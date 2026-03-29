@@ -2768,6 +2768,113 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
+    public void TextButton_ExternalFocusNode_RequestFocus_AppliesFocusedOverlay()
+    {
+        FocusManager.Instance.ResetForTests();
+
+        var owner = new BuildOwner();
+        var focusNode = new FocusNode();
+        var focusedOverlay = Colors.OrangeRed;
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new TextButton(
+                    onPressed: () => { },
+                    focusNode: focusNode,
+                    style: new ButtonStyle(
+                        OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+                            states.HasFlag(MaterialState.Focused) ? focusedOverlay : null)),
+                    child: new Text("External focus node"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var initialDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(initialDecorated);
+        Assert.Null(initialDecorated!.Decoration.Color);
+
+        Assert.True(focusNode.RequestFocus());
+        owner.FlushBuild();
+
+        var focusedDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(focusedDecorated);
+        Assert.Equal(focusedOverlay, focusedDecorated!.Decoration.Color);
+
+        root.Unmount();
+        FocusManager.Instance.ResetForTests();
+    }
+
+    [Fact]
+    public void TextButton_Autofocus_RequestsProvidedFocusNodeOnMount()
+    {
+        FocusManager.Instance.ResetForTests();
+
+        var owner = new BuildOwner();
+        var focusNode = new FocusNode();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new TextButton(
+                    onPressed: () => { },
+                    focusNode: focusNode,
+                    autofocus: true,
+                    child: new Text("Autofocus mount"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.True(focusNode.HasFocus);
+        Assert.Same(focusNode, FocusManager.Instance.PrimaryFocus);
+
+        root.Unmount();
+        FocusManager.Instance.ResetForTests();
+    }
+
+    [Fact]
+    public void TextButton_Autofocus_RequestIsAppliedWhenToggledFromFalseToTrue()
+    {
+        FocusManager.Instance.ResetForTests();
+
+        var owner = new BuildOwner();
+        var focusNode = new FocusNode();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new TextButton(
+                    onPressed: () => { },
+                    focusNode: focusNode,
+                    autofocus: false,
+                    child: new Text("Autofocus update"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.False(focusNode.HasFocus);
+
+        root.Update(
+            new Theme(
+                data: ThemeData.Light,
+                child: new TextButton(
+                    onPressed: () => { },
+                    focusNode: focusNode,
+                    autofocus: true,
+                    child: new Text("Autofocus update"))));
+        owner.FlushBuild();
+
+        Assert.True(focusNode.HasFocus);
+        Assert.Same(focusNode, FocusManager.Instance.PrimaryFocus);
+
+        root.Unmount();
+        FocusManager.Instance.ResetForTests();
+    }
+
+    [Fact]
     public void TextButton_TightWidth_ExpandsInkSplashToFullButtonBounds()
     {
         using var harness = new WidgetRenderHarness(
