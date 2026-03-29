@@ -234,6 +234,14 @@ Progress update (2026-03-19):
 - Added `ThemeData.Brightness` (`Light` default) and aligned M2 dark-path app-bar defaults with Flutter behavior: when `UseMaterial3` is false and brightness is dark, unresolved app-bar defaults now resolve to `CanvasColor`/`OnSurfaceColor`.
 - Added `ThemeData.OnSurfaceVariantColor` and aligned app-bar actions icon default fallback to Flutter Material mode semantics: unresolved actions icon color now resolves to `OnSurfaceVariantColor` in M3 (with size fallback `24`) and keeps existing foreground fallback path in M2, while explicit `actionsIconTheme`/`iconTheme` overrides retain precedence.
 - Aligned app-bar leading `iconTheme` default fallback to Flutter Material mode semantics: when no explicit leading icon theme is provided, M3 now defaults to foreground + `size: 24`, while M2 keeps foreground fallback without forcing size.
+- Continued Material button/theme parity hardening from Flutter M3 defaults:
+  - `ThemeData.Light` default tokens now follow Flutter M3 light scheme for key surfaces/foregrounds used by sample controls (`primary`, `onSurface`, `secondaryContainer`, `onSecondaryContainer`, `surface/canvas`),
+  - `MaterialTextTheme` now includes `LabelLarge` and updated `TitleLarge` defaults to 2021 token metrics (`22/1.27/0.0`), while default body font resolution now follows platform-specific family fallback (Android `Roboto`, iOS/macOS system font, Windows `Segoe UI`, Linux `Noto Sans`),
+  - `TextButton`/`ElevatedButton`/`OutlinedButton`/`FilledButton` defaults now resolve `ButtonStyle.textStyle` from `ThemeData.TextTheme.LabelLarge`,
+  - `ElevatedButton`/`OutlinedButton`/`FilledButton` default padding now matches Flutter M3 generated defaults (`horizontal: 24`, `vertical: 0`),
+  - `OutlinedButton` focused border now uses primary color token (matching Flutter focused-state side behavior),
+  - `MaterialButtonCore` now preserves foreground-color precedence over `ButtonStyle.textStyle.color` (Flutter `ButtonStyleButton` semantics), with added regression coverage for default label typography and foreground-vs-textStyle color precedence,
+  - tap-target parity hardening now mirrors Flutter `_InputPadding` behavior more closely: child layout uses incoming constraints (preserving wide-button material bounds) and padded-area hit-tests redirect to child center.
 
 Initial scope:
 

@@ -153,7 +153,7 @@ internal sealed class SampleMenuPage : StatelessWidget
                         new Text(
                             "Route-based sample menu. Open page and return via Back button or Esc.",
                             fontSize: 14,
-                            color: Colors.DimGray),
+                            color: Color.Parse("#8A000000")),
                         new Expanded(
                             child: ListView.Builder(
                                 itemCount: _pages.Count,
@@ -216,7 +216,7 @@ internal sealed class SampleDemoPage : StatelessWidget
                     spacing: 10,
                     children:
                     [
-                        new Text(_subtitle, fontSize: 14, color: Colors.DimGray),
+                        new Text(_subtitle, fontSize: 14, color: Color.Parse("#8A000000")),
                         new Expanded(
                             child: new Container(
                                 color: Color.Parse("#FFF7F9FC"),

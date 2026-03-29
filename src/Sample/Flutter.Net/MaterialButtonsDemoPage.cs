@@ -37,7 +37,7 @@ internal sealed class MaterialButtonsDemoPageState : State
                 new Text(
                     "TextButton / ElevatedButton / OutlinedButton / FilledButton (+ tonal) with enabled/disabled and theme-aware defaults.",
                     fontSize: 14,
-                    color: Colors.DimGray),
+                    color: Color.Parse("#8A000000")),
                 new Row(
                     spacing: 8,
                     children:
@@ -54,9 +54,9 @@ internal sealed class MaterialButtonsDemoPageState : State
                             background: Color.Parse("#FFF3E8D8")),
                     ]),
                 new Text(
-                    $"enabled={_enabled}, text={_textButtonTaps}, elevated={_elevatedButtonTaps}, outlined={_outlinedButtonTaps}, filled={_filledButtonTaps}, tonal={_filledTonalButtonTaps}",
+                    $"enabled={(_enabled ? "true" : "false")}, text={_textButtonTaps}, elevated={_elevatedButtonTaps}, outlined={_outlinedButtonTaps}, filled={_filledButtonTaps}, tonal={_filledTonalButtonTaps}",
                     fontSize: 12,
-                    color: Colors.DarkSlateGray),
+                    color: Color.Parse("#FF607D8B")),
                 new SizedBox(
                     width: 240,
                     child: new TextButton(

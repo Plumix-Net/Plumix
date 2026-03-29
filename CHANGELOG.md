@@ -16,6 +16,43 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 - Documentation policy update: Dart-to-C# control/widget work now uses mandatory parity-first porting mode (`docs/ai/PORTING_MODE.md`) with strict `1:1` default behavior, required divergence logging, and explicit parity-validation workflow references in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/INVARIANTS.md`, `docs/ai/MODULE_INDEX.md`, `docs/ai/FEATURE_TEMPLATE.md`, `docs/ai/TEST_MATRIX.md`, and `docs/ai/PARITY_MATRIX.md`.
 
+## [2026-03-29] - M4 material button color/typography parity hardening
+
+### Changed
+
+- Aligned framework `ThemeData.Light` defaults with Flutter Material 3 light tokens used by sample controls:
+  - `ScaffoldBackgroundColor`/`CanvasColor`: `#FEF7FF`,
+  - `PrimaryColor`: `#6750A4`,
+  - `OnSurfaceColor`: `#1D1B20`,
+  - `OnSecondaryContainerColor`: `#4A4458`
+  while preserving existing theme override semantics (`src/Flutter.Material/ThemeData.cs`).
+- Expanded `MaterialTextTheme` with `LabelLarge` and updated default typography tokens to match Flutter 2021 baseline more closely:
+  - `TitleLarge`: `22 / 1.27 / 0.0` with regular weight,
+  - `LabelLarge`: `14 / 1.43 / 0.1` with medium weight
+  (`src/Flutter.Material/ThemeData.cs`).
+- Updated default body-font resolution in `MaterialTextTheme` to follow platform-oriented fallback families (Android `Roboto`, iOS/macOS system UI font, Windows `Segoe UI`, Linux `Noto Sans`) for closer cross-host typography parity (`src/Flutter.Material/ThemeData.cs`).
+- Aligned Material button defaults with Flutter `ButtonStyleButton` behavior:
+  - `TextButton`/`ElevatedButton`/`OutlinedButton`/`FilledButton` now provide default `ButtonStyle.TextStyle` from `ThemeData.TextTheme.LabelLarge`,
+  - `ElevatedButton`/`OutlinedButton`/`FilledButton` default content padding now follows Flutter M3 generated defaults (`horizontal: 24`, `vertical: 0`),
+  - focused `OutlinedButton` border now resolves to primary color,
+  - `MaterialButtonCore` now keeps resolved foreground color as source of truth for label paint when `ButtonStyle.TextStyle.Color` is set (matching Flutter precedence),
+  - `_InputPadding` parity hardening: tap-target wrapper now lays out its child with incoming constraints (matching Flutter wide-button behavior) and redirects hit-tests in padded area to visual-child center
+  (`src/Flutter.Material/Buttons.cs`).
+- Added `InternalsVisibleTo("Flutter.Material")` on core `Flutter` assembly and aligned `InheritedWidget.UpdateShouldNotify` overrides in `Flutter.Material` to `protected internal` so framework-owned render-object widgets in Material assembly can override core internal render-widget hooks (`src/Flutter/AssemblyInfo.cs`, `src/Flutter.Material/Theme.cs`, `src/Flutter.Material/ButtonThemes.cs`).
+- Extended `MaterialButtonsTests` with focused regressions for:
+  - `ThemeData.Light` M3 token defaults,
+  - default `TextButton` label typography metrics,
+  - foreground-color precedence over `textStyle.color`,
+  - default `ElevatedButton`/`OutlinedButton`/`FilledButton` horizontal-only padding tokens,
+  - tap-target padded-area hit-test redirection in `TextButton`
+  (`src/Flutter.Tests/MaterialButtonsTests.cs`).
+- Tightened C# sample literal parity with Dart for menu/buttons demo text presentation:
+  - switched subtitle helper text to `black54` equivalent (`#8A000000`),
+  - switched status line color to `blueGrey` equivalent (`#607D8B`),
+  - normalized `enabled=True/False` output to Dart-like lowercase `enabled=true/false`
+  (`src/Sample/Flutter.Net/SampleGalleryScreen.cs`, `src/Sample/Flutter.Net/MaterialButtonsDemoPage.cs`).
+- Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-03-29-button-color-typography-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/PARITY_MATRIX.md`, `docs/ai/TEST_MATRIX.md`).
+
 ## [2026-03-29] - M4 system bars styling parity bridge
 
 ### Added

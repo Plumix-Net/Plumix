@@ -145,7 +145,8 @@ public sealed class TextButton : StatelessWidget
             Side: MaterialStateProperty<BorderSide?>.All(null),
             Padding: MaterialStateProperty<Thickness?>.All(new Thickness(12, 8)),
             Shape: MaterialStateProperty<BorderRadius?>.All(Flutter.Rendering.BorderRadius.Circular(20)),
-            MinimumSize: MaterialStateProperty<Size?>.All(new Size(minWidth, minHeight)));
+            MinimumSize: MaterialStateProperty<Size?>.All(new Size(minWidth, minHeight)),
+            TextStyle: MaterialStateProperty<TextStyle?>.All(theme.TextTheme.LabelLarge));
     }
 
     private ButtonStyle? CreateLegacyStyleOverrides(ThemeData theme)
@@ -322,9 +323,10 @@ public sealed class ElevatedButton : StatelessWidget
             OverlayColor: MaterialButtonCore.CreateDefaultOverlayResolver(stateColor),
             SplashColor: null,
             Side: MaterialStateProperty<BorderSide?>.All(null),
-            Padding: MaterialStateProperty<Thickness?>.All(new Thickness(24, 8)),
+            Padding: MaterialStateProperty<Thickness?>.All(new Thickness(24, 0)),
             Shape: MaterialStateProperty<BorderRadius?>.All(Flutter.Rendering.BorderRadius.Circular(20)),
-            MinimumSize: MaterialStateProperty<Size?>.All(new Size(minWidth, minHeight)));
+            MinimumSize: MaterialStateProperty<Size?>.All(new Size(minWidth, minHeight)),
+            TextStyle: MaterialStateProperty<TextStyle?>.All(theme.TextTheme.LabelLarge));
     }
 
     private ButtonStyle? CreateLegacyStyleOverrides(ThemeData theme)
@@ -574,9 +576,10 @@ public sealed class FilledButton : StatelessWidget
             OverlayColor: MaterialButtonCore.CreateDefaultOverlayResolver(enabledForeground),
             SplashColor: null,
             Side: MaterialStateProperty<BorderSide?>.All(null),
-            Padding: MaterialStateProperty<Thickness?>.All(new Thickness(24, 8)),
+            Padding: MaterialStateProperty<Thickness?>.All(new Thickness(24, 0)),
             Shape: MaterialStateProperty<BorderRadius?>.All(Flutter.Rendering.BorderRadius.Circular(20)),
-            MinimumSize: MaterialStateProperty<Size?>.All(new Size(minWidth, minHeight)));
+            MinimumSize: MaterialStateProperty<Size?>.All(new Size(minWidth, minHeight)),
+            TextStyle: MaterialStateProperty<TextStyle?>.All(theme.TextTheme.LabelLarge));
     }
 
     private ButtonStyle? CreateLegacyStyleOverrides(ThemeData theme)
@@ -765,10 +768,13 @@ public sealed class OutlinedButton : StatelessWidget
             Side: MaterialStateProperty<BorderSide?>.ResolveWith(states =>
                 states.HasFlag(MaterialState.Disabled)
                     ? new BorderSide(MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.12), 1)
+                    : states.HasFlag(MaterialState.Focused)
+                        ? new BorderSide(stateColor, 1)
                     : new BorderSide(theme.OutlineColor, 1)),
-            Padding: MaterialStateProperty<Thickness?>.All(new Thickness(24, 8)),
+            Padding: MaterialStateProperty<Thickness?>.All(new Thickness(24, 0)),
             Shape: MaterialStateProperty<BorderRadius?>.All(Flutter.Rendering.BorderRadius.Circular(20)),
-            MinimumSize: MaterialStateProperty<Size?>.All(new Size(minWidth, minHeight)));
+            MinimumSize: MaterialStateProperty<Size?>.All(new Size(minWidth, minHeight)),
+            TextStyle: MaterialStateProperty<TextStyle?>.All(theme.TextTheme.LabelLarge));
     }
 
     private ButtonStyle? CreateLegacyStyleOverrides(ThemeData theme)
@@ -1194,7 +1200,9 @@ internal sealed class MaterialButtonCore : StatefulWidget
                 new TextStyle(
                     Color: foreground,
                     FontSize: 14,
-                    FontWeight: FontWeight.Medium),
+                    FontWeight: FontWeight.Medium,
+                    Height: 1.43,
+                    LetterSpacing: 0.1),
                 resolvedTextStyle);
 
             Widget content = new DefaultTextStyle(
@@ -1231,31 +1239,37 @@ internal sealed class MaterialButtonCore : StatefulWidget
                     BorderRadius: borderRadius),
                 child: content);
 
-            if (!enabled)
+            Widget result = content;
+
+            if (enabled)
             {
-                return content;
+                result = new GestureDetector(
+                    behavior: HitTestBehavior.Opaque,
+                    onTap: widget.OnPressed,
+                    child: result);
+
+                result = new Listener(
+                    behavior: HitTestBehavior.Opaque,
+                    onPointerDown: HandlePointerDown,
+                    onPointerUp: HandlePointerUp,
+                    onPointerCancel: HandlePointerCancel,
+                    onPointerEnter: _ => SetHovered(true),
+                    onPointerExit: _ => SetHovered(false),
+                    child: result);
+
+                result = new Focus(
+                    focusNode: _focusNode,
+                    autofocus: widget.Autofocus,
+                    canRequestFocus: true,
+                    onKeyEvent: HandleKeyEvent,
+                    child: result);
             }
 
-            content = new GestureDetector(
-                behavior: HitTestBehavior.Opaque,
-                onTap: widget.OnPressed,
-                child: content);
-
-            content = new Listener(
-                behavior: HitTestBehavior.Opaque,
-                onPointerDown: HandlePointerDown,
-                onPointerUp: HandlePointerUp,
-                onPointerCancel: HandlePointerCancel,
-                onPointerEnter: _ => SetHovered(true),
-                onPointerExit: _ => SetHovered(false),
-                child: content);
-
-            return new Focus(
-                focusNode: _focusNode,
-                autofocus: widget.Autofocus,
-                canRequestFocus: true,
-                onKeyEvent: HandleKeyEvent,
-                child: content);
+            // Flutter ButtonStyleButton keeps a larger padded tap-target box around the
+            // visual material; this wrapper aligns layout spacing with that behavior.
+            return new ButtonTapTargetPadding(
+                minSize: new Size(48, 48),
+                child: result);
         }
 
         private void AttachFocusNode(FocusNode? externalNode)
@@ -1615,7 +1629,8 @@ internal sealed class MaterialButtonCore : StatefulWidget
             return new TextStyle(
                 FontFamily: style.FontFamily ?? baseStyle.FontFamily,
                 FontSize: style.FontSize ?? baseStyle.FontSize,
-                Color: style.Color ?? baseStyle.Color,
+                // Flutter ButtonStyleButton ignores textStyle color and uses foregroundColor instead.
+                Color: baseStyle.Color,
                 FontWeight: style.FontWeight ?? baseStyle.FontWeight,
                 FontStyle: style.FontStyle ?? baseStyle.FontStyle,
                 Height: style.Height ?? baseStyle.Height,
@@ -1717,5 +1732,120 @@ internal sealed class MaterialButtonCore : StatefulWidget
     {
         var alpha = (byte)Math.Clamp((int)(255 * opacity), 0, 255);
         return Color.FromArgb(alpha, color.R, color.G, color.B);
+    }
+}
+
+internal sealed class ButtonTapTargetPadding : SingleChildRenderObjectWidget
+{
+    public ButtonTapTargetPadding(Size minSize, Widget child, Key? key = null) : base(child, key)
+    {
+        MinSize = minSize;
+    }
+
+    public Size MinSize { get; }
+
+    internal override RenderObject CreateRenderObject(BuildContext context)
+    {
+        return new RenderButtonTapTargetPadding(MinSize);
+    }
+
+    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    {
+        ((RenderButtonTapTargetPadding)renderObject).MinSize = MinSize;
+    }
+}
+
+internal sealed class RenderButtonTapTargetPadding : RenderProxyBox
+{
+    private Size _minSize;
+
+    public RenderButtonTapTargetPadding(Size minSize, RenderBox? child = null)
+    {
+        _minSize = ValidateMinSize(minSize);
+        Child = child;
+    }
+
+    public Size MinSize
+    {
+        get => _minSize;
+        set
+        {
+            var normalized = ValidateMinSize(value);
+            if (_minSize == normalized)
+            {
+                return;
+            }
+
+            _minSize = normalized;
+            MarkNeedsLayout();
+        }
+    }
+
+    protected override void PerformLayout()
+    {
+        if (Child == null)
+        {
+            Size = Constraints.Constrain(_minSize);
+            return;
+        }
+
+        Child.Layout(Constraints, parentUsesSize: true);
+        var childSize = Child.Size;
+        var targetSize = new Size(
+            Math.Max(childSize.Width, _minSize.Width),
+            Math.Max(childSize.Height, _minSize.Height));
+        Size = Constraints.Constrain(targetSize);
+
+        ((BoxParentData)Child.parentData!).offset = new Point(
+            (Size.Width - childSize.Width) / 2,
+            (Size.Height - childSize.Height) / 2);
+    }
+
+    public override bool HitTest(BoxHitTestResult result, Point position)
+    {
+        var isWithinBounds = position.X >= 0
+                             && position.Y >= 0
+                             && position.X < Size.Width
+                             && position.Y < Size.Height;
+        if (!isWithinBounds)
+        {
+            return false;
+        }
+
+        if (base.HitTest(result, position))
+        {
+            return true;
+        }
+
+        if (Child == null)
+        {
+            return false;
+        }
+
+        var childSize = Child.Size;
+        if (childSize.Width <= 0 || childSize.Height <= 0)
+        {
+            return false;
+        }
+
+        // Match Flutter _InputPadding behavior: taps in expanded tap-target area
+        // are redirected to the visual child's center.
+        var childCenter = new Point(childSize.Width / 2, childSize.Height / 2);
+        return Child.HitTest(result, childCenter);
+    }
+
+    private static Size ValidateMinSize(Size value)
+    {
+        if (double.IsNaN(value.Width) || double.IsInfinity(value.Width) || value.Width < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(value), "MinSize width must be non-negative and finite.");
+        }
+
+        if (double.IsNaN(value.Height) || double.IsInfinity(value.Height) || value.Height < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(value), "MinSize height must be non-negative and finite.");
+        }
+
+        return value;
     }
 }
