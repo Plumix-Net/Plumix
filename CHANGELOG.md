@@ -16,6 +16,19 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 - Documentation policy update: Dart-to-C# control/widget work now uses mandatory parity-first porting mode (`docs/ai/PORTING_MODE.md`) with strict `1:1` default behavior, required divergence logging, and explicit parity-validation workflow references in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/INVARIANTS.md`, `docs/ai/MODULE_INDEX.md`, `docs/ai/FEATURE_TEMPLATE.md`, `docs/ai/TEST_MATRIX.md`, and `docs/ai/PARITY_MATRIX.md`.
 
+## [2026-03-29] - M4 material-button focus-node parity
+
+### Changed
+
+- Extended framework Material button API parity with Flutter `ButtonStyleButton` focus controls by adding `focusNode` and `autofocus` parameters to `TextButton`, `ElevatedButton`, `FilledButton`, and `OutlinedButton`, and propagating them through `MaterialButtonCore` (`src/Flutter.Material/Buttons.cs`).
+- Updated `MaterialButtonCore` focus lifecycle handling to support both owned and externally provided focus nodes without disposal leaks on external nodes, while preserving focused-overlay state updates and existing keyboard activation flow (`src/Flutter.Material/Buttons.cs`).
+- Added focused regression coverage in `MaterialButtonsTests` for:
+  - external focus-node driven focused overlay updates,
+  - autofocus requesting the provided focus node on mount,
+  - autofocus transition from `false` to `true` after rebuild
+  (`src/Flutter.Tests/MaterialButtonsTests.cs`).
+- Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-03-29-button-focus-autofocus-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
+
 ## [2026-03-29] - M4 filled-button parity expansion
 
 ### Added

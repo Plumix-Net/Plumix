@@ -22,6 +22,8 @@ public sealed class TextButton : StatelessWidget
         double minWidth = 64,
         double minHeight = 40,
         ButtonStyle? style = null,
+        FocusNode? focusNode = null,
+        bool autofocus = false,
         Key? key = null) : base(key)
     {
         Child = child;
@@ -33,6 +35,8 @@ public sealed class TextButton : StatelessWidget
         MinWidth = minWidth;
         MinHeight = minHeight;
         Style = style;
+        FocusNode = focusNode;
+        Autofocus = autofocus;
     }
 
     public Widget Child { get; }
@@ -52,6 +56,10 @@ public sealed class TextButton : StatelessWidget
     public double MinHeight { get; }
 
     public ButtonStyle? Style { get; }
+
+    public FocusNode? FocusNode { get; }
+
+    public bool Autofocus { get; }
 
     public static ButtonStyle StyleFrom(
         Color? foregroundColor = null,
@@ -118,7 +126,9 @@ public sealed class TextButton : StatelessWidget
         return new MaterialButtonCore(
             child: Child,
             onPressed: OnPressed,
-            style: mergedStyle);
+            style: mergedStyle,
+            focusNode: FocusNode,
+            autofocus: Autofocus);
     }
 
     private static ButtonStyle CreateDefaultStyle(ThemeData theme, double minWidth, double minHeight)
@@ -188,6 +198,8 @@ public sealed class ElevatedButton : StatelessWidget
         double minWidth = 64,
         double minHeight = 40,
         ButtonStyle? style = null,
+        FocusNode? focusNode = null,
+        bool autofocus = false,
         Key? key = null) : base(key)
     {
         Child = child;
@@ -199,6 +211,8 @@ public sealed class ElevatedButton : StatelessWidget
         MinWidth = minWidth;
         MinHeight = minHeight;
         Style = style;
+        FocusNode = focusNode;
+        Autofocus = autofocus;
     }
 
     public Widget Child { get; }
@@ -218,6 +232,10 @@ public sealed class ElevatedButton : StatelessWidget
     public double MinHeight { get; }
 
     public ButtonStyle? Style { get; }
+
+    public FocusNode? FocusNode { get; }
+
+    public bool Autofocus { get; }
 
     public static ButtonStyle StyleFrom(
         Color? foregroundColor = null,
@@ -284,7 +302,9 @@ public sealed class ElevatedButton : StatelessWidget
         return new MaterialButtonCore(
             child: Child,
             onPressed: OnPressed,
-            style: mergedStyle);
+            style: mergedStyle,
+            focusNode: FocusNode,
+            autofocus: Autofocus);
     }
 
     private static ButtonStyle CreateDefaultStyle(ThemeData theme, double minWidth, double minHeight)
@@ -357,6 +377,8 @@ public sealed class FilledButton : StatelessWidget
         double minWidth = 64,
         double minHeight = 40,
         ButtonStyle? style = null,
+        FocusNode? focusNode = null,
+        bool autofocus = false,
         Key? key = null) : this(
             child: child,
             onPressed: onPressed,
@@ -368,6 +390,8 @@ public sealed class FilledButton : StatelessWidget
             minWidth: minWidth,
             minHeight: minHeight,
             style: style,
+            focusNode: focusNode,
+            autofocus: autofocus,
             key: key)
     {
     }
@@ -383,6 +407,8 @@ public sealed class FilledButton : StatelessWidget
         double minWidth,
         double minHeight,
         ButtonStyle? style,
+        FocusNode? focusNode,
+        bool autofocus,
         Key? key) : base(key)
     {
         Child = child;
@@ -395,6 +421,8 @@ public sealed class FilledButton : StatelessWidget
         MinWidth = minWidth;
         MinHeight = minHeight;
         Style = style;
+        FocusNode = focusNode;
+        Autofocus = autofocus;
     }
 
     public Widget Child { get; }
@@ -417,6 +445,10 @@ public sealed class FilledButton : StatelessWidget
 
     public ButtonStyle? Style { get; }
 
+    public FocusNode? FocusNode { get; }
+
+    public bool Autofocus { get; }
+
     public static FilledButton Tonal(
         Widget child,
         Action? onPressed,
@@ -427,6 +459,8 @@ public sealed class FilledButton : StatelessWidget
         double minWidth = 64,
         double minHeight = 40,
         ButtonStyle? style = null,
+        FocusNode? focusNode = null,
+        bool autofocus = false,
         Key? key = null)
     {
         return new FilledButton(
@@ -440,6 +474,8 @@ public sealed class FilledButton : StatelessWidget
             minWidth: minWidth,
             minHeight: minHeight,
             style: style,
+            focusNode: focusNode,
+            autofocus: autofocus,
             key: key);
     }
 
@@ -508,7 +544,9 @@ public sealed class FilledButton : StatelessWidget
         return new MaterialButtonCore(
             child: Child,
             onPressed: OnPressed,
-            style: mergedStyle);
+            style: mergedStyle,
+            focusNode: FocusNode,
+            autofocus: Autofocus);
     }
 
     private static ButtonStyle CreateDefaultStyle(
@@ -593,6 +631,8 @@ public sealed class OutlinedButton : StatelessWidget
         double minWidth = 64,
         double minHeight = 40,
         ButtonStyle? style = null,
+        FocusNode? focusNode = null,
+        bool autofocus = false,
         Key? key = null) : base(key)
     {
         if (double.IsNaN(borderWidth) || double.IsInfinity(borderWidth) || borderWidth < 0)
@@ -611,6 +651,8 @@ public sealed class OutlinedButton : StatelessWidget
         MinWidth = minWidth;
         MinHeight = minHeight;
         Style = style;
+        FocusNode = focusNode;
+        Autofocus = autofocus;
     }
 
     public Widget Child { get; }
@@ -634,6 +676,10 @@ public sealed class OutlinedButton : StatelessWidget
     public double MinHeight { get; }
 
     public ButtonStyle? Style { get; }
+
+    public FocusNode? FocusNode { get; }
+
+    public bool Autofocus { get; }
 
     public static ButtonStyle StyleFrom(
         Color? foregroundColor = null,
@@ -700,7 +746,9 @@ public sealed class OutlinedButton : StatelessWidget
         return new MaterialButtonCore(
             child: Child,
             onPressed: OnPressed,
-            style: mergedStyle);
+            style: mergedStyle,
+            focusNode: FocusNode,
+            autofocus: Autofocus);
     }
 
     private static ButtonStyle CreateDefaultStyle(ThemeData theme, double minWidth, double minHeight)
@@ -776,11 +824,15 @@ internal sealed class MaterialButtonCore : StatefulWidget
         Widget child,
         Action? onPressed,
         ButtonStyle style,
+        FocusNode? focusNode = null,
+        bool autofocus = false,
         Key? key = null) : base(key)
     {
         Child = child;
         OnPressed = onPressed;
         Style = style ?? throw new ArgumentNullException(nameof(style));
+        FocusNode = focusNode;
+        Autofocus = autofocus;
     }
 
     public Widget Child { get; }
@@ -788,6 +840,10 @@ internal sealed class MaterialButtonCore : StatefulWidget
     public Action? OnPressed { get; }
 
     public ButtonStyle Style { get; }
+
+    public FocusNode? FocusNode { get; }
+
+    public bool Autofocus { get; }
 
     public override State CreateState()
     {
@@ -1024,6 +1080,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
         private Point _splashOrigin = CenterSplashOrigin;
         private Color? _splashBaseColor;
         private FocusNode? _focusNode;
+        private bool _ownsFocusNode;
         private AnimationController? _splashController;
         private AnimationController? _keyboardPressController;
 
@@ -1033,9 +1090,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
 
         public override void InitState()
         {
-            _focusNode = new FocusNode();
-            _focusNode.AddListener(HandleFocusChanged);
-            _hasFocus = _focusNode.HasFocus;
+            AttachFocusNode(CurrentWidget.FocusNode);
 
             _splashController = new AnimationController(TimeSpan.FromMilliseconds(225))
             {
@@ -1050,6 +1105,13 @@ internal sealed class MaterialButtonCore : StatefulWidget
 
         public override void DidUpdateWidget(StatefulWidget oldWidget)
         {
+            var oldButtonWidget = (MaterialButtonCore)oldWidget;
+            if (!ReferenceEquals(oldButtonWidget.FocusNode, CurrentWidget.FocusNode))
+            {
+                DetachFocusNode(disposeOwned: true);
+                AttachFocusNode(CurrentWidget.FocusNode);
+            }
+
             if (!Enabled && _isPressed)
             {
                 _isPressed = false;
@@ -1087,12 +1149,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
 
         public override void Dispose()
         {
-            if (_focusNode != null)
-            {
-                _focusNode.RemoveListener(HandleFocusChanged);
-                _focusNode.Dispose();
-                _focusNode = null;
-            }
+            DetachFocusNode(disposeOwned: true);
 
             if (_splashController != null)
             {
@@ -1195,9 +1252,36 @@ internal sealed class MaterialButtonCore : StatefulWidget
 
             return new Focus(
                 focusNode: _focusNode,
+                autofocus: widget.Autofocus,
                 canRequestFocus: true,
                 onKeyEvent: HandleKeyEvent,
                 child: content);
+        }
+
+        private void AttachFocusNode(FocusNode? externalNode)
+        {
+            _focusNode = externalNode ?? new FocusNode();
+            _ownsFocusNode = externalNode is null;
+            _focusNode.AddListener(HandleFocusChanged);
+            _hasFocus = _focusNode.HasFocus;
+        }
+
+        private void DetachFocusNode(bool disposeOwned)
+        {
+            if (_focusNode is null)
+            {
+                return;
+            }
+
+            _focusNode.RemoveListener(HandleFocusChanged);
+            if (disposeOwned && _ownsFocusNode)
+            {
+                _focusNode.Dispose();
+            }
+
+            _focusNode = null;
+            _ownsFocusNode = false;
+            _hasFocus = false;
         }
 
         private KeyEventResult HandleKeyEvent(FocusNode node, KeyEvent @event)
