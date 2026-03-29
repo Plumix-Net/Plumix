@@ -5,6 +5,7 @@ using Avalonia.Input;
 using Avalonia.Input.Platform;
 using Avalonia.Input.TextInput;
 using Avalonia.Media;
+using System.Reflection;
 using Flutter.Gestures;
 using Flutter.Rendering;
 using Flutter.UI;
@@ -35,6 +36,8 @@ public class FlutterHost : Control
     private TopLevel? _attachedTopLevel;
     private IInsetsManager? _insetsManager;
     private IInputPane? _inputPane;
+    private bool _isSubscribedToSystemUiOverlayStyle;
+    private SystemUiOverlayStyle _currentSystemUiOverlayStyle = SystemChrome.CurrentSystemUiOverlayStyle;
 
     public event Action<SemanticsNode?>? SemanticsUpdated;
 
@@ -254,6 +257,7 @@ public class FlutterHost : Control
     {
         base.OnAttachedToVisualTree(e);
         EnsureSchedulerSubscription();
+        AttachSystemUiOverlayStyleListener();
         AttachMetricSources();
         OnMetricsChanged();
     }
@@ -261,6 +265,7 @@ public class FlutterHost : Control
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
     {
         DetachMetricSources();
+        DetachSystemUiOverlayStyleListener();
         RemoveSchedulerSubscription();
         base.OnDetachedFromVisualTree(e);
     }
@@ -372,9 +377,8 @@ public class FlutterHost : Control
         _insetsManager = _attachedTopLevel.InsetsManager;
         if (_insetsManager != null)
         {
-            // User explicitly requested edge-to-edge-only behavior parity.
-            _insetsManager.DisplayEdgeToEdgePreference = true;
             _insetsManager.SafeAreaChanged += HandleSafeAreaChanged;
+            ApplySystemUiOverlayStyle();
         }
 
         _inputPane = _attachedTopLevel.InputPane;
@@ -409,6 +413,189 @@ public class FlutterHost : Control
     private void HandleInputPaneStateChanged(object? sender, InputPaneStateEventArgs e)
     {
         OnMetricsChanged();
+    }
+
+    private void AttachSystemUiOverlayStyleListener()
+    {
+        if (_isSubscribedToSystemUiOverlayStyle)
+        {
+            return;
+        }
+
+        _currentSystemUiOverlayStyle = SystemChrome.CurrentSystemUiOverlayStyle;
+        SystemChrome.SystemUiOverlayStyleChanged += HandleSystemUiOverlayStyleChanged;
+        _isSubscribedToSystemUiOverlayStyle = true;
+    }
+
+    private void DetachSystemUiOverlayStyleListener()
+    {
+        if (!_isSubscribedToSystemUiOverlayStyle)
+        {
+            return;
+        }
+
+        SystemChrome.SystemUiOverlayStyleChanged -= HandleSystemUiOverlayStyleChanged;
+        _isSubscribedToSystemUiOverlayStyle = false;
+    }
+
+    private void HandleSystemUiOverlayStyleChanged(SystemUiOverlayStyle style)
+    {
+        _currentSystemUiOverlayStyle = style;
+        ApplySystemUiOverlayStyle();
+    }
+
+    private void ApplySystemUiOverlayStyle()
+    {
+        if (_insetsManager == null)
+        {
+            return;
+        }
+
+        var style = _currentSystemUiOverlayStyle;
+        var shouldDisplayEdgeToEdge = ShouldDisplayEdgeToEdge(style);
+        if (_insetsManager.DisplayEdgeToEdgePreference != shouldDisplayEdgeToEdge)
+        {
+            _insetsManager.DisplayEdgeToEdgePreference = shouldDisplayEdgeToEdge;
+        }
+
+        var fallbackSystemBarColor = style.StatusBarColor ?? style.NavigationBarColor;
+        if (fallbackSystemBarColor.HasValue)
+        {
+            if (_attachedTopLevel != null)
+            {
+                TopLevel.SetSystemBarColor(_attachedTopLevel, new SolidColorBrush(fallbackSystemBarColor.Value));
+            }
+
+            _insetsManager.SystemBarColor = fallbackSystemBarColor.Value;
+        }
+
+        var iconBrightness = style.StatusBarIconBrightness ?? style.NavigationBarIconBrightness;
+        if (iconBrightness.HasValue)
+        {
+            var systemBarTheme = iconBrightness.Value == SystemUiIconBrightness.Dark
+                ? SystemBarTheme.Light
+                : SystemBarTheme.Dark;
+            TrySetInsetsManagerSystemBarTheme(_insetsManager, systemBarTheme);
+        }
+
+        TryApplyAndroidSystemBarColors(_insetsManager, style.StatusBarColor, style.NavigationBarColor);
+    }
+
+    private static bool ShouldDisplayEdgeToEdge(SystemUiOverlayStyle style)
+    {
+        static bool IsTransparentOrUnset(Color? color) => !color.HasValue || color.Value.A == 0;
+
+        return IsTransparentOrUnset(style.StatusBarColor)
+               && IsTransparentOrUnset(style.NavigationBarColor);
+    }
+
+    private static void TrySetInsetsManagerSystemBarTheme(IInsetsManager insetsManager, SystemBarTheme theme)
+    {
+        var property = insetsManager.GetType().GetProperty(
+            "SystemBarTheme",
+            BindingFlags.Instance | BindingFlags.Public);
+
+        if (property?.CanWrite != true)
+        {
+            return;
+        }
+
+        if (property.PropertyType == typeof(SystemBarTheme))
+        {
+            property.SetValue(insetsManager, theme);
+            return;
+        }
+
+        if (property.PropertyType == typeof(SystemBarTheme?))
+        {
+            property.SetValue(insetsManager, theme);
+        }
+    }
+
+    private static void TryApplyAndroidSystemBarColors(
+        IInsetsManager insetsManager,
+        Color? statusBarColor,
+        Color? navigationBarColor)
+    {
+        if (!statusBarColor.HasValue && !navigationBarColor.HasValue)
+        {
+            return;
+        }
+
+        var activityField = insetsManager.GetType().GetField(
+            "_activity",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        var activity = activityField?.GetValue(insetsManager);
+        if (activity == null)
+        {
+            return;
+        }
+
+        var windowProperty = activity.GetType().GetProperty(
+            "Window",
+            BindingFlags.Instance | BindingFlags.Public);
+        var window = windowProperty?.GetValue(activity);
+        if (window == null)
+        {
+            return;
+        }
+
+        if (statusBarColor.HasValue)
+        {
+            TrySetAndroidWindowColor(window, "SetStatusBarColor", statusBarColor.Value);
+        }
+
+        if (navigationBarColor.HasValue)
+        {
+            TrySetAndroidWindowColor(window, "SetNavigationBarColor", navigationBarColor.Value);
+        }
+    }
+
+    private static void TrySetAndroidWindowColor(object window, string methodName, Color color)
+    {
+        var method = window.GetType()
+            .GetMethods(BindingFlags.Instance | BindingFlags.Public)
+            .FirstOrDefault(candidate =>
+                string.Equals(candidate.Name, methodName, StringComparison.Ordinal)
+                && candidate.GetParameters().Length == 1);
+        if (method == null)
+        {
+            return;
+        }
+
+        var parameterType = method.GetParameters()[0].ParameterType;
+        var argument = CreateAndroidColorArgument(parameterType, color);
+        if (argument == null)
+        {
+            return;
+        }
+
+        method.Invoke(window, [argument]);
+    }
+
+    private static object? CreateAndroidColorArgument(Type parameterType, Color color)
+    {
+        var argb = unchecked((int)ToArgb(color));
+        if (parameterType == typeof(int))
+        {
+            return argb;
+        }
+
+        var constructor = parameterType.GetConstructor([typeof(int)]);
+        if (constructor != null)
+        {
+            return constructor.Invoke([argb]);
+        }
+
+        return null;
+    }
+
+    private static uint ToArgb(Color color)
+    {
+        return ((uint)color.A << 24)
+               | ((uint)color.R << 16)
+               | ((uint)color.G << 8)
+               | color.B;
     }
 
     private static Thickness ResolveViewInsets(Rect occludedRect, Size hostSize)

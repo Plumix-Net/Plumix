@@ -16,6 +16,28 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 - Documentation policy update: Dart-to-C# control/widget work now uses mandatory parity-first porting mode (`docs/ai/PORTING_MODE.md`) with strict `1:1` default behavior, required divergence logging, and explicit parity-validation workflow references in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/INVARIANTS.md`, `docs/ai/MODULE_INDEX.md`, `docs/ai/FEATURE_TEMPLATE.md`, `docs/ai/TEST_MATRIX.md`, and `docs/ai/PARITY_MATRIX.md`.
 
+## [2026-03-29] - M4 system bars styling parity bridge
+
+### Added
+
+- Added framework `SystemChrome` API surface with `SystemUiOverlayStyle` and icon-brightness model so status/navigation bar styling can be controlled directly from C# code (`src/Flutter/UI/SystemChrome.cs`).
+
+### Changed
+
+- `FlutterHost` now listens to `SystemChrome` overlay-style updates and applies them to platform insets/system bars:
+  - shared system-bar color via `IInsetsManager.SystemBarColor`,
+  - icon theme via `SystemBarTheme` reflection when available,
+  - Android-specific best-effort split color application (`status` and `navigation`) via native window reflection fallback,
+  - adaptive edge-to-edge mode: edge-to-edge is now enabled only when both system-bar colors are transparent/unset, and disabled for opaque bar colors so API 33/34 status/navigation bar colors are actually applied (`src/Flutter/FlutterHost.cs`).
+- Extended `AppBar` with `systemOverlayStyle` and theme-level `AppBarThemeData.SystemOverlayStyle` support; app-bar build now resolves and pushes effective overlay style into `SystemChrome` using Flutter-like precedence (`widget -> theme appBarTheme -> default`) (`src/Flutter.Material/Scaffold.cs`, `src/Flutter.Material/ThemeData.cs`).
+- Added focused `MaterialScaffoldTests` coverage for app-bar overlay-style precedence (`theme` default and `widget` override) (`src/Flutter.Tests/MaterialScaffoldTests.cs`).
+- Updated Android host theme defaults to remove gray system-bar backgrounds by default:
+  - switched to explicit light appcompat base theme,
+  - enabled system-bar background drawing,
+  - set transparent status/navigation bars with light-icon flags and contrast-enforcement overrides on API 31+,
+  - removed `windowIsTranslucent` from API 31+ main theme (`src/Sample/Flutter.Net.Android/Resources/values/styles.xml`, `src/Sample/Flutter.Net.Android/Resources/values-v31/styles.xml`).
+- Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-03-29-system-bars-overlay-native-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
+
 ## [2026-03-29] - M4 app-bar primary status-bar inset parity
 
 ### Changed

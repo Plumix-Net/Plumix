@@ -98,6 +98,7 @@ public sealed class AppBar : StatelessWidget
         Thickness? padding = null,
         Color? backgroundColor = null,
         Color? foregroundColor = null,
+        SystemUiOverlayStyle? systemOverlayStyle = null,
         Key? key = null) : base(key)
     {
         if (toolbarHeight.HasValue && (double.IsNaN(toolbarHeight.Value) || double.IsInfinity(toolbarHeight.Value) || toolbarHeight.Value <= 0))
@@ -132,6 +133,7 @@ public sealed class AppBar : StatelessWidget
         Padding = padding;
         BackgroundColor = backgroundColor;
         ForegroundColor = foregroundColor;
+        SystemOverlayStyle = systemOverlayStyle;
     }
 
     public string? TitleText { get; }
@@ -168,6 +170,8 @@ public sealed class AppBar : StatelessWidget
 
     public Color? ForegroundColor { get; }
 
+    public SystemUiOverlayStyle? SystemOverlayStyle { get; }
+
     public override Widget Build(BuildContext context)
     {
         var theme = Theme.Of(context);
@@ -182,6 +186,7 @@ public sealed class AppBar : StatelessWidget
         var effectiveToolbarHeight = ResolveEffectiveToolbarHeight(theme);
         var effectiveToolbarTextStyle = ResolveToolbarTextStyle(theme, effectiveForeground);
         var effectiveTitleTextStyle = ResolveTitleTextStyle(theme, effectiveForeground);
+        var effectiveSystemOverlayStyle = ResolveEffectiveSystemOverlayStyle(theme, effectiveBackground);
 
         var titleWidget = (Widget)new DefaultTextStyle(
             style: effectiveTitleTextStyle,
@@ -240,6 +245,8 @@ public sealed class AppBar : StatelessWidget
         {
             appBarContent = new SafeArea(bottom: false, child: appBarContent);
         }
+
+        SystemChrome.SetSystemUiOverlayStyle(effectiveSystemOverlayStyle);
 
         return new Container(
             color: effectiveBackground,
@@ -404,6 +411,30 @@ public sealed class AppBar : StatelessWidget
 
         var overrideStyle = TitleTextStyle ?? theme.AppBarTheme.TitleTextStyle;
         return ComposeTextStyle(baseStyle, overrideStyle);
+    }
+
+    private SystemUiOverlayStyle ResolveEffectiveSystemOverlayStyle(ThemeData theme, Color effectiveBackground)
+    {
+        return SystemOverlayStyle
+               ?? theme.AppBarTheme.SystemOverlayStyle
+               ?? ResolveDefaultSystemOverlayStyle(theme, effectiveBackground);
+    }
+
+    private static SystemUiOverlayStyle ResolveDefaultSystemOverlayStyle(ThemeData theme, Color effectiveBackground)
+    {
+        var iconBrightness = EstimateIconBrightnessForColor(effectiveBackground);
+        var systemBarColor = effectiveBackground;
+        return new SystemUiOverlayStyle(
+            StatusBarColor: systemBarColor,
+            NavigationBarColor: systemBarColor,
+            StatusBarIconBrightness: iconBrightness,
+            NavigationBarIconBrightness: iconBrightness);
+    }
+
+    private static SystemUiIconBrightness EstimateIconBrightnessForColor(Color color)
+    {
+        var luminance = (0.299 * color.R + 0.587 * color.G + 0.114 * color.B) / 255.0;
+        return luminance > 0.5 ? SystemUiIconBrightness.Dark : SystemUiIconBrightness.Light;
     }
 
     private static TextStyle ComposeTextStyle(TextStyle baseStyle, TextStyle? overrideStyle)
