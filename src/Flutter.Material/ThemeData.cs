@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
+using Flutter.UI;
 using Flutter.Widgets;
 
 namespace Flutter.Material;
@@ -33,7 +34,8 @@ public sealed record AppBarThemeData(
     double? ToolbarHeight = null,
     TextStyle? ToolbarTextStyle = null,
     TextStyle? TitleTextStyle = null,
-    Thickness? ActionsPadding = null);
+    Thickness? ActionsPadding = null,
+    SystemUiOverlayStyle? SystemOverlayStyle = null);
 
 public sealed record MaterialTextTheme
 {

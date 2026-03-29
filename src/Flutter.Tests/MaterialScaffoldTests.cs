@@ -10,6 +10,11 @@ namespace Flutter.Tests;
 
 public sealed class MaterialScaffoldTests
 {
+    public MaterialScaffoldTests()
+    {
+        SystemChrome.ResetSystemUiOverlayStyleForTests();
+    }
+
     [Fact]
     public void Scaffold_UsesThemeScaffoldBackgroundColor()
     {
@@ -384,6 +389,65 @@ public sealed class MaterialScaffoldTests
         var paragraph = FindParagraphByText(appBarBackground, "Demo");
         Assert.NotNull(paragraph);
         Assert.Equal(Colors.CadetBlue, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+    }
+
+    [Fact]
+    public void AppBar_SystemOverlayStyle_DefaultsFromThemeAppBarTheme()
+    {
+        var owner = new BuildOwner();
+        var themedStyle = new SystemUiOverlayStyle(
+            StatusBarColor: Colors.Crimson,
+            NavigationBarColor: Colors.DarkGreen,
+            StatusBarIconBrightness: SystemUiIconBrightness.Light,
+            NavigationBarIconBrightness: SystemUiIconBrightness.Light);
+        var theme = ThemeData.Light with
+        {
+            AppBarTheme = new AppBarThemeData(SystemOverlayStyle: themedStyle),
+        };
+
+        var root = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: new AppBar(titleText: "Demo")));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.Equal(themedStyle, SystemChrome.CurrentSystemUiOverlayStyle);
+    }
+
+    [Fact]
+    public void AppBar_SystemOverlayStyle_WidgetValue_OverridesThemeAppBarTheme()
+    {
+        var owner = new BuildOwner();
+        var themedStyle = new SystemUiOverlayStyle(
+            StatusBarColor: Colors.Crimson,
+            NavigationBarColor: Colors.DarkGreen,
+            StatusBarIconBrightness: SystemUiIconBrightness.Light,
+            NavigationBarIconBrightness: SystemUiIconBrightness.Light);
+        var widgetStyle = new SystemUiOverlayStyle(
+            StatusBarColor: Colors.Bisque,
+            NavigationBarColor: Colors.CadetBlue,
+            StatusBarIconBrightness: SystemUiIconBrightness.Dark,
+            NavigationBarIconBrightness: SystemUiIconBrightness.Dark);
+        var theme = ThemeData.Light with
+        {
+            AppBarTheme = new AppBarThemeData(SystemOverlayStyle: themedStyle),
+        };
+
+        var root = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: new AppBar(
+                    titleText: "Demo",
+                    systemOverlayStyle: widgetStyle)));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.Equal(widgetStyle, SystemChrome.CurrentSystemUiOverlayStyle);
     }
 
     [Fact]
