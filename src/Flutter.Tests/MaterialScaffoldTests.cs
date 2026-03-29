@@ -691,6 +691,62 @@ public sealed class MaterialScaffoldTests
     }
 
     [Fact]
+    public void AppBar_PrimaryTrue_AppliesMediaQueryTopPadding()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new MediaQuery(
+                    data: new MediaQueryData(
+                        Padding: new Thickness(0, 24, 0, 0),
+                        ViewPadding: new Thickness(0, 24, 0, 0)),
+                    child: new AppBar(titleText: "Title"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var appBarBackground = RequireRenderObject<RenderColoredBox>(root.ChildElement);
+        var safeAreaPadding = FindPadding(appBarBackground, padding =>
+            Math.Abs(padding.Left) < 0.001
+            && Math.Abs(padding.Top - 24) < 0.001
+            && Math.Abs(padding.Right) < 0.001
+            && Math.Abs(padding.Bottom) < 0.001);
+
+        Assert.NotNull(safeAreaPadding);
+    }
+
+    [Fact]
+    public void AppBar_PrimaryFalse_DoesNotApplyMediaQueryTopPadding()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new MediaQuery(
+                    data: new MediaQueryData(
+                        Padding: new Thickness(0, 24, 0, 0),
+                        ViewPadding: new Thickness(0, 24, 0, 0)),
+                    child: new AppBar(
+                        titleText: "Title",
+                        primary: false))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var appBarBackground = RequireRenderObject<RenderColoredBox>(root.ChildElement);
+        var safeAreaPadding = FindPadding(appBarBackground, padding =>
+            Math.Abs(padding.Left) < 0.001
+            && Math.Abs(padding.Top - 24) < 0.001
+            && Math.Abs(padding.Right) < 0.001
+            && Math.Abs(padding.Bottom) < 0.001);
+
+        Assert.Null(safeAreaPadding);
+    }
+
+    [Fact]
     public void AppBar_ActionsRow_DoesNotApplyExtraSpacing()
     {
         var owner = new BuildOwner();
