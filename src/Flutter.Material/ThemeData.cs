@@ -88,6 +88,7 @@ public sealed record ThemeData
     private TextButtonThemeData? _textButtonTheme;
     private ElevatedButtonThemeData? _elevatedButtonTheme;
     private OutlinedButtonThemeData? _outlinedButtonTheme;
+    private FilledButtonThemeData? _filledButtonTheme;
 
     public ThemeData(
         TargetPlatform? platform = null,
@@ -103,12 +104,16 @@ public sealed record ThemeData
         Color? onSurfaceVariantColor = null,
         Color? outlineColor = null,
         Color? surfaceContainerLowColor = null,
+        Color? secondaryContainerColor = null,
+        Color? onSecondaryContainerColor = null,
         ButtonStyle? textButtonStyle = null,
         ButtonStyle? elevatedButtonStyle = null,
         ButtonStyle? outlinedButtonStyle = null,
+        ButtonStyle? filledButtonStyle = null,
         TextButtonThemeData? textButtonTheme = null,
         ElevatedButtonThemeData? elevatedButtonTheme = null,
-        OutlinedButtonThemeData? outlinedButtonTheme = null)
+        OutlinedButtonThemeData? outlinedButtonTheme = null,
+        FilledButtonThemeData? filledButtonTheme = null)
     {
         Platform = platform ?? ResolveDefaultPlatform();
         Brightness = brightness ?? Brightness.Light;
@@ -123,12 +128,16 @@ public sealed record ThemeData
         OnSurfaceVariantColor = onSurfaceVariantColor ?? Color.Parse("#FF49454F");
         OutlineColor = outlineColor ?? Color.Parse("#FF79747E");
         SurfaceContainerLowColor = surfaceContainerLowColor ?? Color.Parse("#FFF7F2FA");
+        SecondaryContainerColor = secondaryContainerColor ?? Color.Parse("#FFE8DEF8");
+        OnSecondaryContainerColor = onSecondaryContainerColor ?? Color.Parse("#FF1D192B");
         TextButtonStyle = textButtonStyle;
         ElevatedButtonStyle = elevatedButtonStyle;
         OutlinedButtonStyle = outlinedButtonStyle;
+        FilledButtonStyle = filledButtonStyle;
         _textButtonTheme = textButtonTheme;
         _elevatedButtonTheme = elevatedButtonTheme;
         _outlinedButtonTheme = outlinedButtonTheme;
+        _filledButtonTheme = filledButtonTheme;
     }
 
     public TargetPlatform Platform { get; init; }
@@ -161,11 +170,17 @@ public sealed record ThemeData
 
     public Color SurfaceContainerLowColor { get; init; }
 
+    public Color SecondaryContainerColor { get; init; }
+
+    public Color OnSecondaryContainerColor { get; init; }
+
     public ButtonStyle? TextButtonStyle { get; init; }
 
     public ButtonStyle? ElevatedButtonStyle { get; init; }
 
     public ButtonStyle? OutlinedButtonStyle { get; init; }
+
+    public ButtonStyle? FilledButtonStyle { get; init; }
 
     public TextButtonThemeData TextButtonTheme
     {
@@ -183,6 +198,12 @@ public sealed record ThemeData
     {
         get => _outlinedButtonTheme ?? new OutlinedButtonThemeData(style: OutlinedButtonStyle);
         init => _outlinedButtonTheme = value;
+    }
+
+    public FilledButtonThemeData FilledButtonTheme
+    {
+        get => _filledButtonTheme ?? new FilledButtonThemeData(style: FilledButtonStyle);
+        init => _filledButtonTheme = value;
     }
 
     public static ThemeData Light { get; } = new();

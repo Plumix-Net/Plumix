@@ -16,6 +16,26 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 - Documentation policy update: Dart-to-C# control/widget work now uses mandatory parity-first porting mode (`docs/ai/PORTING_MODE.md`) with strict `1:1` default behavior, required divergence logging, and explicit parity-validation workflow references in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/INVARIANTS.md`, `docs/ai/MODULE_INDEX.md`, `docs/ai/FEATURE_TEMPLATE.md`, `docs/ai/TEST_MATRIX.md`, and `docs/ai/PARITY_MATRIX.md`.
 
+## [2026-03-29] - M4 filled-button parity expansion
+
+### Added
+
+- Extended `Flutter.Material` button control set with `FilledButton` plus tonal variant factory `FilledButton.Tonal(...)`, both wired through existing `MaterialButtonCore` state/render pipeline (`src/Flutter.Material/Buttons.cs`).
+- Added Filled-button theming and token surfaces in `ThemeData`:
+  - color tokens `SecondaryContainerColor` and `OnSecondaryContainerColor`,
+  - style hooks `FilledButtonStyle` and `FilledButtonTheme` (`FilledButtonThemeData`) for global + local theme override parity (`src/Flutter.Material/ThemeData.cs`, `src/Flutter.Material/ButtonThemes.cs`).
+- Added focused regression coverage in `MaterialButtonsTests` for:
+  - default filled and tonal token resolution,
+  - disabled-state fallback tones derived from `OnSurfaceColor`,
+  - `ThemeData.FilledButtonTheme` precedence over legacy `FilledButtonStyle`,
+  - local `FilledButtonTheme` subtree precedence (`src/Flutter.Tests/MaterialButtonsTests.cs`).
+
+### Changed
+
+- Expanded Material buttons runtime parity demo in both C# and Dart samples with `FilledButton` and `FilledButton.tonal` probes (enabled/disabled toggle flow, dedicated tap counters, and custom color overrides) (`src/Sample/Flutter.Net/MaterialButtonsDemoPage.cs`, `dart_sample/lib/material_buttons_demo_page.dart`).
+- Updated sample-gallery route subtitle parity to include Filled-button coverage on both sample sides (`src/Sample/Flutter.Net/SampleGalleryScreen.cs`, `dart_sample/lib/sample_gallery_screen.dart`).
+- Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-03-29-filled-button-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/PARITY_MATRIX.md`, `docs/ai/TEST_MATRIX.md`).
+
 ## [2026-03-19] - M4 app-bar toolbar-edge geometry parity
 
 ### Changed

@@ -4,7 +4,7 @@ Scope: structural parity of sample routes/modules between C# and Dart samples.
 
 Policy note: sample parity updates must follow `docs/ai/PORTING_MODE.md` (Dart source of truth, strict `1:1` default, documented divergences).
 
-Last checked: 2026-03-14
+Last checked: 2026-03-29
 
 Status legend:
 
@@ -28,7 +28,7 @@ Status legend:
 | Custom slivers demo | `src/Sample/Flutter.Net/CustomSliversDemoPage.cs` | `dart_sample/lib/custom_slivers_demo_page.dart` | verify-runtime | |
 | Scrollbar demo | `src/Sample/Flutter.Net/ScrollbarDemoPage.cs` | `dart_sample/lib/scrollbar_demo_page.dart` | verify-runtime | |
 | Editable text demo | `src/Sample/Flutter.Net/EditableTextDemoPage.cs` | `dart_sample/lib/editable_text_demo_page.dart` | verify-runtime | Includes baseline input flow plus multiline Notes demo (`Enter` newline, Up/Down caret travel), seed action, and escaped live value summary. |
-| Material buttons demo | `src/Sample/Flutter.Net/MaterialButtonsDemoPage.cs` | `dart_sample/lib/material_buttons_demo_page.dart` | verify-runtime | Demonstrates first Material control set (`TextButton`, `ElevatedButton`, `OutlinedButton`) with enabled/disabled toggles, tap counters, and custom color overrides; control-strip actions now also use Material `TextButton`. |
+| Material buttons demo | `src/Sample/Flutter.Net/MaterialButtonsDemoPage.cs` | `dart_sample/lib/material_buttons_demo_page.dart` | verify-runtime | Demonstrates Material control set (`TextButton`, `ElevatedButton`, `OutlinedButton`, `FilledButton`, `FilledButton.tonal`) with enabled/disabled toggles, per-button tap counters, and custom color overrides; control-strip actions now also use Material `TextButton`. |
 | AppBar leadingWidth theme demo | `src/Sample/Flutter.Net/AppBarLeadingWidthDemoPage.cs` | `dart_sample/lib/app_bar_leading_width_demo_page.dart` | verify-runtime | Runtime probe for `AppBar` leading-width precedence (`widget` override vs `ThemeData.AppBarTheme.LeadingWidth` fallback) with side-by-side themed/default previews. |
 | AppBar actionsPadding theme demo | `src/Sample/Flutter.Net/AppBarActionsPaddingDemoPage.cs` | `dart_sample/lib/app_bar_actions_padding_demo_page.dart` | verify-runtime | Runtime probe for `AppBar` actions-row padding precedence (`widget` override vs `ThemeData.AppBarTheme.ActionsPadding` fallback) with side-by-side themed/default previews. |
 | AppBar icon themes demo | `src/Sample/Flutter.Net/AppBarIconThemeDemoPage.cs` | `dart_sample/lib/app_bar_icon_theme_demo_page.dart` | verify-runtime | Runtime probe for `AppBar` icon-theme precedence (`iconTheme` and `actionsIconTheme` with widget/theme/fallback chain) using leading/actions context probes. |
