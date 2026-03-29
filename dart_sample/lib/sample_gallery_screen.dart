@@ -89,7 +89,7 @@ class SampleGalleryScreen extends StatelessWidget {
     SampleRouteDefinition(
       routeName: SampleRoutes.materialButtons,
       title: 'Material buttons',
-      subtitle: 'TextButton + ElevatedButton + OutlinedButton',
+      subtitle: 'TextButton + ElevatedButton + OutlinedButton + FilledButton',
       builder: () => const MaterialButtonsDemoPage(),
     ),
     SampleRouteDefinition(

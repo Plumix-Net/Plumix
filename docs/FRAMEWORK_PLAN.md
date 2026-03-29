@@ -8,7 +8,7 @@ Use this block as the fastest machine-readable status summary.
 
 ```yaml
 framework_plan_version: 1
-last_updated: 2026-03-19
+last_updated: 2026-03-29
 north_star: "Flutter-like widget/rendering framework in C# with Avalonia as host infrastructure."
 current_phase: "M4 material library rewrite (theme/scaffold/material controls) in progress."
 status:
@@ -185,6 +185,10 @@ Progress update (2026-03-19):
 - Added first Material control set: `TextButton`, `ElevatedButton`, and `OutlinedButton` in `src/Flutter.Material` with inherited-theme defaults and disabled-state styling behavior.
 - Added Material buttons demo route/page in both C# and Dart sample galleries for parity/runtime validation.
 - Added regression coverage for Material button default color resolution and disabled visuals in `src/Flutter.Tests/MaterialButtonsTests.cs`.
+- Extended Material control set with `FilledButton` plus `FilledButton.Tonal(...)` in `src/Flutter.Material`, including theme/style composition (`default -> theme -> widget -> legacy`) and `StyleFrom(...)` support.
+- Added Filled-button theming surface in `Flutter.Material`: `ThemeData.SecondaryContainerColor`, `ThemeData.OnSecondaryContainerColor`, `ThemeData.FilledButtonStyle`, and `FilledButtonThemeData`/`FilledButtonTheme`.
+- Expanded Material button regression coverage for Filled variants in `src/Flutter.Tests/MaterialButtonsTests.cs` (default filled/tonal token mapping, disabled-state tones, and theme precedence for `ThemeData.FilledButtonTheme` plus local `FilledButtonTheme` overrides).
+- Extended Material buttons demo parity route/page in both C# and Dart samples with `FilledButton` and tonal variant runtime probes (enabled/disabled flow, tap counters, and custom color overrides).
 - Added initial Material button interaction polish: pointer-pressed visuals, focus visuals, and keyboard activation (`Enter`/`Return`/`Space`) through `Focus` integration in `MaterialButtonCore`.
 - Sample gallery shell buttons (menu entries and demo-page back action) now use Material button controls on both C# and Dart samples; Material-buttons demo control-strip actions now also use Material buttons instead of `CounterTapButton`.
 - Added core framework support for stateful widgets implemented in external assemblies (`State.StateWidget` protected accessor) to keep `src/Flutter.Material` decoupled while preserving stateful widget patterns.

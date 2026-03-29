@@ -13,6 +13,8 @@ class _MaterialButtonsDemoPageState extends State<MaterialButtonsDemoPage> {
   int _textButtonTaps = 0;
   int _elevatedButtonTaps = 0;
   int _outlinedButtonTaps = 0;
+  int _filledButtonTaps = 0;
+  int _filledTonalButtonTaps = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +27,7 @@ class _MaterialButtonsDemoPageState extends State<MaterialButtonsDemoPage> {
           style: TextStyle(fontSize: 20, color: Colors.black),
         ),
         const Text(
-          'TextButton / ElevatedButton / OutlinedButton with enabled/disabled and theme-aware defaults.',
+          'TextButton / ElevatedButton / OutlinedButton / FilledButton (+ tonal) with enabled/disabled and theme-aware defaults.',
           style: TextStyle(fontSize: 14, color: Colors.black54),
         ),
         Row(
@@ -46,7 +48,7 @@ class _MaterialButtonsDemoPageState extends State<MaterialButtonsDemoPage> {
           ],
         ),
         Text(
-          'enabled=$_enabled, text=$_textButtonTaps, elevated=$_elevatedButtonTaps, outlined=$_outlinedButtonTaps',
+          'enabled=$_enabled, text=$_textButtonTaps, elevated=$_elevatedButtonTaps, outlined=$_outlinedButtonTaps, filled=$_filledButtonTaps, tonal=$_filledTonalButtonTaps',
           style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
         ),
         SizedBox(
@@ -70,6 +72,20 @@ class _MaterialButtonsDemoPageState extends State<MaterialButtonsDemoPage> {
             child: Text('OutlinedButton taps: $_outlinedButtonTaps'),
           ),
         ),
+        SizedBox(
+          width: 240,
+          child: FilledButton(
+            onPressed: _enabled ? _onFilledButtonTap : null,
+            child: Text('FilledButton taps: $_filledButtonTaps'),
+          ),
+        ),
+        SizedBox(
+          width: 240,
+          child: FilledButton.tonal(
+            onPressed: _enabled ? _onFilledTonalButtonTap : null,
+            child: Text('FilledButton.tonal taps: $_filledTonalButtonTaps'),
+          ),
+        ),
         Row(
           spacing: 8,
           children: <Widget>[
@@ -91,6 +107,31 @@ class _MaterialButtonsDemoPageState extends State<MaterialButtonsDemoPage> {
                   side: const BorderSide(color: Color(0xFF7B2CBF), width: 1),
                 ),
                 child: const Text('Custom outlined'),
+              ),
+            ),
+          ],
+        ),
+        Row(
+          spacing: 8,
+          children: <Widget>[
+            Expanded(
+              child: FilledButton(
+                onPressed: _enabled ? _onFilledButtonTap : null,
+                style: FilledButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: const Color(0xFF005E7A),
+                ),
+                child: const Text('Custom filled'),
+              ),
+            ),
+            Expanded(
+              child: FilledButton.tonal(
+                onPressed: _enabled ? _onFilledTonalButtonTap : null,
+                style: FilledButton.styleFrom(
+                  foregroundColor: const Color(0xFF42275A),
+                  backgroundColor: const Color(0xFFD8CFF8),
+                ),
+                child: const Text('Custom tonal'),
               ),
             ),
           ],
@@ -132,6 +173,8 @@ class _MaterialButtonsDemoPageState extends State<MaterialButtonsDemoPage> {
       _textButtonTaps = 0;
       _elevatedButtonTaps = 0;
       _outlinedButtonTaps = 0;
+      _filledButtonTaps = 0;
+      _filledTonalButtonTaps = 0;
       _enabled = true;
     });
   }
@@ -151,6 +194,18 @@ class _MaterialButtonsDemoPageState extends State<MaterialButtonsDemoPage> {
   void _onOutlinedButtonTap() {
     setState(() {
       _outlinedButtonTaps += 1;
+    });
+  }
+
+  void _onFilledButtonTap() {
+    setState(() {
+      _filledButtonTaps += 1;
+    });
+  }
+
+  void _onFilledTonalButtonTap() {
+    setState(() {
+      _filledTonalButtonTaps += 1;
     });
   }
 }

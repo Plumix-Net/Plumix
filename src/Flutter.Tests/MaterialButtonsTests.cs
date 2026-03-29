@@ -140,6 +140,98 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
+    public void FilledButton_UsesThemePrimaryAndOnPrimaryColorsByDefault()
+    {
+        var owner = new BuildOwner();
+        var theme = ThemeData.Light with
+        {
+            PrimaryColor = Colors.DarkSlateBlue,
+            OnPrimaryColor = Colors.AliceBlue
+        };
+
+        var root = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: new FilledButton(
+                    onPressed: () => { },
+                    child: new Text("Filled"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
+        var decorated = FindDescendant<RenderDecoratedBox>(renderRoot);
+        var paragraph = FindDescendant<RenderParagraph>(renderRoot);
+
+        Assert.NotNull(decorated);
+        Assert.Equal(theme.PrimaryColor, decorated!.Decoration.Color);
+        Assert.NotNull(paragraph);
+        Assert.Equal(theme.OnPrimaryColor, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+    }
+
+    [Fact]
+    public void FilledButtonTonal_UsesThemeSecondaryContainerAndOnSecondaryContainerColorsByDefault()
+    {
+        var owner = new BuildOwner();
+        var theme = ThemeData.Light with
+        {
+            SecondaryContainerColor = Colors.Bisque,
+            OnSecondaryContainerColor = Colors.DarkSlateBlue
+        };
+
+        var root = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: FilledButton.Tonal(
+                    onPressed: () => { },
+                    child: new Text("Filled tonal"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
+        var decorated = FindDescendant<RenderDecoratedBox>(renderRoot);
+        var paragraph = FindDescendant<RenderParagraph>(renderRoot);
+
+        Assert.NotNull(decorated);
+        Assert.Equal(theme.SecondaryContainerColor, decorated!.Decoration.Color);
+        Assert.NotNull(paragraph);
+        Assert.Equal(theme.OnSecondaryContainerColor, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+    }
+
+    [Fact]
+    public void FilledButton_DisabledStateUsesThemeOnSurfaceTones()
+    {
+        var owner = new BuildOwner();
+        var theme = ThemeData.Light with
+        {
+            OnSurfaceColor = Colors.DarkOliveGreen
+        };
+
+        var root = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: new FilledButton(
+                    onPressed: null,
+                    child: new Text("Disabled filled"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
+        var decorated = FindDescendant<RenderDecoratedBox>(renderRoot);
+        var paragraph = FindDescendant<RenderParagraph>(renderRoot);
+
+        Assert.NotNull(decorated);
+        Assert.Equal(ApplyOpacity(theme.OnSurfaceColor, 0.12), decorated!.Decoration.Color);
+        Assert.NotNull(paragraph);
+        Assert.Equal(ApplyOpacity(theme.OnSurfaceColor, 0.38), Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+    }
+
+    [Fact]
     public void TextButton_ButtonStyleForegroundOverridesDefault()
     {
         var owner = new BuildOwner();
@@ -627,6 +719,35 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
+    public void FilledButton_ThemeDataButtonTheme_OverridesLegacyThemeStyleProperty()
+    {
+        var owner = new BuildOwner();
+        var theme = ThemeData.Light with
+        {
+            FilledButtonStyle = new ButtonStyle(
+                BackgroundColor: MaterialStateProperty<Color?>.All(Colors.MediumPurple)),
+            FilledButtonTheme = new FilledButtonThemeData(
+                style: new ButtonStyle(
+                    BackgroundColor: MaterialStateProperty<Color?>.All(Colors.Gold)))
+        };
+
+        var root = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: new FilledButton(
+                    onPressed: () => { },
+                    child: new Text("ThemeData filled theme"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(decorated);
+        Assert.Equal(Colors.Gold, decorated!.Decoration.Color);
+    }
+
+    [Fact]
     public void TextButton_LocalThemeStyleForegroundOverridesThemeDataStyle()
     {
         var owner = new BuildOwner();
@@ -778,6 +899,36 @@ public sealed class MaterialButtonsTests
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
         Assert.Equal(new BorderSide(Colors.Crimson, 4), decorated!.Decoration.Border);
+    }
+
+    [Fact]
+    public void FilledButton_LocalThemeStyleBackgroundOverridesThemeDataStyle()
+    {
+        var owner = new BuildOwner();
+        var theme = ThemeData.Light with
+        {
+            FilledButtonStyle = new ButtonStyle(
+                BackgroundColor: MaterialStateProperty<Color?>.All(Colors.MediumPurple))
+        };
+
+        var root = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: new FilledButtonTheme(
+                    data: new FilledButtonThemeData(
+                        style: new ButtonStyle(
+                            BackgroundColor: MaterialStateProperty<Color?>.All(Colors.Gold))),
+                    child: new FilledButton(
+                        onPressed: () => { },
+                        child: new Text("Local filled bg")))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(decorated);
+        Assert.Equal(Colors.Gold, decorated!.Decoration.Color);
     }
 
     [Fact]

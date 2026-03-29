@@ -3,7 +3,7 @@ using Flutter.Widgets;
 
 namespace Flutter.Material;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/material/text_button_theme.dart; flutter/packages/flutter/lib/src/material/elevated_button_theme.dart; flutter/packages/flutter/lib/src/material/outlined_button_theme.dart (approximate)
+// Dart parity source (reference): flutter/packages/flutter/lib/src/material/text_button_theme.dart; flutter/packages/flutter/lib/src/material/elevated_button_theme.dart; flutter/packages/flutter/lib/src/material/outlined_button_theme.dart; flutter/packages/flutter/lib/src/material/filled_button_theme.dart (approximate)
 
 public sealed record TextButtonThemeData
 {
@@ -28,6 +28,16 @@ public sealed record ElevatedButtonThemeData
 public sealed record OutlinedButtonThemeData
 {
     public OutlinedButtonThemeData(ButtonStyle? style = null)
+    {
+        Style = style;
+    }
+
+    public ButtonStyle? Style { get; init; }
+}
+
+public sealed record FilledButtonThemeData
+{
+    public FilledButtonThemeData(ButtonStyle? style = null)
     {
         Style = style;
     }
@@ -143,5 +153,42 @@ public sealed class OutlinedButtonTheme : InheritedWidget
         }
 
         return Theme.Of(context).OutlinedButtonTheme;
+    }
+}
+
+public sealed class FilledButtonTheme : InheritedWidget
+{
+    public FilledButtonTheme(
+        FilledButtonThemeData data,
+        Widget child,
+        Key? key = null) : base(key)
+    {
+        Data = data ?? throw new ArgumentNullException(nameof(data));
+        Child = child ?? throw new ArgumentNullException(nameof(child));
+    }
+
+    public FilledButtonThemeData Data { get; }
+
+    public Widget Child { get; }
+
+    public override Widget Build(BuildContext context)
+    {
+        return Child;
+    }
+
+    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    {
+        return !Equals(((FilledButtonTheme)oldWidget).Data, Data);
+    }
+
+    public static FilledButtonThemeData Of(BuildContext context)
+    {
+        var localTheme = context.DependOnInherited<FilledButtonTheme>();
+        if (localTheme is not null)
+        {
+            return localTheme.Data;
+        }
+
+        return Theme.Of(context).FilledButtonTheme;
     }
 }
