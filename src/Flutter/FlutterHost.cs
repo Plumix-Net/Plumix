@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Platform;
 using Avalonia.Input;
 using Avalonia.Input.Platform;
 using Avalonia.Input.TextInput;
@@ -30,6 +31,10 @@ public class FlutterHost : Control
     private readonly GestureBinding _gestureBinding = GestureBinding.Instance;
     private readonly FlutterTextInputMethodClient _textInputClient;
     private bool _isSubscribedToScheduler;
+    private Size _lastArrangedSize;
+    private TopLevel? _attachedTopLevel;
+    private IInsetsManager? _insetsManager;
+    private IInputPane? _inputPane;
 
     public event Action<SemanticsNode?>? SemanticsUpdated;
 
@@ -59,6 +64,12 @@ public class FlutterHost : Control
 
     protected override Size ArrangeOverride(Size finalSize)
     {
+        if (!_lastArrangedSize.Equals(finalSize))
+        {
+            _lastArrangedSize = finalSize;
+            OnMetricsChanged();
+        }
+
         _pipeline.RequestLayout();
         return base.ArrangeOverride(finalSize);
     }
@@ -243,16 +254,42 @@ public class FlutterHost : Control
     {
         base.OnAttachedToVisualTree(e);
         EnsureSchedulerSubscription();
+        AttachMetricSources();
+        OnMetricsChanged();
     }
 
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
     {
+        DetachMetricSources();
         RemoveSchedulerSubscription();
         base.OnDetachedFromVisualTree(e);
     }
 
     protected virtual void OnDrawFrame(TimeSpan timestamp)
     {
+    }
+
+    protected virtual void OnMetricsChanged()
+    {
+    }
+
+    protected MediaQueryData GetMediaQueryData()
+    {
+        var viewPadding = _insetsManager?.SafeAreaPadding ?? default;
+        var viewInsets = ResolveViewInsets(_inputPane?.OccludedRect ?? default, Bounds.Size);
+        var size = Bounds.Size;
+        var scale = _attachedTopLevel?.RenderScaling ?? 1.0;
+        if (!double.IsFinite(scale) || scale <= 0)
+        {
+            scale = 1.0;
+        }
+
+        return new MediaQueryData(
+            Size: size,
+            DevicePixelRatio: scale,
+            Padding: MediaQueryData.ComputePadding(viewPadding, viewInsets),
+            ViewInsets: viewInsets,
+            ViewPadding: viewPadding);
     }
 
     protected void ScheduleVisualUpdate()
@@ -314,6 +351,75 @@ public class FlutterHost : Control
 
         Scheduler.RemovePersistentFrameCallback(HandleSchedulerDrawFrame);
         _isSubscribedToScheduler = false;
+    }
+
+    private void AttachMetricSources()
+    {
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (ReferenceEquals(topLevel, _attachedTopLevel))
+        {
+            return;
+        }
+
+        DetachMetricSources();
+
+        _attachedTopLevel = topLevel;
+        if (_attachedTopLevel == null)
+        {
+            return;
+        }
+
+        _insetsManager = _attachedTopLevel.InsetsManager;
+        if (_insetsManager != null)
+        {
+            // User explicitly requested edge-to-edge-only behavior parity.
+            _insetsManager.DisplayEdgeToEdgePreference = true;
+            _insetsManager.SafeAreaChanged += HandleSafeAreaChanged;
+        }
+
+        _inputPane = _attachedTopLevel.InputPane;
+        if (_inputPane != null)
+        {
+            _inputPane.StateChanged += HandleInputPaneStateChanged;
+        }
+    }
+
+    private void DetachMetricSources()
+    {
+        if (_insetsManager != null)
+        {
+            _insetsManager.SafeAreaChanged -= HandleSafeAreaChanged;
+        }
+
+        if (_inputPane != null)
+        {
+            _inputPane.StateChanged -= HandleInputPaneStateChanged;
+        }
+
+        _attachedTopLevel = null;
+        _insetsManager = null;
+        _inputPane = null;
+    }
+
+    private void HandleSafeAreaChanged(object? sender, SafeAreaChangedArgs e)
+    {
+        OnMetricsChanged();
+    }
+
+    private void HandleInputPaneStateChanged(object? sender, InputPaneStateEventArgs e)
+    {
+        OnMetricsChanged();
+    }
+
+    private static Thickness ResolveViewInsets(Rect occludedRect, Size hostSize)
+    {
+        if (occludedRect.Height <= 0 || hostSize.Height <= 0)
+        {
+            return default;
+        }
+
+        var bottomInset = Math.Clamp(occludedRect.Height, 0.0, hostSize.Height);
+        return new Thickness(0, 0, 0, bottomInset);
     }
 
     private void DispatchPointerEvent(PointerEvent @event)

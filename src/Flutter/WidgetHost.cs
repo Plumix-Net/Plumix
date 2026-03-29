@@ -10,6 +10,7 @@ public sealed class WidgetHost : FlutterHost
     private readonly BuildOwner _owner = new();
     private RootElement? _rootElement;
     private Widget? _rootWidget;
+    private MediaQueryData? _lastMediaQueryData;
 
     public WidgetHost()
     {
@@ -42,24 +43,53 @@ public sealed class WidgetHost : FlutterHost
             }
 
             SetRootChild(null);
+            _lastMediaQueryData = null;
             return;
         }
 
+        var effectiveRootWidget = BuildRootWidget(_rootWidget);
+
         if (_rootElement == null)
         {
-            _rootElement = new RootElement(this, _rootWidget);
+            _rootElement = new RootElement(this, effectiveRootWidget);
             _rootElement.Attach(_owner);
             _rootElement.Mount(parent: null, newSlot: null);
         }
         else
         {
-            _rootElement.Update(_rootWidget);
+            _rootElement.Update(effectiveRootWidget);
         }
     }
 
     protected override void OnDrawFrame(TimeSpan timestamp)
     {
         _owner.BuildScope();
+    }
+
+    protected override void OnMetricsChanged()
+    {
+        base.OnMetricsChanged();
+
+        if (_rootWidget == null || _rootElement == null)
+        {
+            return;
+        }
+
+        var nextData = GetMediaQueryData();
+        if (_lastMediaQueryData == nextData)
+        {
+            return;
+        }
+
+        _lastMediaQueryData = nextData;
+        _rootElement.Update(new MediaQuery(data: nextData, child: _rootWidget));
+    }
+
+    private Widget BuildRootWidget(Widget rootWidget)
+    {
+        var data = GetMediaQueryData();
+        _lastMediaQueryData = data;
+        return new MediaQuery(data: data, child: rootWidget);
     }
 
     private sealed class RootElement : Element, IRenderObjectHost
