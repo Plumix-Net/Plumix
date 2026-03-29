@@ -16,6 +16,35 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 - Documentation policy update: Dart-to-C# control/widget work now uses mandatory parity-first porting mode (`docs/ai/PORTING_MODE.md`) with strict `1:1` default behavior, required divergence logging, and explicit parity-validation workflow references in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/INVARIANTS.md`, `docs/ai/MODULE_INDEX.md`, `docs/ai/FEATURE_TEMPLATE.md`, `docs/ai/TEST_MATRIX.md`, and `docs/ai/PARITY_MATRIX.md`.
 
+## [2026-03-29] - Core SafeArea and MediaQuery parity (edge-to-edge)
+
+### Added
+
+- Added framework `MediaQueryData` + inherited `MediaQuery` primitives in `src/Flutter` with parity-critical insets APIs:
+  - `MediaQuery.of/maybeOf`,
+  - `paddingOf/viewPaddingOf/viewInsetsOf`,
+  - `removePadding/removeViewInsets/removeViewPadding`,
+  - `MediaQueryData` insets transform helpers matching Flutter semantics for `padding`/`viewPadding` interactions (`src/Flutter/Widgets/MediaQuery.cs`).
+- Added framework `SafeArea` widget in `src/Flutter` with Flutter-like composition and defaults:
+  - side flags (`left/top/right/bottom`),
+  - `minimum`,
+  - `maintainBottomViewPadding`,
+  - child `MediaQuery.removePadding(...)` wrapping behavior (`src/Flutter/Widgets/SafeArea.cs`).
+- Added focused regression coverage in `SafeAreaTests` for:
+  - safe-area padding application + descendant media-padding consumption,
+  - `maintainBottomViewPadding` when bottom padding is consumed,
+  - side-flag + minimum precedence behavior,
+  - `MediaQueryData.removePadding` view-padding adjustment parity,
+  - ambient root `MediaQuery` availability in `WidgetHost`
+  (`src/Flutter.Tests/SafeAreaTests.cs`).
+
+### Changed
+
+- `WidgetHost` now wraps the app root widget in ambient `MediaQuery` and refreshes it on host metric changes so `SafeArea`/`MediaQuery` consumers work out of the box (`src/Flutter/WidgetHost.cs`).
+- `FlutterHost` now sources media insets from host features (`TopLevel.InsetsManager.SafeAreaPadding` and `TopLevel.InputPane.OccludedRect`) and feeds that into root `MediaQueryData` generation (`src/Flutter/FlutterHost.cs`).
+- Android legacy non-edge-to-edge behavior is intentionally out of scope for this parity step: when insets manager is available, host now sets `DisplayEdgeToEdgePreference = true` to align runtime behavior with edge-to-edge assumptions (`src/Flutter/FlutterHost.cs`).
+- Added tracking artifacts for this parity step (`docs/ai/core-2026-03-29-safearea-mediaquery-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
+
 ## [2026-03-29] - M4 material-button focus-node parity
 
 ### Changed
