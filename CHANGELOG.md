@@ -16,6 +16,20 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 - Documentation policy update: Dart-to-C# control/widget work now uses mandatory parity-first porting mode (`docs/ai/PORTING_MODE.md`) with strict `1:1` default behavior, required divergence logging, and explicit parity-validation workflow references in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/INVARIANTS.md`, `docs/ai/MODULE_INDEX.md`, `docs/ai/FEATURE_TEMPLATE.md`, `docs/ai/TEST_MATRIX.md`, and `docs/ai/PARITY_MATRIX.md`.
 
+## [2026-03-29] - M4 material elevated-button shadow/elevation parity hardening
+
+### Changed
+
+- Added framework decoration shadow support by extending `BoxDecoration` with optional `BoxShadows` and wiring it through `PaintingContext` + `RenderDecoratedBox` so material components can render elevation shadows (`src/Flutter/Rendering/Decoration.cs`, `src/Flutter/Rendering/Object.PaintingContext.cs`, `src/Flutter/Rendering/Proxy.RenderBox.cs`).
+- Extended Material `ButtonStyle` with state-aware `ShadowColor` and `Elevation` properties and included them in style merge/layer composition and state resolution (`src/Flutter.Material/ButtonStyle.cs`, `src/Flutter.Material/Buttons.cs`).
+- Aligned `ElevatedButton` defaults with Flutter-like elevation states by adding enabled/hovered/pressed/focused/disabled elevation resolution, and mapped default shadow-color source to theme token (`ThemeData.ShadowColor`, default black) (`src/Flutter.Material/Buttons.cs`, `src/Flutter.Material/ThemeData.cs`).
+- Aligned `ElevatedButton.styleFrom(elevation: ...)` with Flutter semantics (`disabled=0`, `pressed=+6`, `hovered/focused=+2`, `default=base`) instead of fixed elevation for all states (`src/Flutter.Material/Buttons.cs`).
+- `MaterialButtonCore` now resolves elevation/shadow style states into a Material-like multi-layer shadow recipe, restoring visible elevated depth in sample buttons (including app-bar `Back` action) (`src/Flutter.Material/Buttons.cs`).
+- Aligned default button label typography with Flutter M3 tokens by keeping `MaterialTextTheme.DefaultLabelLarge` at `FontWeight.Medium` and aligning `MaterialButtonCore` baseline text-style merge source to `ThemeData.TextTheme.LabelLarge` instead of hardcoded metrics (`src/Flutter.Material/ThemeData.cs`, `src/Flutter.Material/Buttons.cs`).
+- Kept Android body-font fallback family explicit as `Roboto` to match Flutter Material typography resolution on Android (`src/Flutter.Material/ThemeData.cs`).
+- Expanded Material button regression coverage with elevated shadow tests (enabled vs disabled) and updated label-large weight expectations (`src/Flutter.Tests/MaterialButtonsTests.cs`).
+- Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-03-29-button-elevation-shadow-typography-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/PARITY_MATRIX.md`, `docs/ai/TEST_MATRIX.md`).
+
 ## [2026-03-29] - M4 material button color/typography parity hardening
 
 ### Changed

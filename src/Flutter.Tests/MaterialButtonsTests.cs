@@ -20,6 +20,7 @@ public sealed class MaterialButtonsTests
         Assert.Equal(Color.Parse("#FF6750A4"), theme.PrimaryColor);
         Assert.Equal(Color.Parse("#FF1D1B20"), theme.OnSurfaceColor);
         Assert.Equal(Color.Parse("#FF4A4458"), theme.OnSecondaryContainerColor);
+        Assert.Equal(Colors.Black, theme.ShadowColor);
     }
 
     [Fact]
@@ -248,6 +249,48 @@ public sealed class MaterialButtonsTests
         Assert.Equal(Colors.Bisque, decorated!.Decoration.Color);
         Assert.NotNull(paragraph);
         Assert.Equal(Colors.DarkSlateBlue, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+    }
+
+    [Fact]
+    public void ElevatedButton_DefaultShadow_IsAppliedWhenEnabled()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new ElevatedButton(
+                    onPressed: () => { },
+                    child: new Text("Shadow"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(decorated);
+        var shadows = decorated!.Decoration.BoxShadows;
+        Assert.True(shadows.HasValue);
+        Assert.True(shadows.Value.Count > 0);
+    }
+
+    [Fact]
+    public void ElevatedButton_DisabledState_DoesNotApplyShadow()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new ElevatedButton(
+                    onPressed: null,
+                    child: new Text("Disabled shadow"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(decorated);
+        Assert.False(decorated!.Decoration.BoxShadows.HasValue);
     }
 
     [Fact]

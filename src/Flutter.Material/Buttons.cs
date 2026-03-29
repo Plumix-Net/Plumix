@@ -243,6 +243,7 @@ public sealed class ElevatedButton : StatelessWidget
         Color? backgroundColor = null,
         Color? disabledForegroundColor = null,
         Color? disabledBackgroundColor = null,
+        Color? shadowColor = null,
         Color? overlayColor = null,
         Color? splashColor = null,
         BorderSide? side = null,
@@ -251,6 +252,7 @@ public sealed class ElevatedButton : StatelessWidget
         Size? minimumSize = null,
         Size? fixedSize = null,
         Size? maximumSize = null,
+        double? elevation = null,
         Alignment? alignment = null,
         TextStyle? textStyle = null)
     {
@@ -267,8 +269,21 @@ public sealed class ElevatedButton : StatelessWidget
                         ? disabledBackgroundColor
                         : backgroundColor)
                 : null,
+            ShadowColor: shadowColor.HasValue
+                ? MaterialStateProperty<Color?>.All(shadowColor.Value)
+                : null,
             OverlayColor: MaterialButtonCore.CreateStyleFromOverlayResolver(foregroundColor, overlayColor),
             SplashColor: MaterialButtonCore.CreateStyleFromSplashResolver(foregroundColor, overlayColor, splashColor),
+            Elevation: elevation.HasValue
+                ? MaterialStateProperty<double?>.ResolveWith(states =>
+                    states.HasFlag(MaterialState.Disabled)
+                        ? 0
+                        : states.HasFlag(MaterialState.Pressed)
+                            ? elevation.Value + 6
+                            : states.HasFlag(MaterialState.Hovered) || states.HasFlag(MaterialState.Focused)
+                                ? elevation.Value + 2
+                                : elevation.Value)
+                : null,
             Side: side.HasValue
                 ? MaterialStateProperty<BorderSide?>.All(side.Value)
                 : null,
@@ -320,8 +335,15 @@ public sealed class ElevatedButton : StatelessWidget
                 states.HasFlag(MaterialState.Disabled)
                     ? MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.12)
                     : theme.SurfaceContainerLowColor),
+            ShadowColor: MaterialStateProperty<Color?>.All(theme.ShadowColor),
             OverlayColor: MaterialButtonCore.CreateDefaultOverlayResolver(stateColor),
             SplashColor: null,
+            Elevation: MaterialStateProperty<double?>.ResolveWith(states =>
+                states.HasFlag(MaterialState.Disabled)
+                    ? 0
+                    : states.HasFlag(MaterialState.Hovered)
+                        ? 3
+                        : 1),
             Side: MaterialStateProperty<BorderSide?>.All(null),
             Padding: MaterialStateProperty<Thickness?>.All(new Thickness(24, 0)),
             Shape: MaterialStateProperty<BorderRadius?>.All(Flutter.Rendering.BorderRadius.Circular(20)),
@@ -873,6 +895,11 @@ internal sealed class MaterialButtonCore : StatefulWidget
                 widgetStyle?.BackgroundColor,
                 themeStyle?.BackgroundColor,
                 defaults?.BackgroundColor),
+            ShadowColor: ComposeStateProperty<Color?>(
+                legacyOverrides?.ShadowColor,
+                widgetStyle?.ShadowColor,
+                themeStyle?.ShadowColor,
+                defaults?.ShadowColor),
             OverlayColor: ComposeStateProperty<Color?>(
                 legacyOverrides?.OverlayColor,
                 widgetStyle?.OverlayColor,
@@ -883,6 +910,11 @@ internal sealed class MaterialButtonCore : StatefulWidget
                 widgetStyle?.SplashColor,
                 themeStyle?.SplashColor,
                 defaults?.SplashColor),
+            Elevation: ComposeStateProperty<double?>(
+                legacyOverrides?.Elevation,
+                widgetStyle?.Elevation,
+                themeStyle?.Elevation,
+                defaults?.Elevation),
             Side: ComposeStateProperty<BorderSide?>(
                 legacyOverrides?.Side,
                 widgetStyle?.Side,
@@ -1184,6 +1216,8 @@ internal sealed class MaterialButtonCore : StatefulWidget
             var foreground = ResolveForegroundColor(style, baseStates);
             var background = ResolveBackgroundColor(style, baseStates, overlayStates);
             var splashColor = ResolveSplashColor();
+            var shadowColor = style.ResolveShadowColor(baseStates);
+            var elevation = ResolveElevation(style, baseStates);
             var border = style.ResolveSide(baseStates);
             var padding = style.ResolvePadding(baseStates) ?? default;
             var borderRadius = style.ResolveShape(baseStates) ?? Flutter.Rendering.BorderRadius.Zero;
@@ -1196,13 +1230,12 @@ internal sealed class MaterialButtonCore : StatefulWidget
             var effectiveConstraints = CreateEffectiveConstraints(minimumSize, maximumSize, fixedSize);
             var alignment = style.Alignment ?? Alignment.Center;
             var resolvedTextStyle = style.ResolveTextStyle(baseStates);
+            var baseTextStyle = Theme.Of(context).TextTheme.LabelLarge with
+            {
+                Color = foreground
+            };
             var textStyle = MergeTextStyle(
-                new TextStyle(
-                    Color: foreground,
-                    FontSize: 14,
-                    FontWeight: FontWeight.Medium,
-                    Height: 1.43,
-                    LetterSpacing: 0.1),
+                baseTextStyle,
                 resolvedTextStyle);
 
             Widget content = new DefaultTextStyle(
@@ -1236,7 +1269,8 @@ internal sealed class MaterialButtonCore : StatefulWidget
                 decoration: new BoxDecoration(
                     Color: background,
                     Border: border,
-                    BorderRadius: borderRadius),
+                    BorderRadius: borderRadius,
+                    BoxShadows: ResolveBoxShadows(elevation, shadowColor)),
                 child: content);
 
             Widget result = content;
@@ -1474,6 +1508,66 @@ internal sealed class MaterialButtonCore : StatefulWidget
             }
 
             return color ?? Colors.Black;
+        }
+
+        private static double ResolveElevation(ButtonStyle style, MaterialState states)
+        {
+            var elevation = style.ResolveElevation(states);
+            if (!elevation.HasValue && states.HasFlag(MaterialState.Disabled))
+            {
+                elevation = style.ResolveElevation(MaterialState.None);
+            }
+
+            if (!elevation.HasValue)
+            {
+                return 0;
+            }
+
+            var resolved = elevation.Value;
+            if (double.IsNaN(resolved) || double.IsInfinity(resolved))
+            {
+                return 0;
+            }
+
+            return Math.Max(0, resolved);
+        }
+
+        private static BoxShadows? ResolveBoxShadows(double elevation, Color? shadowColor)
+        {
+            if (elevation <= 0 || !shadowColor.HasValue || shadowColor.Value.A == 0)
+            {
+                return null;
+            }
+
+            var keyShadow = new BoxShadow
+            {
+                OffsetX = 0,
+                OffsetY = Math.Max(1, Math.Round(elevation)),
+                Blur = Math.Max(2, elevation * 2.4),
+                Spread = 0,
+                Color = ApplyShadowOpacity(shadowColor.Value, 0.20),
+                IsInset = false
+            };
+
+            var ambientShadow = new BoxShadow
+            {
+                OffsetX = 0,
+                OffsetY = Math.Max(1, Math.Round(elevation * 0.5)),
+                Blur = Math.Max(3, elevation * 3.2),
+                Spread = 0,
+                Color = ApplyShadowOpacity(shadowColor.Value, 0.14),
+                IsInset = false
+            };
+
+            return new BoxShadows(keyShadow, [ambientShadow]);
+        }
+
+        private static Color ApplyShadowOpacity(Color color, double opacityMultiplier)
+        {
+            var baseOpacity = color.A / 255.0;
+            var effectiveOpacity = Math.Clamp(baseOpacity * opacityMultiplier, 0, 1);
+            var alpha = (byte)Math.Clamp((int)(effectiveOpacity * 255), 0, 255);
+            return Color.FromArgb(alpha, color.R, color.G, color.B);
         }
 
         private static Color? ResolveBackgroundColor(
