@@ -11,6 +11,18 @@ namespace Flutter.Tests;
 public sealed class MaterialButtonsTests
 {
     [Fact]
+    public void ThemeData_Light_UsesFlutterMaterial3ColorDefaults()
+    {
+        var theme = ThemeData.Light;
+
+        Assert.Equal(Color.Parse("#FFFEF7FF"), theme.ScaffoldBackgroundColor);
+        Assert.Equal(Color.Parse("#FFFEF7FF"), theme.CanvasColor);
+        Assert.Equal(Color.Parse("#FF6750A4"), theme.PrimaryColor);
+        Assert.Equal(Color.Parse("#FF1D1B20"), theme.OnSurfaceColor);
+        Assert.Equal(Color.Parse("#FF4A4458"), theme.OnSecondaryContainerColor);
+    }
+
+    [Fact]
     public void TextButton_UsesThemePrimaryColorAsDefaultForeground()
     {
         var owner = new BuildOwner();
@@ -55,6 +67,156 @@ public sealed class MaterialButtonsTests
         Assert.NotNull(constrainedBox);
         Assert.Equal(64, constrainedBox!.AdditionalConstraints.MinWidth);
         Assert.Equal(40, constrainedBox.AdditionalConstraints.MinHeight);
+    }
+
+    [Fact]
+    public void TextButton_TapTargetPadding_RedirectsHitTestInPaddedAreaToChildCenter()
+    {
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light,
+                child: new SizedBox(
+                    width: 120,
+                    child: new TextButton(
+                        onPressed: () => { },
+                        child: new Text("Tap target")))));
+
+        harness.Pump(new Size(220, 120));
+
+        var renderRoot = harness.RenderView;
+        var probePosition = new Point(60, 1);
+        var hitResult = new BoxHitTestResult();
+        Assert.True(renderRoot.HitTest(hitResult, probePosition));
+
+        var interactiveListener = FindInteractivePointerListener(harness.RenderView.Child);
+        Assert.NotNull(interactiveListener);
+
+        BoxHitTestEntry? interactiveEntry = null;
+        foreach (var entry in hitResult.Path)
+        {
+            if (entry is BoxHitTestEntry boxEntry && ReferenceEquals(boxEntry.Target, interactiveListener))
+            {
+                interactiveEntry = boxEntry;
+                break;
+            }
+        }
+
+        Assert.NotNull(interactiveEntry);
+        Assert.True(interactiveEntry!.LocalPosition.Y > 10);
+
+        var missResult = new BoxHitTestResult();
+        Assert.False(renderRoot.HitTest(missResult, new Point(60, 90)));
+    }
+
+    [Fact]
+    public void ElevatedButton_DefaultPadding_UsesHorizontal24AndZeroVertical()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new ElevatedButton(
+                    onPressed: () => { },
+                    child: new Text("Padding"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(24, 0), padding!.Padding);
+    }
+
+    [Fact]
+    public void OutlinedButton_DefaultPadding_UsesHorizontal24AndZeroVertical()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new OutlinedButton(
+                    onPressed: () => { },
+                    child: new Text("Padding"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(24, 0), padding!.Padding);
+    }
+
+    [Fact]
+    public void FilledButton_DefaultPadding_UsesHorizontal24AndZeroVertical()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new FilledButton(
+                    onPressed: () => { },
+                    child: new Text("Padding"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(24, 0), padding!.Padding);
+    }
+
+    [Fact]
+    public void TextButton_DefaultTextStyle_UsesLabelLargeTypography()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new TextButton(
+                    onPressed: () => { },
+                    child: new Text("Typography"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(paragraph);
+        Assert.Equal(14, paragraph!.FontSize);
+        Assert.Equal(FontWeight.Medium, paragraph.FontWeight);
+        Assert.Equal(1.43, paragraph.Height);
+        Assert.Equal(0.1, paragraph.LetterSpacing);
+    }
+
+    [Fact]
+    public void TextButton_TextStyleColor_DoesNotOverrideForegroundColor()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new TextButton(
+                    onPressed: () => { },
+                    style: TextButton.StyleFrom(
+                        foregroundColor: Colors.DarkCyan,
+                        textStyle: new TextStyle(Color: Colors.Crimson)),
+                    child: new Text("Foreground precedence"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(paragraph);
+        Assert.Equal(Colors.DarkCyan, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
     }
 
     [Fact]
