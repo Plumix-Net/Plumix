@@ -16,6 +16,15 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 - Documentation policy update: Dart-to-C# control/widget work now uses mandatory parity-first porting mode (`docs/ai/PORTING_MODE.md`) with strict `1:1` default behavior, required divergence logging, and explicit parity-validation workflow references in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/INVARIANTS.md`, `docs/ai/MODULE_INDEX.md`, `docs/ai/FEATURE_TEMPLATE.md`, `docs/ai/TEST_MATRIX.md`, and `docs/ai/PARITY_MATRIX.md`.
 
+## [2026-03-29] - M4 app-bar primary status-bar inset parity
+
+### Changed
+
+- Added Flutter-like `AppBar.primary` control in `Flutter.Material` (`true` by default) so app-bar status-bar inset behavior can be toggled per widget (`src/Flutter.Material/Scaffold.cs`).
+- `AppBar` now applies top safe-area inset from ambient `MediaQuery.padding.top` when available (via framework `SafeArea(bottom: false)`), preventing toolbar overlap with the system status bar in edge-to-edge hosts while preserving `primary: false` opt-out parity (`src/Flutter.Material/Scaffold.cs`).
+- Added focused `MaterialScaffoldTests` regression coverage for `AppBar` top inset behavior under `MediaQuery` (`primary=true` applies top padding, `primary=false` does not) (`src/Flutter.Tests/MaterialScaffoldTests.cs`).
+- Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-03-29-appbar-primary-safearea-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
+
 ## [2026-03-29] - Core SafeArea and MediaQuery parity (edge-to-edge)
 
 ### Added

@@ -87,6 +87,7 @@ public sealed class AppBar : StatelessWidget
         double? leadingWidth = null,
         IReadOnlyList<Widget>? actions = null,
         bool? centerTitle = null,
+        bool primary = true,
         double? titleSpacing = null,
         IconThemeData? iconTheme = null,
         IconThemeData? actionsIconTheme = null,
@@ -120,6 +121,7 @@ public sealed class AppBar : StatelessWidget
         LeadingWidth = leadingWidth;
         Actions = actions ?? Array.Empty<Widget>();
         CenterTitle = centerTitle;
+        Primary = primary;
         TitleSpacing = titleSpacing;
         IconTheme = iconTheme;
         ActionsIconTheme = actionsIconTheme;
@@ -143,6 +145,8 @@ public sealed class AppBar : StatelessWidget
     public IReadOnlyList<Widget> Actions { get; }
 
     public bool? CenterTitle { get; }
+
+    public bool Primary { get; }
 
     public double? TitleSpacing { get; }
 
@@ -223,17 +227,24 @@ public sealed class AppBar : StatelessWidget
             rowChildren.Add(new SizedBox(width: effectiveLeadingWidth));
         }
 
+        Widget appBarContent = new SizedBox(
+            height: effectiveToolbarHeight,
+            child: new DefaultTextStyle(
+                style: effectiveToolbarTextStyle,
+                child: new Row(
+                    crossAxisAlignment: CrossAxisAlignment.Center,
+                    spacing: 0,
+                    children: rowChildren)));
+
+        if (Primary && MediaQuery.MaybeOf(context) != null)
+        {
+            appBarContent = new SafeArea(bottom: false, child: appBarContent);
+        }
+
         return new Container(
             color: effectiveBackground,
             padding: Padding ?? new Thickness(),
-            child: new SizedBox(
-                height: effectiveToolbarHeight,
-                child: new DefaultTextStyle(
-                    style: effectiveToolbarTextStyle,
-                    child: new Row(
-                        crossAxisAlignment: CrossAxisAlignment.Center,
-                        spacing: 0,
-                        children: rowChildren))));
+            child: appBarContent);
     }
 
     private bool ResolveEffectiveCenterTitle(ThemeData theme)
