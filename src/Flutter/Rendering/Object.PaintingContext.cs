@@ -52,13 +52,19 @@ public sealed class PaintingContext
         }
     }
 
-    public void DrawRectangle(IBrush brush, IPen? pen, Rect rect, double radiusX = 0, double radiusY = 0)
+    public void DrawRectangle(
+        IBrush brush,
+        IPen? pen,
+        Rect rect,
+        double radiusX = 0,
+        double radiusY = 0,
+        BoxShadows boxShadows = default)
     {
         var pictureLayer = EnsurePictureLayer();
         pictureLayer.AddDrawCommand((drawingContext, sceneOffset) =>
         {
             var translatedRect = new Rect(rect.Position + sceneOffset, rect.Size);
-            drawingContext.DrawRectangle(brush, pen, translatedRect, radiusX, radiusY);
+            drawingContext.DrawRectangle(brush, pen, new RoundedRect(translatedRect, radiusX, radiusY), boxShadows);
         });
     }
 

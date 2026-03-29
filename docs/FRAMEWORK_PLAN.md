@@ -242,6 +242,14 @@ Progress update (2026-03-19):
   - `OutlinedButton` focused border now uses primary color token (matching Flutter focused-state side behavior),
   - `MaterialButtonCore` now preserves foreground-color precedence over `ButtonStyle.textStyle.color` (Flutter `ButtonStyleButton` semantics), with added regression coverage for default label typography and foreground-vs-textStyle color precedence,
   - tap-target parity hardening now mirrors Flutter `_InputPadding` behavior more closely: child layout uses incoming constraints (preserving wide-button material bounds) and padded-area hit-tests redirect to child center.
+- Continued Material elevated-depth parity hardening:
+  - framework `BoxDecoration`/`RenderDecoratedBox` paint path now supports optional `BoxShadows`,
+  - `ButtonStyle` now includes state-aware `ShadowColor` + `Elevation`,
+  - `ElevatedButton` default states now resolve elevation (`disabled=0`, `pressed=1`, `hovered=3`, `focused=1`, enabled baseline `1`) and map it to rendered shadows in `MaterialButtonCore`,
+  - `ElevatedButton.styleFrom(elevation)` now follows Flutter state deltas (`disabled=0`, `pressed=+6`, `hovered/focused=+2`, base for default),
+  - theme now exposes `ThemeData.ShadowColor` (default black) used as default elevated shadow token source,
+  - Android font-family fallback uses explicit `Roboto` to match Flutter Material typography resolution on Android,
+  - `MaterialButtonCore` baseline label style merge now starts from `ThemeData.TextTheme.LabelLarge` (no hardcoded fallback metrics), and current default `LabelLarge` weight is `Medium` (Flutter token parity).
 
 Initial scope:
 

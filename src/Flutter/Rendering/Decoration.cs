@@ -37,7 +37,10 @@ public readonly record struct BorderSide
 public sealed record BoxDecoration(
     Color? Color = null,
     BorderSide? Border = null,
-    BorderRadius? BorderRadius = null)
+    BorderRadius? BorderRadius = null,
+    BoxShadows? BoxShadows = null)
 {
     public BorderRadius EffectiveBorderRadius => BorderRadius ?? Flutter.Rendering.BorderRadius.Zero;
+
+    public BoxShadows EffectiveBoxShadows => BoxShadows ?? default;
 }

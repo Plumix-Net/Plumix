@@ -65,7 +65,7 @@ public sealed class TextButtonTheme : InheritedWidget
         return Child;
     }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    protected internal override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !Equals(((TextButtonTheme)oldWidget).Data, Data);
     }
@@ -102,7 +102,7 @@ public sealed class ElevatedButtonTheme : InheritedWidget
         return Child;
     }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    protected internal override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !Equals(((ElevatedButtonTheme)oldWidget).Data, Data);
     }
@@ -139,7 +139,7 @@ public sealed class OutlinedButtonTheme : InheritedWidget
         return Child;
     }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    protected internal override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !Equals(((OutlinedButtonTheme)oldWidget).Data, Data);
     }
@@ -176,7 +176,7 @@ public sealed class FilledButtonTheme : InheritedWidget
         return Child;
     }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    protected internal override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !Equals(((FilledButtonTheme)oldWidget).Data, Data);
     }

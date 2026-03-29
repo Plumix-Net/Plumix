@@ -120,6 +120,7 @@ public sealed record ThemeData
     private static readonly Color LightOnSurfaceColor = Color.Parse("#FF1D1B20");
     private static readonly Color LightOnSurfaceVariantColor = Color.Parse("#FF49454F");
     private static readonly Color LightOutlineColor = Color.Parse("#FF79747E");
+    private static readonly Color LightShadowColor = Colors.Black;
     private static readonly Color LightSurfaceContainerLowColor = Color.Parse("#FFF7F2FA");
     private static readonly Color LightSecondaryContainerColor = Color.Parse("#FFE8DEF8");
     private static readonly Color LightOnSecondaryContainerColor = Color.Parse("#FF4A4458");
@@ -140,6 +141,7 @@ public sealed record ThemeData
         Color? onPrimaryColor = null,
         bool? useMaterial3 = null,
         AppBarThemeData? appBarTheme = null,
+        Color? shadowColor = null,
         Color? onSurfaceColor = null,
         Color? onSurfaceVariantColor = null,
         Color? outlineColor = null,
@@ -164,6 +166,7 @@ public sealed record ThemeData
         OnPrimaryColor = onPrimaryColor ?? Colors.White;
         UseMaterial3 = useMaterial3 ?? true;
         _appBarTheme = appBarTheme;
+        ShadowColor = shadowColor ?? LightShadowColor;
         OnSurfaceColor = onSurfaceColor ?? LightOnSurfaceColor;
         OnSurfaceVariantColor = onSurfaceVariantColor ?? LightOnSurfaceVariantColor;
         OutlineColor = outlineColor ?? LightOutlineColor;
@@ -201,6 +204,8 @@ public sealed record ThemeData
         get => _appBarTheme ?? new AppBarThemeData();
         init => _appBarTheme = value;
     }
+
+    public Color ShadowColor { get; init; }
 
     public Color OnSurfaceColor { get; init; }
 
