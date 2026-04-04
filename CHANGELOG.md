@@ -16,6 +16,17 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 - Documentation policy update: Dart-to-C# control/widget work now uses mandatory parity-first porting mode (`docs/ai/PORTING_MODE.md`) with strict `1:1` default behavior, required divergence logging, and explicit parity-validation workflow references in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/INVARIANTS.md`, `docs/ai/MODULE_INDEX.md`, `docs/ai/FEATURE_TEMPLATE.md`, `docs/ai/TEST_MATRIX.md`, and `docs/ai/PARITY_MATRIX.md`.
 
+## [2026-04-04] - M4 material button icon-theme parity hardening
+
+### Changed
+
+- Extended Material `ButtonStyle` with state-aware icon fields (`IconColor`, `IconSize`) and wired them into style merge/state resolution in framework button infrastructure (`src/Flutter.Material/ButtonStyle.cs`).
+- Extended `TextButton.StyleFrom(...)`, `ElevatedButton.StyleFrom(...)`, `OutlinedButton.StyleFrom(...)`, and `FilledButton.StyleFrom(...)` with Flutter-like icon arguments (`iconColor`, `disabledIconColor`, `iconSize`) and mapped them to style-state resolvers (`src/Flutter.Material/Buttons.cs`).
+- Aligned default button icon tokens with Flutter M3 button defaults by setting icon-size baseline `18` and state-aware icon color defaults tied to existing foreground/disabled token paths across Material button types (`src/Flutter.Material/Buttons.cs`).
+- `MaterialButtonCore` now wraps button child content with resolved `IconTheme` so icon-bearing button subtrees inherit composed button style icon settings (with foreground fallback when icon color is not explicitly provided), matching Flutter `ButtonStyleButton` icon-theme behavior (`src/Flutter.Material/Buttons.cs`).
+- Added focused regression coverage in `MaterialButtonsTests` for button icon-theme defaults and `styleFrom(...)` icon overrides (enabled and disabled paths) (`src/Flutter.Tests/MaterialButtonsTests.cs`).
+- Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-04-04-button-icon-theme-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
+
 ## [2026-03-29] - M4 material elevated-button shadow/elevation parity hardening
 
 ### Changed

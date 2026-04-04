@@ -49,6 +49,84 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
+    public void TextButton_DefaultIconTheme_UsesForegroundAndIconSizeDefaults()
+    {
+        var owner = new BuildOwner();
+        var theme = ThemeData.Light with
+        {
+            PrimaryColor = Colors.OrangeRed
+        };
+        IconThemeData? capturedTheme = null;
+
+        var root = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: new TextButton(
+                    onPressed: () => { },
+                    child: new CaptureIconThemeWidget(iconTheme => capturedTheme = iconTheme))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.NotNull(capturedTheme);
+        Assert.Equal(Colors.OrangeRed, capturedTheme!.Color);
+        Assert.Equal(18, capturedTheme.Size);
+    }
+
+    [Fact]
+    public void TextButton_StyleFrom_IconColorAndSizeOverrideDefaults()
+    {
+        var owner = new BuildOwner();
+        IconThemeData? capturedTheme = null;
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new TextButton(
+                    onPressed: () => { },
+                    style: TextButton.StyleFrom(
+                        foregroundColor: Colors.DarkCyan,
+                        iconColor: Colors.Gold,
+                        iconSize: 26),
+                    child: new CaptureIconThemeWidget(iconTheme => capturedTheme = iconTheme))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.NotNull(capturedTheme);
+        Assert.Equal(Colors.Gold, capturedTheme!.Color);
+        Assert.Equal(26, capturedTheme.Size);
+    }
+
+    [Fact]
+    public void TextButton_StyleFrom_DisabledIconColorOverridesForegroundFallback()
+    {
+        var owner = new BuildOwner();
+        IconThemeData? capturedTheme = null;
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new TextButton(
+                    onPressed: null,
+                    style: TextButton.StyleFrom(
+                        foregroundColor: Colors.DarkCyan,
+                        iconColor: Colors.Gold,
+                        disabledIconColor: Colors.Gray),
+                    child: new CaptureIconThemeWidget(iconTheme => capturedTheme = iconTheme))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.NotNull(capturedTheme);
+        Assert.Equal(Colors.Gray, capturedTheme!.Color);
+        Assert.Equal(18, capturedTheme.Size);
+    }
+
+    [Fact]
     public void TextButton_DefaultMinSize_UsesMaterialBaseline64x40()
     {
         var owner = new BuildOwner();
@@ -3222,6 +3300,22 @@ public sealed class MaterialButtonsTests
         });
 
         return result;
+    }
+
+    private sealed class CaptureIconThemeWidget : StatelessWidget
+    {
+        private readonly Action<IconThemeData> _capture;
+
+        public CaptureIconThemeWidget(Action<IconThemeData> capture)
+        {
+            _capture = capture;
+        }
+
+        public override Widget Build(BuildContext context)
+        {
+            _capture(IconTheme.Of(context));
+            return new SizedBox(width: 8, height: 8);
+        }
     }
 
     private sealed class WidgetRenderHarness : IDisposable

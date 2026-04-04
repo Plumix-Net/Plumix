@@ -74,6 +74,8 @@ public sealed record ButtonStyle(
     MaterialStateProperty<Color?>? OverlayColor = null,
     MaterialStateProperty<Color?>? SplashColor = null,
     MaterialStateProperty<double?>? Elevation = null,
+    MaterialStateProperty<Color?>? IconColor = null,
+    MaterialStateProperty<double?>? IconSize = null,
     MaterialStateProperty<BorderSide?>? Side = null,
     MaterialStateProperty<Thickness?>? Padding = null,
     MaterialStateProperty<BorderRadius?>? Shape = null,
@@ -98,6 +100,8 @@ public sealed record ButtonStyle(
             OverlayColor = OverlayColor ?? style.OverlayColor,
             SplashColor = SplashColor ?? style.SplashColor,
             Elevation = Elevation ?? style.Elevation,
+            IconColor = IconColor ?? style.IconColor,
+            IconSize = IconSize ?? style.IconSize,
             Side = Side ?? style.Side,
             Padding = Padding ?? style.Padding,
             Shape = Shape ?? style.Shape,
@@ -137,6 +141,16 @@ public sealed record ButtonStyle(
     internal double? ResolveElevation(MaterialState states)
     {
         return Elevation?.Resolve(states);
+    }
+
+    internal Color? ResolveIconColor(MaterialState states)
+    {
+        return IconColor?.Resolve(states);
+    }
+
+    internal double? ResolveIconSize(MaterialState states)
+    {
+        return IconSize?.Resolve(states);
     }
 
     internal BorderSide? ResolveSide(MaterialState states)

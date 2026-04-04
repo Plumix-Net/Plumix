@@ -66,6 +66,9 @@ public sealed class TextButton : StatelessWidget
         Color? backgroundColor = null,
         Color? disabledForegroundColor = null,
         Color? disabledBackgroundColor = null,
+        Color? iconColor = null,
+        double? iconSize = null,
+        Color? disabledIconColor = null,
         Color? overlayColor = null,
         Color? splashColor = null,
         BorderSide? side = null,
@@ -92,6 +95,15 @@ public sealed class TextButton : StatelessWidget
                 : null,
             OverlayColor: MaterialButtonCore.CreateStyleFromOverlayResolver(foregroundColor, overlayColor),
             SplashColor: MaterialButtonCore.CreateStyleFromSplashResolver(foregroundColor, overlayColor, splashColor),
+            IconColor: iconColor.HasValue || disabledIconColor.HasValue
+                ? MaterialStateProperty<Color?>.ResolveWith(states =>
+                    states.HasFlag(MaterialState.Disabled)
+                        ? disabledIconColor
+                        : iconColor)
+                : null,
+            IconSize: iconSize.HasValue
+                ? MaterialStateProperty<double?>.All(iconSize.Value)
+                : null,
             Side: side.HasValue
                 ? MaterialStateProperty<BorderSide?>.All(side.Value)
                 : null,
@@ -142,6 +154,11 @@ public sealed class TextButton : StatelessWidget
             BackgroundColor: MaterialStateProperty<Color?>.All(null),
             OverlayColor: MaterialButtonCore.CreateDefaultOverlayResolver(stateColor),
             SplashColor: null,
+            IconColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+                states.HasFlag(MaterialState.Disabled)
+                    ? MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.38)
+                    : stateColor),
+            IconSize: MaterialStateProperty<double?>.All(18),
             Side: MaterialStateProperty<BorderSide?>.All(null),
             Padding: MaterialStateProperty<Thickness?>.All(new Thickness(12, 8)),
             Shape: MaterialStateProperty<BorderRadius?>.All(Flutter.Rendering.BorderRadius.Circular(20)),
@@ -243,6 +260,9 @@ public sealed class ElevatedButton : StatelessWidget
         Color? backgroundColor = null,
         Color? disabledForegroundColor = null,
         Color? disabledBackgroundColor = null,
+        Color? iconColor = null,
+        double? iconSize = null,
+        Color? disabledIconColor = null,
         Color? shadowColor = null,
         Color? overlayColor = null,
         Color? splashColor = null,
@@ -274,6 +294,15 @@ public sealed class ElevatedButton : StatelessWidget
                 : null,
             OverlayColor: MaterialButtonCore.CreateStyleFromOverlayResolver(foregroundColor, overlayColor),
             SplashColor: MaterialButtonCore.CreateStyleFromSplashResolver(foregroundColor, overlayColor, splashColor),
+            IconColor: iconColor.HasValue || disabledIconColor.HasValue
+                ? MaterialStateProperty<Color?>.ResolveWith(states =>
+                    states.HasFlag(MaterialState.Disabled)
+                        ? disabledIconColor
+                        : iconColor)
+                : null,
+            IconSize: iconSize.HasValue
+                ? MaterialStateProperty<double?>.All(iconSize.Value)
+                : null,
             Elevation: elevation.HasValue
                 ? MaterialStateProperty<double?>.ResolveWith(states =>
                     states.HasFlag(MaterialState.Disabled)
@@ -338,6 +367,11 @@ public sealed class ElevatedButton : StatelessWidget
             ShadowColor: MaterialStateProperty<Color?>.All(theme.ShadowColor),
             OverlayColor: MaterialButtonCore.CreateDefaultOverlayResolver(stateColor),
             SplashColor: null,
+            IconColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+                states.HasFlag(MaterialState.Disabled)
+                    ? MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.38)
+                    : stateColor),
+            IconSize: MaterialStateProperty<double?>.All(18),
             Elevation: MaterialStateProperty<double?>.ResolveWith(states =>
                 states.HasFlag(MaterialState.Disabled)
                     ? 0
@@ -508,6 +542,9 @@ public sealed class FilledButton : StatelessWidget
         Color? backgroundColor = null,
         Color? disabledForegroundColor = null,
         Color? disabledBackgroundColor = null,
+        Color? iconColor = null,
+        double? iconSize = null,
+        Color? disabledIconColor = null,
         Color? overlayColor = null,
         Color? splashColor = null,
         BorderSide? side = null,
@@ -534,6 +571,15 @@ public sealed class FilledButton : StatelessWidget
                 : null,
             OverlayColor: MaterialButtonCore.CreateStyleFromOverlayResolver(foregroundColor, overlayColor),
             SplashColor: MaterialButtonCore.CreateStyleFromSplashResolver(foregroundColor, overlayColor, splashColor),
+            IconColor: iconColor.HasValue || disabledIconColor.HasValue
+                ? MaterialStateProperty<Color?>.ResolveWith(states =>
+                    states.HasFlag(MaterialState.Disabled)
+                        ? disabledIconColor
+                        : iconColor)
+                : null,
+            IconSize: iconSize.HasValue
+                ? MaterialStateProperty<double?>.All(iconSize.Value)
+                : null,
             Side: side.HasValue
                 ? MaterialStateProperty<BorderSide?>.All(side.Value)
                 : null,
@@ -597,6 +643,11 @@ public sealed class FilledButton : StatelessWidget
                     : enabledBackground),
             OverlayColor: MaterialButtonCore.CreateDefaultOverlayResolver(enabledForeground),
             SplashColor: null,
+            IconColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+                states.HasFlag(MaterialState.Disabled)
+                    ? MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.38)
+                    : enabledForeground),
+            IconSize: MaterialStateProperty<double?>.All(18),
             Side: MaterialStateProperty<BorderSide?>.All(null),
             Padding: MaterialStateProperty<Thickness?>.All(new Thickness(24, 0)),
             Shape: MaterialStateProperty<BorderRadius?>.All(Flutter.Rendering.BorderRadius.Circular(20)),
@@ -711,6 +762,9 @@ public sealed class OutlinedButton : StatelessWidget
         Color? backgroundColor = null,
         Color? disabledForegroundColor = null,
         Color? disabledBackgroundColor = null,
+        Color? iconColor = null,
+        double? iconSize = null,
+        Color? disabledIconColor = null,
         Color? overlayColor = null,
         Color? splashColor = null,
         BorderSide? side = null,
@@ -737,6 +791,15 @@ public sealed class OutlinedButton : StatelessWidget
                 : null,
             OverlayColor: MaterialButtonCore.CreateStyleFromOverlayResolver(foregroundColor, overlayColor),
             SplashColor: MaterialButtonCore.CreateStyleFromSplashResolver(foregroundColor, overlayColor, splashColor),
+            IconColor: iconColor.HasValue || disabledIconColor.HasValue
+                ? MaterialStateProperty<Color?>.ResolveWith(states =>
+                    states.HasFlag(MaterialState.Disabled)
+                        ? disabledIconColor
+                        : iconColor)
+                : null,
+            IconSize: iconSize.HasValue
+                ? MaterialStateProperty<double?>.All(iconSize.Value)
+                : null,
             Side: side.HasValue
                 ? MaterialStateProperty<BorderSide?>.All(side.Value)
                 : null,
@@ -787,6 +850,11 @@ public sealed class OutlinedButton : StatelessWidget
             BackgroundColor: MaterialStateProperty<Color?>.All(null),
             OverlayColor: MaterialButtonCore.CreateDefaultOverlayResolver(stateColor),
             SplashColor: null,
+            IconColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+                states.HasFlag(MaterialState.Disabled)
+                    ? MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.38)
+                    : stateColor),
+            IconSize: MaterialStateProperty<double?>.All(18),
             Side: MaterialStateProperty<BorderSide?>.ResolveWith(states =>
                 states.HasFlag(MaterialState.Disabled)
                     ? new BorderSide(MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.12), 1)
@@ -910,6 +978,16 @@ internal sealed class MaterialButtonCore : StatefulWidget
                 widgetStyle?.SplashColor,
                 themeStyle?.SplashColor,
                 defaults?.SplashColor),
+            IconColor: ComposeStateProperty<Color?>(
+                legacyOverrides?.IconColor,
+                widgetStyle?.IconColor,
+                themeStyle?.IconColor,
+                defaults?.IconColor),
+            IconSize: ComposeStateProperty<double?>(
+                legacyOverrides?.IconSize,
+                widgetStyle?.IconSize,
+                themeStyle?.IconSize,
+                defaults?.IconSize),
             Elevation: ComposeStateProperty<double?>(
                 legacyOverrides?.Elevation,
                 widgetStyle?.Elevation,
@@ -1214,6 +1292,8 @@ internal sealed class MaterialButtonCore : StatefulWidget
             var overlayStates = BuildMaterialStates(enabled, includeFocus: !_suppressFocusOverlay);
 
             var foreground = ResolveForegroundColor(style, baseStates);
+            var iconColor = ResolveIconColor(style, baseStates, foreground);
+            var iconSize = ResolveIconSize(style, baseStates);
             var background = ResolveBackgroundColor(style, baseStates, overlayStates);
             var splashColor = ResolveSplashColor();
             var shadowColor = style.ResolveShadowColor(baseStates);
@@ -1238,13 +1318,19 @@ internal sealed class MaterialButtonCore : StatefulWidget
                 baseTextStyle,
                 resolvedTextStyle);
 
+            Widget childContent = new IconTheme(
+                data: new IconThemeData(
+                    Color: iconColor,
+                    Size: iconSize),
+                child: widget.Child);
+
             Widget content = new DefaultTextStyle(
                 style: textStyle,
                 child: new Align(
                     alignment: alignment,
                     widthFactor: 1,
                     heightFactor: 1,
-                    child: widget.Child));
+                    child: childContent));
 
             content = new Container(
                 padding: padding,
@@ -1508,6 +1594,52 @@ internal sealed class MaterialButtonCore : StatefulWidget
             }
 
             return color ?? Colors.Black;
+        }
+
+        private static Color ResolveIconColor(
+            ButtonStyle style,
+            MaterialState states,
+            Color fallbackForeground)
+        {
+            var color = style.ResolveIconColor(states);
+            if (!color.HasValue && states.HasFlag(MaterialState.Disabled))
+            {
+                color = style.ResolveIconColor(MaterialState.None);
+            }
+
+            if (!color.HasValue)
+            {
+                color = style.ResolveForegroundColor(states);
+            }
+
+            if (!color.HasValue && states.HasFlag(MaterialState.Disabled))
+            {
+                color = style.ResolveForegroundColor(MaterialState.None);
+            }
+
+            return color ?? fallbackForeground;
+        }
+
+        private static double? ResolveIconSize(ButtonStyle style, MaterialState states)
+        {
+            var size = style.ResolveIconSize(states);
+            if (!size.HasValue && states.HasFlag(MaterialState.Disabled))
+            {
+                size = style.ResolveIconSize(MaterialState.None);
+            }
+
+            if (!size.HasValue)
+            {
+                return null;
+            }
+
+            var resolved = size.Value;
+            if (double.IsNaN(resolved) || double.IsInfinity(resolved) || resolved <= 0)
+            {
+                return null;
+            }
+
+            return resolved;
         }
 
         private static double ResolveElevation(ButtonStyle style, MaterialState states)

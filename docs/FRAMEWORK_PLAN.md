@@ -8,7 +8,7 @@ Use this block as the fastest machine-readable status summary.
 
 ```yaml
 framework_plan_version: 1
-last_updated: 2026-03-29
+last_updated: 2026-04-04
 north_star: "Flutter-like widget/rendering framework in C# with Avalonia as host infrastructure."
 current_phase: "M4 material library rewrite (theme/scaffold/material controls) in progress."
 status:
@@ -250,6 +250,11 @@ Progress update (2026-03-19):
   - theme now exposes `ThemeData.ShadowColor` (default black) used as default elevated shadow token source,
   - Android font-family fallback uses explicit `Roboto` to match Flutter Material typography resolution on Android,
   - `MaterialButtonCore` baseline label style merge now starts from `ThemeData.TextTheme.LabelLarge` (no hardcoded fallback metrics), and current default `LabelLarge` weight is `Medium` (Flutter token parity).
+- Continued Material button icon-theme parity hardening:
+  - `ButtonStyle` now includes state-aware `IconColor` and `IconSize` properties with merge/composition support.
+  - `TextButton`/`ElevatedButton`/`OutlinedButton`/`FilledButton` default styles now expose Flutter-like icon defaults (`iconSize: 18` plus state-aware icon color tied to foreground/disabled tokens), and all `styleFrom(...)` builders now accept `iconColor`, `disabledIconColor`, and `iconSize`.
+  - `MaterialButtonCore` now wraps button content with `IconTheme` resolved from composed button style layers (`iconColor` with fallback to `foregroundColor`, plus `iconSize`), so icon-bearing button children inherit style parity defaults.
+  - Added focused `MaterialButtonsTests` coverage for icon-theme defaults and `styleFrom(...)` icon overrides in enabled and disabled states.
 
 Initial scope:
 
