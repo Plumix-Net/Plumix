@@ -273,6 +273,11 @@ Progress update (2026-03-19):
 - Continued Material shadow fallback parity hardening for non-elevated `styleFrom(elevation)` paths:
   - `MaterialButtonCore` now falls back to `ThemeData.ShadowColor` when effective elevation is positive and no explicit shadow color resolves from style layers.
   - Added focused `MaterialButtonsTests` coverage for Text/Outlined/Filled style-level elevation overrides without explicit `shadowColor`.
+- Continued `styleFrom` disabled-color mapping parity hardening for text/outlined buttons:
+  - `TextButton.styleFrom(backgroundColor: x)` now keeps `x` for disabled state when `disabledBackgroundColor` is not provided.
+  - `TextButton.styleFrom(iconColor: x)` now keeps `x` for disabled state when `disabledIconColor` is not provided.
+  - `OutlinedButton.styleFrom(backgroundColor: x)` now keeps `x` for disabled state when `disabledBackgroundColor` is not provided.
+  - Added focused `MaterialButtonsTests` coverage for these disabled-state mapping scenarios.
 
 Initial scope:
 

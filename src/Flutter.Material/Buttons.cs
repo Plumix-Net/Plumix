@@ -84,6 +84,24 @@ public sealed class TextButton : StatelessWidget
         MaterialTapTargetSize? tapTargetSize = null,
         TextStyle? textStyle = null)
     {
+        var backgroundColorProperty = backgroundColor.HasValue && !disabledBackgroundColor.HasValue
+            ? MaterialStateProperty<Color?>.All(backgroundColor.Value)
+            : backgroundColor.HasValue || disabledBackgroundColor.HasValue
+                ? MaterialStateProperty<Color?>.ResolveWith(states =>
+                    states.HasFlag(MaterialState.Disabled)
+                        ? disabledBackgroundColor
+                        : backgroundColor)
+                : null;
+
+        var iconColorProperty = iconColor.HasValue && !disabledIconColor.HasValue
+            ? MaterialStateProperty<Color?>.All(iconColor.Value)
+            : iconColor.HasValue || disabledIconColor.HasValue
+                ? MaterialStateProperty<Color?>.ResolveWith(states =>
+                    states.HasFlag(MaterialState.Disabled)
+                        ? disabledIconColor
+                        : iconColor)
+                : null;
+
         return new ButtonStyle(
             ForegroundColor: foregroundColor.HasValue || disabledForegroundColor.HasValue
                 ? MaterialStateProperty<Color?>.ResolveWith(states =>
@@ -91,12 +109,7 @@ public sealed class TextButton : StatelessWidget
                         ? disabledForegroundColor
                         : foregroundColor)
                 : null,
-            BackgroundColor: backgroundColor.HasValue || disabledBackgroundColor.HasValue
-                ? MaterialStateProperty<Color?>.ResolveWith(states =>
-                    states.HasFlag(MaterialState.Disabled)
-                        ? disabledBackgroundColor
-                        : backgroundColor)
-                : null,
+            BackgroundColor: backgroundColorProperty,
             ShadowColor: shadowColor.HasValue
                 ? MaterialStateProperty<Color?>.All(shadowColor.Value)
                 : null,
@@ -105,12 +118,7 @@ public sealed class TextButton : StatelessWidget
                 : null,
             OverlayColor: MaterialButtonCore.CreateStyleFromOverlayResolver(foregroundColor, overlayColor),
             SplashColor: MaterialButtonCore.CreateStyleFromSplashResolver(foregroundColor, overlayColor, splashColor),
-            IconColor: iconColor.HasValue || disabledIconColor.HasValue
-                ? MaterialStateProperty<Color?>.ResolveWith(states =>
-                    states.HasFlag(MaterialState.Disabled)
-                        ? disabledIconColor
-                        : iconColor)
-                : null,
+            IconColor: iconColorProperty,
             IconSize: iconSize.HasValue
                 ? MaterialStateProperty<double?>.All(iconSize.Value)
                 : null,
@@ -582,6 +590,15 @@ public sealed class FilledButton : StatelessWidget
         MaterialTapTargetSize? tapTargetSize = null,
         TextStyle? textStyle = null)
     {
+        var backgroundColorProperty = backgroundColor.HasValue && !disabledBackgroundColor.HasValue
+            ? MaterialStateProperty<Color?>.All(backgroundColor.Value)
+            : backgroundColor.HasValue || disabledBackgroundColor.HasValue
+                ? MaterialStateProperty<Color?>.ResolveWith(states =>
+                    states.HasFlag(MaterialState.Disabled)
+                        ? disabledBackgroundColor
+                        : backgroundColor)
+                : null;
+
         return new ButtonStyle(
             ForegroundColor: foregroundColor.HasValue || disabledForegroundColor.HasValue
                 ? MaterialStateProperty<Color?>.ResolveWith(states =>
@@ -589,12 +606,7 @@ public sealed class FilledButton : StatelessWidget
                         ? disabledForegroundColor
                         : foregroundColor)
                 : null,
-            BackgroundColor: backgroundColor.HasValue || disabledBackgroundColor.HasValue
-                ? MaterialStateProperty<Color?>.ResolveWith(states =>
-                    states.HasFlag(MaterialState.Disabled)
-                        ? disabledBackgroundColor
-                        : backgroundColor)
-                : null,
+            BackgroundColor: backgroundColorProperty,
             ShadowColor: shadowColor.HasValue
                 ? MaterialStateProperty<Color?>.All(shadowColor.Value)
                 : null,

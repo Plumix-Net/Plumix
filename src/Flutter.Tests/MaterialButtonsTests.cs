@@ -133,6 +133,29 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
+    public void TextButton_StyleFrom_IconColorWithoutDisabledIcon_UsesIconColorWhenDisabled()
+    {
+        var owner = new BuildOwner();
+        IconThemeData? capturedTheme = null;
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new TextButton(
+                    onPressed: null,
+                    style: TextButton.StyleFrom(
+                        iconColor: Colors.Gold),
+                    child: new CaptureIconThemeWidget(iconTheme => capturedTheme = iconTheme))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.NotNull(capturedTheme);
+        Assert.Equal(Colors.Gold, capturedTheme!.Color);
+    }
+
+    [Fact]
     public void TextButton_DefaultMinSize_UsesMaterialBaseline64x40()
     {
         var owner = new BuildOwner();
@@ -209,6 +232,28 @@ public sealed class MaterialButtonsTests
 
         var hitResult = new BoxHitTestResult();
         Assert.False(harness.RenderView.HitTest(hitResult, new Point(60, 46)));
+    }
+
+    [Fact]
+    public void TextButton_StyleFrom_BackgroundOnly_AppliesBackgroundWhenDisabled()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new TextButton(
+                    onPressed: null,
+                    style: TextButton.StyleFrom(
+                        backgroundColor: Colors.Gold),
+                    child: new Text("Disabled text background"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(decorated);
+        Assert.Equal(Colors.Gold, decorated!.Decoration.Color);
     }
 
     [Fact]
@@ -675,6 +720,28 @@ public sealed class MaterialButtonsTests
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(paragraph);
         Assert.Equal(Colors.MediumVioletRed, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+    }
+
+    [Fact]
+    public void OutlinedButton_StyleFrom_BackgroundOnly_AppliesBackgroundWhenDisabled()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new OutlinedButton(
+                    onPressed: null,
+                    style: OutlinedButton.StyleFrom(
+                        backgroundColor: Colors.Gold),
+                    child: new Text("Disabled outlined background"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(decorated);
+        Assert.Equal(Colors.Gold, decorated!.Decoration.Color);
     }
 
     [Fact]

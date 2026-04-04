@@ -72,6 +72,22 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 - Added focused regression coverage in `MaterialButtonsTests` for fallback behavior on `TextButton`, `OutlinedButton`, and `FilledButton` with `styleFrom(elevation: ...)` and no explicit `shadowColor` (`src/Flutter.Tests/MaterialButtonsTests.cs`).
 - Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-04-04-button-shadow-fallback-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
 
+## [2026-04-04] - M4 text/outlined styleFrom disabled-color mapping parity hardening
+
+### Changed
+
+- Aligned `TextButton.styleFrom(...)` mapping with Flutter behavior:
+  - `backgroundColor` without `disabledBackgroundColor` now resolves as `all(backgroundColor)` (applies to disabled state),
+  - `iconColor` without `disabledIconColor` now resolves as `all(iconColor)` (applies to disabled state)
+  (`src/Flutter.Material/Buttons.cs`).
+- Aligned `OutlinedButton.styleFrom(...)` background mapping with Flutter behavior: `backgroundColor` without `disabledBackgroundColor` now resolves as `all(backgroundColor)` and remains applied in disabled state (`src/Flutter.Material/Buttons.cs`).
+- Added focused `MaterialButtonsTests` coverage for:
+  - disabled `TextButton` icon-color behavior when only `iconColor` is provided,
+  - disabled `TextButton` background behavior when only `backgroundColor` is provided,
+  - disabled `OutlinedButton` background behavior when only `backgroundColor` is provided
+  (`src/Flutter.Tests/MaterialButtonsTests.cs`).
+- Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-04-04-text-outlined-stylefrom-disabled-color-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
+
 ## [2026-03-29] - M4 material elevated-button shadow/elevation parity hardening
 
 ### Changed
