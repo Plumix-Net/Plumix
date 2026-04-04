@@ -1361,6 +1361,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
             var widget = CurrentWidget;
             var enabled = Enabled;
             var style = widget.Style;
+            var theme = Theme.Of(context);
             var baseStates = BuildMaterialStates(enabled, includeFocus: true);
             var overlayStates = BuildMaterialStates(enabled, includeFocus: !_suppressFocusOverlay);
 
@@ -1369,8 +1370,13 @@ internal sealed class MaterialButtonCore : StatefulWidget
             var iconSize = ResolveIconSize(style, baseStates);
             var splashColor = ResolveSplashColor();
             var elevation = ResolveElevation(style, baseStates);
-            var shadowColor = ResolveShadowColor(style, baseStates, elevation, Theme.Of(context).ShadowColor);
-            var background = ResolveBackgroundColor(style, baseStates, overlayStates, elevation);
+            var shadowColor = ResolveShadowColor(style, baseStates, elevation, theme.ShadowColor);
+            var background = ResolveBackgroundColor(
+                style,
+                baseStates,
+                overlayStates,
+                elevation,
+                theme.UseMaterial3);
             var border = style.ResolveSide(baseStates);
             var padding = style.ResolvePadding(baseStates) ?? default;
             var borderRadius = style.ResolveShape(baseStates) ?? Flutter.Rendering.BorderRadius.Zero;
@@ -1384,7 +1390,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
             var alignment = style.Alignment ?? Alignment.Center;
             var tapTargetSize = style.ResolveTapTargetSize() ?? MaterialTapTargetSize.Padded;
             var resolvedTextStyle = style.ResolveTextStyle(baseStates);
-            var baseTextStyle = Theme.Of(context).TextTheme.LabelLarge with
+            var baseTextStyle = theme.TextTheme.LabelLarge with
             {
                 Color = foreground
             };
@@ -1811,7 +1817,8 @@ internal sealed class MaterialButtonCore : StatefulWidget
             ButtonStyle style,
             MaterialState baseStates,
             MaterialState overlayStates,
-            double elevation)
+            double elevation,
+            bool useMaterial3)
         {
             var background = style.ResolveBackgroundColor(baseStates);
             if (!background.HasValue && baseStates.HasFlag(MaterialState.Disabled))
@@ -1819,7 +1826,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
                 background = style.ResolveBackgroundColor(MaterialState.None);
             }
 
-            if (background.HasValue)
+            if (background.HasValue && useMaterial3)
             {
                 var surfaceTintColor = style.ResolveSurfaceTintColor(baseStates);
                 if (!surfaceTintColor.HasValue && baseStates.HasFlag(MaterialState.Disabled))

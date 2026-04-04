@@ -88,6 +88,14 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
   (`src/Flutter.Tests/MaterialButtonsTests.cs`).
 - Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-04-04-text-outlined-stylefrom-disabled-color-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
 
+## [2026-04-05] - M4 material surface-tint gating parity (`useMaterial3`)
+
+### Changed
+
+- Aligned button surface-tint behavior with Flutter Material semantics by gating `surfaceTintColor` application on `ThemeData.UseMaterial3`: tint overlay is now ignored when `UseMaterial3` is `false` (`src/Flutter.Material/Buttons.cs`).
+- Added focused `MaterialButtonsTests` coverage for both style-level and theme-level elevated-button surface tint under `UseMaterial3 = false` to ensure background remains untinted (`src/Flutter.Tests/MaterialButtonsTests.cs`).
+- Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-04-05-button-surface-tint-usematerial3-gating-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
+
 ## [2026-03-29] - M4 material elevated-button shadow/elevation parity hardening
 
 ### Changed

@@ -278,6 +278,9 @@ Progress update (2026-03-19):
   - `TextButton.styleFrom(iconColor: x)` now keeps `x` for disabled state when `disabledIconColor` is not provided.
   - `OutlinedButton.styleFrom(backgroundColor: x)` now keeps `x` for disabled state when `disabledBackgroundColor` is not provided.
   - Added focused `MaterialButtonsTests` coverage for these disabled-state mapping scenarios.
+- Continued surface-tint Material-mode parity hardening:
+  - `MaterialButtonCore` now applies surface tint only when `ThemeData.UseMaterial3` is `true`, matching Flutter `Material` tint behavior.
+  - Added focused `MaterialButtonsTests` coverage for `UseMaterial3=false` to verify style/theme surface tint overrides do not tint elevated button backgrounds.
 
 Initial scope:
 

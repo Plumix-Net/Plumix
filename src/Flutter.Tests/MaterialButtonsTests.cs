@@ -486,6 +486,62 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
+    public void ElevatedButton_StyleFrom_SurfaceTintColor_DoesNotTintBackground_WhenUseMaterial3IsDisabled()
+    {
+        var owner = new BuildOwner();
+        var baseBackground = Colors.White;
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with { UseMaterial3 = false },
+                child: new ElevatedButton(
+                    onPressed: () => { },
+                    style: ElevatedButton.StyleFrom(
+                        backgroundColor: baseBackground,
+                        surfaceTintColor: Colors.Red,
+                        elevation: 3),
+                    child: new Text("Surface tint off"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(decorated);
+        Assert.Equal(baseBackground, decorated!.Decoration.Color);
+    }
+
+    [Fact]
+    public void ElevatedButton_ThemeStyleSurfaceTintColor_DoesNotTintBackground_WhenUseMaterial3IsDisabled()
+    {
+        var owner = new BuildOwner();
+        var theme = ThemeData.Light with
+        {
+            UseMaterial3 = false,
+            ElevatedButtonTheme = new ElevatedButtonThemeData(
+                style: new ButtonStyle(
+                    SurfaceTintColor: MaterialStateProperty<Color?>.All(Colors.Red)))
+        };
+
+        var root = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: new ElevatedButton(
+                    onPressed: () => { },
+                    style: ElevatedButton.StyleFrom(
+                        backgroundColor: Colors.White,
+                        elevation: 3),
+                    child: new Text("Theme surface tint off"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(decorated);
+        Assert.Equal(Colors.White, decorated!.Decoration.Color);
+    }
+
+    [Fact]
     public void ElevatedButton_DefaultShadow_IsAppliedWhenEnabled()
     {
         var owner = new BuildOwner();
