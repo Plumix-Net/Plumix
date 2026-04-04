@@ -42,6 +42,19 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
   (`src/Flutter.Tests/MaterialButtonsTests.cs`).
 - Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-04-04-button-tap-target-size-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
 
+## [2026-04-04] - M4 material button surface-tint parity hardening
+
+### Changed
+
+- Extended `ButtonStyle` with state-aware `SurfaceTintColor` and wired it into style merge/composition/state-resolution pipeline for Material buttons (`src/Flutter.Material/ButtonStyle.cs`, `src/Flutter.Material/Buttons.cs`).
+- Extended `TextButton.StyleFrom(...)`, `ElevatedButton.StyleFrom(...)`, `OutlinedButton.StyleFrom(...)`, and `FilledButton.StyleFrom(...)` with `surfaceTintColor` support (`src/Flutter.Material/Buttons.cs`).
+- `MaterialButtonCore` now applies Flutter-like surface tint blending to resolved button background color using elevation-based opacity interpolation (token table `0 -> 0.00`, `1 -> 0.05`, `3 -> 0.08`, `6 -> 0.11`, `8 -> 0.12`, `12 -> 0.14`) before state overlay tinting (`src/Flutter.Material/Buttons.cs`).
+- Added focused regression coverage in `MaterialButtonsTests` for:
+  - `ElevatedButton.styleFrom(surfaceTintColor: ...)` background tinting by elevation,
+  - theme-level `ElevatedButtonTheme` `surfaceTintColor` tinting on default elevated background
+  (`src/Flutter.Tests/MaterialButtonsTests.cs`).
+- Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-04-04-button-surface-tint-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
+
 ## [2026-03-29] - M4 material elevated-button shadow/elevation parity hardening
 
 ### Changed

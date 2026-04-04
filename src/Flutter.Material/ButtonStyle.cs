@@ -71,6 +71,7 @@ public sealed record ButtonStyle(
     MaterialStateProperty<Color?>? ForegroundColor = null,
     MaterialStateProperty<Color?>? BackgroundColor = null,
     MaterialStateProperty<Color?>? ShadowColor = null,
+    MaterialStateProperty<Color?>? SurfaceTintColor = null,
     MaterialStateProperty<Color?>? OverlayColor = null,
     MaterialStateProperty<Color?>? SplashColor = null,
     MaterialStateProperty<double?>? Elevation = null,
@@ -98,6 +99,7 @@ public sealed record ButtonStyle(
             ForegroundColor = ForegroundColor ?? style.ForegroundColor,
             BackgroundColor = BackgroundColor ?? style.BackgroundColor,
             ShadowColor = ShadowColor ?? style.ShadowColor,
+            SurfaceTintColor = SurfaceTintColor ?? style.SurfaceTintColor,
             OverlayColor = OverlayColor ?? style.OverlayColor,
             SplashColor = SplashColor ?? style.SplashColor,
             Elevation = Elevation ?? style.Elevation,
@@ -133,6 +135,11 @@ public sealed record ButtonStyle(
     internal Color? ResolveShadowColor(MaterialState states)
     {
         return ShadowColor?.Resolve(states);
+    }
+
+    internal Color? ResolveSurfaceTintColor(MaterialState states)
+    {
+        return SurfaceTintColor?.Resolve(states);
     }
 
     internal Color? ResolveSplashColor(MaterialState states)

@@ -261,6 +261,11 @@ Progress update (2026-03-19):
   - `TextButton`/`ElevatedButton`/`OutlinedButton`/`FilledButton` `styleFrom(...)` builders now accept `tapTargetSize` overrides.
   - `MaterialButtonCore` now resolves tap-target wrapper size from the composed style (`Padded` -> `48x48`, `ShrinkWrap` -> `0x0`) before applying `ButtonTapTargetPadding`, matching Flutter `_InputPadding` mode behavior.
   - Added focused `MaterialButtonsTests` coverage for theme-default tap-target mode, theme shrink-wrap behavior, and `styleFrom` precedence over theme.
+- Continued Material button surface-tint parity hardening:
+  - `ButtonStyle` now includes state-aware `SurfaceTintColor`, and style composition/merge now includes this layer.
+  - all button `styleFrom(...)` builders now accept `surfaceTintColor`.
+  - `MaterialButtonCore` now applies Flutter-like elevation-dependent surface-tint overlay to resolved background color using the M3 opacity table (`0/1/3/6/8/12` elevations).
+  - Added focused `MaterialButtonsTests` coverage for style-level and theme-level `surfaceTintColor` tinting on elevated buttons.
 
 Initial scope:
 

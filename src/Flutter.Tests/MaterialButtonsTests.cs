@@ -387,6 +387,60 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
+    public void ElevatedButton_StyleFrom_SurfaceTintColor_TintsBackgroundByElevation()
+    {
+        var owner = new BuildOwner();
+        var baseBackground = Colors.White;
+        var surfaceTint = Colors.Red;
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new ElevatedButton(
+                    onPressed: () => { },
+                    style: ElevatedButton.StyleFrom(
+                        backgroundColor: baseBackground,
+                        surfaceTintColor: surfaceTint,
+                        elevation: 3),
+                    child: new Text("Surface tint"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(decorated);
+        Assert.Equal(ApplySurfaceTint(baseBackground, surfaceTint, 3), decorated!.Decoration.Color);
+    }
+
+    [Fact]
+    public void ElevatedButton_ThemeStyleSurfaceTintColor_TintsDefaultBackground()
+    {
+        var owner = new BuildOwner();
+        var theme = ThemeData.Light with
+        {
+            ElevatedButtonTheme = new ElevatedButtonThemeData(
+                style: new ButtonStyle(
+                    SurfaceTintColor: MaterialStateProperty<Color?>.All(Colors.Red)))
+        };
+
+        var root = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: new ElevatedButton(
+                    onPressed: () => { },
+                    child: new Text("Theme surface tint"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(decorated);
+        Assert.Equal(ApplySurfaceTint(theme.SurfaceContainerLowColor, Colors.Red, 1), decorated!.Decoration.Color);
+    }
+
+    [Fact]
     public void ElevatedButton_DefaultShadow_IsAppliedWhenEnabled()
     {
         var owner = new BuildOwner();
@@ -3525,6 +3579,64 @@ public sealed class MaterialButtonsTests
             Blend(baseColor.R, overlayColor.R, clampedOpacity),
             Blend(baseColor.G, overlayColor.G, clampedOpacity),
             Blend(baseColor.B, overlayColor.B, clampedOpacity));
+    }
+
+    private static Color ApplySurfaceTint(Color color, Color surfaceTint, double elevation)
+    {
+        if (surfaceTint.A == 0)
+        {
+            return color;
+        }
+
+        var opacity = ResolveSurfaceTintOpacityForElevation(elevation);
+        if (opacity <= 0)
+        {
+            return color;
+        }
+
+        var overlay = Color.FromArgb(
+            (byte)Math.Clamp((int)(opacity * 255), 0, 255),
+            surfaceTint.R,
+            surfaceTint.G,
+            surfaceTint.B);
+
+        return BlendColorOverlay(color, overlay);
+    }
+
+    private static double ResolveSurfaceTintOpacityForElevation(double elevation)
+    {
+        ReadOnlySpan<(double Elevation, double Opacity)> stops =
+        [
+            (0.0, 0.0),
+            (1.0, 0.05),
+            (3.0, 0.08),
+            (6.0, 0.11),
+            (8.0, 0.12),
+            (12.0, 0.14)
+        ];
+
+        if (elevation <= stops[0].Elevation)
+        {
+            return stops[0].Opacity;
+        }
+
+        for (var i = 1; i < stops.Length; i++)
+        {
+            var current = stops[i];
+            if (elevation == current.Elevation)
+            {
+                return current.Opacity;
+            }
+
+            if (elevation < current.Elevation)
+            {
+                var lower = stops[i - 1];
+                var t = (elevation - lower.Elevation) / (current.Elevation - lower.Elevation);
+                return lower.Opacity + (t * (current.Opacity - lower.Opacity));
+            }
+        }
+
+        return stops[^1].Opacity;
     }
 
     private sealed class TestRootElement : Element, IRenderObjectHost

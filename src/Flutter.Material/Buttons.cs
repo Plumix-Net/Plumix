@@ -66,6 +66,7 @@ public sealed class TextButton : StatelessWidget
         Color? backgroundColor = null,
         Color? disabledForegroundColor = null,
         Color? disabledBackgroundColor = null,
+        Color? surfaceTintColor = null,
         Color? iconColor = null,
         double? iconSize = null,
         Color? disabledIconColor = null,
@@ -93,6 +94,9 @@ public sealed class TextButton : StatelessWidget
                     states.HasFlag(MaterialState.Disabled)
                         ? disabledBackgroundColor
                         : backgroundColor)
+                : null,
+            SurfaceTintColor: surfaceTintColor.HasValue
+                ? MaterialStateProperty<Color?>.All(surfaceTintColor.Value)
                 : null,
             OverlayColor: MaterialButtonCore.CreateStyleFromOverlayResolver(foregroundColor, overlayColor),
             SplashColor: MaterialButtonCore.CreateStyleFromSplashResolver(foregroundColor, overlayColor, splashColor),
@@ -263,6 +267,7 @@ public sealed class ElevatedButton : StatelessWidget
         Color? backgroundColor = null,
         Color? disabledForegroundColor = null,
         Color? disabledBackgroundColor = null,
+        Color? surfaceTintColor = null,
         Color? iconColor = null,
         double? iconSize = null,
         Color? disabledIconColor = null,
@@ -292,6 +297,9 @@ public sealed class ElevatedButton : StatelessWidget
                     states.HasFlag(MaterialState.Disabled)
                         ? disabledBackgroundColor
                         : backgroundColor)
+                : null,
+            SurfaceTintColor: surfaceTintColor.HasValue
+                ? MaterialStateProperty<Color?>.All(surfaceTintColor.Value)
                 : null,
             ShadowColor: shadowColor.HasValue
                 ? MaterialStateProperty<Color?>.All(shadowColor.Value)
@@ -548,6 +556,7 @@ public sealed class FilledButton : StatelessWidget
         Color? backgroundColor = null,
         Color? disabledForegroundColor = null,
         Color? disabledBackgroundColor = null,
+        Color? surfaceTintColor = null,
         Color? iconColor = null,
         double? iconSize = null,
         Color? disabledIconColor = null,
@@ -575,6 +584,9 @@ public sealed class FilledButton : StatelessWidget
                     states.HasFlag(MaterialState.Disabled)
                         ? disabledBackgroundColor
                         : backgroundColor)
+                : null,
+            SurfaceTintColor: surfaceTintColor.HasValue
+                ? MaterialStateProperty<Color?>.All(surfaceTintColor.Value)
                 : null,
             OverlayColor: MaterialButtonCore.CreateStyleFromOverlayResolver(foregroundColor, overlayColor),
             SplashColor: MaterialButtonCore.CreateStyleFromSplashResolver(foregroundColor, overlayColor, splashColor),
@@ -771,6 +783,7 @@ public sealed class OutlinedButton : StatelessWidget
         Color? backgroundColor = null,
         Color? disabledForegroundColor = null,
         Color? disabledBackgroundColor = null,
+        Color? surfaceTintColor = null,
         Color? iconColor = null,
         double? iconSize = null,
         Color? disabledIconColor = null,
@@ -798,6 +811,9 @@ public sealed class OutlinedButton : StatelessWidget
                     states.HasFlag(MaterialState.Disabled)
                         ? disabledBackgroundColor
                         : backgroundColor)
+                : null,
+            SurfaceTintColor: surfaceTintColor.HasValue
+                ? MaterialStateProperty<Color?>.All(surfaceTintColor.Value)
                 : null,
             OverlayColor: MaterialButtonCore.CreateStyleFromOverlayResolver(foregroundColor, overlayColor),
             SplashColor: MaterialButtonCore.CreateStyleFromSplashResolver(foregroundColor, overlayColor, splashColor),
@@ -980,6 +996,11 @@ internal sealed class MaterialButtonCore : StatefulWidget
                 widgetStyle?.ShadowColor,
                 themeStyle?.ShadowColor,
                 defaults?.ShadowColor),
+            SurfaceTintColor: ComposeStateProperty<Color?>(
+                legacyOverrides?.SurfaceTintColor,
+                widgetStyle?.SurfaceTintColor,
+                themeStyle?.SurfaceTintColor,
+                defaults?.SurfaceTintColor),
             OverlayColor: ComposeStateProperty<Color?>(
                 legacyOverrides?.OverlayColor,
                 widgetStyle?.OverlayColor,
@@ -1310,10 +1331,10 @@ internal sealed class MaterialButtonCore : StatefulWidget
             var foreground = ResolveForegroundColor(style, baseStates);
             var iconColor = ResolveIconColor(style, baseStates, foreground);
             var iconSize = ResolveIconSize(style, baseStates);
-            var background = ResolveBackgroundColor(style, baseStates, overlayStates);
             var splashColor = ResolveSplashColor();
             var shadowColor = style.ResolveShadowColor(baseStates);
             var elevation = ResolveElevation(style, baseStates);
+            var background = ResolveBackgroundColor(style, baseStates, overlayStates, elevation);
             var border = style.ResolveSide(baseStates);
             var padding = style.ResolvePadding(baseStates) ?? default;
             var borderRadius = style.ResolveShape(baseStates) ?? Flutter.Rendering.BorderRadius.Zero;
@@ -1731,9 +1752,29 @@ internal sealed class MaterialButtonCore : StatefulWidget
         private static Color? ResolveBackgroundColor(
             ButtonStyle style,
             MaterialState baseStates,
-            MaterialState overlayStates)
+            MaterialState overlayStates,
+            double elevation)
         {
             var background = style.ResolveBackgroundColor(baseStates);
+            if (!background.HasValue && baseStates.HasFlag(MaterialState.Disabled))
+            {
+                background = style.ResolveBackgroundColor(MaterialState.None);
+            }
+
+            if (background.HasValue)
+            {
+                var surfaceTintColor = style.ResolveSurfaceTintColor(baseStates);
+                if (!surfaceTintColor.HasValue && baseStates.HasFlag(MaterialState.Disabled))
+                {
+                    surfaceTintColor = style.ResolveSurfaceTintColor(MaterialState.None);
+                }
+
+                if (surfaceTintColor.HasValue)
+                {
+                    background = ApplySurfaceTint(background.Value, surfaceTintColor.Value, elevation);
+                }
+            }
+
             var overlay = HasOverlayState(overlayStates)
                 ? style.ResolveOverlayColor(overlayStates)
                 : null;
@@ -1749,6 +1790,64 @@ internal sealed class MaterialButtonCore : StatefulWidget
             }
 
             return BlendColorOverlay(background.Value, overlay.Value);
+        }
+
+        private static Color ApplySurfaceTint(Color color, Color surfaceTint, double elevation)
+        {
+            if (surfaceTint.A == 0)
+            {
+                return color;
+            }
+
+            var opacity = ResolveSurfaceTintOpacityForElevation(elevation);
+            if (opacity <= 0)
+            {
+                return color;
+            }
+
+            var tintOverlay = Color.FromArgb(
+                (byte)Math.Clamp((int)(opacity * 255), 0, 255),
+                surfaceTint.R,
+                surfaceTint.G,
+                surfaceTint.B);
+
+            return BlendColorOverlay(color, tintOverlay);
+        }
+
+        private static double ResolveSurfaceTintOpacityForElevation(double elevation)
+        {
+            ReadOnlySpan<(double Elevation, double Opacity)> stops =
+            [
+                (0.0, 0.0),
+                (1.0, 0.05),
+                (3.0, 0.08),
+                (6.0, 0.11),
+                (8.0, 0.12),
+                (12.0, 0.14)
+            ];
+
+            if (elevation <= stops[0].Elevation)
+            {
+                return stops[0].Opacity;
+            }
+
+            for (var i = 1; i < stops.Length; i++)
+            {
+                var current = stops[i];
+                if (elevation == current.Elevation)
+                {
+                    return current.Opacity;
+                }
+
+                if (elevation < current.Elevation)
+                {
+                    var lower = stops[i - 1];
+                    var t = (elevation - lower.Elevation) / (current.Elevation - lower.Elevation);
+                    return lower.Opacity + (t * (current.Opacity - lower.Opacity));
+                }
+            }
+
+            return stops[^1].Opacity;
         }
 
         private static bool HasOverlayState(MaterialState states)
