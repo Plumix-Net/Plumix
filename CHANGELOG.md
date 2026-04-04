@@ -55,6 +55,15 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
   (`src/Flutter.Tests/MaterialButtonsTests.cs`).
 - Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-04-04-button-surface-tint-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
 
+## [2026-04-04] - M4 material button styleFrom shadow/elevation parity expansion
+
+### Changed
+
+- Expanded `TextButton.StyleFrom(...)`, `OutlinedButton.StyleFrom(...)`, and `FilledButton.StyleFrom(...)` with `shadowColor` and `elevation` arguments to align API shape with Flutter `styleFrom` helpers (`src/Flutter.Material/Buttons.cs`).
+- Wired new style arguments into `ButtonStyle.ShadowColor` and `ButtonStyle.Elevation` so non-elevated button types can opt into explicit shadow/elevation visuals via style overrides in the existing `MaterialButtonCore` paint path (`src/Flutter.Material/Buttons.cs`).
+- Added focused regression coverage in `MaterialButtonsTests` validating shadow rendering for `TextButton`, `OutlinedButton`, and `FilledButton` when `styleFrom(shadowColor: ..., elevation: ...)` is provided (`src/Flutter.Tests/MaterialButtonsTests.cs`).
+- Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-04-04-button-stylefrom-shadow-elevation-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
+
 ## [2026-03-29] - M4 material elevated-button shadow/elevation parity hardening
 
 ### Changed

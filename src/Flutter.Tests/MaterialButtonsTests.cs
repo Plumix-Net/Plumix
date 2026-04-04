@@ -483,6 +483,80 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
+    public void TextButton_StyleFrom_ElevationAndShadowColor_AppliesShadow()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new TextButton(
+                    onPressed: () => { },
+                    style: TextButton.StyleFrom(
+                        backgroundColor: Colors.White,
+                        shadowColor: Colors.Black,
+                        elevation: 3),
+                    child: new Text("Text shadow"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(decorated);
+        Assert.True(decorated!.Decoration.BoxShadows.HasValue);
+        Assert.True(decorated.Decoration.BoxShadows.Value.Count > 0);
+    }
+
+    [Fact]
+    public void OutlinedButton_StyleFrom_ElevationAndShadowColor_AppliesShadow()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new OutlinedButton(
+                    onPressed: () => { },
+                    style: OutlinedButton.StyleFrom(
+                        backgroundColor: Colors.White,
+                        shadowColor: Colors.Black,
+                        elevation: 2),
+                    child: new Text("Outlined shadow"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(decorated);
+        Assert.True(decorated!.Decoration.BoxShadows.HasValue);
+        Assert.True(decorated.Decoration.BoxShadows.Value.Count > 0);
+    }
+
+    [Fact]
+    public void FilledButton_StyleFrom_ElevationAndShadowColor_AppliesShadow()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new FilledButton(
+                    onPressed: () => { },
+                    style: FilledButton.StyleFrom(
+                        shadowColor: Colors.Black,
+                        elevation: 2),
+                    child: new Text("Filled shadow"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(decorated);
+        Assert.True(decorated!.Decoration.BoxShadows.HasValue);
+        Assert.True(decorated.Decoration.BoxShadows.Value.Count > 0);
+    }
+
+    [Fact]
     public void OutlinedButton_UsesThemeOutlineColorForBorderByDefault()
     {
         var owner = new BuildOwner();

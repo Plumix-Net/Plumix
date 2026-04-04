@@ -266,6 +266,10 @@ Progress update (2026-03-19):
   - all button `styleFrom(...)` builders now accept `surfaceTintColor`.
   - `MaterialButtonCore` now applies Flutter-like elevation-dependent surface-tint overlay to resolved background color using the M3 opacity table (`0/1/3/6/8/12` elevations).
   - Added focused `MaterialButtonsTests` coverage for style-level and theme-level `surfaceTintColor` tinting on elevated buttons.
+- Continued Material button `styleFrom` API parity expansion for non-elevated types:
+  - `TextButton`/`OutlinedButton`/`FilledButton` `styleFrom(...)` builders now also accept `shadowColor` and `elevation`.
+  - explicit `styleFrom(shadowColor: ..., elevation: ...)` on these button types now flows through composed `ButtonStyle` into existing `MaterialButtonCore` shadow/elevation rendering path.
+  - Added focused `MaterialButtonsTests` coverage for shadow rendering on Text/Outlined/Filled buttons via style overrides.
 
 Initial scope:
 

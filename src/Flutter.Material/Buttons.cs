@@ -66,12 +66,14 @@ public sealed class TextButton : StatelessWidget
         Color? backgroundColor = null,
         Color? disabledForegroundColor = null,
         Color? disabledBackgroundColor = null,
+        Color? shadowColor = null,
         Color? surfaceTintColor = null,
         Color? iconColor = null,
         double? iconSize = null,
         Color? disabledIconColor = null,
         Color? overlayColor = null,
         Color? splashColor = null,
+        double? elevation = null,
         BorderSide? side = null,
         Thickness? padding = null,
         BorderRadius? shape = null,
@@ -95,6 +97,9 @@ public sealed class TextButton : StatelessWidget
                         ? disabledBackgroundColor
                         : backgroundColor)
                 : null,
+            ShadowColor: shadowColor.HasValue
+                ? MaterialStateProperty<Color?>.All(shadowColor.Value)
+                : null,
             SurfaceTintColor: surfaceTintColor.HasValue
                 ? MaterialStateProperty<Color?>.All(surfaceTintColor.Value)
                 : null,
@@ -108,6 +113,9 @@ public sealed class TextButton : StatelessWidget
                 : null,
             IconSize: iconSize.HasValue
                 ? MaterialStateProperty<double?>.All(iconSize.Value)
+                : null,
+            Elevation: elevation.HasValue
+                ? MaterialStateProperty<double?>.All(elevation.Value)
                 : null,
             Side: side.HasValue
                 ? MaterialStateProperty<BorderSide?>.All(side.Value)
@@ -556,12 +564,14 @@ public sealed class FilledButton : StatelessWidget
         Color? backgroundColor = null,
         Color? disabledForegroundColor = null,
         Color? disabledBackgroundColor = null,
+        Color? shadowColor = null,
         Color? surfaceTintColor = null,
         Color? iconColor = null,
         double? iconSize = null,
         Color? disabledIconColor = null,
         Color? overlayColor = null,
         Color? splashColor = null,
+        double? elevation = null,
         BorderSide? side = null,
         Thickness? padding = null,
         BorderRadius? shape = null,
@@ -585,6 +595,9 @@ public sealed class FilledButton : StatelessWidget
                         ? disabledBackgroundColor
                         : backgroundColor)
                 : null,
+            ShadowColor: shadowColor.HasValue
+                ? MaterialStateProperty<Color?>.All(shadowColor.Value)
+                : null,
             SurfaceTintColor: surfaceTintColor.HasValue
                 ? MaterialStateProperty<Color?>.All(surfaceTintColor.Value)
                 : null,
@@ -598,6 +611,9 @@ public sealed class FilledButton : StatelessWidget
                 : null,
             IconSize: iconSize.HasValue
                 ? MaterialStateProperty<double?>.All(iconSize.Value)
+                : null,
+            Elevation: elevation.HasValue
+                ? MaterialStateProperty<double?>.All(elevation.Value)
                 : null,
             Side: side.HasValue
                 ? MaterialStateProperty<BorderSide?>.All(side.Value)
@@ -783,12 +799,14 @@ public sealed class OutlinedButton : StatelessWidget
         Color? backgroundColor = null,
         Color? disabledForegroundColor = null,
         Color? disabledBackgroundColor = null,
+        Color? shadowColor = null,
         Color? surfaceTintColor = null,
         Color? iconColor = null,
         double? iconSize = null,
         Color? disabledIconColor = null,
         Color? overlayColor = null,
         Color? splashColor = null,
+        double? elevation = null,
         BorderSide? side = null,
         Thickness? padding = null,
         BorderRadius? shape = null,
@@ -812,6 +830,9 @@ public sealed class OutlinedButton : StatelessWidget
                         ? disabledBackgroundColor
                         : backgroundColor)
                 : null,
+            ShadowColor: shadowColor.HasValue
+                ? MaterialStateProperty<Color?>.All(shadowColor.Value)
+                : null,
             SurfaceTintColor: surfaceTintColor.HasValue
                 ? MaterialStateProperty<Color?>.All(surfaceTintColor.Value)
                 : null,
@@ -825,6 +846,9 @@ public sealed class OutlinedButton : StatelessWidget
                 : null,
             IconSize: iconSize.HasValue
                 ? MaterialStateProperty<double?>.All(iconSize.Value)
+                : null,
+            Elevation: elevation.HasValue
+                ? MaterialStateProperty<double?>.All(elevation.Value)
                 : null,
             Side: side.HasValue
                 ? MaterialStateProperty<BorderSide?>.All(side.Value)
