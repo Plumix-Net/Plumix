@@ -255,6 +255,12 @@ Progress update (2026-03-19):
   - `TextButton`/`ElevatedButton`/`OutlinedButton`/`FilledButton` default styles now expose Flutter-like icon defaults (`iconSize: 18` plus state-aware icon color tied to foreground/disabled tokens), and all `styleFrom(...)` builders now accept `iconColor`, `disabledIconColor`, and `iconSize`.
   - `MaterialButtonCore` now wraps button content with `IconTheme` resolved from composed button style layers (`iconColor` with fallback to `foregroundColor`, plus `iconSize`), so icon-bearing button children inherit style parity defaults.
   - Added focused `MaterialButtonsTests` coverage for icon-theme defaults and `styleFrom(...)` icon overrides in enabled and disabled states.
+- Continued Material button tap-target-size parity hardening:
+  - `ButtonStyle` now includes `TapTargetSize` and propagates it through style merge/composition layers.
+  - `ThemeData` now exposes `MaterialTapTargetSize` (`Padded` default), and Material button default styles now inherit this ambient theme policy.
+  - `TextButton`/`ElevatedButton`/`OutlinedButton`/`FilledButton` `styleFrom(...)` builders now accept `tapTargetSize` overrides.
+  - `MaterialButtonCore` now resolves tap-target wrapper size from the composed style (`Padded` -> `48x48`, `ShrinkWrap` -> `0x0`) before applying `ButtonTapTargetPadding`, matching Flutter `_InputPadding` mode behavior.
+  - Added focused `MaterialButtonsTests` coverage for theme-default tap-target mode, theme shrink-wrap behavior, and `styleFrom` precedence over theme.
 
 Initial scope:
 

@@ -27,6 +27,21 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 - Added focused regression coverage in `MaterialButtonsTests` for button icon-theme defaults and `styleFrom(...)` icon overrides (enabled and disabled paths) (`src/Flutter.Tests/MaterialButtonsTests.cs`).
 - Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-04-04-button-icon-theme-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
 
+## [2026-04-04] - M4 material button tap-target-size parity hardening
+
+### Changed
+
+- Extended `ButtonStyle` with Flutter-like `TapTargetSize` support and wired it into style merge/composition resolution (`src/Flutter.Material/ButtonStyle.cs`, `src/Flutter.Material/Buttons.cs`).
+- Added `ThemeData.MaterialTapTargetSize` (default `Padded`) and propagated it into default Material button styles so ambient theme controls the default tap-target policy (`src/Flutter.Material/ThemeData.cs`, `src/Flutter.Material/Buttons.cs`).
+- Extended `TextButton.StyleFrom(...)`, `ElevatedButton.StyleFrom(...)`, `OutlinedButton.StyleFrom(...)`, and `FilledButton.StyleFrom(...)` with `tapTargetSize` override support (`src/Flutter.Material/Buttons.cs`).
+- `MaterialButtonCore` now resolves tap-target min size from composed button style (`Padded` -> `48x48`, `ShrinkWrap` -> `0x0`) before applying `ButtonTapTargetPadding`, matching Flutter `_InputPadding` tap-target mode behavior (`src/Flutter.Material/Buttons.cs`).
+- Expanded `MaterialButtonsTests` with coverage for:
+  - `ThemeData.Light` default tap-target mode (`Padded`),
+  - theme-level `MaterialTapTargetSize.ShrinkWrap` behavior,
+  - `styleFrom(tapTargetSize: ...)` precedence over theme defaults
+  (`src/Flutter.Tests/MaterialButtonsTests.cs`).
+- Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-04-04-button-tap-target-size-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
+
 ## [2026-03-29] - M4 material elevated-button shadow/elevation parity hardening
 
 ### Changed

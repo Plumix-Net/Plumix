@@ -83,6 +83,7 @@ public sealed record ButtonStyle(
     MaterialStateProperty<Size?>? FixedSize = null,
     MaterialStateProperty<Size?>? MaximumSize = null,
     Alignment? Alignment = null,
+    MaterialTapTargetSize? TapTargetSize = null,
     MaterialStateProperty<TextStyle?>? TextStyle = null)
 {
     public ButtonStyle Merge(ButtonStyle? style)
@@ -109,6 +110,7 @@ public sealed record ButtonStyle(
             FixedSize = FixedSize ?? style.FixedSize,
             MaximumSize = MaximumSize ?? style.MaximumSize,
             Alignment = Alignment ?? style.Alignment,
+            TapTargetSize = TapTargetSize ?? style.TapTargetSize,
             TextStyle = TextStyle ?? style.TextStyle
         };
     }
@@ -181,6 +183,11 @@ public sealed record ButtonStyle(
     internal Size? ResolveMaximumSize(MaterialState states)
     {
         return MaximumSize?.Resolve(states);
+    }
+
+    internal MaterialTapTargetSize? ResolveTapTargetSize()
+    {
+        return TapTargetSize;
     }
 
     internal TextStyle? ResolveTextStyle(MaterialState states)

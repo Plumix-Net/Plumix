@@ -24,6 +24,12 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
+    public void ThemeData_Light_DefaultMaterialTapTargetSize_IsPadded()
+    {
+        Assert.Equal(MaterialTapTargetSize.Padded, ThemeData.Light.MaterialTapTargetSize);
+    }
+
+    [Fact]
     public void TextButton_UsesThemePrimaryColorAsDefaultForeground()
     {
         var owner = new BuildOwner();
@@ -185,6 +191,57 @@ public sealed class MaterialButtonsTests
 
         var missResult = new BoxHitTestResult();
         Assert.False(renderRoot.HitTest(missResult, new Point(60, 90)));
+    }
+
+    [Fact]
+    public void TextButton_ThemeMaterialTapTargetSizeShrinkWrap_DoesNotExpandTapTarget()
+    {
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light with { MaterialTapTargetSize = MaterialTapTargetSize.ShrinkWrap },
+                child: new SizedBox(
+                    width: 120,
+                    child: new TextButton(
+                        onPressed: () => { },
+                        child: new Text("Tap target")))));
+
+        harness.Pump(new Size(220, 120));
+
+        var hitResult = new BoxHitTestResult();
+        Assert.False(harness.RenderView.HitTest(hitResult, new Point(60, 46)));
+    }
+
+    [Fact]
+    public void TextButton_StyleFromTapTargetSize_OverridesThemeTapTargetSize()
+    {
+        using (var paddedHarness = new WidgetRenderHarness(
+                   new Theme(
+                       data: ThemeData.Light with { MaterialTapTargetSize = MaterialTapTargetSize.Padded },
+                       child: new SizedBox(
+                           width: 120,
+                           child: new TextButton(
+                               onPressed: () => { },
+                               child: new Text("Tap target"))))))
+        {
+            paddedHarness.Pump(new Size(220, 120));
+            var paddedHitResult = new BoxHitTestResult();
+            Assert.True(paddedHarness.RenderView.HitTest(paddedHitResult, new Point(60, 46)));
+        }
+
+        using var overrideHarness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light with { MaterialTapTargetSize = MaterialTapTargetSize.Padded },
+                child: new SizedBox(
+                    width: 120,
+                    child: new TextButton(
+                        onPressed: () => { },
+                        style: TextButton.StyleFrom(tapTargetSize: MaterialTapTargetSize.ShrinkWrap),
+                        child: new Text("Tap target")))));
+
+        overrideHarness.Pump(new Size(220, 120));
+
+        var overrideHitResult = new BoxHitTestResult();
+        Assert.False(overrideHarness.RenderView.HitTest(overrideHitResult, new Point(60, 46)));
     }
 
     [Fact]

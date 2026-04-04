@@ -78,6 +78,7 @@ public sealed class TextButton : StatelessWidget
         Size? fixedSize = null,
         Size? maximumSize = null,
         Alignment? alignment = null,
+        MaterialTapTargetSize? tapTargetSize = null,
         TextStyle? textStyle = null)
     {
         return new ButtonStyle(
@@ -123,6 +124,7 @@ public sealed class TextButton : StatelessWidget
                 ? MaterialStateProperty<Size?>.All(maximumSize.Value)
                 : null,
             Alignment: alignment,
+            TapTargetSize: tapTargetSize,
             TextStyle: textStyle is null ? null : MaterialStateProperty<TextStyle?>.All(textStyle));
     }
 
@@ -163,6 +165,7 @@ public sealed class TextButton : StatelessWidget
             Padding: MaterialStateProperty<Thickness?>.All(new Thickness(12, 8)),
             Shape: MaterialStateProperty<BorderRadius?>.All(Flutter.Rendering.BorderRadius.Circular(20)),
             MinimumSize: MaterialStateProperty<Size?>.All(new Size(minWidth, minHeight)),
+            TapTargetSize: theme.MaterialTapTargetSize,
             TextStyle: MaterialStateProperty<TextStyle?>.All(theme.TextTheme.LabelLarge));
     }
 
@@ -274,6 +277,7 @@ public sealed class ElevatedButton : StatelessWidget
         Size? maximumSize = null,
         double? elevation = null,
         Alignment? alignment = null,
+        MaterialTapTargetSize? tapTargetSize = null,
         TextStyle? textStyle = null)
     {
         return new ButtonStyle(
@@ -332,6 +336,7 @@ public sealed class ElevatedButton : StatelessWidget
                 ? MaterialStateProperty<Size?>.All(maximumSize.Value)
                 : null,
             Alignment: alignment,
+            TapTargetSize: tapTargetSize,
             TextStyle: textStyle is null ? null : MaterialStateProperty<TextStyle?>.All(textStyle));
     }
 
@@ -382,6 +387,7 @@ public sealed class ElevatedButton : StatelessWidget
             Padding: MaterialStateProperty<Thickness?>.All(new Thickness(24, 0)),
             Shape: MaterialStateProperty<BorderRadius?>.All(Flutter.Rendering.BorderRadius.Circular(20)),
             MinimumSize: MaterialStateProperty<Size?>.All(new Size(minWidth, minHeight)),
+            TapTargetSize: theme.MaterialTapTargetSize,
             TextStyle: MaterialStateProperty<TextStyle?>.All(theme.TextTheme.LabelLarge));
     }
 
@@ -554,6 +560,7 @@ public sealed class FilledButton : StatelessWidget
         Size? fixedSize = null,
         Size? maximumSize = null,
         Alignment? alignment = null,
+        MaterialTapTargetSize? tapTargetSize = null,
         TextStyle? textStyle = null)
     {
         return new ButtonStyle(
@@ -599,6 +606,7 @@ public sealed class FilledButton : StatelessWidget
                 ? MaterialStateProperty<Size?>.All(maximumSize.Value)
                 : null,
             Alignment: alignment,
+            TapTargetSize: tapTargetSize,
             TextStyle: textStyle is null ? null : MaterialStateProperty<TextStyle?>.All(textStyle));
     }
 
@@ -652,6 +660,7 @@ public sealed class FilledButton : StatelessWidget
             Padding: MaterialStateProperty<Thickness?>.All(new Thickness(24, 0)),
             Shape: MaterialStateProperty<BorderRadius?>.All(Flutter.Rendering.BorderRadius.Circular(20)),
             MinimumSize: MaterialStateProperty<Size?>.All(new Size(minWidth, minHeight)),
+            TapTargetSize: theme.MaterialTapTargetSize,
             TextStyle: MaterialStateProperty<TextStyle?>.All(theme.TextTheme.LabelLarge));
     }
 
@@ -774,6 +783,7 @@ public sealed class OutlinedButton : StatelessWidget
         Size? fixedSize = null,
         Size? maximumSize = null,
         Alignment? alignment = null,
+        MaterialTapTargetSize? tapTargetSize = null,
         TextStyle? textStyle = null)
     {
         return new ButtonStyle(
@@ -819,6 +829,7 @@ public sealed class OutlinedButton : StatelessWidget
                 ? MaterialStateProperty<Size?>.All(maximumSize.Value)
                 : null,
             Alignment: alignment,
+            TapTargetSize: tapTargetSize,
             TextStyle: textStyle is null ? null : MaterialStateProperty<TextStyle?>.All(textStyle));
     }
 
@@ -864,6 +875,7 @@ public sealed class OutlinedButton : StatelessWidget
             Padding: MaterialStateProperty<Thickness?>.All(new Thickness(24, 0)),
             Shape: MaterialStateProperty<BorderRadius?>.All(Flutter.Rendering.BorderRadius.Circular(20)),
             MinimumSize: MaterialStateProperty<Size?>.All(new Size(minWidth, minHeight)),
+            TapTargetSize: theme.MaterialTapTargetSize,
             TextStyle: MaterialStateProperty<TextStyle?>.All(theme.TextTheme.LabelLarge));
     }
 
@@ -1027,6 +1039,10 @@ internal sealed class MaterialButtonCore : StatefulWidget
                        ?? widgetStyle?.Alignment
                        ?? themeStyle?.Alignment
                        ?? defaults?.Alignment,
+            TapTargetSize: legacyOverrides?.TapTargetSize
+                           ?? widgetStyle?.TapTargetSize
+                           ?? themeStyle?.TapTargetSize
+                           ?? defaults?.TapTargetSize,
             TextStyle: ComposeStateProperty<TextStyle?>(
                 legacyOverrides?.TextStyle,
                 widgetStyle?.TextStyle,
@@ -1309,6 +1325,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
             ValidateFixedSize(fixedSize);
             var effectiveConstraints = CreateEffectiveConstraints(minimumSize, maximumSize, fixedSize);
             var alignment = style.Alignment ?? Alignment.Center;
+            var tapTargetSize = style.ResolveTapTargetSize() ?? MaterialTapTargetSize.Padded;
             var resolvedTextStyle = style.ResolveTextStyle(baseStates);
             var baseTextStyle = Theme.Of(context).TextTheme.LabelLarge with
             {
@@ -1388,8 +1405,17 @@ internal sealed class MaterialButtonCore : StatefulWidget
             // Flutter ButtonStyleButton keeps a larger padded tap-target box around the
             // visual material; this wrapper aligns layout spacing with that behavior.
             return new ButtonTapTargetPadding(
-                minSize: new Size(48, 48),
+                minSize: ResolveTapTargetPaddingMinSize(tapTargetSize),
                 child: result);
+        }
+
+        private static Size ResolveTapTargetPaddingMinSize(MaterialTapTargetSize tapTargetSize)
+        {
+            return tapTargetSize switch
+            {
+                MaterialTapTargetSize.ShrinkWrap => new Size(0, 0),
+                _ => new Size(48, 48)
+            };
         }
 
         private void AttachFocusNode(FocusNode? externalNode)

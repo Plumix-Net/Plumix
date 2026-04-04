@@ -23,6 +23,12 @@ public enum Brightness
     Dark,
 }
 
+public enum MaterialTapTargetSize
+{
+    Padded,
+    ShrinkWrap,
+}
+
 public sealed record AppBarThemeData(
     Color? BackgroundColor = null,
     Color? ForegroundColor = null,
@@ -148,6 +154,7 @@ public sealed record ThemeData
         Color? surfaceContainerLowColor = null,
         Color? secondaryContainerColor = null,
         Color? onSecondaryContainerColor = null,
+        MaterialTapTargetSize? materialTapTargetSize = null,
         ButtonStyle? textButtonStyle = null,
         ButtonStyle? elevatedButtonStyle = null,
         ButtonStyle? outlinedButtonStyle = null,
@@ -173,6 +180,7 @@ public sealed record ThemeData
         SurfaceContainerLowColor = surfaceContainerLowColor ?? LightSurfaceContainerLowColor;
         SecondaryContainerColor = secondaryContainerColor ?? LightSecondaryContainerColor;
         OnSecondaryContainerColor = onSecondaryContainerColor ?? LightOnSecondaryContainerColor;
+        MaterialTapTargetSize = materialTapTargetSize ?? MaterialTapTargetSize.Padded;
         TextButtonStyle = textButtonStyle;
         ElevatedButtonStyle = elevatedButtonStyle;
         OutlinedButtonStyle = outlinedButtonStyle;
@@ -218,6 +226,8 @@ public sealed record ThemeData
     public Color SecondaryContainerColor { get; init; }
 
     public Color OnSecondaryContainerColor { get; init; }
+
+    public MaterialTapTargetSize MaterialTapTargetSize { get; init; }
 
     public ButtonStyle? TextButtonStyle { get; init; }
 
