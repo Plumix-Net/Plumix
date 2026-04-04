@@ -16,6 +16,20 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 - Documentation policy update: Dart-to-C# control/widget work now uses mandatory parity-first porting mode (`docs/ai/PORTING_MODE.md`) with strict `1:1` default behavior, required divergence logging, and explicit parity-validation workflow references in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/INVARIANTS.md`, `docs/ai/MODULE_INDEX.md`, `docs/ai/FEATURE_TEMPLATE.md`, `docs/ai/TEST_MATRIX.md`, and `docs/ai/PARITY_MATRIX.md`.
 
+## [2026-04-05] - M4 outlined/filled `styleFrom` background mapping parity correction
+
+### Changed
+
+- Corrected `styleFrom(...)` background mapping split to match Flutter source:
+  - `OutlinedButton.styleFrom(backgroundColor: ...)` without `disabledBackgroundColor` now resolves as all-state background color (disabled state included),
+  - `FilledButton.styleFrom(backgroundColor: ...)` without `disabledBackgroundColor` now keeps default disabled fallback behavior (no all-state special-case)
+  (`src/Flutter.Material/Buttons.cs`).
+- Added focused `MaterialButtonsTests` coverage for:
+  - outlined-button background-only style override winning over themed disabled background,
+  - filled-button background-only style preserving default disabled background fallback
+  (`src/Flutter.Tests/MaterialButtonsTests.cs`).
+- Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-04-05-outlined-filled-stylefrom-background-mapping-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
+
 ## [2026-04-04] - M4 material button icon-theme parity hardening
 
 ### Changed

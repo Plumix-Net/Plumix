@@ -801,6 +801,35 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
+    public void OutlinedButton_StyleFrom_BackgroundOnly_OverridesThemeDisabledBackground()
+    {
+        var owner = new BuildOwner();
+        var theme = ThemeData.Light with
+        {
+            OutlinedButtonTheme = new OutlinedButtonThemeData(
+                new ButtonStyle(
+                    BackgroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+                        states.HasFlag(MaterialState.Disabled) ? Colors.IndianRed : Colors.Transparent)))
+        };
+
+        var root = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: new OutlinedButton(
+                    onPressed: null,
+                    style: OutlinedButton.StyleFrom(backgroundColor: Colors.Gold),
+                    child: new Text("Disabled outlined background override"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(decorated);
+        Assert.Equal(Colors.Gold, decorated!.Decoration.Color);
+    }
+
+    [Fact]
     public void FilledButton_UsesThemePrimaryAndOnPrimaryColorsByDefault()
     {
         var owner = new BuildOwner();
@@ -890,6 +919,32 @@ public sealed class MaterialButtonsTests
         Assert.Equal(ApplyOpacity(theme.OnSurfaceColor, 0.12), decorated!.Decoration.Color);
         Assert.NotNull(paragraph);
         Assert.Equal(ApplyOpacity(theme.OnSurfaceColor, 0.38), Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+    }
+
+    [Fact]
+    public void FilledButton_StyleFrom_BackgroundOnly_DisabledFallsBackToThemeDisabledBackground()
+    {
+        var owner = new BuildOwner();
+        var theme = ThemeData.Light with
+        {
+            OnSurfaceColor = Colors.DarkSlateGray
+        };
+
+        var root = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: new FilledButton(
+                    onPressed: null,
+                    style: FilledButton.StyleFrom(backgroundColor: Colors.SeaGreen),
+                    child: new Text("Disabled filled background fallback"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(decorated);
+        Assert.Equal(ApplyOpacity(theme.OnSurfaceColor, 0.12), decorated!.Decoration.Color);
     }
 
     [Fact]

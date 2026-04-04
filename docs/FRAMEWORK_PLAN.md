@@ -8,7 +8,7 @@ Use this block as the fastest machine-readable status summary.
 
 ```yaml
 framework_plan_version: 1
-last_updated: 2026-04-04
+last_updated: 2026-04-05
 north_star: "Flutter-like widget/rendering framework in C# with Avalonia as host infrastructure."
 current_phase: "M4 material library rewrite (theme/scaffold/material controls) in progress."
 status:
@@ -278,6 +278,10 @@ Progress update (2026-03-19):
   - `TextButton.styleFrom(iconColor: x)` now keeps `x` for disabled state when `disabledIconColor` is not provided.
   - `OutlinedButton.styleFrom(backgroundColor: x)` now keeps `x` for disabled state when `disabledBackgroundColor` is not provided.
   - Added focused `MaterialButtonsTests` coverage for these disabled-state mapping scenarios.
+- Continued `styleFrom` background mapping parity hardening for outlined/filled split behavior:
+  - `OutlinedButton.styleFrom(backgroundColor: x)` now follows Flutter all-state special-case semantics when `disabledBackgroundColor` is omitted, including override precedence over themed disabled background values.
+  - `FilledButton.styleFrom(backgroundColor: x)` now preserves Flutter default disabled-background fallback semantics when `disabledBackgroundColor` is omitted (no all-state special-case for filled).
+  - Added focused `MaterialButtonsTests` coverage for both scenarios.
 - Continued surface-tint Material-mode parity hardening:
   - `MaterialButtonCore` now applies surface tint only when `ThemeData.UseMaterial3` is `true`, matching Flutter `Material` tint behavior.
   - Added focused `MaterialButtonsTests` coverage for `UseMaterial3=false` to verify style/theme surface tint overrides do not tint elevated button backgrounds.

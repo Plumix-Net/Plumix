@@ -590,15 +590,6 @@ public sealed class FilledButton : StatelessWidget
         MaterialTapTargetSize? tapTargetSize = null,
         TextStyle? textStyle = null)
     {
-        var backgroundColorProperty = backgroundColor.HasValue && !disabledBackgroundColor.HasValue
-            ? MaterialStateProperty<Color?>.All(backgroundColor.Value)
-            : backgroundColor.HasValue || disabledBackgroundColor.HasValue
-                ? MaterialStateProperty<Color?>.ResolveWith(states =>
-                    states.HasFlag(MaterialState.Disabled)
-                        ? disabledBackgroundColor
-                        : backgroundColor)
-                : null;
-
         return new ButtonStyle(
             ForegroundColor: foregroundColor.HasValue || disabledForegroundColor.HasValue
                 ? MaterialStateProperty<Color?>.ResolveWith(states =>
@@ -606,7 +597,12 @@ public sealed class FilledButton : StatelessWidget
                         ? disabledForegroundColor
                         : foregroundColor)
                 : null,
-            BackgroundColor: backgroundColorProperty,
+            BackgroundColor: backgroundColor.HasValue || disabledBackgroundColor.HasValue
+                ? MaterialStateProperty<Color?>.ResolveWith(states =>
+                    states.HasFlag(MaterialState.Disabled)
+                        ? disabledBackgroundColor
+                        : backgroundColor)
+                : null,
             ShadowColor: shadowColor.HasValue
                 ? MaterialStateProperty<Color?>.All(shadowColor.Value)
                 : null,
@@ -829,6 +825,15 @@ public sealed class OutlinedButton : StatelessWidget
         MaterialTapTargetSize? tapTargetSize = null,
         TextStyle? textStyle = null)
     {
+        var backgroundColorProperty = backgroundColor.HasValue && !disabledBackgroundColor.HasValue
+            ? MaterialStateProperty<Color?>.All(backgroundColor.Value)
+            : backgroundColor.HasValue || disabledBackgroundColor.HasValue
+                ? MaterialStateProperty<Color?>.ResolveWith(states =>
+                    states.HasFlag(MaterialState.Disabled)
+                        ? disabledBackgroundColor
+                        : backgroundColor)
+                : null;
+
         return new ButtonStyle(
             ForegroundColor: foregroundColor.HasValue || disabledForegroundColor.HasValue
                 ? MaterialStateProperty<Color?>.ResolveWith(states =>
@@ -836,12 +841,7 @@ public sealed class OutlinedButton : StatelessWidget
                         ? disabledForegroundColor
                         : foregroundColor)
                 : null,
-            BackgroundColor: backgroundColor.HasValue || disabledBackgroundColor.HasValue
-                ? MaterialStateProperty<Color?>.ResolveWith(states =>
-                    states.HasFlag(MaterialState.Disabled)
-                        ? disabledBackgroundColor
-                        : backgroundColor)
-                : null,
+            BackgroundColor: backgroundColorProperty,
             ShadowColor: shadowColor.HasValue
                 ? MaterialStateProperty<Color?>.All(shadowColor.Value)
                 : null,
