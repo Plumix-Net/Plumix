@@ -178,6 +178,49 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
+    public void TextButton_DefaultMinSize_UseMaterial3Disabled_UsesMaterialBaseline64x36()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with { UseMaterial3 = false },
+                child: new TextButton(
+                    onPressed: () => { },
+                    child: new Text("Min size"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var constrainedBox = FindDescendant<RenderConstrainedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(constrainedBox);
+        Assert.Equal(64, constrainedBox!.AdditionalConstraints.MinWidth);
+        Assert.Equal(36, constrainedBox.AdditionalConstraints.MinHeight);
+    }
+
+    [Fact]
+    public void TextButton_DefaultPadding_UseMaterial3Disabled_UsesAll8()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with { UseMaterial3 = false },
+                child: new TextButton(
+                    onPressed: () => { },
+                    child: new Text("Padding"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(8), padding!.Padding);
+    }
+
+    [Fact]
     public void TextButton_TapTargetPadding_RedirectsHitTestInPaddedAreaToChildCenter()
     {
         using var harness = new WidgetRenderHarness(
@@ -311,6 +354,49 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
+    public void ElevatedButton_DefaultPadding_UseMaterial3Disabled_UsesHorizontal16AndZeroVertical()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with { UseMaterial3 = false },
+                child: new ElevatedButton(
+                    onPressed: () => { },
+                    child: new Text("Padding"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(16, 0), padding!.Padding);
+    }
+
+    [Fact]
+    public void ElevatedButton_DefaultMinSize_UseMaterial3Disabled_UsesMaterialBaseline64x36()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with { UseMaterial3 = false },
+                child: new ElevatedButton(
+                    onPressed: () => { },
+                    child: new Text("Min size"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var constrainedBox = FindDescendant<RenderConstrainedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(constrainedBox);
+        Assert.Equal(64, constrainedBox!.AdditionalConstraints.MinWidth);
+        Assert.Equal(36, constrainedBox.AdditionalConstraints.MinHeight);
+    }
+
+    [Fact]
     public void OutlinedButton_DefaultPadding_UsesHorizontal24AndZeroVertical()
     {
         var owner = new BuildOwner();
@@ -329,6 +415,49 @@ public sealed class MaterialButtonsTests
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
         Assert.Equal(new Thickness(24, 0), padding!.Padding);
+    }
+
+    [Fact]
+    public void OutlinedButton_DefaultPadding_UseMaterial3Disabled_UsesHorizontal16AndZeroVertical()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with { UseMaterial3 = false },
+                child: new OutlinedButton(
+                    onPressed: () => { },
+                    child: new Text("Padding"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(16, 0), padding!.Padding);
+    }
+
+    [Fact]
+    public void OutlinedButton_DefaultMinSize_UseMaterial3Disabled_UsesMaterialBaseline64x36()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with { UseMaterial3 = false },
+                child: new OutlinedButton(
+                    onPressed: () => { },
+                    child: new Text("Min size"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var constrainedBox = FindDescendant<RenderConstrainedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(constrainedBox);
+        Assert.Equal(64, constrainedBox!.AdditionalConstraints.MinWidth);
+        Assert.Equal(36, constrainedBox.AdditionalConstraints.MinHeight);
     }
 
     [Fact]
@@ -3477,6 +3606,69 @@ public sealed class MaterialButtonsTests
         Assert.Equal(BorderRadius.Circular(20), clip!.BorderRadius);
         Assert.NotNull(splash);
         Assert.False(splash!.ClipToBounds);
+    }
+
+    [Fact]
+    public void TextButton_UsesRoundedClipRadius4_WhenUseMaterial3Disabled()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with { UseMaterial3 = false },
+                child: new TextButton(
+                    onPressed: () => { },
+                    child: new Text("Rounded splash"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var clip = FindDescendant<RenderClipRRect>(RequireRenderObject<RenderObject>(root.ChildElement));
+
+        Assert.NotNull(clip);
+        Assert.Equal(BorderRadius.Circular(4), clip!.BorderRadius);
+    }
+
+    [Fact]
+    public void ElevatedButton_UsesRoundedClipRadius4_WhenUseMaterial3Disabled()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with { UseMaterial3 = false },
+                child: new ElevatedButton(
+                    onPressed: () => { },
+                    child: new Text("Rounded splash"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var clip = FindDescendant<RenderClipRRect>(RequireRenderObject<RenderObject>(root.ChildElement));
+
+        Assert.NotNull(clip);
+        Assert.Equal(BorderRadius.Circular(4), clip!.BorderRadius);
+    }
+
+    [Fact]
+    public void OutlinedButton_UsesRoundedClipRadius4_WhenUseMaterial3Disabled()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with { UseMaterial3 = false },
+                child: new OutlinedButton(
+                    onPressed: () => { },
+                    child: new Text("Rounded splash"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var clip = FindDescendant<RenderClipRRect>(RequireRenderObject<RenderObject>(root.ChildElement));
+
+        Assert.NotNull(clip);
+        Assert.Equal(BorderRadius.Circular(4), clip!.BorderRadius);
     }
 
     [Fact]

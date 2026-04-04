@@ -20,7 +20,7 @@ public sealed class TextButton : StatelessWidget
         Thickness? padding = null,
         BorderRadius? borderRadius = null,
         double minWidth = 64,
-        double minHeight = 40,
+        double? minHeight = null,
         ButtonStyle? style = null,
         FocusNode? focusNode = null,
         bool autofocus = false,
@@ -33,7 +33,8 @@ public sealed class TextButton : StatelessWidget
         Padding = padding;
         BorderRadius = borderRadius;
         MinWidth = minWidth;
-        MinHeight = minHeight;
+        HasExplicitMinHeight = minHeight.HasValue;
+        MinHeight = minHeight ?? 40;
         Style = style;
         FocusNode = focusNode;
         Autofocus = autofocus;
@@ -54,6 +55,8 @@ public sealed class TextButton : StatelessWidget
     public double MinWidth { get; }
 
     public double MinHeight { get; }
+
+    private bool HasExplicitMinHeight { get; }
 
     public ButtonStyle? Style { get; }
 
@@ -152,7 +155,7 @@ public sealed class TextButton : StatelessWidget
     {
         var theme = Theme.Of(context);
         var mergedStyle = MaterialButtonCore.ComposeStyles(
-            defaults: CreateDefaultStyle(theme, MinWidth, MinHeight),
+            defaults: CreateDefaultStyle(theme, MinWidth, MinHeight, HasExplicitMinHeight),
             themeStyle: TextButtonTheme.Of(context).Style,
             widgetStyle: Style,
             legacyOverrides: CreateLegacyStyleOverrides(theme));
@@ -165,9 +168,17 @@ public sealed class TextButton : StatelessWidget
             autofocus: Autofocus);
     }
 
-    private static ButtonStyle CreateDefaultStyle(ThemeData theme, double minWidth, double minHeight)
+    private static ButtonStyle CreateDefaultStyle(
+        ThemeData theme,
+        double minWidth,
+        double minHeight,
+        bool hasExplicitMinHeight)
     {
+        var useMaterial3 = theme.UseMaterial3;
         var stateColor = theme.PrimaryColor;
+        var resolvedMinHeight = hasExplicitMinHeight ? minHeight : useMaterial3 ? 40 : 36;
+        var defaultPadding = useMaterial3 ? new Thickness(12, 8) : new Thickness(8);
+        var defaultShape = Flutter.Rendering.BorderRadius.Circular(useMaterial3 ? 20 : 4);
         return new ButtonStyle(
             ForegroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
                 states.HasFlag(MaterialState.Disabled)
@@ -182,9 +193,9 @@ public sealed class TextButton : StatelessWidget
                     : stateColor),
             IconSize: MaterialStateProperty<double?>.All(18),
             Side: MaterialStateProperty<BorderSide?>.All(null),
-            Padding: MaterialStateProperty<Thickness?>.All(new Thickness(12, 8)),
-            Shape: MaterialStateProperty<BorderRadius?>.All(Flutter.Rendering.BorderRadius.Circular(20)),
-            MinimumSize: MaterialStateProperty<Size?>.All(new Size(minWidth, minHeight)),
+            Padding: MaterialStateProperty<Thickness?>.All(defaultPadding),
+            Shape: MaterialStateProperty<BorderRadius?>.All(defaultShape),
+            MinimumSize: MaterialStateProperty<Size?>.All(new Size(minWidth, resolvedMinHeight)),
             TapTargetSize: theme.MaterialTapTargetSize,
             TextStyle: MaterialStateProperty<TextStyle?>.All(theme.TextTheme.LabelLarge));
     }
@@ -237,7 +248,7 @@ public sealed class ElevatedButton : StatelessWidget
         Thickness? padding = null,
         BorderRadius? borderRadius = null,
         double minWidth = 64,
-        double minHeight = 40,
+        double? minHeight = null,
         ButtonStyle? style = null,
         FocusNode? focusNode = null,
         bool autofocus = false,
@@ -250,7 +261,8 @@ public sealed class ElevatedButton : StatelessWidget
         Padding = padding;
         BorderRadius = borderRadius;
         MinWidth = minWidth;
-        MinHeight = minHeight;
+        HasExplicitMinHeight = minHeight.HasValue;
+        MinHeight = minHeight ?? 40;
         Style = style;
         FocusNode = focusNode;
         Autofocus = autofocus;
@@ -271,6 +283,8 @@ public sealed class ElevatedButton : StatelessWidget
     public double MinWidth { get; }
 
     public double MinHeight { get; }
+
+    private bool HasExplicitMinHeight { get; }
 
     public ButtonStyle? Style { get; }
 
@@ -368,7 +382,7 @@ public sealed class ElevatedButton : StatelessWidget
     {
         var theme = Theme.Of(context);
         var mergedStyle = MaterialButtonCore.ComposeStyles(
-            defaults: CreateDefaultStyle(theme, MinWidth, MinHeight),
+            defaults: CreateDefaultStyle(theme, MinWidth, MinHeight, HasExplicitMinHeight),
             themeStyle: ElevatedButtonTheme.Of(context).Style,
             widgetStyle: Style,
             legacyOverrides: CreateLegacyStyleOverrides(theme));
@@ -381,9 +395,17 @@ public sealed class ElevatedButton : StatelessWidget
             autofocus: Autofocus);
     }
 
-    private static ButtonStyle CreateDefaultStyle(ThemeData theme, double minWidth, double minHeight)
+    private static ButtonStyle CreateDefaultStyle(
+        ThemeData theme,
+        double minWidth,
+        double minHeight,
+        bool hasExplicitMinHeight)
     {
+        var useMaterial3 = theme.UseMaterial3;
         var stateColor = theme.PrimaryColor;
+        var resolvedMinHeight = hasExplicitMinHeight ? minHeight : useMaterial3 ? 40 : 36;
+        var defaultPadding = useMaterial3 ? new Thickness(24, 0) : new Thickness(16, 0);
+        var defaultShape = Flutter.Rendering.BorderRadius.Circular(useMaterial3 ? 20 : 4);
         return new ButtonStyle(
             ForegroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
                 states.HasFlag(MaterialState.Disabled)
@@ -408,9 +430,9 @@ public sealed class ElevatedButton : StatelessWidget
                         ? 3
                         : 1),
             Side: MaterialStateProperty<BorderSide?>.All(null),
-            Padding: MaterialStateProperty<Thickness?>.All(new Thickness(24, 0)),
-            Shape: MaterialStateProperty<BorderRadius?>.All(Flutter.Rendering.BorderRadius.Circular(20)),
-            MinimumSize: MaterialStateProperty<Size?>.All(new Size(minWidth, minHeight)),
+            Padding: MaterialStateProperty<Thickness?>.All(defaultPadding),
+            Shape: MaterialStateProperty<BorderRadius?>.All(defaultShape),
+            MinimumSize: MaterialStateProperty<Size?>.All(new Size(minWidth, resolvedMinHeight)),
             TapTargetSize: theme.MaterialTapTargetSize,
             TextStyle: MaterialStateProperty<TextStyle?>.All(theme.TextTheme.LabelLarge));
     }
@@ -750,7 +772,7 @@ public sealed class OutlinedButton : StatelessWidget
         Thickness? padding = null,
         BorderRadius? borderRadius = null,
         double minWidth = 64,
-        double minHeight = 40,
+        double? minHeight = null,
         ButtonStyle? style = null,
         FocusNode? focusNode = null,
         bool autofocus = false,
@@ -770,7 +792,8 @@ public sealed class OutlinedButton : StatelessWidget
         Padding = padding;
         BorderRadius = borderRadius;
         MinWidth = minWidth;
-        MinHeight = minHeight;
+        HasExplicitMinHeight = minHeight.HasValue;
+        MinHeight = minHeight ?? 40;
         Style = style;
         FocusNode = focusNode;
         Autofocus = autofocus;
@@ -795,6 +818,8 @@ public sealed class OutlinedButton : StatelessWidget
     public double MinWidth { get; }
 
     public double MinHeight { get; }
+
+    private bool HasExplicitMinHeight { get; }
 
     public ButtonStyle? Style { get; }
 
@@ -889,7 +914,7 @@ public sealed class OutlinedButton : StatelessWidget
     {
         var theme = Theme.Of(context);
         var mergedStyle = MaterialButtonCore.ComposeStyles(
-            defaults: CreateDefaultStyle(theme, MinWidth, MinHeight),
+            defaults: CreateDefaultStyle(theme, MinWidth, MinHeight, HasExplicitMinHeight),
             themeStyle: OutlinedButtonTheme.Of(context).Style,
             widgetStyle: Style,
             legacyOverrides: CreateLegacyStyleOverrides(theme));
@@ -902,11 +927,18 @@ public sealed class OutlinedButton : StatelessWidget
             autofocus: Autofocus);
     }
 
-    private static ButtonStyle CreateDefaultStyle(ThemeData theme, double minWidth, double minHeight)
+    private static ButtonStyle CreateDefaultStyle(
+        ThemeData theme,
+        double minWidth,
+        double minHeight,
+        bool hasExplicitMinHeight)
     {
         var stateColor = theme.PrimaryColor;
         var useMaterial3 = theme.UseMaterial3;
         var m2SideColor = MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.12);
+        var resolvedMinHeight = hasExplicitMinHeight ? minHeight : useMaterial3 ? 40 : 36;
+        var defaultPadding = useMaterial3 ? new Thickness(24, 0) : new Thickness(16, 0);
+        var defaultShape = Flutter.Rendering.BorderRadius.Circular(useMaterial3 ? 20 : 4);
         return new ButtonStyle(
             ForegroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
                 states.HasFlag(MaterialState.Disabled)
@@ -926,9 +958,9 @@ public sealed class OutlinedButton : StatelessWidget
                     : useMaterial3 && states.HasFlag(MaterialState.Focused)
                         ? new BorderSide(stateColor, 1)
                     : new BorderSide(useMaterial3 ? theme.OutlineColor : m2SideColor, 1)),
-            Padding: MaterialStateProperty<Thickness?>.All(new Thickness(24, 0)),
-            Shape: MaterialStateProperty<BorderRadius?>.All(Flutter.Rendering.BorderRadius.Circular(20)),
-            MinimumSize: MaterialStateProperty<Size?>.All(new Size(minWidth, minHeight)),
+            Padding: MaterialStateProperty<Thickness?>.All(defaultPadding),
+            Shape: MaterialStateProperty<BorderRadius?>.All(defaultShape),
+            MinimumSize: MaterialStateProperty<Size?>.All(new Size(minWidth, resolvedMinHeight)),
             TapTargetSize: theme.MaterialTapTargetSize,
             TextStyle: MaterialStateProperty<TextStyle?>.All(theme.TextTheme.LabelLarge));
     }

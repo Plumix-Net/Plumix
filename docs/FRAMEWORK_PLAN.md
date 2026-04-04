@@ -288,6 +288,10 @@ Progress update (2026-03-19):
 - Continued surface-tint Material-mode parity hardening:
   - `MaterialButtonCore` now applies surface tint only when `ThemeData.UseMaterial3` is `true`, matching Flutter `Material` tint behavior.
   - Added focused `MaterialButtonsTests` coverage for `UseMaterial3=false` to verify style/theme surface tint overrides do not tint elevated button backgrounds.
+- Continued mode-aware M2 button-geometry parity hardening:
+  - `TextButton`/`ElevatedButton`/`OutlinedButton` default geometry now follows Flutter M2 defaults when `UseMaterial3=false`: `minimumSize` height `36`, shape radius `4`, and default padding tokens (`TextButton` -> `all(8)`, `ElevatedButton`/`OutlinedButton` -> `horizontal(16)`).
+  - Button constructor `minHeight` remains an explicit override path when provided, while omitted `minHeight` now resolves through mode-aware defaults (`M3=40`, `M2=36`) for these button types.
+  - Added focused `MaterialButtonsTests` coverage for M2 default `minimumSize`, `padding`, and rounded clip-shape behavior across text/elevated/outlined buttons.
 
 Initial scope:
 
