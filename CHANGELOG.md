@@ -16,6 +16,20 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 - Documentation policy update: Dart-to-C# control/widget work now uses mandatory parity-first porting mode (`docs/ai/PORTING_MODE.md`) with strict `1:1` default behavior, required divergence logging, and explicit parity-validation workflow references in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/INVARIANTS.md`, `docs/ai/MODULE_INDEX.md`, `docs/ai/FEATURE_TEMPLATE.md`, `docs/ai/TEST_MATRIX.md`, and `docs/ai/PARITY_MATRIX.md`.
 
+## [2026-04-05] - M4 outlined-button M2 border-focus parity hardening
+
+### Changed
+
+- Aligned `OutlinedButton` default border-side state mapping with Flutter mode-aware behavior:
+  - `UseMaterial3=true`: focused border uses primary color, other enabled states use outline color.
+  - `UseMaterial3=false`: focused and unfocused enabled border both use `onSurface(0.12)` (no primary focus border accent)
+  (`src/Flutter.Material/Buttons.cs`).
+- Added focused `MaterialButtonsTests` coverage for M2 outlined-button border behavior:
+  - default enabled border uses `onSurface` opacity path,
+  - focused border remains on the same `onSurface` opacity path in M2 mode
+  (`src/Flutter.Tests/MaterialButtonsTests.cs`).
+- Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-04-05-outlined-button-m2-border-focus-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
+
 ## [2026-04-05] - M4 outlined/filled `styleFrom` background mapping parity correction
 
 ### Changed

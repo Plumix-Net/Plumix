@@ -753,6 +753,66 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
+    public void OutlinedButton_DefaultBorder_UseMaterial3Disabled_UsesOnSurfaceOpacity()
+    {
+        var owner = new BuildOwner();
+        var theme = ThemeData.Light with
+        {
+            UseMaterial3 = false,
+            OnSurfaceColor = Colors.DarkSlateBlue,
+            OutlineColor = Colors.CadetBlue
+        };
+
+        var root = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: new OutlinedButton(
+                    onPressed: () => { },
+                    child: new Text("Outline m2 border"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(decorated);
+        Assert.Equal(new BorderSide(ApplyOpacity(theme.OnSurfaceColor, 0.12), 1), decorated!.Decoration.Border);
+    }
+
+    [Fact]
+    public void OutlinedButton_FocusedBorder_UseMaterial3Disabled_StaysOnSurfaceOpacity()
+    {
+        var owner = new BuildOwner();
+        var focusNode = new FocusNode();
+        var theme = ThemeData.Light with
+        {
+            UseMaterial3 = false,
+            OnSurfaceColor = Colors.DarkSlateBlue,
+            PrimaryColor = Colors.OrangeRed,
+            OutlineColor = Colors.CadetBlue
+        };
+
+        var root = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: new OutlinedButton(
+                    onPressed: () => { },
+                    focusNode: focusNode,
+                    child: new Text("Outline m2 focus border"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.True(focusNode.RequestFocus());
+        owner.FlushBuild();
+
+        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(decorated);
+        Assert.Equal(new BorderSide(ApplyOpacity(theme.OnSurfaceColor, 0.12), 1), decorated!.Decoration.Border);
+    }
+
+    [Fact]
     public void OutlinedButton_DefaultForegroundUsesThemePrimaryColor()
     {
         var owner = new BuildOwner();

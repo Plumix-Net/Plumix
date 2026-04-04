@@ -282,6 +282,9 @@ Progress update (2026-03-19):
   - `OutlinedButton.styleFrom(backgroundColor: x)` now follows Flutter all-state special-case semantics when `disabledBackgroundColor` is omitted, including override precedence over themed disabled background values.
   - `FilledButton.styleFrom(backgroundColor: x)` now preserves Flutter default disabled-background fallback semantics when `disabledBackgroundColor` is omitted (no all-state special-case for filled).
   - Added focused `MaterialButtonsTests` coverage for both scenarios.
+- Continued mode-aware outlined-button border parity hardening:
+  - `OutlinedButton` default border-side resolver is now `UseMaterial3`-aware and matches Flutter behavior: M3 keeps focused primary border accent; M2 keeps focused and unfocused enabled border on `onSurface(0.12)`.
+  - Added focused `MaterialButtonsTests` coverage for M2 default/focused border behavior.
 - Continued surface-tint Material-mode parity hardening:
   - `MaterialButtonCore` now applies surface tint only when `ThemeData.UseMaterial3` is `true`, matching Flutter `Material` tint behavior.
   - Added focused `MaterialButtonsTests` coverage for `UseMaterial3=false` to verify style/theme surface tint overrides do not tint elevated button backgrounds.

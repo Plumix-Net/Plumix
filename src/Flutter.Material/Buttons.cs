@@ -905,6 +905,8 @@ public sealed class OutlinedButton : StatelessWidget
     private static ButtonStyle CreateDefaultStyle(ThemeData theme, double minWidth, double minHeight)
     {
         var stateColor = theme.PrimaryColor;
+        var useMaterial3 = theme.UseMaterial3;
+        var m2SideColor = MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.12);
         return new ButtonStyle(
             ForegroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
                 states.HasFlag(MaterialState.Disabled)
@@ -920,10 +922,10 @@ public sealed class OutlinedButton : StatelessWidget
             IconSize: MaterialStateProperty<double?>.All(18),
             Side: MaterialStateProperty<BorderSide?>.ResolveWith(states =>
                 states.HasFlag(MaterialState.Disabled)
-                    ? new BorderSide(MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.12), 1)
-                    : states.HasFlag(MaterialState.Focused)
+                    ? new BorderSide(m2SideColor, 1)
+                    : useMaterial3 && states.HasFlag(MaterialState.Focused)
                         ? new BorderSide(stateColor, 1)
-                    : new BorderSide(theme.OutlineColor, 1)),
+                    : new BorderSide(useMaterial3 ? theme.OutlineColor : m2SideColor, 1)),
             Padding: MaterialStateProperty<Thickness?>.All(new Thickness(24, 0)),
             Shape: MaterialStateProperty<BorderRadius?>.All(Flutter.Rendering.BorderRadius.Circular(20)),
             MinimumSize: MaterialStateProperty<Size?>.All(new Size(minWidth, minHeight)),
