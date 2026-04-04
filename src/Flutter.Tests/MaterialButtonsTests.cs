@@ -55,6 +55,32 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
+    public void TextButton_UseMaterial3Disabled_UsesThemePrimaryColorAsDefaultForeground()
+    {
+        var owner = new BuildOwner();
+        var theme = ThemeData.Light with
+        {
+            UseMaterial3 = false,
+            PrimaryColor = Colors.OrangeRed
+        };
+
+        var root = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: new TextButton(
+                    onPressed: () => { },
+                    child: new Text("Tap me"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(paragraph);
+        Assert.Equal(Colors.OrangeRed, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+    }
+
+    [Fact]
     public void TextButton_DefaultIconTheme_UsesForegroundAndIconSizeDefaults()
     {
         var owner = new BuildOwner();
@@ -561,6 +587,39 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
+    public void ElevatedButton_UseMaterial3Disabled_UsesThemePrimaryAndOnPrimaryColorsByDefault()
+    {
+        var owner = new BuildOwner();
+        var theme = ThemeData.Light with
+        {
+            UseMaterial3 = false,
+            PrimaryColor = Colors.DarkSlateBlue,
+            OnPrimaryColor = Colors.AliceBlue,
+            SurfaceContainerLowColor = Colors.Bisque
+        };
+
+        var root = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: new ElevatedButton(
+                    onPressed: () => { },
+                    child: new Text("Primary"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
+        var decorated = FindDescendant<RenderDecoratedBox>(renderRoot);
+        var paragraph = FindDescendant<RenderParagraph>(renderRoot);
+
+        Assert.NotNull(decorated);
+        Assert.Equal(theme.PrimaryColor, decorated!.Decoration.Color);
+        Assert.NotNull(paragraph);
+        Assert.Equal(theme.OnPrimaryColor, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+    }
+
+    [Fact]
     public void ElevatedButton_StyleFrom_SurfaceTintColor_TintsBackgroundByElevation()
     {
         var owner = new BuildOwner();
@@ -710,6 +769,64 @@ public sealed class MaterialButtonsTests
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
         Assert.False(decorated!.Decoration.BoxShadows.HasValue);
+    }
+
+    [Fact]
+    public void ElevatedButton_DefaultElevation_UseMaterial3Disabled_UsesMaterial2StateMap()
+    {
+        var owner = new BuildOwner();
+        var theme = ThemeData.Light with { UseMaterial3 = false };
+        var root = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: new ElevatedButton(
+                    onPressed: () => { },
+                    child: new Text("M2 elevation"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
+        var defaultDecorated = FindDescendant<RenderDecoratedBox>(renderRoot);
+        Assert.NotNull(defaultDecorated);
+        var defaultShadow = RequirePrimaryShadow(defaultDecorated!);
+        Assert.Equal(2, defaultShadow.OffsetY);
+
+        var hoverListener = FindHoverPointerListener(renderRoot);
+        Assert.NotNull(hoverListener);
+        hoverListener!.HandleEvent(
+            new PointerEnterEvent(
+                pointer: 88,
+                kind: PointerDeviceKind.Mouse,
+                position: new Point(10, 8),
+                buttons: PointerButtons.None,
+                timestampUtc: DateTime.UtcNow),
+            new BoxHitTestEntry(hoverListener, new Point(10, 8)));
+        owner.FlushBuild();
+
+        renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
+        var hoveredDecorated = FindDescendant<RenderDecoratedBox>(renderRoot);
+        Assert.NotNull(hoveredDecorated);
+        var hoveredShadow = RequirePrimaryShadow(hoveredDecorated!);
+        Assert.Equal(4, hoveredShadow.OffsetY);
+
+        var interactiveListener = FindInteractivePointerListener(renderRoot);
+        Assert.NotNull(interactiveListener);
+        interactiveListener!.HandleEvent(
+            new PointerDownEvent(
+                pointer: 88,
+                kind: PointerDeviceKind.Mouse,
+                position: new Point(10, 8),
+                buttons: PointerButtons.Primary,
+                timestampUtc: DateTime.UtcNow),
+            new BoxHitTestEntry(interactiveListener, new Point(10, 8)));
+        owner.FlushBuild();
+
+        var pressedDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(pressedDecorated);
+        var pressedShadow = RequirePrimaryShadow(pressedDecorated!);
+        Assert.Equal(8, pressedShadow.OffsetY);
     }
 
     [Fact]
@@ -957,6 +1074,32 @@ public sealed class MaterialButtonsTests
                 child: new OutlinedButton(
                     onPressed: () => { },
                     child: new Text("Outline fg"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(paragraph);
+        Assert.Equal(Colors.MediumVioletRed, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+    }
+
+    [Fact]
+    public void OutlinedButton_UseMaterial3Disabled_DefaultForegroundUsesThemePrimaryColor()
+    {
+        var owner = new BuildOwner();
+        var theme = ThemeData.Light with
+        {
+            UseMaterial3 = false,
+            PrimaryColor = Colors.MediumVioletRed
+        };
+
+        var root = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: new OutlinedButton(
+                    onPressed: () => { },
+                    child: new Text("Outlined"))));
 
         root.Attach(owner);
         root.Mount(parent: null, newSlot: null);
@@ -3985,6 +4128,14 @@ public sealed class MaterialButtonsTests
         });
 
         return result;
+    }
+
+    private static BoxShadow RequirePrimaryShadow(RenderDecoratedBox decorated)
+    {
+        Assert.True(decorated.Decoration.BoxShadows.HasValue);
+        var shadows = decorated.Decoration.BoxShadows!.Value;
+        Assert.True(shadows.Count > 0);
+        return shadows[0];
     }
 
     private sealed class CaptureIconThemeWidget : StatelessWidget

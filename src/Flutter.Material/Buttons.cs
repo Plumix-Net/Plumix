@@ -402,7 +402,8 @@ public sealed class ElevatedButton : StatelessWidget
         bool hasExplicitMinHeight)
     {
         var useMaterial3 = theme.UseMaterial3;
-        var stateColor = theme.PrimaryColor;
+        var enabledForeground = useMaterial3 ? theme.PrimaryColor : theme.OnPrimaryColor;
+        var enabledBackground = useMaterial3 ? theme.SurfaceContainerLowColor : theme.PrimaryColor;
         var resolvedMinHeight = hasExplicitMinHeight ? minHeight : useMaterial3 ? 40 : 36;
         var defaultPadding = useMaterial3 ? new Thickness(24, 0) : new Thickness(16, 0);
         var defaultShape = Flutter.Rendering.BorderRadius.Circular(useMaterial3 ? 20 : 4);
@@ -410,25 +411,31 @@ public sealed class ElevatedButton : StatelessWidget
             ForegroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
                 states.HasFlag(MaterialState.Disabled)
                     ? MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.38)
-                    : stateColor),
+                    : enabledForeground),
             BackgroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
                 states.HasFlag(MaterialState.Disabled)
                     ? MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.12)
-                    : theme.SurfaceContainerLowColor),
+                    : enabledBackground),
             ShadowColor: MaterialStateProperty<Color?>.All(theme.ShadowColor),
-            OverlayColor: MaterialButtonCore.CreateDefaultOverlayResolver(stateColor),
+            OverlayColor: MaterialButtonCore.CreateDefaultOverlayResolver(enabledForeground),
             SplashColor: null,
             IconColor: MaterialStateProperty<Color?>.ResolveWith(states =>
                 states.HasFlag(MaterialState.Disabled)
                     ? MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.38)
-                    : stateColor),
+                    : enabledForeground),
             IconSize: MaterialStateProperty<double?>.All(18),
             Elevation: MaterialStateProperty<double?>.ResolveWith(states =>
                 states.HasFlag(MaterialState.Disabled)
                     ? 0
-                    : states.HasFlag(MaterialState.Hovered)
-                        ? 3
-                        : 1),
+                    : useMaterial3
+                        ? states.HasFlag(MaterialState.Hovered)
+                            ? 3
+                            : 1
+                        : states.HasFlag(MaterialState.Pressed)
+                            ? 8
+                            : states.HasFlag(MaterialState.Hovered) || states.HasFlag(MaterialState.Focused)
+                                ? 4
+                                : 2),
             Side: MaterialStateProperty<BorderSide?>.All(null),
             Padding: MaterialStateProperty<Thickness?>.All(defaultPadding),
             Shape: MaterialStateProperty<BorderRadius?>.All(defaultShape),

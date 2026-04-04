@@ -292,6 +292,10 @@ Progress update (2026-03-19):
   - `TextButton`/`ElevatedButton`/`OutlinedButton` default geometry now follows Flutter M2 defaults when `UseMaterial3=false`: `minimumSize` height `36`, shape radius `4`, and default padding tokens (`TextButton` -> `all(8)`, `ElevatedButton`/`OutlinedButton` -> `horizontal(16)`).
   - Button constructor `minHeight` remains an explicit override path when provided, while omitted `minHeight` now resolves through mode-aware defaults (`M3=40`, `M2=36`) for these button types.
   - Added focused `MaterialButtonsTests` coverage for M2 default `minimumSize`, `padding`, and rounded clip-shape behavior across text/elevated/outlined buttons.
+- Continued mode-aware M2 button-color/elevation parity hardening:
+  - `ElevatedButton` defaults now resolve by material mode for enabled tokens: M3 keeps (`surfaceContainerLow` background + `primary` foreground), while M2 now matches Flutter (`primary` background + `onPrimary` foreground).
+  - `ElevatedButton` default elevation resolver is now mode-aware: M3 keeps (`disabled=0`, `default=1`, `hovered=3`, `focused/pressed=1`), while M2 now matches Flutter (`disabled=0`, `default=2`, `hovered/focused=4`, `pressed=8`).
+  - Added focused `MaterialButtonsTests` coverage for M2 elevated default color pair + elevation-state mapping, and baseline M2 foreground-default checks for `TextButton`/`OutlinedButton`.
 
 Initial scope:
 

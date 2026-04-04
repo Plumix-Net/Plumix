@@ -16,6 +16,24 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 - Documentation policy update: Dart-to-C# control/widget work now uses mandatory parity-first porting mode (`docs/ai/PORTING_MODE.md`) with strict `1:1` default behavior, required divergence logging, and explicit parity-validation workflow references in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/INVARIANTS.md`, `docs/ai/MODULE_INDEX.md`, `docs/ai/FEATURE_TEMPLATE.md`, `docs/ai/TEST_MATRIX.md`, and `docs/ai/PARITY_MATRIX.md`.
 
+## [2026-04-05] - M4 button M2 default color/elevation parity hardening
+
+### Changed
+
+- Aligned `ElevatedButton` mode-aware default color tokens with Flutter behavior:
+  - `UseMaterial3=true`: keep existing M3 defaults (`surfaceContainerLow` background, `primary` foreground),
+  - `UseMaterial3=false`: now use M2 defaults (`primary` background, `onPrimary` foreground)
+  (`src/Flutter.Material/Buttons.cs`).
+- Aligned `ElevatedButton` default elevation resolver with Flutter M2 state map when `UseMaterial3=false`:
+  - `disabled=0`, `default=2`, `hovered/focused=4`, `pressed=8`
+  while preserving existing M3 behavior (`src/Flutter.Material/Buttons.cs`).
+- Added focused `MaterialButtonsTests` coverage for:
+  - M2 elevated default color pair,
+  - M2 elevated default elevation-state mapping,
+  - baseline M2 foreground-default behavior for `TextButton` and `OutlinedButton`
+  (`src/Flutter.Tests/MaterialButtonsTests.cs`).
+- Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-04-05-button-m2-default-colors-elevation-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
+
 ## [2026-04-05] - M4 button M2 default geometry parity hardening
 
 ### Changed
