@@ -10,6 +10,11 @@ namespace Flutter.Tests;
 
 public sealed class MaterialScaffoldTests
 {
+    public MaterialScaffoldTests()
+    {
+        SystemChrome.ResetSystemUiOverlayStyleForTests();
+    }
+
     [Fact]
     public void Scaffold_UsesThemeScaffoldBackgroundColor()
     {
@@ -387,6 +392,65 @@ public sealed class MaterialScaffoldTests
     }
 
     [Fact]
+    public void AppBar_SystemOverlayStyle_DefaultsFromThemeAppBarTheme()
+    {
+        var owner = new BuildOwner();
+        var themedStyle = new SystemUiOverlayStyle(
+            StatusBarColor: Colors.Crimson,
+            NavigationBarColor: Colors.DarkGreen,
+            StatusBarIconBrightness: SystemUiIconBrightness.Light,
+            NavigationBarIconBrightness: SystemUiIconBrightness.Light);
+        var theme = ThemeData.Light with
+        {
+            AppBarTheme = new AppBarThemeData(SystemOverlayStyle: themedStyle),
+        };
+
+        var root = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: new AppBar(titleText: "Demo")));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.Equal(themedStyle, SystemChrome.CurrentSystemUiOverlayStyle);
+    }
+
+    [Fact]
+    public void AppBar_SystemOverlayStyle_WidgetValue_OverridesThemeAppBarTheme()
+    {
+        var owner = new BuildOwner();
+        var themedStyle = new SystemUiOverlayStyle(
+            StatusBarColor: Colors.Crimson,
+            NavigationBarColor: Colors.DarkGreen,
+            StatusBarIconBrightness: SystemUiIconBrightness.Light,
+            NavigationBarIconBrightness: SystemUiIconBrightness.Light);
+        var widgetStyle = new SystemUiOverlayStyle(
+            StatusBarColor: Colors.Bisque,
+            NavigationBarColor: Colors.CadetBlue,
+            StatusBarIconBrightness: SystemUiIconBrightness.Dark,
+            NavigationBarIconBrightness: SystemUiIconBrightness.Dark);
+        var theme = ThemeData.Light with
+        {
+            AppBarTheme = new AppBarThemeData(SystemOverlayStyle: themedStyle),
+        };
+
+        var root = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: new AppBar(
+                    titleText: "Demo",
+                    systemOverlayStyle: widgetStyle)));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.Equal(widgetStyle, SystemChrome.CurrentSystemUiOverlayStyle);
+    }
+
+    [Fact]
     public void AppBar_CenterTitleTrue_WrapsTitleInCenterAlign()
     {
         var owner = new BuildOwner();
@@ -688,6 +752,62 @@ public sealed class MaterialScaffoldTests
             && Math.Abs(padding.Bottom) < 0.001);
 
         Assert.NotNull(outerPadding);
+    }
+
+    [Fact]
+    public void AppBar_PrimaryTrue_AppliesMediaQueryTopPadding()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new MediaQuery(
+                    data: new MediaQueryData(
+                        Padding: new Thickness(0, 24, 0, 0),
+                        ViewPadding: new Thickness(0, 24, 0, 0)),
+                    child: new AppBar(titleText: "Title"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var appBarBackground = RequireRenderObject<RenderColoredBox>(root.ChildElement);
+        var safeAreaPadding = FindPadding(appBarBackground, padding =>
+            Math.Abs(padding.Left) < 0.001
+            && Math.Abs(padding.Top - 24) < 0.001
+            && Math.Abs(padding.Right) < 0.001
+            && Math.Abs(padding.Bottom) < 0.001);
+
+        Assert.NotNull(safeAreaPadding);
+    }
+
+    [Fact]
+    public void AppBar_PrimaryFalse_DoesNotApplyMediaQueryTopPadding()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new MediaQuery(
+                    data: new MediaQueryData(
+                        Padding: new Thickness(0, 24, 0, 0),
+                        ViewPadding: new Thickness(0, 24, 0, 0)),
+                    child: new AppBar(
+                        titleText: "Title",
+                        primary: false))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var appBarBackground = RequireRenderObject<RenderColoredBox>(root.ChildElement);
+        var safeAreaPadding = FindPadding(appBarBackground, padding =>
+            Math.Abs(padding.Left) < 0.001
+            && Math.Abs(padding.Top - 24) < 0.001
+            && Math.Abs(padding.Right) < 0.001
+            && Math.Abs(padding.Bottom) < 0.001);
+
+        Assert.Null(safeAreaPadding);
     }
 
     [Fact]

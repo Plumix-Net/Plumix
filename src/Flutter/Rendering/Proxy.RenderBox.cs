@@ -1215,6 +1215,7 @@ public sealed class RenderDecoratedBox : RenderProxyBox
     {
         var rect = new Rect(offset, Size);
         var radius = _decoration.EffectiveBorderRadius.Radius;
+        var boxShadows = _decoration.EffectiveBoxShadows;
         IBrush? fill = _decoration.Color.HasValue
             ? new SolidColorBrush(_decoration.Color.Value)
             : null;
@@ -1229,9 +1230,9 @@ public sealed class RenderDecoratedBox : RenderProxyBox
             }
         }
 
-        if (fill != null || borderPen != null)
+        if (fill != null || borderPen != null || boxShadows.Count > 0)
         {
-            ctx.DrawRectangle(fill ?? Brushes.Transparent, borderPen, rect, radius, radius);
+            ctx.DrawRectangle(fill ?? Brushes.Transparent, borderPen, rect, radius, radius, boxShadows);
         }
 
         base.Paint(ctx, offset);

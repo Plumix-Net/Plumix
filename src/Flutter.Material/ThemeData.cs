@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
+using Flutter.UI;
 using Flutter.Widgets;
 
 namespace Flutter.Material;
@@ -33,7 +34,8 @@ public sealed record AppBarThemeData(
     double? ToolbarHeight = null,
     TextStyle? ToolbarTextStyle = null,
     TextStyle? TitleTextStyle = null,
-    Thickness? ActionsPadding = null);
+    Thickness? ActionsPadding = null,
+    SystemUiOverlayStyle? SystemOverlayStyle = null);
 
 public sealed record MaterialTextTheme
 {
@@ -41,20 +43,24 @@ public sealed record MaterialTextTheme
 
     public MaterialTextTheme(
         TextStyle? bodyMedium = null,
-        TextStyle? titleLarge = null)
+        TextStyle? titleLarge = null,
+        TextStyle? labelLarge = null)
     {
         BodyMedium = bodyMedium ?? DefaultBodyMedium;
         TitleLarge = titleLarge ?? DefaultTitleLarge;
+        LabelLarge = labelLarge ?? DefaultLabelLarge;
     }
 
     public TextStyle BodyMedium { get; init; }
 
     public TextStyle TitleLarge { get; init; }
 
+    public TextStyle LabelLarge { get; init; }
+
     public static TextStyle DefaultBodyMedium { get; } = new(
         FontFamily: DefaultBodyFontFamily,
         FontSize: 14,
-        Color: Colors.Black,
+        Color: Color.Parse("#FF1D1B20"),
         FontWeight: FontWeight.Normal,
         FontStyle: FontStyle.Normal,
         Height: 1.43,
@@ -62,20 +68,45 @@ public sealed record MaterialTextTheme
 
     public static TextStyle DefaultTitleLarge { get; } = new(
         FontFamily: DefaultBodyFontFamily,
-        FontSize: 20,
-        Color: Colors.Black,
-        FontWeight: FontWeight.SemiBold,
+        FontSize: 22,
+        Color: Color.Parse("#FF1D1B20"),
+        FontWeight: FontWeight.Normal,
         FontStyle: FontStyle.Normal,
-        Height: 1.20,
+        Height: 1.27,
         LetterSpacing: 0.0);
+
+    public static TextStyle DefaultLabelLarge { get; } = new(
+        FontFamily: DefaultBodyFontFamily,
+        FontSize: 14,
+        Color: Color.Parse("#FF1D1B20"),
+        FontWeight: FontWeight.Medium,
+        FontStyle: FontStyle.Normal,
+        Height: 1.43,
+        LetterSpacing: 0.1);
 
     public static MaterialTextTheme Fallback { get; } = new();
 
     private static FontFamily ResolveDefaultBodyFontFamily()
     {
-        if (OperatingSystem.IsMacOS())
+        if (OperatingSystem.IsIOS() || OperatingSystem.IsMacOS())
         {
             return new FontFamily(".AppleSystemUIFont");
+        }
+
+        if (OperatingSystem.IsAndroid())
+        {
+            // Flutter Material typography on Android resolves through Roboto.
+            return new FontFamily("Roboto");
+        }
+
+        if (OperatingSystem.IsWindows())
+        {
+            return new FontFamily("Segoe UI");
+        }
+
+        if (OperatingSystem.IsLinux())
+        {
+            return new FontFamily("Noto Sans");
         }
 
         return Avalonia.Media.FontFamily.Default;
@@ -84,10 +115,21 @@ public sealed record MaterialTextTheme
 
 public sealed record ThemeData
 {
+    private static readonly Color LightScaffoldAndCanvasColor = Color.Parse("#FFFEF7FF");
+    private static readonly Color LightPrimaryColor = Color.Parse("#FF6750A4");
+    private static readonly Color LightOnSurfaceColor = Color.Parse("#FF1D1B20");
+    private static readonly Color LightOnSurfaceVariantColor = Color.Parse("#FF49454F");
+    private static readonly Color LightOutlineColor = Color.Parse("#FF79747E");
+    private static readonly Color LightShadowColor = Colors.Black;
+    private static readonly Color LightSurfaceContainerLowColor = Color.Parse("#FFF7F2FA");
+    private static readonly Color LightSecondaryContainerColor = Color.Parse("#FFE8DEF8");
+    private static readonly Color LightOnSecondaryContainerColor = Color.Parse("#FF4A4458");
+
     private AppBarThemeData? _appBarTheme;
     private TextButtonThemeData? _textButtonTheme;
     private ElevatedButtonThemeData? _elevatedButtonTheme;
     private OutlinedButtonThemeData? _outlinedButtonTheme;
+    private FilledButtonThemeData? _filledButtonTheme;
 
     public ThemeData(
         TargetPlatform? platform = null,
@@ -99,36 +141,46 @@ public sealed record ThemeData
         Color? onPrimaryColor = null,
         bool? useMaterial3 = null,
         AppBarThemeData? appBarTheme = null,
+        Color? shadowColor = null,
         Color? onSurfaceColor = null,
         Color? onSurfaceVariantColor = null,
         Color? outlineColor = null,
         Color? surfaceContainerLowColor = null,
+        Color? secondaryContainerColor = null,
+        Color? onSecondaryContainerColor = null,
         ButtonStyle? textButtonStyle = null,
         ButtonStyle? elevatedButtonStyle = null,
         ButtonStyle? outlinedButtonStyle = null,
+        ButtonStyle? filledButtonStyle = null,
         TextButtonThemeData? textButtonTheme = null,
         ElevatedButtonThemeData? elevatedButtonTheme = null,
-        OutlinedButtonThemeData? outlinedButtonTheme = null)
+        OutlinedButtonThemeData? outlinedButtonTheme = null,
+        FilledButtonThemeData? filledButtonTheme = null)
     {
         Platform = platform ?? ResolveDefaultPlatform();
         Brightness = brightness ?? Brightness.Light;
         TextTheme = textTheme ?? MaterialTextTheme.Fallback;
-        ScaffoldBackgroundColor = scaffoldBackgroundColor ?? Colors.White;
-        CanvasColor = canvasColor ?? Colors.White;
-        PrimaryColor = primaryColor ?? Colors.Blue;
+        ScaffoldBackgroundColor = scaffoldBackgroundColor ?? LightScaffoldAndCanvasColor;
+        CanvasColor = canvasColor ?? LightScaffoldAndCanvasColor;
+        PrimaryColor = primaryColor ?? LightPrimaryColor;
         OnPrimaryColor = onPrimaryColor ?? Colors.White;
         UseMaterial3 = useMaterial3 ?? true;
         _appBarTheme = appBarTheme;
-        OnSurfaceColor = onSurfaceColor ?? Colors.Black;
-        OnSurfaceVariantColor = onSurfaceVariantColor ?? Color.Parse("#FF49454F");
-        OutlineColor = outlineColor ?? Color.Parse("#FF79747E");
-        SurfaceContainerLowColor = surfaceContainerLowColor ?? Color.Parse("#FFF7F2FA");
+        ShadowColor = shadowColor ?? LightShadowColor;
+        OnSurfaceColor = onSurfaceColor ?? LightOnSurfaceColor;
+        OnSurfaceVariantColor = onSurfaceVariantColor ?? LightOnSurfaceVariantColor;
+        OutlineColor = outlineColor ?? LightOutlineColor;
+        SurfaceContainerLowColor = surfaceContainerLowColor ?? LightSurfaceContainerLowColor;
+        SecondaryContainerColor = secondaryContainerColor ?? LightSecondaryContainerColor;
+        OnSecondaryContainerColor = onSecondaryContainerColor ?? LightOnSecondaryContainerColor;
         TextButtonStyle = textButtonStyle;
         ElevatedButtonStyle = elevatedButtonStyle;
         OutlinedButtonStyle = outlinedButtonStyle;
+        FilledButtonStyle = filledButtonStyle;
         _textButtonTheme = textButtonTheme;
         _elevatedButtonTheme = elevatedButtonTheme;
         _outlinedButtonTheme = outlinedButtonTheme;
+        _filledButtonTheme = filledButtonTheme;
     }
 
     public TargetPlatform Platform { get; init; }
@@ -153,6 +205,8 @@ public sealed record ThemeData
         init => _appBarTheme = value;
     }
 
+    public Color ShadowColor { get; init; }
+
     public Color OnSurfaceColor { get; init; }
 
     public Color OnSurfaceVariantColor { get; init; }
@@ -161,11 +215,17 @@ public sealed record ThemeData
 
     public Color SurfaceContainerLowColor { get; init; }
 
+    public Color SecondaryContainerColor { get; init; }
+
+    public Color OnSecondaryContainerColor { get; init; }
+
     public ButtonStyle? TextButtonStyle { get; init; }
 
     public ButtonStyle? ElevatedButtonStyle { get; init; }
 
     public ButtonStyle? OutlinedButtonStyle { get; init; }
+
+    public ButtonStyle? FilledButtonStyle { get; init; }
 
     public TextButtonThemeData TextButtonTheme
     {
@@ -183,6 +243,12 @@ public sealed record ThemeData
     {
         get => _outlinedButtonTheme ?? new OutlinedButtonThemeData(style: OutlinedButtonStyle);
         init => _outlinedButtonTheme = value;
+    }
+
+    public FilledButtonThemeData FilledButtonTheme
+    {
+        get => _filledButtonTheme ?? new FilledButtonThemeData(style: FilledButtonStyle);
+        init => _filledButtonTheme = value;
     }
 
     public static ThemeData Light { get; } = new();

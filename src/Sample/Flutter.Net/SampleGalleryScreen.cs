@@ -67,7 +67,7 @@ internal sealed class SampleGalleryScreen : StatelessWidget
         new(SampleRoutes.CustomSlivers, "Custom slivers", "SliverPadding + SliverFixedExtentList", () => new CustomSliversDemoPage()),
         new(SampleRoutes.Scrollbar, "Scrollbar", "controller + thumb", () => new ScrollbarDemoPage()),
         new(SampleRoutes.EditableText, "EditableText", "focus + IME + multiline caret", () => new EditableTextDemoPage()),
-        new(SampleRoutes.MaterialButtons, "Material buttons", "TextButton + ElevatedButton + OutlinedButton", () => new MaterialButtonsDemoPage()),
+        new(SampleRoutes.MaterialButtons, "Material buttons", "TextButton + ElevatedButton + OutlinedButton + FilledButton", () => new MaterialButtonsDemoPage()),
         new(SampleRoutes.AppBarLeadingWidth, "AppBar leadingWidth theme", "theme fallback + widget override runtime probe", () => new AppBarLeadingWidthDemoPage()),
         new(SampleRoutes.AppBarActionsPadding, "AppBar actionsPadding theme", "theme fallback + widget override runtime probe", () => new AppBarActionsPaddingDemoPage()),
         new(SampleRoutes.AppBarIconTheme, "AppBar icon themes", "iconTheme/actionsIconTheme precedence runtime probe", () => new AppBarIconThemeDemoPage()),
@@ -153,7 +153,7 @@ internal sealed class SampleMenuPage : StatelessWidget
                         new Text(
                             "Route-based sample menu. Open page and return via Back button or Esc.",
                             fontSize: 14,
-                            color: Colors.DimGray),
+                            color: Color.Parse("#8A000000")),
                         new Expanded(
                             child: ListView.Builder(
                                 itemCount: _pages.Count,
@@ -216,7 +216,7 @@ internal sealed class SampleDemoPage : StatelessWidget
                     spacing: 10,
                     children:
                     [
-                        new Text(_subtitle, fontSize: 14, color: Colors.DimGray),
+                        new Text(_subtitle, fontSize: 14, color: Color.Parse("#8A000000")),
                         new Expanded(
                             child: new Container(
                                 color: Color.Parse("#FFF7F9FC"),

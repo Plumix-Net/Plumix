@@ -70,8 +70,10 @@ internal sealed class MaterialStatePropertyResolver<T> : MaterialStateProperty<T
 public sealed record ButtonStyle(
     MaterialStateProperty<Color?>? ForegroundColor = null,
     MaterialStateProperty<Color?>? BackgroundColor = null,
+    MaterialStateProperty<Color?>? ShadowColor = null,
     MaterialStateProperty<Color?>? OverlayColor = null,
     MaterialStateProperty<Color?>? SplashColor = null,
+    MaterialStateProperty<double?>? Elevation = null,
     MaterialStateProperty<BorderSide?>? Side = null,
     MaterialStateProperty<Thickness?>? Padding = null,
     MaterialStateProperty<BorderRadius?>? Shape = null,
@@ -92,8 +94,10 @@ public sealed record ButtonStyle(
         {
             ForegroundColor = ForegroundColor ?? style.ForegroundColor,
             BackgroundColor = BackgroundColor ?? style.BackgroundColor,
+            ShadowColor = ShadowColor ?? style.ShadowColor,
             OverlayColor = OverlayColor ?? style.OverlayColor,
             SplashColor = SplashColor ?? style.SplashColor,
+            Elevation = Elevation ?? style.Elevation,
             Side = Side ?? style.Side,
             Padding = Padding ?? style.Padding,
             Shape = Shape ?? style.Shape,
@@ -120,9 +124,19 @@ public sealed record ButtonStyle(
         return OverlayColor?.Resolve(states);
     }
 
+    internal Color? ResolveShadowColor(MaterialState states)
+    {
+        return ShadowColor?.Resolve(states);
+    }
+
     internal Color? ResolveSplashColor(MaterialState states)
     {
         return SplashColor?.Resolve(states);
+    }
+
+    internal double? ResolveElevation(MaterialState states)
+    {
+        return Elevation?.Resolve(states);
     }
 
     internal BorderSide? ResolveSide(MaterialState states)

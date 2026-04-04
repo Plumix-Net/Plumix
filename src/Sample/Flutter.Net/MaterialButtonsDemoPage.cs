@@ -23,6 +23,8 @@ internal sealed class MaterialButtonsDemoPageState : State
     private int _textButtonTaps;
     private int _elevatedButtonTaps;
     private int _outlinedButtonTaps;
+    private int _filledButtonTaps;
+    private int _filledTonalButtonTaps;
 
     public override Widget Build(BuildContext context)
     {
@@ -33,9 +35,9 @@ internal sealed class MaterialButtonsDemoPageState : State
             [
                 new Text("Material buttons baseline", fontSize: 20, color: Colors.Black),
                 new Text(
-                    "TextButton / ElevatedButton / OutlinedButton with enabled/disabled and theme-aware defaults.",
+                    "TextButton / ElevatedButton / OutlinedButton / FilledButton (+ tonal) with enabled/disabled and theme-aware defaults.",
                     fontSize: 14,
-                    color: Colors.DimGray),
+                    color: Color.Parse("#8A000000")),
                 new Row(
                     spacing: 8,
                     children:
@@ -52,9 +54,9 @@ internal sealed class MaterialButtonsDemoPageState : State
                             background: Color.Parse("#FFF3E8D8")),
                     ]),
                 new Text(
-                    $"enabled={_enabled}, text={_textButtonTaps}, elevated={_elevatedButtonTaps}, outlined={_outlinedButtonTaps}",
+                    $"enabled={(_enabled ? "true" : "false")}, text={_textButtonTaps}, elevated={_elevatedButtonTaps}, outlined={_outlinedButtonTaps}, filled={_filledButtonTaps}, tonal={_filledTonalButtonTaps}",
                     fontSize: 12,
-                    color: Colors.DarkSlateGray),
+                    color: Color.Parse("#FF607D8B")),
                 new SizedBox(
                     width: 240,
                     child: new TextButton(
@@ -70,6 +72,16 @@ internal sealed class MaterialButtonsDemoPageState : State
                     child: new OutlinedButton(
                         onPressed: _enabled ? OnOutlinedButtonTap : null,
                         child: new Text($"OutlinedButton taps: {_outlinedButtonTaps}"))),
+                new SizedBox(
+                    width: 240,
+                    child: new FilledButton(
+                        onPressed: _enabled ? OnFilledButtonTap : null,
+                        child: new Text($"FilledButton taps: {_filledButtonTaps}"))),
+                new SizedBox(
+                    width: 240,
+                    child: FilledButton.Tonal(
+                        onPressed: _enabled ? OnFilledTonalButtonTap : null,
+                        child: new Text($"FilledButton.tonal taps: {_filledTonalButtonTaps}"))),
                 new Row(
                     spacing: 8,
                     children:
@@ -86,6 +98,23 @@ internal sealed class MaterialButtonsDemoPageState : State
                                 borderColor: Color.Parse("#FF7B2CBF"),
                                 foregroundColor: Color.Parse("#FF7B2CBF"),
                                 child: new Text("Custom outlined"))),
+                    ]),
+                new Row(
+                    spacing: 8,
+                    children:
+                    [
+                        new Expanded(
+                            child: new FilledButton(
+                                onPressed: _enabled ? OnFilledButtonTap : null,
+                                foregroundColor: Colors.White,
+                                backgroundColor: Color.Parse("#FF005E7A"),
+                                child: new Text("Custom filled"))),
+                        new Expanded(
+                            child: FilledButton.Tonal(
+                                onPressed: _enabled ? OnFilledTonalButtonTap : null,
+                                foregroundColor: Color.Parse("#FF42275A"),
+                                backgroundColor: Color.Parse("#FFD8CFF8"),
+                                child: new Text("Custom tonal"))),
                     ]),
             ]);
     }
@@ -122,6 +151,8 @@ internal sealed class MaterialButtonsDemoPageState : State
             _textButtonTaps = 0;
             _elevatedButtonTaps = 0;
             _outlinedButtonTaps = 0;
+            _filledButtonTaps = 0;
+            _filledTonalButtonTaps = 0;
             _enabled = true;
         });
     }
@@ -139,5 +170,15 @@ internal sealed class MaterialButtonsDemoPageState : State
     private void OnOutlinedButtonTap()
     {
         SetState(() => _outlinedButtonTaps += 1);
+    }
+
+    private void OnFilledButtonTap()
+    {
+        SetState(() => _filledButtonTaps += 1);
+    }
+
+    private void OnFilledTonalButtonTap()
+    {
+        SetState(() => _filledTonalButtonTaps += 1);
     }
 }

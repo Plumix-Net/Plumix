@@ -16,6 +16,150 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 - Documentation policy update: Dart-to-C# control/widget work now uses mandatory parity-first porting mode (`docs/ai/PORTING_MODE.md`) with strict `1:1` default behavior, required divergence logging, and explicit parity-validation workflow references in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/INVARIANTS.md`, `docs/ai/MODULE_INDEX.md`, `docs/ai/FEATURE_TEMPLATE.md`, `docs/ai/TEST_MATRIX.md`, and `docs/ai/PARITY_MATRIX.md`.
 
+## [2026-03-29] - M4 material elevated-button shadow/elevation parity hardening
+
+### Changed
+
+- Added framework decoration shadow support by extending `BoxDecoration` with optional `BoxShadows` and wiring it through `PaintingContext` + `RenderDecoratedBox` so material components can render elevation shadows (`src/Flutter/Rendering/Decoration.cs`, `src/Flutter/Rendering/Object.PaintingContext.cs`, `src/Flutter/Rendering/Proxy.RenderBox.cs`).
+- Extended Material `ButtonStyle` with state-aware `ShadowColor` and `Elevation` properties and included them in style merge/layer composition and state resolution (`src/Flutter.Material/ButtonStyle.cs`, `src/Flutter.Material/Buttons.cs`).
+- Aligned `ElevatedButton` defaults with Flutter-like elevation states by adding enabled/hovered/pressed/focused/disabled elevation resolution, and mapped default shadow-color source to theme token (`ThemeData.ShadowColor`, default black) (`src/Flutter.Material/Buttons.cs`, `src/Flutter.Material/ThemeData.cs`).
+- Aligned `ElevatedButton.styleFrom(elevation: ...)` with Flutter semantics (`disabled=0`, `pressed=+6`, `hovered/focused=+2`, `default=base`) instead of fixed elevation for all states (`src/Flutter.Material/Buttons.cs`).
+- `MaterialButtonCore` now resolves elevation/shadow style states into a Material-like multi-layer shadow recipe, restoring visible elevated depth in sample buttons (including app-bar `Back` action) (`src/Flutter.Material/Buttons.cs`).
+- Aligned default button label typography with Flutter M3 tokens by keeping `MaterialTextTheme.DefaultLabelLarge` at `FontWeight.Medium` and aligning `MaterialButtonCore` baseline text-style merge source to `ThemeData.TextTheme.LabelLarge` instead of hardcoded metrics (`src/Flutter.Material/ThemeData.cs`, `src/Flutter.Material/Buttons.cs`).
+- Kept Android body-font fallback family explicit as `Roboto` to match Flutter Material typography resolution on Android (`src/Flutter.Material/ThemeData.cs`).
+- Expanded Material button regression coverage with elevated shadow tests (enabled vs disabled) and updated label-large weight expectations (`src/Flutter.Tests/MaterialButtonsTests.cs`).
+- Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-03-29-button-elevation-shadow-typography-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/PARITY_MATRIX.md`, `docs/ai/TEST_MATRIX.md`).
+
+## [2026-03-29] - M4 material button color/typography parity hardening
+
+### Changed
+
+- Aligned framework `ThemeData.Light` defaults with Flutter Material 3 light tokens used by sample controls:
+  - `ScaffoldBackgroundColor`/`CanvasColor`: `#FEF7FF`,
+  - `PrimaryColor`: `#6750A4`,
+  - `OnSurfaceColor`: `#1D1B20`,
+  - `OnSecondaryContainerColor`: `#4A4458`
+  while preserving existing theme override semantics (`src/Flutter.Material/ThemeData.cs`).
+- Expanded `MaterialTextTheme` with `LabelLarge` and updated default typography tokens to match Flutter 2021 baseline more closely:
+  - `TitleLarge`: `22 / 1.27 / 0.0` with regular weight,
+  - `LabelLarge`: `14 / 1.43 / 0.1` with medium weight
+  (`src/Flutter.Material/ThemeData.cs`).
+- Updated default body-font resolution in `MaterialTextTheme` to follow platform-oriented fallback families (Android `Roboto`, iOS/macOS system UI font, Windows `Segoe UI`, Linux `Noto Sans`) for closer cross-host typography parity (`src/Flutter.Material/ThemeData.cs`).
+- Aligned Material button defaults with Flutter `ButtonStyleButton` behavior:
+  - `TextButton`/`ElevatedButton`/`OutlinedButton`/`FilledButton` now provide default `ButtonStyle.TextStyle` from `ThemeData.TextTheme.LabelLarge`,
+  - `ElevatedButton`/`OutlinedButton`/`FilledButton` default content padding now follows Flutter M3 generated defaults (`horizontal: 24`, `vertical: 0`),
+  - focused `OutlinedButton` border now resolves to primary color,
+  - `MaterialButtonCore` now keeps resolved foreground color as source of truth for label paint when `ButtonStyle.TextStyle.Color` is set (matching Flutter precedence),
+  - `_InputPadding` parity hardening: tap-target wrapper now lays out its child with incoming constraints (matching Flutter wide-button behavior) and redirects hit-tests in padded area to visual-child center
+  (`src/Flutter.Material/Buttons.cs`).
+- Added `InternalsVisibleTo("Flutter.Material")` on core `Flutter` assembly and aligned `InheritedWidget.UpdateShouldNotify` overrides in `Flutter.Material` to `protected internal` so framework-owned render-object widgets in Material assembly can override core internal render-widget hooks (`src/Flutter/AssemblyInfo.cs`, `src/Flutter.Material/Theme.cs`, `src/Flutter.Material/ButtonThemes.cs`).
+- Extended `MaterialButtonsTests` with focused regressions for:
+  - `ThemeData.Light` M3 token defaults,
+  - default `TextButton` label typography metrics,
+  - foreground-color precedence over `textStyle.color`,
+  - default `ElevatedButton`/`OutlinedButton`/`FilledButton` horizontal-only padding tokens,
+  - tap-target padded-area hit-test redirection in `TextButton`
+  (`src/Flutter.Tests/MaterialButtonsTests.cs`).
+- Tightened C# sample literal parity with Dart for menu/buttons demo text presentation:
+  - switched subtitle helper text to `black54` equivalent (`#8A000000`),
+  - switched status line color to `blueGrey` equivalent (`#607D8B`),
+  - normalized `enabled=True/False` output to Dart-like lowercase `enabled=true/false`
+  (`src/Sample/Flutter.Net/SampleGalleryScreen.cs`, `src/Sample/Flutter.Net/MaterialButtonsDemoPage.cs`).
+- Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-03-29-button-color-typography-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/PARITY_MATRIX.md`, `docs/ai/TEST_MATRIX.md`).
+
+## [2026-03-29] - M4 system bars styling parity bridge
+
+### Added
+
+- Added framework `SystemChrome` API surface with `SystemUiOverlayStyle` and icon-brightness model so status/navigation bar styling can be controlled directly from C# code (`src/Flutter/UI/SystemChrome.cs`).
+
+### Changed
+
+- `FlutterHost` now listens to `SystemChrome` overlay-style updates and applies them to platform insets/system bars:
+  - shared system-bar color via `IInsetsManager.SystemBarColor`,
+  - icon theme via `SystemBarTheme` reflection when available,
+  - Android-specific best-effort split color application (`status` and `navigation`) via native window reflection fallback,
+  - adaptive edge-to-edge mode: edge-to-edge is now enabled only when both system-bar colors are transparent/unset, and disabled for opaque bar colors so API 33/34 status/navigation bar colors are actually applied (`src/Flutter/FlutterHost.cs`).
+- Extended `AppBar` with `systemOverlayStyle` and theme-level `AppBarThemeData.SystemOverlayStyle` support; app-bar build now resolves and pushes effective overlay style into `SystemChrome` using Flutter-like precedence (`widget -> theme appBarTheme -> default`) (`src/Flutter.Material/Scaffold.cs`, `src/Flutter.Material/ThemeData.cs`).
+- Added focused `MaterialScaffoldTests` coverage for app-bar overlay-style precedence (`theme` default and `widget` override) (`src/Flutter.Tests/MaterialScaffoldTests.cs`).
+- Updated Android host theme defaults to remove gray system-bar backgrounds by default:
+  - switched to explicit light appcompat base theme,
+  - enabled system-bar background drawing,
+  - set transparent status/navigation bars with light-icon flags and contrast-enforcement overrides on API 31+,
+  - removed `windowIsTranslucent` from API 31+ main theme (`src/Sample/Flutter.Net.Android/Resources/values/styles.xml`, `src/Sample/Flutter.Net.Android/Resources/values-v31/styles.xml`).
+- Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-03-29-system-bars-overlay-native-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
+
+## [2026-03-29] - M4 app-bar primary status-bar inset parity
+
+### Changed
+
+- Added Flutter-like `AppBar.primary` control in `Flutter.Material` (`true` by default) so app-bar status-bar inset behavior can be toggled per widget (`src/Flutter.Material/Scaffold.cs`).
+- `AppBar` now applies top safe-area inset from ambient `MediaQuery.padding.top` when available (via framework `SafeArea(bottom: false)`), preventing toolbar overlap with the system status bar in edge-to-edge hosts while preserving `primary: false` opt-out parity (`src/Flutter.Material/Scaffold.cs`).
+- Added focused `MaterialScaffoldTests` regression coverage for `AppBar` top inset behavior under `MediaQuery` (`primary=true` applies top padding, `primary=false` does not) (`src/Flutter.Tests/MaterialScaffoldTests.cs`).
+- Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-03-29-appbar-primary-safearea-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
+
+## [2026-03-29] - Core SafeArea and MediaQuery parity (edge-to-edge)
+
+### Added
+
+- Added framework `MediaQueryData` + inherited `MediaQuery` primitives in `src/Flutter` with parity-critical insets APIs:
+  - `MediaQuery.of/maybeOf`,
+  - `paddingOf/viewPaddingOf/viewInsetsOf`,
+  - `removePadding/removeViewInsets/removeViewPadding`,
+  - `MediaQueryData` insets transform helpers matching Flutter semantics for `padding`/`viewPadding` interactions (`src/Flutter/Widgets/MediaQuery.cs`).
+- Added framework `SafeArea` widget in `src/Flutter` with Flutter-like composition and defaults:
+  - side flags (`left/top/right/bottom`),
+  - `minimum`,
+  - `maintainBottomViewPadding`,
+  - child `MediaQuery.removePadding(...)` wrapping behavior (`src/Flutter/Widgets/SafeArea.cs`).
+- Added focused regression coverage in `SafeAreaTests` for:
+  - safe-area padding application + descendant media-padding consumption,
+  - `maintainBottomViewPadding` when bottom padding is consumed,
+  - side-flag + minimum precedence behavior,
+  - `MediaQueryData.removePadding` view-padding adjustment parity,
+  - ambient root `MediaQuery` availability in `WidgetHost`
+  (`src/Flutter.Tests/SafeAreaTests.cs`).
+
+### Changed
+
+- `WidgetHost` now wraps the app root widget in ambient `MediaQuery` and refreshes it on host metric changes so `SafeArea`/`MediaQuery` consumers work out of the box (`src/Flutter/WidgetHost.cs`).
+- `FlutterHost` now sources media insets from host features (`TopLevel.InsetsManager.SafeAreaPadding` and `TopLevel.InputPane.OccludedRect`) and feeds that into root `MediaQueryData` generation (`src/Flutter/FlutterHost.cs`).
+- Android legacy non-edge-to-edge behavior is intentionally out of scope for this parity step: when insets manager is available, host now sets `DisplayEdgeToEdgePreference = true` to align runtime behavior with edge-to-edge assumptions (`src/Flutter/FlutterHost.cs`).
+- Added tracking artifacts for this parity step (`docs/ai/core-2026-03-29-safearea-mediaquery-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
+
+## [2026-03-29] - M4 material-button focus-node parity
+
+### Changed
+
+- Extended framework Material button API parity with Flutter `ButtonStyleButton` focus controls by adding `focusNode` and `autofocus` parameters to `TextButton`, `ElevatedButton`, `FilledButton`, and `OutlinedButton`, and propagating them through `MaterialButtonCore` (`src/Flutter.Material/Buttons.cs`).
+- Updated `MaterialButtonCore` focus lifecycle handling to support both owned and externally provided focus nodes without disposal leaks on external nodes, while preserving focused-overlay state updates and existing keyboard activation flow (`src/Flutter.Material/Buttons.cs`).
+- Added focused regression coverage in `MaterialButtonsTests` for:
+  - external focus-node driven focused overlay updates,
+  - autofocus requesting the provided focus node on mount,
+  - autofocus transition from `false` to `true` after rebuild
+  (`src/Flutter.Tests/MaterialButtonsTests.cs`).
+- Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-03-29-button-focus-autofocus-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
+
+## [2026-03-29] - M4 filled-button parity expansion
+
+### Added
+
+- Extended `Flutter.Material` button control set with `FilledButton` plus tonal variant factory `FilledButton.Tonal(...)`, both wired through existing `MaterialButtonCore` state/render pipeline (`src/Flutter.Material/Buttons.cs`).
+- Added Filled-button theming and token surfaces in `ThemeData`:
+  - color tokens `SecondaryContainerColor` and `OnSecondaryContainerColor`,
+  - style hooks `FilledButtonStyle` and `FilledButtonTheme` (`FilledButtonThemeData`) for global + local theme override parity (`src/Flutter.Material/ThemeData.cs`, `src/Flutter.Material/ButtonThemes.cs`).
+- Added focused regression coverage in `MaterialButtonsTests` for:
+  - default filled and tonal token resolution,
+  - disabled-state fallback tones derived from `OnSurfaceColor`,
+  - `ThemeData.FilledButtonTheme` precedence over legacy `FilledButtonStyle`,
+  - local `FilledButtonTheme` subtree precedence (`src/Flutter.Tests/MaterialButtonsTests.cs`).
+
+### Changed
+
+- Expanded Material buttons runtime parity demo in both C# and Dart samples with `FilledButton` and `FilledButton.tonal` probes (enabled/disabled toggle flow, dedicated tap counters, and custom color overrides) (`src/Sample/Flutter.Net/MaterialButtonsDemoPage.cs`, `dart_sample/lib/material_buttons_demo_page.dart`).
+- Updated sample-gallery route subtitle parity to include Filled-button coverage on both sample sides (`src/Sample/Flutter.Net/SampleGalleryScreen.cs`, `dart_sample/lib/sample_gallery_screen.dart`).
+- Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-03-29-filled-button-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/PARITY_MATRIX.md`, `docs/ai/TEST_MATRIX.md`).
+
 ## [2026-03-19] - M4 app-bar toolbar-edge geometry parity
 
 ### Changed
