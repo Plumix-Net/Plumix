@@ -508,6 +508,30 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
+    public void TextButton_StyleFrom_ElevationWithoutShadowColor_UsesThemeShadowColorFallback()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with { ShadowColor = Colors.Black },
+                child: new TextButton(
+                    onPressed: () => { },
+                    style: TextButton.StyleFrom(
+                        backgroundColor: Colors.White,
+                        elevation: 2),
+                    child: new Text("Text shadow fallback"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(decorated);
+        Assert.True(decorated!.Decoration.BoxShadows.HasValue);
+        Assert.True(decorated.Decoration.BoxShadows.Value.Count > 0);
+    }
+
+    [Fact]
     public void OutlinedButton_StyleFrom_ElevationAndShadowColor_AppliesShadow()
     {
         var owner = new BuildOwner();
@@ -533,6 +557,30 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
+    public void OutlinedButton_StyleFrom_ElevationWithoutShadowColor_UsesThemeShadowColorFallback()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with { ShadowColor = Colors.Black },
+                child: new OutlinedButton(
+                    onPressed: () => { },
+                    style: OutlinedButton.StyleFrom(
+                        backgroundColor: Colors.White,
+                        elevation: 2),
+                    child: new Text("Outlined shadow fallback"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(decorated);
+        Assert.True(decorated!.Decoration.BoxShadows.HasValue);
+        Assert.True(decorated.Decoration.BoxShadows.Value.Count > 0);
+    }
+
+    [Fact]
     public void FilledButton_StyleFrom_ElevationAndShadowColor_AppliesShadow()
     {
         var owner = new BuildOwner();
@@ -545,6 +593,28 @@ public sealed class MaterialButtonsTests
                         shadowColor: Colors.Black,
                         elevation: 2),
                     child: new Text("Filled shadow"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(decorated);
+        Assert.True(decorated!.Decoration.BoxShadows.HasValue);
+        Assert.True(decorated.Decoration.BoxShadows.Value.Count > 0);
+    }
+
+    [Fact]
+    public void FilledButton_StyleFrom_ElevationWithoutShadowColor_UsesThemeShadowColorFallback()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with { ShadowColor = Colors.Black },
+                child: new FilledButton(
+                    onPressed: () => { },
+                    style: FilledButton.StyleFrom(elevation: 2),
+                    child: new Text("Filled shadow fallback"))));
 
         root.Attach(owner);
         root.Mount(parent: null, newSlot: null);

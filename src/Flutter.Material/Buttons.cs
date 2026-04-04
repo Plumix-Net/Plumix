@@ -1356,8 +1356,8 @@ internal sealed class MaterialButtonCore : StatefulWidget
             var iconColor = ResolveIconColor(style, baseStates, foreground);
             var iconSize = ResolveIconSize(style, baseStates);
             var splashColor = ResolveSplashColor();
-            var shadowColor = style.ResolveShadowColor(baseStates);
             var elevation = ResolveElevation(style, baseStates);
+            var shadowColor = ResolveShadowColor(style, baseStates, elevation, Theme.Of(context).ShadowColor);
             var background = ResolveBackgroundColor(style, baseStates, overlayStates, elevation);
             var border = style.ResolveSide(baseStates);
             var padding = style.ResolvePadding(baseStates) ?? default;
@@ -1733,6 +1733,28 @@ internal sealed class MaterialButtonCore : StatefulWidget
             }
 
             return Math.Max(0, resolved);
+        }
+
+        private static Color? ResolveShadowColor(
+            ButtonStyle style,
+            MaterialState states,
+            double elevation,
+            Color themeShadowColor)
+        {
+            var shadowColor = style.ResolveShadowColor(states);
+            if (!shadowColor.HasValue && states.HasFlag(MaterialState.Disabled))
+            {
+                shadowColor = style.ResolveShadowColor(MaterialState.None);
+            }
+
+            // Flutter Material falls back to theme shadow color when elevation is active
+            // and no explicit shadow color is provided by button style layers.
+            if (!shadowColor.HasValue && elevation > 0)
+            {
+                shadowColor = themeShadowColor;
+            }
+
+            return shadowColor;
         }
 
         private static BoxShadows? ResolveBoxShadows(double elevation, Color? shadowColor)

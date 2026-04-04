@@ -64,6 +64,14 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 - Added focused regression coverage in `MaterialButtonsTests` validating shadow rendering for `TextButton`, `OutlinedButton`, and `FilledButton` when `styleFrom(shadowColor: ..., elevation: ...)` is provided (`src/Flutter.Tests/MaterialButtonsTests.cs`).
 - Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-04-04-button-stylefrom-shadow-elevation-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
 
+## [2026-04-04] - M4 material shadow-color fallback parity for styleFrom elevation overrides
+
+### Changed
+
+- `MaterialButtonCore` now applies Flutter-like shadow fallback semantics: when composed button style resolves a positive `elevation` but no explicit `shadowColor`, rendering falls back to `ThemeData.ShadowColor` instead of dropping the shadow (`src/Flutter.Material/Buttons.cs`).
+- Added focused regression coverage in `MaterialButtonsTests` for fallback behavior on `TextButton`, `OutlinedButton`, and `FilledButton` with `styleFrom(elevation: ...)` and no explicit `shadowColor` (`src/Flutter.Tests/MaterialButtonsTests.cs`).
+- Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-04-04-button-shadow-fallback-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
+
 ## [2026-03-29] - M4 material elevated-button shadow/elevation parity hardening
 
 ### Changed

@@ -270,6 +270,9 @@ Progress update (2026-03-19):
   - `TextButton`/`OutlinedButton`/`FilledButton` `styleFrom(...)` builders now also accept `shadowColor` and `elevation`.
   - explicit `styleFrom(shadowColor: ..., elevation: ...)` on these button types now flows through composed `ButtonStyle` into existing `MaterialButtonCore` shadow/elevation rendering path.
   - Added focused `MaterialButtonsTests` coverage for shadow rendering on Text/Outlined/Filled buttons via style overrides.
+- Continued Material shadow fallback parity hardening for non-elevated `styleFrom(elevation)` paths:
+  - `MaterialButtonCore` now falls back to `ThemeData.ShadowColor` when effective elevation is positive and no explicit shadow color resolves from style layers.
+  - Added focused `MaterialButtonsTests` coverage for Text/Outlined/Filled style-level elevation overrides without explicit `shadowColor`.
 
 Initial scope:
 
