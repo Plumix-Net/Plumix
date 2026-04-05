@@ -144,7 +144,10 @@ class _AppBarActionsPaddingDemoPageState
       child: AppBar(
         title: const Text('Theme actions padding'),
         actionsPadding: _useWidgetOverride ? _widgetActionsPadding : null,
-        actions: <Widget>[_buildActionBadge('A1'), _buildActionBadge('A2')],
+        actions: <Widget>[
+          _buildActionBadge(Icons.close),
+          _buildActionBadge(Icons.menu),
+        ],
       ),
     );
   }
@@ -154,21 +157,19 @@ class _AppBarActionsPaddingDemoPageState
       title: const Text('Default actions padding'),
       backgroundColor: const Color(0xFF1E3A5F),
       foregroundColor: Colors.white,
-      actions: <Widget>[_buildActionBadge('A1'), _buildActionBadge('A2')],
+      actions: <Widget>[
+        _buildActionBadge(Icons.close),
+        _buildActionBadge(Icons.menu),
+      ],
     );
   }
 
-  static Widget _buildActionBadge(String label) {
+  static Widget _buildActionBadge(IconData icon) {
     return Container(
       width: 28,
       height: 22,
       color: const Color(0xFFFFB703),
-      child: Center(
-        child: Text(
-          label,
-          style: const TextStyle(fontSize: 10, color: Colors.black),
-        ),
-      ),
+      child: Center(child: Icon(icon, size: 14, color: Colors.black)),
     );
   }
 

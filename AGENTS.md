@@ -54,12 +54,13 @@ This file defines expectations for coding agents working in this repository.
 ## Context Budget Protocol (For AI Agents)
 
 1. Start with read order: `AGENTS.md` -> `docs/FRAMEWORK_PLAN.md` -> `docs/ai/MODULE_INDEX.md` -> targeted tests -> targeted implementation files.
-2. Initial context budget: up to 8 files per task.
-3. Do not open large hotspot files (`Widgets/Scroll.cs`, `Rendering/Sliver.cs`, `Widgets/Navigation.cs`, `Widgets/Framework.Element.cs`, `SemanticsTreeTests.cs`) unless the task explicitly requires them.
-4. Expand context only when blocked by a concrete unanswered question.
-5. For every non-trivial feature, create/update a task note based on `docs/ai/FEATURE_TEMPLATE.md`.
-6. If sample behavior changes, update both `src/Sample/Flutter.Net` and `dart_sample` in the same iteration and reflect status in `docs/ai/PARITY_MATRIX.md`.
-7. Before finishing, update docs with minimal deltas only (`CHANGELOG.md`, `docs/FRAMEWORK_PLAN.md`, and relevant `docs/ai/*` files).
+2. Default scope for Dart-to-C# parity requests: close one control end-to-end in one request (`API/defaults/composition/states/layout/paint/tests`), not a sequence of micro-fixes.
+3. Initial context budget: up to 20 files per task (recommended `12-20` for full-control parity work).
+4. Do not open large hotspot files (`Widgets/Scroll.cs`, `Rendering/Sliver.cs`, `Widgets/Navigation.cs`, `Widgets/Framework.Element.cs`, `SemanticsTreeTests.cs`) unless the task explicitly requires them.
+5. Expand context proactively when needed to finish the current control in the same request; do not stop at partial parity unless blocked by a concrete missing primitive.
+6. For every non-trivial feature or control-parity pass, create/update a task note based on `docs/ai/FEATURE_TEMPLATE.md`.
+7. If sample behavior changes, update both `src/Sample/Flutter.Net` and `dart_sample` in the same iteration and reflect status in `docs/ai/PARITY_MATRIX.md`.
+8. Before finishing, update docs with minimal deltas only (`CHANGELOG.md`, `docs/FRAMEWORK_PLAN.md`, and relevant `docs/ai/*` files).
 
 ## Environment Requirements
 
@@ -104,8 +105,9 @@ dotnet build src/Sample/Flutter.Net.iOS/Flutter.Net.iOS.csproj -c Debug
 
 1. For control/widget ports, treat Flutter Dart source as source of truth and follow `docs/ai/PORTING_MODE.md`.
 2. Default mode is strict `1:1` structure/behavior port, not approximation.
-3. If a required primitive is missing in C#, add/fix the primitive first, then continue the port.
-4. Any unavoidable divergence must be documented in docs/changelog in the same iteration.
+3. Default delivery unit for parity work is one complete control per request; avoid splitting one control into many token-level follow-ups (for example geometry/colors/overlay in separate requests) unless explicitly requested or blocked by missing primitives.
+4. If a required primitive is missing in C#, add/fix the primitive first, then continue and close the control parity pass in the same iteration whenever feasible.
+5. Any unavoidable divergence must be documented in docs/changelog in the same iteration.
 
 ## Validation Checklist
 
@@ -115,3 +117,4 @@ dotnet build src/Sample/Flutter.Net.iOS/Flutter.Net.iOS.csproj -c Debug
 4. For browser/mobile changes, build the affected sample project(s).
 5. For sample changes, validate both C# sample (`src/Sample/Flutter.Net`) and Dart sample (`dart_sample`) are kept in parity.
 6. Automated tests live in `src/Flutter.Tests`; add focused coverage when introducing non-trivial logic.
+7. For control parity tasks, verify parity-critical coverage (`API/defaults/states/layout/paint`) for that control before closing the request.

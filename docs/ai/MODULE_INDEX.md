@@ -1,6 +1,6 @@
 # Module Index
 
-Purpose: quickly select the smallest useful context for a task.
+Purpose: quickly select the smallest context that still lets the agent close one task end-to-end.
 
 Related docs:
 
@@ -15,8 +15,8 @@ Related docs:
 1. Read `AGENTS.md`.
 2. Read `docs/FRAMEWORK_PLAN.md`.
 3. For Dart-to-C# ports, read `docs/ai/PORTING_MODE.md` and open matching Dart reference files first.
-4. Pick one subsystem below and open only its `Read First` files.
-5. Open additional files only after a concrete blocker.
+4. Pick one subsystem below and open its `Read First` files plus directly related control files/tests needed to close the target control.
+5. Expand context proactively whenever needed to finish the same control in one request; avoid partial-parity checkpoints unless there is a hard blocker.
 
 Current priority (2026-03-12):
 
@@ -32,6 +32,7 @@ Current priority (2026-03-12):
   - `src/Flutter.Material/Theme.cs`
   - `src/Flutter.Material/Scaffold.cs`
   - `src/Flutter.Material/Buttons.cs`
+  - `src/Flutter.Material/IconButton.cs`
   - `src/Flutter/Widgets/Framework.Widget.cs`
   - `src/Flutter/Widgets/DefaultTextStyle.cs`
   - `src/Flutter/Widgets/Text.cs`

@@ -6,6 +6,7 @@ import 'app_bar_icon_theme_demo_page.dart';
 import 'app_bar_leading_width_demo_page.dart';
 import 'app_bar_text_styles_demo_page.dart';
 import 'aspect_ratio_demo_page.dart';
+import 'checkbox_demo_page.dart';
 import 'counter_screen.dart';
 import 'container_demo_page.dart';
 import 'custom_slivers_demo_page.dart';
@@ -91,6 +92,12 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'Material buttons',
       subtitle: 'TextButton + ElevatedButton + OutlinedButton + FilledButton',
       builder: () => const MaterialButtonsDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.checkbox,
+      title: 'Checkbox',
+      subtitle: 'bool/bool? values + tristate + tap-target policy',
+      builder: () => const CheckboxDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.appBarLeadingWidth,
@@ -352,7 +359,14 @@ class SampleDemoPage extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
-            child: const Text('Back', style: TextStyle(fontSize: 12)),
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              spacing: 4,
+              children: <Widget>[
+                Icon(Icons.arrow_back, size: 14),
+                Text('Back', style: TextStyle(fontSize: 12)),
+              ],
+            ),
           ),
         ),
       ),

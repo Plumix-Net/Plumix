@@ -23,6 +23,12 @@ public enum Brightness
     Dark,
 }
 
+public enum MaterialTapTargetSize
+{
+    Padded,
+    ShrinkWrap,
+}
+
 public sealed record AppBarThemeData(
     Color? BackgroundColor = null,
     Color? ForegroundColor = null,
@@ -122,14 +128,18 @@ public sealed record ThemeData
     private static readonly Color LightOutlineColor = Color.Parse("#FF79747E");
     private static readonly Color LightShadowColor = Colors.Black;
     private static readonly Color LightSurfaceContainerLowColor = Color.Parse("#FFF7F2FA");
+    private static readonly Color LightSurfaceContainerHighestColor = Color.Parse("#FFE6E0E9");
     private static readonly Color LightSecondaryContainerColor = Color.Parse("#FFE8DEF8");
     private static readonly Color LightOnSecondaryContainerColor = Color.Parse("#FF4A4458");
+    private static readonly Color LightInverseSurfaceColor = Color.Parse("#FF322F35");
+    private static readonly Color LightOnInverseSurfaceColor = Color.Parse("#FFF5EFF7");
 
     private AppBarThemeData? _appBarTheme;
     private TextButtonThemeData? _textButtonTheme;
     private ElevatedButtonThemeData? _elevatedButtonTheme;
     private OutlinedButtonThemeData? _outlinedButtonTheme;
     private FilledButtonThemeData? _filledButtonTheme;
+    private IconButtonThemeData? _iconButtonTheme;
 
     public ThemeData(
         TargetPlatform? platform = null,
@@ -146,16 +156,22 @@ public sealed record ThemeData
         Color? onSurfaceVariantColor = null,
         Color? outlineColor = null,
         Color? surfaceContainerLowColor = null,
+        Color? surfaceContainerHighestColor = null,
         Color? secondaryContainerColor = null,
         Color? onSecondaryContainerColor = null,
+        Color? inverseSurfaceColor = null,
+        Color? onInverseSurfaceColor = null,
+        MaterialTapTargetSize? materialTapTargetSize = null,
         ButtonStyle? textButtonStyle = null,
         ButtonStyle? elevatedButtonStyle = null,
         ButtonStyle? outlinedButtonStyle = null,
         ButtonStyle? filledButtonStyle = null,
+        ButtonStyle? iconButtonStyle = null,
         TextButtonThemeData? textButtonTheme = null,
         ElevatedButtonThemeData? elevatedButtonTheme = null,
         OutlinedButtonThemeData? outlinedButtonTheme = null,
-        FilledButtonThemeData? filledButtonTheme = null)
+        FilledButtonThemeData? filledButtonTheme = null,
+        IconButtonThemeData? iconButtonTheme = null)
     {
         Platform = platform ?? ResolveDefaultPlatform();
         Brightness = brightness ?? Brightness.Light;
@@ -171,16 +187,22 @@ public sealed record ThemeData
         OnSurfaceVariantColor = onSurfaceVariantColor ?? LightOnSurfaceVariantColor;
         OutlineColor = outlineColor ?? LightOutlineColor;
         SurfaceContainerLowColor = surfaceContainerLowColor ?? LightSurfaceContainerLowColor;
+        SurfaceContainerHighestColor = surfaceContainerHighestColor ?? LightSurfaceContainerHighestColor;
         SecondaryContainerColor = secondaryContainerColor ?? LightSecondaryContainerColor;
         OnSecondaryContainerColor = onSecondaryContainerColor ?? LightOnSecondaryContainerColor;
+        InverseSurfaceColor = inverseSurfaceColor ?? LightInverseSurfaceColor;
+        OnInverseSurfaceColor = onInverseSurfaceColor ?? LightOnInverseSurfaceColor;
+        MaterialTapTargetSize = materialTapTargetSize ?? MaterialTapTargetSize.Padded;
         TextButtonStyle = textButtonStyle;
         ElevatedButtonStyle = elevatedButtonStyle;
         OutlinedButtonStyle = outlinedButtonStyle;
         FilledButtonStyle = filledButtonStyle;
+        IconButtonStyle = iconButtonStyle;
         _textButtonTheme = textButtonTheme;
         _elevatedButtonTheme = elevatedButtonTheme;
         _outlinedButtonTheme = outlinedButtonTheme;
         _filledButtonTheme = filledButtonTheme;
+        _iconButtonTheme = iconButtonTheme;
     }
 
     public TargetPlatform Platform { get; init; }
@@ -215,9 +237,17 @@ public sealed record ThemeData
 
     public Color SurfaceContainerLowColor { get; init; }
 
+    public Color SurfaceContainerHighestColor { get; init; }
+
     public Color SecondaryContainerColor { get; init; }
 
     public Color OnSecondaryContainerColor { get; init; }
+
+    public Color InverseSurfaceColor { get; init; }
+
+    public Color OnInverseSurfaceColor { get; init; }
+
+    public MaterialTapTargetSize MaterialTapTargetSize { get; init; }
 
     public ButtonStyle? TextButtonStyle { get; init; }
 
@@ -226,6 +256,8 @@ public sealed record ThemeData
     public ButtonStyle? OutlinedButtonStyle { get; init; }
 
     public ButtonStyle? FilledButtonStyle { get; init; }
+
+    public ButtonStyle? IconButtonStyle { get; init; }
 
     public TextButtonThemeData TextButtonTheme
     {
@@ -249,6 +281,12 @@ public sealed record ThemeData
     {
         get => _filledButtonTheme ?? new FilledButtonThemeData(style: FilledButtonStyle);
         init => _filledButtonTheme = value;
+    }
+
+    public IconButtonThemeData IconButtonTheme
+    {
+        get => _iconButtonTheme ?? new IconButtonThemeData(style: IconButtonStyle);
+        init => _iconButtonTheme = value;
     }
 
     public static ThemeData Light { get; } = new();

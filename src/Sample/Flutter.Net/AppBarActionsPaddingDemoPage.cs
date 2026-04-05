@@ -94,8 +94,8 @@ internal sealed class AppBarActionsPaddingDemoPageState : State
                 actionsPadding: _useWidgetOverride ? _widgetActionsPadding : null,
                 actions:
                 [
-                    BuildActionBadge("A1"),
-                    BuildActionBadge("A2"),
+                    BuildActionBadge(Icons.Close),
+                    BuildActionBadge(Icons.Menu),
                 ]));
     }
 
@@ -107,19 +107,22 @@ internal sealed class AppBarActionsPaddingDemoPageState : State
             foregroundColor: Colors.White,
             actions:
             [
-                BuildActionBadge("A1"),
-                BuildActionBadge("A2"),
+                BuildActionBadge(Icons.Close),
+                BuildActionBadge(Icons.Menu),
             ]);
     }
 
-    private static Widget BuildActionBadge(string label)
+    private static Widget BuildActionBadge(IconData icon)
     {
         return new Container(
             width: 28,
             height: 22,
             color: Color.Parse("#FFFFB703"),
             child: new Center(
-                child: new Text(label, fontSize: 10, color: Colors.Black)));
+                child: new Icon(
+                    icon,
+                    size: 14,
+                    color: Colors.Black)));
     }
 
     private Widget BuildButton(string label, Action onTap, double width, string colorHex)

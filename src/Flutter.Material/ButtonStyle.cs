@@ -14,7 +14,14 @@ public enum MaterialState
     Hovered = 1 << 0,
     Focused = 1 << 1,
     Pressed = 1 << 2,
-    Disabled = 1 << 3
+    Disabled = 1 << 3,
+    Selected = 1 << 4
+}
+
+public enum IconAlignment
+{
+    Start,
+    End
 }
 
 public abstract class MaterialStateProperty<T>
@@ -71,9 +78,12 @@ public sealed record ButtonStyle(
     MaterialStateProperty<Color?>? ForegroundColor = null,
     MaterialStateProperty<Color?>? BackgroundColor = null,
     MaterialStateProperty<Color?>? ShadowColor = null,
+    MaterialStateProperty<Color?>? SurfaceTintColor = null,
     MaterialStateProperty<Color?>? OverlayColor = null,
     MaterialStateProperty<Color?>? SplashColor = null,
     MaterialStateProperty<double?>? Elevation = null,
+    MaterialStateProperty<Color?>? IconColor = null,
+    MaterialStateProperty<double?>? IconSize = null,
     MaterialStateProperty<BorderSide?>? Side = null,
     MaterialStateProperty<Thickness?>? Padding = null,
     MaterialStateProperty<BorderRadius?>? Shape = null,
@@ -81,6 +91,8 @@ public sealed record ButtonStyle(
     MaterialStateProperty<Size?>? FixedSize = null,
     MaterialStateProperty<Size?>? MaximumSize = null,
     Alignment? Alignment = null,
+    IconAlignment? IconAlignment = null,
+    MaterialTapTargetSize? TapTargetSize = null,
     MaterialStateProperty<TextStyle?>? TextStyle = null)
 {
     public ButtonStyle Merge(ButtonStyle? style)
@@ -95,9 +107,12 @@ public sealed record ButtonStyle(
             ForegroundColor = ForegroundColor ?? style.ForegroundColor,
             BackgroundColor = BackgroundColor ?? style.BackgroundColor,
             ShadowColor = ShadowColor ?? style.ShadowColor,
+            SurfaceTintColor = SurfaceTintColor ?? style.SurfaceTintColor,
             OverlayColor = OverlayColor ?? style.OverlayColor,
             SplashColor = SplashColor ?? style.SplashColor,
             Elevation = Elevation ?? style.Elevation,
+            IconColor = IconColor ?? style.IconColor,
+            IconSize = IconSize ?? style.IconSize,
             Side = Side ?? style.Side,
             Padding = Padding ?? style.Padding,
             Shape = Shape ?? style.Shape,
@@ -105,6 +120,8 @@ public sealed record ButtonStyle(
             FixedSize = FixedSize ?? style.FixedSize,
             MaximumSize = MaximumSize ?? style.MaximumSize,
             Alignment = Alignment ?? style.Alignment,
+            IconAlignment = IconAlignment ?? style.IconAlignment,
+            TapTargetSize = TapTargetSize ?? style.TapTargetSize,
             TextStyle = TextStyle ?? style.TextStyle
         };
     }
@@ -129,6 +146,11 @@ public sealed record ButtonStyle(
         return ShadowColor?.Resolve(states);
     }
 
+    internal Color? ResolveSurfaceTintColor(MaterialState states)
+    {
+        return SurfaceTintColor?.Resolve(states);
+    }
+
     internal Color? ResolveSplashColor(MaterialState states)
     {
         return SplashColor?.Resolve(states);
@@ -137,6 +159,16 @@ public sealed record ButtonStyle(
     internal double? ResolveElevation(MaterialState states)
     {
         return Elevation?.Resolve(states);
+    }
+
+    internal Color? ResolveIconColor(MaterialState states)
+    {
+        return IconColor?.Resolve(states);
+    }
+
+    internal double? ResolveIconSize(MaterialState states)
+    {
+        return IconSize?.Resolve(states);
     }
 
     internal BorderSide? ResolveSide(MaterialState states)
@@ -167,6 +199,16 @@ public sealed record ButtonStyle(
     internal Size? ResolveMaximumSize(MaterialState states)
     {
         return MaximumSize?.Resolve(states);
+    }
+
+    internal MaterialTapTargetSize? ResolveTapTargetSize()
+    {
+        return TapTargetSize;
+    }
+
+    internal IconAlignment? ResolveIconAlignment()
+    {
+        return IconAlignment;
     }
 
     internal TextStyle? ResolveTextStyle(MaterialState states)

@@ -1,6 +1,6 @@
 # Feature Template
 
-Use this template for every non-trivial feature iteration.
+Use this template for every non-trivial feature or control-parity iteration.
 
 ```md
 # Feature: <short-name>
@@ -15,13 +15,25 @@ Use this template for every non-trivial feature iteration.
 
 ## Context Budget Plan
 
-- Budget: max <N> files in initial read (recommended: 6-8).
+- Budget: max <N> files in initial read (recommended: 12-20 for full-control parity work).
 - Entry files:
   - <file 1>
   - <file 2>
   - <file 3>
 - Expansion trigger:
-  - Which concrete blocker allows opening more files?
+  - Which concrete need is required to close the target control in this same request?
+
+## Delivery Scope (Required for Control Parity Work)
+
+- Target control:
+  - <control name>
+- Completion checklist (must be closed in this iteration unless explicitly blocked):
+  - [ ] API/default values
+  - [ ] Widget composition order
+  - [ ] State transitions/interaction states
+  - [ ] Constraint/layout behavior
+  - [ ] Paint/visual semantics
+  - [ ] Focused tests for this control
 
 ## Invariants Impacted
 
@@ -41,6 +53,7 @@ Use this template for every non-trivial feature iteration.
   - [ ] Widget composition order mapped
   - [ ] State transitions/interaction states mapped
   - [ ] Constraint/layout behavior mapped
+  - [ ] Paint/visual semantics mapped
 - Divergence log (only if needed):
   - <none> or <file + reason + expected delta + follow-up condition>
 
@@ -75,10 +88,12 @@ Use this template for every non-trivial feature iteration.
 
 ## Done Criteria
 
+- [ ] One full control (or explicitly scoped feature) is closed end-to-end
 - [ ] Behavior implemented
 - [ ] Tests updated and passing
 - [ ] No invariant violations introduced
 - [ ] Parity constraints satisfied
+- [ ] Remaining parity gaps (if any) are documented with blocker + next action
 ```
 
 ## Optional Naming Convention

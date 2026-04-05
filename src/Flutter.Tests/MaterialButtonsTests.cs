@@ -24,6 +24,12 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
+    public void ThemeData_Light_DefaultMaterialTapTargetSize_IsPadded()
+    {
+        Assert.Equal(MaterialTapTargetSize.Padded, ThemeData.Light.MaterialTapTargetSize);
+    }
+
+    [Fact]
     public void TextButton_UsesThemePrimaryColorAsDefaultForeground()
     {
         var owner = new BuildOwner();
@@ -49,6 +55,199 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
+    public void TextButton_UseMaterial3Disabled_UsesThemePrimaryColorAsDefaultForeground()
+    {
+        var owner = new BuildOwner();
+        var theme = ThemeData.Light with
+        {
+            UseMaterial3 = false,
+            PrimaryColor = Colors.OrangeRed
+        };
+
+        var root = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: new TextButton(
+                    onPressed: () => { },
+                    child: new Text("Tap me"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(paragraph);
+        Assert.Equal(Colors.OrangeRed, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+    }
+
+    [Fact]
+    public void TextButton_DefaultIconTheme_UsesForegroundAndIconSizeDefaults()
+    {
+        var owner = new BuildOwner();
+        var theme = ThemeData.Light with
+        {
+            PrimaryColor = Colors.OrangeRed
+        };
+        IconThemeData? capturedTheme = null;
+
+        var root = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: new TextButton(
+                    onPressed: () => { },
+                    child: new CaptureIconThemeWidget(iconTheme => capturedTheme = iconTheme))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.NotNull(capturedTheme);
+        Assert.Equal(Colors.OrangeRed, capturedTheme!.Color);
+        Assert.Equal(18, capturedTheme.Size);
+    }
+
+    [Fact]
+    public void TextButton_StyleFrom_IconColorAndSizeOverrideDefaults()
+    {
+        var owner = new BuildOwner();
+        IconThemeData? capturedTheme = null;
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new TextButton(
+                    onPressed: () => { },
+                    style: TextButton.StyleFrom(
+                        foregroundColor: Colors.DarkCyan,
+                        iconColor: Colors.Gold,
+                        iconSize: 26),
+                    child: new CaptureIconThemeWidget(iconTheme => capturedTheme = iconTheme))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.NotNull(capturedTheme);
+        Assert.Equal(Colors.Gold, capturedTheme!.Color);
+        Assert.Equal(26, capturedTheme.Size);
+    }
+
+    [Fact]
+    public void TextButton_StyleFrom_DisabledIconColorOverridesForegroundFallback()
+    {
+        var owner = new BuildOwner();
+        IconThemeData? capturedTheme = null;
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new TextButton(
+                    onPressed: null,
+                    style: TextButton.StyleFrom(
+                        foregroundColor: Colors.DarkCyan,
+                        iconColor: Colors.Gold,
+                        disabledIconColor: Colors.Gray),
+                    child: new CaptureIconThemeWidget(iconTheme => capturedTheme = iconTheme))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.NotNull(capturedTheme);
+        Assert.Equal(Colors.Gray, capturedTheme!.Color);
+        Assert.Equal(18, capturedTheme.Size);
+    }
+
+    [Fact]
+    public void TextButton_StyleFrom_IconColorWithoutDisabledIcon_UsesIconColorWhenDisabled()
+    {
+        var owner = new BuildOwner();
+        IconThemeData? capturedTheme = null;
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new TextButton(
+                    onPressed: null,
+                    style: TextButton.StyleFrom(
+                        iconColor: Colors.Gold),
+                    child: new CaptureIconThemeWidget(iconTheme => capturedTheme = iconTheme))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.NotNull(capturedTheme);
+        Assert.Equal(Colors.Gold, capturedTheme!.Color);
+    }
+
+    [Fact]
+    public void ElevatedButton_StyleFrom_IconColorWithoutDisabledIcon_UsesIconColorWhenDisabled()
+    {
+        var owner = new BuildOwner();
+        IconThemeData? capturedTheme = null;
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new ElevatedButton(
+                    onPressed: null,
+                    style: ElevatedButton.StyleFrom(iconColor: Colors.Gold),
+                    child: new CaptureIconThemeWidget(iconTheme => capturedTheme = iconTheme))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.NotNull(capturedTheme);
+        Assert.Equal(Colors.Gold, capturedTheme!.Color);
+    }
+
+    [Fact]
+    public void OutlinedButton_StyleFrom_IconColorWithoutDisabledIcon_UsesIconColorWhenDisabled()
+    {
+        var owner = new BuildOwner();
+        IconThemeData? capturedTheme = null;
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new OutlinedButton(
+                    onPressed: null,
+                    style: OutlinedButton.StyleFrom(iconColor: Colors.Gold),
+                    child: new CaptureIconThemeWidget(iconTheme => capturedTheme = iconTheme))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.NotNull(capturedTheme);
+        Assert.Equal(Colors.Gold, capturedTheme!.Color);
+    }
+
+    [Fact]
+    public void FilledButton_StyleFrom_IconColorWithoutDisabledIcon_UsesIconColorWhenDisabled()
+    {
+        var owner = new BuildOwner();
+        IconThemeData? capturedTheme = null;
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new FilledButton(
+                    onPressed: null,
+                    style: FilledButton.StyleFrom(iconColor: Colors.Gold),
+                    child: new CaptureIconThemeWidget(iconTheme => capturedTheme = iconTheme))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.NotNull(capturedTheme);
+        Assert.Equal(Colors.Gold, capturedTheme!.Color);
+    }
+
+    [Fact]
     public void TextButton_DefaultMinSize_UsesMaterialBaseline64x40()
     {
         var owner = new BuildOwner();
@@ -68,6 +267,403 @@ public sealed class MaterialButtonsTests
         Assert.NotNull(constrainedBox);
         Assert.Equal(64, constrainedBox!.AdditionalConstraints.MinWidth);
         Assert.Equal(40, constrainedBox.AdditionalConstraints.MinHeight);
+    }
+
+    [Fact]
+    public void TextButton_DefaultMinSize_UseMaterial3Disabled_UsesMaterialBaseline64x36()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with { UseMaterial3 = false },
+                child: new TextButton(
+                    onPressed: () => { },
+                    child: new Text("Min size"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var constrainedBox = FindDescendant<RenderConstrainedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(constrainedBox);
+        Assert.Equal(64, constrainedBox!.AdditionalConstraints.MinWidth);
+        Assert.Equal(36, constrainedBox.AdditionalConstraints.MinHeight);
+    }
+
+    [Fact]
+    public void TextButton_DefaultPadding_UseMaterial3Disabled_UsesAll8()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with { UseMaterial3 = false },
+                child: new TextButton(
+                    onPressed: () => { },
+                    child: new Text("Padding"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(8), padding!.Padding);
+    }
+
+    [Fact]
+    public void TextButton_Icon_DefaultPadding_UsesStart12TopBottom8End16()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: TextButton.Icon(
+                    onPressed: () => { },
+                    icon: new SizedBox(width: 12, height: 12),
+                    label: new Text("Padding"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(12, 8, 16, 8), padding!.Padding);
+    }
+
+    [Fact]
+    public void TextButton_Icon_DefaultPadding_UseMaterial3Disabled_UsesAll8()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with { UseMaterial3 = false },
+                child: TextButton.Icon(
+                    onPressed: () => { },
+                    icon: new SizedBox(width: 12, height: 12),
+                    label: new Text("Padding"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(8), padding!.Padding);
+    }
+
+    [Fact]
+    public void TextButton_DefaultPadding_TextScaleFactor2_UsesHorizontal8AndZeroVertical()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new MediaQuery(
+                data: new MediaQueryData(TextScaleFactor: 2.0),
+                child: new Theme(
+                    data: ThemeData.Light,
+                    child: new TextButton(
+                        onPressed: () => { },
+                        child: new Text("Padding")))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(8, 0), padding!.Padding);
+    }
+
+    [Fact]
+    public void TextButton_Icon_DefaultPadding_TextScaleFactor2_UsesHorizontal4AndZeroVertical()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new MediaQuery(
+                data: new MediaQueryData(TextScaleFactor: 2.0),
+                child: new Theme(
+                    data: ThemeData.Light,
+                    child: TextButton.Icon(
+                        onPressed: () => { },
+                        icon: new SizedBox(width: 12, height: 12),
+                        label: new Text("Padding")))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(4, 0), padding!.Padding);
+    }
+
+    [Fact]
+    public void TextButton_Icon_DefaultPadding_Rtl_UsesDirectionalStartEnd()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Directionality(
+                textDirection: TextDirection.Rtl,
+                child: new Theme(
+                    data: ThemeData.Light,
+                    child: TextButton.Icon(
+                        onPressed: () => { },
+                        icon: new SizedBox(width: 12, height: 12),
+                        label: new Text("Padding")))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(16, 8, 12, 8), padding!.Padding);
+    }
+
+    [Fact]
+    public void TextButton_Icon_DefaultSpacing_Uses8()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: TextButton.Icon(
+                    onPressed: () => { },
+                    icon: new SizedBox(width: 12, height: 12),
+                    label: new Text("Spacing"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var row = FindDescendant<RenderFlex>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(row);
+        Assert.Equal(8.0, row!.Spacing, 3);
+    }
+
+    [Fact]
+    public void TextButton_Icon_TextScaleFactor15_UsesInterpolatedSpacing6()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new MediaQuery(
+                data: new MediaQueryData(TextScaleFactor: 1.5),
+                child: new Theme(
+                    data: ThemeData.Light,
+                    child: TextButton.Icon(
+                        onPressed: () => { },
+                        icon: new SizedBox(width: 12, height: 12),
+                        label: new Text("Spacing")))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var row = FindDescendant<RenderFlex>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(row);
+        Assert.Equal(6.0, row!.Spacing, 3);
+    }
+
+    [Fact]
+    public void TextButton_Icon_TextScaleFactor3_ClampsSpacingTo4()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new MediaQuery(
+                data: new MediaQueryData(TextScaleFactor: 3.0),
+                child: new Theme(
+                    data: ThemeData.Light,
+                    child: TextButton.Icon(
+                        onPressed: () => { },
+                        icon: new SizedBox(width: 12, height: 12),
+                        label: new Text("Spacing")))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var row = FindDescendant<RenderFlex>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(row);
+        Assert.Equal(4.0, row!.Spacing, 3);
+    }
+
+    [Fact]
+    public void TextButton_Icon_StyleTextSize28_UsesClampedSpacing4()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: TextButton.Icon(
+                    onPressed: () => { },
+                    style: TextButton.StyleFrom(
+                        textStyle: new TextStyle(FontSize: 28)),
+                    icon: new SizedBox(width: 12, height: 12),
+                    label: new Text("Spacing"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var row = FindDescendant<RenderFlex>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(row);
+        Assert.Equal(4.0, row!.Spacing, 3);
+    }
+
+    [Fact]
+    public void TextButton_Icon_IconAlignmentEnd_PlacesLabelBeforeIcon()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: TextButton.Icon(
+                    onPressed: () => { },
+                    icon: new SizedBox(width: 12, height: 12),
+                    label: new Text("Icon alignment"),
+                    iconAlignment: IconAlignment.End)));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        AssertIconRowOrder(
+            RequireRenderObject<RenderObject>(root.ChildElement),
+            iconFirst: false);
+    }
+
+    [Fact]
+    public void TextButton_Icon_StyleFromIconAlignmentEnd_PlacesLabelBeforeIcon()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: TextButton.Icon(
+                    onPressed: () => { },
+                    icon: new SizedBox(width: 12, height: 12),
+                    label: new Text("Icon alignment"),
+                    style: TextButton.StyleFrom(iconAlignment: IconAlignment.End))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        AssertIconRowOrder(
+            RequireRenderObject<RenderObject>(root.ChildElement),
+            iconFirst: false);
+    }
+
+    [Fact]
+    public void TextButton_Icon_ThemeIconAlignmentEnd_PlacesLabelBeforeIcon()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new TextButtonTheme(
+                    data: new TextButtonThemeData(
+                        style: new ButtonStyle(IconAlignment: IconAlignment.End)),
+                    child: TextButton.Icon(
+                        onPressed: () => { },
+                        icon: new SizedBox(width: 12, height: 12),
+                        label: new Text("Icon alignment")))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        AssertIconRowOrder(
+            RequireRenderObject<RenderObject>(root.ChildElement),
+            iconFirst: false);
+    }
+
+    [Fact]
+    public void TextButton_Icon_IconAlignmentParameter_OverridesStyleFromIconAlignment()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: TextButton.Icon(
+                    onPressed: () => { },
+                    icon: new SizedBox(width: 12, height: 12),
+                    label: new Text("Icon alignment"),
+                    style: TextButton.StyleFrom(iconAlignment: IconAlignment.Start),
+                    iconAlignment: IconAlignment.End)));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        AssertIconRowOrder(
+            RequireRenderObject<RenderObject>(root.ChildElement),
+            iconFirst: false);
+    }
+
+    [Fact]
+    public void TextButton_Icon_IconAlignmentStart_Rtl_PlacesLabelBeforeIcon()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Directionality(
+                textDirection: TextDirection.Rtl,
+                child: new Theme(
+                    data: ThemeData.Light,
+                    child: TextButton.Icon(
+                        onPressed: () => { },
+                        icon: new SizedBox(width: 12, height: 12),
+                        label: new Text("Icon alignment"),
+                        iconAlignment: IconAlignment.Start))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        AssertIconRowOrder(
+            RequireRenderObject<RenderObject>(root.ChildElement),
+            iconFirst: false);
+    }
+
+    [Fact]
+    public void TextButton_Icon_IconAlignmentEnd_Rtl_PlacesIconBeforeLabel()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Directionality(
+                textDirection: TextDirection.Rtl,
+                child: new Theme(
+                    data: ThemeData.Light,
+                    child: TextButton.Icon(
+                        onPressed: () => { },
+                        icon: new SizedBox(width: 12, height: 12),
+                        label: new Text("Icon alignment"),
+                        iconAlignment: IconAlignment.End))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        AssertIconRowOrder(
+            RequireRenderObject<RenderObject>(root.ChildElement),
+            iconFirst: true);
     }
 
     [Fact]
@@ -110,6 +706,79 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
+    public void TextButton_ThemeMaterialTapTargetSizeShrinkWrap_DoesNotExpandTapTarget()
+    {
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light with { MaterialTapTargetSize = MaterialTapTargetSize.ShrinkWrap },
+                child: new SizedBox(
+                    width: 120,
+                    child: new TextButton(
+                        onPressed: () => { },
+                        child: new Text("Tap target")))));
+
+        harness.Pump(new Size(220, 120));
+
+        var hitResult = new BoxHitTestResult();
+        Assert.False(harness.RenderView.HitTest(hitResult, new Point(60, 46)));
+    }
+
+    [Fact]
+    public void TextButton_StyleFrom_BackgroundOnly_AppliesBackgroundWhenDisabled()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new TextButton(
+                    onPressed: null,
+                    style: TextButton.StyleFrom(
+                        backgroundColor: Colors.Gold),
+                    child: new Text("Disabled text background"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(decorated);
+        Assert.Equal(Colors.Gold, decorated!.Decoration.Color);
+    }
+
+    [Fact]
+    public void TextButton_StyleFromTapTargetSize_OverridesThemeTapTargetSize()
+    {
+        using (var paddedHarness = new WidgetRenderHarness(
+                   new Theme(
+                       data: ThemeData.Light with { MaterialTapTargetSize = MaterialTapTargetSize.Padded },
+                       child: new SizedBox(
+                           width: 120,
+                           child: new TextButton(
+                               onPressed: () => { },
+                               child: new Text("Tap target"))))))
+        {
+            paddedHarness.Pump(new Size(220, 120));
+            var paddedHitResult = new BoxHitTestResult();
+            Assert.True(paddedHarness.RenderView.HitTest(paddedHitResult, new Point(60, 46)));
+        }
+
+        using var overrideHarness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light with { MaterialTapTargetSize = MaterialTapTargetSize.Padded },
+                child: new SizedBox(
+                    width: 120,
+                    child: new TextButton(
+                        onPressed: () => { },
+                        style: TextButton.StyleFrom(tapTargetSize: MaterialTapTargetSize.ShrinkWrap),
+                        child: new Text("Tap target")))));
+
+        overrideHarness.Pump(new Size(220, 120));
+
+        var overrideHitResult = new BoxHitTestResult();
+        Assert.False(overrideHarness.RenderView.HitTest(overrideHitResult, new Point(60, 46)));
+    }
+
+    [Fact]
     public void ElevatedButton_DefaultPadding_UsesHorizontal24AndZeroVertical()
     {
         var owner = new BuildOwner();
@@ -128,6 +797,191 @@ public sealed class MaterialButtonsTests
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
         Assert.Equal(new Thickness(24, 0), padding!.Padding);
+    }
+
+    [Fact]
+    public void ElevatedButton_DefaultPadding_UseMaterial3Disabled_UsesHorizontal16AndZeroVertical()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with { UseMaterial3 = false },
+                child: new ElevatedButton(
+                    onPressed: () => { },
+                    child: new Text("Padding"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(16, 0), padding!.Padding);
+    }
+
+    [Fact]
+    public void ElevatedButton_Icon_DefaultPadding_UsesStart16AndEnd24()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: ElevatedButton.Icon(
+                    onPressed: () => { },
+                    icon: new SizedBox(width: 12, height: 12),
+                    label: new Text("Padding"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(16, 0, 24, 0), padding!.Padding);
+    }
+
+    [Fact]
+    public void ElevatedButton_Icon_DefaultPadding_UseMaterial3Disabled_UsesStart12AndEnd16()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with { UseMaterial3 = false },
+                child: ElevatedButton.Icon(
+                    onPressed: () => { },
+                    icon: new SizedBox(width: 12, height: 12),
+                    label: new Text("Padding"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(12, 0, 16, 0), padding!.Padding);
+    }
+
+    [Fact]
+    public void ElevatedButton_DefaultPadding_TextScaleFactor2_UsesHorizontal12()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new MediaQuery(
+                data: new MediaQueryData(TextScaleFactor: 2.0),
+                child: new Theme(
+                    data: ThemeData.Light,
+                    child: new ElevatedButton(
+                        onPressed: () => { },
+                        child: new Text("Padding")))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(12, 0), padding!.Padding);
+    }
+
+    [Fact]
+    public void ElevatedButton_Icon_DefaultPadding_TextScaleFactor2_UsesStart8End12()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new MediaQuery(
+                data: new MediaQueryData(TextScaleFactor: 2.0),
+                child: new Theme(
+                    data: ThemeData.Light,
+                    child: ElevatedButton.Icon(
+                        onPressed: () => { },
+                        icon: new SizedBox(width: 12, height: 12),
+                        label: new Text("Padding")))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(8, 0, 12, 0), padding!.Padding);
+    }
+
+    [Fact]
+    public void ElevatedButton_Icon_DefaultPadding_TextScaleFactor2_Rtl_UsesDirectionalStartEnd()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Directionality(
+                textDirection: TextDirection.Rtl,
+                child: new MediaQuery(
+                    data: new MediaQueryData(TextScaleFactor: 2.0),
+                    child: new Theme(
+                        data: ThemeData.Light,
+                        child: ElevatedButton.Icon(
+                            onPressed: () => { },
+                            icon: new SizedBox(width: 12, height: 12),
+                            label: new Text("Padding"))))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(12, 0, 8, 0), padding!.Padding);
+    }
+
+    [Fact]
+    public void ElevatedButton_Icon_ThemeIconAlignmentEnd_PlacesLabelBeforeIcon()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new ElevatedButtonTheme(
+                    data: new ElevatedButtonThemeData(
+                        style: new ButtonStyle(IconAlignment: IconAlignment.End)),
+                    child: ElevatedButton.Icon(
+                        onPressed: () => { },
+                        icon: new SizedBox(width: 12, height: 12),
+                        label: new Text("Icon alignment")))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        AssertIconRowOrder(
+            RequireRenderObject<RenderObject>(root.ChildElement),
+            iconFirst: false);
+    }
+
+    [Fact]
+    public void ElevatedButton_DefaultMinSize_UseMaterial3Disabled_UsesMaterialBaseline64x36()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with { UseMaterial3 = false },
+                child: new ElevatedButton(
+                    onPressed: () => { },
+                    child: new Text("Min size"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var constrainedBox = FindDescendant<RenderConstrainedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(constrainedBox);
+        Assert.Equal(64, constrainedBox!.AdditionalConstraints.MinWidth);
+        Assert.Equal(36, constrainedBox.AdditionalConstraints.MinHeight);
     }
 
     [Fact]
@@ -152,6 +1006,189 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
+    public void OutlinedButton_DefaultPadding_UseMaterial3Disabled_UsesHorizontal16AndZeroVertical()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with { UseMaterial3 = false },
+                child: new OutlinedButton(
+                    onPressed: () => { },
+                    child: new Text("Padding"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(16, 0), padding!.Padding);
+    }
+
+    [Fact]
+    public void OutlinedButton_Icon_DefaultPadding_UsesStart16AndEnd24()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: OutlinedButton.Icon(
+                    onPressed: () => { },
+                    icon: new SizedBox(width: 12, height: 12),
+                    label: new Text("Padding"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(16, 0, 24, 0), padding!.Padding);
+    }
+
+    [Fact]
+    public void OutlinedButton_Icon_DefaultPadding_UseMaterial3Disabled_UsesHorizontal16AndZeroVertical()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with { UseMaterial3 = false },
+                child: OutlinedButton.Icon(
+                    onPressed: () => { },
+                    icon: new SizedBox(width: 12, height: 12),
+                    label: new Text("Padding"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(16, 0), padding!.Padding);
+    }
+
+    [Fact]
+    public void OutlinedButton_DefaultPadding_TextScaleFactor2_UsesHorizontal12()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new MediaQuery(
+                data: new MediaQueryData(TextScaleFactor: 2.0),
+                child: new Theme(
+                    data: ThemeData.Light,
+                    child: new OutlinedButton(
+                        onPressed: () => { },
+                        child: new Text("Padding")))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(12, 0), padding!.Padding);
+    }
+
+    [Fact]
+    public void OutlinedButton_Icon_DefaultPadding_TextScaleFactor2_UsesStart8End12()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new MediaQuery(
+                data: new MediaQueryData(TextScaleFactor: 2.0),
+                child: new Theme(
+                    data: ThemeData.Light,
+                    child: OutlinedButton.Icon(
+                        onPressed: () => { },
+                        icon: new SizedBox(width: 12, height: 12),
+                        label: new Text("Padding")))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(8, 0, 12, 0), padding!.Padding);
+    }
+
+    [Fact]
+    public void OutlinedButton_Icon_DefaultPadding_TextScaleFactor2_UseMaterial3Disabled_UsesHorizontal8()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new MediaQuery(
+                data: new MediaQueryData(TextScaleFactor: 2.0),
+                child: new Theme(
+                    data: ThemeData.Light with { UseMaterial3 = false },
+                    child: OutlinedButton.Icon(
+                        onPressed: () => { },
+                        icon: new SizedBox(width: 12, height: 12),
+                        label: new Text("Padding")))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(8, 0), padding!.Padding);
+    }
+
+    [Fact]
+    public void OutlinedButton_Icon_ThemeIconAlignmentEnd_PlacesLabelBeforeIcon()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new OutlinedButtonTheme(
+                    data: new OutlinedButtonThemeData(
+                        style: new ButtonStyle(IconAlignment: IconAlignment.End)),
+                    child: OutlinedButton.Icon(
+                        onPressed: () => { },
+                        icon: new SizedBox(width: 12, height: 12),
+                        label: new Text("Icon alignment")))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        AssertIconRowOrder(
+            RequireRenderObject<RenderObject>(root.ChildElement),
+            iconFirst: false);
+    }
+
+    [Fact]
+    public void OutlinedButton_DefaultMinSize_UseMaterial3Disabled_UsesMaterialBaseline64x36()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with { UseMaterial3 = false },
+                child: new OutlinedButton(
+                    onPressed: () => { },
+                    child: new Text("Min size"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var constrainedBox = FindDescendant<RenderConstrainedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(constrainedBox);
+        Assert.Equal(64, constrainedBox!.AdditionalConstraints.MinWidth);
+        Assert.Equal(36, constrainedBox.AdditionalConstraints.MinHeight);
+    }
+
+    [Fact]
     public void FilledButton_DefaultPadding_UsesHorizontal24AndZeroVertical()
     {
         var owner = new BuildOwner();
@@ -170,6 +1207,235 @@ public sealed class MaterialButtonsTests
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
         Assert.Equal(new Thickness(24, 0), padding!.Padding);
+    }
+
+    [Fact]
+    public void FilledButton_DefaultPadding_UseMaterial3Disabled_UsesHorizontal16AndZeroVertical()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with { UseMaterial3 = false },
+                child: new FilledButton(
+                    onPressed: () => { },
+                    child: new Text("Padding"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(16, 0), padding!.Padding);
+    }
+
+    [Fact]
+    public void FilledButtonTonal_DefaultPadding_UseMaterial3Disabled_UsesHorizontal16AndZeroVertical()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with { UseMaterial3 = false },
+                child: FilledButton.Tonal(
+                    onPressed: () => { },
+                    child: new Text("Padding"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(16, 0), padding!.Padding);
+    }
+
+    [Fact]
+    public void FilledButton_Icon_DefaultPadding_UsesStart16AndEnd24()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: FilledButton.Icon(
+                    onPressed: () => { },
+                    icon: new SizedBox(width: 12, height: 12),
+                    label: new Text("Padding"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(16, 0, 24, 0), padding!.Padding);
+    }
+
+    [Fact]
+    public void FilledButton_Icon_DefaultPadding_UseMaterial3Disabled_UsesStart12AndEnd16()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with { UseMaterial3 = false },
+                child: FilledButton.Icon(
+                    onPressed: () => { },
+                    icon: new SizedBox(width: 12, height: 12),
+                    label: new Text("Padding"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(12, 0, 16, 0), padding!.Padding);
+    }
+
+    [Fact]
+    public void FilledButtonTonal_Icon_DefaultPadding_UseMaterial3Disabled_UsesStart12AndEnd16()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with { UseMaterial3 = false },
+                child: FilledButton.TonalIcon(
+                    onPressed: () => { },
+                    icon: new SizedBox(width: 12, height: 12),
+                    label: new Text("Padding"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(12, 0, 16, 0), padding!.Padding);
+    }
+
+    [Fact]
+    public void FilledButton_DefaultPadding_TextScaleFactor2_UsesHorizontal12()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new MediaQuery(
+                data: new MediaQueryData(TextScaleFactor: 2.0),
+                child: new Theme(
+                    data: ThemeData.Light,
+                    child: new FilledButton(
+                        onPressed: () => { },
+                        child: new Text("Padding")))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(12, 0), padding!.Padding);
+    }
+
+    [Fact]
+    public void FilledButton_Icon_DefaultPadding_TextScaleFactor2_UsesStart8End12()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new MediaQuery(
+                data: new MediaQueryData(TextScaleFactor: 2.0),
+                child: new Theme(
+                    data: ThemeData.Light,
+                    child: FilledButton.Icon(
+                        onPressed: () => { },
+                        icon: new SizedBox(width: 12, height: 12),
+                        label: new Text("Padding")))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(8, 0, 12, 0), padding!.Padding);
+    }
+
+    [Fact]
+    public void FilledButton_Icon_DefaultPadding_TextScaleFactor2_Rtl_UsesDirectionalStartEnd()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Directionality(
+                textDirection: TextDirection.Rtl,
+                child: new MediaQuery(
+                    data: new MediaQueryData(TextScaleFactor: 2.0),
+                    child: new Theme(
+                        data: ThemeData.Light,
+                        child: FilledButton.Icon(
+                            onPressed: () => { },
+                            icon: new SizedBox(width: 12, height: 12),
+                            label: new Text("Padding"))))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(12, 0, 8, 0), padding!.Padding);
+    }
+
+    [Fact]
+    public void FilledButtonTonal_Icon_IconAlignmentEnd_PlacesLabelBeforeIcon()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: FilledButton.TonalIcon(
+                    onPressed: () => { },
+                    icon: new SizedBox(width: 12, height: 12),
+                    label: new Text("Icon alignment"),
+                    iconAlignment: IconAlignment.End)));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        AssertIconRowOrder(
+            RequireRenderObject<RenderObject>(root.ChildElement),
+            iconFirst: false);
+    }
+
+    [Fact]
+    public void FilledButton_Icon_ThemeIconAlignmentEnd_PlacesLabelBeforeIcon()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new FilledButtonTheme(
+                    data: new FilledButtonThemeData(
+                        style: new ButtonStyle(IconAlignment: IconAlignment.End)),
+                    child: FilledButton.Icon(
+                        onPressed: () => { },
+                        icon: new SizedBox(width: 12, height: 12),
+                        label: new Text("Icon alignment")))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        AssertIconRowOrder(
+            RequireRenderObject<RenderObject>(root.ChildElement),
+            iconFirst: false);
     }
 
     [Fact]
@@ -252,6 +1518,149 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
+    public void ElevatedButton_UseMaterial3Disabled_UsesThemePrimaryAndOnPrimaryColorsByDefault()
+    {
+        var owner = new BuildOwner();
+        var theme = ThemeData.Light with
+        {
+            UseMaterial3 = false,
+            PrimaryColor = Colors.DarkSlateBlue,
+            OnPrimaryColor = Colors.AliceBlue,
+            SurfaceContainerLowColor = Colors.Bisque
+        };
+
+        var root = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: new ElevatedButton(
+                    onPressed: () => { },
+                    child: new Text("Primary"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
+        var decorated = FindDescendant<RenderDecoratedBox>(renderRoot);
+        var paragraph = FindDescendant<RenderParagraph>(renderRoot);
+
+        Assert.NotNull(decorated);
+        Assert.Equal(theme.PrimaryColor, decorated!.Decoration.Color);
+        Assert.NotNull(paragraph);
+        Assert.Equal(theme.OnPrimaryColor, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+    }
+
+    [Fact]
+    public void ElevatedButton_StyleFrom_SurfaceTintColor_TintsBackgroundByElevation()
+    {
+        var owner = new BuildOwner();
+        var baseBackground = Colors.White;
+        var surfaceTint = Colors.Red;
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new ElevatedButton(
+                    onPressed: () => { },
+                    style: ElevatedButton.StyleFrom(
+                        backgroundColor: baseBackground,
+                        surfaceTintColor: surfaceTint,
+                        elevation: 3),
+                    child: new Text("Surface tint"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(decorated);
+        Assert.Equal(ApplySurfaceTint(baseBackground, surfaceTint, 3), decorated!.Decoration.Color);
+    }
+
+    [Fact]
+    public void ElevatedButton_ThemeStyleSurfaceTintColor_TintsDefaultBackground()
+    {
+        var owner = new BuildOwner();
+        var theme = ThemeData.Light with
+        {
+            ElevatedButtonTheme = new ElevatedButtonThemeData(
+                style: new ButtonStyle(
+                    SurfaceTintColor: MaterialStateProperty<Color?>.All(Colors.Red)))
+        };
+
+        var root = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: new ElevatedButton(
+                    onPressed: () => { },
+                    child: new Text("Theme surface tint"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(decorated);
+        Assert.Equal(ApplySurfaceTint(theme.SurfaceContainerLowColor, Colors.Red, 1), decorated!.Decoration.Color);
+    }
+
+    [Fact]
+    public void ElevatedButton_StyleFrom_SurfaceTintColor_DoesNotTintBackground_WhenUseMaterial3IsDisabled()
+    {
+        var owner = new BuildOwner();
+        var baseBackground = Colors.White;
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with { UseMaterial3 = false },
+                child: new ElevatedButton(
+                    onPressed: () => { },
+                    style: ElevatedButton.StyleFrom(
+                        backgroundColor: baseBackground,
+                        surfaceTintColor: Colors.Red,
+                        elevation: 3),
+                    child: new Text("Surface tint off"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(decorated);
+        Assert.Equal(baseBackground, decorated!.Decoration.Color);
+    }
+
+    [Fact]
+    public void ElevatedButton_ThemeStyleSurfaceTintColor_DoesNotTintBackground_WhenUseMaterial3IsDisabled()
+    {
+        var owner = new BuildOwner();
+        var theme = ThemeData.Light with
+        {
+            UseMaterial3 = false,
+            ElevatedButtonTheme = new ElevatedButtonThemeData(
+                style: new ButtonStyle(
+                    SurfaceTintColor: MaterialStateProperty<Color?>.All(Colors.Red)))
+        };
+
+        var root = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: new ElevatedButton(
+                    onPressed: () => { },
+                    style: ElevatedButton.StyleFrom(
+                        backgroundColor: Colors.White,
+                        elevation: 3),
+                    child: new Text("Theme surface tint off"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(decorated);
+        Assert.Equal(Colors.White, decorated!.Decoration.Color);
+    }
+
+    [Fact]
     public void ElevatedButton_DefaultShadow_IsAppliedWhenEnabled()
     {
         var owner = new BuildOwner();
@@ -294,6 +1703,300 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
+    public void FilledButton_DefaultElevation_Hovered_UsesOneAndDefaultUsesZero()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new FilledButton(
+                    onPressed: () => { },
+                    child: new Text("Filled elevation"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
+        var defaultDecorated = FindDescendant<RenderDecoratedBox>(renderRoot);
+        Assert.NotNull(defaultDecorated);
+        Assert.False(defaultDecorated!.Decoration.BoxShadows.HasValue);
+
+        var hoverListener = FindHoverPointerListener(renderRoot);
+        Assert.NotNull(hoverListener);
+        hoverListener!.HandleEvent(
+            new PointerEnterEvent(
+                pointer: 104,
+                kind: PointerDeviceKind.Mouse,
+                position: new Point(10, 8),
+                buttons: PointerButtons.None,
+                timestampUtc: DateTime.UtcNow),
+            new BoxHitTestEntry(hoverListener, new Point(10, 8)));
+        owner.FlushBuild();
+
+        var hoveredDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(hoveredDecorated);
+        var hoveredShadow = RequirePrimaryShadow(hoveredDecorated!);
+        Assert.Equal(1, hoveredShadow.OffsetY);
+    }
+
+    [Fact]
+    public void ElevatedButton_DefaultElevation_UseMaterial3Disabled_UsesMaterial2StateMap()
+    {
+        var owner = new BuildOwner();
+        var theme = ThemeData.Light with { UseMaterial3 = false };
+        var root = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: new ElevatedButton(
+                    onPressed: () => { },
+                    child: new Text("M2 elevation"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
+        var defaultDecorated = FindDescendant<RenderDecoratedBox>(renderRoot);
+        Assert.NotNull(defaultDecorated);
+        var defaultShadow = RequirePrimaryShadow(defaultDecorated!);
+        Assert.Equal(2, defaultShadow.OffsetY);
+
+        var hoverListener = FindHoverPointerListener(renderRoot);
+        Assert.NotNull(hoverListener);
+        hoverListener!.HandleEvent(
+            new PointerEnterEvent(
+                pointer: 88,
+                kind: PointerDeviceKind.Mouse,
+                position: new Point(10, 8),
+                buttons: PointerButtons.None,
+                timestampUtc: DateTime.UtcNow),
+            new BoxHitTestEntry(hoverListener, new Point(10, 8)));
+        owner.FlushBuild();
+
+        renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
+        var hoveredDecorated = FindDescendant<RenderDecoratedBox>(renderRoot);
+        Assert.NotNull(hoveredDecorated);
+        var hoveredShadow = RequirePrimaryShadow(hoveredDecorated!);
+        Assert.Equal(4, hoveredShadow.OffsetY);
+
+        var interactiveListener = FindInteractivePointerListener(renderRoot);
+        Assert.NotNull(interactiveListener);
+        interactiveListener!.HandleEvent(
+            new PointerDownEvent(
+                pointer: 88,
+                kind: PointerDeviceKind.Mouse,
+                position: new Point(10, 8),
+                buttons: PointerButtons.Primary,
+                timestampUtc: DateTime.UtcNow),
+            new BoxHitTestEntry(interactiveListener, new Point(10, 8)));
+        owner.FlushBuild();
+
+        var pressedDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(pressedDecorated);
+        var pressedShadow = RequirePrimaryShadow(pressedDecorated!);
+        Assert.Equal(8, pressedShadow.OffsetY);
+    }
+
+    [Fact]
+    public void TextButton_StyleFrom_ElevationAndShadowColor_AppliesShadow()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new TextButton(
+                    onPressed: () => { },
+                    style: TextButton.StyleFrom(
+                        backgroundColor: Colors.White,
+                        shadowColor: Colors.Black,
+                        elevation: 3),
+                    child: new Text("Text shadow"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(decorated);
+        Assert.True(decorated!.Decoration.BoxShadows.HasValue);
+        Assert.True(decorated.Decoration.BoxShadows.Value.Count > 0);
+    }
+
+    [Fact]
+    public void TextButton_StyleFrom_ElevationWithoutShadowColor_DoesNotApplyShadowInMaterial3()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with { ShadowColor = Colors.Black },
+                child: new TextButton(
+                    onPressed: () => { },
+                    style: TextButton.StyleFrom(
+                        backgroundColor: Colors.White,
+                        elevation: 2),
+                    child: new Text("Text shadow fallback"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(decorated);
+        Assert.False(decorated!.Decoration.BoxShadows.HasValue);
+    }
+
+    [Fact]
+    public void TextButton_StyleFrom_ElevationWithoutShadowColor_UsesThemeShadowColorFallbackInMaterial2()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    UseMaterial3 = false,
+                    ShadowColor = Colors.Black
+                },
+                child: new TextButton(
+                    onPressed: () => { },
+                    style: TextButton.StyleFrom(
+                        backgroundColor: Colors.White,
+                        elevation: 2),
+                    child: new Text("Text shadow fallback M2"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(decorated);
+        Assert.True(decorated!.Decoration.BoxShadows.HasValue);
+        Assert.True(decorated.Decoration.BoxShadows.Value.Count > 0);
+    }
+
+    [Fact]
+    public void OutlinedButton_StyleFrom_ElevationAndShadowColor_AppliesShadow()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new OutlinedButton(
+                    onPressed: () => { },
+                    style: OutlinedButton.StyleFrom(
+                        backgroundColor: Colors.White,
+                        shadowColor: Colors.Black,
+                        elevation: 2),
+                    child: new Text("Outlined shadow"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(decorated);
+        Assert.True(decorated!.Decoration.BoxShadows.HasValue);
+        Assert.True(decorated.Decoration.BoxShadows.Value.Count > 0);
+    }
+
+    [Fact]
+    public void OutlinedButton_StyleFrom_ElevationWithoutShadowColor_DoesNotApplyShadowInMaterial3()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with { ShadowColor = Colors.Black },
+                child: new OutlinedButton(
+                    onPressed: () => { },
+                    style: OutlinedButton.StyleFrom(
+                        backgroundColor: Colors.White,
+                        elevation: 2),
+                    child: new Text("Outlined shadow fallback"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(decorated);
+        Assert.False(decorated!.Decoration.BoxShadows.HasValue);
+    }
+
+    [Fact]
+    public void OutlinedButton_StyleFrom_ElevationWithoutShadowColor_UsesThemeShadowColorFallbackInMaterial2()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    UseMaterial3 = false,
+                    ShadowColor = Colors.Black
+                },
+                child: new OutlinedButton(
+                    onPressed: () => { },
+                    style: OutlinedButton.StyleFrom(
+                        backgroundColor: Colors.White,
+                        elevation: 2),
+                    child: new Text("Outlined shadow fallback M2"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(decorated);
+        Assert.True(decorated!.Decoration.BoxShadows.HasValue);
+        Assert.True(decorated.Decoration.BoxShadows.Value.Count > 0);
+    }
+
+    [Fact]
+    public void FilledButton_StyleFrom_ElevationAndShadowColor_AppliesShadow()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new FilledButton(
+                    onPressed: () => { },
+                    style: FilledButton.StyleFrom(
+                        shadowColor: Colors.Black,
+                        elevation: 2),
+                    child: new Text("Filled shadow"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(decorated);
+        Assert.True(decorated!.Decoration.BoxShadows.HasValue);
+        Assert.True(decorated.Decoration.BoxShadows.Value.Count > 0);
+    }
+
+    [Fact]
+    public void FilledButton_StyleFrom_ElevationWithoutShadowColor_UsesThemeShadowColorFallback()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with { ShadowColor = Colors.Black },
+                child: new FilledButton(
+                    onPressed: () => { },
+                    style: FilledButton.StyleFrom(elevation: 2),
+                    child: new Text("Filled shadow fallback"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(decorated);
+        Assert.True(decorated!.Decoration.BoxShadows.HasValue);
+        Assert.True(decorated.Decoration.BoxShadows.Value.Count > 0);
+    }
+
+    [Fact]
     public void OutlinedButton_UsesThemeOutlineColorForBorderByDefault()
     {
         var owner = new BuildOwner();
@@ -316,6 +2019,66 @@ public sealed class MaterialButtonsTests
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
         Assert.Equal(new BorderSide(Colors.CadetBlue, 1), decorated!.Decoration.Border);
+    }
+
+    [Fact]
+    public void OutlinedButton_DefaultBorder_UseMaterial3Disabled_UsesOnSurfaceOpacity()
+    {
+        var owner = new BuildOwner();
+        var theme = ThemeData.Light with
+        {
+            UseMaterial3 = false,
+            OnSurfaceColor = Colors.DarkSlateBlue,
+            OutlineColor = Colors.CadetBlue
+        };
+
+        var root = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: new OutlinedButton(
+                    onPressed: () => { },
+                    child: new Text("Outline m2 border"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(decorated);
+        Assert.Equal(new BorderSide(ApplyOpacity(theme.OnSurfaceColor, 0.12), 1), decorated!.Decoration.Border);
+    }
+
+    [Fact]
+    public void OutlinedButton_FocusedBorder_UseMaterial3Disabled_StaysOnSurfaceOpacity()
+    {
+        var owner = new BuildOwner();
+        var focusNode = new FocusNode();
+        var theme = ThemeData.Light with
+        {
+            UseMaterial3 = false,
+            OnSurfaceColor = Colors.DarkSlateBlue,
+            PrimaryColor = Colors.OrangeRed,
+            OutlineColor = Colors.CadetBlue
+        };
+
+        var root = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: new OutlinedButton(
+                    onPressed: () => { },
+                    focusNode: focusNode,
+                    child: new Text("Outline m2 focus border"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.True(focusNode.RequestFocus());
+        owner.FlushBuild();
+
+        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(decorated);
+        Assert.Equal(new BorderSide(ApplyOpacity(theme.OnSurfaceColor, 0.12), 1), decorated!.Decoration.Border);
     }
 
     [Fact]
@@ -342,6 +2105,83 @@ public sealed class MaterialButtonsTests
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(paragraph);
         Assert.Equal(Colors.MediumVioletRed, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+    }
+
+    [Fact]
+    public void OutlinedButton_UseMaterial3Disabled_DefaultForegroundUsesThemePrimaryColor()
+    {
+        var owner = new BuildOwner();
+        var theme = ThemeData.Light with
+        {
+            UseMaterial3 = false,
+            PrimaryColor = Colors.MediumVioletRed
+        };
+
+        var root = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: new OutlinedButton(
+                    onPressed: () => { },
+                    child: new Text("Outlined"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(paragraph);
+        Assert.Equal(Colors.MediumVioletRed, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+    }
+
+    [Fact]
+    public void OutlinedButton_StyleFrom_BackgroundOnly_AppliesBackgroundWhenDisabled()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new OutlinedButton(
+                    onPressed: null,
+                    style: OutlinedButton.StyleFrom(
+                        backgroundColor: Colors.Gold),
+                    child: new Text("Disabled outlined background"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(decorated);
+        Assert.Equal(Colors.Gold, decorated!.Decoration.Color);
+    }
+
+    [Fact]
+    public void OutlinedButton_StyleFrom_BackgroundOnly_OverridesThemeDisabledBackground()
+    {
+        var owner = new BuildOwner();
+        var theme = ThemeData.Light with
+        {
+            OutlinedButtonTheme = new OutlinedButtonThemeData(
+                new ButtonStyle(
+                    BackgroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+                        states.HasFlag(MaterialState.Disabled) ? Colors.IndianRed : Colors.Transparent)))
+        };
+
+        var root = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: new OutlinedButton(
+                    onPressed: null,
+                    style: OutlinedButton.StyleFrom(backgroundColor: Colors.Gold),
+                    child: new Text("Disabled outlined background override"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(decorated);
+        Assert.Equal(Colors.Gold, decorated!.Decoration.Color);
     }
 
     [Fact]
@@ -434,6 +2274,32 @@ public sealed class MaterialButtonsTests
         Assert.Equal(ApplyOpacity(theme.OnSurfaceColor, 0.12), decorated!.Decoration.Color);
         Assert.NotNull(paragraph);
         Assert.Equal(ApplyOpacity(theme.OnSurfaceColor, 0.38), Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+    }
+
+    [Fact]
+    public void FilledButton_StyleFrom_BackgroundOnly_DisabledFallsBackToThemeDisabledBackground()
+    {
+        var owner = new BuildOwner();
+        var theme = ThemeData.Light with
+        {
+            OnSurfaceColor = Colors.DarkSlateGray
+        };
+
+        var root = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: new FilledButton(
+                    onPressed: null,
+                    style: FilledButton.StyleFrom(backgroundColor: Colors.SeaGreen),
+                    child: new Text("Disabled filled background fallback"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(decorated);
+        Assert.Equal(ApplyOpacity(theme.OnSurfaceColor, 0.12), decorated!.Decoration.Color);
     }
 
     [Fact]
@@ -2726,6 +4592,132 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
+    public void TextButton_DefaultOverlay_UseMaterial3Disabled_UsesPressedFocusedOpacity012()
+    {
+        FocusManager.Instance.ResetForTests();
+
+        var owner = new BuildOwner();
+        var theme = ThemeData.Light with
+        {
+            UseMaterial3 = false,
+            PrimaryColor = Colors.DeepPink
+        };
+        var focusNode = new FocusNode();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: new TextButton(
+                    onPressed: () => { },
+                    focusNode: focusNode,
+                    child: new Text("M2 overlay"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.True(focusNode.RequestFocus());
+        owner.FlushBuild();
+
+        var focusedDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(focusedDecorated);
+        Assert.Equal(ApplyOpacity(theme.PrimaryColor, 0.12), focusedDecorated!.Decoration.Color);
+
+        var interactiveListener = FindInteractivePointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(interactiveListener);
+        interactiveListener!.HandleEvent(
+            new PointerDownEvent(
+                pointer: 138,
+                kind: PointerDeviceKind.Mouse,
+                position: new Point(12, 9),
+                buttons: PointerButtons.Primary,
+                timestampUtc: DateTime.UtcNow),
+            new BoxHitTestEntry(interactiveListener, new Point(12, 9)));
+        owner.FlushBuild();
+
+        var pressedDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(pressedDecorated);
+        Assert.Equal(ApplyOpacity(theme.PrimaryColor, 0.12), pressedDecorated!.Decoration.Color);
+
+        root.Unmount();
+        FocusManager.Instance.ResetForTests();
+    }
+
+    [Fact]
+    public void ElevatedButton_DefaultFocusedOverlay_UseMaterial3Disabled_UsesOnPrimaryOpacity012()
+    {
+        FocusManager.Instance.ResetForTests();
+
+        var owner = new BuildOwner();
+        var theme = ThemeData.Light with
+        {
+            UseMaterial3 = false,
+            PrimaryColor = Colors.DarkSlateBlue,
+            OnPrimaryColor = Colors.AliceBlue
+        };
+        var focusNode = new FocusNode();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: new ElevatedButton(
+                    onPressed: () => { },
+                    focusNode: focusNode,
+                    child: new Text("M2 elevated overlay"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.True(focusNode.RequestFocus());
+        owner.FlushBuild();
+
+        var focusedDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(focusedDecorated);
+        var expectedOverlay = ApplyOpacity(theme.OnPrimaryColor, 0.12);
+        Assert.Equal(BlendColorOverlay(theme.PrimaryColor, expectedOverlay), focusedDecorated!.Decoration.Color);
+
+        root.Unmount();
+        FocusManager.Instance.ResetForTests();
+    }
+
+    [Fact]
+    public void OutlinedButton_DefaultFocusedOverlay_UseMaterial3Disabled_UsesPrimaryOpacity012()
+    {
+        FocusManager.Instance.ResetForTests();
+
+        var owner = new BuildOwner();
+        var theme = ThemeData.Light with
+        {
+            UseMaterial3 = false,
+            PrimaryColor = Colors.MediumSlateBlue
+        };
+        var focusNode = new FocusNode();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: new OutlinedButton(
+                    onPressed: () => { },
+                    focusNode: focusNode,
+                    child: new Text("M2 outlined overlay"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.True(focusNode.RequestFocus());
+        owner.FlushBuild();
+
+        var focusedDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(focusedDecorated);
+        Assert.Equal(ApplyOpacity(theme.PrimaryColor, 0.12), focusedDecorated!.Decoration.Color);
+
+        root.Unmount();
+        FocusManager.Instance.ResetForTests();
+    }
+
+    [Fact]
     public void ElevatedButton_StyleFrom_OverlayColor_UsesHoverOpacityAndPressedPriority()
     {
         var owner = new BuildOwner();
@@ -2906,6 +4898,69 @@ public sealed class MaterialButtonsTests
         Assert.Equal(BorderRadius.Circular(20), clip!.BorderRadius);
         Assert.NotNull(splash);
         Assert.False(splash!.ClipToBounds);
+    }
+
+    [Fact]
+    public void TextButton_UsesRoundedClipRadius4_WhenUseMaterial3Disabled()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with { UseMaterial3 = false },
+                child: new TextButton(
+                    onPressed: () => { },
+                    child: new Text("Rounded splash"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var clip = FindDescendant<RenderClipRRect>(RequireRenderObject<RenderObject>(root.ChildElement));
+
+        Assert.NotNull(clip);
+        Assert.Equal(BorderRadius.Circular(4), clip!.BorderRadius);
+    }
+
+    [Fact]
+    public void ElevatedButton_UsesRoundedClipRadius4_WhenUseMaterial3Disabled()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with { UseMaterial3 = false },
+                child: new ElevatedButton(
+                    onPressed: () => { },
+                    child: new Text("Rounded splash"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var clip = FindDescendant<RenderClipRRect>(RequireRenderObject<RenderObject>(root.ChildElement));
+
+        Assert.NotNull(clip);
+        Assert.Equal(BorderRadius.Circular(4), clip!.BorderRadius);
+    }
+
+    [Fact]
+    public void OutlinedButton_UsesRoundedClipRadius4_WhenUseMaterial3Disabled()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with { UseMaterial3 = false },
+                child: new OutlinedButton(
+                    onPressed: () => { },
+                    child: new Text("Rounded splash"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var clip = FindDescendant<RenderClipRRect>(RequireRenderObject<RenderObject>(root.ChildElement));
+
+        Assert.NotNull(clip);
+        Assert.Equal(BorderRadius.Circular(4), clip!.BorderRadius);
     }
 
     [Fact]
@@ -3104,6 +5159,247 @@ public sealed class MaterialButtonsTests
         Assert.Equal(decorated.Size.Height, splash.Size.Height, 3);
     }
 
+    [Fact]
+    public void IconButton_DefaultIconTheme_UsesOnSurfaceVariantAndSize24()
+    {
+        var owner = new BuildOwner();
+        var theme = ThemeData.Light with
+        {
+            OnSurfaceVariantColor = Colors.MediumAquamarine
+        };
+        IconThemeData? capturedTheme = null;
+
+        var root = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: new IconButton(
+                    icon: new CaptureIconThemeWidget(iconTheme => capturedTheme = iconTheme),
+                    onPressed: () => { })));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.NotNull(capturedTheme);
+        Assert.Equal(Colors.MediumAquamarine, capturedTheme!.Color);
+        Assert.Equal(24, capturedTheme.Size);
+    }
+
+    [Fact]
+    public void IconButton_DefaultMinSize_UsesMaterial3Baseline40x40()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new IconButton(
+                    icon: new SizedBox(width: 20, height: 20),
+                    onPressed: () => { })));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var constrainedBox = FindDescendant<RenderConstrainedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(constrainedBox);
+        Assert.Equal(40, constrainedBox!.AdditionalConstraints.MinWidth);
+        Assert.Equal(40, constrainedBox.AdditionalConstraints.MinHeight);
+    }
+
+    [Fact]
+    public void IconButton_DefaultMinSize_UseMaterial3Disabled_UsesMaterial2Baseline48x48()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with { UseMaterial3 = false },
+                child: new IconButton(
+                    icon: new SizedBox(width: 20, height: 20),
+                    onPressed: () => { })));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var constrainedBox = FindDescendant<RenderConstrainedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(constrainedBox);
+        Assert.Equal(48, constrainedBox!.AdditionalConstraints.MinWidth);
+        Assert.Equal(48, constrainedBox.AdditionalConstraints.MinHeight);
+    }
+
+    [Fact]
+    public void IconButton_StyleFrom_ForegroundAndIconSizeOverrideDefaults()
+    {
+        var owner = new BuildOwner();
+        IconThemeData? capturedTheme = null;
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new IconButton(
+                    icon: new CaptureIconThemeWidget(iconTheme => capturedTheme = iconTheme),
+                    onPressed: () => { },
+                    style: IconButton.StyleFrom(
+                        foregroundColor: Colors.OrangeRed,
+                        iconSize: 30))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.NotNull(capturedTheme);
+        Assert.Equal(Colors.OrangeRed, capturedTheme!.Color);
+        Assert.Equal(30, capturedTheme.Size);
+    }
+
+    [Fact]
+    public void IconButton_ThemeStyle_OverridesAmbientIconThemeDefaults()
+    {
+        var owner = new BuildOwner();
+        IconThemeData? capturedTheme = null;
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    IconButtonTheme = new IconButtonThemeData(
+                        style: IconButton.StyleFrom(
+                            foregroundColor: Colors.ForestGreen,
+                            iconSize: 22))
+                },
+                child: new Flutter.Widgets.IconTheme(
+                    data: new IconThemeData(Color: Colors.CadetBlue, Size: 18),
+                    child: new IconButton(
+                        icon: new CaptureIconThemeWidget(iconTheme => capturedTheme = iconTheme),
+                        onPressed: () => { }))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.NotNull(capturedTheme);
+        Assert.Equal(Colors.ForestGreen, capturedTheme!.Color);
+        Assert.Equal(22, capturedTheme.Size);
+    }
+
+    [Fact]
+    public void IconButton_WidgetStyle_OverridesIconButtonThemeStyle()
+    {
+        var owner = new BuildOwner();
+        IconThemeData? capturedTheme = null;
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    IconButtonTheme = new IconButtonThemeData(
+                        style: IconButton.StyleFrom(foregroundColor: Colors.ForestGreen))
+                },
+                child: new IconButton(
+                    icon: new CaptureIconThemeWidget(iconTheme => capturedTheme = iconTheme),
+                    onPressed: () => { },
+                    style: IconButton.StyleFrom(foregroundColor: Colors.OrangeRed))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.NotNull(capturedTheme);
+        Assert.Equal(Colors.OrangeRed, capturedTheme!.Color);
+    }
+
+    [Fact]
+    public void IconButton_IsSelectedTrue_UsesSelectedIcon()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new IconButton(
+                    icon: new Text("unselected"),
+                    selectedIcon: new Text("selected"),
+                    isSelected: true,
+                    onPressed: () => { })));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(paragraph);
+        Assert.Equal("selected", paragraph!.Text);
+    }
+
+    [Fact]
+    public void IconButton_Outlined_SelectedState_DropsOutlineBorder()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: IconButton.Outlined(
+                    icon: new SizedBox(width: 20, height: 20),
+                    isSelected: false,
+                    onPressed: () => { })));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var unselectedDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(unselectedDecorated);
+        Assert.Equal(new BorderSide(ThemeData.Light.OutlineColor, 1), unselectedDecorated!.Decoration.Border);
+
+        root.Update(
+            new Theme(
+                data: ThemeData.Light,
+                child: IconButton.Outlined(
+                    icon: new SizedBox(width: 20, height: 20),
+                    isSelected: true,
+                    onPressed: () => { })));
+        owner.FlushBuild();
+
+        var selectedDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(selectedDecorated);
+        Assert.Null(selectedDecorated!.Decoration.Border);
+    }
+
+    [Fact]
+    public void IconButton_StyleFromTapTargetSize_OverridesThemeTapTargetSize()
+    {
+        using (var paddedHarness = new WidgetRenderHarness(
+                   new Theme(
+                       data: ThemeData.Light with { MaterialTapTargetSize = MaterialTapTargetSize.Padded },
+                       child: new SizedBox(
+                           width: 120,
+                           child: new IconButton(
+                               icon: new SizedBox(width: 20, height: 20),
+                               onPressed: () => { })))))
+        {
+            paddedHarness.Pump(new Size(220, 120));
+            var paddedHitResult = new BoxHitTestResult();
+            Assert.True(paddedHarness.RenderView.HitTest(paddedHitResult, new Point(60, 46)));
+        }
+
+        using var overrideHarness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light with { MaterialTapTargetSize = MaterialTapTargetSize.Padded },
+                child: new SizedBox(
+                    width: 120,
+                    child: new IconButton(
+                        icon: new SizedBox(width: 20, height: 20),
+                        onPressed: () => { },
+                        style: IconButton.StyleFrom(tapTargetSize: MaterialTapTargetSize.ShrinkWrap)))));
+
+        overrideHarness.Pump(new Size(220, 120));
+
+        var overrideHitResult = new BoxHitTestResult();
+        Assert.False(overrideHarness.RenderView.HitTest(overrideHitResult, new Point(60, 46)));
+    }
+
     private static T RequireRenderObject<T>(Element? element) where T : RenderObject
     {
         Assert.NotNull(element);
@@ -3222,6 +5518,51 @@ public sealed class MaterialButtonsTests
         });
 
         return result;
+    }
+
+    private static BoxShadow RequirePrimaryShadow(RenderDecoratedBox decorated)
+    {
+        Assert.True(decorated.Decoration.BoxShadows.HasValue);
+        var shadows = decorated.Decoration.BoxShadows!.Value;
+        Assert.True(shadows.Count > 0);
+        return shadows[0];
+    }
+
+    private static void AssertIconRowOrder(RenderObject root, bool iconFirst)
+    {
+        var row = FindDescendant<RenderFlex>(root);
+        Assert.NotNull(row);
+        Assert.Equal(Axis.Horizontal, row!.Direction);
+
+        var first = Assert.IsAssignableFrom<RenderBox>(row.FirstChild);
+        var second = Assert.IsAssignableFrom<RenderBox>(row.ChildAfter(first));
+
+        if (iconFirst)
+        {
+            Assert.IsType<RenderConstrainedBox>(first);
+            Assert.IsType<RenderParagraph>(second);
+        }
+        else
+        {
+            Assert.IsType<RenderParagraph>(first);
+            Assert.IsType<RenderConstrainedBox>(second);
+        }
+    }
+
+    private sealed class CaptureIconThemeWidget : StatelessWidget
+    {
+        private readonly Action<IconThemeData> _capture;
+
+        public CaptureIconThemeWidget(Action<IconThemeData> capture)
+        {
+            _capture = capture;
+        }
+
+        public override Widget Build(BuildContext context)
+        {
+            _capture(IconTheme.Of(context));
+            return new SizedBox(width: 8, height: 8);
+        }
     }
 
     private sealed class WidgetRenderHarness : IDisposable
@@ -3374,6 +5715,64 @@ public sealed class MaterialButtonsTests
             Blend(baseColor.R, overlayColor.R, clampedOpacity),
             Blend(baseColor.G, overlayColor.G, clampedOpacity),
             Blend(baseColor.B, overlayColor.B, clampedOpacity));
+    }
+
+    private static Color ApplySurfaceTint(Color color, Color surfaceTint, double elevation)
+    {
+        if (surfaceTint.A == 0)
+        {
+            return color;
+        }
+
+        var opacity = ResolveSurfaceTintOpacityForElevation(elevation);
+        if (opacity <= 0)
+        {
+            return color;
+        }
+
+        var overlay = Color.FromArgb(
+            (byte)Math.Clamp((int)(opacity * 255), 0, 255),
+            surfaceTint.R,
+            surfaceTint.G,
+            surfaceTint.B);
+
+        return BlendColorOverlay(color, overlay);
+    }
+
+    private static double ResolveSurfaceTintOpacityForElevation(double elevation)
+    {
+        ReadOnlySpan<(double Elevation, double Opacity)> stops =
+        [
+            (0.0, 0.0),
+            (1.0, 0.05),
+            (3.0, 0.08),
+            (6.0, 0.11),
+            (8.0, 0.12),
+            (12.0, 0.14)
+        ];
+
+        if (elevation <= stops[0].Elevation)
+        {
+            return stops[0].Opacity;
+        }
+
+        for (var i = 1; i < stops.Length; i++)
+        {
+            var current = stops[i];
+            if (elevation == current.Elevation)
+            {
+                return current.Opacity;
+            }
+
+            if (elevation < current.Elevation)
+            {
+                var lower = stops[i - 1];
+                var t = (elevation - lower.Elevation) / (current.Elevation - lower.Elevation);
+                return lower.Opacity + (t * (current.Opacity - lower.Opacity));
+            }
+        }
+
+        return stops[^1].Opacity;
     }
 
     private sealed class TestRootElement : Element, IRenderObjectHost

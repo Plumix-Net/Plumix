@@ -15,6 +15,360 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 ### Changed
 
 - Documentation policy update: Dart-to-C# control/widget work now uses mandatory parity-first porting mode (`docs/ai/PORTING_MODE.md`) with strict `1:1` default behavior, required divergence logging, and explicit parity-validation workflow references in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/INVARIANTS.md`, `docs/ai/MODULE_INDEX.md`, `docs/ai/FEATURE_TEMPLATE.md`, `docs/ai/TEST_MATRIX.md`, and `docs/ai/PARITY_MATRIX.md`.
+- Agent workflow scope update: parity tasks now default to `one request = one control closed end-to-end` (not micro-iterations), with expanded context-budget guidance for control work (`12-20` initial files, up to `20`) and aligned rules in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/PORTING_MODE.md`, `docs/ai/MODULE_INDEX.md`, and `docs/ai/FEATURE_TEMPLATE.md`.
+
+## [2026-04-05] - M4 Checkbox parity baseline
+
+### Changed
+
+- Added framework Material `Checkbox` in `src/Flutter.Material/Checkbox.cs` with Flutter-like baseline behavior for current framework scope:
+  - controlled `value` (`bool?`) + `tristate` cycle,
+  - mode-aware defaults for selected/unselected/disabled states,
+  - focus/hover/pressed state overlays and keyboard activation through shared `MaterialButtonCore`,
+  - tap-target policy wiring through `ThemeData.MaterialTapTargetSize` (`padded` vs `shrinkWrap`),
+  - customizable color/border surface (`activeColor`, `fillColor`, `checkColor`, `overlayColor`, `side`, `shape`, focus/hover overrides).
+- Extended Material icons set with `Icons.Check` in `src/Flutter.Material/Icons.cs` for checkbox indicator rendering.
+- Added focused checkbox regression coverage in `src/Flutter.Tests/MaterialCheckboxTests.cs`:
+  - constructor guards (`tristate` + null value),
+  - M3 default visual states (checked/unchecked/disabled),
+  - check/dash indicator rendering,
+  - tap-target behavior for theme `MaterialTapTargetSize`,
+  - keyboard-driven value transitions including tristate cycling.
+- Added sample parity route/page in both C# and Dart samples:
+  - `src/Sample/Flutter.Net/CheckboxDemoPage.cs`
+  - `dart_sample/lib/checkbox_demo_page.dart`
+  - route wiring in `src/Sample/Flutter.Net/SampleGalleryScreen.cs`, `dart_sample/lib/sample_gallery_screen.dart`, and `dart_sample/lib/sample_routes.dart`.
+- Added iteration tracking artifacts for this parity pass (`docs/ai/material-2026-04-05-checkbox-baseline-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`, `docs/ai/PARITY_MATRIX.md`).
+
+## [2026-04-05] - M4 core Icon widget parity baseline
+
+### Changed
+
+- Added core icon primitives in framework widgets (`src/Flutter/Widgets/Icon.cs`):
+  - introduced `IconData` and `Icon`,
+  - wired `Icon` defaults to ambient `IconTheme` (`size`/`color`) with explicit-parameter precedence,
+  - added null-icon square layout behavior and RTL mirroring for `matchTextDirection`.
+- Added bundled Material icon font wiring for framework icons:
+  - imported `MaterialIcons-Regular.otf` + license into `src/Flutter.Material/Assets/Fonts`,
+  - enabled `AvaloniaResource` packaging for Material assets in `src/Flutter.Material/Flutter.Material.csproj`,
+  - routed Material icon constants to embedded Material font family (`avares://Flutter.Material/...#Material Icons`) while keeping `Flutter.Widgets.Icon` core font resolution generic.
+- Expanded Material icon constants set in `src/Flutter.Material/Icons.cs` for current parity/demo usage:
+  - `arrow_back` (with `matchTextDirection=true`),
+  - `menu`, `close`,
+  - `add`, `info_outline`, `star`, `star_outline`
+  (all code points aligned to Flutter source).
+- Updated C# Material buttons demo to use real framework icons (`Icon(Icons.*)`) instead of temporary glyph probe widget (`src/Sample/Flutter.Net/MaterialButtonsDemoPage.cs`), matching existing Dart sample composition.
+- Updated C#/Dart AppBar-focused runtime demos to use real icons in leading/actions slots where icon rendering is the probe target:
+  - `AppBar icon themes`: `menu` + `close` + `info_outline`,
+  - `AppBar leadingWidth`: `menu` leading probe and `close` action probe,
+  - `AppBar actionsPadding`: `close`/`menu` action badges.
+  (`src/Sample/Flutter.Net/AppBarIconThemeDemoPage.cs`, `src/Sample/Flutter.Net/AppBarLeadingWidthDemoPage.cs`, `src/Sample/Flutter.Net/AppBarActionsPaddingDemoPage.cs`, `dart_sample/lib/app_bar_icon_theme_demo_page.dart`, `dart_sample/lib/app_bar_leading_width_demo_page.dart`, `dart_sample/lib/app_bar_actions_padding_demo_page.dart`)
+- Updated C#/Dart sample demo-shell back button to icon+label composition (`arrow_back` + `Back`) for visual parity with new icon set (`src/Sample/Flutter.Net/SampleGalleryScreen.cs`, `dart_sample/lib/sample_gallery_screen.dart`).
+- Added focused `Icon` behavior coverage in `src/Flutter.Tests/TextWidgetTests.cs`:
+  - icon-theme default resolution,
+  - explicit size/color override precedence,
+  - null-icon size box behavior,
+  - RTL `matchTextDirection` transform behavior,
+  - Material `arrow_back` constant mapping (`codePoint` + `matchTextDirection` + font family).
+- Added iteration tracking artifacts for this parity pass (`docs/ai/material-2026-04-05-icon-widget-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`, `docs/ai/PARITY_MATRIX.md`).
+
+## [2026-04-05] - M4 IconButton parity baseline
+
+### Changed
+
+- Added framework Material `IconButton` in `src/Flutter.Material/IconButton.cs` with Flutter-like API surface for current framework scope:
+  - baseline constructor + M3 variant factories (`Filled`, `FilledTonal`, `Outlined`),
+  - `styleFrom(...)` helper,
+  - selected-state behavior (`isSelected`, `selectedIcon`) and variant-specific default tokens.
+- Extended Material style/theming primitives for icon-button parity:
+  - added `MaterialState.Selected`,
+  - added `IconButtonThemeData` + inherited `IconButtonTheme`,
+  - added `ThemeData.IconButtonStyle` and `ThemeData.IconButtonTheme`,
+  - added M3 tokens used by icon-button defaults (`SurfaceContainerHighestColor`, `InverseSurfaceColor`, `OnInverseSurfaceColor`).
+- Extended shared `MaterialButtonCore` to support selected-state propagation and optional hover/long-press callbacks, enabling icon-button interactions without duplicating button-state infrastructure.
+- Added focused `MaterialButtonsTests` coverage for icon-button parity-critical behavior:
+  - default icon color/size and mode-aware min-size defaults,
+  - `styleFrom` icon/foreground overrides,
+  - `IconButtonTheme` precedence over ambient `IconTheme` with widget-style override precedence,
+  - selected-icon rendering and outlined selected-border behavior,
+  - tap-target-size style override precedence over theme defaults.
+- Updated Material buttons runtime demo parity in both samples (`src/Sample/Flutter.Net/MaterialButtonsDemoPage.cs`, `dart_sample/lib/material_buttons_demo_page.dart`) with `IconButton` probes (standard selected toggle + filled + outlined).
+- Added iteration tracking artifacts for this parity pass (`docs/ai/material-2026-04-05-icon-button-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`, `docs/ai/PARITY_MATRIX.md`).
+
+## [2026-04-05] - M4 material button parity close-out (padding scale + theme icon-alignment precedence)
+
+### Changed
+
+- Aligned Material button default paddings with Flutter `scaledPadding` interpolation semantics across `TextButton`, `ElevatedButton`, `OutlinedButton`, and `FilledButton`:
+  - piecewise interpolation now follows Flutter behavior for text-scale multipliers (`<=1`, `1..2`, `2..3`, `>=3`),
+  - default and icon-variant padding tables now scale with ambient `MediaQuery.TextScaleFactor` and baseline `labelLarge` font size.
+  (`src/Flutter.Material/Buttons.cs`).
+- Added direction-aware start/end default icon paddings for button variants that map to Flutter `EdgeInsetsDirectional` defaults, so RTL swaps start/end insets correctly (`src/Flutter.Material/Buttons.cs`).
+- Aligned icon-factory icon-alignment precedence with Flutter order:
+  - explicit icon-factory `iconAlignment` argument,
+  - local button-theme style `iconAlignment`,
+  - button `style` `iconAlignment`,
+  - fallback `start`.
+  (`src/Flutter.Material/Buttons.cs`).
+- Expanded `MaterialButtonsTests` with focused coverage for:
+  - text-scale-driven default/icon padding interpolation,
+  - RTL directional start/end padding mapping for icon variants,
+  - theme-level icon-alignment precedence on text/elevated/outlined/filled icon buttons
+  (`src/Flutter.Tests/MaterialButtonsTests.cs`).
+- Added iteration tracking artifacts for this close-out step (`docs/ai/material-2026-04-05-button-padding-scale-theme-iconalignment-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
+
+## [2026-04-05] - M4 button icon-factory text-scale spacing parity hardening
+
+### Changed
+
+- Extended framework ambient media metrics with `MediaQueryData.TextScaleFactor` (`1.0` default) and added `MediaQuery.TextScaleFactorOf(...)` / `MaybeTextScaleFactorOf(...)` helpers for context-driven text scaling lookup (`src/Flutter/Widgets/MediaQuery.cs`).
+- Aligned Material `.Icon(...)` button child spacing with Flutter icon-factory behavior:
+  - `MaterialButtonIconFactory` now computes spacing using Flutter-style interpolation `lerp(8, 4, clamp(effectiveTextScale, 1, 2) - 1)`.
+  - Effective text scale now uses style text-size baseline (`buttonStyle.textStyle.fontSize` fallback `14`) multiplied by ambient `MediaQuery` text scale factor.
+  (`src/Flutter.Material/Buttons.cs`).
+- Added focused `MaterialButtonsTests` coverage for icon-factory spacing behavior:
+  - default spacing at baseline scale (`8`),
+  - interpolated spacing at scale `1.5` (`6`),
+  - clamped minimum spacing at scale `>= 2` (`4`),
+  - style text-size driven scaling (`fontSize: 28` -> `4`)
+  (`src/Flutter.Tests/MaterialButtonsTests.cs`).
+- Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-04-05-button-icon-spacing-textscale-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
+
+## [2026-04-05] - M4 button `styleFrom` icon-color + M3 shadow parity hardening
+
+### Changed
+
+- Aligned `styleFrom(iconColor: ...)` disabled-state mapping with Flutter `defaultColor` semantics for `ElevatedButton`, `OutlinedButton`, and `FilledButton`: when `disabledIconColor` is omitted, disabled icon color now stays on the provided `iconColor` instead of falling back to default disabled foreground (`src/Flutter.Material/Buttons.cs`).
+- Aligned non-elevated M3 shadow behavior with Flutter defaults:
+  - `TextButton` and `OutlinedButton` default shadow token now resolves to transparent when `UseMaterial3=true`, so style-level elevation without explicit `shadowColor` no longer paints fallback shadows.
+  - M2 behavior remains unchanged (`UseMaterial3=false` keeps theme-shadow fallback via default shadow token)
+  (`src/Flutter.Material/Buttons.cs`).
+- Expanded `MaterialButtonsTests` coverage with:
+  - disabled icon-color mapping checks for `ElevatedButton`/`OutlinedButton`/`FilledButton` `styleFrom(iconColor: ...)`,
+  - M3-vs-M2 shadow-fallback split checks for `TextButton`/`OutlinedButton` style-level elevation without explicit shadow color
+  (`src/Flutter.Tests/MaterialButtonsTests.cs`).
+- Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-04-05-button-stylefrom-iconcolor-shadow-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
+
+## [2026-04-05] - M4 button icon-alignment directionality parity hardening
+
+### Changed
+
+- Added core `Directionality` inherited widget in framework layer with ambient `TextDirection` lookup (`Of`/`MaybeOf`) to support context-driven start/end behavior (`src/Flutter/Widgets/Directionality.cs`).
+- Aligned Material icon-factory icon-order behavior with Flutter directionality semantics:
+  - `IconAlignment.Start`/`End` now resolves against ambient text direction (`LTR`/`RTL`) instead of fixed visual left/right ordering.
+  - `MaterialButtonIconFactory` now builds icon/label row order from `Directionality.Of(context)` while preserving existing spacing/flex composition (`src/Flutter.Material/Buttons.cs`).
+- Added focused `MaterialButtonsTests` coverage for RTL icon-order resolution:
+  - `IconAlignment.Start` under RTL places label before icon,
+  - `IconAlignment.End` under RTL places icon before label
+  (`src/Flutter.Tests/MaterialButtonsTests.cs`).
+- Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-04-05-button-icon-alignment-directionality-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
+
+## [2026-04-05] - M4 button icon-alignment parity hardening
+
+### Changed
+
+- Added `IconAlignment` parity primitives to Material button styling:
+  - introduced `IconAlignment` enum (`Start`, `End`),
+  - added `ButtonStyle.IconAlignment` with merge support,
+  - wired icon-alignment precedence into composed style layers in `MaterialButtonCore.ComposeStyles(...)`
+  (`src/Flutter.Material/ButtonStyle.cs`, `src/Flutter.Material/Buttons.cs`).
+- Expanded `styleFrom(...)` APIs with `iconAlignment` for `TextButton`, `ElevatedButton`, `OutlinedButton`, and `FilledButton`, matching Flutter button-style surface for icon-bearing button variants (`src/Flutter.Material/Buttons.cs`).
+- Expanded icon-factory APIs with explicit `iconAlignment` arguments for:
+  - `TextButton.Icon(...)`
+  - `ElevatedButton.Icon(...)`
+  - `OutlinedButton.Icon(...)`
+  - `FilledButton.Icon(...)`
+  - `FilledButton.TonalIcon(...)`
+  and wired precedence `iconAlignment arg -> style.iconAlignment -> start` for icon-row composition (`src/Flutter.Material/Buttons.cs`).
+- Added focused `MaterialButtonsTests` coverage for icon-alignment behavior:
+  - `IconAlignment.End` icon-row order for text/filled-tonal icon factories,
+  - `styleFrom(iconAlignment: ...)` propagation to icon factory layout,
+  - explicit icon-factory `iconAlignment` override precedence over `styleFrom(...)`
+  (`src/Flutter.Tests/MaterialButtonsTests.cs`).
+- Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-04-05-button-icon-alignment-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
+
+## [2026-04-05] - M4 button icon-factory default padding parity hardening
+
+### Changed
+
+- Added Flutter-like icon factory constructors for Material buttons:
+  - `TextButton.Icon(...)`
+  - `ElevatedButton.Icon(...)`
+  - `OutlinedButton.Icon(...)`
+  - `FilledButton.Icon(...)`
+  - `FilledButton.TonalIcon(...)`
+  (`src/Flutter.Material/Buttons.cs`).
+- Added shared icon+label composition helper for icon factories (`Row(mainAxisSize: min, spacing: 8, children: [icon, Flexible(label)])`) to align default button child structure with Flutter icon-button composition (`src/Flutter.Material/Buttons.cs`).
+- Aligned icon-factory default padding to Flutter mode-aware defaults:
+  - `TextButton.Icon`: M3 `12/8/16/8`, M2 `all(8)`
+  - `ElevatedButton.Icon`: M3 `16/0/24/0`, M2 `12/0/16/0`
+  - `OutlinedButton.Icon`: M3 `16/0/24/0`, M2 `16/0` (same as non-icon default)
+  - `FilledButton.Icon` and `FilledButton.TonalIcon`: M3 `16/0/24/0`, M2 `12/0/16/0`
+  (`src/Flutter.Material/Buttons.cs`).
+- Added focused `MaterialButtonsTests` coverage for icon-factory default padding across M3/M2 paths for text/elevated/outlined/filled/tonal filled buttons (`src/Flutter.Tests/MaterialButtonsTests.cs`).
+- Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-04-05-button-icon-factory-padding-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
+
+## [2026-04-05] - M4 filled-button default padding/elevation parity hardening
+
+### Changed
+
+- Aligned `FilledButton` and `FilledButton.Tonal` default horizontal padding with Flutter mode-aware scaling:
+  - `UseMaterial3=true` keeps `horizontal: 24`,
+  - `UseMaterial3=false` now resolves to `horizontal: 16`
+  (`src/Flutter.Material/Buttons.cs`).
+- Aligned `FilledButton` default elevation progression with Flutter defaults by adding hovered elevation state (`default=0`, `hovered=1`) while keeping non-hover states at `0` (`src/Flutter.Material/Buttons.cs`).
+- Added focused `MaterialButtonsTests` coverage for:
+  - M2 default padding on filled and tonal variants,
+  - default filled hovered-elevation behavior (shadow appears only on hover)
+  (`src/Flutter.Tests/MaterialButtonsTests.cs`).
+- Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-04-05-filled-button-default-padding-elevation-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
+
+## [2026-04-05] - M4 button M2 overlay-opacity default parity hardening
+
+### Changed
+
+- Extended `MaterialButtonCore.CreateDefaultOverlayResolver(...)` with configurable pressed/focused opacity while preserving hover opacity (`0.08`) and existing default behavior (`0.10`) for current call sites (`src/Flutter.Material/Buttons.cs`).
+- Aligned mode-aware default overlay behavior for `TextButton`, `ElevatedButton`, and `OutlinedButton` with Flutter M2 semantics:
+  - when `UseMaterial3=false`, focused/pressed overlay alpha now resolves to `0.12`,
+  - when `UseMaterial3=true`, existing focused/pressed overlay alpha `0.10` is preserved
+  (`src/Flutter.Material/Buttons.cs`).
+- Added focused `MaterialButtonsTests` coverage for M2 overlay defaults across text/elevated/outlined buttons, including elevated `onPrimary` overlay blending over primary background (`src/Flutter.Tests/MaterialButtonsTests.cs`).
+- Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-04-05-button-m2-overlay-opacity-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
+
+## [2026-04-05] - M4 button M2 default color/elevation parity hardening
+
+### Changed
+
+- Aligned `ElevatedButton` mode-aware default color tokens with Flutter behavior:
+  - `UseMaterial3=true`: keep existing M3 defaults (`surfaceContainerLow` background, `primary` foreground),
+  - `UseMaterial3=false`: now use M2 defaults (`primary` background, `onPrimary` foreground)
+  (`src/Flutter.Material/Buttons.cs`).
+- Aligned `ElevatedButton` default elevation resolver with Flutter M2 state map when `UseMaterial3=false`:
+  - `disabled=0`, `default=2`, `hovered/focused=4`, `pressed=8`
+  while preserving existing M3 behavior (`src/Flutter.Material/Buttons.cs`).
+- Added focused `MaterialButtonsTests` coverage for:
+  - M2 elevated default color pair,
+  - M2 elevated default elevation-state mapping,
+  - baseline M2 foreground-default behavior for `TextButton` and `OutlinedButton`
+  (`src/Flutter.Tests/MaterialButtonsTests.cs`).
+- Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-04-05-button-m2-default-colors-elevation-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
+
+## [2026-04-05] - M4 button M2 default geometry parity hardening
+
+### Changed
+
+- Aligned mode-aware default geometry for `TextButton`, `ElevatedButton`, and `OutlinedButton` with Flutter M2 behavior under `UseMaterial3=false` (`minimumSize` height `36`, M2 padding tokens, and rounded shape radius `4`) while preserving current M3 defaults (`src/Flutter.Material/Buttons.cs`).
+- Updated these button constructors to treat omitted `minHeight` as mode-resolved default (`M3=40`, `M2=36`) and keep explicit `minHeight` values as overrides (`src/Flutter.Material/Buttons.cs`).
+- Added focused `MaterialButtonsTests` coverage for M2 default `minimumSize`, `padding`, and clip-shape behavior across text/elevated/outlined buttons (`src/Flutter.Tests/MaterialButtonsTests.cs`).
+- Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-04-05-button-m2-default-geometry-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
+
+## [2026-04-05] - M4 outlined-button M2 border-focus parity hardening
+
+### Changed
+
+- Aligned `OutlinedButton` default border-side state mapping with Flutter mode-aware behavior:
+  - `UseMaterial3=true`: focused border uses primary color, other enabled states use outline color.
+  - `UseMaterial3=false`: focused and unfocused enabled border both use `onSurface(0.12)` (no primary focus border accent)
+  (`src/Flutter.Material/Buttons.cs`).
+- Added focused `MaterialButtonsTests` coverage for M2 outlined-button border behavior:
+  - default enabled border uses `onSurface` opacity path,
+  - focused border remains on the same `onSurface` opacity path in M2 mode
+  (`src/Flutter.Tests/MaterialButtonsTests.cs`).
+- Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-04-05-outlined-button-m2-border-focus-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
+
+## [2026-04-05] - M4 outlined/filled `styleFrom` background mapping parity correction
+
+### Changed
+
+- Corrected `styleFrom(...)` background mapping split to match Flutter source:
+  - `OutlinedButton.styleFrom(backgroundColor: ...)` without `disabledBackgroundColor` now resolves as all-state background color (disabled state included),
+  - `FilledButton.styleFrom(backgroundColor: ...)` without `disabledBackgroundColor` now keeps default disabled fallback behavior (no all-state special-case)
+  (`src/Flutter.Material/Buttons.cs`).
+- Added focused `MaterialButtonsTests` coverage for:
+  - outlined-button background-only style override winning over themed disabled background,
+  - filled-button background-only style preserving default disabled background fallback
+  (`src/Flutter.Tests/MaterialButtonsTests.cs`).
+- Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-04-05-outlined-filled-stylefrom-background-mapping-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
+
+## [2026-04-04] - M4 material button icon-theme parity hardening
+
+### Changed
+
+- Extended Material `ButtonStyle` with state-aware icon fields (`IconColor`, `IconSize`) and wired them into style merge/state resolution in framework button infrastructure (`src/Flutter.Material/ButtonStyle.cs`).
+- Extended `TextButton.StyleFrom(...)`, `ElevatedButton.StyleFrom(...)`, `OutlinedButton.StyleFrom(...)`, and `FilledButton.StyleFrom(...)` with Flutter-like icon arguments (`iconColor`, `disabledIconColor`, `iconSize`) and mapped them to style-state resolvers (`src/Flutter.Material/Buttons.cs`).
+- Aligned default button icon tokens with Flutter M3 button defaults by setting icon-size baseline `18` and state-aware icon color defaults tied to existing foreground/disabled token paths across Material button types (`src/Flutter.Material/Buttons.cs`).
+- `MaterialButtonCore` now wraps button child content with resolved `IconTheme` so icon-bearing button subtrees inherit composed button style icon settings (with foreground fallback when icon color is not explicitly provided), matching Flutter `ButtonStyleButton` icon-theme behavior (`src/Flutter.Material/Buttons.cs`).
+- Added focused regression coverage in `MaterialButtonsTests` for button icon-theme defaults and `styleFrom(...)` icon overrides (enabled and disabled paths) (`src/Flutter.Tests/MaterialButtonsTests.cs`).
+- Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-04-04-button-icon-theme-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
+
+## [2026-04-04] - M4 material button tap-target-size parity hardening
+
+### Changed
+
+- Extended `ButtonStyle` with Flutter-like `TapTargetSize` support and wired it into style merge/composition resolution (`src/Flutter.Material/ButtonStyle.cs`, `src/Flutter.Material/Buttons.cs`).
+- Added `ThemeData.MaterialTapTargetSize` (default `Padded`) and propagated it into default Material button styles so ambient theme controls the default tap-target policy (`src/Flutter.Material/ThemeData.cs`, `src/Flutter.Material/Buttons.cs`).
+- Extended `TextButton.StyleFrom(...)`, `ElevatedButton.StyleFrom(...)`, `OutlinedButton.StyleFrom(...)`, and `FilledButton.StyleFrom(...)` with `tapTargetSize` override support (`src/Flutter.Material/Buttons.cs`).
+- `MaterialButtonCore` now resolves tap-target min size from composed button style (`Padded` -> `48x48`, `ShrinkWrap` -> `0x0`) before applying `ButtonTapTargetPadding`, matching Flutter `_InputPadding` tap-target mode behavior (`src/Flutter.Material/Buttons.cs`).
+- Expanded `MaterialButtonsTests` with coverage for:
+  - `ThemeData.Light` default tap-target mode (`Padded`),
+  - theme-level `MaterialTapTargetSize.ShrinkWrap` behavior,
+  - `styleFrom(tapTargetSize: ...)` precedence over theme defaults
+  (`src/Flutter.Tests/MaterialButtonsTests.cs`).
+- Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-04-04-button-tap-target-size-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
+
+## [2026-04-04] - M4 material button surface-tint parity hardening
+
+### Changed
+
+- Extended `ButtonStyle` with state-aware `SurfaceTintColor` and wired it into style merge/composition/state-resolution pipeline for Material buttons (`src/Flutter.Material/ButtonStyle.cs`, `src/Flutter.Material/Buttons.cs`).
+- Extended `TextButton.StyleFrom(...)`, `ElevatedButton.StyleFrom(...)`, `OutlinedButton.StyleFrom(...)`, and `FilledButton.StyleFrom(...)` with `surfaceTintColor` support (`src/Flutter.Material/Buttons.cs`).
+- `MaterialButtonCore` now applies Flutter-like surface tint blending to resolved button background color using elevation-based opacity interpolation (token table `0 -> 0.00`, `1 -> 0.05`, `3 -> 0.08`, `6 -> 0.11`, `8 -> 0.12`, `12 -> 0.14`) before state overlay tinting (`src/Flutter.Material/Buttons.cs`).
+- Added focused regression coverage in `MaterialButtonsTests` for:
+  - `ElevatedButton.styleFrom(surfaceTintColor: ...)` background tinting by elevation,
+  - theme-level `ElevatedButtonTheme` `surfaceTintColor` tinting on default elevated background
+  (`src/Flutter.Tests/MaterialButtonsTests.cs`).
+- Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-04-04-button-surface-tint-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
+
+## [2026-04-04] - M4 material button styleFrom shadow/elevation parity expansion
+
+### Changed
+
+- Expanded `TextButton.StyleFrom(...)`, `OutlinedButton.StyleFrom(...)`, and `FilledButton.StyleFrom(...)` with `shadowColor` and `elevation` arguments to align API shape with Flutter `styleFrom` helpers (`src/Flutter.Material/Buttons.cs`).
+- Wired new style arguments into `ButtonStyle.ShadowColor` and `ButtonStyle.Elevation` so non-elevated button types can opt into explicit shadow/elevation visuals via style overrides in the existing `MaterialButtonCore` paint path (`src/Flutter.Material/Buttons.cs`).
+- Added focused regression coverage in `MaterialButtonsTests` validating shadow rendering for `TextButton`, `OutlinedButton`, and `FilledButton` when `styleFrom(shadowColor: ..., elevation: ...)` is provided (`src/Flutter.Tests/MaterialButtonsTests.cs`).
+- Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-04-04-button-stylefrom-shadow-elevation-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
+
+## [2026-04-04] - M4 material shadow-color fallback parity for styleFrom elevation overrides
+
+### Changed
+
+- `MaterialButtonCore` now applies Flutter-like shadow fallback semantics: when composed button style resolves a positive `elevation` but no explicit `shadowColor`, rendering falls back to `ThemeData.ShadowColor` instead of dropping the shadow (`src/Flutter.Material/Buttons.cs`).
+- Added focused regression coverage in `MaterialButtonsTests` for fallback behavior on `TextButton`, `OutlinedButton`, and `FilledButton` with `styleFrom(elevation: ...)` and no explicit `shadowColor` (`src/Flutter.Tests/MaterialButtonsTests.cs`).
+- Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-04-04-button-shadow-fallback-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
+
+## [2026-04-04] - M4 text/outlined styleFrom disabled-color mapping parity hardening
+
+### Changed
+
+- Aligned `TextButton.styleFrom(...)` mapping with Flutter behavior:
+  - `backgroundColor` without `disabledBackgroundColor` now resolves as `all(backgroundColor)` (applies to disabled state),
+  - `iconColor` without `disabledIconColor` now resolves as `all(iconColor)` (applies to disabled state)
+  (`src/Flutter.Material/Buttons.cs`).
+- Aligned `OutlinedButton.styleFrom(...)` background mapping with Flutter behavior: `backgroundColor` without `disabledBackgroundColor` now resolves as `all(backgroundColor)` and remains applied in disabled state (`src/Flutter.Material/Buttons.cs`).
+- Added focused `MaterialButtonsTests` coverage for:
+  - disabled `TextButton` icon-color behavior when only `iconColor` is provided,
+  - disabled `TextButton` background behavior when only `backgroundColor` is provided,
+  - disabled `OutlinedButton` background behavior when only `backgroundColor` is provided
+  (`src/Flutter.Tests/MaterialButtonsTests.cs`).
+- Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-04-04-text-outlined-stylefrom-disabled-color-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
+
+## [2026-04-05] - M4 material surface-tint gating parity (`useMaterial3`)
+
+### Changed
+
+- Aligned button surface-tint behavior with Flutter Material semantics by gating `surfaceTintColor` application on `ThemeData.UseMaterial3`: tint overlay is now ignored when `UseMaterial3` is `false` (`src/Flutter.Material/Buttons.cs`).
+- Added focused `MaterialButtonsTests` coverage for both style-level and theme-level elevated-button surface tint under `UseMaterial3 = false` to ensure background remains untinted (`src/Flutter.Tests/MaterialButtonsTests.cs`).
+- Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-04-05-button-surface-tint-usematerial3-gating-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
 
 ## [2026-03-29] - M4 material elevated-button shadow/elevation parity hardening
 

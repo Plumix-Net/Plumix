@@ -116,11 +116,11 @@ internal sealed class AppBarIconThemeDemoPageState : State
                 titleText: "Theme icon chain",
                 iconTheme: _widgetIconOverrideEnabled ? new IconThemeData(Color: WidgetIconColor, Size: 20) : null,
                 actionsIconTheme: _widgetActionsIconOverrideEnabled ? new IconThemeData(Color: WidgetActionsIconColor, Size: 22) : null,
-                leading: new IconThemeProbe("L"),
+                leading: new Icon(Icons.Menu),
                 actions:
                 [
-                    new IconThemeProbe("A1"),
-                    new IconThemeProbe("A2"),
+                    new Icon(Icons.Close),
+                    new Icon(Icons.InfoOutline),
                 ]));
     }
 
@@ -130,11 +130,11 @@ internal sealed class AppBarIconThemeDemoPageState : State
             titleText: "Default icon chain",
             backgroundColor: AppBarBackground,
             foregroundColor: _foregroundColor,
-            leading: new IconThemeProbe("L"),
+            leading: new Icon(Icons.Menu),
             actions:
             [
-                new IconThemeProbe("A1"),
-                new IconThemeProbe("A2"),
+                new Icon(Icons.Close),
+                new Icon(Icons.InfoOutline),
             ]);
     }
 
@@ -219,40 +219,4 @@ internal sealed class AppBarIconThemeDemoPageState : State
     private static string OnOff(bool value) => value ? "on" : "off";
 
     private static string ColorLabel(Color color) => $"#{color.A:X2}{color.R:X2}{color.G:X2}{color.B:X2}";
-}
-
-internal sealed class IconThemeProbe : StatelessWidget
-{
-    private readonly string _label;
-
-    public IconThemeProbe(string label)
-    {
-        _label = label;
-    }
-
-    public override Widget Build(BuildContext context)
-    {
-        var iconTheme = IconTheme.Of(context);
-        var swatch = iconTheme.Color ?? Colors.Transparent;
-        var sizeLabel = iconTheme.Size.HasValue ? iconTheme.Size.Value.ToString("0") : "-";
-
-        return new Container(
-            width: 58,
-            height: 24,
-            color: Color.Parse("#FFF4F7FB"),
-            decoration: new BoxDecoration(
-                Border: new BorderSide(Color.Parse("#FFB8C4D4"), 1),
-                BorderRadius: BorderRadius.Circular(6)),
-            padding: new Thickness(4, 2, 4, 2),
-            child: new Row(
-                spacing: 3,
-                children:
-                [
-                    new Container(
-                        width: 10,
-                        height: 10,
-                        color: swatch),
-                    new Text($"{_label}:{sizeLabel}", fontSize: 9, color: Colors.Black),
-                ]));
-    }
 }
