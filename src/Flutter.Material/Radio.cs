@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Avalonia;
 using Avalonia.Media;
+using Flutter.Cupertino;
 using Flutter.Foundation;
 using Flutter.Rendering;
 using Flutter.Widgets;
@@ -13,6 +14,13 @@ public sealed class Radio<T> : StatefulWidget
 {
     private const double DefaultSplashRadius = 20.0;
     private const double DefaultInnerRadius = 4.5;
+    private readonly RadioType _radioType;
+
+    private enum RadioType
+    {
+        Material,
+        Adaptive
+    }
 
     public const double Width = 20.0;
 
@@ -33,6 +41,49 @@ public sealed class Radio<T> : StatefulWidget
         double? splashRadius = null,
         FocusNode? focusNode = null,
         bool autofocus = false,
+        Key? key = null)
+        : this(
+            value: value,
+            groupValue: groupValue,
+            onChanged: onChanged,
+            toggleable: toggleable,
+            activeColor: activeColor,
+            fillColor: fillColor,
+            overlayColor: overlayColor,
+            focusColor: focusColor,
+            hoverColor: hoverColor,
+            materialTapTargetSize: materialTapTargetSize,
+            backgroundColor: backgroundColor,
+            side: side,
+            innerRadius: innerRadius,
+            splashRadius: splashRadius,
+            focusNode: focusNode,
+            autofocus: autofocus,
+            useCupertinoCheckmarkStyle: false,
+            radioType: RadioType.Material,
+            key: key)
+    {
+    }
+
+    private Radio(
+        T value,
+        T? groupValue,
+        Action<T?>? onChanged,
+        bool toggleable,
+        Color? activeColor,
+        MaterialStateProperty<Color?>? fillColor,
+        MaterialStateProperty<Color?>? overlayColor,
+        Color? focusColor,
+        Color? hoverColor,
+        MaterialTapTargetSize? materialTapTargetSize,
+        MaterialStateProperty<Color?>? backgroundColor,
+        BorderSide? side,
+        MaterialStateProperty<double?>? innerRadius,
+        double? splashRadius,
+        FocusNode? focusNode,
+        bool autofocus,
+        bool useCupertinoCheckmarkStyle,
+        RadioType radioType,
         Key? key = null) : base(key)
     {
         Value = value;
@@ -51,6 +102,8 @@ public sealed class Radio<T> : StatefulWidget
         SplashRadius = splashRadius;
         FocusNode = focusNode;
         Autofocus = autofocus;
+        UseCupertinoCheckmarkStyle = useCupertinoCheckmarkStyle;
+        _radioType = radioType;
     }
 
     public T Value { get; }
@@ -85,6 +138,50 @@ public sealed class Radio<T> : StatefulWidget
 
     public bool Autofocus { get; }
 
+    public bool UseCupertinoCheckmarkStyle { get; }
+
+    public static Radio<T> Adaptive(
+        T value,
+        T? groupValue,
+        Action<T?>? onChanged,
+        bool toggleable = false,
+        Color? activeColor = null,
+        MaterialStateProperty<Color?>? fillColor = null,
+        MaterialStateProperty<Color?>? overlayColor = null,
+        Color? focusColor = null,
+        Color? hoverColor = null,
+        MaterialTapTargetSize? materialTapTargetSize = null,
+        MaterialStateProperty<Color?>? backgroundColor = null,
+        BorderSide? side = null,
+        MaterialStateProperty<double?>? innerRadius = null,
+        double? splashRadius = null,
+        FocusNode? focusNode = null,
+        bool autofocus = false,
+        bool useCupertinoCheckmarkStyle = false,
+        Key? key = null)
+    {
+        return new Radio<T>(
+            value: value,
+            groupValue: groupValue,
+            onChanged: onChanged,
+            toggleable: toggleable,
+            activeColor: activeColor,
+            fillColor: fillColor,
+            overlayColor: overlayColor,
+            focusColor: focusColor,
+            hoverColor: hoverColor,
+            materialTapTargetSize: materialTapTargetSize,
+            backgroundColor: backgroundColor,
+            side: side,
+            innerRadius: innerRadius,
+            splashRadius: splashRadius,
+            focusNode: focusNode,
+            autofocus: autofocus,
+            useCupertinoCheckmarkStyle: useCupertinoCheckmarkStyle,
+            radioType: RadioType.Adaptive,
+            key: key);
+    }
+
     public override State CreateState()
     {
         return new RadioState();
@@ -97,6 +194,21 @@ public sealed class Radio<T> : StatefulWidget
         public override Widget Build(BuildContext context)
         {
             var theme = Theme.Of(context);
+            if (IsAdaptiveCupertino(theme))
+            {
+                return new CupertinoRadio<T>(
+                    value: CurrentWidget.Value,
+                    groupValue: CurrentWidget.GroupValue,
+                    onChanged: CurrentWidget.OnChanged,
+                    toggleable: CurrentWidget.Toggleable,
+                    activeColor: CurrentWidget.ActiveColor,
+                    focusColor: CurrentWidget.FocusColor,
+                    useCheckmarkStyle: CurrentWidget.UseCupertinoCheckmarkStyle,
+                    focusNode: CurrentWidget.FocusNode,
+                    autofocus: CurrentWidget.Autofocus,
+                    isDark: theme.Brightness == Brightness.Dark);
+            }
+
             var radioTheme = RadioTheme.Of(context);
             var enabled = CurrentWidget.OnChanged is not null;
             var selected = IsSelected();
@@ -397,6 +509,16 @@ public sealed class Radio<T> : StatefulWidget
             }
 
             return null;
+        }
+
+        private bool IsAdaptiveCupertino(ThemeData theme)
+        {
+            if (CurrentWidget._radioType != RadioType.Adaptive)
+            {
+                return false;
+            }
+
+            return theme.Platform is TargetPlatform.IOS or TargetPlatform.MacOS;
         }
 
         private static MaterialState BuildStates(bool enabled, bool selected)

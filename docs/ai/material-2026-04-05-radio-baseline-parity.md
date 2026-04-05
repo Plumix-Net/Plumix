@@ -6,7 +6,7 @@
 
 ## Non-Goals
 
-- Full Cupertino-native adaptive radio parity (`Radio.adaptive` path is not implemented in current framework scope).
+- Full Cupertino-native adaptive radio fidelity matrix (haptics/accessibility labels/advanced motion nuances).
 - Full Flutter `RadioThemeData` surface (`mouseCursor`, visual-density, and stateful border-side/inner-radius property types beyond current framework primitives).
 
 ## Context Budget Plan
@@ -60,7 +60,8 @@
   - [x] Constraint/layout behavior mapped
   - [x] Paint/visual semantics mapped
 - Divergence log (only if needed):
-  - `src/Flutter.Material/Radio.cs`: `Radio.adaptive` Cupertino branch is not implemented in current framework scope. Expected delta: adaptive radio behavior remains Material-only in framework usage. Follow-up condition: add Cupertino radio primitive + adaptive constructor path.
+  - Baseline note: at the time of this iteration, `Radio.adaptive` Cupertino path was not yet implemented.
+  - Follow-up status (2026-04-05): closed by `docs/ai/material-2026-04-05-radio-adaptive-cupertino-parity.md` (`CupertinoRadio<T>` + `Radio<T>.Adaptive(...)` platform split).
 
 ## Planned Changes
 

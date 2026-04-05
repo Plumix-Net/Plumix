@@ -11,8 +11,12 @@ class _RadioDemoPageState extends State<RadioDemoPage> {
   bool _enabled = true;
   bool _toggleable = true;
   bool _shrinkWrapTapTarget = false;
-  String? _groupValue = 'first';
-  int _changes = 0;
+  String? _materialGroupValue = 'first';
+  int _materialChanges = 0;
+  String? _adaptiveGroupValue = 'adaptive-first';
+  int _adaptiveChanges = 0;
+  TargetPlatform _adaptivePlatform = TargetPlatform.iOS;
+  bool _adaptiveUseCheckmarkStyle = false;
 
   @override
   Widget build(BuildContext context) {
@@ -21,17 +25,20 @@ class _RadioDemoPageState extends State<RadioDemoPage> {
           ? MaterialTapTargetSize.shrinkWrap
           : MaterialTapTargetSize.padded,
     );
+    final ThemeData adaptiveTheme = radioTheme.copyWith(
+      platform: _adaptivePlatform,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: 10,
       children: <Widget>[
         const Text(
-          'Radio baseline',
+          'Radio baseline + adaptive',
           style: TextStyle(fontSize: 20, color: Colors.black),
         ),
         const Text(
-          'Material Radio with group selection, toggleable mode, and tap-target policy toggle.',
+          'Material Radio plus adaptive Cupertino probe with platform/checkmark toggles.',
           style: TextStyle(fontSize: 14, color: Colors.black54),
         ),
         Row(
@@ -63,8 +70,27 @@ class _RadioDemoPageState extends State<RadioDemoPage> {
             ),
           ],
         ),
+        Row(
+          spacing: 8,
+          children: <Widget>[
+            _buildControlButton(
+              label: 'Adaptive: ${_formatPlatform(_adaptivePlatform)}',
+              onTap: _cycleAdaptivePlatform,
+              width: 156,
+              background: const Color(0xFFE7F4FF),
+            ),
+            _buildControlButton(
+              label: _adaptiveUseCheckmarkStyle
+                  ? 'Adaptive: checkmark'
+                  : 'Adaptive: dot',
+              onTap: _toggleAdaptiveCheckmarkStyle,
+              width: 164,
+              background: const Color(0xFFEFE7FF),
+            ),
+          ],
+        ),
         Text(
-          'enabled=$_enabled, toggleable=$_toggleable, groupValue=${_groupValue ?? 'null'}, changes=$_changes, tapTarget=${_shrinkWrapTapTarget ? 'shrinkWrap' : 'padded'}',
+          'enabled=$_enabled, toggleable=$_toggleable, materialValue=${_materialGroupValue ?? 'null'}, materialChanges=$_materialChanges, adaptiveValue=${_adaptiveGroupValue ?? 'null'}, adaptiveChanges=$_adaptiveChanges, adaptivePlatform=${_formatPlatform(_adaptivePlatform)}, adaptiveStyle=${_adaptiveUseCheckmarkStyle ? 'checkmark' : 'dot'}, tapTarget=${_shrinkWrapTapTarget ? 'shrinkWrap' : 'padded'}',
           style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
         ),
         Theme(
@@ -73,11 +99,15 @@ class _RadioDemoPageState extends State<RadioDemoPage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             spacing: 8,
             children: <Widget>[
+              const Text(
+                'Material path',
+                style: TextStyle(fontSize: 13, color: Color(0xFF37474F)),
+              ),
               _buildRadioRow(
                 radio: Radio<String>(
                   value: 'first',
-                  groupValue: _groupValue,
-                  onChanged: _enabled ? _onChanged : null,
+                  groupValue: _materialGroupValue,
+                  onChanged: _enabled ? _onMaterialChanged : null,
                   toggleable: _toggleable,
                 ),
                 title: 'Default radio #1',
@@ -86,8 +116,8 @@ class _RadioDemoPageState extends State<RadioDemoPage> {
               _buildRadioRow(
                 radio: Radio<String>(
                   value: 'second',
-                  groupValue: _groupValue,
-                  onChanged: _enabled ? _onChanged : null,
+                  groupValue: _materialGroupValue,
+                  onChanged: _enabled ? _onMaterialChanged : null,
                   toggleable: _toggleable,
                 ),
                 title: 'Default radio #2',
@@ -96,8 +126,8 @@ class _RadioDemoPageState extends State<RadioDemoPage> {
               _buildRadioRow(
                 radio: Radio<String>(
                   value: 'custom',
-                  groupValue: _groupValue,
-                  onChanged: _enabled ? _onChanged : null,
+                  groupValue: _materialGroupValue,
+                  onChanged: _enabled ? _onMaterialChanged : null,
                   toggleable: _toggleable,
                   activeColor: const Color(0xFF00695C),
                   fillColor: WidgetStateProperty.resolveWith((
@@ -142,6 +172,45 @@ class _RadioDemoPageState extends State<RadioDemoPage> {
                 ),
                 title: 'Custom colors',
                 subtitle: 'fill/overlay/side/background overrides',
+              ),
+              const Text(
+                'Adaptive path',
+                style: TextStyle(fontSize: 13, color: Color(0xFF37474F)),
+              ),
+              Theme(
+                data: adaptiveTheme,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  spacing: 8,
+                  children: <Widget>[
+                    _buildRadioRow(
+                      radio: Radio<String>.adaptive(
+                        value: 'adaptive-first',
+                        groupValue: _adaptiveGroupValue,
+                        onChanged: _enabled ? _onAdaptiveChanged : null,
+                        toggleable: _toggleable,
+                      ),
+                      title: 'Adaptive default #1',
+                      subtitle: 'value: adaptive-first',
+                    ),
+                    _buildRadioRow(
+                      radio: Radio<String>.adaptive(
+                        value: 'adaptive-second',
+                        groupValue: _adaptiveGroupValue,
+                        onChanged: _enabled ? _onAdaptiveChanged : null,
+                        toggleable: _toggleable,
+                        activeColor: const Color(0xFF00695C),
+                        fillColor: WidgetStateProperty.all(
+                          const Color(0xFF8E24AA),
+                        ),
+                        useCupertinoCheckmarkStyle: _adaptiveUseCheckmarkStyle,
+                      ),
+                      title: 'Adaptive style probe',
+                      subtitle:
+                          'checkmark style + fillColor ignore on iOS/macOS',
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -227,20 +296,58 @@ class _RadioDemoPageState extends State<RadioDemoPage> {
     });
   }
 
+  void _cycleAdaptivePlatform() {
+    setState(() {
+      _adaptivePlatform = switch (_adaptivePlatform) {
+        TargetPlatform.iOS => TargetPlatform.macOS,
+        TargetPlatform.macOS => TargetPlatform.android,
+        _ => TargetPlatform.iOS,
+      };
+    });
+  }
+
+  void _toggleAdaptiveCheckmarkStyle() {
+    setState(() {
+      _adaptiveUseCheckmarkStyle = !_adaptiveUseCheckmarkStyle;
+    });
+  }
+
   void _reset() {
     setState(() {
       _enabled = true;
       _toggleable = true;
       _shrinkWrapTapTarget = false;
-      _groupValue = 'first';
-      _changes = 0;
+      _materialGroupValue = 'first';
+      _materialChanges = 0;
+      _adaptiveGroupValue = 'adaptive-first';
+      _adaptiveChanges = 0;
+      _adaptivePlatform = TargetPlatform.iOS;
+      _adaptiveUseCheckmarkStyle = false;
     });
   }
 
-  void _onChanged(String? value) {
+  void _onMaterialChanged(String? value) {
     setState(() {
-      _groupValue = value;
-      _changes += 1;
+      _materialGroupValue = value;
+      _materialChanges += 1;
     });
+  }
+
+  void _onAdaptiveChanged(String? value) {
+    setState(() {
+      _adaptiveGroupValue = value;
+      _adaptiveChanges += 1;
+    });
+  }
+
+  static String _formatPlatform(TargetPlatform platform) {
+    return switch (platform) {
+      TargetPlatform.iOS => 'iOS',
+      TargetPlatform.macOS => 'macOS',
+      TargetPlatform.android => 'Android',
+      TargetPlatform.fuchsia => 'Fuchsia',
+      TargetPlatform.linux => 'Linux',
+      TargetPlatform.windows => 'Windows',
+    };
   }
 }

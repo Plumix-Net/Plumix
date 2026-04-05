@@ -22,8 +22,12 @@ internal sealed class RadioDemoPageState : State
     private bool _enabled = true;
     private bool _toggleable = true;
     private bool _shrinkWrapTapTarget;
-    private string? _groupValue = "first";
-    private int _changes;
+    private string? _materialGroupValue = "first";
+    private int _materialChanges;
+    private string? _adaptiveGroupValue = "adaptive-first";
+    private int _adaptiveChanges;
+    private TargetPlatform _adaptivePlatform = TargetPlatform.IOS;
+    private bool _adaptiveUseCheckmarkStyle;
 
     public override Widget Build(BuildContext context)
     {
@@ -34,15 +38,19 @@ internal sealed class RadioDemoPageState : State
                 ? MaterialTapTargetSize.ShrinkWrap
                 : MaterialTapTargetSize.Padded
         };
+        var adaptiveTheme = radioTheme with
+        {
+            Platform = _adaptivePlatform
+        };
 
         return new Column(
             crossAxisAlignment: CrossAxisAlignment.Stretch,
             spacing: 10,
             children:
             [
-                new Text("Radio baseline", fontSize: 20, color: Colors.Black),
+                new Text("Radio baseline + adaptive", fontSize: 20, color: Colors.Black),
                 new Text(
-                    "Material Radio with group selection, toggleable mode, and tap-target policy toggle.",
+                    "Material Radio plus adaptive Cupertino probe with platform/checkmark toggles.",
                     fontSize: 14,
                     color: Color.Parse("#8A000000")),
                 new Row(
@@ -70,8 +78,23 @@ internal sealed class RadioDemoPageState : State
                             width: 80,
                             background: Color.Parse("#FFF3E8D8")),
                     ]),
+                new Row(
+                    spacing: 8,
+                    children:
+                    [
+                        BuildControlButton(
+                            label: $"Adaptive: {FormatPlatform(_adaptivePlatform)}",
+                            onTap: CycleAdaptivePlatform,
+                            width: 156,
+                            background: Color.Parse("#FFE7F4FF")),
+                        BuildControlButton(
+                            label: _adaptiveUseCheckmarkStyle ? "Adaptive: checkmark" : "Adaptive: dot",
+                            onTap: ToggleAdaptiveCheckmarkStyle,
+                            width: 164,
+                            background: Color.Parse("#FFEFE7FF")),
+                    ]),
                 new Text(
-                    $"enabled={(_enabled ? "true" : "false")}, toggleable={(_toggleable ? "true" : "false")}, groupValue={FormatValue(_groupValue)}, changes={_changes}, tapTarget={(_shrinkWrapTapTarget ? "shrinkWrap" : "padded")}",
+                    $"enabled={(_enabled ? "true" : "false")}, toggleable={(_toggleable ? "true" : "false")}, materialValue={FormatValue(_materialGroupValue)}, materialChanges={_materialChanges}, adaptiveValue={FormatValue(_adaptiveGroupValue)}, adaptiveChanges={_adaptiveChanges}, adaptivePlatform={FormatPlatform(_adaptivePlatform)}, adaptiveStyle={(_adaptiveUseCheckmarkStyle ? "checkmark" : "dot")}, tapTarget={(_shrinkWrapTapTarget ? "shrinkWrap" : "padded")}",
                     fontSize: 12,
                     color: Color.Parse("#FF607D8B")),
                 new Theme(
@@ -81,27 +104,31 @@ internal sealed class RadioDemoPageState : State
                         spacing: 8,
                         children:
                         [
+                            new Text(
+                                "Material path",
+                                fontSize: 13,
+                                color: Color.Parse("#FF37474F")),
                             BuildRadioRow(
                                 radio: new Radio<string>(
                                     value: "first",
-                                    groupValue: _groupValue,
-                                    onChanged: _enabled ? OnChanged : null,
+                                    groupValue: _materialGroupValue,
+                                    onChanged: _enabled ? OnMaterialChanged : null,
                                     toggleable: _toggleable),
                                 title: "Default radio #1",
                                 subtitle: "value: first"),
                             BuildRadioRow(
                                 radio: new Radio<string>(
                                     value: "second",
-                                    groupValue: _groupValue,
-                                    onChanged: _enabled ? OnChanged : null,
+                                    groupValue: _materialGroupValue,
+                                    onChanged: _enabled ? OnMaterialChanged : null,
                                     toggleable: _toggleable),
                                 title: "Default radio #2",
                                 subtitle: "value: second"),
                             BuildRadioRow(
                                 radio: new Radio<string>(
                                     value: "custom",
-                                    groupValue: _groupValue,
-                                    onChanged: _enabled ? OnChanged : null,
+                                    groupValue: _materialGroupValue,
+                                    onChanged: _enabled ? OnMaterialChanged : null,
                                     toggleable: _toggleable,
                                     activeColor: Color.Parse("#FF00695C"),
                                     fillColor: MaterialStateProperty<Color?>.ResolveWith(states =>
@@ -147,6 +174,37 @@ internal sealed class RadioDemoPageState : State
                                     innerRadius: MaterialStateProperty<double?>.All(5)),
                                 title: "Custom colors",
                                 subtitle: "fill/overlay/side/background overrides"),
+                            new Text(
+                                "Adaptive path",
+                                fontSize: 13,
+                                color: Color.Parse("#FF37474F")),
+                            new Theme(
+                                data: adaptiveTheme,
+                                child: new Column(
+                                    crossAxisAlignment: CrossAxisAlignment.Stretch,
+                                    spacing: 8,
+                                    children:
+                                    [
+                                        BuildRadioRow(
+                                            radio: Radio<string>.Adaptive(
+                                                value: "adaptive-first",
+                                                groupValue: _adaptiveGroupValue,
+                                                onChanged: _enabled ? OnAdaptiveChanged : null,
+                                                toggleable: _toggleable),
+                                            title: "Adaptive default #1",
+                                            subtitle: "value: adaptive-first"),
+                                        BuildRadioRow(
+                                            radio: Radio<string>.Adaptive(
+                                                value: "adaptive-second",
+                                                groupValue: _adaptiveGroupValue,
+                                                onChanged: _enabled ? OnAdaptiveChanged : null,
+                                                toggleable: _toggleable,
+                                                activeColor: Color.Parse("#FF00695C"),
+                                                fillColor: MaterialStateProperty<Color?>.All(Color.Parse("#FF8E24AA")),
+                                                useCupertinoCheckmarkStyle: _adaptiveUseCheckmarkStyle),
+                                            title: "Adaptive style probe",
+                                            subtitle: "checkmark style + fillColor ignore on iOS/macOS"),
+                                    ])),
                         ])),
             ]);
     }
@@ -211,6 +269,24 @@ internal sealed class RadioDemoPageState : State
         SetState(() => _shrinkWrapTapTarget = !_shrinkWrapTapTarget);
     }
 
+    private void CycleAdaptivePlatform()
+    {
+        SetState(() =>
+        {
+            _adaptivePlatform = _adaptivePlatform switch
+            {
+                TargetPlatform.IOS => TargetPlatform.MacOS,
+                TargetPlatform.MacOS => TargetPlatform.Android,
+                _ => TargetPlatform.IOS,
+            };
+        });
+    }
+
+    private void ToggleAdaptiveCheckmarkStyle()
+    {
+        SetState(() => _adaptiveUseCheckmarkStyle = !_adaptiveUseCheckmarkStyle);
+    }
+
     private void Reset()
     {
         SetState(() =>
@@ -218,18 +294,45 @@ internal sealed class RadioDemoPageState : State
             _enabled = true;
             _toggleable = true;
             _shrinkWrapTapTarget = false;
-            _groupValue = "first";
-            _changes = 0;
+            _materialGroupValue = "first";
+            _materialChanges = 0;
+            _adaptiveGroupValue = "adaptive-first";
+            _adaptiveChanges = 0;
+            _adaptivePlatform = TargetPlatform.IOS;
+            _adaptiveUseCheckmarkStyle = false;
         });
     }
 
-    private void OnChanged(string? value)
+    private void OnMaterialChanged(string? value)
     {
         SetState(() =>
         {
-            _groupValue = value;
-            _changes += 1;
+            _materialGroupValue = value;
+            _materialChanges += 1;
         });
+    }
+
+    private void OnAdaptiveChanged(string? value)
+    {
+        SetState(() =>
+        {
+            _adaptiveGroupValue = value;
+            _adaptiveChanges += 1;
+        });
+    }
+
+    private static string FormatPlatform(TargetPlatform platform)
+    {
+        return platform switch
+        {
+            TargetPlatform.IOS => "iOS",
+            TargetPlatform.MacOS => "macOS",
+            TargetPlatform.Android => "Android",
+            TargetPlatform.Fuchsia => "Fuchsia",
+            TargetPlatform.Linux => "Linux",
+            TargetPlatform.Windows => "Windows",
+            _ => "Unknown",
+        };
     }
 
     private static string FormatValue(string? value)

@@ -17,6 +17,30 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 - Documentation policy update: Dart-to-C# control/widget work now uses mandatory parity-first porting mode (`docs/ai/PORTING_MODE.md`) with strict `1:1` default behavior, required divergence logging, and explicit parity-validation workflow references in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/INVARIANTS.md`, `docs/ai/MODULE_INDEX.md`, `docs/ai/FEATURE_TEMPLATE.md`, `docs/ai/TEST_MATRIX.md`, and `docs/ai/PARITY_MATRIX.md`.
 - Agent workflow scope update: parity tasks now default to `one request = one control closed end-to-end` (not micro-iterations), with expanded context-budget guidance for control work (`12-20` initial files, up to `20`) and aligned rules in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/PORTING_MODE.md`, `docs/ai/MODULE_INDEX.md`, and `docs/ai/FEATURE_TEMPLATE.md`.
 
+## [2026-04-05] - M4 Radio adaptive Cupertino parity close-out
+
+### Changed
+
+- Closed the documented adaptive-radio gap by adding `Radio<T>.Adaptive(...)` in `src/Flutter.Material/Radio.cs` with Flutter-like platform split (`ThemeData.Platform`: `iOS`/`macOS` -> Cupertino path; others -> existing Material path).
+- Added framework `CupertinoRadio<T>` in `src/Flutter.Cupertino/CupertinoRadio.cs` with Cupertino-like defaults and interactions for current framework scope:
+  - `18x18` visual geometry,
+  - brightness-aware outer/inner/border color defaults,
+  - dark-mode gradient fill branch,
+  - pressed and focus visuals,
+  - keyboard activation and `toggleable` selected->null behavior.
+- Added adaptive API parity surface in `Radio<T>` for Cupertino checkmark mode (`useCupertinoCheckmarkStyle`) and wired it to adaptive Cupertino indicator rendering.
+- Expanded `src/Flutter.Tests/MaterialRadioTests.cs` with focused adaptive coverage:
+  - iOS adaptive default visuals,
+  - adaptive `fillColor` ignore behavior,
+  - checkmark-style indicator branch,
+  - macOS adaptive visual width (`18x18`).
+- Extended C#/Dart sample parity runtime probe in `RadioDemoPage`:
+  - added adaptive-platform toggle cycle (`iOS`/`macOS`/`Android`) and adaptive checkmark-style toggle in both sample implementations;
+  - added dedicated adaptive probe rows (`Radio.adaptive`) to validate Cupertino path behavior and platform fallback behavior at runtime without route-structure changes.
+- Updated tracking artifacts for this close-out step (`docs/ai/material-2026-04-05-radio-adaptive-cupertino-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`, `docs/ai/PARITY_MATRIX.md`).
+- Remaining documented divergence:
+  - deeper Cupertino radio fidelity items are still out of current framework scope (`haptics`, accessibility labels, advanced motion nuances).
+
 ## [2026-04-05] - M4 Radio parity baseline
 
 ### Changed

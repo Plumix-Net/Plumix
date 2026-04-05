@@ -383,7 +383,12 @@ Progress update (2026-03-19):
   - added dedicated radio theming surface (`RadioThemeData`, inherited `RadioTheme`, and `ThemeData.RadioTheme`) with Flutter-like precedence (`widget -> radioTheme -> defaults`) for fill/overlay/background/side/tap-target/splash/inner-radius values;
   - added focused `MaterialRadioTests` coverage for M3 selected/unselected/disabled defaults, widget/theme precedence, toggleable null transition, keyboard activation, and tap-target behavior (`padded` vs `shrinkWrap`);
   - added C#/Dart sample parity demo route/page for runtime verification (`Radio` route in both sample menus);
-  - remaining divergence: `Radio.adaptive` Cupertino path is not yet implemented in framework scope.
+- Closed adaptive radio platform divergence for Cupertino targets:
+  - added framework `CupertinoRadio<T>` in `src/Flutter.Cupertino/CupertinoRadio.cs` with Cupertino-like visual defaults (`18x18` body, platform brightness-aware outer/inner/border colors, dark-mode gradient branch, and pressed/focus overlays) plus keyboard/toggleable interactions;
+  - added `Radio<T>.Adaptive(...)` in `src/Flutter.Material/Radio.cs` with Flutter-like platform split (`ThemeData.Platform` iOS/macOS -> `CupertinoRadio`, other targets -> Material path), and `useCupertinoCheckmarkStyle` API wiring for Cupertino checkmark indicator mode;
+  - expanded `MaterialRadioTests` with focused adaptive coverage (iOS defaults, adaptive `fillColor` ignore behavior, checkmark-style indicator path, and macOS visual-geometry check);
+  - expanded C#/Dart sample `Radio` runtime probe with adaptive platform/style controls (`iOS`/`macOS`/`Android` cycle + checkmark toggle) and dedicated `Radio.adaptive` probe rows for live verification of Cupertino path and non-Cupertino fallback behavior;
+  - remaining divergence: deeper Cupertino fidelity items for radio (haptics/accessibility labels/advanced motion nuances) remain out of current framework scope.
 
 Initial scope:
 

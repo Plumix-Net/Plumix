@@ -305,6 +305,120 @@ public sealed class MaterialRadioTests
         Assert.False(harness.RenderView.HitTest(hitResult, new Point(60, 46)));
     }
 
+    [Fact]
+    public void Radio_AdaptiveIOS_Selected_UsesCupertinoDefaults()
+    {
+        var owner = new BuildOwner();
+        var theme = ThemeData.Light with
+        {
+            Platform = TargetPlatform.IOS,
+            PrimaryColor = Colors.Coral
+        };
+
+        var root = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: Radio<string>.Adaptive(
+                    value: "first",
+                    groupValue: "first",
+                    onChanged: _ => { })));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
+        var outer = FindOuterDecoration(renderRoot);
+        var dot = FindInnerDotDecoration(renderRoot);
+
+        Assert.NotNull(outer);
+        Assert.NotNull(dot);
+        Assert.Equal(Color.FromArgb(255, 0, 122, 255), outer!.Decoration.Color);
+        Assert.True(outer.Decoration.Border.HasValue);
+        Assert.Equal(0, outer.Decoration.Border!.Value.Width);
+        Assert.Equal(Colors.Transparent, outer.Decoration.Border.Value.Color);
+        Assert.Equal(Colors.White, dot!.Decoration.Color);
+    }
+
+    [Fact]
+    public void Radio_AdaptiveIOS_FillColorParameter_IsIgnored()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    Platform = TargetPlatform.IOS
+                },
+                child: Radio<string>.Adaptive(
+                    value: "first",
+                    groupValue: "first",
+                    onChanged: _ => { },
+                    activeColor: Colors.Orange,
+                    fillColor: MaterialStateProperty<Color?>.All(Colors.MediumPurple))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
+        var outer = FindOuterDecoration(renderRoot);
+        var dot = FindInnerDotDecoration(renderRoot);
+
+        Assert.NotNull(outer);
+        Assert.NotNull(dot);
+        Assert.Equal(Colors.Orange, outer!.Decoration.Color);
+        Assert.Equal(Colors.White, dot!.Decoration.Color);
+    }
+
+    [Fact]
+    public void Radio_AdaptiveIOS_UseCheckmarkStyle_RendersStrokeGlyph()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    Platform = TargetPlatform.IOS
+                },
+                child: Radio<string>.Adaptive(
+                    value: "first",
+                    groupValue: "first",
+                    useCupertinoCheckmarkStyle: true,
+                    onChanged: _ => { })));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
+        var glyph = FindDescendants<RenderStrokeGlyph>(renderRoot).FirstOrDefault();
+        var dot = FindInnerDotDecoration(renderRoot);
+
+        Assert.NotNull(glyph);
+        Assert.Null(dot);
+    }
+
+    [Fact]
+    public void Radio_AdaptiveMacOS_UsesCupertinoVisualWidth()
+    {
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    Platform = TargetPlatform.MacOS
+                },
+                child: Radio<string>.Adaptive(
+                    value: "first",
+                    groupValue: "second",
+                    onChanged: _ => { })));
+
+        harness.Pump(new Size(220, 120));
+
+        var radioBody = FindDecoratedBoxBySize(harness.RenderView, width: 18, height: 18, tolerance: 0.02);
+        Assert.NotNull(radioBody);
+    }
+
     private static T RequireRenderObject<T>(Element? element) where T : RenderObject
     {
         Assert.NotNull(element);
