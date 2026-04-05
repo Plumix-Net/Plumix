@@ -1658,18 +1658,21 @@ public sealed class RenderInkSplash : RenderProxyBox
     private Color? _splashColor;
     private Point _splashOrigin;
     private double _splashProgress;
+    private double? _splashRadius;
     private bool _clipToBounds = true;
 
     public RenderInkSplash(
         Color? splashColor = null,
         Point splashOrigin = default,
         double splashProgress = 0,
+        double? splashRadius = null,
         bool clipToBounds = true,
         RenderBox? child = null)
     {
         _splashColor = splashColor;
         _splashOrigin = splashOrigin;
         _splashProgress = NormalizeProgress(splashProgress);
+        _splashRadius = NormalizeRadius(splashRadius);
         _clipToBounds = clipToBounds;
         Child = child;
     }
@@ -1720,6 +1723,22 @@ public sealed class RenderInkSplash : RenderProxyBox
         }
     }
 
+    public double? SplashRadius
+    {
+        get => _splashRadius;
+        set
+        {
+            var normalized = NormalizeRadius(value);
+            if (_splashRadius == normalized)
+            {
+                return;
+            }
+
+            _splashRadius = normalized;
+            MarkNeedsPaint();
+        }
+    }
+
     public bool ClipToBounds
     {
         get => _clipToBounds;
@@ -1761,7 +1780,10 @@ public sealed class RenderInkSplash : RenderProxyBox
 
         var resolvedOrigin = ResolveOrigin(Size, _splashOrigin);
         var localMaxRadius = Math.Sqrt((Size.Width * Size.Width) + (Size.Height * Size.Height));
-        var radius = localMaxRadius * _splashProgress;
+        var constrainedMaxRadius = _splashRadius.HasValue
+            ? Math.Min(localMaxRadius, _splashRadius.Value)
+            : localMaxRadius;
+        var radius = constrainedMaxRadius * _splashProgress;
 
         var brush = new SolidColorBrush(_splashColor.Value);
         ctx.DrawCircle(brush, pen: null, center: offset + resolvedOrigin, radius: radius);
@@ -1775,6 +1797,22 @@ public sealed class RenderInkSplash : RenderProxyBox
         }
 
         return Math.Clamp(value, 0, 1);
+    }
+
+    private static double? NormalizeRadius(double? value)
+    {
+        if (!value.HasValue)
+        {
+            return null;
+        }
+
+        var resolved = value.Value;
+        if (double.IsNaN(resolved) || double.IsInfinity(resolved) || resolved <= 0)
+        {
+            return null;
+        }
+
+        return resolved;
     }
 
     private static Point ResolveOrigin(Size size, Point origin)

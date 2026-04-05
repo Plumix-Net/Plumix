@@ -17,6 +17,32 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 - Documentation policy update: Dart-to-C# control/widget work now uses mandatory parity-first porting mode (`docs/ai/PORTING_MODE.md`) with strict `1:1` default behavior, required divergence logging, and explicit parity-validation workflow references in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/INVARIANTS.md`, `docs/ai/MODULE_INDEX.md`, `docs/ai/FEATURE_TEMPLATE.md`, `docs/ai/TEST_MATRIX.md`, and `docs/ai/PARITY_MATRIX.md`.
 - Agent workflow scope update: parity tasks now default to `one request = one control closed end-to-end` (not micro-iterations), with expanded context-budget guidance for control work (`12-20` initial files, up to `20`) and aligned rules in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/PORTING_MODE.md`, `docs/ai/MODULE_INDEX.md`, and `docs/ai/FEATURE_TEMPLATE.md`.
 
+## [2026-04-05] - M4 Checkbox parity close-out (theme + animation)
+
+### Changed
+
+- Expanded framework Material `Checkbox` (`src/Flutter.Material/Checkbox.cs`) from baseline parity to close-out scope:
+  - converted control to stateful transition model with animated indicator state changes across `false/true/null` values (check/dash crossfade),
+  - added API surface and behavior for `Checkbox.Adaptive(...)`, `isError`, `splashRadius`, and `semanticLabel` field support,
+  - added Flutter-like resolution order for checkbox visuals and interaction tokens (`widget -> checkboxTheme -> defaults`) including fill/check/overlay/side/shape/tap-target/splash-radius.
+- Added dedicated checkbox theme primitives:
+  - new `CheckboxThemeData` and inherited `CheckboxTheme` (`src/Flutter.Material/CheckboxTheme.cs`),
+  - new `ThemeData.CheckboxTheme` integration in `src/Flutter.Material/ThemeData.cs`.
+- Extended Material state/theme tokens for checkbox parity:
+  - added `MaterialState.Error` in `src/Flutter.Material/ButtonStyle.cs`,
+  - added `ThemeData.ErrorColor` / `ThemeData.OnErrorColor` defaults for M3 checkbox error-state visuals.
+- Extended shared ink/ripple plumbing to support checkbox splash-radius parity:
+  - added optional splash-radius support to `InkSplash` / `RenderInkSplash` (`src/Flutter/Widgets/Basic.cs`, `src/Flutter/Rendering/Proxy.RenderBox.cs`),
+  - threaded optional `splashRadius` through `MaterialButtonCore` (`src/Flutter.Material/Buttons.cs`).
+- Expanded checkbox regression coverage (`src/Flutter.Tests/MaterialCheckboxTests.cs`) with:
+  - checkbox-theme precedence and widget-over-theme override checks,
+  - M3 error-state visual token checks,
+  - adaptive constructor guard check,
+  - splash-radius propagation to `RenderInkSplash`,
+  - indicator transition animation behavior check.
+- Remaining documented divergence:
+  - adaptive checkbox currently renders through Material path on iOS/macOS because Cupertino checkbox primitives are not yet implemented in framework scope.
+
 ## [2026-04-05] - M4 Checkbox parity baseline
 
 ### Changed

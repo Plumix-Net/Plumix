@@ -351,7 +351,12 @@ Progress update (2026-03-19):
   - added `Icons.Check` constant in Material icon set for checkbox check-indicator rendering;
   - added focused `MaterialCheckboxTests` coverage for constructor guards, state visuals, check/dash indicator paths, tap-target behavior (`padded` vs `shrinkWrap`), and keyboard-driven toggle/tristate transitions;
   - added C#/Dart sample parity demo route/page for runtime verification (`Checkbox` route in both sample menus);
-  - documented current parity deltas for follow-up: no custom toggleable stroke animation (`_CheckboxPainter` equivalent) and no dedicated `CheckboxThemeData`/adaptive constructor surface yet.
+- Completed checkbox parity close-out pass in `Flutter.Material`:
+  - added dedicated checkbox theming surface (`CheckboxThemeData`, inherited `CheckboxTheme`, and `ThemeData.CheckboxTheme`) with Flutter-like precedence (`widget -> checkboxTheme -> defaults`) for fill/check/overlay/side/shape/tap-target/splash-radius values;
+  - expanded checkbox API and defaults with `Checkbox.Adaptive(...)`, `isError`, `splashRadius`, mode-aware error token handling (`ErrorColor`/`OnErrorColor`), and animated indicator transitions for value changes (`false/true/null`);
+  - extended framework ink-splash primitives (`InkSplash` / `RenderInkSplash` / `MaterialButtonCore`) with optional splash-radius propagation used by checkbox parity behavior;
+  - expanded `MaterialCheckboxTests` coverage for checkbox-theme precedence, error-state visuals, adaptive-constructor guards, splash-radius propagation, and transition animation behavior.
+  - remaining divergence: adaptive checkbox currently follows Material rendering path on iOS/macOS because Cupertino checkbox primitives are not yet implemented in framework scope.
 
 Initial scope:
 

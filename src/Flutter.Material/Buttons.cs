@@ -1588,6 +1588,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
         Action<bool>? onHoverChanged = null,
         FocusNode? focusNode = null,
         bool isSelected = false,
+        double? splashRadius = null,
         bool autofocus = false,
         Key? key = null) : base(key)
     {
@@ -1598,6 +1599,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
         OnHoverChanged = onHoverChanged;
         FocusNode = focusNode;
         IsSelected = isSelected;
+        SplashRadius = splashRadius;
         Autofocus = autofocus;
     }
 
@@ -1614,6 +1616,8 @@ internal sealed class MaterialButtonCore : StatefulWidget
     public FocusNode? FocusNode { get; }
 
     public bool IsSelected { get; }
+
+    public double? SplashRadius { get; }
 
     public bool Autofocus { get; }
 
@@ -2109,6 +2113,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
                 splashColor: splashColor,
                 splashOrigin: _splashOrigin,
                 splashProgress: _splashProgress,
+                splashRadius: widget.SplashRadius,
                 clipToBounds: false,
                 child: content);
 

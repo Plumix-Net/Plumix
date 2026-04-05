@@ -329,12 +329,14 @@ public sealed class InkSplash : SingleChildRenderObjectWidget
         Color? splashColor = null,
         Point splashOrigin = default,
         double splashProgress = 0,
+        double? splashRadius = null,
         bool clipToBounds = true,
         Key? key = null) : base(child, key)
     {
         SplashColor = splashColor;
         SplashOrigin = splashOrigin;
         SplashProgress = splashProgress;
+        SplashRadius = splashRadius;
         ClipToBounds = clipToBounds;
     }
 
@@ -344,6 +346,8 @@ public sealed class InkSplash : SingleChildRenderObjectWidget
 
     public double SplashProgress { get; }
 
+    public double? SplashRadius { get; }
+
     public bool ClipToBounds { get; }
 
     internal override RenderObject CreateRenderObject(BuildContext context)
@@ -352,6 +356,7 @@ public sealed class InkSplash : SingleChildRenderObjectWidget
             splashColor: SplashColor,
             splashOrigin: SplashOrigin,
             splashProgress: SplashProgress,
+            splashRadius: SplashRadius,
             clipToBounds: ClipToBounds);
     }
 
@@ -361,6 +366,7 @@ public sealed class InkSplash : SingleChildRenderObjectWidget
         inkSplash.SplashColor = SplashColor;
         inkSplash.SplashOrigin = SplashOrigin;
         inkSplash.SplashProgress = SplashProgress;
+        inkSplash.SplashRadius = SplashRadius;
         inkSplash.ClipToBounds = ClipToBounds;
     }
 }
