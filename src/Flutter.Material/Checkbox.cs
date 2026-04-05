@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Media;
 using Flutter;
+using Flutter.Cupertino;
 using Flutter.Foundation;
 using Flutter.Rendering;
 using Flutter.Widgets;
@@ -237,11 +238,26 @@ public sealed class Checkbox : StatefulWidget
         {
             var theme = Theme.Of(context);
             var checkboxTheme = CheckboxTheme.Of(context);
-            var isAdaptive = CurrentWidget._checkboxType == CheckboxType.Adaptive;
-
-            // Cupertino control primitives are not in framework scope yet; adaptive
-            // currently follows the Material path on every platform.
-            _ = isAdaptive;
+            if (IsAdaptiveCupertino(theme))
+            {
+                var adaptiveTapTargetSize = theme.Platform == TargetPlatform.MacOS
+                    ? new Size(CupertinoCheckbox.Width, CupertinoCheckbox.Width)
+                    : new Size(44, 44);
+                return new CupertinoCheckbox(
+                    value: CurrentWidget.Value,
+                    tristate: CurrentWidget.Tristate,
+                    onChanged: CurrentWidget.OnChanged,
+                    activeColor: CurrentWidget.ActiveColor,
+                    checkColor: CurrentWidget.CheckColor,
+                    focusColor: CurrentWidget.FocusColor,
+                    focusNode: CurrentWidget.FocusNode,
+                    autofocus: CurrentWidget.Autofocus,
+                    side: CurrentWidget.Side,
+                    shape: CurrentWidget.Shape,
+                    tapTargetSize: adaptiveTapTargetSize,
+                    isDark: theme.Brightness == Brightness.Dark,
+                    semanticLabel: CurrentWidget.SemanticLabel);
+            }
 
             var enabled = CurrentWidget.OnChanged is not null;
             var isSelected = IsSelected(CurrentWidget.Value);
@@ -700,6 +716,16 @@ public sealed class Checkbox : StatefulWidget
             return new BorderSide(
                 MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.60),
                 2);
+        }
+
+        private bool IsAdaptiveCupertino(ThemeData theme)
+        {
+            if (CurrentWidget._checkboxType != CheckboxType.Adaptive)
+            {
+                return false;
+            }
+
+            return theme.Platform is TargetPlatform.IOS or TargetPlatform.MacOS;
         }
 
         private static MaterialState BuildStates(bool enabled, bool selected, bool isError)

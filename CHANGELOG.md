@@ -34,6 +34,24 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 - Remaining documented divergence:
   - adaptive switch now has Cupertino-like defaults in framework scope, but still uses shared `MaterialButtonCore` composition (no dedicated Cupertino painter/drag-threshold choreography yet).
 
+## [2026-04-05] - M4 Checkbox adaptive Cupertino parity hardening
+
+### Changed
+
+- Hardened `Checkbox.Adaptive(...)` parity on Cupertino targets in `src/Flutter.Material/Checkbox.cs`:
+  - added a dedicated `src/Flutter.Cupertino` project and framework `CupertinoCheckbox` control (`src/Flutter.Cupertino/CupertinoCheckbox.cs`);
+  - adaptive path now branches by `ThemeData.Platform` (`IOS`/`MacOS`) and delegates to `CupertinoCheckbox` instead of following Material defaults/composition;
+  - adaptive iOS/macOS now uses Cupertino-like checkbox defaults for visual geometry and tokens (body size `14x14`, Cupertino-like fill/check/border defaults, and mode-aware dark-path token handling);
+  - Flutter-documented adaptive exclusions are now honored in framework scope for Cupertino targets (`fillColor`, `overlayColor`, `hoverColor`, `materialTapTargetSize`, `splashRadius`, and `isError` are ignored);
+  - adaptive tap-target policy now follows platform split in framework scope (`IOS` uses `44x44`; `MacOS` uses `14x14`).
+- Expanded checkbox regression coverage in `src/Flutter.Tests/MaterialCheckboxTests.cs` for:
+  - adaptive iOS default token behavior,
+  - adaptive iOS ignored-parameter behavior (`fillColor`, `materialTapTargetSize`),
+  - adaptive macOS shrink-wrap hit-target behavior and `14x14` visual geometry.
+- Updated project graph and iteration tracking artifacts for this parity-hardening pass (`src/Flutter.Net.sln`, `src/Flutter.Material/Flutter.Material.csproj`, `src/Flutter.Tests/Flutter.Tests.csproj`, `docs/ai/material-2026-04-05-checkbox-adaptive-cupertino-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
+- Remaining documented divergence:
+  - adaptive checkbox now uses a dedicated Cupertino widget path, but painter-level fidelity is still simplified versus Flutter’s native Cupertino painter (no dark-mode gradient fill and no exact vector check/dash stroke geometry yet).
+
 ## [2026-04-05] - M4 Switch parity baseline
 
 ### Changed

@@ -1,3 +1,4 @@
+using System.Linq;
 using Avalonia;
 using Avalonia.Media;
 using Flutter;
@@ -463,6 +464,125 @@ public sealed class MaterialCheckboxTests
     }
 
     [Fact]
+    public void Checkbox_AdaptiveIOS_Checked_UsesCupertinoDefaults()
+    {
+        var owner = new BuildOwner();
+        var theme = ThemeData.Light with
+        {
+            Platform = TargetPlatform.IOS,
+            PrimaryColor = Colors.Coral
+        };
+
+        var root = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: Checkbox.Adaptive(
+                    value: true,
+                    onChanged: _ => { })));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(decorated);
+        Assert.Equal(Color.FromArgb(255, 0, 122, 255), decorated!.Decoration.Color);
+        Assert.True(decorated.Decoration.Border.HasValue);
+        Assert.Equal(0, decorated.Decoration.Border!.Value.Width);
+        Assert.Equal(Colors.Transparent, decorated.Decoration.Border.Value.Color);
+    }
+
+    [Fact]
+    public void Checkbox_AdaptiveIOS_FillColorParameter_IsIgnored()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    Platform = TargetPlatform.IOS
+                },
+                child: Checkbox.Adaptive(
+                    value: true,
+                    activeColor: Colors.Orange,
+                    fillColor: MaterialStateProperty<Color?>.All(Colors.MediumPurple),
+                    onChanged: _ => { })));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(decorated);
+        Assert.Equal(Colors.Orange, decorated!.Decoration.Color);
+    }
+
+    [Fact]
+    public void Checkbox_AdaptiveIOS_MaterialTapTargetSizeParameter_IsIgnored_AndUsesCupertinoTapTarget()
+    {
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    Platform = TargetPlatform.IOS
+                },
+                child: new SizedBox(
+                    width: 120,
+                    child: Checkbox.Adaptive(
+                        value: false,
+                        materialTapTargetSize: MaterialTapTargetSize.ShrinkWrap,
+                        onChanged: _ => { }))));
+
+        harness.Pump(new Size(220, 120));
+
+        var hitInsideCupertinoTarget = new BoxHitTestResult();
+        Assert.True(harness.RenderView.HitTest(hitInsideCupertinoTarget, new Point(60, 30)));
+
+        var hitOutsideCupertinoTarget = new BoxHitTestResult();
+        Assert.False(harness.RenderView.HitTest(hitOutsideCupertinoTarget, new Point(60, 46)));
+    }
+
+    [Fact]
+    public void Checkbox_AdaptiveMacOS_DefaultTapTarget_DoesNotExpandHitArea()
+    {
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    Platform = TargetPlatform.MacOS
+                },
+                child: new SizedBox(
+                    width: 120,
+                    child: Checkbox.Adaptive(
+                        value: false,
+                        onChanged: _ => { }))));
+
+        harness.Pump(new Size(220, 120));
+
+        var hitResult = new BoxHitTestResult();
+        Assert.False(harness.RenderView.HitTest(hitResult, new Point(60, 46)));
+    }
+
+    [Fact]
+    public void Checkbox_AdaptiveMacOS_UsesCupertinoVisualWidth()
+    {
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    Platform = TargetPlatform.MacOS
+                },
+                child: Checkbox.Adaptive(
+                    value: false,
+                    onChanged: _ => { })));
+
+        harness.Pump(new Size(220, 120));
+
+        var checkboxBody = FindDecoratedBoxBySize(harness.RenderView, width: 14, height: 14, tolerance: 0.02);
+        Assert.NotNull(checkboxBody);
+    }
+
+    [Fact]
     public void Checkbox_ThemeSplashRadius_PropagatesToInkSplash()
     {
         var owner = new BuildOwner();
@@ -555,6 +675,40 @@ public sealed class MaterialCheckboxTests
         });
 
         return result;
+    }
+
+    private static RenderDecoratedBox? FindDecoratedBoxBySize(
+        RenderObject root,
+        double width,
+        double height,
+        double tolerance = 0.01)
+    {
+        return FindDescendants<RenderDecoratedBox>(root)
+            .FirstOrDefault(box =>
+                Math.Abs(box.Size.Width - width) <= tolerance
+                && Math.Abs(box.Size.Height - height) <= tolerance);
+    }
+
+    private static List<T> FindDescendants<T>(RenderObject? root) where T : RenderObject
+    {
+        var results = new List<T>();
+        CollectDescendants(root, results);
+        return results;
+    }
+
+    private static void CollectDescendants<T>(RenderObject? root, List<T> results) where T : RenderObject
+    {
+        if (root is null)
+        {
+            return;
+        }
+
+        if (root is T typed)
+        {
+            results.Add(typed);
+        }
+
+        root.VisitChildren(child => CollectDescendants(child, results));
     }
 
     private static RenderPointerListener? FindFocusPointerListener(RenderObject? root)

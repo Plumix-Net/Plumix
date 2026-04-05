@@ -14,6 +14,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../Flutter/Flutter.csproj" />
+    <ProjectReference Include="../Flutter.Cupertino/Flutter.Cupertino.csproj" />
     <ProjectReference Include="../Flutter.Material/Flutter.Material.csproj" />
     <ProjectReference Include="../Sample/Flutter.Net/Flutter.Net.csproj" />
   </ItemGroup>
