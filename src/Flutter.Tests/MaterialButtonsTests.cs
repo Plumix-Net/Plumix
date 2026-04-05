@@ -508,6 +508,48 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
+    public void FilledButton_DefaultPadding_UseMaterial3Disabled_UsesHorizontal16AndZeroVertical()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with { UseMaterial3 = false },
+                child: new FilledButton(
+                    onPressed: () => { },
+                    child: new Text("Padding"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(16, 0), padding!.Padding);
+    }
+
+    [Fact]
+    public void FilledButtonTonal_DefaultPadding_UseMaterial3Disabled_UsesHorizontal16AndZeroVertical()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with { UseMaterial3 = false },
+                child: FilledButton.Tonal(
+                    onPressed: () => { },
+                    child: new Text("Padding"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(16, 0), padding!.Padding);
+    }
+
+    [Fact]
     public void TextButton_DefaultTextStyle_UsesLabelLargeTypography()
     {
         var owner = new BuildOwner();
@@ -769,6 +811,44 @@ public sealed class MaterialButtonsTests
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
         Assert.False(decorated!.Decoration.BoxShadows.HasValue);
+    }
+
+    [Fact]
+    public void FilledButton_DefaultElevation_Hovered_UsesOneAndDefaultUsesZero()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new FilledButton(
+                    onPressed: () => { },
+                    child: new Text("Filled elevation"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
+        var defaultDecorated = FindDescendant<RenderDecoratedBox>(renderRoot);
+        Assert.NotNull(defaultDecorated);
+        Assert.False(defaultDecorated!.Decoration.BoxShadows.HasValue);
+
+        var hoverListener = FindHoverPointerListener(renderRoot);
+        Assert.NotNull(hoverListener);
+        hoverListener!.HandleEvent(
+            new PointerEnterEvent(
+                pointer: 104,
+                kind: PointerDeviceKind.Mouse,
+                position: new Point(10, 8),
+                buttons: PointerButtons.None,
+                timestampUtc: DateTime.UtcNow),
+            new BoxHitTestEntry(hoverListener, new Point(10, 8)));
+        owner.FlushBuild();
+
+        var hoveredDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(hoveredDecorated);
+        var hoveredShadow = RequirePrimaryShadow(hoveredDecorated!);
+        Assert.Equal(1, hoveredShadow.OffsetY);
     }
 
     [Fact]

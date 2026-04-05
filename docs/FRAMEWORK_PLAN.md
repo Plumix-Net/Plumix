@@ -300,6 +300,10 @@ Progress update (2026-03-19):
   - default overlay resolver now supports configurable pressed/focused alpha and keeps existing hover alpha behavior (`0.08`).
   - `TextButton`/`ElevatedButton`/`OutlinedButton` default styles now use M2 pressed/focused overlay alpha `0.12` when `UseMaterial3=false`, while keeping M3/default `0.10`.
   - Added focused `MaterialButtonsTests` coverage for M2 focused/pressed overlay behavior across text/elevated/outlined defaults (including elevated `onPrimary` overlay blending over primary background).
+- Continued filled-button default parity hardening:
+  - `FilledButton`/`FilledButton.Tonal` default horizontal padding now follows Flutter scaling baseline by material mode (`UseMaterial3=true` -> `24`, `UseMaterial3=false` -> `16`).
+  - `FilledButton` defaults now include Flutter-like hovered elevation progression (`default=0`, `hovered=1`) while keeping non-hover states at `0`.
+  - Added focused `MaterialButtonsTests` coverage for filled/tonal M2 default padding and filled hovered-elevation behavior.
 
 Initial scope:
 

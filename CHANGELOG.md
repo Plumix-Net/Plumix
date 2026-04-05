@@ -16,6 +16,21 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 - Documentation policy update: Dart-to-C# control/widget work now uses mandatory parity-first porting mode (`docs/ai/PORTING_MODE.md`) with strict `1:1` default behavior, required divergence logging, and explicit parity-validation workflow references in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/INVARIANTS.md`, `docs/ai/MODULE_INDEX.md`, `docs/ai/FEATURE_TEMPLATE.md`, `docs/ai/TEST_MATRIX.md`, and `docs/ai/PARITY_MATRIX.md`.
 
+## [2026-04-05] - M4 filled-button default padding/elevation parity hardening
+
+### Changed
+
+- Aligned `FilledButton` and `FilledButton.Tonal` default horizontal padding with Flutter mode-aware scaling:
+  - `UseMaterial3=true` keeps `horizontal: 24`,
+  - `UseMaterial3=false` now resolves to `horizontal: 16`
+  (`src/Flutter.Material/Buttons.cs`).
+- Aligned `FilledButton` default elevation progression with Flutter defaults by adding hovered elevation state (`default=0`, `hovered=1`) while keeping non-hover states at `0` (`src/Flutter.Material/Buttons.cs`).
+- Added focused `MaterialButtonsTests` coverage for:
+  - M2 default padding on filled and tonal variants,
+  - default filled hovered-elevation behavior (shadow appears only on hover)
+  (`src/Flutter.Tests/MaterialButtonsTests.cs`).
+- Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-04-05-filled-button-default-padding-elevation-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
+
 ## [2026-04-05] - M4 button M2 overlay-opacity default parity hardening
 
 ### Changed

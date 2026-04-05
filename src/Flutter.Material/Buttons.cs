@@ -700,12 +700,14 @@ public sealed class FilledButton : StatelessWidget
         double minHeight,
         bool isTonal)
     {
+        var useMaterial3 = theme.UseMaterial3;
         var enabledForeground = isTonal
             ? theme.OnSecondaryContainerColor
             : theme.OnPrimaryColor;
         var enabledBackground = isTonal
             ? theme.SecondaryContainerColor
             : theme.PrimaryColor;
+        var defaultPadding = useMaterial3 ? new Thickness(24, 0) : new Thickness(16, 0);
 
         return new ButtonStyle(
             ForegroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
@@ -716,6 +718,8 @@ public sealed class FilledButton : StatelessWidget
                 states.HasFlag(MaterialState.Disabled)
                     ? MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.12)
                     : enabledBackground),
+            ShadowColor: MaterialStateProperty<Color?>.All(theme.ShadowColor),
+            SurfaceTintColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
             OverlayColor: MaterialButtonCore.CreateDefaultOverlayResolver(enabledForeground),
             SplashColor: null,
             IconColor: MaterialStateProperty<Color?>.ResolveWith(states =>
@@ -723,8 +727,12 @@ public sealed class FilledButton : StatelessWidget
                     ? MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.38)
                     : enabledForeground),
             IconSize: MaterialStateProperty<double?>.All(18),
+            Elevation: MaterialStateProperty<double?>.ResolveWith(states =>
+                states.HasFlag(MaterialState.Hovered)
+                    ? 1
+                    : 0),
             Side: MaterialStateProperty<BorderSide?>.All(null),
-            Padding: MaterialStateProperty<Thickness?>.All(new Thickness(24, 0)),
+            Padding: MaterialStateProperty<Thickness?>.All(defaultPadding),
             Shape: MaterialStateProperty<BorderRadius?>.All(Flutter.Rendering.BorderRadius.Circular(20)),
             MinimumSize: MaterialStateProperty<Size?>.All(new Size(minWidth, minHeight)),
             TapTargetSize: theme.MaterialTapTargetSize,
