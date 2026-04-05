@@ -24,7 +24,37 @@ public sealed class TextButton : StatelessWidget
         ButtonStyle? style = null,
         FocusNode? focusNode = null,
         bool autofocus = false,
-        Key? key = null) : base(key)
+        Key? key = null) : this(
+            child: child,
+            onPressed: onPressed,
+            foregroundColor: foregroundColor,
+            backgroundColor: backgroundColor,
+            padding: padding,
+            borderRadius: borderRadius,
+            minWidth: minWidth,
+            minHeight: minHeight,
+            style: style,
+            focusNode: focusNode,
+            autofocus: autofocus,
+            applyIconFactoryPadding: false,
+            key: key)
+    {
+    }
+
+    private TextButton(
+        Widget child,
+        Action? onPressed,
+        Color? foregroundColor,
+        Color? backgroundColor,
+        Thickness? padding,
+        BorderRadius? borderRadius,
+        double minWidth,
+        double? minHeight,
+        ButtonStyle? style,
+        FocusNode? focusNode,
+        bool autofocus,
+        bool applyIconFactoryPadding,
+        Key? key) : base(key)
     {
         Child = child;
         OnPressed = onPressed;
@@ -38,6 +68,7 @@ public sealed class TextButton : StatelessWidget
         Style = style;
         FocusNode = focusNode;
         Autofocus = autofocus;
+        ApplyIconFactoryPadding = applyIconFactoryPadding;
     }
 
     public Widget Child { get; }
@@ -63,6 +94,39 @@ public sealed class TextButton : StatelessWidget
     public FocusNode? FocusNode { get; }
 
     public bool Autofocus { get; }
+
+    private bool ApplyIconFactoryPadding { get; }
+
+    public static TextButton Icon(
+        Widget label,
+        Action? onPressed,
+        Widget? icon = null,
+        Color? foregroundColor = null,
+        Color? backgroundColor = null,
+        Thickness? padding = null,
+        BorderRadius? borderRadius = null,
+        double minWidth = 64,
+        double? minHeight = null,
+        ButtonStyle? style = null,
+        FocusNode? focusNode = null,
+        bool autofocus = false,
+        Key? key = null)
+    {
+        return new TextButton(
+            child: icon is null ? label : MaterialButtonIconFactory.Create(icon, label),
+            onPressed: onPressed,
+            foregroundColor: foregroundColor,
+            backgroundColor: backgroundColor,
+            padding: padding,
+            borderRadius: borderRadius,
+            minWidth: minWidth,
+            minHeight: minHeight,
+            style: style,
+            focusNode: focusNode,
+            autofocus: autofocus,
+            applyIconFactoryPadding: icon is not null,
+            key: key);
+    }
 
     public static ButtonStyle StyleFrom(
         Color? foregroundColor = null,
@@ -155,7 +219,7 @@ public sealed class TextButton : StatelessWidget
     {
         var theme = Theme.Of(context);
         var mergedStyle = MaterialButtonCore.ComposeStyles(
-            defaults: CreateDefaultStyle(theme, MinWidth, MinHeight, HasExplicitMinHeight),
+            defaults: CreateDefaultStyle(theme, MinWidth, MinHeight, HasExplicitMinHeight, ApplyIconFactoryPadding),
             themeStyle: TextButtonTheme.Of(context).Style,
             widgetStyle: Style,
             legacyOverrides: CreateLegacyStyleOverrides(theme));
@@ -172,13 +236,18 @@ public sealed class TextButton : StatelessWidget
         ThemeData theme,
         double minWidth,
         double minHeight,
-        bool hasExplicitMinHeight)
+        bool hasExplicitMinHeight,
+        bool applyIconFactoryPadding)
     {
         var useMaterial3 = theme.UseMaterial3;
         var stateColor = theme.PrimaryColor;
         var pressedFocusedOverlayOpacity = useMaterial3 ? 0.10 : 0.12;
         var resolvedMinHeight = hasExplicitMinHeight ? minHeight : useMaterial3 ? 40 : 36;
-        var defaultPadding = useMaterial3 ? new Thickness(12, 8) : new Thickness(8);
+        var defaultPadding = useMaterial3
+            ? applyIconFactoryPadding
+                ? new Thickness(12, 8, 16, 8)
+                : new Thickness(12, 8)
+            : new Thickness(8);
         var defaultShape = Flutter.Rendering.BorderRadius.Circular(useMaterial3 ? 20 : 4);
         return new ButtonStyle(
             ForegroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
@@ -253,7 +322,37 @@ public sealed class ElevatedButton : StatelessWidget
         ButtonStyle? style = null,
         FocusNode? focusNode = null,
         bool autofocus = false,
-        Key? key = null) : base(key)
+        Key? key = null) : this(
+            child: child,
+            onPressed: onPressed,
+            foregroundColor: foregroundColor,
+            backgroundColor: backgroundColor,
+            padding: padding,
+            borderRadius: borderRadius,
+            minWidth: minWidth,
+            minHeight: minHeight,
+            style: style,
+            focusNode: focusNode,
+            autofocus: autofocus,
+            applyIconFactoryPadding: false,
+            key: key)
+    {
+    }
+
+    private ElevatedButton(
+        Widget child,
+        Action? onPressed,
+        Color? foregroundColor,
+        Color? backgroundColor,
+        Thickness? padding,
+        BorderRadius? borderRadius,
+        double minWidth,
+        double? minHeight,
+        ButtonStyle? style,
+        FocusNode? focusNode,
+        bool autofocus,
+        bool applyIconFactoryPadding,
+        Key? key) : base(key)
     {
         Child = child;
         OnPressed = onPressed;
@@ -267,6 +366,7 @@ public sealed class ElevatedButton : StatelessWidget
         Style = style;
         FocusNode = focusNode;
         Autofocus = autofocus;
+        ApplyIconFactoryPadding = applyIconFactoryPadding;
     }
 
     public Widget Child { get; }
@@ -292,6 +392,39 @@ public sealed class ElevatedButton : StatelessWidget
     public FocusNode? FocusNode { get; }
 
     public bool Autofocus { get; }
+
+    private bool ApplyIconFactoryPadding { get; }
+
+    public static ElevatedButton Icon(
+        Widget label,
+        Action? onPressed,
+        Widget? icon = null,
+        Color? foregroundColor = null,
+        Color? backgroundColor = null,
+        Thickness? padding = null,
+        BorderRadius? borderRadius = null,
+        double minWidth = 64,
+        double? minHeight = null,
+        ButtonStyle? style = null,
+        FocusNode? focusNode = null,
+        bool autofocus = false,
+        Key? key = null)
+    {
+        return new ElevatedButton(
+            child: icon is null ? label : MaterialButtonIconFactory.Create(icon, label),
+            onPressed: onPressed,
+            foregroundColor: foregroundColor,
+            backgroundColor: backgroundColor,
+            padding: padding,
+            borderRadius: borderRadius,
+            minWidth: minWidth,
+            minHeight: minHeight,
+            style: style,
+            focusNode: focusNode,
+            autofocus: autofocus,
+            applyIconFactoryPadding: icon is not null,
+            key: key);
+    }
 
     public static ButtonStyle StyleFrom(
         Color? foregroundColor = null,
@@ -383,7 +516,7 @@ public sealed class ElevatedButton : StatelessWidget
     {
         var theme = Theme.Of(context);
         var mergedStyle = MaterialButtonCore.ComposeStyles(
-            defaults: CreateDefaultStyle(theme, MinWidth, MinHeight, HasExplicitMinHeight),
+            defaults: CreateDefaultStyle(theme, MinWidth, MinHeight, HasExplicitMinHeight, ApplyIconFactoryPadding),
             themeStyle: ElevatedButtonTheme.Of(context).Style,
             widgetStyle: Style,
             legacyOverrides: CreateLegacyStyleOverrides(theme));
@@ -400,14 +533,21 @@ public sealed class ElevatedButton : StatelessWidget
         ThemeData theme,
         double minWidth,
         double minHeight,
-        bool hasExplicitMinHeight)
+        bool hasExplicitMinHeight,
+        bool applyIconFactoryPadding)
     {
         var useMaterial3 = theme.UseMaterial3;
         var enabledForeground = useMaterial3 ? theme.PrimaryColor : theme.OnPrimaryColor;
         var enabledBackground = useMaterial3 ? theme.SurfaceContainerLowColor : theme.PrimaryColor;
         var pressedFocusedOverlayOpacity = useMaterial3 ? 0.10 : 0.12;
         var resolvedMinHeight = hasExplicitMinHeight ? minHeight : useMaterial3 ? 40 : 36;
-        var defaultPadding = useMaterial3 ? new Thickness(24, 0) : new Thickness(16, 0);
+        var defaultPadding = useMaterial3
+            ? applyIconFactoryPadding
+                ? new Thickness(16, 0, 24, 0)
+                : new Thickness(24, 0)
+            : applyIconFactoryPadding
+                ? new Thickness(12, 0, 16, 0)
+                : new Thickness(16, 0);
         var defaultShape = Flutter.Rendering.BorderRadius.Circular(useMaterial3 ? 20 : 4);
         return new ButtonStyle(
             ForegroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
@@ -502,6 +642,7 @@ public sealed class FilledButton : StatelessWidget
             child: child,
             onPressed: onPressed,
             isTonal: false,
+            applyIconFactoryPadding: false,
             foregroundColor: foregroundColor,
             backgroundColor: backgroundColor,
             padding: padding,
@@ -519,6 +660,7 @@ public sealed class FilledButton : StatelessWidget
         Widget child,
         Action? onPressed,
         bool isTonal,
+        bool applyIconFactoryPadding,
         Color? foregroundColor,
         Color? backgroundColor,
         Thickness? padding,
@@ -533,6 +675,7 @@ public sealed class FilledButton : StatelessWidget
         Child = child;
         OnPressed = onPressed;
         IsTonal = isTonal;
+        ApplyIconFactoryPadding = applyIconFactoryPadding;
         ForegroundColor = foregroundColor;
         BackgroundColor = backgroundColor;
         Padding = padding;
@@ -568,6 +711,8 @@ public sealed class FilledButton : StatelessWidget
 
     public bool Autofocus { get; }
 
+    private bool ApplyIconFactoryPadding { get; }
+
     public static FilledButton Tonal(
         Widget child,
         Action? onPressed,
@@ -586,6 +731,71 @@ public sealed class FilledButton : StatelessWidget
             child: child,
             onPressed: onPressed,
             isTonal: true,
+            applyIconFactoryPadding: false,
+            foregroundColor: foregroundColor,
+            backgroundColor: backgroundColor,
+            padding: padding,
+            borderRadius: borderRadius,
+            minWidth: minWidth,
+            minHeight: minHeight,
+            style: style,
+            focusNode: focusNode,
+            autofocus: autofocus,
+            key: key);
+    }
+
+    public static FilledButton Icon(
+        Widget label,
+        Action? onPressed,
+        Widget? icon = null,
+        Color? foregroundColor = null,
+        Color? backgroundColor = null,
+        Thickness? padding = null,
+        BorderRadius? borderRadius = null,
+        double minWidth = 64,
+        double minHeight = 40,
+        ButtonStyle? style = null,
+        FocusNode? focusNode = null,
+        bool autofocus = false,
+        Key? key = null)
+    {
+        return new FilledButton(
+            child: icon is null ? label : MaterialButtonIconFactory.Create(icon, label),
+            onPressed: onPressed,
+            isTonal: false,
+            applyIconFactoryPadding: icon is not null,
+            foregroundColor: foregroundColor,
+            backgroundColor: backgroundColor,
+            padding: padding,
+            borderRadius: borderRadius,
+            minWidth: minWidth,
+            minHeight: minHeight,
+            style: style,
+            focusNode: focusNode,
+            autofocus: autofocus,
+            key: key);
+    }
+
+    public static FilledButton TonalIcon(
+        Widget label,
+        Action? onPressed,
+        Widget? icon = null,
+        Color? foregroundColor = null,
+        Color? backgroundColor = null,
+        Thickness? padding = null,
+        BorderRadius? borderRadius = null,
+        double minWidth = 64,
+        double minHeight = 40,
+        ButtonStyle? style = null,
+        FocusNode? focusNode = null,
+        bool autofocus = false,
+        Key? key = null)
+    {
+        return new FilledButton(
+            child: icon is null ? label : MaterialButtonIconFactory.Create(icon, label),
+            onPressed: onPressed,
+            isTonal: true,
+            applyIconFactoryPadding: icon is not null,
             foregroundColor: foregroundColor,
             backgroundColor: backgroundColor,
             padding: padding,
@@ -681,7 +891,7 @@ public sealed class FilledButton : StatelessWidget
     {
         var theme = Theme.Of(context);
         var mergedStyle = MaterialButtonCore.ComposeStyles(
-            defaults: CreateDefaultStyle(theme, MinWidth, MinHeight, IsTonal),
+            defaults: CreateDefaultStyle(theme, MinWidth, MinHeight, IsTonal, ApplyIconFactoryPadding),
             themeStyle: FilledButtonTheme.Of(context).Style,
             widgetStyle: Style,
             legacyOverrides: CreateLegacyStyleOverrides(theme));
@@ -698,7 +908,8 @@ public sealed class FilledButton : StatelessWidget
         ThemeData theme,
         double minWidth,
         double minHeight,
-        bool isTonal)
+        bool isTonal,
+        bool applyIconFactoryPadding)
     {
         var useMaterial3 = theme.UseMaterial3;
         var enabledForeground = isTonal
@@ -707,7 +918,13 @@ public sealed class FilledButton : StatelessWidget
         var enabledBackground = isTonal
             ? theme.SecondaryContainerColor
             : theme.PrimaryColor;
-        var defaultPadding = useMaterial3 ? new Thickness(24, 0) : new Thickness(16, 0);
+        var defaultPadding = useMaterial3
+            ? applyIconFactoryPadding
+                ? new Thickness(16, 0, 24, 0)
+                : new Thickness(24, 0)
+            : applyIconFactoryPadding
+                ? new Thickness(12, 0, 16, 0)
+                : new Thickness(16, 0);
 
         return new ButtonStyle(
             ForegroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
@@ -793,7 +1010,41 @@ public sealed class OutlinedButton : StatelessWidget
         ButtonStyle? style = null,
         FocusNode? focusNode = null,
         bool autofocus = false,
-        Key? key = null) : base(key)
+        Key? key = null) : this(
+            child: child,
+            onPressed: onPressed,
+            foregroundColor: foregroundColor,
+            borderColor: borderColor,
+            borderWidth: borderWidth,
+            backgroundColor: backgroundColor,
+            padding: padding,
+            borderRadius: borderRadius,
+            minWidth: minWidth,
+            minHeight: minHeight,
+            style: style,
+            focusNode: focusNode,
+            autofocus: autofocus,
+            applyIconFactoryPadding: false,
+            key: key)
+    {
+    }
+
+    private OutlinedButton(
+        Widget child,
+        Action? onPressed,
+        Color? foregroundColor,
+        Color? borderColor,
+        double borderWidth,
+        Color? backgroundColor,
+        Thickness? padding,
+        BorderRadius? borderRadius,
+        double minWidth,
+        double? minHeight,
+        ButtonStyle? style,
+        FocusNode? focusNode,
+        bool autofocus,
+        bool applyIconFactoryPadding,
+        Key? key) : base(key)
     {
         if (double.IsNaN(borderWidth) || double.IsInfinity(borderWidth) || borderWidth < 0)
         {
@@ -814,6 +1065,7 @@ public sealed class OutlinedButton : StatelessWidget
         Style = style;
         FocusNode = focusNode;
         Autofocus = autofocus;
+        ApplyIconFactoryPadding = applyIconFactoryPadding;
     }
 
     public Widget Child { get; }
@@ -843,6 +1095,43 @@ public sealed class OutlinedButton : StatelessWidget
     public FocusNode? FocusNode { get; }
 
     public bool Autofocus { get; }
+
+    private bool ApplyIconFactoryPadding { get; }
+
+    public static OutlinedButton Icon(
+        Widget label,
+        Action? onPressed,
+        Widget? icon = null,
+        Color? foregroundColor = null,
+        Color? borderColor = null,
+        double borderWidth = 1,
+        Color? backgroundColor = null,
+        Thickness? padding = null,
+        BorderRadius? borderRadius = null,
+        double minWidth = 64,
+        double? minHeight = null,
+        ButtonStyle? style = null,
+        FocusNode? focusNode = null,
+        bool autofocus = false,
+        Key? key = null)
+    {
+        return new OutlinedButton(
+            child: icon is null ? label : MaterialButtonIconFactory.Create(icon, label),
+            onPressed: onPressed,
+            foregroundColor: foregroundColor,
+            borderColor: borderColor,
+            borderWidth: borderWidth,
+            backgroundColor: backgroundColor,
+            padding: padding,
+            borderRadius: borderRadius,
+            minWidth: minWidth,
+            minHeight: minHeight,
+            style: style,
+            focusNode: focusNode,
+            autofocus: autofocus,
+            applyIconFactoryPadding: icon is not null,
+            key: key);
+    }
 
     public static ButtonStyle StyleFrom(
         Color? foregroundColor = null,
@@ -931,7 +1220,7 @@ public sealed class OutlinedButton : StatelessWidget
     {
         var theme = Theme.Of(context);
         var mergedStyle = MaterialButtonCore.ComposeStyles(
-            defaults: CreateDefaultStyle(theme, MinWidth, MinHeight, HasExplicitMinHeight),
+            defaults: CreateDefaultStyle(theme, MinWidth, MinHeight, HasExplicitMinHeight, ApplyIconFactoryPadding),
             themeStyle: OutlinedButtonTheme.Of(context).Style,
             widgetStyle: Style,
             legacyOverrides: CreateLegacyStyleOverrides(theme));
@@ -948,14 +1237,19 @@ public sealed class OutlinedButton : StatelessWidget
         ThemeData theme,
         double minWidth,
         double minHeight,
-        bool hasExplicitMinHeight)
+        bool hasExplicitMinHeight,
+        bool applyIconFactoryPadding)
     {
         var stateColor = theme.PrimaryColor;
         var useMaterial3 = theme.UseMaterial3;
         var m2SideColor = MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.12);
         var pressedFocusedOverlayOpacity = useMaterial3 ? 0.10 : 0.12;
         var resolvedMinHeight = hasExplicitMinHeight ? minHeight : useMaterial3 ? 40 : 36;
-        var defaultPadding = useMaterial3 ? new Thickness(24, 0) : new Thickness(16, 0);
+        var defaultPadding = useMaterial3
+            ? applyIconFactoryPadding
+                ? new Thickness(16, 0, 24, 0)
+                : new Thickness(24, 0)
+            : new Thickness(16, 0);
         var defaultShape = Flutter.Rendering.BorderRadius.Circular(useMaterial3 ? 20 : 4);
         return new ButtonStyle(
             ForegroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
@@ -1027,6 +1321,21 @@ public sealed class OutlinedButton : StatelessWidget
             Shape: BorderRadius.HasValue
                 ? MaterialStateProperty<BorderRadius?>.All(BorderRadius.Value)
                 : null);
+    }
+}
+
+internal static class MaterialButtonIconFactory
+{
+    public static Widget Create(Widget icon, Widget label)
+    {
+        return new Row(
+            mainAxisSize: MainAxisSize.Min,
+            spacing: 8,
+            children: new Widget[]
+            {
+                icon,
+                new Flexible(child: label)
+            });
     }
 }
 

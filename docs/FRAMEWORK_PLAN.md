@@ -304,6 +304,14 @@ Progress update (2026-03-19):
   - `FilledButton`/`FilledButton.Tonal` default horizontal padding now follows Flutter scaling baseline by material mode (`UseMaterial3=true` -> `24`, `UseMaterial3=false` -> `16`).
   - `FilledButton` defaults now include Flutter-like hovered elevation progression (`default=0`, `hovered=1`) while keeping non-hover states at `0`.
   - Added focused `MaterialButtonsTests` coverage for filled/tonal M2 default padding and filled hovered-elevation behavior.
+- Continued icon-factory parity hardening for Material buttons:
+  - Added `TextButton.Icon(...)`, `ElevatedButton.Icon(...)`, `OutlinedButton.Icon(...)`, `FilledButton.Icon(...)`, and `FilledButton.TonalIcon(...)` with Flutter-like icon+label composition (`Row` + `Flexible(label)` and default spacing `8`).
+  - Default icon-factory padding is now mode-aware and aligned with Flutter defaults:
+    - `TextButton.Icon`: M3 `12/8/16/8`, M2 `all(8)`
+    - `ElevatedButton.Icon`: M3 `16/0/24/0`, M2 `12/0/16/0`
+    - `OutlinedButton.Icon`: M3 `16/0/24/0`, M2 `16/0`
+    - `FilledButton.Icon`/`FilledButton.TonalIcon`: M3 `16/0/24/0`, M2 `12/0/16/0`
+  - Added focused `MaterialButtonsTests` coverage for icon-factory default padding across M3/M2 paths for text/elevated/outlined/filled/tonal filled buttons.
 
 Initial scope:
 

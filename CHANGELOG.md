@@ -16,6 +16,27 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 - Documentation policy update: Dart-to-C# control/widget work now uses mandatory parity-first porting mode (`docs/ai/PORTING_MODE.md`) with strict `1:1` default behavior, required divergence logging, and explicit parity-validation workflow references in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/INVARIANTS.md`, `docs/ai/MODULE_INDEX.md`, `docs/ai/FEATURE_TEMPLATE.md`, `docs/ai/TEST_MATRIX.md`, and `docs/ai/PARITY_MATRIX.md`.
 
+## [2026-04-05] - M4 button icon-factory default padding parity hardening
+
+### Changed
+
+- Added Flutter-like icon factory constructors for Material buttons:
+  - `TextButton.Icon(...)`
+  - `ElevatedButton.Icon(...)`
+  - `OutlinedButton.Icon(...)`
+  - `FilledButton.Icon(...)`
+  - `FilledButton.TonalIcon(...)`
+  (`src/Flutter.Material/Buttons.cs`).
+- Added shared icon+label composition helper for icon factories (`Row(mainAxisSize: min, spacing: 8, children: [icon, Flexible(label)])`) to align default button child structure with Flutter icon-button composition (`src/Flutter.Material/Buttons.cs`).
+- Aligned icon-factory default padding to Flutter mode-aware defaults:
+  - `TextButton.Icon`: M3 `12/8/16/8`, M2 `all(8)`
+  - `ElevatedButton.Icon`: M3 `16/0/24/0`, M2 `12/0/16/0`
+  - `OutlinedButton.Icon`: M3 `16/0/24/0`, M2 `16/0` (same as non-icon default)
+  - `FilledButton.Icon` and `FilledButton.TonalIcon`: M3 `16/0/24/0`, M2 `12/0/16/0`
+  (`src/Flutter.Material/Buttons.cs`).
+- Added focused `MaterialButtonsTests` coverage for icon-factory default padding across M3/M2 paths for text/elevated/outlined/filled/tonal filled buttons (`src/Flutter.Tests/MaterialButtonsTests.cs`).
+- Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-04-05-button-icon-factory-padding-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
+
 ## [2026-04-05] - M4 filled-button default padding/elevation parity hardening
 
 ### Changed

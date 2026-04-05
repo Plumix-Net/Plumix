@@ -247,6 +247,50 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
+    public void TextButton_Icon_DefaultPadding_UsesStart12TopBottom8End16()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: TextButton.Icon(
+                    onPressed: () => { },
+                    icon: new SizedBox(width: 12, height: 12),
+                    label: new Text("Padding"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(12, 8, 16, 8), padding!.Padding);
+    }
+
+    [Fact]
+    public void TextButton_Icon_DefaultPadding_UseMaterial3Disabled_UsesAll8()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with { UseMaterial3 = false },
+                child: TextButton.Icon(
+                    onPressed: () => { },
+                    icon: new SizedBox(width: 12, height: 12),
+                    label: new Text("Padding"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(8), padding!.Padding);
+    }
+
+    [Fact]
     public void TextButton_TapTargetPadding_RedirectsHitTestInPaddedAreaToChildCenter()
     {
         using var harness = new WidgetRenderHarness(
@@ -401,6 +445,50 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
+    public void ElevatedButton_Icon_DefaultPadding_UsesStart16AndEnd24()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: ElevatedButton.Icon(
+                    onPressed: () => { },
+                    icon: new SizedBox(width: 12, height: 12),
+                    label: new Text("Padding"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(16, 0, 24, 0), padding!.Padding);
+    }
+
+    [Fact]
+    public void ElevatedButton_Icon_DefaultPadding_UseMaterial3Disabled_UsesStart12AndEnd16()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with { UseMaterial3 = false },
+                child: ElevatedButton.Icon(
+                    onPressed: () => { },
+                    icon: new SizedBox(width: 12, height: 12),
+                    label: new Text("Padding"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(12, 0, 16, 0), padding!.Padding);
+    }
+
+    [Fact]
     public void ElevatedButton_DefaultMinSize_UseMaterial3Disabled_UsesMaterialBaseline64x36()
     {
         var owner = new BuildOwner();
@@ -454,6 +542,50 @@ public sealed class MaterialButtonsTests
                 child: new OutlinedButton(
                     onPressed: () => { },
                     child: new Text("Padding"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(16, 0), padding!.Padding);
+    }
+
+    [Fact]
+    public void OutlinedButton_Icon_DefaultPadding_UsesStart16AndEnd24()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: OutlinedButton.Icon(
+                    onPressed: () => { },
+                    icon: new SizedBox(width: 12, height: 12),
+                    label: new Text("Padding"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(16, 0, 24, 0), padding!.Padding);
+    }
+
+    [Fact]
+    public void OutlinedButton_Icon_DefaultPadding_UseMaterial3Disabled_UsesHorizontal16AndZeroVertical()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with { UseMaterial3 = false },
+                child: OutlinedButton.Icon(
+                    onPressed: () => { },
+                    icon: new SizedBox(width: 12, height: 12),
+                    label: new Text("Padding"))));
 
         root.Attach(owner);
         root.Mount(parent: null, newSlot: null);
@@ -547,6 +679,72 @@ public sealed class MaterialButtonsTests
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
         Assert.Equal(new Thickness(16, 0), padding!.Padding);
+    }
+
+    [Fact]
+    public void FilledButton_Icon_DefaultPadding_UsesStart16AndEnd24()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: FilledButton.Icon(
+                    onPressed: () => { },
+                    icon: new SizedBox(width: 12, height: 12),
+                    label: new Text("Padding"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(16, 0, 24, 0), padding!.Padding);
+    }
+
+    [Fact]
+    public void FilledButton_Icon_DefaultPadding_UseMaterial3Disabled_UsesStart12AndEnd16()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with { UseMaterial3 = false },
+                child: FilledButton.Icon(
+                    onPressed: () => { },
+                    icon: new SizedBox(width: 12, height: 12),
+                    label: new Text("Padding"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(12, 0, 16, 0), padding!.Padding);
+    }
+
+    [Fact]
+    public void FilledButtonTonal_Icon_DefaultPadding_UseMaterial3Disabled_UsesStart12AndEnd16()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with { UseMaterial3 = false },
+                child: FilledButton.TonalIcon(
+                    onPressed: () => { },
+                    icon: new SizedBox(width: 12, height: 12),
+                    label: new Text("Padding"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(12, 0, 16, 0), padding!.Padding);
     }
 
     [Fact]
