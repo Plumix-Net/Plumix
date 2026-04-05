@@ -119,8 +119,9 @@ public sealed class TextButton : StatelessWidget
                 : MaterialButtonIconFactory.Create(
                     icon,
                     label,
-                    iconAlignment ?? style?.IconAlignment ?? IconAlignment.Start,
-                    style),
+                    iconAlignment,
+                    style,
+                    context => TextButtonTheme.Of(context).Style?.ResolveIconAlignment()),
             onPressed: onPressed,
             foregroundColor: foregroundColor,
             backgroundColor: backgroundColor,
@@ -228,7 +229,13 @@ public sealed class TextButton : StatelessWidget
     {
         var theme = Theme.Of(context);
         var mergedStyle = MaterialButtonCore.ComposeStyles(
-            defaults: CreateDefaultStyle(theme, MinWidth, MinHeight, HasExplicitMinHeight, ApplyIconFactoryPadding),
+            defaults: CreateDefaultStyle(
+                context,
+                theme,
+                MinWidth,
+                MinHeight,
+                HasExplicitMinHeight,
+                ApplyIconFactoryPadding),
             themeStyle: TextButtonTheme.Of(context).Style,
             widgetStyle: Style,
             legacyOverrides: CreateLegacyStyleOverrides(theme));
@@ -242,6 +249,7 @@ public sealed class TextButton : StatelessWidget
     }
 
     private static ButtonStyle CreateDefaultStyle(
+        BuildContext context,
         ThemeData theme,
         double minWidth,
         double minHeight,
@@ -252,11 +260,32 @@ public sealed class TextButton : StatelessWidget
         var stateColor = theme.PrimaryColor;
         var pressedFocusedOverlayOpacity = useMaterial3 ? 0.10 : 0.12;
         var resolvedMinHeight = hasExplicitMinHeight ? minHeight : useMaterial3 ? 40 : 36;
+        var effectiveTextScale = MaterialButtonCore.ResolvePaddingFontSizeMultiplier(
+            context,
+            theme.TextTheme.LabelLarge.FontSize);
         var defaultPadding = useMaterial3
             ? applyIconFactoryPadding
-                ? new Thickness(12, 8, 16, 8)
-                : new Thickness(12, 8)
-            : new Thickness(8);
+                ? MaterialButtonCore.ScalePadding(
+                    MaterialButtonCore.ResolveDirectionalPadding(context, start: 12, top: 8, end: 16, bottom: 8),
+                    new Thickness(4, 0),
+                    new Thickness(4, 0),
+                    effectiveTextScale)
+                : MaterialButtonCore.ScalePadding(
+                    new Thickness(12, 8),
+                    new Thickness(8, 0),
+                    new Thickness(4, 0),
+                    effectiveTextScale)
+            : applyIconFactoryPadding
+                ? MaterialButtonCore.ScalePadding(
+                    new Thickness(8),
+                    new Thickness(4, 0),
+                    new Thickness(4, 0),
+                    effectiveTextScale)
+                : MaterialButtonCore.ScalePadding(
+                    new Thickness(8),
+                    new Thickness(8, 0),
+                    new Thickness(4, 0),
+                    effectiveTextScale);
         var defaultShape = Flutter.Rendering.BorderRadius.Circular(useMaterial3 ? 20 : 4);
         return new ButtonStyle(
             ForegroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
@@ -427,8 +456,9 @@ public sealed class ElevatedButton : StatelessWidget
                 : MaterialButtonIconFactory.Create(
                     icon,
                     label,
-                    iconAlignment ?? style?.IconAlignment ?? IconAlignment.Start,
-                    style),
+                    iconAlignment,
+                    style,
+                    context => ElevatedButtonTheme.Of(context).Style?.ResolveIconAlignment()),
             onPressed: onPressed,
             foregroundColor: foregroundColor,
             backgroundColor: backgroundColor,
@@ -539,7 +569,13 @@ public sealed class ElevatedButton : StatelessWidget
     {
         var theme = Theme.Of(context);
         var mergedStyle = MaterialButtonCore.ComposeStyles(
-            defaults: CreateDefaultStyle(theme, MinWidth, MinHeight, HasExplicitMinHeight, ApplyIconFactoryPadding),
+            defaults: CreateDefaultStyle(
+                context,
+                theme,
+                MinWidth,
+                MinHeight,
+                HasExplicitMinHeight,
+                ApplyIconFactoryPadding),
             themeStyle: ElevatedButtonTheme.Of(context).Style,
             widgetStyle: Style,
             legacyOverrides: CreateLegacyStyleOverrides(theme));
@@ -553,6 +589,7 @@ public sealed class ElevatedButton : StatelessWidget
     }
 
     private static ButtonStyle CreateDefaultStyle(
+        BuildContext context,
         ThemeData theme,
         double minWidth,
         double minHeight,
@@ -564,13 +601,32 @@ public sealed class ElevatedButton : StatelessWidget
         var enabledBackground = useMaterial3 ? theme.SurfaceContainerLowColor : theme.PrimaryColor;
         var pressedFocusedOverlayOpacity = useMaterial3 ? 0.10 : 0.12;
         var resolvedMinHeight = hasExplicitMinHeight ? minHeight : useMaterial3 ? 40 : 36;
+        var effectiveTextScale = MaterialButtonCore.ResolvePaddingFontSizeMultiplier(
+            context,
+            theme.TextTheme.LabelLarge.FontSize);
         var defaultPadding = useMaterial3
             ? applyIconFactoryPadding
-                ? new Thickness(16, 0, 24, 0)
-                : new Thickness(24, 0)
+                ? MaterialButtonCore.ScalePadding(
+                    MaterialButtonCore.ResolveDirectionalPadding(context, start: 16, top: 0, end: 24, bottom: 0),
+                    MaterialButtonCore.ResolveDirectionalPadding(context, start: 8, top: 0, end: 12, bottom: 0),
+                    MaterialButtonCore.ResolveDirectionalPadding(context, start: 4, top: 0, end: 6, bottom: 0),
+                    effectiveTextScale)
+                : MaterialButtonCore.ScalePadding(
+                    new Thickness(24, 0),
+                    new Thickness(12, 0),
+                    new Thickness(6, 0),
+                    effectiveTextScale)
             : applyIconFactoryPadding
-                ? new Thickness(12, 0, 16, 0)
-                : new Thickness(16, 0);
+                ? MaterialButtonCore.ScalePadding(
+                    MaterialButtonCore.ResolveDirectionalPadding(context, start: 12, top: 0, end: 16, bottom: 0),
+                    new Thickness(8, 0),
+                    MaterialButtonCore.ResolveDirectionalPadding(context, start: 8, top: 0, end: 4, bottom: 0),
+                    effectiveTextScale)
+                : MaterialButtonCore.ScalePadding(
+                    new Thickness(16, 0),
+                    new Thickness(8, 0),
+                    new Thickness(4, 0),
+                    effectiveTextScale);
         var defaultShape = Flutter.Rendering.BorderRadius.Circular(useMaterial3 ? 20 : 4);
         return new ButtonStyle(
             ForegroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
@@ -789,8 +845,9 @@ public sealed class FilledButton : StatelessWidget
                 : MaterialButtonIconFactory.Create(
                     icon,
                     label,
-                    iconAlignment ?? style?.IconAlignment ?? IconAlignment.Start,
-                    style),
+                    iconAlignment,
+                    style,
+                    context => FilledButtonTheme.Of(context).Style?.ResolveIconAlignment()),
             onPressed: onPressed,
             isTonal: false,
             applyIconFactoryPadding: icon is not null,
@@ -828,8 +885,9 @@ public sealed class FilledButton : StatelessWidget
                 : MaterialButtonIconFactory.Create(
                     icon,
                     label,
-                    iconAlignment ?? style?.IconAlignment ?? IconAlignment.Start,
-                    style),
+                    iconAlignment,
+                    style,
+                    context => FilledButtonTheme.Of(context).Style?.ResolveIconAlignment()),
             onPressed: onPressed,
             isTonal: true,
             applyIconFactoryPadding: icon is not null,
@@ -934,7 +992,13 @@ public sealed class FilledButton : StatelessWidget
     {
         var theme = Theme.Of(context);
         var mergedStyle = MaterialButtonCore.ComposeStyles(
-            defaults: CreateDefaultStyle(theme, MinWidth, MinHeight, IsTonal, ApplyIconFactoryPadding),
+            defaults: CreateDefaultStyle(
+                context,
+                theme,
+                MinWidth,
+                MinHeight,
+                IsTonal,
+                ApplyIconFactoryPadding),
             themeStyle: FilledButtonTheme.Of(context).Style,
             widgetStyle: Style,
             legacyOverrides: CreateLegacyStyleOverrides(theme));
@@ -948,6 +1012,7 @@ public sealed class FilledButton : StatelessWidget
     }
 
     private static ButtonStyle CreateDefaultStyle(
+        BuildContext context,
         ThemeData theme,
         double minWidth,
         double minHeight,
@@ -961,13 +1026,32 @@ public sealed class FilledButton : StatelessWidget
         var enabledBackground = isTonal
             ? theme.SecondaryContainerColor
             : theme.PrimaryColor;
+        var effectiveTextScale = MaterialButtonCore.ResolvePaddingFontSizeMultiplier(
+            context,
+            theme.TextTheme.LabelLarge.FontSize);
         var defaultPadding = useMaterial3
             ? applyIconFactoryPadding
-                ? new Thickness(16, 0, 24, 0)
-                : new Thickness(24, 0)
+                ? MaterialButtonCore.ScalePadding(
+                    MaterialButtonCore.ResolveDirectionalPadding(context, start: 16, top: 0, end: 24, bottom: 0),
+                    MaterialButtonCore.ResolveDirectionalPadding(context, start: 8, top: 0, end: 12, bottom: 0),
+                    MaterialButtonCore.ResolveDirectionalPadding(context, start: 4, top: 0, end: 6, bottom: 0),
+                    effectiveTextScale)
+                : MaterialButtonCore.ScalePadding(
+                    new Thickness(24, 0),
+                    new Thickness(12, 0),
+                    new Thickness(6, 0),
+                    effectiveTextScale)
             : applyIconFactoryPadding
-                ? new Thickness(12, 0, 16, 0)
-                : new Thickness(16, 0);
+                ? MaterialButtonCore.ScalePadding(
+                    MaterialButtonCore.ResolveDirectionalPadding(context, start: 12, top: 0, end: 16, bottom: 0),
+                    new Thickness(8, 0),
+                    MaterialButtonCore.ResolveDirectionalPadding(context, start: 8, top: 0, end: 4, bottom: 0),
+                    effectiveTextScale)
+                : MaterialButtonCore.ScalePadding(
+                    new Thickness(16, 0),
+                    new Thickness(8, 0),
+                    new Thickness(4, 0),
+                    effectiveTextScale);
 
         return new ButtonStyle(
             ForegroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
@@ -1165,8 +1249,9 @@ public sealed class OutlinedButton : StatelessWidget
                 : MaterialButtonIconFactory.Create(
                     icon,
                     label,
-                    iconAlignment ?? style?.IconAlignment ?? IconAlignment.Start,
-                    style),
+                    iconAlignment,
+                    style,
+                    context => OutlinedButtonTheme.Of(context).Style?.ResolveIconAlignment()),
             onPressed: onPressed,
             foregroundColor: foregroundColor,
             borderColor: borderColor,
@@ -1276,7 +1361,13 @@ public sealed class OutlinedButton : StatelessWidget
     {
         var theme = Theme.Of(context);
         var mergedStyle = MaterialButtonCore.ComposeStyles(
-            defaults: CreateDefaultStyle(theme, MinWidth, MinHeight, HasExplicitMinHeight, ApplyIconFactoryPadding),
+            defaults: CreateDefaultStyle(
+                context,
+                theme,
+                MinWidth,
+                MinHeight,
+                HasExplicitMinHeight,
+                ApplyIconFactoryPadding),
             themeStyle: OutlinedButtonTheme.Of(context).Style,
             widgetStyle: Style,
             legacyOverrides: CreateLegacyStyleOverrides(theme));
@@ -1290,6 +1381,7 @@ public sealed class OutlinedButton : StatelessWidget
     }
 
     private static ButtonStyle CreateDefaultStyle(
+        BuildContext context,
         ThemeData theme,
         double minWidth,
         double minHeight,
@@ -1301,11 +1393,26 @@ public sealed class OutlinedButton : StatelessWidget
         var m2SideColor = MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.12);
         var pressedFocusedOverlayOpacity = useMaterial3 ? 0.10 : 0.12;
         var resolvedMinHeight = hasExplicitMinHeight ? minHeight : useMaterial3 ? 40 : 36;
+        var effectiveTextScale = MaterialButtonCore.ResolvePaddingFontSizeMultiplier(
+            context,
+            theme.TextTheme.LabelLarge.FontSize);
         var defaultPadding = useMaterial3
             ? applyIconFactoryPadding
-                ? new Thickness(16, 0, 24, 0)
-                : new Thickness(24, 0)
-            : new Thickness(16, 0);
+                ? MaterialButtonCore.ScalePadding(
+                    MaterialButtonCore.ResolveDirectionalPadding(context, start: 16, top: 0, end: 24, bottom: 0),
+                    MaterialButtonCore.ResolveDirectionalPadding(context, start: 8, top: 0, end: 12, bottom: 0),
+                    MaterialButtonCore.ResolveDirectionalPadding(context, start: 4, top: 0, end: 6, bottom: 0),
+                    effectiveTextScale)
+                : MaterialButtonCore.ScalePadding(
+                    new Thickness(24, 0),
+                    new Thickness(12, 0),
+                    new Thickness(6, 0),
+                    effectiveTextScale)
+            : MaterialButtonCore.ScalePadding(
+                new Thickness(16, 0),
+                new Thickness(8, 0),
+                new Thickness(4, 0),
+                effectiveTextScale);
         var defaultShape = Flutter.Rendering.BorderRadius.Circular(useMaterial3 ? 20 : 4);
         return new ButtonStyle(
             ForegroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
@@ -1386,14 +1493,16 @@ internal static class MaterialButtonIconFactory
     public static Widget Create(
         Widget icon,
         Widget label,
-        IconAlignment iconAlignment = IconAlignment.Start,
-        ButtonStyle? buttonStyle = null)
+        IconAlignment? iconAlignment = null,
+        ButtonStyle? buttonStyle = null,
+        Func<BuildContext, IconAlignment?>? themeIconAlignmentResolver = null)
     {
         return new MaterialButtonIconContent(
             icon: icon,
             label: label,
             iconAlignment: iconAlignment,
-            buttonStyle: buttonStyle);
+            buttonStyle: buttonStyle,
+            themeIconAlignmentResolver: themeIconAlignmentResolver);
     }
 
     private sealed class MaterialButtonIconContent : StatelessWidget
@@ -1401,22 +1510,26 @@ internal static class MaterialButtonIconFactory
         public MaterialButtonIconContent(
             Widget icon,
             Widget label,
-            IconAlignment iconAlignment,
-            ButtonStyle? buttonStyle)
+            IconAlignment? iconAlignment,
+            ButtonStyle? buttonStyle,
+            Func<BuildContext, IconAlignment?>? themeIconAlignmentResolver)
         {
             Icon = icon;
             Label = label;
-            IconAlignment = iconAlignment;
+            IconAlignmentOverride = iconAlignment;
             ButtonStyle = buttonStyle;
+            ThemeIconAlignmentResolver = themeIconAlignmentResolver;
         }
 
         private Widget Icon { get; }
 
         private Widget Label { get; }
 
-        private IconAlignment IconAlignment { get; }
+        private IconAlignment? IconAlignmentOverride { get; }
 
         private ButtonStyle? ButtonStyle { get; }
+
+        private Func<BuildContext, IconAlignment?>? ThemeIconAlignmentResolver { get; }
 
         public override Widget Build(BuildContext context)
         {
@@ -1436,8 +1549,12 @@ internal static class MaterialButtonIconFactory
             var clampedScaleDelta = Math.Clamp(effectiveTextScale, 1.0, 2.0) - 1.0;
             var spacing = 8.0 + ((4.0 - 8.0) * clampedScaleDelta);
 
+            var effectiveIconAlignment = IconAlignmentOverride
+                                         ?? ThemeIconAlignmentResolver?.Invoke(context)
+                                         ?? ButtonStyle?.ResolveIconAlignment()
+                                         ?? IconAlignment.Start;
             var textDirection = Directionality.Of(context);
-            var iconIsLeading = IconAlignment == IconAlignment.Start;
+            var iconIsLeading = effectiveIconAlignment == IconAlignment.Start;
             var placeIconFirst = textDirection == TextDirection.Ltr
                 ? iconIsLeading
                 : !iconIsLeading;
@@ -1630,6 +1747,70 @@ internal sealed class MaterialButtonCore : StatefulWidget
 
             return default!;
         });
+    }
+
+    internal static double ResolvePaddingFontSizeMultiplier(BuildContext context, double? defaultFontSize)
+    {
+        var resolvedFontSize = defaultFontSize ?? 14.0;
+        if (double.IsNaN(resolvedFontSize) || double.IsInfinity(resolvedFontSize) || resolvedFontSize <= 0)
+        {
+            resolvedFontSize = 14.0;
+        }
+
+        var textScaleFactor = MediaQuery.MaybeTextScaleFactorOf(context) ?? 1.0;
+        if (double.IsNaN(textScaleFactor) || double.IsInfinity(textScaleFactor) || textScaleFactor <= 0)
+        {
+            textScaleFactor = 1.0;
+        }
+
+        return (textScaleFactor * resolvedFontSize) / 14.0;
+    }
+
+    internal static Thickness ScalePadding(
+        Thickness geometry1x,
+        Thickness geometry2x,
+        Thickness geometry3x,
+        double fontSizeMultiplier)
+    {
+        if (fontSizeMultiplier <= 1.0)
+        {
+            return geometry1x;
+        }
+
+        if (fontSizeMultiplier < 2.0)
+        {
+            return LerpThickness(geometry1x, geometry2x, fontSizeMultiplier - 1.0);
+        }
+
+        if (fontSizeMultiplier < 3.0)
+        {
+            return LerpThickness(geometry2x, geometry3x, fontSizeMultiplier - 2.0);
+        }
+
+        return geometry3x;
+    }
+
+    internal static Thickness ResolveDirectionalPadding(
+        BuildContext context,
+        double start,
+        double top,
+        double end,
+        double bottom)
+    {
+        var textDirection = Directionality.Of(context);
+        return textDirection == TextDirection.Ltr
+            ? new Thickness(start, top, end, bottom)
+            : new Thickness(end, top, start, bottom);
+    }
+
+    private static Thickness LerpThickness(Thickness from, Thickness to, double t)
+    {
+        var clamped = Math.Clamp(t, 0, 1);
+        return new Thickness(
+            from.Left + ((to.Left - from.Left) * clamped),
+            from.Top + ((to.Top - from.Top) * clamped),
+            from.Right + ((to.Right - from.Right) * clamped),
+            from.Bottom + ((to.Bottom - from.Bottom) * clamped));
     }
 
     internal static MaterialStateProperty<Color?> CreateDefaultOverlayResolver(

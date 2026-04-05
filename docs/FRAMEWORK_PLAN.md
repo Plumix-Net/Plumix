@@ -329,6 +329,11 @@ Progress update (2026-03-19):
   - `MediaQueryData` now includes ambient `TextScaleFactor` (`1.0` default) with `MediaQuery.TextScaleFactorOf(...)` and `MaybeTextScaleFactorOf(...)` helpers.
   - `MaterialButtonIconFactory` now applies Flutter-like icon-gap interpolation for `.Icon(...)` button content: spacing resolves from `lerp(8, 4, clamp(effectiveTextScale, 1, 2) - 1)`, where effective scale uses style text-size baseline (`buttonStyle.textStyle.fontSize` fallback `14`) and ambient `MediaQuery` text scale.
   - Added focused `MaterialButtonsTests` coverage for default spacing (`8`), interpolated spacing at scale `1.5` (`6`), clamp-at-max spacing (`4` for scale `>=2`), and style text-size driven scaling (`fontSize: 28` -> spacing `4`).
+- Continued button padding + icon-alignment precedence parity close-out:
+  - Material button defaults now apply Flutter-like `scaledPadding` piecewise interpolation (`1x`, `1-2`, `2-3`, `3+`) across `TextButton`/`ElevatedButton`/`OutlinedButton`/`FilledButton`, including icon-variant padding tables and mode-aware (`UseMaterial3`) differences.
+  - Directional icon paddings now resolve start/end values via ambient `Directionality` (LTR/RTL) for button variants that use Flutter `EdgeInsetsDirectional` defaults.
+  - Material icon-factory icon-alignment precedence now follows Flutter order: explicit icon-factory `iconAlignment` -> local button theme style `iconAlignment` -> button style `iconAlignment` -> `start`.
+  - Added focused `MaterialButtonsTests` coverage for scaled padding at text scale `2.0`, directional (RTL/LTR) icon-padding mapping, and theme-level icon-alignment precedence across text/elevated/outlined/filled icon factories.
 
 Initial scope:
 

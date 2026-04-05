@@ -357,6 +357,77 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
+    public void TextButton_DefaultPadding_TextScaleFactor2_UsesHorizontal8AndZeroVertical()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new MediaQuery(
+                data: new MediaQueryData(TextScaleFactor: 2.0),
+                child: new Theme(
+                    data: ThemeData.Light,
+                    child: new TextButton(
+                        onPressed: () => { },
+                        child: new Text("Padding")))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(8, 0), padding!.Padding);
+    }
+
+    [Fact]
+    public void TextButton_Icon_DefaultPadding_TextScaleFactor2_UsesHorizontal4AndZeroVertical()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new MediaQuery(
+                data: new MediaQueryData(TextScaleFactor: 2.0),
+                child: new Theme(
+                    data: ThemeData.Light,
+                    child: TextButton.Icon(
+                        onPressed: () => { },
+                        icon: new SizedBox(width: 12, height: 12),
+                        label: new Text("Padding")))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(4, 0), padding!.Padding);
+    }
+
+    [Fact]
+    public void TextButton_Icon_DefaultPadding_Rtl_UsesDirectionalStartEnd()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Directionality(
+                textDirection: TextDirection.Rtl,
+                child: new Theme(
+                    data: ThemeData.Light,
+                    child: TextButton.Icon(
+                        onPressed: () => { },
+                        icon: new SizedBox(width: 12, height: 12),
+                        label: new Text("Padding")))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(16, 8, 12, 8), padding!.Padding);
+    }
+
+    [Fact]
     public void TextButton_Icon_DefaultSpacing_Uses8()
     {
         var owner = new BuildOwner();
@@ -486,6 +557,31 @@ public sealed class MaterialButtonsTests
                     icon: new SizedBox(width: 12, height: 12),
                     label: new Text("Icon alignment"),
                     style: TextButton.StyleFrom(iconAlignment: IconAlignment.End))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        AssertIconRowOrder(
+            RequireRenderObject<RenderObject>(root.ChildElement),
+            iconFirst: false);
+    }
+
+    [Fact]
+    public void TextButton_Icon_ThemeIconAlignmentEnd_PlacesLabelBeforeIcon()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new TextButtonTheme(
+                    data: new TextButtonThemeData(
+                        style: new ButtonStyle(IconAlignment: IconAlignment.End)),
+                    child: TextButton.Icon(
+                        onPressed: () => { },
+                        icon: new SizedBox(width: 12, height: 12),
+                        label: new Text("Icon alignment")))));
 
         root.Attach(owner);
         root.Mount(parent: null, newSlot: null);
@@ -769,6 +865,104 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
+    public void ElevatedButton_DefaultPadding_TextScaleFactor2_UsesHorizontal12()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new MediaQuery(
+                data: new MediaQueryData(TextScaleFactor: 2.0),
+                child: new Theme(
+                    data: ThemeData.Light,
+                    child: new ElevatedButton(
+                        onPressed: () => { },
+                        child: new Text("Padding")))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(12, 0), padding!.Padding);
+    }
+
+    [Fact]
+    public void ElevatedButton_Icon_DefaultPadding_TextScaleFactor2_UsesStart8End12()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new MediaQuery(
+                data: new MediaQueryData(TextScaleFactor: 2.0),
+                child: new Theme(
+                    data: ThemeData.Light,
+                    child: ElevatedButton.Icon(
+                        onPressed: () => { },
+                        icon: new SizedBox(width: 12, height: 12),
+                        label: new Text("Padding")))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(8, 0, 12, 0), padding!.Padding);
+    }
+
+    [Fact]
+    public void ElevatedButton_Icon_DefaultPadding_TextScaleFactor2_Rtl_UsesDirectionalStartEnd()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Directionality(
+                textDirection: TextDirection.Rtl,
+                child: new MediaQuery(
+                    data: new MediaQueryData(TextScaleFactor: 2.0),
+                    child: new Theme(
+                        data: ThemeData.Light,
+                        child: ElevatedButton.Icon(
+                            onPressed: () => { },
+                            icon: new SizedBox(width: 12, height: 12),
+                            label: new Text("Padding"))))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(12, 0, 8, 0), padding!.Padding);
+    }
+
+    [Fact]
+    public void ElevatedButton_Icon_ThemeIconAlignmentEnd_PlacesLabelBeforeIcon()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new ElevatedButtonTheme(
+                    data: new ElevatedButtonThemeData(
+                        style: new ButtonStyle(IconAlignment: IconAlignment.End)),
+                    child: ElevatedButton.Icon(
+                        onPressed: () => { },
+                        icon: new SizedBox(width: 12, height: 12),
+                        label: new Text("Icon alignment")))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        AssertIconRowOrder(
+            RequireRenderObject<RenderObject>(root.ChildElement),
+            iconFirst: false);
+    }
+
+    [Fact]
     public void ElevatedButton_DefaultMinSize_UseMaterial3Disabled_UsesMaterialBaseline64x36()
     {
         var owner = new BuildOwner();
@@ -874,6 +1068,102 @@ public sealed class MaterialButtonsTests
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
         Assert.Equal(new Thickness(16, 0), padding!.Padding);
+    }
+
+    [Fact]
+    public void OutlinedButton_DefaultPadding_TextScaleFactor2_UsesHorizontal12()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new MediaQuery(
+                data: new MediaQueryData(TextScaleFactor: 2.0),
+                child: new Theme(
+                    data: ThemeData.Light,
+                    child: new OutlinedButton(
+                        onPressed: () => { },
+                        child: new Text("Padding")))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(12, 0), padding!.Padding);
+    }
+
+    [Fact]
+    public void OutlinedButton_Icon_DefaultPadding_TextScaleFactor2_UsesStart8End12()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new MediaQuery(
+                data: new MediaQueryData(TextScaleFactor: 2.0),
+                child: new Theme(
+                    data: ThemeData.Light,
+                    child: OutlinedButton.Icon(
+                        onPressed: () => { },
+                        icon: new SizedBox(width: 12, height: 12),
+                        label: new Text("Padding")))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(8, 0, 12, 0), padding!.Padding);
+    }
+
+    [Fact]
+    public void OutlinedButton_Icon_DefaultPadding_TextScaleFactor2_UseMaterial3Disabled_UsesHorizontal8()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new MediaQuery(
+                data: new MediaQueryData(TextScaleFactor: 2.0),
+                child: new Theme(
+                    data: ThemeData.Light with { UseMaterial3 = false },
+                    child: OutlinedButton.Icon(
+                        onPressed: () => { },
+                        icon: new SizedBox(width: 12, height: 12),
+                        label: new Text("Padding")))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(8, 0), padding!.Padding);
+    }
+
+    [Fact]
+    public void OutlinedButton_Icon_ThemeIconAlignmentEnd_PlacesLabelBeforeIcon()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new OutlinedButtonTheme(
+                    data: new OutlinedButtonThemeData(
+                        style: new ButtonStyle(IconAlignment: IconAlignment.End)),
+                    child: OutlinedButton.Icon(
+                        onPressed: () => { },
+                        icon: new SizedBox(width: 12, height: 12),
+                        label: new Text("Icon alignment")))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        AssertIconRowOrder(
+            RequireRenderObject<RenderObject>(root.ChildElement),
+            iconFirst: false);
     }
 
     [Fact]
@@ -1028,6 +1318,79 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
+    public void FilledButton_DefaultPadding_TextScaleFactor2_UsesHorizontal12()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new MediaQuery(
+                data: new MediaQueryData(TextScaleFactor: 2.0),
+                child: new Theme(
+                    data: ThemeData.Light,
+                    child: new FilledButton(
+                        onPressed: () => { },
+                        child: new Text("Padding")))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(12, 0), padding!.Padding);
+    }
+
+    [Fact]
+    public void FilledButton_Icon_DefaultPadding_TextScaleFactor2_UsesStart8End12()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new MediaQuery(
+                data: new MediaQueryData(TextScaleFactor: 2.0),
+                child: new Theme(
+                    data: ThemeData.Light,
+                    child: FilledButton.Icon(
+                        onPressed: () => { },
+                        icon: new SizedBox(width: 12, height: 12),
+                        label: new Text("Padding")))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(8, 0, 12, 0), padding!.Padding);
+    }
+
+    [Fact]
+    public void FilledButton_Icon_DefaultPadding_TextScaleFactor2_Rtl_UsesDirectionalStartEnd()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Directionality(
+                textDirection: TextDirection.Rtl,
+                child: new MediaQuery(
+                    data: new MediaQueryData(TextScaleFactor: 2.0),
+                    child: new Theme(
+                        data: ThemeData.Light,
+                        child: FilledButton.Icon(
+                            onPressed: () => { },
+                            icon: new SizedBox(width: 12, height: 12),
+                            label: new Text("Padding"))))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(padding);
+        Assert.Equal(new Thickness(12, 0, 8, 0), padding!.Padding);
+    }
+
+    [Fact]
     public void FilledButtonTonal_Icon_IconAlignmentEnd_PlacesLabelBeforeIcon()
     {
         var owner = new BuildOwner();
@@ -1040,6 +1403,31 @@ public sealed class MaterialButtonsTests
                     icon: new SizedBox(width: 12, height: 12),
                     label: new Text("Icon alignment"),
                     iconAlignment: IconAlignment.End)));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        AssertIconRowOrder(
+            RequireRenderObject<RenderObject>(root.ChildElement),
+            iconFirst: false);
+    }
+
+    [Fact]
+    public void FilledButton_Icon_ThemeIconAlignmentEnd_PlacesLabelBeforeIcon()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new FilledButtonTheme(
+                    data: new FilledButtonThemeData(
+                        style: new ButtonStyle(IconAlignment: IconAlignment.End)),
+                    child: FilledButton.Icon(
+                        onPressed: () => { },
+                        icon: new SizedBox(width: 12, height: 12),
+                        label: new Text("Icon alignment")))));
 
         root.Attach(owner);
         root.Mount(parent: null, newSlot: null);

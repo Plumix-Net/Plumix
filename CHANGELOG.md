@@ -17,6 +17,28 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 - Documentation policy update: Dart-to-C# control/widget work now uses mandatory parity-first porting mode (`docs/ai/PORTING_MODE.md`) with strict `1:1` default behavior, required divergence logging, and explicit parity-validation workflow references in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/INVARIANTS.md`, `docs/ai/MODULE_INDEX.md`, `docs/ai/FEATURE_TEMPLATE.md`, `docs/ai/TEST_MATRIX.md`, and `docs/ai/PARITY_MATRIX.md`.
 - Agent workflow scope update: parity tasks now default to `one request = one control closed end-to-end` (not micro-iterations), with expanded context-budget guidance for control work (`12-20` initial files, up to `20`) and aligned rules in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/PORTING_MODE.md`, `docs/ai/MODULE_INDEX.md`, and `docs/ai/FEATURE_TEMPLATE.md`.
 
+## [2026-04-05] - M4 material button parity close-out (padding scale + theme icon-alignment precedence)
+
+### Changed
+
+- Aligned Material button default paddings with Flutter `scaledPadding` interpolation semantics across `TextButton`, `ElevatedButton`, `OutlinedButton`, and `FilledButton`:
+  - piecewise interpolation now follows Flutter behavior for text-scale multipliers (`<=1`, `1..2`, `2..3`, `>=3`),
+  - default and icon-variant padding tables now scale with ambient `MediaQuery.TextScaleFactor` and baseline `labelLarge` font size.
+  (`src/Flutter.Material/Buttons.cs`).
+- Added direction-aware start/end default icon paddings for button variants that map to Flutter `EdgeInsetsDirectional` defaults, so RTL swaps start/end insets correctly (`src/Flutter.Material/Buttons.cs`).
+- Aligned icon-factory icon-alignment precedence with Flutter order:
+  - explicit icon-factory `iconAlignment` argument,
+  - local button-theme style `iconAlignment`,
+  - button `style` `iconAlignment`,
+  - fallback `start`.
+  (`src/Flutter.Material/Buttons.cs`).
+- Expanded `MaterialButtonsTests` with focused coverage for:
+  - text-scale-driven default/icon padding interpolation,
+  - RTL directional start/end padding mapping for icon variants,
+  - theme-level icon-alignment precedence on text/elevated/outlined/filled icon buttons
+  (`src/Flutter.Tests/MaterialButtonsTests.cs`).
+- Added iteration tracking artifacts for this close-out step (`docs/ai/material-2026-04-05-button-padding-scale-theme-iconalignment-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
+
 ## [2026-04-05] - M4 button icon-factory text-scale spacing parity hardening
 
 ### Changed
