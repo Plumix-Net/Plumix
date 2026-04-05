@@ -30,6 +30,7 @@ internal static class SampleRoutes
     public const string Scrollbar = "/scrollbar";
     public const string EditableText = "/editable-text";
     public const string MaterialButtons = "/material-buttons";
+    public const string Checkbox = "/checkbox";
     public const string AppBarLeadingWidth = "/appbar-leading-width";
     public const string AppBarActionsPadding = "/appbar-actions-padding";
     public const string AppBarIconTheme = "/appbar-icon-theme";
@@ -68,6 +69,7 @@ internal sealed class SampleGalleryScreen : StatelessWidget
         new(SampleRoutes.Scrollbar, "Scrollbar", "controller + thumb", () => new ScrollbarDemoPage()),
         new(SampleRoutes.EditableText, "EditableText", "focus + IME + multiline caret", () => new EditableTextDemoPage()),
         new(SampleRoutes.MaterialButtons, "Material buttons", "TextButton + ElevatedButton + OutlinedButton + FilledButton", () => new MaterialButtonsDemoPage()),
+        new(SampleRoutes.Checkbox, "Checkbox", "bool/bool? values + tristate + tap-target policy", () => new CheckboxDemoPage()),
         new(SampleRoutes.AppBarLeadingWidth, "AppBar leadingWidth theme", "theme fallback + widget override runtime probe", () => new AppBarLeadingWidthDemoPage()),
         new(SampleRoutes.AppBarActionsPadding, "AppBar actionsPadding theme", "theme fallback + widget override runtime probe", () => new AppBarActionsPaddingDemoPage()),
         new(SampleRoutes.AppBarIconTheme, "AppBar icon themes", "iconTheme/actionsIconTheme precedence runtime probe", () => new AppBarIconThemeDemoPage()),

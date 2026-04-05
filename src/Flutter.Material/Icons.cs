@@ -15,6 +15,8 @@ public static class Icons
 
     public static IconData Add { get; } = new(0xe047, FontFamily: MaterialIconsFontFamily);
 
+    public static IconData Check { get; } = new(0xe156, FontFamily: MaterialIconsFontFamily);
+
     public static IconData Close { get; } = new(0xe16a, FontFamily: MaterialIconsFontFamily);
 
     public static IconData InfoOutline { get; } = new(0xe33d, FontFamily: MaterialIconsFontFamily);

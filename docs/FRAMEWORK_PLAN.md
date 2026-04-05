@@ -346,6 +346,12 @@ Progress update (2026-03-19):
   - updated C# Material buttons demo to use framework `Icon(Icons.*)` instead of temporary glyph-probe widgets, matching the existing Dart sample structure;
   - updated C#/Dart app-bar runtime demos (`iconTheme`, `leadingWidth`, `actionsPadding`) and demo-shell back action to use real icons (`menu`/`close`/`info_outline`/`arrow_back`) instead of text badges where icon rendering is the primary probe target;
   - added focused `TextWidgetTests` coverage for icon-theme defaults/overrides, null-icon layout, and RTL mirror transform behavior.
+- Added Material `Checkbox` baseline in `Flutter.Material`:
+  - introduced framework `Checkbox` with controlled `bool?` value, `tristate` cycle behavior, focus/hover/pressed interaction handling via shared `MaterialButtonCore`, mode-aware selected/unselected/disabled default visuals, and tap-target policy wiring to `ThemeData.MaterialTapTargetSize`;
+  - added `Icons.Check` constant in Material icon set for checkbox check-indicator rendering;
+  - added focused `MaterialCheckboxTests` coverage for constructor guards, state visuals, check/dash indicator paths, tap-target behavior (`padded` vs `shrinkWrap`), and keyboard-driven toggle/tristate transitions;
+  - added C#/Dart sample parity demo route/page for runtime verification (`Checkbox` route in both sample menus);
+  - documented current parity deltas for follow-up: no custom toggleable stroke animation (`_CheckboxPainter` equivalent) and no dedicated `CheckboxThemeData`/adaptive constructor surface yet.
 
 Initial scope:
 

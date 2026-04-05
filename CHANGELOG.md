@@ -17,6 +17,29 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 - Documentation policy update: Dart-to-C# control/widget work now uses mandatory parity-first porting mode (`docs/ai/PORTING_MODE.md`) with strict `1:1` default behavior, required divergence logging, and explicit parity-validation workflow references in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/INVARIANTS.md`, `docs/ai/MODULE_INDEX.md`, `docs/ai/FEATURE_TEMPLATE.md`, `docs/ai/TEST_MATRIX.md`, and `docs/ai/PARITY_MATRIX.md`.
 - Agent workflow scope update: parity tasks now default to `one request = one control closed end-to-end` (not micro-iterations), with expanded context-budget guidance for control work (`12-20` initial files, up to `20`) and aligned rules in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/PORTING_MODE.md`, `docs/ai/MODULE_INDEX.md`, and `docs/ai/FEATURE_TEMPLATE.md`.
 
+## [2026-04-05] - M4 Checkbox parity baseline
+
+### Changed
+
+- Added framework Material `Checkbox` in `src/Flutter.Material/Checkbox.cs` with Flutter-like baseline behavior for current framework scope:
+  - controlled `value` (`bool?`) + `tristate` cycle,
+  - mode-aware defaults for selected/unselected/disabled states,
+  - focus/hover/pressed state overlays and keyboard activation through shared `MaterialButtonCore`,
+  - tap-target policy wiring through `ThemeData.MaterialTapTargetSize` (`padded` vs `shrinkWrap`),
+  - customizable color/border surface (`activeColor`, `fillColor`, `checkColor`, `overlayColor`, `side`, `shape`, focus/hover overrides).
+- Extended Material icons set with `Icons.Check` in `src/Flutter.Material/Icons.cs` for checkbox indicator rendering.
+- Added focused checkbox regression coverage in `src/Flutter.Tests/MaterialCheckboxTests.cs`:
+  - constructor guards (`tristate` + null value),
+  - M3 default visual states (checked/unchecked/disabled),
+  - check/dash indicator rendering,
+  - tap-target behavior for theme `MaterialTapTargetSize`,
+  - keyboard-driven value transitions including tristate cycling.
+- Added sample parity route/page in both C# and Dart samples:
+  - `src/Sample/Flutter.Net/CheckboxDemoPage.cs`
+  - `dart_sample/lib/checkbox_demo_page.dart`
+  - route wiring in `src/Sample/Flutter.Net/SampleGalleryScreen.cs`, `dart_sample/lib/sample_gallery_screen.dart`, and `dart_sample/lib/sample_routes.dart`.
+- Added iteration tracking artifacts for this parity pass (`docs/ai/material-2026-04-05-checkbox-baseline-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`, `docs/ai/PARITY_MATRIX.md`).
+
 ## [2026-04-05] - M4 core Icon widget parity baseline
 
 ### Changed
