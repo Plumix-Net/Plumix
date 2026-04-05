@@ -17,6 +17,23 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 - Documentation policy update: Dart-to-C# control/widget work now uses mandatory parity-first porting mode (`docs/ai/PORTING_MODE.md`) with strict `1:1` default behavior, required divergence logging, and explicit parity-validation workflow references in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/INVARIANTS.md`, `docs/ai/MODULE_INDEX.md`, `docs/ai/FEATURE_TEMPLATE.md`, `docs/ai/TEST_MATRIX.md`, and `docs/ai/PARITY_MATRIX.md`.
 - Agent workflow scope update: parity tasks now default to `one request = one control closed end-to-end` (not micro-iterations), with expanded context-budget guidance for control work (`12-20` initial files, up to `20`) and aligned rules in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/PORTING_MODE.md`, `docs/ai/MODULE_INDEX.md`, and `docs/ai/FEATURE_TEMPLATE.md`.
 
+## [2026-04-05] - M4 Switch adaptive Cupertino parity hardening
+
+### Changed
+
+- Hardened `Switch.Adaptive(...)` parity on Cupertino targets in `src/Flutter.Material/Switch.cs`:
+  - adaptive path now branches by `ThemeData.Platform` (`IOS`/`MacOS`) instead of always following Material defaults;
+  - adaptive iOS/macOS now uses Cupertino-like geometry/defaults (`59x39` shell, `51x31` track, `28` thumb), zero fallback padding, and zero fallback splash radius;
+  - adaptive `activeColor` mapping now follows Flutter semantics by platform (`iOS/macOS -> track`, other platforms -> thumb fallback when explicit track/thumb colors are absent);
+  - disabled adaptive iOS/macOS now applies switch-level opacity `0.5`.
+- Expanded switch regression coverage in `src/Flutter.Tests/MaterialSwitchTests.cs` for:
+  - adaptive iOS `activeColor` track mapping (and non-iOS thumb mapping),
+  - adaptive iOS disabled opacity behavior,
+  - adaptive iOS Cupertino geometry defaults (`track 51x31`).
+- Updated iteration tracking artifacts for this parity-hardening pass (`docs/ai/material-2026-04-05-switch-adaptive-cupertino-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
+- Remaining documented divergence:
+  - adaptive switch now has Cupertino-like defaults in framework scope, but still uses shared `MaterialButtonCore` composition (no dedicated Cupertino painter/drag-threshold choreography yet).
+
 ## [2026-04-05] - M4 Switch parity baseline
 
 ### Changed

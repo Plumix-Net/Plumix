@@ -362,7 +362,12 @@ Progress update (2026-03-19):
   - added dedicated switch theming surface (`SwitchThemeData`, inherited `SwitchTheme`, and `ThemeData.SwitchTheme`) with Flutter-like precedence (`widget -> switchTheme -> defaults`) for thumb/track/outline/overlay/tap-target/splash/icon/padding values;
   - added focused `MaterialSwitchTests` coverage for M3 selected/unselected/disabled defaults, widget/theme precedence, thumb-icon rendering, keyboard toggle activation, and tap-target behavior (`padded` vs `shrinkWrap`);
   - added C#/Dart sample parity demo route/page for runtime verification (`Switch` route in both sample menus).
-  - remaining divergence: adaptive switch currently follows Material rendering path on iOS/macOS because Cupertino switch primitives are not yet implemented in framework scope.
+- Continued adaptive switch parity hardening for Cupertino targets:
+  - `Switch.Adaptive(...)` now resolves a dedicated iOS/macOS adaptive path from `ThemeData.Platform` instead of always following Material-mode geometry/tokens.
+  - adaptive iOS/macOS path now uses Cupertino-like defaults for geometry (`59x39` shell, `51x31` track, `28` thumb), zero fallback padding, and zero fallback splash radius.
+  - `activeColor` adaptive mapping now matches Flutter semantics by platform (`iOS/macOS -> track`, other platforms -> thumb fallback when explicit `activeTrackColor` / `activeThumbColor` are absent).
+  - disabled adaptive iOS/macOS path now applies switch-level opacity (`0.5`) and has focused regression coverage for adaptive mapping, geometry, and disabled opacity behavior.
+  - remaining divergence: adaptive switch still uses framework `MaterialButtonCore` composition (no dedicated Cupertino painter/drag-threshold choreography yet), so motion/press nuances are not fully native-Cupertino yet.
 
 Initial scope:
 

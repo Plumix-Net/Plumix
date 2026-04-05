@@ -14,6 +14,7 @@ namespace Flutter.Material;
 public sealed class Switch : StatefulWidget
 {
     private const double DefaultSplashRadius = 20.0;
+    private static readonly Color CupertinoInactiveTrackColor = Color.FromArgb(0x52, 0x78, 0x78, 0x80);
     private readonly SwitchType _switchType;
 
     private enum SwitchType
@@ -297,41 +298,38 @@ public sealed class Switch : StatefulWidget
         {
             var theme = Theme.Of(context);
             var switchTheme = SwitchTheme.Of(context);
-            var config = ResolveConfig(theme.UseMaterial3);
+            var isCupertinoAdaptive = IsAdaptiveCupertino(theme);
+            var config = ResolveConfig(theme.UseMaterial3, isCupertinoAdaptive);
             var enabled = CurrentWidget.OnChanged is not null;
 
-            // Cupertino switch primitives are not yet in framework scope.
-            var isAdaptive = CurrentWidget._switchType == SwitchType.Adaptive;
-            _ = isAdaptive;
-
-            var effectivePadding = ResolvePadding(theme, switchTheme);
+            var effectivePadding = ResolvePadding(theme, switchTheme, isCupertinoAdaptive);
             var totalWidth = config.BaseWidth + effectivePadding.Left + effectivePadding.Right;
             var totalHeight = config.BaseHeight + effectivePadding.Top + effectivePadding.Bottom;
             var tapTargetSize = CurrentWidget.MaterialTapTargetSize
                                 ?? switchTheme.MaterialTapTargetSize
                                 ?? theme.MaterialTapTargetSize;
-            var splashRadius = ResolveSplashRadius(switchTheme);
+            var splashRadius = ResolveSplashRadius(switchTheme, isCupertinoAdaptive);
 
             var activeStates = BuildVisualStates(enabled, selected: true);
             var inactiveStates = BuildVisualStates(enabled, selected: false);
             var position = CurrentPosition();
 
-            var activeThumbColor = ResolveThumbColor(theme, switchTheme, activeStates);
-            var inactiveThumbColor = ResolveThumbColor(theme, switchTheme, inactiveStates);
+            var activeThumbColor = ResolveThumbColor(theme, switchTheme, activeStates, isCupertinoAdaptive);
+            var inactiveThumbColor = ResolveThumbColor(theme, switchTheme, inactiveStates, isCupertinoAdaptive);
             var thumbColor = LerpColor(inactiveThumbColor, activeThumbColor, position);
 
-            var activeTrackColor = ResolveTrackColor(theme, switchTheme, activeStates);
-            var inactiveTrackColor = ResolveTrackColor(theme, switchTheme, inactiveStates);
+            var activeTrackColor = ResolveTrackColor(theme, switchTheme, activeStates, isCupertinoAdaptive);
+            var inactiveTrackColor = ResolveTrackColor(theme, switchTheme, inactiveStates, isCupertinoAdaptive);
             var trackColor = LerpColor(inactiveTrackColor, activeTrackColor, position);
 
-            var activeOutline = ResolveTrackOutlineSide(theme, switchTheme, activeStates);
-            var inactiveOutline = ResolveTrackOutlineSide(theme, switchTheme, inactiveStates);
+            var activeOutline = ResolveTrackOutlineSide(theme, switchTheme, activeStates, isCupertinoAdaptive);
+            var inactiveOutline = ResolveTrackOutlineSide(theme, switchTheme, inactiveStates, isCupertinoAdaptive);
             var trackOutline = LerpSide(inactiveOutline, activeOutline, position);
 
             var activeIcon = ResolveThumbIcon(switchTheme, activeStates);
             var inactiveIcon = ResolveThumbIcon(switchTheme, inactiveStates);
-            var activeIconColor = ResolveThumbIconColor(theme, activeStates);
-            var inactiveIconColor = ResolveThumbIconColor(theme, inactiveStates);
+            var activeIconColor = ResolveThumbIconColor(theme, activeStates, isCupertinoAdaptive);
+            var inactiveIconColor = ResolveThumbIconColor(theme, inactiveStates, isCupertinoAdaptive);
             var iconColor = LerpColor(inactiveIconColor, activeIconColor, position);
             var currentIcon = position < 0.5 ? inactiveIcon : activeIcon;
 
@@ -385,7 +383,7 @@ public sealed class Switch : StatefulWidget
                 BackgroundColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
                 ShadowColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
                 SurfaceTintColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
-                OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states => ResolveOverlayColor(theme, switchTheme, states)),
+                OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states => ResolveOverlayColor(theme, switchTheme, states, isCupertinoAdaptive)),
                 SplashColor: null,
                 Elevation: MaterialStateProperty<double?>.All(0),
                 IconColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
@@ -409,12 +407,19 @@ public sealed class Switch : StatefulWidget
                 splashRadius: splashRadius,
                 autofocus: CurrentWidget.Autofocus);
 
-            return new GestureDetector(
+            Widget result = new GestureDetector(
                 behavior: HitTestBehavior.Opaque,
                 onHorizontalDragStart: HandleDragStart,
                 onHorizontalDragUpdate: HandleDragUpdate,
                 onHorizontalDragEnd: HandleDragEnd,
                 child: button);
+
+            if (isCupertinoAdaptive && !enabled)
+            {
+                result = new Opacity(0.5, result);
+            }
+
+            return result;
         }
 
         private void AttachFocusNode(FocusNode? externalNode)
@@ -489,7 +494,7 @@ public sealed class Switch : StatefulWidget
             }
 
             var theme = Theme.Of(Context);
-            var config = ResolveConfig(theme.UseMaterial3);
+            var config = ResolveConfig(theme.UseMaterial3, IsAdaptiveCupertino(theme));
             var trackInnerLength = Math.Max(1.0, config.TrackWidth - config.TrackHeight);
             var direction = Directionality.Of(Context);
             var directionMultiplier = direction == TextDirection.Rtl ? -1 : 1;
@@ -558,6 +563,16 @@ public sealed class Switch : StatefulWidget
             return Math.Clamp(_dragPosition ?? _animatedPosition, 0, 1);
         }
 
+        private bool IsAdaptiveCupertino(ThemeData theme)
+        {
+            if (CurrentWidget._switchType != SwitchType.Adaptive)
+            {
+                return false;
+            }
+
+            return theme.Platform is TargetPlatform.IOS or TargetPlatform.MacOS;
+        }
+
         private MaterialState BuildVisualStates(bool enabled, bool selected)
         {
             var states = enabled
@@ -582,7 +597,7 @@ public sealed class Switch : StatefulWidget
             return states;
         }
 
-        private Color ResolveThumbColor(ThemeData theme, SwitchThemeData switchTheme, MaterialState states)
+        private Color ResolveThumbColor(ThemeData theme, SwitchThemeData switchTheme, MaterialState states, bool isCupertinoAdaptive)
         {
             var widgetThumb = CurrentWidget.ThumbColor?.Resolve(states);
             if (widgetThumb.HasValue)
@@ -597,7 +612,7 @@ public sealed class Switch : StatefulWidget
                     return CurrentWidget.ActiveThumbColor.Value;
                 }
 
-                if (CurrentWidget.ActiveColor.HasValue)
+                if (CurrentWidget.ActiveColor.HasValue && !isCupertinoAdaptive)
                 {
                     return CurrentWidget.ActiveColor.Value;
                 }
@@ -613,10 +628,10 @@ public sealed class Switch : StatefulWidget
                 return themedThumb.Value;
             }
 
-            return ResolveDefaultThumbColor(theme, states);
+            return ResolveDefaultThumbColor(theme, states, isCupertinoAdaptive);
         }
 
-        private Color ResolveTrackColor(ThemeData theme, SwitchThemeData switchTheme, MaterialState states)
+        private Color ResolveTrackColor(ThemeData theme, SwitchThemeData switchTheme, MaterialState states, bool isCupertinoAdaptive)
         {
             var widgetTrack = CurrentWidget.TrackColor?.Resolve(states);
             if (widgetTrack.HasValue)
@@ -630,6 +645,11 @@ public sealed class Switch : StatefulWidget
                 {
                     return CurrentWidget.ActiveTrackColor.Value;
                 }
+
+                if (CurrentWidget.ActiveColor.HasValue && isCupertinoAdaptive)
+                {
+                    return CurrentWidget.ActiveColor.Value;
+                }
             }
             else if (CurrentWidget.InactiveTrackColor.HasValue)
             {
@@ -642,17 +662,17 @@ public sealed class Switch : StatefulWidget
                 return themedTrack.Value;
             }
 
-            return ResolveDefaultTrackColor(theme, states);
+            return ResolveDefaultTrackColor(theme, states, isCupertinoAdaptive);
         }
 
-        private BorderSide? ResolveTrackOutlineSide(ThemeData theme, SwitchThemeData switchTheme, MaterialState states)
+        private BorderSide? ResolveTrackOutlineSide(ThemeData theme, SwitchThemeData switchTheme, MaterialState states, bool isCupertinoAdaptive)
         {
             var outlineColor = CurrentWidget.TrackOutlineColor?.Resolve(states)
                                ?? switchTheme.TrackOutlineColor?.Resolve(states)
-                               ?? ResolveDefaultTrackOutlineColor(theme, states);
+                               ?? ResolveDefaultTrackOutlineColor(theme, states, isCupertinoAdaptive);
             var outlineWidth = CurrentWidget.TrackOutlineWidth?.Resolve(states)
                                ?? switchTheme.TrackOutlineWidth?.Resolve(states)
-                               ?? ResolveDefaultTrackOutlineWidth(theme, states);
+                               ?? ResolveDefaultTrackOutlineWidth(theme, states, isCupertinoAdaptive);
 
             if (!outlineColor.HasValue || !outlineWidth.HasValue)
             {
@@ -674,8 +694,18 @@ public sealed class Switch : StatefulWidget
                    ?? switchTheme.ThumbIcon?.Resolve(states);
         }
 
-        private Color ResolveThumbIconColor(ThemeData theme, MaterialState states)
+        private Color ResolveThumbIconColor(ThemeData theme, MaterialState states, bool isCupertinoAdaptive)
         {
+            if (isCupertinoAdaptive)
+            {
+                if (states.HasFlag(MaterialState.Disabled))
+                {
+                    return MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.38);
+                }
+
+                return theme.OnPrimaryColor;
+            }
+
             if (!theme.UseMaterial3)
             {
                 if (states.HasFlag(MaterialState.Disabled))
@@ -700,7 +730,7 @@ public sealed class Switch : StatefulWidget
                 : theme.SurfaceContainerHighestColor;
         }
 
-        private Color? ResolveOverlayColor(ThemeData theme, SwitchThemeData switchTheme, MaterialState states)
+        private Color? ResolveOverlayColor(ThemeData theme, SwitchThemeData switchTheme, MaterialState states, bool isCupertinoAdaptive)
         {
             if (states.HasFlag(MaterialState.Disabled))
             {
@@ -729,26 +759,44 @@ public sealed class Switch : StatefulWidget
                 return themedOverlay.Value;
             }
 
-            return ResolveDefaultOverlayColor(theme, states);
+            return ResolveDefaultOverlayColor(theme, states, isCupertinoAdaptive);
         }
 
-        private double ResolveSplashRadius(SwitchThemeData switchTheme)
+        private double ResolveSplashRadius(SwitchThemeData switchTheme, bool isCupertinoAdaptive)
         {
             var resolved = CurrentWidget.SplashRadius
                            ?? switchTheme.SplashRadius
-                           ?? DefaultSplashRadius;
-            return NormalizePositiveValue(resolved, DefaultSplashRadius);
+                           ?? (isCupertinoAdaptive ? 0.0 : DefaultSplashRadius);
+            var fallback = isCupertinoAdaptive ? 0.0 : DefaultSplashRadius;
+            return NormalizePositiveValue(resolved, fallback);
         }
 
-        private Thickness ResolvePadding(ThemeData theme, SwitchThemeData switchTheme)
+        private Thickness ResolvePadding(ThemeData theme, SwitchThemeData switchTheme, bool isCupertinoAdaptive)
         {
-            var fallback = theme.UseMaterial3 ? new Thickness(4, 0, 4, 0) : default;
+            var fallback = isCupertinoAdaptive
+                ? default
+                : theme.UseMaterial3
+                    ? new Thickness(4, 0, 4, 0)
+                    : default;
             var source = CurrentWidget.Padding ?? switchTheme.Padding ?? fallback;
             return NormalizePadding(source);
         }
 
-        private static SwitchConfig ResolveConfig(bool useMaterial3)
+        private static SwitchConfig ResolveConfig(bool useMaterial3, bool isCupertinoAdaptive)
         {
+            if (isCupertinoAdaptive)
+            {
+                return new SwitchConfig(
+                    BaseWidth: 59,
+                    BaseHeight: 39,
+                    TrackWidth: 51,
+                    TrackHeight: 31,
+                    ActiveThumbDiameter: 28,
+                    InactiveThumbDiameter: 28,
+                    ThumbDiameterWithIcon: 28,
+                    IconSize: 16);
+            }
+
             return useMaterial3
                 ? new SwitchConfig(
                     BaseWidth: 52,
@@ -770,8 +818,13 @@ public sealed class Switch : StatefulWidget
                     IconSize: 14);
         }
 
-        private static Color ResolveDefaultThumbColor(ThemeData theme, MaterialState states)
+        private static Color ResolveDefaultThumbColor(ThemeData theme, MaterialState states, bool isCupertinoAdaptive)
         {
+            if (isCupertinoAdaptive)
+            {
+                return Colors.White;
+            }
+
             if (theme.UseMaterial3)
             {
                 if (states.HasFlag(MaterialState.Disabled))
@@ -796,8 +849,15 @@ public sealed class Switch : StatefulWidget
                 : theme.CanvasColor;
         }
 
-        private static Color ResolveDefaultTrackColor(ThemeData theme, MaterialState states)
+        private static Color ResolveDefaultTrackColor(ThemeData theme, MaterialState states, bool isCupertinoAdaptive)
         {
+            if (isCupertinoAdaptive)
+            {
+                return states.HasFlag(MaterialState.Selected)
+                    ? theme.PrimaryColor
+                    : CupertinoInactiveTrackColor;
+            }
+
             if (theme.UseMaterial3)
             {
                 if (states.HasFlag(MaterialState.Disabled))
@@ -822,8 +882,13 @@ public sealed class Switch : StatefulWidget
                 : MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.32);
         }
 
-        private static Color? ResolveDefaultTrackOutlineColor(ThemeData theme, MaterialState states)
+        private static Color? ResolveDefaultTrackOutlineColor(ThemeData theme, MaterialState states, bool isCupertinoAdaptive)
         {
+            if (isCupertinoAdaptive)
+            {
+                return Colors.Transparent;
+            }
+
             if (!theme.UseMaterial3)
             {
                 return Colors.Transparent;
@@ -842,13 +907,28 @@ public sealed class Switch : StatefulWidget
             return theme.OutlineColor;
         }
 
-        private static double? ResolveDefaultTrackOutlineWidth(ThemeData theme, MaterialState states)
+        private static double? ResolveDefaultTrackOutlineWidth(ThemeData theme, MaterialState states, bool isCupertinoAdaptive)
         {
+            if (isCupertinoAdaptive)
+            {
+                return 0.0;
+            }
+
             return theme.UseMaterial3 ? 2.0 : 0.0;
         }
 
-        private static Color? ResolveDefaultOverlayColor(ThemeData theme, MaterialState states)
+        private static Color? ResolveDefaultOverlayColor(ThemeData theme, MaterialState states, bool isCupertinoAdaptive)
         {
+            if (isCupertinoAdaptive)
+            {
+                if (!states.HasFlag(MaterialState.Focused))
+                {
+                    return Colors.Transparent;
+                }
+
+                return MaterialButtonCore.ApplyOpacity(theme.PrimaryColor, 0.55);
+            }
+
             if (theme.UseMaterial3)
             {
                 if (states.HasFlag(MaterialState.Selected))

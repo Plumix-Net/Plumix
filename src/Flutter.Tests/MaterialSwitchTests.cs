@@ -244,6 +244,109 @@ public sealed class MaterialSwitchTests
     }
 
     [Fact]
+    public void Switch_AdaptiveIOS_ActiveColor_MapsToTrack_NotThumb()
+    {
+        var theme = ThemeData.Light with
+        {
+            Platform = TargetPlatform.IOS,
+            PrimaryColor = Colors.CornflowerBlue
+        };
+
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: theme,
+                child: Switch.Adaptive(
+                    value: true,
+                    onChanged: _ => { },
+                    activeColor: Colors.Orange)));
+
+        harness.Pump(new Size(220, 120));
+
+        var track = FindDecoratedBoxBySize(harness.RenderView, width: 51, height: 31);
+        var thumb = FindDecoratedBoxBySize(harness.RenderView, width: 28, height: 28);
+
+        Assert.NotNull(track);
+        Assert.NotNull(thumb);
+        Assert.Equal(Colors.Orange, track!.Decoration.Color);
+        Assert.Equal(Colors.White, thumb!.Decoration.Color);
+    }
+
+    [Fact]
+    public void Switch_AdaptiveAndroid_ActiveColor_MapsToThumb()
+    {
+        var owner = new BuildOwner();
+        var theme = ThemeData.Light with
+        {
+            Platform = TargetPlatform.Android,
+            PrimaryColor = Colors.CornflowerBlue
+        };
+
+        var root = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: Switch.Adaptive(
+                    value: true,
+                    onChanged: _ => { },
+                    activeColor: Colors.Orange)));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
+        var track = FindTrackDecoration(renderRoot);
+        var thumb = FindThumbDecoration(renderRoot);
+
+        Assert.NotNull(track);
+        Assert.NotNull(thumb);
+        Assert.Equal(Colors.CornflowerBlue, track!.Decoration.Color);
+        Assert.Equal(Colors.Orange, thumb!.Decoration.Color);
+    }
+
+    [Fact]
+    public void Switch_AdaptiveIOS_Disabled_UsesCupertinoOpacity()
+    {
+        var owner = new BuildOwner();
+        var theme = ThemeData.Light with { Platform = TargetPlatform.IOS };
+
+        var root = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: Switch.Adaptive(
+                    value: true,
+                    onChanged: null)));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
+        var opacity = FindDescendant<RenderOpacity>(renderRoot);
+        Assert.NotNull(opacity);
+        Assert.Equal(0.5, opacity!.Opacity);
+    }
+
+    [Fact]
+    public void Switch_AdaptiveIOS_UsesCupertinoTrackGeometry()
+    {
+        var theme = ThemeData.Light with { Platform = TargetPlatform.IOS };
+
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: theme,
+                child: Switch.Adaptive(
+                    value: false,
+                    onChanged: _ => { })));
+
+        harness.Pump(new Size(220, 120));
+
+        var track = FindDecoratedBoxBySize(harness.RenderView, width: 51, height: 31);
+        Assert.NotNull(track);
+        Assert.Equal(51, track!.Size.Width, precision: 2);
+        Assert.Equal(31, track.Size.Height, precision: 2);
+    }
+
+    [Fact]
     public void Switch_DefaultTapTarget_Padded_ExpandsHitArea()
     {
         using var harness = new WidgetRenderHarness(
@@ -386,6 +489,18 @@ public sealed class MaterialSwitchTests
                 box.Decoration.Color.HasValue
                 && box.Decoration.Color.Value.A > 0
                 && !box.Decoration.Border.HasValue);
+    }
+
+    private static RenderDecoratedBox? FindDecoratedBoxBySize(
+        RenderObject root,
+        double width,
+        double height,
+        double tolerance = 0.01)
+    {
+        return FindDescendants<RenderDecoratedBox>(root)
+            .FirstOrDefault(box =>
+                Math.Abs(box.Size.Width - width) <= tolerance
+                && Math.Abs(box.Size.Height - height) <= tolerance);
     }
 
     private static Color ApplyOpacity(Color color, double opacity)
