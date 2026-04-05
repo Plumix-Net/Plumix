@@ -64,7 +64,7 @@
   - [x] Paint/visual semantics mapped
 - Divergence log (only if needed):
   - `src/Flutter/Widgets/Icon.cs`: semantic label is accepted on API surface but not yet wired to semantics widgets, because framework currently lacks `Semantics`/`ExcludeSemantics` widget wrappers.
-  - `src/Flutter.Material/Icons.cs`: only a minimal constant subset (`Add`, `InfoOutline`, `Star`, `StarOutline`) is shipped for current sample/test coverage instead of the full generated Flutter `Icons` table.
+  - `src/Flutter.Material/Icons.cs`: only a sample-driven constant subset (`ArrowBack`, `Menu`, `Close`, `Add`, `InfoOutline`, `Star`, `StarOutline`) is shipped instead of the full generated Flutter `Icons` table.
 
 ## Planned Changes
 
@@ -75,6 +75,14 @@
   - `src/Flutter/Widgets/Icon.cs`
   - `src/Flutter.Material/Icons.cs`
   - `src/Sample/Flutter.Net/MaterialButtonsDemoPage.cs`
+  - `src/Sample/Flutter.Net/AppBarIconThemeDemoPage.cs`
+  - `src/Sample/Flutter.Net/AppBarLeadingWidthDemoPage.cs`
+  - `src/Sample/Flutter.Net/AppBarActionsPaddingDemoPage.cs`
+  - `src/Sample/Flutter.Net/SampleGalleryScreen.cs`
+  - `dart_sample/lib/app_bar_icon_theme_demo_page.dart`
+  - `dart_sample/lib/app_bar_leading_width_demo_page.dart`
+  - `dart_sample/lib/app_bar_actions_padding_demo_page.dart`
+  - `dart_sample/lib/sample_gallery_screen.dart`
   - `src/Flutter.Tests/TextWidgetTests.cs`
   - `CHANGELOG.md`
   - `docs/FRAMEWORK_PLAN.md`
@@ -84,8 +92,8 @@
 - Brief intent per file:
   - `Flutter.Material.csproj` + `Assets/Fonts/*`: bundle Material icon font as Material-layer Avalonia resource for runtime icon glyph rendering.
   - `Icon.cs`: add `IconData` and `Icon` widget composition with `IconTheme` defaults and optional RTL mirroring.
-  - `Icons.cs`: add minimal Material icon constants used by sample/tests.
-  - sample page: replace placeholder glyph widget with real `Icon(Icons.*)`.
+  - `Icons.cs`: add sample-required Material icon constants used by sample/tests.
+  - sample pages: replace placeholder/text badge visuals with real `Icon(Icons.*)` in icon-focused app-bar demos and demo-shell back action.
   - tests: add focused icon behavior coverage.
   - docs/changelog files: mark parity status and coverage updates.
 

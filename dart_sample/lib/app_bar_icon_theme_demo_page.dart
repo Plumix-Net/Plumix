@@ -175,11 +175,8 @@ class _AppBarIconThemeDemoPageState extends State<AppBarIconThemeDemoPage> {
         actionsIconTheme: _widgetActionsIconOverrideEnabled
             ? const IconThemeData(color: _widgetActionsIconColor, size: 22)
             : null,
-        leading: const _IconThemeProbe(label: 'L'),
-        actions: const <Widget>[
-          _IconThemeProbe(label: 'A1'),
-          _IconThemeProbe(label: 'A2'),
-        ],
+        leading: const Icon(Icons.menu),
+        actions: const <Widget>[Icon(Icons.close), Icon(Icons.info_outline)],
       ),
     );
   }
@@ -189,11 +186,8 @@ class _AppBarIconThemeDemoPageState extends State<AppBarIconThemeDemoPage> {
       title: const Text('Default icon chain'),
       backgroundColor: _appBarBackground,
       foregroundColor: _foregroundColor,
-      leading: const _IconThemeProbe(label: 'L'),
-      actions: const <Widget>[
-        _IconThemeProbe(label: 'A1'),
-        _IconThemeProbe(label: 'A2'),
-      ],
+      leading: const Icon(Icons.menu),
+      actions: const <Widget>[Icon(Icons.close), Icon(Icons.info_outline)],
     );
   }
 
@@ -283,41 +277,5 @@ class _AppBarIconThemeDemoPageState extends State<AppBarIconThemeDemoPage> {
   static String _colorLabel(Color color) {
     final int value = color.toARGB32();
     return '#${value.toRadixString(16).toUpperCase().padLeft(8, '0')}';
-  }
-}
-
-class _IconThemeProbe extends StatelessWidget {
-  const _IconThemeProbe({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final IconThemeData theme = IconTheme.of(context);
-    final Color swatch = theme.color ?? Colors.transparent;
-    final String sizeLabel = theme.size == null
-        ? '-'
-        : theme.size!.toStringAsFixed(0);
-
-    return Container(
-      width: 58,
-      height: 24,
-      decoration: BoxDecoration(
-        color: const Color(0xFFF4F7FB),
-        border: Border.all(color: const Color(0xFFB8C4D4), width: 1),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      padding: const EdgeInsets.fromLTRB(4, 2, 4, 2),
-      child: Row(
-        spacing: 3,
-        children: <Widget>[
-          Container(width: 10, height: 10, color: swatch),
-          Text(
-            '$label:$sizeLabel',
-            style: const TextStyle(fontSize: 9, color: Colors.black),
-          ),
-        ],
-      ),
-    );
   }
 }

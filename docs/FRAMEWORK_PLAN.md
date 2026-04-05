@@ -342,8 +342,9 @@ Progress update (2026-03-19):
   - updated C#/Dart Material buttons demo pages with runtime icon-button probes and parity-aligned counters.
 - Added core icon widget parity baseline in framework layers:
   - introduced `IconData` + `Icon` in `Flutter.Widgets` with Flutter-like composition (`SizedBox` + centered glyph text), `IconTheme` size/color defaults, explicit override precedence, null-icon square layout behavior, and RTL mirroring for `matchTextDirection`;
-  - introduced minimal Material `Icons` constants subset in `Flutter.Material` for current parity scopes (`add`, `info_outline`, `star`, `star_outline`) and routed them to a bundled Material font resource (`avares://Flutter.Material/...#Material Icons`);
+  - introduced Material `Icons` constants set used by current samples (`arrow_back`, `menu`, `close`, `add`, `info_outline`, `star`, `star_outline`) and routed them to a bundled Material font resource (`avares://Flutter.Material/...#Material Icons`);
   - updated C# Material buttons demo to use framework `Icon(Icons.*)` instead of temporary glyph-probe widgets, matching the existing Dart sample structure;
+  - updated C#/Dart app-bar runtime demos (`iconTheme`, `leadingWidth`, `actionsPadding`) and demo-shell back action to use real icons (`menu`/`close`/`info_outline`/`arrow_back`) instead of text badges where icon rendering is the primary probe target;
   - added focused `TextWidgetTests` coverage for icon-theme defaults/overrides, null-icon layout, and RTL mirror transform behavior.
 
 Initial scope:

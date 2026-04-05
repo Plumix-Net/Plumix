@@ -135,7 +135,7 @@ class _AppBarLeadingWidthDemoPageState
         title: const Text('Theme leading width'),
         leadingWidth: _useWidgetOverride ? _widgetLeadingWidth : null,
         leading: _buildLeadingProbe(),
-        actions: const <Widget>[Text('A1', style: TextStyle(fontSize: 11))],
+        actions: const <Widget>[Icon(Icons.close)],
       ),
     );
   }
@@ -146,7 +146,7 @@ class _AppBarLeadingWidthDemoPageState
       backgroundColor: const Color(0xFF1E3A5F),
       foregroundColor: Colors.white,
       leading: _buildLeadingProbe(),
-      actions: const <Widget>[Text('A1', style: TextStyle(fontSize: 11))],
+      actions: const <Widget>[Icon(Icons.close)],
     );
   }
 
@@ -156,7 +156,7 @@ class _AppBarLeadingWidthDemoPageState
       height: 24,
       color: const Color(0xFFFFB703),
       child: const Center(
-        child: Text('L', style: TextStyle(fontSize: 11, color: Colors.black)),
+        child: Icon(Icons.menu, size: 14, color: Colors.black),
       ),
     );
   }

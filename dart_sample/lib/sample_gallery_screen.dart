@@ -352,7 +352,14 @@ class SampleDemoPage extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
-            child: const Text('Back', style: TextStyle(fontSize: 12)),
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              spacing: 4,
+              children: <Widget>[
+                Icon(Icons.arrow_back, size: 14),
+                Text('Back', style: TextStyle(fontSize: 12)),
+              ],
+            ),
           ),
         ),
       ),

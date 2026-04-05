@@ -280,6 +280,18 @@ public sealed class TextWidgetTests
         Assert.Equal(Matrix.CreateTranslation(24, 0) * new Matrix(-1, 0, 0, 1, 0, 0), transform!.Transform);
     }
 
+    [Fact]
+    public void MaterialArrowBackIcon_UsesFlutterCodePointAndMatchTextDirection()
+    {
+        var icon = Flutter.Material.Icons.ArrowBack;
+
+        Assert.Equal(0xe092, icon.CodePoint);
+        Assert.True(icon.MatchTextDirection);
+        Assert.Equal(
+            "avares://Flutter.Material/Assets/Fonts/MaterialIcons-Regular.otf#Material Icons",
+            icon.FontFamily);
+    }
+
     private static T RequireRenderObject<T>(Element? element) where T : RenderObject
     {
         Assert.NotNull(element);

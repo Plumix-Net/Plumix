@@ -29,13 +29,24 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
   - imported `MaterialIcons-Regular.otf` + license into `src/Flutter.Material/Assets/Fonts`,
   - enabled `AvaloniaResource` packaging for Material assets in `src/Flutter.Material/Flutter.Material.csproj`,
   - routed Material icon constants to embedded Material font family (`avares://Flutter.Material/...#Material Icons`) while keeping `Flutter.Widgets.Icon` core font resolution generic.
-- Added minimal Material icon constants subset in `src/Flutter.Material/Icons.cs` for current parity/demo usage: `add`, `info_outline`, `star`, `star_outline` (Material icon code points from Flutter source).
+- Expanded Material icon constants set in `src/Flutter.Material/Icons.cs` for current parity/demo usage:
+  - `arrow_back` (with `matchTextDirection=true`),
+  - `menu`, `close`,
+  - `add`, `info_outline`, `star`, `star_outline`
+  (all code points aligned to Flutter source).
 - Updated C# Material buttons demo to use real framework icons (`Icon(Icons.*)`) instead of temporary glyph probe widget (`src/Sample/Flutter.Net/MaterialButtonsDemoPage.cs`), matching existing Dart sample composition.
+- Updated C#/Dart AppBar-focused runtime demos to use real icons in leading/actions slots where icon rendering is the probe target:
+  - `AppBar icon themes`: `menu` + `close` + `info_outline`,
+  - `AppBar leadingWidth`: `menu` leading probe and `close` action probe,
+  - `AppBar actionsPadding`: `close`/`menu` action badges.
+  (`src/Sample/Flutter.Net/AppBarIconThemeDemoPage.cs`, `src/Sample/Flutter.Net/AppBarLeadingWidthDemoPage.cs`, `src/Sample/Flutter.Net/AppBarActionsPaddingDemoPage.cs`, `dart_sample/lib/app_bar_icon_theme_demo_page.dart`, `dart_sample/lib/app_bar_leading_width_demo_page.dart`, `dart_sample/lib/app_bar_actions_padding_demo_page.dart`)
+- Updated C#/Dart sample demo-shell back button to icon+label composition (`arrow_back` + `Back`) for visual parity with new icon set (`src/Sample/Flutter.Net/SampleGalleryScreen.cs`, `dart_sample/lib/sample_gallery_screen.dart`).
 - Added focused `Icon` behavior coverage in `src/Flutter.Tests/TextWidgetTests.cs`:
   - icon-theme default resolution,
   - explicit size/color override precedence,
   - null-icon size box behavior,
-  - RTL `matchTextDirection` transform behavior.
+  - RTL `matchTextDirection` transform behavior,
+  - Material `arrow_back` constant mapping (`codePoint` + `matchTextDirection` + font family).
 - Added iteration tracking artifacts for this parity pass (`docs/ai/material-2026-04-05-icon-widget-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`, `docs/ai/PARITY_MATRIX.md`).
 
 ## [2026-04-05] - M4 IconButton parity baseline

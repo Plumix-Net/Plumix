@@ -95,7 +95,7 @@ internal sealed class AppBarLeadingWidthDemoPageState : State
                 leading: BuildLeadingProbe(),
                 actions:
                 [
-                    new Text("A1", fontSize: 11),
+                    new Icon(Icons.Close),
                 ]));
     }
 
@@ -108,7 +108,7 @@ internal sealed class AppBarLeadingWidthDemoPageState : State
             leading: BuildLeadingProbe(),
             actions:
             [
-                new Text("A1", fontSize: 11),
+                new Icon(Icons.Close),
             ]);
     }
 
@@ -119,7 +119,10 @@ internal sealed class AppBarLeadingWidthDemoPageState : State
             height: 24,
             color: Color.Parse("#FFFFB703"),
             child: new Center(
-                child: new Text("L", fontSize: 11, color: Colors.Black)));
+                child: new Icon(
+                    Icons.Menu,
+                    size: 14,
+                    color: Colors.Black)));
     }
 
     private Widget BuildButton(string label, Action onTap, double width, string colorHex)

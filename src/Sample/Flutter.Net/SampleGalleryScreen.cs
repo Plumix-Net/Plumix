@@ -208,7 +208,14 @@ internal sealed class SampleDemoPage : StatelessWidget
                         minHeight: 34,
                         padding: new Thickness(10, 8),
                         borderRadius: BorderRadius.Circular(8),
-                        child: new Text("Back", fontSize: 12)))),
+                        child: new Row(
+                            mainAxisAlignment: MainAxisAlignment.Center,
+                            spacing: 4,
+                            children:
+                            [
+                                new Icon(Icons.ArrowBack, size: 14),
+                                new Text("Back", fontSize: 12),
+                            ])))),
             body: new Container(
                 padding: new Thickness(16),
                 child: new Column(
