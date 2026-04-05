@@ -144,6 +144,7 @@ public sealed record ThemeData
     private IconButtonThemeData? _iconButtonTheme;
     private CheckboxThemeData? _checkboxTheme;
     private SwitchThemeData? _switchTheme;
+    private RadioThemeData? _radioTheme;
 
     public ThemeData(
         TargetPlatform? platform = null,
@@ -179,7 +180,8 @@ public sealed record ThemeData
         FilledButtonThemeData? filledButtonTheme = null,
         IconButtonThemeData? iconButtonTheme = null,
         CheckboxThemeData? checkboxTheme = null,
-        SwitchThemeData? switchTheme = null)
+        SwitchThemeData? switchTheme = null,
+        RadioThemeData? radioTheme = null)
     {
         Platform = platform ?? ResolveDefaultPlatform();
         Brightness = brightness ?? Brightness.Light;
@@ -215,6 +217,7 @@ public sealed record ThemeData
         _iconButtonTheme = iconButtonTheme;
         _checkboxTheme = checkboxTheme;
         _switchTheme = switchTheme;
+        _radioTheme = radioTheme;
     }
 
     public TargetPlatform Platform { get; init; }
@@ -315,6 +318,12 @@ public sealed record ThemeData
     {
         get => _switchTheme ?? new SwitchThemeData();
         init => _switchTheme = value;
+    }
+
+    public RadioThemeData RadioTheme
+    {
+        get => _radioTheme ?? new RadioThemeData();
+        init => _radioTheme = value;
     }
 
     public static ThemeData Light { get; } = new();

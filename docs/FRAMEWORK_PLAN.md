@@ -378,6 +378,12 @@ Progress update (2026-03-19):
   - adaptive iOS/macOS interaction path now uses dedicated Cupertino-style composition (no `MaterialButtonCore` wrapper): Focus + pointer listeners + gesture drag pipeline with Cupertino drag thresholds (`commit=0.7`, `reverse=0.2`) and pressed-thumb extension/shadow behavior.
   - expanded `MaterialSwitchTests` coverage now includes adaptive drag commit/reverse choreography (`below commit` no-toggle, `beyond commit` toggle, and reverse-threshold cancel flow).
   - remaining divergence: deeper Cupertino fidelity items (`HapticFeedback.lightImpact`, on/off accessibility labels, image-thumb pipeline) remain out of current framework scope.
+- Added Material `Radio` parity baseline in `Flutter.Material`:
+  - introduced framework `Radio<T>` with Flutter-like baseline API (`value`, `groupValue`, `onChanged`, `toggleable`) and state-aware visuals on top of shared `MaterialButtonCore` interactions (focus/hover/pressed + keyboard activation);
+  - added dedicated radio theming surface (`RadioThemeData`, inherited `RadioTheme`, and `ThemeData.RadioTheme`) with Flutter-like precedence (`widget -> radioTheme -> defaults`) for fill/overlay/background/side/tap-target/splash/inner-radius values;
+  - added focused `MaterialRadioTests` coverage for M3 selected/unselected/disabled defaults, widget/theme precedence, toggleable null transition, keyboard activation, and tap-target behavior (`padded` vs `shrinkWrap`);
+  - added C#/Dart sample parity demo route/page for runtime verification (`Radio` route in both sample menus);
+  - remaining divergence: `Radio.adaptive` Cupertino path is not yet implemented in framework scope.
 
 Initial scope:
 

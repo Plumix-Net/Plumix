@@ -17,6 +17,31 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 - Documentation policy update: Dart-to-C# control/widget work now uses mandatory parity-first porting mode (`docs/ai/PORTING_MODE.md`) with strict `1:1` default behavior, required divergence logging, and explicit parity-validation workflow references in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/INVARIANTS.md`, `docs/ai/MODULE_INDEX.md`, `docs/ai/FEATURE_TEMPLATE.md`, `docs/ai/TEST_MATRIX.md`, and `docs/ai/PARITY_MATRIX.md`.
 - Agent workflow scope update: parity tasks now default to `one request = one control closed end-to-end` (not micro-iterations), with expanded context-budget guidance for control work (`12-20` initial files, up to `20`) and aligned rules in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/PORTING_MODE.md`, `docs/ai/MODULE_INDEX.md`, and `docs/ai/FEATURE_TEMPLATE.md`.
 
+## [2026-04-05] - M4 Radio parity baseline
+
+### Changed
+
+- Added framework Material `Radio<T>` in `src/Flutter.Material/Radio.cs` with Flutter-like baseline behavior for current framework scope:
+  - controlled group-selection API (`value`, `groupValue`, `onChanged`) plus `toggleable` deselect behavior (`selected -> null`),
+  - mode-aware M3/M2 default fill/overlay resolution for selected/unselected/disabled states,
+  - state-aware visual composition on top of `MaterialButtonCore` (focus/hover/pressed overlays, keyboard activation, and tap-target policy via `ThemeData.MaterialTapTargetSize`),
+  - customizable visual surface (`activeColor`, `fillColor`, `overlayColor`, `backgroundColor`, `side`, `innerRadius`, `splashRadius`).
+- Added dedicated radio theming primitives:
+  - new `RadioThemeData` and inherited `RadioTheme` (`src/Flutter.Material/RadioTheme.cs`),
+  - new `ThemeData.RadioTheme` integration in `src/Flutter.Material/ThemeData.cs`.
+- Added focused radio regression coverage in `src/Flutter.Tests/MaterialRadioTests.cs`:
+  - M3 selected/unselected/disabled defaults,
+  - widget-vs-theme precedence (`fillColor`),
+  - keyboard activation and toggleable null-transition behavior,
+  - tap-target behavior (`padded` vs `shrinkWrap`).
+- Added sample parity route/page in both C# and Dart samples:
+  - `src/Sample/Flutter.Net/RadioDemoPage.cs`
+  - `dart_sample/lib/radio_demo_page.dart`
+  - route/menu wiring in `src/Sample/Flutter.Net/SampleGalleryScreen.cs`, `dart_sample/lib/sample_gallery_screen.dart`, and `dart_sample/lib/sample_routes.dart`.
+- Added iteration tracking artifacts for this parity pass (`docs/ai/material-2026-04-05-radio-baseline-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`, `docs/ai/PARITY_MATRIX.md`).
+- Remaining documented divergence:
+  - `Radio.adaptive` Cupertino path is not yet implemented in current framework scope.
+
 ## [2026-04-05] - M4 Switch adaptive Cupertino interaction close-out
 
 ### Changed

@@ -24,6 +24,7 @@ import 'offstage_demo_page.dart';
 import 'overflow_box_demo_page.dart';
 import 'overflow_indicator_demo_page.dart';
 import 'proxy_widgets_demo_page.dart';
+import 'radio_demo_page.dart';
 import 'sample_routes.dart';
 import 'scrollbar_demo_page.dart';
 import 'stack_demo_page.dart';
@@ -105,6 +106,12 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'Switch',
       subtitle: 'on/off value + track/thumb theming + drag',
       builder: () => const SwitchDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.radio,
+      title: 'Radio',
+      subtitle: 'group selection + toggleable + tap-target policy',
+      builder: () => const RadioDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.appBarLeadingWidth,
