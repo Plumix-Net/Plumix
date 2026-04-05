@@ -17,6 +17,27 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 - Documentation policy update: Dart-to-C# control/widget work now uses mandatory parity-first porting mode (`docs/ai/PORTING_MODE.md`) with strict `1:1` default behavior, required divergence logging, and explicit parity-validation workflow references in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/INVARIANTS.md`, `docs/ai/MODULE_INDEX.md`, `docs/ai/FEATURE_TEMPLATE.md`, `docs/ai/TEST_MATRIX.md`, and `docs/ai/PARITY_MATRIX.md`.
 - Agent workflow scope update: parity tasks now default to `one request = one control closed end-to-end` (not micro-iterations), with expanded context-budget guidance for control work (`12-20` initial files, up to `20`) and aligned rules in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/PORTING_MODE.md`, `docs/ai/MODULE_INDEX.md`, and `docs/ai/FEATURE_TEMPLATE.md`.
 
+## [2026-04-05] - M4 core Icon widget parity baseline
+
+### Changed
+
+- Added core icon primitives in framework widgets (`src/Flutter/Widgets/Icon.cs`):
+  - introduced `IconData` and `Icon`,
+  - wired `Icon` defaults to ambient `IconTheme` (`size`/`color`) with explicit-parameter precedence,
+  - added null-icon square layout behavior and RTL mirroring for `matchTextDirection`.
+- Added bundled Material icon font wiring for framework icons:
+  - imported `MaterialIcons-Regular.otf` + license into `src/Flutter.Material/Assets/Fonts`,
+  - enabled `AvaloniaResource` packaging for Material assets in `src/Flutter.Material/Flutter.Material.csproj`,
+  - routed Material icon constants to embedded Material font family (`avares://Flutter.Material/...#Material Icons`) while keeping `Flutter.Widgets.Icon` core font resolution generic.
+- Added minimal Material icon constants subset in `src/Flutter.Material/Icons.cs` for current parity/demo usage: `add`, `info_outline`, `star`, `star_outline` (Material icon code points from Flutter source).
+- Updated C# Material buttons demo to use real framework icons (`Icon(Icons.*)`) instead of temporary glyph probe widget (`src/Sample/Flutter.Net/MaterialButtonsDemoPage.cs`), matching existing Dart sample composition.
+- Added focused `Icon` behavior coverage in `src/Flutter.Tests/TextWidgetTests.cs`:
+  - icon-theme default resolution,
+  - explicit size/color override precedence,
+  - null-icon size box behavior,
+  - RTL `matchTextDirection` transform behavior.
+- Added iteration tracking artifacts for this parity pass (`docs/ai/material-2026-04-05-icon-widget-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`, `docs/ai/PARITY_MATRIX.md`).
+
 ## [2026-04-05] - M4 IconButton parity baseline
 
 ### Changed

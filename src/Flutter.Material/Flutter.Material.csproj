@@ -10,4 +10,8 @@
     <ProjectReference Include="..\Flutter\Flutter.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <AvaloniaResource Include="Assets\**" />
+  </ItemGroup>
+
 </Project>

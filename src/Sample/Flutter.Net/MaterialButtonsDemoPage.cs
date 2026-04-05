@@ -94,21 +94,21 @@ internal sealed class MaterialButtonsDemoPageState : State
                             width: 56,
                             height: 56,
                             child: new IconButton(
-                                icon: new DemoIconGlyph("o"),
-                                selectedIcon: new DemoIconGlyph("x"),
+                                icon: new Icon(Icons.StarOutline),
+                                selectedIcon: new Icon(Icons.Star),
                                 isSelected: _iconButtonSelected,
                                 onPressed: _enabled ? OnIconButtonTap : null)),
                         new SizedBox(
                             width: 56,
                             height: 56,
                             child: IconButton.Filled(
-                                icon: new DemoIconGlyph("+"),
+                                icon: new Icon(Icons.Add),
                                 onPressed: _enabled ? OnFilledIconButtonTap : null)),
                         new SizedBox(
                             width: 56,
                             height: 56,
                             child: IconButton.Outlined(
-                                icon: new DemoIconGlyph("i"),
+                                icon: new Icon(Icons.InfoOutline),
                                 onPressed: _enabled ? OnOutlinedIconButtonTap : null)),
                     ]),
                 new Row(
@@ -232,29 +232,5 @@ internal sealed class MaterialButtonsDemoPageState : State
     private void OnOutlinedIconButtonTap()
     {
         SetState(() => _outlinedIconButtonTaps += 1);
-    }
-}
-
-internal sealed class DemoIconGlyph : StatelessWidget
-{
-    private readonly string _glyph;
-
-    public DemoIconGlyph(string glyph)
-    {
-        _glyph = glyph;
-    }
-
-    public override Widget Build(BuildContext context)
-    {
-        var iconTheme = IconTheme.Of(context);
-        var glyphSize = iconTheme.Size ?? 24;
-        var glyphColor = iconTheme.Color ?? Colors.Black;
-
-        return new Text(
-            _glyph,
-            fontSize: glyphSize,
-            color: glyphColor,
-            softWrap: false,
-            maxLines: 1);
     }
 }

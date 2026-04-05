@@ -194,11 +194,123 @@ public sealed class TextWidgetTests
         Assert.Equal(themedStyle.Color, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color);
     }
 
+    [Fact]
+    public void IconWidget_UsesIconThemeDefaults_WhenArgumentsAreOmitted()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new IconTheme(
+                data: new IconThemeData(Color: Colors.DarkOrange, Size: 28),
+                child: new Icon(icon: Flutter.Material.Icons.Add)));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderConstrainedBox>(root.ChildElement));
+        Assert.NotNull(paragraph);
+        Assert.Equal(char.ConvertFromUtf32(0xe047), paragraph!.Text);
+        Assert.Equal(28, paragraph.FontSize);
+        Assert.Equal(Colors.DarkOrange, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color);
+        Assert.Equal(
+            new FontFamily("avares://Flutter.Material/Assets/Fonts/MaterialIcons-Regular.otf#Material Icons"),
+            paragraph.FontFamily);
+    }
+
+    [Fact]
+    public void IconWidget_ExplicitColorAndSize_OverrideIconTheme()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new IconTheme(
+                data: new IconThemeData(Color: Colors.DarkOrange, Size: 28),
+                child: new Icon(
+                    icon: Flutter.Material.Icons.Add,
+                    size: 32,
+                    color: Colors.MediumPurple)));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderConstrainedBox>(root.ChildElement));
+        Assert.NotNull(paragraph);
+        Assert.Equal(32, paragraph!.FontSize);
+        Assert.Equal(Colors.MediumPurple, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color);
+    }
+
+    [Fact]
+    public void IconWidget_NullIcon_RendersSquareByResolvedSize()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(new Icon(icon: null, size: 18));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var constrainedBox = RequireRenderObject<RenderConstrainedBox>(root.ChildElement);
+        Assert.Equal(18, constrainedBox.AdditionalConstraints.MinWidth);
+        Assert.Equal(18, constrainedBox.AdditionalConstraints.MaxWidth);
+        Assert.Equal(18, constrainedBox.AdditionalConstraints.MinHeight);
+        Assert.Equal(18, constrainedBox.AdditionalConstraints.MaxHeight);
+    }
+
+    [Fact]
+    public void IconWidget_MatchTextDirection_Rtl_MirrorsGlyphWithTransform()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Directionality(
+                textDirection: TextDirection.Rtl,
+                child: new Icon(
+                    icon: Flutter.Material.Icons.Add with { MatchTextDirection = true },
+                    size: 24)));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var transform = FindDescendant<RenderTransform>(RequireRenderObject<RenderConstrainedBox>(root.ChildElement));
+        Assert.NotNull(transform);
+        Assert.Equal(Matrix.CreateTranslation(24, 0) * new Matrix(-1, 0, 0, 1, 0, 0), transform!.Transform);
+    }
+
     private static T RequireRenderObject<T>(Element? element) where T : RenderObject
     {
         Assert.NotNull(element);
         Assert.NotNull(element!.RenderObject);
         return Assert.IsType<T>(element.RenderObject);
+    }
+
+    private static T? FindDescendant<T>(RenderObject? root) where T : RenderObject
+    {
+        if (root is null)
+        {
+            return null;
+        }
+
+        if (root is T match)
+        {
+            return match;
+        }
+
+        T? result = null;
+        root.VisitChildren(child =>
+        {
+            if (result is not null)
+            {
+                return;
+            }
+
+            result = FindDescendant<T>(child);
+        });
+
+        return result;
     }
 
     private sealed class TestRootElement : Element, IRenderObjectHost
