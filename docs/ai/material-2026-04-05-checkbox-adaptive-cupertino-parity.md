@@ -6,7 +6,7 @@
 
 ## Non-Goals
 
-- Full native `CupertinoCheckbox` painter parity (dark-mode gradient fill and exact vector check/dash stroke geometry).
+- Pixel-perfect anti-aliasing parity across all host GPU backends.
 
 ## Context Budget Plan
 
@@ -54,7 +54,7 @@
   - [x] Constraint/layout behavior mapped
   - [x] Paint/visual semantics mapped
 - Divergence log (only if needed):
-  - `src/Flutter.Cupertino/CupertinoCheckbox.cs`: adaptive iOS/macOS now routes through a dedicated Cupertino widget path with `44x44` iOS tap target and `14x14` macOS tap target; painter-level details are still simplified versus Flutter’s native Cupertino painter (dark gradient and exact vector check/dash stroke geometry).
+  - No behavior-level divergence is currently documented for adaptive checkbox defaults in framework scope.
 
 ## Planned Changes
 
@@ -73,6 +73,9 @@
 - Brief intent per file:
   - `Flutter.Cupertino`: introduce framework Cupertino checkbox primitive.
   - `Checkbox.cs`: adaptive iOS/macOS route to `CupertinoCheckbox` + ignored-parameter behavior through API mapping.
+  - `src/Flutter/Rendering/Object.PaintingContext.cs`: add line-drawing primitive used by adaptive vector glyph rendering.
+  - `src/Flutter/Rendering/Decoration.cs` + `src/Flutter/Rendering/Proxy.RenderBox.cs`: add brush-backed decoration fill for dark gradient parity.
+  - `src/Flutter/Widgets/StrokeGlyph.cs` + `src/Flutter/RenderStrokeGlyph.cs`: reusable vector stroke primitive for check/dash painter parity.
   - `MaterialCheckboxTests.cs`: focused adaptive behavior coverage.
   - docs/changelog: record shipped status and remaining divergence.
 

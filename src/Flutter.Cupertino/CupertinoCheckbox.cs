@@ -15,6 +15,10 @@ public sealed class CupertinoCheckbox : StatefulWidget
     private const double FocusOpacity = 0.80;
     private const double FocusLightness = 0.69;
     private const double FocusSaturation = 0.835;
+    private const double DarkGradientTopOpacity = 0.14;
+    private const double DarkGradientBottomOpacity = 0.29;
+    private const double DisabledDarkGradientTopOpacity = 0.08;
+    private const double DisabledDarkGradientBottomOpacity = 0.14;
 
     private static readonly Color DisabledCheckColorLight = Color.FromArgb(64, 0, 0, 0);
     private static readonly Color DisabledCheckColorDark = Color.FromArgb(64, 255, 255, 255);
@@ -176,14 +180,18 @@ public sealed class CupertinoCheckbox : StatefulWidget
             var borderSide = ResolveBorderSide(selected);
             var overlayColor = ResolveOverlayColor(activeColor);
             var focusRingColor = ResolveFocusRingColor(activeColor);
+            var useDarkGradient = ShouldUseDarkGradient(selected);
+            var baseFillColor = useDarkGradient ? Colors.Transparent : fillColor;
 
             var indicator = BuildIndicator(checkColor);
             var body = BuildCheckboxBody(
                 shape,
-                fillColor,
+                baseFillColor,
                 borderSide,
                 overlayColor,
-                indicator);
+                indicator,
+                gradientBaseColor: fillColor,
+                useDarkGradient: useDarkGradient);
 
             if (_hasFocus && Enabled)
             {
@@ -231,7 +239,9 @@ public sealed class CupertinoCheckbox : StatefulWidget
             Color fillColor,
             BorderSide? borderSide,
             Color? overlayColor,
-            Widget indicator)
+            Widget indicator,
+            Color gradientBaseColor,
+            bool useDarkGradient)
         {
             var layers = new List<Widget>
             {
@@ -242,6 +252,15 @@ public sealed class CupertinoCheckbox : StatefulWidget
                         BorderRadius: shape),
                     child: new SizedBox(width: Width, height: Width)),
             };
+
+            if (useDarkGradient)
+            {
+                layers.Add(new DecoratedBox(
+                    decoration: new BoxDecoration(
+                        Brush: CreateDarkGradientBrush(gradientBaseColor, Enabled),
+                        BorderRadius: shape),
+                    child: new SizedBox(width: Width, height: Width)));
+            }
 
             if (overlayColor.HasValue && overlayColor.Value.A > 0)
             {
@@ -290,15 +309,8 @@ public sealed class CupertinoCheckbox : StatefulWidget
         {
             return value switch
             {
-                true => new Text(
-                    "✓",
-                    fontSize: 11,
-                    fontWeight: FontWeight.Bold,
-                    color: color,
-                    softWrap: false,
-                    maxLines: 1,
-                    textAlign: TextAlign.Center),
-                null => new Container(width: 7, height: 2, color: color),
+                true => new StrokeGlyph(StrokeGlyphKind.Check, color, Width),
+                null => new StrokeGlyph(StrokeGlyphKind.Dash, color, Width),
                 _ => new SizedBox()
             };
         }
@@ -517,6 +529,27 @@ public sealed class CupertinoCheckbox : StatefulWidget
             return null;
         }
 
+        private bool ShouldUseDarkGradient(bool selected)
+        {
+            return CurrentWidget.IsDark && !(Enabled && selected);
+        }
+
+        private static IBrush CreateDarkGradientBrush(Color baseColor, bool isEnabled)
+        {
+            var topOpacity = isEnabled ? DarkGradientTopOpacity : DisabledDarkGradientTopOpacity;
+            var bottomOpacity = isEnabled ? DarkGradientBottomOpacity : DisabledDarkGradientBottomOpacity;
+            return new LinearGradientBrush
+            {
+                StartPoint = new RelativePoint(0.5, 0.0, RelativeUnit.Relative),
+                EndPoint = new RelativePoint(0.5, 1.0, RelativeUnit.Relative),
+                GradientStops = new GradientStops
+                {
+                    new GradientStop(ApplyOpacity(baseColor, topOpacity), 0.0),
+                    new GradientStop(ApplyOpacity(baseColor, bottomOpacity), 1.0),
+                }
+            };
+        }
+
         private Size ResolveTapTargetSize()
         {
             var source = CurrentWidget.TapTargetSize;
@@ -720,4 +753,5 @@ public sealed class CupertinoCheckbox : StatefulWidget
             return Color.FromArgb(alpha, color.R, color.G, color.B);
         }
     }
+
 }

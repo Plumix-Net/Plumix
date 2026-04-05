@@ -36,6 +36,7 @@ public readonly record struct BorderSide
 
 public sealed record BoxDecoration(
     Color? Color = null,
+    IBrush? Brush = null,
     BorderSide? Border = null,
     BorderRadius? BorderRadius = null,
     BoxShadows? BoxShadows = null)

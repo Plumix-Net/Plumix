@@ -1216,9 +1216,11 @@ public sealed class RenderDecoratedBox : RenderProxyBox
         var rect = new Rect(offset, Size);
         var radius = _decoration.EffectiveBorderRadius.Radius;
         var boxShadows = _decoration.EffectiveBoxShadows;
-        IBrush? fill = _decoration.Color.HasValue
-            ? new SolidColorBrush(_decoration.Color.Value)
-            : null;
+        IBrush? fill = _decoration.Brush;
+        if (fill is null && _decoration.Color.HasValue)
+        {
+            fill = new SolidColorBrush(_decoration.Color.Value);
+        }
 
         IPen? borderPen = null;
         if (_decoration.Border.HasValue)

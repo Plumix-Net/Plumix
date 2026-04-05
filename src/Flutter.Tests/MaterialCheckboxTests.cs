@@ -493,6 +493,28 @@ public sealed class MaterialCheckboxTests
     }
 
     [Fact]
+    public void Checkbox_AdaptiveIOS_Checked_UsesVectorIndicatorInsteadOfTextParagraph()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    Platform = TargetPlatform.IOS
+                },
+                child: Checkbox.Adaptive(
+                    value: true,
+                    onChanged: _ => { })));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.Null(paragraph);
+    }
+
+    [Fact]
     public void Checkbox_AdaptiveIOS_FillColorParameter_IsIgnored()
     {
         var owner = new BuildOwner();
@@ -580,6 +602,52 @@ public sealed class MaterialCheckboxTests
 
         var checkboxBody = FindDecoratedBoxBySize(harness.RenderView, width: 14, height: 14, tolerance: 0.02);
         Assert.NotNull(checkboxBody);
+    }
+
+    [Fact]
+    public void Checkbox_AdaptiveDarkUnchecked_UsesGradientFillBrush()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    Platform = TargetPlatform.IOS,
+                    Brightness = Brightness.Dark
+                },
+                child: Checkbox.Adaptive(
+                    value: false,
+                    onChanged: _ => { })));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var hasGradientBrush = HasGradientBrushFill(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.True(hasGradientBrush);
+    }
+
+    [Fact]
+    public void Checkbox_AdaptiveDarkCheckedEnabled_DoesNotUseGradientFillBrush()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    Platform = TargetPlatform.IOS,
+                    Brightness = Brightness.Dark
+                },
+                child: Checkbox.Adaptive(
+                    value: true,
+                    onChanged: _ => { })));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var hasGradientBrush = HasGradientBrushFill(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.False(hasGradientBrush);
     }
 
     [Fact]
@@ -687,6 +755,12 @@ public sealed class MaterialCheckboxTests
             .FirstOrDefault(box =>
                 Math.Abs(box.Size.Width - width) <= tolerance
                 && Math.Abs(box.Size.Height - height) <= tolerance);
+    }
+
+    private static bool HasGradientBrushFill(RenderObject root)
+    {
+        return FindDescendants<RenderDecoratedBox>(root)
+            .Any(box => box.Decoration.Brush is LinearGradientBrush);
     }
 
     private static List<T> FindDescendants<T>(RenderObject? root) where T : RenderObject

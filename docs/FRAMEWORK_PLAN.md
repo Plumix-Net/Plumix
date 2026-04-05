@@ -360,9 +360,11 @@ Progress update (2026-03-19):
   - introduced a dedicated `Flutter.Cupertino` library project with framework `CupertinoCheckbox` (`src/Flutter.Cupertino/CupertinoCheckbox.cs`) and wired it into solution/project references.
   - `Checkbox.Adaptive(...)` now resolves a dedicated iOS/macOS adaptive branch from `ThemeData.Platform` and delegates to `CupertinoCheckbox` instead of following Material-mode composition.
   - adaptive iOS/macOS path now uses Cupertino-like defaults for visual width (`14x14`), fill/check/border token resolution, and adaptive tap-target policy (`iOS` `44x44`, `macOS` `14x14`).
+  - adaptive painter visuals are now parity-hardened for Cupertino defaults: dark-mode gradient fill branch is implemented and check/dash indicators are rendered as vector stroke glyphs (instead of font-text checkmark).
+  - shared rendering primitives were extended for this parity pass (`PaintingContext.DrawLine`, `BoxDecoration.Brush`, and reusable `StrokeGlyph` render primitive).
   - Flutter-documented adaptive exclusions are now honored in framework scope for Cupertino targets: `fillColor`, `overlayColor`, `hoverColor`, `materialTapTargetSize`, `splashRadius`, and `isError` are ignored.
-  - expanded `MaterialCheckboxTests` with focused adaptive coverage for iOS defaults, ignored adaptive parameters, macOS shrink-wrap hit-target behavior, and `14x14` adaptive visual geometry.
-  - remaining divergence: adaptive checkbox now uses dedicated Cupertino widget composition, but painter-level fidelity is still simplified versus Flutter Cupertino painter (no dark-mode gradient fill and no exact vector check/dash stroke geometry yet).
+  - expanded `MaterialCheckboxTests` with focused adaptive coverage for iOS defaults, ignored adaptive parameters, macOS shrink-wrap hit-target behavior, `14x14` adaptive visual geometry, vector indicator rendering, and dark-gradient behavior.
+  - remaining divergence: none documented for adaptive checkbox painter defaults in current framework scope.
 - Added Material `Switch` parity baseline in `Flutter.Material`:
   - introduced framework `Switch` with controlled `bool` value, tap/drag toggle interaction, keyboard activation through shared `MaterialButtonCore` focus path, and animated thumb-position transitions for value updates;
   - added dedicated switch theming surface (`SwitchThemeData`, inherited `SwitchTheme`, and `ThemeData.SwitchTheme`) with Flutter-like precedence (`widget -> switchTheme -> defaults`) for thumb/track/outline/overlay/tap-target/splash/icon/padding values;

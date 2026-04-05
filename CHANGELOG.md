@@ -50,7 +50,21 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
   - adaptive macOS shrink-wrap hit-target behavior and `14x14` visual geometry.
 - Updated project graph and iteration tracking artifacts for this parity-hardening pass (`src/Flutter.Net.sln`, `src/Flutter.Material/Flutter.Material.csproj`, `src/Flutter.Tests/Flutter.Tests.csproj`, `docs/ai/material-2026-04-05-checkbox-adaptive-cupertino-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
 - Remaining documented divergence:
-  - adaptive checkbox now uses a dedicated Cupertino widget path, but painter-level fidelity is still simplified versus Flutter’s native Cupertino painter (no dark-mode gradient fill and no exact vector check/dash stroke geometry yet).
+  - none for adaptive checkbox painter defaults in current framework scope.
+
+### Additional parity close-out (same iteration)
+
+- Completed painter-level Cupertino parity for adaptive checkbox visuals:
+  - `src/Flutter.Cupertino/CupertinoCheckbox.cs` now renders dark-mode gradient fill behavior matching Flutter Cupertino logic (enabled and disabled gradient opacity profiles).
+  - check and dash indicators now use vector stroke glyph rendering (`0.22/0.54 -> 0.40/0.75 -> 0.78/0.25` check path and centered half-width dash) instead of font glyph text.
+- Added shared rendering primitives needed for this parity pass:
+  - `PaintingContext.DrawLine(...)` in `src/Flutter/Rendering/Object.PaintingContext.cs`,
+  - brush-backed decoration support (`BoxDecoration.Brush`) in `src/Flutter/Rendering/Decoration.cs` + `RenderDecoratedBox`.
+  - reusable stroke glyph widget/render object (`src/Flutter/Widgets/StrokeGlyph.cs`, `src/Flutter/RenderStrokeGlyph.cs`).
+- Expanded adaptive checkbox tests in `src/Flutter.Tests/MaterialCheckboxTests.cs`:
+  - adaptive iOS uses vector indicator path (no `RenderParagraph` checkmark text),
+  - adaptive dark unchecked path uses gradient brush fill,
+  - adaptive dark checked+enabled path keeps solid fill (no dark gradient branch).
 
 ## [2026-04-05] - M4 Switch parity baseline
 
