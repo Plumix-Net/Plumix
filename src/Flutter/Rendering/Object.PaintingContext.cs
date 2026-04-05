@@ -79,6 +79,15 @@ public sealed class PaintingContext
         });
     }
 
+    public void DrawLine(IPen pen, Point startPoint, Point endPoint)
+    {
+        var pictureLayer = EnsurePictureLayer();
+        pictureLayer.AddDrawCommand((drawingContext, sceneOffset) =>
+        {
+            drawingContext.DrawLine(pen, startPoint + sceneOffset, endPoint + sceneOffset);
+        });
+    }
+
     public void DrawTextLayout(TextLayout layout, Point point)
     {
         var pictureLayer = EnsurePictureLayer();

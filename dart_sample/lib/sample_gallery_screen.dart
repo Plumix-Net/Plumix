@@ -27,6 +27,7 @@ import 'proxy_widgets_demo_page.dart';
 import 'sample_routes.dart';
 import 'scrollbar_demo_page.dart';
 import 'stack_demo_page.dart';
+import 'switch_demo_page.dart';
 import 'unconstrained_limited_box_demo_page.dart';
 
 class SampleGalleryScreen extends StatelessWidget {
@@ -98,6 +99,12 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'Checkbox',
       subtitle: 'bool/bool? values + tristate + tap-target policy',
       builder: () => const CheckboxDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.switchDemo,
+      title: 'Switch',
+      subtitle: 'on/off value + track/thumb theming + drag',
+      builder: () => const SwitchDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.appBarLeadingWidth,

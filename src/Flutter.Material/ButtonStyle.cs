@@ -15,7 +15,8 @@ public enum MaterialState
     Focused = 1 << 1,
     Pressed = 1 << 2,
     Disabled = 1 << 3,
-    Selected = 1 << 4
+    Selected = 1 << 4,
+    Error = 1 << 5
 }
 
 public enum IconAlignment

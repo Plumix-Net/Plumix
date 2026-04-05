@@ -17,6 +17,122 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 - Documentation policy update: Dart-to-C# control/widget work now uses mandatory parity-first porting mode (`docs/ai/PORTING_MODE.md`) with strict `1:1` default behavior, required divergence logging, and explicit parity-validation workflow references in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/INVARIANTS.md`, `docs/ai/MODULE_INDEX.md`, `docs/ai/FEATURE_TEMPLATE.md`, `docs/ai/TEST_MATRIX.md`, and `docs/ai/PARITY_MATRIX.md`.
 - Agent workflow scope update: parity tasks now default to `one request = one control closed end-to-end` (not micro-iterations), with expanded context-budget guidance for control work (`12-20` initial files, up to `20`) and aligned rules in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/PORTING_MODE.md`, `docs/ai/MODULE_INDEX.md`, and `docs/ai/FEATURE_TEMPLATE.md`.
 
+## [2026-04-05] - M4 Switch adaptive Cupertino interaction close-out
+
+### Changed
+
+- Closed the documented adaptive-switch interaction gap in `src/Flutter.Material/Switch.cs`:
+  - adaptive iOS/macOS path no longer uses `MaterialButtonCore`; it now uses dedicated Cupertino-style composition (`Focus` + pointer listeners + drag/tap gesture handling),
+  - adaptive drag choreography now follows Flutter Cupertino thresholds (`commit=0.7`, `reverse=0.2`) instead of Material-style midpoint commit,
+  - adaptive thumb now applies Cupertino-style pressed/drag extension (`+7`) and default thumb shadows (`0,3,8` + `0,3,1`) while keeping existing Cupertino geometry/tokens.
+- Expanded adaptive switch regression coverage in `src/Flutter.Tests/MaterialSwitchTests.cs`:
+  - drag below commit threshold does not toggle,
+  - drag beyond commit threshold toggles on,
+  - drag reverse beyond reverse threshold cancels pending toggle.
+- Updated tracking docs for this close-out step (`docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`, `docs/ai/material-2026-04-05-switch-adaptive-cupertino-interaction-closeout.md`).
+- Remaining documented divergence:
+  - deeper Cupertino fidelity items are still out of current scope (`HapticFeedback.lightImpact`, on/off accessibility labels, image-thumb pipeline).
+
+## [2026-04-05] - M4 Switch adaptive Cupertino parity hardening
+
+### Changed
+
+- Hardened `Switch.Adaptive(...)` parity on Cupertino targets in `src/Flutter.Material/Switch.cs`:
+  - adaptive path now branches by `ThemeData.Platform` (`IOS`/`MacOS`) instead of always following Material defaults;
+  - adaptive iOS/macOS now uses Cupertino-like geometry/defaults (`59x39` shell, `51x31` track, `28` thumb), zero fallback padding, and zero fallback splash radius;
+  - adaptive `activeColor` mapping now follows Flutter semantics by platform (`iOS/macOS -> track`, other platforms -> thumb fallback when explicit track/thumb colors are absent);
+  - disabled adaptive iOS/macOS now applies switch-level opacity `0.5`.
+- Expanded switch regression coverage in `src/Flutter.Tests/MaterialSwitchTests.cs` for:
+  - adaptive iOS `activeColor` track mapping (and non-iOS thumb mapping),
+  - adaptive iOS disabled opacity behavior,
+  - adaptive iOS Cupertino geometry defaults (`track 51x31`).
+- Updated iteration tracking artifacts for this parity-hardening pass (`docs/ai/material-2026-04-05-switch-adaptive-cupertino-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
+- Remaining documented divergence:
+  - adaptive switch now has Cupertino-like defaults in framework scope, but still uses shared `MaterialButtonCore` composition (no dedicated Cupertino painter/drag-threshold choreography yet).
+
+## [2026-04-05] - M4 Checkbox adaptive Cupertino parity hardening
+
+### Changed
+
+- Hardened `Checkbox.Adaptive(...)` parity on Cupertino targets in `src/Flutter.Material/Checkbox.cs`:
+  - added a dedicated `src/Flutter.Cupertino` project and framework `CupertinoCheckbox` control (`src/Flutter.Cupertino/CupertinoCheckbox.cs`);
+  - adaptive path now branches by `ThemeData.Platform` (`IOS`/`MacOS`) and delegates to `CupertinoCheckbox` instead of following Material defaults/composition;
+  - adaptive iOS/macOS now uses Cupertino-like checkbox defaults for visual geometry and tokens (body size `14x14`, Cupertino-like fill/check/border defaults, and mode-aware dark-path token handling);
+  - Flutter-documented adaptive exclusions are now honored in framework scope for Cupertino targets (`fillColor`, `overlayColor`, `hoverColor`, `materialTapTargetSize`, `splashRadius`, and `isError` are ignored);
+  - adaptive tap-target policy now follows platform split in framework scope (`IOS` uses `44x44`; `MacOS` uses `14x14`).
+- Expanded checkbox regression coverage in `src/Flutter.Tests/MaterialCheckboxTests.cs` for:
+  - adaptive iOS default token behavior,
+  - adaptive iOS ignored-parameter behavior (`fillColor`, `materialTapTargetSize`),
+  - adaptive macOS shrink-wrap hit-target behavior and `14x14` visual geometry.
+- Updated project graph and iteration tracking artifacts for this parity-hardening pass (`src/Flutter.Net.sln`, `src/Flutter.Material/Flutter.Material.csproj`, `src/Flutter.Tests/Flutter.Tests.csproj`, `docs/ai/material-2026-04-05-checkbox-adaptive-cupertino-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
+- Remaining documented divergence:
+  - none for adaptive checkbox painter defaults in current framework scope.
+
+### Additional parity close-out (same iteration)
+
+- Completed painter-level Cupertino parity for adaptive checkbox visuals:
+  - `src/Flutter.Cupertino/CupertinoCheckbox.cs` now renders dark-mode gradient fill behavior matching Flutter Cupertino logic (enabled and disabled gradient opacity profiles).
+  - check and dash indicators now use vector stroke glyph rendering (`0.22/0.54 -> 0.40/0.75 -> 0.78/0.25` check path and centered half-width dash) instead of font glyph text.
+- Added shared rendering primitives needed for this parity pass:
+  - `PaintingContext.DrawLine(...)` in `src/Flutter/Rendering/Object.PaintingContext.cs`,
+  - brush-backed decoration support (`BoxDecoration.Brush`) in `src/Flutter/Rendering/Decoration.cs` + `RenderDecoratedBox`.
+  - reusable stroke glyph widget/render object (`src/Flutter/Widgets/StrokeGlyph.cs`, `src/Flutter/RenderStrokeGlyph.cs`).
+- Expanded adaptive checkbox tests in `src/Flutter.Tests/MaterialCheckboxTests.cs`:
+  - adaptive iOS uses vector indicator path (no `RenderParagraph` checkmark text),
+  - adaptive dark unchecked path uses gradient brush fill,
+  - adaptive dark checked+enabled path keeps solid fill (no dark gradient branch).
+
+## [2026-04-05] - M4 Switch parity baseline
+
+### Changed
+
+- Added framework Material `Switch` in `src/Flutter.Material/Switch.cs` with Flutter-like baseline behavior for current framework scope:
+  - controlled `value` (`bool`) with callback-driven state updates (`onChanged`),
+  - tap and horizontal-drag interaction flow with animated thumb-position transitions,
+  - keyboard activation through focus path (`focusNode`/`autofocus`) and `MaterialButtonCore`,
+  - mode-aware defaults for thumb/track/outline/overlay and tap-target policy wiring to `ThemeData.MaterialTapTargetSize`,
+  - customizable thumb/track/outline/icon surface (`active/inactive` colors, state properties, `thumbIcon`, `overlayColor`, `padding`, `splashRadius`).
+- Added dedicated switch theming primitives:
+  - new `SwitchThemeData` and inherited `SwitchTheme` (`src/Flutter.Material/SwitchTheme.cs`),
+  - new `ThemeData.SwitchTheme` integration in `src/Flutter.Material/ThemeData.cs`.
+- Added focused switch regression coverage in `src/Flutter.Tests/MaterialSwitchTests.cs`:
+  - M3 default selected/unselected/disabled visual checks,
+  - widget-vs-theme precedence checks for thumb/track/outline,
+  - thumb icon rendering path, tap-target behavior, and keyboard toggle activation.
+- Added sample parity route/page in both C# and Dart samples:
+  - `src/Sample/Flutter.Net/SwitchDemoPage.cs`
+  - `dart_sample/lib/switch_demo_page.dart`
+  - route wiring in `src/Sample/Flutter.Net/SampleGalleryScreen.cs`, `dart_sample/lib/sample_gallery_screen.dart`, and `dart_sample/lib/sample_routes.dart`.
+- Added iteration tracking artifacts for this parity pass (`docs/ai/material-2026-04-05-switch-baseline-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`, `docs/ai/PARITY_MATRIX.md`).
+- Remaining documented divergence:
+  - adaptive switch currently renders through Material path on iOS/macOS because Cupertino switch primitives are not yet implemented in framework scope.
+
+## [2026-04-05] - M4 Checkbox parity close-out (theme + animation)
+
+### Changed
+
+- Expanded framework Material `Checkbox` (`src/Flutter.Material/Checkbox.cs`) from baseline parity to close-out scope:
+  - converted control to stateful transition model with animated indicator state changes across `false/true/null` values (check/dash crossfade),
+  - added API surface and behavior for `Checkbox.Adaptive(...)`, `isError`, `splashRadius`, and `semanticLabel` field support,
+  - added Flutter-like resolution order for checkbox visuals and interaction tokens (`widget -> checkboxTheme -> defaults`) including fill/check/overlay/side/shape/tap-target/splash-radius.
+- Added dedicated checkbox theme primitives:
+  - new `CheckboxThemeData` and inherited `CheckboxTheme` (`src/Flutter.Material/CheckboxTheme.cs`),
+  - new `ThemeData.CheckboxTheme` integration in `src/Flutter.Material/ThemeData.cs`.
+- Extended Material state/theme tokens for checkbox parity:
+  - added `MaterialState.Error` in `src/Flutter.Material/ButtonStyle.cs`,
+  - added `ThemeData.ErrorColor` / `ThemeData.OnErrorColor` defaults for M3 checkbox error-state visuals.
+- Extended shared ink/ripple plumbing to support checkbox splash-radius parity:
+  - added optional splash-radius support to `InkSplash` / `RenderInkSplash` (`src/Flutter/Widgets/Basic.cs`, `src/Flutter/Rendering/Proxy.RenderBox.cs`),
+  - threaded optional `splashRadius` through `MaterialButtonCore` (`src/Flutter.Material/Buttons.cs`).
+- Expanded checkbox regression coverage (`src/Flutter.Tests/MaterialCheckboxTests.cs`) with:
+  - checkbox-theme precedence and widget-over-theme override checks,
+  - M3 error-state visual token checks,
+  - adaptive constructor guard check,
+  - splash-radius propagation to `RenderInkSplash`,
+  - indicator transition animation behavior check.
+- Remaining documented divergence:
+  - adaptive checkbox currently renders through Material path on iOS/macOS because Cupertino checkbox primitives are not yet implemented in framework scope.
+
 ## [2026-04-05] - M4 Checkbox parity baseline
 
 ### Changed

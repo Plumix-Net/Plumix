@@ -1,5 +1,8 @@
+using System.Linq;
 using Avalonia;
 using Avalonia.Media;
+using Flutter;
+using Flutter.Foundation;
 using Flutter.Material;
 using Flutter.Rendering;
 using Flutter.UI;
@@ -340,6 +343,375 @@ public sealed class MaterialCheckboxTests
         }
     }
 
+    [Fact]
+    public void Checkbox_ThemeFillColor_IsApplied_WhenWidgetFillIsNotProvided()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    CheckboxTheme = new CheckboxThemeData(
+                        FillColor: MaterialStateProperty<Color?>.All(Colors.MediumPurple))
+                },
+                child: new Checkbox(
+                    value: true,
+                    onChanged: _ => { })));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(decorated);
+        Assert.Equal(Colors.MediumPurple, decorated!.Decoration.Color);
+    }
+
+    [Fact]
+    public void Checkbox_WidgetFillColor_PrecedesCheckboxThemeFillColor()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    CheckboxTheme = new CheckboxThemeData(
+                        FillColor: MaterialStateProperty<Color?>.All(Colors.MediumPurple))
+                },
+                child: new Checkbox(
+                    value: true,
+                    fillColor: MaterialStateProperty<Color?>.All(Colors.ForestGreen),
+                    onChanged: _ => { })));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(decorated);
+        Assert.Equal(Colors.ForestGreen, decorated!.Decoration.Color);
+    }
+
+    [Fact]
+    public void Checkbox_ErrorState_Checked_UsesErrorFillAndOnErrorCheckColor()
+    {
+        var owner = new BuildOwner();
+        var theme = ThemeData.Light with
+        {
+            ErrorColor = Colors.OrangeRed,
+            OnErrorColor = Colors.AliceBlue
+        };
+
+        var root = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: new Checkbox(
+                    value: true,
+                    isError: true,
+                    onChanged: _ => { })));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
+        var decorated = FindDescendant<RenderDecoratedBox>(renderRoot);
+        var paragraph = FindDescendant<RenderParagraph>(renderRoot);
+        Assert.NotNull(decorated);
+        Assert.NotNull(paragraph);
+        Assert.Equal(Colors.OrangeRed, decorated!.Decoration.Color);
+        Assert.Equal(Colors.AliceBlue, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+    }
+
+    [Fact]
+    public void Checkbox_ErrorState_Unchecked_UsesErrorBorder()
+    {
+        var owner = new BuildOwner();
+        var theme = ThemeData.Light with
+        {
+            ErrorColor = Colors.OrangeRed
+        };
+
+        var root = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: new Checkbox(
+                    value: false,
+                    isError: true,
+                    onChanged: _ => { })));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(decorated);
+        Assert.True(decorated!.Decoration.Border.HasValue);
+        Assert.Equal(Colors.OrangeRed, decorated.Decoration.Border!.Value.Color);
+        Assert.Equal(2, decorated.Decoration.Border.Value.Width);
+    }
+
+    [Fact]
+    public void Checkbox_AdaptiveConstructor_Throws_WhenValueIsNullAndTristateIsFalse()
+    {
+        Assert.Throws<ArgumentException>(() =>
+        {
+            _ = Checkbox.Adaptive(
+                value: null,
+                onChanged: _ => { },
+                tristate: false);
+        });
+    }
+
+    [Fact]
+    public void Checkbox_AdaptiveIOS_Checked_UsesCupertinoDefaults()
+    {
+        var owner = new BuildOwner();
+        var theme = ThemeData.Light with
+        {
+            Platform = TargetPlatform.IOS,
+            PrimaryColor = Colors.Coral
+        };
+
+        var root = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: Checkbox.Adaptive(
+                    value: true,
+                    onChanged: _ => { })));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(decorated);
+        Assert.Equal(Color.FromArgb(255, 0, 122, 255), decorated!.Decoration.Color);
+        Assert.True(decorated.Decoration.Border.HasValue);
+        Assert.Equal(0, decorated.Decoration.Border!.Value.Width);
+        Assert.Equal(Colors.Transparent, decorated.Decoration.Border.Value.Color);
+    }
+
+    [Fact]
+    public void Checkbox_AdaptiveIOS_Checked_UsesVectorIndicatorInsteadOfTextParagraph()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    Platform = TargetPlatform.IOS
+                },
+                child: Checkbox.Adaptive(
+                    value: true,
+                    onChanged: _ => { })));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.Null(paragraph);
+    }
+
+    [Fact]
+    public void Checkbox_AdaptiveIOS_FillColorParameter_IsIgnored()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    Platform = TargetPlatform.IOS
+                },
+                child: Checkbox.Adaptive(
+                    value: true,
+                    activeColor: Colors.Orange,
+                    fillColor: MaterialStateProperty<Color?>.All(Colors.MediumPurple),
+                    onChanged: _ => { })));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(decorated);
+        Assert.Equal(Colors.Orange, decorated!.Decoration.Color);
+    }
+
+    [Fact]
+    public void Checkbox_AdaptiveIOS_MaterialTapTargetSizeParameter_IsIgnored_AndUsesCupertinoTapTarget()
+    {
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    Platform = TargetPlatform.IOS
+                },
+                child: new SizedBox(
+                    width: 120,
+                    child: Checkbox.Adaptive(
+                        value: false,
+                        materialTapTargetSize: MaterialTapTargetSize.ShrinkWrap,
+                        onChanged: _ => { }))));
+
+        harness.Pump(new Size(220, 120));
+
+        var hitInsideCupertinoTarget = new BoxHitTestResult();
+        Assert.True(harness.RenderView.HitTest(hitInsideCupertinoTarget, new Point(60, 30)));
+
+        var hitOutsideCupertinoTarget = new BoxHitTestResult();
+        Assert.False(harness.RenderView.HitTest(hitOutsideCupertinoTarget, new Point(60, 46)));
+    }
+
+    [Fact]
+    public void Checkbox_AdaptiveMacOS_DefaultTapTarget_DoesNotExpandHitArea()
+    {
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    Platform = TargetPlatform.MacOS
+                },
+                child: new SizedBox(
+                    width: 120,
+                    child: Checkbox.Adaptive(
+                        value: false,
+                        onChanged: _ => { }))));
+
+        harness.Pump(new Size(220, 120));
+
+        var hitResult = new BoxHitTestResult();
+        Assert.False(harness.RenderView.HitTest(hitResult, new Point(60, 46)));
+    }
+
+    [Fact]
+    public void Checkbox_AdaptiveMacOS_UsesCupertinoVisualWidth()
+    {
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    Platform = TargetPlatform.MacOS
+                },
+                child: Checkbox.Adaptive(
+                    value: false,
+                    onChanged: _ => { })));
+
+        harness.Pump(new Size(220, 120));
+
+        var checkboxBody = FindDecoratedBoxBySize(harness.RenderView, width: 14, height: 14, tolerance: 0.02);
+        Assert.NotNull(checkboxBody);
+    }
+
+    [Fact]
+    public void Checkbox_AdaptiveDarkUnchecked_UsesGradientFillBrush()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    Platform = TargetPlatform.IOS,
+                    Brightness = Brightness.Dark
+                },
+                child: Checkbox.Adaptive(
+                    value: false,
+                    onChanged: _ => { })));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var hasGradientBrush = HasGradientBrushFill(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.True(hasGradientBrush);
+    }
+
+    [Fact]
+    public void Checkbox_AdaptiveDarkCheckedEnabled_DoesNotUseGradientFillBrush()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    Platform = TargetPlatform.IOS,
+                    Brightness = Brightness.Dark
+                },
+                child: Checkbox.Adaptive(
+                    value: true,
+                    onChanged: _ => { })));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var hasGradientBrush = HasGradientBrushFill(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.False(hasGradientBrush);
+    }
+
+    [Fact]
+    public void Checkbox_ThemeSplashRadius_PropagatesToInkSplash()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    CheckboxTheme = new CheckboxThemeData(SplashRadius: 7)
+                },
+                child: new Checkbox(
+                    value: true,
+                    onChanged: _ => { })));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var inkSplash = FindDescendant<RenderInkSplash>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(inkSplash);
+        Assert.Equal(7, inkSplash!.SplashRadius);
+    }
+
+    [Fact]
+    public void Checkbox_Transition_FromCheckedToNull_CrossfadesCheckAndDash()
+    {
+        Scheduler.ResetForTests();
+        try
+        {
+            Action<bool?>? setValue = null;
+            using var harness = new WidgetRenderHarness(
+                new CheckboxTransitionHost(registerSetValue: callback => setValue = callback));
+
+            harness.Pump(new Size(160, 120));
+            Assert.NotNull(setValue);
+
+            setValue!(null);
+            harness.Pump(new Size(160, 120));
+
+            var now = Scheduler.CurrentSeconds;
+            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
+            harness.Pump(new Size(160, 120));
+
+            var paragraphDuringTransition = FindDescendant<RenderParagraph>(harness.RenderView);
+            var dashDuringTransition = FindDescendant<RenderColoredBox>(harness.RenderView);
+            Assert.NotNull(paragraphDuringTransition);
+            Assert.NotNull(dashDuringTransition);
+
+            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.30));
+            harness.Pump(new Size(160, 120));
+
+            var paragraphAfterTransition = FindDescendant<RenderParagraph>(harness.RenderView);
+            var dashAfterTransition = FindDescendant<RenderColoredBox>(harness.RenderView);
+            Assert.Null(paragraphAfterTransition);
+            Assert.NotNull(dashAfterTransition);
+        }
+        finally
+        {
+            Scheduler.ResetForTests();
+        }
+    }
+
     private static T RequireRenderObject<T>(Element? element) where T : RenderObject
     {
         Assert.NotNull(element);
@@ -371,6 +743,46 @@ public sealed class MaterialCheckboxTests
         });
 
         return result;
+    }
+
+    private static RenderDecoratedBox? FindDecoratedBoxBySize(
+        RenderObject root,
+        double width,
+        double height,
+        double tolerance = 0.01)
+    {
+        return FindDescendants<RenderDecoratedBox>(root)
+            .FirstOrDefault(box =>
+                Math.Abs(box.Size.Width - width) <= tolerance
+                && Math.Abs(box.Size.Height - height) <= tolerance);
+    }
+
+    private static bool HasGradientBrushFill(RenderObject root)
+    {
+        return FindDescendants<RenderDecoratedBox>(root)
+            .Any(box => box.Decoration.Brush is LinearGradientBrush);
+    }
+
+    private static List<T> FindDescendants<T>(RenderObject? root) where T : RenderObject
+    {
+        var results = new List<T>();
+        CollectDescendants(root, results);
+        return results;
+    }
+
+    private static void CollectDescendants<T>(RenderObject? root, List<T> results) where T : RenderObject
+    {
+        if (root is null)
+        {
+            return;
+        }
+
+        if (root is T typed)
+        {
+            results.Add(typed);
+        }
+
+        root.VisitChildren(child => CollectDescendants(child, results));
     }
 
     private static RenderPointerListener? FindFocusPointerListener(RenderObject? root)
@@ -538,6 +950,42 @@ public sealed class MaterialCheckboxTests
 
                 base.Unmount();
             }
+        }
+    }
+
+    private sealed class CheckboxTransitionHost : StatefulWidget
+    {
+        public CheckboxTransitionHost(Action<Action<bool?>> registerSetValue, Key? key = null) : base(key)
+        {
+            RegisterSetValue = registerSetValue;
+        }
+
+        public Action<Action<bool?>> RegisterSetValue { get; }
+
+        public override State CreateState()
+        {
+            return new CheckboxTransitionHostState();
+        }
+    }
+
+    private sealed class CheckboxTransitionHostState : State
+    {
+        private bool? _value = true;
+        private CheckboxTransitionHost CurrentWidget => (CheckboxTransitionHost)StateWidget;
+
+        public override void InitState()
+        {
+            CurrentWidget.RegisterSetValue(next => SetState(() => _value = next));
+        }
+
+        public override Widget Build(BuildContext context)
+        {
+            return new Theme(
+                data: ThemeData.Light,
+                child: new Checkbox(
+                    value: _value,
+                    tristate: true,
+                    onChanged: _ => { }));
         }
     }
 

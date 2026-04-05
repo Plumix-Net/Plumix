@@ -133,6 +133,8 @@ public sealed record ThemeData
     private static readonly Color LightOnSecondaryContainerColor = Color.Parse("#FF4A4458");
     private static readonly Color LightInverseSurfaceColor = Color.Parse("#FF322F35");
     private static readonly Color LightOnInverseSurfaceColor = Color.Parse("#FFF5EFF7");
+    private static readonly Color LightErrorColor = Color.Parse("#FFB3261E");
+    private static readonly Color LightOnErrorColor = Colors.White;
 
     private AppBarThemeData? _appBarTheme;
     private TextButtonThemeData? _textButtonTheme;
@@ -140,6 +142,8 @@ public sealed record ThemeData
     private OutlinedButtonThemeData? _outlinedButtonTheme;
     private FilledButtonThemeData? _filledButtonTheme;
     private IconButtonThemeData? _iconButtonTheme;
+    private CheckboxThemeData? _checkboxTheme;
+    private SwitchThemeData? _switchTheme;
 
     public ThemeData(
         TargetPlatform? platform = null,
@@ -161,6 +165,8 @@ public sealed record ThemeData
         Color? onSecondaryContainerColor = null,
         Color? inverseSurfaceColor = null,
         Color? onInverseSurfaceColor = null,
+        Color? errorColor = null,
+        Color? onErrorColor = null,
         MaterialTapTargetSize? materialTapTargetSize = null,
         ButtonStyle? textButtonStyle = null,
         ButtonStyle? elevatedButtonStyle = null,
@@ -171,7 +177,9 @@ public sealed record ThemeData
         ElevatedButtonThemeData? elevatedButtonTheme = null,
         OutlinedButtonThemeData? outlinedButtonTheme = null,
         FilledButtonThemeData? filledButtonTheme = null,
-        IconButtonThemeData? iconButtonTheme = null)
+        IconButtonThemeData? iconButtonTheme = null,
+        CheckboxThemeData? checkboxTheme = null,
+        SwitchThemeData? switchTheme = null)
     {
         Platform = platform ?? ResolveDefaultPlatform();
         Brightness = brightness ?? Brightness.Light;
@@ -192,6 +200,8 @@ public sealed record ThemeData
         OnSecondaryContainerColor = onSecondaryContainerColor ?? LightOnSecondaryContainerColor;
         InverseSurfaceColor = inverseSurfaceColor ?? LightInverseSurfaceColor;
         OnInverseSurfaceColor = onInverseSurfaceColor ?? LightOnInverseSurfaceColor;
+        ErrorColor = errorColor ?? LightErrorColor;
+        OnErrorColor = onErrorColor ?? LightOnErrorColor;
         MaterialTapTargetSize = materialTapTargetSize ?? MaterialTapTargetSize.Padded;
         TextButtonStyle = textButtonStyle;
         ElevatedButtonStyle = elevatedButtonStyle;
@@ -203,6 +213,8 @@ public sealed record ThemeData
         _outlinedButtonTheme = outlinedButtonTheme;
         _filledButtonTheme = filledButtonTheme;
         _iconButtonTheme = iconButtonTheme;
+        _checkboxTheme = checkboxTheme;
+        _switchTheme = switchTheme;
     }
 
     public TargetPlatform Platform { get; init; }
@@ -247,6 +259,10 @@ public sealed record ThemeData
 
     public Color OnInverseSurfaceColor { get; init; }
 
+    public Color ErrorColor { get; init; }
+
+    public Color OnErrorColor { get; init; }
+
     public MaterialTapTargetSize MaterialTapTargetSize { get; init; }
 
     public ButtonStyle? TextButtonStyle { get; init; }
@@ -287,6 +303,18 @@ public sealed record ThemeData
     {
         get => _iconButtonTheme ?? new IconButtonThemeData(style: IconButtonStyle);
         init => _iconButtonTheme = value;
+    }
+
+    public CheckboxThemeData CheckboxTheme
+    {
+        get => _checkboxTheme ?? new CheckboxThemeData();
+        init => _checkboxTheme = value;
+    }
+
+    public SwitchThemeData SwitchTheme
+    {
+        get => _switchTheme ?? new SwitchThemeData();
+        init => _switchTheme = value;
     }
 
     public static ThemeData Light { get; } = new();
