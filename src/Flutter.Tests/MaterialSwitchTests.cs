@@ -2,6 +2,7 @@ using System.Linq;
 using Avalonia;
 using Avalonia.Media;
 using Flutter;
+using Flutter.Gestures;
 using Flutter.Material;
 using Flutter.Rendering;
 using Flutter.UI;
@@ -347,6 +348,118 @@ public sealed class MaterialSwitchTests
     }
 
     [Fact]
+    public void Switch_AdaptiveIOS_DragBelowCommitThreshold_DoesNotToggle()
+    {
+        var binding = GestureBinding.Instance;
+        binding.ResetForTests();
+        try
+        {
+            var toggled = false;
+            var nextValue = false;
+            var theme = ThemeData.Light with { Platform = TargetPlatform.IOS };
+
+            using var harness = new WidgetRenderHarness(
+                new Theme(
+                    data: theme,
+                    child: new Align(
+                        alignment: Alignment.TopLeft,
+                        child: Switch.Adaptive(
+                            value: false,
+                            onChanged: value =>
+                            {
+                                toggled = true;
+                                nextValue = value;
+                            }))));
+
+            harness.Pump(new Size(220, 120));
+
+            DispatchPointerDown(binding, harness.RenderView, pointer: 601, position: new Point(12, 20));
+            DispatchPointerMove(binding, harness.RenderView, pointer: 601, position: new Point(30, 20));
+            DispatchPointerMove(binding, harness.RenderView, pointer: 601, position: new Point(40, 20));
+            DispatchPointerUp(binding, harness.RenderView, pointer: 601, position: new Point(40, 20));
+            harness.Pump(new Size(220, 120));
+
+            Assert.False(toggled);
+            Assert.False(nextValue);
+        }
+        finally
+        {
+            binding.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void Switch_AdaptiveIOS_DragBeyondCommitThreshold_TogglesOn()
+    {
+        var binding = GestureBinding.Instance;
+        binding.ResetForTests();
+        try
+        {
+            var nextValue = false;
+            var theme = ThemeData.Light with { Platform = TargetPlatform.IOS };
+
+            using var harness = new WidgetRenderHarness(
+                new Theme(
+                    data: theme,
+                    child: new Align(
+                        alignment: Alignment.TopLeft,
+                        child: Switch.Adaptive(
+                            value: false,
+                            onChanged: value => nextValue = value))));
+
+            harness.Pump(new Size(220, 120));
+
+            DispatchPointerDown(binding, harness.RenderView, pointer: 602, position: new Point(12, 20));
+            DispatchPointerMove(binding, harness.RenderView, pointer: 602, position: new Point(30, 20));
+            DispatchPointerMove(binding, harness.RenderView, pointer: 602, position: new Point(52, 20));
+            DispatchPointerUp(binding, harness.RenderView, pointer: 602, position: new Point(52, 20));
+            harness.Pump(new Size(220, 120));
+
+            Assert.True(nextValue);
+        }
+        finally
+        {
+            binding.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void Switch_AdaptiveIOS_DragReverseBeyondThreshold_CancelsToggle()
+    {
+        var binding = GestureBinding.Instance;
+        binding.ResetForTests();
+        try
+        {
+            var toggled = false;
+            var theme = ThemeData.Light with { Platform = TargetPlatform.IOS };
+
+            using var harness = new WidgetRenderHarness(
+                new Theme(
+                    data: theme,
+                    child: new Align(
+                        alignment: Alignment.TopLeft,
+                        child: Switch.Adaptive(
+                            value: false,
+                            onChanged: _ => toggled = true))));
+
+            harness.Pump(new Size(220, 120));
+
+            DispatchPointerDown(binding, harness.RenderView, pointer: 603, position: new Point(12, 20));
+            DispatchPointerMove(binding, harness.RenderView, pointer: 603, position: new Point(30, 20));
+            DispatchPointerMove(binding, harness.RenderView, pointer: 603, position: new Point(52, 20));
+            DispatchPointerMove(binding, harness.RenderView, pointer: 603, position: new Point(15, 20));
+            DispatchPointerUp(binding, harness.RenderView, pointer: 603, position: new Point(15, 20));
+            harness.Pump(new Size(220, 120));
+
+            Assert.False(toggled);
+        }
+        finally
+        {
+            binding.ResetForTests();
+        }
+    }
+
+    [Fact]
     public void Switch_DefaultTapTarget_Padded_ExpandsHitArea()
     {
         using var harness = new WidgetRenderHarness(
@@ -501,6 +614,43 @@ public sealed class MaterialSwitchTests
             .FirstOrDefault(box =>
                 Math.Abs(box.Size.Width - width) <= tolerance
                 && Math.Abs(box.Size.Height - height) <= tolerance);
+    }
+
+    private static void DispatchPointerDown(GestureBinding binding, RenderView renderView, int pointer, Point position)
+    {
+        binding.HandlePointerEvent(
+            renderView,
+            new PointerDownEvent(
+                pointer: pointer,
+                kind: PointerDeviceKind.Mouse,
+                position: position,
+                buttons: PointerButtons.Primary,
+                timestampUtc: DateTime.UtcNow));
+    }
+
+    private static void DispatchPointerMove(GestureBinding binding, RenderView renderView, int pointer, Point position)
+    {
+        binding.HandlePointerEvent(
+            renderView,
+            new PointerMoveEvent(
+                pointer: pointer,
+                kind: PointerDeviceKind.Mouse,
+                position: position,
+                buttons: PointerButtons.Primary,
+                down: true,
+                timestampUtc: DateTime.UtcNow));
+    }
+
+    private static void DispatchPointerUp(GestureBinding binding, RenderView renderView, int pointer, Point position)
+    {
+        binding.HandlePointerEvent(
+            renderView,
+            new PointerUpEvent(
+                pointer: pointer,
+                kind: PointerDeviceKind.Mouse,
+                position: position,
+                buttons: PointerButtons.None,
+                timestampUtc: DateTime.UtcNow));
     }
 
     private static Color ApplyOpacity(Color color, double opacity)

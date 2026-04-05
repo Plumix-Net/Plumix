@@ -1,13 +1,13 @@
-# Feature: material-switch-adaptive-cupertino-parity
+# Feature: material-switch-adaptive-cupertino-interaction-closeout
 
 ## Goal
 
-- Close the documented `Switch.Adaptive` iOS/macOS fallback gap by introducing a Cupertino-like adaptive path in framework scope with parity-critical platform mapping/defaults/tests.
+- Close the remaining `Switch.Adaptive` interaction divergence on iOS/macOS by replacing shared Material button composition with Cupertino-style adaptive interaction flow and drag thresholds.
 
 ## Non-Goals
 
-- Full native `CupertinoSwitch` painter parity (press/drag choreography, painter internals, and all motion nuances).
-- `Checkbox.Adaptive` Cupertino-native implementation (tracked separately).
+- Full Flutter Cupertino painter parity (on/off labels, thumb images, full haptic pipeline).
+- Sample route/module restructuring.
 
 ## Context Budget Plan
 
@@ -19,10 +19,9 @@
   - `docs/ai/PORTING_MODE.md`
   - `src/Flutter.Material/Switch.cs`
   - `src/Flutter.Tests/MaterialSwitchTests.cs`
-  - `/Users/egorozh/Documents/flutter/flutter/packages/flutter/lib/src/material/switch.dart`
   - `/Users/egorozh/Documents/flutter/flutter/packages/flutter/lib/src/cupertino/switch.dart`
 - Expansion trigger:
-  - verify adaptive-platform semantics and coverage updates in docs/changelog after landing control behavior and tests.
+  - update tracking docs/changelog after landing adaptive interaction behavior + focused tests.
 
 ## Delivery Scope (Required for Control Parity Work)
 
@@ -41,8 +40,8 @@
 - [x] `docs/ai/INVARIANTS.md` reviewed
 - [x] `docs/ai/PORTING_MODE.md` reviewed (for Dart-to-C# control/widget ports)
 - List invariants that this feature touches:
-  - Framework control behavior remains in `src/Flutter.Material` (no host-side adaptive switch logic).
-  - Adaptive platform behavior follows Flutter Dart source as the source of truth for mapping/default precedence.
+  - Framework switch behavior remains in framework libraries (`src/Flutter.Material`) with no host-side adaptive special-casing.
+  - Pointer/gesture routing remains through `GestureBinding` + recognizers.
 
 ## Dart Reference Mapping (Required for Ports)
 
@@ -56,8 +55,7 @@
   - [x] Constraint/layout behavior mapped
   - [x] Paint/visual semantics mapped
 - Divergence log (only if needed):
-  - `src/Flutter.Material/Switch.cs`: adaptive iOS/macOS now uses Cupertino-like defaults and platform mapping, but still renders through shared `MaterialButtonCore` composition instead of dedicated Cupertino painter/motion internals. Expected delta: drag/press motion nuances are still simplified versus Flutter native Cupertino implementation. Follow-up condition: add dedicated Cupertino switch primitives/painter in framework scope.
-  - Follow-up status (2026-04-05): closed by `docs/ai/material-2026-04-05-switch-adaptive-cupertino-interaction-closeout.md` (adaptive path no longer uses `MaterialButtonCore`; Cupertino drag commit/reverse thresholds were implemented).
+  - `src/Flutter.Material/Switch.cs`: adaptive switch still omits Cupertino haptics/labels/thumb-image pipeline (`HapticFeedback.lightImpact`, on/off labels, image thumb assets). Expected delta: visual/interaction core parity is present, but those advanced Cupertino extras are absent.
 
 ## Planned Changes
 
@@ -67,11 +65,11 @@
   - `CHANGELOG.md`
   - `docs/FRAMEWORK_PLAN.md`
   - `docs/ai/TEST_MATRIX.md`
-  - `docs/ai/material-2026-04-05-switch-adaptive-cupertino-parity.md`
+  - `docs/ai/material-2026-04-05-switch-adaptive-cupertino-interaction-closeout.md`
 - Brief intent per file:
-  - `Switch.cs`: adaptive platform branching + defaults/mapping/opacity updates.
-  - `MaterialSwitchTests.cs`: focused adaptive behavior coverage.
-  - docs/changelog: record shipped status and remaining divergence.
+  - `Switch.cs`: adaptive branch composition + drag-threshold choreography + pressed-thumb behavior.
+  - `MaterialSwitchTests.cs`: pointer-driven adaptive drag threshold tests.
+  - docs/changelog: capture shipped behavior and narrowed remaining divergence.
 
 ## Test Plan
 
@@ -80,9 +78,9 @@
 - New tests to add:
   - `src/Flutter.Tests/MaterialSwitchTests.cs`
 - Parity-risk scenarios covered:
-  - adaptive `activeColor` mapping by platform,
-  - adaptive iOS disabled opacity behavior,
-  - adaptive iOS Cupertino geometry defaults.
+  - adaptive drag commit threshold (`0.7`),
+  - adaptive reverse threshold (`0.2`),
+  - adaptive non-material composition retaining existing geometry/token behavior.
 
 ## Sample Parity Plan
 
@@ -91,7 +89,7 @@
 - [x] `docs/ai/PARITY_MATRIX.md` updated (if needed)
 
 Notes:
-- No sample route/module structure changes were required in this iteration.
+- No sample structure changes were required in this iteration.
 
 ## Docs and Tracking
 

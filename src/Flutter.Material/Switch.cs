@@ -14,7 +14,32 @@ namespace Flutter.Material;
 public sealed class Switch : StatefulWidget
 {
     private const double DefaultSplashRadius = 20.0;
+    private const double CupertinoDisabledOpacity = 0.5;
+    private const double CupertinoThumbExtension = 7.0;
+    private const double CupertinoDragCommitThreshold = 0.7;
+    private const double CupertinoDragReverseThreshold = 0.2;
     private static readonly Color CupertinoInactiveTrackColor = Color.FromArgb(0x52, 0x78, 0x78, 0x80);
+    private static readonly BoxShadows CupertinoThumbShadows = new(
+        new BoxShadow
+        {
+            OffsetX = 0,
+            OffsetY = 3,
+            Blur = 8,
+            Spread = 0,
+            Color = Color.FromArgb(0x26, 0x00, 0x00, 0x00),
+            IsInset = false
+        },
+        [
+            new BoxShadow
+            {
+                OffsetX = 0,
+                OffsetY = 3,
+                Blur = 1,
+                Spread = 0,
+                Color = Color.FromArgb(0x0F, 0x00, 0x00, 0x00),
+                IsInset = false
+            }
+        ]);
     private readonly SwitchType _switchType;
 
     private enum SwitchType
@@ -233,10 +258,15 @@ public sealed class Switch : StatefulWidget
         private double _toPosition;
         private double _animatedPosition;
         private double? _dragPosition;
+        private bool? _adaptiveDragValue;
+        private double _adaptiveDragDelta;
+        private Point _pointerDownPosition;
+        private bool _hasPointerDownPosition;
         private FocusNode? _focusNode;
         private bool _ownsFocusNode;
         private bool _hasFocus;
         private bool _isHovered;
+        private bool _isPressed;
 
         private Switch CurrentWidget => (Switch)StateWidget;
 
@@ -268,6 +298,9 @@ public sealed class Switch : StatefulWidget
             if (oldSwitch.Value != CurrentWidget.Value)
             {
                 AnimateTo(CurrentWidget.Value);
+                _adaptiveDragValue = null;
+                _adaptiveDragDelta = 0;
+                _hasPointerDownPosition = false;
             }
 
             if (CurrentWidget.OnChanged is null && _dragPosition.HasValue)
@@ -275,9 +308,21 @@ public sealed class Switch : StatefulWidget
                 _dragPosition = null;
             }
 
+            if (CurrentWidget.OnChanged is null && _adaptiveDragValue.HasValue)
+            {
+                _adaptiveDragValue = null;
+                _adaptiveDragDelta = 0;
+                _hasPointerDownPosition = false;
+            }
+
             if (CurrentWidget.OnChanged is null && _isHovered)
             {
                 _isHovered = false;
+            }
+
+            if (CurrentWidget.OnChanged is null && _isPressed)
+            {
+                _isPressed = false;
             }
         }
 
@@ -313,6 +358,7 @@ public sealed class Switch : StatefulWidget
             var activeStates = BuildVisualStates(enabled, selected: true);
             var inactiveStates = BuildVisualStates(enabled, selected: false);
             var position = CurrentPosition();
+            var selectedStates = CurrentWidget.Value ? activeStates : inactiveStates;
 
             var activeThumbColor = ResolveThumbColor(theme, switchTheme, activeStates, isCupertinoAdaptive);
             var inactiveThumbColor = ResolveThumbColor(theme, switchTheme, inactiveStates, isCupertinoAdaptive);
@@ -332,6 +378,7 @@ public sealed class Switch : StatefulWidget
             var inactiveIconColor = ResolveThumbIconColor(theme, inactiveStates, isCupertinoAdaptive);
             var iconColor = LerpColor(inactiveIconColor, activeIconColor, position);
             var currentIcon = position < 0.5 ? inactiveIcon : activeIcon;
+            var overlayColor = ResolveOverlayColor(theme, switchTheme, selectedStates, isCupertinoAdaptive);
 
             var activeThumbDiameter = activeIcon is null
                 ? config.ActiveThumbDiameter
@@ -340,25 +387,57 @@ public sealed class Switch : StatefulWidget
                 ? config.InactiveThumbDiameter
                 : config.ThumbDiameterWithIcon;
             var thumbDiameter = LerpDouble(inactiveThumbDiameter, activeThumbDiameter, position);
+            var thumbWidth = isCupertinoAdaptive
+                ? ResolveCupertinoThumbWidth(thumbDiameter, enabled)
+                : thumbDiameter;
 
-            Widget thumbChild = new SizedBox(width: thumbDiameter, height: thumbDiameter);
+            Widget thumbChild = new SizedBox(width: thumbWidth, height: thumbDiameter);
             if (currentIcon is not null)
             {
-                thumbChild = new Center(
-                    child: new IconTheme(
-                        data: new IconThemeData(
-                            Color: iconColor,
-                            Size: config.IconSize),
-                        child: currentIcon));
+                thumbChild = new SizedBox(
+                    width: thumbWidth,
+                    height: thumbDiameter,
+                    child: new Center(
+                        child: new IconTheme(
+                            data: new IconThemeData(
+                                Color: iconColor,
+                                Size: config.IconSize),
+                            child: currentIcon)));
             }
 
             var thumb = new Container(
-                width: thumbDiameter,
+                width: thumbWidth,
                 height: thumbDiameter,
                 decoration: new BoxDecoration(
                     Color: thumbColor,
-                    BorderRadius: BorderRadius.Circular(thumbDiameter / 2)),
+                    BorderRadius: BorderRadius.Circular(thumbDiameter / 2),
+                    BoxShadows: isCupertinoAdaptive ? CupertinoThumbShadows : null),
                 child: thumbChild);
+
+            Widget trackBody = new Align(
+                alignment: new Alignment((position * 2) - 1, 0),
+                child: thumb);
+
+            if (isCupertinoAdaptive && overlayColor.HasValue && overlayColor.Value.A > 0)
+            {
+                trackBody = new Stack(
+                    alignment: Alignment.Center,
+                    children:
+                    [
+                        trackBody,
+                        new Container(
+                            width: config.TrackWidth,
+                            height: config.TrackHeight,
+                            color: overlayColor.Value)
+                    ]);
+            }
+
+            if (isCupertinoAdaptive)
+            {
+                trackBody = new ClipRRect(
+                    borderRadius: BorderRadius.Circular(config.TrackHeight / 2),
+                    child: trackBody);
+            }
 
             var track = new Container(
                 width: config.TrackWidth,
@@ -367,9 +446,7 @@ public sealed class Switch : StatefulWidget
                     Color: trackColor,
                     Border: trackOutline,
                     BorderRadius: BorderRadius.Circular(config.TrackHeight / 2)),
-                child: new Align(
-                    alignment: new Alignment((position * 2) - 1, 0),
-                    child: thumb));
+                child: trackBody);
 
             Widget child = new SizedBox(
                 width: totalWidth,
@@ -378,12 +455,44 @@ public sealed class Switch : StatefulWidget
                     effectivePadding,
                     new Center(child: track)));
 
+            if (isCupertinoAdaptive)
+            {
+                Widget adaptiveResult = new GestureDetector(
+                    behavior: HitTestBehavior.Opaque,
+                    onTap: enabled ? HandleTap : null,
+                    onHorizontalDragStart: enabled ? HandleAdaptiveDragStart : null,
+                    onHorizontalDragUpdate: enabled ? HandleAdaptiveDragUpdate : null,
+                    onHorizontalDragEnd: enabled ? HandleAdaptiveDragEnd : null,
+                    child: new Listener(
+                        behavior: HitTestBehavior.Opaque,
+                        onPointerDown: enabled ? HandlePointerDown : null,
+                        onPointerUp: enabled ? HandlePointerUp : null,
+                        onPointerCancel: enabled ? HandlePointerCancel : null,
+                        onPointerEnter: enabled ? _ => HandleHoverChanged(true) : null,
+                        onPointerExit: enabled ? _ => HandleHoverChanged(false) : null,
+                        child: child));
+
+                adaptiveResult = new Focus(
+                    child: adaptiveResult,
+                    focusNode: _focusNode,
+                    autofocus: CurrentWidget.Autofocus,
+                    canRequestFocus: enabled,
+                    onKeyEvent: HandleKeyEvent);
+
+                if (!enabled)
+                {
+                    adaptiveResult = new Opacity(CupertinoDisabledOpacity, adaptiveResult);
+                }
+
+                return adaptiveResult;
+            }
+
             var style = new ButtonStyle(
                 ForegroundColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
                 BackgroundColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
                 ShadowColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
                 SurfaceTintColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
-                OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states => ResolveOverlayColor(theme, switchTheme, states, isCupertinoAdaptive)),
+                OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states => ResolveOverlayColor(theme, switchTheme, states, isCupertinoAdaptive: false)),
                 SplashColor: null,
                 Elevation: MaterialStateProperty<double?>.All(0),
                 IconColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
@@ -409,15 +518,10 @@ public sealed class Switch : StatefulWidget
 
             Widget result = new GestureDetector(
                 behavior: HitTestBehavior.Opaque,
-                onHorizontalDragStart: HandleDragStart,
-                onHorizontalDragUpdate: HandleDragUpdate,
-                onHorizontalDragEnd: HandleDragEnd,
+                onHorizontalDragStart: HandleMaterialDragStart,
+                onHorizontalDragUpdate: HandleMaterialDragUpdate,
+                onHorizontalDragEnd: HandleMaterialDragEnd,
                 child: button);
-
-            if (isCupertinoAdaptive && !enabled)
-            {
-                result = new Opacity(0.5, result);
-            }
 
             return result;
         }
@@ -475,7 +579,44 @@ public sealed class Switch : StatefulWidget
             CurrentWidget.OnChanged?.Invoke(!CurrentWidget.Value);
         }
 
-        private void HandleDragStart(DragStartDetails details)
+        private void HandlePointerDown(PointerDownEvent @event)
+        {
+            if (CurrentWidget.OnChanged is null)
+            {
+                return;
+            }
+
+            _pointerDownPosition = @event.Position;
+            _hasPointerDownPosition = true;
+            SetPressed(true);
+        }
+
+        private void HandlePointerUp(PointerUpEvent @event)
+        {
+            _hasPointerDownPosition = false;
+            SetPressed(false);
+        }
+
+        private void HandlePointerCancel(PointerCancelEvent @event)
+        {
+            _hasPointerDownPosition = false;
+            _adaptiveDragDelta = 0;
+            _adaptiveDragValue = null;
+            SetPressed(false);
+            AnimateTo(CurrentWidget.Value);
+        }
+
+        private void SetPressed(bool pressed)
+        {
+            if (_isPressed == pressed)
+            {
+                return;
+            }
+
+            SetState(() => _isPressed = pressed);
+        }
+
+        private void HandleMaterialDragStart(DragStartDetails details)
         {
             if (CurrentWidget.OnChanged is null)
             {
@@ -486,7 +627,7 @@ public sealed class Switch : StatefulWidget
             SetState(() => _dragPosition = CurrentPosition());
         }
 
-        private void HandleDragUpdate(DragUpdateDetails details)
+        private void HandleMaterialDragUpdate(DragUpdateDetails details)
         {
             if (!(_dragPosition.HasValue && CurrentWidget.OnChanged is not null))
             {
@@ -502,7 +643,7 @@ public sealed class Switch : StatefulWidget
             SetState(() => _dragPosition = Math.Clamp(next, 0, 1));
         }
 
-        private void HandleDragEnd(DragEndDetails details)
+        private void HandleMaterialDragEnd(DragEndDetails details)
         {
             if (!(_dragPosition.HasValue && CurrentWidget.OnChanged is not null))
             {
@@ -519,6 +660,119 @@ public sealed class Switch : StatefulWidget
             }
 
             AnimateTo(CurrentWidget.Value, fromOverride: from);
+        }
+
+        private void HandleAdaptiveDragStart(DragStartDetails details)
+        {
+            if (CurrentWidget.OnChanged is null)
+            {
+                return;
+            }
+
+            _positionController?.Stop();
+            var direction = Directionality.Of(Context);
+            var directionMultiplier = direction == TextDirection.Rtl ? -1 : 1;
+            var initialDelta = 0.0;
+            if (_hasPointerDownPosition)
+            {
+                var theme = Theme.Of(Context);
+                var config = ResolveConfig(theme.UseMaterial3, isCupertinoAdaptive: true);
+                initialDelta = ((details.GlobalPosition.X - _pointerDownPosition.X) / config.TrackWidth) * directionMultiplier;
+            }
+
+            SetState(() =>
+            {
+                _adaptiveDragValue = CurrentWidget.Value;
+                _adaptiveDragDelta = initialDelta;
+            });
+        }
+
+        private void HandleAdaptiveDragUpdate(DragUpdateDetails details)
+        {
+            if (!(_adaptiveDragValue.HasValue && CurrentWidget.OnChanged is not null))
+            {
+                return;
+            }
+
+            var theme = Theme.Of(Context);
+            var config = ResolveConfig(theme.UseMaterial3, isCupertinoAdaptive: true);
+            var direction = Directionality.Of(Context);
+            var directionMultiplier = direction == TextDirection.Rtl ? -1 : 1;
+            _adaptiveDragDelta += (details.PrimaryDelta / config.TrackWidth) * directionMultiplier;
+
+            var valueChangedWhileDragging = CurrentWidget.Value != _adaptiveDragValue.Value;
+            var threshold = valueChangedWhileDragging
+                ? CupertinoDragReverseThreshold
+                : CupertinoDragCommitThreshold;
+            var effectiveThreshold = CurrentWidget.Value ? -threshold : threshold;
+            var newDragValue = _adaptiveDragDelta >= effectiveThreshold;
+
+            if (_adaptiveDragValue.Value == newDragValue)
+            {
+                return;
+            }
+
+            _adaptiveDragValue = newDragValue;
+            AnimateTo(newDragValue);
+        }
+
+        private void HandleAdaptiveDragEnd(DragEndDetails details)
+        {
+            if (!(_adaptiveDragValue.HasValue && CurrentWidget.OnChanged is not null))
+            {
+                return;
+            }
+
+            var nextValue = _adaptiveDragValue.Value;
+            _adaptiveDragValue = null;
+            _adaptiveDragDelta = 0;
+            _hasPointerDownPosition = false;
+            SetPressed(false);
+
+            if (nextValue != CurrentWidget.Value)
+            {
+                CurrentWidget.OnChanged?.Invoke(nextValue);
+            }
+
+            AnimateTo(nextValue);
+        }
+
+        private KeyEventResult HandleKeyEvent(FocusNode node, KeyEvent @event)
+        {
+            if (!IsActivateKey(@event))
+            {
+                return KeyEventResult.Ignored;
+            }
+
+            if (CurrentWidget.OnChanged is null)
+            {
+                return KeyEventResult.Handled;
+            }
+
+            if (@event.IsDown)
+            {
+                HandleTap();
+            }
+
+            return KeyEventResult.Handled;
+        }
+
+        private static bool IsActivateKey(KeyEvent @event)
+        {
+            if (@event.IsShiftPressed
+                || @event.IsControlPressed
+                || @event.IsAltPressed
+                || @event.IsMetaPressed)
+            {
+                return false;
+            }
+
+            return string.Equals(@event.Key, "Enter", StringComparison.Ordinal)
+                   || string.Equals(@event.Key, "Return", StringComparison.Ordinal)
+                   || string.Equals(@event.Key, "NumPadEnter", StringComparison.Ordinal)
+                   || string.Equals(@event.Key, "NumpadEnter", StringComparison.Ordinal)
+                   || string.Equals(@event.Key, "Space", StringComparison.Ordinal)
+                   || string.Equals(@event.Key, "Spacebar", StringComparison.Ordinal);
         }
 
         private void AnimateTo(bool value, double? fromOverride = null)
@@ -592,6 +846,11 @@ public sealed class Switch : StatefulWidget
             if (enabled && _isHovered)
             {
                 states |= MaterialState.Hovered;
+            }
+
+            if (enabled && _isPressed)
+            {
+                states |= MaterialState.Pressed;
             }
 
             return states;
@@ -816,6 +1075,21 @@ public sealed class Switch : StatefulWidget
                     InactiveThumbDiameter: 20,
                     ThumbDiameterWithIcon: 20,
                     IconSize: 14);
+        }
+
+        private double ResolveCupertinoThumbWidth(double baseDiameter, bool enabled)
+        {
+            if (!enabled)
+            {
+                return baseDiameter;
+            }
+
+            if (!(_isPressed || _adaptiveDragValue.HasValue))
+            {
+                return baseDiameter;
+            }
+
+            return baseDiameter + CupertinoThumbExtension;
         }
 
         private static Color ResolveDefaultThumbColor(ThemeData theme, MaterialState states, bool isCupertinoAdaptive)

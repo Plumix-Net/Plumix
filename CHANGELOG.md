@@ -17,6 +17,22 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 - Documentation policy update: Dart-to-C# control/widget work now uses mandatory parity-first porting mode (`docs/ai/PORTING_MODE.md`) with strict `1:1` default behavior, required divergence logging, and explicit parity-validation workflow references in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/INVARIANTS.md`, `docs/ai/MODULE_INDEX.md`, `docs/ai/FEATURE_TEMPLATE.md`, `docs/ai/TEST_MATRIX.md`, and `docs/ai/PARITY_MATRIX.md`.
 - Agent workflow scope update: parity tasks now default to `one request = one control closed end-to-end` (not micro-iterations), with expanded context-budget guidance for control work (`12-20` initial files, up to `20`) and aligned rules in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/PORTING_MODE.md`, `docs/ai/MODULE_INDEX.md`, and `docs/ai/FEATURE_TEMPLATE.md`.
 
+## [2026-04-05] - M4 Switch adaptive Cupertino interaction close-out
+
+### Changed
+
+- Closed the documented adaptive-switch interaction gap in `src/Flutter.Material/Switch.cs`:
+  - adaptive iOS/macOS path no longer uses `MaterialButtonCore`; it now uses dedicated Cupertino-style composition (`Focus` + pointer listeners + drag/tap gesture handling),
+  - adaptive drag choreography now follows Flutter Cupertino thresholds (`commit=0.7`, `reverse=0.2`) instead of Material-style midpoint commit,
+  - adaptive thumb now applies Cupertino-style pressed/drag extension (`+7`) and default thumb shadows (`0,3,8` + `0,3,1`) while keeping existing Cupertino geometry/tokens.
+- Expanded adaptive switch regression coverage in `src/Flutter.Tests/MaterialSwitchTests.cs`:
+  - drag below commit threshold does not toggle,
+  - drag beyond commit threshold toggles on,
+  - drag reverse beyond reverse threshold cancels pending toggle.
+- Updated tracking docs for this close-out step (`docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`, `docs/ai/material-2026-04-05-switch-adaptive-cupertino-interaction-closeout.md`).
+- Remaining documented divergence:
+  - deeper Cupertino fidelity items are still out of current scope (`HapticFeedback.lightImpact`, on/off accessibility labels, image-thumb pipeline).
+
 ## [2026-04-05] - M4 Switch adaptive Cupertino parity hardening
 
 ### Changed

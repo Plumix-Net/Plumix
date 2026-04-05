@@ -375,7 +375,9 @@ Progress update (2026-03-19):
   - adaptive iOS/macOS path now uses Cupertino-like defaults for geometry (`59x39` shell, `51x31` track, `28` thumb), zero fallback padding, and zero fallback splash radius.
   - `activeColor` adaptive mapping now matches Flutter semantics by platform (`iOS/macOS -> track`, other platforms -> thumb fallback when explicit `activeTrackColor` / `activeThumbColor` are absent).
   - disabled adaptive iOS/macOS path now applies switch-level opacity (`0.5`) and has focused regression coverage for adaptive mapping, geometry, and disabled opacity behavior.
-  - remaining divergence: adaptive switch still uses framework `MaterialButtonCore` composition (no dedicated Cupertino painter/drag-threshold choreography yet), so motion/press nuances are not fully native-Cupertino yet.
+  - adaptive iOS/macOS interaction path now uses dedicated Cupertino-style composition (no `MaterialButtonCore` wrapper): Focus + pointer listeners + gesture drag pipeline with Cupertino drag thresholds (`commit=0.7`, `reverse=0.2`) and pressed-thumb extension/shadow behavior.
+  - expanded `MaterialSwitchTests` coverage now includes adaptive drag commit/reverse choreography (`below commit` no-toggle, `beyond commit` toggle, and reverse-threshold cancel flow).
+  - remaining divergence: deeper Cupertino fidelity items (`HapticFeedback.lightImpact`, on/off accessibility labels, image-thumb pipeline) remain out of current framework scope.
 
 Initial scope:
 
