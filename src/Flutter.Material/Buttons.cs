@@ -1584,14 +1584,20 @@ internal sealed class MaterialButtonCore : StatefulWidget
         Widget child,
         Action? onPressed,
         ButtonStyle style,
+        Action? onLongPress = null,
+        Action<bool>? onHoverChanged = null,
         FocusNode? focusNode = null,
+        bool isSelected = false,
         bool autofocus = false,
         Key? key = null) : base(key)
     {
         Child = child;
         OnPressed = onPressed;
         Style = style ?? throw new ArgumentNullException(nameof(style));
+        OnLongPress = onLongPress;
+        OnHoverChanged = onHoverChanged;
         FocusNode = focusNode;
+        IsSelected = isSelected;
         Autofocus = autofocus;
     }
 
@@ -1601,7 +1607,13 @@ internal sealed class MaterialButtonCore : StatefulWidget
 
     public ButtonStyle Style { get; }
 
+    public Action? OnLongPress { get; }
+
+    public Action<bool>? OnHoverChanged { get; }
+
     public FocusNode? FocusNode { get; }
+
+    public bool IsSelected { get; }
 
     public bool Autofocus { get; }
 
@@ -2119,6 +2131,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
                 result = new GestureDetector(
                     behavior: HitTestBehavior.Opaque,
                     onTap: widget.OnPressed,
+                    onLongPress: widget.OnLongPress,
                     child: result);
 
                 result = new Listener(
@@ -2266,6 +2279,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
             }
 
             SetState(() => _isHovered = value);
+            CurrentWidget.OnHoverChanged?.Invoke(value);
         }
 
         private void SetFocusOverlaySuppressed(bool value)
@@ -2320,10 +2334,17 @@ internal sealed class MaterialButtonCore : StatefulWidget
         {
             if (!enabled)
             {
-                return MaterialState.Disabled;
+                return CurrentWidget.IsSelected
+                    ? MaterialState.Disabled | MaterialState.Selected
+                    : MaterialState.Disabled;
             }
 
             var states = MaterialState.None;
+            if (CurrentWidget.IsSelected)
+            {
+                states |= MaterialState.Selected;
+            }
+
             if (_isPressed)
             {
                 states |= MaterialState.Pressed;

@@ -17,6 +17,29 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 - Documentation policy update: Dart-to-C# control/widget work now uses mandatory parity-first porting mode (`docs/ai/PORTING_MODE.md`) with strict `1:1` default behavior, required divergence logging, and explicit parity-validation workflow references in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/INVARIANTS.md`, `docs/ai/MODULE_INDEX.md`, `docs/ai/FEATURE_TEMPLATE.md`, `docs/ai/TEST_MATRIX.md`, and `docs/ai/PARITY_MATRIX.md`.
 - Agent workflow scope update: parity tasks now default to `one request = one control closed end-to-end` (not micro-iterations), with expanded context-budget guidance for control work (`12-20` initial files, up to `20`) and aligned rules in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/PORTING_MODE.md`, `docs/ai/MODULE_INDEX.md`, and `docs/ai/FEATURE_TEMPLATE.md`.
 
+## [2026-04-05] - M4 IconButton parity baseline
+
+### Changed
+
+- Added framework Material `IconButton` in `src/Flutter.Material/IconButton.cs` with Flutter-like API surface for current framework scope:
+  - baseline constructor + M3 variant factories (`Filled`, `FilledTonal`, `Outlined`),
+  - `styleFrom(...)` helper,
+  - selected-state behavior (`isSelected`, `selectedIcon`) and variant-specific default tokens.
+- Extended Material style/theming primitives for icon-button parity:
+  - added `MaterialState.Selected`,
+  - added `IconButtonThemeData` + inherited `IconButtonTheme`,
+  - added `ThemeData.IconButtonStyle` and `ThemeData.IconButtonTheme`,
+  - added M3 tokens used by icon-button defaults (`SurfaceContainerHighestColor`, `InverseSurfaceColor`, `OnInverseSurfaceColor`).
+- Extended shared `MaterialButtonCore` to support selected-state propagation and optional hover/long-press callbacks, enabling icon-button interactions without duplicating button-state infrastructure.
+- Added focused `MaterialButtonsTests` coverage for icon-button parity-critical behavior:
+  - default icon color/size and mode-aware min-size defaults,
+  - `styleFrom` icon/foreground overrides,
+  - `IconButtonTheme` precedence over ambient `IconTheme` with widget-style override precedence,
+  - selected-icon rendering and outlined selected-border behavior,
+  - tap-target-size style override precedence over theme defaults.
+- Updated Material buttons runtime demo parity in both samples (`src/Sample/Flutter.Net/MaterialButtonsDemoPage.cs`, `dart_sample/lib/material_buttons_demo_page.dart`) with `IconButton` probes (standard selected toggle + filled + outlined).
+- Added iteration tracking artifacts for this parity pass (`docs/ai/material-2026-04-05-icon-button-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`, `docs/ai/PARITY_MATRIX.md`).
+
 ## [2026-04-05] - M4 material button parity close-out (padding scale + theme icon-alignment precedence)
 
 ### Changed

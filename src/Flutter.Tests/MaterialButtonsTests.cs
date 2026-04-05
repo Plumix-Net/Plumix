@@ -5159,6 +5159,247 @@ public sealed class MaterialButtonsTests
         Assert.Equal(decorated.Size.Height, splash.Size.Height, 3);
     }
 
+    [Fact]
+    public void IconButton_DefaultIconTheme_UsesOnSurfaceVariantAndSize24()
+    {
+        var owner = new BuildOwner();
+        var theme = ThemeData.Light with
+        {
+            OnSurfaceVariantColor = Colors.MediumAquamarine
+        };
+        IconThemeData? capturedTheme = null;
+
+        var root = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: new IconButton(
+                    icon: new CaptureIconThemeWidget(iconTheme => capturedTheme = iconTheme),
+                    onPressed: () => { })));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.NotNull(capturedTheme);
+        Assert.Equal(Colors.MediumAquamarine, capturedTheme!.Color);
+        Assert.Equal(24, capturedTheme.Size);
+    }
+
+    [Fact]
+    public void IconButton_DefaultMinSize_UsesMaterial3Baseline40x40()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new IconButton(
+                    icon: new SizedBox(width: 20, height: 20),
+                    onPressed: () => { })));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var constrainedBox = FindDescendant<RenderConstrainedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(constrainedBox);
+        Assert.Equal(40, constrainedBox!.AdditionalConstraints.MinWidth);
+        Assert.Equal(40, constrainedBox.AdditionalConstraints.MinHeight);
+    }
+
+    [Fact]
+    public void IconButton_DefaultMinSize_UseMaterial3Disabled_UsesMaterial2Baseline48x48()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with { UseMaterial3 = false },
+                child: new IconButton(
+                    icon: new SizedBox(width: 20, height: 20),
+                    onPressed: () => { })));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var constrainedBox = FindDescendant<RenderConstrainedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(constrainedBox);
+        Assert.Equal(48, constrainedBox!.AdditionalConstraints.MinWidth);
+        Assert.Equal(48, constrainedBox.AdditionalConstraints.MinHeight);
+    }
+
+    [Fact]
+    public void IconButton_StyleFrom_ForegroundAndIconSizeOverrideDefaults()
+    {
+        var owner = new BuildOwner();
+        IconThemeData? capturedTheme = null;
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new IconButton(
+                    icon: new CaptureIconThemeWidget(iconTheme => capturedTheme = iconTheme),
+                    onPressed: () => { },
+                    style: IconButton.StyleFrom(
+                        foregroundColor: Colors.OrangeRed,
+                        iconSize: 30))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.NotNull(capturedTheme);
+        Assert.Equal(Colors.OrangeRed, capturedTheme!.Color);
+        Assert.Equal(30, capturedTheme.Size);
+    }
+
+    [Fact]
+    public void IconButton_ThemeStyle_OverridesAmbientIconThemeDefaults()
+    {
+        var owner = new BuildOwner();
+        IconThemeData? capturedTheme = null;
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    IconButtonTheme = new IconButtonThemeData(
+                        style: IconButton.StyleFrom(
+                            foregroundColor: Colors.ForestGreen,
+                            iconSize: 22))
+                },
+                child: new Flutter.Widgets.IconTheme(
+                    data: new IconThemeData(Color: Colors.CadetBlue, Size: 18),
+                    child: new IconButton(
+                        icon: new CaptureIconThemeWidget(iconTheme => capturedTheme = iconTheme),
+                        onPressed: () => { }))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.NotNull(capturedTheme);
+        Assert.Equal(Colors.ForestGreen, capturedTheme!.Color);
+        Assert.Equal(22, capturedTheme.Size);
+    }
+
+    [Fact]
+    public void IconButton_WidgetStyle_OverridesIconButtonThemeStyle()
+    {
+        var owner = new BuildOwner();
+        IconThemeData? capturedTheme = null;
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    IconButtonTheme = new IconButtonThemeData(
+                        style: IconButton.StyleFrom(foregroundColor: Colors.ForestGreen))
+                },
+                child: new IconButton(
+                    icon: new CaptureIconThemeWidget(iconTheme => capturedTheme = iconTheme),
+                    onPressed: () => { },
+                    style: IconButton.StyleFrom(foregroundColor: Colors.OrangeRed))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.NotNull(capturedTheme);
+        Assert.Equal(Colors.OrangeRed, capturedTheme!.Color);
+    }
+
+    [Fact]
+    public void IconButton_IsSelectedTrue_UsesSelectedIcon()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new IconButton(
+                    icon: new Text("unselected"),
+                    selectedIcon: new Text("selected"),
+                    isSelected: true,
+                    onPressed: () => { })));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(paragraph);
+        Assert.Equal("selected", paragraph!.Text);
+    }
+
+    [Fact]
+    public void IconButton_Outlined_SelectedState_DropsOutlineBorder()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: IconButton.Outlined(
+                    icon: new SizedBox(width: 20, height: 20),
+                    isSelected: false,
+                    onPressed: () => { })));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var unselectedDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(unselectedDecorated);
+        Assert.Equal(new BorderSide(ThemeData.Light.OutlineColor, 1), unselectedDecorated!.Decoration.Border);
+
+        root.Update(
+            new Theme(
+                data: ThemeData.Light,
+                child: IconButton.Outlined(
+                    icon: new SizedBox(width: 20, height: 20),
+                    isSelected: true,
+                    onPressed: () => { })));
+        owner.FlushBuild();
+
+        var selectedDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(selectedDecorated);
+        Assert.Null(selectedDecorated!.Decoration.Border);
+    }
+
+    [Fact]
+    public void IconButton_StyleFromTapTargetSize_OverridesThemeTapTargetSize()
+    {
+        using (var paddedHarness = new WidgetRenderHarness(
+                   new Theme(
+                       data: ThemeData.Light with { MaterialTapTargetSize = MaterialTapTargetSize.Padded },
+                       child: new SizedBox(
+                           width: 120,
+                           child: new IconButton(
+                               icon: new SizedBox(width: 20, height: 20),
+                               onPressed: () => { })))))
+        {
+            paddedHarness.Pump(new Size(220, 120));
+            var paddedHitResult = new BoxHitTestResult();
+            Assert.True(paddedHarness.RenderView.HitTest(paddedHitResult, new Point(60, 46)));
+        }
+
+        using var overrideHarness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light with { MaterialTapTargetSize = MaterialTapTargetSize.Padded },
+                child: new SizedBox(
+                    width: 120,
+                    child: new IconButton(
+                        icon: new SizedBox(width: 20, height: 20),
+                        onPressed: () => { },
+                        style: IconButton.StyleFrom(tapTargetSize: MaterialTapTargetSize.ShrinkWrap)))));
+
+        overrideHarness.Pump(new Size(220, 120));
+
+        var overrideHitResult = new BoxHitTestResult();
+        Assert.False(overrideHarness.RenderView.HitTest(overrideHitResult, new Point(60, 46)));
+    }
+
     private static T RequireRenderObject<T>(Element? element) where T : RenderObject
     {
         Assert.NotNull(element);

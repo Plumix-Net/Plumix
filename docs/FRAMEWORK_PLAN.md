@@ -334,6 +334,12 @@ Progress update (2026-03-19):
   - Directional icon paddings now resolve start/end values via ambient `Directionality` (LTR/RTL) for button variants that use Flutter `EdgeInsetsDirectional` defaults.
   - Material icon-factory icon-alignment precedence now follows Flutter order: explicit icon-factory `iconAlignment` -> local button theme style `iconAlignment` -> button style `iconAlignment` -> `start`.
   - Added focused `MaterialButtonsTests` coverage for scaled padding at text scale `2.0`, directional (RTL/LTR) icon-padding mapping, and theme-level icon-alignment precedence across text/elevated/outlined/filled icon factories.
+- Added Material `IconButton` parity baseline in `Flutter.Material`:
+  - introduced `IconButton` with `styleFrom(...)`, selection API (`isSelected`, `selectedIcon`), and M3 variant factories (`Filled`, `FilledTonal`, `Outlined`) wired into shared `MaterialButtonCore` style/state pipeline;
+  - expanded style/theme primitives with `MaterialState.Selected`, `IconButtonThemeData`/`IconButtonTheme`, `ThemeData.IconButtonTheme` + `ThemeData.IconButtonStyle`, and additional M3 color tokens used by icon-button defaults (`surfaceContainerHighest`, `inverseSurface`, `onInverseSurface`);
+  - extended `MaterialButtonCore` to support selected-state propagation plus optional hover/long-press callbacks used by icon-button parity behavior;
+  - added focused `MaterialButtonsTests` coverage for icon-button defaults, style/theme precedence, selected-icon behavior, outlined selected-border behavior, and tap-target-size override precedence;
+  - updated C#/Dart Material buttons demo pages with runtime icon-button probes and parity-aligned counters.
 
 Initial scope:
 

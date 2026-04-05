@@ -25,6 +25,10 @@ internal sealed class MaterialButtonsDemoPageState : State
     private int _outlinedButtonTaps;
     private int _filledButtonTaps;
     private int _filledTonalButtonTaps;
+    private int _iconButtonTaps;
+    private int _filledIconButtonTaps;
+    private int _outlinedIconButtonTaps;
+    private bool _iconButtonSelected;
 
     public override Widget Build(BuildContext context)
     {
@@ -35,7 +39,7 @@ internal sealed class MaterialButtonsDemoPageState : State
             [
                 new Text("Material buttons baseline", fontSize: 20, color: Colors.Black),
                 new Text(
-                    "TextButton / ElevatedButton / OutlinedButton / FilledButton (+ tonal) with enabled/disabled and theme-aware defaults.",
+                    "TextButton / ElevatedButton / OutlinedButton / FilledButton (+ tonal) / IconButton with enabled/disabled and theme-aware defaults.",
                     fontSize: 14,
                     color: Color.Parse("#8A000000")),
                 new Row(
@@ -54,7 +58,7 @@ internal sealed class MaterialButtonsDemoPageState : State
                             background: Color.Parse("#FFF3E8D8")),
                     ]),
                 new Text(
-                    $"enabled={(_enabled ? "true" : "false")}, text={_textButtonTaps}, elevated={_elevatedButtonTaps}, outlined={_outlinedButtonTaps}, filled={_filledButtonTaps}, tonal={_filledTonalButtonTaps}",
+                    $"enabled={(_enabled ? "true" : "false")}, text={_textButtonTaps}, elevated={_elevatedButtonTaps}, outlined={_outlinedButtonTaps}, filled={_filledButtonTaps}, tonal={_filledTonalButtonTaps}, icon={_iconButtonTaps}, filledIcon={_filledIconButtonTaps}, outlinedIcon={_outlinedIconButtonTaps}, iconSelected={(_iconButtonSelected ? "true" : "false")}",
                     fontSize: 12,
                     color: Color.Parse("#FF607D8B")),
                 new SizedBox(
@@ -82,6 +86,31 @@ internal sealed class MaterialButtonsDemoPageState : State
                     child: FilledButton.Tonal(
                         onPressed: _enabled ? OnFilledTonalButtonTap : null,
                         child: new Text($"FilledButton.tonal taps: {_filledTonalButtonTaps}"))),
+                new Row(
+                    spacing: 8,
+                    children:
+                    [
+                        new SizedBox(
+                            width: 56,
+                            height: 56,
+                            child: new IconButton(
+                                icon: new DemoIconGlyph("o"),
+                                selectedIcon: new DemoIconGlyph("x"),
+                                isSelected: _iconButtonSelected,
+                                onPressed: _enabled ? OnIconButtonTap : null)),
+                        new SizedBox(
+                            width: 56,
+                            height: 56,
+                            child: IconButton.Filled(
+                                icon: new DemoIconGlyph("+"),
+                                onPressed: _enabled ? OnFilledIconButtonTap : null)),
+                        new SizedBox(
+                            width: 56,
+                            height: 56,
+                            child: IconButton.Outlined(
+                                icon: new DemoIconGlyph("i"),
+                                onPressed: _enabled ? OnOutlinedIconButtonTap : null)),
+                    ]),
                 new Row(
                     spacing: 8,
                     children:
@@ -153,6 +182,10 @@ internal sealed class MaterialButtonsDemoPageState : State
             _outlinedButtonTaps = 0;
             _filledButtonTaps = 0;
             _filledTonalButtonTaps = 0;
+            _iconButtonTaps = 0;
+            _filledIconButtonTaps = 0;
+            _outlinedIconButtonTaps = 0;
+            _iconButtonSelected = false;
             _enabled = true;
         });
     }
@@ -180,5 +213,48 @@ internal sealed class MaterialButtonsDemoPageState : State
     private void OnFilledTonalButtonTap()
     {
         SetState(() => _filledTonalButtonTaps += 1);
+    }
+
+    private void OnIconButtonTap()
+    {
+        SetState(() =>
+        {
+            _iconButtonTaps += 1;
+            _iconButtonSelected = !_iconButtonSelected;
+        });
+    }
+
+    private void OnFilledIconButtonTap()
+    {
+        SetState(() => _filledIconButtonTaps += 1);
+    }
+
+    private void OnOutlinedIconButtonTap()
+    {
+        SetState(() => _outlinedIconButtonTaps += 1);
+    }
+}
+
+internal sealed class DemoIconGlyph : StatelessWidget
+{
+    private readonly string _glyph;
+
+    public DemoIconGlyph(string glyph)
+    {
+        _glyph = glyph;
+    }
+
+    public override Widget Build(BuildContext context)
+    {
+        var iconTheme = IconTheme.Of(context);
+        var glyphSize = iconTheme.Size ?? 24;
+        var glyphColor = iconTheme.Color ?? Colors.Black;
+
+        return new Text(
+            _glyph,
+            fontSize: glyphSize,
+            color: glyphColor,
+            softWrap: false,
+            maxLines: 1);
     }
 }

@@ -32,6 +32,7 @@ Current priority (2026-03-12):
   - `src/Flutter.Material/Theme.cs`
   - `src/Flutter.Material/Scaffold.cs`
   - `src/Flutter.Material/Buttons.cs`
+  - `src/Flutter.Material/IconButton.cs`
   - `src/Flutter/Widgets/Framework.Widget.cs`
   - `src/Flutter/Widgets/DefaultTextStyle.cs`
   - `src/Flutter/Widgets/Text.cs`

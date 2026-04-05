@@ -3,7 +3,7 @@ using Flutter.Widgets;
 
 namespace Flutter.Material;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/material/text_button_theme.dart; flutter/packages/flutter/lib/src/material/elevated_button_theme.dart; flutter/packages/flutter/lib/src/material/outlined_button_theme.dart; flutter/packages/flutter/lib/src/material/filled_button_theme.dart (approximate)
+// Dart parity source (reference): flutter/packages/flutter/lib/src/material/text_button_theme.dart; flutter/packages/flutter/lib/src/material/elevated_button_theme.dart; flutter/packages/flutter/lib/src/material/outlined_button_theme.dart; flutter/packages/flutter/lib/src/material/filled_button_theme.dart; flutter/packages/flutter/lib/src/material/icon_button_theme.dart (approximate)
 
 public sealed record TextButtonThemeData
 {
@@ -38,6 +38,16 @@ public sealed record OutlinedButtonThemeData
 public sealed record FilledButtonThemeData
 {
     public FilledButtonThemeData(ButtonStyle? style = null)
+    {
+        Style = style;
+    }
+
+    public ButtonStyle? Style { get; init; }
+}
+
+public sealed record IconButtonThemeData
+{
+    public IconButtonThemeData(ButtonStyle? style = null)
     {
         Style = style;
     }
@@ -190,5 +200,42 @@ public sealed class FilledButtonTheme : InheritedWidget
         }
 
         return Theme.Of(context).FilledButtonTheme;
+    }
+}
+
+public sealed class IconButtonTheme : InheritedWidget
+{
+    public IconButtonTheme(
+        IconButtonThemeData data,
+        Widget child,
+        Key? key = null) : base(key)
+    {
+        Data = data ?? throw new ArgumentNullException(nameof(data));
+        Child = child ?? throw new ArgumentNullException(nameof(child));
+    }
+
+    public IconButtonThemeData Data { get; }
+
+    public Widget Child { get; }
+
+    public override Widget Build(BuildContext context)
+    {
+        return Child;
+    }
+
+    protected internal override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    {
+        return !Equals(((IconButtonTheme)oldWidget).Data, Data);
+    }
+
+    public static IconButtonThemeData Of(BuildContext context)
+    {
+        var localTheme = context.DependOnInherited<IconButtonTheme>();
+        if (localTheme is not null)
+        {
+            return localTheme.Data;
+        }
+
+        return Theme.Of(context).IconButtonTheme;
     }
 }
