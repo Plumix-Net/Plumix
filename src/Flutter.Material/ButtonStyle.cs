@@ -17,6 +17,12 @@ public enum MaterialState
     Disabled = 1 << 3
 }
 
+public enum IconAlignment
+{
+    Start,
+    End
+}
+
 public abstract class MaterialStateProperty<T>
 {
     public abstract T Resolve(MaterialState states);
@@ -84,6 +90,7 @@ public sealed record ButtonStyle(
     MaterialStateProperty<Size?>? FixedSize = null,
     MaterialStateProperty<Size?>? MaximumSize = null,
     Alignment? Alignment = null,
+    IconAlignment? IconAlignment = null,
     MaterialTapTargetSize? TapTargetSize = null,
     MaterialStateProperty<TextStyle?>? TextStyle = null)
 {
@@ -112,6 +119,7 @@ public sealed record ButtonStyle(
             FixedSize = FixedSize ?? style.FixedSize,
             MaximumSize = MaximumSize ?? style.MaximumSize,
             Alignment = Alignment ?? style.Alignment,
+            IconAlignment = IconAlignment ?? style.IconAlignment,
             TapTargetSize = TapTargetSize ?? style.TapTargetSize,
             TextStyle = TextStyle ?? style.TextStyle
         };
@@ -195,6 +203,11 @@ public sealed record ButtonStyle(
     internal MaterialTapTargetSize? ResolveTapTargetSize()
     {
         return TapTargetSize;
+    }
+
+    internal IconAlignment? ResolveIconAlignment()
+    {
+        return IconAlignment;
     }
 
     internal TextStyle? ResolveTextStyle(MaterialState states)

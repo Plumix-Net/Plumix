@@ -291,6 +291,76 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
+    public void TextButton_Icon_IconAlignmentEnd_PlacesLabelBeforeIcon()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: TextButton.Icon(
+                    onPressed: () => { },
+                    icon: new SizedBox(width: 12, height: 12),
+                    label: new Text("Icon alignment"),
+                    iconAlignment: IconAlignment.End)));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        AssertIconRowOrder(
+            RequireRenderObject<RenderObject>(root.ChildElement),
+            iconFirst: false);
+    }
+
+    [Fact]
+    public void TextButton_Icon_StyleFromIconAlignmentEnd_PlacesLabelBeforeIcon()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: TextButton.Icon(
+                    onPressed: () => { },
+                    icon: new SizedBox(width: 12, height: 12),
+                    label: new Text("Icon alignment"),
+                    style: TextButton.StyleFrom(iconAlignment: IconAlignment.End))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        AssertIconRowOrder(
+            RequireRenderObject<RenderObject>(root.ChildElement),
+            iconFirst: false);
+    }
+
+    [Fact]
+    public void TextButton_Icon_IconAlignmentParameter_OverridesStyleFromIconAlignment()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: TextButton.Icon(
+                    onPressed: () => { },
+                    icon: new SizedBox(width: 12, height: 12),
+                    label: new Text("Icon alignment"),
+                    style: TextButton.StyleFrom(iconAlignment: IconAlignment.Start),
+                    iconAlignment: IconAlignment.End)));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        AssertIconRowOrder(
+            RequireRenderObject<RenderObject>(root.ChildElement),
+            iconFirst: false);
+    }
+
+    [Fact]
     public void TextButton_TapTargetPadding_RedirectsHitTestInPaddedAreaToChildCenter()
     {
         using var harness = new WidgetRenderHarness(
@@ -745,6 +815,29 @@ public sealed class MaterialButtonsTests
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
         Assert.Equal(new Thickness(12, 0, 16, 0), padding!.Padding);
+    }
+
+    [Fact]
+    public void FilledButtonTonal_Icon_IconAlignmentEnd_PlacesLabelBeforeIcon()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: FilledButton.TonalIcon(
+                    onPressed: () => { },
+                    icon: new SizedBox(width: 12, height: 12),
+                    label: new Text("Icon alignment"),
+                    iconAlignment: IconAlignment.End)));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        AssertIconRowOrder(
+            RequireRenderObject<RenderObject>(root.ChildElement),
+            iconFirst: false);
     }
 
     [Fact]
@@ -4540,6 +4633,27 @@ public sealed class MaterialButtonsTests
         var shadows = decorated.Decoration.BoxShadows!.Value;
         Assert.True(shadows.Count > 0);
         return shadows[0];
+    }
+
+    private static void AssertIconRowOrder(RenderObject root, bool iconFirst)
+    {
+        var row = FindDescendant<RenderFlex>(root);
+        Assert.NotNull(row);
+        Assert.Equal(Axis.Horizontal, row!.Direction);
+
+        var first = Assert.IsAssignableFrom<RenderBox>(row.FirstChild);
+        var second = Assert.IsAssignableFrom<RenderBox>(row.ChildAfter(first));
+
+        if (iconFirst)
+        {
+            Assert.IsType<RenderConstrainedBox>(first);
+            Assert.IsType<RenderParagraph>(second);
+        }
+        else
+        {
+            Assert.IsType<RenderParagraph>(first);
+            Assert.IsType<RenderConstrainedBox>(second);
+        }
     }
 
     private sealed class CaptureIconThemeWidget : StatelessWidget

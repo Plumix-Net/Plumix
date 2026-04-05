@@ -312,6 +312,11 @@ Progress update (2026-03-19):
     - `OutlinedButton.Icon`: M3 `16/0/24/0`, M2 `16/0`
     - `FilledButton.Icon`/`FilledButton.TonalIcon`: M3 `16/0/24/0`, M2 `12/0/16/0`
   - Added focused `MaterialButtonsTests` coverage for icon-factory default padding across M3/M2 paths for text/elevated/outlined/filled/tonal filled buttons.
+- Continued icon-alignment parity hardening for Material button icon factories:
+  - Added `IconAlignment` enum (`Start`, `End`) and `ButtonStyle.IconAlignment` with style merge + composed-style precedence wiring.
+  - `TextButton.StyleFrom(...)`, `ElevatedButton.StyleFrom(...)`, `OutlinedButton.StyleFrom(...)`, and `FilledButton.StyleFrom(...)` now accept `iconAlignment`.
+  - `*.Icon(...)`/`TonalIcon(...)` factories now accept explicit `iconAlignment` and apply precedence `iconAlignment arg -> style.iconAlignment -> start`.
+  - Added focused `MaterialButtonsTests` coverage for icon-row order and icon-alignment precedence (including explicit icon-factory override over `styleFrom(iconAlignment: ...)`).
 
 Initial scope:
 

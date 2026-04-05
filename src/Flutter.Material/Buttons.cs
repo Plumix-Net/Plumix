@@ -108,12 +108,18 @@ public sealed class TextButton : StatelessWidget
         double minWidth = 64,
         double? minHeight = null,
         ButtonStyle? style = null,
+        IconAlignment? iconAlignment = null,
         FocusNode? focusNode = null,
         bool autofocus = false,
         Key? key = null)
     {
         return new TextButton(
-            child: icon is null ? label : MaterialButtonIconFactory.Create(icon, label),
+            child: icon is null
+                ? label
+                : MaterialButtonIconFactory.Create(
+                    icon,
+                    label,
+                    iconAlignment ?? style?.IconAlignment ?? IconAlignment.Start),
             onPressed: onPressed,
             foregroundColor: foregroundColor,
             backgroundColor: backgroundColor,
@@ -148,6 +154,7 @@ public sealed class TextButton : StatelessWidget
         Size? fixedSize = null,
         Size? maximumSize = null,
         Alignment? alignment = null,
+        IconAlignment? iconAlignment = null,
         MaterialTapTargetSize? tapTargetSize = null,
         TextStyle? textStyle = null)
     {
@@ -211,6 +218,7 @@ public sealed class TextButton : StatelessWidget
                 ? MaterialStateProperty<Size?>.All(maximumSize.Value)
                 : null,
             Alignment: alignment,
+            IconAlignment: iconAlignment,
             TapTargetSize: tapTargetSize,
             TextStyle: textStyle is null ? null : MaterialStateProperty<TextStyle?>.All(textStyle));
     }
@@ -406,12 +414,18 @@ public sealed class ElevatedButton : StatelessWidget
         double minWidth = 64,
         double? minHeight = null,
         ButtonStyle? style = null,
+        IconAlignment? iconAlignment = null,
         FocusNode? focusNode = null,
         bool autofocus = false,
         Key? key = null)
     {
         return new ElevatedButton(
-            child: icon is null ? label : MaterialButtonIconFactory.Create(icon, label),
+            child: icon is null
+                ? label
+                : MaterialButtonIconFactory.Create(
+                    icon,
+                    label,
+                    iconAlignment ?? style?.IconAlignment ?? IconAlignment.Start),
             onPressed: onPressed,
             foregroundColor: foregroundColor,
             backgroundColor: backgroundColor,
@@ -446,6 +460,7 @@ public sealed class ElevatedButton : StatelessWidget
         Size? maximumSize = null,
         double? elevation = null,
         Alignment? alignment = null,
+        IconAlignment? iconAlignment = null,
         MaterialTapTargetSize? tapTargetSize = null,
         TextStyle? textStyle = null)
     {
@@ -508,6 +523,7 @@ public sealed class ElevatedButton : StatelessWidget
                 ? MaterialStateProperty<Size?>.All(maximumSize.Value)
                 : null,
             Alignment: alignment,
+            IconAlignment: iconAlignment,
             TapTargetSize: tapTargetSize,
             TextStyle: textStyle is null ? null : MaterialStateProperty<TextStyle?>.All(textStyle));
     }
@@ -755,12 +771,18 @@ public sealed class FilledButton : StatelessWidget
         double minWidth = 64,
         double minHeight = 40,
         ButtonStyle? style = null,
+        IconAlignment? iconAlignment = null,
         FocusNode? focusNode = null,
         bool autofocus = false,
         Key? key = null)
     {
         return new FilledButton(
-            child: icon is null ? label : MaterialButtonIconFactory.Create(icon, label),
+            child: icon is null
+                ? label
+                : MaterialButtonIconFactory.Create(
+                    icon,
+                    label,
+                    iconAlignment ?? style?.IconAlignment ?? IconAlignment.Start),
             onPressed: onPressed,
             isTonal: false,
             applyIconFactoryPadding: icon is not null,
@@ -787,12 +809,18 @@ public sealed class FilledButton : StatelessWidget
         double minWidth = 64,
         double minHeight = 40,
         ButtonStyle? style = null,
+        IconAlignment? iconAlignment = null,
         FocusNode? focusNode = null,
         bool autofocus = false,
         Key? key = null)
     {
         return new FilledButton(
-            child: icon is null ? label : MaterialButtonIconFactory.Create(icon, label),
+            child: icon is null
+                ? label
+                : MaterialButtonIconFactory.Create(
+                    icon,
+                    label,
+                    iconAlignment ?? style?.IconAlignment ?? IconAlignment.Start),
             onPressed: onPressed,
             isTonal: true,
             applyIconFactoryPadding: icon is not null,
@@ -828,6 +856,7 @@ public sealed class FilledButton : StatelessWidget
         Size? fixedSize = null,
         Size? maximumSize = null,
         Alignment? alignment = null,
+        IconAlignment? iconAlignment = null,
         MaterialTapTargetSize? tapTargetSize = null,
         TextStyle? textStyle = null)
     {
@@ -883,6 +912,7 @@ public sealed class FilledButton : StatelessWidget
                 ? MaterialStateProperty<Size?>.All(maximumSize.Value)
                 : null,
             Alignment: alignment,
+            IconAlignment: iconAlignment,
             TapTargetSize: tapTargetSize,
             TextStyle: textStyle is null ? null : MaterialStateProperty<TextStyle?>.All(textStyle));
     }
@@ -1111,12 +1141,18 @@ public sealed class OutlinedButton : StatelessWidget
         double minWidth = 64,
         double? minHeight = null,
         ButtonStyle? style = null,
+        IconAlignment? iconAlignment = null,
         FocusNode? focusNode = null,
         bool autofocus = false,
         Key? key = null)
     {
         return new OutlinedButton(
-            child: icon is null ? label : MaterialButtonIconFactory.Create(icon, label),
+            child: icon is null
+                ? label
+                : MaterialButtonIconFactory.Create(
+                    icon,
+                    label,
+                    iconAlignment ?? style?.IconAlignment ?? IconAlignment.Start),
             onPressed: onPressed,
             foregroundColor: foregroundColor,
             borderColor: borderColor,
@@ -1153,6 +1189,7 @@ public sealed class OutlinedButton : StatelessWidget
         Size? fixedSize = null,
         Size? maximumSize = null,
         Alignment? alignment = null,
+        IconAlignment? iconAlignment = null,
         MaterialTapTargetSize? tapTargetSize = null,
         TextStyle? textStyle = null)
     {
@@ -1212,6 +1249,7 @@ public sealed class OutlinedButton : StatelessWidget
                 ? MaterialStateProperty<Size?>.All(maximumSize.Value)
                 : null,
             Alignment: alignment,
+            IconAlignment: iconAlignment,
             TapTargetSize: tapTargetSize,
             TextStyle: textStyle is null ? null : MaterialStateProperty<TextStyle?>.All(textStyle));
     }
@@ -1326,16 +1364,24 @@ public sealed class OutlinedButton : StatelessWidget
 
 internal static class MaterialButtonIconFactory
 {
-    public static Widget Create(Widget icon, Widget label)
+    public static Widget Create(Widget icon, Widget label, IconAlignment iconAlignment = IconAlignment.Start)
     {
-        return new Row(
-            mainAxisSize: MainAxisSize.Min,
-            spacing: 8,
-            children: new Widget[]
+        var children = iconAlignment == IconAlignment.End
+            ? new Widget[]
+            {
+                new Flexible(child: label),
+                icon
+            }
+            : new Widget[]
             {
                 icon,
                 new Flexible(child: label)
-            });
+            };
+
+        return new Row(
+            mainAxisSize: MainAxisSize.Min,
+            spacing: 8,
+            children: children);
     }
 }
 
@@ -1457,6 +1503,10 @@ internal sealed class MaterialButtonCore : StatefulWidget
                        ?? widgetStyle?.Alignment
                        ?? themeStyle?.Alignment
                        ?? defaults?.Alignment,
+            IconAlignment: legacyOverrides?.IconAlignment
+                           ?? widgetStyle?.IconAlignment
+                           ?? themeStyle?.IconAlignment
+                           ?? defaults?.IconAlignment,
             TapTargetSize: legacyOverrides?.TapTargetSize
                            ?? widgetStyle?.TapTargetSize
                            ?? themeStyle?.TapTargetSize

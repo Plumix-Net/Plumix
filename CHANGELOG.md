@@ -16,6 +16,30 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 - Documentation policy update: Dart-to-C# control/widget work now uses mandatory parity-first porting mode (`docs/ai/PORTING_MODE.md`) with strict `1:1` default behavior, required divergence logging, and explicit parity-validation workflow references in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/INVARIANTS.md`, `docs/ai/MODULE_INDEX.md`, `docs/ai/FEATURE_TEMPLATE.md`, `docs/ai/TEST_MATRIX.md`, and `docs/ai/PARITY_MATRIX.md`.
 
+## [2026-04-05] - M4 button icon-alignment parity hardening
+
+### Changed
+
+- Added `IconAlignment` parity primitives to Material button styling:
+  - introduced `IconAlignment` enum (`Start`, `End`),
+  - added `ButtonStyle.IconAlignment` with merge support,
+  - wired icon-alignment precedence into composed style layers in `MaterialButtonCore.ComposeStyles(...)`
+  (`src/Flutter.Material/ButtonStyle.cs`, `src/Flutter.Material/Buttons.cs`).
+- Expanded `styleFrom(...)` APIs with `iconAlignment` for `TextButton`, `ElevatedButton`, `OutlinedButton`, and `FilledButton`, matching Flutter button-style surface for icon-bearing button variants (`src/Flutter.Material/Buttons.cs`).
+- Expanded icon-factory APIs with explicit `iconAlignment` arguments for:
+  - `TextButton.Icon(...)`
+  - `ElevatedButton.Icon(...)`
+  - `OutlinedButton.Icon(...)`
+  - `FilledButton.Icon(...)`
+  - `FilledButton.TonalIcon(...)`
+  and wired precedence `iconAlignment arg -> style.iconAlignment -> start` for icon-row composition (`src/Flutter.Material/Buttons.cs`).
+- Added focused `MaterialButtonsTests` coverage for icon-alignment behavior:
+  - `IconAlignment.End` icon-row order for text/filled-tonal icon factories,
+  - `styleFrom(iconAlignment: ...)` propagation to icon factory layout,
+  - explicit icon-factory `iconAlignment` override precedence over `styleFrom(...)`
+  (`src/Flutter.Tests/MaterialButtonsTests.cs`).
+- Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-04-05-button-icon-alignment-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
+
 ## [2026-04-05] - M4 button icon-factory default padding parity hardening
 
 ### Changed
