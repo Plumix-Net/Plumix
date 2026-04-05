@@ -15,6 +15,22 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 ### Changed
 
 - Documentation policy update: Dart-to-C# control/widget work now uses mandatory parity-first porting mode (`docs/ai/PORTING_MODE.md`) with strict `1:1` default behavior, required divergence logging, and explicit parity-validation workflow references in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/INVARIANTS.md`, `docs/ai/MODULE_INDEX.md`, `docs/ai/FEATURE_TEMPLATE.md`, `docs/ai/TEST_MATRIX.md`, and `docs/ai/PARITY_MATRIX.md`.
+- Agent workflow scope update: parity tasks now default to `one request = one control closed end-to-end` (not micro-iterations), with expanded context-budget guidance for control work (`12-20` initial files, up to `20`) and aligned rules in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/PORTING_MODE.md`, `docs/ai/MODULE_INDEX.md`, and `docs/ai/FEATURE_TEMPLATE.md`.
+
+## [2026-04-05] - M4 button `styleFrom` icon-color + M3 shadow parity hardening
+
+### Changed
+
+- Aligned `styleFrom(iconColor: ...)` disabled-state mapping with Flutter `defaultColor` semantics for `ElevatedButton`, `OutlinedButton`, and `FilledButton`: when `disabledIconColor` is omitted, disabled icon color now stays on the provided `iconColor` instead of falling back to default disabled foreground (`src/Flutter.Material/Buttons.cs`).
+- Aligned non-elevated M3 shadow behavior with Flutter defaults:
+  - `TextButton` and `OutlinedButton` default shadow token now resolves to transparent when `UseMaterial3=true`, so style-level elevation without explicit `shadowColor` no longer paints fallback shadows.
+  - M2 behavior remains unchanged (`UseMaterial3=false` keeps theme-shadow fallback via default shadow token)
+  (`src/Flutter.Material/Buttons.cs`).
+- Expanded `MaterialButtonsTests` coverage with:
+  - disabled icon-color mapping checks for `ElevatedButton`/`OutlinedButton`/`FilledButton` `styleFrom(iconColor: ...)`,
+  - M3-vs-M2 shadow-fallback split checks for `TextButton`/`OutlinedButton` style-level elevation without explicit shadow color
+  (`src/Flutter.Tests/MaterialButtonsTests.cs`).
+- Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-04-05-button-stylefrom-iconcolor-shadow-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
 
 ## [2026-04-05] - M4 button icon-alignment directionality parity hardening
 

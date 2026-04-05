@@ -321,6 +321,10 @@ Progress update (2026-03-19):
   - Added core `Directionality` inherited widget to framework widget layer for ambient text-direction propagation (`Of`/`MaybeOf`).
   - Material button icon-factory row composition now resolves `IconAlignment.Start/End` against ambient `Directionality` (`LTR`/`RTL`) instead of fixed visual left/right mapping.
   - Added focused `MaterialButtonsTests` RTL coverage for `IconAlignment.Start` and `IconAlignment.End` row-order behavior.
+- Continued `styleFrom` icon/shadow parity hardening across button variants:
+  - `ElevatedButton`/`OutlinedButton`/`FilledButton` `styleFrom(iconColor: x)` now keeps `x` in disabled state when `disabledIconColor` is omitted, matching Flutter `defaultColor` semantics.
+  - `TextButton`/`OutlinedButton` default `shadowColor` now follows Flutter mode split: `UseMaterial3=true` -> transparent (no shadow fallback from style-only elevation), `UseMaterial3=false` -> themed shadow fallback remains available.
+  - Added focused `MaterialButtonsTests` coverage for disabled icon-color mapping on elevated/outlined/filled buttons and M3-vs-M2 shadow fallback behavior on text/outlined buttons.
 
 Initial scope:
 
@@ -362,6 +366,7 @@ Exit criteria:
 - Always update this file when milestone status changes (`done`, `in_progress`, `planned`, `blocked`).
 - Always record shipped outcomes in `CHANGELOG.md`.
 - For Dart-to-C# control/widget ports, follow mandatory parity-first workflow in `docs/ai/PORTING_MODE.md` (strict `1:1` default; documented divergences only).
+- For parity-hardening requests, default delivery unit is one control closed end-to-end (`API/defaults/states/layout/paint/tests`) per request; avoid splitting one control into many micro-iterations unless blocked by a missing primitive or explicitly requested.
 - For every meaningful feature change, update both:
   - semantic status (this document),
   - historical record (`CHANGELOG.md`).

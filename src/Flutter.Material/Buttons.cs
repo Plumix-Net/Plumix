@@ -263,6 +263,7 @@ public sealed class TextButton : StatelessWidget
                     ? MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.38)
                     : stateColor),
             BackgroundColor: MaterialStateProperty<Color?>.All(null),
+            ShadowColor: MaterialStateProperty<Color?>.All(useMaterial3 ? Colors.Transparent : theme.ShadowColor),
             OverlayColor: MaterialButtonCore.CreateDefaultOverlayResolver(stateColor, pressedFocusedOverlayOpacity),
             SplashColor: null,
             IconColor: MaterialStateProperty<Color?>.ResolveWith(states =>
@@ -464,6 +465,15 @@ public sealed class ElevatedButton : StatelessWidget
         MaterialTapTargetSize? tapTargetSize = null,
         TextStyle? textStyle = null)
     {
+        var iconColorProperty = iconColor.HasValue && !disabledIconColor.HasValue
+            ? MaterialStateProperty<Color?>.All(iconColor.Value)
+            : iconColor.HasValue || disabledIconColor.HasValue
+                ? MaterialStateProperty<Color?>.ResolveWith(states =>
+                    states.HasFlag(MaterialState.Disabled)
+                        ? disabledIconColor
+                        : iconColor)
+                : null;
+
         return new ButtonStyle(
             ForegroundColor: foregroundColor.HasValue || disabledForegroundColor.HasValue
                 ? MaterialStateProperty<Color?>.ResolveWith(states =>
@@ -485,12 +495,7 @@ public sealed class ElevatedButton : StatelessWidget
                 : null,
             OverlayColor: MaterialButtonCore.CreateStyleFromOverlayResolver(foregroundColor, overlayColor),
             SplashColor: MaterialButtonCore.CreateStyleFromSplashResolver(foregroundColor, overlayColor, splashColor),
-            IconColor: iconColor.HasValue || disabledIconColor.HasValue
-                ? MaterialStateProperty<Color?>.ResolveWith(states =>
-                    states.HasFlag(MaterialState.Disabled)
-                        ? disabledIconColor
-                        : iconColor)
-                : null,
+            IconColor: iconColorProperty,
             IconSize: iconSize.HasValue
                 ? MaterialStateProperty<double?>.All(iconSize.Value)
                 : null,
@@ -860,6 +865,15 @@ public sealed class FilledButton : StatelessWidget
         MaterialTapTargetSize? tapTargetSize = null,
         TextStyle? textStyle = null)
     {
+        var iconColorProperty = iconColor.HasValue && !disabledIconColor.HasValue
+            ? MaterialStateProperty<Color?>.All(iconColor.Value)
+            : iconColor.HasValue || disabledIconColor.HasValue
+                ? MaterialStateProperty<Color?>.ResolveWith(states =>
+                    states.HasFlag(MaterialState.Disabled)
+                        ? disabledIconColor
+                        : iconColor)
+                : null;
+
         return new ButtonStyle(
             ForegroundColor: foregroundColor.HasValue || disabledForegroundColor.HasValue
                 ? MaterialStateProperty<Color?>.ResolveWith(states =>
@@ -881,12 +895,7 @@ public sealed class FilledButton : StatelessWidget
                 : null,
             OverlayColor: MaterialButtonCore.CreateStyleFromOverlayResolver(foregroundColor, overlayColor),
             SplashColor: MaterialButtonCore.CreateStyleFromSplashResolver(foregroundColor, overlayColor, splashColor),
-            IconColor: iconColor.HasValue || disabledIconColor.HasValue
-                ? MaterialStateProperty<Color?>.ResolveWith(states =>
-                    states.HasFlag(MaterialState.Disabled)
-                        ? disabledIconColor
-                        : iconColor)
-                : null,
+            IconColor: iconColorProperty,
             IconSize: iconSize.HasValue
                 ? MaterialStateProperty<double?>.All(iconSize.Value)
                 : null,
@@ -1202,6 +1211,15 @@ public sealed class OutlinedButton : StatelessWidget
                         : backgroundColor)
                 : null;
 
+        var iconColorProperty = iconColor.HasValue && !disabledIconColor.HasValue
+            ? MaterialStateProperty<Color?>.All(iconColor.Value)
+            : iconColor.HasValue || disabledIconColor.HasValue
+                ? MaterialStateProperty<Color?>.ResolveWith(states =>
+                    states.HasFlag(MaterialState.Disabled)
+                        ? disabledIconColor
+                        : iconColor)
+                : null;
+
         return new ButtonStyle(
             ForegroundColor: foregroundColor.HasValue || disabledForegroundColor.HasValue
                 ? MaterialStateProperty<Color?>.ResolveWith(states =>
@@ -1218,12 +1236,7 @@ public sealed class OutlinedButton : StatelessWidget
                 : null,
             OverlayColor: MaterialButtonCore.CreateStyleFromOverlayResolver(foregroundColor, overlayColor),
             SplashColor: MaterialButtonCore.CreateStyleFromSplashResolver(foregroundColor, overlayColor, splashColor),
-            IconColor: iconColor.HasValue || disabledIconColor.HasValue
-                ? MaterialStateProperty<Color?>.ResolveWith(states =>
-                    states.HasFlag(MaterialState.Disabled)
-                        ? disabledIconColor
-                        : iconColor)
-                : null,
+            IconColor: iconColorProperty,
             IconSize: iconSize.HasValue
                 ? MaterialStateProperty<double?>.All(iconSize.Value)
                 : null,
@@ -1295,6 +1308,7 @@ public sealed class OutlinedButton : StatelessWidget
                     ? MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.38)
                     : stateColor),
             BackgroundColor: MaterialStateProperty<Color?>.All(null),
+            ShadowColor: MaterialStateProperty<Color?>.All(useMaterial3 ? Colors.Transparent : theme.ShadowColor),
             OverlayColor: MaterialButtonCore.CreateDefaultOverlayResolver(stateColor, pressedFocusedOverlayOpacity),
             SplashColor: null,
             IconColor: MaterialStateProperty<Color?>.ResolveWith(states =>

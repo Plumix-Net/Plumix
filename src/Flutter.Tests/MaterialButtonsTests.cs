@@ -182,6 +182,72 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
+    public void ElevatedButton_StyleFrom_IconColorWithoutDisabledIcon_UsesIconColorWhenDisabled()
+    {
+        var owner = new BuildOwner();
+        IconThemeData? capturedTheme = null;
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new ElevatedButton(
+                    onPressed: null,
+                    style: ElevatedButton.StyleFrom(iconColor: Colors.Gold),
+                    child: new CaptureIconThemeWidget(iconTheme => capturedTheme = iconTheme))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.NotNull(capturedTheme);
+        Assert.Equal(Colors.Gold, capturedTheme!.Color);
+    }
+
+    [Fact]
+    public void OutlinedButton_StyleFrom_IconColorWithoutDisabledIcon_UsesIconColorWhenDisabled()
+    {
+        var owner = new BuildOwner();
+        IconThemeData? capturedTheme = null;
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new OutlinedButton(
+                    onPressed: null,
+                    style: OutlinedButton.StyleFrom(iconColor: Colors.Gold),
+                    child: new CaptureIconThemeWidget(iconTheme => capturedTheme = iconTheme))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.NotNull(capturedTheme);
+        Assert.Equal(Colors.Gold, capturedTheme!.Color);
+    }
+
+    [Fact]
+    public void FilledButton_StyleFrom_IconColorWithoutDisabledIcon_UsesIconColorWhenDisabled()
+    {
+        var owner = new BuildOwner();
+        IconThemeData? capturedTheme = null;
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new FilledButton(
+                    onPressed: null,
+                    style: FilledButton.StyleFrom(iconColor: Colors.Gold),
+                    child: new CaptureIconThemeWidget(iconTheme => capturedTheme = iconTheme))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.NotNull(capturedTheme);
+        Assert.Equal(Colors.Gold, capturedTheme!.Color);
+    }
+
+    [Fact]
     public void TextButton_DefaultMinSize_UsesMaterialBaseline64x40()
     {
         var owner = new BuildOwner();
@@ -1276,7 +1342,7 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
-    public void TextButton_StyleFrom_ElevationWithoutShadowColor_UsesThemeShadowColorFallback()
+    public void TextButton_StyleFrom_ElevationWithoutShadowColor_DoesNotApplyShadowInMaterial3()
     {
         var owner = new BuildOwner();
         var root = new TestRootElement(
@@ -1288,6 +1354,33 @@ public sealed class MaterialButtonsTests
                         backgroundColor: Colors.White,
                         elevation: 2),
                     child: new Text("Text shadow fallback"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(decorated);
+        Assert.False(decorated!.Decoration.BoxShadows.HasValue);
+    }
+
+    [Fact]
+    public void TextButton_StyleFrom_ElevationWithoutShadowColor_UsesThemeShadowColorFallbackInMaterial2()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    UseMaterial3 = false,
+                    ShadowColor = Colors.Black
+                },
+                child: new TextButton(
+                    onPressed: () => { },
+                    style: TextButton.StyleFrom(
+                        backgroundColor: Colors.White,
+                        elevation: 2),
+                    child: new Text("Text shadow fallback M2"))));
 
         root.Attach(owner);
         root.Mount(parent: null, newSlot: null);
@@ -1325,7 +1418,7 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
-    public void OutlinedButton_StyleFrom_ElevationWithoutShadowColor_UsesThemeShadowColorFallback()
+    public void OutlinedButton_StyleFrom_ElevationWithoutShadowColor_DoesNotApplyShadowInMaterial3()
     {
         var owner = new BuildOwner();
         var root = new TestRootElement(
@@ -1337,6 +1430,33 @@ public sealed class MaterialButtonsTests
                         backgroundColor: Colors.White,
                         elevation: 2),
                     child: new Text("Outlined shadow fallback"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(decorated);
+        Assert.False(decorated!.Decoration.BoxShadows.HasValue);
+    }
+
+    [Fact]
+    public void OutlinedButton_StyleFrom_ElevationWithoutShadowColor_UsesThemeShadowColorFallbackInMaterial2()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    UseMaterial3 = false,
+                    ShadowColor = Colors.Black
+                },
+                child: new OutlinedButton(
+                    onPressed: () => { },
+                    style: OutlinedButton.StyleFrom(
+                        backgroundColor: Colors.White,
+                        elevation: 2),
+                    child: new Text("Outlined shadow fallback M2"))));
 
         root.Attach(owner);
         root.Mount(parent: null, newSlot: null);
