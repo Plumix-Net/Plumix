@@ -296,6 +296,10 @@ Progress update (2026-03-19):
   - `ElevatedButton` defaults now resolve by material mode for enabled tokens: M3 keeps (`surfaceContainerLow` background + `primary` foreground), while M2 now matches Flutter (`primary` background + `onPrimary` foreground).
   - `ElevatedButton` default elevation resolver is now mode-aware: M3 keeps (`disabled=0`, `default=1`, `hovered=3`, `focused/pressed=1`), while M2 now matches Flutter (`disabled=0`, `default=2`, `hovered/focused=4`, `pressed=8`).
   - Added focused `MaterialButtonsTests` coverage for M2 elevated default color pair + elevation-state mapping, and baseline M2 foreground-default checks for `TextButton`/`OutlinedButton`.
+- Continued mode-aware M2 overlay-opacity parity hardening:
+  - default overlay resolver now supports configurable pressed/focused alpha and keeps existing hover alpha behavior (`0.08`).
+  - `TextButton`/`ElevatedButton`/`OutlinedButton` default styles now use M2 pressed/focused overlay alpha `0.12` when `UseMaterial3=false`, while keeping M3/default `0.10`.
+  - Added focused `MaterialButtonsTests` coverage for M2 focused/pressed overlay behavior across text/elevated/outlined defaults (including elevated `onPrimary` overlay blending over primary background).
 
 Initial scope:
 

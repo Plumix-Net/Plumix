@@ -176,6 +176,7 @@ public sealed class TextButton : StatelessWidget
     {
         var useMaterial3 = theme.UseMaterial3;
         var stateColor = theme.PrimaryColor;
+        var pressedFocusedOverlayOpacity = useMaterial3 ? 0.10 : 0.12;
         var resolvedMinHeight = hasExplicitMinHeight ? minHeight : useMaterial3 ? 40 : 36;
         var defaultPadding = useMaterial3 ? new Thickness(12, 8) : new Thickness(8);
         var defaultShape = Flutter.Rendering.BorderRadius.Circular(useMaterial3 ? 20 : 4);
@@ -185,7 +186,7 @@ public sealed class TextButton : StatelessWidget
                     ? MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.38)
                     : stateColor),
             BackgroundColor: MaterialStateProperty<Color?>.All(null),
-            OverlayColor: MaterialButtonCore.CreateDefaultOverlayResolver(stateColor),
+            OverlayColor: MaterialButtonCore.CreateDefaultOverlayResolver(stateColor, pressedFocusedOverlayOpacity),
             SplashColor: null,
             IconColor: MaterialStateProperty<Color?>.ResolveWith(states =>
                 states.HasFlag(MaterialState.Disabled)
@@ -404,6 +405,7 @@ public sealed class ElevatedButton : StatelessWidget
         var useMaterial3 = theme.UseMaterial3;
         var enabledForeground = useMaterial3 ? theme.PrimaryColor : theme.OnPrimaryColor;
         var enabledBackground = useMaterial3 ? theme.SurfaceContainerLowColor : theme.PrimaryColor;
+        var pressedFocusedOverlayOpacity = useMaterial3 ? 0.10 : 0.12;
         var resolvedMinHeight = hasExplicitMinHeight ? minHeight : useMaterial3 ? 40 : 36;
         var defaultPadding = useMaterial3 ? new Thickness(24, 0) : new Thickness(16, 0);
         var defaultShape = Flutter.Rendering.BorderRadius.Circular(useMaterial3 ? 20 : 4);
@@ -417,7 +419,7 @@ public sealed class ElevatedButton : StatelessWidget
                     ? MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.12)
                     : enabledBackground),
             ShadowColor: MaterialStateProperty<Color?>.All(theme.ShadowColor),
-            OverlayColor: MaterialButtonCore.CreateDefaultOverlayResolver(enabledForeground),
+            OverlayColor: MaterialButtonCore.CreateDefaultOverlayResolver(enabledForeground, pressedFocusedOverlayOpacity),
             SplashColor: null,
             IconColor: MaterialStateProperty<Color?>.ResolveWith(states =>
                 states.HasFlag(MaterialState.Disabled)
@@ -943,6 +945,7 @@ public sealed class OutlinedButton : StatelessWidget
         var stateColor = theme.PrimaryColor;
         var useMaterial3 = theme.UseMaterial3;
         var m2SideColor = MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.12);
+        var pressedFocusedOverlayOpacity = useMaterial3 ? 0.10 : 0.12;
         var resolvedMinHeight = hasExplicitMinHeight ? minHeight : useMaterial3 ? 40 : 36;
         var defaultPadding = useMaterial3 ? new Thickness(24, 0) : new Thickness(16, 0);
         var defaultShape = Flutter.Rendering.BorderRadius.Circular(useMaterial3 ? 20 : 4);
@@ -952,7 +955,7 @@ public sealed class OutlinedButton : StatelessWidget
                     ? MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.38)
                     : stateColor),
             BackgroundColor: MaterialStateProperty<Color?>.All(null),
-            OverlayColor: MaterialButtonCore.CreateDefaultOverlayResolver(stateColor),
+            OverlayColor: MaterialButtonCore.CreateDefaultOverlayResolver(stateColor, pressedFocusedOverlayOpacity),
             SplashColor: null,
             IconColor: MaterialStateProperty<Color?>.ResolveWith(states =>
                 states.HasFlag(MaterialState.Disabled)
@@ -1186,8 +1189,13 @@ internal sealed class MaterialButtonCore : StatefulWidget
         });
     }
 
-    internal static MaterialStateProperty<Color?> CreateDefaultOverlayResolver(Color stateColor)
+    internal static MaterialStateProperty<Color?> CreateDefaultOverlayResolver(
+        Color stateColor,
+        double pressedFocusedOpacity = 0.10)
     {
+        var resolvedPressedFocusedOpacity = double.IsFinite(pressedFocusedOpacity)
+            ? Math.Clamp(pressedFocusedOpacity, 0, 1)
+            : 0.10;
         return MaterialStateProperty<Color?>.ResolveWith(states =>
         {
             if (states.HasFlag(MaterialState.Disabled))
@@ -1197,7 +1205,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
 
             if (states.HasFlag(MaterialState.Pressed))
             {
-                return ApplyOpacity(stateColor, 0.10);
+                return ApplyOpacity(stateColor, resolvedPressedFocusedOpacity);
             }
 
             if (states.HasFlag(MaterialState.Hovered))
@@ -1207,7 +1215,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
 
             if (states.HasFlag(MaterialState.Focused))
             {
-                return ApplyOpacity(stateColor, 0.10);
+                return ApplyOpacity(stateColor, resolvedPressedFocusedOpacity);
             }
 
             return null;

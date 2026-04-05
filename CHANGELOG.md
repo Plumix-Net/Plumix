@@ -16,6 +16,18 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 - Documentation policy update: Dart-to-C# control/widget work now uses mandatory parity-first porting mode (`docs/ai/PORTING_MODE.md`) with strict `1:1` default behavior, required divergence logging, and explicit parity-validation workflow references in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/INVARIANTS.md`, `docs/ai/MODULE_INDEX.md`, `docs/ai/FEATURE_TEMPLATE.md`, `docs/ai/TEST_MATRIX.md`, and `docs/ai/PARITY_MATRIX.md`.
 
+## [2026-04-05] - M4 button M2 overlay-opacity default parity hardening
+
+### Changed
+
+- Extended `MaterialButtonCore.CreateDefaultOverlayResolver(...)` with configurable pressed/focused opacity while preserving hover opacity (`0.08`) and existing default behavior (`0.10`) for current call sites (`src/Flutter.Material/Buttons.cs`).
+- Aligned mode-aware default overlay behavior for `TextButton`, `ElevatedButton`, and `OutlinedButton` with Flutter M2 semantics:
+  - when `UseMaterial3=false`, focused/pressed overlay alpha now resolves to `0.12`,
+  - when `UseMaterial3=true`, existing focused/pressed overlay alpha `0.10` is preserved
+  (`src/Flutter.Material/Buttons.cs`).
+- Added focused `MaterialButtonsTests` coverage for M2 overlay defaults across text/elevated/outlined buttons, including elevated `onPrimary` overlay blending over primary background (`src/Flutter.Tests/MaterialButtonsTests.cs`).
+- Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-04-05-button-m2-overlay-opacity-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
+
 ## [2026-04-05] - M4 button M2 default color/elevation parity hardening
 
 ### Changed

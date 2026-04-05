@@ -3569,6 +3569,132 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
+    public void TextButton_DefaultOverlay_UseMaterial3Disabled_UsesPressedFocusedOpacity012()
+    {
+        FocusManager.Instance.ResetForTests();
+
+        var owner = new BuildOwner();
+        var theme = ThemeData.Light with
+        {
+            UseMaterial3 = false,
+            PrimaryColor = Colors.DeepPink
+        };
+        var focusNode = new FocusNode();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: new TextButton(
+                    onPressed: () => { },
+                    focusNode: focusNode,
+                    child: new Text("M2 overlay"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.True(focusNode.RequestFocus());
+        owner.FlushBuild();
+
+        var focusedDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(focusedDecorated);
+        Assert.Equal(ApplyOpacity(theme.PrimaryColor, 0.12), focusedDecorated!.Decoration.Color);
+
+        var interactiveListener = FindInteractivePointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(interactiveListener);
+        interactiveListener!.HandleEvent(
+            new PointerDownEvent(
+                pointer: 138,
+                kind: PointerDeviceKind.Mouse,
+                position: new Point(12, 9),
+                buttons: PointerButtons.Primary,
+                timestampUtc: DateTime.UtcNow),
+            new BoxHitTestEntry(interactiveListener, new Point(12, 9)));
+        owner.FlushBuild();
+
+        var pressedDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(pressedDecorated);
+        Assert.Equal(ApplyOpacity(theme.PrimaryColor, 0.12), pressedDecorated!.Decoration.Color);
+
+        root.Unmount();
+        FocusManager.Instance.ResetForTests();
+    }
+
+    [Fact]
+    public void ElevatedButton_DefaultFocusedOverlay_UseMaterial3Disabled_UsesOnPrimaryOpacity012()
+    {
+        FocusManager.Instance.ResetForTests();
+
+        var owner = new BuildOwner();
+        var theme = ThemeData.Light with
+        {
+            UseMaterial3 = false,
+            PrimaryColor = Colors.DarkSlateBlue,
+            OnPrimaryColor = Colors.AliceBlue
+        };
+        var focusNode = new FocusNode();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: new ElevatedButton(
+                    onPressed: () => { },
+                    focusNode: focusNode,
+                    child: new Text("M2 elevated overlay"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.True(focusNode.RequestFocus());
+        owner.FlushBuild();
+
+        var focusedDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(focusedDecorated);
+        var expectedOverlay = ApplyOpacity(theme.OnPrimaryColor, 0.12);
+        Assert.Equal(BlendColorOverlay(theme.PrimaryColor, expectedOverlay), focusedDecorated!.Decoration.Color);
+
+        root.Unmount();
+        FocusManager.Instance.ResetForTests();
+    }
+
+    [Fact]
+    public void OutlinedButton_DefaultFocusedOverlay_UseMaterial3Disabled_UsesPrimaryOpacity012()
+    {
+        FocusManager.Instance.ResetForTests();
+
+        var owner = new BuildOwner();
+        var theme = ThemeData.Light with
+        {
+            UseMaterial3 = false,
+            PrimaryColor = Colors.MediumSlateBlue
+        };
+        var focusNode = new FocusNode();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: new OutlinedButton(
+                    onPressed: () => { },
+                    focusNode: focusNode,
+                    child: new Text("M2 outlined overlay"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.True(focusNode.RequestFocus());
+        owner.FlushBuild();
+
+        var focusedDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(focusedDecorated);
+        Assert.Equal(ApplyOpacity(theme.PrimaryColor, 0.12), focusedDecorated!.Decoration.Color);
+
+        root.Unmount();
+        FocusManager.Instance.ResetForTests();
+    }
+
+    [Fact]
     public void ElevatedButton_StyleFrom_OverlayColor_UsesHoverOpacityAndPressedPriority()
     {
         var owner = new BuildOwner();
