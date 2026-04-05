@@ -17,6 +17,23 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 - Documentation policy update: Dart-to-C# control/widget work now uses mandatory parity-first porting mode (`docs/ai/PORTING_MODE.md`) with strict `1:1` default behavior, required divergence logging, and explicit parity-validation workflow references in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/INVARIANTS.md`, `docs/ai/MODULE_INDEX.md`, `docs/ai/FEATURE_TEMPLATE.md`, `docs/ai/TEST_MATRIX.md`, and `docs/ai/PARITY_MATRIX.md`.
 - Agent workflow scope update: parity tasks now default to `one request = one control closed end-to-end` (not micro-iterations), with expanded context-budget guidance for control work (`12-20` initial files, up to `20`) and aligned rules in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/PORTING_MODE.md`, `docs/ai/MODULE_INDEX.md`, and `docs/ai/FEATURE_TEMPLATE.md`.
 
+## [2026-04-05] - M4 button icon-factory text-scale spacing parity hardening
+
+### Changed
+
+- Extended framework ambient media metrics with `MediaQueryData.TextScaleFactor` (`1.0` default) and added `MediaQuery.TextScaleFactorOf(...)` / `MaybeTextScaleFactorOf(...)` helpers for context-driven text scaling lookup (`src/Flutter/Widgets/MediaQuery.cs`).
+- Aligned Material `.Icon(...)` button child spacing with Flutter icon-factory behavior:
+  - `MaterialButtonIconFactory` now computes spacing using Flutter-style interpolation `lerp(8, 4, clamp(effectiveTextScale, 1, 2) - 1)`.
+  - Effective text scale now uses style text-size baseline (`buttonStyle.textStyle.fontSize` fallback `14`) multiplied by ambient `MediaQuery` text scale factor.
+  (`src/Flutter.Material/Buttons.cs`).
+- Added focused `MaterialButtonsTests` coverage for icon-factory spacing behavior:
+  - default spacing at baseline scale (`8`),
+  - interpolated spacing at scale `1.5` (`6`),
+  - clamped minimum spacing at scale `>= 2` (`4`),
+  - style text-size driven scaling (`fontSize: 28` -> `4`)
+  (`src/Flutter.Tests/MaterialButtonsTests.cs`).
+- Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-04-05-button-icon-spacing-textscale-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
+
 ## [2026-04-05] - M4 button `styleFrom` icon-color + M3 shadow parity hardening
 
 ### Changed

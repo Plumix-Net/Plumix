@@ -119,7 +119,8 @@ public sealed class TextButton : StatelessWidget
                 : MaterialButtonIconFactory.Create(
                     icon,
                     label,
-                    iconAlignment ?? style?.IconAlignment ?? IconAlignment.Start),
+                    iconAlignment ?? style?.IconAlignment ?? IconAlignment.Start,
+                    style),
             onPressed: onPressed,
             foregroundColor: foregroundColor,
             backgroundColor: backgroundColor,
@@ -426,7 +427,8 @@ public sealed class ElevatedButton : StatelessWidget
                 : MaterialButtonIconFactory.Create(
                     icon,
                     label,
-                    iconAlignment ?? style?.IconAlignment ?? IconAlignment.Start),
+                    iconAlignment ?? style?.IconAlignment ?? IconAlignment.Start,
+                    style),
             onPressed: onPressed,
             foregroundColor: foregroundColor,
             backgroundColor: backgroundColor,
@@ -787,7 +789,8 @@ public sealed class FilledButton : StatelessWidget
                 : MaterialButtonIconFactory.Create(
                     icon,
                     label,
-                    iconAlignment ?? style?.IconAlignment ?? IconAlignment.Start),
+                    iconAlignment ?? style?.IconAlignment ?? IconAlignment.Start,
+                    style),
             onPressed: onPressed,
             isTonal: false,
             applyIconFactoryPadding: icon is not null,
@@ -825,7 +828,8 @@ public sealed class FilledButton : StatelessWidget
                 : MaterialButtonIconFactory.Create(
                     icon,
                     label,
-                    iconAlignment ?? style?.IconAlignment ?? IconAlignment.Start),
+                    iconAlignment ?? style?.IconAlignment ?? IconAlignment.Start,
+                    style),
             onPressed: onPressed,
             isTonal: true,
             applyIconFactoryPadding: icon is not null,
@@ -1161,7 +1165,8 @@ public sealed class OutlinedButton : StatelessWidget
                 : MaterialButtonIconFactory.Create(
                     icon,
                     label,
-                    iconAlignment ?? style?.IconAlignment ?? IconAlignment.Start),
+                    iconAlignment ?? style?.IconAlignment ?? IconAlignment.Start,
+                    style),
             onPressed: onPressed,
             foregroundColor: foregroundColor,
             borderColor: borderColor,
@@ -1378,12 +1383,17 @@ public sealed class OutlinedButton : StatelessWidget
 
 internal static class MaterialButtonIconFactory
 {
-    public static Widget Create(Widget icon, Widget label, IconAlignment iconAlignment = IconAlignment.Start)
+    public static Widget Create(
+        Widget icon,
+        Widget label,
+        IconAlignment iconAlignment = IconAlignment.Start,
+        ButtonStyle? buttonStyle = null)
     {
         return new MaterialButtonIconContent(
             icon: icon,
             label: label,
-            iconAlignment: iconAlignment);
+            iconAlignment: iconAlignment,
+            buttonStyle: buttonStyle);
     }
 
     private sealed class MaterialButtonIconContent : StatelessWidget
@@ -1391,11 +1401,13 @@ internal static class MaterialButtonIconFactory
         public MaterialButtonIconContent(
             Widget icon,
             Widget label,
-            IconAlignment iconAlignment)
+            IconAlignment iconAlignment,
+            ButtonStyle? buttonStyle)
         {
             Icon = icon;
             Label = label;
             IconAlignment = iconAlignment;
+            ButtonStyle = buttonStyle;
         }
 
         private Widget Icon { get; }
@@ -1404,8 +1416,26 @@ internal static class MaterialButtonIconFactory
 
         private IconAlignment IconAlignment { get; }
 
+        private ButtonStyle? ButtonStyle { get; }
+
         public override Widget Build(BuildContext context)
         {
+            var defaultFontSize = ButtonStyle?.ResolveTextStyle(MaterialState.None)?.FontSize ?? 14.0;
+            if (double.IsNaN(defaultFontSize) || double.IsInfinity(defaultFontSize))
+            {
+                defaultFontSize = 14.0;
+            }
+
+            var textScaleFactor = MediaQuery.MaybeTextScaleFactorOf(context) ?? 1.0;
+            if (double.IsNaN(textScaleFactor) || double.IsInfinity(textScaleFactor) || textScaleFactor <= 0)
+            {
+                textScaleFactor = 1.0;
+            }
+
+            var effectiveTextScale = (textScaleFactor * defaultFontSize) / 14.0;
+            var clampedScaleDelta = Math.Clamp(effectiveTextScale, 1.0, 2.0) - 1.0;
+            var spacing = 8.0 + ((4.0 - 8.0) * clampedScaleDelta);
+
             var textDirection = Directionality.Of(context);
             var iconIsLeading = IconAlignment == IconAlignment.Start;
             var placeIconFirst = textDirection == TextDirection.Ltr
@@ -1425,7 +1455,7 @@ internal static class MaterialButtonIconFactory
 
             return new Row(
                 mainAxisSize: MainAxisSize.Min,
-                spacing: 8,
+                spacing: spacing,
                 children: children);
         }
     }

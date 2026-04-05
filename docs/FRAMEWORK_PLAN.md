@@ -325,6 +325,10 @@ Progress update (2026-03-19):
   - `ElevatedButton`/`OutlinedButton`/`FilledButton` `styleFrom(iconColor: x)` now keeps `x` in disabled state when `disabledIconColor` is omitted, matching Flutter `defaultColor` semantics.
   - `TextButton`/`OutlinedButton` default `shadowColor` now follows Flutter mode split: `UseMaterial3=true` -> transparent (no shadow fallback from style-only elevation), `UseMaterial3=false` -> themed shadow fallback remains available.
   - Added focused `MaterialButtonsTests` coverage for disabled icon-color mapping on elevated/outlined/filled buttons and M3-vs-M2 shadow fallback behavior on text/outlined buttons.
+- Continued icon-factory text-scale spacing parity hardening:
+  - `MediaQueryData` now includes ambient `TextScaleFactor` (`1.0` default) with `MediaQuery.TextScaleFactorOf(...)` and `MaybeTextScaleFactorOf(...)` helpers.
+  - `MaterialButtonIconFactory` now applies Flutter-like icon-gap interpolation for `.Icon(...)` button content: spacing resolves from `lerp(8, 4, clamp(effectiveTextScale, 1, 2) - 1)`, where effective scale uses style text-size baseline (`buttonStyle.textStyle.fontSize` fallback `14`) and ambient `MediaQuery` text scale.
+  - Added focused `MaterialButtonsTests` coverage for default spacing (`8`), interpolated spacing at scale `1.5` (`6`), clamp-at-max spacing (`4` for scale `>=2`), and style text-size driven scaling (`fontSize: 28` -> spacing `4`).
 
 Initial scope:
 

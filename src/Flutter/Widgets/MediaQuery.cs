@@ -11,7 +11,8 @@ public sealed record MediaQueryData(
     Thickness Padding = default,
     Thickness ViewInsets = default,
     Thickness SystemGestureInsets = default,
-    Thickness ViewPadding = default)
+    Thickness ViewPadding = default,
+    double TextScaleFactor = 1.0)
 {
     public MediaQueryData CopyWith(
         Size? size = null,
@@ -19,7 +20,8 @@ public sealed record MediaQueryData(
         Thickness? padding = null,
         Thickness? viewInsets = null,
         Thickness? systemGestureInsets = null,
-        Thickness? viewPadding = null)
+        Thickness? viewPadding = null,
+        double? textScaleFactor = null)
     {
         return new MediaQueryData(
             Size: size ?? Size,
@@ -27,7 +29,8 @@ public sealed record MediaQueryData(
             Padding: padding ?? Padding,
             ViewInsets: viewInsets ?? ViewInsets,
             SystemGestureInsets: systemGestureInsets ?? SystemGestureInsets,
-            ViewPadding: viewPadding ?? ViewPadding);
+            ViewPadding: viewPadding ?? ViewPadding,
+            TextScaleFactor: textScaleFactor ?? TextScaleFactor);
     }
 
     public MediaQueryData RemovePadding(
@@ -176,6 +179,10 @@ public sealed class MediaQuery : InheritedWidget
     public static Thickness ViewPaddingOf(BuildContext context) => Of(context).ViewPadding;
 
     public static Thickness? MaybeViewPaddingOf(BuildContext context) => MaybeOf(context)?.ViewPadding;
+
+    public static double TextScaleFactorOf(BuildContext context) => Of(context).TextScaleFactor;
+
+    public static double? MaybeTextScaleFactorOf(BuildContext context) => MaybeOf(context)?.TextScaleFactor;
 
     public static Widget RemovePadding(
         BuildContext context,

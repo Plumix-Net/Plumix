@@ -357,6 +357,100 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
+    public void TextButton_Icon_DefaultSpacing_Uses8()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: TextButton.Icon(
+                    onPressed: () => { },
+                    icon: new SizedBox(width: 12, height: 12),
+                    label: new Text("Spacing"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var row = FindDescendant<RenderFlex>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(row);
+        Assert.Equal(8.0, row!.Spacing, 3);
+    }
+
+    [Fact]
+    public void TextButton_Icon_TextScaleFactor15_UsesInterpolatedSpacing6()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new MediaQuery(
+                data: new MediaQueryData(TextScaleFactor: 1.5),
+                child: new Theme(
+                    data: ThemeData.Light,
+                    child: TextButton.Icon(
+                        onPressed: () => { },
+                        icon: new SizedBox(width: 12, height: 12),
+                        label: new Text("Spacing")))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var row = FindDescendant<RenderFlex>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(row);
+        Assert.Equal(6.0, row!.Spacing, 3);
+    }
+
+    [Fact]
+    public void TextButton_Icon_TextScaleFactor3_ClampsSpacingTo4()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new MediaQuery(
+                data: new MediaQueryData(TextScaleFactor: 3.0),
+                child: new Theme(
+                    data: ThemeData.Light,
+                    child: TextButton.Icon(
+                        onPressed: () => { },
+                        icon: new SizedBox(width: 12, height: 12),
+                        label: new Text("Spacing")))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var row = FindDescendant<RenderFlex>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(row);
+        Assert.Equal(4.0, row!.Spacing, 3);
+    }
+
+    [Fact]
+    public void TextButton_Icon_StyleTextSize28_UsesClampedSpacing4()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: TextButton.Icon(
+                    onPressed: () => { },
+                    style: TextButton.StyleFrom(
+                        textStyle: new TextStyle(FontSize: 28)),
+                    icon: new SizedBox(width: 12, height: 12),
+                    label: new Text("Spacing"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var row = FindDescendant<RenderFlex>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(row);
+        Assert.Equal(4.0, row!.Spacing, 3);
+    }
+
+    [Fact]
     public void TextButton_Icon_IconAlignmentEnd_PlacesLabelBeforeIcon()
     {
         var owner = new BuildOwner();
