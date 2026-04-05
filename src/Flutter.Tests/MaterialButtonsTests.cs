@@ -361,6 +361,56 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
+    public void TextButton_Icon_IconAlignmentStart_Rtl_PlacesLabelBeforeIcon()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Directionality(
+                textDirection: TextDirection.Rtl,
+                child: new Theme(
+                    data: ThemeData.Light,
+                    child: TextButton.Icon(
+                        onPressed: () => { },
+                        icon: new SizedBox(width: 12, height: 12),
+                        label: new Text("Icon alignment"),
+                        iconAlignment: IconAlignment.Start))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        AssertIconRowOrder(
+            RequireRenderObject<RenderObject>(root.ChildElement),
+            iconFirst: false);
+    }
+
+    [Fact]
+    public void TextButton_Icon_IconAlignmentEnd_Rtl_PlacesIconBeforeLabel()
+    {
+        var owner = new BuildOwner();
+
+        var root = new TestRootElement(
+            new Directionality(
+                textDirection: TextDirection.Rtl,
+                child: new Theme(
+                    data: ThemeData.Light,
+                    child: TextButton.Icon(
+                        onPressed: () => { },
+                        icon: new SizedBox(width: 12, height: 12),
+                        label: new Text("Icon alignment"),
+                        iconAlignment: IconAlignment.End))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        AssertIconRowOrder(
+            RequireRenderObject<RenderObject>(root.ChildElement),
+            iconFirst: true);
+    }
+
+    [Fact]
     public void TextButton_TapTargetPadding_RedirectsHitTestInPaddedAreaToChildCenter()
     {
         using var harness = new WidgetRenderHarness(

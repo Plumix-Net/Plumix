@@ -317,6 +317,10 @@ Progress update (2026-03-19):
   - `TextButton.StyleFrom(...)`, `ElevatedButton.StyleFrom(...)`, `OutlinedButton.StyleFrom(...)`, and `FilledButton.StyleFrom(...)` now accept `iconAlignment`.
   - `*.Icon(...)`/`TonalIcon(...)` factories now accept explicit `iconAlignment` and apply precedence `iconAlignment arg -> style.iconAlignment -> start`.
   - Added focused `MaterialButtonsTests` coverage for icon-row order and icon-alignment precedence (including explicit icon-factory override over `styleFrom(iconAlignment: ...)`).
+- Continued icon-alignment directionality parity hardening:
+  - Added core `Directionality` inherited widget to framework widget layer for ambient text-direction propagation (`Of`/`MaybeOf`).
+  - Material button icon-factory row composition now resolves `IconAlignment.Start/End` against ambient `Directionality` (`LTR`/`RTL`) instead of fixed visual left/right mapping.
+  - Added focused `MaterialButtonsTests` RTL coverage for `IconAlignment.Start` and `IconAlignment.End` row-order behavior.
 
 Initial scope:
 

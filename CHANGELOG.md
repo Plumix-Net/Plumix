@@ -16,6 +16,20 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 - Documentation policy update: Dart-to-C# control/widget work now uses mandatory parity-first porting mode (`docs/ai/PORTING_MODE.md`) with strict `1:1` default behavior, required divergence logging, and explicit parity-validation workflow references in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/INVARIANTS.md`, `docs/ai/MODULE_INDEX.md`, `docs/ai/FEATURE_TEMPLATE.md`, `docs/ai/TEST_MATRIX.md`, and `docs/ai/PARITY_MATRIX.md`.
 
+## [2026-04-05] - M4 button icon-alignment directionality parity hardening
+
+### Changed
+
+- Added core `Directionality` inherited widget in framework layer with ambient `TextDirection` lookup (`Of`/`MaybeOf`) to support context-driven start/end behavior (`src/Flutter/Widgets/Directionality.cs`).
+- Aligned Material icon-factory icon-order behavior with Flutter directionality semantics:
+  - `IconAlignment.Start`/`End` now resolves against ambient text direction (`LTR`/`RTL`) instead of fixed visual left/right ordering.
+  - `MaterialButtonIconFactory` now builds icon/label row order from `Directionality.Of(context)` while preserving existing spacing/flex composition (`src/Flutter.Material/Buttons.cs`).
+- Added focused `MaterialButtonsTests` coverage for RTL icon-order resolution:
+  - `IconAlignment.Start` under RTL places label before icon,
+  - `IconAlignment.End` under RTL places icon before label
+  (`src/Flutter.Tests/MaterialButtonsTests.cs`).
+- Added iteration tracking artifacts for this parity step (`docs/ai/material-2026-04-05-button-icon-alignment-directionality-parity.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`).
+
 ## [2026-04-05] - M4 button icon-alignment parity hardening
 
 ### Changed

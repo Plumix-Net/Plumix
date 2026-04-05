@@ -1366,22 +1366,54 @@ internal static class MaterialButtonIconFactory
 {
     public static Widget Create(Widget icon, Widget label, IconAlignment iconAlignment = IconAlignment.Start)
     {
-        var children = iconAlignment == IconAlignment.End
-            ? new Widget[]
-            {
-                new Flexible(child: label),
-                icon
-            }
-            : new Widget[]
-            {
-                icon,
-                new Flexible(child: label)
-            };
+        return new MaterialButtonIconContent(
+            icon: icon,
+            label: label,
+            iconAlignment: iconAlignment);
+    }
 
-        return new Row(
-            mainAxisSize: MainAxisSize.Min,
-            spacing: 8,
-            children: children);
+    private sealed class MaterialButtonIconContent : StatelessWidget
+    {
+        public MaterialButtonIconContent(
+            Widget icon,
+            Widget label,
+            IconAlignment iconAlignment)
+        {
+            Icon = icon;
+            Label = label;
+            IconAlignment = iconAlignment;
+        }
+
+        private Widget Icon { get; }
+
+        private Widget Label { get; }
+
+        private IconAlignment IconAlignment { get; }
+
+        public override Widget Build(BuildContext context)
+        {
+            var textDirection = Directionality.Of(context);
+            var iconIsLeading = IconAlignment == IconAlignment.Start;
+            var placeIconFirst = textDirection == TextDirection.Ltr
+                ? iconIsLeading
+                : !iconIsLeading;
+            var children = placeIconFirst
+                ? new Widget[]
+                {
+                    Icon,
+                    new Flexible(child: Label)
+                }
+                : new Widget[]
+                {
+                    new Flexible(child: Label),
+                    Icon
+                };
+
+            return new Row(
+                mainAxisSize: MainAxisSize.Min,
+                spacing: 8,
+                children: children);
+        }
     }
 }
 
