@@ -143,6 +143,7 @@ public sealed record ThemeData
     private FilledButtonThemeData? _filledButtonTheme;
     private IconButtonThemeData? _iconButtonTheme;
     private CheckboxThemeData? _checkboxTheme;
+    private SwitchThemeData? _switchTheme;
 
     public ThemeData(
         TargetPlatform? platform = null,
@@ -177,7 +178,8 @@ public sealed record ThemeData
         OutlinedButtonThemeData? outlinedButtonTheme = null,
         FilledButtonThemeData? filledButtonTheme = null,
         IconButtonThemeData? iconButtonTheme = null,
-        CheckboxThemeData? checkboxTheme = null)
+        CheckboxThemeData? checkboxTheme = null,
+        SwitchThemeData? switchTheme = null)
     {
         Platform = platform ?? ResolveDefaultPlatform();
         Brightness = brightness ?? Brightness.Light;
@@ -212,6 +214,7 @@ public sealed record ThemeData
         _filledButtonTheme = filledButtonTheme;
         _iconButtonTheme = iconButtonTheme;
         _checkboxTheme = checkboxTheme;
+        _switchTheme = switchTheme;
     }
 
     public TargetPlatform Platform { get; init; }
@@ -306,6 +309,12 @@ public sealed record ThemeData
     {
         get => _checkboxTheme ?? new CheckboxThemeData();
         init => _checkboxTheme = value;
+    }
+
+    public SwitchThemeData SwitchTheme
+    {
+        get => _switchTheme ?? new SwitchThemeData();
+        init => _switchTheme = value;
     }
 
     public static ThemeData Light { get; } = new();

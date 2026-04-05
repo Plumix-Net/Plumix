@@ -357,6 +357,12 @@ Progress update (2026-03-19):
   - extended framework ink-splash primitives (`InkSplash` / `RenderInkSplash` / `MaterialButtonCore`) with optional splash-radius propagation used by checkbox parity behavior;
   - expanded `MaterialCheckboxTests` coverage for checkbox-theme precedence, error-state visuals, adaptive-constructor guards, splash-radius propagation, and transition animation behavior.
   - remaining divergence: adaptive checkbox currently follows Material rendering path on iOS/macOS because Cupertino checkbox primitives are not yet implemented in framework scope.
+- Added Material `Switch` parity baseline in `Flutter.Material`:
+  - introduced framework `Switch` with controlled `bool` value, tap/drag toggle interaction, keyboard activation through shared `MaterialButtonCore` focus path, and animated thumb-position transitions for value updates;
+  - added dedicated switch theming surface (`SwitchThemeData`, inherited `SwitchTheme`, and `ThemeData.SwitchTheme`) with Flutter-like precedence (`widget -> switchTheme -> defaults`) for thumb/track/outline/overlay/tap-target/splash/icon/padding values;
+  - added focused `MaterialSwitchTests` coverage for M3 selected/unselected/disabled defaults, widget/theme precedence, thumb-icon rendering, keyboard toggle activation, and tap-target behavior (`padded` vs `shrinkWrap`);
+  - added C#/Dart sample parity demo route/page for runtime verification (`Switch` route in both sample menus).
+  - remaining divergence: adaptive switch currently follows Material rendering path on iOS/macOS because Cupertino switch primitives are not yet implemented in framework scope.
 
 Initial scope:
 
