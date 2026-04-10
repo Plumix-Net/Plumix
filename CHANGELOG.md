@@ -17,6 +17,35 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 - Documentation policy update: Dart-to-C# control/widget work now uses mandatory parity-first porting mode (`docs/ai/PORTING_MODE.md`) with strict `1:1` default behavior, required divergence logging, and explicit parity-validation workflow references in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/INVARIANTS.md`, `docs/ai/MODULE_INDEX.md`, `docs/ai/FEATURE_TEMPLATE.md`, `docs/ai/TEST_MATRIX.md`, and `docs/ai/PARITY_MATRIX.md`.
 - Agent workflow scope update: parity tasks now default to `one request = one control closed end-to-end` (not micro-iterations), with expanded context-budget guidance for control work (`12-20` initial files, up to `20`) and aligned rules in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/PORTING_MODE.md`, `docs/ai/MODULE_INDEX.md`, and `docs/ai/FEATURE_TEMPLATE.md`.
 
+## [2026-04-10] - M4 FloatingActionButton parity baseline
+
+### Changed
+
+- Added framework Material `FloatingActionButton` in `src/Flutter.Material/FloatingActionButton.cs` with Flutter-like baseline behavior for current framework scope:
+  - `regular`, `small`, `large`, and `extended` variants;
+  - variant-aware defaults for constraints/shape/icon-size (`56/40/96/extended` sizing paths and M3 rounded-corner defaults);
+  - state-aware elevation mapping (`default`/`focused`/`hovered`/`pressed`/`disabled`) through shared `MaterialButtonCore`;
+  - extended FAB composition with icon+label spacing/padding and `isExtended` open/collapsed behavior.
+- Added dedicated FAB theming primitives:
+  - `FloatingActionButtonThemeData` + inherited `FloatingActionButtonTheme` (`src/Flutter.Material/FloatingActionButtonTheme.cs`);
+  - new `ThemeData.FloatingActionButtonTheme` integration in `src/Flutter.Material/ThemeData.cs`.
+- Expanded `ThemeData` token surface with `PrimaryContainerColor` and `OnPrimaryContainerColor` to support M3 FAB default token mapping.
+- Added focused FAB regression coverage in `src/Flutter.Tests/MaterialFloatingActionButtonTests.cs`:
+  - variant size/shape defaults,
+  - M3 foreground/background token defaults,
+  - extended directional padding behavior,
+  - theme-vs-widget precedence for colors/constraints,
+  - hover/pressed/disabled elevation-state transitions.
+- Added sample parity route/page in both C# and Dart samples:
+  - `src/Sample/Flutter.Net/FloatingActionButtonDemoPage.cs`
+  - `dart_sample/lib/floating_action_button_demo_page.dart`
+  - route/menu wiring in `src/Sample/Flutter.Net/SampleGalleryScreen.cs`, `dart_sample/lib/sample_gallery_screen.dart`, and `dart_sample/lib/sample_routes.dart`.
+- Follow-up layout fix for FAB demo route:
+  - wrapped demo content with `SingleChildScrollView`, replaced fragile `Row + Expanded` FAB probe layout with stacked probe cards, and bounded FAB slots via fixed-height `SizedBox` in both `src/Sample/Flutter.Net/FloatingActionButtonDemoPage.cs` and `dart_sample/lib/floating_action_button_demo_page.dart` to remove bottom overflow and keep FAB probes visible inside the shared `SampleDemoPage` viewport.
+- Updated tracking artifacts for this parity pass (`docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`, `docs/ai/PARITY_MATRIX.md`, and `docs/ai/material-2026-04-10-floating-action-button-baseline-parity.md`).
+- Remaining documented divergence:
+  - `heroTag`/`Tooltip` wrappers, cursor/feedback toggles, and clip-behavior parity are still out of current framework scope due missing primitives.
+
 ## [2026-04-05] - M4 Radio adaptive Cupertino parity close-out
 
 ### Changed

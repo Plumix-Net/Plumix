@@ -33,6 +33,8 @@ Current priority (2026-03-12):
   - `src/Flutter.Material/Scaffold.cs`
   - `src/Flutter.Material/Buttons.cs`
   - `src/Flutter.Material/IconButton.cs`
+  - `src/Flutter.Material/FloatingActionButton.cs`
+  - `src/Flutter.Material/FloatingActionButtonTheme.cs`
   - `src/Flutter.Material/Checkbox.cs`
   - `src/Flutter.Material/Switch.cs`
   - `src/Flutter.Material/Radio.cs`
@@ -42,12 +44,14 @@ Current priority (2026-03-12):
   - `src/Sample/Flutter.Net/CounterApp.cs`
   - `src/Sample/Flutter.Net/SampleGalleryScreen.cs`
   - `src/Sample/Flutter.Net/MaterialButtonsDemoPage.cs`
+  - `src/Sample/Flutter.Net/FloatingActionButtonDemoPage.cs`
   - `src/Sample/Flutter.Net/CheckboxDemoPage.cs`
   - `src/Sample/Flutter.Net/SwitchDemoPage.cs`
   - `src/Sample/Flutter.Net/RadioDemoPage.cs`
   - `dart_sample/lib/counter_app.dart`
   - `dart_sample/lib/sample_gallery_screen.dart`
   - `dart_sample/lib/material_buttons_demo_page.dart`
+  - `dart_sample/lib/floating_action_button_demo_page.dart`
   - `dart_sample/lib/checkbox_demo_page.dart`
   - `dart_sample/lib/switch_demo_page.dart`
   - `dart_sample/lib/radio_demo_page.dart`
@@ -55,6 +59,7 @@ Current priority (2026-03-12):
   - `src/Flutter.Tests/TextWidgetTests.cs`
   - `src/Flutter.Tests/MaterialScaffoldTests.cs`
   - `src/Flutter.Tests/MaterialButtonsTests.cs`
+  - `src/Flutter.Tests/MaterialFloatingActionButtonTests.cs`
   - `src/Flutter.Tests/MaterialCheckboxTests.cs`
   - `src/Flutter.Tests/MaterialSwitchTests.cs`
   - `src/Flutter.Tests/MaterialRadioTests.cs`

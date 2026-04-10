@@ -13,6 +13,7 @@ import 'custom_slivers_demo_page.dart';
 import 'decorated_box_demo_page.dart';
 import 'editable_text_demo_page.dart';
 import 'fitted_box_demo_page.dart';
+import 'floating_action_button_demo_page.dart';
 import 'fractionally_sized_box_demo_page.dart';
 import 'grid_view_demo_page.dart';
 import 'list_view_fixed_extent_demo_page.dart';
@@ -94,6 +95,12 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'Material buttons',
       subtitle: 'TextButton + ElevatedButton + OutlinedButton + FilledButton',
       builder: () => const MaterialButtonsDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.floatingActionButton,
+      title: 'FloatingActionButton',
+      subtitle: 'regular/small/large/extended + theme defaults',
+      builder: () => const FloatingActionButtonDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.checkbox,

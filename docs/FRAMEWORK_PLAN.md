@@ -8,7 +8,7 @@ Use this block as the fastest machine-readable status summary.
 
 ```yaml
 framework_plan_version: 1
-last_updated: 2026-04-05
+last_updated: 2026-04-10
 north_star: "Flutter-like widget/rendering framework in C# with Avalonia as host infrastructure."
 current_phase: "M4 material library rewrite (theme/scaffold/material controls) in progress."
 status:
@@ -389,6 +389,14 @@ Progress update (2026-03-19):
   - expanded `MaterialRadioTests` with focused adaptive coverage (iOS defaults, adaptive `fillColor` ignore behavior, checkmark-style indicator path, and macOS visual-geometry check);
   - expanded C#/Dart sample `Radio` runtime probe with adaptive platform/style controls (`iOS`/`macOS`/`Android` cycle + checkmark toggle) and dedicated `Radio.adaptive` probe rows for live verification of Cupertino path and non-Cupertino fallback behavior;
   - remaining divergence: deeper Cupertino fidelity items for radio (haptics/accessibility labels/advanced motion nuances) remain out of current framework scope.
+- Added Material `FloatingActionButton` baseline in `Flutter.Material`:
+  - introduced framework `FloatingActionButton` control with Flutter-like constructors/variants for current scope (`regular`, `small`, `large`, `extended`) and shared interaction pipeline integration via `MaterialButtonCore`;
+  - added dedicated floating-action-button theming surface (`FloatingActionButtonThemeData`, inherited `FloatingActionButtonTheme`, and `ThemeData.FloatingActionButtonTheme`) with precedence wiring (`widget -> floatingActionButtonTheme -> mode defaults`);
+  - expanded theme-token surface with `ThemeData.PrimaryContainerColor` and `ThemeData.OnPrimaryContainerColor` so M3 FAB defaults map to dedicated container tokens instead of reusing unrelated button tokens;
+  - added focused `MaterialFloatingActionButtonTests` coverage for size/shape defaults across variants, M3 color token defaults, extended directional padding behavior, theme-vs-widget override precedence, and elevation-state transitions (`default/hovered/pressed/disabled`);
+  - added C#/Dart sample parity demo route/page for runtime verification (`FloatingActionButton` route in both sample menus) including variant probes, extended open/collapsed behavior, and theme override probe.
+- Remaining divergence for floating action button in current framework scope:
+  - `heroTag`/`Tooltip` wrappers, cursor/feedback toggles, and clip-behavior parity are still pending due missing framework primitives and are intentionally out of this baseline pass.
 
 Initial scope:
 

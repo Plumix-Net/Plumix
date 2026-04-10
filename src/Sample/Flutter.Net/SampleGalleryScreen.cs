@@ -30,6 +30,7 @@ internal static class SampleRoutes
     public const string Scrollbar = "/scrollbar";
     public const string EditableText = "/editable-text";
     public const string MaterialButtons = "/material-buttons";
+    public const string FloatingActionButton = "/floating-action-button";
     public const string Checkbox = "/checkbox";
     public const string Switch = "/switch";
     public const string Radio = "/radio";
@@ -71,6 +72,7 @@ internal sealed class SampleGalleryScreen : StatelessWidget
         new(SampleRoutes.Scrollbar, "Scrollbar", "controller + thumb", () => new ScrollbarDemoPage()),
         new(SampleRoutes.EditableText, "EditableText", "focus + IME + multiline caret", () => new EditableTextDemoPage()),
         new(SampleRoutes.MaterialButtons, "Material buttons", "TextButton + ElevatedButton + OutlinedButton + FilledButton", () => new MaterialButtonsDemoPage()),
+        new(SampleRoutes.FloatingActionButton, "FloatingActionButton", "regular/small/large/extended + theme defaults", () => new FloatingActionButtonDemoPage()),
         new(SampleRoutes.Checkbox, "Checkbox", "bool/bool? values + tristate + tap-target policy", () => new CheckboxDemoPage()),
         new(SampleRoutes.Switch, "Switch", "on/off value + track/thumb theming + drag", () => new SwitchDemoPage()),
         new(SampleRoutes.Radio, "Radio", "group selection + toggleable + tap-target policy", () => new RadioDemoPage()),
