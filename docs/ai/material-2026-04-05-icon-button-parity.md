@@ -21,8 +21,8 @@
   - `src/Flutter.Material/ButtonThemes.cs`
   - `src/Flutter.Material/ThemeData.cs`
   - `src/Flutter.Tests/MaterialButtonsTests.cs`
-  - `src/Sample/Flutter.Net/MaterialButtonsDemoPage.cs`
-  - `dart_sample/lib/material_buttons_demo_page.dart`
+  - `src/Sample/Flutter.Net/Demos/Material/MaterialButtonsDemoPage.cs`
+  - `dart_sample/lib/demos/material/material_buttons_demo_page.dart`
   - `/Users/egorozh/Documents/flutter/flutter/packages/flutter/lib/src/material/icon_button.dart`
   - `/Users/egorozh/Documents/flutter/flutter/packages/flutter/lib/src/material/icon_button_theme.dart`
 - Expansion trigger:
@@ -53,7 +53,7 @@
 - Flutter/Dart source files used as source of truth:
   - `/Users/egorozh/Documents/flutter/flutter/packages/flutter/lib/src/material/icon_button.dart`
   - `/Users/egorozh/Documents/flutter/flutter/packages/flutter/lib/src/material/icon_button_theme.dart`
-  - `dart_sample/lib/material_buttons_demo_page.dart`
+  - `dart_sample/lib/demos/material/material_buttons_demo_page.dart`
 - Parity mapping checklist:
   - [x] API/default values mapped
   - [x] Widget composition order mapped
@@ -62,7 +62,7 @@
   - [x] Paint/visual semantics mapped
 - Divergence log (only if needed):
   - `src/Flutter.Material/IconButton.cs`: legacy M2 `InkResponse`-specific knobs (`mouseCursor`, `enableFeedback`, `tooltip`, `visualDensity`) remain unported because equivalent framework primitives are currently absent; `IconButton` is implemented through shared `MaterialButtonCore` state/style pipeline.
-  - `src/Sample/Flutter.Net/MaterialButtonsDemoPage.cs`: sample uses `DemoIconGlyph` (IconTheme-driven text glyph probe) instead of Flutter `Icon` because framework-level `Icon`/`Icons` primitives are not yet implemented.
+  - `src/Sample/Flutter.Net/Demos/Material/MaterialButtonsDemoPage.cs`: sample uses `DemoIconGlyph` (IconTheme-driven text glyph probe) instead of Flutter `Icon` because framework-level `Icon`/`Icons` primitives are not yet implemented.
 
 ## Planned Changes
 
@@ -73,8 +73,8 @@
   - `src/Flutter.Material/ThemeData.cs`
   - `src/Flutter.Material/Buttons.cs`
   - `src/Flutter.Tests/MaterialButtonsTests.cs`
-  - `src/Sample/Flutter.Net/MaterialButtonsDemoPage.cs`
-  - `dart_sample/lib/material_buttons_demo_page.dart`
+  - `src/Sample/Flutter.Net/Demos/Material/MaterialButtonsDemoPage.cs`
+  - `dart_sample/lib/demos/material/material_buttons_demo_page.dart`
   - `CHANGELOG.md`
   - `docs/FRAMEWORK_PLAN.md`
   - `docs/ai/PARITY_MATRIX.md`

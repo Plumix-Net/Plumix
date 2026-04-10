@@ -52,7 +52,7 @@
 - Flutter/Dart source files used as source of truth:
   - `/Users/egorozh/Documents/flutter/flutter/packages/flutter/lib/src/material/radio.dart`
   - `/Users/egorozh/Documents/flutter/flutter/packages/flutter/lib/src/material/radio_theme.dart`
-  - `dart_sample/lib/radio_demo_page.dart`
+  - `dart_sample/lib/demos/cupertino/radio_demo_page.dart`
 - Parity mapping checklist:
   - [x] API/default values mapped
   - [x] Widget composition order mapped
@@ -70,9 +70,9 @@
   - `src/Flutter.Material/RadioTheme.cs`
   - `src/Flutter.Material/ThemeData.cs`
   - `src/Flutter.Tests/MaterialRadioTests.cs`
-  - `src/Sample/Flutter.Net/RadioDemoPage.cs`
+  - `src/Sample/Flutter.Net/Demos/Cupertino/RadioDemoPage.cs`
   - `src/Sample/Flutter.Net/SampleGalleryScreen.cs`
-  - `dart_sample/lib/radio_demo_page.dart`
+  - `dart_sample/lib/demos/cupertino/radio_demo_page.dart`
   - `dart_sample/lib/sample_gallery_screen.dart`
   - `dart_sample/lib/sample_routes.dart`
   - `CHANGELOG.md`

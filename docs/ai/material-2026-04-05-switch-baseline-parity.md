@@ -52,7 +52,7 @@
   - `/Users/egorozh/Documents/flutter/flutter/packages/flutter/lib/src/material/switch.dart`
   - `/Users/egorozh/Documents/flutter/flutter/packages/flutter/lib/src/material/switch_theme.dart`
   - `/Users/egorozh/Documents/flutter/flutter/packages/flutter/lib/src/widgets/toggleable.dart`
-  - `dart_sample/lib/switch_demo_page.dart`
+  - `dart_sample/lib/demos/cupertino/switch_demo_page.dart`
 - Parity mapping checklist:
   - [x] API/default values mapped
   - [x] Widget composition order mapped
@@ -69,9 +69,9 @@
   - `src/Flutter.Material/SwitchTheme.cs`
   - `src/Flutter.Material/ThemeData.cs`
   - `src/Flutter.Tests/MaterialSwitchTests.cs`
-  - `src/Sample/Flutter.Net/SwitchDemoPage.cs`
+  - `src/Sample/Flutter.Net/Demos/Cupertino/SwitchDemoPage.cs`
   - `src/Sample/Flutter.Net/SampleGalleryScreen.cs`
-  - `dart_sample/lib/switch_demo_page.dart`
+  - `dart_sample/lib/demos/cupertino/switch_demo_page.dart`
   - `dart_sample/lib/sample_gallery_screen.dart`
   - `dart_sample/lib/sample_routes.dart`
   - `CHANGELOG.md`

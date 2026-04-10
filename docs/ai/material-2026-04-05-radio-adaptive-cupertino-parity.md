@@ -64,8 +64,8 @@
   - `src/Flutter.Material/Radio.cs`
   - `src/Flutter.Cupertino/CupertinoRadio.cs`
   - `src/Flutter.Tests/MaterialRadioTests.cs`
-  - `src/Sample/Flutter.Net/RadioDemoPage.cs`
-  - `dart_sample/lib/radio_demo_page.dart`
+  - `src/Sample/Flutter.Net/Demos/Cupertino/RadioDemoPage.cs`
+  - `dart_sample/lib/demos/cupertino/radio_demo_page.dart`
   - `CHANGELOG.md`
   - `docs/FRAMEWORK_PLAN.md`
   - `docs/ai/TEST_MATRIX.md`

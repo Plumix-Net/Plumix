@@ -19,8 +19,8 @@
   - `src/Flutter/Widgets/Text.cs`
   - `src/Flutter/Widgets/IconTheme.cs`
   - `src/Flutter.Material/IconButton.cs`
-  - `src/Sample/Flutter.Net/MaterialButtonsDemoPage.cs`
-  - `dart_sample/lib/material_buttons_demo_page.dart`
+  - `src/Sample/Flutter.Net/Demos/Material/MaterialButtonsDemoPage.cs`
+  - `dart_sample/lib/demos/material/material_buttons_demo_page.dart`
   - `src/Flutter.Tests/TextWidgetTests.cs`
   - `src/Flutter.Tests/MaterialButtonsTests.cs`
   - `/Users/egorozh/Documents/flutter/flutter/packages/flutter/lib/src/widgets/icon.dart`
@@ -55,7 +55,7 @@
   - `/Users/egorozh/Documents/flutter/flutter/packages/flutter/lib/src/widgets/icon.dart`
   - `/Users/egorozh/Documents/flutter/flutter/packages/flutter/lib/src/widgets/icon_data.dart`
   - `/Users/egorozh/Documents/flutter/flutter/packages/flutter/lib/src/material/icons.dart`
-  - `dart_sample/lib/material_buttons_demo_page.dart`
+  - `dart_sample/lib/demos/material/material_buttons_demo_page.dart`
 - Parity mapping checklist:
   - [x] API/default values mapped
   - [x] Widget composition order mapped
@@ -74,14 +74,14 @@
   - `src/Flutter.Material/Assets/Fonts/MaterialIcons_LICENSE.txt`
   - `src/Flutter/Widgets/Icon.cs`
   - `src/Flutter.Material/Icons.cs`
-  - `src/Sample/Flutter.Net/MaterialButtonsDemoPage.cs`
-  - `src/Sample/Flutter.Net/AppBarIconThemeDemoPage.cs`
-  - `src/Sample/Flutter.Net/AppBarLeadingWidthDemoPage.cs`
-  - `src/Sample/Flutter.Net/AppBarActionsPaddingDemoPage.cs`
+  - `src/Sample/Flutter.Net/Demos/Material/MaterialButtonsDemoPage.cs`
+  - `src/Sample/Flutter.Net/Demos/Material/AppBarIconThemeDemoPage.cs`
+  - `src/Sample/Flutter.Net/Demos/Material/AppBarLeadingWidthDemoPage.cs`
+  - `src/Sample/Flutter.Net/Demos/Material/AppBarActionsPaddingDemoPage.cs`
   - `src/Sample/Flutter.Net/SampleGalleryScreen.cs`
-  - `dart_sample/lib/app_bar_icon_theme_demo_page.dart`
-  - `dart_sample/lib/app_bar_leading_width_demo_page.dart`
-  - `dart_sample/lib/app_bar_actions_padding_demo_page.dart`
+  - `dart_sample/lib/demos/material/app_bar_icon_theme_demo_page.dart`
+  - `dart_sample/lib/demos/material/app_bar_leading_width_demo_page.dart`
+  - `dart_sample/lib/demos/material/app_bar_actions_padding_demo_page.dart`
   - `dart_sample/lib/sample_gallery_screen.dart`
   - `src/Flutter.Tests/TextWidgetTests.cs`
   - `CHANGELOG.md`

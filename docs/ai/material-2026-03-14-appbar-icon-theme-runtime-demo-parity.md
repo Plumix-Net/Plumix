@@ -19,8 +19,8 @@
   - `src/Sample/Flutter.Net/SampleGalleryScreen.cs`
   - `dart_sample/lib/sample_gallery_screen.dart`
   - `dart_sample/lib/sample_routes.dart`
-  - `src/Sample/Flutter.Net/AppBarActionsPaddingDemoPage.cs`
-  - `dart_sample/lib/app_bar_actions_padding_demo_page.dart`
+  - `src/Sample/Flutter.Net/Demos/Material/AppBarActionsPaddingDemoPage.cs`
+  - `dart_sample/lib/demos/material/app_bar_actions_padding_demo_page.dart`
   - `docs/ai/PARITY_MATRIX.md`
   - `CHANGELOG.md`
   - `docs/FRAMEWORK_PLAN.md`
@@ -52,9 +52,9 @@
 ## Planned Changes
 
 - Files to edit:
-  - `src/Sample/Flutter.Net/AppBarIconThemeDemoPage.cs`
+  - `src/Sample/Flutter.Net/Demos/Material/AppBarIconThemeDemoPage.cs`
   - `src/Sample/Flutter.Net/SampleGalleryScreen.cs`
-  - `dart_sample/lib/app_bar_icon_theme_demo_page.dart`
+  - `dart_sample/lib/demos/material/app_bar_icon_theme_demo_page.dart`
   - `dart_sample/lib/sample_gallery_screen.dart`
   - `dart_sample/lib/sample_routes.dart`
   - `docs/ai/PARITY_MATRIX.md`

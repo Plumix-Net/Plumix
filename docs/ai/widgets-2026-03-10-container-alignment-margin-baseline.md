@@ -15,7 +15,7 @@
 - Entry files:
   - `src/Flutter/Widgets/Basic.cs`
   - `src/Flutter.Tests/ContainerTests.cs`
-  - `src/Sample/Flutter.Net/ContainerDemoPage.cs`
+  - `src/Sample/Flutter.Net/Demos/General/ContainerDemoPage.cs`
   - `src/Sample/Flutter.Net/SampleGalleryScreen.cs`
   - `dart_sample/lib/sample_gallery_screen.dart`
   - `dart_sample/lib/sample_routes.dart`
@@ -36,9 +36,9 @@
 - Files to edit:
   - `src/Flutter/Widgets/Basic.cs`
   - `src/Flutter.Tests/ContainerTests.cs`
-  - `src/Sample/Flutter.Net/ContainerDemoPage.cs`
+  - `src/Sample/Flutter.Net/Demos/General/ContainerDemoPage.cs`
   - `src/Sample/Flutter.Net/SampleGalleryScreen.cs`
-  - `dart_sample/lib/container_demo_page.dart`
+  - `dart_sample/lib/demos/general/container_demo_page.dart`
   - `dart_sample/lib/sample_gallery_screen.dart`
   - `dart_sample/lib/sample_routes.dart`
   - `docs/ai/PARITY_MATRIX.md`

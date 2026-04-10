@@ -38,9 +38,9 @@
 - Files to edit:
   - `src/Flutter.Material/Buttons.cs`
   - `src/Flutter.Material/ThemeData.cs`
-  - `src/Sample/Flutter.Net/MaterialButtonsDemoPage.cs`
+  - `src/Sample/Flutter.Net/Demos/Material/MaterialButtonsDemoPage.cs`
   - `src/Sample/Flutter.Net/SampleGalleryScreen.cs`
-  - `dart_sample/lib/material_buttons_demo_page.dart`
+  - `dart_sample/lib/demos/material/material_buttons_demo_page.dart`
   - `dart_sample/lib/sample_gallery_screen.dart`
   - `dart_sample/lib/sample_routes.dart`
   - `src/Flutter.Tests/MaterialButtonsTests.cs`

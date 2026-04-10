@@ -33,9 +33,9 @@
 - Files to edit:
   - `src/Flutter/Widgets/Basic.cs`
   - `src/Flutter.Tests/BasicWidgetProxyTests.cs`
-  - `src/Sample/Flutter.Net/ProxyWidgetsDemoPage.cs`
+  - `src/Sample/Flutter.Net/Demos/General/ProxyWidgetsDemoPage.cs`
   - `src/Sample/Flutter.Net/SampleGalleryScreen.cs`
-  - `dart_sample/lib/proxy_widgets_demo_page.dart`
+  - `dart_sample/lib/demos/general/proxy_widgets_demo_page.dart`
   - `dart_sample/lib/sample_gallery_screen.dart`
   - `dart_sample/lib/sample_routes.dart`
   - `docs/FRAMEWORK_PLAN.md`
@@ -45,9 +45,9 @@
 - Brief intent per file:
   - `src/Flutter/Widgets/Basic.cs`: add `Opacity`, `Transform`, and `ClipRect` widgets.
   - `src/Flutter.Tests/BasicWidgetProxyTests.cs`: verify widget-to-render wiring and rebuild-time property updates.
-  - `src/Sample/Flutter.Net/ProxyWidgetsDemoPage.cs`: add interactive proxy-widget sample page for framework runtime checks.
+  - `src/Sample/Flutter.Net/Demos/General/ProxyWidgetsDemoPage.cs`: add interactive proxy-widget sample page for framework runtime checks.
   - `src/Sample/Flutter.Net/SampleGalleryScreen.cs`: wire route and menu entry for the new proxy demo page.
-  - `dart_sample/lib/proxy_widgets_demo_page.dart`: mirror the same demo page behavior in Dart sample.
+  - `dart_sample/lib/demos/general/proxy_widgets_demo_page.dart`: mirror the same demo page behavior in Dart sample.
   - `dart_sample/lib/sample_gallery_screen.dart`: mirror menu wiring in Dart sample.
   - `dart_sample/lib/sample_routes.dart`: add route constant for parity.
   - `docs/FRAMEWORK_PLAN.md`: mark M3 in-progress with first delivered baseline.

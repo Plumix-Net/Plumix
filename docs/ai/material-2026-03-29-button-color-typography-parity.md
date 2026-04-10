@@ -18,8 +18,8 @@
   - `docs/ai/MODULE_INDEX.md`
   - `src/Flutter.Material/ThemeData.cs`
   - `src/Flutter.Material/Buttons.cs`
-  - `src/Sample/Flutter.Net/MaterialButtonsDemoPage.cs`
-  - `dart_sample/lib/material_buttons_demo_page.dart`
+  - `src/Sample/Flutter.Net/Demos/Material/MaterialButtonsDemoPage.cs`
+  - `dart_sample/lib/demos/material/material_buttons_demo_page.dart`
   - `src/Flutter.Tests/MaterialButtonsTests.cs`
 - Expansion trigger:
   - Expand only when Flutter source defaults/tokens needed exact verification (`theme_data.dart`, `text_button.dart`, `elevated_button.dart`, `outlined_button.dart`, `filled_button.dart`, `typography.dart`).
@@ -42,7 +42,7 @@
   - `flutter/packages/flutter/lib/src/material/elevated_button.dart`
   - `flutter/packages/flutter/lib/src/material/outlined_button.dart`
   - `flutter/packages/flutter/lib/src/material/filled_button.dart`
-  - `dart_sample/lib/material_buttons_demo_page.dart`
+  - `dart_sample/lib/demos/material/material_buttons_demo_page.dart`
   - `dart_sample/lib/sample_gallery_screen.dart`
 - Parity mapping checklist:
   - [x] API/default values mapped
@@ -57,7 +57,7 @@
 - Files to edit:
   - `src/Flutter.Material/ThemeData.cs`
   - `src/Flutter.Material/Buttons.cs`
-  - `src/Sample/Flutter.Net/MaterialButtonsDemoPage.cs`
+  - `src/Sample/Flutter.Net/Demos/Material/MaterialButtonsDemoPage.cs`
   - `src/Sample/Flutter.Net/SampleGalleryScreen.cs`
   - `src/Flutter.Tests/MaterialButtonsTests.cs`
   - `CHANGELOG.md`

@@ -35,9 +35,9 @@
   - `src/Flutter/Rendering/Proxy.RenderBox.cs`
   - `src/Flutter/Widgets/Basic.cs`
   - `src/Flutter.Tests/OverflowBoxTests.cs`
-  - `src/Sample/Flutter.Net/OverflowBoxDemoPage.cs`
+  - `src/Sample/Flutter.Net/Demos/General/OverflowBoxDemoPage.cs`
   - `src/Sample/Flutter.Net/SampleGalleryScreen.cs`
-  - `dart_sample/lib/overflow_box_demo_page.dart`
+  - `dart_sample/lib/demos/general/overflow_box_demo_page.dart`
   - `dart_sample/lib/sample_gallery_screen.dart`
   - `dart_sample/lib/sample_routes.dart`
   - `docs/ai/PARITY_MATRIX.md`

@@ -16,7 +16,7 @@
   - `src/Flutter/Rendering/Proxy.RenderBox.cs`
   - `src/Flutter/Widgets/Basic.cs`
   - `src/Flutter.Tests/AspectRatioTests.cs`
-  - `src/Sample/Flutter.Net/AspectRatioDemoPage.cs`
+  - `src/Sample/Flutter.Net/Demos/General/AspectRatioDemoPage.cs`
   - `src/Sample/Flutter.Net/SampleGalleryScreen.cs`
 - Expansion trigger:
   - Expand only for parity route wiring and tracking docs synchronization.
@@ -36,11 +36,11 @@
   - `src/Flutter/Widgets/Basic.cs`
   - `src/Flutter.Tests/AspectRatioTests.cs`
   - `src/Flutter.Tests/FractionallySizedBoxTests.cs`
-  - `src/Sample/Flutter.Net/AspectRatioDemoPage.cs`
-  - `src/Sample/Flutter.Net/FractionallySizedBoxDemoPage.cs`
+  - `src/Sample/Flutter.Net/Demos/General/AspectRatioDemoPage.cs`
+  - `src/Sample/Flutter.Net/Demos/General/FractionallySizedBoxDemoPage.cs`
   - `src/Sample/Flutter.Net/SampleGalleryScreen.cs`
-  - `dart_sample/lib/aspect_ratio_demo_page.dart`
-  - `dart_sample/lib/fractionally_sized_box_demo_page.dart`
+  - `dart_sample/lib/demos/general/aspect_ratio_demo_page.dart`
+  - `dart_sample/lib/demos/general/fractionally_sized_box_demo_page.dart`
   - `dart_sample/lib/sample_gallery_screen.dart`
   - `dart_sample/lib/sample_routes.dart`
   - `docs/ai/PARITY_MATRIX.md`

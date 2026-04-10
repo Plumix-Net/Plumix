@@ -18,9 +18,9 @@
   - `src/Flutter/Widgets/Text.cs`
   - `src/Flutter/RenderParagraph.cs`
   - `src/Sample/Flutter.Net/CounterWidgets.cs`
-  - `src/Sample/Flutter.Net/UnconstrainedLimitedBoxDemoPage.cs`
+  - `src/Sample/Flutter.Net/Demos/General/UnconstrainedLimitedBoxDemoPage.cs`
   - `dart_sample/lib/counter_widgets.dart`
-  - `dart_sample/lib/unconstrained_limited_box_demo_page.dart`
+  - `dart_sample/lib/demos/general/unconstrained_limited_box_demo_page.dart`
 - Expansion trigger:
   - Expand only if additional text-layout regression coverage is needed outside widget/render text scope.
 
@@ -39,7 +39,7 @@
   - `src/Flutter/Widgets/Text.cs`
   - `src/Flutter.Tests/TextWidgetTests.cs`
   - `src/Sample/Flutter.Net/CounterWidgets.cs`
-  - `src/Sample/Flutter.Net/UnconstrainedLimitedBoxDemoPage.cs`
+  - `src/Sample/Flutter.Net/Demos/General/UnconstrainedLimitedBoxDemoPage.cs`
   - `docs/FRAMEWORK_PLAN.md`
   - `docs/ai/TEST_MATRIX.md`
   - `docs/ai/PARITY_MATRIX.md`

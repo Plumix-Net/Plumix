@@ -55,7 +55,7 @@
 - Flutter/Dart source files used as source of truth:
   - `/Users/egorozh/Documents/flutter/flutter/packages/flutter/lib/src/material/floating_action_button.dart`
   - `/Users/egorozh/Documents/flutter/flutter/packages/flutter/lib/src/material/floating_action_button_theme.dart`
-  - `dart_sample/lib/floating_action_button_demo_page.dart`
+  - `dart_sample/lib/demos/material/floating_action_button_demo_page.dart`
 - Parity mapping checklist:
   - [x] API/default values mapped
   - [x] Widget composition order mapped
@@ -74,9 +74,9 @@
   - `src/Flutter.Material/FloatingActionButtonTheme.cs`
   - `src/Flutter.Material/ThemeData.cs`
   - `src/Flutter.Tests/MaterialFloatingActionButtonTests.cs`
-  - `src/Sample/Flutter.Net/FloatingActionButtonDemoPage.cs`
+  - `src/Sample/Flutter.Net/Demos/Material/FloatingActionButtonDemoPage.cs`
   - `src/Sample/Flutter.Net/SampleGalleryScreen.cs`
-  - `dart_sample/lib/floating_action_button_demo_page.dart`
+  - `dart_sample/lib/demos/material/floating_action_button_demo_page.dart`
   - `dart_sample/lib/sample_gallery_screen.dart`
   - `dart_sample/lib/sample_routes.dart`
   - `CHANGELOG.md`
@@ -116,7 +116,7 @@
 
 ## Follow-up Fixes
 
-- 2026-04-10: eliminated runtime bottom-overflow and out-of-view FAB probes on the demo route by wrapping page content with `SingleChildScrollView`, replacing `Row + Expanded` probe composition with stacked probe cards, and bounding FAB slots via fixed-height `SizedBox` in both C# and Dart sample implementations (`src/Sample/Flutter.Net/FloatingActionButtonDemoPage.cs`, `dart_sample/lib/floating_action_button_demo_page.dart`).
+- 2026-04-10: eliminated runtime bottom-overflow and out-of-view FAB probes on the demo route by wrapping page content with `SingleChildScrollView`, replacing `Row + Expanded` probe composition with stacked probe cards, and bounding FAB slots via fixed-height `SizedBox` in both C# and Dart sample implementations (`src/Sample/Flutter.Net/Demos/Material/FloatingActionButtonDemoPage.cs`, `dart_sample/lib/demos/material/floating_action_button_demo_page.dart`).
 
 ## Done Criteria
 

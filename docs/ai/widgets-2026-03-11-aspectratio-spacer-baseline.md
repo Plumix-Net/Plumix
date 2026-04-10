@@ -35,9 +35,9 @@
   - `src/Flutter/Rendering/Proxy.RenderBox.cs`
   - `src/Flutter/Widgets/Basic.cs`
   - `src/Flutter.Tests/AspectRatioTests.cs`
-  - `src/Sample/Flutter.Net/AspectRatioDemoPage.cs`
+  - `src/Sample/Flutter.Net/Demos/General/AspectRatioDemoPage.cs`
   - `src/Sample/Flutter.Net/SampleGalleryScreen.cs`
-  - `dart_sample/lib/aspect_ratio_demo_page.dart`
+  - `dart_sample/lib/demos/general/aspect_ratio_demo_page.dart`
   - `dart_sample/lib/sample_gallery_screen.dart`
   - `dart_sample/lib/sample_routes.dart`
   - `docs/ai/PARITY_MATRIX.md`

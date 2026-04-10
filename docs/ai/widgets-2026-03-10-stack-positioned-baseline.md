@@ -34,9 +34,9 @@
   - `src/Flutter/Rendering/Stack.RenderStack.cs`
   - `src/Flutter/Widgets/Basic.cs`
   - `src/Flutter.Tests/StackTests.cs`
-  - `src/Sample/Flutter.Net/StackDemoPage.cs`
+  - `src/Sample/Flutter.Net/Demos/General/StackDemoPage.cs`
   - `src/Sample/Flutter.Net/SampleGalleryScreen.cs`
-  - `dart_sample/lib/stack_demo_page.dart`
+  - `dart_sample/lib/demos/general/stack_demo_page.dart`
   - `dart_sample/lib/sample_gallery_screen.dart`
   - `dart_sample/lib/sample_routes.dart`
   - `docs/ai/PARITY_MATRIX.md`

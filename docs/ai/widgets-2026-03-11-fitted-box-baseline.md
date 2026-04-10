@@ -37,9 +37,9 @@
   - `src/Flutter/Rendering/Proxy.RenderBox.cs`
   - `src/Flutter/Widgets/Basic.cs`
   - `src/Flutter.Tests/FittedBoxTests.cs`
-  - `src/Sample/Flutter.Net/FittedBoxDemoPage.cs`
+  - `src/Sample/Flutter.Net/Demos/General/FittedBoxDemoPage.cs`
   - `src/Sample/Flutter.Net/SampleGalleryScreen.cs`
-  - `dart_sample/lib/fitted_box_demo_page.dart`
+  - `dart_sample/lib/demos/general/fitted_box_demo_page.dart`
   - `dart_sample/lib/sample_gallery_screen.dart`
   - `dart_sample/lib/sample_routes.dart`
   - `docs/ai/PARITY_MATRIX.md`
