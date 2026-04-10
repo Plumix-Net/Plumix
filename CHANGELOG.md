@@ -14,6 +14,9 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 ### Changed
 
+- Added framework Material `Drawer` baseline and stateful scaffold integration in `src/Flutter.Material/Scaffold.cs`: `Scaffold` now supports `drawer` slot + `ScaffoldState` APIs (`Scaffold.Of(context).OpenDrawer()/CloseDrawer()`), scrim overlay dismissal, and drawer-aware app-bar implied leading (`Icons.Menu` when `Scaffold.drawer` is present).
+- Expanded `src/Flutter.Tests/MaterialScaffoldTests.cs` with focused drawer coverage: default drawer width (`304`), drawer-aware app-bar implied leading behavior, and drawer visibility state transitions via `ScaffoldState` open/close APIs.
+- Remaining documented drawer divergence for current baseline scope: `DrawerController` drag/animation/open-edge gestures and `endDrawer` parity are not implemented yet.
 - Completed framework `AppBar` fullscreen implied-leading branch: default implied leading now resolves to `IconButton(Icons.Close)` for fullscreen dialog routes (`PageRoute.FullscreenDialog == true`) and keeps `IconButton(Icons.ArrowBack)` for regular dismissible routes, with focused regression coverage in `src/Flutter.Tests/MaterialScaffoldTests.cs`.
 - Aligned framework `AppBar` with Flutter implied-leading behavior: added `automaticallyImplyLeading` (`true` default) and default back leading resolution for non-root navigator routes (`Navigator.CanPop` -> `IconButton(Icons.ArrowBack)` -> `Navigator.MaybePop`), with focused regression coverage in `src/Flutter.Tests/MaterialScaffoldTests.cs`.
 - Updated sample gallery demo shells in both C# and Dart samples to use title-only app bars so back affordance comes from default implied leading (`src/Sample/Flutter.Net/SampleGalleryScreen.cs`, `dart_sample/lib/sample_gallery_screen.dart`).

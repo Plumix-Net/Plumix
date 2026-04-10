@@ -61,6 +61,143 @@ public sealed class MaterialScaffoldTests
     }
 
     [Fact]
+    public void Drawer_DefaultWidth_Is304()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new Drawer(
+                    child: new SizedBox(width: 24, height: 12))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var constrained = FindConstrainedBox(
+            root.ChildElement?.RenderObject,
+            constraints =>
+                Math.Abs(constraints.MinWidth - 304) < 0.001
+                && Math.Abs(constraints.MaxWidth - 304) < 0.001);
+
+        Assert.NotNull(constrained);
+    }
+
+    [Fact]
+    public void AppBar_AutomaticallyImplyLeading_ShowsMenuIcon_WhenScaffoldHasDrawer()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new Scaffold(
+                    appBar: new AppBar(titleText: "Root"),
+                    drawer: new Drawer(
+                        child: new SizedBox(width: 80, height: 40)),
+                    body: new SizedBox(width: 24, height: 12))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var menuGlyph = char.ConvertFromUtf32(Icons.Menu.CodePoint);
+        var menuParagraph = FindParagraphByText(root.ChildElement?.RenderObject, menuGlyph);
+        Assert.NotNull(menuParagraph);
+
+        var arrowBackGlyph = char.ConvertFromUtf32(Icons.ArrowBack.CodePoint);
+        var arrowBackParagraph = FindParagraphByText(root.ChildElement?.RenderObject, arrowBackGlyph);
+        Assert.Null(arrowBackParagraph);
+    }
+
+    [Fact]
+    public void AppBar_AutomaticallyImplyLeading_False_HidesMenuIcon_WhenScaffoldHasDrawer()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new Scaffold(
+                    appBar: new AppBar(
+                        titleText: "Root",
+                        automaticallyImplyLeading: false),
+                    drawer: new Drawer(
+                        child: new SizedBox(width: 80, height: 40)),
+                    body: new SizedBox(width: 24, height: 12))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var menuGlyph = char.ConvertFromUtf32(Icons.Menu.CodePoint);
+        var menuParagraph = FindParagraphByText(root.ChildElement?.RenderObject, menuGlyph);
+        Assert.Null(menuParagraph);
+    }
+
+    [Fact]
+    public void ScaffoldState_OpenDrawer_AndCloseDrawer_TogglesDrawerVisibility()
+    {
+        var owner = new BuildOwner();
+        BuildContext? scaffoldContext = null;
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new Scaffold(
+                    drawer: new Drawer(
+                        child: new Text("Drawer panel")),
+                    body: new CaptureBuildContextWidget(
+                        capture: context => scaffoldContext = context,
+                        child: new SizedBox(width: 24, height: 12)))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.True(scaffoldContext.HasValue);
+        var state = Scaffold.Of(scaffoldContext!.Value);
+        Assert.False(state.IsDrawerOpen);
+        Assert.Null(FindParagraphByText(root.ChildElement?.RenderObject, "Drawer panel"));
+
+        state.OpenDrawer();
+        owner.FlushBuild();
+
+        Assert.True(state.IsDrawerOpen);
+        Assert.NotNull(FindParagraphByText(root.ChildElement?.RenderObject, "Drawer panel"));
+
+        state.CloseDrawer();
+        owner.FlushBuild();
+
+        Assert.False(state.IsDrawerOpen);
+        Assert.Null(FindParagraphByText(root.ChildElement?.RenderObject, "Drawer panel"));
+    }
+
+    [Fact]
+    public void ScaffoldState_OpenDrawer_WithoutDrawer_DoesNothing()
+    {
+        var owner = new BuildOwner();
+        BuildContext? scaffoldContext = null;
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new Scaffold(
+                    body: new CaptureBuildContextWidget(
+                        capture: context => scaffoldContext = context,
+                        child: new SizedBox(width: 24, height: 12)))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.True(scaffoldContext.HasValue);
+        var state = Scaffold.Of(scaffoldContext!.Value);
+        state.OpenDrawer();
+        owner.FlushBuild();
+
+        Assert.False(state.IsDrawerOpen);
+    }
+
+    [Fact]
     public void ThemeData_DefaultsUseMaterial3ToTrue()
     {
         Assert.True(ThemeData.Light.UseMaterial3);
@@ -1941,6 +2078,24 @@ public sealed class MaterialScaffoldTests
         });
 
         return result;
+    }
+
+    private sealed class CaptureBuildContextWidget : StatelessWidget
+    {
+        private readonly Action<BuildContext> _capture;
+        private readonly Widget _child;
+
+        public CaptureBuildContextWidget(Action<BuildContext> capture, Widget? child = null)
+        {
+            _capture = capture ?? throw new ArgumentNullException(nameof(capture));
+            _child = child ?? new SizedBox();
+        }
+
+        public override Widget Build(BuildContext context)
+        {
+            _capture(context);
+            return _child;
+        }
     }
 
     private sealed class CaptureIconThemeWidget : StatelessWidget

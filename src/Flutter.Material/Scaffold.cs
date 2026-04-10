@@ -9,11 +9,119 @@ namespace Flutter.Material;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/material/scaffold.dart; flutter/packages/flutter/lib/src/material/app_bar.dart (approximate)
 
-public sealed class Scaffold : StatelessWidget
+public sealed class Drawer : StatelessWidget
 {
+    private const double DefaultWidth = 304.0;
+    private const double DefaultM2Elevation = 16.0;
+    private const double DefaultM3Elevation = 1.0;
+
+    public Drawer(
+        Widget? child = null,
+        Color? backgroundColor = null,
+        double? elevation = null,
+        Color? shadowColor = null,
+        double? width = null,
+        Key? key = null) : base(key)
+    {
+        if (elevation.HasValue && (double.IsNaN(elevation.Value) || double.IsInfinity(elevation.Value) || elevation.Value < 0))
+        {
+            throw new ArgumentOutOfRangeException(nameof(elevation), "Drawer elevation must be non-negative and finite.");
+        }
+
+        if (width.HasValue && (double.IsNaN(width.Value) || double.IsInfinity(width.Value) || width.Value <= 0))
+        {
+            throw new ArgumentOutOfRangeException(nameof(width), "Drawer width must be positive and finite.");
+        }
+
+        Child = child;
+        BackgroundColor = backgroundColor;
+        Elevation = elevation;
+        ShadowColor = shadowColor;
+        Width = width;
+    }
+
+    public Widget? Child { get; }
+
+    public Color? BackgroundColor { get; }
+
+    public double? Elevation { get; }
+
+    public Color? ShadowColor { get; }
+
+    public double? Width { get; }
+
+    public override Widget Build(BuildContext context)
+    {
+        var theme = Theme.Of(context);
+        var useMaterial3 = theme.UseMaterial3;
+        var effectiveBackground = BackgroundColor ?? (useMaterial3
+            ? theme.SurfaceContainerLowColor
+            : theme.CanvasColor);
+        var effectiveElevation = Elevation ?? (useMaterial3
+            ? DefaultM3Elevation
+            : DefaultM2Elevation);
+        var effectiveShadowColor = ShadowColor ?? (useMaterial3
+            ? Colors.Transparent
+            : theme.ShadowColor);
+        var effectiveBoxShadows = BuildBoxShadows(effectiveShadowColor, effectiveElevation);
+
+        return new Container(
+            width: Width ?? DefaultWidth,
+            decoration: new BoxDecoration(
+                Color: effectiveBackground,
+                BoxShadows: effectiveBoxShadows),
+            child: Child ?? new SizedBox());
+    }
+
+    private static BoxShadows? BuildBoxShadows(Color shadowColor, double elevation)
+    {
+        if (elevation <= 0 || shadowColor.A == 0)
+        {
+            return null;
+        }
+
+        var keyShadow = new BoxShadow
+        {
+            OffsetX = 0,
+            OffsetY = Math.Max(1, Math.Round(elevation * 0.5)),
+            Blur = Math.Max(2, elevation * 2.4),
+            Spread = 0,
+            Color = ApplyOpacity(shadowColor, 0.20),
+            IsInset = false,
+        };
+
+        var ambientShadow = new BoxShadow
+        {
+            OffsetX = 0,
+            OffsetY = Math.Max(1, Math.Round(elevation * 0.5)),
+            Blur = Math.Max(3, elevation * 3.2),
+            Spread = 0,
+            Color = ApplyOpacity(shadowColor, 0.14),
+            IsInset = false,
+        };
+
+        return new BoxShadows(keyShadow, [ambientShadow]);
+    }
+
+    private static Color ApplyOpacity(Color color, double opacityMultiplier)
+    {
+        var baseOpacity = color.A / 255.0;
+        var effectiveOpacity = Math.Clamp(baseOpacity * opacityMultiplier, 0, 1);
+        var alpha = (byte)Math.Clamp((int)(effectiveOpacity * 255), 0, 255);
+        return Color.FromArgb(alpha, color.R, color.G, color.B);
+    }
+}
+
+public sealed class Scaffold : StatefulWidget
+{
+    private static readonly Color DefaultDrawerScrimColor = Color.FromArgb(0x8A, 0x00, 0x00, 0x00);
+
     public Scaffold(
         Widget body,
         AppBar? appBar = null,
+        Widget? drawer = null,
+        bool drawerBarrierDismissible = true,
+        Color? drawerScrimColor = null,
         Widget? floatingActionButton = null,
         Widget? bottomNavigationBar = null,
         Color? backgroundColor = null,
@@ -21,6 +129,9 @@ public sealed class Scaffold : StatelessWidget
     {
         Body = body;
         AppBar = appBar;
+        Drawer = drawer;
+        DrawerBarrierDismissible = drawerBarrierDismissible;
+        DrawerScrimColor = drawerScrimColor;
         FloatingActionButton = floatingActionButton;
         BottomNavigationBar = bottomNavigationBar;
         BackgroundColor = backgroundColor;
@@ -30,35 +141,135 @@ public sealed class Scaffold : StatelessWidget
 
     public AppBar? AppBar { get; }
 
+    public Widget? Drawer { get; }
+
+    public bool DrawerBarrierDismissible { get; }
+
+    public Color? DrawerScrimColor { get; }
+
     public Widget? FloatingActionButton { get; }
 
     public Widget? BottomNavigationBar { get; }
 
     public Color? BackgroundColor { get; }
 
+    public override State CreateState()
+    {
+        return new ScaffoldState();
+    }
+
+    public static ScaffoldState Of(BuildContext context)
+    {
+        return MaybeOf(context)
+               ?? throw new InvalidOperationException("Scaffold not found in context.");
+    }
+
+    public static ScaffoldState? MaybeOf(BuildContext context)
+    {
+        return context.DependOnInherited<ScaffoldScope>()?.Scaffold;
+    }
+
+    internal static Color ResolveDrawerScrimColor(Color? drawerScrimColor)
+    {
+        return drawerScrimColor ?? DefaultDrawerScrimColor;
+    }
+}
+
+internal sealed class ScaffoldScope : InheritedWidget
+{
+    public ScaffoldScope(
+        ScaffoldState scaffold,
+        bool hasDrawer,
+        bool isDrawerOpen,
+        Widget child,
+        Key? key = null) : base(key)
+    {
+        Scaffold = scaffold ?? throw new ArgumentNullException(nameof(scaffold));
+        HasDrawer = hasDrawer;
+        IsDrawerOpen = isDrawerOpen;
+        Child = child ?? throw new ArgumentNullException(nameof(child));
+    }
+
+    public ScaffoldState Scaffold { get; }
+
+    public bool HasDrawer { get; }
+
+    public bool IsDrawerOpen { get; }
+
+    public Widget Child { get; }
+
+    public override Widget Build(BuildContext context) => Child;
+
+    protected internal override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    {
+        var oldScope = (ScaffoldScope)oldWidget;
+        return !ReferenceEquals(Scaffold, oldScope.Scaffold)
+               || HasDrawer != oldScope.HasDrawer
+               || IsDrawerOpen != oldScope.IsDrawerOpen;
+    }
+}
+
+public sealed class ScaffoldState : State
+{
+    private bool _isDrawerOpen;
+
+    private Scaffold CurrentWidget => (Scaffold)StateWidget;
+
+    public bool HasDrawer => CurrentWidget.Drawer != null;
+
+    public bool IsDrawerOpen => _isDrawerOpen;
+
+    public void OpenDrawer()
+    {
+        if (!HasDrawer || _isDrawerOpen)
+        {
+            return;
+        }
+
+        SetState(() => _isDrawerOpen = true);
+    }
+
+    public void CloseDrawer()
+    {
+        if (!_isDrawerOpen)
+        {
+            return;
+        }
+
+        SetState(() => _isDrawerOpen = false);
+    }
+
+    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    {
+        if (!HasDrawer && _isDrawerOpen)
+        {
+            _isDrawerOpen = false;
+        }
+    }
+
     public override Widget Build(BuildContext context)
     {
         var theme = Theme.Of(context);
-        var effectiveBackground = BackgroundColor ?? theme.ScaffoldBackgroundColor;
+        var effectiveBackground = CurrentWidget.BackgroundColor ?? theme.ScaffoldBackgroundColor;
 
-        var children = new List<Widget>();
-        if (AppBar != null)
+        var columnChildren = new List<Widget>();
+        if (CurrentWidget.AppBar != null)
         {
-            children.Add(AppBar);
+            columnChildren.Add(CurrentWidget.AppBar);
         }
 
-        children.Add(new Expanded(child: Body));
+        columnChildren.Add(new Expanded(child: CurrentWidget.Body));
 
-        if (BottomNavigationBar != null)
+        if (CurrentWidget.BottomNavigationBar != null)
         {
-            children.Add(BottomNavigationBar);
+            columnChildren.Add(CurrentWidget.BottomNavigationBar);
         }
 
         Widget content = new Column(
             crossAxisAlignment: CrossAxisAlignment.Stretch,
-            children: children);
+            children: columnChildren);
 
-        if (FloatingActionButton != null)
+        if (CurrentWidget.FloatingActionButton != null)
         {
             content = new Stack(
                 fit: StackFit.Expand,
@@ -68,13 +279,44 @@ public sealed class Scaffold : StatelessWidget
                     new Positioned(
                         right: 16,
                         bottom: 16,
-                        child: FloatingActionButton),
+                        child: CurrentWidget.FloatingActionButton),
                 ]);
         }
 
-        return new Container(
-            color: effectiveBackground,
-            child: content);
+        if (_isDrawerOpen && CurrentWidget.Drawer != null)
+        {
+            var scrim = new Positioned(
+                left: 0,
+                top: 0,
+                right: 0,
+                bottom: 0,
+                child: new GestureDetector(
+                    behavior: HitTestBehavior.Opaque,
+                    onTap: CurrentWidget.DrawerBarrierDismissible ? CloseDrawer : null,
+                    child: new Container(
+                        color: Scaffold.ResolveDrawerScrimColor(CurrentWidget.DrawerScrimColor))));
+
+            content = new Stack(
+                fit: StackFit.Expand,
+                children:
+                [
+                    content,
+                    scrim,
+                    new Positioned(
+                        left: 0,
+                        top: 0,
+                        bottom: 0,
+                        child: CurrentWidget.Drawer),
+                ]);
+        }
+
+        return new ScaffoldScope(
+            scaffold: this,
+            hasDrawer: HasDrawer,
+            isDrawerOpen: _isDrawerOpen,
+            child: new Container(
+                color: effectiveBackground,
+                child: content));
     }
 }
 
@@ -281,13 +523,31 @@ public sealed class AppBar : StatelessWidget
             return Leading;
         }
 
-        if (!AutomaticallyImplyLeading || !Navigator.CanPop(context))
+        if (!AutomaticallyImplyLeading)
+        {
+            return null;
+        }
+
+        var scaffold = Scaffold.MaybeOf(context);
+        if (scaffold?.HasDrawer == true)
+        {
+            return BuildDefaultDrawerLeading(context);
+        }
+
+        if (!Navigator.CanPop(context))
         {
             return null;
         }
 
         var useCloseButton = ModalRoute.MaybeOf(context) is PageRoute pageRoute && pageRoute.FullscreenDialog;
         return BuildDefaultLeading(context, useCloseButton);
+    }
+
+    private static Widget BuildDefaultDrawerLeading(BuildContext context)
+    {
+        return new IconButton(
+            icon: new Icon(Icons.Menu),
+            onPressed: () => Scaffold.Of(context).OpenDrawer());
     }
 
     private static Widget BuildDefaultLeading(BuildContext context, bool useCloseButton)
