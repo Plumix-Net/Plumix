@@ -190,16 +190,22 @@ public abstract class ModalRoute : Route
 
 public abstract class PageRoute : ModalRoute
 {
-    protected PageRoute(RouteSettings? settings = null) : base(settings)
+    protected PageRoute(RouteSettings? settings = null, bool fullscreenDialog = false) : base(settings)
     {
+        FullscreenDialog = fullscreenDialog;
     }
+
+    public bool FullscreenDialog { get; }
 }
 
 public sealed class BuilderPageRoute : PageRoute
 {
     private readonly Func<BuildContext, Widget> _builder;
 
-    public BuilderPageRoute(Func<BuildContext, Widget> builder, RouteSettings? settings = null) : base(settings)
+    public BuilderPageRoute(
+        Func<BuildContext, Widget> builder,
+        RouteSettings? settings = null,
+        bool fullscreenDialog = false) : base(settings, fullscreenDialog)
     {
         _builder = builder ?? throw new ArgumentNullException(nameof(builder));
     }

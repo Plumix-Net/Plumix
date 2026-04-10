@@ -286,13 +286,14 @@ public sealed class AppBar : StatelessWidget
             return null;
         }
 
-        return BuildDefaultLeading(context);
+        var useCloseButton = ModalRoute.MaybeOf(context) is PageRoute pageRoute && pageRoute.FullscreenDialog;
+        return BuildDefaultLeading(context, useCloseButton);
     }
 
-    private static Widget BuildDefaultLeading(BuildContext context)
+    private static Widget BuildDefaultLeading(BuildContext context, bool useCloseButton)
     {
         return new IconButton(
-            icon: new Icon(Icons.ArrowBack),
+            icon: new Icon(useCloseButton ? Icons.Close : Icons.ArrowBack),
             onPressed: () => Navigator.MaybePop(context));
     }
 

@@ -2,12 +2,13 @@
 
 ## Goal
 
-- Close `AppBar` implied-leading parity so title-only app bars on non-root routes show the default back affordance like Flutter.
+- Close `AppBar` implied-leading parity so non-root routes get Flutter-like default dismiss affordances:
+  - standard routes use back icon (`Icons.ArrowBack`),
+  - fullscreen dialog routes use close icon (`Icons.Close`).
 
 ## Non-Goals
 
 - No drawer/end-drawer implied-leading behavior in this iteration.
-- No `BackButton`/`CloseButton` dedicated widget parity surface in this iteration.
 - No sliver app-bar or scroll-under behavior changes.
 
 ## Context Budget Plan
@@ -57,24 +58,22 @@
   - [x] Constraint/layout behavior mapped
   - [x] Paint/visual semantics mapped
 - Divergence log (only if needed):
-  - `src/Flutter.Material/Scaffold.cs`: implied leading currently maps to back icon path only (`Navigator.CanPop` + `Icons.ArrowBack`), while drawer/close-button branches remain follow-up work.
+  - `src/Flutter.Material/Scaffold.cs`: drawer/end-drawer implied-leading branches remain follow-up work because scaffold drawer primitives are not implemented yet in framework scope.
 
 ## Planned Changes
 
 - Files to edit:
+  - `src/Flutter/Widgets/Navigation.cs`
   - `src/Flutter.Material/Scaffold.cs`
   - `src/Flutter.Tests/MaterialScaffoldTests.cs`
-  - `src/Sample/Flutter.Net/SampleGalleryScreen.cs`
-  - `dart_sample/lib/sample_gallery_screen.dart`
   - `CHANGELOG.md`
   - `docs/FRAMEWORK_PLAN.md`
   - `docs/ai/TEST_MATRIX.md`
-  - `docs/ai/PARITY_MATRIX.md`
 - Brief intent per file:
-  - `Scaffold.cs`: add `AppBar.automaticallyImplyLeading` and default back-leading resolution on non-root routes.
-  - `MaterialScaffoldTests.cs`: add focused regression coverage for implied-leading on/off behavior.
-  - sample gallery files: remove custom demo-page back button from app bar, keep title-only app bars.
-  - docs/changelog: record shipped parity delta and updated sample parity notes.
+  - `Navigation.cs`: add `PageRoute.FullscreenDialog` parity flag needed by app-bar implied-leading decision.
+  - `Scaffold.cs`: resolve implied-leading icon by route mode (`fullscreenDialog` -> close, otherwise back).
+  - `MaterialScaffoldTests.cs`: add focused regression coverage for fullscreen-dialog close-icon path.
+  - docs/changelog: record shipped parity delta.
 
 ## Test Plan
 
@@ -84,13 +83,12 @@
   - `src/Flutter.Tests/MaterialScaffoldTests.cs` implied-leading coverage.
 - Parity-risk scenarios covered:
   - non-root route app-bar shows default back icon with title-only config,
+  - fullscreen dialog route app-bar shows default close icon,
   - explicit opt-out (`automaticallyImplyLeading: false`) suppresses implied back icon.
 
 ## Sample Parity Plan
 
-- [x] C# sample impact checked
-- [x] Dart sample parity checked
-- [x] `docs/ai/PARITY_MATRIX.md` updated (if needed)
+- [x] No C#/Dart sample structure changes required in this follow-up (runtime behavior change is in framework app-bar implied-leading resolution only).
 
 ## Docs and Tracking
 
