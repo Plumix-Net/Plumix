@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'counter_widgets.dart';
+import '../../counter_widgets.dart';
 
 class DecoratedBoxDemoPage extends StatefulWidget {
   const DecoratedBoxDemoPage({super.key});

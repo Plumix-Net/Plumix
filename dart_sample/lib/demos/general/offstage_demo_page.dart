@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'counter_widgets.dart';
+import '../../counter_widgets.dart';
 
 class OffstageDemoPage extends StatefulWidget {
   const OffstageDemoPage({super.key});

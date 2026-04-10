@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'counter_widgets.dart';
-import 'sample_routes.dart';
+import '../../counter_widgets.dart';
+import '../../sample_routes.dart';
 
 class NavigatorDemoPage extends StatelessWidget {
   const NavigatorDemoPage({super.key});

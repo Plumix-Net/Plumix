@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'counter_widgets.dart';
+import '../../counter_widgets.dart';
 
 class AspectRatioDemoPage extends StatefulWidget {
   const AspectRatioDemoPage({super.key});
@@ -91,7 +91,10 @@ class _AspectRatioDemoPageState extends State<AspectRatioDemoPage> {
                 child: Container(
                   decoration: BoxDecoration(
                     color: const Color(0xFFCCE3FF),
-                    border: Border.all(color: const Color(0xFF1D3557), width: 2),
+                    border: Border.all(
+                      color: const Color(0xFF1D3557),
+                      width: 2,
+                    ),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Center(

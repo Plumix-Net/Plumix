@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'counter_widgets.dart';
+import '../../counter_widgets.dart';
 
 class OverflowIndicatorDemoPage extends StatefulWidget {
   const OverflowIndicatorDemoPage({super.key});

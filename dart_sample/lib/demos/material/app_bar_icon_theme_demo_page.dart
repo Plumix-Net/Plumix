@@ -1,45 +1,29 @@
 import 'package:flutter/material.dart';
 
-import 'counter_widgets.dart';
+import '../../counter_widgets.dart';
 
-class AppBarTextStylesDemoPage extends StatefulWidget {
-  const AppBarTextStylesDemoPage({super.key});
+class AppBarIconThemeDemoPage extends StatefulWidget {
+  const AppBarIconThemeDemoPage({super.key});
 
   @override
-  State<AppBarTextStylesDemoPage> createState() =>
-      _AppBarTextStylesDemoPageState();
+  State<AppBarIconThemeDemoPage> createState() =>
+      _AppBarIconThemeDemoPageState();
 }
 
-class _AppBarTextStylesDemoPageState extends State<AppBarTextStylesDemoPage> {
+class _AppBarIconThemeDemoPageState extends State<AppBarIconThemeDemoPage> {
   static const Color _appBarBackground = Color(0xFF1E3A5F);
   static const Color _foregroundWhite = Colors.white;
   static const Color _foregroundMint = Color(0xFFB8FFF1);
-  static const TextStyle _themeTitleStyle = TextStyle(
-    fontSize: 22,
-    color: Color(0xFF90E0EF),
-    fontWeight: FontWeight.bold,
-  );
-  static const TextStyle _themeToolbarStyle = TextStyle(
-    fontSize: 14,
-    color: Color(0xFFF4A261),
-    fontWeight: FontWeight.w600,
-  );
-  static const TextStyle _widgetTitleStyle = TextStyle(
-    fontSize: 19,
-    color: Color(0xFF8E44AD),
-    fontWeight: FontWeight.normal,
-  );
-  static const TextStyle _widgetToolbarStyle = TextStyle(
-    fontSize: 16,
-    color: Color(0xFFE63946),
-    fontWeight: FontWeight.bold,
-  );
+  static const Color _themeIconColor = Color(0xFF2A9D8F);
+  static const Color _themeActionsIconColor = Color(0xFFF4A261);
+  static const Color _widgetIconColor = Color(0xFF8E44AD);
+  static const Color _widgetActionsIconColor = Color(0xFFE63946);
 
   Color _foregroundColor = _foregroundWhite;
-  bool _themeTitleStyleEnabled = true;
-  bool _themeToolbarStyleEnabled = true;
-  bool _widgetTitleOverrideEnabled = false;
-  bool _widgetToolbarOverrideEnabled = false;
+  bool _themeIconEnabled = true;
+  bool _themeActionsIconEnabled = false;
+  bool _widgetIconOverrideEnabled = false;
+  bool _widgetActionsIconOverrideEnabled = false;
 
   @override
   Widget build(BuildContext context) {
@@ -48,11 +32,11 @@ class _AppBarTextStylesDemoPageState extends State<AppBarTextStylesDemoPage> {
       spacing: 10,
       children: <Widget>[
         const Text(
-          'AppBar title/toolbar text styles',
+          'AppBar iconTheme/actionsIconTheme',
           style: TextStyle(fontSize: 20, color: Colors.black),
         ),
         const Text(
-          'Runtime probe for titleTextStyle and toolbarTextStyle precedence: widget override > appBarTheme > foreground fallback.',
+          'Runtime probe for icon-theme precedence: widget override > appBarTheme > iconTheme fallback > foreground fallback.',
           style: TextStyle(fontSize: 14, color: Colors.black54),
         ),
         Row(
@@ -76,15 +60,15 @@ class _AppBarTextStylesDemoPageState extends State<AppBarTextStylesDemoPage> {
           spacing: 8,
           children: <Widget>[
             _buildButton(
-              label: 'theme title off',
-              onTap: () => _setThemeTitleStyleEnabled(false),
-              width: 114,
+              label: 'theme icon off',
+              onTap: () => _setThemeIconEnabled(false),
+              width: 108,
               background: const Color(0xFFE9F5EC),
             ),
             _buildButton(
-              label: 'theme title on',
-              onTap: () => _setThemeTitleStyleEnabled(true),
-              width: 114,
+              label: 'theme icon on',
+              onTap: () => _setThemeIconEnabled(true),
+              width: 108,
               background: const Color(0xFFE9F5EC),
             ),
           ],
@@ -93,15 +77,15 @@ class _AppBarTextStylesDemoPageState extends State<AppBarTextStylesDemoPage> {
           spacing: 8,
           children: <Widget>[
             _buildButton(
-              label: 'theme toolbar off',
-              onTap: () => _setThemeToolbarStyleEnabled(false),
-              width: 126,
+              label: 'theme actions off',
+              onTap: () => _setThemeActionsIconEnabled(false),
+              width: 118,
               background: const Color(0xFFF3E8D8),
             ),
             _buildButton(
-              label: 'theme toolbar on',
-              onTap: () => _setThemeToolbarStyleEnabled(true),
-              width: 126,
+              label: 'theme actions on',
+              onTap: () => _setThemeActionsIconEnabled(true),
+              width: 118,
               background: const Color(0xFFF3E8D8),
             ),
           ],
@@ -110,15 +94,15 @@ class _AppBarTextStylesDemoPageState extends State<AppBarTextStylesDemoPage> {
           spacing: 8,
           children: <Widget>[
             _buildButton(
-              label: 'widget title off',
-              onTap: () => _setWidgetTitleOverrideEnabled(false),
-              width: 118,
+              label: 'widget icon off',
+              onTap: () => _setWidgetIconOverrideEnabled(false),
+              width: 114,
               background: const Color(0xFFE4ECF7),
             ),
             _buildButton(
-              label: 'widget title on',
-              onTap: () => _setWidgetTitleOverrideEnabled(true),
-              width: 118,
+              label: 'widget icon on',
+              onTap: () => _setWidgetIconOverrideEnabled(true),
+              width: 114,
               background: const Color(0xFFE4ECF7),
             ),
           ],
@@ -127,21 +111,21 @@ class _AppBarTextStylesDemoPageState extends State<AppBarTextStylesDemoPage> {
           spacing: 8,
           children: <Widget>[
             _buildButton(
-              label: 'widget toolbar off',
-              onTap: () => _setWidgetToolbarOverrideEnabled(false),
-              width: 130,
+              label: 'widget actions off',
+              onTap: () => _setWidgetActionsIconOverrideEnabled(false),
+              width: 126,
               background: const Color(0xFFF5E8ED),
             ),
             _buildButton(
-              label: 'widget toolbar on',
-              onTap: () => _setWidgetToolbarOverrideEnabled(true),
-              width: 130,
+              label: 'widget actions on',
+              onTap: () => _setWidgetActionsIconOverrideEnabled(true),
+              width: 126,
               background: const Color(0xFFF5E8ED),
             ),
           ],
         ),
         Text(
-          'fg=${_colorLabel(_foregroundColor)}, themeTitle=${_onOff(_themeTitleStyleEnabled)}, themeToolbar=${_onOff(_themeToolbarStyleEnabled)}, widgetTitle=${_onOff(_widgetTitleOverrideEnabled)}, widgetToolbar=${_onOff(_widgetToolbarOverrideEnabled)}, expectedTitle=${_describeStyle(_resolveExpectedTitleStyle(), _foregroundColor)}, expectedActions=${_describeStyle(_resolveExpectedToolbarStyle(), _foregroundColor)}',
+          'fg=${_colorLabel(_foregroundColor)}, themeIcon=${_onOff(_themeIconEnabled)}, themeActions=${_onOff(_themeActionsIconEnabled)}, widgetIcon=${_onOff(_widgetIconOverrideEnabled)}, widgetActions=${_onOff(_widgetActionsIconOverrideEnabled)}, expectedLeading=${_colorLabel(_resolveExpectedLeadingColor())}, expectedActions=${_colorLabel(_resolveExpectedActionsColor())}',
           style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
         ),
         Container(
@@ -158,7 +142,7 @@ class _AppBarTextStylesDemoPageState extends State<AppBarTextStylesDemoPage> {
               ),
               _buildThemedPreview(),
               const Text(
-                'Default app bar reference (no text style overrides)',
+                'Default app bar reference (no icon theme overrides)',
                 style: TextStyle(fontSize: 11, color: Colors.black54),
               ),
               _buildDefaultReferencePreview(),
@@ -175,29 +159,35 @@ class _AppBarTextStylesDemoPageState extends State<AppBarTextStylesDemoPage> {
         appBarTheme: AppBarTheme(
           backgroundColor: _appBarBackground,
           foregroundColor: _foregroundColor,
-          titleTextStyle: _themeTitleStyleEnabled ? _themeTitleStyle : null,
-          toolbarTextStyle: _themeToolbarStyleEnabled
-              ? _themeToolbarStyle
+          iconTheme: _themeIconEnabled
+              ? const IconThemeData(color: _themeIconColor, size: 18)
+              : null,
+          actionsIconTheme: _themeActionsIconEnabled
+              ? const IconThemeData(color: _themeActionsIconColor, size: 16)
               : null,
         ),
       ),
       child: AppBar(
-        title: const Text('Theme text styles'),
-        titleTextStyle: _widgetTitleOverrideEnabled ? _widgetTitleStyle : null,
-        toolbarTextStyle: _widgetToolbarOverrideEnabled
-            ? _widgetToolbarStyle
+        title: const Text('Theme icon chain'),
+        iconTheme: _widgetIconOverrideEnabled
+            ? const IconThemeData(color: _widgetIconColor, size: 20)
             : null,
-        actions: const <Widget>[Text('A1'), Text('A2')],
+        actionsIconTheme: _widgetActionsIconOverrideEnabled
+            ? const IconThemeData(color: _widgetActionsIconColor, size: 22)
+            : null,
+        leading: const Icon(Icons.menu),
+        actions: const <Widget>[Icon(Icons.close), Icon(Icons.info_outline)],
       ),
     );
   }
 
   Widget _buildDefaultReferencePreview() {
     return AppBar(
-      title: const Text('Default text styles'),
+      title: const Text('Default icon chain'),
       backgroundColor: _appBarBackground,
       foregroundColor: _foregroundColor,
-      actions: const <Widget>[Text('A1'), Text('A2')],
+      leading: const Icon(Icons.menu),
+      actions: const <Widget>[Icon(Icons.close), Icon(Icons.info_outline)],
     );
   }
 
@@ -226,58 +216,60 @@ class _AppBarTextStylesDemoPageState extends State<AppBarTextStylesDemoPage> {
     });
   }
 
-  void _setThemeTitleStyleEnabled(bool value) {
+  void _setThemeIconEnabled(bool value) {
     setState(() {
-      _themeTitleStyleEnabled = value;
+      _themeIconEnabled = value;
     });
   }
 
-  void _setThemeToolbarStyleEnabled(bool value) {
+  void _setThemeActionsIconEnabled(bool value) {
     setState(() {
-      _themeToolbarStyleEnabled = value;
+      _themeActionsIconEnabled = value;
     });
   }
 
-  void _setWidgetTitleOverrideEnabled(bool value) {
+  void _setWidgetIconOverrideEnabled(bool value) {
     setState(() {
-      _widgetTitleOverrideEnabled = value;
+      _widgetIconOverrideEnabled = value;
     });
   }
 
-  void _setWidgetToolbarOverrideEnabled(bool value) {
+  void _setWidgetActionsIconOverrideEnabled(bool value) {
     setState(() {
-      _widgetToolbarOverrideEnabled = value;
+      _widgetActionsIconOverrideEnabled = value;
     });
   }
 
-  TextStyle? _resolveExpectedTitleStyle() {
-    if (_widgetTitleOverrideEnabled) {
-      return _widgetTitleStyle;
+  Color _resolveExpectedLeadingColor() {
+    if (_widgetIconOverrideEnabled) {
+      return _widgetIconColor;
     }
 
-    if (_themeTitleStyleEnabled) {
-      return _themeTitleStyle;
+    if (_themeIconEnabled) {
+      return _themeIconColor;
     }
 
-    return null;
+    return _foregroundColor;
   }
 
-  TextStyle? _resolveExpectedToolbarStyle() {
-    if (_widgetToolbarOverrideEnabled) {
-      return _widgetToolbarStyle;
+  Color _resolveExpectedActionsColor() {
+    if (_widgetActionsIconOverrideEnabled) {
+      return _widgetActionsIconColor;
     }
 
-    if (_themeToolbarStyleEnabled) {
-      return _themeToolbarStyle;
+    if (_themeActionsIconEnabled) {
+      return _themeActionsIconColor;
     }
 
-    return null;
-  }
+    if (_widgetIconOverrideEnabled) {
+      return _widgetIconColor;
+    }
 
-  static String _describeStyle(TextStyle? style, Color fallbackColor) {
-    final Color color = style?.color ?? fallbackColor;
-    final String sizeLabel = style?.fontSize?.toStringAsFixed(0) ?? 'base';
-    return '${_colorLabel(color)}:$sizeLabel';
+    if (_themeIconEnabled) {
+      return _themeIconColor;
+    }
+
+    return _foregroundColor;
   }
 
   static String _onOff(bool value) => value ? 'on' : 'off';

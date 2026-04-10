@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show OverflowBoxFit;
 
-import 'counter_widgets.dart';
+import '../../counter_widgets.dart';
 
 class OverflowBoxDemoPage extends StatefulWidget {
   const OverflowBoxDemoPage({super.key});

@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
 
-import 'counter_widgets.dart';
+import '../../counter_widgets.dart';
 
-class FittedBoxDemoPage extends StatefulWidget {
-  const FittedBoxDemoPage({super.key});
+class FractionallySizedBoxDemoPage extends StatefulWidget {
+  const FractionallySizedBoxDemoPage({super.key});
 
   @override
-  State<FittedBoxDemoPage> createState() => _FittedBoxDemoPageState();
+  State<FractionallySizedBoxDemoPage> createState() =>
+      _FractionallySizedBoxDemoPageState();
 }
 
-class _FittedBoxDemoPageState extends State<FittedBoxDemoPage> {
-  BoxFit _fit = BoxFit.contain;
+class _FractionallySizedBoxDemoPageState
+    extends State<FractionallySizedBoxDemoPage> {
   Alignment _alignment = Alignment.center;
+  double? _widthFactor = 0.7;
+  double? _heightFactor = 0.55;
 
   @override
   Widget build(BuildContext context) {
@@ -20,45 +23,56 @@ class _FittedBoxDemoPageState extends State<FittedBoxDemoPage> {
       spacing: 10,
       children: <Widget>[
         const Text(
-          'FittedBox',
+          'FractionallySizedBox',
           style: TextStyle(fontSize: 20, color: Colors.black),
         ),
         const Text(
-          'Change fit/alignment to inspect scaling behavior inside a fixed preview box.',
+          'Configure width/height factors and alignment; null factor means pass-through on that axis.',
           style: TextStyle(fontSize: 14, color: Colors.black54),
         ),
         Row(
           spacing: 8,
           children: <Widget>[
             _buildButton(
-              label: 'Contain',
-              onTap: () => _setFit(BoxFit.contain),
-              width: 92,
-              background: const Color(0xFFDCE3ED),
-            ),
-            _buildButton(
-              label: 'Cover',
-              onTap: () => _setFit(BoxFit.cover),
+              label: 'W pass',
+              onTap: () => _setWidthFactor(null),
               width: 88,
               background: const Color(0xFFDCE3ED),
             ),
             _buildButton(
-              label: 'Fill',
-              onTap: () => _setFit(BoxFit.fill),
-              width: 84,
+              label: 'W 0.5',
+              onTap: () => _setWidthFactor(0.5),
+              width: 88,
               background: const Color(0xFFDCE3ED),
             ),
             _buildButton(
-              label: 'None',
-              onTap: () => _setFit(BoxFit.none),
-              width: 84,
+              label: 'W 0.8',
+              onTap: () => _setWidthFactor(0.8),
+              width: 88,
               background: const Color(0xFFDCE3ED),
             ),
+          ],
+        ),
+        Row(
+          spacing: 8,
+          children: <Widget>[
             _buildButton(
-              label: 'Down',
-              onTap: () => _setFit(BoxFit.scaleDown),
-              width: 84,
-              background: const Color(0xFFDCE3ED),
+              label: 'H pass',
+              onTap: () => _setHeightFactor(null),
+              width: 88,
+              background: const Color(0xFFE9F5EC),
+            ),
+            _buildButton(
+              label: 'H 0.4',
+              onTap: () => _setHeightFactor(0.4),
+              width: 88,
+              background: const Color(0xFFE9F5EC),
+            ),
+            _buildButton(
+              label: 'H 0.7',
+              onTap: () => _setHeightFactor(0.7),
+              width: 88,
+              background: const Color(0xFFE9F5EC),
             ),
           ],
         ),
@@ -69,24 +83,24 @@ class _FittedBoxDemoPageState extends State<FittedBoxDemoPage> {
               label: 'TopLeft',
               onTap: () => _setAlignment(Alignment.topLeft),
               width: 96,
-              background: const Color(0xFFE9F5EC),
+              background: const Color(0xFFF3E8D8),
             ),
             _buildButton(
               label: 'Center',
               onTap: () => _setAlignment(Alignment.center),
               width: 96,
-              background: const Color(0xFFE9F5EC),
+              background: const Color(0xFFF3E8D8),
             ),
             _buildButton(
               label: 'BottomRight',
               onTap: () => _setAlignment(Alignment.bottomRight),
               width: 112,
-              background: const Color(0xFFE9F5EC),
+              background: const Color(0xFFF3E8D8),
             ),
           ],
         ),
         Text(
-          'fit=${_fitLabel(_fit)}, alignment=${_alignmentLabel(_alignment)}',
+          'widthFactor=${_formatFactor(_widthFactor)}, heightFactor=${_formatFactor(_heightFactor)}, alignment=${_alignmentLabel(_alignment)}',
           style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
         ),
         Container(
@@ -94,29 +108,20 @@ class _FittedBoxDemoPageState extends State<FittedBoxDemoPage> {
           height: 190,
           color: const Color(0xFFE7EDF6),
           padding: const EdgeInsets.all(10),
-          child: Container(
-            color: Colors.white,
-            child: FittedBox(
-              fit: _fit,
-              alignment: _alignment,
-              child: Container(
-                width: 160,
-                height: 60,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFCCE3FF),
-                  border: Border.all(color: const Color(0xFF1D3557), width: 2),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  spacing: 8,
-                  children: <Widget>[
-                    const Text(
-                      'WIDE',
-                      style: TextStyle(fontSize: 14, color: Colors.black),
-                    ),
-                    Container(width: 14, height: 14, color: const Color(0xFF1D3557)),
-                  ],
+          child: FractionallySizedBox(
+            alignment: _alignment,
+            widthFactor: _widthFactor,
+            heightFactor: _heightFactor,
+            child: Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFFCCE3FF),
+                border: Border.all(color: const Color(0xFF1D3557), width: 2),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Center(
+                child: Text(
+                  'fraction child',
+                  style: TextStyle(fontSize: 14, color: Colors.black),
                 ),
               ),
             ),
@@ -145,9 +150,15 @@ class _FittedBoxDemoPageState extends State<FittedBoxDemoPage> {
     );
   }
 
-  void _setFit(BoxFit value) {
+  void _setWidthFactor(double? value) {
     setState(() {
-      _fit = value;
+      _widthFactor = value;
+    });
+  }
+
+  void _setHeightFactor(double? value) {
+    setState(() {
+      _heightFactor = value;
     });
   }
 
@@ -157,23 +168,8 @@ class _FittedBoxDemoPageState extends State<FittedBoxDemoPage> {
     });
   }
 
-  static String _fitLabel(BoxFit fit) {
-    switch (fit) {
-      case BoxFit.fill:
-        return 'fill';
-      case BoxFit.contain:
-        return 'contain';
-      case BoxFit.cover:
-        return 'cover';
-      case BoxFit.fitWidth:
-        return 'fitWidth';
-      case BoxFit.fitHeight:
-        return 'fitHeight';
-      case BoxFit.none:
-        return 'none';
-      case BoxFit.scaleDown:
-        return 'scaleDown';
-    }
+  static String _formatFactor(double? value) {
+    return value == null ? 'pass' : value.toStringAsFixed(2);
   }
 
   static String _alignmentLabel(Alignment alignment) {

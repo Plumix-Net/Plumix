@@ -395,6 +395,12 @@ Progress update (2026-03-19):
   - expanded theme-token surface with `ThemeData.PrimaryContainerColor` and `ThemeData.OnPrimaryContainerColor` so M3 FAB defaults map to dedicated container tokens instead of reusing unrelated button tokens;
   - added focused `MaterialFloatingActionButtonTests` coverage for size/shape defaults across variants, M3 color token defaults, extended directional padding behavior, theme-vs-widget override precedence, and elevation-state transitions (`default/hovered/pressed/disabled`);
   - added C#/Dart sample parity demo route/page for runtime verification (`FloatingActionButton` route in both sample menus) including variant probes, extended open/collapsed behavior, and theme override probe.
+- Added Material `BottomNavigationBar` baseline in `Flutter.Material`:
+  - introduced framework `BottomNavigationBar` + `BottomNavigationBarItem` with fixed-layout baseline behavior for current scope (item guards, selected/unselected color resolution, active-icon rendering, and tap callback dispatch);
+  - added focused `MaterialBottomNavigationBarTests` coverage for constructor guards, default theme color mapping (`canvas`/`primary`/`onSurfaceVariant`), selected `activeIcon` rendering, and tap index callback wiring;
+  - restructured C#/Dart sample gallery menu using bottom tabs (`Material`, `Cupertino`, `General`) while preserving existing route definitions and detail-page flow.
+- Remaining divergence for bottom navigation bar in current framework scope:
+  - currently covers fixed-layout baseline only; shifting-type animation/background behavior, bottom-navigation theming objects, label-visibility mode toggles, and semantics/tooltips are pending follow-up parity work.
 - Remaining divergence for floating action button in current framework scope:
   - `heroTag`/`Tooltip` wrappers, cursor/feedback toggles, and clip-behavior parity are still pending due missing framework primitives and are intentionally out of this baseline pass.
 

@@ -31,6 +31,7 @@ Current priority (2026-03-12):
   - `src/Flutter.Material/ThemeData.cs`
   - `src/Flutter.Material/Theme.cs`
   - `src/Flutter.Material/Scaffold.cs`
+  - `src/Flutter.Material/BottomNavigationBar.cs`
   - `src/Flutter.Material/Buttons.cs`
   - `src/Flutter.Material/IconButton.cs`
   - `src/Flutter.Material/FloatingActionButton.cs`
@@ -43,23 +44,24 @@ Current priority (2026-03-12):
   - `src/Flutter/Widgets/Text.cs`
   - `src/Sample/Flutter.Net/CounterApp.cs`
   - `src/Sample/Flutter.Net/SampleGalleryScreen.cs`
-  - `src/Sample/Flutter.Net/MaterialButtonsDemoPage.cs`
-  - `src/Sample/Flutter.Net/FloatingActionButtonDemoPage.cs`
-  - `src/Sample/Flutter.Net/CheckboxDemoPage.cs`
-  - `src/Sample/Flutter.Net/SwitchDemoPage.cs`
-  - `src/Sample/Flutter.Net/RadioDemoPage.cs`
+  - `src/Sample/Flutter.Net/Demos/Material/MaterialButtonsDemoPage.cs`
+  - `src/Sample/Flutter.Net/Demos/Material/FloatingActionButtonDemoPage.cs`
+  - `src/Sample/Flutter.Net/Demos/Cupertino/CheckboxDemoPage.cs`
+  - `src/Sample/Flutter.Net/Demos/Cupertino/SwitchDemoPage.cs`
+  - `src/Sample/Flutter.Net/Demos/Cupertino/RadioDemoPage.cs`
   - `dart_sample/lib/counter_app.dart`
   - `dart_sample/lib/sample_gallery_screen.dart`
-  - `dart_sample/lib/material_buttons_demo_page.dart`
-  - `dart_sample/lib/floating_action_button_demo_page.dart`
-  - `dart_sample/lib/checkbox_demo_page.dart`
-  - `dart_sample/lib/switch_demo_page.dart`
-  - `dart_sample/lib/radio_demo_page.dart`
+  - `dart_sample/lib/demos/material/material_buttons_demo_page.dart`
+  - `dart_sample/lib/demos/material/floating_action_button_demo_page.dart`
+  - `dart_sample/lib/demos/cupertino/checkbox_demo_page.dart`
+  - `dart_sample/lib/demos/cupertino/switch_demo_page.dart`
+  - `dart_sample/lib/demos/cupertino/radio_demo_page.dart`
 - Primary Tests:
   - `src/Flutter.Tests/TextWidgetTests.cs`
   - `src/Flutter.Tests/MaterialScaffoldTests.cs`
   - `src/Flutter.Tests/MaterialButtonsTests.cs`
   - `src/Flutter.Tests/MaterialFloatingActionButtonTests.cs`
+  - `src/Flutter.Tests/MaterialBottomNavigationBarTests.cs`
   - `src/Flutter.Tests/MaterialCheckboxTests.cs`
   - `src/Flutter.Tests/MaterialSwitchTests.cs`
   - `src/Flutter.Tests/MaterialRadioTests.cs`
@@ -128,7 +130,7 @@ Current priority (2026-03-12):
 - Goal: route stack operations, named routes, observers, back handling.
 - Read First:
   - `src/Flutter/Widgets/Navigation.cs`
-  - `src/Sample/Flutter.Net/NavigatorDemoPage.cs`
+  - `src/Sample/Flutter.Net/Demos/General/NavigatorDemoPage.cs`
   - `src/Sample/Flutter.Net/SampleGalleryScreen.cs`
 - Primary Tests:
   - `src/Flutter.Tests/NavigationTests.cs`
@@ -163,8 +165,8 @@ Current priority (2026-03-12):
 - Read First:
   - `src/Sample/Flutter.Net/SampleGalleryScreen.cs`
   - `dart_sample/lib/sample_gallery_screen.dart`
-  - `src/Sample/Flutter.Net/NavigatorDemoPage.cs`
-  - `dart_sample/lib/navigator_demo_page.dart`
+  - `src/Sample/Flutter.Net/Demos/General/NavigatorDemoPage.cs`
+  - `dart_sample/lib/demos/general/navigator_demo_page.dart`
   - `docs/ai/PARITY_MATRIX.md`
 
 ## Large File Hotspots

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'counter_widgets.dart';
+import '../../counter_widgets.dart';
 
 class AppBarActionsPaddingDemoPage extends StatefulWidget {
   const AppBarActionsPaddingDemoPage({super.key});

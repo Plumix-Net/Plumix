@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
-import 'counter_widgets.dart';
+import '../../counter_widgets.dart';
 
 class GridViewDemoPage extends StatelessWidget {
   const GridViewDemoPage({super.key});

@@ -2,7 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import 'counter_widgets.dart';
+import '../../counter_widgets.dart';
 
 class ProxyWidgetsDemoPage extends StatefulWidget {
   const ProxyWidgetsDemoPage({super.key});

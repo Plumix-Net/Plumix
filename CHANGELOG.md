@@ -17,6 +17,28 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 - Documentation policy update: Dart-to-C# control/widget work now uses mandatory parity-first porting mode (`docs/ai/PORTING_MODE.md`) with strict `1:1` default behavior, required divergence logging, and explicit parity-validation workflow references in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/INVARIANTS.md`, `docs/ai/MODULE_INDEX.md`, `docs/ai/FEATURE_TEMPLATE.md`, `docs/ai/TEST_MATRIX.md`, and `docs/ai/PARITY_MATRIX.md`.
 - Agent workflow scope update: parity tasks now default to `one request = one control closed end-to-end` (not micro-iterations), with expanded context-budget guidance for control work (`12-20` initial files, up to `20`) and aligned rules in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/PORTING_MODE.md`, `docs/ai/MODULE_INDEX.md`, and `docs/ai/FEATURE_TEMPLATE.md`.
 
+## [2026-04-10] - M4 BottomNavigationBar baseline + tabbed sample menu
+
+### Changed
+
+- Added framework Material `BottomNavigationBar` + `BottomNavigationBarItem` in `src/Flutter.Material/BottomNavigationBar.cs` with fixed-layout baseline behavior for current scope:
+  - item-count/index/font-size guards,
+  - default theme color resolution (`canvas` background, `primary` selected item, `onSurfaceVariant` unselected item for M3),
+  - selected `activeIcon` rendering path and tap callback index dispatch.
+- Added focused regression coverage in `src/Flutter.Tests/MaterialBottomNavigationBarTests.cs` for:
+  - constructor guards,
+  - theme-default color mapping,
+  - active-icon selection,
+  - pointer tap callback index behavior.
+- Reorganized sample gallery menu structure around bottom tabs in both C# and Dart samples:
+  - `Material` tab: Material-focused demos,
+  - `Cupertino` tab: adaptive Cupertino behavior demos (`Checkbox`, `Switch`, `Radio`),
+  - `General` tab: core framework/control demos.
+  - Updated files: `src/Sample/Flutter.Net/SampleGalleryScreen.cs`, `dart_sample/lib/sample_gallery_screen.dart`.
+- Updated tracking docs for this pass (`docs/FRAMEWORK_PLAN.md`, `docs/ai/MODULE_INDEX.md`, `docs/ai/TEST_MATRIX.md`, `docs/ai/PARITY_MATRIX.md`, and `docs/ai/material-2026-04-10-bottom-navigation-bar-baseline-parity.md`).
+- Remaining documented divergence:
+  - current framework `BottomNavigationBar` scope is fixed-layout baseline only; shifting mode animation/background behavior, dedicated bottom-navigation theming objects, and full label-visibility/semantics parity remain follow-up work.
+
 ## [2026-04-10] - M4 FloatingActionButton parity baseline
 
 ### Changed
