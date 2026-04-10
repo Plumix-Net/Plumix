@@ -290,24 +290,7 @@ internal sealed class SampleDemoPage : StatelessWidget
     public override Widget Build(BuildContext context)
     {
         return new Scaffold(
-            appBar: new AppBar(
-                titleText: _title,
-                leadingWidth: 96,
-                leading: new SizedBox(
-                    width: 84,
-                    child: new ElevatedButton(
-                        onPressed: () => Navigator.Of(context).MaybePop(),
-                        minHeight: 34,
-                        padding: new Thickness(10, 8),
-                        borderRadius: BorderRadius.Circular(8),
-                        child: new Row(
-                            mainAxisAlignment: MainAxisAlignment.Center,
-                            spacing: 4,
-                            children:
-                            [
-                                new Icon(Icons.ArrowBack, size: 14),
-                                new Text("Back", fontSize: 12),
-                            ])))),
+            appBar: new AppBar(titleText: _title),
             body: new Container(
                 padding: new Thickness(16),
                 child: new Column(

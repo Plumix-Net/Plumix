@@ -84,6 +84,7 @@ public sealed class AppBar : StatelessWidget
         string? titleText = null,
         Widget? title = null,
         Widget? leading = null,
+        bool automaticallyImplyLeading = true,
         double? leadingWidth = null,
         IReadOnlyList<Widget>? actions = null,
         bool? centerTitle = null,
@@ -119,6 +120,7 @@ public sealed class AppBar : StatelessWidget
         TitleText = titleText;
         Title = title;
         Leading = leading;
+        AutomaticallyImplyLeading = automaticallyImplyLeading;
         LeadingWidth = leadingWidth;
         Actions = actions ?? Array.Empty<Widget>();
         CenterTitle = centerTitle;
@@ -141,6 +143,8 @@ public sealed class AppBar : StatelessWidget
     public Widget? Title { get; }
 
     public Widget? Leading { get; }
+
+    public bool AutomaticallyImplyLeading { get; }
 
     public double? LeadingWidth { get; }
 
@@ -181,6 +185,7 @@ public sealed class AppBar : StatelessWidget
         var effectiveTitleSpacing = TitleSpacing ?? theme.AppBarTheme.TitleSpacing ?? 16;
         var effectiveIconTheme = ResolveEffectiveIconTheme(theme, effectiveForeground);
         var effectiveActionsIconTheme = ResolveEffectiveActionsIconTheme(theme, effectiveForeground, effectiveIconTheme);
+        var effectiveLeading = ResolveEffectiveLeading(context);
         var effectiveLeadingWidth = ResolveEffectiveLeadingWidth(theme);
         var effectiveActionsPadding = ActionsPadding ?? theme.AppBarTheme.ActionsPadding ?? new Thickness();
         var effectiveToolbarHeight = ResolveEffectiveToolbarHeight(theme);
@@ -198,7 +203,7 @@ public sealed class AppBar : StatelessWidget
                 : titleWidget);
 
         var rowChildren = new List<Widget>();
-        if (Leading != null)
+        if (effectiveLeading != null)
         {
             rowChildren.Add(
                 new SizedBox(
@@ -207,7 +212,7 @@ public sealed class AppBar : StatelessWidget
                     child: new Center(
                         child: new Flutter.Widgets.IconTheme(
                             data: effectiveIconTheme,
-                            child: Leading))));
+                            child: effectiveLeading))));
         }
 
         rowChildren.Add(new Expanded(child: middle));
@@ -226,7 +231,7 @@ public sealed class AppBar : StatelessWidget
                         spacing: 0,
                         children: Actions))));
         }
-        else if (effectiveCenterTitle && Leading != null)
+        else if (effectiveCenterTitle && effectiveLeading != null)
         {
             // Reserve symmetric trailing space when centering title without explicit actions.
             rowChildren.Add(new SizedBox(width: effectiveLeadingWidth));
@@ -267,6 +272,28 @@ public sealed class AppBar : StatelessWidget
         }
 
         return ResolvePlatformDefaultCenterTitle(theme.Platform);
+    }
+
+    private Widget? ResolveEffectiveLeading(BuildContext context)
+    {
+        if (Leading != null)
+        {
+            return Leading;
+        }
+
+        if (!AutomaticallyImplyLeading || !Navigator.CanPop(context))
+        {
+            return null;
+        }
+
+        return BuildDefaultLeading(context);
+    }
+
+    private static Widget BuildDefaultLeading(BuildContext context)
+    {
+        return new IconButton(
+            icon: new Icon(Icons.ArrowBack),
+            onPressed: () => Navigator.MaybePop(context));
     }
 
     private double ResolveEffectiveLeadingWidth(ThemeData theme)

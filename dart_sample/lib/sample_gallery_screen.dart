@@ -451,31 +451,7 @@ class SampleDemoPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(title),
-        leadingWidth: 96,
-        leading: SizedBox(
-          width: 84,
-          child: ElevatedButton(
-            onPressed: () => Navigator.of(context).maybePop(),
-            style: ElevatedButton.styleFrom(
-              minimumSize: const Size(0, 34),
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            child: const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              spacing: 4,
-              children: <Widget>[
-                Icon(Icons.arrow_back, size: 14),
-                Text('Back', style: TextStyle(fontSize: 12)),
-              ],
-            ),
-          ),
-        ),
-      ),
+      appBar: AppBar(title: Text(title)),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(

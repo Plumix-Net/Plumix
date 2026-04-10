@@ -665,6 +665,108 @@ public sealed class MaterialScaffoldTests
     }
 
     [Fact]
+    public void AppBar_AutomaticallyImplyLeading_ShowsBackIcon_OnNonRootRoute()
+    {
+        var owner = new BuildOwner();
+        BuildContext? rootContext = null;
+
+        static Widget BuildBody() => new SizedBox(width: 24, height: 12);
+
+        Route? BuildRoute(RouteSettings settings)
+        {
+            return settings.Name switch
+            {
+                "/" => new BuilderPageRoute(
+                    builder: context =>
+                    {
+                        rootContext ??= context;
+                        return new Scaffold(
+                            appBar: new AppBar(titleText: "Root"),
+                            body: BuildBody());
+                    },
+                    settings: settings),
+                "/details" => new BuilderPageRoute(
+                    builder: _ => new Scaffold(
+                        appBar: new AppBar(titleText: "Details"),
+                        body: BuildBody()),
+                    settings: settings),
+                _ => null,
+            };
+        }
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new Navigator(
+                    onGenerateRoute: BuildRoute,
+                    initialRouteName: "/")));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.True(rootContext.HasValue);
+        Navigator.PushNamed(rootContext!.Value, "/details");
+        owner.FlushBuild();
+
+        var arrowBackGlyph = char.ConvertFromUtf32(Icons.ArrowBack.CodePoint);
+        var arrowBackParagraph = FindParagraphByText(root.ChildElement?.RenderObject, arrowBackGlyph);
+        Assert.NotNull(arrowBackParagraph);
+    }
+
+    [Fact]
+    public void AppBar_AutomaticallyImplyLeading_False_HidesBackIcon_OnNonRootRoute()
+    {
+        var owner = new BuildOwner();
+        BuildContext? rootContext = null;
+
+        static Widget BuildBody() => new SizedBox(width: 24, height: 12);
+
+        Route? BuildRoute(RouteSettings settings)
+        {
+            return settings.Name switch
+            {
+                "/" => new BuilderPageRoute(
+                    builder: context =>
+                    {
+                        rootContext ??= context;
+                        return new Scaffold(
+                            appBar: new AppBar(titleText: "Root"),
+                            body: BuildBody());
+                    },
+                    settings: settings),
+                "/details" => new BuilderPageRoute(
+                    builder: _ => new Scaffold(
+                        appBar: new AppBar(
+                            titleText: "Details",
+                            automaticallyImplyLeading: false),
+                        body: BuildBody()),
+                    settings: settings),
+                _ => null,
+            };
+        }
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new Navigator(
+                    onGenerateRoute: BuildRoute,
+                    initialRouteName: "/")));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.True(rootContext.HasValue);
+        Navigator.PushNamed(rootContext!.Value, "/details");
+        owner.FlushBuild();
+
+        var arrowBackGlyph = char.ConvertFromUtf32(Icons.ArrowBack.CodePoint);
+        var arrowBackParagraph = FindParagraphByText(root.ChildElement?.RenderObject, arrowBackGlyph);
+        Assert.Null(arrowBackParagraph);
+    }
+
+    [Fact]
     public void AppBar_ActionsPadding_DefaultsFromThemeAppBarTheme()
     {
         var owner = new BuildOwner();
