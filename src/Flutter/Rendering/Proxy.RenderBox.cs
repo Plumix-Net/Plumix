@@ -1655,6 +1655,92 @@ public sealed class RenderPointerListener : RenderProxyBox
     }
 }
 
+public sealed class RenderSemanticsAnnotations : RenderProxyBox
+{
+    private string? _label;
+    private SemanticsFlags _flags;
+    private Action? _onTap;
+
+    public RenderSemanticsAnnotations(
+        string? label = null,
+        SemanticsFlags flags = SemanticsFlags.None,
+        Action? onTap = null,
+        RenderBox? child = null)
+    {
+        _label = label;
+        _flags = flags;
+        _onTap = onTap;
+        Child = child;
+    }
+
+    public string? Label
+    {
+        get => _label;
+        set
+        {
+            if (_label == value)
+            {
+                return;
+            }
+
+            _label = value;
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
+    public SemanticsFlags Flags
+    {
+        get => _flags;
+        set
+        {
+            if (_flags == value)
+            {
+                return;
+            }
+
+            _flags = value;
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
+    public Action? OnTap
+    {
+        get => _onTap;
+        set
+        {
+            if (ReferenceEquals(_onTap, value))
+            {
+                return;
+            }
+
+            _onTap = value;
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
+    protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
+    {
+        if (string.IsNullOrWhiteSpace(_label)
+            && _flags == SemanticsFlags.None
+            && _onTap is null)
+        {
+            return;
+        }
+
+        configuration.IsSemanticBoundary = true;
+        if (!string.IsNullOrWhiteSpace(_label))
+        {
+            configuration.Label = _label;
+        }
+
+        configuration.Flags |= _flags;
+        if (_onTap is not null)
+        {
+            configuration.AddActionHandler(SemanticsActions.Tap, _onTap);
+        }
+    }
+}
+
 public sealed class RenderInkSplash : RenderProxyBox
 {
     private Color? _splashColor;

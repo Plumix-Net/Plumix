@@ -302,6 +302,10 @@ public sealed class Checkbox : StatefulWidget
                 style: style,
                 focusNode: CurrentWidget.FocusNode,
                 isSelected: isSelected,
+                includeSemanticSelected: false,
+                isSemanticButton: false,
+                isSemanticChecked: isSelected,
+                semanticLabel: CurrentWidget.SemanticLabel,
                 splashRadius: splashRadius,
                 autofocus: CurrentWidget.Autofocus);
         }

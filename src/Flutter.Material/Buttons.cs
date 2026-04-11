@@ -1588,6 +1588,10 @@ internal sealed class MaterialButtonCore : StatefulWidget
         Action<bool>? onHoverChanged = null,
         FocusNode? focusNode = null,
         bool isSelected = false,
+        bool includeSemanticSelected = true,
+        bool isSemanticButton = true,
+        bool? isSemanticChecked = null,
+        string? semanticLabel = null,
         double? splashRadius = null,
         bool autofocus = false,
         Key? key = null) : base(key)
@@ -1599,6 +1603,10 @@ internal sealed class MaterialButtonCore : StatefulWidget
         OnHoverChanged = onHoverChanged;
         FocusNode = focusNode;
         IsSelected = isSelected;
+        IncludeSemanticSelected = includeSemanticSelected;
+        IsSemanticButton = isSemanticButton;
+        IsSemanticChecked = isSemanticChecked;
+        SemanticLabel = semanticLabel;
         SplashRadius = splashRadius;
         Autofocus = autofocus;
     }
@@ -1616,6 +1624,14 @@ internal sealed class MaterialButtonCore : StatefulWidget
     public FocusNode? FocusNode { get; }
 
     public bool IsSelected { get; }
+
+    public bool IncludeSemanticSelected { get; }
+
+    public bool IsSemanticButton { get; }
+
+    public bool? IsSemanticChecked { get; }
+
+    public string? SemanticLabel { get; }
 
     public double? SplashRadius { get; }
 
@@ -2158,9 +2174,15 @@ internal sealed class MaterialButtonCore : StatefulWidget
 
             // Flutter ButtonStyleButton keeps a larger padded tap-target box around the
             // visual material; this wrapper aligns layout spacing with that behavior.
-            return new ButtonTapTargetPadding(
+            var tapTargetResult = new ButtonTapTargetPadding(
                 minSize: ResolveTapTargetPaddingMinSize(tapTargetSize),
                 child: result);
+
+            return new Semantics(
+                label: widget.SemanticLabel,
+                flags: ResolveSemanticsFlags(widget, enabled),
+                onTap: enabled ? widget.OnPressed : null,
+                child: tapTargetResult);
         }
 
         private static Size ResolveTapTargetPaddingMinSize(MaterialTapTargetSize tapTargetSize)
@@ -2170,6 +2192,32 @@ internal sealed class MaterialButtonCore : StatefulWidget
                 MaterialTapTargetSize.ShrinkWrap => new Size(0, 0),
                 _ => new Size(48, 48)
             };
+        }
+
+        private static SemanticsFlags ResolveSemanticsFlags(MaterialButtonCore widget, bool enabled)
+        {
+            var flags = SemanticsFlags.None;
+            if (widget.IsSemanticButton)
+            {
+                flags |= SemanticsFlags.IsButton;
+            }
+
+            if (enabled)
+            {
+                flags |= SemanticsFlags.IsEnabled;
+            }
+
+            if (widget.IncludeSemanticSelected && widget.IsSelected)
+            {
+                flags |= SemanticsFlags.IsSelected;
+            }
+
+            if (widget.IsSemanticChecked == true)
+            {
+                flags |= SemanticsFlags.IsChecked;
+            }
+
+            return flags;
         }
 
         private void AttachFocusNode(FocusNode? externalNode)

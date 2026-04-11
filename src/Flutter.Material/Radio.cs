@@ -258,6 +258,9 @@ public sealed class Radio<T> : StatefulWidget
                 style: style,
                 focusNode: CurrentWidget.FocusNode,
                 isSelected: selected,
+                includeSemanticSelected: false,
+                isSemanticButton: false,
+                isSemanticChecked: selected,
                 splashRadius: splashRadius,
                 autofocus: CurrentWidget.Autofocus);
         }

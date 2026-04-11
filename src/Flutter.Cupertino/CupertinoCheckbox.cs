@@ -226,12 +226,34 @@ public sealed class CupertinoCheckbox : StatefulWidget
                     child: result);
             }
 
-            return new Focus(
+            var focusedResult = new Focus(
                 focusNode: _focusNode,
                 autofocus: CurrentWidget.Autofocus,
                 canRequestFocus: Enabled,
                 onKeyEvent: HandleKeyEvent,
                 child: result);
+
+            return new Semantics(
+                label: CurrentWidget.SemanticLabel,
+                flags: ResolveSemanticsFlags(),
+                onTap: Enabled ? HandleTap : null,
+                child: focusedResult);
+        }
+
+        private SemanticsFlags ResolveSemanticsFlags()
+        {
+            var flags = SemanticsFlags.None;
+            if (Enabled)
+            {
+                flags |= SemanticsFlags.IsEnabled;
+            }
+
+            if (CurrentWidget.Value == true)
+            {
+                flags |= SemanticsFlags.IsChecked;
+            }
+
+            return flags;
         }
 
         private Widget BuildCheckboxBody(

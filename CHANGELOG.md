@@ -14,6 +14,14 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 ### Changed
 
+- Added framework semantics annotation plumbing for interactive controls:
+  - introduced `Semantics` widget + `RenderSemanticsAnnotations` (`src/Flutter/Widgets/Semantics.cs`, `src/Flutter/Rendering/Proxy.RenderBox.cs`);
+  - `MaterialButtonCore` now emits accessibility semantics (`label`, enabled/tap action, button/selected/checked flags) and `Checkbox`/`Switch`/`Radio` now wire toggle-state semantics (`IsChecked`) through shared control composition;
+  - adaptive Cupertino checkbox path now propagates semantic label and toggle-state flags via framework semantics wrapper.
+- Added focused regression coverage for control semantics labels/states:
+  - `src/Flutter.Tests/MaterialCheckboxTests.cs` now asserts semantic-label propagation plus checked/enabled/tap semantics;
+  - `src/Flutter.Tests/MaterialSwitchTests.cs` now asserts semantic-label propagation plus enabled/unchecked/tap semantics.
+- Hardened Material checkbox/switch test isolation for global scheduler/focus state by placing `MaterialCheckboxTests` and `MaterialSwitchTests` in `SchedulerTestCollection`.
 - Expanded framework Material drawer support in `src/Flutter.Material/Scaffold.cs`: `Scaffold` now supports both `drawer` and `endDrawer`, plus `ScaffoldState` APIs (`OpenDrawer/CloseDrawer` and `OpenEndDrawer/CloseEndDrawer`) with mutual-exclusion behavior.
 - Added drawer gesture+motion baseline parity in `Scaffold`: edge swipe open (`drawerEdgeDragWidth`, `drawerEnableOpenDragGesture`, `endDrawerEnableOpenDragGesture`), horizontal drag-to-close for both start/end drawers, settle animation on open/close transitions, and velocity-aware drag-release settle (`fling`-style open/close decision) with scrim opacity tied to drawer progress.
 - Added app-bar end-drawer implied action support in `src/Flutter.Material/Scaffold.cs`: when `Scaffold.endDrawer` exists and actions are absent, `AppBar` now auto-inserts trailing `IconButton(Icons.Menu)` (`automaticallyImplyActions` opt-out).

@@ -484,7 +484,11 @@ public sealed class Switch : StatefulWidget
                     adaptiveResult = new Opacity(CupertinoDisabledOpacity, adaptiveResult);
                 }
 
-                return adaptiveResult;
+                return new Semantics(
+                    label: CurrentWidget.SemanticLabel,
+                    flags: ResolveToggleSemanticsFlags(enabled),
+                    onTap: enabled ? HandleTap : null,
+                    child: adaptiveResult);
             }
 
             var style = new ButtonStyle(
@@ -513,6 +517,10 @@ public sealed class Switch : StatefulWidget
                 onHoverChanged: HandleHoverChanged,
                 focusNode: _focusNode,
                 isSelected: CurrentWidget.Value,
+                includeSemanticSelected: false,
+                isSemanticButton: false,
+                isSemanticChecked: CurrentWidget.Value,
+                semanticLabel: CurrentWidget.SemanticLabel,
                 splashRadius: splashRadius,
                 autofocus: CurrentWidget.Autofocus);
 
@@ -524,6 +532,22 @@ public sealed class Switch : StatefulWidget
                 child: button);
 
             return result;
+        }
+
+        private SemanticsFlags ResolveToggleSemanticsFlags(bool enabled)
+        {
+            var flags = SemanticsFlags.None;
+            if (enabled)
+            {
+                flags |= SemanticsFlags.IsEnabled;
+            }
+
+            if (CurrentWidget.Value)
+            {
+                flags |= SemanticsFlags.IsChecked;
+            }
+
+            return flags;
         }
 
         private void AttachFocusNode(FocusNode? externalNode)

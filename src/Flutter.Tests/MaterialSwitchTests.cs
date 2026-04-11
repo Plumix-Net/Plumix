@@ -11,6 +11,7 @@ using Xunit;
 
 namespace Flutter.Tests;
 
+[Collection(SchedulerTestCollection.Name)]
 public sealed class MaterialSwitchTests
 {
     [Fact]
@@ -496,6 +497,37 @@ public sealed class MaterialSwitchTests
     }
 
     [Fact]
+    public void Switch_SemanticLabel_PropagatesEnabledSemanticsAndUncheckedState()
+    {
+        FocusManager.Instance.ResetForTests();
+        try
+        {
+            using var harness = new WidgetRenderHarness(
+                new Theme(
+                    data: ThemeData.Light,
+                    child: new Switch(
+                        value: false,
+                        onChanged: _ => { },
+                        semanticLabel: "Notifications")));
+
+            var semanticsRoot = harness.PumpAndGetSemantics(new Size(220, 120));
+            Assert.NotNull(semanticsRoot);
+
+            var semanticsNode = FindFirstSemanticsNode(
+                semanticsRoot!,
+                static node => node.Label == "Notifications");
+            Assert.NotNull(semanticsNode);
+            Assert.True(semanticsNode!.Flags.HasFlag(SemanticsFlags.IsEnabled));
+            Assert.False(semanticsNode.Flags.HasFlag(SemanticsFlags.IsChecked));
+            Assert.True(semanticsNode.Actions.HasFlag(SemanticsActions.Tap));
+        }
+        finally
+        {
+            FocusManager.Instance.ResetForTests();
+        }
+    }
+
+    [Fact]
     public void Switch_KeyboardActivation_TogglesFalseToTrue()
     {
         FocusManager.Instance.ResetForTests();
@@ -653,6 +685,25 @@ public sealed class MaterialSwitchTests
                 timestampUtc: DateTime.UtcNow));
     }
 
+    private static SemanticsNode? FindFirstSemanticsNode(SemanticsNode node, Func<SemanticsNode, bool> predicate)
+    {
+        if (predicate(node))
+        {
+            return node;
+        }
+
+        foreach (var child in node.Children)
+        {
+            var found = FindFirstSemanticsNode(child, predicate);
+            if (found is not null)
+            {
+                return found;
+            }
+        }
+
+        return null;
+    }
+
     private static Color ApplyOpacity(Color color, double opacity)
     {
         var alpha = (byte)Math.Clamp((int)(255 * opacity), 0, 255);
@@ -686,6 +737,14 @@ public sealed class MaterialSwitchTests
             _pipeline.FlushLayout(size);
             _pipeline.FlushCompositingBits();
             _pipeline.FlushPaint();
+        }
+
+        public SemanticsNode? PumpAndGetSemantics(Size size)
+        {
+            Pump(size);
+            _pipeline.RequestSemanticsUpdate();
+            _pipeline.FlushSemantics();
+            return _pipeline.SemanticsOwner.RootNode;
         }
 
         public void Dispose()
