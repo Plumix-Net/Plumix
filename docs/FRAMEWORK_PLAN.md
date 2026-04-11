@@ -404,12 +404,14 @@ Progress update (2026-03-19):
   - expanded theme-token surface with `ThemeData.PrimaryContainerColor` and `ThemeData.OnPrimaryContainerColor` so M3 FAB defaults map to dedicated container tokens instead of reusing unrelated button tokens;
   - added focused `MaterialFloatingActionButtonTests` coverage for size/shape defaults across variants, M3 color token defaults, extended directional padding behavior, theme-vs-widget override precedence, and elevation-state transitions (`default/hovered/pressed/disabled`);
   - added C#/Dart sample parity demo route/page for runtime verification (`FloatingActionButton` route in both sample menus) including variant probes, extended open/collapsed behavior, and theme override probe.
-- Added Material `BottomNavigationBar` baseline in `Flutter.Material`:
-  - introduced framework `BottomNavigationBar` + `BottomNavigationBarItem` with fixed-layout baseline behavior for current scope (item guards, selected/unselected color resolution, active-icon rendering, and tap callback dispatch);
-  - added focused `MaterialBottomNavigationBarTests` coverage for constructor guards, default theme color mapping (`canvas`/`primary`/`onSurfaceVariant`), selected `activeIcon` rendering, and tap index callback wiring;
-  - restructured C#/Dart sample gallery menu using bottom tabs (`Material`, `Cupertino`, `General`) while preserving existing route definitions and detail-page flow.
+- Extended Material `BottomNavigationBar` parity in `Flutter.Material`:
+  - expanded framework `BottomNavigationBar` API parity with Flutter-like type/default wiring: `BottomNavigationBarType` (`fixed`/`shifting`) now resolves by precedence (`widget -> theme -> item-count default`), with shifting background-color resolution from selected item `backgroundColor`;
+  - added dedicated bottom-navigation theming primitives (`BottomNavigationBarThemeData`, inherited `BottomNavigationBarTheme`, and `ThemeData.BottomNavigationBarTheme`) with Flutter-like precedence (`widget -> bottomNavigationBarTheme -> defaults`);
+  - expanded visual/default behavior for current scope: nullable label-visibility flags (`showSelectedLabels` / `showUnselectedLabels`) with type-aware defaults, selected/unselected label-style color precedence, selected/unselected icon-theme support, optional elevation handling, and `BottomNavigationBarItem` parity fields (`key`, `tooltip`);
+  - expanded `MaterialBottomNavigationBarTests` coverage for theme-default precedence, widget-over-theme overrides, auto-shifting defaults (background + unselected-label visibility), label-style color precedence, theme-driven `type` override, and icon-theme pair guards;
+  - retained tab-structured C#/Dart sample gallery parity (`Material` / `Cupertino` / `General`) without route-map divergence.
 - Remaining divergence for bottom navigation bar in current framework scope:
-  - currently covers fixed-layout baseline only; shifting-type animation/background behavior, bottom-navigation theming objects, label-visibility mode toggles, and semantics/tooltips are pending follow-up parity work.
+  - full Flutter shifting animation choreography (radial background splash + animated flex/label transitions) and dedicated tooltip/semantics wrappers remain pending due missing framework primitives in current scope.
 - Remaining divergence for floating action button in current framework scope:
   - `heroTag`/`Tooltip` wrappers, cursor/feedback toggles, and clip-behavior parity are still pending due missing framework primitives and are intentionally out of this baseline pass.
 

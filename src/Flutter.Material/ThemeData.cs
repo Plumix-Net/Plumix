@@ -145,6 +145,7 @@ public sealed record ThemeData
     private FilledButtonThemeData? _filledButtonTheme;
     private IconButtonThemeData? _iconButtonTheme;
     private FloatingActionButtonThemeData? _floatingActionButtonTheme;
+    private BottomNavigationBarThemeData? _bottomNavigationBarTheme;
     private CheckboxThemeData? _checkboxTheme;
     private SwitchThemeData? _switchTheme;
     private RadioThemeData? _radioTheme;
@@ -185,6 +186,7 @@ public sealed record ThemeData
         FilledButtonThemeData? filledButtonTheme = null,
         IconButtonThemeData? iconButtonTheme = null,
         FloatingActionButtonThemeData? floatingActionButtonTheme = null,
+        BottomNavigationBarThemeData? bottomNavigationBarTheme = null,
         CheckboxThemeData? checkboxTheme = null,
         SwitchThemeData? switchTheme = null,
         RadioThemeData? radioTheme = null)
@@ -224,6 +226,7 @@ public sealed record ThemeData
         _filledButtonTheme = filledButtonTheme;
         _iconButtonTheme = iconButtonTheme;
         _floatingActionButtonTheme = floatingActionButtonTheme;
+        _bottomNavigationBarTheme = bottomNavigationBarTheme;
         _checkboxTheme = checkboxTheme;
         _switchTheme = switchTheme;
         _radioTheme = radioTheme;
@@ -325,6 +328,12 @@ public sealed record ThemeData
     {
         get => _floatingActionButtonTheme ?? new FloatingActionButtonThemeData();
         init => _floatingActionButtonTheme = value;
+    }
+
+    public BottomNavigationBarThemeData BottomNavigationBarTheme
+    {
+        get => _bottomNavigationBarTheme ?? new BottomNavigationBarThemeData();
+        init => _bottomNavigationBarTheme = value;
     }
 
     public CheckboxThemeData CheckboxTheme

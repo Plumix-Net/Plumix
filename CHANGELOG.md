@@ -29,6 +29,29 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 - Documentation policy update: Dart-to-C# control/widget work now uses mandatory parity-first porting mode (`docs/ai/PORTING_MODE.md`) with strict `1:1` default behavior, required divergence logging, and explicit parity-validation workflow references in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/INVARIANTS.md`, `docs/ai/MODULE_INDEX.md`, `docs/ai/FEATURE_TEMPLATE.md`, `docs/ai/TEST_MATRIX.md`, and `docs/ai/PARITY_MATRIX.md`.
 - Agent workflow scope update: parity tasks now default to `one request = one control closed end-to-end` (not micro-iterations), with expanded context-budget guidance for control work (`12-20` initial files, up to `20`) and aligned rules in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/PORTING_MODE.md`, `docs/ai/MODULE_INDEX.md`, and `docs/ai/FEATURE_TEMPLATE.md`.
 
+## [2026-04-11] - M4 BottomNavigationBar parity expansion
+
+### Changed
+
+- Expanded framework `BottomNavigationBar` parity surface in `src/Flutter.Material/BottomNavigationBar.cs`:
+  - added `BottomNavigationBarType` (`fixed`/`shifting`) with Flutter-like effective-type precedence (`widget -> theme -> item-count default`);
+  - added shifting background resolution from selected-item `BottomNavigationBarItem.backgroundColor`;
+  - added nullable label-visibility flags (`showSelectedLabels` / `showUnselectedLabels`) with type-aware defaults (`fixed`: unselected labels shown, `shifting`: hidden);
+  - added label-style + icon-theme parity surface (`selected/unselectedLabelStyle`, `selected/unselectedIconTheme`) with precedence and validation guards (icon themes must be provided as a pair);
+  - added optional `elevation` handling and expanded item API with `key` and `tooltip`.
+- Added dedicated bottom-navigation theming primitives:
+  - new `BottomNavigationBarThemeData` and inherited `BottomNavigationBarTheme` in `src/Flutter.Material/BottomNavigationBarTheme.cs`;
+  - new `ThemeData.BottomNavigationBarTheme` integration in `src/Flutter.Material/ThemeData.cs`.
+- Expanded focused regression coverage in `src/Flutter.Tests/MaterialBottomNavigationBarTests.cs` for:
+  - theme-default precedence,
+  - widget-over-theme overrides,
+  - auto/type-driven shifting defaults (background + label visibility),
+  - label-style color precedence,
+  - icon-theme pair guard behavior.
+- Updated tracking docs for this pass (`docs/FRAMEWORK_PLAN.md`, `docs/ai/MODULE_INDEX.md`, `docs/ai/TEST_MATRIX.md`, and `docs/ai/material-2026-04-11-bottom-navigation-bar-parity-closeout.md`).
+- Remaining documented divergence:
+  - full Flutter shifting animation choreography (radial splash + animated tile flex/label transitions) and dedicated tooltip/semantics wrappers are still pending due missing framework primitives.
+
 ## [2026-04-10] - M4 BottomNavigationBar baseline + tabbed sample menu
 
 ### Changed
