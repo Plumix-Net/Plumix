@@ -408,7 +408,10 @@ Progress update (2026-03-19):
   - expanded framework `BottomNavigationBar` API parity with Flutter-like type/default wiring: `BottomNavigationBarType` (`fixed`/`shifting`) now resolves by precedence (`widget -> theme -> item-count default`), with shifting background-color resolution from selected item `backgroundColor`;
   - added dedicated bottom-navigation theming primitives (`BottomNavigationBarThemeData`, inherited `BottomNavigationBarTheme`, and `ThemeData.BottomNavigationBarTheme`) with Flutter-like precedence (`widget -> bottomNavigationBarTheme -> defaults`);
   - expanded visual/default behavior for current scope: nullable label-visibility flags (`showSelectedLabels` / `showUnselectedLabels`) with type-aware defaults, selected/unselected label-style color precedence, selected/unselected icon-theme support, optional elevation handling, and `BottomNavigationBarItem` parity fields (`key`, `tooltip`);
-  - expanded `MaterialBottomNavigationBarTests` coverage for theme-default precedence, widget-over-theme overrides, auto-shifting defaults (background + unselected-label visibility), label-style color precedence, theme-driven `type` override, and icon-theme pair guards;
+  - completed stateful shifting choreography for current framework scope: animated selected/unselected icon-size+color transitions, animated label visibility transitions, animated shifting tile-width flex transitions, and radial selected-item background flood transition;
+  - introduced framework `Tooltip` primitive in `src/Flutter.Material/Tooltip.cs` and wired `BottomNavigationBarItem.tooltip` wrapping through `BottomNavigationBar` tiles;
+  - added per-tile semantics wrapper parity: tile semantics now include button/selected/enabled flags with tap action wiring, hidden-label fallback semantics when visual labels are suppressed, and index-label semantics (`Tab {index} of {count}`);
+  - expanded `MaterialBottomNavigationBarTests` coverage for theme-default precedence, widget-over-theme overrides, auto-shifting defaults (background + unselected-label visibility), label-style color precedence, theme-driven `type` override, icon-theme pair guards, semantics-tree coverage for enabled/disabled tile states plus index labels, tooltip hover show/hide behavior, and shifting selection-width animation behavior;
   - retained tab-structured C#/Dart sample gallery parity (`Material` / `Cupertino` / `General`) without route-map divergence.
 - Added framework semantics annotation primitive and control semantics wiring:
   - introduced widget/render semantics wrappers (`Semantics` + `RenderSemanticsAnnotations`) for label/flags/tap-action annotations in framework widget composition;
@@ -416,7 +419,7 @@ Progress update (2026-03-19):
   - `Checkbox`/`Switch`/`Radio` now map toggle state to `IsChecked` semantics, and adaptive Cupertino checkbox/switch paths now propagate semantic labels and toggle-state semantics;
   - expanded `MaterialCheckboxTests` and `MaterialSwitchTests` with focused semantic-label/state regression coverage.
 - Remaining divergence for bottom navigation bar in current framework scope:
-  - full Flutter shifting animation choreography (radial background splash + animated flex/label transitions) and dedicated tooltip wrappers remain pending due missing framework primitives in current scope.
+  - semantics index labels are still framework-localized as fixed English (`"Tab {i} of {n}"`) until Material localization primitives are introduced.
 - Remaining divergence for floating action button in current framework scope:
   - `heroTag`/`Tooltip` wrappers, cursor/feedback toggles, and clip-behavior parity are still pending due missing framework primitives and are intentionally out of this baseline pass.
 

@@ -37,6 +37,29 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 - Documentation policy update: Dart-to-C# control/widget work now uses mandatory parity-first porting mode (`docs/ai/PORTING_MODE.md`) with strict `1:1` default behavior, required divergence logging, and explicit parity-validation workflow references in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/INVARIANTS.md`, `docs/ai/MODULE_INDEX.md`, `docs/ai/FEATURE_TEMPLATE.md`, `docs/ai/TEST_MATRIX.md`, and `docs/ai/PARITY_MATRIX.md`.
 - Agent workflow scope update: parity tasks now default to `one request = one control closed end-to-end` (not micro-iterations), with expanded context-budget guidance for control work (`12-20` initial files, up to `20`) and aligned rules in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/PORTING_MODE.md`, `docs/ai/MODULE_INDEX.md`, and `docs/ai/FEATURE_TEMPLATE.md`.
 
+## [2026-04-11] - M4 BottomNavigationBar semantics + shifting/tooltip parity hardening
+
+### Changed
+
+- Hardened framework `BottomNavigationBar` accessibility semantics in `src/Flutter.Material/BottomNavigationBar.cs`:
+  - each tile is now wrapped with explicit semantics flags (`IsButton`, `IsEnabled` when tappable, and `IsSelected` for the active tab) and tap-action routing;
+  - tabs now expose index-label semantics (`Tab {index} of {count}`), and hidden unselected labels now keep label semantics through fallback wrappers when visual labels are suppressed.
+- Completed stateful shifting behavior in `src/Flutter.Material/BottomNavigationBar.cs`:
+  - animated selected/unselected icon color+size transitions,
+  - animated label visibility transitions,
+  - animated tile-width (`Expanded.flex`) transitions in shifting mode,
+  - radial selected-item background flood transition for shifting color changes.
+- Added framework Material `Tooltip` primitive in `src/Flutter.Material/Tooltip.cs` and wired `BottomNavigationBarItem.tooltip` wrapping for bottom-nav tiles.
+- Added focused semantics regression coverage in `src/Flutter.Tests/MaterialBottomNavigationBarTests.cs`:
+  - verifies button/enabled/selected/tap semantics and index-label exposure,
+  - verifies disabled bars omit enabled/tap semantics.
+- Added focused behavior regression coverage in `src/Flutter.Tests/MaterialBottomNavigationBarTests.cs`:
+  - verifies tooltip show/hide behavior on hover enter/exit transitions,
+  - verifies shifting selection changes animate tile widths between source/target tabs.
+- Updated tracking docs for this parity pass (`docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`, and `docs/ai/material-2026-04-11-bottom-navigation-bar-semantics-parity.md`).
+- Remaining documented divergence:
+  - semantics index labels currently use fixed English (`"Tab {i} of {n}"`) until Material localization primitives are added.
+
 ## [2026-04-11] - M4 BottomNavigationBar parity expansion
 
 ### Changed

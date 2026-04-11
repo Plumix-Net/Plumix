@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
+using Flutter;
 using Flutter.Gestures;
 using Flutter.Material;
 using Flutter.Rendering;
@@ -9,6 +10,7 @@ using Xunit;
 
 namespace Flutter.Tests;
 
+[Collection(SchedulerTestCollection.Name)]
 public sealed class MaterialBottomNavigationBarTests
 {
     [Fact]
@@ -150,6 +152,196 @@ public sealed class MaterialBottomNavigationBarTests
         finally
         {
             binding.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void BottomNavigationBar_Semantics_ExposeButtonSelectionAndIndexLabel()
+    {
+        using var harness = new WidgetRenderHarness(
+            WrapWithThemeAndMediaQuery(
+                ThemeData.Light,
+                new BottomNavigationBar(
+                    currentIndex: 1,
+                    onTap: _ => { },
+                    showUnselectedLabels: false,
+                    items:
+                    [
+                        new BottomNavigationBarItem(icon: new Icon(Icons.Menu), label: "First"),
+                        new BottomNavigationBarItem(icon: new Icon(Icons.InfoOutline), label: "Second"),
+                        new BottomNavigationBarItem(icon: new Icon(Icons.Check), label: "Third"),
+                    ])));
+
+        var semanticsRoot = harness.PumpAndGetSemantics(new Size(320, 120));
+        Assert.NotNull(semanticsRoot);
+
+        var firstIndexNode = FindFirstSemanticsNode(
+            semanticsRoot!,
+            static node => string.Equals(node.Label, "Tab 1 of 3", StringComparison.Ordinal));
+        Assert.NotNull(firstIndexNode);
+
+        var secondIndexNode = FindFirstSemanticsNode(
+            semanticsRoot,
+            static node => string.Equals(node.Label, "Tab 2 of 3", StringComparison.Ordinal));
+        Assert.NotNull(secondIndexNode);
+
+        var firstNode = FindFirstSemanticsNode(
+            semanticsRoot,
+            static node => node.Flags.HasFlag(SemanticsFlags.IsButton)
+                           && node.Label is not null
+                           && node.Label.Contains("First", StringComparison.Ordinal));
+        Assert.NotNull(firstNode);
+        Assert.True(firstNode.Flags.HasFlag(SemanticsFlags.IsButton));
+        Assert.True(firstNode.Flags.HasFlag(SemanticsFlags.IsEnabled));
+        Assert.False(firstNode.Flags.HasFlag(SemanticsFlags.IsSelected));
+        Assert.True(firstNode.Actions.HasFlag(SemanticsActions.Tap));
+
+        var selectedNode = FindFirstSemanticsNode(
+            semanticsRoot,
+            static node => node.Flags.HasFlag(SemanticsFlags.IsButton)
+                           && node.Flags.HasFlag(SemanticsFlags.IsSelected));
+        Assert.NotNull(selectedNode);
+        Assert.True(selectedNode.Flags.HasFlag(SemanticsFlags.IsSelected));
+        Assert.True(selectedNode.Flags.HasFlag(SemanticsFlags.IsButton));
+        Assert.True(selectedNode.Flags.HasFlag(SemanticsFlags.IsEnabled));
+        Assert.True(selectedNode.Actions.HasFlag(SemanticsActions.Tap));
+    }
+
+    [Fact]
+    public void BottomNavigationBar_DisabledSemantics_OmitEnabledFlagAndTapAction()
+    {
+        using var harness = new WidgetRenderHarness(
+            WrapWithThemeAndMediaQuery(
+                ThemeData.Light,
+                new BottomNavigationBar(
+                    currentIndex: 0,
+                    onTap: null,
+                    items:
+                    [
+                        new BottomNavigationBarItem(icon: new Icon(Icons.Menu), label: "First"),
+                        new BottomNavigationBarItem(icon: new Icon(Icons.InfoOutline), label: "Second"),
+                    ])));
+
+        var semanticsRoot = harness.PumpAndGetSemantics(new Size(320, 120));
+        Assert.NotNull(semanticsRoot);
+
+        var selectedNode = FindFirstSemanticsNode(
+            semanticsRoot!,
+            static node => node.Flags.HasFlag(SemanticsFlags.IsButton)
+                           && node.Flags.HasFlag(SemanticsFlags.IsSelected));
+        Assert.NotNull(selectedNode);
+        Assert.True(selectedNode!.Flags.HasFlag(SemanticsFlags.IsButton));
+        Assert.True(selectedNode.Flags.HasFlag(SemanticsFlags.IsSelected));
+        Assert.False(selectedNode.Flags.HasFlag(SemanticsFlags.IsEnabled));
+        Assert.False(selectedNode.Actions.HasFlag(SemanticsActions.Tap));
+    }
+
+    [Fact]
+    public void BottomNavigationBar_Tooltip_ShowsOnPointerEnter_AndHidesOnPointerExit()
+    {
+        Scheduler.ResetForTests();
+        var binding = GestureBinding.Instance;
+        binding.ResetForTests();
+        try
+        {
+            var bar = new BottomNavigationBar(
+                currentIndex: 0,
+                items:
+                [
+                    new BottomNavigationBarItem(icon: new Icon(Icons.Menu), label: "First", tooltip: "First tooltip"),
+                    new BottomNavigationBarItem(icon: new Icon(Icons.InfoOutline), label: "Second"),
+                ]);
+
+            using var harness = new WidgetRenderHarness(
+                WrapWithThemeAndMediaQuery(ThemeData.Light, bar));
+
+            harness.Pump(new Size(320, 120));
+            var renderRoot = harness.RenderView.Child;
+            Assert.Null(FindParagraphByText(renderRoot, "First tooltip"));
+
+            binding.HandlePointerEvent(
+                harness.RenderView,
+                new PointerHoverEvent(
+                    pointer: 501,
+                    kind: PointerDeviceKind.Mouse,
+                    position: new Point(40, 20),
+                    buttons: PointerButtons.None,
+                    timestampUtc: DateTime.UtcNow));
+            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.20));
+            harness.Pump(new Size(320, 120));
+            renderRoot = harness.RenderView.Child;
+            Assert.NotNull(FindParagraphByText(renderRoot, "First tooltip"));
+
+            binding.HandlePointerEvent(
+                harness.RenderView,
+                new PointerHoverEvent(
+                    pointer: 501,
+                    kind: PointerDeviceKind.Mouse,
+                    position: new Point(1200, 20),
+                    buttons: PointerButtons.None,
+                    timestampUtc: DateTime.UtcNow));
+            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.50));
+            harness.Pump(new Size(320, 120));
+            renderRoot = harness.RenderView.Child;
+            Assert.Null(FindParagraphByText(renderRoot, "First tooltip"));
+        }
+        finally
+        {
+            binding.ResetForTests();
+            Scheduler.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void BottomNavigationBar_ShiftingSelectionChange_AnimatesTileWidths()
+    {
+        Scheduler.ResetForTests();
+        try
+        {
+            var items = (IReadOnlyList<BottomNavigationBarItem>)
+            [
+                new BottomNavigationBarItem(icon: new Icon(Icons.Menu), label: "First", backgroundColor: Colors.DarkRed),
+                new BottomNavigationBarItem(icon: new Icon(Icons.InfoOutline), label: "Second", backgroundColor: Colors.DarkBlue),
+                new BottomNavigationBarItem(icon: new Icon(Icons.Check), label: "Third", backgroundColor: Colors.DarkGreen),
+                new BottomNavigationBarItem(icon: new Icon(Icons.Close), label: "Fourth", backgroundColor: Colors.DarkSlateGray),
+            ];
+
+            using var harness = new WidgetRenderHarness(
+                WrapWithThemeAndMediaQuery(
+                    ThemeData.Light,
+                    new BottomNavigationBar(
+                        currentIndex: 0,
+                        items: items)));
+
+            harness.Pump(new Size(360, 140));
+            var initialWidths = GetBottomNavigationTileWidths(harness.RenderView.Child, items.Count);
+            Assert.Equal(items.Count, initialWidths.Count);
+
+            harness.UpdateRootWidget(
+                WrapWithThemeAndMediaQuery(
+                    ThemeData.Light,
+                    new BottomNavigationBar(
+                        currentIndex: 2,
+                        items: items)));
+
+            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.15));
+            harness.Pump(new Size(360, 140));
+            var midWidths = GetBottomNavigationTileWidths(harness.RenderView.Child, items.Count);
+            Assert.Equal(items.Count, midWidths.Count);
+
+            Assert.True(midWidths[0] < initialWidths[0]);
+            Assert.True(midWidths[2] > initialWidths[2]);
+
+            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.60));
+            harness.Pump(new Size(360, 140));
+            var finalWidths = GetBottomNavigationTileWidths(harness.RenderView.Child, items.Count);
+            Assert.Equal(items.Count, finalWidths.Count);
+
+            Assert.True(finalWidths[2] > finalWidths[0]);
+        }
+        finally
+        {
+            Scheduler.ResetForTests();
         }
     }
 
@@ -375,6 +567,66 @@ public sealed class MaterialBottomNavigationBarTests
         return result;
     }
 
+    private static SemanticsNode? FindFirstSemanticsNode(SemanticsNode node, Func<SemanticsNode, bool> predicate)
+    {
+        if (predicate(node))
+        {
+            return node;
+        }
+
+        foreach (var child in node.Children)
+        {
+            var found = FindFirstSemanticsNode(child, predicate);
+            if (found is not null)
+            {
+                return found;
+            }
+        }
+
+        return null;
+    }
+
+    private static List<double> GetBottomNavigationTileWidths(RenderObject? root, int childCount)
+    {
+        var row = FindBottomNavigationRow(root, childCount)
+                  ?? throw new InvalidOperationException("BottomNavigationBar row not found in render tree.");
+        var widths = new List<double>(childCount);
+        for (RenderBox? child = row.FirstChild; child != null; child = row.ChildAfter(child))
+        {
+            widths.Add(child.Size.Width);
+        }
+
+        return widths;
+    }
+
+    private static RenderFlex? FindBottomNavigationRow(RenderObject? root, int childCount)
+    {
+        if (root is null)
+        {
+            return null;
+        }
+
+        if (root is RenderFlex flex
+            && flex.Direction == Axis.Horizontal
+            && flex.ChildCount == childCount)
+        {
+            return flex;
+        }
+
+        RenderFlex? result = null;
+        root.VisitChildren(child =>
+        {
+            if (result is not null)
+            {
+                return;
+            }
+
+            result = FindBottomNavigationRow(child, childCount);
+        });
+
+        return result;
+    }
+
     private static Color ResolveBackgroundColor(RenderObject renderObject)
     {
         return renderObject switch
@@ -499,6 +751,20 @@ public sealed class MaterialBottomNavigationBarTests
             _pipeline.FlushLayout(size);
             _pipeline.FlushCompositingBits();
             _pipeline.FlushPaint();
+        }
+
+        public void UpdateRootWidget(Widget rootWidget)
+        {
+            _rootElement.Update(rootWidget);
+            _owner.FlushBuild();
+        }
+
+        public SemanticsNode? PumpAndGetSemantics(Size size)
+        {
+            Pump(size);
+            _pipeline.RequestSemanticsUpdate();
+            _pipeline.FlushSemantics();
+            return _pipeline.SemanticsOwner.RootNode;
         }
 
         public void Dispose()
