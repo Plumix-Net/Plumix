@@ -403,7 +403,8 @@ Progress update (2026-03-19):
   - added dedicated floating-action-button theming surface (`FloatingActionButtonThemeData`, inherited `FloatingActionButtonTheme`, and `ThemeData.FloatingActionButtonTheme`) with precedence wiring (`widget -> floatingActionButtonTheme -> mode defaults`);
   - expanded theme-token surface with `ThemeData.PrimaryContainerColor` and `ThemeData.OnPrimaryContainerColor` so M3 FAB defaults map to dedicated container tokens instead of reusing unrelated button tokens;
   - added focused `MaterialFloatingActionButtonTests` coverage for size/shape defaults across variants, M3 color token defaults, extended directional padding behavior, theme-vs-widget override precedence, and elevation-state transitions (`default/hovered/pressed/disabled`);
-  - added C#/Dart sample parity demo route/page for runtime verification (`FloatingActionButton` route in both sample menus) including variant probes, extended open/collapsed behavior, and theme override probe.
+  - added C#/Dart sample parity demo route/page for runtime verification (`FloatingActionButton` route in both sample menus) including variant probes, extended open/collapsed behavior, and theme override probe;
+  - added `tooltip` API wiring for all FAB constructors (`regular`/`small`/`large`/`extended`) and wrapped FAB composition with framework `Tooltip` when message is provided, with focused hover enter/exit show/hide regression coverage in `MaterialFloatingActionButtonTests`.
 - Extended Material `BottomNavigationBar` parity in `Flutter.Material`:
   - expanded framework `BottomNavigationBar` API parity with Flutter-like type/default wiring: `BottomNavigationBarType` (`fixed`/`shifting`) now resolves by precedence (`widget -> theme -> item-count default`), with shifting background-color resolution from selected item `backgroundColor`;
   - added dedicated bottom-navigation theming primitives (`BottomNavigationBarThemeData`, inherited `BottomNavigationBarTheme`, and `ThemeData.BottomNavigationBarTheme`) with Flutter-like precedence (`widget -> bottomNavigationBarTheme -> defaults`);
@@ -421,7 +422,7 @@ Progress update (2026-03-19):
 - Remaining divergence for bottom navigation bar in current framework scope:
   - semantics index labels are still framework-localized as fixed English (`"Tab {i} of {n}"`) until Material localization primitives are introduced.
 - Remaining divergence for floating action button in current framework scope:
-  - `heroTag`/`Tooltip` wrappers, cursor/feedback toggles, and clip-behavior parity are still pending due missing framework primitives and are intentionally out of this baseline pass.
+  - `heroTag`, cursor/feedback toggles, and clip-behavior parity are still pending due missing framework primitives and are intentionally out of this baseline pass.
 
 Initial scope:
 

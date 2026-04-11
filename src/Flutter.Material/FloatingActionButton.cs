@@ -21,6 +21,7 @@ public sealed class FloatingActionButton : StatelessWidget
     public FloatingActionButton(
         Widget? child,
         Action? onPressed,
+        string? tooltip = null,
         Color? foregroundColor = null,
         Color? backgroundColor = null,
         Color? focusColor = null,
@@ -38,6 +39,7 @@ public sealed class FloatingActionButton : StatelessWidget
         MaterialTapTargetSize? materialTapTargetSize = null,
         Key? key = null) : this(
             child: child,
+            tooltip: tooltip,
             extendedLabel: null,
             onPressed: onPressed,
             type: mini ? FloatingActionButtonType.Small : FloatingActionButtonType.Regular,
@@ -65,6 +67,7 @@ public sealed class FloatingActionButton : StatelessWidget
 
     private FloatingActionButton(
         Widget? child,
+        string? tooltip,
         Widget? extendedLabel,
         Action? onPressed,
         FloatingActionButtonType type,
@@ -104,6 +107,7 @@ public sealed class FloatingActionButton : StatelessWidget
         }
 
         Child = child;
+        Tooltip = tooltip;
         ExtendedLabel = extendedLabel;
         OnPressed = onPressed;
         Type = type;
@@ -128,6 +132,8 @@ public sealed class FloatingActionButton : StatelessWidget
     }
 
     public Widget? Child { get; }
+
+    public string? Tooltip { get; }
 
     private Widget? ExtendedLabel { get; }
 
@@ -174,6 +180,7 @@ public sealed class FloatingActionButton : StatelessWidget
     public static FloatingActionButton Small(
         Widget? child,
         Action? onPressed,
+        string? tooltip = null,
         Color? foregroundColor = null,
         Color? backgroundColor = null,
         Color? focusColor = null,
@@ -192,6 +199,7 @@ public sealed class FloatingActionButton : StatelessWidget
     {
         return new FloatingActionButton(
             child: child,
+            tooltip: tooltip,
             extendedLabel: null,
             onPressed: onPressed,
             type: FloatingActionButtonType.Small,
@@ -219,6 +227,7 @@ public sealed class FloatingActionButton : StatelessWidget
     public static FloatingActionButton Large(
         Widget? child,
         Action? onPressed,
+        string? tooltip = null,
         Color? foregroundColor = null,
         Color? backgroundColor = null,
         Color? focusColor = null,
@@ -237,6 +246,7 @@ public sealed class FloatingActionButton : StatelessWidget
     {
         return new FloatingActionButton(
             child: child,
+            tooltip: tooltip,
             extendedLabel: null,
             onPressed: onPressed,
             type: FloatingActionButtonType.Large,
@@ -266,6 +276,7 @@ public sealed class FloatingActionButton : StatelessWidget
         Action? onPressed,
         Widget? icon = null,
         bool isExtended = true,
+        string? tooltip = null,
         Color? foregroundColor = null,
         Color? backgroundColor = null,
         Color? focusColor = null,
@@ -287,6 +298,7 @@ public sealed class FloatingActionButton : StatelessWidget
     {
         return new FloatingActionButton(
             child: icon,
+            tooltip: tooltip,
             extendedLabel: label ?? throw new ArgumentNullException(nameof(label)),
             onPressed: onPressed,
             type: FloatingActionButtonType.Extended,
@@ -388,12 +400,21 @@ public sealed class FloatingActionButton : StatelessWidget
             TextStyle: MaterialStateProperty<TextStyle?>.All(extendedTextStyle),
             Alignment: Flutter.Rendering.Alignment.Center);
 
-        return new MaterialButtonCore(
+        Widget result = new MaterialButtonCore(
             child: ResolveChild(context, floatingActionButtonTheme, defaults),
             onPressed: OnPressed,
             style: style,
             focusNode: FocusNode,
             autofocus: Autofocus);
+
+        if (!string.IsNullOrWhiteSpace(Tooltip))
+        {
+            result = new Tooltip(
+                message: Tooltip!,
+                child: result);
+        }
+
+        return result;
     }
 
     private Widget ResolveChild(

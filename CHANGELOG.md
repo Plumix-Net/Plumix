@@ -14,6 +14,13 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 ### Changed
 
+- Extended framework Material `FloatingActionButton` parity in `src/Flutter.Material/FloatingActionButton.cs`:
+  - added `tooltip` API support for all FAB constructors (`regular`, `small`, `large`, `extended`);
+  - FAB build composition now wraps with framework `Tooltip` when a non-empty message is provided.
+- Added focused tooltip regression coverage in `src/Flutter.Tests/MaterialFloatingActionButtonTests.cs`:
+  - verifies FAB tooltip appears on hover enter and hides after hover exit animation completion.
+- Narrowed documented FAB divergence for current framework scope:
+  - remaining gaps are now `heroTag`, cursor/feedback toggles, and `clipBehavior` parity.
 - Added framework semantics annotation plumbing for interactive controls:
   - introduced `Semantics` widget + `RenderSemanticsAnnotations` (`src/Flutter/Widgets/Semantics.cs`, `src/Flutter/Rendering/Proxy.RenderBox.cs`);
   - `MaterialButtonCore` now emits accessibility semantics (`label`, enabled/tap action, button/selected/checked flags) and `Checkbox`/`Switch`/`Radio` now wire toggle-state semantics (`IsChecked`) through shared control composition;

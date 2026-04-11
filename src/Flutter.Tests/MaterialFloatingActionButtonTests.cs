@@ -316,6 +316,65 @@ public sealed class MaterialFloatingActionButtonTests
         Assert.Equal(5, RequirePrimaryShadow(decorated!).OffsetY);
     }
 
+    [Fact]
+    public void FloatingActionButton_Tooltip_ShowsOnPointerEnter_AndHidesOnPointerExit()
+    {
+        Scheduler.ResetForTests();
+        try
+        {
+            var owner = new BuildOwner();
+            var root = new TestRootElement(
+                new Theme(
+                    data: ThemeData.Light,
+                    child: new FloatingActionButton(
+                        child: new Icon(Icons.Add),
+                        tooltip: "Create item",
+                        onPressed: () => { })));
+
+            root.Attach(owner);
+            root.Mount(parent: null, newSlot: null);
+            owner.FlushBuild();
+
+            var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
+            Assert.Null(FindParagraphByText(renderRoot, "Create item"));
+
+            var tooltipListener = FindTooltipHoverPointerListener(renderRoot);
+            Assert.NotNull(tooltipListener);
+            tooltipListener!.HandleEvent(
+                new PointerEnterEvent(
+                    pointer: 701,
+                    kind: PointerDeviceKind.Mouse,
+                    position: new Point(10, 8),
+                    buttons: PointerButtons.None,
+                    timestampUtc: DateTime.UtcNow),
+                new BoxHitTestEntry(tooltipListener, new Point(10, 8)));
+            owner.FlushBuild();
+
+            renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
+            Assert.NotNull(FindParagraphByText(renderRoot, "Create item"));
+
+            tooltipListener = FindTooltipHoverPointerListener(renderRoot);
+            Assert.NotNull(tooltipListener);
+            tooltipListener!.HandleEvent(
+                new PointerExitEvent(
+                    pointer: 701,
+                    kind: PointerDeviceKind.Mouse,
+                    position: new Point(180, 8),
+                    buttons: PointerButtons.None,
+                    timestampUtc: DateTime.UtcNow),
+                new BoxHitTestEntry(tooltipListener, new Point(180, 8)));
+            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.50));
+            owner.FlushBuild();
+
+            renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
+            Assert.Null(FindParagraphByText(renderRoot, "Create item"));
+        }
+        finally
+        {
+            Scheduler.ResetForTests();
+        }
+    }
+
     private static BoxConstraints TightConstraints(double width, double height)
     {
         return new BoxConstraints(
@@ -430,6 +489,59 @@ public sealed class MaterialFloatingActionButtonTests
             }
 
             result = FindHoverPointerListener(child);
+        });
+        return result;
+    }
+
+    private static RenderPointerListener? FindTooltipHoverPointerListener(RenderObject? root)
+    {
+        if (root is null)
+        {
+            return null;
+        }
+
+        if (root is RenderPointerListener listener
+            && listener.OnPointerEnter != null
+            && listener.OnPointerExit != null
+            && listener.OnPointerDown != null)
+        {
+            return listener;
+        }
+
+        RenderPointerListener? result = null;
+        root.VisitChildren(child =>
+        {
+            if (result is not null)
+            {
+                return;
+            }
+
+            result = FindTooltipHoverPointerListener(child);
+        });
+        return result;
+    }
+
+    private static RenderParagraph? FindParagraphByText(RenderObject? root, string text)
+    {
+        if (root is null)
+        {
+            return null;
+        }
+
+        if (root is RenderParagraph paragraph && paragraph.Text == text)
+        {
+            return paragraph;
+        }
+
+        RenderParagraph? result = null;
+        root.VisitChildren(child =>
+        {
+            if (result is not null)
+            {
+                return;
+            }
+
+            result = FindParagraphByText(child, text);
         });
         return result;
     }
