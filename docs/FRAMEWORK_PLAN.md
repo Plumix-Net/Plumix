@@ -8,7 +8,7 @@ Use this block as the fastest machine-readable status summary.
 
 ```yaml
 framework_plan_version: 1
-last_updated: 2026-04-10
+last_updated: 2026-04-11
 north_star: "Flutter-like widget/rendering framework in C# with Avalonia as host infrastructure."
 current_phase: "M4 material library rewrite (theme/scaffold/material controls) in progress."
 status:
@@ -234,10 +234,14 @@ Progress update (2026-03-19):
 - Added `ThemeData.Brightness` (`Light` default) and aligned M2 dark-path app-bar defaults with Flutter behavior: when `UseMaterial3` is false and brightness is dark, unresolved app-bar defaults now resolve to `CanvasColor`/`OnSurfaceColor`.
 - Added `ThemeData.OnSurfaceVariantColor` and aligned app-bar actions icon default fallback to Flutter Material mode semantics: unresolved actions icon color now resolves to `OnSurfaceVariantColor` in M3 (with size fallback `24`) and keeps existing foreground fallback path in M2, while explicit `actionsIconTheme`/`iconTheme` overrides retain precedence.
 - Aligned app-bar leading `iconTheme` default fallback to Flutter Material mode semantics: when no explicit leading icon theme is provided, M3 now defaults to foreground + `size: 24`, while M2 keeps foreground fallback without forcing size.
-- Added app-bar implied-leading parity baseline: `AppBar` now exposes `automaticallyImplyLeading` (`true` default), auto-inserts a default dismiss leading on non-root navigator routes (`Navigator.CanPop`), and resolves icon by route mode (`PageRoute.FullscreenDialog == true` -> `IconButton(Icons.Close)`, otherwise `IconButton(Icons.ArrowBack)`), with `automaticallyImplyLeading: false` opt-out and focused `MaterialScaffoldTests` coverage.
-- Added Material drawer baseline in framework shell primitives: `Scaffold` now supports `drawer` slot with stateful `ScaffoldState` open/close APIs (`Scaffold.Of(context).OpenDrawer()/CloseDrawer()`), scrim overlay dismissal path, and inherited scaffold scope wiring.
-- Aligned `AppBar` implied-leading behavior with drawer-aware precedence: when `automaticallyImplyLeading` is enabled and `Scaffold.drawer` is present, default leading now resolves to `IconButton(Icons.Menu)` before navigator back/close fallback, with focused `MaterialScaffoldTests` coverage for menu/default suppression/open-close toggles and `Drawer` default width (`304`).
-- Documented drawer baseline divergence for follow-up: drag/animation drawer-controller behavior and `endDrawer` parity remain out of current scope.
+- Added app-bar implied-leading parity baseline: `AppBar` now exposes `automaticallyImplyLeading` (`true` default), auto-inserts a default dismiss leading using route dismissal semantics (`ModalRoute.ImpliesAppBarDismissal` with `Navigator.CanPop` fallback), and resolves icon by route mode (`PageRoute.FullscreenDialog == true` -> `IconButton(Icons.Close)`, otherwise `IconButton(Icons.ArrowBack)`), with `automaticallyImplyLeading: false` opt-out and focused `MaterialScaffoldTests` coverage.
+- Expanded Material drawer support in framework shell primitives: `Scaffold` now supports both `drawer` and `endDrawer` slots with stateful `ScaffoldState` APIs for both sides (`OpenDrawer/CloseDrawer`, `OpenEndDrawer/CloseEndDrawer`), start/end mutual exclusion, and inherited scaffold-scope wiring for drawer availability/open state.
+- Added drawer gesture+motion baseline parity in `Scaffold`: edge-swipe open support (`drawerEdgeDragWidth`, `drawerEnableOpenDragGesture`, `endDrawerEnableOpenDragGesture`), horizontal drag-close interactions for start/end drawers, settle animations for open/close transitions, and velocity-aware release settle (`fling`-style open/close) with scrim opacity tied to drawer progress.
+- Added drawer route-history handling baseline: `ScaffoldState` now keeps a `LocalHistoryEntry` while drawer interaction is active so navigator back closes the active drawer before route pop.
+- Updated navigator local-pop semantics for history entries: `NavigatorState.MaybePop` now treats route-local `WillPop` handling as consumed (handled) even on root routes, aligning with Flutter local-history behavior.
+- Expanded app-bar drawer implication behavior: existing drawer-aware implied leading remains (`Scaffold.drawer` -> leading `IconButton(Icons.Menu)`), and app bar now also auto-implies end-drawer trailing action (`Scaffold.endDrawer` with empty actions -> trailing `IconButton(Icons.Menu)`) with `automaticallyImplyActions` opt-out.
+- Updated `MaterialScaffoldTests` coverage for end-drawer implied actions, start/end drawer state APIs, start/end mutual exclusion, edge-drag open flows on both sides, and root-route drawer close on navigator back handling; updated `NavigationTests` coverage for root-route local-history `MaybePop` handling.
+- Documented remaining drawer divergence for follow-up: full Flutter `DrawerController` physics-accurate timing/curve parity remains out of current framework scope.
 - Updated sample gallery demo shells in both C# and Dart samples to use title-only app bars so non-root routes use default implied leading instead of custom back-button composition.
 - Continued Material button/theme parity hardening from Flutter M3 defaults:
   - `ThemeData.Light` default tokens now follow Flutter M3 light scheme for key surfaces/foregrounds used by sample controls (`primary`, `onSurface`, `secondaryContainer`, `onSecondaryContainer`, `surface/canvas`),

@@ -2,12 +2,12 @@
 
 ## Goal
 
-- Add baseline Material `Drawer` support to framework `Scaffold` with Flutter-like API surface and implied app-bar menu leading behavior.
+- Add Material `Drawer` + `endDrawer` support to framework `Scaffold` with Flutter-like state APIs, implied app-bar menu actions, and baseline edge-drag interactions.
 
 ## Non-Goals
 
-- Full Flutter `DrawerController` animation/drag pipeline (`edgeDragWidth`, fling settle physics, drawer route semantics).
-- `endDrawer` parity and drawer-theme object parity.
+- Full Flutter `DrawerController` animation/fling pipeline (physics-equivalent timing/curve parity).
+- Drawer-theme object parity.
 
 ## Context Budget Plan
 
@@ -54,8 +54,8 @@
   - [x] Constraint/layout behavior mapped
   - [x] Paint/visual semantics mapped
 - Divergence log (only if needed):
-  - `src/Flutter.Material/Scaffold.cs`: no `DrawerController` drag/animation pipeline yet; drawer opens/closes through state API and scrim tap dismissal only. Expected delta: no swipe-open/close and no animated transition. Follow-up condition: add `DrawerController`-equivalent primitive in Material shell phase.
-  - `src/Flutter.Material/Scaffold.cs`: drawer shape/theme/end-drawer parity is intentionally deferred. Expected delta: baseline rectangular/start-drawer behavior only.
+  - `src/Flutter.Material/Scaffold.cs`: no full `DrawerController` physics-equivalent timing/curve pipeline yet. Expected delta: framework now has settle animation, velocity-aware release settle, and route/local-history back handling, but still lacks full controller timing/curve parity.
+  - `src/Flutter.Material/Scaffold.cs`: drawer-theme object parity is intentionally deferred.
 
 ## Planned Changes
 
@@ -80,8 +80,15 @@
 - Parity-risk scenarios covered:
   - default drawer width (`304`),
   - implied `menu` leading for `Scaffold.drawer`,
+  - implied end-drawer menu action in app bar when explicit actions are absent,
   - `ScaffoldState.OpenDrawer/CloseDrawer` visibility toggles,
-  - no-op open path when drawer is absent.
+  - `ScaffoldState.OpenEndDrawer/CloseEndDrawer` visibility toggles,
+  - start/end mutual-exclusion behavior when opening opposite drawer,
+  - start/end edge-drag open flows,
+  - settle animation progression for open transitions,
+  - velocity-based drag-release settle for open/close decisions,
+  - root-route back handling (`Navigator.MaybePop`) closes drawer through local history before route pop,
+  - no-op open path when corresponding drawer slot is absent.
 
 ## Sample Parity Plan
 

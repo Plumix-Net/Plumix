@@ -1,6 +1,8 @@
 using Avalonia;
 using Avalonia.Media;
+using Flutter;
 using Flutter.Foundation;
+using Flutter.Gestures;
 using Flutter.Rendering;
 using Flutter.UI;
 using Flutter.Widgets;
@@ -112,26 +114,49 @@ public sealed class Drawer : StatelessWidget
     }
 }
 
+internal enum DrawerSide
+{
+    Start,
+    End
+}
+
 public sealed class Scaffold : StatefulWidget
 {
+    private const double DefaultDrawerEdgeDragWidth = 20.0;
     private static readonly Color DefaultDrawerScrimColor = Color.FromArgb(0x8A, 0x00, 0x00, 0x00);
 
     public Scaffold(
         Widget body,
         AppBar? appBar = null,
         Widget? drawer = null,
+        Widget? endDrawer = null,
         bool drawerBarrierDismissible = true,
         Color? drawerScrimColor = null,
+        double? drawerEdgeDragWidth = null,
+        bool drawerEnableOpenDragGesture = true,
+        bool endDrawerEnableOpenDragGesture = true,
         Widget? floatingActionButton = null,
         Widget? bottomNavigationBar = null,
         Color? backgroundColor = null,
         Key? key = null) : base(key)
     {
+        if (drawerEdgeDragWidth.HasValue
+            && (double.IsNaN(drawerEdgeDragWidth.Value)
+                || double.IsInfinity(drawerEdgeDragWidth.Value)
+                || drawerEdgeDragWidth.Value <= 0))
+        {
+            throw new ArgumentOutOfRangeException(nameof(drawerEdgeDragWidth), "Drawer edge drag width must be positive and finite.");
+        }
+
         Body = body;
         AppBar = appBar;
         Drawer = drawer;
+        EndDrawer = endDrawer;
         DrawerBarrierDismissible = drawerBarrierDismissible;
         DrawerScrimColor = drawerScrimColor;
+        DrawerEdgeDragWidth = drawerEdgeDragWidth;
+        DrawerEnableOpenDragGesture = drawerEnableOpenDragGesture;
+        EndDrawerEnableOpenDragGesture = endDrawerEnableOpenDragGesture;
         FloatingActionButton = floatingActionButton;
         BottomNavigationBar = bottomNavigationBar;
         BackgroundColor = backgroundColor;
@@ -143,9 +168,17 @@ public sealed class Scaffold : StatefulWidget
 
     public Widget? Drawer { get; }
 
+    public Widget? EndDrawer { get; }
+
     public bool DrawerBarrierDismissible { get; }
 
     public Color? DrawerScrimColor { get; }
+
+    public double? DrawerEdgeDragWidth { get; }
+
+    public bool DrawerEnableOpenDragGesture { get; }
+
+    public bool EndDrawerEnableOpenDragGesture { get; }
 
     public Widget? FloatingActionButton { get; }
 
@@ -173,6 +206,11 @@ public sealed class Scaffold : StatefulWidget
     {
         return drawerScrimColor ?? DefaultDrawerScrimColor;
     }
+
+    internal static double ResolveDrawerEdgeDragWidth(double? drawerEdgeDragWidth)
+    {
+        return drawerEdgeDragWidth ?? DefaultDrawerEdgeDragWidth;
+    }
 }
 
 internal sealed class ScaffoldScope : InheritedWidget
@@ -180,13 +218,17 @@ internal sealed class ScaffoldScope : InheritedWidget
     public ScaffoldScope(
         ScaffoldState scaffold,
         bool hasDrawer,
+        bool hasEndDrawer,
         bool isDrawerOpen,
+        bool isEndDrawerOpen,
         Widget child,
         Key? key = null) : base(key)
     {
         Scaffold = scaffold ?? throw new ArgumentNullException(nameof(scaffold));
         HasDrawer = hasDrawer;
+        HasEndDrawer = hasEndDrawer;
         IsDrawerOpen = isDrawerOpen;
+        IsEndDrawerOpen = isEndDrawerOpen;
         Child = child ?? throw new ArgumentNullException(nameof(child));
     }
 
@@ -194,7 +236,11 @@ internal sealed class ScaffoldScope : InheritedWidget
 
     public bool HasDrawer { get; }
 
+    public bool HasEndDrawer { get; }
+
     public bool IsDrawerOpen { get; }
+
+    public bool IsEndDrawerOpen { get; }
 
     public Widget Child { get; }
 
@@ -205,50 +251,180 @@ internal sealed class ScaffoldScope : InheritedWidget
         var oldScope = (ScaffoldScope)oldWidget;
         return !ReferenceEquals(Scaffold, oldScope.Scaffold)
                || HasDrawer != oldScope.HasDrawer
-               || IsDrawerOpen != oldScope.IsDrawerOpen;
+               || HasEndDrawer != oldScope.HasEndDrawer
+               || IsDrawerOpen != oldScope.IsDrawerOpen
+               || IsEndDrawerOpen != oldScope.IsEndDrawerOpen;
     }
 }
 
 public sealed class ScaffoldState : State
 {
+    private const double DefaultDrawerWidth = 304.0;
+    private const double OpenThreshold = 0.5;
+    private const double FlingVelocityThreshold = 0.35;
+    private const double VelocityHintPerDeltaFactor = 60.0;
+    private const double MinSettleDurationMs = 80.0;
+    private const double MaxSettleDurationMs = 246.0;
     private bool _isDrawerOpen;
+    private bool _isEndDrawerOpen;
+    private double _drawerProgress;
+    private double _endDrawerProgress;
+    private DrawerSide? _activeDragSide;
+    private double _activeDragProgress;
+    private double _lastDragVelocityHint;
+    private AnimationController? _drawerAnimationController;
+    private AnimationController? _endDrawerAnimationController;
+    private double _drawerAnimationFrom;
+    private double _drawerAnimationTo;
+    private double _endDrawerAnimationFrom;
+    private double _endDrawerAnimationTo;
+    private LocalHistoryEntry? _drawerHistoryEntry;
+    private ModalRoute? _drawerHistoryRoute;
+    private bool _isRemovingDrawerHistoryEntry;
+    private bool _isDisposed;
 
     private Scaffold CurrentWidget => (Scaffold)StateWidget;
 
     public bool HasDrawer => CurrentWidget.Drawer != null;
 
+    public bool HasEndDrawer => CurrentWidget.EndDrawer != null;
+
     public bool IsDrawerOpen => _isDrawerOpen;
+
+    public bool IsEndDrawerOpen => _isEndDrawerOpen;
+
+    public override void InitState()
+    {
+        _isDisposed = false;
+        _drawerProgress = 0;
+        _endDrawerProgress = 0;
+    }
+
+    public override void Dispose()
+    {
+        _isDisposed = true;
+        RemoveDrawerHistoryEntry();
+        StopSettleAnimation(DrawerSide.Start);
+        StopSettleAnimation(DrawerSide.End);
+    }
 
     public void OpenDrawer()
     {
-        if (!HasDrawer || _isDrawerOpen)
+        if (!HasDrawer)
         {
             return;
         }
 
-        SetState(() => _isDrawerOpen = true);
+        SetState(() =>
+        {
+            StopSettleAnimation(DrawerSide.Start);
+            StopSettleAnimation(DrawerSide.End);
+            CancelDrag();
+            _isDrawerOpen = true;
+            _isEndDrawerOpen = false;
+            StartSettleAnimation(DrawerSide.Start, targetProgress: 1.0, normalizedVelocityHint: null);
+            StartSettleAnimation(DrawerSide.End, targetProgress: 0.0, normalizedVelocityHint: null);
+        });
+    }
+
+    public void OpenEndDrawer()
+    {
+        if (!HasEndDrawer)
+        {
+            return;
+        }
+
+        SetState(() =>
+        {
+            StopSettleAnimation(DrawerSide.Start);
+            StopSettleAnimation(DrawerSide.End);
+            CancelDrag();
+            _isEndDrawerOpen = true;
+            _isDrawerOpen = false;
+            StartSettleAnimation(DrawerSide.End, targetProgress: 1.0, normalizedVelocityHint: null);
+            StartSettleAnimation(DrawerSide.Start, targetProgress: 0.0, normalizedVelocityHint: null);
+        });
     }
 
     public void CloseDrawer()
     {
-        if (!_isDrawerOpen)
+        if (!HasDrawer && ResolveDrawerProgress(DrawerSide.Start) <= 0)
         {
             return;
         }
 
-        SetState(() => _isDrawerOpen = false);
+        if (!_isDrawerOpen && ResolveDrawerProgress(DrawerSide.Start) <= 0)
+        {
+            return;
+        }
+
+        SetState(() =>
+        {
+            StopSettleAnimation(DrawerSide.Start);
+            _isDrawerOpen = false;
+            if (_activeDragSide == DrawerSide.Start)
+            {
+                CancelDrag();
+            }
+
+            StartSettleAnimation(DrawerSide.Start, targetProgress: 0.0, normalizedVelocityHint: null);
+        });
+    }
+
+    public void CloseEndDrawer()
+    {
+        if (!HasEndDrawer && ResolveDrawerProgress(DrawerSide.End) <= 0)
+        {
+            return;
+        }
+
+        if (!_isEndDrawerOpen && ResolveDrawerProgress(DrawerSide.End) <= 0)
+        {
+            return;
+        }
+
+        SetState(() =>
+        {
+            StopSettleAnimation(DrawerSide.End);
+            _isEndDrawerOpen = false;
+            if (_activeDragSide == DrawerSide.End)
+            {
+                CancelDrag();
+            }
+
+            StartSettleAnimation(DrawerSide.End, targetProgress: 0.0, normalizedVelocityHint: null);
+        });
     }
 
     public override void DidUpdateWidget(StatefulWidget oldWidget)
     {
-        if (!HasDrawer && _isDrawerOpen)
+        if (!HasDrawer)
         {
             _isDrawerOpen = false;
+            _drawerProgress = 0;
+            StopSettleAnimation(DrawerSide.Start);
+            if (_activeDragSide == DrawerSide.Start)
+            {
+                CancelDrag();
+            }
+        }
+
+        if (!HasEndDrawer)
+        {
+            _isEndDrawerOpen = false;
+            _endDrawerProgress = 0;
+            StopSettleAnimation(DrawerSide.End);
+            if (_activeDragSide == DrawerSide.End)
+            {
+                CancelDrag();
+            }
         }
     }
 
     public override Widget Build(BuildContext context)
     {
+        SyncDrawerHistoryEntry(context);
+
         var theme = Theme.Of(context);
         var effectiveBackground = CurrentWidget.BackgroundColor ?? theme.ScaffoldBackgroundColor;
 
@@ -283,40 +459,620 @@ public sealed class ScaffoldState : State
                 ]);
         }
 
-        if (_isDrawerOpen && CurrentWidget.Drawer != null)
-        {
-            var scrim = new Positioned(
-                left: 0,
-                top: 0,
-                right: 0,
-                bottom: 0,
-                child: new GestureDetector(
-                    behavior: HitTestBehavior.Opaque,
-                    onTap: CurrentWidget.DrawerBarrierDismissible ? CloseDrawer : null,
-                    child: new Container(
-                        color: Scaffold.ResolveDrawerScrimColor(CurrentWidget.DrawerScrimColor))));
+        var textDirection = Directionality.Of(context);
+        var drawerProgress = ResolveDrawerProgress(DrawerSide.Start);
+        var endDrawerProgress = ResolveDrawerProgress(DrawerSide.End);
+        var isStartDrawerVisible = IsDrawerVisible(DrawerSide.Start, drawerProgress);
+        var isEndDrawerVisible = IsDrawerVisible(DrawerSide.End, endDrawerProgress);
+        var isAnyDrawerVisible = isStartDrawerVisible || isEndDrawerVisible;
+        var overlayChildren = new List<Widget> { content };
 
+        if (!isAnyDrawerVisible)
+        {
+            if (ShouldEnableOpenDragGesture(DrawerSide.Start, theme))
+            {
+                overlayChildren.Add(BuildEdgeDragArea(DrawerSide.Start, textDirection));
+            }
+
+            if (ShouldEnableOpenDragGesture(DrawerSide.End, theme))
+            {
+                overlayChildren.Add(BuildEdgeDragArea(DrawerSide.End, textDirection));
+            }
+        }
+
+        if (isAnyDrawerVisible)
+        {
+            overlayChildren.Add(BuildScrim(Math.Max(drawerProgress, endDrawerProgress)));
+        }
+
+        if (isStartDrawerVisible && CurrentWidget.Drawer != null)
+        {
+            overlayChildren.Add(BuildDrawerPanel(
+                side: DrawerSide.Start,
+                textDirection: textDirection,
+                progress: drawerProgress,
+                child: CurrentWidget.Drawer));
+        }
+
+        if (isEndDrawerVisible && CurrentWidget.EndDrawer != null)
+        {
+            overlayChildren.Add(BuildDrawerPanel(
+                side: DrawerSide.End,
+                textDirection: textDirection,
+                progress: endDrawerProgress,
+                child: CurrentWidget.EndDrawer));
+        }
+
+        if (overlayChildren.Count > 1)
+        {
             content = new Stack(
                 fit: StackFit.Expand,
-                children:
-                [
-                    content,
-                    scrim,
-                    new Positioned(
-                        left: 0,
-                        top: 0,
-                        bottom: 0,
-                        child: CurrentWidget.Drawer),
-                ]);
+                children: overlayChildren);
         }
 
         return new ScaffoldScope(
             scaffold: this,
             hasDrawer: HasDrawer,
+            hasEndDrawer: HasEndDrawer,
             isDrawerOpen: _isDrawerOpen,
+            isEndDrawerOpen: _isEndDrawerOpen,
             child: new Container(
                 color: effectiveBackground,
                 child: content));
+    }
+
+    private Widget BuildEdgeDragArea(DrawerSide side, TextDirection textDirection)
+    {
+        var edgeWidth = Scaffold.ResolveDrawerEdgeDragWidth(CurrentWidget.DrawerEdgeDragWidth);
+        var isOnLeft = IsDrawerOnLeft(side, textDirection);
+        return new Positioned(
+            left: isOnLeft ? 0 : null,
+            top: 0,
+            right: isOnLeft ? null : 0,
+            bottom: 0,
+            width: edgeWidth,
+            child: new GestureDetector(
+                behavior: HitTestBehavior.Opaque,
+                onHorizontalDragStart: _ => BeginDrag(side),
+                onHorizontalDragUpdate: details => UpdateDrag(side, details.PrimaryDelta, textDirection),
+                onHorizontalDragEnd: details => EndDrag(side, details, textDirection)));
+    }
+
+    private Widget BuildScrim(double progress)
+    {
+        var baseColor = Scaffold.ResolveDrawerScrimColor(CurrentWidget.DrawerScrimColor);
+        var scrimColor = ApplyOpacity(baseColor, progress);
+        return new Positioned(
+            left: 0,
+            top: 0,
+            right: 0,
+            bottom: 0,
+            child: new GestureDetector(
+                behavior: HitTestBehavior.Opaque,
+                onTap: CurrentWidget.DrawerBarrierDismissible ? CloseOpenDrawers : null,
+                child: new Container(color: scrimColor)));
+    }
+
+    private Widget BuildDrawerPanel(DrawerSide side, TextDirection textDirection, double progress, Widget child)
+    {
+        var drawerWidth = ResolveDrawerWidth(child);
+        var isOnLeft = IsDrawerOnLeft(side, textDirection);
+        var offset = -(1 - progress) * drawerWidth;
+
+        return new Positioned(
+            left: isOnLeft ? offset : null,
+            top: 0,
+            right: isOnLeft ? null : offset,
+            bottom: 0,
+            child: new GestureDetector(
+                behavior: HitTestBehavior.Opaque,
+                onHorizontalDragStart: _ => BeginDrag(side),
+                onHorizontalDragUpdate: details => UpdateDrag(side, details.PrimaryDelta, textDirection),
+                onHorizontalDragEnd: details => EndDrag(side, details, textDirection),
+                child: child));
+    }
+
+    private bool ShouldEnableOpenDragGesture(DrawerSide side, ThemeData theme)
+    {
+        if (!HasDrawerForSide(side) || IsDesktopPlatform(theme.Platform))
+        {
+            return false;
+        }
+
+        return side == DrawerSide.Start
+            ? CurrentWidget.DrawerEnableOpenDragGesture
+            : CurrentWidget.EndDrawerEnableOpenDragGesture;
+    }
+
+    private void BeginDrag(DrawerSide side)
+    {
+        if (!HasDrawerForSide(side))
+        {
+            return;
+        }
+
+        SetState(() =>
+        {
+            StopSettleAnimation(side);
+            _activeDragSide = side;
+            _activeDragProgress = ResolveDrawerProgress(side);
+            _lastDragVelocityHint = 0;
+
+            if (side == DrawerSide.Start)
+            {
+                _isEndDrawerOpen = false;
+                _endDrawerProgress = 0;
+                StopSettleAnimation(DrawerSide.End);
+            }
+            else
+            {
+                _isDrawerOpen = false;
+                _drawerProgress = 0;
+                StopSettleAnimation(DrawerSide.Start);
+            }
+        });
+    }
+
+    private void UpdateDrag(DrawerSide side, double primaryDelta, TextDirection textDirection)
+    {
+        if (_activeDragSide != side)
+        {
+            return;
+        }
+
+        var drawer = ResolveDrawerWidget(side);
+        if (drawer == null)
+        {
+            return;
+        }
+
+        var drawerWidth = ResolveDrawerWidth(drawer);
+        if (drawerWidth <= 0)
+        {
+            return;
+        }
+
+        var deltaProgress = primaryDelta * ResolveOpenDirectionMultiplier(side, textDirection) / drawerWidth;
+        var nextProgress = Math.Clamp(_activeDragProgress + deltaProgress, 0, 1);
+        if (Math.Abs(nextProgress - _activeDragProgress) <= 0.0001)
+        {
+            return;
+        }
+
+        SetState(() =>
+        {
+            _activeDragProgress = nextProgress;
+            _lastDragVelocityHint = deltaProgress * VelocityHintPerDeltaFactor;
+            UpdateOpenFlagsFromProgress(side, nextProgress);
+        });
+    }
+
+    private void EndDrag(DrawerSide side, DragEndDetails details, TextDirection textDirection)
+    {
+        if (_activeDragSide != side)
+        {
+            return;
+        }
+
+        var drawer = ResolveDrawerWidget(side);
+        if (drawer == null)
+        {
+            return;
+        }
+
+        var drawerWidth = ResolveDrawerWidth(drawer);
+        if (drawerWidth <= 0)
+        {
+            return;
+        }
+
+        var releaseVelocity = details.PrimaryVelocity * ResolveOpenDirectionMultiplier(side, textDirection) / drawerWidth;
+        if (Math.Abs(releaseVelocity) < double.Epsilon)
+        {
+            releaseVelocity = _lastDragVelocityHint;
+        }
+
+        bool shouldOpen;
+        if (releaseVelocity >= FlingVelocityThreshold)
+        {
+            shouldOpen = true;
+        }
+        else if (releaseVelocity <= -FlingVelocityThreshold)
+        {
+            shouldOpen = false;
+        }
+        else
+        {
+            shouldOpen = _activeDragProgress >= OpenThreshold;
+        }
+
+        SetState(() =>
+        {
+            CommitProgress(side, _activeDragProgress);
+            CommitDrawerVisibility(side, shouldOpen);
+            CancelDrag();
+            StartSettleAnimation(side, shouldOpen ? 1.0 : 0.0, releaseVelocity);
+            if (shouldOpen)
+            {
+                StartSettleAnimation(OppositeOf(side), targetProgress: 0.0, normalizedVelocityHint: null);
+            }
+        });
+    }
+
+    private void CommitDrawerVisibility(DrawerSide side, bool isOpen)
+    {
+        if (side == DrawerSide.Start)
+        {
+            _isDrawerOpen = isOpen && HasDrawer;
+            if (isOpen)
+            {
+                _isEndDrawerOpen = false;
+            }
+
+            return;
+        }
+
+        _isEndDrawerOpen = isOpen && HasEndDrawer;
+        if (isOpen)
+        {
+            _isDrawerOpen = false;
+        }
+    }
+
+    private void CloseOpenDrawers()
+    {
+        if (!_isDrawerOpen && !_isEndDrawerOpen && _activeDragSide is null
+            && ResolveDrawerProgress(DrawerSide.Start) <= 0
+            && ResolveDrawerProgress(DrawerSide.End) <= 0)
+        {
+            return;
+        }
+
+        SetState(() =>
+        {
+            StopSettleAnimation(DrawerSide.Start);
+            StopSettleAnimation(DrawerSide.End);
+            _isDrawerOpen = false;
+            _isEndDrawerOpen = false;
+            CancelDrag();
+            StartSettleAnimation(DrawerSide.Start, targetProgress: 0.0, normalizedVelocityHint: null);
+            StartSettleAnimation(DrawerSide.End, targetProgress: 0.0, normalizedVelocityHint: null);
+        });
+    }
+
+    private void CancelDrag()
+    {
+        if (_activeDragSide.HasValue)
+        {
+            CommitProgress(_activeDragSide.Value, _activeDragProgress);
+        }
+
+        _activeDragSide = null;
+        _activeDragProgress = 0;
+        _lastDragVelocityHint = 0;
+    }
+
+    private bool HasDrawerForSide(DrawerSide side)
+    {
+        return side == DrawerSide.Start ? HasDrawer : HasEndDrawer;
+    }
+
+    private Widget? ResolveDrawerWidget(DrawerSide side)
+    {
+        return side == DrawerSide.Start ? CurrentWidget.Drawer : CurrentWidget.EndDrawer;
+    }
+
+    private double ResolveDrawerProgress(DrawerSide side)
+    {
+        if (_activeDragSide == side)
+        {
+            return _activeDragProgress;
+        }
+
+        return side == DrawerSide.Start
+            ? _drawerProgress
+            : _endDrawerProgress;
+    }
+
+    private bool IsDrawerVisible(DrawerSide side, double progress)
+    {
+        if (progress > 0)
+        {
+            return true;
+        }
+
+        if (_activeDragSide == side)
+        {
+            return true;
+        }
+
+        return side == DrawerSide.Start
+            ? _isDrawerOpen
+            : _isEndDrawerOpen;
+    }
+
+    private static bool IsDrawerOnLeft(DrawerSide side, TextDirection textDirection)
+    {
+        return side switch
+        {
+            DrawerSide.Start => textDirection == TextDirection.Ltr,
+            DrawerSide.End => textDirection == TextDirection.Rtl,
+            _ => true,
+        };
+    }
+
+    private static double ResolveOpenDirectionMultiplier(DrawerSide side, TextDirection textDirection)
+    {
+        return IsDrawerOnLeft(side, textDirection) ? 1.0 : -1.0;
+    }
+
+    private static bool IsDesktopPlatform(TargetPlatform platform)
+    {
+        return platform is TargetPlatform.Windows or TargetPlatform.Linux or TargetPlatform.MacOS;
+    }
+
+    private void StartSettleAnimation(DrawerSide side, double targetProgress, double? normalizedVelocityHint)
+    {
+        targetProgress = Math.Clamp(targetProgress, 0, 1);
+        if (targetProgress > 0 && !HasDrawerForSide(side))
+        {
+            return;
+        }
+
+        var currentProgress = ResolveDrawerProgress(side);
+        currentProgress = Math.Clamp(currentProgress, 0, 1);
+
+        if (Math.Abs(currentProgress - targetProgress) <= 0.0001)
+        {
+            CommitProgress(side, targetProgress);
+            return;
+        }
+
+        StopSettleAnimation(side);
+        var duration = ResolveSettleDuration(currentProgress, targetProgress, normalizedVelocityHint);
+        var controller = new AnimationController(duration)
+        {
+            Curve = Curves.EaseOut
+        };
+
+        if (side == DrawerSide.Start)
+        {
+            _drawerAnimationController = controller;
+            _drawerAnimationFrom = currentProgress;
+            _drawerAnimationTo = targetProgress;
+            controller.Changed += HandleDrawerAnimationTick;
+            controller.Completed += HandleDrawerAnimationCompleted;
+            controller.Dismissed += HandleDrawerAnimationCompleted;
+        }
+        else
+        {
+            _endDrawerAnimationController = controller;
+            _endDrawerAnimationFrom = currentProgress;
+            _endDrawerAnimationTo = targetProgress;
+            controller.Changed += HandleEndDrawerAnimationTick;
+            controller.Completed += HandleEndDrawerAnimationCompleted;
+            controller.Dismissed += HandleEndDrawerAnimationCompleted;
+        }
+
+        controller.Forward(0);
+    }
+
+    private static TimeSpan ResolveSettleDuration(double currentProgress, double targetProgress, double? normalizedVelocityHint)
+    {
+        var distance = Math.Abs(targetProgress - currentProgress);
+        if (distance <= 0)
+        {
+            return TimeSpan.FromMilliseconds(1);
+        }
+
+        double durationMs;
+        var velocity = Math.Abs(normalizedVelocityHint ?? 0);
+        if (velocity > double.Epsilon)
+        {
+            durationMs = distance / velocity * 1000;
+        }
+        else
+        {
+            durationMs = MaxSettleDurationMs * distance;
+        }
+
+        durationMs = Math.Clamp(durationMs, MinSettleDurationMs, MaxSettleDurationMs);
+        return TimeSpan.FromMilliseconds(durationMs);
+    }
+
+    private void StopSettleAnimation(DrawerSide side)
+    {
+        if (side == DrawerSide.Start)
+        {
+            if (_drawerAnimationController == null)
+            {
+                return;
+            }
+
+            _drawerAnimationController.Changed -= HandleDrawerAnimationTick;
+            _drawerAnimationController.Completed -= HandleDrawerAnimationCompleted;
+            _drawerAnimationController.Dismissed -= HandleDrawerAnimationCompleted;
+            _drawerAnimationController.Dispose();
+            _drawerAnimationController = null;
+            return;
+        }
+
+        if (_endDrawerAnimationController == null)
+        {
+            return;
+        }
+
+        _endDrawerAnimationController.Changed -= HandleEndDrawerAnimationTick;
+        _endDrawerAnimationController.Completed -= HandleEndDrawerAnimationCompleted;
+        _endDrawerAnimationController.Dismissed -= HandleEndDrawerAnimationCompleted;
+        _endDrawerAnimationController.Dispose();
+        _endDrawerAnimationController = null;
+    }
+
+    private void HandleDrawerAnimationTick()
+    {
+        if (_drawerAnimationController == null)
+        {
+            return;
+        }
+
+        var value = _drawerAnimationController.Evaluate();
+        var progress = Math.Clamp(_drawerAnimationFrom + (_drawerAnimationTo - _drawerAnimationFrom) * value, 0, 1);
+        SetState(() => _drawerProgress = progress);
+    }
+
+    private void HandleEndDrawerAnimationTick()
+    {
+        if (_endDrawerAnimationController == null)
+        {
+            return;
+        }
+
+        var value = _endDrawerAnimationController.Evaluate();
+        var progress = Math.Clamp(_endDrawerAnimationFrom + (_endDrawerAnimationTo - _endDrawerAnimationFrom) * value, 0, 1);
+        SetState(() => _endDrawerProgress = progress);
+    }
+
+    private void HandleDrawerAnimationCompleted()
+    {
+        SetState(() =>
+        {
+            CommitProgress(DrawerSide.Start, _drawerAnimationTo);
+            StopSettleAnimation(DrawerSide.Start);
+        });
+    }
+
+    private void HandleEndDrawerAnimationCompleted()
+    {
+        SetState(() =>
+        {
+            CommitProgress(DrawerSide.End, _endDrawerAnimationTo);
+            StopSettleAnimation(DrawerSide.End);
+        });
+    }
+
+    private void CommitProgress(DrawerSide side, double progress)
+    {
+        progress = Math.Clamp(progress, 0, 1);
+        if (side == DrawerSide.Start)
+        {
+            _drawerProgress = progress;
+            return;
+        }
+
+        _endDrawerProgress = progress;
+    }
+
+    private void UpdateOpenFlagsFromProgress(DrawerSide side, double progress)
+    {
+        var isOpen = progress >= OpenThreshold;
+        if (side == DrawerSide.Start)
+        {
+            _isDrawerOpen = isOpen && HasDrawer;
+            _isEndDrawerOpen = false;
+            return;
+        }
+
+        _isEndDrawerOpen = isOpen && HasEndDrawer;
+        _isDrawerOpen = false;
+    }
+
+    private void SyncDrawerHistoryEntry(BuildContext context)
+    {
+        if (_isDisposed)
+        {
+            return;
+        }
+
+        if (!ShouldMaintainDrawerHistoryEntry())
+        {
+            RemoveDrawerHistoryEntry();
+            return;
+        }
+
+        var route = ModalRoute.MaybeOf(context);
+        if (route == null)
+        {
+            RemoveDrawerHistoryEntry();
+            return;
+        }
+
+        if (_drawerHistoryEntry != null && ReferenceEquals(_drawerHistoryRoute, route))
+        {
+            return;
+        }
+
+        RemoveDrawerHistoryEntry();
+
+        var entry = new LocalHistoryEntry(onRemove: HandleDrawerHistoryEntryRemoved);
+        route.AddLocalHistoryEntry(entry);
+        _drawerHistoryEntry = entry;
+        _drawerHistoryRoute = route;
+    }
+
+    private bool ShouldMaintainDrawerHistoryEntry()
+    {
+        return _activeDragSide != null
+               || _isDrawerOpen
+               || _isEndDrawerOpen;
+    }
+
+    private void RemoveDrawerHistoryEntry()
+    {
+        var entry = _drawerHistoryEntry;
+        if (entry == null)
+        {
+            _drawerHistoryRoute = null;
+            return;
+        }
+
+        _drawerHistoryEntry = null;
+        _drawerHistoryRoute = null;
+        _isRemovingDrawerHistoryEntry = true;
+
+        try
+        {
+            entry.Remove();
+        }
+        finally
+        {
+            _isRemovingDrawerHistoryEntry = false;
+        }
+    }
+
+    private void HandleDrawerHistoryEntryRemoved()
+    {
+        _drawerHistoryEntry = null;
+        _drawerHistoryRoute = null;
+
+        if (_isRemovingDrawerHistoryEntry || _isDisposed)
+        {
+            return;
+        }
+
+        CloseOpenDrawers();
+    }
+
+    private static DrawerSide OppositeOf(DrawerSide side)
+    {
+        return side == DrawerSide.Start ? DrawerSide.End : DrawerSide.Start;
+    }
+
+    private static double ResolveDrawerWidth(Widget drawer)
+    {
+        if (drawer is Drawer typedDrawer)
+        {
+            return typedDrawer.Width ?? DefaultDrawerWidth;
+        }
+
+        return DefaultDrawerWidth;
+    }
+
+    private static Color ApplyOpacity(Color color, double opacity)
+    {
+        var effectiveOpacity = Math.Clamp(opacity, 0, 1);
+        var alpha = (byte)Math.Clamp((int)Math.Round(color.A * effectiveOpacity), 0, 255);
+        return Color.FromArgb(alpha, color.R, color.G, color.B);
     }
 }
 
@@ -327,6 +1083,7 @@ public sealed class AppBar : StatelessWidget
         Widget? title = null,
         Widget? leading = null,
         bool automaticallyImplyLeading = true,
+        bool automaticallyImplyActions = true,
         double? leadingWidth = null,
         IReadOnlyList<Widget>? actions = null,
         bool? centerTitle = null,
@@ -363,6 +1120,7 @@ public sealed class AppBar : StatelessWidget
         Title = title;
         Leading = leading;
         AutomaticallyImplyLeading = automaticallyImplyLeading;
+        AutomaticallyImplyActions = automaticallyImplyActions;
         LeadingWidth = leadingWidth;
         Actions = actions ?? Array.Empty<Widget>();
         CenterTitle = centerTitle;
@@ -387,6 +1145,8 @@ public sealed class AppBar : StatelessWidget
     public Widget? Leading { get; }
 
     public bool AutomaticallyImplyLeading { get; }
+
+    public bool AutomaticallyImplyActions { get; }
 
     public double? LeadingWidth { get; }
 
@@ -428,6 +1188,7 @@ public sealed class AppBar : StatelessWidget
         var effectiveIconTheme = ResolveEffectiveIconTheme(theme, effectiveForeground);
         var effectiveActionsIconTheme = ResolveEffectiveActionsIconTheme(theme, effectiveForeground, effectiveIconTheme);
         var effectiveLeading = ResolveEffectiveLeading(context);
+        var effectiveActions = ResolveEffectiveActions(context);
         var effectiveLeadingWidth = ResolveEffectiveLeadingWidth(theme);
         var effectiveActionsPadding = ActionsPadding ?? theme.AppBarTheme.ActionsPadding ?? new Thickness();
         var effectiveToolbarHeight = ResolveEffectiveToolbarHeight(theme);
@@ -459,7 +1220,7 @@ public sealed class AppBar : StatelessWidget
 
         rowChildren.Add(new Expanded(child: middle));
 
-        if (Actions.Count > 0)
+        if (effectiveActions.Count > 0)
         {
             rowChildren.Add(new Padding(
                 insets: effectiveActionsPadding,
@@ -471,7 +1232,7 @@ public sealed class AppBar : StatelessWidget
                             ? CrossAxisAlignment.Center
                             : CrossAxisAlignment.Stretch,
                         spacing: 0,
-                        children: Actions))));
+                        children: effectiveActions))));
         }
         else if (effectiveCenterTitle && effectiveLeading != null)
         {
@@ -534,13 +1295,39 @@ public sealed class AppBar : StatelessWidget
             return BuildDefaultDrawerLeading(context);
         }
 
-        if (!Navigator.CanPop(context))
+        var route = ModalRoute.MaybeOf(context);
+        var impliesAppBarDismissal = route?.ImpliesAppBarDismissal ?? Navigator.CanPop(context);
+        if (!impliesAppBarDismissal)
         {
             return null;
         }
 
-        var useCloseButton = ModalRoute.MaybeOf(context) is PageRoute pageRoute && pageRoute.FullscreenDialog;
+        var useCloseButton = route is PageRoute pageRoute && pageRoute.FullscreenDialog;
         return BuildDefaultLeading(context, useCloseButton);
+    }
+
+    private IReadOnlyList<Widget> ResolveEffectiveActions(BuildContext context)
+    {
+        if (Actions.Count > 0)
+        {
+            return Actions;
+        }
+
+        if (!AutomaticallyImplyActions)
+        {
+            return Array.Empty<Widget>();
+        }
+
+        var scaffold = Scaffold.MaybeOf(context);
+        if (scaffold?.HasEndDrawer == true)
+        {
+            return
+            [
+                BuildDefaultEndDrawerAction(context),
+            ];
+        }
+
+        return Array.Empty<Widget>();
     }
 
     private static Widget BuildDefaultDrawerLeading(BuildContext context)
@@ -548,6 +1335,13 @@ public sealed class AppBar : StatelessWidget
         return new IconButton(
             icon: new Icon(Icons.Menu),
             onPressed: () => Scaffold.Of(context).OpenDrawer());
+    }
+
+    private static Widget BuildDefaultEndDrawerAction(BuildContext context)
+    {
+        return new IconButton(
+            icon: new Icon(Icons.Menu),
+            onPressed: () => Scaffold.Of(context).OpenEndDrawer());
     }
 
     private static Widget BuildDefaultLeading(BuildContext context, bool useCloseButton)
