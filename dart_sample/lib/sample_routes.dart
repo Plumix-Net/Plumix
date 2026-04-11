@@ -22,8 +22,10 @@ class SampleRoutes {
   static const String scrollbar = '/scrollbar';
   static const String editableText = '/editable-text';
   static const String materialButtons = '/material-buttons';
+  static const String floatingActionButton = '/floating-action-button';
   static const String checkbox = '/checkbox';
   static const String switchDemo = '/switch';
+  static const String radio = '/radio';
   static const String appBarLeadingWidth = '/appbar-leading-width';
   static const String appBarActionsPadding = '/appbar-actions-padding';
   static const String appBarIconTheme = '/appbar-icon-theme';

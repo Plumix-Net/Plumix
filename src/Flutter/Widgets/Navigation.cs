@@ -107,8 +107,56 @@ public sealed class RouteData
     }
 }
 
+public sealed class LocalHistoryEntry
+{
+    private bool _removed;
+
+    public LocalHistoryEntry(Action? onRemove = null, bool impliesAppBarDismissal = true)
+    {
+        OnRemove = onRemove;
+        ImpliesAppBarDismissal = impliesAppBarDismissal;
+    }
+
+    public Action? OnRemove { get; }
+
+    public bool ImpliesAppBarDismissal { get; }
+
+    internal Route? Owner { get; set; }
+
+    public void Remove()
+    {
+        if (_removed)
+        {
+            return;
+        }
+
+        var owner = Owner;
+        if (owner != null)
+        {
+            owner.RemoveLocalHistoryEntry(this);
+            return;
+        }
+
+        MarkRemoved();
+    }
+
+    internal void MarkRemoved()
+    {
+        if (_removed)
+        {
+            return;
+        }
+
+        _removed = true;
+        Owner = null;
+        OnRemove?.Invoke();
+    }
+}
+
 public abstract class Route
 {
+    private List<LocalHistoryEntry>? _localHistoryEntries;
+
     protected Route(RouteSettings? settings = null)
     {
         Settings = settings ?? new RouteSettings();
@@ -117,6 +165,15 @@ public abstract class Route
     public RouteSettings Settings { get; }
 
     internal NavigatorState? Navigator { get; private set; }
+
+    public virtual bool ImpliesAppBarDismissal
+    {
+        get
+        {
+            var hasDismissalLocalHistory = _localHistoryEntries?.Any(entry => entry.ImpliesAppBarDismissal) == true;
+            return hasDismissalLocalHistory || (Navigator?.CanPop ?? false);
+        }
+    }
 
     internal void Attach(NavigatorState navigator)
     {
@@ -140,6 +197,15 @@ public abstract class Route
 
     public virtual bool WillPop()
     {
+        if (_localHistoryEntries is { Count: > 0 })
+        {
+            var entry = _localHistoryEntries[^1];
+            _localHistoryEntries.RemoveAt(_localHistoryEntries.Count - 1);
+            entry.MarkRemoved();
+            OnLocalHistoryChanged();
+            return false;
+        }
+
         return true;
     }
 
@@ -164,6 +230,64 @@ public abstract class Route
     }
 
     public virtual void Dispose()
+    {
+        if (_localHistoryEntries is not { Count: > 0 })
+        {
+            return;
+        }
+
+        foreach (var entry in _localHistoryEntries.ToArray())
+        {
+            _localHistoryEntries.Remove(entry);
+            entry.MarkRemoved();
+        }
+
+        OnLocalHistoryChanged();
+    }
+
+    public void AddLocalHistoryEntry(LocalHistoryEntry entry)
+    {
+        if (entry == null)
+        {
+            throw new ArgumentNullException(nameof(entry));
+        }
+
+        if (entry.Owner != null && !ReferenceEquals(entry.Owner, this))
+        {
+            throw new InvalidOperationException("LocalHistoryEntry is already attached to another route.");
+        }
+
+        _localHistoryEntries ??= [];
+        if (_localHistoryEntries.Contains(entry))
+        {
+            return;
+        }
+
+        entry.Owner = this;
+        _localHistoryEntries.Add(entry);
+        OnLocalHistoryChanged();
+    }
+
+    internal void RemoveLocalHistoryEntry(LocalHistoryEntry entry)
+    {
+        if (entry == null)
+        {
+            throw new ArgumentNullException(nameof(entry));
+        }
+
+        if (_localHistoryEntries is null)
+        {
+            return;
+        }
+
+        if (_localHistoryEntries.Remove(entry))
+        {
+            entry.MarkRemoved();
+            OnLocalHistoryChanged();
+        }
+    }
+
+    protected virtual void OnLocalHistoryChanged()
     {
     }
 
@@ -190,16 +314,22 @@ public abstract class ModalRoute : Route
 
 public abstract class PageRoute : ModalRoute
 {
-    protected PageRoute(RouteSettings? settings = null) : base(settings)
+    protected PageRoute(RouteSettings? settings = null, bool fullscreenDialog = false) : base(settings)
     {
+        FullscreenDialog = fullscreenDialog;
     }
+
+    public bool FullscreenDialog { get; }
 }
 
 public sealed class BuilderPageRoute : PageRoute
 {
     private readonly Func<BuildContext, Widget> _builder;
 
-    public BuilderPageRoute(Func<BuildContext, Widget> builder, RouteSettings? settings = null) : base(settings)
+    public BuilderPageRoute(
+        Func<BuildContext, Widget> builder,
+        RouteSettings? settings = null,
+        bool fullscreenDialog = false) : base(settings, fullscreenDialog)
     {
         _builder = builder ?? throw new ArgumentNullException(nameof(builder));
     }
@@ -708,13 +838,18 @@ public sealed class NavigatorState : State
 
     public bool MaybePop(object? result = null)
     {
-        if (!CanPop)
+        var route = CurrentRoute;
+        if (route == null)
         {
             return false;
         }
 
-        var route = CurrentRoute;
-        if (route == null || !route.WillPop())
+        if (!route.WillPop())
+        {
+            return true;
+        }
+
+        if (!CanPop)
         {
             return false;
         }

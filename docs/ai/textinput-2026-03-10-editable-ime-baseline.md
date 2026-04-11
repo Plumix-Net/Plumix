@@ -37,9 +37,9 @@
   - `src/Flutter/FlutterHost.cs`
   - `src/Flutter/Widgets/TextInput.cs`
   - `src/Flutter.Tests/TextInputTests.cs`
-  - `src/Sample/Flutter.Net/EditableTextDemoPage.cs`
+  - `src/Sample/Flutter.Net/Demos/General/EditableTextDemoPage.cs`
   - `src/Sample/Flutter.Net/SampleGalleryScreen.cs`
-  - `dart_sample/lib/editable_text_demo_page.dart`
+  - `dart_sample/lib/demos/general/editable_text_demo_page.dart`
   - `dart_sample/lib/sample_gallery_screen.dart`
   - `dart_sample/lib/sample_routes.dart`
   - `docs/FRAMEWORK_PLAN.md`

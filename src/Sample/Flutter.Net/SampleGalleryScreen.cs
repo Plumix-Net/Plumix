@@ -30,8 +30,10 @@ internal static class SampleRoutes
     public const string Scrollbar = "/scrollbar";
     public const string EditableText = "/editable-text";
     public const string MaterialButtons = "/material-buttons";
+    public const string FloatingActionButton = "/floating-action-button";
     public const string Checkbox = "/checkbox";
     public const string Switch = "/switch";
+    public const string Radio = "/radio";
     public const string AppBarLeadingWidth = "/appbar-leading-width";
     public const string AppBarActionsPadding = "/appbar-actions-padding";
     public const string AppBarIconTheme = "/appbar-icon-theme";
@@ -56,9 +58,33 @@ internal readonly record struct SampleRouteDefinition(
     string Subtitle,
     Func<Widget> Builder);
 
+internal readonly record struct SampleMenuTabDefinition(
+    string Label,
+    string Description,
+    IconData Icon,
+    IconData ActiveIcon,
+    IReadOnlyList<SampleRouteDefinition> Pages);
+
 internal sealed class SampleGalleryScreen : StatelessWidget
 {
-    private static readonly IReadOnlyList<SampleRouteDefinition> DemoPages =
+    private static readonly IReadOnlyList<SampleRouteDefinition> MaterialDemoPages =
+    [
+        new(SampleRoutes.MaterialButtons, "Material buttons", "TextButton + ElevatedButton + OutlinedButton + FilledButton", () => new MaterialButtonsDemoPage()),
+        new(SampleRoutes.FloatingActionButton, "FloatingActionButton", "regular/small/large/extended + theme defaults", () => new FloatingActionButtonDemoPage()),
+        new(SampleRoutes.AppBarLeadingWidth, "AppBar leadingWidth theme", "theme fallback + widget override runtime probe", () => new AppBarLeadingWidthDemoPage()),
+        new(SampleRoutes.AppBarActionsPadding, "AppBar actionsPadding theme", "theme fallback + widget override runtime probe", () => new AppBarActionsPaddingDemoPage()),
+        new(SampleRoutes.AppBarIconTheme, "AppBar icon themes", "iconTheme/actionsIconTheme precedence runtime probe", () => new AppBarIconThemeDemoPage()),
+        new(SampleRoutes.AppBarTextStyles, "AppBar text styles", "title/toolbar text style precedence runtime probe", () => new AppBarTextStylesDemoPage()),
+    ];
+
+    private static readonly IReadOnlyList<SampleRouteDefinition> CupertinoDemoPages =
+    [
+        new(SampleRoutes.Checkbox, "Checkbox", "bool/bool? values + tristate + tap-target policy", () => new CheckboxDemoPage()),
+        new(SampleRoutes.Switch, "Switch", "on/off value + track/thumb theming + drag", () => new SwitchDemoPage()),
+        new(SampleRoutes.Radio, "Radio", "group selection + toggleable + tap-target policy", () => new RadioDemoPage()),
+    ];
+
+    private static readonly IReadOnlyList<SampleRouteDefinition> GeneralDemoPages =
     [
         new(SampleRoutes.Counter, "Counter", "existing sample", () => new CounterScreen()),
         new(SampleRoutes.Navigator, "Navigator", "named routes + RouteData + stack APIs", () => new NavigatorDemoPage()),
@@ -69,13 +95,6 @@ internal sealed class SampleGalleryScreen : StatelessWidget
         new(SampleRoutes.CustomSlivers, "Custom slivers", "SliverPadding + SliverFixedExtentList", () => new CustomSliversDemoPage()),
         new(SampleRoutes.Scrollbar, "Scrollbar", "controller + thumb", () => new ScrollbarDemoPage()),
         new(SampleRoutes.EditableText, "EditableText", "focus + IME + multiline caret", () => new EditableTextDemoPage()),
-        new(SampleRoutes.MaterialButtons, "Material buttons", "TextButton + ElevatedButton + OutlinedButton + FilledButton", () => new MaterialButtonsDemoPage()),
-        new(SampleRoutes.Checkbox, "Checkbox", "bool/bool? values + tristate + tap-target policy", () => new CheckboxDemoPage()),
-        new(SampleRoutes.Switch, "Switch", "on/off value + track/thumb theming + drag", () => new SwitchDemoPage()),
-        new(SampleRoutes.AppBarLeadingWidth, "AppBar leadingWidth theme", "theme fallback + widget override runtime probe", () => new AppBarLeadingWidthDemoPage()),
-        new(SampleRoutes.AppBarActionsPadding, "AppBar actionsPadding theme", "theme fallback + widget override runtime probe", () => new AppBarActionsPaddingDemoPage()),
-        new(SampleRoutes.AppBarIconTheme, "AppBar icon themes", "iconTheme/actionsIconTheme precedence runtime probe", () => new AppBarIconThemeDemoPage()),
-        new(SampleRoutes.AppBarTextStyles, "AppBar text styles", "title/toolbar text style precedence runtime probe", () => new AppBarTextStylesDemoPage()),
         new(SampleRoutes.ProxyWidgets, "Proxy widgets", "Opacity + Transform + ClipRect composition", () => new ProxyWidgetsDemoPage()),
         new(SampleRoutes.Align, "Align + Center", "single-child alignment and shrink factors", () => new AlignDemoPage()),
         new(SampleRoutes.Stack, "Stack + Positioned", "multi-child overlay layout", () => new StackDemoPage()),
@@ -90,8 +109,32 @@ internal sealed class SampleGalleryScreen : StatelessWidget
         new(SampleRoutes.Offstage, "Offstage", "layout-without-paint and zero-space behavior", () => new OffstageDemoPage()),
     ];
 
+    private static readonly IReadOnlyList<SampleMenuTabDefinition> DemoTabs =
+    [
+        new(
+            Label: "Material",
+            Description: "Material controls and theming demos.",
+            Icon: Icons.StarOutline,
+            ActiveIcon: Icons.Star,
+            Pages: MaterialDemoPages),
+        new(
+            Label: "Cupertino",
+            Description: "Adaptive Cupertino behavior probes for controls.",
+            Icon: Icons.Check,
+            ActiveIcon: Icons.Check,
+            Pages: CupertinoDemoPages),
+        new(
+            Label: "General",
+            Description: "Core widgets, layouts, navigation, and rendering demos.",
+            Icon: Icons.Menu,
+            ActiveIcon: Icons.InfoOutline,
+            Pages: GeneralDemoPages),
+    ];
+
     private static readonly IReadOnlyDictionary<string, SampleRouteDefinition> DemoPageByRoute =
-        DemoPages.ToDictionary(page => page.RouteName, page => page);
+        DemoTabs
+            .SelectMany(tab => tab.Pages)
+            .ToDictionary(page => page.RouteName, page => page);
 
     public override Widget Build(BuildContext context)
     {
@@ -107,7 +150,7 @@ internal sealed class SampleGalleryScreen : StatelessWidget
         if (settings.Name == SampleRoutes.Menu)
         {
             return new BuilderPageRoute(
-                builder: _ => new SampleMenuPage(DemoPages),
+                builder: _ => new SampleMenuPage(DemoTabs),
                 settings: settings);
         }
 
@@ -134,50 +177,95 @@ internal sealed class SampleGalleryScreen : StatelessWidget
     }
 }
 
-internal sealed class SampleMenuPage : StatelessWidget
+internal sealed class SampleMenuPage : StatefulWidget
 {
-    private readonly IReadOnlyList<SampleRouteDefinition> _pages;
+    private readonly IReadOnlyList<SampleMenuTabDefinition> _tabs;
 
-    public SampleMenuPage(IReadOnlyList<SampleRouteDefinition> pages)
+    public SampleMenuPage(IReadOnlyList<SampleMenuTabDefinition> tabs)
     {
-        _pages = pages;
+        _tabs = tabs;
     }
 
-    public override Widget Build(BuildContext context)
-    {
-        return new Scaffold(
-            appBar: new AppBar(titleText: "Flutter.Net widget pages"),
-            body: new Container(
-                padding: new Thickness(16),
-                child: new Column(
-                    crossAxisAlignment: CrossAxisAlignment.Stretch,
-                    spacing: 10,
-                    children:
-                    [
-                        new Text(
-                            "Route-based sample menu. Open page and return via Back button or Esc.",
-                            fontSize: 14,
-                            color: Color.Parse("#8A000000")),
-                        new Expanded(
-                            child: ListView.Builder(
-                                itemCount: _pages.Count,
-                                padding: new Thickness(0, 8, 0, 8),
-                                itemExtent: 56,
-                                itemBuilder: (_, index) => BuildPageButton(context, _pages[index]),
-                                addAutomaticKeepAlives: false)),
-                    ])));
-    }
+    public override State CreateState() => new SampleMenuPageState();
 
-    private static Widget BuildPageButton(BuildContext context, SampleRouteDefinition page)
+    private sealed class SampleMenuPageState : State
     {
-        return new OutlinedButton(
-            onPressed: () => Navigator.Of(context).PushNamed(page.RouteName),
-            backgroundColor: Color.Parse("#FFDCE3ED"),
-            borderColor: Color.Parse("#FFB8C4D4"),
-            foregroundColor: Colors.Black,
-            minHeight: 44,
-            padding: new Thickness(10, 8),
-            child: new Text($"{page.Title}  |  {page.Subtitle}", fontSize: 12));
+        private int _selectedTabIndex;
+
+        private SampleMenuPage CurrentWidget => (SampleMenuPage)StateWidget;
+
+        public override Widget Build(BuildContext context)
+        {
+            var tabs = CurrentWidget._tabs;
+            var selectedTab = tabs[_selectedTabIndex];
+            var pages = selectedTab.Pages;
+
+            return new Scaffold(
+                appBar: new AppBar(titleText: "Flutter.Net widget pages"),
+                body: new Container(
+                    padding: new Thickness(16),
+                    child: new Column(
+                        crossAxisAlignment: CrossAxisAlignment.Stretch,
+                        spacing: 10,
+                        children:
+                        [
+                            new Text(
+                                "Route-based sample menu. Open page and return via Back button or Esc.",
+                                fontSize: 14,
+                                color: Color.Parse("#8A000000")),
+                            new Text(
+                                selectedTab.Description,
+                                fontSize: 12,
+                                color: Color.Parse("#73000000")),
+                            new Expanded(
+                                child: ListView.Builder(
+                                    itemCount: pages.Count,
+                                    padding: new Thickness(0, 8, 0, 8),
+                                    itemExtent: 56,
+                                    itemBuilder: (_, index) => BuildPageButton(context, pages[index]),
+                                    addAutomaticKeepAlives: false)),
+                        ])),
+                bottomNavigationBar: new BottomNavigationBar(
+                    currentIndex: _selectedTabIndex,
+                    onTap: HandleTabSelected,
+                    items: BuildBottomNavigationItems(tabs)));
+        }
+
+        private void HandleTabSelected(int index)
+        {
+            if (index == _selectedTabIndex)
+            {
+                return;
+            }
+
+            SetState(() => _selectedTabIndex = index);
+        }
+
+        private static IReadOnlyList<BottomNavigationBarItem> BuildBottomNavigationItems(IReadOnlyList<SampleMenuTabDefinition> tabs)
+        {
+            var items = new List<BottomNavigationBarItem>(tabs.Count);
+            foreach (var tab in tabs)
+            {
+                items.Add(new BottomNavigationBarItem(
+                    icon: new Icon(tab.Icon),
+                    activeIcon: new Icon(tab.ActiveIcon),
+                    label: tab.Label));
+            }
+
+            return items;
+        }
+
+        private static Widget BuildPageButton(BuildContext context, SampleRouteDefinition page)
+        {
+            return new OutlinedButton(
+                onPressed: () => Navigator.Of(context).PushNamed(page.RouteName),
+                backgroundColor: Color.Parse("#FFDCE3ED"),
+                borderColor: Color.Parse("#FFB8C4D4"),
+                foregroundColor: Colors.Black,
+                minHeight: 44,
+                padding: new Thickness(10, 8),
+                child: new Text($"{page.Title}  |  {page.Subtitle}", fontSize: 12));
+        }
     }
 }
 
@@ -202,24 +290,7 @@ internal sealed class SampleDemoPage : StatelessWidget
     public override Widget Build(BuildContext context)
     {
         return new Scaffold(
-            appBar: new AppBar(
-                titleText: _title,
-                leadingWidth: 96,
-                leading: new SizedBox(
-                    width: 84,
-                    child: new ElevatedButton(
-                        onPressed: () => Navigator.Of(context).MaybePop(),
-                        minHeight: 34,
-                        padding: new Thickness(10, 8),
-                        borderRadius: BorderRadius.Circular(8),
-                        child: new Row(
-                            mainAxisAlignment: MainAxisAlignment.Center,
-                            spacing: 4,
-                            children:
-                            [
-                                new Icon(Icons.ArrowBack, size: 14),
-                                new Text("Back", fontSize: 12),
-                            ])))),
+            appBar: new AppBar(titleText: _title),
             body: new Container(
                 padding: new Thickness(16),
                 child: new Column(

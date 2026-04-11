@@ -18,9 +18,9 @@
   - `src/Flutter/Rendering/Flex.RenderFlex.cs`
   - `src/Flutter.Tests/RenderingParityTests.cs`
   - `src/Sample/Flutter.Net/SampleGalleryScreen.cs`
-  - `src/Sample/Flutter.Net/OverflowIndicatorDemoPage.cs`
+  - `src/Sample/Flutter.Net/Demos/General/OverflowIndicatorDemoPage.cs`
   - `dart_sample/lib/sample_gallery_screen.dart`
-  - `dart_sample/lib/overflow_indicator_demo_page.dart`
+  - `dart_sample/lib/demos/general/overflow_indicator_demo_page.dart`
 - Expansion trigger:
   - Expand only if indicator rendering requires new paint-context primitives beyond existing rectangle/text/clip/transform APIs.
 
@@ -36,9 +36,9 @@
 - Files to edit:
   - `src/Flutter/Rendering/Flex.RenderFlex.cs`
   - `src/Flutter.Tests/RenderingParityTests.cs`
-  - `src/Sample/Flutter.Net/OverflowIndicatorDemoPage.cs`
+  - `src/Sample/Flutter.Net/Demos/General/OverflowIndicatorDemoPage.cs`
   - `src/Sample/Flutter.Net/SampleGalleryScreen.cs`
-  - `dart_sample/lib/overflow_indicator_demo_page.dart`
+  - `dart_sample/lib/demos/general/overflow_indicator_demo_page.dart`
   - `dart_sample/lib/sample_gallery_screen.dart`
   - `dart_sample/lib/sample_routes.dart`
   - `CHANGELOG.md`

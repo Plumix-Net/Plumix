@@ -8,7 +8,7 @@ Use this block as the fastest machine-readable status summary.
 
 ```yaml
 framework_plan_version: 1
-last_updated: 2026-04-05
+last_updated: 2026-04-11
 north_star: "Flutter-like widget/rendering framework in C# with Avalonia as host infrastructure."
 current_phase: "M4 material library rewrite (theme/scaffold/material controls) in progress."
 status:
@@ -234,6 +234,15 @@ Progress update (2026-03-19):
 - Added `ThemeData.Brightness` (`Light` default) and aligned M2 dark-path app-bar defaults with Flutter behavior: when `UseMaterial3` is false and brightness is dark, unresolved app-bar defaults now resolve to `CanvasColor`/`OnSurfaceColor`.
 - Added `ThemeData.OnSurfaceVariantColor` and aligned app-bar actions icon default fallback to Flutter Material mode semantics: unresolved actions icon color now resolves to `OnSurfaceVariantColor` in M3 (with size fallback `24`) and keeps existing foreground fallback path in M2, while explicit `actionsIconTheme`/`iconTheme` overrides retain precedence.
 - Aligned app-bar leading `iconTheme` default fallback to Flutter Material mode semantics: when no explicit leading icon theme is provided, M3 now defaults to foreground + `size: 24`, while M2 keeps foreground fallback without forcing size.
+- Added app-bar implied-leading parity baseline: `AppBar` now exposes `automaticallyImplyLeading` (`true` default), auto-inserts a default dismiss leading using route dismissal semantics (`ModalRoute.ImpliesAppBarDismissal` with `Navigator.CanPop` fallback), and resolves icon by route mode (`PageRoute.FullscreenDialog == true` -> `IconButton(Icons.Close)`, otherwise `IconButton(Icons.ArrowBack)`), with `automaticallyImplyLeading: false` opt-out and focused `MaterialScaffoldTests` coverage.
+- Expanded Material drawer support in framework shell primitives: `Scaffold` now supports both `drawer` and `endDrawer` slots with stateful `ScaffoldState` APIs for both sides (`OpenDrawer/CloseDrawer`, `OpenEndDrawer/CloseEndDrawer`), start/end mutual exclusion, and inherited scaffold-scope wiring for drawer availability/open state.
+- Added drawer gesture+motion baseline parity in `Scaffold`: edge-swipe open support (`drawerEdgeDragWidth`, `drawerEnableOpenDragGesture`, `endDrawerEnableOpenDragGesture`), horizontal drag-close interactions for start/end drawers, settle animations for open/close transitions, and velocity-aware release settle (`fling`-style open/close) with scrim opacity tied to drawer progress.
+- Added drawer route-history handling baseline: `ScaffoldState` now keeps a `LocalHistoryEntry` while drawer interaction is active so navigator back closes the active drawer before route pop.
+- Updated navigator local-pop semantics for history entries: `NavigatorState.MaybePop` now treats route-local `WillPop` handling as consumed (handled) even on root routes, aligning with Flutter local-history behavior.
+- Expanded app-bar drawer implication behavior: existing drawer-aware implied leading remains (`Scaffold.drawer` -> leading `IconButton(Icons.Menu)`), and app bar now also auto-implies end-drawer trailing action (`Scaffold.endDrawer` with empty actions -> trailing `IconButton(Icons.Menu)`) with `automaticallyImplyActions` opt-out.
+- Updated `MaterialScaffoldTests` coverage for end-drawer implied actions, start/end drawer state APIs, start/end mutual exclusion, edge-drag open flows on both sides, and root-route drawer close on navigator back handling; updated `NavigationTests` coverage for root-route local-history `MaybePop` handling.
+- Documented remaining drawer divergence for follow-up: full Flutter `DrawerController` physics-accurate timing/curve parity remains out of current framework scope.
+- Updated sample gallery demo shells in both C# and Dart samples to use title-only app bars so non-root routes use default implied leading instead of custom back-button composition.
 - Continued Material button/theme parity hardening from Flutter M3 defaults:
   - `ThemeData.Light` default tokens now follow Flutter M3 light scheme for key surfaces/foregrounds used by sample controls (`primary`, `onSurface`, `secondaryContainer`, `onSecondaryContainer`, `surface/canvas`),
   - `MaterialTextTheme` now includes `LabelLarge` and updated `TitleLarge` defaults to 2021 token metrics (`22/1.27/0.0`), while default body font resolution now follows platform-specific family fallback (Android `Roboto`, iOS/macOS system font, Windows `Segoe UI`, Linux `Noto Sans`),
@@ -378,6 +387,38 @@ Progress update (2026-03-19):
   - adaptive iOS/macOS interaction path now uses dedicated Cupertino-style composition (no `MaterialButtonCore` wrapper): Focus + pointer listeners + gesture drag pipeline with Cupertino drag thresholds (`commit=0.7`, `reverse=0.2`) and pressed-thumb extension/shadow behavior.
   - expanded `MaterialSwitchTests` coverage now includes adaptive drag commit/reverse choreography (`below commit` no-toggle, `beyond commit` toggle, and reverse-threshold cancel flow).
   - remaining divergence: deeper Cupertino fidelity items (`HapticFeedback.lightImpact`, on/off accessibility labels, image-thumb pipeline) remain out of current framework scope.
+- Added Material `Radio` parity baseline in `Flutter.Material`:
+  - introduced framework `Radio<T>` with Flutter-like baseline API (`value`, `groupValue`, `onChanged`, `toggleable`) and state-aware visuals on top of shared `MaterialButtonCore` interactions (focus/hover/pressed + keyboard activation);
+  - added dedicated radio theming surface (`RadioThemeData`, inherited `RadioTheme`, and `ThemeData.RadioTheme`) with Flutter-like precedence (`widget -> radioTheme -> defaults`) for fill/overlay/background/side/tap-target/splash/inner-radius values;
+  - added focused `MaterialRadioTests` coverage for M3 selected/unselected/disabled defaults, widget/theme precedence, toggleable null transition, keyboard activation, and tap-target behavior (`padded` vs `shrinkWrap`);
+  - added C#/Dart sample parity demo route/page for runtime verification (`Radio` route in both sample menus);
+- Closed adaptive radio platform divergence for Cupertino targets:
+  - added framework `CupertinoRadio<T>` in `src/Flutter.Cupertino/CupertinoRadio.cs` with Cupertino-like visual defaults (`18x18` body, platform brightness-aware outer/inner/border colors, dark-mode gradient branch, and pressed/focus overlays) plus keyboard/toggleable interactions;
+  - added `Radio<T>.Adaptive(...)` in `src/Flutter.Material/Radio.cs` with Flutter-like platform split (`ThemeData.Platform` iOS/macOS -> `CupertinoRadio`, other targets -> Material path), and `useCupertinoCheckmarkStyle` API wiring for Cupertino checkmark indicator mode;
+  - expanded `MaterialRadioTests` with focused adaptive coverage (iOS defaults, adaptive `fillColor` ignore behavior, checkmark-style indicator path, and macOS visual-geometry check);
+  - expanded C#/Dart sample `Radio` runtime probe with adaptive platform/style controls (`iOS`/`macOS`/`Android` cycle + checkmark toggle) and dedicated `Radio.adaptive` probe rows for live verification of Cupertino path and non-Cupertino fallback behavior;
+  - remaining divergence: deeper Cupertino fidelity items for radio (haptics/accessibility labels/advanced motion nuances) remain out of current framework scope.
+- Added Material `FloatingActionButton` baseline in `Flutter.Material`:
+  - introduced framework `FloatingActionButton` control with Flutter-like constructors/variants for current scope (`regular`, `small`, `large`, `extended`) and shared interaction pipeline integration via `MaterialButtonCore`;
+  - added dedicated floating-action-button theming surface (`FloatingActionButtonThemeData`, inherited `FloatingActionButtonTheme`, and `ThemeData.FloatingActionButtonTheme`) with precedence wiring (`widget -> floatingActionButtonTheme -> mode defaults`);
+  - expanded theme-token surface with `ThemeData.PrimaryContainerColor` and `ThemeData.OnPrimaryContainerColor` so M3 FAB defaults map to dedicated container tokens instead of reusing unrelated button tokens;
+  - added focused `MaterialFloatingActionButtonTests` coverage for size/shape defaults across variants, M3 color token defaults, extended directional padding behavior, theme-vs-widget override precedence, and elevation-state transitions (`default/hovered/pressed/disabled`);
+  - added C#/Dart sample parity demo route/page for runtime verification (`FloatingActionButton` route in both sample menus) including variant probes, extended open/collapsed behavior, and theme override probe.
+- Extended Material `BottomNavigationBar` parity in `Flutter.Material`:
+  - expanded framework `BottomNavigationBar` API parity with Flutter-like type/default wiring: `BottomNavigationBarType` (`fixed`/`shifting`) now resolves by precedence (`widget -> theme -> item-count default`), with shifting background-color resolution from selected item `backgroundColor`;
+  - added dedicated bottom-navigation theming primitives (`BottomNavigationBarThemeData`, inherited `BottomNavigationBarTheme`, and `ThemeData.BottomNavigationBarTheme`) with Flutter-like precedence (`widget -> bottomNavigationBarTheme -> defaults`);
+  - expanded visual/default behavior for current scope: nullable label-visibility flags (`showSelectedLabels` / `showUnselectedLabels`) with type-aware defaults, selected/unselected label-style color precedence, selected/unselected icon-theme support, optional elevation handling, and `BottomNavigationBarItem` parity fields (`key`, `tooltip`);
+  - expanded `MaterialBottomNavigationBarTests` coverage for theme-default precedence, widget-over-theme overrides, auto-shifting defaults (background + unselected-label visibility), label-style color precedence, theme-driven `type` override, and icon-theme pair guards;
+  - retained tab-structured C#/Dart sample gallery parity (`Material` / `Cupertino` / `General`) without route-map divergence.
+- Added framework semantics annotation primitive and control semantics wiring:
+  - introduced widget/render semantics wrappers (`Semantics` + `RenderSemanticsAnnotations`) for label/flags/tap-action annotations in framework widget composition;
+  - `MaterialButtonCore` now emits semantic flags/actions (`IsButton`, `IsEnabled`, `IsSelected`, `IsChecked`) and optional semantic labels;
+  - `Checkbox`/`Switch`/`Radio` now map toggle state to `IsChecked` semantics, and adaptive Cupertino checkbox/switch paths now propagate semantic labels and toggle-state semantics;
+  - expanded `MaterialCheckboxTests` and `MaterialSwitchTests` with focused semantic-label/state regression coverage.
+- Remaining divergence for bottom navigation bar in current framework scope:
+  - full Flutter shifting animation choreography (radial background splash + animated flex/label transitions) and dedicated tooltip wrappers remain pending due missing framework primitives in current scope.
+- Remaining divergence for floating action button in current framework scope:
+  - `heroTag`/`Tooltip` wrappers, cursor/feedback toggles, and clip-behavior parity are still pending due missing framework primitives and are intentionally out of this baseline pass.
 
 Initial scope:
 

@@ -123,6 +123,8 @@ public sealed record ThemeData
 {
     private static readonly Color LightScaffoldAndCanvasColor = Color.Parse("#FFFEF7FF");
     private static readonly Color LightPrimaryColor = Color.Parse("#FF6750A4");
+    private static readonly Color LightPrimaryContainerColor = Color.Parse("#FFEADDFF");
+    private static readonly Color LightOnPrimaryContainerColor = Color.Parse("#FF21005D");
     private static readonly Color LightOnSurfaceColor = Color.Parse("#FF1D1B20");
     private static readonly Color LightOnSurfaceVariantColor = Color.Parse("#FF49454F");
     private static readonly Color LightOutlineColor = Color.Parse("#FF79747E");
@@ -142,8 +144,11 @@ public sealed record ThemeData
     private OutlinedButtonThemeData? _outlinedButtonTheme;
     private FilledButtonThemeData? _filledButtonTheme;
     private IconButtonThemeData? _iconButtonTheme;
+    private FloatingActionButtonThemeData? _floatingActionButtonTheme;
+    private BottomNavigationBarThemeData? _bottomNavigationBarTheme;
     private CheckboxThemeData? _checkboxTheme;
     private SwitchThemeData? _switchTheme;
+    private RadioThemeData? _radioTheme;
 
     public ThemeData(
         TargetPlatform? platform = null,
@@ -153,6 +158,8 @@ public sealed record ThemeData
         Color? canvasColor = null,
         Color? primaryColor = null,
         Color? onPrimaryColor = null,
+        Color? primaryContainerColor = null,
+        Color? onPrimaryContainerColor = null,
         bool? useMaterial3 = null,
         AppBarThemeData? appBarTheme = null,
         Color? shadowColor = null,
@@ -178,8 +185,11 @@ public sealed record ThemeData
         OutlinedButtonThemeData? outlinedButtonTheme = null,
         FilledButtonThemeData? filledButtonTheme = null,
         IconButtonThemeData? iconButtonTheme = null,
+        FloatingActionButtonThemeData? floatingActionButtonTheme = null,
+        BottomNavigationBarThemeData? bottomNavigationBarTheme = null,
         CheckboxThemeData? checkboxTheme = null,
-        SwitchThemeData? switchTheme = null)
+        SwitchThemeData? switchTheme = null,
+        RadioThemeData? radioTheme = null)
     {
         Platform = platform ?? ResolveDefaultPlatform();
         Brightness = brightness ?? Brightness.Light;
@@ -188,6 +198,8 @@ public sealed record ThemeData
         CanvasColor = canvasColor ?? LightScaffoldAndCanvasColor;
         PrimaryColor = primaryColor ?? LightPrimaryColor;
         OnPrimaryColor = onPrimaryColor ?? Colors.White;
+        PrimaryContainerColor = primaryContainerColor ?? LightPrimaryContainerColor;
+        OnPrimaryContainerColor = onPrimaryContainerColor ?? LightOnPrimaryContainerColor;
         UseMaterial3 = useMaterial3 ?? true;
         _appBarTheme = appBarTheme;
         ShadowColor = shadowColor ?? LightShadowColor;
@@ -213,8 +225,11 @@ public sealed record ThemeData
         _outlinedButtonTheme = outlinedButtonTheme;
         _filledButtonTheme = filledButtonTheme;
         _iconButtonTheme = iconButtonTheme;
+        _floatingActionButtonTheme = floatingActionButtonTheme;
+        _bottomNavigationBarTheme = bottomNavigationBarTheme;
         _checkboxTheme = checkboxTheme;
         _switchTheme = switchTheme;
+        _radioTheme = radioTheme;
     }
 
     public TargetPlatform Platform { get; init; }
@@ -230,6 +245,10 @@ public sealed record ThemeData
     public Color PrimaryColor { get; init; }
 
     public Color OnPrimaryColor { get; init; }
+
+    public Color PrimaryContainerColor { get; init; }
+
+    public Color OnPrimaryContainerColor { get; init; }
 
     public bool UseMaterial3 { get; init; }
 
@@ -305,6 +324,18 @@ public sealed record ThemeData
         init => _iconButtonTheme = value;
     }
 
+    public FloatingActionButtonThemeData FloatingActionButtonTheme
+    {
+        get => _floatingActionButtonTheme ?? new FloatingActionButtonThemeData();
+        init => _floatingActionButtonTheme = value;
+    }
+
+    public BottomNavigationBarThemeData BottomNavigationBarTheme
+    {
+        get => _bottomNavigationBarTheme ?? new BottomNavigationBarThemeData();
+        init => _bottomNavigationBarTheme = value;
+    }
+
     public CheckboxThemeData CheckboxTheme
     {
         get => _checkboxTheme ?? new CheckboxThemeData();
@@ -315,6 +346,12 @@ public sealed record ThemeData
     {
         get => _switchTheme ?? new SwitchThemeData();
         init => _switchTheme = value;
+    }
+
+    public RadioThemeData RadioTheme
+    {
+        get => _radioTheme ?? new RadioThemeData();
+        init => _radioTheme = value;
     }
 
     public static ThemeData Light { get; } = new();

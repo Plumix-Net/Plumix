@@ -50,7 +50,7 @@
 - Flutter/Dart source files used as source of truth:
   - `/Users/egorozh/Documents/flutter/flutter/packages/flutter/lib/src/material/checkbox.dart`
   - `/Users/egorozh/Documents/flutter/flutter/packages/flutter/lib/src/widgets/toggleable.dart`
-  - `dart_sample/lib/checkbox_demo_page.dart`
+  - `dart_sample/lib/demos/cupertino/checkbox_demo_page.dart`
 - Parity mapping checklist:
   - [x] API/default values mapped
   - [x] Widget composition order mapped

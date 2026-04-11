@@ -51,7 +51,7 @@
 - Flutter/Dart source files used as source of truth:
   - `/Users/egorozh/Documents/flutter/flutter/packages/flutter/lib/src/material/checkbox.dart`
   - `/Users/egorozh/Documents/flutter/flutter/packages/flutter/lib/src/widgets/toggleable.dart`
-  - `dart_sample/lib/checkbox_demo_page.dart`
+  - `dart_sample/lib/demos/cupertino/checkbox_demo_page.dart`
   - `dart_sample/lib/sample_gallery_screen.dart`
   - `dart_sample/lib/sample_routes.dart`
 - Parity mapping checklist:
@@ -70,9 +70,9 @@
   - `src/Flutter.Material/Checkbox.cs`
   - `src/Flutter.Material/Icons.cs`
   - `src/Flutter.Tests/MaterialCheckboxTests.cs`
-  - `src/Sample/Flutter.Net/CheckboxDemoPage.cs`
+  - `src/Sample/Flutter.Net/Demos/Cupertino/CheckboxDemoPage.cs`
   - `src/Sample/Flutter.Net/SampleGalleryScreen.cs`
-  - `dart_sample/lib/checkbox_demo_page.dart`
+  - `dart_sample/lib/demos/cupertino/checkbox_demo_page.dart`
   - `dart_sample/lib/sample_gallery_screen.dart`
   - `dart_sample/lib/sample_routes.dart`
   - `CHANGELOG.md`

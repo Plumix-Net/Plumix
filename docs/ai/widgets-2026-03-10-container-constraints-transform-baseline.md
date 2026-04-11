@@ -15,8 +15,8 @@
 - Entry files:
   - `src/Flutter/Widgets/Basic.cs`
   - `src/Flutter.Tests/ContainerTests.cs`
-  - `src/Sample/Flutter.Net/ContainerDemoPage.cs`
-  - `dart_sample/lib/container_demo_page.dart`
+  - `src/Sample/Flutter.Net/Demos/General/ContainerDemoPage.cs`
+  - `dart_sample/lib/demos/general/container_demo_page.dart`
   - `docs/FRAMEWORK_PLAN.md`
 - Expansion trigger:
   - Expand only for sample route metadata sync and tracking docs updates.
@@ -34,9 +34,9 @@
 - Files to edit:
   - `src/Flutter/Widgets/Basic.cs`
   - `src/Flutter.Tests/ContainerTests.cs`
-  - `src/Sample/Flutter.Net/ContainerDemoPage.cs`
+  - `src/Sample/Flutter.Net/Demos/General/ContainerDemoPage.cs`
   - `src/Sample/Flutter.Net/SampleGalleryScreen.cs`
-  - `dart_sample/lib/container_demo_page.dart`
+  - `dart_sample/lib/demos/general/container_demo_page.dart`
   - `dart_sample/lib/sample_gallery_screen.dart`
   - `docs/ai/PARITY_MATRIX.md`
   - `docs/ai/TEST_MATRIX.md`

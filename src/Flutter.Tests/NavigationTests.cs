@@ -378,6 +378,43 @@ public sealed class NavigationTests
     }
 
     [Fact]
+    public void Navigator_MaybePop_HandlesLocalHistoryOnRootRoute()
+    {
+        var owner = new BuildOwner();
+        NavigatorState? navigatorState = null;
+        ModalRoute? rootRoute = null;
+        var localHistoryRemoved = false;
+
+        var root = new TestRootElement(
+            new Navigator(
+                initialRoute: new BuilderPageRoute(
+                    builder: context =>
+                    {
+                        navigatorState ??= Navigator.Of(context);
+                        rootRoute ??= ModalRoute.Of(context);
+                        return new SizedBox(width: 1, height: 1);
+                    },
+                    settings: new RouteSettings(Name: "/"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.NotNull(navigatorState);
+        Assert.NotNull(rootRoute);
+        Assert.False(navigatorState!.CanPop);
+
+        rootRoute!.AddLocalHistoryEntry(new LocalHistoryEntry(onRemove: () => localHistoryRemoved = true));
+        Assert.True(rootRoute.ImpliesAppBarDismissal);
+
+        Assert.True(navigatorState.MaybePop());
+        Assert.True(localHistoryRemoved);
+        Assert.Same(rootRoute, navigatorState.CurrentRoute);
+        Assert.False(navigatorState.CanPop);
+        Assert.False(navigatorState.MaybePop());
+    }
+
+    [Fact]
     public void NavigatorObserver_UserGestureStartStop_ReceivesCallbacks()
     {
         var owner = new BuildOwner();

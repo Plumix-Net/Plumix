@@ -41,7 +41,7 @@
   - `flutter/packages/flutter/lib/src/material/elevated_button.dart`
   - `flutter/packages/flutter/lib/src/material/theme_data.dart`
   - `dart_sample/lib/sample_gallery_screen.dart`
-  - `dart_sample/lib/material_buttons_demo_page.dart`
+  - `dart_sample/lib/demos/material/material_buttons_demo_page.dart`
 - Parity mapping checklist:
   - [x] API/default values mapped
   - [x] Widget composition order mapped

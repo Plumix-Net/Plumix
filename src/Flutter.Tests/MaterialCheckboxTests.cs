@@ -11,6 +11,7 @@ using Xunit;
 
 namespace Flutter.Tests;
 
+[Collection(SchedulerTestCollection.Name)]
 public sealed class MaterialCheckboxTests
 {
     [Fact]
@@ -213,6 +214,37 @@ public sealed class MaterialCheckboxTests
     }
 
     [Fact]
+    public void Checkbox_SemanticLabel_PropagatesCheckedAndEnabledSemantics()
+    {
+        FocusManager.Instance.ResetForTests();
+        try
+        {
+            using var harness = new WidgetRenderHarness(
+                new Theme(
+                    data: ThemeData.Light,
+                    child: new Checkbox(
+                        value: true,
+                        onChanged: _ => { },
+                        semanticLabel: "Accept terms")));
+
+            var semanticsRoot = harness.PumpAndGetSemantics(new Size(220, 120));
+            Assert.NotNull(semanticsRoot);
+
+            var semanticsNode = FindFirstSemanticsNode(
+                semanticsRoot!,
+                static node => node.Label == "Accept terms");
+            Assert.NotNull(semanticsNode);
+            Assert.True(semanticsNode!.Flags.HasFlag(SemanticsFlags.IsChecked));
+            Assert.True(semanticsNode.Flags.HasFlag(SemanticsFlags.IsEnabled));
+            Assert.True(semanticsNode.Actions.HasFlag(SemanticsActions.Tap));
+        }
+        finally
+        {
+            FocusManager.Instance.ResetForTests();
+        }
+    }
+
+    [Fact]
     public void Checkbox_KeyboardActivation_TogglesFalseToTrue()
     {
         FocusManager.Instance.ResetForTests();
@@ -220,27 +252,20 @@ public sealed class MaterialCheckboxTests
         {
             var owner = new BuildOwner();
             bool? nextValue = null;
+            var focusNode = new FocusNode();
             var root = new TestRootElement(
                 new Theme(
                     data: ThemeData.Light,
                     child: new Checkbox(
                         value: false,
+                        focusNode: focusNode,
                         onChanged: value => nextValue = value)));
 
             root.Attach(owner);
             root.Mount(parent: null, newSlot: null);
             owner.FlushBuild();
 
-            var focusListener = FindFocusPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-            Assert.NotNull(focusListener);
-            focusListener!.HandleEvent(
-                new PointerDownEvent(
-                    pointer: 51,
-                    kind: PointerDeviceKind.Mouse,
-                    position: new Point(10, 10),
-                    buttons: PointerButtons.Primary,
-                    timestampUtc: DateTime.UtcNow),
-                new BoxHitTestEntry(focusListener, new Point(10, 10)));
+            Assert.True(focusNode.RequestFocus());
             owner.FlushBuild();
 
             var handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Space", isDown: true));
@@ -263,28 +288,21 @@ public sealed class MaterialCheckboxTests
         {
             var owner = new BuildOwner();
             bool? nextValue = true;
+            var focusNode = new FocusNode();
             var root = new TestRootElement(
                 new Theme(
                     data: ThemeData.Light,
                     child: new Checkbox(
                         value: true,
                         tristate: true,
+                        focusNode: focusNode,
                         onChanged: value => nextValue = value)));
 
             root.Attach(owner);
             root.Mount(parent: null, newSlot: null);
             owner.FlushBuild();
 
-            var focusListener = FindFocusPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-            Assert.NotNull(focusListener);
-            focusListener!.HandleEvent(
-                new PointerDownEvent(
-                    pointer: 52,
-                    kind: PointerDeviceKind.Mouse,
-                    position: new Point(10, 10),
-                    buttons: PointerButtons.Primary,
-                    timestampUtc: DateTime.UtcNow),
-                new BoxHitTestEntry(focusListener, new Point(10, 10)));
+            Assert.True(focusNode.RequestFocus());
             owner.FlushBuild();
 
             var handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Space", isDown: true));
@@ -307,28 +325,21 @@ public sealed class MaterialCheckboxTests
         {
             var owner = new BuildOwner();
             bool? nextValue = null;
+            var focusNode = new FocusNode();
             var root = new TestRootElement(
                 new Theme(
                     data: ThemeData.Light,
                     child: new Checkbox(
                         value: null,
                         tristate: true,
+                        focusNode: focusNode,
                         onChanged: value => nextValue = value)));
 
             root.Attach(owner);
             root.Mount(parent: null, newSlot: null);
             owner.FlushBuild();
 
-            var focusListener = FindFocusPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-            Assert.NotNull(focusListener);
-            focusListener!.HandleEvent(
-                new PointerDownEvent(
-                    pointer: 53,
-                    kind: PointerDeviceKind.Mouse,
-                    position: new Point(10, 10),
-                    buttons: PointerButtons.Primary,
-                    timestampUtc: DateTime.UtcNow),
-                new BoxHitTestEntry(focusListener, new Point(10, 10)));
+            Assert.True(focusNode.RequestFocus());
             owner.FlushBuild();
 
             var handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Space", isDown: true));
@@ -763,6 +774,25 @@ public sealed class MaterialCheckboxTests
             .Any(box => box.Decoration.Brush is LinearGradientBrush);
     }
 
+    private static SemanticsNode? FindFirstSemanticsNode(SemanticsNode node, Func<SemanticsNode, bool> predicate)
+    {
+        if (predicate(node))
+        {
+            return node;
+        }
+
+        foreach (var child in node.Children)
+        {
+            var found = FindFirstSemanticsNode(child, predicate);
+            if (found is not null)
+            {
+                return found;
+            }
+        }
+
+        return null;
+    }
+
     private static List<T> FindDescendants<T>(RenderObject? root) where T : RenderObject
     {
         var results = new List<T>();
@@ -783,37 +813,6 @@ public sealed class MaterialCheckboxTests
         }
 
         root.VisitChildren(child => CollectDescendants(child, results));
-    }
-
-    private static RenderPointerListener? FindFocusPointerListener(RenderObject? root)
-    {
-        if (root is null)
-        {
-            return null;
-        }
-
-        if (root is RenderPointerListener listener
-            && listener.OnPointerDown != null
-            && listener.OnPointerUp == null
-            && listener.OnPointerCancel == null
-            && listener.OnPointerEnter == null
-            && listener.OnPointerExit == null)
-        {
-            return listener;
-        }
-
-        RenderPointerListener? result = null;
-        root.VisitChildren(child =>
-        {
-            if (result is not null)
-            {
-                return;
-            }
-
-            result = FindFocusPointerListener(child);
-        });
-
-        return result;
     }
 
     private static Color ApplyOpacity(Color color, double opacity)
@@ -849,6 +848,14 @@ public sealed class MaterialCheckboxTests
             _pipeline.FlushLayout(size);
             _pipeline.FlushCompositingBits();
             _pipeline.FlushPaint();
+        }
+
+        public SemanticsNode? PumpAndGetSemantics(Size size)
+        {
+            Pump(size);
+            _pipeline.RequestSemanticsUpdate();
+            _pipeline.FlushSemantics();
+            return _pipeline.SemanticsOwner.RootNode;
         }
 
         public void Dispose()
