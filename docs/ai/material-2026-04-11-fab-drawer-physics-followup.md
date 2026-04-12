@@ -9,7 +9,7 @@
 - Full Flutter `Hero` transition runtime.
 - Host-level mouse cursor application.
 - Haptic/audio feedback dispatch.
-- Full drag-cancel parity for drawer gestures (`onHorizontalDragCancel`) until gesture primitives are expanded.
+- Dedicated drawer theming parity.
 
 ## Context Budget Plan
 
@@ -57,8 +57,7 @@
 - Divergence log (only if needed):
   - `FloatingActionButton`: runtime `Hero` animation pipeline is not implemented yet; `heroTag` is API-level parity only for now.
   - `FloatingActionButton`: `mouseCursor` and `enableFeedback` are currently stored but not wired to host runtime cursor/haptics.
-  - `Scaffold` drawer: drag-cancel parity remains pending because gesture widgets do not expose horizontal drag-cancel callbacks yet.
-  - `Scaffold` drawer: velocity is still estimated from current gesture primitives, not a full px/s tracker.
+  - `Scaffold` drawer: drag-cancel parity and true px/s velocity estimation were closed in the follow-up note `docs/ai/material-2026-04-12-drawer-gesture-velocity-closeout.md`.
 
 ## Planned Changes
 

@@ -8,7 +8,7 @@ Use this block as the fastest machine-readable status summary.
 
 ```yaml
 framework_plan_version: 1
-last_updated: 2026-04-11
+last_updated: 2026-04-12
 north_star: "Flutter-like widget/rendering framework in C# with Avalonia as host infrastructure."
 current_phase: "M4 material library rewrite (theme/scaffold/material controls) in progress."
 status:
@@ -245,7 +245,11 @@ Progress update (2026-03-19):
 - Updated navigator local-pop semantics for history entries: `NavigatorState.MaybePop` now treats route-local `WillPop` handling as consumed (handled) even on root routes, aligning with Flutter local-history behavior.
 - Expanded app-bar drawer implication behavior: existing drawer-aware implied leading remains (`Scaffold.drawer` -> leading `IconButton(Icons.Menu)`), and app bar now also auto-implies end-drawer trailing action (`Scaffold.endDrawer` with empty actions -> trailing `IconButton(Icons.Menu)`) with `automaticallyImplyActions` opt-out.
 - Updated `MaterialScaffoldTests` coverage for end-drawer implied actions, start/end drawer state APIs, start/end mutual exclusion, edge-drag open flows on both sides, and root-route drawer close on navigator back handling; updated `NavigationTests` coverage for root-route local-history `MaybePop` handling.
-- Documented remaining drawer divergence for follow-up: gesture-cancel settle parity (`onHorizontalDragCancel`) and true px/s velocity estimation are still pending.
+- Closed remaining drawer gesture-controller follow-up: shared drag recognizers now expose drag-cancel callbacks through `GestureDetector`/`RawGestureDetector`, report `DragEndDetails.PrimaryVelocity` as timestamp-derived px/s, and `Scaffold` drawer cancel/release paths now settle using Flutter-like half-threshold and fling-threshold semantics.
+- Closed dedicated drawer-theme parity follow-up:
+  - added `DrawerThemeData` + inherited `DrawerTheme` and `ThemeData.DrawerTheme` integration;
+  - `Drawer` visual resolution now follows `widget -> drawer theme -> mode-aware defaults` for background/elevation/shadow/width, with invalid themed width/elevation guards;
+  - `Scaffold` scrim resolution now follows `drawerScrimColor -> drawer theme scrim -> framework default`, and drawer drag progress now uses themed drawer width so settle thresholds match themed geometry.
 - Updated sample gallery demo shells in both C# and Dart samples to use title-only app bars so non-root routes use default implied leading instead of custom back-button composition.
 - Continued Material button/theme parity hardening from Flutter M3 defaults:
   - `ThemeData.Light` default tokens now follow Flutter M3 light scheme for key surfaces/foregrounds used by sample controls (`primary`, `onSurface`, `secondaryContainer`, `onSecondaryContainer`, `surface/canvas`),

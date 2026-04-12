@@ -94,9 +94,11 @@ public sealed class RawGestureDetector : StatefulWidget
         Action<DragStartDetails>? onHorizontalDragStart = null,
         Action<DragUpdateDetails>? onHorizontalDragUpdate = null,
         Action<DragEndDetails>? onHorizontalDragEnd = null,
+        Action? onHorizontalDragCancel = null,
         Action<DragStartDetails>? onVerticalDragStart = null,
         Action<DragUpdateDetails>? onVerticalDragUpdate = null,
         Action<DragEndDetails>? onVerticalDragEnd = null,
+        Action? onVerticalDragCancel = null,
         Key? key = null) : base(key)
     {
         Child = child;
@@ -110,9 +112,11 @@ public sealed class RawGestureDetector : StatefulWidget
         OnHorizontalDragStart = onHorizontalDragStart;
         OnHorizontalDragUpdate = onHorizontalDragUpdate;
         OnHorizontalDragEnd = onHorizontalDragEnd;
+        OnHorizontalDragCancel = onHorizontalDragCancel;
         OnVerticalDragStart = onVerticalDragStart;
         OnVerticalDragUpdate = onVerticalDragUpdate;
         OnVerticalDragEnd = onVerticalDragEnd;
+        OnVerticalDragCancel = onVerticalDragCancel;
     }
 
     public Widget? Child { get; }
@@ -137,11 +141,15 @@ public sealed class RawGestureDetector : StatefulWidget
 
     public Action<DragEndDetails>? OnHorizontalDragEnd { get; }
 
+    public Action? OnHorizontalDragCancel { get; }
+
     public Action<DragStartDetails>? OnVerticalDragStart { get; }
 
     public Action<DragUpdateDetails>? OnVerticalDragUpdate { get; }
 
     public Action<DragEndDetails>? OnVerticalDragEnd { get; }
+
+    public Action? OnVerticalDragCancel { get; }
 
     public override State CreateState()
     {
@@ -223,12 +231,14 @@ public sealed class RawGestureDetector : StatefulWidget
 
             if (widget.OnHorizontalDragStart != null
                 || widget.OnHorizontalDragUpdate != null
-                || widget.OnHorizontalDragEnd != null)
+                || widget.OnHorizontalDragEnd != null
+                || widget.OnHorizontalDragCancel != null)
             {
                 _horizontalDrag ??= new HorizontalDragGestureRecognizer();
                 _horizontalDrag.OnStart = widget.OnHorizontalDragStart;
                 _horizontalDrag.OnUpdate = widget.OnHorizontalDragUpdate;
                 _horizontalDrag.OnEnd = widget.OnHorizontalDragEnd;
+                _horizontalDrag.OnCancel = widget.OnHorizontalDragCancel;
             }
             else
             {
@@ -237,12 +247,14 @@ public sealed class RawGestureDetector : StatefulWidget
 
             if (widget.OnVerticalDragStart != null
                 || widget.OnVerticalDragUpdate != null
-                || widget.OnVerticalDragEnd != null)
+                || widget.OnVerticalDragEnd != null
+                || widget.OnVerticalDragCancel != null)
             {
                 _verticalDrag ??= new VerticalDragGestureRecognizer();
                 _verticalDrag.OnStart = widget.OnVerticalDragStart;
                 _verticalDrag.OnUpdate = widget.OnVerticalDragUpdate;
                 _verticalDrag.OnEnd = widget.OnVerticalDragEnd;
+                _verticalDrag.OnCancel = widget.OnVerticalDragCancel;
             }
             else
             {
@@ -268,9 +280,11 @@ public sealed class GestureDetector : StatelessWidget
         Action<DragStartDetails>? onHorizontalDragStart = null,
         Action<DragUpdateDetails>? onHorizontalDragUpdate = null,
         Action<DragEndDetails>? onHorizontalDragEnd = null,
+        Action? onHorizontalDragCancel = null,
         Action<DragStartDetails>? onVerticalDragStart = null,
         Action<DragUpdateDetails>? onVerticalDragUpdate = null,
         Action<DragEndDetails>? onVerticalDragEnd = null,
+        Action? onVerticalDragCancel = null,
         Key? key = null) : base(key)
     {
         Child = child;
@@ -280,9 +294,11 @@ public sealed class GestureDetector : StatelessWidget
         OnHorizontalDragStart = onHorizontalDragStart;
         OnHorizontalDragUpdate = onHorizontalDragUpdate;
         OnHorizontalDragEnd = onHorizontalDragEnd;
+        OnHorizontalDragCancel = onHorizontalDragCancel;
         OnVerticalDragStart = onVerticalDragStart;
         OnVerticalDragUpdate = onVerticalDragUpdate;
         OnVerticalDragEnd = onVerticalDragEnd;
+        OnVerticalDragCancel = onVerticalDragCancel;
     }
 
     public Widget? Child { get; }
@@ -299,11 +315,15 @@ public sealed class GestureDetector : StatelessWidget
 
     public Action<DragEndDetails>? OnHorizontalDragEnd { get; }
 
+    public Action? OnHorizontalDragCancel { get; }
+
     public Action<DragStartDetails>? OnVerticalDragStart { get; }
 
     public Action<DragUpdateDetails>? OnVerticalDragUpdate { get; }
 
     public Action<DragEndDetails>? OnVerticalDragEnd { get; }
+
+    public Action? OnVerticalDragCancel { get; }
 
     public override Widget Build(BuildContext context)
     {
@@ -315,8 +335,10 @@ public sealed class GestureDetector : StatelessWidget
             onHorizontalDragStart: OnHorizontalDragStart,
             onHorizontalDragUpdate: OnHorizontalDragUpdate,
             onHorizontalDragEnd: OnHorizontalDragEnd,
+            onHorizontalDragCancel: OnHorizontalDragCancel,
             onVerticalDragStart: OnVerticalDragStart,
             onVerticalDragUpdate: OnVerticalDragUpdate,
-            onVerticalDragEnd: OnVerticalDragEnd);
+            onVerticalDragEnd: OnVerticalDragEnd,
+            onVerticalDragCancel: OnVerticalDragCancel);
     }
 }

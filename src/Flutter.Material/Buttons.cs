@@ -2138,7 +2138,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
                 splashOrigin: _splashOrigin,
                 splashProgress: _splashProgress,
                 splashRadius: widget.SplashRadius,
-                clipToBounds: widget.ClipBehavior != Clip.None,
+                clipToBounds: false,
                 child: content);
 
             if (widget.ClipBehavior != Clip.None)

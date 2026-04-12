@@ -6,8 +6,14 @@ using Xunit;
 
 namespace Flutter.Tests;
 
+[Collection(SchedulerTestCollection.Name)]
 public sealed class NavigationTests
 {
+    public NavigationTests()
+    {
+        NavigatorBackButtonDispatcher.ResetForTests();
+    }
+
     [Fact]
     public void Navigator_PushAndPop_UpdatesCurrentRoute()
     {

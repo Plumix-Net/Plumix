@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
+using Flutter.Gestures;
 using Flutter.Material;
 using Flutter.Rendering;
 using Flutter.UI;
@@ -8,8 +9,15 @@ using Xunit;
 
 namespace Flutter.Tests;
 
+[Collection(SchedulerTestCollection.Name)]
 public sealed class MaterialButtonsTests
 {
+    public MaterialButtonsTests()
+    {
+        FocusManager.Instance.ResetForTests();
+        GestureBinding.Instance.ResetForTests();
+    }
+
     [Fact]
     public void ThemeData_Light_UsesFlutterMaterial3ColorDefaults()
     {

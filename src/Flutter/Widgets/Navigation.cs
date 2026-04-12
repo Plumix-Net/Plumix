@@ -1398,4 +1398,9 @@ internal static class NavigatorBackButtonDispatcher
 
         return false;
     }
+
+    internal static void ResetForTests()
+    {
+        Handlers.Clear();
+    }
 }

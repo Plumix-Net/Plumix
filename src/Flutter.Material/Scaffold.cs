@@ -55,24 +55,57 @@ public sealed class Drawer : StatelessWidget
     public override Widget Build(BuildContext context)
     {
         var theme = Theme.Of(context);
+        var drawerTheme = DrawerTheme.Of(context);
         var useMaterial3 = theme.UseMaterial3;
-        var effectiveBackground = BackgroundColor ?? (useMaterial3
+        var effectiveBackground = BackgroundColor ?? drawerTheme.BackgroundColor ?? (useMaterial3
             ? theme.SurfaceContainerLowColor
             : theme.CanvasColor);
-        var effectiveElevation = Elevation ?? (useMaterial3
-            ? DefaultM3Elevation
-            : DefaultM2Elevation);
-        var effectiveShadowColor = ShadowColor ?? (useMaterial3
+        var effectiveElevation = ResolveEffectiveElevation(drawerTheme, useMaterial3);
+        var effectiveWidth = ResolveEffectiveWidth(drawerTheme);
+        var effectiveShadowColor = ShadowColor ?? drawerTheme.ShadowColor ?? (useMaterial3
             ? Colors.Transparent
             : theme.ShadowColor);
         var effectiveBoxShadows = BuildBoxShadows(effectiveShadowColor, effectiveElevation);
 
         return new Container(
-            width: Width ?? DefaultWidth,
+            width: effectiveWidth,
             decoration: new BoxDecoration(
                 Color: effectiveBackground,
                 BoxShadows: effectiveBoxShadows),
             child: Child ?? new SizedBox());
+    }
+
+    internal double ResolveEffectiveWidthForScaffold(BuildContext context)
+    {
+        return ResolveEffectiveWidth(DrawerTheme.Of(context));
+    }
+
+    private double ResolveEffectiveElevation(DrawerThemeData drawerTheme, bool useMaterial3)
+    {
+        var effectiveElevation = Elevation ?? drawerTheme.Elevation ?? (useMaterial3
+            ? DefaultM3Elevation
+            : DefaultM2Elevation);
+        if (double.IsNaN(effectiveElevation) || double.IsInfinity(effectiveElevation) || effectiveElevation < 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(DrawerThemeData.Elevation),
+                "Drawer theme elevation must be non-negative and finite.");
+        }
+
+        return effectiveElevation;
+    }
+
+    private double ResolveEffectiveWidth(DrawerThemeData drawerTheme)
+    {
+        var effectiveWidth = Width ?? drawerTheme.Width ?? DefaultWidth;
+        if (double.IsNaN(effectiveWidth) || double.IsInfinity(effectiveWidth) || effectiveWidth <= 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(DrawerThemeData.Width),
+                "Drawer theme width must be positive and finite.");
+        }
+
+        return effectiveWidth;
     }
 
     private static BoxShadows? BuildBoxShadows(Color shadowColor, double elevation)
@@ -262,7 +295,6 @@ public sealed class ScaffoldState : State
     private const double DefaultDrawerWidth = 304.0;
     private const double DefaultOpenThreshold = 0.5;
     private const double MinFlingVelocityPixelsPerSecond = 365.0;
-    private const double VelocitySamplesPerSecond = 60.0;
     private static readonly TimeSpan BaseSettleDuration = TimeSpan.FromMilliseconds(246);
     private bool _isDrawerOpen;
     private bool _isEndDrawerOpen;
@@ -270,7 +302,6 @@ public sealed class ScaffoldState : State
     private double _endDrawerProgress;
     private DrawerSide? _activeDragSide;
     private double _activeDragProgress;
-    private double _lastDragVelocityHint;
     private AnimationController? _drawerAnimationController;
     private AnimationController? _endDrawerAnimationController;
     private double _drawerAnimationFrom;
@@ -481,12 +512,13 @@ public sealed class ScaffoldState : State
 
         if (isAnyDrawerVisible)
         {
-            overlayChildren.Add(BuildScrim(Math.Max(drawerProgress, endDrawerProgress)));
+            overlayChildren.Add(BuildScrim(context, Math.Max(drawerProgress, endDrawerProgress)));
         }
 
         if (isStartDrawerVisible && CurrentWidget.Drawer != null)
         {
             overlayChildren.Add(BuildDrawerPanel(
+                context: context,
                 side: DrawerSide.Start,
                 textDirection: textDirection,
                 progress: drawerProgress,
@@ -496,6 +528,7 @@ public sealed class ScaffoldState : State
         if (isEndDrawerVisible && CurrentWidget.EndDrawer != null)
         {
             overlayChildren.Add(BuildDrawerPanel(
+                context: context,
                 side: DrawerSide.End,
                 textDirection: textDirection,
                 progress: endDrawerProgress,
@@ -534,12 +567,16 @@ public sealed class ScaffoldState : State
                 behavior: HitTestBehavior.Opaque,
                 onHorizontalDragStart: _ => BeginDrag(side),
                 onHorizontalDragUpdate: details => UpdateDrag(side, details.PrimaryDelta, textDirection),
-                onHorizontalDragEnd: details => EndDrag(side, details, textDirection)));
+                onHorizontalDragEnd: details => EndDrag(side, details, textDirection),
+                onHorizontalDragCancel: () => CancelDragGesture(side)));
     }
 
-    private Widget BuildScrim(double progress)
+    private Widget BuildScrim(BuildContext context, double progress)
     {
-        var baseColor = Scaffold.ResolveDrawerScrimColor(CurrentWidget.DrawerScrimColor);
+        var drawerTheme = DrawerTheme.Of(context);
+        var baseColor = CurrentWidget.DrawerScrimColor
+                        ?? drawerTheme.ScrimColor
+                        ?? Scaffold.ResolveDrawerScrimColor(null);
         var scrimColor = ApplyOpacity(baseColor, progress);
         return new Positioned(
             left: 0,
@@ -552,9 +589,9 @@ public sealed class ScaffoldState : State
                 child: new Container(color: scrimColor)));
     }
 
-    private Widget BuildDrawerPanel(DrawerSide side, TextDirection textDirection, double progress, Widget child)
+    private Widget BuildDrawerPanel(BuildContext context, DrawerSide side, TextDirection textDirection, double progress, Widget child)
     {
-        var drawerWidth = ResolveDrawerWidth(child);
+        var drawerWidth = ResolveDrawerWidth(context, child);
         var isOnLeft = IsDrawerOnLeft(side, textDirection);
         var offset = -(1 - progress) * drawerWidth;
 
@@ -568,6 +605,7 @@ public sealed class ScaffoldState : State
                 onHorizontalDragStart: _ => BeginDrag(side),
                 onHorizontalDragUpdate: details => UpdateDrag(side, details.PrimaryDelta, textDirection),
                 onHorizontalDragEnd: details => EndDrag(side, details, textDirection),
+                onHorizontalDragCancel: () => CancelDragGesture(side),
                 child: child));
     }
 
@@ -595,7 +633,6 @@ public sealed class ScaffoldState : State
             StopSettleAnimation(side);
             _activeDragSide = side;
             _activeDragProgress = ResolveDrawerProgress(side);
-            _lastDragVelocityHint = 0;
 
             if (side == DrawerSide.Start)
             {
@@ -625,7 +662,7 @@ public sealed class ScaffoldState : State
             return;
         }
 
-        var drawerWidth = ResolveDrawerWidth(drawer);
+        var drawerWidth = ResolveDrawerWidth(Context, drawer);
         if (drawerWidth <= 0)
         {
             return;
@@ -641,7 +678,6 @@ public sealed class ScaffoldState : State
         SetState(() =>
         {
             _activeDragProgress = nextProgress;
-            _lastDragVelocityHint = primaryDelta * ResolveOpenDirectionMultiplier(side, textDirection) * VelocitySamplesPerSecond;
             UpdateOpenFlagsFromProgress(side, nextProgress);
         });
     }
@@ -659,17 +695,13 @@ public sealed class ScaffoldState : State
             return;
         }
 
-        var drawerWidth = ResolveDrawerWidth(drawer);
+        var drawerWidth = ResolveDrawerWidth(Context, drawer);
         if (drawerWidth <= 0)
         {
             return;
         }
 
-        var releaseVelocity = details.PrimaryVelocity * ResolveOpenDirectionMultiplier(side, textDirection) * VelocitySamplesPerSecond;
-        if (Math.Abs(releaseVelocity) < double.Epsilon)
-        {
-            releaseVelocity = _lastDragVelocityHint;
-        }
+        var releaseVelocity = details.PrimaryVelocity * ResolveOpenDirectionMultiplier(side, textDirection);
 
         bool shouldOpen;
         if (releaseVelocity >= MinFlingVelocityPixelsPerSecond)
@@ -692,6 +724,28 @@ public sealed class ScaffoldState : State
             CancelDrag();
             var normalizedVelocity = Math.Abs(releaseVelocity) / drawerWidth;
             StartSettleAnimation(side, shouldOpen ? 1.0 : 0.0, normalizedVelocity);
+            if (shouldOpen)
+            {
+                StartSettleAnimation(OppositeOf(side), targetProgress: 0.0, normalizedVelocityHint: null);
+            }
+        });
+    }
+
+    private void CancelDragGesture(DrawerSide side)
+    {
+        if (_activeDragSide != side)
+        {
+            return;
+        }
+
+        var shouldOpen = _activeDragProgress >= DefaultOpenThreshold;
+
+        SetState(() =>
+        {
+            CommitProgress(side, _activeDragProgress);
+            CommitDrawerVisibility(side, shouldOpen);
+            CancelDrag();
+            StartSettleAnimation(side, shouldOpen ? 1.0 : 0.0, normalizedVelocityHint: null);
             if (shouldOpen)
             {
                 StartSettleAnimation(OppositeOf(side), targetProgress: 0.0, normalizedVelocityHint: null);
@@ -749,7 +803,6 @@ public sealed class ScaffoldState : State
 
         _activeDragSide = null;
         _activeDragProgress = 0;
-        _lastDragVelocityHint = 0;
     }
 
     private bool HasDrawerForSide(DrawerSide side)
@@ -1066,11 +1119,11 @@ public sealed class ScaffoldState : State
         return side == DrawerSide.Start ? DrawerSide.End : DrawerSide.Start;
     }
 
-    private static double ResolveDrawerWidth(Widget drawer)
+    private static double ResolveDrawerWidth(BuildContext context, Widget drawer)
     {
         if (drawer is Drawer typedDrawer)
         {
-            return typedDrawer.Width ?? DefaultDrawerWidth;
+            return typedDrawer.ResolveEffectiveWidthForScaffold(context);
         }
 
         return DefaultDrawerWidth;

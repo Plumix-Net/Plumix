@@ -14,6 +14,28 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 ### Changed
 
+- Closed dedicated Material drawer-theming parity in framework `Scaffold`/`Drawer`:
+  - added `DrawerThemeData` + inherited `DrawerTheme` (`src/Flutter.Material/DrawerTheme.cs`) and global `ThemeData.DrawerTheme` surface (`src/Flutter.Material/ThemeData.cs`);
+  - `Drawer` visuals now resolve by `widget -> drawerTheme -> mode-aware defaults` for background/elevation/shadow/width with finite/non-negative guards for themed width/elevation values;
+  - `Scaffold` scrim color now resolves by `drawerScrimColor -> drawerTheme.scrimColor -> default`;
+  - drawer drag progress/settle width math now respects themed drawer width (`ThemeData.DrawerTheme.Width`) instead of only widget width/default width.
+- Added focused drawer-theme regression coverage in `src/Flutter.Tests/MaterialScaffoldTests.cs`:
+  - drawer visual precedence (`widget` overrides `DrawerTheme`; `DrawerTheme` overrides defaults),
+  - invalid themed width/elevation guards,
+  - themed-width drag-threshold behavior for cancel-settle decisions,
+  - scaffold scrim precedence (`widget` scrim override vs `DrawerTheme` scrim fallback).
+- Stabilized full test-suite ordering for navigation/material interaction tests:
+  - added test-only `NavigatorBackButtonDispatcher.ResetForTests()` in `src/Flutter/Widgets/Navigation.cs`;
+  - moved `NavigationTests`, `MaterialScaffoldTests`, and `MaterialButtonsTests` into serial scheduler collection (`SchedulerTestCollection`) and reset relevant global test state in constructors;
+  - removed order-dependent `Navigator.TryHandleBackButton`/fullscreen-dialog app-bar leading/button-overlay flakes in full `Flutter.Tests` runs.
+- Closed the remaining framework drawer gesture-controller parity gaps in `src/Flutter.Material/Scaffold.cs` and shared gesture primitives:
+  - `GestureDetector`/`RawGestureDetector` now expose horizontal and vertical drag-cancel callbacks;
+  - `DragGestureRecognizer` now reports `DragEndDetails.PrimaryVelocity` in real pixels per second from pointer timestamps instead of a frame-rate-scaled delta hint;
+  - drawer drag release now consumes the px/s velocity directly, and pointer cancel settles open/closed by the Flutter half-progress threshold.
+- Added focused drawer and gesture regression coverage:
+  - verifies horizontal drag velocity is reported in px/s;
+  - verifies drawer drag cancel settles closed below half progress and open above half progress.
+- Fixed Material button ripple clipping composition in `src/Flutter.Material/Buttons.cs`: rounded button splashes now rely on the surrounding `ClipRRect` instead of enabling an extra internal `RenderInkSplash` bounds clip, matching existing clip-shape coverage.
 - Closed the remaining framework `BottomNavigationBar` localization gap:
   - added Material localization primitives in `src/Flutter.Material/MaterialLocalizations.cs` (`MaterialLocalizations`, `DefaultMaterialLocalizations`, and inherited `MaterialLocalizationsScope`);
   - bottom-navigation index-label semantics now resolve through `MaterialLocalizations.TabLabel(...)` instead of fixed string formatting in `src/Flutter.Material/BottomNavigationBar.cs`;
@@ -59,7 +81,6 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 - Expanded app-bar dismiss-implied leading behavior in `src/Flutter.Material/Scaffold.cs`: non-drawer implied leading now resolves through `ModalRoute.ImpliesAppBarDismissal` (with `Navigator.CanPop` fallback), enabling root-route back affordance when local history is present.
 - Expanded `src/Flutter.Tests/MaterialScaffoldTests.cs` with focused drawer coverage for end-drawer implied actions, `ScaffoldState` end-drawer transitions, start/end mutual exclusion, and start/end edge-drag open flows.
 - Expanded test coverage with route-history/back handling regressions: `src/Flutter.Tests/MaterialScaffoldTests.cs` now verifies root-route drawer close on `Navigator.MaybePop`, and `src/Flutter.Tests/NavigationTests.cs` now verifies root-route local-history consume semantics.
-- Remaining documented drawer divergence for current framework scope: gesture-cancel settle parity (`onHorizontalDragCancel`) and precise velocity tracking (true px/s estimator) remain follow-up work; dedicated drawer theming parity is also pending.
 - Completed framework `AppBar` fullscreen implied-leading branch: default implied leading now resolves to `IconButton(Icons.Close)` for fullscreen dialog routes (`PageRoute.FullscreenDialog == true`) and keeps `IconButton(Icons.ArrowBack)` for regular dismissible routes, with focused regression coverage in `src/Flutter.Tests/MaterialScaffoldTests.cs`.
 - Aligned framework `AppBar` with Flutter implied-leading behavior: added `automaticallyImplyLeading` (`true` default) and default back leading resolution for non-root navigator routes (`Navigator.CanPop` -> `IconButton(Icons.ArrowBack)` -> `Navigator.MaybePop`), with focused regression coverage in `src/Flutter.Tests/MaterialScaffoldTests.cs`.
 - Updated sample gallery demo shells in both C# and Dart samples to use title-only app bars so back affordance comes from default implied leading (`src/Sample/Flutter.Net/SampleGalleryScreen.cs`, `dart_sample/lib/sample_gallery_screen.dart`).
