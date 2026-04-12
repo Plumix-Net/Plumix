@@ -208,6 +208,37 @@ public sealed class MaterialBottomNavigationBarTests
     }
 
     [Fact]
+    public void BottomNavigationBar_SemanticsIndexLabel_UsesMaterialLocalizationsOverride()
+    {
+        using var harness = new WidgetRenderHarness(
+            WrapWithThemeAndMediaQuery(
+                ThemeData.Light,
+                new BottomNavigationBar(
+                    currentIndex: 1,
+                    onTap: _ => { },
+                    items:
+                    [
+                        new BottomNavigationBarItem(icon: new Icon(Icons.Menu), label: "First"),
+                        new BottomNavigationBarItem(icon: new Icon(Icons.InfoOutline), label: "Second"),
+                        new BottomNavigationBarItem(icon: new Icon(Icons.Check), label: "Third"),
+                    ]),
+                localizations: new TestMaterialLocalizations()));
+
+        var semanticsRoot = harness.PumpAndGetSemantics(new Size(320, 120));
+        Assert.NotNull(semanticsRoot);
+
+        var firstIndexNode = FindFirstSemanticsNode(
+            semanticsRoot!,
+            static node => string.Equals(node.Label, "Section 1 / 3", StringComparison.Ordinal));
+        Assert.NotNull(firstIndexNode);
+
+        var secondIndexNode = FindFirstSemanticsNode(
+            semanticsRoot,
+            static node => string.Equals(node.Label, "Section 2 / 3", StringComparison.Ordinal));
+        Assert.NotNull(secondIndexNode);
+    }
+
+    [Fact]
     public void BottomNavigationBar_DisabledSemantics_OmitEnabledFlagAndTapAction()
     {
         using var harness = new WidgetRenderHarness(
@@ -637,11 +668,28 @@ public sealed class MaterialBottomNavigationBarTests
         };
     }
 
-    private static Widget WrapWithThemeAndMediaQuery(ThemeData theme, Widget child)
+    private static Widget WrapWithThemeAndMediaQuery(
+        ThemeData theme,
+        Widget child,
+        MaterialLocalizations? localizations = null)
     {
+        Widget themedContent = new Theme(data: theme, child: child);
+        if (localizations is not null)
+        {
+            themedContent = new MaterialLocalizationsScope(localizations: localizations, child: themedContent);
+        }
+
         return new MediaQuery(
             data: new MediaQueryData(Size: new Size(390, 844)),
-            child: new Theme(data: theme, child: child));
+            child: themedContent);
+    }
+
+    private sealed class TestMaterialLocalizations : MaterialLocalizations
+    {
+        public override string TabLabel(int tabIndex, int tabCount)
+        {
+            return $"Section {tabIndex + 1} / {tabCount}";
+        }
     }
 
     private sealed class TestRootElement : Element, IRenderObjectHost

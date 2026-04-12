@@ -1593,6 +1593,8 @@ internal sealed class MaterialButtonCore : StatefulWidget
         bool? isSemanticChecked = null,
         string? semanticLabel = null,
         double? splashRadius = null,
+        Clip clipBehavior = Clip.HardEdge,
+        bool? enableFeedback = null,
         bool autofocus = false,
         Key? key = null) : base(key)
     {
@@ -1608,6 +1610,8 @@ internal sealed class MaterialButtonCore : StatefulWidget
         IsSemanticChecked = isSemanticChecked;
         SemanticLabel = semanticLabel;
         SplashRadius = splashRadius;
+        ClipBehavior = clipBehavior;
+        EnableFeedback = enableFeedback;
         Autofocus = autofocus;
     }
 
@@ -1634,6 +1638,10 @@ internal sealed class MaterialButtonCore : StatefulWidget
     public string? SemanticLabel { get; }
 
     public double? SplashRadius { get; }
+
+    public Clip ClipBehavior { get; }
+
+    public bool? EnableFeedback { get; }
 
     public bool Autofocus { get; }
 
@@ -2130,12 +2138,15 @@ internal sealed class MaterialButtonCore : StatefulWidget
                 splashOrigin: _splashOrigin,
                 splashProgress: _splashProgress,
                 splashRadius: widget.SplashRadius,
-                clipToBounds: false,
+                clipToBounds: widget.ClipBehavior != Clip.None,
                 child: content);
 
-            content = new ClipRRect(
-                borderRadius: borderRadius,
-                child: content);
+            if (widget.ClipBehavior != Clip.None)
+            {
+                content = new ClipRRect(
+                    borderRadius: borderRadius,
+                    child: content);
+            }
 
             content = new DecoratedBox(
                 decoration: new BoxDecoration(

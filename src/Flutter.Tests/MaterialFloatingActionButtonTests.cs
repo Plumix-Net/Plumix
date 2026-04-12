@@ -73,6 +73,62 @@ public sealed class MaterialFloatingActionButtonTests
     }
 
     [Fact]
+    public void FloatingActionButton_DefaultClipBehavior_DoesNotInsertClipRRect()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new FloatingActionButton(
+                    child: new Icon(Icons.Add),
+                    onPressed: () => { })));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
+        Assert.Null(FindDescendant<RenderClipRRect>(renderRoot));
+    }
+
+    [Fact]
+    public void FloatingActionButton_ClipBehaviorHardEdge_InsertsClipRRect()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new FloatingActionButton(
+                    child: new Icon(Icons.Add),
+                    onPressed: () => { },
+                    clipBehavior: Clip.HardEdge)));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
+        Assert.NotNull(FindDescendant<RenderClipRRect>(renderRoot));
+    }
+
+    [Fact]
+    public void FloatingActionButton_StoresHeroTagMouseCursorAndEnableFeedback()
+    {
+        var heroTag = new object();
+        var cursor = SystemMouseCursors.Click;
+        var fab = new FloatingActionButton(
+            child: new Icon(Icons.Add),
+            onPressed: () => { },
+            heroTag: heroTag,
+            mouseCursor: cursor,
+            enableFeedback: false);
+
+        Assert.Same(heroTag, fab.HeroTag);
+        Assert.Same(cursor, fab.MouseCursor);
+        Assert.False(fab.EnableFeedback);
+    }
+
+    [Fact]
     public void FloatingActionButton_Small_Uses40Constraint()
     {
         var owner = new BuildOwner();

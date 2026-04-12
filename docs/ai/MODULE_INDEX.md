@@ -30,6 +30,7 @@ Current priority (2026-03-12):
 - Read First:
   - `src/Flutter.Material/ThemeData.cs`
   - `src/Flutter.Material/Theme.cs`
+  - `src/Flutter.Material/MaterialLocalizations.cs`
   - `src/Flutter.Material/Scaffold.cs`
   - `src/Flutter.Material/BottomNavigationBar.cs`
   - `src/Flutter.Material/BottomNavigationBarTheme.cs`
@@ -37,6 +38,8 @@ Current priority (2026-03-12):
   - `src/Flutter.Material/IconButton.cs`
   - `src/Flutter.Material/FloatingActionButton.cs`
   - `src/Flutter.Material/FloatingActionButtonTheme.cs`
+  - `src/Flutter/Widgets/MouseCursor.cs`
+  - `src/Flutter/UI/Clip.cs`
   - `src/Flutter.Material/Checkbox.cs`
   - `src/Flutter.Material/Switch.cs`
   - `src/Flutter.Material/Radio.cs`

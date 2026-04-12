@@ -422,6 +422,48 @@ public sealed class MaterialScaffoldTests
     }
 
     [Fact]
+    public void Scaffold_EdgeDrag_UsesMediaPaddingForStartDrawerActivationWidth()
+    {
+        var binding = GestureBinding.Instance;
+        binding.ResetForTests();
+
+        BuildContext? scaffoldContext = null;
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    Platform = TargetPlatform.Android,
+                },
+                child: new MediaQuery(
+                    data: new MediaQueryData(
+                        Padding: new Thickness(30, 0, 0, 0)),
+                    child: new Scaffold(
+                        drawer: new Drawer(child: new Text("Padded edge drawer panel")),
+                        body: new CaptureBuildContextWidget(
+                            capture: context => scaffoldContext = context,
+                            child: new SizedBox())))));
+
+        try
+        {
+            harness.Pump(new Size(400, 300));
+            Assert.True(scaffoldContext.HasValue);
+
+            DispatchPointerDown(binding, harness.RenderView, pointer: 7003, position: new Point(40, 120));
+            DispatchPointerMove(binding, harness.RenderView, pointer: 7003, position: new Point(220, 120));
+            DispatchPointerUp(binding, harness.RenderView, pointer: 7003, position: new Point(220, 120));
+            harness.Pump(new Size(400, 300));
+
+            var state = Scaffold.Of(scaffoldContext!.Value);
+            Assert.True(state.IsDrawerOpen);
+            Assert.NotNull(FindParagraphByText(harness.RenderView, "Padded edge drawer panel"));
+        }
+        finally
+        {
+            binding.ResetForTests();
+        }
+    }
+
+    [Fact]
     public void Scaffold_OpenDrawer_AnimatesScrimOpacity_ToFullValue()
     {
         Scheduler.ResetForTests();

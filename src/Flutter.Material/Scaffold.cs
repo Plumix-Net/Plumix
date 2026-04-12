@@ -260,11 +260,10 @@ internal sealed class ScaffoldScope : InheritedWidget
 public sealed class ScaffoldState : State
 {
     private const double DefaultDrawerWidth = 304.0;
-    private const double OpenThreshold = 0.5;
-    private const double FlingVelocityThreshold = 0.35;
-    private const double VelocityHintPerDeltaFactor = 60.0;
-    private const double MinSettleDurationMs = 80.0;
-    private const double MaxSettleDurationMs = 246.0;
+    private const double DefaultOpenThreshold = 0.5;
+    private const double MinFlingVelocityPixelsPerSecond = 365.0;
+    private const double VelocitySamplesPerSecond = 60.0;
+    private static readonly TimeSpan BaseSettleDuration = TimeSpan.FromMilliseconds(246);
     private bool _isDrawerOpen;
     private bool _isEndDrawerOpen;
     private double _drawerProgress;
@@ -471,12 +470,12 @@ public sealed class ScaffoldState : State
         {
             if (ShouldEnableOpenDragGesture(DrawerSide.Start, theme))
             {
-                overlayChildren.Add(BuildEdgeDragArea(DrawerSide.Start, textDirection));
+                overlayChildren.Add(BuildEdgeDragArea(context, DrawerSide.Start, textDirection));
             }
 
             if (ShouldEnableOpenDragGesture(DrawerSide.End, theme))
             {
-                overlayChildren.Add(BuildEdgeDragArea(DrawerSide.End, textDirection));
+                overlayChildren.Add(BuildEdgeDragArea(context, DrawerSide.End, textDirection));
             }
         }
 
@@ -521,9 +520,9 @@ public sealed class ScaffoldState : State
                 child: content));
     }
 
-    private Widget BuildEdgeDragArea(DrawerSide side, TextDirection textDirection)
+    private Widget BuildEdgeDragArea(BuildContext context, DrawerSide side, TextDirection textDirection)
     {
-        var edgeWidth = Scaffold.ResolveDrawerEdgeDragWidth(CurrentWidget.DrawerEdgeDragWidth);
+        var edgeWidth = ResolveEdgeDragWidth(context, side, textDirection);
         var isOnLeft = IsDrawerOnLeft(side, textDirection);
         return new Positioned(
             left: isOnLeft ? 0 : null,
@@ -642,7 +641,7 @@ public sealed class ScaffoldState : State
         SetState(() =>
         {
             _activeDragProgress = nextProgress;
-            _lastDragVelocityHint = deltaProgress * VelocityHintPerDeltaFactor;
+            _lastDragVelocityHint = primaryDelta * ResolveOpenDirectionMultiplier(side, textDirection) * VelocitySamplesPerSecond;
             UpdateOpenFlagsFromProgress(side, nextProgress);
         });
     }
@@ -666,24 +665,24 @@ public sealed class ScaffoldState : State
             return;
         }
 
-        var releaseVelocity = details.PrimaryVelocity * ResolveOpenDirectionMultiplier(side, textDirection) / drawerWidth;
+        var releaseVelocity = details.PrimaryVelocity * ResolveOpenDirectionMultiplier(side, textDirection) * VelocitySamplesPerSecond;
         if (Math.Abs(releaseVelocity) < double.Epsilon)
         {
             releaseVelocity = _lastDragVelocityHint;
         }
 
         bool shouldOpen;
-        if (releaseVelocity >= FlingVelocityThreshold)
+        if (releaseVelocity >= MinFlingVelocityPixelsPerSecond)
         {
             shouldOpen = true;
         }
-        else if (releaseVelocity <= -FlingVelocityThreshold)
+        else if (releaseVelocity <= -MinFlingVelocityPixelsPerSecond)
         {
             shouldOpen = false;
         }
         else
         {
-            shouldOpen = _activeDragProgress >= OpenThreshold;
+            shouldOpen = _activeDragProgress >= DefaultOpenThreshold;
         }
 
         SetState(() =>
@@ -691,7 +690,8 @@ public sealed class ScaffoldState : State
             CommitProgress(side, _activeDragProgress);
             CommitDrawerVisibility(side, shouldOpen);
             CancelDrag();
-            StartSettleAnimation(side, shouldOpen ? 1.0 : 0.0, releaseVelocity);
+            var normalizedVelocity = Math.Abs(releaseVelocity) / drawerWidth;
+            StartSettleAnimation(side, shouldOpen ? 1.0 : 0.0, normalizedVelocity);
             if (shouldOpen)
             {
                 StartSettleAnimation(OppositeOf(side), targetProgress: 0.0, normalizedVelocityHint: null);
@@ -811,6 +811,18 @@ public sealed class ScaffoldState : State
         return platform is TargetPlatform.Windows or TargetPlatform.Linux or TargetPlatform.MacOS;
     }
 
+    private double ResolveEdgeDragWidth(BuildContext context, DrawerSide side, TextDirection textDirection)
+    {
+        if (CurrentWidget.DrawerEdgeDragWidth.HasValue)
+        {
+            return CurrentWidget.DrawerEdgeDragWidth.Value;
+        }
+
+        var padding = MediaQuery.MaybePaddingOf(context) ?? default;
+        var safePadding = IsDrawerOnLeft(side, textDirection) ? padding.Left : padding.Right;
+        return Scaffold.ResolveDrawerEdgeDragWidth(null) + safePadding;
+    }
+
     private void StartSettleAnimation(DrawerSide side, double targetProgress, double? normalizedVelocityHint)
     {
         targetProgress = Math.Clamp(targetProgress, 0, 1);
@@ -832,7 +844,7 @@ public sealed class ScaffoldState : State
         var duration = ResolveSettleDuration(currentProgress, targetProgress, normalizedVelocityHint);
         var controller = new AnimationController(duration)
         {
-            Curve = Curves.EaseOut
+            Curve = Curves.Linear
         };
 
         if (side == DrawerSide.Start)
@@ -865,18 +877,14 @@ public sealed class ScaffoldState : State
             return TimeSpan.FromMilliseconds(1);
         }
 
-        double durationMs;
+        var durationMs = BaseSettleDuration.TotalMilliseconds * distance;
         var velocity = Math.Abs(normalizedVelocityHint ?? 0);
         if (velocity > double.Epsilon)
         {
-            durationMs = distance / velocity * 1000;
-        }
-        else
-        {
-            durationMs = MaxSettleDurationMs * distance;
+            durationMs /= velocity;
         }
 
-        durationMs = Math.Clamp(durationMs, MinSettleDurationMs, MaxSettleDurationMs);
+        durationMs = Math.Clamp(durationMs, 1.0, BaseSettleDuration.TotalMilliseconds);
         return TimeSpan.FromMilliseconds(durationMs);
     }
 
@@ -965,7 +973,7 @@ public sealed class ScaffoldState : State
 
     private void UpdateOpenFlagsFromProgress(DrawerSide side, double progress)
     {
-        var isOpen = progress >= OpenThreshold;
+        var isOpen = progress >= DefaultOpenThreshold;
         if (side == DrawerSide.Start)
         {
             _isDrawerOpen = isOpen && HasDrawer;

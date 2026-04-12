@@ -14,13 +14,35 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 ### Changed
 
+- Closed the remaining framework `BottomNavigationBar` localization gap:
+  - added Material localization primitives in `src/Flutter.Material/MaterialLocalizations.cs` (`MaterialLocalizations`, `DefaultMaterialLocalizations`, and inherited `MaterialLocalizationsScope`);
+  - bottom-navigation index-label semantics now resolve through `MaterialLocalizations.TabLabel(...)` instead of fixed string formatting in `src/Flutter.Material/BottomNavigationBar.cs`;
+  - added focused regression coverage in `src/Flutter.Tests/MaterialBottomNavigationBarTests.cs` to verify local `MaterialLocalizationsScope` override for index-label semantics.
+- Hardened framework drawer interaction parity in `src/Flutter.Material/Scaffold.cs`:
+  - edge-drag activation width now follows Flutter behavior (`20dp + MediaQuery.padding` on the opening edge) when `drawerEdgeDragWidth` is not explicitly provided;
+  - settle choreography now uses Flutter-aligned constants (`_kMinFlingVelocity=365`, `_kBaseSettleDuration=246ms`) with linear settle curve and velocity-aware settle duration;
+  - drag-release open/close decisions now prioritize fling threshold and only fall back to progress threshold when fling velocity is not met.
+- Added focused drawer regression coverage in `src/Flutter.Tests/MaterialScaffoldTests.cs`:
+  - verifies start-drawer edge drag can begin from the `MediaQuery.padding` extension zone.
 - Extended framework Material `FloatingActionButton` parity in `src/Flutter.Material/FloatingActionButton.cs`:
   - added `tooltip` API support for all FAB constructors (`regular`, `small`, `large`, `extended`);
   - FAB build composition now wraps with framework `Tooltip` when a non-empty message is provided.
+- Extended framework Material `FloatingActionButton` API parity in `src/Flutter.Material/FloatingActionButton.cs`:
+  - added constructor/factory API fields for `heroTag`, `mouseCursor`, `enableFeedback`, and `clipBehavior`;
+  - `clipBehavior` is now wired into shared button composition (`MaterialButtonCore`) and controls whether FAB content/splash is clipped to shape.
 - Added focused tooltip regression coverage in `src/Flutter.Tests/MaterialFloatingActionButtonTests.cs`:
   - verifies FAB tooltip appears on hover enter and hides after hover exit animation completion.
+- Added focused FAB regression coverage in `src/Flutter.Tests/MaterialFloatingActionButtonTests.cs`:
+  - verifies default `clipBehavior` does not insert `RenderClipRRect`,
+  - verifies explicit `clipBehavior` inserts `RenderClipRRect`,
+  - verifies FAB stores `heroTag`/`mouseCursor`/`enableFeedback` values.
+- Synced tracking docs for this parity pass:
+  - `docs/FRAMEWORK_PLAN.md`,
+  - `docs/ai/TEST_MATRIX.md`,
+  - `docs/ai/MODULE_INDEX.md`,
+  - `docs/ai/material-2026-04-11-fab-drawer-physics-followup.md`.
 - Narrowed documented FAB divergence for current framework scope:
-  - remaining gaps are now `heroTag`, cursor/feedback toggles, and `clipBehavior` parity.
+  - remaining gaps are now runtime behavior parity for hero transitions, cursor application to host pointer, and feedback/haptics dispatch.
 - Added framework semantics annotation plumbing for interactive controls:
   - introduced `Semantics` widget + `RenderSemanticsAnnotations` (`src/Flutter/Widgets/Semantics.cs`, `src/Flutter/Rendering/Proxy.RenderBox.cs`);
   - `MaterialButtonCore` now emits accessibility semantics (`label`, enabled/tap action, button/selected/checked flags) and `Checkbox`/`Switch`/`Radio` now wire toggle-state semantics (`IsChecked`) through shared control composition;
@@ -37,7 +59,7 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 - Expanded app-bar dismiss-implied leading behavior in `src/Flutter.Material/Scaffold.cs`: non-drawer implied leading now resolves through `ModalRoute.ImpliesAppBarDismissal` (with `Navigator.CanPop` fallback), enabling root-route back affordance when local history is present.
 - Expanded `src/Flutter.Tests/MaterialScaffoldTests.cs` with focused drawer coverage for end-drawer implied actions, `ScaffoldState` end-drawer transitions, start/end mutual exclusion, and start/end edge-drag open flows.
 - Expanded test coverage with route-history/back handling regressions: `src/Flutter.Tests/MaterialScaffoldTests.cs` now verifies root-route drawer close on `Navigator.MaybePop`, and `src/Flutter.Tests/NavigationTests.cs` now verifies root-route local-history consume semantics.
-- Remaining documented drawer divergence for current framework scope: full Flutter `DrawerController` physics-accurate timing/curve parity and dedicated drawer theming parity remain follow-up work.
+- Remaining documented drawer divergence for current framework scope: gesture-cancel settle parity (`onHorizontalDragCancel`) and precise velocity tracking (true px/s estimator) remain follow-up work; dedicated drawer theming parity is also pending.
 - Completed framework `AppBar` fullscreen implied-leading branch: default implied leading now resolves to `IconButton(Icons.Close)` for fullscreen dialog routes (`PageRoute.FullscreenDialog == true`) and keeps `IconButton(Icons.ArrowBack)` for regular dismissible routes, with focused regression coverage in `src/Flutter.Tests/MaterialScaffoldTests.cs`.
 - Aligned framework `AppBar` with Flutter implied-leading behavior: added `automaticallyImplyLeading` (`true` default) and default back leading resolution for non-root navigator routes (`Navigator.CanPop` -> `IconButton(Icons.ArrowBack)` -> `Navigator.MaybePop`), with focused regression coverage in `src/Flutter.Tests/MaterialScaffoldTests.cs`.
 - Updated sample gallery demo shells in both C# and Dart samples to use title-only app bars so back affordance comes from default implied leading (`src/Sample/Flutter.Net/SampleGalleryScreen.cs`, `dart_sample/lib/sample_gallery_screen.dart`).

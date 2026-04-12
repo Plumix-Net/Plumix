@@ -237,11 +237,15 @@ Progress update (2026-03-19):
 - Added app-bar implied-leading parity baseline: `AppBar` now exposes `automaticallyImplyLeading` (`true` default), auto-inserts a default dismiss leading using route dismissal semantics (`ModalRoute.ImpliesAppBarDismissal` with `Navigator.CanPop` fallback), and resolves icon by route mode (`PageRoute.FullscreenDialog == true` -> `IconButton(Icons.Close)`, otherwise `IconButton(Icons.ArrowBack)`), with `automaticallyImplyLeading: false` opt-out and focused `MaterialScaffoldTests` coverage.
 - Expanded Material drawer support in framework shell primitives: `Scaffold` now supports both `drawer` and `endDrawer` slots with stateful `ScaffoldState` APIs for both sides (`OpenDrawer/CloseDrawer`, `OpenEndDrawer/CloseEndDrawer`), start/end mutual exclusion, and inherited scaffold-scope wiring for drawer availability/open state.
 - Added drawer gesture+motion baseline parity in `Scaffold`: edge-swipe open support (`drawerEdgeDragWidth`, `drawerEnableOpenDragGesture`, `endDrawerEnableOpenDragGesture`), horizontal drag-close interactions for start/end drawers, settle animations for open/close transitions, and velocity-aware release settle (`fling`-style open/close) with scrim opacity tied to drawer progress.
+- Hardened drawer settle parity in `Scaffold` with Flutter-aligned defaults:
+  - fallback edge-drag activation width now resolves as `20dp + MediaQuery.padding` on the opening edge when `drawerEdgeDragWidth` is not explicitly provided,
+  - fling threshold now uses Flutter `365 px/s` baseline,
+  - settle timing now follows Flutter `_kBaseSettleDuration = 246ms` with velocity-aware duration and linear settle curve.
 - Added drawer route-history handling baseline: `ScaffoldState` now keeps a `LocalHistoryEntry` while drawer interaction is active so navigator back closes the active drawer before route pop.
 - Updated navigator local-pop semantics for history entries: `NavigatorState.MaybePop` now treats route-local `WillPop` handling as consumed (handled) even on root routes, aligning with Flutter local-history behavior.
 - Expanded app-bar drawer implication behavior: existing drawer-aware implied leading remains (`Scaffold.drawer` -> leading `IconButton(Icons.Menu)`), and app bar now also auto-implies end-drawer trailing action (`Scaffold.endDrawer` with empty actions -> trailing `IconButton(Icons.Menu)`) with `automaticallyImplyActions` opt-out.
 - Updated `MaterialScaffoldTests` coverage for end-drawer implied actions, start/end drawer state APIs, start/end mutual exclusion, edge-drag open flows on both sides, and root-route drawer close on navigator back handling; updated `NavigationTests` coverage for root-route local-history `MaybePop` handling.
-- Documented remaining drawer divergence for follow-up: full Flutter `DrawerController` physics-accurate timing/curve parity remains out of current framework scope.
+- Documented remaining drawer divergence for follow-up: gesture-cancel settle parity (`onHorizontalDragCancel`) and true px/s velocity estimation are still pending.
 - Updated sample gallery demo shells in both C# and Dart samples to use title-only app bars so non-root routes use default implied leading instead of custom back-button composition.
 - Continued Material button/theme parity hardening from Flutter M3 defaults:
   - `ThemeData.Light` default tokens now follow Flutter M3 light scheme for key surfaces/foregrounds used by sample controls (`primary`, `onSurface`, `secondaryContainer`, `onSecondaryContainer`, `surface/canvas`),
@@ -404,14 +408,16 @@ Progress update (2026-03-19):
   - expanded theme-token surface with `ThemeData.PrimaryContainerColor` and `ThemeData.OnPrimaryContainerColor` so M3 FAB defaults map to dedicated container tokens instead of reusing unrelated button tokens;
   - added focused `MaterialFloatingActionButtonTests` coverage for size/shape defaults across variants, M3 color token defaults, extended directional padding behavior, theme-vs-widget override precedence, and elevation-state transitions (`default/hovered/pressed/disabled`);
   - added C#/Dart sample parity demo route/page for runtime verification (`FloatingActionButton` route in both sample menus) including variant probes, extended open/collapsed behavior, and theme override probe;
-  - added `tooltip` API wiring for all FAB constructors (`regular`/`small`/`large`/`extended`) and wrapped FAB composition with framework `Tooltip` when message is provided, with focused hover enter/exit show/hide regression coverage in `MaterialFloatingActionButtonTests`.
+  - added `tooltip` API wiring for all FAB constructors (`regular`/`small`/`large`/`extended`) and wrapped FAB composition with framework `Tooltip` when message is provided, with focused hover enter/exit show/hide regression coverage in `MaterialFloatingActionButtonTests`;
+  - added API-level parity fields (`heroTag`, `mouseCursor`, `enableFeedback`, `clipBehavior`) and wired `clipBehavior` into shared `MaterialButtonCore` clipping behavior, with focused `MaterialFloatingActionButtonTests` coverage for default-vs-explicit clipping and API value persistence.
 - Extended Material `BottomNavigationBar` parity in `Flutter.Material`:
   - expanded framework `BottomNavigationBar` API parity with Flutter-like type/default wiring: `BottomNavigationBarType` (`fixed`/`shifting`) now resolves by precedence (`widget -> theme -> item-count default`), with shifting background-color resolution from selected item `backgroundColor`;
   - added dedicated bottom-navigation theming primitives (`BottomNavigationBarThemeData`, inherited `BottomNavigationBarTheme`, and `ThemeData.BottomNavigationBarTheme`) with Flutter-like precedence (`widget -> bottomNavigationBarTheme -> defaults`);
   - expanded visual/default behavior for current scope: nullable label-visibility flags (`showSelectedLabels` / `showUnselectedLabels`) with type-aware defaults, selected/unselected label-style color precedence, selected/unselected icon-theme support, optional elevation handling, and `BottomNavigationBarItem` parity fields (`key`, `tooltip`);
   - completed stateful shifting choreography for current framework scope: animated selected/unselected icon-size+color transitions, animated label visibility transitions, animated shifting tile-width flex transitions, and radial selected-item background flood transition;
   - introduced framework `Tooltip` primitive in `src/Flutter.Material/Tooltip.cs` and wired `BottomNavigationBarItem.tooltip` wrapping through `BottomNavigationBar` tiles;
-  - added per-tile semantics wrapper parity: tile semantics now include button/selected/enabled flags with tap action wiring, hidden-label fallback semantics when visual labels are suppressed, and index-label semantics (`Tab {index} of {count}`);
+  - added per-tile semantics wrapper parity: tile semantics now include button/selected/enabled flags with tap action wiring, hidden-label fallback semantics when visual labels are suppressed, and index-label semantics from `MaterialLocalizations.TabLabel(...)`;
+  - introduced framework Material localization primitives (`MaterialLocalizations`, `DefaultMaterialLocalizations`, and inherited `MaterialLocalizationsScope`) and routed bottom-navigation index-label semantics through the localization provider (default English fallback with subtree override support);
   - expanded `MaterialBottomNavigationBarTests` coverage for theme-default precedence, widget-over-theme overrides, auto-shifting defaults (background + unselected-label visibility), label-style color precedence, theme-driven `type` override, icon-theme pair guards, semantics-tree coverage for enabled/disabled tile states plus index labels, tooltip hover show/hide behavior, and shifting selection-width animation behavior;
   - retained tab-structured C#/Dart sample gallery parity (`Material` / `Cupertino` / `General`) without route-map divergence.
 - Added framework semantics annotation primitive and control semantics wiring:
@@ -419,10 +425,8 @@ Progress update (2026-03-19):
   - `MaterialButtonCore` now emits semantic flags/actions (`IsButton`, `IsEnabled`, `IsSelected`, `IsChecked`) and optional semantic labels;
   - `Checkbox`/`Switch`/`Radio` now map toggle state to `IsChecked` semantics, and adaptive Cupertino checkbox/switch paths now propagate semantic labels and toggle-state semantics;
   - expanded `MaterialCheckboxTests` and `MaterialSwitchTests` with focused semantic-label/state regression coverage.
-- Remaining divergence for bottom navigation bar in current framework scope:
-  - semantics index labels are still framework-localized as fixed English (`"Tab {i} of {n}"`) until Material localization primitives are introduced.
 - Remaining divergence for floating action button in current framework scope:
-  - `heroTag`, cursor/feedback toggles, and clip-behavior parity are still pending due missing framework primitives and are intentionally out of this baseline pass.
+  - runtime hero transition behavior, host cursor application, and feedback/haptics dispatch are still pending due missing framework primitives.
 
 Initial scope:
 

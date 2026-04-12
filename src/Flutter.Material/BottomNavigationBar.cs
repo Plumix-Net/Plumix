@@ -352,7 +352,7 @@ public sealed class BottomNavigationBar : StatefulWidget
                 var semanticsChildren = new List<Widget>
                 {
                     tileBody,
-                    new Semantics(label: CreateIndexSemanticsLabel(itemIndex, CurrentWidget.Items.Count)),
+                    new Semantics(label: CreateIndexSemanticsLabel(context, itemIndex, CurrentWidget.Items.Count)),
                 };
 
                 var tileNeedsSemanticLabel = !(effectiveShowSelectedLabels && effectiveShowUnselectedLabels);
@@ -854,8 +854,8 @@ public sealed class BottomNavigationBar : StatefulWidget
         return flags;
     }
 
-    private static string CreateIndexSemanticsLabel(int index, int count)
+    private static string CreateIndexSemanticsLabel(BuildContext context, int index, int count)
     {
-        return $"Tab {index + 1} of {count}";
+        return MaterialLocalizations.Of(context).TabLabel(index, count);
     }
 }
