@@ -413,7 +413,8 @@ Progress update (2026-03-19):
   - added focused `MaterialFloatingActionButtonTests` coverage for size/shape defaults across variants, M3 color token defaults, extended directional padding behavior, theme-vs-widget override precedence, and elevation-state transitions (`default/hovered/pressed/disabled`);
   - added C#/Dart sample parity demo route/page for runtime verification (`FloatingActionButton` route in both sample menus) including variant probes, extended open/collapsed behavior, and theme override probe;
   - added `tooltip` API wiring for all FAB constructors (`regular`/`small`/`large`/`extended`) and wrapped FAB composition with framework `Tooltip` when message is provided, with focused hover enter/exit show/hide regression coverage in `MaterialFloatingActionButtonTests`;
-  - added API-level parity fields (`heroTag`, `mouseCursor`, `enableFeedback`, `clipBehavior`) and wired `clipBehavior` into shared `MaterialButtonCore` clipping behavior, with focused `MaterialFloatingActionButtonTests` coverage for default-vs-explicit clipping and API value persistence.
+  - added API-level parity fields (`heroTag`, `mouseCursor`, `enableFeedback`, `clipBehavior`) and wired `clipBehavior` into shared `MaterialButtonCore` clipping behavior, with focused `MaterialFloatingActionButtonTests` coverage for default-vs-explicit clipping and API value persistence;
+  - closed framework-scope runtime cursor + feedback wiring for FAB/buttons by introducing `Feedback` primitive and `MouseCursorManager` in `Flutter` core, resolving FAB cursor/feedback precedence through `FloatingActionButtonThemeData` (`widget -> theme -> defaults`), and routing framework cursor/feedback channels into `FlutterHost` host hooks.
 - Extended Material `BottomNavigationBar` parity in `Flutter.Material`:
   - expanded framework `BottomNavigationBar` API parity with Flutter-like type/default wiring: `BottomNavigationBarType` (`fixed`/`shifting`) now resolves by precedence (`widget -> theme -> item-count default`), with shifting background-color resolution from selected item `backgroundColor`;
   - added dedicated bottom-navigation theming primitives (`BottomNavigationBarThemeData`, inherited `BottomNavigationBarTheme`, and `ThemeData.BottomNavigationBarTheme`) with Flutter-like precedence (`widget -> bottomNavigationBarTheme -> defaults`);
@@ -430,7 +431,7 @@ Progress update (2026-03-19):
   - `Checkbox`/`Switch`/`Radio` now map toggle state to `IsChecked` semantics, and adaptive Cupertino checkbox/switch paths now propagate semantic labels and toggle-state semantics;
   - expanded `MaterialCheckboxTests` and `MaterialSwitchTests` with focused semantic-label/state regression coverage.
 - Remaining divergence for floating action button in current framework scope:
-  - runtime hero transition behavior, host cursor application, and feedback/haptics dispatch are still pending due missing framework primitives.
+  - runtime hero transition behavior is still pending due missing framework hero primitives.
 
 Initial scope:
 

@@ -28,6 +28,8 @@ public sealed record FloatingActionButtonThemeData(
     double? ExtendedIconLabelSpacing = null,
     Thickness? ExtendedPadding = null,
     TextStyle? ExtendedTextStyle = null,
+    MouseCursor? MouseCursor = null,
+    bool? EnableFeedback = null,
     MaterialTapTargetSize? MaterialTapTargetSize = null);
 
 public sealed class FloatingActionButtonTheme : InheritedWidget

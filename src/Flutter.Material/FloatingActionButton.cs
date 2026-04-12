@@ -422,9 +422,15 @@ public sealed class FloatingActionButton : StatelessWidget
         {
             Color = foregroundColor
         };
+        var mouseCursor = MouseCursor
+                          ?? floatingActionButtonTheme.MouseCursor
+                          ?? defaults.MouseCursor;
         var tapTargetSize = MaterialTapTargetSize
                             ?? floatingActionButtonTheme.MaterialTapTargetSize
                             ?? theme.MaterialTapTargetSize;
+        var enableFeedback = EnableFeedback
+                             ?? floatingActionButtonTheme.EnableFeedback
+                             ?? defaults.EnableFeedback;
         var sizeConstraints = ResolveSizeConstraints(floatingActionButtonTheme, defaults);
 
         var style = new ButtonStyle(
@@ -454,8 +460,9 @@ public sealed class FloatingActionButton : StatelessWidget
             onPressed: OnPressed,
             style: style,
             focusNode: FocusNode,
+            mouseCursor: mouseCursor,
             clipBehavior: ClipBehavior,
-            enableFeedback: EnableFeedback,
+            enableFeedback: enableFeedback,
             autofocus: Autofocus);
 
         if (!string.IsNullOrWhiteSpace(Tooltip))
@@ -624,7 +631,9 @@ internal sealed record FloatingActionButtonDefaults(
     BoxConstraints ExtendedSizeConstraints,
     double ExtendedIconLabelSpacing,
     Thickness ExtendedPadding,
-    TextStyle ExtendedTextStyle)
+    TextStyle ExtendedTextStyle,
+    MouseCursor MouseCursor,
+    bool EnableFeedback)
 {
     public static FloatingActionButtonDefaults Material2(
         BuildContext context,
@@ -660,7 +669,9 @@ internal sealed record FloatingActionButtonDefaults(
                 top: 0,
                 end: 20,
                 bottom: 0),
-            ExtendedTextStyle: theme.TextTheme.LabelLarge with { LetterSpacing = 1.2 });
+            ExtendedTextStyle: theme.TextTheme.LabelLarge with { LetterSpacing = 1.2 },
+            MouseCursor: SystemMouseCursors.Click,
+            EnableFeedback: true);
     }
 
     public static FloatingActionButtonDefaults Material3(
@@ -697,7 +708,9 @@ internal sealed record FloatingActionButtonDefaults(
                 top: 0,
                 end: 20,
                 bottom: 0),
-            ExtendedTextStyle: theme.TextTheme.LabelLarge);
+            ExtendedTextStyle: theme.TextTheme.LabelLarge,
+            MouseCursor: SystemMouseCursors.Click,
+            EnableFeedback: true);
     }
 
     private static BorderRadius ResolveM2Shape(FloatingActionButtonType type)

@@ -58,13 +58,22 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
   - verifies default `clipBehavior` does not insert `RenderClipRRect`,
   - verifies explicit `clipBehavior` inserts `RenderClipRRect`,
   - verifies FAB stores `heroTag`/`mouseCursor`/`enableFeedback` values.
+- Closed framework-scope runtime cursor + feedback wiring for Material FAB/buttons:
+  - introduced framework feedback primitive (`src/Flutter/UI/Feedback.cs`) and hooked `MaterialButtonCore` tap/long-press + keyboard activation paths to dispatch feedback when `enableFeedback` resolves true;
+  - `FloatingActionButton` now resolves `enableFeedback` by Flutter-like precedence (`widget -> floatingActionButtonTheme -> defaults`) with new theme surface support (`FloatingActionButtonThemeData.EnableFeedback`);
+  - `MaterialButtonCore` now applies interactive mouse cursor requests through `MouseCursorManager`, and `FloatingActionButton` resolves cursor by precedence (`widget -> floatingActionButtonTheme -> defaults`) with new theme surface support (`FloatingActionButtonThemeData.MouseCursor`);
+  - `FlutterHost` now subscribes to framework cursor and feedback channels (`MouseCursorManager` / `Feedback`) to apply host pointer cursor updates and provide host feedback dispatch hook (`OnFrameworkFeedback`).
+- Expanded focused FAB regression coverage in `src/Flutter.Tests/MaterialFloatingActionButtonTests.cs`:
+  - verifies default hover cursor fallback (`click`) and theme-level cursor override application via `MouseCursorManager`,
+  - verifies keyboard activation feedback dispatch for default FAB behavior,
+  - verifies feedback suppression for widget-level and theme-level `enableFeedback: false`.
 - Synced tracking docs for this parity pass:
   - `docs/FRAMEWORK_PLAN.md`,
   - `docs/ai/TEST_MATRIX.md`,
   - `docs/ai/MODULE_INDEX.md`,
   - `docs/ai/material-2026-04-11-fab-drawer-physics-followup.md`.
 - Narrowed documented FAB divergence for current framework scope:
-  - remaining gaps are now runtime behavior parity for hero transitions, cursor application to host pointer, and feedback/haptics dispatch.
+  - remaining gap is runtime behavior parity for hero transitions.
 - Added framework semantics annotation plumbing for interactive controls:
   - introduced `Semantics` widget + `RenderSemanticsAnnotations` (`src/Flutter/Widgets/Semantics.cs`, `src/Flutter/Rendering/Proxy.RenderBox.cs`);
   - `MaterialButtonCore` now emits accessibility semantics (`label`, enabled/tap action, button/selected/checked flags) and `Checkbox`/`Switch`/`Radio` now wire toggle-state semantics (`IsChecked`) through shared control composition;

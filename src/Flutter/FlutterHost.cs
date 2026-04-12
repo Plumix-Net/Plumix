@@ -37,7 +37,10 @@ public class FlutterHost : Control
     private IInsetsManager? _insetsManager;
     private IInputPane? _inputPane;
     private bool _isSubscribedToSystemUiOverlayStyle;
+    private bool _isSubscribedToMouseCursor;
+    private bool _isSubscribedToFeedback;
     private SystemUiOverlayStyle _currentSystemUiOverlayStyle = SystemChrome.CurrentSystemUiOverlayStyle;
+    private MouseCursor _currentMouseCursor = MouseCursorManager.CurrentCursor;
 
     public event Action<SemanticsNode?>? SemanticsUpdated;
 
@@ -258,6 +261,8 @@ public class FlutterHost : Control
         base.OnAttachedToVisualTree(e);
         EnsureSchedulerSubscription();
         AttachSystemUiOverlayStyleListener();
+        AttachMouseCursorListener();
+        AttachFeedbackListener();
         AttachMetricSources();
         OnMetricsChanged();
     }
@@ -265,6 +270,8 @@ public class FlutterHost : Control
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
     {
         DetachMetricSources();
+        DetachFeedbackListener();
+        DetachMouseCursorListener();
         DetachSystemUiOverlayStyleListener();
         RemoveSchedulerSubscription();
         base.OnDetachedFromVisualTree(e);
@@ -436,6 +443,87 @@ public class FlutterHost : Control
 
         SystemChrome.SystemUiOverlayStyleChanged -= HandleSystemUiOverlayStyleChanged;
         _isSubscribedToSystemUiOverlayStyle = false;
+    }
+
+    private void AttachMouseCursorListener()
+    {
+        if (_isSubscribedToMouseCursor)
+        {
+            return;
+        }
+
+        _currentMouseCursor = MouseCursorManager.CurrentCursor;
+        MouseCursorManager.CursorChanged += HandleMouseCursorChanged;
+        _isSubscribedToMouseCursor = true;
+        ApplyMouseCursor();
+    }
+
+    private void DetachMouseCursorListener()
+    {
+        if (!_isSubscribedToMouseCursor)
+        {
+            return;
+        }
+
+        MouseCursorManager.CursorChanged -= HandleMouseCursorChanged;
+        _isSubscribedToMouseCursor = false;
+        Cursor = null;
+    }
+
+    private void HandleMouseCursorChanged(MouseCursor cursor)
+    {
+        _currentMouseCursor = cursor;
+        ApplyMouseCursor();
+    }
+
+    private void ApplyMouseCursor()
+    {
+        Cursor = ResolveAvaloniaCursor(_currentMouseCursor);
+    }
+
+    private static Cursor ResolveAvaloniaCursor(MouseCursor cursor)
+    {
+        if (cursor is SystemMouseCursor systemCursor)
+        {
+            return systemCursor.Kind switch
+            {
+                "click" => new Cursor(StandardCursorType.Hand),
+                _ => new Cursor(StandardCursorType.Arrow)
+            };
+        }
+
+        return new Cursor(StandardCursorType.Arrow);
+    }
+
+    private void AttachFeedbackListener()
+    {
+        if (_isSubscribedToFeedback)
+        {
+            return;
+        }
+
+        Feedback.FeedbackTriggered += HandleFeedbackTriggered;
+        _isSubscribedToFeedback = true;
+    }
+
+    private void DetachFeedbackListener()
+    {
+        if (!_isSubscribedToFeedback)
+        {
+            return;
+        }
+
+        Feedback.FeedbackTriggered -= HandleFeedbackTriggered;
+        _isSubscribedToFeedback = false;
+    }
+
+    private void HandleFeedbackTriggered(FeedbackType type)
+    {
+        OnFrameworkFeedback(type);
+    }
+
+    protected virtual void OnFrameworkFeedback(FeedbackType type)
+    {
     }
 
     private void HandleSystemUiOverlayStyleChanged(SystemUiOverlayStyle style)
