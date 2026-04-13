@@ -38,6 +38,8 @@ Current priority (2026-03-12):
   - `src/Flutter.Material/IconButton.cs`
   - `src/Flutter.Material/FloatingActionButton.cs`
   - `src/Flutter.Material/FloatingActionButtonTheme.cs`
+  - `src/Flutter/Widgets/Hero.cs`
+  - `src/Flutter/Widgets/Navigation.cs`
   - `src/Flutter/Widgets/MouseCursor.cs`
   - `src/Flutter/UI/Feedback.cs`
   - `src/Flutter/UI/Clip.cs`

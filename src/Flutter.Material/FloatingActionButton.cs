@@ -472,6 +472,13 @@ public sealed class FloatingActionButton : StatelessWidget
                 child: result);
         }
 
+        if (HeroTag != null)
+        {
+            result = new Hero(
+                tag: HeroTag,
+                child: result);
+        }
+
         return result;
     }
 

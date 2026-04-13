@@ -415,6 +415,9 @@ Progress update (2026-03-19):
   - added `tooltip` API wiring for all FAB constructors (`regular`/`small`/`large`/`extended`) and wrapped FAB composition with framework `Tooltip` when message is provided, with focused hover enter/exit show/hide regression coverage in `MaterialFloatingActionButtonTests`;
   - added API-level parity fields (`heroTag`, `mouseCursor`, `enableFeedback`, `clipBehavior`) and wired `clipBehavior` into shared `MaterialButtonCore` clipping behavior, with focused `MaterialFloatingActionButtonTests` coverage for default-vs-explicit clipping and API value persistence;
   - closed framework-scope runtime cursor + feedback wiring for FAB/buttons by introducing `Feedback` primitive and `MouseCursorManager` in `Flutter` core, resolving FAB cursor/feedback precedence through `FloatingActionButtonThemeData` (`widget -> theme -> defaults`), and routing framework cursor/feedback channels into `FlutterHost` host hooks.
+  - closed framework-scope runtime hero transition behavior for FAB tags by introducing a baseline framework `Hero` primitive in `src/Flutter/Widgets/Hero.cs`, wiring navigator push/pop hero-flight choreography in `src/Flutter/Widgets/Navigation.cs` (temporary dual-route composition + overlay flight animation + popped-route disposal after flight completion), and wrapping `FloatingActionButton` composition with `Hero(tag: heroTag, ...)` when `heroTag` is provided.
+  - expanded hero rect-flight parity with `Hero.createRectTween` support (`src/Flutter/Widgets/Hero.cs` + `src/Flutter/Widgets/Navigation.cs`): destination hero rect tween factory now resolves per-flight bounds animation with linear `RectTween` fallback, and flight overlay bounds now evaluate via manifest tween instead of hardcoded lerp.
+  - expanded focused hero coverage with `src/Flutter.Tests/HeroNavigatorTests.cs` (push/pop shared-tag hero flights) plus `MaterialFloatingActionButtonTests` assertion that FAB composition is hero-wrapped when `heroTag` is set.
 - Extended Material `BottomNavigationBar` parity in `Flutter.Material`:
   - expanded framework `BottomNavigationBar` API parity with Flutter-like type/default wiring: `BottomNavigationBarType` (`fixed`/`shifting`) now resolves by precedence (`widget -> theme -> item-count default`), with shifting background-color resolution from selected item `backgroundColor`;
   - added dedicated bottom-navigation theming primitives (`BottomNavigationBarThemeData`, inherited `BottomNavigationBarTheme`, and `ThemeData.BottomNavigationBarTheme`) with Flutter-like precedence (`widget -> bottomNavigationBarTheme -> defaults`);
@@ -431,7 +434,7 @@ Progress update (2026-03-19):
   - `Checkbox`/`Switch`/`Radio` now map toggle state to `IsChecked` semantics, and adaptive Cupertino checkbox/switch paths now propagate semantic labels and toggle-state semantics;
   - expanded `MaterialCheckboxTests` and `MaterialSwitchTests` with focused semantic-label/state regression coverage.
 - Remaining divergence for floating action button in current framework scope:
-  - runtime hero transition behavior is still pending due missing framework hero primitives.
+  - none documented in current framework scope; advanced Hero APIs (shuttle builders/nested-controller behaviors) remain broader navigator-layer follow-up.
 
 Initial scope:
 

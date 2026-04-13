@@ -130,6 +130,31 @@ public sealed class MaterialFloatingActionButtonTests
     }
 
     [Fact]
+    public void FloatingActionButton_HeroTag_WrapsBuiltResultWithHero()
+    {
+        var owner = new BuildOwner();
+        Widget? capturedBuiltWidget = null;
+        var heroTag = new object();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new CaptureFloatingActionButtonBuild(
+                    floatingActionButton: new FloatingActionButton(
+                        child: new Icon(Icons.Add),
+                        onPressed: () => { },
+                        heroTag: heroTag),
+                    onBuilt: widget => capturedBuiltWidget = widget)));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var hero = Assert.IsType<Hero>(capturedBuiltWidget);
+        Assert.Same(heroTag, hero.Tag);
+    }
+
+    [Fact]
     public void FloatingActionButton_DefaultMouseCursor_UsesClickOnHover()
     {
         MouseCursorManager.ResetForTests();
@@ -904,6 +929,27 @@ public sealed class MaterialFloatingActionButtonTests
         {
             _capture(IconTheme.Of(context));
             return new SizedBox(width: 12, height: 12);
+        }
+    }
+
+    private sealed class CaptureFloatingActionButtonBuild : StatelessWidget
+    {
+        private readonly FloatingActionButton _floatingActionButton;
+        private readonly Action<Widget> _onBuilt;
+
+        public CaptureFloatingActionButtonBuild(
+            FloatingActionButton floatingActionButton,
+            Action<Widget> onBuilt)
+        {
+            _floatingActionButton = floatingActionButton;
+            _onBuilt = onBuilt;
+        }
+
+        public override Widget Build(BuildContext context)
+        {
+            var built = _floatingActionButton.Build(context);
+            _onBuilt(built);
+            return built;
         }
     }
 

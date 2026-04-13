@@ -67,13 +67,21 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
   - verifies default hover cursor fallback (`click`) and theme-level cursor override application via `MouseCursorManager`,
   - verifies keyboard activation feedback dispatch for default FAB behavior,
   - verifies feedback suppression for widget-level and theme-level `enableFeedback: false`.
+- Closed framework-scope runtime hero transitions for FAB tags:
+  - added framework `Hero` primitive in `src/Flutter/Widgets/Hero.cs` (tag registration + render-bounds snapshotting + hero hide/show during active flights);
+  - extended `Navigator` in `src/Flutter/Widgets/Navigation.cs` with shared-tag push/pop hero-flight choreography (temporary dual-route composition, animated overlay flight, and deferred disposal of popped routes until flight completion);
+  - `FloatingActionButton` build output is now wrapped with `Hero(tag: heroTag, ...)` when `heroTag` is provided in `src/Flutter.Material/FloatingActionButton.cs`;
+  - hero flight bounds interpolation now supports destination-priority `Hero.createRectTween` with linear `RectTween` fallback (`src/Flutter/Widgets/Hero.cs`, `src/Flutter/Widgets/Navigation.cs`, `src/Flutter/AnimationController.cs`).
+- Added focused hero regression coverage:
+  - new `src/Flutter.Tests/HeroNavigatorTests.cs` verifies shared-tag push/pop hero transitions keep both routes during flight and settle to a single destination route after completion;
+  - `src/Flutter.Tests/HeroNavigatorTests.cs` now also verifies destination `Hero.createRectTween` precedence and custom tween evaluation during flight;
+  - `src/Flutter.Tests/MaterialFloatingActionButtonTests.cs` now verifies FAB composition is wrapped by `Hero` when `heroTag` is set.
 - Synced tracking docs for this parity pass:
   - `docs/FRAMEWORK_PLAN.md`,
-  - `docs/ai/TEST_MATRIX.md`,
   - `docs/ai/MODULE_INDEX.md`,
-  - `docs/ai/material-2026-04-11-fab-drawer-physics-followup.md`.
-- Narrowed documented FAB divergence for current framework scope:
-  - remaining gap is runtime behavior parity for hero transitions.
+  - `docs/ai/TEST_MATRIX.md`,
+  - `docs/ai/material-2026-04-12-fab-hero-transition-closeout.md`,
+  - `docs/ai/material-2026-04-12-hero-create-rect-tween.md`.
 - Added framework semantics annotation plumbing for interactive controls:
   - introduced `Semantics` widget + `RenderSemanticsAnnotations` (`src/Flutter/Widgets/Semantics.cs`, `src/Flutter/Rendering/Proxy.RenderBox.cs`);
   - `MaterialButtonCore` now emits accessibility semantics (`label`, enabled/tap action, button/selected/checked flags) and `Checkbox`/`Switch`/`Radio` now wire toggle-state semantics (`IsChecked`) through shared control composition;

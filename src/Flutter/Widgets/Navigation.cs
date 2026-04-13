@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Avalonia;
 using Flutter.Foundation;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/widgets/navigator.dart; flutter/packages/flutter/lib/src/widgets/routes.dart (approximate)
@@ -679,14 +680,26 @@ public sealed class Navigator : StatefulWidget
 
 public sealed class NavigatorState : State
 {
+    private const double HeroTransitionDurationMilliseconds = 300;
     private readonly List<Route> _history = [];
     private readonly List<NavigatorObserver> _observers = [];
     private readonly Func<bool> _backButtonHandler;
+    private readonly HeroTransitionController _heroTransitionController = new();
+    private readonly Flutter.AnimationController _heroFlightController;
     private int _userGestureCount;
+    private HeroTransitionSession? _heroTransitionSession;
 
     public NavigatorState()
     {
         _backButtonHandler = HandleBackButton;
+        _heroFlightController = new Flutter.AnimationController(
+            TimeSpan.FromMilliseconds(HeroTransitionDurationMilliseconds))
+        {
+            Curve = Flutter.Curves.EaseInOut,
+        };
+        _heroFlightController.Changed += HandleHeroFlightTick;
+        _heroFlightController.Completed += HandleHeroFlightCompleted;
+        _heroFlightController.Dismissed += HandleHeroFlightCompleted;
     }
 
     private Navigator CurrentWidget => (Navigator)Element.Widget;
@@ -732,6 +745,11 @@ public sealed class NavigatorState : State
     {
         NavigatorBackButtonDispatcher.RemoveHandler(_backButtonHandler);
         StopUserGesture();
+        CancelHeroTransition(disposeDetachedRoute: true);
+        _heroFlightController.Changed -= HandleHeroFlightTick;
+        _heroFlightController.Completed -= HandleHeroFlightCompleted;
+        _heroFlightController.Dismissed -= HandleHeroFlightCompleted;
+        _heroFlightController.Dispose();
 
         foreach (var route in _history.ToArray())
         {
@@ -754,11 +772,82 @@ public sealed class NavigatorState : State
 
     public override Widget Build(BuildContext context)
     {
-        var route = CurrentRoute;
-        Widget child = route == null
-            ? new SizedBox()
-            : new ActiveRouteHost(route);
+        Widget child;
+        if (_heroTransitionSession == null)
+        {
+            var route = CurrentRoute;
+            child = route == null
+                ? new SizedBox()
+                : BuildRouteHost(route);
+        }
+        else
+        {
+            child = BuildHeroTransitionHost(_heroTransitionSession);
+        }
+
         return new NavigatorScope(this, child);
+    }
+
+    private ActiveRouteHost BuildRouteHost(Route route)
+    {
+        return new ActiveRouteHost(
+            route: route,
+            heroTransitionController: _heroTransitionController,
+            key: new ObjectKey(route));
+    }
+
+    private Widget BuildHeroTransitionHost(HeroTransitionSession session)
+    {
+        var children = new List<Widget>();
+        if (session.Direction == HeroTransitionDirection.Pop)
+        {
+            children.Add(BuildRouteHost(session.ToRoute));
+            children.Add(BuildRouteHost(session.FromRoute));
+        }
+        else
+        {
+            children.Add(BuildRouteHost(session.FromRoute));
+            children.Add(BuildRouteHost(session.ToRoute));
+        }
+
+        var flights = _heroTransitionController.ActiveFlights;
+        if (flights.Count > 0)
+        {
+            children.Add(BuildHeroFlightOverlay(flights, _heroFlightController.Evaluate()));
+        }
+
+        return new Stack(children: children);
+    }
+
+    private static Widget BuildHeroFlightOverlay(IReadOnlyList<HeroFlightManifest> flights, double progress)
+    {
+        var overlayChildren = new List<Widget>(flights.Count);
+        foreach (var flight in flights)
+        {
+            var rect = flight.RectTween.Evaluate(progress, flight.FromBounds, flight.ToBounds);
+            if (rect.Width <= 0 || rect.Height <= 0)
+            {
+                continue;
+            }
+
+            overlayChildren.Add(
+                new Positioned(
+                    left: rect.X,
+                    top: rect.Y,
+                    width: rect.Width,
+                    height: rect.Height,
+                    child: new SizedBox(
+                        width: rect.Width,
+                        height: rect.Height,
+                        child: flight.Shuttle)));
+        }
+
+        if (overlayChildren.Count == 0)
+        {
+            return new SizedBox();
+        }
+
+        return new Stack(children: overlayChildren);
     }
 
     public void Push(Route route)
@@ -770,12 +859,18 @@ public sealed class NavigatorState : State
 
         SetState(() =>
         {
+            CancelHeroTransition(disposeDetachedRoute: true);
             var previousRoute = CurrentRoute;
             InstallRoute(route);
             previousRoute?.DidChangeNext(route);
             route.DidChangePrevious(previousRoute);
             route.DidPush();
             NotifyObserversPush(route, previousRoute);
+            TryStartHeroTransition(
+                fromRoute: previousRoute,
+                toRoute: route,
+                direction: HeroTransitionDirection.Push,
+                detachFromRouteOnComplete: false);
         });
     }
 
@@ -793,6 +888,7 @@ public sealed class NavigatorState : State
 
         SetState(() =>
         {
+            CancelHeroTransition(disposeDetachedRoute: true);
             var previousRoute = CurrentRoute;
             InstallRoute(newRoute);
             previousRoute?.DidChangeNext(newRoute);
@@ -854,7 +950,11 @@ public sealed class NavigatorState : State
             return false;
         }
 
-        SetState(() => PopCurrentRoute(result));
+        SetState(() =>
+        {
+            CancelHeroTransition(disposeDetachedRoute: true);
+            PopCurrentRoute(result);
+        });
         return true;
     }
 
@@ -888,6 +988,7 @@ public sealed class NavigatorState : State
 
         SetState(() =>
         {
+            CancelHeroTransition(disposeDetachedRoute: true);
             while (_history.Count > 0)
             {
                 var route = _history[^1];
@@ -915,6 +1016,7 @@ public sealed class NavigatorState : State
 
         SetState(() =>
         {
+            CancelHeroTransition(disposeDetachedRoute: true);
             var oldRoute = CurrentRoute;
             if (oldRoute == null)
             {
@@ -971,6 +1073,7 @@ public sealed class NavigatorState : State
 
         SetState(() =>
         {
+            CancelHeroTransition(disposeDetachedRoute: true);
             var index = _history.FindIndex(existing => ReferenceEquals(existing, route));
             if (index < 0)
             {
@@ -995,6 +1098,7 @@ public sealed class NavigatorState : State
 
         SetState(() =>
         {
+            CancelHeroTransition(disposeDetachedRoute: true);
             var anchorIndex = _history.FindIndex(existing => ReferenceEquals(existing, anchorRoute));
             if (anchorIndex < 0)
             {
@@ -1045,6 +1149,103 @@ public sealed class NavigatorState : State
         NotifyObserversStopUserGesture();
     }
 
+    private void TryStartHeroTransition(
+        Route? fromRoute,
+        Route? toRoute,
+        HeroTransitionDirection direction,
+        bool detachFromRouteOnComplete)
+    {
+        if (fromRoute == null || toRoute == null)
+        {
+            return;
+        }
+
+        if (!_heroTransitionController.HasHeroes(fromRoute))
+        {
+            return;
+        }
+
+        _heroFlightController.Stop();
+        _heroTransitionController.ClearFlights();
+        _heroTransitionSession = new HeroTransitionSession(
+            fromRoute: fromRoute,
+            toRoute: toRoute,
+            direction: direction,
+            detachFromRouteOnComplete: detachFromRouteOnComplete);
+
+        Scheduler.AddPostFrameCallback(_ => ResolvePendingHeroTransition());
+    }
+
+    private void ResolvePendingHeroTransition()
+    {
+        if (_heroTransitionSession == null || !Element.IsActive)
+        {
+            return;
+        }
+
+        var session = _heroTransitionSession;
+        var flights = _heroTransitionController.CreateFlights(session.FromRoute, session.ToRoute);
+        if (flights.Count == 0)
+        {
+            SetState(() => CancelHeroTransition(disposeDetachedRoute: true));
+            return;
+        }
+
+        SetState(() =>
+        {
+            if (_heroTransitionSession == null || !ReferenceEquals(_heroTransitionSession, session))
+            {
+                return;
+            }
+
+            _heroTransitionController.ActivateFlights(flights);
+            _heroFlightController.Forward(from: 0.0);
+        });
+    }
+
+    private void HandleHeroFlightTick()
+    {
+        if (_heroTransitionSession == null || _heroTransitionController.ActiveFlights.Count == 0 || !Element.IsActive)
+        {
+            return;
+        }
+
+        SetState(() => { });
+    }
+
+    private void HandleHeroFlightCompleted()
+    {
+        if (_heroTransitionSession == null)
+        {
+            return;
+        }
+
+        if (!Element.IsActive)
+        {
+            CancelHeroTransition(disposeDetachedRoute: true);
+            return;
+        }
+
+        SetState(() => CancelHeroTransition(disposeDetachedRoute: true));
+    }
+
+    private void CancelHeroTransition(bool disposeDetachedRoute)
+    {
+        _heroFlightController.Stop();
+        _heroTransitionController.ClearFlights();
+
+        var session = _heroTransitionSession;
+        _heroTransitionSession = null;
+
+        if (!disposeDetachedRoute || session == null || !session.DetachFromRouteOnComplete)
+        {
+            return;
+        }
+
+        session.FromRoute.Dispose();
+        session.FromRoute.Detach();
+    }
+
     private void PushInitialRoute()
     {
         if (_history.Count > 0)
@@ -1070,14 +1271,25 @@ public sealed class NavigatorState : State
         var previousRoute = CurrentRoute;
 
         route.DidPop(previousRoute);
-        route.Dispose();
-        route.Detach();
-
         previousRoute?.DidPopNext(route);
         previousRoute?.DidChangeNext(nextRoute: null);
 
         _ = result;
         NotifyObserversPop(route, previousRoute);
+
+        var shouldAnimateHero = previousRoute != null && _heroTransitionController.HasHeroes(route);
+        if (shouldAnimateHero)
+        {
+            TryStartHeroTransition(
+                fromRoute: route,
+                toRoute: previousRoute,
+                direction: HeroTransitionDirection.Pop,
+                detachFromRouteOnComplete: true);
+            return;
+        }
+
+        route.Dispose();
+        route.Detach();
     }
 
     private void InstallRoute(Route route)
@@ -1276,6 +1488,35 @@ public sealed class NavigatorState : State
         }
     }
 
+    private enum HeroTransitionDirection
+    {
+        Push,
+        Pop,
+    }
+
+    private sealed class HeroTransitionSession
+    {
+        public HeroTransitionSession(
+            Route fromRoute,
+            Route toRoute,
+            HeroTransitionDirection direction,
+            bool detachFromRouteOnComplete)
+        {
+            FromRoute = fromRoute;
+            ToRoute = toRoute;
+            Direction = direction;
+            DetachFromRouteOnComplete = detachFromRouteOnComplete;
+        }
+
+        public Route FromRoute { get; }
+
+        public Route ToRoute { get; }
+
+        public HeroTransitionDirection Direction { get; }
+
+        public bool DetachFromRouteOnComplete { get; }
+    }
+
     private bool HandleBackButton()
     {
         if (!Element.IsActive)
@@ -1342,17 +1583,25 @@ internal sealed class RouteScope : InheritedWidget
 internal sealed class ActiveRouteHost : StatelessWidget
 {
     private readonly Route _route;
+    private readonly HeroTransitionController _heroTransitionController;
 
-    public ActiveRouteHost(Route route)
+    public ActiveRouteHost(
+        Route route,
+        HeroTransitionController heroTransitionController,
+        Key? key = null) : base(key)
     {
         _route = route;
+        _heroTransitionController = heroTransitionController;
     }
 
     public override Widget Build(BuildContext context)
     {
         return new RouteScope(
             route: _route,
-            child: new RoutePageHost(_route));
+            child: new HeroControllerScope(
+                controller: _heroTransitionController,
+                route: _route,
+                child: new RoutePageHost(_route)));
     }
 }
 
