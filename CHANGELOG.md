@@ -14,6 +14,14 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 ### Changed
 
+- Closed the requested parity triplet for Material shell/buttons and environment insets coverage:
+  - expanded `src/Flutter.Tests/SafeAreaTests.cs` with explicit `MediaQueryData.RemoveViewInsets(...)` edge coverage (selected-side zeroing, view-padding adjustment, and clamp-to-zero behavior when insets exceed padding);
+  - expanded `src/Flutter.Tests/MaterialButtonsTests.cs` with missing `FilledButton` advanced style-matrix coverage:
+    - resolver-null fallback parity (`ForegroundColor`/`OverlayColor` fallback to lower-priority defaults),
+    - `FilledButton.StyleFrom(overlayColor: ...)` hover/pressed opacity priority and transparent-overlay behavior;
+  - expanded `src/Flutter.Tests/MaterialScaffoldTests.cs` with deeper end-drawer choreography coverage:
+    - velocity-based open/close settle for `endDrawer`,
+    - drag-cancel settle below/above threshold for `endDrawer`.
 - Closed dedicated Material drawer-theming parity in framework `Scaffold`/`Drawer`:
   - added `DrawerThemeData` + inherited `DrawerTheme` (`src/Flutter.Material/DrawerTheme.cs`) and global `ThemeData.DrawerTheme` surface (`src/Flutter.Material/ThemeData.cs`);
   - `Drawer` visuals now resolve by `widget -> drawerTheme -> mode-aware defaults` for background/elevation/shadow/width with finite/non-negative guards for themed width/elevation values;

@@ -8,7 +8,7 @@ Use this block as the fastest machine-readable status summary.
 
 ```yaml
 framework_plan_version: 1
-last_updated: 2026-04-13
+last_updated: 2026-04-14
 north_star: "Flutter-like widget/rendering framework in C# with Avalonia as host infrastructure."
 current_phase: "M4 material library rewrite (theme/scaffold/material controls) in progress."
 status:
@@ -203,6 +203,7 @@ Progress update (2026-03-19):
 - Aligned Material button overlay conflict priority with Flutter Dart defaults (`pressed > hovered > focused`) and added regression coverage for combined-state conflicts (`pressed+hovered`, `pressed+focused`, `focused+hovered`).
 - Continued `StyleFrom(...)` parity: `foregroundColor` now derives default overlay/splash state colors when explicit values are absent, explicit `overlayColor` now uses Flutter-like state opacities (`0.10/0.08/0.10`) plus splash fallback semantics (including transparent highlight/splash suppression), splash color is now captured at activation to match InkWell's non-shifting ripple tint during release/hover transitions, overlay tint application is now gated to interactive states only (no idle tint for `MaterialStateProperty.All(...)` overlays), `ButtonStyle.Merge(...)` is aligned with Flutter semantics (fills only null fields), and button style layering now uses internal per-state fallback composition to preserve default disabled tokens when higher-priority resolvers return null.
 - Expanded resolver-null parity coverage for `ButtonStyle` on non-text buttons: `ElevatedButton` foreground/background and `OutlinedButton` foreground/side now have explicit regression checks that per-state `null` from high-priority resolvers falls back to default enabled/disabled tokens.
+- Expanded `FilledButton` style-matrix parity coverage in `MaterialButtonsTests`: added resolver-null fallback checks (`ForegroundColor` and `OverlayColor`) and missing `FilledButton.StyleFrom(overlayColor: ...)` hover/pressed/transparent overlay scenarios.
 - Added theme-level button style overrides in `ThemeData` (`textButtonStyle`, `elevatedButtonStyle`, `outlinedButtonStyle`) and wired style composition order to `default -> theme -> widget -> legacy`, with regression coverage for precedence and theme-level state fallback.
 - Added local inherited button-theme wrappers (`TextButtonTheme`/`ElevatedButtonTheme`/`OutlinedButtonTheme`) with `*ThemeData` and switched button theme-style lookup to subtree-aware `*ButtonTheme.Of(context).Style`, matching Flutter per-subtree theme override semantics (including local null-style clearing of global `ThemeData` button styles).
 - Aligned `ThemeData` with Flutter button-theme shape by adding top-level `TextButtonTheme`/`ElevatedButtonTheme`/`OutlinedButtonTheme` (`*ThemeData`) and routing inherited fallback through these properties; explicit theme-data objects now override legacy `*ButtonStyle` fields when both are set, while legacy style-only configuration remains supported for backward compatibility.
@@ -219,6 +220,7 @@ Progress update (2026-03-19):
 - `WidgetHost` now injects ambient root `MediaQuery` data so framework widgets can read window metrics/insets without app-level bootstrap wrappers.
 - `FlutterHost` now derives `MediaQuery` insets from Avalonia host features (`InsetsManager.SafeAreaPadding` + `InputPane.OccludedRect`) and sets `DisplayEdgeToEdgePreference=true` when available (legacy Android non-edge-to-edge path intentionally out of scope).
 - Added focused regression coverage in `SafeAreaTests` for `SafeArea`/`MediaQueryData` parity behavior and root ambient `MediaQuery` availability.
+- Expanded `SafeAreaTests` with explicit `MediaQueryData.RemoveViewInsets(...)` edge coverage: selected-side inset zeroing, view-padding adjustment, and clamp-to-zero behavior when insets exceed view padding.
 - Added ink/ripple baseline for Material buttons with rounded clipping parity: framework now includes animated radial splash paint support (`RenderInkSplash` + `InkSplash`), rounded clip primitives (`ClipRRect` widget/render/layer + `PaintingContext.PushClipRRect`), and `MaterialButtonCore` triggers splash animation from pointer origin (keyboard fallback: center origin) while clipping splash by button border radius.
 - Aligned framework `AppBar` toolbar-edge geometry with Flutter defaults: removed implicit outer horizontal toolbar padding (`0` default instead of framework-only `16`) and removed hardcoded actions-row inter-item spacing so actions rely on their own widget-level sizing/padding.
 - Added focused `MaterialScaffoldTests` regression coverage for app-bar geometry parity: default zero outer toolbar padding and zero extra actions-row spacing.
@@ -245,6 +247,7 @@ Progress update (2026-03-19):
 - Updated navigator local-pop semantics for history entries: `NavigatorState.MaybePop` now treats route-local `WillPop` handling as consumed (handled) even on root routes, aligning with Flutter local-history behavior.
 - Expanded app-bar drawer implication behavior: existing drawer-aware implied leading remains (`Scaffold.drawer` -> leading `IconButton(Icons.Menu)`), and app bar now also auto-implies end-drawer trailing action (`Scaffold.endDrawer` with empty actions -> trailing `IconButton(Icons.Menu)`) with `automaticallyImplyActions` opt-out.
 - Updated `MaterialScaffoldTests` coverage for end-drawer implied actions, start/end drawer state APIs, start/end mutual exclusion, edge-drag open flows on both sides, and root-route drawer close on navigator back handling; updated `NavigationTests` coverage for root-route local-history `MaybePop` handling.
+- Expanded `MaterialScaffoldTests` with deeper end-drawer choreography coverage: velocity-based open/close settle and drag-cancel settle on both sides of the half-progress threshold.
 - Closed remaining drawer gesture-controller follow-up: shared drag recognizers now expose drag-cancel callbacks through `GestureDetector`/`RawGestureDetector`, report `DragEndDetails.PrimaryVelocity` as timestamp-derived px/s, and `Scaffold` drawer cancel/release paths now settle using Flutter-like half-threshold and fling-threshold semantics.
 - Closed dedicated drawer-theme parity follow-up:
   - added `DrawerThemeData` + inherited `DrawerTheme` and `ThemeData.DrawerTheme` integration;
