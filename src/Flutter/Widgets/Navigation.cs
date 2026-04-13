@@ -959,7 +959,6 @@ public sealed class NavigatorState : State
 
         SetState(() =>
         {
-            CancelHeroTransition(disposeDetachedRoute: true);
             PopCurrentRoute(result);
         });
         return true;
@@ -1167,13 +1166,17 @@ public sealed class NavigatorState : State
             return;
         }
 
+        if (TryDivertHeroTransition(fromRoute, toRoute, direction, detachFromRouteOnComplete))
+        {
+            return;
+        }
+
         if (!_heroTransitionController.HasHeroes(fromRoute))
         {
             return;
         }
 
-        _heroFlightController.Stop();
-        _heroTransitionController.ClearFlights();
+        CancelHeroTransition(disposeDetachedRoute: true);
         _heroTransitionSession = new HeroTransitionSession(
             fromRoute: fromRoute,
             toRoute: toRoute,
@@ -1181,6 +1184,41 @@ public sealed class NavigatorState : State
             detachFromRouteOnComplete: detachFromRouteOnComplete);
 
         Scheduler.AddPostFrameCallback(_ => ResolvePendingHeroTransition());
+    }
+
+    private bool TryDivertHeroTransition(
+        Route fromRoute,
+        Route toRoute,
+        HeroTransitionDirection direction,
+        bool detachFromRouteOnComplete)
+    {
+        var activeSession = _heroTransitionSession;
+        if (activeSession == null
+            || activeSession.Direction != HeroTransitionDirection.Push
+            || direction != HeroTransitionDirection.Pop)
+        {
+            return false;
+        }
+
+        if (!ReferenceEquals(activeSession.FromRoute, toRoute)
+            || !ReferenceEquals(activeSession.ToRoute, fromRoute))
+        {
+            return false;
+        }
+
+        if (_heroTransitionController.ActiveFlights.Count == 0)
+        {
+            return false;
+        }
+
+        _heroTransitionSession = new HeroTransitionSession(
+            fromRoute: fromRoute,
+            toRoute: toRoute,
+            direction: direction,
+            detachFromRouteOnComplete: detachFromRouteOnComplete);
+        _heroTransitionController.UpdateActiveFlightPlaceholders(isPushTransition: false);
+        _heroFlightController.Reverse(from: _heroFlightController.Value);
+        return true;
     }
 
     private void ResolvePendingHeroTransition()
@@ -1297,6 +1335,7 @@ public sealed class NavigatorState : State
             return;
         }
 
+        CancelHeroTransition(disposeDetachedRoute: true);
         route.Dispose();
         route.Detach();
     }

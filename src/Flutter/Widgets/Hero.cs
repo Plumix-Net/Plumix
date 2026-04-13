@@ -404,15 +404,26 @@ internal sealed class HeroTransitionController
 
     public void ActivateFlights(IReadOnlyList<HeroFlightManifest> flights, bool isPushTransition)
     {
-        _hiddenHeroes.Clear();
         if (flights.Count == 0)
         {
             _activeFlights = [];
+            _hiddenHeroes.Clear();
             return;
         }
 
-        var capturedFlights = flights.ToArray();
-        foreach (var flight in capturedFlights)
+        _activeFlights = flights.ToArray();
+        UpdateActiveFlightPlaceholders(isPushTransition);
+    }
+
+    public void UpdateActiveFlightPlaceholders(bool isPushTransition)
+    {
+        _hiddenHeroes.Clear();
+        if (_activeFlights.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var flight in _activeFlights)
         {
             _hiddenHeroes[(flight.FromRoute, flight.Tag)] = new HeroPlaceholderState(
                 new Size(flight.FromBounds.Width, flight.FromBounds.Height),
@@ -421,8 +432,6 @@ internal sealed class HeroTransitionController
                 new Size(flight.ToBounds.Width, flight.ToBounds.Height),
                 IncludeChild: false);
         }
-
-        _activeFlights = capturedFlights;
     }
 
     public void ClearFlights()

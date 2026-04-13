@@ -422,6 +422,7 @@ Progress update (2026-03-19):
   - expanded default hero placeholder parity (`src/Flutter/Widgets/Hero.cs`): default hidden-hero placeholders now follow Flutter push/pop behavior (push-source keeps offstage child in fixed-size box; push-destination and pop placeholders use fixed-size empty boxes).
   - added duplicate-tag runtime guard for Hero registration (`src/Flutter/Widgets/Hero.cs`): multiple active heroes with the same `tag` inside one route subtree now throw `InvalidOperationException` to prevent ambiguous hero-flight resolution.
   - added nested-hero runtime guard in `src/Flutter/Widgets/Hero.cs`: rendering a `Hero` under another `Hero` now throws `InvalidOperationException` to match Flutter hero composition constraints.
+  - added hero push-to-pop diversion lifecycle parity in `src/Flutter/Widgets/Navigation.cs`: if pop interrupts an active push hero flight between the same routes, navigator now reuses and reverses the active flight/tween instead of restarting a new pop flight.
   - expanded focused hero coverage with `src/Flutter.Tests/HeroNavigatorTests.cs` (push/pop shared-tag hero flights) plus `MaterialFloatingActionButtonTests` assertion that FAB composition is hero-wrapped when `heroTag` is set.
 - Extended Material `BottomNavigationBar` parity in `Flutter.Material`:
   - expanded framework `BottomNavigationBar` API parity with Flutter-like type/default wiring: `BottomNavigationBarType` (`fixed`/`shifting`) now resolves by precedence (`widget -> theme -> item-count default`), with shifting background-color resolution from selected item `backgroundColor`;
@@ -439,7 +440,7 @@ Progress update (2026-03-19):
   - `Checkbox`/`Switch`/`Radio` now map toggle state to `IsChecked` semantics, and adaptive Cupertino checkbox/switch paths now propagate semantic labels and toggle-state semantics;
   - expanded `MaterialCheckboxTests` and `MaterialSwitchTests` with focused semantic-label/state regression coverage.
 - Remaining divergence for floating action button in current framework scope:
-  - none documented in current framework scope; advanced Hero APIs (nested-controller orchestration and flight-diversion lifecycle hooks) remain broader navigator-layer follow-up.
+  - none documented in current framework scope; advanced Hero APIs (nested-controller orchestration) remain broader navigator-layer follow-up.
 
 Initial scope:
 

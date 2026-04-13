@@ -527,6 +527,81 @@ public sealed class HeroNavigatorTests
     }
 
     [Fact]
+    public void Navigator_PushFlight_InterruptedByPop_DivertsActiveHeroFlight()
+    {
+        Scheduler.ResetForTests();
+        NavigatorBackButtonDispatcher.ResetForTests();
+
+        try
+        {
+            var viewportSize = new Size(320, 240);
+            NavigatorState? navigatorState = null;
+            var rootCreateRectTweenCalls = 0;
+            var detailsCreateRectTweenCalls = 0;
+            var divertedTweenLerpCalls = 0;
+
+            using var harness = new WidgetRenderHarness(
+                new Navigator(
+                    initialRoute: BuildHeroRoute(
+                        routeName: "root-page",
+                        heroOrigin: new Point(20, 160),
+                        heroColor: Colors.OrangeRed,
+                        onBuild: () => { },
+                        captureState: state => navigatorState ??= state,
+                        createRectTween: (begin, end) =>
+                        {
+                            _ = begin;
+                            _ = end;
+                            rootCreateRectTweenCalls += 1;
+                            return new TrackingRectTween(() => { });
+                        })));
+
+            harness.Pump(viewportSize);
+            Assert.NotNull(navigatorState);
+
+            navigatorState!.Push(
+                BuildHeroRoute(
+                    routeName: "details-page",
+                    heroOrigin: new Point(238, 18),
+                    heroColor: Colors.SteelBlue,
+                    onBuild: () => { },
+                    captureState: _ => { },
+                    createRectTween: (begin, end) =>
+                    {
+                        _ = begin;
+                        _ = end;
+                        detailsCreateRectTweenCalls += 1;
+                        return new TrackingRectTween(() => divertedTweenLerpCalls += 1);
+                    }));
+            harness.Pump(viewportSize);
+            PumpHeroTransitionFrame(harness, viewportSize);
+
+            Assert.Equal(1, detailsCreateRectTweenCalls);
+            Assert.Equal(0, rootCreateRectTweenCalls);
+            Assert.True(divertedTweenLerpCalls > 0);
+
+            var tweenLerpCallsBeforePop = divertedTweenLerpCalls;
+            navigatorState.Pop();
+            harness.Pump(viewportSize);
+            PumpHeroTransitionFrame(harness, viewportSize);
+
+            Assert.Equal(1, detailsCreateRectTweenCalls);
+            Assert.Equal(0, rootCreateRectTweenCalls);
+            Assert.True(divertedTweenLerpCalls > tweenLerpCallsBeforePop);
+
+            AdvanceHeroTransition(harness, viewportSize);
+
+            Assert.NotNull(FindParagraphByText(harness.RenderView, "root-page"));
+            Assert.Null(FindParagraphByText(harness.RenderView, "details-page"));
+        }
+        finally
+        {
+            Scheduler.ResetForTests();
+            NavigatorBackButtonDispatcher.ResetForTests();
+        }
+    }
+
+    [Fact]
     public void Navigator_InitialRoute_WithDuplicateHeroTagsInRouteSubtree_ThrowsInvalidOperationException()
     {
         Scheduler.ResetForTests();
