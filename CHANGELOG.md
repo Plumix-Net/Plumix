@@ -14,6 +14,13 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 ### Changed
 
+- Added framework Material `ListTile` baseline:
+  - introduced `ListTile` in `src/Flutter.Material/ListTile.cs` with one/two/three-line composition (`leading`/`title`/`subtitle`/`trailing`), M3 baseline heights (`56`/`72`/`88`) plus dense defaults (`48`/`64`/`76`), selected/disabled color handling, and interaction wiring through `MaterialButtonCore` (`tap`, `long-press`, hover/focus/pressed states, cursor, semantics);
+  - added list-tile theming surface in `src/Flutter.Material/ListTileTheme.cs` and `ThemeData.ListTileTheme` integration in `src/Flutter.Material/ThemeData.cs`;
+  - added focused regression coverage in `src/Flutter.Tests/MaterialListTileTests.cs` for constructor guards, default heights, selected/disabled colors, theme precedence, tap dispatch, and selected/enabled semantics;
+  - added C#/Dart sample parity runtime probes (`src/Sample/Flutter.Net/Demos/Material/ListTileDemoPage.cs`, `dart_sample/lib/demos/material/list_tile_demo_page.dart`) and route wiring updates in sample menus;
+  - aligned `ListTile` text/layout behavior with Flutter defaults: title now defaults to one line, subtitle defaults to one line (`two-line`) or two lines (`three-line`) with ellipsis for plain `Text`, and tile body now shrink-wraps vertically (`Align.heightFactor=1`) so long subtitles do not trigger `RenderFlex` bottom overflow stripes in demo states;
+  - fixed `RenderAlign` unbounded-axis sizing in `src/Flutter/Rendering/Proxy.RenderBox.cs` (shrink-wrap when parent axis is unbounded), which removed `ListTile` demo `RenderFlex` right-overflow indicators.
 - Closed the requested parity triplet for Material shell/buttons and environment insets coverage:
   - expanded `src/Flutter.Tests/SafeAreaTests.cs` with explicit `MediaQueryData.RemoveViewInsets(...)` edge coverage (selected-side zeroing, view-padding adjustment, and clamp-to-zero behavior when insets exceed padding);
   - expanded `src/Flutter.Tests/MaterialButtonsTests.cs` with missing `FilledButton` advanced style-matrix coverage:

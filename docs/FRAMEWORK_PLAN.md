@@ -446,6 +446,12 @@ Progress update (2026-03-19):
   - `MaterialButtonCore` now emits semantic flags/actions (`IsButton`, `IsEnabled`, `IsSelected`, `IsChecked`) and optional semantic labels;
   - `Checkbox`/`Switch`/`Radio` now map toggle state to `IsChecked` semantics, and adaptive Cupertino checkbox/switch paths now propagate semantic labels and toggle-state semantics;
   - expanded `MaterialCheckboxTests` and `MaterialSwitchTests` with focused semantic-label/state regression coverage.
+- Added Material `ListTile` baseline in `Flutter.Material`:
+  - introduced framework `ListTile` with one/two/three-line baseline composition (`leading`/`title`/`subtitle`/`trailing`) and Flutter-like default height baselines for current scope (`56/72/88` and dense `48/64/76`);
+  - added dedicated list-tile theming primitives (`ListTileThemeData`, inherited `ListTileTheme`, and `ThemeData.ListTileTheme`) with precedence wiring for color/layout fields (`widget -> listTileTheme -> mode defaults`);
+  - wired list-tile interaction/focus/hover/pressed semantics through shared `MaterialButtonCore` (`onTap`, `onLongPress`, cursor resolution, selected/enabled semantics flags);
+  - added focused `MaterialListTileTests` coverage for constructor guards, default heights, selected/disabled color behavior, theme precedence, tap dispatch, and selected/enabled semantics;
+  - added C#/Dart sample parity demo route/page for runtime verification (`ListTile` route in Material tab with state and local theme override probes).
 - Remaining divergence for floating action button in current framework scope:
   - none documented in current framework scope.
 
