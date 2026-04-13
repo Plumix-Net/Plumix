@@ -85,6 +85,8 @@ internal sealed class HeroState : State
 
     public override Widget Build(BuildContext context)
     {
+        EnsureNoHeroAncestor();
+
         var placeholderState = _scope?.Controller.ResolvePlaceholder(_route, CurrentWidget.Tag);
         if (placeholderState == null)
         {
@@ -112,6 +114,20 @@ internal sealed class HeroState : State
         return new SizedBox(
             width: placeholderState.Value.Size.Width,
             height: placeholderState.Value.Size.Height);
+    }
+
+    private void EnsureNoHeroAncestor()
+    {
+        var ancestor = Element.Parent;
+        while (ancestor != null)
+        {
+            if (ancestor.Widget is Hero)
+            {
+                throw new InvalidOperationException("A Hero widget cannot be the descendant of another Hero widget.");
+            }
+
+            ancestor = ancestor.Parent;
+        }
     }
 
     internal HeroSnapshot? CreateSnapshot(Route expectedRoute)

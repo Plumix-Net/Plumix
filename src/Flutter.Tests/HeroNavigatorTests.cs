@@ -554,6 +554,34 @@ public sealed class HeroNavigatorTests
         }
     }
 
+    [Fact]
+    public void Navigator_InitialRoute_WithNestedHero_ThrowsInvalidOperationException()
+    {
+        Scheduler.ResetForTests();
+        NavigatorBackButtonDispatcher.ResetForTests();
+
+        try
+        {
+            var viewportSize = new Size(320, 240);
+
+            var exception = Assert.Throws<InvalidOperationException>(() =>
+            {
+                using var harness = new WidgetRenderHarness(
+                    new Navigator(
+                        initialRoute: BuildNestedHeroRoute(
+                            routeName: "nested-hero")));
+                harness.Pump(viewportSize);
+            });
+
+            Assert.Contains("cannot be the descendant of another Hero", exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+        finally
+        {
+            Scheduler.ResetForTests();
+            NavigatorBackButtonDispatcher.ResetForTests();
+        }
+    }
+
     private static void AdvanceHeroTransition(WidgetRenderHarness harness, Size viewportSize)
     {
         PumpHeroTransitionFrame(harness, viewportSize);
@@ -616,6 +644,18 @@ public sealed class HeroNavigatorTests
                                 tag: SharedHeroTag,
                                 child: new SizedBox(width: 44, height: 44)))
                     ]),
+            settings: new RouteSettings(Name: routeName));
+    }
+
+    private static Route BuildNestedHeroRoute(string routeName)
+    {
+        return new BuilderPageRoute(
+            builder: _ =>
+                new Hero(
+                    tag: "outer-hero",
+                    child: new Hero(
+                        tag: "inner-hero",
+                        child: new SizedBox(width: 44, height: 44))),
             settings: new RouteSettings(Name: routeName));
     }
 
