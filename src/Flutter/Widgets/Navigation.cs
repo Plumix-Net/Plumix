@@ -877,7 +877,8 @@ public sealed class NavigatorState : State
                 fromRoute: previousRoute,
                 toRoute: route,
                 direction: HeroTransitionDirection.Push,
-                detachFromRouteOnComplete: false);
+                detachFromRouteOnComplete: false,
+                isUserGestureTransition: false);
         });
     }
 
@@ -1159,14 +1160,15 @@ public sealed class NavigatorState : State
         Route? fromRoute,
         Route? toRoute,
         HeroTransitionDirection direction,
-        bool detachFromRouteOnComplete)
+        bool detachFromRouteOnComplete,
+        bool isUserGestureTransition)
     {
         if (fromRoute == null || toRoute == null)
         {
             return;
         }
 
-        if (TryDivertHeroTransition(fromRoute, toRoute, direction, detachFromRouteOnComplete))
+        if (TryDivertHeroTransition(fromRoute, toRoute, direction, detachFromRouteOnComplete, isUserGestureTransition))
         {
             return;
         }
@@ -1181,7 +1183,8 @@ public sealed class NavigatorState : State
             fromRoute: fromRoute,
             toRoute: toRoute,
             direction: direction,
-            detachFromRouteOnComplete: detachFromRouteOnComplete);
+            detachFromRouteOnComplete: detachFromRouteOnComplete,
+            isUserGestureTransition: isUserGestureTransition);
 
         Scheduler.AddPostFrameCallback(_ => ResolvePendingHeroTransition());
     }
@@ -1190,7 +1193,8 @@ public sealed class NavigatorState : State
         Route fromRoute,
         Route toRoute,
         HeroTransitionDirection direction,
-        bool detachFromRouteOnComplete)
+        bool detachFromRouteOnComplete,
+        bool isUserGestureTransition)
     {
         var activeSession = _heroTransitionSession;
         if (activeSession == null
@@ -1215,7 +1219,8 @@ public sealed class NavigatorState : State
             fromRoute: fromRoute,
             toRoute: toRoute,
             direction: direction,
-            detachFromRouteOnComplete: detachFromRouteOnComplete);
+            detachFromRouteOnComplete: detachFromRouteOnComplete,
+            isUserGestureTransition: isUserGestureTransition);
         _heroTransitionController.UpdateActiveFlightPlaceholders(isPushTransition: false);
         _heroFlightController.Reverse(from: _heroFlightController.Value);
         return true;
@@ -1229,7 +1234,10 @@ public sealed class NavigatorState : State
         }
 
         var session = _heroTransitionSession;
-        var flights = _heroTransitionController.CreateFlights(session.FromRoute, session.ToRoute);
+        var flights = _heroTransitionController.CreateFlights(
+            session.FromRoute,
+            session.ToRoute,
+            session.IsUserGestureTransition);
         if (flights.Count == 0)
         {
             SetState(() => CancelHeroTransition(disposeDetachedRoute: true));
@@ -1331,7 +1339,8 @@ public sealed class NavigatorState : State
                 fromRoute: route,
                 toRoute: previousRoute,
                 direction: HeroTransitionDirection.Pop,
-                detachFromRouteOnComplete: true);
+                detachFromRouteOnComplete: true,
+                isUserGestureTransition: UserGestureInProgress);
             return;
         }
 
@@ -1548,12 +1557,14 @@ public sealed class NavigatorState : State
             Route fromRoute,
             Route toRoute,
             HeroTransitionDirection direction,
-            bool detachFromRouteOnComplete)
+            bool detachFromRouteOnComplete,
+            bool isUserGestureTransition)
         {
             FromRoute = fromRoute;
             ToRoute = toRoute;
             Direction = direction;
             DetachFromRouteOnComplete = detachFromRouteOnComplete;
+            IsUserGestureTransition = isUserGestureTransition;
         }
 
         public Route FromRoute { get; }
@@ -1563,6 +1574,8 @@ public sealed class NavigatorState : State
         public HeroTransitionDirection Direction { get; }
 
         public bool DetachFromRouteOnComplete { get; }
+
+        public bool IsUserGestureTransition { get; }
     }
 
     private bool HandleBackButton()

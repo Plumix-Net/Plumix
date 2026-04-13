@@ -54,13 +54,15 @@ public sealed class Hero : StatefulWidget
         Key? key = null,
         CreateRectTween? createRectTween = null,
         HeroFlightShuttleBuilder? flightShuttleBuilder = null,
-        HeroPlaceholderBuilder? placeholderBuilder = null) : base(key)
+        HeroPlaceholderBuilder? placeholderBuilder = null,
+        bool transitionOnUserGestures = false) : base(key)
     {
         Tag = tag ?? throw new ArgumentNullException(nameof(tag));
         Child = child ?? throw new ArgumentNullException(nameof(child));
         CreateRectTween = createRectTween;
         FlightShuttleBuilder = flightShuttleBuilder;
         PlaceholderBuilder = placeholderBuilder;
+        TransitionOnUserGestures = transitionOnUserGestures;
     }
 
     public object Tag { get; }
@@ -73,6 +75,8 @@ public sealed class Hero : StatefulWidget
 
     public HeroPlaceholderBuilder? PlaceholderBuilder { get; }
 
+    public bool TransitionOnUserGestures { get; }
+
     public override State CreateState()
     {
         return new HeroState();
@@ -81,8 +85,7 @@ public sealed class Hero : StatefulWidget
 
 internal sealed class HeroState : State
 {
-    private HeroControllerScope? _scope;
-    private Route? _route;
+    private readonly List<HeroRegistration> _registrations = [];
     private object? _registeredTag;
     private bool _isEnabled = true;
 
@@ -121,7 +124,7 @@ internal sealed class HeroState : State
             return CurrentWidget.Child;
         }
 
-        var placeholderState = _scope?.Controller.ResolvePlaceholder(_route, CurrentWidget.Tag);
+        var placeholderState = ResolvePlaceholder();
         if (placeholderState == null)
         {
             return CurrentWidget.Child;
@@ -166,7 +169,7 @@ internal sealed class HeroState : State
 
     internal HeroSnapshot? CreateSnapshot(Route expectedRoute)
     {
-        if (_route == null || !ReferenceEquals(_route, expectedRoute))
+        if (!_isEnabled || !IsRegisteredForRoute(expectedRoute))
         {
             return null;
         }
@@ -195,18 +198,21 @@ internal sealed class HeroState : State
         return CurrentWidget.FlightShuttleBuilder;
     }
 
+    internal bool ResolveTransitionOnUserGestures()
+    {
+        return CurrentWidget.TransitionOnUserGestures;
+    }
+
     private void RegisterWithScope()
     {
-        var scope = HeroControllerScope.MaybeOf(Context);
-        var route = scope?.Route;
         var tag = CurrentWidget.Tag;
         var isEnabled = HeroMode.IsEnabled(Context);
+        var nextRegistrations = isEnabled ? CollectRegistrations() : [];
 
         var registrationChanged =
-            !ReferenceEquals(_scope, scope)
-            || !ReferenceEquals(_route, route)
-            || !Equals(_registeredTag, tag)
-            || _isEnabled != isEnabled;
+            !Equals(_registeredTag, tag)
+            || _isEnabled != isEnabled
+            || !RegistrationsMatch(nextRegistrations);
 
         if (!registrationChanged)
         {
@@ -215,27 +221,116 @@ internal sealed class HeroState : State
 
         Unregister();
 
-        _scope = scope;
-        _route = route;
         _registeredTag = tag;
         _isEnabled = isEnabled;
 
-        if (_isEnabled && _scope != null && _route != null)
+        if (!_isEnabled)
         {
-            _scope.Controller.Register(_route, tag, this);
+            return;
+        }
+
+        foreach (var registration in nextRegistrations)
+        {
+            registration.Controller.Register(registration.Route, tag, this);
+            _registrations.Add(registration);
         }
     }
 
     private void Unregister()
     {
-        if (_scope != null && _route != null && _registeredTag != null)
+        if (_registeredTag != null)
         {
-            _scope.Controller.Unregister(_route, _registeredTag, this);
+            foreach (var registration in _registrations)
+            {
+                registration.Controller.Unregister(registration.Route, _registeredTag, this);
+            }
         }
 
-        _scope = null;
-        _route = null;
+        _registrations.Clear();
         _registeredTag = null;
+    }
+
+    private HeroPlaceholderState? ResolvePlaceholder()
+    {
+        var tag = _registeredTag ?? CurrentWidget.Tag;
+        foreach (var registration in _registrations)
+        {
+            var placeholder = registration.Controller.ResolvePlaceholder(registration.Route, tag);
+            if (placeholder != null)
+            {
+                return placeholder;
+            }
+        }
+
+        return null;
+    }
+
+    private bool IsRegisteredForRoute(Route route)
+    {
+        return _registrations.Any(registration => ReferenceEquals(registration.Route, route));
+    }
+
+    private bool RegistrationsMatch(IReadOnlyList<HeroRegistration> nextRegistrations)
+    {
+        if (_registrations.Count != nextRegistrations.Count)
+        {
+            return false;
+        }
+
+        for (var index = 0; index < _registrations.Count; index += 1)
+        {
+            if (!ReferenceEquals(_registrations[index].Controller, nextRegistrations[index].Controller)
+                || !ReferenceEquals(_registrations[index].Route, nextRegistrations[index].Route))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private List<HeroRegistration> CollectRegistrations()
+    {
+        var nearestScope = HeroControllerScope.MaybeOf(Context);
+        if (nearestScope == null)
+        {
+            return [];
+        }
+
+        var registrations = new List<HeroRegistration>
+        {
+            new(nearestScope.Controller, nearestScope.Route),
+        };
+
+        // For nested navigators, let heroes on the nested navigator's current route
+        // also participate in transitions driven by ancestor navigators.
+        if (!IsCurrentRouteInOwningNavigator(nearestScope.Route))
+        {
+            return registrations;
+        }
+
+        var ancestor = Element.Parent;
+        while (ancestor != null)
+        {
+            if (ancestor.Widget is HeroControllerScope scope)
+            {
+                var candidate = new HeroRegistration(scope.Controller, scope.Route);
+                if (!registrations.Contains(candidate))
+                {
+                    registrations.Add(candidate);
+                }
+            }
+
+            ancestor = ancestor.Parent;
+        }
+
+        return registrations;
+    }
+
+    private static bool IsCurrentRouteInOwningNavigator(Route route)
+    {
+        var navigator = route.Navigator;
+        return navigator == null || ReferenceEquals(navigator.CurrentRoute, route);
     }
 
     private static Rect ResolveGlobalBounds(RenderBox renderBox)
@@ -269,6 +364,8 @@ internal sealed class HeroState : State
 
         return transformToRoot;
     }
+
+    private readonly record struct HeroRegistration(HeroTransitionController Controller, Route Route);
 }
 
 internal readonly record struct HeroSnapshot(Rect Bounds, Widget Child);
@@ -390,7 +487,10 @@ internal sealed class HeroTransitionController
         }
     }
 
-    public IReadOnlyList<HeroFlightManifest> CreateFlights(Route fromRoute, Route toRoute)
+    public IReadOnlyList<HeroFlightManifest> CreateFlights(
+        Route fromRoute,
+        Route toRoute,
+        bool isUserGestureTransition = false)
     {
         if (!_heroesByRoute.TryGetValue(fromRoute, out var fromHeroes) || fromHeroes.Count == 0)
         {
@@ -406,6 +506,12 @@ internal sealed class HeroTransitionController
         foreach (var (tag, fromHero) in fromHeroes)
         {
             if (!toHeroes.TryGetValue(tag, out var toHero))
+            {
+                continue;
+            }
+
+            if (isUserGestureTransition
+                && (!fromHero.ResolveTransitionOnUserGestures() || !toHero.ResolveTransitionOnUserGestures()))
             {
                 continue;
             }

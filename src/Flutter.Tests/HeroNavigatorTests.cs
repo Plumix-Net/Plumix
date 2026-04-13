@@ -354,6 +354,159 @@ public sealed class HeroNavigatorTests
     }
 
     [Fact]
+    public void Navigator_Push_WithNestedNavigatorHeroes_ShowsBothRoutesDuringFlight()
+    {
+        Scheduler.ResetForTests();
+        NavigatorBackButtonDispatcher.ResetForTests();
+
+        try
+        {
+            var viewportSize = new Size(320, 240);
+            NavigatorState? navigatorState = null;
+
+            using var harness = new WidgetRenderHarness(
+                new Navigator(
+                    initialRoute: BuildHeroRoute(
+                        routeName: "root-page",
+                        heroOrigin: new Point(20, 160),
+                        heroColor: Colors.OrangeRed,
+                        onBuild: () => { },
+                        captureState: state => navigatorState ??= state,
+                        useNestedNavigator: true)));
+
+            harness.Pump(viewportSize);
+            Assert.NotNull(navigatorState);
+            Assert.NotNull(FindParagraphByText(harness.RenderView, "root-page"));
+
+            navigatorState!.Push(
+                BuildHeroRoute(
+                    routeName: "details-page",
+                    heroOrigin: new Point(238, 18),
+                    heroColor: Colors.SteelBlue,
+                    onBuild: () => { },
+                    captureState: _ => { },
+                    useNestedNavigator: true));
+            harness.Pump(viewportSize);
+            PumpHeroTransitionFrame(harness, viewportSize);
+
+            Assert.NotNull(FindParagraphByText(harness.RenderView, "root-page"));
+            Assert.NotNull(FindParagraphByText(harness.RenderView, "details-page"));
+
+            AdvanceHeroTransition(harness, viewportSize);
+
+            Assert.Null(FindParagraphByText(harness.RenderView, "root-page"));
+            Assert.NotNull(FindParagraphByText(harness.RenderView, "details-page"));
+        }
+        finally
+        {
+            Scheduler.ResetForTests();
+            NavigatorBackButtonDispatcher.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void Navigator_Pop_FromUserGesture_SkipsHeroFlight_WhenTransitionOnUserGesturesDisabled()
+    {
+        Scheduler.ResetForTests();
+        NavigatorBackButtonDispatcher.ResetForTests();
+
+        try
+        {
+            var viewportSize = new Size(320, 240);
+            NavigatorState? navigatorState = null;
+
+            using var harness = new WidgetRenderHarness(
+                new Navigator(
+                    initialRoute: BuildHeroRoute(
+                        routeName: "root-page",
+                        heroOrigin: new Point(20, 160),
+                        heroColor: Colors.OrangeRed,
+                        onBuild: () => { },
+                        captureState: state => navigatorState ??= state)));
+
+            harness.Pump(viewportSize);
+            Assert.NotNull(navigatorState);
+
+            navigatorState!.Push(
+                BuildHeroRoute(
+                    routeName: "details-page",
+                    heroOrigin: new Point(238, 18),
+                    heroColor: Colors.SteelBlue,
+                    onBuild: () => { },
+                    captureState: _ => { }));
+            harness.Pump(viewportSize);
+            AdvanceHeroTransition(harness, viewportSize);
+
+            Assert.True(navigatorState.MaybePopFromUserGesture());
+            harness.Pump(viewportSize);
+            PumpHeroTransitionFrame(harness, viewportSize);
+
+            Assert.NotNull(FindParagraphByText(harness.RenderView, "root-page"));
+            Assert.Null(FindParagraphByText(harness.RenderView, "details-page"));
+            Assert.Equal(0, CountDescendants<RenderOffstage>(harness.RenderView));
+        }
+        finally
+        {
+            Scheduler.ResetForTests();
+            NavigatorBackButtonDispatcher.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void Navigator_Pop_FromUserGesture_UsesHeroFlight_WhenBothHeroesAllowGestureTransition()
+    {
+        Scheduler.ResetForTests();
+        NavigatorBackButtonDispatcher.ResetForTests();
+
+        try
+        {
+            var viewportSize = new Size(320, 240);
+            NavigatorState? navigatorState = null;
+
+            using var harness = new WidgetRenderHarness(
+                new Navigator(
+                    initialRoute: BuildHeroRoute(
+                        routeName: "root-page",
+                        heroOrigin: new Point(20, 160),
+                        heroColor: Colors.OrangeRed,
+                        onBuild: () => { },
+                        captureState: state => navigatorState ??= state,
+                        transitionOnUserGestures: true)));
+
+            harness.Pump(viewportSize);
+            Assert.NotNull(navigatorState);
+
+            navigatorState!.Push(
+                BuildHeroRoute(
+                    routeName: "details-page",
+                    heroOrigin: new Point(238, 18),
+                    heroColor: Colors.SteelBlue,
+                    onBuild: () => { },
+                    captureState: _ => { },
+                    transitionOnUserGestures: true));
+            harness.Pump(viewportSize);
+            AdvanceHeroTransition(harness, viewportSize);
+
+            Assert.True(navigatorState.MaybePopFromUserGesture());
+            harness.Pump(viewportSize);
+            PumpHeroTransitionFrame(harness, viewportSize);
+
+            Assert.NotNull(FindParagraphByText(harness.RenderView, "root-page"));
+            Assert.NotNull(FindParagraphByText(harness.RenderView, "details-page"));
+
+            AdvanceHeroTransition(harness, viewportSize);
+
+            Assert.NotNull(FindParagraphByText(harness.RenderView, "root-page"));
+            Assert.Null(FindParagraphByText(harness.RenderView, "details-page"));
+        }
+        finally
+        {
+            Scheduler.ResetForTests();
+            NavigatorBackButtonDispatcher.ResetForTests();
+        }
+    }
+
+    [Fact]
     public void Navigator_Push_UsesSourceHeroPlaceholderBuilder_DuringFlight()
     {
         Scheduler.ResetForTests();
@@ -727,23 +880,60 @@ public sealed class HeroNavigatorTests
         CreateRectTween? createRectTween = null,
         HeroFlightShuttleBuilder? flightShuttleBuilder = null,
         HeroPlaceholderBuilder? placeholderBuilder = null,
-        bool heroModeEnabled = true)
+        bool heroModeEnabled = true,
+        bool transitionOnUserGestures = false,
+        bool useNestedNavigator = false)
     {
         return new BuilderPageRoute(
             builder: context =>
             {
                 captureState(Navigator.Of(context));
                 onBuild();
-                return BuildHeroPage(
-                    routeName,
+                return useNestedNavigator
+                    ? BuildNestedNavigatorHeroPage(
+                        routeName,
+                        heroOrigin,
+                        heroColor,
+                        createRectTween,
+                        flightShuttleBuilder,
+                        placeholderBuilder,
+                        heroModeEnabled,
+                        transitionOnUserGestures)
+                    : BuildHeroPage(
+                        routeName,
+                        heroOrigin,
+                        heroColor,
+                        createRectTween,
+                        flightShuttleBuilder,
+                        placeholderBuilder,
+                        heroModeEnabled,
+                        transitionOnUserGestures);
+            },
+            settings: new RouteSettings(Name: routeName));
+    }
+
+    private static Widget BuildNestedNavigatorHeroPage(
+        string routeLabel,
+        Point heroOrigin,
+        Color heroColor,
+        CreateRectTween? createRectTween = null,
+        HeroFlightShuttleBuilder? flightShuttleBuilder = null,
+        HeroPlaceholderBuilder? placeholderBuilder = null,
+        bool heroModeEnabled = true,
+        bool transitionOnUserGestures = false)
+    {
+        return new Navigator(
+            initialRoute: new BuilderPageRoute(
+                builder: _ => BuildHeroPage(
+                    routeLabel,
                     heroOrigin,
                     heroColor,
                     createRectTween,
                     flightShuttleBuilder,
                     placeholderBuilder,
-                    heroModeEnabled);
-            },
-            settings: new RouteSettings(Name: routeName));
+                    heroModeEnabled,
+                    transitionOnUserGestures),
+                settings: new RouteSettings(Name: $"{routeLabel}-nested-inner")));
     }
 
     private static Route BuildDuplicateHeroTagRoute(string routeName)
@@ -788,13 +978,15 @@ public sealed class HeroNavigatorTests
         CreateRectTween? createRectTween = null,
         HeroFlightShuttleBuilder? flightShuttleBuilder = null,
         HeroPlaceholderBuilder? placeholderBuilder = null,
-        bool heroModeEnabled = true)
+        bool heroModeEnabled = true,
+        bool transitionOnUserGestures = false)
     {
         Widget heroWidget = new Hero(
             tag: SharedHeroTag,
             createRectTween: createRectTween,
             flightShuttleBuilder: flightShuttleBuilder,
             placeholderBuilder: placeholderBuilder,
+            transitionOnUserGestures: transitionOnUserGestures,
             child: new DecoratedBox(
                 decoration: new BoxDecoration(
                     Color: heroColor,

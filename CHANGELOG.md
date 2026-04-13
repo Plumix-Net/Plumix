@@ -79,6 +79,8 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
   - hero registration now validates duplicate tags within the same route subtree and throws `InvalidOperationException` when multiple active heroes share one `tag` in `src/Flutter/Widgets/Hero.cs`.
   - hero build now validates nested hero composition and throws `InvalidOperationException` when a `Hero` is rendered under another `Hero` in `src/Flutter/Widgets/Hero.cs`.
   - added `HeroMode(enabled: ...)` in `src/Flutter/Widgets/Hero.cs`; disabled hero subtrees are excluded from registration/flight placeholder resolution, so matching tags no longer trigger hero flights when one side is wrapped in disabled `HeroMode`.
+  - added `Hero.transitionOnUserGestures` in `src/Flutter/Widgets/Hero.cs` and wired navigator hero-session filtering in `src/Flutter/Widgets/Navigation.cs`; user-gesture pop transitions now animate heroes only when both matching heroes opt in.
+  - added nested-navigator hero orchestration in `src/Flutter/Widgets/Hero.cs`; heroes from nested navigators now participate in ancestor navigator flights when they belong to the nested navigator's current route, matching Flutter's nested hero candidate rules.
 - Added focused hero regression coverage:
   - new `src/Flutter.Tests/HeroNavigatorTests.cs` verifies shared-tag push/pop hero transitions keep both routes during flight and settle to a single destination route after completion;
   - `src/Flutter.Tests/HeroNavigatorTests.cs` now also verifies destination `Hero.createRectTween` precedence and custom tween evaluation during flight;
@@ -89,6 +91,8 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
   - `src/Flutter.Tests/HeroNavigatorTests.cs` now verifies nested-hero detection (`Hero` under `Hero`) throws `InvalidOperationException`.
   - `src/Flutter.Tests/HeroNavigatorTests.cs` now verifies push-flight interruption by pop diverts the active hero flight (no new pop `createRectTween` invocation, active tween reverses in-place).
   - `src/Flutter.Tests/HeroNavigatorTests.cs` now verifies disabled destination `HeroMode` prevents hero-flight startup on push.
+  - `src/Flutter.Tests/HeroNavigatorTests.cs` now verifies user-gesture pop hero gating (default disabled path skips flights, opt-in path animates flights when both heroes set `transitionOnUserGestures: true`).
+  - `src/Flutter.Tests/HeroNavigatorTests.cs` now verifies hero flights across outer-route push transitions when matching heroes live inside nested navigators.
   - `src/Flutter.Tests/MaterialFloatingActionButtonTests.cs` now verifies FAB composition is wrapped by `Hero` when `heroTag` is set.
 - Synced tracking docs for this parity pass:
   - `docs/FRAMEWORK_PLAN.md`,
@@ -102,7 +106,8 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
   - `docs/ai/material-2026-04-13-hero-duplicate-tag-guard.md`,
   - `docs/ai/material-2026-04-13-hero-nested-guard.md`,
   - `docs/ai/material-2026-04-13-hero-flight-diversion.md`,
-  - `docs/ai/material-2026-04-13-hero-mode-disable-parity.md`.
+  - `docs/ai/material-2026-04-13-hero-mode-disable-parity.md`,
+  - `docs/ai/material-2026-04-13-hero-parity-closeout.md`.
 - Added framework semantics annotation plumbing for interactive controls:
   - introduced `Semantics` widget + `RenderSemanticsAnnotations` (`src/Flutter/Widgets/Semantics.cs`, `src/Flutter/Rendering/Proxy.RenderBox.cs`);
   - `MaterialButtonCore` now emits accessibility semantics (`label`, enabled/tap action, button/selected/checked flags) and `Checkbox`/`Switch`/`Radio` now wire toggle-state semantics (`IsChecked`) through shared control composition;

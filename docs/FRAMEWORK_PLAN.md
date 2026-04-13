@@ -424,6 +424,8 @@ Progress update (2026-03-19):
   - added nested-hero runtime guard in `src/Flutter/Widgets/Hero.cs`: rendering a `Hero` under another `Hero` now throws `InvalidOperationException` to match Flutter hero composition constraints.
   - added hero push-to-pop diversion lifecycle parity in `src/Flutter/Widgets/Navigation.cs`: if pop interrupts an active push hero flight between the same routes, navigator now reuses and reverses the active flight/tween instead of restarting a new pop flight.
   - added hero subtree participation gating via `HeroMode(enabled: ...)` in `src/Flutter/Widgets/Hero.cs`: disabled hero subtrees now opt out from registration and hero-flight placeholder substitution, preventing matching-tag flights when disabled.
+  - added `Hero.transitionOnUserGestures` parity in `src/Flutter/Widgets/Hero.cs` + `src/Flutter/Widgets/Navigation.cs`: user-gesture pop transitions now start hero flights only when both matching heroes explicitly opt in.
+  - added nested-navigator hero orchestration parity in `src/Flutter/Widgets/Hero.cs`: heroes on a nested navigator's current route now register for ancestor route scopes so outer navigator transitions can animate matching tags across nested navigator content.
   - expanded focused hero coverage with `src/Flutter.Tests/HeroNavigatorTests.cs` (push/pop shared-tag hero flights) plus `MaterialFloatingActionButtonTests` assertion that FAB composition is hero-wrapped when `heroTag` is set.
 - Extended Material `BottomNavigationBar` parity in `Flutter.Material`:
   - expanded framework `BottomNavigationBar` API parity with Flutter-like type/default wiring: `BottomNavigationBarType` (`fixed`/`shifting`) now resolves by precedence (`widget -> theme -> item-count default`), with shifting background-color resolution from selected item `backgroundColor`;
@@ -441,7 +443,7 @@ Progress update (2026-03-19):
   - `Checkbox`/`Switch`/`Radio` now map toggle state to `IsChecked` semantics, and adaptive Cupertino checkbox/switch paths now propagate semantic labels and toggle-state semantics;
   - expanded `MaterialCheckboxTests` and `MaterialSwitchTests` with focused semantic-label/state regression coverage.
 - Remaining divergence for floating action button in current framework scope:
-  - none documented in current framework scope; advanced Hero APIs (`transitionOnUserGestures`, nested-controller orchestration) remain broader navigator-layer follow-up.
+  - none documented in current framework scope.
 
 Initial scope:
 
