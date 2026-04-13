@@ -14,6 +14,119 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 ### Changed
 
+- Added framework Material `ListTile` baseline:
+  - introduced `ListTile` in `src/Flutter.Material/ListTile.cs` with one/two/three-line composition (`leading`/`title`/`subtitle`/`trailing`), M3 baseline heights (`56`/`72`/`88`) plus dense defaults (`48`/`64`/`76`), selected/disabled color handling, and interaction wiring through `MaterialButtonCore` (`tap`, `long-press`, hover/focus/pressed states, cursor, semantics);
+  - added list-tile theming surface in `src/Flutter.Material/ListTileTheme.cs` and `ThemeData.ListTileTheme` integration in `src/Flutter.Material/ThemeData.cs`;
+  - added focused regression coverage in `src/Flutter.Tests/MaterialListTileTests.cs` for constructor guards, default heights, selected/disabled colors, theme precedence, tap dispatch, and selected/enabled semantics;
+  - added C#/Dart sample parity runtime probes (`src/Sample/Flutter.Net/Demos/Material/ListTileDemoPage.cs`, `dart_sample/lib/demos/material/list_tile_demo_page.dart`) and route wiring updates in sample menus;
+  - aligned `ListTile` text/layout behavior with Flutter defaults: title now defaults to one line, subtitle defaults to one line (`two-line`) or two lines (`three-line`) with ellipsis for plain `Text`, and tile body now shrink-wraps vertically (`Align.heightFactor=1`) so long subtitles do not trigger `RenderFlex` bottom overflow stripes in demo states;
+  - fixed `RenderAlign` unbounded-axis sizing in `src/Flutter/Rendering/Proxy.RenderBox.cs` (shrink-wrap when parent axis is unbounded), which removed `ListTile` demo `RenderFlex` right-overflow indicators.
+- Closed the requested parity triplet for Material shell/buttons and environment insets coverage:
+  - expanded `src/Flutter.Tests/SafeAreaTests.cs` with explicit `MediaQueryData.RemoveViewInsets(...)` edge coverage (selected-side zeroing, view-padding adjustment, and clamp-to-zero behavior when insets exceed padding);
+  - expanded `src/Flutter.Tests/MaterialButtonsTests.cs` with missing `FilledButton` advanced style-matrix coverage:
+    - resolver-null fallback parity (`ForegroundColor`/`OverlayColor` fallback to lower-priority defaults),
+    - `FilledButton.StyleFrom(overlayColor: ...)` hover/pressed opacity priority and transparent-overlay behavior;
+  - expanded `src/Flutter.Tests/MaterialScaffoldTests.cs` with deeper end-drawer choreography coverage:
+    - velocity-based open/close settle for `endDrawer`,
+    - drag-cancel settle below/above threshold for `endDrawer`.
+- Closed dedicated Material drawer-theming parity in framework `Scaffold`/`Drawer`:
+  - added `DrawerThemeData` + inherited `DrawerTheme` (`src/Flutter.Material/DrawerTheme.cs`) and global `ThemeData.DrawerTheme` surface (`src/Flutter.Material/ThemeData.cs`);
+  - `Drawer` visuals now resolve by `widget -> drawerTheme -> mode-aware defaults` for background/elevation/shadow/width with finite/non-negative guards for themed width/elevation values;
+  - `Scaffold` scrim color now resolves by `drawerScrimColor -> drawerTheme.scrimColor -> default`;
+  - drawer drag progress/settle width math now respects themed drawer width (`ThemeData.DrawerTheme.Width`) instead of only widget width/default width.
+- Added focused drawer-theme regression coverage in `src/Flutter.Tests/MaterialScaffoldTests.cs`:
+  - drawer visual precedence (`widget` overrides `DrawerTheme`; `DrawerTheme` overrides defaults),
+  - invalid themed width/elevation guards,
+  - themed-width drag-threshold behavior for cancel-settle decisions,
+  - scaffold scrim precedence (`widget` scrim override vs `DrawerTheme` scrim fallback).
+- Stabilized full test-suite ordering for navigation/material interaction tests:
+  - added test-only `NavigatorBackButtonDispatcher.ResetForTests()` in `src/Flutter/Widgets/Navigation.cs`;
+  - moved `NavigationTests`, `MaterialScaffoldTests`, and `MaterialButtonsTests` into serial scheduler collection (`SchedulerTestCollection`) and reset relevant global test state in constructors;
+  - removed order-dependent `Navigator.TryHandleBackButton`/fullscreen-dialog app-bar leading/button-overlay flakes in full `Flutter.Tests` runs.
+- Closed the remaining framework drawer gesture-controller parity gaps in `src/Flutter.Material/Scaffold.cs` and shared gesture primitives:
+  - `GestureDetector`/`RawGestureDetector` now expose horizontal and vertical drag-cancel callbacks;
+  - `DragGestureRecognizer` now reports `DragEndDetails.PrimaryVelocity` in real pixels per second from pointer timestamps instead of a frame-rate-scaled delta hint;
+  - drawer drag release now consumes the px/s velocity directly, and pointer cancel settles open/closed by the Flutter half-progress threshold.
+- Added focused drawer and gesture regression coverage:
+  - verifies horizontal drag velocity is reported in px/s;
+  - verifies drawer drag cancel settles closed below half progress and open above half progress.
+- Fixed Material button ripple clipping composition in `src/Flutter.Material/Buttons.cs`: rounded button splashes now rely on the surrounding `ClipRRect` instead of enabling an extra internal `RenderInkSplash` bounds clip, matching existing clip-shape coverage.
+- Closed the remaining framework `BottomNavigationBar` localization gap:
+  - added Material localization primitives in `src/Flutter.Material/MaterialLocalizations.cs` (`MaterialLocalizations`, `DefaultMaterialLocalizations`, and inherited `MaterialLocalizationsScope`);
+  - bottom-navigation index-label semantics now resolve through `MaterialLocalizations.TabLabel(...)` instead of fixed string formatting in `src/Flutter.Material/BottomNavigationBar.cs`;
+  - added focused regression coverage in `src/Flutter.Tests/MaterialBottomNavigationBarTests.cs` to verify local `MaterialLocalizationsScope` override for index-label semantics.
+- Hardened framework drawer interaction parity in `src/Flutter.Material/Scaffold.cs`:
+  - edge-drag activation width now follows Flutter behavior (`20dp + MediaQuery.padding` on the opening edge) when `drawerEdgeDragWidth` is not explicitly provided;
+  - settle choreography now uses Flutter-aligned constants (`_kMinFlingVelocity=365`, `_kBaseSettleDuration=246ms`) with linear settle curve and velocity-aware settle duration;
+  - drag-release open/close decisions now prioritize fling threshold and only fall back to progress threshold when fling velocity is not met.
+- Added focused drawer regression coverage in `src/Flutter.Tests/MaterialScaffoldTests.cs`:
+  - verifies start-drawer edge drag can begin from the `MediaQuery.padding` extension zone.
+- Extended framework Material `FloatingActionButton` parity in `src/Flutter.Material/FloatingActionButton.cs`:
+  - added `tooltip` API support for all FAB constructors (`regular`, `small`, `large`, `extended`);
+  - FAB build composition now wraps with framework `Tooltip` when a non-empty message is provided.
+- Extended framework Material `FloatingActionButton` API parity in `src/Flutter.Material/FloatingActionButton.cs`:
+  - added constructor/factory API fields for `heroTag`, `mouseCursor`, `enableFeedback`, and `clipBehavior`;
+  - `clipBehavior` is now wired into shared button composition (`MaterialButtonCore`) and controls whether FAB content/splash is clipped to shape.
+- Added focused tooltip regression coverage in `src/Flutter.Tests/MaterialFloatingActionButtonTests.cs`:
+  - verifies FAB tooltip appears on hover enter and hides after hover exit animation completion.
+- Added focused FAB regression coverage in `src/Flutter.Tests/MaterialFloatingActionButtonTests.cs`:
+  - verifies default `clipBehavior` does not insert `RenderClipRRect`,
+  - verifies explicit `clipBehavior` inserts `RenderClipRRect`,
+  - verifies FAB stores `heroTag`/`mouseCursor`/`enableFeedback` values.
+- Closed framework-scope runtime cursor + feedback wiring for Material FAB/buttons:
+  - introduced framework feedback primitive (`src/Flutter/UI/Feedback.cs`) and hooked `MaterialButtonCore` tap/long-press + keyboard activation paths to dispatch feedback when `enableFeedback` resolves true;
+  - `FloatingActionButton` now resolves `enableFeedback` by Flutter-like precedence (`widget -> floatingActionButtonTheme -> defaults`) with new theme surface support (`FloatingActionButtonThemeData.EnableFeedback`);
+  - `MaterialButtonCore` now applies interactive mouse cursor requests through `MouseCursorManager`, and `FloatingActionButton` resolves cursor by precedence (`widget -> floatingActionButtonTheme -> defaults`) with new theme surface support (`FloatingActionButtonThemeData.MouseCursor`);
+  - `FlutterHost` now subscribes to framework cursor and feedback channels (`MouseCursorManager` / `Feedback`) to apply host pointer cursor updates and provide host feedback dispatch hook (`OnFrameworkFeedback`).
+- Expanded focused FAB regression coverage in `src/Flutter.Tests/MaterialFloatingActionButtonTests.cs`:
+  - verifies default hover cursor fallback (`click`) and theme-level cursor override application via `MouseCursorManager`,
+  - verifies keyboard activation feedback dispatch for default FAB behavior,
+  - verifies feedback suppression for widget-level and theme-level `enableFeedback: false`.
+- Closed framework-scope runtime hero transitions for FAB tags:
+  - added framework `Hero` primitive in `src/Flutter/Widgets/Hero.cs` (tag registration + render-bounds snapshotting + hero hide/show during active flights);
+  - extended `Navigator` in `src/Flutter/Widgets/Navigation.cs` with shared-tag push/pop hero-flight choreography (temporary dual-route composition, animated overlay flight, and deferred disposal of popped routes until flight completion);
+  - `FloatingActionButton` build output is now wrapped with `Hero(tag: heroTag, ...)` when `heroTag` is provided in `src/Flutter.Material/FloatingActionButton.cs`;
+  - hero flight bounds interpolation now supports destination-priority `Hero.createRectTween` with linear `RectTween` fallback (`src/Flutter/Widgets/Hero.cs`, `src/Flutter/Widgets/Navigation.cs`, `src/Flutter/AnimationController.cs`);
+  - hero flight shuttle composition now supports destination-priority `Hero.flightShuttleBuilder` (with source fallback and destination-child default) in `src/Flutter/Widgets/Hero.cs` and `src/Flutter/Widgets/Navigation.cs`;
+  - hidden-hero placeholder composition now supports `Hero.placeholderBuilder` with size metadata resolved from flight snapshots in `src/Flutter/Widgets/Hero.cs`;
+  - default hidden-hero placeholder behavior now follows Flutter-like push/pop semantics in `src/Flutter/Widgets/Hero.cs`: push-source hero keeps child under `Offstage` in a fixed-size `SizedBox`, while push-destination and both pop placeholders use fixed-size empty `SizedBox`.
+  - hero flight lifecycle now supports push-to-pop diversion in `src/Flutter/Widgets/Navigation.cs`: when a pop interrupts an active push hero flight between the same routes, the existing flight/tween is reused and reversed instead of creating a new pop flight.
+  - hero registration now validates duplicate tags within the same route subtree and throws `InvalidOperationException` when multiple active heroes share one `tag` in `src/Flutter/Widgets/Hero.cs`.
+  - hero build now validates nested hero composition and throws `InvalidOperationException` when a `Hero` is rendered under another `Hero` in `src/Flutter/Widgets/Hero.cs`.
+  - added `HeroMode(enabled: ...)` in `src/Flutter/Widgets/Hero.cs`; disabled hero subtrees are excluded from registration/flight placeholder resolution, so matching tags no longer trigger hero flights when one side is wrapped in disabled `HeroMode`.
+  - added `Hero.transitionOnUserGestures` in `src/Flutter/Widgets/Hero.cs` and wired navigator hero-session filtering in `src/Flutter/Widgets/Navigation.cs`; user-gesture pop transitions now animate heroes only when both matching heroes opt in.
+  - added nested-navigator hero orchestration in `src/Flutter/Widgets/Hero.cs`; heroes from nested navigators now participate in ancestor navigator flights when they belong to the nested navigator's current route, matching Flutter's nested hero candidate rules.
+- Added focused hero regression coverage:
+  - new `src/Flutter.Tests/HeroNavigatorTests.cs` verifies shared-tag push/pop hero transitions keep both routes during flight and settle to a single destination route after completion;
+  - `src/Flutter.Tests/HeroNavigatorTests.cs` now also verifies destination `Hero.createRectTween` precedence and custom tween evaluation during flight;
+  - `src/Flutter.Tests/HeroNavigatorTests.cs` now verifies destination `Hero.flightShuttleBuilder` precedence (over source) and source-builder fallback when destination builder is absent;
+  - `src/Flutter.Tests/HeroNavigatorTests.cs` now verifies `Hero.placeholderBuilder` on push/pop flights for source/destination hidden heroes, including placeholder size metadata (`44x44`) from hero bounds;
+  - `src/Flutter.Tests/HeroNavigatorTests.cs` now verifies default hidden-hero placeholder semantics (push-source includes an offstage child placeholder; pop placeholders do not include offstage child placeholders).
+  - `src/Flutter.Tests/HeroNavigatorTests.cs` now verifies duplicate `Hero(tag)` detection in one route subtree (`InvalidOperationException`).
+  - `src/Flutter.Tests/HeroNavigatorTests.cs` now verifies nested-hero detection (`Hero` under `Hero`) throws `InvalidOperationException`.
+  - `src/Flutter.Tests/HeroNavigatorTests.cs` now verifies push-flight interruption by pop diverts the active hero flight (no new pop `createRectTween` invocation, active tween reverses in-place).
+  - `src/Flutter.Tests/HeroNavigatorTests.cs` now verifies disabled destination `HeroMode` prevents hero-flight startup on push.
+  - `src/Flutter.Tests/HeroNavigatorTests.cs` now verifies user-gesture pop hero gating (default disabled path skips flights, opt-in path animates flights when both heroes set `transitionOnUserGestures: true`).
+  - `src/Flutter.Tests/HeroNavigatorTests.cs` now verifies hero flights across outer-route push transitions when matching heroes live inside nested navigators.
+  - `src/Flutter.Tests/MaterialFloatingActionButtonTests.cs` now verifies FAB composition is wrapped by `Hero` when `heroTag` is set.
+- Expanded navigation nested back-dispatch regression coverage in `src/Flutter.Tests/NavigationTests.cs`:
+  - verifies host back dispatch prefers innermost active navigator when nested stacks can pop,
+  - verifies dispatch falls back to outer navigator when nested navigator cannot pop.
+- Synced tracking docs for this parity pass:
+  - `docs/FRAMEWORK_PLAN.md`,
+  - `docs/ai/MODULE_INDEX.md`,
+  - `docs/ai/TEST_MATRIX.md`,
+  - `docs/ai/material-2026-04-12-fab-hero-transition-closeout.md`,
+  - `docs/ai/material-2026-04-12-hero-create-rect-tween.md`,
+  - `docs/ai/material-2026-04-13-hero-flight-shuttle-builder.md`,
+  - `docs/ai/material-2026-04-13-hero-placeholder-builder.md`,
+  - `docs/ai/material-2026-04-13-hero-default-placeholder-parity.md`,
+  - `docs/ai/material-2026-04-13-hero-duplicate-tag-guard.md`,
+  - `docs/ai/material-2026-04-13-hero-nested-guard.md`,
+  - `docs/ai/material-2026-04-13-hero-flight-diversion.md`,
+  - `docs/ai/material-2026-04-13-hero-mode-disable-parity.md`,
+  - `docs/ai/material-2026-04-13-hero-parity-closeout.md`,
+  - `docs/ai/navigation-2026-04-13-nested-back-dispatch.md`.
 - Added framework semantics annotation plumbing for interactive controls:
   - introduced `Semantics` widget + `RenderSemanticsAnnotations` (`src/Flutter/Widgets/Semantics.cs`, `src/Flutter/Rendering/Proxy.RenderBox.cs`);
   - `MaterialButtonCore` now emits accessibility semantics (`label`, enabled/tap action, button/selected/checked flags) and `Checkbox`/`Switch`/`Radio` now wire toggle-state semantics (`IsChecked`) through shared control composition;
@@ -30,12 +143,34 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 - Expanded app-bar dismiss-implied leading behavior in `src/Flutter.Material/Scaffold.cs`: non-drawer implied leading now resolves through `ModalRoute.ImpliesAppBarDismissal` (with `Navigator.CanPop` fallback), enabling root-route back affordance when local history is present.
 - Expanded `src/Flutter.Tests/MaterialScaffoldTests.cs` with focused drawer coverage for end-drawer implied actions, `ScaffoldState` end-drawer transitions, start/end mutual exclusion, and start/end edge-drag open flows.
 - Expanded test coverage with route-history/back handling regressions: `src/Flutter.Tests/MaterialScaffoldTests.cs` now verifies root-route drawer close on `Navigator.MaybePop`, and `src/Flutter.Tests/NavigationTests.cs` now verifies root-route local-history consume semantics.
-- Remaining documented drawer divergence for current framework scope: full Flutter `DrawerController` physics-accurate timing/curve parity and dedicated drawer theming parity remain follow-up work.
 - Completed framework `AppBar` fullscreen implied-leading branch: default implied leading now resolves to `IconButton(Icons.Close)` for fullscreen dialog routes (`PageRoute.FullscreenDialog == true`) and keeps `IconButton(Icons.ArrowBack)` for regular dismissible routes, with focused regression coverage in `src/Flutter.Tests/MaterialScaffoldTests.cs`.
 - Aligned framework `AppBar` with Flutter implied-leading behavior: added `automaticallyImplyLeading` (`true` default) and default back leading resolution for non-root navigator routes (`Navigator.CanPop` -> `IconButton(Icons.ArrowBack)` -> `Navigator.MaybePop`), with focused regression coverage in `src/Flutter.Tests/MaterialScaffoldTests.cs`.
 - Updated sample gallery demo shells in both C# and Dart samples to use title-only app bars so back affordance comes from default implied leading (`src/Sample/Flutter.Net/SampleGalleryScreen.cs`, `dart_sample/lib/sample_gallery_screen.dart`).
 - Documentation policy update: Dart-to-C# control/widget work now uses mandatory parity-first porting mode (`docs/ai/PORTING_MODE.md`) with strict `1:1` default behavior, required divergence logging, and explicit parity-validation workflow references in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/INVARIANTS.md`, `docs/ai/MODULE_INDEX.md`, `docs/ai/FEATURE_TEMPLATE.md`, `docs/ai/TEST_MATRIX.md`, and `docs/ai/PARITY_MATRIX.md`.
 - Agent workflow scope update: parity tasks now default to `one request = one control closed end-to-end` (not micro-iterations), with expanded context-budget guidance for control work (`12-20` initial files, up to `20`) and aligned rules in `AGENTS.md`, `docs/FRAMEWORK_PLAN.md`, `docs/ai/PORTING_MODE.md`, `docs/ai/MODULE_INDEX.md`, and `docs/ai/FEATURE_TEMPLATE.md`.
+
+## [2026-04-11] - M4 BottomNavigationBar semantics + shifting/tooltip parity hardening
+
+### Changed
+
+- Hardened framework `BottomNavigationBar` accessibility semantics in `src/Flutter.Material/BottomNavigationBar.cs`:
+  - each tile is now wrapped with explicit semantics flags (`IsButton`, `IsEnabled` when tappable, and `IsSelected` for the active tab) and tap-action routing;
+  - tabs now expose index-label semantics (`Tab {index} of {count}`), and hidden unselected labels now keep label semantics through fallback wrappers when visual labels are suppressed.
+- Completed stateful shifting behavior in `src/Flutter.Material/BottomNavigationBar.cs`:
+  - animated selected/unselected icon color+size transitions,
+  - animated label visibility transitions,
+  - animated tile-width (`Expanded.flex`) transitions in shifting mode,
+  - radial selected-item background flood transition for shifting color changes.
+- Added framework Material `Tooltip` primitive in `src/Flutter.Material/Tooltip.cs` and wired `BottomNavigationBarItem.tooltip` wrapping for bottom-nav tiles.
+- Added focused semantics regression coverage in `src/Flutter.Tests/MaterialBottomNavigationBarTests.cs`:
+  - verifies button/enabled/selected/tap semantics and index-label exposure,
+  - verifies disabled bars omit enabled/tap semantics.
+- Added focused behavior regression coverage in `src/Flutter.Tests/MaterialBottomNavigationBarTests.cs`:
+  - verifies tooltip show/hide behavior on hover enter/exit transitions,
+  - verifies shifting selection changes animate tile widths between source/target tabs.
+- Updated tracking docs for this parity pass (`docs/FRAMEWORK_PLAN.md`, `docs/ai/TEST_MATRIX.md`, and `docs/ai/material-2026-04-11-bottom-navigation-bar-semantics-parity.md`).
+- Remaining documented divergence:
+  - semantics index labels currently use fixed English (`"Tab {i} of {n}"`) until Material localization primitives are added.
 
 ## [2026-04-11] - M4 BottomNavigationBar parity expansion
 

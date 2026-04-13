@@ -734,8 +734,8 @@ public sealed class RenderAlign : RenderProxyBox
 
     protected override void PerformLayout()
     {
-        var shrinkWrapWidth = _widthFactor.HasValue;
-        var shrinkWrapHeight = _heightFactor.HasValue;
+        var shrinkWrapWidth = _widthFactor.HasValue || !Constraints.HasBoundedWidth;
+        var shrinkWrapHeight = _heightFactor.HasValue || !Constraints.HasBoundedHeight;
 
         if (Child == null)
         {
@@ -747,8 +747,10 @@ public sealed class RenderAlign : RenderProxyBox
 
         Child.Layout(BoxConstraints.Loose(Constraints.Biggest), parentUsesSize: true);
         var childSize = Child.Size;
-        var targetWidth = shrinkWrapWidth ? childSize.Width * _widthFactor!.Value : double.PositiveInfinity;
-        var targetHeight = shrinkWrapHeight ? childSize.Height * _heightFactor!.Value : double.PositiveInfinity;
+        var widthFactor = _widthFactor ?? 1.0;
+        var heightFactor = _heightFactor ?? 1.0;
+        var targetWidth = shrinkWrapWidth ? childSize.Width * widthFactor : double.PositiveInfinity;
+        var targetHeight = shrinkWrapHeight ? childSize.Height * heightFactor : double.PositiveInfinity;
         Size = Constraints.Constrain(new Size(targetWidth, targetHeight));
         ((BoxParentData)Child.parentData!).offset = _alignment.AlongOffset(Size, childSize);
     }

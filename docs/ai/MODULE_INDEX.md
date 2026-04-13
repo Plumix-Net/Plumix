@@ -30,13 +30,21 @@ Current priority (2026-03-12):
 - Read First:
   - `src/Flutter.Material/ThemeData.cs`
   - `src/Flutter.Material/Theme.cs`
+  - `src/Flutter.Material/MaterialLocalizations.cs`
   - `src/Flutter.Material/Scaffold.cs`
   - `src/Flutter.Material/BottomNavigationBar.cs`
   - `src/Flutter.Material/BottomNavigationBarTheme.cs`
+  - `src/Flutter.Material/ListTile.cs`
+  - `src/Flutter.Material/ListTileTheme.cs`
   - `src/Flutter.Material/Buttons.cs`
   - `src/Flutter.Material/IconButton.cs`
   - `src/Flutter.Material/FloatingActionButton.cs`
   - `src/Flutter.Material/FloatingActionButtonTheme.cs`
+  - `src/Flutter/Widgets/Hero.cs`
+  - `src/Flutter/Widgets/Navigation.cs`
+  - `src/Flutter/Widgets/MouseCursor.cs`
+  - `src/Flutter/UI/Feedback.cs`
+  - `src/Flutter/UI/Clip.cs`
   - `src/Flutter.Material/Checkbox.cs`
   - `src/Flutter.Material/Switch.cs`
   - `src/Flutter.Material/Radio.cs`
@@ -46,6 +54,7 @@ Current priority (2026-03-12):
   - `src/Sample/Flutter.Net/CounterApp.cs`
   - `src/Sample/Flutter.Net/SampleGalleryScreen.cs`
   - `src/Sample/Flutter.Net/Demos/Material/MaterialButtonsDemoPage.cs`
+  - `src/Sample/Flutter.Net/Demos/Material/ListTileDemoPage.cs`
   - `src/Sample/Flutter.Net/Demos/Material/FloatingActionButtonDemoPage.cs`
   - `src/Sample/Flutter.Net/Demos/Cupertino/CheckboxDemoPage.cs`
   - `src/Sample/Flutter.Net/Demos/Cupertino/SwitchDemoPage.cs`
@@ -53,6 +62,7 @@ Current priority (2026-03-12):
   - `dart_sample/lib/counter_app.dart`
   - `dart_sample/lib/sample_gallery_screen.dart`
   - `dart_sample/lib/demos/material/material_buttons_demo_page.dart`
+  - `dart_sample/lib/demos/material/list_tile_demo_page.dart`
   - `dart_sample/lib/demos/material/floating_action_button_demo_page.dart`
   - `dart_sample/lib/demos/cupertino/checkbox_demo_page.dart`
   - `dart_sample/lib/demos/cupertino/switch_demo_page.dart`
@@ -61,6 +71,7 @@ Current priority (2026-03-12):
   - `src/Flutter.Tests/TextWidgetTests.cs`
   - `src/Flutter.Tests/MaterialScaffoldTests.cs`
   - `src/Flutter.Tests/MaterialButtonsTests.cs`
+  - `src/Flutter.Tests/MaterialListTileTests.cs`
   - `src/Flutter.Tests/MaterialFloatingActionButtonTests.cs`
   - `src/Flutter.Tests/MaterialBottomNavigationBarTests.cs`
   - `src/Flutter.Tests/MaterialCheckboxTests.cs`
@@ -131,10 +142,12 @@ Current priority (2026-03-12):
 - Goal: route stack operations, named routes, observers, back handling.
 - Read First:
   - `src/Flutter/Widgets/Navigation.cs`
+  - `src/Flutter/Widgets/Hero.cs`
   - `src/Sample/Flutter.Net/Demos/General/NavigatorDemoPage.cs`
   - `src/Sample/Flutter.Net/SampleGalleryScreen.cs`
 - Primary Tests:
   - `src/Flutter.Tests/NavigationTests.cs`
+  - `src/Flutter.Tests/HeroNavigatorTests.cs`
 
 ### Scroll and Slivers
 

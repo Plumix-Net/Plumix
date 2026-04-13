@@ -144,6 +144,8 @@ public sealed record ThemeData
     private OutlinedButtonThemeData? _outlinedButtonTheme;
     private FilledButtonThemeData? _filledButtonTheme;
     private IconButtonThemeData? _iconButtonTheme;
+    private ListTileThemeData? _listTileTheme;
+    private DrawerThemeData? _drawerTheme;
     private FloatingActionButtonThemeData? _floatingActionButtonTheme;
     private BottomNavigationBarThemeData? _bottomNavigationBarTheme;
     private CheckboxThemeData? _checkboxTheme;
@@ -185,6 +187,8 @@ public sealed record ThemeData
         OutlinedButtonThemeData? outlinedButtonTheme = null,
         FilledButtonThemeData? filledButtonTheme = null,
         IconButtonThemeData? iconButtonTheme = null,
+        ListTileThemeData? listTileTheme = null,
+        DrawerThemeData? drawerTheme = null,
         FloatingActionButtonThemeData? floatingActionButtonTheme = null,
         BottomNavigationBarThemeData? bottomNavigationBarTheme = null,
         CheckboxThemeData? checkboxTheme = null,
@@ -225,6 +229,8 @@ public sealed record ThemeData
         _outlinedButtonTheme = outlinedButtonTheme;
         _filledButtonTheme = filledButtonTheme;
         _iconButtonTheme = iconButtonTheme;
+        _listTileTheme = listTileTheme;
+        _drawerTheme = drawerTheme;
         _floatingActionButtonTheme = floatingActionButtonTheme;
         _bottomNavigationBarTheme = bottomNavigationBarTheme;
         _checkboxTheme = checkboxTheme;
@@ -322,6 +328,18 @@ public sealed record ThemeData
     {
         get => _iconButtonTheme ?? new IconButtonThemeData(style: IconButtonStyle);
         init => _iconButtonTheme = value;
+    }
+
+    public ListTileThemeData ListTileTheme
+    {
+        get => _listTileTheme ?? new ListTileThemeData();
+        init => _listTileTheme = value;
+    }
+
+    public DrawerThemeData DrawerTheme
+    {
+        get => _drawerTheme ?? new DrawerThemeData();
+        init => _drawerTheme = value;
     }
 
     public FloatingActionButtonThemeData FloatingActionButtonTheme

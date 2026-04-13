@@ -99,6 +99,34 @@ public sealed class SafeAreaTests
     }
 
     [Fact]
+    public void MediaQueryData_RemoveViewInsets_AdjustsViewPaddingAndZeroesSelectedInsets()
+    {
+        var data = new MediaQueryData(
+            Padding: new Thickness(3, 4, 5, 6),
+            ViewPadding: new Thickness(9, 10, 11, 12),
+            ViewInsets: new Thickness(2, 20, 4, 6));
+
+        var updated = data.RemoveViewInsets(removeLeft: true, removeBottom: true);
+
+        Assert.Equal(new Thickness(3, 4, 5, 6), updated.Padding);
+        Assert.Equal(new Thickness(0, 20, 4, 0), updated.ViewInsets);
+        Assert.Equal(new Thickness(7, 10, 11, 6), updated.ViewPadding);
+    }
+
+    [Fact]
+    public void MediaQueryData_RemoveViewInsets_ClampsViewPaddingToZeroWhenInsetsExceedPadding()
+    {
+        var data = new MediaQueryData(
+            ViewPadding: new Thickness(5, 6, 7, 8),
+            ViewInsets: new Thickness(9, 10, 3, 2));
+
+        var updated = data.RemoveViewInsets(removeLeft: true, removeTop: true);
+
+        Assert.Equal(new Thickness(0, 0, 3, 2), updated.ViewInsets);
+        Assert.Equal(new Thickness(0, 0, 7, 8), updated.ViewPadding);
+    }
+
+    [Fact]
     public void MediaQueryData_RemoveViewPadding_ZerosSelectedPaddingSides()
     {
         var data = new MediaQueryData(

@@ -1593,6 +1593,9 @@ internal sealed class MaterialButtonCore : StatefulWidget
         bool? isSemanticChecked = null,
         string? semanticLabel = null,
         double? splashRadius = null,
+        MouseCursor? mouseCursor = null,
+        Clip clipBehavior = Clip.HardEdge,
+        bool? enableFeedback = null,
         bool autofocus = false,
         Key? key = null) : base(key)
     {
@@ -1608,6 +1611,9 @@ internal sealed class MaterialButtonCore : StatefulWidget
         IsSemanticChecked = isSemanticChecked;
         SemanticLabel = semanticLabel;
         SplashRadius = splashRadius;
+        MouseCursor = mouseCursor;
+        ClipBehavior = clipBehavior;
+        EnableFeedback = enableFeedback;
         Autofocus = autofocus;
     }
 
@@ -1634,6 +1640,12 @@ internal sealed class MaterialButtonCore : StatefulWidget
     public string? SemanticLabel { get; }
 
     public double? SplashRadius { get; }
+
+    public MouseCursor? MouseCursor { get; }
+
+    public Clip ClipBehavior { get; }
+
+    public bool? EnableFeedback { get; }
 
     public bool Autofocus { get; }
 
@@ -1977,6 +1989,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
         private bool _ownsFocusNode;
         private AnimationController? _splashController;
         private AnimationController? _keyboardPressController;
+        private IDisposable? _mouseCursorHandle;
 
         private MaterialButtonCore CurrentWidget => (MaterialButtonCore)StateWidget;
 
@@ -2016,6 +2029,11 @@ internal sealed class MaterialButtonCore : StatefulWidget
                 _isHovered = false;
             }
 
+            if (!Enabled && _mouseCursorHandle is not null)
+            {
+                ReleaseMouseCursor();
+            }
+
             if (!Enabled && _suppressFocusOverlay)
             {
                 _suppressFocusOverlay = false;
@@ -2039,10 +2057,18 @@ internal sealed class MaterialButtonCore : StatefulWidget
             {
                 _focusNode.Unfocus();
             }
+
+            if (Enabled
+                && _isHovered
+                && !Equals(oldButtonWidget.MouseCursor, CurrentWidget.MouseCursor))
+            {
+                UpdateMouseCursor();
+            }
         }
 
         public override void Dispose()
         {
+            ReleaseMouseCursor();
             DetachFocusNode(disposeOwned: true);
 
             if (_splashController != null)
@@ -2133,9 +2159,12 @@ internal sealed class MaterialButtonCore : StatefulWidget
                 clipToBounds: false,
                 child: content);
 
-            content = new ClipRRect(
-                borderRadius: borderRadius,
-                child: content);
+            if (widget.ClipBehavior != Clip.None)
+            {
+                content = new ClipRRect(
+                    borderRadius: borderRadius,
+                    child: content);
+            }
 
             content = new DecoratedBox(
                 decoration: new BoxDecoration(
@@ -2146,13 +2175,15 @@ internal sealed class MaterialButtonCore : StatefulWidget
                 child: content);
 
             Widget result = content;
+            Action? tapCallback = enabled ? HandleTap : null;
+            Action? longPressCallback = enabled && widget.OnLongPress is not null ? HandleLongPress : null;
 
             if (enabled)
             {
                 result = new GestureDetector(
                     behavior: HitTestBehavior.Opaque,
-                    onTap: widget.OnPressed,
-                    onLongPress: widget.OnLongPress,
+                    onTap: tapCallback,
+                    onLongPress: longPressCallback,
                     child: result);
 
                 result = new Listener(
@@ -2181,7 +2212,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
             return new Semantics(
                 label: widget.SemanticLabel,
                 flags: ResolveSemanticsFlags(widget, enabled),
-                onTap: enabled ? widget.OnPressed : null,
+                onTap: tapCallback,
                 child: tapTargetResult);
         }
 
@@ -2263,10 +2294,40 @@ internal sealed class MaterialButtonCore : StatefulWidget
                 SetFocusOverlaySuppressed(false);
                 StartKeyboardPress();
                 StartSplash(CenterSplashOrigin);
-                CurrentWidget.OnPressed?.Invoke();
+                HandleTap();
             }
 
             return KeyEventResult.Handled;
+        }
+
+        private void HandleTap()
+        {
+            if (!Enabled)
+            {
+                return;
+            }
+
+            if (IsFeedbackEnabled())
+            {
+                Feedback.ForTap();
+            }
+
+            CurrentWidget.OnPressed?.Invoke();
+        }
+
+        private void HandleLongPress()
+        {
+            if (!Enabled || CurrentWidget.OnLongPress is null)
+            {
+                return;
+            }
+
+            if (IsFeedbackEnabled())
+            {
+                Feedback.ForLongPress();
+            }
+
+            CurrentWidget.OnLongPress.Invoke();
         }
 
         private void HandlePointerDown(PointerDownEvent @event)
@@ -2326,13 +2387,50 @@ internal sealed class MaterialButtonCore : StatefulWidget
 
         private void SetHovered(bool value)
         {
-            if (!Enabled || _isHovered == value)
+            if (!Enabled)
+            {
+                if (!value)
+                {
+                    ReleaseMouseCursor();
+                }
+
+                return;
+            }
+
+            if (_isHovered == value)
             {
                 return;
             }
 
             SetState(() => _isHovered = value);
+            if (value)
+            {
+                UpdateMouseCursor();
+            }
+            else
+            {
+                ReleaseMouseCursor();
+            }
+
             CurrentWidget.OnHoverChanged?.Invoke(value);
+        }
+
+        private void UpdateMouseCursor()
+        {
+            ReleaseMouseCursor();
+            _mouseCursorHandle = MouseCursorManager.PushCursor(
+                CurrentWidget.MouseCursor ?? SystemMouseCursors.Click);
+        }
+
+        private void ReleaseMouseCursor()
+        {
+            _mouseCursorHandle?.Dispose();
+            _mouseCursorHandle = null;
+        }
+
+        private bool IsFeedbackEnabled()
+        {
+            return CurrentWidget.EnableFeedback ?? true;
         }
 
         private void SetFocusOverlaySuppressed(bool value)

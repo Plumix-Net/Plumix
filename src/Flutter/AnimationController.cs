@@ -1,4 +1,5 @@
-﻿using Avalonia.Media;
+﻿using Avalonia;
+using Avalonia.Media;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/animation/animation_controller.dart (approximate)
 
@@ -43,6 +44,18 @@ public sealed class ColorTween : Tween<Color>
             L(a.R, b.R),
             L(a.G, b.G),
             L(a.B, b.B));
+    }
+}
+
+public sealed class RectTween : Tween<Rect>
+{
+    public override Rect Lerp(Rect a, Rect b, double t)
+    {
+        var x = a.X + ((b.X - a.X) * t);
+        var y = a.Y + ((b.Y - a.Y) * t);
+        var width = a.Width + ((b.Width - a.Width) * t);
+        var height = a.Height + ((b.Height - a.Height) * t);
+        return new Rect(x, y, Math.Max(0, width), Math.Max(0, height));
     }
 }
 

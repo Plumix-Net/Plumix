@@ -10,10 +10,12 @@ using Xunit;
 
 namespace Flutter.Tests;
 
+[Collection(SchedulerTestCollection.Name)]
 public sealed class MaterialScaffoldTests
 {
     public MaterialScaffoldTests()
     {
+        NavigatorBackButtonDispatcher.ResetForTests();
         SystemChrome.ResetSystemUiOverlayStyleForTests();
     }
 
@@ -83,6 +85,152 @@ public sealed class MaterialScaffoldTests
                 && Math.Abs(constraints.MaxWidth - 304) < 0.001);
 
         Assert.NotNull(constrained);
+    }
+
+    [Fact]
+    public void Drawer_UsesDrawerThemeDefaults_WhenWidgetValuesAreNull()
+    {
+        var owner = new BuildOwner();
+        var drawerTheme = new DrawerThemeData(
+            BackgroundColor: Colors.CadetBlue,
+            ScrimColor: Color.FromArgb(0x99, 0x11, 0x22, 0x33),
+            Elevation: 12,
+            ShadowColor: Colors.Goldenrod,
+            Width: 280);
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    DrawerTheme = drawerTheme
+                },
+                child: new Drawer(
+                    child: new SizedBox(width: 24, height: 12))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var constrained = FindConstrainedBox(
+            root.ChildElement?.RenderObject,
+            constraints =>
+                Math.Abs(constraints.MinWidth - 280) < 0.001
+                && Math.Abs(constraints.MaxWidth - 280) < 0.001);
+        Assert.NotNull(constrained);
+
+        var decorated = FindDescendant<RenderDecoratedBox>(root.ChildElement?.RenderObject);
+        Assert.NotNull(decorated);
+        Assert.Equal(Colors.CadetBlue, decorated!.Decoration.Color);
+        Assert.True(decorated.Decoration.BoxShadows.HasValue);
+
+        var shadows = decorated.Decoration.BoxShadows!.Value;
+        Assert.True(shadows.Count > 0);
+        for (var i = 0; i < shadows.Count; i++)
+        {
+            var shadow = shadows[i];
+            Assert.Equal(Colors.Goldenrod.R, shadow.Color.R);
+            Assert.Equal(Colors.Goldenrod.G, shadow.Color.G);
+            Assert.Equal(Colors.Goldenrod.B, shadow.Color.B);
+            Assert.True(shadow.Color.A > 0);
+        }
+    }
+
+    [Fact]
+    public void Drawer_WidgetValues_OverrideDrawerThemeDefaults()
+    {
+        var owner = new BuildOwner();
+        var drawerTheme = new DrawerThemeData(
+            BackgroundColor: Colors.CadetBlue,
+            ScrimColor: Color.FromArgb(0x99, 0x11, 0x22, 0x33),
+            Elevation: 12,
+            ShadowColor: Colors.Goldenrod,
+            Width: 280);
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    DrawerTheme = drawerTheme
+                },
+                child: new Drawer(
+                    backgroundColor: Colors.Crimson,
+                    elevation: 6,
+                    shadowColor: Colors.DarkGreen,
+                    width: 240,
+                    child: new SizedBox(width: 24, height: 12))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var constrained = FindConstrainedBox(
+            root.ChildElement?.RenderObject,
+            constraints =>
+                Math.Abs(constraints.MinWidth - 240) < 0.001
+                && Math.Abs(constraints.MaxWidth - 240) < 0.001);
+        Assert.NotNull(constrained);
+
+        var decorated = FindDescendant<RenderDecoratedBox>(root.ChildElement?.RenderObject);
+        Assert.NotNull(decorated);
+        Assert.Equal(Colors.Crimson, decorated!.Decoration.Color);
+        Assert.True(decorated.Decoration.BoxShadows.HasValue);
+
+        var shadows = decorated.Decoration.BoxShadows!.Value;
+        Assert.True(shadows.Count > 0);
+        for (var i = 0; i < shadows.Count; i++)
+        {
+            var shadow = shadows[i];
+            Assert.Equal(Colors.DarkGreen.R, shadow.Color.R);
+            Assert.Equal(Colors.DarkGreen.G, shadow.Color.G);
+            Assert.Equal(Colors.DarkGreen.B, shadow.Color.B);
+            Assert.True(shadow.Color.A > 0);
+        }
+    }
+
+    [Fact]
+    public void Drawer_InvalidThemedWidth_ThrowsArgumentOutOfRange()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    DrawerTheme = new DrawerThemeData(Width: 0)
+                },
+                child: new Drawer(
+                    child: new SizedBox(width: 24, height: 12))));
+
+        var exception = Assert.Throws<ArgumentOutOfRangeException>(() =>
+        {
+            root.Attach(owner);
+            root.Mount(parent: null, newSlot: null);
+            owner.FlushBuild();
+        });
+
+        Assert.Equal(nameof(DrawerThemeData.Width), exception.ParamName);
+    }
+
+    [Fact]
+    public void Drawer_InvalidThemedElevation_ThrowsArgumentOutOfRange()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    DrawerTheme = new DrawerThemeData(Elevation: -1)
+                },
+                child: new Drawer(
+                    child: new SizedBox(width: 24, height: 12))));
+
+        var exception = Assert.Throws<ArgumentOutOfRangeException>(() =>
+        {
+            root.Attach(owner);
+            root.Mount(parent: null, newSlot: null);
+            owner.FlushBuild();
+        });
+
+        Assert.Equal(nameof(DrawerThemeData.Elevation), exception.ParamName);
     }
 
     [Fact]
@@ -422,6 +570,48 @@ public sealed class MaterialScaffoldTests
     }
 
     [Fact]
+    public void Scaffold_EdgeDrag_UsesMediaPaddingForStartDrawerActivationWidth()
+    {
+        var binding = GestureBinding.Instance;
+        binding.ResetForTests();
+
+        BuildContext? scaffoldContext = null;
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    Platform = TargetPlatform.Android,
+                },
+                child: new MediaQuery(
+                    data: new MediaQueryData(
+                        Padding: new Thickness(30, 0, 0, 0)),
+                    child: new Scaffold(
+                        drawer: new Drawer(child: new Text("Padded edge drawer panel")),
+                        body: new CaptureBuildContextWidget(
+                            capture: context => scaffoldContext = context,
+                            child: new SizedBox())))));
+
+        try
+        {
+            harness.Pump(new Size(400, 300));
+            Assert.True(scaffoldContext.HasValue);
+
+            DispatchPointerDown(binding, harness.RenderView, pointer: 7003, position: new Point(40, 120));
+            DispatchPointerMove(binding, harness.RenderView, pointer: 7003, position: new Point(220, 120));
+            DispatchPointerUp(binding, harness.RenderView, pointer: 7003, position: new Point(220, 120));
+            harness.Pump(new Size(400, 300));
+
+            var state = Scaffold.Of(scaffoldContext!.Value);
+            Assert.True(state.IsDrawerOpen);
+            Assert.NotNull(FindParagraphByText(harness.RenderView, "Padded edge drawer panel"));
+        }
+        finally
+        {
+            binding.ResetForTests();
+        }
+    }
+
+    [Fact]
     public void Scaffold_OpenDrawer_AnimatesScrimOpacity_ToFullValue()
     {
         Scheduler.ResetForTests();
@@ -507,9 +697,10 @@ public sealed class MaterialScaffoldTests
             harness.Pump(size);
             Assert.True(scaffoldContext.HasValue);
 
-            DispatchPointerDown(binding, harness.RenderView, pointer: 7101, position: new Point(2, 120));
-            DispatchPointerMove(binding, harness.RenderView, pointer: 7101, position: new Point(80, 120));
-            DispatchPointerUp(binding, harness.RenderView, pointer: 7101, position: new Point(260, 120));
+            var start = new DateTime(2026, 4, 12, 8, 0, 0, DateTimeKind.Utc);
+            DispatchPointerDown(binding, harness.RenderView, pointer: 7101, position: new Point(2, 120), timestampUtc: start);
+            DispatchPointerMove(binding, harness.RenderView, pointer: 7101, position: new Point(80, 120), timestampUtc: start.AddMilliseconds(100));
+            DispatchPointerUp(binding, harness.RenderView, pointer: 7101, position: new Point(260, 120), timestampUtc: start.AddMilliseconds(150));
             harness.Pump(size);
 
             var now = Scheduler.CurrentSeconds;
@@ -562,9 +753,10 @@ public sealed class MaterialScaffoldTests
             harness.Pump(size);
             Assert.True(state.IsDrawerOpen);
 
-            DispatchPointerDown(binding, harness.RenderView, pointer: 7102, position: new Point(240, 120));
-            DispatchPointerMove(binding, harness.RenderView, pointer: 7102, position: new Point(220, 120));
-            DispatchPointerUp(binding, harness.RenderView, pointer: 7102, position: new Point(40, 120));
+            var start = new DateTime(2026, 4, 12, 8, 1, 0, DateTimeKind.Utc);
+            DispatchPointerDown(binding, harness.RenderView, pointer: 7102, position: new Point(240, 120), timestampUtc: start);
+            DispatchPointerMove(binding, harness.RenderView, pointer: 7102, position: new Point(220, 120), timestampUtc: start.AddMilliseconds(100));
+            DispatchPointerUp(binding, harness.RenderView, pointer: 7102, position: new Point(40, 120), timestampUtc: start.AddMilliseconds(150));
             harness.Pump(size);
 
             now = Scheduler.CurrentSeconds;
@@ -573,6 +765,435 @@ public sealed class MaterialScaffoldTests
 
             Assert.False(state.IsDrawerOpen);
             Assert.Null(FindParagraphByText(harness.RenderView, "Velocity close drawer panel"));
+        }
+        finally
+        {
+            binding.ResetForTests();
+            Scheduler.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void Scaffold_DragCancel_SettlesDrawerClosed_BelowHalfThreshold()
+    {
+        Scheduler.ResetForTests();
+        var binding = GestureBinding.Instance;
+        binding.ResetForTests();
+
+        BuildContext? scaffoldContext = null;
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    Platform = TargetPlatform.Android,
+                },
+                child: new Scaffold(
+                    drawer: new Drawer(child: new Text("Cancel close drawer panel")),
+                    body: new CaptureBuildContextWidget(
+                        capture: context => scaffoldContext = context,
+                        child: new SizedBox()))));
+
+        try
+        {
+            var size = new Size(400, 300);
+            harness.Pump(size);
+            Assert.True(scaffoldContext.HasValue);
+
+            DispatchPointerDown(binding, harness.RenderView, pointer: 7103, position: new Point(2, 120));
+            DispatchPointerMove(binding, harness.RenderView, pointer: 7103, position: new Point(80, 120));
+            DispatchPointerCancel(binding, harness.RenderView, pointer: 7103, position: new Point(80, 120));
+            harness.Pump(size);
+
+            var now = Scheduler.CurrentSeconds;
+            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
+            harness.Pump(size);
+
+            var state = Scaffold.Of(scaffoldContext!.Value);
+            Assert.False(state.IsDrawerOpen);
+            Assert.Null(FindParagraphByText(harness.RenderView, "Cancel close drawer panel"));
+        }
+        finally
+        {
+            binding.ResetForTests();
+            Scheduler.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void Scaffold_DragCancel_SettlesDrawerOpen_AboveHalfThreshold()
+    {
+        Scheduler.ResetForTests();
+        var binding = GestureBinding.Instance;
+        binding.ResetForTests();
+
+        BuildContext? scaffoldContext = null;
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    Platform = TargetPlatform.Android,
+                },
+                child: new Scaffold(
+                    drawer: new Drawer(child: new Text("Cancel open drawer panel")),
+                    body: new CaptureBuildContextWidget(
+                        capture: context => scaffoldContext = context,
+                        child: new SizedBox()))));
+
+        try
+        {
+            var size = new Size(400, 300);
+            harness.Pump(size);
+            Assert.True(scaffoldContext.HasValue);
+
+            DispatchPointerDown(binding, harness.RenderView, pointer: 7104, position: new Point(2, 120));
+            DispatchPointerMove(binding, harness.RenderView, pointer: 7104, position: new Point(220, 120));
+            DispatchPointerCancel(binding, harness.RenderView, pointer: 7104, position: new Point(220, 120));
+            harness.Pump(size);
+
+            var now = Scheduler.CurrentSeconds;
+            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
+            harness.Pump(size);
+
+            var state = Scaffold.Of(scaffoldContext!.Value);
+            Assert.True(state.IsDrawerOpen);
+            Assert.NotNull(FindParagraphByText(harness.RenderView, "Cancel open drawer panel"));
+        }
+        finally
+        {
+            binding.ResetForTests();
+            Scheduler.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void Scaffold_DragCancel_UsesThemedDrawerWidth_ForProgressThreshold()
+    {
+        Scheduler.ResetForTests();
+        var binding = GestureBinding.Instance;
+        binding.ResetForTests();
+
+        BuildContext? scaffoldContext = null;
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    Platform = TargetPlatform.Android,
+                    DrawerTheme = new DrawerThemeData(Width: 200),
+                },
+                child: new Scaffold(
+                    drawer: new Drawer(child: new Text("Themed width drawer panel")),
+                    body: new CaptureBuildContextWidget(
+                        capture: context => scaffoldContext = context,
+                        child: new SizedBox()))));
+
+        try
+        {
+            var size = new Size(400, 300);
+            harness.Pump(size);
+            Assert.True(scaffoldContext.HasValue);
+
+            DispatchPointerDown(binding, harness.RenderView, pointer: 7105, position: new Point(2, 120));
+            DispatchPointerMove(binding, harness.RenderView, pointer: 7105, position: new Point(112, 120));
+            DispatchPointerCancel(binding, harness.RenderView, pointer: 7105, position: new Point(112, 120));
+            harness.Pump(size);
+
+            var now = Scheduler.CurrentSeconds;
+            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
+            harness.Pump(size);
+
+            var state = Scaffold.Of(scaffoldContext!.Value);
+            Assert.True(state.IsDrawerOpen);
+            Assert.NotNull(FindParagraphByText(harness.RenderView, "Themed width drawer panel"));
+        }
+        finally
+        {
+            binding.ResetForTests();
+            Scheduler.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void Scaffold_EndDrawer_DragReleaseVelocity_OpensDrawer_BelowHalfThreshold()
+    {
+        Scheduler.ResetForTests();
+        var binding = GestureBinding.Instance;
+        binding.ResetForTests();
+
+        BuildContext? scaffoldContext = null;
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    Platform = TargetPlatform.Android,
+                },
+                child: new Scaffold(
+                    endDrawer: new Drawer(child: new Text("End velocity drawer panel")),
+                    body: new CaptureBuildContextWidget(
+                        capture: context => scaffoldContext = context,
+                        child: new SizedBox()))));
+
+        try
+        {
+            var size = new Size(400, 300);
+            harness.Pump(size);
+            Assert.True(scaffoldContext.HasValue);
+
+            var start = new DateTime(2026, 4, 12, 8, 5, 0, DateTimeKind.Utc);
+            DispatchPointerDown(binding, harness.RenderView, pointer: 7111, position: new Point(398, 120), timestampUtc: start);
+            DispatchPointerMove(binding, harness.RenderView, pointer: 7111, position: new Point(320, 120), timestampUtc: start.AddMilliseconds(100));
+            DispatchPointerUp(binding, harness.RenderView, pointer: 7111, position: new Point(120, 120), timestampUtc: start.AddMilliseconds(150));
+            harness.Pump(size);
+
+            var now = Scheduler.CurrentSeconds;
+            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
+            harness.Pump(size);
+
+            var state = Scaffold.Of(scaffoldContext!.Value);
+            Assert.True(state.IsEndDrawerOpen);
+            Assert.NotNull(FindParagraphByText(harness.RenderView, "End velocity drawer panel"));
+        }
+        finally
+        {
+            binding.ResetForTests();
+            Scheduler.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void Scaffold_EndDrawer_DragReleaseVelocity_ClosesDrawer_AboveHalfThreshold()
+    {
+        Scheduler.ResetForTests();
+        var binding = GestureBinding.Instance;
+        binding.ResetForTests();
+
+        BuildContext? scaffoldContext = null;
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    Platform = TargetPlatform.Android,
+                },
+                child: new Scaffold(
+                    endDrawer: new Drawer(child: new Text("End velocity close drawer panel")),
+                    body: new CaptureBuildContextWidget(
+                        capture: context => scaffoldContext = context,
+                        child: new SizedBox()))));
+
+        try
+        {
+            var size = new Size(400, 300);
+            harness.Pump(size);
+            Assert.True(scaffoldContext.HasValue);
+
+            var state = Scaffold.Of(scaffoldContext!.Value);
+            state.OpenEndDrawer();
+            harness.Pump(size);
+
+            var now = Scheduler.CurrentSeconds;
+            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
+            harness.Pump(size);
+            Assert.True(state.IsEndDrawerOpen);
+
+            var start = new DateTime(2026, 4, 12, 8, 6, 0, DateTimeKind.Utc);
+            DispatchPointerDown(binding, harness.RenderView, pointer: 7112, position: new Point(160, 120), timestampUtc: start);
+            DispatchPointerMove(binding, harness.RenderView, pointer: 7112, position: new Point(180, 120), timestampUtc: start.AddMilliseconds(100));
+            DispatchPointerUp(binding, harness.RenderView, pointer: 7112, position: new Point(360, 120), timestampUtc: start.AddMilliseconds(150));
+            harness.Pump(size);
+
+            now = Scheduler.CurrentSeconds;
+            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
+            harness.Pump(size);
+
+            Assert.False(state.IsEndDrawerOpen);
+            Assert.Null(FindParagraphByText(harness.RenderView, "End velocity close drawer panel"));
+        }
+        finally
+        {
+            binding.ResetForTests();
+            Scheduler.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void Scaffold_EndDrawer_DragCancel_SettlesDrawerClosed_BelowHalfThreshold()
+    {
+        Scheduler.ResetForTests();
+        var binding = GestureBinding.Instance;
+        binding.ResetForTests();
+
+        BuildContext? scaffoldContext = null;
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    Platform = TargetPlatform.Android,
+                },
+                child: new Scaffold(
+                    endDrawer: new Drawer(child: new Text("End cancel close drawer panel")),
+                    body: new CaptureBuildContextWidget(
+                        capture: context => scaffoldContext = context,
+                        child: new SizedBox()))));
+
+        try
+        {
+            var size = new Size(400, 300);
+            harness.Pump(size);
+            Assert.True(scaffoldContext.HasValue);
+
+            DispatchPointerDown(binding, harness.RenderView, pointer: 7113, position: new Point(398, 120));
+            DispatchPointerMove(binding, harness.RenderView, pointer: 7113, position: new Point(320, 120));
+            DispatchPointerCancel(binding, harness.RenderView, pointer: 7113, position: new Point(320, 120));
+            harness.Pump(size);
+
+            var now = Scheduler.CurrentSeconds;
+            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
+            harness.Pump(size);
+
+            var state = Scaffold.Of(scaffoldContext!.Value);
+            Assert.False(state.IsEndDrawerOpen);
+            Assert.Null(FindParagraphByText(harness.RenderView, "End cancel close drawer panel"));
+        }
+        finally
+        {
+            binding.ResetForTests();
+            Scheduler.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void Scaffold_EndDrawer_DragCancel_SettlesDrawerOpen_AboveHalfThreshold()
+    {
+        Scheduler.ResetForTests();
+        var binding = GestureBinding.Instance;
+        binding.ResetForTests();
+
+        BuildContext? scaffoldContext = null;
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    Platform = TargetPlatform.Android,
+                },
+                child: new Scaffold(
+                    endDrawer: new Drawer(child: new Text("End cancel open drawer panel")),
+                    body: new CaptureBuildContextWidget(
+                        capture: context => scaffoldContext = context,
+                        child: new SizedBox()))));
+
+        try
+        {
+            var size = new Size(400, 300);
+            harness.Pump(size);
+            Assert.True(scaffoldContext.HasValue);
+
+            DispatchPointerDown(binding, harness.RenderView, pointer: 7114, position: new Point(398, 120));
+            DispatchPointerMove(binding, harness.RenderView, pointer: 7114, position: new Point(150, 120));
+            DispatchPointerCancel(binding, harness.RenderView, pointer: 7114, position: new Point(150, 120));
+            harness.Pump(size);
+
+            var now = Scheduler.CurrentSeconds;
+            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
+            harness.Pump(size);
+
+            var state = Scaffold.Of(scaffoldContext!.Value);
+            Assert.True(state.IsEndDrawerOpen);
+            Assert.NotNull(FindParagraphByText(harness.RenderView, "End cancel open drawer panel"));
+        }
+        finally
+        {
+            binding.ResetForTests();
+            Scheduler.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void Scaffold_OpenDrawer_UsesDrawerThemeScrimColor_WhenWidgetScrimColorIsNull()
+    {
+        Scheduler.ResetForTests();
+        var binding = GestureBinding.Instance;
+        binding.ResetForTests();
+
+        BuildContext? scaffoldContext = null;
+        var themedScrim = Color.FromArgb(0x99, 0x11, 0x22, 0x33);
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    Platform = TargetPlatform.Android,
+                    DrawerTheme = new DrawerThemeData(ScrimColor: themedScrim),
+                },
+                child: new Scaffold(
+                    drawer: new Drawer(child: new Text("Themed scrim drawer panel")),
+                    body: new CaptureBuildContextWidget(
+                        capture: context => scaffoldContext = context,
+                        child: new SizedBox()))));
+
+        try
+        {
+            var size = new Size(400, 300);
+            harness.Pump(size);
+            Assert.True(scaffoldContext.HasValue);
+
+            var state = Scaffold.Of(scaffoldContext!.Value);
+            state.OpenDrawer();
+            harness.Pump(size);
+
+            var now = Scheduler.CurrentSeconds;
+            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
+            harness.Pump(size);
+
+            var scrim = FindColoredBox(harness.RenderView, color => color == themedScrim);
+            Assert.NotNull(scrim);
+            Assert.True(state.IsDrawerOpen);
+        }
+        finally
+        {
+            binding.ResetForTests();
+            Scheduler.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void Scaffold_OpenDrawer_WidgetScrimColor_OverridesDrawerThemeScrimColor()
+    {
+        Scheduler.ResetForTests();
+        var binding = GestureBinding.Instance;
+        binding.ResetForTests();
+
+        BuildContext? scaffoldContext = null;
+        var themedScrim = Color.FromArgb(0x99, 0x11, 0x22, 0x33);
+        var widgetScrim = Color.FromArgb(0x88, 0x44, 0x55, 0x66);
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    Platform = TargetPlatform.Android,
+                    DrawerTheme = new DrawerThemeData(ScrimColor: themedScrim),
+                },
+                child: new Scaffold(
+                    drawerScrimColor: widgetScrim,
+                    drawer: new Drawer(child: new Text("Widget scrim drawer panel")),
+                    body: new CaptureBuildContextWidget(
+                        capture: context => scaffoldContext = context,
+                        child: new SizedBox()))));
+
+        try
+        {
+            var size = new Size(400, 300);
+            harness.Pump(size);
+            Assert.True(scaffoldContext.HasValue);
+
+            var state = Scaffold.Of(scaffoldContext!.Value);
+            state.OpenDrawer();
+            harness.Pump(size);
+
+            var now = Scheduler.CurrentSeconds;
+            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
+            harness.Pump(size);
+
+            var scrim = FindColoredBox(harness.RenderView, color => color == widgetScrim);
+            Assert.NotNull(scrim);
+            Assert.True(state.IsDrawerOpen);
         }
         finally
         {
@@ -2580,7 +3201,12 @@ public sealed class MaterialScaffoldTests
         return result;
     }
 
-    private static void DispatchPointerDown(GestureBinding binding, RenderView renderView, int pointer, Point position)
+    private static void DispatchPointerDown(
+        GestureBinding binding,
+        RenderView renderView,
+        int pointer,
+        Point position,
+        DateTime? timestampUtc = null)
     {
         binding.HandlePointerEvent(
             renderView,
@@ -2589,10 +3215,15 @@ public sealed class MaterialScaffoldTests
                 kind: PointerDeviceKind.Mouse,
                 position: position,
                 buttons: PointerButtons.Primary,
-                timestampUtc: DateTime.UtcNow));
+                timestampUtc: timestampUtc ?? DateTime.UtcNow));
     }
 
-    private static void DispatchPointerMove(GestureBinding binding, RenderView renderView, int pointer, Point position)
+    private static void DispatchPointerMove(
+        GestureBinding binding,
+        RenderView renderView,
+        int pointer,
+        Point position,
+        DateTime? timestampUtc = null)
     {
         binding.HandlePointerEvent(
             renderView,
@@ -2602,10 +3233,15 @@ public sealed class MaterialScaffoldTests
                 position: position,
                 buttons: PointerButtons.Primary,
                 down: true,
-                timestampUtc: DateTime.UtcNow));
+                timestampUtc: timestampUtc ?? DateTime.UtcNow));
     }
 
-    private static void DispatchPointerUp(GestureBinding binding, RenderView renderView, int pointer, Point position)
+    private static void DispatchPointerUp(
+        GestureBinding binding,
+        RenderView renderView,
+        int pointer,
+        Point position,
+        DateTime? timestampUtc = null)
     {
         binding.HandlePointerEvent(
             renderView,
@@ -2614,7 +3250,24 @@ public sealed class MaterialScaffoldTests
                 kind: PointerDeviceKind.Mouse,
                 position: position,
                 buttons: PointerButtons.None,
-                timestampUtc: DateTime.UtcNow));
+                timestampUtc: timestampUtc ?? DateTime.UtcNow));
+    }
+
+    private static void DispatchPointerCancel(
+        GestureBinding binding,
+        RenderView renderView,
+        int pointer,
+        Point position,
+        DateTime? timestampUtc = null)
+    {
+        binding.HandlePointerEvent(
+            renderView,
+            new PointerCancelEvent(
+                pointer: pointer,
+                kind: PointerDeviceKind.Mouse,
+                position: position,
+                buttons: PointerButtons.None,
+                timestampUtc: timestampUtc ?? DateTime.UtcNow));
     }
 
     private sealed class WidgetRenderHarness : IDisposable

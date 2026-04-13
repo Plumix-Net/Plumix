@@ -178,6 +178,65 @@ public sealed class GesturePipelineTests
     }
 
     [Fact]
+    public void GestureBinding_HorizontalDragRecognizer_ReportsPrimaryVelocityInPixelsPerSecond()
+    {
+        var binding = GestureBinding.Instance;
+        binding.ResetForTests();
+
+        double? velocity = null;
+        var recognizer = new HorizontalDragGestureRecognizer
+        {
+            OnEnd = details => velocity = details.PrimaryVelocity
+        };
+
+        try
+        {
+            var listener = new RenderPointerListener(
+                onPointerDown: recognizer.AddPointer,
+                behavior: HitTestBehavior.Opaque,
+                child: new FixedHitTestBox(new Size(160, 80), hitSelf: true));
+            var pipeline = BuildPipeline(listener);
+            var start = new DateTime(2026, 4, 12, 8, 0, 0, DateTimeKind.Utc);
+
+            binding.HandlePointerEvent(
+                pipeline.Root,
+                new PointerDownEvent(
+                    pointer: 8,
+                    kind: PointerDeviceKind.Mouse,
+                    position: new Point(10, 10),
+                    buttons: PointerButtons.Primary,
+                    timestampUtc: start));
+
+            binding.HandlePointerEvent(
+                pipeline.Root,
+                new PointerMoveEvent(
+                    pointer: 8,
+                    kind: PointerDeviceKind.Mouse,
+                    position: new Point(50, 10),
+                    buttons: PointerButtons.Primary,
+                    down: true,
+                    timestampUtc: start.AddMilliseconds(100)));
+
+            binding.HandlePointerEvent(
+                pipeline.Root,
+                new PointerUpEvent(
+                    pointer: 8,
+                    kind: PointerDeviceKind.Mouse,
+                    position: new Point(80, 10),
+                    buttons: PointerButtons.None,
+                    timestampUtc: start.AddMilliseconds(150)));
+
+            Assert.True(velocity.HasValue);
+            Assert.Equal(600, velocity.Value, precision: 3);
+        }
+        finally
+        {
+            recognizer.Dispose();
+            binding.ResetForTests();
+        }
+    }
+
+    [Fact]
     public void GestureBinding_ArenaConflict_HorizontalDragBeatsTap()
     {
         var binding = GestureBinding.Instance;

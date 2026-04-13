@@ -9,6 +9,7 @@ using Xunit;
 
 namespace Flutter.Tests;
 
+[Collection(SchedulerTestCollection.Name)]
 public sealed class MaterialFloatingActionButtonTests
 {
     [Fact]
@@ -70,6 +71,337 @@ public sealed class MaterialFloatingActionButtonTests
 
         Assert.NotNull(decorated);
         Assert.Equal(BorderRadius.Circular(16), decorated!.Decoration.BorderRadius);
+    }
+
+    [Fact]
+    public void FloatingActionButton_DefaultClipBehavior_DoesNotInsertClipRRect()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new FloatingActionButton(
+                    child: new Icon(Icons.Add),
+                    onPressed: () => { })));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
+        Assert.Null(FindDescendant<RenderClipRRect>(renderRoot));
+    }
+
+    [Fact]
+    public void FloatingActionButton_ClipBehaviorHardEdge_InsertsClipRRect()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new FloatingActionButton(
+                    child: new Icon(Icons.Add),
+                    onPressed: () => { },
+                    clipBehavior: Clip.HardEdge)));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
+        Assert.NotNull(FindDescendant<RenderClipRRect>(renderRoot));
+    }
+
+    [Fact]
+    public void FloatingActionButton_StoresHeroTagMouseCursorAndEnableFeedback()
+    {
+        var heroTag = new object();
+        var cursor = SystemMouseCursors.Click;
+        var fab = new FloatingActionButton(
+            child: new Icon(Icons.Add),
+            onPressed: () => { },
+            heroTag: heroTag,
+            mouseCursor: cursor,
+            enableFeedback: false);
+
+        Assert.Same(heroTag, fab.HeroTag);
+        Assert.Same(cursor, fab.MouseCursor);
+        Assert.False(fab.EnableFeedback);
+    }
+
+    [Fact]
+    public void FloatingActionButton_HeroTag_WrapsBuiltResultWithHero()
+    {
+        var owner = new BuildOwner();
+        Widget? capturedBuiltWidget = null;
+        var heroTag = new object();
+
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new CaptureFloatingActionButtonBuild(
+                    floatingActionButton: new FloatingActionButton(
+                        child: new Icon(Icons.Add),
+                        onPressed: () => { },
+                        heroTag: heroTag),
+                    onBuilt: widget => capturedBuiltWidget = widget)));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var hero = Assert.IsType<Hero>(capturedBuiltWidget);
+        Assert.Same(heroTag, hero.Tag);
+    }
+
+    [Fact]
+    public void FloatingActionButton_DefaultMouseCursor_UsesClickOnHover()
+    {
+        MouseCursorManager.ResetForTests();
+        try
+        {
+            var owner = new BuildOwner();
+            var root = new TestRootElement(
+                new Theme(
+                    data: ThemeData.Light,
+                    child: new FloatingActionButton(
+                        child: new Icon(Icons.Add),
+                        onPressed: () => { })));
+
+            root.Attach(owner);
+            root.Mount(parent: null, newSlot: null);
+            owner.FlushBuild();
+
+            Assert.Equal(SystemMouseCursors.Basic, MouseCursorManager.CurrentCursor);
+
+            var hoverListener = FindHoverPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
+            Assert.NotNull(hoverListener);
+            hoverListener!.HandleEvent(
+                new PointerEnterEvent(
+                    pointer: 702,
+                    kind: PointerDeviceKind.Mouse,
+                    position: new Point(10, 8),
+                    buttons: PointerButtons.None,
+                    timestampUtc: DateTime.UtcNow),
+                new BoxHitTestEntry(hoverListener, new Point(10, 8)));
+            owner.FlushBuild();
+
+            Assert.Equal(SystemMouseCursors.Click, MouseCursorManager.CurrentCursor);
+
+            hoverListener = FindHoverPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
+            Assert.NotNull(hoverListener);
+            hoverListener!.HandleEvent(
+                new PointerExitEvent(
+                    pointer: 702,
+                    kind: PointerDeviceKind.Mouse,
+                    position: new Point(150, 8),
+                    buttons: PointerButtons.None,
+                    timestampUtc: DateTime.UtcNow),
+                new BoxHitTestEntry(hoverListener, new Point(150, 8)));
+            owner.FlushBuild();
+
+            Assert.Equal(SystemMouseCursors.Basic, MouseCursorManager.CurrentCursor);
+        }
+        finally
+        {
+            MouseCursorManager.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void FloatingActionButton_ThemeMouseCursor_UsedWhenWidgetMouseCursorIsNull()
+    {
+        MouseCursorManager.ResetForTests();
+        try
+        {
+            var themeCursor = new SystemMouseCursor("themeCursor");
+            var owner = new BuildOwner();
+            var root = new TestRootElement(
+                new Theme(
+                    data: ThemeData.Light with
+                    {
+                        FloatingActionButtonTheme = new FloatingActionButtonThemeData(
+                            MouseCursor: themeCursor),
+                    },
+                    child: new FloatingActionButton(
+                        child: new Icon(Icons.Add),
+                        onPressed: () => { })));
+
+            root.Attach(owner);
+            root.Mount(parent: null, newSlot: null);
+            owner.FlushBuild();
+
+            var hoverListener = FindHoverPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
+            Assert.NotNull(hoverListener);
+            hoverListener!.HandleEvent(
+                new PointerEnterEvent(
+                    pointer: 703,
+                    kind: PointerDeviceKind.Mouse,
+                    position: new Point(10, 8),
+                    buttons: PointerButtons.None,
+                    timestampUtc: DateTime.UtcNow),
+                new BoxHitTestEntry(hoverListener, new Point(10, 8)));
+            owner.FlushBuild();
+
+            Assert.Equal(themeCursor, MouseCursorManager.CurrentCursor);
+        }
+        finally
+        {
+            MouseCursorManager.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void FloatingActionButton_DefaultEnableFeedback_EmitsTapFeedbackOnKeyboardActivation()
+    {
+        FocusManager.Instance.ResetForTests();
+        Feedback.ResetForTests();
+        try
+        {
+            var pressedCount = 0;
+            var feedbackEvents = new List<FeedbackType>();
+            Feedback.FeedbackTriggered += feedbackEvents.Add;
+
+            var owner = new BuildOwner();
+            var root = new TestRootElement(
+                new Theme(
+                    data: ThemeData.Light,
+                    child: new FloatingActionButton(
+                        child: new Icon(Icons.Add),
+                        onPressed: () => pressedCount += 1)));
+
+            root.Attach(owner);
+            root.Mount(parent: null, newSlot: null);
+            owner.FlushBuild();
+
+            var focusListener = FindFocusPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
+            Assert.NotNull(focusListener);
+            focusListener!.HandleEvent(
+                new PointerDownEvent(
+                    pointer: 704,
+                    kind: PointerDeviceKind.Mouse,
+                    position: new Point(10, 8),
+                    buttons: PointerButtons.Primary,
+                    timestampUtc: DateTime.UtcNow),
+                new BoxHitTestEntry(focusListener, new Point(10, 8)));
+            owner.FlushBuild();
+
+            var handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Space", isDown: true));
+            Assert.True(handled);
+            owner.FlushBuild();
+
+            Assert.Equal(1, pressedCount);
+            Assert.Single(feedbackEvents);
+            Assert.Equal(FeedbackType.Tap, feedbackEvents[0]);
+        }
+        finally
+        {
+            FocusManager.Instance.ResetForTests();
+            Feedback.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void FloatingActionButton_EnableFeedbackFalse_SuppressesTapFeedback()
+    {
+        FocusManager.Instance.ResetForTests();
+        Feedback.ResetForTests();
+        try
+        {
+            var pressedCount = 0;
+            var feedbackEvents = new List<FeedbackType>();
+            Feedback.FeedbackTriggered += feedbackEvents.Add;
+
+            var owner = new BuildOwner();
+            var root = new TestRootElement(
+                new Theme(
+                    data: ThemeData.Light,
+                    child: new FloatingActionButton(
+                        child: new Icon(Icons.Add),
+                        onPressed: () => pressedCount += 1,
+                        enableFeedback: false)));
+
+            root.Attach(owner);
+            root.Mount(parent: null, newSlot: null);
+            owner.FlushBuild();
+
+            var focusListener = FindFocusPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
+            Assert.NotNull(focusListener);
+            focusListener!.HandleEvent(
+                new PointerDownEvent(
+                    pointer: 705,
+                    kind: PointerDeviceKind.Mouse,
+                    position: new Point(10, 8),
+                    buttons: PointerButtons.Primary,
+                    timestampUtc: DateTime.UtcNow),
+                new BoxHitTestEntry(focusListener, new Point(10, 8)));
+            owner.FlushBuild();
+
+            var handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Space", isDown: true));
+            Assert.True(handled);
+            owner.FlushBuild();
+
+            Assert.Equal(1, pressedCount);
+            Assert.Empty(feedbackEvents);
+        }
+        finally
+        {
+            FocusManager.Instance.ResetForTests();
+            Feedback.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void FloatingActionButton_ThemeEnableFeedbackFalse_SuppressesTapFeedback()
+    {
+        FocusManager.Instance.ResetForTests();
+        Feedback.ResetForTests();
+        try
+        {
+            var pressedCount = 0;
+            var feedbackEvents = new List<FeedbackType>();
+            Feedback.FeedbackTriggered += feedbackEvents.Add;
+
+            var owner = new BuildOwner();
+            var root = new TestRootElement(
+                new Theme(
+                    data: ThemeData.Light with
+                    {
+                        FloatingActionButtonTheme = new FloatingActionButtonThemeData(
+                            EnableFeedback: false),
+                    },
+                    child: new FloatingActionButton(
+                        child: new Icon(Icons.Add),
+                        onPressed: () => pressedCount += 1)));
+
+            root.Attach(owner);
+            root.Mount(parent: null, newSlot: null);
+            owner.FlushBuild();
+
+            var focusListener = FindFocusPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
+            Assert.NotNull(focusListener);
+            focusListener!.HandleEvent(
+                new PointerDownEvent(
+                    pointer: 706,
+                    kind: PointerDeviceKind.Mouse,
+                    position: new Point(10, 8),
+                    buttons: PointerButtons.Primary,
+                    timestampUtc: DateTime.UtcNow),
+                new BoxHitTestEntry(focusListener, new Point(10, 8)));
+            owner.FlushBuild();
+
+            var handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Space", isDown: true));
+            Assert.True(handled);
+            owner.FlushBuild();
+
+            Assert.Equal(1, pressedCount);
+            Assert.Empty(feedbackEvents);
+        }
+        finally
+        {
+            FocusManager.Instance.ResetForTests();
+            Feedback.ResetForTests();
+        }
     }
 
     [Fact]
@@ -316,6 +648,65 @@ public sealed class MaterialFloatingActionButtonTests
         Assert.Equal(5, RequirePrimaryShadow(decorated!).OffsetY);
     }
 
+    [Fact]
+    public void FloatingActionButton_Tooltip_ShowsOnPointerEnter_AndHidesOnPointerExit()
+    {
+        Scheduler.ResetForTests();
+        try
+        {
+            var owner = new BuildOwner();
+            var root = new TestRootElement(
+                new Theme(
+                    data: ThemeData.Light,
+                    child: new FloatingActionButton(
+                        child: new Icon(Icons.Add),
+                        tooltip: "Create item",
+                        onPressed: () => { })));
+
+            root.Attach(owner);
+            root.Mount(parent: null, newSlot: null);
+            owner.FlushBuild();
+
+            var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
+            Assert.Null(FindParagraphByText(renderRoot, "Create item"));
+
+            var tooltipListener = FindTooltipHoverPointerListener(renderRoot);
+            Assert.NotNull(tooltipListener);
+            tooltipListener!.HandleEvent(
+                new PointerEnterEvent(
+                    pointer: 701,
+                    kind: PointerDeviceKind.Mouse,
+                    position: new Point(10, 8),
+                    buttons: PointerButtons.None,
+                    timestampUtc: DateTime.UtcNow),
+                new BoxHitTestEntry(tooltipListener, new Point(10, 8)));
+            owner.FlushBuild();
+
+            renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
+            Assert.NotNull(FindParagraphByText(renderRoot, "Create item"));
+
+            tooltipListener = FindTooltipHoverPointerListener(renderRoot);
+            Assert.NotNull(tooltipListener);
+            tooltipListener!.HandleEvent(
+                new PointerExitEvent(
+                    pointer: 701,
+                    kind: PointerDeviceKind.Mouse,
+                    position: new Point(180, 8),
+                    buttons: PointerButtons.None,
+                    timestampUtc: DateTime.UtcNow),
+                new BoxHitTestEntry(tooltipListener, new Point(180, 8)));
+            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.50));
+            owner.FlushBuild();
+
+            renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
+            Assert.Null(FindParagraphByText(renderRoot, "Create item"));
+        }
+        finally
+        {
+            Scheduler.ResetForTests();
+        }
+    }
+
     private static BoxConstraints TightConstraints(double width, double height)
     {
         return new BoxConstraints(
@@ -434,6 +825,89 @@ public sealed class MaterialFloatingActionButtonTests
         return result;
     }
 
+    private static RenderPointerListener? FindFocusPointerListener(RenderObject? root)
+    {
+        if (root is null)
+        {
+            return null;
+        }
+
+        if (root is RenderPointerListener listener
+            && listener.OnPointerDown != null
+            && listener.OnPointerUp == null
+            && listener.OnPointerCancel == null
+            && listener.OnPointerEnter == null
+            && listener.OnPointerExit == null)
+        {
+            return listener;
+        }
+
+        RenderPointerListener? result = null;
+        root.VisitChildren(child =>
+        {
+            if (result is not null)
+            {
+                return;
+            }
+
+            result = FindFocusPointerListener(child);
+        });
+        return result;
+    }
+
+    private static RenderPointerListener? FindTooltipHoverPointerListener(RenderObject? root)
+    {
+        if (root is null)
+        {
+            return null;
+        }
+
+        if (root is RenderPointerListener listener
+            && listener.OnPointerEnter != null
+            && listener.OnPointerExit != null
+            && listener.OnPointerDown != null)
+        {
+            return listener;
+        }
+
+        RenderPointerListener? result = null;
+        root.VisitChildren(child =>
+        {
+            if (result is not null)
+            {
+                return;
+            }
+
+            result = FindTooltipHoverPointerListener(child);
+        });
+        return result;
+    }
+
+    private static RenderParagraph? FindParagraphByText(RenderObject? root, string text)
+    {
+        if (root is null)
+        {
+            return null;
+        }
+
+        if (root is RenderParagraph paragraph && paragraph.Text == text)
+        {
+            return paragraph;
+        }
+
+        RenderParagraph? result = null;
+        root.VisitChildren(child =>
+        {
+            if (result is not null)
+            {
+                return;
+            }
+
+            result = FindParagraphByText(child, text);
+        });
+        return result;
+    }
+
     private static BoxShadow RequirePrimaryShadow(RenderDecoratedBox decorated)
     {
         Assert.True(decorated.Decoration.BoxShadows.HasValue);
@@ -455,6 +929,27 @@ public sealed class MaterialFloatingActionButtonTests
         {
             _capture(IconTheme.Of(context));
             return new SizedBox(width: 12, height: 12);
+        }
+    }
+
+    private sealed class CaptureFloatingActionButtonBuild : StatelessWidget
+    {
+        private readonly FloatingActionButton _floatingActionButton;
+        private readonly Action<Widget> _onBuilt;
+
+        public CaptureFloatingActionButtonBuild(
+            FloatingActionButton floatingActionButton,
+            Action<Widget> onBuilt)
+        {
+            _floatingActionButton = floatingActionButton;
+            _onBuilt = onBuilt;
+        }
+
+        public override Widget Build(BuildContext context)
+        {
+            var built = _floatingActionButton.Build(context);
+            _onBuilt(built);
+            return built;
         }
     }
 

@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Media;
 using Flutter.Foundation;
 using Flutter.Rendering;
+using Flutter.UI;
 using Flutter.Widgets;
 
 namespace Flutter.Material;
@@ -21,6 +22,9 @@ public sealed class FloatingActionButton : StatelessWidget
     public FloatingActionButton(
         Widget? child,
         Action? onPressed,
+        string? tooltip = null,
+        object? heroTag = null,
+        MouseCursor? mouseCursor = null,
         Color? foregroundColor = null,
         Color? backgroundColor = null,
         Color? focusColor = null,
@@ -34,14 +38,19 @@ public sealed class FloatingActionButton : StatelessWidget
         bool mini = false,
         BorderRadius? shape = null,
         FocusNode? focusNode = null,
+        bool? enableFeedback = null,
+        Clip clipBehavior = Clip.None,
         bool autofocus = false,
         MaterialTapTargetSize? materialTapTargetSize = null,
         Key? key = null) : this(
             child: child,
+            tooltip: tooltip,
             extendedLabel: null,
             onPressed: onPressed,
             type: mini ? FloatingActionButtonType.Small : FloatingActionButtonType.Regular,
             isExtended: false,
+            heroTag: heroTag,
+            mouseCursor: mouseCursor,
             foregroundColor: foregroundColor,
             backgroundColor: backgroundColor,
             focusColor: focusColor,
@@ -54,6 +63,8 @@ public sealed class FloatingActionButton : StatelessWidget
             disabledElevation: disabledElevation,
             shape: shape,
             focusNode: focusNode,
+            enableFeedback: enableFeedback,
+            clipBehavior: clipBehavior,
             autofocus: autofocus,
             materialTapTargetSize: materialTapTargetSize,
             extendedIconLabelSpacing: null,
@@ -65,10 +76,13 @@ public sealed class FloatingActionButton : StatelessWidget
 
     private FloatingActionButton(
         Widget? child,
+        string? tooltip,
         Widget? extendedLabel,
         Action? onPressed,
         FloatingActionButtonType type,
         bool isExtended,
+        object? heroTag,
+        MouseCursor? mouseCursor,
         Color? foregroundColor,
         Color? backgroundColor,
         Color? focusColor,
@@ -81,6 +95,8 @@ public sealed class FloatingActionButton : StatelessWidget
         double? disabledElevation,
         BorderRadius? shape,
         FocusNode? focusNode,
+        bool? enableFeedback,
+        Clip clipBehavior,
         bool autofocus,
         MaterialTapTargetSize? materialTapTargetSize,
         double? extendedIconLabelSpacing,
@@ -104,10 +120,13 @@ public sealed class FloatingActionButton : StatelessWidget
         }
 
         Child = child;
+        Tooltip = tooltip;
         ExtendedLabel = extendedLabel;
         OnPressed = onPressed;
         Type = type;
         IsExtended = isExtended;
+        HeroTag = heroTag;
+        MouseCursor = mouseCursor;
         ForegroundColor = foregroundColor;
         BackgroundColor = backgroundColor;
         FocusColor = focusColor;
@@ -120,6 +139,8 @@ public sealed class FloatingActionButton : StatelessWidget
         DisabledElevation = disabledElevation;
         Shape = shape;
         FocusNode = focusNode;
+        EnableFeedback = enableFeedback;
+        ClipBehavior = clipBehavior;
         Autofocus = autofocus;
         MaterialTapTargetSize = materialTapTargetSize;
         ExtendedIconLabelSpacing = extendedIconLabelSpacing;
@@ -129,6 +150,8 @@ public sealed class FloatingActionButton : StatelessWidget
 
     public Widget? Child { get; }
 
+    public string? Tooltip { get; }
+
     private Widget? ExtendedLabel { get; }
 
     public Action? OnPressed { get; }
@@ -136,6 +159,10 @@ public sealed class FloatingActionButton : StatelessWidget
     private FloatingActionButtonType Type { get; }
 
     public bool IsExtended { get; }
+
+    public object? HeroTag { get; }
+
+    public MouseCursor? MouseCursor { get; }
 
     public Color? ForegroundColor { get; }
 
@@ -161,6 +188,10 @@ public sealed class FloatingActionButton : StatelessWidget
 
     public FocusNode? FocusNode { get; }
 
+    public bool? EnableFeedback { get; }
+
+    public Clip ClipBehavior { get; }
+
     public bool Autofocus { get; }
 
     public MaterialTapTargetSize? MaterialTapTargetSize { get; }
@@ -174,6 +205,9 @@ public sealed class FloatingActionButton : StatelessWidget
     public static FloatingActionButton Small(
         Widget? child,
         Action? onPressed,
+        string? tooltip = null,
+        object? heroTag = null,
+        MouseCursor? mouseCursor = null,
         Color? foregroundColor = null,
         Color? backgroundColor = null,
         Color? focusColor = null,
@@ -186,16 +220,21 @@ public sealed class FloatingActionButton : StatelessWidget
         double? disabledElevation = null,
         BorderRadius? shape = null,
         FocusNode? focusNode = null,
+        bool? enableFeedback = null,
+        Clip clipBehavior = Clip.None,
         bool autofocus = false,
         MaterialTapTargetSize? materialTapTargetSize = null,
         Key? key = null)
     {
         return new FloatingActionButton(
             child: child,
+            tooltip: tooltip,
             extendedLabel: null,
             onPressed: onPressed,
             type: FloatingActionButtonType.Small,
             isExtended: false,
+            heroTag: heroTag,
+            mouseCursor: mouseCursor,
             foregroundColor: foregroundColor,
             backgroundColor: backgroundColor,
             focusColor: focusColor,
@@ -208,6 +247,8 @@ public sealed class FloatingActionButton : StatelessWidget
             disabledElevation: disabledElevation,
             shape: shape,
             focusNode: focusNode,
+            enableFeedback: enableFeedback,
+            clipBehavior: clipBehavior,
             autofocus: autofocus,
             materialTapTargetSize: materialTapTargetSize,
             extendedIconLabelSpacing: null,
@@ -219,6 +260,9 @@ public sealed class FloatingActionButton : StatelessWidget
     public static FloatingActionButton Large(
         Widget? child,
         Action? onPressed,
+        string? tooltip = null,
+        object? heroTag = null,
+        MouseCursor? mouseCursor = null,
         Color? foregroundColor = null,
         Color? backgroundColor = null,
         Color? focusColor = null,
@@ -231,16 +275,21 @@ public sealed class FloatingActionButton : StatelessWidget
         double? disabledElevation = null,
         BorderRadius? shape = null,
         FocusNode? focusNode = null,
+        bool? enableFeedback = null,
+        Clip clipBehavior = Clip.None,
         bool autofocus = false,
         MaterialTapTargetSize? materialTapTargetSize = null,
         Key? key = null)
     {
         return new FloatingActionButton(
             child: child,
+            tooltip: tooltip,
             extendedLabel: null,
             onPressed: onPressed,
             type: FloatingActionButtonType.Large,
             isExtended: false,
+            heroTag: heroTag,
+            mouseCursor: mouseCursor,
             foregroundColor: foregroundColor,
             backgroundColor: backgroundColor,
             focusColor: focusColor,
@@ -253,6 +302,8 @@ public sealed class FloatingActionButton : StatelessWidget
             disabledElevation: disabledElevation,
             shape: shape,
             focusNode: focusNode,
+            enableFeedback: enableFeedback,
+            clipBehavior: clipBehavior,
             autofocus: autofocus,
             materialTapTargetSize: materialTapTargetSize,
             extendedIconLabelSpacing: null,
@@ -266,6 +317,9 @@ public sealed class FloatingActionButton : StatelessWidget
         Action? onPressed,
         Widget? icon = null,
         bool isExtended = true,
+        string? tooltip = null,
+        object? heroTag = null,
+        MouseCursor? mouseCursor = null,
         Color? foregroundColor = null,
         Color? backgroundColor = null,
         Color? focusColor = null,
@@ -278,6 +332,8 @@ public sealed class FloatingActionButton : StatelessWidget
         double? disabledElevation = null,
         BorderRadius? shape = null,
         FocusNode? focusNode = null,
+        bool? enableFeedback = null,
+        Clip clipBehavior = Clip.None,
         bool autofocus = false,
         MaterialTapTargetSize? materialTapTargetSize = null,
         double? extendedIconLabelSpacing = null,
@@ -287,10 +343,13 @@ public sealed class FloatingActionButton : StatelessWidget
     {
         return new FloatingActionButton(
             child: icon,
+            tooltip: tooltip,
             extendedLabel: label ?? throw new ArgumentNullException(nameof(label)),
             onPressed: onPressed,
             type: FloatingActionButtonType.Extended,
             isExtended: isExtended,
+            heroTag: heroTag,
+            mouseCursor: mouseCursor,
             foregroundColor: foregroundColor,
             backgroundColor: backgroundColor,
             focusColor: focusColor,
@@ -303,6 +362,8 @@ public sealed class FloatingActionButton : StatelessWidget
             disabledElevation: disabledElevation,
             shape: shape,
             focusNode: focusNode,
+            enableFeedback: enableFeedback,
+            clipBehavior: clipBehavior,
             autofocus: autofocus,
             materialTapTargetSize: materialTapTargetSize,
             extendedIconLabelSpacing: extendedIconLabelSpacing,
@@ -361,9 +422,15 @@ public sealed class FloatingActionButton : StatelessWidget
         {
             Color = foregroundColor
         };
+        var mouseCursor = MouseCursor
+                          ?? floatingActionButtonTheme.MouseCursor
+                          ?? defaults.MouseCursor;
         var tapTargetSize = MaterialTapTargetSize
                             ?? floatingActionButtonTheme.MaterialTapTargetSize
                             ?? theme.MaterialTapTargetSize;
+        var enableFeedback = EnableFeedback
+                             ?? floatingActionButtonTheme.EnableFeedback
+                             ?? defaults.EnableFeedback;
         var sizeConstraints = ResolveSizeConstraints(floatingActionButtonTheme, defaults);
 
         var style = new ButtonStyle(
@@ -388,12 +455,31 @@ public sealed class FloatingActionButton : StatelessWidget
             TextStyle: MaterialStateProperty<TextStyle?>.All(extendedTextStyle),
             Alignment: Flutter.Rendering.Alignment.Center);
 
-        return new MaterialButtonCore(
+        Widget result = new MaterialButtonCore(
             child: ResolveChild(context, floatingActionButtonTheme, defaults),
             onPressed: OnPressed,
             style: style,
             focusNode: FocusNode,
+            mouseCursor: mouseCursor,
+            clipBehavior: ClipBehavior,
+            enableFeedback: enableFeedback,
             autofocus: Autofocus);
+
+        if (!string.IsNullOrWhiteSpace(Tooltip))
+        {
+            result = new Tooltip(
+                message: Tooltip!,
+                child: result);
+        }
+
+        if (HeroTag != null)
+        {
+            result = new Hero(
+                tag: HeroTag,
+                child: result);
+        }
+
+        return result;
     }
 
     private Widget ResolveChild(
@@ -552,7 +638,9 @@ internal sealed record FloatingActionButtonDefaults(
     BoxConstraints ExtendedSizeConstraints,
     double ExtendedIconLabelSpacing,
     Thickness ExtendedPadding,
-    TextStyle ExtendedTextStyle)
+    TextStyle ExtendedTextStyle,
+    MouseCursor MouseCursor,
+    bool EnableFeedback)
 {
     public static FloatingActionButtonDefaults Material2(
         BuildContext context,
@@ -588,7 +676,9 @@ internal sealed record FloatingActionButtonDefaults(
                 top: 0,
                 end: 20,
                 bottom: 0),
-            ExtendedTextStyle: theme.TextTheme.LabelLarge with { LetterSpacing = 1.2 });
+            ExtendedTextStyle: theme.TextTheme.LabelLarge with { LetterSpacing = 1.2 },
+            MouseCursor: SystemMouseCursors.Click,
+            EnableFeedback: true);
     }
 
     public static FloatingActionButtonDefaults Material3(
@@ -625,7 +715,9 @@ internal sealed record FloatingActionButtonDefaults(
                 top: 0,
                 end: 20,
                 bottom: 0),
-            ExtendedTextStyle: theme.TextTheme.LabelLarge);
+            ExtendedTextStyle: theme.TextTheme.LabelLarge,
+            MouseCursor: SystemMouseCursors.Click,
+            EnableFeedback: true);
     }
 
     private static BorderRadius ResolveM2Shape(FloatingActionButtonType type)

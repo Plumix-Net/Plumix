@@ -20,6 +20,8 @@ public abstract class DragGestureRecognizer : GestureRecognizer, IGestureArenaMe
 
     public Action<DragEndDetails>? OnEnd { get; set; }
 
+    public Action? OnCancel { get; set; }
+
     public override void AddPointer(PointerDownEvent @event)
     {
         if (_trackers.ContainsKey(@event.Pointer))
@@ -28,7 +30,7 @@ public abstract class DragGestureRecognizer : GestureRecognizer, IGestureArenaMe
         }
 
         var entry = GestureArena.Add(@event.Pointer, this);
-        _trackers[@event.Pointer] = new DragTracker(@event.Position, entry);
+        _trackers[@event.Pointer] = new DragTracker(@event.Position, @event.TimestampUtc, entry);
         StartTrackingPointer(@event.Pointer);
     }
 
@@ -92,7 +94,7 @@ public abstract class DragGestureRecognizer : GestureRecognizer, IGestureArenaMe
                     }
                 }
 
-                tracker.LastPosition = @event.Position;
+                tracker.RecordPosition(@event.Position, @event.TimestampUtc);
                 break;
             }
             case PointerUpEvent:
@@ -104,13 +106,19 @@ public abstract class DragGestureRecognizer : GestureRecognizer, IGestureArenaMe
                     return;
                 }
 
-                var endVelocity = GetPrimaryValue(@event.Position - tracker.LastPosition);
+                tracker.RecordPosition(@event.Position, @event.TimestampUtc);
+                var endVelocity = tracker.EstimateVelocity(GetPrimaryValue);
                 OnEnd?.Invoke(new DragEndDetails(endVelocity));
                 Cleanup(@event.Pointer);
                 break;
             }
             case PointerCancelEvent:
             {
+                if (tracker.Accepted)
+                {
+                    OnCancel?.Invoke();
+                }
+
                 tracker.Entry.Resolve(GestureDisposition.Rejected);
                 Cleanup(@event.Pointer);
                 break;
@@ -130,11 +138,14 @@ public abstract class DragGestureRecognizer : GestureRecognizer, IGestureArenaMe
 
     private sealed class DragTracker
     {
-        public DragTracker(Point initialPosition, GestureArenaEntry entry)
+        private readonly List<VelocitySample> _samples = [];
+
+        public DragTracker(Point initialPosition, DateTime timestampUtc, GestureArenaEntry entry)
         {
             InitialPosition = initialPosition;
             LastPosition = initialPosition;
             Entry = entry;
+            _samples.Add(new VelocitySample(initialPosition, timestampUtc));
         }
 
         public Point InitialPosition { get; }
@@ -144,7 +155,52 @@ public abstract class DragGestureRecognizer : GestureRecognizer, IGestureArenaMe
         public GestureArenaEntry Entry { get; }
 
         public bool Accepted { get; set; }
+
+        public void RecordPosition(Point position, DateTime timestampUtc)
+        {
+            LastPosition = position;
+
+            if (_samples.Count > 0 && timestampUtc <= _samples[^1].TimestampUtc)
+            {
+                _samples[^1] = new VelocitySample(position, timestampUtc);
+            }
+            else
+            {
+                _samples.Add(new VelocitySample(position, timestampUtc));
+            }
+
+            const int maxVelocitySamples = 4;
+            if (_samples.Count > maxVelocitySamples)
+            {
+                _samples.RemoveRange(0, _samples.Count - maxVelocitySamples);
+            }
+        }
+
+        public double EstimateVelocity(Func<Point, double> primaryValue)
+        {
+            if (_samples.Count < 2)
+            {
+                return 0;
+            }
+
+            var newest = _samples[^1];
+            for (var i = _samples.Count - 2; i >= 0; i--)
+            {
+                var older = _samples[i];
+                var elapsedSeconds = (newest.TimestampUtc - older.TimestampUtc).TotalSeconds;
+                if (elapsedSeconds <= 0)
+                {
+                    continue;
+                }
+
+                return primaryValue(newest.Position - older.Position) / elapsedSeconds;
+            }
+
+            return 0;
+        }
     }
+
+    private readonly record struct VelocitySample(Point Position, DateTime TimestampUtc);
 }
 
 public sealed class HorizontalDragGestureRecognizer : DragGestureRecognizer
