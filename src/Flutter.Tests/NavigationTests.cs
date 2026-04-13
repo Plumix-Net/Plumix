@@ -384,6 +384,101 @@ public sealed class NavigationTests
     }
 
     [Fact]
+    public void Navigator_TryHandleBackButton_PrefersInnermostNavigator()
+    {
+        var owner = new BuildOwner();
+        NavigatorState? innerNavigatorState = null;
+        var currentOuterPage = string.Empty;
+        var currentInnerPage = string.Empty;
+
+        var root = new TestRootElement(
+            new Navigator(
+                initialRoute: new BuilderPageRoute(
+                    builder: context =>
+                    {
+                        _ = Navigator.Of(context);
+                        currentOuterPage = "outer-root";
+                        return new Navigator(
+                            initialRoute: BuildRoute(
+                                name: "inner-root",
+                                onBuild: name => currentInnerPage = name,
+                                captureState: state => innerNavigatorState ??= state));
+                    },
+                    settings: new RouteSettings(Name: "outer-root"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.NotNull(innerNavigatorState);
+        innerNavigatorState!.Push(BuildRoute(
+            name: "inner-details",
+            onBuild: name => currentInnerPage = name,
+            captureState: _ => { }));
+        owner.FlushBuild();
+
+        Assert.Equal("outer-root", currentOuterPage);
+        Assert.Equal("inner-details", currentInnerPage);
+
+        Assert.True(Navigator.TryHandleBackButton());
+        owner.FlushBuild();
+
+        Assert.Equal("outer-root", currentOuterPage);
+        Assert.Equal("inner-root", currentInnerPage);
+        Assert.False(Navigator.TryHandleBackButton());
+    }
+
+    [Fact]
+    public void Navigator_TryHandleBackButton_FallsBackToOuterNavigatorWhenInnerCannotPop()
+    {
+        var owner = new BuildOwner();
+        NavigatorState? outerNavigatorState = null;
+        NavigatorState? innerNavigatorState = null;
+        var currentOuterPage = string.Empty;
+        var currentInnerPage = string.Empty;
+
+        var root = new TestRootElement(
+            new Navigator(
+                initialRoute: BuildRoute(
+                    name: "outer-root",
+                    onBuild: name => currentOuterPage = name,
+                    captureState: state => outerNavigatorState ??= state)));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.NotNull(outerNavigatorState);
+
+        outerNavigatorState!.Push(
+            new BuilderPageRoute(
+                builder: context =>
+                {
+                    _ = Navigator.Of(context);
+                    currentOuterPage = "outer-details";
+                    return new Navigator(
+                        initialRoute: BuildRoute(
+                            name: "inner-root",
+                            onBuild: name => currentInnerPage = name,
+                            captureState: state => innerNavigatorState ??= state));
+                },
+                settings: new RouteSettings(Name: "outer-details")));
+        owner.FlushBuild();
+
+        Assert.NotNull(innerNavigatorState);
+        Assert.Equal("outer-details", currentOuterPage);
+        Assert.Equal("inner-root", currentInnerPage);
+        Assert.False(innerNavigatorState!.CanPop);
+
+        Assert.True(Navigator.TryHandleBackButton());
+        owner.FlushBuild();
+
+        Assert.Equal("outer-root", currentOuterPage);
+        Assert.False(outerNavigatorState.CanPop);
+        Assert.False(Navigator.TryHandleBackButton());
+    }
+
+    [Fact]
     public void Navigator_MaybePop_HandlesLocalHistoryOnRootRoute()
     {
         var owner = new BuildOwner();

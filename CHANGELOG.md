@@ -94,6 +94,9 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
   - `src/Flutter.Tests/HeroNavigatorTests.cs` now verifies user-gesture pop hero gating (default disabled path skips flights, opt-in path animates flights when both heroes set `transitionOnUserGestures: true`).
   - `src/Flutter.Tests/HeroNavigatorTests.cs` now verifies hero flights across outer-route push transitions when matching heroes live inside nested navigators.
   - `src/Flutter.Tests/MaterialFloatingActionButtonTests.cs` now verifies FAB composition is wrapped by `Hero` when `heroTag` is set.
+- Expanded navigation nested back-dispatch regression coverage in `src/Flutter.Tests/NavigationTests.cs`:
+  - verifies host back dispatch prefers innermost active navigator when nested stacks can pop,
+  - verifies dispatch falls back to outer navigator when nested navigator cannot pop.
 - Synced tracking docs for this parity pass:
   - `docs/FRAMEWORK_PLAN.md`,
   - `docs/ai/MODULE_INDEX.md`,
@@ -107,7 +110,8 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
   - `docs/ai/material-2026-04-13-hero-nested-guard.md`,
   - `docs/ai/material-2026-04-13-hero-flight-diversion.md`,
   - `docs/ai/material-2026-04-13-hero-mode-disable-parity.md`,
-  - `docs/ai/material-2026-04-13-hero-parity-closeout.md`.
+  - `docs/ai/material-2026-04-13-hero-parity-closeout.md`,
+  - `docs/ai/navigation-2026-04-13-nested-back-dispatch.md`.
 - Added framework semantics annotation plumbing for interactive controls:
   - introduced `Semantics` widget + `RenderSemanticsAnnotations` (`src/Flutter/Widgets/Semantics.cs`, `src/Flutter/Rendering/Proxy.RenderBox.cs`);
   - `MaterialButtonCore` now emits accessibility semantics (`label`, enabled/tap action, button/selected/checked flags) and `Checkbox`/`Switch`/`Radio` now wire toggle-state semantics (`IsChecked`) through shared control composition;
