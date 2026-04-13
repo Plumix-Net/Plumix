@@ -141,6 +141,7 @@ Current priority (2026-03-12):
   - `src/Sample/Flutter.Net/SampleGalleryScreen.cs`
 - Primary Tests:
   - `src/Flutter.Tests/NavigationTests.cs`
+  - `src/Flutter.Tests/HeroNavigatorTests.cs`
 
 ### Scroll and Slivers
 

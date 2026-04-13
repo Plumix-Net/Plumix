@@ -813,13 +813,20 @@ public sealed class NavigatorState : State
         var flights = _heroTransitionController.ActiveFlights;
         if (flights.Count > 0)
         {
-            children.Add(BuildHeroFlightOverlay(flights, _heroFlightController.Evaluate()));
+            children.Add(
+                BuildHeroFlightOverlay(
+                    flights,
+                    _heroFlightController.Evaluate(),
+                    isPushTransition: session.Direction == HeroTransitionDirection.Push));
         }
 
         return new Stack(children: children);
     }
 
-    private static Widget BuildHeroFlightOverlay(IReadOnlyList<HeroFlightManifest> flights, double progress)
+    private static Widget BuildHeroFlightOverlay(
+        IReadOnlyList<HeroFlightManifest> flights,
+        double progress,
+        bool isPushTransition)
     {
         var overlayChildren = new List<Widget>(flights.Count);
         foreach (var flight in flights)
@@ -839,7 +846,7 @@ public sealed class NavigatorState : State
                     child: new SizedBox(
                         width: rect.Width,
                         height: rect.Height,
-                        child: flight.Shuttle)));
+                        child: flight.BuildShuttle(progress, isPushTransition))));
         }
 
         if (overlayChildren.Count == 0)

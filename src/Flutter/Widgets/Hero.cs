@@ -8,6 +8,11 @@ using Flutter.Rendering;
 namespace Flutter.Widgets;
 
 public delegate Flutter.Tween<Rect> CreateRectTween(Rect begin, Rect end);
+public delegate Widget HeroFlightShuttleBuilder(
+    BuildContext fromHeroContext,
+    BuildContext toHeroContext,
+    double progress,
+    bool isPushTransition);
 
 public sealed class Hero : StatefulWidget
 {
@@ -15,11 +20,13 @@ public sealed class Hero : StatefulWidget
         object tag,
         Widget child,
         Key? key = null,
-        CreateRectTween? createRectTween = null) : base(key)
+        CreateRectTween? createRectTween = null,
+        HeroFlightShuttleBuilder? flightShuttleBuilder = null) : base(key)
     {
         Tag = tag ?? throw new ArgumentNullException(nameof(tag));
         Child = child ?? throw new ArgumentNullException(nameof(child));
         CreateRectTween = createRectTween;
+        FlightShuttleBuilder = flightShuttleBuilder;
     }
 
     public object Tag { get; }
@@ -27,6 +34,8 @@ public sealed class Hero : StatefulWidget
     public Widget Child { get; }
 
     public CreateRectTween? CreateRectTween { get; }
+
+    public HeroFlightShuttleBuilder? FlightShuttleBuilder { get; }
 
     public override State CreateState()
     {
@@ -101,6 +110,11 @@ internal sealed class HeroState : State
     internal CreateRectTween? ResolveCreateRectTween()
     {
         return CurrentWidget.CreateRectTween;
+    }
+
+    internal HeroFlightShuttleBuilder? ResolveFlightShuttleBuilder()
+    {
+        return CurrentWidget.FlightShuttleBuilder;
     }
 
     private void RegisterWithScope()
@@ -184,17 +198,23 @@ internal sealed class HeroFlightManifest
         object tag,
         Route fromRoute,
         Route toRoute,
+        HeroState fromHero,
+        HeroState toHero,
         Rect fromBounds,
         Rect toBounds,
-        Widget shuttle,
+        Widget defaultShuttle,
+        HeroFlightShuttleBuilder? shuttleBuilder,
         Flutter.Tween<Rect> rectTween)
     {
         Tag = tag;
         FromRoute = fromRoute;
         ToRoute = toRoute;
+        FromHero = fromHero;
+        ToHero = toHero;
         FromBounds = fromBounds;
         ToBounds = toBounds;
-        Shuttle = shuttle;
+        DefaultShuttle = defaultShuttle;
+        ShuttleBuilder = shuttleBuilder;
         RectTween = rectTween ?? new Flutter.RectTween();
     }
 
@@ -204,13 +224,29 @@ internal sealed class HeroFlightManifest
 
     public Route ToRoute { get; }
 
+    public HeroState FromHero { get; }
+
+    public HeroState ToHero { get; }
+
     public Rect FromBounds { get; }
 
     public Rect ToBounds { get; }
 
-    public Widget Shuttle { get; }
+    public Widget DefaultShuttle { get; }
+
+    public HeroFlightShuttleBuilder? ShuttleBuilder { get; }
 
     public Flutter.Tween<Rect> RectTween { get; }
+
+    public Widget BuildShuttle(double progress, bool isPushTransition)
+    {
+        return ShuttleBuilder?.Invoke(
+                   FromHero.Context,
+                   ToHero.Context,
+                   progress,
+                   isPushTransition)
+               ?? DefaultShuttle;
+    }
 }
 
 internal sealed class HeroTransitionController
@@ -295,15 +331,19 @@ internal sealed class HeroTransitionController
             var rectTweenFactory = toHero.ResolveCreateRectTween();
             var rectTween = rectTweenFactory?.Invoke(fromSnapshot.Value.Bounds, toSnapshot.Value.Bounds)
                 ?? new Flutter.RectTween();
+            var shuttleBuilder = toHero.ResolveFlightShuttleBuilder() ?? fromHero.ResolveFlightShuttleBuilder();
 
             flights.Add(
                 new HeroFlightManifest(
                     tag: tag,
                     fromRoute: fromRoute,
                     toRoute: toRoute,
+                    fromHero: fromHero,
+                    toHero: toHero,
                     fromBounds: fromSnapshot.Value.Bounds,
                     toBounds: toSnapshot.Value.Bounds,
-                    shuttle: toSnapshot.Value.Child,
+                    defaultShuttle: toSnapshot.Value.Child,
+                    shuttleBuilder: shuttleBuilder,
                     rectTween: rectTween));
         }
 

@@ -198,14 +198,129 @@ public sealed class HeroNavigatorTests
         }
     }
 
+    [Fact]
+    public void Navigator_Push_UsesDestinationHeroFlightShuttleBuilder_WhenBothHeroesProvideBuilder()
+    {
+        Scheduler.ResetForTests();
+        NavigatorBackButtonDispatcher.ResetForTests();
+
+        try
+        {
+            var viewportSize = new Size(320, 240);
+            NavigatorState? navigatorState = null;
+            var sourceShuttleBuilderCalls = 0;
+            var destinationShuttleBuilderCalls = 0;
+
+            using var harness = new WidgetRenderHarness(
+                new Navigator(
+                    initialRoute: BuildHeroRoute(
+                        routeName: "root-page",
+                        heroOrigin: new Point(20, 160),
+                        heroColor: Colors.OrangeRed,
+                        onBuild: () => { },
+                        captureState: state => navigatorState ??= state,
+                        flightShuttleBuilder: (_, _, _, _) =>
+                        {
+                            sourceShuttleBuilderCalls += 1;
+                            return new Text("source-shuttle");
+                        })));
+
+            harness.Pump(viewportSize);
+            Assert.NotNull(navigatorState);
+
+            navigatorState!.Push(
+                BuildHeroRoute(
+                    routeName: "details-page",
+                    heroOrigin: new Point(238, 18),
+                    heroColor: Colors.SteelBlue,
+                    onBuild: () => { },
+                    captureState: _ => { },
+                    flightShuttleBuilder: (_, _, _, _) =>
+                    {
+                        destinationShuttleBuilderCalls += 1;
+                        return new Text("destination-shuttle");
+                    }));
+            harness.Pump(viewportSize);
+            PumpHeroTransitionFrame(harness, viewportSize);
+
+            Assert.Equal(0, sourceShuttleBuilderCalls);
+            Assert.True(destinationShuttleBuilderCalls > 0);
+            Assert.NotNull(FindParagraphByText(harness.RenderView, "destination-shuttle"));
+            Assert.Null(FindParagraphByText(harness.RenderView, "source-shuttle"));
+
+            AdvanceHeroTransition(harness, viewportSize);
+        }
+        finally
+        {
+            Scheduler.ResetForTests();
+            NavigatorBackButtonDispatcher.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void Navigator_Push_UsesSourceHeroFlightShuttleBuilder_AsFallbackWhenDestinationBuilderIsMissing()
+    {
+        Scheduler.ResetForTests();
+        NavigatorBackButtonDispatcher.ResetForTests();
+
+        try
+        {
+            var viewportSize = new Size(320, 240);
+            NavigatorState? navigatorState = null;
+            var sourceShuttleBuilderCalls = 0;
+
+            using var harness = new WidgetRenderHarness(
+                new Navigator(
+                    initialRoute: BuildHeroRoute(
+                        routeName: "root-page",
+                        heroOrigin: new Point(20, 160),
+                        heroColor: Colors.OrangeRed,
+                        onBuild: () => { },
+                        captureState: state => navigatorState ??= state,
+                        flightShuttleBuilder: (_, _, _, _) =>
+                        {
+                            sourceShuttleBuilderCalls += 1;
+                            return new Text("source-fallback-shuttle");
+                        })));
+
+            harness.Pump(viewportSize);
+            Assert.NotNull(navigatorState);
+
+            navigatorState!.Push(
+                BuildHeroRoute(
+                    routeName: "details-page",
+                    heroOrigin: new Point(238, 18),
+                    heroColor: Colors.SteelBlue,
+                    onBuild: () => { },
+                    captureState: _ => { }));
+            harness.Pump(viewportSize);
+            PumpHeroTransitionFrame(harness, viewportSize);
+
+            Assert.True(sourceShuttleBuilderCalls > 0);
+            Assert.NotNull(FindParagraphByText(harness.RenderView, "source-fallback-shuttle"));
+
+            AdvanceHeroTransition(harness, viewportSize);
+        }
+        finally
+        {
+            Scheduler.ResetForTests();
+            NavigatorBackButtonDispatcher.ResetForTests();
+        }
+    }
+
     private static void AdvanceHeroTransition(WidgetRenderHarness harness, Size viewportSize)
     {
-        var now = Scheduler.CurrentSeconds;
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.016));
-        harness.Pump(viewportSize);
+        PumpHeroTransitionFrame(harness, viewportSize);
 
         var afterStart = Scheduler.CurrentSeconds;
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(afterStart + 0.40));
+        harness.Pump(viewportSize);
+    }
+
+    private static void PumpHeroTransitionFrame(WidgetRenderHarness harness, Size viewportSize)
+    {
+        var now = Scheduler.CurrentSeconds;
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.016));
         harness.Pump(viewportSize);
     }
 
@@ -215,14 +330,15 @@ public sealed class HeroNavigatorTests
         Color heroColor,
         Action onBuild,
         Action<NavigatorState> captureState,
-        CreateRectTween? createRectTween = null)
+        CreateRectTween? createRectTween = null,
+        HeroFlightShuttleBuilder? flightShuttleBuilder = null)
     {
         return new BuilderPageRoute(
             builder: context =>
             {
                 captureState(Navigator.Of(context));
                 onBuild();
-                return BuildHeroPage(routeName, heroOrigin, heroColor, createRectTween);
+                return BuildHeroPage(routeName, heroOrigin, heroColor, createRectTween, flightShuttleBuilder);
             },
             settings: new RouteSettings(Name: routeName));
     }
@@ -231,7 +347,8 @@ public sealed class HeroNavigatorTests
         string routeLabel,
         Point heroOrigin,
         Color heroColor,
-        CreateRectTween? createRectTween = null)
+        CreateRectTween? createRectTween = null,
+        HeroFlightShuttleBuilder? flightShuttleBuilder = null)
     {
         return new Stack(
             children:
@@ -242,6 +359,7 @@ public sealed class HeroNavigatorTests
                     child: new Hero(
                         tag: SharedHeroTag,
                         createRectTween: createRectTween,
+                        flightShuttleBuilder: flightShuttleBuilder,
                         child: new DecoratedBox(
                             decoration: new BoxDecoration(
                                 Color: heroColor,
