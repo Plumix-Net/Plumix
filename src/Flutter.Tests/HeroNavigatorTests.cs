@@ -432,6 +432,100 @@ public sealed class HeroNavigatorTests
         }
     }
 
+    [Fact]
+    public void Navigator_Push_DefaultHeroPlaceholder_UsesOffstageChildForSourceHero()
+    {
+        Scheduler.ResetForTests();
+        NavigatorBackButtonDispatcher.ResetForTests();
+
+        try
+        {
+            var viewportSize = new Size(320, 240);
+            NavigatorState? navigatorState = null;
+
+            using var harness = new WidgetRenderHarness(
+                new Navigator(
+                    initialRoute: BuildHeroRoute(
+                        routeName: "root-page",
+                        heroOrigin: new Point(20, 160),
+                        heroColor: Colors.OrangeRed,
+                        onBuild: () => { },
+                        captureState: state => navigatorState ??= state)));
+
+            harness.Pump(viewportSize);
+            Assert.NotNull(navigatorState);
+
+            navigatorState!.Push(
+                BuildHeroRoute(
+                    routeName: "details-page",
+                    heroOrigin: new Point(238, 18),
+                    heroColor: Colors.SteelBlue,
+                    onBuild: () => { },
+                    captureState: _ => { }));
+            harness.Pump(viewportSize);
+            PumpHeroTransitionFrame(harness, viewportSize);
+
+            Assert.True(CountDescendants<RenderOffstage>(harness.RenderView) > 0);
+
+            AdvanceHeroTransition(harness, viewportSize);
+
+            Assert.Equal(0, CountDescendants<RenderOffstage>(harness.RenderView));
+        }
+        finally
+        {
+            Scheduler.ResetForTests();
+            NavigatorBackButtonDispatcher.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void Navigator_Pop_DefaultHeroPlaceholder_DoesNotUseOffstageChild()
+    {
+        Scheduler.ResetForTests();
+        NavigatorBackButtonDispatcher.ResetForTests();
+
+        try
+        {
+            var viewportSize = new Size(320, 240);
+            NavigatorState? navigatorState = null;
+
+            using var harness = new WidgetRenderHarness(
+                new Navigator(
+                    initialRoute: BuildHeroRoute(
+                        routeName: "root-page",
+                        heroOrigin: new Point(20, 160),
+                        heroColor: Colors.OrangeRed,
+                        onBuild: () => { },
+                        captureState: state => navigatorState ??= state)));
+
+            harness.Pump(viewportSize);
+            Assert.NotNull(navigatorState);
+
+            navigatorState!.Push(
+                BuildHeroRoute(
+                    routeName: "details-page",
+                    heroOrigin: new Point(238, 18),
+                    heroColor: Colors.SteelBlue,
+                    onBuild: () => { },
+                    captureState: _ => { }));
+            harness.Pump(viewportSize);
+            AdvanceHeroTransition(harness, viewportSize);
+
+            navigatorState.Pop();
+            harness.Pump(viewportSize);
+            PumpHeroTransitionFrame(harness, viewportSize);
+
+            Assert.Equal(0, CountDescendants<RenderOffstage>(harness.RenderView));
+
+            AdvanceHeroTransition(harness, viewportSize);
+        }
+        finally
+        {
+            Scheduler.ResetForTests();
+            NavigatorBackButtonDispatcher.ResetForTests();
+        }
+    }
+
     private static void AdvanceHeroTransition(WidgetRenderHarness harness, Size viewportSize)
     {
         PumpHeroTransitionFrame(harness, viewportSize);
@@ -529,6 +623,18 @@ public sealed class HeroNavigatorTests
         });
 
         return result;
+    }
+
+    private static int CountDescendants<TRenderObject>(RenderObject? root) where TRenderObject : RenderObject
+    {
+        if (root is null)
+        {
+            return 0;
+        }
+
+        var count = root is TRenderObject ? 1 : 0;
+        root.VisitChildren(child => count += CountDescendants<TRenderObject>(child));
+        return count;
     }
 
     private sealed class TrackingRectTween : Tween<Rect>

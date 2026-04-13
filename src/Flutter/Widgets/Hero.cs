@@ -99,7 +99,19 @@ internal sealed class HeroState : State
                 CurrentWidget.Child);
         }
 
-        return new Opacity(0.0, child: CurrentWidget.Child);
+        if (placeholderState.Value.IncludeChild)
+        {
+            return new SizedBox(
+                width: placeholderState.Value.Size.Width,
+                height: placeholderState.Value.Size.Height,
+                child: new Offstage(
+                    child: CurrentWidget.Child,
+                    offstage: true));
+        }
+
+        return new SizedBox(
+            width: placeholderState.Value.Size.Width,
+            height: placeholderState.Value.Size.Height);
     }
 
     internal HeroSnapshot? CreateSnapshot(Route expectedRoute)
@@ -368,7 +380,7 @@ internal sealed class HeroTransitionController
         return flights;
     }
 
-    public void ActivateFlights(IReadOnlyList<HeroFlightManifest> flights)
+    public void ActivateFlights(IReadOnlyList<HeroFlightManifest> flights, bool isPushTransition)
     {
         _hiddenHeroes.Clear();
         if (flights.Count == 0)
@@ -381,9 +393,11 @@ internal sealed class HeroTransitionController
         foreach (var flight in capturedFlights)
         {
             _hiddenHeroes[(flight.FromRoute, flight.Tag)] = new HeroPlaceholderState(
-                new Size(flight.FromBounds.Width, flight.FromBounds.Height));
+                new Size(flight.FromBounds.Width, flight.FromBounds.Height),
+                IncludeChild: isPushTransition);
             _hiddenHeroes[(flight.ToRoute, flight.Tag)] = new HeroPlaceholderState(
-                new Size(flight.ToBounds.Width, flight.ToBounds.Height));
+                new Size(flight.ToBounds.Width, flight.ToBounds.Height),
+                IncludeChild: false);
         }
 
         _activeFlights = capturedFlights;
@@ -396,7 +410,7 @@ internal sealed class HeroTransitionController
     }
 }
 
-internal readonly record struct HeroPlaceholderState(Size Size);
+internal readonly record struct HeroPlaceholderState(Size Size, bool IncludeChild);
 
 internal sealed class HeroControllerScope : InheritedWidget
 {

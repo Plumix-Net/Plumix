@@ -1205,7 +1205,9 @@ public sealed class NavigatorState : State
                 return;
             }
 
-            _heroTransitionController.ActivateFlights(flights);
+            _heroTransitionController.ActivateFlights(
+                flights,
+                isPushTransition: session.Direction == HeroTransitionDirection.Push);
             _heroFlightController.Forward(from: 0.0);
         });
     }
