@@ -309,6 +309,51 @@ public sealed class HeroNavigatorTests
     }
 
     [Fact]
+    public void Navigator_Push_WithDisabledDestinationHeroMode_DoesNotStartHeroFlight()
+    {
+        Scheduler.ResetForTests();
+        NavigatorBackButtonDispatcher.ResetForTests();
+
+        try
+        {
+            var viewportSize = new Size(320, 240);
+            NavigatorState? navigatorState = null;
+
+            using var harness = new WidgetRenderHarness(
+                new Navigator(
+                    initialRoute: BuildHeroRoute(
+                        routeName: "root-page",
+                        heroOrigin: new Point(20, 160),
+                        heroColor: Colors.OrangeRed,
+                        onBuild: () => { },
+                        captureState: state => navigatorState ??= state)));
+
+            harness.Pump(viewportSize);
+            Assert.NotNull(navigatorState);
+
+            navigatorState!.Push(
+                BuildHeroRoute(
+                    routeName: "details-page",
+                    heroOrigin: new Point(238, 18),
+                    heroColor: Colors.SteelBlue,
+                    onBuild: () => { },
+                    captureState: _ => { },
+                    heroModeEnabled: false));
+            harness.Pump(viewportSize);
+            PumpHeroTransitionFrame(harness, viewportSize);
+
+            Assert.Null(FindParagraphByText(harness.RenderView, "root-page"));
+            Assert.NotNull(FindParagraphByText(harness.RenderView, "details-page"));
+            Assert.Equal(0, CountDescendants<RenderOffstage>(harness.RenderView));
+        }
+        finally
+        {
+            Scheduler.ResetForTests();
+            NavigatorBackButtonDispatcher.ResetForTests();
+        }
+    }
+
+    [Fact]
     public void Navigator_Push_UsesSourceHeroPlaceholderBuilder_DuringFlight()
     {
         Scheduler.ResetForTests();
@@ -681,7 +726,8 @@ public sealed class HeroNavigatorTests
         Action<NavigatorState> captureState,
         CreateRectTween? createRectTween = null,
         HeroFlightShuttleBuilder? flightShuttleBuilder = null,
-        HeroPlaceholderBuilder? placeholderBuilder = null)
+        HeroPlaceholderBuilder? placeholderBuilder = null,
+        bool heroModeEnabled = true)
     {
         return new BuilderPageRoute(
             builder: context =>
@@ -694,7 +740,8 @@ public sealed class HeroNavigatorTests
                     heroColor,
                     createRectTween,
                     flightShuttleBuilder,
-                    placeholderBuilder);
+                    placeholderBuilder,
+                    heroModeEnabled);
             },
             settings: new RouteSettings(Name: routeName));
     }
@@ -740,24 +787,34 @@ public sealed class HeroNavigatorTests
         Color heroColor,
         CreateRectTween? createRectTween = null,
         HeroFlightShuttleBuilder? flightShuttleBuilder = null,
-        HeroPlaceholderBuilder? placeholderBuilder = null)
+        HeroPlaceholderBuilder? placeholderBuilder = null,
+        bool heroModeEnabled = true)
     {
+        Widget heroWidget = new Hero(
+            tag: SharedHeroTag,
+            createRectTween: createRectTween,
+            flightShuttleBuilder: flightShuttleBuilder,
+            placeholderBuilder: placeholderBuilder,
+            child: new DecoratedBox(
+                decoration: new BoxDecoration(
+                    Color: heroColor,
+                    BorderRadius: BorderRadius.Circular(12)),
+                child: new SizedBox(width: 44, height: 44)));
+
+        if (!heroModeEnabled)
+        {
+            heroWidget = new HeroMode(
+                enabled: false,
+                child: heroWidget);
+        }
+
         return new Stack(
             children:
             [
                 new Positioned(
                     left: heroOrigin.X,
                     top: heroOrigin.Y,
-                    child: new Hero(
-                        tag: SharedHeroTag,
-                        createRectTween: createRectTween,
-                        flightShuttleBuilder: flightShuttleBuilder,
-                        placeholderBuilder: placeholderBuilder,
-                        child: new DecoratedBox(
-                            decoration: new BoxDecoration(
-                                Color: heroColor,
-                                BorderRadius: BorderRadius.Circular(12)),
-                            child: new SizedBox(width: 44, height: 44)))),
+                    child: heroWidget),
                 new Positioned(
                     left: 8,
                     top: 8,

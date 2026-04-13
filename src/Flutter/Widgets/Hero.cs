@@ -18,6 +18,34 @@ public delegate Widget HeroPlaceholderBuilder(
     Size placeholderSize,
     Widget child);
 
+public sealed class HeroMode : StatelessWidget
+{
+    public HeroMode(
+        Widget child,
+        bool enabled = true,
+        Key? key = null) : base(key)
+    {
+        Child = child ?? throw new ArgumentNullException(nameof(child));
+        Enabled = enabled;
+    }
+
+    public Widget Child { get; }
+
+    public bool Enabled { get; }
+
+    public override Widget Build(BuildContext context)
+    {
+        return new HeroModeScope(
+            enabled: Enabled,
+            child: Child);
+    }
+
+    internal static bool IsEnabled(BuildContext context)
+    {
+        return context.DependOnInherited<HeroModeScope>()?.Enabled ?? true;
+    }
+}
+
 public sealed class Hero : StatefulWidget
 {
     public Hero(
@@ -56,6 +84,7 @@ internal sealed class HeroState : State
     private HeroControllerScope? _scope;
     private Route? _route;
     private object? _registeredTag;
+    private bool _isEnabled = true;
 
     private Hero CurrentWidget => (Hero)StateWidget;
 
@@ -86,6 +115,11 @@ internal sealed class HeroState : State
     public override Widget Build(BuildContext context)
     {
         EnsureNoHeroAncestor();
+
+        if (!_isEnabled)
+        {
+            return CurrentWidget.Child;
+        }
 
         var placeholderState = _scope?.Controller.ResolvePlaceholder(_route, CurrentWidget.Tag);
         if (placeholderState == null)
@@ -166,11 +200,13 @@ internal sealed class HeroState : State
         var scope = HeroControllerScope.MaybeOf(Context);
         var route = scope?.Route;
         var tag = CurrentWidget.Tag;
+        var isEnabled = HeroMode.IsEnabled(Context);
 
         var registrationChanged =
             !ReferenceEquals(_scope, scope)
             || !ReferenceEquals(_route, route)
-            || !Equals(_registeredTag, tag);
+            || !Equals(_registeredTag, tag)
+            || _isEnabled != isEnabled;
 
         if (!registrationChanged)
         {
@@ -182,8 +218,9 @@ internal sealed class HeroState : State
         _scope = scope;
         _route = route;
         _registeredTag = tag;
+        _isEnabled = isEnabled;
 
-        if (_scope != null && _route != null)
+        if (_isEnabled && _scope != null && _route != null)
         {
             _scope.Controller.Register(_route, tag, this);
         }
@@ -442,6 +479,32 @@ internal sealed class HeroTransitionController
 }
 
 internal readonly record struct HeroPlaceholderState(Size Size, bool IncludeChild);
+
+internal sealed class HeroModeScope : InheritedWidget
+{
+    public HeroModeScope(
+        bool enabled,
+        Widget child,
+        Key? key = null) : base(key)
+    {
+        Enabled = enabled;
+        Child = child ?? throw new ArgumentNullException(nameof(child));
+    }
+
+    public bool Enabled { get; }
+
+    public Widget Child { get; }
+
+    public override Widget Build(BuildContext context)
+    {
+        return Child;
+    }
+
+    protected internal override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    {
+        return ((HeroModeScope)oldWidget).Enabled != Enabled;
+    }
+}
 
 internal sealed class HeroControllerScope : InheritedWidget
 {
