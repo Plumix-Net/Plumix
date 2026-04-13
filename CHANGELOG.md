@@ -75,12 +75,14 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
   - hero flight shuttle composition now supports destination-priority `Hero.flightShuttleBuilder` (with source fallback and destination-child default) in `src/Flutter/Widgets/Hero.cs` and `src/Flutter/Widgets/Navigation.cs`;
   - hidden-hero placeholder composition now supports `Hero.placeholderBuilder` with size metadata resolved from flight snapshots in `src/Flutter/Widgets/Hero.cs`;
   - default hidden-hero placeholder behavior now follows Flutter-like push/pop semantics in `src/Flutter/Widgets/Hero.cs`: push-source hero keeps child under `Offstage` in a fixed-size `SizedBox`, while push-destination and both pop placeholders use fixed-size empty `SizedBox`.
+  - hero registration now validates duplicate tags within the same route subtree and throws `InvalidOperationException` when multiple active heroes share one `tag` in `src/Flutter/Widgets/Hero.cs`.
 - Added focused hero regression coverage:
   - new `src/Flutter.Tests/HeroNavigatorTests.cs` verifies shared-tag push/pop hero transitions keep both routes during flight and settle to a single destination route after completion;
   - `src/Flutter.Tests/HeroNavigatorTests.cs` now also verifies destination `Hero.createRectTween` precedence and custom tween evaluation during flight;
   - `src/Flutter.Tests/HeroNavigatorTests.cs` now verifies destination `Hero.flightShuttleBuilder` precedence (over source) and source-builder fallback when destination builder is absent;
   - `src/Flutter.Tests/HeroNavigatorTests.cs` now verifies `Hero.placeholderBuilder` on push/pop flights for source/destination hidden heroes, including placeholder size metadata (`44x44`) from hero bounds;
   - `src/Flutter.Tests/HeroNavigatorTests.cs` now verifies default hidden-hero placeholder semantics (push-source includes an offstage child placeholder; pop placeholders do not include offstage child placeholders).
+  - `src/Flutter.Tests/HeroNavigatorTests.cs` now verifies duplicate `Hero(tag)` detection in one route subtree (`InvalidOperationException`).
   - `src/Flutter.Tests/MaterialFloatingActionButtonTests.cs` now verifies FAB composition is wrapped by `Hero` when `heroTag` is set.
 - Synced tracking docs for this parity pass:
   - `docs/FRAMEWORK_PLAN.md`,
@@ -90,7 +92,8 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
   - `docs/ai/material-2026-04-12-hero-create-rect-tween.md`,
   - `docs/ai/material-2026-04-13-hero-flight-shuttle-builder.md`,
   - `docs/ai/material-2026-04-13-hero-placeholder-builder.md`,
-  - `docs/ai/material-2026-04-13-hero-default-placeholder-parity.md`.
+  - `docs/ai/material-2026-04-13-hero-default-placeholder-parity.md`,
+  - `docs/ai/material-2026-04-13-hero-duplicate-tag-guard.md`.
 - Added framework semantics annotation plumbing for interactive controls:
   - introduced `Semantics` widget + `RenderSemanticsAnnotations` (`src/Flutter/Widgets/Semantics.cs`, `src/Flutter/Rendering/Proxy.RenderBox.cs`);
   - `MaterialButtonCore` now emits accessibility semantics (`label`, enabled/tap action, button/selected/checked flags) and `Checkbox`/`Switch`/`Radio` now wire toggle-state semantics (`IsChecked`) through shared control composition;

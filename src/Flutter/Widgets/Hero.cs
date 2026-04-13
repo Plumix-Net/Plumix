@@ -310,6 +310,12 @@ internal sealed class HeroTransitionController
             _heroesByRoute[route] = heroes;
         }
 
+        if (heroes.TryGetValue(tag, out var existingHeroState) && !ReferenceEquals(existingHeroState, heroState))
+        {
+            throw new InvalidOperationException(
+                $"There are multiple heroes that share the same tag within one route subtree. Tag: {tag}.");
+        }
+
         heroes[tag] = heroState;
     }
 

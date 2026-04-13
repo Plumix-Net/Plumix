@@ -526,6 +526,34 @@ public sealed class HeroNavigatorTests
         }
     }
 
+    [Fact]
+    public void Navigator_InitialRoute_WithDuplicateHeroTagsInRouteSubtree_ThrowsInvalidOperationException()
+    {
+        Scheduler.ResetForTests();
+        NavigatorBackButtonDispatcher.ResetForTests();
+
+        try
+        {
+            var viewportSize = new Size(320, 240);
+
+            var exception = Assert.Throws<InvalidOperationException>(() =>
+            {
+                using var harness = new WidgetRenderHarness(
+                    new Navigator(
+                        initialRoute: BuildDuplicateHeroTagRoute(
+                            routeName: "duplicate-tags")));
+                harness.Pump(viewportSize);
+            });
+
+            Assert.Contains("multiple heroes", exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+        finally
+        {
+            Scheduler.ResetForTests();
+            NavigatorBackButtonDispatcher.ResetForTests();
+        }
+    }
+
     private static void AdvanceHeroTransition(WidgetRenderHarness harness, Size viewportSize)
     {
         PumpHeroTransitionFrame(harness, viewportSize);
@@ -565,6 +593,29 @@ public sealed class HeroNavigatorTests
                     flightShuttleBuilder,
                     placeholderBuilder);
             },
+            settings: new RouteSettings(Name: routeName));
+    }
+
+    private static Route BuildDuplicateHeroTagRoute(string routeName)
+    {
+        return new BuilderPageRoute(
+            builder: _ =>
+                new Stack(
+                    children:
+                    [
+                        new Positioned(
+                            left: 20,
+                            top: 160,
+                            child: new Hero(
+                                tag: SharedHeroTag,
+                                child: new SizedBox(width: 44, height: 44))),
+                        new Positioned(
+                            left: 90,
+                            top: 160,
+                            child: new Hero(
+                                tag: SharedHeroTag,
+                                child: new SizedBox(width: 44, height: 44)))
+                    ]),
             settings: new RouteSettings(Name: routeName));
     }
 
