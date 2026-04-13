@@ -137,6 +137,7 @@ Current priority (2026-03-12):
 - Goal: route stack operations, named routes, observers, back handling.
 - Read First:
   - `src/Flutter/Widgets/Navigation.cs`
+  - `src/Flutter/Widgets/Hero.cs`
   - `src/Sample/Flutter.Net/Demos/General/NavigatorDemoPage.cs`
   - `src/Sample/Flutter.Net/SampleGalleryScreen.cs`
 - Primary Tests:

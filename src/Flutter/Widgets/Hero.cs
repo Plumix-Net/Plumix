@@ -13,6 +13,10 @@ public delegate Widget HeroFlightShuttleBuilder(
     BuildContext toHeroContext,
     double progress,
     bool isPushTransition);
+public delegate Widget HeroPlaceholderBuilder(
+    BuildContext context,
+    Size placeholderSize,
+    Widget child);
 
 public sealed class Hero : StatefulWidget
 {
@@ -21,12 +25,14 @@ public sealed class Hero : StatefulWidget
         Widget child,
         Key? key = null,
         CreateRectTween? createRectTween = null,
-        HeroFlightShuttleBuilder? flightShuttleBuilder = null) : base(key)
+        HeroFlightShuttleBuilder? flightShuttleBuilder = null,
+        HeroPlaceholderBuilder? placeholderBuilder = null) : base(key)
     {
         Tag = tag ?? throw new ArgumentNullException(nameof(tag));
         Child = child ?? throw new ArgumentNullException(nameof(child));
         CreateRectTween = createRectTween;
         FlightShuttleBuilder = flightShuttleBuilder;
+        PlaceholderBuilder = placeholderBuilder;
     }
 
     public object Tag { get; }
@@ -36,6 +42,8 @@ public sealed class Hero : StatefulWidget
     public CreateRectTween? CreateRectTween { get; }
 
     public HeroFlightShuttleBuilder? FlightShuttleBuilder { get; }
+
+    public HeroPlaceholderBuilder? PlaceholderBuilder { get; }
 
     public override State CreateState()
     {
@@ -77,10 +85,18 @@ internal sealed class HeroState : State
 
     public override Widget Build(BuildContext context)
     {
-        var hide = _scope?.Controller.ShouldHide(_route, CurrentWidget.Tag) == true;
-        if (!hide)
+        var placeholderState = _scope?.Controller.ResolvePlaceholder(_route, CurrentWidget.Tag);
+        if (placeholderState == null)
         {
             return CurrentWidget.Child;
+        }
+
+        if (CurrentWidget.PlaceholderBuilder != null)
+        {
+            return CurrentWidget.PlaceholderBuilder(
+                context,
+                placeholderState.Value.Size,
+                CurrentWidget.Child);
         }
 
         return new Opacity(0.0, child: CurrentWidget.Child);
@@ -252,7 +268,7 @@ internal sealed class HeroFlightManifest
 internal sealed class HeroTransitionController
 {
     private readonly Dictionary<Route, Dictionary<object, HeroState>> _heroesByRoute = [];
-    private readonly HashSet<(Route Route, object Tag)> _hiddenHeroes = [];
+    private readonly Dictionary<(Route Route, object Tag), HeroPlaceholderState> _hiddenHeroes = [];
     private IReadOnlyList<HeroFlightManifest> _activeFlights = [];
 
     public IReadOnlyList<HeroFlightManifest> ActiveFlights => _activeFlights;
@@ -262,14 +278,16 @@ internal sealed class HeroTransitionController
         return _heroesByRoute.TryGetValue(route, out var heroes) && heroes.Count > 0;
     }
 
-    public bool ShouldHide(Route? route, object tag)
+    public HeroPlaceholderState? ResolvePlaceholder(Route? route, object tag)
     {
         if (route == null)
         {
-            return false;
+            return null;
         }
 
-        return _hiddenHeroes.Contains((route, tag));
+        return _hiddenHeroes.TryGetValue((route, tag), out var placeholderState)
+            ? placeholderState
+            : null;
     }
 
     public void Register(Route route, object tag, HeroState heroState)
@@ -362,8 +380,10 @@ internal sealed class HeroTransitionController
         var capturedFlights = flights.ToArray();
         foreach (var flight in capturedFlights)
         {
-            _hiddenHeroes.Add((flight.FromRoute, flight.Tag));
-            _hiddenHeroes.Add((flight.ToRoute, flight.Tag));
+            _hiddenHeroes[(flight.FromRoute, flight.Tag)] = new HeroPlaceholderState(
+                new Size(flight.FromBounds.Width, flight.FromBounds.Height));
+            _hiddenHeroes[(flight.ToRoute, flight.Tag)] = new HeroPlaceholderState(
+                new Size(flight.ToBounds.Width, flight.ToBounds.Height));
         }
 
         _activeFlights = capturedFlights;
@@ -375,6 +395,8 @@ internal sealed class HeroTransitionController
         _hiddenHeroes.Clear();
     }
 }
+
+internal readonly record struct HeroPlaceholderState(Size Size);
 
 internal sealed class HeroControllerScope : InheritedWidget
 {

@@ -418,6 +418,7 @@ Progress update (2026-03-19):
   - closed framework-scope runtime hero transition behavior for FAB tags by introducing a baseline framework `Hero` primitive in `src/Flutter/Widgets/Hero.cs`, wiring navigator push/pop hero-flight choreography in `src/Flutter/Widgets/Navigation.cs` (temporary dual-route composition + overlay flight animation + popped-route disposal after flight completion), and wrapping `FloatingActionButton` composition with `Hero(tag: heroTag, ...)` when `heroTag` is provided.
   - expanded hero rect-flight parity with `Hero.createRectTween` support (`src/Flutter/Widgets/Hero.cs` + `src/Flutter/Widgets/Navigation.cs`): destination hero rect tween factory now resolves per-flight bounds animation with linear `RectTween` fallback, and flight overlay bounds now evaluate via manifest tween instead of hardcoded lerp.
   - expanded hero shuttle parity with `Hero.flightShuttleBuilder` support (`src/Flutter/Widgets/Hero.cs` + `src/Flutter/Widgets/Navigation.cs`): flight overlay content now resolves by Flutter-like precedence (`destination flightShuttleBuilder -> source flightShuttleBuilder -> destination child`) and receives per-frame progress during route hero flights.
+  - expanded hero placeholder parity with `Hero.placeholderBuilder` support (`src/Flutter/Widgets/Hero.cs`): hidden heroes now resolve route/tag-specific placeholder metadata (size from flight snapshots), and placeholder widgets are built during push/pop flights with Flutter-like callback shape (`context`, `size`, `child`).
   - expanded focused hero coverage with `src/Flutter.Tests/HeroNavigatorTests.cs` (push/pop shared-tag hero flights) plus `MaterialFloatingActionButtonTests` assertion that FAB composition is hero-wrapped when `heroTag` is set.
 - Extended Material `BottomNavigationBar` parity in `Flutter.Material`:
   - expanded framework `BottomNavigationBar` API parity with Flutter-like type/default wiring: `BottomNavigationBarType` (`fixed`/`shifting`) now resolves by precedence (`widget -> theme -> item-count default`), with shifting background-color resolution from selected item `backgroundColor`;
@@ -435,7 +436,7 @@ Progress update (2026-03-19):
   - `Checkbox`/`Switch`/`Radio` now map toggle state to `IsChecked` semantics, and adaptive Cupertino checkbox/switch paths now propagate semantic labels and toggle-state semantics;
   - expanded `MaterialCheckboxTests` and `MaterialSwitchTests` with focused semantic-label/state regression coverage.
 - Remaining divergence for floating action button in current framework scope:
-  - none documented in current framework scope; advanced Hero APIs (placeholder builders/nested-controller behaviors) remain broader navigator-layer follow-up.
+  - none documented in current framework scope; advanced Hero APIs (nested-controller orchestration and flight-diversion lifecycle hooks) remain broader navigator-layer follow-up.
 
 Initial scope:
 

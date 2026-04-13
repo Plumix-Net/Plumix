@@ -308,6 +308,130 @@ public sealed class HeroNavigatorTests
         }
     }
 
+    [Fact]
+    public void Navigator_Push_UsesSourceHeroPlaceholderBuilder_DuringFlight()
+    {
+        Scheduler.ResetForTests();
+        NavigatorBackButtonDispatcher.ResetForTests();
+
+        try
+        {
+            var viewportSize = new Size(320, 240);
+            NavigatorState? navigatorState = null;
+            var placeholderBuilderCalls = 0;
+            Size? capturedPlaceholderSize = null;
+
+            using var harness = new WidgetRenderHarness(
+                new Navigator(
+                    initialRoute: BuildHeroRoute(
+                        routeName: "root-page",
+                        heroOrigin: new Point(20, 160),
+                        heroColor: Colors.OrangeRed,
+                        onBuild: () => { },
+                        captureState: state => navigatorState ??= state,
+                        placeholderBuilder: (context, size, child) =>
+                        {
+                            _ = context;
+                            _ = child;
+                            placeholderBuilderCalls += 1;
+                            capturedPlaceholderSize = size;
+                            return new Text("source-placeholder");
+                        })));
+
+            harness.Pump(viewportSize);
+            Assert.NotNull(navigatorState);
+
+            navigatorState!.Push(
+                BuildHeroRoute(
+                    routeName: "details-page",
+                    heroOrigin: new Point(238, 18),
+                    heroColor: Colors.SteelBlue,
+                    onBuild: () => { },
+                    captureState: _ => { }));
+            harness.Pump(viewportSize);
+            PumpHeroTransitionFrame(harness, viewportSize);
+
+            Assert.True(placeholderBuilderCalls > 0);
+            Assert.NotNull(capturedPlaceholderSize);
+            Assert.Equal(44, capturedPlaceholderSize!.Value.Width);
+            Assert.Equal(44, capturedPlaceholderSize.Value.Height);
+            Assert.NotNull(FindParagraphByText(harness.RenderView, "source-placeholder"));
+
+            AdvanceHeroTransition(harness, viewportSize);
+
+            Assert.Null(FindParagraphByText(harness.RenderView, "source-placeholder"));
+        }
+        finally
+        {
+            Scheduler.ResetForTests();
+            NavigatorBackButtonDispatcher.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void Navigator_Pop_UsesDestinationHeroPlaceholderBuilder_DuringFlight()
+    {
+        Scheduler.ResetForTests();
+        NavigatorBackButtonDispatcher.ResetForTests();
+
+        try
+        {
+            var viewportSize = new Size(320, 240);
+            NavigatorState? navigatorState = null;
+            var placeholderBuilderCalls = 0;
+            Size? capturedPlaceholderSize = null;
+
+            using var harness = new WidgetRenderHarness(
+                new Navigator(
+                    initialRoute: BuildHeroRoute(
+                        routeName: "root-page",
+                        heroOrigin: new Point(20, 160),
+                        heroColor: Colors.OrangeRed,
+                        onBuild: () => { },
+                        captureState: state => navigatorState ??= state,
+                        placeholderBuilder: (context, size, child) =>
+                        {
+                            _ = context;
+                            _ = child;
+                            placeholderBuilderCalls += 1;
+                            capturedPlaceholderSize = size;
+                            return new Text("destination-placeholder");
+                        })));
+
+            harness.Pump(viewportSize);
+            Assert.NotNull(navigatorState);
+
+            navigatorState!.Push(
+                BuildHeroRoute(
+                    routeName: "details-page",
+                    heroOrigin: new Point(238, 18),
+                    heroColor: Colors.SteelBlue,
+                    onBuild: () => { },
+                    captureState: _ => { }));
+            harness.Pump(viewportSize);
+            AdvanceHeroTransition(harness, viewportSize);
+
+            navigatorState.Pop();
+            harness.Pump(viewportSize);
+            PumpHeroTransitionFrame(harness, viewportSize);
+
+            Assert.True(placeholderBuilderCalls > 0);
+            Assert.NotNull(capturedPlaceholderSize);
+            Assert.Equal(44, capturedPlaceholderSize!.Value.Width);
+            Assert.Equal(44, capturedPlaceholderSize.Value.Height);
+            Assert.NotNull(FindParagraphByText(harness.RenderView, "destination-placeholder"));
+
+            AdvanceHeroTransition(harness, viewportSize);
+
+            Assert.Null(FindParagraphByText(harness.RenderView, "destination-placeholder"));
+        }
+        finally
+        {
+            Scheduler.ResetForTests();
+            NavigatorBackButtonDispatcher.ResetForTests();
+        }
+    }
+
     private static void AdvanceHeroTransition(WidgetRenderHarness harness, Size viewportSize)
     {
         PumpHeroTransitionFrame(harness, viewportSize);
@@ -331,14 +455,21 @@ public sealed class HeroNavigatorTests
         Action onBuild,
         Action<NavigatorState> captureState,
         CreateRectTween? createRectTween = null,
-        HeroFlightShuttleBuilder? flightShuttleBuilder = null)
+        HeroFlightShuttleBuilder? flightShuttleBuilder = null,
+        HeroPlaceholderBuilder? placeholderBuilder = null)
     {
         return new BuilderPageRoute(
             builder: context =>
             {
                 captureState(Navigator.Of(context));
                 onBuild();
-                return BuildHeroPage(routeName, heroOrigin, heroColor, createRectTween, flightShuttleBuilder);
+                return BuildHeroPage(
+                    routeName,
+                    heroOrigin,
+                    heroColor,
+                    createRectTween,
+                    flightShuttleBuilder,
+                    placeholderBuilder);
             },
             settings: new RouteSettings(Name: routeName));
     }
@@ -348,7 +479,8 @@ public sealed class HeroNavigatorTests
         Point heroOrigin,
         Color heroColor,
         CreateRectTween? createRectTween = null,
-        HeroFlightShuttleBuilder? flightShuttleBuilder = null)
+        HeroFlightShuttleBuilder? flightShuttleBuilder = null,
+        HeroPlaceholderBuilder? placeholderBuilder = null)
     {
         return new Stack(
             children:
@@ -360,6 +492,7 @@ public sealed class HeroNavigatorTests
                         tag: SharedHeroTag,
                         createRectTween: createRectTween,
                         flightShuttleBuilder: flightShuttleBuilder,
+                        placeholderBuilder: placeholderBuilder,
                         child: new DecoratedBox(
                             decoration: new BoxDecoration(
                                 Color: heroColor,
