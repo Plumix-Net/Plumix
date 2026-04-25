@@ -14,6 +14,7 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 ### Changed
 
+- Fixed renamed `Plumix` satellite assembly access by granting `Plumix.Material` and `Plumix.Cupertino` friend access to framework internals needed for inherited/render-object widget implementations.
 - Added framework Material `Card` baseline:
   - introduced `Card` in `src/Flutter.Material/Card.cs` with elevated, filled, and outlined variants, Flutter-like default margin (`4`), clipping policy, elevation/shadow rendering, surface-tint application, outlined border defaults, and `semanticContainer` wiring;
   - added `CardThemeData` + inherited `CardTheme` and `ThemeData.CardTheme` integration, plus M3 card tokens (`surface`, `outlineVariant`) and M2 `cardColor` fallback;
