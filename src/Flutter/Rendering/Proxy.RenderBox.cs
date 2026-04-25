@@ -1662,16 +1662,22 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
     private string? _label;
     private SemanticsFlags _flags;
     private Action? _onTap;
+    private bool _container;
+    private bool _explicitChildNodes;
 
     public RenderSemanticsAnnotations(
         string? label = null,
         SemanticsFlags flags = SemanticsFlags.None,
         Action? onTap = null,
+        bool container = false,
+        bool explicitChildNodes = false,
         RenderBox? child = null)
     {
         _label = label;
         _flags = flags;
         _onTap = onTap;
+        _container = container;
+        _explicitChildNodes = explicitChildNodes;
         Child = child;
     }
 
@@ -1720,16 +1726,54 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         }
     }
 
+    public bool Container
+    {
+        get => _container;
+        set
+        {
+            if (_container == value)
+            {
+                return;
+            }
+
+            _container = value;
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
+    public bool ExplicitChildNodes
+    {
+        get => _explicitChildNodes;
+        set
+        {
+            if (_explicitChildNodes == value)
+            {
+                return;
+            }
+
+            _explicitChildNodes = value;
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
     protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
     {
         if (string.IsNullOrWhiteSpace(_label)
             && _flags == SemanticsFlags.None
-            && _onTap is null)
+            && _onTap is null
+            && !_container
+            && !_explicitChildNodes)
         {
             return;
         }
 
         configuration.IsSemanticBoundary = true;
+        configuration.ExplicitChildNodes = _explicitChildNodes;
+        if (_container && !_explicitChildNodes)
+        {
+            configuration.IsMergingSemanticsOfDescendants = true;
+        }
+
         if (!string.IsNullOrWhiteSpace(_label))
         {
             configuration.Label = _label;

@@ -6,6 +6,7 @@ import 'demos/material/app_bar_icon_theme_demo_page.dart';
 import 'demos/material/app_bar_leading_width_demo_page.dart';
 import 'demos/material/app_bar_text_styles_demo_page.dart';
 import 'demos/general/aspect_ratio_demo_page.dart';
+import 'demos/material/card_demo_page.dart';
 import 'demos/cupertino/checkbox_demo_page.dart';
 import 'counter_screen.dart';
 import 'demos/general/container_demo_page.dart';
@@ -36,53 +37,57 @@ import 'demos/general/unconstrained_limited_box_demo_page.dart';
 class SampleGalleryScreen extends StatelessWidget {
   const SampleGalleryScreen({super.key});
 
-  static final List<SampleRouteDefinition> _materialDemoPages =
-      <SampleRouteDefinition>[
-        SampleRouteDefinition(
-          routeName: SampleRoutes.materialButtons,
-          title: 'Material buttons',
-          subtitle:
-              'TextButton + ElevatedButton + OutlinedButton + FilledButton',
-          builder: () => const MaterialButtonsDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.listTile,
-          title: 'ListTile',
-          subtitle:
-              'leading/title/subtitle/trailing + selected/dense/theme probes',
-          builder: () => const ListTileDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.floatingActionButton,
-          title: 'FloatingActionButton',
-          subtitle: 'regular/small/large/extended + theme defaults',
-          builder: () => const FloatingActionButtonDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.appBarLeadingWidth,
-          title: 'AppBar leadingWidth theme',
-          subtitle: 'theme fallback + widget override runtime probe',
-          builder: () => const AppBarLeadingWidthDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.appBarActionsPadding,
-          title: 'AppBar actionsPadding theme',
-          subtitle: 'theme fallback + widget override runtime probe',
-          builder: () => const AppBarActionsPaddingDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.appBarIconTheme,
-          title: 'AppBar icon themes',
-          subtitle: 'iconTheme/actionsIconTheme precedence runtime probe',
-          builder: () => const AppBarIconThemeDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.appBarTextStyles,
-          title: 'AppBar text styles',
-          subtitle: 'title/toolbar text style precedence runtime probe',
-          builder: () => const AppBarTextStylesDemoPage(),
-        ),
-      ];
+  static final List<SampleRouteDefinition>
+  _materialDemoPages = <SampleRouteDefinition>[
+    SampleRouteDefinition(
+      routeName: SampleRoutes.materialButtons,
+      title: 'Material buttons',
+      subtitle: 'TextButton + ElevatedButton + OutlinedButton + FilledButton',
+      builder: () => const MaterialButtonsDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.card,
+      title: 'Card',
+      subtitle: 'elevated/filled/outlined variants + theme/clip probes',
+      builder: () => const CardDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.listTile,
+      title: 'ListTile',
+      subtitle: 'leading/title/subtitle/trailing + selected/dense/theme probes',
+      builder: () => const ListTileDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.floatingActionButton,
+      title: 'FloatingActionButton',
+      subtitle: 'regular/small/large/extended + theme defaults',
+      builder: () => const FloatingActionButtonDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.appBarLeadingWidth,
+      title: 'AppBar leadingWidth theme',
+      subtitle: 'theme fallback + widget override runtime probe',
+      builder: () => const AppBarLeadingWidthDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.appBarActionsPadding,
+      title: 'AppBar actionsPadding theme',
+      subtitle: 'theme fallback + widget override runtime probe',
+      builder: () => const AppBarActionsPaddingDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.appBarIconTheme,
+      title: 'AppBar icon themes',
+      subtitle: 'iconTheme/actionsIconTheme precedence runtime probe',
+      builder: () => const AppBarIconThemeDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.appBarTextStyles,
+      title: 'AppBar text styles',
+      subtitle: 'title/toolbar text style precedence runtime probe',
+      builder: () => const AppBarTextStylesDemoPage(),
+    ),
+  ];
 
   static final List<SampleRouteDefinition> _cupertinoDemoPages =
       <SampleRouteDefinition>[

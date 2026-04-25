@@ -125,10 +125,13 @@ public sealed record ThemeData
     private static readonly Color LightPrimaryColor = Color.Parse("#FF6750A4");
     private static readonly Color LightPrimaryContainerColor = Color.Parse("#FFEADDFF");
     private static readonly Color LightOnPrimaryContainerColor = Color.Parse("#FF21005D");
+    private static readonly Color LightSurfaceColor = Color.Parse("#FFFEF7FF");
     private static readonly Color LightOnSurfaceColor = Color.Parse("#FF1D1B20");
     private static readonly Color LightOnSurfaceVariantColor = Color.Parse("#FF49454F");
     private static readonly Color LightOutlineColor = Color.Parse("#FF79747E");
+    private static readonly Color LightOutlineVariantColor = Color.Parse("#FFCAC4D0");
     private static readonly Color LightShadowColor = Colors.Black;
+    private static readonly Color LightCardColor = Colors.White;
     private static readonly Color LightSurfaceContainerLowColor = Color.Parse("#FFF7F2FA");
     private static readonly Color LightSurfaceContainerHighestColor = Color.Parse("#FFE6E0E9");
     private static readonly Color LightSecondaryContainerColor = Color.Parse("#FFE8DEF8");
@@ -144,6 +147,7 @@ public sealed record ThemeData
     private OutlinedButtonThemeData? _outlinedButtonTheme;
     private FilledButtonThemeData? _filledButtonTheme;
     private IconButtonThemeData? _iconButtonTheme;
+    private CardThemeData? _cardTheme;
     private ListTileThemeData? _listTileTheme;
     private DrawerThemeData? _drawerTheme;
     private FloatingActionButtonThemeData? _floatingActionButtonTheme;
@@ -165,9 +169,12 @@ public sealed record ThemeData
         bool? useMaterial3 = null,
         AppBarThemeData? appBarTheme = null,
         Color? shadowColor = null,
+        Color? surfaceColor = null,
         Color? onSurfaceColor = null,
         Color? onSurfaceVariantColor = null,
         Color? outlineColor = null,
+        Color? outlineVariantColor = null,
+        Color? cardColor = null,
         Color? surfaceContainerLowColor = null,
         Color? surfaceContainerHighestColor = null,
         Color? secondaryContainerColor = null,
@@ -187,6 +194,7 @@ public sealed record ThemeData
         OutlinedButtonThemeData? outlinedButtonTheme = null,
         FilledButtonThemeData? filledButtonTheme = null,
         IconButtonThemeData? iconButtonTheme = null,
+        CardThemeData? cardTheme = null,
         ListTileThemeData? listTileTheme = null,
         DrawerThemeData? drawerTheme = null,
         FloatingActionButtonThemeData? floatingActionButtonTheme = null,
@@ -207,9 +215,12 @@ public sealed record ThemeData
         UseMaterial3 = useMaterial3 ?? true;
         _appBarTheme = appBarTheme;
         ShadowColor = shadowColor ?? LightShadowColor;
+        SurfaceColor = surfaceColor ?? LightSurfaceColor;
         OnSurfaceColor = onSurfaceColor ?? LightOnSurfaceColor;
         OnSurfaceVariantColor = onSurfaceVariantColor ?? LightOnSurfaceVariantColor;
         OutlineColor = outlineColor ?? LightOutlineColor;
+        OutlineVariantColor = outlineVariantColor ?? LightOutlineVariantColor;
+        CardColor = cardColor ?? LightCardColor;
         SurfaceContainerLowColor = surfaceContainerLowColor ?? LightSurfaceContainerLowColor;
         SurfaceContainerHighestColor = surfaceContainerHighestColor ?? LightSurfaceContainerHighestColor;
         SecondaryContainerColor = secondaryContainerColor ?? LightSecondaryContainerColor;
@@ -229,6 +240,7 @@ public sealed record ThemeData
         _outlinedButtonTheme = outlinedButtonTheme;
         _filledButtonTheme = filledButtonTheme;
         _iconButtonTheme = iconButtonTheme;
+        _cardTheme = cardTheme;
         _listTileTheme = listTileTheme;
         _drawerTheme = drawerTheme;
         _floatingActionButtonTheme = floatingActionButtonTheme;
@@ -266,11 +278,17 @@ public sealed record ThemeData
 
     public Color ShadowColor { get; init; }
 
+    public Color SurfaceColor { get; init; }
+
     public Color OnSurfaceColor { get; init; }
 
     public Color OnSurfaceVariantColor { get; init; }
 
     public Color OutlineColor { get; init; }
+
+    public Color OutlineVariantColor { get; init; }
+
+    public Color CardColor { get; init; }
 
     public Color SurfaceContainerLowColor { get; init; }
 
@@ -328,6 +346,12 @@ public sealed record ThemeData
     {
         get => _iconButtonTheme ?? new IconButtonThemeData(style: IconButtonStyle);
         init => _iconButtonTheme = value;
+    }
+
+    public CardThemeData CardTheme
+    {
+        get => _cardTheme ?? new CardThemeData();
+        init => _cardTheme = value;
     }
 
     public ListTileThemeData ListTileTheme

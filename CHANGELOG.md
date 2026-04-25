@@ -14,6 +14,12 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 ### Changed
 
+- Added framework Material `Card` baseline:
+  - introduced `Card` in `src/Flutter.Material/Card.cs` with elevated, filled, and outlined variants, Flutter-like default margin (`4`), clipping policy, elevation/shadow rendering, surface-tint application, outlined border defaults, and `semanticContainer` wiring;
+  - added `CardThemeData` + inherited `CardTheme` and `ThemeData.CardTheme` integration, plus M3 card tokens (`surface`, `outlineVariant`) and M2 `cardColor` fallback;
+  - added a minimal rounded-rectangle `ShapeBorder` primitive used by card shape/side resolution and extended framework `Semantics` annotations with `container` / `explicitChildNodes`;
+  - added focused regression coverage in `src/Flutter.Tests/MaterialCardTests.cs` for constructor guards, M3/M2 defaults, variant behavior, theme/widget precedence, surface tint, clipping, and semantic-container wiring;
+  - added C#/Dart sample parity runtime probes (`src/Sample/Flutter.Net/Demos/Material/CardDemoPage.cs`, `dart_sample/lib/demos/material/card_demo_page.dart`) and route/menu wiring updates.
 - Added framework Material `ListTile` baseline:
   - introduced `ListTile` in `src/Flutter.Material/ListTile.cs` with one/two/three-line composition (`leading`/`title`/`subtitle`/`trailing`), M3 baseline heights (`56`/`72`/`88`) plus dense defaults (`48`/`64`/`76`), selected/disabled color handling, and interaction wiring through `MaterialButtonCore` (`tap`, `long-press`, hover/focus/pressed states, cursor, semantics);
   - added list-tile theming surface in `src/Flutter.Material/ListTileTheme.cs` and `ThemeData.ListTileTheme` integration in `src/Flutter.Material/ThemeData.cs`;

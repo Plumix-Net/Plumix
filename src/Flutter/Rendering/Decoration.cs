@@ -34,6 +34,16 @@ public readonly record struct BorderSide
     public double Width { get; }
 }
 
+public sealed record ShapeBorder(
+    BorderRadius BorderRadius,
+    BorderSide? Side = null)
+{
+    public static ShapeBorder RoundedRectangle(double radius, BorderSide? side = null)
+    {
+        return new ShapeBorder(BorderRadius.Circular(radius), side);
+    }
+}
+
 public sealed record BoxDecoration(
     Color? Color = null,
     IBrush? Brush = null,

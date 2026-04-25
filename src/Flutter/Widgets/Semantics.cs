@@ -12,11 +12,15 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         string? label = null,
         SemanticsFlags flags = SemanticsFlags.None,
         Action? onTap = null,
+        bool container = false,
+        bool explicitChildNodes = false,
         Key? key = null) : base(child, key)
     {
         Label = label;
         Flags = flags;
         OnTap = onTap;
+        Container = container;
+        ExplicitChildNodes = explicitChildNodes;
     }
 
     public string? Label { get; }
@@ -25,12 +29,18 @@ public sealed class Semantics : SingleChildRenderObjectWidget
 
     public Action? OnTap { get; }
 
+    public bool Container { get; }
+
+    public bool ExplicitChildNodes { get; }
+
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderSemanticsAnnotations(
             label: Label,
             flags: Flags,
-            onTap: OnTap);
+            onTap: OnTap,
+            container: Container,
+            explicitChildNodes: ExplicitChildNodes);
     }
 
     internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
@@ -39,5 +49,7 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         semantics.Label = Label;
         semantics.Flags = Flags;
         semantics.OnTap = OnTap;
+        semantics.Container = Container;
+        semantics.ExplicitChildNodes = ExplicitChildNodes;
     }
 }
