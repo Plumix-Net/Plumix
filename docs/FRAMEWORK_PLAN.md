@@ -8,7 +8,7 @@ Use this block as the fastest machine-readable status summary.
 
 ```yaml
 framework_plan_version: 1
-last_updated: 2026-04-14
+last_updated: 2026-04-25
 north_star: "Flutter-like widget/rendering framework in C# with Avalonia as host infrastructure."
 current_phase: "M4 material library rewrite (theme/scaffold/material controls) in progress."
 status:
@@ -452,6 +452,11 @@ Progress update (2026-03-19):
   - wired list-tile interaction/focus/hover/pressed semantics through shared `MaterialButtonCore` (`onTap`, `onLongPress`, cursor resolution, selected/enabled semantics flags);
   - added focused `MaterialListTileTests` coverage for constructor guards, default heights, selected/disabled color behavior, theme precedence, tap dispatch, and selected/enabled semantics;
   - added C#/Dart sample parity demo route/page for runtime verification (`ListTile` route in Material tab with state and local theme override probes).
+- Added Material `Card` baseline in `Flutter.Material`:
+  - introduced framework `Card` with elevated/filled/outlined variants, Flutter-like default margin, M3/M2 color/elevation/shape defaults, outlined border defaults, clipping, surface tint, and `semanticContainer` wiring;
+  - added `CardThemeData` + inherited `CardTheme` and `ThemeData.CardTheme` integration with precedence (`widget -> card theme -> mode defaults`);
+  - added focused `MaterialCardTests` coverage for constructor guards, M3 variant defaults, M2 fallback behavior, theme/widget precedence, surface tint, clipping, and semantic-container wiring;
+  - added C#/Dart sample parity demo route/page for runtime verification (`Card` route in Material tab with variant/mode/theme/clip probes).
 - Remaining divergence for floating action button in current framework scope:
   - none documented in current framework scope.
 
