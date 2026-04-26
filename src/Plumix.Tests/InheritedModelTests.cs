@@ -236,13 +236,13 @@ public sealed class InheritedModelTests
 
         public override Widget Build(BuildContext context) => Child;
 
-        protected internal override bool UpdateShouldNotify(InheritedWidget oldWidget)
+        protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
         {
             var oldModel = (ABModel)oldWidget;
             return A != oldModel.A || B != oldModel.B;
         }
 
-        protected internal override bool UpdateShouldNotifyDependent(InheritedModel<ABAspect> oldWidget, IReadOnlySet<ABAspect> dependencies)
+        protected override bool UpdateShouldNotifyDependent(InheritedModel<ABAspect> oldWidget, IReadOnlySet<ABAspect> dependencies)
         {
             var oldModel = (ABModel)oldWidget;
             return (A != oldModel.A && dependencies.Contains(ABAspect.A))
@@ -270,18 +270,18 @@ public sealed class InheritedModelTests
 
         public override Widget Build(BuildContext context) => Child;
 
-        protected internal override bool IsSupportedAspect(object aspect)
+        protected override bool IsSupportedAspect(object aspect)
         {
             return aspect is ABAspect typedAspect && _supportedAspects.Contains(typedAspect);
         }
 
-        protected internal override bool UpdateShouldNotify(InheritedWidget oldWidget)
+        protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
         {
             var oldModel = (ShadowingABModel)oldWidget;
             return A != oldModel.A || B != oldModel.B;
         }
 
-        protected internal override bool UpdateShouldNotifyDependent(InheritedModel<ABAspect> oldWidget, IReadOnlySet<ABAspect> dependencies)
+        protected override bool UpdateShouldNotifyDependent(InheritedModel<ABAspect> oldWidget, IReadOnlySet<ABAspect> dependencies)
         {
             var oldModel = (ShadowingABModel)oldWidget;
             return (A != oldModel.A && dependencies.Contains(ABAspect.A))

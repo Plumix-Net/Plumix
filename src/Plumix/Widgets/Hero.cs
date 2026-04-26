@@ -606,7 +606,7 @@ internal sealed class HeroModeScope : InheritedWidget
         return Child;
     }
 
-    protected internal override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return ((HeroModeScope)oldWidget).Enabled != Enabled;
     }
@@ -636,7 +636,7 @@ internal sealed class HeroControllerScope : InheritedWidget
         return Child;
     }
 
-    protected internal override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         var oldScope = (HeroControllerScope)oldWidget;
         return !ReferenceEquals(oldScope.Controller, Controller)

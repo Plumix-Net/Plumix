@@ -152,7 +152,7 @@ public sealed class MediaQuery : InheritedWidget
 
     public override Widget Build(BuildContext context) => Child;
 
-    protected internal override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !Equals(((MediaQuery)oldWidget).Data, Data);
     }

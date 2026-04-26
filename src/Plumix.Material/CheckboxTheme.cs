@@ -36,7 +36,7 @@ public sealed class CheckboxTheme : InheritedWidget
         return Child;
     }
 
-    protected internal override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !Equals(((CheckboxTheme)oldWidget).Data, Data);
     }

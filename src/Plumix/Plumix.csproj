@@ -9,7 +9,7 @@
     <PropertyGroup>
         <IsPackable>true</IsPackable>
         <PackageId>Plumix</PackageId>
-        <Version>0.1.0-alpha.2</Version>
+        <Version>0.1.0-alpha.3</Version>
         <Description>A Flutter-inspired declarative UI framework for .NET, built on Avalonia. Provides the widget/element/render-object architecture, state management, and cross-platform rendering.</Description>
     </PropertyGroup>
 

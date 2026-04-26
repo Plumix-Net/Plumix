@@ -33,7 +33,7 @@ public sealed class DrawerTheme : InheritedWidget
         return Child;
     }
 
-    protected internal override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !Equals(((DrawerTheme)oldWidget).Data, Data);
     }

@@ -39,7 +39,7 @@ public sealed class BottomNavigationBarTheme : InheritedWidget
         return Child;
     }
 
-    protected internal override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !Equals(((BottomNavigationBarTheme)oldWidget).Data, Data);
     }

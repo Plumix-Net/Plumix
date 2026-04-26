@@ -25,7 +25,7 @@ public sealed class Directionality : InheritedWidget
         return Child;
     }
 
-    protected internal override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return ((Directionality)oldWidget).TextDirection != TextDirection;
     }

@@ -55,7 +55,7 @@ public sealed class ListTileTheme : InheritedWidget
         return Child;
     }
 
-    protected internal override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !Equals(((ListTileTheme)oldWidget).Data, Data);
     }

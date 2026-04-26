@@ -29,7 +29,7 @@ public sealed class IconTheme : InheritedWidget
 
     public override Widget Build(BuildContext context) => Child;
 
-    protected internal override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !Equals(((IconTheme)oldWidget).Data, Data);
     }

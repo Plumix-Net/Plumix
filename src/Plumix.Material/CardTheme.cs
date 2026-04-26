@@ -72,7 +72,7 @@ public sealed class CardTheme : InheritedWidget
         return Child;
     }
 
-    protected internal override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !Equals(((CardTheme)oldWidget).Data, Data);
     }

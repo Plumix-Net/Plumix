@@ -38,7 +38,7 @@ public sealed class SwitchTheme : InheritedWidget
         return Child;
     }
 
-    protected internal override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !Equals(((SwitchTheme)oldWidget).Data, Data);
     }

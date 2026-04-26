@@ -52,7 +52,7 @@ public sealed class FloatingActionButtonTheme : InheritedWidget
         return Child;
     }
 
-    protected internal override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !Equals(((FloatingActionButtonTheme)oldWidget).Data, Data);
     }

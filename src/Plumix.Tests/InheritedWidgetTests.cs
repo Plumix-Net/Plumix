@@ -157,7 +157,7 @@ public sealed class InheritedWidgetTests
 
         public override Widget Build(BuildContext context) => Child;
 
-        protected internal override bool UpdateShouldNotify(InheritedWidget oldWidget)
+        protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
         {
             return Value != ((IntScope)oldWidget).Value;
         }
@@ -180,7 +180,7 @@ public sealed class InheritedWidgetTests
 
         public override Widget Build(BuildContext context) => Child;
 
-        protected internal override bool UpdateShouldNotify(InheritedWidget oldWidget)
+        protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
         {
             return ShouldNotify;
         }

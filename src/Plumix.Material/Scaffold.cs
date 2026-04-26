@@ -279,7 +279,7 @@ internal sealed class ScaffoldScope : InheritedWidget
 
     public override Widget Build(BuildContext context) => Child;
 
-    protected internal override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         var oldScope = (ScaffoldScope)oldWidget;
         return !ReferenceEquals(Scaffold, oldScope.Scaffold)

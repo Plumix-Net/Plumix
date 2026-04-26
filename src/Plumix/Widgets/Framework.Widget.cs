@@ -141,9 +141,11 @@ public abstract class InheritedWidget : Widget
     }
 
     public abstract Widget Build(BuildContext context);
-    
-    protected internal abstract bool UpdateShouldNotify(InheritedWidget oldWidget);
-    
+
+    protected abstract bool UpdateShouldNotify(InheritedWidget oldWidget);
+
+    internal bool InvokeUpdateShouldNotify(InheritedWidget oldWidget) => UpdateShouldNotify(oldWidget);
+
     internal override Element CreateElement() => new InheritedElement(this);
 }
 
@@ -153,14 +155,14 @@ public abstract class InheritedModel<TAspect> : InheritedWidget
     {
     }
 
-    protected internal abstract bool UpdateShouldNotifyDependent(
+    protected abstract bool UpdateShouldNotifyDependent(
         InheritedModel<TAspect> oldWidget,
         IReadOnlySet<TAspect> dependencies);
 
-    protected internal virtual bool IsSupportedAspect(object aspect)
-    {
-        return true;
-    }
+    internal bool InvokeUpdateShouldNotifyDependent(InheritedModel<TAspect> oldWidget, IReadOnlySet<TAspect> dependencies)
+        => UpdateShouldNotifyDependent(oldWidget, dependencies);
+
+    protected virtual bool IsSupportedAspect(object aspect) => true;
 
     internal override Element CreateElement() => new InheritedModelElement<TAspect>(this);
 
@@ -240,10 +242,8 @@ public abstract class InheritedNotifier<TNotifier> : InheritedWidget where TNoti
 
     public override Widget Build(BuildContext context) => Child;
 
-    protected internal override bool UpdateShouldNotify(InheritedWidget oldWidget)
-    {
-        return !ReferenceEquals(((InheritedNotifier<TNotifier>)oldWidget).Notifier, Notifier);
-    }
+    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+        => !ReferenceEquals(((InheritedNotifier<TNotifier>)oldWidget).Notifier, Notifier);
 
     internal override Element CreateElement() => new InheritedNotifierElement<TNotifier>(this);
 }

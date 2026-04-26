@@ -27,7 +27,7 @@ public sealed class Theme : InheritedWidget
             child: Child);
     }
 
-    protected internal override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !Equals(((Theme)oldWidget).Data, Data);
     }

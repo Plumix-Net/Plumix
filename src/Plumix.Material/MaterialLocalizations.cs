@@ -59,7 +59,7 @@ public sealed class MaterialLocalizationsScope : InheritedWidget
         return Child;
     }
 
-    protected internal override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !ReferenceEquals(((MaterialLocalizationsScope)oldWidget).Localizations, Localizations);
     }

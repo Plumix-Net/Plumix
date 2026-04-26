@@ -28,6 +28,21 @@ public readonly struct BuildContext
     }
 
     public T? DependOnInherited<T>(object? aspect = null) where T : InheritedWidget => Owner.DependOnInherited<T>(aspect);
+
+    /// <summary>
+    /// Finds the nearest ancestor <typeparamref name="T"/> without registering a dependency.
+    /// Use this when you want to read a value once without subscribing to future changes.
+    /// </summary>
+    public T? GetInherited<T>() where T : InheritedWidget
+    {
+        for (var ancestor = Owner.Parent; ancestor != null; ancestor = ancestor.Parent)
+        {
+            if (ancestor is InheritedElement inheritedElement && inheritedElement.Widget is T typedWidget)
+                return typedWidget;
+        }
+
+        return null;
+    }
 }
 
 internal enum ElementLifecycleState
@@ -714,7 +729,7 @@ public class InheritedElement : Element
     {
         var old = (InheritedWidget)Widget;
         base.Update(newWidget);
-        if (((InheritedWidget)newWidget).UpdateShouldNotify(old))
+        if (((InheritedWidget)newWidget).InvokeUpdateShouldNotify(old))
         {
             NotifyClients(old);
         }
@@ -831,7 +846,7 @@ public sealed class InheritedModelElement<TAspect> : InheritedElement
         }
 
         if (dependencies.Count == 0
-            || InheritedModelWidget.UpdateShouldNotifyDependent((InheritedModel<TAspect>)oldWidget, dependencies))
+            || InheritedModelWidget.InvokeUpdateShouldNotifyDependent((InheritedModel<TAspect>)oldWidget, dependencies))
         {
             dependent.DidChangeDependencies();
         }

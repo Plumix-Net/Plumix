@@ -1609,7 +1609,7 @@ internal sealed class NavigatorScope : InheritedWidget
         return Child;
     }
 
-    protected internal override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !ReferenceEquals(((NavigatorScope)oldWidget).Navigator, Navigator);
     }
@@ -1635,7 +1635,7 @@ internal sealed class RouteScope : InheritedWidget
         return Child;
     }
 
-    protected internal override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !ReferenceEquals(((RouteScope)oldWidget).Route, Route);
     }
