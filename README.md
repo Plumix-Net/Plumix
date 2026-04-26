@@ -4,12 +4,15 @@
 
 # Plumix
 
-Flutter-like UI framework in C#.
+Flutter-inspired UI framework for .NET — build declarative, widget-based UIs in C# with Flutter's `Widget`/`Element`/`RenderObject` architecture.
 
+[![Website](https://img.shields.io/badge/website-plumix.net-blue)](https://plumix.net/)
 [![Plumix](https://img.shields.io/nuget/v/Plumix?label=Plumix&logo=nuget)](https://www.nuget.org/packages/Plumix/)
 [![Plumix.Material](https://img.shields.io/nuget/v/Plumix.Material?label=Plumix.Material&logo=nuget)](https://www.nuget.org/packages/Plumix.Material/)
 [![Plumix.Cupertino](https://img.shields.io/nuget/v/Plumix.Cupertino?label=Plumix.Cupertino&logo=nuget)](https://www.nuget.org/packages/Plumix.Cupertino/)
 [![CI](https://github.com/Plumix-Net/Plumix/actions/workflows/ci.yml/badge.svg)](https://github.com/Plumix-Net/Plumix/actions/workflows/ci.yml)
+
+**[plumix.net](https://plumix.net/)** · [NuGet packages](https://github.com/Plumix-Net/Plumix.Packages)
 
 ## Vision
 
@@ -30,30 +33,39 @@ Flutter-like UI framework in C#.
 - Changelog: [`CHANGELOG.md`](CHANGELOG.md)
 - Global implementation status and roadmap: [`docs/FRAMEWORK_PLAN.md`](docs/FRAMEWORK_PLAN.md)
 - AI-oriented context map and workflows: [`docs/ai/MODULE_INDEX.md`](docs/ai/MODULE_INDEX.md)
+- Additional packages: [Plumix.Packages](https://github.com/Plumix-Net/Plumix.Packages)
 
 ## Example
 
 ```csharp
-using Avalonia;
 using Avalonia.Media;
-using Flutter.Widgets;
+using Plumix.Widgets;
 
-namespace Flutter.Net;
+namespace MyApp;
 
 public sealed class MyApp : StatelessWidget
 {
     public override Widget Build(BuildContext context)
     {
-        return new Container(
-            color: Brushes.White,
-            padding: new Thickness(24),
-            child: new Column(
-                children:
-                [
-                    new Text("Hello, Flutter.NET"),
-                    new SizedBox(height: 12),
-                    new Text("Render tree is driven by Flutter-like widgets.")
-                ]
+        return new Scaffold(
+            body: new Center(
+                child: new Column(
+                    mainAxisAlignment: MainAxisAlignment.Center,
+                    children:
+                    [
+                        new Text(
+                            "Hello, Plumix!",
+                            style: new TextStyle(fontSize: 32, fontWeight: FontWeight.Bold)
+                        ),
+                        new SizedBox(height: 16),
+                        new Text("Flutter-like widgets, powered by .NET and Avalonia."),
+                        new SizedBox(height: 24),
+                        new ElevatedButton(
+                            onPressed: () => { /* handle tap */ },
+                            child: new Text("Get Started")
+                        )
+                    ]
+                )
             )
         );
     }
