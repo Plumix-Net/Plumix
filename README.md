@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="icon.png" alt="Plumix" width="120" />
+</p>
+
 # Plumix
 
 Flutter-like UI framework in C#.

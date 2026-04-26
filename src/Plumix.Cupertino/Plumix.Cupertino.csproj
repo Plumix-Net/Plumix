@@ -9,7 +9,7 @@
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <PackageId>Plumix.Cupertino</PackageId>
-    <Version>0.1.0-alpha.1</Version>
+    <Version>0.1.0-alpha.2</Version>
     <Description>Cupertino (iOS-style) component library for Plumix — a Flutter-inspired UI framework for .NET. Includes iOS-style buttons, navigation bars, and Cupertino theming.</Description>
   </PropertyGroup>
 
@@ -20,6 +20,7 @@
   <ItemGroup>
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />
     <None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
+    <None Include="..\..\icon.png" Pack="true" PackagePath="\" />
   </ItemGroup>
 
 </Project>
