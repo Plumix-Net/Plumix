@@ -8,30 +8,30 @@ namespace Plumix;
 
 public static class PlumixExtensions
 {
-    private const double TargetWindowWidthPixels = 512;
-    private const double TargetWindowHeightPixels = 1820;
-
-    public static void Run<T>(T application, IApplicationLifetime? applicationLifetime) where T : Widget
+    public static void Run<T>(T application, IApplicationLifetime? applicationLifetime, PlumixOptions? options = null)
+        where T : Widget
     {
+        options ??= new PlumixOptions();
+
         var host = new WidgetHost
         {
             RootWidget = application
         };
-
 
         switch (applicationLifetime)
         {
             case IClassicDesktopStyleApplicationLifetime desktop:
                 var window = new Window
                 {
-                    Title = "Plumix.Sample.NET",
+                    Title = options.Title,
                     Content = host
                 };
 
-                // Keep target desktop window size stable in physical pixels across DPI scales.
-                ApplyPixelSizedWindowBounds(window, TargetWindowWidthPixels, TargetWindowHeightPixels);
-                window.Opened += (_, _) =>
-                    ApplyPixelSizedWindowBounds(window, TargetWindowWidthPixels, TargetWindowHeightPixels);
+                if (options.InitialWindowSize is { } size)
+                {
+                    window.Width = size.Width;
+                    window.Height = size.Height;
+                }
 
                 desktop.MainWindow = window;
                 break;
@@ -39,22 +39,5 @@ public static class PlumixExtensions
                 singleViewPlatform.MainView = host;
                 break;
         }
-    }
-
-    private static void ApplyPixelSizedWindowBounds(Window window, double widthPixels, double heightPixels)
-    {
-        var scale = window.RenderScaling;
-        if (double.IsNaN(scale) || double.IsInfinity(scale) || scale <= 0)
-        {
-            scale = window.DesktopScaling;
-        }
-
-        if (double.IsNaN(scale) || double.IsInfinity(scale) || scale <= 0)
-        {
-            scale = 1;
-        }
-
-        window.Width = widthPixels / scale;
-        window.Height = heightPixels / scale;
     }
 }

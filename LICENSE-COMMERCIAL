@@ -1,0 +1,81 @@
+Plumix Commercial License Agreement
+=====================================
+
+Copyright (c) 2024–2026 Plumix Contributors
+Contact: egorozh.dev@gmail.com
+
+This Commercial License Agreement ("Agreement") is entered into between
+Plumix Contributors ("Licensor") and the purchasing entity ("Licensee").
+
+By purchasing, downloading, or using Plumix under a commercial license, you
+agree to the terms of this Agreement.
+
+1. GRANT OF LICENSE
+───────────────────
+Subject to payment of the applicable license fee, Licensor grants Licensee
+a non-exclusive, non-transferable, worldwide license to:
+
+  a) Use, integrate, and distribute Plumix as part of Licensee's proprietary
+     application(s) ("Application") in binary form.
+  b) Modify the Plumix source code solely for internal use within the
+     Application. Such modifications do not need to be made public.
+
+2. LICENSE TIERS
+────────────────
+  Developer License  — covers one (1) individual developer.
+  Team License       — covers up to ten (10) developers within one company.
+  Enterprise License — covers unlimited developers within one company.
+
+The applicable tier and fee are agreed upon at the time of purchase.
+
+3. RESTRICTIONS
+───────────────
+Licensee may NOT:
+
+  a) Redistribute, sell, sublicense, or otherwise transfer Plumix itself
+     (source or binaries) as a standalone product or component library.
+  b) Use Plumix to build a product that competes directly with Plumix
+     (i.e., a general-purpose .NET UI framework or component toolkit).
+  c) Remove or alter copyright notices, license headers, or attribution
+     statements in the Plumix source code.
+  d) Share or transfer this license to a third party without written consent
+     of the Licensor.
+
+4. ATTRIBUTION
+──────────────
+Licensee is not required to display any attribution in their end-user product,
+but is encouraged to mention Plumix in documentation or about pages.
+
+5. TERM
+───────
+  Perpetual License — the license is perpetual for the version purchased.
+    Updates (new major versions) may require a separate or upgrade license.
+
+  Annual Subscription — the license is valid for twelve (12) months from the
+    date of purchase and includes all updates released during that period.
+
+The applicable term is agreed upon at the time of purchase.
+
+6. WARRANTY DISCLAIMER
+──────────────────────
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+LICENSOR BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+7. GOVERNING LAW
+────────────────
+This Agreement is governed by the laws of the Russian Federation. Any disputes
+shall be resolved in the competent courts of the Russian Federation.
+
+8. ENTIRE AGREEMENT
+────────────────────
+This Agreement, together with the invoice or order confirmation at time of
+purchase, constitutes the entire agreement between the parties with respect
+to the subject matter herein.
+
+───────────────────────────────────────────────────────────────────────────────
+To obtain a commercial license, contact: egorozh.dev@gmail.com
+───────────────────────────────────────────────────────────────────────────────

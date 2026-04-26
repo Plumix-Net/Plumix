@@ -1,0 +1,14 @@
+<Project>
+  <PropertyGroup>
+    <!-- Shared NuGet package metadata for all packable projects -->
+    <Authors>Plumix Contributors</Authors>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <RepositoryUrl>https://github.com/Plumix-Net/Plumix</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/Plumix-Net/Plumix</PackageProjectUrl>
+    <PackageTags>avalonia;flutter;ui;cross-platform;dotnet</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <!-- Disable packaging by default; library projects opt in explicitly -->
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+</Project>
