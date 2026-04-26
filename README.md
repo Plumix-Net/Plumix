@@ -1,6 +1,11 @@
-# Flutter.NET
+# Plumix
 
 Flutter-like UI framework in C#.
+
+[![Plumix](https://img.shields.io/nuget/v/Plumix?label=Plumix&logo=nuget)](https://www.nuget.org/packages/Plumix/)
+[![Plumix.Material](https://img.shields.io/nuget/v/Plumix.Material?label=Plumix.Material&logo=nuget)](https://www.nuget.org/packages/Plumix.Material/)
+[![Plumix.Cupertino](https://img.shields.io/nuget/v/Plumix.Cupertino?label=Plumix.Cupertino&logo=nuget)](https://www.nuget.org/packages/Plumix.Cupertino/)
+[![CI](https://github.com/Plumix-Net/Plumix/actions/workflows/ci.yml/badge.svg)](https://github.com/Plumix-Net/Plumix/actions/workflows/ci.yml)
 
 ## Vision
 
