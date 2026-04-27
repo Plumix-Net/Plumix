@@ -19,11 +19,11 @@
             <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
             <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
         </PackageReference>
+        <PackageReference Include="Plumix.Bloc" />
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\Plumix\Plumix.csproj" />
-      <ProjectReference Include="..\..\Plumix.Material\Plumix.Material.csproj" />
-      <ProjectReference Include="..\..\..\..\Plumix.Packages\src\Plumix.Bloc\Plumix.Bloc.csproj" />
+        <ProjectReference Include="..\..\Plumix\Plumix.csproj" />
+        <ProjectReference Include="..\..\Plumix.Material\Plumix.Material.csproj" />
     </ItemGroup>
 </Project>

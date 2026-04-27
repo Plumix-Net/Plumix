@@ -14,6 +14,7 @@
     <PackageVersion Include="Avalonia.iOS" Version="12.0.0" />
     <PackageVersion Include="Avalonia.Browser" Version="12.0.0" />
     <PackageVersion Include="Avalonia.Android" Version="12.0.0" />
+    <PackageVersion Include="Plumix.Bloc" Version="0.1.0-alpha.1" />
     <PackageVersion Include="Xamarin.AndroidX.Core.SplashScreen" Version="1.2.0.2" />
     <!-- Tests -->
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.4.0" />
