@@ -20,6 +20,7 @@ internal static class SampleRoutes
 {
     public const string Menu = "/";
     public const string Counter = "/counter";
+    public const string BlocCounter = "/bloc-counter";
     public const string Navigator = "/navigator";
     public const string NavigatorDetails = "/navigator/details";
     public const string ListViewSeparated = "/list-separated";
@@ -91,6 +92,7 @@ internal sealed class SampleGalleryScreen : StatelessWidget
     private static readonly IReadOnlyList<SampleRouteDefinition> GeneralDemoPages =
     [
         new(SampleRoutes.Counter, "Counter", "existing sample", () => new CounterScreen()),
+        new(SampleRoutes.BlocCounter, "Bloc counter", "BlocProvider + BlocBuilder + BlocListener + BlocSelector", () => new BlocCounterDemoPage()),
         new(SampleRoutes.Navigator, "Navigator", "named routes + RouteData + stack APIs", () => new NavigatorDemoPage()),
         new(SampleRoutes.ListViewSeparated, "ListView.Separated", "item + separator builder", () => new ListViewSeparatedDemoPage()),
         new(SampleRoutes.ListViewFixedExtent, "ListView fixed extent", "itemExtent + padding", () => new ListViewFixedExtentDemoPage()),
