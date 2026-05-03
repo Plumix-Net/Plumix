@@ -18,6 +18,15 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
   - added RTL edge-open coverage for `Scaffold.drawer` (start drawer opens from the right edge in RTL with leftward drag);
   - added RTL edge-open coverage for `Scaffold.endDrawer` (end drawer opens from the left edge in RTL with rightward drag);
   - added RTL `MediaQuery.padding` edge-activation coverage for both sides (start drawer uses right padding extension zone; end drawer uses left padding extension zone).
+- Expanded framework Material drawer interaction gating coverage in `src/Plumix.Tests/MaterialScaffoldTests.cs`:
+  - added scrim-tap dismiss coverage for open drawers when `drawerBarrierDismissible=true`;
+  - added negative scrim-tap coverage to confirm drawers stay open when `drawerBarrierDismissible=false`;
+  - added edge-drag disable coverage for `drawerEnableOpenDragGesture=false` and `endDrawerEnableOpenDragGesture=false`;
+  - added desktop-platform gesture gating coverage to confirm edge drag does not open drawers on `TargetPlatform.Windows`.
+- Expanded framework Material drawer stress coverage for rapid alternating gestures in `src/Plumix.Tests/MaterialScaffoldTests.cs`:
+  - added start->end alternating drag choreography coverage (open start by edge drag, close by panel drag, then open end by edge drag);
+  - added end->start alternating drag choreography coverage (open end by edge drag, close by panel drag, then open start by edge drag);
+  - both scenarios assert mutual exclusion (`start` and `end` drawers cannot remain open together) and panel visibility consistency after each settle step.
 - Added C#/Dart sample parity runtime probes for framework Material `Drawer`:
   - added `Drawer` demo pages in both samples (`src/Sample/Plumix.Sample/Demos/Material/DrawerDemoPage.cs`, `dart_sample/lib/demos/material/drawer_demo_page.dart`) with explicit start/end drawer open/close choreography controls;
   - added mode/theme/widget precedence probes for drawer visuals and scrim resolution (`UseMaterial3`, `DrawerTheme`, and widget-level `Drawer`/`Scaffold.drawerScrimColor` overrides);
