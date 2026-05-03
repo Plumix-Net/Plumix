@@ -31,6 +31,7 @@ internal static class SampleRoutes
     public const string Scrollbar = "/scrollbar";
     public const string EditableText = "/editable-text";
     public const string MaterialButtons = "/material-buttons";
+    public const string Drawer = "/drawer";
     public const string Divider = "/divider";
     public const string Card = "/card";
     public const string ListTile = "/list-tile";
@@ -74,6 +75,7 @@ internal sealed class SampleGalleryScreen : StatelessWidget
     private static readonly IReadOnlyList<SampleRouteDefinition> MaterialDemoPages =
     [
         new(SampleRoutes.MaterialButtons, "Material buttons", "TextButton + ElevatedButton + OutlinedButton + FilledButton", () => new MaterialButtonsDemoPage()),
+        new(SampleRoutes.Drawer, "Drawer", "scaffold drawer/endDrawer + theme/widget precedence probes", () => new DrawerDemoPage()),
         new(SampleRoutes.Divider, "Divider", "horizontal/vertical divider + theme/widget precedence probes", () => new DividerDemoPage()),
         new(SampleRoutes.Card, "Card", "elevated/filled/outlined variants + theme/clip probes", () => new CardDemoPage()),
         new(SampleRoutes.ListTile, "ListTile", "leading/title/subtitle/trailing + selected/dense/theme probes", () => new ListTileDemoPage()),

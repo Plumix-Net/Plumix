@@ -14,6 +14,10 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 ### Changed
 
+- Added C#/Dart sample parity runtime probes for framework Material `Drawer`:
+  - added `Drawer` demo pages in both samples (`src/Sample/Plumix.Sample/Demos/Material/DrawerDemoPage.cs`, `dart_sample/lib/demos/material/drawer_demo_page.dart`) with explicit start/end drawer open/close choreography controls;
+  - added mode/theme/widget precedence probes for drawer visuals and scrim resolution (`UseMaterial3`, `DrawerTheme`, and widget-level `Drawer`/`Scaffold.drawerScrimColor` overrides);
+  - wired the new route into both sample menus (`/drawer`) under the Material tab.
 - Added framework Material `Divider` baseline:
   - introduced `Divider` and `VerticalDivider` in `src/Plumix.Material/Divider.cs` with Flutter-like mode-aware defaults (`M3`: `outlineVariant` + `thickness=1`; `M2`: `dividerColor` + hairline logical thickness), plus widget overrides for `space`/`thickness`/`indent`/`endIndent`/`color`/`radius`;
   - added `DividerThemeData` + inherited `DividerTheme` in `src/Plumix.Material/DividerTheme.cs` and integrated `ThemeData.DividerTheme` + `ThemeData.DividerColor` in `src/Plumix.Material/ThemeData.cs`;

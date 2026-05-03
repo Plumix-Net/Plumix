@@ -12,6 +12,7 @@ import 'counter_screen.dart';
 import 'demos/general/container_demo_page.dart';
 import 'demos/general/custom_slivers_demo_page.dart';
 import 'demos/general/decorated_box_demo_page.dart';
+import 'demos/material/drawer_demo_page.dart';
 import 'demos/material/divider_demo_page.dart';
 import 'demos/general/editable_text_demo_page.dart';
 import 'demos/general/fitted_box_demo_page.dart';
@@ -45,6 +46,12 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'Material buttons',
       subtitle: 'TextButton + ElevatedButton + OutlinedButton + FilledButton',
       builder: () => const MaterialButtonsDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.drawer,
+      title: 'Drawer',
+      subtitle: 'scaffold drawer/endDrawer + theme/widget precedence probes',
+      builder: () => const DrawerDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.divider,

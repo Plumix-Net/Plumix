@@ -462,6 +462,7 @@ Progress update (2026-03-19):
   - added `DividerThemeData` + inherited `DividerTheme` and `ThemeData.DividerTheme`/`ThemeData.DividerColor` integration with precedence (`widget -> divider theme -> mode defaults`);
   - added focused `MaterialDividerTests` coverage for constructor guards, M2/M3 defaults, theme/widget precedence, and vertical-divider width/indent behavior;
   - added C#/Dart sample parity demo route/page for runtime verification (`Divider` route in Material tab with theme/widget override probes for `space`/`thickness`/`indent`/`endIndent`/`radius`).
+- Added C#/Dart sample parity demo route/page for runtime `Drawer` verification in the Material tab (`Drawer` route with start/end drawer open/close choreography controls plus `DrawerTheme`/widget override probes for scrim/color/elevation/width precedence).
 - Remaining divergence for floating action button in current framework scope:
   - none documented in current framework scope.
 
