@@ -531,6 +531,47 @@ public sealed class MaterialScaffoldTests
     }
 
     [Fact]
+    public void Scaffold_EdgeDrag_OpensStartDrawer_InRtl()
+    {
+        var binding = GestureBinding.Instance;
+        binding.ResetForTests();
+
+        BuildContext? scaffoldContext = null;
+        using var harness = new WidgetRenderHarness(
+            new Directionality(
+                textDirection: TextDirection.Rtl,
+                child: new Theme(
+                    data: ThemeData.Light with
+                    {
+                        Platform = TargetPlatform.Android,
+                    },
+                    child: new Scaffold(
+                        drawer: new Drawer(child: new Text("RTL start drawer panel")),
+                        body: new CaptureBuildContextWidget(
+                            capture: context => scaffoldContext = context,
+                            child: new SizedBox())))));
+
+        try
+        {
+            harness.Pump(new Size(400, 300));
+            Assert.True(scaffoldContext.HasValue);
+
+            DispatchPointerDown(binding, harness.RenderView, pointer: 7006, position: new Point(398, 120));
+            DispatchPointerMove(binding, harness.RenderView, pointer: 7006, position: new Point(180, 120));
+            DispatchPointerUp(binding, harness.RenderView, pointer: 7006, position: new Point(180, 120));
+            harness.Pump(new Size(400, 300));
+
+            var state = Scaffold.Of(scaffoldContext!.Value);
+            Assert.True(state.IsDrawerOpen);
+            Assert.NotNull(FindParagraphByText(harness.RenderView, "RTL start drawer panel"));
+        }
+        finally
+        {
+            binding.ResetForTests();
+        }
+    }
+
+    [Fact]
     public void Scaffold_EdgeDrag_OpensEndDrawer()
     {
         var binding = GestureBinding.Instance;
@@ -562,6 +603,47 @@ public sealed class MaterialScaffoldTests
             var state = Scaffold.Of(scaffoldContext!.Value);
             Assert.True(state.IsEndDrawerOpen);
             Assert.NotNull(FindParagraphByText(harness.RenderView, "End drawer panel"));
+        }
+        finally
+        {
+            binding.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void Scaffold_EdgeDrag_OpensEndDrawer_InRtl()
+    {
+        var binding = GestureBinding.Instance;
+        binding.ResetForTests();
+
+        BuildContext? scaffoldContext = null;
+        using var harness = new WidgetRenderHarness(
+            new Directionality(
+                textDirection: TextDirection.Rtl,
+                child: new Theme(
+                    data: ThemeData.Light with
+                    {
+                        Platform = TargetPlatform.Android,
+                    },
+                    child: new Scaffold(
+                        endDrawer: new Drawer(child: new Text("RTL end drawer panel")),
+                        body: new CaptureBuildContextWidget(
+                            capture: context => scaffoldContext = context,
+                            child: new SizedBox())))));
+
+        try
+        {
+            harness.Pump(new Size(400, 300));
+            Assert.True(scaffoldContext.HasValue);
+
+            DispatchPointerDown(binding, harness.RenderView, pointer: 7007, position: new Point(2, 120));
+            DispatchPointerMove(binding, harness.RenderView, pointer: 7007, position: new Point(220, 120));
+            DispatchPointerUp(binding, harness.RenderView, pointer: 7007, position: new Point(220, 120));
+            harness.Pump(new Size(400, 300));
+
+            var state = Scaffold.Of(scaffoldContext!.Value);
+            Assert.True(state.IsEndDrawerOpen);
+            Assert.NotNull(FindParagraphByText(harness.RenderView, "RTL end drawer panel"));
         }
         finally
         {
@@ -604,6 +686,94 @@ public sealed class MaterialScaffoldTests
             var state = Scaffold.Of(scaffoldContext!.Value);
             Assert.True(state.IsDrawerOpen);
             Assert.NotNull(FindParagraphByText(harness.RenderView, "Padded edge drawer panel"));
+        }
+        finally
+        {
+            binding.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void Scaffold_EdgeDrag_UsesMediaPaddingForStartDrawerActivationWidth_InRtl()
+    {
+        var binding = GestureBinding.Instance;
+        binding.ResetForTests();
+
+        BuildContext? scaffoldContext = null;
+        using var harness = new WidgetRenderHarness(
+            new Directionality(
+                textDirection: TextDirection.Rtl,
+                child: new Theme(
+                    data: ThemeData.Light with
+                    {
+                        Platform = TargetPlatform.Android,
+                    },
+                    child: new MediaQuery(
+                        data: new MediaQueryData(
+                            Padding: new Thickness(0, 0, 30, 0)),
+                        child: new Scaffold(
+                            drawer: new Drawer(child: new Text("RTL padded edge start drawer panel")),
+                            body: new CaptureBuildContextWidget(
+                                capture: context => scaffoldContext = context,
+                                child: new SizedBox()))))));
+
+        try
+        {
+            harness.Pump(new Size(400, 300));
+            Assert.True(scaffoldContext.HasValue);
+
+            DispatchPointerDown(binding, harness.RenderView, pointer: 7008, position: new Point(360, 120));
+            DispatchPointerMove(binding, harness.RenderView, pointer: 7008, position: new Point(180, 120));
+            DispatchPointerUp(binding, harness.RenderView, pointer: 7008, position: new Point(180, 120));
+            harness.Pump(new Size(400, 300));
+
+            var state = Scaffold.Of(scaffoldContext!.Value);
+            Assert.True(state.IsDrawerOpen);
+            Assert.NotNull(FindParagraphByText(harness.RenderView, "RTL padded edge start drawer panel"));
+        }
+        finally
+        {
+            binding.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void Scaffold_EdgeDrag_UsesMediaPaddingForEndDrawerActivationWidth_InRtl()
+    {
+        var binding = GestureBinding.Instance;
+        binding.ResetForTests();
+
+        BuildContext? scaffoldContext = null;
+        using var harness = new WidgetRenderHarness(
+            new Directionality(
+                textDirection: TextDirection.Rtl,
+                child: new Theme(
+                    data: ThemeData.Light with
+                    {
+                        Platform = TargetPlatform.Android,
+                    },
+                    child: new MediaQuery(
+                        data: new MediaQueryData(
+                            Padding: new Thickness(30, 0, 0, 0)),
+                        child: new Scaffold(
+                            endDrawer: new Drawer(child: new Text("RTL padded edge end drawer panel")),
+                            body: new CaptureBuildContextWidget(
+                                capture: context => scaffoldContext = context,
+                                child: new SizedBox()))))));
+
+        try
+        {
+            harness.Pump(new Size(400, 300));
+            Assert.True(scaffoldContext.HasValue);
+
+            DispatchPointerDown(binding, harness.RenderView, pointer: 7009, position: new Point(40, 120));
+            DispatchPointerMove(binding, harness.RenderView, pointer: 7009, position: new Point(220, 120));
+            DispatchPointerUp(binding, harness.RenderView, pointer: 7009, position: new Point(220, 120));
+            harness.Pump(new Size(400, 300));
+
+            var state = Scaffold.Of(scaffoldContext!.Value);
+            Assert.True(state.IsEndDrawerOpen);
+            Assert.NotNull(FindParagraphByText(harness.RenderView, "RTL padded edge end drawer panel"));
         }
         finally
         {
