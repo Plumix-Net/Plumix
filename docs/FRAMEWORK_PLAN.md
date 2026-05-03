@@ -457,6 +457,11 @@ Progress update (2026-03-19):
   - added `CardThemeData` + inherited `CardTheme` and `ThemeData.CardTheme` integration with precedence (`widget -> card theme -> mode defaults`);
   - added focused `MaterialCardTests` coverage for constructor guards, M3 variant defaults, M2 fallback behavior, theme/widget precedence, surface tint, clipping, and semantic-container wiring;
   - added C#/Dart sample parity demo route/page for runtime verification (`Card` route in Material tab with variant/mode/theme/clip probes).
+- Added Material `Divider` baseline in `Flutter.Material`:
+  - introduced framework `Divider` and `VerticalDivider` with Flutter-like defaults and mode-aware fallbacks (`M3`: `outlineVariant` + `thickness=1`; `M2`: `dividerColor` + hairline logical thickness);
+  - added `DividerThemeData` + inherited `DividerTheme` and `ThemeData.DividerTheme`/`ThemeData.DividerColor` integration with precedence (`widget -> divider theme -> mode defaults`);
+  - added focused `MaterialDividerTests` coverage for constructor guards, M2/M3 defaults, theme/widget precedence, and vertical-divider width/indent behavior;
+  - added C#/Dart sample parity demo route/page for runtime verification (`Divider` route in Material tab with theme/widget override probes for `space`/`thickness`/`indent`/`endIndent`/`radius`).
 - Remaining divergence for floating action button in current framework scope:
   - none documented in current framework scope.
 

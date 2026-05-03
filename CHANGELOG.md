@@ -14,6 +14,11 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 ### Changed
 
+- Added framework Material `Divider` baseline:
+  - introduced `Divider` and `VerticalDivider` in `src/Plumix.Material/Divider.cs` with Flutter-like mode-aware defaults (`M3`: `outlineVariant` + `thickness=1`; `M2`: `dividerColor` + hairline logical thickness), plus widget overrides for `space`/`thickness`/`indent`/`endIndent`/`color`/`radius`;
+  - added `DividerThemeData` + inherited `DividerTheme` in `src/Plumix.Material/DividerTheme.cs` and integrated `ThemeData.DividerTheme` + `ThemeData.DividerColor` in `src/Plumix.Material/ThemeData.cs`;
+  - added focused regression coverage in `src/Plumix.Tests/MaterialDividerTests.cs` for constructor guards, M2/M3 defaults, theme/widget precedence, and vertical-divider layout behavior;
+  - added C#/Dart sample parity runtime probes (`src/Sample/Plumix.Sample/Demos/Material/DividerDemoPage.cs`, `dart_sample/lib/demos/material/divider_demo_page.dart`) with route/menu wiring updates.
 - Fixed renamed `Plumix` satellite assembly access by granting `Plumix.Material` and `Plumix.Cupertino` friend access to framework internals needed for inherited/render-object widget implementations.
 - Added framework Material `Card` baseline:
   - introduced `Card` in `src/Flutter.Material/Card.cs` with elevated, filled, and outlined variants, Flutter-like default margin (`4`), clipping policy, elevation/shadow rendering, surface-tint application, outlined border defaults, and `semanticContainer` wiring;

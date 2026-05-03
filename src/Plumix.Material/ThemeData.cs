@@ -130,6 +130,7 @@ public sealed record ThemeData
     private static readonly Color LightOnSurfaceVariantColor = Color.Parse("#FF49454F");
     private static readonly Color LightOutlineColor = Color.Parse("#FF79747E");
     private static readonly Color LightOutlineVariantColor = Color.Parse("#FFCAC4D0");
+    private static readonly Color LightDividerColor = Color.FromArgb(0x1F, 0x00, 0x00, 0x00);
     private static readonly Color LightShadowColor = Colors.Black;
     private static readonly Color LightCardColor = Colors.White;
     private static readonly Color LightSurfaceContainerLowColor = Color.Parse("#FFF7F2FA");
@@ -152,6 +153,7 @@ public sealed record ThemeData
     private DrawerThemeData? _drawerTheme;
     private FloatingActionButtonThemeData? _floatingActionButtonTheme;
     private BottomNavigationBarThemeData? _bottomNavigationBarTheme;
+    private DividerThemeData? _dividerTheme;
     private CheckboxThemeData? _checkboxTheme;
     private SwitchThemeData? _switchTheme;
     private RadioThemeData? _radioTheme;
@@ -174,6 +176,7 @@ public sealed record ThemeData
         Color? onSurfaceVariantColor = null,
         Color? outlineColor = null,
         Color? outlineVariantColor = null,
+        Color? dividerColor = null,
         Color? cardColor = null,
         Color? surfaceContainerLowColor = null,
         Color? surfaceContainerHighestColor = null,
@@ -199,6 +202,7 @@ public sealed record ThemeData
         DrawerThemeData? drawerTheme = null,
         FloatingActionButtonThemeData? floatingActionButtonTheme = null,
         BottomNavigationBarThemeData? bottomNavigationBarTheme = null,
+        DividerThemeData? dividerTheme = null,
         CheckboxThemeData? checkboxTheme = null,
         SwitchThemeData? switchTheme = null,
         RadioThemeData? radioTheme = null)
@@ -220,6 +224,7 @@ public sealed record ThemeData
         OnSurfaceVariantColor = onSurfaceVariantColor ?? LightOnSurfaceVariantColor;
         OutlineColor = outlineColor ?? LightOutlineColor;
         OutlineVariantColor = outlineVariantColor ?? LightOutlineVariantColor;
+        DividerColor = dividerColor ?? LightDividerColor;
         CardColor = cardColor ?? LightCardColor;
         SurfaceContainerLowColor = surfaceContainerLowColor ?? LightSurfaceContainerLowColor;
         SurfaceContainerHighestColor = surfaceContainerHighestColor ?? LightSurfaceContainerHighestColor;
@@ -245,6 +250,7 @@ public sealed record ThemeData
         _drawerTheme = drawerTheme;
         _floatingActionButtonTheme = floatingActionButtonTheme;
         _bottomNavigationBarTheme = bottomNavigationBarTheme;
+        _dividerTheme = dividerTheme;
         _checkboxTheme = checkboxTheme;
         _switchTheme = switchTheme;
         _radioTheme = radioTheme;
@@ -287,6 +293,8 @@ public sealed record ThemeData
     public Color OutlineColor { get; init; }
 
     public Color OutlineVariantColor { get; init; }
+
+    public Color DividerColor { get; init; }
 
     public Color CardColor { get; init; }
 
@@ -376,6 +384,12 @@ public sealed record ThemeData
     {
         get => _bottomNavigationBarTheme ?? new BottomNavigationBarThemeData();
         init => _bottomNavigationBarTheme = value;
+    }
+
+    public DividerThemeData DividerTheme
+    {
+        get => _dividerTheme ?? new DividerThemeData();
+        init => _dividerTheme = value;
     }
 
     public CheckboxThemeData CheckboxTheme
