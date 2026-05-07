@@ -12,10 +12,13 @@ class CircularProgressIndicatorDemoPage extends StatefulWidget {
 
 class _CircularProgressIndicatorDemoPageState
     extends State<CircularProgressIndicatorDemoPage> {
+  static const List<double> _widgetTrackGapOptions = <double>[0, 2, 4];
+
   bool _useMaterial3 = true;
   bool _determinate = true;
   bool _useThemeOverrides = false;
   bool _useWidgetOverrides = false;
+  int _widgetTrackGapIndex = 0;
   double _progress = 0.35;
 
   @override
@@ -88,6 +91,13 @@ class _CircularProgressIndicatorDemoPageState
               ),
               const SizedBox(width: 8),
               _buildControlButton(
+                label: 'gap=${_widgetTrackGap.toStringAsFixed(0)}',
+                onTap: () => setState(_cycleWidgetTrackGap),
+                width: 76,
+                background: const Color(0xFFEFF4FF),
+              ),
+              const SizedBox(width: 8),
+              _buildControlButton(
                 label: '-',
                 onTap: () =>
                     setState(() => _progress = math.max(0, _progress - 0.1)),
@@ -119,7 +129,8 @@ class _CircularProgressIndicatorDemoPageState
             'useMaterial3=${_useMaterial3 ? "true" : "false"}, '
             'determinate=${_determinate ? "true" : "false"}, '
             'theme=${_useThemeOverrides ? "true" : "false"}, '
-            'widget=${_useWidgetOverrides ? "true" : "false"}',
+            'widget=${_useWidgetOverrides ? "true" : "false"}, '
+            'gap=${_widgetTrackGap.toStringAsFixed(0)}',
             style: const TextStyle(fontSize: 12, color: Color(0xFF607D8B)),
           ),
           const SizedBox(height: 10),
@@ -194,13 +205,14 @@ class _CircularProgressIndicatorDemoPageState
         strokeAlign: 1,
         strokeCap: StrokeCap.square,
         constraints: const BoxConstraints(minWidth: 56, minHeight: 56),
-        trackGap: 5,
+        trackGap: _widgetTrackGap,
         semanticsLabel: 'Widget override progress',
       );
     }
 
     return CircularProgressIndicator(
       value: _determinate ? _progress : null,
+      trackGap: _widgetTrackGap,
       semanticsLabel: 'Baseline progress',
     );
   }
@@ -225,5 +237,12 @@ class _CircularProgressIndicatorDemoPageState
         child: Text(label, style: const TextStyle(fontSize: 12)),
       ),
     );
+  }
+
+  double get _widgetTrackGap => _widgetTrackGapOptions[_widgetTrackGapIndex];
+
+  void _cycleWidgetTrackGap() {
+    _widgetTrackGapIndex =
+        (_widgetTrackGapIndex + 1) % _widgetTrackGapOptions.length;
   }
 }

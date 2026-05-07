@@ -20,10 +20,13 @@ public sealed class CircularProgressIndicatorDemoPage : StatefulWidget
 
 internal sealed class CircularProgressIndicatorDemoPageState : State
 {
+    private static readonly double[] WidgetTrackGapOptions = [0.0, 2.0, 4.0];
+
     private bool _useMaterial3 = true;
     private bool _determinate = true;
     private bool _useThemeOverrides;
     private bool _useWidgetOverrides;
+    private int _widgetTrackGapIndex;
     private double _progress = 0.35;
 
     public override Widget Build(BuildContext context)
@@ -86,6 +89,11 @@ internal sealed class CircularProgressIndicatorDemoPageState : State
                                 width: 118,
                                 background: Color.Parse("#FFF0E8FF")),
                             BuildControlButton(
+                                label: $"gap={GetWidgetTrackGap():0.#}",
+                                onTap: () => SetState(CycleWidgetTrackGap),
+                                width: 76,
+                                background: Color.Parse("#FFEFF4FF")),
+                            BuildControlButton(
                                 label: "-",
                                 onTap: () => SetState(() => _progress = Math.Max(0, _progress - 0.1)),
                                 width: 42,
@@ -102,7 +110,7 @@ internal sealed class CircularProgressIndicatorDemoPageState : State
                                     color: Color.Parse("#FF607D8B"))),
                         ]),
                     new Text(
-                        $"useMaterial3={(_useMaterial3 ? "true" : "false")}, determinate={(_determinate ? "true" : "false")}, theme={(_useThemeOverrides ? "true" : "false")}, widget={(_useWidgetOverrides ? "true" : "false")}",
+                        $"useMaterial3={(_useMaterial3 ? "true" : "false")}, determinate={(_determinate ? "true" : "false")}, theme={(_useThemeOverrides ? "true" : "false")}, widget={(_useWidgetOverrides ? "true" : "false")}, gap={GetWidgetTrackGap():0.#}",
                         fontSize: 12,
                         color: Color.Parse("#FF607D8B")),
                     new Expanded(
@@ -161,12 +169,13 @@ internal sealed class CircularProgressIndicatorDemoPageState : State
                 strokeAlign: 1.0,
                 size: 56,
                 strokeCap: StrokeCap.Square,
-                trackGap: 5.0,
+                trackGap: GetWidgetTrackGap(),
                 semanticsLabel: "Widget override progress");
         }
 
         return new CircularProgressIndicator(
             value: _determinate ? _progress : null,
+            trackGap: GetWidgetTrackGap(),
             semanticsLabel: "Baseline progress");
     }
 
@@ -186,5 +195,15 @@ internal sealed class CircularProgressIndicatorDemoPageState : State
                 padding: new Thickness(10, 8),
                 borderRadius: BorderRadius.Circular(8),
                 child: new Text(label, fontSize: 12)));
+    }
+
+    private double GetWidgetTrackGap()
+    {
+        return WidgetTrackGapOptions[_widgetTrackGapIndex];
+    }
+
+    private void CycleWidgetTrackGap()
+    {
+        _widgetTrackGapIndex = (_widgetTrackGapIndex + 1) % WidgetTrackGapOptions.Length;
     }
 }
