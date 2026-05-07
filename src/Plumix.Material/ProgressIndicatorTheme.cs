@@ -8,6 +8,13 @@ namespace Plumix.Material;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/material/progress_indicator_theme.dart (baseline subset)
 
+public enum StrokeCap
+{
+    Butt,
+    Round,
+    Square
+}
+
 public sealed record ProgressIndicatorThemeData(
     Color? Color = null,
     Color? LinearTrackColor = null,
@@ -18,7 +25,9 @@ public sealed record ProgressIndicatorThemeData(
     double? TrackGap = null,
     Color? CircularTrackColor = null,
     double? CircularStrokeWidth = null,
-    double? CircularSize = null);
+    double? CircularStrokeAlign = null,
+    double? CircularSize = null,
+    StrokeCap? CircularStrokeCap = null);
 
 public sealed class ProgressIndicatorTheme : InheritedWidget
 {

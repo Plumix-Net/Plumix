@@ -20,6 +20,10 @@ public sealed class MaterialCircularProgressIndicatorTests
         Assert.Throws<ArgumentOutOfRangeException>(() => new CircularProgressIndicator(strokeWidth: -1));
         Assert.Throws<ArgumentOutOfRangeException>(() => new CircularProgressIndicator(size: 0));
         Assert.Throws<ArgumentOutOfRangeException>(() => new CircularProgressIndicator(size: -1));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new CircularProgressIndicator(strokeAlign: double.NaN));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new CircularProgressIndicator(strokeAlign: double.NegativeInfinity));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new CircularProgressIndicator(trackGap: -1));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new CircularProgressIndicator(trackGap: double.NaN));
     }
 
     [Fact]
@@ -45,7 +49,12 @@ public sealed class MaterialCircularProgressIndicatorTests
         Assert.Equal(Colors.DarkOrange, ReadProperty<Color>(renderIndicator!, "ValueColor"));
         Assert.Equal(Colors.LightBlue, ReadProperty<Color?>(renderIndicator, "TrackColor"));
         Assert.Equal(4.0, ReadProperty<double>(renderIndicator, "StrokeWidth"), 3);
+        Assert.Equal(0.0, ReadProperty<double>(renderIndicator, "StrokeAlign"), 3);
         Assert.Equal(40.0, ReadProperty<double>(renderIndicator, "IndicatorSize"), 3);
+        Assert.Null(ReadNullableProperty<StrokeCap>(renderIndicator, "StrokeCap"));
+        var trackGap = ReadNullableProperty<double>(renderIndicator, "TrackGap");
+        Assert.NotNull(trackGap);
+        Assert.Equal(4.0, trackGap.Value, 3);
 
         var value = ReadProperty<double?>(renderIndicator, "Value");
         Assert.True(value.HasValue);
@@ -74,7 +83,10 @@ public sealed class MaterialCircularProgressIndicatorTests
         Assert.Equal(Colors.MediumVioletRed, ReadProperty<Color>(renderIndicator!, "ValueColor"));
         Assert.Null(ReadProperty<Color?>(renderIndicator, "TrackColor"));
         Assert.Equal(4.0, ReadProperty<double>(renderIndicator, "StrokeWidth"), 3);
+        Assert.Equal(0.0, ReadProperty<double>(renderIndicator, "StrokeAlign"), 3);
         Assert.Equal(36.0, ReadProperty<double>(renderIndicator, "IndicatorSize"), 3);
+        Assert.Null(ReadNullableProperty<StrokeCap>(renderIndicator, "StrokeCap"));
+        Assert.Null(ReadNullableProperty<double>(renderIndicator, "TrackGap"));
     }
 
     [Fact]
@@ -88,7 +100,10 @@ public sealed class MaterialCircularProgressIndicatorTests
                 Color: Colors.Green,
                 CircularTrackColor: Colors.MediumPurple,
                 CircularStrokeWidth: 6,
-                CircularSize: 48)
+                CircularStrokeAlign: -1.0,
+                CircularSize: 48,
+                CircularStrokeCap: StrokeCap.Round,
+                TrackGap: 7.0)
         };
 
         using var themedHarness = new WidgetRenderHarness(
@@ -104,7 +119,14 @@ public sealed class MaterialCircularProgressIndicatorTests
         Assert.Equal(Colors.Green, ReadProperty<Color>(themedRender!, "ValueColor"));
         Assert.Equal(Colors.MediumPurple, ReadProperty<Color?>(themedRender, "TrackColor"));
         Assert.Equal(6.0, ReadProperty<double>(themedRender, "StrokeWidth"), 3);
+        Assert.Equal(-1.0, ReadProperty<double>(themedRender, "StrokeAlign"), 3);
         Assert.Equal(48.0, ReadProperty<double>(themedRender, "IndicatorSize"), 3);
+        var themedStrokeCap = ReadNullableProperty<StrokeCap>(themedRender, "StrokeCap");
+        Assert.NotNull(themedStrokeCap);
+        Assert.Equal(StrokeCap.Round, themedStrokeCap.Value);
+        var themedTrackGap = ReadNullableProperty<double>(themedRender, "TrackGap");
+        Assert.NotNull(themedTrackGap);
+        Assert.Equal(7.0, themedTrackGap.Value, 3);
 
         using var widgetHarness = new WidgetRenderHarness(
             new Theme(
@@ -114,7 +136,10 @@ public sealed class MaterialCircularProgressIndicatorTests
                     color: Colors.DarkRed,
                     backgroundColor: Colors.LightGoldenrodYellow,
                     strokeWidth: 8,
-                    size: 52)));
+                    strokeAlign: 1.0,
+                    size: 52,
+                    strokeCap: StrokeCap.Square,
+                    trackGap: 2.5)));
 
         widgetHarness.Pump(new Size(160, 160));
 
@@ -124,7 +149,14 @@ public sealed class MaterialCircularProgressIndicatorTests
         Assert.Equal(Colors.DarkRed, ReadProperty<Color>(widgetRender!, "ValueColor"));
         Assert.Equal(Colors.LightGoldenrodYellow, ReadProperty<Color?>(widgetRender, "TrackColor"));
         Assert.Equal(8.0, ReadProperty<double>(widgetRender, "StrokeWidth"), 3);
+        Assert.Equal(1.0, ReadProperty<double>(widgetRender, "StrokeAlign"), 3);
         Assert.Equal(52.0, ReadProperty<double>(widgetRender, "IndicatorSize"), 3);
+        var widgetStrokeCap = ReadNullableProperty<StrokeCap>(widgetRender, "StrokeCap");
+        Assert.NotNull(widgetStrokeCap);
+        Assert.Equal(StrokeCap.Square, widgetStrokeCap.Value);
+        var widgetTrackGap = ReadNullableProperty<double>(widgetRender, "TrackGap");
+        Assert.NotNull(widgetTrackGap);
+        Assert.Equal(2.5, widgetTrackGap.Value, 3);
     }
 
     [Fact]
@@ -203,6 +235,19 @@ public sealed class MaterialCircularProgressIndicatorTests
         if (value is null)
         {
             return default!;
+        }
+
+        return (T)value;
+    }
+
+    private static T? ReadNullableProperty<T>(RenderObject target, string propertyName) where T : struct
+    {
+        var property = target.GetType().GetProperty(propertyName);
+        Assert.NotNull(property);
+        var value = property!.GetValue(target);
+        if (value is null)
+        {
+            return null;
         }
 
         return (T)value;

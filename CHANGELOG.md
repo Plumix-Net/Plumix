@@ -20,6 +20,16 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
   - updated linear painter choreography to apply track-gap logic across determinate and indeterminate phases and draw the determinate stop-indicator cap at the trailing edge;
   - expanded focused regression coverage in `src/Plumix.Tests/MaterialLinearProgressIndicatorTests.cs` for new constructor guards, M2/M3 stop/gap defaults, and theme/widget precedence for `stopIndicator*` + `trackGap`;
   - updated C#/Dart runtime parity demos (`src/Sample/Plumix.Sample/Demos/Material/LinearProgressIndicatorDemoPage.cs`, `dart_sample/lib/demos/material/linear_progress_indicator_demo_page.dart`) to probe `ProgressIndicatorTheme` and widget-level stop/gap overrides.
+- Expanded framework Material `CircularProgressIndicator` parity in `src/Plumix.Material/ProgressIndicator.cs`:
+  - added Flutter-like API surface for circular M3 track-gap styling (`trackGap`) with constructor guards for non-finite/negative values;
+  - wired circular `trackGap` precedence as `widget -> ProgressIndicatorThemeData -> mode defaults` (`M3` default `4`; `M2` disabled/null);
+  - updated circular determinate track paint choreography to render a Flutter-like gap between active arc and background track when `trackGap` is set;
+  - added Flutter-like `strokeCap` API for circular progress (enum `StrokeCap`) with `widget -> ProgressIndicatorThemeData.CircularStrokeCap -> default-null` precedence;
+  - updated circular render paint behavior to apply Flutter-like null-cap defaults (`determinate=butt`, `indeterminate=square`) and explicit `strokeCap` mapping for both foreground and track arc paint;
+  - added Flutter-like `strokeAlign` API for circular progress with finite-value guards and `widget -> ProgressIndicatorThemeData.CircularStrokeAlign -> default(0.0)` precedence;
+  - updated circular arc geometry resolution to apply Flutter-like stroke alignment offsets in paint (`inside/center/outside` via signed stroke offset);
+  - expanded focused regression coverage in `src/Plumix.Tests/MaterialCircularProgressIndicatorTests.cs` for constructor guards, M2/M3 `trackGap` defaults, and theme/widget precedence for `trackGap` + `strokeCap` + `strokeAlign`;
+  - updated C#/Dart runtime parity demos (`src/Sample/Plumix.Sample/Demos/Material/CircularProgressIndicatorDemoPage.cs`, `dart_sample/lib/demos/material/circular_progress_indicator_demo_page.dart`) to probe `ProgressIndicatorTheme` and widget-level `trackGap` + `strokeCap` + `strokeAlign` overrides.
 - Expanded framework Material drawer gesture parity coverage with focused RTL regression tests in `src/Plumix.Tests/MaterialScaffoldTests.cs`:
   - added RTL edge-open coverage for `Scaffold.drawer` (start drawer opens from the right edge in RTL with leftward drag);
   - added RTL edge-open coverage for `Scaffold.endDrawer` (end drawer opens from the left edge in RTL with rightward drag);

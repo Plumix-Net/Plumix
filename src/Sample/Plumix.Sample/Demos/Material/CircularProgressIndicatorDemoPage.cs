@@ -37,7 +37,10 @@ internal sealed class CircularProgressIndicatorDemoPageState : State
                     Color: Color.Parse("#FF1565C0"),
                     CircularTrackColor: Color.Parse("#FFC5CAE9"),
                     CircularStrokeWidth: 6,
-                    CircularSize: 44)
+                    CircularStrokeAlign: -1.0,
+                    CircularSize: 44,
+                    CircularStrokeCap: StrokeCap.Round,
+                    TrackGap: 7.0)
                 : new ProgressIndicatorThemeData()
         };
 
@@ -50,7 +53,7 @@ internal sealed class CircularProgressIndicatorDemoPageState : State
                 [
                     new Text("CircularProgressIndicator baseline", fontSize: 20, color: Colors.Black),
                     new Text(
-                        "Determinate/indeterminate behavior, M2/M3 defaults, and theme/widget precedence.",
+                        "Determinate/indeterminate behavior, M2/M3 defaults, theme/widget precedence, and circular trackGap/strokeCap/strokeAlign.",
                         fontSize: 14,
                         color: Color.Parse("#8A000000")),
                     new Row(
@@ -155,7 +158,10 @@ internal sealed class CircularProgressIndicatorDemoPageState : State
                 color: Color.Parse("#FFB71C1C"),
                 backgroundColor: Color.Parse("#FFFFCDD2"),
                 strokeWidth: 8,
+                strokeAlign: 1.0,
                 size: 56,
+                strokeCap: StrokeCap.Square,
+                trackGap: 5.0,
                 semanticsLabel: "Widget override progress");
         }
 

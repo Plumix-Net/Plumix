@@ -749,7 +749,10 @@ public sealed class CircularProgressIndicator : StatefulWidget
         Color? backgroundColor = null,
         Color? color = null,
         double? strokeWidth = null,
+        double? strokeAlign = null,
         double? size = null,
+        StrokeCap? strokeCap = null,
+        double? trackGap = null,
         string? semanticsLabel = null,
         string? semanticsValue = null,
         Key? key = null) : base(key)
@@ -764,16 +767,29 @@ public sealed class CircularProgressIndicator : StatefulWidget
             throw new ArgumentOutOfRangeException(nameof(strokeWidth), "CircularProgressIndicator strokeWidth must be finite and greater than zero.");
         }
 
+        if (strokeAlign.HasValue && (double.IsNaN(strokeAlign.Value) || double.IsInfinity(strokeAlign.Value)))
+        {
+            throw new ArgumentOutOfRangeException(nameof(strokeAlign), "CircularProgressIndicator strokeAlign must be finite when provided.");
+        }
+
         if (size.HasValue && (double.IsNaN(size.Value) || double.IsInfinity(size.Value) || size.Value <= 0))
         {
             throw new ArgumentOutOfRangeException(nameof(size), "CircularProgressIndicator size must be finite and greater than zero.");
+        }
+
+        if (trackGap.HasValue && (double.IsNaN(trackGap.Value) || double.IsInfinity(trackGap.Value) || trackGap.Value < 0))
+        {
+            throw new ArgumentOutOfRangeException(nameof(trackGap), "CircularProgressIndicator trackGap must be finite and greater than or equal to zero.");
         }
 
         Value = value;
         BackgroundColor = backgroundColor;
         Color = color;
         StrokeWidth = strokeWidth;
+        StrokeAlign = strokeAlign;
         Size = size;
+        StrokeCap = strokeCap;
+        TrackGap = trackGap;
         SemanticsLabel = semanticsLabel;
         SemanticsValue = semanticsValue;
     }
@@ -786,7 +802,13 @@ public sealed class CircularProgressIndicator : StatefulWidget
 
     public double? StrokeWidth { get; }
 
+    public double? StrokeAlign { get; }
+
     public double? Size { get; }
+
+    public StrokeCap? StrokeCap { get; }
+
+    public double? TrackGap { get; }
 
     public string? SemanticsLabel { get; }
 
@@ -861,9 +883,22 @@ public sealed class CircularProgressIndicator : StatefulWidget
                                       ?? progressTheme.CircularStrokeWidth
                                       ?? DefaultStrokeWidth;
 
+            var resolvedStrokeAlign = CurrentWidget.StrokeAlign
+                                      ?? progressTheme.CircularStrokeAlign
+                                      ?? 0.0;
+
             var resolvedSize = CurrentWidget.Size
                                ?? progressTheme.CircularSize
                                ?? (theme.UseMaterial3 ? DefaultM3Size : DefaultM2Size);
+
+            var resolvedTrackGap = theme.UseMaterial3
+                ? CurrentWidget.TrackGap
+                  ?? progressTheme.TrackGap
+                  ?? 4.0
+                : (double?)null;
+
+            var resolvedStrokeCap = CurrentWidget.StrokeCap
+                                    ?? progressTheme.CircularStrokeCap;
 
             var animationValue = _animationController?.Evaluate() ?? 0.0;
             var arcStart = ArcStart;
@@ -878,7 +913,10 @@ public sealed class CircularProgressIndicator : StatefulWidget
                 trackColor: resolvedTrackColor,
                 valueColor: resolvedValueColor,
                 strokeWidth: resolvedStrokeWidth,
-                indicatorSize: resolvedSize);
+                strokeAlign: resolvedStrokeAlign,
+                indicatorSize: resolvedSize,
+                strokeCap: resolvedStrokeCap,
+                trackGap: resolvedTrackGap);
 
             var semanticsLabel = ResolveSemanticsLabel(resolvedValue);
             if (!string.IsNullOrWhiteSpace(semanticsLabel))
@@ -1053,7 +1091,10 @@ internal sealed class CircularProgressIndicatorRenderWidget : LeafRenderObjectWi
         Color? trackColor,
         Color valueColor,
         double strokeWidth,
+        double strokeAlign,
         double indicatorSize,
+        StrokeCap? strokeCap,
+        double? trackGap,
         Key? key = null) : base(key)
     {
         Value = value;
@@ -1062,7 +1103,10 @@ internal sealed class CircularProgressIndicatorRenderWidget : LeafRenderObjectWi
         TrackColor = trackColor;
         ValueColor = valueColor;
         StrokeWidth = strokeWidth;
+        StrokeAlign = strokeAlign;
         IndicatorSize = indicatorSize;
+        StrokeCap = strokeCap;
+        TrackGap = trackGap;
     }
 
     public double? Value { get; }
@@ -1077,7 +1121,13 @@ internal sealed class CircularProgressIndicatorRenderWidget : LeafRenderObjectWi
 
     public double StrokeWidth { get; }
 
+    public double StrokeAlign { get; }
+
     public double IndicatorSize { get; }
+
+    public StrokeCap? StrokeCap { get; }
+
+    public double? TrackGap { get; }
 
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
@@ -1088,7 +1138,10 @@ internal sealed class CircularProgressIndicatorRenderWidget : LeafRenderObjectWi
             trackColor: TrackColor,
             valueColor: ValueColor,
             strokeWidth: StrokeWidth,
-            indicatorSize: IndicatorSize);
+            strokeAlign: StrokeAlign,
+            indicatorSize: IndicatorSize,
+            strokeCap: StrokeCap,
+            trackGap: TrackGap);
     }
 
     internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
@@ -1100,14 +1153,18 @@ internal sealed class CircularProgressIndicatorRenderWidget : LeafRenderObjectWi
         indicator.TrackColor = TrackColor;
         indicator.ValueColor = ValueColor;
         indicator.StrokeWidth = StrokeWidth;
+        indicator.StrokeAlign = StrokeAlign;
         indicator.IndicatorSize = IndicatorSize;
+        indicator.StrokeCap = StrokeCap;
+        indicator.TrackGap = TrackGap;
     }
 }
 
 internal sealed class RenderCircularProgressIndicator : RenderBox
 {
+    private const double TwoPi = Math.PI * 2.0;
     private const double DeterminateStartAngle = -Math.PI / 2.0;
-    private const double FullSweep = (Math.PI * 2.0) - 0.001;
+    private const double FullSweep = TwoPi - 0.001;
     private const double MinSweep = 0.001;
 
     private double? _value;
@@ -1116,7 +1173,10 @@ internal sealed class RenderCircularProgressIndicator : RenderBox
     private Color? _trackColor;
     private Color _valueColor;
     private double _strokeWidth;
+    private double _strokeAlign;
     private double _indicatorSize;
+    private StrokeCap? _strokeCap;
+    private double? _trackGap;
 
     public RenderCircularProgressIndicator(
         double? value,
@@ -1125,7 +1185,10 @@ internal sealed class RenderCircularProgressIndicator : RenderBox
         Color? trackColor,
         Color valueColor,
         double strokeWidth,
-        double indicatorSize)
+        double strokeAlign,
+        double indicatorSize,
+        StrokeCap? strokeCap,
+        double? trackGap)
     {
         _value = value;
         _arcStart = arcStart;
@@ -1133,7 +1196,10 @@ internal sealed class RenderCircularProgressIndicator : RenderBox
         _trackColor = trackColor;
         _valueColor = valueColor;
         _strokeWidth = strokeWidth;
+        _strokeAlign = strokeAlign;
         _indicatorSize = indicatorSize;
+        _strokeCap = strokeCap;
+        _trackGap = trackGap;
     }
 
     public double? Value
@@ -1228,6 +1294,21 @@ internal sealed class RenderCircularProgressIndicator : RenderBox
         }
     }
 
+    public double StrokeAlign
+    {
+        get => _strokeAlign;
+        set
+        {
+            if (Math.Abs(_strokeAlign - value) <= 0.0001)
+            {
+                return;
+            }
+
+            _strokeAlign = value;
+            MarkNeedsPaint();
+        }
+    }
+
     public double IndicatorSize
     {
         get => _indicatorSize;
@@ -1240,6 +1321,41 @@ internal sealed class RenderCircularProgressIndicator : RenderBox
 
             _indicatorSize = value;
             MarkNeedsLayout();
+            MarkNeedsPaint();
+        }
+    }
+
+    public StrokeCap? StrokeCap
+    {
+        get => _strokeCap;
+        set
+        {
+            if (_strokeCap == value)
+            {
+                return;
+            }
+
+            _strokeCap = value;
+            MarkNeedsPaint();
+        }
+    }
+
+    public double? TrackGap
+    {
+        get => _trackGap;
+        set
+        {
+            if (!_trackGap.HasValue && !value.HasValue)
+            {
+                return;
+            }
+
+            if (_trackGap.HasValue && value.HasValue && Math.Abs(_trackGap.Value - value.Value) <= 0.0001)
+            {
+                return;
+            }
+
+            _trackGap = value;
             MarkNeedsPaint();
         }
     }
@@ -1269,24 +1385,38 @@ internal sealed class RenderCircularProgressIndicator : RenderBox
             return;
         }
 
-        var arcDiameter = diameter - strokeWidth;
-        if (arcDiameter <= 0)
+        var strokeOffset = strokeWidth / 2.0 * -StrokeAlign;
+        var arcDiameter = diameter - (strokeOffset * 2.0);
+        if (arcDiameter <= 0 || double.IsNaN(arcDiameter) || double.IsInfinity(arcDiameter))
         {
             return;
         }
 
-        var left = offset.X + ((Size.Width - diameter) / 2.0) + (strokeWidth / 2.0);
-        var top = offset.Y + ((Size.Height - diameter) / 2.0) + (strokeWidth / 2.0);
+        var left = offset.X + ((Size.Width - diameter) / 2.0) + strokeOffset;
+        var top = offset.Y + ((Size.Height - diameter) / 2.0) + strokeOffset;
         var arcRect = new Rect(left, top, arcDiameter, arcDiameter);
+        var resolvedValue = Value.HasValue
+            ? CircularProgressIndicator.ClampValue(Value.Value)
+            : (double?)null;
 
         if (TrackColor.HasValue)
         {
-            var trackPen = new Pen(new SolidColorBrush(TrackColor.Value), strokeWidth, lineCap: PenLineCap.Round);
-            ctx.DrawArc(trackPen, arcRect, startAngleRadians: 0, sweepAngleRadians: FullSweep);
+            var trackPen = new Pen(
+                new SolidColorBrush(TrackColor.Value),
+                strokeWidth,
+                lineCap: ResolveTrackLineCap(StrokeCap));
+            if (TryResolveTrackGapArc(arcRect, strokeWidth, resolvedValue, out var gapArcStart, out var gapArcSweep))
+            {
+                ctx.DrawArc(trackPen, arcRect, startAngleRadians: gapArcStart, sweepAngleRadians: gapArcSweep);
+            }
+            else
+            {
+                ctx.DrawArc(trackPen, arcRect, startAngleRadians: 0, sweepAngleRadians: FullSweep);
+            }
         }
 
-        var sweep = Value.HasValue
-            ? ResolveDeterminateSweep(Value.Value)
+        var sweep = resolvedValue.HasValue
+            ? ResolveDeterminateSweep(resolvedValue.Value)
             : Math.Clamp(ArcSweep, MinSweep, FullSweep);
         if (sweep <= MinSweep)
         {
@@ -1296,9 +1426,80 @@ internal sealed class RenderCircularProgressIndicator : RenderBox
         var start = Value.HasValue
             ? DeterminateStartAngle
             : ArcStart;
-        var lineCap = Value.HasValue ? PenLineCap.Flat : PenLineCap.Square;
+        var lineCap = ResolveIndicatorLineCap(resolvedValue, StrokeCap);
         var indicatorPen = new Pen(new SolidColorBrush(ValueColor), strokeWidth, lineCap: lineCap);
         ctx.DrawArc(indicatorPen, arcRect, startAngleRadians: start, sweepAngleRadians: sweep);
+    }
+
+    private bool TryResolveTrackGapArc(
+        Rect arcRect,
+        double strokeWidth,
+        double? resolvedValue,
+        out double gapArcStart,
+        out double gapArcSweep)
+    {
+        gapArcStart = 0.0;
+        gapArcSweep = 0.0;
+
+        if (!_trackGap.HasValue
+            || double.IsNaN(_trackGap.Value)
+            || double.IsInfinity(_trackGap.Value)
+            || _trackGap.Value <= 0
+            || !resolvedValue.HasValue
+            || resolvedValue.Value <= MinSweep)
+        {
+            return false;
+        }
+
+        var arcRadius = Math.Min(arcRect.Width, arcRect.Height) / 2.0;
+        if (arcRadius <= 0)
+        {
+            return false;
+        }
+
+        var clampedTrackGap = Math.Max(0, _trackGap.Value);
+        var strokeRadius = strokeWidth / arcRadius;
+        var gapRadius = clampedTrackGap / arcRadius;
+        var startGap = strokeRadius + gapRadius;
+        var endGap = startGap * 2.0;
+        var startSweep = DeterminateStartAngle + startGap;
+        var trackSweep = Math.Max(0.0, TwoPi - (resolvedValue.Value * TwoPi) - endGap);
+        if (trackSweep <= MinSweep)
+        {
+            return false;
+        }
+
+        // Flutter parity draws the gapped background arc on a horizontally mirrored canvas.
+        gapArcStart = Math.PI - startSweep;
+        gapArcSweep = -trackSweep;
+        return true;
+    }
+
+    private static PenLineCap ResolveTrackLineCap(StrokeCap? strokeCap)
+    {
+        return ToPenLineCap(strokeCap ?? Plumix.Material.StrokeCap.Round);
+    }
+
+    private static PenLineCap ResolveIndicatorLineCap(double? resolvedValue, StrokeCap? strokeCap)
+    {
+        if (strokeCap.HasValue)
+        {
+            return ToPenLineCap(strokeCap.Value);
+        }
+
+        // Flutter parity: indeterminate + null cap uses square; determinate + null cap uses butt.
+        return resolvedValue.HasValue ? PenLineCap.Flat : PenLineCap.Square;
+    }
+
+    private static PenLineCap ToPenLineCap(StrokeCap strokeCap)
+    {
+        return strokeCap switch
+        {
+            Plumix.Material.StrokeCap.Butt => PenLineCap.Flat,
+            Plumix.Material.StrokeCap.Round => PenLineCap.Round,
+            Plumix.Material.StrokeCap.Square => PenLineCap.Square,
+            _ => PenLineCap.Flat
+        };
     }
 
     private static double ResolveDeterminateSweep(double value)

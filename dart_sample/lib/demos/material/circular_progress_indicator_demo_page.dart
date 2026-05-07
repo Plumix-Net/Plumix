@@ -28,7 +28,10 @@ class _CircularProgressIndicatorDemoPageState
               color: Color(0xFF1565C0),
               circularTrackColor: Color(0xFFC5CAE9),
               strokeWidth: 6,
+              strokeAlign: -1,
+              strokeCap: StrokeCap.round,
               constraints: BoxConstraints(minWidth: 44, minHeight: 44),
+              trackGap: 7,
             )
           : const ProgressIndicatorThemeData(),
     );
@@ -44,7 +47,7 @@ class _CircularProgressIndicatorDemoPageState
           ),
           const SizedBox(height: 8),
           const Text(
-            'Determinate/indeterminate behavior, M2/M3 defaults, and theme/widget precedence.',
+            'Determinate/indeterminate behavior, M2/M3 defaults, theme/widget precedence, and circular trackGap/strokeCap/strokeAlign.',
             style: TextStyle(fontSize: 14, color: Color(0x8A000000)),
           ),
           const SizedBox(height: 10),
@@ -188,7 +191,10 @@ class _CircularProgressIndicatorDemoPageState
         color: const Color(0xFFB71C1C),
         backgroundColor: const Color(0xFFFFCDD2),
         strokeWidth: 8,
+        strokeAlign: 1,
+        strokeCap: StrokeCap.square,
         constraints: const BoxConstraints(minWidth: 56, minHeight: 56),
+        trackGap: 5,
         semanticsLabel: 'Widget override progress',
       );
     }
