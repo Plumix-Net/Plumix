@@ -40,6 +40,7 @@ Current priority (2026-03-12):
   - `src/Flutter.Material/ListTileTheme.cs`
   - `src/Plumix.Material/ProgressIndicator.cs`
   - `src/Plumix.Material/ProgressIndicatorTheme.cs`
+  - `src/Plumix.Cupertino/CupertinoActivityIndicator.cs`
   - `src/Flutter.Material/Buttons.cs`
   - `src/Flutter.Material/IconButton.cs`
   - `src/Flutter.Material/FloatingActionButton.cs`

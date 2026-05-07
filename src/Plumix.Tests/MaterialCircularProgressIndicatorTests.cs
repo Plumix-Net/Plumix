@@ -29,6 +29,88 @@ public sealed class MaterialCircularProgressIndicatorTests
     }
 
     [Fact]
+    public void CircularProgressIndicator_AdaptiveIOS_Indeterminate_UsesCupertinoActivityIndicator()
+    {
+        using var valueColor = new ValueNotifier<Color?>(Colors.HotPink);
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    Platform = TargetPlatform.IOS
+                },
+                child: CircularProgressIndicator.Adaptive(
+                    backgroundColor: Colors.OrangeRed,
+                    color: Colors.MediumPurple,
+                    valueColor: valueColor,
+                    strokeWidth: 9,
+                    strokeAlign: -1,
+                    trackGap: 6,
+                    year2023: false)));
+
+        harness.Pump(new Size(140, 140));
+
+        var cupertinoRender = FindDescendantByTypeName(harness.RenderView, "RenderCupertinoActivityIndicator");
+        var materialRender = FindDescendantByTypeName(harness.RenderView, "RenderCircularProgressIndicator");
+
+        Assert.NotNull(cupertinoRender);
+        Assert.Null(materialRender);
+        Assert.Equal(Colors.OrangeRed, ReadProperty<Color>(cupertinoRender!, "ActiveColor"));
+        Assert.Equal(1.0, ReadProperty<double>(cupertinoRender, "Progress"), 3);
+        Assert.Equal(10.0, ReadProperty<double>(cupertinoRender, "Radius"), 3);
+    }
+
+    [Fact]
+    public void CircularProgressIndicator_AdaptiveIOS_Determinate_UsesPartiallyRevealedProgress()
+    {
+        using var valueColor = new ValueNotifier<Color?>(Colors.HotPink);
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    Platform = TargetPlatform.IOS
+                },
+                child: CircularProgressIndicator.Adaptive(
+                    value: 0.37,
+                    backgroundColor: Colors.SeaGreen,
+                    color: Colors.DarkRed,
+                    valueColor: valueColor,
+                    strokeCap: StrokeCap.Round)));
+
+        harness.Pump(new Size(140, 140));
+
+        var cupertinoRender = FindDescendantByTypeName(harness.RenderView, "RenderCupertinoActivityIndicator");
+        var materialRender = FindDescendantByTypeName(harness.RenderView, "RenderCircularProgressIndicator");
+
+        Assert.NotNull(cupertinoRender);
+        Assert.Null(materialRender);
+        Assert.Equal(Colors.SeaGreen, ReadProperty<Color>(cupertinoRender!, "ActiveColor"));
+        Assert.Equal(0.37, ReadProperty<double>(cupertinoRender, "Progress"), 3);
+    }
+
+    [Fact]
+    public void CircularProgressIndicator_AdaptiveAndroid_FallsBackToMaterialIndicator()
+    {
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    Platform = TargetPlatform.Android,
+                    PrimaryColor = Colors.DarkOrange
+                },
+                child: CircularProgressIndicator.Adaptive(
+                    value: 0.5)));
+
+        harness.Pump(new Size(140, 140));
+
+        var materialRender = FindDescendantByTypeName(harness.RenderView, "RenderCircularProgressIndicator");
+        var cupertinoRender = FindDescendantByTypeName(harness.RenderView, "RenderCupertinoActivityIndicator");
+
+        Assert.NotNull(materialRender);
+        Assert.Null(cupertinoRender);
+        Assert.Equal(Colors.DarkOrange, ReadProperty<Color>(materialRender!, "ValueColor"));
+    }
+
+    [Fact]
     public void CircularProgressIndicator_DefaultM3_Determinate_Uses2023Defaults()
     {
         var theme = ThemeData.Light with

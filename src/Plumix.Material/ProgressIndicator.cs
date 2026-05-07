@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
+using Plumix.Cupertino;
 using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
@@ -853,6 +854,13 @@ public sealed class CircularProgressIndicator : StatefulWidget
     private static readonly BoxConstraints DefaultM3Year2023Constraints = new(MinWidth: DefaultM3Year2023Size, MinHeight: DefaultM3Year2023Size);
     private static readonly BoxConstraints DefaultM3Constraints = new(MinWidth: DefaultM3Size, MinHeight: DefaultM3Size);
     private static readonly TimeSpan IndeterminateDuration = TimeSpan.FromMilliseconds(1333.0 * 2222.0);
+    private readonly CircularProgressIndicatorType _indicatorType;
+
+    private enum CircularProgressIndicatorType
+    {
+        Material,
+        Adaptive
+    }
 
     public CircularProgressIndicator(
         double? value = null,
@@ -869,7 +877,45 @@ public sealed class CircularProgressIndicator : StatefulWidget
         AnimationController? controller = null,
         string? semanticsLabel = null,
         string? semanticsValue = null,
-        Key? key = null) : base(key)
+        Key? key = null)
+        : this(
+            value: value,
+            backgroundColor: backgroundColor,
+            color: color,
+            valueColor: valueColor,
+            strokeWidth: strokeWidth,
+            strokeAlign: strokeAlign,
+            constraints: constraints,
+            size: size,
+            strokeCap: strokeCap,
+            trackGap: trackGap,
+            year2023: year2023,
+            controller: controller,
+            semanticsLabel: semanticsLabel,
+            semanticsValue: semanticsValue,
+            indicatorType: CircularProgressIndicatorType.Material,
+            key: key)
+    {
+    }
+
+    private CircularProgressIndicator(
+        double? value,
+        Color? backgroundColor,
+        Color? color,
+        ValueNotifier<Color?>? valueColor,
+        double? strokeWidth,
+        double? strokeAlign,
+        BoxConstraints? constraints,
+        double? size,
+        StrokeCap? strokeCap,
+        double? trackGap,
+        bool? year2023,
+        AnimationController? controller,
+        string? semanticsLabel,
+        string? semanticsValue,
+        CircularProgressIndicatorType indicatorType,
+        Key? key = null)
+        : base(key)
     {
         if (value.HasValue && (double.IsNaN(value.Value) || double.IsInfinity(value.Value)))
         {
@@ -915,6 +961,43 @@ public sealed class CircularProgressIndicator : StatefulWidget
         Controller = controller;
         SemanticsLabel = semanticsLabel;
         SemanticsValue = semanticsValue;
+        _indicatorType = indicatorType;
+    }
+
+    public static CircularProgressIndicator Adaptive(
+        double? value = null,
+        Color? backgroundColor = null,
+        Color? color = null,
+        ValueNotifier<Color?>? valueColor = null,
+        double? strokeWidth = null,
+        double? strokeAlign = null,
+        BoxConstraints? constraints = null,
+        double? size = null,
+        StrokeCap? strokeCap = null,
+        double? trackGap = null,
+        bool? year2023 = null,
+        AnimationController? controller = null,
+        string? semanticsLabel = null,
+        string? semanticsValue = null,
+        Key? key = null)
+    {
+        return new CircularProgressIndicator(
+            value: value,
+            backgroundColor: backgroundColor,
+            color: color,
+            valueColor: valueColor,
+            strokeWidth: strokeWidth,
+            strokeAlign: strokeAlign,
+            constraints: constraints,
+            size: size,
+            strokeCap: strokeCap,
+            trackGap: trackGap,
+            year2023: year2023,
+            controller: controller,
+            semanticsLabel: semanticsLabel,
+            semanticsValue: semanticsValue,
+            indicatorType: CircularProgressIndicatorType.Adaptive,
+            key: key);
     }
 
     public double? Value { get; }
@@ -1017,6 +1100,11 @@ public sealed class CircularProgressIndicator : StatefulWidget
                 ? ClampValue(CurrentWidget.Value.Value)
                 : (double?)null;
 
+            if (IsAdaptiveCupertino(theme))
+            {
+                return BuildAdaptiveCupertinoIndicator(theme, resolvedValue);
+            }
+
             var resolvedValueColor = CurrentWidget.ValueColor?.Value
                                      ?? CurrentWidget.Color
                                      ?? progressTheme.Color
@@ -1076,6 +1164,25 @@ public sealed class CircularProgressIndicator : StatefulWidget
             }
 
             return child;
+        }
+
+        private Widget BuildAdaptiveCupertinoIndicator(ThemeData theme, double? resolvedValue)
+        {
+            var isDark = theme.Brightness == Brightness.Dark;
+            var tickColor = CurrentWidget.BackgroundColor;
+            if (resolvedValue.HasValue)
+            {
+                return CupertinoActivityIndicator.PartiallyRevealed(
+                    color: tickColor,
+                    progress: resolvedValue.Value,
+                    isDark: isDark,
+                    key: CurrentWidget.Key);
+            }
+
+            return new CupertinoActivityIndicator(
+                color: tickColor,
+                isDark: isDark,
+                key: CurrentWidget.Key);
         }
 
         private AnimationController ResolveAnimationController(ProgressIndicatorThemeData progressTheme)
@@ -1197,6 +1304,12 @@ public sealed class CircularProgressIndicator : StatefulWidget
             return CurrentWidget.Year2023
                    ?? progressTheme.Year2023
                    ?? true;
+        }
+
+        private bool IsAdaptiveCupertino(ThemeData theme)
+        {
+            return CurrentWidget._indicatorType == CircularProgressIndicatorType.Adaptive
+                   && theme.Platform is TargetPlatform.IOS or TargetPlatform.MacOS;
         }
 
         private static Color? ResolveDefaultTrackColor(ThemeData theme, double? resolvedValue, bool useYear2023)

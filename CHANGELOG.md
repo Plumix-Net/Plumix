@@ -14,6 +14,11 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 ### Changed
 
+- Closed adaptive-platform parity for framework `CircularProgressIndicator`:
+  - added `CircularProgressIndicator.Adaptive(...)` in `src/Plumix.Material/ProgressIndicator.cs` with Flutter-like platform routing (`iOS/macOS -> Cupertino`, other platforms -> Material);
+  - introduced reusable `CupertinoActivityIndicator` in `src/Plumix.Cupertino/CupertinoActivityIndicator.cs` with animated and partially-revealed modes used by adaptive circular progress;
+  - adaptive iOS/macOS path now maps determinate progress to partially revealed Cupertino ticks and keeps Material-only circular styling parameters out of the Cupertino render path;
+  - expanded focused coverage in `src/Plumix.Tests/MaterialCircularProgressIndicatorTests.cs` for adaptive iOS indeterminate/determinate behavior and Android adaptive fallback to Material render path.
 - Expanded framework progress-indicator color parity in `src/Plumix.Material/ProgressIndicator.cs`:
   - added Flutter-like `valueColor` precedence for both `LinearProgressIndicator` and `CircularProgressIndicator` (`valueColor -> color -> ProgressIndicatorThemeData.color -> theme primary`);
   - introduced live `valueColor` updates through `ValueNotifier<Color?>` listener wiring in indicator state lifecycles, including null-value fallback to `color`/theme/default paths;
