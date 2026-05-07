@@ -7,6 +7,7 @@ import 'demos/material/app_bar_leading_width_demo_page.dart';
 import 'demos/material/app_bar_text_styles_demo_page.dart';
 import 'demos/general/aspect_ratio_demo_page.dart';
 import 'demos/material/card_demo_page.dart';
+import 'demos/material/circular_progress_indicator_demo_page.dart';
 import 'demos/cupertino/checkbox_demo_page.dart';
 import 'counter_screen.dart';
 import 'demos/general/container_demo_page.dart';
@@ -65,6 +66,12 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'LinearProgressIndicator',
       subtitle: 'determinate/indeterminate + M2/M3 + theme/widget/RTL probes',
       builder: () => const LinearProgressIndicatorDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.circularProgressIndicator,
+      title: 'CircularProgressIndicator',
+      subtitle: 'determinate/indeterminate + M2/M3 + theme/widget probes',
+      builder: () => const CircularProgressIndicatorDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.card,

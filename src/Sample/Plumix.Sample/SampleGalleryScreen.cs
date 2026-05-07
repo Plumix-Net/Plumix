@@ -34,6 +34,7 @@ internal static class SampleRoutes
     public const string Drawer = "/drawer";
     public const string Divider = "/divider";
     public const string LinearProgressIndicator = "/linear-progress-indicator";
+    public const string CircularProgressIndicator = "/circular-progress-indicator";
     public const string Card = "/card";
     public const string ListTile = "/list-tile";
     public const string FloatingActionButton = "/floating-action-button";
@@ -79,6 +80,7 @@ internal sealed class SampleGalleryScreen : StatelessWidget
         new(SampleRoutes.Drawer, "Drawer", "scaffold drawer/endDrawer + theme/widget precedence probes", () => new DrawerDemoPage()),
         new(SampleRoutes.Divider, "Divider", "horizontal/vertical divider + theme/widget precedence probes", () => new DividerDemoPage()),
         new(SampleRoutes.LinearProgressIndicator, "LinearProgressIndicator", "determinate/indeterminate + M2/M3 + theme/widget/RTL probes", () => new LinearProgressIndicatorDemoPage()),
+        new(SampleRoutes.CircularProgressIndicator, "CircularProgressIndicator", "determinate/indeterminate + M2/M3 + theme/widget probes", () => new CircularProgressIndicatorDemoPage()),
         new(SampleRoutes.Card, "Card", "elevated/filled/outlined variants + theme/clip probes", () => new CardDemoPage()),
         new(SampleRoutes.ListTile, "ListTile", "leading/title/subtitle/trailing + selected/dense/theme probes", () => new ListTileDemoPage()),
         new(SampleRoutes.FloatingActionButton, "FloatingActionButton", "regular/small/large/extended + theme defaults", () => new FloatingActionButtonDemoPage()),

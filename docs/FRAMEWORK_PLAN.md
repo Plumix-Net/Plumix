@@ -8,7 +8,7 @@ Use this block as the fastest machine-readable status summary.
 
 ```yaml
 framework_plan_version: 1
-last_updated: 2026-04-25
+last_updated: 2026-05-07
 north_star: "Flutter-like widget/rendering framework in C# with Avalonia as host infrastructure."
 current_phase: "M4 material library rewrite (theme/scaffold/material controls) in progress."
 status:
@@ -471,6 +471,12 @@ Progress update (2026-03-19):
   - added focused `MaterialLinearProgressIndicatorTests` coverage in `src/Plumix.Tests/MaterialLinearProgressIndicatorTests.cs` for constructor guards, M2/M3 defaults, theme/widget precedence, value clamping, indeterminate animation tick progression, RTL direction wiring, and semantics-label percentage fallback.
   - added C#/Dart sample parity demo route/page for runtime verification (`LinearProgressIndicator` route in Material tab with determinate/indeterminate, M2/M3, theme/widget overrides, and RTL probes).
   - remaining divergence: advanced Flutter API surface (`valueColor`, external `controller`, `year2023`, `stopIndicator*`, and `trackGap`) remains out of this baseline scope.
+- Added Material `CircularProgressIndicator` baseline in `Plumix.Material`:
+  - introduced framework `CircularProgressIndicator` in `src/Plumix.Material/ProgressIndicator.cs` with determinate (`value`) and indeterminate (`value: null`) modes, Flutter-like indeterminate arc choreography timing (`1333*2222` timeline with sawtooth head/tail/rotation composition), mode-aware defaults (M3 determinate track `secondaryContainer`, M2 no default track), and widget/theme/default precedence for color/track/stroke/size.
+  - expanded progress-indicator theming surface (`ProgressIndicatorThemeData`) with circular baseline fields (`circularTrackColor`, `circularStrokeWidth`, `circularSize`) and reused inherited `ProgressIndicatorTheme` + `ThemeData.ProgressIndicatorTheme` precedence.
+  - added focused `MaterialCircularProgressIndicatorTests` coverage in `src/Plumix.Tests/MaterialCircularProgressIndicatorTests.cs` for constructor guards, M2/M3 defaults, theme/widget precedence, value clamping, indeterminate arc animation progression, and semantics-label percentage fallback.
+  - added C#/Dart sample parity demo route/page for runtime verification (`CircularProgressIndicator` route in Material tab with determinate/indeterminate, M2/M3, and theme/widget override probes).
+  - remaining divergence: advanced Flutter API surface (`strokeAlign`, `strokeCap`, `constraints` matrix, `trackGap`, `year2023`, external `controller`, and adaptive Cupertino branch) remains out of this baseline scope.
 - Added C#/Dart sample parity demo route/page for runtime `Drawer` verification in the Material tab (`Drawer` route with start/end drawer open/close choreography controls plus `DrawerTheme`/widget override probes for scrim/color/elevation/width precedence).
 - Remaining divergence for floating action button in current framework scope:
   - none documented in current framework scope.

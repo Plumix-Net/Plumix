@@ -62,6 +62,7 @@ Current priority (2026-03-12):
   - `src/Sample/Flutter.Net/Demos/Material/ListTileDemoPage.cs`
   - `src/Sample/Flutter.Net/Demos/Material/FloatingActionButtonDemoPage.cs`
   - `src/Sample/Plumix.Sample/Demos/Material/LinearProgressIndicatorDemoPage.cs`
+  - `src/Sample/Plumix.Sample/Demos/Material/CircularProgressIndicatorDemoPage.cs`
   - `src/Sample/Flutter.Net/Demos/Cupertino/CheckboxDemoPage.cs`
   - `src/Sample/Flutter.Net/Demos/Cupertino/SwitchDemoPage.cs`
   - `src/Sample/Flutter.Net/Demos/Cupertino/RadioDemoPage.cs`
@@ -72,6 +73,7 @@ Current priority (2026-03-12):
   - `dart_sample/lib/demos/material/list_tile_demo_page.dart`
   - `dart_sample/lib/demos/material/floating_action_button_demo_page.dart`
   - `dart_sample/lib/demos/material/linear_progress_indicator_demo_page.dart`
+  - `dart_sample/lib/demos/material/circular_progress_indicator_demo_page.dart`
   - `dart_sample/lib/demos/cupertino/checkbox_demo_page.dart`
   - `dart_sample/lib/demos/cupertino/switch_demo_page.dart`
   - `dart_sample/lib/demos/cupertino/radio_demo_page.dart`
@@ -84,6 +86,7 @@ Current priority (2026-03-12):
   - `src/Flutter.Tests/MaterialFloatingActionButtonTests.cs`
   - `src/Flutter.Tests/MaterialBottomNavigationBarTests.cs`
   - `src/Plumix.Tests/MaterialLinearProgressIndicatorTests.cs`
+  - `src/Plumix.Tests/MaterialCircularProgressIndicatorTests.cs`
   - `src/Flutter.Tests/MaterialCheckboxTests.cs`
   - `src/Flutter.Tests/MaterialSwitchTests.cs`
   - `src/Flutter.Tests/MaterialRadioTests.cs`

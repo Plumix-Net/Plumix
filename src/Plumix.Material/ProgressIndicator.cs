@@ -537,3 +537,581 @@ internal sealed class RenderLinearProgressIndicator : RenderBox
         return Math.Min(radius, Math.Min(width / 2.0, height / 2.0));
     }
 }
+
+// Dart parity source (reference): flutter/packages/flutter/lib/src/material/progress_indicator.dart (circular baseline subset)
+
+public sealed class CircularProgressIndicator : StatefulWidget
+{
+    private const double DefaultStrokeWidth = 4.0;
+    private const double DefaultM2Size = 36.0;
+    private const double DefaultM3Size = 40.0;
+    private static readonly TimeSpan IndeterminateDuration = TimeSpan.FromMilliseconds(1333.0 * 2222.0);
+
+    public CircularProgressIndicator(
+        double? value = null,
+        Color? backgroundColor = null,
+        Color? color = null,
+        double? strokeWidth = null,
+        double? size = null,
+        string? semanticsLabel = null,
+        string? semanticsValue = null,
+        Key? key = null) : base(key)
+    {
+        if (value.HasValue && (double.IsNaN(value.Value) || double.IsInfinity(value.Value)))
+        {
+            throw new ArgumentOutOfRangeException(nameof(value), "CircularProgressIndicator value must be finite when provided.");
+        }
+
+        if (strokeWidth.HasValue && (double.IsNaN(strokeWidth.Value) || double.IsInfinity(strokeWidth.Value) || strokeWidth.Value <= 0))
+        {
+            throw new ArgumentOutOfRangeException(nameof(strokeWidth), "CircularProgressIndicator strokeWidth must be finite and greater than zero.");
+        }
+
+        if (size.HasValue && (double.IsNaN(size.Value) || double.IsInfinity(size.Value) || size.Value <= 0))
+        {
+            throw new ArgumentOutOfRangeException(nameof(size), "CircularProgressIndicator size must be finite and greater than zero.");
+        }
+
+        Value = value;
+        BackgroundColor = backgroundColor;
+        Color = color;
+        StrokeWidth = strokeWidth;
+        Size = size;
+        SemanticsLabel = semanticsLabel;
+        SemanticsValue = semanticsValue;
+    }
+
+    public double? Value { get; }
+
+    public Color? BackgroundColor { get; }
+
+    public Color? Color { get; }
+
+    public double? StrokeWidth { get; }
+
+    public double? Size { get; }
+
+    public string? SemanticsLabel { get; }
+
+    public string? SemanticsValue { get; }
+
+    public override State CreateState()
+    {
+        return new CircularProgressIndicatorState();
+    }
+
+    internal static double ClampValue(double value)
+    {
+        return Math.Clamp(value, 0.0, 1.0);
+    }
+
+    private sealed class CircularProgressIndicatorState : State
+    {
+        private const int PathCount = 2222;
+        private const int RotationCount = 1333;
+        private const double ArcStart = -Math.PI / 2.0;
+        private const double FullSweep = (Math.PI * 2.0) - 0.001;
+        private const double MinIndeterminateSweep = 0.001;
+
+        private AnimationController? _animationController;
+        private bool _isMounted;
+
+        private CircularProgressIndicator CurrentWidget => (CircularProgressIndicator)StateWidget;
+
+        public override void InitState()
+        {
+            _animationController = new AnimationController(IndeterminateDuration);
+            _animationController.Changed += HandleAnimationTick;
+            _isMounted = true;
+            UpdateAnimationStatus();
+        }
+
+        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        {
+            base.DidUpdateWidget(oldWidget);
+            UpdateAnimationStatus();
+        }
+
+        public override void Dispose()
+        {
+            _isMounted = false;
+            if (_animationController is not null)
+            {
+                _animationController.Changed -= HandleAnimationTick;
+                _animationController.Dispose();
+                _animationController = null;
+            }
+        }
+
+        public override Widget Build(BuildContext context)
+        {
+            var theme = Theme.Of(context);
+            var progressTheme = ProgressIndicatorTheme.Of(context);
+
+            var resolvedValue = CurrentWidget.Value.HasValue
+                ? ClampValue(CurrentWidget.Value.Value)
+                : (double?)null;
+
+            var resolvedValueColor = CurrentWidget.Color
+                                     ?? progressTheme.Color
+                                     ?? theme.PrimaryColor;
+
+            var resolvedTrackColor = CurrentWidget.BackgroundColor
+                                     ?? progressTheme.CircularTrackColor
+                                     ?? ResolveDefaultTrackColor(theme, resolvedValue);
+
+            var resolvedStrokeWidth = CurrentWidget.StrokeWidth
+                                      ?? progressTheme.CircularStrokeWidth
+                                      ?? DefaultStrokeWidth;
+
+            var resolvedSize = CurrentWidget.Size
+                               ?? progressTheme.CircularSize
+                               ?? (theme.UseMaterial3 ? DefaultM3Size : DefaultM2Size);
+
+            var animationValue = _animationController?.Evaluate() ?? 0.0;
+            var arcStart = ArcStart;
+            var arcSweep = resolvedValue.HasValue
+                ? ResolveDeterminateSweep(resolvedValue.Value)
+                : ResolveIndeterminateSweep(animationValue, out arcStart);
+
+            Widget child = new CircularProgressIndicatorRenderWidget(
+                value: resolvedValue,
+                arcStart: arcStart,
+                arcSweep: arcSweep,
+                trackColor: resolvedTrackColor,
+                valueColor: resolvedValueColor,
+                strokeWidth: resolvedStrokeWidth,
+                indicatorSize: resolvedSize);
+
+            var semanticsLabel = ResolveSemanticsLabel(resolvedValue);
+            if (!string.IsNullOrWhiteSpace(semanticsLabel))
+            {
+                child = new Semantics(
+                    label: semanticsLabel,
+                    child: child);
+            }
+
+            return child;
+        }
+
+        private string? ResolveSemanticsLabel(double? resolvedValue)
+        {
+            var label = CurrentWidget.SemanticsLabel;
+            var value = CurrentWidget.SemanticsValue;
+
+            if (string.IsNullOrWhiteSpace(value) && resolvedValue.HasValue)
+            {
+                value = $"{Math.Round(resolvedValue.Value * 100)}%";
+            }
+
+            if (string.IsNullOrWhiteSpace(label))
+            {
+                return value;
+            }
+
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return label;
+            }
+
+            return $"{label} {value}";
+        }
+
+        private void UpdateAnimationStatus()
+        {
+            if (_animationController is null)
+            {
+                return;
+            }
+
+            if (CurrentWidget.Value.HasValue)
+            {
+                if (_animationController.IsAnimating)
+                {
+                    _animationController.Stop();
+                }
+
+                return;
+            }
+
+            if (!_animationController.IsAnimating)
+            {
+                _animationController.Repeat();
+            }
+        }
+
+        private void HandleAnimationTick()
+        {
+            if (!_isMounted)
+            {
+                return;
+            }
+
+            SetState(() => { });
+        }
+
+        private static Color? ResolveDefaultTrackColor(ThemeData theme, double? resolvedValue)
+        {
+            if (!theme.UseMaterial3)
+            {
+                return null;
+            }
+
+            return resolvedValue.HasValue
+                ? theme.SecondaryContainerColor
+                : null;
+        }
+
+        private static double ResolveDeterminateSweep(double value)
+        {
+            var clampedValue = ClampValue(value);
+            if (clampedValue <= 0)
+            {
+                return 0;
+            }
+
+            return Math.Min(clampedValue * FullSweep, FullSweep);
+        }
+
+        private static double ResolveIndeterminateSweep(double animationValue, out double arcStart)
+        {
+            var t = Math.Clamp(animationValue, 0.0, 1.0);
+            // Flutter parity: CurveTween(interval + fastOutSlowIn).chain(CurveTween(SawTooth(pathCount)))
+            // means SawTooth is applied first, then interval/curve on the sawtooth output.
+            var sawTooth = EvaluateSawTooth(t, PathCount);
+            var headValue = TransformInterval(sawTooth, 0.0, 0.5, 0.4, 0.0, 0.2, 1.0);
+            var tailValue = TransformInterval(sawTooth, 0.5, 1.0, 0.4, 0.0, 0.2, 1.0);
+            var offsetValue = EvaluateSawTooth(t, PathCount);
+            var rotationValue = EvaluateSawTooth(t, RotationCount);
+
+            arcStart = ArcStart
+                       + (tailValue * 1.5 * Math.PI)
+                       + (rotationValue * Math.PI * 2.0)
+                       + (offsetValue * 0.5 * Math.PI);
+
+            var sweep = Math.Max((headValue * 1.5 * Math.PI) - (tailValue * 1.5 * Math.PI), MinIndeterminateSweep);
+            return Math.Min(sweep, FullSweep);
+        }
+
+        private static double EvaluateSawTooth(double value, int count)
+        {
+            var transformed = Math.Clamp(value, 0.0, 1.0) * count;
+            return transformed - Math.Floor(transformed);
+        }
+
+        private static double TransformInterval(
+            double value,
+            double begin,
+            double end,
+            double x1,
+            double y1,
+            double x2,
+            double y2)
+        {
+            var transformed = Math.Clamp((value - begin) / (end - begin), 0.0, 1.0);
+            if (transformed <= 0 || transformed >= 1)
+            {
+                return transformed;
+            }
+
+            return TransformCubic(transformed, x1, y1, x2, y2);
+        }
+
+        private static double TransformCubic(double t, double x1, double y1, double x2, double y2)
+        {
+            var low = 0.0;
+            var high = 1.0;
+            for (var i = 0; i < 12; i++)
+            {
+                var mid = (low + high) * 0.5;
+                var estimate = EvaluateCubic(mid, x1, x2);
+                if (estimate < t)
+                {
+                    low = mid;
+                }
+                else
+                {
+                    high = mid;
+                }
+            }
+
+            var solved = (low + high) * 0.5;
+            return EvaluateCubic(solved, y1, y2);
+        }
+
+        private static double EvaluateCubic(double t, double c1, double c2)
+        {
+            var mt = 1 - t;
+            return (3 * c1 * mt * mt * t) + (3 * c2 * mt * t * t) + (t * t * t);
+        }
+    }
+}
+
+internal sealed class CircularProgressIndicatorRenderWidget : LeafRenderObjectWidget
+{
+    public CircularProgressIndicatorRenderWidget(
+        double? value,
+        double arcStart,
+        double arcSweep,
+        Color? trackColor,
+        Color valueColor,
+        double strokeWidth,
+        double indicatorSize,
+        Key? key = null) : base(key)
+    {
+        Value = value;
+        ArcStart = arcStart;
+        ArcSweep = arcSweep;
+        TrackColor = trackColor;
+        ValueColor = valueColor;
+        StrokeWidth = strokeWidth;
+        IndicatorSize = indicatorSize;
+    }
+
+    public double? Value { get; }
+
+    public double ArcStart { get; }
+
+    public double ArcSweep { get; }
+
+    public Color? TrackColor { get; }
+
+    public Color ValueColor { get; }
+
+    public double StrokeWidth { get; }
+
+    public double IndicatorSize { get; }
+
+    internal override RenderObject CreateRenderObject(BuildContext context)
+    {
+        return new RenderCircularProgressIndicator(
+            value: Value,
+            arcStart: ArcStart,
+            arcSweep: ArcSweep,
+            trackColor: TrackColor,
+            valueColor: ValueColor,
+            strokeWidth: StrokeWidth,
+            indicatorSize: IndicatorSize);
+    }
+
+    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    {
+        var indicator = (RenderCircularProgressIndicator)renderObject;
+        indicator.Value = Value;
+        indicator.ArcStart = ArcStart;
+        indicator.ArcSweep = ArcSweep;
+        indicator.TrackColor = TrackColor;
+        indicator.ValueColor = ValueColor;
+        indicator.StrokeWidth = StrokeWidth;
+        indicator.IndicatorSize = IndicatorSize;
+    }
+}
+
+internal sealed class RenderCircularProgressIndicator : RenderBox
+{
+    private const double DeterminateStartAngle = -Math.PI / 2.0;
+    private const double FullSweep = (Math.PI * 2.0) - 0.001;
+    private const double MinSweep = 0.001;
+
+    private double? _value;
+    private double _arcStart;
+    private double _arcSweep;
+    private Color? _trackColor;
+    private Color _valueColor;
+    private double _strokeWidth;
+    private double _indicatorSize;
+
+    public RenderCircularProgressIndicator(
+        double? value,
+        double arcStart,
+        double arcSweep,
+        Color? trackColor,
+        Color valueColor,
+        double strokeWidth,
+        double indicatorSize)
+    {
+        _value = value;
+        _arcStart = arcStart;
+        _arcSweep = arcSweep;
+        _trackColor = trackColor;
+        _valueColor = valueColor;
+        _strokeWidth = strokeWidth;
+        _indicatorSize = indicatorSize;
+    }
+
+    public double? Value
+    {
+        get => _value;
+        set
+        {
+            if (_value.HasValue == value.HasValue
+                && (!_value.HasValue || Math.Abs(_value.Value - value!.Value) <= 0.0001))
+            {
+                return;
+            }
+
+            _value = value;
+            MarkNeedsPaint();
+        }
+    }
+
+    public double ArcStart
+    {
+        get => _arcStart;
+        set
+        {
+            if (Math.Abs(_arcStart - value) <= 0.0001)
+            {
+                return;
+            }
+
+            _arcStart = value;
+            MarkNeedsPaint();
+        }
+    }
+
+    public double ArcSweep
+    {
+        get => _arcSweep;
+        set
+        {
+            if (Math.Abs(_arcSweep - value) <= 0.0001)
+            {
+                return;
+            }
+
+            _arcSweep = value;
+            MarkNeedsPaint();
+        }
+    }
+
+    public Color? TrackColor
+    {
+        get => _trackColor;
+        set
+        {
+            if (_trackColor == value)
+            {
+                return;
+            }
+
+            _trackColor = value;
+            MarkNeedsPaint();
+        }
+    }
+
+    public Color ValueColor
+    {
+        get => _valueColor;
+        set
+        {
+            if (_valueColor == value)
+            {
+                return;
+            }
+
+            _valueColor = value;
+            MarkNeedsPaint();
+        }
+    }
+
+    public double StrokeWidth
+    {
+        get => _strokeWidth;
+        set
+        {
+            if (Math.Abs(_strokeWidth - value) <= 0.0001)
+            {
+                return;
+            }
+
+            _strokeWidth = value;
+            MarkNeedsLayout();
+            MarkNeedsPaint();
+        }
+    }
+
+    public double IndicatorSize
+    {
+        get => _indicatorSize;
+        set
+        {
+            if (Math.Abs(_indicatorSize - value) <= 0.0001)
+            {
+                return;
+            }
+
+            _indicatorSize = value;
+            MarkNeedsLayout();
+            MarkNeedsPaint();
+        }
+    }
+
+    protected override void PerformLayout()
+    {
+        var side = Math.Max(0, IndicatorSize);
+        Size = Constraints.Constrain(new Size(side, side));
+    }
+
+    public override void Paint(PaintingContext ctx, Point offset)
+    {
+        if (Size.Width <= 0 || Size.Height <= 0)
+        {
+            return;
+        }
+
+        var diameter = Math.Min(Size.Width, Size.Height);
+        if (diameter <= 0)
+        {
+            return;
+        }
+
+        var strokeWidth = Math.Min(Math.Max(0, StrokeWidth), diameter);
+        if (strokeWidth <= 0)
+        {
+            return;
+        }
+
+        var arcDiameter = diameter - strokeWidth;
+        if (arcDiameter <= 0)
+        {
+            return;
+        }
+
+        var left = offset.X + ((Size.Width - diameter) / 2.0) + (strokeWidth / 2.0);
+        var top = offset.Y + ((Size.Height - diameter) / 2.0) + (strokeWidth / 2.0);
+        var arcRect = new Rect(left, top, arcDiameter, arcDiameter);
+
+        if (TrackColor.HasValue)
+        {
+            var trackPen = new Pen(new SolidColorBrush(TrackColor.Value), strokeWidth, lineCap: PenLineCap.Round);
+            ctx.DrawArc(trackPen, arcRect, startAngleRadians: 0, sweepAngleRadians: FullSweep);
+        }
+
+        var sweep = Value.HasValue
+            ? ResolveDeterminateSweep(Value.Value)
+            : Math.Clamp(ArcSweep, MinSweep, FullSweep);
+        if (sweep <= MinSweep)
+        {
+            return;
+        }
+
+        var start = Value.HasValue
+            ? DeterminateStartAngle
+            : ArcStart;
+        var lineCap = Value.HasValue ? PenLineCap.Flat : PenLineCap.Square;
+        var indicatorPen = new Pen(new SolidColorBrush(ValueColor), strokeWidth, lineCap: lineCap);
+        ctx.DrawArc(indicatorPen, arcRect, startAngleRadians: start, sweepAngleRadians: sweep);
+    }
+
+    private static double ResolveDeterminateSweep(double value)
+    {
+        var clamped = CircularProgressIndicator.ClampValue(value);
+        if (clamped <= 0)
+        {
+            return 0;
+        }
+
+        return Math.Min(clamped * FullSweep, FullSweep);
+    }
+}

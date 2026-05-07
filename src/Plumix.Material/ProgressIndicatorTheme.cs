@@ -12,7 +12,10 @@ public sealed record ProgressIndicatorThemeData(
     Color? Color = null,
     Color? LinearTrackColor = null,
     double? LinearMinHeight = null,
-    BorderRadius? BorderRadius = null);
+    BorderRadius? BorderRadius = null,
+    Color? CircularTrackColor = null,
+    double? CircularStrokeWidth = null,
+    double? CircularSize = null);
 
 public sealed class ProgressIndicatorTheme : InheritedWidget
 {
