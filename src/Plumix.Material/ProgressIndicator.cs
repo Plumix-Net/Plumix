@@ -18,6 +18,7 @@ public sealed class LinearProgressIndicator : StatefulWidget
         double? value = null,
         Color? backgroundColor = null,
         Color? color = null,
+        ValueNotifier<Color?>? valueColor = null,
         double? minHeight = null,
         BorderRadius? borderRadius = null,
         Color? stopIndicatorColor = null,
@@ -57,6 +58,7 @@ public sealed class LinearProgressIndicator : StatefulWidget
         Value = value;
         BackgroundColor = backgroundColor;
         Color = color;
+        ValueColor = valueColor;
         MinHeight = minHeight;
         BorderRadius = borderRadius;
         StopIndicatorColor = stopIndicatorColor;
@@ -73,6 +75,8 @@ public sealed class LinearProgressIndicator : StatefulWidget
     public Color? BackgroundColor { get; }
 
     public Color? Color { get; }
+
+    public ValueNotifier<Color?>? ValueColor { get; }
 
     public double? MinHeight { get; }
 
@@ -106,6 +110,7 @@ public sealed class LinearProgressIndicator : StatefulWidget
     {
         private AnimationController? _internalController;
         private AnimationController? _activeController;
+        private ValueNotifier<Color?>? _activeValueColor;
         private bool _isMounted;
 
         private LinearProgressIndicator CurrentWidget => (LinearProgressIndicator)StateWidget;
@@ -130,6 +135,12 @@ public sealed class LinearProgressIndicator : StatefulWidget
                 _activeController = null;
             }
 
+            if (_activeValueColor is not null)
+            {
+                _activeValueColor.RemoveListener(HandleValueColorChanged);
+                _activeValueColor = null;
+            }
+
             if (_internalController is not null)
             {
                 _internalController.Dispose();
@@ -144,9 +155,11 @@ public sealed class LinearProgressIndicator : StatefulWidget
             var useYear2023 = ResolveYear2023(theme, progressTheme);
             var animationController = ResolveAnimationController(progressTheme);
             UpdateAnimationBinding(animationController);
+            UpdateValueColorBinding(CurrentWidget.ValueColor);
             UpdateAnimationStatus(animationController);
 
-            var resolvedValueColor = CurrentWidget.Color
+            var resolvedValueColor = CurrentWidget.ValueColor?.Value
+                                     ?? CurrentWidget.Color
                                      ?? progressTheme.Color
                                      ?? theme.PrimaryColor;
 
@@ -236,6 +249,22 @@ public sealed class LinearProgressIndicator : StatefulWidget
             _activeController.Changed += HandleAnimationTick;
         }
 
+        private void UpdateValueColorBinding(ValueNotifier<Color?>? valueColor)
+        {
+            if (ReferenceEquals(_activeValueColor, valueColor))
+            {
+                return;
+            }
+
+            if (_activeValueColor is not null)
+            {
+                _activeValueColor.RemoveListener(HandleValueColorChanged);
+            }
+
+            _activeValueColor = valueColor;
+            _activeValueColor?.AddListener(HandleValueColorChanged);
+        }
+
         private string? ResolveSemanticsLabel(double? resolvedValue)
         {
             var label = CurrentWidget.SemanticsLabel;
@@ -286,6 +315,16 @@ public sealed class LinearProgressIndicator : StatefulWidget
         }
 
         private void HandleAnimationTick()
+        {
+            if (!_isMounted)
+            {
+                return;
+            }
+
+            SetState(() => { });
+        }
+
+        private void HandleValueColorChanged()
         {
             if (!_isMounted)
             {
@@ -819,6 +858,7 @@ public sealed class CircularProgressIndicator : StatefulWidget
         double? value = null,
         Color? backgroundColor = null,
         Color? color = null,
+        ValueNotifier<Color?>? valueColor = null,
         double? strokeWidth = null,
         double? strokeAlign = null,
         BoxConstraints? constraints = null,
@@ -864,6 +904,7 @@ public sealed class CircularProgressIndicator : StatefulWidget
         Value = value;
         BackgroundColor = backgroundColor;
         Color = color;
+        ValueColor = valueColor;
         StrokeWidth = strokeWidth;
         StrokeAlign = strokeAlign;
         Constraints = constraints;
@@ -881,6 +922,8 @@ public sealed class CircularProgressIndicator : StatefulWidget
     public Color? BackgroundColor { get; }
 
     public Color? Color { get; }
+
+    public ValueNotifier<Color?>? ValueColor { get; }
 
     public double? StrokeWidth { get; }
 
@@ -922,6 +965,7 @@ public sealed class CircularProgressIndicator : StatefulWidget
 
         private AnimationController? _internalController;
         private AnimationController? _activeController;
+        private ValueNotifier<Color?>? _activeValueColor;
         private bool _isMounted;
 
         private CircularProgressIndicator CurrentWidget => (CircularProgressIndicator)StateWidget;
@@ -946,6 +990,12 @@ public sealed class CircularProgressIndicator : StatefulWidget
                 _activeController = null;
             }
 
+            if (_activeValueColor is not null)
+            {
+                _activeValueColor.RemoveListener(HandleValueColorChanged);
+                _activeValueColor = null;
+            }
+
             if (_internalController is not null)
             {
                 _internalController.Dispose();
@@ -960,13 +1010,15 @@ public sealed class CircularProgressIndicator : StatefulWidget
             var useYear2023 = ResolveYear2023(theme, progressTheme);
             var animationController = ResolveAnimationController(progressTheme);
             UpdateAnimationBinding(animationController);
+            UpdateValueColorBinding(CurrentWidget.ValueColor);
             UpdateAnimationStatus(animationController);
 
             var resolvedValue = CurrentWidget.Value.HasValue
                 ? ClampValue(CurrentWidget.Value.Value)
                 : (double?)null;
 
-            var resolvedValueColor = CurrentWidget.Color
+            var resolvedValueColor = CurrentWidget.ValueColor?.Value
+                                     ?? CurrentWidget.Color
                                      ?? progressTheme.Color
                                      ?? theme.PrimaryColor;
 
@@ -1050,6 +1102,22 @@ public sealed class CircularProgressIndicator : StatefulWidget
             _activeController.Changed += HandleAnimationTick;
         }
 
+        private void UpdateValueColorBinding(ValueNotifier<Color?>? valueColor)
+        {
+            if (ReferenceEquals(_activeValueColor, valueColor))
+            {
+                return;
+            }
+
+            if (_activeValueColor is not null)
+            {
+                _activeValueColor.RemoveListener(HandleValueColorChanged);
+            }
+
+            _activeValueColor = valueColor;
+            _activeValueColor?.AddListener(HandleValueColorChanged);
+        }
+
         private string? ResolveSemanticsLabel(double? resolvedValue)
         {
             var label = CurrentWidget.SemanticsLabel;
@@ -1100,6 +1168,16 @@ public sealed class CircularProgressIndicator : StatefulWidget
         }
 
         private void HandleAnimationTick()
+        {
+            if (!_isMounted)
+            {
+                return;
+            }
+
+            SetState(() => { });
+        }
+
+        private void HandleValueColorChanged()
         {
             if (!_isMounted)
             {

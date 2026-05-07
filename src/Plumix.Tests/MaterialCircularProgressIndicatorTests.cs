@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
+using Plumix.Foundation;
 using Plumix.Material;
 using Plumix.Rendering;
 using Plumix.UI;
@@ -258,6 +259,47 @@ public sealed class MaterialCircularProgressIndicatorTests
         var themedArcSweep = ReadProperty<double>(themedRender, "ArcSweep");
         Assert.Equal(explicitArcStart, themedArcStart, 3);
         Assert.Equal(explicitArcSweep, themedArcSweep, 3);
+    }
+
+    [Fact]
+    public void CircularProgressIndicator_ValueColor_OverridesColorAndUpdatesFromNotifier()
+    {
+        var initialValueColor = Color.Parse("#FF00695C");
+        var updatedValueColor = Color.Parse("#FF8E24AA");
+        using var notifier = new ValueNotifier<Color?>(initialValueColor);
+
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    PrimaryColor = Colors.DarkOrange,
+                    ProgressIndicatorTheme = new ProgressIndicatorThemeData(
+                        Color: Colors.Navy)
+                },
+                child: new CircularProgressIndicator(
+                    value: 0.5,
+                    color: Colors.DarkRed,
+                    valueColor: notifier)));
+
+        harness.Pump(new Size(140, 140));
+
+        var renderIndicator = FindDescendantByTypeName(harness.RenderView, "RenderCircularProgressIndicator");
+        Assert.NotNull(renderIndicator);
+        Assert.Equal(initialValueColor, ReadProperty<Color>(renderIndicator!, "ValueColor"));
+
+        notifier.Value = null;
+        harness.Pump(new Size(140, 140));
+
+        renderIndicator = FindDescendantByTypeName(harness.RenderView, "RenderCircularProgressIndicator");
+        Assert.NotNull(renderIndicator);
+        Assert.Equal(Colors.DarkRed, ReadProperty<Color>(renderIndicator!, "ValueColor"));
+
+        notifier.Value = updatedValueColor;
+        harness.Pump(new Size(140, 140));
+
+        renderIndicator = FindDescendantByTypeName(harness.RenderView, "RenderCircularProgressIndicator");
+        Assert.NotNull(renderIndicator);
+        Assert.Equal(updatedValueColor, ReadProperty<Color>(renderIndicator!, "ValueColor"));
     }
 
     [Fact]

@@ -1,6 +1,7 @@
 using System;
 using Avalonia;
 using Avalonia.Media;
+using Plumix.Foundation;
 using Plumix.Material;
 using Plumix.Rendering;
 using Plumix.UI;
@@ -25,7 +26,14 @@ internal sealed class LinearProgressIndicatorDemoPageState : State
     private bool _determinate = true;
     private bool _useThemeOverrides;
     private bool _useWidgetOverrides;
+    private bool _useValueColorOverride;
     private double _progress = 0.35;
+    private readonly ValueNotifier<Color?> _valueColorOverride = new(Color.Parse("#FF1B5E20"));
+
+    public override void Dispose()
+    {
+        _valueColorOverride.Dispose();
+    }
 
     public override Widget Build(BuildContext context)
     {
@@ -56,7 +64,7 @@ internal sealed class LinearProgressIndicatorDemoPageState : State
                 [
                     new Text("LinearProgressIndicator baseline", fontSize: 20, color: Colors.Black),
                     new Text(
-                        "Determinate/indeterminate behavior, M2/M3 defaults, year2023 toggle, theme/widget precedence, track-gap/stop-dot styling, and RTL paint direction.",
+                        "Determinate/indeterminate behavior, M2/M3 defaults, year2023 toggle, theme/widget precedence, valueColor priority, track-gap/stop-dot styling, and RTL paint direction.",
                         fontSize: 14,
                         color: Color.Parse("#8A000000")),
                     new Row(
@@ -94,6 +102,11 @@ internal sealed class LinearProgressIndicatorDemoPageState : State
                                 width: 118,
                                 background: Color.Parse("#FFF0E8FF")),
                             BuildControlButton(
+                                label: _useValueColorOverride ? "valueColor on" : "valueColor off",
+                                onTap: () => SetState(() => _useValueColorOverride = !_useValueColorOverride),
+                                width: 126,
+                                background: Color.Parse("#FFE4F7E8")),
+                            BuildControlButton(
                                 label: "-",
                                 onTap: () => SetState(() => _progress = Math.Max(0, _progress - 0.1)),
                                 width: 42,
@@ -110,7 +123,7 @@ internal sealed class LinearProgressIndicatorDemoPageState : State
                                     color: Color.Parse("#FF607D8B"))),
                         ]),
                     new Text(
-                        $"useMaterial3={(_useMaterial3 ? "true" : "false")}, year2023={(_useYear2023 ? "true" : "false")}, determinate={(_determinate ? "true" : "false")}, theme={(_useThemeOverrides ? "true" : "false")}, widget={(_useWidgetOverrides ? "true" : "false")}",
+                        $"useMaterial3={(_useMaterial3 ? "true" : "false")}, year2023={(_useYear2023 ? "true" : "false")}, determinate={(_determinate ? "true" : "false")}, theme={(_useThemeOverrides ? "true" : "false")}, widget={(_useWidgetOverrides ? "true" : "false")}, valueColor={(_useValueColorOverride ? "true" : "false")}",
                         fontSize: 12,
                         color: Color.Parse("#FF607D8B")),
                     new Expanded(
@@ -180,12 +193,14 @@ internal sealed class LinearProgressIndicatorDemoPageState : State
                 stopIndicatorColor: Color.Parse("#FF880E4F"),
                 stopIndicatorRadius: 3.5,
                 trackGap: 8,
+                valueColor: _useValueColorOverride ? _valueColorOverride : null,
                 year2023: _useYear2023,
                 semanticsLabel: "Widget override progress");
         }
 
         return new LinearProgressIndicator(
             value: _determinate ? _progress : null,
+            valueColor: _useValueColorOverride ? _valueColorOverride : null,
             year2023: _useYear2023,
             semanticsLabel: "Baseline progress");
     }

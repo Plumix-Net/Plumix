@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
+using Plumix.Foundation;
 using Plumix.Material;
 using Plumix.Rendering;
 using Plumix.UI;
@@ -73,6 +74,49 @@ public sealed class MaterialLinearProgressIndicatorTests
         Assert.NotNull(themedRender);
         Assert.Null(ReadNullableProperty<double>(themedRender!, "Value"));
         Assert.Equal(0.25, ReadProperty<double>(themedRender, "AnimationValue"), 3);
+    }
+
+    [Fact]
+    public void LinearProgressIndicator_ValueColor_OverridesColorAndUpdatesFromNotifier()
+    {
+        var initialValueColor = Color.Parse("#FF00695C");
+        var updatedValueColor = Color.Parse("#FF8E24AA");
+        using var notifier = new ValueNotifier<Color?>(initialValueColor);
+
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    PrimaryColor = Colors.DarkOrange,
+                    ProgressIndicatorTheme = new ProgressIndicatorThemeData(
+                        Color: Colors.Navy)
+                },
+                child: new SizedBox(
+                    width: 200,
+                    child: new LinearProgressIndicator(
+                        value: 0.5,
+                        color: Colors.DarkRed,
+                        valueColor: notifier))));
+
+        harness.Pump(new Size(240, 80));
+
+        var renderIndicator = FindDescendantByTypeName(harness.RenderView, "RenderLinearProgressIndicator");
+        Assert.NotNull(renderIndicator);
+        Assert.Equal(initialValueColor, ReadProperty<Color>(renderIndicator!, "ValueColor"));
+
+        notifier.Value = null;
+        harness.Pump(new Size(240, 80));
+
+        renderIndicator = FindDescendantByTypeName(harness.RenderView, "RenderLinearProgressIndicator");
+        Assert.NotNull(renderIndicator);
+        Assert.Equal(Colors.DarkRed, ReadProperty<Color>(renderIndicator!, "ValueColor"));
+
+        notifier.Value = updatedValueColor;
+        harness.Pump(new Size(240, 80));
+
+        renderIndicator = FindDescendantByTypeName(harness.RenderView, "RenderLinearProgressIndicator");
+        Assert.NotNull(renderIndicator);
+        Assert.Equal(updatedValueColor, ReadProperty<Color>(renderIndicator!, "ValueColor"));
     }
 
     [Fact]

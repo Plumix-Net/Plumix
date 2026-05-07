@@ -19,6 +19,7 @@ class _CircularProgressIndicatorDemoPageState
   bool _determinate = true;
   bool _useThemeOverrides = false;
   bool _useWidgetOverrides = false;
+  bool _useValueColorOverride = false;
   int _widgetTrackGapIndex = 0;
   double _progress = 0.35;
 
@@ -52,7 +53,7 @@ class _CircularProgressIndicatorDemoPageState
           ),
           const SizedBox(height: 8),
           const Text(
-            'Determinate/indeterminate behavior, M2/M3 defaults, year2023 toggle, theme/widget precedence, and circular trackGap/strokeCap/strokeAlign/constraints.',
+            'Determinate/indeterminate behavior, M2/M3 defaults, year2023 toggle, theme/widget precedence, valueColor priority, and circular trackGap/strokeCap/strokeAlign/constraints.',
             style: TextStyle(fontSize: 14, color: Color(0x8A000000)),
           ),
           const SizedBox(height: 10),
@@ -100,6 +101,17 @@ class _CircularProgressIndicatorDemoPageState
               ),
               const SizedBox(width: 8),
               _buildControlButton(
+                label: _useValueColorOverride
+                    ? 'valueColor on'
+                    : 'valueColor off',
+                onTap: () => setState(
+                  () => _useValueColorOverride = !_useValueColorOverride,
+                ),
+                width: 126,
+                background: const Color(0xFFE4F7E8),
+              ),
+              const SizedBox(width: 8),
+              _buildControlButton(
                 label: 'gap=${_widgetTrackGap.toStringAsFixed(0)}',
                 onTap: () => setState(_cycleWidgetTrackGap),
                 width: 76,
@@ -140,6 +152,7 @@ class _CircularProgressIndicatorDemoPageState
             'determinate=${_determinate ? "true" : "false"}, '
             'theme=${_useThemeOverrides ? "true" : "false"}, '
             'widget=${_useWidgetOverrides ? "true" : "false"}, '
+            'valueColor=${_useValueColorOverride ? "true" : "false"}, '
             'gap=${_widgetTrackGap.toStringAsFixed(0)}',
             style: const TextStyle(fontSize: 12, color: Color(0xFF607D8B)),
           ),
@@ -216,6 +229,9 @@ class _CircularProgressIndicatorDemoPageState
         strokeCap: StrokeCap.square,
         constraints: const BoxConstraints(minWidth: 56, minHeight: 56),
         trackGap: _widgetTrackGap,
+        valueColor: _useValueColorOverride
+            ? const AlwaysStoppedAnimation<Color>(Color(0xFF1B5E20))
+            : null,
         year2023: _useYear2023,
         semanticsLabel: 'Widget override progress',
       );
@@ -224,6 +240,9 @@ class _CircularProgressIndicatorDemoPageState
     return CircularProgressIndicator(
       value: _determinate ? _progress : null,
       trackGap: _widgetTrackGap,
+      valueColor: _useValueColorOverride
+          ? const AlwaysStoppedAnimation<Color>(Color(0xFF1B5E20))
+          : null,
       year2023: _useYear2023,
       semanticsLabel: 'Baseline progress',
     );

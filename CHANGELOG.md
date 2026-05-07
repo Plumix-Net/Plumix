@@ -14,6 +14,11 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 ### Changed
 
+- Expanded framework progress-indicator color parity in `src/Plumix.Material/ProgressIndicator.cs`:
+  - added Flutter-like `valueColor` precedence for both `LinearProgressIndicator` and `CircularProgressIndicator` (`valueColor -> color -> ProgressIndicatorThemeData.color -> theme primary`);
+  - introduced live `valueColor` updates through `ValueNotifier<Color?>` listener wiring in indicator state lifecycles, including null-value fallback to `color`/theme/default paths;
+  - expanded focused regression coverage in `src/Plumix.Tests/MaterialLinearProgressIndicatorTests.cs` and `src/Plumix.Tests/MaterialCircularProgressIndicatorTests.cs` for precedence, null fallback, and runtime notifier-driven color updates;
+  - updated C#/Dart runtime parity demos (`src/Sample/Plumix.Sample/Demos/Material/LinearProgressIndicatorDemoPage.cs`, `src/Sample/Plumix.Sample/Demos/Material/CircularProgressIndicatorDemoPage.cs`, `dart_sample/lib/demos/material/linear_progress_indicator_demo_page.dart`, `dart_sample/lib/demos/material/circular_progress_indicator_demo_page.dart`) with explicit `valueColor` toggles.
 - Expanded framework Material `LinearProgressIndicator` parity in `src/Plumix.Material/ProgressIndicator.cs`:
   - added Flutter-like `year2023` API/theme precedence (`widget.year2023 -> ProgressIndicatorThemeData.year2023 -> default true` in M3);
   - aligned M3 2023/2024 default switching behavior for stop-indicator visibility, track-gap visibility, and default border radius (`2023`: square/no stop/no gap; `2024`: rounded with stop+gap defaults);

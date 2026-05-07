@@ -17,6 +17,7 @@ class _LinearProgressIndicatorDemoPageState
   bool _determinate = true;
   bool _useThemeOverrides = false;
   bool _useWidgetOverrides = false;
+  bool _useValueColorOverride = false;
   double _progress = 0.35;
 
   @override
@@ -49,7 +50,7 @@ class _LinearProgressIndicatorDemoPageState
           ),
           const SizedBox(height: 8),
           const Text(
-            'Determinate/indeterminate behavior, M2/M3 defaults, year2023 toggle, theme/widget precedence, track-gap/stop-dot styling, and RTL paint direction.',
+            'Determinate/indeterminate behavior, M2/M3 defaults, year2023 toggle, theme/widget precedence, valueColor priority, track-gap/stop-dot styling, and RTL paint direction.',
             style: TextStyle(fontSize: 14, color: Color(0x8A000000)),
           ),
           const SizedBox(height: 10),
@@ -97,6 +98,17 @@ class _LinearProgressIndicatorDemoPageState
               ),
               const SizedBox(width: 8),
               _buildControlButton(
+                label: _useValueColorOverride
+                    ? 'valueColor on'
+                    : 'valueColor off',
+                onTap: () => setState(
+                  () => _useValueColorOverride = !_useValueColorOverride,
+                ),
+                width: 126,
+                background: const Color(0xFFE4F7E8),
+              ),
+              const SizedBox(width: 8),
+              _buildControlButton(
                 label: '-',
                 onTap: () =>
                     setState(() => _progress = math.max(0, _progress - 0.1)),
@@ -129,7 +141,8 @@ class _LinearProgressIndicatorDemoPageState
             'year2023=${_useYear2023 ? "true" : "false"}, '
             'determinate=${_determinate ? "true" : "false"}, '
             'theme=${_useThemeOverrides ? "true" : "false"}, '
-            'widget=${_useWidgetOverrides ? "true" : "false"}',
+            'widget=${_useWidgetOverrides ? "true" : "false"}, '
+            'valueColor=${_useValueColorOverride ? "true" : "false"}',
             style: const TextStyle(fontSize: 12, color: Color(0xFF607D8B)),
           ),
           const SizedBox(height: 10),
@@ -201,6 +214,9 @@ class _LinearProgressIndicatorDemoPageState
         stopIndicatorColor: const Color(0xFF880E4F),
         stopIndicatorRadius: 3.5,
         trackGap: 8,
+        valueColor: _useValueColorOverride
+            ? const AlwaysStoppedAnimation<Color>(Color(0xFF1B5E20))
+            : null,
         year2023: _useYear2023,
         semanticsLabel: 'Widget override progress',
       );
@@ -208,6 +224,9 @@ class _LinearProgressIndicatorDemoPageState
 
     return LinearProgressIndicator(
       value: _determinate ? _progress : null,
+      valueColor: _useValueColorOverride
+          ? const AlwaysStoppedAnimation<Color>(Color(0xFF1B5E20))
+          : null,
       year2023: _useYear2023,
       semanticsLabel: 'Baseline progress',
     );

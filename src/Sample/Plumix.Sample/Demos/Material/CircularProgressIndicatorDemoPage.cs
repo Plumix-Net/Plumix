@@ -1,6 +1,7 @@
 using System;
 using Avalonia;
 using Avalonia.Media;
+using Plumix.Foundation;
 using Plumix.Material;
 using Plumix.Rendering;
 using Plumix.UI;
@@ -27,8 +28,15 @@ internal sealed class CircularProgressIndicatorDemoPageState : State
     private bool _determinate = true;
     private bool _useThemeOverrides;
     private bool _useWidgetOverrides;
+    private bool _useValueColorOverride;
     private int _widgetTrackGapIndex;
     private double _progress = 0.35;
+    private readonly ValueNotifier<Color?> _valueColorOverride = new(Color.Parse("#FF1B5E20"));
+
+    public override void Dispose()
+    {
+        _valueColorOverride.Dispose();
+    }
 
     public override Widget Build(BuildContext context)
     {
@@ -59,7 +67,7 @@ internal sealed class CircularProgressIndicatorDemoPageState : State
                 [
                     new Text("CircularProgressIndicator baseline", fontSize: 20, color: Colors.Black),
                     new Text(
-                        "Determinate/indeterminate behavior, M2/M3 defaults, year2023 toggle, theme/widget precedence, and circular trackGap/strokeCap/strokeAlign/constraints.",
+                        "Determinate/indeterminate behavior, M2/M3 defaults, year2023 toggle, theme/widget precedence, valueColor priority, and circular trackGap/strokeCap/strokeAlign/constraints.",
                         fontSize: 14,
                         color: Color.Parse("#8A000000")),
                     new Row(
@@ -97,6 +105,11 @@ internal sealed class CircularProgressIndicatorDemoPageState : State
                                 width: 118,
                                 background: Color.Parse("#FFF0E8FF")),
                             BuildControlButton(
+                                label: _useValueColorOverride ? "valueColor on" : "valueColor off",
+                                onTap: () => SetState(() => _useValueColorOverride = !_useValueColorOverride),
+                                width: 126,
+                                background: Color.Parse("#FFE4F7E8")),
+                            BuildControlButton(
                                 label: $"gap={GetWidgetTrackGap():0.#}",
                                 onTap: () => SetState(CycleWidgetTrackGap),
                                 width: 76,
@@ -118,7 +131,7 @@ internal sealed class CircularProgressIndicatorDemoPageState : State
                                     color: Color.Parse("#FF607D8B"))),
                         ]),
                     new Text(
-                        $"useMaterial3={(_useMaterial3 ? "true" : "false")}, year2023={(_useYear2023 ? "true" : "false")}, determinate={(_determinate ? "true" : "false")}, theme={(_useThemeOverrides ? "true" : "false")}, widget={(_useWidgetOverrides ? "true" : "false")}, gap={GetWidgetTrackGap():0.#}",
+                        $"useMaterial3={(_useMaterial3 ? "true" : "false")}, year2023={(_useYear2023 ? "true" : "false")}, determinate={(_determinate ? "true" : "false")}, theme={(_useThemeOverrides ? "true" : "false")}, widget={(_useWidgetOverrides ? "true" : "false")}, valueColor={(_useValueColorOverride ? "true" : "false")}, gap={GetWidgetTrackGap():0.#}",
                         fontSize: 12,
                         color: Color.Parse("#FF607D8B")),
                     new Expanded(
@@ -178,6 +191,7 @@ internal sealed class CircularProgressIndicatorDemoPageState : State
                 constraints: new BoxConstraints(MinWidth: 56, MinHeight: 56),
                 strokeCap: StrokeCap.Square,
                 trackGap: GetWidgetTrackGap(),
+                valueColor: _useValueColorOverride ? _valueColorOverride : null,
                 year2023: _useYear2023,
                 semanticsLabel: "Widget override progress");
         }
@@ -185,6 +199,7 @@ internal sealed class CircularProgressIndicatorDemoPageState : State
         return new CircularProgressIndicator(
             value: _determinate ? _progress : null,
             trackGap: GetWidgetTrackGap(),
+            valueColor: _useValueColorOverride ? _valueColorOverride : null,
             year2023: _useYear2023,
             semanticsLabel: "Baseline progress");
     }
