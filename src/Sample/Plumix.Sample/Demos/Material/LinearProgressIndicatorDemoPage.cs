@@ -37,7 +37,10 @@ internal sealed class LinearProgressIndicatorDemoPageState : State
                     Color: Color.Parse("#FF1565C0"),
                     LinearTrackColor: Color.Parse("#FFC5CAE9"),
                     LinearMinHeight: 6,
-                    BorderRadius: BorderRadius.Circular(3))
+                    BorderRadius: BorderRadius.Circular(3),
+                    LinearStopIndicatorColor: Color.Parse("#FF0D47A1"),
+                    LinearStopIndicatorRadius: 3,
+                    TrackGap: 6)
                 : new ProgressIndicatorThemeData()
         };
 
@@ -50,7 +53,7 @@ internal sealed class LinearProgressIndicatorDemoPageState : State
                 [
                     new Text("LinearProgressIndicator baseline", fontSize: 20, color: Colors.Black),
                     new Text(
-                        "Determinate/indeterminate behavior, M2/M3 defaults, theme/widget precedence, and RTL paint direction.",
+                        "Determinate/indeterminate behavior, M2/M3 defaults, theme/widget precedence, track-gap/stop-dot styling, and RTL paint direction.",
                         fontSize: 14,
                         color: Color.Parse("#8A000000")),
                     new Row(
@@ -166,6 +169,9 @@ internal sealed class LinearProgressIndicatorDemoPageState : State
                 backgroundColor: Color.Parse("#FFFFCDD2"),
                 minHeight: 8,
                 borderRadius: BorderRadius.Circular(4),
+                stopIndicatorColor: Color.Parse("#FF880E4F"),
+                stopIndicatorRadius: 3.5,
+                trackGap: 8,
                 semanticsLabel: "Widget override progress");
         }
 

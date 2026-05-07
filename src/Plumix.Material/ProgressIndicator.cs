@@ -20,6 +20,9 @@ public sealed class LinearProgressIndicator : StatefulWidget
         Color? color = null,
         double? minHeight = null,
         BorderRadius? borderRadius = null,
+        Color? stopIndicatorColor = null,
+        double? stopIndicatorRadius = null,
+        double? trackGap = null,
         string? semanticsLabel = null,
         string? semanticsValue = null,
         Key? key = null) : base(key)
@@ -34,11 +37,24 @@ public sealed class LinearProgressIndicator : StatefulWidget
             throw new ArgumentOutOfRangeException(nameof(minHeight), "LinearProgressIndicator minHeight must be finite and greater than zero.");
         }
 
+        if (stopIndicatorRadius.HasValue && (double.IsNaN(stopIndicatorRadius.Value) || double.IsInfinity(stopIndicatorRadius.Value) || stopIndicatorRadius.Value < 0))
+        {
+            throw new ArgumentOutOfRangeException(nameof(stopIndicatorRadius), "LinearProgressIndicator stopIndicatorRadius must be finite and greater than or equal to zero.");
+        }
+
+        if (trackGap.HasValue && (double.IsNaN(trackGap.Value) || double.IsInfinity(trackGap.Value) || trackGap.Value < 0))
+        {
+            throw new ArgumentOutOfRangeException(nameof(trackGap), "LinearProgressIndicator trackGap must be finite and greater than or equal to zero.");
+        }
+
         Value = value;
         BackgroundColor = backgroundColor;
         Color = color;
         MinHeight = minHeight;
         BorderRadius = borderRadius;
+        StopIndicatorColor = stopIndicatorColor;
+        StopIndicatorRadius = stopIndicatorRadius;
+        TrackGap = trackGap;
         SemanticsLabel = semanticsLabel;
         SemanticsValue = semanticsValue;
     }
@@ -52,6 +68,12 @@ public sealed class LinearProgressIndicator : StatefulWidget
     public double? MinHeight { get; }
 
     public BorderRadius? BorderRadius { get; }
+
+    public Color? StopIndicatorColor { get; }
+
+    public double? StopIndicatorRadius { get; }
+
+    public double? TrackGap { get; }
 
     public string? SemanticsLabel { get; }
 
@@ -124,6 +146,24 @@ public sealed class LinearProgressIndicator : StatefulWidget
                                            ? Plumix.Rendering.BorderRadius.Circular(2.0)
                                            : Plumix.Rendering.BorderRadius.Zero);
 
+            Color? resolvedStopIndicatorColor = theme.UseMaterial3
+                ? CurrentWidget.StopIndicatorColor
+                  ?? progressTheme.LinearStopIndicatorColor
+                  ?? theme.PrimaryColor
+                : null;
+
+            double? resolvedStopIndicatorRadius = theme.UseMaterial3
+                ? CurrentWidget.StopIndicatorRadius
+                  ?? progressTheme.LinearStopIndicatorRadius
+                  ?? 2.0
+                : null;
+
+            var resolvedTrackGap = theme.UseMaterial3
+                ? CurrentWidget.TrackGap
+                  ?? progressTheme.TrackGap
+                  ?? 4.0
+                : 0.0;
+
             var resolvedValue = CurrentWidget.Value.HasValue
                 ? ClampValue(CurrentWidget.Value.Value)
                 : (double?)null;
@@ -138,6 +178,9 @@ public sealed class LinearProgressIndicator : StatefulWidget
                 valueColor: resolvedValueColor,
                 minHeight: resolvedMinHeight,
                 borderRadius: resolvedBorderRadius,
+                stopIndicatorColor: resolvedStopIndicatorColor,
+                stopIndicatorRadius: resolvedStopIndicatorRadius,
+                trackGap: resolvedTrackGap,
                 textDirection: textDirection);
 
             var semanticsLabel = ResolveSemanticsLabel(resolvedValue);
@@ -218,6 +261,9 @@ internal sealed class LinearProgressIndicatorRenderWidget : LeafRenderObjectWidg
         Color valueColor,
         double minHeight,
         BorderRadius borderRadius,
+        Color? stopIndicatorColor,
+        double? stopIndicatorRadius,
+        double trackGap,
         TextDirection textDirection,
         Key? key = null) : base(key)
     {
@@ -227,6 +273,9 @@ internal sealed class LinearProgressIndicatorRenderWidget : LeafRenderObjectWidg
         ValueColor = valueColor;
         MinHeight = minHeight;
         BorderRadius = borderRadius;
+        StopIndicatorColor = stopIndicatorColor;
+        StopIndicatorRadius = stopIndicatorRadius;
+        TrackGap = trackGap;
         TextDirection = textDirection;
     }
 
@@ -242,6 +291,12 @@ internal sealed class LinearProgressIndicatorRenderWidget : LeafRenderObjectWidg
 
     public BorderRadius BorderRadius { get; }
 
+    public Color? StopIndicatorColor { get; }
+
+    public double? StopIndicatorRadius { get; }
+
+    public double TrackGap { get; }
+
     public TextDirection TextDirection { get; }
 
     internal override RenderObject CreateRenderObject(BuildContext context)
@@ -253,6 +308,9 @@ internal sealed class LinearProgressIndicatorRenderWidget : LeafRenderObjectWidg
             valueColor: ValueColor,
             minHeight: MinHeight,
             borderRadius: BorderRadius,
+            stopIndicatorColor: StopIndicatorColor,
+            stopIndicatorRadius: StopIndicatorRadius,
+            trackGap: TrackGap,
             textDirection: TextDirection);
     }
 
@@ -265,6 +323,9 @@ internal sealed class LinearProgressIndicatorRenderWidget : LeafRenderObjectWidg
         indicator.ValueColor = ValueColor;
         indicator.MinHeight = MinHeight;
         indicator.BorderRadius = BorderRadius;
+        indicator.StopIndicatorColor = StopIndicatorColor;
+        indicator.StopIndicatorRadius = StopIndicatorRadius;
+        indicator.TrackGap = TrackGap;
         indicator.TextDirection = TextDirection;
     }
 }
@@ -272,6 +333,7 @@ internal sealed class LinearProgressIndicatorRenderWidget : LeafRenderObjectWidg
 internal sealed class RenderLinearProgressIndicator : RenderBox
 {
     private const double IndeterminateDurationMilliseconds = 1800.0;
+    private const double TrackGapRampDownThreshold = 0.01;
 
     private double? _value;
     private double _animationValue;
@@ -279,6 +341,9 @@ internal sealed class RenderLinearProgressIndicator : RenderBox
     private Color _valueColor;
     private double _minHeight;
     private BorderRadius _borderRadius;
+    private Color? _stopIndicatorColor;
+    private double? _stopIndicatorRadius;
+    private double _trackGap;
     private TextDirection _textDirection;
 
     public RenderLinearProgressIndicator(
@@ -288,6 +353,9 @@ internal sealed class RenderLinearProgressIndicator : RenderBox
         Color valueColor,
         double minHeight,
         BorderRadius borderRadius,
+        Color? stopIndicatorColor,
+        double? stopIndicatorRadius,
+        double trackGap,
         TextDirection textDirection)
     {
         _value = value;
@@ -296,6 +364,9 @@ internal sealed class RenderLinearProgressIndicator : RenderBox
         _valueColor = valueColor;
         _minHeight = minHeight;
         _borderRadius = borderRadius;
+        _stopIndicatorColor = stopIndicatorColor;
+        _stopIndicatorRadius = stopIndicatorRadius;
+        _trackGap = trackGap;
         _textDirection = textDirection;
     }
 
@@ -391,6 +462,56 @@ internal sealed class RenderLinearProgressIndicator : RenderBox
         }
     }
 
+    public Color? StopIndicatorColor
+    {
+        get => _stopIndicatorColor;
+        set
+        {
+            if (_stopIndicatorColor == value)
+            {
+                return;
+            }
+
+            _stopIndicatorColor = value;
+            MarkNeedsPaint();
+        }
+    }
+
+    public double? StopIndicatorRadius
+    {
+        get => _stopIndicatorRadius;
+        set
+        {
+            if (!_stopIndicatorRadius.HasValue && !value.HasValue)
+            {
+                return;
+            }
+
+            if (_stopIndicatorRadius.HasValue && value.HasValue && Math.Abs(_stopIndicatorRadius.Value - value.Value) <= 0.0001)
+            {
+                return;
+            }
+
+            _stopIndicatorRadius = value;
+            MarkNeedsPaint();
+        }
+    }
+
+    public double TrackGap
+    {
+        get => _trackGap;
+        set
+        {
+            if (Math.Abs(_trackGap - value) <= 0.0001)
+            {
+                return;
+            }
+
+            _trackGap = value;
+            MarkNeedsPaint();
+        }
+    }
+
     public TextDirection TextDirection
     {
         get => _textDirection;
@@ -426,16 +547,32 @@ internal sealed class RenderLinearProgressIndicator : RenderBox
         var valueBrush = new SolidColorBrush(ValueColor);
         var radius = ResolveRadius(Size.Width, Size.Height, BorderRadius.Radius);
 
-        ctx.DrawRectangle(
-            trackBrush,
-            null,
-            new Rect(offset.X, offset.Y, Size.Width, Size.Height),
-            radius,
-            radius);
+        var effectiveTrackGap = Size.Width > 0
+            ? Math.Clamp(TrackGap, 0.0, Size.Width)
+            : 0.0;
+        var trackGapFraction = Size.Width > 0
+            ? effectiveTrackGap / Size.Width
+            : 0.0;
 
         if (Value.HasValue)
         {
-            DrawBar(ctx, offset, valueBrush, 0, LinearProgressIndicator.ClampValue(Value.Value), radius);
+            var effectiveValue = LinearProgressIndicator.ClampValue(Value.Value);
+            var trackStartFraction = trackGapFraction > 0
+                ? effectiveValue + GetEffectiveTrackGapFraction(effectiveValue, trackGapFraction)
+                : 0.0;
+
+            if (trackStartFraction < 1.0)
+            {
+                DrawBar(ctx, offset, trackBrush, trackStartFraction, 1.0, radius);
+            }
+
+            DrawStopIndicator(ctx, offset);
+
+            if (effectiveValue > 0)
+            {
+                DrawBar(ctx, offset, valueBrush, 0.0, effectiveValue, radius);
+            }
+
             return;
         }
 
@@ -445,8 +582,37 @@ internal sealed class RenderLinearProgressIndicator : RenderBox
         var line2Head = TransformInterval(t, 1000.0 / IndeterminateDurationMilliseconds, (1000.0 + 567.0) / IndeterminateDurationMilliseconds, 0.0, 0.0, 0.65, 1.0);
         var line2Tail = TransformInterval(t, 1267.0 / IndeterminateDurationMilliseconds, (1267.0 + 533.0) / IndeterminateDurationMilliseconds, 0.10, 0.0, 0.45, 1.0);
 
+        if (line1Head < 1 - trackGapFraction)
+        {
+            var trackStartFraction = line1Head > 0
+                ? line1Head + GetEffectiveTrackGapFraction(line1Head, trackGapFraction)
+                : 0.0;
+            DrawBar(ctx, offset, trackBrush, trackStartFraction, 1.0, radius);
+        }
+
         DrawBar(ctx, offset, valueBrush, line1Tail, line1Head, radius);
+
+        if (line1Tail > trackGapFraction)
+        {
+            var trackStartFraction = line2Head > 0
+                ? line2Head + GetEffectiveTrackGapFraction(line2Head, trackGapFraction)
+                : 0.0;
+            var trackEndFraction = line1Tail < 1
+                ? line1Tail - GetEffectiveTrackGapFraction(1 - line1Tail, trackGapFraction)
+                : 1.0;
+
+            DrawBar(ctx, offset, trackBrush, trackStartFraction, trackEndFraction, radius);
+        }
+
         DrawBar(ctx, offset, valueBrush, line2Tail, line2Head, radius);
+
+        if (line2Tail > trackGapFraction)
+        {
+            var trackEndFraction = line2Tail < 1
+                ? line2Tail - GetEffectiveTrackGapFraction(1 - line2Tail, trackGapFraction)
+                : 1.0;
+            DrawBar(ctx, offset, trackBrush, 0.0, trackEndFraction, radius);
+        }
     }
 
     private void DrawBar(
@@ -478,6 +644,37 @@ internal sealed class RenderLinearProgressIndicator : RenderBox
             barRect,
             barRadius,
             barRadius);
+    }
+
+    private void DrawStopIndicator(PaintingContext ctx, Point offset)
+    {
+        if (!_stopIndicatorRadius.HasValue || _stopIndicatorRadius.Value <= 0 || _stopIndicatorColor is null)
+        {
+            return;
+        }
+
+        var maxRadius = Size.Height / 2.0;
+        var radius = Math.Min(_stopIndicatorRadius.Value, maxRadius);
+        if (radius <= 0)
+        {
+            return;
+        }
+
+        var centerX = TextDirection == TextDirection.Rtl
+            ? offset.X + maxRadius
+            : offset.X + (Size.Width - maxRadius);
+        var center = new Point(centerX, offset.Y + maxRadius);
+        ctx.DrawCircle(new SolidColorBrush(_stopIndicatorColor.Value), null, center, radius);
+    }
+
+    private static double GetEffectiveTrackGapFraction(double currentValue, double trackGapFraction)
+    {
+        if (trackGapFraction <= 0)
+        {
+            return 0;
+        }
+
+        return trackGapFraction * Math.Clamp(currentValue, 0.0, TrackGapRampDownThreshold) / TrackGapRampDownThreshold;
     }
 
     private static double TransformInterval(

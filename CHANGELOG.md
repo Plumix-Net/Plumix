@@ -14,6 +14,12 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 ### Changed
 
+- Expanded framework Material `LinearProgressIndicator` parity in `src/Plumix.Material/ProgressIndicator.cs`:
+  - added Flutter-like API surface for linear M3 stop/gap styling (`stopIndicatorColor`, `stopIndicatorRadius`, and `trackGap`) with constructor guards for non-finite/negative values;
+  - wired precedence for new fields as `widget -> ProgressIndicatorThemeData -> mode defaults` (`M3` defaults: stop color `primary`, stop radius `2`, track gap `4`; `M2`: stop/gap disabled);
+  - updated linear painter choreography to apply track-gap logic across determinate and indeterminate phases and draw the determinate stop-indicator cap at the trailing edge;
+  - expanded focused regression coverage in `src/Plumix.Tests/MaterialLinearProgressIndicatorTests.cs` for new constructor guards, M2/M3 stop/gap defaults, and theme/widget precedence for `stopIndicator*` + `trackGap`;
+  - updated C#/Dart runtime parity demos (`src/Sample/Plumix.Sample/Demos/Material/LinearProgressIndicatorDemoPage.cs`, `dart_sample/lib/demos/material/linear_progress_indicator_demo_page.dart`) to probe `ProgressIndicatorTheme` and widget-level stop/gap overrides.
 - Expanded framework Material drawer gesture parity coverage with focused RTL regression tests in `src/Plumix.Tests/MaterialScaffoldTests.cs`:
   - added RTL edge-open coverage for `Scaffold.drawer` (start drawer opens from the right edge in RTL with leftward drag);
   - added RTL edge-open coverage for `Scaffold.endDrawer` (end drawer opens from the left edge in RTL with rightward drag);

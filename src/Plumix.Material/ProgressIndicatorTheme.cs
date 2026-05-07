@@ -13,6 +13,9 @@ public sealed record ProgressIndicatorThemeData(
     Color? LinearTrackColor = null,
     double? LinearMinHeight = null,
     BorderRadius? BorderRadius = null,
+    Color? LinearStopIndicatorColor = null,
+    double? LinearStopIndicatorRadius = null,
+    double? TrackGap = null,
     Color? CircularTrackColor = null,
     double? CircularStrokeWidth = null,
     double? CircularSize = null);

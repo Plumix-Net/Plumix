@@ -29,6 +29,9 @@ class _LinearProgressIndicatorDemoPageState
               linearTrackColor: Color(0xFFC5CAE9),
               linearMinHeight: 6,
               borderRadius: BorderRadius.all(Radius.circular(3)),
+              stopIndicatorColor: Color(0xFF0D47A1),
+              stopIndicatorRadius: 3,
+              trackGap: 6,
             )
           : const ProgressIndicatorThemeData(),
     );
@@ -44,7 +47,7 @@ class _LinearProgressIndicatorDemoPageState
           ),
           const SizedBox(height: 8),
           const Text(
-            'Determinate/indeterminate behavior, M2/M3 defaults, theme/widget precedence, and RTL paint direction.',
+            'Determinate/indeterminate behavior, M2/M3 defaults, theme/widget precedence, track-gap/stop-dot styling, and RTL paint direction.',
             style: TextStyle(fontSize: 14, color: Color(0x8A000000)),
           ),
           const SizedBox(height: 10),
@@ -185,6 +188,9 @@ class _LinearProgressIndicatorDemoPageState
         backgroundColor: const Color(0xFFFFCDD2),
         minHeight: 8,
         borderRadius: const BorderRadius.all(Radius.circular(4)),
+        stopIndicatorColor: const Color(0xFF880E4F),
+        stopIndicatorRadius: 3.5,
+        trackGap: 8,
         semanticsLabel: 'Widget override progress',
       );
     }

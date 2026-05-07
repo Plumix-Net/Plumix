@@ -18,6 +18,10 @@ public sealed class MaterialLinearProgressIndicatorTests
         Assert.Throws<ArgumentOutOfRangeException>(() => new LinearProgressIndicator(value: double.PositiveInfinity));
         Assert.Throws<ArgumentOutOfRangeException>(() => new LinearProgressIndicator(minHeight: 0));
         Assert.Throws<ArgumentOutOfRangeException>(() => new LinearProgressIndicator(minHeight: -1));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new LinearProgressIndicator(stopIndicatorRadius: -0.1));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new LinearProgressIndicator(stopIndicatorRadius: double.NaN));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new LinearProgressIndicator(trackGap: -0.1));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new LinearProgressIndicator(trackGap: double.PositiveInfinity));
     }
 
     [Fact]
@@ -45,6 +49,11 @@ public sealed class MaterialLinearProgressIndicatorTests
         Assert.Equal(Colors.DarkOrange, ReadProperty<Color>(renderIndicator!, "ValueColor"));
         Assert.Equal(Colors.LightBlue, ReadProperty<Color>(renderIndicator, "TrackColor"));
         Assert.Equal(4.0, ReadProperty<double>(renderIndicator, "MinHeight"), 3);
+        Assert.Equal(4.0, ReadProperty<double>(renderIndicator, "TrackGap"), 3);
+        Assert.Equal(Colors.DarkOrange, ReadNullableProperty<Color>(renderIndicator, "StopIndicatorColor"));
+        var defaultStopRadius = ReadNullableProperty<double>(renderIndicator, "StopIndicatorRadius");
+        Assert.NotNull(defaultStopRadius);
+        Assert.Equal(2.0, defaultStopRadius.Value, 3);
 
         var radius = ReadProperty<BorderRadius>(renderIndicator, "BorderRadius");
         Assert.Equal(2.0, radius.Radius, 3);
@@ -74,6 +83,9 @@ public sealed class MaterialLinearProgressIndicatorTests
 
         Assert.Equal(Colors.MediumVioletRed, ReadProperty<Color>(renderIndicator!, "ValueColor"));
         Assert.Equal(Colors.Wheat, ReadProperty<Color>(renderIndicator, "TrackColor"));
+        Assert.Equal(0.0, ReadProperty<double>(renderIndicator, "TrackGap"), 3);
+        Assert.Null(ReadNullableProperty<Color>(renderIndicator, "StopIndicatorColor"));
+        Assert.Null(ReadNullableProperty<double>(renderIndicator, "StopIndicatorRadius"));
 
         var radius = ReadProperty<BorderRadius>(renderIndicator, "BorderRadius");
         Assert.Equal(0.0, radius.Radius, 3);
@@ -90,7 +102,10 @@ public sealed class MaterialLinearProgressIndicatorTests
                 Color: Colors.Green,
                 LinearTrackColor: Colors.MediumPurple,
                 LinearMinHeight: 6,
-                BorderRadius: BorderRadius.Circular(3))
+                BorderRadius: BorderRadius.Circular(3),
+                LinearStopIndicatorColor: Colors.DeepSkyBlue,
+                LinearStopIndicatorRadius: 1.5,
+                TrackGap: 6.0)
         };
 
         using var themedHarness = new WidgetRenderHarness(
@@ -109,6 +124,11 @@ public sealed class MaterialLinearProgressIndicatorTests
         Assert.Equal(Colors.MediumPurple, ReadProperty<Color>(themedRender, "TrackColor"));
         Assert.Equal(6.0, ReadProperty<double>(themedRender, "MinHeight"), 3);
         Assert.Equal(3.0, ReadProperty<BorderRadius>(themedRender, "BorderRadius").Radius, 3);
+        Assert.Equal(Colors.DeepSkyBlue, ReadNullableProperty<Color>(themedRender, "StopIndicatorColor"));
+        var themedStopRadius = ReadNullableProperty<double>(themedRender, "StopIndicatorRadius");
+        Assert.NotNull(themedStopRadius);
+        Assert.Equal(1.5, themedStopRadius.Value, 3);
+        Assert.Equal(6.0, ReadProperty<double>(themedRender, "TrackGap"), 3);
 
         using var widgetHarness = new WidgetRenderHarness(
             new Theme(
@@ -120,7 +140,10 @@ public sealed class MaterialLinearProgressIndicatorTests
                         color: Colors.DarkRed,
                         backgroundColor: Colors.LightGoldenrodYellow,
                         minHeight: 8,
-                        borderRadius: BorderRadius.Circular(4)))));
+                        borderRadius: BorderRadius.Circular(4),
+                        stopIndicatorColor: Colors.HotPink,
+                        stopIndicatorRadius: 3.0,
+                        trackGap: 5.0))));
 
         widgetHarness.Pump(new Size(240, 80));
 
@@ -131,6 +154,11 @@ public sealed class MaterialLinearProgressIndicatorTests
         Assert.Equal(Colors.LightGoldenrodYellow, ReadProperty<Color>(widgetRender, "TrackColor"));
         Assert.Equal(8.0, ReadProperty<double>(widgetRender, "MinHeight"), 3);
         Assert.Equal(4.0, ReadProperty<BorderRadius>(widgetRender, "BorderRadius").Radius, 3);
+        Assert.Equal(Colors.HotPink, ReadNullableProperty<Color>(widgetRender, "StopIndicatorColor"));
+        var widgetStopRadius = ReadNullableProperty<double>(widgetRender, "StopIndicatorRadius");
+        Assert.NotNull(widgetStopRadius);
+        Assert.Equal(3.0, widgetStopRadius.Value, 3);
+        Assert.Equal(5.0, ReadProperty<double>(widgetRender, "TrackGap"), 3);
     }
 
     [Fact]
@@ -229,6 +257,19 @@ public sealed class MaterialLinearProgressIndicatorTests
         var value = property!.GetValue(target);
         Assert.NotNull(value);
         return (T)value!;
+    }
+
+    private static T? ReadNullableProperty<T>(RenderObject target, string propertyName) where T : struct
+    {
+        var property = target.GetType().GetProperty(propertyName);
+        Assert.NotNull(property);
+        var value = property!.GetValue(target);
+        if (value is null)
+        {
+            return null;
+        }
+
+        return (T)value;
     }
 
     private static RenderObject? FindDescendantByTypeName(RenderObject? root, string typeName)
