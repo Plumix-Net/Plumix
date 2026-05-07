@@ -36,6 +36,11 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
   - added `DividerThemeData` + inherited `DividerTheme` in `src/Plumix.Material/DividerTheme.cs` and integrated `ThemeData.DividerTheme` + `ThemeData.DividerColor` in `src/Plumix.Material/ThemeData.cs`;
   - added focused regression coverage in `src/Plumix.Tests/MaterialDividerTests.cs` for constructor guards, M2/M3 defaults, theme/widget precedence, and vertical-divider layout behavior;
   - added C#/Dart sample parity runtime probes (`src/Sample/Plumix.Sample/Demos/Material/DividerDemoPage.cs`, `dart_sample/lib/demos/material/divider_demo_page.dart`) with route/menu wiring updates.
+- Added framework Material `LinearProgressIndicator` baseline:
+  - introduced `LinearProgressIndicator` in `src/Plumix.Material/ProgressIndicator.cs` with determinate (`value`) and indeterminate (`value: null`) modes, Flutter-like two-segment indeterminate timing, RTL-aware fill direction, and mode-aware defaults (`M3`: `primary` on `secondaryContainer` with rounded radius; `M2`: `primary` on `canvas` with square radius);
+  - added progress-indicator theming surface via `ProgressIndicatorThemeData` + inherited `ProgressIndicatorTheme` (`src/Plumix.Material/ProgressIndicatorTheme.cs`) and `ThemeData.ProgressIndicatorTheme` integration (`src/Plumix.Material/ThemeData.cs`);
+  - added focused regression coverage in `src/Plumix.Tests/MaterialLinearProgressIndicatorTests.cs` for constructor guards, M2/M3 defaults, theme/widget precedence, value clamping, indeterminate animation advancement, RTL resolution, and semantics percentage fallback;
+  - added C#/Dart sample parity runtime probes (`src/Sample/Plumix.Sample/Demos/Material/LinearProgressIndicatorDemoPage.cs`, `dart_sample/lib/demos/material/linear_progress_indicator_demo_page.dart`) with route/menu wiring updates.
 - Fixed renamed `Plumix` satellite assembly access by granting `Plumix.Material` and `Plumix.Cupertino` friend access to framework internals needed for inherited/render-object widget implementations.
 - Added framework Material `Card` baseline:
   - introduced `Card` in `src/Flutter.Material/Card.cs` with elevated, filled, and outlined variants, Flutter-like default margin (`4`), clipping policy, elevation/shadow rendering, surface-tint application, outlined border defaults, and `semanticContainer` wiring;

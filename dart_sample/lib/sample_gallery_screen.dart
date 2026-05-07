@@ -19,6 +19,7 @@ import 'demos/general/fitted_box_demo_page.dart';
 import 'demos/material/floating_action_button_demo_page.dart';
 import 'demos/general/fractionally_sized_box_demo_page.dart';
 import 'demos/general/grid_view_demo_page.dart';
+import 'demos/material/linear_progress_indicator_demo_page.dart';
 import 'demos/general/list_view_fixed_extent_demo_page.dart';
 import 'demos/general/list_view_reverse_demo_page.dart';
 import 'demos/general/list_view_separated_demo_page.dart';
@@ -58,6 +59,12 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'Divider',
       subtitle: 'horizontal/vertical divider + theme/widget precedence probes',
       builder: () => const DividerDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.linearProgressIndicator,
+      title: 'LinearProgressIndicator',
+      subtitle: 'determinate/indeterminate + M2/M3 + theme/widget/RTL probes',
+      builder: () => const LinearProgressIndicatorDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.card,

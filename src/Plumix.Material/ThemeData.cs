@@ -154,6 +154,7 @@ public sealed record ThemeData
     private FloatingActionButtonThemeData? _floatingActionButtonTheme;
     private BottomNavigationBarThemeData? _bottomNavigationBarTheme;
     private DividerThemeData? _dividerTheme;
+    private ProgressIndicatorThemeData? _progressIndicatorTheme;
     private CheckboxThemeData? _checkboxTheme;
     private SwitchThemeData? _switchTheme;
     private RadioThemeData? _radioTheme;
@@ -203,6 +204,7 @@ public sealed record ThemeData
         FloatingActionButtonThemeData? floatingActionButtonTheme = null,
         BottomNavigationBarThemeData? bottomNavigationBarTheme = null,
         DividerThemeData? dividerTheme = null,
+        ProgressIndicatorThemeData? progressIndicatorTheme = null,
         CheckboxThemeData? checkboxTheme = null,
         SwitchThemeData? switchTheme = null,
         RadioThemeData? radioTheme = null)
@@ -251,6 +253,7 @@ public sealed record ThemeData
         _floatingActionButtonTheme = floatingActionButtonTheme;
         _bottomNavigationBarTheme = bottomNavigationBarTheme;
         _dividerTheme = dividerTheme;
+        _progressIndicatorTheme = progressIndicatorTheme;
         _checkboxTheme = checkboxTheme;
         _switchTheme = switchTheme;
         _radioTheme = radioTheme;
@@ -390,6 +393,12 @@ public sealed record ThemeData
     {
         get => _dividerTheme ?? new DividerThemeData();
         init => _dividerTheme = value;
+    }
+
+    public ProgressIndicatorThemeData ProgressIndicatorTheme
+    {
+        get => _progressIndicatorTheme ?? new ProgressIndicatorThemeData();
+        init => _progressIndicatorTheme = value;
     }
 
     public CheckboxThemeData CheckboxTheme

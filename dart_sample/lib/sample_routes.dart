@@ -24,6 +24,7 @@ class SampleRoutes {
   static const String materialButtons = '/material-buttons';
   static const String drawer = '/drawer';
   static const String divider = '/divider';
+  static const String linearProgressIndicator = '/linear-progress-indicator';
   static const String card = '/card';
   static const String listTile = '/list-tile';
   static const String floatingActionButton = '/floating-action-button';
