@@ -22,6 +22,57 @@ public sealed class MaterialLinearProgressIndicatorTests
         Assert.Throws<ArgumentOutOfRangeException>(() => new LinearProgressIndicator(stopIndicatorRadius: double.NaN));
         Assert.Throws<ArgumentOutOfRangeException>(() => new LinearProgressIndicator(trackGap: -0.1));
         Assert.Throws<ArgumentOutOfRangeException>(() => new LinearProgressIndicator(trackGap: double.PositiveInfinity));
+        Assert.Throws<ArgumentException>(() => new LinearProgressIndicator(value: 0.2, controller: new AnimationController(TimeSpan.FromSeconds(1))));
+    }
+
+    [Fact]
+    public void LinearProgressIndicator_UsesExplicitAndThemeControllersForIndeterminateAnimation()
+    {
+        using var explicitController = new AnimationController(TimeSpan.FromSeconds(1))
+        {
+            Curve = Curves.EaseIn
+        };
+        explicitController.Forward(from: 0.5);
+        explicitController.Stop();
+
+        using var explicitHarness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light,
+                child: new SizedBox(
+                    width: 200,
+                    child: new LinearProgressIndicator(controller: explicitController))));
+
+        explicitHarness.Pump(new Size(240, 80));
+
+        var explicitRender = FindDescendantByTypeName(explicitHarness.RenderView, "RenderLinearProgressIndicator");
+        Assert.NotNull(explicitRender);
+        Assert.Null(ReadNullableProperty<double>(explicitRender!, "Value"));
+        Assert.Equal(0.25, ReadProperty<double>(explicitRender, "AnimationValue"), 3);
+
+        using var themedController = new AnimationController(TimeSpan.FromSeconds(1))
+        {
+            Curve = Curves.EaseIn
+        };
+        themedController.Forward(from: 0.5);
+        themedController.Stop();
+
+        using var themedHarness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    ProgressIndicatorTheme = new ProgressIndicatorThemeData(
+                        Controller: themedController)
+                },
+                child: new SizedBox(
+                    width: 200,
+                    child: new LinearProgressIndicator())));
+
+        themedHarness.Pump(new Size(240, 80));
+
+        var themedRender = FindDescendantByTypeName(themedHarness.RenderView, "RenderLinearProgressIndicator");
+        Assert.NotNull(themedRender);
+        Assert.Null(ReadNullableProperty<double>(themedRender!, "Value"));
+        Assert.Equal(0.25, ReadProperty<double>(themedRender, "AnimationValue"), 3);
     }
 
     [Fact]

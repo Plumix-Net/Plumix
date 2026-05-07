@@ -23,6 +23,7 @@ internal sealed class CircularProgressIndicatorDemoPageState : State
     private static readonly double[] WidgetTrackGapOptions = [0.0, 2.0, 4.0];
 
     private bool _useMaterial3 = true;
+    private bool _useYear2023 = true;
     private bool _determinate = true;
     private bool _useThemeOverrides;
     private bool _useWidgetOverrides;
@@ -41,10 +42,12 @@ internal sealed class CircularProgressIndicatorDemoPageState : State
                     CircularTrackColor: Color.Parse("#FFC5CAE9"),
                     CircularStrokeWidth: 6,
                     CircularStrokeAlign: -1.0,
-                    CircularSize: 44,
+                    CircularConstraints: new BoxConstraints(MinWidth: 44, MinHeight: 44),
                     CircularStrokeCap: StrokeCap.Round,
-                    TrackGap: 7.0)
-                : new ProgressIndicatorThemeData()
+                    TrackGap: 7.0,
+                    Year2023: _useYear2023)
+                : new ProgressIndicatorThemeData(
+                    Year2023: _useYear2023)
         };
 
         return new Theme(
@@ -56,7 +59,7 @@ internal sealed class CircularProgressIndicatorDemoPageState : State
                 [
                     new Text("CircularProgressIndicator baseline", fontSize: 20, color: Colors.Black),
                     new Text(
-                        "Determinate/indeterminate behavior, M2/M3 defaults, theme/widget precedence, and circular trackGap/strokeCap/strokeAlign.",
+                        "Determinate/indeterminate behavior, M2/M3 defaults, year2023 toggle, theme/widget precedence, and circular trackGap/strokeCap/strokeAlign/constraints.",
                         fontSize: 14,
                         color: Color.Parse("#8A000000")),
                     new Row(
@@ -68,6 +71,11 @@ internal sealed class CircularProgressIndicatorDemoPageState : State
                                 onTap: () => SetState(() => _useMaterial3 = !_useMaterial3),
                                 width: 80,
                                 background: Color.Parse("#FFE9F0FF")),
+                            BuildControlButton(
+                                label: _useYear2023 ? "2023" : "2024",
+                                onTap: () => SetState(() => _useYear2023 = !_useYear2023),
+                                width: 82,
+                                background: Color.Parse("#FFFFF8E1")),
                             BuildControlButton(
                                 label: _determinate ? "Determinate" : "Indeterminate",
                                 onTap: () => SetState(() => _determinate = !_determinate),
@@ -110,7 +118,7 @@ internal sealed class CircularProgressIndicatorDemoPageState : State
                                     color: Color.Parse("#FF607D8B"))),
                         ]),
                     new Text(
-                        $"useMaterial3={(_useMaterial3 ? "true" : "false")}, determinate={(_determinate ? "true" : "false")}, theme={(_useThemeOverrides ? "true" : "false")}, widget={(_useWidgetOverrides ? "true" : "false")}, gap={GetWidgetTrackGap():0.#}",
+                        $"useMaterial3={(_useMaterial3 ? "true" : "false")}, year2023={(_useYear2023 ? "true" : "false")}, determinate={(_determinate ? "true" : "false")}, theme={(_useThemeOverrides ? "true" : "false")}, widget={(_useWidgetOverrides ? "true" : "false")}, gap={GetWidgetTrackGap():0.#}",
                         fontSize: 12,
                         color: Color.Parse("#FF607D8B")),
                     new Expanded(
@@ -167,15 +175,17 @@ internal sealed class CircularProgressIndicatorDemoPageState : State
                 backgroundColor: Color.Parse("#FFFFCDD2"),
                 strokeWidth: 8,
                 strokeAlign: 1.0,
-                size: 56,
+                constraints: new BoxConstraints(MinWidth: 56, MinHeight: 56),
                 strokeCap: StrokeCap.Square,
                 trackGap: GetWidgetTrackGap(),
+                year2023: _useYear2023,
                 semanticsLabel: "Widget override progress");
         }
 
         return new CircularProgressIndicator(
             value: _determinate ? _progress : null,
             trackGap: GetWidgetTrackGap(),
+            year2023: _useYear2023,
             semanticsLabel: "Baseline progress");
     }
 

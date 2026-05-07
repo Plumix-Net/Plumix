@@ -24,10 +24,11 @@ public sealed class MaterialCircularProgressIndicatorTests
         Assert.Throws<ArgumentOutOfRangeException>(() => new CircularProgressIndicator(strokeAlign: double.NegativeInfinity));
         Assert.Throws<ArgumentOutOfRangeException>(() => new CircularProgressIndicator(trackGap: -1));
         Assert.Throws<ArgumentOutOfRangeException>(() => new CircularProgressIndicator(trackGap: double.NaN));
+        Assert.Throws<ArgumentException>(() => new CircularProgressIndicator(value: 0.3, controller: new AnimationController(TimeSpan.FromSeconds(1))));
     }
 
     [Fact]
-    public void CircularProgressIndicator_DefaultM3_Determinate_UsesPrimaryAndSecondaryContainer()
+    public void CircularProgressIndicator_DefaultM3_Determinate_Uses2023Defaults()
     {
         var theme = ThemeData.Light with
         {
@@ -39,7 +40,43 @@ public sealed class MaterialCircularProgressIndicatorTests
         using var harness = new WidgetRenderHarness(
             new Theme(
                 data: theme,
-                child: new CircularProgressIndicator(value: 0.5)));
+                child: new Center(
+                    child: new CircularProgressIndicator(value: 0.5))));
+
+        harness.Pump(new Size(140, 140));
+
+        var renderIndicator = FindDescendantByTypeName(harness.RenderView, "RenderCircularProgressIndicator");
+        Assert.NotNull(renderIndicator);
+
+        Assert.Equal(Colors.DarkOrange, ReadProperty<Color>(renderIndicator!, "ValueColor"));
+        Assert.Null(ReadProperty<Color?>(renderIndicator, "TrackColor"));
+        Assert.Equal(4.0, ReadProperty<double>(renderIndicator, "StrokeWidth"), 3);
+        Assert.Equal(0.0, ReadProperty<double>(renderIndicator, "StrokeAlign"), 3);
+        Assert.Equal(36.0, ReadProperty<Size>(renderIndicator, "Size").Width, 3);
+        Assert.True(ReadProperty<bool>(renderIndicator, "Year2023"));
+        Assert.Null(ReadNullableProperty<StrokeCap>(renderIndicator, "StrokeCap"));
+        Assert.Null(ReadNullableProperty<double>(renderIndicator, "TrackGap"));
+
+        var value = ReadProperty<double?>(renderIndicator, "Value");
+        Assert.True(value.HasValue);
+        Assert.Equal(0.5, value.Value, 3);
+    }
+
+    [Fact]
+    public void CircularProgressIndicator_Year2023False_Uses2024M3Defaults()
+    {
+        var theme = ThemeData.Light with
+        {
+            UseMaterial3 = true,
+            PrimaryColor = Colors.DarkOrange,
+            SecondaryContainerColor = Colors.LightBlue
+        };
+
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: theme,
+                child: new Center(
+                    child: new CircularProgressIndicator(value: 0.5, year2023: false))));
 
         harness.Pump(new Size(140, 140));
 
@@ -49,16 +86,12 @@ public sealed class MaterialCircularProgressIndicatorTests
         Assert.Equal(Colors.DarkOrange, ReadProperty<Color>(renderIndicator!, "ValueColor"));
         Assert.Equal(Colors.LightBlue, ReadProperty<Color?>(renderIndicator, "TrackColor"));
         Assert.Equal(4.0, ReadProperty<double>(renderIndicator, "StrokeWidth"), 3);
-        Assert.Equal(0.0, ReadProperty<double>(renderIndicator, "StrokeAlign"), 3);
-        Assert.Equal(40.0, ReadProperty<double>(renderIndicator, "IndicatorSize"), 3);
-        Assert.Null(ReadNullableProperty<StrokeCap>(renderIndicator, "StrokeCap"));
+        Assert.Equal(-1.0, ReadProperty<double>(renderIndicator, "StrokeAlign"), 3);
+        Assert.Equal(40.0, ReadProperty<Size>(renderIndicator, "Size").Width, 3);
+        Assert.False(ReadProperty<bool>(renderIndicator, "Year2023"));
         var trackGap = ReadNullableProperty<double>(renderIndicator, "TrackGap");
         Assert.NotNull(trackGap);
         Assert.Equal(4.0, trackGap.Value, 3);
-
-        var value = ReadProperty<double?>(renderIndicator, "Value");
-        Assert.True(value.HasValue);
-        Assert.Equal(0.5, value.Value, 3);
     }
 
     [Fact]
@@ -73,7 +106,8 @@ public sealed class MaterialCircularProgressIndicatorTests
         using var harness = new WidgetRenderHarness(
             new Theme(
                 data: theme,
-                child: new CircularProgressIndicator(value: 0.5)));
+                child: new Center(
+                    child: new CircularProgressIndicator(value: 0.5))));
 
         harness.Pump(new Size(140, 140));
 
@@ -84,7 +118,7 @@ public sealed class MaterialCircularProgressIndicatorTests
         Assert.Null(ReadProperty<Color?>(renderIndicator, "TrackColor"));
         Assert.Equal(4.0, ReadProperty<double>(renderIndicator, "StrokeWidth"), 3);
         Assert.Equal(0.0, ReadProperty<double>(renderIndicator, "StrokeAlign"), 3);
-        Assert.Equal(36.0, ReadProperty<double>(renderIndicator, "IndicatorSize"), 3);
+        Assert.Equal(36.0, ReadProperty<Size>(renderIndicator, "Size").Width, 3);
         Assert.Null(ReadNullableProperty<StrokeCap>(renderIndicator, "StrokeCap"));
         Assert.Null(ReadNullableProperty<double>(renderIndicator, "TrackGap"));
     }
@@ -101,15 +135,17 @@ public sealed class MaterialCircularProgressIndicatorTests
                 CircularTrackColor: Colors.MediumPurple,
                 CircularStrokeWidth: 6,
                 CircularStrokeAlign: -1.0,
-                CircularSize: 48,
+                CircularConstraints: new BoxConstraints(MinWidth: 48, MinHeight: 48),
                 CircularStrokeCap: StrokeCap.Round,
-                TrackGap: 7.0)
+                TrackGap: 7.0,
+                Year2023: false)
         };
 
         using var themedHarness = new WidgetRenderHarness(
             new Theme(
                 data: theme,
-                child: new CircularProgressIndicator(value: 0.5)));
+                child: new Center(
+                    child: new CircularProgressIndicator(value: 0.5))));
 
         themedHarness.Pump(new Size(140, 140));
 
@@ -120,7 +156,8 @@ public sealed class MaterialCircularProgressIndicatorTests
         Assert.Equal(Colors.MediumPurple, ReadProperty<Color?>(themedRender, "TrackColor"));
         Assert.Equal(6.0, ReadProperty<double>(themedRender, "StrokeWidth"), 3);
         Assert.Equal(-1.0, ReadProperty<double>(themedRender, "StrokeAlign"), 3);
-        Assert.Equal(48.0, ReadProperty<double>(themedRender, "IndicatorSize"), 3);
+        Assert.Equal(48.0, ReadProperty<Size>(themedRender, "Size").Width, 3);
+        Assert.False(ReadProperty<bool>(themedRender, "Year2023"));
         var themedStrokeCap = ReadNullableProperty<StrokeCap>(themedRender, "StrokeCap");
         Assert.NotNull(themedStrokeCap);
         Assert.Equal(StrokeCap.Round, themedStrokeCap.Value);
@@ -131,15 +168,17 @@ public sealed class MaterialCircularProgressIndicatorTests
         using var widgetHarness = new WidgetRenderHarness(
             new Theme(
                 data: theme,
-                child: new CircularProgressIndicator(
-                    value: 0.5,
-                    color: Colors.DarkRed,
-                    backgroundColor: Colors.LightGoldenrodYellow,
-                    strokeWidth: 8,
-                    strokeAlign: 1.0,
-                    size: 52,
-                    strokeCap: StrokeCap.Square,
-                    trackGap: 2.5)));
+                child: new Center(
+                    child: new CircularProgressIndicator(
+                        value: 0.5,
+                        color: Colors.DarkRed,
+                        backgroundColor: Colors.LightGoldenrodYellow,
+                        strokeWidth: 8,
+                        strokeAlign: 1.0,
+                        constraints: new BoxConstraints(MinWidth: 52, MinHeight: 52),
+                        strokeCap: StrokeCap.Square,
+                        trackGap: 2.5,
+                        year2023: false))));
 
         widgetHarness.Pump(new Size(160, 160));
 
@@ -150,13 +189,111 @@ public sealed class MaterialCircularProgressIndicatorTests
         Assert.Equal(Colors.LightGoldenrodYellow, ReadProperty<Color?>(widgetRender, "TrackColor"));
         Assert.Equal(8.0, ReadProperty<double>(widgetRender, "StrokeWidth"), 3);
         Assert.Equal(1.0, ReadProperty<double>(widgetRender, "StrokeAlign"), 3);
-        Assert.Equal(52.0, ReadProperty<double>(widgetRender, "IndicatorSize"), 3);
+        Assert.Equal(52.0, ReadProperty<Size>(widgetRender, "Size").Width, 3);
+        Assert.False(ReadProperty<bool>(widgetRender, "Year2023"));
         var widgetStrokeCap = ReadNullableProperty<StrokeCap>(widgetRender, "StrokeCap");
         Assert.NotNull(widgetStrokeCap);
         Assert.Equal(StrokeCap.Square, widgetStrokeCap.Value);
         var widgetTrackGap = ReadNullableProperty<double>(widgetRender, "TrackGap");
         Assert.NotNull(widgetTrackGap);
         Assert.Equal(2.5, widgetTrackGap.Value, 3);
+    }
+
+    [Fact]
+    public void CircularProgressIndicator_UsesExplicitAndThemeControllersForIndeterminateAnimation()
+    {
+        using var defaultHarness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light,
+                child: new CircularProgressIndicator()));
+        defaultHarness.Pump(new Size(140, 140));
+        var defaultRender = FindDescendantByTypeName(defaultHarness.RenderView, "RenderCircularProgressIndicator");
+        Assert.NotNull(defaultRender);
+        var defaultArcStart = ReadProperty<double>(defaultRender!, "ArcStart");
+        var defaultArcSweep = ReadProperty<double>(defaultRender, "ArcSweep");
+
+        using var explicitController = new AnimationController(TimeSpan.FromSeconds(1))
+        {
+            Curve = Curves.EaseIn
+        };
+        explicitController.Forward(from: 0.5);
+        explicitController.Stop();
+
+        using var explicitHarness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light,
+                child: new CircularProgressIndicator(controller: explicitController)));
+
+        explicitHarness.Pump(new Size(140, 140));
+
+        var explicitRender = FindDescendantByTypeName(explicitHarness.RenderView, "RenderCircularProgressIndicator");
+        Assert.NotNull(explicitRender);
+        Assert.Null(ReadProperty<double?>(explicitRender!, "Value"));
+        var explicitArcStart = ReadProperty<double>(explicitRender, "ArcStart");
+        var explicitArcSweep = ReadProperty<double>(explicitRender, "ArcSweep");
+        Assert.True(Math.Abs(explicitArcStart - defaultArcStart) > 0.0001 || Math.Abs(explicitArcSweep - defaultArcSweep) > 0.0001);
+
+        using var themedController = new AnimationController(TimeSpan.FromSeconds(1))
+        {
+            Curve = Curves.EaseIn
+        };
+        themedController.Forward(from: 0.5);
+        themedController.Stop();
+
+        using var themedHarness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    ProgressIndicatorTheme = new ProgressIndicatorThemeData(
+                        Controller: themedController)
+                },
+                child: new CircularProgressIndicator()));
+
+        themedHarness.Pump(new Size(140, 140));
+
+        var themedRender = FindDescendantByTypeName(themedHarness.RenderView, "RenderCircularProgressIndicator");
+        Assert.NotNull(themedRender);
+        Assert.Null(ReadProperty<double?>(themedRender!, "Value"));
+        var themedArcStart = ReadProperty<double>(themedRender, "ArcStart");
+        var themedArcSweep = ReadProperty<double>(themedRender, "ArcSweep");
+        Assert.Equal(explicitArcStart, themedArcStart, 3);
+        Assert.Equal(explicitArcSweep, themedArcSweep, 3);
+    }
+
+    [Fact]
+    public void CircularProgressIndicator_LegacySizeFallback_RemainsSupported()
+    {
+        var theme = ThemeData.Light with
+        {
+            ProgressIndicatorTheme = new ProgressIndicatorThemeData(
+                CircularSize: 46)
+        };
+
+        using var themedHarness = new WidgetRenderHarness(
+            new Theme(
+                data: theme,
+                child: new Center(
+                    child: new CircularProgressIndicator(value: 0.5))));
+
+        themedHarness.Pump(new Size(140, 140));
+
+        var themedRender = FindDescendantByTypeName(themedHarness.RenderView, "RenderCircularProgressIndicator");
+        Assert.NotNull(themedRender);
+        Assert.Equal(46.0, ReadProperty<Size>(themedRender!, "Size").Width, 3);
+
+        using var widgetHarness = new WidgetRenderHarness(
+            new Theme(
+                data: theme,
+                child: new Center(
+                    child: new CircularProgressIndicator(
+                        value: 0.5,
+                        size: 50))));
+
+        widgetHarness.Pump(new Size(140, 140));
+
+        var widgetRender = FindDescendantByTypeName(widgetHarness.RenderView, "RenderCircularProgressIndicator");
+        Assert.NotNull(widgetRender);
+        Assert.Equal(50.0, ReadProperty<Size>(widgetRender!, "Size").Width, 3);
     }
 
     [Fact]

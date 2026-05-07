@@ -23,9 +23,12 @@ public sealed record ProgressIndicatorThemeData(
     Color? LinearStopIndicatorColor = null,
     double? LinearStopIndicatorRadius = null,
     double? TrackGap = null,
+    bool? Year2023 = null,
+    AnimationController? Controller = null,
     Color? CircularTrackColor = null,
     double? CircularStrokeWidth = null,
     double? CircularStrokeAlign = null,
+    BoxConstraints? CircularConstraints = null,
     double? CircularSize = null,
     StrokeCap? CircularStrokeCap = null);
 

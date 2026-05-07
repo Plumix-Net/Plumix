@@ -15,6 +15,7 @@ class _CircularProgressIndicatorDemoPageState
   static const List<double> _widgetTrackGapOptions = <double>[0, 2, 4];
 
   bool _useMaterial3 = true;
+  bool _useYear2023 = true;
   bool _determinate = true;
   bool _useThemeOverrides = false;
   bool _useWidgetOverrides = false;
@@ -27,7 +28,7 @@ class _CircularProgressIndicatorDemoPageState
     final ThemeData pageTheme = baseTheme.copyWith(
       useMaterial3: _useMaterial3,
       progressIndicatorTheme: _useThemeOverrides
-          ? const ProgressIndicatorThemeData(
+          ? ProgressIndicatorThemeData(
               color: Color(0xFF1565C0),
               circularTrackColor: Color(0xFFC5CAE9),
               strokeWidth: 6,
@@ -35,8 +36,9 @@ class _CircularProgressIndicatorDemoPageState
               strokeCap: StrokeCap.round,
               constraints: BoxConstraints(minWidth: 44, minHeight: 44),
               trackGap: 7,
+              year2023: _useYear2023,
             )
-          : const ProgressIndicatorThemeData(),
+          : ProgressIndicatorThemeData(year2023: _useYear2023),
     );
 
     return Theme(
@@ -50,7 +52,7 @@ class _CircularProgressIndicatorDemoPageState
           ),
           const SizedBox(height: 8),
           const Text(
-            'Determinate/indeterminate behavior, M2/M3 defaults, theme/widget precedence, and circular trackGap/strokeCap/strokeAlign.',
+            'Determinate/indeterminate behavior, M2/M3 defaults, year2023 toggle, theme/widget precedence, and circular trackGap/strokeCap/strokeAlign/constraints.',
             style: TextStyle(fontSize: 14, color: Color(0x8A000000)),
           ),
           const SizedBox(height: 10),
@@ -61,6 +63,13 @@ class _CircularProgressIndicatorDemoPageState
                 onTap: () => setState(() => _useMaterial3 = !_useMaterial3),
                 width: 80,
                 background: const Color(0xFFE9F0FF),
+              ),
+              const SizedBox(width: 8),
+              _buildControlButton(
+                label: _useYear2023 ? '2023' : '2024',
+                onTap: () => setState(() => _useYear2023 = !_useYear2023),
+                width: 82,
+                background: const Color(0xFFFFF8E1),
               ),
               const SizedBox(width: 8),
               _buildControlButton(
@@ -127,6 +136,7 @@ class _CircularProgressIndicatorDemoPageState
           const SizedBox(height: 8),
           Text(
             'useMaterial3=${_useMaterial3 ? "true" : "false"}, '
+            'year2023=${_useYear2023 ? "true" : "false"}, '
             'determinate=${_determinate ? "true" : "false"}, '
             'theme=${_useThemeOverrides ? "true" : "false"}, '
             'widget=${_useWidgetOverrides ? "true" : "false"}, '
@@ -206,6 +216,7 @@ class _CircularProgressIndicatorDemoPageState
         strokeCap: StrokeCap.square,
         constraints: const BoxConstraints(minWidth: 56, minHeight: 56),
         trackGap: _widgetTrackGap,
+        year2023: _useYear2023,
         semanticsLabel: 'Widget override progress',
       );
     }
@@ -213,6 +224,7 @@ class _CircularProgressIndicatorDemoPageState
     return CircularProgressIndicator(
       value: _determinate ? _progress : null,
       trackGap: _widgetTrackGap,
+      year2023: _useYear2023,
       semanticsLabel: 'Baseline progress',
     );
   }
