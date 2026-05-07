@@ -14,6 +14,10 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 ### Changed
 
+- Closed adaptive semantics parity for framework `CircularProgressIndicator`:
+  - adaptive iOS/macOS branch now preserves progress semantics wrapping (`Semantics`) instead of bypassing it via early return;
+  - adaptive determinate indicators now expose the same computed percentage fallback (`semanticsLabel + semanticsValue/percent`) as the Material path;
+  - expanded focused coverage in `src/Plumix.Tests/MaterialCircularProgressIndicatorTests.cs` with an iOS adaptive semantics-label regression test.
 - Closed adaptive-platform parity for framework `CircularProgressIndicator`:
   - added `CircularProgressIndicator.Adaptive(...)` in `src/Plumix.Material/ProgressIndicator.cs` with Flutter-like platform routing (`iOS/macOS -> Cupertino`, other platforms -> Material);
   - introduced reusable `CupertinoActivityIndicator` in `src/Plumix.Cupertino/CupertinoActivityIndicator.cs` with animated and partially-revealed modes used by adaptive circular progress;

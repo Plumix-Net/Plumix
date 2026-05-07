@@ -1099,10 +1099,13 @@ public sealed class CircularProgressIndicator : StatefulWidget
             var resolvedValue = CurrentWidget.Value.HasValue
                 ? ClampValue(CurrentWidget.Value.Value)
                 : (double?)null;
+            var semanticsLabel = ResolveSemanticsLabel(resolvedValue);
 
             if (IsAdaptiveCupertino(theme))
             {
-                return BuildAdaptiveCupertinoIndicator(theme, resolvedValue);
+                return WrapWithSemanticsIfNeeded(
+                    BuildAdaptiveCupertinoIndicator(theme, resolvedValue),
+                    semanticsLabel);
             }
 
             var resolvedValueColor = CurrentWidget.ValueColor?.Value
@@ -1155,15 +1158,7 @@ public sealed class CircularProgressIndicator : StatefulWidget
                 constraints: resolvedConstraints,
                 child: child);
 
-            var semanticsLabel = ResolveSemanticsLabel(resolvedValue);
-            if (!string.IsNullOrWhiteSpace(semanticsLabel))
-            {
-                child = new Semantics(
-                    label: semanticsLabel,
-                    child: child);
-            }
-
-            return child;
+            return WrapWithSemanticsIfNeeded(child, semanticsLabel);
         }
 
         private Widget BuildAdaptiveCupertinoIndicator(ThemeData theme, double? resolvedValue)
@@ -1183,6 +1178,18 @@ public sealed class CircularProgressIndicator : StatefulWidget
                 color: tickColor,
                 isDark: isDark,
                 key: CurrentWidget.Key);
+        }
+
+        private static Widget WrapWithSemanticsIfNeeded(Widget child, string? semanticsLabel)
+        {
+            if (string.IsNullOrWhiteSpace(semanticsLabel))
+            {
+                return child;
+            }
+
+            return new Semantics(
+                label: semanticsLabel,
+                child: child);
         }
 
         private AnimationController ResolveAnimationController(ProgressIndicatorThemeData progressTheme)

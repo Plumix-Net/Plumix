@@ -88,6 +88,29 @@ public sealed class MaterialCircularProgressIndicatorTests
     }
 
     [Fact]
+    public void CircularProgressIndicator_AdaptiveIOS_SemanticsLabel_IncludesComputedPercentForDeterminateValue()
+    {
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    Platform = TargetPlatform.IOS
+                },
+                child: CircularProgressIndicator.Adaptive(
+                    value: 0.37,
+                    semanticsLabel: "Loading")));
+
+        var semanticsRoot = harness.PumpAndGetSemantics(new Size(140, 140));
+        Assert.NotNull(semanticsRoot);
+
+        var semanticsNode = FindFirstSemanticsNode(
+            semanticsRoot!,
+            node => node.Label != null && node.Label.Contains("Loading"));
+        Assert.NotNull(semanticsNode);
+        Assert.Contains("37%", semanticsNode!.Label);
+    }
+
+    [Fact]
     public void CircularProgressIndicator_AdaptiveAndroid_FallsBackToMaterialIndicator()
     {
         using var harness = new WidgetRenderHarness(
