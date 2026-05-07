@@ -76,7 +76,7 @@ public sealed class MaterialLinearProgressIndicatorTests
     }
 
     [Fact]
-    public void LinearProgressIndicator_DefaultM3_UsesPrimarySecondaryContainerAndRoundedTrack()
+    public void LinearProgressIndicator_DefaultM3_Uses2023Defaults()
     {
         var theme = ThemeData.Light with
         {
@@ -91,6 +91,39 @@ public sealed class MaterialLinearProgressIndicatorTests
                 child: new SizedBox(
                     width: 200,
                     child: new LinearProgressIndicator(value: 0.5))));
+
+        harness.Pump(new Size(240, 80));
+
+        var renderIndicator = FindDescendantByTypeName(harness.RenderView, "RenderLinearProgressIndicator");
+        Assert.NotNull(renderIndicator);
+
+        Assert.Equal(Colors.DarkOrange, ReadProperty<Color>(renderIndicator!, "ValueColor"));
+        Assert.Equal(Colors.LightBlue, ReadProperty<Color>(renderIndicator, "TrackColor"));
+        Assert.Equal(4.0, ReadProperty<double>(renderIndicator, "MinHeight"), 3);
+        Assert.Equal(0.0, ReadProperty<double>(renderIndicator, "TrackGap"), 3);
+        Assert.Null(ReadNullableProperty<Color>(renderIndicator, "StopIndicatorColor"));
+        Assert.Null(ReadNullableProperty<double>(renderIndicator, "StopIndicatorRadius"));
+
+        var radius = ReadProperty<BorderRadius>(renderIndicator, "BorderRadius");
+        Assert.Equal(0.0, radius.Radius, 3);
+    }
+
+    [Fact]
+    public void LinearProgressIndicator_Year2023False_Uses2024M3Defaults()
+    {
+        var theme = ThemeData.Light with
+        {
+            UseMaterial3 = true,
+            PrimaryColor = Colors.DarkOrange,
+            SecondaryContainerColor = Colors.LightBlue
+        };
+
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: theme,
+                child: new SizedBox(
+                    width: 200,
+                    child: new LinearProgressIndicator(value: 0.5, year2023: false))));
 
         harness.Pump(new Size(240, 80));
 
@@ -156,7 +189,8 @@ public sealed class MaterialLinearProgressIndicatorTests
                 BorderRadius: BorderRadius.Circular(3),
                 LinearStopIndicatorColor: Colors.DeepSkyBlue,
                 LinearStopIndicatorRadius: 1.5,
-                TrackGap: 6.0)
+                TrackGap: 6.0,
+                Year2023: false)
         };
 
         using var themedHarness = new WidgetRenderHarness(
@@ -194,7 +228,8 @@ public sealed class MaterialLinearProgressIndicatorTests
                         borderRadius: BorderRadius.Circular(4),
                         stopIndicatorColor: Colors.HotPink,
                         stopIndicatorRadius: 3.0,
-                        trackGap: 5.0))));
+                        trackGap: 5.0,
+                        year2023: false))));
 
         widgetHarness.Pump(new Size(240, 80));
 

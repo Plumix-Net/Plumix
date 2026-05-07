@@ -21,6 +21,7 @@ public sealed class LinearProgressIndicatorDemoPage : StatefulWidget
 internal sealed class LinearProgressIndicatorDemoPageState : State
 {
     private bool _useMaterial3 = true;
+    private bool _useYear2023 = true;
     private bool _determinate = true;
     private bool _useThemeOverrides;
     private bool _useWidgetOverrides;
@@ -40,8 +41,10 @@ internal sealed class LinearProgressIndicatorDemoPageState : State
                     BorderRadius: BorderRadius.Circular(3),
                     LinearStopIndicatorColor: Color.Parse("#FF0D47A1"),
                     LinearStopIndicatorRadius: 3,
-                    TrackGap: 6)
-                : new ProgressIndicatorThemeData()
+                    TrackGap: 6,
+                    Year2023: _useYear2023)
+                : new ProgressIndicatorThemeData(
+                    Year2023: _useYear2023)
         };
 
         return new Theme(
@@ -53,7 +56,7 @@ internal sealed class LinearProgressIndicatorDemoPageState : State
                 [
                     new Text("LinearProgressIndicator baseline", fontSize: 20, color: Colors.Black),
                     new Text(
-                        "Determinate/indeterminate behavior, M2/M3 defaults, theme/widget precedence, track-gap/stop-dot styling, and RTL paint direction.",
+                        "Determinate/indeterminate behavior, M2/M3 defaults, year2023 toggle, theme/widget precedence, track-gap/stop-dot styling, and RTL paint direction.",
                         fontSize: 14,
                         color: Color.Parse("#8A000000")),
                     new Row(
@@ -65,6 +68,11 @@ internal sealed class LinearProgressIndicatorDemoPageState : State
                                 onTap: () => SetState(() => _useMaterial3 = !_useMaterial3),
                                 width: 80,
                                 background: Color.Parse("#FFE9F0FF")),
+                            BuildControlButton(
+                                label: _useYear2023 ? "2023" : "2024",
+                                onTap: () => SetState(() => _useYear2023 = !_useYear2023),
+                                width: 82,
+                                background: Color.Parse("#FFFFF8E1")),
                             BuildControlButton(
                                 label: _determinate ? "Determinate" : "Indeterminate",
                                 onTap: () => SetState(() => _determinate = !_determinate),
@@ -102,7 +110,7 @@ internal sealed class LinearProgressIndicatorDemoPageState : State
                                     color: Color.Parse("#FF607D8B"))),
                         ]),
                     new Text(
-                        $"useMaterial3={(_useMaterial3 ? "true" : "false")}, determinate={(_determinate ? "true" : "false")}, theme={(_useThemeOverrides ? "true" : "false")}, widget={(_useWidgetOverrides ? "true" : "false")}",
+                        $"useMaterial3={(_useMaterial3 ? "true" : "false")}, year2023={(_useYear2023 ? "true" : "false")}, determinate={(_determinate ? "true" : "false")}, theme={(_useThemeOverrides ? "true" : "false")}, widget={(_useWidgetOverrides ? "true" : "false")}",
                         fontSize: 12,
                         color: Color.Parse("#FF607D8B")),
                     new Expanded(
@@ -172,11 +180,13 @@ internal sealed class LinearProgressIndicatorDemoPageState : State
                 stopIndicatorColor: Color.Parse("#FF880E4F"),
                 stopIndicatorRadius: 3.5,
                 trackGap: 8,
+                year2023: _useYear2023,
                 semanticsLabel: "Widget override progress");
         }
 
         return new LinearProgressIndicator(
             value: _determinate ? _progress : null,
+            year2023: _useYear2023,
             semanticsLabel: "Baseline progress");
     }
 

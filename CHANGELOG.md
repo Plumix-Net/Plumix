@@ -15,6 +15,11 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 ### Changed
 
 - Expanded framework Material `LinearProgressIndicator` parity in `src/Plumix.Material/ProgressIndicator.cs`:
+  - added Flutter-like `year2023` API/theme precedence (`widget.year2023 -> ProgressIndicatorThemeData.year2023 -> default true` in M3);
+  - aligned M3 2023/2024 default switching behavior for stop-indicator visibility, track-gap visibility, and default border radius (`2023`: square/no stop/no gap; `2024`: rounded with stop+gap defaults);
+  - expanded focused regression coverage in `src/Plumix.Tests/MaterialLinearProgressIndicatorTests.cs` for M3 `year2023` true/false defaults and updated theme/widget precedence assertions;
+  - updated C#/Dart runtime parity demos (`src/Sample/Plumix.Sample/Demos/Material/LinearProgressIndicatorDemoPage.cs`, `dart_sample/lib/demos/material/linear_progress_indicator_demo_page.dart`) with an explicit `year2023` toggle and theme/widget probe wiring.
+- Expanded framework Material `LinearProgressIndicator` parity in `src/Plumix.Material/ProgressIndicator.cs`:
   - added Flutter-like API surface for linear M3 stop/gap styling (`stopIndicatorColor`, `stopIndicatorRadius`, and `trackGap`) with constructor guards for non-finite/negative values;
   - wired precedence for new fields as `widget -> ProgressIndicatorThemeData -> mode defaults` (`M3` defaults: stop color `primary`, stop radius `2`, track gap `4`; `M2`: stop/gap disabled);
   - added Flutter-like external controller support (`controller`) with animation-source precedence `widget.controller -> ProgressIndicatorThemeData.controller -> internal controller`, plus constructor guard for invalid `value + controller` usage;

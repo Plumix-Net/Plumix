@@ -23,6 +23,7 @@ public sealed class LinearProgressIndicator : StatefulWidget
         Color? stopIndicatorColor = null,
         double? stopIndicatorRadius = null,
         double? trackGap = null,
+        bool? year2023 = null,
         AnimationController? controller = null,
         string? semanticsLabel = null,
         string? semanticsValue = null,
@@ -61,6 +62,7 @@ public sealed class LinearProgressIndicator : StatefulWidget
         StopIndicatorColor = stopIndicatorColor;
         StopIndicatorRadius = stopIndicatorRadius;
         TrackGap = trackGap;
+        Year2023 = year2023;
         Controller = controller;
         SemanticsLabel = semanticsLabel;
         SemanticsValue = semanticsValue;
@@ -81,6 +83,8 @@ public sealed class LinearProgressIndicator : StatefulWidget
     public double? StopIndicatorRadius { get; }
 
     public double? TrackGap { get; }
+
+    public bool? Year2023 { get; }
 
     public AnimationController? Controller { get; }
 
@@ -137,6 +141,7 @@ public sealed class LinearProgressIndicator : StatefulWidget
         {
             var theme = Theme.Of(context);
             var progressTheme = ProgressIndicatorTheme.Of(context);
+            var useYear2023 = ResolveYear2023(theme, progressTheme);
             var animationController = ResolveAnimationController(progressTheme);
             UpdateAnimationBinding(animationController);
             UpdateAnimationStatus(animationController);
@@ -157,23 +162,21 @@ public sealed class LinearProgressIndicator : StatefulWidget
 
             var resolvedBorderRadius = CurrentWidget.BorderRadius
                                        ?? progressTheme.BorderRadius
-                                       ?? (theme.UseMaterial3
-                                           ? Plumix.Rendering.BorderRadius.Circular(2.0)
-                                           : Plumix.Rendering.BorderRadius.Zero);
+                                       ?? ResolveDefaultBorderRadius(theme, useYear2023);
 
-            Color? resolvedStopIndicatorColor = theme.UseMaterial3
+            Color? resolvedStopIndicatorColor = theme.UseMaterial3 && !useYear2023
                 ? CurrentWidget.StopIndicatorColor
                   ?? progressTheme.LinearStopIndicatorColor
                   ?? theme.PrimaryColor
                 : null;
 
-            double? resolvedStopIndicatorRadius = theme.UseMaterial3
+            double? resolvedStopIndicatorRadius = theme.UseMaterial3 && !useYear2023
                 ? CurrentWidget.StopIndicatorRadius
                   ?? progressTheme.LinearStopIndicatorRadius
                   ?? 2.0
                 : null;
 
-            var resolvedTrackGap = theme.UseMaterial3
+            var resolvedTrackGap = theme.UseMaterial3 && !useYear2023
                 ? CurrentWidget.TrackGap
                   ?? progressTheme.TrackGap
                   ?? 4.0
@@ -290,6 +293,28 @@ public sealed class LinearProgressIndicator : StatefulWidget
             }
 
             SetState(() => { });
+        }
+
+        private bool ResolveYear2023(ThemeData theme, ProgressIndicatorThemeData progressTheme)
+        {
+            if (!theme.UseMaterial3)
+            {
+                return true;
+            }
+
+            return CurrentWidget.Year2023
+                   ?? progressTheme.Year2023
+                   ?? true;
+        }
+
+        private static BorderRadius ResolveDefaultBorderRadius(ThemeData theme, bool useYear2023)
+        {
+            if (!theme.UseMaterial3 || useYear2023)
+            {
+                return Plumix.Rendering.BorderRadius.Zero;
+            }
+
+            return Plumix.Rendering.BorderRadius.Circular(2.0);
         }
     }
 }

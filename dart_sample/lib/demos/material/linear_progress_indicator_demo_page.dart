@@ -13,6 +13,7 @@ class LinearProgressIndicatorDemoPage extends StatefulWidget {
 class _LinearProgressIndicatorDemoPageState
     extends State<LinearProgressIndicatorDemoPage> {
   bool _useMaterial3 = true;
+  bool _useYear2023 = true;
   bool _determinate = true;
   bool _useThemeOverrides = false;
   bool _useWidgetOverrides = false;
@@ -32,8 +33,9 @@ class _LinearProgressIndicatorDemoPageState
               stopIndicatorColor: Color(0xFF0D47A1),
               stopIndicatorRadius: 3,
               trackGap: 6,
+              year2023: _useYear2023,
             )
-          : const ProgressIndicatorThemeData(),
+          : ProgressIndicatorThemeData(year2023: _useYear2023),
     );
 
     return Theme(
@@ -47,7 +49,7 @@ class _LinearProgressIndicatorDemoPageState
           ),
           const SizedBox(height: 8),
           const Text(
-            'Determinate/indeterminate behavior, M2/M3 defaults, theme/widget precedence, track-gap/stop-dot styling, and RTL paint direction.',
+            'Determinate/indeterminate behavior, M2/M3 defaults, year2023 toggle, theme/widget precedence, track-gap/stop-dot styling, and RTL paint direction.',
             style: TextStyle(fontSize: 14, color: Color(0x8A000000)),
           ),
           const SizedBox(height: 10),
@@ -58,6 +60,13 @@ class _LinearProgressIndicatorDemoPageState
                 onTap: () => setState(() => _useMaterial3 = !_useMaterial3),
                 width: 80,
                 background: const Color(0xFFE9F0FF),
+              ),
+              const SizedBox(width: 8),
+              _buildControlButton(
+                label: _useYear2023 ? '2023' : '2024',
+                onTap: () => setState(() => _useYear2023 = !_useYear2023),
+                width: 82,
+                background: const Color(0xFFFFF8E1),
               ),
               const SizedBox(width: 8),
               _buildControlButton(
@@ -117,6 +126,7 @@ class _LinearProgressIndicatorDemoPageState
           const SizedBox(height: 8),
           Text(
             'useMaterial3=${_useMaterial3 ? "true" : "false"}, '
+            'year2023=${_useYear2023 ? "true" : "false"}, '
             'determinate=${_determinate ? "true" : "false"}, '
             'theme=${_useThemeOverrides ? "true" : "false"}, '
             'widget=${_useWidgetOverrides ? "true" : "false"}',
@@ -191,12 +201,14 @@ class _LinearProgressIndicatorDemoPageState
         stopIndicatorColor: const Color(0xFF880E4F),
         stopIndicatorRadius: 3.5,
         trackGap: 8,
+        year2023: _useYear2023,
         semanticsLabel: 'Widget override progress',
       );
     }
 
     return LinearProgressIndicator(
       value: _determinate ? _progress : null,
+      year2023: _useYear2023,
       semanticsLabel: 'Baseline progress',
     );
   }
