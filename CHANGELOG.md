@@ -14,6 +14,11 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 ### Changed
 
+- Added framework Material `Slider` baseline:
+  - introduced `Slider` in `src/Plumix.Material/Slider.cs` with controlled-value API (`value`, `onChanged`, `onChangeStart`, `onChangeEnd`), range/division guards, pointer drag/tap updates, keyboard adjustments (including RTL-aware direction handling), and slider semantics wiring;
+  - added slider theming surface via `SliderThemeData` + inherited `SliderTheme` (`src/Plumix.Material/SliderTheme.cs`) and integrated `ThemeData.SliderTheme` in `src/Plumix.Material/ThemeData.cs`;
+  - added focused regression coverage in `src/Plumix.Tests/MaterialSliderTests.cs` for constructor guards, M2/M3 defaults, theme/widget color precedence, discrete snapping + change callback lifecycle, keyboard adjustment behavior, and semantics flags/label propagation;
+  - added C#/Dart sample parity runtime probes (`src/Sample/Plumix.Sample/Demos/Material/SliderDemoPage.cs`, `dart_sample/lib/demos/material/slider_demo_page.dart`) and route/menu wiring updates (`src/Sample/Plumix.Sample/SampleGalleryScreen.cs`, `dart_sample/lib/sample_routes.dart`, `dart_sample/lib/sample_gallery_screen.dart`).
 - Closed sample route/page parity drift for `Bloc counter`:
   - added Dart sample route constant `/bloc-counter` and menu wiring (`dart_sample/lib/sample_routes.dart`, `dart_sample/lib/sample_gallery_screen.dart`);
   - added Dart `Bloc counter` demo page mirroring C# behavior (`dart_sample/lib/demos/general/bloc_counter_demo_page.dart`) with `BlocProvider` + `BlocBuilder` + `BlocListener` + `BlocSelector` and restartable refresh-event handling.

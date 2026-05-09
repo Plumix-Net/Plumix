@@ -37,6 +37,7 @@ import 'sample_routes.dart';
 import 'demos/general/scrollbar_demo_page.dart';
 import 'demos/general/stack_demo_page.dart';
 import 'demos/cupertino/switch_demo_page.dart';
+import 'demos/material/slider_demo_page.dart';
 import 'demos/general/unconstrained_limited_box_demo_page.dart';
 
 class SampleGalleryScreen extends StatelessWidget {
@@ -73,6 +74,12 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'CircularProgressIndicator',
       subtitle: 'determinate/indeterminate + M2/M3 + theme/widget probes',
       builder: () => const CircularProgressIndicatorDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.slider,
+      title: 'Slider',
+      subtitle: 'continuous/discrete + drag/tap/keyboard + theme/widget colors',
+      builder: () => const SliderDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.card,

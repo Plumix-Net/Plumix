@@ -492,6 +492,11 @@ Progress update (2026-03-19):
   - expanded `MaterialCircularProgressIndicatorTests` with adaptive-branch coverage: iOS indeterminate Cupertino render path, iOS determinate partially-revealed progress mapping, and Android adaptive fallback to Material render path.
   - added C#/Dart sample parity demo route/page for runtime verification (`CircularProgressIndicator` route in Material tab with determinate/indeterminate, M2/M3, `year2023` toggle, `valueColor` toggle, and theme/widget override probes including `trackGap`, `strokeCap`, `strokeAlign`, and `constraints`).
   - value-color source parity now supports Flutter-like constant animation usage (`AlwaysStoppedAnimation<Color?>`) while retaining mutable listenable updates through `ValueNotifier<Color?>`.
+- Added Material `Slider` baseline in `Plumix.Material`:
+  - introduced framework `Slider` in `src/Plumix.Material/Slider.cs` with Flutter-like controlled-value API (`value`, `onChanged`, `onChangeStart`, `onChangeEnd`), range/division guards, and callback wiring for drag/tap/keyboard interaction paths;
+  - added slider theming surface via `SliderThemeData` + inherited `SliderTheme` (`src/Plumix.Material/SliderTheme.cs`) and `ThemeData.SliderTheme` integration (`src/Plumix.Material/ThemeData.cs`) with mode-aware fallback defaults and widget-over-theme precedence for active/inactive/thumb/overlay colors;
+  - added focused `MaterialSliderTests` coverage in `src/Plumix.Tests/MaterialSliderTests.cs` for constructor guards, M2/M3 default color resolution, theme/widget color precedence, discrete drag snapping and change lifecycle callbacks, keyboard increments with RTL-aware direction handling, and slider semantics flags/labels;
+  - added C#/Dart sample parity demo route/page for runtime verification (`Slider` route in Material tab with enabled/disabled + continuous/discrete probes, M2/M3 mode switch, theme/widget color override probes, callback-status output, and LTR/RTL preview).
 - Added C#/Dart sample parity demo route/page for runtime `Drawer` verification in the Material tab (`Drawer` route with start/end drawer open/close choreography controls plus `DrawerTheme`/widget override probes for scrim/color/elevation/width precedence).
 - Remaining divergence for floating action button in current framework scope:
   - none documented in current framework scope.
