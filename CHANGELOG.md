@@ -14,6 +14,11 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 ### Changed
 
+- Added framework Material `RangeSlider` baseline:
+  - introduced `RangeSlider` + `RangeValues` in `src/Plumix.Material/RangeSlider.cs` with two-thumb controlled range API (`values`, `onChanged`, `onChangeStart`, `onChangeEnd`), range/division guards, pointer drag/tap thumb selection, focused keyboard adjustment baseline, and range semantics formatting support (`semanticFormatterCallback`);
+  - reused slider theming surface (`SliderThemeData` + inherited `SliderTheme`) with `ThemeData.SliderTheme` integration for mode-aware fallback defaults and widget-over-theme precedence for active/inactive/overlay color paths;
+  - added focused regression coverage in `src/Plumix.Tests/MaterialRangeSliderTests.cs` for constructor guards, M2/M3 defaults, theme/widget color precedence, discrete snapping + change lifecycle callbacks, keyboard adjustment baseline, and semantics label/flags propagation;
+  - added C#/Dart sample parity runtime probes (`src/Sample/Plumix.Sample/Demos/Material/RangeSliderDemoPage.cs`, `dart_sample/lib/demos/material/range_slider_demo_page.dart`) and route/menu wiring updates (`src/Sample/Plumix.Sample/SampleGalleryScreen.cs`, `dart_sample/lib/sample_routes.dart`, `dart_sample/lib/sample_gallery_screen.dart`).
 - Added framework Material `Slider` baseline:
   - introduced `Slider` in `src/Plumix.Material/Slider.cs` with controlled-value API (`value`, `onChanged`, `onChangeStart`, `onChangeEnd`), range/division guards, pointer drag/tap updates, keyboard adjustments (including RTL-aware direction handling), and slider semantics wiring;
   - added slider theming surface via `SliderThemeData` + inherited `SliderTheme` (`src/Plumix.Material/SliderTheme.cs`) and integrated `ThemeData.SliderTheme` in `src/Plumix.Material/ThemeData.cs`;
