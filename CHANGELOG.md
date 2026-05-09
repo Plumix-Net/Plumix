@@ -14,6 +14,11 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 ### Changed
 
+- Closed remaining progress-indicator `valueColor` API divergence with Flutter usage patterns:
+  - introduced framework `IValueListenable<T>` and `AlwaysStoppedAnimation<T>` (`src/Plumix/Foundation/Listenable.cs`);
+  - switched `LinearProgressIndicator` and `CircularProgressIndicator` `valueColor` surface from `ValueNotifier<Color?>` to `IValueListenable<Color?>` (`src/Plumix.Material/ProgressIndicator.cs`) while preserving live listener-driven updates and null fallback behavior;
+  - added focused regression coverage for constant animation-style color sources in `src/Plumix.Tests/MaterialLinearProgressIndicatorTests.cs` and `src/Plumix.Tests/MaterialCircularProgressIndicatorTests.cs`;
+  - aligned C# progress-indicator demos with Dart usage style by wiring `AlwaysStoppedAnimation<Color?>` for the explicit `valueColor` toggle path (`src/Sample/Plumix.Sample/Demos/Material/LinearProgressIndicatorDemoPage.cs`, `src/Sample/Plumix.Sample/Demos/Material/CircularProgressIndicatorDemoPage.cs`).
 - Closed adaptive semantics parity for framework `CircularProgressIndicator`:
   - adaptive iOS/macOS branch now preserves progress semantics wrapping (`Semantics`) instead of bypassing it via early return;
   - adaptive determinate indicators now expose the same computed percentage fallback (`semanticsLabel + semanticsValue/percent`) as the Material path;

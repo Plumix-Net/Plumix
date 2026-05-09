@@ -28,12 +28,7 @@ internal sealed class LinearProgressIndicatorDemoPageState : State
     private bool _useWidgetOverrides;
     private bool _useValueColorOverride;
     private double _progress = 0.35;
-    private readonly ValueNotifier<Color?> _valueColorOverride = new(Color.Parse("#FF1B5E20"));
-
-    public override void Dispose()
-    {
-        _valueColorOverride.Dispose();
-    }
+    private static readonly AlwaysStoppedAnimation<Color?> ValueColorOverride = new(Color.Parse("#FF1B5E20"));
 
     public override Widget Build(BuildContext context)
     {
@@ -193,14 +188,14 @@ internal sealed class LinearProgressIndicatorDemoPageState : State
                 stopIndicatorColor: Color.Parse("#FF880E4F"),
                 stopIndicatorRadius: 3.5,
                 trackGap: 8,
-                valueColor: _useValueColorOverride ? _valueColorOverride : null,
+                valueColor: _useValueColorOverride ? ValueColorOverride : null,
                 year2023: _useYear2023,
                 semanticsLabel: "Widget override progress");
         }
 
         return new LinearProgressIndicator(
             value: _determinate ? _progress : null,
-            valueColor: _useValueColorOverride ? _valueColorOverride : null,
+            valueColor: _useValueColorOverride ? ValueColorOverride : null,
             year2023: _useYear2023,
             semanticsLabel: "Baseline progress");
     }

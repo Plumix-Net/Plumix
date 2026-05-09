@@ -120,6 +120,29 @@ public sealed class MaterialLinearProgressIndicatorTests
     }
 
     [Fact]
+    public void LinearProgressIndicator_ValueColor_UsesAlwaysStoppedAnimationValue()
+    {
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    PrimaryColor = Colors.DarkOrange
+                },
+                child: new SizedBox(
+                    width: 200,
+                    child: new LinearProgressIndicator(
+                        value: 0.5,
+                        color: Colors.DarkRed,
+                        valueColor: new AlwaysStoppedAnimation<Color?>(Colors.ForestGreen)))));
+
+        harness.Pump(new Size(240, 80));
+
+        var renderIndicator = FindDescendantByTypeName(harness.RenderView, "RenderLinearProgressIndicator");
+        Assert.NotNull(renderIndicator);
+        Assert.Equal(Colors.ForestGreen, ReadProperty<Color>(renderIndicator!, "ValueColor"));
+    }
+
+    [Fact]
     public void LinearProgressIndicator_DefaultM3_Uses2023Defaults()
     {
         var theme = ThemeData.Light with

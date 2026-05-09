@@ -31,12 +31,7 @@ internal sealed class CircularProgressIndicatorDemoPageState : State
     private bool _useValueColorOverride;
     private int _widgetTrackGapIndex;
     private double _progress = 0.35;
-    private readonly ValueNotifier<Color?> _valueColorOverride = new(Color.Parse("#FF1B5E20"));
-
-    public override void Dispose()
-    {
-        _valueColorOverride.Dispose();
-    }
+    private static readonly AlwaysStoppedAnimation<Color?> ValueColorOverride = new(Color.Parse("#FF1B5E20"));
 
     public override Widget Build(BuildContext context)
     {
@@ -191,7 +186,7 @@ internal sealed class CircularProgressIndicatorDemoPageState : State
                 constraints: new BoxConstraints(MinWidth: 56, MinHeight: 56),
                 strokeCap: StrokeCap.Square,
                 trackGap: GetWidgetTrackGap(),
-                valueColor: _useValueColorOverride ? _valueColorOverride : null,
+                valueColor: _useValueColorOverride ? ValueColorOverride : null,
                 year2023: _useYear2023,
                 semanticsLabel: "Widget override progress");
         }
@@ -199,7 +194,7 @@ internal sealed class CircularProgressIndicatorDemoPageState : State
         return new CircularProgressIndicator(
             value: _determinate ? _progress : null,
             trackGap: GetWidgetTrackGap(),
-            valueColor: _useValueColorOverride ? _valueColorOverride : null,
+            valueColor: _useValueColorOverride ? ValueColorOverride : null,
             year2023: _useYear2023,
             semanticsLabel: "Baseline progress");
     }

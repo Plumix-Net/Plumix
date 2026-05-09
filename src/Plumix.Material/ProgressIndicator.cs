@@ -19,7 +19,7 @@ public sealed class LinearProgressIndicator : StatefulWidget
         double? value = null,
         Color? backgroundColor = null,
         Color? color = null,
-        ValueNotifier<Color?>? valueColor = null,
+        IValueListenable<Color?>? valueColor = null,
         double? minHeight = null,
         BorderRadius? borderRadius = null,
         Color? stopIndicatorColor = null,
@@ -77,7 +77,7 @@ public sealed class LinearProgressIndicator : StatefulWidget
 
     public Color? Color { get; }
 
-    public ValueNotifier<Color?>? ValueColor { get; }
+    public IValueListenable<Color?>? ValueColor { get; }
 
     public double? MinHeight { get; }
 
@@ -111,7 +111,7 @@ public sealed class LinearProgressIndicator : StatefulWidget
     {
         private AnimationController? _internalController;
         private AnimationController? _activeController;
-        private ValueNotifier<Color?>? _activeValueColor;
+        private IValueListenable<Color?>? _activeValueColor;
         private bool _isMounted;
 
         private LinearProgressIndicator CurrentWidget => (LinearProgressIndicator)StateWidget;
@@ -250,7 +250,7 @@ public sealed class LinearProgressIndicator : StatefulWidget
             _activeController.Changed += HandleAnimationTick;
         }
 
-        private void UpdateValueColorBinding(ValueNotifier<Color?>? valueColor)
+        private void UpdateValueColorBinding(IValueListenable<Color?>? valueColor)
         {
             if (ReferenceEquals(_activeValueColor, valueColor))
             {
@@ -866,7 +866,7 @@ public sealed class CircularProgressIndicator : StatefulWidget
         double? value = null,
         Color? backgroundColor = null,
         Color? color = null,
-        ValueNotifier<Color?>? valueColor = null,
+        IValueListenable<Color?>? valueColor = null,
         double? strokeWidth = null,
         double? strokeAlign = null,
         BoxConstraints? constraints = null,
@@ -902,7 +902,7 @@ public sealed class CircularProgressIndicator : StatefulWidget
         double? value,
         Color? backgroundColor,
         Color? color,
-        ValueNotifier<Color?>? valueColor,
+        IValueListenable<Color?>? valueColor,
         double? strokeWidth,
         double? strokeAlign,
         BoxConstraints? constraints,
@@ -968,7 +968,7 @@ public sealed class CircularProgressIndicator : StatefulWidget
         double? value = null,
         Color? backgroundColor = null,
         Color? color = null,
-        ValueNotifier<Color?>? valueColor = null,
+        IValueListenable<Color?>? valueColor = null,
         double? strokeWidth = null,
         double? strokeAlign = null,
         BoxConstraints? constraints = null,
@@ -1006,7 +1006,7 @@ public sealed class CircularProgressIndicator : StatefulWidget
 
     public Color? Color { get; }
 
-    public ValueNotifier<Color?>? ValueColor { get; }
+    public IValueListenable<Color?>? ValueColor { get; }
 
     public double? StrokeWidth { get; }
 
@@ -1048,7 +1048,7 @@ public sealed class CircularProgressIndicator : StatefulWidget
 
         private AnimationController? _internalController;
         private AnimationController? _activeController;
-        private ValueNotifier<Color?>? _activeValueColor;
+        private IValueListenable<Color?>? _activeValueColor;
         private bool _isMounted;
 
         private CircularProgressIndicator CurrentWidget => (CircularProgressIndicator)StateWidget;
@@ -1216,7 +1216,7 @@ public sealed class CircularProgressIndicator : StatefulWidget
             _activeController.Changed += HandleAnimationTick;
         }
 
-        private void UpdateValueColorBinding(ValueNotifier<Color?>? valueColor)
+        private void UpdateValueColorBinding(IValueListenable<Color?>? valueColor)
         {
             if (ReferenceEquals(_activeValueColor, valueColor))
             {

@@ -408,6 +408,27 @@ public sealed class MaterialCircularProgressIndicatorTests
     }
 
     [Fact]
+    public void CircularProgressIndicator_ValueColor_UsesAlwaysStoppedAnimationValue()
+    {
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    PrimaryColor = Colors.DarkOrange
+                },
+                child: new CircularProgressIndicator(
+                    value: 0.5,
+                    color: Colors.DarkRed,
+                    valueColor: new AlwaysStoppedAnimation<Color?>(Colors.ForestGreen))));
+
+        harness.Pump(new Size(140, 140));
+
+        var renderIndicator = FindDescendantByTypeName(harness.RenderView, "RenderCircularProgressIndicator");
+        Assert.NotNull(renderIndicator);
+        Assert.Equal(Colors.ForestGreen, ReadProperty<Color>(renderIndicator!, "ValueColor"));
+    }
+
+    [Fact]
     public void CircularProgressIndicator_LegacySizeFallback_RemainsSupported()
     {
         var theme = ThemeData.Light with
