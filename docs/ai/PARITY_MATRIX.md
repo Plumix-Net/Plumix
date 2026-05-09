@@ -4,7 +4,7 @@ Scope: structural parity of sample routes/modules between C# and Dart samples.
 
 Policy note: sample parity updates must follow `docs/ai/PORTING_MODE.md` (Dart source of truth, strict `1:1` default, documented divergences).
 
-Last checked: 2026-05-07
+Last checked: 2026-05-09
 
 Status legend:
 
@@ -17,9 +17,10 @@ Status legend:
 | Feature | C# sample | Dart sample | Status | Notes |
 | --- | --- | --- | --- | --- |
 | App bootstrap | `src/Sample/Flutter.Net/CounterApp.cs` | `dart_sample/lib/counter_app.dart` | done | Counter model + scope app root present on both sides; C# root uses framework Material `Theme(data: ThemeData.Light, ...)` (`Flutter.Material`) while Dart root uses `MaterialApp(theme: ThemeData(...))`. C# `ThemeData.Light` defaults are now aligned to Flutter M3 token values for key sample surfaces/buttons (`primary`, `onSurface`, `secondaryContainer`, `onSecondaryContainer`, `scaffold/canvas`) and button typography baseline (`labelLarge`). |
-| Route constants + route data | `src/Sample/Flutter.Net/SampleGalleryScreen.cs` | `dart_sample/lib/sample_routes.dart` | done | Same route set including navigator details, radio/card/demo routes, floating-action-button demo route, drawer demo route, and linear-progress-indicator demo route. |
+| Route constants + route data | `src/Sample/Flutter.Net/SampleGalleryScreen.cs` | `dart_sample/lib/sample_routes.dart` | done | Same route set including navigator details, bloc-counter demo route, radio/card demo routes, floating-action-button demo route, drawer demo route, and progress-indicator demo routes. |
 | Sample gallery menu | `src/Sample/Flutter.Net/SampleGalleryScreen.cs` | `dart_sample/lib/sample_gallery_screen.dart` | done | Menu is now tab-structured on both sides through bottom navigation (`Material` / `Cupertino` / `General`) with the same demo-to-tab mapping and unchanged route set; menu and demo shells still use Material structure (`Scaffold` + `AppBar`), route entries remain outlined buttons, and demo pages now rely on default `AppBar` implied back leading (title-only app bars) on non-root routes. |
 | Counter page | `src/Sample/Flutter.Net/CounterScreen.cs` | `dart_sample/lib/counter_screen.dart` | verify-runtime | Structural match; centered label parity hardened for intrinsic-width rows (notably `Keyed List`) via `RenderParagraph` loose-width center/right/end alignment normalization, and both samples now wrap page content with `SingleChildScrollView` to avoid bottom overflow-debug zones on shorter viewports. |
+| Bloc counter demo | `src/Sample/Plumix.Sample/Demos/General/BlocCounterDemoPage.cs` | `dart_sample/lib/demos/general/bloc_counter_demo_page.dart` | verify-runtime | Demonstrates `BlocProvider` + `BlocBuilder` + `BlocListener` + `BlocSelector` parity with increment/decrement/reset actions and restartable refresh events (`350ms` and `80ms`) to verify cancellation/replacement behavior under rapid dispatch. |
 | Navigator demo | `src/Sample/Flutter.Net/Demos/General/NavigatorDemoPage.cs` | `dart_sample/lib/demos/general/navigator_demo_page.dart` | verify-runtime | Route operations and observer flows are mirrored. |
 | ListView separated demo | `src/Sample/Flutter.Net/Demos/General/ListViewSeparatedDemoPage.cs` | `dart_sample/lib/demos/general/list_view_separated_demo_page.dart` | verify-runtime | |
 | ListView fixed extent demo | `src/Sample/Flutter.Net/Demos/General/ListViewFixedExtentDemoPage.cs` | `dart_sample/lib/demos/general/list_view_fixed_extent_demo_page.dart` | verify-runtime | |

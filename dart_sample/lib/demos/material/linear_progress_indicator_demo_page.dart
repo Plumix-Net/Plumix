@@ -26,7 +26,7 @@ class _LinearProgressIndicatorDemoPageState
     final ThemeData pageTheme = baseTheme.copyWith(
       useMaterial3: _useMaterial3,
       progressIndicatorTheme: _useThemeOverrides
-          ? const ProgressIndicatorThemeData(
+          ? ProgressIndicatorThemeData(
               color: Color(0xFF1565C0),
               linearTrackColor: Color(0xFFC5CAE9),
               linearMinHeight: 6,

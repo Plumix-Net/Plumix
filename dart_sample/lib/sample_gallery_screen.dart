@@ -6,6 +6,7 @@ import 'demos/material/app_bar_icon_theme_demo_page.dart';
 import 'demos/material/app_bar_leading_width_demo_page.dart';
 import 'demos/material/app_bar_text_styles_demo_page.dart';
 import 'demos/general/aspect_ratio_demo_page.dart';
+import 'demos/general/bloc_counter_demo_page.dart';
 import 'demos/material/card_demo_page.dart';
 import 'demos/material/circular_progress_indicator_demo_page.dart';
 import 'demos/cupertino/checkbox_demo_page.dart';
@@ -146,6 +147,12 @@ class SampleGalleryScreen extends StatelessWidget {
           title: 'Counter',
           subtitle: 'existing sample',
           builder: () => const CounterScreen(),
+        ),
+        SampleRouteDefinition(
+          routeName: SampleRoutes.blocCounter,
+          title: 'Bloc counter',
+          subtitle: 'BlocProvider + BlocBuilder + BlocListener + BlocSelector',
+          builder: () => const BlocCounterDemoPage(),
         ),
         SampleRouteDefinition(
           routeName: SampleRoutes.navigator,

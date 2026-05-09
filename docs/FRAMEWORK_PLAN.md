@@ -444,6 +444,7 @@ Progress update (2026-03-19):
   - introduced framework Material localization primitives (`MaterialLocalizations`, `DefaultMaterialLocalizations`, and inherited `MaterialLocalizationsScope`) and routed bottom-navigation index-label semantics through the localization provider (default English fallback with subtree override support);
   - expanded `MaterialBottomNavigationBarTests` coverage for theme-default precedence, widget-over-theme overrides, auto-shifting defaults (background + unselected-label visibility), label-style color precedence, theme-driven `type` override, icon-theme pair guards, semantics-tree coverage for enabled/disabled tile states plus index labels, tooltip hover show/hide behavior, and shifting selection-width animation behavior;
   - retained tab-structured C#/Dart sample gallery parity (`Material` / `Cupertino` / `General`) without route-map divergence.
+  - closed a sample route-map parity drift by adding the missing Dart `Bloc counter` demo route/page (`/bloc-counter`) to match the C# sample menu and route constants.
 - Added framework semantics annotation primitive and control semantics wiring:
   - introduced widget/render semantics wrappers (`Semantics` + `RenderSemanticsAnnotations`) for label/flags/tap-action annotations in framework widget composition;
   - `MaterialButtonCore` now emits semantic flags/actions (`IsButton`, `IsEnabled`, `IsSelected`, `IsChecked`) and optional semantic labels;

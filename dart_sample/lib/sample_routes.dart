@@ -12,6 +12,7 @@ class SampleRoutes {
 
   static const String menu = '/';
   static const String counter = '/counter';
+  static const String blocCounter = '/bloc-counter';
   static const String navigator = '/navigator';
   static const String navigatorDetails = '/navigator/details';
   static const String listViewSeparated = '/list-separated';

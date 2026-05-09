@@ -14,6 +14,9 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 ### Changed
 
+- Closed sample route/page parity drift for `Bloc counter`:
+  - added Dart sample route constant `/bloc-counter` and menu wiring (`dart_sample/lib/sample_routes.dart`, `dart_sample/lib/sample_gallery_screen.dart`);
+  - added Dart `Bloc counter` demo page mirroring C# behavior (`dart_sample/lib/demos/general/bloc_counter_demo_page.dart`) with `BlocProvider` + `BlocBuilder` + `BlocListener` + `BlocSelector` and restartable refresh-event handling.
 - Closed remaining progress-indicator `valueColor` API divergence with Flutter usage patterns:
   - introduced framework `IValueListenable<T>` and `AlwaysStoppedAnimation<T>` (`src/Plumix/Foundation/Listenable.cs`);
   - switched `LinearProgressIndicator` and `CircularProgressIndicator` `valueColor` surface from `ValueNotifier<Color?>` to `IValueListenable<Color?>` (`src/Plumix.Material/ProgressIndicator.cs`) while preserving live listener-driven updates and null fallback behavior;
