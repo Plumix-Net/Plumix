@@ -19,14 +19,17 @@ public sealed class Slider : StatefulWidget
         double min = 0.0,
         double max = 1.0,
         int? divisions = null,
+        double? secondaryTrackValue = null,
         Color? activeColor = null,
         Color? inactiveColor = null,
+        Color? secondaryActiveColor = null,
         Color? thumbColor = null,
         MaterialStateProperty<Color?>? overlayColor = null,
         MaterialTapTargetSize? materialTapTargetSize = null,
         FocusNode? focusNode = null,
         bool autofocus = false,
         string? semanticLabel = null,
+        SemanticFormatterCallback? semanticFormatterCallback = null,
         Key? key = null) : base(key)
     {
         if (double.IsNaN(value) || double.IsInfinity(value))
@@ -59,6 +62,23 @@ public sealed class Slider : StatefulWidget
             throw new ArgumentOutOfRangeException(nameof(divisions), "Slider divisions must be greater than zero.");
         }
 
+        if (secondaryTrackValue.HasValue)
+        {
+            if (double.IsNaN(secondaryTrackValue.Value) || double.IsInfinity(secondaryTrackValue.Value))
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(secondaryTrackValue),
+                    "Slider secondaryTrackValue must be finite.");
+            }
+
+            if (secondaryTrackValue.Value < min || secondaryTrackValue.Value > max)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(secondaryTrackValue),
+                    "Slider secondaryTrackValue must be between min and max.");
+            }
+        }
+
         Value = value;
         OnChanged = onChanged;
         OnChangeStart = onChangeStart;
@@ -66,14 +86,17 @@ public sealed class Slider : StatefulWidget
         Min = min;
         Max = max;
         Divisions = divisions;
+        SecondaryTrackValue = secondaryTrackValue;
         ActiveColor = activeColor;
         InactiveColor = inactiveColor;
+        SecondaryActiveColor = secondaryActiveColor;
         ThumbColor = thumbColor;
         OverlayColor = overlayColor;
         MaterialTapTargetSize = materialTapTargetSize;
         FocusNode = focusNode;
         Autofocus = autofocus;
         SemanticLabel = semanticLabel;
+        SemanticFormatterCallback = semanticFormatterCallback;
     }
 
     public double Value { get; }
@@ -90,9 +113,13 @@ public sealed class Slider : StatefulWidget
 
     public int? Divisions { get; }
 
+    public double? SecondaryTrackValue { get; }
+
     public Color? ActiveColor { get; }
 
     public Color? InactiveColor { get; }
+
+    public Color? SecondaryActiveColor { get; }
 
     public Color? ThumbColor { get; }
 
@@ -105,6 +132,8 @@ public sealed class Slider : StatefulWidget
     public bool Autofocus { get; }
 
     public string? SemanticLabel { get; }
+
+    public SemanticFormatterCallback? SemanticFormatterCallback { get; }
 
     public override State CreateState()
     {
@@ -161,10 +190,13 @@ public sealed class Slider : StatefulWidget
 
             var activeTrackColor = ResolveActiveTrackColor(theme, sliderTheme);
             var inactiveTrackColor = ResolveInactiveTrackColor(theme, sliderTheme);
+            var secondaryTrackColor = ResolveSecondaryTrackColor(theme, sliderTheme);
             var thumbColor = ResolveThumbColor(theme, sliderTheme);
             var disabledActiveTrackColor = ResolveDisabledActiveTrackColor(theme, sliderTheme);
             var disabledInactiveTrackColor = ResolveDisabledInactiveTrackColor(theme, sliderTheme);
+            var disabledSecondaryTrackColor = ResolveDisabledSecondaryTrackColor(theme, sliderTheme);
             var disabledThumbColor = ResolveDisabledThumbColor(theme, sliderTheme);
+            var secondaryTrackValueNormalized = NormalizeOptional(CurrentWidget.SecondaryTrackValue);
 
             var focusedStates = BuildStates(interactive: IsInteractive, focused: true);
             var hoveredStates = BuildStates(interactive: IsInteractive, hovered: true);
@@ -172,6 +204,7 @@ public sealed class Slider : StatefulWidget
             var overlayFocusedColor = ResolveOverlayColor(theme, sliderTheme, focusedStates);
             var overlayHoveredColor = ResolveOverlayColor(theme, sliderTheme, hoveredStates);
             var overlayDraggedColor = ResolveOverlayColor(theme, sliderTheme, draggedStates);
+            var semanticsLabel = ResolveSemanticsLabel();
 
             var semanticsFlags = SemanticsFlags.IsSlider;
             if (IsInteractive)
@@ -180,7 +213,7 @@ public sealed class Slider : StatefulWidget
             }
 
             return new Semantics(
-                label: CurrentWidget.SemanticLabel,
+                label: semanticsLabel,
                 flags: semanticsFlags,
                 child: new Focus(
                     focusNode: _focusNode,
@@ -189,6 +222,7 @@ public sealed class Slider : StatefulWidget
                     onKeyEvent: HandleKeyEvent,
                     child: new SliderRenderWidget(
                         valueNormalized: Normalize(CurrentWidget.Value),
+                        secondaryTrackValueNormalized: secondaryTrackValueNormalized,
                         divisions: CurrentWidget.Divisions,
                         isInteractive: IsInteractive,
                         isFocused: _hasFocus,
@@ -198,6 +232,7 @@ public sealed class Slider : StatefulWidget
                         minPreferredHeight: minPreferredHeight,
                         activeTrackColor: IsInteractive ? activeTrackColor : disabledActiveTrackColor,
                         inactiveTrackColor: IsInteractive ? inactiveTrackColor : disabledInactiveTrackColor,
+                        secondaryActiveTrackColor: IsInteractive ? secondaryTrackColor : disabledSecondaryTrackColor,
                         thumbColor: IsInteractive ? thumbColor : disabledThumbColor,
                         overlayFocusedColor: overlayFocusedColor,
                         overlayHoveredColor: overlayHoveredColor,
@@ -371,6 +406,17 @@ public sealed class Slider : StatefulWidget
             CurrentWidget.OnChangeEnd?.Invoke(Denormalize(SnapNormalized(normalized)));
         }
 
+        private string? ResolveSemanticsLabel()
+        {
+            var formatter = CurrentWidget.SemanticFormatterCallback;
+            if (formatter is not null)
+            {
+                return formatter(CurrentWidget.Value);
+            }
+
+            return CurrentWidget.SemanticLabel;
+        }
+
         private double Normalize(double value)
         {
             var range = CurrentWidget.Max - CurrentWidget.Min;
@@ -386,6 +432,16 @@ public sealed class Slider : StatefulWidget
         {
             var clamped = Math.Clamp(normalized, 0.0, 1.0);
             return CurrentWidget.Min + ((CurrentWidget.Max - CurrentWidget.Min) * clamped);
+        }
+
+        private double? NormalizeOptional(double? value)
+        {
+            if (!value.HasValue)
+            {
+                return null;
+            }
+
+            return Normalize(value.Value);
         }
 
         private double SnapNormalized(double normalized)
@@ -446,6 +502,13 @@ public sealed class Slider : StatefulWidget
                    ?? theme.PrimaryColor;
         }
 
+        private Color ResolveSecondaryTrackColor(ThemeData theme, SliderThemeData sliderTheme)
+        {
+            return CurrentWidget.SecondaryActiveColor
+                   ?? sliderTheme.SecondaryActiveTrackColor
+                   ?? MaterialButtonCore.ApplyOpacity(theme.PrimaryColor, 0.54);
+        }
+
         private Color ResolveDisabledActiveTrackColor(ThemeData theme, SliderThemeData sliderTheme)
         {
             return sliderTheme.DisabledActiveTrackColor
@@ -455,6 +518,12 @@ public sealed class Slider : StatefulWidget
         private Color ResolveDisabledInactiveTrackColor(ThemeData theme, SliderThemeData sliderTheme)
         {
             return sliderTheme.DisabledInactiveTrackColor
+                   ?? MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.12);
+        }
+
+        private Color ResolveDisabledSecondaryTrackColor(ThemeData theme, SliderThemeData sliderTheme)
+        {
+            return sliderTheme.DisabledSecondaryActiveTrackColor
                    ?? MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.12);
         }
 
@@ -536,6 +605,7 @@ internal sealed class SliderRenderWidget : LeafRenderObjectWidget
 {
     public SliderRenderWidget(
         double valueNormalized,
+        double? secondaryTrackValueNormalized,
         int? divisions,
         bool isInteractive,
         bool isFocused,
@@ -545,6 +615,7 @@ internal sealed class SliderRenderWidget : LeafRenderObjectWidget
         double minPreferredHeight,
         Color activeTrackColor,
         Color inactiveTrackColor,
+        Color secondaryActiveTrackColor,
         Color thumbColor,
         Color? overlayFocusedColor,
         Color? overlayHoveredColor,
@@ -556,6 +627,7 @@ internal sealed class SliderRenderWidget : LeafRenderObjectWidget
         Key? key = null) : base(key)
     {
         ValueNormalized = valueNormalized;
+        SecondaryTrackValueNormalized = secondaryTrackValueNormalized;
         Divisions = divisions;
         IsInteractive = isInteractive;
         IsFocused = isFocused;
@@ -565,6 +637,7 @@ internal sealed class SliderRenderWidget : LeafRenderObjectWidget
         MinPreferredHeight = minPreferredHeight;
         ActiveTrackColor = activeTrackColor;
         InactiveTrackColor = inactiveTrackColor;
+        SecondaryActiveTrackColor = secondaryActiveTrackColor;
         ThumbColor = thumbColor;
         OverlayFocusedColor = overlayFocusedColor;
         OverlayHoveredColor = overlayHoveredColor;
@@ -576,6 +649,8 @@ internal sealed class SliderRenderWidget : LeafRenderObjectWidget
     }
 
     public double ValueNormalized { get; }
+
+    public double? SecondaryTrackValueNormalized { get; }
 
     public int? Divisions { get; }
 
@@ -594,6 +669,8 @@ internal sealed class SliderRenderWidget : LeafRenderObjectWidget
     public Color ActiveTrackColor { get; }
 
     public Color InactiveTrackColor { get; }
+
+    public Color SecondaryActiveTrackColor { get; }
 
     public Color ThumbColor { get; }
 
@@ -615,6 +692,7 @@ internal sealed class SliderRenderWidget : LeafRenderObjectWidget
     {
         return new RenderSlider(
             valueNormalized: ValueNormalized,
+            secondaryTrackValueNormalized: SecondaryTrackValueNormalized,
             divisions: Divisions,
             isInteractive: IsInteractive,
             isFocused: IsFocused,
@@ -624,6 +702,7 @@ internal sealed class SliderRenderWidget : LeafRenderObjectWidget
             minPreferredHeight: MinPreferredHeight,
             activeTrackColor: ActiveTrackColor,
             inactiveTrackColor: InactiveTrackColor,
+            secondaryActiveTrackColor: SecondaryActiveTrackColor,
             thumbColor: ThumbColor,
             overlayFocusedColor: OverlayFocusedColor,
             overlayHoveredColor: OverlayHoveredColor,
@@ -638,6 +717,7 @@ internal sealed class SliderRenderWidget : LeafRenderObjectWidget
     {
         var slider = (RenderSlider)renderObject;
         slider.ValueNormalized = ValueNormalized;
+        slider.SecondaryTrackValueNormalized = SecondaryTrackValueNormalized;
         slider.Divisions = Divisions;
         slider.IsInteractive = IsInteractive;
         slider.IsFocused = IsFocused;
@@ -647,6 +727,7 @@ internal sealed class SliderRenderWidget : LeafRenderObjectWidget
         slider.MinPreferredHeight = MinPreferredHeight;
         slider.ActiveTrackColor = ActiveTrackColor;
         slider.InactiveTrackColor = InactiveTrackColor;
+        slider.SecondaryActiveTrackColor = SecondaryActiveTrackColor;
         slider.ThumbColor = ThumbColor;
         slider.OverlayFocusedColor = OverlayFocusedColor;
         slider.OverlayHoveredColor = OverlayHoveredColor;
@@ -664,6 +745,7 @@ internal sealed class RenderSlider : RenderBox
     private const double Epsilon = 0.0001;
 
     private double _valueNormalized;
+    private double? _secondaryTrackValueNormalized;
     private int? _divisions;
     private bool _isInteractive;
     private bool _isFocused;
@@ -673,6 +755,7 @@ internal sealed class RenderSlider : RenderBox
     private double _minPreferredHeight;
     private Color _activeTrackColor;
     private Color _inactiveTrackColor;
+    private Color _secondaryActiveTrackColor;
     private Color _thumbColor;
     private Color? _overlayFocusedColor;
     private Color? _overlayHoveredColor;
@@ -689,6 +772,7 @@ internal sealed class RenderSlider : RenderBox
 
     public RenderSlider(
         double valueNormalized,
+        double? secondaryTrackValueNormalized,
         int? divisions,
         bool isInteractive,
         bool isFocused,
@@ -698,6 +782,7 @@ internal sealed class RenderSlider : RenderBox
         double minPreferredHeight,
         Color activeTrackColor,
         Color inactiveTrackColor,
+        Color secondaryActiveTrackColor,
         Color thumbColor,
         Color? overlayFocusedColor,
         Color? overlayHoveredColor,
@@ -708,6 +793,7 @@ internal sealed class RenderSlider : RenderBox
         Action<double>? onChangeEndNormalized)
     {
         _valueNormalized = ClampNormalized(valueNormalized);
+        _secondaryTrackValueNormalized = ClampNormalizedNullable(secondaryTrackValueNormalized);
         _divisions = divisions;
         _isInteractive = isInteractive;
         _isFocused = isFocused;
@@ -717,6 +803,7 @@ internal sealed class RenderSlider : RenderBox
         _minPreferredHeight = minPreferredHeight;
         _activeTrackColor = activeTrackColor;
         _inactiveTrackColor = inactiveTrackColor;
+        _secondaryActiveTrackColor = secondaryActiveTrackColor;
         _thumbColor = thumbColor;
         _overlayFocusedColor = overlayFocusedColor;
         _overlayHoveredColor = overlayHoveredColor;
@@ -743,6 +830,24 @@ internal sealed class RenderSlider : RenderBox
             {
                 MarkNeedsPaint();
             }
+        }
+    }
+
+    public double? SecondaryTrackValueNormalized
+    {
+        get => _secondaryTrackValueNormalized;
+        set
+        {
+            var normalized = ClampNormalizedNullable(value);
+            if (_secondaryTrackValueNormalized.HasValue == normalized.HasValue
+                && (!_secondaryTrackValueNormalized.HasValue
+                    || Math.Abs(_secondaryTrackValueNormalized.Value - normalized!.Value) <= Epsilon))
+            {
+                return;
+            }
+
+            _secondaryTrackValueNormalized = normalized;
+            MarkNeedsPaint();
         }
     }
 
@@ -885,6 +990,21 @@ internal sealed class RenderSlider : RenderBox
             }
 
             _inactiveTrackColor = value;
+            MarkNeedsPaint();
+        }
+    }
+
+    public Color SecondaryActiveTrackColor
+    {
+        get => _secondaryActiveTrackColor;
+        set
+        {
+            if (_secondaryActiveTrackColor == value)
+            {
+                return;
+            }
+
+            _secondaryActiveTrackColor = value;
             MarkNeedsPaint();
         }
     }
@@ -1062,6 +1182,28 @@ internal sealed class RenderSlider : RenderBox
                         brush: new SolidColorBrush(ActiveTrackColor),
                         pen: null,
                         rect: activeRect,
+                        radiusX: TrackHeight / 2.0,
+                        radiusY: TrackHeight / 2.0);
+                }
+            }
+
+            if (ShouldShowSecondaryTrack(visualValue))
+            {
+                var secondaryTrackValue = ClampNormalized(SecondaryTrackValueNormalized!.Value);
+                var secondaryThumbCenterX = ResolveThumbCenterX(geometry, secondaryTrackValue);
+                var secondaryLeft = Math.Min(thumbCenterX, secondaryThumbCenterX);
+                var secondaryWidth = Math.Abs(secondaryThumbCenterX - thumbCenterX);
+                if (secondaryWidth > 0)
+                {
+                    var secondaryRect = new Rect(
+                        secondaryLeft,
+                        centerY - (TrackHeight / 2.0),
+                        secondaryWidth,
+                        TrackHeight);
+                    ctx.DrawRectangle(
+                        brush: new SolidColorBrush(SecondaryActiveTrackColor),
+                        pen: null,
+                        rect: secondaryRect,
                         radiusX: TrackHeight / 2.0,
                         radiusY: TrackHeight / 2.0);
                 }
@@ -1318,6 +1460,16 @@ internal sealed class RenderSlider : RenderBox
         return null;
     }
 
+    private bool ShouldShowSecondaryTrack(double visualValue)
+    {
+        if (!_secondaryTrackValueNormalized.HasValue)
+        {
+            return false;
+        }
+
+        return _secondaryTrackValueNormalized.Value > ClampNormalized(visualValue) + Epsilon;
+    }
+
     private static bool _isPrimaryButton(PointerButtons buttons)
     {
         return buttons.HasFlag(PointerButtons.Primary);
@@ -1331,6 +1483,16 @@ internal sealed class RenderSlider : RenderBox
         }
 
         return Math.Clamp(value, 0.0, 1.0);
+    }
+
+    private static double? ClampNormalizedNullable(double? value)
+    {
+        if (!value.HasValue)
+        {
+            return null;
+        }
+
+        return ClampNormalized(value.Value);
     }
 
     private readonly record struct TrackGeometry(double Left, double Right)

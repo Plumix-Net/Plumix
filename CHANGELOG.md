@@ -14,6 +14,12 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 ### Changed
 
+- Expanded framework Material `Slider` parity in `src/Plumix.Material/Slider.cs`:
+  - added Flutter-like `secondaryTrackValue` + `secondaryActiveColor` API surface with constructor guards for finite/range-valid secondary values;
+  - expanded slider theming surface in `src/Plumix.Material/SliderTheme.cs` with `secondaryActiveTrackColor` and `disabledSecondaryActiveTrackColor`, and wired resolution precedence (`widget -> SliderTheme -> defaults`) for interactive/disabled secondary-track paint;
+  - added semantics formatter parity to `Slider` (`semanticFormatterCallback`) and precedence over static `semanticLabel` within current framework semantics-label surface;
+  - expanded focused coverage in `src/Plumix.Tests/MaterialSliderTests.cs` for secondary-track validation/normalization, default/theme/widget secondary color precedence (including disabled path), and semantic formatter precedence;
+  - updated C#/Dart runtime parity demos (`src/Sample/Plumix.Sample/Demos/Material/SliderDemoPage.cs`, `dart_sample/lib/demos/material/slider_demo_page.dart`) with `secondaryTrackValue`/`secondaryActiveColor` probes and secondary-track stepping controls.
 - Added framework Material `RangeSlider` baseline:
   - introduced `RangeSlider` + `RangeValues` in `src/Plumix.Material/RangeSlider.cs` with two-thumb controlled range API (`values`, `onChanged`, `onChangeStart`, `onChangeEnd`), range/division guards, pointer drag/tap thumb selection, focused keyboard adjustment baseline, and range semantics formatting support (`semanticFormatterCallback`);
   - reused slider theming surface (`SliderThemeData` + inherited `SliderTheme`) with `ThemeData.SliderTheme` integration for mode-aware fallback defaults and widget-over-theme precedence for active/inactive/overlay color paths;

@@ -21,6 +21,8 @@ public sealed class MaterialSliderTests
         Assert.Throws<ArgumentOutOfRangeException>(() => new Slider(value: -0.1, min: 0, max: 1, onChanged: _ => { }));
         Assert.Throws<ArgumentOutOfRangeException>(() => new Slider(value: 0.5, min: 0, max: 1, divisions: 0, onChanged: _ => { }));
         Assert.Throws<ArgumentOutOfRangeException>(() => new Slider(value: double.NaN, min: 0, max: 1, onChanged: _ => { }));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new Slider(value: 0.5, min: 0, max: 1, secondaryTrackValue: 1.1, onChanged: _ => { }));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new Slider(value: 0.5, min: 0, max: 1, secondaryTrackValue: double.NaN, onChanged: _ => { }));
     }
 
     [Fact]
@@ -75,6 +77,102 @@ public sealed class MaterialSliderTests
         Assert.NotNull(render);
         Assert.Equal(Colors.CadetBlue, ReadProperty<Color>(render!, "ActiveTrackColor"));
         Assert.Equal(ApplyOpacity(Colors.CadetBlue, 0.24), ReadProperty<Color>(render, "InactiveTrackColor"));
+    }
+
+    [Fact]
+    public void Slider_SecondaryTrack_DefaultAndNormalizationFollowFlutterParity()
+    {
+        var theme = ThemeData.Light with
+        {
+            UseMaterial3 = true,
+            PrimaryColor = Colors.CadetBlue
+        };
+
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: theme,
+                child: new SizedBox(
+                    width: 220,
+                    child: new Slider(
+                        value: 15,
+                        min: 0,
+                        max: 20,
+                        secondaryTrackValue: 18,
+                        onChanged: _ => { }))));
+
+        harness.Pump(new Size(260, 120));
+
+        var render = FindDescendantByTypeName(harness.RenderView, "RenderSlider");
+        Assert.NotNull(render);
+        Assert.Equal(0.9, ReadProperty<double>(render!, "SecondaryTrackValueNormalized"), 3);
+        Assert.Equal(ApplyOpacity(Colors.CadetBlue, 0.54), ReadProperty<Color>(render, "SecondaryActiveTrackColor"));
+    }
+
+    [Fact]
+    public void Slider_SecondaryTrack_ThemeAndWidgetColorsFollowPrecedence()
+    {
+        var theme = ThemeData.Light with
+        {
+            SliderTheme = new SliderThemeData(
+                SecondaryActiveTrackColor: Colors.OrangeRed)
+        };
+
+        using var themeHarness = new WidgetRenderHarness(
+            new Theme(
+                data: theme,
+                child: new SizedBox(
+                    width: 220,
+                    child: new Slider(
+                        value: 0.3,
+                        secondaryTrackValue: 0.8,
+                        onChanged: _ => { }))));
+
+        themeHarness.Pump(new Size(260, 120));
+        var themeRender = FindDescendantByTypeName(themeHarness.RenderView, "RenderSlider");
+        Assert.NotNull(themeRender);
+        Assert.Equal(Colors.OrangeRed, ReadProperty<Color>(themeRender!, "SecondaryActiveTrackColor"));
+
+        using var widgetHarness = new WidgetRenderHarness(
+            new Theme(
+                data: theme,
+                child: new SizedBox(
+                    width: 220,
+                    child: new Slider(
+                        value: 0.3,
+                        secondaryTrackValue: 0.8,
+                        secondaryActiveColor: Colors.MediumPurple,
+                        onChanged: _ => { }))));
+
+        widgetHarness.Pump(new Size(260, 120));
+        var widgetRender = FindDescendantByTypeName(widgetHarness.RenderView, "RenderSlider");
+        Assert.NotNull(widgetRender);
+        Assert.Equal(Colors.MediumPurple, ReadProperty<Color>(widgetRender!, "SecondaryActiveTrackColor"));
+    }
+
+    [Fact]
+    public void Slider_SecondaryTrack_DisabledUsesDisabledThemeColor()
+    {
+        var theme = ThemeData.Light with
+        {
+            SliderTheme = new SliderThemeData(
+                DisabledSecondaryActiveTrackColor: Colors.Gainsboro)
+        };
+
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: theme,
+                child: new SizedBox(
+                    width: 220,
+                    child: new Slider(
+                        value: 0.4,
+                        secondaryTrackValue: 0.9,
+                        onChanged: null))));
+
+        harness.Pump(new Size(260, 120));
+
+        var render = FindDescendantByTypeName(harness.RenderView, "RenderSlider");
+        Assert.NotNull(render);
+        Assert.Equal(Colors.Gainsboro, ReadProperty<Color>(render!, "SecondaryActiveTrackColor"));
     }
 
     [Fact]
@@ -287,6 +385,37 @@ public sealed class MaterialSliderTests
             Assert.NotNull(semanticsNode);
             Assert.True(semanticsNode!.Flags.HasFlag(SemanticsFlags.IsSlider));
             Assert.True(semanticsNode.Flags.HasFlag(SemanticsFlags.IsEnabled));
+        }
+        finally
+        {
+            FocusManager.Instance.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void Slider_SemanticFormatterCallback_OverridesSemanticLabel()
+    {
+        FocusManager.Instance.ResetForTests();
+        try
+        {
+            using var harness = new WidgetRenderHarness(
+                new Theme(
+                    data: ThemeData.Light,
+                    child: new SizedBox(
+                        width: 220,
+                        child: new Slider(
+                            value: 0.5,
+                            onChanged: _ => { },
+                            semanticLabel: "Volume",
+                            semanticFormatterCallback: value => $"{Math.Round(value * 100)} percent"))));
+
+            var semanticsRoot = harness.PumpAndGetSemantics(new Size(260, 120));
+            Assert.NotNull(semanticsRoot);
+
+            var semanticsNode = FindFirstSemanticsNode(
+                semanticsRoot!,
+                static node => node.Label == "50 percent");
+            Assert.NotNull(semanticsNode);
         }
         finally
         {

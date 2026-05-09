@@ -9,8 +9,10 @@ namespace Plumix.Material;
 public sealed record SliderThemeData(
     Color? ActiveTrackColor = null,
     Color? InactiveTrackColor = null,
+    Color? SecondaryActiveTrackColor = null,
     Color? DisabledActiveTrackColor = null,
     Color? DisabledInactiveTrackColor = null,
+    Color? DisabledSecondaryActiveTrackColor = null,
     Color? ThumbColor = null,
     Color? DisabledThumbColor = null,
     MaterialStateProperty<Color?>? OverlayColor = null,

@@ -24,8 +24,11 @@ internal sealed class SliderDemoPageState : State
     private bool _discrete;
     private bool _useThemeOverrides;
     private bool _useWidgetColorOverride;
+    private bool _showSecondaryTrack = true;
+    private bool _useSecondaryColorOverride;
     private bool _useMaterial3 = true;
     private double _value = 0.35;
+    private double _secondaryTrackValue = 0.7;
     private string _status = "idle";
 
     public override Widget Build(BuildContext context)
@@ -94,6 +97,11 @@ internal sealed class SliderDemoPageState : State
                                 width: 118,
                                 background: Color.Parse("#FFF0E8FF")),
                             BuildControlButton(
+                                label: _showSecondaryTrack ? "Secondary on" : "Secondary off",
+                                onTap: () => SetState(() => _showSecondaryTrack = !_showSecondaryTrack),
+                                width: 132,
+                                background: Color.Parse("#FFE8F6EE")),
+                            BuildControlButton(
                                 label: "-",
                                 onTap: () => SetState(() => _value = Math.Max(0, _value - 0.1)),
                                 width: 42,
@@ -105,9 +113,29 @@ internal sealed class SliderDemoPageState : State
                                 background: Color.Parse("#FFFFF3E0")),
                             new Expanded(
                                 child: new Text(
-                                    $"value={_value:0.00}, status={_status}",
+                                    $"value={_value:0.00}, secondary={ResolveSecondaryLabel()}, status={_status}",
                                     fontSize: 12,
                                     color: Color.Parse("#FF607D8B"))),
+                        ]),
+                    new Row(
+                        spacing: 8,
+                        children:
+                        [
+                            BuildControlButton(
+                                label: _useSecondaryColorOverride ? "Secondary color on" : "Secondary color off",
+                                onTap: () => SetState(() => _useSecondaryColorOverride = !_useSecondaryColorOverride),
+                                width: 164,
+                                background: Color.Parse("#FFE9F0FF")),
+                            BuildControlButton(
+                                label: "Sec -",
+                                onTap: () => SetState(() => _secondaryTrackValue = Math.Max(0, _secondaryTrackValue - 0.1)),
+                                width: 56,
+                                background: Color.Parse("#FFFFF3E0")),
+                            BuildControlButton(
+                                label: "Sec +",
+                                onTap: () => SetState(() => _secondaryTrackValue = Math.Min(1, _secondaryTrackValue + 0.1)),
+                                width: 56,
+                                background: Color.Parse("#FFFFF3E0")),
                         ]),
                     new Expanded(
                         child: new SingleChildScrollView(
@@ -153,13 +181,15 @@ internal sealed class SliderDemoPageState : State
             min: 0,
             max: 1,
             divisions: _discrete ? 5 : null,
+            secondaryTrackValue: _showSecondaryTrack ? _secondaryTrackValue : null,
             activeColor: _useWidgetColorOverride ? Color.Parse("#FFB71C1C") : null,
             inactiveColor: _useWidgetColorOverride ? Color.Parse("#FFFFCDD2") : null,
+            secondaryActiveColor: _useSecondaryColorOverride ? Color.Parse("#FF1B5E20") : null,
             thumbColor: _useWidgetColorOverride ? Color.Parse("#FF880E4F") : null,
             onChanged: _enabled ? HandleValueChanged : null,
             onChangeStart: value => SetState(() => _status = $"start {value:0.00}"),
             onChangeEnd: value => SetState(() => _status = $"end {value:0.00}"),
-            semanticLabel: "Demo slider");
+            semanticFormatterCallback: value => $"{Math.Round(value * 100)} percent");
     }
 
     private void HandleValueChanged(double value)
@@ -169,6 +199,11 @@ internal sealed class SliderDemoPageState : State
             _value = value;
             _status = $"change {value:0.00}";
         });
+    }
+
+    private string ResolveSecondaryLabel()
+    {
+        return _showSecondaryTrack ? _secondaryTrackValue.ToString("0.00") : "off";
     }
 
     private Widget BuildControlButton(

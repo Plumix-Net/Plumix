@@ -14,8 +14,11 @@ class _SliderDemoPageState extends State<SliderDemoPage> {
   bool _discrete = false;
   bool _useThemeOverrides = false;
   bool _useWidgetColorOverride = false;
+  bool _showSecondaryTrack = true;
+  bool _useSecondaryColorOverride = false;
   bool _useMaterial3 = true;
   double _value = 0.35;
+  double _secondaryTrackValue = 0.7;
   String _status = 'idle';
 
   @override
@@ -96,6 +99,14 @@ class _SliderDemoPageState extends State<SliderDemoPage> {
               ),
               const SizedBox(width: 8),
               _buildControlButton(
+                label: _showSecondaryTrack ? 'Secondary on' : 'Secondary off',
+                onTap: () =>
+                    setState(() => _showSecondaryTrack = !_showSecondaryTrack),
+                width: 132,
+                background: const Color(0xFFE8F6EE),
+              ),
+              const SizedBox(width: 8),
+              _buildControlButton(
                 label: '-',
                 onTap: () =>
                     setState(() => _value = math.max(0, _value - 0.1)),
@@ -113,12 +124,48 @@ class _SliderDemoPageState extends State<SliderDemoPage> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'value=${_value.toStringAsFixed(2)}, status=$_status',
+                  'value=${_value.toStringAsFixed(2)}, secondary=${_resolveSecondaryLabel()}, status=$_status',
                   style: const TextStyle(
                     fontSize: 12,
                     color: Color(0xFF607D8B),
                   ),
                 ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: <Widget>[
+              _buildControlButton(
+                label: _useSecondaryColorOverride
+                    ? 'Secondary color on'
+                    : 'Secondary color off',
+                onTap: () => setState(
+                  () =>
+                      _useSecondaryColorOverride = !_useSecondaryColorOverride,
+                ),
+                width: 164,
+                background: const Color(0xFFE9F0FF),
+              ),
+              const SizedBox(width: 8),
+              _buildControlButton(
+                label: 'Sec -',
+                onTap: () => setState(
+                  () => _secondaryTrackValue =
+                      math.max(0, _secondaryTrackValue - 0.1),
+                ),
+                width: 56,
+                background: const Color(0xFFFFF3E0),
+              ),
+              const SizedBox(width: 8),
+              _buildControlButton(
+                label: 'Sec +',
+                onTap: () => setState(
+                  () => _secondaryTrackValue =
+                      math.min(1, _secondaryTrackValue + 0.1),
+                ),
+                width: 56,
+                background: const Color(0xFFFFF3E0),
               ),
             ],
           ),
@@ -180,8 +227,11 @@ class _SliderDemoPageState extends State<SliderDemoPage> {
       min: 0,
       max: 1,
       divisions: _discrete ? 5 : null,
+      secondaryTrackValue: _showSecondaryTrack ? _secondaryTrackValue : null,
       activeColor: _useWidgetColorOverride ? const Color(0xFFB71C1C) : null,
       inactiveColor: _useWidgetColorOverride ? const Color(0xFFFFCDD2) : null,
+      secondaryActiveColor:
+          _useSecondaryColorOverride ? const Color(0xFF1B5E20) : null,
       thumbColor: _useWidgetColorOverride ? const Color(0xFF880E4F) : null,
       onChanged: _enabled ? _handleValueChanged : null,
       onChangeStart: (double value) =>
@@ -198,6 +248,10 @@ class _SliderDemoPageState extends State<SliderDemoPage> {
       _value = value;
       _status = 'change ${value.toStringAsFixed(2)}';
     });
+  }
+
+  String _resolveSecondaryLabel() {
+    return _showSecondaryTrack ? _secondaryTrackValue.toStringAsFixed(2) : 'off';
   }
 
   Widget _buildControlButton({
