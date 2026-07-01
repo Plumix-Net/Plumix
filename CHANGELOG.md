@@ -14,6 +14,11 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 ### Changed
 
+- Added paired Material `CheckboxListTile` + `SwitchListTile` parity baseline:
+  - introduced Flutter-like controlled APIs, whole-row toggle behavior, checkbox tristate cycling, `ListTileControlAffinity` widget/theme resolution, selected-color precedence, shrink-wrap embedded controls, adaptive factories, and merged checked/enabled/tap semantics;
+  - added shared `MergeSemantics` and `ExcludeFocus` widget primitives, `MaterialButtonCore`/`ListTile` focus-change propagation, and the Material secondary color token used by selected list-tile controls;
+  - fixed `ListTile` layout-field wiring and leading-slot shrink sizing so leading controls no longer expand a tile to the available viewport height;
+  - added focused `MaterialListTileTests` coverage and a mirrored C#/Dart runtime page for enabled/disabled, affinity, tristate, selected, and adaptive paths.
 - Expanded framework Material `Slider` parity in `src/Plumix.Material/Slider.cs`:
   - added Flutter-like `secondaryTrackValue` + `secondaryActiveColor` API surface with constructor guards for finite/range-valid secondary values;
   - expanded slider theming surface in `src/Plumix.Material/SliderTheme.cs` with `secondaryActiveTrackColor` and `disabledSecondaryActiveTrackColor`, and wired resolution precedence (`widget -> SliderTheme -> defaults`) for interactive/disabled secondary-track paint;

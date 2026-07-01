@@ -8,7 +8,7 @@ Use this block as the fastest machine-readable status summary.
 
 ```yaml
 framework_plan_version: 1
-last_updated: 2026-05-09
+last_updated: 2026-07-01
 north_star: "Flutter-like widget/rendering framework in C# with Avalonia as host infrastructure."
 current_phase: "M4 material library rewrite (theme/scaffold/material controls) in progress."
 status:
@@ -456,6 +456,12 @@ Progress update (2026-03-19):
   - wired list-tile interaction/focus/hover/pressed semantics through shared `MaterialButtonCore` (`onTap`, `onLongPress`, cursor resolution, selected/enabled semantics flags);
   - added focused `MaterialListTileTests` coverage for constructor guards, default heights, selected/disabled color behavior, theme precedence, tap dispatch, and selected/enabled semantics;
   - added C#/Dart sample parity demo route/page for runtime verification (`ListTile` route in Material tab with state and local theme override probes).
+- Added paired Material list-tile control parity baseline in `Plumix.Material`:
+  - introduced `CheckboxListTile` and `SwitchListTile` with Flutter-like controlled values, whole-tile interaction, checkbox tristate cycling, selected styling, disabled behavior, adaptive branches, and `ListTileControlAffinity` resolution through widget/local/global list-tile theme precedence;
+  - preserved Flutter composition through shared `ExcludeFocus` + `MergeSemantics` primitives and shrink-wrap embedded `Checkbox`/`Switch` controls, with explicit checked/enabled/tap semantics on the merged tile;
+  - fixed base `ListTile` layout override assignment and leading-slot shrink geometry required by `controlAffinity.leading`;
+  - added focused regression coverage and a mirrored C#/Dart runtime demo route for material/adaptive, leading/trailing, selected, disabled, and tristate paths;
+  - remaining shared-primitive gaps are switch thumb-image support, `WidgetStatesController`, `VisualDensity`, and `ListTileTitleAlignment`.
 - Added Material `Card` baseline in `Flutter.Material`:
   - introduced framework `Card` with elevated/filled/outlined variants, Flutter-like default margin, M3/M2 color/elevation/shape defaults, outlined border defaults, clipping, surface tint, and `semanticContainer` wiring;
   - added `CardThemeData` + inherited `CardTheme` and `ThemeData.CardTheme` integration with precedence (`widget -> card theme -> mode defaults`);

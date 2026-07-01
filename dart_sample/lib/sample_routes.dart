@@ -32,6 +32,7 @@ class SampleRoutes {
   static const String rangeSlider = '/range-slider';
   static const String card = '/card';
   static const String listTile = '/list-tile';
+  static const String listTileControls = '/list-tile-controls';
   static const String floatingActionButton = '/floating-action-button';
   static const String checkbox = '/checkbox';
   static const String switchDemo = '/switch';

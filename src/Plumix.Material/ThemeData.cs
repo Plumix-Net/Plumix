@@ -123,6 +123,7 @@ public sealed record ThemeData
 {
     private static readonly Color LightScaffoldAndCanvasColor = Color.Parse("#FFFEF7FF");
     private static readonly Color LightPrimaryColor = Color.Parse("#FF6750A4");
+    private static readonly Color LightSecondaryColor = Color.Parse("#FF625B71");
     private static readonly Color LightPrimaryContainerColor = Color.Parse("#FFEADDFF");
     private static readonly Color LightOnPrimaryContainerColor = Color.Parse("#FF21005D");
     private static readonly Color LightSurfaceColor = Color.Parse("#FFFEF7FF");
@@ -167,6 +168,7 @@ public sealed record ThemeData
         Color? scaffoldBackgroundColor = null,
         Color? canvasColor = null,
         Color? primaryColor = null,
+        Color? secondaryColor = null,
         Color? onPrimaryColor = null,
         Color? primaryContainerColor = null,
         Color? onPrimaryContainerColor = null,
@@ -217,6 +219,7 @@ public sealed record ThemeData
         ScaffoldBackgroundColor = scaffoldBackgroundColor ?? LightScaffoldAndCanvasColor;
         CanvasColor = canvasColor ?? LightScaffoldAndCanvasColor;
         PrimaryColor = primaryColor ?? LightPrimaryColor;
+        SecondaryColor = secondaryColor ?? LightSecondaryColor;
         OnPrimaryColor = onPrimaryColor ?? Colors.White;
         PrimaryContainerColor = primaryContainerColor ?? LightPrimaryContainerColor;
         OnPrimaryContainerColor = onPrimaryContainerColor ?? LightOnPrimaryContainerColor;
@@ -273,6 +276,8 @@ public sealed record ThemeData
     public Color CanvasColor { get; init; }
 
     public Color PrimaryColor { get; init; }
+
+    public Color SecondaryColor { get; init; }
 
     public Color OnPrimaryColor { get; init; }
 

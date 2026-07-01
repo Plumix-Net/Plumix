@@ -1586,6 +1586,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
         ButtonStyle style,
         Action? onLongPress = null,
         Action<bool>? onHoverChanged = null,
+        Action<bool>? onFocusChange = null,
         FocusNode? focusNode = null,
         bool isSelected = false,
         bool includeSemanticSelected = true,
@@ -1604,6 +1605,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
         Style = style ?? throw new ArgumentNullException(nameof(style));
         OnLongPress = onLongPress;
         OnHoverChanged = onHoverChanged;
+        OnFocusChange = onFocusChange;
         FocusNode = focusNode;
         IsSelected = isSelected;
         IncludeSemanticSelected = includeSemanticSelected;
@@ -1626,6 +1628,8 @@ internal sealed class MaterialButtonCore : StatefulWidget
     public Action? OnLongPress { get; }
 
     public Action<bool>? OnHoverChanged { get; }
+
+    public Action<bool>? OnFocusChange { get; }
 
     public FocusNode? FocusNode { get; }
 
@@ -2363,6 +2367,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
                     _suppressFocusOverlay = false;
                 }
             });
+            CurrentWidget.OnFocusChange?.Invoke(hasFocus);
         }
 
         private void SetPressed(bool value, bool suppressFocusOverlay = false)

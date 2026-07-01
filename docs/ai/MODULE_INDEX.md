@@ -38,6 +38,7 @@ Current priority (2026-03-12):
   - `src/Flutter.Material/CardTheme.cs`
   - `src/Flutter.Material/ListTile.cs`
   - `src/Flutter.Material/ListTileTheme.cs`
+  - `src/Plumix.Material/ListTileControls.cs`
   - `src/Plumix.Material/ProgressIndicator.cs`
   - `src/Plumix.Material/ProgressIndicatorTheme.cs`
   - `src/Plumix.Cupertino/CupertinoActivityIndicator.cs`
@@ -61,6 +62,7 @@ Current priority (2026-03-12):
   - `src/Sample/Flutter.Net/Demos/Material/MaterialButtonsDemoPage.cs`
   - `src/Sample/Flutter.Net/Demos/Material/CardDemoPage.cs`
   - `src/Sample/Flutter.Net/Demos/Material/ListTileDemoPage.cs`
+  - `src/Sample/Plumix.Sample/Demos/Material/ListTileControlsDemoPage.cs`
   - `src/Sample/Flutter.Net/Demos/Material/FloatingActionButtonDemoPage.cs`
   - `src/Sample/Plumix.Sample/Demos/Material/LinearProgressIndicatorDemoPage.cs`
   - `src/Sample/Plumix.Sample/Demos/Material/CircularProgressIndicatorDemoPage.cs`
@@ -72,6 +74,7 @@ Current priority (2026-03-12):
   - `dart_sample/lib/demos/material/material_buttons_demo_page.dart`
   - `dart_sample/lib/demos/material/card_demo_page.dart`
   - `dart_sample/lib/demos/material/list_tile_demo_page.dart`
+  - `dart_sample/lib/demos/material/list_tile_controls_demo_page.dart`
   - `dart_sample/lib/demos/material/floating_action_button_demo_page.dart`
   - `dart_sample/lib/demos/material/linear_progress_indicator_demo_page.dart`
   - `dart_sample/lib/demos/material/circular_progress_indicator_demo_page.dart`
@@ -83,7 +86,7 @@ Current priority (2026-03-12):
   - `src/Flutter.Tests/MaterialScaffoldTests.cs`
   - `src/Flutter.Tests/MaterialButtonsTests.cs`
   - `src/Flutter.Tests/MaterialCardTests.cs`
-  - `src/Flutter.Tests/MaterialListTileTests.cs`
+  - `src/Plumix.Tests/MaterialListTileTests.cs`
   - `src/Flutter.Tests/MaterialFloatingActionButtonTests.cs`
   - `src/Flutter.Tests/MaterialBottomNavigationBarTests.cs`
   - `src/Plumix.Tests/MaterialLinearProgressIndicatorTests.cs`

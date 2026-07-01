@@ -14,6 +14,13 @@ public enum ListTileStyle
     Drawer,
 }
 
+public enum ListTileControlAffinity
+{
+    Leading,
+    Trailing,
+    Platform,
+}
+
 public sealed record ListTileThemeData(
     bool? Dense = null,
     BorderRadius? Shape = null,
@@ -33,7 +40,8 @@ public sealed record ListTileThemeData(
     double? MinTileHeight = null,
     bool? EnableFeedback = null,
     MouseCursor? MouseCursor = null,
-    bool? IsThreeLine = null);
+    bool? IsThreeLine = null,
+    ListTileControlAffinity? ControlAffinity = null);
 
 public sealed class ListTileTheme : InheritedWidget
 {

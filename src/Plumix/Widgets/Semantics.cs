@@ -53,3 +53,21 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         semantics.ExplicitChildNodes = ExplicitChildNodes;
     }
 }
+
+// Dart parity source (reference): flutter/packages/flutter/lib/src/widgets/basic.dart (MergeSemantics)
+public sealed class MergeSemantics : StatelessWidget
+{
+    public MergeSemantics(Widget child, Key? key = null) : base(key)
+    {
+        Child = child ?? throw new ArgumentNullException(nameof(child));
+    }
+
+    public Widget Child { get; }
+
+    public override Widget Build(BuildContext context)
+    {
+        return new Semantics(
+            child: Child,
+            container: true);
+    }
+}

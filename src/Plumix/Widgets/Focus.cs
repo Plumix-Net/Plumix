@@ -942,6 +942,7 @@ public sealed class Focus : StatefulWidget
         public override void DidChangeDependencies()
         {
             EnsureNodeRegistration(ResolveScope());
+            ApplyWidgetConfiguration();
             ApplyAutofocusIfNeeded();
         }
 
@@ -1039,8 +1040,9 @@ public sealed class Focus : StatefulWidget
         private void ApplyWidgetConfiguration()
         {
             var node = _focusNode!;
-            node.CanRequestFocus = Widget.CanRequestFocus;
-            node.SkipTraversal = Widget.SkipTraversal;
+            var descendantsAreFocusable = ExcludeFocus.DescendantsAreFocusableOf(Context);
+            node.CanRequestFocus = Widget.CanRequestFocus && descendantsAreFocusable;
+            node.SkipTraversal = Widget.SkipTraversal || !descendantsAreFocusable;
             node.OnKeyEvent = Widget.OnKeyEvent;
             node.OnTextInput = Widget.OnTextInput;
             node.OnTextComposition = Widget.OnTextComposition;
@@ -1058,5 +1060,37 @@ public sealed class Focus : StatefulWidget
             _autofocusApplied = true;
             _focusNode!.RequestFocus();
         }
+    }
+}
+
+// Dart parity source (reference): flutter/packages/flutter/lib/src/widgets/focus_scope.dart (ExcludeFocus)
+public sealed class ExcludeFocus : InheritedWidget
+{
+    public ExcludeFocus(
+        Widget child,
+        bool excluding = true,
+        Key? key = null) : base(key)
+    {
+        Child = child ?? throw new ArgumentNullException(nameof(child));
+        Excluding = excluding;
+    }
+
+    public Widget Child { get; }
+
+    public bool Excluding { get; }
+
+    public override Widget Build(BuildContext context)
+    {
+        return Child;
+    }
+
+    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    {
+        return ((ExcludeFocus)oldWidget).Excluding != Excluding;
+    }
+
+    internal static bool DescendantsAreFocusableOf(BuildContext context)
+    {
+        return context.DependOnInherited<ExcludeFocus>()?.Excluding != true;
     }
 }
