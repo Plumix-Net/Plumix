@@ -27,6 +27,7 @@ import 'demos/general/list_view_reverse_demo_page.dart';
 import 'demos/general/list_view_separated_demo_page.dart';
 import 'demos/material/list_tile_demo_page.dart';
 import 'demos/material/list_tile_controls_demo_page.dart';
+import 'demos/material/radio_expansion_tile_demo_page.dart';
 import 'demos/material/material_buttons_demo_page.dart';
 import 'demos/general/navigator_demo_page.dart';
 import 'demos/general/offstage_demo_page.dart';
@@ -106,6 +107,13 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'CheckboxListTile + SwitchListTile',
       subtitle: 'whole-row toggle + tristate + affinity + adaptive probes',
       builder: () => const ListTileControlsDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.radioExpansionTile,
+      title: 'RadioListTile + ExpansionTile',
+      subtitle:
+          'RadioGroup + toggleable/adaptive + animated controller expansion',
+      builder: () => const RadioExpansionTileDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.floatingActionButton,

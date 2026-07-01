@@ -160,6 +160,7 @@ public sealed record ThemeData
     private SwitchThemeData? _switchTheme;
     private RadioThemeData? _radioTheme;
     private SliderThemeData? _sliderTheme;
+    private ExpansionTileThemeData? _expansionTileTheme;
 
     public ThemeData(
         TargetPlatform? platform = null,
@@ -211,7 +212,8 @@ public sealed record ThemeData
         CheckboxThemeData? checkboxTheme = null,
         SwitchThemeData? switchTheme = null,
         RadioThemeData? radioTheme = null,
-        SliderThemeData? sliderTheme = null)
+        SliderThemeData? sliderTheme = null,
+        ExpansionTileThemeData? expansionTileTheme = null)
     {
         Platform = platform ?? ResolveDefaultPlatform();
         Brightness = brightness ?? Brightness.Light;
@@ -263,6 +265,7 @@ public sealed record ThemeData
         _switchTheme = switchTheme;
         _radioTheme = radioTheme;
         _sliderTheme = sliderTheme;
+        _expansionTileTheme = expansionTileTheme;
     }
 
     public TargetPlatform Platform { get; init; }
@@ -431,6 +434,12 @@ public sealed record ThemeData
     {
         get => _sliderTheme ?? new SliderThemeData();
         init => _sliderTheme = value;
+    }
+
+    public ExpansionTileThemeData ExpansionTileTheme
+    {
+        get => _expansionTileTheme ?? new ExpansionTileThemeData();
+        init => _expansionTileTheme = value;
     }
 
     public static ThemeData Light { get; } = new();

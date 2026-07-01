@@ -462,6 +462,12 @@ Progress update (2026-03-19):
   - fixed base `ListTile` layout override assignment and leading-slot shrink geometry required by `controlAffinity.leading`;
   - added focused regression coverage and a mirrored C#/Dart runtime demo route for material/adaptive, leading/trailing, selected, disabled, and tristate paths;
   - remaining shared-primitive gaps are switch thumb-image support, `WidgetStatesController`, `VisualDensity`, and `ListTileTitleAlignment`.
+- Added paired `RadioListTile<T>` + `ExpansionTile` parity baseline in `Plumix.Material`:
+  - `RadioListTile<T>` supports inherited `RadioGroup<T>` value/callback coordination, legacy group API, toggleable selection, adaptive branch, selected/theme color precedence, platform/explicit control affinity, scaling, disabled behavior, and merged checked/enabled/tap semantics;
+  - reusable `ExpansibleController`/`Expansible` primitives now own external expansion state, forward/reverse animation, clipped height layout, and `maintainState` body lifecycle;
+  - `ExpansionTile` adds controller/tap expansion, arrow/header/background/shape animation, `ExpansionTileTheme` + `ThemeData` precedence, leading/trailing affinity, body alignment/padding, disabled behavior, and expanded-state semantics;
+  - added mirrored C#/Dart runtime probes and focused regression coverage for both controls;
+  - remaining gaps are `PageStorage`, general `ShapeBorder` interpolation, semantics hint/live-region announcements, and ordered arrow-key `RadioGroup` client traversal.
 - Added Material `Card` baseline in `Flutter.Material`:
   - introduced framework `Card` with elevated/filled/outlined variants, Flutter-like default margin, M3/M2 color/elevation/shape defaults, outlined border defaults, clipping, surface tint, and `semanticContainer` wiring;
   - added `CardThemeData` + inherited `CardTheme` and `ThemeData.CardTheme` integration with precedence (`widget -> card theme -> mode defaults`);

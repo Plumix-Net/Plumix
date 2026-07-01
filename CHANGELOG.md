@@ -14,6 +14,11 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 ### Changed
 
+- Added paired Material `RadioListTile<T>` + `ExpansionTile` parity baseline:
+  - introduced modern inherited `RadioGroup<T>` coordination plus legacy `groupValue/onChanged`, toggleable selection, adaptive Cupertino routing, control affinity, selected-color precedence, scale transforms, and merged radio semantics;
+  - introduced reusable framework `ExpansibleController`/`Expansible` with animated clipped height, external controller lifecycle, `maintainState`, and forward/reverse curves, plus self-bounds `ClipRect` support;
+  - added `ExpansionTileThemeData`/`ExpansionTileTheme`/`ThemeData.ExpansionTileTheme`, controller/tap expansion, animated arrow/header/background/shape transitions, leading/trailing affinity, disabled behavior, and expanded-state semantics;
+  - added focused regression coverage and a mirrored C#/Dart runtime page for group/toggle/adaptive radio paths and controller/theme/animation expansion paths.
 - Added paired Material `CheckboxListTile` + `SwitchListTile` parity baseline:
   - introduced Flutter-like controlled APIs, whole-row toggle behavior, checkbox tristate cycling, `ListTileControlAffinity` widget/theme resolution, selected-color precedence, shrink-wrap embedded controls, adaptive factories, and merged checked/enabled/tap semantics;
   - added shared `MergeSemantics` and `ExcludeFocus` widget primitives, `MaterialButtonCore`/`ListTile` focus-change propagation, and the Material secondary color token used by selected list-tile controls;

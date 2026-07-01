@@ -40,6 +40,7 @@ internal static class SampleRoutes
     public const string Card = "/card";
     public const string ListTile = "/list-tile";
     public const string ListTileControls = "/list-tile-controls";
+    public const string RadioExpansionTile = "/radio-expansion-tile";
     public const string FloatingActionButton = "/floating-action-button";
     public const string Checkbox = "/checkbox";
     public const string Switch = "/switch";
@@ -89,6 +90,7 @@ internal sealed class SampleGalleryScreen : StatelessWidget
         new(SampleRoutes.Card, "Card", "elevated/filled/outlined variants + theme/clip probes", () => new CardDemoPage()),
         new(SampleRoutes.ListTile, "ListTile", "leading/title/subtitle/trailing + selected/dense/theme probes", () => new ListTileDemoPage()),
         new(SampleRoutes.ListTileControls, "CheckboxListTile + SwitchListTile", "whole-row toggle + tristate + affinity + adaptive probes", () => new ListTileControlsDemoPage()),
+        new(SampleRoutes.RadioExpansionTile, "RadioListTile + ExpansionTile", "RadioGroup + toggleable/adaptive + animated controller expansion", () => new RadioExpansionTileDemoPage()),
         new(SampleRoutes.FloatingActionButton, "FloatingActionButton", "regular/small/large/extended + theme defaults", () => new FloatingActionButtonDemoPage()),
         new(SampleRoutes.AppBarLeadingWidth, "AppBar leadingWidth theme", "theme fallback + widget override runtime probe", () => new AppBarLeadingWidthDemoPage()),
         new(SampleRoutes.AppBarActionsPadding, "AppBar actionsPadding theme", "theme fallback + widget override runtime probe", () => new AppBarActionsPaddingDemoPage()),
