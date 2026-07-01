@@ -34,6 +34,7 @@ class SampleRoutes {
   static const String listTile = '/list-tile';
   static const String listTileControls = '/list-tile-controls';
   static const String radioExpansionTile = '/radio-expansion-tile';
+  static const String expansionPanel = '/expansion-panel';
   static const String floatingActionButton = '/floating-action-button';
   static const String checkbox = '/checkbox';
   static const String switchDemo = '/switch';

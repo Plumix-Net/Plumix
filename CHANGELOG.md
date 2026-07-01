@@ -14,6 +14,11 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 ### Changed
 
+- Added paired Material `ExpansionPanel` + `ExpansionPanelList` parity baseline:
+  - introduced Flutter-shaped `ExpansionPanel`/`ExpansionPanelRadio` descriptors and normal/radio list constructors with controlled expansion, unique radio values, initial-open selection, mutually exclusive state, and Dart callback ordering;
+  - added reusable `MergeableMaterial`, `MaterialSlice`, and `MaterialGap` primitives with keyed animated gaps, merged slice groups, divider/color/elevation handling, and card-edge clipping;
+  - matched header/icon tap gating, 48px minimum headers, expanded-header padding, rotating expand icon, clipped height/body-opacity animation, material-gap sizing, per-panel backgrounds, and expanded-state semantics;
+  - added focused regression coverage and a mirrored C#/Dart runtime page for controlled and radio panel-list paths.
 - Added paired Material `RadioListTile<T>` + `ExpansionTile` parity baseline:
   - introduced modern inherited `RadioGroup<T>` coordination plus legacy `groupValue/onChanged`, toggleable selection, adaptive Cupertino routing, control affinity, selected-color precedence, scale transforms, and merged radio semantics;
   - introduced reusable framework `ExpansibleController`/`Expansible` with animated clipped height, external controller lifecycle, `maintainState`, and forward/reverse curves, plus self-bounds `ClipRect` support;

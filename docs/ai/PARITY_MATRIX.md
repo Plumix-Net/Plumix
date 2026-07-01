@@ -4,7 +4,7 @@ Scope: structural parity of sample routes/modules between C# and Dart samples.
 
 Policy note: sample parity updates must follow `docs/ai/PORTING_MODE.md` (Dart source of truth, strict `1:1` default, documented divergences).
 
-Last checked: 2026-05-09
+Last checked: 2026-07-01
 
 Status legend:
 
@@ -40,6 +40,7 @@ Status legend:
 | ListTile demo | `src/Sample/Flutter.Net/Demos/Material/ListTileDemoPage.cs` | `dart_sample/lib/demos/material/list_tile_demo_page.dart` | verify-runtime | Demonstrates framework Material `ListTile` baseline with one/two/three-line variants, selected/disabled/dense toggles, tap/long-press counters, and local `ListTileTheme` override probe for text/icon/tile colors. |
 | CheckboxListTile + SwitchListTile demo | `src/Sample/Plumix.Sample/Demos/Material/ListTileControlsDemoPage.cs` | `dart_sample/lib/demos/material/list_tile_controls_demo_page.dart` | verify-runtime | Demonstrates whole-row toggle behavior, checkbox tristate cycling, inherited leading/trailing control affinity, selected styling, disabled state, and Material/adaptive branches for both controls. |
 | RadioListTile + ExpansionTile demo | `src/Sample/Plumix.Sample/Demos/Material/RadioExpansionTileDemoPage.cs` | `dart_sample/lib/demos/material/radio_expansion_tile_demo_page.dart` | verify-runtime | Demonstrates inherited `RadioGroup` selection, toggleable/adaptive radio tiles, leading/trailing affinity, external expansion controller actions, `maintainState`, animated arrow/body/background/shape transitions, and expanded-state callbacks. |
+| ExpansionPanel + ExpansionPanelList demo | `src/Sample/Plumix.Sample/Demos/Material/ExpansionPanelDemoPage.cs` | `dart_sample/lib/demos/material/expansion_panel_demo_page.dart` | verify-runtime | Demonstrates controlled normal panels, icon-only versus whole-header taps, animated merged-material gaps, initial radio selection, mutually exclusive radio switching, and callback state reporting. |
 | FloatingActionButton demo | `src/Sample/Flutter.Net/Demos/Material/FloatingActionButtonDemoPage.cs` | `dart_sample/lib/demos/material/floating_action_button_demo_page.dart` | verify-runtime | Demonstrates framework Material `FloatingActionButton` baseline (`regular`, `small`, `large`, `extended`) with enabled/disabled flow, extended open/collapsed toggle, tap counters, and local `FloatingActionButtonTheme` override probe (foreground/background + size constraints) in both samples. |
 | Checkbox demo | `src/Sample/Flutter.Net/Demos/Cupertino/CheckboxDemoPage.cs` | `dart_sample/lib/demos/cupertino/checkbox_demo_page.dart` | verify-runtime | Demonstrates framework Material `Checkbox` baseline with enabled/disabled flow, bool and tristate value handling, tap-target policy toggle (`padded`/`shrinkWrap`), and custom color/border overrides in both samples. |
 | Switch demo | `src/Sample/Flutter.Net/Demos/Cupertino/SwitchDemoPage.cs` | `dart_sample/lib/demos/cupertino/switch_demo_page.dart` | verify-runtime | Demonstrates framework Material `Switch` baseline with controlled on/off value, tap+drag interaction, thumb-icon toggles, tap-target policy toggle (`padded`/`shrinkWrap`), and widget/theme color precedence probes in both samples. |

@@ -42,6 +42,8 @@ Current priority (2026-03-12):
   - `src/Plumix.Material/RadioListTile.cs`
   - `src/Plumix.Material/ExpansionTile.cs`
   - `src/Plumix.Material/ExpansionTileTheme.cs`
+  - `src/Plumix.Material/ExpansionPanel.cs`
+  - `src/Plumix.Material/MergeableMaterial.cs`
   - `src/Plumix/Widgets/Expansible.cs`
   - `src/Plumix.Material/ProgressIndicator.cs`
   - `src/Plumix.Material/ProgressIndicatorTheme.cs`
@@ -68,6 +70,7 @@ Current priority (2026-03-12):
   - `src/Sample/Flutter.Net/Demos/Material/ListTileDemoPage.cs`
   - `src/Sample/Plumix.Sample/Demos/Material/ListTileControlsDemoPage.cs`
   - `src/Sample/Plumix.Sample/Demos/Material/RadioExpansionTileDemoPage.cs`
+  - `src/Sample/Plumix.Sample/Demos/Material/ExpansionPanelDemoPage.cs`
   - `src/Sample/Flutter.Net/Demos/Material/FloatingActionButtonDemoPage.cs`
   - `src/Sample/Plumix.Sample/Demos/Material/LinearProgressIndicatorDemoPage.cs`
   - `src/Sample/Plumix.Sample/Demos/Material/CircularProgressIndicatorDemoPage.cs`
@@ -81,6 +84,7 @@ Current priority (2026-03-12):
   - `dart_sample/lib/demos/material/list_tile_demo_page.dart`
   - `dart_sample/lib/demos/material/list_tile_controls_demo_page.dart`
   - `dart_sample/lib/demos/material/radio_expansion_tile_demo_page.dart`
+  - `dart_sample/lib/demos/material/expansion_panel_demo_page.dart`
   - `dart_sample/lib/demos/material/floating_action_button_demo_page.dart`
   - `dart_sample/lib/demos/material/linear_progress_indicator_demo_page.dart`
   - `dart_sample/lib/demos/material/circular_progress_indicator_demo_page.dart`
@@ -94,6 +98,7 @@ Current priority (2026-03-12):
   - `src/Flutter.Tests/MaterialCardTests.cs`
   - `src/Plumix.Tests/MaterialListTileTests.cs`
   - `src/Plumix.Tests/MaterialRadioExpansionTileTests.cs`
+  - `src/Plumix.Tests/MaterialExpansionPanelTests.cs`
   - `src/Flutter.Tests/MaterialFloatingActionButtonTests.cs`
   - `src/Flutter.Tests/MaterialBottomNavigationBarTests.cs`
   - `src/Plumix.Tests/MaterialLinearProgressIndicatorTests.cs`

@@ -468,6 +468,12 @@ Progress update (2026-03-19):
   - `ExpansionTile` adds controller/tap expansion, arrow/header/background/shape animation, `ExpansionTileTheme` + `ThemeData` precedence, leading/trailing affinity, body alignment/padding, disabled behavior, and expanded-state semantics;
   - added mirrored C#/Dart runtime probes and focused regression coverage for both controls;
   - remaining gaps are `PageStorage`, general `ShapeBorder` interpolation, semantics hint/live-region announcements, and ordered arrow-key `RadioGroup` client traversal.
+- Added paired `ExpansionPanel` + `ExpansionPanelList` parity baseline in `Plumix.Material`:
+  - `ExpansionPanel`/`ExpansionPanelRadio` expose Flutter-like header/body descriptors, controlled expanded state, per-panel interaction colors, header tap gating, backgrounds, and unique radio values;
+  - `ExpansionPanelList` supports controlled normal lists and internally coordinated radio lists with initial-open value, mutually exclusive expansion, and Flutter callback ordering when switching panels;
+  - reusable keyed `MergeableMaterial`/`MaterialSlice`/`MaterialGap` primitives provide animated split/merge gaps, slice backgrounds, dividers, grouped elevation, and card-edge clipping;
+  - panel composition includes animated expanded-header padding, 48px header baseline, rotating expand icon, clipped body height/opacity, material-gap/elevation/divider/icon overrides, and expanded-state semantics;
+  - added mirrored C#/Dart runtime probes and focused regression coverage for defaults, guards, controlled/radio interaction, animation, tap gating, visual overrides, and semantics.
 - Added Material `Card` baseline in `Flutter.Material`:
   - introduced framework `Card` with elevated/filled/outlined variants, Flutter-like default margin, M3/M2 color/elevation/shape defaults, outlined border defaults, clipping, surface tint, and `semanticContainer` wiring;
   - added `CardThemeData` + inherited `CardTheme` and `ThemeData.CardTheme` integration with precedence (`widget -> card theme -> mode defaults`);

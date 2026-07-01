@@ -28,6 +28,7 @@ import 'demos/general/list_view_separated_demo_page.dart';
 import 'demos/material/list_tile_demo_page.dart';
 import 'demos/material/list_tile_controls_demo_page.dart';
 import 'demos/material/radio_expansion_tile_demo_page.dart';
+import 'demos/material/expansion_panel_demo_page.dart';
 import 'demos/material/material_buttons_demo_page.dart';
 import 'demos/general/navigator_demo_page.dart';
 import 'demos/general/offstage_demo_page.dart';
@@ -114,6 +115,12 @@ class SampleGalleryScreen extends StatelessWidget {
       subtitle:
           'RadioGroup + toggleable/adaptive + animated controller expansion',
       builder: () => const RadioExpansionTileDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.expansionPanel,
+      title: 'ExpansionPanel + ExpansionPanelList',
+      subtitle: 'controlled panels + radio accordion + animated material gaps',
+      builder: () => const ExpansionPanelDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.floatingActionButton,
