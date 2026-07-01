@@ -7,9 +7,9 @@ This file defines expectations for coding agents working in this repository.
 - Platform: .NET 10
 - UI stack: Avalonia
 - Purpose: Flutter-like widget/rendering layer implemented in C#
-- Main library: `src/Flutter`
+- Main library: `src/Plumix`
 - Example hosts: `src/Sample/*`
-- Main solution: `src/Flutter.Net.sln`
+- Main solution: `src/Plumix.sln`
 
 ## Project Vision
 
@@ -21,46 +21,48 @@ This file defines expectations for coding agents working in this repository.
 ## Expected End State (Definition of Done)
 
 1. Applications are composed through Flutter-like widgets/state/lifecycle and rendered by framework-owned render objects.
-2. Core rendering behavior lives in `src/Flutter/Rendering` and related framework layers, with minimal Avalonia-specific UI logic.
+2. Core rendering behavior lives in `src/Plumix/Rendering` and related framework layers, with minimal Avalonia-specific UI logic.
 3. Desktop sample runs a widget app through `WidgetHost` (or an equivalent framework host), not only a render demo window.
 4. Core primitives (box, flex, text, animation tick flow) are stable enough for straightforward Dart-to-C# control rewrites.
 5. Project docs stay aligned with architecture boundaries and migration goals.
 
 ## Repository Map
 
-- `src/Flutter`: core framework (`Foundation`, `Widgets`, `Rendering`, `UI`, scheduler/ticker pipeline).
-- `src/Sample/Flutter.Net`: shared sample app/widgets.
-- `dart_sample`: reference sample app on real Flutter (Dart), kept in lockstep with `src/Sample/Flutter.Net`.
-- `src/Sample/Flutter.Net.Desktop`: desktop entry point.
-- `src/Sample/Flutter.Net.Browser`: WebAssembly host.
-- `src/Sample/Flutter.Net.Android`: Android host.
-- `src/Sample/Flutter.Net.iOS`: iOS host.
+- `src/Plumix`: core framework (`Foundation`, `Widgets`, `Rendering`, `UI`, scheduler/ticker pipeline).
+- `src/Sample/Plumix.Sample`: shared sample app/widgets.
+- `dart_sample`: reference sample app on real Flutter (Dart), kept in lockstep with `src/Sample/Plumix.Sample`.
+- `src/Sample/Plumix.Desktop`: desktop entry point.
+- `src/Sample/Plumix.Browser`: WebAssembly host.
+- `src/Sample/Plumix.Android`: Android host.
+- `src/Sample/Plumix.iOS`: iOS host.
 
 ## Progress Source of Truth
 
 - Historical shipped changes: `CHANGELOG.md`
 - Current status + global roadmap: `docs/FRAMEWORK_PLAN.md`
 - Module entry points by task: `docs/ai/MODULE_INDEX.md`
-- Non-negotiable behavior rules: `docs/ai/INVARIANTS.md`
+- Non-negotiable behavior rules (architecture, package boundaries, versioning): `docs/ai/INVARIANTS.md`
 - Mandatory Dart-to-C# porting workflow: `docs/ai/PORTING_MODE.md`
+- Intentional divergences from Flutter: `docs/ai/DIVERGENCES.md`
 - Sample parity tracker: `docs/ai/PARITY_MATRIX.md`
 - Feature-to-tests map: `docs/ai/TEST_MATRIX.md`
 - Iteration planning template: `docs/ai/FEATURE_TEMPLATE.md`
+- Archived per-iteration notes (journal, not rules): `docs/ai/notes/`
 - When task scope changes framework behavior, update tracking docs so agents can infer:
   - what is already done,
   - what remains,
   - what direction has priority now.
+- `CHANGELOG.md` entries must be short (a few lines per change, no test-inventory prose). When the file exceeds roughly 100 KB, rotate the older half into `CHANGELOG-<year>-H<half>.md` and keep only the current period in `CHANGELOG.md`.
 
 ## Context Budget Protocol (For AI Agents)
 
 1. Start with read order: `AGENTS.md` -> `docs/FRAMEWORK_PLAN.md` -> `docs/ai/MODULE_INDEX.md` -> targeted tests -> targeted implementation files.
 2. Default scope for Dart-to-C# parity requests: close one control end-to-end in one request (`API/defaults/composition/states/layout/paint/tests`), not a sequence of micro-fixes.
-3. Initial context budget: up to 20 files per task (recommended `12-20` for full-control parity work).
-4. Do not open large hotspot files (`Widgets/Scroll.cs`, `Rendering/Sliver.cs`, `Widgets/Navigation.cs`, `Widgets/Framework.Element.cs`, `SemanticsTreeTests.cs`) unless the task explicitly requires them.
-5. Expand context proactively when needed to finish the current control in the same request; do not stop at partial parity unless blocked by a concrete missing primitive.
-6. For every non-trivial feature or control-parity pass, create/update a task note based on `docs/ai/FEATURE_TEMPLATE.md`.
-7. If sample behavior changes, update both `src/Sample/Flutter.Net` and `dart_sample` in the same iteration and reflect status in `docs/ai/PARITY_MATRIX.md`.
-8. Before finishing, update docs with minimal deltas only (`CHANGELOG.md`, `docs/FRAMEWORK_PLAN.md`, and relevant `docs/ai/*` files).
+3. Prefer entering unfamiliar subsystems through their tests (`docs/ai/TEST_MATRIX.md`); open implementation hotspot files (`Widgets/Scroll.cs`, `Rendering/Sliver.cs`, `Widgets/Navigation.cs`, `Widgets/Framework.Element.cs`, `SemanticsTreeTests.cs`) only when the task explicitly requires them.
+4. Expand context proactively when needed to finish the current control in the same request; do not stop at partial parity unless blocked by a concrete missing primitive.
+5. A task note (`docs/ai/FEATURE_TEMPLATE.md`, stored in `docs/ai/notes/`) is required only when an iteration ends blocked (unclosed parity with a concrete blocker) or introduces a divergence. Routine closed iterations need only `CHANGELOG.md` and matrix updates.
+6. If sample behavior changes, update both `src/Sample/Plumix.Sample` and `dart_sample` in the same iteration and reflect status in `docs/ai/PARITY_MATRIX.md` (scope per `docs/ai/INVARIANTS.md` Sample Parity).
+7. Before finishing, update docs with minimal deltas only (`CHANGELOG.md`, `docs/FRAMEWORK_PLAN.md`, and relevant `docs/ai/*` files) and keep `dotnet test src/Plumix.Tests/Plumix.Tests.csproj` green.
 
 ## Environment Requirements
 
@@ -77,29 +79,29 @@ This file defines expectations for coding agents working in this repository.
 Run from repository root:
 
 ```bash
-dotnet restore src/Flutter.Net.sln
-dotnet build src/Flutter.Net.sln -c Debug
-dotnet run --project src/Sample/Flutter.Net.Desktop/Flutter.Net.Desktop.csproj
-dotnet run --project src/Sample/Flutter.Net.Browser/Flutter.Net.Browser.csproj
+dotnet restore src/Plumix.sln
+dotnet build src/Plumix.sln -c Debug
+dotnet run --project src/Sample/Plumix.Desktop/Plumix.Desktop.csproj
+dotnet run --project src/Sample/Plumix.Browser/Plumix.Browser.csproj
 ```
 
 Platform-specific builds:
 
 ```bash
-dotnet build src/Sample/Flutter.Net.Android/Flutter.Net.Android.csproj -c Debug
-dotnet build src/Sample/Flutter.Net.iOS/Flutter.Net.iOS.csproj -c Debug
+dotnet build src/Sample/Plumix.Android/Plumix.Android.csproj -c Debug
+dotnet build src/Sample/Plumix.iOS/Plumix.iOS.csproj -c Debug
 ```
 
 ## Change Guidelines
 
-1. Keep core API and behavior changes focused in `src/Flutter` unless sample host updates are required.
+1. Keep core API and behavior changes focused in `src/Plumix` unless sample host updates are required.
 2. Respect architecture boundaries: `Widget` -> `Element` -> `RenderObject` -> platform adapter.
 3. Keep render-object semantics and naming close to Flutter unless there is a clear, documented reason to diverge.
 4. Use Avalonia primarily for host/platform integration and low-level drawing backend; avoid moving framework behavior into Avalonia controls.
 5. Preserve lifecycle contracts (`CreateElement`, mount/update/rebuild flow, render object attachment).
 6. Keep nullability correctness (`Nullable` is enabled) and avoid introducing nullable warnings.
 7. Avoid broad dependency/framework upgrades unless explicitly requested.
-8. Any behavior/structure update in `src/Sample/Flutter.Net` must be adapted 100% in `dart_sample` in the same change (feature parity, route parity, and page/module structure parity).
+8. Demo feature/route/page-structure updates in `src/Sample/Plumix.Sample` must be mirrored in `dart_sample` in the same change; host glue is exempt (see `docs/ai/INVARIANTS.md`, Sample Parity).
 
 ## Porting Workflow (Mandatory)
 
@@ -111,10 +113,10 @@ dotnet build src/Sample/Flutter.Net.iOS/Flutter.Net.iOS.csproj -c Debug
 
 ## Validation Checklist
 
-1. Build the full solution: `dotnet build src/Flutter.Net.sln -c Debug`.
+1. Build the full solution: `dotnet build src/Plumix.sln -c Debug`.
 2. For UI behavior changes, run desktop sample and verify startup/rendering through the framework widget host path.
 3. For rendering changes, verify that layout/paint behavior is executed by framework render objects.
 4. For browser/mobile changes, build the affected sample project(s).
-5. For sample changes, validate both C# sample (`src/Sample/Flutter.Net`) and Dart sample (`dart_sample`) are kept in parity.
-6. Automated tests live in `src/Flutter.Tests`; add focused coverage when introducing non-trivial logic.
+5. For sample changes, validate both C# sample (`src/Sample/Plumix.Sample`) and Dart sample (`dart_sample`) are kept in parity.
+6. Automated tests live in `src/Plumix.Tests`; add focused coverage when introducing non-trivial logic.
 7. For control parity tasks, verify parity-critical coverage (`API/defaults/states/layout/paint`) for that control before closing the request.

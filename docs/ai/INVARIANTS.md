@@ -4,15 +4,34 @@ These rules are non-negotiable unless explicitly changed via documented architec
 
 ## Architecture Boundaries
 
-- Framework behavior must stay in framework libraries under `src/` (`src/Flutter`, `src/Flutter.Material`).
+- Framework behavior must stay in framework libraries under `src/` (`src/Plumix`, `src/Plumix.Material`, `src/Plumix.Cupertino`).
 - Avalonia is host/platform infrastructure, not business logic for framework widgets.
 - Core direction remains `Widget -> Element -> RenderObject -> platform adapter`.
+
+## Package Boundaries
+
+Allowed dependency direction (mirrors Flutter's `widgets <- cupertino <- material` layering):
+
+- `Plumix` (core) depends on no other Plumix package.
+- `Plumix.Cupertino` depends only on `Plumix`.
+- `Plumix.Material` depends on `Plumix` and `Plumix.Cupertino` (adaptive controls).
+- `Plumix.Sample` and platform hosts may depend on any of the above.
+- Never introduce a reverse edge (core referencing Material, Cupertino referencing Material). If core needs a Material concept, port the underlying primitive into `Plumix` instead.
+
+## Public API and Versioning
+
+`Plumix`, `Plumix.Material`, and `Plumix.Cupertino` are published NuGet packages; their public API is a contract.
+
+- Versioning follows SemVer: breaking public API/behavior changes require a major bump; new API is minor; fixes are patch.
+- Breaking changes must be called out explicitly in `CHANGELOG.md` (a `Breaking:` prefix on the entry) — never shipped silently inside a parity pass.
+- Parity fixes that change existing public defaults/behavior count as breaking for consumers even when they move closer to Flutter; call them out the same way.
+- CI gate: `dotnet test src/Plumix.Tests/Plumix.Tests.csproj` must be green before any change is considered done; releases are tag-driven (`v*.*.*`) via `.github/workflows/ci.yml`.
 
 ## Dart Porting Invariants
 
 - Dart implementation is the source of truth for matching controls/widgets; ports must follow strict `1:1` structure/behavior by default (see `docs/ai/PORTING_MODE.md`).
 - Missing primitives must be implemented in framework layers first; do not hide parity gaps with control-local workarounds.
-- Any intentional divergence from Dart behavior must be documented with reason and expected delta in the same iteration.
+- Any intentional divergence from Dart behavior must be recorded in `docs/ai/DIVERGENCES.md` in the same iteration.
 
 ## Widget and Element Lifecycle
 
@@ -48,15 +67,17 @@ These rules are non-negotiable unless explicitly changed via documented architec
 
 ## Sample Parity
 
-- Feature/route/module parity between `src/Sample/Flutter.Net` and `dart_sample` is required for sample-level changes.
+- Feature/route/module parity between `src/Sample/Plumix.Sample` and `dart_sample` is required for sample-level changes.
+- Scope: parity covers demo features, routes, and page/module structure. Host glue (`App.axaml`, csproj/platform bootstrap, Avalonia wiring) is exempt — purely host-side edits do not require a Dart-side change.
+- Both samples must be updated in the same iteration, with status reflected in `docs/ai/PARITY_MATRIX.md`.
 
 ## Fast Safety Checks
 
-- Lifecycle: `src/Flutter.Tests/ElementLifecycleTests.cs`
-- Inherited: `src/Flutter.Tests/InheritedWidgetTests.cs`, `src/Flutter.Tests/InheritedModelTests.cs`, `src/Flutter.Tests/InheritedNotifierTests.cs`
-- Pipeline: `src/Flutter.Tests/FramePipelineTests.cs`, `src/Flutter.Tests/RenderingParityTests.cs`
-- Layers: `src/Flutter.Tests/CompositingLayerTests.cs`, `src/Flutter.Tests/LayerV2Tests.cs`
-- Gestures: `src/Flutter.Tests/GesturePipelineTests.cs`
-- Navigation: `src/Flutter.Tests/NavigationTests.cs`
-- Scroll: `src/Flutter.Tests/ScrollPipelineTests.cs`, `src/Flutter.Tests/ScrollInfrastructureTests.cs`
-- Semantics: `src/Flutter.Tests/SemanticsTreeTests.cs`
+- Lifecycle: `src/Plumix.Tests/ElementLifecycleTests.cs`
+- Inherited: `src/Plumix.Tests/InheritedWidgetTests.cs`, `src/Plumix.Tests/InheritedModelTests.cs`, `src/Plumix.Tests/InheritedNotifierTests.cs`
+- Pipeline: `src/Plumix.Tests/FramePipelineTests.cs`, `src/Plumix.Tests/RenderingParityTests.cs`
+- Layers: `src/Plumix.Tests/CompositingLayerTests.cs`, `src/Plumix.Tests/LayerV2Tests.cs`
+- Gestures: `src/Plumix.Tests/GesturePipelineTests.cs`
+- Navigation: `src/Plumix.Tests/NavigationTests.cs`
+- Scroll: `src/Plumix.Tests/ScrollPipelineTests.cs`, `src/Plumix.Tests/ScrollInfrastructureTests.cs`
+- Semantics: `src/Plumix.Tests/SemanticsTreeTests.cs`
