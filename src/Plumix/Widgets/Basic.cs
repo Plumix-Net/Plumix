@@ -413,24 +413,35 @@ public sealed class Transform : SingleChildRenderObjectWidget
 
 public sealed class ClipRect : SingleChildRenderObjectWidget
 {
-    public ClipRect(Rect clipRect, Widget? child = null, Key? key = null) : base(child, key)
+    public ClipRect(Rect? clipRect = null, Widget? child = null, Key? key = null) : base(child, key)
     {
         Clip = clipRect;
     }
 
-    public Rect Clip { get; }
+    public Rect? Clip { get; }
 
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
-        return new RenderClipRect
+        var renderObject = new RenderClipRect();
+        if (Clip.HasValue)
         {
-            ClipRect = Clip
-        };
+            renderObject.ClipRect = Clip.Value;
+        }
+
+        return renderObject;
     }
 
     internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
-        ((RenderClipRect)renderObject).ClipRect = Clip;
+        var clipRect = (RenderClipRect)renderObject;
+        if (Clip.HasValue)
+        {
+            clipRect.ClipRect = Clip.Value;
+        }
+        else
+        {
+            clipRect.ClearClipRect();
+        }
     }
 }
 

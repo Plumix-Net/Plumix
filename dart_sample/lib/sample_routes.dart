@@ -12,6 +12,7 @@ class SampleRoutes {
 
   static const String menu = '/';
   static const String counter = '/counter';
+  static const String blocCounter = '/bloc-counter';
   static const String navigator = '/navigator';
   static const String navigatorDetails = '/navigator/details';
   static const String listViewSeparated = '/list-separated';
@@ -22,8 +23,18 @@ class SampleRoutes {
   static const String scrollbar = '/scrollbar';
   static const String editableText = '/editable-text';
   static const String materialButtons = '/material-buttons';
+  static const String drawer = '/drawer';
+  static const String divider = '/divider';
+  static const String linearProgressIndicator = '/linear-progress-indicator';
+  static const String circularProgressIndicator =
+      '/circular-progress-indicator';
+  static const String slider = '/slider';
+  static const String rangeSlider = '/range-slider';
   static const String card = '/card';
   static const String listTile = '/list-tile';
+  static const String listTileControls = '/list-tile-controls';
+  static const String radioExpansionTile = '/radio-expansion-tile';
+  static const String expansionPanel = '/expansion-panel';
   static const String floatingActionButton = '/floating-action-button';
   static const String checkbox = '/checkbox';
   static const String switchDemo = '/switch';

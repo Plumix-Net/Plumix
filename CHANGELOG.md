@@ -14,6 +14,117 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 ### Changed
 
+- Added paired Material `ExpansionPanel` + `ExpansionPanelList` parity baseline:
+  - introduced Flutter-shaped `ExpansionPanel`/`ExpansionPanelRadio` descriptors and normal/radio list constructors with controlled expansion, unique radio values, initial-open selection, mutually exclusive state, and Dart callback ordering;
+  - added reusable `MergeableMaterial`, `MaterialSlice`, and `MaterialGap` primitives with keyed animated gaps, merged slice groups, divider/color/elevation handling, and card-edge clipping;
+  - matched header/icon tap gating, 48px minimum headers, expanded-header padding, rotating expand icon, clipped height/body-opacity animation, material-gap sizing, per-panel backgrounds, and expanded-state semantics;
+  - added focused regression coverage and a mirrored C#/Dart runtime page for controlled and radio panel-list paths.
+- Added paired Material `RadioListTile<T>` + `ExpansionTile` parity baseline:
+  - introduced modern inherited `RadioGroup<T>` coordination plus legacy `groupValue/onChanged`, toggleable selection, adaptive Cupertino routing, control affinity, selected-color precedence, scale transforms, and merged radio semantics;
+  - introduced reusable framework `ExpansibleController`/`Expansible` with animated clipped height, external controller lifecycle, `maintainState`, and forward/reverse curves, plus self-bounds `ClipRect` support;
+  - added `ExpansionTileThemeData`/`ExpansionTileTheme`/`ThemeData.ExpansionTileTheme`, controller/tap expansion, animated arrow/header/background/shape transitions, leading/trailing affinity, disabled behavior, and expanded-state semantics;
+  - added focused regression coverage and a mirrored C#/Dart runtime page for group/toggle/adaptive radio paths and controller/theme/animation expansion paths.
+- Added paired Material `CheckboxListTile` + `SwitchListTile` parity baseline:
+  - introduced Flutter-like controlled APIs, whole-row toggle behavior, checkbox tristate cycling, `ListTileControlAffinity` widget/theme resolution, selected-color precedence, shrink-wrap embedded controls, adaptive factories, and merged checked/enabled/tap semantics;
+  - added shared `MergeSemantics` and `ExcludeFocus` widget primitives, `MaterialButtonCore`/`ListTile` focus-change propagation, and the Material secondary color token used by selected list-tile controls;
+  - fixed `ListTile` layout-field wiring and leading-slot shrink sizing so leading controls no longer expand a tile to the available viewport height;
+  - added focused `MaterialListTileTests` coverage and a mirrored C#/Dart runtime page for enabled/disabled, affinity, tristate, selected, and adaptive paths.
+- Expanded framework Material `Slider` parity in `src/Plumix.Material/Slider.cs`:
+  - added Flutter-like `secondaryTrackValue` + `secondaryActiveColor` API surface with constructor guards for finite/range-valid secondary values;
+  - expanded slider theming surface in `src/Plumix.Material/SliderTheme.cs` with `secondaryActiveTrackColor` and `disabledSecondaryActiveTrackColor`, and wired resolution precedence (`widget -> SliderTheme -> defaults`) for interactive/disabled secondary-track paint;
+  - added semantics formatter parity to `Slider` (`semanticFormatterCallback`) and precedence over static `semanticLabel` within current framework semantics-label surface;
+  - expanded focused coverage in `src/Plumix.Tests/MaterialSliderTests.cs` for secondary-track validation/normalization, default/theme/widget secondary color precedence (including disabled path), and semantic formatter precedence;
+  - updated C#/Dart runtime parity demos (`src/Sample/Plumix.Sample/Demos/Material/SliderDemoPage.cs`, `dart_sample/lib/demos/material/slider_demo_page.dart`) with `secondaryTrackValue`/`secondaryActiveColor` probes and secondary-track stepping controls.
+- Added framework Material `RangeSlider` baseline:
+  - introduced `RangeSlider` + `RangeValues` in `src/Plumix.Material/RangeSlider.cs` with two-thumb controlled range API (`values`, `onChanged`, `onChangeStart`, `onChangeEnd`), range/division guards, pointer drag/tap thumb selection, focused keyboard adjustment baseline, and range semantics formatting support (`semanticFormatterCallback`);
+  - reused slider theming surface (`SliderThemeData` + inherited `SliderTheme`) with `ThemeData.SliderTheme` integration for mode-aware fallback defaults and widget-over-theme precedence for active/inactive/overlay color paths;
+  - added focused regression coverage in `src/Plumix.Tests/MaterialRangeSliderTests.cs` for constructor guards, M2/M3 defaults, theme/widget color precedence, discrete snapping + change lifecycle callbacks, keyboard adjustment baseline, and semantics label/flags propagation;
+  - added C#/Dart sample parity runtime probes (`src/Sample/Plumix.Sample/Demos/Material/RangeSliderDemoPage.cs`, `dart_sample/lib/demos/material/range_slider_demo_page.dart`) and route/menu wiring updates (`src/Sample/Plumix.Sample/SampleGalleryScreen.cs`, `dart_sample/lib/sample_routes.dart`, `dart_sample/lib/sample_gallery_screen.dart`).
+- Added framework Material `Slider` baseline:
+  - introduced `Slider` in `src/Plumix.Material/Slider.cs` with controlled-value API (`value`, `onChanged`, `onChangeStart`, `onChangeEnd`), range/division guards, pointer drag/tap updates, keyboard adjustments (including RTL-aware direction handling), and slider semantics wiring;
+  - added slider theming surface via `SliderThemeData` + inherited `SliderTheme` (`src/Plumix.Material/SliderTheme.cs`) and integrated `ThemeData.SliderTheme` in `src/Plumix.Material/ThemeData.cs`;
+  - added focused regression coverage in `src/Plumix.Tests/MaterialSliderTests.cs` for constructor guards, M2/M3 defaults, theme/widget color precedence, discrete snapping + change callback lifecycle, keyboard adjustment behavior, and semantics flags/label propagation;
+  - added C#/Dart sample parity runtime probes (`src/Sample/Plumix.Sample/Demos/Material/SliderDemoPage.cs`, `dart_sample/lib/demos/material/slider_demo_page.dart`) and route/menu wiring updates (`src/Sample/Plumix.Sample/SampleGalleryScreen.cs`, `dart_sample/lib/sample_routes.dart`, `dart_sample/lib/sample_gallery_screen.dart`).
+- Closed sample route/page parity drift for `Bloc counter`:
+  - added Dart sample route constant `/bloc-counter` and menu wiring (`dart_sample/lib/sample_routes.dart`, `dart_sample/lib/sample_gallery_screen.dart`);
+  - added Dart `Bloc counter` demo page mirroring C# behavior (`dart_sample/lib/demos/general/bloc_counter_demo_page.dart`) with `BlocProvider` + `BlocBuilder` + `BlocListener` + `BlocSelector` and restartable refresh-event handling.
+- Closed remaining progress-indicator `valueColor` API divergence with Flutter usage patterns:
+  - introduced framework `IValueListenable<T>` and `AlwaysStoppedAnimation<T>` (`src/Plumix/Foundation/Listenable.cs`);
+  - switched `LinearProgressIndicator` and `CircularProgressIndicator` `valueColor` surface from `ValueNotifier<Color?>` to `IValueListenable<Color?>` (`src/Plumix.Material/ProgressIndicator.cs`) while preserving live listener-driven updates and null fallback behavior;
+  - added focused regression coverage for constant animation-style color sources in `src/Plumix.Tests/MaterialLinearProgressIndicatorTests.cs` and `src/Plumix.Tests/MaterialCircularProgressIndicatorTests.cs`;
+  - aligned C# progress-indicator demos with Dart usage style by wiring `AlwaysStoppedAnimation<Color?>` for the explicit `valueColor` toggle path (`src/Sample/Plumix.Sample/Demos/Material/LinearProgressIndicatorDemoPage.cs`, `src/Sample/Plumix.Sample/Demos/Material/CircularProgressIndicatorDemoPage.cs`).
+- Closed adaptive semantics parity for framework `CircularProgressIndicator`:
+  - adaptive iOS/macOS branch now preserves progress semantics wrapping (`Semantics`) instead of bypassing it via early return;
+  - adaptive determinate indicators now expose the same computed percentage fallback (`semanticsLabel + semanticsValue/percent`) as the Material path;
+  - expanded focused coverage in `src/Plumix.Tests/MaterialCircularProgressIndicatorTests.cs` with an iOS adaptive semantics-label regression test.
+- Closed adaptive-platform parity for framework `CircularProgressIndicator`:
+  - added `CircularProgressIndicator.Adaptive(...)` in `src/Plumix.Material/ProgressIndicator.cs` with Flutter-like platform routing (`iOS/macOS -> Cupertino`, other platforms -> Material);
+  - introduced reusable `CupertinoActivityIndicator` in `src/Plumix.Cupertino/CupertinoActivityIndicator.cs` with animated and partially-revealed modes used by adaptive circular progress;
+  - adaptive iOS/macOS path now maps determinate progress to partially revealed Cupertino ticks and keeps Material-only circular styling parameters out of the Cupertino render path;
+  - expanded focused coverage in `src/Plumix.Tests/MaterialCircularProgressIndicatorTests.cs` for adaptive iOS indeterminate/determinate behavior and Android adaptive fallback to Material render path.
+- Expanded framework progress-indicator color parity in `src/Plumix.Material/ProgressIndicator.cs`:
+  - added Flutter-like `valueColor` precedence for both `LinearProgressIndicator` and `CircularProgressIndicator` (`valueColor -> color -> ProgressIndicatorThemeData.color -> theme primary`);
+  - introduced live `valueColor` updates through `ValueNotifier<Color?>` listener wiring in indicator state lifecycles, including null-value fallback to `color`/theme/default paths;
+  - expanded focused regression coverage in `src/Plumix.Tests/MaterialLinearProgressIndicatorTests.cs` and `src/Plumix.Tests/MaterialCircularProgressIndicatorTests.cs` for precedence, null fallback, and runtime notifier-driven color updates;
+  - updated C#/Dart runtime parity demos (`src/Sample/Plumix.Sample/Demos/Material/LinearProgressIndicatorDemoPage.cs`, `src/Sample/Plumix.Sample/Demos/Material/CircularProgressIndicatorDemoPage.cs`, `dart_sample/lib/demos/material/linear_progress_indicator_demo_page.dart`, `dart_sample/lib/demos/material/circular_progress_indicator_demo_page.dart`) with explicit `valueColor` toggles.
+- Expanded framework Material `LinearProgressIndicator` parity in `src/Plumix.Material/ProgressIndicator.cs`:
+  - added Flutter-like `year2023` API/theme precedence (`widget.year2023 -> ProgressIndicatorThemeData.year2023 -> default true` in M3);
+  - aligned M3 2023/2024 default switching behavior for stop-indicator visibility, track-gap visibility, and default border radius (`2023`: square/no stop/no gap; `2024`: rounded with stop+gap defaults);
+  - expanded focused regression coverage in `src/Plumix.Tests/MaterialLinearProgressIndicatorTests.cs` for M3 `year2023` true/false defaults and updated theme/widget precedence assertions;
+  - updated C#/Dart runtime parity demos (`src/Sample/Plumix.Sample/Demos/Material/LinearProgressIndicatorDemoPage.cs`, `dart_sample/lib/demos/material/linear_progress_indicator_demo_page.dart`) with an explicit `year2023` toggle and theme/widget probe wiring.
+- Expanded framework Material `LinearProgressIndicator` parity in `src/Plumix.Material/ProgressIndicator.cs`:
+  - added Flutter-like API surface for linear M3 stop/gap styling (`stopIndicatorColor`, `stopIndicatorRadius`, and `trackGap`) with constructor guards for non-finite/negative values;
+  - wired precedence for new fields as `widget -> ProgressIndicatorThemeData -> mode defaults` (`M3` defaults: stop color `primary`, stop radius `2`, track gap `4`; `M2`: stop/gap disabled);
+  - added Flutter-like external controller support (`controller`) with animation-source precedence `widget.controller -> ProgressIndicatorThemeData.controller -> internal controller`, plus constructor guard for invalid `value + controller` usage;
+  - updated linear painter choreography to apply track-gap logic across determinate and indeterminate phases and draw the determinate stop-indicator cap at the trailing edge;
+  - expanded focused regression coverage in `src/Plumix.Tests/MaterialLinearProgressIndicatorTests.cs` for new constructor guards, M2/M3 stop/gap defaults, and theme/widget precedence for `stopIndicator*` + `trackGap` + explicit/theme controller usage;
+  - updated C#/Dart runtime parity demos (`src/Sample/Plumix.Sample/Demos/Material/LinearProgressIndicatorDemoPage.cs`, `dart_sample/lib/demos/material/linear_progress_indicator_demo_page.dart`) to probe `ProgressIndicatorTheme` and widget-level stop/gap overrides.
+- Expanded framework Material `CircularProgressIndicator` parity in `src/Plumix.Material/ProgressIndicator.cs`:
+  - added Flutter-like API surface for circular M3 track-gap styling (`trackGap`) with constructor guards for non-finite/negative values;
+  - wired circular `trackGap` precedence as `widget -> ProgressIndicatorThemeData -> mode defaults` (`M3` default `4`; `M2` disabled/null);
+  - updated circular determinate track paint choreography to render a Flutter-like gap between active arc and background track when `trackGap` is set;
+  - added Flutter-like `strokeCap` API for circular progress (enum `StrokeCap`) with `widget -> ProgressIndicatorThemeData.CircularStrokeCap -> default-null` precedence;
+  - updated circular render paint behavior to apply Flutter-like null-cap defaults (`determinate=butt`, `indeterminate=square`) and explicit `strokeCap` mapping for both foreground and track arc paint;
+  - added Flutter-like `strokeAlign` API for circular progress with finite-value guards and `widget -> ProgressIndicatorThemeData.CircularStrokeAlign -> default(0.0)` precedence;
+  - updated circular arc geometry resolution to apply Flutter-like stroke alignment offsets in paint (`inside/center/outside` via signed stroke offset);
+  - added Flutter-like circular `constraints` support with precedence `widget.constraints -> widget.size (legacy fallback) -> theme.circularConstraints -> theme.circularSize (legacy fallback) -> mode defaults` (`M3`: `40x40`, `M2`: `36x36`) and `ConstrainedBox` composition;
+  - added Flutter-like `year2023` support (`widget.year2023 -> ProgressIndicatorThemeData.year2023 -> default true` in M3) to switch 2023/2024 defaults (track visibility, track-gap enablement, stroke-align default, default constraints, and implicit indicator line-cap behavior);
+  - added Flutter-like external controller support (`controller`) with animation-source precedence `widget.controller -> ProgressIndicatorThemeData.controller -> internal controller`, plus constructor guard for invalid `value + controller` usage;
+  - expanded focused regression coverage in `src/Plumix.Tests/MaterialCircularProgressIndicatorTests.cs` for constructor guards, M2/M3 `trackGap` defaults, and theme/widget precedence for `trackGap` + `strokeCap` + `strokeAlign` + `constraints` + `year2023` + explicit/theme controller usage (including retained legacy `size` fallback checks);
+  - updated C#/Dart runtime parity demos (`src/Sample/Plumix.Sample/Demos/Material/CircularProgressIndicatorDemoPage.cs`, `dart_sample/lib/demos/material/circular_progress_indicator_demo_page.dart`) to probe `ProgressIndicatorTheme` and widget-level `trackGap` + `strokeCap` + `strokeAlign` + `constraints` + `year2023` overrides.
+- Expanded framework Material drawer gesture parity coverage with focused RTL regression tests in `src/Plumix.Tests/MaterialScaffoldTests.cs`:
+  - added RTL edge-open coverage for `Scaffold.drawer` (start drawer opens from the right edge in RTL with leftward drag);
+  - added RTL edge-open coverage for `Scaffold.endDrawer` (end drawer opens from the left edge in RTL with rightward drag);
+  - added RTL `MediaQuery.padding` edge-activation coverage for both sides (start drawer uses right padding extension zone; end drawer uses left padding extension zone).
+- Expanded framework Material drawer interaction gating coverage in `src/Plumix.Tests/MaterialScaffoldTests.cs`:
+  - added scrim-tap dismiss coverage for open drawers when `drawerBarrierDismissible=true`;
+  - added negative scrim-tap coverage to confirm drawers stay open when `drawerBarrierDismissible=false`;
+  - added edge-drag disable coverage for `drawerEnableOpenDragGesture=false` and `endDrawerEnableOpenDragGesture=false`;
+  - added desktop-platform gesture gating coverage to confirm edge drag does not open drawers on `TargetPlatform.Windows`.
+- Expanded framework Material drawer stress coverage for rapid alternating gestures in `src/Plumix.Tests/MaterialScaffoldTests.cs`:
+  - added start->end alternating drag choreography coverage (open start by edge drag, close by panel drag, then open end by edge drag);
+  - added end->start alternating drag choreography coverage (open end by edge drag, close by panel drag, then open start by edge drag);
+  - both scenarios assert mutual exclusion (`start` and `end` drawers cannot remain open together) and panel visibility consistency after each settle step.
+- Added C#/Dart sample parity runtime probes for framework Material `Drawer`:
+  - added `Drawer` demo pages in both samples (`src/Sample/Plumix.Sample/Demos/Material/DrawerDemoPage.cs`, `dart_sample/lib/demos/material/drawer_demo_page.dart`) with explicit start/end drawer open/close choreography controls;
+  - added mode/theme/widget precedence probes for drawer visuals and scrim resolution (`UseMaterial3`, `DrawerTheme`, and widget-level `Drawer`/`Scaffold.drawerScrimColor` overrides);
+  - wired the new route into both sample menus (`/drawer`) under the Material tab.
+- Added framework Material `Divider` baseline:
+  - introduced `Divider` and `VerticalDivider` in `src/Plumix.Material/Divider.cs` with Flutter-like mode-aware defaults (`M3`: `outlineVariant` + `thickness=1`; `M2`: `dividerColor` + hairline logical thickness), plus widget overrides for `space`/`thickness`/`indent`/`endIndent`/`color`/`radius`;
+  - added `DividerThemeData` + inherited `DividerTheme` in `src/Plumix.Material/DividerTheme.cs` and integrated `ThemeData.DividerTheme` + `ThemeData.DividerColor` in `src/Plumix.Material/ThemeData.cs`;
+  - added focused regression coverage in `src/Plumix.Tests/MaterialDividerTests.cs` for constructor guards, M2/M3 defaults, theme/widget precedence, and vertical-divider layout behavior;
+  - added C#/Dart sample parity runtime probes (`src/Sample/Plumix.Sample/Demos/Material/DividerDemoPage.cs`, `dart_sample/lib/demos/material/divider_demo_page.dart`) with route/menu wiring updates.
+- Added framework Material `LinearProgressIndicator` baseline:
+  - introduced `LinearProgressIndicator` in `src/Plumix.Material/ProgressIndicator.cs` with determinate (`value`) and indeterminate (`value: null`) modes, Flutter-like two-segment indeterminate timing, RTL-aware fill direction, and mode-aware defaults (`M3`: `primary` on `secondaryContainer` with rounded radius; `M2`: `primary` on `canvas` with square radius);
+  - added progress-indicator theming surface via `ProgressIndicatorThemeData` + inherited `ProgressIndicatorTheme` (`src/Plumix.Material/ProgressIndicatorTheme.cs`) and `ThemeData.ProgressIndicatorTheme` integration (`src/Plumix.Material/ThemeData.cs`);
+  - added focused regression coverage in `src/Plumix.Tests/MaterialLinearProgressIndicatorTests.cs` for constructor guards, M2/M3 defaults, theme/widget precedence, value clamping, indeterminate animation advancement, RTL resolution, and semantics percentage fallback;
+  - added C#/Dart sample parity runtime probes (`src/Sample/Plumix.Sample/Demos/Material/LinearProgressIndicatorDemoPage.cs`, `dart_sample/lib/demos/material/linear_progress_indicator_demo_page.dart`) with route/menu wiring updates.
+- Added framework Material `CircularProgressIndicator` baseline:
+  - introduced `CircularProgressIndicator` in `src/Plumix.Material/ProgressIndicator.cs` with determinate (`value`) and indeterminate (`value: null`) modes, Flutter-like indeterminate arc timing/choreography (`1333*2222` timeline with head/tail/rotation composition), and mode-aware defaults (`M3` determinate default track uses `secondaryContainer`; `M2` has no default track);
+  - expanded progress-indicator theming surface in `src/Plumix.Material/ProgressIndicatorTheme.cs` with circular baseline fields (`CircularTrackColor`, `CircularStrokeWidth`, `CircularSize`) and reused `ThemeData.ProgressIndicatorTheme` precedence wiring;
+  - added a reusable arc drawing primitive in `src/Plumix/Rendering/Object.PaintingContext.cs` (`DrawArc(...)`) used by circular progress paint;
+  - added focused regression coverage in `src/Plumix.Tests/MaterialCircularProgressIndicatorTests.cs` for constructor guards, M2/M3 defaults, theme/widget precedence, value clamping, indeterminate arc animation progression, and semantics percentage fallback;
+  - added C#/Dart sample parity runtime probes (`src/Sample/Plumix.Sample/Demos/Material/CircularProgressIndicatorDemoPage.cs`, `dart_sample/lib/demos/material/circular_progress_indicator_demo_page.dart`) and route/menu wiring updates.
 - Fixed renamed `Plumix` satellite assembly access by granting `Plumix.Material` and `Plumix.Cupertino` friend access to framework internals needed for inherited/render-object widget implementations.
 - Added framework Material `Card` baseline:
   - introduced `Card` in `src/Flutter.Material/Card.cs` with elevated, filled, and outlined variants, Flutter-like default margin (`4`), clipping policy, elevation/shadow rendering, surface-tint application, outlined border defaults, and `semanticContainer` wiring;

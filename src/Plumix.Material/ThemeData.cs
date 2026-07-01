@@ -123,6 +123,7 @@ public sealed record ThemeData
 {
     private static readonly Color LightScaffoldAndCanvasColor = Color.Parse("#FFFEF7FF");
     private static readonly Color LightPrimaryColor = Color.Parse("#FF6750A4");
+    private static readonly Color LightSecondaryColor = Color.Parse("#FF625B71");
     private static readonly Color LightPrimaryContainerColor = Color.Parse("#FFEADDFF");
     private static readonly Color LightOnPrimaryContainerColor = Color.Parse("#FF21005D");
     private static readonly Color LightSurfaceColor = Color.Parse("#FFFEF7FF");
@@ -130,6 +131,7 @@ public sealed record ThemeData
     private static readonly Color LightOnSurfaceVariantColor = Color.Parse("#FF49454F");
     private static readonly Color LightOutlineColor = Color.Parse("#FF79747E");
     private static readonly Color LightOutlineVariantColor = Color.Parse("#FFCAC4D0");
+    private static readonly Color LightDividerColor = Color.FromArgb(0x1F, 0x00, 0x00, 0x00);
     private static readonly Color LightShadowColor = Colors.Black;
     private static readonly Color LightCardColor = Colors.White;
     private static readonly Color LightSurfaceContainerLowColor = Color.Parse("#FFF7F2FA");
@@ -152,9 +154,13 @@ public sealed record ThemeData
     private DrawerThemeData? _drawerTheme;
     private FloatingActionButtonThemeData? _floatingActionButtonTheme;
     private BottomNavigationBarThemeData? _bottomNavigationBarTheme;
+    private DividerThemeData? _dividerTheme;
+    private ProgressIndicatorThemeData? _progressIndicatorTheme;
     private CheckboxThemeData? _checkboxTheme;
     private SwitchThemeData? _switchTheme;
     private RadioThemeData? _radioTheme;
+    private SliderThemeData? _sliderTheme;
+    private ExpansionTileThemeData? _expansionTileTheme;
 
     public ThemeData(
         TargetPlatform? platform = null,
@@ -163,6 +169,7 @@ public sealed record ThemeData
         Color? scaffoldBackgroundColor = null,
         Color? canvasColor = null,
         Color? primaryColor = null,
+        Color? secondaryColor = null,
         Color? onPrimaryColor = null,
         Color? primaryContainerColor = null,
         Color? onPrimaryContainerColor = null,
@@ -174,6 +181,7 @@ public sealed record ThemeData
         Color? onSurfaceVariantColor = null,
         Color? outlineColor = null,
         Color? outlineVariantColor = null,
+        Color? dividerColor = null,
         Color? cardColor = null,
         Color? surfaceContainerLowColor = null,
         Color? surfaceContainerHighestColor = null,
@@ -199,9 +207,13 @@ public sealed record ThemeData
         DrawerThemeData? drawerTheme = null,
         FloatingActionButtonThemeData? floatingActionButtonTheme = null,
         BottomNavigationBarThemeData? bottomNavigationBarTheme = null,
+        DividerThemeData? dividerTheme = null,
+        ProgressIndicatorThemeData? progressIndicatorTheme = null,
         CheckboxThemeData? checkboxTheme = null,
         SwitchThemeData? switchTheme = null,
-        RadioThemeData? radioTheme = null)
+        RadioThemeData? radioTheme = null,
+        SliderThemeData? sliderTheme = null,
+        ExpansionTileThemeData? expansionTileTheme = null)
     {
         Platform = platform ?? ResolveDefaultPlatform();
         Brightness = brightness ?? Brightness.Light;
@@ -209,6 +221,7 @@ public sealed record ThemeData
         ScaffoldBackgroundColor = scaffoldBackgroundColor ?? LightScaffoldAndCanvasColor;
         CanvasColor = canvasColor ?? LightScaffoldAndCanvasColor;
         PrimaryColor = primaryColor ?? LightPrimaryColor;
+        SecondaryColor = secondaryColor ?? LightSecondaryColor;
         OnPrimaryColor = onPrimaryColor ?? Colors.White;
         PrimaryContainerColor = primaryContainerColor ?? LightPrimaryContainerColor;
         OnPrimaryContainerColor = onPrimaryContainerColor ?? LightOnPrimaryContainerColor;
@@ -220,6 +233,7 @@ public sealed record ThemeData
         OnSurfaceVariantColor = onSurfaceVariantColor ?? LightOnSurfaceVariantColor;
         OutlineColor = outlineColor ?? LightOutlineColor;
         OutlineVariantColor = outlineVariantColor ?? LightOutlineVariantColor;
+        DividerColor = dividerColor ?? LightDividerColor;
         CardColor = cardColor ?? LightCardColor;
         SurfaceContainerLowColor = surfaceContainerLowColor ?? LightSurfaceContainerLowColor;
         SurfaceContainerHighestColor = surfaceContainerHighestColor ?? LightSurfaceContainerHighestColor;
@@ -245,9 +259,13 @@ public sealed record ThemeData
         _drawerTheme = drawerTheme;
         _floatingActionButtonTheme = floatingActionButtonTheme;
         _bottomNavigationBarTheme = bottomNavigationBarTheme;
+        _dividerTheme = dividerTheme;
+        _progressIndicatorTheme = progressIndicatorTheme;
         _checkboxTheme = checkboxTheme;
         _switchTheme = switchTheme;
         _radioTheme = radioTheme;
+        _sliderTheme = sliderTheme;
+        _expansionTileTheme = expansionTileTheme;
     }
 
     public TargetPlatform Platform { get; init; }
@@ -261,6 +279,8 @@ public sealed record ThemeData
     public Color CanvasColor { get; init; }
 
     public Color PrimaryColor { get; init; }
+
+    public Color SecondaryColor { get; init; }
 
     public Color OnPrimaryColor { get; init; }
 
@@ -287,6 +307,8 @@ public sealed record ThemeData
     public Color OutlineColor { get; init; }
 
     public Color OutlineVariantColor { get; init; }
+
+    public Color DividerColor { get; init; }
 
     public Color CardColor { get; init; }
 
@@ -378,6 +400,18 @@ public sealed record ThemeData
         init => _bottomNavigationBarTheme = value;
     }
 
+    public DividerThemeData DividerTheme
+    {
+        get => _dividerTheme ?? new DividerThemeData();
+        init => _dividerTheme = value;
+    }
+
+    public ProgressIndicatorThemeData ProgressIndicatorTheme
+    {
+        get => _progressIndicatorTheme ?? new ProgressIndicatorThemeData();
+        init => _progressIndicatorTheme = value;
+    }
+
     public CheckboxThemeData CheckboxTheme
     {
         get => _checkboxTheme ?? new CheckboxThemeData();
@@ -394,6 +428,18 @@ public sealed record ThemeData
     {
         get => _radioTheme ?? new RadioThemeData();
         init => _radioTheme = value;
+    }
+
+    public SliderThemeData SliderTheme
+    {
+        get => _sliderTheme ?? new SliderThemeData();
+        init => _sliderTheme = value;
+    }
+
+    public ExpansionTileThemeData ExpansionTileTheme
+    {
+        get => _expansionTileTheme ?? new ExpansionTileThemeData();
+        init => _expansionTileTheme = value;
     }
 
     public static ThemeData Light { get; } = new();

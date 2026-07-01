@@ -1391,6 +1391,18 @@ public sealed class RenderClipRect : RenderProxyBox
         }
     }
 
+    public void ClearClipRect()
+    {
+        if (!_hasExplicitClipRect)
+        {
+            return;
+        }
+
+        _hasExplicitClipRect = false;
+        MarkNeedsCompositedLayerUpdate();
+        MarkNeedsSemanticsUpdate();
+    }
+
     public override bool IsRepaintBoundary => Child != null;
     protected override bool AlwaysNeedsCompositing => Child != null;
 

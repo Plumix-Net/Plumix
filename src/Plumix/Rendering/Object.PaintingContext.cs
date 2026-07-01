@@ -79,6 +79,48 @@ public sealed class PaintingContext
         });
     }
 
+    public void DrawArc(IPen pen, Rect rect, double startAngleRadians, double sweepAngleRadians)
+    {
+        if (rect.Width <= 0 || rect.Height <= 0)
+        {
+            return;
+        }
+
+        if (Math.Abs(sweepAngleRadians) <= 0.0001)
+        {
+            return;
+        }
+
+        var pictureLayer = EnsurePictureLayer();
+        pictureLayer.AddDrawCommand((drawingContext, sceneOffset) =>
+        {
+            var translatedRect = new Rect(rect.Position + sceneOffset, rect.Size);
+            if (translatedRect.Width <= 0 || translatedRect.Height <= 0)
+            {
+                return;
+            }
+
+            var geometry = new StreamGeometry();
+            using (var geometryContext = geometry.Open())
+            {
+                var startPoint = PointOnEllipse(translatedRect, startAngleRadians);
+                var endPoint = PointOnEllipse(translatedRect, startAngleRadians + sweepAngleRadians);
+                geometryContext.BeginFigure(startPoint, isFilled: false);
+                geometryContext.ArcTo(
+                    point: endPoint,
+                    size: new Size(translatedRect.Width / 2.0, translatedRect.Height / 2.0),
+                    rotationAngle: 0.0,
+                    isLargeArc: Math.Abs(sweepAngleRadians) > Math.PI,
+                    sweepDirection: sweepAngleRadians >= 0
+                        ? SweepDirection.Clockwise
+                        : SweepDirection.CounterClockwise);
+                geometryContext.EndFigure(isClosed: false);
+            }
+
+            drawingContext.DrawGeometry(brush: null, pen: pen, geometry: geometry);
+        });
+    }
+
     public void DrawLine(IPen pen, Point startPoint, Point endPoint)
     {
         var pictureLayer = EnsurePictureLayer();
@@ -174,5 +216,16 @@ public sealed class PaintingContext
     private void StopRecordingIfNeeded()
     {
         _currentPictureLayer = null;
+    }
+
+    private static Point PointOnEllipse(Rect rect, double angleRadians)
+    {
+        var centerX = rect.X + (rect.Width / 2.0);
+        var centerY = rect.Y + (rect.Height / 2.0);
+        var radiusX = rect.Width / 2.0;
+        var radiusY = rect.Height / 2.0;
+        return new Point(
+            centerX + (Math.Cos(angleRadians) * radiusX),
+            centerY + (Math.Sin(angleRadians) * radiusY));
     }
 }

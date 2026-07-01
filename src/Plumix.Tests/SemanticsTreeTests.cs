@@ -813,10 +813,10 @@ public sealed class SemanticsTreeTests
         Assert.NotNull(root);
         Assert.Equal(2, root.Children.Count);
 
-        var parentNode = Assert.Single(root.Children.Where(node => node.Label == "Parent"));
+        var parentNode = Assert.Single(root.Children, static node => node.Label == "Parent");
         Assert.Empty(parentNode.Children);
 
-        var siblingNode = Assert.Single(root.Children.Where(node => node.Label == "One Two"));
+        var siblingNode = Assert.Single(root.Children, static node => node.Label == "One Two");
         Assert.True(siblingNode.Flags == SemanticsFlags.None);
     }
 
@@ -852,9 +852,9 @@ public sealed class SemanticsTreeTests
         Assert.NotNull(root);
         Assert.Equal(3, root.Children.Count);
 
-        Assert.Single(root.Children.Where(node => node.Label == "Parent"));
-        var firstNode = Assert.Single(root.Children.Where(node => node.Label == "First"));
-        var secondNode = Assert.Single(root.Children.Where(node => node.Label == "Second"));
+        Assert.Single(root.Children, static node => node.Label == "Parent");
+        var firstNode = Assert.Single(root.Children, static node => node.Label == "First");
+        var secondNode = Assert.Single(root.Children, static node => node.Label == "Second");
 
         Assert.True(pipeline.SemanticsOwner.PerformAction(firstNode.Id, SemanticsActions.Tap));
         Assert.True(pipeline.SemanticsOwner.PerformAction(secondNode.Id, SemanticsActions.Tap));
@@ -930,7 +930,7 @@ public sealed class SemanticsTreeTests
         Assert.NotNull(root);
         Assert.Equal(2, root.Children.Count);
 
-        var siblingNode = Assert.Single(root.Children.Where(node => node.Label == "Synthetic Action"));
+        var siblingNode = Assert.Single(root.Children, static node => node.Label == "Synthetic Action");
         Assert.True(siblingNode.Actions.HasFlag(SemanticsActions.Tap));
         Assert.True(pipeline.SemanticsOwner.PerformAction(siblingNode.Id, SemanticsActions.Tap));
         Assert.Equal(1, tapCount);

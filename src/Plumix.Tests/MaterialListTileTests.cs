@@ -308,6 +308,258 @@ public sealed class MaterialListTileTests
             $"Expected no flex overflow in demo-like ListTile layout, but found {overflowCount} overflowing flex nodes.");
     }
 
+    [Fact]
+    public void CheckboxListTile_Constructor_ValidatesFlutterGuards()
+    {
+        Assert.Throws<ArgumentException>(() => new CheckboxListTile(value: null, onChanged: _ => { }));
+        Assert.Throws<ArgumentException>(() => new CheckboxListTile(
+            value: false,
+            onChanged: _ => { },
+            isThreeLine: true));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new CheckboxListTile(
+            value: false,
+            onChanged: _ => { },
+            checkboxScaleFactor: 0));
+    }
+
+    [Fact]
+    public void SwitchListTile_Constructor_RequiresSubtitleForThreeLineLayout()
+    {
+        Assert.Throws<ArgumentException>(() => new SwitchListTile(
+            value: false,
+            onChanged: _ => { },
+            isThreeLine: true));
+    }
+
+    [Fact]
+    public void CheckboxListTile_WholeTileTap_UsesFlutterTristateCycle()
+    {
+        bool? nextValue = false;
+        using var harness = new WidgetRenderHarness(
+            BuildThemedTile(new CheckboxListTile(
+                value: true,
+                tristate: true,
+                title: new Text("Tristate tile"),
+                onChanged: value => nextValue = value)));
+
+        harness.Pump(new Size(400, 200));
+        Tap(harness.RenderView, new Point(120, 28), pointer: 610);
+
+        Assert.Null(nextValue);
+    }
+
+    [Fact]
+    public void SwitchListTile_WholeTileTap_TogglesControlledValue()
+    {
+        bool? nextValue = null;
+        using var harness = new WidgetRenderHarness(
+            BuildThemedTile(new SwitchListTile(
+                value: false,
+                title: new Text("Switch tile"),
+                onChanged: value => nextValue = value)));
+
+        harness.Pump(new Size(400, 200));
+        Tap(harness.RenderView, new Point(120, 28), pointer: 611);
+
+        Assert.True(nextValue);
+    }
+
+    [Fact]
+    public void CheckboxListTile_SelectedTitle_UsesCheckboxThemeThenSecondaryFallback()
+    {
+        var themedSelected = Color.Parse("#FF006C4C");
+        var theme = ThemeData.Light with
+        {
+            SecondaryColor = Color.Parse("#FF735C00"),
+            CheckboxTheme = new CheckboxThemeData(
+                FillColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+                    states.HasFlag(MaterialState.Selected) ? themedSelected : null))
+        };
+
+        using var harness = new WidgetRenderHarness(
+            BuildThemedTile(
+                new CheckboxListTile(
+                    value: true,
+                    selected: true,
+                    title: new Text("Selected checkbox tile"),
+                    onChanged: _ => { }),
+                theme));
+
+        harness.Pump(new Size(400, 200));
+        var title = FindParagraphByText(harness.RenderView, "Selected checkbox tile");
+        Assert.NotNull(title);
+        Assert.Equal(themedSelected, Assert.IsType<SolidColorBrush>(title!.Foreground).Color);
+    }
+
+    [Fact]
+    public void SwitchListTile_SelectedTitle_UsesActiveThumbColorPrecedence()
+    {
+        var activeThumb = Color.Parse("#FF8C1D40");
+        using var harness = new WidgetRenderHarness(
+            BuildThemedTile(new SwitchListTile(
+                value: true,
+                selected: true,
+                activeColor: Colors.Coral,
+                activeThumbColor: activeThumb,
+                title: new Text("Selected switch tile"),
+                onChanged: _ => { })));
+
+        harness.Pump(new Size(400, 200));
+        var title = FindParagraphByText(harness.RenderView, "Selected switch tile");
+        Assert.NotNull(title);
+        Assert.Equal(activeThumb, Assert.IsType<SolidColorBrush>(title!.Foreground).Color);
+    }
+
+    [Fact]
+    public void ListTileControls_RespectThemeAffinityAndLayoutOverrides()
+    {
+        var theme = ThemeData.Light with
+        {
+            ListTileTheme = new ListTileThemeData(ControlAffinity: ListTileControlAffinity.Leading)
+        };
+        using var harness = new WidgetRenderHarness(
+            BuildThemedTile(
+                new CheckboxListTile(
+                    value: false,
+                    title: new Text("Leading control"),
+                    secondary: new Icon(Icons.InfoOutline),
+                    minTileHeight: 72,
+                    horizontalTitleGap: 24,
+                    onChanged: _ => { }),
+                theme));
+
+        harness.Pump(new Size(400, 200));
+
+        var materials = FindDescendants<RenderDecoratedBox>(harness.RenderView).ToList();
+        var material = materials.FirstOrDefault(box => Math.Abs(box.Size.Height - 72) < 0.001);
+        Assert.True(
+            material is not null,
+            $"Expected a 72dp tile material. Actual boxes: {string.Join(", ", materials.Select(box => $"{box.Size.Width}x{box.Size.Height}"))}");
+        var secondaryGlyph = char.ConvertFromUtf32(Icons.InfoOutline.CodePoint);
+        Assert.NotNull(FindParagraphByText(harness.RenderView, secondaryGlyph));
+
+        var affinityRow = FindDescendants<RenderFlex>(harness.RenderView).FirstOrDefault(flex =>
+        {
+            var children = ImmediateChildren(flex);
+            return children.Count == 5
+                   && FindDescendants<RenderDecoratedBox>(children[0]).Any(box =>
+                       Math.Abs(box.Size.Width - Checkbox.Width) < 0.001)
+                   && FindDescendants<RenderParagraph>(children[^1]).Any(paragraph =>
+                       paragraph.Text == secondaryGlyph);
+        });
+        Assert.NotNull(affinityRow);
+    }
+
+    [Fact]
+    public void CheckboxListTile_ScaleFactor_AppliesCenteredPaintTransform()
+    {
+        const double scaleFactor = 1.5;
+        using var harness = new WidgetRenderHarness(
+            BuildThemedTile(new CheckboxListTile(
+                value: false,
+                checkboxScaleFactor: scaleFactor,
+                title: new Text("Scaled checkbox"),
+                onChanged: _ => { })));
+
+        harness.Pump(new Size(400, 200));
+
+        var transform = FindDescendant<RenderTransform>(harness.RenderView);
+        Assert.NotNull(transform);
+        var center = Checkbox.Width / 2.0;
+        var expected = Matrix.CreateTranslation(center, center)
+                       * new Matrix(scaleFactor, 0, 0, scaleFactor, 0, 0)
+                       * Matrix.CreateTranslation(-center, -center);
+        Assert.Equal(expected, transform!.Transform);
+    }
+
+    [Fact]
+    public void CheckboxListTile_MergeSemantics_ExposesCheckedEnabledAndTap()
+    {
+        using var harness = new WidgetRenderHarness(
+            BuildThemedTile(new CheckboxListTile(
+                value: true,
+                title: new Text("Terms"),
+                checkboxSemanticLabel: "Accept terms",
+                onChanged: _ => { })));
+
+        var semanticsRoot = harness.PumpAndGetSemantics(new Size(400, 200));
+        Assert.NotNull(semanticsRoot);
+        var checkedNode = FindFirstSemanticsNode(
+            semanticsRoot!,
+            static node => node.Flags.HasFlag(SemanticsFlags.IsChecked));
+        Assert.NotNull(checkedNode);
+        Assert.True(checkedNode!.Flags.HasFlag(SemanticsFlags.IsEnabled));
+        Assert.True(checkedNode.Actions.HasFlag(SemanticsActions.Tap));
+    }
+
+    [Fact]
+    public void CheckboxListTile_ExplicitDisabledState_BlocksTileTapAndEnabledSemantics()
+    {
+        var changeCount = 0;
+        using var harness = new WidgetRenderHarness(
+            BuildThemedTile(new CheckboxListTile(
+                value: true,
+                enabled: false,
+                title: new Text("Disabled checkbox tile"),
+                onChanged: _ => changeCount += 1)));
+
+        var semanticsRoot = harness.PumpAndGetSemantics(new Size(400, 200));
+        Tap(harness.RenderView, new Point(120, 28), pointer: 612);
+
+        Assert.Equal(0, changeCount);
+        var checkedNode = FindFirstSemanticsNode(
+            semanticsRoot!,
+            static node => node.Flags.HasFlag(SemanticsFlags.IsChecked));
+        Assert.NotNull(checkedNode);
+        Assert.False(checkedNode!.Flags.HasFlag(SemanticsFlags.IsEnabled));
+        Assert.False(checkedNode.Actions.HasFlag(SemanticsActions.Tap));
+    }
+
+    [Fact]
+    public void SwitchListTile_MergeSemantics_ExposesCheckedEnabledAndTap()
+    {
+        using var harness = new WidgetRenderHarness(
+            BuildThemedTile(new SwitchListTile(
+                value: true,
+                title: new Text("Notifications"),
+                onChanged: _ => { })));
+
+        var semanticsRoot = harness.PumpAndGetSemantics(new Size(400, 200));
+        var checkedNode = FindFirstSemanticsNode(
+            semanticsRoot!,
+            static node => node.Flags.HasFlag(SemanticsFlags.IsChecked));
+
+        Assert.NotNull(checkedNode);
+        Assert.True(checkedNode!.Flags.HasFlag(SemanticsFlags.IsEnabled));
+        Assert.True(checkedNode.Actions.HasFlag(SemanticsActions.Tap));
+    }
+
+    [Fact]
+    public void AdaptiveListTileControls_BuildOnCupertinoPlatform()
+    {
+        var theme = ThemeData.Light with { Platform = TargetPlatform.IOS };
+        using var harness = new WidgetRenderHarness(
+            BuildThemedTile(
+                new Column(
+                    children:
+                    [
+                        CheckboxListTile.Adaptive(
+                            value: true,
+                            title: new Text("Adaptive checkbox tile"),
+                            onChanged: _ => { }),
+                        SwitchListTile.Adaptive(
+                            value: true,
+                            title: new Text("Adaptive switch tile"),
+                            onChanged: _ => { }),
+                    ]),
+                theme));
+
+        harness.Pump(new Size(400, 240));
+
+        Assert.NotNull(FindParagraphByText(harness.RenderView, "Adaptive checkbox tile"));
+        Assert.NotNull(FindParagraphByText(harness.RenderView, "Adaptive switch tile"));
+    }
+
     private static Widget BuildThemedTile(Widget tile, ThemeData? theme = null)
     {
         return new Theme(
@@ -315,6 +567,36 @@ public sealed class MaterialListTileTests
             child: new SizedBox(
                 width: 300,
                 child: tile));
+    }
+
+    private static void Tap(RenderView renderView, Point position, int pointer)
+    {
+        var binding = GestureBinding.Instance;
+        binding.ResetForTests();
+        try
+        {
+            var timestamp = DateTime.UtcNow;
+            binding.HandlePointerEvent(
+                renderView,
+                new PointerDownEvent(
+                    pointer: pointer,
+                    kind: PointerDeviceKind.Mouse,
+                    position: position,
+                    buttons: PointerButtons.Primary,
+                    timestampUtc: timestamp));
+            binding.HandlePointerEvent(
+                renderView,
+                new PointerUpEvent(
+                    pointer: pointer,
+                    kind: PointerDeviceKind.Mouse,
+                    position: position,
+                    buttons: PointerButtons.None,
+                    timestampUtc: timestamp.AddMilliseconds(20)));
+        }
+        finally
+        {
+            binding.ResetForTests();
+        }
     }
 
     private static RenderParagraph? FindParagraphByText(RenderObject? root, string text)
@@ -328,6 +610,13 @@ public sealed class MaterialListTileTests
         var results = new List<T>();
         CollectDescendants(root, results);
         return results;
+    }
+
+    private static List<RenderObject> ImmediateChildren(RenderObject root)
+    {
+        var children = new List<RenderObject>();
+        root.VisitChildren(children.Add);
+        return children;
     }
 
     private static void CollectDescendants<T>(RenderObject? root, List<T> results) where T : RenderObject

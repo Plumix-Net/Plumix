@@ -8,6 +8,11 @@ public interface IListenable
     void RemoveListener(Action listener);
 }
 
+public interface IValueListenable<out T> : IListenable
+{
+    T Value { get; }
+}
+
 public class ChangeNotifier : IListenable, IDisposable
 {
     private readonly List<Action> _listeners = [];
@@ -58,7 +63,7 @@ public class ChangeNotifier : IListenable, IDisposable
     }
 }
 
-public sealed class ValueNotifier<T> : ChangeNotifier
+public sealed class ValueNotifier<T> : ChangeNotifier, IValueListenable<T>
 {
     private T _value;
 
@@ -81,4 +86,14 @@ public sealed class ValueNotifier<T> : ChangeNotifier
             NotifyListeners();
         }
     }
+}
+
+public sealed class AlwaysStoppedAnimation<T> : ChangeNotifier, IValueListenable<T>
+{
+    public AlwaysStoppedAnimation(T value)
+    {
+        Value = value;
+    }
+
+    public T Value { get; }
 }

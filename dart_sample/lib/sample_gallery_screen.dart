@@ -6,21 +6,29 @@ import 'demos/material/app_bar_icon_theme_demo_page.dart';
 import 'demos/material/app_bar_leading_width_demo_page.dart';
 import 'demos/material/app_bar_text_styles_demo_page.dart';
 import 'demos/general/aspect_ratio_demo_page.dart';
+import 'demos/general/bloc_counter_demo_page.dart';
 import 'demos/material/card_demo_page.dart';
+import 'demos/material/circular_progress_indicator_demo_page.dart';
 import 'demos/cupertino/checkbox_demo_page.dart';
 import 'counter_screen.dart';
 import 'demos/general/container_demo_page.dart';
 import 'demos/general/custom_slivers_demo_page.dart';
 import 'demos/general/decorated_box_demo_page.dart';
+import 'demos/material/drawer_demo_page.dart';
+import 'demos/material/divider_demo_page.dart';
 import 'demos/general/editable_text_demo_page.dart';
 import 'demos/general/fitted_box_demo_page.dart';
 import 'demos/material/floating_action_button_demo_page.dart';
 import 'demos/general/fractionally_sized_box_demo_page.dart';
 import 'demos/general/grid_view_demo_page.dart';
+import 'demos/material/linear_progress_indicator_demo_page.dart';
 import 'demos/general/list_view_fixed_extent_demo_page.dart';
 import 'demos/general/list_view_reverse_demo_page.dart';
 import 'demos/general/list_view_separated_demo_page.dart';
 import 'demos/material/list_tile_demo_page.dart';
+import 'demos/material/list_tile_controls_demo_page.dart';
+import 'demos/material/radio_expansion_tile_demo_page.dart';
+import 'demos/material/expansion_panel_demo_page.dart';
 import 'demos/material/material_buttons_demo_page.dart';
 import 'demos/general/navigator_demo_page.dart';
 import 'demos/general/offstage_demo_page.dart';
@@ -32,6 +40,8 @@ import 'sample_routes.dart';
 import 'demos/general/scrollbar_demo_page.dart';
 import 'demos/general/stack_demo_page.dart';
 import 'demos/cupertino/switch_demo_page.dart';
+import 'demos/material/range_slider_demo_page.dart';
+import 'demos/material/slider_demo_page.dart';
 import 'demos/general/unconstrained_limited_box_demo_page.dart';
 
 class SampleGalleryScreen extends StatelessWidget {
@@ -46,6 +56,42 @@ class SampleGalleryScreen extends StatelessWidget {
       builder: () => const MaterialButtonsDemoPage(),
     ),
     SampleRouteDefinition(
+      routeName: SampleRoutes.drawer,
+      title: 'Drawer',
+      subtitle: 'scaffold drawer/endDrawer + theme/widget precedence probes',
+      builder: () => const DrawerDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.divider,
+      title: 'Divider',
+      subtitle: 'horizontal/vertical divider + theme/widget precedence probes',
+      builder: () => const DividerDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.linearProgressIndicator,
+      title: 'LinearProgressIndicator',
+      subtitle: 'determinate/indeterminate + M2/M3 + theme/widget/RTL probes',
+      builder: () => const LinearProgressIndicatorDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.circularProgressIndicator,
+      title: 'CircularProgressIndicator',
+      subtitle: 'determinate/indeterminate + M2/M3 + theme/widget probes',
+      builder: () => const CircularProgressIndicatorDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.slider,
+      title: 'Slider',
+      subtitle: 'continuous/discrete + drag/tap/keyboard + theme/widget colors',
+      builder: () => const SliderDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.rangeSlider,
+      title: 'RangeSlider',
+      subtitle: 'two-thumb range + continuous/discrete + theme/widget colors',
+      builder: () => const RangeSliderDemoPage(),
+    ),
+    SampleRouteDefinition(
       routeName: SampleRoutes.card,
       title: 'Card',
       subtitle: 'elevated/filled/outlined variants + theme/clip probes',
@@ -56,6 +102,25 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'ListTile',
       subtitle: 'leading/title/subtitle/trailing + selected/dense/theme probes',
       builder: () => const ListTileDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.listTileControls,
+      title: 'CheckboxListTile + SwitchListTile',
+      subtitle: 'whole-row toggle + tristate + affinity + adaptive probes',
+      builder: () => const ListTileControlsDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.radioExpansionTile,
+      title: 'RadioListTile + ExpansionTile',
+      subtitle:
+          'RadioGroup + toggleable/adaptive + animated controller expansion',
+      builder: () => const RadioExpansionTileDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.expansionPanel,
+      title: 'ExpansionPanel + ExpansionPanelList',
+      subtitle: 'controlled panels + radio accordion + animated material gaps',
+      builder: () => const ExpansionPanelDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.floatingActionButton,
@@ -118,6 +183,12 @@ class SampleGalleryScreen extends StatelessWidget {
           title: 'Counter',
           subtitle: 'existing sample',
           builder: () => const CounterScreen(),
+        ),
+        SampleRouteDefinition(
+          routeName: SampleRoutes.blocCounter,
+          title: 'Bloc counter',
+          subtitle: 'BlocProvider + BlocBuilder + BlocListener + BlocSelector',
+          builder: () => const BlocCounterDemoPage(),
         ),
         SampleRouteDefinition(
           routeName: SampleRoutes.navigator,

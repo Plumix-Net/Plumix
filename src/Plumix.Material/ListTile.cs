@@ -44,6 +44,7 @@ public sealed class ListTile : StatelessWidget
         Color? tileColor = null,
         Color? selectedTileColor = null,
         bool? enableFeedback = null,
+        Action<bool>? onFocusChange = null,
         double? horizontalTitleGap = null,
         double? minVerticalPadding = null,
         double? minLeadingWidth = null,
@@ -88,6 +89,11 @@ public sealed class ListTile : StatelessWidget
         TileColor = tileColor;
         SelectedTileColor = selectedTileColor;
         EnableFeedback = enableFeedback;
+        OnFocusChange = onFocusChange;
+        HorizontalTitleGap = horizontalTitleGap;
+        MinVerticalPadding = minVerticalPadding;
+        MinLeadingWidth = minLeadingWidth;
+        MinTileHeight = minTileHeight;
         Shape = shape;
     }
 
@@ -144,6 +150,8 @@ public sealed class ListTile : StatelessWidget
     public Color? SelectedTileColor { get; }
 
     public bool? EnableFeedback { get; }
+
+    public Action<bool>? OnFocusChange { get; }
 
     public double? HorizontalTitleGap { get; }
 
@@ -260,6 +268,8 @@ public sealed class ListTile : StatelessWidget
                 constraints: new BoxConstraints(MinWidth: effectiveMinLeadingWidth),
                 child: new Align(
                     alignment: Alignment.CenterLeft,
+                    widthFactor: 1,
+                    heightFactor: 1,
                     child: BuildSlotWidget(Leading))));
             rowChildren.Add(new SizedBox(width: effectiveHorizontalTitleGap));
         }
@@ -316,6 +326,7 @@ public sealed class ListTile : StatelessWidget
             style: style,
             mouseCursor: effectiveMouseCursor,
             focusNode: FocusNode,
+            onFocusChange: OnFocusChange,
             autofocus: Autofocus,
             isSelected: Selected,
             includeSemanticSelected: true,

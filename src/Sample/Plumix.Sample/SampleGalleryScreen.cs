@@ -31,8 +31,17 @@ internal static class SampleRoutes
     public const string Scrollbar = "/scrollbar";
     public const string EditableText = "/editable-text";
     public const string MaterialButtons = "/material-buttons";
+    public const string Drawer = "/drawer";
+    public const string Divider = "/divider";
+    public const string LinearProgressIndicator = "/linear-progress-indicator";
+    public const string CircularProgressIndicator = "/circular-progress-indicator";
+    public const string Slider = "/slider";
+    public const string RangeSlider = "/range-slider";
     public const string Card = "/card";
     public const string ListTile = "/list-tile";
+    public const string ListTileControls = "/list-tile-controls";
+    public const string RadioExpansionTile = "/radio-expansion-tile";
+    public const string ExpansionPanel = "/expansion-panel";
     public const string FloatingActionButton = "/floating-action-button";
     public const string Checkbox = "/checkbox";
     public const string Switch = "/switch";
@@ -73,8 +82,17 @@ internal sealed class SampleGalleryScreen : StatelessWidget
     private static readonly IReadOnlyList<SampleRouteDefinition> MaterialDemoPages =
     [
         new(SampleRoutes.MaterialButtons, "Material buttons", "TextButton + ElevatedButton + OutlinedButton + FilledButton", () => new MaterialButtonsDemoPage()),
+        new(SampleRoutes.Drawer, "Drawer", "scaffold drawer/endDrawer + theme/widget precedence probes", () => new DrawerDemoPage()),
+        new(SampleRoutes.Divider, "Divider", "horizontal/vertical divider + theme/widget precedence probes", () => new DividerDemoPage()),
+        new(SampleRoutes.LinearProgressIndicator, "LinearProgressIndicator", "determinate/indeterminate + M2/M3 + theme/widget/RTL probes", () => new LinearProgressIndicatorDemoPage()),
+        new(SampleRoutes.CircularProgressIndicator, "CircularProgressIndicator", "determinate/indeterminate + M2/M3 + theme/widget probes", () => new CircularProgressIndicatorDemoPage()),
+        new(SampleRoutes.Slider, "Slider", "continuous/discrete + drag/tap/keyboard + theme/widget colors", () => new SliderDemoPage()),
+        new(SampleRoutes.RangeSlider, "RangeSlider", "two-thumb range + continuous/discrete + theme/widget colors", () => new RangeSliderDemoPage()),
         new(SampleRoutes.Card, "Card", "elevated/filled/outlined variants + theme/clip probes", () => new CardDemoPage()),
         new(SampleRoutes.ListTile, "ListTile", "leading/title/subtitle/trailing + selected/dense/theme probes", () => new ListTileDemoPage()),
+        new(SampleRoutes.ListTileControls, "CheckboxListTile + SwitchListTile", "whole-row toggle + tristate + affinity + adaptive probes", () => new ListTileControlsDemoPage()),
+        new(SampleRoutes.RadioExpansionTile, "RadioListTile + ExpansionTile", "RadioGroup + toggleable/adaptive + animated controller expansion", () => new RadioExpansionTileDemoPage()),
+        new(SampleRoutes.ExpansionPanel, "ExpansionPanel + ExpansionPanelList", "controlled panels + radio accordion + animated material gaps", () => new ExpansionPanelDemoPage()),
         new(SampleRoutes.FloatingActionButton, "FloatingActionButton", "regular/small/large/extended + theme defaults", () => new FloatingActionButtonDemoPage()),
         new(SampleRoutes.AppBarLeadingWidth, "AppBar leadingWidth theme", "theme fallback + widget override runtime probe", () => new AppBarLeadingWidthDemoPage()),
         new(SampleRoutes.AppBarActionsPadding, "AppBar actionsPadding theme", "theme fallback + widget override runtime probe", () => new AppBarActionsPaddingDemoPage()),

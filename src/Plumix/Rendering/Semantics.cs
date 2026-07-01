@@ -20,6 +20,8 @@ public enum SemanticsFlags
     IsImage = 1 << 8,
     IsSlider = 1 << 9,
     IsHidden = 1 << 10,
+    HasExpandedState = 1 << 11,
+    IsExpanded = 1 << 12,
 }
 
 [Flags]
