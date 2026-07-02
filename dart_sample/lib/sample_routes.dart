@@ -28,6 +28,7 @@ class SampleRoutes {
   static const String badgeTooltip = '/badge-tooltip';
   static const String circleAvatar = '/circle-avatar';
   static const String navigationSurfaces = '/navigation-surfaces';
+  static const String chips = '/chips';
   static const String linearProgressIndicator = '/linear-progress-indicator';
   static const String circularProgressIndicator =
       '/circular-progress-indicator';

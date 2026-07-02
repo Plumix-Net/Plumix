@@ -29,6 +29,17 @@ public enum MaterialTapTargetSize
     ShrinkWrap,
 }
 
+public readonly record struct VisualDensity(double Horizontal = 0, double Vertical = 0)
+{
+    public static VisualDensity Standard => new();
+
+    public static VisualDensity Comfortable => new(0, -1);
+
+    public static VisualDensity Compact => new(-2, -2);
+
+    public Vector BaseSizeAdjustment => new(Horizontal * 4, Vertical * 4);
+}
+
 public sealed record AppBarThemeData(
     Color? BackgroundColor = null,
     Color? ForegroundColor = null,
@@ -220,6 +231,7 @@ public sealed record ThemeData
     private TooltipThemeData? _tooltipTheme;
     private NavigationBarThemeData? _navigationBarTheme;
     private NavigationRailThemeData? _navigationRailTheme;
+    private ChipThemeData? _chipTheme;
 
     public ThemeData(
         TargetPlatform? platform = null,
@@ -281,7 +293,9 @@ public sealed record ThemeData
         IconThemeData? iconTheme = null,
         Color? surfaceContainerColor = null,
         NavigationBarThemeData? navigationBarTheme = null,
-        NavigationRailThemeData? navigationRailTheme = null)
+        NavigationRailThemeData? navigationRailTheme = null,
+        ChipThemeData? chipTheme = null,
+        VisualDensity? visualDensity = null)
     {
         Platform = platform ?? ResolveDefaultPlatform();
         Brightness = brightness ?? Brightness.Light;
@@ -344,6 +358,8 @@ public sealed record ThemeData
         _tooltipTheme = tooltipTheme;
         _navigationBarTheme = navigationBarTheme;
         _navigationRailTheme = navigationRailTheme;
+        _chipTheme = chipTheme;
+        VisualDensity = visualDensity ?? VisualDensity.Standard;
     }
 
     public TargetPlatform Platform { get; init; }
@@ -417,6 +433,8 @@ public sealed record ThemeData
     public Color OnErrorColor { get; init; }
 
     public MaterialTapTargetSize MaterialTapTargetSize { get; init; }
+
+    public VisualDensity VisualDensity { get; init; }
 
     public ButtonStyle? TextButtonStyle { get; init; }
 
@@ -552,6 +570,12 @@ public sealed record ThemeData
     {
         get => _navigationRailTheme ?? new NavigationRailThemeData();
         init => _navigationRailTheme = value;
+    }
+
+    public ChipThemeData ChipTheme
+    {
+        get => _chipTheme ?? new ChipThemeData();
+        init => _chipTheme = value;
     }
 
     public static ThemeData Light { get; } = new();

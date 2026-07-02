@@ -14,6 +14,7 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 ### Changed
 
+- Added paired Flutter-structured `ActionChip` + `ChoiceChip` ports over a shared `RawChip`, with flat/elevated variants, M2/M3 defaults, `ChipTheme`/`ThemeData.ChipTheme`, state-color precedence, avatar/checkmark composition, focus/hover/press/tap semantics, `VisualDensity`, scaled label padding, focused tests, and a mirrored C#/Dart runtime demo. Advanced `Plumix.Material` to `1.3.0-alpha.1`.
 - Added paired Flutter-structured `NavigationBar` + `NavigationRail` ports with M2/M3 defaults, themes, destination/disabled states, selection indicators, label modes, safe-area handling, semantics, and mirrored C#/Dart runtime probes. Expanded Material typography/surface tokens and advanced `Plumix.Material` to `1.2.0-alpha.1`.
 - Added a Flutter-structured `CircleAvatar` port with M2/M3 color defaults, radius constraints, foreground/background image fallback, error callbacks, child typography/icon theming, implicit 200ms transitions, and a mirrored C#/Dart runtime demo. Core prerequisites now include circular/foreground decoration paint, `AnimatedContainer`, decoration/image interpolation, and bitmap sampling controls; advanced `Plumix` to `0.3.0-alpha.1` and `Plumix.Material` to `1.1.0-alpha.1`.
 - Hardened failed image-stream caching so listeners attached after asynchronous completion still receive the cached error instead of observing a prematurely disposed completer.

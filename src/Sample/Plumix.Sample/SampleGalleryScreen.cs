@@ -36,6 +36,7 @@ internal static class SampleRoutes
     public const string BadgeTooltip = "/badge-tooltip";
     public const string CircleAvatar = "/circle-avatar";
     public const string NavigationSurfaces = "/navigation-surfaces";
+    public const string Chips = "/chips";
     public const string LinearProgressIndicator = "/linear-progress-indicator";
     public const string CircularProgressIndicator = "/circular-progress-indicator";
     public const string Slider = "/slider";
@@ -90,6 +91,7 @@ internal sealed class SampleGalleryScreen : StatelessWidget
         new(SampleRoutes.BadgeTooltip, "Badge + Tooltip", "count/small badges + hover/long-press tooltip theming", () => new BadgeTooltipDemoPage()),
         new(SampleRoutes.CircleAvatar, "CircleAvatar", "initials + image layers + animated radius + fallback", () => new CircleAvatarDemoPage()),
         new(SampleRoutes.NavigationSurfaces, "NavigationBar + NavigationRail", "horizontal/vertical Material navigation + labels/themes", () => new NavigationSurfacesDemoPage()),
+        new(SampleRoutes.Chips, "ActionChip + ChoiceChip", "flat/elevated + selected/disabled + ChipTheme probes", () => new ChipsDemoPage()),
         new(SampleRoutes.LinearProgressIndicator, "LinearProgressIndicator", "determinate/indeterminate + M2/M3 + theme/widget/RTL probes", () => new LinearProgressIndicatorDemoPage()),
         new(SampleRoutes.CircularProgressIndicator, "CircularProgressIndicator", "determinate/indeterminate + M2/M3 + theme/widget probes", () => new CircularProgressIndicatorDemoPage()),
         new(SampleRoutes.Slider, "Slider", "continuous/discrete + drag/tap/keyboard + theme/widget colors", () => new SliderDemoPage()),

@@ -1598,6 +1598,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
         Clip clipBehavior = Clip.HardEdge,
         bool? enableFeedback = null,
         bool autofocus = false,
+        Size? tapTargetMinimumSize = null,
         Key? key = null) : base(key)
     {
         Child = child;
@@ -1617,6 +1618,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
         ClipBehavior = clipBehavior;
         EnableFeedback = enableFeedback;
         Autofocus = autofocus;
+        TapTargetMinimumSize = tapTargetMinimumSize;
     }
 
     public Widget Child { get; }
@@ -1652,6 +1654,8 @@ internal sealed class MaterialButtonCore : StatefulWidget
     public bool? EnableFeedback { get; }
 
     public bool Autofocus { get; }
+
+    public Size? TapTargetMinimumSize { get; }
 
     public override State CreateState()
     {
@@ -2210,7 +2214,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
             // Plumix.Sample ButtonStyleButton keeps a larger padded tap-target box around the
             // visual material; this wrapper aligns layout spacing with that behavior.
             var tapTargetResult = new ButtonTapTargetPadding(
-                minSize: ResolveTapTargetPaddingMinSize(tapTargetSize),
+                minSize: widget.TapTargetMinimumSize ?? ResolveTapTargetPaddingMinSize(tapTargetSize),
                 child: result);
 
             return new Semantics(

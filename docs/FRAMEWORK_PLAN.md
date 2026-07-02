@@ -534,6 +534,10 @@ Progress update (2026-03-19):
 - Added paired Material `NavigationBar` + `NavigationRail` parity pass in `Plumix.Material`:
   - ported Flutter-shaped destination APIs, M2/M3 token defaults, local/global theme precedence, selected/disabled interaction states, animated selection indicators, label behaviors, safe-area composition, tooltips, localized tab semantics, rail extension, scrolling, and leading/trailing placement;
   - expanded shared Material tokens with `surfaceContainer`, `labelMedium`, and `bodyLarge`, and added focused navigation-surface coverage plus a mirrored C#/Dart runtime route.
+- Added paired Material `ActionChip` + `ChoiceChip` parity pass in `Plumix.Material`:
+  - introduced shared `RawChip`, `ChipThemeData`/`ChipTheme`/`ThemeData.ChipTheme`, `ChipAnimationStyle`, and `VisualDensity` primitives with Flutter-shaped public APIs and flat/elevated factories;
+  - matched M2/M3 defaults, widget/theme/default state-color precedence, selected+disabled handling, avatar/checkmark composition, scaled label padding, tap-target policy, mouse/focus/keyboard interaction, and selected/checked semantics;
+  - added focused `MaterialChipTests` plus a mirrored C#/Dart runtime route covering enabled/disabled, selection, elevated variants, avatars, and local theme overrides.
 - Remaining divergence for floating action button in current framework scope:
   - none documented in current framework scope.
 
