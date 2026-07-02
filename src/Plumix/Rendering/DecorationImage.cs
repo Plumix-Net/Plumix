@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 
 namespace Plumix.Rendering;
 
@@ -44,7 +45,7 @@ public abstract record ColorFilter
     public sealed record Mode(Color Color, Avalonia.Media.Imaging.BitmapBlendingMode BlendMode) : ColorFilter;
 }
 
-public sealed class DecorationImage : IEquatable<DecorationImage>
+public class DecorationImage : IEquatable<DecorationImage>
 {
     public DecorationImage(
         ImageProvider image,
@@ -97,12 +98,12 @@ public sealed class DecorationImage : IEquatable<DecorationImage>
     public bool InvertColors { get; }
     public bool IsAntiAlias { get; }
 
-    public DecorationImagePainter CreatePainter(Action onChanged)
+    public virtual DecorationImagePainter CreatePainter(Action onChanged)
     {
         return new DecorationImagePainter(this, onChanged ?? throw new ArgumentNullException(nameof(onChanged)));
     }
 
-    public bool Equals(DecorationImage? other)
+    public virtual bool Equals(DecorationImage? other)
     {
         return other is not null
                && Equals(Image, other.Image)
@@ -138,9 +139,16 @@ public sealed class DecorationImage : IEquatable<DecorationImage>
         hash.Add(IsAntiAlias);
         return hash.ToHashCode();
     }
+
+    public static DecorationImage? Lerp(DecorationImage? a, DecorationImage? b, double t)
+    {
+        t = Math.Clamp(t, 0, 1);
+        if (ReferenceEquals(a, b) || Equals(a, b)) return a;
+        return new BlendedDecorationImage(a, b, t);
+    }
 }
 
-public sealed class DecorationImagePainter : IDisposable
+public class DecorationImagePainter : IDisposable
 {
     private readonly DecorationImage _details;
     private readonly Action _onChanged;
@@ -149,19 +157,21 @@ public sealed class DecorationImagePainter : IDisposable
     private ImageInfo? _image;
     private bool _disposed;
 
-    internal DecorationImagePainter(DecorationImage details, Action onChanged)
+    protected internal DecorationImagePainter(DecorationImage details, Action onChanged)
     {
         _details = details;
         _onChanged = onChanged;
         _listener = new ImageStreamListener(HandleImage, OnError: details.OnError);
     }
 
-    public void Paint(
+    public virtual void Paint(
         PaintingContext context,
         Rect rect,
         ImageConfiguration configuration,
         BorderRadius? clipRadius = null,
-        double blend = 1.0)
+        double blend = 1.0,
+        BoxShape shape = BoxShape.Rectangle,
+        BitmapBlendingMode blendMode = BitmapBlendingMode.SourceOver)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         if (_details.MatchTextDirection && configuration.TextDirection is null)
@@ -195,13 +205,15 @@ public sealed class DecorationImagePainter : IDisposable
             repeat: _details.Repeat,
             flipHorizontally: _details.MatchTextDirection && configuration.TextDirection == Plumix.UI.TextDirection.Rtl,
             clipRadius: clipRadius,
+            shape: shape,
             colorFilter: _details.ColorFilter,
             filterQuality: _details.FilterQuality,
             invertColors: _details.InvertColors,
-            isAntiAlias: _details.IsAntiAlias);
+            isAntiAlias: _details.IsAntiAlias,
+            blendMode: blendMode);
     }
 
-    public void Dispose()
+    public virtual void Dispose()
     {
         if (_disposed) return;
         _disposed = true;
@@ -228,6 +240,102 @@ public sealed class DecorationImagePainter : IDisposable
     }
 }
 
+internal sealed class BlendedDecorationImage : DecorationImage
+{
+    public BlendedDecorationImage(DecorationImage? a, DecorationImage? b, double t)
+        : base(
+            image: (b ?? a ?? throw new ArgumentException("At least one image is required.")).Image,
+            onError: b?.OnError ?? a?.OnError,
+            colorFilter: b?.ColorFilter ?? a?.ColorFilter,
+            fit: b?.Fit ?? a?.Fit,
+            alignment: b?.Alignment ?? a!.Alignment,
+            centerSlice: b?.CenterSlice ?? a?.CenterSlice,
+            repeat: b?.Repeat ?? a!.Repeat,
+            matchTextDirection: b?.MatchTextDirection ?? a!.MatchTextDirection,
+            scale: b?.Scale ?? a!.Scale,
+            opacity: b?.Opacity ?? a!.Opacity,
+            filterQuality: b?.FilterQuality ?? a!.FilterQuality,
+            invertColors: b?.InvertColors ?? a!.InvertColors,
+            isAntiAlias: b?.IsAntiAlias ?? a!.IsAntiAlias)
+    {
+        A = a;
+        B = b;
+        T = t;
+    }
+
+    public DecorationImage? A { get; }
+    public DecorationImage? B { get; }
+    public double T { get; }
+
+    public override DecorationImagePainter CreatePainter(Action onChanged)
+    {
+        return new BlendedDecorationImagePainter(this, onChanged);
+    }
+
+    public override bool Equals(DecorationImage? other)
+    {
+        return other is BlendedDecorationImage blended
+               && Equals(A, blended.A)
+               && Equals(B, blended.B)
+               && T.Equals(blended.T);
+    }
+
+    public override int GetHashCode() => HashCode.Combine(A, B, T);
+}
+
+internal sealed class BlendedDecorationImagePainter : DecorationImagePainter
+{
+    private readonly DecorationImagePainter? _a;
+    private readonly DecorationImagePainter? _b;
+    private readonly double _t;
+    private bool _disposed;
+
+    public BlendedDecorationImagePainter(BlendedDecorationImage details, Action onChanged)
+        : base(details, onChanged)
+    {
+        _a = details.A?.CreatePainter(onChanged);
+        _b = details.B?.CreatePainter(onChanged);
+        _t = details.T;
+    }
+
+    public override void Paint(
+        PaintingContext context,
+        Rect rect,
+        ImageConfiguration configuration,
+        BorderRadius? clipRadius = null,
+        double blend = 1.0,
+        BoxShape shape = BoxShape.Rectangle,
+        BitmapBlendingMode blendMode = BitmapBlendingMode.SourceOver)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        _a?.Paint(
+            context,
+            rect,
+            configuration,
+            clipRadius,
+            blend * (1 - _t),
+            shape,
+            blendMode);
+        _b?.Paint(
+            context,
+            rect,
+            configuration,
+            clipRadius,
+            blend * _t,
+            shape,
+            blendMode);
+    }
+
+    public override void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+        _a?.Dispose();
+        _b?.Dispose();
+        base.Dispose();
+    }
+}
+
 public static class ImagePainting
 {
     public static void PaintImage(
@@ -245,7 +353,9 @@ public static class ImagePainting
         bool invertColors = false,
         FilterQuality filterQuality = FilterQuality.Medium,
         bool isAntiAlias = false,
-        BorderRadius? clipRadius = null)
+        BorderRadius? clipRadius = null,
+        BoxShape shape = BoxShape.Rectangle,
+        BitmapBlendingMode blendMode = BitmapBlendingMode.SourceOver)
     {
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(image);
@@ -264,6 +374,7 @@ public static class ImagePainting
         foreach (var destination in plan.DestinationRects)
         {
             var effectiveClipRect = plan.ClipRect ?? (clipRadius.HasValue ? rect : null);
+            var ovalClipRect = shape == BoxShape.Circle ? InscribedSquare(rect) : (Rect?)null;
             if (plan.CenterSlicePixels.HasValue)
             {
                 DrawNinePatch(
@@ -276,30 +387,36 @@ public static class ImagePainting
                     opacity,
                     effectiveClipRect,
                     clipRadius,
+                    ovalClipRect,
                     flipHorizontally,
-                    plan.FlipAxisX);
+                    plan.FlipAxisX,
+                    filterQuality,
+                    isAntiAlias,
+                    blendMode);
             }
             else
             {
                 context.DrawImage(
-                    image,
-                    plan.SourceRect,
-                    destination,
-                    opacity,
-                    effectiveClipRect,
-                    clipRadius,
-                    flipHorizontally,
-                    plan.FlipAxisX);
+                    image: image,
+                    sourceRect: plan.SourceRect,
+                    destinationRect: destination,
+                    opacity: opacity,
+                    clipRect: effectiveClipRect,
+                    clipRadius: clipRadius,
+                    ovalClipRect: ovalClipRect,
+                    flipHorizontally: flipHorizontally,
+                    horizontalFlipAxisX: plan.FlipAxisX,
+                    filterQuality: filterQuality,
+                    isAntiAlias: isAntiAlias,
+                    blendMode: blendMode);
             }
         }
 
         // Avalonia's public DrawingContext does not currently expose per-draw
-        // sampling or color-matrix effects. The parity fields are retained so
-        // the backend can adopt them without another public API change.
+        // color-matrix effects. The parity fields are retained so the backend
+        // can adopt them without another public API change.
         _ = colorFilter;
         _ = invertColors;
-        _ = filterQuality;
-        _ = isAntiAlias;
     }
 
     internal static ImagePaintPlan CreatePaintPlan(
@@ -428,20 +545,28 @@ public static class ImagePainting
         double opacity,
         Rect? clipRect,
         BorderRadius? clipRadius,
+        Rect? ovalClipRect,
         bool flipHorizontally,
-        double? flipAxisX)
+        double? flipAxisX,
+        FilterQuality filterQuality,
+        bool isAntiAlias,
+        BitmapBlendingMode blendMode)
     {
         foreach (var patch in GenerateNinePatchRects(imageSize, centerSlice, destination, scale))
         {
             context.DrawImage(
-                image,
-                patch.Source,
-                patch.Destination,
-                opacity,
-                clipRect,
-                clipRadius,
-                flipHorizontally,
-                flipAxisX);
+                image: image,
+                sourceRect: patch.Source,
+                destinationRect: patch.Destination,
+                opacity: opacity,
+                clipRect: clipRect,
+                clipRadius: clipRadius,
+                ovalClipRect: ovalClipRect,
+                flipHorizontally: flipHorizontally,
+                horizontalFlipAxisX: flipAxisX,
+                filterQuality: filterQuality,
+                isAntiAlias: isAntiAlias,
+                blendMode: blendMode);
         }
     }
 
@@ -493,6 +618,16 @@ public static class ImagePainting
     private static Rect ScaleRect(Rect rect, double scale)
     {
         return new Rect(rect.X * scale, rect.Y * scale, rect.Width * scale, rect.Height * scale);
+    }
+
+    private static Rect InscribedSquare(Rect rect)
+    {
+        var side = Math.Min(rect.Width, rect.Height);
+        return new Rect(
+            rect.Center.X - (side / 2.0),
+            rect.Center.Y - (side / 2.0),
+            side,
+            side);
     }
 
     private static bool SizesClose(Size first, Size second)

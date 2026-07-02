@@ -9,6 +9,11 @@ public sealed record IconThemeData(
     Color? Color = null,
     double? Size = null)
 {
+    public IconThemeData CopyWith(Color? color = null, double? size = null)
+    {
+        return new IconThemeData(color ?? Color, size ?? Size);
+    }
+
     internal static IconThemeData Fallback { get; } = new();
 }
 

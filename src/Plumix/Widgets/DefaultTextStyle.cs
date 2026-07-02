@@ -15,6 +15,25 @@ public sealed record TextStyle(
     double? Height = null,
     double? LetterSpacing = null)
 {
+    public TextStyle CopyWith(
+        FontFamily? fontFamily = null,
+        double? fontSize = null,
+        Color? color = null,
+        FontWeight? fontWeight = null,
+        FontStyle? fontStyle = null,
+        double? height = null,
+        double? letterSpacing = null)
+    {
+        return new TextStyle(
+            FontFamily: fontFamily ?? FontFamily,
+            FontSize: fontSize ?? FontSize,
+            Color: color ?? Color,
+            FontWeight: fontWeight ?? FontWeight,
+            FontStyle: fontStyle ?? FontStyle,
+            Height: height ?? Height,
+            LetterSpacing: letterSpacing ?? LetterSpacing);
+    }
+
     internal static TextStyle Fallback { get; } = new(
         FontFamily: Avalonia.Media.FontFamily.Default,
         FontSize: 14,

@@ -182,12 +182,6 @@ public sealed class ImageCache
                 CompletePending(key, completer, pendingImage, image, trackPending);
                 completer.RemoveListener(listener!);
                 image.Dispose();
-            },
-            OnError: (exception, stack) =>
-            {
-                if (Interlocked.Exchange(ref listenedOnce, 1) != 0) return;
-                RemovePending(key, pendingImage);
-                completer.RemoveListener(listener!);
             });
         pendingImage = new PendingImage(completer, listener);
 
@@ -319,18 +313,6 @@ public sealed class ImageCache
 
         rejected?.Dispose();
         DisposeAll(evicted);
-    }
-
-    private void RemovePending(object key, PendingImage? pending)
-    {
-        if (pending is null) return;
-        lock (_sync)
-        {
-            if (_pendingImages.TryGetValue(key, out var current) && ReferenceEquals(current, pending))
-            {
-                _pendingImages.Remove(key);
-            }
-        }
     }
 
     private void TrackLiveImageLocked(object key, ImageStreamCompleter completer, long? sizeBytes)

@@ -1190,17 +1190,31 @@ public sealed class RenderColoredBox : RenderProxyBox
 public sealed class RenderDecoratedBox : RenderProxyBox
 {
     private BoxDecoration _decoration;
+    private DecorationPosition _position;
     private ImageConfiguration _configuration;
     private DecorationImagePainter? _imagePainter;
 
     public RenderDecoratedBox(
         BoxDecoration decoration,
         RenderBox? child = null,
-        ImageConfiguration? configuration = null)
+        ImageConfiguration? configuration = null,
+        DecorationPosition position = DecorationPosition.Background)
     {
         _decoration = decoration ?? new BoxDecoration();
+        _position = position;
         _configuration = configuration ?? ImageConfiguration.Empty;
         Child = child;
+    }
+
+    public DecorationPosition Position
+    {
+        get => _position;
+        set
+        {
+            if (_position == value) return;
+            _position = value;
+            MarkNeedsPaint();
+        }
     }
 
     public BoxDecoration Decoration
@@ -1242,6 +1256,21 @@ public sealed class RenderDecoratedBox : RenderProxyBox
 
     public override void Paint(PaintingContext ctx, Point offset)
     {
+        if (_position == DecorationPosition.Background)
+        {
+            PaintDecoration(ctx, offset);
+        }
+
+        base.Paint(ctx, offset);
+
+        if (_position == DecorationPosition.Foreground)
+        {
+            PaintDecoration(ctx, offset);
+        }
+    }
+
+    private void PaintDecoration(PaintingContext ctx, Point offset)
+    {
         var rect = new Rect(offset, Size);
         var radius = _decoration.EffectiveBorderRadius.Radius;
         var boxShadows = _decoration.EffectiveBoxShadows;
@@ -1261,7 +1290,26 @@ public sealed class RenderDecoratedBox : RenderProxyBox
             }
         }
 
-        if (fill != null || boxShadows.Count > 0)
+        if (_decoration.Shape == BoxShape.Circle)
+        {
+            if (fill != null || boxShadows.Count > 0)
+            {
+                var side = Math.Min(rect.Width, rect.Height);
+                var circleRect = new Rect(
+                    rect.Center.X - (side / 2.0),
+                    rect.Center.Y - (side / 2.0),
+                    side,
+                    side);
+                ctx.DrawRectangle(
+                    fill ?? Brushes.Transparent,
+                    null,
+                    circleRect,
+                    side / 2.0,
+                    side / 2.0,
+                    boxShadows);
+            }
+        }
+        else if (fill != null || boxShadows.Count > 0)
         {
             ctx.DrawRectangle(fill ?? Brushes.Transparent, null, rect, radius, radius, boxShadows);
         }
@@ -1273,15 +1321,32 @@ public sealed class RenderDecoratedBox : RenderProxyBox
                 ctx,
                 rect,
                 _configuration.CopyWith(size: Size),
-                clipRadius: _decoration.BorderRadius);
+                clipRadius: _decoration.BorderRadius,
+                shape: _decoration.Shape);
         }
 
         if (borderPen is not null)
         {
-            ctx.DrawRectangle(Brushes.Transparent, borderPen, rect, radius, radius);
+            if (_decoration.Shape == BoxShape.Circle)
+            {
+                var side = Math.Min(rect.Width, rect.Height);
+                var circleRect = new Rect(
+                    rect.Center.X - (side / 2.0),
+                    rect.Center.Y - (side / 2.0),
+                    side,
+                    side);
+                ctx.DrawRectangle(
+                    Brushes.Transparent,
+                    borderPen,
+                    circleRect,
+                    side / 2.0,
+                    side / 2.0);
+            }
+            else
+            {
+                ctx.DrawRectangle(Brushes.Transparent, borderPen, rect, radius, radius);
+            }
         }
-
-        base.Paint(ctx, offset);
     }
 
     protected override void OnDetach()

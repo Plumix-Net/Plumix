@@ -304,17 +304,24 @@ public sealed class ColoredBox : SingleChildRenderObjectWidget
 
 public sealed class DecoratedBox : SingleChildRenderObjectWidget
 {
-    public DecoratedBox(BoxDecoration decoration, Widget? child = null, Key? key = null) : base(child, key)
+    public DecoratedBox(
+        BoxDecoration decoration,
+        Widget? child = null,
+        Key? key = null,
+        DecorationPosition position = DecorationPosition.Background) : base(child, key)
     {
         Decoration = decoration ?? new BoxDecoration();
+        Position = position;
     }
 
     public BoxDecoration Decoration { get; }
+    public DecorationPosition Position { get; }
 
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderDecoratedBox(
             Decoration,
+            position: Position,
             configuration: CreateImageConfiguration(context));
     }
 
@@ -322,6 +329,7 @@ public sealed class DecoratedBox : SingleChildRenderObjectWidget
     {
         var decoratedBox = (RenderDecoratedBox)renderObject;
         decoratedBox.Decoration = Decoration;
+        decoratedBox.Position = Position;
         decoratedBox.Configuration = CreateImageConfiguration(context);
     }
 
@@ -603,11 +611,13 @@ public sealed class Container : StatelessWidget
         Thickness? padding = null,
         double? width = null,
         double? height = null,
-        Key? key = null) : base(key)
+        Key? key = null,
+        BoxDecoration? foregroundDecoration = null) : base(key)
     {
         Child = child;
         Color = color;
         Decoration = decoration;
+        ForegroundDecoration = foregroundDecoration;
         Alignment = alignment;
         Margin = margin;
         Constraints = constraints;
@@ -622,6 +632,7 @@ public sealed class Container : StatelessWidget
     public Color? Color { get; }
 
     public BoxDecoration? Decoration { get; }
+    public BoxDecoration? ForegroundDecoration { get; }
 
     public Alignment? Alignment { get; }
 
@@ -660,6 +671,14 @@ public sealed class Container : StatelessWidget
         else if (Color.HasValue)
         {
             current = new ColoredBox(Color.Value, current);
+        }
+
+        if (ForegroundDecoration != null)
+        {
+            current = new DecoratedBox(
+                ForegroundDecoration,
+                position: DecorationPosition.Foreground,
+                child: current);
         }
 
         BoxConstraints? effectiveConstraints = Constraints;

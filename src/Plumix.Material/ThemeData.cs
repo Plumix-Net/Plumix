@@ -51,12 +51,14 @@ public sealed record MaterialTextTheme
         TextStyle? bodyMedium = null,
         TextStyle? titleLarge = null,
         TextStyle? labelLarge = null,
-        TextStyle? labelSmall = null)
+        TextStyle? labelSmall = null,
+        TextStyle? titleMedium = null)
     {
         BodyMedium = bodyMedium ?? DefaultBodyMedium;
         TitleLarge = titleLarge ?? DefaultTitleLarge;
         LabelLarge = labelLarge ?? DefaultLabelLarge;
         LabelSmall = labelSmall ?? DefaultLabelSmall;
+        TitleMedium = titleMedium ?? DefaultTitleMedium;
     }
 
     public TextStyle BodyMedium { get; init; }
@@ -66,6 +68,8 @@ public sealed record MaterialTextTheme
     public TextStyle LabelLarge { get; init; }
 
     public TextStyle LabelSmall { get; init; }
+
+    public TextStyle TitleMedium { get; init; }
 
     public static TextStyle DefaultBodyMedium { get; } = new(
         FontFamily: DefaultBodyFontFamily,
@@ -103,6 +107,15 @@ public sealed record MaterialTextTheme
         Height: 1.45,
         LetterSpacing: 0.5);
 
+    public static TextStyle DefaultTitleMedium { get; } = new(
+        FontFamily: DefaultBodyFontFamily,
+        FontSize: 16,
+        Color: Color.Parse("#FF1D1B20"),
+        FontWeight: FontWeight.Normal,
+        FontStyle: FontStyle.Normal,
+        Height: 1.5,
+        LetterSpacing: 0.15);
+
     public static MaterialTextTheme Fallback { get; } = new();
 
     private static FontFamily ResolveDefaultBodyFontFamily()
@@ -136,6 +149,8 @@ public sealed record ThemeData
 {
     private static readonly Color LightScaffoldAndCanvasColor = Color.Parse("#FFFEF7FF");
     private static readonly Color LightPrimaryColor = Color.Parse("#FF6750A4");
+    private static readonly Color DefaultPrimaryColorLight = Color.Parse("#FFBBDEFB");
+    private static readonly Color DefaultPrimaryColorDark = Color.Parse("#FF1976D2");
     private static readonly Color LightSecondaryColor = Color.Parse("#FF625B71");
     private static readonly Color LightPrimaryContainerColor = Color.Parse("#FFEADDFF");
     private static readonly Color LightOnPrimaryContainerColor = Color.Parse("#FF21005D");
@@ -230,7 +245,11 @@ public sealed record ThemeData
         SliderThemeData? sliderTheme = null,
         ExpansionTileThemeData? expansionTileTheme = null,
         BadgeThemeData? badgeTheme = null,
-        TooltipThemeData? tooltipTheme = null)
+        TooltipThemeData? tooltipTheme = null,
+        Color? primaryColorLight = null,
+        Color? primaryColorDark = null,
+        MaterialTextTheme? primaryTextTheme = null,
+        IconThemeData? iconTheme = null)
     {
         Platform = platform ?? ResolveDefaultPlatform();
         Brightness = brightness ?? Brightness.Light;
@@ -238,6 +257,11 @@ public sealed record ThemeData
         ScaffoldBackgroundColor = scaffoldBackgroundColor ?? LightScaffoldAndCanvasColor;
         CanvasColor = canvasColor ?? LightScaffoldAndCanvasColor;
         PrimaryColor = primaryColor ?? LightPrimaryColor;
+        PrimaryColorLight = primaryColorLight ?? DefaultPrimaryColorLight;
+        PrimaryColorDark = primaryColorDark ?? DefaultPrimaryColorDark;
+        PrimaryTextTheme = primaryTextTheme ?? new MaterialTextTheme(
+            titleMedium: MaterialTextTheme.DefaultTitleMedium.CopyWith(color: Colors.White));
+        IconTheme = iconTheme ?? new IconThemeData(Color: LightOnSurfaceColor, Size: 24);
         SecondaryColor = secondaryColor ?? LightSecondaryColor;
         OnPrimaryColor = onPrimaryColor ?? Colors.White;
         PrimaryContainerColor = primaryContainerColor ?? LightPrimaryContainerColor;
@@ -298,6 +322,14 @@ public sealed record ThemeData
     public Color CanvasColor { get; init; }
 
     public Color PrimaryColor { get; init; }
+
+    public Color PrimaryColorLight { get; init; }
+
+    public Color PrimaryColorDark { get; init; }
+
+    public MaterialTextTheme PrimaryTextTheme { get; init; }
+
+    public IconThemeData IconTheme { get; init; }
 
     public Color SecondaryColor { get; init; }
 
@@ -474,6 +506,24 @@ public sealed record ThemeData
     }
 
     public static ThemeData Light { get; } = new();
+
+    public static Brightness EstimateBrightnessForColor(Color color)
+    {
+        static double Linearize(byte component)
+        {
+            var value = component / 255.0;
+            return value <= 0.03928
+                ? value / 12.92
+                : Math.Pow((value + 0.055) / 1.055, 2.4);
+        }
+
+        var luminance = (0.2126 * Linearize(color.R))
+                        + (0.7152 * Linearize(color.G))
+                        + (0.0722 * Linearize(color.B));
+        return (luminance + 0.05) * (luminance + 0.05) > 0.15
+            ? Brightness.Light
+            : Brightness.Dark;
+    }
 
     private static TargetPlatform ResolveDefaultPlatform()
     {

@@ -10,6 +10,7 @@ import 'demos/general/aspect_ratio_demo_page.dart';
 import 'demos/general/bloc_counter_demo_page.dart';
 import 'demos/material/card_demo_page.dart';
 import 'demos/material/circular_progress_indicator_demo_page.dart';
+import 'demos/material/circle_avatar_demo_page.dart';
 import 'demos/cupertino/checkbox_demo_page.dart';
 import 'counter_screen.dart';
 import 'demos/general/container_demo_page.dart';
@@ -73,6 +74,12 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'Badge + Tooltip',
       subtitle: 'count/small badges + hover/long-press tooltip theming',
       builder: () => const BadgeTooltipDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.circleAvatar,
+      title: 'CircleAvatar',
+      subtitle: 'initials + image layers + animated radius + fallback',
+      builder: () => const CircleAvatarDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.linearProgressIndicator,

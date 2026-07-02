@@ -106,6 +106,7 @@ public sealed class ImageProviderDecorationTests : IDisposable
         var error = new TaskCompletionSource<Exception>(TaskCreationOptions.RunContinuationsAsynchronously);
 
         var stream = provider.Resolve(ImageConfiguration.Empty);
+        await Task.Delay(20);
         stream.AddListener(new ImageStreamListener(
             (_, _) => { },
             OnError: (exception, _) => error.TrySetResult(exception)));
@@ -115,7 +116,7 @@ public sealed class ImageProviderDecorationTests : IDisposable
     }
 
     [Fact]
-    public async Task ImageProvider_AsyncLoadFailure_IsReportedOnceAndLeavesPendingCache()
+    public async Task ImageProvider_AsyncLoadFailure_IsReplayableAndRemainsPendingUntilEvicted()
     {
         var provider = new TestImageProvider(
             "failed",
@@ -124,6 +125,7 @@ public sealed class ImageProviderDecorationTests : IDisposable
         var calls = 0;
 
         var stream = provider.Resolve(ImageConfiguration.Empty);
+        await Task.Delay(20);
         stream.AddListener(new ImageStreamListener(
             (_, _) => { },
             OnError: (exception, _) =>
@@ -134,7 +136,7 @@ public sealed class ImageProviderDecorationTests : IDisposable
 
         Assert.IsType<InvalidOperationException>(await error.Task.WaitAsync(TimeSpan.FromSeconds(2)));
         Assert.Equal(1, calls);
-        Assert.False(ImageCache.Shared.StatusForKey("failed").Pending);
+        Assert.True(ImageCache.Shared.StatusForKey("failed").Pending);
     }
 
     [Fact]
@@ -351,6 +353,44 @@ public sealed class ImageProviderDecorationTests : IDisposable
 
         var picture = Assert.IsType<PictureLayer>(Assert.Single(root.Children));
         Assert.Equal(9, CountPictureCommands(picture));
+    }
+
+    [Fact]
+    public void DecorationImage_LerpPaintsBothImagesDuringTransition()
+    {
+        var firstCompletion = new TaskCompletionSource<ImageInfo>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var secondCompletion = new TaskCompletionSource<ImageInfo>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var first = new TestImageProvider(
+            "lerp-first",
+            () => firstCompletion.Task);
+        var second = new TestImageProvider(
+            "lerp-second",
+            () => secondCompletion.Task);
+        var repaintCount = 0;
+        using var painter = DecorationImage.Lerp(
+                new DecorationImage(first, fit: BoxFit.Cover),
+                new DecorationImage(second, fit: BoxFit.Cover),
+                0.25)!
+            .CreatePainter(() => Interlocked.Increment(ref repaintCount));
+
+        painter.Paint(
+            new PaintingContext(new ContainerLayer()),
+            new Rect(0, 0, 20, 20),
+            ImageConfiguration.Empty,
+            shape: BoxShape.Circle);
+        firstCompletion.SetResult(new ImageInfo(new FakeImage(new Size(10, 10))));
+        secondCompletion.SetResult(new ImageInfo(new FakeImage(new Size(10, 10))));
+        Assert.True(SpinWait.SpinUntil(() => repaintCount >= 2, TimeSpan.FromSeconds(2)));
+
+        var root = new ContainerLayer();
+        painter.Paint(
+            new PaintingContext(root),
+            new Rect(0, 0, 20, 20),
+            ImageConfiguration.Empty,
+            shape: BoxShape.Circle);
+
+        var picture = Assert.IsType<PictureLayer>(Assert.Single(root.Children));
+        Assert.Equal(2, CountPictureCommands(picture));
     }
 
     [Fact]

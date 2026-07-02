@@ -14,7 +14,9 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 ### Changed
 
-- Added Flutter-shaped `ImageProvider`/`ImageStream`/`ImageCache` primitives and `DecorationImage` painting for memory, file, network, asset-resolution, resize, fit, repeat, RTL flip, opacity, clipping, and nine-patch paths; advanced `Plumix` to `0.2.0-alpha.1`. Animated frames and backend color/filter effects remain documented divergences.
+- Added a Flutter-structured `CircleAvatar` port with M2/M3 color defaults, radius constraints, foreground/background image fallback, error callbacks, child typography/icon theming, implicit 200ms transitions, and a mirrored C#/Dart runtime demo. Core prerequisites now include circular/foreground decoration paint, `AnimatedContainer`, decoration/image interpolation, and bitmap sampling controls; advanced `Plumix` to `0.3.0-alpha.1` and `Plumix.Material` to `1.1.0-alpha.1`.
+- Hardened failed image-stream caching so listeners attached after asynchronous completion still receive the cached error instead of observing a prematurely disposed completer.
+- Added Flutter-shaped `ImageProvider`/`ImageStream`/`ImageCache` primitives and `DecorationImage` painting for memory, file, network, asset-resolution, resize, fit, repeat, RTL flip, opacity, clipping, and nine-patch paths. Animated frames and backend color-matrix/inversion effects remain documented divergences.
 - Breaking: expanded Material `Tooltip` from its baseline constructor to Flutter-shaped nullable/theme-resolved defaults and advanced `Plumix.Material` to `1.0.0-alpha.1`; also added paired `Badge` support, focused coverage, and a mirrored C#/Dart runtime demo. Remaining shared overlay/rich-text gaps are tracked in `docs/ai/DIVERGENCES.md`.
 - Fixed recursive `BoxConstraints.ToString()` diagnostics so layout failures report constraints instead of overflowing the stack.
 - Added paired Material `ExpansionPanel` + `ExpansionPanelList` parity baseline:

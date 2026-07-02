@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using Avalonia.Media.TextFormatting;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/rendering/object.dart (approximate)
@@ -144,7 +145,11 @@ public sealed class PaintingContext
         Rect? clipRect = null,
         BorderRadius? clipRadius = null,
         bool flipHorizontally = false,
-        double? horizontalFlipAxisX = null)
+        double? horizontalFlipAxisX = null,
+        Rect? ovalClipRect = null,
+        FilterQuality filterQuality = FilterQuality.Medium,
+        bool isAntiAlias = false,
+        BitmapBlendingMode blendMode = BitmapBlendingMode.SourceOver)
     {
         ArgumentNullException.ThrowIfNull(image);
         if (sourceRect.Width <= 0 || sourceRect.Height <= 0
@@ -161,9 +166,15 @@ public sealed class PaintingContext
             DrawingContext.PushedState? clip = null;
             DrawingContext.PushedState? alpha = null;
             DrawingContext.PushedState? transform = null;
+            DrawingContext.PushedState? renderOptions = null;
             try
             {
-                if (clipRect.HasValue)
+                if (ovalClipRect.HasValue)
+                {
+                    var translatedOval = new Rect(ovalClipRect.Value.Position + sceneOffset, ovalClipRect.Value.Size);
+                    clip = drawingContext.PushGeometryClip(new EllipseGeometry(translatedOval));
+                }
+                else if (clipRect.HasValue)
                 {
                     var translatedClip = new Rect(clipRect.Value.Position + sceneOffset, clipRect.Value.Size);
                     clip = clipRadius.HasValue && clipRadius.Value.Radius > 0
@@ -178,6 +189,21 @@ public sealed class PaintingContext
                     alpha = drawingContext.PushOpacity(effectiveOpacity);
                 }
 
+                renderOptions = drawingContext.PushRenderOptions(new RenderOptions
+                {
+                    BitmapInterpolationMode = filterQuality switch
+                    {
+                        FilterQuality.None => BitmapInterpolationMode.None,
+                        FilterQuality.Low => BitmapInterpolationMode.LowQuality,
+                        FilterQuality.High => BitmapInterpolationMode.HighQuality,
+                        _ => BitmapInterpolationMode.MediumQuality,
+                    },
+                    EdgeMode = isAntiAlias || ovalClipRect.HasValue || clipRadius?.Radius > 0
+                        ? EdgeMode.Antialias
+                        : EdgeMode.Aliased,
+                    BitmapBlendingMode = blendMode,
+                });
+
                 if (flipHorizontally)
                 {
                     var centerX = horizontalFlipAxisX.HasValue
@@ -191,6 +217,7 @@ public sealed class PaintingContext
             finally
             {
                 transform?.Dispose();
+                renderOptions?.Dispose();
                 alpha?.Dispose();
                 clip?.Dispose();
             }

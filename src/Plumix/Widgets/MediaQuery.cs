@@ -184,6 +184,13 @@ public sealed class MediaQuery : InheritedWidget
 
     public static double? MaybeTextScaleFactorOf(BuildContext context) => MaybeOf(context)?.TextScaleFactor;
 
+    public static Widget WithNoTextScaling(BuildContext context, Widget child)
+    {
+        return new MediaQuery(
+            data: Of(context).CopyWith(textScaleFactor: 1.0),
+            child: child);
+    }
+
     public static Widget RemovePadding(
         BuildContext context,
         Widget child,
