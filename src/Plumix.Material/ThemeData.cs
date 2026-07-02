@@ -50,11 +50,13 @@ public sealed record MaterialTextTheme
     public MaterialTextTheme(
         TextStyle? bodyMedium = null,
         TextStyle? titleLarge = null,
-        TextStyle? labelLarge = null)
+        TextStyle? labelLarge = null,
+        TextStyle? labelSmall = null)
     {
         BodyMedium = bodyMedium ?? DefaultBodyMedium;
         TitleLarge = titleLarge ?? DefaultTitleLarge;
         LabelLarge = labelLarge ?? DefaultLabelLarge;
+        LabelSmall = labelSmall ?? DefaultLabelSmall;
     }
 
     public TextStyle BodyMedium { get; init; }
@@ -62,6 +64,8 @@ public sealed record MaterialTextTheme
     public TextStyle TitleLarge { get; init; }
 
     public TextStyle LabelLarge { get; init; }
+
+    public TextStyle LabelSmall { get; init; }
 
     public static TextStyle DefaultBodyMedium { get; } = new(
         FontFamily: DefaultBodyFontFamily,
@@ -89,6 +93,15 @@ public sealed record MaterialTextTheme
         FontStyle: FontStyle.Normal,
         Height: 1.43,
         LetterSpacing: 0.1);
+
+    public static TextStyle DefaultLabelSmall { get; } = new(
+        FontFamily: DefaultBodyFontFamily,
+        FontSize: 11,
+        Color: Color.Parse("#FF1D1B20"),
+        FontWeight: FontWeight.Medium,
+        FontStyle: FontStyle.Normal,
+        Height: 1.45,
+        LetterSpacing: 0.5);
 
     public static MaterialTextTheme Fallback { get; } = new();
 
@@ -161,6 +174,8 @@ public sealed record ThemeData
     private RadioThemeData? _radioTheme;
     private SliderThemeData? _sliderTheme;
     private ExpansionTileThemeData? _expansionTileTheme;
+    private BadgeThemeData? _badgeTheme;
+    private TooltipThemeData? _tooltipTheme;
 
     public ThemeData(
         TargetPlatform? platform = null,
@@ -213,7 +228,9 @@ public sealed record ThemeData
         SwitchThemeData? switchTheme = null,
         RadioThemeData? radioTheme = null,
         SliderThemeData? sliderTheme = null,
-        ExpansionTileThemeData? expansionTileTheme = null)
+        ExpansionTileThemeData? expansionTileTheme = null,
+        BadgeThemeData? badgeTheme = null,
+        TooltipThemeData? tooltipTheme = null)
     {
         Platform = platform ?? ResolveDefaultPlatform();
         Brightness = brightness ?? Brightness.Light;
@@ -266,6 +283,8 @@ public sealed record ThemeData
         _radioTheme = radioTheme;
         _sliderTheme = sliderTheme;
         _expansionTileTheme = expansionTileTheme;
+        _badgeTheme = badgeTheme;
+        _tooltipTheme = tooltipTheme;
     }
 
     public TargetPlatform Platform { get; init; }
@@ -440,6 +459,18 @@ public sealed record ThemeData
     {
         get => _expansionTileTheme ?? new ExpansionTileThemeData();
         init => _expansionTileTheme = value;
+    }
+
+    public BadgeThemeData BadgeTheme
+    {
+        get => _badgeTheme ?? new BadgeThemeData();
+        init => _badgeTheme = value;
+    }
+
+    public TooltipThemeData TooltipTheme
+    {
+        get => _tooltipTheme ?? new TooltipThemeData();
+        init => _tooltipTheme = value;
     }
 
     public static ThemeData Light { get; } = new();

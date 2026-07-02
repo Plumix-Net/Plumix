@@ -25,6 +25,7 @@ class SampleRoutes {
   static const String materialButtons = '/material-buttons';
   static const String drawer = '/drawer';
   static const String divider = '/divider';
+  static const String badgeTooltip = '/badge-tooltip';
   static const String linearProgressIndicator = '/linear-progress-indicator';
   static const String circularProgressIndicator =
       '/circular-progress-indicator';

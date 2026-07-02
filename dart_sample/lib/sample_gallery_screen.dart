@@ -5,6 +5,7 @@ import 'demos/material/app_bar_actions_padding_demo_page.dart';
 import 'demos/material/app_bar_icon_theme_demo_page.dart';
 import 'demos/material/app_bar_leading_width_demo_page.dart';
 import 'demos/material/app_bar_text_styles_demo_page.dart';
+import 'demos/material/badge_tooltip_demo_page.dart';
 import 'demos/general/aspect_ratio_demo_page.dart';
 import 'demos/general/bloc_counter_demo_page.dart';
 import 'demos/material/card_demo_page.dart';
@@ -66,6 +67,12 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'Divider',
       subtitle: 'horizontal/vertical divider + theme/widget precedence probes',
       builder: () => const DividerDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.badgeTooltip,
+      title: 'Badge + Tooltip',
+      subtitle: 'count/small badges + hover/long-press tooltip theming',
+      builder: () => const BadgeTooltipDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.linearProgressIndicator,

@@ -33,6 +33,7 @@ internal static class SampleRoutes
     public const string MaterialButtons = "/material-buttons";
     public const string Drawer = "/drawer";
     public const string Divider = "/divider";
+    public const string BadgeTooltip = "/badge-tooltip";
     public const string LinearProgressIndicator = "/linear-progress-indicator";
     public const string CircularProgressIndicator = "/circular-progress-indicator";
     public const string Slider = "/slider";
@@ -84,6 +85,7 @@ internal sealed class SampleGalleryScreen : StatelessWidget
         new(SampleRoutes.MaterialButtons, "Material buttons", "TextButton + ElevatedButton + OutlinedButton + FilledButton", () => new MaterialButtonsDemoPage()),
         new(SampleRoutes.Drawer, "Drawer", "scaffold drawer/endDrawer + theme/widget precedence probes", () => new DrawerDemoPage()),
         new(SampleRoutes.Divider, "Divider", "horizontal/vertical divider + theme/widget precedence probes", () => new DividerDemoPage()),
+        new(SampleRoutes.BadgeTooltip, "Badge + Tooltip", "count/small badges + hover/long-press tooltip theming", () => new BadgeTooltipDemoPage()),
         new(SampleRoutes.LinearProgressIndicator, "LinearProgressIndicator", "determinate/indeterminate + M2/M3 + theme/widget/RTL probes", () => new LinearProgressIndicatorDemoPage()),
         new(SampleRoutes.CircularProgressIndicator, "CircularProgressIndicator", "determinate/indeterminate + M2/M3 + theme/widget probes", () => new CircularProgressIndicatorDemoPage()),
         new(SampleRoutes.Slider, "Slider", "continuous/discrete + drag/tap/keyboard + theme/widget colors", () => new SliderDemoPage()),

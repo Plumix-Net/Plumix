@@ -696,6 +696,7 @@ public sealed class MaterialFloatingActionButtonTests
                     timestampUtc: DateTime.UtcNow),
                 new BoxHitTestEntry(tooltipListener, new Point(180, 8)));
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.50));
+            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.70));
             owner.FlushBuild();
 
             renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);

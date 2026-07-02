@@ -8,7 +8,7 @@ Use this block as the fastest machine-readable status summary.
 
 ```yaml
 framework_plan_version: 1
-last_updated: 2026-07-01
+last_updated: 2026-07-02
 north_star: "Flutter-like widget/rendering framework in C# with Avalonia as host infrastructure."
 current_phase: "M4 material library rewrite (theme/scaffold/material controls) in progress."
 status:
@@ -525,6 +525,10 @@ Progress update (2026-03-19):
   - added focused `MaterialRangeSliderTests` coverage in `src/Plumix.Tests/MaterialRangeSliderTests.cs` for constructor guards, M2/M3 default color resolution, theme/widget color precedence, discrete snapping + change lifecycle callbacks, keyboard adjustment baseline, and formatted range semantics label/flags;
   - added C#/Dart sample parity demo route/page for runtime verification (`RangeSlider` route in Material tab with enabled/disabled + continuous/discrete probes, M2/M3 mode switch, theme/widget color override probes, callback-status output, and LTR/RTL preview).
 - Added C#/Dart sample parity demo route/page for runtime `Drawer` verification in the Material tab (`Drawer` route with start/end drawer open/close choreography controls plus `DrawerTheme`/widget override probes for scrim/color/elevation/width precedence).
+- Added paired Material `Badge` + `Tooltip` parity pass in `Plumix.Material`:
+  - `Badge` now matches Flutter count formatting, small/large geometry, intrinsic horizontal stadium sizing, label visibility, LTR/RTL placement offsets, M3 error/on-error tokens, and `BadgeTheme`/`ThemeData.BadgeTheme` precedence;
+  - `Tooltip` now exposes Flutter-shaped sizing, decoration, typography, timing, trigger, feedback, cursor, semantics, programmatic visibility, global dismissal, and `TooltipTheme`/`ThemeData.TooltipTheme` surfaces with desktop/mobile and brightness-aware defaults;
+  - added focused `MaterialBadgeTests` and `MaterialTooltipTests`, plus a mirrored C#/Dart `Badge + Tooltip` runtime route with count/small/widget/theme and hover/long-press probes.
 - Remaining divergence for floating action button in current framework scope:
   - none documented in current framework scope.
 

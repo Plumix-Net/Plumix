@@ -52,6 +52,14 @@ public sealed class RenderingParityTests
     }
 
     [Fact]
+    public void BoxConstraints_ToString_IsFiniteAndDiagnostic()
+    {
+        var constraints = new BoxConstraints(MinWidth: 10, MaxWidth: 100, MinHeight: 20, MaxHeight: 200);
+
+        Assert.Equal("BoxConstraints(10≤w≤100, 20≤h≤200)", constraints.ToString());
+    }
+
+    [Fact]
     public void RenderConstrainedBox_IgnoresNoOpAdditionalConstraintsUpdate()
     {
         var child = new CountingRenderBox();
