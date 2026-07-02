@@ -136,6 +136,67 @@ public sealed class PaintingContext
         pictureLayer.AddDrawCommand((drawingContext, sceneOffset) => layout.Draw(drawingContext, point + sceneOffset));
     }
 
+    public void DrawImage(
+        IImage image,
+        Rect sourceRect,
+        Rect destinationRect,
+        double opacity = 1.0,
+        Rect? clipRect = null,
+        BorderRadius? clipRadius = null,
+        bool flipHorizontally = false,
+        double? horizontalFlipAxisX = null)
+    {
+        ArgumentNullException.ThrowIfNull(image);
+        if (sourceRect.Width <= 0 || sourceRect.Height <= 0
+            || destinationRect.Width <= 0 || destinationRect.Height <= 0)
+        {
+            return;
+        }
+
+        var effectiveOpacity = Math.Clamp(opacity, 0.0, 1.0);
+        var pictureLayer = EnsurePictureLayer();
+        pictureLayer.AddDrawCommand((drawingContext, sceneOffset) =>
+        {
+            var translatedDestination = new Rect(destinationRect.Position + sceneOffset, destinationRect.Size);
+            DrawingContext.PushedState? clip = null;
+            DrawingContext.PushedState? alpha = null;
+            DrawingContext.PushedState? transform = null;
+            try
+            {
+                if (clipRect.HasValue)
+                {
+                    var translatedClip = new Rect(clipRect.Value.Position + sceneOffset, clipRect.Value.Size);
+                    clip = clipRadius.HasValue && clipRadius.Value.Radius > 0
+                        ? drawingContext.PushClip(new RoundedRect(
+                            translatedClip,
+                            Math.Min(clipRadius.Value.Radius, Math.Min(translatedClip.Width, translatedClip.Height) / 2.0)))
+                        : drawingContext.PushClip(translatedClip);
+                }
+
+                if (effectiveOpacity < 1.0)
+                {
+                    alpha = drawingContext.PushOpacity(effectiveOpacity);
+                }
+
+                if (flipHorizontally)
+                {
+                    var centerX = horizontalFlipAxisX.HasValue
+                        ? horizontalFlipAxisX.Value + sceneOffset.X
+                        : translatedDestination.Center.X;
+                    transform = drawingContext.PushTransform(new Matrix(-1, 0, 0, 1, centerX * 2, 0));
+                }
+
+                drawingContext.DrawImage(image, sourceRect, translatedDestination);
+            }
+            finally
+            {
+                transform?.Dispose();
+                alpha?.Dispose();
+                clip?.Dispose();
+            }
+        });
+    }
+
     public void PushClipRect(Rect clipRect, Action<PaintingContext> painter)
     {
         StopRecordingIfNeeded();

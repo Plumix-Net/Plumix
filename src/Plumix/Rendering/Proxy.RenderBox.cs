@@ -1190,10 +1190,16 @@ public sealed class RenderColoredBox : RenderProxyBox
 public sealed class RenderDecoratedBox : RenderProxyBox
 {
     private BoxDecoration _decoration;
+    private ImageConfiguration _configuration;
+    private DecorationImagePainter? _imagePainter;
 
-    public RenderDecoratedBox(BoxDecoration decoration, RenderBox? child = null)
+    public RenderDecoratedBox(
+        BoxDecoration decoration,
+        RenderBox? child = null,
+        ImageConfiguration? configuration = null)
     {
         _decoration = decoration ?? new BoxDecoration();
+        _configuration = configuration ?? ImageConfiguration.Empty;
         Child = child;
     }
 
@@ -1208,7 +1214,28 @@ public sealed class RenderDecoratedBox : RenderProxyBox
                 return;
             }
 
+            if (!Equals(_decoration.Image, next.Image))
+            {
+                DisposeImagePainter();
+            }
+
             _decoration = next;
+            MarkNeedsPaint();
+        }
+    }
+
+    public ImageConfiguration Configuration
+    {
+        get => _configuration;
+        set
+        {
+            var next = value ?? ImageConfiguration.Empty;
+            if (_configuration == next)
+            {
+                return;
+            }
+
+            _configuration = next;
             MarkNeedsPaint();
         }
     }
@@ -1234,12 +1261,44 @@ public sealed class RenderDecoratedBox : RenderProxyBox
             }
         }
 
-        if (fill != null || borderPen != null || boxShadows.Count > 0)
+        if (fill != null || boxShadows.Count > 0)
         {
-            ctx.DrawRectangle(fill ?? Brushes.Transparent, borderPen, rect, radius, radius, boxShadows);
+            ctx.DrawRectangle(fill ?? Brushes.Transparent, null, rect, radius, radius, boxShadows);
+        }
+
+        if (_decoration.Image is not null)
+        {
+            _imagePainter ??= _decoration.Image.CreatePainter(HandleImageChanged);
+            _imagePainter.Paint(
+                ctx,
+                rect,
+                _configuration.CopyWith(size: Size),
+                clipRadius: _decoration.BorderRadius);
+        }
+
+        if (borderPen is not null)
+        {
+            ctx.DrawRectangle(Brushes.Transparent, borderPen, rect, radius, radius);
         }
 
         base.Paint(ctx, offset);
+    }
+
+    protected override void OnDetach()
+    {
+        DisposeImagePainter();
+        base.OnDetach();
+    }
+
+    private void HandleImageChanged()
+    {
+        MarkNeedsPaint();
+    }
+
+    private void DisposeImagePainter()
+    {
+        _imagePainter?.Dispose();
+        _imagePainter = null;
     }
 }
 

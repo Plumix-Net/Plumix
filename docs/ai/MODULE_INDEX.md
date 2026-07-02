@@ -80,6 +80,18 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix.Tests/CompositingLayerTests.cs`
   - `src/Plumix.Tests/LayerV2Tests.cs`
 
+### Images and Decoration Paint
+
+- Goal: Flutter-like image resolution, caching, stream lifetime, and decoration paint geometry.
+- Read First:
+  - `src/Plumix/Rendering/ImageProvider.cs`
+  - `src/Plumix/Rendering/ImageStream.cs`
+  - `src/Plumix/Rendering/ImageCache.cs`
+  - `src/Plumix/Rendering/DecorationImage.cs`
+  - `src/Plumix/Rendering/Proxy.RenderBox.cs`
+- Primary Tests:
+  - `src/Plumix.Tests/ImageProviderDecorationTests.cs`
+
 ### Gestures and Input
 
 - Goal: pointer dispatch, hit testing, arena resolution, recognizer callbacks.

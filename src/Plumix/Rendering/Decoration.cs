@@ -49,7 +49,8 @@ public sealed record BoxDecoration(
     IBrush? Brush = null,
     BorderSide? Border = null,
     BorderRadius? BorderRadius = null,
-    BoxShadows? BoxShadows = null)
+    BoxShadows? BoxShadows = null,
+    DecorationImage? Image = null)
 {
     public BorderRadius EffectiveBorderRadius => BorderRadius ?? Plumix.Rendering.BorderRadius.Zero;
 

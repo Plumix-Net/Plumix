@@ -14,6 +14,7 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 ### Changed
 
+- Added Flutter-shaped `ImageProvider`/`ImageStream`/`ImageCache` primitives and `DecorationImage` painting for memory, file, network, asset-resolution, resize, fit, repeat, RTL flip, opacity, clipping, and nine-patch paths; advanced `Plumix` to `0.2.0-alpha.1`. Animated frames and backend color/filter effects remain documented divergences.
 - Breaking: expanded Material `Tooltip` from its baseline constructor to Flutter-shaped nullable/theme-resolved defaults and advanced `Plumix.Material` to `1.0.0-alpha.1`; also added paired `Badge` support, focused coverage, and a mirrored C#/Dart runtime demo. Remaining shared overlay/rich-text gaps are tracked in `docs/ai/DIVERGENCES.md`.
 - Fixed recursive `BoxConstraints.ToString()` diagnostics so layout failures report constraints instead of overflowing the stack.
 - Added paired Material `ExpansionPanel` + `ExpansionPanelList` parity baseline:

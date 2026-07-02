@@ -117,6 +117,7 @@ Completion note:
 - Continued paragraph-alignment parity hardening: `RenderParagraph` now normalizes loose-width `center/right/end` layout width to content width when host layout reports positive internal glyph offset, eliminating right-shifted intrinsic label paint in sample list/button scenarios while retaining tight-width aligned behavior.
 - Counter sample viewport hardening: `CounterScreen` now uses outer `SingleChildScrollView` in both C# and Dart samples so smaller desktop heights avoid `RenderFlex` bottom-overflow debug zones while preserving existing demo modules on the page.
 - Overflow-debug parity progression: `RenderFlex` now paints Flutter-style yellow/black overflow indicators with clipped overflow child paint, 45-degree marker geometry, and edge-aligned/rotated labels for main-axis overflow; both samples include a dedicated overflow-indicator demo page for runtime verification.
+- Continued image-pipeline parity hardening: core now includes Flutter-shaped image providers/streams/cache/configuration plus `DecorationImage` integration in `BoxDecoration`, including DPR asset selection, resize keys, async repaint, fit/crop/repeat/RTL geometry, clipping, opacity, and scaled nine-patch paint.
 
 Completion snapshot:
 

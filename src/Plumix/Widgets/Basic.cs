@@ -313,12 +313,21 @@ public sealed class DecoratedBox : SingleChildRenderObjectWidget
 
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
-        return new RenderDecoratedBox(Decoration);
+        return new RenderDecoratedBox(
+            Decoration,
+            configuration: CreateImageConfiguration(context));
     }
 
     internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
-        ((RenderDecoratedBox)renderObject).Decoration = Decoration;
+        var decoratedBox = (RenderDecoratedBox)renderObject;
+        decoratedBox.Decoration = Decoration;
+        decoratedBox.Configuration = CreateImageConfiguration(context);
+    }
+
+    private static ImageConfiguration CreateImageConfiguration(BuildContext context)
+    {
+        return ImageConfigurationUtils.CreateLocalImageConfiguration(context);
     }
 }
 
