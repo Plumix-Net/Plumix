@@ -32,6 +32,7 @@ import 'demos/material/list_tile_controls_demo_page.dart';
 import 'demos/material/radio_expansion_tile_demo_page.dart';
 import 'demos/material/expansion_panel_demo_page.dart';
 import 'demos/material/material_buttons_demo_page.dart';
+import 'demos/material/navigation_surfaces_demo_page.dart';
 import 'demos/general/navigator_demo_page.dart';
 import 'demos/general/offstage_demo_page.dart';
 import 'demos/general/overflow_box_demo_page.dart';
@@ -80,6 +81,12 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'CircleAvatar',
       subtitle: 'initials + image layers + animated radius + fallback',
       builder: () => const CircleAvatarDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.navigationSurfaces,
+      title: 'NavigationBar + NavigationRail',
+      subtitle: 'horizontal/vertical Material navigation + labels/themes',
+      builder: () => const NavigationSurfacesDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.linearProgressIndicator,

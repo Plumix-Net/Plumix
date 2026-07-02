@@ -531,6 +531,9 @@ Progress update (2026-03-19):
   - `Badge` now matches Flutter count formatting, small/large geometry, intrinsic horizontal stadium sizing, label visibility, LTR/RTL placement offsets, M3 error/on-error tokens, and `BadgeTheme`/`ThemeData.BadgeTheme` precedence;
   - `Tooltip` now exposes Flutter-shaped sizing, decoration, typography, timing, trigger, feedback, cursor, semantics, programmatic visibility, global dismissal, and `TooltipTheme`/`ThemeData.TooltipTheme` surfaces with desktop/mobile and brightness-aware defaults;
   - added focused `MaterialBadgeTests` and `MaterialTooltipTests`, plus a mirrored C#/Dart `Badge + Tooltip` runtime route with count/small/widget/theme and hover/long-press probes.
+- Added paired Material `NavigationBar` + `NavigationRail` parity pass in `Plumix.Material`:
+  - ported Flutter-shaped destination APIs, M2/M3 token defaults, local/global theme precedence, selected/disabled interaction states, animated selection indicators, label behaviors, safe-area composition, tooltips, localized tab semantics, rail extension, scrolling, and leading/trailing placement;
+  - expanded shared Material tokens with `surfaceContainer`, `labelMedium`, and `bodyLarge`, and added focused navigation-surface coverage plus a mirrored C#/Dart runtime route.
 - Remaining divergence for floating action button in current framework scope:
   - none documented in current framework scope.
 

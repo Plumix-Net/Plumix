@@ -52,20 +52,28 @@ public sealed record MaterialTextTheme
         TextStyle? titleLarge = null,
         TextStyle? labelLarge = null,
         TextStyle? labelSmall = null,
-        TextStyle? titleMedium = null)
+        TextStyle? titleMedium = null,
+        TextStyle? bodyLarge = null,
+        TextStyle? labelMedium = null)
     {
         BodyMedium = bodyMedium ?? DefaultBodyMedium;
+        BodyLarge = bodyLarge ?? DefaultBodyLarge;
         TitleLarge = titleLarge ?? DefaultTitleLarge;
         LabelLarge = labelLarge ?? DefaultLabelLarge;
+        LabelMedium = labelMedium ?? DefaultLabelMedium;
         LabelSmall = labelSmall ?? DefaultLabelSmall;
         TitleMedium = titleMedium ?? DefaultTitleMedium;
     }
 
     public TextStyle BodyMedium { get; init; }
 
+    public TextStyle BodyLarge { get; init; }
+
     public TextStyle TitleLarge { get; init; }
 
     public TextStyle LabelLarge { get; init; }
+
+    public TextStyle LabelMedium { get; init; }
 
     public TextStyle LabelSmall { get; init; }
 
@@ -79,6 +87,15 @@ public sealed record MaterialTextTheme
         FontStyle: FontStyle.Normal,
         Height: 1.43,
         LetterSpacing: 0.25);
+
+    public static TextStyle DefaultBodyLarge { get; } = new(
+        FontFamily: DefaultBodyFontFamily,
+        FontSize: 16,
+        Color: Color.Parse("#FF1D1B20"),
+        FontWeight: FontWeight.Normal,
+        FontStyle: FontStyle.Normal,
+        Height: 1.5,
+        LetterSpacing: 0.5);
 
     public static TextStyle DefaultTitleLarge { get; } = new(
         FontFamily: DefaultBodyFontFamily,
@@ -97,6 +114,15 @@ public sealed record MaterialTextTheme
         FontStyle: FontStyle.Normal,
         Height: 1.43,
         LetterSpacing: 0.1);
+
+    public static TextStyle DefaultLabelMedium { get; } = new(
+        FontFamily: DefaultBodyFontFamily,
+        FontSize: 12,
+        Color: Color.Parse("#FF1D1B20"),
+        FontWeight: FontWeight.Medium,
+        FontStyle: FontStyle.Normal,
+        Height: 1.33,
+        LetterSpacing: 0.5);
 
     public static TextStyle DefaultLabelSmall { get; } = new(
         FontFamily: DefaultBodyFontFamily,
@@ -163,6 +189,7 @@ public sealed record ThemeData
     private static readonly Color LightShadowColor = Colors.Black;
     private static readonly Color LightCardColor = Colors.White;
     private static readonly Color LightSurfaceContainerLowColor = Color.Parse("#FFF7F2FA");
+    private static readonly Color LightSurfaceContainerColor = Color.Parse("#FFF3EDF7");
     private static readonly Color LightSurfaceContainerHighestColor = Color.Parse("#FFE6E0E9");
     private static readonly Color LightSecondaryContainerColor = Color.Parse("#FFE8DEF8");
     private static readonly Color LightOnSecondaryContainerColor = Color.Parse("#FF4A4458");
@@ -191,6 +218,8 @@ public sealed record ThemeData
     private ExpansionTileThemeData? _expansionTileTheme;
     private BadgeThemeData? _badgeTheme;
     private TooltipThemeData? _tooltipTheme;
+    private NavigationBarThemeData? _navigationBarTheme;
+    private NavigationRailThemeData? _navigationRailTheme;
 
     public ThemeData(
         TargetPlatform? platform = null,
@@ -249,7 +278,10 @@ public sealed record ThemeData
         Color? primaryColorLight = null,
         Color? primaryColorDark = null,
         MaterialTextTheme? primaryTextTheme = null,
-        IconThemeData? iconTheme = null)
+        IconThemeData? iconTheme = null,
+        Color? surfaceContainerColor = null,
+        NavigationBarThemeData? navigationBarTheme = null,
+        NavigationRailThemeData? navigationRailTheme = null)
     {
         Platform = platform ?? ResolveDefaultPlatform();
         Brightness = brightness ?? Brightness.Light;
@@ -277,6 +309,7 @@ public sealed record ThemeData
         DividerColor = dividerColor ?? LightDividerColor;
         CardColor = cardColor ?? LightCardColor;
         SurfaceContainerLowColor = surfaceContainerLowColor ?? LightSurfaceContainerLowColor;
+        SurfaceContainerColor = surfaceContainerColor ?? LightSurfaceContainerColor;
         SurfaceContainerHighestColor = surfaceContainerHighestColor ?? LightSurfaceContainerHighestColor;
         SecondaryContainerColor = secondaryContainerColor ?? LightSecondaryContainerColor;
         OnSecondaryContainerColor = onSecondaryContainerColor ?? LightOnSecondaryContainerColor;
@@ -309,6 +342,8 @@ public sealed record ThemeData
         _expansionTileTheme = expansionTileTheme;
         _badgeTheme = badgeTheme;
         _tooltipTheme = tooltipTheme;
+        _navigationBarTheme = navigationBarTheme;
+        _navigationRailTheme = navigationRailTheme;
     }
 
     public TargetPlatform Platform { get; init; }
@@ -364,6 +399,8 @@ public sealed record ThemeData
     public Color CardColor { get; init; }
 
     public Color SurfaceContainerLowColor { get; init; }
+
+    public Color SurfaceContainerColor { get; init; }
 
     public Color SurfaceContainerHighestColor { get; init; }
 
@@ -503,6 +540,18 @@ public sealed record ThemeData
     {
         get => _tooltipTheme ?? new TooltipThemeData();
         init => _tooltipTheme = value;
+    }
+
+    public NavigationBarThemeData NavigationBarTheme
+    {
+        get => _navigationBarTheme ?? new NavigationBarThemeData();
+        init => _navigationBarTheme = value;
+    }
+
+    public NavigationRailThemeData NavigationRailTheme
+    {
+        get => _navigationRailTheme ?? new NavigationRailThemeData();
+        init => _navigationRailTheme = value;
     }
 
     public static ThemeData Light { get; } = new();
