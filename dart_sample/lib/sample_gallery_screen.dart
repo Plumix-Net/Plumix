@@ -91,8 +91,8 @@ class SampleGalleryScreen extends StatelessWidget {
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.chips,
-      title: 'ActionChip + ChoiceChip',
-      subtitle: 'flat/elevated + selected/disabled + ChipTheme probes',
+      title: 'Material chips',
+      subtitle: 'action/choice/filter/input + selection/deletion/theme probes',
       builder: () => const ChipsDemoPage(),
     ),
     SampleRouteDefinition(

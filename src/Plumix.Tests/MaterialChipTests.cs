@@ -271,16 +271,296 @@ public sealed class MaterialChipTests : IDisposable
             box => box.MinSize == new Size(40, 40));
     }
 
-    private static Widget Root(ThemeData theme, Widget child)
+    [Fact]
+    public void FilterAndInputChip_ConstructorsValidateContractsAndElevatedFactory()
     {
-        return new MediaQuery(
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            new FilterChip(new Text("Filter"), _ => { }, elevation: -1));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            new InputChip(new Text("Input"), pressElevation: double.NaN));
+        Assert.Throws<ArgumentException>(() =>
+            new InputChip(
+                new Text("Input"),
+                onSelected: _ => { },
+                onPressed: () => { }));
+
+        Assert.Equal(
+            ChipVariant.Elevated,
+            FilterChip.Elevated(new Text("Elevated"), _ => { }).Variant);
+    }
+
+    [Fact]
+    public void FilterChip_M3SelectedDefaultsUseSecondaryTokensCheckmarkAndClearDeleteIcon()
+    {
+        var theme = ThemeData.Light with
+        {
+            SecondaryContainerColor = Colors.DarkGreen,
+            OnSecondaryContainerColor = Colors.Gold,
+        };
+        using var harness = new WidgetRenderHarness(Root(
+            theme,
+            new FilterChip(
+                new Text("Filter"),
+                onSelected: _ => { },
+                selected: true,
+                onDeleted: () => { })));
+
+        harness.Pump(new Size(320, 120));
+
+        Assert.Equal(Colors.DarkGreen, FindChipDecoration(harness.RenderView).Decoration.Color);
+        Assert.Equal(Colors.Gold, ForegroundColor(Paragraph(harness.RenderView, "Filter")));
+        Assert.Contains(FindDescendants<RenderParagraph>(harness.RenderView),
+            paragraph => paragraph.Text == IconText(Icons.Check));
+        Assert.Contains(FindDescendants<RenderParagraph>(harness.RenderView),
+            paragraph => paragraph.Text == IconText(Icons.Clear));
+    }
+
+    [Fact]
+    public void FilterChip_ElevatedAndDisabledDefaultsMatchFlutterStatePolicy()
+    {
+        var theme = ThemeData.Light with
+        {
+            SurfaceContainerLowColor = Colors.MediumPurple,
+            OnSurfaceColor = Colors.Crimson,
+        };
+        using var enabled = new WidgetRenderHarness(Root(
+            theme,
+            FilterChip.Elevated(new Text("Enabled"), _ => { })));
+        enabled.Pump(new Size(320, 120));
+        Assert.Equal(Colors.MediumPurple, FindChipDecoration(enabled.RenderView).Decoration.Color);
+        Assert.True(FindChipDecoration(enabled.RenderView).Decoration.BoxShadows.HasValue);
+
+        using var disabled = new WidgetRenderHarness(Root(
+            theme,
+            FilterChip.Elevated(
+                new Text("Disabled"),
+                onSelected: null,
+                selected: true,
+                onDeleted: () => { })));
+        var semantics = disabled.PumpAndGetSemantics(new Size(320, 120));
+        Assert.Equal(WithOpacity(Colors.Crimson, 0.12), FindChipDecoration(disabled.RenderView).Decoration.Color);
+        var delete = FindSemantics(semantics, node => node.Label == "Delete" && node.Flags.HasFlag(SemanticsFlags.IsButton));
+        Assert.NotNull(delete);
+        Assert.False(delete!.Flags.HasFlag(SemanticsFlags.IsEnabled));
+        Assert.False(delete.Actions.HasFlag(SemanticsActions.Tap));
+    }
+
+    [Fact]
+    public void FilterAndInputChip_M2DefaultsUseLegacySelectionAndCancelIcon()
+    {
+        var theme = ThemeData.Light with { UseMaterial3 = false };
+        using var filter = new WidgetRenderHarness(Root(
+            theme,
+            new FilterChip(
+                new Text("Filter M2"),
+                onSelected: _ => { },
+                selected: true,
+                onDeleted: () => { })));
+        filter.Pump(new Size(320, 120));
+        Assert.Equal(WithOpacity(Colors.Black, 0x3d / 255.0), FindChipDecoration(filter.RenderView).Decoration.Color);
+        Assert.Contains(FindDescendants<RenderParagraph>(filter.RenderView),
+            paragraph => paragraph.Text == IconText(Icons.Cancel));
+        Assert.DoesNotContain(FindDescendants<RenderParagraph>(filter.RenderView),
+            paragraph => paragraph.Text == IconText(Icons.Check));
+
+        using var input = new WidgetRenderHarness(Root(
+            theme,
+            new InputChip(
+                new Text("Input M2"),
+                selected: true,
+                onSelected: _ => { },
+                onDeleted: () => { })));
+        input.Pump(new Size(320, 120));
+        Assert.Equal(WithOpacity(Colors.Black, 0x3d / 255.0), FindChipDecoration(input.RenderView).Decoration.Color);
+        Assert.Contains(FindDescendants<RenderParagraph>(input.RenderView),
+            paragraph => paragraph.Text == IconText(Icons.Cancel));
+        Assert.DoesNotContain(FindDescendants<RenderParagraph>(input.RenderView),
+            paragraph => paragraph.Text == IconText(Icons.Check));
+    }
+
+    [Fact]
+    public void FilterChip_SelectionAndDeleteCallbacksRemainIndependent()
+    {
+        bool? selected = null;
+        var deleted = 0;
+        using var harness = new WidgetRenderHarness(Root(
+            ThemeData.Light,
+            new FilterChip(
+                new Text("Filter"),
+                onSelected: value => selected = value,
+                onDeleted: () => deleted++,
+                deleteButtonTooltipMessage: "Remove filter")));
+
+        var semantics = harness.PumpAndGetSemantics(new Size(320, 120));
+        var body = FindSemantics(
+            semantics,
+            node => node.Label != "Remove filter"
+                    && node.Flags.HasFlag(SemanticsFlags.IsButton)
+                    && node.Actions.HasFlag(SemanticsActions.Tap));
+        var delete = FindSemantics(semantics, node => node.Label == "Remove filter");
+        Assert.NotNull(body);
+        Assert.NotNull(delete);
+
+        var deleteCenter = new Point(
+            delete!.Rect.X + (delete.Rect.Width / 2),
+            delete.Rect.Y + (delete.Rect.Height / 2));
+        Tap(harness.RenderView, deleteCenter, 31);
+        Assert.Equal(1, deleted);
+        Assert.Null(selected);
+
+        Assert.True(body!.PerformAction(SemanticsActions.Tap));
+        Assert.True(selected);
+        Assert.Equal(1, deleted);
+    }
+
+    [Fact]
+    public void InputChip_DeleteOnlyPathStaysVisuallyEnabledWithoutBodyTap()
+    {
+        var deleted = 0;
+        var theme = ThemeData.Light with
+        {
+            OutlineVariantColor = Colors.CadetBlue,
+            OnSurfaceColor = Colors.Crimson,
+        };
+        using var harness = new WidgetRenderHarness(Root(
+            theme,
+            new InputChip(
+                new Text("Person"),
+                avatar: new CircleAvatar(child: new Text("P")),
+                onDeleted: () => deleted++)));
+
+        var semantics = harness.PumpAndGetSemantics(new Size(320, 120));
+
+        var decoration = FindChipDecoration(harness.RenderView);
+        Assert.Equal(Colors.CadetBlue, decoration.Decoration.Border!.Value.Color);
+        Assert.Equal(Colors.Transparent, decoration.Decoration.Color);
+        var body = FindSemantics(semantics, node => node.Flags.HasFlag(SemanticsFlags.IsSelected));
+        Assert.Null(body);
+        var delete = FindSemantics(semantics, node => node.Label == "Delete" && node.Actions.HasFlag(SemanticsActions.Tap));
+        Assert.NotNull(delete);
+        Assert.True(delete!.Flags.HasFlag(SemanticsFlags.IsEnabled));
+        Assert.True(delete.PerformAction(SemanticsActions.Tap));
+        Assert.Equal(1, deleted);
+    }
+
+    [Fact]
+    public void InputChip_ExplicitDisabledStateDisablesBodyAndDelete()
+    {
+        var theme = ThemeData.Light with { OnSurfaceColor = Colors.Crimson };
+        using var harness = new WidgetRenderHarness(Root(
+            theme,
+            new InputChip(
+                new Text("Disabled"),
+                selected: true,
+                isEnabled: false,
+                onSelected: _ => { },
+                onDeleted: () => { })));
+
+        var semantics = harness.PumpAndGetSemantics(new Size(320, 120));
+
+        Assert.Equal(WithOpacity(Colors.Crimson, 0.12), FindChipDecoration(harness.RenderView).Decoration.Color);
+        var selected = FindSemantics(semantics, node => node.Flags.HasFlag(SemanticsFlags.IsSelected));
+        Assert.NotNull(selected);
+        Assert.False(selected!.Flags.HasFlag(SemanticsFlags.IsEnabled));
+        Assert.False(selected.Actions.HasFlag(SemanticsActions.Tap));
+        var delete = FindSemantics(semantics, node => node.Label == "Delete" && node.Flags.HasFlag(SemanticsFlags.IsButton));
+        Assert.NotNull(delete);
+        Assert.False(delete!.Flags.HasFlag(SemanticsFlags.IsEnabled));
+        Assert.False(delete.Actions.HasFlag(SemanticsActions.Tap));
+    }
+
+    [Fact]
+    public void InputChip_M3SelectedDefaultsResolveLabelCheckmarkAndDeleteTokens()
+    {
+        var theme = ThemeData.Light with
+        {
+            PrimaryColor = Colors.CadetBlue,
+            SecondaryContainerColor = Colors.DarkGreen,
+            OnSecondaryContainerColor = Colors.Gold,
+        };
+        using var harness = new WidgetRenderHarness(Root(
+            theme,
+            new InputChip(
+                new Text("Selected input"),
+                selected: true,
+                onSelected: _ => { },
+                onDeleted: () => { })));
+
+        harness.Pump(new Size(320, 120));
+
+        Assert.Equal(Colors.DarkGreen, FindChipDecoration(harness.RenderView).Decoration.Color);
+        Assert.Equal(Colors.Gold, ForegroundColor(Paragraph(harness.RenderView, "Selected input")));
+        var check = FindDescendants<RenderParagraph>(harness.RenderView)
+            .Single(paragraph => paragraph.Text == IconText(Icons.Check));
+        var clear = FindDescendants<RenderParagraph>(harness.RenderView)
+            .Single(paragraph => paragraph.Text == IconText(Icons.Clear));
+        Assert.Equal(Colors.CadetBlue, ForegroundColor(check));
+        Assert.Equal(Colors.Gold, ForegroundColor(clear));
+    }
+
+    [Fact]
+    public void InputChip_OnPressedAndOnSelectedPathsMatchBodyCallbackContract()
+    {
+        var presses = 0;
+        using var harness = new WidgetRenderHarness(Root(
+            ThemeData.Light,
+            new InputChip(new Text("Press"), onPressed: () => presses++)));
+
+        var semantics = harness.PumpAndGetSemantics(new Size(320, 120));
+        var body = FindSemantics(
+            semantics,
+            node => node.Flags.HasFlag(SemanticsFlags.IsButton)
+                    && node.Flags.HasFlag(SemanticsFlags.IsEnabled)
+                    && node.Actions.HasFlag(SemanticsActions.Tap));
+        Assert.NotNull(body);
+        Assert.True(body!.PerformAction(SemanticsActions.Tap));
+        Assert.Equal(1, presses);
+    }
+
+    [Fact]
+    public void DeleteIconUsesWidgetColorConstraintsAndLocalizedTooltipPrecedence()
+    {
+        var constraints = BoxConstraints.Tight(new Size(20, 20));
+        using var harness = new WidgetRenderHarness(Root(
+            ThemeData.Light,
+            new InputChip(
+                new Text("Localized"),
+                onDeleted: () => { },
+                deleteIcon: new Icon(Icons.Clear),
+                deleteIconColor: Colors.Purple,
+                deleteIconBoxConstraints: constraints),
+            new TestMaterialLocalizations("Effacer")));
+
+        var semantics = harness.PumpAndGetSemantics(new Size(320, 120));
+
+        var clear = FindDescendants<RenderParagraph>(harness.RenderView)
+            .Single(paragraph => paragraph.Text == IconText(Icons.Clear));
+        Assert.Equal(Colors.Purple, ForegroundColor(clear));
+        Assert.Contains(FindDescendants<RenderConstrainedBox>(harness.RenderView),
+            box => box.AdditionalConstraints == constraints);
+        var delete = FindSemantics(semantics, node => node.Label == "Effacer");
+        Assert.NotNull(delete);
+        Assert.True(delete!.Actions.HasFlag(SemanticsActions.Tap));
+    }
+
+    private static Widget Root(
+        ThemeData theme,
+        Widget child,
+        MaterialLocalizations? localizations = null)
+    {
+        Widget result = new MediaQuery(
             data: new MediaQueryData(Size: new Size(320, 120)),
             child: new Directionality(
                 TextDirection.Ltr,
                 new Theme(
                     theme,
                     new Align(alignment: Alignment.Center, child: child))));
+        return localizations is null
+            ? result
+            : new MaterialLocalizationsScope(localizations, result);
     }
+
+    private static string IconText(IconData icon) => char.ConvertFromUtf32(icon.CodePoint);
 
     private static RenderDecoratedBox FindChipDecoration(RenderObject root)
     {
@@ -409,5 +689,12 @@ public sealed class MaterialChipTests : IDisposable
             public void RemoveRenderObjectChild(RenderObject child, object? slot) { if (ReferenceEquals(_view.Child, child)) _view.Child = null; }
             internal override void Unmount() { if (_child is not null) { UnmountChild(_child); _child = null; } base.Unmount(); }
         }
+    }
+
+    private sealed class TestMaterialLocalizations(string deleteTooltip) : MaterialLocalizations
+    {
+        public override string DeleteButtonTooltip => deleteTooltip;
+
+        public override string TabLabel(int tabIndex, int tabCount) => $"{tabIndex + 1}/{tabCount}";
     }
 }

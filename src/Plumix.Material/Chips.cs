@@ -29,6 +29,8 @@ internal enum ChipDefaultsKind
     Raw,
     Action,
     Choice,
+    Filter,
+    Input,
 }
 
 public sealed class ActionChip : StatelessWidget
@@ -507,6 +509,7 @@ public sealed class RawChip : StatefulWidget
         Thickness? padding = null,
         VisualDensity? visualDensity = null,
         bool isEnabled = true,
+        bool tapEnabled = true,
         MaterialTapTargetSize? materialTapTargetSize = null,
         double? elevation = null,
         Color? shadowColor = null,
@@ -517,13 +520,20 @@ public sealed class RawChip : StatefulWidget
         BoxConstraints? avatarBoxConstraints = null,
         ChipAnimationStyle? chipAnimationStyle = null,
         MouseCursor? mouseCursor = null,
+        Widget? deleteIcon = null,
+        Action? onDeleted = null,
+        Color? deleteIconColor = null,
+        string? deleteButtonTooltipMessage = null,
+        BoxConstraints? deleteIconBoxConstraints = null,
         Key? key = null) : this(
             label, avatar, labelStyle, labelPadding, onPressed, onSelected, pressElevation, selected,
             showCheckmark, checkmarkColor, tooltip, side, shape, clipBehavior, focusNode, autofocus,
             disabledColor, selectedColor, color, backgroundColor, padding, visualDensity, isEnabled,
             materialTapTargetSize, elevation, shadowColor, surfaceTintColor, selectedShadowColor,
             avatarBorder, iconTheme, avatarBoxConstraints, chipAnimationStyle, mouseCursor,
-            ChipDefaultsKind.Raw, ChipVariant.Flat, key)
+            ChipDefaultsKind.Raw, ChipVariant.Flat,
+            deleteIcon, onDeleted, deleteIconColor, deleteButtonTooltipMessage,
+            deleteIconBoxConstraints, tapEnabled, key)
     {
     }
 
@@ -563,6 +573,12 @@ public sealed class RawChip : StatefulWidget
         MouseCursor? mouseCursor,
         ChipDefaultsKind defaultsKind,
         ChipVariant variant,
+        Widget? deleteIcon = null,
+        Action? onDeleted = null,
+        Color? deleteIconColor = null,
+        string? deleteButtonTooltipMessage = null,
+        BoxConstraints? deleteIconBoxConstraints = null,
+        bool tapEnabled = true,
         Key? key = null) : base(key)
     {
         if (onPressed is not null && onSelected is not null)
@@ -609,8 +625,14 @@ public sealed class RawChip : StatefulWidget
         AvatarBorder = avatarBorder ?? ShapeBorder.RoundedRectangle(10_000);
         IconTheme = iconTheme;
         AvatarBoxConstraints = avatarBoxConstraints;
+        DeleteIcon = deleteIcon ?? new Icon(Icons.Cancel);
+        OnDeleted = onDeleted;
+        DeleteIconColor = deleteIconColor;
+        DeleteButtonTooltipMessage = deleteButtonTooltipMessage;
+        DeleteIconBoxConstraints = deleteIconBoxConstraints;
         ChipAnimationStyle = chipAnimationStyle;
         MouseCursor = mouseCursor;
+        TapEnabled = tapEnabled;
         DefaultsKind = defaultsKind;
         Variant = variant;
     }
@@ -646,12 +668,22 @@ public sealed class RawChip : StatefulWidget
     public ShapeBorder AvatarBorder { get; }
     public IconThemeData? IconTheme { get; }
     public BoxConstraints? AvatarBoxConstraints { get; }
+    public Widget DeleteIcon { get; }
+    public Action? OnDeleted { get; }
+    public Color? DeleteIconColor { get; }
+    public string? DeleteButtonTooltipMessage { get; }
+    public BoxConstraints? DeleteIconBoxConstraints { get; }
     public ChipAnimationStyle? ChipAnimationStyle { get; }
     public MouseCursor? MouseCursor { get; }
+    public bool TapEnabled { get; }
     internal ChipDefaultsKind DefaultsKind { get; }
     internal ChipVariant Variant { get; }
 
-    public bool TapEnabled => IsEnabled && (OnPressed is not null || OnSelected is not null);
+    public bool CanTapBody => IsEnabled
+                              && TapEnabled
+                              && (OnPressed is not null || OnSelected is not null);
+
+    public bool CanDelete => IsEnabled && OnDeleted is not null;
 
     public override State CreateState() => new RawChipState();
 
@@ -659,6 +691,8 @@ public sealed class RawChip : StatefulWidget
     {
         private AnimationController? _selectionController;
         private double _selectionProgress;
+        private AnimationController? _deleteController;
+        private double _deleteProgress;
 
         private RawChip CurrentWidget => (RawChip)StateWidget;
 
@@ -671,6 +705,13 @@ public sealed class RawChip : StatefulWidget
                 Curve = Curves.EaseInOut,
             };
             _selectionController.Changed += HandleSelectionTick;
+            _deleteProgress = CurrentWidget.OnDeleted is null ? 0 : 1;
+            _deleteController = new AnimationController(
+                CurrentWidget.ChipAnimationStyle?.DeleteDrawerAnimation ?? TimeSpan.FromMilliseconds(150))
+            {
+                Curve = Curves.EaseInOut,
+            };
+            _deleteController.Changed += HandleDeleteTick;
         }
 
         public override void DidUpdateWidget(StatefulWidget oldWidget)
@@ -696,6 +737,30 @@ public sealed class RawChip : StatefulWidget
                 else
                 {
                     _selectionController!.Reverse(1);
+                }
+            }
+
+            if (oldChip.ChipAnimationStyle?.DeleteDrawerAnimation
+                != CurrentWidget.ChipAnimationStyle?.DeleteDrawerAnimation)
+            {
+                DisposeDeleteController();
+                _deleteProgress = CurrentWidget.OnDeleted is null ? 0 : 1;
+                _deleteController = new AnimationController(
+                    CurrentWidget.ChipAnimationStyle?.DeleteDrawerAnimation ?? TimeSpan.FromMilliseconds(150))
+                {
+                    Curve = Curves.EaseInOut,
+                };
+                _deleteController.Changed += HandleDeleteTick;
+            }
+            else if ((oldChip.OnDeleted is null) != (CurrentWidget.OnDeleted is null))
+            {
+                if (CurrentWidget.OnDeleted is not null)
+                {
+                    _deleteController!.Forward(0);
+                }
+                else
+                {
+                    _deleteController!.Reverse(1);
                 }
             }
         }
@@ -762,13 +827,23 @@ public sealed class RawChip : StatefulWidget
 
             Widget label = new Padding(labelPadding, widget.Label);
             var leading = BuildLeading(widget, chipTheme, defaults, effectiveIconTheme);
-            Widget content = leading is null
+            var delete = BuildDelete(
+                context,
+                widget,
+                chipTheme,
+                defaults,
+                effectiveIconTheme);
+            var contentChildren = new List<Widget>(3);
+            if (leading is not null) contentChildren.Add(leading);
+            contentChildren.Add(label);
+            if (delete is not null) contentChildren.Add(delete);
+            Widget content = contentChildren.Count == 1
                 ? label
                 : new Row(
                     mainAxisSize: MainAxisSize.Min,
-                    children: [leading, label]);
+                    children: contentChildren);
 
-            Action? onTap = widget.TapEnabled
+            Action? onTap = widget.CanTapBody
                 ? () =>
                 {
                     widget.OnSelected?.Invoke(!widget.Selected);
@@ -782,20 +857,23 @@ public sealed class RawChip : StatefulWidget
                 focusNode: widget.FocusNode,
                 autofocus: widget.Autofocus,
                 isSelected: widget.Selected,
-                includeSemanticSelected: widget.DefaultsKind == ChipDefaultsKind.Choice || widget.OnSelected is not null,
-                isSemanticButton: widget.OnPressed is not null,
-                isSemanticChecked: widget.DefaultsKind == ChipDefaultsKind.Choice || widget.OnSelected is not null
+                includeSemanticSelected: true,
+                isSemanticButton: widget.TapEnabled,
+                isSemanticChecked: widget.DefaultsKind is ChipDefaultsKind.Choice or ChipDefaultsKind.Filter
+                                   || widget.OnSelected is not null
                     ? widget.Selected
                     : null,
                 mouseCursor: widget.MouseCursor,
                 clipBehavior: widget.ClipBehavior,
+                enabled: widget.IsEnabled,
+                semanticEnabled: widget.CanTapBody,
                 tapTargetMinimumSize: tapTargetSize == Plumix.Material.MaterialTapTargetSize.Padded
                     ? new Size(
                         Math.Max(0, 48 + density.BaseSizeAdjustment.X),
                         Math.Max(0, 48 + density.BaseSizeAdjustment.Y))
                     : new Size(0, 0));
 
-            if (!string.IsNullOrEmpty(widget.Tooltip) && widget.TapEnabled)
+            if (!string.IsNullOrEmpty(widget.Tooltip) && widget.CanTapBody)
             {
                 result = new Tooltip(message: widget.Tooltip!, child: result);
             }
@@ -806,6 +884,66 @@ public sealed class RawChip : StatefulWidget
         public override void Dispose()
         {
             DisposeController();
+            DisposeDeleteController();
+        }
+
+        private Widget? BuildDelete(
+            BuildContext context,
+            RawChip widget,
+            ChipThemeData chipTheme,
+            ChipThemeData defaults,
+            IconThemeData? iconTheme)
+        {
+            if (_deleteProgress <= 0) return null;
+
+            var color = widget.DeleteIconColor
+                        ?? chipTheme.DeleteIconColor
+                        ?? widget.IconTheme?.Color
+                        ?? chipTheme.IconTheme?.Color
+                        ?? defaults.DeleteIconColor
+                        ?? iconTheme?.Color
+                        ?? Theme.Of(context).OnSurfaceVariantColor;
+            if (!widget.IsEnabled)
+            {
+                color = MaterialButtonCore.ApplyOpacity(color, 0.38);
+            }
+
+            Widget icon = new IconTheme(
+                new IconThemeData(Color: color, Size: iconTheme?.Size ?? 18),
+                widget.DeleteIcon);
+            icon = widget.DeleteIconBoxConstraints is { } constraints
+                ? new ConstrainedBox(constraints, icon)
+                : new SizedBox(width: 24, height: 24, child: icon);
+            icon = new Align(
+                alignment: Alignment.Center,
+                widthFactor: _deleteProgress,
+                heightFactor: 1,
+                child: icon);
+            icon = new Opacity(_deleteProgress, icon);
+
+            Action? delete = widget.CanDelete ? widget.OnDeleted : null;
+            if (delete is not null)
+            {
+                icon = new GestureDetector(
+                    behavior: HitTestBehavior.Opaque,
+                    onTap: delete,
+                    child: icon);
+            }
+
+            var tooltip = widget.DeleteButtonTooltipMessage
+                          ?? MaterialLocalizations.Of(context).DeleteButtonTooltip;
+            if (delete is not null && !string.IsNullOrEmpty(tooltip))
+            {
+                icon = new Tooltip(message: tooltip, child: icon);
+            }
+
+            return new Semantics(
+                label: tooltip,
+                flags: delete is null
+                    ? SemanticsFlags.IsButton
+                    : SemanticsFlags.IsButton | SemanticsFlags.IsEnabled,
+                onTap: delete,
+                child: icon);
         }
 
         private Widget? BuildLeading(
@@ -865,6 +1003,7 @@ public sealed class RawChip : StatefulWidget
                     DisabledColor: WithAlpha(primary, 0x0c),
                     SelectedColor: WithAlpha(primary, 0x3d),
                     SecondarySelectedColor: WithAlpha(theme.PrimaryColor, 0x3d),
+                    DeleteIconColor: WithAlpha(primary, 0xde),
                     ShowCheckmark: false,
                     CheckmarkColor: WithAlpha(primary, 0xde),
                     LabelStyle: theme.TextTheme.BodyLarge.CopyWith(color: WithAlpha(primary, 0xde)),
@@ -886,7 +1025,7 @@ public sealed class RawChip : StatefulWidget
                 Padding: new Thickness(8),
                 PressElevation: 1);
 
-            if (chip.DefaultsKind == ChipDefaultsKind.Choice)
+            if (chip.DefaultsKind is ChipDefaultsKind.Choice or ChipDefaultsKind.Filter)
             {
                 return baseDefaults with
                 {
@@ -915,6 +1054,9 @@ public sealed class RawChip : StatefulWidget
                     CheckmarkColor = enabled
                         ? selected ? theme.OnSecondaryContainerColor : theme.PrimaryColor
                         : theme.OnSurfaceColor,
+                    DeleteIconColor = enabled
+                        ? selected ? theme.OnSecondaryContainerColor : theme.OnSurfaceVariantColor
+                        : theme.OnSurfaceColor,
                     Side = !elevated && !selected
                         ? new BorderSide(enabled
                             ? theme.OutlineVariantColor
@@ -923,6 +1065,46 @@ public sealed class RawChip : StatefulWidget
                     IconTheme = new IconThemeData(
                         Color: enabled
                             ? selected ? theme.OnSecondaryContainerColor : theme.PrimaryColor
+                            : theme.OnSurfaceColor,
+                        Size: 18),
+                };
+            }
+
+            if (chip.DefaultsKind == ChipDefaultsKind.Input)
+            {
+                return baseDefaults with
+                {
+                    Elevation = 0,
+                    ShadowColor = Colors.Transparent,
+                    LabelStyle = theme.TextTheme.LabelLarge.CopyWith(color:
+                        enabled
+                            ? selected ? theme.OnSecondaryContainerColor : theme.OnSurfaceVariantColor
+                            : theme.OnSurfaceColor),
+                    Color = MaterialStateProperty<Color?>.ResolveWith(states =>
+                    {
+                        if (states.HasFlag(MaterialState.Selected) && states.HasFlag(MaterialState.Disabled))
+                        {
+                            return WithOpacity(theme.OnSurfaceColor, 0.12);
+                        }
+                        if (states.HasFlag(MaterialState.Disabled)) return null;
+                        return states.HasFlag(MaterialState.Selected)
+                            ? theme.SecondaryContainerColor
+                            : null;
+                    }),
+                    CheckmarkColor = enabled
+                        ? selected ? theme.PrimaryColor : theme.OnSurfaceVariantColor
+                        : theme.OnSurfaceColor,
+                    DeleteIconColor = enabled
+                        ? selected ? theme.OnSecondaryContainerColor : theme.OnSurfaceVariantColor
+                        : theme.OnSurfaceColor,
+                    Side = !selected
+                        ? new BorderSide(enabled
+                            ? theme.OutlineVariantColor
+                            : WithOpacity(theme.OnSurfaceColor, 0.12))
+                        : new BorderSide(Colors.Transparent, 0),
+                    IconTheme = new IconThemeData(
+                        Color: enabled
+                            ? selected ? theme.PrimaryColor : theme.OnSurfaceVariantColor
                             : theme.OnSurfaceColor,
                         Size: 18),
                 };
@@ -1052,7 +1234,7 @@ public sealed class RawChip : StatefulWidget
         {
             if (widget.Side.HasValue) return widget.Side;
             if (chipTheme.Side.HasValue) return chipTheme.Side;
-            if (widget.DefaultsKind == ChipDefaultsKind.Choice
+            if (widget.DefaultsKind is ChipDefaultsKind.Choice or ChipDefaultsKind.Filter or ChipDefaultsKind.Input
                 && widget.Variant == ChipVariant.Flat
                 && states.HasFlag(MaterialState.Selected))
             {
@@ -1079,12 +1261,25 @@ public sealed class RawChip : StatefulWidget
             SetState(() => _selectionProgress = _selectionController!.Evaluate());
         }
 
+        private void HandleDeleteTick()
+        {
+            SetState(() => _deleteProgress = _deleteController!.Evaluate());
+        }
+
         private void DisposeController()
         {
             if (_selectionController is null) return;
             _selectionController.Changed -= HandleSelectionTick;
             _selectionController.Dispose();
             _selectionController = null;
+        }
+
+        private void DisposeDeleteController()
+        {
+            if (_deleteController is null) return;
+            _deleteController.Changed -= HandleDeleteTick;
+            _deleteController.Dispose();
+            _deleteController = null;
         }
 
         private static Color WithOpacity(Color color, double opacity)

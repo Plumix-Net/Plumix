@@ -18,8 +18,12 @@ internal sealed class ChipsDemoPageState : State
 {
     private bool _enabled = true;
     private bool _selected;
+    private bool _filterSelected;
+    private bool _inputSelected;
+    private bool _inputVisible = true;
     private bool _useLocalTheme;
     private int _actionCount;
+    private int _deleteCount;
 
     public override Widget Build(BuildContext context)
     {
@@ -28,9 +32,9 @@ internal sealed class ChipsDemoPageState : State
             spacing: 14,
             children:
             [
-                new Text("ActionChip + ChoiceChip", fontSize: 20, color: Colors.Black),
+                new Text("Material chips", fontSize: 20, color: Colors.Black),
                 new Text(
-                    "Flat/elevated variants, selected and disabled states, avatar/checkmark, and ChipTheme precedence.",
+                    "Action, choice, filter, and input chips with flat/elevated variants, selection, deletion, and ChipTheme precedence.",
                     fontSize: 14,
                     color: Color.Parse("#8A000000")),
                 new Row(
@@ -39,6 +43,7 @@ internal sealed class ChipsDemoPageState : State
                     [
                         ControlButton(_enabled ? "Enabled" : "Disabled", () => SetState(() => _enabled = !_enabled)),
                         ControlButton(_useLocalTheme ? "Theme override on" : "Theme override off", () => SetState(() => _useLocalTheme = !_useLocalTheme)),
+                        ControlButton(_inputVisible ? "Remove input" : "Restore input", () => SetState(() => _inputVisible = !_inputVisible)),
                     ]),
                 new Text("Action chips", fontSize: 14, color: Colors.Black),
                 new Row(
@@ -75,8 +80,52 @@ internal sealed class ChipsDemoPageState : State
                             selected: _selected,
                             onSelected: _enabled ? value => SetState(() => _selected = value) : null),
                     ]),
+                new Text("Filter chips", fontSize: 14, color: Colors.Black),
+                new Row(
+                    spacing: 10,
+                    children:
+                    [
+                        new FilterChip(
+                            label: new Text("Favorites"),
+                            avatar: new Icon(Icons.StarOutline),
+                            selected: _filterSelected,
+                            onSelected: _enabled ? value => SetState(() => _filterSelected = value) : null),
+                        FilterChip.Elevated(
+                            label: new Text("Elevated"),
+                            selected: !_filterSelected,
+                            onSelected: _enabled ? value => SetState(() => _filterSelected = !value) : null),
+                        new FilterChip(
+                            label: new Text("Deletable"),
+                            selected: _filterSelected,
+                            onSelected: _enabled ? value => SetState(() => _filterSelected = value) : null,
+                            onDeleted: _enabled ? HandleDelete : null),
+                    ]),
+                new Text("Input chips", fontSize: 14, color: Colors.Black),
+                new Row(
+                    spacing: 10,
+                    children:
+                    [
+                        _inputVisible
+                            ? new InputChip(
+                                label: new Text("Ada"),
+                                avatar: new CircleAvatar(child: new Text("A")),
+                                selected: _inputSelected,
+                                isEnabled: _enabled,
+                                onSelected: value => SetState(() => _inputSelected = value),
+                                onDeleted: () => SetState(() =>
+                                {
+                                    _inputVisible = false;
+                                    _deleteCount++;
+                                }))
+                            : new Text("Input removed", fontSize: 13, color: Color.Parse("#FF49454F")),
+                        new InputChip(
+                            label: new Text("Pressable"),
+                            avatar: new Icon(Icons.InfoOutline),
+                            isEnabled: _enabled,
+                            onPressed: HandleAction),
+                    ]),
                 new Text(
-                    $"Actions: {_actionCount} · selected: {_selected.ToString().ToLowerInvariant()}",
+                    $"Actions: {_actionCount} · deletes: {_deleteCount} · choice: {_selected.ToString().ToLowerInvariant()} · filter: {_filterSelected.ToString().ToLowerInvariant()} · input: {_inputSelected.ToString().ToLowerInvariant()}",
                     fontSize: 13,
                     color: Color.Parse("#FF49454F")),
             ]);
@@ -100,6 +149,11 @@ internal sealed class ChipsDemoPageState : State
     private void HandleAction()
     {
         SetState(() => _actionCount++);
+    }
+
+    private void HandleDelete()
+    {
+        SetState(() => _deleteCount++);
     }
 
     private static Widget ControlButton(string label, Action onPressed)

@@ -1599,6 +1599,8 @@ internal sealed class MaterialButtonCore : StatefulWidget
         bool? enableFeedback = null,
         bool autofocus = false,
         Size? tapTargetMinimumSize = null,
+        bool? enabled = null,
+        bool? semanticEnabled = null,
         Key? key = null) : base(key)
     {
         Child = child;
@@ -1619,6 +1621,8 @@ internal sealed class MaterialButtonCore : StatefulWidget
         EnableFeedback = enableFeedback;
         Autofocus = autofocus;
         TapTargetMinimumSize = tapTargetMinimumSize;
+        Enabled = enabled;
+        SemanticEnabled = semanticEnabled;
     }
 
     public Widget Child { get; }
@@ -1656,6 +1660,10 @@ internal sealed class MaterialButtonCore : StatefulWidget
     public bool Autofocus { get; }
 
     public Size? TapTargetMinimumSize { get; }
+
+    public bool? Enabled { get; }
+
+    public bool? SemanticEnabled { get; }
 
     public override State CreateState()
     {
@@ -2001,7 +2009,9 @@ internal sealed class MaterialButtonCore : StatefulWidget
 
         private MaterialButtonCore CurrentWidget => (MaterialButtonCore)StateWidget;
 
-        private bool Enabled => CurrentWidget.OnPressed != null;
+        private bool Enabled => CurrentWidget.Enabled ?? CurrentWidget.OnPressed != null;
+
+        private bool Interactive => Enabled && CurrentWidget.OnPressed != null;
 
         public override void InitState()
         {
@@ -2027,27 +2037,27 @@ internal sealed class MaterialButtonCore : StatefulWidget
                 AttachFocusNode(CurrentWidget.FocusNode);
             }
 
-            if (!Enabled && _isPressed)
+            if (!Interactive && _isPressed)
             {
                 _isPressed = false;
             }
 
-            if (!Enabled && _isHovered)
+            if (!Interactive && _isHovered)
             {
                 _isHovered = false;
             }
 
-            if (!Enabled && _mouseCursorHandle is not null)
+            if (!Interactive && _mouseCursorHandle is not null)
             {
                 ReleaseMouseCursor();
             }
 
-            if (!Enabled && _suppressFocusOverlay)
+            if (!Interactive && _suppressFocusOverlay)
             {
                 _suppressFocusOverlay = false;
             }
 
-            if (!Enabled && _isSplashActive)
+            if (!Interactive && _isSplashActive)
             {
                 _isSplashActive = false;
                 _splashProgress = 0;
@@ -2055,18 +2065,18 @@ internal sealed class MaterialButtonCore : StatefulWidget
                 _splashController?.Stop();
             }
 
-            if (!Enabled && _isKeyboardPressed)
+            if (!Interactive && _isKeyboardPressed)
             {
                 _isKeyboardPressed = false;
                 _keyboardPressController?.Stop();
             }
 
-            if (!Enabled && _focusNode != null && _focusNode.HasFocus)
+            if (!Interactive && _focusNode != null && _focusNode.HasFocus)
             {
                 _focusNode.Unfocus();
             }
 
-            if (Enabled
+            if (Interactive
                 && _isHovered
                 && !Equals(oldButtonWidget.MouseCursor, CurrentWidget.MouseCursor))
             {
@@ -2183,10 +2193,10 @@ internal sealed class MaterialButtonCore : StatefulWidget
                 child: content);
 
             Widget result = content;
-            Action? tapCallback = enabled ? HandleTap : null;
-            Action? longPressCallback = enabled && widget.OnLongPress is not null ? HandleLongPress : null;
+            Action? tapCallback = Interactive ? HandleTap : null;
+            Action? longPressCallback = Interactive && widget.OnLongPress is not null ? HandleLongPress : null;
 
-            if (enabled)
+            if (Interactive)
             {
                 result = new GestureDetector(
                     behavior: HitTestBehavior.Opaque,
@@ -2241,7 +2251,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
                 flags |= SemanticsFlags.IsButton;
             }
 
-            if (enabled)
+            if (widget.SemanticEnabled ?? enabled)
             {
                 flags |= SemanticsFlags.IsEnabled;
             }
@@ -2292,7 +2302,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
                 return KeyEventResult.Ignored;
             }
 
-            if (!Enabled)
+            if (!Interactive)
             {
                 return KeyEventResult.Handled;
             }
@@ -2325,7 +2335,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
 
         private void HandleLongPress()
         {
-            if (!Enabled || CurrentWidget.OnLongPress is null)
+            if (!Interactive || CurrentWidget.OnLongPress is null)
             {
                 return;
             }
@@ -2376,7 +2386,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
 
         private void SetPressed(bool value, bool suppressFocusOverlay = false)
         {
-            if (!Enabled)
+            if (!Interactive)
             {
                 return;
             }
@@ -2396,7 +2406,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
 
         private void SetHovered(bool value)
         {
-            if (!Enabled)
+            if (!Interactive)
             {
                 if (!value)
                 {
@@ -2454,7 +2464,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
 
         private void StartKeyboardPress()
         {
-            if (!Enabled || _keyboardPressController is null)
+            if (!Interactive || _keyboardPressController is null)
             {
                 return;
             }
@@ -2469,7 +2479,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
 
         private void StartSplash(Point origin)
         {
-            if (!Enabled || _splashController is null)
+            if (!Interactive || _splashController is null)
             {
                 return;
             }

@@ -10,18 +10,22 @@ class ChipsDemoPage extends StatefulWidget {
 class _ChipsDemoPageState extends State<ChipsDemoPage> {
   bool _enabled = true;
   bool _selected = false;
+  bool _filterSelected = false;
+  bool _inputSelected = false;
+  bool _inputVisible = true;
   bool _useLocalTheme = false;
   int _actionCount = 0;
+  int _deleteCount = 0;
 
   @override
   Widget build(BuildContext context) {
     Widget probes = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        const Text('ActionChip + ChoiceChip', style: TextStyle(fontSize: 20)),
+        const Text('Material chips', style: TextStyle(fontSize: 20)),
         const SizedBox(height: 14),
         const Text(
-          'Flat/elevated variants, selected and disabled states, avatar/checkmark, and ChipTheme precedence.',
+          'Action, choice, filter, and input chips with flat/elevated variants, selection, deletion, and ChipTheme precedence.',
           style: TextStyle(fontSize: 14, color: Color(0x8A000000)),
         ),
         const SizedBox(height: 14),
@@ -35,6 +39,11 @@ class _ChipsDemoPageState extends State<ChipsDemoPage> {
             _controlButton(
               _useLocalTheme ? 'Theme override on' : 'Theme override off',
               () => setState(() => _useLocalTheme = !_useLocalTheme),
+            ),
+            const SizedBox(width: 8),
+            _controlButton(
+              _inputVisible ? 'Remove input' : 'Restore input',
+              () => setState(() => _inputVisible = !_inputVisible),
             ),
           ],
         ),
@@ -92,8 +101,72 @@ class _ChipsDemoPageState extends State<ChipsDemoPage> {
           ],
         ),
         const SizedBox(height: 14),
+        const Text('Filter chips', style: TextStyle(fontSize: 14)),
+        const SizedBox(height: 14),
+        Row(
+          children: <Widget>[
+            FilterChip(
+              avatar: const Icon(Icons.star_outline),
+              label: const Text('Favorites'),
+              selected: _filterSelected,
+              onSelected: _enabled
+                  ? (bool value) => setState(() => _filterSelected = value)
+                  : null,
+            ),
+            const SizedBox(width: 10),
+            FilterChip.elevated(
+              label: const Text('Elevated'),
+              selected: !_filterSelected,
+              onSelected: _enabled
+                  ? (bool value) => setState(() => _filterSelected = !value)
+                  : null,
+            ),
+            const SizedBox(width: 10),
+            FilterChip(
+              label: const Text('Deletable'),
+              selected: _filterSelected,
+              onSelected: _enabled
+                  ? (bool value) => setState(() => _filterSelected = value)
+                  : null,
+              onDeleted: _enabled ? _handleDelete : null,
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        const Text('Input chips', style: TextStyle(fontSize: 14)),
+        const SizedBox(height: 14),
+        Row(
+          children: <Widget>[
+            if (_inputVisible)
+              InputChip(
+                avatar: const CircleAvatar(child: Text('A')),
+                label: const Text('Ada'),
+                selected: _inputSelected,
+                isEnabled: _enabled,
+                onSelected: (bool value) =>
+                    setState(() => _inputSelected = value),
+                onDeleted: () => setState(() {
+                  _inputVisible = false;
+                  _deleteCount++;
+                }),
+              )
+            else
+              const Text(
+                'Input removed',
+                style: TextStyle(fontSize: 13, color: Color(0xFF49454F)),
+              ),
+            const SizedBox(width: 10),
+            InputChip(
+              avatar: const Icon(Icons.info_outline),
+              label: const Text('Pressable'),
+              isEnabled: _enabled,
+              onPressed: _handleAction,
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
         Text(
-          'Actions: $_actionCount · selected: $_selected',
+          'Actions: $_actionCount · deletes: $_deleteCount · choice: $_selected · filter: $_filterSelected · input: $_inputSelected',
           style: const TextStyle(fontSize: 13, color: Color(0xFF49454F)),
         ),
       ],
@@ -118,6 +191,10 @@ class _ChipsDemoPageState extends State<ChipsDemoPage> {
 
   void _handleAction() {
     setState(() => _actionCount++);
+  }
+
+  void _handleDelete() {
+    setState(() => _deleteCount++);
   }
 
   Widget _controlButton(String label, VoidCallback onPressed) {

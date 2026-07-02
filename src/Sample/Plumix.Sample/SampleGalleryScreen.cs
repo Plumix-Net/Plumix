@@ -91,7 +91,7 @@ internal sealed class SampleGalleryScreen : StatelessWidget
         new(SampleRoutes.BadgeTooltip, "Badge + Tooltip", "count/small badges + hover/long-press tooltip theming", () => new BadgeTooltipDemoPage()),
         new(SampleRoutes.CircleAvatar, "CircleAvatar", "initials + image layers + animated radius + fallback", () => new CircleAvatarDemoPage()),
         new(SampleRoutes.NavigationSurfaces, "NavigationBar + NavigationRail", "horizontal/vertical Material navigation + labels/themes", () => new NavigationSurfacesDemoPage()),
-        new(SampleRoutes.Chips, "ActionChip + ChoiceChip", "flat/elevated + selected/disabled + ChipTheme probes", () => new ChipsDemoPage()),
+        new(SampleRoutes.Chips, "Material chips", "action/choice/filter/input + selection/deletion/theme probes", () => new ChipsDemoPage()),
         new(SampleRoutes.LinearProgressIndicator, "LinearProgressIndicator", "determinate/indeterminate + M2/M3 + theme/widget/RTL probes", () => new LinearProgressIndicatorDemoPage()),
         new(SampleRoutes.CircularProgressIndicator, "CircularProgressIndicator", "determinate/indeterminate + M2/M3 + theme/widget probes", () => new CircularProgressIndicatorDemoPage()),
         new(SampleRoutes.Slider, "Slider", "continuous/discrete + drag/tap/keyboard + theme/widget colors", () => new SliderDemoPage()),

@@ -538,6 +538,10 @@ Progress update (2026-03-19):
   - introduced shared `RawChip`, `ChipThemeData`/`ChipTheme`/`ThemeData.ChipTheme`, `ChipAnimationStyle`, and `VisualDensity` primitives with Flutter-shaped public APIs and flat/elevated factories;
   - matched M2/M3 defaults, widget/theme/default state-color precedence, selected+disabled handling, avatar/checkmark composition, scaled label padding, tap-target policy, mouse/focus/keyboard interaction, and selected/checked semantics;
   - added focused `MaterialChipTests` plus a mirrored C#/Dart runtime route covering enabled/disabled, selection, elevated variants, avatars, and local theme overrides.
+- Extended the Material chip family with paired `FilterChip` + `InputChip` ports:
+  - matched Flutter constructor surfaces, flat/elevated filter variants, M2/M3 state tokens, checkmark/avatar behavior, and input selection/press/delete-only enablement rules;
+  - expanded `RawChip` with an independently animated delete drawer, default M2 cancel/M3 clear icons, color/constraint precedence, localized tooltip semantics, and separate body/delete gesture arenas;
+  - expanded focused chip coverage and the mirrored C#/Dart `/chips` demo with filter selection, deletion, input avatar/selection/removal, disabled states, and theme probes.
 - Remaining divergence for floating action button in current framework scope:
   - none documented in current framework scope.
 
