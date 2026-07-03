@@ -1393,16 +1393,12 @@ public sealed class AppBar : StatelessWidget
 
     private static Widget BuildDefaultDrawerLeading(BuildContext context)
     {
-        return new IconButton(
-            icon: new Icon(Icons.Menu),
-            onPressed: () => Scaffold.Of(context).OpenDrawer());
+        return new DrawerButton();
     }
 
     private static Widget BuildDefaultEndDrawerAction(BuildContext context)
     {
-        return new IconButton(
-            icon: new Icon(Icons.Menu),
-            onPressed: () => Scaffold.Of(context).OpenEndDrawer());
+        return new EndDrawerButton();
     }
 
     private static Widget BuildDefaultLeading(BuildContext context, bool useCloseButton)

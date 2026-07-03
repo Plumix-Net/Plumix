@@ -12,6 +12,8 @@ class _ActionButtonsDemoPageState extends State<ActionButtonsDemoPage> {
   bool _customIcons = false;
   int _backCount = 0;
   int _closeCount = 0;
+  int _drawerCount = 0;
+  int _endDrawerCount = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -22,6 +24,8 @@ class _ActionButtonsDemoPageState extends State<ActionButtonsDemoPage> {
         ? ActionIconThemeData(
             backButtonIconBuilder: (_) => const Icon(Icons.star),
             closeButtonIconBuilder: (_) => const Icon(Icons.cancel),
+            drawerButtonIconBuilder: (_) => const Icon(Icons.info_outline),
+            endDrawerButtonIconBuilder: (_) => const Icon(Icons.star_outline),
           )
         : const ActionIconThemeData();
 
@@ -30,11 +34,11 @@ class _ActionButtonsDemoPageState extends State<ActionButtonsDemoPage> {
       spacing: 12,
       children: <Widget>[
         const Text(
-          'BackButton + CloseButton',
+          'Material action buttons',
           style: TextStyle(fontSize: 20, color: Colors.black),
         ),
         const Text(
-          'Platform icons, ActionIconTheme overrides, callbacks, tooltips, and style precedence.',
+          'Back/close/drawer/end-drawer icons, themes, callbacks, tooltips, and style precedence.',
           style: TextStyle(fontSize: 14, color: Colors.black54),
         ),
         Row(
@@ -59,15 +63,21 @@ class _ActionButtonsDemoPageState extends State<ActionButtonsDemoPage> {
               children: <Widget>[
                 BackButton(onPressed: () => setState(() => _backCount++)),
                 CloseButton(onPressed: () => setState(() => _closeCount++)),
+                DrawerButton(onPressed: () => setState(() => _drawerCount++)),
+                EndDrawerButton(
+                  onPressed: () => setState(() => _endDrawerCount++),
+                ),
                 const Text('standalone:'),
                 const BackButtonIcon(),
                 const CloseButtonIcon(),
+                const DrawerButtonIcon(),
+                const EndDrawerButtonIcon(),
               ],
             ),
           ),
         ),
         Text(
-          'back=$_backCount, close=$_closeCount',
+          'back=$_backCount, close=$_closeCount, drawer=$_drawerCount, end=$_endDrawerCount',
           style: const TextStyle(color: Colors.black),
         ),
         const Text(

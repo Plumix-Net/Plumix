@@ -57,8 +57,8 @@ class SampleGalleryScreen extends StatelessWidget {
   _materialDemoPages = <SampleRouteDefinition>[
     SampleRouteDefinition(
       routeName: SampleRoutes.actionButtons,
-      title: 'BackButton + CloseButton',
-      subtitle: 'platform icons + ActionIconTheme + navigation actions',
+      title: 'Material action buttons',
+      subtitle: 'back/close/drawer/end-drawer + ActionIconTheme',
       builder: () => const ActionButtonsDemoPage(),
     ),
     SampleRouteDefinition(

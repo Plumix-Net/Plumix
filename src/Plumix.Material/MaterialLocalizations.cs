@@ -15,6 +15,8 @@ public abstract class MaterialLocalizations
 
     public virtual string CloseButtonTooltip => "Close";
 
+    public virtual string OpenAppDrawerTooltip => "Open navigation menu";
+
     public static MaterialLocalizations Of(BuildContext context)
     {
         return MaterialLocalizationsScope.Of(context);
@@ -34,6 +36,8 @@ public sealed class DefaultMaterialLocalizations : MaterialLocalizations
     public override string BackButtonTooltip => "Back";
 
     public override string CloseButtonTooltip => "Close";
+
+    public override string OpenAppDrawerTooltip => "Open navigation menu";
 
     public override string TabLabel(int tabIndex, int tabCount)
     {

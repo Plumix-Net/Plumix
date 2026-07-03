@@ -17,6 +17,8 @@ public sealed class ActionButtonsDemoPage : StatefulWidget
         private bool _customIcons;
         private int _backCount;
         private int _closeCount;
+        private int _drawerCount;
+        private int _endDrawerCount;
 
         public override Widget Build(BuildContext context)
         {
@@ -27,7 +29,9 @@ public sealed class ActionButtonsDemoPage : StatefulWidget
             var actionIconTheme = _customIcons
                 ? new ActionIconThemeData(
                     BackButtonIconBuilder: _ => new Icon(Icons.Star),
-                    CloseButtonIconBuilder: _ => new Icon(Icons.Cancel))
+                    CloseButtonIconBuilder: _ => new Icon(Icons.Cancel),
+                    DrawerButtonIconBuilder: _ => new Icon(Icons.InfoOutline),
+                    EndDrawerButtonIconBuilder: _ => new Icon(Icons.StarOutline))
                 : new ActionIconThemeData();
 
             return new Column(
@@ -35,9 +39,9 @@ public sealed class ActionButtonsDemoPage : StatefulWidget
                 spacing: 12,
                 children:
                 [
-                    new Text("BackButton + CloseButton", fontSize: 20, color: Colors.Black),
+                    new Text("Material action buttons", fontSize: 20, color: Colors.Black),
                     new Text(
-                        "Platform icons, ActionIconTheme overrides, callbacks, tooltips, and style precedence.",
+                        "Back/close/drawer/end-drawer icons, themes, callbacks, tooltips, and style precedence.",
                         fontSize: 14,
                         color: Colors.DimGray),
                     new Row(
@@ -61,11 +65,17 @@ public sealed class ActionButtonsDemoPage : StatefulWidget
                                 [
                                     new BackButton(onPressed: () => SetState(() => _backCount++)),
                                     new CloseButton(onPressed: () => SetState(() => _closeCount++)),
+                                    new DrawerButton(onPressed: () => SetState(() => _drawerCount++)),
+                                    new EndDrawerButton(onPressed: () => SetState(() => _endDrawerCount++)),
                                     new Text("standalone:"),
                                     new BackButtonIcon(),
                                     new CloseButtonIcon(),
+                                    new DrawerButtonIcon(),
+                                    new EndDrawerButtonIcon(),
                                 ]))),
-                    new Text("back=$_backCount, close=$_closeCount", color: Colors.Black),
+                    new Text(
+                        "back=$_backCount, close=$_closeCount, drawer=$_drawerCount, end=$_endDrawerCount",
+                        color: Colors.Black),
                     new Text("style.iconColor overrides color", color: Colors.DimGray),
                     new Theme(
                         data: localTheme,

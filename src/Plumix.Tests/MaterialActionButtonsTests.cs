@@ -35,7 +35,9 @@ public sealed class MaterialActionButtonsTests
         {
             ActionIconTheme = new ActionIconThemeData(
                 BackButtonIconBuilder: _ => new Text("theme-back"),
-                CloseButtonIconBuilder: _ => new Text("theme-close")),
+                CloseButtonIconBuilder: _ => new Text("theme-close"),
+                DrawerButtonIconBuilder: _ => new Text("theme-drawer"),
+                EndDrawerButtonIconBuilder: _ => new Text("theme-end-drawer")),
         };
         using var harness = new WidgetRenderHarness(
             new Theme(
@@ -43,15 +45,95 @@ public sealed class MaterialActionButtonsTests
                 new ActionIconTheme(
                     data: new ActionIconThemeData(
                         BackButtonIconBuilder: _ => new Text("local-back"),
-                        CloseButtonIconBuilder: _ => new Text("local-close")),
-                    child: new Row(children: [new BackButtonIcon(), new CloseButtonIcon()]))));
+                        CloseButtonIconBuilder: _ => new Text("local-close"),
+                        DrawerButtonIconBuilder: _ => new Text("local-drawer"),
+                        EndDrawerButtonIconBuilder: _ => new Text("local-end-drawer")),
+                    child: new Row(children:
+                    [
+                        new BackButtonIcon(),
+                        new CloseButtonIcon(),
+                        new DrawerButtonIcon(),
+                        new EndDrawerButtonIcon(),
+                    ]))));
 
         harness.Pump(new Size(240, 80));
 
         Assert.NotNull(FindParagraph(harness.RenderView, "local-back"));
         Assert.NotNull(FindParagraph(harness.RenderView, "local-close"));
+        Assert.NotNull(FindParagraph(harness.RenderView, "local-drawer"));
+        Assert.NotNull(FindParagraph(harness.RenderView, "local-end-drawer"));
         Assert.Null(FindParagraph(harness.RenderView, "theme-back"));
         Assert.Null(FindParagraph(harness.RenderView, "theme-close"));
+        Assert.Null(FindParagraph(harness.RenderView, "theme-drawer"));
+        Assert.Null(FindParagraph(harness.RenderView, "theme-end-drawer"));
+    }
+
+    [Fact]
+    public void DrawerButtons_UseLocalizedTooltipsAndCustomCallbacks()
+    {
+        var drawerPressed = 0;
+        var endDrawerPressed = 0;
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                ThemeData.Light,
+                new MaterialLocalizationsScope(
+                    new TestMaterialLocalizations(),
+                    new Row(children:
+                    [
+                        new DrawerButton(onPressed: () => drawerPressed++),
+                        new EndDrawerButton(onPressed: () => endDrawerPressed++),
+                    ]))));
+
+        var semantics = harness.PumpAndGetSemantics(new Size(180, 80));
+        Assert.NotNull(FindSemantics(semantics, node => node.Label == "Ouvrir le menu"));
+        var buttons = FindAllSemantics(
+            semantics,
+            node => node.Flags.HasFlag(SemanticsFlags.IsButton)
+                    && node.Actions.HasFlag(SemanticsActions.Tap));
+
+        Assert.Equal(2, buttons.Count);
+        Assert.True(buttons[0].PerformAction(SemanticsActions.Tap));
+        Assert.True(buttons[1].PerformAction(SemanticsActions.Tap));
+        Assert.Equal(1, drawerPressed);
+        Assert.Equal(1, endDrawerPressed);
+    }
+
+    [Fact]
+    public void DrawerButtons_DefaultCallbacks_OpenMatchingScaffoldDrawers()
+    {
+        ScaffoldState? scaffold = null;
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                ThemeData.Light,
+                new Scaffold(
+                    drawer: new Drawer(child: new Text("start drawer")),
+                    endDrawer: new Drawer(child: new Text("end drawer")),
+                    body: new CaptureScaffoldState(
+                        capture: state => scaffold = state,
+                        child: new Row(children: [new DrawerButton(), new EndDrawerButton()])))));
+
+        var semantics = harness.PumpAndGetSemantics(new Size(320, 180));
+        var buttons = FindAllSemantics(
+            semantics,
+            node => node.Flags.HasFlag(SemanticsFlags.IsButton)
+                    && node.Actions.HasFlag(SemanticsActions.Tap));
+        Assert.Equal(2, buttons.Count);
+
+        Assert.True(buttons[0].PerformAction(SemanticsActions.Tap));
+        harness.Pump(new Size(320, 180));
+        Assert.True(scaffold!.IsDrawerOpen);
+        Assert.False(scaffold.IsEndDrawerOpen);
+
+        scaffold.CloseDrawer();
+        semantics = harness.PumpAndGetSemantics(new Size(320, 180));
+        buttons = FindAllSemantics(
+            semantics,
+            node => node.Flags.HasFlag(SemanticsFlags.IsButton)
+                    && node.Actions.HasFlag(SemanticsActions.Tap));
+        Assert.True(buttons[1].PerformAction(SemanticsActions.Tap));
+        harness.Pump(new Size(320, 180));
+        Assert.False(scaffold.IsDrawerOpen);
+        Assert.True(scaffold.IsEndDrawerOpen);
     }
 
     [Fact]
@@ -199,7 +281,26 @@ public sealed class MaterialActionButtonsTests
     {
         public override string BackButtonTooltip => "Retour";
         public override string CloseButtonTooltip => "Fermer";
+        public override string OpenAppDrawerTooltip => "Ouvrir le menu";
         public override string TabLabel(int tabIndex, int tabCount) => $"{tabIndex + 1}/{tabCount}";
+    }
+
+    private sealed class CaptureScaffoldState : StatelessWidget
+    {
+        private readonly Action<ScaffoldState> _capture;
+        private readonly Widget _child;
+
+        public CaptureScaffoldState(Action<ScaffoldState> capture, Widget child)
+        {
+            _capture = capture;
+            _child = child;
+        }
+
+        public override Widget Build(BuildContext context)
+        {
+            _capture(Scaffold.Of(context));
+            return _child;
+        }
     }
 
     private sealed class WidgetRenderHarness : IDisposable

@@ -550,6 +550,9 @@ Progress update (2026-03-19):
   - added Flutter-shaped action buttons and standalone icon widgets with Android/desktop versus iOS/macOS back glyph selection, localized tooltips, custom callbacks, and default `Navigator.MaybePop` behavior;
   - added `ActionIconThemeData`/`ActionIconTheme` plus `ThemeData.ActionIconTheme` builder precedence and wired AppBar's regular/fullscreen implied leading to the new controls;
   - added focused platform/theme/style/navigation coverage and a mirrored C#/Dart `/action-buttons` runtime demo.
+- Completed the Flutter action-button quartet with paired `DrawerButton` + `EndDrawerButton` ports:
+  - added standalone drawer icon widgets, local/global action-icon builder precedence, localized tooltip and Android duplicated icon semantics, custom callbacks, and default start/end `Scaffold` open actions;
+  - replaced AppBar's manual implied start/end drawer `IconButton` composition with the new controls and expanded the mirrored `/action-buttons` demo plus focused Scaffold/action coverage.
 - Remaining divergence for floating action button in current framework scope:
   - none documented in current framework scope.
 
