@@ -546,6 +546,10 @@ Progress update (2026-03-19):
   - matched Flutter's direct-child fast path plus positioned header/footer overlay composition for `GridTile`;
   - matched `GridTileBar` one/two-line heights, directional slot padding, dark title/body typography, white icon defaults, ellipsis behavior, transparent/background-color paths, and RTL layout, adding explicit flex text-direction wiring needed by the source composition;
   - added focused geometry/style coverage and a mirrored C#/Dart `/grid-tile` runtime demo.
+- Added paired Material `BackButton` + `CloseButton` ports:
+  - added Flutter-shaped action buttons and standalone icon widgets with Android/desktop versus iOS/macOS back glyph selection, localized tooltips, custom callbacks, and default `Navigator.MaybePop` behavior;
+  - added `ActionIconThemeData`/`ActionIconTheme` plus `ThemeData.ActionIconTheme` builder precedence and wired AppBar's regular/fullscreen implied leading to the new controls;
+  - added focused platform/theme/style/navigation coverage and a mirrored C#/Dart `/action-buttons` runtime demo.
 - Remaining divergence for floating action button in current framework scope:
   - none documented in current framework scope.
 

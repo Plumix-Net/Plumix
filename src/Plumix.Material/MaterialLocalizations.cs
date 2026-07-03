@@ -11,6 +11,10 @@ public abstract class MaterialLocalizations
 
     public virtual string DeleteButtonTooltip => "Delete";
 
+    public virtual string BackButtonTooltip => "Back";
+
+    public virtual string CloseButtonTooltip => "Close";
+
     public static MaterialLocalizations Of(BuildContext context)
     {
         return MaterialLocalizationsScope.Of(context);
@@ -26,6 +30,10 @@ public sealed class DefaultMaterialLocalizations : MaterialLocalizations
     public static DefaultMaterialLocalizations Instance { get; } = new();
 
     public override string DeleteButtonTooltip => "Delete";
+
+    public override string BackButtonTooltip => "Back";
+
+    public override string CloseButtonTooltip => "Close";
 
     public override string TabLabel(int tabIndex, int tabCount)
     {

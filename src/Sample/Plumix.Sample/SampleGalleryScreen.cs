@@ -31,6 +31,7 @@ internal static class SampleRoutes
     public const string Scrollbar = "/scrollbar";
     public const string EditableText = "/editable-text";
     public const string MaterialButtons = "/material-buttons";
+    public const string ActionButtons = "/action-buttons";
     public const string Drawer = "/drawer";
     public const string Divider = "/divider";
     public const string BadgeTooltip = "/badge-tooltip";
@@ -87,6 +88,7 @@ internal sealed class SampleGalleryScreen : StatelessWidget
     private static readonly IReadOnlyList<SampleRouteDefinition> MaterialDemoPages =
     [
         new(SampleRoutes.MaterialButtons, "Material buttons", "TextButton + ElevatedButton + OutlinedButton + FilledButton", () => new MaterialButtonsDemoPage()),
+        new(SampleRoutes.ActionButtons, "BackButton + CloseButton", "platform icons + ActionIconTheme + navigation actions", () => new ActionButtonsDemoPage()),
         new(SampleRoutes.Drawer, "Drawer", "scaffold drawer/endDrawer + theme/widget precedence probes", () => new DrawerDemoPage()),
         new(SampleRoutes.Divider, "Divider", "horizontal/vertical divider + theme/widget precedence probes", () => new DividerDemoPage()),
         new(SampleRoutes.BadgeTooltip, "Badge + Tooltip", "count/small badges + hover/long-press tooltip theming", () => new BadgeTooltipDemoPage()),

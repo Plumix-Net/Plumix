@@ -245,6 +245,7 @@ public sealed record ThemeData
     private NavigationBarThemeData? _navigationBarTheme;
     private NavigationRailThemeData? _navigationRailTheme;
     private ChipThemeData? _chipTheme;
+    private ActionIconThemeData? _actionIconTheme;
 
     public ThemeData(
         TargetPlatform? platform = null,
@@ -308,7 +309,8 @@ public sealed record ThemeData
         NavigationBarThemeData? navigationBarTheme = null,
         NavigationRailThemeData? navigationRailTheme = null,
         ChipThemeData? chipTheme = null,
-        VisualDensity? visualDensity = null)
+        VisualDensity? visualDensity = null,
+        ActionIconThemeData? actionIconTheme = null)
     {
         Platform = platform ?? ResolveDefaultPlatform();
         Brightness = brightness ?? Brightness.Light;
@@ -372,6 +374,7 @@ public sealed record ThemeData
         _navigationBarTheme = navigationBarTheme;
         _navigationRailTheme = navigationRailTheme;
         _chipTheme = chipTheme;
+        _actionIconTheme = actionIconTheme;
         VisualDensity = visualDensity ?? VisualDensity.Standard;
     }
 
@@ -589,6 +592,12 @@ public sealed record ThemeData
     {
         get => _chipTheme ?? new ChipThemeData();
         init => _chipTheme = value;
+    }
+
+    public ActionIconThemeData? ActionIconTheme
+    {
+        get => _actionIconTheme;
+        init => _actionIconTheme = value;
     }
 
     public static ThemeData Light { get; } = new();

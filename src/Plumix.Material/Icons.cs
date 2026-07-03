@@ -13,6 +13,11 @@ public static class Icons
         FontFamily: MaterialIconsFontFamily,
         MatchTextDirection: true);
 
+    public static IconData ArrowBackIosNewRounded { get; } = new(
+        0xf570,
+        FontFamily: MaterialIconsFontFamily,
+        MatchTextDirection: true);
+
     public static IconData Add { get; } = new(0xe047, FontFamily: MaterialIconsFontFamily);
 
     public static IconData Check { get; } = new(0xe156, FontFamily: MaterialIconsFontFamily);

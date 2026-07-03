@@ -1407,9 +1407,9 @@ public sealed class AppBar : StatelessWidget
 
     private static Widget BuildDefaultLeading(BuildContext context, bool useCloseButton)
     {
-        return new IconButton(
-            icon: new Icon(useCloseButton ? Icons.Close : Icons.ArrowBack),
-            onPressed: () => Navigator.MaybePop(context));
+        return useCloseButton
+            ? new CloseButton()
+            : new BackButton();
     }
 
     private double ResolveEffectiveLeadingWidth(ThemeData theme)
