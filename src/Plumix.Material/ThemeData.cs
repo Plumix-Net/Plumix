@@ -249,6 +249,7 @@ public sealed record ThemeData
     private SegmentedButtonThemeData? _segmentedButtonTheme;
     private ChipThemeData? _chipTheme;
     private ActionIconThemeData? _actionIconTheme;
+    private MaterialBannerThemeData? _bannerTheme;
 
     public ThemeData(
         TargetPlatform? platform = null,
@@ -316,7 +317,8 @@ public sealed record ThemeData
         ActionIconThemeData? actionIconTheme = null,
         NavigationDrawerThemeData? navigationDrawerTheme = null,
         ToggleButtonsThemeData? toggleButtonsTheme = null,
-        SegmentedButtonThemeData? segmentedButtonTheme = null)
+        SegmentedButtonThemeData? segmentedButtonTheme = null,
+        MaterialBannerThemeData? bannerTheme = null)
     {
         Platform = platform ?? ResolveDefaultPlatform();
         Brightness = brightness ?? Brightness.Light;
@@ -384,6 +386,7 @@ public sealed record ThemeData
         _segmentedButtonTheme = segmentedButtonTheme;
         _chipTheme = chipTheme;
         _actionIconTheme = actionIconTheme;
+        _bannerTheme = bannerTheme;
         VisualDensity = visualDensity ?? VisualDensity.Standard;
     }
 
@@ -625,6 +628,12 @@ public sealed record ThemeData
     {
         get => _actionIconTheme;
         init => _actionIconTheme = value;
+    }
+
+    public MaterialBannerThemeData BannerTheme
+    {
+        get => _bannerTheme ?? new MaterialBannerThemeData();
+        init => _bannerTheme = value;
     }
 
     public static ThemeData Light { get; } = new();

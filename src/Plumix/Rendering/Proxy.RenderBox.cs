@@ -1485,6 +1485,65 @@ public sealed class RenderTransform : RenderProxyBox
     }
 }
 
+public sealed class RenderFractionalTranslation : RenderProxyBox
+{
+    private Vector _translation;
+    private bool _transformHitTests;
+
+    public RenderFractionalTranslation(
+        Vector translation,
+        bool transformHitTests = true,
+        RenderBox? child = null)
+    {
+        _translation = translation;
+        _transformHitTests = transformHitTests;
+        Child = child;
+    }
+
+    public Vector Translation
+    {
+        get => _translation;
+        set
+        {
+            if (_translation == value) return;
+            _translation = value;
+            MarkNeedsPaint();
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
+    public bool TransformHitTests
+    {
+        get => _transformHitTests;
+        set { if (_transformHitTests != value) { _transformHitTests = value; MarkNeedsSemanticsUpdate(); } }
+    }
+
+    private Vector PaintOffset => new(Size.Width * Translation.X, Size.Height * Translation.Y);
+
+    public override void Paint(PaintingContext ctx, Point offset)
+    {
+        if (Child is null) return;
+        var data = (BoxParentData)Child.parentData!;
+        ctx.PaintChild(Child, data.offset + offset + PaintOffset);
+    }
+
+    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    {
+        if (Child is null) return false;
+        var data = (BoxParentData)Child.parentData!;
+        var offset = TransformHitTests ? PaintOffset : default;
+        return Child.HitTest(result, position - data.offset - offset);
+    }
+
+    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    {
+        if (Child is null) return;
+        var data = (BoxParentData)Child.parentData!;
+        var offset = PaintOffset;
+        visitor(Child, data.offset, Matrix.CreateTranslation(offset.X, offset.Y));
+    }
+}
+
 public sealed class RenderClipRect : RenderProxyBox
 {
     private Rect _clipRect;
@@ -1798,6 +1857,8 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
     private string? _label;
     private SemanticsFlags _flags;
     private Action? _onTap;
+    private Action? _onDismiss;
+    private bool _liveRegion;
     private bool _container;
     private bool _explicitChildNodes;
 
@@ -1805,6 +1866,8 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         string? label = null,
         SemanticsFlags flags = SemanticsFlags.None,
         Action? onTap = null,
+        Action? onDismiss = null,
+        bool liveRegion = false,
         bool container = false,
         bool explicitChildNodes = false,
         RenderBox? child = null)
@@ -1812,6 +1875,8 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         _label = label;
         _flags = flags;
         _onTap = onTap;
+        _onDismiss = onDismiss;
+        _liveRegion = liveRegion;
         _container = container;
         _explicitChildNodes = explicitChildNodes;
         Child = child;
@@ -1862,6 +1927,28 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         }
     }
 
+    public Action? OnDismiss
+    {
+        get => _onDismiss;
+        set
+        {
+            if (ReferenceEquals(_onDismiss, value)) return;
+            _onDismiss = value;
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
+    public bool LiveRegion
+    {
+        get => _liveRegion;
+        set
+        {
+            if (_liveRegion == value) return;
+            _liveRegion = value;
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
     public bool Container
     {
         get => _container;
@@ -1897,6 +1984,8 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         if (string.IsNullOrWhiteSpace(_label)
             && _flags == SemanticsFlags.None
             && _onTap is null
+            && _onDismiss is null
+            && !_liveRegion
             && !_container
             && !_explicitChildNodes)
         {
@@ -1916,9 +2005,17 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         }
 
         configuration.Flags |= _flags;
+        if (_liveRegion)
+        {
+            configuration.Flags |= SemanticsFlags.IsLiveRegion;
+        }
         if (_onTap is not null)
         {
             configuration.AddActionHandler(SemanticsActions.Tap, _onTap);
+        }
+        if (_onDismiss is not null)
+        {
+            configuration.AddActionHandler(SemanticsActions.Dismiss, _onDismiss);
         }
     }
 }

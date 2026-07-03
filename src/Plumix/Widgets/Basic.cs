@@ -429,6 +429,38 @@ public sealed class Transform : SingleChildRenderObjectWidget
     }
 }
 
+public sealed class FractionalTranslation : SingleChildRenderObjectWidget
+{
+    public FractionalTranslation(
+        Vector translation,
+        Widget? child = null,
+        bool transformHitTests = true,
+        Key? key = null) : base(child, key)
+    {
+        if (!double.IsFinite(translation.X) || !double.IsFinite(translation.Y))
+        {
+            throw new ArgumentOutOfRangeException(nameof(translation));
+        }
+        Translation = translation;
+        TransformHitTests = transformHitTests;
+    }
+
+    public Vector Translation { get; }
+    public bool TransformHitTests { get; }
+
+    internal override RenderObject CreateRenderObject(BuildContext context)
+    {
+        return new RenderFractionalTranslation(Translation, TransformHitTests);
+    }
+
+    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    {
+        var translation = (RenderFractionalTranslation)renderObject;
+        translation.Translation = Translation;
+        translation.TransformHitTests = TransformHitTests;
+    }
+}
+
 public sealed class ClipRect : SingleChildRenderObjectWidget
 {
     public ClipRect(Rect? clipRect = null, Widget? child = null, Key? key = null) : base(child, key)

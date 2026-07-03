@@ -12,6 +12,8 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         string? label = null,
         SemanticsFlags flags = SemanticsFlags.None,
         Action? onTap = null,
+        Action? onDismiss = null,
+        bool liveRegion = false,
         bool container = false,
         bool explicitChildNodes = false,
         Key? key = null) : base(child, key)
@@ -19,6 +21,8 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         Label = label;
         Flags = flags;
         OnTap = onTap;
+        OnDismiss = onDismiss;
+        LiveRegion = liveRegion;
         Container = container;
         ExplicitChildNodes = explicitChildNodes;
     }
@@ -28,6 +32,10 @@ public sealed class Semantics : SingleChildRenderObjectWidget
     public SemanticsFlags Flags { get; }
 
     public Action? OnTap { get; }
+
+    public Action? OnDismiss { get; }
+
+    public bool LiveRegion { get; }
 
     public bool Container { get; }
 
@@ -39,6 +47,8 @@ public sealed class Semantics : SingleChildRenderObjectWidget
             label: Label,
             flags: Flags,
             onTap: OnTap,
+            onDismiss: OnDismiss,
+            liveRegion: LiveRegion,
             container: Container,
             explicitChildNodes: ExplicitChildNodes);
     }
@@ -49,6 +59,8 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         semantics.Label = Label;
         semantics.Flags = Flags;
         semantics.OnTap = OnTap;
+        semantics.OnDismiss = OnDismiss;
+        semantics.LiveRegion = LiveRegion;
         semantics.Container = Container;
         semantics.ExplicitChildNodes = ExplicitChildNodes;
     }

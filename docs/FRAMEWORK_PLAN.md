@@ -566,6 +566,10 @@ Progress update (2026-03-19):
   - added `ToggleButtonsThemeData`/`ToggleButtonsTheme`, `SegmentedButtonThemeData`/`SegmentedButtonTheme`, and corresponding `ThemeData` surfaces, plus shared `ButtonStyle` cursor/density/duration/feedback fields;
   - added a shared equalized segment render layout for tallest/widest child normalization, RTL/vertical ordering, expanded-insets distribution, zero-area safety, tap-target geometry, and checked/selected/mutually-exclusive semantics;
   - added focused API/default/state/layout/style/semantics coverage and a mirrored `/segmented-buttons` C#/Dart runtime demo.
+- Added paired core `Banner` + Material `MaterialBanner` ports:
+  - matched the exact four-corner/RTL diagonal ribbon transforms, colors, shadow, typography, foreground paint order, and debug checked-mode composition through a shared Flutter-shaped `CustomPaint` primitive;
+  - matched Material single-action trailing versus forced/multiple below-action composition, `OverflowBar` row-to-column behavior, directional padding, leading slot, minimum action bar, M2/M3 surface/divider defaults, elevation/margin, theme/widget precedence, and `1.5x` text-scale cap;
+  - added controller-driven slide/height transitions, accessible-navigation bypass, live-region/dismiss semantics, focused coverage, and a mirrored `/banner` C#/Dart runtime demo; ScaffoldMessenger queue/presentation integration is tracked as a divergence.
 - Remaining divergence for floating action button in current framework scope:
   - none documented in current framework scope.
 

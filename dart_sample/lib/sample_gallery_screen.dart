@@ -7,6 +7,7 @@ import 'demos/material/app_bar_leading_width_demo_page.dart';
 import 'demos/material/app_bar_text_styles_demo_page.dart';
 import 'demos/material/action_buttons_demo_page.dart';
 import 'demos/material/badge_tooltip_demo_page.dart';
+import 'demos/material/banner_demo_page.dart';
 import 'demos/general/aspect_ratio_demo_page.dart';
 import 'demos/general/bloc_counter_demo_page.dart';
 import 'demos/material/card_demo_page.dart';
@@ -117,6 +118,12 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'ToggleButtons + SegmentedButton',
       subtitle: 'legacy/M3 segmented selection + themes/states',
       builder: () => const SegmentedButtonsDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.banner,
+      title: 'Banner + MaterialBanner',
+      subtitle: 'diagonal ribbon + persistent actions/theme/overflow probes',
+      builder: () => const BannerDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.chips,

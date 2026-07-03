@@ -23,6 +23,7 @@ public enum SemanticsFlags
     HasExpandedState = 1 << 11,
     IsExpanded = 1 << 12,
     IsInMutuallyExclusiveGroup = 1 << 13,
+    IsLiveRegion = 1 << 14,
 }
 
 [Flags]
