@@ -23,7 +23,8 @@ public sealed class Drawer : StatelessWidget
         double? elevation = null,
         Color? shadowColor = null,
         double? width = null,
-        Key? key = null) : base(key)
+        Key? key = null,
+        Color? surfaceTintColor = null) : base(key)
     {
         if (elevation.HasValue && (double.IsNaN(elevation.Value) || double.IsInfinity(elevation.Value) || elevation.Value < 0))
         {
@@ -39,6 +40,7 @@ public sealed class Drawer : StatelessWidget
         BackgroundColor = backgroundColor;
         Elevation = elevation;
         ShadowColor = shadowColor;
+        SurfaceTintColor = surfaceTintColor;
         Width = width;
     }
 
@@ -49,6 +51,8 @@ public sealed class Drawer : StatelessWidget
     public double? Elevation { get; }
 
     public Color? ShadowColor { get; }
+
+    public Color? SurfaceTintColor { get; }
 
     public double? Width { get; }
 
@@ -65,6 +69,15 @@ public sealed class Drawer : StatelessWidget
         var effectiveShadowColor = ShadowColor ?? drawerTheme.ShadowColor ?? (useMaterial3
             ? Colors.Transparent
             : theme.ShadowColor);
+        var effectiveSurfaceTintColor = SurfaceTintColor ?? drawerTheme.SurfaceTintColor
+            ?? (useMaterial3 ? Colors.Transparent : null);
+        if (effectiveSurfaceTintColor.HasValue && effectiveSurfaceTintColor.Value.A > 0 && effectiveElevation > 0)
+        {
+            effectiveBackground = NavigationSurfaceUtilities.ApplySurfaceTint(
+                effectiveBackground,
+                effectiveSurfaceTintColor.Value,
+                effectiveElevation);
+        }
         var effectiveBoxShadows = BuildBoxShadows(effectiveShadowColor, effectiveElevation);
 
         return new Container(

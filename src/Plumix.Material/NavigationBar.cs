@@ -578,6 +578,20 @@ internal sealed class NavigationBarCustomDestinationTile : StatelessWidget
 
 internal static class NavigationSurfaceUtilities
 {
+    public static Color ApplySurfaceTint(Color background, Color surfaceTint, double elevation)
+    {
+        var opacity = elevation switch
+        {
+            <= 0 => 0,
+            <= 1 => 0.05,
+            <= 3 => 0.08,
+            <= 6 => 0.11,
+            <= 8 => 0.12,
+            _ => 0.14
+        };
+        return Blend(background, surfaceTint, opacity);
+    }
+
     public static BoxDecoration CreateDecoration(
         Color background,
         double elevation,

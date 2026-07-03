@@ -36,6 +36,7 @@ import 'demos/material/radio_expansion_tile_demo_page.dart';
 import 'demos/material/expansion_panel_demo_page.dart';
 import 'demos/material/material_buttons_demo_page.dart';
 import 'demos/material/navigation_surfaces_demo_page.dart';
+import 'demos/material/navigation_drawer_demo_page.dart';
 import 'demos/material/chips_demo_page.dart';
 import 'demos/general/navigator_demo_page.dart';
 import 'demos/general/offstage_demo_page.dart';
@@ -103,6 +104,12 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'NavigationBar + NavigationRail',
       subtitle: 'horizontal/vertical Material navigation + labels/themes',
       builder: () => const NavigationSurfacesDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.navigationDrawer,
+      title: 'NavigationDrawer',
+      subtitle: 'destinations + custom children + selection/theme probes',
+      builder: () => const NavigationDrawerDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.chips,

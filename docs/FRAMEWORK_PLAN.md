@@ -557,6 +557,10 @@ Progress update (2026-03-19):
   - matched status-bar-aware `161dp` header sizing, default padding/margin, exact `fastOutSlowIn` animated decoration and bottom divider composition;
   - matched primary account plus three secondary picture slots, primary text styles, details callback/toggle arrow, signed-in/show/hide localized semantics, directional geometry, and default theme-primary decoration;
   - added focused layout/theme/semantics/RTL coverage and a mirrored `/drawer-headers` runtime demo.
+- Added paired `NavigationDrawer` + `NavigationDrawerDestination` ports:
+  - matched Flutter's header/footer plus scrollable mixed-child composition, destination-only indexing, nullable controlled selection, disabled interaction, selected-icon switching, 500ms indicator animation, destination background, safe-area behavior, and localized tab semantics;
+  - added `NavigationDrawerThemeData`/`NavigationDrawerTheme` plus `ThemeData.NavigationDrawerTheme` with state-aware label/icon style resolution and widget/local/global/default precedence for surface, indicator, tile, and typography geometry;
+  - extended `Drawer`/`DrawerThemeData` with source-required surface-tint plumbing, added focused defaults/precedence/interaction/semantics coverage, and added a mirrored `/navigation-drawer` C#/Dart runtime demo.
 - Remaining divergence for floating action button in current framework scope:
   - none documented in current framework scope.
 

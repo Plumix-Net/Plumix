@@ -160,6 +160,184 @@ public sealed class MaterialNavigationSurfacesTests
     }
 
     [Fact]
+    public void NavigationDrawer_ValidatesGeometryAndDestinationContract()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => new NavigationDrawer(
+            children: DrawerDestinations(),
+            elevation: -1));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new NavigationDrawer(
+            children: DrawerDestinations(),
+            elevation: double.NaN));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new NavigationDrawer(
+            children: DrawerDestinations(),
+            tilePadding: new Thickness(-1, 0, 0, 0)));
+
+        var destination = new NavigationDrawerDestination(
+            icon: new Icon(Icons.Menu),
+            label: new Text("Home"));
+        Assert.True(destination.Enabled);
+
+        using var zeroSizeHarness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new NavigationDrawer(children: DrawerDestinations())));
+        zeroSizeHarness.Pump(new Size(0, 0));
+    }
+
+    [Fact]
+    public void NavigationDrawer_M3Defaults_UseSourceTokensAndSelectedVisuals()
+    {
+        var theme = ThemeData.Light with
+        {
+            SurfaceContainerLowColor = Colors.DarkSlateBlue,
+            SecondaryContainerColor = Colors.DarkGreen,
+            OnSecondaryContainerColor = Colors.Gold,
+            OnSurfaceVariantColor = Colors.CadetBlue,
+        };
+        using var harness = new WidgetRenderHarness(Wrap(
+            theme,
+            new NavigationDrawer(
+                children: DrawerDestinations(),
+                selectedIndex: 1)));
+
+        harness.Pump(new Size(420, 320));
+
+        Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView),
+            box => box.Decoration.Color == Colors.DarkSlateBlue);
+        Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView),
+            box => box.Decoration.Color == Colors.DarkGreen);
+        Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView),
+            box => box.Decoration.Color == Colors.Yellow);
+        Assert.Equal(Colors.CadetBlue,
+            Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "Home")!.Foreground).Color);
+        Assert.Equal(Colors.Gold,
+            Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "Explore")!.Foreground).Color);
+        Assert.NotNull(FindParagraph(harness.RenderView, "selected-explore"));
+        Assert.Null(FindParagraph(harness.RenderView, "plain-explore"));
+        Assert.Contains(FindDescendants<RenderConstrainedBox>(harness.RenderView),
+            box => box.AdditionalConstraints.MinHeight == 56
+                   && box.AdditionalConstraints.MaxHeight == 56);
+    }
+
+    [Fact]
+    public void NavigationDrawer_WidgetLocalAndGlobalThemePrecedenceIsApplied()
+    {
+        var global = ThemeData.Light with
+        {
+            NavigationDrawerTheme = new NavigationDrawerThemeData(
+                BackgroundColor: Colors.DarkRed,
+                IndicatorColor: Colors.Orange,
+                TileHeight: 64,
+                IndicatorSize: new Size(250, 44)),
+        };
+        var local = new NavigationDrawerThemeData(
+            BackgroundColor: Colors.DarkGreen,
+            IndicatorColor: Colors.Purple,
+            TileHeight: 60,
+            IndicatorSize: new Size(260, 48),
+            LabelTextStyle: MaterialStateProperty<TextStyle?>.All(
+                new TextStyle(Color: Colors.CadetBlue, FontSize: 13)),
+            IconTheme: MaterialStateProperty<IconThemeData?>.All(
+                new IconThemeData(Color: Colors.Gold, Size: 21)));
+        using var harness = new WidgetRenderHarness(Wrap(
+            global,
+            new NavigationDrawerTheme(
+                data: local,
+                child: new NavigationDrawer(
+                    children: DrawerDestinations(),
+                    backgroundColor: Colors.DarkBlue,
+                    indicatorColor: Colors.Yellow,
+                    selectedIndex: 0))));
+
+        harness.Pump(new Size(420, 320));
+
+        Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView),
+            box => box.Decoration.Color == Colors.DarkBlue);
+        Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView),
+            box => box.Decoration.Color == Colors.Yellow);
+        Assert.Equal(Colors.CadetBlue,
+            Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "Home")!.Foreground).Color);
+        Assert.Contains(FindDescendants<RenderConstrainedBox>(harness.RenderView),
+            box => box.AdditionalConstraints.MinHeight == 60
+                   && box.AdditionalConstraints.MaxHeight == 60);
+        Assert.Contains(FindDescendants<RenderConstrainedBox>(harness.RenderView),
+            box => box.AdditionalConstraints.MinWidth == 260);
+    }
+
+    [Fact]
+    public void NavigationDrawer_SurfaceTintFlowsThroughDrawerMaterial()
+    {
+        var background = Colors.White;
+        var tint = Colors.DarkRed;
+        var expected = NavigationSurfaceUtilities.ApplySurfaceTint(background, tint, 1);
+        var theme = ThemeData.Light with
+        {
+            NavigationDrawerTheme = new NavigationDrawerThemeData(
+                BackgroundColor: background,
+                SurfaceTintColor: tint,
+                Elevation: 1),
+        };
+        using var harness = new WidgetRenderHarness(Wrap(
+            theme,
+            new NavigationDrawer(children: DrawerDestinations())));
+
+        harness.Pump(new Size(420, 320));
+
+        Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView),
+            box => box.Decoration.Color == expected);
+    }
+
+    [Fact]
+    public void NavigationDrawer_IndexingTapDisabledAndSemanticsMatchFlutter()
+    {
+        int? selected = null;
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new NavigationDrawer(
+                header: new Text("Header"),
+                footer: new Text("Footer"),
+                selectedIndex: 1,
+                onDestinationSelected: index => selected = index,
+                children:
+                [
+                    new Text("Section"),
+                    new NavigationDrawerDestination(
+                        icon: new Icon(Icons.Menu),
+                        label: new Text("Home")),
+                    new Divider(),
+                    new NavigationDrawerDestination(
+                        icon: new Icon(Icons.InfoOutline),
+                        label: new Text("Explore")),
+                    new NavigationDrawerDestination(
+                        icon: new Icon(Icons.Close),
+                        label: new Text("Disabled"),
+                        enabled: false),
+                ])));
+        harness.Pump(new Size(420, 360));
+
+        Assert.NotNull(FindParagraph(harness.RenderView, "Header"));
+        Assert.NotNull(FindParagraph(harness.RenderView, "Footer"));
+        Tap(harness.RenderView, new Point(150, 92), 104);
+        Assert.Equal(0, selected);
+        selected = null;
+        Tap(harness.RenderView, new Point(150, 224), 105);
+        Assert.Null(selected);
+
+        var root = harness.PumpAndGetSemantics(new Size(420, 360));
+        var selectedNode = FindSemantics(root,
+            node => node.Label?.Contains("Explore\nTab 2 of 3", StringComparison.Ordinal) == true);
+        Assert.NotNull(selectedNode);
+        Assert.True(selectedNode!.Flags.HasFlag(SemanticsFlags.IsSelected));
+        Assert.True(selectedNode.Flags.HasFlag(SemanticsFlags.IsEnabled));
+        Assert.True(selectedNode.Actions.HasFlag(SemanticsActions.Tap));
+
+        var disabledNode = FindSemantics(root,
+            node => node.Label?.Contains("Disabled\nTab 3 of 3", StringComparison.Ordinal) == true);
+        Assert.NotNull(disabledNode);
+        Assert.False(disabledNode!.Flags.HasFlag(SemanticsFlags.IsEnabled));
+        Assert.False(disabledNode.Actions.HasFlag(SemanticsActions.Tap));
+    }
+
+    [Fact]
     public void NavigationRail_ValidatesIndexGeometryAndExtendedLabelContract()
     {
         Assert.Throws<ArgumentOutOfRangeException>(() => new NavigationRail(RailDestinations(), selectedIndex: 2));
@@ -280,6 +458,18 @@ public sealed class MaterialNavigationSurfacesTests
 
     private static NavigationDestination Destination(string label, IconData icon) =>
         new(new Icon(icon), label);
+
+    private static IReadOnlyList<Widget> DrawerDestinations() =>
+    [
+        new NavigationDrawerDestination(
+            icon: new Icon(Icons.Menu),
+            label: new Text("Home")),
+        new NavigationDrawerDestination(
+            icon: new Text("plain-explore"),
+            selectedIcon: new Text("selected-explore"),
+            label: new Text("Explore"),
+            backgroundColor: Colors.Yellow),
+    ];
 
     private static IReadOnlyList<NavigationRailDestination> RailDestinations() =>
     [
