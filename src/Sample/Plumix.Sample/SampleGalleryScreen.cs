@@ -42,6 +42,7 @@ internal static class SampleRoutes
     public const string Slider = "/slider";
     public const string RangeSlider = "/range-slider";
     public const string Card = "/card";
+    public const string GridTile = "/grid-tile";
     public const string ListTile = "/list-tile";
     public const string ListTileControls = "/list-tile-controls";
     public const string RadioExpansionTile = "/radio-expansion-tile";
@@ -97,6 +98,7 @@ internal sealed class SampleGalleryScreen : StatelessWidget
         new(SampleRoutes.Slider, "Slider", "continuous/discrete + drag/tap/keyboard + theme/widget colors", () => new SliderDemoPage()),
         new(SampleRoutes.RangeSlider, "RangeSlider", "two-thumb range + continuous/discrete + theme/widget colors", () => new RangeSliderDemoPage()),
         new(SampleRoutes.Card, "Card", "elevated/filled/outlined variants + theme/clip probes", () => new CardDemoPage()),
+        new(SampleRoutes.GridTile, "GridTile + GridTileBar", "header/footer overlays + one/two-line bars + RTL", () => new GridTileDemoPage()),
         new(SampleRoutes.ListTile, "ListTile", "leading/title/subtitle/trailing + selected/dense/theme probes", () => new ListTileDemoPage()),
         new(SampleRoutes.ListTileControls, "CheckboxListTile + SwitchListTile", "whole-row toggle + tristate + affinity + adaptive probes", () => new ListTileControlsDemoPage()),
         new(SampleRoutes.RadioExpansionTile, "RadioListTile + ExpansionTile", "RadioGroup + toggleable/adaptive + animated controller expansion", () => new RadioExpansionTileDemoPage()),

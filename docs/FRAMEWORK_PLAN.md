@@ -8,7 +8,7 @@ Use this block as the fastest machine-readable status summary.
 
 ```yaml
 framework_plan_version: 1
-last_updated: 2026-07-02
+last_updated: 2026-07-03
 north_star: "Flutter-like widget/rendering framework in C# with Avalonia as host infrastructure."
 current_phase: "M4 material library rewrite (theme/scaffold/material controls) in progress."
 status:
@@ -542,6 +542,10 @@ Progress update (2026-03-19):
   - matched Flutter constructor surfaces, flat/elevated filter variants, M2/M3 state tokens, checkmark/avatar behavior, and input selection/press/delete-only enablement rules;
   - expanded `RawChip` with an independently animated delete drawer, default M2 cancel/M3 clear icons, color/constraint precedence, localized tooltip semantics, and separate body/delete gesture arenas;
   - expanded focused chip coverage and the mirrored C#/Dart `/chips` demo with filter selection, deletion, input avatar/selection/removal, disabled states, and theme probes.
+- Added paired Material `GridTile` + `GridTileBar` ports:
+  - matched Flutter's direct-child fast path plus positioned header/footer overlay composition for `GridTile`;
+  - matched `GridTileBar` one/two-line heights, directional slot padding, dark title/body typography, white icon defaults, ellipsis behavior, transparent/background-color paths, and RTL layout, adding explicit flex text-direction wiring needed by the source composition;
+  - added focused geometry/style coverage and a mirrored C#/Dart `/grid-tile` runtime demo.
 - Remaining divergence for floating action button in current framework scope:
   - none documented in current framework scope.
 

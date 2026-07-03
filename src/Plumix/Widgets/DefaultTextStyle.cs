@@ -1,6 +1,7 @@
 using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Rendering;
+using Plumix.UI;
 
 namespace Plumix.Widgets;
 
@@ -47,25 +48,41 @@ public sealed class DefaultTextStyle : InheritedWidget
     public DefaultTextStyle(
         TextStyle style,
         Widget child,
-        Key? key = null) : base(key)
+        Key? key = null,
+        bool? softWrap = null,
+        TextOverflow? overflow = null) : base(key)
     {
         Style = style;
         Child = child;
+        SoftWrap = softWrap;
+        Overflow = overflow;
     }
 
     public TextStyle Style { get; }
 
     public Widget Child { get; }
 
+    public bool? SoftWrap { get; }
+
+    public TextOverflow? Overflow { get; }
+
     public override Widget Build(BuildContext context) => Child;
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
-        return !Equals(((DefaultTextStyle)oldWidget).Style, Style);
+        var oldStyle = (DefaultTextStyle)oldWidget;
+        return !Equals(oldStyle.Style, Style)
+               || oldStyle.SoftWrap != SoftWrap
+               || oldStyle.Overflow != Overflow;
     }
 
     public static TextStyle Of(BuildContext context)
     {
         return context.DependOnInherited<DefaultTextStyle>()?.Style ?? TextStyle.Fallback;
+    }
+
+    internal static DefaultTextStyle? MaybeOf(BuildContext context)
+    {
+        return context.DependOnInherited<DefaultTextStyle>();
     }
 }

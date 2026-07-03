@@ -65,10 +65,12 @@ public sealed record MaterialTextTheme
         TextStyle? labelSmall = null,
         TextStyle? titleMedium = null,
         TextStyle? bodyLarge = null,
-        TextStyle? labelMedium = null)
+        TextStyle? labelMedium = null,
+        TextStyle? bodySmall = null)
     {
         BodyMedium = bodyMedium ?? DefaultBodyMedium;
         BodyLarge = bodyLarge ?? DefaultBodyLarge;
+        BodySmall = bodySmall ?? DefaultBodySmall;
         TitleLarge = titleLarge ?? DefaultTitleLarge;
         LabelLarge = labelLarge ?? DefaultLabelLarge;
         LabelMedium = labelMedium ?? DefaultLabelMedium;
@@ -79,6 +81,8 @@ public sealed record MaterialTextTheme
     public TextStyle BodyMedium { get; init; }
 
     public TextStyle BodyLarge { get; init; }
+
+    public TextStyle BodySmall { get; init; }
 
     public TextStyle TitleLarge { get; init; }
 
@@ -107,6 +111,15 @@ public sealed record MaterialTextTheme
         FontStyle: FontStyle.Normal,
         Height: 1.5,
         LetterSpacing: 0.5);
+
+    public static TextStyle DefaultBodySmall { get; } = new(
+        FontFamily: DefaultBodyFontFamily,
+        FontSize: 12,
+        Color: Color.Parse("#FF49454F"),
+        FontWeight: FontWeight.Normal,
+        FontStyle: FontStyle.Normal,
+        Height: 1.33,
+        LetterSpacing: 0.4);
 
     public static TextStyle DefaultTitleLarge { get; } = new(
         FontFamily: DefaultBodyFontFamily,
@@ -579,6 +592,28 @@ public sealed record ThemeData
     }
 
     public static ThemeData Light { get; } = new();
+
+    public static ThemeData Dark { get; } = new(
+        brightness: Brightness.Dark,
+        textTheme: new MaterialTextTheme(
+            bodyMedium: MaterialTextTheme.DefaultBodyMedium.CopyWith(color: Colors.White),
+            bodyLarge: MaterialTextTheme.DefaultBodyLarge.CopyWith(color: Colors.White),
+            bodySmall: MaterialTextTheme.DefaultBodySmall.CopyWith(color: Color.FromArgb(0xB3, 0xFF, 0xFF, 0xFF)),
+            titleLarge: MaterialTextTheme.DefaultTitleLarge.CopyWith(color: Colors.White),
+            titleMedium: MaterialTextTheme.DefaultTitleMedium.CopyWith(color: Colors.White),
+            labelLarge: MaterialTextTheme.DefaultLabelLarge.CopyWith(color: Colors.White),
+            labelMedium: MaterialTextTheme.DefaultLabelMedium.CopyWith(color: Colors.White),
+            labelSmall: MaterialTextTheme.DefaultLabelSmall.CopyWith(color: Colors.White)),
+        scaffoldBackgroundColor: Color.Parse("#FF121212"),
+        canvasColor: Color.Parse("#FF121212"),
+        primaryColor: Color.Parse("#FFBB86FC"),
+        secondaryColor: Color.Parse("#FF03DAC6"),
+        onPrimaryColor: Colors.Black,
+        surfaceColor: Color.Parse("#FF121212"),
+        onSurfaceColor: Colors.White,
+        onSurfaceVariantColor: Color.FromArgb(0xB3, 0xFF, 0xFF, 0xFF),
+        cardColor: Color.Parse("#FF1E1E1E"),
+        iconTheme: new IconThemeData(Color: Colors.White, Size: 24));
 
     public static Brightness EstimateBrightnessForColor(Color color)
     {

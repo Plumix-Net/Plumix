@@ -68,12 +68,13 @@ public sealed class Text : LeafRenderObjectWidget
 
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
+        var defaultTextStyle = DefaultTextStyle.MaybeOf(context);
         var paragraph = new RenderParagraph(Data)
         {
             TextAlign = TextAlign,
-            SoftWrap = SoftWrap,
+            SoftWrap = defaultTextStyle?.SoftWrap ?? SoftWrap,
             MaxLines = MaxLines,
-            Overflow = Overflow,
+            Overflow = defaultTextStyle?.Overflow ?? Overflow,
             TextDirection = TextDirection
         };
 
@@ -87,9 +88,10 @@ public sealed class Text : LeafRenderObjectWidget
         paragraph.Text = Data;
         ApplyResolvedTextStyle(context, paragraph);
         paragraph.TextAlign = TextAlign;
-        paragraph.SoftWrap = SoftWrap;
+        var defaultTextStyle = DefaultTextStyle.MaybeOf(context);
+        paragraph.SoftWrap = defaultTextStyle?.SoftWrap ?? SoftWrap;
         paragraph.MaxLines = MaxLines;
-        paragraph.Overflow = Overflow;
+        paragraph.Overflow = defaultTextStyle?.Overflow ?? Overflow;
         paragraph.TextDirection = TextDirection;
     }
 

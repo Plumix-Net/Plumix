@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Rendering;
+using Plumix.UI;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/widgets/basic.dart (approximate)
 
@@ -770,13 +771,15 @@ public class Flex : MultiChildRenderObjectWidget
         MainAxisAlignment mainAxisAlignment = MainAxisAlignment.Start,
         CrossAxisAlignment crossAxisAlignment = CrossAxisAlignment.Center,
         double spacing = 0,
-        Key? key = null) : base(children, key)
+        Key? key = null,
+        TextDirection? textDirection = null) : base(children, key)
     {
         Direction = direction;
         MainAxisSize = mainAxisSize;
         MainAxisAlignment = mainAxisAlignment;
         CrossAxisAlignment = crossAxisAlignment;
         Spacing = spacing;
+        TextDirection = textDirection;
     }
 
     public Axis Direction { get; }
@@ -789,6 +792,8 @@ public class Flex : MultiChildRenderObjectWidget
 
     public double Spacing { get; }
 
+    public TextDirection? TextDirection { get; }
+
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderFlex(
@@ -797,6 +802,7 @@ public class Flex : MultiChildRenderObjectWidget
             mainAxisSize: MainAxisSize,
             mainAxisAlignment: MainAxisAlignment,
             crossAxisAlignment: CrossAxisAlignment,
+            textDirection: TextDirection,
             spacing: Spacing);
     }
 
@@ -807,6 +813,7 @@ public class Flex : MultiChildRenderObjectWidget
         flex.MainAxisSize = MainAxisSize;
         flex.MainAxisAlignment = MainAxisAlignment;
         flex.CrossAxisAlignment = CrossAxisAlignment;
+        flex.TextDirection = TextDirection;
         flex.Spacing = Spacing;
     }
 }
@@ -894,14 +901,16 @@ public sealed class Row : Flex
         MainAxisAlignment mainAxisAlignment = MainAxisAlignment.Start,
         CrossAxisAlignment crossAxisAlignment = CrossAxisAlignment.Center,
         double spacing = 0,
-        Key? key = null) : base(
+        Key? key = null,
+        TextDirection? textDirection = null) : base(
         direction: Axis.Horizontal,
         children: children,
         mainAxisSize: mainAxisSize,
         mainAxisAlignment: mainAxisAlignment,
         crossAxisAlignment: crossAxisAlignment,
         spacing: spacing,
-        key: key)
+        key: key,
+        textDirection: textDirection)
     {
     }
 }
@@ -914,14 +923,16 @@ public sealed class Column : Flex
         MainAxisAlignment mainAxisAlignment = MainAxisAlignment.Start,
         CrossAxisAlignment crossAxisAlignment = CrossAxisAlignment.Center,
         double spacing = 0,
-        Key? key = null) : base(
+        Key? key = null,
+        TextDirection? textDirection = null) : base(
         direction: Axis.Vertical,
         children: children,
         mainAxisSize: mainAxisSize,
         mainAxisAlignment: mainAxisAlignment,
         crossAxisAlignment: crossAxisAlignment,
         spacing: spacing,
-        key: key)
+        key: key,
+        textDirection: textDirection)
     {
     }
 }

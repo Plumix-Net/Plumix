@@ -23,6 +23,7 @@ import 'demos/general/fitted_box_demo_page.dart';
 import 'demos/material/floating_action_button_demo_page.dart';
 import 'demos/general/fractionally_sized_box_demo_page.dart';
 import 'demos/general/grid_view_demo_page.dart';
+import 'demos/material/grid_tile_demo_page.dart';
 import 'demos/material/linear_progress_indicator_demo_page.dart';
 import 'demos/general/list_view_fixed_extent_demo_page.dart';
 import 'demos/general/list_view_reverse_demo_page.dart';
@@ -124,6 +125,12 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'Card',
       subtitle: 'elevated/filled/outlined variants + theme/clip probes',
       builder: () => const CardDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.gridTile,
+      title: 'GridTile + GridTileBar',
+      subtitle: 'header/footer overlays + one/two-line bars + RTL',
+      builder: () => const GridTileDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.listTile,
