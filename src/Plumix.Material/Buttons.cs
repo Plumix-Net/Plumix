@@ -1768,7 +1768,24 @@ internal sealed class MaterialButtonCore : StatefulWidget
                 legacyOverrides?.TextStyle,
                 widgetStyle?.TextStyle,
                 themeStyle?.TextStyle,
-                defaults?.TextStyle));
+                defaults?.TextStyle),
+            MouseCursor: ComposeStateProperty<MouseCursor?>(
+                legacyOverrides?.MouseCursor,
+                widgetStyle?.MouseCursor,
+                themeStyle?.MouseCursor,
+                defaults?.MouseCursor),
+            VisualDensity: legacyOverrides?.VisualDensity
+                           ?? widgetStyle?.VisualDensity
+                           ?? themeStyle?.VisualDensity
+                           ?? defaults?.VisualDensity,
+            AnimationDuration: legacyOverrides?.AnimationDuration
+                               ?? widgetStyle?.AnimationDuration
+                               ?? themeStyle?.AnimationDuration
+                               ?? defaults?.AnimationDuration,
+            EnableFeedback: legacyOverrides?.EnableFeedback
+                            ?? widgetStyle?.EnableFeedback
+                            ?? themeStyle?.EnableFeedback
+                            ?? defaults?.EnableFeedback);
     }
 
     private static MaterialStateProperty<T>? ComposeStateProperty<T>(
@@ -2131,6 +2148,10 @@ internal sealed class MaterialButtonCore : StatefulWidget
             var borderRadius = style.ResolveShape(baseStates) ?? Plumix.Rendering.BorderRadius.Zero;
             var minimumSize = style.ResolveMinimumSize(baseStates) ?? new Size(64, 40);
             ValidateMinimumSize(minimumSize);
+            var densityAdjustment = (style.VisualDensity ?? theme.VisualDensity).BaseSizeAdjustment;
+            minimumSize = new Size(
+                Math.Max(0, minimumSize.Width + densityAdjustment.X),
+                Math.Max(0, minimumSize.Height + densityAdjustment.Y));
             var maximumSize = style.ResolveMaximumSize(baseStates) ?? new Size(double.PositiveInfinity, double.PositiveInfinity);
             ValidateMaximumSize(maximumSize);
             var fixedSize = style.ResolveFixedSize(baseStates);
@@ -2184,13 +2205,19 @@ internal sealed class MaterialButtonCore : StatefulWidget
                     child: content);
             }
 
-            content = new DecoratedBox(
-                decoration: new BoxDecoration(
-                    Color: background,
-                    Border: border,
-                    BorderRadius: borderRadius,
-                    BoxShadows: ResolveBoxShadows(elevation, shadowColor)),
-                child: content);
+            var decoration = new BoxDecoration(
+                Color: background,
+                Border: border,
+                BorderRadius: borderRadius,
+                BoxShadows: ResolveBoxShadows(elevation, shadowColor));
+            content = style.AnimationDuration is { } animationDuration && animationDuration > TimeSpan.Zero
+                ? new AnimatedContainer(
+                    duration: animationDuration,
+                    decoration: decoration,
+                    child: content)
+                : new DecoratedBox(
+                    decoration: decoration,
+                    child: content);
 
             Widget result = content;
             Action? tapCallback = Interactive ? HandleTap : null;
@@ -2437,8 +2464,11 @@ internal sealed class MaterialButtonCore : StatefulWidget
         private void UpdateMouseCursor()
         {
             ReleaseMouseCursor();
+            var states = BuildMaterialStates(enabled: Enabled, includeFocus: true);
             _mouseCursorHandle = MouseCursorManager.PushCursor(
-                CurrentWidget.MouseCursor ?? SystemMouseCursors.Click);
+                CurrentWidget.MouseCursor
+                ?? CurrentWidget.Style.ResolveMouseCursor(states)
+                ?? SystemMouseCursors.Click);
         }
 
         private void ReleaseMouseCursor()
@@ -2449,7 +2479,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
 
         private bool IsFeedbackEnabled()
         {
-            return CurrentWidget.EnableFeedback ?? true;
+            return CurrentWidget.EnableFeedback ?? CurrentWidget.Style.EnableFeedback ?? true;
         }
 
         private void SetFocusOverlaySuppressed(bool value)

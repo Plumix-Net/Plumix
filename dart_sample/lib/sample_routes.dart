@@ -31,6 +31,7 @@ class SampleRoutes {
   static const String circleAvatar = '/circle-avatar';
   static const String navigationSurfaces = '/navigation-surfaces';
   static const String navigationDrawer = '/navigation-drawer';
+  static const String segmentedButtons = '/segmented-buttons';
   static const String chips = '/chips';
   static const String linearProgressIndicator = '/linear-progress-indicator';
   static const String circularProgressIndicator =

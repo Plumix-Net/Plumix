@@ -561,6 +561,11 @@ Progress update (2026-03-19):
   - matched Flutter's header/footer plus scrollable mixed-child composition, destination-only indexing, nullable controlled selection, disabled interaction, selected-icon switching, 500ms indicator animation, destination background, safe-area behavior, and localized tab semantics;
   - added `NavigationDrawerThemeData`/`NavigationDrawerTheme` plus `ThemeData.NavigationDrawerTheme` with state-aware label/icon style resolution and widget/local/global/default precedence for surface, indicator, tile, and typography geometry;
   - extended `Drawer`/`DrawerThemeData` with source-required surface-tint plumbing, added focused defaults/precedence/interaction/semantics coverage, and added a mirrored `/navigation-drawer` C#/Dart runtime demo.
+- Added paired `ToggleButtons` + `SegmentedButton<T>` ports:
+  - matched Flutter's controlled bool-list and typed-set models, exclusive/multi/empty selection rules, disabled whole-control/per-segment behavior, selected-icon replacement, tooltip composition, `styleFrom`, and state-aware default/theme/widget precedence;
+  - added `ToggleButtonsThemeData`/`ToggleButtonsTheme`, `SegmentedButtonThemeData`/`SegmentedButtonTheme`, and corresponding `ThemeData` surfaces, plus shared `ButtonStyle` cursor/density/duration/feedback fields;
+  - added a shared equalized segment render layout for tallest/widest child normalization, RTL/vertical ordering, expanded-insets distribution, zero-area safety, tap-target geometry, and checked/selected/mutually-exclusive semantics;
+  - added focused API/default/state/layout/style/semantics coverage and a mirrored `/segmented-buttons` C#/Dart runtime demo.
 - Remaining divergence for floating action button in current framework scope:
   - none documented in current framework scope.
 

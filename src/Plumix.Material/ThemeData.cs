@@ -245,6 +245,8 @@ public sealed record ThemeData
     private NavigationBarThemeData? _navigationBarTheme;
     private NavigationRailThemeData? _navigationRailTheme;
     private NavigationDrawerThemeData? _navigationDrawerTheme;
+    private ToggleButtonsThemeData? _toggleButtonsTheme;
+    private SegmentedButtonThemeData? _segmentedButtonTheme;
     private ChipThemeData? _chipTheme;
     private ActionIconThemeData? _actionIconTheme;
 
@@ -312,7 +314,9 @@ public sealed record ThemeData
         ChipThemeData? chipTheme = null,
         VisualDensity? visualDensity = null,
         ActionIconThemeData? actionIconTheme = null,
-        NavigationDrawerThemeData? navigationDrawerTheme = null)
+        NavigationDrawerThemeData? navigationDrawerTheme = null,
+        ToggleButtonsThemeData? toggleButtonsTheme = null,
+        SegmentedButtonThemeData? segmentedButtonTheme = null)
     {
         Platform = platform ?? ResolveDefaultPlatform();
         Brightness = brightness ?? Brightness.Light;
@@ -376,6 +380,8 @@ public sealed record ThemeData
         _navigationBarTheme = navigationBarTheme;
         _navigationRailTheme = navigationRailTheme;
         _navigationDrawerTheme = navigationDrawerTheme;
+        _toggleButtonsTheme = toggleButtonsTheme;
+        _segmentedButtonTheme = segmentedButtonTheme;
         _chipTheme = chipTheme;
         _actionIconTheme = actionIconTheme;
         VisualDensity = visualDensity ?? VisualDensity.Standard;
@@ -595,6 +601,18 @@ public sealed record ThemeData
     {
         get => _navigationDrawerTheme ?? new NavigationDrawerThemeData();
         init => _navigationDrawerTheme = value;
+    }
+
+    public ToggleButtonsThemeData ToggleButtonsTheme
+    {
+        get => _toggleButtonsTheme ?? new ToggleButtonsThemeData();
+        init => _toggleButtonsTheme = value;
+    }
+
+    public SegmentedButtonThemeData SegmentedButtonTheme
+    {
+        get => _segmentedButtonTheme ?? new SegmentedButtonThemeData();
+        init => _segmentedButtonTheme = value;
     }
 
     public ChipThemeData ChipTheme

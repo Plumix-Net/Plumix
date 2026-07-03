@@ -37,6 +37,7 @@ import 'demos/material/expansion_panel_demo_page.dart';
 import 'demos/material/material_buttons_demo_page.dart';
 import 'demos/material/navigation_surfaces_demo_page.dart';
 import 'demos/material/navigation_drawer_demo_page.dart';
+import 'demos/material/segmented_buttons_demo_page.dart';
 import 'demos/material/chips_demo_page.dart';
 import 'demos/general/navigator_demo_page.dart';
 import 'demos/general/offstage_demo_page.dart';
@@ -110,6 +111,12 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'NavigationDrawer',
       subtitle: 'destinations + custom children + selection/theme probes',
       builder: () => const NavigationDrawerDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.segmentedButtons,
+      title: 'ToggleButtons + SegmentedButton',
+      subtitle: 'legacy/M3 segmented selection + themes/states',
+      builder: () => const SegmentedButtonsDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.chips,

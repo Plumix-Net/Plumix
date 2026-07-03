@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Rendering;
+using Plumix.UI;
 using Plumix.Widgets;
 
 namespace Plumix.Material;
@@ -94,7 +95,11 @@ public sealed record ButtonStyle(
     Alignment? Alignment = null,
     IconAlignment? IconAlignment = null,
     MaterialTapTargetSize? TapTargetSize = null,
-    MaterialStateProperty<TextStyle?>? TextStyle = null)
+    MaterialStateProperty<TextStyle?>? TextStyle = null,
+    MaterialStateProperty<MouseCursor?>? MouseCursor = null,
+    VisualDensity? VisualDensity = null,
+    TimeSpan? AnimationDuration = null,
+    bool? EnableFeedback = null)
 {
     public ButtonStyle Merge(ButtonStyle? style)
     {
@@ -123,7 +128,11 @@ public sealed record ButtonStyle(
             Alignment = Alignment ?? style.Alignment,
             IconAlignment = IconAlignment ?? style.IconAlignment,
             TapTargetSize = TapTargetSize ?? style.TapTargetSize,
-            TextStyle = TextStyle ?? style.TextStyle
+            TextStyle = TextStyle ?? style.TextStyle,
+            MouseCursor = MouseCursor ?? style.MouseCursor,
+            VisualDensity = VisualDensity ?? style.VisualDensity,
+            AnimationDuration = AnimationDuration ?? style.AnimationDuration,
+            EnableFeedback = EnableFeedback ?? style.EnableFeedback
         };
     }
 
@@ -215,5 +224,10 @@ public sealed record ButtonStyle(
     internal TextStyle? ResolveTextStyle(MaterialState states)
     {
         return TextStyle?.Resolve(states);
+    }
+
+    internal MouseCursor? ResolveMouseCursor(MaterialState states)
+    {
+        return MouseCursor?.Resolve(states);
     }
 }
