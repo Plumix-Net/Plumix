@@ -33,6 +33,7 @@ internal static class SampleRoutes
     public const string MaterialButtons = "/material-buttons";
     public const string ActionButtons = "/action-buttons";
     public const string Drawer = "/drawer";
+    public const string DrawerHeaders = "/drawer-headers";
     public const string Divider = "/divider";
     public const string BadgeTooltip = "/badge-tooltip";
     public const string CircleAvatar = "/circle-avatar";
@@ -90,6 +91,7 @@ internal sealed class SampleGalleryScreen : StatelessWidget
         new(SampleRoutes.MaterialButtons, "Material buttons", "TextButton + ElevatedButton + OutlinedButton + FilledButton", () => new MaterialButtonsDemoPage()),
         new(SampleRoutes.ActionButtons, "Material action buttons", "back/close/drawer/end-drawer + ActionIconTheme", () => new ActionButtonsDemoPage()),
         new(SampleRoutes.Drawer, "Drawer", "scaffold drawer/endDrawer + theme/widget precedence probes", () => new DrawerDemoPage()),
+        new(SampleRoutes.DrawerHeaders, "Drawer headers", "DrawerHeader + UserAccountsDrawerHeader", () => new DrawerHeadersDemoPage()),
         new(SampleRoutes.Divider, "Divider", "horizontal/vertical divider + theme/widget precedence probes", () => new DividerDemoPage()),
         new(SampleRoutes.BadgeTooltip, "Badge + Tooltip", "count/small badges + hover/long-press tooltip theming", () => new BadgeTooltipDemoPage()),
         new(SampleRoutes.CircleAvatar, "CircleAvatar", "initials + image layers + animated radius + fallback", () => new CircleAvatarDemoPage()),

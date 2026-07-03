@@ -17,6 +17,12 @@ public abstract class MaterialLocalizations
 
     public virtual string OpenAppDrawerTooltip => "Open navigation menu";
 
+    public virtual string SignedInLabel => "Signed in";
+
+    public virtual string HideAccountsLabel => "Hide accounts";
+
+    public virtual string ShowAccountsLabel => "Show accounts";
+
     public static MaterialLocalizations Of(BuildContext context)
     {
         return MaterialLocalizationsScope.Of(context);
@@ -38,6 +44,12 @@ public sealed class DefaultMaterialLocalizations : MaterialLocalizations
     public override string CloseButtonTooltip => "Close";
 
     public override string OpenAppDrawerTooltip => "Open navigation menu";
+
+    public override string SignedInLabel => "Signed in";
+
+    public override string HideAccountsLabel => "Hide accounts";
+
+    public override string ShowAccountsLabel => "Show accounts";
 
     public override string TabLabel(int tabIndex, int tabCount)
     {

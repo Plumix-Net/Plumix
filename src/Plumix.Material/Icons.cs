@@ -18,6 +18,8 @@ public static class Icons
         FontFamily: MaterialIconsFontFamily,
         MatchTextDirection: true);
 
+    public static IconData ArrowDropDown { get; } = new(0xe098, FontFamily: MaterialIconsFontFamily);
+
     public static IconData Add { get; } = new(0xe047, FontFamily: MaterialIconsFontFamily);
 
     public static IconData Check { get; } = new(0xe156, FontFamily: MaterialIconsFontFamily);

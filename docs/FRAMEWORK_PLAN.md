@@ -553,6 +553,10 @@ Progress update (2026-03-19):
 - Completed the Flutter action-button quartet with paired `DrawerButton` + `EndDrawerButton` ports:
   - added standalone drawer icon widgets, local/global action-icon builder precedence, localized tooltip and Android duplicated icon semantics, custom callbacks, and default start/end `Scaffold` open actions;
   - replaced AppBar's manual implied start/end drawer `IconButton` composition with the new controls and expanded the mirrored `/action-buttons` demo plus focused Scaffold/action coverage.
+- Added paired `DrawerHeader` + `UserAccountsDrawerHeader` ports:
+  - matched status-bar-aware `161dp` header sizing, default padding/margin, exact `fastOutSlowIn` animated decoration and bottom divider composition;
+  - matched primary account plus three secondary picture slots, primary text styles, details callback/toggle arrow, signed-in/show/hide localized semantics, directional geometry, and default theme-primary decoration;
+  - added focused layout/theme/semantics/RTL coverage and a mirrored `/drawer-headers` runtime demo.
 - Remaining divergence for floating action button in current framework scope:
   - none documented in current framework scope.
 
