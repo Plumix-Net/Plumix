@@ -470,6 +470,10 @@ public sealed class ScaffoldState : State
 
         var theme = Theme.Of(context);
         var effectiveBackground = CurrentWidget.BackgroundColor ?? theme.ScaffoldBackgroundColor;
+        var presentedSnackBar = ScaffoldMessenger.MaybeOf(context)?.CurrentSnackBar;
+        var presentedSnackBarBehavior = presentedSnackBar?.Behavior
+                                        ?? SnackBarTheme.Of(context).Behavior
+                                        ?? SnackBarBehavior.Fixed;
 
         var columnChildren = new List<Widget>();
         if (CurrentWidget.AppBar != null)
@@ -478,6 +482,11 @@ public sealed class ScaffoldState : State
         }
 
         columnChildren.Add(new Expanded(child: CurrentWidget.Body));
+
+        if (presentedSnackBar is not null && presentedSnackBarBehavior == SnackBarBehavior.Fixed)
+        {
+            columnChildren.Add(presentedSnackBar);
+        }
 
         if (CurrentWidget.BottomNavigationBar != null)
         {
@@ -509,6 +518,14 @@ public sealed class ScaffoldState : State
         var isEndDrawerVisible = IsDrawerVisible(DrawerSide.End, endDrawerProgress);
         var isAnyDrawerVisible = isStartDrawerVisible || isEndDrawerVisible;
         var overlayChildren = new List<Widget> { content };
+        if (presentedSnackBar is not null && presentedSnackBarBehavior == SnackBarBehavior.Floating)
+        {
+            overlayChildren.Add(new Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: presentedSnackBar));
+        }
 
         if (!isAnyDrawerVisible)
         {

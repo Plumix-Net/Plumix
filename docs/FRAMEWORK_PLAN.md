@@ -8,7 +8,7 @@ Use this block as the fastest machine-readable status summary.
 
 ```yaml
 framework_plan_version: 1
-last_updated: 2026-07-03
+last_updated: 2026-07-04
 north_star: "Flutter-like widget/rendering framework in C# with Avalonia as host infrastructure."
 current_phase: "M4 material library rewrite (theme/scaffold/material controls) in progress."
 status:
@@ -569,7 +569,11 @@ Progress update (2026-03-19):
 - Added paired core `Banner` + Material `MaterialBanner` ports:
   - matched the exact four-corner/RTL diagonal ribbon transforms, colors, shadow, typography, foreground paint order, and debug checked-mode composition through a shared Flutter-shaped `CustomPaint` primitive;
   - matched Material single-action trailing versus forced/multiple below-action composition, `OverflowBar` row-to-column behavior, directional padding, leading slot, minimum action bar, M2/M3 surface/divider defaults, elevation/margin, theme/widget precedence, and `1.5x` text-scale cap;
-  - added controller-driven slide/height transitions, accessible-navigation bypass, live-region/dismiss semantics, focused coverage, and a mirrored `/banner` C#/Dart runtime demo; ScaffoldMessenger queue/presentation integration is tracked as a divergence.
+  - added controller-driven slide/height transitions, accessible-navigation bypass, live-region/dismiss semantics, focused coverage, and a mirrored `/banner` C#/Dart runtime demo; banner presentation through ScaffoldMessenger remains tracked as a divergence.
+- Added paired Material `SnackBarAction` + `SnackBar` ports:
+  - matched one-shot action behavior, M2/M3 colors/typography/elevation, `SnackBarTheme` and widget precedence, fixed/floating geometry, close icon, measured action-overflow layout, animation, swipe/dismiss handling, and live-region semantics;
+  - introduced `ScaffoldMessenger` + `ScaffoldFeatureController` with FIFO snackbar presentation, hide/remove/timeout lifecycle, closed reasons, accessible-navigation persistence, and `Scaffold` placement integration;
+  - added focused `MaterialSnackBarTests` and a mirrored `/snack-bar` C#/Dart runtime demo covering queue, action, close, custom colors, and fixed/floating paths.
 - Remaining divergence for floating action button in current framework scope:
   - none documented in current framework scope.
 

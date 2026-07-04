@@ -219,6 +219,7 @@ public sealed record ThemeData
     private static readonly Color LightOnSecondaryContainerColor = Color.Parse("#FF4A4458");
     private static readonly Color LightInverseSurfaceColor = Color.Parse("#FF322F35");
     private static readonly Color LightOnInverseSurfaceColor = Color.Parse("#FFF5EFF7");
+    private static readonly Color LightInversePrimaryColor = Color.Parse("#FFD0BCFF");
     private static readonly Color LightErrorColor = Color.Parse("#FFB3261E");
     private static readonly Color LightOnErrorColor = Colors.White;
 
@@ -250,6 +251,7 @@ public sealed record ThemeData
     private ChipThemeData? _chipTheme;
     private ActionIconThemeData? _actionIconTheme;
     private MaterialBannerThemeData? _bannerTheme;
+    private SnackBarThemeData? _snackBarTheme;
 
     public ThemeData(
         TargetPlatform? platform = null,
@@ -318,7 +320,9 @@ public sealed record ThemeData
         NavigationDrawerThemeData? navigationDrawerTheme = null,
         ToggleButtonsThemeData? toggleButtonsTheme = null,
         SegmentedButtonThemeData? segmentedButtonTheme = null,
-        MaterialBannerThemeData? bannerTheme = null)
+        MaterialBannerThemeData? bannerTheme = null,
+        SnackBarThemeData? snackBarTheme = null,
+        Color? inversePrimaryColor = null)
     {
         Platform = platform ?? ResolveDefaultPlatform();
         Brightness = brightness ?? Brightness.Light;
@@ -352,6 +356,7 @@ public sealed record ThemeData
         OnSecondaryContainerColor = onSecondaryContainerColor ?? LightOnSecondaryContainerColor;
         InverseSurfaceColor = inverseSurfaceColor ?? LightInverseSurfaceColor;
         OnInverseSurfaceColor = onInverseSurfaceColor ?? LightOnInverseSurfaceColor;
+        InversePrimaryColor = inversePrimaryColor ?? LightInversePrimaryColor;
         ErrorColor = errorColor ?? LightErrorColor;
         OnErrorColor = onErrorColor ?? LightOnErrorColor;
         MaterialTapTargetSize = materialTapTargetSize ?? MaterialTapTargetSize.Padded;
@@ -387,6 +392,7 @@ public sealed record ThemeData
         _chipTheme = chipTheme;
         _actionIconTheme = actionIconTheme;
         _bannerTheme = bannerTheme;
+        _snackBarTheme = snackBarTheme;
         VisualDensity = visualDensity ?? VisualDensity.Standard;
     }
 
@@ -455,6 +461,8 @@ public sealed record ThemeData
     public Color InverseSurfaceColor { get; init; }
 
     public Color OnInverseSurfaceColor { get; init; }
+
+    public Color InversePrimaryColor { get; init; }
 
     public Color ErrorColor { get; init; }
 
@@ -636,6 +644,12 @@ public sealed record ThemeData
         init => _bannerTheme = value;
     }
 
+    public SnackBarThemeData SnackBarTheme
+    {
+        get => _snackBarTheme ?? new SnackBarThemeData();
+        init => _snackBarTheme = value;
+    }
+
     public static ThemeData Light { get; } = new();
 
     public static ThemeData Dark { get; } = new(
@@ -657,6 +671,9 @@ public sealed record ThemeData
         surfaceColor: Color.Parse("#FF121212"),
         onSurfaceColor: Colors.White,
         onSurfaceVariantColor: Color.FromArgb(0xB3, 0xFF, 0xFF, 0xFF),
+        inverseSurfaceColor: Color.Parse("#FFE6E1E5"),
+        onInverseSurfaceColor: Color.Parse("#FF322F35"),
+        inversePrimaryColor: Color.Parse("#FF6750A4"),
         cardColor: Color.Parse("#FF1E1E1E"),
         iconTheme: new IconThemeData(Color: Colors.White, Size: 24));
 

@@ -33,6 +33,7 @@ class SampleRoutes {
   static const String navigationDrawer = '/navigation-drawer';
   static const String segmentedButtons = '/segmented-buttons';
   static const String banner = '/banner';
+  static const String snackBar = '/snack-bar';
   static const String chips = '/chips';
   static const String linearProgressIndicator = '/linear-progress-indicator';
   static const String circularProgressIndicator =
