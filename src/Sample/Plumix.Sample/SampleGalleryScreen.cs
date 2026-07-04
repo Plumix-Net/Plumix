@@ -42,6 +42,7 @@ internal static class SampleRoutes
     public const string SegmentedButtons = "/segmented-buttons";
     public const string Banner = "/banner";
     public const string SnackBar = "/snack-bar";
+    public const string Dialog = "/dialog";
     public const string Chips = "/chips";
     public const string LinearProgressIndicator = "/linear-progress-indicator";
     public const string CircularProgressIndicator = "/circular-progress-indicator";
@@ -104,6 +105,7 @@ internal sealed class SampleGalleryScreen : StatelessWidget
         new(SampleRoutes.SegmentedButtons, "ToggleButtons + SegmentedButton", "legacy/M3 segmented selection + themes/states", () => new SegmentedButtonsDemoPage()),
         new(SampleRoutes.Banner, "Banner + MaterialBanner", "diagonal ribbon + persistent actions/theme/overflow probes", () => new BannerDemoPage()),
         new(SampleRoutes.SnackBar, "SnackBar + SnackBarAction", "messenger queue + action/close/overflow probes", () => new SnackBarDemoPage()),
+        new(SampleRoutes.Dialog, "Dialog + AlertDialog", "modal route + barrier/result/scrollable/theme probes", () => new DialogDemoPage()),
         new(SampleRoutes.Chips, "Material chips", "action/choice/filter/input + selection/deletion/theme probes", () => new ChipsDemoPage()),
         new(SampleRoutes.LinearProgressIndicator, "LinearProgressIndicator", "determinate/indeterminate + M2/M3 + theme/widget/RTL probes", () => new LinearProgressIndicatorDemoPage()),
         new(SampleRoutes.CircularProgressIndicator, "CircularProgressIndicator", "determinate/indeterminate + M2/M3 + theme/widget probes", () => new CircularProgressIndicatorDemoPage()),

@@ -23,6 +23,10 @@ public abstract class MaterialLocalizations
 
     public virtual string ShowAccountsLabel => "Show accounts";
 
+    public virtual string AlertDialogLabel => "Alert";
+
+    public virtual string ModalBarrierDismissLabel => "Dismiss";
+
     public static MaterialLocalizations Of(BuildContext context)
     {
         return MaterialLocalizationsScope.Of(context);
@@ -50,6 +54,10 @@ public sealed class DefaultMaterialLocalizations : MaterialLocalizations
     public override string HideAccountsLabel => "Hide accounts";
 
     public override string ShowAccountsLabel => "Show accounts";
+
+    public override string AlertDialogLabel => "Alert";
+
+    public override string ModalBarrierDismissLabel => "Dismiss";
 
     public override string TabLabel(int tabIndex, int tabCount)
     {

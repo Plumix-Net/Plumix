@@ -24,6 +24,10 @@ public enum SemanticsFlags
     IsExpanded = 1 << 12,
     IsInMutuallyExclusiveGroup = 1 << 13,
     IsLiveRegion = 1 << 14,
+    IsDialog = 1 << 15,
+    IsAlertDialog = 1 << 16,
+    ScopesRoute = 1 << 17,
+    NamesRoute = 1 << 18,
 }
 
 [Flags]

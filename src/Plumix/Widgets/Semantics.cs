@@ -5,6 +5,13 @@ using Plumix.Rendering;
 
 namespace Plumix.Widgets;
 
+public enum SemanticsRole
+{
+    None,
+    Dialog,
+    AlertDialog,
+}
+
 public sealed class Semantics : SingleChildRenderObjectWidget
 {
     public Semantics(
@@ -16,15 +23,24 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         bool liveRegion = false,
         bool container = false,
         bool explicitChildNodes = false,
+        SemanticsRole role = SemanticsRole.None,
+        bool scopesRoute = false,
+        bool namesRoute = false,
         Key? key = null) : base(child, key)
     {
         Label = label;
-        Flags = flags;
+        Flags = flags
+                | RoleFlags(role)
+                | (scopesRoute ? SemanticsFlags.ScopesRoute : SemanticsFlags.None)
+                | (namesRoute ? SemanticsFlags.NamesRoute : SemanticsFlags.None);
         OnTap = onTap;
         OnDismiss = onDismiss;
         LiveRegion = liveRegion;
         Container = container;
         ExplicitChildNodes = explicitChildNodes;
+        Role = role;
+        ScopesRoute = scopesRoute;
+        NamesRoute = namesRoute;
     }
 
     public string? Label { get; }
@@ -40,6 +56,12 @@ public sealed class Semantics : SingleChildRenderObjectWidget
     public bool Container { get; }
 
     public bool ExplicitChildNodes { get; }
+
+    public SemanticsRole Role { get; }
+
+    public bool ScopesRoute { get; }
+
+    public bool NamesRoute { get; }
 
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
@@ -64,6 +86,13 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         semantics.Container = Container;
         semantics.ExplicitChildNodes = ExplicitChildNodes;
     }
+
+    private static SemanticsFlags RoleFlags(SemanticsRole role) => role switch
+    {
+        SemanticsRole.Dialog => SemanticsFlags.IsDialog,
+        SemanticsRole.AlertDialog => SemanticsFlags.IsAlertDialog,
+        _ => SemanticsFlags.None,
+    };
 }
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/widgets/basic.dart (MergeSemantics)

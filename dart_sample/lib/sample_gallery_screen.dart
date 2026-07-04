@@ -9,6 +9,7 @@ import 'demos/material/action_buttons_demo_page.dart';
 import 'demos/material/badge_tooltip_demo_page.dart';
 import 'demos/material/banner_demo_page.dart';
 import 'demos/material/snack_bar_demo_page.dart';
+import 'demos/material/dialog_demo_page.dart';
 import 'demos/general/aspect_ratio_demo_page.dart';
 import 'demos/general/bloc_counter_demo_page.dart';
 import 'demos/material/card_demo_page.dart';
@@ -131,6 +132,12 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'SnackBar + SnackBarAction',
       subtitle: 'messenger queue + action/close/overflow probes',
       builder: () => const SnackBarDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.dialog,
+      title: 'Dialog + AlertDialog',
+      subtitle: 'modal route + barrier/result/scrollable/theme probes',
+      builder: () => const DialogDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.chips,

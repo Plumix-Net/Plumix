@@ -574,6 +574,10 @@ Progress update (2026-03-19):
   - matched one-shot action behavior, M2/M3 colors/typography/elevation, `SnackBarTheme` and widget precedence, fixed/floating geometry, close icon, measured action-overflow layout, animation, swipe/dismiss handling, and live-region semantics;
   - introduced `ScaffoldMessenger` + `ScaffoldFeatureController` with FIFO snackbar presentation, hide/remove/timeout lifecycle, closed reasons, accessible-navigation persistence, and `Scaffold` placement integration;
   - added focused `MaterialSnackBarTests` and a mirrored `/snack-bar` C#/Dart runtime demo covering queue, action, close, custom colors, and fixed/floating paths.
+- Added paired Material `Dialog` + `AlertDialog` ports:
+  - matched M2/M3/fullscreen surfaces, `DialogTheme`/widget precedence, view-inset animation, minimum/intrinsic width, icon/title/content/action slots, scaled padding, scrollable content, action overflow, and dialog/route semantics;
+  - extended Navigator with non-opaque route stacking and typed completion results, then added `DialogRoute<T>`/`MaterialDialogs.ShowDialog<T>` with captured themes/media/direction, modal barrier dismissal, fade/reverse transitions, and delayed result completion;
+  - added shared `Builder`, `IntrinsicWidth`, unbounded-stretch flex hardening, focused `MaterialDialogTests`, and a mirrored `/dialog` C#/Dart runtime demo.
 - Remaining divergence for floating action button in current framework scope:
   - none documented in current framework scope.
 

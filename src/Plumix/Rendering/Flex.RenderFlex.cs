@@ -379,7 +379,9 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
     {
         bool fillCrossAxis = CrossAxisAlignment switch
         {
-            CrossAxisAlignment.Stretch => true,
+            CrossAxisAlignment.Stretch => Direction == Axis.Horizontal
+                ? constraints.HasBoundedHeight
+                : constraints.HasBoundedWidth,
             _ => false,
         };
 

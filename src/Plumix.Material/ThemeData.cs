@@ -66,7 +66,8 @@ public sealed record MaterialTextTheme
         TextStyle? titleMedium = null,
         TextStyle? bodyLarge = null,
         TextStyle? labelMedium = null,
-        TextStyle? bodySmall = null)
+        TextStyle? bodySmall = null,
+        TextStyle? headlineSmall = null)
     {
         BodyMedium = bodyMedium ?? DefaultBodyMedium;
         BodyLarge = bodyLarge ?? DefaultBodyLarge;
@@ -76,6 +77,7 @@ public sealed record MaterialTextTheme
         LabelMedium = labelMedium ?? DefaultLabelMedium;
         LabelSmall = labelSmall ?? DefaultLabelSmall;
         TitleMedium = titleMedium ?? DefaultTitleMedium;
+        HeadlineSmall = headlineSmall ?? DefaultHeadlineSmall;
     }
 
     public TextStyle BodyMedium { get; init; }
@@ -93,6 +95,8 @@ public sealed record MaterialTextTheme
     public TextStyle LabelSmall { get; init; }
 
     public TextStyle TitleMedium { get; init; }
+
+    public TextStyle HeadlineSmall { get; init; }
 
     public static TextStyle DefaultBodyMedium { get; } = new(
         FontFamily: DefaultBodyFontFamily,
@@ -166,6 +170,15 @@ public sealed record MaterialTextTheme
         Height: 1.5,
         LetterSpacing: 0.15);
 
+    public static TextStyle DefaultHeadlineSmall { get; } = new(
+        FontFamily: DefaultBodyFontFamily,
+        FontSize: 24,
+        Color: Color.Parse("#FF1D1B20"),
+        FontWeight: FontWeight.Normal,
+        FontStyle: FontStyle.Normal,
+        Height: 1.33,
+        LetterSpacing: 0.0);
+
     public static MaterialTextTheme Fallback { get; } = new();
 
     private static FontFamily ResolveDefaultBodyFontFamily()
@@ -214,6 +227,7 @@ public sealed record ThemeData
     private static readonly Color LightCardColor = Colors.White;
     private static readonly Color LightSurfaceContainerLowColor = Color.Parse("#FFF7F2FA");
     private static readonly Color LightSurfaceContainerColor = Color.Parse("#FFF3EDF7");
+    private static readonly Color LightSurfaceContainerHighColor = Color.Parse("#FFECE6F0");
     private static readonly Color LightSurfaceContainerHighestColor = Color.Parse("#FFE6E0E9");
     private static readonly Color LightSecondaryContainerColor = Color.Parse("#FFE8DEF8");
     private static readonly Color LightOnSecondaryContainerColor = Color.Parse("#FF4A4458");
@@ -252,6 +266,7 @@ public sealed record ThemeData
     private ActionIconThemeData? _actionIconTheme;
     private MaterialBannerThemeData? _bannerTheme;
     private SnackBarThemeData? _snackBarTheme;
+    private DialogThemeData? _dialogTheme;
 
     public ThemeData(
         TargetPlatform? platform = null,
@@ -322,7 +337,9 @@ public sealed record ThemeData
         SegmentedButtonThemeData? segmentedButtonTheme = null,
         MaterialBannerThemeData? bannerTheme = null,
         SnackBarThemeData? snackBarTheme = null,
-        Color? inversePrimaryColor = null)
+        Color? inversePrimaryColor = null,
+        DialogThemeData? dialogTheme = null,
+        Color? surfaceContainerHighColor = null)
     {
         Platform = platform ?? ResolveDefaultPlatform();
         Brightness = brightness ?? Brightness.Light;
@@ -351,6 +368,7 @@ public sealed record ThemeData
         CardColor = cardColor ?? LightCardColor;
         SurfaceContainerLowColor = surfaceContainerLowColor ?? LightSurfaceContainerLowColor;
         SurfaceContainerColor = surfaceContainerColor ?? LightSurfaceContainerColor;
+        SurfaceContainerHighColor = surfaceContainerHighColor ?? LightSurfaceContainerHighColor;
         SurfaceContainerHighestColor = surfaceContainerHighestColor ?? LightSurfaceContainerHighestColor;
         SecondaryContainerColor = secondaryContainerColor ?? LightSecondaryContainerColor;
         OnSecondaryContainerColor = onSecondaryContainerColor ?? LightOnSecondaryContainerColor;
@@ -393,6 +411,7 @@ public sealed record ThemeData
         _actionIconTheme = actionIconTheme;
         _bannerTheme = bannerTheme;
         _snackBarTheme = snackBarTheme;
+        _dialogTheme = dialogTheme;
         VisualDensity = visualDensity ?? VisualDensity.Standard;
     }
 
@@ -451,6 +470,8 @@ public sealed record ThemeData
     public Color SurfaceContainerLowColor { get; init; }
 
     public Color SurfaceContainerColor { get; init; }
+
+    public Color SurfaceContainerHighColor { get; init; }
 
     public Color SurfaceContainerHighestColor { get; init; }
 
@@ -650,6 +671,12 @@ public sealed record ThemeData
         init => _snackBarTheme = value;
     }
 
+    public DialogThemeData DialogTheme
+    {
+        get => _dialogTheme ?? new DialogThemeData();
+        init => _dialogTheme = value;
+    }
+
     public static ThemeData Light { get; } = new();
 
     public static ThemeData Dark { get; } = new(
@@ -660,6 +687,7 @@ public sealed record ThemeData
             bodySmall: MaterialTextTheme.DefaultBodySmall.CopyWith(color: Color.FromArgb(0xB3, 0xFF, 0xFF, 0xFF)),
             titleLarge: MaterialTextTheme.DefaultTitleLarge.CopyWith(color: Colors.White),
             titleMedium: MaterialTextTheme.DefaultTitleMedium.CopyWith(color: Colors.White),
+            headlineSmall: MaterialTextTheme.DefaultHeadlineSmall.CopyWith(color: Colors.White),
             labelLarge: MaterialTextTheme.DefaultLabelLarge.CopyWith(color: Colors.White),
             labelMedium: MaterialTextTheme.DefaultLabelMedium.CopyWith(color: Colors.White),
             labelSmall: MaterialTextTheme.DefaultLabelSmall.CopyWith(color: Colors.White)),
@@ -674,6 +702,7 @@ public sealed record ThemeData
         inverseSurfaceColor: Color.Parse("#FFE6E1E5"),
         onInverseSurfaceColor: Color.Parse("#FF322F35"),
         inversePrimaryColor: Color.Parse("#FF6750A4"),
+        surfaceContainerHighColor: Color.Parse("#FF211F26"),
         cardColor: Color.Parse("#FF1E1E1E"),
         iconTheme: new IconThemeData(Color: Colors.White, Size: 24));
 

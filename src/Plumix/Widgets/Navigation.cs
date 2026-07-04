@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Avalonia;
 using Plumix.Foundation;
+using Plumix.Rendering;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/widgets/navigator.dart; flutter/packages/flutter/lib/src/widgets/routes.dart (approximate)
 
@@ -165,6 +166,8 @@ public abstract class Route
 
     public RouteSettings Settings { get; }
 
+    public virtual bool Opaque => true;
+
     internal NavigatorState? Navigator { get; private set; }
 
     public virtual bool ImpliesAppBarDismissal
@@ -210,11 +213,17 @@ public abstract class Route
         return true;
     }
 
+    public virtual bool WillPop(object? result) => WillPop();
+
     public virtual void DidPush()
     {
     }
 
     public virtual void DidPop(Route? previousRoute)
+    {
+    }
+
+    public virtual void DidComplete(object? result)
     {
     }
 
@@ -290,6 +299,11 @@ public abstract class Route
 
     protected virtual void OnLocalHistoryChanged()
     {
+    }
+
+    protected void NotifyRouteChanged()
+    {
+        Navigator?.NotifyRouteChanged();
     }
 
     public abstract Widget BuildPage(BuildContext context);
@@ -775,10 +789,15 @@ public sealed class NavigatorState : State
         Widget child;
         if (_heroTransitionSession == null)
         {
-            var route = CurrentRoute;
-            child = route == null
-                ? new SizedBox()
-                : BuildRouteHost(route);
+            var visibleRoutes = VisibleRoutes();
+            child = visibleRoutes.Count switch
+            {
+                0 => new SizedBox(),
+                1 => BuildRouteHost(visibleRoutes[0]),
+                _ => new Stack(
+                    fit: StackFit.Expand,
+                    children: visibleRoutes.Select(BuildRouteHost).Cast<Widget>().ToArray()),
+            };
         }
         else
         {
@@ -786,6 +805,26 @@ public sealed class NavigatorState : State
         }
 
         return new NavigatorScope(this, child);
+    }
+
+    internal void NotifyRouteChanged()
+    {
+        if (Element.IsActive)
+        {
+            SetState(() => { });
+        }
+    }
+
+    private IReadOnlyList<Route> VisibleRoutes()
+    {
+        if (_history.Count == 0) return [];
+        var firstVisible = _history.Count - 1;
+        while (firstVisible > 0 && !_history[firstVisible].Opaque)
+        {
+            firstVisible--;
+        }
+
+        return _history.Skip(firstVisible).ToArray();
     }
 
     private ActiveRouteHost BuildRouteHost(Route route)
@@ -948,7 +987,7 @@ public sealed class NavigatorState : State
             return false;
         }
 
-        if (!route.WillPop())
+        if (!route.WillPop(result))
         {
             return true;
         }
@@ -1004,7 +1043,7 @@ public sealed class NavigatorState : State
                     break;
                 }
 
-                if (_history.Count <= 1 || !route.WillPop())
+                if (_history.Count <= 1 || !route.WillPop(result: null))
                 {
                     break;
                 }
@@ -1047,6 +1086,7 @@ public sealed class NavigatorState : State
             newRoute.DidPush();
 
             oldRoute.DidPop(previousRoute);
+            oldRoute.DidComplete(result);
             oldRoute.Dispose();
             oldRoute.Detach();
             previousRoute?.DidPopNext(oldRoute);
@@ -1326,10 +1366,10 @@ public sealed class NavigatorState : State
         var previousRoute = CurrentRoute;
 
         route.DidPop(previousRoute);
+        route.DidComplete(result);
         previousRoute?.DidPopNext(route);
         previousRoute?.DidChangeNext(nextRoute: null);
 
-        _ = result;
         NotifyObserversPop(route, previousRoute);
 
         var shouldAnimateHero = previousRoute != null && _heroTransitionController.HasHeroes(route);
@@ -1394,6 +1434,7 @@ public sealed class NavigatorState : State
         var removedRoute = _history[index];
         _history.RemoveAt(index);
 
+        removedRoute.DidComplete(result);
         removedRoute.Dispose();
         removedRoute.Detach();
 
@@ -1404,7 +1445,6 @@ public sealed class NavigatorState : State
             previousRoute?.DidPopNext(removedRoute);
         }
 
-        _ = result;
         NotifyObserversRemove(removedRoute, previousRoute);
     }
 
