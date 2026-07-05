@@ -214,7 +214,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
         Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("Enter", true)));
         PumpAnimation();
         harness.Pump(new Size(500, 360));
-        await Task.Yield();
+        await WaitForConditionAsync(() => selected is not null);
         Assert.Equal("three", selected);
 
         var reopenSemantics = harness.PumpAndGetSemantics(new Size(500, 360));
@@ -228,8 +228,13 @@ public sealed class MaterialPopupMenuTests : IDisposable
         Assert.True(barrier!.PerformAction(SemanticsActions.Tap));
         PumpAnimation();
         harness.Pump(new Size(500, 360));
-        await Task.Yield();
+        await WaitForConditionAsync(() => canceled == 1);
         Assert.Equal(1, canceled);
+    }
+
+    private static async Task WaitForConditionAsync(Func<bool> condition)
+    {
+        for (var i = 0; i < 100 && !condition(); i++) await Task.Delay(10);
     }
 
     private static Widget Wrap(ThemeData theme, Widget child) =>
