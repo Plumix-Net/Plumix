@@ -1,8 +1,8 @@
 <Project>
   <PropertyGroup>
     <!-- Shared NuGet package metadata for all packable projects -->
-    <Authors>Plumix Contributors</Authors>
-    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <Authors>Egor Zheludkov</Authors>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/Plumix-Net/Plumix</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageProjectUrl>https://github.com/Plumix-Net/Plumix</PackageProjectUrl>

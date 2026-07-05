@@ -1,17 +1,6 @@
-Plumix Dual License
-===================
+MIT License
 
-Copyright (c) 2024–2026 Plumix Contributors
-
-Plumix is available under two licenses depending on your use case:
-
-───────────────────────────────────────────────────────────────────────────────
-1. MIT LICENSE  (for open-source use)
-───────────────────────────────────────────────────────────────────────────────
-
-If your application is distributed under an OSI-approved open-source license
-(https://opensource.org/licenses), you may use Plumix free of charge under
-the terms of the MIT License below.
+Copyright (c) 2024–2026 Egor Zheludkov
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -30,22 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
-───────────────────────────────────────────────────────────────────────────────
-2. COMMERCIAL LICENSE  (for proprietary / closed-source use)
-───────────────────────────────────────────────────────────────────────────────
-
-If your application is proprietary (closed-source) or is not distributed under
-an OSI-approved open-source license, you must obtain a commercial license.
-
-To purchase a commercial license, contact: egorozh.dev@gmail.com
-
-The full terms of the commercial license are provided in LICENSE-COMMERCIAL.
-
-───────────────────────────────────────────────────────────────────────────────
-SUMMARY
-
-  Open-source app (MIT-compatible license)?  →  use for free under MIT above.
-  Proprietary / closed-source app?           →  commercial license required.
-
-───────────────────────────────────────────────────────────────────────────────

@@ -84,4 +84,4 @@ Not yet. Standard .NET/C# tooling works fine — Visual Studio, VS Code with C# 
 
 **Q: What is the license?**
 
-Plumix has a dual license. See `LICENSE` (open source) and `LICENSE-COMMERCIAL` in the repository for details.
+Plumix is licensed under the MIT License — free for both open-source and commercial use. See `LICENSE` in the repository.
