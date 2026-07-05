@@ -1000,6 +1000,38 @@ public sealed class Stack : MultiChildRenderObjectWidget
     }
 }
 
+public sealed class IndexedStack : MultiChildRenderObjectWidget
+{
+    public IndexedStack(
+        IReadOnlyList<Widget>? children = null,
+        int? index = 0,
+        Alignment alignment = default,
+        Key? key = null) : base(children, key)
+    {
+        if (index.HasValue && (index.Value < 0 || index.Value >= Children.Count))
+        {
+            throw new ArgumentOutOfRangeException(nameof(index));
+        }
+
+        Index = index;
+        Alignment = alignment;
+    }
+
+    public int? Index { get; }
+
+    public Alignment Alignment { get; }
+
+    internal override RenderObject CreateRenderObject(BuildContext context) =>
+        new RenderIndexedStack(Index, Alignment);
+
+    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    {
+        var stack = (RenderIndexedStack)renderObject;
+        stack.Index = Index;
+        stack.Alignment = Alignment;
+    }
+}
+
 public sealed class Positioned : ParentDataWidget<StackParentData>
 {
     public Positioned(

@@ -268,6 +268,7 @@ public sealed record ThemeData
     private SnackBarThemeData? _snackBarTheme;
     private DialogThemeData? _dialogTheme;
     private PopupMenuThemeData? _popupMenuTheme;
+    private ButtonThemeData? _buttonTheme;
 
     public ThemeData(
         TargetPlatform? platform = null,
@@ -341,7 +342,11 @@ public sealed record ThemeData
         Color? inversePrimaryColor = null,
         DialogThemeData? dialogTheme = null,
         Color? surfaceContainerHighColor = null,
-        PopupMenuThemeData? popupMenuTheme = null)
+        PopupMenuThemeData? popupMenuTheme = null,
+        ButtonThemeData? buttonTheme = null,
+        Color? disabledColor = null,
+        Color? hintColor = null,
+        Color? focusColor = null)
     {
         Platform = platform ?? ResolveDefaultPlatform();
         Brightness = brightness ?? Brightness.Light;
@@ -379,6 +384,9 @@ public sealed record ThemeData
         InversePrimaryColor = inversePrimaryColor ?? LightInversePrimaryColor;
         ErrorColor = errorColor ?? LightErrorColor;
         OnErrorColor = onErrorColor ?? LightOnErrorColor;
+        DisabledColor = disabledColor ?? ApplyOpacity(OnSurfaceColor, 0.38);
+        HintColor = hintColor ?? ApplyOpacity(OnSurfaceColor, 0.60);
+        FocusColor = focusColor ?? ApplyOpacity(OnSurfaceColor, 0.12);
         MaterialTapTargetSize = materialTapTargetSize ?? MaterialTapTargetSize.Padded;
         TextButtonStyle = textButtonStyle;
         ElevatedButtonStyle = elevatedButtonStyle;
@@ -415,6 +423,7 @@ public sealed record ThemeData
         _snackBarTheme = snackBarTheme;
         _dialogTheme = dialogTheme;
         _popupMenuTheme = popupMenuTheme;
+        _buttonTheme = buttonTheme;
         VisualDensity = visualDensity ?? VisualDensity.Standard;
     }
 
@@ -491,6 +500,12 @@ public sealed record ThemeData
     public Color ErrorColor { get; init; }
 
     public Color OnErrorColor { get; init; }
+
+    public Color DisabledColor { get; init; }
+
+    public Color HintColor { get; init; }
+
+    public Color FocusColor { get; init; }
 
     public MaterialTapTargetSize MaterialTapTargetSize { get; init; }
 
@@ -685,6 +700,18 @@ public sealed record ThemeData
         get => _popupMenuTheme ?? new PopupMenuThemeData();
         init => _popupMenuTheme = value;
     }
+
+    public ButtonThemeData ButtonTheme
+    {
+        get => _buttonTheme ?? new ButtonThemeData();
+        init => _buttonTheme = value;
+    }
+
+    private static Color ApplyOpacity(Color color, double opacity) => Color.FromArgb(
+        (byte)Math.Round(color.A * Math.Clamp(opacity, 0, 1)),
+        color.R,
+        color.G,
+        color.B);
 
     public static ThemeData Light { get; } = new();
 

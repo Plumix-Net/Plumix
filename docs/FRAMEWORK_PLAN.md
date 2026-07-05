@@ -591,6 +591,10 @@ Progress update (2026-03-19):
   - matched Flutter checkmark/list-tile composition, 150ms selection fade, selected-state label styling, checkbox-role checked semantics, and divider height/thickness/indent/radius/color forwarding;
   - generalized popup routes to accept typed items plus non-value divider entries while keeping dividers out of keyboard focus traversal;
   - expanded focused popup-menu coverage and the mirrored C#/Dart runtime demo.
+- Added paired `DropdownButton<T>` + `DropdownMenuItem<T>` ports:
+  - matched controlled and nullable selection, disabled/hint fallback states, `selectedItemBuilder`, dense/expanded sizing, custom icon/style/padding/underline, `DropdownButtonHideUnderline`, and aligned legacy `ButtonTheme` behavior;
+  - added Flutter-shaped positioned dropdown routes with selected-item alignment, fixed/variable item measurement, max-height scrolling, custom width/color/radius/elevation, barrier policy, staged 300ms reveal, item callbacks, keyboard traversal, and expanded/menu semantics;
+  - added source-required core `IndexedStack`, focused `MaterialDropdownTests`, and a mirrored `/dropdown` C#/Dart runtime demo.
 - Remaining divergence for floating action button in current framework scope:
   - none documented in current framework scope.
 

@@ -44,6 +44,7 @@ internal static class SampleRoutes
     public const string SnackBar = "/snack-bar";
     public const string Dialog = "/dialog";
     public const string PopupMenu = "/popup-menu";
+    public const string Dropdown = "/dropdown";
     public const string Chips = "/chips";
     public const string LinearProgressIndicator = "/linear-progress-indicator";
     public const string CircularProgressIndicator = "/circular-progress-indicator";
@@ -108,6 +109,7 @@ internal sealed class SampleGalleryScreen : StatelessWidget
         new(SampleRoutes.SnackBar, "SnackBar + SnackBarAction", "messenger queue + action/close/overflow probes", () => new SnackBarDemoPage()),
         new(SampleRoutes.Dialog, "Dialog family", "modal route + alert/simple/result/scrollable/theme probes", () => new DialogDemoPage()),
         new(SampleRoutes.PopupMenu, "PopupMenuButton + PopupMenuItem", "anchor + selection/cancel/keyboard/theme probes", () => new PopupMenuDemoPage()),
+        new(SampleRoutes.Dropdown, "DropdownButton + DropdownMenuItem", "selection + hint/disabled/dense/expanded/route probes", () => new DropdownDemoPage()),
         new(SampleRoutes.Chips, "Material chips", "action/choice/filter/input + selection/deletion/theme probes", () => new ChipsDemoPage()),
         new(SampleRoutes.LinearProgressIndicator, "LinearProgressIndicator", "determinate/indeterminate + M2/M3 + theme/widget/RTL probes", () => new LinearProgressIndicatorDemoPage()),
         new(SampleRoutes.CircularProgressIndicator, "CircularProgressIndicator", "determinate/indeterminate + M2/M3 + theme/widget probes", () => new CircularProgressIndicatorDemoPage()),

@@ -11,6 +11,7 @@ import 'demos/material/banner_demo_page.dart';
 import 'demos/material/snack_bar_demo_page.dart';
 import 'demos/material/dialog_demo_page.dart';
 import 'demos/material/popup_menu_demo_page.dart';
+import 'demos/material/dropdown_demo_page.dart';
 import 'demos/general/aspect_ratio_demo_page.dart';
 import 'demos/general/bloc_counter_demo_page.dart';
 import 'demos/material/card_demo_page.dart';
@@ -145,6 +146,12 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'PopupMenuButton + PopupMenuItem',
       subtitle: 'anchor + selection/cancel/keyboard/theme probes',
       builder: () => const PopupMenuDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.dropdown,
+      title: 'DropdownButton + DropdownMenuItem',
+      subtitle: 'selection + hint/disabled/dense/expanded/route probes',
+      builder: () => const DropdownDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.chips,
