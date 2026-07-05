@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
+using Plumix.Widgets;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/rendering/object.dart; flutter/packages/flutter/lib/src/rendering/semantics.dart (approximate)
 
@@ -371,6 +372,7 @@ internal sealed class RenderObjectSemantics
                || config.IsMergingSemanticsOfDescendants
                || config.IsBlockingSemanticsOfPreviouslyPaintedNodes
                || !string.IsNullOrEmpty(config.Label)
+               || config.Role != SemanticsRole.None
                || config.Flags != SemanticsFlags.None
                || config.Actions != SemanticsActions.None
                || config.HasActionHandlers;
@@ -698,6 +700,7 @@ internal sealed class RenderObjectSemantics
         var configuration = new SemanticsConfiguration
         {
             Label = node.Label,
+            Role = node.Role,
             Flags = node.Flags,
             Actions = node.Actions
         };
@@ -727,6 +730,7 @@ internal sealed class RenderObjectSemantics
     {
         node.Rect = rect;
         node.Label = configuration.Label;
+        node.Role = configuration.Role;
         node.Flags = configuration.Flags;
         node.Actions = configuration.Actions;
         node.IsHidden = isHidden;

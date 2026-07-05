@@ -1,5 +1,6 @@
 using Avalonia;
 using System.Text;
+using Plumix.Widgets;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/rendering/semantics.dart (approximate)
 
@@ -28,6 +29,7 @@ public enum SemanticsFlags
     IsAlertDialog = 1 << 16,
     ScopesRoute = 1 << 17,
     NamesRoute = 1 << 18,
+    HasCheckedState = 1 << 19,
 }
 
 [Flags]
@@ -74,6 +76,7 @@ public sealed class SemanticsConfiguration
     public ChildSemanticsConfigurationsDelegate? ChildConfigurationsDelegate { get; set; }
     public bool IsExcluded { get; set; }
     public string? Label { get; set; }
+    public SemanticsRole Role { get; set; }
     public SemanticsFlags Flags { get; set; } = SemanticsFlags.None;
     public SemanticsActions Actions { get; set; } = SemanticsActions.None;
     public Rect? ExplicitRect { get; set; }
@@ -113,6 +116,7 @@ public sealed class SemanticsConfiguration
             ChildConfigurationsDelegate = ChildConfigurationsDelegate,
             IsExcluded = IsExcluded,
             Label = Label,
+            Role = Role,
             Flags = Flags,
             Actions = Actions,
             ExplicitRect = ExplicitRect
@@ -128,6 +132,7 @@ public sealed class SemanticsConfiguration
 
     internal bool HasBeenAnnotated =>
         !string.IsNullOrWhiteSpace(Label)
+        || Role != SemanticsRole.None
         || Flags != SemanticsFlags.None
         || Actions != SemanticsActions.None
         || HasActionHandlers;
@@ -149,6 +154,13 @@ public sealed class SemanticsConfiguration
             return false;
         }
 
+        if (Role != SemanticsRole.None
+            && other.Role != SemanticsRole.None
+            && Role != other.Role)
+        {
+            return false;
+        }
+
         return true;
     }
 
@@ -166,6 +178,10 @@ public sealed class SemanticsConfiguration
 
         Flags |= child.Flags;
         Actions |= child.Actions;
+        if (Role == SemanticsRole.None)
+        {
+            Role = child.Role;
+        }
 
         if (!string.IsNullOrWhiteSpace(child.Label))
         {
@@ -203,6 +219,7 @@ public sealed class SemanticsNode
     public int Id { get; }
     public Rect Rect { get; internal set; }
     public string? Label { get; internal set; }
+    public SemanticsRole Role { get; internal set; }
     public SemanticsFlags Flags { get; internal set; }
     public SemanticsActions Actions { get; internal set; }
     public bool IsHidden { get; internal set; }

@@ -19,6 +19,7 @@ public sealed class PopupMenuDemoPage : StatefulWidget
         private bool _enabled = true;
         private bool _under;
         private bool _useTheme;
+        private bool _keepFavorite = true;
         private string _selected = "copy";
         private string _status = "idle";
 
@@ -49,9 +50,9 @@ public sealed class PopupMenuDemoPage : StatefulWidget
                 spacing: 14,
                 children:
                 [
-                    new Text("PopupMenuButton + PopupMenuItem", fontSize: 20),
+                    new Text("Popup menu entries", fontSize: 20),
                     new Text(
-                        "Anchored menu route with selection, cancellation, disabled items, keyboard navigation, and theme precedence.",
+                        "PopupMenuItem, CheckedPopupMenuItem, and PopupMenuDivider with selection, keyboard navigation, and theme precedence.",
                         fontSize: 14,
                         color: Colors.DimGray),
                     new Row(
@@ -72,6 +73,7 @@ public sealed class PopupMenuDemoPage : StatefulWidget
                                 onOpened: () => SetState(() => _status = "opened"),
                                 onSelected: value => SetState(() =>
                                 {
+                                    if (value == "favorite") _keepFavorite = !_keepFavorite;
                                     _selected = value;
                                     _status = $"selected: {value}";
                                 }),
@@ -84,6 +86,7 @@ public sealed class PopupMenuDemoPage : StatefulWidget
                                 initialValue: _selected,
                                 onSelected: value => SetState(() =>
                                 {
+                                    if (value == "favorite") _keepFavorite = !_keepFavorite;
                                     _selected = value;
                                     _status = $"icon selected: {value}";
                                 }),
@@ -94,12 +97,18 @@ public sealed class PopupMenuDemoPage : StatefulWidget
                                 tooltip: "Show commands"),
                         ]),
                     new Text($"Selected: {_selected}", fontSize: 13),
+                    new Text($"Keep favorite: {_keepFavorite}", fontSize: 13),
                     new Text($"Status: {_status}", fontSize: 13),
                 ]);
         }
 
-        private static IReadOnlyList<PopupMenuEntry<string>> BuildItems(BuildContext context) =>
+        private IReadOnlyList<PopupMenuEntry> BuildItems(BuildContext context) =>
         [
+            new CheckedPopupMenuItem<string>(
+                new Text("Keep favorite"),
+                value: "favorite",
+                @checked: _keepFavorite),
+            new PopupMenuDivider(indent: 12, endIndent: 12),
             new PopupMenuItem<string>(new Text("Copy"), value: "copy"),
             new PopupMenuItem<string>(new Text("Rename"), value: "rename"),
             new PopupMenuItem<string>(new Text("Archive (disabled)"), value: "archive", enabled: false),

@@ -587,6 +587,10 @@ Progress update (2026-03-19):
   - added `PopupMenuThemeData`/`PopupMenuTheme` + `ThemeData.PopupMenuTheme`, `PopupMenus.ShowMenu<T>`, animated non-opaque route presentation, safe-area screen clamping, intrinsic 56px width steps, and shrink-wrapped scrolling;
   - added source-required core primitives (`RelativeRect`, `AnimationStyle`, expanded/menu semantics, root navigator lookup) and stabilized Navigator visible-route composition so underlying state survives the first popup route;
   - added focused `MaterialPopupMenuTests` and a mirrored `/popup-menu` C#/Dart runtime demo.
+- Extended popup-menu entries with paired `CheckedPopupMenuItem<T>` + `PopupMenuDivider` ports:
+  - matched Flutter checkmark/list-tile composition, 150ms selection fade, selected-state label styling, checkbox-role checked semantics, and divider height/thickness/indent/radius/color forwarding;
+  - generalized popup routes to accept typed items plus non-value divider entries while keeping dividers out of keyboard focus traversal;
+  - expanded focused popup-menu coverage and the mirrored C#/Dart runtime demo.
 - Remaining divergence for floating action button in current framework scope:
   - none documented in current framework scope.
 
