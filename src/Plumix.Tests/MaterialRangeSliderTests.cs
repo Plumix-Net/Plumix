@@ -210,7 +210,7 @@ public sealed class MaterialRangeSliderTests
             var owner = new BuildOwner();
             var root = new TestRootElement(
                 new Theme(
-                    data: ThemeData.Light,
+                    data: new ThemeData(platform: TargetPlatform.MacOS),
                     child: new SizedBox(
                         width: 220,
                         child: new RangeSlider(
