@@ -39,9 +39,9 @@ class _DialogDemoPageState extends State<DialogDemoPage> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: 14,
       children: <Widget>[
-        const Text('Dialog + AlertDialog', style: TextStyle(fontSize: 20)),
+        const Text('Dialog family', style: TextStyle(fontSize: 20)),
         const Text(
-          'Material dialog route, modal barrier, typed result, intrinsic width, actions overflow, and scrollable content.',
+          'Dialog, AlertDialog, SimpleDialog, typed results, intrinsic width, actions overflow, and scrollable choices.',
           style: TextStyle(fontSize: 14, color: Colors.black54),
         ),
         Wrap(
@@ -77,6 +77,10 @@ class _DialogDemoPageState extends State<DialogDemoPage> {
             OutlinedButton(
               onPressed: () => _showPlainDialog(context),
               child: const Text('SHOW DIALOG'),
+            ),
+            FilledButton(
+              onPressed: () => _showSimpleDialog(context),
+              child: const Text('SHOW SIMPLE'),
             ),
           ],
         ),
@@ -141,6 +145,31 @@ class _DialogDemoPageState extends State<DialogDemoPage> {
             ],
           ),
         ),
+      ),
+    );
+    if (mounted) setState(() => _lastResult = result ?? 'dismissed');
+  }
+
+  Future<void> _showSimpleDialog(BuildContext context) async {
+    final String? result = await showDialog<String>(
+      context: context,
+      barrierDismissible: _barrierDismissible,
+      builder: (BuildContext routeContext) => SimpleDialog(
+        title: const Text('Select workspace'),
+        children: <Widget>[
+          SimpleDialogOption(
+            onPressed: () => Navigator.pop(routeContext, 'personal'),
+            child: const Text('Personal workspace'),
+          ),
+          SimpleDialogOption(
+            onPressed: () => Navigator.pop(routeContext, 'team'),
+            child: const Text('Team workspace'),
+          ),
+          SimpleDialogOption(
+            onPressed: () => Navigator.pop(routeContext, 'guest'),
+            child: const Text('Guest workspace'),
+          ),
+        ],
       ),
     );
     if (mounted) setState(() => _lastResult = result ?? 'dismissed');

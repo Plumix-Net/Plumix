@@ -260,6 +260,184 @@ public sealed class Dialog : StatelessWidget
     }
 }
 
+public sealed class SimpleDialogOption : StatelessWidget
+{
+    public SimpleDialogOption(
+        Action? onPressed = null,
+        Thickness? padding = null,
+        Widget? child = null,
+        Key? key = null) : base(key)
+    {
+        Dialog.ValidateInsets(padding, nameof(padding));
+        OnPressed = onPressed;
+        Padding = padding;
+        Child = child;
+    }
+
+    public Action? OnPressed { get; }
+
+    public Thickness? Padding { get; }
+
+    public Widget? Child { get; }
+
+    public override Widget Build(BuildContext context)
+    {
+        return new InkWell(
+            onTap: OnPressed,
+            child: new Padding(
+                Padding ?? new Thickness(24, 8),
+                Child ?? new SizedBox()));
+    }
+}
+
+public sealed class SimpleDialog : StatelessWidget
+{
+    private static readonly Thickness DefaultTitlePadding = new(24, 24, 24, 0);
+    private static readonly Thickness DefaultContentPadding = new(0, 12, 0, 16);
+
+    public SimpleDialog(
+        Widget? title = null,
+        Thickness? titlePadding = null,
+        TextStyle? titleTextStyle = null,
+        IReadOnlyList<Widget>? children = null,
+        Thickness? contentPadding = null,
+        TextStyle? contentTextStyle = null,
+        Color? backgroundColor = null,
+        double? elevation = null,
+        Color? shadowColor = null,
+        Color? surfaceTintColor = null,
+        string? semanticLabel = null,
+        Thickness? insetPadding = null,
+        Clip? clipBehavior = null,
+        ShapeBorder? shape = null,
+        Alignment? alignment = null,
+        BoxConstraints? constraints = null,
+        Key? key = null) : base(key)
+    {
+        if (elevation.HasValue && (!double.IsFinite(elevation.Value) || elevation.Value < 0))
+            throw new ArgumentOutOfRangeException(nameof(elevation));
+        Dialog.ValidateInsets(titlePadding, nameof(titlePadding));
+        Dialog.ValidateInsets(contentPadding, nameof(contentPadding));
+        Dialog.ValidateInsets(insetPadding, nameof(insetPadding));
+        Title = title;
+        TitlePadding = titlePadding ?? DefaultTitlePadding;
+        TitleTextStyle = titleTextStyle;
+        Children = children;
+        ContentPadding = contentPadding ?? DefaultContentPadding;
+        ContentTextStyle = contentTextStyle;
+        BackgroundColor = backgroundColor;
+        Elevation = elevation;
+        ShadowColor = shadowColor;
+        SurfaceTintColor = surfaceTintColor;
+        SemanticLabel = semanticLabel;
+        InsetPadding = insetPadding;
+        ClipBehavior = clipBehavior;
+        Shape = shape;
+        Alignment = alignment;
+        Constraints = constraints;
+    }
+
+    public Widget? Title { get; }
+    public Thickness TitlePadding { get; }
+    public TextStyle? TitleTextStyle { get; }
+    public IReadOnlyList<Widget>? Children { get; }
+    public Thickness ContentPadding { get; }
+    public TextStyle? ContentTextStyle { get; }
+    public Color? BackgroundColor { get; }
+    public double? Elevation { get; }
+    public Color? ShadowColor { get; }
+    public Color? SurfaceTintColor { get; }
+    public string? SemanticLabel { get; }
+    public Thickness? InsetPadding { get; }
+    public Clip? ClipBehavior { get; }
+    public ShapeBorder? Shape { get; }
+    public Alignment? Alignment { get; }
+    public BoxConstraints? Constraints { get; }
+
+    public override Widget Build(BuildContext context)
+    {
+        var theme = Theme.Of(context);
+        var dialogTheme = DialogTheme.Of(context);
+        var defaults = Dialog.ResolveDefaults(theme);
+        var label = theme.Platform is TargetPlatform.IOS or TargetPlatform.MacOS
+            ? SemanticLabel
+            : SemanticLabel ?? MaterialLocalizations.Of(context).DialogLabel;
+        var effectiveTitleTextStyle = TitleTextStyle ?? dialogTheme.TitleTextStyle ?? theme.TextTheme.TitleLarge;
+        var paddingScale = ScalePadding(MediaQuery.TextScaleFactorOf(context));
+
+        Widget? titleWidget = null;
+        if (Title is not null)
+        {
+            var padding = new Thickness(
+                TitlePadding.Left * paddingScale,
+                TitlePadding.Top * paddingScale,
+                TitlePadding.Right * paddingScale,
+                Children is null ? TitlePadding.Bottom * paddingScale : TitlePadding.Bottom);
+            titleWidget = new Padding(
+                padding,
+                new DefaultTextStyle(
+                    effectiveTitleTextStyle,
+                    new Semantics(
+                        namesRoute: label is null && theme.Platform != TargetPlatform.IOS,
+                        container: true,
+                        child: Title)));
+        }
+
+        Widget? contentWidget = null;
+        if (Children is not null)
+        {
+            var padding = new Thickness(
+                ContentPadding.Left * paddingScale,
+                Title is null ? ContentPadding.Top * paddingScale : ContentPadding.Top,
+                ContentPadding.Right * paddingScale,
+                ContentPadding.Bottom * paddingScale);
+            contentWidget = new Flexible(
+                new SingleChildScrollView(
+                    padding: padding,
+                    child: new DefaultTextStyle(
+                        ContentTextStyle ?? dialogTheme.ContentTextStyle ?? defaults.ContentTextStyle!,
+                        new ListBody(children: Children))));
+        }
+
+        var children = new List<Widget>();
+        if (titleWidget is not null) children.Add(titleWidget);
+        if (contentWidget is not null) children.Add(contentWidget);
+        Widget dialogChild = new IntrinsicWidth(
+            stepWidth: 56,
+            child: new Column(
+                mainAxisSize: MainAxisSize.Min,
+                crossAxisAlignment: CrossAxisAlignment.Stretch,
+                children: children));
+        if (label is not null)
+        {
+            dialogChild = new Semantics(
+                label: label,
+                scopesRoute: true,
+                namesRoute: true,
+                explicitChildNodes: true,
+                child: dialogChild);
+        }
+
+        return new Dialog(
+            backgroundColor: BackgroundColor,
+            elevation: Elevation,
+            shadowColor: ShadowColor,
+            surfaceTintColor: SurfaceTintColor,
+            insetPadding: InsetPadding,
+            clipBehavior: ClipBehavior,
+            shape: Shape,
+            alignment: Alignment,
+            constraints: Constraints,
+            child: dialogChild);
+    }
+
+    private static double ScalePadding(double textScaleFactor)
+    {
+        var clamped = Math.Clamp(textScaleFactor, 1, 2);
+        return 1.0 + ((1.0 / 3.0 - 1.0) * (clamped - 1.0));
+    }
+}
+
 public sealed class AlertDialog : StatelessWidget
 {
     public AlertDialog(

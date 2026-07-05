@@ -25,6 +25,8 @@ public abstract class MaterialLocalizations
 
     public virtual string AlertDialogLabel => "Alert";
 
+    public virtual string DialogLabel => "Dialog";
+
     public virtual string ModalBarrierDismissLabel => "Dismiss";
 
     public static MaterialLocalizations Of(BuildContext context)
@@ -56,6 +58,8 @@ public sealed class DefaultMaterialLocalizations : MaterialLocalizations
     public override string ShowAccountsLabel => "Show accounts";
 
     public override string AlertDialogLabel => "Alert";
+
+    public override string DialogLabel => "Dialog";
 
     public override string ModalBarrierDismissLabel => "Dismiss";
 

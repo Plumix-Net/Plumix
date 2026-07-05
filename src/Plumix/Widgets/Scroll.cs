@@ -1267,6 +1267,7 @@ public sealed class SingleChildScrollView : StatelessWidget
         ScrollPhysics? physics = null,
         double cacheExtent = 250.0,
         CacheExtentStyle cacheExtentStyle = CacheExtentStyle.Pixel,
+        Thickness? padding = null,
         Key? key = null) : base(key)
     {
         Child = child;
@@ -1276,6 +1277,7 @@ public sealed class SingleChildScrollView : StatelessWidget
         Physics = physics;
         CacheExtent = cacheExtent;
         CacheExtentStyle = cacheExtentStyle;
+        Padding = padding;
     }
 
     public Widget Child { get; }
@@ -1292,10 +1294,14 @@ public sealed class SingleChildScrollView : StatelessWidget
 
     public CacheExtentStyle CacheExtentStyle { get; }
 
+    public Thickness? Padding { get; }
+
     public override Widget Build(BuildContext context)
     {
+        Widget child = Child;
+        if (Padding.HasValue) child = new Padding(Padding.Value, child);
         return new CustomScrollView(
-            slivers: [new SliverToBoxAdapter(Child)],
+            slivers: [new SliverToBoxAdapter(child)],
             scrollDirection: ScrollDirection,
             reverse: Reverse,
             controller: Controller,

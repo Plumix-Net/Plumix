@@ -578,6 +578,10 @@ Progress update (2026-03-19):
   - matched M2/M3/fullscreen surfaces, `DialogTheme`/widget precedence, view-inset animation, minimum/intrinsic width, icon/title/content/action slots, scaled padding, scrollable content, action overflow, and dialog/route semantics;
   - extended Navigator with non-opaque route stacking and typed completion results, then added `DialogRoute<T>`/`MaterialDialogs.ShowDialog<T>` with captured themes/media/direction, modal barrier dismissal, fade/reverse transitions, and delayed result completion;
   - added shared `Builder`, `IntrinsicWidth`, unbounded-stretch flex hardening, focused `MaterialDialogTests`, and a mirrored `/dialog` C#/Dart runtime demo.
+- Extended the dialog family with paired `SimpleDialog` + `SimpleDialogOption` ports:
+  - matched optional title plus scrollable choice-list composition, default/scaled title and content padding, dialog-theme typography/surface precedence, localized route semantics, and nullable option callbacks;
+  - added source-required shared `ListBody`, `SingleChildScrollView.padding`, and `InkWell` primitives for cross-axis-stretched scroll content and enabled/disabled ink interaction;
+  - expanded focused dialog coverage and the mirrored `/dialog` C#/Dart runtime demo with typed simple-choice results.
 - Remaining divergence for floating action button in current framework scope:
   - none documented in current framework scope.
 

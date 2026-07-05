@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Media;
 using Plumix;
 using Plumix.Foundation;
+using Plumix.Gestures;
 using Plumix.Material;
 using Plumix.Rendering;
 using Plumix.UI;
@@ -13,9 +14,17 @@ namespace Plumix.Tests;
 [Collection(SchedulerTestCollection.Name)]
 public sealed class MaterialDialogTests : IDisposable
 {
-    public MaterialDialogTests() => Scheduler.ResetForTests();
+    public MaterialDialogTests()
+    {
+        Scheduler.ResetForTests();
+        GestureBinding.Instance.ResetForTests();
+    }
 
-    public void Dispose() => Scheduler.ResetForTests();
+    public void Dispose()
+    {
+        GestureBinding.Instance.ResetForTests();
+        Scheduler.ResetForTests();
+    }
 
     [Fact]
     public void DialogAndTheme_ValidateContractsAndFullscreenDefaults()
@@ -198,6 +207,136 @@ public sealed class MaterialDialogTests : IDisposable
         var firstOffset = ((OverflowBarParentData)overflow.FirstChild!.parentData!).offset;
         var secondOffset = ((OverflowBarParentData)overflow.LastChild!.parentData!).offset;
         Assert.True(secondOffset.Y >= firstOffset.Y + overflow.FirstChild.Size.Height + 6);
+    }
+
+    [Fact]
+    public void SimpleDialogAndOption_ExposeFlutterDefaultsAndValidateContracts()
+    {
+        var dialog = new SimpleDialog();
+        Assert.Equal(new Thickness(24, 24, 24, 0), dialog.TitlePadding);
+        Assert.Equal(new Thickness(0, 12, 0, 16), dialog.ContentPadding);
+        Assert.Null(dialog.Children);
+        Assert.Throws<ArgumentOutOfRangeException>(() => new SimpleDialog(elevation: -1));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new SimpleDialog(titlePadding: new Thickness(-1)));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new SimpleDialogOption(padding: new Thickness(-1)));
+    }
+
+    [Fact]
+    public void SimpleDialog_ComposesScrollableListBodyWithFlutterPaddingTypographyAndSemantics()
+    {
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light with { Platform = TargetPlatform.Android },
+            new SimpleDialog(
+                title: new Text("Choose account"),
+                children:
+                [
+                    new SimpleDialogOption(child: new Text("Personal")),
+                    new SimpleDialogOption(child: new Text("Work")),
+                ])));
+        var semantics = harness.PumpAndGetSemantics(new Size(600, 320));
+
+        Assert.Single(FindDescendants<RenderIntrinsicWidth>(harness.RenderView));
+        Assert.Single(FindDescendants<RenderViewport>(harness.RenderView));
+        var listBody = Assert.Single(FindDescendants<RenderListBody>(harness.RenderView));
+        Assert.Equal(AxisDirection.Down, listBody.AxisDirection);
+        Assert.Equal(2, listBody.ChildCount);
+        Assert.Contains(FindDescendants<RenderPadding>(harness.RenderView), value =>
+            value.Padding == new Thickness(24, 24, 24, 0));
+        Assert.Contains(FindDescendants<RenderPadding>(harness.RenderView), value =>
+            value.Padding == new Thickness(0, 12, 0, 16));
+        Assert.Equal(2, FindDescendants<RenderPadding>(harness.RenderView).Count(value =>
+            value.Padding == new Thickness(24, 8)));
+        Assert.Equal(ThemeData.Light.TextTheme.TitleLarge.FontSize, FindParagraph(harness.RenderView, "Choose account")!.FontSize);
+        Assert.Equal(ThemeData.Light.TextTheme.BodyMedium.FontSize, FindParagraph(harness.RenderView, "Personal")!.FontSize);
+        Assert.NotNull(FindSemantics(semantics, node =>
+            node.Label == "Dialog"
+            && node.Flags.HasFlag(SemanticsFlags.ScopesRoute)
+            && node.Flags.HasFlag(SemanticsFlags.NamesRoute)));
+        Assert.NotNull(FindSemantics(semantics, node => node.Flags.HasFlag(SemanticsFlags.IsDialog)));
+    }
+
+    [Fact]
+    public void SimpleDialog_TextScaleAndThemeOverridesFollowSourcePrecedence()
+    {
+        var titleStyle = ThemeData.Light.TextTheme.TitleLarge.CopyWith(fontSize: 30, color: Colors.Purple);
+        var contentStyle = ThemeData.Light.TextTheme.BodyMedium.CopyWith(fontSize: 18, color: Colors.Green);
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new DialogTheme(
+                new DialogThemeData(TitleTextStyle: titleStyle, ContentTextStyle: contentStyle),
+                new SimpleDialog(
+                    title: new Text("Scaled title"),
+                    children: [new SimpleDialogOption(child: new Text("Scaled option"))])),
+            mediaQuery: new MediaQueryData(Size: new Size(500, 300), TextScaleFactor: 2)));
+        harness.Pump(new Size(500, 300));
+
+        Assert.Contains(FindDescendants<RenderPadding>(harness.RenderView), value =>
+            Close(value.Padding.Left, 8)
+            && Close(value.Padding.Top, 8)
+            && Close(value.Padding.Right, 8)
+            && Close(value.Padding.Bottom, 0));
+        Assert.Contains(FindDescendants<RenderPadding>(harness.RenderView), value =>
+            Close(value.Padding.Left, 0)
+            && Close(value.Padding.Top, 12)
+            && Close(value.Padding.Right, 0)
+            && Close(value.Padding.Bottom, 16.0 / 3.0));
+        Assert.Equal(60, FindParagraph(harness.RenderView, "Scaled title")!.FontSize);
+        Assert.Equal(36, FindParagraph(harness.RenderView, "Scaled option")!.FontSize);
+    }
+
+    [Fact]
+    public void SimpleDialogOption_UsesInkWellTapSemanticsAndSupportsDisabledState()
+    {
+        var taps = 0;
+        using var enabled = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new SimpleDialogOption(onPressed: () => taps++, child: new Text("Enabled option"))));
+        var semantics = enabled.PumpAndGetSemantics(new Size(240, 80));
+        var tappable = FindSemantics(semantics, node => node.Actions.HasFlag(SemanticsActions.Tap));
+        Assert.NotNull(tappable);
+        Assert.True(tappable!.PerformAction(SemanticsActions.Tap));
+        Assert.Equal(1, taps);
+        Assert.Single(FindDescendants<RenderInkSplash>(enabled.RenderView));
+
+        using var disabled = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new SimpleDialogOption(child: new Text("Disabled option"))));
+        var disabledSemantics = disabled.PumpAndGetSemantics(new Size(240, 80));
+        Assert.Null(FindSemantics(disabledSemantics, node => node.Actions.HasFlag(SemanticsActions.Tap)));
+    }
+
+    [Fact]
+    public async Task SimpleDialogOption_CompletesTypedDialogResult()
+    {
+        BuildContext captured = default;
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new Navigator(new BuilderPageRoute(context => new CaptureContext(
+                value => captured = value,
+                new Text("Home"))))));
+        harness.Pump(new Size(500, 320));
+        var result = MaterialDialogs.ShowDialog<string>(
+            captured,
+            routeContext => new SimpleDialog(
+                title: new Text("Select workspace"),
+                children:
+                [
+                    new SimpleDialogOption(
+                        onPressed: () => Navigator.Pop(routeContext, "team"),
+                        child: new Text("Team workspace")),
+                ]));
+        PumpAnimation();
+        var semantics = harness.PumpAndGetSemantics(new Size(500, 320));
+        var option = FindSemantics(semantics, node =>
+            node.Actions.HasFlag(SemanticsActions.Tap)
+            && node.Label != "Dismiss");
+        Assert.NotNull(option);
+        Assert.True(option!.PerformAction(SemanticsActions.Tap));
+
+        PumpAnimation();
+        harness.Pump(new Size(500, 320));
+        Assert.Equal("team", await result);
+        Assert.Null(FindParagraph(harness.RenderView, "Select workspace"));
     }
 
     [Fact]

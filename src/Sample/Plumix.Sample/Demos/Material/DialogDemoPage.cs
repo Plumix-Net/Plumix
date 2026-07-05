@@ -43,9 +43,9 @@ public sealed class DialogDemoPage : StatefulWidget
                 spacing: 14,
                 children:
                 [
-                    new Text("Dialog + AlertDialog", fontSize: 20),
+                    new Text("Dialog family", fontSize: 20),
                     new Text(
-                        "Material dialog route, modal barrier, typed result, intrinsic width, actions overflow, and scrollable content.",
+                        "Dialog, AlertDialog, SimpleDialog, typed results, intrinsic width, actions overflow, and scrollable choices.",
                         fontSize: 14,
                         color: Colors.DimGray),
                     new Row(
@@ -62,6 +62,7 @@ public sealed class DialogDemoPage : StatefulWidget
                         [
                             new ElevatedButton(new Text("SHOW ALERT"), () => ShowAlert(context)),
                             new OutlinedButton(new Text("SHOW DIALOG"), () => ShowPlainDialog(context)),
+                            new FilledButton(new Text("SHOW SIMPLE"), () => ShowSimpleDialog(context)),
                         ]),
                     new Text($"Last result: {_lastResult}", fontSize: 13),
                 ]);
@@ -108,6 +109,28 @@ public sealed class DialogDemoPage : StatefulWidget
                                 new Text("This uses the same themed Material surface and route barrier."),
                                 new TextButton(new Text("CLOSE"), () => Navigator.Pop(routeContext, "closed")),
                             ]))),
+                barrierDismissible: _barrierDismissible);
+            if (Mounted) SetState(() => _lastResult = result ?? "dismissed");
+        }
+
+        private async void ShowSimpleDialog(BuildContext context)
+        {
+            var result = await MaterialDialogs.ShowDialog<string>(
+                context,
+                routeContext => new SimpleDialog(
+                    title: new Text("Select workspace"),
+                    children:
+                    [
+                        new SimpleDialogOption(
+                            onPressed: () => Navigator.Pop(routeContext, "personal"),
+                            child: new Text("Personal workspace")),
+                        new SimpleDialogOption(
+                            onPressed: () => Navigator.Pop(routeContext, "team"),
+                            child: new Text("Team workspace")),
+                        new SimpleDialogOption(
+                            onPressed: () => Navigator.Pop(routeContext, "guest"),
+                            child: new Text("Guest workspace")),
+                    ]),
                 barrierDismissible: _barrierDismissible);
             if (Mounted) SetState(() => _lastResult = result ?? "dismissed");
         }

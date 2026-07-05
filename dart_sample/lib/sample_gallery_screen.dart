@@ -135,8 +135,8 @@ class SampleGalleryScreen extends StatelessWidget {
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.dialog,
-      title: 'Dialog + AlertDialog',
-      subtitle: 'modal route + barrier/result/scrollable/theme probes',
+      title: 'Dialog family',
+      subtitle: 'modal route + alert/simple/result/scrollable/theme probes',
       builder: () => const DialogDemoPage(),
     ),
     SampleRouteDefinition(
