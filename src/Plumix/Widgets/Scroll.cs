@@ -304,6 +304,7 @@ public sealed class Scrollable : StatefulWidget
         ScrollPhysics? physics = null,
         double cacheExtent = 250.0,
         CacheExtentStyle cacheExtentStyle = CacheExtentStyle.Pixel,
+        bool shrinkWrap = false,
         HitTestBehavior hitTestBehavior = HitTestBehavior.Opaque,
         Key? key = null) : base(key)
     {
@@ -315,6 +316,7 @@ public sealed class Scrollable : StatefulWidget
         Physics = physics;
         CacheExtent = cacheExtent;
         CacheExtentStyle = cacheExtentStyle;
+        ShrinkWrap = shrinkWrap;
         HitTestBehavior = hitTestBehavior;
     }
 
@@ -333,6 +335,8 @@ public sealed class Scrollable : StatefulWidget
     public double CacheExtent { get; }
 
     public CacheExtentStyle CacheExtentStyle { get; }
+
+    public bool ShrinkWrap { get; }
 
     public HitTestBehavior HitTestBehavior { get; }
 
@@ -406,6 +410,7 @@ public sealed class Scrollable : StatefulWidget
                         offsetPixels: _position.Pixels,
                         cacheExtent: widget.CacheExtent,
                         cacheExtentStyle: widget.CacheExtentStyle,
+                        shrinkWrap: widget.ShrinkWrap,
                         slivers: slivers,
                         onViewportMetricsChanged: HandleViewportMetricsChanged)));
         }
@@ -522,6 +527,7 @@ public sealed class Viewport : MultiChildRenderObjectWidget
         double offsetPixels,
         double cacheExtent,
         CacheExtentStyle cacheExtentStyle,
+        bool shrinkWrap,
         IReadOnlyList<Widget> slivers,
         Action<double, double, double>? onViewportMetricsChanged = null,
         Key? key = null) : base(slivers, key)
@@ -532,6 +538,7 @@ public sealed class Viewport : MultiChildRenderObjectWidget
         OffsetPixels = offsetPixels;
         CacheExtent = cacheExtent;
         CacheExtentStyle = cacheExtentStyle;
+        ShrinkWrap = shrinkWrap;
         OnViewportMetricsChanged = onViewportMetricsChanged;
     }
 
@@ -547,6 +554,8 @@ public sealed class Viewport : MultiChildRenderObjectWidget
 
     public CacheExtentStyle CacheExtentStyle { get; }
 
+    public bool ShrinkWrap { get; }
+
     public Action<double, double, double>? OnViewportMetricsChanged { get; }
 
     internal override RenderObject CreateRenderObject(BuildContext context)
@@ -558,6 +567,7 @@ public sealed class Viewport : MultiChildRenderObjectWidget
             offsetPixels: OffsetPixels,
             cacheExtent: CacheExtent,
             cacheExtentStyle: CacheExtentStyle,
+            shrinkWrap: ShrinkWrap,
             onViewportMetricsChanged: OnViewportMetricsChanged);
     }
 
@@ -570,6 +580,7 @@ public sealed class Viewport : MultiChildRenderObjectWidget
         viewport.OffsetPixels = OffsetPixels;
         viewport.CacheExtent = CacheExtent;
         viewport.CacheExtentStyle = CacheExtentStyle;
+        viewport.ShrinkWrap = ShrinkWrap;
         viewport.OnViewportMetricsChanged = OnViewportMetricsChanged;
     }
 }
@@ -1209,6 +1220,7 @@ public sealed class CustomScrollView : StatelessWidget
         ScrollPhysics? physics = null,
         double cacheExtent = 250.0,
         CacheExtentStyle cacheExtentStyle = CacheExtentStyle.Pixel,
+        bool shrinkWrap = false,
         Key? key = null) : base(key)
     {
         Slivers = slivers;
@@ -1219,6 +1231,7 @@ public sealed class CustomScrollView : StatelessWidget
         Physics = physics;
         CacheExtent = cacheExtent;
         CacheExtentStyle = cacheExtentStyle;
+        ShrinkWrap = shrinkWrap;
     }
 
     public IReadOnlyList<Widget> Slivers { get; }
@@ -1237,6 +1250,8 @@ public sealed class CustomScrollView : StatelessWidget
 
     public CacheExtentStyle CacheExtentStyle { get; }
 
+    public bool ShrinkWrap { get; }
+
     public override Widget Build(BuildContext context)
     {
         var usePrimary = Primary ?? (ScrollDirection == Axis.Vertical && Controller == null);
@@ -1253,7 +1268,8 @@ public sealed class CustomScrollView : StatelessWidget
             controller: effectiveController,
             physics: Physics,
             cacheExtent: CacheExtent,
-            cacheExtentStyle: CacheExtentStyle);
+            cacheExtentStyle: CacheExtentStyle,
+            shrinkWrap: ShrinkWrap);
     }
 }
 
@@ -1307,7 +1323,8 @@ public sealed class SingleChildScrollView : StatelessWidget
             controller: Controller,
             physics: Physics,
             cacheExtent: CacheExtent,
-            cacheExtentStyle: CacheExtentStyle);
+            cacheExtentStyle: CacheExtentStyle,
+            shrinkWrap: true);
     }
 }
 

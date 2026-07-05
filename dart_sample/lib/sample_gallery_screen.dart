@@ -10,6 +10,7 @@ import 'demos/material/badge_tooltip_demo_page.dart';
 import 'demos/material/banner_demo_page.dart';
 import 'demos/material/snack_bar_demo_page.dart';
 import 'demos/material/dialog_demo_page.dart';
+import 'demos/material/popup_menu_demo_page.dart';
 import 'demos/general/aspect_ratio_demo_page.dart';
 import 'demos/general/bloc_counter_demo_page.dart';
 import 'demos/material/card_demo_page.dart';
@@ -138,6 +139,12 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'Dialog family',
       subtitle: 'modal route + alert/simple/result/scrollable/theme probes',
       builder: () => const DialogDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.popupMenu,
+      title: 'PopupMenuButton + PopupMenuItem',
+      subtitle: 'anchor + selection/cancel/keyboard/theme probes',
+      builder: () => const PopupMenuDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.chips,

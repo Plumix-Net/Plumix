@@ -35,6 +35,7 @@ class SampleRoutes {
   static const String banner = '/banner';
   static const String snackBar = '/snack-bar';
   static const String dialog = '/dialog';
+  static const String popupMenu = '/popup-menu';
   static const String chips = '/chips';
   static const String linearProgressIndicator = '/linear-progress-indicator';
   static const String circularProgressIndicator =

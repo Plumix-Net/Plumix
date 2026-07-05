@@ -29,6 +29,12 @@ public abstract class MaterialLocalizations
 
     public virtual string ModalBarrierDismissLabel => "Dismiss";
 
+    public virtual string ShowMenuTooltip => "Show menu";
+
+    public virtual string PopupMenuLabel => "Popup menu";
+
+    public virtual string MenuDismissLabel => "Dismiss menu";
+
     public static MaterialLocalizations Of(BuildContext context)
     {
         return MaterialLocalizationsScope.Of(context);
@@ -62,6 +68,12 @@ public sealed class DefaultMaterialLocalizations : MaterialLocalizations
     public override string DialogLabel => "Dialog";
 
     public override string ModalBarrierDismissLabel => "Dismiss";
+
+    public override string ShowMenuTooltip => "Show menu";
+
+    public override string PopupMenuLabel => "Popup menu";
+
+    public override string MenuDismissLabel => "Dismiss menu";
 
     public override string TabLabel(int tabIndex, int tabCount)
     {

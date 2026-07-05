@@ -43,6 +43,8 @@ public readonly struct BuildContext
 
         return null;
     }
+
+    public RenderObject? FindRenderObject() => Owner.RenderObject;
 }
 
 internal enum ElementLifecycleState

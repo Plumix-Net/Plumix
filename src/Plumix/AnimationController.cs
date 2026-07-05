@@ -98,7 +98,12 @@ public sealed class AnimationController : IDisposable
 
     public double Value { get; private set; } // 0..1
     public bool IsAnimating { get; private set; }
-    public TimeSpan Duration { get; }
+    private TimeSpan _duration;
+    public TimeSpan Duration
+    {
+        get => _duration;
+        set => _duration = value <= TimeSpan.Zero ? TimeSpan.FromMilliseconds(1) : value;
+    }
     public Curve Curve { get; set; } = Curves.Linear;
 
     private readonly Ticker _ticker;

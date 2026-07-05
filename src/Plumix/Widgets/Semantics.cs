@@ -10,6 +10,8 @@ public enum SemanticsRole
     None,
     Dialog,
     AlertDialog,
+    Menu,
+    MenuItem,
 }
 
 public sealed class Semantics : SingleChildRenderObjectWidget
@@ -26,13 +28,16 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         SemanticsRole role = SemanticsRole.None,
         bool scopesRoute = false,
         bool namesRoute = false,
+        bool? expanded = null,
         Key? key = null) : base(child, key)
     {
         Label = label;
         Flags = flags
                 | RoleFlags(role)
                 | (scopesRoute ? SemanticsFlags.ScopesRoute : SemanticsFlags.None)
-                | (namesRoute ? SemanticsFlags.NamesRoute : SemanticsFlags.None);
+                | (namesRoute ? SemanticsFlags.NamesRoute : SemanticsFlags.None)
+                | (expanded.HasValue ? SemanticsFlags.HasExpandedState : SemanticsFlags.None)
+                | (expanded == true ? SemanticsFlags.IsExpanded : SemanticsFlags.None);
         OnTap = onTap;
         OnDismiss = onDismiss;
         LiveRegion = liveRegion;
@@ -41,6 +46,7 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         Role = role;
         ScopesRoute = scopesRoute;
         NamesRoute = namesRoute;
+        Expanded = expanded;
     }
 
     public string? Label { get; }
@@ -62,6 +68,8 @@ public sealed class Semantics : SingleChildRenderObjectWidget
     public bool ScopesRoute { get; }
 
     public bool NamesRoute { get; }
+
+    public bool? Expanded { get; }
 
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
@@ -91,6 +99,7 @@ public sealed class Semantics : SingleChildRenderObjectWidget
     {
         SemanticsRole.Dialog => SemanticsFlags.IsDialog,
         SemanticsRole.AlertDialog => SemanticsFlags.IsAlertDialog,
+        SemanticsRole.MenuItem => SemanticsFlags.IsButton,
         _ => SemanticsFlags.None,
     };
 }

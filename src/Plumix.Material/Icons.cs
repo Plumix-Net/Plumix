@@ -36,6 +36,10 @@ public static class Icons
 
     public static IconData Menu { get; } = new(0xe3dc, FontFamily: MaterialIconsFontFamily);
 
+    public static IconData MoreHoriz { get; } = new(0xe402, FontFamily: MaterialIconsFontFamily);
+
+    public static IconData MoreVert { get; } = new(0xe404, FontFamily: MaterialIconsFontFamily);
+
     public static IconData Star { get; } = new(0xe5f9, FontFamily: MaterialIconsFontFamily);
 
     public static IconData StarOutline { get; } = new(0xe5fd, FontFamily: MaterialIconsFontFamily);

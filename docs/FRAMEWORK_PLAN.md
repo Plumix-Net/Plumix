@@ -8,7 +8,7 @@ Use this block as the fastest machine-readable status summary.
 
 ```yaml
 framework_plan_version: 1
-last_updated: 2026-07-04
+last_updated: 2026-07-05
 north_star: "Flutter-like widget/rendering framework in C# with Avalonia as host infrastructure."
 current_phase: "M4 material library rewrite (theme/scaffold/material controls) in progress."
 status:
@@ -582,6 +582,11 @@ Progress update (2026-03-19):
   - matched optional title plus scrollable choice-list composition, default/scaled title and content padding, dialog-theme typography/surface precedence, localized route semantics, and nullable option callbacks;
   - added source-required shared `ListBody`, `SingleChildScrollView.padding`, and `InkWell` primitives for cross-axis-stretched scroll content and enabled/disabled ink interaction;
   - expanded focused dialog coverage and the mirrored `/dialog` C#/Dart runtime demo with typed simple-choice results.
+- Added paired `PopupMenuButton<T>` + `PopupMenuItem<T>` ports:
+  - matched lazy item building, child/icon button paths, over/under anchor geometry, initial selection, selection/cancel/open callbacks, disabled items, M2/M3 typography/padding/surfaces, theme/widget precedence, localized tooltips/route semantics, and keyboard traversal that skips disabled entries;
+  - added `PopupMenuThemeData`/`PopupMenuTheme` + `ThemeData.PopupMenuTheme`, `PopupMenus.ShowMenu<T>`, animated non-opaque route presentation, safe-area screen clamping, intrinsic 56px width steps, and shrink-wrapped scrolling;
+  - added source-required core primitives (`RelativeRect`, `AnimationStyle`, expanded/menu semantics, root navigator lookup) and stabilized Navigator visible-route composition so underlying state survives the first popup route;
+  - added focused `MaterialPopupMenuTests` and a mirrored `/popup-menu` C#/Dart runtime demo.
 - Remaining divergence for floating action button in current framework scope:
   - none documented in current framework scope.
 

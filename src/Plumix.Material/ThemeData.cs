@@ -267,6 +267,7 @@ public sealed record ThemeData
     private MaterialBannerThemeData? _bannerTheme;
     private SnackBarThemeData? _snackBarTheme;
     private DialogThemeData? _dialogTheme;
+    private PopupMenuThemeData? _popupMenuTheme;
 
     public ThemeData(
         TargetPlatform? platform = null,
@@ -339,7 +340,8 @@ public sealed record ThemeData
         SnackBarThemeData? snackBarTheme = null,
         Color? inversePrimaryColor = null,
         DialogThemeData? dialogTheme = null,
-        Color? surfaceContainerHighColor = null)
+        Color? surfaceContainerHighColor = null,
+        PopupMenuThemeData? popupMenuTheme = null)
     {
         Platform = platform ?? ResolveDefaultPlatform();
         Brightness = brightness ?? Brightness.Light;
@@ -412,6 +414,7 @@ public sealed record ThemeData
         _bannerTheme = bannerTheme;
         _snackBarTheme = snackBarTheme;
         _dialogTheme = dialogTheme;
+        _popupMenuTheme = popupMenuTheme;
         VisualDensity = visualDensity ?? VisualDensity.Standard;
     }
 
@@ -675,6 +678,12 @@ public sealed record ThemeData
     {
         get => _dialogTheme ?? new DialogThemeData();
         init => _dialogTheme = value;
+    }
+
+    public PopupMenuThemeData PopupMenuTheme
+    {
+        get => _popupMenuTheme ?? new PopupMenuThemeData();
+        init => _popupMenuTheme = value;
     }
 
     public static ThemeData Light { get; } = new();

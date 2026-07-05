@@ -571,15 +571,26 @@ public sealed class Navigator : StatefulWidget
         return new NavigatorState();
     }
 
-    public static NavigatorState Of(BuildContext context)
+    public static NavigatorState Of(BuildContext context, bool rootNavigator = false)
     {
-        return MaybeOf(context)
+        return MaybeOf(context, rootNavigator)
                ?? throw new InvalidOperationException("Navigator not found in context.");
     }
 
-    public static NavigatorState? MaybeOf(BuildContext context)
+    public static NavigatorState? MaybeOf(BuildContext context, bool rootNavigator = false)
     {
-        return context.DependOnInherited<NavigatorScope>()?.Navigator;
+        if (!rootNavigator)
+        {
+            return context.DependOnInherited<NavigatorScope>()?.Navigator;
+        }
+
+        NavigatorState? result = null;
+        for (var ancestor = context.Owner; ancestor is not null; ancestor = ancestor.Parent)
+        {
+            if (ancestor.Widget is NavigatorScope scope) result = scope.Navigator;
+        }
+
+        return result;
     }
 
     public static bool CanPop(BuildContext context)
@@ -793,7 +804,6 @@ public sealed class NavigatorState : State
             child = visibleRoutes.Count switch
             {
                 0 => new SizedBox(),
-                1 => BuildRouteHost(visibleRoutes[0]),
                 _ => new Stack(
                     fit: StackFit.Expand,
                     children: visibleRoutes.Select(BuildRouteHost).Cast<Widget>().ToArray()),
