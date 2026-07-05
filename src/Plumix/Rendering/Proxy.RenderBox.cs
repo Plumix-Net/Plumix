@@ -1190,11 +1190,31 @@ public sealed class RenderColoredBox : RenderProxyBox
 public sealed class RenderDecoratedBox : RenderProxyBox
 {
     private BoxDecoration _decoration;
+    private DecorationPosition _position;
+    private ImageConfiguration _configuration;
+    private DecorationImagePainter? _imagePainter;
 
-    public RenderDecoratedBox(BoxDecoration decoration, RenderBox? child = null)
+    public RenderDecoratedBox(
+        BoxDecoration decoration,
+        RenderBox? child = null,
+        ImageConfiguration? configuration = null,
+        DecorationPosition position = DecorationPosition.Background)
     {
         _decoration = decoration ?? new BoxDecoration();
+        _position = position;
+        _configuration = configuration ?? ImageConfiguration.Empty;
         Child = child;
+    }
+
+    public DecorationPosition Position
+    {
+        get => _position;
+        set
+        {
+            if (_position == value) return;
+            _position = value;
+            MarkNeedsPaint();
+        }
     }
 
     public BoxDecoration Decoration
@@ -1208,12 +1228,48 @@ public sealed class RenderDecoratedBox : RenderProxyBox
                 return;
             }
 
+            if (!Equals(_decoration.Image, next.Image))
+            {
+                DisposeImagePainter();
+            }
+
             _decoration = next;
             MarkNeedsPaint();
         }
     }
 
+    public ImageConfiguration Configuration
+    {
+        get => _configuration;
+        set
+        {
+            var next = value ?? ImageConfiguration.Empty;
+            if (_configuration == next)
+            {
+                return;
+            }
+
+            _configuration = next;
+            MarkNeedsPaint();
+        }
+    }
+
     public override void Paint(PaintingContext ctx, Point offset)
+    {
+        if (_position == DecorationPosition.Background)
+        {
+            PaintDecoration(ctx, offset);
+        }
+
+        base.Paint(ctx, offset);
+
+        if (_position == DecorationPosition.Foreground)
+        {
+            PaintDecoration(ctx, offset);
+        }
+    }
+
+    private void PaintDecoration(PaintingContext ctx, Point offset)
     {
         var rect = new Rect(offset, Size);
         var radius = _decoration.EffectiveBorderRadius.Radius;
@@ -1234,12 +1290,80 @@ public sealed class RenderDecoratedBox : RenderProxyBox
             }
         }
 
-        if (fill != null || borderPen != null || boxShadows.Count > 0)
+        if (_decoration.Shape == BoxShape.Circle)
         {
-            ctx.DrawRectangle(fill ?? Brushes.Transparent, borderPen, rect, radius, radius, boxShadows);
+            if (fill != null || boxShadows.Count > 0)
+            {
+                var side = Math.Min(rect.Width, rect.Height);
+                var circleRect = new Rect(
+                    rect.Center.X - (side / 2.0),
+                    rect.Center.Y - (side / 2.0),
+                    side,
+                    side);
+                ctx.DrawRectangle(
+                    fill ?? Brushes.Transparent,
+                    null,
+                    circleRect,
+                    side / 2.0,
+                    side / 2.0,
+                    boxShadows);
+            }
+        }
+        else if (fill != null || boxShadows.Count > 0)
+        {
+            ctx.DrawRectangle(fill ?? Brushes.Transparent, null, rect, radius, radius, boxShadows);
         }
 
-        base.Paint(ctx, offset);
+        if (_decoration.Image is not null)
+        {
+            _imagePainter ??= _decoration.Image.CreatePainter(HandleImageChanged);
+            _imagePainter.Paint(
+                ctx,
+                rect,
+                _configuration.CopyWith(size: Size),
+                clipRadius: _decoration.BorderRadius,
+                shape: _decoration.Shape);
+        }
+
+        if (borderPen is not null)
+        {
+            if (_decoration.Shape == BoxShape.Circle)
+            {
+                var side = Math.Min(rect.Width, rect.Height);
+                var circleRect = new Rect(
+                    rect.Center.X - (side / 2.0),
+                    rect.Center.Y - (side / 2.0),
+                    side,
+                    side);
+                ctx.DrawRectangle(
+                    Brushes.Transparent,
+                    borderPen,
+                    circleRect,
+                    side / 2.0,
+                    side / 2.0);
+            }
+            else
+            {
+                ctx.DrawRectangle(Brushes.Transparent, borderPen, rect, radius, radius);
+            }
+        }
+    }
+
+    protected override void OnDetach()
+    {
+        DisposeImagePainter();
+        base.OnDetach();
+    }
+
+    private void HandleImageChanged()
+    {
+        MarkNeedsPaint();
+    }
+
+    private void DisposeImagePainter()
+    {
+        _imagePainter?.Dispose();
+        _imagePainter = null;
     }
 }
 
@@ -1358,6 +1482,65 @@ public sealed class RenderTransform : RenderProxyBox
         var childParentData = (BoxParentData)Child.parentData!;
         var transformedPosition = inverse.Transform(position - childParentData.offset);
         return Child.HitTest(result, transformedPosition);
+    }
+}
+
+public sealed class RenderFractionalTranslation : RenderProxyBox
+{
+    private Vector _translation;
+    private bool _transformHitTests;
+
+    public RenderFractionalTranslation(
+        Vector translation,
+        bool transformHitTests = true,
+        RenderBox? child = null)
+    {
+        _translation = translation;
+        _transformHitTests = transformHitTests;
+        Child = child;
+    }
+
+    public Vector Translation
+    {
+        get => _translation;
+        set
+        {
+            if (_translation == value) return;
+            _translation = value;
+            MarkNeedsPaint();
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
+    public bool TransformHitTests
+    {
+        get => _transformHitTests;
+        set { if (_transformHitTests != value) { _transformHitTests = value; MarkNeedsSemanticsUpdate(); } }
+    }
+
+    private Vector PaintOffset => new(Size.Width * Translation.X, Size.Height * Translation.Y);
+
+    public override void Paint(PaintingContext ctx, Point offset)
+    {
+        if (Child is null) return;
+        var data = (BoxParentData)Child.parentData!;
+        ctx.PaintChild(Child, data.offset + offset + PaintOffset);
+    }
+
+    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    {
+        if (Child is null) return false;
+        var data = (BoxParentData)Child.parentData!;
+        var offset = TransformHitTests ? PaintOffset : default;
+        return Child.HitTest(result, position - data.offset - offset);
+    }
+
+    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    {
+        if (Child is null) return;
+        var data = (BoxParentData)Child.parentData!;
+        var offset = PaintOffset;
+        visitor(Child, data.offset, Matrix.CreateTranslation(offset.X, offset.Y));
     }
 }
 
@@ -1674,6 +1857,8 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
     private string? _label;
     private SemanticsFlags _flags;
     private Action? _onTap;
+    private Action? _onDismiss;
+    private bool _liveRegion;
     private bool _container;
     private bool _explicitChildNodes;
 
@@ -1681,6 +1866,8 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         string? label = null,
         SemanticsFlags flags = SemanticsFlags.None,
         Action? onTap = null,
+        Action? onDismiss = null,
+        bool liveRegion = false,
         bool container = false,
         bool explicitChildNodes = false,
         RenderBox? child = null)
@@ -1688,6 +1875,8 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         _label = label;
         _flags = flags;
         _onTap = onTap;
+        _onDismiss = onDismiss;
+        _liveRegion = liveRegion;
         _container = container;
         _explicitChildNodes = explicitChildNodes;
         Child = child;
@@ -1738,6 +1927,28 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         }
     }
 
+    public Action? OnDismiss
+    {
+        get => _onDismiss;
+        set
+        {
+            if (ReferenceEquals(_onDismiss, value)) return;
+            _onDismiss = value;
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
+    public bool LiveRegion
+    {
+        get => _liveRegion;
+        set
+        {
+            if (_liveRegion == value) return;
+            _liveRegion = value;
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
     public bool Container
     {
         get => _container;
@@ -1773,6 +1984,8 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         if (string.IsNullOrWhiteSpace(_label)
             && _flags == SemanticsFlags.None
             && _onTap is null
+            && _onDismiss is null
+            && !_liveRegion
             && !_container
             && !_explicitChildNodes)
         {
@@ -1792,9 +2005,17 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         }
 
         configuration.Flags |= _flags;
+        if (_liveRegion)
+        {
+            configuration.Flags |= SemanticsFlags.IsLiveRegion;
+        }
         if (_onTap is not null)
         {
             configuration.AddActionHandler(SemanticsActions.Tap, _onTap);
+        }
+        if (_onDismiss is not null)
+        {
+            configuration.AddActionHandler(SemanticsActions.Dismiss, _onDismiss);
         }
     }
 }

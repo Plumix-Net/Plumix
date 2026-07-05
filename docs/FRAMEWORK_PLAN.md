@@ -8,7 +8,7 @@ Use this block as the fastest machine-readable status summary.
 
 ```yaml
 framework_plan_version: 1
-last_updated: 2026-07-01
+last_updated: 2026-07-05
 north_star: "Flutter-like widget/rendering framework in C# with Avalonia as host infrastructure."
 current_phase: "M4 material library rewrite (theme/scaffold/material controls) in progress."
 status:
@@ -117,6 +117,8 @@ Completion note:
 - Continued paragraph-alignment parity hardening: `RenderParagraph` now normalizes loose-width `center/right/end` layout width to content width when host layout reports positive internal glyph offset, eliminating right-shifted intrinsic label paint in sample list/button scenarios while retaining tight-width aligned behavior.
 - Counter sample viewport hardening: `CounterScreen` now uses outer `SingleChildScrollView` in both C# and Dart samples so smaller desktop heights avoid `RenderFlex` bottom-overflow debug zones while preserving existing demo modules on the page.
 - Overflow-debug parity progression: `RenderFlex` now paints Flutter-style yellow/black overflow indicators with clipped overflow child paint, 45-degree marker geometry, and edge-aligned/rotated labels for main-axis overflow; both samples include a dedicated overflow-indicator demo page for runtime verification.
+- Continued image-pipeline parity hardening: core now includes Flutter-shaped image providers/streams/cache/configuration plus `DecorationImage` integration in `BoxDecoration`, including DPR asset selection, resize keys, async repaint, fit/crop/repeat/RTL geometry, clipping, opacity, and scaled nine-patch paint.
+- Continued port-first primitive/control expansion: core now supports `AnimatedContainer`, foreground decorations, circular `BoxDecoration` paint, and decoration/image interpolation; Material now uses those primitives for a Flutter-structured `CircleAvatar` with image fallback and M2/M3 theme behavior.
 
 Completion snapshot:
 
@@ -156,14 +158,14 @@ Kickoff note (2026-03-12):
 
 Progress update (2026-03-19):
 
-- Added dedicated framework Material assembly: `src/Flutter.Material/Flutter.Material.csproj`.
+- Added dedicated framework Material assembly: `src/Plumix.Material/Plumix.Material.csproj`.
 - Introduced initial theming primitives: `ThemeData`, `MaterialTextTheme`, and inherited `Theme`.
 - `Theme` now propagates baseline `TextTheme.BodyMedium` through `DefaultTextStyle`, enabling framework `Text` defaults without sample-only wrappers.
 - C# sample app root now uses `Theme(data: ThemeData.Light, child: ...)`; Dart sample root now sets explicit `MaterialApp` text-theme baseline (`bodyMedium` 14/1.43/0.25) for parity.
-- Added regression coverage for theme-to-text propagation in `src/Flutter.Tests/TextWidgetTests.cs`.
-- Added Material shell primitives: `Scaffold` and `AppBar` in `src/Flutter.Material` with baseline slot wiring (`body`, `appBar`, `floatingActionButton`, `bottomNavigationBar`, title/leading/actions).
+- Added regression coverage for theme-to-text propagation in `src/Plumix.Tests/TextWidgetTests.cs`.
+- Added Material shell primitives: `Scaffold` and `AppBar` in `src/Plumix.Material` with baseline slot wiring (`body`, `appBar`, `floatingActionButton`, `bottomNavigationBar`, title/leading/actions).
 - C# sample gallery pages now use framework `Scaffold`/`AppBar` composition for menu/demo shells; Dart sample gallery mirrors the same structural shell usage.
-- Added regression coverage for scaffold/app-bar theme resolution and widget composition behavior in `src/Flutter.Tests/MaterialScaffoldTests.cs`.
+- Added regression coverage for scaffold/app-bar theme resolution and widget composition behavior in `src/Plumix.Tests/MaterialScaffoldTests.cs`.
 - Extended `AppBar` title-layout parity with Flutter-like controls: `centerTitle` and `titleSpacing` (default `16`) with non-negative finite spacing validation, plus title insets driven by `titleSpacing`.
 - Updated centered-title composition: when `leading` exists and `actions` are absent, a symmetric trailing slot now matches effective leading width to keep title centering stable.
 - Added focused `MaterialScaffoldTests` coverage for centered-title alignment wiring, `titleSpacing` horizontal padding, and negative-spacing argument guard.
@@ -182,16 +184,16 @@ Progress update (2026-03-19):
 - Added app-bar actions-padding runtime parity probe route/page in both C# and Dart samples (`AppBar actionsPadding theme`) with controls for theme actions-padding and widget override values plus themed/default app-bar preview comparison.
 - Added app-bar icon-theme runtime parity probe route/page in both C# and Dart samples (`AppBar icon themes`) with controls for foreground, theme/widget icon-theme overrides, and leading/actions context probes for precedence verification.
 - Added app-bar text-style runtime parity probe route/page in both C# and Dart samples (`AppBar text styles`) with controls for foreground and theme/widget `titleTextStyle`/`toolbarTextStyle` overrides plus expected-style summary and themed/default preview comparison.
-- Added first Material control set: `TextButton`, `ElevatedButton`, and `OutlinedButton` in `src/Flutter.Material` with inherited-theme defaults and disabled-state styling behavior.
+- Added first Material control set: `TextButton`, `ElevatedButton`, and `OutlinedButton` in `src/Plumix.Material` with inherited-theme defaults and disabled-state styling behavior.
 - Added Material buttons demo route/page in both C# and Dart sample galleries for parity/runtime validation.
-- Added regression coverage for Material button default color resolution and disabled visuals in `src/Flutter.Tests/MaterialButtonsTests.cs`.
-- Extended Material control set with `FilledButton` plus `FilledButton.Tonal(...)` in `src/Flutter.Material`, including theme/style composition (`default -> theme -> widget -> legacy`) and `StyleFrom(...)` support.
+- Added regression coverage for Material button default color resolution and disabled visuals in `src/Plumix.Tests/MaterialButtonsTests.cs`.
+- Extended Material control set with `FilledButton` plus `FilledButton.Tonal(...)` in `src/Plumix.Material`, including theme/style composition (`default -> theme -> widget -> legacy`) and `StyleFrom(...)` support.
 - Added Filled-button theming surface in `Flutter.Material`: `ThemeData.SecondaryContainerColor`, `ThemeData.OnSecondaryContainerColor`, `ThemeData.FilledButtonStyle`, and `FilledButtonThemeData`/`FilledButtonTheme`.
-- Expanded Material button regression coverage for Filled variants in `src/Flutter.Tests/MaterialButtonsTests.cs` (default filled/tonal token mapping, disabled-state tones, and theme precedence for `ThemeData.FilledButtonTheme` plus local `FilledButtonTheme` overrides).
+- Expanded Material button regression coverage for Filled variants in `src/Plumix.Tests/MaterialButtonsTests.cs` (default filled/tonal token mapping, disabled-state tones, and theme precedence for `ThemeData.FilledButtonTheme` plus local `FilledButtonTheme` overrides).
 - Extended Material buttons demo parity route/page in both C# and Dart samples with `FilledButton` and tonal variant runtime probes (enabled/disabled flow, tap counters, and custom color overrides).
 - Added initial Material button interaction polish: pointer-pressed visuals, focus visuals, and keyboard activation (`Enter`/`Return`/`Space`) through `Focus` integration in `MaterialButtonCore`.
 - Sample gallery shell buttons (menu entries and demo-page back action) now use Material button controls on both C# and Dart samples; Material-buttons demo control-strip actions now also use Material buttons instead of `CounterTapButton`.
-- Added core framework support for stateful widgets implemented in external assemblies (`State.StateWidget` protected accessor) to keep `src/Flutter.Material` decoupled while preserving stateful widget patterns.
+- Added core framework support for stateful widgets implemented in external assemblies (`State.StateWidget` protected accessor) to keep `src/Plumix.Material` decoupled while preserving stateful widget patterns.
 - Applied strict parity follow-up for button defaults/state layers from Flutter Dart source: `TextButton`/`ElevatedButton`/`OutlinedButton` now enforce baseline minimum size `64x40`, use stadium-like default radius, and use normalized state-layer overlay (`pressed/focused`) instead of custom focus-border widening heuristics.
 - Continued strict parity follow-up for button theming tokens/defaults: `ThemeData` now exposes `onSurfaceColor`, `outlineColor`, and `surfaceContainerLowColor`; `ElevatedButton` defaults now use surface-container/primary color pairing with on-surface disabled tones; `OutlinedButton` default border now resolves from outline token while foreground remains primary.
 - Added hover interaction baseline for Material buttons: framework pointer stack now dispatches enter/exit transitions (`PointerEnterEvent`/`PointerExitEvent` via `GestureBinding` hover-hit tracking), and `MaterialButtonCore` applies hover state-layer opacity (`0.08`) in addition to pressed/focused overlays.
@@ -380,7 +382,7 @@ Progress update (2026-03-19):
   - extended framework ink-splash primitives (`InkSplash` / `RenderInkSplash` / `MaterialButtonCore`) with optional splash-radius propagation used by checkbox parity behavior;
   - expanded `MaterialCheckboxTests` coverage for checkbox-theme precedence, error-state visuals, adaptive-constructor guards, splash-radius propagation, and transition animation behavior.
 - Continued adaptive checkbox parity hardening for Cupertino targets:
-  - introduced a dedicated `Flutter.Cupertino` library project with framework `CupertinoCheckbox` (`src/Flutter.Cupertino/CupertinoCheckbox.cs`) and wired it into solution/project references.
+  - introduced a dedicated `Flutter.Cupertino` library project with framework `CupertinoCheckbox` (`src/Plumix.Cupertino/CupertinoCheckbox.cs`) and wired it into solution/project references.
   - `Checkbox.Adaptive(...)` now resolves a dedicated iOS/macOS adaptive branch from `ThemeData.Platform` and delegates to `CupertinoCheckbox` instead of following Material-mode composition.
   - adaptive iOS/macOS path now uses Cupertino-like defaults for visual width (`14x14`), fill/check/border token resolution, and adaptive tap-target policy (`iOS` `44x44`, `macOS` `14x14`).
   - adaptive painter visuals are now parity-hardened for Cupertino defaults: dark-mode gradient fill branch is implemented and check/dash indicators are rendered as vector stroke glyphs (instead of font-text checkmark).
@@ -407,8 +409,8 @@ Progress update (2026-03-19):
   - added focused `MaterialRadioTests` coverage for M3 selected/unselected/disabled defaults, widget/theme precedence, toggleable null transition, keyboard activation, and tap-target behavior (`padded` vs `shrinkWrap`);
   - added C#/Dart sample parity demo route/page for runtime verification (`Radio` route in both sample menus);
 - Closed adaptive radio platform divergence for Cupertino targets:
-  - added framework `CupertinoRadio<T>` in `src/Flutter.Cupertino/CupertinoRadio.cs` with Cupertino-like visual defaults (`18x18` body, platform brightness-aware outer/inner/border colors, dark-mode gradient branch, and pressed/focus overlays) plus keyboard/toggleable interactions;
-  - added `Radio<T>.Adaptive(...)` in `src/Flutter.Material/Radio.cs` with Flutter-like platform split (`ThemeData.Platform` iOS/macOS -> `CupertinoRadio`, other targets -> Material path), and `useCupertinoCheckmarkStyle` API wiring for Cupertino checkmark indicator mode;
+  - added framework `CupertinoRadio<T>` in `src/Plumix.Cupertino/CupertinoRadio.cs` with Cupertino-like visual defaults (`18x18` body, platform brightness-aware outer/inner/border colors, dark-mode gradient branch, and pressed/focus overlays) plus keyboard/toggleable interactions;
+  - added `Radio<T>.Adaptive(...)` in `src/Plumix.Material/Radio.cs` with Flutter-like platform split (`ThemeData.Platform` iOS/macOS -> `CupertinoRadio`, other targets -> Material path), and `useCupertinoCheckmarkStyle` API wiring for Cupertino checkmark indicator mode;
   - expanded `MaterialRadioTests` with focused adaptive coverage (iOS defaults, adaptive `fillColor` ignore behavior, checkmark-style indicator path, and macOS visual-geometry check);
   - expanded C#/Dart sample `Radio` runtime probe with adaptive platform/style controls (`iOS`/`macOS`/`Android` cycle + checkmark toggle) and dedicated `Radio.adaptive` probe rows for live verification of Cupertino path and non-Cupertino fallback behavior;
   - remaining divergence: deeper Cupertino fidelity items for radio (haptics/accessibility labels/advanced motion nuances) remain out of current framework scope.
@@ -421,25 +423,25 @@ Progress update (2026-03-19):
   - added `tooltip` API wiring for all FAB constructors (`regular`/`small`/`large`/`extended`) and wrapped FAB composition with framework `Tooltip` when message is provided, with focused hover enter/exit show/hide regression coverage in `MaterialFloatingActionButtonTests`;
   - added API-level parity fields (`heroTag`, `mouseCursor`, `enableFeedback`, `clipBehavior`) and wired `clipBehavior` into shared `MaterialButtonCore` clipping behavior, with focused `MaterialFloatingActionButtonTests` coverage for default-vs-explicit clipping and API value persistence;
   - closed framework-scope runtime cursor + feedback wiring for FAB/buttons by introducing `Feedback` primitive and `MouseCursorManager` in `Flutter` core, resolving FAB cursor/feedback precedence through `FloatingActionButtonThemeData` (`widget -> theme -> defaults`), and routing framework cursor/feedback channels into `FlutterHost` host hooks.
-  - closed framework-scope runtime hero transition behavior for FAB tags by introducing a baseline framework `Hero` primitive in `src/Flutter/Widgets/Hero.cs`, wiring navigator push/pop hero-flight choreography in `src/Flutter/Widgets/Navigation.cs` (temporary dual-route composition + overlay flight animation + popped-route disposal after flight completion), and wrapping `FloatingActionButton` composition with `Hero(tag: heroTag, ...)` when `heroTag` is provided.
-  - expanded hero rect-flight parity with `Hero.createRectTween` support (`src/Flutter/Widgets/Hero.cs` + `src/Flutter/Widgets/Navigation.cs`): destination hero rect tween factory now resolves per-flight bounds animation with linear `RectTween` fallback, and flight overlay bounds now evaluate via manifest tween instead of hardcoded lerp.
-  - expanded hero shuttle parity with `Hero.flightShuttleBuilder` support (`src/Flutter/Widgets/Hero.cs` + `src/Flutter/Widgets/Navigation.cs`): flight overlay content now resolves by Flutter-like precedence (`destination flightShuttleBuilder -> source flightShuttleBuilder -> destination child`) and receives per-frame progress during route hero flights.
-  - expanded hero placeholder parity with `Hero.placeholderBuilder` support (`src/Flutter/Widgets/Hero.cs`): hidden heroes now resolve route/tag-specific placeholder metadata (size from flight snapshots), and placeholder widgets are built during push/pop flights with Flutter-like callback shape (`context`, `size`, `child`).
-  - expanded default hero placeholder parity (`src/Flutter/Widgets/Hero.cs`): default hidden-hero placeholders now follow Flutter push/pop behavior (push-source keeps offstage child in fixed-size box; push-destination and pop placeholders use fixed-size empty boxes).
-  - added duplicate-tag runtime guard for Hero registration (`src/Flutter/Widgets/Hero.cs`): multiple active heroes with the same `tag` inside one route subtree now throw `InvalidOperationException` to prevent ambiguous hero-flight resolution.
-  - added nested-hero runtime guard in `src/Flutter/Widgets/Hero.cs`: rendering a `Hero` under another `Hero` now throws `InvalidOperationException` to match Flutter hero composition constraints.
-  - added hero push-to-pop diversion lifecycle parity in `src/Flutter/Widgets/Navigation.cs`: if pop interrupts an active push hero flight between the same routes, navigator now reuses and reverses the active flight/tween instead of restarting a new pop flight.
-  - added hero subtree participation gating via `HeroMode(enabled: ...)` in `src/Flutter/Widgets/Hero.cs`: disabled hero subtrees now opt out from registration and hero-flight placeholder substitution, preventing matching-tag flights when disabled.
-  - added `Hero.transitionOnUserGestures` parity in `src/Flutter/Widgets/Hero.cs` + `src/Flutter/Widgets/Navigation.cs`: user-gesture pop transitions now start hero flights only when both matching heroes explicitly opt in.
-  - added nested-navigator hero orchestration parity in `src/Flutter/Widgets/Hero.cs`: heroes on a nested navigator's current route now register for ancestor route scopes so outer navigator transitions can animate matching tags across nested navigator content.
-  - expanded focused hero coverage with `src/Flutter.Tests/HeroNavigatorTests.cs` (push/pop shared-tag hero flights) plus `MaterialFloatingActionButtonTests` assertion that FAB composition is hero-wrapped when `heroTag` is set.
-  - expanded navigator host back-dispatch coverage across nested navigators in `src/Flutter.Tests/NavigationTests.cs`: innermost navigator now has explicit regression coverage for first-pop handling, with verified fallback to outer navigator when nested stacks cannot pop.
+  - closed framework-scope runtime hero transition behavior for FAB tags by introducing a baseline framework `Hero` primitive in `src/Plumix/Widgets/Hero.cs`, wiring navigator push/pop hero-flight choreography in `src/Plumix/Widgets/Navigation.cs` (temporary dual-route composition + overlay flight animation + popped-route disposal after flight completion), and wrapping `FloatingActionButton` composition with `Hero(tag: heroTag, ...)` when `heroTag` is provided.
+  - expanded hero rect-flight parity with `Hero.createRectTween` support (`src/Plumix/Widgets/Hero.cs` + `src/Plumix/Widgets/Navigation.cs`): destination hero rect tween factory now resolves per-flight bounds animation with linear `RectTween` fallback, and flight overlay bounds now evaluate via manifest tween instead of hardcoded lerp.
+  - expanded hero shuttle parity with `Hero.flightShuttleBuilder` support (`src/Plumix/Widgets/Hero.cs` + `src/Plumix/Widgets/Navigation.cs`): flight overlay content now resolves by Flutter-like precedence (`destination flightShuttleBuilder -> source flightShuttleBuilder -> destination child`) and receives per-frame progress during route hero flights.
+  - expanded hero placeholder parity with `Hero.placeholderBuilder` support (`src/Plumix/Widgets/Hero.cs`): hidden heroes now resolve route/tag-specific placeholder metadata (size from flight snapshots), and placeholder widgets are built during push/pop flights with Flutter-like callback shape (`context`, `size`, `child`).
+  - expanded default hero placeholder parity (`src/Plumix/Widgets/Hero.cs`): default hidden-hero placeholders now follow Flutter push/pop behavior (push-source keeps offstage child in fixed-size box; push-destination and pop placeholders use fixed-size empty boxes).
+  - added duplicate-tag runtime guard for Hero registration (`src/Plumix/Widgets/Hero.cs`): multiple active heroes with the same `tag` inside one route subtree now throw `InvalidOperationException` to prevent ambiguous hero-flight resolution.
+  - added nested-hero runtime guard in `src/Plumix/Widgets/Hero.cs`: rendering a `Hero` under another `Hero` now throws `InvalidOperationException` to match Flutter hero composition constraints.
+  - added hero push-to-pop diversion lifecycle parity in `src/Plumix/Widgets/Navigation.cs`: if pop interrupts an active push hero flight between the same routes, navigator now reuses and reverses the active flight/tween instead of restarting a new pop flight.
+  - added hero subtree participation gating via `HeroMode(enabled: ...)` in `src/Plumix/Widgets/Hero.cs`: disabled hero subtrees now opt out from registration and hero-flight placeholder substitution, preventing matching-tag flights when disabled.
+  - added `Hero.transitionOnUserGestures` parity in `src/Plumix/Widgets/Hero.cs` + `src/Plumix/Widgets/Navigation.cs`: user-gesture pop transitions now start hero flights only when both matching heroes explicitly opt in.
+  - added nested-navigator hero orchestration parity in `src/Plumix/Widgets/Hero.cs`: heroes on a nested navigator's current route now register for ancestor route scopes so outer navigator transitions can animate matching tags across nested navigator content.
+  - expanded focused hero coverage with `src/Plumix.Tests/HeroNavigatorTests.cs` (push/pop shared-tag hero flights) plus `MaterialFloatingActionButtonTests` assertion that FAB composition is hero-wrapped when `heroTag` is set.
+  - expanded navigator host back-dispatch coverage across nested navigators in `src/Plumix.Tests/NavigationTests.cs`: innermost navigator now has explicit regression coverage for first-pop handling, with verified fallback to outer navigator when nested stacks cannot pop.
 - Extended Material `BottomNavigationBar` parity in `Flutter.Material`:
   - expanded framework `BottomNavigationBar` API parity with Flutter-like type/default wiring: `BottomNavigationBarType` (`fixed`/`shifting`) now resolves by precedence (`widget -> theme -> item-count default`), with shifting background-color resolution from selected item `backgroundColor`;
   - added dedicated bottom-navigation theming primitives (`BottomNavigationBarThemeData`, inherited `BottomNavigationBarTheme`, and `ThemeData.BottomNavigationBarTheme`) with Flutter-like precedence (`widget -> bottomNavigationBarTheme -> defaults`);
   - expanded visual/default behavior for current scope: nullable label-visibility flags (`showSelectedLabels` / `showUnselectedLabels`) with type-aware defaults, selected/unselected label-style color precedence, selected/unselected icon-theme support, optional elevation handling, and `BottomNavigationBarItem` parity fields (`key`, `tooltip`);
   - completed stateful shifting choreography for current framework scope: animated selected/unselected icon-size+color transitions, animated label visibility transitions, animated shifting tile-width flex transitions, and radial selected-item background flood transition;
-  - introduced framework `Tooltip` primitive in `src/Flutter.Material/Tooltip.cs` and wired `BottomNavigationBarItem.tooltip` wrapping through `BottomNavigationBar` tiles;
+  - introduced framework `Tooltip` primitive in `src/Plumix.Material/Tooltip.cs` and wired `BottomNavigationBarItem.tooltip` wrapping through `BottomNavigationBar` tiles;
   - added per-tile semantics wrapper parity: tile semantics now include button/selected/enabled flags with tap action wiring, hidden-label fallback semantics when visual labels are suppressed, and index-label semantics from `MaterialLocalizations.TabLabel(...)`;
   - introduced framework Material localization primitives (`MaterialLocalizations`, `DefaultMaterialLocalizations`, and inherited `MaterialLocalizationsScope`) and routed bottom-navigation index-label semantics through the localization provider (default English fallback with subtree override support);
   - expanded `MaterialBottomNavigationBarTests` coverage for theme-default precedence, widget-over-theme overrides, auto-shifting defaults (background + unselected-label visibility), label-style color precedence, theme-driven `type` override, icon-theme pair guards, semantics-tree coverage for enabled/disabled tile states plus index labels, tooltip hover show/hide behavior, and shifting selection-width animation behavior;
@@ -525,6 +527,66 @@ Progress update (2026-03-19):
   - added focused `MaterialRangeSliderTests` coverage in `src/Plumix.Tests/MaterialRangeSliderTests.cs` for constructor guards, M2/M3 default color resolution, theme/widget color precedence, discrete snapping + change lifecycle callbacks, keyboard adjustment baseline, and formatted range semantics label/flags;
   - added C#/Dart sample parity demo route/page for runtime verification (`RangeSlider` route in Material tab with enabled/disabled + continuous/discrete probes, M2/M3 mode switch, theme/widget color override probes, callback-status output, and LTR/RTL preview).
 - Added C#/Dart sample parity demo route/page for runtime `Drawer` verification in the Material tab (`Drawer` route with start/end drawer open/close choreography controls plus `DrawerTheme`/widget override probes for scrim/color/elevation/width precedence).
+- Added paired Material `Badge` + `Tooltip` parity pass in `Plumix.Material`:
+  - `Badge` now matches Flutter count formatting, small/large geometry, intrinsic horizontal stadium sizing, label visibility, LTR/RTL placement offsets, M3 error/on-error tokens, and `BadgeTheme`/`ThemeData.BadgeTheme` precedence;
+  - `Tooltip` now exposes Flutter-shaped sizing, decoration, typography, timing, trigger, feedback, cursor, semantics, programmatic visibility, global dismissal, and `TooltipTheme`/`ThemeData.TooltipTheme` surfaces with desktop/mobile and brightness-aware defaults;
+  - added focused `MaterialBadgeTests` and `MaterialTooltipTests`, plus a mirrored C#/Dart `Badge + Tooltip` runtime route with count/small/widget/theme and hover/long-press probes.
+- Added paired Material `NavigationBar` + `NavigationRail` parity pass in `Plumix.Material`:
+  - ported Flutter-shaped destination APIs, M2/M3 token defaults, local/global theme precedence, selected/disabled interaction states, animated selection indicators, label behaviors, safe-area composition, tooltips, localized tab semantics, rail extension, scrolling, and leading/trailing placement;
+  - expanded shared Material tokens with `surfaceContainer`, `labelMedium`, and `bodyLarge`, and added focused navigation-surface coverage plus a mirrored C#/Dart runtime route.
+- Added paired Material `ActionChip` + `ChoiceChip` parity pass in `Plumix.Material`:
+  - introduced shared `RawChip`, `ChipThemeData`/`ChipTheme`/`ThemeData.ChipTheme`, `ChipAnimationStyle`, and `VisualDensity` primitives with Flutter-shaped public APIs and flat/elevated factories;
+  - matched M2/M3 defaults, widget/theme/default state-color precedence, selected+disabled handling, avatar/checkmark composition, scaled label padding, tap-target policy, mouse/focus/keyboard interaction, and selected/checked semantics;
+  - added focused `MaterialChipTests` plus a mirrored C#/Dart runtime route covering enabled/disabled, selection, elevated variants, avatars, and local theme overrides.
+- Extended the Material chip family with paired `FilterChip` + `InputChip` ports:
+  - matched Flutter constructor surfaces, flat/elevated filter variants, M2/M3 state tokens, checkmark/avatar behavior, and input selection/press/delete-only enablement rules;
+  - expanded `RawChip` with an independently animated delete drawer, default M2 cancel/M3 clear icons, color/constraint precedence, localized tooltip semantics, and separate body/delete gesture arenas;
+  - expanded focused chip coverage and the mirrored C#/Dart `/chips` demo with filter selection, deletion, input avatar/selection/removal, disabled states, and theme probes.
+- Added paired Material `GridTile` + `GridTileBar` ports:
+  - matched Flutter's direct-child fast path plus positioned header/footer overlay composition for `GridTile`;
+  - matched `GridTileBar` one/two-line heights, directional slot padding, dark title/body typography, white icon defaults, ellipsis behavior, transparent/background-color paths, and RTL layout, adding explicit flex text-direction wiring needed by the source composition;
+  - added focused geometry/style coverage and a mirrored C#/Dart `/grid-tile` runtime demo.
+- Added paired Material `BackButton` + `CloseButton` ports:
+  - added Flutter-shaped action buttons and standalone icon widgets with Android/desktop versus iOS/macOS back glyph selection, localized tooltips, custom callbacks, and default `Navigator.MaybePop` behavior;
+  - added `ActionIconThemeData`/`ActionIconTheme` plus `ThemeData.ActionIconTheme` builder precedence and wired AppBar's regular/fullscreen implied leading to the new controls;
+  - added focused platform/theme/style/navigation coverage and a mirrored C#/Dart `/action-buttons` runtime demo.
+- Completed the Flutter action-button quartet with paired `DrawerButton` + `EndDrawerButton` ports:
+  - added standalone drawer icon widgets, local/global action-icon builder precedence, localized tooltip and Android duplicated icon semantics, custom callbacks, and default start/end `Scaffold` open actions;
+  - replaced AppBar's manual implied start/end drawer `IconButton` composition with the new controls and expanded the mirrored `/action-buttons` demo plus focused Scaffold/action coverage.
+- Added paired `DrawerHeader` + `UserAccountsDrawerHeader` ports:
+  - matched status-bar-aware `161dp` header sizing, default padding/margin, exact `fastOutSlowIn` animated decoration and bottom divider composition;
+  - matched primary account plus three secondary picture slots, primary text styles, details callback/toggle arrow, signed-in/show/hide localized semantics, directional geometry, and default theme-primary decoration;
+  - added focused layout/theme/semantics/RTL coverage and a mirrored `/drawer-headers` runtime demo.
+- Added paired `NavigationDrawer` + `NavigationDrawerDestination` ports:
+  - matched Flutter's header/footer plus scrollable mixed-child composition, destination-only indexing, nullable controlled selection, disabled interaction, selected-icon switching, 500ms indicator animation, destination background, safe-area behavior, and localized tab semantics;
+  - added `NavigationDrawerThemeData`/`NavigationDrawerTheme` plus `ThemeData.NavigationDrawerTheme` with state-aware label/icon style resolution and widget/local/global/default precedence for surface, indicator, tile, and typography geometry;
+  - extended `Drawer`/`DrawerThemeData` with source-required surface-tint plumbing, added focused defaults/precedence/interaction/semantics coverage, and added a mirrored `/navigation-drawer` C#/Dart runtime demo.
+- Added paired `ToggleButtons` + `SegmentedButton<T>` ports:
+  - matched Flutter's controlled bool-list and typed-set models, exclusive/multi/empty selection rules, disabled whole-control/per-segment behavior, selected-icon replacement, tooltip composition, `styleFrom`, and state-aware default/theme/widget precedence;
+  - added `ToggleButtonsThemeData`/`ToggleButtonsTheme`, `SegmentedButtonThemeData`/`SegmentedButtonTheme`, and corresponding `ThemeData` surfaces, plus shared `ButtonStyle` cursor/density/duration/feedback fields;
+  - added a shared equalized segment render layout for tallest/widest child normalization, RTL/vertical ordering, expanded-insets distribution, zero-area safety, tap-target geometry, and checked/selected/mutually-exclusive semantics;
+  - added focused API/default/state/layout/style/semantics coverage and a mirrored `/segmented-buttons` C#/Dart runtime demo.
+- Added paired core `Banner` + Material `MaterialBanner` ports:
+  - matched the exact four-corner/RTL diagonal ribbon transforms, colors, shadow, typography, foreground paint order, and debug checked-mode composition through a shared Flutter-shaped `CustomPaint` primitive;
+  - matched Material single-action trailing versus forced/multiple below-action composition, `OverflowBar` row-to-column behavior, directional padding, leading slot, minimum action bar, M2/M3 surface/divider defaults, elevation/margin, theme/widget precedence, and `1.5x` text-scale cap;
+  - added controller-driven slide/height transitions, accessible-navigation bypass, live-region/dismiss semantics, focused coverage, and a mirrored `/banner` C#/Dart runtime demo; banner presentation through ScaffoldMessenger remains tracked as a divergence.
+- Added paired Material `SnackBarAction` + `SnackBar` ports:
+  - matched one-shot action behavior, M2/M3 colors/typography/elevation, `SnackBarTheme` and widget precedence, fixed/floating geometry, close icon, measured action-overflow layout, animation, swipe/dismiss handling, and live-region semantics;
+  - introduced `ScaffoldMessenger` + `ScaffoldFeatureController` with FIFO snackbar presentation, hide/remove/timeout lifecycle, closed reasons, accessible-navigation persistence, and `Scaffold` placement integration;
+  - added focused `MaterialSnackBarTests` and a mirrored `/snack-bar` C#/Dart runtime demo covering queue, action, close, custom colors, and fixed/floating paths.
+- Added paired Material `Dialog` + `AlertDialog` ports:
+  - matched M2/M3/fullscreen surfaces, `DialogTheme`/widget precedence, view-inset animation, minimum/intrinsic width, icon/title/content/action slots, scaled padding, scrollable content, action overflow, and dialog/route semantics;
+  - extended Navigator with non-opaque route stacking and typed completion results, then added `DialogRoute<T>`/`MaterialDialogs.ShowDialog<T>` with captured themes/media/direction, modal barrier dismissal, fade/reverse transitions, and delayed result completion;
+  - added shared `Builder`, `IntrinsicWidth`, unbounded-stretch flex hardening, focused `MaterialDialogTests`, and a mirrored `/dialog` C#/Dart runtime demo.
+- Extended the dialog family with paired `SimpleDialog` + `SimpleDialogOption` ports:
+  - matched optional title plus scrollable choice-list composition, default/scaled title and content padding, dialog-theme typography/surface precedence, localized route semantics, and nullable option callbacks;
+  - added source-required shared `ListBody`, `SingleChildScrollView.padding`, and `InkWell` primitives for cross-axis-stretched scroll content and enabled/disabled ink interaction;
+  - expanded focused dialog coverage and the mirrored `/dialog` C#/Dart runtime demo with typed simple-choice results.
+- Added paired `PopupMenuButton<T>` + `PopupMenuItem<T>` ports:
+  - matched lazy item building, child/icon button paths, over/under anchor geometry, initial selection, selection/cancel/open callbacks, disabled items, M2/M3 typography/padding/surfaces, theme/widget precedence, localized tooltips/route semantics, and keyboard traversal that skips disabled entries;
+  - added `PopupMenuThemeData`/`PopupMenuTheme` + `ThemeData.PopupMenuTheme`, `PopupMenus.ShowMenu<T>`, animated non-opaque route presentation, safe-area screen clamping, intrinsic 56px width steps, and shrink-wrapped scrolling;
+  - added source-required core primitives (`RelativeRect`, `AnimationStyle`, expanded/menu semantics, root navigator lookup) and stabilized Navigator visible-route composition so underlying state survives the first popup route;
+  - added focused `MaterialPopupMenuTests` and a mirrored `/popup-menu` C#/Dart runtime demo.
 - Remaining divergence for floating action button in current framework scope:
   - none documented in current framework scope.
 
@@ -533,7 +595,7 @@ Initial scope:
 - Introduce framework-level theming primitives (`ThemeData`, `Theme`, baseline color/text style propagation).
 - Introduce shell/layout primitives for Material app structure (`Scaffold`, `AppBar`, and supporting slots).
 - Introduce first Material control set (`TextButton`, `ElevatedButton`, `OutlinedButton`) on top of framework render/widget layers.
-- Keep architecture boundaries explicit: behavior in framework libraries (`src/Flutter`, `src/Flutter.Material`), host integration in sample hosts only.
+- Keep architecture boundaries explicit: behavior in framework libraries (`src/Plumix`, `src/Plumix.Material`), host integration in sample hosts only.
 
 Exit criteria:
 
@@ -554,7 +616,7 @@ Exit criteria:
 
 - Desktop, browser, Android, and iOS sample hosts build successfully from the solution.
 - Framework-driven app flow remains identical across hosts.
-- `src/Sample/Flutter.Net` and `dart_sample` stay in feature/route/module parity.
+- `src/Sample/Plumix.Sample` and `dart_sample` stay in feature/route/module parity.
 
 ## Backlog Candidates (After M1-M5)
 
@@ -565,11 +627,10 @@ Exit criteria:
 
 ## Update Protocol (For Humans and AI Agents)
 
+This document owns exactly one thing: milestone status and roadmap direction.
+
 - Always update this file when milestone status changes (`done`, `in_progress`, `planned`, `blocked`).
-- Always record shipped outcomes in `CHANGELOG.md`.
-- For Dart-to-C# control/widget ports, follow mandatory parity-first workflow in `docs/ai/PORTING_MODE.md` (strict `1:1` default; documented divergences only).
-- For parity-hardening requests, default delivery unit is one control closed end-to-end (`API/defaults/states/layout/paint/tests`) per request; avoid splitting one control into many micro-iterations unless blocked by a missing primitive or explicitly requested.
 - For every meaningful feature change, update both:
   - semantic status (this document),
   - historical record (`CHANGELOG.md`).
-- Keep architecture boundaries explicit: framework behavior in framework libraries (`src/Flutter`, `src/Flutter.Material`), host adaptation only in sample hosts.
+- Porting workflow and delivery-unit rules live in `docs/ai/PORTING_MODE.md`; architecture/package/versioning rules live in `docs/ai/INVARIANTS.md`. Do not restate them here.

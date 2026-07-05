@@ -1598,6 +1598,9 @@ internal sealed class MaterialButtonCore : StatefulWidget
         Clip clipBehavior = Clip.HardEdge,
         bool? enableFeedback = null,
         bool autofocus = false,
+        Size? tapTargetMinimumSize = null,
+        bool? enabled = null,
+        bool? semanticEnabled = null,
         Key? key = null) : base(key)
     {
         Child = child;
@@ -1617,6 +1620,9 @@ internal sealed class MaterialButtonCore : StatefulWidget
         ClipBehavior = clipBehavior;
         EnableFeedback = enableFeedback;
         Autofocus = autofocus;
+        TapTargetMinimumSize = tapTargetMinimumSize;
+        Enabled = enabled;
+        SemanticEnabled = semanticEnabled;
     }
 
     public Widget Child { get; }
@@ -1652,6 +1658,12 @@ internal sealed class MaterialButtonCore : StatefulWidget
     public bool? EnableFeedback { get; }
 
     public bool Autofocus { get; }
+
+    public Size? TapTargetMinimumSize { get; }
+
+    public bool? Enabled { get; }
+
+    public bool? SemanticEnabled { get; }
 
     public override State CreateState()
     {
@@ -1756,7 +1768,24 @@ internal sealed class MaterialButtonCore : StatefulWidget
                 legacyOverrides?.TextStyle,
                 widgetStyle?.TextStyle,
                 themeStyle?.TextStyle,
-                defaults?.TextStyle));
+                defaults?.TextStyle),
+            MouseCursor: ComposeStateProperty<MouseCursor?>(
+                legacyOverrides?.MouseCursor,
+                widgetStyle?.MouseCursor,
+                themeStyle?.MouseCursor,
+                defaults?.MouseCursor),
+            VisualDensity: legacyOverrides?.VisualDensity
+                           ?? widgetStyle?.VisualDensity
+                           ?? themeStyle?.VisualDensity
+                           ?? defaults?.VisualDensity,
+            AnimationDuration: legacyOverrides?.AnimationDuration
+                               ?? widgetStyle?.AnimationDuration
+                               ?? themeStyle?.AnimationDuration
+                               ?? defaults?.AnimationDuration,
+            EnableFeedback: legacyOverrides?.EnableFeedback
+                            ?? widgetStyle?.EnableFeedback
+                            ?? themeStyle?.EnableFeedback
+                            ?? defaults?.EnableFeedback);
     }
 
     private static MaterialStateProperty<T>? ComposeStateProperty<T>(
@@ -1997,7 +2026,9 @@ internal sealed class MaterialButtonCore : StatefulWidget
 
         private MaterialButtonCore CurrentWidget => (MaterialButtonCore)StateWidget;
 
-        private bool Enabled => CurrentWidget.OnPressed != null;
+        private bool Enabled => CurrentWidget.Enabled ?? CurrentWidget.OnPressed != null;
+
+        private bool Interactive => Enabled && CurrentWidget.OnPressed != null;
 
         public override void InitState()
         {
@@ -2023,27 +2054,27 @@ internal sealed class MaterialButtonCore : StatefulWidget
                 AttachFocusNode(CurrentWidget.FocusNode);
             }
 
-            if (!Enabled && _isPressed)
+            if (!Interactive && _isPressed)
             {
                 _isPressed = false;
             }
 
-            if (!Enabled && _isHovered)
+            if (!Interactive && _isHovered)
             {
                 _isHovered = false;
             }
 
-            if (!Enabled && _mouseCursorHandle is not null)
+            if (!Interactive && _mouseCursorHandle is not null)
             {
                 ReleaseMouseCursor();
             }
 
-            if (!Enabled && _suppressFocusOverlay)
+            if (!Interactive && _suppressFocusOverlay)
             {
                 _suppressFocusOverlay = false;
             }
 
-            if (!Enabled && _isSplashActive)
+            if (!Interactive && _isSplashActive)
             {
                 _isSplashActive = false;
                 _splashProgress = 0;
@@ -2051,18 +2082,18 @@ internal sealed class MaterialButtonCore : StatefulWidget
                 _splashController?.Stop();
             }
 
-            if (!Enabled && _isKeyboardPressed)
+            if (!Interactive && _isKeyboardPressed)
             {
                 _isKeyboardPressed = false;
                 _keyboardPressController?.Stop();
             }
 
-            if (!Enabled && _focusNode != null && _focusNode.HasFocus)
+            if (!Interactive && _focusNode != null && _focusNode.HasFocus)
             {
                 _focusNode.Unfocus();
             }
 
-            if (Enabled
+            if (Interactive
                 && _isHovered
                 && !Equals(oldButtonWidget.MouseCursor, CurrentWidget.MouseCursor))
             {
@@ -2117,6 +2148,10 @@ internal sealed class MaterialButtonCore : StatefulWidget
             var borderRadius = style.ResolveShape(baseStates) ?? Plumix.Rendering.BorderRadius.Zero;
             var minimumSize = style.ResolveMinimumSize(baseStates) ?? new Size(64, 40);
             ValidateMinimumSize(minimumSize);
+            var densityAdjustment = (style.VisualDensity ?? theme.VisualDensity).BaseSizeAdjustment;
+            minimumSize = new Size(
+                Math.Max(0, minimumSize.Width + densityAdjustment.X),
+                Math.Max(0, minimumSize.Height + densityAdjustment.Y));
             var maximumSize = style.ResolveMaximumSize(baseStates) ?? new Size(double.PositiveInfinity, double.PositiveInfinity);
             ValidateMaximumSize(maximumSize);
             var fixedSize = style.ResolveFixedSize(baseStates);
@@ -2170,19 +2205,25 @@ internal sealed class MaterialButtonCore : StatefulWidget
                     child: content);
             }
 
-            content = new DecoratedBox(
-                decoration: new BoxDecoration(
-                    Color: background,
-                    Border: border,
-                    BorderRadius: borderRadius,
-                    BoxShadows: ResolveBoxShadows(elevation, shadowColor)),
-                child: content);
+            var decoration = new BoxDecoration(
+                Color: background,
+                Border: border,
+                BorderRadius: borderRadius,
+                BoxShadows: ResolveBoxShadows(elevation, shadowColor));
+            content = style.AnimationDuration is { } animationDuration && animationDuration > TimeSpan.Zero
+                ? new AnimatedContainer(
+                    duration: animationDuration,
+                    decoration: decoration,
+                    child: content)
+                : new DecoratedBox(
+                    decoration: decoration,
+                    child: content);
 
             Widget result = content;
-            Action? tapCallback = enabled ? HandleTap : null;
-            Action? longPressCallback = enabled && widget.OnLongPress is not null ? HandleLongPress : null;
+            Action? tapCallback = Interactive ? HandleTap : null;
+            Action? longPressCallback = Interactive && widget.OnLongPress is not null ? HandleLongPress : null;
 
-            if (enabled)
+            if (Interactive)
             {
                 result = new GestureDetector(
                     behavior: HitTestBehavior.Opaque,
@@ -2210,7 +2251,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
             // Plumix.Sample ButtonStyleButton keeps a larger padded tap-target box around the
             // visual material; this wrapper aligns layout spacing with that behavior.
             var tapTargetResult = new ButtonTapTargetPadding(
-                minSize: ResolveTapTargetPaddingMinSize(tapTargetSize),
+                minSize: widget.TapTargetMinimumSize ?? ResolveTapTargetPaddingMinSize(tapTargetSize),
                 child: result);
 
             return new Semantics(
@@ -2237,7 +2278,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
                 flags |= SemanticsFlags.IsButton;
             }
 
-            if (enabled)
+            if (widget.SemanticEnabled ?? enabled)
             {
                 flags |= SemanticsFlags.IsEnabled;
             }
@@ -2288,7 +2329,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
                 return KeyEventResult.Ignored;
             }
 
-            if (!Enabled)
+            if (!Interactive)
             {
                 return KeyEventResult.Handled;
             }
@@ -2321,7 +2362,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
 
         private void HandleLongPress()
         {
-            if (!Enabled || CurrentWidget.OnLongPress is null)
+            if (!Interactive || CurrentWidget.OnLongPress is null)
             {
                 return;
             }
@@ -2372,7 +2413,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
 
         private void SetPressed(bool value, bool suppressFocusOverlay = false)
         {
-            if (!Enabled)
+            if (!Interactive)
             {
                 return;
             }
@@ -2392,7 +2433,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
 
         private void SetHovered(bool value)
         {
-            if (!Enabled)
+            if (!Interactive)
             {
                 if (!value)
                 {
@@ -2423,8 +2464,11 @@ internal sealed class MaterialButtonCore : StatefulWidget
         private void UpdateMouseCursor()
         {
             ReleaseMouseCursor();
+            var states = BuildMaterialStates(enabled: Enabled, includeFocus: true);
             _mouseCursorHandle = MouseCursorManager.PushCursor(
-                CurrentWidget.MouseCursor ?? SystemMouseCursors.Click);
+                CurrentWidget.MouseCursor
+                ?? CurrentWidget.Style.ResolveMouseCursor(states)
+                ?? SystemMouseCursors.Click);
         }
 
         private void ReleaseMouseCursor()
@@ -2435,7 +2479,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
 
         private bool IsFeedbackEnabled()
         {
-            return CurrentWidget.EnableFeedback ?? true;
+            return CurrentWidget.EnableFeedback ?? CurrentWidget.Style.EnableFeedback ?? true;
         }
 
         private void SetFocusOverlaySuppressed(bool value)
@@ -2450,7 +2494,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
 
         private void StartKeyboardPress()
         {
-            if (!Enabled || _keyboardPressController is null)
+            if (!Interactive || _keyboardPressController is null)
             {
                 return;
             }
@@ -2465,7 +2509,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
 
         private void StartSplash(Point origin)
         {
-            if (!Enabled || _splashController is null)
+            if (!Interactive || _splashController is null)
             {
                 return;
             }

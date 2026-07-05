@@ -95,6 +95,7 @@ public abstract class State
 {
     internal StatefulElement Element = null!;
     public BuildContext Context => new(Element);
+    public bool Mounted => Element is not null && Element.IsActive;
     protected StatefulWidget StateWidget => (StatefulWidget)Element.Widget;
 
     public virtual void InitState()

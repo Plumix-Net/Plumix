@@ -11,7 +11,8 @@ public sealed record DrawerThemeData(
     Color? ScrimColor = null,
     double? Elevation = null,
     Color? ShadowColor = null,
-    double? Width = null);
+    double? Width = null,
+    Color? SurfaceTintColor = null);
 
 public sealed class DrawerTheme : InheritedWidget
 {

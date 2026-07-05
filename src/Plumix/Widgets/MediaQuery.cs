@@ -12,7 +12,8 @@ public sealed record MediaQueryData(
     Thickness ViewInsets = default,
     Thickness SystemGestureInsets = default,
     Thickness ViewPadding = default,
-    double TextScaleFactor = 1.0)
+    double TextScaleFactor = 1.0,
+    bool AccessibleNavigation = false)
 {
     public MediaQueryData CopyWith(
         Size? size = null,
@@ -21,7 +22,8 @@ public sealed record MediaQueryData(
         Thickness? viewInsets = null,
         Thickness? systemGestureInsets = null,
         Thickness? viewPadding = null,
-        double? textScaleFactor = null)
+        double? textScaleFactor = null,
+        bool? accessibleNavigation = null)
     {
         return new MediaQueryData(
             Size: size ?? Size,
@@ -30,7 +32,8 @@ public sealed record MediaQueryData(
             ViewInsets: viewInsets ?? ViewInsets,
             SystemGestureInsets: systemGestureInsets ?? SystemGestureInsets,
             ViewPadding: viewPadding ?? ViewPadding,
-            TextScaleFactor: textScaleFactor ?? TextScaleFactor);
+            TextScaleFactor: textScaleFactor ?? TextScaleFactor,
+            AccessibleNavigation: accessibleNavigation ?? AccessibleNavigation);
     }
 
     public MediaQueryData RemovePadding(
@@ -183,6 +186,32 @@ public sealed class MediaQuery : InheritedWidget
     public static double TextScaleFactorOf(BuildContext context) => Of(context).TextScaleFactor;
 
     public static double? MaybeTextScaleFactorOf(BuildContext context) => MaybeOf(context)?.TextScaleFactor;
+
+    public static bool AccessibleNavigationOf(BuildContext context) => Of(context).AccessibleNavigation;
+
+    public static Widget WithClampedTextScaling(
+        BuildContext context,
+        Widget child,
+        double maxScaleFactor,
+        double minScaleFactor = 0)
+    {
+        if (!double.IsFinite(maxScaleFactor) || maxScaleFactor <= 0) throw new ArgumentOutOfRangeException(nameof(maxScaleFactor));
+        if (!double.IsFinite(minScaleFactor) || minScaleFactor < 0 || minScaleFactor > maxScaleFactor)
+        {
+            throw new ArgumentOutOfRangeException(nameof(minScaleFactor));
+        }
+        var data = Of(context);
+        return new MediaQuery(
+            data.CopyWith(textScaleFactor: Math.Clamp(data.TextScaleFactor, minScaleFactor, maxScaleFactor)),
+            child);
+    }
+
+    public static Widget WithNoTextScaling(BuildContext context, Widget child)
+    {
+        return new MediaQuery(
+            data: Of(context).CopyWith(textScaleFactor: 1.0),
+            child: child);
+    }
 
     public static Widget RemovePadding(
         BuildContext context,

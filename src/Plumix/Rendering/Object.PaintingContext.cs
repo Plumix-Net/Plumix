@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using Avalonia.Media.TextFormatting;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/rendering/object.dart (approximate)
@@ -134,6 +135,93 @@ public sealed class PaintingContext
     {
         var pictureLayer = EnsurePictureLayer();
         pictureLayer.AddDrawCommand((drawingContext, sceneOffset) => layout.Draw(drawingContext, point + sceneOffset));
+    }
+
+    public void DrawImage(
+        IImage image,
+        Rect sourceRect,
+        Rect destinationRect,
+        double opacity = 1.0,
+        Rect? clipRect = null,
+        BorderRadius? clipRadius = null,
+        bool flipHorizontally = false,
+        double? horizontalFlipAxisX = null,
+        Rect? ovalClipRect = null,
+        FilterQuality filterQuality = FilterQuality.Medium,
+        bool isAntiAlias = false,
+        BitmapBlendingMode blendMode = BitmapBlendingMode.SourceOver)
+    {
+        ArgumentNullException.ThrowIfNull(image);
+        if (sourceRect.Width <= 0 || sourceRect.Height <= 0
+            || destinationRect.Width <= 0 || destinationRect.Height <= 0)
+        {
+            return;
+        }
+
+        var effectiveOpacity = Math.Clamp(opacity, 0.0, 1.0);
+        var pictureLayer = EnsurePictureLayer();
+        pictureLayer.AddDrawCommand((drawingContext, sceneOffset) =>
+        {
+            var translatedDestination = new Rect(destinationRect.Position + sceneOffset, destinationRect.Size);
+            DrawingContext.PushedState? clip = null;
+            DrawingContext.PushedState? alpha = null;
+            DrawingContext.PushedState? transform = null;
+            DrawingContext.PushedState? renderOptions = null;
+            try
+            {
+                if (ovalClipRect.HasValue)
+                {
+                    var translatedOval = new Rect(ovalClipRect.Value.Position + sceneOffset, ovalClipRect.Value.Size);
+                    clip = drawingContext.PushGeometryClip(new EllipseGeometry(translatedOval));
+                }
+                else if (clipRect.HasValue)
+                {
+                    var translatedClip = new Rect(clipRect.Value.Position + sceneOffset, clipRect.Value.Size);
+                    clip = clipRadius.HasValue && clipRadius.Value.Radius > 0
+                        ? drawingContext.PushClip(new RoundedRect(
+                            translatedClip,
+                            Math.Min(clipRadius.Value.Radius, Math.Min(translatedClip.Width, translatedClip.Height) / 2.0)))
+                        : drawingContext.PushClip(translatedClip);
+                }
+
+                if (effectiveOpacity < 1.0)
+                {
+                    alpha = drawingContext.PushOpacity(effectiveOpacity);
+                }
+
+                renderOptions = drawingContext.PushRenderOptions(new RenderOptions
+                {
+                    BitmapInterpolationMode = filterQuality switch
+                    {
+                        FilterQuality.None => BitmapInterpolationMode.None,
+                        FilterQuality.Low => BitmapInterpolationMode.LowQuality,
+                        FilterQuality.High => BitmapInterpolationMode.HighQuality,
+                        _ => BitmapInterpolationMode.MediumQuality,
+                    },
+                    EdgeMode = isAntiAlias || ovalClipRect.HasValue || clipRadius?.Radius > 0
+                        ? EdgeMode.Antialias
+                        : EdgeMode.Aliased,
+                    BitmapBlendingMode = blendMode,
+                });
+
+                if (flipHorizontally)
+                {
+                    var centerX = horizontalFlipAxisX.HasValue
+                        ? horizontalFlipAxisX.Value + sceneOffset.X
+                        : translatedDestination.Center.X;
+                    transform = drawingContext.PushTransform(new Matrix(-1, 0, 0, 1, centerX * 2, 0));
+                }
+
+                drawingContext.DrawImage(image, sourceRect, translatedDestination);
+            }
+            finally
+            {
+                transform?.Dispose();
+                renderOptions?.Dispose();
+                alpha?.Dispose();
+                clip?.Dispose();
+            }
+        });
     }
 
     public void PushClipRect(Rect clipRect, Action<PaintingContext> painter)

@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Rendering;
+using Plumix.UI;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/widgets/basic.dart (approximate)
 
@@ -304,21 +305,38 @@ public sealed class ColoredBox : SingleChildRenderObjectWidget
 
 public sealed class DecoratedBox : SingleChildRenderObjectWidget
 {
-    public DecoratedBox(BoxDecoration decoration, Widget? child = null, Key? key = null) : base(child, key)
+    public DecoratedBox(
+        BoxDecoration decoration,
+        Widget? child = null,
+        Key? key = null,
+        DecorationPosition position = DecorationPosition.Background) : base(child, key)
     {
         Decoration = decoration ?? new BoxDecoration();
+        Position = position;
     }
 
     public BoxDecoration Decoration { get; }
+    public DecorationPosition Position { get; }
 
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
-        return new RenderDecoratedBox(Decoration);
+        return new RenderDecoratedBox(
+            Decoration,
+            position: Position,
+            configuration: CreateImageConfiguration(context));
     }
 
     internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
-        ((RenderDecoratedBox)renderObject).Decoration = Decoration;
+        var decoratedBox = (RenderDecoratedBox)renderObject;
+        decoratedBox.Decoration = Decoration;
+        decoratedBox.Position = Position;
+        decoratedBox.Configuration = CreateImageConfiguration(context);
+    }
+
+    private static ImageConfiguration CreateImageConfiguration(BuildContext context)
+    {
+        return ImageConfigurationUtils.CreateLocalImageConfiguration(context);
     }
 }
 
@@ -408,6 +426,38 @@ public sealed class Transform : SingleChildRenderObjectWidget
     internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         ((RenderTransform)renderObject).Transform = Matrix;
+    }
+}
+
+public sealed class FractionalTranslation : SingleChildRenderObjectWidget
+{
+    public FractionalTranslation(
+        Vector translation,
+        Widget? child = null,
+        bool transformHitTests = true,
+        Key? key = null) : base(child, key)
+    {
+        if (!double.IsFinite(translation.X) || !double.IsFinite(translation.Y))
+        {
+            throw new ArgumentOutOfRangeException(nameof(translation));
+        }
+        Translation = translation;
+        TransformHitTests = transformHitTests;
+    }
+
+    public Vector Translation { get; }
+    public bool TransformHitTests { get; }
+
+    internal override RenderObject CreateRenderObject(BuildContext context)
+    {
+        return new RenderFractionalTranslation(Translation, TransformHitTests);
+    }
+
+    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    {
+        var translation = (RenderFractionalTranslation)renderObject;
+        translation.Translation = Translation;
+        translation.TransformHitTests = TransformHitTests;
     }
 }
 
@@ -594,11 +644,13 @@ public sealed class Container : StatelessWidget
         Thickness? padding = null,
         double? width = null,
         double? height = null,
-        Key? key = null) : base(key)
+        Key? key = null,
+        BoxDecoration? foregroundDecoration = null) : base(key)
     {
         Child = child;
         Color = color;
         Decoration = decoration;
+        ForegroundDecoration = foregroundDecoration;
         Alignment = alignment;
         Margin = margin;
         Constraints = constraints;
@@ -613,6 +665,7 @@ public sealed class Container : StatelessWidget
     public Color? Color { get; }
 
     public BoxDecoration? Decoration { get; }
+    public BoxDecoration? ForegroundDecoration { get; }
 
     public Alignment? Alignment { get; }
 
@@ -651,6 +704,14 @@ public sealed class Container : StatelessWidget
         else if (Color.HasValue)
         {
             current = new ColoredBox(Color.Value, current);
+        }
+
+        if (ForegroundDecoration != null)
+        {
+            current = new DecoratedBox(
+                ForegroundDecoration,
+                position: DecorationPosition.Foreground,
+                child: current);
         }
 
         BoxConstraints? effectiveConstraints = Constraints;
@@ -742,13 +803,15 @@ public class Flex : MultiChildRenderObjectWidget
         MainAxisAlignment mainAxisAlignment = MainAxisAlignment.Start,
         CrossAxisAlignment crossAxisAlignment = CrossAxisAlignment.Center,
         double spacing = 0,
-        Key? key = null) : base(children, key)
+        Key? key = null,
+        TextDirection? textDirection = null) : base(children, key)
     {
         Direction = direction;
         MainAxisSize = mainAxisSize;
         MainAxisAlignment = mainAxisAlignment;
         CrossAxisAlignment = crossAxisAlignment;
         Spacing = spacing;
+        TextDirection = textDirection;
     }
 
     public Axis Direction { get; }
@@ -761,6 +824,8 @@ public class Flex : MultiChildRenderObjectWidget
 
     public double Spacing { get; }
 
+    public TextDirection? TextDirection { get; }
+
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderFlex(
@@ -769,6 +834,7 @@ public class Flex : MultiChildRenderObjectWidget
             mainAxisSize: MainAxisSize,
             mainAxisAlignment: MainAxisAlignment,
             crossAxisAlignment: CrossAxisAlignment,
+            textDirection: TextDirection,
             spacing: Spacing);
     }
 
@@ -779,6 +845,7 @@ public class Flex : MultiChildRenderObjectWidget
         flex.MainAxisSize = MainAxisSize;
         flex.MainAxisAlignment = MainAxisAlignment;
         flex.CrossAxisAlignment = CrossAxisAlignment;
+        flex.TextDirection = TextDirection;
         flex.Spacing = Spacing;
     }
 }
@@ -866,14 +933,16 @@ public sealed class Row : Flex
         MainAxisAlignment mainAxisAlignment = MainAxisAlignment.Start,
         CrossAxisAlignment crossAxisAlignment = CrossAxisAlignment.Center,
         double spacing = 0,
-        Key? key = null) : base(
+        Key? key = null,
+        TextDirection? textDirection = null) : base(
         direction: Axis.Horizontal,
         children: children,
         mainAxisSize: mainAxisSize,
         mainAxisAlignment: mainAxisAlignment,
         crossAxisAlignment: crossAxisAlignment,
         spacing: spacing,
-        key: key)
+        key: key,
+        textDirection: textDirection)
     {
     }
 }
@@ -886,14 +955,16 @@ public sealed class Column : Flex
         MainAxisAlignment mainAxisAlignment = MainAxisAlignment.Start,
         CrossAxisAlignment crossAxisAlignment = CrossAxisAlignment.Center,
         double spacing = 0,
-        Key? key = null) : base(
+        Key? key = null,
+        TextDirection? textDirection = null) : base(
         direction: Axis.Vertical,
         children: children,
         mainAxisSize: mainAxisSize,
         mainAxisAlignment: mainAxisAlignment,
         crossAxisAlignment: crossAxisAlignment,
         spacing: spacing,
-        key: key)
+        key: key,
+        textDirection: textDirection)
     {
     }
 }

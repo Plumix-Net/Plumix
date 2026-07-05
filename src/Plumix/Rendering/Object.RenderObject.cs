@@ -226,10 +226,15 @@ public abstract class RenderObject : IRenderObject
     /// </summary>
     public void Detach()
     {
+        OnDetach();
         _layer = null;
         _semanticsNode = null;
         _semantics.ResetForDetach();
         Owner = null;
+    }
+
+    protected virtual void OnDetach()
+    {
     }
 
     private bool _needsLayout = true;

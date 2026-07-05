@@ -9,6 +9,32 @@ public abstract class MaterialLocalizations
 {
     public abstract string TabLabel(int tabIndex, int tabCount);
 
+    public virtual string DeleteButtonTooltip => "Delete";
+
+    public virtual string BackButtonTooltip => "Back";
+
+    public virtual string CloseButtonTooltip => "Close";
+
+    public virtual string OpenAppDrawerTooltip => "Open navigation menu";
+
+    public virtual string SignedInLabel => "Signed in";
+
+    public virtual string HideAccountsLabel => "Hide accounts";
+
+    public virtual string ShowAccountsLabel => "Show accounts";
+
+    public virtual string AlertDialogLabel => "Alert";
+
+    public virtual string DialogLabel => "Dialog";
+
+    public virtual string ModalBarrierDismissLabel => "Dismiss";
+
+    public virtual string ShowMenuTooltip => "Show menu";
+
+    public virtual string PopupMenuLabel => "Popup menu";
+
+    public virtual string MenuDismissLabel => "Dismiss menu";
+
     public static MaterialLocalizations Of(BuildContext context)
     {
         return MaterialLocalizationsScope.Of(context);
@@ -22,6 +48,32 @@ public sealed class DefaultMaterialLocalizations : MaterialLocalizations
     }
 
     public static DefaultMaterialLocalizations Instance { get; } = new();
+
+    public override string DeleteButtonTooltip => "Delete";
+
+    public override string BackButtonTooltip => "Back";
+
+    public override string CloseButtonTooltip => "Close";
+
+    public override string OpenAppDrawerTooltip => "Open navigation menu";
+
+    public override string SignedInLabel => "Signed in";
+
+    public override string HideAccountsLabel => "Hide accounts";
+
+    public override string ShowAccountsLabel => "Show accounts";
+
+    public override string AlertDialogLabel => "Alert";
+
+    public override string DialogLabel => "Dialog";
+
+    public override string ModalBarrierDismissLabel => "Dismiss";
+
+    public override string ShowMenuTooltip => "Show menu";
+
+    public override string PopupMenuLabel => "Popup menu";
+
+    public override string MenuDismissLabel => "Dismiss menu";
 
     public override string TabLabel(int tabIndex, int tabCount)
     {

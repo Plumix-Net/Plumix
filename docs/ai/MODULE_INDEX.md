@@ -8,187 +8,131 @@ Related docs:
 - `docs/ai/PORTING_MODE.md`
 - `docs/ai/TEST_MATRIX.md`
 - `docs/ai/PARITY_MATRIX.md`
+- `docs/ai/DIVERGENCES.md`
 - `docs/ai/FEATURE_TEMPLATE.md`
+
+Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI Semantic Snapshot` block); this file does not duplicate it.
 
 ## Quick Start
 
-1. Read `AGENTS.md`.
-2. Read `docs/FRAMEWORK_PLAN.md`.
-3. For Dart-to-C# ports, read `docs/ai/PORTING_MODE.md` and open matching Dart reference files first.
-4. Pick one subsystem below and open its `Read First` files plus directly related control files/tests needed to close the target control.
-5. Expand context proactively whenever needed to finish the same control in one request; avoid partial-parity checkpoints unless there is a hard blocker.
-
-Current priority (2026-03-12):
-
-- Active milestone is `M4` (Material library rewrite). Cross-host parity/stability moved to final `M5`.
+1. Follow the read order from `AGENTS.md` (Context Budget Protocol).
+2. For Dart-to-C# ports, read `docs/ai/PORTING_MODE.md` and open matching Flutter Dart source first.
+3. Pick one subsystem below, open its `Read First` files, then expand along the control you are closing: `src/Plumix.Material/<Control>.cs` + `<Control>Theme.cs` + `src/Plumix.Tests/Material<Control>Tests.cs` + demo pages in both samples.
+4. Enter unfamiliar subsystems through their tests, not through hotspot implementation files.
 
 ## Subsystems
 
-### Material Layer (M4 Focus)
+### Material Layer
 
-- Goal: establish Flutter-like Material theming/app-shell/control primitives in framework layers.
+- Goal: Flutter-like Material theming/app-shell/control primitives in framework layers.
 - Read First:
-  - `src/Flutter.Material/ThemeData.cs`
-  - `src/Flutter.Material/Theme.cs`
-  - `src/Flutter.Material/MaterialLocalizations.cs`
-  - `src/Flutter.Material/Scaffold.cs`
-  - `src/Flutter.Material/BottomNavigationBar.cs`
-  - `src/Flutter.Material/BottomNavigationBarTheme.cs`
-  - `src/Flutter.Material/Card.cs`
-  - `src/Flutter.Material/CardTheme.cs`
-  - `src/Flutter.Material/ListTile.cs`
-  - `src/Flutter.Material/ListTileTheme.cs`
-  - `src/Plumix.Material/ListTileControls.cs`
-  - `src/Plumix.Material/RadioListTile.cs`
-  - `src/Plumix.Material/ExpansionTile.cs`
-  - `src/Plumix.Material/ExpansionTileTheme.cs`
-  - `src/Plumix.Material/ExpansionPanel.cs`
-  - `src/Plumix.Material/MergeableMaterial.cs`
-  - `src/Plumix/Widgets/Expansible.cs`
-  - `src/Plumix.Material/ProgressIndicator.cs`
-  - `src/Plumix.Material/ProgressIndicatorTheme.cs`
-  - `src/Plumix.Cupertino/CupertinoActivityIndicator.cs`
-  - `src/Flutter.Material/Buttons.cs`
-  - `src/Flutter.Material/IconButton.cs`
-  - `src/Flutter.Material/FloatingActionButton.cs`
-  - `src/Flutter.Material/FloatingActionButtonTheme.cs`
-  - `src/Flutter/Widgets/Hero.cs`
-  - `src/Flutter/Widgets/Navigation.cs`
-  - `src/Flutter/Widgets/MouseCursor.cs`
-  - `src/Flutter/UI/Feedback.cs`
-  - `src/Flutter/UI/Clip.cs`
-  - `src/Flutter.Material/Checkbox.cs`
-  - `src/Flutter.Material/Switch.cs`
-  - `src/Flutter.Material/Radio.cs`
-  - `src/Flutter/Widgets/Framework.Widget.cs`
-  - `src/Flutter/Widgets/DefaultTextStyle.cs`
-  - `src/Flutter/Widgets/Text.cs`
-  - `src/Sample/Flutter.Net/CounterApp.cs`
-  - `src/Sample/Flutter.Net/SampleGalleryScreen.cs`
-  - `src/Sample/Flutter.Net/Demos/Material/MaterialButtonsDemoPage.cs`
-  - `src/Sample/Flutter.Net/Demos/Material/CardDemoPage.cs`
-  - `src/Sample/Flutter.Net/Demos/Material/ListTileDemoPage.cs`
-  - `src/Sample/Plumix.Sample/Demos/Material/ListTileControlsDemoPage.cs`
-  - `src/Sample/Plumix.Sample/Demos/Material/RadioExpansionTileDemoPage.cs`
-  - `src/Sample/Plumix.Sample/Demos/Material/ExpansionPanelDemoPage.cs`
-  - `src/Sample/Flutter.Net/Demos/Material/FloatingActionButtonDemoPage.cs`
-  - `src/Sample/Plumix.Sample/Demos/Material/LinearProgressIndicatorDemoPage.cs`
-  - `src/Sample/Plumix.Sample/Demos/Material/CircularProgressIndicatorDemoPage.cs`
-  - `src/Sample/Flutter.Net/Demos/Cupertino/CheckboxDemoPage.cs`
-  - `src/Sample/Flutter.Net/Demos/Cupertino/SwitchDemoPage.cs`
-  - `src/Sample/Flutter.Net/Demos/Cupertino/RadioDemoPage.cs`
-  - `dart_sample/lib/counter_app.dart`
-  - `dart_sample/lib/sample_gallery_screen.dart`
-  - `dart_sample/lib/demos/material/material_buttons_demo_page.dart`
-  - `dart_sample/lib/demos/material/card_demo_page.dart`
-  - `dart_sample/lib/demos/material/list_tile_demo_page.dart`
-  - `dart_sample/lib/demos/material/list_tile_controls_demo_page.dart`
-  - `dart_sample/lib/demos/material/radio_expansion_tile_demo_page.dart`
-  - `dart_sample/lib/demos/material/expansion_panel_demo_page.dart`
-  - `dart_sample/lib/demos/material/floating_action_button_demo_page.dart`
-  - `dart_sample/lib/demos/material/linear_progress_indicator_demo_page.dart`
-  - `dart_sample/lib/demos/material/circular_progress_indicator_demo_page.dart`
-  - `dart_sample/lib/demos/cupertino/checkbox_demo_page.dart`
-  - `dart_sample/lib/demos/cupertino/switch_demo_page.dart`
-  - `dart_sample/lib/demos/cupertino/radio_demo_page.dart`
+  - `src/Plumix.Material/ThemeData.cs`
+  - `src/Plumix.Material/Theme.cs`
+  - `src/Plumix.Material/Scaffold.cs`
+  - `src/Plumix.Material/Buttons.cs`
+  - `src/Plumix.Material/ButtonStyle.cs`
+  - `src/Plumix.Material/MaterialLocalizations.cs`
+- Then per target control: control file + its theme file + its `src/Plumix.Tests/Material*Tests.cs` + demo pages (`src/Sample/Plumix.Sample/Demos/Material/*`, `dart_sample/lib/demos/material/*`).
+- Paired composition controls such as `GridTile` + `GridTileBar` share one focused test/demo surface when their Flutter implementations are directly coupled.
+- AppBar action controls enter through `ActionButtons.cs` + `ActionIconTheme.cs`, with implied-leading integration covered in `MaterialScaffoldTests.cs`.
+- Drawer header controls enter through `DrawerHeader.cs`, with geometry and account-details behavior covered in `MaterialDrawerHeaderTests.cs`.
+- Transient message controls enter through `SnackBar.cs` + `SnackBarTheme.cs`, with queue/presentation lifecycle in `ScaffoldMessenger.cs` and coverage in `MaterialSnackBarTests.cs`.
+- Dialog-family controls (`Dialog`, `AlertDialog`, `SimpleDialog`, `SimpleDialogOption`) enter through `Dialog.cs` + `DialogTheme.cs`; modal stacking/result behavior also touches `Widgets/Navigation.cs` and is covered by `MaterialDialogTests.cs`.
+- Popup-menu controls enter through `PopupMenu.cs` + `PopupMenuTheme.cs`; anchor geometry and route lifecycle also touch `Widgets/Navigation.cs`/`Widgets/Scroll.cs` and are covered by `MaterialPopupMenuTests.cs`.
 - Primary Tests:
-  - `src/Flutter.Tests/TextWidgetTests.cs`
-  - `src/Flutter.Tests/MaterialScaffoldTests.cs`
-  - `src/Flutter.Tests/MaterialButtonsTests.cs`
-  - `src/Flutter.Tests/MaterialCardTests.cs`
-  - `src/Plumix.Tests/MaterialListTileTests.cs`
-  - `src/Plumix.Tests/MaterialRadioExpansionTileTests.cs`
-  - `src/Plumix.Tests/MaterialExpansionPanelTests.cs`
-  - `src/Flutter.Tests/MaterialFloatingActionButtonTests.cs`
-  - `src/Flutter.Tests/MaterialBottomNavigationBarTests.cs`
-  - `src/Plumix.Tests/MaterialLinearProgressIndicatorTests.cs`
-  - `src/Plumix.Tests/MaterialCircularProgressIndicatorTests.cs`
-  - `src/Flutter.Tests/MaterialCheckboxTests.cs`
-  - `src/Flutter.Tests/MaterialSwitchTests.cs`
-  - `src/Flutter.Tests/MaterialRadioTests.cs`
+  - `src/Plumix.Tests/MaterialScaffoldTests.cs`
+  - `src/Plumix.Tests/MaterialButtonsTests.cs`
+  - Control-specific `src/Plumix.Tests/Material<Control>Tests.cs`
 
 ### Runtime and Host
 
 - Goal: frame scheduling, pipeline wiring, Avalonia host integration.
 - Read First:
-  - `src/Flutter/FlutterHost.cs`
-  - `src/Flutter/WidgetHost.cs`
-  - `src/Flutter/Scheduler.cs`
-  - `src/Flutter/PipelineOwner.cs`
-  - `src/Flutter/RenderView.cs`
+  - `src/Plumix/FlutterHost.cs`
+  - `src/Plumix/WidgetHost.cs`
+  - `src/Plumix/Scheduler.cs`
+  - `src/Plumix/PipelineOwner.cs`
+  - `src/Plumix/RenderView.cs`
 - Primary Tests:
-  - `src/Flutter.Tests/FramePipelineTests.cs`
-  - `src/Flutter.Tests/RenderingParityTests.cs`
-- Usually Skip Initially:
-  - `src/Flutter/Rendering/Sliver.cs`
-  - `src/Flutter/Widgets/Scroll.cs`
+  - `src/Plumix.Tests/FramePipelineTests.cs`
+  - `src/Plumix.Tests/RenderingParityTests.cs`
 
 ### Widget/Element Lifecycle
 
 - Goal: reconciliation, state retention/disposal, dependency propagation.
 - Read First:
-  - `src/Flutter/Widgets/Framework.Widget.cs`
-  - `src/Flutter/Widgets/Framework.Element.cs`
-  - `src/Flutter/Widgets/Framework.BuildOwner.cs`
-  - `src/Flutter/Widgets/Framework.RenderObject.cs`
-  - `src/Flutter/Foundation/Key.cs`
+  - `src/Plumix/Widgets/Framework.Widget.cs`
+  - `src/Plumix/Widgets/Framework.Element.cs`
+  - `src/Plumix/Widgets/Framework.BuildOwner.cs`
+  - `src/Plumix/Widgets/Framework.RenderObject.cs`
+  - `src/Plumix/Foundation/Key.cs`
 - Primary Tests:
-  - `src/Flutter.Tests/ElementLifecycleTests.cs`
-  - `src/Flutter.Tests/InheritedWidgetTests.cs`
-  - `src/Flutter.Tests/InheritedModelTests.cs`
-  - `src/Flutter.Tests/InheritedNotifierTests.cs`
+  - `src/Plumix.Tests/ElementLifecycleTests.cs`
+  - `src/Plumix.Tests/InheritedWidgetTests.cs`
+  - `src/Plumix.Tests/InheritedModelTests.cs`
+  - `src/Plumix.Tests/InheritedNotifierTests.cs`
 
 ### Core Layout/Paint/Compositing
 
 - Goal: box constraints, relayout boundaries, repaint boundaries, layers.
 - Read First:
-  - `src/Flutter/Rendering/Object.RenderObject.cs`
-  - `src/Flutter/Rendering/Box.RenderBox.cs`
-  - `src/Flutter/Rendering/Proxy.RenderBox.cs`
-  - `src/Flutter/Rendering/Layer.cs`
-  - `src/Flutter/Rendering/Object.PaintingContext.cs`
+  - `src/Plumix/Rendering/Object.RenderObject.cs`
+  - `src/Plumix/Rendering/Box.RenderBox.cs`
+  - `src/Plumix/Rendering/Proxy.RenderBox.cs`
+  - `src/Plumix/Rendering/Layer.cs`
+  - `src/Plumix/Rendering/Object.PaintingContext.cs`
 - Primary Tests:
-  - `src/Flutter.Tests/RenderingParityTests.cs`
-  - `src/Flutter.Tests/CompositingLayerTests.cs`
-  - `src/Flutter.Tests/LayerV2Tests.cs`
+  - `src/Plumix.Tests/RenderingParityTests.cs`
+  - `src/Plumix.Tests/CompositingLayerTests.cs`
+  - `src/Plumix.Tests/LayerV2Tests.cs`
+
+### Images and Decoration Paint
+
+- Goal: Flutter-like image resolution, caching, stream lifetime, and decoration paint geometry.
+- Read First:
+  - `src/Plumix/Rendering/ImageProvider.cs`
+  - `src/Plumix/Rendering/ImageStream.cs`
+  - `src/Plumix/Rendering/ImageCache.cs`
+  - `src/Plumix/Rendering/DecorationImage.cs`
+  - `src/Plumix/Rendering/Proxy.RenderBox.cs`
+- Primary Tests:
+  - `src/Plumix.Tests/ImageProviderDecorationTests.cs`
 
 ### Gestures and Input
 
 - Goal: pointer dispatch, hit testing, arena resolution, recognizer callbacks.
 - Read First:
-  - `src/Flutter/UI/PointerEvents.cs`
-  - `src/Flutter/Gestures/GestureBinding.cs`
-  - `src/Flutter/Gestures/GestureArena.cs`
-  - `src/Flutter/Gestures/TapGestureRecognizer.cs`
-  - `src/Flutter/Gestures/DragGestureRecognizer.cs`
-  - `src/Flutter/Widgets/Gestures.cs`
-  - `src/Flutter/Rendering/Object.HitTest.cs`
+  - `src/Plumix/UI/PointerEvents.cs`
+  - `src/Plumix/Gestures/GestureBinding.cs`
+  - `src/Plumix/Gestures/GestureArena.cs`
+  - `src/Plumix/Widgets/Gestures.cs`
+  - `src/Plumix/Rendering/Object.HitTest.cs`
 - Primary Tests:
-  - `src/Flutter.Tests/GesturePipelineTests.cs`
+  - `src/Plumix.Tests/GesturePipelineTests.cs`
 
 ### Navigation
 
-- Goal: route stack operations, named routes, observers, back handling.
+- Goal: route stack operations, named routes, observers, back handling, hero flights.
 - Read First:
-  - `src/Flutter/Widgets/Navigation.cs`
-  - `src/Flutter/Widgets/Hero.cs`
-  - `src/Sample/Flutter.Net/Demos/General/NavigatorDemoPage.cs`
-  - `src/Sample/Flutter.Net/SampleGalleryScreen.cs`
+  - `src/Plumix/Widgets/Navigation.cs`
+  - `src/Plumix/Widgets/Hero.cs`
+  - `src/Sample/Plumix.Sample/Demos/General/NavigatorDemoPage.cs`
+  - `src/Sample/Plumix.Sample/SampleGalleryScreen.cs`
 - Primary Tests:
-  - `src/Flutter.Tests/NavigationTests.cs`
-  - `src/Flutter.Tests/HeroNavigatorTests.cs`
+  - `src/Plumix.Tests/NavigationTests.cs`
+  - `src/Plumix.Tests/HeroNavigatorTests.cs`
 
 ### Scroll and Slivers
 
 - Goal: scroll activities, viewport behavior, sliver child lifecycle, keep-alive.
 - Read First:
-  - `src/Flutter/Widgets/Scroll.cs`
-  - `src/Flutter/Rendering/Scroll.cs`
-  - `src/Flutter/Rendering/Viewport.RenderViewport.cs`
-  - `src/Flutter/Rendering/Sliver.cs`
+  - `src/Plumix/Widgets/Scroll.cs`
+  - `src/Plumix/Rendering/Scroll.cs`
+  - `src/Plumix/Rendering/Viewport.RenderViewport.cs`
+  - `src/Plumix/Rendering/Sliver.cs`
 - Primary Tests:
-  - `src/Flutter.Tests/ScrollPipelineTests.cs`
-  - `src/Flutter.Tests/ScrollInfrastructureTests.cs`
+  - `src/Plumix.Tests/ScrollPipelineTests.cs`
+  - `src/Plumix.Tests/ScrollInfrastructureTests.cs`
 - Note:
   - `Scroll.cs` and `Sliver.cs` are large. Enter through tests first.
 
@@ -196,28 +140,26 @@ Current priority (2026-03-12):
 
 - Goal: semantics tree generation, action dispatch, merge/split behavior.
 - Read First:
-  - `src/Flutter/Rendering/Semantics.cs`
-  - `src/Flutter/Rendering/Object.RenderObjectSemantics.cs`
-  - `src/Flutter/Rendering/SemanticsConfigurationProvider.cs`
+  - `src/Plumix/Rendering/Semantics.cs`
+  - `src/Plumix/Rendering/Object.RenderObjectSemantics.cs`
+  - `src/Plumix/Rendering/SemanticsConfigurationProvider.cs`
 - Primary Tests:
-  - `src/Flutter.Tests/SemanticsTreeTests.cs`
+  - `src/Plumix.Tests/SemanticsTreeTests.cs`
 
 ### Sample and Dart Parity
 
-- Goal: keep sample feature/route/module parity between C# and Dart.
+- Goal: keep sample feature/route/module parity between C# and Dart samples.
 - Read First:
-  - `src/Sample/Flutter.Net/SampleGalleryScreen.cs`
+  - `src/Sample/Plumix.Sample/SampleGalleryScreen.cs`
   - `dart_sample/lib/sample_gallery_screen.dart`
-  - `src/Sample/Flutter.Net/Demos/General/NavigatorDemoPage.cs`
-  - `dart_sample/lib/demos/general/navigator_demo_page.dart`
   - `docs/ai/PARITY_MATRIX.md`
 
 ## Large File Hotspots
 
 Open these only when task scope explicitly requires them:
 
-- `src/Flutter/Rendering/Sliver.cs`
-- `src/Flutter/Widgets/Scroll.cs`
-- `src/Flutter/Widgets/Navigation.cs`
-- `src/Flutter/Widgets/Framework.Element.cs`
-- `src/Flutter.Tests/SemanticsTreeTests.cs`
+- `src/Plumix/Rendering/Sliver.cs`
+- `src/Plumix/Widgets/Scroll.cs`
+- `src/Plumix/Widgets/Navigation.cs`
+- `src/Plumix/Widgets/Framework.Element.cs`
+- `src/Plumix.Tests/SemanticsTreeTests.cs`

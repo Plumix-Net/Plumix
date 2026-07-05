@@ -312,6 +312,7 @@ public sealed class MaterialBottomNavigationBarTests
                     buttons: PointerButtons.None,
                     timestampUtc: DateTime.UtcNow));
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.50));
+            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.70));
             harness.Pump(new Size(320, 120));
             renderRoot = harness.RenderView.Child;
             Assert.Null(FindParagraphByText(renderRoot, "First tooltip"));

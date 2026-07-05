@@ -23,14 +23,27 @@ class SampleRoutes {
   static const String scrollbar = '/scrollbar';
   static const String editableText = '/editable-text';
   static const String materialButtons = '/material-buttons';
+  static const String actionButtons = '/action-buttons';
   static const String drawer = '/drawer';
+  static const String drawerHeaders = '/drawer-headers';
   static const String divider = '/divider';
+  static const String badgeTooltip = '/badge-tooltip';
+  static const String circleAvatar = '/circle-avatar';
+  static const String navigationSurfaces = '/navigation-surfaces';
+  static const String navigationDrawer = '/navigation-drawer';
+  static const String segmentedButtons = '/segmented-buttons';
+  static const String banner = '/banner';
+  static const String snackBar = '/snack-bar';
+  static const String dialog = '/dialog';
+  static const String popupMenu = '/popup-menu';
+  static const String chips = '/chips';
   static const String linearProgressIndicator = '/linear-progress-indicator';
   static const String circularProgressIndicator =
       '/circular-progress-indicator';
   static const String slider = '/slider';
   static const String rangeSlider = '/range-slider';
   static const String card = '/card';
+  static const String gridTile = '/grid-tile';
   static const String listTile = '/list-tile';
   static const String listTileControls = '/list-tile-controls';
   static const String radioExpansionTile = '/radio-expansion-tile';

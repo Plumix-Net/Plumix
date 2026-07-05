@@ -35,35 +35,32 @@ Purpose: define a single mandatory workflow for Dart-to-C# control/widget ports.
   - a missing primitive must be landed first,
   - risk requires an isolated foundational step,
   - user explicitly asks for phased delivery.
-- If split is unavoidable, the feature note must document what remains and the immediate next step to close parity for the same control.
+- If split is unavoidable, create a feature note (`docs/ai/FEATURE_TEMPLATE.md`, stored in `docs/ai/notes/`) documenting what remains and the immediate next step to close parity for the same control. This is the only case (besides divergences) where a feature note is mandatory.
 
 ## When Framework Primitives Are Missing
 
 - Do not introduce control-local workaround logic if it changes structure/behavior from Flutter.
-- First add or fix the missing framework primitive in `src/Flutter` / `src/Flutter.Material`.
+- First add or fix the missing framework primitive in `src/Plumix` / `src/Plumix.Material`.
 - Then continue the control port with the same structure as Dart and close the control in the same request whenever feasible.
 
 ## Allowed Divergence
 
 - Divergence is allowed only when platform/runtime constraints require it.
 - Every divergence must be documented in the same iteration:
-  - feature note (`docs/ai/*`),
+  - one row in `docs/ai/DIVERGENCES.md` (the single registry: reason, expected delta, close condition),
   - `CHANGELOG.md` (short note),
   - inline code comment only when needed for future maintainers.
-- Divergence note must include:
-  - exact reason,
-  - expected behavior delta,
-  - follow-up condition for removing divergence.
+- When a divergence is closed, remove its registry row and record the closure in `CHANGELOG.md`.
 
 ## Required Validation for Ports
 
-- Add/update focused tests in `src/Flutter.Tests` for:
+- Add/update focused tests in `src/Plumix.Tests` for:
   - default values,
   - interaction states,
   - known high-risk layout/constraints scenarios,
   - parity-critical paint/visual behavior for the target control.
 - Keep sample parity in the same iteration:
-  - update both `src/Sample/Flutter.Net` and `dart_sample`,
+  - update both `src/Sample/Plumix.Sample` and `dart_sample`,
   - update `docs/ai/PARITY_MATRIX.md` when route/page behavior changes.
 
 ## Definition of Done for Port Iterations

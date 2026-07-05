@@ -292,7 +292,7 @@ public sealed class MaterialSliderTests
             var owner = new BuildOwner();
             var root = new TestRootElement(
                 new Theme(
-                    data: ThemeData.Light,
+                    data: new ThemeData(platform: TargetPlatform.MacOS),
                     child: new SizedBox(
                         width: 220,
                         child: new Slider(
@@ -331,7 +331,7 @@ public sealed class MaterialSliderTests
             var owner = new BuildOwner();
             var root = new TestRootElement(
                 new Theme(
-                    data: ThemeData.Light,
+                    data: new ThemeData(platform: TargetPlatform.MacOS),
                     child: new Directionality(
                         textDirection: TextDirection.Rtl,
                         child: new SizedBox(

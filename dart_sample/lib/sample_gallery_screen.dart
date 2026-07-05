@@ -5,22 +5,31 @@ import 'demos/material/app_bar_actions_padding_demo_page.dart';
 import 'demos/material/app_bar_icon_theme_demo_page.dart';
 import 'demos/material/app_bar_leading_width_demo_page.dart';
 import 'demos/material/app_bar_text_styles_demo_page.dart';
+import 'demos/material/action_buttons_demo_page.dart';
+import 'demos/material/badge_tooltip_demo_page.dart';
+import 'demos/material/banner_demo_page.dart';
+import 'demos/material/snack_bar_demo_page.dart';
+import 'demos/material/dialog_demo_page.dart';
+import 'demos/material/popup_menu_demo_page.dart';
 import 'demos/general/aspect_ratio_demo_page.dart';
 import 'demos/general/bloc_counter_demo_page.dart';
 import 'demos/material/card_demo_page.dart';
 import 'demos/material/circular_progress_indicator_demo_page.dart';
+import 'demos/material/circle_avatar_demo_page.dart';
 import 'demos/cupertino/checkbox_demo_page.dart';
 import 'counter_screen.dart';
 import 'demos/general/container_demo_page.dart';
 import 'demos/general/custom_slivers_demo_page.dart';
 import 'demos/general/decorated_box_demo_page.dart';
 import 'demos/material/drawer_demo_page.dart';
+import 'demos/material/drawer_headers_demo_page.dart';
 import 'demos/material/divider_demo_page.dart';
 import 'demos/general/editable_text_demo_page.dart';
 import 'demos/general/fitted_box_demo_page.dart';
 import 'demos/material/floating_action_button_demo_page.dart';
 import 'demos/general/fractionally_sized_box_demo_page.dart';
 import 'demos/general/grid_view_demo_page.dart';
+import 'demos/material/grid_tile_demo_page.dart';
 import 'demos/material/linear_progress_indicator_demo_page.dart';
 import 'demos/general/list_view_fixed_extent_demo_page.dart';
 import 'demos/general/list_view_reverse_demo_page.dart';
@@ -30,6 +39,10 @@ import 'demos/material/list_tile_controls_demo_page.dart';
 import 'demos/material/radio_expansion_tile_demo_page.dart';
 import 'demos/material/expansion_panel_demo_page.dart';
 import 'demos/material/material_buttons_demo_page.dart';
+import 'demos/material/navigation_surfaces_demo_page.dart';
+import 'demos/material/navigation_drawer_demo_page.dart';
+import 'demos/material/segmented_buttons_demo_page.dart';
+import 'demos/material/chips_demo_page.dart';
 import 'demos/general/navigator_demo_page.dart';
 import 'demos/general/offstage_demo_page.dart';
 import 'demos/general/overflow_box_demo_page.dart';
@@ -50,6 +63,12 @@ class SampleGalleryScreen extends StatelessWidget {
   static final List<SampleRouteDefinition>
   _materialDemoPages = <SampleRouteDefinition>[
     SampleRouteDefinition(
+      routeName: SampleRoutes.actionButtons,
+      title: 'Material action buttons',
+      subtitle: 'back/close/drawer/end-drawer + ActionIconTheme',
+      builder: () => const ActionButtonsDemoPage(),
+    ),
+    SampleRouteDefinition(
       routeName: SampleRoutes.materialButtons,
       title: 'Material buttons',
       subtitle: 'TextButton + ElevatedButton + OutlinedButton + FilledButton',
@@ -62,10 +81,76 @@ class SampleGalleryScreen extends StatelessWidget {
       builder: () => const DrawerDemoPage(),
     ),
     SampleRouteDefinition(
+      routeName: SampleRoutes.drawerHeaders,
+      title: 'Drawer headers',
+      subtitle: 'DrawerHeader + UserAccountsDrawerHeader',
+      builder: () => const DrawerHeadersDemoPage(),
+    ),
+    SampleRouteDefinition(
       routeName: SampleRoutes.divider,
       title: 'Divider',
       subtitle: 'horizontal/vertical divider + theme/widget precedence probes',
       builder: () => const DividerDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.badgeTooltip,
+      title: 'Badge + Tooltip',
+      subtitle: 'count/small badges + hover/long-press tooltip theming',
+      builder: () => const BadgeTooltipDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.circleAvatar,
+      title: 'CircleAvatar',
+      subtitle: 'initials + image layers + animated radius + fallback',
+      builder: () => const CircleAvatarDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.navigationSurfaces,
+      title: 'NavigationBar + NavigationRail',
+      subtitle: 'horizontal/vertical Material navigation + labels/themes',
+      builder: () => const NavigationSurfacesDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.navigationDrawer,
+      title: 'NavigationDrawer',
+      subtitle: 'destinations + custom children + selection/theme probes',
+      builder: () => const NavigationDrawerDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.segmentedButtons,
+      title: 'ToggleButtons + SegmentedButton',
+      subtitle: 'legacy/M3 segmented selection + themes/states',
+      builder: () => const SegmentedButtonsDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.banner,
+      title: 'Banner + MaterialBanner',
+      subtitle: 'diagonal ribbon + persistent actions/theme/overflow probes',
+      builder: () => const BannerDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.snackBar,
+      title: 'SnackBar + SnackBarAction',
+      subtitle: 'messenger queue + action/close/overflow probes',
+      builder: () => const SnackBarDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.dialog,
+      title: 'Dialog family',
+      subtitle: 'modal route + alert/simple/result/scrollable/theme probes',
+      builder: () => const DialogDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.popupMenu,
+      title: 'PopupMenuButton + PopupMenuItem',
+      subtitle: 'anchor + selection/cancel/keyboard/theme probes',
+      builder: () => const PopupMenuDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.chips,
+      title: 'Material chips',
+      subtitle: 'action/choice/filter/input + selection/deletion/theme probes',
+      builder: () => const ChipsDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.linearProgressIndicator,
@@ -96,6 +181,12 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'Card',
       subtitle: 'elevated/filled/outlined variants + theme/clip probes',
       builder: () => const CardDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.gridTile,
+      title: 'GridTile + GridTileBar',
+      subtitle: 'header/footer overlays + one/two-line bars + RTL',
+      builder: () => const GridTileDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.listTile,

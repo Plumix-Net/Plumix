@@ -1,6 +1,6 @@
 # Feature Template
 
-Use this template for every non-trivial feature or control-parity iteration.
+Use this template when an iteration ends blocked (unclosed parity with a concrete blocker) or introduces a divergence — see `AGENTS.md`, Context Budget Protocol. Routine closed iterations do not need a note. Store notes in `docs/ai/notes/` as `<area>-<yyyy-mm-dd>-<slug>.md`.
 
 ```md
 # Feature: <short-name>
@@ -13,9 +13,8 @@ Use this template for every non-trivial feature or control-parity iteration.
 
 - What is explicitly out of scope for this iteration?
 
-## Context Budget Plan
+## Context Plan
 
-- Budget: max <N> files in initial read (recommended: 12-20 for full-control parity work).
 - Entry files:
   - <file 1>
   - <file 2>
@@ -54,8 +53,8 @@ Use this template for every non-trivial feature or control-parity iteration.
   - [ ] State transitions/interaction states mapped
   - [ ] Constraint/layout behavior mapped
   - [ ] Paint/visual semantics mapped
-- Divergence log (only if needed):
-  - <none> or <file + reason + expected delta + follow-up condition>
+- Divergences (only if needed):
+  - <none> or a row added to `docs/ai/DIVERGENCES.md` (file + reason + expected delta + close condition)
 
 ## Planned Changes
 
@@ -98,5 +97,5 @@ Use this template for every non-trivial feature or control-parity iteration.
 
 ## Optional Naming Convention
 
-- Suggested branch prefix: `codex/<area>-<feature>`
+- Suggested branch name: `<area>/<feature>`
 - Suggested feature id format: `<area>-<yyyy-mm-dd>-<slug>`

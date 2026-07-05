@@ -254,7 +254,10 @@ public sealed class MaterialScaffoldTests
         var menuParagraph = FindParagraphByText(root.ChildElement?.RenderObject, menuGlyph);
         Assert.NotNull(menuParagraph);
 
-        var arrowBackGlyph = char.ConvertFromUtf32(Icons.ArrowBack.CodePoint);
+        var arrowBackGlyph = char.ConvertFromUtf32(
+            ThemeData.Light.Platform is TargetPlatform.IOS or TargetPlatform.MacOS
+                ? Icons.ArrowBackIosNewRounded.CodePoint
+                : Icons.ArrowBack.CodePoint);
         var arrowBackParagraph = FindParagraphByText(root.ChildElement?.RenderObject, arrowBackGlyph);
         Assert.Null(arrowBackParagraph);
     }
@@ -2459,7 +2462,10 @@ public sealed class MaterialScaffoldTests
         Navigator.PushNamed(rootContext!.Value, "/details");
         owner.FlushBuild();
 
-        var arrowBackGlyph = char.ConvertFromUtf32(Icons.ArrowBack.CodePoint);
+        var arrowBackGlyph = char.ConvertFromUtf32(
+            ThemeData.Light.Platform is TargetPlatform.IOS or TargetPlatform.MacOS
+                ? Icons.ArrowBackIosNewRounded.CodePoint
+                : Icons.ArrowBack.CodePoint);
         var arrowBackParagraph = FindParagraphByText(root.ChildElement?.RenderObject, arrowBackGlyph);
         Assert.NotNull(arrowBackParagraph);
     }
@@ -2490,7 +2496,10 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var arrowBackGlyph = char.ConvertFromUtf32(Icons.ArrowBack.CodePoint);
+        var arrowBackGlyph = char.ConvertFromUtf32(
+            ThemeData.Light.Platform is TargetPlatform.IOS or TargetPlatform.MacOS
+                ? Icons.ArrowBackIosNewRounded.CodePoint
+                : Icons.ArrowBack.CodePoint);
         var arrowBackBefore = FindParagraphByText(root.ChildElement?.RenderObject, arrowBackGlyph);
         Assert.Null(arrowBackBefore);
 

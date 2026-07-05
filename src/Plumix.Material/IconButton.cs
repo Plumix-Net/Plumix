@@ -39,6 +39,9 @@ public sealed class IconButton : StatelessWidget
         ButtonStyle? style = null,
         bool? isSelected = null,
         Widget? selectedIcon = null,
+        double? splashRadius = null,
+        bool? enableFeedback = null,
+        MouseCursor? mouseCursor = null,
         Key? key = null) : this(
             icon: icon,
             onPressed: onPressed,
@@ -58,9 +61,12 @@ public sealed class IconButton : StatelessWidget
             autofocus: autofocus,
             constraints: constraints,
             style: style,
-            isSelected: isSelected,
-            selectedIcon: selectedIcon,
-            key: key)
+        isSelected: isSelected,
+        selectedIcon: selectedIcon,
+        splashRadius: splashRadius,
+        enableFeedback: enableFeedback,
+        mouseCursor: mouseCursor,
+        key: key)
     {
     }
 
@@ -85,7 +91,10 @@ public sealed class IconButton : StatelessWidget
         ButtonStyle? style,
         bool? isSelected,
         Widget? selectedIcon,
-        Key? key) : base(key)
+        Key? key,
+        double? splashRadius = null,
+        bool? enableFeedback = null,
+        MouseCursor? mouseCursor = null) : base(key)
     {
         Icon = icon ?? throw new ArgumentNullException(nameof(icon));
         OnPressed = onPressed;
@@ -107,10 +116,17 @@ public sealed class IconButton : StatelessWidget
         Style = style;
         IsSelected = isSelected;
         SelectedIcon = selectedIcon;
+        SplashRadius = splashRadius;
+        EnableFeedback = enableFeedback;
+        MouseCursor = mouseCursor;
 
         if (iconSize.HasValue && (double.IsNaN(iconSize.Value) || double.IsInfinity(iconSize.Value) || iconSize.Value <= 0))
         {
             throw new ArgumentOutOfRangeException(nameof(iconSize), "Icon size must be finite and positive.");
+        }
+        if (splashRadius.HasValue && (!double.IsFinite(splashRadius.Value) || splashRadius.Value <= 0))
+        {
+            throw new ArgumentOutOfRangeException(nameof(splashRadius), "Splash radius must be finite and positive.");
         }
     }
 
@@ -153,6 +169,12 @@ public sealed class IconButton : StatelessWidget
     public bool? IsSelected { get; }
 
     public Widget? SelectedIcon { get; }
+
+    public double? SplashRadius { get; }
+
+    public bool? EnableFeedback { get; }
+
+    public MouseCursor? MouseCursor { get; }
 
     public static IconButton Filled(
         Widget icon,
@@ -423,6 +445,9 @@ public sealed class IconButton : StatelessWidget
             style: mergedStyle,
             focusNode: FocusNode,
             isSelected: isSelected,
+            splashRadius: SplashRadius,
+            enableFeedback: EnableFeedback,
+            mouseCursor: MouseCursor,
             autofocus: Autofocus);
     }
 

@@ -64,6 +64,11 @@ public readonly record struct BoxConstraints(
     double MaxHeight = double.PositiveInfinity)
     : IConstraints
 {
+    public override string ToString()
+    {
+        return $"BoxConstraints({MinWidth:0.###}≤w≤{MaxWidth:0.###}, {MinHeight:0.###}≤h≤{MaxHeight:0.###})";
+    }
+
     /// The biggest size that satisfies the constraints.
     public Size Biggest => new Size(ConstrainWidth(), ConstrainHeight());
 

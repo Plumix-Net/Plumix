@@ -29,7 +29,8 @@ public sealed class CounterApp : StatefulWidget
                 _model,
                 new Theme(
                     data: ThemeData.Light,
-                    child: new SampleGalleryScreen()));
+                    child: new ScaffoldMessenger(
+                        child: new SampleGalleryScreen())));
         }
     }
 }

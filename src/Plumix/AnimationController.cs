@@ -21,6 +21,37 @@ public static class Curves
 
     public static double EaseIn(double t) => t * t;
     public static double EaseOut(double t) => 1 - (1 - t) * (1 - t);
+
+    public static double FastOutSlowIn(double t)
+    {
+        t = Math.Clamp(t, 0, 1);
+        var parameter = t;
+        for (var i = 0; i < 8; i++)
+        {
+            var x = Cubic(parameter, 0.4, 0.2) - t;
+            if (Math.Abs(x) < 1e-7) break;
+            var derivative = CubicDerivative(parameter, 0.4, 0.2);
+            if (Math.Abs(derivative) < 1e-7) break;
+            parameter = Math.Clamp(parameter - (x / derivative), 0, 1);
+        }
+        return Cubic(parameter, 0, 1);
+    }
+
+    private static double Cubic(double t, double firstControl, double secondControl)
+    {
+        var inverse = 1 - t;
+        return (3 * inverse * inverse * t * firstControl)
+               + (3 * inverse * t * t * secondControl)
+               + (t * t * t);
+    }
+
+    private static double CubicDerivative(double t, double firstControl, double secondControl)
+    {
+        var inverse = 1 - t;
+        return (3 * inverse * inverse * firstControl)
+               + (6 * inverse * t * (secondControl - firstControl))
+               + (3 * t * t * (1 - secondControl));
+    }
 }
 
 public abstract class Tween<T>
@@ -67,7 +98,12 @@ public sealed class AnimationController : IDisposable
 
     public double Value { get; private set; } // 0..1
     public bool IsAnimating { get; private set; }
-    public TimeSpan Duration { get; }
+    private TimeSpan _duration;
+    public TimeSpan Duration
+    {
+        get => _duration;
+        set => _duration = value <= TimeSpan.Zero ? TimeSpan.FromMilliseconds(1) : value;
+    }
     public Curve Curve { get; set; } = Curves.Linear;
 
     private readonly Ticker _ticker;

@@ -14,6 +14,7 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer
     private double _offsetPixels;
     private double _cacheExtent;
     private CacheExtentStyle _cacheExtentStyle;
+    private bool _shrinkWrap;
     private double _maxScrollExtent;
     private RenderSliverToBoxAdapter? _legacyChildSliver;
 
@@ -24,6 +25,7 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer
         double offsetPixels = 0.0,
         double cacheExtent = 0.0,
         CacheExtentStyle cacheExtentStyle = CacheExtentStyle.Pixel,
+        bool shrinkWrap = false,
         Action<double, double, double>? onViewportMetricsChanged = null,
         RenderBox? child = null)
     {
@@ -34,6 +36,7 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer
         _offsetPixels = offsetPixels;
         _cacheExtent = Math.Max(0, cacheExtent);
         _cacheExtentStyle = cacheExtentStyle;
+        _shrinkWrap = shrinkWrap;
         OnViewportMetricsChanged = onViewportMetricsChanged;
 
         if (child != null)
@@ -109,6 +112,17 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer
     }
 
     public Action<double, double, double>? OnViewportMetricsChanged { get; set; }
+
+    public bool ShrinkWrap
+    {
+        get => _shrinkWrap;
+        set
+        {
+            if (_shrinkWrap == value) return;
+            _shrinkWrap = value;
+            MarkNeedsLayout();
+        }
+    }
 
     public double CacheExtent
     {
@@ -229,6 +243,15 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer
 
         var viewportMainAxisExtent = Axis == Axis.Vertical ? Size.Height : Size.Width;
         var crossAxisExtent = Axis == Axis.Vertical ? Size.Width : Size.Height;
+        if (ShrinkWrap && double.IsFinite(viewportMainAxisExtent))
+        {
+            var probe = LayoutWithCorrections(0, viewportMainAxisExtent, crossAxisExtent);
+            var desiredExtent = Math.Min(probe.totalScrollExtent, viewportMainAxisExtent);
+            Size = Axis == Axis.Vertical
+                ? Constraints.Constrain(new Size(Size.Width, desiredExtent))
+                : Constraints.Constrain(new Size(desiredExtent, Size.Height));
+            viewportMainAxisExtent = Axis == Axis.Vertical ? Size.Height : Size.Width;
+        }
         var currentOffset = Math.Max(0, _offsetPixels);
         var currentMaxScrollExtent = Math.Max(0, _maxScrollExtent);
         const double precisionErrorTolerance = 0.0001;
