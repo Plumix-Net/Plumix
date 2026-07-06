@@ -6,7 +6,7 @@ namespace Plumix.Widgets;
 
 public abstract class Notification
 {
-    public bool Dispatch(BuildContext target)
+    public virtual bool Dispatch(BuildContext target)
     {
         for (var ancestor = target.Owner.Parent; ancestor != null; ancestor = ancestor.Parent)
         {

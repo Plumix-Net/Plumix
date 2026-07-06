@@ -110,6 +110,50 @@ public sealed class GesturePipelineTests
     }
 
     [Fact]
+    public async Task GestureBinding_TapRecognizer_DistinguishesDoubleTapAndReportsTapDown()
+    {
+        var binding = GestureBinding.Instance;
+        binding.ResetForTests();
+        var taps = 0;
+        var doubleTaps = 0;
+        var tapDowns = 0;
+        var recognizer = new TapGestureRecognizer
+        {
+            OnTap = () => taps += 1,
+            OnDoubleTap = () => doubleTaps += 1,
+            OnTapDown = _ => tapDowns += 1,
+        };
+
+        try
+        {
+            var listener = new RenderPointerListener(
+                onPointerDown: recognizer.AddPointer,
+                behavior: HitTestBehavior.Opaque,
+                child: new FixedHitTestBox(new Size(80, 80), hitSelf: true));
+            var pipeline = BuildPipeline(listener);
+            var now = DateTime.UtcNow;
+            for (var pointer = 21; pointer <= 22; pointer++)
+            {
+                binding.HandlePointerEvent(pipeline.Root, new PointerDownEvent(
+                    pointer, PointerDeviceKind.Mouse, new Point(12, 12), PointerButtons.Primary, now));
+                binding.HandlePointerEvent(pipeline.Root, new PointerUpEvent(
+                    pointer, PointerDeviceKind.Mouse, new Point(12, 12), PointerButtons.None, now.AddMilliseconds(20)));
+                now = now.AddMilliseconds(80);
+            }
+
+            await Task.Delay(350);
+            Assert.Equal(2, tapDowns);
+            Assert.Equal(1, doubleTaps);
+            Assert.Equal(0, taps);
+        }
+        finally
+        {
+            recognizer.Dispose();
+            binding.ResetForTests();
+        }
+    }
+
+    [Fact]
     public void GestureBinding_HorizontalDragRecognizer_ProducesPrimaryDelta()
     {
         var binding = GestureBinding.Instance;

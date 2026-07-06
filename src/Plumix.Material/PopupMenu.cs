@@ -10,16 +10,78 @@ namespace Plumix.Material;
 
 // Dart parity source: flutter/packages/flutter/lib/src/material/popup_menu.dart
 
-public delegate IReadOnlyList<PopupMenuEntry<T>> PopupMenuItemBuilder<T>(BuildContext context);
+public delegate IReadOnlyList<PopupMenuEntry> PopupMenuItemBuilder<T>(BuildContext context);
 public delegate RelativeRect PopupMenuPositionBuilder(BuildContext context, BoxConstraints constraints);
 
-public abstract class PopupMenuEntry<T> : StatefulWidget
+public abstract class PopupMenuEntry : StatefulWidget
 {
     protected PopupMenuEntry(Key? key = null) : base(key) { }
 
     public abstract double Height { get; }
-    public abstract bool Represents(T? value);
+    public abstract bool Represents(object? value);
     internal virtual bool IsEnabled => true;
+}
+
+public abstract class PopupMenuEntry<T> : PopupMenuEntry
+{
+    protected PopupMenuEntry(Key? key = null) : base(key) { }
+
+    public abstract bool Represents(T? value);
+
+    public sealed override bool Represents(object? value)
+    {
+        if (value is null) return Represents(default);
+        return value is T typed && Represents(typed);
+    }
+}
+
+public sealed class PopupMenuDivider : PopupMenuEntry
+{
+    public PopupMenuDivider(
+        double height = 16,
+        double? thickness = null,
+        double? indent = null,
+        double? endIndent = null,
+        BorderRadius? radius = null,
+        Color? color = null,
+        Key? key = null) : base(key)
+    {
+        Divider.ValidateNonNegativeFinite(height, nameof(height));
+        Divider.ValidateNonNegativeFinite(thickness, nameof(thickness));
+        Divider.ValidateNonNegativeFinite(indent, nameof(indent));
+        Divider.ValidateNonNegativeFinite(endIndent, nameof(endIndent));
+        Height = height;
+        Thickness = thickness;
+        Indent = indent;
+        EndIndent = endIndent;
+        Radius = radius;
+        Color = color;
+    }
+
+    public override double Height { get; }
+    public double? Thickness { get; }
+    public double? Indent { get; }
+    public double? EndIndent { get; }
+    public BorderRadius? Radius { get; }
+    public Color? Color { get; }
+    internal override bool IsEnabled => false;
+
+    public override bool Represents(object? value) => false;
+
+    public override State CreateState() => new PopupMenuDividerState();
+
+    private sealed class PopupMenuDividerState : State
+    {
+        private PopupMenuDivider CurrentWidget => (PopupMenuDivider)StateWidget;
+
+        public override Widget Build(BuildContext context) => new Divider(
+            height: CurrentWidget.Height,
+            thickness: CurrentWidget.Thickness,
+            indent: CurrentWidget.Indent,
+            endIndent: CurrentWidget.EndIndent,
+            radius: CurrentWidget.Radius,
+            color: CurrentWidget.Color);
+    }
 }
 
 public class PopupMenuItem<T> : PopupMenuEntry<T>
@@ -128,13 +190,14 @@ public class PopupMenuItemState<T> : State
                     ContentPadding: default,
                     TitleTextStyle: style),
                 item));
-        return new MergeSemantics(
-            new Semantics(
-                role: SemanticsRole.MenuItem,
-                flags: widget.Enabled ? SemanticsFlags.IsEnabled : SemanticsFlags.None,
-                onTap: widget.Enabled ? HandleTap : null,
-                child: item));
+        return new MergeSemantics(BuildSemantics(item));
     }
+
+    protected virtual Widget BuildSemantics(Widget child) => new Semantics(
+        role: SemanticsRole.MenuItem,
+        flags: CurrentWidget.Enabled ? SemanticsFlags.IsEnabled : SemanticsFlags.None,
+        onTap: CurrentWidget.Enabled ? HandleTap : null,
+        child: child);
 
     protected virtual void HandleTap()
     {
@@ -151,6 +214,112 @@ public class PopupMenuItemState<T> : State
 
     private static Color ApplyOpacity(Color color, double opacity) => Color.FromArgb(
         (byte)Math.Round(color.A * Math.Clamp(opacity, 0, 1)), color.R, color.G, color.B);
+}
+
+public sealed class CheckedPopupMenuItem<T> : PopupMenuItem<T>
+{
+    public CheckedPopupMenuItem(
+        Widget? child,
+        T? value = default,
+        bool @checked = false,
+        Action? onTap = null,
+        bool enabled = true,
+        double height = 48,
+        Thickness? padding = null,
+        MaterialStateProperty<TextStyle?>? labelTextStyle = null,
+        MouseCursor? mouseCursor = null,
+        Key? key = null)
+        : base(
+            child: child,
+            value: value,
+            onTap: onTap,
+            enabled: enabled,
+            height: height,
+            padding: padding,
+            labelTextStyle: labelTextStyle,
+            mouseCursor: mouseCursor,
+            key: key)
+    {
+        Checked = @checked;
+    }
+
+    public bool Checked { get; }
+
+    public override State CreateState() => new CheckedPopupMenuItemState<T>();
+}
+
+internal sealed class CheckedPopupMenuItemState<T> : PopupMenuItemState<T>
+{
+    private static readonly TimeSpan FadeDuration = TimeSpan.FromMilliseconds(150);
+    private AnimationController? _controller;
+    private double _opacity;
+
+    private CheckedPopupMenuItem<T> CheckedWidget => (CheckedPopupMenuItem<T>)StateWidget;
+
+    public override void InitState()
+    {
+        _opacity = CheckedWidget.Checked ? 1 : 0;
+        _controller = new AnimationController(FadeDuration);
+        _controller.Forward(from: _opacity);
+        _controller.Stop();
+        _controller.Changed += HandleAnimationChanged;
+    }
+
+    public override void Dispose()
+    {
+        if (_controller is null) return;
+        _controller.Changed -= HandleAnimationChanged;
+        _controller.Dispose();
+        _controller = null;
+    }
+
+    protected override void HandleTap()
+    {
+        if (CheckedWidget.Checked)
+        {
+            _controller!.Reverse();
+        }
+        else
+        {
+            _controller!.Forward();
+        }
+        base.HandleTap();
+    }
+
+    protected override Widget BuildSemantics(Widget child) => new Semantics(
+        role: SemanticsRole.MenuItemCheckbox,
+        flags: CheckedWidget.Enabled ? SemanticsFlags.IsEnabled : SemanticsFlags.None,
+        onTap: CheckedWidget.Enabled ? HandleTap : null,
+        @checked: CheckedWidget.Checked,
+        child: child);
+
+    protected override Widget? BuildChild()
+    {
+        var theme = Theme.Of(Context);
+        var popupTheme = PopupMenuTheme.Of(Context);
+        var states = CheckedWidget.Checked ? MaterialState.Selected : MaterialState.None;
+        var effectiveLabelTextStyle = CheckedWidget.LabelTextStyle?.Resolve(states)
+                                      ?? popupTheme.LabelTextStyle?.Resolve(states)
+                                      ?? (theme.UseMaterial3
+                                          ? theme.TextTheme.LabelLarge.CopyWith(color: theme.OnSurfaceColor)
+                                          : theme.TextTheme.TitleMedium);
+        Widget leading = new Opacity(
+            _opacity,
+            new Icon(_opacity <= 0 ? null : Icons.Done));
+        return new ListTile(
+            enabled: CheckedWidget.Enabled,
+            title: CheckedWidget.Child,
+            leading: leading,
+            titleTextStyle: effectiveLabelTextStyle,
+            textColor: effectiveLabelTextStyle.Color,
+            contentPadding: new Thickness(0));
+    }
+
+    private void HandleAnimationChanged()
+    {
+        if (_controller is null) return;
+        SetState(() => _opacity = _controller.Value);
+    }
 }
 
 public sealed class PopupMenuButton<T> : StatefulWidget
@@ -413,6 +582,47 @@ public static class PopupMenus
         AnimationStyle? popUpAnimationStyle = null,
         bool? requestFocus = null)
     {
+        return ShowMenu(
+            context,
+            items.Cast<PopupMenuEntry>().ToArray(),
+            position,
+            positionBuilder,
+            initialValue,
+            elevation,
+            shadowColor,
+            surfaceTintColor,
+            semanticLabel,
+            shape,
+            menuPadding,
+            color,
+            useRootNavigator,
+            constraints,
+            clipBehavior,
+            routeSettings,
+            popUpAnimationStyle,
+            requestFocus);
+    }
+
+    public static Task<T?> ShowMenu<T>(
+        BuildContext context,
+        IReadOnlyList<PopupMenuEntry> items,
+        RelativeRect? position = null,
+        PopupMenuPositionBuilder? positionBuilder = null,
+        T? initialValue = default,
+        double? elevation = null,
+        Color? shadowColor = null,
+        Color? surfaceTintColor = null,
+        string? semanticLabel = null,
+        ShapeBorder? shape = null,
+        Thickness? menuPadding = null,
+        Color? color = null,
+        bool useRootNavigator = false,
+        BoxConstraints? constraints = null,
+        Clip clipBehavior = Clip.None,
+        RouteSettings? routeSettings = null,
+        AnimationStyle? popUpAnimationStyle = null,
+        bool? requestFocus = null)
+    {
         if (items is null || items.Count == 0) throw new ArgumentException("Popup menu items must not be empty.", nameof(items));
         if (position.HasValue == (positionBuilder is not null))
             throw new ArgumentException("Exactly one of position and positionBuilder must be provided.");
@@ -444,7 +654,7 @@ public static class PopupMenus
 
 internal sealed class PopupMenuRoute<T> : PageRoute
 {
-    private readonly IReadOnlyList<PopupMenuEntry<T>> _items;
+    private readonly IReadOnlyList<PopupMenuEntry> _items;
     private readonly RelativeRect? _position;
     private readonly PopupMenuPositionBuilder? _positionBuilder;
     private readonly T? _initialValue;
@@ -460,7 +670,7 @@ internal sealed class PopupMenuRoute<T> : PageRoute
 
     public PopupMenuRoute(
         BuildContext context,
-        IReadOnlyList<PopupMenuEntry<T>> items,
+        IReadOnlyList<PopupMenuEntry> items,
         RelativeRect? position,
         PopupMenuPositionBuilder? positionBuilder,
         T? initialValue,
@@ -657,11 +867,11 @@ internal sealed class PopupMenuRoute<T> : PageRoute
 internal sealed class PopupMenuPanel<T> : StatelessWidget
 {
     private readonly PopupMenuRoute<T> _route;
-    private readonly IReadOnlyList<PopupMenuEntry<T>> _items;
+    private readonly IReadOnlyList<PopupMenuEntry> _items;
     private readonly T? _initialValue;
     private readonly int _focusIndex;
 
-    public PopupMenuPanel(PopupMenuRoute<T> route, IReadOnlyList<PopupMenuEntry<T>> items, T? initialValue, int focusIndex)
+    public PopupMenuPanel(PopupMenuRoute<T> route, IReadOnlyList<PopupMenuEntry> items, T? initialValue, int focusIndex)
     {
         _route = route;
         _items = items;

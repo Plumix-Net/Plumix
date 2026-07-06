@@ -844,7 +844,7 @@ internal sealed class RenderLinearProgressIndicator : RenderBox
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/material/progress_indicator.dart (circular baseline subset)
 
-public sealed class CircularProgressIndicator : StatefulWidget
+public class CircularProgressIndicator : StatefulWidget
 {
     private const double DefaultStrokeWidth = 4.0;
     private const double DefaultM2Size = 36.0;
@@ -1484,6 +1484,7 @@ internal sealed class CircularProgressIndicatorRenderWidget : LeafRenderObjectWi
         StrokeCap? strokeCap,
         double? trackGap,
         bool year2023,
+        double arrowheadScale = 0.0,
         Key? key = null) : base(key)
     {
         Value = value;
@@ -1497,6 +1498,7 @@ internal sealed class CircularProgressIndicatorRenderWidget : LeafRenderObjectWi
         StrokeCap = strokeCap;
         TrackGap = trackGap;
         Year2023 = year2023;
+        ArrowheadScale = Math.Clamp(arrowheadScale, 0.0, 1.0);
     }
 
     public double? Value { get; }
@@ -1521,6 +1523,8 @@ internal sealed class CircularProgressIndicatorRenderWidget : LeafRenderObjectWi
 
     public bool Year2023 { get; }
 
+    public double ArrowheadScale { get; }
+
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderCircularProgressIndicator(
@@ -1534,7 +1538,8 @@ internal sealed class CircularProgressIndicatorRenderWidget : LeafRenderObjectWi
             indicatorSize: IndicatorSize,
             strokeCap: StrokeCap,
             trackGap: TrackGap,
-            year2023: Year2023);
+            year2023: Year2023,
+            arrowheadScale: ArrowheadScale);
     }
 
     internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
@@ -1551,6 +1556,7 @@ internal sealed class CircularProgressIndicatorRenderWidget : LeafRenderObjectWi
         indicator.StrokeCap = StrokeCap;
         indicator.TrackGap = TrackGap;
         indicator.Year2023 = Year2023;
+        indicator.ArrowheadScale = ArrowheadScale;
     }
 }
 
@@ -1572,6 +1578,7 @@ internal sealed class RenderCircularProgressIndicator : RenderBox
     private StrokeCap? _strokeCap;
     private double? _trackGap;
     private bool _year2023;
+    private double _arrowheadScale;
 
     public RenderCircularProgressIndicator(
         double? value,
@@ -1584,7 +1591,8 @@ internal sealed class RenderCircularProgressIndicator : RenderBox
         double indicatorSize,
         StrokeCap? strokeCap,
         double? trackGap,
-        bool year2023)
+        bool year2023,
+        double arrowheadScale = 0.0)
     {
         _value = value;
         _arcStart = arcStart;
@@ -1597,6 +1605,7 @@ internal sealed class RenderCircularProgressIndicator : RenderBox
         _strokeCap = strokeCap;
         _trackGap = trackGap;
         _year2023 = year2023;
+        _arrowheadScale = Math.Clamp(arrowheadScale, 0.0, 1.0);
     }
 
     public double? Value
@@ -1772,6 +1781,18 @@ internal sealed class RenderCircularProgressIndicator : RenderBox
         }
     }
 
+    public double ArrowheadScale
+    {
+        get => _arrowheadScale;
+        set
+        {
+            value = Math.Clamp(value, 0.0, 1.0);
+            if (Math.Abs(_arrowheadScale - value) <= 0.0001) return;
+            _arrowheadScale = value;
+            MarkNeedsPaint();
+        }
+    }
+
     protected override void PerformLayout()
     {
         var side = Math.Max(0, IndicatorSize);
@@ -1841,6 +1862,31 @@ internal sealed class RenderCircularProgressIndicator : RenderBox
         var lineCap = ResolveIndicatorLineCap(resolvedValue, StrokeCap, Year2023);
         var indicatorPen = new Pen(new SolidColorBrush(ValueColor), strokeWidth, lineCap: lineCap);
         ctx.DrawArc(indicatorPen, arcRect, startAngleRadians: start, sweepAngleRadians: sweep);
+        DrawArrowhead(ctx, arcRect, strokeWidth, start + sweep);
+    }
+
+    private void DrawArrowhead(PaintingContext context, Rect arcRect, double strokeWidth, double arcEnd)
+    {
+        if (ArrowheadScale <= 0) return;
+
+        var radius = Math.Min(arcRect.Width, arcRect.Height) / 2.0;
+        var center = arcRect.Center;
+        var ux = Math.Cos(arcEnd);
+        var uy = Math.Sin(arcEnd);
+        var arrowheadRadius = strokeWidth * 2.0 * ArrowheadScale;
+        var innerRadius = Math.Max(0, radius - arrowheadRadius);
+        var outerRadius = radius + arrowheadRadius;
+        var point = new Point(
+            center.X + (ux * radius) - (uy * strokeWidth * 2.0 * ArrowheadScale),
+            center.Y + (uy * radius) + (ux * strokeWidth * 2.0 * ArrowheadScale));
+        context.DrawPolygon(
+            new SolidColorBrush(ValueColor),
+            null,
+            [
+                new Point(center.X + (ux * innerRadius), center.Y + (uy * innerRadius)),
+                new Point(center.X + (ux * outerRadius), center.Y + (uy * outerRadius)),
+                point,
+            ]);
     }
 
     private bool TryResolveTrackGapArc(

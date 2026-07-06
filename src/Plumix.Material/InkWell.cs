@@ -14,6 +14,9 @@ public sealed class InkWell : StatefulWidget
     public InkWell(
         Widget? child = null,
         Action? onTap = null,
+        Action? onDoubleTap = null,
+        Action<PointerDownEvent>? onTapDown = null,
+        Action? onTapCancel = null,
         Action? onLongPress = null,
         Action<bool>? onHover = null,
         Action<bool>? onFocusChange = null,
@@ -32,6 +35,9 @@ public sealed class InkWell : StatefulWidget
     {
         Child = child;
         OnTap = onTap;
+        OnDoubleTap = onDoubleTap;
+        OnTapDown = onTapDown;
+        OnTapCancel = onTapCancel;
         OnLongPress = onLongPress;
         OnHover = onHover;
         OnFocusChange = onFocusChange;
@@ -50,6 +56,9 @@ public sealed class InkWell : StatefulWidget
 
     public Widget? Child { get; }
     public Action? OnTap { get; }
+    public Action? OnDoubleTap { get; }
+    public Action<PointerDownEvent>? OnTapDown { get; }
+    public Action? OnTapCancel { get; }
     public Action? OnLongPress { get; }
     public Action<bool>? OnHover { get; }
     public Action<bool>? OnFocusChange { get; }
@@ -81,7 +90,7 @@ public sealed class InkWell : StatefulWidget
         private IDisposable? _cursorHandle;
 
         private InkWell CurrentWidget => (InkWell)StateWidget;
-        private bool Enabled => CurrentWidget.OnTap is not null || CurrentWidget.OnLongPress is not null;
+        private bool Enabled => CurrentWidget.OnTap is not null || CurrentWidget.OnDoubleTap is not null || CurrentWidget.OnLongPress is not null;
 
         public override void InitState()
         {
@@ -156,6 +165,9 @@ public sealed class InkWell : StatefulWidget
                 result = new GestureDetector(
                     behavior: HitTestBehavior.Opaque,
                     onTap: tap,
+                    onDoubleTap: widget.OnDoubleTap,
+                    onTapDown: widget.OnTapDown,
+                    onTapCancel: widget.OnTapCancel,
                     onLongPress: longPress,
                     child: result);
                 result = new Listener(

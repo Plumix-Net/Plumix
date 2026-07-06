@@ -1855,6 +1855,8 @@ public sealed class RenderPointerListener : RenderProxyBox
 public sealed class RenderSemanticsAnnotations : RenderProxyBox
 {
     private string? _label;
+    private string? _hint;
+    private SemanticsRole _role;
     private SemanticsFlags _flags;
     private Action? _onTap;
     private Action? _onDismiss;
@@ -1864,6 +1866,8 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
 
     public RenderSemanticsAnnotations(
         string? label = null,
+        string? hint = null,
+        SemanticsRole role = SemanticsRole.None,
         SemanticsFlags flags = SemanticsFlags.None,
         Action? onTap = null,
         Action? onDismiss = null,
@@ -1873,6 +1877,8 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         RenderBox? child = null)
     {
         _label = label;
+        _hint = hint;
+        _role = role;
         _flags = flags;
         _onTap = onTap;
         _onDismiss = onDismiss;
@@ -1897,6 +1903,17 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         }
     }
 
+    public string? Hint
+    {
+        get => _hint;
+        set
+        {
+            if (_hint == value) return;
+            _hint = value;
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
     public SemanticsFlags Flags
     {
         get => _flags;
@@ -1908,6 +1925,17 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
             }
 
             _flags = value;
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
+    public SemanticsRole Role
+    {
+        get => _role;
+        set
+        {
+            if (_role == value) return;
+            _role = value;
             MarkNeedsSemanticsUpdate();
         }
     }
@@ -1982,6 +2010,8 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
     protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
     {
         if (string.IsNullOrWhiteSpace(_label)
+            && string.IsNullOrWhiteSpace(_hint)
+            && _role == SemanticsRole.None
             && _flags == SemanticsFlags.None
             && _onTap is null
             && _onDismiss is null
@@ -1993,6 +2023,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         }
 
         configuration.IsSemanticBoundary = true;
+        configuration.Role = _role;
         configuration.ExplicitChildNodes = _explicitChildNodes;
         if (_container && !_explicitChildNodes)
         {
@@ -2002,6 +2033,12 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         if (!string.IsNullOrWhiteSpace(_label))
         {
             configuration.Label = _label;
+        }
+
+
+        if (!string.IsNullOrWhiteSpace(_hint))
+        {
+            configuration.Hint = _hint;
         }
 
         configuration.Flags |= _flags;

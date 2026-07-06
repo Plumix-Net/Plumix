@@ -36,10 +36,14 @@ class SampleRoutes {
   static const String snackBar = '/snack-bar';
   static const String dialog = '/dialog';
   static const String popupMenu = '/popup-menu';
+  static const String dropdown = '/dropdown';
   static const String chips = '/chips';
   static const String linearProgressIndicator = '/linear-progress-indicator';
   static const String circularProgressIndicator =
       '/circular-progress-indicator';
+  static const String refreshIndicator = '/refresh-indicator';
+  static const String barControls = '/bar-controls';
+  static const String dataTable = '/data-table';
   static const String slider = '/slider';
   static const String rangeSlider = '/range-slider';
   static const String card = '/card';
@@ -48,6 +52,8 @@ class SampleRoutes {
   static const String listTileControls = '/list-tile-controls';
   static const String radioExpansionTile = '/radio-expansion-tile';
   static const String expansionPanel = '/expansion-panel';
+  static const String stepper = '/stepper';
+  static const String about = '/about';
   static const String floatingActionButton = '/floating-action-button';
   static const String checkbox = '/checkbox';
   static const String switchDemo = '/switch';

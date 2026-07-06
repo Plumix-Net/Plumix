@@ -190,6 +190,20 @@ public sealed class ClipRRectLayer : ContainerLayer
     }
 }
 
+public sealed class ClipGeometryLayer : ContainerLayer
+{
+    public Geometry Geometry { get; set; } = new RectangleGeometry();
+
+    internal override void AddToScene(DrawingContext context, Point offset)
+    {
+        using (context.PushTransform(Matrix.CreateTranslation(offset.X, offset.Y)))
+        using (context.PushGeometryClip(Geometry))
+        {
+            base.AddToScene(context, new Point(0, 0));
+        }
+    }
+}
+
 public sealed class TransformLayer : ContainerLayer
 {
     public Matrix Transform { get; set; } = Matrix.Identity;

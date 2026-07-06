@@ -332,6 +332,12 @@ public sealed class ScaffoldState : State
 
     public bool HasEndDrawer => CurrentWidget.EndDrawer != null;
 
+    public bool HasFloatingActionButton => CurrentWidget.FloatingActionButton != null;
+
+    public Size FloatingActionButtonSize => CurrentWidget.FloatingActionButton is FloatingActionButton button
+        ? button.ResolveNominalSizeForScaffold(Context)
+        : new Size(56, 56);
+
     public bool IsDrawerOpen => _isDrawerOpen;
 
     public bool IsEndDrawerOpen => _isEndDrawerOpen;
@@ -497,21 +503,27 @@ public sealed class ScaffoldState : State
             crossAxisAlignment: CrossAxisAlignment.Stretch,
             children: columnChildren);
 
+        var textDirection = Directionality.Of(context);
+
         if (CurrentWidget.FloatingActionButton != null)
         {
+            var fabSize = FloatingActionButtonSize;
+            var bottom = CurrentWidget.BottomNavigationBar is BottomAppBar bottomAppBar
+                ? Math.Max(0, bottomAppBar.ResolveHeightForScaffold(context) - (fabSize.Height / 2))
+                : 16;
             content = new Stack(
                 fit: StackFit.Expand,
                 children:
                 [
                     content,
                     new Positioned(
-                        right: 16,
-                        bottom: 16,
+                        left: textDirection == TextDirection.Rtl ? 16 : null,
+                        right: textDirection == TextDirection.Ltr ? 16 : null,
+                        bottom: bottom,
                         child: CurrentWidget.FloatingActionButton),
                 ]);
         }
 
-        var textDirection = Directionality.Of(context);
         var drawerProgress = ResolveDrawerProgress(DrawerSide.Start);
         var endDrawerProgress = ResolveDrawerProgress(DrawerSide.End);
         var isStartDrawerVisible = IsDrawerVisible(DrawerSide.Start, drawerProgress);

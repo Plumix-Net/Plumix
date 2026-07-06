@@ -236,6 +236,23 @@ public abstract class Element
         Owner?.ScheduleBuild(this);
     }
 
+    /// Called whenever the application is reassembled during debugging, for
+    /// example during hot reload.
+    ///
+    /// This method should rerun any initialization logic that depends on
+    /// global state, for example, image loading from asset bundles (since the
+    /// asset bundle may have changed).
+    ///
+    /// See also:
+    ///
+    ///  * [State.Reassemble]
+    ///  * [BuildOwner.Reassemble]
+    internal virtual void Reassemble()
+    {
+        MarkNeedsBuild();
+        VisitChildren(child => child.Reassemble());
+    }
+
     internal virtual void Update(Widget newWidget)
     {
         var oldGlobalKey = Widget.Key as GlobalKey;
@@ -670,6 +687,12 @@ public sealed class StatefulElement : Element
     {
         base.DidChangeDependencies();
         _didChangeDependencies = true;
+    }
+
+    internal override void Reassemble()
+    {
+        State.Reassemble();
+        base.Reassemble();
     }
 
     internal override void VisitChildren(Action<Element> visitor)

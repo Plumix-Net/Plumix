@@ -1,4 +1,5 @@
 using Avalonia;
+using Avalonia.Threading;
 using Plumix.UI;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/gestures/tap.dart (approximate)
@@ -8,13 +9,21 @@ namespace Plumix.Gestures;
 public sealed class TapGestureRecognizer : GestureRecognizer, IGestureArenaMember
 {
     private const double TouchSlop = 18.0;
+    private static readonly TimeSpan DoubleTapTimeout = TimeSpan.FromMilliseconds(300);
     private readonly Dictionary<int, TapTracker> _trackers = [];
+    private readonly object _doubleTapGate = new();
+    private Timer? _singleTapTimer;
+    private DateTime? _lastTapAt;
+    private Point _lastTapPosition;
 
     public TapGestureRecognizer(GestureBinding? binding = null) : base(binding)
     {
     }
 
     public Action? OnTap { get; set; }
+    public Action? OnDoubleTap { get; set; }
+    public Action<PointerDownEvent>? OnTapDown { get; set; }
+    public Action? OnTapCancel { get; set; }
 
     public override void AddPointer(PointerDownEvent @event)
     {
@@ -25,6 +34,7 @@ public sealed class TapGestureRecognizer : GestureRecognizer, IGestureArenaMembe
 
         var arenaEntry = GestureArena.Add(@event.Pointer, this);
         _trackers[@event.Pointer] = new TapTracker(@event.Position, arenaEntry);
+        OnTapDown?.Invoke(@event);
         StartTrackingPointer(@event.Pointer);
     }
 
@@ -41,6 +51,7 @@ public sealed class TapGestureRecognizer : GestureRecognizer, IGestureArenaMembe
 
     public void RejectGesture(int pointer)
     {
+        OnTapCancel?.Invoke();
         Cleanup(pointer);
     }
 
@@ -87,8 +98,62 @@ public sealed class TapGestureRecognizer : GestureRecognizer, IGestureArenaMembe
         }
 
         tracker.Fired = true;
-        OnTap?.Invoke();
+        FireTap(tracker.InitialPosition);
         Cleanup(pointer);
+    }
+
+    private void FireTap(Point position)
+    {
+        if (OnDoubleTap is null)
+        {
+            OnTap?.Invoke();
+            return;
+        }
+
+        Action? doubleTap = null;
+        lock (_doubleTapGate)
+        {
+            var now = DateTime.UtcNow;
+            if (_lastTapAt.HasValue
+                && now - _lastTapAt.Value <= DoubleTapTimeout
+                && Distance(_lastTapPosition, position) <= TouchSlop)
+            {
+                _singleTapTimer?.Dispose();
+                _singleTapTimer = null;
+                _lastTapAt = null;
+                doubleTap = OnDoubleTap;
+            }
+            else
+            {
+                _singleTapTimer?.Dispose();
+                _lastTapAt = now;
+                _lastTapPosition = position;
+                _singleTapTimer = new Timer(_ =>
+                {
+                    Action? callback;
+                    lock (_doubleTapGate)
+                    {
+                        callback = OnTap;
+                        _lastTapAt = null;
+                        _singleTapTimer?.Dispose();
+                        _singleTapTimer = null;
+                    }
+                    if (callback is not null) Dispatcher.UIThread.Post(callback);
+                }, null, DoubleTapTimeout, Timeout.InfiniteTimeSpan);
+            }
+        }
+        doubleTap?.Invoke();
+    }
+
+    public override void Dispose()
+    {
+        lock (_doubleTapGate)
+        {
+            _singleTapTimer?.Dispose();
+            _singleTapTimer = null;
+            _lastTapAt = null;
+        }
+        base.Dispose();
     }
 
     private void Cleanup(int pointer)

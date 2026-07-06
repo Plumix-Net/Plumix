@@ -8,9 +8,12 @@ import 'demos/material/app_bar_text_styles_demo_page.dart';
 import 'demos/material/action_buttons_demo_page.dart';
 import 'demos/material/badge_tooltip_demo_page.dart';
 import 'demos/material/banner_demo_page.dart';
+import 'demos/material/bar_controls_demo_page.dart';
+import 'demos/material/data_table_demo_page.dart';
 import 'demos/material/snack_bar_demo_page.dart';
 import 'demos/material/dialog_demo_page.dart';
 import 'demos/material/popup_menu_demo_page.dart';
+import 'demos/material/dropdown_demo_page.dart';
 import 'demos/general/aspect_ratio_demo_page.dart';
 import 'demos/general/bloc_counter_demo_page.dart';
 import 'demos/material/card_demo_page.dart';
@@ -38,6 +41,8 @@ import 'demos/material/list_tile_demo_page.dart';
 import 'demos/material/list_tile_controls_demo_page.dart';
 import 'demos/material/radio_expansion_tile_demo_page.dart';
 import 'demos/material/expansion_panel_demo_page.dart';
+import 'demos/material/stepper_demo_page.dart';
+import 'demos/material/about_demo_page.dart';
 import 'demos/material/material_buttons_demo_page.dart';
 import 'demos/material/navigation_surfaces_demo_page.dart';
 import 'demos/material/navigation_drawer_demo_page.dart';
@@ -54,6 +59,7 @@ import 'demos/general/scrollbar_demo_page.dart';
 import 'demos/general/stack_demo_page.dart';
 import 'demos/cupertino/switch_demo_page.dart';
 import 'demos/material/range_slider_demo_page.dart';
+import 'demos/material/refresh_indicator_demo_page.dart';
 import 'demos/material/slider_demo_page.dart';
 import 'demos/general/unconstrained_limited_box_demo_page.dart';
 
@@ -147,6 +153,12 @@ class SampleGalleryScreen extends StatelessWidget {
       builder: () => const PopupMenuDemoPage(),
     ),
     SampleRouteDefinition(
+      routeName: SampleRoutes.dropdown,
+      title: 'DropdownButton + DropdownMenuItem',
+      subtitle: 'selection + hint/disabled/dense/expanded/route probes',
+      builder: () => const DropdownDemoPage(),
+    ),
+    SampleRouteDefinition(
       routeName: SampleRoutes.chips,
       title: 'Material chips',
       subtitle: 'action/choice/filter/input + selection/deletion/theme probes',
@@ -163,6 +175,24 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'CircularProgressIndicator',
       subtitle: 'determinate/indeterminate + M2/M3 + theme/widget probes',
       builder: () => const CircularProgressIndicatorDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.refreshIndicator,
+      title: 'RefreshIndicator + RefreshProgressIndicator',
+      subtitle: 'pull-to-refresh lifecycle + adaptive/no-spinner/theme probes',
+      builder: () => const RefreshIndicatorDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.barControls,
+      title: 'BottomAppBar + ButtonBar',
+      subtitle: 'FAB notch + M2/M3 surface + legacy action overflow',
+      builder: () => const BarControlsDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.dataTable,
+      title: 'DataTable + PaginatedDataTable',
+      subtitle: 'sorting + selection + themes + source-backed paging',
+      builder: () => const DataTableDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.slider,
@@ -212,6 +242,18 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'ExpansionPanel + ExpansionPanelList',
       subtitle: 'controlled panels + radio accordion + animated material gaps',
       builder: () => const ExpansionPanelDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.stepper,
+      title: 'ExpandIcon + Stepper',
+      subtitle: 'disclosure animation + vertical/horizontal step progress',
+      builder: () => const StepperDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.about,
+      title: 'AboutDialog + LicensePage',
+      subtitle: 'metadata dialog + registry/package license navigation',
+      builder: () => const AboutDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.floatingActionButton,

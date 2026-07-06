@@ -44,9 +44,13 @@ internal static class SampleRoutes
     public const string SnackBar = "/snack-bar";
     public const string Dialog = "/dialog";
     public const string PopupMenu = "/popup-menu";
+    public const string Dropdown = "/dropdown";
     public const string Chips = "/chips";
     public const string LinearProgressIndicator = "/linear-progress-indicator";
     public const string CircularProgressIndicator = "/circular-progress-indicator";
+    public const string RefreshIndicator = "/refresh-indicator";
+    public const string BarControls = "/bar-controls";
+    public const string DataTable = "/data-table";
     public const string Slider = "/slider";
     public const string RangeSlider = "/range-slider";
     public const string Card = "/card";
@@ -55,6 +59,8 @@ internal static class SampleRoutes
     public const string ListTileControls = "/list-tile-controls";
     public const string RadioExpansionTile = "/radio-expansion-tile";
     public const string ExpansionPanel = "/expansion-panel";
+    public const string Stepper = "/stepper";
+    public const string About = "/about";
     public const string FloatingActionButton = "/floating-action-button";
     public const string Checkbox = "/checkbox";
     public const string Switch = "/switch";
@@ -108,9 +114,13 @@ internal sealed class SampleGalleryScreen : StatelessWidget
         new(SampleRoutes.SnackBar, "SnackBar + SnackBarAction", "messenger queue + action/close/overflow probes", () => new SnackBarDemoPage()),
         new(SampleRoutes.Dialog, "Dialog family", "modal route + alert/simple/result/scrollable/theme probes", () => new DialogDemoPage()),
         new(SampleRoutes.PopupMenu, "PopupMenuButton + PopupMenuItem", "anchor + selection/cancel/keyboard/theme probes", () => new PopupMenuDemoPage()),
+        new(SampleRoutes.Dropdown, "DropdownButton + DropdownMenuItem", "selection + hint/disabled/dense/expanded/route probes", () => new DropdownDemoPage()),
         new(SampleRoutes.Chips, "Material chips", "action/choice/filter/input + selection/deletion/theme probes", () => new ChipsDemoPage()),
         new(SampleRoutes.LinearProgressIndicator, "LinearProgressIndicator", "determinate/indeterminate + M2/M3 + theme/widget/RTL probes", () => new LinearProgressIndicatorDemoPage()),
         new(SampleRoutes.CircularProgressIndicator, "CircularProgressIndicator", "determinate/indeterminate + M2/M3 + theme/widget probes", () => new CircularProgressIndicatorDemoPage()),
+        new(SampleRoutes.RefreshIndicator, "RefreshIndicator + RefreshProgressIndicator", "pull-to-refresh lifecycle + adaptive/no-spinner/theme probes", () => new RefreshIndicatorDemoPage()),
+        new(SampleRoutes.BarControls, "BottomAppBar + ButtonBar", "FAB notch + M2/M3 surface + legacy action overflow", () => new BarControlsDemoPage()),
+        new(SampleRoutes.DataTable, "DataTable + PaginatedDataTable", "sorting + selection + themes + source-backed paging", () => new DataTableDemoPage()),
         new(SampleRoutes.Slider, "Slider", "continuous/discrete + drag/tap/keyboard + theme/widget colors", () => new SliderDemoPage()),
         new(SampleRoutes.RangeSlider, "RangeSlider", "two-thumb range + continuous/discrete + theme/widget colors", () => new RangeSliderDemoPage()),
         new(SampleRoutes.Card, "Card", "elevated/filled/outlined variants + theme/clip probes", () => new CardDemoPage()),
@@ -119,6 +129,8 @@ internal sealed class SampleGalleryScreen : StatelessWidget
         new(SampleRoutes.ListTileControls, "CheckboxListTile + SwitchListTile", "whole-row toggle + tristate + affinity + adaptive probes", () => new ListTileControlsDemoPage()),
         new(SampleRoutes.RadioExpansionTile, "RadioListTile + ExpansionTile", "RadioGroup + toggleable/adaptive + animated controller expansion", () => new RadioExpansionTileDemoPage()),
         new(SampleRoutes.ExpansionPanel, "ExpansionPanel + ExpansionPanelList", "controlled panels + radio accordion + animated material gaps", () => new ExpansionPanelDemoPage()),
+        new(SampleRoutes.Stepper, "ExpandIcon + Stepper", "disclosure animation + vertical/horizontal step progress", () => new StepperDemoPage()),
+        new(SampleRoutes.About, "AboutDialog + LicensePage", "metadata dialog + registry/package license navigation", () => new AboutDemoPage()),
         new(SampleRoutes.FloatingActionButton, "FloatingActionButton", "regular/small/large/extended + theme defaults", () => new FloatingActionButtonDemoPage()),
         new(SampleRoutes.AppBarLeadingWidth, "AppBar leadingWidth theme", "theme fallback + widget override runtime probe", () => new AppBarLeadingWidthDemoPage()),
         new(SampleRoutes.AppBarActionsPadding, "AppBar actionsPadding theme", "theme fallback + widget override runtime probe", () => new AppBarActionsPaddingDemoPage()),

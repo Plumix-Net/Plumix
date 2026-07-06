@@ -9,6 +9,21 @@ namespace Plumix.Tests;
 public sealed class ScrollInfrastructureTests
 {
     [Fact]
+    public void ScrollMetricsSnapshot_ExposesFlutterEdgeAndAxisMetrics()
+    {
+        var vertical = new ScrollMetricsSnapshot(25, 0, 100, 40, AxisDirection.Down);
+        Assert.Equal(25, vertical.ExtentBefore);
+        Assert.Equal(75, vertical.ExtentAfter);
+        Assert.Equal(Axis.Vertical, vertical.Axis);
+        Assert.False(vertical.AtEdge);
+
+        var horizontalEdge = new ScrollMetricsSnapshot(100, 0, 100, 40, AxisDirection.Left);
+        Assert.Equal(Axis.Horizontal, horizontalEdge.Axis);
+        Assert.True(horizontalEdge.AtEdge);
+        Assert.Equal(0, horizontalEdge.ExtentAfter);
+    }
+
+    [Fact]
     public void NotificationListener_ReceivesBubbledNotification()
     {
         var owner = new BuildOwner();

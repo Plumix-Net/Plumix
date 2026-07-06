@@ -138,16 +138,30 @@ public sealed class BuildOwner
         return false;
     }
 
+    /// Cause the entire subtree rooted at the given [Element] to be entirely
+    /// rebuilt. This is used by development tools when the application code has
+    /// changed and is being hot-reloaded, to cause the widget tree to pick up
+    /// any changed implementations.
+    ///
+    /// This is expensive and should not be called except during development.
+    public void Reassemble(Element root)
+    {
+        root.Reassemble();
+    }
+
     internal void BuildScope()
     {
         _scheduled = false;
 
+        // Flutter parity: process the dirty list in order of increasing depth so
+        // parents rebuild before children; elements cleaned by an ancestor's
+        // rebuild are skipped via the Dirty check instead of rebuilding twice.
         while (_dirty.Count > 0)
         {
-            var element = _dirty.Max!;
+            var element = _dirty.Min!;
             _dirty.Remove(element);
 
-            if (!element.IsActive || element.Owner != this)
+            if (!element.IsActive || element.Owner != this || !element.Dirty)
             {
                 continue;
             }

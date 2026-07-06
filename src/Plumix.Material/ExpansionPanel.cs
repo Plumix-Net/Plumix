@@ -322,7 +322,15 @@ public sealed class ExpansionPanelList : StatefulWidget
                     constraints: new BoxConstraints(MinHeight: 48),
                     child: panel.HeaderBuilder(context, expanded)));
             var iconColor = CurrentWidget.ExpandIconColor ?? Theme.Of(context).OnSurfaceVariantColor;
-            Widget arrow = BuildArrow(progress, iconColor);
+            Widget arrow = new ExpandIcon(
+                isExpanded: expanded,
+                onPressed: panel.CanTapOnHeader ? null : _ => HandlePressed(index, expanded),
+                color: iconColor,
+                disabledColor: iconColor,
+                expandedColor: iconColor,
+                splashColor: panel.SplashColor,
+                highlightColor: panel.HighlightColor,
+                padding: panel.CanTapOnHeader ? default : new Thickness(12));
 
             if (panel.CanTapOnHeader)
             {
@@ -333,14 +341,7 @@ public sealed class ExpansionPanelList : StatefulWidget
             }
             else
             {
-                arrow = new IconButton(
-                    icon: arrow,
-                    onPressed: () => HandlePressed(index, expanded),
-                    color: iconColor,
-                    splashColor: panel.SplashColor,
-                    highlightColor: panel.HighlightColor,
-                    padding: new Thickness(12),
-                    constraints: new BoxConstraints(MinWidth: 48, MinHeight: 48));
+                arrow = new SizedBox(width: 48, height: 48, child: arrow);
             }
 
             var flags = SemanticsFlags.HasExpandedState | SemanticsFlags.IsEnabled;
@@ -351,8 +352,12 @@ public sealed class ExpansionPanelList : StatefulWidget
 
             if (!panel.CanTapOnHeader)
             {
+                var localizations = MaterialLocalizations.Of(context);
                 arrow = new Semantics(
                     child: arrow,
+                    label: expanded
+                        ? localizations.ExpandedIconTapHint
+                        : localizations.CollapsedIconTapHint,
                     flags: flags,
                     onTap: () => HandlePressed(index, expanded),
                     container: true);
@@ -511,21 +516,6 @@ public sealed class ExpansionPanelList : StatefulWidget
                 MaximumSize: MaterialStateProperty<Size?>.All(new Size(double.PositiveInfinity, double.PositiveInfinity)),
                 Alignment: Alignment.CenterLeft,
                 TapTargetSize: MaterialTapTargetSize.ShrinkWrap);
-        }
-
-        private static Widget BuildArrow(double progress, Color color)
-        {
-            const double iconSize = 24;
-            var center = iconSize / 2;
-            var angle = Math.PI * progress;
-            var cos = Math.Cos(angle);
-            var sin = Math.Sin(angle);
-            var rotation = new Matrix(cos, sin, -sin, cos, 0, 0);
-            return new Plumix.Widgets.Transform(
-                transform: Matrix.CreateTranslation(center, center)
-                           * rotation
-                           * Matrix.CreateTranslation(-center, -center),
-                child: new Icon(Icons.ExpandMore, size: iconSize, color: color));
         }
 
         private static Thickness LerpThickness(Thickness from, Thickness to, double progress)

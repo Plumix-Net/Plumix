@@ -90,6 +90,9 @@ public sealed class RawGestureDetector : StatefulWidget
         Action<PointerUpEvent>? onPointerUp = null,
         Action<PointerCancelEvent>? onPointerCancel = null,
         Action? onTap = null,
+        Action? onDoubleTap = null,
+        Action<PointerDownEvent>? onTapDown = null,
+        Action? onTapCancel = null,
         Action? onLongPress = null,
         Action<DragStartDetails>? onHorizontalDragStart = null,
         Action<DragUpdateDetails>? onHorizontalDragUpdate = null,
@@ -108,6 +111,9 @@ public sealed class RawGestureDetector : StatefulWidget
         OnPointerUp = onPointerUp;
         OnPointerCancel = onPointerCancel;
         OnTap = onTap;
+        OnDoubleTap = onDoubleTap;
+        OnTapDown = onTapDown;
+        OnTapCancel = onTapCancel;
         OnLongPress = onLongPress;
         OnHorizontalDragStart = onHorizontalDragStart;
         OnHorizontalDragUpdate = onHorizontalDragUpdate;
@@ -132,6 +138,9 @@ public sealed class RawGestureDetector : StatefulWidget
     public Action<PointerCancelEvent>? OnPointerCancel { get; }
 
     public Action? OnTap { get; }
+    public Action? OnDoubleTap { get; }
+    public Action<PointerDownEvent>? OnTapDown { get; }
+    public Action? OnTapCancel { get; }
 
     public Action? OnLongPress { get; }
 
@@ -209,10 +218,13 @@ public sealed class RawGestureDetector : StatefulWidget
         {
             var widget = CurrentWidget;
 
-            if (widget.OnTap != null)
+            if (widget.OnTap != null || widget.OnDoubleTap != null)
             {
                 _tap ??= new TapGestureRecognizer();
                 _tap.OnTap = widget.OnTap;
+                _tap.OnDoubleTap = widget.OnDoubleTap;
+                _tap.OnTapDown = widget.OnTapDown;
+                _tap.OnTapCancel = widget.OnTapCancel;
             }
             else
             {
@@ -276,6 +288,9 @@ public sealed class GestureDetector : StatelessWidget
         Widget? child = null,
         HitTestBehavior behavior = HitTestBehavior.DeferToChild,
         Action? onTap = null,
+        Action? onDoubleTap = null,
+        Action<PointerDownEvent>? onTapDown = null,
+        Action? onTapCancel = null,
         Action? onLongPress = null,
         Action<DragStartDetails>? onHorizontalDragStart = null,
         Action<DragUpdateDetails>? onHorizontalDragUpdate = null,
@@ -290,6 +305,9 @@ public sealed class GestureDetector : StatelessWidget
         Child = child;
         Behavior = behavior;
         OnTap = onTap;
+        OnDoubleTap = onDoubleTap;
+        OnTapDown = onTapDown;
+        OnTapCancel = onTapCancel;
         OnLongPress = onLongPress;
         OnHorizontalDragStart = onHorizontalDragStart;
         OnHorizontalDragUpdate = onHorizontalDragUpdate;
@@ -306,6 +324,9 @@ public sealed class GestureDetector : StatelessWidget
     public HitTestBehavior Behavior { get; }
 
     public Action? OnTap { get; }
+    public Action? OnDoubleTap { get; }
+    public Action<PointerDownEvent>? OnTapDown { get; }
+    public Action? OnTapCancel { get; }
 
     public Action? OnLongPress { get; }
 
@@ -331,6 +352,9 @@ public sealed class GestureDetector : StatelessWidget
             child: Child,
             behavior: Behavior,
             onTap: OnTap,
+            onDoubleTap: OnDoubleTap,
+            onTapDown: OnTapDown,
+            onTapCancel: OnTapCancel,
             onLongPress: OnLongPress,
             onHorizontalDragStart: OnHorizontalDragStart,
             onHorizontalDragUpdate: OnHorizontalDragUpdate,

@@ -66,6 +66,16 @@ public sealed class WidgetHost : PlumixHost
         _owner.BuildScope();
     }
 
+    protected override void PerformReassemble()
+    {
+        if (_rootElement != null)
+        {
+            _owner.Reassemble(_rootElement);
+        }
+
+        base.PerformReassemble();
+    }
+
     protected override void OnMetricsChanged()
     {
         base.OnMetricsChanged();

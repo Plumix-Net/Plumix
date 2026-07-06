@@ -15,22 +15,78 @@ public readonly record struct ScrollMetricsSnapshot(
     double Pixels,
     double MinScrollExtent,
     double MaxScrollExtent,
-    double ViewportDimension);
+    double ViewportDimension,
+    AxisDirection AxisDirection = AxisDirection.Down)
+{
+    public double ExtentBefore => Math.Max(Pixels - MinScrollExtent, 0.0);
 
-public abstract class ScrollNotification(ScrollMetricsSnapshot metrics) : Notification
+    public double ExtentAfter => Math.Max(MaxScrollExtent - Pixels, 0.0);
+
+    public Axis Axis => AxisDirection is AxisDirection.Left or AxisDirection.Right
+        ? Axis.Horizontal
+        : Axis.Vertical;
+
+    public bool AtEdge => ExtentBefore <= 0.0001 || ExtentAfter <= 0.0001;
+}
+
+public abstract class ScrollNotification(ScrollMetricsSnapshot metrics, int depth = 0) : Notification
 {
     public ScrollMetricsSnapshot Metrics { get; } = metrics;
+
+    public int Depth { get; private set; } = Math.Max(0, depth);
+
+    public override bool Dispatch(BuildContext target)
+    {
+        for (var ancestor = target.Owner.Parent; ancestor != null; ancestor = ancestor.Parent)
+        {
+            if (ancestor.Widget is Viewport)
+            {
+                Depth += 1;
+            }
+
+            if (ancestor is INotificationListener listener && listener.OnNotification(this))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }
 
-public sealed class ScrollStartNotification(ScrollMetricsSnapshot metrics) : ScrollNotification(metrics)
+public sealed class ScrollStartNotification(
+    ScrollMetricsSnapshot metrics,
+    bool hasDragDetails = false,
+    int depth = 0) : ScrollNotification(metrics, depth)
 {
+    public bool HasDragDetails { get; } = hasDragDetails;
 }
 
-public sealed class ScrollUpdateNotification(ScrollMetricsSnapshot metrics) : ScrollNotification(metrics)
+public sealed class ScrollUpdateNotification(
+    ScrollMetricsSnapshot metrics,
+    double? scrollDelta = null,
+    bool hasDragDetails = false,
+    int depth = 0) : ScrollNotification(metrics, depth)
 {
+    public double? ScrollDelta { get; } = scrollDelta;
+
+    public bool HasDragDetails { get; } = hasDragDetails;
 }
 
-public sealed class ScrollEndNotification(ScrollMetricsSnapshot metrics) : ScrollNotification(metrics)
+public sealed class OverscrollNotification(
+    ScrollMetricsSnapshot metrics,
+    double overscroll,
+    bool hasDragDetails = false,
+    int depth = 0) : ScrollNotification(metrics, depth)
+{
+    public double Overscroll { get; } = overscroll;
+
+    public bool HasDragDetails { get; } = hasDragDetails;
+}
+
+public sealed class ScrollEndNotification(
+    ScrollMetricsSnapshot metrics,
+    int depth = 0) : ScrollNotification(metrics, depth)
 {
 }
 
@@ -340,6 +396,8 @@ public sealed class Scrollable : StatefulWidget
 
     public HitTestBehavior HitTestBehavior { get; }
 
+    internal bool UseSingleChildViewport { get; init; }
+
     public override State CreateState()
     {
         return new ScrollableState();
@@ -350,6 +408,7 @@ public sealed class Scrollable : StatefulWidget
         private ScrollController? _fallbackController;
         private ScrollController? _attachedController;
         private ScrollPosition _position = null!;
+        private bool _isApplyingDrag;
 
         private Scrollable CurrentWidget => (Scrollable)Element.Widget;
 
@@ -389,8 +448,23 @@ public sealed class Scrollable : StatefulWidget
         public override Widget Build(BuildContext context)
         {
             var widget = CurrentWidget;
-            var slivers = ResolveSlivers(widget);
             var axisDirection = ResolveAxisDirection(widget.Axis, widget.Reverse);
+            Widget viewport = widget.UseSingleChildViewport
+                ? new SingleChildViewport(
+                    child: widget.Child ?? new SizedBox(),
+                    axisDirection: axisDirection,
+                    offsetPixels: _position.Pixels,
+                    onViewportMetricsChanged: HandleViewportMetricsChanged)
+                : new Viewport(
+                    axis: widget.Axis,
+                    axisDirection: axisDirection,
+                    growthDirection: GrowthDirection.Forward,
+                    offsetPixels: _position.Pixels,
+                    cacheExtent: widget.CacheExtent,
+                    cacheExtentStyle: widget.CacheExtentStyle,
+                    shrinkWrap: widget.ShrinkWrap,
+                    slivers: ResolveSlivers(widget),
+                    onViewportMetricsChanged: HandleViewportMetricsChanged);
 
             return new Listener(
                 behavior: widget.HitTestBehavior,
@@ -400,19 +474,12 @@ public sealed class Scrollable : StatefulWidget
                     onHorizontalDragStart: widget.Axis == Axis.Horizontal ? HandleDragStart : null,
                     onHorizontalDragUpdate: widget.Axis == Axis.Horizontal ? HandleHorizontalDragUpdate : null,
                     onHorizontalDragEnd: widget.Axis == Axis.Horizontal ? HandleDragEnd : null,
+                    onHorizontalDragCancel: widget.Axis == Axis.Horizontal ? HandleDragCancel : null,
                     onVerticalDragStart: widget.Axis == Axis.Vertical ? HandleDragStart : null,
                     onVerticalDragUpdate: widget.Axis == Axis.Vertical ? HandleVerticalDragUpdate : null,
                     onVerticalDragEnd: widget.Axis == Axis.Vertical ? HandleDragEnd : null,
-                    child: new Viewport(
-                        axis: widget.Axis,
-                        axisDirection: axisDirection,
-                        growthDirection: GrowthDirection.Forward,
-                        offsetPixels: _position.Pixels,
-                        cacheExtent: widget.CacheExtent,
-                        cacheExtentStyle: widget.CacheExtentStyle,
-                        shrinkWrap: widget.ShrinkWrap,
-                        slivers: slivers,
-                        onViewportMetricsChanged: HandleViewportMetricsChanged)));
+                    onVerticalDragCancel: widget.Axis == Axis.Vertical ? HandleDragCancel : null,
+                    child: viewport));
         }
 
         private IReadOnlyList<Widget> ResolveSlivers(Scrollable widget)
@@ -436,6 +503,11 @@ public sealed class Scrollable : StatefulWidget
 
         private void HandlePositionChanged()
         {
+            if (_isApplyingDrag)
+            {
+                return;
+            }
+
             new ScrollUpdateNotification(CurrentMetrics()).Dispatch(Context);
             SetState(static () => { });
         }
@@ -443,7 +515,7 @@ public sealed class Scrollable : StatefulWidget
         private void HandleDragStart(DragStartDetails _)
         {
             _position.BeginDrag();
-            new ScrollStartNotification(CurrentMetrics()).Dispatch(Context);
+            new ScrollStartNotification(CurrentMetrics(), hasDragDetails: true).Dispatch(Context);
         }
 
         private void HandleHorizontalDragUpdate(DragUpdateDetails details)
@@ -451,7 +523,7 @@ public sealed class Scrollable : StatefulWidget
             var delta = IsReversedAxisDirection()
                 ? -details.PrimaryDelta
                 : details.PrimaryDelta;
-            _position.ApplyUserOffset(delta);
+            ApplyDragOffset(delta);
         }
 
         private void HandleVerticalDragUpdate(DragUpdateDetails details)
@@ -459,7 +531,7 @@ public sealed class Scrollable : StatefulWidget
             var delta = IsReversedAxisDirection()
                 ? -details.PrimaryDelta
                 : details.PrimaryDelta;
-            _position.ApplyUserOffset(delta);
+            ApplyDragOffset(delta);
         }
 
         private void HandleDragEnd(DragEndDetails details)
@@ -469,6 +541,48 @@ public sealed class Scrollable : StatefulWidget
                 : details.PrimaryVelocity;
             _position.EndDrag(velocity);
             new ScrollEndNotification(CurrentMetrics()).Dispatch(Context);
+        }
+
+        private void HandleDragCancel()
+        {
+            _position.EndDrag(0.0);
+            new ScrollEndNotification(CurrentMetrics()).Dispatch(Context);
+        }
+
+        private void ApplyDragOffset(double delta)
+        {
+            var before = _position.Pixels;
+            var adjusted = _position.Physics.ApplyPhysicsToUserOffset(_position, delta);
+            var intendedScrollDelta = -adjusted;
+
+            _isApplyingDrag = true;
+            try
+            {
+                _position.ApplyUserOffset(delta);
+            }
+            finally
+            {
+                _isApplyingDrag = false;
+            }
+
+            var actualScrollDelta = _position.Pixels - before;
+            if (Math.Abs(actualScrollDelta) > 0.0001)
+            {
+                new ScrollUpdateNotification(
+                    CurrentMetrics(),
+                    scrollDelta: actualScrollDelta,
+                    hasDragDetails: true).Dispatch(Context);
+                SetState(static () => { });
+            }
+
+            var overscroll = intendedScrollDelta - actualScrollDelta;
+            if (Math.Abs(overscroll) > 0.0001)
+            {
+                new OverscrollNotification(
+                    CurrentMetrics(),
+                    overscroll: overscroll,
+                    hasDragDetails: true).Dispatch(Context);
+            }
         }
 
         private void HandlePointerSignal(PointerSignalEvent @event)
@@ -497,7 +611,8 @@ public sealed class Scrollable : StatefulWidget
                 Pixels: _position.Pixels,
                 MinScrollExtent: _position.MinScrollExtent,
                 MaxScrollExtent: _position.MaxScrollExtent,
-                ViewportDimension: _position.ViewportDimension);
+                ViewportDimension: _position.ViewportDimension,
+                AxisDirection: ResolveAxisDirection(CurrentWidget.Axis, CurrentWidget.Reverse));
         }
 
         private bool IsReversedAxisDirection()
@@ -581,6 +696,37 @@ public sealed class Viewport : MultiChildRenderObjectWidget
         viewport.CacheExtent = CacheExtent;
         viewport.CacheExtentStyle = CacheExtentStyle;
         viewport.ShrinkWrap = ShrinkWrap;
+        viewport.OnViewportMetricsChanged = OnViewportMetricsChanged;
+    }
+}
+
+internal sealed class SingleChildViewport : SingleChildRenderObjectWidget
+{
+    public SingleChildViewport(
+        Widget child,
+        AxisDirection axisDirection,
+        double offsetPixels,
+        Action<double, double, double>? onViewportMetricsChanged = null) : base(child)
+    {
+        AxisDirection = axisDirection;
+        OffsetPixels = offsetPixels;
+        OnViewportMetricsChanged = onViewportMetricsChanged;
+    }
+
+    public AxisDirection AxisDirection { get; }
+    public double OffsetPixels { get; }
+    public Action<double, double, double>? OnViewportMetricsChanged { get; }
+
+    internal override RenderObject CreateRenderObject(BuildContext context) => new RenderSingleChildViewport(
+        axisDirection: AxisDirection,
+        offsetPixels: OffsetPixels,
+        onViewportMetricsChanged: OnViewportMetricsChanged);
+
+    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    {
+        var viewport = (RenderSingleChildViewport)renderObject;
+        viewport.AxisDirection = AxisDirection;
+        viewport.OffsetPixels = OffsetPixels;
         viewport.OnViewportMetricsChanged = OnViewportMetricsChanged;
     }
 }
@@ -1316,15 +1462,18 @@ public sealed class SingleChildScrollView : StatelessWidget
     {
         Widget child = Child;
         if (Padding.HasValue) child = new Padding(Padding.Value, child);
-        return new CustomScrollView(
-            slivers: [new SliverToBoxAdapter(child)],
-            scrollDirection: ScrollDirection,
+        return new Scrollable(
+            child: child,
+            axis: ScrollDirection,
             reverse: Reverse,
             controller: Controller,
             physics: Physics,
             cacheExtent: CacheExtent,
             cacheExtentStyle: CacheExtentStyle,
-            shrinkWrap: true);
+            shrinkWrap: true)
+        {
+            UseSingleChildViewport = true,
+        };
     }
 }
 

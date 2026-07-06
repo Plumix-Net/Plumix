@@ -8,7 +8,7 @@ Use this block as the fastest machine-readable status summary.
 
 ```yaml
 framework_plan_version: 1
-last_updated: 2026-07-05
+last_updated: 2026-07-06
 north_star: "Flutter-like widget/rendering framework in C# with Avalonia as host infrastructure."
 current_phase: "M4 material library rewrite (theme/scaffold/material controls) in progress."
 status:
@@ -54,6 +54,7 @@ next_milestones:
 - [x] Widget host path is active on desktop (`FlutterExtensions.Run` + `WidgetHost`).
 - [x] Sample gallery demonstrates navigation, scrolling, and editable text/focus demos through framework widgets.
 - [x] Automated test project exists and covers lifecycle, rendering, layers, semantics, gestures, navigation, and scrolling.
+- [x] Hot reload is supported via .NET Hot Reload + Flutter-style reassemble flow (`HotReloadManager`, `ReassembleApplication`, `Element.Reassemble`), preserving `State` across code patches.
 
 ## Global Plan
 
@@ -587,6 +588,36 @@ Progress update (2026-03-19):
   - added `PopupMenuThemeData`/`PopupMenuTheme` + `ThemeData.PopupMenuTheme`, `PopupMenus.ShowMenu<T>`, animated non-opaque route presentation, safe-area screen clamping, intrinsic 56px width steps, and shrink-wrapped scrolling;
   - added source-required core primitives (`RelativeRect`, `AnimationStyle`, expanded/menu semantics, root navigator lookup) and stabilized Navigator visible-route composition so underlying state survives the first popup route;
   - added focused `MaterialPopupMenuTests` and a mirrored `/popup-menu` C#/Dart runtime demo.
+- Extended popup-menu entries with paired `CheckedPopupMenuItem<T>` + `PopupMenuDivider` ports:
+  - matched Flutter checkmark/list-tile composition, 150ms selection fade, selected-state label styling, checkbox-role checked semantics, and divider height/thickness/indent/radius/color forwarding;
+  - generalized popup routes to accept typed items plus non-value divider entries while keeping dividers out of keyboard focus traversal;
+  - expanded focused popup-menu coverage and the mirrored C#/Dart runtime demo.
+- Added paired `DropdownButton<T>` + `DropdownMenuItem<T>` ports:
+  - matched controlled and nullable selection, disabled/hint fallback states, `selectedItemBuilder`, dense/expanded sizing, custom icon/style/padding/underline, `DropdownButtonHideUnderline`, and aligned legacy `ButtonTheme` behavior;
+  - added Flutter-shaped positioned dropdown routes with selected-item alignment, fixed/variable item measurement, max-height scrolling, custom width/color/radius/elevation, barrier policy, staged 300ms reveal, item callbacks, keyboard traversal, and expanded/menu semantics;
+  - added source-required core `IndexedStack`, focused `MaterialDropdownTests`, and a mirrored `/dropdown` C#/Dart runtime demo.
+- Added paired `ExpandIcon` + `Stepper` ports:
+  - matched expand/collapse rotation, localized semantic hints, callback contract, icon colors, and source-accurate integration with `ExpansionPanelList`;
+  - matched vertical/horizontal step composition, controlled current step, indexed/editing/complete/disabled/error states, connector/icon sizing and styling, default/custom controls, retained horizontal panel state, clipping, elevation, and RTL-aware vertical geometry;
+  - added focused `MaterialStepperTests`, source-required semantics-hint/polygon-paint plumbing, and a mirrored `/stepper` C#/Dart runtime demo.
+- Added paired `AboutDialog` + `LicensePage` ports:
+  - matched application metadata/icon/legalese/custom-child composition, M2/M3 action labels, `AboutListTile`, dialog and license route helpers, localized package counts, and root/nearest navigator selection;
+  - added lazy `LicenseRegistry`, `LicenseEntry`, `LicenseParagraph`, and line-break parser primitives plus first-package ordering, case-insensitive package sorting, multi-package license bindings, package detail routes, centered/indented paragraph rendering, safe-area gutters, and scrollbars;
+  - added focused `MaterialAboutTests` and a mirrored `/about` C#/Dart runtime demo with registered sample licenses.
+- Added paired `RefreshProgressIndicator` + `RefreshIndicator` ports:
+  - matched the circular refresh surface, arrowhead growth/rotation, elevation, theme precedence, Material/adaptive/no-spinner constructors, localized semantics, and programmatic `Show()` behavior;
+  - matched the drag/armed/snap/refresh/done/canceled state machine on top of shared Flutter-shaped scroll metrics, drag-delta, axis, and overscroll notifications;
+  - added focused `MaterialRefreshIndicatorTests` and a mirrored `/refresh-indicator` C#/Dart runtime demo.
+- Added paired `BottomAppBar` + `ButtonBar` ports:
+  - matched M2/M3 bottom-app-bar color/elevation/height/padding/surface-tint/shadow defaults, theme/widget precedence, bottom SafeArea, FAB-aware circular notch geometry, clipping, and direction-aware Scaffold placement;
+  - matched legacy button-bar theme propagation, padded/constrained layout behavior, main-axis sizing/alignment, RTL ordering, and narrow-width vertical overflow direction/spacing;
+  - added shared `NotchedShape`/geometry clip primitives, focused `MaterialBarControlsTests`, and a mirrored `/bar-controls` C#/Dart runtime demo.
+- Added paired `DataTable` + `PaginatedDataTable` ports:
+  - introduced Flutter-shaped `DataColumn`/`DataRow`/`DataCell`, sorting, selectable rows and select-all behavior, numeric alignment, placeholder/edit cells, `DataTableTheme` + `ThemeData` precedence, and divider/decoration/clip wiring;
+  - added source-backed pagination with row caching, approximate counts, loading/blank rows, selected-count headers, rows-per-page selection, first/previous/next/last navigation, and public `PageTo(...)` state control;
+  - added source-required core `Table`/`RenderTable` fixed/intrinsic/flex column negotiation plus full tap/double-tap/down/cancel plumbing through `GestureDetector` and `InkWell`;
+  - replaced the sliver-backed `SingleChildScrollView` shortcut with a Flutter-shaped single-child viewport so nested horizontal table scrollers shrink-wrap finite child height instead of inheriting an unbounded cross axis;
+  - added focused `MaterialDataTableTests` and a mirrored `/data-table` C#/Dart runtime demo.
 - Remaining divergence for floating action button in current framework scope:
   - none documented in current framework scope.
 

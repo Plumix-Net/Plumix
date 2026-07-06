@@ -122,6 +122,24 @@ public abstract class State
     {
     }
 
+    /// Called whenever the application is reassembled during debugging, for
+    /// example during hot reload.
+    ///
+    /// This method should rerun any initialization logic that depends on
+    /// global state, for example, image loading from asset bundles (since the
+    /// asset bundle may have changed).
+    ///
+    /// In addition to this method being invoked, it is guaranteed that the
+    /// [Build] method will be invoked when a reassemble is signaled. Most
+    /// widgets therefore do not need to do anything in the [Reassemble] method.
+    ///
+    /// See also:
+    ///
+    ///  * [Element.Reassemble]
+    public virtual void Reassemble()
+    {
+    }
+
     public abstract Widget Build(BuildContext context);
 
     protected void SetState(Action updater)

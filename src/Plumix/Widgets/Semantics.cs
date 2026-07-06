@@ -12,6 +12,7 @@ public enum SemanticsRole
     AlertDialog,
     Menu,
     MenuItem,
+    MenuItemCheckbox,
 }
 
 public sealed class Semantics : SingleChildRenderObjectWidget
@@ -19,6 +20,7 @@ public sealed class Semantics : SingleChildRenderObjectWidget
     public Semantics(
         Widget? child = null,
         string? label = null,
+        string? hint = null,
         SemanticsFlags flags = SemanticsFlags.None,
         Action? onTap = null,
         Action? onDismiss = null,
@@ -29,15 +31,19 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         bool scopesRoute = false,
         bool namesRoute = false,
         bool? expanded = null,
+        bool? @checked = null,
         Key? key = null) : base(child, key)
     {
         Label = label;
+        Hint = hint;
         Flags = flags
                 | RoleFlags(role)
                 | (scopesRoute ? SemanticsFlags.ScopesRoute : SemanticsFlags.None)
                 | (namesRoute ? SemanticsFlags.NamesRoute : SemanticsFlags.None)
                 | (expanded.HasValue ? SemanticsFlags.HasExpandedState : SemanticsFlags.None)
-                | (expanded == true ? SemanticsFlags.IsExpanded : SemanticsFlags.None);
+                | (expanded == true ? SemanticsFlags.IsExpanded : SemanticsFlags.None)
+                | (@checked.HasValue ? SemanticsFlags.HasCheckedState : SemanticsFlags.None)
+                | (@checked == true ? SemanticsFlags.IsChecked : SemanticsFlags.None);
         OnTap = onTap;
         OnDismiss = onDismiss;
         LiveRegion = liveRegion;
@@ -47,9 +53,12 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         ScopesRoute = scopesRoute;
         NamesRoute = namesRoute;
         Expanded = expanded;
+        Checked = @checked;
     }
 
     public string? Label { get; }
+
+    public string? Hint { get; }
 
     public SemanticsFlags Flags { get; }
 
@@ -71,10 +80,14 @@ public sealed class Semantics : SingleChildRenderObjectWidget
 
     public bool? Expanded { get; }
 
+    public bool? Checked { get; }
+
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderSemanticsAnnotations(
             label: Label,
+            hint: Hint,
+            role: Role,
             flags: Flags,
             onTap: OnTap,
             onDismiss: OnDismiss,
@@ -87,6 +100,8 @@ public sealed class Semantics : SingleChildRenderObjectWidget
     {
         var semantics = (RenderSemanticsAnnotations)renderObject;
         semantics.Label = Label;
+        semantics.Hint = Hint;
+        semantics.Role = Role;
         semantics.Flags = Flags;
         semantics.OnTap = OnTap;
         semantics.OnDismiss = OnDismiss;
@@ -99,7 +114,7 @@ public sealed class Semantics : SingleChildRenderObjectWidget
     {
         SemanticsRole.Dialog => SemanticsFlags.IsDialog,
         SemanticsRole.AlertDialog => SemanticsFlags.IsAlertDialog,
-        SemanticsRole.MenuItem => SemanticsFlags.IsButton,
+        SemanticsRole.MenuItem or SemanticsRole.MenuItemCheckbox => SemanticsFlags.IsButton,
         _ => SemanticsFlags.None,
     };
 }

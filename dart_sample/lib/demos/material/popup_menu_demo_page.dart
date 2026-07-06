@@ -11,6 +11,7 @@ class _PopupMenuDemoPageState extends State<PopupMenuDemoPage> {
   bool _enabled = true;
   bool _under = false;
   bool _useTheme = false;
+  bool _keepFavorite = true;
   String _selected = 'copy';
   String _status = 'idle';
 
@@ -49,12 +50,9 @@ class _PopupMenuDemoPageState extends State<PopupMenuDemoPage> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: 14,
       children: <Widget>[
+        const Text('Popup menu entries', style: TextStyle(fontSize: 20)),
         const Text(
-          'PopupMenuButton + PopupMenuItem',
-          style: TextStyle(fontSize: 20),
-        ),
-        const Text(
-          'Anchored menu route with selection, cancellation, disabled items, keyboard navigation, and theme precedence.',
+          'PopupMenuItem, CheckedPopupMenuItem, and PopupMenuDivider with selection, keyboard navigation, and theme precedence.',
           style: TextStyle(fontSize: 14, color: Colors.black54),
         ),
         Wrap(
@@ -85,6 +83,7 @@ class _PopupMenuDemoPageState extends State<PopupMenuDemoPage> {
               initialValue: _selected,
               onOpened: () => setState(() => _status = 'opened'),
               onSelected: (String value) => setState(() {
+                if (value == 'favorite') _keepFavorite = !_keepFavorite;
                 _selected = value;
                 _status = 'selected: $value';
               }),
@@ -100,6 +99,7 @@ class _PopupMenuDemoPageState extends State<PopupMenuDemoPage> {
               itemBuilder: _buildItems,
               initialValue: _selected,
               onSelected: (String value) => setState(() {
+                if (value == 'favorite') _keepFavorite = !_keepFavorite;
                 _selected = value;
                 _status = 'icon selected: $value';
               }),
@@ -112,21 +112,31 @@ class _PopupMenuDemoPageState extends State<PopupMenuDemoPage> {
           ],
         ),
         Text('Selected: $_selected', style: const TextStyle(fontSize: 13)),
+        Text(
+          'Keep favorite: $_keepFavorite',
+          style: const TextStyle(fontSize: 13),
+        ),
         Text('Status: $_status', style: const TextStyle(fontSize: 13)),
       ],
     );
   }
 
   List<PopupMenuEntry<String>> _buildItems(BuildContext context) {
-    return const <PopupMenuEntry<String>>[
-      PopupMenuItem<String>(value: 'copy', child: Text('Copy')),
-      PopupMenuItem<String>(value: 'rename', child: Text('Rename')),
-      PopupMenuItem<String>(
+    return <PopupMenuEntry<String>>[
+      CheckedPopupMenuItem<String>(
+        value: 'favorite',
+        checked: _keepFavorite,
+        child: const Text('Keep favorite'),
+      ),
+      const PopupMenuDivider(indent: 12, endIndent: 12),
+      const PopupMenuItem<String>(value: 'copy', child: Text('Copy')),
+      const PopupMenuItem<String>(value: 'rename', child: Text('Rename')),
+      const PopupMenuItem<String>(
         value: 'archive',
         enabled: false,
         child: Text('Archive (disabled)'),
       ),
-      PopupMenuItem<String>(value: 'delete', child: Text('Delete')),
+      const PopupMenuItem<String>(value: 'delete', child: Text('Delete')),
     ];
   }
 }
