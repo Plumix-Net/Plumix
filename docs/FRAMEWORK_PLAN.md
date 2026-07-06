@@ -603,6 +603,10 @@ Progress update (2026-03-19):
   - matched application metadata/icon/legalese/custom-child composition, M2/M3 action labels, `AboutListTile`, dialog and license route helpers, localized package counts, and root/nearest navigator selection;
   - added lazy `LicenseRegistry`, `LicenseEntry`, `LicenseParagraph`, and line-break parser primitives plus first-package ordering, case-insensitive package sorting, multi-package license bindings, package detail routes, centered/indented paragraph rendering, safe-area gutters, and scrollbars;
   - added focused `MaterialAboutTests` and a mirrored `/about` C#/Dart runtime demo with registered sample licenses.
+- Added paired `RefreshProgressIndicator` + `RefreshIndicator` ports:
+  - matched the circular refresh surface, arrowhead growth/rotation, elevation, theme precedence, Material/adaptive/no-spinner constructors, localized semantics, and programmatic `Show()` behavior;
+  - matched the drag/armed/snap/refresh/done/canceled state machine on top of shared Flutter-shaped scroll metrics, drag-delta, axis, and overscroll notifications;
+  - added focused `MaterialRefreshIndicatorTests` and a mirrored `/refresh-indicator` C#/Dart runtime demo.
 - Remaining divergence for floating action button in current framework scope:
   - none documented in current framework scope.
 

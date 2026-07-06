@@ -57,6 +57,7 @@ import 'demos/general/scrollbar_demo_page.dart';
 import 'demos/general/stack_demo_page.dart';
 import 'demos/cupertino/switch_demo_page.dart';
 import 'demos/material/range_slider_demo_page.dart';
+import 'demos/material/refresh_indicator_demo_page.dart';
 import 'demos/material/slider_demo_page.dart';
 import 'demos/general/unconstrained_limited_box_demo_page.dart';
 
@@ -172,6 +173,12 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'CircularProgressIndicator',
       subtitle: 'determinate/indeterminate + M2/M3 + theme/widget probes',
       builder: () => const CircularProgressIndicatorDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.refreshIndicator,
+      title: 'RefreshIndicator + RefreshProgressIndicator',
+      subtitle: 'pull-to-refresh lifecycle + adaptive/no-spinner/theme probes',
+      builder: () => const RefreshIndicatorDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.slider,

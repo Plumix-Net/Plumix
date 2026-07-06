@@ -14,6 +14,7 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 ### Changed
 
+- Added paired Flutter-structured `RefreshProgressIndicator` + `RefreshIndicator` ports with arrowhead/elevation paint, Material/adaptive/no-spinner variants, drag/armed/snap/refresh/done/canceled lifecycle, programmatic show, localized semantics, focused tests, and a mirrored C#/Dart demo. Expanded core scroll notifications with axis/extents, drag deltas, and overscroll data; advanced `Plumix` to `0.1.0-alpha.8` and `Plumix.Material` to `0.1.0-alpha.9`.
 - Added paired Flutter-structured `AboutDialog` + `LicensePage` ports with `AboutListTile`, dialog/license route helpers, localized labels, lazy package license registry/parser, package grouping/detail navigation, focused tests, and a mirrored C#/Dart demo; advanced `Plumix` to `0.1.0-alpha.7` and `Plumix.Material` to `0.1.0-alpha.8`.
 - Breaking: `MaterialDialogs.ShowDialog` now follows Flutter's root-navigator default and exposes `useRootNavigator` for explicit nearest/root selection.
 - Added paired Flutter-structured `ExpandIcon` + `Stepper` ports with animated disclosure, vertical/horizontal step layouts, state icons/error paint, connectors, default/custom controls, disabled interactions, focused tests, and a mirrored C#/Dart demo. Added semantics hints and polygon paint support; advanced `Plumix` to `0.1.0-alpha.6` and `Plumix.Material` to `0.1.0-alpha.7`.

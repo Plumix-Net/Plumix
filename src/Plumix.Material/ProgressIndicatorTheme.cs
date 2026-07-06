@@ -30,7 +30,11 @@ public sealed record ProgressIndicatorThemeData(
     double? CircularStrokeAlign = null,
     BoxConstraints? CircularConstraints = null,
     double? CircularSize = null,
-    StrokeCap? CircularStrokeCap = null);
+    StrokeCap? CircularStrokeCap = null,
+    Color? RefreshBackgroundColor = null,
+    double? StrokeWidth = null,
+    double? StrokeAlign = null,
+    StrokeCap? StrokeCap = null);
 
 public sealed class ProgressIndicatorTheme : InheritedWidget
 {

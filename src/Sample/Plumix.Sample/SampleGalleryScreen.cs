@@ -48,6 +48,7 @@ internal static class SampleRoutes
     public const string Chips = "/chips";
     public const string LinearProgressIndicator = "/linear-progress-indicator";
     public const string CircularProgressIndicator = "/circular-progress-indicator";
+    public const string RefreshIndicator = "/refresh-indicator";
     public const string Slider = "/slider";
     public const string RangeSlider = "/range-slider";
     public const string Card = "/card";
@@ -115,6 +116,7 @@ internal sealed class SampleGalleryScreen : StatelessWidget
         new(SampleRoutes.Chips, "Material chips", "action/choice/filter/input + selection/deletion/theme probes", () => new ChipsDemoPage()),
         new(SampleRoutes.LinearProgressIndicator, "LinearProgressIndicator", "determinate/indeterminate + M2/M3 + theme/widget/RTL probes", () => new LinearProgressIndicatorDemoPage()),
         new(SampleRoutes.CircularProgressIndicator, "CircularProgressIndicator", "determinate/indeterminate + M2/M3 + theme/widget probes", () => new CircularProgressIndicatorDemoPage()),
+        new(SampleRoutes.RefreshIndicator, "RefreshIndicator + RefreshProgressIndicator", "pull-to-refresh lifecycle + adaptive/no-spinner/theme probes", () => new RefreshIndicatorDemoPage()),
         new(SampleRoutes.Slider, "Slider", "continuous/discrete + drag/tap/keyboard + theme/widget colors", () => new SliderDemoPage()),
         new(SampleRoutes.RangeSlider, "RangeSlider", "two-thumb range + continuous/discrete + theme/widget colors", () => new RangeSliderDemoPage()),
         new(SampleRoutes.Card, "Card", "elevated/filled/outlined variants + theme/clip probes", () => new CardDemoPage()),

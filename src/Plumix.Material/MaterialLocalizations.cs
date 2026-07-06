@@ -49,6 +49,8 @@ public abstract class MaterialLocalizations
 
     public virtual string LicensesPageTitle => "Licenses";
 
+    public virtual string RefreshIndicatorSemanticLabel => "Refresh";
+
     public virtual string AboutListTileTitle(string applicationName) => $"About {applicationName}";
 
     public virtual string LicensesPackageDetailText(int licenseCount) =>
