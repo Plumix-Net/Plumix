@@ -54,6 +54,7 @@ public class PlumixHost : Control
         ClipToBounds = true;
         Focusable = true;
         EnsureSchedulerSubscription();
+        HotReloadManager.RegisterHost(this);
     }
 
     internal RenderBox? RootChild => _root.Child;
@@ -307,6 +308,29 @@ public class PlumixHost : Control
     protected void ScheduleVisualUpdate()
     {
         Scheduler.ScheduleFrame();
+    }
+
+    /// Cause the widget and render trees hosted by this control to be fully
+    /// rebuilt, laid out, and repainted, so that the effects of a hot reload
+    /// can be seen.
+    ///
+    /// This is expensive and should not be called except during development.
+    ///
+    /// See also:
+    ///
+    ///  * [HotReloadManager], which invokes this for all live hosts after the
+    ///    runtime applies .NET Hot Reload deltas.
+    public void ReassembleApplication()
+    {
+        PerformReassemble();
+        ScheduleVisualUpdate();
+    }
+
+    /// This method is called by [ReassembleApplication] to actually cause the
+    /// application to reassemble, e.g. after a hot reload.
+    protected virtual void PerformReassemble()
+    {
+        _root.Reassemble();
     }
 
     private void HandleSchedulerDrawFrame(TimeSpan timestamp)
@@ -716,6 +740,13 @@ public class PlumixHost : Control
     {
         return (e.KeyModifiers.HasFlag(KeyModifiers.Control) || e.KeyModifiers.HasFlag(KeyModifiers.Meta))
                && e.Key == Key.V;
+    }
+
+    private static bool IsReassembleShortcut(KeyEventArgs e)
+    {
+        return (e.KeyModifiers.HasFlag(KeyModifiers.Control) || e.KeyModifiers.HasFlag(KeyModifiers.Meta))
+               && e.KeyModifiers.HasFlag(KeyModifiers.Shift)
+               && e.Key == Key.R;
     }
 
     private static bool IsCopyOrCutShortcut(KeyEventArgs e)
