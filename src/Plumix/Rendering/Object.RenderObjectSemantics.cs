@@ -700,6 +700,7 @@ internal sealed class RenderObjectSemantics
         var configuration = new SemanticsConfiguration
         {
             Label = node.Label,
+            Hint = node.Hint,
             Role = node.Role,
             Flags = node.Flags,
             Actions = node.Actions
@@ -730,6 +731,7 @@ internal sealed class RenderObjectSemantics
     {
         node.Rect = rect;
         node.Label = configuration.Label;
+        node.Hint = configuration.Hint;
         node.Role = configuration.Role;
         node.Flags = configuration.Flags;
         node.Actions = configuration.Actions;

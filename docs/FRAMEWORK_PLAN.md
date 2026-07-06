@@ -8,7 +8,7 @@ Use this block as the fastest machine-readable status summary.
 
 ```yaml
 framework_plan_version: 1
-last_updated: 2026-07-05
+last_updated: 2026-07-06
 north_star: "Flutter-like widget/rendering framework in C# with Avalonia as host infrastructure."
 current_phase: "M4 material library rewrite (theme/scaffold/material controls) in progress."
 status:
@@ -595,6 +595,10 @@ Progress update (2026-03-19):
   - matched controlled and nullable selection, disabled/hint fallback states, `selectedItemBuilder`, dense/expanded sizing, custom icon/style/padding/underline, `DropdownButtonHideUnderline`, and aligned legacy `ButtonTheme` behavior;
   - added Flutter-shaped positioned dropdown routes with selected-item alignment, fixed/variable item measurement, max-height scrolling, custom width/color/radius/elevation, barrier policy, staged 300ms reveal, item callbacks, keyboard traversal, and expanded/menu semantics;
   - added source-required core `IndexedStack`, focused `MaterialDropdownTests`, and a mirrored `/dropdown` C#/Dart runtime demo.
+- Added paired `ExpandIcon` + `Stepper` ports:
+  - matched expand/collapse rotation, localized semantic hints, callback contract, icon colors, and source-accurate integration with `ExpansionPanelList`;
+  - matched vertical/horizontal step composition, controlled current step, indexed/editing/complete/disabled/error states, connector/icon sizing and styling, default/custom controls, retained horizontal panel state, clipping, elevation, and RTL-aware vertical geometry;
+  - added focused `MaterialStepperTests`, source-required semantics-hint/polygon-paint plumbing, and a mirrored `/stepper` C#/Dart runtime demo.
 - Remaining divergence for floating action button in current framework scope:
   - none documented in current framework scope.
 

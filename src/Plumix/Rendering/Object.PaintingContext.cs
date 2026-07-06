@@ -131,6 +131,26 @@ public sealed class PaintingContext
         });
     }
 
+    public void DrawPolygon(IBrush brush, IPen? pen, IReadOnlyList<Point> points)
+    {
+        if (points.Count < 3) return;
+        var pictureLayer = EnsurePictureLayer();
+        pictureLayer.AddDrawCommand((drawingContext, sceneOffset) =>
+        {
+            var geometry = new StreamGeometry();
+            using (var geometryContext = geometry.Open())
+            {
+                geometryContext.BeginFigure(points[0] + sceneOffset, isFilled: true);
+                for (var index = 1; index < points.Count; index++)
+                {
+                    geometryContext.LineTo(points[index] + sceneOffset);
+                }
+                geometryContext.EndFigure(isClosed: true);
+            }
+            drawingContext.DrawGeometry(brush, pen, geometry);
+        });
+    }
+
     public void DrawTextLayout(TextLayout layout, Point point)
     {
         var pictureLayer = EnsurePictureLayer();

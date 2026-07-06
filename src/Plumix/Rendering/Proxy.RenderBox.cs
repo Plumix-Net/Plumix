@@ -1855,6 +1855,7 @@ public sealed class RenderPointerListener : RenderProxyBox
 public sealed class RenderSemanticsAnnotations : RenderProxyBox
 {
     private string? _label;
+    private string? _hint;
     private SemanticsRole _role;
     private SemanticsFlags _flags;
     private Action? _onTap;
@@ -1865,6 +1866,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
 
     public RenderSemanticsAnnotations(
         string? label = null,
+        string? hint = null,
         SemanticsRole role = SemanticsRole.None,
         SemanticsFlags flags = SemanticsFlags.None,
         Action? onTap = null,
@@ -1875,6 +1877,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         RenderBox? child = null)
     {
         _label = label;
+        _hint = hint;
         _role = role;
         _flags = flags;
         _onTap = onTap;
@@ -1896,6 +1899,17 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
             }
 
             _label = value;
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
+    public string? Hint
+    {
+        get => _hint;
+        set
+        {
+            if (_hint == value) return;
+            _hint = value;
             MarkNeedsSemanticsUpdate();
         }
     }
@@ -1996,6 +2010,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
     protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
     {
         if (string.IsNullOrWhiteSpace(_label)
+            && string.IsNullOrWhiteSpace(_hint)
             && _role == SemanticsRole.None
             && _flags == SemanticsFlags.None
             && _onTap is null
@@ -2018,6 +2033,12 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         if (!string.IsNullOrWhiteSpace(_label))
         {
             configuration.Label = _label;
+        }
+
+
+        if (!string.IsNullOrWhiteSpace(_hint))
+        {
+            configuration.Hint = _hint;
         }
 
         configuration.Flags |= _flags;

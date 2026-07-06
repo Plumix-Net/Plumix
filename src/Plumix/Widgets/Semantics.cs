@@ -20,6 +20,7 @@ public sealed class Semantics : SingleChildRenderObjectWidget
     public Semantics(
         Widget? child = null,
         string? label = null,
+        string? hint = null,
         SemanticsFlags flags = SemanticsFlags.None,
         Action? onTap = null,
         Action? onDismiss = null,
@@ -34,6 +35,7 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         Key? key = null) : base(child, key)
     {
         Label = label;
+        Hint = hint;
         Flags = flags
                 | RoleFlags(role)
                 | (scopesRoute ? SemanticsFlags.ScopesRoute : SemanticsFlags.None)
@@ -55,6 +57,8 @@ public sealed class Semantics : SingleChildRenderObjectWidget
     }
 
     public string? Label { get; }
+
+    public string? Hint { get; }
 
     public SemanticsFlags Flags { get; }
 
@@ -82,6 +86,7 @@ public sealed class Semantics : SingleChildRenderObjectWidget
     {
         return new RenderSemanticsAnnotations(
             label: Label,
+            hint: Hint,
             role: Role,
             flags: Flags,
             onTap: OnTap,
@@ -95,6 +100,7 @@ public sealed class Semantics : SingleChildRenderObjectWidget
     {
         var semantics = (RenderSemanticsAnnotations)renderObject;
         semantics.Label = Label;
+        semantics.Hint = Hint;
         semantics.Role = Role;
         semantics.Flags = Flags;
         semantics.OnTap = OnTap;

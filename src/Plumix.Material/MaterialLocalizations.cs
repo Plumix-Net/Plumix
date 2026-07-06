@@ -35,6 +35,14 @@ public abstract class MaterialLocalizations
 
     public virtual string MenuDismissLabel => "Dismiss menu";
 
+    public virtual string ExpandedIconTapHint => "Collapse";
+
+    public virtual string CollapsedIconTapHint => "Expand";
+
+    public virtual string ContinueButtonLabel => "Continue";
+
+    public virtual string CancelButtonLabel => "Cancel";
+
     public static MaterialLocalizations Of(BuildContext context)
     {
         return MaterialLocalizationsScope.Of(context);
