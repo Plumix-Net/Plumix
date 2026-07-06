@@ -43,6 +43,7 @@ class SampleRoutes {
       '/circular-progress-indicator';
   static const String refreshIndicator = '/refresh-indicator';
   static const String barControls = '/bar-controls';
+  static const String dataTable = '/data-table';
   static const String slider = '/slider';
   static const String rangeSlider = '/range-slider';
   static const String card = '/card';

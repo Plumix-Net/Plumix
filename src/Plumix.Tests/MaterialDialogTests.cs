@@ -181,7 +181,7 @@ public sealed class MaterialDialogTests : IDisposable
                 actions: [new TextButton(new Text("DONE"), () => { })])));
         harness.Pump(new Size(420, 240));
 
-        Assert.Single(FindDescendants<RenderViewport>(harness.RenderView));
+        Assert.Single(FindDescendants<RenderSingleChildViewport>(harness.RenderView));
         var overflow = Assert.Single(FindDescendants<RenderOverflowBar>(harness.RenderView));
         Assert.Equal(1, overflow.ChildCount);
         Assert.NotNull(FindParagraph(harness.RenderView, "DONE"));
@@ -236,7 +236,7 @@ public sealed class MaterialDialogTests : IDisposable
         var semantics = harness.PumpAndGetSemantics(new Size(600, 320));
 
         Assert.Single(FindDescendants<RenderIntrinsicWidth>(harness.RenderView));
-        Assert.Single(FindDescendants<RenderViewport>(harness.RenderView));
+        Assert.Single(FindDescendants<RenderSingleChildViewport>(harness.RenderView));
         var listBody = Assert.Single(FindDescendants<RenderListBody>(harness.RenderView));
         Assert.Equal(AxisDirection.Down, listBody.AxisDirection);
         Assert.Equal(2, listBody.ChildCount);

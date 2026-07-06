@@ -105,6 +105,17 @@ public class PlumixHost : Control
             return;
         }
 
+        if (HotReloadManager.IsManualReassembleAvailable
+            && e.Key == Key.R
+            && e.KeyModifiers.HasFlag(KeyModifiers.Shift)
+            && (e.KeyModifiers.HasFlag(KeyModifiers.Control) || e.KeyModifiers.HasFlag(KeyModifiers.Meta))
+            && !e.KeyModifiers.HasFlag(KeyModifiers.Alt))
+        {
+            e.Handled = true;
+            HotReloadManager.ReassembleApplication();
+            return;
+        }
+
         var keyEvent = new KeyEvent(
             key: e.Key.ToString(),
             isDown: true,

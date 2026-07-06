@@ -9,6 +9,7 @@ import 'demos/material/action_buttons_demo_page.dart';
 import 'demos/material/badge_tooltip_demo_page.dart';
 import 'demos/material/banner_demo_page.dart';
 import 'demos/material/bar_controls_demo_page.dart';
+import 'demos/material/data_table_demo_page.dart';
 import 'demos/material/snack_bar_demo_page.dart';
 import 'demos/material/dialog_demo_page.dart';
 import 'demos/material/popup_menu_demo_page.dart';
@@ -186,6 +187,12 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'BottomAppBar + ButtonBar',
       subtitle: 'FAB notch + M2/M3 surface + legacy action overflow',
       builder: () => const BarControlsDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.dataTable,
+      title: 'DataTable + PaginatedDataTable',
+      subtitle: 'sorting + selection + themes + source-backed paging',
+      builder: () => const DataTableDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.slider,

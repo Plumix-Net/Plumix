@@ -271,6 +271,7 @@ public sealed record ThemeData
     private ButtonThemeData? _buttonTheme;
     private ButtonBarThemeData? _buttonBarTheme;
     private BottomAppBarThemeData? _bottomAppBarTheme;
+    private DataTableThemeData? _dataTableTheme;
 
     public ThemeData(
         TargetPlatform? platform = null,
@@ -348,6 +349,7 @@ public sealed record ThemeData
         ButtonThemeData? buttonTheme = null,
         ButtonBarThemeData? buttonBarTheme = null,
         BottomAppBarThemeData? bottomAppBarTheme = null,
+        DataTableThemeData? dataTableTheme = null,
         Color? disabledColor = null,
         Color? hintColor = null,
         Color? focusColor = null)
@@ -430,6 +432,7 @@ public sealed record ThemeData
         _buttonTheme = buttonTheme;
         _buttonBarTheme = buttonBarTheme;
         _bottomAppBarTheme = bottomAppBarTheme;
+        _dataTableTheme = dataTableTheme;
         VisualDensity = visualDensity ?? VisualDensity.Standard;
     }
 
@@ -516,6 +519,12 @@ public sealed record ThemeData
     public MaterialTapTargetSize MaterialTapTargetSize { get; init; }
 
     public VisualDensity VisualDensity { get; init; }
+
+    public DataTableThemeData DataTableTheme
+    {
+        get => _dataTableTheme ?? new DataTableThemeData();
+        init => _dataTableTheme = value;
+    }
 
     public ButtonStyle? TextButtonStyle { get; init; }
 

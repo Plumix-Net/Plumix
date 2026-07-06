@@ -51,6 +51,22 @@ public abstract class MaterialLocalizations
 
     public virtual string RefreshIndicatorSemanticLabel => "Refresh";
 
+    public virtual string RowsPerPageTitle => "Rows per page:";
+
+    public virtual string FirstPageTooltip => "First page";
+
+    public virtual string PreviousPageTooltip => "Previous page";
+
+    public virtual string NextPageTooltip => "Next page";
+
+    public virtual string LastPageTooltip => "Last page";
+
+    public virtual string SelectedRowCountTitle(int selectedRowCount) =>
+        selectedRowCount == 1 ? "1 item selected" : $"{selectedRowCount} items selected";
+
+    public virtual string PageRowsInfoTitle(int firstRow, int lastRow, int rowCount, bool rowCountIsApproximate) =>
+        $"{firstRow}–{lastRow} of {(rowCountIsApproximate ? "about " : string.Empty)}{rowCount}";
+
     public virtual string AboutListTileTitle(string applicationName) => $"About {applicationName}";
 
     public virtual string LicensesPackageDetailText(int licenseCount) =>

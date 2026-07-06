@@ -20,6 +20,10 @@ public static class Icons
 
     public static IconData ArrowDropDown { get; } = new(0xe098, FontFamily: MaterialIconsFontFamily);
 
+    public static IconData ArrowUpward { get; } = new(0xe5d8, FontFamily: MaterialIconsFontFamily);
+
+    public static IconData ArrowDownward { get; } = new(0xe5db, FontFamily: MaterialIconsFontFamily);
+
     public static IconData Add { get; } = new(0xe047, FontFamily: MaterialIconsFontFamily);
 
     public static IconData Check { get; } = new(0xe156, FontFamily: MaterialIconsFontFamily);
@@ -33,6 +37,14 @@ public static class Icons
     public static IconData Done { get; } = new(0xe1f6, FontFamily: MaterialIconsFontFamily);
 
     public static IconData Edit { get; } = new(0xe3c9, FontFamily: MaterialIconsFontFamily);
+
+    public static IconData FirstPage { get; } = new(0xe5dc, FontFamily: MaterialIconsFontFamily, MatchTextDirection: true);
+
+    public static IconData LastPage { get; } = new(0xe5dd, FontFamily: MaterialIconsFontFamily, MatchTextDirection: true);
+
+    public static IconData ChevronLeft { get; } = new(0xe5cb, FontFamily: MaterialIconsFontFamily, MatchTextDirection: true);
+
+    public static IconData ChevronRight { get; } = new(0xe5cc, FontFamily: MaterialIconsFontFamily, MatchTextDirection: true);
 
     public static IconData ExpandMore { get; } = new(0xe246, FontFamily: MaterialIconsFontFamily);
 

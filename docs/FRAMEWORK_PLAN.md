@@ -612,6 +612,12 @@ Progress update (2026-03-19):
   - matched M2/M3 bottom-app-bar color/elevation/height/padding/surface-tint/shadow defaults, theme/widget precedence, bottom SafeArea, FAB-aware circular notch geometry, clipping, and direction-aware Scaffold placement;
   - matched legacy button-bar theme propagation, padded/constrained layout behavior, main-axis sizing/alignment, RTL ordering, and narrow-width vertical overflow direction/spacing;
   - added shared `NotchedShape`/geometry clip primitives, focused `MaterialBarControlsTests`, and a mirrored `/bar-controls` C#/Dart runtime demo.
+- Added paired `DataTable` + `PaginatedDataTable` ports:
+  - introduced Flutter-shaped `DataColumn`/`DataRow`/`DataCell`, sorting, selectable rows and select-all behavior, numeric alignment, placeholder/edit cells, `DataTableTheme` + `ThemeData` precedence, and divider/decoration/clip wiring;
+  - added source-backed pagination with row caching, approximate counts, loading/blank rows, selected-count headers, rows-per-page selection, first/previous/next/last navigation, and public `PageTo(...)` state control;
+  - added source-required core `Table`/`RenderTable` fixed/intrinsic/flex column negotiation plus full tap/double-tap/down/cancel plumbing through `GestureDetector` and `InkWell`;
+  - replaced the sliver-backed `SingleChildScrollView` shortcut with a Flutter-shaped single-child viewport so nested horizontal table scrollers shrink-wrap finite child height instead of inheriting an unbounded cross axis;
+  - added focused `MaterialDataTableTests` and a mirrored `/data-table` C#/Dart runtime demo.
 - Remaining divergence for floating action button in current framework scope:
   - none documented in current framework scope.
 

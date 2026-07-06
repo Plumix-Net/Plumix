@@ -202,7 +202,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
             box.Decoration.Color == ThemeData.Light.SurfaceContainerColor
             && box.Decoration.EffectiveBorderRadius == BorderRadius.Circular(4)
             && box.Decoration.BoxShadows is not null);
-        var viewport = Assert.Single(FindDescendants<RenderViewport>(harness.RenderView));
+        var viewport = Assert.Single(FindDescendants<RenderSingleChildViewport>(harness.RenderView));
         Assert.True(viewport.Size.Height < 360);
         Assert.NotNull(FindSemantics(semantics, node =>
             node.Label == "Popup menu"
