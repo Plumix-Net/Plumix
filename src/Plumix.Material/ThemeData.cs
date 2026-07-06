@@ -269,6 +269,8 @@ public sealed record ThemeData
     private DialogThemeData? _dialogTheme;
     private PopupMenuThemeData? _popupMenuTheme;
     private ButtonThemeData? _buttonTheme;
+    private ButtonBarThemeData? _buttonBarTheme;
+    private BottomAppBarThemeData? _bottomAppBarTheme;
 
     public ThemeData(
         TargetPlatform? platform = null,
@@ -344,6 +346,8 @@ public sealed record ThemeData
         Color? surfaceContainerHighColor = null,
         PopupMenuThemeData? popupMenuTheme = null,
         ButtonThemeData? buttonTheme = null,
+        ButtonBarThemeData? buttonBarTheme = null,
+        BottomAppBarThemeData? bottomAppBarTheme = null,
         Color? disabledColor = null,
         Color? hintColor = null,
         Color? focusColor = null)
@@ -424,6 +428,8 @@ public sealed record ThemeData
         _dialogTheme = dialogTheme;
         _popupMenuTheme = popupMenuTheme;
         _buttonTheme = buttonTheme;
+        _buttonBarTheme = buttonBarTheme;
+        _bottomAppBarTheme = bottomAppBarTheme;
         VisualDensity = visualDensity ?? VisualDensity.Standard;
     }
 
@@ -705,6 +711,18 @@ public sealed record ThemeData
     {
         get => _buttonTheme ?? new ButtonThemeData();
         init => _buttonTheme = value;
+    }
+
+    public ButtonBarThemeData ButtonBarTheme
+    {
+        get => _buttonBarTheme ?? new ButtonBarThemeData();
+        init => _buttonBarTheme = value;
+    }
+
+    public BottomAppBarThemeData BottomAppBarTheme
+    {
+        get => _bottomAppBarTheme ?? new BottomAppBarThemeData();
+        init => _bottomAppBarTheme = value;
     }
 
     private static Color ApplyOpacity(Color color, double opacity) => Color.FromArgb(

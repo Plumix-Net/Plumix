@@ -8,6 +8,7 @@ import 'demos/material/app_bar_text_styles_demo_page.dart';
 import 'demos/material/action_buttons_demo_page.dart';
 import 'demos/material/badge_tooltip_demo_page.dart';
 import 'demos/material/banner_demo_page.dart';
+import 'demos/material/bar_controls_demo_page.dart';
 import 'demos/material/snack_bar_demo_page.dart';
 import 'demos/material/dialog_demo_page.dart';
 import 'demos/material/popup_menu_demo_page.dart';
@@ -179,6 +180,12 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'RefreshIndicator + RefreshProgressIndicator',
       subtitle: 'pull-to-refresh lifecycle + adaptive/no-spinner/theme probes',
       builder: () => const RefreshIndicatorDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.barControls,
+      title: 'BottomAppBar + ButtonBar',
+      subtitle: 'FAB notch + M2/M3 surface + legacy action overflow',
+      builder: () => const BarControlsDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.slider,

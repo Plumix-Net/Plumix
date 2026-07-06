@@ -53,6 +53,22 @@ public sealed class LayerV2Tests
     }
 
     [Fact]
+    public void PushClipGeometry_CreatesGeometryLayer_WithPictureChild()
+    {
+        var geometry = new RectangleGeometry(new Rect(0, 0, 50, 30));
+
+        var rootLayer = new ContainerLayer();
+        var context = new PaintingContext(rootLayer);
+        context.PushClipGeometry(
+            geometry,
+            clipped => clipped.DrawRectangle(Brushes.Gold, null, new Rect(0, 0, 80, 40)));
+
+        var clipLayer = Assert.IsType<ClipGeometryLayer>(Assert.Single(rootLayer.Children));
+        Assert.Same(geometry, clipLayer.Geometry);
+        Assert.IsType<PictureLayer>(Assert.Single(clipLayer.Children));
+    }
+
+    [Fact]
     public void RenderClipRRect_UpdatesLayerClipRect_WhenSizeChanges()
     {
         var clip = new RenderClipRRect(

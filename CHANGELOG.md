@@ -14,6 +14,7 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 ### Changed
 
+- Added paired Flutter-structured `BottomAppBar` + `ButtonBar` ports with M2/M3 defaults, local/global themes, SafeArea sizing, FAB-aware circular notch geometry/clipping, legacy button-theme propagation, row-to-column overflow, RTL/direction handling, focused tests, and a mirrored C#/Dart demo. Added shared notched-shape and geometry-clip primitives; advanced `Plumix` to `0.1.0-alpha.9` and `Plumix.Material` to `0.1.0-alpha.10`.
 - Added paired Flutter-structured `RefreshProgressIndicator` + `RefreshIndicator` ports with arrowhead/elevation paint, Material/adaptive/no-spinner variants, drag/armed/snap/refresh/done/canceled lifecycle, programmatic show, localized semantics, focused tests, and a mirrored C#/Dart demo. Expanded core scroll notifications with axis/extents, drag deltas, and overscroll data; advanced `Plumix` to `0.1.0-alpha.8` and `Plumix.Material` to `0.1.0-alpha.9`.
 - Added paired Flutter-structured `AboutDialog` + `LicensePage` ports with `AboutListTile`, dialog/license route helpers, localized labels, lazy package license registry/parser, package grouping/detail navigation, focused tests, and a mirrored C#/Dart demo; advanced `Plumix` to `0.1.0-alpha.7` and `Plumix.Material` to `0.1.0-alpha.8`.
 - Breaking: `MaterialDialogs.ShowDialog` now follows Flutter's root-navigator default and exposes `useRootNavigator` for explicit nearest/root selection.

@@ -1,11 +1,35 @@
+using Avalonia;
 using Plumix.Foundation;
+using Plumix.Rendering;
 using Plumix.Widgets;
 
 namespace Plumix.Material;
 
 // Dart parity source: flutter/packages/flutter/lib/src/material/button_theme.dart (dropdown subset)
 
-public sealed record ButtonThemeData(bool AlignedDropdown = false);
+public enum ButtonTextTheme
+{
+    Normal,
+    Accent,
+    Primary,
+}
+
+public enum ButtonBarLayoutBehavior
+{
+    Padded,
+    Constrained,
+}
+
+public sealed record ButtonThemeData(
+    bool AlignedDropdown = false,
+    ButtonTextTheme TextTheme = ButtonTextTheme.Normal,
+    double MinWidth = 88.0,
+    double Height = 36.0,
+    Thickness? Padding = null,
+    ButtonBarLayoutBehavior LayoutBehavior = ButtonBarLayoutBehavior.Padded)
+{
+    public Thickness EffectivePadding => Padding ?? new Thickness(16, 8);
+}
 
 public sealed class ButtonTheme : InheritedWidget
 {

@@ -42,6 +42,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Legacy Material dropdown controls enter through `Dropdown.cs`; selected-size behavior uses core `IndexedStack`, and positioned route/scroll/focus behavior is covered by `MaterialDropdownTests.cs`.
 - Disclosure/progress controls enter through `ExpandIcon.cs` + `Stepper.cs`; integration with expansion controls and vertical/horizontal step behavior is covered by `MaterialStepperTests.cs`.
 - About/license controls enter through `About.cs` plus core `Foundation/Licenses.cs`; dialog/list/detail navigation and registry parsing are covered by `MaterialAboutTests.cs`.
+- Bottom/action bar controls enter through `BottomAppBar.cs` + `BottomAppBarTheme.cs` and `ButtonBar.cs` + `ButtonBarTheme.cs`; Scaffold/FAB geometry and overflow behavior are covered by `MaterialBarControlsTests.cs`.
 - Primary Tests:
   - `src/Plumix.Tests/MaterialScaffoldTests.cs`
   - `src/Plumix.Tests/MaterialButtonsTests.cs`

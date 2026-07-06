@@ -607,6 +607,10 @@ Progress update (2026-03-19):
   - matched the circular refresh surface, arrowhead growth/rotation, elevation, theme precedence, Material/adaptive/no-spinner constructors, localized semantics, and programmatic `Show()` behavior;
   - matched the drag/armed/snap/refresh/done/canceled state machine on top of shared Flutter-shaped scroll metrics, drag-delta, axis, and overscroll notifications;
   - added focused `MaterialRefreshIndicatorTests` and a mirrored `/refresh-indicator` C#/Dart runtime demo.
+- Added paired `BottomAppBar` + `ButtonBar` ports:
+  - matched M2/M3 bottom-app-bar color/elevation/height/padding/surface-tint/shadow defaults, theme/widget precedence, bottom SafeArea, FAB-aware circular notch geometry, clipping, and direction-aware Scaffold placement;
+  - matched legacy button-bar theme propagation, padded/constrained layout behavior, main-axis sizing/alignment, RTL ordering, and narrow-width vertical overflow direction/spacing;
+  - added shared `NotchedShape`/geometry clip primitives, focused `MaterialBarControlsTests`, and a mirrored `/bar-controls` C#/Dart runtime demo.
 - Remaining divergence for floating action button in current framework scope:
   - none documented in current framework scope.
 
