@@ -819,7 +819,8 @@ public static class MaterialDialogs
         bool useSafeArea = true,
         RouteSettings? routeSettings = null,
         bool fullscreenDialog = false,
-        TimeSpan? transitionDuration = null)
+        TimeSpan? transitionDuration = null,
+        bool useRootNavigator = true)
     {
         var route = new DialogRoute<T>(
             context,
@@ -831,7 +832,7 @@ public static class MaterialDialogs
             settings: routeSettings,
             fullscreenDialog: fullscreenDialog,
             transitionDuration: transitionDuration);
-        Navigator.Of(context).Push(route);
+        Navigator.Of(context, rootNavigator: useRootNavigator).Push(route);
         return route.Completed;
     }
 }

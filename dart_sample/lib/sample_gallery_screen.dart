@@ -40,6 +40,7 @@ import 'demos/material/list_tile_controls_demo_page.dart';
 import 'demos/material/radio_expansion_tile_demo_page.dart';
 import 'demos/material/expansion_panel_demo_page.dart';
 import 'demos/material/stepper_demo_page.dart';
+import 'demos/material/about_demo_page.dart';
 import 'demos/material/material_buttons_demo_page.dart';
 import 'demos/material/navigation_surfaces_demo_page.dart';
 import 'demos/material/navigation_drawer_demo_page.dart';
@@ -226,6 +227,12 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'ExpandIcon + Stepper',
       subtitle: 'disclosure animation + vertical/horizontal step progress',
       builder: () => const StepperDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.about,
+      title: 'AboutDialog + LicensePage',
+      subtitle: 'metadata dialog + registry/package license navigation',
+      builder: () => const AboutDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.floatingActionButton,

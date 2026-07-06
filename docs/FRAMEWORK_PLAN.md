@@ -599,6 +599,10 @@ Progress update (2026-03-19):
   - matched expand/collapse rotation, localized semantic hints, callback contract, icon colors, and source-accurate integration with `ExpansionPanelList`;
   - matched vertical/horizontal step composition, controlled current step, indexed/editing/complete/disabled/error states, connector/icon sizing and styling, default/custom controls, retained horizontal panel state, clipping, elevation, and RTL-aware vertical geometry;
   - added focused `MaterialStepperTests`, source-required semantics-hint/polygon-paint plumbing, and a mirrored `/stepper` C#/Dart runtime demo.
+- Added paired `AboutDialog` + `LicensePage` ports:
+  - matched application metadata/icon/legalese/custom-child composition, M2/M3 action labels, `AboutListTile`, dialog and license route helpers, localized package counts, and root/nearest navigator selection;
+  - added lazy `LicenseRegistry`, `LicenseEntry`, `LicenseParagraph`, and line-break parser primitives plus first-package ordering, case-insensitive package sorting, multi-package license bindings, package detail routes, centered/indented paragraph rendering, safe-area gutters, and scrollbars;
+  - added focused `MaterialAboutTests` and a mirrored `/about` C#/Dart runtime demo with registered sample licenses.
 - Remaining divergence for floating action button in current framework scope:
   - none documented in current framework scope.
 

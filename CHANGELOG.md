@@ -14,6 +14,8 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 ### Changed
 
+- Added paired Flutter-structured `AboutDialog` + `LicensePage` ports with `AboutListTile`, dialog/license route helpers, localized labels, lazy package license registry/parser, package grouping/detail navigation, focused tests, and a mirrored C#/Dart demo; advanced `Plumix` to `0.1.0-alpha.7` and `Plumix.Material` to `0.1.0-alpha.8`.
+- Breaking: `MaterialDialogs.ShowDialog` now follows Flutter's root-navigator default and exposes `useRootNavigator` for explicit nearest/root selection.
 - Added paired Flutter-structured `ExpandIcon` + `Stepper` ports with animated disclosure, vertical/horizontal step layouts, state icons/error paint, connectors, default/custom controls, disabled interactions, focused tests, and a mirrored C#/Dart demo. Added semantics hints and polygon paint support; advanced `Plumix` to `0.1.0-alpha.6` and `Plumix.Material` to `0.1.0-alpha.7`.
 - Added paired Flutter-structured `DropdownButton<T>` + `DropdownMenuItem<T>` ports with controlled/null/disabled states, hints, selected builders, dense/expanded sizing, underline policy, positioned scroll routes, staged animation, keyboard/focus/semantics, focused tests, and mirrored C#/Dart demo coverage. Added source-required `IndexedStack` and dropdown `ButtonTheme` support; advanced `Plumix`/`Plumix.Material` to `0.1.0-alpha.6`.
 - Added paired Flutter-structured `CheckedPopupMenuItem<T>` + `PopupMenuDivider` ports with checkmark fade, selected-state typography, checkbox-role semantics, divider geometry/theming, mixed-entry keyboard traversal, focused tests, and mirrored C#/Dart demo coverage. Expanded semantics-role propagation and advanced `Plumix`/`Plumix.Material` to `0.1.0-alpha.5`.

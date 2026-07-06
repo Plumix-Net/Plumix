@@ -41,6 +41,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Popup-menu controls (`PopupMenuButton`, item/checked/divider entries) enter through `PopupMenu.cs` + `PopupMenuTheme.cs`; anchor geometry and route lifecycle also touch `Widgets/Navigation.cs`/`Widgets/Scroll.cs` and are covered by `MaterialPopupMenuTests.cs`.
 - Legacy Material dropdown controls enter through `Dropdown.cs`; selected-size behavior uses core `IndexedStack`, and positioned route/scroll/focus behavior is covered by `MaterialDropdownTests.cs`.
 - Disclosure/progress controls enter through `ExpandIcon.cs` + `Stepper.cs`; integration with expansion controls and vertical/horizontal step behavior is covered by `MaterialStepperTests.cs`.
+- About/license controls enter through `About.cs` plus core `Foundation/Licenses.cs`; dialog/list/detail navigation and registry parsing are covered by `MaterialAboutTests.cs`.
 - Primary Tests:
   - `src/Plumix.Tests/MaterialScaffoldTests.cs`
   - `src/Plumix.Tests/MaterialButtonsTests.cs`

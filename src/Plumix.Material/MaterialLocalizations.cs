@@ -43,6 +43,17 @@ public abstract class MaterialLocalizations
 
     public virtual string CancelButtonLabel => "Cancel";
 
+    public virtual string ViewLicensesButtonLabel => "View licenses";
+
+    public virtual string CloseButtonLabel => "Close";
+
+    public virtual string LicensesPageTitle => "Licenses";
+
+    public virtual string AboutListTileTitle(string applicationName) => $"About {applicationName}";
+
+    public virtual string LicensesPackageDetailText(int licenseCount) =>
+        licenseCount == 1 ? "1 license" : $"{licenseCount} licenses";
+
     public static MaterialLocalizations Of(BuildContext context)
     {
         return MaterialLocalizationsScope.Of(context);
