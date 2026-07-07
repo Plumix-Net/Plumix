@@ -352,7 +352,10 @@ public sealed record ThemeData
         DataTableThemeData? dataTableTheme = null,
         Color? disabledColor = null,
         Color? hintColor = null,
-        Color? focusColor = null)
+        Color? focusColor = null,
+        Color? hoverColor = null,
+        Color? highlightColor = null,
+        Color? splashColor = null)
     {
         Platform = platform ?? ResolveDefaultPlatform();
         Brightness = brightness ?? Brightness.Light;
@@ -393,6 +396,15 @@ public sealed record ThemeData
         DisabledColor = disabledColor ?? ApplyOpacity(OnSurfaceColor, 0.38);
         HintColor = hintColor ?? ApplyOpacity(OnSurfaceColor, 0.60);
         FocusColor = focusColor ?? ApplyOpacity(OnSurfaceColor, 0.12);
+        HoverColor = hoverColor ?? ApplyOpacity(
+            Brightness == Brightness.Dark ? Colors.White : Colors.Black,
+            0.04);
+        HighlightColor = highlightColor ?? (Brightness == Brightness.Dark
+            ? Color.FromArgb(0x40, 0xCC, 0xCC, 0xCC)
+            : Color.FromArgb(0x66, 0xBC, 0xBC, 0xBC));
+        SplashColor = splashColor ?? (Brightness == Brightness.Dark
+            ? Color.FromArgb(0x40, 0xCC, 0xCC, 0xCC)
+            : Color.FromArgb(0x66, 0xC8, 0xC8, 0xC8));
         MaterialTapTargetSize = materialTapTargetSize ?? MaterialTapTargetSize.Padded;
         TextButtonStyle = textButtonStyle;
         ElevatedButtonStyle = elevatedButtonStyle;
@@ -515,6 +527,12 @@ public sealed record ThemeData
     public Color HintColor { get; init; }
 
     public Color FocusColor { get; init; }
+
+    public Color HoverColor { get; init; }
+
+    public Color HighlightColor { get; init; }
+
+    public Color SplashColor { get; init; }
 
     public MaterialTapTargetSize MaterialTapTargetSize { get; init; }
 

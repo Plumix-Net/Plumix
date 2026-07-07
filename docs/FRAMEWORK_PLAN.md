@@ -8,7 +8,7 @@ Use this block as the fastest machine-readable status summary.
 
 ```yaml
 framework_plan_version: 1
-last_updated: 2026-07-06
+last_updated: 2026-07-07
 north_star: "Flutter-like widget/rendering framework in C# with Avalonia as host infrastructure."
 current_phase: "M4 material library rewrite (theme/scaffold/material controls) in progress."
 status:
@@ -618,6 +618,10 @@ Progress update (2026-03-19):
   - added source-required core `Table`/`RenderTable` fixed/intrinsic/flex column negotiation plus full tap/double-tap/down/cancel plumbing through `GestureDetector` and `InkWell`;
   - replaced the sliver-backed `SingleChildScrollView` shortcut with a Flutter-shaped single-child viewport so nested horizontal table scrollers shrink-wrap finite child height instead of inheriting an unbounded cross axis;
   - added focused `MaterialDataTableTests` and a mirrored `/data-table` C#/Dart runtime demo.
+- Added paired legacy `MaterialButton` + `RawMaterialButton` ports:
+  - matched Flutter constructor/default surfaces, `MaterialButton -> RawMaterialButton` composition, `ButtonThemeData` geometry/color resolution, disabled and long-press-only enablement, focus/hover/pressed elevation priority, density-adjusted padding/constraints, tap targets, highlight callbacks, and text/icon styling;
+  - extended the shared button core only for source-required highlight notification and long-press-only interaction behavior, preserving the framework-owned ink/focus/semantics pipeline;
+  - added focused `MaterialLegacyButtonTests` and mirrored runtime probes in the existing C#/Dart Material buttons demo.
 - Remaining divergence for floating action button in current framework scope:
   - none documented in current framework scope.
 

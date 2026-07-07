@@ -19,6 +19,8 @@ class _MaterialButtonsDemoPageState extends State<MaterialButtonsDemoPage> {
   int _iconButtonTaps = 0;
   int _filledIconButtonTaps = 0;
   int _outlinedIconButtonTaps = 0;
+  int _materialButtonTaps = 0;
+  int _rawMaterialButtonTaps = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +54,7 @@ class _MaterialButtonsDemoPageState extends State<MaterialButtonsDemoPage> {
           ],
         ),
         Text(
-          'enabled=$_enabled, text=$_textButtonTaps, elevated=$_elevatedButtonTaps, outlined=$_outlinedButtonTaps, filled=$_filledButtonTaps, tonal=$_filledTonalButtonTaps, icon=$_iconButtonTaps, filledIcon=$_filledIconButtonTaps, outlinedIcon=$_outlinedIconButtonTaps, iconSelected=$_iconButtonSelected',
+          'enabled=$_enabled, text=$_textButtonTaps, elevated=$_elevatedButtonTaps, outlined=$_outlinedButtonTaps, filled=$_filledButtonTaps, tonal=$_filledTonalButtonTaps, material=$_materialButtonTaps, raw=$_rawMaterialButtonTaps, icon=$_iconButtonTaps, filledIcon=$_filledIconButtonTaps, outlinedIcon=$_outlinedIconButtonTaps, iconSelected=$_iconButtonSelected',
           style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
         ),
         SizedBox(
@@ -89,6 +91,31 @@ class _MaterialButtonsDemoPageState extends State<MaterialButtonsDemoPage> {
             onPressed: _enabled ? _onFilledTonalButtonTap : null,
             child: Text('FilledButton.tonal taps: $_filledTonalButtonTaps'),
           ),
+        ),
+        Row(
+          spacing: 8,
+          children: <Widget>[
+            Expanded(
+              child: MaterialButton(
+                onPressed: _enabled ? _onMaterialButtonTap : null,
+                color: const Color(0xFFE0E0E0),
+                child: Text('Material: $_materialButtonTaps'),
+              ),
+            ),
+            Expanded(
+              child: RawMaterialButton(
+                onPressed: _enabled ? _onRawMaterialButtonTap : null,
+                fillColor: const Color(0xFFDDEBF7),
+                hoverColor: const Color(0x1F005E7A),
+                highlightColor: const Color(0x33005E7A),
+                splashColor: const Color(0x33005E7A),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text('Raw: $_rawMaterialButtonTaps'),
+              ),
+            ),
+          ],
         ),
         Row(
           spacing: 8,
@@ -213,6 +240,8 @@ class _MaterialButtonsDemoPageState extends State<MaterialButtonsDemoPage> {
       _iconButtonTaps = 0;
       _filledIconButtonTaps = 0;
       _outlinedIconButtonTaps = 0;
+      _materialButtonTaps = 0;
+      _rawMaterialButtonTaps = 0;
       _iconButtonSelected = false;
       _enabled = true;
     });
@@ -245,6 +274,18 @@ class _MaterialButtonsDemoPageState extends State<MaterialButtonsDemoPage> {
   void _onFilledTonalButtonTap() {
     setState(() {
       _filledTonalButtonTaps += 1;
+    });
+  }
+
+  void _onMaterialButtonTap() {
+    setState(() {
+      _materialButtonTaps += 1;
+    });
+  }
+
+  void _onRawMaterialButtonTap() {
+    setState(() {
+      _rawMaterialButtonTaps += 1;
     });
   }
 
