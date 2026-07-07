@@ -1416,11 +1416,43 @@ public sealed class RenderOpacity : RenderProxyBox
 public sealed class RenderTransform : RenderProxyBox
 {
     private Matrix _transform;
+    private Alignment? _alignment;
 
-    public RenderTransform(Matrix transform, RenderBox? child = null)
+    public RenderTransform(Matrix transform, Alignment? alignment, RenderBox? child)
     {
         _transform = transform;
+        _alignment = alignment;
         Child = child;
+    }
+
+    public RenderTransform(Matrix transform, RenderBox? child = null) : this(transform, null, child)
+    {
+    }
+
+    public Alignment? Alignment
+    {
+        get => _alignment;
+        set
+        {
+            if (_alignment == value) return;
+            _alignment = value;
+            MarkNeedsCompositedLayerUpdate();
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
+    public Matrix EffectiveTransform
+    {
+        get
+        {
+            if (!Alignment.HasValue) return Transform;
+            var anchor = new Point(
+                Size.Width * (Alignment.Value.X + 1) / 2.0,
+                Size.Height * (Alignment.Value.Y + 1) / 2.0);
+            return Matrix.CreateTranslation(anchor.X, anchor.Y)
+                   * Transform
+                   * Matrix.CreateTranslation(-anchor.X, -anchor.Y);
+        }
     }
 
     public Matrix Transform
@@ -1450,7 +1482,7 @@ public sealed class RenderTransform : RenderProxyBox
         if (Child != null)
         {
             var childParentData = (BoxParentData)Child.parentData!;
-            visitor(Child, childParentData.offset, Transform);
+            visitor(Child, childParentData.offset, EffectiveTransform);
         }
     }
 
@@ -1463,7 +1495,7 @@ public sealed class RenderTransform : RenderProxyBox
     {
         if (layer is TransformOffsetLayer transformLayer)
         {
-            transformLayer.Transform = Transform;
+            transformLayer.Transform = EffectiveTransform;
         }
     }
 
@@ -1474,7 +1506,7 @@ public sealed class RenderTransform : RenderProxyBox
             return false;
         }
 
-        if (!Transform.TryInvert(out var inverse))
+        if (!EffectiveTransform.TryInvert(out var inverse))
         {
             return false;
         }

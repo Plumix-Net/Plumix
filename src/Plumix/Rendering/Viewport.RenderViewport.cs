@@ -307,7 +307,7 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer
         }
 
         var clipRect = new Rect(offset, Size);
-        ctx.PushClipRect(clipRect, clippedContext => _container.DefaultPaint(clippedContext, offset));
+        ctx.PushClipRect(clipRect, clippedContext => PaintChildrenFirstIsTop(clippedContext, offset));
     }
 
     protected override bool HitTestChildren(BoxHitTestResult result, Point position)
@@ -317,7 +317,33 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer
             return false;
         }
 
-        return _container.DefaultHitTestChildren(result, position);
+        // Flutter viewports use SliverPaintOrder.firstIsTop by default. Since the
+        // first sliver is painted last, hit testing must inspect it first.
+        for (var child = FirstChild; child != null; child = _container.ChildAfter(child))
+        {
+            var parentData = (SliverPhysicalParentData)child.parentData!;
+            if (child.HitTest(result, position - parentData.offset))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void PaintChildrenFirstIsTop(PaintingContext context, Point offset)
+    {
+        // Match RenderViewport's default SliverPaintOrder.firstIsTop. This is
+        // essential for pinned headers: following list slivers may paint into
+        // the header's area, but the leading header must remain above them.
+        for (var child = LastChild; child != null; child = _container.ChildBefore(child))
+        {
+            var parentData = (SliverPhysicalParentData)child.parentData!;
+            if (child.Geometry.PaintExtent > 0)
+            {
+                context.PaintChild(child, parentData.offset + offset);
+            }
+        }
     }
 
     protected override Rect? DescribeApproximatePaintClip(RenderObject? child)

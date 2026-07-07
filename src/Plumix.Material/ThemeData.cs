@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
+using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
 
@@ -52,7 +53,12 @@ public sealed record AppBarThemeData(
     TextStyle? ToolbarTextStyle = null,
     TextStyle? TitleTextStyle = null,
     Thickness? ActionsPadding = null,
-    SystemUiOverlayStyle? SystemOverlayStyle = null);
+    SystemUiOverlayStyle? SystemOverlayStyle = null,
+    double? Elevation = null,
+    double? ScrolledUnderElevation = null,
+    Color? ShadowColor = null,
+    Color? SurfaceTintColor = null,
+    ShapeBorder? Shape = null);
 
 public sealed record MaterialTextTheme
 {
@@ -68,7 +74,8 @@ public sealed record MaterialTextTheme
         TextStyle? labelMedium = null,
         TextStyle? bodySmall = null,
         TextStyle? headlineSmall = null,
-        TextStyle? titleSmall = null)
+        TextStyle? titleSmall = null,
+        TextStyle? headlineMedium = null)
     {
         BodyMedium = bodyMedium ?? DefaultBodyMedium;
         BodyLarge = bodyLarge ?? DefaultBodyLarge;
@@ -79,6 +86,7 @@ public sealed record MaterialTextTheme
         LabelSmall = labelSmall ?? DefaultLabelSmall;
         TitleMedium = titleMedium ?? DefaultTitleMedium;
         HeadlineSmall = headlineSmall ?? DefaultHeadlineSmall;
+        HeadlineMedium = headlineMedium ?? DefaultHeadlineMedium;
         TitleSmall = titleSmall ?? DefaultTitleSmall;
     }
 
@@ -99,6 +107,8 @@ public sealed record MaterialTextTheme
     public TextStyle TitleMedium { get; init; }
 
     public TextStyle HeadlineSmall { get; init; }
+
+    public TextStyle HeadlineMedium { get; init; }
 
     public TextStyle TitleSmall { get; init; }
 
@@ -190,6 +200,15 @@ public sealed record MaterialTextTheme
         FontWeight: FontWeight.Normal,
         FontStyle: FontStyle.Normal,
         Height: 1.33,
+        LetterSpacing: 0.0);
+
+    public static TextStyle DefaultHeadlineMedium { get; } = new(
+        FontFamily: DefaultBodyFontFamily,
+        FontSize: 28,
+        Color: Color.Parse("#FF1D1B20"),
+        FontWeight: FontWeight.Normal,
+        FontStyle: FontStyle.Normal,
+        Height: 1.29,
         LetterSpacing: 0.0);
 
     public static MaterialTextTheme Fallback { get; } = new();
@@ -809,6 +828,7 @@ public sealed record ThemeData
             titleLarge: MaterialTextTheme.DefaultTitleLarge.CopyWith(color: Colors.White),
             titleMedium: MaterialTextTheme.DefaultTitleMedium.CopyWith(color: Colors.White),
             headlineSmall: MaterialTextTheme.DefaultHeadlineSmall.CopyWith(color: Colors.White),
+            headlineMedium: MaterialTextTheme.DefaultHeadlineMedium.CopyWith(color: Colors.White),
             labelLarge: MaterialTextTheme.DefaultLabelLarge.CopyWith(color: Colors.White),
             labelMedium: MaterialTextTheme.DefaultLabelMedium.CopyWith(color: Colors.White),
             labelSmall: MaterialTextTheme.DefaultLabelSmall.CopyWith(color: Colors.White)),

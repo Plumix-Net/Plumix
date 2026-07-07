@@ -355,7 +355,7 @@ internal sealed class HeroState : State
 
             if (parent is RenderTransform renderTransform)
             {
-                childToParentTransform *= renderTransform.Transform;
+                childToParentTransform *= renderTransform.EffectiveTransform;
             }
 
             transformToRoot = childToParentTransform * transformToRoot;

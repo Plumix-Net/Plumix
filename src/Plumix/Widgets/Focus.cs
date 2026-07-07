@@ -208,7 +208,7 @@ public class FocusNode : ChangeNotifier
 
             if (parent is RenderTransform renderTransform)
             {
-                childToParentTransform *= renderTransform.Transform;
+                childToParentTransform *= renderTransform.EffectiveTransform;
             }
 
             transformToRoot = childToParentTransform * transformToRoot;

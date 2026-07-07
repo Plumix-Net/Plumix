@@ -635,6 +635,10 @@ Progress update (2026-03-19):
   - matched M2/M3 surfaces, `BottomSheetTheme`/widget precedence, drag handles, vertical drag close thresholds, animation styles, constraints, modal barriers, SafeArea, typed route results, and the default non-scroll-controlled `9/16` height cap;
   - integrated static `Scaffold.bottomSheet` plus dynamic persistent-sheet controller, rebuild/close task, entrance/exit motion, and `LocalHistoryEntry` back/AppBar behavior;
   - added focused `MaterialBottomSheetTests` and a mirrored `/bottom-sheet` C#/Dart runtime demo.
+- Added paired `SliverAppBar` + `FlexibleSpaceBar` ports:
+  - added framework-owned `SliverPersistentHeader`/`RenderSliverPersistentHeader` geometry with collapsing, pinned, and floating behavior, plus alignment-aware transform geometry used by scaled flexible titles;
+  - matched the Flutter API/default/composition paths for flexible-space parallax/pin modes, title scaling/fade, leading-aware padding, scroll-under surfaces, primary safe-area extent, regular and M3 medium/large app bars, and AppBarTheme elevation/shape/color precedence;
+  - added focused `MaterialSliverAppBarTests` and a mirrored `/sliver-app-bar` C#/Dart runtime demo. Exact ballistic snap settling and overscroll stretch remain documented against missing shared scroll protocols.
 - Remaining divergence for floating action button in current framework scope:
   - none documented in current framework scope.
 

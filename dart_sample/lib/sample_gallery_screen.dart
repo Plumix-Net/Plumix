@@ -12,6 +12,7 @@ import 'demos/material/bar_controls_demo_page.dart';
 import 'demos/material/data_table_demo_page.dart';
 import 'demos/material/snack_bar_demo_page.dart';
 import 'demos/material/bottom_sheet_demo_page.dart';
+import 'demos/material/sliver_app_bar_demo_page.dart';
 import 'demos/material/dialog_demo_page.dart';
 import 'demos/material/popup_menu_demo_page.dart';
 import 'demos/material/dropdown_demo_page.dart';
@@ -153,6 +154,12 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'BottomSheet + ModalBottomSheet',
       subtitle: 'persistent controller + modal route/drag/theme probes',
       builder: () => const BottomSheetDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.sliverAppBar,
+      title: 'SliverAppBar + FlexibleSpaceBar',
+      subtitle: 'collapse/parallax + pinned/floating/snap + M3 variants',
+      builder: () => const SliverAppBarDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.dialog,
