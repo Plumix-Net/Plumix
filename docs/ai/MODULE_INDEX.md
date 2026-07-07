@@ -38,6 +38,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Legacy Material buttons enter through `MaterialButton.cs` + `ButtonTheme.cs`; shared interaction/rendering remains in `Buttons.cs`, with focused coverage in `MaterialLegacyButtonTests.cs`.
 - Drawer header controls enter through `DrawerHeader.cs`, with geometry and account-details behavior covered in `MaterialDrawerHeaderTests.cs`.
 - Transient message controls enter through `SnackBar.cs` + `SnackBarTheme.cs`, with queue/presentation lifecycle in `ScaffoldMessenger.cs` and coverage in `MaterialSnackBarTests.cs`.
+- Bottom sheets enter through `BottomSheet.cs` + `BottomSheetTheme.cs`; persistent presentation integrates with `Scaffold.cs`, modal presentation with `Widgets/Navigation.cs`, and focused coverage lives in `MaterialBottomSheetTests.cs`.
 - Dialog-family controls (`Dialog`, `AlertDialog`, `SimpleDialog`, `SimpleDialogOption`) enter through `Dialog.cs` + `DialogTheme.cs`; modal stacking/result behavior also touches `Widgets/Navigation.cs` and is covered by `MaterialDialogTests.cs`.
 - Popup-menu controls (`PopupMenuButton`, item/checked/divider entries) enter through `PopupMenu.cs` + `PopupMenuTheme.cs`; anchor geometry and route lifecycle also touch `Widgets/Navigation.cs`/`Widgets/Scroll.cs` and are covered by `MaterialPopupMenuTests.cs`.
 - Legacy Material dropdown controls enter through `Dropdown.cs`; selected-size behavior uses core `IndexedStack`, and positioned route/scroll/focus behavior is covered by `MaterialDropdownTests.cs`.

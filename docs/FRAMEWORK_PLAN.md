@@ -631,6 +631,10 @@ Progress update (2026-03-19):
   - added `Tab`, `TabController`/`DefaultTabController`, `TabBarTheme`, primary/secondary M2/M3 token paths, fill/center/scrollable alignment, automatic selected-tab centering, real-label indicator geometry, linear/elastic motion, divider/custom box-decoration paint, hover/focus/tap callbacks, and localized tab semantics;
   - added source-required core `PageView`/`PageController`, preferred-size and horizontal text-fade primitives plus `AppBar.bottom`, with tap and swipe changes sharing fractional controller animation and Flutter-shaped non-adjacent warping;
   - added focused `MaterialTabsTests` and a mirrored `/tabs` C#/Dart runtime demo covering M2/M3, fill/scrollable, local theme, tap, and swipe paths.
+- Added paired `BottomSheet` + `ModalBottomSheetRoute<T>` ports:
+  - matched M2/M3 surfaces, `BottomSheetTheme`/widget precedence, drag handles, vertical drag close thresholds, animation styles, constraints, modal barriers, SafeArea, typed route results, and the default non-scroll-controlled `9/16` height cap;
+  - integrated static `Scaffold.bottomSheet` plus dynamic persistent-sheet controller, rebuild/close task, entrance/exit motion, and `LocalHistoryEntry` back/AppBar behavior;
+  - added focused `MaterialBottomSheetTests` and a mirrored `/bottom-sheet` C#/Dart runtime demo.
 - Remaining divergence for floating action button in current framework scope:
   - none documented in current framework scope.
 

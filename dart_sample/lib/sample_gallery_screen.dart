@@ -11,6 +11,7 @@ import 'demos/material/banner_demo_page.dart';
 import 'demos/material/bar_controls_demo_page.dart';
 import 'demos/material/data_table_demo_page.dart';
 import 'demos/material/snack_bar_demo_page.dart';
+import 'demos/material/bottom_sheet_demo_page.dart';
 import 'demos/material/dialog_demo_page.dart';
 import 'demos/material/popup_menu_demo_page.dart';
 import 'demos/material/dropdown_demo_page.dart';
@@ -146,6 +147,12 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'SnackBar + SnackBarAction',
       subtitle: 'messenger queue + action/close/overflow probes',
       builder: () => const SnackBarDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.bottomSheet,
+      title: 'BottomSheet + ModalBottomSheet',
+      subtitle: 'persistent controller + modal route/drag/theme probes',
+      builder: () => const BottomSheetDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.dialog,

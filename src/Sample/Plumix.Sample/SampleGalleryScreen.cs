@@ -43,6 +43,7 @@ internal static class SampleRoutes
     public const string SegmentedButtons = "/segmented-buttons";
     public const string Banner = "/banner";
     public const string SnackBar = "/snack-bar";
+    public const string BottomSheet = "/bottom-sheet";
     public const string Dialog = "/dialog";
     public const string PopupMenu = "/popup-menu";
     public const string Dropdown = "/dropdown";
@@ -114,6 +115,7 @@ internal sealed class SampleGalleryScreen : StatelessWidget
         new(SampleRoutes.SegmentedButtons, "ToggleButtons + SegmentedButton", "legacy/M3 segmented selection + themes/states", () => new SegmentedButtonsDemoPage()),
         new(SampleRoutes.Banner, "Banner + MaterialBanner", "diagonal ribbon + persistent actions/theme/overflow probes", () => new BannerDemoPage()),
         new(SampleRoutes.SnackBar, "SnackBar + SnackBarAction", "messenger queue + action/close/overflow probes", () => new SnackBarDemoPage()),
+        new(SampleRoutes.BottomSheet, "BottomSheet + ModalBottomSheet", "persistent controller + modal route/drag/theme probes", () => new BottomSheetDemoPage()),
         new(SampleRoutes.Dialog, "Dialog family", "modal route + alert/simple/result/scrollable/theme probes", () => new DialogDemoPage()),
         new(SampleRoutes.PopupMenu, "PopupMenuButton + PopupMenuItem", "anchor + selection/cancel/keyboard/theme probes", () => new PopupMenuDemoPage()),
         new(SampleRoutes.Dropdown, "DropdownButton + DropdownMenuItem", "selection + hint/disabled/dense/expanded/route probes", () => new DropdownDemoPage()),

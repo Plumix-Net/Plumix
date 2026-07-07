@@ -35,6 +35,7 @@ class SampleRoutes {
   static const String segmentedButtons = '/segmented-buttons';
   static const String banner = '/banner';
   static const String snackBar = '/snack-bar';
+  static const String bottomSheet = '/bottom-sheet';
   static const String dialog = '/dialog';
   static const String popupMenu = '/popup-menu';
   static const String dropdown = '/dropdown';

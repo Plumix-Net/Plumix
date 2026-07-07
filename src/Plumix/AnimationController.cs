@@ -168,6 +168,14 @@ public sealed class AnimationController : IDisposable
         _ticker.Stop();
     }
 
+    internal void SetValue(double value)
+    {
+        var next = Math.Clamp(value, 0, 1);
+        if (Math.Abs(Value - next) <= 0.000001) return;
+        Value = next;
+        Changed?.Invoke();
+    }
+
     private void Start()
     {
         if (IsAnimating) return;
