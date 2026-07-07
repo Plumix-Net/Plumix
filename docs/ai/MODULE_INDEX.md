@@ -45,6 +45,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - About/license controls enter through `About.cs` plus core `Foundation/Licenses.cs`; dialog/list/detail navigation and registry parsing are covered by `MaterialAboutTests.cs`.
 - Bottom/action bar controls enter through `BottomAppBar.cs` + `BottomAppBarTheme.cs` and `ButtonBar.cs` + `ButtonBarTheme.cs`; Scaffold/FAB geometry and overflow behavior are covered by `MaterialBarControlsTests.cs`.
 - Data-table controls enter through `DataTable.cs` + `DataTableTheme.cs` and `PaginatedDataTable.cs`; shared column negotiation lives in core `Widgets/Table.cs` + `Rendering/Table.cs`, with coverage in `MaterialDataTableTests.cs`.
+- Material scrollbars enter through `src/Plumix.Material/Scrollbar.cs` + `ScrollbarTheme.cs`; raw overlay/interaction behavior lives in core `Widgets/Scrollbar.cs`, with adaptive defaults in `src/Plumix.Cupertino/CupertinoScrollbar.cs` and focused coverage in `MaterialScrollbarTests.cs`.
 - Primary Tests:
   - `src/Plumix.Tests/MaterialScaffoldTests.cs`
   - `src/Plumix.Tests/MaterialButtonsTests.cs`
@@ -139,6 +140,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Primary Tests:
   - `src/Plumix.Tests/ScrollPipelineTests.cs`
   - `src/Plumix.Tests/ScrollInfrastructureTests.cs`
+  - `src/Plumix.Tests/MaterialScrollbarTests.cs`
 - Note:
   - `Scroll.cs` and `Sliver.cs` are large. Enter through tests first.
 

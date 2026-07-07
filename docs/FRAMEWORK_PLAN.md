@@ -622,6 +622,11 @@ Progress update (2026-03-19):
   - matched Flutter constructor/default surfaces, `MaterialButton -> RawMaterialButton` composition, `ButtonThemeData` geometry/color resolution, disabled and long-press-only enablement, focus/hover/pressed elevation priority, density-adjusted padding/constraints, tap targets, highlight callbacks, and text/icon styling;
   - extended the shared button core only for source-required highlight notification and long-press-only interaction behavior, preserving the framework-owned ink/focus/semantics pipeline;
   - added focused `MaterialLegacyButtonTests` and mirrored runtime probes in the existing C#/Dart Material buttons demo.
+- Added paired `RawScrollbar` + Material `Scrollbar` ports:
+  - replaced the early row/column scrollbar layout insertion with a Flutter-shaped render overlay that preserves child size and paints vertical/horizontal, reversed, RTL, padded, margin, thumb, track, border, radius, and minimum-length geometry from live scroll metrics;
+  - matched Flutter's mouse-proximity behavior: a faded scrollbar animates back in only inside the expanded 48px scrollbar hover target, while ordinary content hover remains inert;
+  - matched transient fade visibility, forced thumb/track visibility, thumb drag mapping, track page actions, notification filtering, and Material hovered/dragged theme/platform precedence, including Android non-interactive defaults; retained hit-test entries now advance local move/up coordinates so dragging also works through the complete host pointer route;
+  - added the source-required adaptive `CupertinoScrollbar` branch with Cupertino sizing/fade/margins and delayed thumb-drag behavior, focused `MaterialScrollbarTests`, and a mirrored C#/Dart comparison demo.
 - Remaining divergence for floating action button in current framework scope:
   - none documented in current framework scope.
 

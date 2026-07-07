@@ -22,13 +22,30 @@ public class HitTestEntry(RenderObject target)
     }
 }
 
-public sealed class BoxHitTestEntry(RenderBox target, Point localPosition) : HitTestEntry(target)
+public sealed class BoxHitTestEntry : HitTestEntry
 {
-    public Point LocalPosition { get; } = localPosition;
+    private Point _currentLocalPosition;
+
+    public BoxHitTestEntry(RenderBox target, Point localPosition) : base(target)
+    {
+        LocalPosition = localPosition;
+        _currentLocalPosition = localPosition;
+    }
+
+    public Point LocalPosition { get; }
 
     public override PointerEvent TransformEvent(PointerEvent @event)
     {
-        return @event.WithLocalCoordinates(LocalPosition, @event.Delta);
+        if (@event is PointerMoveEvent or PointerUpEvent or PointerCancelEvent)
+        {
+            _currentLocalPosition += new Vector(@event.Delta.X, @event.Delta.Y);
+        }
+        else if (@event is PointerDownEvent)
+        {
+            _currentLocalPosition = LocalPosition;
+        }
+
+        return @event.WithLocalCoordinates(_currentLocalPosition, @event.Delta);
     }
 }
 

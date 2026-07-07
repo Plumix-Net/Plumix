@@ -272,6 +272,7 @@ public sealed record ThemeData
     private ButtonBarThemeData? _buttonBarTheme;
     private BottomAppBarThemeData? _bottomAppBarTheme;
     private DataTableThemeData? _dataTableTheme;
+    private ScrollbarThemeData? _scrollbarTheme;
 
     public ThemeData(
         TargetPlatform? platform = null,
@@ -350,6 +351,7 @@ public sealed record ThemeData
         ButtonBarThemeData? buttonBarTheme = null,
         BottomAppBarThemeData? bottomAppBarTheme = null,
         DataTableThemeData? dataTableTheme = null,
+        ScrollbarThemeData? scrollbarTheme = null,
         Color? disabledColor = null,
         Color? hintColor = null,
         Color? focusColor = null,
@@ -445,6 +447,7 @@ public sealed record ThemeData
         _buttonBarTheme = buttonBarTheme;
         _bottomAppBarTheme = bottomAppBarTheme;
         _dataTableTheme = dataTableTheme;
+        _scrollbarTheme = scrollbarTheme;
         VisualDensity = visualDensity ?? VisualDensity.Standard;
     }
 
@@ -738,6 +741,12 @@ public sealed record ThemeData
     {
         get => _buttonTheme ?? new ButtonThemeData();
         init => _buttonTheme = value;
+    }
+
+    public ScrollbarThemeData ScrollbarTheme
+    {
+        get => _scrollbarTheme ?? new ScrollbarThemeData();
+        init => _scrollbarTheme = value;
     }
 
     public ButtonBarThemeData ButtonBarTheme

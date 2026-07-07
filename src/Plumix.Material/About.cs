@@ -387,7 +387,7 @@ internal sealed class PackageLicensePage : StatelessWidget
             new Card(
                 elevation: 4,
                 margin: default,
-                child: new Plumix.Widgets.Scrollbar(
+                child: new Scrollbar(
                     child: new SingleChildScrollView(
                         padding: padding,
                         child: new Column(
