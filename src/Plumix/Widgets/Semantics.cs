@@ -13,6 +13,9 @@ public enum SemanticsRole
     Menu,
     MenuItem,
     MenuItemCheckbox,
+    TabBar,
+    Tab,
+    TabPanel,
 }
 
 public sealed class Semantics : SingleChildRenderObjectWidget
@@ -32,6 +35,7 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         bool namesRoute = false,
         bool? expanded = null,
         bool? @checked = null,
+        bool? selected = null,
         Key? key = null) : base(child, key)
     {
         Label = label;
@@ -43,7 +47,8 @@ public sealed class Semantics : SingleChildRenderObjectWidget
                 | (expanded.HasValue ? SemanticsFlags.HasExpandedState : SemanticsFlags.None)
                 | (expanded == true ? SemanticsFlags.IsExpanded : SemanticsFlags.None)
                 | (@checked.HasValue ? SemanticsFlags.HasCheckedState : SemanticsFlags.None)
-                | (@checked == true ? SemanticsFlags.IsChecked : SemanticsFlags.None);
+                | (@checked == true ? SemanticsFlags.IsChecked : SemanticsFlags.None)
+                | (selected == true ? SemanticsFlags.IsSelected : SemanticsFlags.None);
         OnTap = onTap;
         OnDismiss = onDismiss;
         LiveRegion = liveRegion;
@@ -54,6 +59,7 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         NamesRoute = namesRoute;
         Expanded = expanded;
         Checked = @checked;
+        Selected = selected;
     }
 
     public string? Label { get; }
@@ -81,6 +87,8 @@ public sealed class Semantics : SingleChildRenderObjectWidget
     public bool? Expanded { get; }
 
     public bool? Checked { get; }
+
+    public bool? Selected { get; }
 
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
@@ -114,7 +122,7 @@ public sealed class Semantics : SingleChildRenderObjectWidget
     {
         SemanticsRole.Dialog => SemanticsFlags.IsDialog,
         SemanticsRole.AlertDialog => SemanticsFlags.IsAlertDialog,
-        SemanticsRole.MenuItem or SemanticsRole.MenuItemCheckbox => SemanticsFlags.IsButton,
+        SemanticsRole.MenuItem or SemanticsRole.MenuItemCheckbox or SemanticsRole.Tab => SemanticsFlags.IsButton,
         _ => SemanticsFlags.None,
     };
 }

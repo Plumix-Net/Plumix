@@ -1179,7 +1179,7 @@ public sealed class ScaffoldState : State
     }
 }
 
-public sealed class AppBar : StatelessWidget
+public sealed class AppBar : StatelessWidget, IPreferredSizeWidget
 {
     public AppBar(
         string? titleText = null,
@@ -1202,6 +1202,7 @@ public sealed class AppBar : StatelessWidget
         Color? backgroundColor = null,
         Color? foregroundColor = null,
         SystemUiOverlayStyle? systemOverlayStyle = null,
+        Widget? bottom = null,
         Key? key = null) : base(key)
     {
         if (toolbarHeight.HasValue && (double.IsNaN(toolbarHeight.Value) || double.IsInfinity(toolbarHeight.Value) || toolbarHeight.Value <= 0))
@@ -1239,6 +1240,7 @@ public sealed class AppBar : StatelessWidget
         BackgroundColor = backgroundColor;
         ForegroundColor = foregroundColor;
         SystemOverlayStyle = systemOverlayStyle;
+        Bottom = bottom;
     }
 
     public string? TitleText { get; }
@@ -1280,6 +1282,12 @@ public sealed class AppBar : StatelessWidget
     public Color? ForegroundColor { get; }
 
     public SystemUiOverlayStyle? SystemOverlayStyle { get; }
+
+    public Widget? Bottom { get; }
+
+    public Size PreferredSize => new(
+        0,
+        (ToolbarHeight ?? 56) + (Bottom is IPreferredSizeWidget preferred ? preferred.PreferredSize.Height : 0));
 
     public override Widget Build(BuildContext context)
     {
@@ -1351,6 +1359,14 @@ public sealed class AppBar : StatelessWidget
                     crossAxisAlignment: CrossAxisAlignment.Center,
                     spacing: 0,
                     children: rowChildren)));
+
+        if (Bottom is not null)
+        {
+            appBarContent = new Column(
+                mainAxisSize: MainAxisSize.Min,
+                crossAxisAlignment: CrossAxisAlignment.Stretch,
+                children: [appBarContent, Bottom]);
+        }
 
         if (Primary && MediaQuery.MaybeOf(context) != null)
         {

@@ -627,6 +627,10 @@ Progress update (2026-03-19):
   - matched Flutter's mouse-proximity behavior: a faded scrollbar animates back in only inside the expanded 48px scrollbar hover target, while ordinary content hover remains inert;
   - matched transient fade visibility, forced thumb/track visibility, thumb drag mapping, track page actions, notification filtering, and Material hovered/dragged theme/platform precedence, including Android non-interactive defaults; retained hit-test entries now advance local move/up coordinates so dragging also works through the complete host pointer route;
   - added the source-required adaptive `CupertinoScrollbar` branch with Cupertino sizing/fade/margins and delayed thumb-drag behavior, focused `MaterialScrollbarTests`, and a mirrored C#/Dart comparison demo.
+- Added paired `TabBar` + `TabBarView` ports:
+  - added `Tab`, `TabController`/`DefaultTabController`, `TabBarTheme`, primary/secondary M2/M3 token paths, fill/center/scrollable alignment, automatic selected-tab centering, real-label indicator geometry, linear/elastic motion, divider/custom box-decoration paint, hover/focus/tap callbacks, and localized tab semantics;
+  - added source-required core `PageView`/`PageController`, preferred-size and horizontal text-fade primitives plus `AppBar.bottom`, with tap and swipe changes sharing fractional controller animation and Flutter-shaped non-adjacent warping;
+  - added focused `MaterialTabsTests` and a mirrored `/tabs` C#/Dart runtime demo covering M2/M3, fill/scrollable, local theme, tap, and swipe paths.
 - Remaining divergence for floating action button in current framework scope:
   - none documented in current framework scope.
 

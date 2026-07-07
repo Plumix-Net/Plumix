@@ -67,7 +67,8 @@ public sealed record MaterialTextTheme
         TextStyle? bodyLarge = null,
         TextStyle? labelMedium = null,
         TextStyle? bodySmall = null,
-        TextStyle? headlineSmall = null)
+        TextStyle? headlineSmall = null,
+        TextStyle? titleSmall = null)
     {
         BodyMedium = bodyMedium ?? DefaultBodyMedium;
         BodyLarge = bodyLarge ?? DefaultBodyLarge;
@@ -78,6 +79,7 @@ public sealed record MaterialTextTheme
         LabelSmall = labelSmall ?? DefaultLabelSmall;
         TitleMedium = titleMedium ?? DefaultTitleMedium;
         HeadlineSmall = headlineSmall ?? DefaultHeadlineSmall;
+        TitleSmall = titleSmall ?? DefaultTitleSmall;
     }
 
     public TextStyle BodyMedium { get; init; }
@@ -97,6 +99,8 @@ public sealed record MaterialTextTheme
     public TextStyle TitleMedium { get; init; }
 
     public TextStyle HeadlineSmall { get; init; }
+
+    public TextStyle TitleSmall { get; init; }
 
     public static TextStyle DefaultBodyMedium { get; } = new(
         FontFamily: DefaultBodyFontFamily,
@@ -135,6 +139,15 @@ public sealed record MaterialTextTheme
         LetterSpacing: 0.0);
 
     public static TextStyle DefaultLabelLarge { get; } = new(
+        FontFamily: DefaultBodyFontFamily,
+        FontSize: 14,
+        Color: Color.Parse("#FF1D1B20"),
+        FontWeight: FontWeight.Medium,
+        FontStyle: FontStyle.Normal,
+        Height: 1.43,
+        LetterSpacing: 0.1);
+
+    public static TextStyle DefaultTitleSmall { get; } = new(
         FontFamily: DefaultBodyFontFamily,
         FontSize: 14,
         Color: Color.Parse("#FF1D1B20"),
@@ -273,6 +286,7 @@ public sealed record ThemeData
     private BottomAppBarThemeData? _bottomAppBarTheme;
     private DataTableThemeData? _dataTableTheme;
     private ScrollbarThemeData? _scrollbarTheme;
+    private TabBarThemeData? _tabBarTheme;
 
     public ThemeData(
         TargetPlatform? platform = null,
@@ -352,6 +366,7 @@ public sealed record ThemeData
         BottomAppBarThemeData? bottomAppBarTheme = null,
         DataTableThemeData? dataTableTheme = null,
         ScrollbarThemeData? scrollbarTheme = null,
+        TabBarThemeData? tabBarTheme = null,
         Color? disabledColor = null,
         Color? hintColor = null,
         Color? focusColor = null,
@@ -448,6 +463,7 @@ public sealed record ThemeData
         _bottomAppBarTheme = bottomAppBarTheme;
         _dataTableTheme = dataTableTheme;
         _scrollbarTheme = scrollbarTheme;
+        _tabBarTheme = tabBarTheme;
         VisualDensity = visualDensity ?? VisualDensity.Standard;
     }
 
@@ -747,6 +763,12 @@ public sealed record ThemeData
     {
         get => _scrollbarTheme ?? new ScrollbarThemeData();
         init => _scrollbarTheme = value;
+    }
+
+    public TabBarThemeData TabBarTheme
+    {
+        get => _tabBarTheme ?? new TabBarThemeData();
+        init => _tabBarTheme = value;
     }
 
     public ButtonBarThemeData ButtonBarTheme

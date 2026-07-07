@@ -44,6 +44,7 @@ import 'demos/material/expansion_panel_demo_page.dart';
 import 'demos/material/stepper_demo_page.dart';
 import 'demos/material/about_demo_page.dart';
 import 'demos/material/material_buttons_demo_page.dart';
+import 'demos/material/tabs_demo_page.dart';
 import 'demos/material/navigation_surfaces_demo_page.dart';
 import 'demos/material/navigation_drawer_demo_page.dart';
 import 'demos/material/segmented_buttons_demo_page.dart';
@@ -79,6 +80,12 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'Material buttons',
       subtitle: 'TextButton + ElevatedButton + OutlinedButton + FilledButton',
       builder: () => const MaterialButtonsDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.tabs,
+      title: 'TabBar + TabBarView',
+      subtitle: 'controller + indicator + scrollable tabs + swipe pages',
+      builder: () => const TabsDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.drawer,

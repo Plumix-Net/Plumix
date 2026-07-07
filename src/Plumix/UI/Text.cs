@@ -34,7 +34,8 @@ public enum TextAlign
 public enum TextOverflow
 {
     Clip,
-    Ellipsis
+    Ellipsis,
+    Fade
 }
 
 // Dart parity source (reference): flutter/engine/src/flutter/lib/ui/text.dart (engine parity, approximate)

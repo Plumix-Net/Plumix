@@ -46,6 +46,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Bottom/action bar controls enter through `BottomAppBar.cs` + `BottomAppBarTheme.cs` and `ButtonBar.cs` + `ButtonBarTheme.cs`; Scaffold/FAB geometry and overflow behavior are covered by `MaterialBarControlsTests.cs`.
 - Data-table controls enter through `DataTable.cs` + `DataTableTheme.cs` and `PaginatedDataTable.cs`; shared column negotiation lives in core `Widgets/Table.cs` + `Rendering/Table.cs`, with coverage in `MaterialDataTableTests.cs`.
 - Material scrollbars enter through `src/Plumix.Material/Scrollbar.cs` + `ScrollbarTheme.cs`; raw overlay/interaction behavior lives in core `Widgets/Scrollbar.cs`, with adaptive defaults in `src/Plumix.Cupertino/CupertinoScrollbar.cs` and focused coverage in `MaterialScrollbarTests.cs`.
+- Material tabs enter through `src/Plumix.Material/Tabs.cs` + `TabController.cs` + `TabBarTheme.cs`; page motion lives in core `Widgets/PageView.cs`/`Rendering/PageView.cs`, indicator layout/paint in `RenderTabBar.cs`, and focused coverage in `MaterialTabsTests.cs`.
 - Primary Tests:
   - `src/Plumix.Tests/MaterialScaffoldTests.cs`
   - `src/Plumix.Tests/MaterialButtonsTests.cs`
