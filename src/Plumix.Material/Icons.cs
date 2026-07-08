@@ -20,6 +20,8 @@ public static class Icons
 
     public static IconData ArrowDropDown { get; } = new(0xe098, FontFamily: MaterialIconsFontFamily);
 
+    public static IconData ArrowDropUp { get; } = new(0xe099, FontFamily: MaterialIconsFontFamily);
+
     public static IconData ArrowUpward { get; } = new(0xe5d8, FontFamily: MaterialIconsFontFamily);
 
     public static IconData ArrowDownward { get; } = new(0xe5db, FontFamily: MaterialIconsFontFamily);

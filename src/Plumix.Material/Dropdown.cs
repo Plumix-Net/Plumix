@@ -472,7 +472,7 @@ internal sealed record DropdownRouteResult<T>(T? Value);
 
 internal sealed class DropdownRoute<T> : PageRoute
 {
-    private readonly IReadOnlyList<DropdownMenuItem<T>> _items;
+    private IReadOnlyList<DropdownMenuItem<T>> _items;
     private readonly ThemeData _theme;
     private readonly IconThemeData _iconTheme;
     private readonly MaterialLocalizations _localizations;
@@ -499,7 +499,13 @@ internal sealed class DropdownRoute<T> : PageRoute
         bool enableFeedback,
         BorderRadius? borderRadius,
         bool barrierDismissible,
-        MouseCursor? mouseCursor) : base()
+        MouseCursor? mouseCursor,
+        bool requestFocus = true,
+        bool closeOnSelect = true,
+        bool menuBelowAnchor = false,
+        Color? shadowColor = null,
+        BorderSide? side = null,
+        Thickness? menuPadding = null) : base()
     {
         _items = items;
         _theme = Theme.Of(context);
@@ -522,6 +528,12 @@ internal sealed class DropdownRoute<T> : PageRoute
         BorderRadius = borderRadius;
         BarrierDismissible = barrierDismissible;
         MouseCursor = mouseCursor;
+        RequestFocus = requestFocus;
+        CloseOnSelect = closeOnSelect;
+        MenuBelowAnchor = menuBelowAnchor;
+        ShadowColor = shadowColor;
+        Side = side;
+        MenuPadding = menuPadding ?? new Thickness(0, 8);
         ItemHeights = Enumerable.Repeat(itemHeight ?? 48, items.Count).ToArray();
         _focusIndex = ResolveInitialFocusIndex(selectedIndex);
         ScrollController = new ScrollController(
@@ -530,7 +542,7 @@ internal sealed class DropdownRoute<T> : PageRoute
 
     public override bool Opaque => false;
     public Rect ButtonRect { get; }
-    public int SelectedIndex { get; }
+    public int SelectedIndex { get; private set; }
     public int Elevation { get; }
     public TextStyle Style { get; }
     public double? ItemHeight { get; }
@@ -541,7 +553,13 @@ internal sealed class DropdownRoute<T> : PageRoute
     public BorderRadius? BorderRadius { get; }
     public bool BarrierDismissible { get; }
     public MouseCursor? MouseCursor { get; }
-    public double[] ItemHeights { get; }
+    public bool RequestFocus { get; }
+    public bool CloseOnSelect { get; }
+    public bool MenuBelowAnchor { get; }
+    public Color? ShadowColor { get; }
+    public BorderSide? Side { get; }
+    public Thickness MenuPadding { get; }
+    public double[] ItemHeights { get; private set; }
     public ScrollController ScrollController { get; }
     public double Progress => Math.Clamp(_animation.Value, 0, 1);
     public bool IsExiting => _isExiting;
@@ -594,7 +612,7 @@ internal sealed class DropdownRoute<T> : PageRoute
                 new Positioned(left: 0, top: 0, right: 0, bottom: 0, child: barrier),
                 new Positioned(left: 0, top: 0, right: 0, bottom: 0, child: menu),
             ]);
-        page = new Focus(autofocus: true, onKeyEvent: HandleKeyEvent, child: page);
+        if (RequestFocus) page = new Focus(autofocus: true, onKeyEvent: HandleKeyEvent, child: page);
         page = new MediaQuery(_mediaQuery, page);
         return new Directionality(_direction, page);
     }
@@ -616,6 +634,15 @@ internal sealed class DropdownRoute<T> : PageRoute
         NotifyRouteChanged();
     }
 
+    public void UpdateItems(IReadOnlyList<DropdownMenuItem<T>> items, int selectedIndex, bool notify = true)
+    {
+        _items = items;
+        SelectedIndex = items.Count == 0 ? -1 : Math.Clamp(selectedIndex, 0, items.Count - 1);
+        _focusIndex = ResolveInitialFocusIndex(SelectedIndex);
+        ItemHeights = Enumerable.Repeat(ItemHeight ?? 48, items.Count).ToArray();
+        if (notify) NotifyRouteChanged();
+    }
+
     public DropdownMenuLimits GetMenuLimits(double availableHeight)
     {
         var computedMaxHeight = Math.Max(0, availableHeight - 96);
@@ -625,10 +652,12 @@ internal sealed class DropdownRoute<T> : PageRoute
         var selectedOffset = GetItemOffset(SelectedIndex);
         var topLimit = Math.Min(48, buttonTop);
         var bottomLimit = Math.Max(availableHeight - 48, buttonBottom);
-        var selectedHeight = ItemHeights.Length == 0 ? 48 : ItemHeights[SelectedIndex];
-        var menuTop = buttonTop - selectedOffset - ((selectedHeight - ButtonRect.Height) / 2);
-        var preferredHeight = 16 + ItemHeights.Sum();
+        var selectedHeight = ItemHeights.Length == 0 ? 48 : ItemHeights[Math.Clamp(SelectedIndex, 0, ItemHeights.Length - 1)];
+        var preferredHeight = MenuPadding.Top + MenuPadding.Bottom + ItemHeights.Sum();
         var menuHeight = Math.Min(computedMaxHeight, preferredHeight);
+        var menuTop = MenuBelowAnchor
+            ? buttonBottom
+            : buttonTop - selectedOffset - ((selectedHeight - ButtonRect.Height) / 2);
         var menuBottom = menuTop + menuHeight;
         if (menuTop < topLimit)
         {
@@ -640,7 +669,7 @@ internal sealed class DropdownRoute<T> : PageRoute
             menuBottom = Math.Max(buttonBottom, bottomLimit);
             menuTop = menuBottom - menuHeight;
         }
-        if (menuBottom - (selectedHeight / 2) < buttonBottom - (ButtonRect.Height / 2))
+        if (!MenuBelowAnchor && menuBottom - (selectedHeight / 2) < buttonBottom - (ButtonRect.Height / 2))
         {
             menuBottom = buttonBottom - (ButtonRect.Height / 2) + (selectedHeight / 2);
             menuTop = menuBottom - menuHeight;
@@ -651,7 +680,7 @@ internal sealed class DropdownRoute<T> : PageRoute
         return new DropdownMenuLimits(menuTop, menuBottom, menuHeight, scrollOffset);
     }
 
-    public double GetItemOffset(int index) => 8 + ItemHeights.Take(index).Sum();
+    public double GetItemOffset(int index) => MenuPadding.Top + ItemHeights.Take(Math.Max(0, index)).Sum();
 
     private KeyEventResult HandleKeyEvent(FocusNode node, KeyEvent @event)
     {
@@ -699,7 +728,8 @@ internal sealed class DropdownRoute<T> : PageRoute
         if (_focusIndex < 0 || _focusIndex >= _items.Count || !_items[_focusIndex].Enabled) return;
         var item = _items[_focusIndex];
         item.OnTap?.Invoke();
-        Navigator?.MaybePop(new DropdownRouteResult<T>(item.Value));
+        if (CloseOnSelect) Navigator?.MaybePop(new DropdownRouteResult<T>(item.Value));
+        else NotifyRouteChanged();
     }
 
     private int ResolveInitialFocusIndex(int selectedIndex)
@@ -752,10 +782,12 @@ internal sealed class DropdownMenuPanel<T> : StatelessWidget
                     onTap: () =>
                     {
                         item.OnTap?.Invoke();
-                        _route.Navigator?.MaybePop(new DropdownRouteResult<T>(item.Value));
+                        if (_route.CloseOnSelect)
+                            _route.Navigator?.MaybePop(new DropdownRouteResult<T>(item.Value));
                     },
                     enableFeedback: _route.EnableFeedback,
                     mouseCursor: _route.MouseCursor ?? SystemMouseCursors.Click,
+                    excludeFromSemantics: true,
                     child: child);
             }
             else
@@ -766,13 +798,23 @@ internal sealed class DropdownMenuPanel<T> : StatelessWidget
                 ? (_route.Progress > 0 ? 1 : 0)
                 : Interval(_route.Progress, Math.Clamp(0.5 + ((i + 1) * unit), 0, 1),
                     Math.Clamp(0.5 + ((i + 2.5) * unit), 0, 1));
-            child = new Opacity(opacity, new Semantics(role: SemanticsRole.MenuItem, child: child));
+            child = new Opacity(opacity, new Semantics(
+                role: SemanticsRole.MenuItem,
+                onTap: item.Enabled
+                    ? () =>
+                    {
+                        item.OnTap?.Invoke();
+                        if (_route.CloseOnSelect)
+                            _route.Navigator?.MaybePop(new DropdownRouteResult<T>(item.Value));
+                    }
+                    : null,
+                child: child));
             children.Add(child);
         }
 
         Widget content = new SingleChildScrollView(
             controller: _route.ScrollController,
-            padding: new Thickness(0, 8),
+            padding: _route.MenuPadding,
             child: new ListBody(children: children));
         content = new Scrollbar(child: content, controller: _route.ScrollController);
         content = new Semantics(
@@ -786,8 +828,9 @@ internal sealed class DropdownMenuPanel<T> : StatelessWidget
         content = new DecoratedBox(
             new BoxDecoration(
                 Color: _route.DropdownColor ?? theme.CanvasColor,
+                Border: _route.Side,
                 BorderRadius: radius,
-                BoxShadows: BuildShadow(theme.ShadowColor, _route.Elevation)),
+                BoxShadows: BuildShadow(_route.ShadowColor ?? theme.ShadowColor, _route.Elevation)),
             content);
         content = new ClipRRect(radius, content);
         content = new DropdownMenuReveal(

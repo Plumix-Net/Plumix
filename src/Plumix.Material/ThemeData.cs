@@ -310,6 +310,7 @@ public sealed record ThemeData
     private InputDecorationThemeData? _inputDecorationTheme;
     private DatePickerThemeData? _datePickerTheme;
     private TimePickerThemeData? _timePickerTheme;
+    private DropdownMenuThemeData? _dropdownMenuTheme;
 
     public ThemeData(
         TargetPlatform? platform = null,
@@ -399,7 +400,8 @@ public sealed record ThemeData
         BottomSheetThemeData? bottomSheetTheme = null,
         InputDecorationThemeData? inputDecorationTheme = null,
         DatePickerThemeData? datePickerTheme = null,
-        TimePickerThemeData? timePickerTheme = null)
+        TimePickerThemeData? timePickerTheme = null,
+        DropdownMenuThemeData? dropdownMenuTheme = null)
     {
         Platform = platform ?? ResolveDefaultPlatform();
         Brightness = brightness ?? Brightness.Light;
@@ -495,6 +497,7 @@ public sealed record ThemeData
         _inputDecorationTheme = inputDecorationTheme;
         _datePickerTheme = datePickerTheme;
         _timePickerTheme = timePickerTheme;
+        _dropdownMenuTheme = dropdownMenuTheme;
         VisualDensity = visualDensity ?? VisualDensity.Standard;
     }
 
@@ -824,6 +827,12 @@ public sealed record ThemeData
     {
         get => _timePickerTheme ?? new TimePickerThemeData();
         init => _timePickerTheme = value;
+    }
+
+    public DropdownMenuThemeData DropdownMenuTheme
+    {
+        get => _dropdownMenuTheme ?? new DropdownMenuThemeData();
+        init => _dropdownMenuTheme = value;
     }
 
     public ButtonBarThemeData ButtonBarTheme

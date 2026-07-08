@@ -196,8 +196,8 @@ class SampleGalleryScreen extends StatelessWidget {
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.dropdown,
-      title: 'DropdownButton + DropdownMenuItem',
-      subtitle: 'selection + hint/disabled/dense/expanded/route probes',
+      title: 'Dropdown controls',
+      subtitle: 'button/menu + form/filter/search/keyboard/route probes',
       builder: () => const DropdownDemoPage(),
     ),
     SampleRouteDefinition(
