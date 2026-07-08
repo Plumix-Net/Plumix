@@ -343,21 +343,21 @@ public sealed class Switch : StatefulWidget
         {
             var theme = Theme.Of(context);
             var switchTheme = SwitchTheme.Of(context);
-            var isCupertinoAdaptive = IsAdaptiveCupertino(theme);
+            bool isCupertinoAdaptive = IsAdaptiveCupertino(theme);
             var config = ResolveConfig(theme.UseMaterial3, isCupertinoAdaptive);
-            var enabled = CurrentWidget.OnChanged is not null;
+            bool enabled = CurrentWidget.OnChanged is not null;
 
             var effectivePadding = ResolvePadding(theme, switchTheme, isCupertinoAdaptive);
-            var totalWidth = config.BaseWidth + effectivePadding.Left + effectivePadding.Right;
-            var totalHeight = config.BaseHeight + effectivePadding.Top + effectivePadding.Bottom;
+            double totalWidth = config.BaseWidth + effectivePadding.Left + effectivePadding.Right;
+            double totalHeight = config.BaseHeight + effectivePadding.Top + effectivePadding.Bottom;
             var tapTargetSize = CurrentWidget.MaterialTapTargetSize
                                 ?? switchTheme.MaterialTapTargetSize
                                 ?? theme.MaterialTapTargetSize;
-            var splashRadius = ResolveSplashRadius(switchTheme, isCupertinoAdaptive);
+            double splashRadius = ResolveSplashRadius(switchTheme, isCupertinoAdaptive);
 
             var activeStates = BuildVisualStates(enabled, selected: true);
             var inactiveStates = BuildVisualStates(enabled, selected: false);
-            var position = CurrentPosition();
+            double position = CurrentPosition();
             var selectedStates = CurrentWidget.Value ? activeStates : inactiveStates;
 
             var activeThumbColor = ResolveThumbColor(theme, switchTheme, activeStates, isCupertinoAdaptive);
@@ -380,14 +380,14 @@ public sealed class Switch : StatefulWidget
             var currentIcon = position < 0.5 ? inactiveIcon : activeIcon;
             var overlayColor = ResolveOverlayColor(theme, switchTheme, selectedStates, isCupertinoAdaptive);
 
-            var activeThumbDiameter = activeIcon is null
+            double activeThumbDiameter = activeIcon is null
                 ? config.ActiveThumbDiameter
                 : config.ThumbDiameterWithIcon;
-            var inactiveThumbDiameter = inactiveIcon is null
+            double inactiveThumbDiameter = inactiveIcon is null
                 ? config.InactiveThumbDiameter
                 : config.ThumbDiameterWithIcon;
-            var thumbDiameter = LerpDouble(inactiveThumbDiameter, activeThumbDiameter, position);
-            var thumbWidth = isCupertinoAdaptive
+            double thumbDiameter = LerpDouble(inactiveThumbDiameter, activeThumbDiameter, position);
+            double thumbWidth = isCupertinoAdaptive
                 ? ResolveCupertinoThumbWidth(thumbDiameter, enabled)
                 : thumbDiameter;
 
@@ -578,7 +578,7 @@ public sealed class Switch : StatefulWidget
 
         private void HandleFocusChanged()
         {
-            var hasFocus = _focusNode?.HasFocus ?? false;
+            bool hasFocus = _focusNode?.HasFocus ?? false;
             if (_hasFocus == hasFocus)
             {
                 return;
@@ -660,10 +660,10 @@ public sealed class Switch : StatefulWidget
 
             var theme = Theme.Of(Context);
             var config = ResolveConfig(theme.UseMaterial3, IsAdaptiveCupertino(theme));
-            var trackInnerLength = Math.Max(1.0, config.TrackWidth - config.TrackHeight);
+            double trackInnerLength = Math.Max(1.0, config.TrackWidth - config.TrackHeight);
             var direction = Directionality.Of(Context);
-            var directionMultiplier = direction == TextDirection.Rtl ? -1 : 1;
-            var next = _dragPosition.Value + ((details.PrimaryDelta / trackInnerLength) * directionMultiplier);
+            int directionMultiplier = direction == TextDirection.Rtl ? -1 : 1;
+            double next = _dragPosition.Value + ((details.PrimaryDelta / trackInnerLength) * directionMultiplier);
             SetState(() => _dragPosition = Math.Clamp(next, 0, 1));
         }
 
@@ -674,8 +674,8 @@ public sealed class Switch : StatefulWidget
                 return;
             }
 
-            var from = Math.Clamp(_dragPosition.Value, 0, 1);
-            var nextValue = from >= 0.5;
+            double from = Math.Clamp(_dragPosition.Value, 0, 1);
+            bool nextValue = from >= 0.5;
             SetState(() => _dragPosition = null);
 
             if (nextValue != CurrentWidget.Value)
@@ -695,8 +695,8 @@ public sealed class Switch : StatefulWidget
 
             _positionController?.Stop();
             var direction = Directionality.Of(Context);
-            var directionMultiplier = direction == TextDirection.Rtl ? -1 : 1;
-            var initialDelta = 0.0;
+            int directionMultiplier = direction == TextDirection.Rtl ? -1 : 1;
+            double initialDelta = 0.0;
             if (_hasPointerDownPosition)
             {
                 var theme = Theme.Of(Context);
@@ -721,15 +721,15 @@ public sealed class Switch : StatefulWidget
             var theme = Theme.Of(Context);
             var config = ResolveConfig(theme.UseMaterial3, isCupertinoAdaptive: true);
             var direction = Directionality.Of(Context);
-            var directionMultiplier = direction == TextDirection.Rtl ? -1 : 1;
+            int directionMultiplier = direction == TextDirection.Rtl ? -1 : 1;
             _adaptiveDragDelta += (details.PrimaryDelta / config.TrackWidth) * directionMultiplier;
 
-            var valueChangedWhileDragging = CurrentWidget.Value != _adaptiveDragValue.Value;
-            var threshold = valueChangedWhileDragging
+            bool valueChangedWhileDragging = CurrentWidget.Value != _adaptiveDragValue.Value;
+            double threshold = valueChangedWhileDragging
                 ? CupertinoDragReverseThreshold
                 : CupertinoDragCommitThreshold;
-            var effectiveThreshold = CurrentWidget.Value ? -threshold : threshold;
-            var newDragValue = _adaptiveDragDelta >= effectiveThreshold;
+            double effectiveThreshold = CurrentWidget.Value ? -threshold : threshold;
+            bool newDragValue = _adaptiveDragDelta >= effectiveThreshold;
 
             if (_adaptiveDragValue.Value == newDragValue)
             {
@@ -747,7 +747,7 @@ public sealed class Switch : StatefulWidget
                 return;
             }
 
-            var nextValue = _adaptiveDragValue.Value;
+            bool nextValue = _adaptiveDragValue.Value;
             _adaptiveDragValue = null;
             _adaptiveDragDelta = 0;
             _hasPointerDownPosition = false;
@@ -801,8 +801,8 @@ public sealed class Switch : StatefulWidget
 
         private void AnimateTo(bool value, double? fromOverride = null)
         {
-            var target = value ? 1.0 : 0.0;
-            var from = Math.Clamp(fromOverride ?? CurrentPosition(), 0, 1);
+            double target = value ? 1.0 : 0.0;
+            double from = Math.Clamp(fromOverride ?? CurrentPosition(), 0, 1);
             _fromPosition = from;
             _toPosition = target;
 
@@ -822,7 +822,7 @@ public sealed class Switch : StatefulWidget
                 return;
             }
 
-            var t = Math.Clamp(_positionController.Evaluate(), 0, 1);
+            double t = Math.Clamp(_positionController.Evaluate(), 0, 1);
             SetState(() => _animatedPosition = LerpDouble(_fromPosition, _toPosition, t));
         }
 
@@ -953,16 +953,16 @@ public sealed class Switch : StatefulWidget
             var outlineColor = CurrentWidget.TrackOutlineColor?.Resolve(states)
                                ?? switchTheme.TrackOutlineColor?.Resolve(states)
                                ?? ResolveDefaultTrackOutlineColor(theme, states, isCupertinoAdaptive);
-            var outlineWidth = CurrentWidget.TrackOutlineWidth?.Resolve(states)
-                               ?? switchTheme.TrackOutlineWidth?.Resolve(states)
-                               ?? ResolveDefaultTrackOutlineWidth(theme, states, isCupertinoAdaptive);
+            double? outlineWidth = CurrentWidget.TrackOutlineWidth?.Resolve(states)
+                                   ?? switchTheme.TrackOutlineWidth?.Resolve(states)
+                                   ?? ResolveDefaultTrackOutlineWidth(theme, states, isCupertinoAdaptive);
 
             if (!outlineColor.HasValue || !outlineWidth.HasValue)
             {
                 return null;
             }
 
-            var width = NormalizeWidth(outlineWidth.Value);
+            double width = NormalizeWidth(outlineWidth.Value);
             if (width <= 0)
             {
                 return null;
@@ -1047,10 +1047,10 @@ public sealed class Switch : StatefulWidget
 
         private double ResolveSplashRadius(SwitchThemeData switchTheme, bool isCupertinoAdaptive)
         {
-            var resolved = CurrentWidget.SplashRadius
-                           ?? switchTheme.SplashRadius
-                           ?? (isCupertinoAdaptive ? 0.0 : DefaultSplashRadius);
-            var fallback = isCupertinoAdaptive ? 0.0 : DefaultSplashRadius;
+            double resolved = CurrentWidget.SplashRadius
+                              ?? switchTheme.SplashRadius
+                              ?? (isCupertinoAdaptive ? 0.0 : DefaultSplashRadius);
+            double fallback = isCupertinoAdaptive ? 0.0 : DefaultSplashRadius;
             return NormalizePositiveValue(resolved, fallback);
         }
 
@@ -1314,7 +1314,7 @@ public sealed class Switch : StatefulWidget
 
         private static Color LerpColor(Color from, Color to, double t)
         {
-            var clamped = Math.Clamp(t, 0, 1);
+            double clamped = Math.Clamp(t, 0, 1);
             byte LerpByte(byte start, byte end)
             {
                 return (byte)Math.Clamp((int)(start + ((end - start) * clamped)), 0, 255);
@@ -1329,7 +1329,7 @@ public sealed class Switch : StatefulWidget
 
         private static BorderSide? LerpSide(BorderSide? from, BorderSide? to, double t)
         {
-            var clamped = Math.Clamp(t, 0, 1);
+            double clamped = Math.Clamp(t, 0, 1);
             if (clamped <= 0.001)
             {
                 return from;
@@ -1347,14 +1347,14 @@ public sealed class Switch : StatefulWidget
 
             var fromSide = from ?? new BorderSide(Colors.Transparent, 0);
             var toSide = to ?? new BorderSide(Colors.Transparent, 0);
-            var width = fromSide.Width + ((toSide.Width - fromSide.Width) * clamped);
+            double width = fromSide.Width + ((toSide.Width - fromSide.Width) * clamped);
             var color = LerpColor(fromSide.Color, toSide.Color, clamped);
             return new BorderSide(color, width);
         }
 
         private static double LerpDouble(double from, double to, double t)
         {
-            var clamped = Math.Clamp(t, 0, 1);
+            double clamped = Math.Clamp(t, 0, 1);
             return from + ((to - from) * clamped);
         }
     }

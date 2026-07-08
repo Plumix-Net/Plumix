@@ -210,7 +210,7 @@ public sealed class MaterialRadioTests
                 new BoxHitTestEntry(focusListener, new Point(10, 10)));
             owner.FlushBuild();
 
-            var handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Space", isDown: true));
+            bool handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Space", isDown: true));
             Assert.True(handled);
             owner.FlushBuild();
 
@@ -255,7 +255,7 @@ public sealed class MaterialRadioTests
                 new BoxHitTestEntry(focusListener, new Point(10, 10)));
             owner.FlushBuild();
 
-            var handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Space", isDown: true));
+            bool handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Space", isDown: true));
             Assert.True(handled);
             owner.FlushBuild();
 
@@ -509,7 +509,7 @@ public sealed class MaterialRadioTests
 
     private static Color ApplyOpacity(Color color, double opacity)
     {
-        var alpha = (byte)Math.Clamp((int)(255 * opacity), 0, 255);
+        byte alpha = (byte)Math.Clamp((int)(255 * opacity), 0, 255);
         return Color.FromArgb(alpha, color.R, color.G, color.B);
     }
 

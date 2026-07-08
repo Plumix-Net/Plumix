@@ -342,7 +342,7 @@ public sealed class CheckboxListTile : StatelessWidget
 
         if (CheckboxScaleFactor != 1.0)
         {
-            var center = Checkbox.Width / 2.0;
+            double center = Checkbox.Width / 2.0;
             var scale = new Matrix(CheckboxScaleFactor, 0, 0, CheckboxScaleFactor, 0, 0);
             control = new Plumix.Widgets.Transform(
                 transform: Matrix.CreateTranslation(center, center)
@@ -361,7 +361,7 @@ public sealed class CheckboxListTile : StatelessWidget
                             ?? CheckboxTheme.Of(context).FillColor?.Resolve(selectedStates)
                             ?? Theme.Of(context).SecondaryColor;
 
-        var tileEnabled = Enabled ?? OnChanged is not null;
+        bool tileEnabled = Enabled ?? OnChanged is not null;
         var tile = new ListTile(
                 selectedColor: selectedColor,
                 leading: leading,

@@ -178,15 +178,15 @@ public sealed class Slider : StatefulWidget
         {
             var theme = Theme.Of(context);
             var sliderTheme = SliderTheme.Of(context);
-            var trackHeight = ResolveTrackHeight(sliderTheme);
-            var thumbRadius = ResolveThumbRadius(sliderTheme);
+            double trackHeight = ResolveTrackHeight(sliderTheme);
+            double thumbRadius = ResolveThumbRadius(sliderTheme);
             var tapTargetSize = CurrentWidget.MaterialTapTargetSize
                                 ?? sliderTheme.MaterialTapTargetSize
                                 ?? theme.MaterialTapTargetSize;
-            var minPreferredHeight = tapTargetSize == Plumix.Material.MaterialTapTargetSize.Padded
+            double minPreferredHeight = tapTargetSize == Plumix.Material.MaterialTapTargetSize.Padded
                 ? Math.Max(PaddedTapTargetExtent, thumbRadius * 2)
                 : Math.Max(trackHeight, thumbRadius * 2);
-            var overlayRadius = Math.Max(thumbRadius, theme.UseMaterial3 ? 20.0 : 16.0);
+            double overlayRadius = Math.Max(thumbRadius, theme.UseMaterial3 ? 20.0 : 16.0);
 
             var activeTrackColor = ResolveActiveTrackColor(theme, sliderTheme);
             var inactiveTrackColor = ResolveInactiveTrackColor(theme, sliderTheme);
@@ -196,7 +196,7 @@ public sealed class Slider : StatefulWidget
             var disabledInactiveTrackColor = ResolveDisabledInactiveTrackColor(theme, sliderTheme);
             var disabledSecondaryTrackColor = ResolveDisabledSecondaryTrackColor(theme, sliderTheme);
             var disabledThumbColor = ResolveDisabledThumbColor(theme, sliderTheme);
-            var secondaryTrackValueNormalized = NormalizeOptional(CurrentWidget.SecondaryTrackValue);
+            double? secondaryTrackValueNormalized = NormalizeOptional(CurrentWidget.SecondaryTrackValue);
 
             var focusedStates = BuildStates(interactive: IsInteractive, focused: true);
             var hoveredStates = BuildStates(interactive: IsInteractive, hovered: true);
@@ -204,7 +204,7 @@ public sealed class Slider : StatefulWidget
             var overlayFocusedColor = ResolveOverlayColor(theme, sliderTheme, focusedStates);
             var overlayHoveredColor = ResolveOverlayColor(theme, sliderTheme, hoveredStates);
             var overlayDraggedColor = ResolveOverlayColor(theme, sliderTheme, draggedStates);
-            var semanticsLabel = ResolveSemanticsLabel();
+            string? semanticsLabel = ResolveSemanticsLabel();
 
             var semanticsFlags = SemanticsFlags.IsSlider;
             if (IsInteractive)
@@ -271,7 +271,7 @@ public sealed class Slider : StatefulWidget
 
         private void HandleFocusChanged()
         {
-            var hasFocus = _focusNode?.HasFocus ?? false;
+            bool hasFocus = _focusNode?.HasFocus ?? false;
             if (hasFocus == _hasFocus)
             {
                 return;
@@ -292,8 +292,8 @@ public sealed class Slider : StatefulWidget
                 return KeyEventResult.Handled;
             }
 
-            var normalized = Normalize(CurrentWidget.Value);
-            var next = ResolveKeyboardTargetNormalized(normalized, @event.Key);
+            double normalized = Normalize(CurrentWidget.Value);
+            double next = ResolveKeyboardTargetNormalized(normalized, @event.Key);
             if (Math.Abs(next - normalized) <= 0.0001)
             {
                 return KeyEventResult.Handled;
@@ -317,9 +317,9 @@ public sealed class Slider : StatefulWidget
                 return 1.0;
             }
 
-            var step = ResolveAdjustmentUnit(Theme.Of(Context));
+            double step = ResolveAdjustmentUnit(Theme.Of(Context));
             var direction = Directionality.Of(Context);
-            var delta = 0.0;
+            double delta = 0.0;
             if (string.Equals(key, "ArrowRight", StringComparison.Ordinal))
             {
                 delta = direction == TextDirection.Rtl ? -step : step;
@@ -339,7 +339,7 @@ public sealed class Slider : StatefulWidget
                 delta = -step;
             }
 
-            var next = Math.Clamp(currentNormalized + delta, 0.0, 1.0);
+            double next = Math.Clamp(currentNormalized + delta, 0.0, 1.0);
             return SnapNormalized(next);
         }
 
@@ -387,7 +387,7 @@ public sealed class Slider : StatefulWidget
                 return;
             }
 
-            var nextValue = Denormalize(SnapNormalized(normalized));
+            double nextValue = Denormalize(SnapNormalized(normalized));
             if (Math.Abs(nextValue - CurrentWidget.Value) <= 0.0001)
             {
                 return;
@@ -419,7 +419,7 @@ public sealed class Slider : StatefulWidget
 
         private double Normalize(double value)
         {
-            var range = CurrentWidget.Max - CurrentWidget.Min;
+            double range = CurrentWidget.Max - CurrentWidget.Min;
             if (range <= 0)
             {
                 return 0.0;
@@ -430,7 +430,7 @@ public sealed class Slider : StatefulWidget
 
         private double Denormalize(double normalized)
         {
-            var clamped = Math.Clamp(normalized, 0.0, 1.0);
+            double clamped = Math.Clamp(normalized, 0.0, 1.0);
             return CurrentWidget.Min + ((CurrentWidget.Max - CurrentWidget.Min) * clamped);
         }
 
@@ -446,19 +446,19 @@ public sealed class Slider : StatefulWidget
 
         private double SnapNormalized(double normalized)
         {
-            var clamped = Math.Clamp(normalized, 0.0, 1.0);
+            double clamped = Math.Clamp(normalized, 0.0, 1.0);
             if (!CurrentWidget.Divisions.HasValue || CurrentWidget.Divisions.Value <= 0)
             {
                 return clamped;
             }
 
-            var divisions = CurrentWidget.Divisions.Value;
+            int divisions = CurrentWidget.Divisions.Value;
             return Math.Clamp(Math.Round(clamped * divisions) / divisions, 0.0, 1.0);
         }
 
         private double ResolveTrackHeight(SliderThemeData sliderTheme)
         {
-            var resolved = sliderTheme.TrackHeight ?? DefaultTrackHeight;
+            double resolved = sliderTheme.TrackHeight ?? DefaultTrackHeight;
             if (double.IsNaN(resolved) || double.IsInfinity(resolved) || resolved <= 0)
             {
                 return DefaultTrackHeight;
@@ -469,7 +469,7 @@ public sealed class Slider : StatefulWidget
 
         private double ResolveThumbRadius(SliderThemeData sliderTheme)
         {
-            var resolved = sliderTheme.ThumbRadius ?? DefaultThumbRadius;
+            double resolved = sliderTheme.ThumbRadius ?? DefaultThumbRadius;
             if (double.IsNaN(resolved) || double.IsInfinity(resolved) || resolved <= 0)
             {
                 return DefaultThumbRadius;
@@ -819,7 +819,7 @@ internal sealed class RenderSlider : RenderBox
         get => _valueNormalized;
         set
         {
-            var normalized = ClampNormalized(value);
+            double normalized = ClampNormalized(value);
             if (Math.Abs(_valueNormalized - normalized) <= Epsilon)
             {
                 return;
@@ -838,7 +838,7 @@ internal sealed class RenderSlider : RenderBox
         get => _secondaryTrackValueNormalized;
         set
         {
-            var normalized = ClampNormalizedNullable(value);
+            double? normalized = ClampNormalizedNullable(value);
             if (_secondaryTrackValueNormalized.HasValue == normalized.HasValue
                 && (!_secondaryTrackValueNormalized.HasValue
                     || Math.Abs(_secondaryTrackValueNormalized.Value - normalized!.Value) <= Epsilon))
@@ -1109,13 +1109,13 @@ internal sealed class RenderSlider : RenderBox
 
     protected override void PerformLayout()
     {
-        var desiredWidth = Constraints.HasBoundedWidth ? Constraints.MaxWidth : DefaultTrackWidth;
+        double desiredWidth = Constraints.HasBoundedWidth ? Constraints.MaxWidth : DefaultTrackWidth;
         if (!double.IsFinite(desiredWidth) || desiredWidth <= 0)
         {
             desiredWidth = DefaultTrackWidth;
         }
 
-        var desiredHeight = Math.Max(MinPreferredHeight, Math.Max(TrackHeight, ThumbRadius * 2.0));
+        double desiredHeight = Math.Max(MinPreferredHeight, Math.Max(TrackHeight, ThumbRadius * 2.0));
         if (!double.IsFinite(desiredHeight) || desiredHeight <= 0)
         {
             desiredHeight = Math.Max(TrackHeight, ThumbRadius * 2.0);
@@ -1131,8 +1131,8 @@ internal sealed class RenderSlider : RenderBox
             return;
         }
 
-        var visualValue = ResolveVisualValue();
-        var centerY = offset.Y + (Size.Height / 2.0);
+        double visualValue = ResolveVisualValue();
+        double centerY = offset.Y + (Size.Height / 2.0);
         var geometry = ResolveTrackGeometry(offset.X);
 
         if (geometry.Width > 0 && TrackHeight > 0)
@@ -1149,10 +1149,10 @@ internal sealed class RenderSlider : RenderBox
                 radiusX: TrackHeight / 2.0,
                 radiusY: TrackHeight / 2.0);
 
-            var thumbCenterX = ResolveThumbCenterX(geometry, visualValue);
+            double thumbCenterX = ResolveThumbCenterX(geometry, visualValue);
             if (TextDirection == TextDirection.Ltr)
             {
-                var activeWidth = Math.Max(0.0, thumbCenterX - geometry.Left);
+                double activeWidth = Math.Max(0.0, thumbCenterX - geometry.Left);
                 if (activeWidth > 0)
                 {
                     var activeRect = new Rect(
@@ -1170,7 +1170,7 @@ internal sealed class RenderSlider : RenderBox
             }
             else
             {
-                var activeWidth = Math.Max(0.0, geometry.Right - thumbCenterX);
+                double activeWidth = Math.Max(0.0, geometry.Right - thumbCenterX);
                 if (activeWidth > 0)
                 {
                     var activeRect = new Rect(
@@ -1189,10 +1189,10 @@ internal sealed class RenderSlider : RenderBox
 
             if (ShouldShowSecondaryTrack(visualValue))
             {
-                var secondaryTrackValue = ClampNormalized(SecondaryTrackValueNormalized!.Value);
-                var secondaryThumbCenterX = ResolveThumbCenterX(geometry, secondaryTrackValue);
-                var secondaryLeft = Math.Min(thumbCenterX, secondaryThumbCenterX);
-                var secondaryWidth = Math.Abs(secondaryThumbCenterX - thumbCenterX);
+                double secondaryTrackValue = ClampNormalized(SecondaryTrackValueNormalized!.Value);
+                double secondaryThumbCenterX = ResolveThumbCenterX(geometry, secondaryTrackValue);
+                double secondaryLeft = Math.Min(thumbCenterX, secondaryThumbCenterX);
+                double secondaryWidth = Math.Abs(secondaryThumbCenterX - thumbCenterX);
                 if (secondaryWidth > 0)
                 {
                     var secondaryRect = new Rect(
@@ -1323,7 +1323,7 @@ internal sealed class RenderSlider : RenderBox
 
     private void UpdateDragValueFromLocalX(double localX)
     {
-        var next = ResolveNormalizedFromLocalX(localX);
+        double next = ResolveNormalizedFromLocalX(localX);
         if (_dragValueNormalized.HasValue && Math.Abs(_dragValueNormalized.Value - next) <= Epsilon)
         {
             return;
@@ -1336,16 +1336,16 @@ internal sealed class RenderSlider : RenderBox
 
     private void UpdateDragValueFromDeltaX(double deltaX)
     {
-        var current = ResolveVisualValue();
+        double current = ResolveVisualValue();
         var geometry = ResolveTrackGeometry(offsetX: 0);
         if (geometry.Width <= Epsilon)
         {
             return;
         }
 
-        var directionMultiplier = TextDirection == TextDirection.Rtl ? -1.0 : 1.0;
-        var normalizedDelta = (deltaX / geometry.Width) * directionMultiplier;
-        var next = current + normalizedDelta;
+        double directionMultiplier = TextDirection == TextDirection.Rtl ? -1.0 : 1.0;
+        double normalizedDelta = (deltaX / geometry.Width) * directionMultiplier;
+        double next = current + normalizedDelta;
         if (Divisions.HasValue && Divisions.Value > 0)
         {
             next = Math.Round(next * Divisions.Value) / Divisions.Value;
@@ -1369,7 +1369,7 @@ internal sealed class RenderSlider : RenderBox
             return;
         }
 
-        var finalValue = ResolveVisualValue();
+        double finalValue = ResolveVisualValue();
         _activePointer = null;
         _dragging = false;
         _dragValueNormalized = null;
@@ -1397,8 +1397,8 @@ internal sealed class RenderSlider : RenderBox
             return ClampNormalized(ValueNormalized);
         }
 
-        var relative = Math.Clamp(localX - geometry.Left, 0.0, geometry.Width);
-        var normalized = relative / geometry.Width;
+        double relative = Math.Clamp(localX - geometry.Left, 0.0, geometry.Width);
+        double normalized = relative / geometry.Width;
         if (TextDirection == TextDirection.Rtl)
         {
             normalized = 1.0 - normalized;
@@ -1414,8 +1414,8 @@ internal sealed class RenderSlider : RenderBox
 
     private double ResolveThumbCenterX(TrackGeometry geometry, double normalizedValue)
     {
-        var value = ClampNormalized(normalizedValue);
-        var visualValue = TextDirection == TextDirection.Rtl
+        double value = ClampNormalized(normalizedValue);
+        double visualValue = TextDirection == TextDirection.Rtl
             ? 1.0 - value
             : value;
         return geometry.Left + (geometry.Width * visualValue);
@@ -1423,11 +1423,11 @@ internal sealed class RenderSlider : RenderBox
 
     private TrackGeometry ResolveTrackGeometry(double offsetX)
     {
-        var left = offsetX + ThumbRadius;
-        var right = offsetX + Size.Width - ThumbRadius;
+        double left = offsetX + ThumbRadius;
+        double right = offsetX + Size.Width - ThumbRadius;
         if (right < left)
         {
-            var center = offsetX + (Size.Width / 2.0);
+            double center = offsetX + (Size.Width / 2.0);
             left = center;
             right = center;
         }

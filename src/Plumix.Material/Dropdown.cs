@@ -169,7 +169,7 @@ public sealed class DropdownButton<T> : StatefulWidget
     private static void ValidateSelection(IReadOnlyList<DropdownMenuItem<T>>? items, T? value)
     {
         if (items is null || items.Count == 0) return;
-        var matching = items.Count(item => EqualityComparer<T?>.Default.Equals(item.Value, value));
+        int matching = items.Count(item => EqualityComparer<T?>.Default.Equals(item.Value, value));
         if (value is not null && matching != 1)
         {
             throw new ArgumentException("There must be exactly one dropdown item matching value.", nameof(value));
@@ -314,7 +314,7 @@ internal sealed class DropdownButtonState<T> : State
 
         if (!DropdownButtonHideUnderline.At(context))
         {
-            var bottom = widget.IsDense || widget.ItemHeight is null ? 0 : 8;
+            int bottom = widget.IsDense || widget.ItemHeight is null ? 0 : 8;
             result = new Stack(
                 children:
                 [
@@ -364,7 +364,7 @@ internal sealed class DropdownButtonState<T> : State
                 : new Rect(bounds.X - 16, bounds.Y, bounds.Width + 40, bounds.Height);
         }
 
-        var selectedIndex = _selectedIndex ?? 0;
+        int selectedIndex = _selectedIndex ?? 0;
         _route = new DropdownRoute<T>(
             context: Context,
             items: widget.Items!,
@@ -405,7 +405,7 @@ internal sealed class DropdownButtonState<T> : State
         var items = CurrentWidget.Items;
         if (items is null || items.Count == 0) return;
         if (CurrentWidget.Value is null && !items.Any(item => item.Enabled && item.Value is null)) return;
-        for (var i = 0; i < items.Count; i++)
+        for (int i = 0; i < items.Count; i++)
         {
             if (EqualityComparer<T?>.Default.Equals(items[i].Value, CurrentWidget.Value))
             {
@@ -430,9 +430,9 @@ internal sealed class DropdownButtonState<T> : State
 
     private double ResolveDenseHeight(BuildContext context, TextStyle style)
     {
-        var fontSize = style.FontSize ?? Theme.Of(context).TextTheme.TitleMedium.FontSize ?? 14;
-        var lineHeight = style.Height ?? Theme.Of(context).TextTheme.TitleMedium.Height ?? 1;
-        var scale = MediaQuery.MaybeTextScaleFactorOf(context) ?? 1;
+        double fontSize = style.FontSize ?? Theme.Of(context).TextTheme.TitleMedium.FontSize ?? 14;
+        double lineHeight = style.Height ?? Theme.Of(context).TextTheme.TitleMedium.Height ?? 1;
+        double scale = MediaQuery.MaybeTextScaleFactorOf(context) ?? 1;
         return Math.Max(fontSize * lineHeight * scale, Math.Max(CurrentWidget.IconSize, 24));
     }
 
@@ -460,10 +460,10 @@ internal sealed class DropdownButtonState<T> : State
             transform.Transform(new Point(0, renderBox.Size.Height)),
             transform.Transform(new Point(renderBox.Size.Width, renderBox.Size.Height)),
         };
-        var left = points.Min(point => point.X);
-        var top = points.Min(point => point.Y);
-        var right = points.Max(point => point.X);
-        var bottom = points.Max(point => point.Y);
+        double left = points.Min(point => point.X);
+        double top = points.Min(point => point.Y);
+        double right = points.Max(point => point.X);
+        double bottom = points.Max(point => point.Y);
         return new Rect(left, top, right - left, bottom - top);
     }
 }
@@ -645,20 +645,20 @@ internal sealed class DropdownRoute<T> : PageRoute
 
     public DropdownMenuLimits GetMenuLimits(double availableHeight)
     {
-        var computedMaxHeight = Math.Max(0, availableHeight - 96);
+        double computedMaxHeight = Math.Max(0, availableHeight - 96);
         if (MenuMaxHeight.HasValue) computedMaxHeight = Math.Min(computedMaxHeight, MenuMaxHeight.Value);
-        var buttonTop = ButtonRect.Top;
-        var buttonBottom = Math.Min(ButtonRect.Bottom, availableHeight);
-        var selectedOffset = GetItemOffset(SelectedIndex);
-        var topLimit = Math.Min(48, buttonTop);
-        var bottomLimit = Math.Max(availableHeight - 48, buttonBottom);
-        var selectedHeight = ItemHeights.Length == 0 ? 48 : ItemHeights[Math.Clamp(SelectedIndex, 0, ItemHeights.Length - 1)];
-        var preferredHeight = MenuPadding.Top + MenuPadding.Bottom + ItemHeights.Sum();
-        var menuHeight = Math.Min(computedMaxHeight, preferredHeight);
-        var menuTop = MenuBelowAnchor
+        double buttonTop = ButtonRect.Top;
+        double buttonBottom = Math.Min(ButtonRect.Bottom, availableHeight);
+        double selectedOffset = GetItemOffset(SelectedIndex);
+        double topLimit = Math.Min(48, buttonTop);
+        double bottomLimit = Math.Max(availableHeight - 48, buttonBottom);
+        double selectedHeight = ItemHeights.Length == 0 ? 48 : ItemHeights[Math.Clamp(SelectedIndex, 0, ItemHeights.Length - 1)];
+        double preferredHeight = MenuPadding.Top + MenuPadding.Bottom + ItemHeights.Sum();
+        double menuHeight = Math.Min(computedMaxHeight, preferredHeight);
+        double menuTop = MenuBelowAnchor
             ? buttonBottom
             : buttonTop - selectedOffset - ((selectedHeight - ButtonRect.Height) / 2);
-        var menuBottom = menuTop + menuHeight;
+        double menuBottom = menuTop + menuHeight;
         if (menuTop < topLimit)
         {
             menuTop = Math.Min(buttonTop, topLimit);
@@ -674,7 +674,7 @@ internal sealed class DropdownRoute<T> : PageRoute
             menuBottom = buttonBottom - (ButtonRect.Height / 2) + (selectedHeight / 2);
             menuTop = menuBottom - menuHeight;
         }
-        var scrollOffset = preferredHeight > computedMaxHeight
+        double scrollOffset = preferredHeight > computedMaxHeight
             ? Math.Clamp(selectedOffset - (buttonTop - menuTop), 0, Math.Max(0, preferredHeight - menuHeight))
             : 0;
         return new DropdownMenuLimits(menuTop, menuBottom, menuHeight, scrollOffset);
@@ -710,8 +710,8 @@ internal sealed class DropdownRoute<T> : PageRoute
 
     private void MoveFocus(int delta)
     {
-        var next = _focusIndex;
-        for (var i = 0; i < _items.Count; i++)
+        int next = _focusIndex;
+        for (int i = 0; i < _items.Count; i++)
         {
             next = (next + delta + _items.Count) % _items.Count;
             if (_items[next].Enabled)
@@ -735,7 +735,7 @@ internal sealed class DropdownRoute<T> : PageRoute
     private int ResolveInitialFocusIndex(int selectedIndex)
     {
         if (selectedIndex >= 0 && selectedIndex < _items.Count && _items[selectedIndex].Enabled) return selectedIndex;
-        for (var i = 0; i < _items.Count; i++) if (_items[i].Enabled) return i;
+        for (int i = 0; i < _items.Count; i++) if (_items[i].Enabled) return i;
         return -1;
     }
 
@@ -762,10 +762,10 @@ internal sealed class DropdownMenuPanel<T> : StatelessWidget
     {
         var theme = Theme.Of(context);
         var children = new List<Widget>(_items.Count);
-        var unit = 0.5 / (_items.Count + 1.5);
-        for (var i = 0; i < _items.Count; i++)
+        double unit = 0.5 / (_items.Count + 1.5);
+        for (int i = 0; i < _items.Count; i++)
         {
-            var index = i;
+            int index = i;
             var item = _items[i];
             Widget child = item;
             if (_route.ItemHeight.HasValue) child = new SizedBox(height: _route.ItemHeight.Value, child: child);
@@ -794,7 +794,7 @@ internal sealed class DropdownMenuPanel<T> : StatelessWidget
             {
                 child = new Listener(behavior: HitTestBehavior.Opaque, child: child);
             }
-            var opacity = i == _route.SelectedIndex
+            double opacity = i == _route.SelectedIndex
                 ? (_route.Progress > 0 ? 1 : 0)
                 : Interval(_route.Progress, Math.Clamp(0.5 + ((i + 1) * unit), 0, 1),
                     Math.Clamp(0.5 + ((i + 2.5) * unit), 0, 1));
@@ -899,7 +899,7 @@ internal sealed class RenderDropdownMenuReveal : RenderProxyBox
         get => _progress;
         set
         {
-            var next = Math.Clamp(value, 0, 1);
+            double next = Math.Clamp(value, 0, 1);
             if (Math.Abs(_progress - next) < 0.0001) return;
             _progress = next;
             MarkNeedsPaint();
@@ -911,7 +911,7 @@ internal sealed class RenderDropdownMenuReveal : RenderProxyBox
         get => _selectedItemOffset;
         set
         {
-            var next = Math.Max(0, value);
+            double next = Math.Max(0, value);
             if (Math.Abs(_selectedItemOffset - next) < 0.0001) return;
             _selectedItemOffset = next;
             MarkNeedsPaint();
@@ -922,10 +922,10 @@ internal sealed class RenderDropdownMenuReveal : RenderProxyBox
     {
         get
         {
-            var topStart = Math.Clamp(SelectedItemOffset, 0, Math.Max(0, Size.Height - 48));
-            var bottomStart = Math.Clamp(topStart + 48, Math.Min(48, Size.Height), Size.Height);
-            var top = Lerp(topStart, 0, Progress);
-            var bottom = Lerp(bottomStart, Size.Height, Progress);
+            double topStart = Math.Clamp(SelectedItemOffset, 0, Math.Max(0, Size.Height - 48));
+            double bottomStart = Math.Clamp(topStart + 48, Math.Min(48, Size.Height), Size.Height);
+            double top = Lerp(topStart, 0, Progress);
+            double bottom = Lerp(bottomStart, Size.Height, Progress);
             return new Rect(0, top, Size.Width, Math.Max(0, bottom - top));
         }
     }
@@ -992,13 +992,13 @@ internal sealed class RenderDropdownMenuPositionLayout<T> : RenderProxyBox
     {
         Size = Constraints.Constrain(Constraints.Biggest);
         if (Child is null) return;
-        var width = Math.Min(Size.Width, Route.MenuWidth ?? Route.ButtonRect.Width);
+        double width = Math.Min(Size.Width, Route.MenuWidth ?? Route.ButtonRect.Width);
         var limits = Route.GetMenuLimits(Size.Height);
         Child.Layout(new BoxConstraints(
             MinWidth: width,
             MaxWidth: width,
             MaxHeight: Math.Max(0, limits.Height)), parentUsesSize: true);
-        var x = TextDirection == TextDirection.Rtl
+        double x = TextDirection == TextDirection.Rtl
             ? Math.Clamp(Route.ButtonRect.Right, 0, Size.Width) - Child.Size.Width
             : Math.Clamp(Route.ButtonRect.Left, 0, Math.Max(0, Size.Width - Child.Size.Width));
         ((BoxParentData)Child.parentData!).offset = new Point(x, limits.Top);

@@ -264,9 +264,9 @@ public sealed class ExpansionPanelList : StatefulWidget
         public override Widget Build(BuildContext context)
         {
             var items = new List<MergeableMaterialItem>();
-            for (var index = 0; index < CurrentWidget.Children.Count; index++)
+            for (int index = 0; index < CurrentWidget.Children.Count; index++)
             {
-                var expanded = IsChildExpanded(index);
+                bool expanded = IsChildExpanded(index);
                 if (expanded
                     && index != 0
                     && !IsChildExpanded(index - 1))
@@ -277,7 +277,7 @@ public sealed class ExpansionPanelList : StatefulWidget
                 }
 
                 var panel = CurrentWidget.Children[index];
-                var capturedIndex = index;
+                int capturedIndex = index;
                 var controller = _controllers[IdentityFor(index, panel)];
                 items.Add(new MaterialSlice(
                     key: new ValueKey<string>($"expansion-panel-slice-{index * 2}"),
@@ -314,7 +314,7 @@ public sealed class ExpansionPanelList : StatefulWidget
             bool expanded,
             AnimationController animation)
         {
-            var progress = Curves.EaseInOut(animation.Value);
+            double progress = Curves.EaseInOut(animation.Value);
             var padding = LerpThickness(default, CurrentWidget.ExpandedHeaderPadding, progress);
             var header = new Padding(
                 padding,
@@ -388,8 +388,8 @@ public sealed class ExpansionPanelList : StatefulWidget
 
         private static Widget BuildBody(ExpansionPanel panel, AnimationController animation)
         {
-            var progress = animation.Evaluate();
-            var opacity = progress <= 0.4
+            double progress = animation.Evaluate();
+            double opacity = progress <= 0.4
                 ? 0
                 : Curves.EaseInOut((progress - 0.4) / 0.6);
             return new Opacity(opacity, panel.Body);
@@ -405,7 +405,7 @@ public sealed class ExpansionPanelList : StatefulWidget
 
             if (_currentOpenPanelValue is not null && !isExpanded)
             {
-                var previousIndex = FindRadioIndex(_currentOpenPanelValue);
+                int previousIndex = FindRadioIndex(_currentOpenPanelValue);
                 if (previousIndex >= 0 && previousIndex != index)
                 {
                     CurrentWidget.ExpansionCallback?.Invoke(previousIndex, false);
@@ -432,7 +432,7 @@ public sealed class ExpansionPanelList : StatefulWidget
         private void SynchronizeControllers()
         {
             var desired = new HashSet<PanelIdentity>();
-            for (var index = 0; index < CurrentWidget.Children.Count; index++)
+            for (int index = 0; index < CurrentWidget.Children.Count; index++)
             {
                 var identity = IdentityFor(index, CurrentWidget.Children[index]);
                 desired.Add(identity);
@@ -476,7 +476,7 @@ public sealed class ExpansionPanelList : StatefulWidget
 
         private int FindRadioIndex(object value)
         {
-            for (var index = 0; index < CurrentWidget.Children.Count; index++)
+            for (int index = 0; index < CurrentWidget.Children.Count; index++)
             {
                 if (CurrentWidget.Children[index] is ExpansionPanelRadio radio
                     && Equals(radio.Value, value))
@@ -520,7 +520,7 @@ public sealed class ExpansionPanelList : StatefulWidget
 
         private static Thickness LerpThickness(Thickness from, Thickness to, double progress)
         {
-            var t = Math.Clamp(progress, 0, 1);
+            double t = Math.Clamp(progress, 0, 1);
             return new Thickness(
                 from.Left + ((to.Left - from.Left) * t),
                 from.Top + ((to.Top - from.Top) * t),

@@ -33,14 +33,14 @@ public sealed class LicenseEntryWithLineBreaks : LicenseEntry
 
     private IReadOnlyList<LicenseParagraph> ParseParagraphs()
     {
-        var normalized = Text
+        string normalized = Text
             .Replace("\r\n", "\n", StringComparison.Ordinal)
             .Replace('\r', '\n')
             .Replace("\f", "\n\n", StringComparison.Ordinal);
         var result = new List<LicenseParagraph>();
         var paragraphLines = new List<string>();
         int? paragraphIndent = null;
-        var lastLineIndent = 0;
+        int lastLineIndent = 0;
 
         void Flush()
         {
@@ -51,7 +51,7 @@ public sealed class LicenseEntryWithLineBreaks : LicenseEntry
             lastLineIndent = 0;
         }
 
-        foreach (var rawLine in normalized.Split('\n'))
+        foreach (string rawLine in normalized.Split('\n'))
         {
             if (rawLine.Length == 0 || string.IsNullOrWhiteSpace(rawLine))
             {
@@ -59,8 +59,8 @@ public sealed class LicenseEntryWithLineBreaks : LicenseEntry
                 continue;
             }
 
-            var indent = CountIndent(rawLine);
-            var text = rawLine.TrimStart(' ', '\t');
+            int indent = CountIndent(rawLine);
+            string text = rawLine.TrimStart(' ', '\t');
             if (paragraphLines.Count > 0 && indent > lastLineIndent)
             {
                 Flush();
@@ -81,8 +81,8 @@ public sealed class LicenseEntryWithLineBreaks : LicenseEntry
 
     private static int CountIndent(string line)
     {
-        var result = 0;
-        foreach (var character in line)
+        int result = 0;
+        foreach (char character in line)
         {
             if (character == ' ') result++;
             else if (character == '\t') result += 8;

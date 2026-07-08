@@ -26,7 +26,7 @@ public abstract class GestureRecognizer : IDisposable
 
     public virtual void Dispose()
     {
-        foreach (var pointer in _trackedPointers.ToArray())
+        foreach (int pointer in _trackedPointers.ToArray())
         {
             PointerRouter.RemoveRoute(pointer, _route);
         }

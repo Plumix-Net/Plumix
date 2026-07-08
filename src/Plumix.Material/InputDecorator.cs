@@ -290,7 +290,7 @@ public sealed class InputDecorator : StatefulWidget
         }
         public override void DidChangeDependencies()
         {
-            var shouldFloat = ShouldFloat(Current, InputDecorationTheme.Of(Context));
+            bool shouldFloat = ShouldFloat(Current, InputDecorationTheme.Of(Context));
             _labelController!.Forward(from: shouldFloat ? 1 : 0); _labelController.Stop();
         }
         public override void DidUpdateWidget(StatefulWidget oldWidget)
@@ -308,10 +308,10 @@ public sealed class InputDecorator : StatefulWidget
         {
             var theme = Theme.Of(context);
             var decoration = Current.Decoration.ApplyDefaults(InputDecorationTheme.Of(context));
-            var hasError = decoration.Error is not null || decoration.ErrorText is not null;
-            var dense = decoration.IsDense ?? false;
-            var collapsed = decoration.IsCollapsed ?? false;
-            var filled = decoration.Filled ?? false;
+            bool hasError = decoration.Error is not null || decoration.ErrorText is not null;
+            bool dense = decoration.IsDense ?? false;
+            bool collapsed = decoration.IsCollapsed ?? false;
+            bool filled = decoration.Filled ?? false;
             var border = ResolveBorder(decoration, theme, hasError);
             var fillColor = ResolveFill(decoration, theme, filled);
             var baseStyle = Merge(theme.UseMaterial3 ? theme.TextTheme.BodyLarge : theme.TextTheme.TitleMedium, Current.BaseStyle);
@@ -325,11 +325,11 @@ public sealed class InputDecorator : StatefulWidget
             var errorStyle = Merge(theme.TextTheme.BodySmall.CopyWith(color: theme.ErrorColor), decoration.ErrorStyle);
             var counterStyle = Merge(theme.TextTheme.BodySmall.CopyWith(color: theme.OnSurfaceVariantColor), decoration.CounterStyle);
             var contentPadding = decoration.ContentPadding ?? DefaultPadding(border, dense, filled, collapsed);
-            var containerHeight = collapsed ? 24 : dense ? 48 : 56;
+            int containerHeight = collapsed ? 24 : dense ? 48 : 56;
             if (Current.Expands) containerHeight = 80;
 
             Widget input = Current.Child ?? new SizedBox();
-            var hintVisible = Current.IsEmpty && (decoration.Label is null && decoration.LabelText is null || floatProgress > 0.5);
+            bool hintVisible = Current.IsEmpty && (decoration.Label is null && decoration.LabelText is null || floatProgress > 0.5);
             var centerChildren = new List<Widget>
             {
                 new Padding(new Thickness(0, 12 * floatProgress, 0, 0), new Align(alignment: Alignment.CenterLeft, child: input)),
@@ -389,7 +389,7 @@ public sealed class InputDecorator : StatefulWidget
             var color = !d.Enabled ? ApplyOpacity(theme.OnSurfaceColor, 0.12)
                 : error ? theme.ErrorColor : Current.IsFocused ? theme.PrimaryColor
                 : border.IsOutline ? theme.OutlineColor : theme.OnSurfaceVariantColor;
-            var width = Current.IsFocused ? 2.0 : 1.0;
+            double width = Current.IsFocused ? 2.0 : 1.0;
             return border.CopyWith(new BorderSide(color, width));
         }
 
@@ -436,7 +436,7 @@ public sealed class InputDecorator : StatefulWidget
             b.FontFamily ?? a.FontFamily, b.FontSize ?? a.FontSize, b.Color ?? a.Color, b.FontWeight ?? a.FontWeight,
             b.FontStyle ?? a.FontStyle, b.Height ?? a.Height, b.LetterSpacing ?? a.LetterSpacing);
         private static Color ApplyOpacity(Color c, double opacity) => Color.FromArgb((byte)Math.Round(c.A * Math.Clamp(opacity, 0, 1)), c.R, c.G, c.B);
-        private static Color Blend(Color a, Color b) { var alpha = b.A / 255.0; return Color.FromArgb(a.A,
+        private static Color Blend(Color a, Color b) { double alpha = b.A / 255.0; return Color.FromArgb(a.A,
             (byte)Math.Round(a.R + (b.R - a.R) * alpha), (byte)Math.Round(a.G + (b.G - a.G) * alpha), (byte)Math.Round(a.B + (b.B - a.B) * alpha)); }
     }
 }
@@ -458,7 +458,7 @@ internal sealed class InputBorderPainter : CustomPainter
     public override void Paint(PaintingContext context, Size size)
     {
         var rect = new Rect(size);
-        var radius = _border.BorderRadius.Radius;
+        double radius = _border.BorderRadius.Radius;
         if (_fillColor.A > 0) context.DrawRectangle(new SolidColorBrush(_fillColor), null, rect, radius, radius);
         if (ReferenceEquals(_border, InputBorder.None) || _border.BorderSide.Width <= 0) return;
         var pen = new Pen(new SolidColorBrush(_border.BorderSide.Color), _border.BorderSide.Width);

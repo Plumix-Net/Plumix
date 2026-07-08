@@ -36,7 +36,7 @@ public sealed class RenderParagraph : RenderBox
         get => _text;
         set
         {
-            var next = value ?? string.Empty;
+            string next = value ?? string.Empty;
             if (string.Equals(_text, next, StringComparison.Ordinal))
             {
                 return;
@@ -268,13 +268,13 @@ public sealed class RenderParagraph : RenderBox
 
     protected override void PerformLayout()
     {
-        var maxWidth = double.IsInfinity(Constraints.MaxWidth)
+        double maxWidth = double.IsInfinity(Constraints.MaxWidth)
             ? double.PositiveInfinity
             : Math.Max(0, Constraints.MaxWidth);
-        var maxHeight = double.IsInfinity(Constraints.MaxHeight)
+        double maxHeight = double.IsInfinity(Constraints.MaxHeight)
             ? double.PositiveInfinity
             : Math.Max(0, Constraints.MaxHeight);
-        var lineHeight = _height is > 0
+        double lineHeight = _height is > 0
             ? Math.Max(0.01, _fontSize * _height.Value)
             : double.NaN;
         var typeface = new Typeface(_fontFamily, _fontStyle, _fontWeight, _fontStretch);
@@ -285,7 +285,7 @@ public sealed class RenderParagraph : RenderBox
 
             if (ShouldTightenAlignedWidth(_layout, maxWidth))
             {
-                var tightenedWidth = Math.Max(0, Math.Min(maxWidth, _layout.WidthIncludingTrailingWhitespace));
+                double tightenedWidth = Math.Max(0, Math.Min(maxWidth, _layout.WidthIncludingTrailingWhitespace));
                 if (tightenedWidth > 0)
                 {
                     _layout = CreateTextLayout(typeface, tightenedWidth, maxHeight, lineHeight);

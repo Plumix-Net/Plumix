@@ -509,10 +509,10 @@ public static class ImagePainting
             return [];
         }
 
-        var startX = 0;
-        var stopX = 0;
-        var startY = 0;
-        var stopY = 0;
+        int startX = 0;
+        int stopX = 0;
+        int startY = 0;
+        int stopY = 0;
         if (repeat is ImageRepeat.Repeat or ImageRepeat.RepeatX)
         {
             startX = (int)Math.Floor((outputRect.Left - fundamentalRect.Left) / fundamentalRect.Width);
@@ -525,9 +525,9 @@ public static class ImagePainting
         }
 
         var result = new List<Rect>();
-        for (var x = startX; x <= stopX; x++)
+        for (int x = startX; x <= stopX; x++)
         {
-            for (var y = startY; y <= stopY; y++)
+            for (int y = startY; y <= stopY; y++)
             {
                 result.Add(fundamentalRect.Translate(x * fundamentalRect.Width, y * fundamentalRect.Height));
             }
@@ -577,21 +577,21 @@ public static class ImagePainting
         double scale)
     {
         if (!double.IsFinite(scale) || scale <= 0) throw new ArgumentOutOfRangeException(nameof(scale));
-        var sourceX = new[] { 0.0, centerSlice.Left, centerSlice.Right, imageSize.Width };
-        var sourceY = new[] { 0.0, centerSlice.Top, centerSlice.Bottom, imageSize.Height };
-        var left = centerSlice.Left / scale;
-        var right = (imageSize.Width - centerSlice.Right) / scale;
-        var top = centerSlice.Top / scale;
-        var bottom = (imageSize.Height - centerSlice.Bottom) / scale;
+        double[] sourceX = new[] { 0.0, centerSlice.Left, centerSlice.Right, imageSize.Width };
+        double[] sourceY = new[] { 0.0, centerSlice.Top, centerSlice.Bottom, imageSize.Height };
+        double left = centerSlice.Left / scale;
+        double right = (imageSize.Width - centerSlice.Right) / scale;
+        double top = centerSlice.Top / scale;
+        double bottom = (imageSize.Height - centerSlice.Bottom) / scale;
         NormalizeBorders(destination.Width, ref left, ref right);
         NormalizeBorders(destination.Height, ref top, ref bottom);
-        var destinationX = new[] { destination.Left, destination.Left + left, destination.Right - right, destination.Right };
-        var destinationY = new[] { destination.Top, destination.Top + top, destination.Bottom - bottom, destination.Bottom };
+        double[] destinationX = new[] { destination.Left, destination.Left + left, destination.Right - right, destination.Right };
+        double[] destinationY = new[] { destination.Top, destination.Top + top, destination.Bottom - bottom, destination.Bottom };
         var result = new List<ImagePatch>(9);
 
-        for (var x = 0; x < 3; x++)
+        for (int x = 0; x < 3; x++)
         {
-            for (var y = 0; y < 3; y++)
+            for (int y = 0; y < 3; y++)
             {
                 result.Add(new ImagePatch(
                     Source: new Rect(
@@ -608,9 +608,9 @@ public static class ImagePainting
 
     private static void NormalizeBorders(double extent, ref double leading, ref double trailing)
     {
-        var sum = leading + trailing;
+        double sum = leading + trailing;
         if (sum <= extent || sum <= 0) return;
-        var factor = extent / sum;
+        double factor = extent / sum;
         leading *= factor;
         trailing *= factor;
     }
@@ -622,7 +622,7 @@ public static class ImagePainting
 
     private static Rect InscribedSquare(Rect rect)
     {
-        var side = Math.Min(rect.Width, rect.Height);
+        double side = Math.Min(rect.Width, rect.Height);
         return new Rect(
             rect.Center.X - (side / 2.0),
             rect.Center.Y - (side / 2.0),

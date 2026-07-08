@@ -135,8 +135,8 @@ public sealed class NavigationBar : StatelessWidget
         var theme = Theme.Of(context);
         var navigationTheme = NavigationBarTheme.Of(context);
         var defaults = ResolveDefaults(theme);
-        var effectiveHeight = Height ?? navigationTheme.Height ?? defaults.Height!.Value;
-        var effectiveElevation = Elevation ?? navigationTheme.Elevation ?? defaults.Elevation!.Value;
+        double effectiveHeight = Height ?? navigationTheme.Height ?? defaults.Height!.Value;
+        double effectiveElevation = Elevation ?? navigationTheme.Elevation ?? defaults.Elevation!.Value;
         var effectiveBackground = BackgroundColor ?? navigationTheme.BackgroundColor ?? defaults.BackgroundColor!.Value;
         var effectiveShadow = ShadowColor ?? navigationTheme.ShadowColor ?? defaults.ShadowColor;
         var effectiveSurfaceTint = SurfaceTintColor ?? navigationTheme.SurfaceTintColor ?? defaults.SurfaceTintColor;
@@ -146,12 +146,12 @@ public sealed class NavigationBar : StatelessWidget
         var effectiveLabelPadding = LabelPadding ?? navigationTheme.LabelPadding ?? defaults.LabelPadding ?? new Thickness(0, 4, 0, 0);
 
         var children = new List<Widget>(Destinations.Count);
-        for (var index = 0; index < Destinations.Count; index++)
+        for (int index = 0; index < Destinations.Count; index++)
         {
             var destination = Destinations[index];
-            var capturedIndex = index;
+            int capturedIndex = index;
             Action onTap = OnDestinationSelected is null ? () => { } : () => OnDestinationSelected(capturedIndex);
-            var indexLabel = MaterialLocalizations.Of(context).TabLabel(index, Destinations.Count);
+            string indexLabel = MaterialLocalizations.Of(context).TabLabel(index, Destinations.Count);
             Widget tile = destination is NavigationDestination navigationDestination
                 ? new NavigationBarDestinationTile(
                     destination: navigationDestination,
@@ -331,7 +331,7 @@ public sealed class NavigationIndicator : StatelessWidget
 
     public override Widget Build(BuildContext context)
     {
-        var scale = AnimationValue <= 0
+        double scale = AnimationValue <= 0
             ? 0
             : 0.4 + (0.6 * Curves.EaseInOut(AnimationValue));
         var shape = Shape ?? ShapeBorder.RoundedRectangle(BorderRadius.Radius);
@@ -414,7 +414,7 @@ internal sealed class NavigationBarDestinationTileState : State
         var old = (NavigationBarDestinationTile)oldWidget;
         if (old.Duration != CurrentWidget.Duration)
         {
-            var value = _controller?.Value ?? (CurrentWidget.Selected ? 1 : 0);
+            double value = _controller?.Value ?? (CurrentWidget.Selected ? 1 : 0);
             DisposeController();
             CreateController(value);
         }
@@ -434,7 +434,7 @@ internal sealed class NavigationBarDestinationTileState : State
     {
         var widget = CurrentWidget;
         var destination = widget.Destination;
-        var progress = _controller?.Evaluate() ?? (widget.Selected ? 1 : 0);
+        double progress = _controller?.Evaluate() ?? (widget.Selected ? 1 : 0);
         var icon = widget.Selected && destination.SelectedIcon is not null
             ? destination.SelectedIcon
             : destination.Icon;
@@ -457,7 +457,7 @@ internal sealed class NavigationBarDestinationTileState : State
         }
         else
         {
-            var labelOpacity = widget.LabelBehavior == NavigationDestinationLabelBehavior.AlwaysShow ? 1 : progress;
+            double labelOpacity = widget.LabelBehavior == NavigationDestinationLabelBehavior.AlwaysShow ? 1 : progress;
             var label = new Opacity(
                 opacity: labelOpacity,
                 child: new Padding(
@@ -492,7 +492,7 @@ internal sealed class NavigationBarDestinationTileState : State
             semanticLabel: $"{destination.Label}, {widget.IndexLabel}",
             clipBehavior: Clip.None);
 
-        var tooltipMessage = destination.Tooltip ?? destination.Label;
+        string tooltipMessage = destination.Tooltip ?? destination.Label;
         if (tooltipMessage.Length > 0)
         {
             result = new Tooltip(
@@ -580,7 +580,7 @@ internal static class NavigationSurfaceUtilities
 {
     public static Color ApplySurfaceTint(Color background, Color surfaceTint, double elevation)
     {
-        var opacity = elevation switch
+        double opacity = elevation switch
         {
             <= 0 => 0,
             <= 1 => 0.05,
@@ -601,7 +601,7 @@ internal static class NavigationSurfaceUtilities
     {
         if (useMaterial3 && surfaceTintColor.HasValue && surfaceTintColor.Value.A > 0 && elevation > 0)
         {
-            var opacity = elevation switch
+            double opacity = elevation switch
             {
                 <= 0 => 0,
                 <= 1 => 0.05,

@@ -1,0 +1,11 @@
+root = true
+
+[*.{cs,csx}]
+indent_style = space
+indent_size = 4
+
+# Code style: explicit types for primitives/string, var only when the type is apparent.
+# See AGENTS.md (Change Guidelines) and docs/ai/INVARIANTS.md (Code Style).
+csharp_style_var_for_built_in_types = false:warning
+csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_style_var_elsewhere = true:suggestion

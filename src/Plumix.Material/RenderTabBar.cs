@@ -78,13 +78,13 @@ internal sealed class RenderTabBar : RenderBox,
         TabIndicatorAnimation indicatorAnimation, TextDirection textDirection,
         Action<IReadOnlyList<Rect>, double>? onLayout, Thickness labelPadding)
     {
-        var layoutChanged = _isScrollable != isScrollable || _alignment != alignment || _textDirection != textDirection;
-        var indicatorGeometryChanged = Math.Abs(_animationValue - animationValue) > 0.000001
-                                       || _indicatorSize != indicatorSize
-                                       || Math.Abs(_indicatorWeight - indicatorWeight) > 0.000001
-                                       || _indicatorPadding != indicatorPadding
-                                       || _labelPadding != labelPadding
-                                       || _indicatorAnimation != indicatorAnimation;
+        bool layoutChanged = _isScrollable != isScrollable || _alignment != alignment || _textDirection != textDirection;
+        bool indicatorGeometryChanged = Math.Abs(_animationValue - animationValue) > 0.000001
+                                        || _indicatorSize != indicatorSize
+                                        || Math.Abs(_indicatorWeight - indicatorWeight) > 0.000001
+                                        || _indicatorPadding != indicatorPadding
+                                        || _labelPadding != labelPadding
+                                        || _indicatorAnimation != indicatorAnimation;
         _animationValue = animationValue;
         _currentIndex = currentIndex;
         _previousIndex = previousIndex;
@@ -128,10 +128,10 @@ internal sealed class RenderTabBar : RenderBox,
             return;
         }
 
-        var maxHeight = Constraints.HasBoundedHeight ? Constraints.MaxHeight : double.PositiveInfinity;
+        double maxHeight = Constraints.HasBoundedHeight ? Constraints.MaxHeight : double.PositiveInfinity;
         var probe = new BoxConstraints(MaxHeight: maxHeight);
         var widths = new List<double>(ChildCount);
-        var height = 0.0;
+        double height = 0.0;
         for (var child = FirstChild; child is not null; child = ChildAfter(child))
         {
             child.Layout(probe, parentUsesSize: true);
@@ -140,21 +140,21 @@ internal sealed class RenderTabBar : RenderBox,
             height = Math.Max(height, child.Size.Height);
         }
 
-        var availableWidth = Constraints.HasBoundedWidth ? Constraints.MaxWidth : widths.Sum();
-        var fill = !_isScrollable && _alignment == TabAlignment.Fill;
-        var totalWidth = fill ? availableWidth : widths.Sum();
-        var start = _alignment == TabAlignment.Center && totalWidth < availableWidth
+        double availableWidth = Constraints.HasBoundedWidth ? Constraints.MaxWidth : widths.Sum();
+        bool fill = !_isScrollable && _alignment == TabAlignment.Fill;
+        double totalWidth = fill ? availableWidth : widths.Sum();
+        double start = _alignment == TabAlignment.Center && totalWidth < availableWidth
             ? (availableWidth - totalWidth) / 2
             : 0;
         Size = Constraints.Constrain(new Size(_isScrollable ? totalWidth : availableWidth, height));
 
-        var x = start;
-        var index = 0;
+        double x = start;
+        int index = 0;
         for (var child = FirstChild; child is not null; child = ChildAfter(child), index++)
         {
-            var width = fill ? availableWidth / ChildCount : widths[index];
+            double width = fill ? availableWidth / ChildCount : widths[index];
             child.Layout(BoxConstraints.Tight(new Size(width, height)), parentUsesSize: true);
-            var logicalX = _textDirection == TextDirection.Rtl ? Size.Width - x - width : x;
+            double logicalX = _textDirection == TextDirection.Rtl ? Size.Width - x - width : x;
             ((TabBarParentData)child.parentData!).offset = new Point(logicalX, 0);
             _tabRects.Add(new Rect(logicalX, 0, width, height));
             x += width;
@@ -178,7 +178,7 @@ internal sealed class RenderTabBar : RenderBox,
         var translated = new Rect(indicatorRect.Position + offset, indicatorRect.Size);
         if (_indicator is { } decoration)
         {
-            var radius = decoration.EffectiveBorderRadius.Radius;
+            double radius = decoration.EffectiveBorderRadius.Radius;
             context.DrawRectangle(
                 decoration.Brush ?? new SolidColorBrush(decoration.Color ?? Colors.Transparent),
                 decoration.Border is { } border ? new Pen(new SolidColorBrush(border.Color), border.Width) : null,
@@ -188,7 +188,7 @@ internal sealed class RenderTabBar : RenderBox,
             return;
         }
 
-        var radiusValue = _indicatorSize == TabBarIndicatorSize.Label ? _indicatorWeight : 0;
+        double radiusValue = _indicatorSize == TabBarIndicatorSize.Label ? _indicatorWeight : 0;
         context.DrawRectangle(new SolidColorBrush(_indicatorColor), null, translated, radiusValue, radiusValue);
     }
 
@@ -219,19 +219,19 @@ internal sealed class RenderTabBar : RenderBox,
     private void UpdateIndicatorRect()
     {
         if (_tabRects.Count == 0) { IndicatorRect = null; return; }
-        var value = Math.Clamp(_animationValue, 0, _tabRects.Count - 1);
-        var from = Math.Clamp((int)Math.Floor(value), 0, _tabRects.Count - 1);
-        var to = Math.Clamp((int)Math.Ceiling(value), 0, _tabRects.Count - 1);
-        var progress = value - from;
+        double value = Math.Clamp(_animationValue, 0, _tabRects.Count - 1);
+        int from = Math.Clamp((int)Math.Floor(value), 0, _tabRects.Count - 1);
+        int to = Math.Clamp((int)Math.Ceiling(value), 0, _tabRects.Count - 1);
+        double progress = value - from;
         var fromRect = IndicatorBounds(from);
         var toRect = IndicatorBounds(to);
         double left;
         double right;
         if (_indicatorAnimation == TabIndicatorAnimation.Elastic && from != to)
         {
-            var movingRight = toRect.Center.X > fromRect.Center.X;
-            var accelerate = 1 - Math.Cos(progress * Math.PI / 2);
-            var decelerate = Math.Sin(progress * Math.PI / 2);
+            bool movingRight = toRect.Center.X > fromRect.Center.X;
+            double accelerate = 1 - Math.Cos(progress * Math.PI / 2);
+            double decelerate = Math.Sin(progress * Math.PI / 2);
             left = Lerp(fromRect.Left, toRect.Left, movingRight ? accelerate : decelerate);
             right = Lerp(fromRect.Right, toRect.Right, movingRight ? decelerate : accelerate);
         }
@@ -249,14 +249,14 @@ internal sealed class RenderTabBar : RenderBox,
         var rect = _tabRects[index];
         if (_indicatorSize == TabBarIndicatorSize.Label)
         {
-            var intrinsicWidth = index < _intrinsicWidths.Count ? _intrinsicWidths[index] : rect.Width;
-            var labelWidth = Math.Min(
+            double intrinsicWidth = index < _intrinsicWidths.Count ? _intrinsicWidths[index] : rect.Width;
+            double labelWidth = Math.Min(
                 rect.Width,
                 Math.Max(0, intrinsicWidth - _labelPadding.Left - _labelPadding.Right));
             rect = new Rect(rect.Center.X - (labelWidth / 2), rect.Y, labelWidth, rect.Height);
         }
-        var left = rect.Left + _indicatorPadding.Left;
-        var right = rect.Right - _indicatorPadding.Right;
+        double left = rect.Left + _indicatorPadding.Left;
+        double right = rect.Right - _indicatorPadding.Right;
         if (right < left) throw new InvalidOperationException("Indicator padding exceeds tab bounds.");
         return new Rect(left, rect.Top + _indicatorPadding.Top, right - left,
             Math.Max(0, rect.Height - _indicatorPadding.Top - _indicatorPadding.Bottom));

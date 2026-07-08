@@ -124,15 +124,15 @@ internal sealed class DatePickerDialogState : State
     public override Widget Build(BuildContext context)
     {
         var theme = Theme.Of(context);
-        var useMaterial3 = theme.UseMaterial3;
+        bool useMaterial3 = theme.UseMaterial3;
         var localizations = MaterialLocalizations.Of(context);
         var datePickerTheme = DatePickerTheme.Of(context);
         var defaults = DatePickerTheme.Defaults(context);
         var media = MediaQuery.MaybeOf(context) ?? new MediaQueryData(Size: new Size(360, 640));
-        var landscape = media.Size.Width > media.Size.Height;
-        var calendarMode = _entryMode is DatePickerEntryMode.Calendar or DatePickerEntryMode.CalendarOnly;
+        bool landscape = media.Size.Width > media.Size.Height;
+        bool calendarMode = _entryMode is DatePickerEntryMode.Calendar or DatePickerEntryMode.CalendarOnly;
         var baseSize = ResolveDialogSize(useMaterial3, calendarMode, landscape);
-        var scale = Math.Clamp(media.TextScaleFactor, 0, 3);
+        double scale = Math.Clamp(media.TextScaleFactor, 0, 3);
         var dialogSize = new Size(baseSize.Width * scale, baseSize.Height * scale);
         var headerForeground = datePickerTheme.HeaderForegroundColor ?? defaults.HeaderForegroundColor;
         var headlineStyle = ResolveHeadlineStyle(theme, datePickerTheme, defaults, landscape)
@@ -167,9 +167,9 @@ internal sealed class DatePickerDialogState : State
                 break;
         }
 
-        var helpText = Current.HelpText
-                       ?? (useMaterial3 ? localizations.DatePickerHelpText : localizations.DatePickerHelpText.ToUpperInvariant());
-        var titleText = _selectedDate is { } selected
+        string helpText = Current.HelpText
+                          ?? (useMaterial3 ? localizations.DatePickerHelpText : localizations.DatePickerHelpText.ToUpperInvariant());
+        string titleText = _selectedDate is { } selected
             ? Current.CalendarDelegate.FormatMediumDate(selected, localizations)
             : string.Empty;
         var header = BuildHeader(

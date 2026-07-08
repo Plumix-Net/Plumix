@@ -71,6 +71,14 @@ Allowed dependency direction (mirrors Flutter's `widgets <- cupertino <- materia
 - Scope: parity covers demo features, routes, and page/module structure. Host glue (`App.axaml`, csproj/platform bootstrap, Avalonia wiring) is exempt — purely host-side edits do not require a Dart-side change.
 - Both samples must be updated in the same iteration, with status reflected in `docs/ai/PARITY_MATRIX.md`.
 
+## Code Style
+
+- Use **explicit types** for primitive/built-in value types and `string`: `double`, `int`, `long`, `float`, `decimal`, `bool`, `char`, `byte`, `short`, and their unsigned/`string` counterparts. Do not use `var` for these.
+  - Applies to locals, `?? ` fallback chains, `Math.*` results, cast/conversion results, and pattern-binding intermediates whose inferred type is a primitive.
+  - Example: `double effectiveWidth = width ?? theme?.Thickness ?? 0.0;` (not `var`).
+- Keep `var` for complex/reference types where the type is evident from the right-hand side: constructor calls (`new Size(...)`), factory/`Of` accessors (`Theme.Of(context)`), LINQ results, and other non-primitive expressions.
+- This is a non-negotiable convention for all new and ported code; agents must emit it correctly on first pass rather than relying on a follow-up refactor.
+
 ## Fast Safety Checks
 
 - Lifecycle: `src/Plumix.Tests/ElementLifecycleTests.cs`

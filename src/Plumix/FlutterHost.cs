@@ -135,10 +135,10 @@ public class PlumixHost : Control
             return;
         }
 
-        var keyName = e.Key.ToString();
-        var isBackKey = e.Key == Key.Escape
-                        || string.Equals(keyName, "Back", StringComparison.Ordinal)
-                        || string.Equals(keyName, "BrowserBack", StringComparison.Ordinal);
+        string keyName = e.Key.ToString();
+        bool isBackKey = e.Key == Key.Escape
+                         || string.Equals(keyName, "Back", StringComparison.Ordinal)
+                         || string.Equals(keyName, "BrowserBack", StringComparison.Ordinal);
         if (!isBackKey)
         {
             return;
@@ -302,7 +302,7 @@ public class PlumixHost : Control
         var viewPadding = _insetsManager?.SafeAreaPadding ?? default;
         var viewInsets = ResolveViewInsets(_inputPane?.OccludedRect ?? default, Bounds.Size);
         var size = Bounds.Size;
-        var scale = _attachedTopLevel?.RenderScaling ?? 1.0;
+        double scale = _attachedTopLevel?.RenderScaling ?? 1.0;
         if (!double.IsFinite(scale) || scale <= 0)
         {
             scale = 1.0;
@@ -575,7 +575,7 @@ public class PlumixHost : Control
         }
 
         var style = _currentSystemUiOverlayStyle;
-        var shouldDisplayEdgeToEdge = ShouldDisplayEdgeToEdge(style);
+        bool shouldDisplayEdgeToEdge = ShouldDisplayEdgeToEdge(style);
         if (_insetsManager.DisplayEdgeToEdgePreference != shouldDisplayEdgeToEdge)
         {
             _insetsManager.DisplayEdgeToEdgePreference = shouldDisplayEdgeToEdge;
@@ -648,7 +648,7 @@ public class PlumixHost : Control
         var activityField = insetsManager.GetType().GetField(
             "_activity",
             BindingFlags.Instance | BindingFlags.NonPublic);
-        var activity = activityField?.GetValue(insetsManager);
+        object? activity = activityField?.GetValue(insetsManager);
         if (activity == null)
         {
             return;
@@ -657,7 +657,7 @@ public class PlumixHost : Control
         var windowProperty = activity.GetType().GetProperty(
             "Window",
             BindingFlags.Instance | BindingFlags.Public);
-        var window = windowProperty?.GetValue(activity);
+        object? window = windowProperty?.GetValue(activity);
         if (window == null)
         {
             return;
@@ -687,7 +687,7 @@ public class PlumixHost : Control
         }
 
         var parameterType = method.GetParameters()[0].ParameterType;
-        var argument = CreateAndroidColorArgument(parameterType, color);
+        object? argument = CreateAndroidColorArgument(parameterType, color);
         if (argument == null)
         {
             return;
@@ -698,7 +698,7 @@ public class PlumixHost : Control
 
     private static object? CreateAndroidColorArgument(Type parameterType, Color color)
     {
-        var argb = unchecked((int)ToArgb(color));
+        int argb = unchecked((int)ToArgb(color));
         if (parameterType == typeof(int))
         {
             return argb;
@@ -728,7 +728,7 @@ public class PlumixHost : Control
             return default;
         }
 
-        var bottomInset = Math.Clamp(occludedRect.Height, 0.0, hostSize.Height);
+        double bottomInset = Math.Clamp(occludedRect.Height, 0.0, hostSize.Height);
         return new Thickness(0, 0, 0, bottomInset);
     }
 
@@ -739,7 +739,7 @@ public class PlumixHost : Control
 
     private void FlushSemanticsAndNotify()
     {
-        var hadPendingSemantics = _pipeline.PendingSemanticsNodeCount > 0;
+        bool hadPendingSemantics = _pipeline.PendingSemanticsNodeCount > 0;
         _pipeline.FlushSemantics();
         if (hadPendingSemantics)
         {
@@ -775,14 +775,14 @@ public class PlumixHost : Control
         var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
         if (clipboard != null)
         {
-            var systemText = await clipboard.TryGetTextAsync();
+            string? systemText = await clipboard.TryGetTextAsync();
             if (!string.IsNullOrEmpty(systemText))
             {
                 TextClipboard.SetText(systemText);
             }
         }
 
-        var textToPaste = TextClipboard.GetText() ?? string.Empty;
+        string textToPaste = TextClipboard.GetText() ?? string.Empty;
         if (!string.IsNullOrEmpty(textToPaste))
         {
             _ = FrameworkFocusManager.Instance.HandleTextInput(textToPaste);

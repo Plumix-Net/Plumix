@@ -125,7 +125,7 @@ public sealed class MaterialScaffoldTests
 
         var shadows = decorated.Decoration.BoxShadows!.Value;
         Assert.True(shadows.Count > 0);
-        for (var i = 0; i < shadows.Count; i++)
+        for (int i = 0; i < shadows.Count; i++)
         {
             var shadow = shadows[i];
             Assert.Equal(Colors.Goldenrod.R, shadow.Color.R);
@@ -177,7 +177,7 @@ public sealed class MaterialScaffoldTests
 
         var shadows = decorated.Decoration.BoxShadows!.Value;
         Assert.True(shadows.Count > 0);
-        for (var i = 0; i < shadows.Count; i++)
+        for (int i = 0; i < shadows.Count; i++)
         {
             var shadow = shadows[i];
             Assert.Equal(Colors.DarkGreen.R, shadow.Color.R);
@@ -250,11 +250,11 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var menuGlyph = char.ConvertFromUtf32(Icons.Menu.CodePoint);
+        string menuGlyph = char.ConvertFromUtf32(Icons.Menu.CodePoint);
         var menuParagraph = FindParagraphByText(root.ChildElement?.RenderObject, menuGlyph);
         Assert.NotNull(menuParagraph);
 
-        var arrowBackGlyph = char.ConvertFromUtf32(
+        string arrowBackGlyph = char.ConvertFromUtf32(
             ThemeData.Light.Platform is TargetPlatform.IOS or TargetPlatform.MacOS
                 ? Icons.ArrowBackIosNewRounded.CodePoint
                 : Icons.ArrowBack.CodePoint);
@@ -281,7 +281,7 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var menuGlyph = char.ConvertFromUtf32(Icons.Menu.CodePoint);
+        string menuGlyph = char.ConvertFromUtf32(Icons.Menu.CodePoint);
         var menuParagraph = FindParagraphByText(root.ChildElement?.RenderObject, menuGlyph);
         Assert.Null(menuParagraph);
     }
@@ -303,7 +303,7 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var menuGlyph = char.ConvertFromUtf32(Icons.Menu.CodePoint);
+        string menuGlyph = char.ConvertFromUtf32(Icons.Menu.CodePoint);
         var menuParagraph = FindParagraphByText(root.ChildElement?.RenderObject, menuGlyph);
         Assert.NotNull(menuParagraph);
     }
@@ -327,7 +327,7 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var menuGlyph = char.ConvertFromUtf32(Icons.Menu.CodePoint);
+        string menuGlyph = char.ConvertFromUtf32(Icons.Menu.CodePoint);
         var menuParagraph = FindParagraphByText(root.ChildElement?.RenderObject, menuGlyph);
         Assert.Null(menuParagraph);
     }
@@ -938,7 +938,7 @@ public sealed class MaterialScaffoldTests
                 color => color.R == 0 && color.G == 0 && color.B == 0 && color.A < 0x8A);
             Assert.NotNull(scrimAtStart);
 
-            var now = Scheduler.CurrentSeconds;
+            double now = Scheduler.CurrentSeconds;
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.15));
             harness.Pump(size);
 
@@ -993,7 +993,7 @@ public sealed class MaterialScaffoldTests
             state.OpenDrawer();
             harness.Pump(size);
 
-            var now = Scheduler.CurrentSeconds;
+            double now = Scheduler.CurrentSeconds;
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
             Assert.True(state.IsDrawerOpen);
@@ -1047,7 +1047,7 @@ public sealed class MaterialScaffoldTests
             state.OpenDrawer();
             harness.Pump(size);
 
-            var now = Scheduler.CurrentSeconds;
+            double now = Scheduler.CurrentSeconds;
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
             Assert.True(state.IsDrawerOpen);
@@ -1102,7 +1102,7 @@ public sealed class MaterialScaffoldTests
             DispatchPointerUp(binding, harness.RenderView, pointer: 7101, position: new Point(260, 120), timestampUtc: start.AddMilliseconds(150));
             harness.Pump(size);
 
-            var now = Scheduler.CurrentSeconds;
+            double now = Scheduler.CurrentSeconds;
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
@@ -1147,7 +1147,7 @@ public sealed class MaterialScaffoldTests
             state.OpenDrawer();
             harness.Pump(size);
 
-            var now = Scheduler.CurrentSeconds;
+            double now = Scheduler.CurrentSeconds;
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
             Assert.True(state.IsDrawerOpen);
@@ -1203,7 +1203,7 @@ public sealed class MaterialScaffoldTests
             DispatchPointerCancel(binding, harness.RenderView, pointer: 7103, position: new Point(80, 120));
             harness.Pump(size);
 
-            var now = Scheduler.CurrentSeconds;
+            double now = Scheduler.CurrentSeconds;
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
@@ -1249,7 +1249,7 @@ public sealed class MaterialScaffoldTests
             DispatchPointerCancel(binding, harness.RenderView, pointer: 7104, position: new Point(220, 120));
             harness.Pump(size);
 
-            var now = Scheduler.CurrentSeconds;
+            double now = Scheduler.CurrentSeconds;
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
@@ -1296,7 +1296,7 @@ public sealed class MaterialScaffoldTests
             DispatchPointerCancel(binding, harness.RenderView, pointer: 7105, position: new Point(112, 120));
             harness.Pump(size);
 
-            var now = Scheduler.CurrentSeconds;
+            double now = Scheduler.CurrentSeconds;
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
@@ -1343,7 +1343,7 @@ public sealed class MaterialScaffoldTests
             DispatchPointerUp(binding, harness.RenderView, pointer: 7111, position: new Point(120, 120), timestampUtc: start.AddMilliseconds(150));
             harness.Pump(size);
 
-            var now = Scheduler.CurrentSeconds;
+            double now = Scheduler.CurrentSeconds;
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
@@ -1388,7 +1388,7 @@ public sealed class MaterialScaffoldTests
             state.OpenEndDrawer();
             harness.Pump(size);
 
-            var now = Scheduler.CurrentSeconds;
+            double now = Scheduler.CurrentSeconds;
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
             Assert.True(state.IsEndDrawerOpen);
@@ -1444,7 +1444,7 @@ public sealed class MaterialScaffoldTests
             DispatchPointerCancel(binding, harness.RenderView, pointer: 7113, position: new Point(320, 120));
             harness.Pump(size);
 
-            var now = Scheduler.CurrentSeconds;
+            double now = Scheduler.CurrentSeconds;
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
@@ -1490,7 +1490,7 @@ public sealed class MaterialScaffoldTests
             DispatchPointerCancel(binding, harness.RenderView, pointer: 7114, position: new Point(150, 120));
             harness.Pump(size);
 
-            var now = Scheduler.CurrentSeconds;
+            double now = Scheduler.CurrentSeconds;
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
@@ -1540,7 +1540,7 @@ public sealed class MaterialScaffoldTests
             DispatchPointerUp(binding, harness.RenderView, pointer: 7121, position: new Point(260, 120), timestampUtc: startOpenAt.AddMilliseconds(150));
             harness.Pump(size);
 
-            var now = Scheduler.CurrentSeconds;
+            double now = Scheduler.CurrentSeconds;
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
@@ -1620,7 +1620,7 @@ public sealed class MaterialScaffoldTests
             DispatchPointerUp(binding, harness.RenderView, pointer: 7124, position: new Point(120, 120), timestampUtc: endOpenAt.AddMilliseconds(150));
             harness.Pump(size);
 
-            var now = Scheduler.CurrentSeconds;
+            double now = Scheduler.CurrentSeconds;
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
@@ -1697,7 +1697,7 @@ public sealed class MaterialScaffoldTests
             state.OpenDrawer();
             harness.Pump(size);
 
-            var now = Scheduler.CurrentSeconds;
+            double now = Scheduler.CurrentSeconds;
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
@@ -1746,7 +1746,7 @@ public sealed class MaterialScaffoldTests
             state.OpenDrawer();
             harness.Pump(size);
 
-            var now = Scheduler.CurrentSeconds;
+            double now = Scheduler.CurrentSeconds;
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
@@ -2462,7 +2462,7 @@ public sealed class MaterialScaffoldTests
         Navigator.PushNamed(rootContext!.Value, "/details");
         owner.FlushBuild();
 
-        var arrowBackGlyph = char.ConvertFromUtf32(
+        string arrowBackGlyph = char.ConvertFromUtf32(
             ThemeData.Light.Platform is TargetPlatform.IOS or TargetPlatform.MacOS
                 ? Icons.ArrowBackIosNewRounded.CodePoint
                 : Icons.ArrowBack.CodePoint);
@@ -2496,7 +2496,7 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var arrowBackGlyph = char.ConvertFromUtf32(
+        string arrowBackGlyph = char.ConvertFromUtf32(
             ThemeData.Light.Platform is TargetPlatform.IOS or TargetPlatform.MacOS
                 ? Icons.ArrowBackIosNewRounded.CodePoint
                 : Icons.ArrowBack.CodePoint);
@@ -2557,11 +2557,11 @@ public sealed class MaterialScaffoldTests
         Navigator.PushNamed(rootContext!.Value, "/dialog");
         owner.FlushBuild();
 
-        var closeGlyph = char.ConvertFromUtf32(Icons.Close.CodePoint);
+        string closeGlyph = char.ConvertFromUtf32(Icons.Close.CodePoint);
         var closeParagraph = FindParagraphByText(root.ChildElement?.RenderObject, closeGlyph);
         Assert.NotNull(closeParagraph);
 
-        var arrowBackGlyph = char.ConvertFromUtf32(Icons.ArrowBack.CodePoint);
+        string arrowBackGlyph = char.ConvertFromUtf32(Icons.ArrowBack.CodePoint);
         var arrowBackParagraph = FindParagraphByText(root.ChildElement?.RenderObject, arrowBackGlyph);
         Assert.Null(arrowBackParagraph);
     }
@@ -2613,7 +2613,7 @@ public sealed class MaterialScaffoldTests
         Navigator.PushNamed(rootContext!.Value, "/details");
         owner.FlushBuild();
 
-        var arrowBackGlyph = char.ConvertFromUtf32(Icons.ArrowBack.CodePoint);
+        string arrowBackGlyph = char.ConvertFromUtf32(Icons.ArrowBack.CodePoint);
         var arrowBackParagraph = FindParagraphByText(root.ChildElement?.RenderObject, arrowBackGlyph);
         Assert.Null(arrowBackParagraph);
     }

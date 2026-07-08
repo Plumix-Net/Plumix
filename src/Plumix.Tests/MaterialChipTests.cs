@@ -218,7 +218,7 @@ public sealed class MaterialChipTests : IDisposable
         harness.Pump(new Size(320, 120));
         var start = FindChipDecoration(harness.RenderView).Decoration.Color;
 
-        var now = Scheduler.CurrentSeconds;
+        double now = Scheduler.CurrentSeconds;
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 1));
         harness.Pump(new Size(320, 120));
         var middle = FindChipDecoration(harness.RenderView).Decoration.Color;
@@ -233,7 +233,7 @@ public sealed class MaterialChipTests : IDisposable
     [Fact]
     public void Chips_InvokeActionAndInverseSelectionCallbacks()
     {
-        var actionCount = 0;
+        int actionCount = 0;
         bool? selected = null;
         using var actionHarness = new WidgetRenderHarness(Root(
             ThemeData.Light,
@@ -382,7 +382,7 @@ public sealed class MaterialChipTests : IDisposable
     public void FilterChip_SelectionAndDeleteCallbacksRemainIndependent()
     {
         bool? selected = null;
-        var deleted = 0;
+        int deleted = 0;
         using var harness = new WidgetRenderHarness(Root(
             ThemeData.Light,
             new FilterChip(
@@ -416,7 +416,7 @@ public sealed class MaterialChipTests : IDisposable
     [Fact]
     public void InputChip_DeleteOnlyPathStaysVisuallyEnabledWithoutBodyTap()
     {
-        var deleted = 0;
+        int deleted = 0;
         var theme = ThemeData.Light with
         {
             OutlineVariantColor = Colors.CadetBlue,
@@ -501,7 +501,7 @@ public sealed class MaterialChipTests : IDisposable
     [Fact]
     public void InputChip_OnPressedAndOnSelectedPathsMatchBodyCallbackContract()
     {
-        var presses = 0;
+        int presses = 0;
         using var harness = new WidgetRenderHarness(Root(
             ThemeData.Light,
             new InputChip(new Text("Press"), onPressed: () => presses++)));

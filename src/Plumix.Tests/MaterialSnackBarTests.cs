@@ -147,7 +147,7 @@ public sealed class MaterialSnackBarTests : IDisposable
     [Fact]
     public void SnackBarAction_CanOnlyBePressedOnceAndUsesDisabledColors()
     {
-        var calls = 0;
+        int calls = 0;
         using var harness = new WidgetRenderHarness(Wrap(
             ThemeData.Light,
             new SizedBox(
@@ -195,7 +195,7 @@ public sealed class MaterialSnackBarTests : IDisposable
         Assert.NotNull(FindParagraph(harness.RenderView, "Second"));
 
         second.Close();
-        var now = Scheduler.CurrentSeconds;
+        double now = Scheduler.CurrentSeconds;
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.35));
         harness.Pump(new Size(360, 220));
@@ -213,7 +213,7 @@ public sealed class MaterialSnackBarTests : IDisposable
         harness.Pump(new Size(360, 220));
         var messenger = harness.FindState<ScaffoldMessengerState>();
         var controller = messenger.ShowSnackBar(Bar(showCloseIcon: true, persist: true));
-        var now = Scheduler.CurrentSeconds;
+        double now = Scheduler.CurrentSeconds;
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.35));
         var semantics = harness.PumpAndGetSemantics(new Size(360, 220));

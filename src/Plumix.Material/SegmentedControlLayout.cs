@@ -125,10 +125,10 @@ internal sealed class RenderSegmentedControlLayout : RenderBox,
         var loose = new BoxConstraints(
             MaxWidth: Constraints.MaxWidth,
             MaxHeight: Constraints.MaxHeight);
-        var maxWidth = 0.0;
-        var maxHeight = 0.0;
-        var totalWidth = 0.0;
-        var totalHeight = 0.0;
+        double maxWidth = 0.0;
+        double maxHeight = 0.0;
+        double totalWidth = 0.0;
+        double totalHeight = 0.0;
         for (var child = FirstChild; child is not null; child = ChildAfter(child))
         {
             child.Layout(loose, parentUsesSize: true);
@@ -141,12 +141,12 @@ internal sealed class RenderSegmentedControlLayout : RenderBox,
 
         if (Direction == Axis.Horizontal)
         {
-            var equalWidth = Expanded && Constraints.HasBoundedWidth
+            double equalWidth = Expanded && Constraints.HasBoundedWidth
                 ? Constraints.MaxWidth / ChildCount
                 : double.NaN;
             foreach (var item in measured)
             {
-                var width = double.IsNaN(equalWidth) ? item.Size.Width : equalWidth;
+                double width = double.IsNaN(equalWidth) ? item.Size.Width : equalWidth;
                 item.Child.Layout(BoxConstraints.Tight(new Size(width, maxHeight)), parentUsesSize: true);
             }
             totalWidth = double.IsNaN(equalWidth) ? totalWidth : Constraints.MaxWidth;
@@ -155,12 +155,12 @@ internal sealed class RenderSegmentedControlLayout : RenderBox,
         }
         else
         {
-            var equalHeight = Expanded && Constraints.HasBoundedHeight
+            double equalHeight = Expanded && Constraints.HasBoundedHeight
                 ? Constraints.MaxHeight / ChildCount
                 : double.NaN;
             foreach (var item in measured)
             {
-                var height = double.IsNaN(equalHeight) ? item.Size.Height : equalHeight;
+                double height = double.IsNaN(equalHeight) ? item.Size.Height : equalHeight;
                 item.Child.Layout(BoxConstraints.Tight(new Size(maxWidth, height)), parentUsesSize: true);
             }
             totalHeight = double.IsNaN(equalHeight) ? totalHeight : Constraints.MaxHeight;
@@ -173,7 +173,7 @@ internal sealed class RenderSegmentedControlLayout : RenderBox,
     {
         if (TextDirection == TextDirection.Ltr)
         {
-            var x = 0.0;
+            double x = 0.0;
             foreach (var item in measured)
             {
                 ((SegmentedControlParentData)item.Child.parentData!).offset = new Point(
@@ -184,7 +184,7 @@ internal sealed class RenderSegmentedControlLayout : RenderBox,
             return;
         }
 
-        var right = Size.Width;
+        double right = Size.Width;
         foreach (var item in measured)
         {
             right -= item.Child.Size.Width;
@@ -198,7 +198,7 @@ internal sealed class RenderSegmentedControlLayout : RenderBox,
     {
         if (VerticalDirection == VerticalDirection.Down)
         {
-            var y = 0.0;
+            double y = 0.0;
             foreach (var item in measured)
             {
                 ((SegmentedControlParentData)item.Child.parentData!).offset = new Point(
@@ -209,7 +209,7 @@ internal sealed class RenderSegmentedControlLayout : RenderBox,
             return;
         }
 
-        var bottom = Size.Height;
+        double bottom = Size.Height;
         foreach (var item in measured)
         {
             bottom -= item.Child.Size.Height;

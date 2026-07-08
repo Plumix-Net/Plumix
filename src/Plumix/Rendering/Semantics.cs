@@ -422,12 +422,12 @@ public sealed class SemanticsOwner
     private static Rect UnionBounds(List<SemanticsNode> nodes)
     {
         var first = nodes[0].Rect;
-        var minX = first.X;
-        var minY = first.Y;
-        var maxX = first.Right;
-        var maxY = first.Bottom;
+        double minX = first.X;
+        double minY = first.Y;
+        double maxX = first.Right;
+        double maxY = first.Bottom;
 
-        for (var index = 1; index < nodes.Count; index++)
+        for (int index = 1; index < nodes.Count; index++)
         {
             var rect = nodes[index].Rect;
             minX = Math.Min(minX, rect.X);

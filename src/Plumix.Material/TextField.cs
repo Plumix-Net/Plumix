@@ -135,12 +135,12 @@ public sealed class TextField : StatefulWidget
         public override Widget Build(BuildContext context)
         {
             var theme = Theme.Of(context);
-            var enabled = Current.Enabled ?? Current.Decoration?.Enabled ?? true;
+            bool enabled = Current.Enabled ?? Current.Decoration?.Enabled ?? true;
             var baseStyle = Current.Style ?? (theme.UseMaterial3 ? theme.TextTheme.BodyLarge : theme.TextTheme.TitleMedium);
             if (!enabled && Current.Style?.Color is null)
                 baseStyle = baseStyle.CopyWith(color: ApplyOpacity(theme.OnSurfaceColor, 0.38));
-            var multiline = Current.MaxLines != 1;
-            var positiveMaxLength = Current.MaxLength is > 0 ? Current.MaxLength : null;
+            bool multiline = Current.MaxLines != 1;
+            int? positiveMaxLength = Current.MaxLength is > 0 ? Current.MaxLength : null;
 
             Widget editable = new EditableText(
                 controller: _controller!,
@@ -169,7 +169,7 @@ public sealed class TextField : StatefulWidget
 
             if (multiline && !Current.Expands)
             {
-                var lineCount = Current.MinLines ?? Math.Min(Current.MaxLines ?? 3, 3);
+                int lineCount = Current.MinLines ?? Math.Min(Current.MaxLines ?? 3, 3);
                 editable = new SizedBox(height: Math.Max(24, lineCount * (baseStyle.FontSize ?? 16) * 1.35), child: editable);
             }
 
@@ -180,7 +180,7 @@ public sealed class TextField : StatefulWidget
             }
             else
             {
-                var generatedCounter = Current.MaxLength.HasValue
+                string? generatedCounter = Current.MaxLength.HasValue
                     ? Current.MaxLength == NoMaxLength ? TextLength(_controller!.Text).ToString() : $"{TextLength(_controller!.Text)}/{Current.MaxLength}"
                     : null;
                 var decoration = Current.Decoration.WithRuntime(enabled, Current.BuildCounter is null ? generatedCounter : null);
@@ -239,7 +239,7 @@ public sealed class TextField : StatefulWidget
         private void BeginHover()
         {
             if (!_hovering) SetState(() => _hovering = true);
-            var enabled = Current.Enabled ?? Current.Decoration?.Enabled ?? true;
+            bool enabled = Current.Enabled ?? Current.Decoration?.Enabled ?? true;
             _cursorHandle ??= MouseCursorManager.PushCursor(
                 Current.MouseCursor ?? (enabled ? SystemMouseCursors.Text : SystemMouseCursors.Basic));
         }

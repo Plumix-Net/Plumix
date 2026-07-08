@@ -101,7 +101,7 @@ public sealed class CalendarDatePicker : StatefulWidget
             if (_announcedInitialDate || CurrentWidget.InitialDate is not { } initialDate) return;
             _announcedInitialDate = true;
             var localizations = MaterialLocalizations.Of(Context);
-            var suffix = CurrentWidget.CalendarDelegate.IsSameDay(CurrentWidget.CurrentDate, initialDate)
+            string suffix = CurrentWidget.CalendarDelegate.IsSameDay(CurrentWidget.CurrentDate, initialDate)
                 ? $", {localizations.CurrentDateLabel}"
                 : string.Empty;
             _announcementText = $"{CurrentWidget.CalendarDelegate.FormatFullDate(initialDate, localizations)}{suffix}";
@@ -129,12 +129,12 @@ public sealed class CalendarDatePicker : StatefulWidget
             var titleStyle = theme.ToggleButtonTextStyle ?? defaults.ToggleButtonTextStyle!;
             var subHeaderColor = theme.SubHeaderForegroundColor ?? defaults.SubHeaderForegroundColor;
             var localizations = MaterialLocalizations.Of(context);
-            var useMaterial3 = Theme.Of(context).UseMaterial3;
+            bool useMaterial3 = Theme.Of(context).UseMaterial3;
             var media = MediaQuery.MaybeOf(context) ?? new MediaQueryData(Size: new Size(360, 640));
-            var portrait = media.Size.Height >= media.Size.Width;
-            var rowHeight = useMaterial3 && portrait ? 48.0 : 42.0;
-            var textScale = Math.Clamp(media.TextScaleFactor, 0, 3);
-            var pickerHeight = SubHeaderHeight + (rowHeight * 7) + (textScale > 1.3 ? 7 * ((textScale - 1) * 8) : 0);
+            bool portrait = media.Size.Height >= media.Size.Width;
+            double rowHeight = useMaterial3 && portrait ? 48.0 : 42.0;
+            double textScale = Math.Clamp(media.TextScaleFactor, 0, 3);
+            double pickerHeight = SubHeaderHeight + (rowHeight * 7) + (textScale > 1.3 ? 7 * ((textScale - 1) * 8) : 0);
 
             Widget picker = _mode == DatePickerMode.Day
                 ? BuildMonthPicker(context, rowHeight)
@@ -239,8 +239,8 @@ public sealed class CalendarDatePicker : StatefulWidget
         private Widget BuildMonthNavigation(Color? color)
         {
             var localizations = MaterialLocalizations.Of(Context);
-            var previousEnabled = !IsFirstMonth;
-            var nextEnabled = !IsLastMonth;
+            bool previousEnabled = !IsFirstMonth;
+            bool nextEnabled = !IsLastMonth;
             return new SizedBox(
                 width: 108,
                 child: new Row(
@@ -273,8 +273,8 @@ public sealed class CalendarDatePicker : StatefulWidget
         private Widget BuildModeArrow(Color? color)
         {
             const double size = 24;
-            var center = size / 2;
-            var angle = Math.PI * (_modeController?.Value ?? 0);
+            double center = size / 2;
+            double angle = Math.PI * (_modeController?.Value ?? 0);
             var rotation = new Matrix(Math.Cos(angle), Math.Sin(angle), -Math.Sin(angle), Math.Cos(angle), 0, 0);
             return new Plumix.Widgets.Transform(
                 transform: Matrix.CreateTranslation(center, center)
@@ -348,7 +348,7 @@ public sealed class CalendarDatePicker : StatefulWidget
                 _selectedDate = date;
                 _focusedDate = date;
                 var localizations = MaterialLocalizations.Of(Context);
-                var suffix = CurrentWidget.CalendarDelegate.IsSameDay(CurrentWidget.CurrentDate, date)
+                string suffix = CurrentWidget.CalendarDelegate.IsSameDay(CurrentWidget.CurrentDate, date)
                     ? $", {localizations.CurrentDateLabel}"
                     : string.Empty;
                 _announcementText = $"{localizations.SelectedDateLabel} {CurrentWidget.CalendarDelegate.FormatFullDate(date, localizations)}{suffix}";
@@ -360,8 +360,8 @@ public sealed class CalendarDatePicker : StatefulWidget
         {
             var widget = CurrentWidget;
             var previousMonth = _displayedMonth;
-            var days = widget.CalendarDelegate.GetDaysInMonth(date.Year, date.Month);
-            var preferredDay = Math.Min(_selectedDate?.Day ?? 1, days);
+            int days = widget.CalendarDelegate.GetDaysInMonth(date.Year, date.Month);
+            int preferredDay = Math.Min(_selectedDate?.Day ?? 1, days);
             var value = widget.CalendarDelegate.GetDay(date.Year, date.Month, preferredDay);
             if (value < widget.FirstDate) value = widget.FirstDate;
             if (value > widget.LastDate) value = widget.LastDate;
@@ -387,7 +387,7 @@ public sealed class CalendarDatePicker : StatefulWidget
         {
             if (!@event.IsDown) return KeyEventResult.Ignored;
             var direction = Directionality.Of(Context);
-            var delta = @event.Key switch
+            int delta = @event.Key switch
             {
                 "ArrowLeft" => direction == TextDirection.Ltr ? -1 : 1,
                 "ArrowRight" => direction == TextDirection.Ltr ? 1 : -1,
@@ -439,13 +439,13 @@ public sealed class CalendarDatePicker : StatefulWidget
 
         private DateTime? FocusableDayForMonth(DateTime month, int preferredDay)
         {
-            var days = CurrentWidget.CalendarDelegate.GetDaysInMonth(month.Year, month.Month);
+            int days = CurrentWidget.CalendarDelegate.GetDaysInMonth(month.Year, month.Month);
             if (preferredDay <= days)
             {
                 var preferred = CurrentWidget.CalendarDelegate.GetDay(month.Year, month.Month, preferredDay);
                 if (IsSelectable(preferred)) return preferred;
             }
-            for (var day = 1; day <= days; day++)
+            for (int day = 1; day <= days; day++)
             {
                 var candidate = CurrentWidget.CalendarDelegate.GetDay(month.Year, month.Month, day);
                 if (IsSelectable(candidate)) return candidate;
@@ -508,21 +508,21 @@ internal sealed class CalendarDayPicker : StatelessWidget
         var defaults = DatePickerTheme.Defaults(context);
         var weekdayStyle = theme.WeekdayStyle ?? defaults.WeekdayStyle!;
         var items = new List<Widget>(49);
-        for (var index = localizations.FirstDayOfWeekIndex; items.Count < 7; index = (index + 1) % 7)
+        for (int index = localizations.FirstDayOfWeekIndex; items.Count < 7; index = (index + 1) % 7)
         {
             items.Add(new Center(
                 child: new DefaultTextStyle(weekdayStyle, new Text(localizations.NarrowWeekdays[index]))));
         }
 
-        var year = DisplayedMonth.Year;
-        var month = DisplayedMonth.Month;
-        var offset = CalendarDelegate.FirstDayOffset(year, month, localizations);
-        for (var blank = 0; blank < offset; blank++) items.Add(new SizedBox());
-        var days = CalendarDelegate.GetDaysInMonth(year, month);
-        for (var day = 1; day <= days; day++)
+        int year = DisplayedMonth.Year;
+        int month = DisplayedMonth.Month;
+        int offset = CalendarDelegate.FirstDayOffset(year, month, localizations);
+        for (int blank = 0; blank < offset; blank++) items.Add(new SizedBox());
+        int days = CalendarDelegate.GetDaysInMonth(year, month);
+        for (int day = 1; day <= days; day++)
         {
             var date = CalendarDelegate.GetDay(year, month, day);
-            var disabled = date < FirstDate || date > LastDate || !(SelectableDayPredicate?.Invoke(date) ?? true);
+            bool disabled = date < FirstDate || date > LastDate || !(SelectableDayPredicate?.Invoke(date) ?? true);
             items.Add(new CalendarDay(
                 day: date,
                 isDisabled: disabled,
@@ -713,11 +713,11 @@ public sealed class YearPicker : StatefulWidget
 
         public override Widget Build(BuildContext context)
         {
-            var count = CurrentWidget.LastDate.Year - CurrentWidget.FirstDate.Year + 1;
-            var total = Math.Max(count, MinimumYears);
-            var scale = Math.Clamp(MediaQuery.MaybeTextScaleFactorOf(context) ?? 1, 0, 3);
-            var columns = scale > 1.65 ? 2 : 3;
-            var height = 52 + (scale > 1 ? (scale - 1) * 9 : 0);
+            int count = CurrentWidget.LastDate.Year - CurrentWidget.FirstDate.Year + 1;
+            int total = Math.Max(count, MinimumYears);
+            double scale = Math.Clamp(MediaQuery.MaybeTextScaleFactorOf(context) ?? 1, 0, 3);
+            int columns = scale > 1.65 ? 2 : 3;
+            double height = 52 + (scale > 1 ? (scale - 1) * 9 : 0);
             return new Column(
                 children:
                 [
@@ -739,9 +739,9 @@ public sealed class YearPicker : StatefulWidget
 
         private Widget BuildYearItem(int index, int count, int total, double textScale)
         {
-            var offset = count < MinimumYears ? (MinimumYears - count) / 2 : 0;
-            var year = CurrentWidget.FirstDate.Year + index - offset;
-            var disabled = year < CurrentWidget.FirstDate.Year || year > CurrentWidget.LastDate.Year;
+            int offset = count < MinimumYears ? (MinimumYears - count) / 2 : 0;
+            int year = CurrentWidget.FirstDate.Year + index - offset;
+            bool disabled = year < CurrentWidget.FirstDate.Year || year > CurrentWidget.LastDate.Year;
             return new CalendarYear(
                 year: year,
                 isDisabled: disabled,
@@ -755,7 +755,7 @@ public sealed class YearPicker : StatefulWidget
         private DateTime DateForYear(int year)
         {
             var widget = CurrentWidget;
-            var month = widget.SelectedDate?.Month ?? 1;
+            int month = widget.SelectedDate?.Month ?? 1;
             var date = widget.CalendarDelegate.GetMonth(year, month);
             var firstMonth = widget.CalendarDelegate.GetMonth(widget.FirstDate.Year, widget.FirstDate.Month);
             var lastMonth = widget.CalendarDelegate.GetMonth(widget.LastDate.Year, widget.LastDate.Month);
@@ -768,7 +768,7 @@ public sealed class YearPicker : StatefulWidget
 
         private double ScrollOffsetFor(DateTime date)
         {
-            var row = (date.Year - CurrentWidget.FirstDate.Year) / 3;
+            int row = (date.Year - CurrentWidget.FirstDate.Year) / 3;
             return ItemCount < MinimumYears ? 0 : Math.Max(0, row - 2) * 52;
         }
     }

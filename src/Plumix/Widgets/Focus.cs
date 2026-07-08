@@ -26,9 +26,9 @@ public readonly record struct FocusTextInputState(
 
     internal FocusTextInputState Normalize()
     {
-        var normalizedText = SurroundingText ?? string.Empty;
-        var clampedBaseOffset = Math.Clamp(SelectionBaseOffset, 0, normalizedText.Length);
-        var clampedExtentOffset = Math.Clamp(SelectionExtentOffset, 0, normalizedText.Length);
+        string normalizedText = SurroundingText ?? string.Empty;
+        int clampedBaseOffset = Math.Clamp(SelectionBaseOffset, 0, normalizedText.Length);
+        int clampedExtentOffset = Math.Clamp(SelectionExtentOffset, 0, normalizedText.Length);
         return new FocusTextInputState(
             normalizedText,
             clampedBaseOffset,
@@ -376,10 +376,10 @@ public sealed class FocusManager
             return false;
         }
 
-        var currentIndex = PrimaryFocus != null ? candidates.IndexOf(PrimaryFocus) : -1;
-        var startIndex = currentIndex >= 0 ? currentIndex + 1 : 0;
+        int currentIndex = PrimaryFocus != null ? candidates.IndexOf(PrimaryFocus) : -1;
+        int startIndex = currentIndex >= 0 ? currentIndex + 1 : 0;
 
-        for (var index = startIndex; index < candidates.Count; index++)
+        for (int index = startIndex; index < candidates.Count; index++)
         {
             if (RequestFocus(candidates[index]))
             {
@@ -398,10 +398,10 @@ public sealed class FocusManager
             return false;
         }
 
-        var currentIndex = PrimaryFocus != null ? candidates.IndexOf(PrimaryFocus) : -1;
-        var startIndex = currentIndex >= 0 ? currentIndex - 1 : candidates.Count - 1;
+        int currentIndex = PrimaryFocus != null ? candidates.IndexOf(PrimaryFocus) : -1;
+        int startIndex = currentIndex >= 0 ? currentIndex - 1 : candidates.Count - 1;
 
-        for (var index = startIndex; index >= 0; index--)
+        for (int index = startIndex; index >= 0; index--)
         {
             if (RequestFocus(candidates[index]))
             {
@@ -597,9 +597,9 @@ public sealed class FocusManager
         }
 
         FocusNode? bestNode = null;
-        var bestPrimaryDistance = double.PositiveInfinity;
-        var bestSecondaryDistance = double.PositiveInfinity;
-        var bestDistanceSquared = double.PositiveInfinity;
+        double bestPrimaryDistance = double.PositiveInfinity;
+        double bestSecondaryDistance = double.PositiveInfinity;
+        double bestDistanceSquared = double.PositiveInfinity;
 
         foreach (var candidate in candidates)
         {
@@ -614,14 +614,14 @@ public sealed class FocusManager
                 continue;
             }
 
-            var dx = candidateRect.Value.Center.X - sourceRect.Value.Center.X;
-            var dy = candidateRect.Value.Center.Y - sourceRect.Value.Center.Y;
-            if (!TryComputeDirectionalDistance(direction, dx, dy, out var primaryDistance, out var secondaryDistance))
+            double dx = candidateRect.Value.Center.X - sourceRect.Value.Center.X;
+            double dy = candidateRect.Value.Center.Y - sourceRect.Value.Center.Y;
+            if (!TryComputeDirectionalDistance(direction, dx, dy, out double primaryDistance, out double secondaryDistance))
             {
                 continue;
             }
 
-            var distanceSquared = (dx * dx) + (dy * dy);
+            double distanceSquared = (dx * dx) + (dy * dy);
             if (primaryDistance < bestPrimaryDistance - 0.0001
                 || (Math.Abs(primaryDistance - bestPrimaryDistance) <= 0.0001
                     && (secondaryDistance < bestSecondaryDistance - 0.0001
@@ -1043,7 +1043,7 @@ public sealed class Focus : StatefulWidget
         private void ApplyWidgetConfiguration()
         {
             var node = _focusNode!;
-            var descendantsAreFocusable = ExcludeFocus.DescendantsAreFocusableOf(Context);
+            bool descendantsAreFocusable = ExcludeFocus.DescendantsAreFocusableOf(Context);
             node.CanRequestFocus = Widget.CanRequestFocus && descendantsAreFocusable;
             node.SkipTraversal = Widget.SkipTraversal || !descendantsAreFocusable;
             node.OnKeyEvent = Widget.OnKeyEvent;

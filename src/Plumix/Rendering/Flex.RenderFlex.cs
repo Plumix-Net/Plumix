@@ -731,8 +731,8 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
             _ => throw new ArgumentOutOfRangeException()
         };
 
-        var overflowRight = Math.Max(0, overflowChildRect.Right - containerRect.Right);
-        var overflowBottom = Math.Max(0, overflowChildRect.Bottom - containerRect.Bottom);
+        double overflowRight = Math.Max(0, overflowChildRect.Right - containerRect.Right);
+        double overflowBottom = Math.Max(0, overflowChildRect.Bottom - containerRect.Bottom);
 
         if (overflowRight <= Constants.PrecisionErrorTolerance
             && overflowBottom <= Constants.PrecisionErrorTolerance)
@@ -831,8 +831,8 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
 
     private static Matrix CreateRotationMatrix(double angle)
     {
-        var cos = Math.Cos(angle);
-        var sin = Math.Sin(angle);
+        double cos = Math.Cos(angle);
+        double sin = Math.Sin(angle);
         return new Matrix(cos, sin, -sin, cos, 0, 0);
     }
 

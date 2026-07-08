@@ -127,8 +127,8 @@ public sealed record BoxDecoration(
     private static BorderRadius? LerpBorderRadius(BorderRadius? a, BorderRadius? b, double t)
     {
         if (!a.HasValue && !b.HasValue) return null;
-        var from = a?.Radius ?? 0;
-        var to = b?.Radius ?? 0;
+        double from = a?.Radius ?? 0;
+        double to = b?.Radius ?? 0;
         return new BorderRadius(from + ((to - from) * t));
     }
 }

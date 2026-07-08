@@ -79,7 +79,7 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
     [Fact]
     public void RadioListTile_SelectedNonToggleableTap_DoesNotInvokeCallback()
     {
-        var calls = 0;
+        int calls = 0;
         using var harness = new WidgetRenderHarness(
             BuildThemed(new RadioListTile<string>(
                 value: "a",
@@ -120,7 +120,7 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
         Assert.NotNull(title);
         Assert.Equal(selectedColor, Assert.IsType<SolidColorBrush>(title!.Foreground).Color);
 
-        var secondaryGlyph = char.ConvertFromUtf32(Icons.InfoOutline.CodePoint);
+        string secondaryGlyph = char.ConvertFromUtf32(Icons.InfoOutline.CodePoint);
         var row = FindDescendants<RenderFlex>(harness.RenderView).FirstOrDefault(flex =>
         {
             var children = ImmediateChildren(flex);
@@ -169,7 +169,7 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
 
         var transform = FindDescendant<RenderTransform>(harness.RenderView);
         Assert.NotNull(transform);
-        var center = Radio<string>.Width / 2.0;
+        double center = Radio<string>.Width / 2.0;
         var expected = Matrix.CreateTranslation(center, center)
                        * new Matrix(scaleFactor, 0, 0, scaleFactor, 0, 0)
                        * Matrix.CreateTranslation(-center, -center);
@@ -242,7 +242,7 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
         harness.Pump(new Size(360, 240));
         Assert.True(callbackValue);
 
-        var now = Scheduler.CurrentSeconds;
+        double now = Scheduler.CurrentSeconds;
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
         harness.Pump(new Size(360, 240));
         var midAlign = FindDescendants<RenderAlign>(harness.RenderView)
@@ -273,7 +273,7 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
         Assert.NotNull(FindParagraphByText(harness.RenderView, "Disposable body"));
 
         controller.Collapse();
-        var now = Scheduler.CurrentSeconds;
+        double now = Scheduler.CurrentSeconds;
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.30));
         harness.Pump(new Size(360, 240));
 
@@ -325,7 +325,7 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
         var background = FindDescendants<RenderDecoratedBox>(harness.RenderView)
             .FirstOrDefault(box => box.Decoration.Color == widgetBackground);
         Assert.NotNull(background);
-        var iconGlyph = char.ConvertFromUtf32(Icons.ExpandMore.CodePoint);
+        string iconGlyph = char.ConvertFromUtf32(Icons.ExpandMore.CodePoint);
         Assert.NotNull(FindParagraphByText(harness.RenderView, iconGlyph));
     }
 

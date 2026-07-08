@@ -120,15 +120,15 @@ public sealed class ToggleButtons : StatelessWidget
         var maximumSize = effectiveConstraints?.Biggest;
         var effectiveTapTarget = TapTargetSize ?? theme.MaterialTapTargetSize;
         var effectiveTextStyle = TextStyle ?? toggleTheme.TextStyle ?? theme.TextTheme.BodyMedium;
-        var effectiveBorderWidth = BorderWidth ?? toggleTheme.BorderWidth ?? DefaultBorderWidth;
+        double effectiveBorderWidth = BorderWidth ?? toggleTheme.BorderWidth ?? DefaultBorderWidth;
         var effectiveRadius = BorderRadius ?? toggleTheme.BorderRadius ?? Plumix.Rendering.BorderRadius.Zero;
         var textDirection = Directionality.Of(context);
 
         var indexedButtons = new List<(int Index, Widget Button)>(Children.Count);
-        for (var index = 0; index < Children.Count; index++)
+        for (int index = 0; index < Children.Count; index++)
         {
-            var selected = IsSelected[index];
-            var enabled = OnPressed is not null;
+            bool selected = IsSelected[index];
+            bool enabled = OnPressed is not null;
             var foreground = !enabled
                 ? DisabledColor ?? toggleTheme.DisabledColor
                     ?? NavigationSurfaceUtilities.WithOpacity(theme.OnSurfaceColor, 0.38)
@@ -141,7 +141,7 @@ public sealed class ToggleButtons : StatelessWidget
                     ?? NavigationSurfaceUtilities.WithOpacity(theme.PrimaryColor, 0.12)
                 : Colors.Transparent;
             var border = ResolveBorderSide(theme, toggleTheme, selected, enabled, effectiveBorderWidth);
-            var capturedIndex = index;
+            int capturedIndex = index;
             var overlay = MaterialStateProperty<Color?>.ResolveWith(states =>
                 ResolveOverlayColor(theme, toggleTheme, selected, enabled, states));
             var style = new ButtonStyle(

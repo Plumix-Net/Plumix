@@ -99,9 +99,9 @@ public sealed class RenderStack : RenderBox, IRenderBoxContainerDefaultsMixin<Re
     protected override void PerformLayout()
     {
         var constraints = Constraints;
-        var hasNonPositionedChild = false;
-        var maxWidth = 0.0;
-        var maxHeight = 0.0;
+        bool hasNonPositionedChild = false;
+        double maxWidth = 0.0;
+        double maxHeight = 0.0;
 
         var nonPositionedConstraints = _fit switch
         {
@@ -211,12 +211,12 @@ public sealed class RenderStack : RenderBox, IRenderBoxContainerDefaultsMixin<Re
 
     private void LayoutPositionedChild(RenderBox child, StackParentData childParentData)
     {
-        var childWidth = ComputeChildExtent(
+        double? childWidth = ComputeChildExtent(
             leading: childParentData.Left,
             trailing: childParentData.Right,
             extent: childParentData.Width,
             availableExtent: Size.Width);
-        var childHeight = ComputeChildExtent(
+        double? childHeight = ComputeChildExtent(
             leading: childParentData.Top,
             trailing: childParentData.Bottom,
             extent: childParentData.Height,
@@ -230,14 +230,14 @@ public sealed class RenderStack : RenderBox, IRenderBoxContainerDefaultsMixin<Re
         child.Layout(childConstraints, parentUsesSize: true);
 
         var alignedOffset = _alignment.AlongOffset(Size, child.Size);
-        var x = childParentData.Left
-                ?? (childParentData.Right.HasValue
-                    ? Size.Width - childParentData.Right.Value - child.Size.Width
-                    : alignedOffset.X);
-        var y = childParentData.Top
-                ?? (childParentData.Bottom.HasValue
-                    ? Size.Height - childParentData.Bottom.Value - child.Size.Height
-                    : alignedOffset.Y);
+        double x = childParentData.Left
+                   ?? (childParentData.Right.HasValue
+                       ? Size.Width - childParentData.Right.Value - child.Size.Width
+                       : alignedOffset.X);
+        double y = childParentData.Top
+                   ?? (childParentData.Bottom.HasValue
+                       ? Size.Height - childParentData.Bottom.Value - child.Size.Height
+                       : alignedOffset.Y);
         childParentData.offset = new Point(x, y);
     }
 

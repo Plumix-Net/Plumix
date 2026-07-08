@@ -65,7 +65,7 @@ public class ContainerLayer : Layer
 
     protected void AddChildrenToScene(DrawingContext context, Point offset)
     {
-        for (var index = 0; index < _children.Count; index++)
+        for (int index = 0; index < _children.Count; index++)
         {
             _children[index].AddToScene(context, offset);
         }
@@ -149,7 +149,7 @@ public sealed class ClipRRectOffsetLayer : OffsetLayer
 
     private static double ClampRadius(Rect clipRect, BorderRadius borderRadius)
     {
-        var maxRadius = Math.Max(0, Math.Min(clipRect.Width, clipRect.Height) / 2);
+        double maxRadius = Math.Max(0, Math.Min(clipRect.Width, clipRect.Height) / 2);
         return Math.Min(borderRadius.Radius, maxRadius);
     }
 }
@@ -185,7 +185,7 @@ public sealed class ClipRRectLayer : ContainerLayer
 
     private static double ClampRadius(Rect clipRect, BorderRadius borderRadius)
     {
-        var maxRadius = Math.Max(0, Math.Min(clipRect.Width, clipRect.Height) / 2);
+        double maxRadius = Math.Max(0, Math.Min(clipRect.Width, clipRect.Height) / 2);
         return Math.Min(borderRadius.Radius, maxRadius);
     }
 }
@@ -250,7 +250,7 @@ public sealed class PictureLayer : Layer
 
     internal override void AddToScene(DrawingContext context, Point offset)
     {
-        for (var index = 0; index < _commands.Count; index++)
+        for (int index = 0; index < _commands.Count; index++)
         {
             _commands[index](context, offset);
         }

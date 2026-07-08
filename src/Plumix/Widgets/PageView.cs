@@ -53,7 +53,7 @@ public sealed class PageController : ChangeNotifier
 
     public void AnimateToPage(int page, TimeSpan duration, Curve? curve = null)
     {
-        var target = ClampPage(page);
+        double target = ClampPage(page);
         if (duration <= TimeSpan.Zero || Math.Abs(target - _page) <= double.Epsilon)
         {
             JumpToPage((int)Math.Round(target));
@@ -110,7 +110,7 @@ public sealed class PageController : ChangeNotifier
 
     private void SetPage(double page)
     {
-        var value = ClampPage(page);
+        double value = ClampPage(page);
         if (Math.Abs(_page - value) <= 0.000001) return;
         _page = value;
         NotifyListeners();
@@ -202,8 +202,8 @@ public sealed class PageView : StatefulWidget
         public override Widget Build(BuildContext context)
         {
             var widget = CurrentWidget;
-            var reverse = widget.Reverse ^
-                          (widget.ScrollDirection == Axis.Horizontal && Directionality.Of(context) == TextDirection.Rtl);
+            bool reverse = widget.Reverse ^
+                           (widget.ScrollDirection == Axis.Horizontal && Directionality.Of(context) == TextDirection.Rtl);
             Widget result = new PageViewport(
                 children: widget.Children,
                 controller: _controller!,
@@ -247,7 +247,7 @@ public sealed class PageView : StatefulWidget
         private void HandleControllerChanged()
         {
             if (!Mounted || _controller is null) return;
-            var page = (int)Math.Round(_controller.EffectivePage);
+            int page = (int)Math.Round(_controller.EffectivePage);
             if (page != _lastReportedPage)
             {
                 _lastReportedPage = page;
@@ -260,26 +260,26 @@ public sealed class PageView : StatefulWidget
         private void HandleDragUpdate(DragUpdateDetails details)
         {
             if (_controller is null || CurrentWidget.Children.Count < 2) return;
-            var extent = _controller.ViewportDimension * _controller.ViewportFraction;
+            double extent = _controller.ViewportDimension * _controller.ViewportFraction;
             if (extent <= 0) return;
-            var reverse = CurrentWidget.Reverse ^
-                          (CurrentWidget.ScrollDirection == Axis.Horizontal &&
-                           Directionality.Of(Context) == TextDirection.Rtl);
-            var direction = reverse ? 1 : -1;
+            bool reverse = CurrentWidget.Reverse ^
+                           (CurrentWidget.ScrollDirection == Axis.Horizontal &&
+                            Directionality.Of(Context) == TextDirection.Rtl);
+            int direction = reverse ? 1 : -1;
             _controller.UpdatePageFromDrag(_controller.EffectivePage + (direction * details.PrimaryDelta / extent));
         }
 
         private void HandleDragEnd(DragEndDetails details)
         {
             if (_controller is null) return;
-            var page = _controller.EffectivePage;
+            double page = _controller.EffectivePage;
             int target;
             if (Math.Abs(details.PrimaryVelocity) >= 50)
             {
-                var reverse = CurrentWidget.Reverse ^
-                              (CurrentWidget.ScrollDirection == Axis.Horizontal &&
-                               Directionality.Of(Context) == TextDirection.Rtl);
-                var towardNext = reverse ? details.PrimaryVelocity > 0 : details.PrimaryVelocity < 0;
+                bool reverse = CurrentWidget.Reverse ^
+                               (CurrentWidget.ScrollDirection == Axis.Horizontal &&
+                                Directionality.Of(Context) == TextDirection.Rtl);
+                bool towardNext = reverse ? details.PrimaryVelocity > 0 : details.PrimaryVelocity < 0;
                 target = towardNext ? (int)Math.Floor(page + 1) : (int)Math.Ceiling(page - 1);
             }
             else

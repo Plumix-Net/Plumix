@@ -215,7 +215,7 @@ public sealed class MaterialBannerTests
     [Fact]
     public void MaterialBanner_AnimationAddsSlideHeightLiveRegionAndCallsOnVisibleOnce()
     {
-        var visibleCalls = 0;
+        int visibleCalls = 0;
         using var controller = MaterialBanner.CreateAnimationController();
         controller.Forward(from: 0.5);
         using var harness = new WidgetRenderHarness(Wrap(
@@ -233,7 +233,7 @@ public sealed class MaterialBannerTests
         Assert.NotNull(liveRegion);
         Assert.True(liveRegion!.Actions.HasFlag(SemanticsActions.Dismiss));
 
-        var now = Scheduler.CurrentSeconds;
+        double now = Scheduler.CurrentSeconds;
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.35));
         harness.Pump(new Size(360, 180));

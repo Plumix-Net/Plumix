@@ -173,14 +173,14 @@ public sealed class CupertinoCheckbox : StatefulWidget
         {
             var shape = CurrentWidget.Shape ?? Plumix.Rendering.BorderRadius.Circular(4.0);
             var targetSize = ResolveTapTargetSize();
-            var selected = IsSelected(CurrentWidget.Value);
+            bool selected = IsSelected(CurrentWidget.Value);
             var activeColor = ResolveActiveColor();
             var fillColor = ResolveFillColor(selected, activeColor);
             var checkColor = ResolveCheckColor(selected);
             var borderSide = ResolveBorderSide(selected);
             var overlayColor = ResolveOverlayColor(activeColor);
             var focusRingColor = ResolveFocusRingColor(activeColor);
-            var useDarkGradient = ShouldUseDarkGradient(selected);
+            bool useDarkGradient = ShouldUseDarkGradient(selected);
             var baseFillColor = useDarkGradient ? Colors.Transparent : fillColor;
 
             var indicator = BuildIndicator(checkColor);
@@ -311,9 +311,9 @@ public sealed class CupertinoCheckbox : StatefulWidget
                 return BuildStaticIndicator(CurrentWidget.Value, color);
             }
 
-            var progress = Math.Clamp(_transitionProgress, 0, 1);
-            var previousOpacity = Math.Clamp(1.0 - progress, 0, 1);
-            var targetOpacity = progress;
+            double progress = Math.Clamp(_transitionProgress, 0, 1);
+            double previousOpacity = Math.Clamp(1.0 - progress, 0, 1);
+            double targetOpacity = progress;
 
             return new SizedBox(
                 width: Width,
@@ -558,8 +558,8 @@ public sealed class CupertinoCheckbox : StatefulWidget
 
         private static IBrush CreateDarkGradientBrush(Color baseColor, bool isEnabled)
         {
-            var topOpacity = isEnabled ? DarkGradientTopOpacity : DisabledDarkGradientTopOpacity;
-            var bottomOpacity = isEnabled ? DarkGradientBottomOpacity : DisabledDarkGradientBottomOpacity;
+            double topOpacity = isEnabled ? DarkGradientTopOpacity : DisabledDarkGradientTopOpacity;
+            double bottomOpacity = isEnabled ? DarkGradientBottomOpacity : DisabledDarkGradientBottomOpacity;
             return new LinearGradientBrush
             {
                 StartPoint = new RelativePoint(0.5, 0.0, RelativeUnit.Relative),
@@ -657,7 +657,7 @@ public sealed class CupertinoCheckbox : StatefulWidget
 
         private void HandleFocusChanged()
         {
-            var hasFocus = _focusNode?.HasFocus ?? false;
+            bool hasFocus = _focusNode?.HasFocus ?? false;
             if (_hasFocus == hasFocus)
             {
                 return;
@@ -673,21 +673,21 @@ public sealed class CupertinoCheckbox : StatefulWidget
 
         private static (double H, double S, double L) ToHsl(Color color)
         {
-            var r = color.R / 255.0;
-            var g = color.G / 255.0;
-            var b = color.B / 255.0;
+            double r = color.R / 255.0;
+            double g = color.G / 255.0;
+            double b = color.B / 255.0;
 
-            var max = Math.Max(r, Math.Max(g, b));
-            var min = Math.Min(r, Math.Min(g, b));
-            var delta = max - min;
+            double max = Math.Max(r, Math.Max(g, b));
+            double min = Math.Min(r, Math.Min(g, b));
+            double delta = max - min;
 
-            var l = (max + min) / 2.0;
+            double l = (max + min) / 2.0;
             if (delta <= 0.000001)
             {
                 return (0, 0, l);
             }
 
-            var s = l < 0.5
+            double s = l < 0.5
                 ? delta / (max + min)
                 : delta / (2.0 - max - min);
 
@@ -716,18 +716,18 @@ public sealed class CupertinoCheckbox : StatefulWidget
 
             if (s <= 0.000001)
             {
-                var gray = (byte)Math.Clamp((int)Math.Round(l * 255), 0, 255);
+                byte gray = (byte)Math.Clamp((int)Math.Round(l * 255), 0, 255);
                 return Color.FromArgb(255, gray, gray, gray);
             }
 
-            var q = l < 0.5
+            double q = l < 0.5
                 ? l * (1 + s)
                 : l + s - l * s;
-            var p = 2 * l - q;
+            double p = 2 * l - q;
 
-            var r = HueToRgb(p, q, h + 1.0 / 3.0);
-            var g = HueToRgb(p, q, h);
-            var b = HueToRgb(p, q, h - 1.0 / 3.0);
+            double r = HueToRgb(p, q, h + 1.0 / 3.0);
+            double g = HueToRgb(p, q, h);
+            double b = HueToRgb(p, q, h - 1.0 / 3.0);
 
             return Color.FromArgb(
                 255,
@@ -759,7 +759,7 @@ public sealed class CupertinoCheckbox : StatefulWidget
 
         private static double Normalize(double value)
         {
-            var result = value % 1.0;
+            double result = value % 1.0;
             if (result < 0)
             {
                 result += 1.0;
@@ -770,8 +770,8 @@ public sealed class CupertinoCheckbox : StatefulWidget
 
         private static Color ApplyOpacity(Color color, double opacity)
         {
-            var clampedOpacity = Math.Clamp(opacity, 0, 1);
-            var alpha = (byte)Math.Clamp((int)Math.Round(color.A * clampedOpacity), 0, 255);
+            double clampedOpacity = Math.Clamp(opacity, 0, 1);
+            byte alpha = (byte)Math.Clamp((int)Math.Round(color.A * clampedOpacity), 0, 255);
             return Color.FromArgb(alpha, color.R, color.G, color.B);
         }
     }

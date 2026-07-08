@@ -417,7 +417,7 @@ public sealed class InputChip : StatelessWidget
     public override Widget Build(BuildContext context)
     {
         var theme = Theme.Of(context);
-        var enabled = IsEnabled && (OnSelected is not null || OnDeleted is not null || OnPressed is not null);
+        bool enabled = IsEnabled && (OnSelected is not null || OnDeleted is not null || OnPressed is not null);
         var resolvedDeleteIcon = DeleteIcon ?? (theme.UseMaterial3 ? new Icon(Icons.Clear, size: 18) : null);
         return new RawChip(
             label: Label,

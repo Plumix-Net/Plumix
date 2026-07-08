@@ -115,7 +115,7 @@ public sealed class MaterialFloatingActionButtonTests
     [Fact]
     public void FloatingActionButton_StoresHeroTagMouseCursorAndEnableFeedback()
     {
-        var heroTag = new object();
+        object heroTag = new object();
         var cursor = SystemMouseCursors.Click;
         var fab = new FloatingActionButton(
             child: new Icon(Icons.Add),
@@ -134,7 +134,7 @@ public sealed class MaterialFloatingActionButtonTests
     {
         var owner = new BuildOwner();
         Widget? capturedBuiltWidget = null;
-        var heroTag = new object();
+        object heroTag = new object();
 
         var root = new TestRootElement(
             new Theme(
@@ -258,7 +258,7 @@ public sealed class MaterialFloatingActionButtonTests
         Feedback.ResetForTests();
         try
         {
-            var pressedCount = 0;
+            int pressedCount = 0;
             var feedbackEvents = new List<FeedbackType>();
             Feedback.FeedbackTriggered += feedbackEvents.Add;
 
@@ -286,7 +286,7 @@ public sealed class MaterialFloatingActionButtonTests
                 new BoxHitTestEntry(focusListener, new Point(10, 8)));
             owner.FlushBuild();
 
-            var handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Space", isDown: true));
+            bool handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Space", isDown: true));
             Assert.True(handled);
             owner.FlushBuild();
 
@@ -308,7 +308,7 @@ public sealed class MaterialFloatingActionButtonTests
         Feedback.ResetForTests();
         try
         {
-            var pressedCount = 0;
+            int pressedCount = 0;
             var feedbackEvents = new List<FeedbackType>();
             Feedback.FeedbackTriggered += feedbackEvents.Add;
 
@@ -337,7 +337,7 @@ public sealed class MaterialFloatingActionButtonTests
                 new BoxHitTestEntry(focusListener, new Point(10, 8)));
             owner.FlushBuild();
 
-            var handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Space", isDown: true));
+            bool handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Space", isDown: true));
             Assert.True(handled);
             owner.FlushBuild();
 
@@ -358,7 +358,7 @@ public sealed class MaterialFloatingActionButtonTests
         Feedback.ResetForTests();
         try
         {
-            var pressedCount = 0;
+            int pressedCount = 0;
             var feedbackEvents = new List<FeedbackType>();
             Feedback.FeedbackTriggered += feedbackEvents.Add;
 
@@ -390,7 +390,7 @@ public sealed class MaterialFloatingActionButtonTests
                 new BoxHitTestEntry(focusListener, new Point(10, 8)));
             owner.FlushBuild();
 
-            var handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Space", isDown: true));
+            bool handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Space", isDown: true));
             Assert.True(handled);
             owner.FlushBuild();
 
@@ -472,7 +472,7 @@ public sealed class MaterialFloatingActionButtonTests
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
         var constrainedBox = FindDescendant<RenderConstrainedBox>(renderRoot);
         var paddings = FindDescendants<RenderPadding>(renderRoot);
-        var hasExpectedPadding = paddings.Any(p => p.Padding == new Thickness(16, 0, 20, 0));
+        bool hasExpectedPadding = paddings.Any(p => p.Padding == new Thickness(16, 0, 20, 0));
         var label = FindDescendants<RenderParagraph>(renderRoot).FirstOrDefault(p => p.Text == "Create");
 
         Assert.NotNull(constrainedBox);
@@ -498,7 +498,7 @@ public sealed class MaterialFloatingActionButtonTests
         owner.FlushBuild();
 
         var paddings = FindDescendants<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
-        var hasExpectedPadding = paddings.Any(p => p.Padding == new Thickness(20, 0, 20, 0));
+        bool hasExpectedPadding = paddings.Any(p => p.Padding == new Thickness(20, 0, 20, 0));
         Assert.True(hasExpectedPadding);
     }
 

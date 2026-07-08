@@ -123,8 +123,8 @@ public sealed class TabController : ChangeNotifier
 
     private void SetAnimationValue(double value, bool notify = true)
     {
-        var max = Math.Max(0, Length - 1);
-        var effective = Math.Clamp(value, 0, max);
+        int max = Math.Max(0, Length - 1);
+        double effective = Math.Clamp(value, 0, max);
         if (Math.Abs(_animationValue - effective) <= 0.000001) return;
         _animationValue = effective;
         if (notify) NotifyListeners();
@@ -185,7 +185,7 @@ public sealed class DefaultTabController : StatefulWidget
             var old = (DefaultTabController)oldWidget;
             if (old.Length == CurrentWidget.Length && old.AnimationDuration == CurrentWidget.AnimationDuration) return;
             var previous = _controller!;
-            var index = Math.Min(previous.Index, Math.Max(0, CurrentWidget.Length - 1));
+            int index = Math.Min(previous.Index, Math.Max(0, CurrentWidget.Length - 1));
             _controller = new TabController(CurrentWidget.Length, index, CurrentWidget.AnimationDuration);
             previous.Dispose();
         }

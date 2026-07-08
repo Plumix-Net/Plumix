@@ -338,8 +338,8 @@ internal sealed class DropdownMenuState<T> : State
         var theme = Theme.Of(context);
         var dropdownTheme = DropdownMenuTheme.Of(context);
         var defaults = DropdownMenuTheme.Defaults(context);
-        var canRequestFocus = CanRequestFocus(theme);
-        var isButton = !canRequestFocus || Current.SelectOnly;
+        bool canRequestFocus = CanRequestFocus(theme);
+        bool isButton = !canRequestFocus || Current.SelectOnly;
         var baseStyle = Current.TextStyle ?? dropdownTheme.TextStyle ?? defaults.TextStyle ?? theme.TextTheme.BodyLarge;
         var effectiveStyle = Current.Enabled
             ? baseStyle
@@ -442,18 +442,18 @@ internal sealed class DropdownMenuState<T> : State
         var min = style.MinimumSize?.Resolve(states);
         var fixedSize = style.FixedSize?.Resolve(states);
         var max = style.MaximumSize?.Resolve(states);
-        var desiredWidth = Current.Width ?? bounds.Width;
+        double desiredWidth = Current.Width ?? bounds.Width;
         if (fixedSize is { } fixedValue && double.IsFinite(fixedValue.Width)) desiredWidth = fixedValue.Width;
         desiredWidth = Math.Max(min?.Width ?? 112, desiredWidth);
         if (max is { } maximum && double.IsFinite(maximum.Width)) desiredWidth = Math.Min(desiredWidth, maximum.Width);
-        var maxHeight = Current.MenuHeight;
+        double? maxHeight = Current.MenuHeight;
         if (!maxHeight.HasValue && max is { } maximumSize && double.IsFinite(maximumSize.Height))
             maxHeight = maximumSize.Height;
         var shape = style.Shape?.Resolve(states);
         var side = style.Side?.Resolve(states);
         var menuPadding = style.Padding?.Resolve(states);
         var routeItems = BuildRouteItems();
-        var selectedIndex = _currentHighlight ?? FirstEnabledIndex(_filteredEntries);
+        int selectedIndex = _currentHighlight ?? FirstEnabledIndex(_filteredEntries);
         _route = new DropdownRoute<T>(
             context: Context,
             items: routeItems,
@@ -541,8 +541,8 @@ internal sealed class DropdownMenuState<T> : State
         if (!_filteredEntries.Any(entry => entry.Enabled)) return;
         _filterActive = false;
         _searchActive = false;
-        var next = _currentHighlight ?? (delta > 0 ? -1 : 0);
-        for (var count = 0; count < _filteredEntries.Count; count++)
+        int next = _currentHighlight ?? (delta > 0 ? -1 : 0);
+        for (int count = 0; count < _filteredEntries.Count; count++)
         {
             next = (next + delta + _filteredEntries.Count) % _filteredEntries.Count;
             if (!_filteredEntries[next].Enabled) continue;
@@ -607,7 +607,7 @@ internal sealed class DropdownMenuState<T> : State
     private static int? DefaultSearch(IReadOnlyList<DropdownMenuEntry<T>> entries, string query)
     {
         if (string.IsNullOrEmpty(query)) return null;
-        for (var i = 0; i < entries.Count; i++)
+        for (int i = 0; i < entries.Count; i++)
             if (entries[i].Label.Contains(query, StringComparison.OrdinalIgnoreCase)) return i;
         return null;
     }
@@ -615,9 +615,9 @@ internal sealed class DropdownMenuState<T> : State
     private IReadOnlyList<DropdownMenuItem<T>> BuildRouteItems()
     {
         var result = new List<DropdownMenuItem<T>>(_filteredEntries.Count);
-        for (var i = 0; i < _filteredEntries.Count; i++)
+        for (int i = 0; i < _filteredEntries.Count; i++)
         {
-            var index = i;
+            int index = i;
             var entry = _filteredEntries[index];
             result.Add(new DropdownMenuItem<T>(
                 child: BuildEntryContent(entry, _currentHighlight == index),
@@ -662,7 +662,7 @@ internal sealed class DropdownMenuState<T> : State
     private void UpdateRouteItems(bool notify = true)
     {
         if (_route is null) return;
-        var selected = _currentHighlight ?? FirstEnabledIndex(_filteredEntries);
+        int selected = _currentHighlight ?? FirstEnabledIndex(_filteredEntries);
         _route.UpdateItems(BuildRouteItems(), selected < 0 ? 0 : selected, notify);
     }
 
@@ -777,7 +777,7 @@ internal sealed class DropdownMenuState<T> : State
 
     private static int FirstEnabledIndex(IReadOnlyList<DropdownMenuEntry<T>> entries)
     {
-        for (var i = 0; i < entries.Count; i++) if (entries[i].Enabled) return i;
+        for (int i = 0; i < entries.Count; i++) if (entries[i].Enabled) return i;
         return -1;
     }
 
@@ -801,10 +801,10 @@ internal sealed class DropdownMenuState<T> : State
             transform.Transform(new Point(0, renderBox.Size.Height)),
             transform.Transform(new Point(renderBox.Size.Width, renderBox.Size.Height)),
         };
-        var left = points.Min(point => point.X);
-        var top = points.Min(point => point.Y);
-        var right = points.Max(point => point.X);
-        var bottom = points.Max(point => point.Y);
+        double left = points.Min(point => point.X);
+        double top = points.Min(point => point.Y);
+        double right = points.Max(point => point.X);
+        double bottom = points.Max(point => point.Y);
         return new Rect(left, top, right - left, bottom - top);
     }
 }
@@ -868,14 +868,14 @@ internal sealed class RenderDropdownMenuBody : RenderBox,
         var loose = new BoxConstraints(
             MaxWidth: Constraints.HasBoundedWidth ? Constraints.MaxWidth : double.PositiveInfinity,
             MaxHeight: Constraints.HasBoundedHeight ? Constraints.MaxHeight : double.PositiveInfinity);
-        var measuredWidth = 112.0;
+        double measuredWidth = 112.0;
         for (var child = ChildAfter(FirstChild); child is not null; child = ChildAfter(child))
         {
             child.Layout(loose, parentUsesSize: true);
             measuredWidth = Math.Max(measuredWidth, child.Size.Width);
             ((DropdownMenuBodyParentData)child.parentData!).offset = default;
         }
-        var width = Width ?? measuredWidth;
+        double width = Width ?? measuredWidth;
         if (Constraints.HasBoundedWidth) width = Math.Min(width, Constraints.MaxWidth);
         width = Math.Max(0, width);
         FirstChild.Layout(new BoxConstraints(MinWidth: width, MaxWidth: width, MaxHeight: loose.MaxHeight), parentUsesSize: true);

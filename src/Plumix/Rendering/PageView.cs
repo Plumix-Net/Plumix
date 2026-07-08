@@ -73,20 +73,20 @@ internal sealed class RenderPageViewport : RenderBox,
             Constraints.HasBoundedWidth ? Constraints.MaxWidth : 0,
             Constraints.HasBoundedHeight ? Constraints.MaxHeight : 0));
         Size = fallback;
-        var mainExtent = Axis == Axis.Horizontal ? Size.Width : Size.Height;
-        var pageExtent = mainExtent * Controller.ViewportFraction;
-        var crossExtent = Axis == Axis.Horizontal ? Size.Height : Size.Width;
-        var sidePadding = (mainExtent - pageExtent) / 2;
+        double mainExtent = Axis == Axis.Horizontal ? Size.Width : Size.Height;
+        double pageExtent = mainExtent * Controller.ViewportFraction;
+        double crossExtent = Axis == Axis.Horizontal ? Size.Height : Size.Width;
+        double sidePadding = (mainExtent - pageExtent) / 2;
         Controller.AttachViewport(mainExtent, ChildCount);
 
-        var index = 0;
+        int index = 0;
         for (var child = FirstChild; child is not null; child = ChildAfter(child), index++)
         {
             var childConstraints = Axis == Axis.Horizontal
                 ? BoxConstraints.Tight(new Size(pageExtent, crossExtent))
                 : BoxConstraints.Tight(new Size(crossExtent, pageExtent));
             child.Layout(childConstraints, parentUsesSize: true);
-            var logicalOffset = (index - Page) * pageExtent;
+            double logicalOffset = (index - Page) * pageExtent;
             if (Reverse) logicalOffset = -logicalOffset;
             ((PageViewportParentData)child.parentData!).offset = Axis == Axis.Horizontal
                 ? new Point(sidePadding + logicalOffset, 0)
@@ -127,8 +127,8 @@ internal sealed class RenderPageViewport : RenderBox,
 
     internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
     {
-        var selected = (int)Math.Round(Page);
-        var index = 0;
+        int selected = (int)Math.Round(Page);
+        int index = 0;
         for (var child = FirstChild; child is not null; child = ChildAfter(child), index++)
         {
             if (index != selected) continue;

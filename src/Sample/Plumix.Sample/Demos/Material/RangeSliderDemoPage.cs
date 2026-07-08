@@ -184,7 +184,7 @@ internal sealed class RangeSliderDemoPageState : State
     {
         SetState(() =>
         {
-            var nextStart = Math.Clamp(_values.Start + delta, 0, _values.End);
+            double nextStart = Math.Clamp(_values.Start + delta, 0, _values.End);
             _values = new RangeValues(nextStart, _values.End);
             _status = $"manual {nextStart:0.00}-{_values.End:0.00}";
         });
@@ -194,7 +194,7 @@ internal sealed class RangeSliderDemoPageState : State
     {
         SetState(() =>
         {
-            var nextEnd = Math.Clamp(_values.End + delta, _values.Start, 1);
+            double nextEnd = Math.Clamp(_values.End + delta, _values.Start, 1);
             _values = new RangeValues(_values.Start, nextEnd);
             _status = $"manual {_values.Start:0.00}-{nextEnd:0.00}";
         });

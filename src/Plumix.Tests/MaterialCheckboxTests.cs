@@ -268,7 +268,7 @@ public sealed class MaterialCheckboxTests
             Assert.True(focusNode.RequestFocus());
             owner.FlushBuild();
 
-            var handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Space", isDown: true));
+            bool handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Space", isDown: true));
             Assert.True(handled);
             owner.FlushBuild();
 
@@ -305,7 +305,7 @@ public sealed class MaterialCheckboxTests
             Assert.True(focusNode.RequestFocus());
             owner.FlushBuild();
 
-            var handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Space", isDown: true));
+            bool handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Space", isDown: true));
             Assert.True(handled);
             owner.FlushBuild();
 
@@ -342,7 +342,7 @@ public sealed class MaterialCheckboxTests
             Assert.True(focusNode.RequestFocus());
             owner.FlushBuild();
 
-            var handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Space", isDown: true));
+            bool handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Space", isDown: true));
             Assert.True(handled);
             owner.FlushBuild();
 
@@ -634,7 +634,7 @@ public sealed class MaterialCheckboxTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var hasGradientBrush = HasGradientBrushFill(RequireRenderObject<RenderObject>(root.ChildElement));
+        bool hasGradientBrush = HasGradientBrushFill(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.True(hasGradientBrush);
     }
 
@@ -657,7 +657,7 @@ public sealed class MaterialCheckboxTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var hasGradientBrush = HasGradientBrushFill(RequireRenderObject<RenderObject>(root.ChildElement));
+        bool hasGradientBrush = HasGradientBrushFill(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.False(hasGradientBrush);
     }
 
@@ -700,7 +700,7 @@ public sealed class MaterialCheckboxTests
             setValue!(null);
             harness.Pump(new Size(160, 120));
 
-            var now = Scheduler.CurrentSeconds;
+            double now = Scheduler.CurrentSeconds;
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
             harness.Pump(new Size(160, 120));
 
@@ -817,7 +817,7 @@ public sealed class MaterialCheckboxTests
 
     private static Color ApplyOpacity(Color color, double opacity)
     {
-        var alpha = (byte)Math.Clamp((int)(255 * opacity), 0, 255);
+        byte alpha = (byte)Math.Clamp((int)(255 * opacity), 0, 255);
         return Color.FromArgb(alpha, color.R, color.G, color.B);
     }
 

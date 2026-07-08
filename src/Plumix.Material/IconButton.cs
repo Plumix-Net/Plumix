@@ -392,8 +392,8 @@ public sealed class IconButton : StatelessWidget
     {
         var theme = Theme.Of(context);
         var iconThemeData = Plumix.Widgets.IconTheme.Of(context);
-        var canToggle = theme.UseMaterial3 && IsSelected.HasValue;
-        var isSelected = canToggle && IsSelected!.Value;
+        bool canToggle = theme.UseMaterial3 && IsSelected.HasValue;
+        bool isSelected = canToggle && IsSelected!.Value;
         Size? minimumSize = Constraints is not BoxConstraints explicitConstraints
             ? null
             : new Size(explicitConstraints.MinWidth, explicitConstraints.MinHeight);
@@ -466,7 +466,7 @@ public sealed class IconButton : StatelessWidget
         bool isToggleable,
         IconButtonVariant variant)
     {
-        var minDimension = theme.UseMaterial3 ? 40.0 : 48.0;
+        double minDimension = theme.UseMaterial3 ? 40.0 : 48.0;
         var borderRadius = Plumix.Rendering.BorderRadius.Circular(theme.UseMaterial3 ? 20 : 24);
 
         return new ButtonStyle(
@@ -504,7 +504,7 @@ public sealed class IconButton : StatelessWidget
             return MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.38);
         }
 
-        var isSelected = states.HasFlag(MaterialState.Selected);
+        bool isSelected = states.HasFlag(MaterialState.Selected);
         return variant switch
         {
             IconButtonVariant.Filled => isSelected
@@ -532,8 +532,8 @@ public sealed class IconButton : StatelessWidget
         bool isToggleable,
         MaterialState states)
     {
-        var isDisabled = states.HasFlag(MaterialState.Disabled);
-        var isSelected = states.HasFlag(MaterialState.Selected);
+        bool isDisabled = states.HasFlag(MaterialState.Disabled);
+        bool isSelected = states.HasFlag(MaterialState.Selected);
 
         return variant switch
         {
@@ -583,7 +583,7 @@ public sealed class IconButton : StatelessWidget
                 _ => theme.PrimaryColor,
             };
 
-            var selectedFocusOpacity = variant == IconButtonVariant.Outlined ? 0.08 : 0.10;
+            double selectedFocusOpacity = variant == IconButtonVariant.Outlined ? 0.08 : 0.10;
             return ResolveStateLayerColor(selectedOverlay, states, selectedFocusOpacity);
         }
 

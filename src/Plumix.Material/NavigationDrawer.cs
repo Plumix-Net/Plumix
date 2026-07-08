@@ -71,9 +71,9 @@ public sealed class NavigationDrawer : StatelessWidget
 
     public override Widget Build(BuildContext context)
     {
-        var totalDestinations = Children.Count(child => child is NavigationDrawerDestination);
+        int totalDestinations = Children.Count(child => child is NavigationDrawerDestination);
         var wrappedChildren = new List<Widget>(Children.Count);
-        var destinationIndex = 0;
+        int destinationIndex = 0;
         foreach (var child in Children)
         {
             if (child is not NavigationDrawerDestination destination)
@@ -82,7 +82,7 @@ public sealed class NavigationDrawer : StatelessWidget
                 continue;
             }
 
-            var index = destinationIndex++;
+            int index = destinationIndex++;
             wrappedChildren.Add(new NavigationDrawerDestinationTile(
                 destination: destination,
                 index: index,
@@ -198,7 +198,7 @@ internal sealed class NavigationDrawerDestinationTileState : State
         var old = (NavigationDrawerDestinationTile)oldWidget;
         if (old.Duration != CurrentWidget.Duration)
         {
-            var value = _controller?.Value ?? (CurrentWidget.Selected ? 1 : 0);
+            double value = _controller?.Value ?? (CurrentWidget.Selected ? 1 : 0);
             DisposeController();
             CreateController(value);
         }
@@ -218,7 +218,7 @@ internal sealed class NavigationDrawerDestinationTileState : State
         var states = destination.Enabled ? MaterialState.None : MaterialState.Disabled;
         if (widget.Selected) states |= MaterialState.Selected;
 
-        var progress = _controller?.Evaluate() ?? (widget.Selected ? 1 : 0);
+        double progress = _controller?.Evaluate() ?? (widget.Selected ? 1 : 0);
         var iconTheme = drawerTheme.IconTheme?.Resolve(states)
                         ?? ResolveDefaultIconTheme(theme, states);
         var labelStyle = drawerTheme.LabelTextStyle?.Resolve(states)
@@ -230,7 +230,7 @@ internal sealed class NavigationDrawerDestinationTileState : State
         var indicatorColor = widget.IndicatorColor
                              ?? drawerTheme.IndicatorColor
                              ?? theme.SecondaryContainerColor;
-        var tileHeight = drawerTheme.TileHeight ?? 56;
+        double tileHeight = drawerTheme.TileHeight ?? 56;
 
         var icon = widget.Selected && destination.SelectedIcon is not null
             ? destination.SelectedIcon
@@ -264,10 +264,10 @@ internal sealed class NavigationDrawerDestinationTileState : State
                 : buttonStates.HasFlag(MaterialState.Hovered)
                     ? NavigationSurfaceUtilities.WithOpacity(theme.OnSurfaceColor, 0.08)
                     : null);
-        var indexLabel = MaterialLocalizations.Of(context).TabLabel(
+        string indexLabel = MaterialLocalizations.Of(context).TabLabel(
             widget.Index,
             widget.TotalDestinations);
-        var textLabel = destination.Label is Text text ? $"{text.Data}\n{indexLabel}" : indexLabel;
+        string textLabel = destination.Label is Text text ? $"{text.Data}\n{indexLabel}" : indexLabel;
         var buttonStyle = new ButtonStyle(
             ForegroundColor: MaterialStateProperty<Color?>.All(labelStyle.Color),
             BackgroundColor: MaterialStateProperty<Color?>.All(Colors.Transparent),

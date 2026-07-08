@@ -176,8 +176,8 @@ public sealed class BannerPainter : CustomPainter
 
     private static Matrix CreateRotationMatrix(double angle)
     {
-        var cosine = Math.Cos(angle);
-        var sine = Math.Sin(angle);
+        double cosine = Math.Cos(angle);
+        double sine = Math.Sin(angle);
         return new Matrix(cosine, sine, -sine, cosine, 0, 0);
     }
 }

@@ -64,7 +64,7 @@ public sealed class SemanticsTreeTests
         var firstRoot = pipeline.SemanticsOwner.RootNode;
         Assert.NotNull(firstRoot);
         var firstNode = Assert.Single(firstRoot.Children);
-        var firstId = firstNode.Id;
+        int firstId = firstNode.Id;
 
         button.OnPressed = null;
         pipeline.FlushSemantics();
@@ -81,7 +81,7 @@ public sealed class SemanticsTreeTests
     [Fact]
     public void SemanticsOwner_PerformAction_InvokesTapHandler()
     {
-        var tapCount = 0;
+        int tapCount = 0;
         var button = new RenderButton(
             label: "Tap me",
             onPressed: () => tapCount += 1,
@@ -121,7 +121,7 @@ public sealed class SemanticsTreeTests
     [Fact]
     public void SemanticsOwner_PerformAction_InvokesLongPressHandler()
     {
-        var longPressCount = 0;
+        int longPressCount = 0;
         var box = new MultiActionSemanticBox(
             label: "LongPress",
             size: new Size(16, 10),
@@ -180,8 +180,8 @@ public sealed class SemanticsTreeTests
     [Fact]
     public void MergeSemantics_ConflictingActionsRemainAsSeparateChildNode()
     {
-        var firstTapCount = 0;
-        var secondTapCount = 0;
+        int firstTapCount = 0;
+        int secondTapCount = 0;
         var first = new ActionSemanticBox("First", new Size(20, 10), () => firstTapCount += 1);
         var second = new ActionSemanticBox("Second", new Size(20, 10), () => secondTapCount += 1);
         var merge = new MergeSemanticsRenderBox(
@@ -290,7 +290,7 @@ public sealed class SemanticsTreeTests
         pipeline.FlushLayout(new Size(220, 120));
         pipeline.FlushSemantics();
 
-        var dump = pipeline.SemanticsOwner.DebugDumpTree();
+        string dump = pipeline.SemanticsOwner.DebugDumpTree();
         Assert.Contains("label=\"Save\"", dump);
         Assert.Contains("actions=Tap", dump);
     }
@@ -505,7 +505,7 @@ public sealed class SemanticsTreeTests
         var firstRoot = pipeline.SemanticsOwner.RootNode;
         Assert.NotNull(firstRoot);
         var firstNode = Assert.Single(firstRoot.Children);
-        var firstId = firstNode.Id;
+        int firstId = firstNode.Id;
         Assert.Equal(new Rect(10, 6, 12, 8), firstNode.Rect);
 
         transform.Transform = Matrix.CreateTranslation(44, 18);
@@ -823,8 +823,8 @@ public sealed class SemanticsTreeTests
     [Fact]
     public void ChildConfigurationsDelegate_SiblingMergeGroup_WithConflicts_LeavesSeparateNodes()
     {
-        var firstTapCount = 0;
-        var secondTapCount = 0;
+        int firstTapCount = 0;
+        int secondTapCount = 0;
         var first = new ActionSemanticBox("First", new Size(12, 8), () => firstTapCount += 1);
         var second = new ActionSemanticBox("Second", new Size(12, 8), () => secondTapCount += 1);
         var row = new RenderFlex(
@@ -898,7 +898,7 @@ public sealed class SemanticsTreeTests
     [Fact]
     public void ChildConfigurationsDelegate_IncompleteSiblingGroup_WithoutChildSemantics_ProducesActionableSiblingNode()
     {
-        var tapCount = 0;
+        int tapCount = 0;
         var childWithoutSemantics = new RenderConstrainedBox(BoxConstraints.TightFor(width: 10, height: 10));
         var delegated = new ChildDelegateSemanticBoundaryRenderBox("Parent", childWithoutSemantics, _ =>
         {
@@ -970,7 +970,7 @@ public sealed class SemanticsTreeTests
         Assert.NotNull(firstRoot);
         var firstNode = FindNodeByLabel(firstRoot, "Synthetic Stable");
         Assert.NotNull(firstNode);
-        var firstId = firstNode.Id;
+        int firstId = firstNode.Id;
 
         transform.Transform = Matrix.CreateTranslation(6, 0);
         pipeline.FlushSemantics();
@@ -1002,7 +1002,7 @@ public sealed class SemanticsTreeTests
         Assert.NotNull(firstRoot);
         var merged = FindNodeByLabel(firstRoot, "Synthetic A Synthetic B");
         Assert.NotNull(merged);
-        var mergedId = merged.Id;
+        int mergedId = merged.Id;
 
         delegated.ConflictingActions = true;
         pipeline.FlushSemantics();
@@ -1014,7 +1014,7 @@ public sealed class SemanticsTreeTests
         Assert.NotNull(firstSplit);
         Assert.NotNull(secondSplit);
         Assert.Equal(mergedId, firstSplit.Id);
-        var secondSplitId = secondSplit.Id;
+        int secondSplitId = secondSplit.Id;
 
         delegated.ConflictingActions = false;
         pipeline.FlushSemantics();
@@ -1065,7 +1065,7 @@ public sealed class SemanticsTreeTests
         Assert.NotNull(conflictRoot);
         var firstSibling = FindNodeByLabel(conflictRoot, "Synthetic MergeUp");
         Assert.NotNull(firstSibling);
-        var siblingId = firstSibling.Id;
+        int siblingId = firstSibling.Id;
 
         delegated.ParentTapConflict = false;
         pipeline.FlushSemantics();
@@ -1109,7 +1109,7 @@ public sealed class SemanticsTreeTests
         var firstNode = FindNodeByLabel(firstRoot, "Synthetic Geo");
         Assert.NotNull(firstNode);
         Assert.Equal(new Rect(10, 6, 10, 8), firstNode.Rect);
-        var firstId = firstNode.Id;
+        int firstId = firstNode.Id;
 
         transform.Transform = Matrix.CreateTranslation(25, 3);
         pipeline.FlushSemantics();
@@ -1151,7 +1151,7 @@ public sealed class SemanticsTreeTests
         var initialNode = FindNodeByLabel(initialRoot, "Synthetic Clip");
         Assert.NotNull(initialNode);
         Assert.False(initialNode.IsHidden);
-        var initialId = initialNode.Id;
+        int initialId = initialNode.Id;
 
         clip.PaintClipRect = new Rect(0, 0, 10, 10);
         pipeline.FlushSemantics();

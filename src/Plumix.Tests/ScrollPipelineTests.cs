@@ -14,7 +14,7 @@ public sealed class ScrollPipelineTests
     public void ScrollPosition_ClampingPhysics_ClampsToContentBounds()
     {
         var position = new ScrollPosition(initialPixels: 10);
-        var notifications = 0;
+        int notifications = 0;
         position.AddListener(() => notifications += 1);
 
         position.ApplyViewportDimension(120);
@@ -307,7 +307,7 @@ public sealed class ScrollPipelineTests
     [Fact]
     public void RenderSliverList_VariableExtentChildren_ContinuouslyCoverViewportDuringScroll()
     {
-        var childCount = 300;
+        int childCount = 300;
         var manager = new VariableExtentSliverChildManager(
             childCount,
             index => index % 2 == 0 ? 44 : 4);
@@ -327,8 +327,8 @@ public sealed class ScrollPipelineTests
 
         pipeline.FlushLayout(new Size(100, viewportExtent));
 
-        var contentExtent = manager.TotalContentExtent;
-        var maxOffsetToCheck = Math.Max(0, contentExtent - viewportExtent - 1);
+        double contentExtent = manager.TotalContentExtent;
+        double maxOffsetToCheck = Math.Max(0, contentExtent - viewportExtent - 1);
 
         for (double offset = 0; offset <= maxOffsetToCheck; offset += 37)
         {
@@ -363,7 +363,7 @@ public sealed class ScrollPipelineTests
         harness.Pump(viewportSize);
         var position = controller.PrimaryPosition;
         Assert.NotNull(position);
-        var maxOffsetToCheck = Math.Max(0, position!.MaxScrollExtent - 1);
+        double maxOffsetToCheck = Math.Max(0, position!.MaxScrollExtent - 1);
         var viewport = Assert.IsType<RenderViewport>(FindRenderObject<RenderViewport>(harness.RenderView)!);
 
         for (double offset = 0; offset <= maxOffsetToCheck; offset += 53)
@@ -598,7 +598,7 @@ public sealed class ScrollPipelineTests
     private static bool CoversViewportPosition(RenderSliverMultiBoxAdaptor sliverList, double viewportY)
     {
         const double epsilon = 0.0001;
-        var sliverMainAxisOffset = SliverOffsetFromViewport(sliverList);
+        double sliverMainAxisOffset = SliverOffsetFromViewport(sliverList);
 
         for (var child = sliverList.FirstChild; child != null; child = sliverList.ChildAfter(child))
         {
@@ -609,8 +609,8 @@ public sealed class ScrollPipelineTests
                     $"Active child index {parentData.Index} has no size. Active children: {DescribeActiveChildren(sliverList)}");
             }
 
-            var top = sliverMainAxisOffset + parentData.offset.Y;
-            var bottom = top + child.Size.Height;
+            double top = sliverMainAxisOffset + parentData.offset.Y;
+            double bottom = top + child.Size.Height;
             if (top <= viewportY + epsilon && bottom >= viewportY - epsilon)
             {
                 return true;
@@ -634,7 +634,7 @@ public sealed class ScrollPipelineTests
 
     private static double SliverOffsetFromViewport(RenderSliver sliver)
     {
-        var offset = 0.0;
+        double offset = 0.0;
         RenderObject? current = sliver;
 
         while (current is RenderSliver currentSliver)
@@ -847,9 +847,9 @@ public sealed class ScrollPipelineTests
                 return;
             }
 
-            var remaining = Math.Max(0, _scrollExtent - constraints.ScrollOffset);
-            var paintExtent = Math.Min(remaining, constraints.RemainingPaintExtent);
-            var layoutExtent = Math.Min(paintExtent, constraints.ViewportMainAxisExtent);
+            double remaining = Math.Max(0, _scrollExtent - constraints.ScrollOffset);
+            double paintExtent = Math.Min(remaining, constraints.RemainingPaintExtent);
+            double layoutExtent = Math.Min(paintExtent, constraints.ViewportMainAxisExtent);
             Geometry = new SliverGeometry(
                 ScrollExtent: _scrollExtent,
                 PaintExtent: paintExtent,
@@ -892,9 +892,9 @@ public sealed class ScrollPipelineTests
         protected override void PerformSliverLayout(SliverConstraints constraints)
         {
             LastConstraints = constraints;
-            var remaining = Math.Max(0, _scrollExtent - constraints.ScrollOffset);
-            var paintExtent = Math.Min(remaining, constraints.RemainingPaintExtent);
-            var layoutExtent = Math.Min(paintExtent, constraints.ViewportMainAxisExtent);
+            double remaining = Math.Max(0, _scrollExtent - constraints.ScrollOffset);
+            double paintExtent = Math.Min(remaining, constraints.RemainingPaintExtent);
+            double layoutExtent = Math.Min(paintExtent, constraints.ViewportMainAxisExtent);
             Geometry = new SliverGeometry(
                 ScrollExtent: _scrollExtent,
                 PaintExtent: paintExtent,
@@ -937,7 +937,7 @@ public sealed class ScrollPipelineTests
 
         public int CreateCountFor(int index)
         {
-            return _createCountByIndex.TryGetValue(index, out var count) ? count : 0;
+            return _createCountByIndex.TryGetValue(index, out int count) ? count : 0;
         }
 
         public void AttachOwner(RenderSliverMultiBoxAdaptor owner)
@@ -960,7 +960,7 @@ public sealed class ScrollPipelineTests
             var child = new FixedSizeBox(new Size(100, _childExtent));
             _childrenByIndex[index] = child;
             _indexByChild[child] = index;
-            _createCountByIndex[index] = _createCountByIndex.TryGetValue(index, out var createdCount)
+            _createCountByIndex[index] = _createCountByIndex.TryGetValue(index, out int createdCount)
                 ? createdCount + 1
                 : 1;
             MaxCreatedIndex = Math.Max(MaxCreatedIndex, index);
@@ -975,7 +975,7 @@ public sealed class ScrollPipelineTests
 
         public void RemoveChild(RenderBox child)
         {
-            if (!_indexByChild.TryGetValue(child, out var index))
+            if (!_indexByChild.TryGetValue(child, out int index))
             {
                 return;
             }
@@ -989,7 +989,7 @@ public sealed class ScrollPipelineTests
 
         public void DidAdoptChild(RenderBox child)
         {
-            if (!_indexByChild.TryGetValue(child, out var index))
+            if (!_indexByChild.TryGetValue(child, out int index))
             {
                 return;
             }
@@ -1041,7 +1041,7 @@ public sealed class ScrollPipelineTests
                 return true;
             }
 
-            var extent = Math.Max(0, _extentForIndex(index));
+            double extent = Math.Max(0, _extentForIndex(index));
             var child = new FixedSizeBox(new Size(100, extent));
             _childrenByIndex[index] = child;
             _indexByChild[child] = index;
@@ -1051,7 +1051,7 @@ public sealed class ScrollPipelineTests
 
         public void RemoveChild(RenderBox child)
         {
-            if (!_indexByChild.TryGetValue(child, out var index))
+            if (!_indexByChild.TryGetValue(child, out int index))
             {
                 return;
             }
@@ -1063,7 +1063,7 @@ public sealed class ScrollPipelineTests
 
         public void DidAdoptChild(RenderBox child)
         {
-            if (!_indexByChild.TryGetValue(child, out var index))
+            if (!_indexByChild.TryGetValue(child, out int index))
             {
                 return;
             }

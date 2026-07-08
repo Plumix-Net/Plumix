@@ -32,7 +32,7 @@ internal sealed class CircleAvatarDemoPageState : State
 
     public override Widget Build(BuildContext context)
     {
-        var radius = _largeRadius ? 38.0 : 26.0;
+        double radius = _largeRadius ? 38.0 : 26.0;
         var foreground = _breakForeground
             ? BrokenImage
             : _showForeground

@@ -166,10 +166,10 @@ public sealed class ImageCache
             return null;
         }
 
-        var trackPending = false;
+        bool trackPending = false;
         PendingImage? pendingImage = null;
         ImageStreamListener? listener = null;
-        var listenedOnce = 0;
+        int listenedOnce = 0;
         listener = new ImageStreamListener(
             OnImage: (image, _) =>
             {
@@ -355,7 +355,7 @@ public sealed class ImageCache
         List<CachedImage> evicted = [];
         while (_cache.Count > _maximumSize || _currentSizeBytes > _maximumSizeBytes)
         {
-            var key = _lru.First!.Value;
+            object key = _lru.First!.Value;
             var image = _cache[key];
             _cache.Remove(key);
             _lru.RemoveFirst();

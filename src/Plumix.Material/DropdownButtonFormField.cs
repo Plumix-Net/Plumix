@@ -210,16 +210,16 @@ public sealed class DropdownButtonFormField<T> : FormField<T>
         MouseCursor? mouseCursor,
         MouseCursor? dropdownMenuItemMouseCursor)
     {
-        var showSelectedItem = items?.Any(item =>
+        bool showSelectedItem = items?.Any(item =>
             EqualityComparer<T?>.Default.Equals(item.Value, state.Value)) == true;
-        var enabled = onChanged is not null && items is { Count: > 0 };
+        bool enabled = onChanged is not null && items is { Count: > 0 };
         var decorationHint = decoration.HintText is null ? null : new Text(decoration.HintText);
         var effectiveHint = hint ?? decorationHint;
         var effectiveDisabledHint = disabledHint ?? effectiveHint;
-        var hintAvailable = enabled
+        bool hintAvailable = enabled
             ? effectiveHint is not null
             : effectiveHint is not null || effectiveDisabledHint is not null;
-        var isEmpty = !showSelectedItem && !hintAvailable;
+        bool isEmpty = !showSelectedItem && !hintAvailable;
 
         var effectiveDecoration = decoration;
         if (state.ErrorText is { } errorText || decoration.HintText is not null)

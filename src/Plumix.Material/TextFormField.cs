@@ -243,7 +243,7 @@ public sealed class TextFormFieldState : FormFieldState<string>
         var old = (TextFormField)oldWidget;
         if (ReferenceEquals(old.Controller, Current.Controller)) return;
 
-        var previousText = old.Controller?.Text ?? _controller?.Text ?? Value ?? string.Empty;
+        string previousText = old.Controller?.Text ?? _controller?.Text ?? Value ?? string.Empty;
         DetachController(old.Controller);
         AttachController(Current.Controller, previousText);
         if (Current.Controller is not null) SetValue(Current.Controller.Text);
@@ -258,7 +258,7 @@ public sealed class TextFormFieldState : FormFieldState<string>
     public override void DidChange(string? value)
     {
         base.DidChange(value);
-        var normalized = value ?? string.Empty;
+        string normalized = value ?? string.Empty;
         if (!string.Equals(EffectiveController.Text, normalized, StringComparison.Ordinal))
             EffectiveController.Text = normalized;
     }

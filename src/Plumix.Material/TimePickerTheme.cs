@@ -55,7 +55,7 @@ public sealed class TimePickerTheme : InheritedWidget
     internal static TimePickerThemeData Defaults(BuildContext context)
     {
         var theme = Theme.Of(context);
-        var m3 = theme.UseMaterial3;
+        bool m3 = theme.UseMaterial3;
         var selectedFill = m3
             ? theme.PrimaryContainerColor
             : WithOpacity(theme.PrimaryColor, theme.Brightness == Brightness.Dark ? 0.24 : 0.12);

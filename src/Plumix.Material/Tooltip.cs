@@ -171,16 +171,16 @@ public sealed class TooltipState : State
     {
         _theme = Theme.Of(context);
         _tooltipTheme = TooltipTheme.Of(context);
-        var message = CurrentWidget.Message ?? string.Empty;
+        string message = CurrentWidget.Message ?? string.Empty;
         if (message.Length == 0)
         {
             return CurrentWidget.Child ?? new SizedBox();
         }
 
         Widget child = CurrentWidget.Child ?? new SizedBox();
-        var excludeFromSemantics = CurrentWidget.ExcludeFromSemantics
-                                   ?? _tooltipTheme.ExcludeFromSemantics
-                                   ?? false;
+        bool excludeFromSemantics = CurrentWidget.ExcludeFromSemantics
+                                    ?? _tooltipTheme.ExcludeFromSemantics
+                                    ?? false;
         if (!excludeFromSemantics)
         {
             child = new Semantics(label: message, child: child);
@@ -201,14 +201,14 @@ public sealed class TooltipState : State
             onPointerDown: _ => HandlePointerDown(),
             child: child);
 
-        var opacity = _fadeController?.Evaluate() ?? 0;
+        double opacity = _fadeController?.Evaluate() ?? 0;
         if (!_isShown && opacity <= 0)
         {
             return child;
         }
 
-        var preferBelow = CurrentWidget.PreferBelow ?? _tooltipTheme.PreferBelow ?? true;
-        var verticalOffset = CurrentWidget.VerticalOffset ?? _tooltipTheme.VerticalOffset ?? 24.0;
+        bool preferBelow = CurrentWidget.PreferBelow ?? _tooltipTheme.PreferBelow ?? true;
+        double verticalOffset = CurrentWidget.VerticalOffset ?? _tooltipTheme.VerticalOffset ?? 24.0;
         var bubble = new Opacity(opacity, BuildBubble(message));
         var positionedBubble = preferBelow
             ? new Positioned(
@@ -246,7 +246,7 @@ public sealed class TooltipState : State
             states = [.. Registry];
         }
 
-        var dismissed = false;
+        bool dismissed = false;
         foreach (var state in states)
         {
             dismissed |= state.DismissTooltip(immediate: false);
@@ -257,8 +257,8 @@ public sealed class TooltipState : State
 
     private Widget BuildBubble(string message)
     {
-        var desktop = _theme.Platform is TargetPlatform.MacOS or TargetPlatform.Linux or TargetPlatform.Windows;
-        var defaultHeight = desktop ? 24.0 : 32.0;
+        bool desktop = _theme.Platform is TargetPlatform.MacOS or TargetPlatform.Linux or TargetPlatform.Windows;
+        double defaultHeight = desktop ? 24.0 : 32.0;
         var defaultPadding = desktop ? new Thickness(8, 4) : new Thickness(16, 4);
         var foreground = _theme.Brightness == Brightness.Dark ? Colors.Black : Colors.White;
         var background = _theme.Brightness == Brightness.Dark

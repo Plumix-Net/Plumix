@@ -158,7 +158,7 @@ internal sealed class DrawerDemoPageState : State
 
     private Widget BuildDrawerPanel(bool isStartDrawer)
     {
-        var title = isStartDrawer ? "Start drawer" : "End drawer";
+        string title = isStartDrawer ? "Start drawer" : "End drawer";
         var accent = isStartDrawer ? Color.Parse("#FF0D47A1") : Color.Parse("#FF4A148C");
 
         return new Drawer(

@@ -60,7 +60,7 @@ public sealed class Tab : StatelessWidget, IPreferredSizeWidget
         Widget label = Child ?? (Text is not null
             ? new Text(Text, softWrap: false, overflow: TextOverflow.Fade)
             : Icon!);
-        var calculatedHeight = 46.0;
+        double calculatedHeight = 46.0;
         if (Icon is not null && HasLabel)
         {
             calculatedHeight = 72;
@@ -249,7 +249,7 @@ public sealed class TabBar : StatefulWidget, IPreferredSizeWidget
     {
         get
         {
-            var height = 46.0;
+            double height = 46.0;
             foreach (var tab in Tabs)
             {
                 if (tab is IPreferredSizeWidget preferred) height = Math.Max(height, preferred.PreferredSize.Height);
@@ -316,21 +316,21 @@ public sealed class TabBar : StatefulWidget, IPreferredSizeWidget
             var labelPadding = widget.LabelPadding ?? tabTheme.LabelPadding ?? new Thickness(16, 0);
             var indicatorColor = widget.IndicatorColor ?? tabTheme.IndicatorColor
                 ?? (theme.UseMaterial3 ? theme.PrimaryColor : theme.SecondaryColor);
-            var indicatorWeight = theme.UseMaterial3 && widget.IsPrimary && indicatorSize == TabBarIndicatorSize.Label
+            double indicatorWeight = theme.UseMaterial3 && widget.IsPrimary && indicatorSize == TabBarIndicatorSize.Label
                 ? Math.Max(3, widget.IndicatorWeight)
                 : widget.IndicatorWeight;
             var dividerColor = widget.DividerColor ?? tabTheme.DividerColor
                 ?? (theme.UseMaterial3 ? theme.OutlineVariantColor : Colors.Transparent);
-            var dividerHeight = widget.DividerHeight ?? tabTheme.DividerHeight ?? (theme.UseMaterial3 ? 1 : 0);
+            double dividerHeight = widget.DividerHeight ?? tabTheme.DividerHeight ?? (theme.UseMaterial3 ? 1 : 0);
             var indicatorAnimation = widget.IndicatorAnimation ?? tabTheme.IndicatorAnimation
                 ?? (indicatorSize == TabBarIndicatorSize.Label ? TabIndicatorAnimation.Elastic : TabIndicatorAnimation.Linear);
 
             var children = new List<Widget>(widget.Tabs.Count);
             var localizations = MaterialLocalizations.Of(context);
-            for (var index = 0; index < widget.Tabs.Count; index++)
+            for (int index = 0; index < widget.Tabs.Count; index++)
             {
-                var tabIndex = index;
-                var fraction = Math.Clamp(1 - Math.Abs(controller.AnimationValue - index), 0, 1);
+                int tabIndex = index;
+                double fraction = Math.Clamp(1 - Math.Abs(controller.AnimationValue - index), 0, 1);
                 var color = LerpColor(unselectedColor, selectedColor, fraction);
                 var style = (fraction >= 0.5 ? selectedStyle : unselectedStyle).CopyWith(color: color);
                 var states = index == controller.Index ? MaterialState.Selected : MaterialState.None;
@@ -470,8 +470,8 @@ public sealed class TabBar : StatefulWidget, IPreferredSizeWidget
                     ?? (Theme.Of(Context).UseMaterial3
                         ? global::Plumix.Material.TabAlignment.StartOffset
                         : global::Plumix.Material.TabAlignment.Start);
-                var desiredInset = alignment == global::Plumix.Material.TabAlignment.Center &&
-                                   _tabStripWidth < position.ViewportDimension
+                double desiredInset = alignment == global::Plumix.Material.TabAlignment.Center &&
+                                      _tabStripWidth < position.ViewportDimension
                     ? (position.ViewportDimension - _tabStripWidth) / 2
                     : 0;
                 if (Math.Abs(desiredInset - _alignmentInset) > 0.01)
@@ -480,14 +480,14 @@ public sealed class TabBar : StatefulWidget, IPreferredSizeWidget
                     return;
                 }
 
-                var index = Math.Clamp(_controller.Index, 0, _tabRects.Count - 1);
+                int index = Math.Clamp(_controller.Index, 0, _tabRects.Count - 1);
                 var contentPadding = CurrentWidget.Padding ?? new Thickness();
-                var leading = Directionality.Of(Context) == TextDirection.Rtl
+                double leading = Directionality.Of(Context) == TextDirection.Rtl
                     ? contentPadding.Right
                     : contentPadding.Left;
                 if (alignment == global::Plumix.Material.TabAlignment.StartOffset) leading += 52;
                 leading += _alignmentInset;
-                var target = Math.Clamp(
+                double target = Math.Clamp(
                     leading + _tabRects[index].Center.X - (position.ViewportDimension / 2),
                     position.MinScrollExtent,
                     position.MaxScrollExtent);
@@ -630,7 +630,7 @@ public sealed class TabBarView : StatefulWidget
             _warpingToIndex = _controller.Index;
             if (Math.Abs(_controller.Index - _controller.PreviousIndex) > 1)
             {
-                var initialPage = _controller.Index > _controller.PreviousIndex
+                int initialPage = _controller.Index > _controller.PreviousIndex
                     ? _controller.Index - 1
                     : _controller.Index + 1;
                 var warped = _children.ToArray();
@@ -660,8 +660,8 @@ public sealed class TabBarView : StatefulWidget
         {
             if (_controllerDrivingPage || _controller is null || _pageController?.Page is not { } page || _controller.IndexIsChanging) return;
             _pageDrivingController = true;
-            var delta = Math.Clamp(page - _controller.Index, -1, 1);
-            var rounded = Math.Clamp((int)Math.Round(page), 0, Math.Max(0, _controller.Length - 1));
+            double delta = Math.Clamp(page - _controller.Index, -1, 1);
+            int rounded = Math.Clamp((int)Math.Round(page), 0, Math.Max(0, _controller.Length - 1));
             if (Math.Abs(page - rounded) <= 0.0001 && Math.Abs(delta) >= 0.9999)
             {
                 _controller.Index = rounded;

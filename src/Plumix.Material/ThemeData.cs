@@ -887,15 +887,15 @@ public sealed record ThemeData
     {
         static double Linearize(byte component)
         {
-            var value = component / 255.0;
+            double value = component / 255.0;
             return value <= 0.03928
                 ? value / 12.92
                 : Math.Pow((value + 0.055) / 1.055, 2.4);
         }
 
-        var luminance = (0.2126 * Linearize(color.R))
-                        + (0.7152 * Linearize(color.G))
-                        + (0.0722 * Linearize(color.B));
+        double luminance = (0.2126 * Linearize(color.R))
+                           + (0.7152 * Linearize(color.G))
+                           + (0.0722 * Linearize(color.B));
         return (luminance + 0.05) * (luminance + 0.05) > 0.15
             ? Brightness.Light
             : Brightness.Dark;

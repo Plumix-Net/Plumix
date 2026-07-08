@@ -67,7 +67,7 @@ public sealed class ButtonBar : StatelessWidget
             AlignedDropdown = ButtonAlignedDropdown ?? barTheme.ButtonAlignedDropdown ?? false,
             LayoutBehavior = LayoutBehavior ?? barTheme.LayoutBehavior ?? ButtonBarLayoutBehavior.Padded,
         };
-        var paddingUnit = (effectivePadding.Left + effectivePadding.Right) / 4.0;
+        double paddingUnit = (effectivePadding.Left + effectivePadding.Right) / 4.0;
         var paddedChildren = Children
             .Select(child => (Widget)new Padding(new Thickness(paddingUnit, 0), child))
             .ToList();
@@ -199,8 +199,8 @@ internal sealed class RenderButtonBarRow : RenderBox,
 
         var children = new List<RenderBox>(ChildCount);
         var childConstraints = new BoxConstraints(MaxWidth: double.PositiveInfinity, MaxHeight: Constraints.MaxHeight);
-        var idealWidth = 0.0;
-        var maxHeight = 0.0;
+        double idealWidth = 0.0;
+        double maxHeight = 0.0;
         for (var child = FirstChild; child is not null; child = ChildAfter(child))
         {
             child.Layout(childConstraints, parentUsesSize: true);
@@ -211,7 +211,7 @@ internal sealed class RenderButtonBarRow : RenderBox,
 
         if (!Constraints.HasBoundedWidth || idealWidth <= Constraints.MaxWidth)
         {
-            var width = MainAxisSize == MainAxisSize.Max && Constraints.HasBoundedWidth
+            double width = MainAxisSize == MainAxisSize.Max && Constraints.HasBoundedWidth
                 ? Constraints.MaxWidth
                 : idealWidth;
             Size = Constraints.Constrain(new Size(width, maxHeight));
@@ -219,16 +219,16 @@ internal sealed class RenderButtonBarRow : RenderBox,
             return;
         }
 
-        var height = children.Sum(child => child.Size.Height)
-                     + (OverflowButtonSpacing * Math.Max(0, children.Count - 1));
+        double height = children.Sum(child => child.Size.Height)
+                        + (OverflowButtonSpacing * Math.Max(0, children.Count - 1));
         Size = Constraints.Constrain(new Size(Constraints.MaxWidth, height));
         PositionVertical(children);
     }
 
     private void PositionHorizontal(IReadOnlyList<RenderBox> children, double childrenWidth)
     {
-        var free = Math.Max(0, Size.Width - childrenWidth);
-        var (leading, between) = MainAxisAlignment switch
+        double free = Math.Max(0, Size.Width - childrenWidth);
+        (double leading, double between) = MainAxisAlignment switch
         {
             MainAxisAlignment.Center => (free / 2, 0.0),
             MainAxisAlignment.End => (free, 0.0),
@@ -237,8 +237,8 @@ internal sealed class RenderButtonBarRow : RenderBox,
             MainAxisAlignment.SpaceEvenly => (free / (children.Count + 1), free / (children.Count + 1)),
             _ => (0.0, 0.0),
         };
-        var rtl = TextDirection == TextDirection.Rtl;
-        var x = rtl ? Size.Width - leading : leading;
+        bool rtl = TextDirection == TextDirection.Rtl;
+        double x = rtl ? Size.Width - leading : leading;
         foreach (var child in children)
         {
             if (rtl) x -= child.Size.Width;
@@ -251,10 +251,10 @@ internal sealed class RenderButtonBarRow : RenderBox,
     private void PositionVertical(IReadOnlyList<RenderBox> children)
     {
         var ordered = OverflowDirection == VerticalDirection.Down ? children : children.Reverse().ToList();
-        var y = 0.0;
+        double y = 0.0;
         foreach (var child in ordered)
         {
-            var x = ResolveOverflowX(child.Size.Width);
+            double x = ResolveOverflowX(child.Size.Width);
             ((ButtonBarParentData)child.parentData!).offset = new Point(x, y);
             y += child.Size.Height + OverflowButtonSpacing;
         }
@@ -266,8 +266,8 @@ internal sealed class RenderButtonBarRow : RenderBox,
             ? MainAxisAlignment.Start
             : MainAxisAlignment;
         if (logical == MainAxisAlignment.Center) return (Size.Width - width) / 2;
-        var start = TextDirection == TextDirection.Ltr ? 0 : Size.Width - width;
-        var end = TextDirection == TextDirection.Ltr ? Size.Width - width : 0;
+        double start = TextDirection == TextDirection.Ltr ? 0 : Size.Width - width;
+        double end = TextDirection == TextDirection.Ltr ? Size.Width - width : 0;
         return logical == MainAxisAlignment.End ? end : start;
     }
 

@@ -121,7 +121,7 @@ public sealed class TextFieldDemoPage : StatefulWidget
 
         private void ValidateForm()
         {
-            var valid = _formKey.CurrentState?.Validate() == true;
+            bool valid = _formKey.CurrentState?.Validate() == true;
             SetState(() => _formStatus = valid ? "valid" : "invalid");
         }
 

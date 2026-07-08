@@ -56,8 +56,8 @@ public sealed class Scrollbar : StatelessWidget
     {
         var theme = Theme.Of(context);
         var scrollbarTheme = ScrollbarTheme.Of(context);
-        var isAndroid = theme.Platform == TargetPlatform.Android;
-        var isIos = theme.Platform == TargetPlatform.IOS;
+        bool isAndroid = theme.Platform == TargetPlatform.Android;
+        bool isIos = theme.Platform == TargetPlatform.IOS;
         var onSurface = theme.OnSurfaceColor;
 
         if (isIos)
@@ -111,7 +111,7 @@ public sealed class Scrollbar : StatelessWidget
 
         double? ResolveThickness(ScrollbarInteractionState state)
         {
-            var resolved = Thickness ?? scrollbarTheme.Thickness?.Resolve(ToMaterialState(state));
+            double? resolved = Thickness ?? scrollbarTheme.Thickness?.Resolve(ToMaterialState(state));
             if (resolved.HasValue) return resolved;
             return state.HasFlag(ScrollbarInteractionState.Hovered) && ResolveTrackVisibility(state) == true
                 ? 12

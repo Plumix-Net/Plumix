@@ -4474,7 +4474,7 @@ public sealed class MaterialButtonsTests
         var owner = new BuildOwner();
         var focusedOverlay = Colors.SeaGreen;
         var pressedOverlay = Colors.OrangeRed;
-        var pressedCount = 0;
+        int pressedCount = 0;
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -4518,7 +4518,7 @@ public sealed class MaterialButtonsTests
         Assert.NotNull(focusedDecorated);
         Assert.Equal(focusedOverlay, focusedDecorated!.Decoration.Color);
 
-        var handledDown = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Space", isDown: true));
+        bool handledDown = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Space", isDown: true));
         Assert.True(handledDown);
         owner.FlushBuild();
 
@@ -4527,7 +4527,7 @@ public sealed class MaterialButtonsTests
         Assert.Equal(pressedOverlay, pressedDecorated!.Decoration.Color);
         Assert.Equal(1, pressedCount);
 
-        var handledUp = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Space", isDown: false));
+        bool handledUp = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Space", isDown: false));
         Assert.True(handledUp);
         owner.FlushBuild();
         Assert.Equal(1, pressedCount);
@@ -4537,7 +4537,7 @@ public sealed class MaterialButtonsTests
     public void TextButton_KeyboardActivation_NumPadEnter_InvokesOnPressed()
     {
         var owner = new BuildOwner();
-        var pressedCount = 0;
+        int pressedCount = 0;
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -4562,7 +4562,7 @@ public sealed class MaterialButtonsTests
 
         owner.FlushBuild();
 
-        var handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "NumPadEnter", isDown: true));
+        bool handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "NumPadEnter", isDown: true));
         Assert.True(handled);
         owner.FlushBuild();
 
@@ -4575,7 +4575,7 @@ public sealed class MaterialButtonsTests
         var owner = new BuildOwner();
         var focusedOverlay = Colors.SeaGreen;
         var pressedOverlay = Colors.OrangeRed;
-        var pressedCount = 0;
+        int pressedCount = 0;
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -4619,7 +4619,7 @@ public sealed class MaterialButtonsTests
         Assert.NotNull(focusedDecorated);
         Assert.Equal(focusedOverlay, focusedDecorated!.Decoration.Color);
 
-        var handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(
+        bool handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(
             key: "Space",
             isDown: true,
             isControlPressed: true));
@@ -5910,7 +5910,7 @@ public sealed class MaterialButtonsTests
 
     private static Color ApplyOpacity(Color color, double opacity)
     {
-        var alpha = (byte)Math.Clamp((int)(255 * opacity), 0, 255);
+        byte alpha = (byte)Math.Clamp((int)(255 * opacity), 0, 255);
         return Color.FromArgb(alpha, color.R, color.G, color.B);
     }
 
@@ -5921,7 +5921,7 @@ public sealed class MaterialButtonsTests
             return (byte)Math.Clamp((int)(from + ((to - from) * t)), 0, 255);
         }
 
-        var clampedOpacity = Math.Clamp(overlayColor.A / 255.0, 0, 1);
+        double clampedOpacity = Math.Clamp(overlayColor.A / 255.0, 0, 1);
         return Color.FromArgb(
             baseColor.A,
             Blend(baseColor.R, overlayColor.R, clampedOpacity),
@@ -5936,7 +5936,7 @@ public sealed class MaterialButtonsTests
             return color;
         }
 
-        var opacity = ResolveSurfaceTintOpacityForElevation(elevation);
+        double opacity = ResolveSurfaceTintOpacityForElevation(elevation);
         if (opacity <= 0)
         {
             return color;
@@ -5968,7 +5968,7 @@ public sealed class MaterialButtonsTests
             return stops[0].Opacity;
         }
 
-        for (var i = 1; i < stops.Length; i++)
+        for (int i = 1; i < stops.Length; i++)
         {
             var current = stops[i];
             if (elevation == current.Elevation)
@@ -5979,7 +5979,7 @@ public sealed class MaterialButtonsTests
             if (elevation < current.Elevation)
             {
                 var lower = stops[i - 1];
-                var t = (elevation - lower.Elevation) / (current.Elevation - lower.Elevation);
+                double t = (elevation - lower.Elevation) / (current.Elevation - lower.Elevation);
                 return lower.Opacity + (t * (current.Opacity - lower.Opacity));
             }
         }

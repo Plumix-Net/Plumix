@@ -142,7 +142,7 @@ public sealed class Dialog : StatelessWidget
         {
             var constraints = Constraints ?? dialogTheme.Constraints ?? new BoxConstraints(MinWidth: 280);
             var background = BackgroundColor ?? dialogTheme.BackgroundColor ?? defaults.BackgroundColor!.Value;
-            var elevation = Elevation ?? dialogTheme.Elevation ?? defaults.Elevation!.Value;
+            double elevation = Elevation ?? dialogTheme.Elevation ?? defaults.Elevation!.Value;
             var shadow = ShadowColor ?? dialogTheme.ShadowColor ?? defaults.ShadowColor ?? Colors.Transparent;
             var surfaceTint = SurfaceTintColor ?? dialogTheme.SurfaceTintColor ?? defaults.SurfaceTintColor;
             if (theme.UseMaterial3 && surfaceTint.HasValue)
@@ -359,11 +359,11 @@ public sealed class SimpleDialog : StatelessWidget
         var theme = Theme.Of(context);
         var dialogTheme = DialogTheme.Of(context);
         var defaults = Dialog.ResolveDefaults(theme);
-        var label = theme.Platform is TargetPlatform.IOS or TargetPlatform.MacOS
+        string? label = theme.Platform is TargetPlatform.IOS or TargetPlatform.MacOS
             ? SemanticLabel
             : SemanticLabel ?? MaterialLocalizations.Of(context).DialogLabel;
         var effectiveTitleTextStyle = TitleTextStyle ?? dialogTheme.TitleTextStyle ?? theme.TextTheme.TitleLarge;
-        var paddingScale = ScalePadding(MediaQuery.TextScaleFactorOf(context));
+        double paddingScale = ScalePadding(MediaQuery.TextScaleFactorOf(context));
 
         Widget? titleWidget = null;
         if (Title is not null)
@@ -433,7 +433,7 @@ public sealed class SimpleDialog : StatelessWidget
 
     private static double ScalePadding(double textScaleFactor)
     {
-        var clamped = Math.Clamp(textScaleFactor, 1, 2);
+        double clamped = Math.Clamp(textScaleFactor, 1, 2);
         return 1.0 + ((1.0 / 3.0 - 1.0) * (clamped - 1.0));
     }
 }
@@ -543,16 +543,16 @@ public sealed class AlertDialog : StatelessWidget
         var theme = Theme.Of(context);
         var dialogTheme = DialogTheme.Of(context);
         var defaults = Dialog.ResolveDefaults(theme);
-        var label = theme.Platform is TargetPlatform.IOS or TargetPlatform.MacOS
+        string? label = theme.Platform is TargetPlatform.IOS or TargetPlatform.MacOS
             ? SemanticLabel
             : SemanticLabel ?? MaterialLocalizations.Of(context).AlertDialogLabel;
-        var paddingScale = ScalePadding(MediaQuery.TextScaleFactorOf(context));
+        double paddingScale = ScalePadding(MediaQuery.TextScaleFactorOf(context));
 
         Widget? iconWidget = null;
         if (Icon is not null)
         {
-            var belowIsTitle = Title is not null;
-            var belowIsContent = !belowIsTitle && Content is not null;
+            bool belowIsTitle = Title is not null;
+            bool belowIsContent = !belowIsTitle && Content is not null;
             var padding = IconPadding ?? new Thickness(
                 24,
                 24,
@@ -593,7 +593,7 @@ public sealed class AlertDialog : StatelessWidget
         Widget? actionsWidget = null;
         if (Actions is not null)
         {
-            var spacing = ((ButtonPadding?.Left ?? 8) + (ButtonPadding?.Right ?? 8)) / 2.0;
+            double spacing = ((ButtonPadding?.Left ?? 8) + (ButtonPadding?.Right ?? 8)) / 2.0;
             var defaultActionsPadding = theme.UseMaterial3
                 ? defaults.ActionsPadding!.Value
                 : Add(defaults.ActionsPadding ?? default, new Thickness(spacing));
@@ -663,7 +663,7 @@ public sealed class AlertDialog : StatelessWidget
 
     private static double ScalePadding(double textScaleFactor)
     {
-        var clamped = Math.Clamp(textScaleFactor, 1, 2);
+        double clamped = Math.Clamp(textScaleFactor, 1, 2);
         return 1.0 + ((1.0 / 3.0 - 1.0) * (clamped - 1.0));
     }
 
@@ -762,7 +762,7 @@ public sealed class DialogRoute<T> : PageRoute
 
     public override Widget BuildPage(BuildContext context)
     {
-        var progress = Math.Clamp(_animation.Value, 0, 1);
+        double progress = Math.Clamp(_animation.Value, 0, 1);
         var barrier = new Semantics(
             label: BarrierLabel,
             container: true,

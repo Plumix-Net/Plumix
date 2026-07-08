@@ -102,7 +102,7 @@ public sealed class RenderIntrinsicWidth : RenderProxyBox
             MaxHeight: Constraints.MaxHeight);
         Child.Layout(probeConstraints, parentUsesSize: true);
 
-        var width = Constraints.ConstrainWidth(ApplyStep(Child.Size.Width, _stepWidth));
+        double width = Constraints.ConstrainWidth(ApplyStep(Child.Size.Width, _stepWidth));
         double? height = _stepHeight.HasValue
             ? Constraints.ConstrainHeight(ApplyStep(Child.Size.Height, _stepHeight))
             : null;

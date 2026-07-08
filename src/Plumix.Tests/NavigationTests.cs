@@ -19,7 +19,7 @@ public sealed class NavigationTests
     {
         var owner = new BuildOwner();
         NavigatorState? navigatorState = null;
-        var currentPageName = string.Empty;
+        string currentPageName = string.Empty;
 
         var root = new TestRootElement(
             new Navigator(
@@ -57,7 +57,7 @@ public sealed class NavigationTests
     {
         var owner = new BuildOwner();
         NavigatorState? navigatorState = null;
-        var currentPageName = string.Empty;
+        string currentPageName = string.Empty;
 
         var root = new TestRootElement(
             new Navigator(
@@ -356,7 +356,7 @@ public sealed class NavigationTests
     {
         var owner = new BuildOwner();
         NavigatorState? navigatorState = null;
-        var currentPageName = string.Empty;
+        string currentPageName = string.Empty;
 
         var root = new TestRootElement(
             new Navigator(
@@ -388,8 +388,8 @@ public sealed class NavigationTests
     {
         var owner = new BuildOwner();
         NavigatorState? innerNavigatorState = null;
-        var currentOuterPage = string.Empty;
-        var currentInnerPage = string.Empty;
+        string currentOuterPage = string.Empty;
+        string currentInnerPage = string.Empty;
 
         var root = new TestRootElement(
             new Navigator(
@@ -434,8 +434,8 @@ public sealed class NavigationTests
         var owner = new BuildOwner();
         NavigatorState? outerNavigatorState = null;
         NavigatorState? innerNavigatorState = null;
-        var currentOuterPage = string.Empty;
-        var currentInnerPage = string.Empty;
+        string currentOuterPage = string.Empty;
+        string currentInnerPage = string.Empty;
 
         var root = new TestRootElement(
             new Navigator(
@@ -484,7 +484,7 @@ public sealed class NavigationTests
         var owner = new BuildOwner();
         NavigatorState? navigatorState = null;
         ModalRoute? rootRoute = null;
-        var localHistoryRemoved = false;
+        bool localHistoryRemoved = false;
 
         var root = new TestRootElement(
             new Navigator(
@@ -594,7 +594,7 @@ public sealed class NavigationTests
     {
         var owner = new BuildOwner();
         NavigatorState? navigatorState = null;
-        var currentPageName = string.Empty;
+        string currentPageName = string.Empty;
         var observer = new RecordingObserver();
 
         var root = new TestRootElement(
@@ -636,7 +636,7 @@ public sealed class NavigationTests
     {
         var owner = new BuildOwner();
         NavigatorState? navigatorState = null;
-        var currentPageName = string.Empty;
+        string currentPageName = string.Empty;
         object? latestArguments = null;
 
         Route? OnGenerateRoute(RouteSettings settings)
@@ -693,7 +693,7 @@ public sealed class NavigationTests
         var owner = new BuildOwner();
         BuildContext? rootContext = null;
         BuildContext? detailsContext = null;
-        var currentPageName = string.Empty;
+        string currentPageName = string.Empty;
         object? latestArguments = null;
 
         Route? OnGenerateRoute(RouteSettings settings)
@@ -756,7 +756,7 @@ public sealed class NavigationTests
     {
         var owner = new BuildOwner();
         NavigatorState? navigatorState = null;
-        var currentPageName = string.Empty;
+        string currentPageName = string.Empty;
 
         Route? OnGenerateRoute(RouteSettings settings)
         {
@@ -803,7 +803,7 @@ public sealed class NavigationTests
     {
         var owner = new BuildOwner();
         NavigatorState? navigatorState = null;
-        var currentPageName = string.Empty;
+        string currentPageName = string.Empty;
 
         var root = new TestRootElement(
             new Navigator(
@@ -836,7 +836,7 @@ public sealed class NavigationTests
     {
         var owner = new BuildOwner();
         NavigatorState? navigatorState = null;
-        var currentPageName = string.Empty;
+        string currentPageName = string.Empty;
 
         Route BuildNamedRoute(string pageName, RouteSettings settings)
         {
@@ -953,7 +953,7 @@ public sealed class NavigationTests
     {
         var owner = new BuildOwner();
         NavigatorState? navigatorState = null;
-        var currentPageName = string.Empty;
+        string currentPageName = string.Empty;
         var routesByName = new Dictionary<string, Route>(StringComparer.Ordinal);
 
         Route BuildNamedRoute(string pageName, RouteSettings settings)
@@ -1013,7 +1013,7 @@ public sealed class NavigationTests
     {
         var owner = new BuildOwner();
         NavigatorState? navigatorState = null;
-        var currentPageName = string.Empty;
+        string currentPageName = string.Empty;
         var routesByName = new Dictionary<string, Route>(StringComparer.Ordinal);
 
         Route BuildNamedRoute(string pageName, RouteSettings settings)
@@ -1098,7 +1098,7 @@ public sealed class NavigationTests
     {
         var owner = new BuildOwner();
         RouteData? capturedRouteData = null;
-        var currentPageName = string.Empty;
+        string currentPageName = string.Empty;
 
         Route? OnGenerateRoute(RouteSettings settings)
         {

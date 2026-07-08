@@ -219,8 +219,8 @@ internal sealed class AppBarTextStylesDemoPageState : State
     private static string DescribeStyle(TextStyle? style, Color fallbackColor)
     {
         var color = style?.Color ?? fallbackColor;
-        var fontSize = style?.FontSize;
-        var sizeLabel = fontSize.HasValue ? fontSize.Value.ToString("0") : "base";
+        double? fontSize = style?.FontSize;
+        string sizeLabel = fontSize.HasValue ? fontSize.Value.ToString("0") : "base";
         return $"{ColorLabel(color)}:{sizeLabel}";
     }
 

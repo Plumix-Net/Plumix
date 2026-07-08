@@ -46,7 +46,7 @@ public sealed class ElementLifecycleTests
         LifecycleTracker.Reset();
 
         var owner = new BuildOwner();
-        var identity = new object();
+        object identity = new object();
 
         var root = new TestRootElement(new GlobalReparentHost(moveToLeft: true, identity));
         root.Attach(owner);
@@ -58,8 +58,8 @@ public sealed class ElementLifecycleTests
         root.Update(new GlobalReparentHost(moveToLeft: false, identity));
         owner.FlushBuild();
 
-        var deactivateIndex = LifecycleTracker.Events.IndexOf("deactivate");
-        var activateIndex = LifecycleTracker.Events.IndexOf("activate");
+        int deactivateIndex = LifecycleTracker.Events.IndexOf("deactivate");
+        int activateIndex = LifecycleTracker.Events.IndexOf("activate");
 
         Assert.True(deactivateIndex >= 0, "Expected deactivate event during GlobalKey move.");
         Assert.True(activateIndex > deactivateIndex, "Expected activate after deactivate during GlobalKey move.");
@@ -76,7 +76,7 @@ public sealed class ElementLifecycleTests
         LifecycleTracker.Reset();
 
         var owner = new BuildOwner();
-        var identity = new object();
+        object identity = new object();
 
         var root = new TestRootElement(new GlobalPlacementHost(includeGlobal: true, moveToLeft: true, identity));
         root.Attach(owner);
@@ -100,7 +100,7 @@ public sealed class ElementLifecycleTests
         LifecycleTracker.Reset();
 
         var owner = new BuildOwner();
-        var identity = new object();
+        object identity = new object();
 
         var root = new TestRootElement(new GlobalPlacementHost(includeGlobal: true, moveToLeft: true, identity));
         root.Attach(owner);
@@ -125,7 +125,7 @@ public sealed class ElementLifecycleTests
         LifecycleTracker.Reset();
 
         var owner = new BuildOwner();
-        var identity = new object();
+        object identity = new object();
 
         var root = new TestRootElement(new GlobalPlacementHost(includeGlobal: true, moveToLeft: true, identity));
         root.Attach(owner);
@@ -190,8 +190,8 @@ public sealed class ElementLifecycleTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var initialKeyedBranchState = NestedBranchTracker.CurrentKeyedStateIdByName["branch-keyed"];
-        var initialUnkeyedBranchState = NestedBranchTracker.CurrentUnkeyedStateIdByName["branch-unkeyed"];
+        string initialKeyedBranchState = NestedBranchTracker.CurrentKeyedStateIdByName["branch-keyed"];
+        string initialUnkeyedBranchState = NestedBranchTracker.CurrentUnkeyedStateIdByName["branch-unkeyed"];
         var initialKeyed = MixedTracker.CurrentKeyedStateIdByName.ToDictionary(
             static pair => pair.Key,
             static pair => pair.Value);
@@ -330,7 +330,7 @@ public sealed class ElementLifecycleTests
 
         public override void Dispose()
         {
-            if (KeyedTracker.CurrentStateIdByItem.TryGetValue(itemId, out var stateId) && stateId == _stateId)
+            if (KeyedTracker.CurrentStateIdByItem.TryGetValue(itemId, out string? stateId) && stateId == _stateId)
             {
                 KeyedTracker.CurrentStateIdByItem.Remove(itemId);
             }
@@ -465,7 +465,7 @@ public sealed class ElementLifecycleTests
 
         public override void Dispose()
         {
-            if (NestedBranchTracker.CurrentKeyedStateIdByName.TryGetValue(BranchWidget.Name, out var stateId) &&
+            if (NestedBranchTracker.CurrentKeyedStateIdByName.TryGetValue(BranchWidget.Name, out string? stateId) &&
                 stateId == _stateId)
             {
                 NestedBranchTracker.CurrentKeyedStateIdByName.Remove(BranchWidget.Name);
@@ -528,7 +528,7 @@ public sealed class ElementLifecycleTests
 
         public override void Dispose()
         {
-            if (NestedBranchTracker.CurrentUnkeyedStateIdByName.TryGetValue(BranchWidget.Name, out var stateId) &&
+            if (NestedBranchTracker.CurrentUnkeyedStateIdByName.TryGetValue(BranchWidget.Name, out string? stateId) &&
                 stateId == _stateId)
             {
                 NestedBranchTracker.CurrentUnkeyedStateIdByName.Remove(BranchWidget.Name);
@@ -573,14 +573,14 @@ public sealed class ElementLifecycleTests
         {
             if (isKeyed)
             {
-                if (MixedTracker.CurrentKeyedStateIdByName.TryGetValue(name, out var stateId) && stateId == _stateId)
+                if (MixedTracker.CurrentKeyedStateIdByName.TryGetValue(name, out string? stateId) && stateId == _stateId)
                 {
                     MixedTracker.CurrentKeyedStateIdByName.Remove(name);
                 }
             }
             else
             {
-                if (MixedTracker.CurrentUnkeyedStateIdByName.TryGetValue(name, out var stateId) &&
+                if (MixedTracker.CurrentUnkeyedStateIdByName.TryGetValue(name, out string? stateId) &&
                     stateId == _stateId)
                 {
                     MixedTracker.CurrentUnkeyedStateIdByName.Remove(name);

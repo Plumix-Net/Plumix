@@ -776,7 +776,7 @@ public sealed class RawChip : StatefulWidget
             var padding = widget.Padding ?? chipTheme.Padding ?? defaults.Padding ?? new Thickness(4);
             var baseLabelStyle = chipTheme.LabelStyle ?? defaults.LabelStyle ?? theme.TextTheme.BodyLarge;
             var labelStyle = MergeTextStyles(baseLabelStyle, widget.LabelStyle);
-            var textScale = MaterialButtonCore.ResolvePaddingFontSizeMultiplier(
+            double textScale = MaterialButtonCore.ResolvePaddingFontSizeMultiplier(
                 context,
                 labelStyle.FontSize ?? 14);
             var defaultLabelPadding = MaterialButtonCore.ScalePadding(
@@ -930,8 +930,8 @@ public sealed class RawChip : StatefulWidget
                     child: icon);
             }
 
-            var tooltip = widget.DeleteButtonTooltipMessage
-                          ?? MaterialLocalizations.Of(context).DeleteButtonTooltip;
+            string tooltip = widget.DeleteButtonTooltipMessage
+                             ?? MaterialLocalizations.Of(context).DeleteButtonTooltip;
             if (delete is not null && !string.IsNullOrEmpty(tooltip))
             {
                 icon = new Tooltip(message: tooltip, child: icon);
@@ -952,8 +952,8 @@ public sealed class RawChip : StatefulWidget
             ChipThemeData defaults,
             IconThemeData? iconTheme)
         {
-            var showCheckmark = widget.ShowCheckmark ?? chipTheme.ShowCheckmark ?? defaults.ShowCheckmark ?? false;
-            var checkmarkVisible = showCheckmark && _selectionProgress > 0;
+            bool showCheckmark = widget.ShowCheckmark ?? chipTheme.ShowCheckmark ?? defaults.ShowCheckmark ?? false;
+            bool checkmarkVisible = showCheckmark && _selectionProgress > 0;
             var checkmarkColor = widget.CheckmarkColor ?? chipTheme.CheckmarkColor ?? defaults.CheckmarkColor;
             if (!widget.IsEnabled && checkmarkColor.HasValue)
             {
@@ -1015,9 +1015,9 @@ public sealed class RawChip : StatefulWidget
                     IconTheme: new IconThemeData(Color: WithAlpha(primary, 0xde), Size: 18));
             }
 
-            var enabled = chip.IsEnabled;
-            var selected = chip.Selected;
-            var elevated = chip.Variant == ChipVariant.Elevated;
+            bool enabled = chip.IsEnabled;
+            bool selected = chip.Selected;
+            bool elevated = chip.Variant == ChipVariant.Elevated;
             var baseDefaults = new ChipThemeData(
                 Shape: ShapeBorder.RoundedRectangle(8),
                 ShowCheckmark: true,

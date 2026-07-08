@@ -68,10 +68,10 @@ public sealed class RenderSingleChildViewport : RenderProxyBox
         Child.Layout(childConstraints, parentUsesSize: true);
         Size = Constraints.Constrain(Child.Size);
 
-        var viewportExtent = MainExtent(Size);
-        var childExtent = MainExtent(Child.Size);
+        double viewportExtent = MainExtent(Size);
+        double childExtent = MainExtent(Child.Size);
         MaxScrollExtent = Math.Max(0, childExtent - viewportExtent);
-        var pixels = Math.Clamp(OffsetPixels, 0, MaxScrollExtent);
+        double pixels = Math.Clamp(OffsetPixels, 0, MaxScrollExtent);
         ((BoxParentData)Child.parentData!).offset = ResolvePaintOffset(pixels);
         OnViewportMetricsChanged?.Invoke(viewportExtent, 0, MaxScrollExtent);
     }

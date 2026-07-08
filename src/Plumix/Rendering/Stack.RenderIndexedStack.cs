@@ -62,8 +62,8 @@ public sealed class RenderIndexedStack : RenderBox, IRenderObjectContainer
     protected override void PerformLayout()
     {
         var childConstraints = BoxConstraints.Loose(Constraints.Biggest);
-        var maxWidth = 0.0;
-        var maxHeight = 0.0;
+        double maxWidth = 0.0;
+        double maxHeight = 0.0;
         for (RenderBox? child = FirstChild; child is not null; child = ChildAfter(child))
         {
             child.Layout(childConstraints, parentUsesSize: true);
@@ -124,7 +124,7 @@ public sealed class RenderIndexedStack : RenderBox, IRenderObjectContainer
         {
             if (!_index.HasValue || _index.Value < 0 || _index.Value >= ChildCount) return null;
             var current = FirstChild;
-            for (var i = 0; i < _index.Value && current is not null; i++) current = ChildAfter(current);
+            for (int i = 0; i < _index.Value && current is not null; i++) current = ChildAfter(current);
             return current;
         }
     }

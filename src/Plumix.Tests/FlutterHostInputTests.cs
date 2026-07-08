@@ -23,8 +23,8 @@ public sealed class PlumixHostInputTests : IDisposable
     [Fact]
     public void PlumixHost_KeyDownAndKeyUp_AreDispatchedToPrimaryFocusNode()
     {
-        var keyDownCount = 0;
-        var keyUpCount = 0;
+        int keyDownCount = 0;
+        int keyUpCount = 0;
         var focusNode = new FocusNode
         {
             OnKeyEvent = (_, @event) =>

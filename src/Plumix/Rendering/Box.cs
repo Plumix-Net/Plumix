@@ -125,10 +125,10 @@ public readonly record struct BoxConstraints(
 
     public BoxConstraints Tighten(double? width = null, double? height = null)
     {
-        var tightenedWidth = width.HasValue
+        double? tightenedWidth = width.HasValue
             ? Math.Clamp(width.Value, MinWidth, MaxWidth)
             : (double?)null;
-        var tightenedHeight = height.HasValue
+        double? tightenedHeight = height.HasValue
             ? Math.Clamp(height.Value, MinHeight, MaxHeight)
             : (double?)null;
 
@@ -149,8 +149,8 @@ public readonly record struct BoxConstraints(
 
     public BoxConstraints Deflate(Thickness edges)
     {
-        var horizontal = edges.Left + edges.Right;
-        var vertical = edges.Top + edges.Bottom;
+        double horizontal = edges.Left + edges.Right;
+        double vertical = edges.Top + edges.Bottom;
 
         double deflatedMinWidth = Math.Max(0, MinWidth - horizontal);
         double deflatedMaxWidth = double.IsPositiveInfinity(MaxWidth)
@@ -197,9 +197,9 @@ public readonly record struct BoxConstraints(
             return Constrain(size);
         }
 
-        var width = size.Width;
-        var height = size.Height;
-        var aspectRatio = width / height;
+        double width = size.Width;
+        double height = size.Height;
+        double aspectRatio = width / height;
 
         if (width > MaxWidth)
         {

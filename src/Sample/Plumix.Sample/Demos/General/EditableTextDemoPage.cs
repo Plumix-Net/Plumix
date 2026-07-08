@@ -37,7 +37,7 @@ internal sealed class EditableTextDemoPageState : State
 
     public override Widget Build(BuildContext context)
     {
-        var notesLineCount = CountLines(_notesController.Text);
+        int notesLineCount = CountLines(_notesController.Text);
 
         return new Column(
             crossAxisAlignment: CrossAxisAlignment.Stretch,
@@ -128,9 +128,9 @@ internal sealed class EditableTextDemoPageState : State
             return 1;
         }
 
-        var normalized = value.Replace("\r", string.Empty, StringComparison.Ordinal);
-        var lines = 1;
-        foreach (var character in normalized)
+        string normalized = value.Replace("\r", string.Empty, StringComparison.Ordinal);
+        int lines = 1;
+        foreach (char character in normalized)
         {
             if (character == '\n')
             {

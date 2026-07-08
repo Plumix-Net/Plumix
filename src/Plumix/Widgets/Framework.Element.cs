@@ -118,7 +118,7 @@ public abstract class Element
             throw new InvalidOperationException($"Cannot activate element in state {_lifecycleState}.");
         }
 
-        var hadDependencies = (_dependencies?.Count > 0) || _hadUnsatisfiedDependencies;
+        bool hadDependencies = (_dependencies?.Count > 0) || _hadUnsatisfiedDependencies;
 
         Parent = parent;
         Slot = newSlot;
@@ -441,7 +441,7 @@ public abstract class Element
             newChildrenBottom -= 1;
         }
 
-        var haveOldChildren = oldChildrenTop <= oldChildrenBottom;
+        bool haveOldChildren = oldChildrenTop <= oldChildrenBottom;
         Dictionary<Key, Element>? oldKeyedChildren = null;
         if (haveOldChildren)
         {
@@ -769,7 +769,7 @@ public class InheritedElement : Element
 
     protected object? GetDependencies(Element dependent)
     {
-        _dependents.TryGetValue(dependent, out var dependencies);
+        _dependents.TryGetValue(dependent, out object? dependencies);
         return dependencies;
     }
 

@@ -239,7 +239,7 @@ public sealed class MaterialSwitchTests
         owner.FlushBuild();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
-        var iconGlyph = char.ConvertFromUtf32(Icons.Check.CodePoint);
+        string iconGlyph = char.ConvertFromUtf32(Icons.Check.CodePoint);
         var iconParagraph = FindDescendants<RenderParagraph>(renderRoot)
             .FirstOrDefault(paragraph => paragraph.Text == iconGlyph);
         Assert.NotNull(iconParagraph);
@@ -355,8 +355,8 @@ public sealed class MaterialSwitchTests
         binding.ResetForTests();
         try
         {
-            var toggled = false;
-            var nextValue = false;
+            bool toggled = false;
+            bool nextValue = false;
             var theme = ThemeData.Light with { Platform = TargetPlatform.IOS };
 
             using var harness = new WidgetRenderHarness(
@@ -396,7 +396,7 @@ public sealed class MaterialSwitchTests
         binding.ResetForTests();
         try
         {
-            var nextValue = false;
+            bool nextValue = false;
             var theme = ThemeData.Light with { Platform = TargetPlatform.IOS };
 
             using var harness = new WidgetRenderHarness(
@@ -431,7 +431,7 @@ public sealed class MaterialSwitchTests
         binding.ResetForTests();
         try
         {
-            var toggled = false;
+            bool toggled = false;
             var theme = ThemeData.Light with { Platform = TargetPlatform.IOS };
 
             using var harness = new WidgetRenderHarness(
@@ -535,7 +535,7 @@ public sealed class MaterialSwitchTests
         {
             var owner = new BuildOwner();
             var focusNode = new FocusNode();
-            var nextValue = false;
+            bool nextValue = false;
             var root = new TestRootElement(
                 new Theme(
                     data: ThemeData.Light,
@@ -551,7 +551,7 @@ public sealed class MaterialSwitchTests
             Assert.True(focusNode.RequestFocus());
             owner.FlushBuild();
 
-            var handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Space", isDown: true));
+            bool handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Space", isDown: true));
             Assert.True(handled);
             owner.FlushBuild();
 
@@ -706,7 +706,7 @@ public sealed class MaterialSwitchTests
 
     private static Color ApplyOpacity(Color color, double opacity)
     {
-        var alpha = (byte)Math.Clamp((int)(255 * opacity), 0, 255);
+        byte alpha = (byte)Math.Clamp((int)(255 * opacity), 0, 255);
         return Color.FromArgb(alpha, color.R, color.G, color.B);
     }
 

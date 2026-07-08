@@ -54,7 +54,7 @@ internal sealed class CounterTapButton : StatelessWidget
 
     private static Color DisabledColor(Color color)
     {
-        var alpha = (byte)Math.Clamp((int)(color.A * 0.45), 0, 255);
+        byte alpha = (byte)Math.Clamp((int)(color.A * 0.45), 0, 255);
         return Color.FromArgb(alpha, color.R, color.G, color.B);
     }
 }
@@ -167,7 +167,7 @@ internal sealed class KeepAliveListItemState : AutomaticKeepAliveClientMixin
 
     public override Widget Build(BuildContext context)
     {
-        var keepAlive = _keepAlive;
+        bool keepAlive = _keepAlive;
         return new CounterTapButton(
             label: $"row #{_index} keepAlive={(keepAlive ? "on" : "off")} token={_token} local taps={_localTaps}",
             onTap: () =>

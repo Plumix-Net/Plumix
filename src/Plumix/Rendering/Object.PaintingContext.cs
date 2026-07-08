@@ -25,7 +25,7 @@ public sealed class PaintingContext
 
             var oldLayer = child._layer as OffsetLayer;
             var layer = child.EnsureCompositedLayer();
-            var shouldRepaint = child.NeedsPaint || oldLayer == null || !ReferenceEquals(oldLayer, layer);
+            bool shouldRepaint = child.NeedsPaint || oldLayer == null || !ReferenceEquals(oldLayer, layer);
             layer.Offset = offset;
             _containerLayer.Append(layer);
             child._layer = layer;
@@ -71,7 +71,7 @@ public sealed class PaintingContext
 
     public void DrawCircle(IBrush brush, IPen? pen, Point center, double radius)
     {
-        var clampedRadius = Math.Max(0, radius);
+        double clampedRadius = Math.Max(0, radius);
         var pictureLayer = EnsurePictureLayer();
         pictureLayer.AddDrawCommand((drawingContext, sceneOffset) =>
         {
@@ -141,7 +141,7 @@ public sealed class PaintingContext
             using (var geometryContext = geometry.Open())
             {
                 geometryContext.BeginFigure(points[0] + sceneOffset, isFilled: true);
-                for (var index = 1; index < points.Count; index++)
+                for (int index = 1; index < points.Count; index++)
                 {
                     geometryContext.LineTo(points[index] + sceneOffset);
                 }
@@ -224,7 +224,7 @@ public sealed class PaintingContext
             return;
         }
 
-        var effectiveOpacity = Math.Clamp(opacity, 0.0, 1.0);
+        double effectiveOpacity = Math.Clamp(opacity, 0.0, 1.0);
         var pictureLayer = EnsurePictureLayer();
         pictureLayer.AddDrawCommand((drawingContext, sceneOffset) =>
         {
@@ -272,7 +272,7 @@ public sealed class PaintingContext
 
                 if (flipHorizontally)
                 {
-                    var centerX = horizontalFlipAxisX.HasValue
+                    double centerX = horizontalFlipAxisX.HasValue
                         ? horizontalFlipAxisX.Value + sceneOffset.X
                         : translatedDestination.Center.X;
                     transform = drawingContext.PushTransform(new Matrix(-1, 0, 0, 1, centerX * 2, 0));
@@ -390,10 +390,10 @@ public sealed class PaintingContext
 
     private static Point PointOnEllipse(Rect rect, double angleRadians)
     {
-        var centerX = rect.X + (rect.Width / 2.0);
-        var centerY = rect.Y + (rect.Height / 2.0);
-        var radiusX = rect.Width / 2.0;
-        var radiusY = rect.Height / 2.0;
+        double centerX = rect.X + (rect.Width / 2.0);
+        double centerY = rect.Y + (rect.Height / 2.0);
+        double radiusX = rect.Width / 2.0;
+        double radiusY = rect.Height / 2.0;
         return new Point(
             centerX + (Math.Cos(angleRadians) * radiusX),
             centerY + (Math.Sin(angleRadians) * radiusY));

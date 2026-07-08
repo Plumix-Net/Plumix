@@ -103,7 +103,7 @@ public sealed class FormState : State
 
     public override Widget Build(BuildContext context)
     {
-        var hasError = _fields.Any(field => field.HasError);
+        bool hasError = _fields.Any(field => field.HasError);
         switch (Current.AutovalidateMode)
         {
             case AutovalidateMode.Always:
@@ -128,7 +128,7 @@ public sealed class FormState : State
 
     private bool ValidateFields(ISet<FormFieldState>? invalidFields)
     {
-        var valid = true;
+        bool valid = true;
         foreach (var field in _fields.ToArray())
         {
             if (field.Validate()) continue;
@@ -209,7 +209,7 @@ public abstract class FormFieldState : State
 
     private void HandlePrimaryFocusChanged()
     {
-        var hasFocusWithin = HasFocusWithin();
+        bool hasFocusWithin = HasFocusWithin();
         if (_hadFocusWithin && !hasFocusWithin
             && FieldEnabled
             && EffectiveAutovalidateMode == AutovalidateMode.OnUnfocus

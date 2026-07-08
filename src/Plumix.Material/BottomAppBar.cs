@@ -77,9 +77,9 @@ internal sealed class BottomAppBarState : State
         var widget = CurrentWidget;
         var theme = Theme.Of(context);
         var barTheme = BottomAppBarTheme.Of(context);
-        var useMaterial3 = theme.UseMaterial3;
-        var elevation = widget.Elevation ?? barTheme.Elevation ?? (useMaterial3 ? 3.0 : 8.0);
-        var height = widget.Height ?? barTheme.Height ?? (useMaterial3 ? 80.0 : (double?)null);
+        bool useMaterial3 = theme.UseMaterial3;
+        double elevation = widget.Elevation ?? barTheme.Elevation ?? (useMaterial3 ? 3.0 : 8.0);
+        double? height = widget.Height ?? barTheme.Height ?? (useMaterial3 ? 80.0 : (double?)null);
         var color = widget.Color
                     ?? barTheme.Color
                     ?? (useMaterial3
@@ -121,7 +121,7 @@ internal sealed class BottomAppBarState : State
             child: child);
 
         var scaffold = Scaffold.MaybeOf(context);
-        var hasFab = scaffold?.HasFloatingActionButton == true;
+        bool hasFab = scaffold?.HasFloatingActionButton == true;
         var fabSize = scaffold?.FloatingActionButtonSize ?? new Size(56, 56);
         return new BottomAppBarSurface(
             color: color,
@@ -276,9 +276,9 @@ internal sealed class RenderBottomAppBarSurface : RenderProxyBox
     private Rect? ResolveGuestRect()
     {
         if (!HasFloatingActionButton || Shape is null) return null;
-        var width = Math.Max(0, FloatingActionButtonSize.Width + (NotchMargin * 2));
-        var height = Math.Max(0, FloatingActionButtonSize.Height + (NotchMargin * 2));
-        var centerX = TextDirection == TextDirection.Ltr
+        double width = Math.Max(0, FloatingActionButtonSize.Width + (NotchMargin * 2));
+        double height = Math.Max(0, FloatingActionButtonSize.Height + (NotchMargin * 2));
+        double centerX = TextDirection == TextDirection.Ltr
             ? Size.Width - 16 - (FloatingActionButtonSize.Width / 2)
             : 16 + (FloatingActionButtonSize.Width / 2);
         return new Rect(centerX - (width / 2), -(height / 2), width, height);

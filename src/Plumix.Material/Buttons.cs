@@ -256,11 +256,11 @@ public sealed class TextButton : StatelessWidget
         bool hasExplicitMinHeight,
         bool applyIconFactoryPadding)
     {
-        var useMaterial3 = theme.UseMaterial3;
+        bool useMaterial3 = theme.UseMaterial3;
         var stateColor = theme.PrimaryColor;
-        var pressedFocusedOverlayOpacity = useMaterial3 ? 0.10 : 0.12;
-        var resolvedMinHeight = hasExplicitMinHeight ? minHeight : useMaterial3 ? 40 : 36;
-        var effectiveTextScale = MaterialButtonCore.ResolvePaddingFontSizeMultiplier(
+        double pressedFocusedOverlayOpacity = useMaterial3 ? 0.10 : 0.12;
+        double resolvedMinHeight = hasExplicitMinHeight ? minHeight : useMaterial3 ? 40 : 36;
+        double effectiveTextScale = MaterialButtonCore.ResolvePaddingFontSizeMultiplier(
             context,
             theme.TextTheme.LabelLarge.FontSize);
         var defaultPadding = useMaterial3
@@ -596,12 +596,12 @@ public sealed class ElevatedButton : StatelessWidget
         bool hasExplicitMinHeight,
         bool applyIconFactoryPadding)
     {
-        var useMaterial3 = theme.UseMaterial3;
+        bool useMaterial3 = theme.UseMaterial3;
         var enabledForeground = useMaterial3 ? theme.PrimaryColor : theme.OnPrimaryColor;
         var enabledBackground = useMaterial3 ? theme.SurfaceContainerLowColor : theme.PrimaryColor;
-        var pressedFocusedOverlayOpacity = useMaterial3 ? 0.10 : 0.12;
-        var resolvedMinHeight = hasExplicitMinHeight ? minHeight : useMaterial3 ? 40 : 36;
-        var effectiveTextScale = MaterialButtonCore.ResolvePaddingFontSizeMultiplier(
+        double pressedFocusedOverlayOpacity = useMaterial3 ? 0.10 : 0.12;
+        double resolvedMinHeight = hasExplicitMinHeight ? minHeight : useMaterial3 ? 40 : 36;
+        double effectiveTextScale = MaterialButtonCore.ResolvePaddingFontSizeMultiplier(
             context,
             theme.TextTheme.LabelLarge.FontSize);
         var defaultPadding = useMaterial3
@@ -1019,14 +1019,14 @@ public sealed class FilledButton : StatelessWidget
         bool isTonal,
         bool applyIconFactoryPadding)
     {
-        var useMaterial3 = theme.UseMaterial3;
+        bool useMaterial3 = theme.UseMaterial3;
         var enabledForeground = isTonal
             ? theme.OnSecondaryContainerColor
             : theme.OnPrimaryColor;
         var enabledBackground = isTonal
             ? theme.SecondaryContainerColor
             : theme.PrimaryColor;
-        var effectiveTextScale = MaterialButtonCore.ResolvePaddingFontSizeMultiplier(
+        double effectiveTextScale = MaterialButtonCore.ResolvePaddingFontSizeMultiplier(
             context,
             theme.TextTheme.LabelLarge.FontSize);
         var defaultPadding = useMaterial3
@@ -1389,11 +1389,11 @@ public sealed class OutlinedButton : StatelessWidget
         bool applyIconFactoryPadding)
     {
         var stateColor = theme.PrimaryColor;
-        var useMaterial3 = theme.UseMaterial3;
+        bool useMaterial3 = theme.UseMaterial3;
         var m2SideColor = MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.12);
-        var pressedFocusedOverlayOpacity = useMaterial3 ? 0.10 : 0.12;
-        var resolvedMinHeight = hasExplicitMinHeight ? minHeight : useMaterial3 ? 40 : 36;
-        var effectiveTextScale = MaterialButtonCore.ResolvePaddingFontSizeMultiplier(
+        double pressedFocusedOverlayOpacity = useMaterial3 ? 0.10 : 0.12;
+        double resolvedMinHeight = hasExplicitMinHeight ? minHeight : useMaterial3 ? 40 : 36;
+        double effectiveTextScale = MaterialButtonCore.ResolvePaddingFontSizeMultiplier(
             context,
             theme.TextTheme.LabelLarge.FontSize);
         var defaultPadding = useMaterial3
@@ -1443,7 +1443,7 @@ public sealed class OutlinedButton : StatelessWidget
 
     private ButtonStyle? CreateLegacyStyleOverrides(ThemeData theme)
     {
-        var hasSideOverride = BorderColor.HasValue || Math.Abs(BorderWidth - 1) > 0.0001;
+        bool hasSideOverride = BorderColor.HasValue || Math.Abs(BorderWidth - 1) > 0.0001;
         if (!ForegroundColor.HasValue
             && !BackgroundColor.HasValue
             && !Padding.HasValue
@@ -1533,29 +1533,29 @@ internal static class MaterialButtonIconFactory
 
         public override Widget Build(BuildContext context)
         {
-            var defaultFontSize = ButtonStyle?.ResolveTextStyle(MaterialState.None)?.FontSize ?? 14.0;
+            double defaultFontSize = ButtonStyle?.ResolveTextStyle(MaterialState.None)?.FontSize ?? 14.0;
             if (double.IsNaN(defaultFontSize) || double.IsInfinity(defaultFontSize))
             {
                 defaultFontSize = 14.0;
             }
 
-            var textScaleFactor = MediaQuery.MaybeTextScaleFactorOf(context) ?? 1.0;
+            double textScaleFactor = MediaQuery.MaybeTextScaleFactorOf(context) ?? 1.0;
             if (double.IsNaN(textScaleFactor) || double.IsInfinity(textScaleFactor) || textScaleFactor <= 0)
             {
                 textScaleFactor = 1.0;
             }
 
-            var effectiveTextScale = (textScaleFactor * defaultFontSize) / 14.0;
-            var clampedScaleDelta = Math.Clamp(effectiveTextScale, 1.0, 2.0) - 1.0;
-            var spacing = 8.0 + ((4.0 - 8.0) * clampedScaleDelta);
+            double effectiveTextScale = (textScaleFactor * defaultFontSize) / 14.0;
+            double clampedScaleDelta = Math.Clamp(effectiveTextScale, 1.0, 2.0) - 1.0;
+            double spacing = 8.0 + ((4.0 - 8.0) * clampedScaleDelta);
 
             var effectiveIconAlignment = IconAlignmentOverride
                                          ?? ThemeIconAlignmentResolver?.Invoke(context)
                                          ?? ButtonStyle?.ResolveIconAlignment()
                                          ?? IconAlignment.Start;
             var textDirection = Directionality.Of(context);
-            var iconIsLeading = effectiveIconAlignment == IconAlignment.Start;
-            var placeIconFirst = textDirection == TextDirection.Ltr
+            bool iconIsLeading = effectiveIconAlignment == IconAlignment.Start;
+            bool placeIconFirst = textDirection == TextDirection.Ltr
                 ? iconIsLeading
                 : !iconIsLeading;
             var children = placeIconFirst
@@ -1795,7 +1795,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
     private static MaterialStateProperty<T>? ComposeStateProperty<T>(
         params MaterialStateProperty<T>?[] layers)
     {
-        var hasAny = false;
+        bool hasAny = false;
         foreach (var layer in layers)
         {
             if (layer is not null)
@@ -1832,13 +1832,13 @@ internal sealed class MaterialButtonCore : StatefulWidget
 
     internal static double ResolvePaddingFontSizeMultiplier(BuildContext context, double? defaultFontSize)
     {
-        var resolvedFontSize = defaultFontSize ?? 14.0;
+        double resolvedFontSize = defaultFontSize ?? 14.0;
         if (double.IsNaN(resolvedFontSize) || double.IsInfinity(resolvedFontSize) || resolvedFontSize <= 0)
         {
             resolvedFontSize = 14.0;
         }
 
-        var textScaleFactor = MediaQuery.MaybeTextScaleFactorOf(context) ?? 1.0;
+        double textScaleFactor = MediaQuery.MaybeTextScaleFactorOf(context) ?? 1.0;
         if (double.IsNaN(textScaleFactor) || double.IsInfinity(textScaleFactor) || textScaleFactor <= 0)
         {
             textScaleFactor = 1.0;
@@ -1886,7 +1886,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
 
     private static Thickness LerpThickness(Thickness from, Thickness to, double t)
     {
-        var clamped = Math.Clamp(t, 0, 1);
+        double clamped = Math.Clamp(t, 0, 1);
         return new Thickness(
             from.Left + ((to.Left - from.Left) * clamped),
             from.Top + ((to.Top - from.Top) * clamped),
@@ -1898,7 +1898,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
         Color stateColor,
         double pressedFocusedOpacity = 0.10)
     {
-        var resolvedPressedFocusedOpacity = double.IsFinite(pressedFocusedOpacity)
+        double resolvedPressedFocusedOpacity = double.IsFinite(pressedFocusedOpacity)
             ? Math.Clamp(pressedFocusedOpacity, 0, 1)
             : 0.10;
         return MaterialStateProperty<Color?>.ResolveWith(states =>
@@ -2131,7 +2131,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
         public override Widget Build(BuildContext context)
         {
             var widget = CurrentWidget;
-            var enabled = Enabled;
+            bool enabled = Enabled;
             var style = widget.Style;
             var theme = Theme.Of(context);
             var baseStates = BuildMaterialStates(enabled, includeFocus: true);
@@ -2139,9 +2139,9 @@ internal sealed class MaterialButtonCore : StatefulWidget
 
             var foreground = ResolveForegroundColor(style, baseStates);
             var iconColor = ResolveIconColor(style, baseStates, foreground);
-            var iconSize = ResolveIconSize(style, baseStates);
+            double? iconSize = ResolveIconSize(style, baseStates);
             var splashColor = ResolveSplashColor();
-            var elevation = ResolveElevation(style, baseStates);
+            double elevation = ResolveElevation(style, baseStates);
             var shadowColor = ResolveShadowColor(style, baseStates, elevation, theme.ShadowColor);
             var background = ResolveBackgroundColor(
                 style,
@@ -2399,8 +2399,8 @@ internal sealed class MaterialButtonCore : StatefulWidget
 
         private void HandleFocusChanged()
         {
-            var hasFocus = _focusNode?.HasFocus ?? false;
-            var shouldClearFocusSuppression = !hasFocus && _suppressFocusOverlay;
+            bool hasFocus = _focusNode?.HasFocus ?? false;
+            bool shouldClearFocusSuppression = !hasFocus && _suppressFocusOverlay;
             if (_hasFocus == hasFocus && !shouldClearFocusSuppression)
             {
                 return;
@@ -2424,7 +2424,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
                 return;
             }
 
-            var nextSuppressFocusOverlay = _suppressFocusOverlay || suppressFocusOverlay;
+            bool nextSuppressFocusOverlay = _suppressFocusOverlay || suppressFocusOverlay;
             if (_isPressed == value && _suppressFocusOverlay == nextSuppressFocusOverlay)
             {
                 return;
@@ -2612,7 +2612,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
 
         private static double? ResolveIconSize(ButtonStyle style, MaterialState states)
         {
-            var size = style.ResolveIconSize(states);
+            double? size = style.ResolveIconSize(states);
             if (!size.HasValue && states.HasFlag(MaterialState.Disabled))
             {
                 size = style.ResolveIconSize(MaterialState.None);
@@ -2623,7 +2623,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
                 return null;
             }
 
-            var resolved = size.Value;
+            double resolved = size.Value;
             if (double.IsNaN(resolved) || double.IsInfinity(resolved) || resolved <= 0)
             {
                 return null;
@@ -2634,7 +2634,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
 
         private static double ResolveElevation(ButtonStyle style, MaterialState states)
         {
-            var elevation = style.ResolveElevation(states);
+            double? elevation = style.ResolveElevation(states);
             if (!elevation.HasValue && states.HasFlag(MaterialState.Disabled))
             {
                 elevation = style.ResolveElevation(MaterialState.None);
@@ -2645,7 +2645,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
                 return 0;
             }
 
-            var resolved = elevation.Value;
+            double resolved = elevation.Value;
             if (double.IsNaN(resolved) || double.IsInfinity(resolved))
             {
                 return 0;
@@ -2708,9 +2708,9 @@ internal sealed class MaterialButtonCore : StatefulWidget
 
         private static Color ApplyShadowOpacity(Color color, double opacityMultiplier)
         {
-            var baseOpacity = color.A / 255.0;
-            var effectiveOpacity = Math.Clamp(baseOpacity * opacityMultiplier, 0, 1);
-            var alpha = (byte)Math.Clamp((int)(effectiveOpacity * 255), 0, 255);
+            double baseOpacity = color.A / 255.0;
+            double effectiveOpacity = Math.Clamp(baseOpacity * opacityMultiplier, 0, 1);
+            byte alpha = (byte)Math.Clamp((int)(effectiveOpacity * 255), 0, 255);
             return Color.FromArgb(alpha, color.R, color.G, color.B);
         }
 
@@ -2765,7 +2765,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
                 return color;
             }
 
-            var opacity = ResolveSurfaceTintOpacityForElevation(elevation);
+            double opacity = ResolveSurfaceTintOpacityForElevation(elevation);
             if (opacity <= 0)
             {
                 return color;
@@ -2797,7 +2797,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
                 return stops[0].Opacity;
             }
 
-            for (var i = 1; i < stops.Length; i++)
+            for (int i = 1; i < stops.Length; i++)
             {
                 var current = stops[i];
                 if (elevation == current.Elevation)
@@ -2808,7 +2808,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
                 if (elevation < current.Elevation)
                 {
                     var lower = stops[i - 1];
-                    var t = (elevation - lower.Elevation) / (current.Elevation - lower.Elevation);
+                    double t = (elevation - lower.Elevation) / (current.Elevation - lower.Elevation);
                     return lower.Opacity + (t * (current.Opacity - lower.Opacity));
                 }
             }
@@ -2835,14 +2835,14 @@ internal sealed class MaterialButtonCore : StatefulWidget
                 return null;
             }
 
-            var fade = ResolveSplashFade(_splashProgress);
-            var opacity = Math.Clamp((_splashBaseColor.Value.A / 255.0) * fade, 0, 1);
+            double fade = ResolveSplashFade(_splashProgress);
+            double opacity = Math.Clamp((_splashBaseColor.Value.A / 255.0) * fade, 0, 1);
             if (opacity <= 0.001)
             {
                 return null;
             }
 
-            var alpha = (byte)Math.Clamp((int)(opacity * 255), 0, 255);
+            byte alpha = (byte)Math.Clamp((int)(opacity * 255), 0, 255);
             return Color.FromArgb(alpha, _splashBaseColor.Value.R, _splashBaseColor.Value.G, _splashBaseColor.Value.B);
         }
 
@@ -2896,10 +2896,10 @@ internal sealed class MaterialButtonCore : StatefulWidget
             Size maximumSize,
             Size? fixedSize)
         {
-            var normalizedMaxWidth = double.IsPositiveInfinity(maximumSize.Width)
+            double normalizedMaxWidth = double.IsPositiveInfinity(maximumSize.Width)
                 ? double.PositiveInfinity
                 : Math.Max(maximumSize.Width, minimumSize.Width);
-            var normalizedMaxHeight = double.IsPositiveInfinity(maximumSize.Height)
+            double normalizedMaxHeight = double.IsPositiveInfinity(maximumSize.Height)
                 ? double.PositiveInfinity
                 : Math.Max(maximumSize.Height, minimumSize.Height);
 
@@ -2956,14 +2956,14 @@ internal sealed class MaterialButtonCore : StatefulWidget
 
         private static double ResolveSplashFade(double progress)
         {
-            var clamped = Math.Clamp(progress, 0, 1);
+            double clamped = Math.Clamp(progress, 0, 1);
             const double fadeStart = 0.72;
             if (clamped <= fadeStart)
             {
                 return 1;
             }
 
-            var tailProgress = (clamped - fadeStart) / (1 - fadeStart);
+            double tailProgress = (clamped - fadeStart) / (1 - fadeStart);
             return Math.Clamp(1 - tailProgress, 0, 1);
         }
 
@@ -3037,7 +3037,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
             return (byte)Math.Clamp((int)(from + ((to - from) * t)), 0, 255);
         }
 
-        var clampedOpacity = Math.Clamp(overlayColor.A / 255.0, 0, 1);
+        double clampedOpacity = Math.Clamp(overlayColor.A / 255.0, 0, 1);
         return Color.FromArgb(
             baseColor.A,
             Blend(baseColor.R, overlayColor.R, clampedOpacity),
@@ -3047,7 +3047,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
 
     internal static Color ApplyOpacity(Color color, double opacity)
     {
-        var alpha = (byte)Math.Clamp((int)(255 * opacity), 0, 255);
+        byte alpha = (byte)Math.Clamp((int)(255 * opacity), 0, 255);
         return Color.FromArgb(alpha, color.R, color.G, color.B);
     }
 }
@@ -3120,10 +3120,10 @@ internal sealed class RenderButtonTapTargetPadding : RenderProxyBox
 
     public override bool HitTest(BoxHitTestResult result, Point position)
     {
-        var isWithinBounds = position.X >= 0
-                             && position.Y >= 0
-                             && position.X < Size.Width
-                             && position.Y < Size.Height;
+        bool isWithinBounds = position.X >= 0
+                              && position.Y >= 0
+                              && position.X < Size.Width
+                              && position.Y < Size.Height;
         if (!isWithinBounds)
         {
             return false;

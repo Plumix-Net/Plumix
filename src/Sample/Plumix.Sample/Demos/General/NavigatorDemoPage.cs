@@ -112,7 +112,7 @@ internal sealed class NavigatorRouteAwareProbeState : State, RouteAware
 
     public override Widget Build(BuildContext context)
     {
-        var routeName = ModalRoute.MaybeOf(context)?.Settings.Name ?? "(null)";
+        string routeName = ModalRoute.MaybeOf(context)?.Settings.Name ?? "(null)";
         return new Container(
             color: Color.Parse("#FFF1F8FF"),
             padding: new Thickness(10, 8),
@@ -154,12 +154,12 @@ internal sealed class NavigatorDetailsPage : StatelessWidget
 
     public override Widget Build(BuildContext context)
     {
-        var id = GetQuery("id");
-        var mode = GetQuery("mode");
-        var payload = _routeData.Arguments?.ToString() ?? "null";
+        string id = GetQuery("id");
+        string mode = GetQuery("mode");
+        string payload = _routeData.Arguments?.ToString() ?? "null";
 
-        var nextId = 1;
-        if (int.TryParse(id, out var parsedId))
+        int nextId = 1;
+        if (int.TryParse(id, out int parsedId))
         {
             nextId = parsedId + 1;
         }
@@ -247,7 +247,7 @@ internal sealed class NavigatorDetailsPage : StatelessWidget
 
     private string GetQuery(string key)
     {
-        return _routeData.QueryParameters.TryGetValue(key, out var value)
+        return _routeData.QueryParameters.TryGetValue(key, out string? value)
             ? value
             : "-";
     }

@@ -219,7 +219,7 @@ public sealed class BuildOwner
                 return 1;
             }
 
-            var depthCompare = x.Depth.CompareTo(y.Depth);
+            int depthCompare = x.Depth.CompareTo(y.Depth);
             if (depthCompare != 0)
             {
                 return depthCompare;

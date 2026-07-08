@@ -168,7 +168,7 @@ internal sealed class PeopleDataSource : DataTableSource
     {
         Items.Sort((left, right) =>
         {
-            var result = columnIndex == 2
+            int result = columnIndex == 2
                 ? left.Score.CompareTo(right.Score)
                 : string.Compare(left.Name, right.Name, StringComparison.OrdinalIgnoreCase);
             return ascending ? result : -result;

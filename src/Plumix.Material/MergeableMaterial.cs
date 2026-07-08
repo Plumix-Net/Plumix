@@ -93,7 +93,7 @@ public sealed class MergeableMaterial : StatefulWidget
     private static void ValidateChildren(IReadOnlyList<MergeableMaterialItem> children)
     {
         var keys = new HashSet<LocalKey>();
-        for (var i = 0; i < children.Count; i++)
+        for (int i = 0; i < children.Count; i++)
         {
             if (!keys.Add(children[i].Key))
             {
@@ -169,7 +169,7 @@ public sealed class MergeableMaterial : StatefulWidget
             var groups = new List<Widget>();
             var currentGroup = new List<MaterialSlice>();
 
-            for (var i = 0; i < slices.Length; i++)
+            for (int i = 0; i < slices.Length; i++)
             {
                 currentGroup.Add(slices[i]);
                 if (i == slices.Length - 1)
@@ -185,7 +185,7 @@ public sealed class MergeableMaterial : StatefulWidget
 
                 groups.Add(BuildSliceGroup(currentGroup, theme));
                 currentGroup = [];
-                var extent = gap.Descriptor.Gap.Size * gap.Controller.Evaluate();
+                double extent = gap.Descriptor.Gap.Size * gap.Controller.Evaluate();
                 groups.Add(CurrentWidget.MainAxis == Axis.Vertical
                     ? new SizedBox(height: extent)
                     : new SizedBox(width: extent));
@@ -207,7 +207,7 @@ public sealed class MergeableMaterial : StatefulWidget
         private Widget BuildSliceGroup(IReadOnlyList<MaterialSlice> slices, ThemeData theme)
         {
             var children = new List<Widget>();
-            for (var i = 0; i < slices.Count; i++)
+            for (int i = 0; i < slices.Count; i++)
             {
                 if (i > 0 && CurrentWidget.HasDividers)
                 {
@@ -296,7 +296,7 @@ public sealed class MergeableMaterial : StatefulWidget
 
         private static IEnumerable<GapDescriptor> DescribeGaps(IReadOnlyList<MergeableMaterialItem> children)
         {
-            for (var i = 1; i < children.Count - 1; i++)
+            for (int i = 1; i < children.Count - 1; i++)
             {
                 if (children[i] is MaterialGap gap
                     && children[i - 1] is MaterialSlice previous

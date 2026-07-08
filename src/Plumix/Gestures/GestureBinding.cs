@@ -174,7 +174,7 @@ public sealed class GestureBinding
             return @event.WithDelta(default);
         }
 
-        var pointer = @event.Pointer;
+        int pointer = @event.Pointer;
         if (!_lastPositions.TryGetValue(pointer, out var previousPosition))
         {
             _lastPositions[pointer] = @event.Position;

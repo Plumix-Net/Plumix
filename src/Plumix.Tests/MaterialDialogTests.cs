@@ -287,7 +287,7 @@ public sealed class MaterialDialogTests : IDisposable
     [Fact]
     public void SimpleDialogOption_UsesInkWellTapSemanticsAndSupportsDisabledState()
     {
-        var taps = 0;
+        int taps = 0;
         using var enabled = new WidgetRenderHarness(Wrap(
             ThemeData.Light,
             new SimpleDialogOption(onPressed: () => taps++, child: new Text("Enabled option"))));
@@ -423,7 +423,7 @@ public sealed class MaterialDialogTests : IDisposable
 
     private static void PumpAnimation()
     {
-        var now = Scheduler.CurrentSeconds;
+        double now = Scheduler.CurrentSeconds;
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
     }

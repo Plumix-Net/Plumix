@@ -259,15 +259,15 @@ public sealed class Checkbox : StatefulWidget
                     semanticLabel: CurrentWidget.SemanticLabel);
             }
 
-            var enabled = CurrentWidget.OnChanged is not null;
-            var isSelected = IsSelected(CurrentWidget.Value);
+            bool enabled = CurrentWidget.OnChanged is not null;
+            bool isSelected = IsSelected(CurrentWidget.Value);
             var tapTargetSize = CurrentWidget.MaterialTapTargetSize
                                 ?? checkboxTheme.MaterialTapTargetSize
                                 ?? theme.MaterialTapTargetSize;
             var shape = CurrentWidget.Shape
                         ?? checkboxTheme.Shape
                         ?? Plumix.Rendering.BorderRadius.Circular(theme.UseMaterial3 ? 2 : 1);
-            var splashRadius = ResolveSplashRadius(checkboxTheme);
+            double splashRadius = ResolveSplashRadius(checkboxTheme);
 
             var style = new ButtonStyle(
                 ForegroundColor: MaterialStateProperty<Color?>.ResolveWith(states => ResolveAnimatedCheckColor(theme, checkboxTheme, states)),
@@ -361,9 +361,9 @@ public sealed class Checkbox : StatefulWidget
                 return BuildStaticIndicator(CurrentWidget.Value, color);
             }
 
-            var progress = Math.Clamp(_transitionProgress, 0, 1);
-            var previousOpacity = Math.Clamp(1.0 - progress, 0, 1);
-            var targetOpacity = progress;
+            double progress = Math.Clamp(_transitionProgress, 0, 1);
+            double previousOpacity = Math.Clamp(1.0 - progress, 0, 1);
+            double targetOpacity = progress;
 
             return new SizedBox(
                 width: 14,
@@ -504,7 +504,7 @@ public sealed class Checkbox : StatefulWidget
 
             if (states.HasFlag(MaterialState.Pressed) && CurrentWidget.ActiveColor.HasValue)
             {
-                var pressedOpacity = theme.UseMaterial3 ? 0.10 : 0.12;
+                double pressedOpacity = theme.UseMaterial3 ? 0.10 : 0.12;
                 return MaterialButtonCore.ApplyOpacity(CurrentWidget.ActiveColor.Value, pressedOpacity);
             }
 
@@ -547,9 +547,9 @@ public sealed class Checkbox : StatefulWidget
 
         private double ResolveSplashRadius(CheckboxThemeData checkboxTheme)
         {
-            var resolved = CurrentWidget.SplashRadius
-                           ?? checkboxTheme.SplashRadius
-                           ?? DefaultSplashRadius;
+            double resolved = CurrentWidget.SplashRadius
+                              ?? checkboxTheme.SplashRadius
+                              ?? DefaultSplashRadius;
 
             if (double.IsNaN(resolved) || double.IsInfinity(resolved) || resolved <= 0)
             {
@@ -772,7 +772,7 @@ public sealed class Checkbox : StatefulWidget
 
         private static BorderSide? LerpSide(BorderSide? from, BorderSide? to, double t)
         {
-            var clamped = Math.Clamp(t, 0, 1);
+            double clamped = Math.Clamp(t, 0, 1);
             if (clamped <= 0.001)
             {
                 return from;
@@ -790,14 +790,14 @@ public sealed class Checkbox : StatefulWidget
 
             var fromSide = from ?? new BorderSide(Colors.Transparent, 0);
             var toSide = to ?? new BorderSide(Colors.Transparent, 0);
-            var width = fromSide.Width + ((toSide.Width - fromSide.Width) * clamped);
+            double width = fromSide.Width + ((toSide.Width - fromSide.Width) * clamped);
             var color = LerpColor(fromSide.Color, toSide.Color, clamped);
             return new BorderSide(color, width);
         }
 
         private static Color LerpColor(Color from, Color to, double t)
         {
-            var clamped = Math.Clamp(t, 0, 1);
+            double clamped = Math.Clamp(t, 0, 1);
             byte LerpByte(byte start, byte end)
             {
                 return (byte)Math.Clamp((int)(start + ((end - start) * clamped)), 0, 255);

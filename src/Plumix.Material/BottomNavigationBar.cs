@@ -283,29 +283,29 @@ public sealed class BottomNavigationBar : StatefulWidget
                 CurrentWidget.UnselectedFontSize,
                 effectiveUnselectedColor);
 
-            var effectiveShowSelectedLabels = CurrentWidget.ShowSelectedLabels
-                                              ?? bottomTheme.ShowSelectedLabels
-                                              ?? true;
-            var effectiveShowUnselectedLabels = CurrentWidget.ShowUnselectedLabels
-                                                ?? bottomTheme.ShowUnselectedLabels
-                                                ?? (effectiveType == BottomNavigationBarType.Fixed);
-            var effectiveElevation = CurrentWidget.Elevation ?? bottomTheme.Elevation;
+            bool effectiveShowSelectedLabels = CurrentWidget.ShowSelectedLabels
+                                               ?? bottomTheme.ShowSelectedLabels
+                                               ?? true;
+            bool effectiveShowUnselectedLabels = CurrentWidget.ShowUnselectedLabels
+                                                 ?? bottomTheme.ShowUnselectedLabels
+                                                 ?? (effectiveType == BottomNavigationBarType.Fixed);
+            double? effectiveElevation = CurrentWidget.Elevation ?? bottomTheme.Elevation;
 
             var tiles = new List<Widget>(CurrentWidget.Items.Count);
-            for (var index = 0; index < CurrentWidget.Items.Count; index++)
+            for (int index = 0; index < CurrentWidget.Items.Count; index++)
             {
-                var itemIndex = index;
+                int itemIndex = index;
                 var item = CurrentWidget.Items[itemIndex];
-                var selectionValue = ResolveSelectionValue(index);
+                double selectionValue = ResolveSelectionValue(index);
                 var iconFromColor = effectiveUnselectedIconTheme.Color ?? effectiveUnselectedColor;
                 var iconToColor = effectiveSelectedIconTheme.Color ?? effectiveSelectedColor;
-                var iconFromSize = effectiveUnselectedIconTheme.Size ?? CurrentWidget.IconSize;
-                var iconToSize = effectiveSelectedIconTheme.Size ?? CurrentWidget.IconSize;
+                double iconFromSize = effectiveUnselectedIconTheme.Size ?? CurrentWidget.IconSize;
+                double iconToSize = effectiveSelectedIconTheme.Size ?? CurrentWidget.IconSize;
                 var iconColor = _colorTween.Evaluate(
                     selectionValue,
                     iconFromColor,
                     iconToColor);
-                var iconSize = Lerp(
+                double iconSize = Lerp(
                     iconFromSize,
                     iconToSize,
                     selectionValue);
@@ -313,14 +313,14 @@ public sealed class BottomNavigationBar : StatefulWidget
                     Color: iconColor,
                     Size: iconSize);
 
-                var selectedVisual = selectionValue >= 0.5;
+                bool selectedVisual = selectionValue >= 0.5;
                 var icon = selectedVisual ? item.ActiveIcon : item.Icon;
                 var labelStyle = selectedVisual ? effectiveSelectedLabelStyle : effectiveUnselectedLabelStyle;
-                var labelOpacity = ResolveLabelOpacity(
+                double labelOpacity = ResolveLabelOpacity(
                     selectionValue,
                     effectiveShowSelectedLabels,
                     effectiveShowUnselectedLabels);
-                var tileFlex = ResolveTileFlex(selectionValue, effectiveType);
+                int tileFlex = ResolveTileFlex(selectionValue, effectiveType);
 
                 var tileChildren = new List<Widget>
                 {
@@ -355,8 +355,8 @@ public sealed class BottomNavigationBar : StatefulWidget
                     new Semantics(label: CreateIndexSemanticsLabel(context, itemIndex, CurrentWidget.Items.Count)),
                 };
 
-                var tileNeedsSemanticLabel = !(effectiveShowSelectedLabels && effectiveShowUnselectedLabels);
-                var tileSemanticsLabel = tileNeedsSemanticLabel ? item.Label : null;
+                bool tileNeedsSemanticLabel = !(effectiveShowSelectedLabels && effectiveShowUnselectedLabels);
+                string? tileSemanticsLabel = tileNeedsSemanticLabel ? item.Label : null;
 
                 Widget tileContent = new Semantics(
                     label: tileSemanticsLabel,
@@ -390,7 +390,7 @@ public sealed class BottomNavigationBar : StatefulWidget
                 spacing: 0,
                 children: tiles);
 
-            var barWidth = ResolveBarWidth(context);
+            double barWidth = ResolveBarWidth(context);
             var overlay = BuildRadialBackgroundOverlay(barWidth, effectiveType);
             Widget rowWithOverlay = row;
             if (overlay is not null)
@@ -435,7 +435,7 @@ public sealed class BottomNavigationBar : StatefulWidget
             }
 
             _selectionControllers = new List<AnimationController>(count);
-            for (var index = 0; index < count; index++)
+            for (int index = 0; index < count; index++)
             {
                 var controller = new AnimationController(SelectionTransitionDuration)
                 {
@@ -454,11 +454,11 @@ public sealed class BottomNavigationBar : StatefulWidget
                 return;
             }
 
-            for (var index = 0; index < _selectionControllers.Count; index++)
+            for (int index = 0; index < _selectionControllers.Count; index++)
             {
                 var controller = _selectionControllers[index];
-                var target = index == toIndex ? 1.0 : 0.0;
-                var value = controller.Value;
+                double target = index == toIndex ? 1.0 : 0.0;
+                double value = controller.Value;
 
                 if (target > value)
                 {
@@ -533,16 +533,16 @@ public sealed class BottomNavigationBar : StatefulWidget
                 return null;
             }
 
-            var progress = _backgroundController.Evaluate();
-            var maxRadius = Math.Sqrt((barWidth * barWidth) + (DefaultHeight * DefaultHeight));
-            var radius = maxRadius * progress;
+            double progress = _backgroundController.Evaluate();
+            double maxRadius = Math.Sqrt((barWidth * barWidth) + (DefaultHeight * DefaultHeight));
+            double radius = maxRadius * progress;
             if (radius <= 0)
             {
                 return null;
             }
 
-            var centerX = ResolveBackgroundCenterX(barWidth, effectiveType);
-            var centerY = DefaultHeight / 2.0;
+            double centerX = ResolveBackgroundCenterX(barWidth, effectiveType);
+            double centerY = DefaultHeight / 2.0;
 
             return new Positioned(
                 left: centerX - radius,
@@ -562,7 +562,7 @@ public sealed class BottomNavigationBar : StatefulWidget
                 return 1;
             }
 
-            var weight = ResolveTileWeight(selectionValue, type);
+            double weight = ResolveTileWeight(selectionValue, type);
             return Math.Max(1, (int)Math.Round(weight * FlexScale));
         }
 
@@ -608,15 +608,15 @@ public sealed class BottomNavigationBar : StatefulWidget
 
         private double ResolveBackgroundCenterX(double barWidth, BottomNavigationBarType type)
         {
-            var itemCount = CurrentWidget.Items.Count;
+            int itemCount = CurrentWidget.Items.Count;
             if (itemCount <= 0)
             {
                 return barWidth / 2.0;
             }
 
-            var originIndex = Math.Clamp(_backgroundOriginIndex, 0, itemCount - 1);
-            var totalWeight = 0.0;
-            for (var i = 0; i < itemCount; i++)
+            int originIndex = Math.Clamp(_backgroundOriginIndex, 0, itemCount - 1);
+            double totalWeight = 0.0;
+            for (int i = 0; i < itemCount; i++)
             {
                 totalWeight += ResolveTileWeight(ResolveSelectionValue(i), type);
             }
@@ -626,14 +626,14 @@ public sealed class BottomNavigationBar : StatefulWidget
                 return barWidth / 2.0;
             }
 
-            var leadingWeight = 0.0;
-            for (var i = 0; i < originIndex; i++)
+            double leadingWeight = 0.0;
+            for (int i = 0; i < originIndex; i++)
             {
                 leadingWeight += ResolveTileWeight(ResolveSelectionValue(i), type);
             }
 
-            var originWeight = ResolveTileWeight(ResolveSelectionValue(originIndex), type);
-            var centerFraction = (leadingWeight + (originWeight / 2.0)) / totalWeight;
+            double originWeight = ResolveTileWeight(ResolveSelectionValue(originIndex), type);
+            double centerFraction = (leadingWeight + (originWeight / 2.0)) / totalWeight;
             return centerFraction * barWidth;
         }
 
@@ -655,7 +655,7 @@ public sealed class BottomNavigationBar : StatefulWidget
                 return _backgroundToColor;
             }
 
-            var t = _backgroundController.Evaluate();
+            double t = _backgroundController.Evaluate();
             return _colorTween.Evaluate(t, _backgroundFromColor, _backgroundToColor);
         }
 

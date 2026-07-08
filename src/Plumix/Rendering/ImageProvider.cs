@@ -86,11 +86,11 @@ public sealed class PlatformAssetBundle : AssetBundle
     {
         cancellationToken.ThrowIfCancellationRequested();
         var uri = ResolveUri(key);
-        var path = uri.AbsolutePath;
-        var slash = path.LastIndexOf('/');
-        var directoryPath = slash >= 0 ? path[..(slash + 1)] : "/";
+        string path = uri.AbsolutePath;
+        int slash = path.LastIndexOf('/');
+        string directoryPath = slash >= 0 ? path[..(slash + 1)] : "/";
         var directory = new UriBuilder(uri) { Path = directoryPath }.Uri;
-        var assets = AssetLoader.GetAssets(directory, BaseUri).Select(asset => asset.ToString()).ToArray();
+        string[] assets = AssetLoader.GetAssets(directory, BaseUri).Select(asset => asset.ToString()).ToArray();
         return Task.FromResult<IReadOnlyList<string>>(assets);
     }
 
@@ -102,9 +102,9 @@ public sealed class PlatformAssetBundle : AssetBundle
             return uri;
         }
 
-        var assemblyName = System.Reflection.Assembly.GetEntryAssembly()?.GetName().Name
-                           ?? throw new InvalidOperationException(
-                               "A relative asset key requires an entry assembly or an explicit PlatformAssetBundle baseUri.");
+        string assemblyName = System.Reflection.Assembly.GetEntryAssembly()?.GetName().Name
+                              ?? throw new InvalidOperationException(
+                                  "A relative asset key requires an entry assembly or an explicit PlatformAssetBundle baseUri.");
         return new Uri($"avares://{assemblyName}/{key.TrimStart('/')}");
     }
 }
@@ -338,7 +338,7 @@ public sealed class FileImage : ImageProvider<FileImage>, IEquatable<FileImage>
 
     private static async Task<ImageInfo> LoadAsync(FileImage key)
     {
-        var bytes = await File.ReadAllBytesAsync(key.FilePath).ConfigureAwait(false);
+        byte[] bytes = await File.ReadAllBytesAsync(key.FilePath).ConfigureAwait(false);
         if (bytes.Length == 0)
         {
             ImageCache.Shared.Evict(key);
@@ -412,14 +412,14 @@ public sealed class NetworkImage : ImageProvider<NetworkImage>, IEquatable<Netwo
                 throw new NetworkImageLoadException((int)response.StatusCode, request.RequestUri!);
             }
 
-            var expected = response.Content.Headers.ContentLength;
+            long? expected = response.Content.Headers.ContentLength;
             await using var network = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
             using var bytes = new MemoryStream();
-            var buffer = new byte[16 * 1024];
+            byte[] buffer = new byte[16 * 1024];
             long loaded = 0;
             while (true)
             {
-                var count = await network.ReadAsync(buffer).ConfigureAwait(false);
+                int count = await network.ReadAsync(buffer).ConfigureAwait(false);
                 if (count == 0) break;
                 await bytes.WriteAsync(buffer.AsMemory(0, count)).ConfigureAwait(false);
                 loaded += count;
@@ -440,7 +440,7 @@ public sealed class NetworkImage : ImageProvider<NetworkImage>, IEquatable<Netwo
         if (other is null || !StringComparer.Ordinal.Equals(Url, other.Url) || !Scale.Equals(other.Scale)) return false;
         if (ReferenceEquals(Headers, other.Headers)) return true;
         if (Headers is null || other.Headers is null || Headers.Count != other.Headers.Count) return false;
-        return Headers.All(pair => other.Headers.TryGetValue(pair.Key, out var value) && value == pair.Value);
+        return Headers.All(pair => other.Headers.TryGetValue(pair.Key, out string? value) && value == pair.Value);
     }
 
     public override bool Equals(object? obj) => Equals(obj as NetworkImage);
@@ -556,7 +556,7 @@ public sealed class AssetImage : AssetBundleImageProvider, IEquatable<AssetImage
     public override async ValueTask<AssetBundleImageKey> ObtainKey(ImageConfiguration configuration)
     {
         var bundle = Bundle ?? configuration.Bundle ?? PlatformAssetBundle.Root;
-        var dpr = configuration.DevicePixelRatio;
+        double? dpr = configuration.DevicePixelRatio;
         if (!dpr.HasValue)
         {
             return new AssetBundleImageKey(bundle, KeyName, NaturalResolution);
@@ -565,15 +565,15 @@ public sealed class AssetImage : AssetBundleImageProvider, IEquatable<AssetImage
         var variants = await bundle.ListAssetsAsync(KeyName).ConfigureAwait(false);
         var candidates = new SortedDictionary<double, string>();
         candidates[NaturalResolution] = KeyName;
-        foreach (var variant in variants)
+        foreach (string variant in variants)
         {
-            if (TryParseVariantScale(KeyName, variant, out var scale))
+            if (TryParseVariantScale(KeyName, variant, out double scale))
             {
                 candidates[scale] = variant;
             }
         }
 
-        var selected = FindBestVariant(candidates.Keys.ToArray(), dpr.Value);
+        double selected = FindBestVariant(candidates.Keys.ToArray(), dpr.Value);
         return new AssetBundleImageKey(bundle, candidates[selected], selected);
     }
 
@@ -581,8 +581,8 @@ public sealed class AssetImage : AssetBundleImageProvider, IEquatable<AssetImage
     {
         if (sortedCandidates.Count == 0) return NaturalResolution;
         if (sortedCandidates.Contains(value)) return value;
-        var lower = sortedCandidates.Where(candidate => candidate < value).LastOrDefault(double.NaN);
-        var upper = sortedCandidates.FirstOrDefault(candidate => candidate > value, double.NaN);
+        double lower = sortedCandidates.Where(candidate => candidate < value).LastOrDefault(double.NaN);
+        double upper = sortedCandidates.FirstOrDefault(candidate => candidate > value, double.NaN);
         if (double.IsNaN(lower)) return upper;
         if (double.IsNaN(upper)) return lower;
         return value < LowDprLimit || value > (lower + upper) / 2.0 ? upper : lower;
@@ -591,11 +591,11 @@ public sealed class AssetImage : AssetBundleImageProvider, IEquatable<AssetImage
     private static bool TryParseVariantScale(string keyName, string candidate, out double scale)
     {
         scale = 0;
-        var fileName = Path.GetFileName(keyName);
+        string fileName = Path.GetFileName(keyName);
         if (!candidate.EndsWith(fileName, StringComparison.OrdinalIgnoreCase)) return false;
-        var segments = candidate.Replace('\\', '/').Split('/');
+        string[] segments = candidate.Replace('\\', '/').Split('/');
         if (segments.Length < 2) return false;
-        var density = segments[^2];
+        string density = segments[^2];
         return density.EndsWith('x')
                && double.TryParse(density[..^1], NumberStyles.Float, CultureInfo.InvariantCulture, out scale)
                && scale > 0;
@@ -731,11 +731,11 @@ public sealed class ResizeImage : ImageProvider<ResizeImageKey>, IEquatable<Resi
         }
 
         var source = bitmap.PixelSize;
-        var targetWidth = key.Width ?? Math.Max(1, (int)Math.Round(source.Width * (key.Height!.Value / (double)source.Height)));
-        var targetHeight = key.Height ?? Math.Max(1, (int)Math.Round(source.Height * (key.Width!.Value / (double)source.Width)));
+        int targetWidth = key.Width ?? Math.Max(1, (int)Math.Round(source.Width * (key.Height!.Value / (double)source.Height)));
+        int targetHeight = key.Height ?? Math.Max(1, (int)Math.Round(source.Height * (key.Width!.Value / (double)source.Width)));
         if (!key.AllowUpscaling)
         {
-            var factor = Math.Min(1.0, Math.Min(targetWidth / (double)source.Width, targetHeight / (double)source.Height));
+            double factor = Math.Min(1.0, Math.Min(targetWidth / (double)source.Width, targetHeight / (double)source.Height));
             targetWidth = Math.Max(1, (int)Math.Round(source.Width * factor));
             targetHeight = Math.Max(1, (int)Math.Round(source.Height * factor));
         }

@@ -207,7 +207,7 @@ public sealed class MaterialDataTableTests : IDisposable
             availableRowsPerPage: [3])));
         harness.Pump(new Size(500, 420));
         Assert.NotNull(FindParagraph(harness.RenderView, "People"));
-        var firstCalls = source.GetRowCalls;
+        int firstCalls = source.GetRowCalls;
 
         source.Selected = 2;
         source.Notify();

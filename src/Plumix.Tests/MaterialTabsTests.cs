@@ -62,7 +62,7 @@ public sealed class MaterialTabsTests
         Assert.True(controller.IndexIsChanging);
         Assert.Equal(0, controller.AnimationValue);
 
-        var now = Scheduler.CurrentSeconds;
+        double now = Scheduler.CurrentSeconds;
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.16));
         Assert.InRange(controller.AnimationValue, 0.5, 1.9);
@@ -185,7 +185,7 @@ public sealed class MaterialTabsTests
     public void TabBar_TapUsesGestureRouteAndAnimatesIndicator()
     {
         using var controller = new TabController(2);
-        var tapped = -1;
+        int tapped = -1;
         using var harness = new WidgetRenderHarness(Wrap(new TabBar(
             controller: controller,
             onTap: index => tapped = index,
@@ -204,7 +204,7 @@ public sealed class MaterialTabsTests
         Assert.Equal(1, tapped);
         Assert.True(controller.IndexIsChanging);
 
-        var clock = Scheduler.CurrentSeconds;
+        double clock = Scheduler.CurrentSeconds;
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.01));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.35));
         harness.Pump(new Size(300, 100));
@@ -249,7 +249,7 @@ public sealed class MaterialTabsTests
         harness.Pump(new Size(300, 180));
 
         controller.AnimateTo(2);
-        var clock = Scheduler.CurrentSeconds;
+        double clock = Scheduler.CurrentSeconds;
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.01));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.35));
         harness.Pump(new Size(300, 180));

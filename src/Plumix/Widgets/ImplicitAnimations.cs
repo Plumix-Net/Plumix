@@ -92,9 +92,9 @@ public sealed class AnimatedContainer : StatefulWidget
             var oldContainer = (AnimatedContainer)oldWidget;
             var current = Evaluate(_controller!.Evaluate());
             var target = AnimatedContainerValues.From(CurrentWidget);
-            var targetChanged = target != _end;
-            var durationChanged = oldContainer.Duration != CurrentWidget.Duration;
-            var wasAnimating = _controller.IsAnimating;
+            bool targetChanged = target != _end;
+            bool durationChanged = oldContainer.Duration != CurrentWidget.Duration;
+            bool wasAnimating = _controller.IsAnimating;
 
             if (durationChanged)
             {

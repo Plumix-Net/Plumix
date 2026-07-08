@@ -123,7 +123,7 @@ public sealed class MaterialDrawerHeaderTests
     [Fact]
     public void UserAccountsDrawerHeader_DetailsToggleInvokesCallbackAndUpdatesArrowSemantics()
     {
-        var detailsPressed = 0;
+        int detailsPressed = 0;
         using var harness = new WidgetRenderHarness(Root(
             new UserAccountsDrawerHeader(
                 accountName: new Text("Ada"),
