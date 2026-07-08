@@ -156,6 +156,7 @@ Status: `in_progress`
 Kickoff note (2026-03-12):
 
 - Prioritized immediately after M3 to unblock practical control rewrites and reduce sample-level styling drift by introducing a Flutter-like Material layer in framework widgets.
+- Added paired `CalendarDatePicker` + `YearPicker` parity with calendar delegates/date utilities, M2/M3 date-picker theming, bounded month paging, day/year states, keyboard/accessibility behavior, focused tests, and mirrored C#/Dart sample coverage.
 
 Progress update (2026-03-19):
 

@@ -308,6 +308,7 @@ public sealed record ThemeData
     private TabBarThemeData? _tabBarTheme;
     private BottomSheetThemeData? _bottomSheetTheme;
     private InputDecorationThemeData? _inputDecorationTheme;
+    private DatePickerThemeData? _datePickerTheme;
 
     public ThemeData(
         TargetPlatform? platform = null,
@@ -395,7 +396,8 @@ public sealed record ThemeData
         Color? highlightColor = null,
         Color? splashColor = null,
         BottomSheetThemeData? bottomSheetTheme = null,
-        InputDecorationThemeData? inputDecorationTheme = null)
+        InputDecorationThemeData? inputDecorationTheme = null,
+        DatePickerThemeData? datePickerTheme = null)
     {
         Platform = platform ?? ResolveDefaultPlatform();
         Brightness = brightness ?? Brightness.Light;
@@ -489,6 +491,7 @@ public sealed record ThemeData
         _tabBarTheme = tabBarTheme;
         _bottomSheetTheme = bottomSheetTheme;
         _inputDecorationTheme = inputDecorationTheme;
+        _datePickerTheme = datePickerTheme;
         VisualDensity = visualDensity ?? VisualDensity.Standard;
     }
 
@@ -806,6 +809,12 @@ public sealed record ThemeData
     {
         get => _inputDecorationTheme ?? new InputDecorationThemeData();
         init => _inputDecorationTheme = value;
+    }
+
+    public DatePickerThemeData DatePickerTheme
+    {
+        get => _datePickerTheme ?? new DatePickerThemeData();
+        init => _datePickerTheme = value;
     }
 
     public ButtonBarThemeData ButtonBarTheme

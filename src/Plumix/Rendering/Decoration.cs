@@ -50,10 +50,18 @@ public sealed record ShapeBorder(
     BorderRadius BorderRadius,
     BorderSide? Side = null)
 {
+    public BoxShape Shape { get; init; } = BoxShape.Rectangle;
+
     public static ShapeBorder RoundedRectangle(double radius, BorderSide? side = null)
     {
         return new ShapeBorder(BorderRadius.Circular(radius), side);
     }
+
+    public static ShapeBorder Circle(BorderSide? side = null) =>
+        new(BorderRadius.Circular(9999), side) { Shape = BoxShape.Circle };
+
+    public static ShapeBorder Stadium(BorderSide? side = null) =>
+        new(BorderRadius.Circular(9999), side);
 }
 
 public sealed record BoxDecoration(

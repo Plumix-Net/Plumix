@@ -51,6 +51,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Material scrollbars enter through `src/Plumix.Material/Scrollbar.cs` + `ScrollbarTheme.cs`; raw overlay/interaction behavior lives in core `Widgets/Scrollbar.cs`, with adaptive defaults in `src/Plumix.Cupertino/CupertinoScrollbar.cs` and focused coverage in `MaterialScrollbarTests.cs`.
 - Material tabs enter through `src/Plumix.Material/Tabs.cs` + `TabController.cs` + `TabBarTheme.cs`; page motion lives in core `Widgets/PageView.cs`/`Rendering/PageView.cs`, indicator layout/paint in `RenderTabBar.cs`, and focused coverage in `MaterialTabsTests.cs`.
 - Material ink reactions enter through `src/Plumix.Material/InkWell.cs`; source-required primary/secondary gesture callbacks live in core `Widgets/Gestures.cs` and recognizers, with focused coverage in `MaterialInkResponseTests.cs`.
+- Material calendar pickers enter through `src/Plumix.Material/CalendarDatePicker.cs` + `Date.cs` + `DatePickerTheme.cs`; localization hooks live in `MaterialLocalizations.cs`, month motion uses core `PageView`, and focused coverage lives in `MaterialDatePickerTests.cs`.
 - Primary Tests:
   - `src/Plumix.Tests/MaterialScaffoldTests.cs`
   - `src/Plumix.Tests/MaterialButtonsTests.cs`

@@ -10,6 +10,7 @@ import 'demos/material/badge_tooltip_demo_page.dart';
 import 'demos/material/banner_demo_page.dart';
 import 'demos/material/bar_controls_demo_page.dart';
 import 'demos/material/data_table_demo_page.dart';
+import 'demos/material/date_picker_demo_page.dart';
 import 'demos/material/snack_bar_demo_page.dart';
 import 'demos/material/bottom_sheet_demo_page.dart';
 import 'demos/material/sliver_app_bar_demo_page.dart';
@@ -96,6 +97,12 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'InkResponse + InkWell',
       subtitle: 'circle/rectangle ink + gestures + overlay states',
       builder: () => const InkResponseDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.datePicker,
+      title: 'CalendarDatePicker + YearPicker',
+      subtitle: 'month/day/year selection + predicates + M2/M3 theme states',
+      builder: () => const DatePickerDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.drawer,
