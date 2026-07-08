@@ -158,6 +158,7 @@ Kickoff note (2026-03-12):
 - Prioritized immediately after M3 to unblock practical control rewrites and reduce sample-level styling drift by introducing a Flutter-like Material layer in framework widgets.
 - Added paired `CalendarDatePicker` + `YearPicker` parity with calendar delegates/date utilities, M2/M3 date-picker theming, bounded month paging, day/year states, keyboard/accessibility behavior, focused tests, and mirrored C#/Dart sample coverage.
 - Added paired `TextFormField` + `DropdownButtonFormField<T>` parity on shared core `Form`/`FormField<T>` primitives, covering typed global-key state access, field registration, validation modes, save/reset/error lifecycle, controller/focus synchronization, decorated error/hint composition, callback ordering, invalid/form semantics, focused tests, and mirrored C#/Dart sample probes.
+- Added paired `InputDatePickerFormField` + `DatePickerDialog` parity with localized parsing, range/predicate validation, form save/submit, calendar/input entry modes, M2/M3 portrait/landscape sizing, theme/header/action precedence, typed dialog results, focused tests, and mirrored C#/Dart sample probes.
 
 Progress update (2026-03-19):
 

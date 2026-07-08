@@ -44,6 +44,8 @@ public abstract class MaterialLocalizations
 
     public virtual string CancelButtonLabel => "Cancel";
 
+    public virtual string OkButtonLabel => "OK";
+
     public virtual string ViewLicensesButtonLabel => "View licenses";
 
     public virtual string CloseButtonLabel => "Close";
@@ -83,6 +85,12 @@ public abstract class MaterialLocalizations
     public virtual string InvalidDateFormatLabel => "Invalid format.";
 
     public virtual string DateOutOfRangeLabel => "Out of range.";
+
+    public virtual string DatePickerHelpText => "Select date";
+
+    public virtual string CalendarModeButtonLabel => "Switch to calendar";
+
+    public virtual string InputDateModeButtonLabel => "Switch to input";
 
     public virtual string FormatDecimal(int number) => number.ToString(CultureInfo.InvariantCulture);
 

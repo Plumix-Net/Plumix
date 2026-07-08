@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
@@ -21,6 +22,8 @@ public sealed class DatePickerDemoPage : StatefulWidget
         private bool _showYearPicker;
         private bool _useMaterial3 = true;
         private bool _useThemeOverride;
+        private readonly LabeledGlobalKey<FormState> _dateFormKey = new("date-input-form");
+        private string _formStatus = "not validated";
 
         public override Widget Build(BuildContext context)
         {
@@ -83,7 +86,78 @@ public sealed class DatePickerDemoPage : StatefulWidget
                                 fontSize: 13,
                                 color: Color.Parse("#FF455A64")),
                             picker,
+                            new Divider(),
+                            new Text("InputDatePickerFormField + DatePickerDialog", fontSize: 18),
+                            new Form(
+                                key: _dateFormKey,
+                                child: new InputDatePickerFormField(
+                                    initialDate: _selectedDate,
+                                    firstDate: new DateTime(2022, 1, 1),
+                                    lastDate: new DateTime(2032, 12, 31),
+                                    selectableDayPredicate: date => date.DayOfWeek is not DayOfWeek.Saturday and not DayOfWeek.Sunday,
+                                    onDateSaved: value => SetState(() =>
+                                    {
+                                        _selectedDate = value;
+                                        _formStatus = $"saved: {value:yyyy-MM-dd}";
+                                    }))),
+                            new Row(
+                                spacing: 8,
+                                children:
+                                [
+                                    BuildToggle("Validate", ValidateDateForm),
+                                    BuildToggle("Save", SaveDateForm),
+                                    BuildToggle("Reset", ResetDateForm),
+                                ]),
+                            new Row(
+                                spacing: 8,
+                                children:
+                                [
+                                    BuildToggle("Calendar dialog", () => _ = OpenDatePicker(context, DatePickerEntryMode.Calendar)),
+                                    BuildToggle("Input dialog", () => _ = OpenDatePicker(context, DatePickerEntryMode.Input)),
+                                ]),
+                            new Text($"Form/dialog status: {_formStatus}", fontSize: 13, color: Color.Parse("#FF455A64")),
                         ])));
+        }
+
+        private void ValidateDateForm()
+        {
+            var valid = _dateFormKey.CurrentState?.Validate() == true;
+            SetState(() => _formStatus = valid ? "valid" : "invalid");
+        }
+
+        private void SaveDateForm()
+        {
+            var form = _dateFormKey.CurrentState;
+            if (form?.Validate() != true)
+            {
+                SetState(() => _formStatus = "invalid");
+                return;
+            }
+            form.Save();
+        }
+
+        private void ResetDateForm()
+        {
+            _dateFormKey.CurrentState?.Reset();
+            SetState(() => _formStatus = "reset");
+        }
+
+        private async Task OpenDatePicker(BuildContext context, DatePickerEntryMode entryMode)
+        {
+            var result = await MaterialDatePickers.ShowDatePicker(
+                context,
+                initialDate: _selectedDate,
+                firstDate: new DateTime(2022, 1, 1),
+                lastDate: new DateTime(2032, 12, 31),
+                currentDate: new DateTime(2026, 3, 12),
+                initialEntryMode: entryMode,
+                selectableDayPredicate: date => date.DayOfWeek is not DayOfWeek.Saturday and not DayOfWeek.Sunday);
+            if (!Mounted) return;
+            SetState(() =>
+            {
+                if (result.HasValue) _selectedDate = result.Value;
+                _formStatus = result.HasValue ? $"dialog: {result:yyyy-MM-dd}" : "dialog canceled";
+            });
         }
 
         private static Widget BuildToggle(string label, Action onPressed) => new Expanded(

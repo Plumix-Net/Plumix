@@ -264,15 +264,299 @@ public sealed class MaterialDatePickerTests : IDisposable
             Close(box.AdditionalConstraints.MinHeight, 346) && Close(box.AdditionalConstraints.MaxHeight, 346));
     }
 
+    [Fact]
+    public void InputDatePickerFormField_NormalizesDefaultsAndValidatesContracts()
+    {
+        var field = new InputDatePickerFormField(
+            initialDate: new DateTime(2026, 3, 12, 14, 30, 0),
+            firstDate: new DateTime(2026, 1, 1, 8, 0, 0),
+            lastDate: new DateTime(2026, 12, 31, 22, 0, 0));
+        Assert.Equal(new DateTime(2026, 3, 12), field.InitialDate);
+        Assert.Equal(new DateTime(2026, 1, 1), field.FirstDate);
+        Assert.Equal(new DateTime(2026, 12, 31), field.LastDate);
+        Assert.False(field.Autofocus);
+        Assert.False(field.AcceptEmptyDate);
+
+        Assert.Throws<ArgumentException>(() => new InputDatePickerFormField(
+            firstDate: new DateTime(2026, 2, 1),
+            lastDate: new DateTime(2026, 1, 1)));
+        Assert.Throws<ArgumentException>(() => new InputDatePickerFormField(
+            initialDate: new DateTime(2026, 3, 14),
+            firstDate: new DateTime(2026, 1, 1),
+            lastDate: new DateTime(2026, 12, 31),
+            selectableDayPredicate: date => date.DayOfWeek is not DayOfWeek.Saturday));
+    }
+
+    [Fact]
+    public void InputDatePickerFormField_FormatsValidatesSavesAndSubmitsDates()
+    {
+        var formKey = new LabeledGlobalKey<FormState>("input-date-form");
+        DateTime? saved = null;
+        DateTime? submitted = null;
+        using var harness = CreateHarness(new Form(
+            key: formKey,
+            child: new InputDatePickerFormField(
+                initialDate: new DateTime(2026, 3, 12),
+                firstDate: new DateTime(2026, 1, 1),
+                lastDate: new DateTime(2026, 12, 31),
+                selectableDayPredicate: date => date.DayOfWeek is not DayOfWeek.Saturday and not DayOfWeek.Sunday,
+                errorFormatText: "Bad format",
+                errorInvalidText: "Unavailable date",
+                onDateSaved: value => saved = value,
+                onDateSubmitted: value => submitted = value,
+                autofocus: true)));
+        harness.Pump(new Size(420, 180));
+        var textState = Assert.IsType<TextFormFieldState>(Assert.Single(formKey.CurrentState!.Fields));
+        Assert.Equal("03/12/2026", textState.EffectiveController.Text);
+        Assert.Equal(new TextSelection(0, 10), textState.EffectiveController.Selection);
+
+        textState.EffectiveController.Text = "not-a-date";
+        Assert.False(formKey.CurrentState.Validate());
+        harness.Pump(new Size(420, 180));
+        Assert.Contains(FindDescendants<RenderParagraph>(harness.RenderView), paragraph => paragraph.Text == "Bad format");
+
+        textState.EffectiveController.Text = "03/15/2026";
+        Assert.False(formKey.CurrentState.Validate());
+        Assert.Equal("Unavailable date", textState.ErrorText);
+
+        textState.EffectiveController.Text = "03/16/2026";
+        Assert.True(formKey.CurrentState.Validate());
+        formKey.CurrentState.Save();
+        Assert.Equal(new DateTime(2026, 3, 16), saved);
+        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("Enter", isDown: true)));
+        Assert.Equal(new DateTime(2026, 3, 16), submitted);
+    }
+
+    [Fact]
+    public void InputDatePickerFormField_AcceptEmptyDateAllowsValidationWithoutCallbacks()
+    {
+        var formKey = new LabeledGlobalKey<FormState>("empty-date-form");
+        var saves = 0;
+        using var harness = CreateHarness(new Form(
+            key: formKey,
+            child: new InputDatePickerFormField(
+                firstDate: new DateTime(2026, 1, 1),
+                lastDate: new DateTime(2026, 12, 31),
+                acceptEmptyDate: true,
+                onDateSaved: _ => saves++)));
+        harness.Pump(new Size(420, 160));
+        Assert.True(formKey.CurrentState!.Validate());
+        formKey.CurrentState.Save();
+        Assert.Equal(0, saves);
+    }
+
+    [Fact]
+    public void InputDatePickerFormField_DatePickerInputThemeOverridesAmbientBorder()
+    {
+        var theme = ThemeData.Light with
+        {
+            InputDecorationTheme = new InputDecorationThemeData(Border: new UnderlineInputBorder()),
+            DatePickerTheme = new DatePickerThemeData(
+                InputDecorationTheme: new InputDecorationThemeData(Border: new OutlineInputBorder())),
+        };
+        using var harness = CreateHarness(new InputDatePickerFormField(
+            firstDate: new DateTime(2026, 1, 1),
+            lastDate: new DateTime(2026, 12, 31)), theme);
+        harness.Pump(new Size(420, 160));
+        Assert.Contains(FindDescendants<RenderCustomPaint>(harness.RenderView), paint =>
+            paint.Painter is InputBorderPainter { Border: OutlineInputBorder });
+    }
+
+    [Fact]
+    public void DatePickerDialog_ExposesFlutterDefaultsSizesAndEntryModePolicy()
+    {
+        var dialog = new DatePickerDialog(
+            initialDate: new DateTime(2026, 3, 12),
+            firstDate: new DateTime(2026, 1, 1),
+            lastDate: new DateTime(2026, 12, 31));
+        Assert.Equal(DatePickerEntryMode.Calendar, dialog.InitialEntryMode);
+        Assert.Equal(DatePickerMode.Day, dialog.InitialCalendarMode);
+        Assert.Equal(new Thickness(16, 24), dialog.InsetPadding);
+        Assert.Equal(new DateTime(2026, 3, 12), dialog.InitialDate);
+        Assert.Throws<ArgumentOutOfRangeException>(() => new DatePickerDialog(
+            firstDate: new DateTime(2026, 1, 1),
+            lastDate: new DateTime(2026, 12, 31),
+            insetPadding: new Thickness(-1)));
+
+        using var harness = CreateHarness(new Navigator(new BuilderPageRoute(_ => dialog)));
+        harness.Pump(new Size(500, 700));
+        Assert.Contains(FindDescendants<RenderConstrainedBox>(harness.RenderView), box =>
+            Close(box.AdditionalConstraints.MinWidth, 360)
+            && Close(box.AdditionalConstraints.MaxWidth, 360)
+            && Close(box.AdditionalConstraints.MinHeight, 568)
+            && Close(box.AdditionalConstraints.MaxHeight, 568));
+    }
+
+    [Fact]
+    public void DatePickerDialog_TogglesCalendarAndInputModesWithSourceCallbacks()
+    {
+        var modes = new List<DatePickerEntryMode>();
+        using var harness = CreateHarness(new Navigator(new BuilderPageRoute(_ => new DatePickerDialog(
+            initialDate: new DateTime(2026, 3, 12),
+            firstDate: new DateTime(2026, 1, 1),
+            lastDate: new DateTime(2026, 12, 31),
+            onDatePickerModeChange: modes.Add))));
+        var semantics = harness.PumpAndGetSemantics(new Size(500, 700));
+        var inputToggle = FindSemantics(semantics, node =>
+            node.Label == "Switch to input" && node.Actions.HasFlag(SemanticsActions.Tap));
+        Assert.True(inputToggle is not null, DumpSemantics(semantics));
+        Assert.True(inputToggle!.PerformAction(SemanticsActions.Tap));
+
+        semantics = harness.PumpAndGetSemantics(new Size(500, 700));
+        Assert.Equal(DatePickerEntryMode.Input, Assert.Single(modes));
+        Assert.NotNull(FindSemantics(semantics, node => node.Label == "Switch to calendar"));
+        Assert.Contains(FindDescendants<RenderParagraph>(harness.RenderView), paragraph => paragraph.Text == "Enter date");
+    }
+
+    [Fact]
+    public void DatePickerDialog_OnlyModesHideToggleAndThemeHeaderSurfaceActions()
+    {
+        var pickerTheme = new DatePickerThemeData(
+            BackgroundColor: Colors.Purple,
+            HeaderBackgroundColor: Colors.Orange,
+            CancelButtonStyle: TextButton.StyleFrom(foregroundColor: Colors.Green),
+            ConfirmButtonStyle: TextButton.StyleFrom(foregroundColor: Colors.Red));
+        using var harness = CreateHarness(
+            new DatePickerTheme(
+                pickerTheme,
+                new Navigator(new BuilderPageRoute(_ => new DatePickerDialog(
+                    initialDate: new DateTime(2026, 3, 12),
+                    firstDate: new DateTime(2026, 1, 1),
+                    lastDate: new DateTime(2026, 12, 31),
+                    initialEntryMode: DatePickerEntryMode.InputOnly,
+                    helpText: "Choose birthday",
+                    cancelText: "BACK",
+                    confirmText: "USE")))));
+        var semantics = harness.PumpAndGetSemantics(new Size(500, 700));
+        Assert.Null(FindSemantics(semantics, node =>
+            node.Label is "Switch to input" or "Switch to calendar"));
+        Assert.Contains(FindDescendants<RenderColoredBox>(harness.RenderView), box => box.Color == Colors.Orange);
+        Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView), box => box.Decoration.Color == Colors.Purple);
+        Assert.Contains(FindDescendants<RenderParagraph>(harness.RenderView), paragraph => paragraph.Text == "Choose birthday");
+        Assert.Contains(FindDescendants<RenderParagraph>(harness.RenderView), paragraph => paragraph.Text == "BACK");
+        Assert.Contains(FindDescendants<RenderParagraph>(harness.RenderView), paragraph => paragraph.Text == "USE");
+    }
+
+    [Fact]
+    public void DatePickerDialog_M2PortraitAndM3InputLandscapeUseSourceSizes()
+    {
+        using var m2 = CreateHarness(
+            new Navigator(new BuilderPageRoute(_ => new DatePickerDialog(
+                firstDate: new DateTime(2026, 1, 1),
+                lastDate: new DateTime(2026, 12, 31)))),
+            ThemeData.Light with { UseMaterial3 = false },
+            new Size(500, 700));
+        m2.Pump(new Size(500, 700));
+        Assert.Contains(FindDescendants<RenderConstrainedBox>(m2.RenderView), box =>
+            Close(box.AdditionalConstraints.MinWidth, 330)
+            && Close(box.AdditionalConstraints.MaxWidth, 330)
+            && Close(box.AdditionalConstraints.MinHeight, 518)
+            && Close(box.AdditionalConstraints.MaxHeight, 518));
+
+        using var landscape = CreateHarness(
+            new Navigator(new BuilderPageRoute(_ => new DatePickerDialog(
+                firstDate: new DateTime(2026, 1, 1),
+                lastDate: new DateTime(2026, 12, 31),
+                initialEntryMode: DatePickerEntryMode.InputOnly))),
+            mediaSize: new Size(700, 500));
+        landscape.Pump(new Size(700, 500));
+        Assert.Contains(FindDescendants<RenderConstrainedBox>(landscape.RenderView), box =>
+            Close(box.AdditionalConstraints.MinWidth, 496)
+            && Close(box.AdditionalConstraints.MaxWidth, 496)
+            && Close(box.AdditionalConstraints.MinHeight, 160)
+            && Close(box.AdditionalConstraints.MaxHeight, 160));
+    }
+
+    [Fact]
+    public async Task ShowDatePicker_InputModeRejectsInvalidThenReturnsSavedDate()
+    {
+        BuildContext captured = default;
+        using var harness = CreateHarness(new Navigator(new BuilderPageRoute(context => new CaptureContext(
+            value => captured = value,
+            new Text("Home")))));
+        harness.Pump(new Size(500, 700));
+        var result = MaterialDatePickers.ShowDatePicker(
+            captured,
+            initialDate: new DateTime(2026, 3, 12),
+            firstDate: new DateTime(2026, 1, 1),
+            lastDate: new DateTime(2026, 12, 31),
+            initialEntryMode: DatePickerEntryMode.Input,
+            errorFormatText: "Bad date");
+        PumpAnimation();
+        var semantics = harness.PumpAndGetSemantics(new Size(500, 700));
+        Assert.False(result.IsCompleted);
+        Assert.True(FocusManager.Instance.HandleTextInput("bad"));
+
+        var ok = FindSemantics(semantics, node =>
+            node.Actions.HasFlag(SemanticsActions.Tap) && ContainsLabel(node, "OK"));
+        Assert.True(ok is not null, DumpSemantics(semantics));
+        Assert.True(ok!.PerformAction(SemanticsActions.Tap));
+        harness.Pump(new Size(500, 700));
+        Assert.False(result.IsCompleted);
+        Assert.Contains(FindDescendants<RenderParagraph>(harness.RenderView), paragraph => paragraph.Text == "Bad date");
+
+        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("A", isDown: true, isControlPressed: true)));
+        Assert.True(FocusManager.Instance.HandleTextInput("03/16/2026"));
+        semantics = harness.PumpAndGetSemantics(new Size(500, 700));
+        ok = FindSemantics(semantics, node =>
+            node.Actions.HasFlag(SemanticsActions.Tap) && ContainsLabel(node, "OK"));
+        Assert.True(ok!.PerformAction(SemanticsActions.Tap));
+        PumpAnimation();
+        harness.Pump(new Size(500, 700));
+        Assert.Equal(new DateTime(2026, 3, 16), await result);
+    }
+
+    [Fact]
+    public async Task ShowDatePicker_CalendarSelectionUpdatesHeaderAndConfirmedResult()
+    {
+        BuildContext captured = default;
+        using var harness = CreateHarness(new Navigator(new BuilderPageRoute(context => new CaptureContext(
+            value => captured = value,
+            new Text("Home")))));
+        harness.Pump(new Size(500, 700));
+        var result = MaterialDatePickers.ShowDatePicker(
+            captured,
+            initialDate: new DateTime(2026, 3, 12),
+            firstDate: new DateTime(2026, 3, 1),
+            lastDate: new DateTime(2026, 3, 31));
+        PumpAnimation();
+        var semantics = harness.PumpAndGetSemantics(new Size(500, 700));
+        var day = FindSemantics(semantics, node =>
+            node.Label?.StartsWith("16, Monday, March 16, 2026", StringComparison.Ordinal) == true
+            && node.Actions.HasFlag(SemanticsActions.Tap));
+        Assert.NotNull(day);
+        Assert.True(day!.PerformAction(SemanticsActions.Tap));
+        harness.Pump(new Size(500, 700));
+        Assert.Contains(FindDescendants<RenderParagraph>(harness.RenderView), paragraph => paragraph.Text == "Mon, Mar 16");
+
+        semantics = harness.PumpAndGetSemantics(new Size(500, 700));
+        var ok = FindSemantics(semantics, node =>
+            node.Actions.HasFlag(SemanticsActions.Tap) && ContainsLabel(node, "OK"));
+        Assert.True(ok!.PerformAction(SemanticsActions.Tap));
+        PumpAnimation();
+        harness.Pump(new Size(500, 700));
+        Assert.Equal(new DateTime(2026, 3, 16), await result);
+    }
+
+    private static void PumpAnimation()
+    {
+        var now = Scheduler.CurrentSeconds;
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
+    }
+
     private static CalendarDatePicker BuildPicker() => new(
         initialDate: new DateTime(2026, 7, 8),
         firstDate: new DateTime(2026, 1, 1),
         lastDate: new DateTime(2026, 12, 31),
         onDateChanged: _ => { });
 
-    private static WidgetRenderHarness CreateHarness(Widget child, ThemeData? theme = null) => new(
+    private static WidgetRenderHarness CreateHarness(
+        Widget child,
+        ThemeData? theme = null,
+        Size? mediaSize = null) => new(
         new MediaQuery(
-            new MediaQueryData(Size: new Size(420, 500)),
+            new MediaQueryData(Size: mediaSize ?? new Size(420, 500)),
             new Directionality(TextDirection.Ltr, new Theme(theme ?? ThemeData.Light, child))));
 
     private static bool Close(double a, double b) => Math.Abs(a - b) < 0.001;
@@ -298,6 +582,12 @@ public sealed class MaterialDatePickerTests : IDisposable
         return null;
     }
 
+    private static bool ContainsLabel(SemanticsNode node, string label)
+    {
+        if (node.Label == label) return true;
+        return node.Children.Any(child => ContainsLabel(child, label));
+    }
+
     private static string DumpSemantics(SemanticsNode? node, int depth = 0)
     {
         if (node is null) return "<null>";
@@ -313,6 +603,24 @@ public sealed class MaterialDatePickerTests : IDisposable
     {
         public override int FirstDayOfWeekIndex => 1;
         public override string TabLabel(int tabIndex, int tabCount) => $"{tabIndex + 1}/{tabCount}";
+    }
+
+    private sealed class CaptureContext : StatelessWidget
+    {
+        private readonly Action<BuildContext> _capture;
+        private readonly Widget _child;
+
+        public CaptureContext(Action<BuildContext> capture, Widget child)
+        {
+            _capture = capture;
+            _child = child;
+        }
+
+        public override Widget Build(BuildContext context)
+        {
+            _capture(context);
+            return _child;
+        }
     }
 
     private sealed class WidgetRenderHarness : IDisposable

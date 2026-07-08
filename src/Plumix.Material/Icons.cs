@@ -38,6 +38,10 @@ public static class Icons
 
     public static IconData Edit { get; } = new(0xe3c9, FontFamily: MaterialIconsFontFamily);
 
+    public static IconData EditOutlined { get; } = new(0xf00d, FontFamily: MaterialIconsFontFamily);
+
+    public static IconData CalendarToday { get; } = new(0xe122, FontFamily: MaterialIconsFontFamily);
+
     public static IconData FirstPage { get; } = new(0xe5dc, FontFamily: MaterialIconsFontFamily, MatchTextDirection: true);
 
     public static IconData LastPage { get; } = new(0xe5dd, FontFamily: MaterialIconsFontFamily, MatchTextDirection: true);
