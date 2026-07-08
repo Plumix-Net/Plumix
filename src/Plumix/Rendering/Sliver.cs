@@ -415,6 +415,10 @@ public abstract class RenderSliver : RenderBox
 
     public void LayoutWithSliverConstraints(SliverConstraints constraints)
     {
+        if (_sliverConstraints != constraints)
+        {
+            MarkNeedsLayout();
+        }
         _sliverConstraints = constraints;
         var remainingCacheExtent = constraints.RemainingCacheExtent > 0
             ? constraints.RemainingCacheExtent
@@ -606,6 +610,124 @@ public class RenderSliverToBoxAdapter : RenderSliverSingleBoxAdapter
             CacheExtent: cacheExtent,
             HasVisualOverflow: remaining > constraints.RemainingPaintExtent);
     }
+}
+
+// Dart parity source: flutter/packages/flutter/lib/src/rendering/sliver_persistent_header.dart
+public sealed class RenderSliverPersistentHeader : RenderSliverSingleBoxAdapter
+{
+    private double _minExtent;
+    private double _maxExtent;
+    private bool _pinned;
+    private bool _floating;
+    private double _lastActualScrollOffset;
+    private double _effectiveScrollOffset;
+    private bool _hasLayout;
+
+    public RenderSliverPersistentHeader(
+        double minExtent,
+        double maxExtent,
+        bool pinned,
+        bool floating,
+        Action<double, bool>? onLayout = null,
+        RenderBox? child = null)
+    {
+        ValidateExtents(minExtent, maxExtent);
+        _minExtent = minExtent;
+        _maxExtent = maxExtent;
+        _pinned = pinned;
+        _floating = floating;
+        OnLayout = onLayout;
+        Child = child;
+    }
+
+    public double MinExtent { get => _minExtent; set { ValidateExtents(value, _maxExtent); if (Close(_minExtent, value)) return; _minExtent = value; MarkNeedsLayout(); } }
+    public double MaxExtent { get => _maxExtent; set { ValidateExtents(_minExtent, value); if (Close(_maxExtent, value)) return; _maxExtent = value; MarkNeedsLayout(); } }
+    public bool Pinned { get => _pinned; set { if (_pinned == value) return; _pinned = value; MarkNeedsLayout(); } }
+    public bool Floating { get => _floating; set { if (_floating == value) return; _floating = value; _hasLayout = false; MarkNeedsLayout(); } }
+    public Action<double, bool>? OnLayout { get; set; }
+    public double LastShrinkOffset { get; private set; }
+    public bool LastOverlapsContent { get; private set; }
+
+    protected override void PerformSliverLayout(SliverConstraints constraints)
+    {
+        var maxShrinkExtent = Math.Max(0, MaxExtent - MinExtent);
+        var actualScrollOffset = Math.Max(0, constraints.ScrollOffset);
+        if (Floating)
+        {
+            if (_hasLayout && (actualScrollOffset < _lastActualScrollOffset || _effectiveScrollOffset < MaxExtent))
+            {
+                var delta = _lastActualScrollOffset - actualScrollOffset;
+                if (delta > 0 && _effectiveScrollOffset > MaxExtent)
+                    _effectiveScrollOffset = MaxExtent;
+                _effectiveScrollOffset = Math.Clamp(_effectiveScrollOffset - delta, 0, actualScrollOffset);
+            }
+            else
+            {
+                _effectiveScrollOffset = actualScrollOffset;
+            }
+        }
+        else
+        {
+            _effectiveScrollOffset = actualScrollOffset;
+        }
+
+        var shrinkOffset = Math.Clamp(_effectiveScrollOffset, 0, maxShrinkExtent);
+        _lastActualScrollOffset = actualScrollOffset;
+        _hasLayout = true;
+        var currentExtent = Math.Max(MinExtent, MaxExtent - shrinkOffset);
+        var overlapsContent = Floating
+            ? _effectiveScrollOffset < actualScrollOffset
+            : actualScrollOffset > maxShrinkExtent + 0.0001;
+
+        var unclampedPaintExtent = Floating
+            ? MaxExtent - _effectiveScrollOffset
+            : Pinned ? currentExtent : MaxExtent - actualScrollOffset;
+        if (Pinned) unclampedPaintExtent = Math.Max(MinExtent, unclampedPaintExtent);
+        var paintExtent = Math.Clamp(unclampedPaintExtent, 0, constraints.RemainingPaintExtent);
+
+        if (Child is not null)
+        {
+            var childConstraints = constraints.Axis == Axis.Vertical
+                ? new BoxConstraints(
+                    MinWidth: constraints.CrossAxisExtent,
+                    MaxWidth: constraints.CrossAxisExtent,
+                    MinHeight: currentExtent,
+                    MaxHeight: currentExtent)
+                : new BoxConstraints(
+                    MinWidth: currentExtent,
+                    MaxWidth: currentExtent,
+                    MinHeight: constraints.CrossAxisExtent,
+                    MaxHeight: constraints.CrossAxisExtent);
+            Child.Layout(childConstraints, parentUsesSize: true);
+            var extraScroll = Pinned ? 0 : Math.Max(0, currentExtent - paintExtent);
+            ((BoxParentData)Child.parentData!).offset = constraints.Axis == Axis.Vertical
+                ? new Point(0, -extraScroll)
+                : new Point(-extraScroll, 0);
+        }
+
+        var layoutExtent = Floating || Pinned
+            ? Math.Clamp(MaxExtent - actualScrollOffset, 0, paintExtent)
+            : paintExtent;
+        Geometry = new SliverGeometry(
+            ScrollExtent: MaxExtent,
+            PaintExtent: paintExtent,
+            LayoutExtent: layoutExtent,
+            MaxPaintExtent: MaxExtent,
+            CacheExtent: Math.Min(MaxExtent, Math.Max(0, constraints.RemainingCacheExtent)),
+            HasVisualOverflow: currentExtent > paintExtent || overlapsContent);
+
+        LastShrinkOffset = shrinkOffset;
+        LastOverlapsContent = overlapsContent;
+        OnLayout?.Invoke(shrinkOffset, overlapsContent);
+    }
+
+    private static void ValidateExtents(double minExtent, double maxExtent)
+    {
+        if (!double.IsFinite(minExtent) || minExtent < 0) throw new ArgumentOutOfRangeException(nameof(minExtent));
+        if (!double.IsFinite(maxExtent) || maxExtent < minExtent) throw new ArgumentOutOfRangeException(nameof(maxExtent));
+    }
+
+    private static bool Close(double a, double b) => Math.Abs(a - b) <= 0.0001;
 }
 
 public sealed class RenderSliverPadding : RenderSliver, IRenderObjectSingleChildContainer

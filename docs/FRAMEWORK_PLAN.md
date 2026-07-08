@@ -8,7 +8,7 @@ Use this block as the fastest machine-readable status summary.
 
 ```yaml
 framework_plan_version: 1
-last_updated: 2026-07-06
+last_updated: 2026-07-08
 north_star: "Flutter-like widget/rendering framework in C# with Avalonia as host infrastructure."
 current_phase: "M4 material library rewrite (theme/scaffold/material controls) in progress."
 status:
@@ -156,6 +156,7 @@ Status: `in_progress`
 Kickoff note (2026-03-12):
 
 - Prioritized immediately after M3 to unblock practical control rewrites and reduce sample-level styling drift by introducing a Flutter-like Material layer in framework widgets.
+- Added paired `CalendarDatePicker` + `YearPicker` parity with calendar delegates/date utilities, M2/M3 date-picker theming, bounded month paging, day/year states, keyboard/accessibility behavior, focused tests, and mirrored C#/Dart sample coverage.
 
 Progress update (2026-03-19):
 
@@ -618,6 +619,35 @@ Progress update (2026-03-19):
   - added source-required core `Table`/`RenderTable` fixed/intrinsic/flex column negotiation plus full tap/double-tap/down/cancel plumbing through `GestureDetector` and `InkWell`;
   - replaced the sliver-backed `SingleChildScrollView` shortcut with a Flutter-shaped single-child viewport so nested horizontal table scrollers shrink-wrap finite child height instead of inheriting an unbounded cross axis;
   - added focused `MaterialDataTableTests` and a mirrored `/data-table` C#/Dart runtime demo.
+- Added paired legacy `MaterialButton` + `RawMaterialButton` ports:
+  - matched Flutter constructor/default surfaces, `MaterialButton -> RawMaterialButton` composition, `ButtonThemeData` geometry/color resolution, disabled and long-press-only enablement, focus/hover/pressed elevation priority, density-adjusted padding/constraints, tap targets, highlight callbacks, and text/icon styling;
+  - extended the shared button core only for source-required highlight notification and long-press-only interaction behavior, preserving the framework-owned ink/focus/semantics pipeline;
+  - added focused `MaterialLegacyButtonTests` and mirrored runtime probes in the existing C#/Dart Material buttons demo.
+- Added paired `RawScrollbar` + Material `Scrollbar` ports:
+  - replaced the early row/column scrollbar layout insertion with a Flutter-shaped render overlay that preserves child size and paints vertical/horizontal, reversed, RTL, padded, margin, thumb, track, border, radius, and minimum-length geometry from live scroll metrics;
+  - matched Flutter's mouse-proximity behavior: a faded scrollbar animates back in only inside the expanded 48px scrollbar hover target, while ordinary content hover remains inert;
+  - matched transient fade visibility, forced thumb/track visibility, thumb drag mapping, track page actions, notification filtering, and Material hovered/dragged theme/platform precedence, including Android non-interactive defaults; retained hit-test entries now advance local move/up coordinates so dragging also works through the complete host pointer route;
+  - added the source-required adaptive `CupertinoScrollbar` branch with Cupertino sizing/fade/margins and delayed thumb-drag behavior, focused `MaterialScrollbarTests`, and a mirrored C#/Dart comparison demo.
+- Added paired `TabBar` + `TabBarView` ports:
+  - added `Tab`, `TabController`/`DefaultTabController`, `TabBarTheme`, primary/secondary M2/M3 token paths, fill/center/scrollable alignment, automatic selected-tab centering, real-label indicator geometry, linear/elastic motion, divider/custom box-decoration paint, hover/focus/tap callbacks, and localized tab semantics;
+  - added source-required core `PageView`/`PageController`, preferred-size and horizontal text-fade primitives plus `AppBar.bottom`, with tap and swipe changes sharing fractional controller animation and Flutter-shaped non-adjacent warping;
+  - added focused `MaterialTabsTests` and a mirrored `/tabs` C#/Dart runtime demo covering M2/M3, fill/scrollable, local theme, tap, and swipe paths.
+- Added paired `BottomSheet` + `ModalBottomSheetRoute<T>` ports:
+  - matched M2/M3 surfaces, `BottomSheetTheme`/widget precedence, drag handles, vertical drag close thresholds, animation styles, constraints, modal barriers, SafeArea, typed route results, and the default non-scroll-controlled `9/16` height cap;
+  - integrated static `Scaffold.bottomSheet` plus dynamic persistent-sheet controller, rebuild/close task, entrance/exit motion, and `LocalHistoryEntry` back/AppBar behavior;
+  - added focused `MaterialBottomSheetTests` and a mirrored `/bottom-sheet` C#/Dart runtime demo.
+- Added paired `SliverAppBar` + `FlexibleSpaceBar` ports:
+  - added framework-owned `SliverPersistentHeader`/`RenderSliverPersistentHeader` geometry with collapsing, pinned, and floating behavior, plus alignment-aware transform geometry used by scaled flexible titles;
+  - matched the Flutter API/default/composition paths for flexible-space parallax/pin modes, title scaling/fade, leading-aware padding, scroll-under surfaces, primary safe-area extent, regular and M3 medium/large app bars, and AppBarTheme elevation/shape/color precedence;
+  - added focused `MaterialSliverAppBarTests` and a mirrored `/sliver-app-bar` C#/Dart runtime demo. Exact ballistic snap settling and overscroll stretch remain documented against missing shared scroll protocols.
+- Added paired `InputDecorator` + Material `TextField` ports:
+  - added `InputDecoration`, underline/outline/no-border shapes, `InputDecorationThemeData`/`InputDecorationTheme`, M2/M3 fill and state-border resolution, floating/inline labels, hint/helper/error/counter, prefix/suffix/icon slots, dense/collapsed and constraints composition;
+  - expanded core `EditableText` for source-required styled, read-only, obscured, submitted, semantic, and grapheme-limited input while preserving the existing IME/selection/clipboard/focus pipeline;
+  - added focused `MaterialTextFieldTests` and a mirrored `/text-field` C#/Dart runtime demo. Advanced selection overlays/context menus, autofill/spellcheck/restoration and exact private decorator render geometry remain documented shared-primitive gaps.
+- Added paired `InkResponse` + `InkWell` ports:
+  - replaced the earlier `InkWell` subset with a shared Flutter-shaped interaction state machine covering primary/secondary taps, tap-up/cancel, double tap, long-press/up, focus, hover, feedback, semantics, and external `MaterialStatesController` synchronization;
+  - matched circle/uncontained `InkResponse` versus rectangle/contained `InkWell` geometry, radius/border resolution, splash migration, and `overlayColor -> legacy color -> ThemeData` state-color precedence;
+  - added source-required gesture callback and long-press semantics plumbing, fixed `RenderTabBar` indicator geometry refresh when ink-child layout remains stable, added focused `MaterialInkResponseTests`, and a mirrored `/ink-response` C#/Dart runtime demo. Pluggable ink factories and ancestor-Material ink ownership remain documented shared-primitive gaps.
 - Remaining divergence for floating action button in current framework scope:
   - none documented in current framework scope.
 

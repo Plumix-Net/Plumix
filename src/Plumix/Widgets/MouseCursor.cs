@@ -11,6 +11,8 @@ public static class SystemMouseCursors
     public static MouseCursor Basic { get; } = new SystemMouseCursor("basic");
 
     public static MouseCursor Click { get; } = new SystemMouseCursor("click");
+
+    public static MouseCursor Text { get; } = new SystemMouseCursor("text");
 }
 
 public static class MouseCursorManager

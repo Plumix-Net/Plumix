@@ -169,6 +169,40 @@ public sealed class PaintingContext
         pictureLayer.AddDrawCommand((drawingContext, sceneOffset) => layout.Draw(drawingContext, point + sceneOffset));
     }
 
+    public void DrawTextLayoutWithHorizontalFade(
+        TextLayout layout,
+        Point point,
+        Rect bounds,
+        bool fadeTowardRight)
+    {
+        var pictureLayer = EnsurePictureLayer();
+        pictureLayer.AddDrawCommand((drawingContext, sceneOffset) =>
+        {
+            var translatedBounds = new Rect(bounds.Position + sceneOffset, bounds.Size);
+            var mask = new LinearGradientBrush
+            {
+                StartPoint = new RelativePoint(0, 0.5, RelativeUnit.Relative),
+                EndPoint = new RelativePoint(1, 0.5, RelativeUnit.Relative),
+                GradientStops = fadeTowardRight
+                    ? new GradientStops
+                    {
+                        new GradientStop(Colors.White, 0),
+                        new GradientStop(Colors.White, 0.8),
+                        new GradientStop(Colors.Transparent, 1),
+                    }
+                    : new GradientStops
+                    {
+                        new GradientStop(Colors.Transparent, 0),
+                        new GradientStop(Colors.White, 0.2),
+                        new GradientStop(Colors.White, 1),
+                    },
+            };
+            using var clip = drawingContext.PushClip(translatedBounds);
+            using var opacityMask = drawingContext.PushOpacityMask(mask, translatedBounds);
+            layout.Draw(drawingContext, point + sceneOffset);
+        });
+    }
+
     public void DrawImage(
         IImage image,
         Rect sourceRect,

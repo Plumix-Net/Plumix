@@ -811,6 +811,109 @@ public sealed class SliverToBoxAdapter : SingleChildRenderObjectWidget
     }
 }
 
+// Dart parity source: flutter/packages/flutter/lib/src/widgets/sliver_persistent_header.dart
+public abstract class SliverPersistentHeaderDelegate
+{
+    public abstract double MinExtent { get; }
+    public abstract double MaxExtent { get; }
+    public abstract Widget Build(BuildContext context, double shrinkOffset, bool overlapsContent);
+    public abstract bool ShouldRebuild(SliverPersistentHeaderDelegate oldDelegate);
+}
+
+public sealed class SliverPersistentHeader : StatefulWidget
+{
+    public SliverPersistentHeader(
+        SliverPersistentHeaderDelegate @delegate,
+        bool pinned = false,
+        bool floating = false,
+        Key? key = null) : base(key)
+    {
+        Delegate = @delegate ?? throw new ArgumentNullException(nameof(@delegate));
+        ValidateDelegate(@delegate);
+        Pinned = pinned;
+        Floating = floating;
+    }
+
+    public SliverPersistentHeaderDelegate Delegate { get; }
+    public bool Pinned { get; }
+    public bool Floating { get; }
+    public override State CreateState() => new SliverPersistentHeaderState();
+
+    private static void ValidateDelegate(SliverPersistentHeaderDelegate value)
+    {
+        if (!double.IsFinite(value.MinExtent) || value.MinExtent < 0)
+            throw new ArgumentOutOfRangeException(nameof(value), "minExtent must be finite and non-negative.");
+        if (!double.IsFinite(value.MaxExtent) || value.MaxExtent < value.MinExtent)
+            throw new ArgumentOutOfRangeException(nameof(value), "maxExtent must be finite and >= minExtent.");
+    }
+
+    private sealed class SliverPersistentHeaderState : State
+    {
+        private double _shrinkOffset;
+        private bool _overlapsContent;
+        private SliverPersistentHeader CurrentWidget => (SliverPersistentHeader)StateWidget;
+
+        public override Widget Build(BuildContext context)
+        {
+            var widget = CurrentWidget;
+            ValidateDelegate(widget.Delegate);
+            return new SliverPersistentHeaderRenderWidget(
+                minExtent: widget.Delegate.MinExtent,
+                maxExtent: widget.Delegate.MaxExtent,
+                pinned: widget.Pinned,
+                floating: widget.Floating,
+                onLayout: HandleLayout,
+                child: widget.Delegate.Build(context, _shrinkOffset, _overlapsContent));
+        }
+
+        private void HandleLayout(double shrinkOffset, bool overlapsContent)
+        {
+            if (Math.Abs(_shrinkOffset - shrinkOffset) <= 0.0001
+                && _overlapsContent == overlapsContent) return;
+            _shrinkOffset = shrinkOffset;
+            _overlapsContent = overlapsContent;
+            SetState(() => { });
+        }
+    }
+}
+
+internal sealed class SliverPersistentHeaderRenderWidget : SingleChildRenderObjectWidget
+{
+    public SliverPersistentHeaderRenderWidget(
+        double minExtent,
+        double maxExtent,
+        bool pinned,
+        bool floating,
+        Action<double, bool> onLayout,
+        Widget child) : base(child)
+    {
+        MinExtent = minExtent;
+        MaxExtent = maxExtent;
+        Pinned = pinned;
+        Floating = floating;
+        OnLayout = onLayout;
+    }
+
+    public double MinExtent { get; }
+    public double MaxExtent { get; }
+    public bool Pinned { get; }
+    public bool Floating { get; }
+    public Action<double, bool> OnLayout { get; }
+
+    internal override RenderObject CreateRenderObject(BuildContext context) => new RenderSliverPersistentHeader(
+        MinExtent, MaxExtent, Pinned, Floating, OnLayout);
+
+    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    {
+        var header = (RenderSliverPersistentHeader)renderObject;
+        header.MinExtent = MinExtent;
+        header.MaxExtent = MaxExtent;
+        header.Pinned = Pinned;
+        header.Floating = Floating;
+        header.OnLayout = OnLayout;
+    }
+}
+
 public sealed class SliverPadding : SingleChildRenderObjectWidget
 {
     public SliverPadding(Thickness padding, Widget? sliver = null, Key? key = null) : base(sliver, key)
@@ -1474,113 +1577,6 @@ public sealed class SingleChildScrollView : StatelessWidget
         {
             UseSingleChildViewport = true,
         };
-    }
-}
-
-public sealed class Scrollbar : StatefulWidget
-{
-    public Scrollbar(
-        Widget child,
-        ScrollController? controller = null,
-        double thickness = 4.0,
-        Color? thumbColor = null,
-        Key? key = null) : base(key)
-    {
-        Child = child;
-        Controller = controller;
-        Thickness = thickness;
-        ThumbColor = thumbColor ?? Color.Parse("#AA5A6B82");
-    }
-
-    public Widget Child { get; }
-
-    public ScrollController? Controller { get; }
-
-    public double Thickness { get; }
-
-    public Color ThumbColor { get; }
-
-    public override State CreateState()
-    {
-        return new ScrollbarState();
-    }
-
-    private sealed class ScrollbarState : State
-    {
-        private ScrollController? _controller;
-
-        private Scrollbar CurrentWidget => (Scrollbar)Element.Widget;
-
-        public override void InitState()
-        {
-            _controller = ResolveController();
-            _controller?.AddListener(HandleControllerChanged);
-        }
-
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
-        {
-            var oldScrollbar = (Scrollbar)oldWidget;
-            if (ReferenceEquals(oldScrollbar.Controller, CurrentWidget.Controller))
-            {
-                return;
-            }
-
-            _controller?.RemoveListener(HandleControllerChanged);
-            _controller = ResolveController();
-            _controller?.AddListener(HandleControllerChanged);
-            SetState(static () => { });
-        }
-
-        public override void Dispose()
-        {
-            _controller?.RemoveListener(HandleControllerChanged);
-        }
-
-        public override Widget Build(BuildContext context)
-        {
-            var widget = CurrentWidget;
-            var controller = _controller;
-            var position = controller?.PrimaryPosition;
-
-            if (position == null || position.MaxScrollExtent <= 0 || position.ViewportDimension <= 0)
-            {
-                return widget.Child;
-            }
-
-            const int totalFlex = 1000;
-            var fraction = Math.Clamp(position.ViewportDimension / (position.MaxScrollExtent + position.ViewportDimension), 0.05, 1.0);
-            var thumbFlex = Math.Clamp((int)(fraction * totalFlex), 1, totalFlex);
-            var offsetFraction = position.MaxScrollExtent <= 0 ? 0 : Math.Clamp(position.Pixels / position.MaxScrollExtent, 0, 1);
-            var beforeFlex = Math.Clamp((int)(offsetFraction * (totalFlex - thumbFlex)), 0, totalFlex - thumbFlex);
-            var afterFlex = Math.Max(0, totalFlex - thumbFlex - beforeFlex);
-
-            return new Row(
-                children:
-                [
-                    new Expanded(child: widget.Child),
-                    new SizedBox(
-                        width: widget.Thickness,
-                        child: new Column(
-                            children:
-                            [
-                                new Expanded(flex: Math.Max(1, beforeFlex), child: new SizedBox()),
-                                new Expanded(
-                                    flex: Math.Max(1, thumbFlex),
-                                    child: new ColoredBox(widget.ThumbColor)),
-                                new Expanded(flex: Math.Max(1, afterFlex), child: new SizedBox()),
-                            ]))
-                ]);
-        }
-
-        private ScrollController? ResolveController()
-        {
-            return CurrentWidget.Controller ?? PrimaryScrollController.MaybeOf(Context);
-        }
-
-        private void HandleControllerChanged()
-        {
-            SetState(static () => { });
-        }
     }
 }
 

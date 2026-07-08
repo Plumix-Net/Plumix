@@ -1,3 +1,4 @@
+using System.Globalization;
 using Plumix.Foundation;
 using Plumix.Widgets;
 
@@ -61,6 +62,59 @@ public abstract class MaterialLocalizations
 
     public virtual string LastPageTooltip => "Last page";
 
+    public virtual IReadOnlyList<string> NarrowWeekdays { get; } = ["S", "M", "T", "W", "T", "F", "S"];
+
+    public virtual int FirstDayOfWeekIndex => 0;
+
+    public virtual string CurrentDateLabel => "Today";
+
+    public virtual string SelectedDateLabel => "Selected";
+
+    public virtual string SelectYearSemanticsLabel => "Select year";
+
+    public virtual string PreviousMonthTooltip => "Previous month";
+
+    public virtual string NextMonthTooltip => "Next month";
+
+    public virtual string DateHelpText => "mm/dd/yyyy";
+
+    public virtual string DateInputLabel => "Enter date";
+
+    public virtual string InvalidDateFormatLabel => "Invalid format.";
+
+    public virtual string DateOutOfRangeLabel => "Out of range.";
+
+    public virtual string FormatDecimal(int number) => number.ToString(CultureInfo.InvariantCulture);
+
+    public virtual string FormatYear(DateTime date) => date.Year.ToString(CultureInfo.InvariantCulture);
+
+    public virtual string FormatMonthYear(DateTime date) => date.ToString("MMMM yyyy", EnglishCulture);
+
+    public virtual string FormatMediumDate(DateTime date) => date.ToString("ddd, MMM d", EnglishCulture);
+
+    public virtual string FormatShortMonthDay(DateTime date) => date.ToString("MMM d", EnglishCulture);
+
+    public virtual string FormatShortDate(DateTime date) => date.ToString("MMM d, yyyy", EnglishCulture);
+
+    public virtual string FormatFullDate(DateTime date) => date.ToString("dddd, MMMM d, yyyy", EnglishCulture);
+
+    public virtual string FormatCompactDate(DateTime date) => date.ToString("MM/dd/yyyy", EnglishCulture);
+
+    public virtual DateTime? ParseCompactDate(string? input)
+    {
+        if (input is null) return null;
+        var parts = input.Split('/');
+        if (parts.Length != 3
+            || !int.TryParse(parts[0], NumberStyles.None, CultureInfo.InvariantCulture, out var month)
+            || !int.TryParse(parts[1], NumberStyles.None, CultureInfo.InvariantCulture, out var day)
+            || !int.TryParse(parts[2], NumberStyles.None, CultureInfo.InvariantCulture, out var year)
+            || year < 1 || month is < 1 or > 12 || day < 1 || day > DateTime.DaysInMonth(year, month))
+        {
+            return null;
+        }
+        return new DateTime(year, month, day);
+    }
+
     public virtual string SelectedRowCountTitle(int selectedRowCount) =>
         selectedRowCount == 1 ? "1 item selected" : $"{selectedRowCount} items selected";
 
@@ -76,6 +130,8 @@ public abstract class MaterialLocalizations
     {
         return MaterialLocalizationsScope.Of(context);
     }
+
+    private static CultureInfo EnglishCulture { get; } = CultureInfo.GetCultureInfo("en-US");
 }
 
 public sealed class DefaultMaterialLocalizations : MaterialLocalizations

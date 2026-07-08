@@ -12,6 +12,9 @@ public static class Curves
 {
     public static double Linear(double t) => t;
 
+    // Flutter Curves.ease: Cubic(0.25, 0.1, 0.25, 1.0).
+    public static double Ease(double t) => CubicBezier(t, 0.25, 0.1, 0.25, 1.0);
+
     public static double EaseInOut(double t)
     {
         // простая S-кривая (smoothstep)
@@ -35,6 +38,22 @@ public static class Curves
             parameter = Math.Clamp(parameter - (x / derivative), 0, 1);
         }
         return Cubic(parameter, 0, 1);
+    }
+
+    private static double CubicBezier(double t, double x1, double y1, double x2, double y2)
+    {
+        t = Math.Clamp(t, 0, 1);
+        var parameter = t;
+        for (var i = 0; i < 8; i++)
+        {
+            var x = Cubic(parameter, x1, x2) - t;
+            if (Math.Abs(x) < 1e-7) break;
+            var derivative = CubicDerivative(parameter, x1, x2);
+            if (Math.Abs(derivative) < 1e-7) break;
+            parameter = Math.Clamp(parameter - (x / derivative), 0, 1);
+        }
+
+        return Cubic(parameter, y1, y2);
     }
 
     private static double Cubic(double t, double firstControl, double secondControl)
@@ -147,6 +166,14 @@ public sealed class AnimationController : IDisposable
     {
         IsAnimating = false;
         _ticker.Stop();
+    }
+
+    internal void SetValue(double value)
+    {
+        var next = Math.Clamp(value, 0, 1);
+        if (Math.Abs(Value - next) <= 0.000001) return;
+        Value = next;
+        Changed?.Invoke();
     }
 
     private void Start()

@@ -184,7 +184,8 @@ public sealed class Scaffold : StatefulWidget
         Widget? floatingActionButton = null,
         Widget? bottomNavigationBar = null,
         Color? backgroundColor = null,
-        Key? key = null) : base(key)
+        Key? key = null,
+        Widget? bottomSheet = null) : base(key)
     {
         if (drawerEdgeDragWidth.HasValue
             && (double.IsNaN(drawerEdgeDragWidth.Value)
@@ -205,6 +206,7 @@ public sealed class Scaffold : StatefulWidget
         EndDrawerEnableOpenDragGesture = endDrawerEnableOpenDragGesture;
         FloatingActionButton = floatingActionButton;
         BottomNavigationBar = bottomNavigationBar;
+        BottomSheet = bottomSheet;
         BackgroundColor = backgroundColor;
     }
 
@@ -229,6 +231,8 @@ public sealed class Scaffold : StatefulWidget
     public Widget? FloatingActionButton { get; }
 
     public Widget? BottomNavigationBar { get; }
+
+    public Widget? BottomSheet { get; }
 
     public Color? BackgroundColor { get; }
 
@@ -325,6 +329,8 @@ public sealed class ScaffoldState : State
     private ModalRoute? _drawerHistoryRoute;
     private bool _isRemovingDrawerHistoryEntry;
     private bool _isDisposed;
+    private PersistentBottomSheetPresentation? _persistentBottomSheet;
+    private AnimationController? _staticBottomSheetAnimation;
 
     private Scaffold CurrentWidget => (Scaffold)StateWidget;
 
@@ -347,6 +353,7 @@ public sealed class ScaffoldState : State
         _isDisposed = false;
         _drawerProgress = 0;
         _endDrawerProgress = 0;
+        SyncStaticBottomSheetAnimation();
     }
 
     public override void Dispose()
@@ -355,6 +362,8 @@ public sealed class ScaffoldState : State
         RemoveDrawerHistoryEntry();
         StopSettleAnimation(DrawerSide.Start);
         StopSettleAnimation(DrawerSide.End);
+        DisposeStaticBottomSheetAnimation();
+        DisposePersistentBottomSheet(complete: true);
     }
 
     public void OpenDrawer()
@@ -445,8 +454,76 @@ public sealed class ScaffoldState : State
         });
     }
 
+    public PersistentBottomSheetController ShowBottomSheet(
+        WidgetBuilder builder,
+        Color? backgroundColor = null,
+        double? elevation = null,
+        ShapeBorder? shape = null,
+        Clip? clipBehavior = null,
+        BoxConstraints? constraints = null,
+        bool? enableDrag = null,
+        bool? showDragHandle = null,
+        AnimationController? transitionAnimationController = null,
+        AnimationStyle? sheetAnimationStyle = null)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        if (CurrentWidget.BottomSheet is not null)
+        {
+            throw new InvalidOperationException(
+                "Scaffold.showBottomSheet cannot be used while Scaffold.bottomSheet is non-null.");
+        }
+        if (elevation.HasValue && (!double.IsFinite(elevation.Value) || elevation.Value < 0))
+            throw new ArgumentOutOfRangeException(nameof(elevation));
+
+        ClosePersistentBottomSheet(immediate: true);
+        var animation = transitionAnimationController ?? BottomSheet.CreateAnimationController(sheetAnimationStyle);
+        var presentation = new PersistentBottomSheetPresentation
+        {
+            Builder = builder,
+            Animation = animation,
+            OwnsAnimation = transitionAnimationController is null,
+            ExitDuration = transitionAnimationController?.Duration
+                           ?? sheetAnimationStyle?.ReverseDuration
+                           ?? BottomSheet.ExitDuration,
+            EnableDrag = enableDrag ?? true,
+            ShowDragHandle = showDragHandle,
+            BackgroundColor = backgroundColor,
+            Elevation = elevation,
+            Shape = shape,
+            ClipBehavior = clipBehavior,
+            Constraints = constraints,
+        };
+        animation.Changed += HandlePersistentBottomSheetAnimationChanged;
+        animation.Dismissed += HandlePersistentBottomSheetDismissed;
+        var route = ModalRoute.MaybeOf(Context);
+        if (route is not null)
+        {
+            presentation.HistoryEntry = new LocalHistoryEntry(
+                onRemove: () => ClosePersistentBottomSheet(),
+                impliesAppBarDismissal: true);
+            route.AddLocalHistoryEntry(presentation.HistoryEntry);
+        }
+        _persistentBottomSheet = presentation;
+        SetState(() => { });
+        animation.Forward(from: 0);
+
+        return new PersistentBottomSheetController(
+            close: ClosePersistentBottomSheet,
+            setState: callback =>
+            {
+                if (!ReferenceEquals(_persistentBottomSheet, presentation)) return;
+                SetState(callback);
+            },
+            closed: presentation.Closed.Task);
+    }
+
     public override void DidUpdateWidget(StatefulWidget oldWidget)
     {
+        var oldScaffold = (Scaffold)oldWidget;
+        if (!ReferenceEquals(oldScaffold.BottomSheet, CurrentWidget.BottomSheet))
+        {
+            SyncStaticBottomSheetAnimation();
+        }
         if (!HasDrawer)
         {
             _isDrawerOpen = false;
@@ -539,6 +616,16 @@ public sealed class ScaffoldState : State
                 child: presentedSnackBar));
         }
 
+        var bottomSheet = BuildPresentedBottomSheet(context);
+        if (bottomSheet is not null)
+        {
+            overlayChildren.Add(new Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: bottomSheet));
+        }
+
         if (!isAnyDrawerVisible)
         {
             if (ShouldEnableOpenDragGesture(DrawerSide.Start, theme))
@@ -593,6 +680,107 @@ public sealed class ScaffoldState : State
             child: new Container(
                 color: effectiveBackground,
                 child: content));
+    }
+
+    private Widget? BuildPresentedBottomSheet(BuildContext context)
+    {
+        if (_persistentBottomSheet is { } presentation)
+        {
+            return new FractionalTranslation(
+                new Vector(0, 1 - presentation.Animation.Evaluate()),
+                transformHitTests: true,
+                child: new BottomSheet(
+                    animationController: presentation.Animation,
+                    onClosing: ClosePersistentBottomSheet,
+                    builder: presentation.Builder,
+                    enableDrag: presentation.EnableDrag,
+                    showDragHandle: presentation.ShowDragHandle,
+                    backgroundColor: presentation.BackgroundColor,
+                    elevation: presentation.Elevation,
+                    shape: presentation.Shape,
+                    clipBehavior: presentation.ClipBehavior,
+                    constraints: presentation.Constraints));
+        }
+
+        if (CurrentWidget.BottomSheet is null) return null;
+        _staticBottomSheetAnimation ??= CreateCompletedBottomSheetAnimation();
+        return new FractionalTranslation(
+            new Vector(0, 1 - _staticBottomSheetAnimation.Evaluate()),
+            transformHitTests: true,
+            child: new BottomSheet(
+                animationController: _staticBottomSheetAnimation,
+                onClosing: () => _staticBottomSheetAnimation.Reverse(),
+                builder: _ => CurrentWidget.BottomSheet,
+                enableDrag: true));
+    }
+
+    private void ClosePersistentBottomSheet() => ClosePersistentBottomSheet(immediate: false);
+
+    private void ClosePersistentBottomSheet(bool immediate)
+    {
+        var presentation = _persistentBottomSheet;
+        if (presentation is null || presentation.Closing) return;
+        presentation.Closing = true;
+        if (immediate)
+        {
+            DisposePersistentBottomSheet(complete: true);
+            if (!_isDisposed) SetState(() => { });
+            return;
+        }
+        presentation.Animation.Duration = presentation.ExitDuration;
+        presentation.Animation.Reverse();
+    }
+
+    private void HandlePersistentBottomSheetAnimationChanged()
+    {
+        if (!_isDisposed) SetState(() => { });
+    }
+
+    private void HandlePersistentBottomSheetDismissed()
+    {
+        DisposePersistentBottomSheet(complete: true);
+        if (!_isDisposed) SetState(() => { });
+    }
+
+    private void DisposePersistentBottomSheet(bool complete)
+    {
+        var presentation = _persistentBottomSheet;
+        if (presentation is null) return;
+        _persistentBottomSheet = null;
+        presentation.Animation.Changed -= HandlePersistentBottomSheetAnimationChanged;
+        presentation.Animation.Dismissed -= HandlePersistentBottomSheetDismissed;
+        presentation.HistoryEntry?.Remove();
+        presentation.HistoryEntry = null;
+        if (presentation.OwnsAnimation) presentation.Animation.Dispose();
+        if (complete) presentation.Closed.TrySetResult(null);
+    }
+
+    private void SyncStaticBottomSheetAnimation()
+    {
+        DisposeStaticBottomSheetAnimation();
+        if (CurrentWidget.BottomSheet is null) return;
+        _staticBottomSheetAnimation = CreateCompletedBottomSheetAnimation();
+        _staticBottomSheetAnimation.Changed += HandleStaticBottomSheetAnimationChanged;
+    }
+
+    private static AnimationController CreateCompletedBottomSheetAnimation()
+    {
+        var animation = BottomSheet.CreateAnimationController();
+        animation.SetValue(1);
+        return animation;
+    }
+
+    private void HandleStaticBottomSheetAnimationChanged()
+    {
+        if (!_isDisposed) SetState(() => { });
+    }
+
+    private void DisposeStaticBottomSheetAnimation()
+    {
+        if (_staticBottomSheetAnimation is null) return;
+        _staticBottomSheetAnimation.Changed -= HandleStaticBottomSheetAnimationChanged;
+        _staticBottomSheetAnimation.Dispose();
+        _staticBottomSheetAnimation = null;
     }
 
     private Widget BuildEdgeDragArea(BuildContext context, DrawerSide side, TextDirection textDirection)
@@ -1179,7 +1367,7 @@ public sealed class ScaffoldState : State
     }
 }
 
-public sealed class AppBar : StatelessWidget
+public sealed class AppBar : StatelessWidget, IPreferredSizeWidget
 {
     public AppBar(
         string? titleText = null,
@@ -1202,6 +1390,7 @@ public sealed class AppBar : StatelessWidget
         Color? backgroundColor = null,
         Color? foregroundColor = null,
         SystemUiOverlayStyle? systemOverlayStyle = null,
+        Widget? bottom = null,
         Key? key = null) : base(key)
     {
         if (toolbarHeight.HasValue && (double.IsNaN(toolbarHeight.Value) || double.IsInfinity(toolbarHeight.Value) || toolbarHeight.Value <= 0))
@@ -1239,6 +1428,7 @@ public sealed class AppBar : StatelessWidget
         BackgroundColor = backgroundColor;
         ForegroundColor = foregroundColor;
         SystemOverlayStyle = systemOverlayStyle;
+        Bottom = bottom;
     }
 
     public string? TitleText { get; }
@@ -1280,6 +1470,12 @@ public sealed class AppBar : StatelessWidget
     public Color? ForegroundColor { get; }
 
     public SystemUiOverlayStyle? SystemOverlayStyle { get; }
+
+    public Widget? Bottom { get; }
+
+    public Size PreferredSize => new(
+        0,
+        (ToolbarHeight ?? 56) + (Bottom is IPreferredSizeWidget preferred ? preferred.PreferredSize.Height : 0));
 
     public override Widget Build(BuildContext context)
     {
@@ -1351,6 +1547,14 @@ public sealed class AppBar : StatelessWidget
                     crossAxisAlignment: CrossAxisAlignment.Center,
                     spacing: 0,
                     children: rowChildren)));
+
+        if (Bottom is not null)
+        {
+            appBarContent = new Column(
+                mainAxisSize: MainAxisSize.Min,
+                crossAxisAlignment: CrossAxisAlignment.Stretch,
+                children: [appBarContent, Bottom]);
+        }
 
         if (Primary && MediaQuery.MaybeOf(context) != null)
         {

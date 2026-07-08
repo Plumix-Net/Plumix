@@ -411,21 +411,29 @@ public sealed class Opacity : SingleChildRenderObjectWidget
 
 public sealed class Transform : SingleChildRenderObjectWidget
 {
-    public Transform(Matrix transform, Widget? child = null, Key? key = null) : base(child, key)
+    public Transform(
+        Matrix transform,
+        Widget? child = null,
+        Alignment? alignment = null,
+        Key? key = null) : base(child, key)
     {
         Matrix = transform;
+        Alignment = alignment;
     }
 
     public Matrix Matrix { get; }
+    public Alignment? Alignment { get; }
 
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
-        return new RenderTransform(Matrix);
+        return new RenderTransform(Matrix, Alignment, child: null);
     }
 
     internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
-        ((RenderTransform)renderObject).Transform = Matrix;
+        var transform = (RenderTransform)renderObject;
+        transform.Transform = Matrix;
+        transform.Alignment = Alignment;
     }
 }
 

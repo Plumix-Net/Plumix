@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
+using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -17,13 +18,40 @@ public enum MaterialState
     Pressed = 1 << 2,
     Disabled = 1 << 3,
     Selected = 1 << 4,
-    Error = 1 << 5
+    Error = 1 << 5,
+    Dragged = 1 << 6
 }
 
 public enum IconAlignment
 {
     Start,
     End
+}
+
+public sealed class MaterialStatesController : ChangeNotifier
+{
+    private MaterialState _value;
+
+    public MaterialStatesController(MaterialState value = MaterialState.None)
+    {
+        _value = value;
+    }
+
+    public MaterialState Value
+    {
+        get => _value;
+        set
+        {
+            if (_value == value) return;
+            _value = value;
+            NotifyListeners();
+        }
+    }
+
+    public void Update(MaterialState state, bool add)
+    {
+        Value = add ? Value | state : Value & ~state;
+    }
 }
 
 public abstract class MaterialStateProperty<T>

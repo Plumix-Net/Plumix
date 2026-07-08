@@ -10,7 +10,11 @@ import 'demos/material/badge_tooltip_demo_page.dart';
 import 'demos/material/banner_demo_page.dart';
 import 'demos/material/bar_controls_demo_page.dart';
 import 'demos/material/data_table_demo_page.dart';
+import 'demos/material/date_picker_demo_page.dart';
 import 'demos/material/snack_bar_demo_page.dart';
+import 'demos/material/bottom_sheet_demo_page.dart';
+import 'demos/material/sliver_app_bar_demo_page.dart';
+import 'demos/material/text_field_demo_page.dart';
 import 'demos/material/dialog_demo_page.dart';
 import 'demos/material/popup_menu_demo_page.dart';
 import 'demos/material/dropdown_demo_page.dart';
@@ -30,6 +34,7 @@ import 'demos/material/divider_demo_page.dart';
 import 'demos/general/editable_text_demo_page.dart';
 import 'demos/general/fitted_box_demo_page.dart';
 import 'demos/material/floating_action_button_demo_page.dart';
+import 'demos/material/ink_response_demo_page.dart';
 import 'demos/general/fractionally_sized_box_demo_page.dart';
 import 'demos/general/grid_view_demo_page.dart';
 import 'demos/material/grid_tile_demo_page.dart';
@@ -44,6 +49,7 @@ import 'demos/material/expansion_panel_demo_page.dart';
 import 'demos/material/stepper_demo_page.dart';
 import 'demos/material/about_demo_page.dart';
 import 'demos/material/material_buttons_demo_page.dart';
+import 'demos/material/tabs_demo_page.dart';
 import 'demos/material/navigation_surfaces_demo_page.dart';
 import 'demos/material/navigation_drawer_demo_page.dart';
 import 'demos/material/segmented_buttons_demo_page.dart';
@@ -79,6 +85,24 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'Material buttons',
       subtitle: 'TextButton + ElevatedButton + OutlinedButton + FilledButton',
       builder: () => const MaterialButtonsDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.tabs,
+      title: 'TabBar + TabBarView',
+      subtitle: 'controller + indicator + scrollable tabs + swipe pages',
+      builder: () => const TabsDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.inkResponse,
+      title: 'InkResponse + InkWell',
+      subtitle: 'circle/rectangle ink + gestures + overlay states',
+      builder: () => const InkResponseDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.datePicker,
+      title: 'CalendarDatePicker + YearPicker',
+      subtitle: 'month/day/year selection + predicates + M2/M3 theme states',
+      builder: () => const DatePickerDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.drawer,
@@ -139,6 +163,24 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'SnackBar + SnackBarAction',
       subtitle: 'messenger queue + action/close/overflow probes',
       builder: () => const SnackBarDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.bottomSheet,
+      title: 'BottomSheet + ModalBottomSheet',
+      subtitle: 'persistent controller + modal route/drag/theme probes',
+      builder: () => const BottomSheetDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.sliverAppBar,
+      title: 'SliverAppBar + FlexibleSpaceBar',
+      subtitle: 'collapse/parallax + pinned/floating/snap + M3 variants',
+      builder: () => const SliverAppBarDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.textField,
+      title: 'InputDecorator + TextField',
+      subtitle: 'labels/borders/supporting text + editable states',
+      builder: () => const TextFieldDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.dialog,

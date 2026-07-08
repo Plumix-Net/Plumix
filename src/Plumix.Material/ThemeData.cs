@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
+using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
 
@@ -52,7 +53,12 @@ public sealed record AppBarThemeData(
     TextStyle? ToolbarTextStyle = null,
     TextStyle? TitleTextStyle = null,
     Thickness? ActionsPadding = null,
-    SystemUiOverlayStyle? SystemOverlayStyle = null);
+    SystemUiOverlayStyle? SystemOverlayStyle = null,
+    double? Elevation = null,
+    double? ScrolledUnderElevation = null,
+    Color? ShadowColor = null,
+    Color? SurfaceTintColor = null,
+    ShapeBorder? Shape = null);
 
 public sealed record MaterialTextTheme
 {
@@ -67,7 +73,9 @@ public sealed record MaterialTextTheme
         TextStyle? bodyLarge = null,
         TextStyle? labelMedium = null,
         TextStyle? bodySmall = null,
-        TextStyle? headlineSmall = null)
+        TextStyle? headlineSmall = null,
+        TextStyle? titleSmall = null,
+        TextStyle? headlineMedium = null)
     {
         BodyMedium = bodyMedium ?? DefaultBodyMedium;
         BodyLarge = bodyLarge ?? DefaultBodyLarge;
@@ -78,6 +86,8 @@ public sealed record MaterialTextTheme
         LabelSmall = labelSmall ?? DefaultLabelSmall;
         TitleMedium = titleMedium ?? DefaultTitleMedium;
         HeadlineSmall = headlineSmall ?? DefaultHeadlineSmall;
+        HeadlineMedium = headlineMedium ?? DefaultHeadlineMedium;
+        TitleSmall = titleSmall ?? DefaultTitleSmall;
     }
 
     public TextStyle BodyMedium { get; init; }
@@ -97,6 +107,10 @@ public sealed record MaterialTextTheme
     public TextStyle TitleMedium { get; init; }
 
     public TextStyle HeadlineSmall { get; init; }
+
+    public TextStyle HeadlineMedium { get; init; }
+
+    public TextStyle TitleSmall { get; init; }
 
     public static TextStyle DefaultBodyMedium { get; } = new(
         FontFamily: DefaultBodyFontFamily,
@@ -143,6 +157,15 @@ public sealed record MaterialTextTheme
         Height: 1.43,
         LetterSpacing: 0.1);
 
+    public static TextStyle DefaultTitleSmall { get; } = new(
+        FontFamily: DefaultBodyFontFamily,
+        FontSize: 14,
+        Color: Color.Parse("#FF1D1B20"),
+        FontWeight: FontWeight.Medium,
+        FontStyle: FontStyle.Normal,
+        Height: 1.43,
+        LetterSpacing: 0.1);
+
     public static TextStyle DefaultLabelMedium { get; } = new(
         FontFamily: DefaultBodyFontFamily,
         FontSize: 12,
@@ -177,6 +200,15 @@ public sealed record MaterialTextTheme
         FontWeight: FontWeight.Normal,
         FontStyle: FontStyle.Normal,
         Height: 1.33,
+        LetterSpacing: 0.0);
+
+    public static TextStyle DefaultHeadlineMedium { get; } = new(
+        FontFamily: DefaultBodyFontFamily,
+        FontSize: 28,
+        Color: Color.Parse("#FF1D1B20"),
+        FontWeight: FontWeight.Normal,
+        FontStyle: FontStyle.Normal,
+        Height: 1.29,
         LetterSpacing: 0.0);
 
     public static MaterialTextTheme Fallback { get; } = new();
@@ -272,6 +304,11 @@ public sealed record ThemeData
     private ButtonBarThemeData? _buttonBarTheme;
     private BottomAppBarThemeData? _bottomAppBarTheme;
     private DataTableThemeData? _dataTableTheme;
+    private ScrollbarThemeData? _scrollbarTheme;
+    private TabBarThemeData? _tabBarTheme;
+    private BottomSheetThemeData? _bottomSheetTheme;
+    private InputDecorationThemeData? _inputDecorationTheme;
+    private DatePickerThemeData? _datePickerTheme;
 
     public ThemeData(
         TargetPlatform? platform = null,
@@ -350,9 +387,17 @@ public sealed record ThemeData
         ButtonBarThemeData? buttonBarTheme = null,
         BottomAppBarThemeData? bottomAppBarTheme = null,
         DataTableThemeData? dataTableTheme = null,
+        ScrollbarThemeData? scrollbarTheme = null,
+        TabBarThemeData? tabBarTheme = null,
         Color? disabledColor = null,
         Color? hintColor = null,
-        Color? focusColor = null)
+        Color? focusColor = null,
+        Color? hoverColor = null,
+        Color? highlightColor = null,
+        Color? splashColor = null,
+        BottomSheetThemeData? bottomSheetTheme = null,
+        InputDecorationThemeData? inputDecorationTheme = null,
+        DatePickerThemeData? datePickerTheme = null)
     {
         Platform = platform ?? ResolveDefaultPlatform();
         Brightness = brightness ?? Brightness.Light;
@@ -393,6 +438,15 @@ public sealed record ThemeData
         DisabledColor = disabledColor ?? ApplyOpacity(OnSurfaceColor, 0.38);
         HintColor = hintColor ?? ApplyOpacity(OnSurfaceColor, 0.60);
         FocusColor = focusColor ?? ApplyOpacity(OnSurfaceColor, 0.12);
+        HoverColor = hoverColor ?? ApplyOpacity(
+            Brightness == Brightness.Dark ? Colors.White : Colors.Black,
+            0.04);
+        HighlightColor = highlightColor ?? (Brightness == Brightness.Dark
+            ? Color.FromArgb(0x40, 0xCC, 0xCC, 0xCC)
+            : Color.FromArgb(0x66, 0xBC, 0xBC, 0xBC));
+        SplashColor = splashColor ?? (Brightness == Brightness.Dark
+            ? Color.FromArgb(0x40, 0xCC, 0xCC, 0xCC)
+            : Color.FromArgb(0x66, 0xC8, 0xC8, 0xC8));
         MaterialTapTargetSize = materialTapTargetSize ?? MaterialTapTargetSize.Padded;
         TextButtonStyle = textButtonStyle;
         ElevatedButtonStyle = elevatedButtonStyle;
@@ -433,6 +487,11 @@ public sealed record ThemeData
         _buttonBarTheme = buttonBarTheme;
         _bottomAppBarTheme = bottomAppBarTheme;
         _dataTableTheme = dataTableTheme;
+        _scrollbarTheme = scrollbarTheme;
+        _tabBarTheme = tabBarTheme;
+        _bottomSheetTheme = bottomSheetTheme;
+        _inputDecorationTheme = inputDecorationTheme;
+        _datePickerTheme = datePickerTheme;
         VisualDensity = visualDensity ?? VisualDensity.Standard;
     }
 
@@ -515,6 +574,12 @@ public sealed record ThemeData
     public Color HintColor { get; init; }
 
     public Color FocusColor { get; init; }
+
+    public Color HoverColor { get; init; }
+
+    public Color HighlightColor { get; init; }
+
+    public Color SplashColor { get; init; }
 
     public MaterialTapTargetSize MaterialTapTargetSize { get; init; }
 
@@ -722,6 +787,36 @@ public sealed record ThemeData
         init => _buttonTheme = value;
     }
 
+    public ScrollbarThemeData ScrollbarTheme
+    {
+        get => _scrollbarTheme ?? new ScrollbarThemeData();
+        init => _scrollbarTheme = value;
+    }
+
+    public TabBarThemeData TabBarTheme
+    {
+        get => _tabBarTheme ?? new TabBarThemeData();
+        init => _tabBarTheme = value;
+    }
+
+    public BottomSheetThemeData BottomSheetTheme
+    {
+        get => _bottomSheetTheme ?? new BottomSheetThemeData();
+        init => _bottomSheetTheme = value;
+    }
+
+    public InputDecorationThemeData InputDecorationTheme
+    {
+        get => _inputDecorationTheme ?? new InputDecorationThemeData();
+        init => _inputDecorationTheme = value;
+    }
+
+    public DatePickerThemeData DatePickerTheme
+    {
+        get => _datePickerTheme ?? new DatePickerThemeData();
+        init => _datePickerTheme = value;
+    }
+
     public ButtonBarThemeData ButtonBarTheme
     {
         get => _buttonBarTheme ?? new ButtonBarThemeData();
@@ -751,6 +846,7 @@ public sealed record ThemeData
             titleLarge: MaterialTextTheme.DefaultTitleLarge.CopyWith(color: Colors.White),
             titleMedium: MaterialTextTheme.DefaultTitleMedium.CopyWith(color: Colors.White),
             headlineSmall: MaterialTextTheme.DefaultHeadlineSmall.CopyWith(color: Colors.White),
+            headlineMedium: MaterialTextTheme.DefaultHeadlineMedium.CopyWith(color: Colors.White),
             labelLarge: MaterialTextTheme.DefaultLabelLarge.CopyWith(color: Colors.White),
             labelMedium: MaterialTextTheme.DefaultLabelMedium.CopyWith(color: Colors.White),
             labelSmall: MaterialTextTheme.DefaultLabelSmall.CopyWith(color: Colors.White)),

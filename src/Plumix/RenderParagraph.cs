@@ -354,7 +354,19 @@ public sealed class RenderParagraph : RenderBox
     {
         if (_layout != null)
         {
-            ctx.DrawTextLayout(_layout, offset);
+            if (_overflow == TextOverflow.Fade &&
+                _layout.WidthIncludingTrailingWhitespace > Size.Width + 0.01)
+            {
+                ctx.DrawTextLayoutWithHorizontalFade(
+                    _layout,
+                    offset,
+                    new Rect(offset, Size),
+                    fadeTowardRight: _textDirection == TextDirection.Ltr);
+            }
+            else
+            {
+                ctx.DrawTextLayout(_layout, offset);
+            }
         }
     }
 

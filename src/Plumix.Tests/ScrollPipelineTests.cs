@@ -129,6 +129,27 @@ public sealed class ScrollPipelineTests
     }
 
     [Fact]
+    public void RenderViewport_PaintsFirstSliverAboveFollowingSlivers()
+    {
+        var paintOrder = new List<string>();
+        var first = new PaintTrackingSliver("first", paintOrder);
+        var second = new PaintTrackingSliver("second", paintOrder);
+        var viewport = new RenderViewport(axis: Axis.Vertical);
+        viewport.Insert(first);
+        viewport.Insert(second, after: first);
+
+        var root = new RenderView { Child = viewport };
+        var pipeline = new PipelineOwner(root);
+        pipeline.Attach(root);
+        pipeline.FlushLayout(new Size(100, 200));
+
+        pipeline.FlushCompositingBits();
+        pipeline.FlushPaint();
+
+        Assert.Equal(["second", "first"], paintOrder);
+    }
+
+    [Fact]
     public void RenderViewport_AppliesScrollOffsetCorrection_FromSliver()
     {
         double maxExtent = -1;
@@ -841,6 +862,20 @@ public sealed class ScrollPipelineTests
         public override void Paint(PaintingContext ctx, Point offset)
         {
         }
+    }
+
+    private sealed class PaintTrackingSliver(string name, List<string> paintOrder) : RenderSliver
+    {
+        protected override void PerformSliverLayout(SliverConstraints constraints)
+        {
+            Geometry = new SliverGeometry(
+                ScrollExtent: 50,
+                PaintExtent: Math.Min(50, constraints.RemainingPaintExtent),
+                LayoutExtent: Math.Min(50, constraints.RemainingPaintExtent),
+                MaxPaintExtent: 50);
+        }
+
+        public override void Paint(PaintingContext ctx, Point offset) => paintOrder.Add(name);
     }
 
     private sealed class ConstraintCapturingSliver : RenderSliver

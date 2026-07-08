@@ -8,17 +8,20 @@ class ScrollbarDemoPage extends StatefulWidget {
 }
 
 class _ScrollbarDemoPageState extends State<ScrollbarDemoPage> {
-  late final ScrollController _controller;
+  late final ScrollController _materialController;
+  late final ScrollController _rawController;
 
   @override
   void initState() {
     super.initState();
-    _controller = ScrollController();
+    _materialController = ScrollController();
+    _rawController = ScrollController();
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _materialController.dispose();
+    _rawController.dispose();
     super.dispose();
   }
 
@@ -29,38 +32,79 @@ class _ScrollbarDemoPageState extends State<ScrollbarDemoPage> {
       spacing: 10,
       children: <Widget>[
         const Text(
-          'Scrollbar + ScrollController',
+          'Scrollbar + RawScrollbar',
           style: TextStyle(fontSize: 20, color: Colors.black),
         ),
         const Text(
-          'The thumb is computed from viewport/content metrics.',
+          'Material defaults/fade beside an always-visible themed raw track; both thumbs are draggable.',
           style: TextStyle(fontSize: 14, color: Colors.black54),
         ),
         Expanded(
-          child: Scrollbar(
-            controller: _controller,
-            child: ListView.builder(
-              controller: _controller,
-              itemCount: 70,
-              itemExtent: 40,
-              padding: const EdgeInsets.all(10),
-              itemBuilder: (BuildContext context, int index) {
-                return Container(
-                  color: index.isEven ? Colors.white : const Color(0xFFF4F7FA),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 8,
+          child: Row(
+            spacing: 12,
+            children: <Widget>[
+              Expanded(
+                child: _buildPane(
+                  'Material',
+                  Scrollbar(
+                    controller: _materialController,
+                    child: _buildList(_materialController, 'material'),
                   ),
-                  child: Text(
-                    'scroll row #$index',
-                    style: const TextStyle(fontSize: 13, color: Colors.black),
+                ),
+              ),
+              Expanded(
+                child: _buildPane(
+                  'Raw + track',
+                  RawScrollbar(
+                    controller: _rawController,
+                    thumbVisibility: true,
+                    trackVisibility: true,
+                    thickness: 8,
+                    radius: const Radius.circular(4),
+                    thumbColor: const Color(0xB3005E7A),
+                    trackColor: const Color(0x14005E7A),
+                    trackBorderColor: const Color(0x33005E7A),
+                    child: _buildList(_rawController, 'raw'),
                   ),
-                );
-              },
-            ),
+                ),
+              ),
+            ],
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildPane(String label, Widget child) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      spacing: 6,
+      children: <Widget>[
+        Text(
+          label,
+          style: const TextStyle(fontSize: 13, color: Colors.black54),
+        ),
+        Expanded(child: child),
+      ],
+    );
+  }
+
+  Widget _buildList(ScrollController controller, String prefix) {
+    return ListView.builder(
+      controller: controller,
+      itemCount: 70,
+      itemExtent: 40,
+      padding: const EdgeInsets.all(10),
+      itemBuilder: (BuildContext context, int index) {
+        return Container(
+          color: index.isEven ? Colors.white : const Color(0xFFF4F7FA),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          child: Text(
+            '$prefix row #$index',
+            style: const TextStyle(fontSize: 13, color: Colors.black),
+          ),
+        );
+      },
     );
   }
 }

@@ -31,6 +31,9 @@ internal static class SampleRoutes
     public const string Scrollbar = "/scrollbar";
     public const string EditableText = "/editable-text";
     public const string MaterialButtons = "/material-buttons";
+    public const string Tabs = "/tabs";
+    public const string InkResponse = "/ink-response";
+    public const string DatePicker = "/date-picker";
     public const string ActionButtons = "/action-buttons";
     public const string Drawer = "/drawer";
     public const string DrawerHeaders = "/drawer-headers";
@@ -42,6 +45,9 @@ internal static class SampleRoutes
     public const string SegmentedButtons = "/segmented-buttons";
     public const string Banner = "/banner";
     public const string SnackBar = "/snack-bar";
+    public const string BottomSheet = "/bottom-sheet";
+    public const string SliverAppBar = "/sliver-app-bar";
+    public const string TextField = "/text-field";
     public const string Dialog = "/dialog";
     public const string PopupMenu = "/popup-menu";
     public const string Dropdown = "/dropdown";
@@ -101,6 +107,9 @@ internal sealed class SampleGalleryScreen : StatelessWidget
     private static readonly IReadOnlyList<SampleRouteDefinition> MaterialDemoPages =
     [
         new(SampleRoutes.MaterialButtons, "Material buttons", "TextButton + ElevatedButton + OutlinedButton + FilledButton", () => new MaterialButtonsDemoPage()),
+        new(SampleRoutes.Tabs, "TabBar + TabBarView", "controller + indicator + scrollable tabs + swipe pages", () => new TabsDemoPage()),
+        new(SampleRoutes.InkResponse, "InkResponse + InkWell", "circle/rectangle ink + gestures + overlay states", () => new InkResponseDemoPage()),
+        new(SampleRoutes.DatePicker, "CalendarDatePicker + YearPicker", "month/day/year selection + predicates + M2/M3 theme states", () => new DatePickerDemoPage()),
         new(SampleRoutes.ActionButtons, "Material action buttons", "back/close/drawer/end-drawer + ActionIconTheme", () => new ActionButtonsDemoPage()),
         new(SampleRoutes.Drawer, "Drawer", "scaffold drawer/endDrawer + theme/widget precedence probes", () => new DrawerDemoPage()),
         new(SampleRoutes.DrawerHeaders, "Drawer headers", "DrawerHeader + UserAccountsDrawerHeader", () => new DrawerHeadersDemoPage()),
@@ -112,6 +121,9 @@ internal sealed class SampleGalleryScreen : StatelessWidget
         new(SampleRoutes.SegmentedButtons, "ToggleButtons + SegmentedButton", "legacy/M3 segmented selection + themes/states", () => new SegmentedButtonsDemoPage()),
         new(SampleRoutes.Banner, "Banner + MaterialBanner", "diagonal ribbon + persistent actions/theme/overflow probes", () => new BannerDemoPage()),
         new(SampleRoutes.SnackBar, "SnackBar + SnackBarAction", "messenger queue + action/close/overflow probes", () => new SnackBarDemoPage()),
+        new(SampleRoutes.BottomSheet, "BottomSheet + ModalBottomSheet", "persistent controller + modal route/drag/theme probes", () => new BottomSheetDemoPage()),
+        new(SampleRoutes.SliverAppBar, "SliverAppBar + FlexibleSpaceBar", "collapse/parallax + pinned/floating/snap + M3 variants", () => new SliverAppBarDemoPage()),
+        new(SampleRoutes.TextField, "InputDecorator + TextField", "labels/borders/supporting text + editable states", () => new TextFieldDemoPage()),
         new(SampleRoutes.Dialog, "Dialog family", "modal route + alert/simple/result/scrollable/theme probes", () => new DialogDemoPage()),
         new(SampleRoutes.PopupMenu, "PopupMenuButton + PopupMenuItem", "anchor + selection/cancel/keyboard/theme probes", () => new PopupMenuDemoPage()),
         new(SampleRoutes.Dropdown, "DropdownButton + DropdownMenuItem", "selection + hint/disabled/dense/expanded/route probes", () => new DropdownDemoPage()),

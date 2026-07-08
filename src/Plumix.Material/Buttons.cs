@@ -1585,6 +1585,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
         Action? onPressed,
         ButtonStyle style,
         Action? onLongPress = null,
+        Action<bool>? onHighlightChanged = null,
         Action<bool>? onHoverChanged = null,
         Action<bool>? onFocusChange = null,
         FocusNode? focusNode = null,
@@ -1607,6 +1608,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
         OnPressed = onPressed;
         Style = style ?? throw new ArgumentNullException(nameof(style));
         OnLongPress = onLongPress;
+        OnHighlightChanged = onHighlightChanged;
         OnHoverChanged = onHoverChanged;
         OnFocusChange = onFocusChange;
         FocusNode = focusNode;
@@ -1632,6 +1634,8 @@ internal sealed class MaterialButtonCore : StatefulWidget
     public ButtonStyle Style { get; }
 
     public Action? OnLongPress { get; }
+
+    public Action<bool>? OnHighlightChanged { get; }
 
     public Action<bool>? OnHoverChanged { get; }
 
@@ -2026,9 +2030,11 @@ internal sealed class MaterialButtonCore : StatefulWidget
 
         private MaterialButtonCore CurrentWidget => (MaterialButtonCore)StateWidget;
 
-        private bool Enabled => CurrentWidget.Enabled ?? CurrentWidget.OnPressed != null;
+        private bool Enabled => CurrentWidget.Enabled
+                                ?? (CurrentWidget.OnPressed != null || CurrentWidget.OnLongPress != null);
 
-        private bool Interactive => Enabled && CurrentWidget.OnPressed != null;
+        private bool Interactive => Enabled
+                                    && (CurrentWidget.OnPressed != null || CurrentWidget.OnLongPress != null);
 
         public override void InitState()
         {
@@ -2220,8 +2226,8 @@ internal sealed class MaterialButtonCore : StatefulWidget
                     child: content);
 
             Widget result = content;
-            Action? tapCallback = Interactive ? HandleTap : null;
-            Action? longPressCallback = Interactive && widget.OnLongPress is not null ? HandleLongPress : null;
+            Action? tapCallback = Enabled && widget.OnPressed is not null ? HandleTap : null;
+            Action? longPressCallback = Enabled && widget.OnLongPress is not null ? HandleLongPress : null;
 
             if (Interactive)
             {
@@ -2429,6 +2435,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
                 _isPressed = value;
                 _suppressFocusOverlay = nextSuppressFocusOverlay;
             });
+            CurrentWidget.OnHighlightChanged?.Invoke(value);
         }
 
         private void SetHovered(bool value)

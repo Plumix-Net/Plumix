@@ -35,8 +35,12 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Then per target control: control file + its theme file + its `src/Plumix.Tests/Material*Tests.cs` + demo pages (`src/Sample/Plumix.Sample/Demos/Material/*`, `dart_sample/lib/demos/material/*`).
 - Paired composition controls such as `GridTile` + `GridTileBar` share one focused test/demo surface when their Flutter implementations are directly coupled.
 - AppBar action controls enter through `ActionButtons.cs` + `ActionIconTheme.cs`, with implied-leading integration covered in `MaterialScaffoldTests.cs`.
+- Legacy Material buttons enter through `MaterialButton.cs` + `ButtonTheme.cs`; shared interaction/rendering remains in `Buttons.cs`, with focused coverage in `MaterialLegacyButtonTests.cs`.
 - Drawer header controls enter through `DrawerHeader.cs`, with geometry and account-details behavior covered in `MaterialDrawerHeaderTests.cs`.
 - Transient message controls enter through `SnackBar.cs` + `SnackBarTheme.cs`, with queue/presentation lifecycle in `ScaffoldMessenger.cs` and coverage in `MaterialSnackBarTests.cs`.
+- Bottom sheets enter through `BottomSheet.cs` + `BottomSheetTheme.cs`; persistent presentation integrates with `Scaffold.cs`, modal presentation with `Widgets/Navigation.cs`, and focused coverage lives in `MaterialBottomSheetTests.cs`.
+- Sliver app bars enter through `SliverAppBar.cs` + `FlexibleSpaceBar.cs`; persistent-header layout lives in `Widgets/Scroll.cs` and `Rendering/Sliver.cs`, with focused coverage in `MaterialSliverAppBarTests.cs`.
+- Material text inputs enter through `TextField.cs` + `InputDecorator.cs` + `InputDecoratorTheme.cs`; editing/IME behavior stays in core `Widgets/TextInput.cs`, with focused coverage in `MaterialTextFieldTests.cs`.
 - Dialog-family controls (`Dialog`, `AlertDialog`, `SimpleDialog`, `SimpleDialogOption`) enter through `Dialog.cs` + `DialogTheme.cs`; modal stacking/result behavior also touches `Widgets/Navigation.cs` and is covered by `MaterialDialogTests.cs`.
 - Popup-menu controls (`PopupMenuButton`, item/checked/divider entries) enter through `PopupMenu.cs` + `PopupMenuTheme.cs`; anchor geometry and route lifecycle also touch `Widgets/Navigation.cs`/`Widgets/Scroll.cs` and are covered by `MaterialPopupMenuTests.cs`.
 - Legacy Material dropdown controls enter through `Dropdown.cs`; selected-size behavior uses core `IndexedStack`, and positioned route/scroll/focus behavior is covered by `MaterialDropdownTests.cs`.
@@ -44,6 +48,10 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - About/license controls enter through `About.cs` plus core `Foundation/Licenses.cs`; dialog/list/detail navigation and registry parsing are covered by `MaterialAboutTests.cs`.
 - Bottom/action bar controls enter through `BottomAppBar.cs` + `BottomAppBarTheme.cs` and `ButtonBar.cs` + `ButtonBarTheme.cs`; Scaffold/FAB geometry and overflow behavior are covered by `MaterialBarControlsTests.cs`.
 - Data-table controls enter through `DataTable.cs` + `DataTableTheme.cs` and `PaginatedDataTable.cs`; shared column negotiation lives in core `Widgets/Table.cs` + `Rendering/Table.cs`, with coverage in `MaterialDataTableTests.cs`.
+- Material scrollbars enter through `src/Plumix.Material/Scrollbar.cs` + `ScrollbarTheme.cs`; raw overlay/interaction behavior lives in core `Widgets/Scrollbar.cs`, with adaptive defaults in `src/Plumix.Cupertino/CupertinoScrollbar.cs` and focused coverage in `MaterialScrollbarTests.cs`.
+- Material tabs enter through `src/Plumix.Material/Tabs.cs` + `TabController.cs` + `TabBarTheme.cs`; page motion lives in core `Widgets/PageView.cs`/`Rendering/PageView.cs`, indicator layout/paint in `RenderTabBar.cs`, and focused coverage in `MaterialTabsTests.cs`.
+- Material ink reactions enter through `src/Plumix.Material/InkWell.cs`; source-required primary/secondary gesture callbacks live in core `Widgets/Gestures.cs` and recognizers, with focused coverage in `MaterialInkResponseTests.cs`.
+- Material calendar pickers enter through `src/Plumix.Material/CalendarDatePicker.cs` + `Date.cs` + `DatePickerTheme.cs`; localization hooks live in `MaterialLocalizations.cs`, month motion uses core `PageView`, and focused coverage lives in `MaterialDatePickerTests.cs`.
 - Primary Tests:
   - `src/Plumix.Tests/MaterialScaffoldTests.cs`
   - `src/Plumix.Tests/MaterialButtonsTests.cs`
@@ -138,6 +146,8 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Primary Tests:
   - `src/Plumix.Tests/ScrollPipelineTests.cs`
   - `src/Plumix.Tests/ScrollInfrastructureTests.cs`
+  - `src/Plumix.Tests/MaterialScrollbarTests.cs`
+  - `src/Plumix.Tests/MaterialSliverAppBarTests.cs`
 - Note:
   - `Scroll.cs` and `Sliver.cs` are large. Enter through tests first.
 

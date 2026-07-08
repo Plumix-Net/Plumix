@@ -19,6 +19,8 @@ public sealed class LongPressGestureRecognizer : GestureRecognizer, IGestureAren
 
     public Action? OnLongPress { get; set; }
 
+    public Action? OnLongPressUp { get; set; }
+
     public override void AddPointer(PointerDownEvent @event)
     {
         if (_trackers.ContainsKey(@event.Pointer))
@@ -77,6 +79,10 @@ public sealed class LongPressGestureRecognizer : GestureRecognizer, IGestureAren
                 }
                 else
                 {
+                    if (tracker.Fired)
+                    {
+                        OnLongPressUp?.Invoke();
+                    }
                     Cleanup(@event.Pointer);
                 }
 
@@ -93,6 +99,12 @@ public sealed class LongPressGestureRecognizer : GestureRecognizer, IGestureAren
 
     private void StartDeadlineTimer(int pointer, LongPressTracker tracker)
     {
+        if (Deadline <= TimeSpan.Zero)
+        {
+            HandleDeadline(pointer, tracker);
+            return;
+        }
+
         var cancellation = tracker.Cancellation;
         _ = Task.Run(async () =>
         {
@@ -106,17 +118,20 @@ public sealed class LongPressGestureRecognizer : GestureRecognizer, IGestureAren
             }
 
             await Dispatcher.UIThread.InvokeAsync(() =>
-            {
-                if (!_trackers.TryGetValue(pointer, out var activeTracker) || !ReferenceEquals(activeTracker, tracker))
-                {
-                    return;
-                }
-
-                activeTracker.DeadlineExceeded = true;
-                activeTracker.Entry.Resolve(GestureDisposition.Accepted);
-                TryFire(pointer, activeTracker);
-            });
+                HandleDeadline(pointer, tracker));
         });
+    }
+
+    private void HandleDeadline(int pointer, LongPressTracker tracker)
+    {
+        if (!_trackers.TryGetValue(pointer, out var activeTracker) || !ReferenceEquals(activeTracker, tracker))
+        {
+            return;
+        }
+
+        activeTracker.DeadlineExceeded = true;
+        activeTracker.Entry.Resolve(GestureDisposition.Accepted);
+        TryFire(pointer, activeTracker);
     }
 
     private void TryFire(int pointer, LongPressTracker tracker)

@@ -23,6 +23,9 @@ class SampleRoutes {
   static const String scrollbar = '/scrollbar';
   static const String editableText = '/editable-text';
   static const String materialButtons = '/material-buttons';
+  static const String tabs = '/tabs';
+  static const String inkResponse = '/ink-response';
+  static const String datePicker = '/date-picker';
   static const String actionButtons = '/action-buttons';
   static const String drawer = '/drawer';
   static const String drawerHeaders = '/drawer-headers';
@@ -34,6 +37,9 @@ class SampleRoutes {
   static const String segmentedButtons = '/segmented-buttons';
   static const String banner = '/banner';
   static const String snackBar = '/snack-bar';
+  static const String bottomSheet = '/bottom-sheet';
+  static const String sliverAppBar = '/sliver-app-bar';
+  static const String textField = '/text-field';
   static const String dialog = '/dialog';
   static const String popupMenu = '/popup-menu';
   static const String dropdown = '/dropdown';

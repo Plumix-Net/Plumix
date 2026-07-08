@@ -28,6 +28,8 @@ internal sealed class MaterialButtonsDemoPageState : State
     private int _iconButtonTaps;
     private int _filledIconButtonTaps;
     private int _outlinedIconButtonTaps;
+    private int _materialButtonTaps;
+    private int _rawMaterialButtonTaps;
     private bool _iconButtonSelected;
 
     public override Widget Build(BuildContext context)
@@ -58,7 +60,7 @@ internal sealed class MaterialButtonsDemoPageState : State
                             background: Color.Parse("#FFF3E8D8")),
                     ]),
                 new Text(
-                    $"enabled={(_enabled ? "true" : "false")}, text={_textButtonTaps}, elevated={_elevatedButtonTaps}, outlined={_outlinedButtonTaps}, filled={_filledButtonTaps}, tonal={_filledTonalButtonTaps}, icon={_iconButtonTaps}, filledIcon={_filledIconButtonTaps}, outlinedIcon={_outlinedIconButtonTaps}, iconSelected={(_iconButtonSelected ? "true" : "false")}",
+                    $"enabled={(_enabled ? "true" : "false")}, text={_textButtonTaps}, elevated={_elevatedButtonTaps}, outlined={_outlinedButtonTaps}, filled={_filledButtonTaps}, tonal={_filledTonalButtonTaps}, material={_materialButtonTaps}, raw={_rawMaterialButtonTaps}, icon={_iconButtonTaps}, filledIcon={_filledIconButtonTaps}, outlinedIcon={_outlinedIconButtonTaps}, iconSelected={(_iconButtonSelected ? "true" : "false")}",
                     fontSize: 12,
                     color: Color.Parse("#FF607D8B")),
                 new SizedBox(
@@ -86,6 +88,25 @@ internal sealed class MaterialButtonsDemoPageState : State
                     child: FilledButton.Tonal(
                         onPressed: _enabled ? OnFilledTonalButtonTap : null,
                         child: new Text($"FilledButton.tonal taps: {_filledTonalButtonTaps}"))),
+                new Row(
+                    spacing: 8,
+                    children:
+                    [
+                        new Expanded(
+                            child: new MaterialButton(
+                                onPressed: _enabled ? OnMaterialButtonTap : null,
+                                color: Color.Parse("#FFE0E0E0"),
+                                child: new Text($"Material: {_materialButtonTaps}"))),
+                        new Expanded(
+                            child: new RawMaterialButton(
+                                onPressed: _enabled ? OnRawMaterialButtonTap : null,
+                                fillColor: Color.Parse("#FFDDEBF7"),
+                                hoverColor: Color.Parse("#1F005E7A"),
+                                highlightColor: Color.Parse("#33005E7A"),
+                                splashColor: Color.Parse("#33005E7A"),
+                                shape: BorderRadius.Circular(6),
+                                child: new Text($"Raw: {_rawMaterialButtonTaps}"))),
+                    ]),
                 new Row(
                     spacing: 8,
                     children:
@@ -185,6 +206,8 @@ internal sealed class MaterialButtonsDemoPageState : State
             _iconButtonTaps = 0;
             _filledIconButtonTaps = 0;
             _outlinedIconButtonTaps = 0;
+            _materialButtonTaps = 0;
+            _rawMaterialButtonTaps = 0;
             _iconButtonSelected = false;
             _enabled = true;
         });
@@ -213,6 +236,16 @@ internal sealed class MaterialButtonsDemoPageState : State
     private void OnFilledTonalButtonTap()
     {
         SetState(() => _filledTonalButtonTaps += 1);
+    }
+
+    private void OnMaterialButtonTap()
+    {
+        SetState(() => _materialButtonTaps += 1);
+    }
+
+    private void OnRawMaterialButtonTap()
+    {
+        SetState(() => _rawMaterialButtonTaps += 1);
     }
 
     private void OnIconButtonTap()
