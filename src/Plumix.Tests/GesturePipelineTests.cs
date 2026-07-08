@@ -154,6 +154,83 @@ public sealed class GesturePipelineTests
     }
 
     [Fact]
+    public void GestureBinding_TapRecognizer_ReportsPrimaryUpAndSecondaryLifecycle()
+    {
+        var binding = GestureBinding.Instance;
+        binding.ResetForTests();
+        var events = new List<string>();
+        var recognizer = new TapGestureRecognizer
+        {
+            OnTapUp = _ => events.Add("primary-up"),
+            OnTap = () => events.Add("primary"),
+            OnSecondaryTapDown = _ => events.Add("secondary-down"),
+            OnSecondaryTapUp = _ => events.Add("secondary-up"),
+            OnSecondaryTap = () => events.Add("secondary"),
+        };
+
+        try
+        {
+            var listener = new RenderPointerListener(
+                onPointerDown: recognizer.AddPointer,
+                behavior: HitTestBehavior.Opaque,
+                child: new FixedHitTestBox(new Size(80, 80), hitSelf: true));
+            var pipeline = BuildPipeline(listener);
+            var now = DateTime.UtcNow;
+
+            binding.HandlePointerEvent(pipeline.Root, new PointerDownEvent(
+                23, PointerDeviceKind.Mouse, new Point(12, 12), PointerButtons.Primary, now));
+            binding.HandlePointerEvent(pipeline.Root, new PointerUpEvent(
+                23, PointerDeviceKind.Mouse, new Point(12, 12), PointerButtons.None, now.AddMilliseconds(20)));
+            binding.HandlePointerEvent(pipeline.Root, new PointerDownEvent(
+                24, PointerDeviceKind.Mouse, new Point(12, 12), PointerButtons.Secondary, now.AddMilliseconds(40)));
+            binding.HandlePointerEvent(pipeline.Root, new PointerUpEvent(
+                24, PointerDeviceKind.Mouse, new Point(12, 12), PointerButtons.None, now.AddMilliseconds(60)));
+
+            Assert.Equal(["primary-up", "primary", "secondary-down", "secondary-up", "secondary"], events);
+        }
+        finally
+        {
+            recognizer.Dispose();
+            binding.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void GestureBinding_LongPressRecognizer_ReportsUpAfterAcceptedPress()
+    {
+        var binding = GestureBinding.Instance;
+        binding.ResetForTests();
+        var events = new List<string>();
+        var recognizer = new LongPressGestureRecognizer
+        {
+            Deadline = TimeSpan.Zero,
+            OnLongPress = () => events.Add("long-press"),
+            OnLongPressUp = () => events.Add("long-press-up"),
+        };
+
+        try
+        {
+            var listener = new RenderPointerListener(
+                onPointerDown: recognizer.AddPointer,
+                behavior: HitTestBehavior.Opaque,
+                child: new FixedHitTestBox(new Size(80, 80), hitSelf: true));
+            var pipeline = BuildPipeline(listener);
+            var now = DateTime.UtcNow;
+            binding.HandlePointerEvent(pipeline.Root, new PointerDownEvent(
+                25, PointerDeviceKind.Mouse, new Point(12, 12), PointerButtons.Primary, now));
+            binding.HandlePointerEvent(pipeline.Root, new PointerUpEvent(
+                25, PointerDeviceKind.Mouse, new Point(12, 12), PointerButtons.None, now.AddMilliseconds(60)));
+
+            Assert.Equal(["long-press", "long-press-up"], events);
+        }
+        finally
+        {
+            recognizer.Dispose();
+            binding.ResetForTests();
+        }
+    }
+
+    [Fact]
     public void GestureBinding_HorizontalDragRecognizer_ProducesPrimaryDelta()
     {
         var binding = GestureBinding.Instance;

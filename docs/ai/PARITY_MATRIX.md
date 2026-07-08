@@ -4,7 +4,7 @@ Scope: structural parity of sample routes/modules between C# and Dart samples.
 
 Policy note: sample parity updates must follow `docs/ai/PORTING_MODE.md` (Dart source of truth, strict `1:1` default, documented divergences).
 
-Last checked: 2026-07-07
+Last checked: 2026-07-08
 
 Status legend:
 
@@ -19,6 +19,7 @@ Status legend:
 | App bootstrap | `src/Sample/Plumix.Sample/CounterApp.cs` | `dart_sample/lib/counter_app.dart` | done | Counter model + scope app root present on both sides; C# root uses framework Material `Theme` + `ScaffoldMessenger`, while Dart `MaterialApp` provides the matching theme/messenger infrastructure. C# `ThemeData.Light` defaults are aligned to Flutter M3 token values for key sample surfaces/buttons and button typography. |
 | Route constants + route data | `src/Sample/Plumix.Sample/SampleGalleryScreen.cs` | `dart_sample/lib/sample_routes.dart` | done | Same route set including navigator details, Material/Cupertino controls, navigation surfaces, banners, snackbars, dialogs, progress indicators, sliders, chips, and general rendering demos. |
 | Sample gallery menu | `src/Sample/Plumix.Sample/SampleGalleryScreen.cs` | `dart_sample/lib/sample_gallery_screen.dart` | done | Menu is now tab-structured on both sides through bottom navigation (`Material` / `Cupertino` / `General`) with the same demo-to-tab mapping and unchanged route set; menu and demo shells still use Material structure (`Scaffold` + `AppBar`), route entries remain outlined buttons, and demo pages now rely on default `AppBar` implied back leading (title-only app bars) on non-root routes. |
+| InkResponse + InkWell demo | `src/Sample/Plumix.Sample/Demos/Material/InkResponseDemoPage.cs` | `dart_sample/lib/demos/material/ink_response_demo_page.dart` | verify-runtime | Demonstrates circle/uncontained versus rectangle/contained ink, enabled/disabled primary and secondary gestures, long press, hover/highlight callbacks, and custom `overlayColor` state resolution. |
 | Counter page | `src/Sample/Plumix.Sample/CounterScreen.cs` | `dart_sample/lib/counter_screen.dart` | verify-runtime | Structural match; centered label parity hardened for intrinsic-width rows (notably `Keyed List`) via `RenderParagraph` loose-width center/right/end alignment normalization, and both samples now wrap page content with `SingleChildScrollView` to avoid bottom overflow-debug zones on shorter viewports. |
 | Bloc counter demo | `src/Sample/Plumix.Sample/Demos/General/BlocCounterDemoPage.cs` | `dart_sample/lib/demos/general/bloc_counter_demo_page.dart` | verify-runtime | Demonstrates `BlocProvider` + `BlocBuilder` + `BlocListener` + `BlocSelector` parity with increment/decrement/reset actions and restartable refresh events (`350ms` and `80ms`) to verify cancellation/replacement behavior under rapid dispatch. |
 | Navigator demo | `src/Sample/Plumix.Sample/Demos/General/NavigatorDemoPage.cs` | `dart_sample/lib/demos/general/navigator_demo_page.dart` | verify-runtime | Route operations and observer flows are mirrored. |

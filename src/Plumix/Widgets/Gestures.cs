@@ -92,8 +92,14 @@ public sealed class RawGestureDetector : StatefulWidget
         Action? onTap = null,
         Action? onDoubleTap = null,
         Action<PointerDownEvent>? onTapDown = null,
+        Action<PointerUpEvent>? onTapUp = null,
         Action? onTapCancel = null,
         Action? onLongPress = null,
+        Action? onLongPressUp = null,
+        Action? onSecondaryTap = null,
+        Action<PointerDownEvent>? onSecondaryTapDown = null,
+        Action<PointerUpEvent>? onSecondaryTapUp = null,
+        Action? onSecondaryTapCancel = null,
         Action<DragStartDetails>? onHorizontalDragStart = null,
         Action<DragUpdateDetails>? onHorizontalDragUpdate = null,
         Action<DragEndDetails>? onHorizontalDragEnd = null,
@@ -113,8 +119,14 @@ public sealed class RawGestureDetector : StatefulWidget
         OnTap = onTap;
         OnDoubleTap = onDoubleTap;
         OnTapDown = onTapDown;
+        OnTapUp = onTapUp;
         OnTapCancel = onTapCancel;
         OnLongPress = onLongPress;
+        OnLongPressUp = onLongPressUp;
+        OnSecondaryTap = onSecondaryTap;
+        OnSecondaryTapDown = onSecondaryTapDown;
+        OnSecondaryTapUp = onSecondaryTapUp;
+        OnSecondaryTapCancel = onSecondaryTapCancel;
         OnHorizontalDragStart = onHorizontalDragStart;
         OnHorizontalDragUpdate = onHorizontalDragUpdate;
         OnHorizontalDragEnd = onHorizontalDragEnd;
@@ -140,9 +152,15 @@ public sealed class RawGestureDetector : StatefulWidget
     public Action? OnTap { get; }
     public Action? OnDoubleTap { get; }
     public Action<PointerDownEvent>? OnTapDown { get; }
+    public Action<PointerUpEvent>? OnTapUp { get; }
     public Action? OnTapCancel { get; }
 
     public Action? OnLongPress { get; }
+    public Action? OnLongPressUp { get; }
+    public Action? OnSecondaryTap { get; }
+    public Action<PointerDownEvent>? OnSecondaryTapDown { get; }
+    public Action<PointerUpEvent>? OnSecondaryTapUp { get; }
+    public Action? OnSecondaryTapCancel { get; }
 
     public Action<DragStartDetails>? OnHorizontalDragStart { get; }
 
@@ -218,23 +236,31 @@ public sealed class RawGestureDetector : StatefulWidget
         {
             var widget = CurrentWidget;
 
-            if (widget.OnTap != null || widget.OnDoubleTap != null)
+            if (widget.OnTap != null || widget.OnDoubleTap != null || widget.OnTapDown != null
+                || widget.OnTapUp != null || widget.OnSecondaryTap != null
+                || widget.OnSecondaryTapDown != null || widget.OnSecondaryTapUp != null)
             {
                 _tap ??= new TapGestureRecognizer();
                 _tap.OnTap = widget.OnTap;
                 _tap.OnDoubleTap = widget.OnDoubleTap;
                 _tap.OnTapDown = widget.OnTapDown;
+                _tap.OnTapUp = widget.OnTapUp;
                 _tap.OnTapCancel = widget.OnTapCancel;
+                _tap.OnSecondaryTap = widget.OnSecondaryTap;
+                _tap.OnSecondaryTapDown = widget.OnSecondaryTapDown;
+                _tap.OnSecondaryTapUp = widget.OnSecondaryTapUp;
+                _tap.OnSecondaryTapCancel = widget.OnSecondaryTapCancel;
             }
             else
             {
                 DisposeRecognizer(ref _tap);
             }
 
-            if (widget.OnLongPress != null)
+            if (widget.OnLongPress != null || widget.OnLongPressUp != null)
             {
                 _longPress ??= new LongPressGestureRecognizer();
                 _longPress.OnLongPress = widget.OnLongPress;
+                _longPress.OnLongPressUp = widget.OnLongPressUp;
             }
             else
             {
@@ -290,8 +316,14 @@ public sealed class GestureDetector : StatelessWidget
         Action? onTap = null,
         Action? onDoubleTap = null,
         Action<PointerDownEvent>? onTapDown = null,
+        Action<PointerUpEvent>? onTapUp = null,
         Action? onTapCancel = null,
         Action? onLongPress = null,
+        Action? onLongPressUp = null,
+        Action? onSecondaryTap = null,
+        Action<PointerDownEvent>? onSecondaryTapDown = null,
+        Action<PointerUpEvent>? onSecondaryTapUp = null,
+        Action? onSecondaryTapCancel = null,
         Action<DragStartDetails>? onHorizontalDragStart = null,
         Action<DragUpdateDetails>? onHorizontalDragUpdate = null,
         Action<DragEndDetails>? onHorizontalDragEnd = null,
@@ -307,8 +339,14 @@ public sealed class GestureDetector : StatelessWidget
         OnTap = onTap;
         OnDoubleTap = onDoubleTap;
         OnTapDown = onTapDown;
+        OnTapUp = onTapUp;
         OnTapCancel = onTapCancel;
         OnLongPress = onLongPress;
+        OnLongPressUp = onLongPressUp;
+        OnSecondaryTap = onSecondaryTap;
+        OnSecondaryTapDown = onSecondaryTapDown;
+        OnSecondaryTapUp = onSecondaryTapUp;
+        OnSecondaryTapCancel = onSecondaryTapCancel;
         OnHorizontalDragStart = onHorizontalDragStart;
         OnHorizontalDragUpdate = onHorizontalDragUpdate;
         OnHorizontalDragEnd = onHorizontalDragEnd;
@@ -326,9 +364,15 @@ public sealed class GestureDetector : StatelessWidget
     public Action? OnTap { get; }
     public Action? OnDoubleTap { get; }
     public Action<PointerDownEvent>? OnTapDown { get; }
+    public Action<PointerUpEvent>? OnTapUp { get; }
     public Action? OnTapCancel { get; }
 
     public Action? OnLongPress { get; }
+    public Action? OnLongPressUp { get; }
+    public Action? OnSecondaryTap { get; }
+    public Action<PointerDownEvent>? OnSecondaryTapDown { get; }
+    public Action<PointerUpEvent>? OnSecondaryTapUp { get; }
+    public Action? OnSecondaryTapCancel { get; }
 
     public Action<DragStartDetails>? OnHorizontalDragStart { get; }
 
@@ -354,8 +398,14 @@ public sealed class GestureDetector : StatelessWidget
             onTap: OnTap,
             onDoubleTap: OnDoubleTap,
             onTapDown: OnTapDown,
+            onTapUp: OnTapUp,
             onTapCancel: OnTapCancel,
             onLongPress: OnLongPress,
+            onLongPressUp: OnLongPressUp,
+            onSecondaryTap: OnSecondaryTap,
+            onSecondaryTapDown: OnSecondaryTapDown,
+            onSecondaryTapUp: OnSecondaryTapUp,
+            onSecondaryTapCancel: OnSecondaryTapCancel,
             onHorizontalDragStart: OnHorizontalDragStart,
             onHorizontalDragUpdate: OnHorizontalDragUpdate,
             onHorizontalDragEnd: OnHorizontalDragEnd,

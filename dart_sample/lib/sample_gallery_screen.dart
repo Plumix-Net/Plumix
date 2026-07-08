@@ -33,6 +33,7 @@ import 'demos/material/divider_demo_page.dart';
 import 'demos/general/editable_text_demo_page.dart';
 import 'demos/general/fitted_box_demo_page.dart';
 import 'demos/material/floating_action_button_demo_page.dart';
+import 'demos/material/ink_response_demo_page.dart';
 import 'demos/general/fractionally_sized_box_demo_page.dart';
 import 'demos/general/grid_view_demo_page.dart';
 import 'demos/material/grid_tile_demo_page.dart';
@@ -89,6 +90,12 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'TabBar + TabBarView',
       subtitle: 'controller + indicator + scrollable tabs + swipe pages',
       builder: () => const TabsDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.inkResponse,
+      title: 'InkResponse + InkWell',
+      subtitle: 'circle/rectangle ink + gestures + overlay states',
+      builder: () => const InkResponseDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.drawer,

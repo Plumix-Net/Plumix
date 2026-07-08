@@ -26,6 +26,7 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         string? hint = null,
         SemanticsFlags flags = SemanticsFlags.None,
         Action? onTap = null,
+        Action? onLongPress = null,
         Action? onDismiss = null,
         bool liveRegion = false,
         bool container = false,
@@ -50,6 +51,7 @@ public sealed class Semantics : SingleChildRenderObjectWidget
                 | (@checked == true ? SemanticsFlags.IsChecked : SemanticsFlags.None)
                 | (selected == true ? SemanticsFlags.IsSelected : SemanticsFlags.None);
         OnTap = onTap;
+        OnLongPress = onLongPress;
         OnDismiss = onDismiss;
         LiveRegion = liveRegion;
         Container = container;
@@ -69,6 +71,8 @@ public sealed class Semantics : SingleChildRenderObjectWidget
     public SemanticsFlags Flags { get; }
 
     public Action? OnTap { get; }
+
+    public Action? OnLongPress { get; }
 
     public Action? OnDismiss { get; }
 
@@ -98,6 +102,7 @@ public sealed class Semantics : SingleChildRenderObjectWidget
             role: Role,
             flags: Flags,
             onTap: OnTap,
+            onLongPress: OnLongPress,
             onDismiss: OnDismiss,
             liveRegion: LiveRegion,
             container: Container,
@@ -112,6 +117,7 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         semantics.Role = Role;
         semantics.Flags = Flags;
         semantics.OnTap = OnTap;
+        semantics.OnLongPress = OnLongPress;
         semantics.OnDismiss = OnDismiss;
         semantics.LiveRegion = LiveRegion;
         semantics.Container = Container;

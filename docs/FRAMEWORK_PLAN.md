@@ -643,6 +643,10 @@ Progress update (2026-03-19):
   - added `InputDecoration`, underline/outline/no-border shapes, `InputDecorationThemeData`/`InputDecorationTheme`, M2/M3 fill and state-border resolution, floating/inline labels, hint/helper/error/counter, prefix/suffix/icon slots, dense/collapsed and constraints composition;
   - expanded core `EditableText` for source-required styled, read-only, obscured, submitted, semantic, and grapheme-limited input while preserving the existing IME/selection/clipboard/focus pipeline;
   - added focused `MaterialTextFieldTests` and a mirrored `/text-field` C#/Dart runtime demo. Advanced selection overlays/context menus, autofill/spellcheck/restoration and exact private decorator render geometry remain documented shared-primitive gaps.
+- Added paired `InkResponse` + `InkWell` ports:
+  - replaced the earlier `InkWell` subset with a shared Flutter-shaped interaction state machine covering primary/secondary taps, tap-up/cancel, double tap, long-press/up, focus, hover, feedback, semantics, and external `MaterialStatesController` synchronization;
+  - matched circle/uncontained `InkResponse` versus rectangle/contained `InkWell` geometry, radius/border resolution, splash migration, and `overlayColor -> legacy color -> ThemeData` state-color precedence;
+  - added source-required gesture callback and long-press semantics plumbing, fixed `RenderTabBar` indicator geometry refresh when ink-child layout remains stable, added focused `MaterialInkResponseTests`, and a mirrored `/ink-response` C#/Dart runtime demo. Pluggable ink factories and ancestor-Material ink ownership remain documented shared-primitive gaps.
 - Remaining divergence for floating action button in current framework scope:
   - none documented in current framework scope.
 

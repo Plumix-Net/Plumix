@@ -79,6 +79,12 @@ internal sealed class RenderTabBar : RenderBox,
         Action<IReadOnlyList<Rect>, double>? onLayout, Thickness labelPadding)
     {
         var layoutChanged = _isScrollable != isScrollable || _alignment != alignment || _textDirection != textDirection;
+        var indicatorGeometryChanged = Math.Abs(_animationValue - animationValue) > 0.000001
+                                       || _indicatorSize != indicatorSize
+                                       || Math.Abs(_indicatorWeight - indicatorWeight) > 0.000001
+                                       || _indicatorPadding != indicatorPadding
+                                       || _labelPadding != labelPadding
+                                       || _indicatorAnimation != indicatorAnimation;
         _animationValue = animationValue;
         _currentIndex = currentIndex;
         _previousIndex = previousIndex;
@@ -96,7 +102,14 @@ internal sealed class RenderTabBar : RenderBox,
         _indicatorAnimation = indicatorAnimation;
         _textDirection = textDirection;
         _onLayout = onLayout;
-        if (layoutChanged) MarkNeedsLayout();
+        if (layoutChanged)
+        {
+            MarkNeedsLayout();
+        }
+        else if (indicatorGeometryChanged)
+        {
+            UpdateIndicatorRect();
+        }
         MarkNeedsPaint();
     }
 

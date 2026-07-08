@@ -1891,6 +1891,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
     private SemanticsRole _role;
     private SemanticsFlags _flags;
     private Action? _onTap;
+    private Action? _onLongPress;
     private Action? _onDismiss;
     private bool _liveRegion;
     private bool _container;
@@ -1902,6 +1903,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         SemanticsRole role = SemanticsRole.None,
         SemanticsFlags flags = SemanticsFlags.None,
         Action? onTap = null,
+        Action? onLongPress = null,
         Action? onDismiss = null,
         bool liveRegion = false,
         bool container = false,
@@ -1913,6 +1915,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         _role = role;
         _flags = flags;
         _onTap = onTap;
+        _onLongPress = onLongPress;
         _onDismiss = onDismiss;
         _liveRegion = liveRegion;
         _container = container;
@@ -1998,6 +2001,17 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         }
     }
 
+    public Action? OnLongPress
+    {
+        get => _onLongPress;
+        set
+        {
+            if (ReferenceEquals(_onLongPress, value)) return;
+            _onLongPress = value;
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
     public bool LiveRegion
     {
         get => _liveRegion;
@@ -2046,6 +2060,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
             && _role == SemanticsRole.None
             && _flags == SemanticsFlags.None
             && _onTap is null
+            && _onLongPress is null
             && _onDismiss is null
             && !_liveRegion
             && !_container
@@ -2081,6 +2096,10 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         if (_onTap is not null)
         {
             configuration.AddActionHandler(SemanticsActions.Tap, _onTap);
+        }
+        if (_onLongPress is not null)
+        {
+            configuration.AddActionHandler(SemanticsActions.LongPress, _onLongPress);
         }
         if (_onDismiss is not null)
         {

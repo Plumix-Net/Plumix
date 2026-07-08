@@ -296,7 +296,7 @@ public sealed class MaterialDialogTests : IDisposable
         Assert.NotNull(tappable);
         Assert.True(tappable!.PerformAction(SemanticsActions.Tap));
         Assert.Equal(1, taps);
-        Assert.Single(FindDescendants<RenderInkSplash>(enabled.RenderView));
+        Assert.Single(FindDescendants<RenderInkResponsePaint>(enabled.RenderView));
 
         using var disabled = new WidgetRenderHarness(Wrap(
             ThemeData.Light,

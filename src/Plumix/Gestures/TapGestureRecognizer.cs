@@ -23,7 +23,12 @@ public sealed class TapGestureRecognizer : GestureRecognizer, IGestureArenaMembe
     public Action? OnTap { get; set; }
     public Action? OnDoubleTap { get; set; }
     public Action<PointerDownEvent>? OnTapDown { get; set; }
+    public Action<PointerUpEvent>? OnTapUp { get; set; }
     public Action? OnTapCancel { get; set; }
+    public Action? OnSecondaryTap { get; set; }
+    public Action<PointerDownEvent>? OnSecondaryTapDown { get; set; }
+    public Action<PointerUpEvent>? OnSecondaryTapUp { get; set; }
+    public Action? OnSecondaryTapCancel { get; set; }
 
     public override void AddPointer(PointerDownEvent @event)
     {
@@ -33,8 +38,16 @@ public sealed class TapGestureRecognizer : GestureRecognizer, IGestureArenaMembe
         }
 
         var arenaEntry = GestureArena.Add(@event.Pointer, this);
-        _trackers[@event.Pointer] = new TapTracker(@event.Position, arenaEntry);
-        OnTapDown?.Invoke(@event);
+        var isSecondary = (@event.Buttons & PointerButtons.Secondary) != 0;
+        _trackers[@event.Pointer] = new TapTracker(@event.Position, arenaEntry, isSecondary);
+        if (isSecondary)
+        {
+            OnSecondaryTapDown?.Invoke(@event);
+        }
+        else
+        {
+            OnTapDown?.Invoke(@event);
+        }
         StartTrackingPointer(@event.Pointer);
     }
 
@@ -51,7 +64,17 @@ public sealed class TapGestureRecognizer : GestureRecognizer, IGestureArenaMembe
 
     public void RejectGesture(int pointer)
     {
-        OnTapCancel?.Invoke();
+        if (_trackers.TryGetValue(pointer, out var tracker))
+        {
+            if (tracker.IsSecondary)
+            {
+                OnSecondaryTapCancel?.Invoke();
+            }
+            else
+            {
+                OnTapCancel?.Invoke();
+            }
+        }
         Cleanup(pointer);
     }
 
@@ -76,6 +99,7 @@ public sealed class TapGestureRecognizer : GestureRecognizer, IGestureArenaMembe
             }
             case PointerUpEvent:
             {
+                tracker.UpEvent = (PointerUpEvent)@event;
                 tracker.UpSeen = true;
                 tracker.Entry.Resolve(GestureDisposition.Accepted);
                 TryFire(@event.Pointer, tracker);
@@ -98,7 +122,26 @@ public sealed class TapGestureRecognizer : GestureRecognizer, IGestureArenaMembe
         }
 
         tracker.Fired = true;
-        FireTap(tracker.InitialPosition);
+        if (tracker.UpEvent is not null)
+        {
+            if (tracker.IsSecondary)
+            {
+                OnSecondaryTapUp?.Invoke(tracker.UpEvent);
+            }
+            else
+            {
+                OnTapUp?.Invoke(tracker.UpEvent);
+            }
+        }
+
+        if (tracker.IsSecondary)
+        {
+            OnSecondaryTap?.Invoke();
+        }
+        else
+        {
+            FireTap(tracker.InitialPosition);
+        }
         Cleanup(pointer);
     }
 
@@ -171,15 +214,20 @@ public sealed class TapGestureRecognizer : GestureRecognizer, IGestureArenaMembe
 
     private sealed class TapTracker
     {
-        public TapTracker(Point initialPosition, GestureArenaEntry entry)
+        public TapTracker(Point initialPosition, GestureArenaEntry entry, bool isSecondary)
         {
             InitialPosition = initialPosition;
             Entry = entry;
+            IsSecondary = isSecondary;
         }
 
         public Point InitialPosition { get; }
 
         public GestureArenaEntry Entry { get; }
+
+        public bool IsSecondary { get; }
+
+        public PointerUpEvent? UpEvent { get; set; }
 
         public bool Accepted { get; set; }
 

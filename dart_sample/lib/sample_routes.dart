@@ -24,6 +24,7 @@ class SampleRoutes {
   static const String editableText = '/editable-text';
   static const String materialButtons = '/material-buttons';
   static const String tabs = '/tabs';
+  static const String inkResponse = '/ink-response';
   static const String actionButtons = '/action-buttons';
   static const String drawer = '/drawer';
   static const String drawerHeaders = '/drawer-headers';
