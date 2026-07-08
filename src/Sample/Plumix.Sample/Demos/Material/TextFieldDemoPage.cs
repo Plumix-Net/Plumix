@@ -19,10 +19,13 @@ public sealed class TextFieldDemoPage : StatefulWidget
         private readonly TextEditingController _password = new();
         private readonly TextEditingController _notes = new();
         private readonly TextEditingController _readOnly = new("Read-only value");
+        private readonly TextEditingController _formName = new();
+        private readonly LabeledGlobalKey<FormState> _formKey = new("text-form");
         private bool _enabled = true;
         private bool _obscure = true;
         private bool _error;
         private string _submitted = "none";
+        private string _formStatus = "not validated";
 
         public override Widget Build(BuildContext context) => new SingleChildScrollView(
             child: new Column(
@@ -79,11 +82,64 @@ public sealed class TextFieldDemoPage : StatefulWidget
                         readOnly: true,
                         decoration: InputDecoration.Collapsed("Read only")),
                     new Text($"Last submitted email: {_submitted}", fontSize: 13),
+                    new Divider(),
+                    new Text("TextFormField + Form", fontSize: 18),
+                    new Form(
+                        key: _formKey,
+                        autovalidateMode: AutovalidateMode.OnUserInteraction,
+                        child: new Column(
+                            crossAxisAlignment: CrossAxisAlignment.Stretch,
+                            spacing: 8,
+                            children:
+                            [
+                                new TextFormField(
+                                    controller: _formName,
+                                    decoration: new InputDecoration(
+                                        labelText: "Display name",
+                                        helperText: "Required form field",
+                                        border: new OutlineInputBorder()),
+                                    validator: value => string.IsNullOrWhiteSpace(value)
+                                        ? "Enter a display name"
+                                        : value.Length < 3 ? "Use at least 3 characters" : null,
+                                    onSaved: value => SetState(() => _formStatus = $"saved: {value}")),
+                                new Row(
+                                    spacing: 8,
+                                    children:
+                                    [
+                                        Control("Validate", ValidateForm),
+                                        Control("Save", SaveForm),
+                                        Control("Reset", ResetForm),
+                                    ]),
+                                new Text($"Form status: {_formStatus}", fontSize: 13),
+                            ])),
                 ]));
 
         public override void Dispose()
         {
-            _email.Dispose(); _password.Dispose(); _notes.Dispose(); _readOnly.Dispose();
+            _email.Dispose(); _password.Dispose(); _notes.Dispose(); _readOnly.Dispose(); _formName.Dispose();
+        }
+
+        private void ValidateForm()
+        {
+            var valid = _formKey.CurrentState?.Validate() == true;
+            SetState(() => _formStatus = valid ? "valid" : "invalid");
+        }
+
+        private void SaveForm()
+        {
+            var form = _formKey.CurrentState;
+            if (form?.Validate() != true)
+            {
+                SetState(() => _formStatus = "invalid");
+                return;
+            }
+            form.Save();
+        }
+
+        private void ResetForm()
+        {
+            _formKey.CurrentState?.Reset();
+            SetState(() => _formStatus = "reset");
         }
 
         private static Widget Control(string label, Action action) => new TextButton(new Text(label, fontSize: 12), action);

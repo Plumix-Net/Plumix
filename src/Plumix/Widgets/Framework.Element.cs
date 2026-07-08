@@ -272,6 +272,11 @@ public abstract class Element
                 Owner?.RegisterGlobalKey(newGlobalKey, this);
             }
         }
+        else if (!ReferenceEquals(oldGlobalKey, newGlobalKey))
+        {
+            oldGlobalKey?.DetachElement(this);
+            newGlobalKey?.AttachElement(this);
+        }
     }
 
     internal virtual void ForgetChild(Element child)

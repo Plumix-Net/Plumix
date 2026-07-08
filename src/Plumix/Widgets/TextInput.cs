@@ -588,6 +588,7 @@ public sealed class EditableText : StatefulWidget
         TextAlign textAlign = TextAlign.Start,
         TextDirection? textDirection = null,
         bool canRequestFocus = true,
+        FocusOnKeyEventCallback? onKeyEvent = null,
         Key? key = null) : base(key)
     {
         if (string.IsNullOrEmpty(obscuringCharacter) || obscuringCharacter.Length != 1)
@@ -618,6 +619,7 @@ public sealed class EditableText : StatefulWidget
         TextAlign = textAlign;
         TextDirection = textDirection;
         CanRequestFocus = canRequestFocus;
+        OnKeyEvent = onKeyEvent;
     }
 
     public TextEditingController Controller { get; }
@@ -656,6 +658,7 @@ public sealed class EditableText : StatefulWidget
     public TextAlign TextAlign { get; }
     public TextDirection? TextDirection { get; }
     public bool CanRequestFocus { get; }
+    public FocusOnKeyEventCallback? OnKeyEvent { get; }
 
     public override State CreateState()
     {
@@ -804,6 +807,11 @@ public sealed class EditableText : StatefulWidget
 
         private KeyEventResult HandleKeyEvent(FocusNode node, KeyEvent @event)
         {
+            if (Widget.OnKeyEvent?.Invoke(node, @event) == KeyEventResult.Handled)
+            {
+                return KeyEventResult.Handled;
+            }
+
             if (!Widget.Enabled || !@event.IsDown)
             {
                 return KeyEventResult.Ignored;

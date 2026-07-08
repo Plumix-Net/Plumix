@@ -63,10 +63,38 @@ public record ObjectKey(object? Value) : LocalKey;
 ///  * The discussion at [Widget.key] for more information about how widgets use
 /// keys.
 /// </summary>
-public abstract record GlobalKey : Key;
+public abstract record GlobalKey : Key
+{
+    private sealed class CurrentElementHolder(Element element)
+    {
+        public Element Element { get; } = element;
+    }
+
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<GlobalKey, CurrentElementHolder>
+        CurrentElements = new();
+
+    internal Element? CurrentElement => CurrentElements.TryGetValue(this, out var holder) ? holder.Element : null;
+
+    public BuildContext? CurrentContext => CurrentElement is null ? null : new BuildContext(CurrentElement);
+    public Widget? CurrentWidget => CurrentElement?.Widget;
+
+    internal void AttachElement(Element element)
+    {
+        CurrentElements.Remove(this);
+        CurrentElements.Add(this, new CurrentElementHolder(element));
+    }
+
+    internal void DetachElement(Element element)
+    {
+        if (CurrentElements.TryGetValue(this, out var current) && ReferenceEquals(current.Element, element))
+            CurrentElements.Remove(this);
+    }
+}
 
 public abstract record GlobalKey<T> : GlobalKey where T : State
 {
+    public T? CurrentState => (CurrentElement as StatefulElement)?.State as T;
+
     //   /// Creates a [LabeledGlobalKey], which is a [GlobalKey] with a label used for
 //   /// debugging.
 //   ///

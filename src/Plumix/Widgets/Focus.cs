@@ -291,6 +291,8 @@ public sealed class FocusManager
 
     public FocusNode? PrimaryFocus { get; private set; }
 
+    internal event Action? PrimaryFocusChanged;
+
     public FocusScopeNode RootScope => _rootScope;
 
     public void RegisterNode(FocusNode node, FocusScopeNode? scope = null)
@@ -530,6 +532,7 @@ public sealed class FocusManager
         next?.Scope?.SetFocusedChild(next);
         previous?.SetHasFocus(false);
         next?.SetHasFocus(true);
+        PrimaryFocusChanged?.Invoke();
     }
 
     private void MoveNodeToScope(FocusNode node, FocusScopeNode scope)

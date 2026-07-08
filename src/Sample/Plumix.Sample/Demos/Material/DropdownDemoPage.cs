@@ -23,6 +23,14 @@ public sealed class DropdownDemoPage : StatefulWidget
         private bool _hideUnderline;
         private bool _aligned;
         private string _status = "idle";
+        private string? _formValue;
+        private string _formStatus = "not validated";
+        private string? _modernValue = "two";
+        private string _modernStatus = "idle";
+        private string? _modernFormValue;
+        private string _modernFormStatus = "not validated";
+        private readonly LabeledGlobalKey<FormState> _formKey = new("dropdown-form");
+        private readonly LabeledGlobalKey<FormState> _modernFormKey = new("dropdown-menu-form");
 
         public override Widget Build(BuildContext context)
         {
@@ -89,6 +97,60 @@ public sealed class DropdownDemoPage : StatefulWidget
                         new Text($"Value: {_value ?? "none"}", fontSize: 13),
                         new Text($"Status: {_status}", fontSize: 13),
                         new Divider(),
+                        new Text("DropdownMenu + DropdownMenuEntry", fontSize: 18),
+                        new Text(
+                            "Editable Material 3 menu with filtering, search highlighting, disabled-entry traversal, leading/trailing icons, and controller-backed route state.",
+                            fontSize: 14,
+                            color: Colors.DimGray),
+                        new Align(
+                            alignment: Alignment.CenterLeft,
+                            child: new DropdownMenu<string>(
+                                dropdownMenuEntries: BuildModernEntries(),
+                                initialSelection: _modernValue,
+                                width: 320,
+                                menuHeight: 180,
+                                leadingIcon: new Icon(Icons.Search),
+                                label: new Text("Search a destination"),
+                                helperText: "Type to filter, then use arrow keys",
+                                enableFilter: true,
+                                onSelected: value => SetState(() =>
+                                {
+                                    _modernValue = value;
+                                    _modernStatus = $"selected: {value ?? "none"}";
+                                }))),
+                        new Text($"Modern value: {_modernValue ?? "none"}", fontSize: 13),
+                        new Text($"Modern status: {_modernStatus}", fontSize: 13),
+                        new Divider(),
+                        new Text("DropdownMenuFormField + Form", fontSize: 18),
+                        new Form(
+                            key: _modernFormKey,
+                            child: new Column(
+                                crossAxisAlignment: CrossAxisAlignment.Stretch,
+                                spacing: 8,
+                                children:
+                                [
+                                    new DropdownMenuFormField<string>(
+                                        dropdownMenuEntries: BuildModernEntries(),
+                                        initialSelection: _modernFormValue,
+                                        label: new Text("Required destination"),
+                                        hintText: "Pick one destination",
+                                        enableFilter: true,
+                                        onSelected: value => SetState(() =>
+                                        {
+                                            _modernFormValue = value;
+                                            _modernFormStatus = $"changed: {value ?? "none"}";
+                                        }),
+                                        validator: value => value is null ? "Select a destination" : null),
+                                    new Row(
+                                        spacing: 8,
+                                        children:
+                                        [
+                                            ControlButton("Validate", ValidateModernForm),
+                                            ControlButton("Reset", ResetModernForm),
+                                        ]),
+                                    new Text($"Modern form status: {_modernFormStatus}", fontSize: 13),
+                                ])),
+                        new Divider(),
                         new Text("Disabled fallback", fontSize: 15),
                         new Align(
                             alignment: Alignment.CenterLeft,
@@ -97,7 +159,70 @@ public sealed class DropdownDemoPage : StatefulWidget
                                 onChanged: null,
                                 hint: new Text("Fallback hint"),
                                 disabledHint: new Text("Disabled hint"))),
+                        new Divider(),
+                        new Text("DropdownButtonFormField + Form", fontSize: 18),
+                        new Form(
+                            key: _formKey,
+                            child: new Column(
+                                crossAxisAlignment: CrossAxisAlignment.Stretch,
+                                spacing: 8,
+                                children:
+                                [
+                                    new DropdownButtonFormField<string>(
+                                        items: BuildItems(),
+                                        onChanged: value => SetState(() =>
+                                        {
+                                            _formValue = value;
+                                            _formStatus = $"changed: {value ?? "none"}";
+                                        }),
+                                        initialValue: _formValue,
+                                        decoration: new InputDecoration(
+                                            labelText: "Required choice",
+                                            hintText: "Pick one item",
+                                            border: new OutlineInputBorder()),
+                                        validator: value => value is null ? "Select an item" : null),
+                                    new Row(
+                                        spacing: 8,
+                                        children:
+                                        [
+                                            ControlButton("Validate", ValidateForm),
+                                            ControlButton("Reset", ResetForm),
+                                        ]),
+                                    new Text($"Form status: {_formStatus}", fontSize: 13),
+                                ])),
                     ]));
+        }
+
+        private void ValidateForm()
+        {
+            var valid = _formKey.CurrentState?.Validate() == true;
+            SetState(() => _formStatus = valid ? "valid" : "invalid");
+        }
+
+        private void ResetForm()
+        {
+            _formKey.CurrentState?.Reset();
+            SetState(() =>
+            {
+                _formValue = null;
+                _formStatus = "reset";
+            });
+        }
+
+        private void ValidateModernForm()
+        {
+            var valid = _modernFormKey.CurrentState?.Validate() == true;
+            SetState(() => _modernFormStatus = valid ? "valid" : "invalid");
+        }
+
+        private void ResetModernForm()
+        {
+            _modernFormKey.CurrentState?.Reset();
+            SetState(() =>
+            {
+                _modernFormValue = null;
+                _modernFormStatus = "reset";
+            });
         }
 
         private static IReadOnlyList<DropdownMenuItem<string>> BuildItems() =>
@@ -107,6 +232,14 @@ public sealed class DropdownDemoPage : StatefulWidget
             new DropdownMenuItem<string>(new Text("Two"), value: "two"),
             new DropdownMenuItem<string>(new Text("Three"), value: "three"),
             new DropdownMenuItem<string>(new Text("Disabled entry"), value: "disabled", enabled: false),
+        ];
+
+        private static IReadOnlyList<DropdownMenuEntry<string>> BuildModernEntries() =>
+        [
+            new DropdownMenuEntry<string>("one", "One", leadingIcon: new Icon(Icons.StarOutline)),
+            new DropdownMenuEntry<string>("two", "Two", leadingIcon: new Icon(Icons.Star)),
+            new DropdownMenuEntry<string>("three", "Three", trailingIcon: new Icon(Icons.Check)),
+            new DropdownMenuEntry<string>("disabled", "Disabled entry", enabled: false),
         ];
 
         private static Widget ControlButton(string label, Action action) =>

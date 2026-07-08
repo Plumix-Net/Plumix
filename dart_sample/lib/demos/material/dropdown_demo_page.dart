@@ -15,6 +15,14 @@ class _DropdownDemoPageState extends State<DropdownDemoPage> {
   bool _hideUnderline = false;
   bool _aligned = false;
   String _status = 'idle';
+  String? _formValue;
+  String _formStatus = 'not validated';
+  String? _modernValue = 'two';
+  String _modernStatus = 'idle';
+  String? _modernFormValue;
+  String _modernFormStatus = 'not validated';
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final GlobalKey<FormState> _modernFormKey = GlobalKey<FormState>();
 
   @override
   Widget build(BuildContext context) {
@@ -96,6 +104,79 @@ class _DropdownDemoPageState extends State<DropdownDemoPage> {
           ),
           Text('Status: $_status', style: const TextStyle(fontSize: 13)),
           const Divider(),
+          const Text(
+            'DropdownMenu + DropdownMenuEntry',
+            style: TextStyle(fontSize: 18),
+          ),
+          const Text(
+            'Editable Material 3 menu with filtering, search highlighting, disabled-entry traversal, leading/trailing icons, and controller-backed route state.',
+            style: TextStyle(fontSize: 14, color: Colors.black54),
+          ),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: DropdownMenu<String>(
+              dropdownMenuEntries: _buildModernEntries(),
+              initialSelection: _modernValue,
+              width: 320,
+              menuHeight: 180,
+              leadingIcon: const Icon(Icons.search),
+              label: const Text('Search a destination'),
+              helperText: 'Type to filter, then use arrow keys',
+              enableFilter: true,
+              onSelected: (String? value) => setState(() {
+                _modernValue = value;
+                _modernStatus = 'selected: ${value ?? 'none'}';
+              }),
+            ),
+          ),
+          Text(
+            'Modern value: ${_modernValue ?? 'none'}',
+            style: const TextStyle(fontSize: 13),
+          ),
+          Text(
+            'Modern status: $_modernStatus',
+            style: const TextStyle(fontSize: 13),
+          ),
+          const Divider(),
+          const Text(
+            'DropdownMenuFormField + Form',
+            style: TextStyle(fontSize: 18),
+          ),
+          Form(
+            key: _modernFormKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              spacing: 8,
+              children: <Widget>[
+                DropdownMenuFormField<String>(
+                  dropdownMenuEntries: _buildModernEntries(),
+                  initialSelection: _modernFormValue,
+                  label: const Text('Required destination'),
+                  hintText: 'Pick one destination',
+                  enableFilter: true,
+                  onSelected: (String? value) => setState(() {
+                    _modernFormValue = value;
+                    _modernFormStatus = 'changed: ${value ?? 'none'}';
+                  }),
+                  validator: (String? value) =>
+                      value == null ? 'Select a destination' : null,
+                ),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: <Widget>[
+                    _controlButton('Validate', _validateModernForm),
+                    _controlButton('Reset', _resetModernForm),
+                  ],
+                ),
+                Text(
+                  'Modern form status: $_modernFormStatus',
+                  style: const TextStyle(fontSize: 13),
+                ),
+              ],
+            ),
+          ),
+          const Divider(),
           const Text('Disabled fallback', style: TextStyle(fontSize: 15)),
           Align(
             alignment: Alignment.centerLeft,
@@ -106,9 +187,76 @@ class _DropdownDemoPageState extends State<DropdownDemoPage> {
               disabledHint: const Text('Disabled hint'),
             ),
           ),
+          const Divider(),
+          const Text(
+            'DropdownButtonFormField + Form',
+            style: TextStyle(fontSize: 18),
+          ),
+          Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              spacing: 8,
+              children: <Widget>[
+                DropdownButtonFormField<String>(
+                  items: _buildItems(),
+                  initialValue: _formValue,
+                  onChanged: (String? value) => setState(() {
+                    _formValue = value;
+                    _formStatus = 'changed: ${value ?? 'none'}';
+                  }),
+                  decoration: const InputDecoration(
+                    labelText: 'Required choice',
+                    hintText: 'Pick one item',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (String? value) =>
+                      value == null ? 'Select an item' : null,
+                ),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: <Widget>[
+                    _controlButton('Validate', _validateForm),
+                    _controlButton('Reset', _resetForm),
+                  ],
+                ),
+                Text(
+                  'Form status: $_formStatus',
+                  style: const TextStyle(fontSize: 13),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
+  }
+
+  void _validateForm() {
+    final bool valid = _formKey.currentState?.validate() ?? false;
+    setState(() => _formStatus = valid ? 'valid' : 'invalid');
+  }
+
+  void _resetForm() {
+    _formKey.currentState?.reset();
+    setState(() {
+      _formValue = null;
+      _formStatus = 'reset';
+    });
+  }
+
+  void _validateModernForm() {
+    final bool valid = _modernFormKey.currentState?.validate() ?? false;
+    setState(() => _modernFormStatus = valid ? 'valid' : 'invalid');
+  }
+
+  void _resetModernForm() {
+    _modernFormKey.currentState?.reset();
+    setState(() {
+      _modernFormValue = null;
+      _modernFormStatus = 'reset';
+    });
   }
 
   List<DropdownMenuItem<String>> _buildItems() =>
@@ -121,6 +269,30 @@ class _DropdownDemoPageState extends State<DropdownDemoPage> {
           value: 'disabled',
           enabled: false,
           child: Text('Disabled entry'),
+        ),
+      ];
+
+  List<DropdownMenuEntry<String>> _buildModernEntries() =>
+      const <DropdownMenuEntry<String>>[
+        DropdownMenuEntry<String>(
+          value: 'one',
+          label: 'One',
+          leadingIcon: Icon(Icons.star_outline),
+        ),
+        DropdownMenuEntry<String>(
+          value: 'two',
+          label: 'Two',
+          leadingIcon: Icon(Icons.star),
+        ),
+        DropdownMenuEntry<String>(
+          value: 'three',
+          label: 'Three',
+          trailingIcon: Icon(Icons.check),
+        ),
+        DropdownMenuEntry<String>(
+          value: 'disabled',
+          label: 'Disabled entry',
+          enabled: false,
         ),
       ];
 

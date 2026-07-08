@@ -44,6 +44,8 @@ public abstract class MaterialLocalizations
 
     public virtual string CancelButtonLabel => "Cancel";
 
+    public virtual string OkButtonLabel => "OK";
+
     public virtual string ViewLicensesButtonLabel => "View licenses";
 
     public virtual string CloseButtonLabel => "Close";
@@ -83,6 +85,78 @@ public abstract class MaterialLocalizations
     public virtual string InvalidDateFormatLabel => "Invalid format.";
 
     public virtual string DateOutOfRangeLabel => "Out of range.";
+
+    public virtual string DatePickerHelpText => "Select date";
+
+    public virtual string CalendarModeButtonLabel => "Switch to calendar";
+
+    public virtual string InputDateModeButtonLabel => "Switch to input";
+
+    public virtual string DateRangeStartLabel => "Start date";
+
+    public virtual string DateRangeEndLabel => "End date";
+
+    public virtual string DateRangePickerHelpText => "Select range";
+
+    public virtual string InvalidDateRangeLabel => "Invalid range.";
+
+    public virtual string SaveButtonLabel => "Save";
+
+    public virtual string UnspecifiedDateRange => "Date range";
+
+    public virtual string TimePickerDialHelpText => "Select time";
+
+    public virtual string TimePickerInputHelpText => "Enter time";
+
+    public virtual string InputTimeModeButtonLabel => "Switch to text input mode";
+
+    public virtual string DialModeButtonLabel => "Switch to clock mode";
+
+    public virtual string InvalidTimeLabel => "Enter a valid time";
+
+    public virtual string HourLabel => "Hour";
+
+    public virtual string MinuteLabel => "Minute";
+
+    public virtual string AnteMeridiemAbbreviation => "AM";
+
+    public virtual string PostMeridiemAbbreviation => "PM";
+
+    public virtual TimeOfDayFormat TimeOfDayFormat(bool alwaysUse24HourFormat = false) =>
+        alwaysUse24HourFormat ? Material.TimeOfDayFormat.HHColonMm : Material.TimeOfDayFormat.HColonMmSpaceA;
+
+    public virtual string FormatHour(TimeOfDay timeOfDay, bool alwaysUse24HourFormat = false)
+    {
+        var format = TimeOfDayFormat(alwaysUse24HourFormat);
+        var hour = TimeOfDay.HourFormatOf(format) switch
+        {
+            HourFormat.H12 => timeOfDay.HourOfPeriod,
+            _ => timeOfDay.Hour,
+        };
+        return TimeOfDay.HourFormatOf(format) == HourFormat.HH
+            ? hour.ToString("00", CultureInfo.InvariantCulture)
+            : hour.ToString(CultureInfo.InvariantCulture);
+    }
+
+    public virtual string FormatMinute(TimeOfDay timeOfDay) =>
+        timeOfDay.Minute.ToString("00", CultureInfo.InvariantCulture);
+
+    public virtual string FormatTimeOfDay(TimeOfDay timeOfDay, bool alwaysUse24HourFormat = false)
+    {
+        var format = TimeOfDayFormat(alwaysUse24HourFormat);
+        var hour = FormatHour(timeOfDay, alwaysUse24HourFormat);
+        var minute = FormatMinute(timeOfDay);
+        return format switch
+        {
+            Material.TimeOfDayFormat.HHDotMm => $"{hour}.{minute}",
+            Material.TimeOfDayFormat.FrenchCanadian => $"{hour} h {minute}",
+            Material.TimeOfDayFormat.ASpaceHColonMm =>
+                $"{(timeOfDay.Period == DayPeriod.Am ? AnteMeridiemAbbreviation : PostMeridiemAbbreviation)} {hour}:{minute}",
+            Material.TimeOfDayFormat.HColonMmSpaceA =>
+                $"{hour}:{minute} {(timeOfDay.Period == DayPeriod.Am ? AnteMeridiemAbbreviation : PostMeridiemAbbreviation)}",
+            _ => $"{hour}:{minute}",
+        };
+    }
 
     public virtual string FormatDecimal(int number) => number.ToString(CultureInfo.InvariantCulture);
 

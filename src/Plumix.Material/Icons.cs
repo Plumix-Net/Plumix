@@ -20,6 +20,8 @@ public static class Icons
 
     public static IconData ArrowDropDown { get; } = new(0xe098, FontFamily: MaterialIconsFontFamily);
 
+    public static IconData ArrowDropUp { get; } = new(0xe099, FontFamily: MaterialIconsFontFamily);
+
     public static IconData ArrowUpward { get; } = new(0xe5d8, FontFamily: MaterialIconsFontFamily);
 
     public static IconData ArrowDownward { get; } = new(0xe5db, FontFamily: MaterialIconsFontFamily);
@@ -37,6 +39,14 @@ public static class Icons
     public static IconData Done { get; } = new(0xe1f6, FontFamily: MaterialIconsFontFamily);
 
     public static IconData Edit { get; } = new(0xe3c9, FontFamily: MaterialIconsFontFamily);
+
+    public static IconData EditOutlined { get; } = new(0xf00d, FontFamily: MaterialIconsFontFamily);
+
+    public static IconData CalendarToday { get; } = new(0xe122, FontFamily: MaterialIconsFontFamily);
+
+    public static IconData KeyboardOutlined { get; } = new(0xf03d, FontFamily: MaterialIconsFontFamily);
+
+    public static IconData AccessTime { get; } = new(0xe03a, FontFamily: MaterialIconsFontFamily);
 
     public static IconData FirstPage { get; } = new(0xe5dc, FontFamily: MaterialIconsFontFamily, MatchTextDirection: true);
 

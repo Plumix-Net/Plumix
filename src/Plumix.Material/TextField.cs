@@ -43,6 +43,7 @@ public sealed class TextField : StatefulWidget
         MouseCursor? mouseCursor = null,
         TextFieldCounterBuilder? buildCounter = null,
         bool canRequestFocus = true,
+        FocusOnKeyEventCallback? onKeyEvent = null,
         Key? key = null) : base(key)
     {
         if (string.IsNullOrEmpty(obscuringCharacter) || obscuringCharacter.Length != 1)
@@ -79,6 +80,7 @@ public sealed class TextField : StatefulWidget
         MouseCursor = mouseCursor;
         BuildCounter = buildCounter;
         CanRequestFocus = canRequestFocus;
+        OnKeyEvent = onKeyEvent;
     }
 
     public TextEditingController? Controller { get; }
@@ -103,6 +105,7 @@ public sealed class TextField : StatefulWidget
     public MouseCursor? MouseCursor { get; }
     public TextFieldCounterBuilder? BuildCounter { get; }
     public bool CanRequestFocus { get; }
+    public FocusOnKeyEventCallback? OnKeyEvent { get; }
 
     public override State CreateState() => new TextFieldState();
 
@@ -161,7 +164,8 @@ public sealed class TextField : StatefulWidget
                 semanticsLabel: Current.Decoration?.LabelText ?? Current.Decoration?.HintText,
                 textAlign: Current.TextAlign,
                 textDirection: Current.TextDirection,
-                canRequestFocus: Current.CanRequestFocus);
+                canRequestFocus: Current.CanRequestFocus,
+                onKeyEvent: Current.OnKeyEvent);
 
             if (multiline && !Current.Expands)
             {

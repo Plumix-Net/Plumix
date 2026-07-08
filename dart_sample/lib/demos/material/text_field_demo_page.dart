@@ -14,10 +14,13 @@ class _TextFieldDemoPageState extends State<TextFieldDemoPage> {
   final TextEditingController _readOnly = TextEditingController(
     text: 'Read-only value',
   );
+  final TextEditingController _formName = TextEditingController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _enabled = true;
   bool _obscure = true;
   bool _error = false;
   String _submitted = 'none';
+  String _formStatus = 'not validated';
 
   @override
   Widget build(BuildContext context) {
@@ -104,6 +107,49 @@ class _TextFieldDemoPageState extends State<TextFieldDemoPage> {
             'Last submitted email: $_submitted',
             style: const TextStyle(fontSize: 13),
           ),
+          const Divider(),
+          const Text('TextFormField + Form', style: TextStyle(fontSize: 18)),
+          Form(
+            key: _formKey,
+            autovalidateMode: AutovalidateMode.onUserInteraction,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              spacing: 8,
+              children: <Widget>[
+                TextFormField(
+                  controller: _formName,
+                  decoration: const InputDecoration(
+                    labelText: 'Display name',
+                    helperText: 'Required form field',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (String? value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Enter a display name';
+                    }
+                    return value.length < 3
+                        ? 'Use at least 3 characters'
+                        : null;
+                  },
+                  onSaved: (String? value) =>
+                      setState(() => _formStatus = 'saved: $value'),
+                ),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: <Widget>[
+                    _control('Validate', _validateForm),
+                    _control('Save', _saveForm),
+                    _control('Reset', _resetForm),
+                  ],
+                ),
+                Text(
+                  'Form status: $_formStatus',
+                  style: const TextStyle(fontSize: 13),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -115,6 +161,31 @@ class _TextFieldDemoPageState extends State<TextFieldDemoPage> {
     _password.dispose();
     _notes.dispose();
     _readOnly.dispose();
+    _formName.dispose();
     super.dispose();
   }
+
+  void _validateForm() {
+    final bool valid = _formKey.currentState?.validate() ?? false;
+    setState(() => _formStatus = valid ? 'valid' : 'invalid');
+  }
+
+  void _saveForm() {
+    final FormState? form = _formKey.currentState;
+    if (form?.validate() != true) {
+      setState(() => _formStatus = 'invalid');
+      return;
+    }
+    form!.save();
+  }
+
+  void _resetForm() {
+    _formKey.currentState?.reset();
+    setState(() => _formStatus = 'reset');
+  }
+
+  Widget _control(String label, VoidCallback onPressed) => TextButton(
+    onPressed: onPressed,
+    child: Text(label, style: const TextStyle(fontSize: 12)),
+  );
 }

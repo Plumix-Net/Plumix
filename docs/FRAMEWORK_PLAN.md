@@ -157,6 +157,10 @@ Kickoff note (2026-03-12):
 
 - Prioritized immediately after M3 to unblock practical control rewrites and reduce sample-level styling drift by introducing a Flutter-like Material layer in framework widgets.
 - Added paired `CalendarDatePicker` + `YearPicker` parity with calendar delegates/date utilities, M2/M3 date-picker theming, bounded month paging, day/year states, keyboard/accessibility behavior, focused tests, and mirrored C#/Dart sample coverage.
+- Added paired `TextFormField` + `DropdownButtonFormField<T>` parity on shared core `Form`/`FormField<T>` primitives, covering typed global-key state access, field registration, validation modes, save/reset/error lifecycle, controller/focus synchronization, decorated error/hint composition, callback ordering, invalid/form semantics, focused tests, and mirrored C#/Dart sample probes.
+- Added paired `InputDatePickerFormField` + `DatePickerDialog` parity with localized parsing, range/predicate validation, form save/submit, calendar/input entry modes, M2/M3 portrait/landscape sizing, theme/header/action precedence, typed dialog results, focused tests, and mirrored C#/Dart sample probes.
+- Added paired `TimePickerDialog` + `DateRangePickerDialog` parity with Flutter-shaped `TimeOfDay`, dial/input and calendar/input modes, 12/24-hour formatting, time/range theming, lazy multi-month range layout, connected range paint, typed dialog results, focused tests, and mirrored C#/Dart sample probes.
+- Added paired `DropdownMenu<T>` + `DropdownMenuFormField<T>` parity with editable/select-only anchors, filtering/search, disabled-item keyboard traversal, menu controllers/close policies, intrinsic and explicit sizing, Material 3 dropdown theming, form lifecycle, focused tests, and mirrored C#/Dart sample probes.
 
 Progress update (2026-03-19):
 
@@ -597,6 +601,10 @@ Progress update (2026-03-19):
   - matched controlled and nullable selection, disabled/hint fallback states, `selectedItemBuilder`, dense/expanded sizing, custom icon/style/padding/underline, `DropdownButtonHideUnderline`, and aligned legacy `ButtonTheme` behavior;
   - added Flutter-shaped positioned dropdown routes with selected-item alignment, fixed/variable item measurement, max-height scrolling, custom width/color/radius/elevation, barrier policy, staged 300ms reveal, item callbacks, keyboard traversal, and expanded/menu semantics;
   - added source-required core `IndexedStack`, focused `MaterialDropdownTests`, and a mirrored `/dropdown` C#/Dart runtime demo.
+- Extended the dropdown family with paired `DropdownMenu<T>` + `DropdownMenuFormField<T>` ports:
+  - matched entry descriptors, editable and select-only anchors, initial/controller selection, filtering/search highlighting, disabled-item keyboard traversal, leading/trailing slots, explicit/intrinsic/expanded sizing, menu height/alignment offset, and all/self/none close policies for the current single-menu hierarchy;
+  - added `DropdownMenuThemeData`/`DropdownMenuTheme`, `MenuStyle`, external `MenuController`, M3 input/menu defaults, resolved surface/shape/border/shadow/padding, expanded/menu-item semantics, and source-required editable key interception;
+  - integrated `FormField<T>` validation/save/reset/error composition, expanded focused `MaterialDropdownTests`, and mirrored modern dropdown probes in the existing `/dropdown` C#/Dart demo.
 - Added paired `ExpandIcon` + `Stepper` ports:
   - matched expand/collapse rotation, localized semantic hints, callback contract, icon colors, and source-accurate integration with `ExpansionPanelList`;
   - matched vertical/horizontal step composition, controlled current step, indexed/editing/complete/disabled/error states, connector/icon sizing and styling, default/custom controls, retained horizontal panel state, clipping, elevation, and RTL-aware vertical geometry;
