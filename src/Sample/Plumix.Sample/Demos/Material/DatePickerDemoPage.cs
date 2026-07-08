@@ -22,6 +22,8 @@ public sealed class DatePickerDemoPage : StatefulWidget
         private bool _showYearPicker;
         private bool _useMaterial3 = true;
         private bool _useThemeOverride;
+        private TimeOfDay _selectedTime = new(14, 30);
+        private DateTimeRange<DateTime> _selectedRange = new(new DateTime(2026, 3, 10), new DateTime(2026, 3, 16));
         private readonly LabeledGlobalKey<FormState> _dateFormKey = new("date-input-form");
         private string _formStatus = "not validated";
 
@@ -34,8 +36,16 @@ public sealed class DatePickerDemoPage : StatefulWidget
                         states.HasFlag(MaterialState.Selected) ? Color.Parse("#FF006C4C") : null),
                     YearBackgroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
                         states.HasFlag(MaterialState.Selected) ? Color.Parse("#FF6750A4") : null),
-                    TodayBorder: new BorderSide(Color.Parse("#FF006C4C"), 2))
+                    TodayBorder: new BorderSide(Color.Parse("#FF006C4C"), 2),
+                    RangeSelectionBackgroundColor: Color.Parse("#FFCDE8DE"))
                 : new DatePickerThemeData();
+            var timePickerTheme = _useThemeOverride
+                ? new TimePickerThemeData(
+                    DialBackgroundColor: Color.Parse("#FFE0F2F1"),
+                    DialHandColor: Color.Parse("#FF006C4C"),
+                    HourMinuteColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+                        states.HasFlag(MaterialState.Selected) ? Color.Parse("#FFCDE8DE") : Color.Parse("#FFF2F2F2")))
+                : new TimePickerThemeData();
 
             Widget picker = _showYearPicker
                 ? new SizedBox(
@@ -60,7 +70,12 @@ public sealed class DatePickerDemoPage : StatefulWidget
                     onDisplayedMonthChanged: value => SetState(() => _displayedMonth = value));
 
             return new Theme(
-                data: baseTheme with { UseMaterial3 = _useMaterial3, DatePickerTheme = pickerTheme },
+                data: baseTheme with
+                {
+                    UseMaterial3 = _useMaterial3,
+                    DatePickerTheme = pickerTheme,
+                    TimePickerTheme = timePickerTheme,
+                },
                 child: new SingleChildScrollView(
                     child: new Column(
                         crossAxisAlignment: CrossAxisAlignment.Stretch,
@@ -116,6 +131,26 @@ public sealed class DatePickerDemoPage : StatefulWidget
                                     BuildToggle("Input dialog", () => _ = OpenDatePicker(context, DatePickerEntryMode.Input)),
                                 ]),
                             new Text($"Form/dialog status: {_formStatus}", fontSize: 13, color: Color.Parse("#FF455A64")),
+                            new Divider(),
+                            new Text("TimePickerDialog + DateRangePickerDialog", fontSize: 18),
+                            new Text(
+                                $"Time: {_selectedTime.Hour:00}:{_selectedTime.Minute:00}  |  Range: {_selectedRange.Start:yyyy-MM-dd} – {_selectedRange.End:yyyy-MM-dd}",
+                                fontSize: 13,
+                                color: Color.Parse("#FF455A64")),
+                            new Row(
+                                spacing: 8,
+                                children:
+                                [
+                                    BuildToggle("Dial time", () => _ = OpenTimePicker(context, TimePickerEntryMode.Dial)),
+                                    BuildToggle("Input time", () => _ = OpenTimePicker(context, TimePickerEntryMode.Input)),
+                                ]),
+                            new Row(
+                                spacing: 8,
+                                children:
+                                [
+                                    BuildToggle("Calendar range", () => _ = OpenRangePicker(context, DatePickerEntryMode.Calendar)),
+                                    BuildToggle("Input range", () => _ = OpenRangePicker(context, DatePickerEntryMode.Input)),
+                                ]),
                         ])));
         }
 
@@ -157,6 +192,40 @@ public sealed class DatePickerDemoPage : StatefulWidget
             {
                 if (result.HasValue) _selectedDate = result.Value;
                 _formStatus = result.HasValue ? $"dialog: {result:yyyy-MM-dd}" : "dialog canceled";
+            });
+        }
+
+        private async Task OpenTimePicker(BuildContext context, TimePickerEntryMode entryMode)
+        {
+            var result = await MaterialTimePickers.ShowTimePicker(
+                context,
+                initialTime: _selectedTime,
+                initialEntryMode: entryMode);
+            if (!Mounted) return;
+            SetState(() =>
+            {
+                if (result.HasValue) _selectedTime = result.Value;
+                _formStatus = result.HasValue ? $"time: {result.Value.Hour:00}:{result.Value.Minute:00}" : "time canceled";
+            });
+        }
+
+        private async Task OpenRangePicker(BuildContext context, DatePickerEntryMode entryMode)
+        {
+            var result = await MaterialDatePickers.ShowDateRangePicker(
+                context,
+                initialDateRange: _selectedRange,
+                firstDate: new DateTime(2022, 1, 1),
+                lastDate: new DateTime(2032, 12, 31),
+                currentDate: new DateTime(2026, 3, 12),
+                initialEntryMode: entryMode,
+                selectableDayPredicate: (date, _, _) => date.DayOfWeek is not DayOfWeek.Saturday and not DayOfWeek.Sunday);
+            if (!Mounted) return;
+            SetState(() =>
+            {
+                if (result is not null) _selectedRange = result;
+                _formStatus = result is null
+                    ? "range canceled"
+                    : $"range: {result.Start:yyyy-MM-dd} – {result.End:yyyy-MM-dd}";
             });
         }
 

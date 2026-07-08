@@ -442,7 +442,7 @@ internal sealed class DatePickerDialogState : State
     }
 }
 
-public static class MaterialDatePickers
+public static partial class MaterialDatePickers
 {
     public static Task<DateTime?> ShowDatePicker(
         BuildContext context,

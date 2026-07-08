@@ -109,7 +109,7 @@ internal sealed class SampleGalleryScreen : StatelessWidget
         new(SampleRoutes.MaterialButtons, "Material buttons", "TextButton + ElevatedButton + OutlinedButton + FilledButton", () => new MaterialButtonsDemoPage()),
         new(SampleRoutes.Tabs, "TabBar + TabBarView", "controller + indicator + scrollable tabs + swipe pages", () => new TabsDemoPage()),
         new(SampleRoutes.InkResponse, "InkResponse + InkWell", "circle/rectangle ink + gestures + overlay states", () => new InkResponseDemoPage()),
-        new(SampleRoutes.DatePicker, "CalendarDatePicker + YearPicker", "month/day/year selection + predicates + M2/M3 theme states", () => new DatePickerDemoPage()),
+        new(SampleRoutes.DatePicker, "Date/time picker family", "day/year/time/range selection + input modes + M2/M3 themes", () => new DatePickerDemoPage()),
         new(SampleRoutes.ActionButtons, "Material action buttons", "back/close/drawer/end-drawer + ActionIconTheme", () => new ActionButtonsDemoPage()),
         new(SampleRoutes.Drawer, "Drawer", "scaffold drawer/endDrawer + theme/widget precedence probes", () => new DrawerDemoPage()),
         new(SampleRoutes.DrawerHeaders, "Drawer headers", "DrawerHeader + UserAccountsDrawerHeader", () => new DrawerHeadersDemoPage()),

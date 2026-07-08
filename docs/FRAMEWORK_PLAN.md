@@ -159,6 +159,7 @@ Kickoff note (2026-03-12):
 - Added paired `CalendarDatePicker` + `YearPicker` parity with calendar delegates/date utilities, M2/M3 date-picker theming, bounded month paging, day/year states, keyboard/accessibility behavior, focused tests, and mirrored C#/Dart sample coverage.
 - Added paired `TextFormField` + `DropdownButtonFormField<T>` parity on shared core `Form`/`FormField<T>` primitives, covering typed global-key state access, field registration, validation modes, save/reset/error lifecycle, controller/focus synchronization, decorated error/hint composition, callback ordering, invalid/form semantics, focused tests, and mirrored C#/Dart sample probes.
 - Added paired `InputDatePickerFormField` + `DatePickerDialog` parity with localized parsing, range/predicate validation, form save/submit, calendar/input entry modes, M2/M3 portrait/landscape sizing, theme/header/action precedence, typed dialog results, focused tests, and mirrored C#/Dart sample probes.
+- Added paired `TimePickerDialog` + `DateRangePickerDialog` parity with Flutter-shaped `TimeOfDay`, dial/input and calendar/input modes, 12/24-hour formatting, time/range theming, lazy multi-month range layout, connected range paint, typed dialog results, focused tests, and mirrored C#/Dart sample probes.
 
 Progress update (2026-03-19):
 

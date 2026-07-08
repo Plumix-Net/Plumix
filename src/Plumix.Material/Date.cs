@@ -6,6 +6,8 @@ namespace Plumix.Material;
 
 public delegate bool SelectableDayPredicate(DateTime day);
 
+public delegate bool SelectableDayForRangePredicate(DateTime day, DateTime? selectedStartDay, DateTime? selectedEndDay);
+
 public enum DatePickerMode
 {
     Day,

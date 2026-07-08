@@ -36,7 +36,18 @@ public sealed record DatePickerThemeData(
     ButtonStyle? CancelButtonStyle = null,
     ButtonStyle? ConfirmButtonStyle = null,
     TextStyle? ToggleButtonTextStyle = null,
-    Color? SubHeaderForegroundColor = null);
+    Color? SubHeaderForegroundColor = null,
+    Color? RangePickerBackgroundColor = null,
+    double? RangePickerElevation = null,
+    Color? RangePickerShadowColor = null,
+    Color? RangePickerSurfaceTintColor = null,
+    ShapeBorder? RangePickerShape = null,
+    Color? RangePickerHeaderBackgroundColor = null,
+    Color? RangePickerHeaderForegroundColor = null,
+    TextStyle? RangePickerHeaderHeadlineStyle = null,
+    TextStyle? RangePickerHeaderHelpStyle = null,
+    Color? RangeSelectionBackgroundColor = null,
+    MaterialStateProperty<Color?>? RangeSelectionOverlayColor = null);
 
 public sealed class DatePickerTheme : InheritedWidget
 {
@@ -127,7 +138,18 @@ public sealed class DatePickerTheme : InheritedWidget
             YearShape: MaterialStateProperty<ShapeBorder?>.All(ShapeBorder.Stadium()),
             DividerColor: theme.DividerColor,
             ToggleButtonTextStyle: theme.TextTheme.TitleSmall.CopyWith(color: ApplyOpacity(theme.OnSurfaceColor, 0.60)),
-            SubHeaderForegroundColor: ApplyOpacity(theme.OnSurfaceColor, 0.60));
+            SubHeaderForegroundColor: ApplyOpacity(theme.OnSurfaceColor, 0.60),
+            RangePickerBackgroundColor: m3 ? theme.SurfaceContainerLowColor : theme.SurfaceColor,
+            RangePickerElevation: m3 ? 0 : 24,
+            RangePickerShadowColor: Colors.Transparent,
+            RangePickerSurfaceTintColor: Colors.Transparent,
+            RangePickerShape: ShapeBorder.RoundedRectangle(0),
+            RangePickerHeaderBackgroundColor: m3 ? theme.SurfaceContainerLowColor : theme.PrimaryColor,
+            RangePickerHeaderForegroundColor: m3 ? theme.OnSurfaceColor : theme.OnPrimaryColor,
+            RangePickerHeaderHeadlineStyle: m3 ? theme.TextTheme.TitleLarge : theme.TextTheme.HeadlineSmall,
+            RangePickerHeaderHelpStyle: m3 ? theme.TextTheme.LabelLarge : theme.TextTheme.LabelSmall,
+            RangeSelectionBackgroundColor: m3 ? theme.SecondaryContainerColor : ApplyOpacity(theme.PrimaryColor, 0.12),
+            RangeSelectionOverlayColor: overlay());
     }
 
     private static Color ApplyOpacity(Color color, double opacity) => Color.FromArgb(

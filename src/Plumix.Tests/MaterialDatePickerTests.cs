@@ -538,6 +538,206 @@ public sealed class MaterialDatePickerTests : IDisposable
         Assert.Equal(new DateTime(2026, 3, 16), await result);
     }
 
+    [Fact]
+    public void TimeOfDayMatchesFlutterValueAndFormattingContract()
+    {
+        var midnight = new TimeOfDay(0, 5);
+        var afternoon = new TimeOfDay(15, 42);
+
+        Assert.Equal(DayPeriod.Am, midnight.Period);
+        Assert.Equal(12, midnight.HourOfPeriod);
+        Assert.Equal(DayPeriod.Pm, afternoon.Period);
+        Assert.Equal(3, afternoon.HourOfPeriod);
+        Assert.True(midnight.IsBefore(afternoon));
+        Assert.Equal(new TimeOfDay(15, 7), afternoon.Replacing(minute: 7));
+        Assert.Equal("TimeOfDay(15:42)", afternoon.ToString());
+        Assert.Throws<ArgumentOutOfRangeException>(() => new TimeOfDay(24, 0));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new TimeOfDay(0, 60));
+
+        Assert.Equal("3:42 PM", DefaultMaterialLocalizations.Instance.FormatTimeOfDay(afternoon));
+        Assert.Equal("15:42", DefaultMaterialLocalizations.Instance.FormatTimeOfDay(afternoon, alwaysUse24HourFormat: true));
+    }
+
+    [Fact]
+    public void TimePickerDialog_ExposesFlutterDefaultsAndDialSemantics()
+    {
+        var dialog = new TimePickerDialog(new TimeOfDay(10, 30));
+        Assert.Equal(TimePickerEntryMode.Dial, dialog.InitialEntryMode);
+        Assert.False(dialog.EmptyInitialInput);
+        Assert.Null(dialog.Orientation);
+
+        using var harness = CreateHarness(new Navigator(new BuilderPageRoute(_ => dialog)), mediaSize: new Size(500, 700));
+        var semantics = harness.PumpAndGetSemantics(new Size(500, 700));
+        Assert.Contains(FindDescendants<RenderConstrainedBox>(harness.RenderView), box =>
+            Close(box.AdditionalConstraints.MinWidth, 310)
+            && Close(box.AdditionalConstraints.MaxWidth, 310)
+            && Close(box.AdditionalConstraints.MinHeight, 468)
+            && Close(box.AdditionalConstraints.MaxHeight, 468));
+        Assert.NotNull(FindSemantics(semantics, node => node.Label == "10" && node.Flags.HasFlag(SemanticsFlags.IsSelected)));
+        Assert.NotNull(FindSemantics(semantics, node => node.Label == "Switch to text input mode"));
+    }
+
+    [Fact]
+    public void TimePickerDialog_DialSelectsHourThenMinuteAndThemeOverridesPaint()
+    {
+        var dialBackground = Color.Parse("#FF123456");
+        var hand = Color.Parse("#FFABCDEF");
+        using var harness = CreateHarness(new TimePickerTheme(
+            new TimePickerThemeData(DialBackgroundColor: dialBackground, DialHandColor: hand),
+            new Navigator(new BuilderPageRoute(_ => new TimePickerDialog(new TimeOfDay(10, 30))))));
+        var semantics = harness.PumpAndGetSemantics(new Size(500, 700));
+        var eleven = FindSemantics(semantics, node => node.Label == "11" && node.Actions.HasFlag(SemanticsActions.Tap));
+        Assert.NotNull(eleven);
+        Assert.True(eleven!.PerformAction(SemanticsActions.Tap));
+        semantics = harness.PumpAndGetSemantics(new Size(500, 700));
+        var fortyFive = FindSemantics(semantics, node => node.Label == "45" && node.Actions.HasFlag(SemanticsActions.Tap));
+        Assert.NotNull(fortyFive);
+        Assert.True(fortyFive!.PerformAction(SemanticsActions.Tap));
+        harness.Pump(new Size(500, 700));
+
+        Assert.Contains(FindDescendants<RenderCustomPaint>(harness.RenderView), paint =>
+            paint.Painter is TimeDialPainter painter
+            && painter.BackgroundColor == dialBackground
+            && painter.HandColor == hand);
+    }
+
+    [Fact]
+    public void TimePickerDialog_AlwaysUse24HourFormatBuildsInnerAndOuterHours()
+    {
+        var child = new MediaQuery(
+            new MediaQueryData(Size: new Size(500, 700), AlwaysUse24HourFormat: true),
+            new Directionality(
+                TextDirection.Ltr,
+                new Theme(
+                    ThemeData.Light,
+                    new Navigator(new BuilderPageRoute(_ => new TimePickerDialog(new TimeOfDay(23, 5)))))));
+        using var harness = new WidgetRenderHarness(child);
+        var semantics = harness.PumpAndGetSemantics(new Size(500, 700));
+        Assert.NotNull(FindSemantics(semantics, node => node.Label == "23" && node.Flags.HasFlag(SemanticsFlags.IsSelected)));
+        Assert.NotNull(FindSemantics(semantics, node => node.Label == "0" && node.Actions.HasFlag(SemanticsActions.Tap)));
+        Assert.Null(FindSemantics(semantics, node => node.Label is "AM" or "PM"));
+    }
+
+    [Fact]
+    public async Task ShowTimePicker_InputModeRejectsInvalidAndReturnsTime()
+    {
+        BuildContext captured = default;
+        using var harness = CreateHarness(new Navigator(new BuilderPageRoute(context => new CaptureContext(
+            value => captured = value,
+            new Text("Home")))));
+        harness.Pump(new Size(500, 700));
+        var result = MaterialTimePickers.ShowTimePicker(
+            captured,
+            initialTime: new TimeOfDay(9, 30),
+            initialEntryMode: TimePickerEntryMode.Input,
+            errorInvalidText: "Bad time");
+        PumpAnimation();
+        harness.Pump(new Size(500, 700));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("A", isDown: true, isControlPressed: true)));
+        Assert.True(FocusManager.Instance.HandleTextInput("99"));
+        var semantics = harness.PumpAndGetSemantics(new Size(500, 700));
+        var ok = FindSemantics(semantics, node => node.Actions.HasFlag(SemanticsActions.Tap) && ContainsLabel(node, "OK"));
+        Assert.NotNull(ok);
+        Assert.True(ok!.PerformAction(SemanticsActions.Tap));
+        harness.Pump(new Size(500, 700));
+        Assert.False(result.IsCompleted);
+        Assert.Contains(FindDescendants<RenderParagraph>(harness.RenderView), paragraph => paragraph.Text == "Bad time");
+
+        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("A", isDown: true, isControlPressed: true)));
+        Assert.True(FocusManager.Instance.HandleTextInput("11"));
+        Assert.True(FocusManager.Instance.FocusNext());
+        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("A", isDown: true, isControlPressed: true)));
+        Assert.True(FocusManager.Instance.HandleTextInput("45"));
+        semantics = harness.PumpAndGetSemantics(new Size(500, 700));
+        ok = FindSemantics(semantics, node => node.Actions.HasFlag(SemanticsActions.Tap) && ContainsLabel(node, "OK"));
+        Assert.True(ok!.PerformAction(SemanticsActions.Tap));
+        PumpAnimation();
+        harness.Pump(new Size(500, 700));
+        Assert.Equal(new TimeOfDay(11, 45), await result);
+    }
+
+    [Fact]
+    public void DateRangePickerDialog_NormalizesAndValidatesRangeContract()
+    {
+        var dialog = new DateRangePickerDialog(
+            initialDateRange: new DateTimeRange<DateTime>(
+                new DateTime(2026, 3, 10, 14, 0, 0),
+                new DateTime(2026, 3, 15, 18, 0, 0)),
+            firstDate: new DateTime(2026, 1, 1, 9, 0, 0),
+            lastDate: new DateTime(2026, 12, 31, 23, 0, 0));
+        Assert.Equal(new DateTime(2026, 3, 10), dialog.InitialDateRange!.Start);
+        Assert.Equal(new DateTime(2026, 3, 15), dialog.InitialDateRange.End);
+        Assert.Equal(DatePickerEntryMode.Calendar, dialog.InitialEntryMode);
+
+        Assert.Throws<ArgumentException>(() => new DateRangePickerDialog(
+            firstDate: new DateTime(2026, 2, 1),
+            lastDate: new DateTime(2026, 1, 1)));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new DateRangePickerDialog(
+            initialDateRange: new DateTimeRange<DateTime>(new DateTime(2025, 12, 31), new DateTime(2026, 1, 2)),
+            firstDate: new DateTime(2026, 1, 1),
+            lastDate: new DateTime(2026, 12, 31)));
+    }
+
+    [Fact]
+    public void DateRangePickerDialog_CalendarSelectionUsesRangeStatesAndPredicate()
+    {
+        var rangeColor = Color.Parse("#FF345678");
+        using var harness = CreateHarness(new DatePickerTheme(
+            new DatePickerThemeData(RangeSelectionBackgroundColor: rangeColor),
+            new Navigator(new BuilderPageRoute(_ => new DateRangePickerDialog(
+                firstDate: new DateTime(2026, 3, 1),
+                lastDate: new DateTime(2026, 3, 31),
+                currentDate: new DateTime(2026, 3, 13),
+                selectableDayPredicate: (day, _, _) => day.Day != 14)))));
+        var semantics = harness.PumpAndGetSemantics(new Size(500, 700));
+        var start = FindSemantics(semantics, node => node.Label?.StartsWith("10, Tuesday, March 10, 2026") == true);
+        var disabled = FindSemantics(semantics, node => node.Label?.StartsWith("14, Saturday, March 14, 2026") == true);
+        Assert.NotNull(start);
+        Assert.True(start!.PerformAction(SemanticsActions.Tap));
+        Assert.NotNull(disabled);
+        Assert.False(disabled!.Actions.HasFlag(SemanticsActions.Tap));
+
+        semantics = harness.PumpAndGetSemantics(new Size(500, 700));
+        var end = FindSemantics(semantics, node => node.Label?.StartsWith("16, Monday, March 16, 2026") == true);
+        Assert.NotNull(end);
+        Assert.True(end!.PerformAction(SemanticsActions.Tap));
+        harness.Pump(new Size(500, 700));
+        Assert.Contains(FindDescendants<RenderCustomPaint>(harness.RenderView), paint =>
+            paint.Painter is DateRangeHighlightPainter painter
+            && painter.Color == rangeColor);
+    }
+
+    [Fact]
+    public async Task ShowDateRangePicker_CalendarReturnsSelectedRange()
+    {
+        BuildContext captured = default;
+        using var harness = CreateHarness(new Navigator(new BuilderPageRoute(context => new CaptureContext(
+            value => captured = value,
+            new Text("Home")))));
+        harness.Pump(new Size(500, 700));
+        var result = MaterialDatePickers.ShowDateRangePicker(
+            captured,
+            firstDate: new DateTime(2026, 3, 1),
+            lastDate: new DateTime(2026, 3, 31),
+            currentDate: new DateTime(2026, 3, 13));
+        PumpAnimation();
+        var semantics = harness.PumpAndGetSemantics(new Size(500, 700));
+        var start = FindSemantics(semantics, node => node.Label?.StartsWith("10, Tuesday, March 10, 2026") == true);
+        Assert.True(start!.PerformAction(SemanticsActions.Tap));
+        semantics = harness.PumpAndGetSemantics(new Size(500, 700));
+        var end = FindSemantics(semantics, node => node.Label?.StartsWith("16, Monday, March 16, 2026") == true);
+        Assert.True(end!.PerformAction(SemanticsActions.Tap));
+        semantics = harness.PumpAndGetSemantics(new Size(500, 700));
+        var save = FindSemantics(semantics, node => node.Actions.HasFlag(SemanticsActions.Tap) && ContainsLabel(node, "Save"));
+        Assert.NotNull(save);
+        Assert.True(save!.PerformAction(SemanticsActions.Tap));
+        PumpAnimation();
+        harness.Pump(new Size(500, 700));
+        var range = await result;
+        Assert.Equal(new DateTime(2026, 3, 10), range!.Start);
+        Assert.Equal(new DateTime(2026, 3, 16), range.End);
+    }
+
     private static void PumpAnimation()
     {
         var now = Scheduler.CurrentSeconds;

@@ -5,6 +5,12 @@ namespace Plumix.Widgets;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/widgets/media_query.dart (approximate)
 
+public enum Orientation
+{
+    Portrait,
+    Landscape,
+}
+
 public sealed record MediaQueryData(
     Size Size = default,
     double DevicePixelRatio = 1.0,
@@ -13,8 +19,13 @@ public sealed record MediaQueryData(
     Thickness SystemGestureInsets = default,
     Thickness ViewPadding = default,
     double TextScaleFactor = 1.0,
-    bool AccessibleNavigation = false)
+    bool AccessibleNavigation = false,
+    bool AlwaysUse24HourFormat = false)
 {
+    public Orientation Orientation => Size.Width > Size.Height
+        ? Orientation.Landscape
+        : Orientation.Portrait;
+
     public MediaQueryData CopyWith(
         Size? size = null,
         double? devicePixelRatio = null,
@@ -23,7 +34,8 @@ public sealed record MediaQueryData(
         Thickness? systemGestureInsets = null,
         Thickness? viewPadding = null,
         double? textScaleFactor = null,
-        bool? accessibleNavigation = null)
+        bool? accessibleNavigation = null,
+        bool? alwaysUse24HourFormat = null)
     {
         return new MediaQueryData(
             Size: size ?? Size,
@@ -33,7 +45,8 @@ public sealed record MediaQueryData(
             SystemGestureInsets: systemGestureInsets ?? SystemGestureInsets,
             ViewPadding: viewPadding ?? ViewPadding,
             TextScaleFactor: textScaleFactor ?? TextScaleFactor,
-            AccessibleNavigation: accessibleNavigation ?? AccessibleNavigation);
+            AccessibleNavigation: accessibleNavigation ?? AccessibleNavigation,
+            AlwaysUse24HourFormat: alwaysUse24HourFormat ?? AlwaysUse24HourFormat);
     }
 
     public MediaQueryData RemovePadding(
@@ -188,6 +201,14 @@ public sealed class MediaQuery : InheritedWidget
     public static double? MaybeTextScaleFactorOf(BuildContext context) => MaybeOf(context)?.TextScaleFactor;
 
     public static bool AccessibleNavigationOf(BuildContext context) => Of(context).AccessibleNavigation;
+
+    public static bool AlwaysUse24HourFormatOf(BuildContext context) => Of(context).AlwaysUse24HourFormat;
+
+    public static bool? MaybeAlwaysUse24HourFormatOf(BuildContext context) => MaybeOf(context)?.AlwaysUse24HourFormat;
+
+    public static Orientation OrientationOf(BuildContext context) => Of(context).Orientation;
+
+    public static Orientation? MaybeOrientationOf(BuildContext context) => MaybeOf(context)?.Orientation;
 
     public static Widget WithClampedTextScaling(
         BuildContext context,

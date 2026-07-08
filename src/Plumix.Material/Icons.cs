@@ -42,6 +42,10 @@ public static class Icons
 
     public static IconData CalendarToday { get; } = new(0xe122, FontFamily: MaterialIconsFontFamily);
 
+    public static IconData KeyboardOutlined { get; } = new(0xf03d, FontFamily: MaterialIconsFontFamily);
+
+    public static IconData AccessTime { get; } = new(0xe03a, FontFamily: MaterialIconsFontFamily);
+
     public static IconData FirstPage { get; } = new(0xe5dc, FontFamily: MaterialIconsFontFamily, MatchTextDirection: true);
 
     public static IconData LastPage { get; } = new(0xe5dd, FontFamily: MaterialIconsFontFamily, MatchTextDirection: true);

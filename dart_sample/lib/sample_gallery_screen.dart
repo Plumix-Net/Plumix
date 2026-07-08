@@ -100,8 +100,8 @@ class SampleGalleryScreen extends StatelessWidget {
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.datePicker,
-      title: 'CalendarDatePicker + YearPicker',
-      subtitle: 'month/day/year selection + predicates + M2/M3 theme states',
+      title: 'Date/time picker family',
+      subtitle: 'day/year/time/range selection + input modes + M2/M3 themes',
       builder: () => const DatePickerDemoPage(),
     ),
     SampleRouteDefinition(
