@@ -45,6 +45,7 @@ internal static class SampleRoutes
     public const string SnackBar = "/snack-bar";
     public const string BottomSheet = "/bottom-sheet";
     public const string SliverAppBar = "/sliver-app-bar";
+    public const string TextField = "/text-field";
     public const string Dialog = "/dialog";
     public const string PopupMenu = "/popup-menu";
     public const string Dropdown = "/dropdown";
@@ -118,6 +119,7 @@ internal sealed class SampleGalleryScreen : StatelessWidget
         new(SampleRoutes.SnackBar, "SnackBar + SnackBarAction", "messenger queue + action/close/overflow probes", () => new SnackBarDemoPage()),
         new(SampleRoutes.BottomSheet, "BottomSheet + ModalBottomSheet", "persistent controller + modal route/drag/theme probes", () => new BottomSheetDemoPage()),
         new(SampleRoutes.SliverAppBar, "SliverAppBar + FlexibleSpaceBar", "collapse/parallax + pinned/floating/snap + M3 variants", () => new SliverAppBarDemoPage()),
+        new(SampleRoutes.TextField, "InputDecorator + TextField", "labels/borders/supporting text + editable states", () => new TextFieldDemoPage()),
         new(SampleRoutes.Dialog, "Dialog family", "modal route + alert/simple/result/scrollable/theme probes", () => new DialogDemoPage()),
         new(SampleRoutes.PopupMenu, "PopupMenuButton + PopupMenuItem", "anchor + selection/cancel/keyboard/theme probes", () => new PopupMenuDemoPage()),
         new(SampleRoutes.Dropdown, "DropdownButton + DropdownMenuItem", "selection + hint/disabled/dense/expanded/route probes", () => new DropdownDemoPage()),

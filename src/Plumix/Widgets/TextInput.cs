@@ -3,6 +3,7 @@ using Avalonia.Media;
 using Avalonia.Media.TextFormatting;
 using System.Globalization;
 using Plumix.Foundation;
+using Plumix.Rendering;
 using Plumix.UI;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/widgets/editable_text.dart; flutter/packages/flutter/lib/src/widgets/text_field.dart (adapted)
@@ -576,8 +577,23 @@ public sealed class EditableText : StatefulWidget
         Color? backgroundColor = null,
         Color? focusedBackgroundColor = null,
         Thickness? padding = null,
+        TextStyle? style = null,
+        bool readOnly = false,
+        bool obscureText = false,
+        string obscuringCharacter = "•",
+        int? maxLength = null,
+        Action? onEditingComplete = null,
+        Action<string>? onSubmitted = null,
+        string? semanticsLabel = null,
+        TextAlign textAlign = TextAlign.Start,
+        TextDirection? textDirection = null,
+        bool canRequestFocus = true,
         Key? key = null) : base(key)
     {
+        if (string.IsNullOrEmpty(obscuringCharacter) || obscuringCharacter.Length != 1)
+            throw new ArgumentException("obscuringCharacter must contain exactly one UTF-16 character.", nameof(obscuringCharacter));
+        if (maxLength.HasValue && maxLength.Value <= 0)
+            throw new ArgumentOutOfRangeException(nameof(maxLength));
         Controller = controller;
         FocusNode = focusNode;
         Placeholder = placeholder;
@@ -591,6 +607,17 @@ public sealed class EditableText : StatefulWidget
         BackgroundColor = backgroundColor ?? Color.Parse("#FFF5F5F5");
         FocusedBackgroundColor = focusedBackgroundColor ?? Color.Parse("#FFE8F0FE");
         Padding = padding ?? new Thickness(8, 6);
+        Style = style;
+        ReadOnly = readOnly;
+        ObscureText = obscureText;
+        ObscuringCharacter = obscuringCharacter;
+        MaxLength = maxLength;
+        OnEditingComplete = onEditingComplete;
+        OnSubmitted = onSubmitted;
+        SemanticsLabel = semanticsLabel;
+        TextAlign = textAlign;
+        TextDirection = textDirection;
+        CanRequestFocus = canRequestFocus;
     }
 
     public TextEditingController Controller { get; }
@@ -618,6 +645,17 @@ public sealed class EditableText : StatefulWidget
     public Color FocusedBackgroundColor { get; }
 
     public Thickness Padding { get; }
+    public TextStyle? Style { get; }
+    public bool ReadOnly { get; }
+    public bool ObscureText { get; }
+    public string ObscuringCharacter { get; }
+    public int? MaxLength { get; }
+    public Action? OnEditingComplete { get; }
+    public Action<string>? OnSubmitted { get; }
+    public string? SemanticsLabel { get; }
+    public TextAlign TextAlign { get; }
+    public TextDirection? TextDirection { get; }
+    public bool CanRequestFocus { get; }
 
     public override State CreateState()
     {
@@ -666,8 +704,11 @@ public sealed class EditableText : StatefulWidget
         {
             var text = _controller!.Text;
             var showPlaceholder = string.IsNullOrEmpty(text) && !string.IsNullOrEmpty(Widget.Placeholder);
+            var renderedText = Widget.ObscureText
+                ? new string(Widget.ObscuringCharacter[0], text.Length)
+                : text;
             var displayText = BuildDisplayText(
-                text: text,
+                text: renderedText,
                 showPlaceholder: showPlaceholder,
                 placeholder: Widget.Placeholder,
                 hasFocus: _focusNode!.HasFocus,
@@ -676,10 +717,11 @@ public sealed class EditableText : StatefulWidget
             var textColor = showPlaceholder ? Widget.PlaceholderColor : Widget.TextColor;
             var backgroundColor = _focusNode!.HasFocus ? Widget.FocusedBackgroundColor : Widget.BackgroundColor;
 
-            return new Focus(
+            var style = Widget.Style;
+            Widget result = new Focus(
                 focusNode: _focusNode,
                 autofocus: Widget.Autofocus,
-                canRequestFocus: Widget.Enabled,
+                canRequestFocus: Widget.Enabled && Widget.CanRequestFocus,
                 onKeyEvent: HandleKeyEvent,
                 onTextInput: HandleTextInput,
                 onTextComposition: HandleTextComposition,
@@ -688,7 +730,25 @@ public sealed class EditableText : StatefulWidget
                 child: new Container(
                     color: backgroundColor,
                     padding: Widget.Padding,
-                    child: new Text(displayText, fontSize: Widget.FontSize, color: textColor)));
+                    child: new Text(
+                        displayText,
+                        fontFamily: style?.FontFamily,
+                        fontSize: style?.FontSize ?? Widget.FontSize,
+                        color: style?.Color ?? textColor,
+                        fontWeight: style?.FontWeight,
+                        fontStyle: style?.FontStyle,
+                        height: style?.Height,
+                        letterSpacing: style?.LetterSpacing,
+                        textAlign: Widget.TextAlign,
+                        textDirection: Widget.TextDirection ?? Directionality.Of(context),
+                        softWrap: Widget.Multiline)));
+            return new Semantics(
+                label: Widget.SemanticsLabel,
+                flags: SemanticsFlags.IsTextField
+                       | (Widget.Enabled ? SemanticsFlags.IsEnabled : SemanticsFlags.None)
+                       | (_focusNode.HasFocus ? SemanticsFlags.IsFocused : SemanticsFlags.None),
+                onTap: Widget.Enabled ? () => _focusNode.RequestFocus() : null,
+                child: result);
         }
 
         private void AttachController(TextEditingController controller)
@@ -782,7 +842,7 @@ public sealed class EditableText : StatefulWidget
                 if (!controller.Selection.IsCollapsed)
                 {
                     TextClipboard.SetText(controller.SelectedText);
-                    textChanged = controller.DeleteBackward();
+                    textChanged = !Widget.ReadOnly && controller.DeleteBackward();
                     if (textChanged)
                     {
                         Widget.OnChanged?.Invoke(controller.Text);
@@ -797,8 +857,9 @@ public sealed class EditableText : StatefulWidget
             if (isEditingShortcut && string.Equals(key, "V", StringComparison.Ordinal))
             {
                 var pasteText = TextClipboard.GetText() ?? string.Empty;
-                if (!string.IsNullOrEmpty(pasteText))
+                if (!Widget.ReadOnly && !string.IsNullOrEmpty(pasteText))
                 {
+                    pasteText = LimitInsertion(pasteText);
                     textChanged = controller.Composing.HasValue
                         ? controller.CommitComposing(pasteText)
                         : controller.Insert(pasteText);
@@ -816,15 +877,15 @@ public sealed class EditableText : StatefulWidget
             if (string.Equals(key, "Back", StringComparison.Ordinal)
                 || string.Equals(key, "Backspace", StringComparison.Ordinal))
             {
-                textChanged = isWordShortcut
+                textChanged = !Widget.ReadOnly && (isWordShortcut
                     ? controller.DeleteBackwardByWord()
-                    : controller.DeleteBackward();
+                    : controller.DeleteBackward());
             }
             else if (string.Equals(key, "Delete", StringComparison.Ordinal))
             {
-                textChanged = isWordShortcut
+                textChanged = !Widget.ReadOnly && (isWordShortcut
                     ? controller.DeleteForwardByWord()
-                    : controller.DeleteForward();
+                    : controller.DeleteForward());
             }
             else if (string.Equals(key, "ArrowLeft", StringComparison.Ordinal)
                      || string.Equals(key, "Left", StringComparison.Ordinal))
@@ -876,11 +937,18 @@ public sealed class EditableText : StatefulWidget
             {
                 _ = controller.MoveCaretToEnd(extendSelection: @event.IsShiftPressed);
             }
-            else if (Widget.Multiline
-                     && (string.Equals(key, "Enter", StringComparison.Ordinal)
-                         || string.Equals(key, "Return", StringComparison.Ordinal)))
+            else if (string.Equals(key, "Enter", StringComparison.Ordinal)
+                     || string.Equals(key, "Return", StringComparison.Ordinal))
             {
-                textChanged = controller.Insert("\n");
+                if (Widget.Multiline && !Widget.ReadOnly)
+                {
+                    textChanged = controller.Insert(LimitInsertion("\n"));
+                }
+                else
+                {
+                    Widget.OnEditingComplete?.Invoke();
+                    Widget.OnSubmitted?.Invoke(controller.Text);
+                }
             }
             else if (string.Equals(key, "Escape", StringComparison.Ordinal))
             {
@@ -907,7 +975,7 @@ public sealed class EditableText : StatefulWidget
 
         private bool HandleTextInput(FocusNode node, string text)
         {
-            if (!Widget.Enabled || string.IsNullOrEmpty(text))
+            if (!Widget.Enabled || Widget.ReadOnly || string.IsNullOrEmpty(text))
             {
                 return false;
             }
@@ -921,6 +989,8 @@ public sealed class EditableText : StatefulWidget
                 return false;
             }
 
+            normalizedInput = LimitInsertion(normalizedInput);
+            if (string.IsNullOrEmpty(normalizedInput)) return false;
             var changed = _controller!.Composing.HasValue
                 ? _controller.CommitComposing(normalizedInput)
                 : _controller.Insert(normalizedInput);
@@ -936,14 +1006,15 @@ public sealed class EditableText : StatefulWidget
 
         private bool HandleTextComposition(FocusNode node, string text, bool isCommit)
         {
-            if (!Widget.Enabled)
+            if (!Widget.Enabled || Widget.ReadOnly)
             {
                 return false;
             }
 
+            var limitedText = LimitInsertion(text);
             var changed = isCommit
-                ? _controller!.CommitComposing(text)
-                : _controller!.SetComposing(text);
+                ? _controller!.CommitComposing(limitedText)
+                : _controller!.SetComposing(limitedText);
             if (changed)
             {
                 _verticalNavigationX = null;
@@ -1165,6 +1236,22 @@ public sealed class EditableText : StatefulWidget
             _verticalNavigationX = null;
             _verticalNavigationColumn = null;
             SetState(static () => { });
+        }
+
+        private string LimitInsertion(string insertion)
+        {
+            if (!Widget.MaxLength.HasValue || string.IsNullOrEmpty(insertion)) return insertion;
+            var controller = _controller!;
+            var selection = controller.Selection.Clamp(controller.Text.Length);
+            var retained = controller.Text.Remove(selection.Start, selection.End - selection.Start);
+            var remaining = Math.Max(0, Widget.MaxLength.Value - new StringInfo(retained).LengthInTextElements);
+            if (new StringInfo(insertion).LengthInTextElements <= remaining) return insertion;
+            if (remaining == 0) return string.Empty;
+            var enumerator = StringInfo.GetTextElementEnumerator(insertion);
+            var end = 0;
+            for (var index = 0; index < remaining && enumerator.MoveNext(); index++)
+                end = enumerator.ElementIndex + enumerator.GetTextElement().Length;
+            return insertion[..end];
         }
 
         private static string BuildDisplayText(

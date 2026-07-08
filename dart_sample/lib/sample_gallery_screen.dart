@@ -13,6 +13,7 @@ import 'demos/material/data_table_demo_page.dart';
 import 'demos/material/snack_bar_demo_page.dart';
 import 'demos/material/bottom_sheet_demo_page.dart';
 import 'demos/material/sliver_app_bar_demo_page.dart';
+import 'demos/material/text_field_demo_page.dart';
 import 'demos/material/dialog_demo_page.dart';
 import 'demos/material/popup_menu_demo_page.dart';
 import 'demos/material/dropdown_demo_page.dart';
@@ -160,6 +161,12 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'SliverAppBar + FlexibleSpaceBar',
       subtitle: 'collapse/parallax + pinned/floating/snap + M3 variants',
       builder: () => const SliverAppBarDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.textField,
+      title: 'InputDecorator + TextField',
+      subtitle: 'labels/borders/supporting text + editable states',
+      builder: () => const TextFieldDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.dialog,

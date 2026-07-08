@@ -307,6 +307,7 @@ public sealed record ThemeData
     private ScrollbarThemeData? _scrollbarTheme;
     private TabBarThemeData? _tabBarTheme;
     private BottomSheetThemeData? _bottomSheetTheme;
+    private InputDecorationThemeData? _inputDecorationTheme;
 
     public ThemeData(
         TargetPlatform? platform = null,
@@ -393,7 +394,8 @@ public sealed record ThemeData
         Color? hoverColor = null,
         Color? highlightColor = null,
         Color? splashColor = null,
-        BottomSheetThemeData? bottomSheetTheme = null)
+        BottomSheetThemeData? bottomSheetTheme = null,
+        InputDecorationThemeData? inputDecorationTheme = null)
     {
         Platform = platform ?? ResolveDefaultPlatform();
         Brightness = brightness ?? Brightness.Light;
@@ -486,6 +488,7 @@ public sealed record ThemeData
         _scrollbarTheme = scrollbarTheme;
         _tabBarTheme = tabBarTheme;
         _bottomSheetTheme = bottomSheetTheme;
+        _inputDecorationTheme = inputDecorationTheme;
         VisualDensity = visualDensity ?? VisualDensity.Standard;
     }
 
@@ -797,6 +800,12 @@ public sealed record ThemeData
     {
         get => _bottomSheetTheme ?? new BottomSheetThemeData();
         init => _bottomSheetTheme = value;
+    }
+
+    public InputDecorationThemeData InputDecorationTheme
+    {
+        get => _inputDecorationTheme ?? new InputDecorationThemeData();
+        init => _inputDecorationTheme = value;
     }
 
     public ButtonBarThemeData ButtonBarTheme

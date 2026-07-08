@@ -52,6 +52,16 @@ public static class Icons
 
     public static IconData Menu { get; } = new(0xe3dc, FontFamily: MaterialIconsFontFamily);
 
+    public static IconData Search { get; } = new(0xe8b6, FontFamily: MaterialIconsFontFamily);
+
+    public static IconData Visibility { get; } = new(0xe8f4, FontFamily: MaterialIconsFontFamily);
+
+    public static IconData VisibilityOff { get; } = new(0xe8f5, FontFamily: MaterialIconsFontFamily);
+
+    public static IconData Email { get; } = new(0xe0be, FontFamily: MaterialIconsFontFamily);
+
+    public static IconData Lock { get; } = new(0xe897, FontFamily: MaterialIconsFontFamily);
+
     public static IconData MoreHoriz { get; } = new(0xe402, FontFamily: MaterialIconsFontFamily);
 
     public static IconData MoreVert { get; } = new(0xe404, FontFamily: MaterialIconsFontFamily);

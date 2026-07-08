@@ -8,7 +8,7 @@ Use this block as the fastest machine-readable status summary.
 
 ```yaml
 framework_plan_version: 1
-last_updated: 2026-07-07
+last_updated: 2026-07-08
 north_star: "Flutter-like widget/rendering framework in C# with Avalonia as host infrastructure."
 current_phase: "M4 material library rewrite (theme/scaffold/material controls) in progress."
 status:
@@ -639,6 +639,10 @@ Progress update (2026-03-19):
   - added framework-owned `SliverPersistentHeader`/`RenderSliverPersistentHeader` geometry with collapsing, pinned, and floating behavior, plus alignment-aware transform geometry used by scaled flexible titles;
   - matched the Flutter API/default/composition paths for flexible-space parallax/pin modes, title scaling/fade, leading-aware padding, scroll-under surfaces, primary safe-area extent, regular and M3 medium/large app bars, and AppBarTheme elevation/shape/color precedence;
   - added focused `MaterialSliverAppBarTests` and a mirrored `/sliver-app-bar` C#/Dart runtime demo. Exact ballistic snap settling and overscroll stretch remain documented against missing shared scroll protocols.
+- Added paired `InputDecorator` + Material `TextField` ports:
+  - added `InputDecoration`, underline/outline/no-border shapes, `InputDecorationThemeData`/`InputDecorationTheme`, M2/M3 fill and state-border resolution, floating/inline labels, hint/helper/error/counter, prefix/suffix/icon slots, dense/collapsed and constraints composition;
+  - expanded core `EditableText` for source-required styled, read-only, obscured, submitted, semantic, and grapheme-limited input while preserving the existing IME/selection/clipboard/focus pipeline;
+  - added focused `MaterialTextFieldTests` and a mirrored `/text-field` C#/Dart runtime demo. Advanced selection overlays/context menus, autofill/spellcheck/restoration and exact private decorator render geometry remain documented shared-primitive gaps.
 - Remaining divergence for floating action button in current framework scope:
   - none documented in current framework scope.
 
