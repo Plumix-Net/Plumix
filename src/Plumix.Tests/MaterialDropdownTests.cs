@@ -289,6 +289,91 @@ public sealed class MaterialDropdownTests : IDisposable
         focusNode.Dispose();
     }
 
+    [Fact]
+    public void DropdownButtonFormField_ExposesFlutterDefaultsAndValidatesContracts()
+    {
+        var items = new[] { new DropdownMenuItem<string>(new Text("One"), value: "one") };
+        var field = new DropdownButtonFormField<string>(items, _ => { }, initialValue: "one");
+        Assert.True(field.IsDense);
+        Assert.False(field.IsExpanded);
+        Assert.Null(field.ItemHeight);
+        Assert.Equal(8, field.Elevation);
+        Assert.Equal(24, field.IconSize);
+        Assert.True(field.BarrierDismissible);
+        Assert.NotNull(field.Decoration);
+
+        Assert.Throws<ArgumentException>(() => new DropdownButtonFormField<string>(items, _ => { }, initialValue: "missing"));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new DropdownButtonFormField<string>(items, _ => { }, itemHeight: 47));
+        Assert.Throws<ArgumentException>(() => new DropdownButtonFormField<string>(
+            items,
+            _ => { },
+            decoration: new InputDecoration(errorText: "fixed"),
+            errorBuilder: (_, error) => new Text(error)));
+    }
+
+    [Fact]
+    public void DropdownButtonFormField_ValidationChangeOrderingAndResetMatchSource()
+    {
+        var items = new[]
+        {
+            new DropdownMenuItem<string>(new Text("One"), value: "one"),
+            new DropdownMenuItem<string>(new Text("Two"), value: "two"),
+        };
+        var callbacks = new List<string>();
+        FormState? formState = null;
+        using var harness = new WidgetRenderHarness(Wrap(new Form(
+            onChanged: () => callbacks.Add("form"),
+            child: new Builder(context =>
+            {
+                formState = Form.Of(context);
+                return new DropdownButtonFormField<string>(
+                    items,
+                    value => callbacks.Add($"field:{value}"),
+                    initialValue: "one",
+                    decoration: new InputDecoration(labelText: "Choice"),
+                    validator: value => value == "one" ? "Choose another" : null);
+            }))));
+        harness.Pump(new Size(420, 160));
+        var state = Assert.IsType<DropdownButtonFormFieldState<string>>(Assert.Single(formState!.Fields));
+
+        Assert.False(formState.Validate());
+        harness.Pump(new Size(420, 180));
+        Assert.Contains(FindDescendants<RenderParagraph>(harness.RenderView), value => value.Text == "Choose another");
+
+        state.DidChange("two");
+        Assert.Equal(new[] { "form", "field:two" }, callbacks.TakeLast(2));
+        Assert.Equal("two", state.Value);
+        Assert.True(formState.Validate());
+
+        formState.Reset();
+        harness.Pump(new Size(420, 160));
+        Assert.Equal("one", state.Value);
+        Assert.Equal(new[] { "form", "field:one", "form" }, callbacks.TakeLast(3));
+    }
+
+    [Fact]
+    public void DropdownButtonFormField_UsesDecorationHintAndCustomErrorWidget()
+    {
+        FormState? formState = null;
+        using var harness = new WidgetRenderHarness(Wrap(new Form(
+            child: new Builder(context =>
+            {
+                formState = Form.Of(context);
+                return new DropdownButtonFormField<string>(
+                    [new DropdownMenuItem<string>(new Text("One"), value: "one")],
+                    _ => { },
+                    decoration: new InputDecoration(hintText: "Pick one"),
+                    validator: _ => "Required",
+                    errorBuilder: (_, error) => new Text($"custom {error}"));
+            }))));
+        harness.Pump(new Size(420, 140));
+        Assert.NotNull(FindParagraph(harness.RenderView, "Pick one"));
+
+        Assert.False(formState!.Validate());
+        harness.Pump(new Size(420, 180));
+        Assert.NotNull(FindParagraph(harness.RenderView, "custom Required"));
+    }
+
     private static Widget Wrap(Widget child) => new Directionality(
         TextDirection.Ltr,
         new MediaQuery(

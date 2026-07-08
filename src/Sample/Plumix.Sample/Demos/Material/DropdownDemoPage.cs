@@ -23,6 +23,9 @@ public sealed class DropdownDemoPage : StatefulWidget
         private bool _hideUnderline;
         private bool _aligned;
         private string _status = "idle";
+        private string? _formValue;
+        private string _formStatus = "not validated";
+        private readonly LabeledGlobalKey<FormState> _formKey = new("dropdown-form");
 
         public override Widget Build(BuildContext context)
         {
@@ -97,7 +100,54 @@ public sealed class DropdownDemoPage : StatefulWidget
                                 onChanged: null,
                                 hint: new Text("Fallback hint"),
                                 disabledHint: new Text("Disabled hint"))),
+                        new Divider(),
+                        new Text("DropdownButtonFormField + Form", fontSize: 18),
+                        new Form(
+                            key: _formKey,
+                            child: new Column(
+                                crossAxisAlignment: CrossAxisAlignment.Stretch,
+                                spacing: 8,
+                                children:
+                                [
+                                    new DropdownButtonFormField<string>(
+                                        items: BuildItems(),
+                                        onChanged: value => SetState(() =>
+                                        {
+                                            _formValue = value;
+                                            _formStatus = $"changed: {value ?? "none"}";
+                                        }),
+                                        initialValue: _formValue,
+                                        decoration: new InputDecoration(
+                                            labelText: "Required choice",
+                                            hintText: "Pick one item",
+                                            border: new OutlineInputBorder()),
+                                        validator: value => value is null ? "Select an item" : null),
+                                    new Row(
+                                        spacing: 8,
+                                        children:
+                                        [
+                                            ControlButton("Validate", ValidateForm),
+                                            ControlButton("Reset", ResetForm),
+                                        ]),
+                                    new Text($"Form status: {_formStatus}", fontSize: 13),
+                                ])),
                     ]));
+        }
+
+        private void ValidateForm()
+        {
+            var valid = _formKey.CurrentState?.Validate() == true;
+            SetState(() => _formStatus = valid ? "valid" : "invalid");
+        }
+
+        private void ResetForm()
+        {
+            _formKey.CurrentState?.Reset();
+            SetState(() =>
+            {
+                _formValue = null;
+                _formStatus = "reset";
+            });
         }
 
         private static IReadOnlyList<DropdownMenuItem<string>> BuildItems() =>

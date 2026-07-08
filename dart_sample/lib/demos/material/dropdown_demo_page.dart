@@ -15,6 +15,9 @@ class _DropdownDemoPageState extends State<DropdownDemoPage> {
   bool _hideUnderline = false;
   bool _aligned = false;
   String _status = 'idle';
+  String? _formValue;
+  String _formStatus = 'not validated';
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   @override
   Widget build(BuildContext context) {
@@ -106,9 +109,63 @@ class _DropdownDemoPageState extends State<DropdownDemoPage> {
               disabledHint: const Text('Disabled hint'),
             ),
           ),
+          const Divider(),
+          const Text(
+            'DropdownButtonFormField + Form',
+            style: TextStyle(fontSize: 18),
+          ),
+          Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              spacing: 8,
+              children: <Widget>[
+                DropdownButtonFormField<String>(
+                  items: _buildItems(),
+                  initialValue: _formValue,
+                  onChanged: (String? value) => setState(() {
+                    _formValue = value;
+                    _formStatus = 'changed: ${value ?? 'none'}';
+                  }),
+                  decoration: const InputDecoration(
+                    labelText: 'Required choice',
+                    hintText: 'Pick one item',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (String? value) =>
+                      value == null ? 'Select an item' : null,
+                ),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: <Widget>[
+                    _controlButton('Validate', _validateForm),
+                    _controlButton('Reset', _resetForm),
+                  ],
+                ),
+                Text(
+                  'Form status: $_formStatus',
+                  style: const TextStyle(fontSize: 13),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
+  }
+
+  void _validateForm() {
+    final bool valid = _formKey.currentState?.validate() ?? false;
+    setState(() => _formStatus = valid ? 'valid' : 'invalid');
+  }
+
+  void _resetForm() {
+    _formKey.currentState?.reset();
+    setState(() {
+      _formValue = null;
+      _formStatus = 'reset';
+    });
   }
 
   List<DropdownMenuItem<String>> _buildItems() =>

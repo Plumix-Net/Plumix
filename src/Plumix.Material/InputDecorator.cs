@@ -211,6 +211,23 @@ public sealed class InputDecoration
         border: Border, enabled: Enabled, semanticCounterText: SemanticCounterText,
         alignLabelWithHint: AlignLabelWithHint, constraints: Constraints);
 
+    internal InputDecoration WithFormError(string? errorText, Widget? error = null, bool clearHintText = false) => new(
+        icon: Icon, iconColor: IconColor, label: Label, labelText: LabelText, labelStyle: LabelStyle,
+        floatingLabelStyle: FloatingLabelStyle, helper: Helper, helperText: HelperText, helperStyle: HelperStyle,
+        helperMaxLines: HelperMaxLines, hintText: clearHintText && HintText is not null ? string.Empty : HintText,
+        hint: Hint, hintStyle: HintStyle, hintMaxLines: HintMaxLines,
+        error: error, errorText: error is null ? errorText : null, errorStyle: ErrorStyle, errorMaxLines: ErrorMaxLines,
+        floatingLabelBehavior: FloatingLabelBehavior, floatingLabelAlignment: FloatingLabelAlignment,
+        isCollapsed: IsCollapsed, isDense: IsDense, contentPadding: ContentPadding, prefixIcon: PrefixIcon,
+        prefixIconConstraints: PrefixIconConstraints, prefix: Prefix, prefixText: PrefixText, prefixStyle: PrefixStyle,
+        prefixIconColor: PrefixIconColor, suffixIcon: SuffixIcon, suffix: Suffix, suffixText: SuffixText,
+        suffixStyle: SuffixStyle, suffixIconColor: SuffixIconColor, suffixIconConstraints: SuffixIconConstraints,
+        counter: Counter, counterText: CounterText, counterStyle: CounterStyle,
+        filled: Filled, fillColor: FillColor, focusColor: FocusColor, hoverColor: HoverColor,
+        errorBorder: ErrorBorder, focusedBorder: FocusedBorder, focusedErrorBorder: FocusedErrorBorder,
+        disabledBorder: DisabledBorder, enabledBorder: EnabledBorder, border: Border, enabled: Enabled,
+        semanticCounterText: SemanticCounterText, alignLabelWithHint: AlignLabelWithHint, constraints: Constraints);
+
     private static void ValidateLines(int? value, string name) { if (value.HasValue && value.Value <= 0) throw new ArgumentOutOfRangeException(name); }
 }
 

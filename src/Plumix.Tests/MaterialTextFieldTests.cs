@@ -139,6 +139,88 @@ public sealed class MaterialTextFieldTests : IDisposable
         Assert.NotNull(new TextField(maxLength: TextField.NoMaxLength));
     }
 
+    [Fact]
+    public void TextFormField_ExposesFlutterDefaultsAndConstructorContracts()
+    {
+        var field = new TextFormField(initialValue: "hello");
+        Assert.Equal("hello", field.InitialValue);
+        Assert.True(field.Enabled);
+        Assert.Equal(AutovalidateMode.Disabled, field.AutovalidateMode);
+        Assert.Equal(1, field.MaxLines);
+        Assert.False(field.ReadOnly);
+        Assert.False(field.Autofocus);
+        Assert.NotNull(field.Decoration);
+
+        var controller = new TextEditingController("external");
+        Assert.Throws<ArgumentException>(() => new TextFormField(controller: controller, initialValue: "duplicate"));
+        Assert.Throws<ArgumentException>(() => new TextFormField(
+            decoration: new InputDecoration(errorText: "fixed"),
+            errorBuilder: (_, error) => new Text(error)));
+        Assert.Throws<ArgumentException>(() => new TextFormField(expands: true));
+        controller.Dispose();
+    }
+
+    [Fact]
+    public void TextFormField_SynchronizesControllerValidationSaveAndReset()
+    {
+        var controller = new TextEditingController("initial");
+        FormState? formState = null;
+        var formChanged = 0;
+        var changedValues = new List<string>();
+        string? saved = null;
+        using var harness = new WidgetRenderHarness(Wrap(new Form(
+            onChanged: () => formChanged++,
+            child: new Builder(context =>
+            {
+                formState = Form.Of(context);
+                return new TextFormField(
+                    controller: controller,
+                    decoration: new InputDecoration(labelText: "Name"),
+                    validator: value => string.IsNullOrEmpty(value) ? "Name is required" : null,
+                    onSaved: value => saved = value,
+                    onChanged: changedValues.Add);
+            }))));
+        harness.Pump(new Size(360, 140));
+        var state = Assert.IsType<TextFormFieldState>(Assert.Single(formState!.Fields));
+
+        controller.Text = string.Empty;
+        harness.Pump(new Size(360, 140));
+        Assert.Equal(string.Empty, state.Value);
+        Assert.Equal(1, formChanged);
+        Assert.False(formState.Validate());
+        harness.Pump(new Size(360, 160));
+        Assert.Contains(FindDescendants<RenderParagraph>(harness.RenderView), value => value.Text == "Name is required");
+
+        formState.Save();
+        Assert.Equal(string.Empty, saved);
+        formState.Reset();
+        harness.Pump(new Size(360, 140));
+        Assert.Equal("initial", controller.Text);
+        Assert.Equal("initial", state.Value);
+        Assert.Contains("initial", changedValues);
+        controller.Dispose();
+    }
+
+    [Fact]
+    public void TextFormField_ErrorBuilderOverridesValidationTextWidget()
+    {
+        FormState? formState = null;
+        using var harness = new WidgetRenderHarness(Wrap(new Form(
+            child: new Builder(context =>
+            {
+                formState = Form.Of(context);
+                return new TextFormField(
+                    initialValue: string.Empty,
+                    validator: _ => "raw error",
+                    errorBuilder: (_, error) => new Text($"custom: {error}"));
+            }))));
+        harness.Pump(new Size(360, 140));
+        Assert.False(formState!.Validate());
+        harness.Pump(new Size(360, 160));
+        Assert.Contains(FindDescendants<RenderParagraph>(harness.RenderView), value => value.Text == "custom: raw error");
+        Assert.DoesNotContain(FindDescendants<RenderParagraph>(harness.RenderView), value => value.Text == "raw error");
+    }
+
     private static Widget Wrap(Widget child, ThemeData? theme = null) => new Directionality(
         TextDirection.Ltr,
         new MediaQuery(new MediaQueryData(Size: new Size(360, 640)), new Theme(theme ?? ThemeData.Light, child)));

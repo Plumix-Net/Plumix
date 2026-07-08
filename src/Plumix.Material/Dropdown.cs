@@ -175,10 +175,6 @@ public sealed class DropdownButton<T> : StatefulWidget
             throw new ArgumentException("There must be exactly one dropdown item matching value.", nameof(value));
         }
 
-        if (value is null && items.Any(item => item.Enabled && item.Value is null) && matching != 1)
-        {
-            throw new ArgumentException("There must be exactly one null-valued dropdown item when it is selected.", nameof(value));
-        }
     }
 
     private static void ValidateFiniteNonNegative(double value, string name)

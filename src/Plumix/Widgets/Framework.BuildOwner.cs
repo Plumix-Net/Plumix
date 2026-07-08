@@ -38,6 +38,7 @@ public sealed class BuildOwner
         }
 
         _globalKeyRegistry[key] = element;
+        key.AttachElement(element);
     }
 
     internal void UnregisterGlobalKey(GlobalKey key, Element element)
@@ -45,6 +46,7 @@ public sealed class BuildOwner
         if (_globalKeyRegistry.TryGetValue(key, out var existing) && ReferenceEquals(existing, element))
         {
             _globalKeyRegistry.Remove(key);
+            key.DetachElement(element);
         }
     }
 
