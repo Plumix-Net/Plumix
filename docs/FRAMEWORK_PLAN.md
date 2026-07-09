@@ -163,6 +163,7 @@ Kickoff note (2026-03-12):
 - Added paired `DropdownMenu<T>` + `DropdownMenuFormField<T>` parity with editable/select-only anchors, filtering/search, disabled-item keyboard traversal, menu controllers/close policies, intrinsic and explicit sizing, Material 3 dropdown theming, form lifecycle, focused tests, and mirrored C#/Dart sample probes.
 - Added paired `SearchBar` + `SearchAnchor` parity baseline with controller open/close, route-owned search view, sync suggestions, M3 bar/view themes, focused tests, and mirrored C#/Dart sample probes.
 - Added paired core `RawAutocomplete<T>` + Material `Autocomplete<T>` parity with sync/async option resolution, stale-result suppression, split/custom fields, anchored direction selection, keyboard highlighting/selection, Material defaults, focused tests, and mirrored C#/Dart sample probes.
+- Added paired `TabPageSelector` + `TabPageSelectorIndicator` parity with explicit/inherited controllers, animated and drag-driven color interpolation, theme-secondary defaults, border styles, localized semantics, focused tests, and expanded mirrored tabs demos.
 
 Progress update (2026-03-19):
 

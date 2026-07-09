@@ -64,6 +64,17 @@ class _TabsDemoPageState extends State<TabsDemoPage> {
               style: TextStyle(fontSize: 13, color: Color(0x8A000000)),
             ),
             const SizedBox(height: 10),
+            Center(
+              child: TabPageSelector(
+                indicatorSize: _useThemeOverrides ? 16 : 12,
+                color: _useThemeOverrides ? const Color(0xFFB2DFDB) : null,
+                selectedColor: _useThemeOverrides
+                    ? const Color(0xFF00695C)
+                    : null,
+                borderStyle: _useThemeOverrides ? BorderStyle.none : null,
+              ),
+            ),
+            const SizedBox(height: 10),
             Expanded(
               child: Scaffold(
                 appBar: AppBar(

@@ -1284,7 +1284,7 @@ public sealed class RenderDecoratedBox : RenderProxyBox
         if (_decoration.Border.HasValue)
         {
             var border = _decoration.Border.Value;
-            if (border.Width > 0)
+            if (border.Style == BorderStyle.Solid && border.Width > 0)
             {
                 borderPen = new Pen(new SolidColorBrush(border.Color), border.Width);
             }

@@ -178,12 +178,14 @@ public sealed class MaterialAutocompleteTests : IDisposable
         controller.Text = "new";
 
         second.SetResult(["new-result"]);
-        await Task.Yield();
-        harness.Pump(new Size(480, 320));
+        await PumpUntilAsync(
+            harness,
+            new Size(480, 320),
+            () => FindParagraph(harness.RenderView, "new-result") is not null);
         Assert.NotNull(FindParagraph(harness.RenderView, "new-result"));
 
         first.SetResult(["stale-result"]);
-        await Task.Yield();
+        await Task.Delay(10);
         harness.Pump(new Size(480, 320));
         Assert.NotNull(FindParagraph(harness.RenderView, "new-result"));
         Assert.Null(FindParagraph(harness.RenderView, "stale-result"));
@@ -201,6 +203,24 @@ public sealed class MaterialAutocompleteTests : IDisposable
     private static RenderParagraph? FindParagraph(RenderObject? root, string text)
     {
         return FindDescendants<RenderParagraph>(root).FirstOrDefault(paragraph => paragraph.Text == text);
+    }
+
+    private static async Task PumpUntilAsync(
+        WidgetRenderHarness harness,
+        Size size,
+        Func<bool> predicate)
+    {
+        for (int attempt = 0; attempt < 100; attempt++)
+        {
+            await Task.Delay(1);
+            harness.Pump(size);
+            if (predicate())
+            {
+                return;
+            }
+        }
+
+        throw new TimeoutException("The expected asynchronous widget state was not reached.");
     }
 
     private static List<T> FindDescendants<T>(RenderObject? root) where T : RenderObject
