@@ -49,10 +49,10 @@ internal sealed class RenderObjectSemantics
 
     internal void MarkNeedsSemanticsUpdate()
     {
-        var hadProducedSemanticsNode = _owner._semanticsNode != null;
-        var wasEffectiveSemanticsBoundary = hadProducedSemanticsNode && _isSemanticsBoundary && !_parentDataDirty;
+        bool hadProducedSemanticsNode = _owner._semanticsNode != null;
+        bool wasEffectiveSemanticsBoundary = hadProducedSemanticsNode && _isSemanticsBoundary && !_parentDataDirty;
         var cachedConfiguration = _configProvider.TryGetCachedEffective();
-        var wasBlockingSiblings = cachedConfiguration is
+        bool wasBlockingSiblings = cachedConfiguration is
         {
             IsExcluded: false,
             IsBlockingSemanticsOfPreviouslyPaintedNodes: true
@@ -64,9 +64,9 @@ internal sealed class RenderObjectSemantics
 
         var updatedConfiguration = new SemanticsConfiguration();
         _owner.InvokeDescribeSemanticsConfiguration(updatedConfiguration);
-        var blocksSiblingsNow = !updatedConfiguration.IsExcluded
-                                && updatedConfiguration.IsBlockingSemanticsOfPreviouslyPaintedNodes;
-        var mayAffectSiblingOrdering = wasBlockingSiblings || blocksSiblingsNow;
+        bool blocksSiblingsNow = !updatedConfiguration.IsExcluded
+                                 && updatedConfiguration.IsBlockingSemanticsOfPreviouslyPaintedNodes;
+        bool mayAffectSiblingOrdering = wasBlockingSiblings || blocksSiblingsNow;
 
         var pipelineOwner = _owner.Owner;
         if (!_owner.Attached || pipelineOwner == null)
@@ -74,9 +74,9 @@ internal sealed class RenderObjectSemantics
             return;
         }
 
-        var mayProduceSiblingNodes = updatedConfiguration.ChildConfigurationsDelegate != null;
+        bool mayProduceSiblingNodes = updatedConfiguration.ChildConfigurationsDelegate != null;
         RenderObject node = _owner;
-        var isEffectiveSemanticsBoundary = wasEffectiveSemanticsBoundary && !mayAffectSiblingOrdering;
+        bool isEffectiveSemanticsBoundary = wasEffectiveSemanticsBoundary && !mayAffectSiblingOrdering;
 
         while (node.Parent != null && (mayProduceSiblingNodes || !isEffectiveSemanticsBoundary))
         {
@@ -235,10 +235,10 @@ internal sealed class RenderObjectSemantics
             return;
         }
 
-        var contributesToSemanticsTree = ContributesToSemanticsTree(config);
-        var explicitChildNodesForChildren = _owner.Parent == null
-                                            || config.ExplicitChildNodes
-                                            || (!contributesToSemanticsTree && inheritedExplicitChildNodes);
+        bool contributesToSemanticsTree = ContributesToSemanticsTree(config);
+        bool explicitChildNodesForChildren = _owner.Parent == null
+                                             || config.ExplicitChildNodes
+                                             || (!contributesToSemanticsTree && inheritedExplicitChildNodes);
 
         var children = new List<SemanticsNode>();
         _owner.VisitChildrenForSemantics((child, _, _) =>
@@ -340,7 +340,7 @@ internal sealed class RenderObjectSemantics
             return false;
         }
 
-        var blocksPreviousSibling = false;
+        bool blocksPreviousSibling = false;
         _owner.VisitChildrenForSemantics((child, _, _) =>
         {
             if (!blocksPreviousSibling && child.Semantics.BlocksPreviousSemanticsSibling())
@@ -445,7 +445,7 @@ internal sealed class RenderObjectSemantics
                     configurationToChildNode,
                     incompleteConfigurationNodes,
                     out var node,
-                    out var fromChild))
+                    out bool fromChild))
             {
                 continue;
             }
@@ -504,8 +504,8 @@ internal sealed class RenderObjectSemantics
             SemanticsNode? mergedNode = null;
             SemanticsConfiguration? mergedConfiguration = null;
             var mergedRect = default(Rect);
-            var mergedIsHidden = false;
-            var mergedBlocksPreviousNodes = false;
+            bool mergedIsHidden = false;
+            bool mergedBlocksPreviousNodes = false;
 
             foreach (var groupConfiguration in siblingGroup)
             {
@@ -515,7 +515,7 @@ internal sealed class RenderObjectSemantics
                         configurationToChildNode,
                         incompleteConfigurationNodes,
                         out var groupNode,
-                        out var fromChild))
+                        out bool fromChild))
                 {
                     continue;
                 }
@@ -669,8 +669,8 @@ internal sealed class RenderObjectSemantics
             return null;
         }
 
-        var isHidden = _paintClipRect.HasValue
-                       && !_paintClipRect.Value.Intersects(rect);
+        bool isHidden = _paintClipRect.HasValue
+                        && !_paintClipRect.Value.Intersects(rect);
         var node = GetOrCreateDetachedNode(owner);
         ApplySemanticsConfigurationToNode(
             node,
@@ -714,10 +714,10 @@ internal sealed class RenderObjectSemantics
 
     private static Rect ExpandRectToInclude(Rect current, Rect addition)
     {
-        var minX = Math.Min(current.X, addition.X);
-        var minY = Math.Min(current.Y, addition.Y);
-        var maxX = Math.Max(current.Right, addition.Right);
-        var maxY = Math.Max(current.Bottom, addition.Bottom);
+        double minX = Math.Min(current.X, addition.X);
+        double minY = Math.Min(current.Y, addition.Y);
+        double maxX = Math.Max(current.Right, addition.Right);
+        double maxY = Math.Max(current.Bottom, addition.Bottom);
         return new Rect(minX, minY, maxX - minX, maxY - minY);
     }
 

@@ -156,7 +156,7 @@ public sealed class DatePickerDemoPage : StatefulWidget
 
         private void ValidateDateForm()
         {
-            var valid = _dateFormKey.CurrentState?.Validate() == true;
+            bool valid = _dateFormKey.CurrentState?.Validate() == true;
             SetState(() => _formStatus = valid ? "valid" : "invalid");
         }
 

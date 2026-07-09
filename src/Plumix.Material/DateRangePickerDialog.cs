@@ -157,8 +157,8 @@ internal sealed class DateRangePickerDialogState : State
             .CopyWith(color: foreground);
         var headlineStyle = (local.RangePickerHeaderHeadlineStyle ?? defaults.RangePickerHeaderHeadlineStyle ?? theme.TextTheme.TitleLarge)
             .CopyWith(color: foreground);
-        var startText = FormatRangeStart(localizations);
-        var endText = FormatRangeEnd(localizations);
+        string startText = FormatRangeStart(localizations);
+        string endText = FormatRangeEnd(localizations);
         var switchButton = BuildModeButton(context, toInput: true, foreground);
 
         Widget header = new ColoredBox(
@@ -242,10 +242,10 @@ internal sealed class DateRangePickerDialogState : State
         var local = DatePickerTheme.Of(context);
         var defaults = DatePickerTheme.Defaults(context);
         var media = MediaQuery.MaybeOf(context) ?? new MediaQueryData(Size: new Size(360, 640));
-        var landscape = media.Orientation == Orientation.Landscape;
+        bool landscape = media.Orientation == Orientation.Landscape;
         var size = landscape ? InputLandscapeSize : theme.UseMaterial3 ? InputPortraitSizeM3 : InputPortraitSizeM2;
         var foreground = local.HeaderForegroundColor ?? defaults.HeaderForegroundColor;
-        var headline = FormatRange(localizations);
+        string headline = FormatRange(localizations);
 
         var header = new Container(
             width: landscape ? 152 : null,
@@ -350,7 +350,7 @@ internal sealed class DateRangePickerDialogState : State
 
     private Widget BuildModeButton(BuildContext context, bool toInput, Color? color)
     {
-        var visible = _entryMode is DatePickerEntryMode.Calendar or DatePickerEntryMode.Input;
+        bool visible = _entryMode is DatePickerEntryMode.Calendar or DatePickerEntryMode.Input;
         if (!visible) return new SizedBox();
         var localizations = MaterialLocalizations.Of(context);
         return new Tooltip(
@@ -417,7 +417,7 @@ internal sealed class DateRangePickerDialogState : State
         var date = Current.CalendarDelegate.ParseCompactDate(text, localizations);
         if (!date.HasValue) return Current.ErrorFormatText ?? localizations.InvalidDateFormatLabel;
         if (!IsSelectable(date.Value)) return Current.ErrorInvalidText ?? localizations.DateOutOfRangeLabel;
-        var otherText = start ? _endController.Text : _startController.Text;
+        string otherText = start ? _endController.Text : _startController.Text;
         var other = Current.CalendarDelegate.ParseCompactDate(otherText, localizations);
         if (other.HasValue && (start ? date > other : other > date))
             return Current.ErrorInvalidRangeText ?? localizations.InvalidDateRangeLabel;
@@ -516,11 +516,11 @@ internal sealed class CalendarDateRangePickerState : State
         _start = Current.InitialStartDate;
         _end = Current.InitialEndDate;
         var initial = _start ?? Current.CurrentDate;
-        var initialMonth = initial >= Current.FirstDate && initial <= Current.LastDate
+        int initialMonth = initial >= Current.FirstDate && initial <= Current.LastDate
             ? Current.CalendarDelegate.MonthDelta(Current.FirstDate, initial)
             : 0;
-        var initialOffset = 0.0;
-        for (var index = 0; index < initialMonth; index++) initialOffset += MonthExtent(index);
+        double initialOffset = 0.0;
+        for (int index = 0; index < initialMonth; index++) initialOffset += MonthExtent(index);
         _controller = new ScrollController(initialScrollOffset: Math.Max(0, initialOffset));
     }
 
@@ -536,11 +536,11 @@ internal sealed class CalendarDateRangePickerState : State
         var weekdayStyle = DatePickerTheme.Of(context).WeekdayStyle
                            ?? DatePickerTheme.Defaults(context).WeekdayStyle!;
         var headers = new List<Widget>();
-        for (var index = localizations.FirstDayOfWeekIndex; headers.Count < 7; index = (index + 1) % 7)
+        for (int index = localizations.FirstDayOfWeekIndex; headers.Count < 7; index = (index + 1) % 7)
         {
             headers.Add(new Center(new DefaultTextStyle(weekdayStyle, new Text(localizations.NarrowWeekdays[index]))));
         }
-        var monthCount = Current.CalendarDelegate.MonthDelta(Current.FirstDate, Current.LastDate) + 1;
+        int monthCount = Current.CalendarDelegate.MonthDelta(Current.FirstDate, Current.LastDate) + 1;
 
         return new Column(
             crossAxisAlignment: CrossAxisAlignment.Stretch,
@@ -569,19 +569,19 @@ internal sealed class CalendarDateRangePickerState : State
         var dateTheme = DatePickerTheme.Of(Context);
         var defaults = DatePickerTheme.Defaults(Context);
         var items = new List<Widget>(42);
-        var offset = Current.CalendarDelegate.FirstDayOffset(month.Year, month.Month, localizations);
-        var count = Current.CalendarDelegate.GetDaysInMonth(month.Year, month.Month);
-        var weeks = (int)Math.Ceiling((offset + count) / 7.0);
-        var gridHeight = weeks * DayRowHeight + (weeks - 1) * DayRowSpacing;
-        for (var blank = 0; blank < offset; blank++) items.Add(new SizedBox());
-        for (var day = 1; day <= count; day++)
+        int offset = Current.CalendarDelegate.FirstDayOffset(month.Year, month.Month, localizations);
+        int count = Current.CalendarDelegate.GetDaysInMonth(month.Year, month.Month);
+        int weeks = (int)Math.Ceiling((offset + count) / 7.0);
+        double gridHeight = weeks * DayRowHeight + (weeks - 1) * DayRowSpacing;
+        for (int blank = 0; blank < offset; blank++) items.Add(new SizedBox());
+        for (int day = 1; day <= count; day++)
         {
             var date = Current.CalendarDelegate.GetDay(month.Year, month.Month, day);
-            var disabled = date < Current.FirstDate || date > Current.LastDate
-                           || !(Current.SelectableDayPredicate?.Invoke(date, _start, _end) ?? true);
-            var endpoint = Current.CalendarDelegate.IsSameDay(date, _start)
-                           || Current.CalendarDelegate.IsSameDay(date, _end);
-            var inRange = _start.HasValue && _end.HasValue && date >= _start && date <= _end;
+            bool disabled = date < Current.FirstDate || date > Current.LastDate
+                                                     || !(Current.SelectableDayPredicate?.Invoke(date, _start, _end) ?? true);
+            bool endpoint = Current.CalendarDelegate.IsSameDay(date, _start)
+                            || Current.CalendarDelegate.IsSameDay(date, _end);
+            bool inRange = _start.HasValue && _end.HasValue && date >= _start && date <= _end;
             Widget cell = new CalendarDay(
                 day: date,
                 isDisabled: disabled,
@@ -635,12 +635,12 @@ internal sealed class CalendarDateRangePickerState : State
     private double MonthExtent(int monthIndex)
     {
         var month = Current.CalendarDelegate.AddMonthsToMonthDate(Current.FirstDate, monthIndex);
-        var offset = Current.CalendarDelegate.FirstDayOffset(
+        int offset = Current.CalendarDelegate.FirstDayOffset(
             month.Year,
             month.Month,
             MaterialLocalizations.Of(Context));
-        var days = Current.CalendarDelegate.GetDaysInMonth(month.Year, month.Month);
-        var weeks = (int)Math.Ceiling((offset + days) / 7.0);
+        int days = Current.CalendarDelegate.GetDaysInMonth(month.Year, month.Month);
+        int weeks = (int)Math.Ceiling((offset + days) / 7.0);
         return MonthHeaderHeight + MonthFooterHeight
                + weeks * DayRowHeight
                + (weeks - 1) * DayRowSpacing;
@@ -687,8 +687,8 @@ internal sealed class DateRangeHighlightPainter : CustomPainter
     public override void Paint(PaintingContext context, Size size)
     {
         if (IsStart && IsEnd) return;
-        var left = 0.0;
-        var width = size.Width;
+        double left = 0.0;
+        double width = size.Width;
         if (IsStart)
         {
             left = TextDirection == TextDirection.Ltr ? size.Width / 2 : 0;

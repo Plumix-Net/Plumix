@@ -208,7 +208,7 @@ public sealed class MaterialDividerTests
             propertyName,
             BindingFlags.Instance | BindingFlags.Public);
         Assert.NotNull(property);
-        var value = property!.GetValue(target);
+        object? value = property!.GetValue(target);
         Assert.NotNull(value);
         return (T)value!;
     }

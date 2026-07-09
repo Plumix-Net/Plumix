@@ -43,7 +43,7 @@ public sealed class TextInputTests : IDisposable
         manager.RegisterNode(node);
         manager.RequestFocus(node);
 
-        var handled = manager.HandleTextInput("A");
+        bool handled = manager.HandleTextInput("A");
 
         Assert.True(handled);
         Assert.Equal("A", captured);
@@ -66,8 +66,8 @@ public sealed class TextInputTests : IDisposable
         manager.RegisterNode(node);
         manager.RequestFocus(node);
 
-        var updateHandled = manager.HandleTextCompositionUpdate("pre");
-        var commitHandled = manager.HandleTextCompositionCommit("final");
+        bool updateHandled = manager.HandleTextCompositionUpdate("pre");
+        bool commitHandled = manager.HandleTextCompositionCommit("final");
 
         Assert.True(updateHandled);
         Assert.True(commitHandled);
@@ -188,8 +188,8 @@ public sealed class TextInputTests : IDisposable
     public void TextEditingController_WordNavigationAndDeletion_Work()
     {
         const string initialText = "alpha beta_gamma delta";
-        var betaStart = initialText.IndexOf("beta_gamma", StringComparison.Ordinal);
-        var deltaStart = initialText.IndexOf("delta", StringComparison.Ordinal);
+        int betaStart = initialText.IndexOf("beta_gamma", StringComparison.Ordinal);
+        int deltaStart = initialText.IndexOf("delta", StringComparison.Ordinal);
 
         var controller = new TextEditingController(initialText);
         controller.Selection = TextSelection.Collapsed(initialText.Length);
@@ -235,8 +235,8 @@ public sealed class TextInputTests : IDisposable
     public void TextEditingController_ParagraphNavigation_Work()
     {
         const string initialText = "aa\nbbb\ncccc";
-        var secondParagraphStart = initialText.IndexOf("bbb", StringComparison.Ordinal);
-        var thirdParagraphStart = initialText.IndexOf("cccc", StringComparison.Ordinal);
+        int secondParagraphStart = initialText.IndexOf("bbb", StringComparison.Ordinal);
+        int thirdParagraphStart = initialText.IndexOf("cccc", StringComparison.Ordinal);
 
         var controller = new TextEditingController(initialText);
         controller.Selection = TextSelection.Collapsed(initialText.Length);
@@ -323,11 +323,11 @@ public sealed class TextInputTests : IDisposable
 
         Assert.Equal(string.Empty, controller.Text);
 
-        var textHandled = FocusManager.Instance.HandleTextInput("Hi");
+        bool textHandled = FocusManager.Instance.HandleTextInput("Hi");
         Assert.True(textHandled);
         Assert.Equal("Hi", controller.Text);
 
-        var backspaceHandled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Back", isDown: true));
+        bool backspaceHandled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Back", isDown: true));
         Assert.True(backspaceHandled);
         Assert.Equal("H", controller.Text);
     }
@@ -548,10 +548,10 @@ public sealed class TextInputTests : IDisposable
     {
         const string familyEmoji = "👨‍👩‍👧‍👦";
         const string combining = "e\u0301";
-        var text = $"A{familyEmoji}{combining}B";
-        var familyStart = 1;
-        var combiningStart = familyStart + familyEmoji.Length;
-        var endOffset = text.Length;
+        string text = $"A{familyEmoji}{combining}B";
+        int familyStart = 1;
+        int combiningStart = familyStart + familyEmoji.Length;
+        int endOffset = text.Length;
 
         var controller = new TextEditingController(text);
         controller.Selection = TextSelection.Collapsed(endOffset);
@@ -621,10 +621,10 @@ public sealed class TextInputTests : IDisposable
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var textHandled = FocusManager.Instance.HandleTextInput("x");
-        var compositionUpdateHandled = FocusManager.Instance.HandleTextCompositionUpdate("y");
-        var compositionCommitHandled = FocusManager.Instance.HandleTextCompositionCommit("z");
-        var keyHandled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Back", isDown: true));
+        bool textHandled = FocusManager.Instance.HandleTextInput("x");
+        bool compositionUpdateHandled = FocusManager.Instance.HandleTextCompositionUpdate("y");
+        bool compositionCommitHandled = FocusManager.Instance.HandleTextCompositionCommit("z");
+        bool keyHandled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Back", isDown: true));
 
         Assert.False(textHandled);
         Assert.False(compositionUpdateHandled);

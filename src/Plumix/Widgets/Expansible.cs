@@ -118,8 +118,8 @@ public sealed class Expansible : StatefulWidget
 
             if (oldExpansible.Duration != CurrentWidget.Duration)
             {
-                var value = _animation?.Value ?? 0;
-                var wasAnimating = _animation?.IsAnimating == true;
+                double value = _animation?.Value ?? 0;
+                bool wasAnimating = _animation?.IsAnimating == true;
                 DisposeAnimation();
                 CreateAnimation(value);
                 if (wasAnimating)
@@ -152,8 +152,8 @@ public sealed class Expansible : StatefulWidget
         public override Widget Build(BuildContext context)
         {
             var animation = _animation!;
-            var closed = !CurrentWidget.Controller.IsExpanded && animation.Value <= 0.0001;
-            var shouldRemoveBody = closed && !CurrentWidget.MaintainState;
+            bool closed = !CurrentWidget.Controller.IsExpanded && animation.Value <= 0.0001;
+            bool shouldRemoveBody = closed && !CurrentWidget.MaintainState;
 
             Widget body = shouldRemoveBody
                 ? new SizedBox()

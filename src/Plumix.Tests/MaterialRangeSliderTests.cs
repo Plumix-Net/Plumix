@@ -46,7 +46,7 @@ public sealed class MaterialRangeSliderTests
 
         harness.Pump(new Size(260, 120));
 
-        var render = FindDescendantByTypeName(harness.RenderView, "RenderRangeSlider");
+        object? render = FindDescendantByTypeName(harness.RenderView, "RenderRangeSlider");
         Assert.NotNull(render);
         Assert.Equal(Colors.Coral, ReadProperty<Color>(render!, "ActiveTrackColor"));
         Assert.Equal(Colors.PowderBlue, ReadProperty<Color>(render, "InactiveTrackColor"));
@@ -75,7 +75,7 @@ public sealed class MaterialRangeSliderTests
 
         harness.Pump(new Size(260, 120));
 
-        var render = FindDescendantByTypeName(harness.RenderView, "RenderRangeSlider");
+        object? render = FindDescendantByTypeName(harness.RenderView, "RenderRangeSlider");
         Assert.NotNull(render);
         Assert.Equal(Colors.DarkGreen, ReadProperty<Color>(render!, "ActiveTrackColor"));
         Assert.Equal(Colors.LightGreen, ReadProperty<Color>(render, "InactiveTrackColor"));
@@ -106,7 +106,7 @@ public sealed class MaterialRangeSliderTests
 
         harness.Pump(new Size(260, 120));
 
-        var render = FindDescendantByTypeName(harness.RenderView, "RenderRangeSlider");
+        object? render = FindDescendantByTypeName(harness.RenderView, "RenderRangeSlider");
         Assert.NotNull(render);
         Assert.Equal(Colors.DarkRed, ReadProperty<Color>(render!, "ActiveTrackColor"));
         Assert.Equal(Colors.MistyRose, ReadProperty<Color>(render, "InactiveTrackColor"));
@@ -225,7 +225,7 @@ public sealed class MaterialRangeSliderTests
             Assert.True(focusNode.RequestFocus());
             owner.FlushBuild();
 
-            var handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "ArrowRight", isDown: true));
+            bool handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "ArrowRight", isDown: true));
             Assert.True(handled);
             owner.FlushBuild();
 
@@ -303,7 +303,7 @@ public sealed class MaterialRangeSliderTests
             BindingFlags.Public | BindingFlags.Instance);
         Assert.NotNull(property);
 
-        var value = property!.GetValue(target);
+        object? value = property!.GetValue(target);
         Assert.NotNull(value);
         return (T)value!;
     }

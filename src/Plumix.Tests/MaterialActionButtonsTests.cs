@@ -71,8 +71,8 @@ public sealed class MaterialActionButtonsTests
     [Fact]
     public void DrawerButtons_UseLocalizedTooltipsAndCustomCallbacks()
     {
-        var drawerPressed = 0;
-        var endDrawerPressed = 0;
+        int drawerPressed = 0;
+        int endDrawerPressed = 0;
         using var harness = new WidgetRenderHarness(
             new Theme(
                 ThemeData.Light,
@@ -139,8 +139,8 @@ public sealed class MaterialActionButtonsTests
     [Fact]
     public void BackAndCloseButtons_UseLocalizedTooltipsAndCustomCallbacks()
     {
-        var backPressed = 0;
-        var closePressed = 0;
+        int backPressed = 0;
+        int closePressed = 0;
         using var harness = new WidgetRenderHarness(
             new Theme(
                 ThemeData.Light,
@@ -232,7 +232,7 @@ public sealed class MaterialActionButtonsTests
 
         harness.Pump(new Size(80, 80));
 
-        var labels = FindDescendants<RenderSemanticsAnnotations>(harness.RenderView)
+        int labels = FindDescendants<RenderSemanticsAnnotations>(harness.RenderView)
             .Count(semantics => semantics.Label == "Back");
         Assert.Equal(2, labels);
     }

@@ -47,7 +47,7 @@ public sealed class FocusTests : IDisposable
     public void FocusManager_HandleKeyEvent_InvokesPrimaryNodeCallback()
     {
         var manager = new FocusManager();
-        var callbackInvocationCount = 0;
+        int callbackInvocationCount = 0;
         var node = new FocusNode
         {
             OnKeyEvent = (_, @event) =>
@@ -65,7 +65,7 @@ public sealed class FocusTests : IDisposable
         manager.RegisterNode(node);
         manager.RequestFocus(node);
 
-        var handled = manager.HandleKeyEvent(new KeyEvent(key: "Enter", isDown: true));
+        bool handled = manager.HandleKeyEvent(new KeyEvent(key: "Enter", isDown: true));
 
         Assert.True(handled);
         Assert.Equal(1, callbackInvocationCount);
@@ -87,16 +87,16 @@ public sealed class FocusTests : IDisposable
         manager.RegisterNode(third);
         manager.RequestFocus(first);
 
-        var movedForward = manager.HandleKeyEvent(new KeyEvent(key: "Tab", isDown: true));
+        bool movedForward = manager.HandleKeyEvent(new KeyEvent(key: "Tab", isDown: true));
         Assert.True(movedForward);
         Assert.Same(second, manager.PrimaryFocus);
 
-        var movedBackward = manager.HandleKeyEvent(new KeyEvent(key: "Tab", isDown: true, isShiftPressed: true));
+        bool movedBackward = manager.HandleKeyEvent(new KeyEvent(key: "Tab", isDown: true, isShiftPressed: true));
         Assert.True(movedBackward);
         Assert.Same(first, manager.PrimaryFocus);
 
         manager.RequestFocus(second);
-        var movedPastLast = manager.HandleKeyEvent(new KeyEvent(key: "Tab", isDown: true));
+        bool movedPastLast = manager.HandleKeyEvent(new KeyEvent(key: "Tab", isDown: true));
         Assert.False(movedPastLast);
         Assert.Same(second, manager.PrimaryFocus);
     }
@@ -267,7 +267,7 @@ public sealed class FocusTests : IDisposable
     public void FocusWidget_OnKeyEvent_CallbackIsUsedByFocusManager()
     {
         var owner = new BuildOwner();
-        var keyEventCount = 0;
+        int keyEventCount = 0;
         var root = new TestRootElement(
             new Focus(
                 autofocus: true,
@@ -287,7 +287,7 @@ public sealed class FocusTests : IDisposable
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Space", isDown: true));
+        bool handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Space", isDown: true));
 
         Assert.True(handled);
         Assert.Equal(1, keyEventCount);
@@ -315,7 +315,7 @@ public sealed class FocusTests : IDisposable
         Assert.True(first.HasFocus);
         Assert.False(second.HasFocus);
 
-        var handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Tab", isDown: true));
+        bool handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Tab", isDown: true));
 
         Assert.True(handled);
         Assert.Same(second, FocusManager.Instance.PrimaryFocus);
@@ -351,16 +351,16 @@ public sealed class FocusTests : IDisposable
 
         Assert.Same(firstInScope, FocusManager.Instance.PrimaryFocus);
 
-        var movedBeforeScopeStart = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Tab", isDown: true, isShiftPressed: true));
+        bool movedBeforeScopeStart = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Tab", isDown: true, isShiftPressed: true));
         Assert.False(movedBeforeScopeStart);
         Assert.Same(firstInScope, FocusManager.Instance.PrimaryFocus);
         Assert.False(leadingSibling.HasFocus);
 
-        var movedInsideScope = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Tab", isDown: true));
+        bool movedInsideScope = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Tab", isDown: true));
         Assert.True(movedInsideScope);
         Assert.Same(secondInScope, FocusManager.Instance.PrimaryFocus);
 
-        var movedAfterScopeEnd = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Tab", isDown: true));
+        bool movedAfterScopeEnd = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Tab", isDown: true));
         Assert.False(movedAfterScopeEnd);
         Assert.Same(secondInScope, FocusManager.Instance.PrimaryFocus);
         Assert.False(trailingSibling.HasFocus);
@@ -394,16 +394,16 @@ public sealed class FocusTests : IDisposable
 
         Assert.Same(firstInScope, FocusManager.Instance.PrimaryFocus);
 
-        var movedBeforeScopeStart = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "ArrowLeft", isDown: true));
+        bool movedBeforeScopeStart = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "ArrowLeft", isDown: true));
         Assert.False(movedBeforeScopeStart);
         Assert.Same(firstInScope, FocusManager.Instance.PrimaryFocus);
         Assert.False(leadingSibling.HasFocus);
 
-        var movedInsideScope = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "ArrowRight", isDown: true));
+        bool movedInsideScope = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "ArrowRight", isDown: true));
         Assert.True(movedInsideScope);
         Assert.Same(secondInScope, FocusManager.Instance.PrimaryFocus);
 
-        var movedAfterScopeEnd = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "ArrowRight", isDown: true));
+        bool movedAfterScopeEnd = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "ArrowRight", isDown: true));
         Assert.False(movedAfterScopeEnd);
         Assert.Same(secondInScope, FocusManager.Instance.PrimaryFocus);
         Assert.False(trailingSibling.HasFocus);

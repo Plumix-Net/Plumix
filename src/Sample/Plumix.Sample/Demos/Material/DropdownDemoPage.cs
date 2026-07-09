@@ -195,7 +195,7 @@ public sealed class DropdownDemoPage : StatefulWidget
 
         private void ValidateForm()
         {
-            var valid = _formKey.CurrentState?.Validate() == true;
+            bool valid = _formKey.CurrentState?.Validate() == true;
             SetState(() => _formStatus = valid ? "valid" : "invalid");
         }
 
@@ -211,7 +211,7 @@ public sealed class DropdownDemoPage : StatefulWidget
 
         private void ValidateModernForm()
         {
-            var valid = _modernFormKey.CurrentState?.Validate() == true;
+            bool valid = _modernFormKey.CurrentState?.Validate() == true;
             SetState(() => _modernFormStatus = valid ? "valid" : "invalid");
         }
 

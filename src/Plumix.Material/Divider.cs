@@ -54,10 +54,10 @@ public sealed class Divider : StatelessWidget
             defaults = DividerDefaults.Resolve(Theme.Of(resolvedContext));
         }
 
-        var effectiveWidth = width
-                             ?? dividerTheme?.Thickness
-                             ?? defaults?.Thickness
-                             ?? 0.0;
+        double effectiveWidth = width
+                                ?? dividerTheme?.Thickness
+                                ?? defaults?.Thickness
+                                ?? 0.0;
         ValidateNonNegativeFinite(effectiveWidth, nameof(width));
 
         var effectiveColor = color
@@ -72,10 +72,10 @@ public sealed class Divider : StatelessWidget
         var theme = Theme.Of(context);
         var dividerTheme = DividerTheme.Of(context);
         var defaults = DividerDefaults.Resolve(theme);
-        var effectiveHeight = Height ?? dividerTheme.Space ?? defaults.Space ?? 16.0;
-        var effectiveThickness = Thickness ?? dividerTheme.Thickness ?? defaults.Thickness ?? 0.0;
-        var effectiveIndent = Indent ?? dividerTheme.Indent ?? defaults.Indent ?? 0.0;
-        var effectiveEndIndent = EndIndent ?? dividerTheme.EndIndent ?? defaults.EndIndent ?? 0.0;
+        double effectiveHeight = Height ?? dividerTheme.Space ?? defaults.Space ?? 16.0;
+        double effectiveThickness = Thickness ?? dividerTheme.Thickness ?? defaults.Thickness ?? 0.0;
+        double effectiveIndent = Indent ?? dividerTheme.Indent ?? defaults.Indent ?? 0.0;
+        double effectiveEndIndent = EndIndent ?? dividerTheme.EndIndent ?? defaults.EndIndent ?? 0.0;
         var effectiveColor = Color ?? dividerTheme.Color ?? defaults.Color ?? theme.DividerColor;
         var effectiveRadius = Radius ?? dividerTheme.Radius ?? defaults.Radius;
 
@@ -141,10 +141,10 @@ public sealed class VerticalDivider : StatelessWidget
         var theme = Theme.Of(context);
         var dividerTheme = DividerTheme.Of(context);
         var defaults = DividerDefaults.Resolve(theme);
-        var effectiveWidth = Width ?? dividerTheme.Space ?? defaults.Space ?? 16.0;
-        var effectiveThickness = Thickness ?? dividerTheme.Thickness ?? defaults.Thickness ?? 0.0;
-        var effectiveIndent = Indent ?? dividerTheme.Indent ?? defaults.Indent ?? 0.0;
-        var effectiveEndIndent = EndIndent ?? dividerTheme.EndIndent ?? defaults.EndIndent ?? 0.0;
+        double effectiveWidth = Width ?? dividerTheme.Space ?? defaults.Space ?? 16.0;
+        double effectiveThickness = Thickness ?? dividerTheme.Thickness ?? defaults.Thickness ?? 0.0;
+        double effectiveIndent = Indent ?? dividerTheme.Indent ?? defaults.Indent ?? 0.0;
+        double effectiveEndIndent = EndIndent ?? dividerTheme.EndIndent ?? defaults.EndIndent ?? 0.0;
         var effectiveColor = Color ?? dividerTheme.Color ?? defaults.Color ?? theme.DividerColor;
         var effectiveRadius = Radius ?? dividerTheme.Radius ?? defaults.Radius;
 
@@ -353,15 +353,15 @@ internal sealed class RenderDividerLine : RenderBox
 
     protected override void PerformLayout()
     {
-        var logicalThickness = Math.Max(0, Thickness);
+        double logicalThickness = Math.Max(0, Thickness);
         if (Axis == Axis.Horizontal)
         {
-            var width = Constraints.HasBoundedWidth ? Constraints.MaxWidth : Constraints.ConstrainWidth(0);
+            double width = Constraints.HasBoundedWidth ? Constraints.MaxWidth : Constraints.ConstrainWidth(0);
             Size = Constraints.Constrain(new Size(width, logicalThickness));
         }
         else
         {
-            var height = Constraints.HasBoundedHeight ? Constraints.MaxHeight : Constraints.ConstrainHeight(0);
+            double height = Constraints.HasBoundedHeight ? Constraints.MaxHeight : Constraints.ConstrainHeight(0);
             Size = Constraints.Constrain(new Size(logicalThickness, height));
         }
     }
@@ -369,31 +369,31 @@ internal sealed class RenderDividerLine : RenderBox
     public override void Paint(PaintingContext ctx, Point offset)
     {
         var brush = new SolidColorBrush(Color);
-        var drawThickness = Thickness <= 0 ? 1.0 : Thickness;
-        var radius = Radius?.Radius ?? 0.0;
+        double drawThickness = Thickness <= 0 ? 1.0 : Thickness;
+        double radius = Radius?.Radius ?? 0.0;
 
         if (Axis == Axis.Horizontal)
         {
-            var availableWidth = Math.Max(0, Size.Width - Indent - EndIndent);
+            double availableWidth = Math.Max(0, Size.Width - Indent - EndIndent);
             if (availableWidth <= 0)
             {
                 return;
             }
 
-            var y = offset.Y + ((Size.Height - drawThickness) / 2.0);
-            var x = offset.X + Indent;
+            double y = offset.Y + ((Size.Height - drawThickness) / 2.0);
+            double x = offset.X + Indent;
             ctx.DrawRectangle(brush, null, new Rect(x, y, availableWidth, drawThickness), radius, radius);
             return;
         }
 
-        var availableHeight = Math.Max(0, Size.Height - Indent - EndIndent);
+        double availableHeight = Math.Max(0, Size.Height - Indent - EndIndent);
         if (availableHeight <= 0)
         {
             return;
         }
 
-        var xVertical = offset.X + ((Size.Width - drawThickness) / 2.0);
-        var yVertical = offset.Y + Indent;
+        double xVertical = offset.X + ((Size.Width - drawThickness) / 2.0);
+        double yVertical = offset.Y + Indent;
         ctx.DrawRectangle(brush, null, new Rect(xVertical, yVertical, drawThickness, availableHeight), radius, radius);
     }
 }

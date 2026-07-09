@@ -67,7 +67,7 @@ public sealed class ImageProviderDecorationTests : IDisposable
         completion.SetResult(new ImageInfo(image, scale: 2, debugLabel: "queued"));
         await firstCall.Task.WaitAsync(TimeSpan.FromSeconds(2));
 
-        var synchronousCall = false;
+        bool synchronousCall = false;
         var secondListener = new ImageStreamListener((info, synchronous) =>
         {
             synchronousCall = synchronous;
@@ -122,7 +122,7 @@ public sealed class ImageProviderDecorationTests : IDisposable
             "failed",
             () => Task.FromException<ImageInfo>(new InvalidOperationException("decode failed")));
         var error = new TaskCompletionSource<Exception>(TaskCreationOptions.RunContinuationsAsynchronously);
-        var calls = 0;
+        int calls = 0;
 
         var stream = provider.Resolve(ImageConfiguration.Empty);
         await Task.Delay(20);
@@ -186,11 +186,11 @@ public sealed class ImageProviderDecorationTests : IDisposable
     [Fact]
     public void MemoryFileAndNetworkProviders_MatchFlutterKeyEqualityRules()
     {
-        var bytes = new byte[] { 1, 2, 3 };
+        byte[] bytes = new byte[] { 1, 2, 3 };
         Assert.Equal(new MemoryImage(bytes, 2), new MemoryImage(bytes, 2));
         Assert.NotEqual(new MemoryImage(bytes, 2), new MemoryImage([1, 2, 3], 2));
 
-        var file = Path.Combine(Path.GetTempPath(), "plumix-image.png");
+        string file = Path.Combine(Path.GetTempPath(), "plumix-image.png");
         Assert.Equal(new FileImage(file, 1.5), new FileImage(file, 1.5));
         Assert.NotEqual(new FileImage(file, 1), new FileImage(file, 2));
 
@@ -240,7 +240,7 @@ public sealed class ImageProviderDecorationTests : IDisposable
         var key = await provider.ObtainKey(new ImageConfiguration(DevicePixelRatio: dpr));
 
         Assert.Equal(expectedScale, key.Scale);
-        var expectedName = expectedScale switch
+        string expectedName = expectedScale switch
         {
             1 => "icons/a.png",
             2 => "icons/2.0x/a.png",
@@ -366,7 +366,7 @@ public sealed class ImageProviderDecorationTests : IDisposable
         var second = new TestImageProvider(
             "lerp-second",
             () => secondCompletion.Task);
-        var repaintCount = 0;
+        int repaintCount = 0;
         using var painter = DecorationImage.Lerp(
                 new DecorationImage(first, fit: BoxFit.Cover),
                 new DecorationImage(second, fit: BoxFit.Cover),

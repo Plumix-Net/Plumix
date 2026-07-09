@@ -46,7 +46,7 @@ public sealed class MaterialSliderTests
 
         harness.Pump(new Size(260, 120));
 
-        var render = FindDescendantByTypeName(harness.RenderView, "RenderSlider");
+        object? render = FindDescendantByTypeName(harness.RenderView, "RenderSlider");
         Assert.NotNull(render);
         Assert.Equal(Colors.Coral, ReadProperty<Color>(render!, "ActiveTrackColor"));
         Assert.Equal(Colors.PowderBlue, ReadProperty<Color>(render, "InactiveTrackColor"));
@@ -73,7 +73,7 @@ public sealed class MaterialSliderTests
 
         harness.Pump(new Size(260, 120));
 
-        var render = FindDescendantByTypeName(harness.RenderView, "RenderSlider");
+        object? render = FindDescendantByTypeName(harness.RenderView, "RenderSlider");
         Assert.NotNull(render);
         Assert.Equal(Colors.CadetBlue, ReadProperty<Color>(render!, "ActiveTrackColor"));
         Assert.Equal(ApplyOpacity(Colors.CadetBlue, 0.24), ReadProperty<Color>(render, "InactiveTrackColor"));
@@ -102,7 +102,7 @@ public sealed class MaterialSliderTests
 
         harness.Pump(new Size(260, 120));
 
-        var render = FindDescendantByTypeName(harness.RenderView, "RenderSlider");
+        object? render = FindDescendantByTypeName(harness.RenderView, "RenderSlider");
         Assert.NotNull(render);
         Assert.Equal(0.9, ReadProperty<double>(render!, "SecondaryTrackValueNormalized"), 3);
         Assert.Equal(ApplyOpacity(Colors.CadetBlue, 0.54), ReadProperty<Color>(render, "SecondaryActiveTrackColor"));
@@ -128,7 +128,7 @@ public sealed class MaterialSliderTests
                         onChanged: _ => { }))));
 
         themeHarness.Pump(new Size(260, 120));
-        var themeRender = FindDescendantByTypeName(themeHarness.RenderView, "RenderSlider");
+        object? themeRender = FindDescendantByTypeName(themeHarness.RenderView, "RenderSlider");
         Assert.NotNull(themeRender);
         Assert.Equal(Colors.OrangeRed, ReadProperty<Color>(themeRender!, "SecondaryActiveTrackColor"));
 
@@ -144,7 +144,7 @@ public sealed class MaterialSliderTests
                         onChanged: _ => { }))));
 
         widgetHarness.Pump(new Size(260, 120));
-        var widgetRender = FindDescendantByTypeName(widgetHarness.RenderView, "RenderSlider");
+        object? widgetRender = FindDescendantByTypeName(widgetHarness.RenderView, "RenderSlider");
         Assert.NotNull(widgetRender);
         Assert.Equal(Colors.MediumPurple, ReadProperty<Color>(widgetRender!, "SecondaryActiveTrackColor"));
     }
@@ -170,7 +170,7 @@ public sealed class MaterialSliderTests
 
         harness.Pump(new Size(260, 120));
 
-        var render = FindDescendantByTypeName(harness.RenderView, "RenderSlider");
+        object? render = FindDescendantByTypeName(harness.RenderView, "RenderSlider");
         Assert.NotNull(render);
         Assert.Equal(Colors.Gainsboro, ReadProperty<Color>(render!, "SecondaryActiveTrackColor"));
     }
@@ -197,7 +197,7 @@ public sealed class MaterialSliderTests
 
         harness.Pump(new Size(260, 120));
 
-        var render = FindDescendantByTypeName(harness.RenderView, "RenderSlider");
+        object? render = FindDescendantByTypeName(harness.RenderView, "RenderSlider");
         Assert.NotNull(render);
         Assert.Equal(Colors.DarkGreen, ReadProperty<Color>(render!, "ActiveTrackColor"));
         Assert.Equal(Colors.LightGreen, ReadProperty<Color>(render, "InactiveTrackColor"));
@@ -229,7 +229,7 @@ public sealed class MaterialSliderTests
 
         harness.Pump(new Size(260, 120));
 
-        var render = FindDescendantByTypeName(harness.RenderView, "RenderSlider");
+        object? render = FindDescendantByTypeName(harness.RenderView, "RenderSlider");
         Assert.NotNull(render);
         Assert.Equal(Colors.DarkRed, ReadProperty<Color>(render!, "ActiveTrackColor"));
         Assert.Equal(Colors.MistyRose, ReadProperty<Color>(render, "InactiveTrackColor"));
@@ -287,7 +287,7 @@ public sealed class MaterialSliderTests
         try
         {
             var focusNode = new FocusNode();
-            var next = 0.0;
+            double next = 0.0;
 
             var owner = new BuildOwner();
             var root = new TestRootElement(
@@ -307,7 +307,7 @@ public sealed class MaterialSliderTests
             Assert.True(focusNode.RequestFocus());
             owner.FlushBuild();
 
-            var handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "ArrowRight", isDown: true));
+            bool handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "ArrowRight", isDown: true));
             Assert.True(handled);
             owner.FlushBuild();
 
@@ -326,7 +326,7 @@ public sealed class MaterialSliderTests
         try
         {
             var focusNode = new FocusNode();
-            var next = 0.0;
+            double next = 0.0;
 
             var owner = new BuildOwner();
             var root = new TestRootElement(
@@ -348,7 +348,7 @@ public sealed class MaterialSliderTests
             Assert.True(focusNode.RequestFocus());
             owner.FlushBuild();
 
-            var handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "ArrowLeft", isDown: true));
+            bool handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "ArrowLeft", isDown: true));
             Assert.True(handled);
             owner.FlushBuild();
 
@@ -456,14 +456,14 @@ public sealed class MaterialSliderTests
             BindingFlags.Public | BindingFlags.Instance);
         Assert.NotNull(property);
 
-        var value = property!.GetValue(target);
+        object? value = property!.GetValue(target);
         Assert.NotNull(value);
         return (T)value!;
     }
 
     private static Color ApplyOpacity(Color color, double opacity)
     {
-        var alpha = (byte)Math.Clamp((int)(255 * opacity), 0, 255);
+        byte alpha = (byte)Math.Clamp((int)(255 * opacity), 0, 255);
         return Color.FromArgb(alpha, color.R, color.G, color.B);
     }
 

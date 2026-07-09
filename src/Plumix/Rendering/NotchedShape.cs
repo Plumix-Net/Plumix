@@ -27,25 +27,25 @@ public sealed class CircularNotchedRectangle : NotchedShape
         }
 
         var guestRect = guest.Value;
-        var radius = guestRect.Width / 2.0;
-        var invertMultiplier = Inverted ? -1.0 : 1.0;
+        double radius = guestRect.Width / 2.0;
+        double invertMultiplier = Inverted ? -1.0 : 1.0;
         const double s1 = 15.0;
         const double s2 = 1.0;
-        var a = -radius - s2;
-        var b = (Inverted ? host.Bottom : host.Top) - guestRect.Center.Y;
-        var radicand = b * b * radius * radius * (a * a + b * b - radius * radius);
-        var n2 = Math.Sqrt(Math.Max(0, radicand));
-        var denominator = a * a + b * b;
+        double a = -radius - s2;
+        double b = (Inverted ? host.Bottom : host.Top) - guestRect.Center.Y;
+        double radicand = b * b * radius * radius * (a * a + b * b - radius * radius);
+        double n2 = Math.Sqrt(Math.Max(0, radicand));
+        double denominator = a * a + b * b;
         if (denominator <= 0)
         {
             return new RectangleGeometry(host);
         }
 
-        var p2xA = ((a * radius * radius) - n2) / denominator;
-        var p2xB = ((a * radius * radius) + n2) / denominator;
-        var p2yA = Math.Sqrt(Math.Max(0, radius * radius - p2xA * p2xA)) * invertMultiplier;
-        var p2yB = Math.Sqrt(Math.Max(0, radius * radius - p2xB * p2xB)) * invertMultiplier;
-        var compare = b < 0 ? -1.0 : 1.0;
+        double p2xA = ((a * radius * radius) - n2) / denominator;
+        double p2xB = ((a * radius * radius) + n2) / denominator;
+        double p2yA = Math.Sqrt(Math.Max(0, radius * radius - p2xA * p2xA)) * invertMultiplier;
+        double p2yB = Math.Sqrt(Math.Max(0, radius * radius - p2xB * p2xB)) * invertMultiplier;
+        double compare = b < 0 ? -1.0 : 1.0;
         var p2 = compare * p2yA > compare * p2yB
             ? new Point(p2xA, p2yA)
             : new Point(p2xB, p2yB);
@@ -127,7 +127,7 @@ public sealed class AutomaticNotchedShape : NotchedShape
 
     private static Geometry BuildShapeGeometry(ShapeBorder shape, Rect rect)
     {
-        var radius = Math.Min(
+        double radius = Math.Min(
             shape.BorderRadius.Radius,
             Math.Min(rect.Width, rect.Height) / 2.0);
         return new RectangleGeometry(rect, radius, radius);

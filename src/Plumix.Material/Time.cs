@@ -63,7 +63,7 @@ public readonly record struct TimeOfDay : IComparable<TimeOfDay>
 
     public int CompareTo(TimeOfDay other)
     {
-        var hourComparison = Hour.CompareTo(other.Hour);
+        int hourComparison = Hour.CompareTo(other.Hour);
         return hourComparison == 0 ? Minute.CompareTo(other.Minute) : hourComparison;
     }
 

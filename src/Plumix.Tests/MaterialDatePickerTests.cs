@@ -166,7 +166,7 @@ public sealed class MaterialDatePickerTests : IDisposable
         Assert.True(next is not null, DumpSemantics(semantics));
         Assert.True(next!.PerformAction(SemanticsActions.Tap));
 
-        var now = Scheduler.CurrentSeconds;
+        double now = Scheduler.CurrentSeconds;
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.35));
@@ -188,7 +188,7 @@ public sealed class MaterialDatePickerTests : IDisposable
             onDisplayedMonthChanged: value => displayed = value));
         harness.Pump(new Size(420, 500));
 
-        for (var index = 0; index < 12 && FocusManager.Instance.PrimaryFocus?.OnKeyEvent?.Method.Name != "HandleGridKey"; index++)
+        for (int index = 0; index < 12 && FocusManager.Instance.PrimaryFocus?.OnKeyEvent?.Method.Name != "HandleGridKey"; index++)
         {
             Assert.True(FocusManager.Instance.FocusNext());
         }
@@ -331,7 +331,7 @@ public sealed class MaterialDatePickerTests : IDisposable
     public void InputDatePickerFormField_AcceptEmptyDateAllowsValidationWithoutCallbacks()
     {
         var formKey = new LabeledGlobalKey<FormState>("empty-date-form");
-        var saves = 0;
+        int saves = 0;
         using var harness = CreateHarness(new Form(
             key: formKey,
             child: new InputDatePickerFormField(
@@ -740,7 +740,7 @@ public sealed class MaterialDatePickerTests : IDisposable
 
     private static void PumpAnimation()
     {
-        var now = Scheduler.CurrentSeconds;
+        double now = Scheduler.CurrentSeconds;
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
     }

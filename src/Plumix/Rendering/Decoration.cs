@@ -16,6 +16,12 @@ public enum DecorationPosition
     Foreground,
 }
 
+public enum BorderStyle
+{
+    None,
+    Solid,
+}
+
 public readonly record struct BorderRadius
 {
     public BorderRadius(double radius)
@@ -35,15 +41,21 @@ public readonly record struct BorderRadius
 
 public readonly record struct BorderSide
 {
-    public BorderSide(Color color, double width = 1.0) : this()
+    public BorderSide(
+        Color color,
+        double width = 1.0,
+        BorderStyle style = BorderStyle.Solid) : this()
     {
         Color = color;
         Width = Math.Max(0, width);
+        Style = style;
     }
 
     public Color Color { get; }
 
     public double Width { get; }
+
+    public BorderStyle Style { get; }
 }
 
 public sealed record ShapeBorder(
@@ -117,18 +129,25 @@ public sealed record BoxDecoration(
     private static BorderSide? LerpBorder(BorderSide? a, BorderSide? b, double t)
     {
         if (!a.HasValue && !b.HasValue) return null;
-        var from = a ?? new BorderSide(Avalonia.Media.Color.FromArgb(0, b!.Value.Color.R, b.Value.Color.G, b.Value.Color.B), 0);
-        var to = b ?? new BorderSide(Avalonia.Media.Color.FromArgb(0, a!.Value.Color.R, a.Value.Color.G, a.Value.Color.B), 0);
+        var from = a ?? new BorderSide(
+            Avalonia.Media.Color.FromArgb(0, b!.Value.Color.R, b.Value.Color.G, b.Value.Color.B),
+            0,
+            b.Value.Style);
+        var to = b ?? new BorderSide(
+            Avalonia.Media.Color.FromArgb(0, a!.Value.Color.R, a.Value.Color.G, a.Value.Color.B),
+            0,
+            a.Value.Style);
         return new BorderSide(
             LerpColor(from.Color, to.Color, t)!.Value,
-            from.Width + ((to.Width - from.Width) * t));
+            from.Width + ((to.Width - from.Width) * t),
+            t < 0.5 ? from.Style : to.Style);
     }
 
     private static BorderRadius? LerpBorderRadius(BorderRadius? a, BorderRadius? b, double t)
     {
         if (!a.HasValue && !b.HasValue) return null;
-        var from = a?.Radius ?? 0;
-        var to = b?.Radius ?? 0;
+        double from = a?.Radius ?? 0;
+        double to = b?.Radius ?? 0;
         return new BorderRadius(from + ((to - from) * t));
     }
 }

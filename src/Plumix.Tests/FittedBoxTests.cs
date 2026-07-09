@@ -45,11 +45,11 @@ public sealed class FittedBoxTests
         fittedBox.Layout(BoxConstraints.TightFor(width: 100, height: 80));
 
         var hitResult = new BoxHitTestResult();
-        var hit = fittedBox.HitTest(hitResult, new Point(90, 75));
+        bool hit = fittedBox.HitTest(hitResult, new Point(90, 75));
         Assert.True(hit);
 
         var missResult = new BoxHitTestResult();
-        var miss = fittedBox.HitTest(missResult, new Point(10, 10));
+        bool miss = fittedBox.HitTest(missResult, new Point(10, 10));
         Assert.False(miss);
     }
 

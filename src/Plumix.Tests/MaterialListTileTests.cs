@@ -182,7 +182,7 @@ public sealed class MaterialListTileTests
     [Fact]
     public void ListTile_OnTap_InvokesCallback()
     {
-        var tapCount = 0;
+        int tapCount = 0;
         using var harness = new WidgetRenderHarness(
             BuildThemedTile(new ListTile(
                 title: new Text("Tap target"),
@@ -302,7 +302,7 @@ public sealed class MaterialListTileTests
 
         var flexes = FindDescendants<RenderFlex>(harness.RenderView).ToList();
         Assert.NotEmpty(flexes);
-        var overflowCount = flexes.Count(static flex => flex._hasOverflow);
+        int overflowCount = flexes.Count(static flex => flex._hasOverflow);
         Assert.True(
             overflowCount == 0,
             $"Expected no flex overflow in demo-like ListTile layout, but found {overflowCount} overflowing flex nodes.");
@@ -435,7 +435,7 @@ public sealed class MaterialListTileTests
         Assert.True(
             material is not null,
             $"Expected a 72dp tile material. Actual boxes: {string.Join(", ", materials.Select(box => $"{box.Size.Width}x{box.Size.Height}"))}");
-        var secondaryGlyph = char.ConvertFromUtf32(Icons.InfoOutline.CodePoint);
+        string secondaryGlyph = char.ConvertFromUtf32(Icons.InfoOutline.CodePoint);
         Assert.NotNull(FindParagraphByText(harness.RenderView, secondaryGlyph));
 
         var affinityRow = FindDescendants<RenderFlex>(harness.RenderView).FirstOrDefault(flex =>
@@ -465,7 +465,7 @@ public sealed class MaterialListTileTests
 
         var transform = FindDescendant<RenderTransform>(harness.RenderView);
         Assert.NotNull(transform);
-        var center = Checkbox.Width / 2.0;
+        double center = Checkbox.Width / 2.0;
         var expected = Matrix.CreateTranslation(center, center)
                        * new Matrix(scaleFactor, 0, 0, scaleFactor, 0, 0)
                        * Matrix.CreateTranslation(-center, -center);
@@ -495,7 +495,7 @@ public sealed class MaterialListTileTests
     [Fact]
     public void CheckboxListTile_ExplicitDisabledState_BlocksTileTapAndEnabledSemantics()
     {
-        var changeCount = 0;
+        int changeCount = 0;
         using var harness = new WidgetRenderHarness(
             BuildThemedTile(new CheckboxListTile(
                 value: true,

@@ -60,12 +60,12 @@ public sealed class Drawer : StatelessWidget
     {
         var theme = Theme.Of(context);
         var drawerTheme = DrawerTheme.Of(context);
-        var useMaterial3 = theme.UseMaterial3;
+        bool useMaterial3 = theme.UseMaterial3;
         var effectiveBackground = BackgroundColor ?? drawerTheme.BackgroundColor ?? (useMaterial3
             ? theme.SurfaceContainerLowColor
             : theme.CanvasColor);
-        var effectiveElevation = ResolveEffectiveElevation(drawerTheme, useMaterial3);
-        var effectiveWidth = ResolveEffectiveWidth(drawerTheme);
+        double effectiveElevation = ResolveEffectiveElevation(drawerTheme, useMaterial3);
+        double effectiveWidth = ResolveEffectiveWidth(drawerTheme);
         var effectiveShadowColor = ShadowColor ?? drawerTheme.ShadowColor ?? (useMaterial3
             ? Colors.Transparent
             : theme.ShadowColor);
@@ -95,7 +95,7 @@ public sealed class Drawer : StatelessWidget
 
     private double ResolveEffectiveElevation(DrawerThemeData drawerTheme, bool useMaterial3)
     {
-        var effectiveElevation = Elevation ?? drawerTheme.Elevation ?? (useMaterial3
+        double effectiveElevation = Elevation ?? drawerTheme.Elevation ?? (useMaterial3
             ? DefaultM3Elevation
             : DefaultM2Elevation);
         if (double.IsNaN(effectiveElevation) || double.IsInfinity(effectiveElevation) || effectiveElevation < 0)
@@ -110,7 +110,7 @@ public sealed class Drawer : StatelessWidget
 
     private double ResolveEffectiveWidth(DrawerThemeData drawerTheme)
     {
-        var effectiveWidth = Width ?? drawerTheme.Width ?? DefaultWidth;
+        double effectiveWidth = Width ?? drawerTheme.Width ?? DefaultWidth;
         if (double.IsNaN(effectiveWidth) || double.IsInfinity(effectiveWidth) || effectiveWidth <= 0)
         {
             throw new ArgumentOutOfRangeException(
@@ -153,9 +153,9 @@ public sealed class Drawer : StatelessWidget
 
     private static Color ApplyOpacity(Color color, double opacityMultiplier)
     {
-        var baseOpacity = color.A / 255.0;
-        var effectiveOpacity = Math.Clamp(baseOpacity * opacityMultiplier, 0, 1);
-        var alpha = (byte)Math.Clamp((int)(effectiveOpacity * 255), 0, 255);
+        double baseOpacity = color.A / 255.0;
+        double effectiveOpacity = Math.Clamp(baseOpacity * opacityMultiplier, 0, 1);
+        byte alpha = (byte)Math.Clamp((int)(effectiveOpacity * 255), 0, 255);
         return Color.FromArgb(alpha, color.R, color.G, color.B);
     }
 }
@@ -585,7 +585,7 @@ public sealed class ScaffoldState : State
         if (CurrentWidget.FloatingActionButton != null)
         {
             var fabSize = FloatingActionButtonSize;
-            var bottom = CurrentWidget.BottomNavigationBar is BottomAppBar bottomAppBar
+            double bottom = CurrentWidget.BottomNavigationBar is BottomAppBar bottomAppBar
                 ? Math.Max(0, bottomAppBar.ResolveHeightForScaffold(context) - (fabSize.Height / 2))
                 : 16;
             content = new Stack(
@@ -601,11 +601,11 @@ public sealed class ScaffoldState : State
                 ]);
         }
 
-        var drawerProgress = ResolveDrawerProgress(DrawerSide.Start);
-        var endDrawerProgress = ResolveDrawerProgress(DrawerSide.End);
-        var isStartDrawerVisible = IsDrawerVisible(DrawerSide.Start, drawerProgress);
-        var isEndDrawerVisible = IsDrawerVisible(DrawerSide.End, endDrawerProgress);
-        var isAnyDrawerVisible = isStartDrawerVisible || isEndDrawerVisible;
+        double drawerProgress = ResolveDrawerProgress(DrawerSide.Start);
+        double endDrawerProgress = ResolveDrawerProgress(DrawerSide.End);
+        bool isStartDrawerVisible = IsDrawerVisible(DrawerSide.Start, drawerProgress);
+        bool isEndDrawerVisible = IsDrawerVisible(DrawerSide.End, endDrawerProgress);
+        bool isAnyDrawerVisible = isStartDrawerVisible || isEndDrawerVisible;
         var overlayChildren = new List<Widget> { content };
         if (presentedSnackBar is not null && presentedSnackBarBehavior == SnackBarBehavior.Floating)
         {
@@ -785,8 +785,8 @@ public sealed class ScaffoldState : State
 
     private Widget BuildEdgeDragArea(BuildContext context, DrawerSide side, TextDirection textDirection)
     {
-        var edgeWidth = ResolveEdgeDragWidth(context, side, textDirection);
-        var isOnLeft = IsDrawerOnLeft(side, textDirection);
+        double edgeWidth = ResolveEdgeDragWidth(context, side, textDirection);
+        bool isOnLeft = IsDrawerOnLeft(side, textDirection);
         return new Positioned(
             left: isOnLeft ? 0 : null,
             top: 0,
@@ -821,9 +821,9 @@ public sealed class ScaffoldState : State
 
     private Widget BuildDrawerPanel(BuildContext context, DrawerSide side, TextDirection textDirection, double progress, Widget child)
     {
-        var drawerWidth = ResolveDrawerWidth(context, child);
-        var isOnLeft = IsDrawerOnLeft(side, textDirection);
-        var offset = -(1 - progress) * drawerWidth;
+        double drawerWidth = ResolveDrawerWidth(context, child);
+        bool isOnLeft = IsDrawerOnLeft(side, textDirection);
+        double offset = -(1 - progress) * drawerWidth;
 
         return new Positioned(
             left: isOnLeft ? offset : null,
@@ -892,14 +892,14 @@ public sealed class ScaffoldState : State
             return;
         }
 
-        var drawerWidth = ResolveDrawerWidth(Context, drawer);
+        double drawerWidth = ResolveDrawerWidth(Context, drawer);
         if (drawerWidth <= 0)
         {
             return;
         }
 
-        var deltaProgress = primaryDelta * ResolveOpenDirectionMultiplier(side, textDirection) / drawerWidth;
-        var nextProgress = Math.Clamp(_activeDragProgress + deltaProgress, 0, 1);
+        double deltaProgress = primaryDelta * ResolveOpenDirectionMultiplier(side, textDirection) / drawerWidth;
+        double nextProgress = Math.Clamp(_activeDragProgress + deltaProgress, 0, 1);
         if (Math.Abs(nextProgress - _activeDragProgress) <= 0.0001)
         {
             return;
@@ -925,13 +925,13 @@ public sealed class ScaffoldState : State
             return;
         }
 
-        var drawerWidth = ResolveDrawerWidth(Context, drawer);
+        double drawerWidth = ResolveDrawerWidth(Context, drawer);
         if (drawerWidth <= 0)
         {
             return;
         }
 
-        var releaseVelocity = details.PrimaryVelocity * ResolveOpenDirectionMultiplier(side, textDirection);
+        double releaseVelocity = details.PrimaryVelocity * ResolveOpenDirectionMultiplier(side, textDirection);
 
         bool shouldOpen;
         if (releaseVelocity >= MinFlingVelocityPixelsPerSecond)
@@ -952,7 +952,7 @@ public sealed class ScaffoldState : State
             CommitProgress(side, _activeDragProgress);
             CommitDrawerVisibility(side, shouldOpen);
             CancelDrag();
-            var normalizedVelocity = Math.Abs(releaseVelocity) / drawerWidth;
+            double normalizedVelocity = Math.Abs(releaseVelocity) / drawerWidth;
             StartSettleAnimation(side, shouldOpen ? 1.0 : 0.0, normalizedVelocity);
             if (shouldOpen)
             {
@@ -968,7 +968,7 @@ public sealed class ScaffoldState : State
             return;
         }
 
-        var shouldOpen = _activeDragProgress >= DefaultOpenThreshold;
+        bool shouldOpen = _activeDragProgress >= DefaultOpenThreshold;
 
         SetState(() =>
         {
@@ -1102,7 +1102,7 @@ public sealed class ScaffoldState : State
         }
 
         var padding = MediaQuery.MaybePaddingOf(context) ?? default;
-        var safePadding = IsDrawerOnLeft(side, textDirection) ? padding.Left : padding.Right;
+        double safePadding = IsDrawerOnLeft(side, textDirection) ? padding.Left : padding.Right;
         return Scaffold.ResolveDrawerEdgeDragWidth(null) + safePadding;
     }
 
@@ -1114,7 +1114,7 @@ public sealed class ScaffoldState : State
             return;
         }
 
-        var currentProgress = ResolveDrawerProgress(side);
+        double currentProgress = ResolveDrawerProgress(side);
         currentProgress = Math.Clamp(currentProgress, 0, 1);
 
         if (Math.Abs(currentProgress - targetProgress) <= 0.0001)
@@ -1154,14 +1154,14 @@ public sealed class ScaffoldState : State
 
     private static TimeSpan ResolveSettleDuration(double currentProgress, double targetProgress, double? normalizedVelocityHint)
     {
-        var distance = Math.Abs(targetProgress - currentProgress);
+        double distance = Math.Abs(targetProgress - currentProgress);
         if (distance <= 0)
         {
             return TimeSpan.FromMilliseconds(1);
         }
 
-        var durationMs = BaseSettleDuration.TotalMilliseconds * distance;
-        var velocity = Math.Abs(normalizedVelocityHint ?? 0);
+        double durationMs = BaseSettleDuration.TotalMilliseconds * distance;
+        double velocity = Math.Abs(normalizedVelocityHint ?? 0);
         if (velocity > double.Epsilon)
         {
             durationMs /= velocity;
@@ -1207,8 +1207,8 @@ public sealed class ScaffoldState : State
             return;
         }
 
-        var value = _drawerAnimationController.Evaluate();
-        var progress = Math.Clamp(_drawerAnimationFrom + (_drawerAnimationTo - _drawerAnimationFrom) * value, 0, 1);
+        double value = _drawerAnimationController.Evaluate();
+        double progress = Math.Clamp(_drawerAnimationFrom + (_drawerAnimationTo - _drawerAnimationFrom) * value, 0, 1);
         SetState(() => _drawerProgress = progress);
     }
 
@@ -1219,8 +1219,8 @@ public sealed class ScaffoldState : State
             return;
         }
 
-        var value = _endDrawerAnimationController.Evaluate();
-        var progress = Math.Clamp(_endDrawerAnimationFrom + (_endDrawerAnimationTo - _endDrawerAnimationFrom) * value, 0, 1);
+        double value = _endDrawerAnimationController.Evaluate();
+        double progress = Math.Clamp(_endDrawerAnimationFrom + (_endDrawerAnimationTo - _endDrawerAnimationFrom) * value, 0, 1);
         SetState(() => _endDrawerProgress = progress);
     }
 
@@ -1256,7 +1256,7 @@ public sealed class ScaffoldState : State
 
     private void UpdateOpenFlagsFromProgress(DrawerSide side, double progress)
     {
-        var isOpen = progress >= DefaultOpenThreshold;
+        bool isOpen = progress >= DefaultOpenThreshold;
         if (side == DrawerSide.Start)
         {
             _isDrawerOpen = isOpen && HasDrawer;
@@ -1361,8 +1361,8 @@ public sealed class ScaffoldState : State
 
     private static Color ApplyOpacity(Color color, double opacity)
     {
-        var effectiveOpacity = Math.Clamp(opacity, 0, 1);
-        var alpha = (byte)Math.Clamp((int)Math.Round(color.A * effectiveOpacity), 0, 255);
+        double effectiveOpacity = Math.Clamp(opacity, 0, 1);
+        byte alpha = (byte)Math.Clamp((int)Math.Round(color.A * effectiveOpacity), 0, 255);
         return Color.FromArgb(alpha, color.R, color.G, color.B);
     }
 }
@@ -1482,15 +1482,15 @@ public sealed class AppBar : StatelessWidget, IPreferredSizeWidget
         var theme = Theme.Of(context);
         var effectiveBackground = BackgroundColor ?? theme.AppBarTheme.BackgroundColor ?? ResolveDefaultBackgroundColor(theme);
         var effectiveForeground = ForegroundColor ?? theme.AppBarTheme.ForegroundColor ?? ResolveDefaultForegroundColor(theme);
-        var effectiveCenterTitle = ResolveEffectiveCenterTitle(theme);
-        var effectiveTitleSpacing = TitleSpacing ?? theme.AppBarTheme.TitleSpacing ?? 16;
+        bool effectiveCenterTitle = ResolveEffectiveCenterTitle(theme);
+        double effectiveTitleSpacing = TitleSpacing ?? theme.AppBarTheme.TitleSpacing ?? 16;
         var effectiveIconTheme = ResolveEffectiveIconTheme(theme, effectiveForeground);
         var effectiveActionsIconTheme = ResolveEffectiveActionsIconTheme(theme, effectiveForeground, effectiveIconTheme);
         var effectiveLeading = ResolveEffectiveLeading(context);
         var effectiveActions = ResolveEffectiveActions(context);
-        var effectiveLeadingWidth = ResolveEffectiveLeadingWidth(theme);
+        double effectiveLeadingWidth = ResolveEffectiveLeadingWidth(theme);
         var effectiveActionsPadding = ActionsPadding ?? theme.AppBarTheme.ActionsPadding ?? new Thickness();
-        var effectiveToolbarHeight = ResolveEffectiveToolbarHeight(theme);
+        double effectiveToolbarHeight = ResolveEffectiveToolbarHeight(theme);
         var effectiveToolbarTextStyle = ResolveToolbarTextStyle(theme, effectiveForeground);
         var effectiveTitleTextStyle = ResolveTitleTextStyle(theme, effectiveForeground);
         var effectiveSystemOverlayStyle = ResolveEffectiveSystemOverlayStyle(theme, effectiveBackground);
@@ -1603,13 +1603,13 @@ public sealed class AppBar : StatelessWidget, IPreferredSizeWidget
         }
 
         var route = ModalRoute.MaybeOf(context);
-        var impliesAppBarDismissal = route?.ImpliesAppBarDismissal ?? Navigator.CanPop(context);
+        bool impliesAppBarDismissal = route?.ImpliesAppBarDismissal ?? Navigator.CanPop(context);
         if (!impliesAppBarDismissal)
         {
             return null;
         }
 
-        var useCloseButton = route is PageRoute pageRoute && pageRoute.FullscreenDialog;
+        bool useCloseButton = route is PageRoute pageRoute && pageRoute.FullscreenDialog;
         return BuildDefaultLeading(context, useCloseButton);
     }
 
@@ -1656,7 +1656,7 @@ public sealed class AppBar : StatelessWidget, IPreferredSizeWidget
 
     private double ResolveEffectiveLeadingWidth(ThemeData theme)
     {
-        var effectiveLeadingWidth = LeadingWidth ?? theme.AppBarTheme.LeadingWidth ?? 56;
+        double effectiveLeadingWidth = LeadingWidth ?? theme.AppBarTheme.LeadingWidth ?? 56;
         if (double.IsNaN(effectiveLeadingWidth)
             || double.IsInfinity(effectiveLeadingWidth)
             || effectiveLeadingWidth <= 0)
@@ -1700,9 +1700,9 @@ public sealed class AppBar : StatelessWidget, IPreferredSizeWidget
 
     private double ResolveEffectiveToolbarHeight(ThemeData theme)
     {
-        var effectiveToolbarHeight = ToolbarHeight
-                                     ?? theme.AppBarTheme.ToolbarHeight
-                                     ?? ResolveDefaultToolbarHeight();
+        double effectiveToolbarHeight = ToolbarHeight
+                                        ?? theme.AppBarTheme.ToolbarHeight
+                                        ?? ResolveDefaultToolbarHeight();
         if (double.IsNaN(effectiveToolbarHeight)
             || double.IsInfinity(effectiveToolbarHeight)
             || effectiveToolbarHeight <= 0)
@@ -1818,7 +1818,7 @@ public sealed class AppBar : StatelessWidget, IPreferredSizeWidget
 
     private static SystemUiIconBrightness EstimateIconBrightnessForColor(Color color)
     {
-        var luminance = (0.299 * color.R + 0.587 * color.G + 0.114 * color.B) / 255.0;
+        double luminance = (0.299 * color.R + 0.587 * color.G + 0.114 * color.B) / 255.0;
         return luminance > 0.5 ? SystemUiIconBrightness.Dark : SystemUiIconBrightness.Light;
     }
 

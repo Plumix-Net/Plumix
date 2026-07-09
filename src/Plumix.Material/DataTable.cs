@@ -221,24 +221,24 @@ public sealed class DataTable : StatelessWidget
         var theme = Theme.Of(context);
         var localTheme = DataTableTheme.Of(context);
         var textDirection = Directionality.Of(context);
-        var horizontalMargin = HorizontalMargin ?? localTheme.HorizontalMargin ?? 24.0;
-        var columnSpacing = ColumnSpacing ?? localTheme.ColumnSpacing ?? 56.0;
-        var checkboxMargin = CheckboxHorizontalMargin ?? localTheme.CheckboxHorizontalMargin ?? horizontalMargin;
-        var headingHeight = HeadingRowHeight ?? localTheme.HeadingRowHeight ?? 56.0;
-        var dataMinHeight = DataRowMinHeight ?? localTheme.DataRowMinHeight ?? 48.0;
-        var dataMaxHeight = DataRowMaxHeight ?? localTheme.DataRowMaxHeight ?? 48.0;
+        double horizontalMargin = HorizontalMargin ?? localTheme.HorizontalMargin ?? 24.0;
+        double columnSpacing = ColumnSpacing ?? localTheme.ColumnSpacing ?? 56.0;
+        double checkboxMargin = CheckboxHorizontalMargin ?? localTheme.CheckboxHorizontalMargin ?? horizontalMargin;
+        double headingHeight = HeadingRowHeight ?? localTheme.HeadingRowHeight ?? 56.0;
+        double dataMinHeight = DataRowMinHeight ?? localTheme.DataRowMinHeight ?? 48.0;
+        double dataMaxHeight = DataRowMaxHeight ?? localTheme.DataRowMaxHeight ?? 48.0;
         var headingStyle = HeadingTextStyle ?? localTheme.HeadingTextStyle ?? theme.TextTheme.LabelLarge;
         var dataStyle = DataTextStyle ?? localTheme.DataTextStyle ?? theme.TextTheme.BodyMedium;
         var effectiveDataRowColor = DataRowColor ?? localTheme.DataRowColor;
         var effectiveHeadingRowColor = HeadingRowColor ?? localTheme.HeadingRowColor;
-        var anySelectable = Rows.Any(row => row.OnSelectChanged is not null);
-        var displayCheckbox = ShowCheckboxColumn && anySelectable;
+        bool anySelectable = Rows.Any(row => row.OnSelectChanged is not null);
+        bool displayCheckbox = ShowCheckboxColumn && anySelectable;
         var selectableRows = Rows.Where(row => row.OnSelectChanged is not null).ToArray();
-        var selectedRows = selectableRows.Count(row => row.Selected);
-        var allChecked = displayCheckbox && selectedRows == selectableRows.Length;
-        var someChecked = displayCheckbox && selectedRows > 0 && !allChecked;
+        int selectedRows = selectableRows.Count(row => row.Selected);
+        bool allChecked = displayCheckbox && selectedRows == selectableRows.Length;
+        bool someChecked = displayCheckbox && selectedRows > 0 && !allChecked;
         var textColumns = Columns.Select((column, index) => (column, index)).Where(pair => !pair.column.Numeric).ToArray();
-        var onlyTextColumn = textColumns.Length == 1 ? textColumns[0].index : (int?)null;
+        int? onlyTextColumn = textColumns.Length == 1 ? textColumns[0].index : (int?)null;
         var tableRows = new List<TableRow>();
 
         var headingChildren = new List<Widget>();
@@ -251,7 +251,7 @@ public sealed class DataTable : StatelessWidget
                 horizontalEnd: checkboxMargin / 2,
                 onChanged: value => HandleSelectAll(value, someChecked)));
         }
-        for (var columnIndex = 0; columnIndex < Columns.Count; columnIndex++)
+        for (int columnIndex = 0; columnIndex < Columns.Count; columnIndex++)
         {
             var padding = ResolveCellPadding(columnIndex, displayCheckbox, horizontalMargin, columnSpacing, textDirection);
             headingChildren.Add(BuildHeadingCell(
@@ -281,7 +281,7 @@ public sealed class DataTable : StatelessWidget
                     horizontalEnd: checkboxMargin / 2,
                     onChanged: row.OnSelectChanged));
             }
-            for (var columnIndex = 0; columnIndex < Columns.Count; columnIndex++)
+            for (int columnIndex = 0; columnIndex < Columns.Count; columnIndex++)
             {
                 children.Add(BuildDataCell(
                     context,
@@ -300,12 +300,12 @@ public sealed class DataTable : StatelessWidget
         }
 
         var widths = new Dictionary<int, TableColumnWidth>();
-        var displayIndex = 0;
+        int displayIndex = 0;
         if (displayCheckbox)
         {
             widths[displayIndex++] = new FixedColumnWidth(checkboxMargin + Checkbox.Width + (checkboxMargin / 2));
         }
-        for (var columnIndex = 0; columnIndex < Columns.Count; columnIndex++)
+        for (int columnIndex = 0; columnIndex < Columns.Count; columnIndex++)
         {
             widths[displayIndex++] = Columns[columnIndex].ColumnWidth
                                      ?? (columnIndex == onlyTextColumn ? new IntrinsicColumnWidth(1) : new IntrinsicColumnWidth());
@@ -336,7 +336,7 @@ public sealed class DataTable : StatelessWidget
         TextStyle style,
         DataTableThemeData tableTheme)
     {
-        var sorted = SortColumnIndex == columnIndex;
+        bool sorted = SortColumnIndex == columnIndex;
         var alignment = column.HeadingRowAlignment ?? tableTheme.HeadingRowAlignment ?? MainAxisAlignment.Start;
         var content = new List<Widget>();
         if (alignment == MainAxisAlignment.Center && column.OnSort is not null) content.Add(new SizedBox(width: 18));
@@ -427,7 +427,7 @@ public sealed class DataTable : StatelessWidget
 
     private void HandleSelectAll(bool? value, bool someChecked)
     {
-        var effective = someChecked || (value ?? false);
+        bool effective = someChecked || (value ?? false);
         if (OnSelectAll is not null)
         {
             OnSelectAll(effective);
@@ -446,13 +446,13 @@ public sealed class DataTable : StatelessWidget
         double columnSpacing,
         TextDirection textDirection)
     {
-        var start = index switch
+        double start = index switch
         {
             0 when hasCheckbox && CheckboxHorizontalMargin is null => horizontalMargin / 2,
             0 => horizontalMargin,
             _ => columnSpacing / 2,
         };
-        var end = index == Columns.Count - 1 ? horizontalMargin : columnSpacing / 2;
+        double end = index == Columns.Count - 1 ? horizontalMargin : columnSpacing / 2;
         return textDirection == TextDirection.Rtl
             ? new Thickness(end, 0, start, 0)
             : new Thickness(start, 0, end, 0);

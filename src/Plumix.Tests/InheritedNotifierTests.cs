@@ -286,7 +286,7 @@ public sealed class InheritedNotifierTests
         {
             var inherited = context.DependOnInherited<CountingIntInheritedNotifier>()
                             ?? throw new InvalidOperationException("CountingIntInheritedNotifier not found.");
-            var value = inherited.Notifier?.Value ?? -1;
+            int value = inherited.Notifier?.Value ?? -1;
             InheritedNotifierTracker.CountingSeenValues.Add(value);
             return new SizedBox(width: 1, height: 1);
         }
@@ -303,7 +303,7 @@ public sealed class InheritedNotifierTests
         {
             var inherited = context.DependOnInherited<IntInheritedNotifier>()
                             ?? throw new InvalidOperationException("IntInheritedNotifier not found.");
-            var value = inherited.Notifier?.Value ?? -1;
+            int value = inherited.Notifier?.Value ?? -1;
             InheritedNotifierTracker.SeenValues.Add(value);
             return new SizedBox(width: 1, height: 1);
         }

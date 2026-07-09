@@ -53,12 +53,12 @@ public sealed class RenderListBody : RenderBox,
     protected override void PerformLayout()
     {
         ValidateConstraints();
-        var mainAxisExtent = 0.0;
+        double mainAxisExtent = 0.0;
         var child = FirstChild;
 
         if (MainAxis == Axis.Horizontal)
         {
-            var crossAxisExtent = Constraints.HasBoundedHeight
+            double crossAxisExtent = Constraints.HasBoundedHeight
                 ? Constraints.MaxHeight
                 : MeasureCrossAxis(horizontal: true);
             var childConstraints = BoxConstraints.TightFor(height: crossAxisExtent);
@@ -75,7 +75,7 @@ public sealed class RenderListBody : RenderBox,
             return;
         }
 
-        var verticalCrossAxisExtent = Constraints.HasBoundedWidth
+        double verticalCrossAxisExtent = Constraints.HasBoundedWidth
             ? Constraints.MaxWidth
             : MeasureCrossAxis(horizontal: false);
         var verticalChildConstraints = BoxConstraints.TightFor(width: verticalCrossAxisExtent);
@@ -130,7 +130,7 @@ public sealed class RenderListBody : RenderBox,
 
     private void ValidateConstraints()
     {
-        var boundedMainAxis = MainAxis == Axis.Horizontal
+        bool boundedMainAxis = MainAxis == Axis.Horizontal
             ? Constraints.HasBoundedWidth
             : Constraints.HasBoundedHeight;
         if (boundedMainAxis)
@@ -142,7 +142,7 @@ public sealed class RenderListBody : RenderBox,
 
     private double MeasureCrossAxis(bool horizontal)
     {
-        var extent = 0.0;
+        double extent = 0.0;
         var probe = new BoxConstraints();
         for (var child = FirstChild; child is not null; child = ChildAfter(child))
         {

@@ -74,19 +74,19 @@ public sealed class FlexibleSpaceBar : StatelessWidget
     public override Widget Build(BuildContext context)
     {
         var settings = FlexibleSpaceBarSettings.Of(context);
-        var deltaExtent = Math.Max(0, settings.MaxExtent - settings.MinExtent);
-        var t = deltaExtent <= 0.0001
+        double deltaExtent = Math.Max(0, settings.MaxExtent - settings.MinExtent);
+        double t = deltaExtent <= 0.0001
             ? 0
             : Math.Clamp(1 - ((settings.CurrentExtent - settings.MinExtent) / deltaExtent), 0, 1);
         var children = new List<Widget>();
 
         if (Background is not null)
         {
-            var fadeStart = deltaExtent <= 0.0001 ? 1 : Math.Max(0, 1 - (56 / deltaExtent));
-            var fadeProgress = t <= fadeStart ? 0 : Math.Clamp((t - fadeStart) / Math.Max(0.0001, 1 - fadeStart), 0, 1);
-            var opacity = deltaExtent <= 0.0001 ? 1 : 1 - fadeProgress;
-            var height = Math.Max(settings.MaxExtent, settings.CurrentExtent);
-            var top = CollapseMode switch
+            double fadeStart = deltaExtent <= 0.0001 ? 1 : Math.Max(0, 1 - (56 / deltaExtent));
+            double fadeProgress = t <= fadeStart ? 0 : Math.Clamp((t - fadeStart) / Math.Max(0.0001, 1 - fadeStart), 0, 1);
+            double opacity = deltaExtent <= 0.0001 ? 1 : 1 - fadeProgress;
+            double height = Math.Max(settings.MaxExtent, settings.CurrentExtent);
+            double top = CollapseMode switch
             {
                 CollapseMode.Pin => -(settings.MaxExtent - settings.CurrentExtent),
                 CollapseMode.None => 0,
@@ -103,12 +103,12 @@ public sealed class FlexibleSpaceBar : StatelessWidget
         if (Title is not null && settings.ToolbarOpacity > 0)
         {
             var theme = Theme.Of(context);
-            var center = CenterTitle ?? theme.Platform is TargetPlatform.IOS or TargetPlatform.MacOS;
+            bool center = CenterTitle ?? theme.Platform is TargetPlatform.IOS or TargetPlatform.MacOS;
             var direction = Directionality.Of(context);
             var alignment = center
                 ? Alignment.BottomCenter
                 : direction == TextDirection.Ltr ? Alignment.BottomLeft : Alignment.BottomRight;
-            var leadingPadding = settings.HasLeading ?? true ? 72.0 : 0.0;
+            double leadingPadding = settings.HasLeading ?? true ? 72.0 : 0.0;
             var padding = TitlePadding ?? (center
                 ? new Thickness(0, 0, 0, 16)
                 : direction == TextDirection.Ltr
@@ -119,7 +119,7 @@ public sealed class FlexibleSpaceBar : StatelessWidget
                     (theme.UseMaterial3 ? theme.TextTheme.TitleLarge : theme.PrimaryTextTheme.TitleLarge).Color
                     ?? theme.OnSurfaceColor,
                     settings.ToolbarOpacity));
-            var scale = ExpandedTitleScale + ((1 - ExpandedTitleScale) * t);
+            double scale = ExpandedTitleScale + ((1 - ExpandedTitleScale) * t);
             Widget title = new Semantics(
                 namesRoute: theme.Platform is not (TargetPlatform.IOS or TargetPlatform.MacOS),
                 child: new DefaultTextStyle(style, Title));

@@ -31,7 +31,7 @@ public sealed class ListBody : MultiChildRenderObjectWidget
     private AxisDirection ResolveAxisDirection(BuildContext context)
     {
         if (MainAxis == Axis.Vertical) return Reverse ? AxisDirection.Up : AxisDirection.Down;
-        var rtl = Directionality.Of(context) == TextDirection.Rtl;
+        bool rtl = Directionality.Of(context) == TextDirection.Rtl;
         return rtl ^ Reverse ? AxisDirection.Left : AxisDirection.Right;
     }
 }

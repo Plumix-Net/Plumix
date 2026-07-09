@@ -153,7 +153,7 @@ public sealed class LinearProgressIndicator : StatefulWidget
         {
             var theme = Theme.Of(context);
             var progressTheme = ProgressIndicatorTheme.Of(context);
-            var useYear2023 = ResolveYear2023(theme, progressTheme);
+            bool useYear2023 = ResolveYear2023(theme, progressTheme);
             var animationController = ResolveAnimationController(progressTheme);
             UpdateAnimationBinding(animationController);
             UpdateValueColorBinding(CurrentWidget.ValueColor);
@@ -170,9 +170,9 @@ public sealed class LinearProgressIndicator : StatefulWidget
                                          ? theme.SecondaryContainerColor
                                          : theme.CanvasColor);
 
-            var resolvedMinHeight = CurrentWidget.MinHeight
-                                    ?? progressTheme.LinearMinHeight
-                                    ?? DefaultMinHeight;
+            double resolvedMinHeight = CurrentWidget.MinHeight
+                                       ?? progressTheme.LinearMinHeight
+                                       ?? DefaultMinHeight;
 
             var resolvedBorderRadius = CurrentWidget.BorderRadius
                                        ?? progressTheme.BorderRadius
@@ -190,17 +190,17 @@ public sealed class LinearProgressIndicator : StatefulWidget
                   ?? 2.0
                 : null;
 
-            var resolvedTrackGap = theme.UseMaterial3 && !useYear2023
+            double resolvedTrackGap = theme.UseMaterial3 && !useYear2023
                 ? CurrentWidget.TrackGap
                   ?? progressTheme.TrackGap
                   ?? 4.0
                 : 0.0;
 
-            var resolvedValue = CurrentWidget.Value.HasValue
+            double? resolvedValue = CurrentWidget.Value.HasValue
                 ? ClampValue(CurrentWidget.Value.Value)
                 : (double?)null;
 
-            var animationValue = animationController.Evaluate();
+            double animationValue = animationController.Evaluate();
             var textDirection = Directionality.Of(context);
 
             Widget child = new LinearProgressIndicatorRenderWidget(
@@ -215,7 +215,7 @@ public sealed class LinearProgressIndicator : StatefulWidget
                 trackGap: resolvedTrackGap,
                 textDirection: textDirection);
 
-            var semanticsLabel = ResolveSemanticsLabel(resolvedValue);
+            string? semanticsLabel = ResolveSemanticsLabel(resolvedValue);
             if (!string.IsNullOrWhiteSpace(semanticsLabel))
             {
                 child = new Semantics(
@@ -268,8 +268,8 @@ public sealed class LinearProgressIndicator : StatefulWidget
 
         private string? ResolveSemanticsLabel(double? resolvedValue)
         {
-            var label = CurrentWidget.SemanticsLabel;
-            var value = CurrentWidget.SemanticsValue;
+            string? label = CurrentWidget.SemanticsLabel;
+            string? value = CurrentWidget.SemanticsValue;
 
             if (string.IsNullOrWhiteSpace(value) && resolvedValue.HasValue)
             {
@@ -296,8 +296,8 @@ public sealed class LinearProgressIndicator : StatefulWidget
                 return;
             }
 
-            var shouldAnimateInternalController = !CurrentWidget.Value.HasValue
-                                                  && ReferenceEquals(animationController, _internalController);
+            bool shouldAnimateInternalController = !CurrentWidget.Value.HasValue
+                                                   && ReferenceEquals(animationController, _internalController);
 
             if (!shouldAnimateInternalController)
             {
@@ -636,8 +636,8 @@ internal sealed class RenderLinearProgressIndicator : RenderBox
 
     protected override void PerformLayout()
     {
-        var resolvedMinHeight = Math.Max(0, MinHeight);
-        var width = Constraints.HasBoundedWidth
+        double resolvedMinHeight = Math.Max(0, MinHeight);
+        double width = Constraints.HasBoundedWidth
             ? Constraints.MaxWidth
             : Constraints.ConstrainWidth(0);
         Size = Constraints.Constrain(new Size(width, resolvedMinHeight));
@@ -652,19 +652,19 @@ internal sealed class RenderLinearProgressIndicator : RenderBox
 
         var trackBrush = new SolidColorBrush(TrackColor);
         var valueBrush = new SolidColorBrush(ValueColor);
-        var radius = ResolveRadius(Size.Width, Size.Height, BorderRadius.Radius);
+        double radius = ResolveRadius(Size.Width, Size.Height, BorderRadius.Radius);
 
-        var effectiveTrackGap = Size.Width > 0
+        double effectiveTrackGap = Size.Width > 0
             ? Math.Clamp(TrackGap, 0.0, Size.Width)
             : 0.0;
-        var trackGapFraction = Size.Width > 0
+        double trackGapFraction = Size.Width > 0
             ? effectiveTrackGap / Size.Width
             : 0.0;
 
         if (Value.HasValue)
         {
-            var effectiveValue = LinearProgressIndicator.ClampValue(Value.Value);
-            var trackStartFraction = trackGapFraction > 0
+            double effectiveValue = LinearProgressIndicator.ClampValue(Value.Value);
+            double trackStartFraction = trackGapFraction > 0
                 ? effectiveValue + GetEffectiveTrackGapFraction(effectiveValue, trackGapFraction)
                 : 0.0;
 
@@ -683,15 +683,15 @@ internal sealed class RenderLinearProgressIndicator : RenderBox
             return;
         }
 
-        var t = Math.Clamp(AnimationValue, 0.0, 1.0);
-        var line1Head = TransformInterval(t, 0.0, 750.0 / IndeterminateDurationMilliseconds, 0.2, 0.0, 0.8, 1.0);
-        var line1Tail = TransformInterval(t, 333.0 / IndeterminateDurationMilliseconds, (333.0 + 750.0) / IndeterminateDurationMilliseconds, 0.4, 0.0, 1.0, 1.0);
-        var line2Head = TransformInterval(t, 1000.0 / IndeterminateDurationMilliseconds, (1000.0 + 567.0) / IndeterminateDurationMilliseconds, 0.0, 0.0, 0.65, 1.0);
-        var line2Tail = TransformInterval(t, 1267.0 / IndeterminateDurationMilliseconds, (1267.0 + 533.0) / IndeterminateDurationMilliseconds, 0.10, 0.0, 0.45, 1.0);
+        double t = Math.Clamp(AnimationValue, 0.0, 1.0);
+        double line1Head = TransformInterval(t, 0.0, 750.0 / IndeterminateDurationMilliseconds, 0.2, 0.0, 0.8, 1.0);
+        double line1Tail = TransformInterval(t, 333.0 / IndeterminateDurationMilliseconds, (333.0 + 750.0) / IndeterminateDurationMilliseconds, 0.4, 0.0, 1.0, 1.0);
+        double line2Head = TransformInterval(t, 1000.0 / IndeterminateDurationMilliseconds, (1000.0 + 567.0) / IndeterminateDurationMilliseconds, 0.0, 0.0, 0.65, 1.0);
+        double line2Tail = TransformInterval(t, 1267.0 / IndeterminateDurationMilliseconds, (1267.0 + 533.0) / IndeterminateDurationMilliseconds, 0.10, 0.0, 0.45, 1.0);
 
         if (line1Head < 1 - trackGapFraction)
         {
-            var trackStartFraction = line1Head > 0
+            double trackStartFraction = line1Head > 0
                 ? line1Head + GetEffectiveTrackGapFraction(line1Head, trackGapFraction)
                 : 0.0;
             DrawBar(ctx, offset, trackBrush, trackStartFraction, 1.0, radius);
@@ -701,10 +701,10 @@ internal sealed class RenderLinearProgressIndicator : RenderBox
 
         if (line1Tail > trackGapFraction)
         {
-            var trackStartFraction = line2Head > 0
+            double trackStartFraction = line2Head > 0
                 ? line2Head + GetEffectiveTrackGapFraction(line2Head, trackGapFraction)
                 : 0.0;
-            var trackEndFraction = line1Tail < 1
+            double trackEndFraction = line1Tail < 1
                 ? line1Tail - GetEffectiveTrackGapFraction(1 - line1Tail, trackGapFraction)
                 : 1.0;
 
@@ -715,7 +715,7 @@ internal sealed class RenderLinearProgressIndicator : RenderBox
 
         if (line2Tail > trackGapFraction)
         {
-            var trackEndFraction = line2Tail < 1
+            double trackEndFraction = line2Tail < 1
                 ? line2Tail - GetEffectiveTrackGapFraction(1 - line2Tail, trackGapFraction)
                 : 1.0;
             DrawBar(ctx, offset, trackBrush, 0.0, trackEndFraction, radius);
@@ -732,19 +732,19 @@ internal sealed class RenderLinearProgressIndicator : RenderBox
     {
         startFraction = Math.Clamp(startFraction, 0.0, 1.0);
         endFraction = Math.Clamp(endFraction, 0.0, 1.0);
-        var widthFraction = endFraction - startFraction;
+        double widthFraction = endFraction - startFraction;
         if (widthFraction <= 0)
         {
             return;
         }
 
-        var width = Size.Width * widthFraction;
-        var left = TextDirection == TextDirection.Rtl
+        double width = Size.Width * widthFraction;
+        double left = TextDirection == TextDirection.Rtl
             ? offset.X + (Size.Width - width - (Size.Width * startFraction))
             : offset.X + (Size.Width * startFraction);
 
         var barRect = new Rect(left, offset.Y, width, Size.Height);
-        var barRadius = ResolveRadius(barRect.Width, barRect.Height, radius);
+        double barRadius = ResolveRadius(barRect.Width, barRect.Height, radius);
         ctx.DrawRectangle(
             brush,
             null,
@@ -760,14 +760,14 @@ internal sealed class RenderLinearProgressIndicator : RenderBox
             return;
         }
 
-        var maxRadius = Size.Height / 2.0;
-        var radius = Math.Min(_stopIndicatorRadius.Value, maxRadius);
+        double maxRadius = Size.Height / 2.0;
+        double radius = Math.Min(_stopIndicatorRadius.Value, maxRadius);
         if (radius <= 0)
         {
             return;
         }
 
-        var centerX = TextDirection == TextDirection.Rtl
+        double centerX = TextDirection == TextDirection.Rtl
             ? offset.X + maxRadius
             : offset.X + (Size.Width - maxRadius);
         var center = new Point(centerX, offset.Y + maxRadius);
@@ -793,7 +793,7 @@ internal sealed class RenderLinearProgressIndicator : RenderBox
         double x2,
         double y2)
     {
-        var transformed = Math.Clamp((value - begin) / (end - begin), 0.0, 1.0);
+        double transformed = Math.Clamp((value - begin) / (end - begin), 0.0, 1.0);
         if (transformed <= 0 || transformed >= 1)
         {
             return transformed;
@@ -805,12 +805,12 @@ internal sealed class RenderLinearProgressIndicator : RenderBox
     private static double TransformCubic(double t, double x1, double y1, double x2, double y2)
     {
         // Solve x(s) = t for cubic-bezier control points, then evaluate y(s).
-        var low = 0.0;
-        var high = 1.0;
-        for (var i = 0; i < 12; i++)
+        double low = 0.0;
+        double high = 1.0;
+        for (int i = 0; i < 12; i++)
         {
-            var mid = (low + high) * 0.5;
-            var estimate = EvaluateCubic(mid, x1, x2);
+            double mid = (low + high) * 0.5;
+            double estimate = EvaluateCubic(mid, x1, x2);
             if (estimate < t)
             {
                 low = mid;
@@ -821,13 +821,13 @@ internal sealed class RenderLinearProgressIndicator : RenderBox
             }
         }
 
-        var solved = (low + high) * 0.5;
+        double solved = (low + high) * 0.5;
         return EvaluateCubic(solved, y1, y2);
     }
 
     private static double EvaluateCubic(double t, double c1, double c2)
     {
-        var mt = 1 - t;
+        double mt = 1 - t;
         return (3 * c1 * mt * mt * t) + (3 * c2 * mt * t * t) + (t * t * t);
     }
 
@@ -1090,16 +1090,16 @@ public class CircularProgressIndicator : StatefulWidget
         {
             var theme = Theme.Of(context);
             var progressTheme = ProgressIndicatorTheme.Of(context);
-            var useYear2023 = ResolveYear2023(theme, progressTheme);
+            bool useYear2023 = ResolveYear2023(theme, progressTheme);
             var animationController = ResolveAnimationController(progressTheme);
             UpdateAnimationBinding(animationController);
             UpdateValueColorBinding(CurrentWidget.ValueColor);
             UpdateAnimationStatus(animationController);
 
-            var resolvedValue = CurrentWidget.Value.HasValue
+            double? resolvedValue = CurrentWidget.Value.HasValue
                 ? ClampValue(CurrentWidget.Value.Value)
                 : (double?)null;
-            var semanticsLabel = ResolveSemanticsLabel(resolvedValue);
+            string? semanticsLabel = ResolveSemanticsLabel(resolvedValue);
 
             if (IsAdaptiveCupertino(theme))
             {
@@ -1117,17 +1117,17 @@ public class CircularProgressIndicator : StatefulWidget
                                      ?? progressTheme.CircularTrackColor
                                      ?? ResolveDefaultTrackColor(theme, resolvedValue, useYear2023);
 
-            var resolvedStrokeWidth = CurrentWidget.StrokeWidth
-                                      ?? progressTheme.CircularStrokeWidth
-                                      ?? DefaultStrokeWidth;
+            double resolvedStrokeWidth = CurrentWidget.StrokeWidth
+                                         ?? progressTheme.CircularStrokeWidth
+                                         ?? DefaultStrokeWidth;
 
-            var resolvedStrokeAlign = CurrentWidget.StrokeAlign
-                                      ?? progressTheme.CircularStrokeAlign
-                                      ?? ResolveDefaultStrokeAlign(theme, useYear2023);
+            double resolvedStrokeAlign = CurrentWidget.StrokeAlign
+                                         ?? progressTheme.CircularStrokeAlign
+                                         ?? ResolveDefaultStrokeAlign(theme, useYear2023);
 
-            var resolvedConstraints = ResolveConstraints(CurrentWidget, progressTheme, theme, useYear2023, out var resolvedIndicatorSize);
+            var resolvedConstraints = ResolveConstraints(CurrentWidget, progressTheme, theme, useYear2023, out double resolvedIndicatorSize);
 
-            var resolvedTrackGap = theme.UseMaterial3 && !useYear2023
+            double? resolvedTrackGap = theme.UseMaterial3 && !useYear2023
                 ? CurrentWidget.TrackGap
                   ?? progressTheme.TrackGap
                   ?? 4.0
@@ -1136,9 +1136,9 @@ public class CircularProgressIndicator : StatefulWidget
             var resolvedStrokeCap = CurrentWidget.StrokeCap
                                     ?? progressTheme.CircularStrokeCap;
 
-            var animationValue = animationController.Evaluate();
-            var arcStart = ArcStart;
-            var arcSweep = resolvedValue.HasValue
+            double animationValue = animationController.Evaluate();
+            double arcStart = ArcStart;
+            double arcSweep = resolvedValue.HasValue
                 ? ResolveDeterminateSweep(resolvedValue.Value)
                 : ResolveIndeterminateSweep(animationValue, out arcStart);
 
@@ -1163,7 +1163,7 @@ public class CircularProgressIndicator : StatefulWidget
 
         private Widget BuildAdaptiveCupertinoIndicator(ThemeData theme, double? resolvedValue)
         {
-            var isDark = theme.Brightness == Brightness.Dark;
+            bool isDark = theme.Brightness == Brightness.Dark;
             var tickColor = CurrentWidget.BackgroundColor;
             if (resolvedValue.HasValue)
             {
@@ -1234,8 +1234,8 @@ public class CircularProgressIndicator : StatefulWidget
 
         private string? ResolveSemanticsLabel(double? resolvedValue)
         {
-            var label = CurrentWidget.SemanticsLabel;
-            var value = CurrentWidget.SemanticsValue;
+            string? label = CurrentWidget.SemanticsLabel;
+            string? value = CurrentWidget.SemanticsValue;
 
             if (string.IsNullOrWhiteSpace(value) && resolvedValue.HasValue)
             {
@@ -1262,8 +1262,8 @@ public class CircularProgressIndicator : StatefulWidget
                 return;
             }
 
-            var shouldAnimateInternalController = !CurrentWidget.Value.HasValue
-                                                  && ReferenceEquals(animationController, _internalController);
+            bool shouldAnimateInternalController = !CurrentWidget.Value.HasValue
+                                                   && ReferenceEquals(animationController, _internalController);
 
             if (!shouldAnimateInternalController)
             {
@@ -1387,7 +1387,7 @@ public class CircularProgressIndicator : StatefulWidget
 
         private static double ResolveDeterminateSweep(double value)
         {
-            var clampedValue = ClampValue(value);
+            double clampedValue = ClampValue(value);
             if (clampedValue <= 0)
             {
                 return 0;
@@ -1398,27 +1398,27 @@ public class CircularProgressIndicator : StatefulWidget
 
         private static double ResolveIndeterminateSweep(double animationValue, out double arcStart)
         {
-            var t = Math.Clamp(animationValue, 0.0, 1.0);
+            double t = Math.Clamp(animationValue, 0.0, 1.0);
             // Flutter parity: CurveTween(interval + fastOutSlowIn).chain(CurveTween(SawTooth(pathCount)))
             // means SawTooth is applied first, then interval/curve on the sawtooth output.
-            var sawTooth = EvaluateSawTooth(t, PathCount);
-            var headValue = TransformInterval(sawTooth, 0.0, 0.5, 0.4, 0.0, 0.2, 1.0);
-            var tailValue = TransformInterval(sawTooth, 0.5, 1.0, 0.4, 0.0, 0.2, 1.0);
-            var offsetValue = EvaluateSawTooth(t, PathCount);
-            var rotationValue = EvaluateSawTooth(t, RotationCount);
+            double sawTooth = EvaluateSawTooth(t, PathCount);
+            double headValue = TransformInterval(sawTooth, 0.0, 0.5, 0.4, 0.0, 0.2, 1.0);
+            double tailValue = TransformInterval(sawTooth, 0.5, 1.0, 0.4, 0.0, 0.2, 1.0);
+            double offsetValue = EvaluateSawTooth(t, PathCount);
+            double rotationValue = EvaluateSawTooth(t, RotationCount);
 
             arcStart = ArcStart
                        + (tailValue * 1.5 * Math.PI)
                        + (rotationValue * Math.PI * 2.0)
                        + (offsetValue * 0.5 * Math.PI);
 
-            var sweep = Math.Max((headValue * 1.5 * Math.PI) - (tailValue * 1.5 * Math.PI), MinIndeterminateSweep);
+            double sweep = Math.Max((headValue * 1.5 * Math.PI) - (tailValue * 1.5 * Math.PI), MinIndeterminateSweep);
             return Math.Min(sweep, FullSweep);
         }
 
         private static double EvaluateSawTooth(double value, int count)
         {
-            var transformed = Math.Clamp(value, 0.0, 1.0) * count;
+            double transformed = Math.Clamp(value, 0.0, 1.0) * count;
             return transformed - Math.Floor(transformed);
         }
 
@@ -1431,7 +1431,7 @@ public class CircularProgressIndicator : StatefulWidget
             double x2,
             double y2)
         {
-            var transformed = Math.Clamp((value - begin) / (end - begin), 0.0, 1.0);
+            double transformed = Math.Clamp((value - begin) / (end - begin), 0.0, 1.0);
             if (transformed <= 0 || transformed >= 1)
             {
                 return transformed;
@@ -1442,12 +1442,12 @@ public class CircularProgressIndicator : StatefulWidget
 
         private static double TransformCubic(double t, double x1, double y1, double x2, double y2)
         {
-            var low = 0.0;
-            var high = 1.0;
-            for (var i = 0; i < 12; i++)
+            double low = 0.0;
+            double high = 1.0;
+            for (int i = 0; i < 12; i++)
             {
-                var mid = (low + high) * 0.5;
-                var estimate = EvaluateCubic(mid, x1, x2);
+                double mid = (low + high) * 0.5;
+                double estimate = EvaluateCubic(mid, x1, x2);
                 if (estimate < t)
                 {
                     low = mid;
@@ -1458,13 +1458,13 @@ public class CircularProgressIndicator : StatefulWidget
                 }
             }
 
-            var solved = (low + high) * 0.5;
+            double solved = (low + high) * 0.5;
             return EvaluateCubic(solved, y1, y2);
         }
 
         private static double EvaluateCubic(double t, double c1, double c2)
         {
-            var mt = 1 - t;
+            double mt = 1 - t;
             return (3 * c1 * mt * mt * t) + (3 * c2 * mt * t * t) + (t * t * t);
         }
     }
@@ -1795,7 +1795,7 @@ internal sealed class RenderCircularProgressIndicator : RenderBox
 
     protected override void PerformLayout()
     {
-        var side = Math.Max(0, IndicatorSize);
+        double side = Math.Max(0, IndicatorSize);
         Size = Constraints.Constrain(new Size(side, side));
     }
 
@@ -1806,29 +1806,29 @@ internal sealed class RenderCircularProgressIndicator : RenderBox
             return;
         }
 
-        var diameter = Math.Min(Size.Width, Size.Height);
+        double diameter = Math.Min(Size.Width, Size.Height);
         if (diameter <= 0)
         {
             return;
         }
 
-        var strokeWidth = Math.Min(Math.Max(0, StrokeWidth), diameter);
+        double strokeWidth = Math.Min(Math.Max(0, StrokeWidth), diameter);
         if (strokeWidth <= 0)
         {
             return;
         }
 
-        var strokeOffset = strokeWidth / 2.0 * -StrokeAlign;
-        var arcDiameter = diameter - (strokeOffset * 2.0);
+        double strokeOffset = strokeWidth / 2.0 * -StrokeAlign;
+        double arcDiameter = diameter - (strokeOffset * 2.0);
         if (arcDiameter <= 0 || double.IsNaN(arcDiameter) || double.IsInfinity(arcDiameter))
         {
             return;
         }
 
-        var left = offset.X + ((Size.Width - diameter) / 2.0) + strokeOffset;
-        var top = offset.Y + ((Size.Height - diameter) / 2.0) + strokeOffset;
+        double left = offset.X + ((Size.Width - diameter) / 2.0) + strokeOffset;
+        double top = offset.Y + ((Size.Height - diameter) / 2.0) + strokeOffset;
         var arcRect = new Rect(left, top, arcDiameter, arcDiameter);
-        var resolvedValue = Value.HasValue
+        double? resolvedValue = Value.HasValue
             ? CircularProgressIndicator.ClampValue(Value.Value)
             : (double?)null;
 
@@ -1838,7 +1838,7 @@ internal sealed class RenderCircularProgressIndicator : RenderBox
                 new SolidColorBrush(TrackColor.Value),
                 strokeWidth,
                 lineCap: ResolveTrackLineCap(StrokeCap));
-            if (TryResolveTrackGapArc(arcRect, strokeWidth, resolvedValue, out var gapArcStart, out var gapArcSweep))
+            if (TryResolveTrackGapArc(arcRect, strokeWidth, resolvedValue, out double gapArcStart, out double gapArcSweep))
             {
                 ctx.DrawArc(trackPen, arcRect, startAngleRadians: gapArcStart, sweepAngleRadians: gapArcSweep);
             }
@@ -1848,7 +1848,7 @@ internal sealed class RenderCircularProgressIndicator : RenderBox
             }
         }
 
-        var sweep = resolvedValue.HasValue
+        double sweep = resolvedValue.HasValue
             ? ResolveDeterminateSweep(resolvedValue.Value)
             : Math.Clamp(ArcSweep, MinSweep, FullSweep);
         if (sweep <= MinSweep)
@@ -1856,7 +1856,7 @@ internal sealed class RenderCircularProgressIndicator : RenderBox
             return;
         }
 
-        var start = Value.HasValue
+        double start = Value.HasValue
             ? DeterminateStartAngle
             : ArcStart;
         var lineCap = ResolveIndicatorLineCap(resolvedValue, StrokeCap, Year2023);
@@ -1869,13 +1869,13 @@ internal sealed class RenderCircularProgressIndicator : RenderBox
     {
         if (ArrowheadScale <= 0) return;
 
-        var radius = Math.Min(arcRect.Width, arcRect.Height) / 2.0;
+        double radius = Math.Min(arcRect.Width, arcRect.Height) / 2.0;
         var center = arcRect.Center;
-        var ux = Math.Cos(arcEnd);
-        var uy = Math.Sin(arcEnd);
-        var arrowheadRadius = strokeWidth * 2.0 * ArrowheadScale;
-        var innerRadius = Math.Max(0, radius - arrowheadRadius);
-        var outerRadius = radius + arrowheadRadius;
+        double ux = Math.Cos(arcEnd);
+        double uy = Math.Sin(arcEnd);
+        double arrowheadRadius = strokeWidth * 2.0 * ArrowheadScale;
+        double innerRadius = Math.Max(0, radius - arrowheadRadius);
+        double outerRadius = radius + arrowheadRadius;
         var point = new Point(
             center.X + (ux * radius) - (uy * strokeWidth * 2.0 * ArrowheadScale),
             center.Y + (uy * radius) + (ux * strokeWidth * 2.0 * ArrowheadScale));
@@ -1909,19 +1909,19 @@ internal sealed class RenderCircularProgressIndicator : RenderBox
             return false;
         }
 
-        var arcRadius = Math.Min(arcRect.Width, arcRect.Height) / 2.0;
+        double arcRadius = Math.Min(arcRect.Width, arcRect.Height) / 2.0;
         if (arcRadius <= 0)
         {
             return false;
         }
 
-        var clampedTrackGap = Math.Max(0, _trackGap.Value);
-        var strokeRadius = strokeWidth / arcRadius;
-        var gapRadius = clampedTrackGap / arcRadius;
-        var startGap = strokeRadius + gapRadius;
-        var endGap = startGap * 2.0;
-        var startSweep = DeterminateStartAngle + startGap;
-        var trackSweep = Math.Max(0.0, TwoPi - (resolvedValue.Value * TwoPi) - endGap);
+        double clampedTrackGap = Math.Max(0, _trackGap.Value);
+        double strokeRadius = strokeWidth / arcRadius;
+        double gapRadius = clampedTrackGap / arcRadius;
+        double startGap = strokeRadius + gapRadius;
+        double endGap = startGap * 2.0;
+        double startSweep = DeterminateStartAngle + startGap;
+        double trackSweep = Math.Max(0.0, TwoPi - (resolvedValue.Value * TwoPi) - endGap);
         if (trackSweep <= MinSweep)
         {
             return false;
@@ -1967,7 +1967,7 @@ internal sealed class RenderCircularProgressIndicator : RenderBox
 
     private static double ResolveDeterminateSweep(double value)
     {
-        var clamped = CircularProgressIndicator.ClampValue(value);
+        double clamped = CircularProgressIndicator.ClampValue(value);
         if (clamped <= 0)
         {
             return 0;

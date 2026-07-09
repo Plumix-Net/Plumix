@@ -148,8 +148,8 @@ public sealed class MaterialInkResponseTests : IDisposable
     [Fact]
     public void InkResponse_SemanticsExposeOnlyConfiguredPrimaryActions()
     {
-        var taps = 0;
-        var longPresses = 0;
+        int taps = 0;
+        int longPresses = 0;
         using var harness = CreateHarness(new InkResponse(
             onTap: () => taps++,
             onLongPress: () => longPresses++,

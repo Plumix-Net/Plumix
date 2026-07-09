@@ -141,7 +141,7 @@ public sealed class CupertinoRadio<T> : StatefulWidget
 
         public override Widget Build(BuildContext context)
         {
-            var selected = IsSelected();
+            bool selected = IsSelected();
             var shape = Plumix.Rendering.BorderRadius.Circular(Width / 2);
             var activeColor = ResolveActiveColor();
             var outerColor = ResolveOuterColor(selected, activeColor);
@@ -150,7 +150,7 @@ public sealed class CupertinoRadio<T> : StatefulWidget
             var overlayColor = ResolvePressedOverlayColor();
             var focusRingColor = ResolveFocusRingColor(activeColor);
             var bodyColor = CurrentWidget.IsDark ? Colors.Transparent : outerColor;
-            var borderWidth = borderColor.A == 0 ? 0 : BorderWidth;
+            double borderWidth = borderColor.A == 0 ? 0 : BorderWidth;
 
             var layers = new List<Widget>
             {
@@ -451,8 +451,8 @@ public sealed class CupertinoRadio<T> : StatefulWidget
 
         private static IBrush CreateDarkGradientBrush(Color baseColor, bool isEnabled)
         {
-            var topOpacity = isEnabled ? DarkGradientTopOpacity : DisabledDarkGradientTopOpacity;
-            var bottomOpacity = isEnabled ? DarkGradientBottomOpacity : DisabledDarkGradientBottomOpacity;
+            double topOpacity = isEnabled ? DarkGradientTopOpacity : DisabledDarkGradientTopOpacity;
+            double bottomOpacity = isEnabled ? DarkGradientBottomOpacity : DisabledDarkGradientBottomOpacity;
             return new LinearGradientBrush
             {
                 StartPoint = new RelativePoint(0.5, 0.0, RelativeUnit.Relative),
@@ -493,7 +493,7 @@ public sealed class CupertinoRadio<T> : StatefulWidget
 
         private void HandleFocusChanged()
         {
-            var hasFocus = _focusNode?.HasFocus ?? false;
+            bool hasFocus = _focusNode?.HasFocus ?? false;
             if (_hasFocus == hasFocus)
             {
                 return;
@@ -504,21 +504,21 @@ public sealed class CupertinoRadio<T> : StatefulWidget
 
         private static (double H, double S, double L) ToHsl(Color color)
         {
-            var r = color.R / 255.0;
-            var g = color.G / 255.0;
-            var b = color.B / 255.0;
+            double r = color.R / 255.0;
+            double g = color.G / 255.0;
+            double b = color.B / 255.0;
 
-            var max = Math.Max(r, Math.Max(g, b));
-            var min = Math.Min(r, Math.Min(g, b));
-            var delta = max - min;
+            double max = Math.Max(r, Math.Max(g, b));
+            double min = Math.Min(r, Math.Min(g, b));
+            double delta = max - min;
 
-            var l = (max + min) / 2.0;
+            double l = (max + min) / 2.0;
             if (delta <= 0.000001)
             {
                 return (0, 0, l);
             }
 
-            var s = l < 0.5
+            double s = l < 0.5
                 ? delta / (max + min)
                 : delta / (2.0 - max - min);
 
@@ -547,18 +547,18 @@ public sealed class CupertinoRadio<T> : StatefulWidget
 
             if (s <= 0.000001)
             {
-                var gray = (byte)Math.Clamp((int)Math.Round(l * 255), 0, 255);
+                byte gray = (byte)Math.Clamp((int)Math.Round(l * 255), 0, 255);
                 return Color.FromArgb(255, gray, gray, gray);
             }
 
-            var q = l < 0.5
+            double q = l < 0.5
                 ? l * (1 + s)
                 : l + s - l * s;
-            var p = 2 * l - q;
+            double p = 2 * l - q;
 
-            var r = HueToRgb(p, q, h + 1.0 / 3.0);
-            var g = HueToRgb(p, q, h);
-            var b = HueToRgb(p, q, h - 1.0 / 3.0);
+            double r = HueToRgb(p, q, h + 1.0 / 3.0);
+            double g = HueToRgb(p, q, h);
+            double b = HueToRgb(p, q, h - 1.0 / 3.0);
 
             return Color.FromArgb(
                 255,
@@ -590,7 +590,7 @@ public sealed class CupertinoRadio<T> : StatefulWidget
 
         private static double Normalize(double value)
         {
-            var result = value % 1.0;
+            double result = value % 1.0;
             if (result < 0)
             {
                 result += 1.0;
@@ -601,8 +601,8 @@ public sealed class CupertinoRadio<T> : StatefulWidget
 
         private static Color ApplyOpacity(Color color, double opacity)
         {
-            var clampedOpacity = Math.Clamp(opacity, 0, 1);
-            var alpha = (byte)Math.Clamp((int)Math.Round(color.A * clampedOpacity), 0, 255);
+            double clampedOpacity = Math.Clamp(opacity, 0, 1);
+            byte alpha = (byte)Math.Clamp((int)Math.Round(color.A * clampedOpacity), 0, 255);
             return Color.FromArgb(alpha, color.R, color.G, color.B);
         }
     }

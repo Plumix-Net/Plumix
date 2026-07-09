@@ -63,7 +63,7 @@ internal sealed class ListViewReverseDemoPageState : State
                         padding: new Thickness(12),
                         itemBuilder: (_, index) =>
                         {
-                            var id = _messages[index];
+                            int id = _messages[index];
                             return new Container(
                                 color: id % 2 == 0 ? Color.Parse("#FFFFF3E0") : Colors.White,
                                 padding: new Thickness(12, 8),

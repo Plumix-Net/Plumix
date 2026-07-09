@@ -43,8 +43,8 @@ public sealed class GridTileBar : StatelessWidget
     public override Widget Build(BuildContext context)
     {
         var direction = Directionality.Of(context);
-        var startPadding = Leading is not null ? 8.0 : 16.0;
-        var endPadding = Trailing is not null ? 8.0 : 16.0;
+        double startPadding = Leading is not null ? 8.0 : 16.0;
+        double endPadding = Trailing is not null ? 8.0 : 16.0;
         var padding = direction == TextDirection.Ltr
             ? new Thickness(startPadding, 0, endPadding, 0)
             : new Thickness(endPadding, 0, startPadding, 0);

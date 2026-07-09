@@ -25,7 +25,7 @@ public sealed class BackButtonIcon : StatelessWidget
                        && theme.Platform is TargetPlatform.IOS or TargetPlatform.MacOS
             ? Icons.ArrowBackIosNewRounded
             : Icons.ArrowBack;
-        var semanticLabel = theme.Platform == TargetPlatform.Android
+        string? semanticLabel = theme.Platform == TargetPlatform.Android
             ? MaterialLocalizations.Of(context).BackButtonTooltip
             : null;
         Widget icon = new Icon(iconData, semanticLabel: semanticLabel);
@@ -49,7 +49,7 @@ public sealed class CloseButtonIcon : StatelessWidget
             return themedBuilder(context);
         }
 
-        var semanticLabel = Theme.Of(context).Platform == TargetPlatform.Android
+        string? semanticLabel = Theme.Of(context).Platform == TargetPlatform.Android
             ? MaterialLocalizations.Of(context).CloseButtonTooltip
             : null;
         Widget icon = new Icon(Icons.Close, semanticLabel: semanticLabel);
@@ -148,7 +148,7 @@ public sealed class DrawerButtonIcon : StatelessWidget
 
     internal static Widget BuildMenuIcon(BuildContext context)
     {
-        var semanticLabel = Theme.Of(context).Platform == TargetPlatform.Android
+        string? semanticLabel = Theme.Of(context).Platform == TargetPlatform.Android
             ? MaterialLocalizations.Of(context).OpenAppDrawerTooltip
             : null;
         Widget icon = new Icon(Icons.Menu, semanticLabel: semanticLabel);

@@ -244,7 +244,7 @@ public sealed class RenderLimitedBox : RenderProxyBox
         get => _maxWidth;
         set
         {
-            var normalized = ValidateMaxValue(value, nameof(value));
+            double normalized = ValidateMaxValue(value, nameof(value));
             if (Math.Abs(_maxWidth - normalized) < 0.0001)
             {
                 return;
@@ -260,7 +260,7 @@ public sealed class RenderLimitedBox : RenderProxyBox
         get => _maxHeight;
         set
         {
-            var normalized = ValidateMaxValue(value, nameof(value));
+            double normalized = ValidateMaxValue(value, nameof(value));
             if (Math.Abs(_maxHeight - normalized) < 0.0001)
             {
                 return;
@@ -357,7 +357,7 @@ public sealed class RenderConstrainedOverflowBox : RenderProxyBox
         get => _minWidth;
         set
         {
-            var normalized = ValidateConstraint(value, nameof(value));
+            double? normalized = ValidateConstraint(value, nameof(value));
             ValidateRanges(normalized, _maxWidth, nameof(value), nameof(MaxWidth));
             if (_minWidth == normalized)
             {
@@ -374,7 +374,7 @@ public sealed class RenderConstrainedOverflowBox : RenderProxyBox
         get => _maxWidth;
         set
         {
-            var normalized = ValidateConstraint(value, nameof(value));
+            double? normalized = ValidateConstraint(value, nameof(value));
             ValidateRanges(_minWidth, normalized, nameof(MinWidth), nameof(value));
             if (_maxWidth == normalized)
             {
@@ -391,7 +391,7 @@ public sealed class RenderConstrainedOverflowBox : RenderProxyBox
         get => _minHeight;
         set
         {
-            var normalized = ValidateConstraint(value, nameof(value));
+            double? normalized = ValidateConstraint(value, nameof(value));
             ValidateRanges(normalized, _maxHeight, nameof(value), nameof(MaxHeight));
             if (_minHeight == normalized)
             {
@@ -408,7 +408,7 @@ public sealed class RenderConstrainedOverflowBox : RenderProxyBox
         get => _maxHeight;
         set
         {
-            var normalized = ValidateConstraint(value, nameof(value));
+            double? normalized = ValidateConstraint(value, nameof(value));
             ValidateRanges(_minHeight, normalized, nameof(MinHeight), nameof(value));
             if (_maxHeight == normalized)
             {
@@ -705,7 +705,7 @@ public sealed class RenderAlign : RenderProxyBox
         get => _widthFactor;
         set
         {
-            var normalized = ValidateFactor(value, nameof(value));
+            double? normalized = ValidateFactor(value, nameof(value));
             if (_widthFactor == normalized)
             {
                 return;
@@ -721,7 +721,7 @@ public sealed class RenderAlign : RenderProxyBox
         get => _heightFactor;
         set
         {
-            var normalized = ValidateFactor(value, nameof(value));
+            double? normalized = ValidateFactor(value, nameof(value));
             if (_heightFactor == normalized)
             {
                 return;
@@ -734,23 +734,23 @@ public sealed class RenderAlign : RenderProxyBox
 
     protected override void PerformLayout()
     {
-        var shrinkWrapWidth = _widthFactor.HasValue || !Constraints.HasBoundedWidth;
-        var shrinkWrapHeight = _heightFactor.HasValue || !Constraints.HasBoundedHeight;
+        bool shrinkWrapWidth = _widthFactor.HasValue || !Constraints.HasBoundedWidth;
+        bool shrinkWrapHeight = _heightFactor.HasValue || !Constraints.HasBoundedHeight;
 
         if (Child == null)
         {
-            var fallbackWidth = shrinkWrapWidth ? 0.0 : double.PositiveInfinity;
-            var fallbackHeight = shrinkWrapHeight ? 0.0 : double.PositiveInfinity;
+            double fallbackWidth = shrinkWrapWidth ? 0.0 : double.PositiveInfinity;
+            double fallbackHeight = shrinkWrapHeight ? 0.0 : double.PositiveInfinity;
             Size = Constraints.Constrain(new Size(fallbackWidth, fallbackHeight));
             return;
         }
 
         Child.Layout(BoxConstraints.Loose(Constraints.Biggest), parentUsesSize: true);
         var childSize = Child.Size;
-        var widthFactor = _widthFactor ?? 1.0;
-        var heightFactor = _heightFactor ?? 1.0;
-        var targetWidth = shrinkWrapWidth ? childSize.Width * widthFactor : double.PositiveInfinity;
-        var targetHeight = shrinkWrapHeight ? childSize.Height * heightFactor : double.PositiveInfinity;
+        double widthFactor = _widthFactor ?? 1.0;
+        double heightFactor = _heightFactor ?? 1.0;
+        double targetWidth = shrinkWrapWidth ? childSize.Width * widthFactor : double.PositiveInfinity;
+        double targetHeight = shrinkWrapHeight ? childSize.Height * heightFactor : double.PositiveInfinity;
         Size = Constraints.Constrain(new Size(targetWidth, targetHeight));
         ((BoxParentData)Child.parentData!).offset = _alignment.AlongOffset(Size, childSize);
     }
@@ -786,7 +786,7 @@ public sealed class RenderAspectRatio : RenderProxyBox
         get => _aspectRatio;
         set
         {
-            var normalized = ValidateAspectRatio(value, nameof(value));
+            double normalized = ValidateAspectRatio(value, nameof(value));
             if (Math.Abs(_aspectRatio - normalized) < 0.0001)
             {
                 return;
@@ -823,8 +823,8 @@ public sealed class RenderAspectRatio : RenderProxyBox
                 "RenderAspectRatio requires at least one bounded axis.");
         }
 
-        var width = constraints.MaxWidth;
-        var height = width / _aspectRatio;
+        double width = constraints.MaxWidth;
+        double height = width / _aspectRatio;
 
         if (double.IsPositiveInfinity(width))
         {
@@ -908,7 +908,7 @@ public sealed class RenderFractionallySizedBox : RenderProxyBox
         get => _widthFactor;
         set
         {
-            var normalized = ValidateFactor(value, nameof(value));
+            double? normalized = ValidateFactor(value, nameof(value));
             if (_widthFactor == normalized)
             {
                 return;
@@ -924,7 +924,7 @@ public sealed class RenderFractionallySizedBox : RenderProxyBox
         get => _heightFactor;
         set
         {
-            var normalized = ValidateFactor(value, nameof(value));
+            double? normalized = ValidateFactor(value, nameof(value));
             if (_heightFactor == normalized)
             {
                 return;
@@ -951,22 +951,22 @@ public sealed class RenderFractionallySizedBox : RenderProxyBox
 
     private BoxConstraints GetInnerConstraints(BoxConstraints constraints)
     {
-        var minWidth = constraints.MinWidth;
-        var maxWidth = constraints.MaxWidth;
+        double minWidth = constraints.MinWidth;
+        double maxWidth = constraints.MaxWidth;
 
         if (_widthFactor.HasValue && double.IsFinite(maxWidth))
         {
-            var width = maxWidth * _widthFactor.Value;
+            double width = maxWidth * _widthFactor.Value;
             minWidth = width;
             maxWidth = width;
         }
 
-        var minHeight = constraints.MinHeight;
-        var maxHeight = constraints.MaxHeight;
+        double minHeight = constraints.MinHeight;
+        double maxHeight = constraints.MaxHeight;
 
         if (_heightFactor.HasValue && double.IsFinite(maxHeight))
         {
-            var height = maxHeight * _heightFactor.Value;
+            double height = maxHeight * _heightFactor.Value;
             minHeight = height;
             maxHeight = height;
         }
@@ -1145,8 +1145,8 @@ public sealed class RenderFittedBox : RenderProxyBox
 
         var sourceOffset = _alignment.AlongOffset(childSize, sourceSize);
         var destinationOffset = _alignment.AlongOffset(Size, destinationSize);
-        var scaleX = destinationSize.Width / sourceSize.Width;
-        var scaleY = destinationSize.Height / sourceSize.Height;
+        double scaleX = destinationSize.Width / sourceSize.Width;
+        double scaleY = destinationSize.Height / sourceSize.Height;
 
         _transform =
             Matrix.CreateTranslation(destinationOffset.X, destinationOffset.Y)
@@ -1272,7 +1272,7 @@ public sealed class RenderDecoratedBox : RenderProxyBox
     private void PaintDecoration(PaintingContext ctx, Point offset)
     {
         var rect = new Rect(offset, Size);
-        var radius = _decoration.EffectiveBorderRadius.Radius;
+        double radius = _decoration.EffectiveBorderRadius.Radius;
         var boxShadows = _decoration.EffectiveBoxShadows;
         IBrush? fill = _decoration.Brush;
         if (fill is null && _decoration.Color.HasValue)
@@ -1284,7 +1284,7 @@ public sealed class RenderDecoratedBox : RenderProxyBox
         if (_decoration.Border.HasValue)
         {
             var border = _decoration.Border.Value;
-            if (border.Width > 0)
+            if (border.Style == BorderStyle.Solid && border.Width > 0)
             {
                 borderPen = new Pen(new SolidColorBrush(border.Color), border.Width);
             }
@@ -1294,7 +1294,7 @@ public sealed class RenderDecoratedBox : RenderProxyBox
         {
             if (fill != null || boxShadows.Count > 0)
             {
-                var side = Math.Min(rect.Width, rect.Height);
+                double side = Math.Min(rect.Width, rect.Height);
                 var circleRect = new Rect(
                     rect.Center.X - (side / 2.0),
                     rect.Center.Y - (side / 2.0),
@@ -1329,7 +1329,7 @@ public sealed class RenderDecoratedBox : RenderProxyBox
         {
             if (_decoration.Shape == BoxShape.Circle)
             {
-                var side = Math.Min(rect.Width, rect.Height);
+                double side = Math.Min(rect.Width, rect.Height);
                 var circleRect = new Rect(
                     rect.Center.X - (side / 2.0),
                     rect.Center.Y - (side / 2.0),
@@ -1382,7 +1382,7 @@ public sealed class RenderOpacity : RenderProxyBox
         get => _opacity;
         set
         {
-            var clamped = Math.Clamp(value, 0.0, 1.0);
+            double clamped = Math.Clamp(value, 0.0, 1.0);
             if (Math.Abs(_opacity - clamped) < 0.0001)
             {
                 return;
@@ -1623,7 +1623,7 @@ public sealed class RenderClipRect : RenderProxyBox
 
     protected override void PerformLayout()
     {
-        var hadSize = HasSize;
+        bool hadSize = HasSize;
         var previousSize = hadSize ? Size : default;
         base.PerformLayout();
 
@@ -1729,7 +1729,7 @@ public sealed class RenderClipRRect : RenderProxyBox
 
     protected override void PerformLayout()
     {
-        var hadSize = HasSize;
+        bool hadSize = HasSize;
         var previousSize = hadSize ? Size : default;
         base.PerformLayout();
 
@@ -1838,7 +1838,7 @@ public sealed class RenderPointerListener : RenderProxyBox
             return false;
         }
 
-        var hitTarget = HitTestChildren(result, position) || HitTestSelf(position);
+        bool hitTarget = HitTestChildren(result, position) || HitTestSelf(position);
         if (hitTarget || Behavior == HitTestBehavior.Translucent || Behavior == HitTestBehavior.Opaque)
         {
             result.Add(new BoxHitTestEntry(this, position));
@@ -2167,7 +2167,7 @@ public sealed class RenderInkSplash : RenderProxyBox
         get => _splashProgress;
         set
         {
-            var normalized = NormalizeProgress(value);
+            double normalized = NormalizeProgress(value);
             if (Math.Abs(_splashProgress - normalized) < 0.0001)
             {
                 return;
@@ -2183,7 +2183,7 @@ public sealed class RenderInkSplash : RenderProxyBox
         get => _splashRadius;
         set
         {
-            var normalized = NormalizeRadius(value);
+            double? normalized = NormalizeRadius(value);
             if (_splashRadius == normalized)
             {
                 return;
@@ -2234,11 +2234,11 @@ public sealed class RenderInkSplash : RenderProxyBox
         }
 
         var resolvedOrigin = ResolveOrigin(Size, _splashOrigin);
-        var localMaxRadius = Math.Sqrt((Size.Width * Size.Width) + (Size.Height * Size.Height));
-        var constrainedMaxRadius = _splashRadius.HasValue
+        double localMaxRadius = Math.Sqrt((Size.Width * Size.Width) + (Size.Height * Size.Height));
+        double constrainedMaxRadius = _splashRadius.HasValue
             ? Math.Min(localMaxRadius, _splashRadius.Value)
             : localMaxRadius;
-        var radius = constrainedMaxRadius * _splashProgress;
+        double radius = constrainedMaxRadius * _splashProgress;
 
         var brush = new SolidColorBrush(_splashColor.Value);
         ctx.DrawCircle(brush, pen: null, center: offset + resolvedOrigin, radius: radius);
@@ -2261,7 +2261,7 @@ public sealed class RenderInkSplash : RenderProxyBox
             return null;
         }
 
-        var resolved = value.Value;
+        double resolved = value.Value;
         if (double.IsNaN(resolved) || double.IsInfinity(resolved) || resolved <= 0)
         {
             return null;
@@ -2274,10 +2274,10 @@ public sealed class RenderInkSplash : RenderProxyBox
     {
         var center = new Point(size.Width / 2, size.Height / 2);
 
-        var x = double.IsNaN(origin.X) || double.IsInfinity(origin.X)
+        double x = double.IsNaN(origin.X) || double.IsInfinity(origin.X)
             ? center.X
             : origin.X;
-        var y = double.IsNaN(origin.Y) || double.IsInfinity(origin.Y)
+        double y = double.IsNaN(origin.Y) || double.IsInfinity(origin.Y)
             ? center.Y
             : origin.Y;
 

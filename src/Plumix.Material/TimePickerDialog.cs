@@ -106,7 +106,7 @@ internal sealed class TimePickerDialogState : State
 
     public override void DidChangeDependencies()
     {
-        var use24 = MediaQuery.MaybeAlwaysUse24HourFormatOf(Context) ?? false;
+        bool use24 = MediaQuery.MaybeAlwaysUse24HourFormatOf(Context) ?? false;
         if (_initializedInputs && use24 == _use24HourFormat) return;
         _use24HourFormat = use24;
         _initializedInputs = true;
@@ -126,13 +126,13 @@ internal sealed class TimePickerDialogState : State
         var defaults = TimePickerTheme.Defaults(context);
         var media = MediaQuery.MaybeOf(context) ?? new MediaQueryData(Size: new Size(360, 640));
         var orientation = Current.Orientation ?? media.Orientation;
-        var dialMode = _entryMode is TimePickerEntryMode.Dial or TimePickerEntryMode.DialOnly;
+        bool dialMode = _entryMode is TimePickerEntryMode.Dial or TimePickerEntryMode.DialOnly;
         var size = dialMode
             ? orientation == Orientation.Portrait
                 ? PortraitSize
                 : theme.UseMaterial3 ? LandscapeSizeM3 : LandscapeSizeM2
             : InputSize;
-        var textScale = Math.Clamp(media.TextScaleFactor, 0, 1.1);
+        double textScale = Math.Clamp(media.TextScaleFactor, 0, 1.1);
         size = new Size(size.Width * (orientation == Orientation.Landscape ? textScale : 1), size.Height * textScale);
 
         Widget picker = dialMode
@@ -291,7 +291,7 @@ internal sealed class TimePickerDialogState : State
         bool input)
     {
         var localizations = MaterialLocalizations.Of(context);
-        var help = Current.HelpText ?? (input
+        string help = Current.HelpText ?? (input
             ? localizations.TimePickerInputHelpText
             : localizations.TimePickerDialHelpText);
         var selectedStyle = local.HourMinuteTextStyle ?? defaults.HourMinuteTextStyle
@@ -334,7 +334,7 @@ internal sealed class TimePickerDialogState : State
         TimePickerThemeData local,
         TimePickerThemeData defaults)
     {
-        var selected = _selectingHour == hour;
+        bool selected = _selectingHour == hour;
         var states = selected ? MaterialState.Selected : MaterialState.None;
         var background = (local.HourMinuteColor ?? defaults.HourMinuteColor)?.Resolve(states);
         var foreground = (local.HourMinuteTextColor ?? defaults.HourMinuteTextColor)?.Resolve(states);
@@ -369,7 +369,7 @@ internal sealed class TimePickerDialogState : State
 
         Widget button(DayPeriod period, string label)
         {
-            var selected = _inputPeriod == period;
+            bool selected = _inputPeriod == period;
             var states = selected ? MaterialState.Selected : MaterialState.None;
             var background = (local.DayPeriodColor ?? defaults.DayPeriodColor)?.Resolve(states);
             var foreground = (local.DayPeriodTextColor ?? defaults.DayPeriodTextColor)?.Resolve(states);
@@ -412,11 +412,11 @@ internal sealed class TimePickerDialogState : State
     {
         var theme = Theme.Of(context);
         var localizations = MaterialLocalizations.Of(context);
-        var canSwitch = _entryMode is TimePickerEntryMode.Dial or TimePickerEntryMode.Input;
+        bool canSwitch = _entryMode is TimePickerEntryMode.Dial or TimePickerEntryMode.Input;
         Widget switcher = new SizedBox(width: 48, height: 48);
         if (canSwitch)
         {
-            var dialMode = _entryMode == TimePickerEntryMode.Dial;
+            bool dialMode = _entryMode == TimePickerEntryMode.Dial;
             switcher = new Tooltip(
                 message: dialMode ? localizations.InputTimeModeButtonLabel : localizations.DialModeButtonLabel,
                 child: new IconButton(
@@ -493,9 +493,9 @@ internal sealed class TimePickerDialogState : State
 
     private string? ValidateTimePart(string? value, bool hour)
     {
-        if (!int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out var number))
+        if (!int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out int number))
             return Current.ErrorInvalidText ?? MaterialLocalizations.Of(Context).InvalidTimeLabel;
-        var valid = hour
+        bool valid = hour
             ? _use24HourFormat ? number is >= 0 and <= 23 : number is >= 1 and <= 12
             : number is >= 0 and <= 59;
         return valid ? null : Current.ErrorInvalidText ?? MaterialLocalizations.Of(Context).InvalidTimeLabel;
@@ -503,10 +503,10 @@ internal sealed class TimePickerDialogState : State
 
     private void SaveTimePart(string? value, bool hour)
     {
-        if (!int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out var number)) return;
+        if (!int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out int number)) return;
         if (hour)
         {
-            var resolved = _use24HourFormat
+            int resolved = _use24HourFormat
                 ? number
                 : number % 12 + (_inputPeriod == DayPeriod.Pm ? 12 : 0);
             _selectedTime = _selectedTime.Replacing(hour: resolved);
@@ -523,7 +523,7 @@ internal sealed class TimePickerDialogState : State
         SetState(() =>
         {
             _inputPeriod = period;
-            var hour = _selectedTime.HourOfPeriod % 12 + (period == DayPeriod.Pm ? 12 : 0);
+            int hour = _selectedTime.HourOfPeriod % 12 + (period == DayPeriod.Pm ? 12 : 0);
             _selectedTime = _selectedTime.Replacing(hour: hour);
         });
     }
@@ -580,7 +580,7 @@ internal sealed class TimePickerDial : StatelessWidget
 
         foreach (var item in BuildLabels())
         {
-            var selected = SelectingHour ? item.Value == SelectedTime.Hour : item.Value == SelectedTime.Minute;
+            bool selected = SelectingHour ? item.Value == SelectedTime.Hour : item.Value == SelectedTime.Minute;
             var states = selected ? MaterialState.Selected : MaterialState.None;
             var color = (Theme.DialTextColor ?? Defaults.DialTextColor)?.Resolve(states);
             var style = (Theme.DialTextStyle ?? Defaults.DialTextStyle ?? ThemeData.Light.TextTheme.BodyLarge)
@@ -612,9 +612,9 @@ internal sealed class TimePickerDial : StatelessWidget
     {
         if (!SelectingHour)
         {
-            for (var index = 0; index < 12; index++)
+            for (int index = 0; index < 12; index++)
             {
-                var value = index * 5;
+                int value = index * 5;
                 yield return (value, value.ToString("00", CultureInfo.InvariantCulture), Position(index, 96));
             }
             yield break;
@@ -622,19 +622,19 @@ internal sealed class TimePickerDial : StatelessWidget
 
         if (!Use24HourFormat)
         {
-            for (var index = 0; index < 12; index++)
+            for (int index = 0; index < 12; index++)
             {
-                var hourOfPeriod = index == 0 ? 12 : index;
-                var value = hourOfPeriod % 12 + (SelectedTime.Period == DayPeriod.Pm ? 12 : 0);
+                int hourOfPeriod = index == 0 ? 12 : index;
+                int value = hourOfPeriod % 12 + (SelectedTime.Period == DayPeriod.Pm ? 12 : 0);
                 yield return (value, hourOfPeriod.ToString(CultureInfo.InvariantCulture), Position(index, 96));
             }
             yield break;
         }
 
-        for (var index = 0; index < 12; index++)
+        for (int index = 0; index < 12; index++)
         {
-            var inner = index == 0 ? 12 : index;
-            var outer = index == 0 ? 0 : index + 12;
+            int inner = index == 0 ? 12 : index;
+            int outer = index == 0 ? 0 : index + 12;
             yield return (outer, outer.ToString(CultureInfo.InvariantCulture), Position(index, 96));
             yield return (inner, inner.ToString(CultureInfo.InvariantCulture), Position(index, 62));
         }
@@ -642,17 +642,17 @@ internal sealed class TimePickerDial : StatelessWidget
 
     private void SelectFromPosition(Point point, bool finished)
     {
-        var dx = point.X - Extent / 2;
-        var dy = point.Y - Extent / 2;
-        var angle = Math.Atan2(dx, -dy);
+        double dx = point.X - Extent / 2;
+        double dy = point.Y - Extent / 2;
+        double angle = Math.Atan2(dx, -dy);
         if (angle < 0) angle += Math.PI * 2;
         if (SelectingHour)
         {
-            var index = (int)Math.Round(angle / (Math.PI * 2) * 12) % 12;
+            int index = (int)Math.Round(angle / (Math.PI * 2) * 12) % 12;
             int hour;
             if (Use24HourFormat)
             {
-                var inner = Math.Sqrt(dx * dx + dy * dy) < 79;
+                bool inner = Math.Sqrt(dx * dx + dy * dy) < 79;
                 hour = inner ? (index == 0 ? 12 : index) : (index == 0 ? 0 : index + 12);
             }
             else
@@ -663,7 +663,7 @@ internal sealed class TimePickerDial : StatelessWidget
         }
         else
         {
-            var minute = (int)Math.Round(angle / (Math.PI * 2) * 60) % 60;
+            int minute = (int)Math.Round(angle / (Math.PI * 2) * 60) % 60;
             OnChanged(SelectedTime.Replacing(minute: minute), finished);
         }
     }
@@ -674,7 +674,7 @@ internal sealed class TimePickerDial : StatelessWidget
 
     private static Point Position(int index, double radius)
     {
-        var angle = index / 12.0 * Math.PI * 2 - Math.PI / 2;
+        double angle = index / 12.0 * Math.PI * 2 - Math.PI / 2;
         return new Point(Extent / 2 + Math.Cos(angle) * radius, Extent / 2 + Math.Sin(angle) * radius);
     }
 }
@@ -707,12 +707,12 @@ internal sealed class TimeDialPainter : CustomPainter
     public override void Paint(PaintingContext context, Size size)
     {
         var center = new Point(size.Width / 2, size.Height / 2);
-        var faceRadius = Math.Min(size.Width, size.Height) / 2;
+        double faceRadius = Math.Min(size.Width, size.Height) / 2;
         context.DrawCircle(new SolidColorBrush(_background), null, center, faceRadius);
-        var value = _selectingHour ? _selectedTime.Hour % 12 : _selectedTime.Minute / 5.0;
-        var angle = value / 12.0 * Math.PI * 2 - Math.PI / 2;
-        var inner = _selectingHour && _use24HourFormat && _selectedTime.Hour is >= 1 and <= 12;
-        var radius = inner ? 62 : 96;
+        double value = _selectingHour ? _selectedTime.Hour % 12 : _selectedTime.Minute / 5.0;
+        double angle = value / 12.0 * Math.PI * 2 - Math.PI / 2;
+        bool inner = _selectingHour && _use24HourFormat && _selectedTime.Hour is >= 1 and <= 12;
+        int radius = inner ? 62 : 96;
         var endpoint = new Point(center.X + Math.Cos(angle) * radius, center.Y + Math.Sin(angle) * radius);
         var brush = new SolidColorBrush(_hand);
         context.DrawLine(new Pen(brush, 2), center, endpoint);

@@ -210,14 +210,14 @@ public sealed class Radio<T> : StatefulWidget
             }
 
             var radioTheme = RadioTheme.Of(context);
-            var enabled = CurrentWidget.OnChanged is not null;
-            var selected = IsSelected();
+            bool enabled = CurrentWidget.OnChanged is not null;
+            bool selected = IsSelected();
             var selectedStates = BuildStates(enabled, selected: true);
             var tapTargetSize = CurrentWidget.MaterialTapTargetSize
                                 ?? radioTheme.MaterialTapTargetSize
                                 ?? theme.MaterialTapTargetSize;
-            var splashRadius = ResolveSplashRadius(radioTheme);
-            var innerRadius = ResolveInnerRadius(radioTheme, selectedStates);
+            double splashRadius = ResolveSplashRadius(radioTheme);
+            double innerRadius = ResolveInnerRadius(radioTheme, selectedStates);
             var shape = Plumix.Rendering.BorderRadius.Circular(Width / 2);
 
             var style = new ButtonStyle(
@@ -292,9 +292,9 @@ public sealed class Radio<T> : StatefulWidget
 
         private double ResolveInnerRadius(RadioThemeData radioTheme, MaterialState states)
         {
-            var resolved = CurrentWidget.InnerRadius?.Resolve(states)
-                           ?? radioTheme.InnerRadius?.Resolve(states)
-                           ?? DefaultInnerRadius;
+            double resolved = CurrentWidget.InnerRadius?.Resolve(states)
+                              ?? radioTheme.InnerRadius?.Resolve(states)
+                              ?? DefaultInnerRadius;
 
             if (double.IsNaN(resolved) || double.IsInfinity(resolved))
             {
@@ -306,9 +306,9 @@ public sealed class Radio<T> : StatefulWidget
 
         private double ResolveSplashRadius(RadioThemeData radioTheme)
         {
-            var resolved = CurrentWidget.SplashRadius
-                           ?? radioTheme.SplashRadius
-                           ?? DefaultSplashRadius;
+            double resolved = CurrentWidget.SplashRadius
+                              ?? radioTheme.SplashRadius
+                              ?? DefaultSplashRadius;
 
             if (double.IsNaN(resolved) || double.IsInfinity(resolved) || resolved <= 0)
             {
@@ -399,7 +399,7 @@ public sealed class Radio<T> : StatefulWidget
 
             if (states.HasFlag(MaterialState.Pressed) && CurrentWidget.ActiveColor.HasValue)
             {
-                var pressedOpacity = theme.UseMaterial3 ? 0.10 : 0.12;
+                double pressedOpacity = theme.UseMaterial3 ? 0.10 : 0.12;
                 return MaterialButtonCore.ApplyOpacity(CurrentWidget.ActiveColor.Value, pressedOpacity);
             }
 

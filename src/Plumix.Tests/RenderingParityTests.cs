@@ -200,10 +200,10 @@ public sealed class RenderingParityTests
     [Fact]
     public void RenderFlex_OverflowPaint_AddsDebugIndicatorCommands()
     {
-        var commandsWithoutOverflow = MeasureFlexPictureCommandCount(viewportHeight: 260, out var nonOverflowFlex);
+        int commandsWithoutOverflow = MeasureFlexPictureCommandCount(viewportHeight: 260, out var nonOverflowFlex);
         Assert.False(nonOverflowFlex._hasOverflow);
 
-        var commandsWithOverflow = MeasureFlexPictureCommandCount(viewportHeight: 60, out var overflowFlex);
+        int commandsWithOverflow = MeasureFlexPictureCommandCount(viewportHeight: 60, out var overflowFlex);
         Assert.True(overflowFlex._hasOverflow);
         Assert.True(
             commandsWithOverflow > commandsWithoutOverflow,
@@ -438,7 +438,7 @@ public sealed class RenderingParityTests
 
     private static int CountPictureCommandsRecursive(ContainerLayer layer)
     {
-        var total = 0;
+        int total = 0;
         foreach (var child in layer.Children)
         {
             if (child is PictureLayer pictureLayer)

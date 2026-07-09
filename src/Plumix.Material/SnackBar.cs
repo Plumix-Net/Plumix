@@ -97,7 +97,7 @@ public sealed class SnackBarAction : StatefulWidget
 
     private static Color ApplyOpacity(Color color, double opacity)
     {
-        var alpha = (byte)Math.Round(color.A * Math.Clamp(opacity, 0, 1));
+        byte alpha = (byte)Math.Round(color.A * Math.Clamp(opacity, 0, 1));
         return Color.FromArgb(alpha, color.R, color.G, color.B);
     }
 }
@@ -247,21 +247,21 @@ public sealed class SnackBar : StatefulWidget
             var theme = Theme.Of(context);
             var snackBarTheme = SnackBarTheme.Of(context);
             var behavior = widget.Behavior ?? snackBarTheme.Behavior ?? SnackBarBehavior.Fixed;
-            var width = widget.Width ?? snackBarTheme.Width;
+            double? width = widget.Width ?? snackBarTheme.Width;
             if (behavior != SnackBarBehavior.Floating && (widget.Margin.HasValue || width.HasValue))
             {
                 throw new InvalidOperationException("SnackBar width and margin require floating behavior.");
             }
 
-            var showCloseIcon = widget.ShowCloseIcon ?? snackBarTheme.ShowCloseIcon ?? false;
+            bool showCloseIcon = widget.ShowCloseIcon ?? snackBarTheme.ShowCloseIcon ?? false;
             var direction = Directionality.Of(context);
-            var horizontalPadding = behavior == SnackBarBehavior.Floating ? 16.0 : 24.0;
+            double horizontalPadding = behavior == SnackBarBehavior.Floating ? 16.0 : 24.0;
             var effectivePadding = widget.Padding ?? ResolveDirectionalPadding(
                 direction,
                 start: horizontalPadding,
                 end: widget.Action is not null || showCloseIcon ? 0 : horizontalPadding);
-            var actionHorizontalMargin = (widget.Padding?.Right ?? horizontalPadding) / 2.0;
-            var iconHorizontalMargin = (widget.Padding?.Right ?? horizontalPadding) / 12.0;
+            double actionHorizontalMargin = (widget.Padding?.Right ?? horizontalPadding) / 2.0;
+            double iconHorizontalMargin = (widget.Padding?.Right ?? horizontalPadding) / 12.0;
 
             var trailingChildren = new List<Widget>();
             if (widget.Action is not null)
@@ -313,7 +313,7 @@ public sealed class SnackBar : StatefulWidget
                 snackBar = new SafeArea(top: false, child: snackBar);
             }
 
-            var elevation = widget.Elevation ?? snackBarTheme.Elevation ?? 6.0;
+            double elevation = widget.Elevation ?? snackBarTheme.Elevation ?? 6.0;
             var background = widget.BackgroundColor
                              ?? snackBarTheme.BackgroundColor
                              ?? ResolveDefaultBackground(theme);
@@ -383,8 +383,8 @@ public sealed class SnackBar : StatefulWidget
                     onVerticalDragUpdate: details => _dragExtent += details.PrimaryDelta,
                     onVerticalDragEnd: details =>
                     {
-                        var velocity = details.PrimaryVelocity;
-                        var matches = direction switch
+                        double velocity = details.PrimaryVelocity;
+                        bool matches = direction switch
                         {
                             Plumix.Material.DismissDirection.Up => _dragExtent < -40 || velocity < -365,
                             Plumix.Material.DismissDirection.Down => _dragExtent > 40 || velocity > 365,
@@ -405,8 +405,8 @@ public sealed class SnackBar : StatefulWidget
                 onHorizontalDragEnd: details =>
                 {
                     var directionality = Directionality.Of(Context);
-                    var velocity = details.PrimaryVelocity;
-                    var matches = direction switch
+                    double velocity = details.PrimaryVelocity;
+                    bool matches = direction switch
                     {
                         Plumix.Material.DismissDirection.StartToEnd => directionality == TextDirection.Ltr
                             ? _dragExtent > 40 || velocity > 365
@@ -427,10 +427,10 @@ public sealed class SnackBar : StatefulWidget
         private Widget ApplyTransition(Widget child, SnackBarBehavior behavior, ThemeData theme, bool accessibleNavigation)
         {
             if (accessibleNavigation || CurrentWidget.Animation is null) return child;
-            var raw = Math.Clamp(CurrentWidget.Animation.Value, 0, 1);
+            double raw = Math.Clamp(CurrentWidget.Animation.Value, 0, 1);
             if (behavior == SnackBarBehavior.Floating)
             {
-                var fade = theme.UseMaterial3
+                double fade = theme.UseMaterial3
                     ? EvaluateInterval(raw, 0.4, 0.6, Curves.EaseIn)
                     : EvaluateInterval(raw, 0.4, 1.0, Curves.Linear);
                 Widget result = new Opacity(fade, child);
@@ -525,7 +525,7 @@ public sealed class SnackBar : StatefulWidget
 
     private static Color AlphaBlend(Color foreground, Color background)
     {
-        var alpha = foreground.A / 255.0;
+        double alpha = foreground.A / 255.0;
         byte Blend(byte foregroundChannel, byte backgroundChannel) =>
             (byte)Math.Round((foregroundChannel * alpha) + (backgroundChannel * (1 - alpha)));
         return Color.FromArgb(
@@ -663,15 +663,15 @@ internal sealed class RenderSnackBarContentLayout : RenderBox,
             return;
         }
 
-        var maxWidth = Constraints.MaxWidth;
+        double maxWidth = Constraints.MaxWidth;
         trailing.Layout(new BoxConstraints(MaxWidth: maxWidth), parentUsesSize: true);
-        var overflow = maxWidth > 0 && trailing.Size.Width / maxWidth > ActionOverflowThreshold;
-        var contentWidth = overflow
+        bool overflow = maxWidth > 0 && trailing.Size.Width / maxWidth > ActionOverflowThreshold;
+        double contentWidth = overflow
             ? maxWidth * 0.6
             : Math.Max(0, maxWidth - trailing.Size.Width);
         content.Layout(new BoxConstraints(MaxWidth: contentWidth), parentUsesSize: true);
 
-        var height = overflow
+        double height = overflow
             ? content.Size.Height + trailing.Size.Height + 14
             : Math.Max(content.Size.Height, trailing.Size.Height);
         Size = Constraints.Constrain(new Size(maxWidth, height));

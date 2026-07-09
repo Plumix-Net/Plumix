@@ -18,6 +18,8 @@ import 'demos/material/text_field_demo_page.dart';
 import 'demos/material/dialog_demo_page.dart';
 import 'demos/material/popup_menu_demo_page.dart';
 import 'demos/material/dropdown_demo_page.dart';
+import 'demos/material/search_demo_page.dart';
+import 'demos/material/autocomplete_demo_page.dart';
 import 'demos/general/aspect_ratio_demo_page.dart';
 import 'demos/general/bloc_counter_demo_page.dart';
 import 'demos/material/card_demo_page.dart';
@@ -199,6 +201,19 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'Dropdown controls',
       subtitle: 'button/menu + form/filter/search/keyboard/route probes',
       builder: () => const DropdownDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.search,
+      title: 'SearchBar + SearchAnchor',
+      subtitle: 'controller-backed search view + suggestions + theme probes',
+      builder: () => const SearchDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.autocomplete,
+      title: 'Autocomplete + RawAutocomplete',
+      subtitle:
+          'Material defaults + custom options + keyboard/open-direction probes',
+      builder: () => const AutocompleteDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.chips,

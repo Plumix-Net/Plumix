@@ -119,7 +119,7 @@ public sealed class HotReloadTests
 
         Assert.Equal(1, ReassembleTracker.StatefulBuildCount);
 
-        var wasAvailable = HotReloadManager.IsManualReassembleAvailable;
+        bool wasAvailable = HotReloadManager.IsManualReassembleAvailable;
         try
         {
             HotReloadManager.IsManualReassembleAvailable = false;

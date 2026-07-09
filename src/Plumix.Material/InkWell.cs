@@ -412,7 +412,7 @@ public class InkResponse : StatefulWidget
 
         private void HandleFocusChanged()
         {
-            var focused = _focusNode?.HasFocus ?? false;
+            bool focused = _focusNode?.HasFocus ?? false;
             if (_focused == focused) return;
             SetState(() => _focused = focused);
             _statesController?.Update(MaterialState.Focused, focused);
@@ -670,7 +670,7 @@ internal sealed class RenderInkResponsePaint : RenderProxyBox
                 var brush = new SolidColorBrush(_highlightColor.Value);
                 if (_highlightShape == BoxShape.Circle)
                 {
-                    var radius = _splashRadius ?? Math.Min(Size.Width, Size.Height) / 2.0;
+                    double radius = _splashRadius ?? Math.Min(Size.Width, Size.Height) / 2.0;
                     target.DrawCircle(brush, null, offset + new Point(Size.Width / 2.0, Size.Height / 2.0), radius);
                 }
                 else
@@ -691,7 +691,7 @@ internal sealed class RenderInkResponsePaint : RenderProxyBox
                         origin.X + ((center.X - origin.X) * _splashProgress),
                         origin.Y + ((center.Y - origin.Y) * _splashProgress));
                 }
-                var maxRadius = _splashRadius ?? ResolveSplashRadius(origin);
+                double maxRadius = _splashRadius ?? ResolveSplashRadius(origin);
                 target.DrawCircle(new SolidColorBrush(_splashColor.Value), null, offset + origin, maxRadius * _splashProgress);
             }
 
@@ -722,7 +722,7 @@ internal sealed class RenderInkResponsePaint : RenderProxyBox
             return Math.Sqrt((Size.Width * Size.Width) + (Size.Height * Size.Height)) / 2.0;
         }
 
-        var distances = new[]
+        double[] distances = new[]
         {
             Distance(origin, new Point(0, 0)),
             Distance(origin, new Point(Size.Width, 0)),
@@ -734,8 +734,8 @@ internal sealed class RenderInkResponsePaint : RenderProxyBox
 
     private static double Distance(Point a, Point b)
     {
-        var dx = a.X - b.X;
-        var dy = a.Y - b.Y;
+        double dx = a.X - b.X;
+        double dy = a.Y - b.Y;
         return Math.Sqrt((dx * dx) + (dy * dy));
     }
 

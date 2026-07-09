@@ -129,7 +129,7 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer
         get => _cacheExtent;
         set
         {
-            var normalized = Math.Max(0, value);
+            double normalized = Math.Max(0, value);
             if (Math.Abs(_cacheExtent - normalized) < 0.0001)
             {
                 return;
@@ -241,40 +241,40 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer
     {
         Size = Constraints.Constrain(Constraints.Biggest);
 
-        var viewportMainAxisExtent = Axis == Axis.Vertical ? Size.Height : Size.Width;
-        var crossAxisExtent = Axis == Axis.Vertical ? Size.Width : Size.Height;
+        double viewportMainAxisExtent = Axis == Axis.Vertical ? Size.Height : Size.Width;
+        double crossAxisExtent = Axis == Axis.Vertical ? Size.Width : Size.Height;
         if (ShrinkWrap && double.IsFinite(viewportMainAxisExtent))
         {
             var probe = LayoutWithCorrections(0, viewportMainAxisExtent, crossAxisExtent);
-            var desiredExtent = Math.Min(probe.totalScrollExtent, viewportMainAxisExtent);
+            double desiredExtent = Math.Min(probe.totalScrollExtent, viewportMainAxisExtent);
             Size = Axis == Axis.Vertical
                 ? Constraints.Constrain(new Size(Size.Width, desiredExtent))
                 : Constraints.Constrain(new Size(desiredExtent, Size.Height));
             viewportMainAxisExtent = Axis == Axis.Vertical ? Size.Height : Size.Width;
         }
-        var currentOffset = Math.Max(0, _offsetPixels);
-        var currentMaxScrollExtent = Math.Max(0, _maxScrollExtent);
+        double currentOffset = Math.Max(0, _offsetPixels);
+        double currentMaxScrollExtent = Math.Max(0, _maxScrollExtent);
         const double precisionErrorTolerance = 0.0001;
 
-        for (var pass = 0; pass < 6; pass++)
+        for (int pass = 0; pass < 6; pass++)
         {
-            var effectiveScrollOffset = EffectiveScrollOffsetForLayout(currentOffset, currentMaxScrollExtent);
+            double effectiveScrollOffset = EffectiveScrollOffsetForLayout(currentOffset, currentMaxScrollExtent);
             var layout = LayoutWithCorrections(
                 scrollOffset: effectiveScrollOffset,
                 viewportMainAxisExtent: viewportMainAxisExtent,
                 crossAxisExtent: crossAxisExtent);
 
-            var maxScrollExtent = Math.Max(0, layout.totalScrollExtent - viewportMainAxisExtent);
-            var clampedOffset = Math.Clamp(currentOffset, 0, maxScrollExtent);
+            double maxScrollExtent = Math.Max(0, layout.totalScrollExtent - viewportMainAxisExtent);
+            double clampedOffset = Math.Clamp(currentOffset, 0, maxScrollExtent);
             if (Math.Abs(layout.scrollOffset - effectiveScrollOffset) > precisionErrorTolerance)
             {
                 clampedOffset = UserOffsetFromEffective(layout.scrollOffset, maxScrollExtent);
             }
 
-            var targetEffectiveScrollOffset = EffectiveScrollOffsetForLayout(clampedOffset, maxScrollExtent);
-            var offsetStable = Math.Abs(clampedOffset - currentOffset) <= precisionErrorTolerance;
-            var effectiveOffsetStable = Math.Abs(targetEffectiveScrollOffset - effectiveScrollOffset) <= precisionErrorTolerance;
-            var maxExtentStable = Math.Abs(maxScrollExtent - currentMaxScrollExtent) <= precisionErrorTolerance;
+            double targetEffectiveScrollOffset = EffectiveScrollOffsetForLayout(clampedOffset, maxScrollExtent);
+            bool offsetStable = Math.Abs(clampedOffset - currentOffset) <= precisionErrorTolerance;
+            bool effectiveOffsetStable = Math.Abs(targetEffectiveScrollOffset - effectiveScrollOffset) <= precisionErrorTolerance;
+            bool maxExtentStable = Math.Abs(maxScrollExtent - currentMaxScrollExtent) <= precisionErrorTolerance;
 
             if (offsetStable && effectiveOffsetStable && maxExtentStable)
             {
@@ -289,7 +289,7 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer
             currentMaxScrollExtent = maxScrollExtent;
         }
 
-        var finalEffectiveScrollOffset = EffectiveScrollOffsetForLayout(currentOffset, currentMaxScrollExtent);
+        double finalEffectiveScrollOffset = EffectiveScrollOffsetForLayout(currentOffset, currentMaxScrollExtent);
         var finalLayout = LayoutWithCorrections(
             scrollOffset: finalEffectiveScrollOffset,
             viewportMainAxisExtent: viewportMainAxisExtent,
@@ -366,9 +366,9 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer
         double crossAxisExtent)
     {
         const double precisionErrorTolerance = 0.0001;
-        var currentScrollOffset = Math.Max(0, scrollOffset);
+        double currentScrollOffset = Math.Max(0, scrollOffset);
 
-        for (var pass = 0; pass < 8; pass++)
+        for (int pass = 0; pass < 8; pass++)
         {
             var result = LayoutChildren(
                 currentScrollOffset,
@@ -395,22 +395,22 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer
         double viewportMainAxisExtent,
         double crossAxisExtent)
     {
-        var precedingScrollExtent = 0.0;
-        var paintedExtent = 0.0;
-        var cacheExtent = Math.Max(0, _cacheExtentStyle == CacheExtentStyle.Viewport
+        double precedingScrollExtent = 0.0;
+        double paintedExtent = 0.0;
+        double cacheExtent = Math.Max(0, _cacheExtentStyle == CacheExtentStyle.Viewport
             ? _cacheExtent * viewportMainAxisExtent
             : _cacheExtent);
-        var cacheStart = Math.Max(0, scrollOffset - cacheExtent);
-        var cacheEnd = scrollOffset + viewportMainAxisExtent + cacheExtent;
+        double cacheStart = Math.Max(0, scrollOffset - cacheExtent);
+        double cacheEnd = scrollOffset + viewportMainAxisExtent + cacheExtent;
 
         for (var child = FirstChild; child != null; child = _container.ChildAfter(child))
         {
-            var localScrollOffset = Math.Max(0, scrollOffset - precedingScrollExtent);
-            var remainingPaintExtent = Math.Max(0, viewportMainAxisExtent - paintedExtent);
-            var localCacheStart = Math.Max(0, cacheStart - precedingScrollExtent);
-            var localCacheEnd = Math.Max(localCacheStart, cacheEnd - precedingScrollExtent);
-            var remainingCacheExtent = Math.Max(0, localCacheEnd - localCacheStart);
-            var cacheOrigin = localCacheStart - localScrollOffset;
+            double localScrollOffset = Math.Max(0, scrollOffset - precedingScrollExtent);
+            double remainingPaintExtent = Math.Max(0, viewportMainAxisExtent - paintedExtent);
+            double localCacheStart = Math.Max(0, cacheStart - precedingScrollExtent);
+            double localCacheEnd = Math.Max(localCacheStart, cacheEnd - precedingScrollExtent);
+            double remainingCacheExtent = Math.Max(0, localCacheEnd - localCacheStart);
+            double cacheOrigin = localCacheStart - localScrollOffset;
 
             child.LayoutWithSliverConstraints(new SliverConstraints(
                 Axis,
@@ -442,7 +442,7 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer
 
     private double EffectiveScrollOffsetForLayout(double userOffset, double maxScrollExtent)
     {
-        var clampedOffset = Math.Clamp(userOffset, 0, Math.Max(0, maxScrollExtent));
+        double clampedOffset = Math.Clamp(userOffset, 0, Math.Max(0, maxScrollExtent));
         if (!ScrollDirectionUtils.AxisDirectionIsReversed(_axisDirection))
         {
             return clampedOffset;
@@ -453,7 +453,7 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer
 
     private double UserOffsetFromEffective(double effectiveOffset, double maxScrollExtent)
     {
-        var clampedEffectiveOffset = Math.Clamp(effectiveOffset, 0, Math.Max(0, maxScrollExtent));
+        double clampedEffectiveOffset = Math.Clamp(effectiveOffset, 0, Math.Max(0, maxScrollExtent));
         if (!ScrollDirectionUtils.AxisDirectionIsReversed(_axisDirection))
         {
             return clampedEffectiveOffset;

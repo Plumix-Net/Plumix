@@ -179,7 +179,7 @@ public sealed class ExpansionTile : StatefulWidget
             ExpansionTileThemeData expansionTheme)
         {
             var theme = Theme.Of(context);
-            var progress = Curves.EaseIn(animation.Value);
+            double progress = Curves.EaseIn(animation.Value);
             var expandedTextColor = CurrentWidget.TextColor
                                     ?? expansionTheme.TextColor
                                     ?? (theme.UseMaterial3 ? theme.OnSurfaceColor : theme.PrimaryColor);
@@ -273,7 +273,7 @@ public sealed class ExpansionTile : StatefulWidget
             AnimationController animation,
             ExpansionTileThemeData expansionTheme)
         {
-            var backgroundProgress = Curves.EaseOut(animation.Value);
+            double backgroundProgress = Curves.EaseOut(animation.Value);
             var collapsedBackground = CurrentWidget.CollapsedBackgroundColor
                                       ?? expansionTheme.CollapsedBackgroundColor
                                       ?? Colors.Transparent;
@@ -312,10 +312,10 @@ public sealed class ExpansionTile : StatefulWidget
         private Widget BuildArrow(AnimationController animation, Color color)
         {
             const double iconSize = 24;
-            var center = iconSize / 2;
-            var angle = Math.PI * Curves.EaseIn(animation.Value);
-            var cos = Math.Cos(angle);
-            var sin = Math.Sin(angle);
+            double center = iconSize / 2;
+            double angle = Math.PI * Curves.EaseIn(animation.Value);
+            double cos = Math.Cos(angle);
+            double sin = Math.Sin(angle);
             var rotation = new Matrix(cos, sin, -sin, cos, 0, 0);
             return new Plumix.Widgets.Transform(
                 transform: Matrix.CreateTranslation(center, center)
@@ -371,13 +371,13 @@ public sealed class ExpansionTile : StatefulWidget
 
         private static BorderRadius LerpBorderRadius(BorderRadius from, BorderRadius to, double progress)
         {
-            var t = Math.Clamp(progress, 0, 1);
+            double t = Math.Clamp(progress, 0, 1);
             return BorderRadius.Circular(from.Radius + ((to.Radius - from.Radius) * t));
         }
 
         private static Color ApplyOpacity(Color color, double opacity)
         {
-            var alpha = (byte)Math.Round(color.A * Math.Clamp(opacity, 0, 1));
+            byte alpha = (byte)Math.Round(color.A * Math.Clamp(opacity, 0, 1));
             return Color.FromArgb(alpha, color.R, color.G, color.B);
         }
     }

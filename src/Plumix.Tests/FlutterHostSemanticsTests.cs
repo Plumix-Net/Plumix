@@ -13,7 +13,7 @@ public sealed class PlumixHostSemanticsTests
     [Fact]
     public void PlumixHost_SemanticsBridge_ExposesRootAndDispatchesAction()
     {
-        var tapped = false;
+        bool tapped = false;
         var host = new PlumixHost();
         host.SetRootChild(new RenderButton(
             label: "Tap me",
@@ -46,7 +46,7 @@ public sealed class PlumixHostSemanticsTests
             background: Colors.Gray,
             foreground: Colors.White,
             fontSize: 14);
-        var updateCount = 0;
+        int updateCount = 0;
         SemanticsNode? lastRoot = null;
 
         host.SemanticsUpdated += root =>

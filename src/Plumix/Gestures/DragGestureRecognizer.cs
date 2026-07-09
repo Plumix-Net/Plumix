@@ -65,8 +65,8 @@ public abstract class DragGestureRecognizer : GestureRecognizer, IGestureArenaMe
                 var totalDelta = @event.Position - tracker.InitialPosition;
                 if (!tracker.Accepted)
                 {
-                    var primary = Math.Abs(GetPrimaryValue(totalDelta));
-                    var cross = Math.Abs(GetCrossValue(totalDelta));
+                    double primary = Math.Abs(GetPrimaryValue(totalDelta));
+                    double cross = Math.Abs(GetCrossValue(totalDelta));
 
                     if (primary > TouchSlop && primary > cross)
                     {
@@ -83,7 +83,7 @@ public abstract class DragGestureRecognizer : GestureRecognizer, IGestureArenaMe
                 if (tracker.Accepted)
                 {
                     var delta = @event.Position - tracker.LastPosition;
-                    var primaryDelta = GetPrimaryValue(delta);
+                    double primaryDelta = GetPrimaryValue(delta);
                     if (Math.Abs(primaryDelta) > double.Epsilon)
                     {
                         OnUpdate?.Invoke(new DragUpdateDetails(
@@ -107,7 +107,7 @@ public abstract class DragGestureRecognizer : GestureRecognizer, IGestureArenaMe
                 }
 
                 tracker.RecordPosition(@event.Position, @event.TimestampUtc);
-                var endVelocity = tracker.EstimateVelocity(GetPrimaryValue);
+                double endVelocity = tracker.EstimateVelocity(GetPrimaryValue);
                 OnEnd?.Invoke(new DragEndDetails(endVelocity));
                 Cleanup(@event.Pointer);
                 break;
@@ -184,10 +184,10 @@ public abstract class DragGestureRecognizer : GestureRecognizer, IGestureArenaMe
             }
 
             var newest = _samples[^1];
-            for (var i = _samples.Count - 2; i >= 0; i--)
+            for (int i = _samples.Count - 2; i >= 0; i--)
             {
                 var older = _samples[i];
-                var elapsedSeconds = (newest.TimestampUtc - older.TimestampUtc).TotalSeconds;
+                double elapsedSeconds = (newest.TimestampUtc - older.TimestampUtc).TotalSeconds;
                 if (elapsedSeconds <= 0)
                 {
                     continue;

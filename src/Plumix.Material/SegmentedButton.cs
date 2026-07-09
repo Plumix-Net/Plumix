@@ -229,8 +229,8 @@ internal sealed class SegmentedButtonState<T> : State
         var children = new List<Widget>(widget.Segments.Count);
         foreach (var segment in widget.Segments)
         {
-            var selected = widget.Selected.Contains(segment.Value);
-            var enabled = widget.OnSelectionChanged is not null && segment.Enabled;
+            bool selected = widget.Selected.Contains(segment.Value);
+            bool enabled = widget.OnSelectionChanged is not null && segment.Enabled;
             var baseStates = enabled ? MaterialState.None : MaterialState.Disabled;
             if (selected) baseStates |= MaterialState.Selected;
             var segmentStyle = ComposeStyle(
@@ -302,11 +302,11 @@ internal sealed class SegmentedButtonState<T> : State
     {
         var widget = CurrentWidget;
         if (widget.OnSelectionChanged is null) return;
-        var onlySelected = widget.Selected.Count == 1 && widget.Selected.Contains(segmentValue);
+        bool onlySelected = widget.Selected.Count == 1 && widget.Selected.Contains(segmentValue);
         if (!widget.EmptySelectionAllowed && onlySelected) return;
 
         HashSet<T> updated;
-        var toggle = widget.MultiSelectionEnabled || (widget.EmptySelectionAllowed && onlySelected);
+        bool toggle = widget.MultiSelectionEnabled || (widget.EmptySelectionAllowed && onlySelected);
         if (toggle)
         {
             updated = new HashSet<T>(widget.Selected);

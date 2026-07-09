@@ -139,8 +139,8 @@ public sealed class MaterialDropdownTests : IDisposable
     [Fact]
     public async Task DropdownButton_OpensPositionedMenuAndCompletesKeyboardSelectionSkippingDisabled()
     {
-        var buttonTap = 0;
-        var firstTap = 0;
+        int buttonTap = 0;
+        int firstTap = 0;
         string? selected = null;
         Widget page = new Align(
             alignment: Alignment.TopLeft,
@@ -192,8 +192,8 @@ public sealed class MaterialDropdownTests : IDisposable
     [Fact]
     public async Task DropdownButton_ItemTapRunsBeforeNullableSelectionAndBarrierPolicyIsHonored()
     {
-        var itemTap = 0;
-        var changed = false;
+        int itemTap = 0;
+        bool changed = false;
         string? value = "one";
         using var harness = new WidgetRenderHarness(Wrap(
             new Navigator(new BuilderPageRoute(_ => new DropdownButton<string>(
@@ -517,7 +517,7 @@ public sealed class MaterialDropdownTests : IDisposable
     [Fact]
     public void DropdownMenu_CloseBehaviorNoneKeepsMenuOpenAfterPointerSelection()
     {
-        var selected = string.Empty;
+        string selected = string.Empty;
         using var harness = new WidgetRenderHarness(Wrap(new Navigator(new BuilderPageRoute(_ =>
             new DropdownMenu<string>(
                 dropdownMenuEntries: [new DropdownMenuEntry<string>("one", "One")],
@@ -632,14 +632,14 @@ public sealed class MaterialDropdownTests : IDisposable
 
     private static void PumpAnimation()
     {
-        var now = Scheduler.CurrentSeconds;
+        double now = Scheduler.CurrentSeconds;
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.35));
     }
 
     private static async Task WaitForConditionAsync(Func<bool> condition)
     {
-        for (var i = 0; i < 100 && !condition(); i++) await Task.Delay(10);
+        for (int i = 0; i < 100 && !condition(); i++) await Task.Delay(10);
     }
 
     private static RenderParagraph? FindParagraph(RenderObject? root, string text) =>

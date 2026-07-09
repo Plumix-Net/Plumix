@@ -132,7 +132,7 @@ public sealed class CupertinoActivityIndicator : StatefulWidget
                                 ?? (CurrentWidget.IsDark
                                     ? DefaultActiveTickDarkColor
                                     : DefaultActiveTickLightColor);
-            var position = _controller?.Evaluate() ?? 0.0;
+            double position = _controller?.Evaluate() ?? 0.0;
 
             return new SizedBox(
                 width: CurrentWidget.Radius * 2.0,
@@ -308,7 +308,7 @@ internal sealed class RenderCupertinoActivityIndicator : RenderBox
 
     protected override void PerformLayout()
     {
-        var side = Math.Max(0, _radius * 2.0);
+        double side = Math.Max(0, _radius * 2.0);
         Size = Constraints.Constrain(new Size(side, side));
     }
 
@@ -319,29 +319,29 @@ internal sealed class RenderCupertinoActivityIndicator : RenderBox
             return;
         }
 
-        var progress = Math.Clamp(_progress, 0.0, 1.0);
+        double progress = Math.Clamp(_progress, 0.0, 1.0);
         if (progress <= 0.0)
         {
             return;
         }
 
         var center = new Point(offset.X + (Size.Width / 2.0), offset.Y + (Size.Height / 2.0));
-        var tickRadius = _radius / DefaultIndicatorRadius;
+        double tickRadius = _radius / DefaultIndicatorRadius;
         var tickRect = new Rect(
             x: -tickRadius,
             y: -_radius,
             width: tickRadius * 2.0,
             height: _radius - (_radius / 3.0));
-        var activeTick = PositiveModulo((int)Math.Floor(TickCount * Math.Clamp(_position, 0.0, 1.0)), TickCount);
+        int activeTick = PositiveModulo((int)Math.Floor(TickCount * Math.Clamp(_position, 0.0, 1.0)), TickCount);
 
         ctx.PushTransform(Matrix.CreateTranslation(center.X, center.Y), centeredContext =>
         {
-            for (var i = 0; i < TickCount * progress; i++)
+            for (int i = 0; i < TickCount * progress; i++)
             {
-                var tickIndex = PositiveModulo(i - activeTick, TickCount);
-                var alpha = progress < 1.0 ? PartiallyRevealedAlpha : TickAlphaValues[tickIndex];
+                int tickIndex = PositiveModulo(i - activeTick, TickCount);
+                byte alpha = progress < 1.0 ? PartiallyRevealedAlpha : TickAlphaValues[tickIndex];
                 var tickColor = Color.FromArgb(alpha, _activeColor.R, _activeColor.G, _activeColor.B);
-                var angle = i * TwoPi / TickCount;
+                double angle = i * TwoPi / TickCount;
                 centeredContext.PushTransform(CreateRotationMatrix(angle), rotatedContext =>
                 {
                     rotatedContext.DrawRectangle(
@@ -357,14 +357,14 @@ internal sealed class RenderCupertinoActivityIndicator : RenderBox
 
     private static Matrix CreateRotationMatrix(double angle)
     {
-        var cos = Math.Cos(angle);
-        var sin = Math.Sin(angle);
+        double cos = Math.Cos(angle);
+        double sin = Math.Sin(angle);
         return new Matrix(cos, sin, -sin, cos, 0, 0);
     }
 
     private static int PositiveModulo(int value, int modulo)
     {
-        var result = value % modulo;
+        int result = value % modulo;
         return result < 0 ? result + modulo : result;
     }
 }

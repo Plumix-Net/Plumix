@@ -163,7 +163,7 @@ public sealed class MaterialCircularProgressIndicatorTests
         Assert.Null(ReadNullableProperty<StrokeCap>(renderIndicator, "StrokeCap"));
         Assert.Null(ReadNullableProperty<double>(renderIndicator, "TrackGap"));
 
-        var value = ReadProperty<double?>(renderIndicator, "Value");
+        double? value = ReadProperty<double?>(renderIndicator, "Value");
         Assert.True(value.HasValue);
         Assert.Equal(0.5, value.Value, 3);
     }
@@ -195,7 +195,7 @@ public sealed class MaterialCircularProgressIndicatorTests
         Assert.Equal(-1.0, ReadProperty<double>(renderIndicator, "StrokeAlign"), 3);
         Assert.Equal(40.0, ReadProperty<Size>(renderIndicator, "Size").Width, 3);
         Assert.False(ReadProperty<bool>(renderIndicator, "Year2023"));
-        var trackGap = ReadNullableProperty<double>(renderIndicator, "TrackGap");
+        double? trackGap = ReadNullableProperty<double>(renderIndicator, "TrackGap");
         Assert.NotNull(trackGap);
         Assert.Equal(4.0, trackGap.Value, 3);
     }
@@ -267,7 +267,7 @@ public sealed class MaterialCircularProgressIndicatorTests
         var themedStrokeCap = ReadNullableProperty<StrokeCap>(themedRender, "StrokeCap");
         Assert.NotNull(themedStrokeCap);
         Assert.Equal(StrokeCap.Round, themedStrokeCap.Value);
-        var themedTrackGap = ReadNullableProperty<double>(themedRender, "TrackGap");
+        double? themedTrackGap = ReadNullableProperty<double>(themedRender, "TrackGap");
         Assert.NotNull(themedTrackGap);
         Assert.Equal(7.0, themedTrackGap.Value, 3);
 
@@ -300,7 +300,7 @@ public sealed class MaterialCircularProgressIndicatorTests
         var widgetStrokeCap = ReadNullableProperty<StrokeCap>(widgetRender, "StrokeCap");
         Assert.NotNull(widgetStrokeCap);
         Assert.Equal(StrokeCap.Square, widgetStrokeCap.Value);
-        var widgetTrackGap = ReadNullableProperty<double>(widgetRender, "TrackGap");
+        double? widgetTrackGap = ReadNullableProperty<double>(widgetRender, "TrackGap");
         Assert.NotNull(widgetTrackGap);
         Assert.Equal(2.5, widgetTrackGap.Value, 3);
     }
@@ -315,8 +315,8 @@ public sealed class MaterialCircularProgressIndicatorTests
         defaultHarness.Pump(new Size(140, 140));
         var defaultRender = FindDescendantByTypeName(defaultHarness.RenderView, "RenderCircularProgressIndicator");
         Assert.NotNull(defaultRender);
-        var defaultArcStart = ReadProperty<double>(defaultRender!, "ArcStart");
-        var defaultArcSweep = ReadProperty<double>(defaultRender, "ArcSweep");
+        double defaultArcStart = ReadProperty<double>(defaultRender!, "ArcStart");
+        double defaultArcSweep = ReadProperty<double>(defaultRender, "ArcSweep");
 
         using var explicitController = new AnimationController(TimeSpan.FromSeconds(1))
         {
@@ -335,8 +335,8 @@ public sealed class MaterialCircularProgressIndicatorTests
         var explicitRender = FindDescendantByTypeName(explicitHarness.RenderView, "RenderCircularProgressIndicator");
         Assert.NotNull(explicitRender);
         Assert.Null(ReadProperty<double?>(explicitRender!, "Value"));
-        var explicitArcStart = ReadProperty<double>(explicitRender, "ArcStart");
-        var explicitArcSweep = ReadProperty<double>(explicitRender, "ArcSweep");
+        double explicitArcStart = ReadProperty<double>(explicitRender, "ArcStart");
+        double explicitArcSweep = ReadProperty<double>(explicitRender, "ArcSweep");
         Assert.True(Math.Abs(explicitArcStart - defaultArcStart) > 0.0001 || Math.Abs(explicitArcSweep - defaultArcSweep) > 0.0001);
 
         using var themedController = new AnimationController(TimeSpan.FromSeconds(1))
@@ -360,8 +360,8 @@ public sealed class MaterialCircularProgressIndicatorTests
         var themedRender = FindDescendantByTypeName(themedHarness.RenderView, "RenderCircularProgressIndicator");
         Assert.NotNull(themedRender);
         Assert.Null(ReadProperty<double?>(themedRender!, "Value"));
-        var themedArcStart = ReadProperty<double>(themedRender, "ArcStart");
-        var themedArcSweep = ReadProperty<double>(themedRender, "ArcSweep");
+        double themedArcStart = ReadProperty<double>(themedRender, "ArcStart");
+        double themedArcSweep = ReadProperty<double>(themedRender, "ArcSweep");
         Assert.Equal(explicitArcStart, themedArcStart, 3);
         Assert.Equal(explicitArcSweep, themedArcSweep, 3);
     }
@@ -477,7 +477,7 @@ public sealed class MaterialCircularProgressIndicatorTests
         var renderIndicator = FindDescendantByTypeName(harness.RenderView, "RenderCircularProgressIndicator");
         Assert.NotNull(renderIndicator);
 
-        var clampedValue = ReadProperty<double?>(renderIndicator!, "Value");
+        double? clampedValue = ReadProperty<double?>(renderIndicator!, "Value");
         Assert.True(clampedValue.HasValue);
         Assert.Equal(1.0, clampedValue.Value, 3);
     }
@@ -497,8 +497,8 @@ public sealed class MaterialCircularProgressIndicatorTests
 
         Assert.Null(ReadProperty<double?>(renderIndicator!, "Value"));
 
-        var firstStart = ReadProperty<double>(renderIndicator, "ArcStart");
-        var firstSweep = ReadProperty<double>(renderIndicator, "ArcSweep");
+        double firstStart = ReadProperty<double>(renderIndicator, "ArcStart");
+        double firstSweep = ReadProperty<double>(renderIndicator, "ArcSweep");
 
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.30));
         harness.Pump(new Size(140, 140));
@@ -506,8 +506,8 @@ public sealed class MaterialCircularProgressIndicatorTests
         renderIndicator = FindDescendantByTypeName(harness.RenderView, "RenderCircularProgressIndicator");
         Assert.NotNull(renderIndicator);
 
-        var secondStart = ReadProperty<double>(renderIndicator!, "ArcStart");
-        var secondSweep = ReadProperty<double>(renderIndicator, "ArcSweep");
+        double secondStart = ReadProperty<double>(renderIndicator!, "ArcStart");
+        double secondSweep = ReadProperty<double>(renderIndicator, "ArcSweep");
 
         Assert.True(Math.Abs(secondStart - firstStart) > 0.0001 || Math.Abs(secondSweep - firstSweep) > 0.0001);
     }
@@ -536,7 +536,7 @@ public sealed class MaterialCircularProgressIndicatorTests
     {
         var property = target.GetType().GetProperty(propertyName);
         Assert.NotNull(property);
-        var value = property!.GetValue(target);
+        object? value = property!.GetValue(target);
         if (value is null)
         {
             return default!;
@@ -549,7 +549,7 @@ public sealed class MaterialCircularProgressIndicatorTests
     {
         var property = target.GetType().GetProperty(propertyName);
         Assert.NotNull(property);
-        var value = property!.GetValue(target);
+        object? value = property!.GetValue(target);
         if (value is null)
         {
             return null;

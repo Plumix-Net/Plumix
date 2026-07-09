@@ -202,7 +202,7 @@ public sealed class MaterialLinearProgressIndicatorTests
         Assert.Equal(4.0, ReadProperty<double>(renderIndicator, "MinHeight"), 3);
         Assert.Equal(4.0, ReadProperty<double>(renderIndicator, "TrackGap"), 3);
         Assert.Equal(Colors.DarkOrange, ReadNullableProperty<Color>(renderIndicator, "StopIndicatorColor"));
-        var defaultStopRadius = ReadNullableProperty<double>(renderIndicator, "StopIndicatorRadius");
+        double? defaultStopRadius = ReadNullableProperty<double>(renderIndicator, "StopIndicatorRadius");
         Assert.NotNull(defaultStopRadius);
         Assert.Equal(2.0, defaultStopRadius.Value, 3);
 
@@ -277,7 +277,7 @@ public sealed class MaterialLinearProgressIndicatorTests
         Assert.Equal(6.0, ReadProperty<double>(themedRender, "MinHeight"), 3);
         Assert.Equal(3.0, ReadProperty<BorderRadius>(themedRender, "BorderRadius").Radius, 3);
         Assert.Equal(Colors.DeepSkyBlue, ReadNullableProperty<Color>(themedRender, "StopIndicatorColor"));
-        var themedStopRadius = ReadNullableProperty<double>(themedRender, "StopIndicatorRadius");
+        double? themedStopRadius = ReadNullableProperty<double>(themedRender, "StopIndicatorRadius");
         Assert.NotNull(themedStopRadius);
         Assert.Equal(1.5, themedStopRadius.Value, 3);
         Assert.Equal(6.0, ReadProperty<double>(themedRender, "TrackGap"), 3);
@@ -308,7 +308,7 @@ public sealed class MaterialLinearProgressIndicatorTests
         Assert.Equal(8.0, ReadProperty<double>(widgetRender, "MinHeight"), 3);
         Assert.Equal(4.0, ReadProperty<BorderRadius>(widgetRender, "BorderRadius").Radius, 3);
         Assert.Equal(Colors.HotPink, ReadNullableProperty<Color>(widgetRender, "StopIndicatorColor"));
-        var widgetStopRadius = ReadNullableProperty<double>(widgetRender, "StopIndicatorRadius");
+        double? widgetStopRadius = ReadNullableProperty<double>(widgetRender, "StopIndicatorRadius");
         Assert.NotNull(widgetStopRadius);
         Assert.Equal(3.0, widgetStopRadius.Value, 3);
         Assert.Equal(5.0, ReadProperty<double>(widgetRender, "TrackGap"), 3);
@@ -329,7 +329,7 @@ public sealed class MaterialLinearProgressIndicatorTests
         var renderIndicator = FindDescendantByTypeName(harness.RenderView, "RenderLinearProgressIndicator");
         Assert.NotNull(renderIndicator);
 
-        var clampedValue = ReadProperty<double?>(renderIndicator!, "Value");
+        double? clampedValue = ReadProperty<double?>(renderIndicator!, "Value");
         Assert.True(clampedValue.HasValue);
         Assert.Equal(1.0, clampedValue.Value, 3);
     }
@@ -349,7 +349,7 @@ public sealed class MaterialLinearProgressIndicatorTests
         var renderIndicator = FindDescendantByTypeName(harness.RenderView, "RenderLinearProgressIndicator");
         Assert.NotNull(renderIndicator);
 
-        var first = ReadProperty<double>(renderIndicator!, "AnimationValue");
+        double first = ReadProperty<double>(renderIndicator!, "AnimationValue");
 
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.30));
         harness.Pump(new Size(240, 80));
@@ -357,7 +357,7 @@ public sealed class MaterialLinearProgressIndicatorTests
         renderIndicator = FindDescendantByTypeName(harness.RenderView, "RenderLinearProgressIndicator");
         Assert.NotNull(renderIndicator);
 
-        var second = ReadProperty<double>(renderIndicator!, "AnimationValue");
+        double second = ReadProperty<double>(renderIndicator!, "AnimationValue");
         Assert.True(second > first);
     }
 
@@ -407,7 +407,7 @@ public sealed class MaterialLinearProgressIndicatorTests
     {
         var property = target.GetType().GetProperty(propertyName);
         Assert.NotNull(property);
-        var value = property!.GetValue(target);
+        object? value = property!.GetValue(target);
         Assert.NotNull(value);
         return (T)value!;
     }
@@ -416,7 +416,7 @@ public sealed class MaterialLinearProgressIndicatorTests
     {
         var property = target.GetType().GetProperty(propertyName);
         Assert.NotNull(property);
-        var value = property!.GetValue(target);
+        object? value = property!.GetValue(target);
         if (value is null)
         {
             return null;

@@ -128,9 +128,9 @@ public sealed class RenderOverflowBar : RenderBox,
 
         var children = new List<RenderBox>(ChildCount);
         var childConstraints = new BoxConstraints(MaxWidth: Constraints.MaxWidth, MaxHeight: Constraints.MaxHeight);
-        var totalWidth = 0.0;
-        var maxHeight = 0.0;
-        var totalHeight = 0.0;
+        double totalWidth = 0.0;
+        double maxHeight = 0.0;
+        double totalHeight = 0.0;
         for (var child = FirstChild; child is not null; child = ChildAfter(child))
         {
             child.Layout(childConstraints, parentUsesSize: true);
@@ -143,7 +143,7 @@ public sealed class RenderOverflowBar : RenderBox,
 
         if (!Constraints.HasBoundedWidth || totalWidth <= Constraints.MaxWidth)
         {
-            var overallWidth = Alignment.HasValue && Constraints.HasBoundedWidth
+            double overallWidth = Alignment.HasValue && Constraints.HasBoundedWidth
                 ? Constraints.MaxWidth
                 : totalWidth;
             Size = Constraints.Constrain(new Size(overallWidth, maxHeight));
@@ -158,12 +158,12 @@ public sealed class RenderOverflowBar : RenderBox,
 
     private void PositionHorizontal(IReadOnlyList<RenderBox> children)
     {
-        var childrenWidth = children.Sum(child => child.Size.Width);
-        var actualWidth = childrenWidth + Spacing * Math.Max(0, children.Count - 1);
-        var layoutSpacing = Spacing;
-        var firstWidth = children[0].Size.Width;
-        var rtl = TextDirection == TextDirection.Rtl;
-        var x = Alignment switch
+        double childrenWidth = children.Sum(child => child.Size.Width);
+        double actualWidth = childrenWidth + Spacing * Math.Max(0, children.Count - 1);
+        double layoutSpacing = Spacing;
+        double firstWidth = children[0].Size.Width;
+        bool rtl = TextDirection == TextDirection.Rtl;
+        double x = Alignment switch
         {
             MainAxisAlignment.Center => rtl
                 ? Size.Width - ((Size.Width - actualWidth) / 2) - firstWidth
@@ -189,7 +189,7 @@ public sealed class RenderOverflowBar : RenderBox,
         {
             layoutSpacing = (Size.Width - childrenWidth) / (children.Count + 1);
         }
-        for (var index = 0; index < children.Count; index++)
+        for (int index = 0; index < children.Count; index++)
         {
             var child = children[index];
             ((OverflowBarParentData)child.parentData!).offset = new Point(
@@ -201,7 +201,7 @@ public sealed class RenderOverflowBar : RenderBox,
             }
             else
             {
-                var nextIndex = index + 1;
+                int nextIndex = index + 1;
                 if (nextIndex < children.Count)
                 {
                     x -= children[nextIndex].Size.Width + layoutSpacing;
@@ -212,11 +212,11 @@ public sealed class RenderOverflowBar : RenderBox,
 
     private void PositionOverflow(IReadOnlyList<RenderBox> children)
     {
-        var y = OverflowDirection == VerticalDirection.Down ? 0.0 : Size.Height;
+        double y = OverflowDirection == VerticalDirection.Down ? 0.0 : Size.Height;
         foreach (var child in children)
         {
             if (OverflowDirection == VerticalDirection.Up) y -= child.Size.Height;
-            var x = ResolveOverflowX(child.Size.Width);
+            double x = ResolveOverflowX(child.Size.Width);
             ((OverflowBarParentData)child.parentData!).offset = new Point(x, y);
             y += OverflowDirection == VerticalDirection.Down
                 ? child.Size.Height + OverflowSpacing
@@ -227,8 +227,8 @@ public sealed class RenderOverflowBar : RenderBox,
     private double ResolveOverflowX(double childWidth)
     {
         if (OverflowAlignment == OverflowBarAlignment.Center) return (Size.Width - childWidth) / 2;
-        var start = TextDirection == TextDirection.Ltr ? 0.0 : Size.Width - childWidth;
-        var end = TextDirection == TextDirection.Ltr ? Size.Width - childWidth : 0.0;
+        double start = TextDirection == TextDirection.Ltr ? 0.0 : Size.Width - childWidth;
+        double end = TextDirection == TextDirection.Ltr ? Size.Width - childWidth : 0.0;
         return OverflowAlignment == OverflowBarAlignment.Start ? start : end;
     }
 

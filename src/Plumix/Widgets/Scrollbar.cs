@@ -326,22 +326,22 @@ public sealed class RawScrollbar : StatefulWidget
         {
             var widget = CurrentWidget;
             var states = _interactionState;
-            var forcedVisible = widget.ThumbVisibility
-                                ?? widget.ThumbVisibilityResolver?.Invoke(states)
+            bool forcedVisible = widget.ThumbVisibility
+                                 ?? widget.ThumbVisibilityResolver?.Invoke(states)
+                                 ?? false;
+            bool trackVisible = widget.TrackVisibility
+                                ?? widget.TrackVisibilityResolver?.Invoke(states)
                                 ?? false;
-            var trackVisible = widget.TrackVisibility
-                               ?? widget.TrackVisibilityResolver?.Invoke(states)
-                               ?? false;
-            var opacity = forcedVisible ? 1 : 1 - (_fadeController?.Evaluate() ?? 1);
-            var thickness = widget.Thickness
-                            ?? widget.ThicknessResolver?.Invoke(states)
-                            ?? 6;
-            var radius = widget.Shape?.BorderRadius.Radius
-                         ?? widget.Radius
-                         ?? widget.RadiusResolver?.Invoke(states)
-                         ?? 0;
+            double opacity = forcedVisible ? 1 : 1 - (_fadeController?.Evaluate() ?? 1);
+            double thickness = widget.Thickness
+                               ?? widget.ThicknessResolver?.Invoke(states)
+                               ?? 6;
+            double radius = widget.Shape?.BorderRadius.Radius
+                            ?? widget.Radius
+                            ?? widget.RadiusResolver?.Invoke(states)
+                            ?? 0;
             var padding = widget.Padding ?? MediaQuery.MaybePaddingOf(context) ?? default;
-            var interactive = widget.Interactive ?? true;
+            bool interactive = widget.Interactive ?? true;
             var effectiveOrientation = widget.ScrollbarOrientation;
             if (!effectiveOrientation.HasValue)
             {
@@ -501,10 +501,10 @@ public sealed class RawScrollbar : StatefulWidget
         {
             if (_activePointer.HasValue || _controller?.PrimaryPosition is not { } position) return;
             _activePointer = @event.Pointer;
-            var axisOffset = AxisOffset(@event.LocalPosition, geometry.Axis);
+            double axisOffset = AxisOffset(@event.LocalPosition, geometry.Axis);
             _lastPointerAxisOffset = axisOffset;
-            var thumbStart = geometry.TrackMainAxisStart + geometry.ThumbMainAxisOffset;
-            var thumbEnd = thumbStart + geometry.ThumbMainAxisExtent;
+            double thumbStart = geometry.TrackMainAxisStart + geometry.ThumbMainAxisOffset;
+            double thumbEnd = thumbStart + geometry.ThumbMainAxisExtent;
             if (axisOffset >= thumbStart && axisOffset <= thumbEnd)
             {
                 CancelFade();
@@ -524,7 +524,7 @@ public sealed class RawScrollbar : StatefulWidget
 
             if (!CurrentWidget.TrackTapEnabled) return;
 
-            var direction = axisOffset < thumbStart ? -1 : 1;
+            int direction = axisOffset < thumbStart ? -1 : 1;
             position.JumpTo(position.Pixels + (direction * position.ViewportDimension));
             ShowTemporarily();
         }
@@ -538,12 +538,12 @@ public sealed class RawScrollbar : StatefulWidget
                 return;
             }
 
-            var axisOffset = _lastPointerAxisOffset;
-            var thumbOffset = Math.Clamp(
+            double axisOffset = _lastPointerAxisOffset;
+            double thumbOffset = Math.Clamp(
                 axisOffset - _dragOffsetWithinThumb - geometry.TrackMainAxisStart,
                 0,
                 geometry.MaxThumbTravel);
-            var fraction = geometry.MaxThumbTravel <= 0 ? 0 : thumbOffset / geometry.MaxThumbTravel;
+            double fraction = geometry.MaxThumbTravel <= 0 ? 0 : thumbOffset / geometry.MaxThumbTravel;
             if (geometry.IsReversed) fraction = 1 - fraction;
             position.JumpTo(position.MinScrollExtent + (fraction * (position.MaxScrollExtent - position.MinScrollExtent)));
         }
@@ -614,9 +614,9 @@ public sealed class RawScrollbar : StatefulWidget
 
         private bool IsScrollbarTransparent()
         {
-            var forcedVisible = CurrentWidget.ThumbVisibility
-                                ?? CurrentWidget.ThumbVisibilityResolver?.Invoke(_interactionState)
-                                ?? false;
+            bool forcedVisible = CurrentWidget.ThumbVisibility
+                                 ?? CurrentWidget.ThumbVisibilityResolver?.Invoke(_interactionState)
+                                 ?? false;
             return !forcedVisible && 1 - (_fadeController?.Evaluate() ?? 1) <= 0.001;
         }
 
@@ -972,31 +972,31 @@ internal sealed class RenderRawScrollbarOverlay : RenderProxyBox
         var axis = orientation is ScrollbarOrientation.Left or ScrollbarOrientation.Right
             ? Axis.Vertical
             : Axis.Horizontal;
-        var reversed = _axisDirection is AxisDirection.Up or AxisDirection.Left;
-        var leadingPadding = axis == Axis.Vertical ? _padding.Top : _padding.Left;
-        var trailingPadding = axis == Axis.Vertical ? _padding.Bottom : _padding.Right;
-        var mainExtent = axis == Axis.Vertical ? Size.Height : Size.Width;
-        var trackStart = leadingPadding + _mainAxisMargin;
-        var trackExtent = Math.Max(0, mainExtent - leadingPadding - trailingPadding - (2 * _mainAxisMargin));
+        bool reversed = _axisDirection is AxisDirection.Up or AxisDirection.Left;
+        double leadingPadding = axis == Axis.Vertical ? _padding.Top : _padding.Left;
+        double trailingPadding = axis == Axis.Vertical ? _padding.Bottom : _padding.Right;
+        double mainExtent = axis == Axis.Vertical ? Size.Height : Size.Width;
+        double trackStart = leadingPadding + _mainAxisMargin;
+        double trackExtent = Math.Max(0, mainExtent - leadingPadding - trailingPadding - (2 * _mainAxisMargin));
         if (trackExtent <= 0) return null;
 
-        var totalContentExtent = position.MaxScrollExtent - position.MinScrollExtent + position.ViewportDimension;
-        var thumbExtent = Math.Clamp(
+        double totalContentExtent = position.MaxScrollExtent - position.MinScrollExtent + position.ViewportDimension;
+        double thumbExtent = Math.Clamp(
             Math.Max(_minThumbLength, trackExtent * position.ViewportDimension / totalContentExtent),
             0,
             trackExtent);
-        var fraction = Math.Clamp(
+        double fraction = Math.Clamp(
             (position.Pixels - position.MinScrollExtent) / (position.MaxScrollExtent - position.MinScrollExtent),
             0,
             1);
         if (reversed) fraction = 1 - fraction;
-        var thumbOffset = fraction * Math.Max(0, trackExtent - thumbExtent);
+        double thumbOffset = fraction * Math.Max(0, trackExtent - thumbExtent);
 
         Rect trackRect;
         Rect thumbRect;
         if (axis == Axis.Vertical)
         {
-            var x = orientation == ScrollbarOrientation.Left
+            double x = orientation == ScrollbarOrientation.Left
                 ? _padding.Left + _crossAxisMargin
                 : Size.Width - _padding.Right - _crossAxisMargin - _thickness;
             trackRect = new Rect(x, trackStart, _thickness, trackExtent);
@@ -1004,7 +1004,7 @@ internal sealed class RenderRawScrollbarOverlay : RenderProxyBox
         }
         else
         {
-            var y = orientation == ScrollbarOrientation.Top
+            double y = orientation == ScrollbarOrientation.Top
                 ? _padding.Top + _crossAxisMargin
                 : Size.Height - _padding.Bottom - _crossAxisMargin - _thickness;
             trackRect = new Rect(trackStart, y, trackExtent, _thickness);

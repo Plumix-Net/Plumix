@@ -125,7 +125,7 @@ public sealed class MaterialTooltipTests
         Scheduler.ResetForTests();
         try
         {
-            var triggered = 0;
+            int triggered = 0;
             using var harness = new WidgetRenderHarness(
                 new Theme(
                     ThemeData.Light,
@@ -140,7 +140,7 @@ public sealed class MaterialTooltipTests
             var listener = FindTooltipListener(harness.RenderView);
             Assert.NotNull(listener);
             listener!.HandleEvent(PointerEnter(1), new BoxHitTestEntry(listener, new Point(5, 5)));
-            var clock = Scheduler.CurrentSeconds;
+            double clock = Scheduler.CurrentSeconds;
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.20));
             harness.Pump(new Size(160, 80));
             Assert.Null(FindParagraph(harness.RenderView, "Delayed tip"));

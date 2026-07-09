@@ -18,8 +18,8 @@ public readonly record struct Alignment(double X, double Y)
 
     public Point AlongOffset(Size parentSize, Size childSize)
     {
-        var freeWidth = parentSize.Width - childSize.Width;
-        var freeHeight = parentSize.Height - childSize.Height;
+        double freeWidth = parentSize.Width - childSize.Width;
+        double freeHeight = parentSize.Height - childSize.Height;
         return new Point(
             freeWidth * (X + 1) / 2.0,
             freeHeight * (Y + 1) / 2.0);

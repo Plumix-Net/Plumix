@@ -275,7 +275,7 @@ public sealed class MaterialCardTests
             return color;
         }
 
-        var opacity = ResolveSurfaceTintOpacityForElevation(elevation);
+        double opacity = ResolveSurfaceTintOpacityForElevation(elevation);
         if (opacity <= 0)
         {
             return color;
@@ -307,7 +307,7 @@ public sealed class MaterialCardTests
             return stops[0].Opacity;
         }
 
-        for (var i = 1; i < stops.Length; i++)
+        for (int i = 1; i < stops.Length; i++)
         {
             var current = stops[i];
             if (Math.Abs(elevation - current.Elevation) < 0.0001)
@@ -318,7 +318,7 @@ public sealed class MaterialCardTests
             if (elevation < current.Elevation)
             {
                 var lower = stops[i - 1];
-                var t = (elevation - lower.Elevation) / (current.Elevation - lower.Elevation);
+                double t = (elevation - lower.Elevation) / (current.Elevation - lower.Elevation);
                 return lower.Opacity + (t * (current.Opacity - lower.Opacity));
             }
         }
@@ -333,7 +333,7 @@ public sealed class MaterialCardTests
             return (byte)Math.Clamp((int)(from + ((to - from) * t)), 0, 255);
         }
 
-        var clampedOpacity = Math.Clamp(overlayColor.A / 255.0, 0, 1);
+        double clampedOpacity = Math.Clamp(overlayColor.A / 255.0, 0, 1);
         return Color.FromArgb(
             baseColor.A,
             Blend(baseColor.R, overlayColor.R, clampedOpacity),

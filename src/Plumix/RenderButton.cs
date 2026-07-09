@@ -114,7 +114,7 @@ public sealed class RenderButton : RenderBox
 
     protected override void PerformLayout()
     {
-        var maxTextWidth = double.IsInfinity(Constraints.MaxWidth)
+        double maxTextWidth = double.IsInfinity(Constraints.MaxWidth)
             ? double.PositiveInfinity
             : Math.Max(0, Constraints.MaxWidth - _padding.Left - _padding.Right);
         Size measuredTextSize;
@@ -157,8 +157,8 @@ public sealed class RenderButton : RenderBox
             return;
         }
 
-        var textX = offset.X + (Size.Width - _layout.Width) / 2;
-        var textY = offset.Y + (Size.Height - _layout.Height) / 2;
+        double textX = offset.X + (Size.Width - _layout.Width) / 2;
+        double textY = offset.Y + (Size.Height - _layout.Height) / 2;
         ctx.DrawTextLayout(_layout, new Point(textX, textY));
     }
 

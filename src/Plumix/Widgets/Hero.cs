@@ -205,11 +205,11 @@ internal sealed class HeroState : State
 
     private void RegisterWithScope()
     {
-        var tag = CurrentWidget.Tag;
-        var isEnabled = HeroMode.IsEnabled(Context);
+        object tag = CurrentWidget.Tag;
+        bool isEnabled = HeroMode.IsEnabled(Context);
         var nextRegistrations = isEnabled ? CollectRegistrations() : [];
 
-        var registrationChanged =
+        bool registrationChanged =
             !Equals(_registeredTag, tag)
             || _isEnabled != isEnabled
             || !RegistrationsMatch(nextRegistrations);
@@ -252,7 +252,7 @@ internal sealed class HeroState : State
 
     private HeroPlaceholderState? ResolvePlaceholder()
     {
-        var tag = _registeredTag ?? CurrentWidget.Tag;
+        object tag = _registeredTag ?? CurrentWidget.Tag;
         foreach (var registration in _registrations)
         {
             var placeholder = registration.Controller.ResolvePlaceholder(registration.Route, tag);
@@ -277,7 +277,7 @@ internal sealed class HeroState : State
             return false;
         }
 
-        for (var index = 0; index < _registrations.Count; index += 1)
+        for (int index = 0; index < _registrations.Count; index += 1)
         {
             if (!ReferenceEquals(_registrations[index].Controller, nextRegistrations[index].Controller)
                 || !ReferenceEquals(_registrations[index].Route, nextRegistrations[index].Route))
@@ -503,7 +503,7 @@ internal sealed class HeroTransitionController
         }
 
         var flights = new List<HeroFlightManifest>();
-        foreach (var (tag, fromHero) in fromHeroes)
+        foreach ((object tag, var fromHero) in fromHeroes)
         {
             if (!toHeroes.TryGetValue(tag, out var toHero))
             {

@@ -58,7 +58,7 @@ public sealed class Icon : StatelessWidget
     public override Widget Build(BuildContext context)
     {
         var iconTheme = IconTheme.Of(context);
-        var iconSize = ResolveIconSize(context, iconTheme);
+        double iconSize = ResolveIconSize(context, iconTheme);
 
         if (IconData is null)
         {
@@ -96,7 +96,7 @@ public sealed class Icon : StatelessWidget
 
     private double ResolveIconSize(BuildContext context, IconThemeData iconTheme)
     {
-        var iconSize = Size ?? iconTheme.Size ?? DefaultIconSize;
+        double iconSize = Size ?? iconTheme.Size ?? DefaultIconSize;
 
         if (ApplyTextScaling ?? false)
         {

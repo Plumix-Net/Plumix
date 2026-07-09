@@ -211,7 +211,7 @@ public sealed class Stepper : StatefulWidget
 
         public override void InitState()
         {
-            for (var index = 0; index < CurrentWidget.Steps.Count; index++)
+            for (int index = 0; index < CurrentWidget.Steps.Count; index++)
             {
                 _oldStates[index] = CurrentWidget.Steps[index].State;
                 var body = CreateController(Curves.FastOutSlowIn);
@@ -228,7 +228,7 @@ public sealed class Stepper : StatefulWidget
                 throw new InvalidOperationException("Stepper steps length must not change without replacing its key.");
             }
 
-            for (var index = 0; index < CurrentWidget.Steps.Count; index++)
+            for (int index = 0; index < CurrentWidget.Steps.Count; index++)
             {
                 if (index == CurrentWidget.CurrentStep) _bodyControllers[index].Forward();
                 else _bodyControllers[index].Reverse();
@@ -271,9 +271,9 @@ public sealed class Stepper : StatefulWidget
         private Widget BuildVertical(BuildContext context)
         {
             var children = new List<Widget>(CurrentWidget.Steps.Count);
-            for (var index = 0; index < CurrentWidget.Steps.Count; index++)
+            for (int index = 0; index < CurrentWidget.Steps.Count; index++)
             {
-                var captured = index;
+                int captured = index;
                 var step = CurrentWidget.Steps[index];
                 var header = new InkWell(
                     canRequestFocus: step.State != StepState.Disabled,
@@ -299,7 +299,7 @@ public sealed class Stepper : StatefulWidget
         private Widget BuildVerticalHeader(BuildContext context, int index)
         {
             var step = CurrentWidget.Steps[index];
-            var previousActive = index > 0 && CurrentWidget.Steps[index - 1].IsActive;
+            bool previousActive = index > 0 && CurrentWidget.Steps[index - 1].IsActive;
             return new Padding(
                 CurrentWidget.HeaderPadding ?? new Thickness(24, 0),
                 new Row(children:
@@ -318,8 +318,8 @@ public sealed class Stepper : StatefulWidget
 
         private Widget BuildVerticalBody(BuildContext context, int index)
         {
-            var progress = _bodyControllers[index].Evaluate();
-            var leftMargin = CurrentWidget.StepIconMargin?.Left ?? 0;
+            double progress = _bodyControllers[index].Evaluate();
+            double leftMargin = CurrentWidget.StepIconMargin?.Left ?? 0;
             var textDirection = Directionality.Of(context);
             var padding = CurrentWidget.ContentPadding ?? (textDirection == TextDirection.Rtl
                 ? new Thickness(24, 0, 60 + leftMargin, 24)
@@ -334,7 +334,7 @@ public sealed class Stepper : StatefulWidget
                 heightFactor: progress,
                 child: content));
 
-            var connectorOffset = 24 + ((CurrentWidget.StepIconWidth ?? 24) / 2);
+            double connectorOffset = 24 + ((CurrentWidget.StepIconWidth ?? 24) / 2);
             var connector = new Positioned(
                 left: textDirection == TextDirection.Rtl ? null : connectorOffset,
                 right: textDirection == TextDirection.Rtl ? connectorOffset : null,
@@ -348,9 +348,9 @@ public sealed class Stepper : StatefulWidget
         private Widget BuildHorizontal(BuildContext context)
         {
             var headerChildren = new List<Widget>();
-            for (var index = 0; index < CurrentWidget.Steps.Count; index++)
+            for (int index = 0; index < CurrentWidget.Steps.Count; index++)
             {
-                var captured = index;
+                int captured = index;
                 var step = CurrentWidget.Steps[index];
                 headerChildren.Add(new InkWell(
                     canRequestFocus: step.State != StepState.Disabled,
@@ -430,7 +430,7 @@ public sealed class Stepper : StatefulWidget
         {
             if (_iconControllers.TryGetValue(index, out var transition) && transition.IsAnimating)
             {
-                var progress = transition.Evaluate();
+                double progress = transition.Evaluate();
                 return new Stack(
                     alignment: Alignment.Center,
                     children:
@@ -459,8 +459,8 @@ public sealed class Stepper : StatefulWidget
 
         private Widget WrapIconBox(Widget child, int index, bool error)
         {
-            var width = CurrentWidget.StepIconWidth ?? 24;
-            var height = CurrentWidget.StepIconHeight ?? 24;
+            double width = CurrentWidget.StepIconWidth ?? 24;
+            double height = CurrentWidget.StepIconHeight ?? 24;
             Widget decorated;
             if (error)
             {
@@ -528,10 +528,10 @@ public sealed class Stepper : StatefulWidget
 
             var theme = Theme.Of(context);
             var localizations = MaterialLocalizations.Of(context);
-            var continueText = theme.UseMaterial3
+            string continueText = theme.UseMaterial3
                 ? localizations.ContinueButtonLabel
                 : localizations.ContinueButtonLabel.ToUpperInvariant();
-            var cancelText = theme.UseMaterial3
+            string cancelText = theme.UseMaterial3
                 ? localizations.CancelButtonLabel
                 : localizations.CancelButtonLabel.ToUpperInvariant();
             var cancelColor = theme.Brightness == Brightness.Dark

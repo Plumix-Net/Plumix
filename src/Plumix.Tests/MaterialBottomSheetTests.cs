@@ -101,7 +101,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
     {
         var controller = BottomSheet.CreateAnimationController();
         controller.SetValue(1);
-        var closingCalls = 0;
+        int closingCalls = 0;
         bool? reportedClosing = null;
         using var harness = new WidgetRenderHarness(Wrap(
             ThemeData.Light,
@@ -156,7 +156,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
     public async Task PersistentBottomSheet_ControllerRebuildCloseAndLocalHistoryMatchScaffoldFlow()
     {
         BuildContext captured = default;
-        var label = "First";
+        string label = "First";
         using var harness = new WidgetRenderHarness(Wrap(
             ThemeData.Light,
             new Navigator(new BuilderPageRoute(_ => new Scaffold(
@@ -189,7 +189,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
 
     private static void PumpAnimation()
     {
-        var now = Scheduler.CurrentSeconds;
+        double now = Scheduler.CurrentSeconds;
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.30));
     }

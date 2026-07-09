@@ -27,7 +27,7 @@ public sealed class ScrollInfrastructureTests
     public void NotificationListener_ReceivesBubbledNotification()
     {
         var owner = new BuildOwner();
-        var handled = 0;
+        int handled = 0;
 
         var root = new TestRootElement(
             new NotificationListener<TestScrollNotification>(
@@ -69,7 +69,7 @@ public sealed class ScrollInfrastructureTests
     {
         var owner = new BuildOwner();
         var handle = new KeepAliveHandle();
-        var dispatched = false;
+        bool dispatched = false;
 
         var root = new TestRootElement(
             new AutomaticKeepAlive(
@@ -88,7 +88,7 @@ public sealed class ScrollInfrastructureTests
     public void AutomaticKeepAliveClientMixin_DispatchesWhenEnabled()
     {
         var owner = new BuildOwner();
-        var notifications = 0;
+        int notifications = 0;
         Func<KeepAliveNotification, bool> onNotification = _ =>
         {
             notifications += 1;

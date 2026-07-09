@@ -210,20 +210,20 @@ internal sealed class NavigationRailState : State
         var railTheme = NavigationRailTheme.Of(context);
         var defaults = ResolveDefaults(theme);
         var backgroundColor = widget.BackgroundColor ?? railTheme.BackgroundColor ?? defaults.BackgroundColor!.Value;
-        var elevation = widget.Elevation ?? railTheme.Elevation ?? defaults.Elevation!.Value;
-        var minWidth = widget.MinWidth ?? railTheme.MinWidth ?? defaults.MinWidth!.Value;
-        var minExtendedWidth = widget.MinExtendedWidth ?? railTheme.MinExtendedWidth ?? defaults.MinExtendedWidth!.Value;
-        var groupAlignment = widget.GroupAlignment ?? railTheme.GroupAlignment ?? defaults.GroupAlignment!.Value;
+        double elevation = widget.Elevation ?? railTheme.Elevation ?? defaults.Elevation!.Value;
+        double minWidth = widget.MinWidth ?? railTheme.MinWidth ?? defaults.MinWidth!.Value;
+        double minExtendedWidth = widget.MinExtendedWidth ?? railTheme.MinExtendedWidth ?? defaults.MinExtendedWidth!.Value;
+        double groupAlignment = widget.GroupAlignment ?? railTheme.GroupAlignment ?? defaults.GroupAlignment!.Value;
         var labelType = widget.LabelType ?? railTheme.LabelType ?? defaults.LabelType!.Value;
-        var useIndicator = widget.UseIndicator ?? railTheme.UseIndicator ?? defaults.UseIndicator!.Value;
+        bool useIndicator = widget.UseIndicator ?? railTheme.UseIndicator ?? defaults.UseIndicator!.Value;
         var indicatorColor = widget.IndicatorColor ?? railTheme.IndicatorColor ?? defaults.IndicatorColor;
         var indicatorShape = widget.IndicatorShape ?? railTheme.IndicatorShape ?? defaults.IndicatorShape;
         var unselectedLabelStyle = widget.UnselectedLabelTextStyle ?? railTheme.UnselectedLabelTextStyle ?? defaults.UnselectedLabelTextStyle!;
         var selectedLabelStyle = widget.SelectedLabelTextStyle ?? railTheme.SelectedLabelTextStyle ?? defaults.SelectedLabelTextStyle!;
         var unselectedIconTheme = widget.UnselectedIconTheme ?? railTheme.UnselectedIconTheme ?? defaults.UnselectedIconTheme!;
         var selectedIconTheme = widget.SelectedIconTheme ?? railTheme.SelectedIconTheme ?? defaults.SelectedIconTheme!;
-        var extendedProgress = _extendedController?.Evaluate() ?? (widget.Extended ? 1 : 0);
-        var effectiveWidth = minWidth + ((minExtendedWidth - minWidth) * extendedProgress);
+        double extendedProgress = _extendedController?.Evaluate() ?? (widget.Extended ? 1 : 0);
+        double effectiveWidth = minWidth + ((minExtendedWidth - minWidth) * extendedProgress);
 
         var mainChildren = new List<Widget>();
         if (!widget.LeadingAtTop && widget.Leading is not null)
@@ -232,11 +232,11 @@ internal sealed class NavigationRailState : State
             mainChildren.Add(new SizedBox(height: 8));
         }
 
-        for (var index = 0; index < widget.Destinations.Count; index++)
+        for (int index = 0; index < widget.Destinations.Count; index++)
         {
             var destination = widget.Destinations[index];
-            var selected = widget.SelectedIndex == index;
-            var capturedIndex = index;
+            bool selected = widget.SelectedIndex == index;
+            int capturedIndex = index;
             mainChildren.Add(new NavigationRailDestinationTile(
                 destination: destination,
                 selected: selected,
@@ -291,7 +291,7 @@ internal sealed class NavigationRailState : State
                 explicitChildNodes: true,
                 child: new Column(children: columnChildren)));
 
-        var isRtl = Directionality.MaybeOf(context) == TextDirection.Rtl;
+        bool isRtl = Directionality.MaybeOf(context) == TextDirection.Rtl;
         content = new SafeArea(
             left: !isRtl,
             right: isRtl,
@@ -438,7 +438,7 @@ internal sealed class NavigationRailDestinationTileState : State
     {
         var widget = CurrentWidget;
         var destination = widget.Destination;
-        var selectionProgress = _selectionController?.Evaluate() ?? (widget.Selected ? 1 : 0);
+        double selectionProgress = _selectionController?.Evaluate() ?? (widget.Selected ? 1 : 0);
         var icon = widget.Selected ? destination.SelectedIcon : destination.Icon;
         var disabledColor = NavigationSurfaceUtilities.WithOpacity(Theme.Of(context).OnSurfaceColor, 0.38);
         var iconTheme = destination.Disabled
@@ -484,7 +484,7 @@ internal sealed class NavigationRailDestinationTileState : State
         }
         else
         {
-            var labelOpacity = widget.LabelType switch
+            double labelOpacity = widget.LabelType switch
             {
                 NavigationRailLabelType.All => 1,
                 NavigationRailLabelType.Selected => selectionProgress,

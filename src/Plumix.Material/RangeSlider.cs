@@ -166,15 +166,15 @@ public sealed class RangeSlider : StatefulWidget
         {
             var theme = Theme.Of(context);
             var sliderTheme = SliderTheme.Of(context);
-            var trackHeight = ResolveTrackHeight(sliderTheme);
-            var thumbRadius = ResolveThumbRadius(sliderTheme);
+            double trackHeight = ResolveTrackHeight(sliderTheme);
+            double thumbRadius = ResolveThumbRadius(sliderTheme);
             var tapTargetSize = CurrentWidget.MaterialTapTargetSize
                                 ?? sliderTheme.MaterialTapTargetSize
                                 ?? theme.MaterialTapTargetSize;
-            var minPreferredHeight = tapTargetSize == Plumix.Material.MaterialTapTargetSize.Padded
+            double minPreferredHeight = tapTargetSize == Plumix.Material.MaterialTapTargetSize.Padded
                 ? Math.Max(PaddedTapTargetExtent, thumbRadius * 2)
                 : Math.Max(trackHeight, thumbRadius * 2);
-            var overlayRadius = Math.Max(thumbRadius, theme.UseMaterial3 ? 20.0 : 16.0);
+            double overlayRadius = Math.Max(thumbRadius, theme.UseMaterial3 ? 20.0 : 16.0);
 
             var activeTrackColor = ResolveActiveTrackColor(theme, sliderTheme);
             var inactiveTrackColor = ResolveInactiveTrackColor(theme, sliderTheme);
@@ -196,7 +196,7 @@ public sealed class RangeSlider : StatefulWidget
                 semanticsFlags |= SemanticsFlags.IsEnabled;
             }
 
-            var semanticsLabel = ResolveSemanticsLabel();
+            string? semanticsLabel = ResolveSemanticsLabel();
             var normalizedValues = Normalize(CurrentWidget.Values);
 
             return new Semantics(
@@ -257,7 +257,7 @@ public sealed class RangeSlider : StatefulWidget
 
         private void HandleFocusChanged()
         {
-            var hasFocus = _focusNode?.HasFocus ?? false;
+            bool hasFocus = _focusNode?.HasFocus ?? false;
             if (hasFocus == _hasFocus)
             {
                 return;
@@ -310,9 +310,9 @@ public sealed class RangeSlider : StatefulWidget
                     : new NormalizedRangeValues(current.Start, 1.0);
             }
 
-            var step = ResolveAdjustmentUnit(Theme.Of(Context));
+            double step = ResolveAdjustmentUnit(Theme.Of(Context));
             var direction = Directionality.Of(Context);
-            var delta = 0.0;
+            double delta = 0.0;
             if (string.Equals(key, "ArrowRight", StringComparison.Ordinal))
             {
                 delta = direction == TextDirection.Rtl ? -step : step;
@@ -339,11 +339,11 @@ public sealed class RangeSlider : StatefulWidget
 
             if (thumb == RangeSliderThumb.Start)
             {
-                var nextStart = SnapNormalized(Math.Clamp(current.Start + delta, 0.0, current.End));
+                double nextStart = SnapNormalized(Math.Clamp(current.Start + delta, 0.0, current.End));
                 return new NormalizedRangeValues(nextStart, current.End);
             }
 
-            var nextEnd = SnapNormalized(Math.Clamp(current.End + delta, current.Start, 1.0));
+            double nextEnd = SnapNormalized(Math.Clamp(current.End + delta, current.Start, 1.0));
             return new NormalizedRangeValues(current.Start, nextEnd);
         }
 
@@ -428,14 +428,14 @@ public sealed class RangeSlider : StatefulWidget
 
         private NormalizedRangeValues Normalize(RangeValues values)
         {
-            var range = CurrentWidget.Max - CurrentWidget.Min;
+            double range = CurrentWidget.Max - CurrentWidget.Min;
             if (range <= 0)
             {
                 return new NormalizedRangeValues(0.0, 0.0);
             }
 
-            var start = Math.Clamp((values.Start - CurrentWidget.Min) / range, 0.0, 1.0);
-            var end = Math.Clamp((values.End - CurrentWidget.Min) / range, 0.0, 1.0);
+            double start = Math.Clamp((values.Start - CurrentWidget.Min) / range, 0.0, 1.0);
+            double end = Math.Clamp((values.End - CurrentWidget.Min) / range, 0.0, 1.0);
             if (end < start)
             {
                 (start, end) = (end, start);
@@ -447,15 +447,15 @@ public sealed class RangeSlider : StatefulWidget
         private RangeValues Denormalize(NormalizedRangeValues normalized)
         {
             var snapped = SnapNormalized(normalized);
-            var start = CurrentWidget.Min + ((CurrentWidget.Max - CurrentWidget.Min) * snapped.Start);
-            var end = CurrentWidget.Min + ((CurrentWidget.Max - CurrentWidget.Min) * snapped.End);
+            double start = CurrentWidget.Min + ((CurrentWidget.Max - CurrentWidget.Min) * snapped.Start);
+            double end = CurrentWidget.Min + ((CurrentWidget.Max - CurrentWidget.Min) * snapped.End);
             return new RangeValues(start, end);
         }
 
         private NormalizedRangeValues SnapNormalized(NormalizedRangeValues normalized)
         {
-            var start = SnapNormalized(normalized.Start);
-            var end = SnapNormalized(normalized.End);
+            double start = SnapNormalized(normalized.Start);
+            double end = SnapNormalized(normalized.End);
             if (end < start)
             {
                 (start, end) = (end, start);
@@ -466,19 +466,19 @@ public sealed class RangeSlider : StatefulWidget
 
         private double SnapNormalized(double normalized)
         {
-            var clamped = Math.Clamp(normalized, 0.0, 1.0);
+            double clamped = Math.Clamp(normalized, 0.0, 1.0);
             if (!CurrentWidget.Divisions.HasValue || CurrentWidget.Divisions.Value <= 0)
             {
                 return clamped;
             }
 
-            var divisions = CurrentWidget.Divisions.Value;
+            int divisions = CurrentWidget.Divisions.Value;
             return Math.Clamp(Math.Round(clamped * divisions) / divisions, 0.0, 1.0);
         }
 
         private double ResolveTrackHeight(SliderThemeData sliderTheme)
         {
-            var resolved = sliderTheme.TrackHeight ?? DefaultTrackHeight;
+            double resolved = sliderTheme.TrackHeight ?? DefaultTrackHeight;
             if (double.IsNaN(resolved) || double.IsInfinity(resolved) || resolved <= 0)
             {
                 return DefaultTrackHeight;
@@ -489,7 +489,7 @@ public sealed class RangeSlider : StatefulWidget
 
         private double ResolveThumbRadius(SliderThemeData sliderTheme)
         {
-            var resolved = sliderTheme.ThumbRadius ?? DefaultThumbRadius;
+            double resolved = sliderTheme.ThumbRadius ?? DefaultThumbRadius;
             if (double.IsNaN(resolved) || double.IsInfinity(resolved) || resolved <= 0)
             {
                 return DefaultThumbRadius;
@@ -1113,13 +1113,13 @@ internal sealed class RenderRangeSlider : RenderBox
 
     protected override void PerformLayout()
     {
-        var desiredWidth = Constraints.HasBoundedWidth ? Constraints.MaxWidth : DefaultTrackWidth;
+        double desiredWidth = Constraints.HasBoundedWidth ? Constraints.MaxWidth : DefaultTrackWidth;
         if (!double.IsFinite(desiredWidth) || desiredWidth <= 0)
         {
             desiredWidth = DefaultTrackWidth;
         }
 
-        var desiredHeight = Math.Max(MinPreferredHeight, Math.Max(TrackHeight, ThumbRadius * 2.0));
+        double desiredHeight = Math.Max(MinPreferredHeight, Math.Max(TrackHeight, ThumbRadius * 2.0));
         if (!double.IsFinite(desiredHeight) || desiredHeight <= 0)
         {
             desiredHeight = Math.Max(TrackHeight, ThumbRadius * 2.0);
@@ -1136,7 +1136,7 @@ internal sealed class RenderRangeSlider : RenderBox
         }
 
         var values = ResolveVisualValues();
-        var centerY = offset.Y + (Size.Height / 2.0);
+        double centerY = offset.Y + (Size.Height / 2.0);
         var geometry = ResolveTrackGeometry(offset.X);
 
         if (geometry.Width > 0 && TrackHeight > 0)
@@ -1153,11 +1153,11 @@ internal sealed class RenderRangeSlider : RenderBox
                 radiusX: TrackHeight / 2.0,
                 radiusY: TrackHeight / 2.0);
 
-            var startThumbCenterX = ResolveThumbCenterX(geometry, values.Start);
-            var endThumbCenterX = ResolveThumbCenterX(geometry, values.End);
-            var activeLeft = Math.Min(startThumbCenterX, endThumbCenterX);
-            var activeRight = Math.Max(startThumbCenterX, endThumbCenterX);
-            var activeWidth = Math.Max(0.0, activeRight - activeLeft);
+            double startThumbCenterX = ResolveThumbCenterX(geometry, values.Start);
+            double endThumbCenterX = ResolveThumbCenterX(geometry, values.End);
+            double activeLeft = Math.Min(startThumbCenterX, endThumbCenterX);
+            double activeRight = Math.Max(startThumbCenterX, endThumbCenterX);
+            double activeWidth = Math.Max(0.0, activeRight - activeLeft);
             if (activeWidth > 0)
             {
                 var activeRect = new Rect(
@@ -1176,7 +1176,7 @@ internal sealed class RenderRangeSlider : RenderBox
             var overlayColor = ResolveOverlayColor();
             if (overlayColor.HasValue && overlayColor.Value.A > 0 && OverlayRadius > 0)
             {
-                var overlayCenterX = ResolveOverlayCenterX(startThumbCenterX, endThumbCenterX);
+                double overlayCenterX = ResolveOverlayCenterX(startThumbCenterX, endThumbCenterX);
                 ctx.DrawCircle(
                     brush: new SolidColorBrush(overlayColor.Value),
                     pen: null,
@@ -1252,7 +1252,7 @@ internal sealed class RenderRangeSlider : RenderBox
             return;
         }
 
-        var deltaX = _lastGlobalPointerX.HasValue
+        double deltaX = _lastGlobalPointerX.HasValue
             ? @event.Position.X - _lastGlobalPointerX.Value
             : @event.Delta.X;
         _lastGlobalPointerX = @event.Position.X;
@@ -1309,7 +1309,7 @@ internal sealed class RenderRangeSlider : RenderBox
         }
 
         var current = ResolveVisualValues();
-        var nextNormalized = ResolveNormalizedFromLocalX(localX);
+        double nextNormalized = ResolveNormalizedFromLocalX(localX);
         var next = UpdateThumbValue(current, _activeThumb.Value, nextNormalized);
         if (AreEqual(current, next))
         {
@@ -1335,14 +1335,14 @@ internal sealed class RenderRangeSlider : RenderBox
             return;
         }
 
-        var directionMultiplier = TextDirection == TextDirection.Rtl ? -1.0 : 1.0;
-        var normalizedDelta = (deltaX / geometry.Width) * directionMultiplier;
+        double directionMultiplier = TextDirection == TextDirection.Rtl ? -1.0 : 1.0;
+        double normalizedDelta = (deltaX / geometry.Width) * directionMultiplier;
         if (Math.Abs(normalizedDelta) <= Epsilon)
         {
             return;
         }
 
-        var baseValue = _activeThumb.Value == RangeSliderThumb.Start ? current.Start : current.End;
+        double baseValue = _activeThumb.Value == RangeSliderThumb.Start ? current.Start : current.End;
         var next = UpdateThumbValue(current, _activeThumb.Value, baseValue + normalizedDelta);
         if (AreEqual(current, next))
         {
@@ -1395,8 +1395,8 @@ internal sealed class RenderRangeSlider : RenderBox
             return 0.0;
         }
 
-        var relative = Math.Clamp(localX - geometry.Left, 0.0, geometry.Width);
-        var normalized = relative / geometry.Width;
+        double relative = Math.Clamp(localX - geometry.Left, 0.0, geometry.Width);
+        double normalized = relative / geometry.Width;
         if (TextDirection == TextDirection.Rtl)
         {
             normalized = 1.0 - normalized;
@@ -1407,9 +1407,9 @@ internal sealed class RenderRangeSlider : RenderBox
 
     private RangeSliderThumb ResolveClosestThumb(double localX, NormalizedRangeValues values)
     {
-        var tapValue = ResolveNormalizedFromLocalX(localX);
-        var distanceToStart = Math.Abs(tapValue - values.Start);
-        var distanceToEnd = Math.Abs(tapValue - values.End);
+        double tapValue = ResolveNormalizedFromLocalX(localX);
+        double distanceToStart = Math.Abs(tapValue - values.Start);
+        double distanceToEnd = Math.Abs(tapValue - values.End);
         if (Math.Abs(distanceToStart - distanceToEnd) <= Epsilon)
         {
             return tapValue <= ((values.Start + values.End) / 2.0)
@@ -1427,21 +1427,21 @@ internal sealed class RenderRangeSlider : RenderBox
         RangeSliderThumb thumb,
         double nextRawValue)
     {
-        var nextValue = SnapNormalized(nextRawValue);
+        double nextValue = SnapNormalized(nextRawValue);
         if (thumb == RangeSliderThumb.Start)
         {
-            var nextStart = Math.Clamp(nextValue, 0.0, current.End);
+            double nextStart = Math.Clamp(nextValue, 0.0, current.End);
             return OrderAndClamp(nextStart, current.End);
         }
 
-        var nextEnd = Math.Clamp(nextValue, current.Start, 1.0);
+        double nextEnd = Math.Clamp(nextValue, current.Start, 1.0);
         return OrderAndClamp(current.Start, nextEnd);
     }
 
     private double ResolveThumbCenterX(TrackGeometry geometry, double normalizedValue)
     {
-        var value = ClampNormalized(normalizedValue);
-        var visualValue = TextDirection == TextDirection.Rtl
+        double value = ClampNormalized(normalizedValue);
+        double visualValue = TextDirection == TextDirection.Rtl
             ? 1.0 - value
             : value;
         return geometry.Left + (geometry.Width * visualValue);
@@ -1449,11 +1449,11 @@ internal sealed class RenderRangeSlider : RenderBox
 
     private TrackGeometry ResolveTrackGeometry(double offsetX)
     {
-        var left = offsetX + ThumbRadius;
-        var right = offsetX + Size.Width - ThumbRadius;
+        double left = offsetX + ThumbRadius;
+        double right = offsetX + Size.Width - ThumbRadius;
         if (right < left)
         {
-            var center = offsetX + (Size.Width / 2.0);
+            double center = offsetX + (Size.Width / 2.0);
             left = center;
             right = center;
         }
@@ -1503,13 +1503,13 @@ internal sealed class RenderRangeSlider : RenderBox
 
     private double SnapNormalized(double normalized)
     {
-        var clamped = ClampNormalized(normalized);
+        double clamped = ClampNormalized(normalized);
         if (!Divisions.HasValue || Divisions.Value <= 0)
         {
             return clamped;
         }
 
-        var divisions = Divisions.Value;
+        int divisions = Divisions.Value;
         return Math.Clamp(Math.Round(clamped * divisions) / divisions, 0.0, 1.0);
     }
 
@@ -1530,8 +1530,8 @@ internal sealed class RenderRangeSlider : RenderBox
 
     private static NormalizedRangeValues OrderAndClamp(double start, double end)
     {
-        var clampedStart = ClampNormalized(start);
-        var clampedEnd = ClampNormalized(end);
+        double clampedStart = ClampNormalized(start);
+        double clampedEnd = ClampNormalized(end);
         if (clampedEnd < clampedStart)
         {
             (clampedStart, clampedEnd) = (clampedEnd, clampedStart);

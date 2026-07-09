@@ -420,7 +420,7 @@ public abstract class RenderObject : IRenderObject
 
         VisitChildren(static child => child.UpdateCompositingBits());
 
-        var oldNeedsCompositing = NeedsCompositing;
+        bool oldNeedsCompositing = NeedsCompositing;
         PerformUpdateCompositingBits();
 
         if (!IsRepaintBoundary && _wasRepaintBoundary)
@@ -463,7 +463,7 @@ public abstract class RenderObject : IRenderObject
 
     protected virtual void PerformUpdateCompositingBits()
     {
-        var needsCompositing = IsRepaintBoundary || AlwaysNeedsCompositing;
+        bool needsCompositing = IsRepaintBoundary || AlwaysNeedsCompositing;
 
         if (!needsCompositing)
         {
@@ -669,10 +669,10 @@ public abstract class RenderObject : IRenderObject
         var p3 = transform.Transform(rect.BottomLeft);
         var p4 = transform.Transform(rect.BottomRight);
 
-        var minX = Math.Min(Math.Min(p1.X, p2.X), Math.Min(p3.X, p4.X));
-        var minY = Math.Min(Math.Min(p1.Y, p2.Y), Math.Min(p3.Y, p4.Y));
-        var maxX = Math.Max(Math.Max(p1.X, p2.X), Math.Max(p3.X, p4.X));
-        var maxY = Math.Max(Math.Max(p1.Y, p2.Y), Math.Max(p3.Y, p4.Y));
+        double minX = Math.Min(Math.Min(p1.X, p2.X), Math.Min(p3.X, p4.X));
+        double minY = Math.Min(Math.Min(p1.Y, p2.Y), Math.Min(p3.Y, p4.Y));
+        double maxX = Math.Max(Math.Max(p1.X, p2.X), Math.Max(p3.X, p4.X));
+        double maxY = Math.Max(Math.Max(p1.Y, p2.Y), Math.Max(p3.Y, p4.Y));
         return new Rect(minX, minY, maxX - minX, maxY - minY);
     }
 

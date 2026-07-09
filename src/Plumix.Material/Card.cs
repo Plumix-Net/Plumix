@@ -166,7 +166,7 @@ public sealed class Card : StatelessWidget
         var cardTheme = CardTheme.Of(context);
         var defaults = ResolveDefaults(theme);
         var effectiveMargin = Margin ?? cardTheme.Margin ?? defaults.Margin ?? DefaultMargin;
-        var effectiveElevation = ResolveEffectiveElevation(cardTheme, defaults);
+        double effectiveElevation = ResolveEffectiveElevation(cardTheme, defaults);
         var effectiveShape = Shape ?? cardTheme.Shape ?? defaults.Shape ?? ResolveDefaultShape(theme, Variant);
         var effectiveShadowColor = ShadowColor ?? cardTheme.ShadowColor ?? defaults.ShadowColor ?? theme.ShadowColor;
         var effectiveClipBehavior = ClipBehavior ?? cardTheme.ClipBehavior ?? defaults.ClipBehavior ?? Clip.None;
@@ -265,7 +265,7 @@ public sealed class Card : StatelessWidget
 
     private double ResolveEffectiveElevation(CardThemeData cardTheme, CardThemeData defaults)
     {
-        var effectiveElevation = Elevation ?? cardTheme.Elevation ?? defaults.Elevation ?? 1;
+        double effectiveElevation = Elevation ?? cardTheme.Elevation ?? defaults.Elevation ?? 1;
         if (double.IsNaN(effectiveElevation)
             || double.IsInfinity(effectiveElevation)
             || effectiveElevation < 0)
@@ -325,7 +325,7 @@ public sealed class Card : StatelessWidget
             return color;
         }
 
-        var opacity = ResolveSurfaceTintOpacityForElevation(elevation);
+        double opacity = ResolveSurfaceTintOpacityForElevation(elevation);
         if (opacity <= 0)
         {
             return color;
@@ -357,7 +357,7 @@ public sealed class Card : StatelessWidget
             return stops[0].Opacity;
         }
 
-        for (var i = 1; i < stops.Length; i++)
+        for (int i = 1; i < stops.Length; i++)
         {
             var current = stops[i];
             if (Math.Abs(elevation - current.Elevation) < 0.0001)
@@ -368,7 +368,7 @@ public sealed class Card : StatelessWidget
             if (elevation < current.Elevation)
             {
                 var lower = stops[i - 1];
-                var t = (elevation - lower.Elevation) / (current.Elevation - lower.Elevation);
+                double t = (elevation - lower.Elevation) / (current.Elevation - lower.Elevation);
                 return lower.Opacity + (t * (current.Opacity - lower.Opacity));
             }
         }
@@ -383,7 +383,7 @@ public sealed class Card : StatelessWidget
             return (byte)Math.Clamp((int)(from + ((to - from) * t)), 0, 255);
         }
 
-        var clampedOpacity = Math.Clamp(overlayColor.A / 255.0, 0, 1);
+        double clampedOpacity = Math.Clamp(overlayColor.A / 255.0, 0, 1);
         return Avalonia.Media.Color.FromArgb(
             baseColor.A,
             Blend(baseColor.R, overlayColor.R, clampedOpacity),
@@ -393,9 +393,9 @@ public sealed class Card : StatelessWidget
 
     private static Color ApplyOpacity(Color color, double opacityMultiplier)
     {
-        var baseOpacity = color.A / 255.0;
-        var effectiveOpacity = Math.Clamp(baseOpacity * opacityMultiplier, 0, 1);
-        var alpha = (byte)Math.Clamp((int)(effectiveOpacity * 255), 0, 255);
+        double baseOpacity = color.A / 255.0;
+        double effectiveOpacity = Math.Clamp(baseOpacity * opacityMultiplier, 0, 1);
+        byte alpha = (byte)Math.Clamp((int)(effectiveOpacity * 255), 0, 255);
         return Avalonia.Media.Color.FromArgb(alpha, color.R, color.G, color.B);
     }
 }

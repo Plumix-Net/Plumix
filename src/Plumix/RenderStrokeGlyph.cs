@@ -55,7 +55,7 @@ public sealed class RenderStrokeGlyph : RenderBox
         get => _glyphSize;
         set
         {
-            var normalized = Math.Max(0, value);
+            double normalized = Math.Max(0, value);
             if (Math.Abs(_glyphSize - normalized) < 0.0001)
             {
                 return;
@@ -73,14 +73,14 @@ public sealed class RenderStrokeGlyph : RenderBox
 
     public override void Paint(PaintingContext ctx, Point offset)
     {
-        var glyphExtent = Math.Min(Size.Width, Size.Height);
+        double glyphExtent = Math.Min(Size.Width, Size.Height);
         if (glyphExtent <= 0.001)
         {
             return;
         }
 
-        var dx = offset.X + ((Size.Width - glyphExtent) / 2.0);
-        var dy = offset.Y + ((Size.Height - glyphExtent) / 2.0);
+        double dx = offset.X + ((Size.Width - glyphExtent) / 2.0);
+        double dy = offset.Y + ((Size.Height - glyphExtent) / 2.0);
         var pen = new Pen(new SolidColorBrush(Color), 2.0, lineCap: PenLineCap.Round);
 
         switch (Kind)

@@ -25,8 +25,8 @@ public readonly record struct TextSelection(int BaseOffset, int ExtentOffset)
 
     internal TextSelection Clamp(int textLength)
     {
-        var clampedBaseOffset = Math.Clamp(BaseOffset, 0, textLength);
-        var clampedExtentOffset = Math.Clamp(ExtentOffset, 0, textLength);
+        int clampedBaseOffset = Math.Clamp(BaseOffset, 0, textLength);
+        int clampedExtentOffset = Math.Clamp(ExtentOffset, 0, textLength);
         return new TextSelection(clampedBaseOffset, clampedExtentOffset);
     }
 }
@@ -43,7 +43,27 @@ public readonly record struct TextRange(int Start, int End)
     }
 }
 
-public sealed class TextEditingController : ChangeNotifier
+public readonly record struct TextEditingValue
+{
+    public TextEditingValue(
+        string text = "",
+        TextSelection? selection = null,
+        TextRange? composing = null)
+    {
+        Text = text ?? string.Empty;
+        Selection = (selection ?? TextSelection.Collapsed(Text.Length)).Clamp(Text.Length);
+        TextRange? normalizedComposing = composing?.Clamp(Text.Length);
+        Composing = normalizedComposing is { IsCollapsed: false } ? normalizedComposing : null;
+    }
+
+    public string Text { get; }
+
+    public TextSelection Selection { get; }
+
+    public TextRange? Composing { get; }
+}
+
+public class TextEditingController : ChangeNotifier
 {
     private string _text;
     private TextSelection _selection;
@@ -64,7 +84,7 @@ public sealed class TextEditingController : ChangeNotifier
         get => _text;
         set
         {
-            var next = value ?? string.Empty;
+            string next = value ?? string.Empty;
             SetValue(
                 text: next,
                 selection: TextSelection.Collapsed(next.Length),
@@ -78,6 +98,21 @@ public sealed class TextEditingController : ChangeNotifier
         set => SetValue(text: _text, selection: value, composing: _composing);
     }
 
+    public TextEditingValue Value
+    {
+        get => new(_text, _selection, _composing);
+        set => SetValue(value.Text, value.Selection, value.Composing);
+    }
+
+    public static TextEditingController FromValue(TextEditingValue? value)
+    {
+        TextEditingValue initialValue = value ?? new TextEditingValue();
+        return new TextEditingController(
+            initialValue.Text,
+            initialValue.Selection,
+            initialValue.Composing);
+    }
+
     public TextRange? Composing
     {
         get => _composing;
@@ -89,7 +124,7 @@ public sealed class TextEditingController : ChangeNotifier
         TextSelection? selection = null,
         TextRange? composing = null)
     {
-        var normalizedText = text ?? string.Empty;
+        string normalizedText = text ?? string.Empty;
         var normalizedSelection = (selection ?? _selection).Clamp(normalizedText.Length);
         var normalizedComposing = composing?.Clamp(normalizedText.Length);
         if (normalizedComposing.HasValue && normalizedComposing.Value.IsCollapsed)
@@ -122,7 +157,7 @@ public sealed class TextEditingController : ChangeNotifier
             return UpdateSelection(TextSelection.Collapsed(_selection.Start));
         }
 
-        var nextExtentOffset = FindPreviousTextElementBoundary(_selection.ExtentOffset);
+        int nextExtentOffset = FindPreviousTextElementBoundary(_selection.ExtentOffset);
         var nextSelection = extendSelection
             ? new TextSelection(_selection.BaseOffset, nextExtentOffset)
             : TextSelection.Collapsed(nextExtentOffset);
@@ -136,7 +171,7 @@ public sealed class TextEditingController : ChangeNotifier
             return UpdateSelection(TextSelection.Collapsed(_selection.End));
         }
 
-        var nextExtentOffset = FindNextTextElementBoundary(_selection.ExtentOffset);
+        int nextExtentOffset = FindNextTextElementBoundary(_selection.ExtentOffset);
         var nextSelection = extendSelection
             ? new TextSelection(_selection.BaseOffset, nextExtentOffset)
             : TextSelection.Collapsed(nextExtentOffset);
@@ -166,7 +201,7 @@ public sealed class TextEditingController : ChangeNotifier
             return UpdateSelection(TextSelection.Collapsed(_selection.Start));
         }
 
-        var nextExtentOffset = FindPreviousWordBoundary(_selection.ExtentOffset);
+        int nextExtentOffset = FindPreviousWordBoundary(_selection.ExtentOffset);
         var nextSelection = extendSelection
             ? new TextSelection(_selection.BaseOffset, nextExtentOffset)
             : TextSelection.Collapsed(nextExtentOffset);
@@ -180,7 +215,7 @@ public sealed class TextEditingController : ChangeNotifier
             return UpdateSelection(TextSelection.Collapsed(_selection.End));
         }
 
-        var nextExtentOffset = FindNextWordBoundary(_selection.ExtentOffset, includeWordAfterSeparator: false);
+        int nextExtentOffset = FindNextWordBoundary(_selection.ExtentOffset, includeWordAfterSeparator: false);
         var nextSelection = extendSelection
             ? new TextSelection(_selection.BaseOffset, nextExtentOffset)
             : TextSelection.Collapsed(nextExtentOffset);
@@ -194,7 +229,7 @@ public sealed class TextEditingController : ChangeNotifier
             return UpdateSelection(TextSelection.Collapsed(_selection.Start));
         }
 
-        var nextExtentOffset = FindParagraphStart(_selection.ExtentOffset);
+        int nextExtentOffset = FindParagraphStart(_selection.ExtentOffset);
         var nextSelection = extendSelection
             ? new TextSelection(_selection.BaseOffset, nextExtentOffset)
             : TextSelection.Collapsed(nextExtentOffset);
@@ -208,7 +243,7 @@ public sealed class TextEditingController : ChangeNotifier
             return UpdateSelection(TextSelection.Collapsed(_selection.End));
         }
 
-        var nextExtentOffset = FindParagraphEnd(_selection.ExtentOffset);
+        int nextExtentOffset = FindParagraphEnd(_selection.ExtentOffset);
         var nextSelection = extendSelection
             ? new TextSelection(_selection.BaseOffset, nextExtentOffset)
             : TextSelection.Collapsed(nextExtentOffset);
@@ -222,10 +257,10 @@ public sealed class TextEditingController : ChangeNotifier
             return false;
         }
 
-        var start = _selection.Start;
-        var end = _selection.End;
-        var nextText = _text[..start] + text + _text[end..];
-        var caretOffset = start + text.Length;
+        int start = _selection.Start;
+        int end = _selection.End;
+        string nextText = _text[..start] + text + _text[end..];
+        int caretOffset = start + text.Length;
         return ApplyAndReportChange(
             text: nextText,
             selection: TextSelection.Collapsed(caretOffset),
@@ -234,14 +269,14 @@ public sealed class TextEditingController : ChangeNotifier
 
     public bool SetComposing(string text)
     {
-        var composingText = text ?? string.Empty;
-        var rangeStart = _composing?.Start ?? _selection.Start;
-        var rangeEnd = _composing?.End ?? _selection.End;
-        var clampedStart = Math.Clamp(rangeStart, 0, _text.Length);
-        var clampedEnd = Math.Clamp(rangeEnd, 0, _text.Length);
+        string composingText = text ?? string.Empty;
+        int rangeStart = _composing?.Start ?? _selection.Start;
+        int rangeEnd = _composing?.End ?? _selection.End;
+        int clampedStart = Math.Clamp(rangeStart, 0, _text.Length);
+        int clampedEnd = Math.Clamp(rangeEnd, 0, _text.Length);
 
-        var nextText = _text[..clampedStart] + composingText + _text[clampedEnd..];
-        var composingEnd = clampedStart + composingText.Length;
+        string nextText = _text[..clampedStart] + composingText + _text[clampedEnd..];
+        int composingEnd = clampedStart + composingText.Length;
         var nextComposing = new TextRange(clampedStart, composingEnd);
         var collapsedSelection = TextSelection.Collapsed(composingEnd);
         return ApplyAndReportChange(nextText, collapsedSelection, nextComposing);
@@ -254,9 +289,9 @@ public sealed class TextEditingController : ChangeNotifier
             return Insert(text);
         }
 
-        var composingText = text ?? string.Empty;
+        string composingText = text ?? string.Empty;
         var currentComposing = _composing.Value.Clamp(_text.Length);
-        var nextText = _text[..currentComposing.Start] + composingText + _text[currentComposing.End..];
+        string nextText = _text[..currentComposing.Start] + composingText + _text[currentComposing.End..];
         var collapsedSelection = TextSelection.Collapsed(currentComposing.Start + composingText.Length);
         return ApplyAndReportChange(nextText, collapsedSelection, composing: null);
     }
@@ -278,14 +313,14 @@ public sealed class TextEditingController : ChangeNotifier
             return false;
         }
 
-        var start = _selection.Start;
-        var end = _selection.End;
+        int start = _selection.Start;
+        int end = _selection.End;
         if (start == end)
         {
             start = FindPreviousTextElementBoundary(end);
         }
 
-        var nextText = _text[..start] + _text[end..];
+        string nextText = _text[..start] + _text[end..];
         return ApplyAndReportChange(
             text: nextText,
             selection: TextSelection.Collapsed(start),
@@ -299,19 +334,19 @@ public sealed class TextEditingController : ChangeNotifier
             return DeleteBackward();
         }
 
-        var end = _selection.ExtentOffset;
+        int end = _selection.ExtentOffset;
         if (end <= 0)
         {
             return false;
         }
 
-        var start = FindPreviousWordBoundary(end);
+        int start = FindPreviousWordBoundary(end);
         if (start >= end)
         {
             return false;
         }
 
-        var nextText = _text[..start] + _text[end..];
+        string nextText = _text[..start] + _text[end..];
         return ApplyAndReportChange(
             text: nextText,
             selection: TextSelection.Collapsed(start),
@@ -325,14 +360,14 @@ public sealed class TextEditingController : ChangeNotifier
             return false;
         }
 
-        var start = _selection.Start;
-        var end = _selection.End;
+        int start = _selection.Start;
+        int end = _selection.End;
         if (start == end)
         {
             end = FindNextTextElementBoundary(start);
         }
 
-        var nextText = _text[..start] + _text[end..];
+        string nextText = _text[..start] + _text[end..];
         return ApplyAndReportChange(
             text: nextText,
             selection: TextSelection.Collapsed(start),
@@ -346,19 +381,19 @@ public sealed class TextEditingController : ChangeNotifier
             return DeleteForward();
         }
 
-        var start = _selection.ExtentOffset;
+        int start = _selection.ExtentOffset;
         if (start >= _text.Length)
         {
             return false;
         }
 
-        var end = FindNextWordBoundary(start, includeWordAfterSeparator: true);
+        int end = FindNextWordBoundary(start, includeWordAfterSeparator: true);
         if (end <= start)
         {
             return false;
         }
 
-        var nextText = _text[..start] + _text[end..];
+        string nextText = _text[..start] + _text[end..];
         return ApplyAndReportChange(
             text: nextText,
             selection: TextSelection.Collapsed(start),
@@ -377,8 +412,8 @@ public sealed class TextEditingController : ChangeNotifier
     {
         get
         {
-            var start = _selection.Start;
-            var end = _selection.End;
+            int start = _selection.Start;
+            int end = _selection.End;
             if (start >= end)
             {
                 return string.Empty;
@@ -395,7 +430,7 @@ public sealed class TextEditingController : ChangeNotifier
 
     private int FindPreviousWordBoundary(int offset)
     {
-        var index = Math.Clamp(offset, 0, _text.Length);
+        int index = Math.Clamp(offset, 0, _text.Length);
         while (index > 0 && !IsWordCharacter(_text[index - 1]))
         {
             index--;
@@ -411,7 +446,7 @@ public sealed class TextEditingController : ChangeNotifier
 
     private int FindNextWordBoundary(int offset, bool includeWordAfterSeparator)
     {
-        var index = Math.Clamp(offset, 0, _text.Length);
+        int index = Math.Clamp(offset, 0, _text.Length);
         if (index >= _text.Length)
         {
             return _text.Length;
@@ -452,20 +487,20 @@ public sealed class TextEditingController : ChangeNotifier
 
     private int FindPreviousTextElementBoundary(int offset)
     {
-        var index = Math.Clamp(offset, 0, _text.Length);
+        int index = Math.Clamp(offset, 0, _text.Length);
         if (index <= 0 || string.IsNullOrEmpty(_text))
         {
             return 0;
         }
 
-        var boundaries = StringInfo.ParseCombiningCharacters(_text);
+        int[] boundaries = StringInfo.ParseCombiningCharacters(_text);
         if (boundaries.Length == 0)
         {
             return Math.Max(0, index - 1);
         }
 
-        var previous = 0;
-        foreach (var boundary in boundaries)
+        int previous = 0;
+        foreach (int boundary in boundaries)
         {
             if (boundary >= index)
             {
@@ -480,22 +515,22 @@ public sealed class TextEditingController : ChangeNotifier
 
     private int FindNextTextElementBoundary(int offset)
     {
-        var index = Math.Clamp(offset, 0, _text.Length);
+        int index = Math.Clamp(offset, 0, _text.Length);
         if (index >= _text.Length || string.IsNullOrEmpty(_text))
         {
             return _text.Length;
         }
 
-        var boundaries = StringInfo.ParseCombiningCharacters(_text);
+        int[] boundaries = StringInfo.ParseCombiningCharacters(_text);
         if (boundaries.Length == 0)
         {
             return Math.Min(_text.Length, index + 1);
         }
 
-        for (var i = 0; i < boundaries.Length; i++)
+        for (int i = 0; i < boundaries.Length; i++)
         {
-            var start = boundaries[i];
-            var end = i + 1 < boundaries.Length ? boundaries[i + 1] : _text.Length;
+            int start = boundaries[i];
+            int end = i + 1 < boundaries.Length ? boundaries[i + 1] : _text.Length;
             if (index < end)
             {
                 return end;
@@ -507,13 +542,13 @@ public sealed class TextEditingController : ChangeNotifier
 
     private int FindParagraphStart(int offset)
     {
-        var index = Math.Clamp(offset, 0, _text.Length);
+        int index = Math.Clamp(offset, 0, _text.Length);
         if (index <= 0)
         {
             return 0;
         }
 
-        var searchFrom = index - 1;
+        int searchFrom = index - 1;
         if (searchFrom >= 0 && _text[searchFrom] == '\n')
         {
             searchFrom -= 1;
@@ -524,25 +559,25 @@ public sealed class TextEditingController : ChangeNotifier
             return 0;
         }
 
-        var lastNewline = _text.LastIndexOf('\n', searchFrom);
+        int lastNewline = _text.LastIndexOf('\n', searchFrom);
         return lastNewline < 0 ? 0 : lastNewline + 1;
     }
 
     private int FindParagraphEnd(int offset)
     {
-        var index = Math.Clamp(offset, 0, _text.Length);
+        int index = Math.Clamp(offset, 0, _text.Length);
         if (index >= _text.Length)
         {
             return _text.Length;
         }
 
-        var searchFrom = _text[index] == '\n' ? index + 1 : index;
+        int searchFrom = _text[index] == '\n' ? index + 1 : index;
         if (searchFrom >= _text.Length)
         {
             return _text.Length;
         }
 
-        var nextNewline = _text.IndexOf('\n', searchFrom);
+        int nextNewline = _text.IndexOf('\n', searchFrom);
         return nextNewline < 0 ? _text.Length : nextNewline;
     }
 
@@ -551,7 +586,7 @@ public sealed class TextEditingController : ChangeNotifier
         TextSelection selection,
         TextRange? composing)
     {
-        var previousText = _text;
+        string previousText = _text;
         var previousSelection = _selection;
         var previousComposing = _composing;
         SetValue(text, selection, composing);
@@ -705,12 +740,12 @@ public sealed class EditableText : StatefulWidget
 
         public override Widget Build(BuildContext context)
         {
-            var text = _controller!.Text;
-            var showPlaceholder = string.IsNullOrEmpty(text) && !string.IsNullOrEmpty(Widget.Placeholder);
-            var renderedText = Widget.ObscureText
+            string text = _controller!.Text;
+            bool showPlaceholder = string.IsNullOrEmpty(text) && !string.IsNullOrEmpty(Widget.Placeholder);
+            string renderedText = Widget.ObscureText
                 ? new string(Widget.ObscuringCharacter[0], text.Length)
                 : text;
-            var displayText = BuildDisplayText(
+            string displayText = BuildDisplayText(
                 text: renderedText,
                 showPlaceholder: showPlaceholder,
                 placeholder: Widget.Placeholder,
@@ -818,12 +853,12 @@ public sealed class EditableText : StatefulWidget
             }
 
             var controller = _controller!;
-            var key = @event.Key;
-            var textChanged = false;
-            var keepVerticalNavigationX = false;
-            var isEditingShortcut = @event.IsControlPressed || @event.IsMetaPressed;
-            var isWordShortcut = @event.IsControlPressed || @event.IsAltPressed;
-            var isParagraphShortcut = Widget.Multiline && isWordShortcut;
+            string key = @event.Key;
+            bool textChanged = false;
+            bool keepVerticalNavigationX = false;
+            bool isEditingShortcut = @event.IsControlPressed || @event.IsMetaPressed;
+            bool isWordShortcut = @event.IsControlPressed || @event.IsAltPressed;
+            bool isParagraphShortcut = Widget.Multiline && isWordShortcut;
 
             if (isEditingShortcut && string.Equals(key, "A", StringComparison.Ordinal))
             {
@@ -864,7 +899,7 @@ public sealed class EditableText : StatefulWidget
 
             if (isEditingShortcut && string.Equals(key, "V", StringComparison.Ordinal))
             {
-                var pasteText = TextClipboard.GetText() ?? string.Empty;
+                string pasteText = TextClipboard.GetText() ?? string.Empty;
                 if (!Widget.ReadOnly && !string.IsNullOrEmpty(pasteText))
                 {
                     pasteText = LimitInsertion(pasteText);
@@ -988,7 +1023,7 @@ public sealed class EditableText : StatefulWidget
                 return false;
             }
 
-            var normalizedInput = Widget.Multiline
+            string normalizedInput = Widget.Multiline
                 ? text
                 : text.Replace("\r", string.Empty, StringComparison.Ordinal)
                     .Replace("\n", string.Empty, StringComparison.Ordinal);
@@ -999,7 +1034,7 @@ public sealed class EditableText : StatefulWidget
 
             normalizedInput = LimitInsertion(normalizedInput);
             if (string.IsNullOrEmpty(normalizedInput)) return false;
-            var changed = _controller!.Composing.HasValue
+            bool changed = _controller!.Composing.HasValue
                 ? _controller.CommitComposing(normalizedInput)
                 : _controller.Insert(normalizedInput);
             if (changed)
@@ -1019,8 +1054,8 @@ public sealed class EditableText : StatefulWidget
                 return false;
             }
 
-            var limitedText = LimitInsertion(text);
-            var changed = isCommit
+            string limitedText = LimitInsertion(text);
+            bool changed = isCommit
                 ? _controller!.CommitComposing(limitedText)
                 : _controller!.SetComposing(limitedText);
             if (changed)
@@ -1036,7 +1071,7 @@ public sealed class EditableText : StatefulWidget
         private FocusTextInputState? HandleTextInputState(FocusNode node)
         {
             var controller = _controller!;
-            var text = controller.Text;
+            string text = controller.Text;
             var selection = controller.Selection.Clamp(text.Length);
             var cursorRectangle = ResolveCursorRectangle(node, text.Length, selection.ExtentOffset);
             return new FocusTextInputState(
@@ -1054,7 +1089,7 @@ public sealed class EditableText : StatefulWidget
             }
 
             var controller = _controller!;
-            var textLength = controller.Text.Length;
+            int textLength = controller.Text.Length;
             var nextSelection = new TextSelection(
                 BaseOffset: Math.Clamp(baseOffset, 0, textLength),
                 ExtentOffset: Math.Clamp(extentOffset, 0, textLength));
@@ -1076,9 +1111,9 @@ public sealed class EditableText : StatefulWidget
             {
                 using (layout!)
                 {
-                    var clampedCaretOffset = Math.Clamp(caretOffset, 0, textLength);
+                    int clampedCaretOffset = Math.Clamp(caretOffset, 0, textLength);
                     var hitRect = layout!.HitTestTextPosition(clampedCaretOffset);
-                    var caretHeight = Math.Max(1, hitRect.Height);
+                    double caretHeight = Math.Max(1, hitRect.Height);
                     return new Rect(
                         x: contentRect.X + hitRect.X,
                         y: contentRect.Y + hitRect.Y,
@@ -1087,9 +1122,9 @@ public sealed class EditableText : StatefulWidget
                 }
             }
 
-            var clampedCaretForFallback = Math.Clamp(caretOffset, 0, textLength);
-            var fallbackX = contentRect.X + Math.Min(contentRect.Width, clampedCaretForFallback * Math.Max(1, Widget.FontSize * 0.6));
-            var fallbackHeight = Math.Max(1, Math.Min(contentRect.Height, Widget.FontSize * 1.2));
+            int clampedCaretForFallback = Math.Clamp(caretOffset, 0, textLength);
+            double fallbackX = contentRect.X + Math.Min(contentRect.Width, clampedCaretForFallback * Math.Max(1, Widget.FontSize * 0.6));
+            double fallbackHeight = Math.Max(1, Math.Min(contentRect.Height, Widget.FontSize * 1.2));
             return new Rect(fallbackX, contentRect.Y, 1, fallbackHeight);
         }
 
@@ -1101,7 +1136,7 @@ public sealed class EditableText : StatefulWidget
             }
 
             var controller = _controller!;
-            var text = controller.Text;
+            string text = controller.Text;
             if (!TryCreateTextLayout(_focusNode!, text, out var layout, out _))
             {
                 return MoveCaretVerticalByLineModel(controller, text, moveDown, extendSelection);
@@ -1110,16 +1145,16 @@ public sealed class EditableText : StatefulWidget
             using (layout!)
             {
                 var clampedSelection = controller.Selection.Clamp(text.Length);
-                var caretOffset = clampedSelection.ExtentOffset;
+                int caretOffset = clampedSelection.ExtentOffset;
                 var caretRect = layout!.HitTestTextPosition(caretOffset);
-                var maxX = Math.Max(0, layout.WidthIncludingTrailingWhitespace);
-                var targetX = Math.Clamp(_verticalNavigationX ?? caretRect.X, 0, maxX);
-                var probeDelta = Math.Max(1, caretRect.Height * 0.5);
-                var probeY = moveDown
+                double maxX = Math.Max(0, layout.WidthIncludingTrailingWhitespace);
+                double targetX = Math.Clamp(_verticalNavigationX ?? caretRect.X, 0, maxX);
+                double probeDelta = Math.Max(1, caretRect.Height * 0.5);
+                double probeY = moveDown
                     ? caretRect.Y + caretRect.Height + probeDelta
                     : caretRect.Y - probeDelta;
                 var hit = layout.HitTestPoint(new Point(targetX, probeY));
-                var nextOffset = Math.Clamp(
+                int nextOffset = Math.Clamp(
                     hit.CharacterHit.FirstCharacterIndex + hit.CharacterHit.TrailingLength,
                     0,
                     text.Length);
@@ -1141,9 +1176,9 @@ public sealed class EditableText : StatefulWidget
             bool extendSelection)
         {
             var clampedSelection = controller.Selection.Clamp(text.Length);
-            var caretOffset = clampedSelection.ExtentOffset;
+            int caretOffset = clampedSelection.ExtentOffset;
             var lineStarts = new List<int> { 0 };
-            for (var index = 0; index < text.Length; index++)
+            for (int index = 0; index < text.Length; index++)
             {
                 if (text[index] == '\n')
                 {
@@ -1151,8 +1186,8 @@ public sealed class EditableText : StatefulWidget
                 }
             }
 
-            var currentLineIndex = 0;
-            for (var index = 1; index < lineStarts.Count; index++)
+            int currentLineIndex = 0;
+            for (int index = 1; index < lineStarts.Count; index++)
             {
                 if (lineStarts[index] > caretOffset)
                 {
@@ -1162,25 +1197,25 @@ public sealed class EditableText : StatefulWidget
                 currentLineIndex = index;
             }
 
-            var targetLineIndex = moveDown ? currentLineIndex + 1 : currentLineIndex - 1;
+            int targetLineIndex = moveDown ? currentLineIndex + 1 : currentLineIndex - 1;
             if (targetLineIndex < 0 || targetLineIndex >= lineStarts.Count)
             {
                 return false;
             }
 
-            var currentLineStart = lineStarts[currentLineIndex];
-            var currentLineEnd = currentLineIndex + 1 < lineStarts.Count
+            int currentLineStart = lineStarts[currentLineIndex];
+            int currentLineEnd = currentLineIndex + 1 < lineStarts.Count
                 ? lineStarts[currentLineIndex + 1] - 1
                 : text.Length;
-            var currentLineColumn = Math.Clamp(caretOffset - currentLineStart, 0, currentLineEnd - currentLineStart);
-            var preferredColumn = _verticalNavigationColumn ?? currentLineColumn;
+            int currentLineColumn = Math.Clamp(caretOffset - currentLineStart, 0, currentLineEnd - currentLineStart);
+            int preferredColumn = _verticalNavigationColumn ?? currentLineColumn;
 
-            var targetLineStart = lineStarts[targetLineIndex];
-            var targetLineEnd = targetLineIndex + 1 < lineStarts.Count
+            int targetLineStart = lineStarts[targetLineIndex];
+            int targetLineEnd = targetLineIndex + 1 < lineStarts.Count
                 ? lineStarts[targetLineIndex + 1] - 1
                 : text.Length;
-            var targetLineLength = Math.Max(0, targetLineEnd - targetLineStart);
-            var nextOffset = targetLineStart + Math.Min(preferredColumn, targetLineLength);
+            int targetLineLength = Math.Max(0, targetLineEnd - targetLineStart);
+            int nextOffset = targetLineStart + Math.Min(preferredColumn, targetLineLength);
             var nextSelection = extendSelection
                 ? new TextSelection(clampedSelection.BaseOffset, nextOffset)
                 : TextSelection.Collapsed(nextOffset);
@@ -1198,7 +1233,7 @@ public sealed class EditableText : StatefulWidget
             out Rect contentRect)
         {
             contentRect = ResolveContentRect(node);
-            var maxWidth = Widget.Multiline
+            double maxWidth = Widget.Multiline
                 ? Math.Max(1, contentRect.Width)
                 : double.PositiveInfinity;
 
@@ -1251,13 +1286,13 @@ public sealed class EditableText : StatefulWidget
             if (!Widget.MaxLength.HasValue || string.IsNullOrEmpty(insertion)) return insertion;
             var controller = _controller!;
             var selection = controller.Selection.Clamp(controller.Text.Length);
-            var retained = controller.Text.Remove(selection.Start, selection.End - selection.Start);
-            var remaining = Math.Max(0, Widget.MaxLength.Value - new StringInfo(retained).LengthInTextElements);
+            string retained = controller.Text.Remove(selection.Start, selection.End - selection.Start);
+            int remaining = Math.Max(0, Widget.MaxLength.Value - new StringInfo(retained).LengthInTextElements);
             if (new StringInfo(insertion).LengthInTextElements <= remaining) return insertion;
             if (remaining == 0) return string.Empty;
             var enumerator = StringInfo.GetTextElementEnumerator(insertion);
-            var end = 0;
-            for (var index = 0; index < remaining && enumerator.MoveNext(); index++)
+            int end = 0;
+            for (int index = 0; index < remaining && enumerator.MoveNext(); index++)
                 end = enumerator.ElementIndex + enumerator.GetTextElement().Length;
             return insertion[..end];
         }
@@ -1292,12 +1327,12 @@ public sealed class EditableText : StatefulWidget
             var clampedSelection = selection.Clamp(text.Length);
             if (clampedSelection.IsCollapsed)
             {
-                var caretOffset = clampedSelection.ExtentOffset;
+                int caretOffset = clampedSelection.ExtentOffset;
                 return text[..caretOffset] + "|" + text[caretOffset..];
             }
 
-            var start = clampedSelection.Start;
-            var end = clampedSelection.End;
+            int start = clampedSelection.Start;
+            int end = clampedSelection.End;
             return text[..start] + "[" + text[start..end] + "]" + text[end..];
         }
     }

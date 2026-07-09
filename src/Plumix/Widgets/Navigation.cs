@@ -46,9 +46,9 @@ public sealed class RouteData
             throw new ArgumentException("location cannot be null or whitespace.", nameof(location));
         }
 
-        var normalized = NormalizeLocation(location);
-        var queryIndex = normalized.IndexOf('?', StringComparison.Ordinal);
-        var path = queryIndex >= 0
+        string normalized = NormalizeLocation(location);
+        int queryIndex = normalized.IndexOf('?', StringComparison.Ordinal);
+        string path = queryIndex >= 0
             ? normalized[..queryIndex]
             : normalized;
         if (string.IsNullOrEmpty(path))
@@ -56,7 +56,7 @@ public sealed class RouteData
             path = "/";
         }
 
-        var query = queryIndex >= 0 ? normalized[(queryIndex + 1)..] : string.Empty;
+        string query = queryIndex >= 0 ? normalized[(queryIndex + 1)..] : string.Empty;
         return new RouteData(
             name: path,
             queryParameters: ParseQueryParameters(query),
@@ -68,7 +68,7 @@ public sealed class RouteData
         if (location.Contains("://", StringComparison.Ordinal)
             && Uri.TryCreate(location, UriKind.Absolute, out var absoluteUri))
         {
-            var normalized = absoluteUri.PathAndQuery;
+            string normalized = absoluteUri.PathAndQuery;
             if (!string.IsNullOrEmpty(absoluteUri.Fragment))
             {
                 normalized += absoluteUri.Fragment;
@@ -88,18 +88,18 @@ public sealed class RouteData
         }
 
         var parameters = new Dictionary<string, string>(StringComparer.Ordinal);
-        foreach (var pair in query.Split('&', StringSplitOptions.RemoveEmptyEntries))
+        foreach (string pair in query.Split('&', StringSplitOptions.RemoveEmptyEntries))
         {
-            var separatorIndex = pair.IndexOf('=', StringComparison.Ordinal);
-            var rawKey = separatorIndex < 0 ? pair : pair[..separatorIndex];
+            int separatorIndex = pair.IndexOf('=', StringComparison.Ordinal);
+            string rawKey = separatorIndex < 0 ? pair : pair[..separatorIndex];
             if (rawKey.Length == 0)
             {
                 continue;
             }
 
-            var rawValue = separatorIndex < 0 ? string.Empty : pair[(separatorIndex + 1)..];
-            var key = Uri.UnescapeDataString(rawKey.Replace('+', ' '));
-            var value = Uri.UnescapeDataString(rawValue.Replace('+', ' '));
+            string rawValue = separatorIndex < 0 ? string.Empty : pair[(separatorIndex + 1)..];
+            string key = Uri.UnescapeDataString(rawKey.Replace('+', ' '));
+            string value = Uri.UnescapeDataString(rawValue.Replace('+', ' '));
             parameters[key] = value;
         }
 
@@ -174,7 +174,7 @@ public abstract class Route
     {
         get
         {
-            var hasDismissalLocalHistory = _localHistoryEntries?.Any(entry => entry.ImpliesAppBarDismissal) == true;
+            bool hasDismissalLocalHistory = _localHistoryEntries?.Any(entry => entry.ImpliesAppBarDismissal) == true;
             return hasDismissalLocalHistory || (Navigator?.CanPop ?? false);
         }
     }
@@ -828,7 +828,7 @@ public sealed class NavigatorState : State
     private IReadOnlyList<Route> VisibleRoutes()
     {
         if (_history.Count == 0) return [];
-        var firstVisible = _history.Count - 1;
+        int firstVisible = _history.Count - 1;
         while (firstVisible > 0 && !_history[firstVisible].Opaque)
         {
             firstVisible--;
@@ -1131,7 +1131,7 @@ public sealed class NavigatorState : State
         SetState(() =>
         {
             CancelHeroTransition(disposeDetachedRoute: true);
-            var index = _history.FindIndex(existing => ReferenceEquals(existing, route));
+            int index = _history.FindIndex(existing => ReferenceEquals(existing, route));
             if (index < 0)
             {
                 throw new InvalidOperationException("Route is not present in Navigator history.");
@@ -1156,13 +1156,13 @@ public sealed class NavigatorState : State
         SetState(() =>
         {
             CancelHeroTransition(disposeDetachedRoute: true);
-            var anchorIndex = _history.FindIndex(existing => ReferenceEquals(existing, anchorRoute));
+            int anchorIndex = _history.FindIndex(existing => ReferenceEquals(existing, anchorRoute));
             if (anchorIndex < 0)
             {
                 throw new InvalidOperationException("Anchor route is not present in Navigator history.");
             }
 
-            var removeIndex = anchorIndex - 1;
+            int removeIndex = anchorIndex - 1;
             if (removeIndex < 0)
             {
                 throw new InvalidOperationException("Anchor route does not have a route below it.");
@@ -1382,7 +1382,7 @@ public sealed class NavigatorState : State
 
         NotifyObserversPop(route, previousRoute);
 
-        var shouldAnimateHero = previousRoute != null && _heroTransitionController.HasHeroes(route);
+        bool shouldAnimateHero = previousRoute != null && _heroTransitionController.HasHeroes(route);
         if (shouldAnimateHero)
         {
             TryStartHeroTransition(
@@ -1438,7 +1438,7 @@ public sealed class NavigatorState : State
             throw new ArgumentOutOfRangeException(nameof(index));
         }
 
-        var wasTopRoute = index == _history.Count - 1;
+        bool wasTopRoute = index == _history.Count - 1;
         var previousRoute = index > 0 ? _history[index - 1] : null;
         var nextRoute = index + 1 < _history.Count ? _history[index + 1] : null;
         var removedRoute = _history[index];
@@ -1470,7 +1470,7 @@ public sealed class NavigatorState : State
             return ResolveRouteData(CurrentWidget.InitialRouteData);
         }
 
-        var routeName = CurrentWidget.InitialRouteName;
+        string? routeName = CurrentWidget.InitialRouteName;
         if (string.IsNullOrWhiteSpace(routeName))
         {
             throw new InvalidOperationException("Navigator requires either InitialRoute or InitialRouteName.");
@@ -1748,7 +1748,7 @@ internal static class NavigatorBackButtonDispatcher
 
     public static bool DispatchBackButton()
     {
-        for (var index = Handlers.Count - 1; index >= 0; index -= 1)
+        for (int index = Handlers.Count - 1; index >= 0; index -= 1)
         {
             if (Handlers[index]())
             {

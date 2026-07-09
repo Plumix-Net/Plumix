@@ -176,7 +176,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
     public async Task ShowMenu_UsesPositionThemeSurfaceShrinkWrapAndCompletesSelection()
     {
         BuildContext captured = default;
-        var itemTapCount = 0;
+        int itemTapCount = 0;
         using var harness = new WidgetRenderHarness(Wrap(
             ThemeData.Light with { Platform = TargetPlatform.Android },
             new Navigator(new BuilderPageRoute(context => new CaptureContext(
@@ -303,8 +303,8 @@ public sealed class MaterialPopupMenuTests : IDisposable
     [Fact]
     public async Task PopupMenuButton_AnchorsUnderButtonSkipsDisabledKeyboardItemAndReportsCancel()
     {
-        var opened = 0;
-        var canceled = 0;
+        int opened = 0;
+        int canceled = 0;
         string? selected = null;
         using var harness = new WidgetRenderHarness(Wrap(
             ThemeData.Light,
@@ -364,7 +364,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
 
     private static async Task WaitForConditionAsync(Func<bool> condition)
     {
-        for (var i = 0; i < 100 && !condition(); i++) await Task.Delay(10);
+        for (int i = 0; i < 100 && !condition(); i++) await Task.Delay(10);
     }
 
     private static Widget Wrap(ThemeData theme, Widget child) =>
@@ -376,7 +376,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
 
     private static void PumpAnimation()
     {
-        var now = Scheduler.CurrentSeconds;
+        double now = Scheduler.CurrentSeconds;
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
     }
@@ -407,7 +407,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
     private static string DumpSemantics(SemanticsNode? node, int depth = 0)
     {
         if (node is null) return "<null>";
-        var line = $"{new string(' ', depth * 2)}label={node.Label ?? "<null>"}; flags={node.Flags}; actions={node.Actions}";
+        string line = $"{new string(' ', depth * 2)}label={node.Label ?? "<null>"}; flags={node.Flags}; actions={node.Actions}";
         return string.Join("\n", new[] { line }.Concat(node.Children.Select(child => DumpSemantics(child, depth + 1))));
     }
 

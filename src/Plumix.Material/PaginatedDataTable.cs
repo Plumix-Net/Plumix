@@ -183,7 +183,7 @@ public sealed class PaginatedDataTableState : State
     public void PageTo(int rowIndex)
     {
         if (rowIndex < 0) throw new ArgumentOutOfRangeException(nameof(rowIndex));
-        var oldIndex = _firstRowIndex;
+        int oldIndex = _firstRowIndex;
         SetState(() => _firstRowIndex = (rowIndex / CurrentWidget.RowsPerPage) * CurrentWidget.RowsPerPage);
         if (oldIndex != _firstRowIndex) CurrentWidget.OnPageChanged?.Invoke(_firstRowIndex);
     }
@@ -242,7 +242,7 @@ public sealed class PaginatedDataTableState : State
 
         if (!widget.ShowEmptyRows)
         {
-            var missingRows = Math.Clamp(widget.RowsPerPage - _rowCount + _firstRowIndex, 0, widget.RowsPerPage);
+            int missingRows = Math.Clamp(widget.RowsPerPage - _rowCount + _firstRowIndex, 0, widget.RowsPerPage);
             if (missingRows > 0) children.Add(new SizedBox(height: (widget.DataRowMaxHeight ?? 48) * missingRows));
         }
 
@@ -281,7 +281,7 @@ public sealed class PaginatedDataTableState : State
                         value => widget.OnRowsPerPageChanged?.Invoke(value),
                         value: widget.RowsPerPage)))));
         }
-        var lastRow = Math.Min(_firstRowIndex + widget.RowsPerPage, _rowCount);
+        int lastRow = Math.Min(_firstRowIndex + widget.RowsPerPage, _rowCount);
         footer.Add(new SizedBox(width: 32));
         footer.Add(new Text(localizations.PageRowsInfoTitle(
             Math.Min(_firstRowIndex + 1, Math.Max(_rowCount, 1)),
@@ -311,8 +311,8 @@ public sealed class PaginatedDataTableState : State
     private IReadOnlyList<DataRow> GetRows(int firstRowIndex, int rowsPerPage)
     {
         var result = new List<DataRow>();
-        var haveProgress = false;
-        for (var index = firstRowIndex; index < firstRowIndex + rowsPerPage; index++)
+        bool haveProgress = false;
+        for (int index = firstRowIndex; index < firstRowIndex + rowsPerPage; index++)
         {
             DataRow? row = null;
             if (index < _rowCount || _rowCountApproximate)
@@ -338,7 +338,7 @@ public sealed class PaginatedDataTableState : State
 
     private DataRow ProgressRow(int index)
     {
-        var inserted = false;
+        bool inserted = false;
         var cells = CurrentWidget.Columns.Select(column =>
         {
             if (!inserted && !column.Numeric)

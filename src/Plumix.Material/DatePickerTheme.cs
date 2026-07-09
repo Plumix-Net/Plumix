@@ -71,8 +71,8 @@ public sealed class DatePickerTheme : InheritedWidget
     internal static DatePickerThemeData Defaults(BuildContext context)
     {
         var theme = Theme.Of(context);
-        var m3 = theme.UseMaterial3;
-        var pressedOpacity = m3 ? 0.10 : 0.12;
+        bool m3 = theme.UseMaterial3;
+        double pressedOpacity = m3 ? 0.10 : 0.12;
         var dayStyle = m3 ? theme.TextTheme.BodyLarge : theme.TextTheme.BodySmall;
         var weekdayStyle = m3
             ? theme.TextTheme.BodyLarge.CopyWith(color: theme.OnSurfaceColor)

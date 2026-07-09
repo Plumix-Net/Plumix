@@ -111,7 +111,7 @@ public static class BoxFitUtils
             case BoxFit.ScaleDown:
                 sourceSize = inputSize;
                 destinationSize = inputSize;
-                var aspectRatio = inputSize.Width / inputSize.Height;
+                double aspectRatio = inputSize.Width / inputSize.Height;
 
                 if (destinationSize.Height > outputSize.Height)
                 {

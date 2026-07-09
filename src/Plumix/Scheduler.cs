@@ -202,8 +202,8 @@ public static class Scheduler
             return;
         }
 
-        var count = _postFrameCallbacks.Count;
-        for (var index = 0; index < count; index++)
+        int count = _postFrameCallbacks.Count;
+        for (int index = 0; index < count; index++)
         {
             var callback = _postFrameCallbacks.Dequeue();
             callback(timestamp);

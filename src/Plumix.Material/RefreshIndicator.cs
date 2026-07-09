@@ -102,7 +102,7 @@ public sealed class RefreshProgressIndicator : CircularProgressIndicator
 
             var theme = Theme.Of(context);
             var indicatorTheme = ProgressIndicatorTheme.Of(context);
-            var value = widget.Value.HasValue
+            double? value = widget.Value.HasValue
                 ? Math.Clamp(widget.Value.Value, 0.0, 1.0)
                 : (double?)null;
 
@@ -116,18 +116,18 @@ public sealed class RefreshProgressIndicator : CircularProgressIndicator
                 _controller.Repeat();
             }
 
-            var animationValue = _controller?.Evaluate() ?? 0.0;
-            var arcStart = -Math.PI / 2.0;
+            double animationValue = _controller?.Evaluate() ?? 0.0;
+            double arcStart = -Math.PI / 2.0;
             double arcSweep;
             double arrowheadScale;
 
             if (value.HasValue)
             {
-                var converted = TransformInterval(value.Value, 0.1, 0.33);
+                double converted = TransformInterval(value.Value, 0.1, 0.33);
                 arrowheadScale = converted;
-                var headValue = 1.05 * Curves.FastOutSlowIn(converted);
-                var offsetValue = converted * 0.5;
-                var rotationValue = converted * 0.3;
+                double headValue = 1.05 * Curves.FastOutSlowIn(converted);
+                double offsetValue = converted * 0.5;
+                double rotationValue = converted * 0.3;
                 arcSweep = Math.Max(0.001, Math.Min(FullSweep, headValue * Math.PI * 1.5));
                 arcStart += (rotationValue * Math.PI * 2.0)
                             + (offsetValue * Math.PI * 0.5)
@@ -150,9 +150,9 @@ public sealed class RefreshProgressIndicator : CircularProgressIndicator
             var resolvedBackground = widget.BackgroundColor
                                      ?? indicatorTheme.RefreshBackgroundColor
                                      ?? theme.CanvasColor;
-            var resolvedStrokeAlign = widget.StrokeAlign
-                                      ?? indicatorTheme.StrokeAlign
-                                      ?? 0.0;
+            double resolvedStrokeAlign = widget.StrokeAlign
+                                         ?? indicatorTheme.StrokeAlign
+                                         ?? 0.0;
             var resolvedStrokeCap = widget.StrokeCap
                                     ?? indicatorTheme.StrokeCap;
 
@@ -181,7 +181,7 @@ public sealed class RefreshProgressIndicator : CircularProgressIndicator
                 child: child);
             child = new Padding(widget.IndicatorMargin, child);
 
-            var semanticsLabel = ResolveSemanticsLabel(value);
+            string? semanticsLabel = ResolveSemanticsLabel(value);
             if (!string.IsNullOrWhiteSpace(semanticsLabel))
             {
                 child = new Semantics(label: semanticsLabel, child: child);
@@ -208,8 +208,8 @@ public sealed class RefreshProgressIndicator : CircularProgressIndicator
 
         private string? ResolveSemanticsLabel(double? value)
         {
-            var label = CurrentWidget.SemanticsLabel;
-            var semanticsValue = CurrentWidget.SemanticsValue;
+            string? label = CurrentWidget.SemanticsLabel;
+            string? semanticsValue = CurrentWidget.SemanticsValue;
             if (string.IsNullOrWhiteSpace(semanticsValue) && value.HasValue)
             {
                 semanticsValue = $"{Math.Round(value.Value * 100)}%";
@@ -246,11 +246,11 @@ public sealed class RefreshProgressIndicator : CircularProgressIndicator
 
         private static void ResolveIndeterminateArc(double value, out double start, out double sweep)
         {
-            var t = Math.Clamp(value, 0.0, 1.0);
-            var pathValue = SawTooth(t, 2222);
-            var head = Curves.FastOutSlowIn(Math.Clamp(pathValue / 0.5, 0.0, 1.0));
-            var tail = Curves.FastOutSlowIn(Math.Clamp((pathValue - 0.5) / 0.5, 0.0, 1.0));
-            var rotationValue = SawTooth(t, 1333);
+            double t = Math.Clamp(value, 0.0, 1.0);
+            double pathValue = SawTooth(t, 2222);
+            double head = Curves.FastOutSlowIn(Math.Clamp(pathValue / 0.5, 0.0, 1.0));
+            double tail = Curves.FastOutSlowIn(Math.Clamp((pathValue - 0.5) / 0.5, 0.0, 1.0));
+            double rotationValue = SawTooth(t, 1333);
             start = -Math.PI / 2.0
                     + (tail * Math.PI * 1.5)
                     + (rotationValue * Math.PI * 2.0)
@@ -260,7 +260,7 @@ public sealed class RefreshProgressIndicator : CircularProgressIndicator
 
         private static double SawTooth(double value, int count)
         {
-            var transformed = Math.Clamp(value, 0.0, 1.0) * count;
+            double transformed = Math.Clamp(value, 0.0, 1.0) * count;
             return transformed - Math.Floor(transformed);
         }
 
@@ -518,12 +518,12 @@ public sealed class RefreshIndicatorState : State
 
         if (_status is not null && CurrentWidget.IndicatorType != RefreshIndicatorType.NoSpinner)
         {
-            var atTop = _isIndicatorAtTop ?? true;
-            var revealFactor = Math.Clamp(_positionValue * DragSizeFactorLimit, 0.0, DragSizeFactorLimit);
+            bool atTop = _isIndicatorAtTop ?? true;
+            double revealFactor = Math.Clamp(_positionValue * DragSizeFactorLimit, 0.0, DragSizeFactorLimit);
             Widget indicator = BuildIndicator(context);
             if (_status == RefreshIndicatorStatus.Done)
             {
-                var scale = Math.Clamp(1.0 - _scaleValue, 0.0, 1.0);
+                double scale = Math.Clamp(1.0 - _scaleValue, 0.0, 1.0);
                 const double center = 24.5;
                 indicator = new Opacity(
                     scale,
@@ -578,7 +578,7 @@ public sealed class RefreshIndicatorState : State
     {
         var widget = CurrentWidget;
         var theme = Theme.Of(context);
-        var showIndeterminate = _status is RefreshIndicatorStatus.Refresh or RefreshIndicatorStatus.Done;
+        bool showIndeterminate = _status is RefreshIndicatorStatus.Refresh or RefreshIndicatorStatus.Done;
 
         if (widget.IndicatorType == RefreshIndicatorType.Adaptive
             && theme.Platform is TargetPlatform.IOS or TargetPlatform.MacOS)
@@ -612,7 +612,7 @@ public sealed class RefreshIndicatorState : State
             return false;
         }
 
-        var atTopNow = notification.Metrics.AxisDirection switch
+        bool? atTopNow = notification.Metrics.AxisDirection switch
         {
             AxisDirection.Down or AxisDirection.Up => true,
             _ => (bool?)null,
@@ -630,7 +630,7 @@ public sealed class RefreshIndicatorState : State
         {
             if (_status is RefreshIndicatorStatus.Drag or RefreshIndicatorStatus.Armed)
             {
-                var delta = update.ScrollDelta ?? 0.0;
+                double delta = update.ScrollDelta ?? 0.0;
                 _dragOffset = notification.Metrics.AxisDirection == AxisDirection.Down
                     ? (_dragOffset ?? 0) - delta
                     : (_dragOffset ?? 0) + delta;
@@ -667,14 +667,14 @@ public sealed class RefreshIndicatorState : State
 
     private bool ShouldStart(ScrollNotification notification)
     {
-        var isDragStart = notification is ScrollStartNotification { HasDragDetails: true };
-        var isAnywhereUpdate = notification is ScrollUpdateNotification { HasDragDetails: true }
-                               && CurrentWidget.TriggerMode == RefreshIndicatorTriggerMode.Anywhere;
+        bool isDragStart = notification is ScrollStartNotification { HasDragDetails: true };
+        bool isAnywhereUpdate = notification is ScrollUpdateNotification { HasDragDetails: true }
+                                && CurrentWidget.TriggerMode == RefreshIndicatorTriggerMode.Anywhere;
         if (!isDragStart && !isAnywhereUpdate) return false;
 
         var metrics = notification.Metrics;
-        var atSupportedEdge = (metrics.AxisDirection == AxisDirection.Down && metrics.ExtentBefore <= 0.0001)
-                              || (metrics.AxisDirection == AxisDirection.Up && metrics.ExtentAfter <= 0.0001);
+        bool atSupportedEdge = (metrics.AxisDirection == AxisDirection.Down && metrics.ExtentBefore <= 0.0001)
+                               || (metrics.AxisDirection == AxisDirection.Up && metrics.ExtentAfter <= 0.0001);
         return atSupportedEdge && _status is null && Start(metrics.AxisDirection);
     }
 
@@ -691,7 +691,7 @@ public sealed class RefreshIndicatorState : State
     private void CheckDragOffset(double containerExtent)
     {
         if (containerExtent <= 0) return;
-        var newValue = (_dragOffset ?? 0) / (containerExtent * DragContainerExtentPercentage);
+        double newValue = (_dragOffset ?? 0) / (containerExtent * DragContainerExtentPercentage);
         if (_status == RefreshIndicatorStatus.Armed)
         {
             newValue = Math.Max(newValue, 1.0 / DragSizeFactorLimit);
@@ -741,7 +741,7 @@ public sealed class RefreshIndicatorState : State
     private void HandleTransitionChanged()
     {
         if (!_mounted || _transitionController is null) return;
-        var value = _transitionFrom + ((_transitionTo - _transitionFrom) * _transitionController.Evaluate());
+        double value = _transitionFrom + ((_transitionTo - _transitionFrom) * _transitionController.Evaluate());
         if (_status == RefreshIndicatorStatus.Done)
         {
             _scaleValue = value;

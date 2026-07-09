@@ -41,7 +41,7 @@ public sealed class MaterialRefreshIndicatorTests : IDisposable
         using var harness = new WidgetRenderHarness(Wrap(widget));
         harness.Pump(new Size(120, 120));
 
-        var render = FindDescendantByTypeName(harness.RenderView, "RenderCircularProgressIndicator");
+        object? render = FindDescendantByTypeName(harness.RenderView, "RenderCircularProgressIndicator");
         Assert.NotNull(render);
         Assert.Equal(17.0, ReadProperty<Size>(render!, "Size").Width, 3);
         Assert.Equal(2.5, ReadProperty<double>(render, "StrokeWidth"), 3);
@@ -65,7 +65,7 @@ public sealed class MaterialRefreshIndicatorTests : IDisposable
 
         using var themed = new WidgetRenderHarness(Wrap(new RefreshProgressIndicator(value: 0.4), theme));
         themed.Pump(new Size(120, 120));
-        var themedRender = FindDescendantByTypeName(themed.RenderView, "RenderCircularProgressIndicator");
+        object? themedRender = FindDescendantByTypeName(themed.RenderView, "RenderCircularProgressIndicator");
         Assert.NotNull(themedRender);
         Assert.Equal(Colors.MediumPurple, ReadProperty<Color>(themedRender!, "ValueColor"));
         Assert.Equal(-1.0, ReadProperty<double>(themedRender, "StrokeAlign"), 3);
@@ -81,7 +81,7 @@ public sealed class MaterialRefreshIndicatorTests : IDisposable
                 strokeCap: StrokeCap.Square),
             theme));
         explicitHarness.Pump(new Size(120, 120));
-        var explicitRender = FindDescendantByTypeName(explicitHarness.RenderView, "RenderCircularProgressIndicator");
+        object? explicitRender = FindDescendantByTypeName(explicitHarness.RenderView, "RenderCircularProgressIndicator");
         Assert.NotNull(explicitRender);
         Assert.Equal(Colors.Crimson, ReadProperty<Color>(explicitRender!, "ValueColor"));
         Assert.Equal(0.5, ReadProperty<double>(explicitRender, "StrokeAlign"), 3);

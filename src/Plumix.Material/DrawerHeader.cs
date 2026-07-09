@@ -46,7 +46,7 @@ public sealed class DrawerHeader : StatelessWidget
 
     public override Widget Build(BuildContext context)
     {
-        var statusBarHeight = MediaQuery.PaddingOf(context).Top;
+        double statusBarHeight = MediaQuery.PaddingOf(context).Top;
         var divider = Divider.CreateBorderSide(context);
         Widget? child = Child;
         if (child is not null)
@@ -284,9 +284,9 @@ public sealed class UserAccountsDrawerHeader : StatefulWidget
 
             if (widget.OnTap is not null)
             {
-                var angle = widget.IsOpen ? Math.PI : 0;
+                double angle = widget.IsOpen ? Math.PI : 0;
                 var transform = RotationAroundCenter(angle, 12);
-                var semanticLabel = widget.IsOpen
+                string semanticLabel = widget.IsOpen
                     ? MaterialLocalizations.Of(context).HideAccountsLabel
                     : MaterialLocalizations.Of(context).ShowAccountsLabel;
                 children.Add(new SizedBox(
@@ -324,8 +324,8 @@ public sealed class UserAccountsDrawerHeader : StatefulWidget
 
         private static Matrix RotationAroundCenter(double angle, double center)
         {
-            var cos = Math.Cos(angle);
-            var sin = Math.Sin(angle);
+            double cos = Math.Cos(angle);
+            double sin = Math.Sin(angle);
             return new Matrix(
                 cos,
                 sin,

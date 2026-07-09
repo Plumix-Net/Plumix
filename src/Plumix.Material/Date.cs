@@ -130,7 +130,7 @@ public static class DateUtils
 
     public static int FirstDayOffset(int year, int month, MaterialLocalizations localizations)
     {
-        var weekdayFromSunday = (int)new DateTime(year, month, 1).DayOfWeek;
+        int weekdayFromSunday = (int)new DateTime(year, month, 1).DayOfWeek;
         return ((weekdayFromSunday - localizations.FirstDayOfWeekIndex) % 7 + 7) % 7;
     }
 

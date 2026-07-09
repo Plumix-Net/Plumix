@@ -18,8 +18,8 @@ public sealed class FormTests : IDisposable
         FormState? formState = null;
         FormFieldState<string>? fieldState = null;
         string? saved = null;
-        var resets = 0;
-        var formChanges = 0;
+        int resets = 0;
+        int formChanges = 0;
         using var harness = new WidgetRenderHarness(new Directionality(
             TextDirection.Ltr,
             new Form(

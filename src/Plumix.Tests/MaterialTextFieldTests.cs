@@ -165,7 +165,7 @@ public sealed class MaterialTextFieldTests : IDisposable
     {
         var controller = new TextEditingController("initial");
         FormState? formState = null;
-        var formChanged = 0;
+        int formChanged = 0;
         var changedValues = new List<string>();
         string? saved = null;
         using var harness = new WidgetRenderHarness(Wrap(new Form(

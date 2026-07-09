@@ -62,7 +62,7 @@ public sealed class MaterialTabsTests
         Assert.True(controller.IndexIsChanging);
         Assert.Equal(0, controller.AnimationValue);
 
-        var now = Scheduler.CurrentSeconds;
+        double now = Scheduler.CurrentSeconds;
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.16));
         Assert.InRange(controller.AnimationValue, 0.5, 1.9);
@@ -185,7 +185,7 @@ public sealed class MaterialTabsTests
     public void TabBar_TapUsesGestureRouteAndAnimatesIndicator()
     {
         using var controller = new TabController(2);
-        var tapped = -1;
+        int tapped = -1;
         using var harness = new WidgetRenderHarness(Wrap(new TabBar(
             controller: controller,
             onTap: index => tapped = index,
@@ -204,7 +204,7 @@ public sealed class MaterialTabsTests
         Assert.Equal(1, tapped);
         Assert.True(controller.IndexIsChanging);
 
-        var clock = Scheduler.CurrentSeconds;
+        double clock = Scheduler.CurrentSeconds;
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.01));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.35));
         harness.Pump(new Size(300, 100));
@@ -249,7 +249,7 @@ public sealed class MaterialTabsTests
         harness.Pump(new Size(300, 180));
 
         controller.AnimateTo(2);
-        var clock = Scheduler.CurrentSeconds;
+        double clock = Scheduler.CurrentSeconds;
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.01));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.35));
         harness.Pump(new Size(300, 180));
@@ -294,6 +294,148 @@ public sealed class MaterialTabsTests
     }
 
     [Fact]
+    public void TabPageSelectorIndicator_MatchesCircleGeometryAndBorderStyle()
+    {
+        var indicator = new TabPageSelectorIndicator(
+            backgroundColor: Colors.Red,
+            borderColor: Colors.Blue,
+            size: 16);
+        Assert.Equal(Colors.Red, indicator.BackgroundColor);
+        Assert.Equal(Colors.Blue, indicator.BorderColor);
+        Assert.Equal(16, indicator.Size);
+        Assert.Equal(BorderStyle.Solid, indicator.BorderStyle);
+
+        using var harness = new WidgetRenderHarness(Wrap(indicator));
+        harness.Pump(new Size(100, 100));
+        var decoration = Assert.Single(FindDescendants<RenderDecoratedBox>(harness.RenderView),
+            box => box.Decoration.Shape == BoxShape.Circle);
+        Assert.Equal(Colors.Red, decoration.Decoration.Color);
+        Assert.Equal(new BorderSide(Colors.Blue), decoration.Decoration.Border);
+        Assert.Equal(new Size(16, 16), decoration.Size);
+        Assert.Equal(new Size(24, 24), harness.RenderView.Child!.Size);
+
+        using var borderless = new WidgetRenderHarness(Wrap(new TabPageSelectorIndicator(
+            backgroundColor: Colors.Red,
+            borderColor: Colors.Blue,
+            size: 12,
+            borderStyle: BorderStyle.None)));
+        borderless.Pump(new Size(100, 100));
+        Assert.Equal(
+            new BorderSide(Colors.Blue, style: BorderStyle.None),
+            Assert.Single(FindDescendants<RenderDecoratedBox>(borderless.RenderView),
+                box => box.Decoration.Shape == BoxShape.Circle).Decoration.Border);
+    }
+
+    [Fact]
+    public void TabPageSelector_DefaultsUseControllerLengthAndThemeSecondaryColor()
+    {
+        using var controller = new TabController(length: 3, initialIndex: 1);
+        var selector = new TabPageSelector(controller: controller);
+        Assert.Equal(12, selector.IndicatorSize);
+        Assert.Null(selector.Color);
+        Assert.Null(selector.SelectedColor);
+        Assert.Null(selector.BorderStyle);
+
+        using var harness = new WidgetRenderHarness(Wrap(selector));
+        harness.Pump(new Size(200, 60));
+        var circles = FindDescendants<RenderDecoratedBox>(harness.RenderView)
+            .Where(box => box.Decoration.Shape == BoxShape.Circle)
+            .ToArray();
+        Assert.Equal(3, circles.Length);
+        Assert.Equal([Colors.Transparent, ThemeData.Light.SecondaryColor, Colors.Transparent],
+            circles.Select(circle => circle.Decoration.Color!.Value).ToArray());
+        Assert.All(circles, circle => Assert.Equal(
+            new BorderSide(ThemeData.Light.SecondaryColor),
+            circle.Decoration.Border));
+        Assert.Equal(new Size(60, 20), harness.RenderView.Child!.Size);
+    }
+
+    [Fact]
+    public void TabPageSelector_RespondsToImmediateIndexAndDragOffsetChanges()
+    {
+        using var controller = new TabController(length: 3, initialIndex: 1);
+        using var harness = new WidgetRenderHarness(Wrap(new TabPageSelector(
+            controller: controller,
+            color: Colors.Transparent,
+            selectedColor: Colors.Red)));
+        harness.Pump(new Size(200, 60));
+
+        controller.Index = 2;
+        harness.Pump(new Size(200, 60));
+        Assert.Equal([0, 0, 255], SelectorAlphas(harness.RenderView));
+
+        controller.Index = 1;
+        controller.Offset = 0.4;
+        harness.Pump(new Size(200, 60));
+        int[] alphas = SelectorAlphas(harness.RenderView);
+        Assert.Equal(0, alphas[0]);
+        Assert.InRange(alphas[1], 150, 155);
+        Assert.InRange(alphas[2], 100, 105);
+    }
+
+    [Fact]
+    public void TabPageSelector_InterpolatesOutgoingAndIncomingColorsDuringAnimateTo()
+    {
+        using var controller = new TabController(length: 3);
+        using var harness = new WidgetRenderHarness(Wrap(new TabPageSelector(
+            controller: controller,
+            color: Colors.Transparent,
+            selectedColor: Colors.Red)));
+        harness.Pump(new Size(200, 60));
+
+        controller.AnimateTo(1, duration: TimeSpan.FromMilliseconds(200));
+        double now = Scheduler.CurrentSeconds;
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.04));
+        harness.Pump(new Size(200, 60));
+        int[] early = SelectorAlphas(harness.RenderView);
+        Assert.True(early[0] > early[1]);
+        Assert.Equal(0, early[2]);
+
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.18));
+        harness.Pump(new Size(200, 60));
+        int[] late = SelectorAlphas(harness.RenderView);
+        Assert.True(late[0] < late[1]);
+        Assert.Equal(0, late[2]);
+
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
+        harness.Pump(new Size(200, 60));
+        Assert.Equal([0, 255, 0], SelectorAlphas(harness.RenderView));
+    }
+
+    [Fact]
+    public void TabPageSelector_UsesDefaultControllerAndLocalizedSemantics()
+    {
+        using var harness = new WidgetRenderHarness(Wrap(new DefaultTabController(
+            length: 3,
+            initialIndex: 1,
+            child: new TabPageSelector())));
+        harness.Pump(new Size(200, 60));
+
+        Assert.Contains(FindDescendants<RenderSemanticsAnnotations>(harness.RenderView),
+            semantics => semantics.Label == "Tab 2 of 3");
+        Assert.Equal([0, 255, 0], SelectorAlphas(harness.RenderView));
+    }
+
+    [Fact]
+    public void TabPageSelector_ValidatesControllerAndHandlesZeroArea()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => new TabPageSelector(indicatorSize: 0));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new TabPageSelector(indicatorSize: double.PositiveInfinity));
+        Assert.Throws<InvalidOperationException>(() => new WidgetRenderHarness(Wrap(new TabPageSelector())));
+
+        using var controller = new TabController(2);
+        using var harness = new WidgetRenderHarness(Wrap(new TabPageSelector(controller: controller)));
+        harness.Pump(new Size());
+        controller.AnimateTo(1);
+        double now = Scheduler.CurrentSeconds;
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.35));
+        harness.Pump(new Size());
+        Assert.Equal(new Size(), harness.RenderView.Child!.Size);
+    }
+
+    [Fact]
     public void TabsDemoPage_RendersNestedAppBarBottomAndPageViewAtDesktopSize()
     {
         using var harness = new WidgetRenderHarness(Wrap(new TabsDemoPage()));
@@ -301,6 +443,8 @@ public sealed class MaterialTabsTests
 
         Assert.NotNull(FindDescendant<RenderTabBar>(harness.RenderView));
         Assert.NotNull(FindDescendant<RenderPageViewport>(harness.RenderView));
+        Assert.Equal(4, FindDescendants<RenderDecoratedBox>(harness.RenderView)
+            .Count(box => box.Decoration.Shape == BoxShape.Circle));
     }
 
     private static Widget Wrap(Widget child, ThemeData? theme = null) => new Directionality(
@@ -320,6 +464,23 @@ public sealed class MaterialTabsTests
         T? result = null;
         root.VisitChildren(child => result ??= FindDescendant<T>(child));
         return result;
+    }
+
+    private static List<T> FindDescendants<T>(RenderObject? root) where T : RenderObject
+    {
+        var result = new List<T>();
+        if (root is null) return result;
+        if (root is T match) result.Add(match);
+        root.VisitChildren(child => result.AddRange(FindDescendants<T>(child)));
+        return result;
+    }
+
+    private static int[] SelectorAlphas(RenderObject root)
+    {
+        return FindDescendants<RenderDecoratedBox>(root)
+            .Where(box => box.Decoration.Shape == BoxShape.Circle)
+            .Select(box => (int)box.Decoration.Color!.Value.A)
+            .ToArray();
     }
 
     private sealed class ControllerProbe(Action<TabController> capture) : StatelessWidget

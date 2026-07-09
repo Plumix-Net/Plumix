@@ -28,12 +28,12 @@ public static class Curves
     public static double FastOutSlowIn(double t)
     {
         t = Math.Clamp(t, 0, 1);
-        var parameter = t;
-        for (var i = 0; i < 8; i++)
+        double parameter = t;
+        for (int i = 0; i < 8; i++)
         {
-            var x = Cubic(parameter, 0.4, 0.2) - t;
+            double x = Cubic(parameter, 0.4, 0.2) - t;
             if (Math.Abs(x) < 1e-7) break;
-            var derivative = CubicDerivative(parameter, 0.4, 0.2);
+            double derivative = CubicDerivative(parameter, 0.4, 0.2);
             if (Math.Abs(derivative) < 1e-7) break;
             parameter = Math.Clamp(parameter - (x / derivative), 0, 1);
         }
@@ -43,12 +43,12 @@ public static class Curves
     private static double CubicBezier(double t, double x1, double y1, double x2, double y2)
     {
         t = Math.Clamp(t, 0, 1);
-        var parameter = t;
-        for (var i = 0; i < 8; i++)
+        double parameter = t;
+        for (int i = 0; i < 8; i++)
         {
-            var x = Cubic(parameter, x1, x2) - t;
+            double x = Cubic(parameter, x1, x2) - t;
             if (Math.Abs(x) < 1e-7) break;
-            var derivative = CubicDerivative(parameter, x1, x2);
+            double derivative = CubicDerivative(parameter, x1, x2);
             if (Math.Abs(derivative) < 1e-7) break;
             parameter = Math.Clamp(parameter - (x / derivative), 0, 1);
         }
@@ -58,7 +58,7 @@ public static class Curves
 
     private static double Cubic(double t, double firstControl, double secondControl)
     {
-        var inverse = 1 - t;
+        double inverse = 1 - t;
         return (3 * inverse * inverse * t * firstControl)
                + (3 * inverse * t * t * secondControl)
                + (t * t * t);
@@ -66,7 +66,7 @@ public static class Curves
 
     private static double CubicDerivative(double t, double firstControl, double secondControl)
     {
-        var inverse = 1 - t;
+        double inverse = 1 - t;
         return (3 * inverse * inverse * firstControl)
                + (6 * inverse * t * (secondControl - firstControl))
                + (3 * t * t * (1 - secondControl));
@@ -101,10 +101,10 @@ public sealed class RectTween : Tween<Rect>
 {
     public override Rect Lerp(Rect a, Rect b, double t)
     {
-        var x = a.X + ((b.X - a.X) * t);
-        var y = a.Y + ((b.Y - a.Y) * t);
-        var width = a.Width + ((b.Width - a.Width) * t);
-        var height = a.Height + ((b.Height - a.Height) * t);
+        double x = a.X + ((b.X - a.X) * t);
+        double y = a.Y + ((b.Y - a.Y) * t);
+        double width = a.Width + ((b.Width - a.Width) * t);
+        double height = a.Height + ((b.Height - a.Height) * t);
         return new Rect(x, y, Math.Max(0, width), Math.Max(0, height));
     }
 }
@@ -170,7 +170,7 @@ public sealed class AnimationController : IDisposable
 
     internal void SetValue(double value)
     {
-        var next = Math.Clamp(value, 0, 1);
+        double next = Math.Clamp(value, 0, 1);
         if (Math.Abs(Value - next) <= 0.000001) return;
         Value = next;
         Changed?.Invoke();

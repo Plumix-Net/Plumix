@@ -98,7 +98,7 @@ public sealed class Text : LeafRenderObjectWidget
     private void ApplyResolvedTextStyle(BuildContext context, RenderParagraph paragraph)
     {
         var defaultTextStyle = DefaultTextStyle.Of(context);
-        var textScaleFactor = MediaQuery.MaybeTextScaleFactorOf(context) ?? 1.0;
+        double textScaleFactor = MediaQuery.MaybeTextScaleFactorOf(context) ?? 1.0;
         paragraph.FontFamily = FontFamily ?? defaultTextStyle.FontFamily ?? Avalonia.Media.FontFamily.Default;
         paragraph.FontSize = (FontSize ?? defaultTextStyle.FontSize ?? 14) * textScaleFactor;
         paragraph.Foreground = new SolidColorBrush(Color ?? defaultTextStyle.Color ?? Colors.Black);

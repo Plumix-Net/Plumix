@@ -422,8 +422,8 @@ public sealed class Scrollable : StatefulWidget
         {
             var oldScrollable = (Scrollable)oldWidget;
             var current = CurrentWidget;
-            var controllerChanged = !ReferenceEquals(oldScrollable.Controller, current.Controller);
-            var physicsChanged = !ReferenceEquals(oldScrollable.Physics, current.Physics);
+            bool controllerChanged = !ReferenceEquals(oldScrollable.Controller, current.Controller);
+            bool physicsChanged = !ReferenceEquals(oldScrollable.Physics, current.Physics);
 
             if (!controllerChanged && !physicsChanged)
             {
@@ -520,7 +520,7 @@ public sealed class Scrollable : StatefulWidget
 
         private void HandleHorizontalDragUpdate(DragUpdateDetails details)
         {
-            var delta = IsReversedAxisDirection()
+            double delta = IsReversedAxisDirection()
                 ? -details.PrimaryDelta
                 : details.PrimaryDelta;
             ApplyDragOffset(delta);
@@ -528,7 +528,7 @@ public sealed class Scrollable : StatefulWidget
 
         private void HandleVerticalDragUpdate(DragUpdateDetails details)
         {
-            var delta = IsReversedAxisDirection()
+            double delta = IsReversedAxisDirection()
                 ? -details.PrimaryDelta
                 : details.PrimaryDelta;
             ApplyDragOffset(delta);
@@ -536,7 +536,7 @@ public sealed class Scrollable : StatefulWidget
 
         private void HandleDragEnd(DragEndDetails details)
         {
-            var velocity = IsReversedAxisDirection()
+            double velocity = IsReversedAxisDirection()
                 ? -details.PrimaryVelocity
                 : details.PrimaryVelocity;
             _position.EndDrag(velocity);
@@ -551,9 +551,9 @@ public sealed class Scrollable : StatefulWidget
 
         private void ApplyDragOffset(double delta)
         {
-            var before = _position.Pixels;
-            var adjusted = _position.Physics.ApplyPhysicsToUserOffset(_position, delta);
-            var intendedScrollDelta = -adjusted;
+            double before = _position.Pixels;
+            double adjusted = _position.Physics.ApplyPhysicsToUserOffset(_position, delta);
+            double intendedScrollDelta = -adjusted;
 
             _isApplyingDrag = true;
             try
@@ -565,7 +565,7 @@ public sealed class Scrollable : StatefulWidget
                 _isApplyingDrag = false;
             }
 
-            var actualScrollDelta = _position.Pixels - before;
+            double actualScrollDelta = _position.Pixels - before;
             if (Math.Abs(actualScrollDelta) > 0.0001)
             {
                 new ScrollUpdateNotification(
@@ -575,7 +575,7 @@ public sealed class Scrollable : StatefulWidget
                 SetState(static () => { });
             }
 
-            var overscroll = intendedScrollDelta - actualScrollDelta;
+            double overscroll = intendedScrollDelta - actualScrollDelta;
             if (Math.Abs(overscroll) > 0.0001)
             {
                 new OverscrollNotification(
@@ -592,8 +592,8 @@ public sealed class Scrollable : StatefulWidget
                 return;
             }
 
-            var rawDelta = CurrentWidget.Axis == Axis.Vertical ? scroll.ScrollDelta.Y : scroll.ScrollDelta.X;
-            var delta = IsReversedAxisDirection() ? rawDelta : -rawDelta;
+            double rawDelta = CurrentWidget.Axis == Axis.Vertical ? scroll.ScrollDelta.Y : scroll.ScrollDelta.X;
+            double delta = IsReversedAxisDirection() ? rawDelta : -rawDelta;
             new ScrollStartNotification(CurrentMetrics()).Dispatch(Context);
             _position.ApplyPointerScrollDelta(delta * 40.0);
             new ScrollEndNotification(CurrentMetrics()).Dispatch(Context);
@@ -1105,7 +1105,7 @@ internal sealed class SliverMultiBoxAdaptorElement : RenderObjectElement, IRende
             return;
         }
 
-        if (!_indexByElement.TryGetValue(element, out var index))
+        if (!_indexByElement.TryGetValue(element, out int index))
         {
             return;
         }
@@ -1158,7 +1158,7 @@ internal sealed class SliverMultiBoxAdaptorElement : RenderObjectElement, IRende
 
     private void SyncChildWidgets()
     {
-        foreach (var index in _childElements.Keys.ToArray())
+        foreach (int index in _childElements.Keys.ToArray())
         {
             if (!_childElements.TryGetValue(index, out var oldChild))
             {
@@ -1243,7 +1243,7 @@ internal sealed class SliverMultiBoxAdaptorElement : RenderObjectElement, IRende
 
     private void RemoveMappings(Element child)
     {
-        if (_indexByElement.TryGetValue(child, out var index))
+        if (_indexByElement.TryGetValue(child, out int index))
         {
             _indexByElement.Remove(child);
             _childElements.Remove(index);
@@ -1503,7 +1503,7 @@ public sealed class CustomScrollView : StatelessWidget
 
     public override Widget Build(BuildContext context)
     {
-        var usePrimary = Primary ?? (ScrollDirection == Axis.Vertical && Controller == null);
+        bool usePrimary = Primary ?? (ScrollDirection == Axis.Vertical && Controller == null);
         var effectiveController = Controller;
         if (effectiveController == null && usePrimary)
         {
@@ -1589,6 +1589,7 @@ public sealed class ListView : StatelessWidget
     private readonly double? _itemExtent;
     private readonly Thickness _padding;
     private readonly bool _addAutomaticKeepAlives;
+    private readonly bool _shrinkWrap;
     private readonly double _cacheExtent;
     private readonly CacheExtentStyle _cacheExtentStyle;
 
@@ -1603,7 +1604,8 @@ public sealed class ListView : StatelessWidget
         bool addAutomaticKeepAlives = true,
         double cacheExtent = 250.0,
         CacheExtentStyle cacheExtentStyle = CacheExtentStyle.Pixel,
-        Key? key = null) : base(key)
+        Key? key = null,
+        bool shrinkWrap = false) : base(key)
     {
         if (itemExtent.HasValue && itemExtent.Value <= 0)
         {
@@ -1617,6 +1619,7 @@ public sealed class ListView : StatelessWidget
         Physics = physics;
         _itemExtent = itemExtent;
         _padding = padding ?? default;
+        _shrinkWrap = shrinkWrap;
         _addAutomaticKeepAlives = addAutomaticKeepAlives;
         _cacheExtent = cacheExtent;
         _cacheExtentStyle = cacheExtentStyle;
@@ -1632,6 +1635,7 @@ public sealed class ListView : StatelessWidget
         ScrollPhysics? physics,
         double? itemExtent,
         Thickness? padding,
+        bool shrinkWrap,
         bool addAutomaticKeepAlives,
         double cacheExtent,
         CacheExtentStyle cacheExtentStyle,
@@ -1656,6 +1660,7 @@ public sealed class ListView : StatelessWidget
         Physics = physics;
         _itemExtent = itemExtent;
         _padding = padding ?? default;
+        _shrinkWrap = shrinkWrap;
         _addAutomaticKeepAlives = addAutomaticKeepAlives;
         _cacheExtent = cacheExtent;
         _cacheExtentStyle = cacheExtentStyle;
@@ -1681,7 +1686,8 @@ public sealed class ListView : StatelessWidget
         bool addAutomaticKeepAlives = true,
         double cacheExtent = 250.0,
         CacheExtentStyle cacheExtentStyle = CacheExtentStyle.Pixel,
-        Key? key = null)
+        Key? key = null,
+        bool shrinkWrap = false)
     {
         return new ListView(
             itemCount: itemCount,
@@ -1693,6 +1699,7 @@ public sealed class ListView : StatelessWidget
             physics: physics,
             itemExtent: itemExtent,
             padding: padding,
+            shrinkWrap: shrinkWrap,
             addAutomaticKeepAlives: addAutomaticKeepAlives,
             cacheExtent: cacheExtent,
             cacheExtentStyle: cacheExtentStyle,
@@ -1712,7 +1719,8 @@ public sealed class ListView : StatelessWidget
         bool addAutomaticKeepAlives = true,
         double cacheExtent = 250.0,
         CacheExtentStyle cacheExtentStyle = CacheExtentStyle.Pixel,
-        Key? key = null)
+        Key? key = null,
+        bool shrinkWrap = false)
     {
         return new ListView(
             itemCount: itemCount,
@@ -1724,6 +1732,7 @@ public sealed class ListView : StatelessWidget
             physics: physics,
             itemExtent: itemExtent,
             padding: padding,
+            shrinkWrap: shrinkWrap,
             addAutomaticKeepAlives: addAutomaticKeepAlives,
             cacheExtent: cacheExtent,
             cacheExtentStyle: cacheExtentStyle,
@@ -1735,7 +1744,7 @@ public sealed class ListView : StatelessWidget
         Widget sliver;
         if (_itemBuilder != null)
         {
-            var childCount = _itemCount;
+            int childCount = _itemCount;
             IndexedWidgetBuilder effectiveItemBuilder = _itemBuilder;
 
             if (_separatorBuilder != null)
@@ -1745,7 +1754,7 @@ public sealed class ListView : StatelessWidget
                 childCount = SeparatedChildCount(_itemCount);
                 effectiveItemBuilder = (buildContext, index) =>
                 {
-                    var itemIndex = index / 2;
+                    int itemIndex = index / 2;
                     return index % 2 == 0
                         ? itemBuilder(buildContext, itemIndex)
                         : separatorBuilder(buildContext, itemIndex);
@@ -1787,7 +1796,8 @@ public sealed class ListView : StatelessWidget
             controller: Controller,
             physics: Physics,
             cacheExtent: _cacheExtent,
-            cacheExtentStyle: _cacheExtentStyle);
+            cacheExtentStyle: _cacheExtentStyle,
+            shrinkWrap: _shrinkWrap);
     }
 
     private static int SeparatedChildCount(int itemCount)

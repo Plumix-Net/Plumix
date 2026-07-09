@@ -59,6 +59,12 @@ internal sealed class TabsDemoPageState : State
                         new Text("Tap tabs or swipe pages; the indicator and labels share one TabController.",
                             fontSize: 13,
                             color: Color.Parse("#8A000000")),
+                        new Center(
+                            child: new TabPageSelector(
+                                indicatorSize: _useThemeOverrides ? 16 : 12,
+                                color: _useThemeOverrides ? Color.Parse("#FFB2DFDB") : null,
+                                selectedColor: _useThemeOverrides ? Color.Parse("#FF00695C") : null,
+                                borderStyle: _useThemeOverrides ? BorderStyle.None : null)),
                         new Expanded(
                             child: new Scaffold(
                                 appBar: new AppBar(

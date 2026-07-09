@@ -103,10 +103,10 @@ public sealed class RenderTable : RenderBox,
 
         // Flutter's intrinsic table layout first negotiates a width per column,
         // then lays every cell out again with the resolved width.
-        for (var index = 0; index < children.Length; index++)
+        for (int index = 0; index < children.Length; index++)
         {
             var child = children[index];
-            var column = index % _columns;
+            int column = index % _columns;
             var width = ResolveWidth(column);
             if (width is FixedColumnWidth fixedWidth)
             {
@@ -118,13 +118,13 @@ public sealed class RenderTable : RenderBox,
             _resolvedColumnWidths[column] = Math.Max(_resolvedColumnWidths[column], child.Size.Width);
         }
 
-        var intrinsicWidth = _resolvedColumnWidths.Sum();
-        var targetWidth = Constraints.HasBoundedWidth
+        double intrinsicWidth = _resolvedColumnWidths.Sum();
+        double targetWidth = Constraints.HasBoundedWidth
             ? Constraints.MaxWidth
             : Constraints.ConstrainWidth(intrinsicWidth);
-        var remaining = Math.Max(0, targetWidth - intrinsicWidth);
-        var flexTotal = 0.0;
-        for (var column = 0; column < _columns; column++)
+        double remaining = Math.Max(0, targetWidth - intrinsicWidth);
+        double flexTotal = 0.0;
+        for (int column = 0; column < _columns; column++)
         {
             if (ResolveWidth(column) is IntrinsicColumnWidth { Flex: > 0 } flexible)
             {
@@ -133,7 +133,7 @@ public sealed class RenderTable : RenderBox,
         }
         if (remaining > 0 && flexTotal > 0)
         {
-            for (var column = 0; column < _columns; column++)
+            for (int column = 0; column < _columns; column++)
             {
                 if (ResolveWidth(column) is IntrinsicColumnWidth { Flex: > 0 } flexible)
                 {
@@ -142,24 +142,24 @@ public sealed class RenderTable : RenderBox,
             }
         }
 
-        for (var index = 0; index < children.Length; index++)
+        for (int index = 0; index < children.Length; index++)
         {
             var child = children[index];
-            var row = index / _columns;
-            var column = index % _columns;
+            int row = index / _columns;
+            int column = index % _columns;
             child.Layout(new BoxConstraints(
                 MinWidth: _resolvedColumnWidths[column],
                 MaxWidth: _resolvedColumnWidths[column]), parentUsesSize: true);
             _resolvedRowHeights[row] = Math.Max(_resolvedRowHeights[row], child.Size.Height);
         }
 
-        var xOffsets = PrefixOffsets(_resolvedColumnWidths);
-        var yOffsets = PrefixOffsets(_resolvedRowHeights);
-        for (var index = 0; index < children.Length; index++)
+        double[] xOffsets = PrefixOffsets(_resolvedColumnWidths);
+        double[] yOffsets = PrefixOffsets(_resolvedRowHeights);
+        for (int index = 0; index < children.Length; index++)
         {
             var child = children[index];
-            var row = index / _columns;
-            var column = index % _columns;
+            int row = index / _columns;
+            int column = index % _columns;
             var data = (TableCellParentData)child.parentData!;
             data.X = column;
             data.Y = row;
@@ -172,13 +172,13 @@ public sealed class RenderTable : RenderBox,
     public Rect GetRowBox(int row)
     {
         if (row < 0 || row >= _resolvedRowHeights.Length) throw new ArgumentOutOfRangeException(nameof(row));
-        var y = _resolvedRowHeights.Take(row).Sum();
+        double y = _resolvedRowHeights.Take(row).Sum();
         return new Rect(0, y, Size.Width, _resolvedRowHeights[row]);
     }
 
     public override void Paint(PaintingContext context, Point offset)
     {
-        for (var row = 0; row < _resolvedRowHeights.Length; row++)
+        for (int row = 0; row < _resolvedRowHeights.Length; row++)
         {
             var decoration = row < _rowDecorations.Count ? _rowDecorations[row] : null;
             if (decoration?.Color is { } color)
@@ -217,8 +217,8 @@ public sealed class RenderTable : RenderBox,
 
     private static double[] PrefixOffsets(IReadOnlyList<double> values)
     {
-        var offsets = new double[values.Count];
-        for (var index = 1; index < values.Count; index++) offsets[index] = offsets[index - 1] + values[index - 1];
+        double[] offsets = new double[values.Count];
+        for (int index = 1; index < values.Count; index++) offsets[index] = offsets[index - 1] + values[index - 1];
         return offsets;
     }
 
@@ -226,20 +226,20 @@ public sealed class RenderTable : RenderBox,
     {
         if (_border is null) return;
         static Pen PenFor(BorderSide side) => new(new SolidColorBrush(side.Color), side.Width);
-        var x = PrefixOffsets(_resolvedColumnWidths);
-        var y = PrefixOffsets(_resolvedRowHeights);
+        double[] x = PrefixOffsets(_resolvedColumnWidths);
+        double[] y = PrefixOffsets(_resolvedRowHeights);
         if (_border.Top is { } top) context.DrawLine(PenFor(top), offset, offset + new Vector(Size.Width, 0));
         if (_border.Bottom is { } bottom) context.DrawLine(PenFor(bottom), offset + new Vector(0, Size.Height), offset + new Vector(Size.Width, Size.Height));
         if (_border.Left is { } left) context.DrawLine(PenFor(left), offset, offset + new Vector(0, Size.Height));
         if (_border.Right is { } right) context.DrawLine(PenFor(right), offset + new Vector(Size.Width, 0), offset + new Vector(Size.Width, Size.Height));
         if (_border.VerticalInside is { } vertical)
         {
-            for (var index = 1; index < x.Length; index++)
+            for (int index = 1; index < x.Length; index++)
                 context.DrawLine(PenFor(vertical), offset + new Vector(x[index], 0), offset + new Vector(x[index], Size.Height));
         }
         if (_border.HorizontalInside is { } horizontal)
         {
-            for (var index = 1; index < y.Length; index++)
+            for (int index = 1; index < y.Length; index++)
                 context.DrawLine(PenFor(horizontal), offset + new Vector(0, y[index]), offset + new Vector(Size.Width, y[index]));
         }
     }

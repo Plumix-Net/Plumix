@@ -159,8 +159,8 @@ public sealed class LongPressGestureRecognizer : GestureRecognizer, IGestureAren
 
     private static double Distance(Point a, Point b)
     {
-        var dx = a.X - b.X;
-        var dy = a.Y - b.Y;
+        double dx = a.X - b.X;
+        double dy = a.Y - b.Y;
         return Math.Sqrt(dx * dx + dy * dy);
     }
 

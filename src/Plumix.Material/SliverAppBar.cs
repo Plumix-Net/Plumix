@@ -318,9 +318,9 @@ internal sealed class SliverAppBarState : State
     public override Widget Build(BuildContext context)
     {
         var widget = CurrentWidget;
-        var bottomHeight = widget.Bottom is IPreferredSizeWidget preferred ? preferred.PreferredSize.Height : 0;
-        var topPadding = widget.Primary ? MediaQuery.MaybePaddingOf(context)?.Top ?? 0 : 0;
-        var collapsedHeight = widget.Variant switch
+        double bottomHeight = widget.Bottom is IPreferredSizeWidget preferred ? preferred.PreferredSize.Height : 0;
+        double topPadding = widget.Primary ? MediaQuery.MaybePaddingOf(context)?.Top ?? 0 : 0;
+        double collapsedHeight = widget.Variant switch
         {
             SliverAppBarVariant.Medium or SliverAppBarVariant.Large =>
                 widget.CollapsedHeight ?? topPadding + 64 + bottomHeight,
@@ -328,13 +328,13 @@ internal sealed class SliverAppBarState : State
                 (widget.CollapsedHeight ?? 0) + bottomHeight + topPadding,
             _ => (widget.CollapsedHeight ?? widget.ToolbarHeight) + bottomHeight + topPadding,
         };
-        var expandedBodyHeight = widget.Variant switch
+        double expandedBodyHeight = widget.Variant switch
         {
             SliverAppBarVariant.Medium => widget.ExpandedHeight ?? 112 + bottomHeight,
             SliverAppBarVariant.Large => widget.ExpandedHeight ?? 152 + bottomHeight,
             _ => widget.ExpandedHeight ?? widget.ToolbarHeight + bottomHeight,
         };
-        var expandedHeight = topPadding + expandedBodyHeight;
+        double expandedHeight = topPadding + expandedBodyHeight;
         if (expandedHeight < collapsedHeight)
             throw new InvalidOperationException("SliverAppBar expandedHeight must be >= collapsed height.");
 
@@ -389,15 +389,15 @@ internal sealed class SliverAppBarDelegate : SliverPersistentHeaderDelegate
     public override Widget Build(BuildContext context, double shrinkOffset, bool overlapsContent)
     {
         var theme = Theme.Of(context);
-        var delta = Math.Max(0.0001, MaxExtent - MinExtent);
-        var t = Math.Clamp(shrinkOffset / delta, 0, 1);
-        var currentExtent = Math.Max(MinExtent, MaxExtent - shrinkOffset);
+        double delta = Math.Max(0.0001, MaxExtent - MinExtent);
+        double t = Math.Clamp(shrinkOffset / delta, 0, 1);
+        double currentExtent = Math.Max(MinExtent, MaxExtent - shrinkOffset);
         var variant = _widget.Variant;
-        var toolbarOpacity = variant == SliverAppBarVariant.Small ? 1 : t;
-        var flexibleTitleOpacity = variant == SliverAppBarVariant.Small ? 1 : 1 - t;
-        var elevated = _widget.ForceElevated || overlapsContent;
-        var baseElevation = _widget.Elevation ?? theme.AppBarTheme.Elevation ?? (theme.UseMaterial3 ? 0 : 4);
-        var elevation = elevated
+        double toolbarOpacity = variant == SliverAppBarVariant.Small ? 1 : t;
+        double flexibleTitleOpacity = variant == SliverAppBarVariant.Small ? 1 : 1 - t;
+        bool elevated = _widget.ForceElevated || overlapsContent;
+        double baseElevation = _widget.Elevation ?? theme.AppBarTheme.Elevation ?? (theme.UseMaterial3 ? 0 : 4);
+        double elevation = elevated
             ? _widget.ScrolledUnderElevation ?? theme.AppBarTheme.ScrolledUnderElevation ?? (theme.UseMaterial3 ? 3 : baseElevation)
             : baseElevation;
         var background = _widget.BackgroundColor

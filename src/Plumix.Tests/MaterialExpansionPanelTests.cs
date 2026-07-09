@@ -73,7 +73,7 @@ public sealed class MaterialExpansionPanelTests : IDisposable
         Assert.NotNull(FindParagraphByText(harness.RenderView, "Controlled body"));
         Assert.Contains(FindDescendants<RenderAlign>(harness.RenderView), align => align.HeightFactor is >= 0 and < 1);
 
-        var now = Scheduler.CurrentSeconds;
+        double now = Scheduler.CurrentSeconds;
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
         harness.Pump(new Size(360, 240));
         Assert.Contains(FindDescendants<RenderAlign>(harness.RenderView), align => align.HeightFactor is >= 0.99);
@@ -82,7 +82,7 @@ public sealed class MaterialExpansionPanelTests : IDisposable
     [Fact]
     public void ExpansionPanelList_IconOnlyMode_DoesNotToggleFromHeaderArea()
     {
-        var calls = 0;
+        int calls = 0;
         using var harness = new WidgetRenderHarness(
             BuildThemed(new ExpansionPanelList(
                 expansionCallback: (_, _) => calls++,
@@ -113,7 +113,7 @@ public sealed class MaterialExpansionPanelTests : IDisposable
             node => node.Flags.HasFlag(SemanticsFlags.HasExpandedState)).First();
         Assert.True(harness.PerformSemanticsAction(firstHeader.Id, SemanticsActions.Tap));
 
-        var now = Scheduler.CurrentSeconds;
+        double now = Scheduler.CurrentSeconds;
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
         harness.Pump(new Size(360, 280));
         Assert.Contains(

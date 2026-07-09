@@ -42,7 +42,7 @@ public static class MouseCursorManager
 
     public static IDisposable PushCursor(MouseCursor? cursor)
     {
-        var requestId = Interlocked.Increment(ref _nextRequestId);
+        long requestId = Interlocked.Increment(ref _nextRequestId);
         Action<MouseCursor>? listener = null;
         MouseCursor? nextCursor = null;
 
@@ -74,8 +74,8 @@ public static class MouseCursorManager
 
         lock (Sync)
         {
-            var removed = false;
-            for (var i = Requests.Count - 1; i >= 0; i--)
+            bool removed = false;
+            for (int i = Requests.Count - 1; i >= 0; i--)
             {
                 if (Requests[i].Id != requestId)
                 {
@@ -130,7 +130,7 @@ public static class MouseCursorManager
 
         public void Dispose()
         {
-            var requestId = Interlocked.Exchange(ref _requestId, 0);
+            long requestId = Interlocked.Exchange(ref _requestId, 0);
             if (requestId == 0)
             {
                 return;

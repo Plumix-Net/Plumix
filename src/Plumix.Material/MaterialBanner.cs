@@ -168,7 +168,7 @@ public sealed class MaterialBanner : StatefulWidget
             var theme = Theme.Of(context);
             var bannerTheme = MaterialBannerTheme.Of(context);
             var direction = Directionality.Of(context);
-            var isSingleRow = widget.Actions.Count == 1 && !widget.ForceActionsBelow;
+            bool isSingleRow = widget.Actions.Count == 1 && !widget.ForceActionsBelow;
 
             var contentPadding = widget.Padding
                                  ?? bannerTheme.Padding
@@ -193,7 +193,7 @@ public sealed class MaterialBanner : StatefulWidget
                             textDirection: direction,
                             children: widget.Actions))));
 
-            var elevation = widget.Elevation ?? bannerTheme.Elevation ?? 0;
+            double elevation = widget.Elevation ?? bannerTheme.Elevation ?? 0;
             var margin = widget.Margin ?? new Thickness(0, 0, 0, elevation > 0 ? 10 : 0);
             var backgroundColor = widget.BackgroundColor
                                   ?? bannerTheme.BackgroundColor
@@ -257,7 +257,7 @@ public sealed class MaterialBanner : StatefulWidget
             materialBanner = new SafeArea(materialBanner);
             if (!mediaQuery.AccessibleNavigation)
             {
-                var slideValue = widget.Animation.Value <= 0 ? -1.0 : 0.0;
+                double slideValue = widget.Animation.Value <= 0 ? -1.0 : 0.0;
                 materialBanner = new FractionalTranslation(
                     translation: new Vector(0, slideValue),
                     child: materialBanner);

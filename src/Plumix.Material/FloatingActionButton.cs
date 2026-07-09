@@ -395,27 +395,27 @@ public sealed class FloatingActionButton : StatelessWidget
         var splashColor = SplashColor
                           ?? floatingActionButtonTheme.SplashColor
                           ?? defaults.SplashColor;
-        var elevation = Elevation
-                        ?? floatingActionButtonTheme.Elevation
-                        ?? defaults.Elevation;
-        var focusElevation = FocusElevation
-                             ?? floatingActionButtonTheme.FocusElevation
-                             ?? defaults.FocusElevation;
-        var hoverElevation = HoverElevation
-                             ?? floatingActionButtonTheme.HoverElevation
-                             ?? defaults.HoverElevation;
-        var highlightElevation = HighlightElevation
-                                 ?? floatingActionButtonTheme.HighlightElevation
-                                 ?? defaults.HighlightElevation;
-        var disabledElevation = DisabledElevation
-                                ?? floatingActionButtonTheme.DisabledElevation
-                                ?? defaults.DisabledElevation
-                                ?? elevation;
+        double elevation = Elevation
+                           ?? floatingActionButtonTheme.Elevation
+                           ?? defaults.Elevation;
+        double focusElevation = FocusElevation
+                                ?? floatingActionButtonTheme.FocusElevation
+                                ?? defaults.FocusElevation;
+        double hoverElevation = HoverElevation
+                                ?? floatingActionButtonTheme.HoverElevation
+                                ?? defaults.HoverElevation;
+        double highlightElevation = HighlightElevation
+                                    ?? floatingActionButtonTheme.HighlightElevation
+                                    ?? defaults.HighlightElevation;
+        double disabledElevation = DisabledElevation
+                                   ?? floatingActionButtonTheme.DisabledElevation
+                                   ?? defaults.DisabledElevation
+                                   ?? elevation;
         var shape = Shape
                     ?? floatingActionButtonTheme.Shape
                     ?? defaults.Shape;
-        var iconSize = floatingActionButtonTheme.IconSize
-                       ?? defaults.IconSize;
+        double iconSize = floatingActionButtonTheme.IconSize
+                          ?? defaults.IconSize;
         var extendedTextStyle = (ExtendedTextStyle
                                  ?? floatingActionButtonTheme.ExtendedTextStyle
                                  ?? defaults.ExtendedTextStyle) with
@@ -428,9 +428,9 @@ public sealed class FloatingActionButton : StatelessWidget
         var tapTargetSize = MaterialTapTargetSize
                             ?? floatingActionButtonTheme.MaterialTapTargetSize
                             ?? theme.MaterialTapTargetSize;
-        var enableFeedback = EnableFeedback
-                             ?? floatingActionButtonTheme.EnableFeedback
-                             ?? defaults.EnableFeedback;
+        bool enableFeedback = EnableFeedback
+                              ?? floatingActionButtonTheme.EnableFeedback
+                              ?? defaults.EnableFeedback;
         var sizeConstraints = ResolveSizeConstraints(floatingActionButtonTheme, defaults);
 
         var style = new ButtonStyle(
@@ -498,9 +498,9 @@ public sealed class FloatingActionButton : StatelessWidget
         }
 
         var label = ExtendedLabel ?? new SizedBox();
-        var spacing = ExtendedIconLabelSpacing
-                      ?? floatingActionButtonTheme.ExtendedIconLabelSpacing
-                      ?? defaults.ExtendedIconLabelSpacing;
+        double spacing = ExtendedIconLabelSpacing
+                         ?? floatingActionButtonTheme.ExtendedIconLabelSpacing
+                         ?? defaults.ExtendedIconLabelSpacing;
         var children = new List<Widget>();
         if (Child is not null)
         {
@@ -549,10 +549,10 @@ public sealed class FloatingActionButton : StatelessWidget
             ? FloatingActionButtonDefaults.Material3(context, Type, Child is not null)
             : FloatingActionButtonDefaults.Material2(context, Type, Child is not null);
         var constraints = ResolveSizeConstraints(floatingActionButtonTheme, defaults);
-        var width = double.IsFinite(constraints.MaxWidth)
+        double width = double.IsFinite(constraints.MaxWidth)
             ? constraints.MaxWidth
             : Math.Max(constraints.MinWidth, 80);
-        var height = double.IsFinite(constraints.MaxHeight)
+        double height = double.IsFinite(constraints.MaxHeight)
             ? constraints.MaxHeight
             : Math.Max(constraints.MinHeight, 56);
         return new Size(width, height);

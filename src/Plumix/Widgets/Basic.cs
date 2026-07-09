@@ -879,7 +879,7 @@ public class Flexible : ParentDataWidget<FlexParentData>
     protected override void ApplyParentData(RenderObject renderObject)
     {
         var parentData = (FlexParentData)renderObject.parentData!;
-        var needsLayout = false;
+        bool needsLayout = false;
 
         if (parentData.flex != Flex)
         {
@@ -1087,7 +1087,7 @@ public sealed class Positioned : ParentDataWidget<StackParentData>
     protected override void ApplyParentData(RenderObject renderObject)
     {
         var parentData = (StackParentData)renderObject.parentData!;
-        var needsLayout = false;
+        bool needsLayout = false;
 
         if (parentData.Left != Left)
         {

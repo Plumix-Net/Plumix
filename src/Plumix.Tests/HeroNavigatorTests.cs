@@ -22,8 +22,8 @@ public sealed class HeroNavigatorTests
         {
             var viewportSize = new Size(320, 240);
             NavigatorState? navigatorState = null;
-            var rootBuildCount = 0;
-            var detailsBuildCount = 0;
+            int rootBuildCount = 0;
+            int detailsBuildCount = 0;
 
             using var harness = new WidgetRenderHarness(
                 new Navigator(
@@ -130,9 +130,9 @@ public sealed class HeroNavigatorTests
         {
             var viewportSize = new Size(320, 240);
             NavigatorState? navigatorState = null;
-            var sourceCreateRectTweenCalls = 0;
-            var destinationCreateRectTweenCalls = 0;
-            var tweenLerpCalls = 0;
+            int sourceCreateRectTweenCalls = 0;
+            int destinationCreateRectTweenCalls = 0;
+            int tweenLerpCalls = 0;
             Rect? capturedBegin = null;
             Rect? capturedEnd = null;
             var sourceHeroOrigin = new Point(20, 160);
@@ -171,7 +171,7 @@ public sealed class HeroNavigatorTests
                     }));
             harness.Pump(viewportSize);
 
-            var now = Scheduler.CurrentSeconds;
+            double now = Scheduler.CurrentSeconds;
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.016));
             harness.Pump(viewportSize);
 
@@ -208,8 +208,8 @@ public sealed class HeroNavigatorTests
         {
             var viewportSize = new Size(320, 240);
             NavigatorState? navigatorState = null;
-            var sourceShuttleBuilderCalls = 0;
-            var destinationShuttleBuilderCalls = 0;
+            int sourceShuttleBuilderCalls = 0;
+            int destinationShuttleBuilderCalls = 0;
 
             using var harness = new WidgetRenderHarness(
                 new Navigator(
@@ -267,7 +267,7 @@ public sealed class HeroNavigatorTests
         {
             var viewportSize = new Size(320, 240);
             NavigatorState? navigatorState = null;
-            var sourceShuttleBuilderCalls = 0;
+            int sourceShuttleBuilderCalls = 0;
 
             using var harness = new WidgetRenderHarness(
                 new Navigator(
@@ -516,7 +516,7 @@ public sealed class HeroNavigatorTests
         {
             var viewportSize = new Size(320, 240);
             NavigatorState? navigatorState = null;
-            var placeholderBuilderCalls = 0;
+            int placeholderBuilderCalls = 0;
             Size? capturedPlaceholderSize = null;
 
             using var harness = new WidgetRenderHarness(
@@ -576,7 +576,7 @@ public sealed class HeroNavigatorTests
         {
             var viewportSize = new Size(320, 240);
             NavigatorState? navigatorState = null;
-            var placeholderBuilderCalls = 0;
+            int placeholderBuilderCalls = 0;
             Size? capturedPlaceholderSize = null;
 
             using var harness = new WidgetRenderHarness(
@@ -734,9 +734,9 @@ public sealed class HeroNavigatorTests
         {
             var viewportSize = new Size(320, 240);
             NavigatorState? navigatorState = null;
-            var rootCreateRectTweenCalls = 0;
-            var detailsCreateRectTweenCalls = 0;
-            var divertedTweenLerpCalls = 0;
+            int rootCreateRectTweenCalls = 0;
+            int detailsCreateRectTweenCalls = 0;
+            int divertedTweenLerpCalls = 0;
 
             using var harness = new WidgetRenderHarness(
                 new Navigator(
@@ -778,7 +778,7 @@ public sealed class HeroNavigatorTests
             Assert.Equal(0, rootCreateRectTweenCalls);
             Assert.True(divertedTweenLerpCalls > 0);
 
-            var tweenLerpCallsBeforePop = divertedTweenLerpCalls;
+            int tweenLerpCallsBeforePop = divertedTweenLerpCalls;
             navigatorState.Pop();
             harness.Pump(viewportSize);
             PumpHeroTransitionFrame(harness, viewportSize);
@@ -859,14 +859,14 @@ public sealed class HeroNavigatorTests
     {
         PumpHeroTransitionFrame(harness, viewportSize);
 
-        var afterStart = Scheduler.CurrentSeconds;
+        double afterStart = Scheduler.CurrentSeconds;
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(afterStart + 0.40));
         harness.Pump(viewportSize);
     }
 
     private static void PumpHeroTransitionFrame(WidgetRenderHarness harness, Size viewportSize)
     {
-        var now = Scheduler.CurrentSeconds;
+        double now = Scheduler.CurrentSeconds;
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.016));
         harness.Pump(viewportSize);
     }
@@ -1047,7 +1047,7 @@ public sealed class HeroNavigatorTests
             return 0;
         }
 
-        var count = root is TRenderObject ? 1 : 0;
+        int count = root is TRenderObject ? 1 : 0;
         root.VisitChildren(child => count += CountDescendants<TRenderObject>(child));
         return count;
     }

@@ -47,7 +47,7 @@ public sealed class MaterialAboutTests : IDisposable
     [Fact]
     public async Task LicenseRegistry_IsLazyOrderedAndResettable()
     {
-        var calls = 0;
+        int calls = 0;
         LicenseRegistry.AddLicense(() =>
         {
             calls++;
@@ -190,7 +190,7 @@ public sealed class MaterialAboutTests : IDisposable
         using var harness = new WidgetRenderHarness(BuildThemed(navigator));
 
         PumpUntil(harness, new Size(700, 560), () => FindParagraph(harness.RenderView, "app") is not null);
-        var paragraphs = FindDescendants<RenderParagraph>(harness.RenderView).Select(item => item.Text).ToArray();
+        string[] paragraphs = FindDescendants<RenderParagraph>(harness.RenderView).Select(item => item.Text).ToArray();
         Assert.True(Array.IndexOf(paragraphs, "app") < Array.IndexOf(paragraphs, "alpha"));
         Assert.True(Array.IndexOf(paragraphs, "alpha") < Array.IndexOf(paragraphs, "zeta"));
         Assert.Contains("1 license", paragraphs);

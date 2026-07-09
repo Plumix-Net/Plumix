@@ -81,7 +81,7 @@ public sealed class Table : MultiChildRenderObjectWidget
         Key? key = null) : base(Flatten(children), key)
     {
         ArgumentNullException.ThrowIfNull(children);
-        var columnCount = children.Count == 0 ? 0 : children[0].Children.Count;
+        int columnCount = children.Count == 0 ? 0 : children[0].Children.Count;
         if (children.Any(row => row.Children.Count != columnCount))
         {
             throw new ArgumentException("Every TableRow must have the same number of children.", nameof(children));

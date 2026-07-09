@@ -68,7 +68,7 @@ public sealed class GesturePipelineTests
         var binding = GestureBinding.Instance;
         binding.ResetForTests();
 
-        var taps = 0;
+        int taps = 0;
         var recognizer = new TapGestureRecognizer
         {
             OnTap = () => taps += 1
@@ -114,9 +114,9 @@ public sealed class GesturePipelineTests
     {
         var binding = GestureBinding.Instance;
         binding.ResetForTests();
-        var taps = 0;
-        var doubleTaps = 0;
-        var tapDowns = 0;
+        int taps = 0;
+        int doubleTaps = 0;
+        int tapDowns = 0;
         var recognizer = new TapGestureRecognizer
         {
             OnTap = () => taps += 1,
@@ -132,7 +132,7 @@ public sealed class GesturePipelineTests
                 child: new FixedHitTestBox(new Size(80, 80), hitSelf: true));
             var pipeline = BuildPipeline(listener);
             var now = DateTime.UtcNow;
-            for (var pointer = 21; pointer <= 22; pointer++)
+            for (int pointer = 21; pointer <= 22; pointer++)
             {
                 binding.HandlePointerEvent(pipeline.Root, new PointerDownEvent(
                     pointer, PointerDeviceKind.Mouse, new Point(12, 12), PointerButtons.Primary, now));
@@ -363,8 +363,8 @@ public sealed class GesturePipelineTests
         var binding = GestureBinding.Instance;
         binding.ResetForTests();
 
-        var taps = 0;
-        var dragUpdates = 0;
+        int taps = 0;
+        int dragUpdates = 0;
         var tap = new TapGestureRecognizer
         {
             OnTap = () => taps += 1
@@ -448,9 +448,9 @@ public sealed class GesturePipelineTests
         var binding = GestureBinding.Instance;
         binding.ResetForTests();
 
-        var enters = 0;
-        var exits = 0;
-        var hovers = 0;
+        int enters = 0;
+        int exits = 0;
+        int hovers = 0;
 
         var listener = new RenderPointerListener(
             behavior: HitTestBehavior.Opaque,

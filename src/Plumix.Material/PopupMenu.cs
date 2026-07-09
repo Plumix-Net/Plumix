@@ -443,8 +443,8 @@ public sealed class PopupMenuButtonState<T> : State
         var widget = CurrentWidget;
         _popupMenuTheme = PopupMenuTheme.Of(context);
         var localizations = MaterialLocalizations.Of(context);
-        var tooltip = widget.Tooltip ?? localizations.ShowMenuTooltip;
-        var feedback = widget.EnableFeedback ?? _popupMenuTheme.EnableFeedback ?? true;
+        string tooltip = widget.Tooltip ?? localizations.ShowMenuTooltip;
+        bool feedback = widget.EnableFeedback ?? _popupMenuTheme.EnableFeedback ?? true;
         Widget button;
         if (widget.Child is not null)
         {
@@ -524,7 +524,7 @@ public sealed class PopupMenuButtonState<T> : State
         var bounds = ResolveGlobalBounds(button);
         var position = CurrentWidget.Position ?? _popupMenuTheme.Position ?? PopupMenuPosition.Over;
         var offset = CurrentWidget.Offset;
-        var yOffset = position == PopupMenuPosition.Under ? button.Size.Height : 0;
+        double yOffset = position == PopupMenuPosition.Under ? button.Size.Height : 0;
         var shifted = bounds.Translate(new Vector(offset.X, offset.Y + yOffset));
         var resolved = RelativeRect.FromSize(shifted, constraints.Biggest);
         _lastPosition = resolved;
@@ -552,10 +552,10 @@ public sealed class PopupMenuButtonState<T> : State
             transform.Transform(new Point(0, renderBox.Size.Height)),
             transform.Transform(new Point(renderBox.Size.Width, renderBox.Size.Height)),
         };
-        var left = points.Min(p => p.X);
-        var top = points.Min(p => p.Y);
-        var right = points.Max(p => p.X);
-        var bottom = points.Max(p => p.Y);
+        double left = points.Min(p => p.X);
+        double top = points.Min(p => p.Y);
+        double right = points.Max(p => p.X);
+        double bottom = points.Max(p => p.Y);
         return new Rect(left, top, right - left, bottom - top);
     }
 }
@@ -800,9 +800,9 @@ internal sealed class PopupMenuRoute<T> : PageRoute
     {
         if (_initialValue is not null)
         {
-            for (var i = 0; i < _items.Count; i++) if (_items[i].Represents(_initialValue)) return i;
+            for (int i = 0; i < _items.Count; i++) if (_items[i].Represents(_initialValue)) return i;
         }
-        for (var i = 0; i < _items.Count; i++) if (_items[i].IsEnabled) return i;
+        for (int i = 0; i < _items.Count; i++) if (_items[i].IsEnabled) return i;
         return -1;
     }
 
@@ -835,8 +835,8 @@ internal sealed class PopupMenuRoute<T> : PageRoute
     private void MoveFocus(int delta)
     {
         if (_items.Count == 0) return;
-        var next = _focusIndex;
-        for (var i = 0; i < _items.Count; i++)
+        int next = _focusIndex;
+        for (int i = 0; i < _items.Count; i++)
         {
             next = (next + delta + _items.Count) % _items.Count;
             if (_items[next].IsEnabled)
@@ -883,24 +883,24 @@ internal sealed class PopupMenuPanel<T> : StatelessWidget
     {
         var theme = Theme.Of(context);
         var popupTheme = PopupMenuTheme.Of(context);
-        var useM3 = theme.UseMaterial3;
-        var elevation = _route.Elevation ?? popupTheme.Elevation ?? (useM3 ? 3 : 8);
+        bool useM3 = theme.UseMaterial3;
+        double elevation = _route.Elevation ?? popupTheme.Elevation ?? (useM3 ? 3 : 8);
         var color = _route.Color ?? popupTheme.Color ?? (useM3 ? theme.SurfaceContainerColor : theme.CardColor);
         var surfaceTint = _route.SurfaceTintColor ?? popupTheme.SurfaceTintColor ?? Colors.Transparent;
         if (useM3 && surfaceTint.A > 0) color = NavigationSurfaceUtilities.ApplySurfaceTint(color, surfaceTint, elevation);
         var shadow = _route.ShadowColor ?? popupTheme.ShadowColor ?? theme.ShadowColor;
         var shape = _route.Shape ?? popupTheme.Shape ?? ShapeBorder.RoundedRectangle(useM3 ? 4 : 2);
         var children = new List<Widget>(_items.Count);
-        var unit = 1.0 / (_items.Count + 1.5);
-        for (var i = 0; i < _items.Count; i++)
+        double unit = 1.0 / (_items.Count + 1.5);
+        for (int i = 0; i < _items.Count; i++)
         {
             Widget item = _items[i];
             if (i == _focusIndex || (_initialValue is not null && _items[i].Represents(_initialValue)))
             {
                 item = new ColoredBox(ApplyOpacity(theme.OnSurfaceColor, 0.12), item);
             }
-            var start = (i + 1) * unit;
-            var end = Math.Min(1, start + (1.5 * unit));
+            double start = (i + 1) * unit;
+            double end = Math.Min(1, start + (1.5 * unit));
             children.Add(new Opacity(Interval(_route.Progress, start, end), item));
         }
 
@@ -1003,19 +1003,19 @@ internal sealed class RenderPopupMenuPositionLayout : RenderProxyBox
     {
         Size = Constraints.Constrain(Constraints.Biggest);
         if (Child is null) return;
-        var horizontalInset = 16 + SafePadding.Left + SafePadding.Right;
-        var verticalInset = 16 + SafePadding.Top + SafePadding.Bottom;
+        double horizontalInset = 16 + SafePadding.Left + SafePadding.Right;
+        double verticalInset = 16 + SafePadding.Top + SafePadding.Bottom;
         Child.Layout(new BoxConstraints(
             MaxWidth: Math.Max(0, Size.Width - horizontalInset),
             MaxHeight: Math.Max(0, Size.Height - verticalInset)), parentUsesSize: true);
-        var x = Position.Left > Position.Right
+        double x = Position.Left > Position.Right
             ? Size.Width - Position.Right - Child.Size.Width
             : Position.Left < Position.Right
                 ? Position.Left
                 : TextDirection == TextDirection.Rtl
                     ? Size.Width - Position.Right - Child.Size.Width
                     : Position.Left;
-        var y = Position.Top;
+        double y = Position.Top;
         x = Math.Clamp(x, 8 + SafePadding.Left, Math.Max(8 + SafePadding.Left, Size.Width - Child.Size.Width - 8 - SafePadding.Right));
         y = Math.Clamp(y, 8 + SafePadding.Top, Math.Max(8 + SafePadding.Top, Size.Height - Child.Size.Height - 8 - SafePadding.Bottom));
         ((BoxParentData)Child.parentData!).offset = new Point(x, y);

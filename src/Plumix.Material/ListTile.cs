@@ -167,16 +167,16 @@ public sealed class ListTile : StatelessWidget
     {
         var theme = Theme.Of(context);
         var tileTheme = ListTileTheme.Of(context);
-        var useMaterial3 = theme.UseMaterial3;
+        bool useMaterial3 = theme.UseMaterial3;
         var effectiveStyle = Style ?? tileTheme.Style ?? ListTileStyle.List;
-        var isDense = Dense ?? tileTheme.Dense ?? false;
-        var hasSubtitle = Subtitle is not null;
-        var isThreeLine = hasSubtitle && (IsThreeLine ?? tileTheme.IsThreeLine ?? false);
-        var lineCount = hasSubtitle ? (isThreeLine ? 3 : 2) : 1;
-        var effectiveHorizontalTitleGap = HorizontalTitleGap ?? tileTheme.HorizontalTitleGap ?? 16;
-        var effectiveMinVerticalPadding = MinVerticalPadding ?? tileTheme.MinVerticalPadding ?? (useMaterial3 ? 8 : 4);
-        var effectiveMinLeadingWidth = MinLeadingWidth ?? tileTheme.MinLeadingWidth ?? (useMaterial3 ? 24 : 40);
-        var effectiveMinTileHeight = MinTileHeight ?? tileTheme.MinTileHeight ?? ResolveDefaultTileHeight(lineCount, isDense);
+        bool isDense = Dense ?? tileTheme.Dense ?? false;
+        bool hasSubtitle = Subtitle is not null;
+        bool isThreeLine = hasSubtitle && (IsThreeLine ?? tileTheme.IsThreeLine ?? false);
+        int lineCount = hasSubtitle ? (isThreeLine ? 3 : 2) : 1;
+        double effectiveHorizontalTitleGap = HorizontalTitleGap ?? tileTheme.HorizontalTitleGap ?? 16;
+        double effectiveMinVerticalPadding = MinVerticalPadding ?? tileTheme.MinVerticalPadding ?? (useMaterial3 ? 8 : 4);
+        double effectiveMinLeadingWidth = MinLeadingWidth ?? tileTheme.MinLeadingWidth ?? (useMaterial3 ? 24 : 40);
+        double effectiveMinTileHeight = MinTileHeight ?? tileTheme.MinTileHeight ?? ResolveDefaultTileHeight(lineCount, isDense);
         var textDirection = Directionality.Of(context);
         var effectiveContentPadding = ContentPadding
             ?? tileTheme.ContentPadding
@@ -312,7 +312,7 @@ public sealed class ListTile : StatelessWidget
             MinimumSize: MaterialStateProperty<Size?>.All(new Size(0, effectiveMinTileHeight)),
             TapTargetSize: MaterialTapTargetSize.ShrinkWrap);
 
-        var hasAnyAction = OnTap is not null || OnLongPress is not null;
+        bool hasAnyAction = OnTap is not null || OnLongPress is not null;
         Action? onPressed = null;
         if (Enabled && hasAnyAction)
         {
@@ -389,7 +389,7 @@ public sealed class ListTile : StatelessWidget
             return tileTheme.MouseCursor;
         }
 
-        var hasAnyAction = OnTap is not null || OnLongPress is not null;
+        bool hasAnyAction = OnTap is not null || OnLongPress is not null;
         return Enabled && hasAnyAction
             ? SystemMouseCursors.Click
             : SystemMouseCursors.Basic;
@@ -534,9 +534,9 @@ public sealed class ListTile : StatelessWidget
 
     private static Color ApplyOpacity(Color color, double opacity)
     {
-        var baseOpacity = color.A / 255.0;
-        var effectiveOpacity = Math.Clamp(baseOpacity * opacity, 0, 1);
-        var alpha = (byte)Math.Clamp((int)(effectiveOpacity * 255), 0, 255);
+        double baseOpacity = color.A / 255.0;
+        double effectiveOpacity = Math.Clamp(baseOpacity * opacity, 0, 1);
+        byte alpha = (byte)Math.Clamp((int)(effectiveOpacity * 255), 0, 255);
         return Color.FromArgb(alpha, color.R, color.G, color.B);
     }
 
@@ -557,8 +557,8 @@ public sealed class ListTile : StatelessWidget
             return child;
         }
 
-        var effectiveMaxLines = text.MaxLines ?? maxLines;
-        var effectiveSoftWrap = text.MaxLines.HasValue
+        int effectiveMaxLines = text.MaxLines ?? maxLines;
+        bool effectiveSoftWrap = text.MaxLines.HasValue
             ? text.SoftWrap
             : effectiveMaxLines > 1;
         var effectiveOverflow = text.MaxLines.HasValue || text.Overflow != TextOverflow.Clip

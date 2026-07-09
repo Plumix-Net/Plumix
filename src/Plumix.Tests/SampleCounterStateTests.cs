@@ -13,7 +13,7 @@ public sealed class SampleCounterStateTests
     public void CounterAppModel_Mutations_UpdateStateAndNotifyListeners()
     {
         var model = new CounterAppModel();
-        var notifications = 0;
+        int notifications = 0;
         model.AddListener(() => notifications += 1);
 
         Assert.Equal(0, model.Count);
@@ -38,7 +38,7 @@ public sealed class SampleCounterStateTests
         }
 
         Assert.Empty(model.Items);
-        var notificationsBeforeNoOpRemove = notifications;
+        int notificationsBeforeNoOpRemove = notifications;
         model.RemoveTail();
         Assert.Equal(notificationsBeforeNoOpRemove, notifications);
     }

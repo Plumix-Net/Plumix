@@ -36,6 +36,10 @@ public abstract class MaterialLocalizations
 
     public virtual string MenuDismissLabel => "Dismiss menu";
 
+    public virtual string SearchFieldLabel => "Search";
+
+    public virtual string ClearButtonTooltip => "Clear";
+
     public virtual string ExpandedIconTapHint => "Collapse";
 
     public virtual string CollapsedIconTapHint => "Expand";
@@ -128,7 +132,7 @@ public abstract class MaterialLocalizations
     public virtual string FormatHour(TimeOfDay timeOfDay, bool alwaysUse24HourFormat = false)
     {
         var format = TimeOfDayFormat(alwaysUse24HourFormat);
-        var hour = TimeOfDay.HourFormatOf(format) switch
+        int hour = TimeOfDay.HourFormatOf(format) switch
         {
             HourFormat.H12 => timeOfDay.HourOfPeriod,
             _ => timeOfDay.Hour,
@@ -144,8 +148,8 @@ public abstract class MaterialLocalizations
     public virtual string FormatTimeOfDay(TimeOfDay timeOfDay, bool alwaysUse24HourFormat = false)
     {
         var format = TimeOfDayFormat(alwaysUse24HourFormat);
-        var hour = FormatHour(timeOfDay, alwaysUse24HourFormat);
-        var minute = FormatMinute(timeOfDay);
+        string hour = FormatHour(timeOfDay, alwaysUse24HourFormat);
+        string minute = FormatMinute(timeOfDay);
         return format switch
         {
             Material.TimeOfDayFormat.HHDotMm => $"{hour}.{minute}",
@@ -177,11 +181,11 @@ public abstract class MaterialLocalizations
     public virtual DateTime? ParseCompactDate(string? input)
     {
         if (input is null) return null;
-        var parts = input.Split('/');
+        string[] parts = input.Split('/');
         if (parts.Length != 3
-            || !int.TryParse(parts[0], NumberStyles.None, CultureInfo.InvariantCulture, out var month)
-            || !int.TryParse(parts[1], NumberStyles.None, CultureInfo.InvariantCulture, out var day)
-            || !int.TryParse(parts[2], NumberStyles.None, CultureInfo.InvariantCulture, out var year)
+            || !int.TryParse(parts[0], NumberStyles.None, CultureInfo.InvariantCulture, out int month)
+            || !int.TryParse(parts[1], NumberStyles.None, CultureInfo.InvariantCulture, out int day)
+            || !int.TryParse(parts[2], NumberStyles.None, CultureInfo.InvariantCulture, out int year)
             || year < 1 || month is < 1 or > 12 || day < 1 || day > DateTime.DaysInMonth(year, month))
         {
             return null;
@@ -239,6 +243,10 @@ public sealed class DefaultMaterialLocalizations : MaterialLocalizations
     public override string ShowMenuTooltip => "Show menu";
 
     public override string PopupMenuLabel => "Popup menu";
+
+    public override string SearchFieldLabel => "Search";
+
+    public override string ClearButtonTooltip => "Clear";
 
     public override string MenuDismissLabel => "Dismiss menu";
 

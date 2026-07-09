@@ -70,7 +70,7 @@ public sealed class DialogDemoPage : StatefulWidget
 
         private async void ShowAlert(BuildContext context)
         {
-            var result = await MaterialDialogs.ShowDialog<string>(
+            string? result = await MaterialDialogs.ShowDialog<string>(
                 context,
                 routeContext => new AlertDialog(
                     icon: new Icon(Icons.InfoOutline),
@@ -95,7 +95,7 @@ public sealed class DialogDemoPage : StatefulWidget
 
         private async void ShowPlainDialog(BuildContext context)
         {
-            var result = await MaterialDialogs.ShowDialog<string>(
+            string? result = await MaterialDialogs.ShowDialog<string>(
                 context,
                 routeContext => new Dialog(
                     child: new Padding(
@@ -115,7 +115,7 @@ public sealed class DialogDemoPage : StatefulWidget
 
         private async void ShowSimpleDialog(BuildContext context)
         {
-            var result = await MaterialDialogs.ShowDialog<string>(
+            string? result = await MaterialDialogs.ShowDialog<string>(
                 context,
                 routeContext => new SimpleDialog(
                     title: new Text("Select workspace"),

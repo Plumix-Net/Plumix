@@ -128,11 +128,11 @@ public sealed class BottomSheet : StatefulWidget
             var constraints = widget.Constraints ?? sheetTheme.Constraints ?? defaults.Constraints;
             var color = widget.BackgroundColor ?? sheetTheme.BackgroundColor ?? defaults.BackgroundColor ?? theme.CanvasColor;
             var surfaceTint = sheetTheme.SurfaceTintColor ?? defaults.SurfaceTintColor;
-            var elevation = widget.Elevation ?? sheetTheme.Elevation ?? defaults.Elevation ?? 0;
+            double elevation = widget.Elevation ?? sheetTheme.Elevation ?? defaults.Elevation ?? 0;
             var shadow = widget.ShadowColor ?? sheetTheme.ShadowColor ?? defaults.ShadowColor ?? Colors.Transparent;
             var shape = widget.Shape ?? sheetTheme.Shape ?? defaults.Shape ?? ShapeBorder.RoundedRectangle(0);
             var clip = widget.ClipBehavior ?? sheetTheme.ClipBehavior ?? Clip.None;
-            var showHandle = widget.ShowDragHandle ?? (widget.EnableDrag && (sheetTheme.ShowDragHandle ?? false));
+            bool showHandle = widget.ShowDragHandle ?? (widget.EnableDrag && (sheetTheme.ShowDragHandle ?? false));
 
             if (surfaceTint.HasValue && surfaceTint.Value.A > 0 && elevation > 0)
             {
@@ -234,9 +234,9 @@ public sealed class BottomSheet : StatefulWidget
         private void HandleDragEnd(DragEndDetails details)
         {
             var controller = RequireController();
-            var isClosing = details.PrimaryVelocity > MinFlingVelocity
-                            || (Math.Abs(details.PrimaryVelocity) <= MinFlingVelocity
-                                && controller.Value < CloseProgressThreshold);
+            bool isClosing = details.PrimaryVelocity > MinFlingVelocity
+                             || (Math.Abs(details.PrimaryVelocity) <= MinFlingVelocity
+                                 && controller.Value < CloseProgressThreshold);
             SetState(() => _dragged = false);
             if (isClosing) controller.Reverse();
             else controller.Forward();
@@ -407,7 +407,7 @@ public sealed class ModalBottomSheetRoute<T> : PageRoute
 
     public override Widget BuildPage(BuildContext context)
     {
-        var progress = Math.Clamp(_animation.Evaluate(), 0, 1);
+        double progress = Math.Clamp(_animation.Evaluate(), 0, 1);
         var barrierColor = ModalBarrierColor ?? _capturedBottomSheetTheme.ModalBarrierColor ?? Color.FromArgb(0x8A, 0, 0, 0);
         Widget barrier = new Semantics(
             label: BarrierLabel,
@@ -419,7 +419,7 @@ public sealed class ModalBottomSheetRoute<T> : PageRoute
                 child: new ColoredBox(ApplyOpacity(barrierColor, progress))));
 
         var modalBackground = BackgroundColor ?? _capturedBottomSheetTheme.ModalBackgroundColor;
-        var modalElevation = Elevation ?? _capturedBottomSheetTheme.ModalElevation;
+        double? modalElevation = Elevation ?? _capturedBottomSheetTheme.ModalElevation;
         Widget sheet = new BottomSheet(
             animationController: _animation,
             onClosing: () => Navigator?.MaybePop(),
@@ -525,7 +525,7 @@ internal sealed class RenderModalBottomSheetLayout : RenderProxyBox
     {
         Size = Constraints.Biggest;
         if (Child is null) return;
-        var maxHeight = IsScrollControlled ? Constraints.MaxHeight : Constraints.MaxHeight * MaxHeightRatio;
+        double maxHeight = IsScrollControlled ? Constraints.MaxHeight : Constraints.MaxHeight * MaxHeightRatio;
         Child.Layout(new BoxConstraints(
             MinWidth: Constraints.MaxWidth,
             MaxWidth: Constraints.MaxWidth,

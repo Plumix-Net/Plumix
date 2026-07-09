@@ -102,7 +102,7 @@ public abstract class RenderObjectElement : Element, IRenderObjectHost
 
     internal override void UpdateSlot(object? newSlot)
     {
-        var oldSlot = Slot;
+        object? oldSlot = Slot;
         base.UpdateSlot(newSlot);
 
         if (_ancestorRenderObjectHost != null && !Equals(oldSlot, newSlot))

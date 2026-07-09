@@ -101,8 +101,8 @@ public sealed class Badge : StatelessWidget
         var badgeTheme = BadgeTheme.Of(context);
         var backgroundColor = BackgroundColor ?? badgeTheme.BackgroundColor ?? theme.ErrorColor;
         var textColor = TextColor ?? badgeTheme.TextColor ?? theme.OnErrorColor;
-        var hasLabel = Label is not null;
-        var widthOffset = hasLabel
+        bool hasLabel = Label is not null;
+        double widthOffset = hasLabel
             ? LargeSize ?? badgeTheme.LargeSize ?? 16.0
             : SmallSize ?? badgeTheme.SmallSize ?? 6.0;
 

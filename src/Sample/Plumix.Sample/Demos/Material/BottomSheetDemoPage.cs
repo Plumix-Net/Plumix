@@ -63,7 +63,7 @@ public sealed class BottomSheetDemoPage : StatefulWidget
 
         private async void ShowModal(BuildContext context)
         {
-            var result = await MaterialBottomSheets.ShowModalBottomSheet<string>(
+            string? result = await MaterialBottomSheets.ShowModalBottomSheet<string>(
                 context,
                 sheetContext => BuildSheetContent("Modal sheet", () => Navigator.Pop(sheetContext, "accepted")),
                 backgroundColor: _customTheme ? Color.Parse("#FFE8DEF8") : null,

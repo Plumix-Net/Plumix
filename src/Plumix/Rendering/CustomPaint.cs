@@ -95,7 +95,7 @@ public sealed class RenderCustomPaint : RenderProxyBox
     private void SetPainter(ref CustomPainter? field, CustomPainter? value)
     {
         if (ReferenceEquals(field, value)) return;
-        var shouldRepaint = field is null || value is null || value.ShouldRepaint(field);
+        bool shouldRepaint = field is null || value is null || value.ShouldRepaint(field);
         field = value;
         if (shouldRepaint) MarkNeedsPaint();
     }

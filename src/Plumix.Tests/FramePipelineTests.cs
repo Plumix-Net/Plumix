@@ -100,7 +100,7 @@ public sealed class FramePipelineTests
                 OnBuildScheduled = Scheduler.ScheduleFrame
             };
 
-            var drawFrames = 0;
+            int drawFrames = 0;
             Scheduler.DrawFrame += _ =>
             {
                 drawFrames += 1;

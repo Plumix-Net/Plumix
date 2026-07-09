@@ -38,7 +38,7 @@ public sealed class TapGestureRecognizer : GestureRecognizer, IGestureArenaMembe
         }
 
         var arenaEntry = GestureArena.Add(@event.Pointer, this);
-        var isSecondary = (@event.Buttons & PointerButtons.Secondary) != 0;
+        bool isSecondary = (@event.Buttons & PointerButtons.Secondary) != 0;
         _trackers[@event.Pointer] = new TapTracker(@event.Position, arenaEntry, isSecondary);
         if (isSecondary)
         {
@@ -207,8 +207,8 @@ public sealed class TapGestureRecognizer : GestureRecognizer, IGestureArenaMembe
 
     private static double Distance(Point a, Point b)
     {
-        var dx = a.X - b.X;
-        var dy = a.Y - b.Y;
+        double dx = a.X - b.X;
+        double dy = a.Y - b.Y;
         return Math.Sqrt(dx * dx + dy * dy);
     }
 

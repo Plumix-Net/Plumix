@@ -83,13 +83,13 @@ public sealed class ExpandIcon : StatefulWidget
         public override Widget Build(BuildContext context)
         {
             var localizations = MaterialLocalizations.Of(context);
-            var onTapHint = CurrentWidget.IsExpanded
+            string onTapHint = CurrentWidget.IsExpanded
                 ? localizations.ExpandedIconTapHint
                 : localizations.CollapsedIconTapHint;
             var iconColor = ResolveIconColor(Theme.Of(context));
-            var progress = _controller!.Evaluate();
-            var angle = Math.PI * progress;
-            var center = CurrentWidget.Size / 2;
+            double progress = _controller!.Evaluate();
+            double angle = Math.PI * progress;
+            double center = CurrentWidget.Size / 2;
             var rotation = new Matrix(
                 Math.Cos(angle), Math.Sin(angle),
                 -Math.Sin(angle), Math.Cos(angle),

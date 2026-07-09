@@ -336,13 +336,13 @@ public sealed class RadioListTile<T> : StatelessWidget
     {
         var group = RadioGroup<T>.MaybeOf(context);
         var effectiveGroupValue = group is not null ? group.GroupValue : GroupValue;
-        var isEnabled = Enabled ?? (OnChanged is not null || group is not null);
+        bool isEnabled = Enabled ?? (OnChanged is not null || group is not null);
         if (Enabled == true && OnChanged is null && group is null)
         {
             throw new InvalidOperationException("An enabled RadioListTile requires onChanged or an ancestor RadioGroup.");
         }
 
-        var isChecked = EqualityComparer<T?>.Default.Equals(Value, effectiveGroupValue);
+        bool isChecked = EqualityComparer<T?>.Default.Equals(Value, effectiveGroupValue);
         Action<T?>? controlOnChanged = isEnabled ? HandleChange : null;
         Widget control = _adaptive
             ? Radio<T>.Adaptive(
@@ -380,7 +380,7 @@ public sealed class RadioListTile<T> : StatelessWidget
 
         if (RadioScaleFactor != 1.0)
         {
-            var center = Radio<T>.Width / 2.0;
+            double center = Radio<T>.Width / 2.0;
             var scale = new Matrix(RadioScaleFactor, 0, 0, RadioScaleFactor, 0, 0);
             control = new Plumix.Widgets.Transform(
                 transform: Matrix.CreateTranslation(center, center)
@@ -392,7 +392,7 @@ public sealed class RadioListTile<T> : StatelessWidget
         var affinity = ControlAffinity
                        ?? ListTileTheme.Of(context).ControlAffinity
                        ?? ListTileControlAffinity.Platform;
-        var controlIsLeading = affinity is ListTileControlAffinity.Leading or ListTileControlAffinity.Platform;
+        bool controlIsLeading = affinity is ListTileControlAffinity.Leading or ListTileControlAffinity.Platform;
         var leading = controlIsLeading ? control : Secondary;
         var trailing = controlIsLeading ? Secondary : control;
         var selectedStates = Selected ? MaterialState.Selected : MaterialState.None;

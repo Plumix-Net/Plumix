@@ -42,7 +42,7 @@ public sealed class AboutListTile : StatelessWidget
 
     public override Widget Build(BuildContext context)
     {
-        var name = ApplicationName ?? AboutDialogs.DefaultApplicationName;
+        string name = ApplicationName ?? AboutDialogs.DefaultApplicationName;
         return new ListTile(
             leading: Icon,
             title: Child ?? new Text(MaterialLocalizations.Of(context).AboutListTileTitle(name)),
@@ -100,8 +100,8 @@ public sealed class AboutDialog : StatelessWidget
     {
         var theme = Theme.Of(context);
         var localizations = MaterialLocalizations.Of(context);
-        var name = ApplicationName ?? AboutDialogs.DefaultApplicationName;
-        var version = ApplicationVersion ?? string.Empty;
+        string name = ApplicationName ?? AboutDialogs.DefaultApplicationName;
+        string version = ApplicationVersion ?? string.Empty;
         var information = new List<Widget>
         {
             new DefaultTextStyle(theme.TextTheme.HeadlineSmall, new Text(name)),
@@ -123,10 +123,10 @@ public sealed class AboutDialog : StatelessWidget
 
         var content = new List<Widget> { new Row(crossAxisAlignment: CrossAxisAlignment.Start, children: row) };
         if (Children is not null) content.AddRange(Children);
-        var licenseLabel = theme.UseMaterial3
+        string licenseLabel = theme.UseMaterial3
             ? localizations.ViewLicensesButtonLabel
             : localizations.ViewLicensesButtonLabel.ToUpperInvariant();
-        var closeLabel = theme.UseMaterial3
+        string closeLabel = theme.UseMaterial3
             ? localizations.CloseButtonLabel
             : localizations.CloseButtonLabel.ToUpperInvariant();
 
@@ -210,10 +210,10 @@ public sealed class LicensePage : StatefulWidget
             else
             {
                 var rows = new List<Widget> { BuildAboutProgram(context) };
-                for (var index = 0; index < _data.Packages.Count; index++)
+                for (int index = 0; index < _data.Packages.Count; index++)
                 {
-                    var captured = index;
-                    var package = _data.Packages[index];
+                    int captured = index;
+                    string package = _data.Packages[index];
                     var entries = _data.EntriesFor(package);
                     rows.Add(new ListTile(
                         title: new Text(package),
@@ -236,8 +236,8 @@ public sealed class LicensePage : StatefulWidget
         private Widget BuildAboutProgram(BuildContext context)
         {
             var theme = Theme.Of(context);
-            var width = MediaQuery.MaybeOf(context)?.Size.Width ?? 0;
-            var gutter = width >= 720 ? 24.0 : 12.0;
+            double width = MediaQuery.MaybeOf(context)?.Size.Width ?? 0;
+            double gutter = width >= 720 ? 24.0 : 12.0;
             var children = new List<Widget>
             {
                 new DefaultTextStyle(
@@ -248,7 +248,7 @@ public sealed class LicensePage : StatefulWidget
             {
                 children.Add(new IconTheme(theme.IconTheme, CurrentWidget.ApplicationIcon));
             }
-            var version = CurrentWidget.ApplicationVersion ?? string.Empty;
+            string version = CurrentWidget.ApplicationVersion ?? string.Empty;
             if (version.Length > 0)
             {
                 children.Add(new Padding(
@@ -273,7 +273,7 @@ public sealed class LicensePage : StatefulWidget
         private void ShowPackage(BuildContext context, int packageIndex)
         {
             if (_data is null) return;
-            var package = _data.Packages[packageIndex];
+            string package = _data.Packages[packageIndex];
             var entries = _data.EntriesFor(package);
             Navigator.Of(context).Push(new BuilderPageRoute(
                 builder: _ => new PackageLicensePage(package, entries)));
@@ -313,7 +313,7 @@ public sealed class LicensePage : StatefulWidget
 
         public void AddLicense(LicenseEntry entry)
         {
-            foreach (var package in entry.Packages)
+            foreach (string package in entry.Packages)
             {
                 if (!_bindings.TryGetValue(package, out var indexes))
                 {
@@ -367,7 +367,7 @@ internal sealed class PackageLicensePage : StatelessWidget
                     paragraph.Text,
                     textAlign: paragraph.Indent == LicenseParagraph.CenteredIndent ? TextAlign.Center : TextAlign.Start,
                     fontWeight: paragraph.Indent == LicenseParagraph.CenteredIndent ? FontWeight.Bold : null);
-                var start = paragraph.Indent < 0 ? 0 : paragraph.Indent * 16.0;
+                double start = paragraph.Indent < 0 ? 0 : paragraph.Indent * 16.0;
                 var direction = Directionality.Of(context);
                 text = new Padding(
                     direction == TextDirection.Rtl
@@ -379,8 +379,8 @@ internal sealed class PackageLicensePage : StatelessWidget
         }
 
         var safe = MediaQuery.MaybePaddingOf(context) ?? default;
-        var width = MediaQuery.MaybeOf(context)?.Size.Width ?? 0;
-        var gutter = width >= 720 ? 24.0 : 12.0;
+        double width = MediaQuery.MaybeOf(context)?.Size.Width ?? 0;
+        double gutter = width >= 720 ? 24.0 : 12.0;
         var padding = new Thickness(gutter + safe.Left, 0, gutter + safe.Right, gutter + safe.Bottom);
         Widget body = new Center(child: new ConstrainedBox(
             new BoxConstraints(MaxWidth: 600),

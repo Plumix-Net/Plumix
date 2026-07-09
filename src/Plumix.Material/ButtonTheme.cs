@@ -186,14 +186,14 @@ public sealed record ButtonThemeData
         }
 
         var value = color.Value;
-        var luminance = ((0.2126 * value.R) + (0.7152 * value.G) + (0.0722 * value.B)) / 255.0;
+        double luminance = ((0.2126 * value.R) + (0.7152 * value.G) + (0.0722 * value.B)) / 255.0;
         return Math.Sqrt(luminance) + 0.15 < 0.5;
     }
 
     private Color ResolvePrimaryTextColor(MaterialButton button, ThemeData theme)
     {
         var fill = GetFillColor(button, theme);
-        var fillIsDark = fill.HasValue
+        bool fillIsDark = fill.HasValue
             ? IsDark(fill)
             : (button.ColorBrightness ?? theme.Brightness) == Brightness.Dark;
         return fillIsDark ? Colors.White : Colors.Black;

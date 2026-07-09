@@ -191,7 +191,7 @@ public sealed class MaterialScrollbarTests
             proximityPoint,
             PointerButtons.None,
             now.AddMilliseconds(20)));
-        var schedulerNow = Scheduler.CurrentSeconds;
+        double schedulerNow = Scheduler.CurrentSeconds;
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(schedulerNow + 0.01));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(schedulerNow + 0.35));
         harness.Pump(new Size(200, 240));
@@ -212,8 +212,8 @@ public sealed class MaterialScrollbarTests
 
         var overlay = RequireOverlay(harness.RenderView);
         var geometry = overlay.Geometry!.Value;
-        var x = geometry.ThumbRect.Center.X;
-        var downY = geometry.ThumbRect.Center.Y;
+        double x = geometry.ThumbRect.Center.X;
+        double downY = geometry.ThumbRect.Center.Y;
         var now = DateTime.UtcNow;
         overlay.HandleEvent(new PointerDownEvent(
             pointer: 9,
@@ -312,7 +312,7 @@ public sealed class MaterialScrollbarTests
             new BoxHitTestEntry(overlay, end));
         Assert.Equal(0, controller.Offset);
 
-        var schedulerNow = Scheduler.CurrentSeconds;
+        double schedulerNow = Scheduler.CurrentSeconds;
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(schedulerNow + 0.01));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(schedulerNow + 0.12));
         overlay.HandleEvent(new PointerMoveEvent(21, PointerDeviceKind.Touch, end, PointerButtons.Primary, true, now.AddMilliseconds(120)),
