@@ -8,7 +8,7 @@ Use this block as the fastest machine-readable status summary.
 
 ```yaml
 framework_plan_version: 1
-last_updated: 2026-07-09
+last_updated: 2026-07-10
 north_star: "Flutter-like widget/rendering framework in C# with Avalonia as host infrastructure."
 current_phase: "M4 material library rewrite (theme/scaffold/material controls) in progress."
 status:
@@ -162,6 +162,7 @@ Kickoff note (2026-03-12):
 - Added paired `TimePickerDialog` + `DateRangePickerDialog` parity with Flutter-shaped `TimeOfDay`, dial/input and calendar/input modes, 12/24-hour formatting, time/range theming, lazy multi-month range layout, connected range paint, typed dialog results, focused tests, and mirrored C#/Dart sample probes.
 - Added paired `DropdownMenu<T>` + `DropdownMenuFormField<T>` parity with editable/select-only anchors, filtering/search, disabled-item keyboard traversal, menu controllers/close policies, intrinsic and explicit sizing, Material 3 dropdown theming, form lifecycle, focused tests, and mirrored C#/Dart sample probes.
 - Added paired `SearchBar` + `SearchAnchor` parity baseline with controller open/close, route-owned search view, sync suggestions, M3 bar/view themes, focused tests, and mirrored C#/Dart sample probes.
+- Added paired core `RawAutocomplete<T>` + Material `Autocomplete<T>` parity with sync/async option resolution, stale-result suppression, split/custom fields, anchored direction selection, keyboard highlighting/selection, Material defaults, focused tests, and mirrored C#/Dart sample probes.
 
 Progress update (2026-03-19):
 

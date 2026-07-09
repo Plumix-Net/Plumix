@@ -1589,6 +1589,7 @@ public sealed class ListView : StatelessWidget
     private readonly double? _itemExtent;
     private readonly Thickness _padding;
     private readonly bool _addAutomaticKeepAlives;
+    private readonly bool _shrinkWrap;
     private readonly double _cacheExtent;
     private readonly CacheExtentStyle _cacheExtentStyle;
 
@@ -1603,7 +1604,8 @@ public sealed class ListView : StatelessWidget
         bool addAutomaticKeepAlives = true,
         double cacheExtent = 250.0,
         CacheExtentStyle cacheExtentStyle = CacheExtentStyle.Pixel,
-        Key? key = null) : base(key)
+        Key? key = null,
+        bool shrinkWrap = false) : base(key)
     {
         if (itemExtent.HasValue && itemExtent.Value <= 0)
         {
@@ -1617,6 +1619,7 @@ public sealed class ListView : StatelessWidget
         Physics = physics;
         _itemExtent = itemExtent;
         _padding = padding ?? default;
+        _shrinkWrap = shrinkWrap;
         _addAutomaticKeepAlives = addAutomaticKeepAlives;
         _cacheExtent = cacheExtent;
         _cacheExtentStyle = cacheExtentStyle;
@@ -1632,6 +1635,7 @@ public sealed class ListView : StatelessWidget
         ScrollPhysics? physics,
         double? itemExtent,
         Thickness? padding,
+        bool shrinkWrap,
         bool addAutomaticKeepAlives,
         double cacheExtent,
         CacheExtentStyle cacheExtentStyle,
@@ -1656,6 +1660,7 @@ public sealed class ListView : StatelessWidget
         Physics = physics;
         _itemExtent = itemExtent;
         _padding = padding ?? default;
+        _shrinkWrap = shrinkWrap;
         _addAutomaticKeepAlives = addAutomaticKeepAlives;
         _cacheExtent = cacheExtent;
         _cacheExtentStyle = cacheExtentStyle;
@@ -1681,7 +1686,8 @@ public sealed class ListView : StatelessWidget
         bool addAutomaticKeepAlives = true,
         double cacheExtent = 250.0,
         CacheExtentStyle cacheExtentStyle = CacheExtentStyle.Pixel,
-        Key? key = null)
+        Key? key = null,
+        bool shrinkWrap = false)
     {
         return new ListView(
             itemCount: itemCount,
@@ -1693,6 +1699,7 @@ public sealed class ListView : StatelessWidget
             physics: physics,
             itemExtent: itemExtent,
             padding: padding,
+            shrinkWrap: shrinkWrap,
             addAutomaticKeepAlives: addAutomaticKeepAlives,
             cacheExtent: cacheExtent,
             cacheExtentStyle: cacheExtentStyle,
@@ -1712,7 +1719,8 @@ public sealed class ListView : StatelessWidget
         bool addAutomaticKeepAlives = true,
         double cacheExtent = 250.0,
         CacheExtentStyle cacheExtentStyle = CacheExtentStyle.Pixel,
-        Key? key = null)
+        Key? key = null,
+        bool shrinkWrap = false)
     {
         return new ListView(
             itemCount: itemCount,
@@ -1724,6 +1732,7 @@ public sealed class ListView : StatelessWidget
             physics: physics,
             itemExtent: itemExtent,
             padding: padding,
+            shrinkWrap: shrinkWrap,
             addAutomaticKeepAlives: addAutomaticKeepAlives,
             cacheExtent: cacheExtent,
             cacheExtentStyle: cacheExtentStyle,
@@ -1787,7 +1796,8 @@ public sealed class ListView : StatelessWidget
             controller: Controller,
             physics: Physics,
             cacheExtent: _cacheExtent,
-            cacheExtentStyle: _cacheExtentStyle);
+            cacheExtentStyle: _cacheExtentStyle,
+            shrinkWrap: _shrinkWrap);
     }
 
     private static int SeparatedChildCount(int itemCount)

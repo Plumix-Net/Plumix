@@ -43,6 +43,26 @@ public readonly record struct TextRange(int Start, int End)
     }
 }
 
+public readonly record struct TextEditingValue
+{
+    public TextEditingValue(
+        string text = "",
+        TextSelection? selection = null,
+        TextRange? composing = null)
+    {
+        Text = text ?? string.Empty;
+        Selection = (selection ?? TextSelection.Collapsed(Text.Length)).Clamp(Text.Length);
+        TextRange? normalizedComposing = composing?.Clamp(Text.Length);
+        Composing = normalizedComposing is { IsCollapsed: false } ? normalizedComposing : null;
+    }
+
+    public string Text { get; }
+
+    public TextSelection Selection { get; }
+
+    public TextRange? Composing { get; }
+}
+
 public class TextEditingController : ChangeNotifier
 {
     private string _text;
@@ -76,6 +96,21 @@ public class TextEditingController : ChangeNotifier
     {
         get => _selection;
         set => SetValue(text: _text, selection: value, composing: _composing);
+    }
+
+    public TextEditingValue Value
+    {
+        get => new(_text, _selection, _composing);
+        set => SetValue(value.Text, value.Selection, value.Composing);
+    }
+
+    public static TextEditingController FromValue(TextEditingValue? value)
+    {
+        TextEditingValue initialValue = value ?? new TextEditingValue();
+        return new TextEditingController(
+            initialValue.Text,
+            initialValue.Selection,
+            initialValue.Composing);
     }
 
     public TextRange? Composing

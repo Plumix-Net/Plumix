@@ -45,6 +45,7 @@ public delegate bool FocusOnTextSelectionChangedCallback(FocusNode node, int bas
 
 public class FocusNode : ChangeNotifier
 {
+    private readonly List<FocusOnKeyEventCallback> _keyEventHandlers = [];
     private bool _hasFocus;
     private bool _canRequestFocus = true;
     private bool _skipTraversal;
@@ -153,7 +154,29 @@ public class FocusNode : ChangeNotifier
 
     internal KeyEventResult HandleKeyEvent(KeyEvent @event)
     {
+        foreach (FocusOnKeyEventCallback handler in _keyEventHandlers.ToArray())
+        {
+            if (handler(this, @event) == KeyEventResult.Handled)
+            {
+                return KeyEventResult.Handled;
+            }
+        }
+
         return OnKeyEvent?.Invoke(this, @event) ?? KeyEventResult.Ignored;
+    }
+
+    internal void AddKeyEventHandler(FocusOnKeyEventCallback handler)
+    {
+        ArgumentNullException.ThrowIfNull(handler);
+        if (!_keyEventHandlers.Contains(handler))
+        {
+            _keyEventHandlers.Add(handler);
+        }
+    }
+
+    internal void RemoveKeyEventHandler(FocusOnKeyEventCallback handler)
+    {
+        _keyEventHandlers.Remove(handler);
     }
 
     internal bool HandleTextInput(string text)
@@ -220,6 +243,7 @@ public class FocusNode : ChangeNotifier
 
     public override void Dispose()
     {
+        _keyEventHandlers.Clear();
         (Manager ?? FocusManager.Instance).UnregisterNode(this);
         base.Dispose();
     }
