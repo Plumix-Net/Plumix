@@ -43,7 +43,7 @@ public readonly record struct TextRange(int Start, int End)
     }
 }
 
-public sealed class TextEditingController : ChangeNotifier
+public class TextEditingController : ChangeNotifier
 {
     private string _text;
     private TextSelection _selection;

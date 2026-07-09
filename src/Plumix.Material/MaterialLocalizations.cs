@@ -36,6 +36,10 @@ public abstract class MaterialLocalizations
 
     public virtual string MenuDismissLabel => "Dismiss menu";
 
+    public virtual string SearchFieldLabel => "Search";
+
+    public virtual string ClearButtonTooltip => "Clear";
+
     public virtual string ExpandedIconTapHint => "Collapse";
 
     public virtual string CollapsedIconTapHint => "Expand";
@@ -239,6 +243,10 @@ public sealed class DefaultMaterialLocalizations : MaterialLocalizations
     public override string ShowMenuTooltip => "Show menu";
 
     public override string PopupMenuLabel => "Popup menu";
+
+    public override string SearchFieldLabel => "Search";
+
+    public override string ClearButtonTooltip => "Clear";
 
     public override string MenuDismissLabel => "Dismiss menu";
 
