@@ -676,6 +676,10 @@ Progress update (2026-03-19):
   - introduced shared `MenuController` anchor attachment, nearest-anchor lookup, programmatic open/close, local anchored panel layout, Flutter-shaped leaf item API/state/focus/semantics composition, and close-on-activate behavior;
   - added focused controller/layout/item coverage and mirrored controller/disabled/keep-open probes in the C# and Dart dropdown demos;
   - root-overlay placement, cascading submenus, animated panel choreography, keyboard traversal, and full `MenuTheme`/`MenuButtonTheme` resolution remain tracked in `DIVERGENCES.md`.
+- Added paired core `Wrap` + Material `Chip` ports:
+  - `Wrap` now follows Flutter run construction, main/run alignment, cross-axis alignment, spacing, RTL/vertical-direction ordering, and overflow clipping through a framework-owned `RenderWrap`;
+  - `Chip` now forwards its information/delete-only API through `RawChip` with source-shaped delete slots and semantics;
+  - added focused render/control coverage and switched both chips demos to matching multi-run `Wrap` composition.
 - Remaining divergence for floating action button in current framework scope:
   - none documented in current framework scope.
 

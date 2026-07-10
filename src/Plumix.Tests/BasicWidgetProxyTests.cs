@@ -116,6 +116,62 @@ public sealed class BasicWidgetProxyTests
         Assert.Equal(updatedBorderRadius, updatedRenderClipRRect.BorderRadius);
     }
 
+    [Fact]
+    public void WrapWidget_CreatesRenderWrap_AndUpdatesRunConfiguration()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(new Wrap(
+            spacing: 3,
+            runSpacing: 5,
+            alignment: WrapAlignment.SpaceAround,
+            runAlignment: WrapAlignment.Center,
+            crossAxisAlignment: WrapCrossAlignment.End,
+            textDirection: Plumix.UI.TextDirection.Rtl,
+            children:
+            [
+                new SizedBox(width: 10, height: 10),
+                new SizedBox(width: 20, height: 10),
+            ]));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var wrap = RequireRenderObject<RenderWrap>(root.ChildElement);
+        Assert.Equal(3, wrap.Spacing);
+        Assert.Equal(5, wrap.RunSpacing);
+        Assert.Equal(WrapAlignment.SpaceAround, wrap.Alignment);
+        Assert.Equal(WrapCrossAlignment.End, wrap.CrossAxisAlignment);
+        Assert.Equal(Plumix.UI.TextDirection.Rtl, wrap.TextDirection);
+
+        root.Update(new Wrap(
+            direction: Axis.Vertical,
+            spacing: 7,
+            runSpacing: 11,
+            alignment: WrapAlignment.SpaceEvenly,
+            runAlignment: WrapAlignment.End,
+            crossAxisAlignment: WrapCrossAlignment.Center,
+            textDirection: Plumix.UI.TextDirection.Ltr,
+            verticalDirection: Plumix.Painting.VerticalDirection.Up,
+            children:
+            [
+                new SizedBox(width: 10, height: 10),
+                new SizedBox(width: 20, height: 10),
+            ]));
+        owner.FlushBuild();
+
+        var updated = RequireRenderObject<RenderWrap>(root.ChildElement);
+        Assert.Same(wrap, updated);
+        Assert.Equal(Axis.Vertical, updated.Direction);
+        Assert.Equal(7, updated.Spacing);
+        Assert.Equal(11, updated.RunSpacing);
+        Assert.Equal(WrapAlignment.SpaceEvenly, updated.Alignment);
+        Assert.Equal(WrapAlignment.End, updated.RunAlignment);
+        Assert.Equal(WrapCrossAlignment.Center, updated.CrossAxisAlignment);
+        Assert.Equal(Plumix.UI.TextDirection.Ltr, updated.TextDirection);
+        Assert.Equal(Plumix.Painting.VerticalDirection.Up, updated.VerticalDirection);
+    }
+
     private static T RequireRenderObject<T>(Element? element) where T : RenderObject
     {
         Assert.NotNull(element);
