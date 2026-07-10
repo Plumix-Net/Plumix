@@ -112,7 +112,6 @@ public sealed class MergeableMaterial : StatefulWidget
 
     private sealed class MergeableMaterialState : State
     {
-        private const double CardRadius = 4;
         private readonly Dictionary<LocalKey, GapAnimation> _gaps = [];
 
         private MergeableMaterial CurrentWidget => (MergeableMaterial)StateWidget;
@@ -225,12 +224,12 @@ public sealed class MergeableMaterial : StatefulWidget
                     crossAxisAlignment: CrossAxisAlignment.Stretch,
                     children: children)
                 : new Row(mainAxisSize: MainAxisSize.Min, children: children);
-            body = new ClipRRect(BorderRadius.Circular(CardRadius), body);
-            return new DecoratedBox(
-                decoration: new BoxDecoration(
-                    Color: Colors.Transparent,
-                    BorderRadius: BorderRadius.Circular(CardRadius),
-                    BoxShadows: BuildBoxShadows(theme.ShadowColor, CurrentWidget.Elevation)),
+            return new Material(
+                type: MaterialType.Card,
+                color: Colors.Transparent,
+                elevation: CurrentWidget.Elevation,
+                shadowColor: theme.ShadowColor,
+                clipBehavior: Clip.AntiAlias,
                 child: body);
         }
 
@@ -305,31 +304,6 @@ public sealed class MergeableMaterial : StatefulWidget
                     yield return new GapDescriptor(gap, previous.Key, next.Key);
                 }
             }
-        }
-
-        private static BoxShadows? BuildBoxShadows(Color shadowColor, double elevation)
-        {
-            if (elevation <= 0 || shadowColor.A == 0)
-            {
-                return null;
-            }
-
-            static Color WithOpacity(Color color, double opacity) => Color.FromArgb(
-                (byte)Math.Round(color.A * opacity), color.R, color.G, color.B);
-
-            var keyShadow = new BoxShadow
-            {
-                OffsetY = Math.Max(1, Math.Round(elevation)),
-                Blur = Math.Max(2, elevation * 2.4),
-                Color = WithOpacity(shadowColor, 0.20)
-            };
-            var ambientShadow = new BoxShadow
-            {
-                OffsetY = Math.Max(1, Math.Round(elevation * 0.5)),
-                Blur = Math.Max(3, elevation * 3.2),
-                Color = WithOpacity(shadowColor, 0.14)
-            };
-            return new BoxShadows(keyShadow, [ambientShadow]);
         }
 
         private sealed class GapAnimation(GapDescriptor descriptor, AnimationController controller)

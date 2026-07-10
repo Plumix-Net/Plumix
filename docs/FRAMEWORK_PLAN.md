@@ -664,6 +664,10 @@ Progress update (2026-03-19):
   - `Ink` now provides Flutter-shaped color/decoration/image shorthand, padding and sizing composition, preserving decoration-under-response paint for ordinary `InkWell`/`InkResponse` descendants;
   - `TooltipVisibility` now supplies inherited nearest-scope suppression for pointer, long-press, tap, and programmatic tooltip display while preserving tooltip semantics;
   - added focused coverage and mirrored C#/Dart probes in the existing ink-response and badge-tooltip sample pages. Shared ancestor-Material ink ownership remains tracked in `DIVERGENCES.md`.
+- Added paired Material surface + `MergeableMaterial` parity pass:
+  - introduced public `Material`/`MaterialType` with Flutter-shaped canvas/card/circle/button/transparency defaults, elevation shadow and surface-tint resolution, shape/border/clip/default-text composition, and animated surface values;
+  - rewired `MergeableMaterial` slice groups through the shared card `Material` surface while preserving keyed gap animation and divider behavior;
+  - added focused surface/mergeable regression coverage and expanded the mirrored Card runtime demo. Oval clipping, shared ink ownership, and default-text-style interpolation remain tracked in `DIVERGENCES.md`.
 - Added paired Material `SearchDelegate<T>` + `showSearch` (`MaterialSearch.ShowSearch<T>`) ports:
   - added a full-screen route with fade lifecycle, captured ambient theme/media/directionality, typed completion result, single-active-delegate guard, query cursor placement, focused suggestions/results switching, escape/back dismissal, and AppBar leading/actions/bottom/flexible-space composition;
   - added Flutter-shaped delegate hooks for search-field defaults, query control, app-bar theme override, suggestions/results, close/reuse lifecycle, and transition-controller exposure;

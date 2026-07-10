@@ -101,8 +101,9 @@ dotnet build src/Sample/Plumix.iOS/Plumix.iOS.csproj -c Debug
 5. Preserve lifecycle contracts (`CreateElement`, mount/update/rebuild flow, render object attachment).
 6. Keep nullability correctness (`Nullable` is enabled) and avoid introducing nullable warnings.
 7. Code style: use explicit types for primitives and `string` (`double`, `int`, `bool`, `string`, `char`, `byte`, `long`, `float`, `decimal`, ...); keep `var` only for complex/reference types whose type is obvious from the right-hand side. See `docs/ai/INVARIANTS.md` (Code Style). Emit this correctly on first pass.
-8. Avoid broad dependency/framework upgrades unless explicitly requested.
-9. Demo feature/route/page-structure updates in `src/Sample/Plumix.Sample` must be mirrored in `dart_sample` in the same change; host glue is exempt (see `docs/ai/INVARIANTS.md`, Sample Parity).
+8. Max line length is 120 characters (`.editorconfig` `max_line_length`). Wrap long argument lists, chained calls, and conditions instead of exceeding it. Applies to new/edited lines; do not mass-reformat untouched code.
+9. Avoid broad dependency/framework upgrades unless explicitly requested.
+10. Demo feature/route/page-structure updates in `src/Sample/Plumix.Sample` must be mirrored in `dart_sample` in the same change; host glue is exempt (see `docs/ai/INVARIANTS.md`, Sample Parity).
 
 ## Porting Workflow (Mandatory)
 

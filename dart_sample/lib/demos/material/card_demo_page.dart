@@ -47,7 +47,7 @@ class _CardDemoPageState extends State<CardDemoPage> {
             style: TextStyle(fontSize: 20, color: Colors.black),
           ),
           const Text(
-            'Elevated, filled, and outlined Material card variants with theme, mode, and clip probes.',
+            'Card variants plus Material surfaces and mergeable slices with theme, mode, and clip probes.',
             style: TextStyle(fontSize: 14, color: Colors.black54),
           ),
           Row(
@@ -105,6 +105,8 @@ class _CardDemoPageState extends State<CardDemoPage> {
                     _buildElevatedCard(),
                     _buildFilledCard(),
                     _buildOutlinedCard(),
+                    _buildMaterialSurface(),
+                    _buildMergeableMaterial(),
                   ],
                 ),
               ),
@@ -148,6 +150,59 @@ class _CardDemoPageState extends State<CardDemoPage> {
         title: 'Outlined card',
         body:
             'Outlined cards add the default outlineVariant border while keeping elevation at zero.',
+      ),
+    );
+  }
+
+  Widget _buildMaterialSurface() {
+    return Container(
+      margin: const EdgeInsets.all(4),
+      child: Material(
+        type: MaterialType.card,
+        color: const Color(0xFFFFF8E1),
+        elevation: _useThemeOverrides ? 5 : 2,
+        surfaceTintColor: _useMaterial3
+            ? const Color(0xFF6750A4)
+            : Colors.transparent,
+        clipBehavior: _clip ? Clip.antiAlias : Clip.none,
+        child: _buildCardBody(
+          title: 'Material surface',
+          body:
+              'Card-type Material resolves surface tint, elevation, clipping, and its default text style.',
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMergeableMaterial() {
+    return Container(
+      margin: const EdgeInsets.all(4),
+      child: MergeableMaterial(
+        elevation: _useThemeOverrides ? 4 : 2,
+        hasDividers: true,
+        children: <MergeableMaterialItem>[
+          MaterialSlice(
+            key: const ValueKey<String>('material-slice-first'),
+            color: const Color(0xFFE8F5E9),
+            child: _buildCardBody(
+              title: 'First mergeable slice',
+              body: 'Slices join on a shared Material card surface.',
+            ),
+          ),
+          MaterialGap(
+            key: const ValueKey<String>('material-slice-gap'),
+            size: _dense ? 8 : 16,
+          ),
+          MaterialSlice(
+            key: const ValueKey<String>('material-slice-second'),
+            color: const Color(0xFFE3F2FD),
+            child: _buildCardBody(
+              title: 'Second mergeable slice',
+              body:
+                  'The gap is controller-animated when the item list changes.',
+            ),
+          ),
+        ],
       ),
     );
   }

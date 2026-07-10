@@ -1,10 +1,12 @@
 using System;
 using Avalonia;
 using Avalonia.Media;
+using Plumix.Foundation;
 using Plumix.Material;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
+using MaterialSurface = Plumix.Material.Material;
 
 // Dart parity source (reference): dart_sample/lib/demos/material/card_demo_page.dart (exact sample parity)
 
@@ -52,7 +54,7 @@ internal sealed class CardDemoPageState : State
                 [
                     new Text("Card baseline", fontSize: 20, color: Colors.Black),
                     new Text(
-                        "Elevated, filled, and outlined Material card variants with theme, mode, and clip probes.",
+                        "Card variants plus Material surfaces and mergeable slices with theme, mode, and clip probes.",
                         fontSize: 14,
                         color: Color.Parse("#8A000000")),
                     new Row(
@@ -105,6 +107,8 @@ internal sealed class CardDemoPageState : State
                                         BuildElevatedCard(),
                                         BuildFilledCard(),
                                         BuildOutlinedCard(),
+                                        BuildMaterialSurface(),
+                                        BuildMergeableMaterial(),
                                     ])))),
                 ]));
     }
@@ -137,6 +141,42 @@ internal sealed class CardDemoPageState : State
             child: BuildCardBody(
                 title: "Outlined card",
                 body: "Outlined cards add the default outlineVariant border while keeping elevation at zero."));
+    }
+
+    private Widget BuildMaterialSurface()
+    {
+        return new Container(
+            margin: new Thickness(4),
+            child: new MaterialSurface(
+                type: MaterialType.Card,
+                color: Color.Parse("#FFFFF8E1"),
+                elevation: _useThemeOverrides ? 5 : 2,
+                surfaceTintColor: _useMaterial3 ? Color.Parse("#FF6750A4") : Colors.Transparent,
+                clipBehavior: _clip ? Clip.AntiAlias : Clip.None,
+                child: BuildCardBody(
+                    title: "Material surface",
+                    body: "Card-type Material resolves surface tint, elevation, clipping, and its default text style.")));
+    }
+
+    private Widget BuildMergeableMaterial()
+    {
+        return new Container(
+            margin: new Thickness(4),
+            child: new MergeableMaterial(
+                elevation: _useThemeOverrides ? 4 : 2,
+                hasDividers: true,
+                children:
+                [
+                    new MaterialSlice(
+                        new ValueKey<string>("material-slice-first"),
+                        BuildCardBody("First mergeable slice", "Slices join on a shared Material card surface."),
+                        Color.Parse("#FFE8F5E9")),
+                    new MaterialGap(new ValueKey<string>("material-slice-gap"), _dense ? 8 : 16),
+                    new MaterialSlice(
+                        new ValueKey<string>("material-slice-second"),
+                        BuildCardBody("Second mergeable slice", "The gap is controller-animated when the item list changes."),
+                        Color.Parse("#FFE3F2FD")),
+                ]));
     }
 
     private Widget BuildCardBody(string title, string body)
