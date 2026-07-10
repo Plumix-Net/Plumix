@@ -283,7 +283,7 @@ public sealed class PrimaryScrollController : InheritedNotifier<ScrollController
     }
 }
 
-public sealed class ScrollController : ChangeNotifier
+public class ScrollController : ChangeNotifier
 {
     private readonly List<ScrollPosition> _positions = [];
 
@@ -303,7 +303,7 @@ public sealed class ScrollController : ChangeNotifier
 
     public ScrollPosition? PrimaryPosition => _positions.Count == 0 ? null : _positions[0];
 
-    internal ScrollPosition CreateScrollPosition(ScrollPhysics? physics = null)
+    public virtual ScrollPosition CreateScrollPosition(ScrollPhysics? physics = null)
     {
         return new ScrollPosition(initialPixels: InitialScrollOffset, physics: physics ?? Physics);
     }
@@ -1363,6 +1363,20 @@ public sealed class SliverFixedExtentList : SliverMultiBoxAdaptorWidget
     {
         ((RenderSliverFixedExtentList)renderObject).ItemExtent = ItemExtent;
     }
+}
+
+public sealed class SliverVariableExtentList : SliverMultiBoxAdaptorWidget
+{
+    public SliverVariableExtentList(SliverChildDelegate @delegate, SliverVariableExtentLayout layout, Key? key = null) : base(@delegate, key)
+    {
+        Layout = layout ?? throw new ArgumentNullException(nameof(layout));
+    }
+
+    public SliverVariableExtentLayout Layout { get; }
+
+    internal override RenderObject CreateRenderObject(BuildContext context) => new RenderSliverVariableExtentList(Layout);
+
+    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject) => ((RenderSliverVariableExtentList)renderObject).ExtentLayout = Layout;
 }
 
 public sealed class SliverGrid : SliverMultiBoxAdaptorWidget

@@ -313,6 +313,7 @@ public sealed record ThemeData
     private DropdownMenuThemeData? _dropdownMenuTheme;
     private SearchBarThemeData? _searchBarTheme;
     private SearchViewThemeData? _searchViewTheme;
+    private CarouselViewThemeData? _carouselViewTheme;
 
     public ThemeData(
         TargetPlatform? platform = null,
@@ -405,7 +406,8 @@ public sealed record ThemeData
         TimePickerThemeData? timePickerTheme = null,
         DropdownMenuThemeData? dropdownMenuTheme = null,
         SearchBarThemeData? searchBarTheme = null,
-        SearchViewThemeData? searchViewTheme = null)
+        SearchViewThemeData? searchViewTheme = null,
+        CarouselViewThemeData? carouselViewTheme = null)
     {
         Platform = platform ?? ResolveDefaultPlatform();
         Brightness = brightness ?? Brightness.Light;
@@ -504,6 +506,7 @@ public sealed record ThemeData
         _dropdownMenuTheme = dropdownMenuTheme;
         _searchBarTheme = searchBarTheme;
         _searchViewTheme = searchViewTheme;
+        _carouselViewTheme = carouselViewTheme;
         VisualDensity = visualDensity ?? VisualDensity.Standard;
     }
 
@@ -851,6 +854,12 @@ public sealed record ThemeData
     {
         get => _searchViewTheme ?? new SearchViewThemeData();
         init => _searchViewTheme = value;
+    }
+
+    public CarouselViewThemeData CarouselViewTheme
+    {
+        get => _carouselViewTheme ?? new CarouselViewThemeData();
+        init => _carouselViewTheme = value;
     }
 
     public ButtonBarThemeData ButtonBarTheme

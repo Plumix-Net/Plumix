@@ -155,6 +155,7 @@ Status: `in_progress`
 
 Kickoff note (2026-03-12):
 
+- Added Flutter-structured `CarouselView`/`CarouselViewTheme` with fixed, weighted, and lazy item sources; core now exposes a variable-extent sliver adapter and subclassable scroll positions so carousel geometry and leading-item preservation remain framework-owned.
 - Prioritized immediately after M3 to unblock practical control rewrites and reduce sample-level styling drift by introducing a Flutter-like Material layer in framework widgets.
 - Added paired `CalendarDatePicker` + `YearPicker` parity with calendar delegates/date utilities, M2/M3 date-picker theming, bounded month paging, day/year states, keyboard/accessibility behavior, focused tests, and mirrored C#/Dart sample coverage.
 - Added paired `TextFormField` + `DropdownButtonFormField<T>` parity on shared core `Form`/`FormField<T>` primitives, covering typed global-key state access, field registration, validation modes, save/reset/error lifecycle, controller/focus synchronization, decorated error/hint composition, callback ordering, invalid/form semantics, focused tests, and mirrored C#/Dart sample probes.
