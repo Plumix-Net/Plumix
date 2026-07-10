@@ -1,5 +1,7 @@
 # Changelog
 
+- Added paired Material `Ink` and `TooltipVisibility` ports with Flutter-shaped decoration/image shorthand, inherited tooltip suppression, focused tests, and mirrored C#/Dart demo probes. Added core `BoxConstraints.Expand` and advanced `Plumix`/`Plumix.Material` to `0.2.0-alpha.1`. Ancestor-owned ink features remain documented in `docs/ai/DIVERGENCES.md`.
+
 All notable framework changes are documented in this file.
 
 This project follows the spirit of [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).

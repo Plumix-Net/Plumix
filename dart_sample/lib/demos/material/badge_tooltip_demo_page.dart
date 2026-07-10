@@ -11,6 +11,7 @@ class _BadgeTooltipDemoPageState extends State<BadgeTooltipDemoPage> {
   int _count = 7;
   bool _isLabelVisible = true;
   bool _useThemeOverrides = false;
+  bool _tooltipsVisible = true;
 
   @override
   Widget build(BuildContext context) {
@@ -36,6 +37,11 @@ class _BadgeTooltipDemoPageState extends State<BadgeTooltipDemoPage> {
             _controlButton(
               _useThemeOverrides ? 'Theme on' : 'Theme off',
               () => setState(() => _useThemeOverrides = !_useThemeOverrides),
+            ),
+            const SizedBox(width: 8),
+            _controlButton(
+              _tooltipsVisible ? 'Tooltips on' : 'Tooltips off',
+              () => setState(() => _tooltipsVisible = !_tooltipsVisible),
             ),
           ],
         ),
@@ -83,32 +89,35 @@ class _BadgeTooltipDemoPageState extends State<BadgeTooltipDemoPage> {
           style: TextStyle(fontSize: 14),
         ),
         const SizedBox(height: 14),
-        Row(
-          children: <Widget>[
-            Tooltip(
-              message: 'Default tooltip',
-              child: OutlinedButton(
-                onPressed: () {},
-                child: const Text('Default'),
+        TooltipVisibility(
+          visible: _tooltipsVisible,
+          child: Row(
+            children: <Widget>[
+              Tooltip(
+                message: 'Default tooltip',
+                child: OutlinedButton(
+                  onPressed: () {},
+                  child: const Text('Default'),
+                ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Tooltip(
-              message: 'Widget override tooltip',
-              preferBelow: false,
-              verticalOffset: 28,
-              decoration: BoxDecoration(
-                color: const Color(0xFF4527A0),
-                borderRadius: BorderRadius.circular(8),
+              const SizedBox(width: 12),
+              Tooltip(
+                message: 'Widget override tooltip',
+                preferBelow: false,
+                verticalOffset: 28,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF4527A0),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                textStyle: const TextStyle(color: Colors.white, fontSize: 13),
+                waitDuration: const Duration(milliseconds: 250),
+                child: OutlinedButton(
+                  onPressed: () {},
+                  child: const Text('Above + delay'),
+                ),
               ),
-              textStyle: const TextStyle(color: Colors.white, fontSize: 13),
-              waitDuration: const Duration(milliseconds: 250),
-              child: OutlinedButton(
-                onPressed: () {},
-                child: const Text('Above + delay'),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ],
     );

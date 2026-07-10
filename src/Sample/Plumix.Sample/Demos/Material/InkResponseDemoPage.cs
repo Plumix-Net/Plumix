@@ -40,7 +40,7 @@ public sealed class InkResponseDemoPage : StatefulWidget
                     [
                         new Text("InkResponse + InkWell", fontSize: 20, color: Colors.Black),
                         new Text(
-                            "Circle/uncontained versus rectangle/contained ink, primary + secondary gestures, hover/focus, and overlay states.",
+                            "Circle/uncontained versus rectangle/contained ink, Ink decoration, primary + secondary gestures, hover/focus, and overlay states.",
                             fontSize: 14,
                             color: Colors.DimGray),
                         new Row(
@@ -79,7 +79,7 @@ public sealed class InkResponseDemoPage : StatefulWidget
                 children:
                 [
                     new Text("InkResponse", fontSize: 14, color: Colors.Black),
-                    new Container(
+                    new Ink(
                         width: 112,
                         height: 112,
                         decoration: new BoxDecoration(
@@ -103,7 +103,7 @@ public sealed class InkResponseDemoPage : StatefulWidget
                 children:
                 [
                     new Text("InkWell", fontSize: 14, color: Colors.Black),
-                    new Container(
+                    new Ink(
                         width: 150,
                         height: 96,
                         decoration: new BoxDecoration(

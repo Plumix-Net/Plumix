@@ -659,6 +659,10 @@ Progress update (2026-03-19):
   - replaced the earlier `InkWell` subset with a shared Flutter-shaped interaction state machine covering primary/secondary taps, tap-up/cancel, double tap, long-press/up, focus, hover, feedback, semantics, and external `MaterialStatesController` synchronization;
   - matched circle/uncontained `InkResponse` versus rectangle/contained `InkWell` geometry, radius/border resolution, splash migration, and `overlayColor -> legacy color -> ThemeData` state-color precedence;
   - added source-required gesture callback and long-press semantics plumbing, fixed `RenderTabBar` indicator geometry refresh when ink-child layout remains stable, added focused `MaterialInkResponseTests`, and a mirrored `/ink-response` C#/Dart runtime demo. Pluggable ink factories and ancestor-Material ink ownership remain documented shared-primitive gaps.
+- Added paired Material `Ink` + `TooltipVisibility` ports:
+  - `Ink` now provides Flutter-shaped color/decoration/image shorthand, padding and sizing composition, preserving decoration-under-response paint for ordinary `InkWell`/`InkResponse` descendants;
+  - `TooltipVisibility` now supplies inherited nearest-scope suppression for pointer, long-press, tap, and programmatic tooltip display while preserving tooltip semantics;
+  - added focused coverage and mirrored C#/Dart probes in the existing ink-response and badge-tooltip sample pages. Shared ancestor-Material ink ownership remains tracked in `DIVERGENCES.md`.
 - Remaining divergence for floating action button in current framework scope:
   - none documented in current framework scope.
 

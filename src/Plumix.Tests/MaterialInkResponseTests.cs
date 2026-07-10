@@ -25,6 +25,54 @@ public sealed class MaterialInkResponseTests : IDisposable
     }
 
     [Fact]
+    public void Ink_ValidatesShorthandAndDimensions()
+    {
+        Assert.Throws<ArgumentException>(() => new Ink(
+            color: Colors.Red,
+            decoration: new BoxDecoration(Color: Colors.Blue)));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new Ink(width: -1));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new Ink(padding: new Thickness(-1, 0, 0, 0)));
+
+        var provider = new MemoryImage([1, 2, 3]);
+        var image = Ink.Image(provider);
+        Assert.NotNull(image.Decoration?.Image);
+        Assert.Same(provider, image.Decoration!.Image!.Image);
+    }
+
+    [Fact]
+    public void Ink_PaintsDecorationBelowInkWellAndAppliesPaddingAndSize()
+    {
+        using var harness = CreateHarness(new Ink(
+            width: 100,
+            height: 56,
+            padding: new Thickness(8, 4),
+            color: Color.Parse("#FFEADDFF"),
+            child: new InkWell(
+                onTap: () => { },
+                child: new Center(child: new Text("Ink")))));
+        harness.Pump(new Size(160, 100));
+
+        var decoration = Assert.Single(FindDescendants<RenderDecoratedBox>(harness.RenderView));
+        Assert.Equal(Color.Parse("#FFEADDFF"), decoration.Decoration.Color);
+        Assert.Equal(100, decoration.Size.Width, 3);
+        Assert.Equal(56, decoration.Size.Height, 3);
+        Assert.Contains(
+            FindDescendants<RenderPadding>(harness.RenderView),
+            padding => padding.Padding == new Thickness(8, 4));
+        Assert.Single(FindDescendants<RenderInkResponsePaint>(harness.RenderView));
+    }
+
+    [Fact]
+    public void Ink_WithoutChild_ExpandsToTheParentConstraints()
+    {
+        using var harness = CreateHarness(new Ink(color: Colors.Blue));
+        harness.Pump(new Size(160, 100));
+
+        var decoration = Assert.Single(FindDescendants<RenderDecoratedBox>(harness.RenderView));
+        Assert.Equal(new Size(160, 100), decoration.Size);
+    }
+
+    [Fact]
     public void InkResponseAndInkWell_DefaultGeometryMatchesFlutter()
     {
         var response = new InkResponse();

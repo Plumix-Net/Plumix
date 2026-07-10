@@ -42,7 +42,7 @@ class _InkResponseDemoPageState extends State<InkResponseDemoPage> {
             style: TextStyle(fontSize: 20, color: Colors.black),
           ),
           const Text(
-            'Circle/uncontained versus rectangle/contained ink, primary + secondary gestures, hover/focus, and overlay states.',
+            'Circle/uncontained versus rectangle/contained ink, Ink decoration, primary + secondary gestures, hover/focus, and overlay states.',
             style: TextStyle(fontSize: 14, color: Colors.black54),
           ),
           Row(
@@ -94,7 +94,7 @@ class _InkResponseDemoPageState extends State<InkResponseDemoPage> {
           'InkResponse',
           style: TextStyle(fontSize: 14, color: Colors.black),
         ),
-        Container(
+        Ink(
           width: 112,
           height: 112,
           decoration: const BoxDecoration(
@@ -127,7 +127,7 @@ class _InkResponseDemoPageState extends State<InkResponseDemoPage> {
           'InkWell',
           style: TextStyle(fontSize: 14, color: Colors.black),
         ),
-        Container(
+        Ink(
           width: 150,
           height: 96,
           decoration: BoxDecoration(

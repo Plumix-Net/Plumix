@@ -131,6 +131,7 @@ public sealed class TooltipState : State
     private ThemeData _theme = ThemeData.Light;
     private bool _isMounted;
     private bool _isShown;
+    private bool _isVisible = true;
 
     private Tooltip CurrentWidget => (Tooltip)StateWidget;
 
@@ -171,6 +172,15 @@ public sealed class TooltipState : State
     {
         _theme = Theme.Of(context);
         _tooltipTheme = TooltipTheme.Of(context);
+        _isVisible = TooltipVisibility.Of(context);
+        if (!_isVisible && _isShown)
+        {
+            CancelTimer(ref _showTimer);
+            CancelTimer(ref _hideTimer);
+            _fadeController?.Stop();
+            _isShown = false;
+        }
+
         string message = CurrentWidget.Message ?? string.Empty;
         if (message.Length == 0)
         {
@@ -227,7 +237,7 @@ public sealed class TooltipState : State
 
     public bool EnsureTooltipVisible()
     {
-        if (!_isMounted || _isShown)
+        if (!_isMounted || !_isVisible || _isShown)
         {
             return false;
         }
@@ -299,6 +309,11 @@ public sealed class TooltipState : State
 
     private void HandlePointerEnter()
     {
+        if (!_isVisible)
+        {
+            return;
+        }
+
         _cursorHandle?.Dispose();
         _cursorHandle = CurrentWidget.MouseCursor is null
             ? null
@@ -323,6 +338,11 @@ public sealed class TooltipState : State
 
     private void HandlePointerDown()
     {
+        if (!_isVisible)
+        {
+            return;
+        }
+
         if (_isShown && CurrentWidget.EnableTapToDismiss)
         {
             DismissTooltip(immediate: false);
@@ -341,6 +361,11 @@ public sealed class TooltipState : State
 
     private void TriggerTooltip(FeedbackType feedbackType)
     {
+        if (!_isVisible)
+        {
+            return;
+        }
+
         ShowTooltip(triggered: true);
         if (CurrentWidget.EnableFeedback ?? _tooltipTheme.EnableFeedback ?? true)
         {
@@ -362,7 +387,7 @@ public sealed class TooltipState : State
 
     private void ShowTooltip(bool triggered)
     {
-        if (!_isMounted)
+        if (!_isMounted || !_isVisible)
         {
             return;
         }
