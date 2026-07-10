@@ -7,7 +7,7 @@
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <PackageId>Plumix.Elmish</PackageId>
-    <Version>0.1.0-alpha.1</Version>
+    <Version>0.1.0-alpha.6</Version>
     <Description>Elmish (MVU) integration for Plumix — a Flutter-inspired UI framework for .NET. Hosts an Elmish program inside a widget and lets Plumix's element reconciliation do the diffing: Elmish without a virtual DOM.</Description>
   </PropertyGroup>
 
