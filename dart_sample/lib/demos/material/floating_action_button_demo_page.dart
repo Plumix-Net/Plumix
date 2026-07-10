@@ -70,6 +70,20 @@ class _FloatingActionButtonDemoPageState
             'enabled=$_enabled, extended=${_extendedOpen ? 'open' : 'icon'}, regular=$_regularTaps, small=$_smallTaps, large=$_largeTaps, extendedTaps=$_extendedTaps, themed=$_themedTaps',
             style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
           ),
+          SizedBox(
+            height: 160,
+            child: Scaffold(
+              body: const Center(child: Text('Scaffold: centerFloat')),
+              bottomNavigationBar: const BottomAppBar(),
+              floatingActionButtonLocation:
+                  FloatingActionButtonLocation.centerFloat,
+              floatingActionButton: FloatingActionButton(
+                onPressed: _enabled ? _onRegularTap : null,
+                tooltip: 'Center float action',
+                child: const Icon(Icons.add),
+              ),
+            ),
+          ),
           Column(
             mainAxisSize: MainAxisSize.min,
             spacing: 8,

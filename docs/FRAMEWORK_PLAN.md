@@ -165,6 +165,7 @@ Kickoff note (2026-03-12):
 - Added paired `SearchBar` + `SearchAnchor` parity baseline with controller open/close, route-owned search view, sync suggestions, M3 bar/view themes, focused tests, and mirrored C#/Dart sample probes.
 - Added paired core `RawAutocomplete<T>` + Material `Autocomplete<T>` parity with sync/async option resolution, stale-result suppression, split/custom fields, anchored direction selection, keyboard highlighting/selection, Material defaults, focused tests, and mirrored C#/Dart sample probes.
 - Added paired `TabPageSelector` + `TabPageSelectorIndicator` parity with explicit/inherited controllers, animated and drag-driven color interpolation, theme-secondary defaults, border styles, localized semantics, focused tests, and expanded mirrored tabs demos.
+- Added paired `FloatingActionButtonLocation` + `FloatingActionButtonAnimator` baseline: `Scaffold` now exposes Flutter-shaped location/animator APIs and applies standard start/center/end, top/float/docked/contained, mini, RTL, and inset placement through a framework render adapter; the public geometry model also carries snackbar/bottom-sheet inputs for the full Dart formulas. Focused geometry/animator tests and a mirrored centered-FAB sample probe were added. Location-transition motion and live snackbar/bottom-sheet avoidance remain tracked in `DIVERGENCES.md` pending live scaffold geometry.
 
 Progress update (2026-03-19):
 

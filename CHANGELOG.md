@@ -22,6 +22,7 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 ### Changed
 
+- Added paired Material `FloatingActionButtonLocation` + `FloatingActionButtonAnimator` baseline with all standard static FAB placement formulas, `Scaffold` API wiring, focused geometry/RTL/animator tests, and mirrored C#/Dart centered-FAB sample probes. Location-transition animation remains documented in `DIVERGENCES.md` pending live scaffold geometry.
 - Added paired Flutter `Wrap` + Material `Chip` ports. `Wrap` now owns multi-run layout, alignment, RTL/vertical ordering, and optional overflow clipping; `Chip` composes through `RawChip` with Flutter-shaped delete-only semantics. Added focused tests and mirrored C#/Dart chips-demo coverage.
 - Added Flutter-structured Material `CarouselView`/`CarouselViewTheme` with fixed, weighted, and lazy constructors; a carousel-specific controller/scroll position preserves the leading item across viewport changes and supports item snapping. Added a core variable-extent sliver adapter, focused carousel coverage, and mirrored C#/Dart gallery demos.
 - Added `Plumix.Elmish` `0.1.0-alpha.1` — Elmish (MVU) integration hosting an `Elmish.Program` inside a `StatefulWidget` (`Program.toWidget`/`toWidgetWith`), with framework element reconciliation as the diffing layer and command dispatch marshaled to the UI thread; the F# sample's root counter is now the MVU variant. Known gap (tracked in the F# note): program termination/subscription teardown is not wired to widget disposal yet.
