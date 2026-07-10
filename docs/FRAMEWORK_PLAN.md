@@ -672,6 +672,10 @@ Progress update (2026-03-19):
   - added a full-screen route with fade lifecycle, captured ambient theme/media/directionality, typed completion result, single-active-delegate guard, query cursor placement, focused suggestions/results switching, escape/back dismissal, and AppBar leading/actions/bottom/flexible-space composition;
   - added Flutter-shaped delegate hooks for search-field defaults, query control, app-bar theme override, suggestions/results, close/reuse lifecycle, and transition-controller exposure;
   - expanded focused search tests and the mirrored C#/Dart Search demo with a legacy full-screen delegate route. Generic transition animation and complete platform input configuration remain tracked in `DIVERGENCES.md`.
+- Added paired Material `MenuAnchor` + `MenuItemButton` ports:
+  - introduced shared `MenuController` anchor attachment, nearest-anchor lookup, programmatic open/close, local anchored panel layout, Flutter-shaped leaf item API/state/focus/semantics composition, and close-on-activate behavior;
+  - added focused controller/layout/item coverage and mirrored controller/disabled/keep-open probes in the C# and Dart dropdown demos;
+  - root-overlay placement, cascading submenus, animated panel choreography, keyboard traversal, and full `MenuTheme`/`MenuButtonTheme` resolution remain tracked in `DIVERGENCES.md`.
 - Remaining divergence for floating action button in current framework scope:
   - none documented in current framework scope.
 

@@ -560,6 +560,36 @@ public sealed class MaterialDropdownTests : IDisposable
     }
 
     [Fact]
+    public void MenuAnchor_ControllerAndMenuItem_FollowOpenCloseAndActivationContracts()
+    {
+        var controller = new MenuController();
+        int activations = 0;
+        using var harness = new WidgetRenderHarness(Wrap(new MenuAnchor(
+            controller: controller,
+            child: new SizedBox(width: 80, height: 40),
+            menuChildren:
+            [
+                new MenuItemButton(child: new Text("Run"), onPressed: () => activations++),
+                new MenuItemButton(child: new Text("Disabled")),
+            ])));
+        harness.Pump(new Size(500, 360));
+
+        Assert.False(controller.IsOpen);
+        controller.Open();
+        harness.Pump(new Size(500, 360));
+        Assert.True(controller.IsOpen);
+        Assert.NotNull(FindDescendants<RenderMenuAnchorLayout>(harness.RenderView).SingleOrDefault());
+        Assert.NotNull(FindParagraph(harness.RenderView, "Run"));
+        var semantics = harness.PumpAndGetSemantics(new Size(500, 360));
+        var item = FindSemantics(semantics, node => node.Actions.HasFlag(SemanticsActions.Tap));
+        Assert.NotNull(item);
+        Assert.True(item!.PerformAction(SemanticsActions.Tap));
+        harness.Pump(new Size(500, 360));
+        Assert.False(controller.IsOpen);
+        Assert.Equal(1, activations);
+    }
+
+    [Fact]
     public void DropdownMenuFormField_ValidationSelectionSaveAndResetSynchronizeController()
     {
         var entries = new[]

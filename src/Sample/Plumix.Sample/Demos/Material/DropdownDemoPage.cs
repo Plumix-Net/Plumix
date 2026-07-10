@@ -29,6 +29,8 @@ public sealed class DropdownDemoPage : StatefulWidget
         private string _modernStatus = "idle";
         private string? _modernFormValue;
         private string _modernFormStatus = "not validated";
+        private string _anchorStatus = "closed";
+        private readonly MenuController _anchorController = new();
         private readonly LabeledGlobalKey<FormState> _formKey = new("dropdown-form");
         private readonly LabeledGlobalKey<FormState> _modernFormKey = new("dropdown-menu-form");
 
@@ -120,6 +122,36 @@ public sealed class DropdownDemoPage : StatefulWidget
                                 }))),
                         new Text($"Modern value: {_modernValue ?? "none"}", fontSize: 13),
                         new Text($"Modern status: {_modernStatus}", fontSize: 13),
+                        new Divider(),
+                        new Text("MenuAnchor + MenuItemButton", fontSize: 18),
+                        new Text(
+                            "Controller-owned anchored menu with enabled/disabled leaf items and close-on-activate policy.",
+                            fontSize: 14,
+                            color: Colors.DimGray),
+                        new Align(
+                            alignment: Alignment.CenterLeft,
+                            child: new MenuAnchor(
+                                controller: _anchorController,
+                                onOpen: () => SetState(() => _anchorStatus = "opened"),
+                                onClose: () => SetState(() => _anchorStatus = "closed"),
+                                menuChildren:
+                                [
+                                    new MenuItemButton(
+                                        child: new Text("Run action"),
+                                        onPressed: () => SetState(() => _anchorStatus = "activated")),
+                                    new MenuItemButton(child: new Text("Disabled item")),
+                                    new MenuItemButton(
+                                        child: new Text("Keep open"),
+                                        closeOnActivate: false,
+                                        onPressed: () => SetState(() => _anchorStatus = "kept open")),
+                                ],
+                                builder: (_, controller, _) => new TextButton(
+                                    new Text(controller.IsOpen ? "Close menu" : "Open menu"),
+                                    () =>
+                                    {
+                                        if (controller.IsOpen) controller.Close(); else controller.Open();
+                                    }))),
+                        new Text($"Anchor menu: {_anchorStatus}", fontSize: 13),
                         new Divider(),
                         new Text("DropdownMenuFormField + Form", fontSize: 18),
                         new Form(

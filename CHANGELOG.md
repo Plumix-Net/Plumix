@@ -1,5 +1,7 @@
 # Changelog
 
+- Added paired Material `MenuAnchor` + `MenuItemButton` ports with shared `MenuController` ownership, programmatic open/close, inherited nearest-anchor lookup, anchored overlay layout, menu-item state/focus/semantics composition, close-on-activate behavior, focused coverage, and mirrored C#/Dart dropdown-demo probes. Root-overlay placement, cascading submenus, menu animation, and complete menu theming remain tracked in `docs/ai/DIVERGENCES.md`.
+
 - Added Flutter-structured Material surface and completed its `MergeableMaterial` integration: surface type/color/elevation/tint/shape/clip/default-text behavior, animated visual values, focused regression coverage, and mirrored C#/Dart runtime probes. Shared ink ownership, oval clipping, and text-style interpolation remain tracked in `docs/ai/DIVERGENCES.md`.
 
 - Added Material `SearchDelegate<T>` and `MaterialSearch.ShowSearch<T>` full-screen route support, focused lifecycle coverage, and mirrored C#/Dart demo probes. Advanced `Plumix.Material` to `0.3.0-alpha.1`; generic transition/input configuration gaps are tracked in `docs/ai/DIVERGENCES.md`.

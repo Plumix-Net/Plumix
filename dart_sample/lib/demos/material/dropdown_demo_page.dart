@@ -21,6 +21,8 @@ class _DropdownDemoPageState extends State<DropdownDemoPage> {
   String _modernStatus = 'idle';
   String? _modernFormValue;
   String _modernFormStatus = 'not validated';
+  String _anchorStatus = 'closed';
+  final MenuController _anchorController = MenuController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final GlobalKey<FormState> _modernFormKey = GlobalKey<FormState>();
 
@@ -137,6 +139,42 @@ class _DropdownDemoPageState extends State<DropdownDemoPage> {
             'Modern status: $_modernStatus',
             style: const TextStyle(fontSize: 13),
           ),
+          const Divider(),
+          const Text(
+            'MenuAnchor + MenuItemButton',
+            style: TextStyle(fontSize: 18),
+          ),
+          const Text(
+            'Controller-owned anchored menu with enabled/disabled leaf items and close-on-activate policy.',
+            style: TextStyle(fontSize: 14, color: Colors.black54),
+          ),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: MenuAnchor(
+              controller: _anchorController,
+              onOpen: () => setState(() => _anchorStatus = 'opened'),
+              onClose: () => setState(() => _anchorStatus = 'closed'),
+              menuChildren: <Widget>[
+                MenuItemButton(
+                  onPressed: () => setState(() => _anchorStatus = 'activated'),
+                  child: const Text('Run action'),
+                ),
+                const MenuItemButton(child: Text('Disabled item')),
+                MenuItemButton(
+                  closeOnActivate: false,
+                  onPressed: () => setState(() => _anchorStatus = 'kept open'),
+                  child: const Text('Keep open'),
+                ),
+              ],
+              builder: (BuildContext context, MenuController controller, Widget? child) {
+                return TextButton(
+                  onPressed: controller.isOpen ? controller.close : controller.open,
+                  child: Text(controller.isOpen ? 'Close menu' : 'Open menu'),
+                );
+              },
+            ),
+          ),
+          Text('Anchor menu: $_anchorStatus', style: const TextStyle(fontSize: 13)),
           const Divider(),
           const Text(
             'DropdownMenuFormField + Form',
