@@ -22,7 +22,10 @@ class _DropdownDemoPageState extends State<DropdownDemoPage> {
   String? _modernFormValue;
   String _modernFormStatus = 'not validated';
   String _anchorStatus = 'closed';
+  String _menuBarStatus = 'closed';
   final MenuController _anchorController = MenuController();
+  final MenuController _fileMenuController = MenuController();
+  final MenuController _editMenuController = MenuController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final GlobalKey<FormState> _modernFormKey = GlobalKey<FormState>();
 
@@ -166,15 +169,85 @@ class _DropdownDemoPageState extends State<DropdownDemoPage> {
                   child: const Text('Keep open'),
                 ),
               ],
-              builder: (BuildContext context, MenuController controller, Widget? child) {
-                return TextButton(
-                  onPressed: controller.isOpen ? controller.close : controller.open,
-                  child: Text(controller.isOpen ? 'Close menu' : 'Open menu'),
-                );
-              },
+              builder:
+                  (
+                    BuildContext context,
+                    MenuController controller,
+                    Widget? child,
+                  ) {
+                    return TextButton(
+                      onPressed: controller.isOpen
+                          ? controller.close
+                          : controller.open,
+                      child: Text(
+                        controller.isOpen ? 'Close menu' : 'Open menu',
+                      ),
+                    );
+                  },
             ),
           ),
-          Text('Anchor menu: $_anchorStatus', style: const TextStyle(fontSize: 13)),
+          Text(
+            'Anchor menu: $_anchorStatus',
+            style: const TextStyle(fontSize: 13),
+          ),
+          const Divider(),
+          const Text('MenuBar + SubmenuButton', style: TextStyle(fontSize: 18)),
+          const Text(
+            'Horizontal menu bar with controller-owned sibling closing and a nested side submenu.',
+            style: TextStyle(fontSize: 14, color: Colors.black54),
+          ),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: MenuBar(
+              children: <Widget>[
+                SubmenuButton(
+                  controller: _fileMenuController,
+                  onOpen: () => setState(() => _menuBarStatus = 'file opened'),
+                  onClose: () => setState(() => _menuBarStatus = 'file closed'),
+                  menuChildren: <Widget>[
+                    MenuItemButton(
+                      onPressed: () =>
+                          setState(() => _menuBarStatus = 'new document'),
+                      child: const Text('New document'),
+                    ),
+                    SubmenuButton(
+                      onOpen: () =>
+                          setState(() => _menuBarStatus = 'recent opened'),
+                      menuChildren: <Widget>[
+                        MenuItemButton(
+                          onPressed: () =>
+                              setState(() => _menuBarStatus = 'recent report'),
+                          child: const Text('Quarterly report'),
+                        ),
+                      ],
+                      child: const Text('Recent'),
+                    ),
+                  ],
+                  child: const Text('File'),
+                ),
+                SubmenuButton(
+                  controller: _editMenuController,
+                  onOpen: () => setState(() => _menuBarStatus = 'edit opened'),
+                  onClose: () => setState(() => _menuBarStatus = 'edit closed'),
+                  menuChildren: <Widget>[
+                    MenuItemButton(
+                      onPressed: () => setState(() => _menuBarStatus = 'paste'),
+                      child: const Text('Paste'),
+                    ),
+                  ],
+                  child: const Text('Edit'),
+                ),
+                const SubmenuButton(
+                  menuChildren: <Widget>[],
+                  child: Text('Disabled'),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            'Menu bar: $_menuBarStatus',
+            style: const TextStyle(fontSize: 13),
+          ),
           const Divider(),
           const Text(
             'DropdownMenuFormField + Form',

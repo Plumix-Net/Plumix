@@ -70,11 +70,17 @@ public sealed class MenuAnchor : StatefulWidget
     public bool Animated { get; }
     public Action<bool>? OnAnimationStatusChanged { get; }
 
+    // These assembly-local fields mirror the orientation contracts supplied by
+    // Flutter's private _MenuBarAnchor and submenu layout delegates.
+    internal Axis Orientation { get; init; } = Axis.Vertical;
+    internal Axis PanelOrientation { get; init; } = Axis.Vertical;
+
     public override State CreateState() => new MenuAnchorState();
 }
 
 public sealed class MenuAnchorState : State, IMenuControllerHost
 {
+    private readonly HashSet<MenuController> _childControllers = [];
     private MenuController? _internalController;
     private MenuController? _controller;
     private bool _isOpen;
@@ -101,17 +107,36 @@ public sealed class MenuAnchorState : State, IMenuControllerHost
         Widget? panel = _isOpen ? BuildPanel(context) : null;
         return new MenuControllerScope(
             controller,
+            this,
             _isOpen,
+            Current.Orientation,
             new MenuAnchorLayout(
                 anchor,
                 panel,
                 Current.AlignmentOffset,
-                Current.CrossAxisUnconstrained));
+                Current.CrossAxisUnconstrained,
+                Current.PanelOrientation,
+                Directionality.Of(context)));
     }
 
     public void CloseChildren()
     {
-        // SubmenuButton will register child controllers here. A leaf MenuAnchor has none.
+        CloseChildrenExcept(null);
+    }
+
+    internal void RegisterChild(MenuController controller) => _childControllers.Add(controller);
+
+    internal void UnregisterChild(MenuController controller) => _childControllers.Remove(controller);
+
+    internal void CloseChildrenExcept(MenuController? except)
+    {
+        foreach (MenuController controller in _childControllers.ToArray())
+        {
+            if (!ReferenceEquals(controller, except))
+            {
+                controller.Close();
+            }
+        }
     }
 
     private void AttachController()
@@ -131,6 +156,7 @@ public sealed class MenuAnchorState : State, IMenuControllerHost
     private void Open()
     {
         if (_isOpen) return;
+        MenuController.MaybeScopeOf(Context)?.Host.CloseChildrenExcept(_controller);
         SetState(() => _isOpen = true);
         _controller!.SetOpen(true);
         Current.OnOpen?.Invoke();
@@ -275,24 +301,330 @@ public sealed class MenuItemButton : StatelessWidget
     }
 }
 
+/// <summary>A horizontal collection of top-level <see cref="SubmenuButton"/> controls.</summary>
+/// <remarks>Dart parity source: flutter/packages/flutter/lib/src/material/menu_anchor.dart (MenuBar).</remarks>
+public sealed class MenuBar : StatelessWidget
+{
+    public MenuBar(
+        IReadOnlyList<Widget> children,
+        MenuStyle? style = null,
+        Clip clipBehavior = Clip.None,
+        MenuController? controller = null,
+        Key? key = null) : base(key)
+    {
+        Children = children ?? throw new ArgumentNullException(nameof(children));
+        Style = style;
+        ClipBehavior = clipBehavior;
+        Controller = controller;
+    }
+
+    public IReadOnlyList<Widget> Children { get; }
+    public MenuStyle? Style { get; }
+    public Clip ClipBehavior { get; }
+    public MenuController? Controller { get; }
+
+    public override Widget Build(BuildContext context)
+    {
+        ThemeData theme = Theme.Of(context);
+        MenuStyle style = Style ?? DropdownMenuTheme.Of(context).MenuStyle ?? new MenuStyle();
+        MaterialState states = MaterialState.None;
+        Color color = style.BackgroundColor?.Resolve(states) ?? theme.SurfaceContainerColor;
+        Color shadowColor = style.ShadowColor?.Resolve(states) ?? theme.ShadowColor;
+        Color surfaceTint = style.SurfaceTintColor?.Resolve(states) ?? Colors.Transparent;
+        double elevation = style.Elevation?.Resolve(states) ?? 3;
+        Thickness padding = style.Padding?.Resolve(states) ?? new Thickness(8, 0);
+        ShapeBorder? shape = style.Shape?.Resolve(states);
+
+        Widget content = new Material(
+            type: MaterialType.Card,
+            color: color,
+            shadowColor: shadowColor,
+            surfaceTintColor: surfaceTint,
+            elevation: elevation,
+            shape: shape,
+            clipBehavior: ClipBehavior,
+            child: new Padding(
+                padding,
+                new Row(
+                    mainAxisSize: MainAxisSize.Min,
+                    crossAxisAlignment: CrossAxisAlignment.Stretch,
+                    children: Children,
+                    textDirection: Directionality.Of(context))));
+
+        return new MenuAnchor(
+            menuChildren: [],
+            controller: Controller,
+            clipBehavior: ClipBehavior,
+            builder: (_, _, _) => content)
+        {
+            Orientation = Axis.Horizontal,
+        };
+    }
+}
+
+/// <summary>A menu button that opens a nested vertical menu.</summary>
+/// <remarks>Dart parity source: flutter/packages/flutter/lib/src/material/menu_anchor.dart (SubmenuButton).</remarks>
+public sealed class SubmenuButton : StatefulWidget
+{
+    public SubmenuButton(
+        IReadOnlyList<Widget> menuChildren,
+        Widget? child,
+        Action<bool>? onHover = null,
+        Action<bool>? onFocusChange = null,
+        Action? onOpen = null,
+        Action? onClose = null,
+        MenuController? controller = null,
+        ButtonStyle? style = null,
+        MenuStyle? menuStyle = null,
+        Vector? alignmentOffset = null,
+        Clip clipBehavior = Clip.HardEdge,
+        FocusNode? focusNode = null,
+        MaterialStatesController? statesController = null,
+        Widget? leadingIcon = null,
+        Widget? trailingIcon = null,
+        MaterialStateProperty<Widget?>? submenuIcon = null,
+        bool useRootOverlay = false,
+        TimeSpan? hoverOpenDelay = null,
+        bool animated = false,
+        Action<bool>? onAnimationStatusChanged = null,
+        Key? key = null) : base(key)
+    {
+        MenuChildren = menuChildren ?? throw new ArgumentNullException(nameof(menuChildren));
+        Child = child;
+        OnHover = onHover;
+        OnFocusChange = onFocusChange;
+        OnOpen = onOpen;
+        OnClose = onClose;
+        Controller = controller;
+        Style = style;
+        MenuStyle = menuStyle;
+        AlignmentOffset = alignmentOffset ?? default;
+        ClipBehavior = clipBehavior;
+        FocusNode = focusNode;
+        StatesController = statesController;
+        LeadingIcon = leadingIcon;
+        TrailingIcon = trailingIcon;
+        SubmenuIcon = submenuIcon;
+        UseRootOverlay = useRootOverlay;
+        HoverOpenDelay = hoverOpenDelay ?? TimeSpan.Zero;
+        if (HoverOpenDelay < TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(hoverOpenDelay));
+        }
+        Animated = animated;
+        OnAnimationStatusChanged = onAnimationStatusChanged;
+    }
+
+    public IReadOnlyList<Widget> MenuChildren { get; }
+    public Widget? Child { get; }
+    public Action<bool>? OnHover { get; }
+    public Action<bool>? OnFocusChange { get; }
+    public Action? OnOpen { get; }
+    public Action? OnClose { get; }
+    public MenuController? Controller { get; }
+    public ButtonStyle? Style { get; }
+    public MenuStyle? MenuStyle { get; }
+    public Vector AlignmentOffset { get; }
+    public Clip ClipBehavior { get; }
+    public FocusNode? FocusNode { get; }
+    public MaterialStatesController? StatesController { get; }
+    public Widget? LeadingIcon { get; }
+    public Widget? TrailingIcon { get; }
+    public MaterialStateProperty<Widget?>? SubmenuIcon { get; }
+    public bool UseRootOverlay { get; }
+    public TimeSpan HoverOpenDelay { get; }
+    public bool Animated { get; }
+    public Action<bool>? OnAnimationStatusChanged { get; }
+    public bool Enabled => MenuChildren.Count > 0;
+
+    public override State CreateState() => new SubmenuButtonState();
+}
+
+public sealed class SubmenuButtonState : State
+{
+    private MenuController? _internalController;
+    private MenuAnchorState? _parentHost;
+    private SubmenuButton Current => (SubmenuButton)StateWidget;
+    private MenuController Controller => Current.Controller ?? _internalController!;
+
+    public override void InitState()
+    {
+        if (Current.Controller is null)
+        {
+            _internalController = new MenuController();
+        }
+    }
+
+    public override void DidChangeDependencies()
+    {
+        MenuAnchorState? nextParent = MenuController.MaybeScopeOf(Context)?.Host;
+        if (ReferenceEquals(nextParent, _parentHost)) return;
+        _parentHost?.UnregisterChild(Controller);
+        _parentHost = nextParent;
+        _parentHost?.RegisterChild(Controller);
+    }
+
+    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    {
+        var oldButton = (SubmenuButton)oldWidget;
+        if (!ReferenceEquals(oldButton.Controller, Current.Controller))
+        {
+            _parentHost?.UnregisterChild(oldButton.Controller ?? _internalController!);
+            _internalController = Current.Controller is null ? new MenuController() : null;
+            _parentHost?.RegisterChild(Controller);
+        }
+    }
+
+    public override void Dispose()
+    {
+        _parentHost?.UnregisterChild(Controller);
+    }
+
+    public override Widget Build(BuildContext context)
+    {
+        MenuControllerScope? parentScope = MenuController.MaybeScopeOf(context);
+        Axis parentOrientation = parentScope?.Orientation ?? Axis.Vertical;
+        MaterialState states = Current.StatesController?.Value ?? MaterialState.None;
+        if (!Current.Enabled)
+        {
+            states |= MaterialState.Disabled;
+        }
+        Widget submenuIcon = Current.SubmenuIcon?.Resolve(states)
+            ?? new Icon(parentOrientation == Axis.Horizontal ? Icons.ArrowDropDown : Icons.ChevronRight);
+        var row = new List<Widget>();
+        if (Current.LeadingIcon is not null) row.Add(Current.LeadingIcon);
+        row.Add(new Flexible(child: Current.Child ?? new SizedBox()));
+        if (Current.TrailingIcon is not null) row.Add(Current.TrailingIcon);
+        row.Add(submenuIcon);
+
+        ThemeData theme = Theme.Of(context);
+        ButtonStyle defaults = new(
+            ForegroundColor: MaterialStateProperty<Color?>.ResolveWith(value =>
+                value.HasFlag(MaterialState.Disabled) ? theme.DisabledColor : theme.OnSurfaceColor),
+            OverlayColor: MaterialButtonCore.CreateDefaultOverlayResolver(theme.OnSurfaceColor),
+            Padding: MaterialStateProperty<Thickness?>.All(new Thickness(12, 0)),
+            MinimumSize: MaterialStateProperty<Size?>.All(
+                parentOrientation == Axis.Horizontal ? new Size(64, 48) : new Size(112, 48)),
+            Shape: MaterialStateProperty<BorderRadius?>.All(BorderRadius.Zero),
+            TextStyle: MaterialStateProperty<TextStyle?>.All(theme.TextTheme.LabelLarge),
+            TapTargetSize: MaterialTapTargetSize.ShrinkWrap);
+        Widget button = new MaterialButtonCore(
+            child: new Row(
+                mainAxisSize: MainAxisSize.Max,
+                spacing: 12,
+                children: row,
+                textDirection: Directionality.Of(context)),
+            onPressed: Current.Enabled ? Toggle : null,
+            style: MaterialButtonCore.ComposeStyles(defaults, null, Current.Style, null),
+            onHoverChanged: HandleHover,
+            onFocusChange: Current.OnFocusChange,
+            focusNode: Current.FocusNode,
+            clipBehavior: Current.ClipBehavior,
+            enabled: Current.Enabled);
+
+        return new MenuAnchor(
+            menuChildren: Current.MenuChildren,
+            controller: Controller,
+            childFocusNode: Current.FocusNode,
+            style: Current.MenuStyle,
+            alignmentOffset: Current.AlignmentOffset,
+            clipBehavior: Current.ClipBehavior,
+            onOpen: () =>
+            {
+                SetState(() => { });
+                Current.OnOpen?.Invoke();
+            },
+            onClose: () =>
+            {
+                SetState(() => { });
+                Current.OnClose?.Invoke();
+            },
+            useRootOverlay: Current.UseRootOverlay,
+            animated: Current.Animated,
+            onAnimationStatusChanged: Current.OnAnimationStatusChanged,
+            child: new Semantics(expanded: Controller.IsOpen, child: button))
+        {
+            PanelOrientation = parentOrientation == Axis.Horizontal ? Axis.Vertical : Axis.Horizontal,
+        };
+    }
+
+    private void Toggle()
+    {
+        if (Controller.IsOpen)
+        {
+            Controller.Close();
+        }
+        else
+        {
+            Controller.Open();
+        }
+    }
+
+    private void HandleHover(bool hovered)
+    {
+        Current.OnHover?.Invoke(hovered);
+        if (!hovered || !Current.Enabled) return;
+        if (Current.HoverOpenDelay == TimeSpan.Zero)
+        {
+            Controller.Open();
+        }
+        else
+        {
+            _ = DelayOpenAsync(Current.HoverOpenDelay);
+        }
+    }
+
+    private async Task DelayOpenAsync(TimeSpan delay)
+    {
+        await Task.Delay(delay);
+        if (Mounted && Current.Enabled)
+        {
+            Controller.Open();
+        }
+    }
+}
+
 internal sealed class MenuAnchorLayout : MultiChildRenderObjectWidget
 {
     public MenuAnchorLayout(Widget anchor, Widget? panel, Vector offset, bool crossAxisUnconstrained)
+        : this(
+            anchor,
+            panel,
+            offset,
+            crossAxisUnconstrained,
+            Axis.Vertical,
+            TextDirection.Ltr)
+    {
+    }
+
+    public MenuAnchorLayout(
+        Widget anchor,
+        Widget? panel,
+        Vector offset,
+        bool crossAxisUnconstrained,
+        Axis panelOrientation,
+        TextDirection textDirection)
         : base(panel is null ? [anchor] : [anchor, panel])
     {
         Offset = offset;
         CrossAxisUnconstrained = crossAxisUnconstrained;
+        PanelOrientation = panelOrientation;
+        TextDirection = textDirection;
     }
 
     public Vector Offset { get; }
     public bool CrossAxisUnconstrained { get; }
+    public Axis PanelOrientation { get; }
+    public TextDirection TextDirection { get; }
     internal override RenderObject CreateRenderObject(BuildContext context) =>
-        new RenderMenuAnchorLayout(Offset, CrossAxisUnconstrained);
+        new RenderMenuAnchorLayout(Offset, CrossAxisUnconstrained, PanelOrientation, TextDirection);
     internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var layout = (RenderMenuAnchorLayout)renderObject;
         layout.Offset = Offset;
         layout.CrossAxisUnconstrained = CrossAxisUnconstrained;
+        layout.PanelOrientation = PanelOrientation;
+        layout.TextDirection = TextDirection;
     }
 }
 
@@ -304,11 +636,19 @@ internal sealed class RenderMenuAnchorLayout : RenderBox,
     private readonly RenderBoxContainerDefaultsMixin<RenderBox, MenuAnchorParentData> _container;
     private Vector _offset;
     private bool _crossAxisUnconstrained;
-    public RenderMenuAnchorLayout(Vector offset, bool crossAxisUnconstrained)
+    private Axis _panelOrientation;
+    private TextDirection _textDirection;
+    public RenderMenuAnchorLayout(
+        Vector offset,
+        bool crossAxisUnconstrained,
+        Axis panelOrientation,
+        TextDirection textDirection)
     {
         _container = new RenderBoxContainerDefaultsMixin<RenderBox, MenuAnchorParentData>(this);
         _offset = offset;
         _crossAxisUnconstrained = crossAxisUnconstrained;
+        _panelOrientation = panelOrientation;
+        _textDirection = textDirection;
     }
     public Vector Offset { get => _offset; set { if (_offset == value) return; _offset = value; MarkNeedsLayout(); } }
     public bool CrossAxisUnconstrained
@@ -318,6 +658,26 @@ internal sealed class RenderMenuAnchorLayout : RenderBox,
         {
             if (_crossAxisUnconstrained == value) return;
             _crossAxisUnconstrained = value;
+            MarkNeedsLayout();
+        }
+    }
+    public Axis PanelOrientation
+    {
+        get => _panelOrientation;
+        set
+        {
+            if (_panelOrientation == value) return;
+            _panelOrientation = value;
+            MarkNeedsLayout();
+        }
+    }
+    public TextDirection TextDirection
+    {
+        get => _textDirection;
+        set
+        {
+            if (_textDirection == value) return;
+            _textDirection = value;
             MarkNeedsLayout();
         }
     }
@@ -350,7 +710,12 @@ internal sealed class RenderMenuAnchorLayout : RenderBox,
         if (double.IsPositiveInfinity(maxWidth)) maxWidth = 10000;
         double maxHeight = double.IsPositiveInfinity(Constraints.MaxHeight) ? 10000 : Constraints.MaxHeight;
         panel.Layout(BoxConstraints.Loose(new Size(maxWidth, maxHeight)), parentUsesSize: true);
-        ((MenuAnchorParentData)panel.parentData!).offset = new Point(Offset.X, Size.Height + Offset.Y);
+        Point panelOffset = PanelOrientation == Axis.Horizontal
+            ? new Point(
+                TextDirection == TextDirection.Ltr ? Size.Width + Offset.X : -panel.Size.Width + Offset.X,
+                Offset.Y)
+            : new Point(Offset.X, Size.Height + Offset.Y);
+        ((MenuAnchorParentData)panel.parentData!).offset = panelOffset;
     }
     public override void Paint(PaintingContext ctx, Point offset) => _container.DefaultPaint(ctx, offset);
     public void DefaultPaint(PaintingContext ctx, Point offset) => _container.DefaultPaint(ctx, offset);

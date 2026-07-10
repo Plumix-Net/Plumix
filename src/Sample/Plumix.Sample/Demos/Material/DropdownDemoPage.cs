@@ -30,7 +30,10 @@ public sealed class DropdownDemoPage : StatefulWidget
         private string? _modernFormValue;
         private string _modernFormStatus = "not validated";
         private string _anchorStatus = "closed";
+        private string _menuBarStatus = "closed";
         private readonly MenuController _anchorController = new();
+        private readonly MenuController _fileMenuController = new();
+        private readonly MenuController _editMenuController = new();
         private readonly LabeledGlobalKey<FormState> _formKey = new("dropdown-form");
         private readonly LabeledGlobalKey<FormState> _modernFormKey = new("dropdown-menu-form");
 
@@ -152,6 +155,48 @@ public sealed class DropdownDemoPage : StatefulWidget
                                         if (controller.IsOpen) controller.Close(); else controller.Open();
                                     }))),
                         new Text($"Anchor menu: {_anchorStatus}", fontSize: 13),
+                        new Divider(),
+                        new Text("MenuBar + SubmenuButton", fontSize: 18),
+                        new Text(
+                            "Horizontal menu bar with controller-owned sibling closing and a nested side submenu.",
+                            fontSize: 14,
+                            color: Colors.DimGray),
+                        new Align(
+                            alignment: Alignment.CenterLeft,
+                            child: new MenuBar(
+                                children:
+                                [
+                                    new SubmenuButton(
+                                        [
+                                            new MenuItemButton(
+                                                child: new Text("New document"),
+                                                onPressed: () => SetState(() => _menuBarStatus = "new document")),
+                                            new SubmenuButton(
+                                                [
+                                                    new MenuItemButton(
+                                                        child: new Text("Quarterly report"),
+                                                        onPressed: () => SetState(() => _menuBarStatus = "recent report")),
+                                                ],
+                                                new Text("Recent"),
+                                                onOpen: () => SetState(() => _menuBarStatus = "recent opened")),
+                                        ],
+                                        new Text("File"),
+                                        controller: _fileMenuController,
+                                        onOpen: () => SetState(() => _menuBarStatus = "file opened"),
+                                        onClose: () => SetState(() => _menuBarStatus = "file closed")),
+                                    new SubmenuButton(
+                                        [
+                                            new MenuItemButton(
+                                                child: new Text("Paste"),
+                                                onPressed: () => SetState(() => _menuBarStatus = "paste")),
+                                        ],
+                                        new Text("Edit"),
+                                        controller: _editMenuController,
+                                        onOpen: () => SetState(() => _menuBarStatus = "edit opened"),
+                                        onClose: () => SetState(() => _menuBarStatus = "edit closed")),
+                                    new SubmenuButton([], new Text("Disabled")),
+                                ])),
+                        new Text($"Menu bar: {_menuBarStatus}", fontSize: 13),
                         new Divider(),
                         new Text("DropdownMenuFormField + Form", fontSize: 18),
                         new Form(

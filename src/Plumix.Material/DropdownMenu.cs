@@ -109,6 +109,11 @@ public sealed class MenuController : ChangeNotifier
     {
         return context.GetInherited<MenuControllerScope>()?.Controller;
     }
+
+    internal static MenuControllerScope? MaybeScopeOf(BuildContext context)
+    {
+        return context.GetInherited<MenuControllerScope>();
+    }
 }
 
 internal interface IMenuControllerHost
@@ -118,19 +123,29 @@ internal interface IMenuControllerHost
 
 internal sealed class MenuControllerScope : InheritedWidget
 {
-    public MenuControllerScope(MenuController controller, bool isOpen, Widget child) : base()
+    public MenuControllerScope(
+        MenuController controller,
+        MenuAnchorState host,
+        bool isOpen,
+        Axis orientation,
+        Widget child) : base()
     {
         Controller = controller;
+        Host = host;
         IsOpen = isOpen;
+        Orientation = orientation;
         Child = child;
     }
 
     public MenuController Controller { get; }
+    public MenuAnchorState Host { get; }
     public bool IsOpen { get; }
+    public Axis Orientation { get; }
     public Widget Child { get; }
     public override Widget Build(BuildContext context) => Child;
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
-        ((MenuControllerScope)oldWidget).IsOpen != IsOpen;
+        ((MenuControllerScope)oldWidget).IsOpen != IsOpen
+        || ((MenuControllerScope)oldWidget).Orientation != Orientation;
 }
 
 public sealed class DropdownMenu<T> : StatefulWidget

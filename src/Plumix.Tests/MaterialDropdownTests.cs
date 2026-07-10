@@ -590,6 +590,84 @@ public sealed class MaterialDropdownTests : IDisposable
     }
 
     [Fact]
+    public void MenuBarAndSubmenuButton_ManageNestedMenusSiblingClosingAndPanelOrientation()
+    {
+        var fileController = new MenuController();
+        var editController = new MenuController();
+        var recentController = new MenuController();
+        var empty = new SubmenuButton([], new Text("Disabled"));
+        using var harness = new WidgetRenderHarness(Wrap(new MenuBar(
+            children:
+            [
+                new SubmenuButton(
+                    [
+                        new MenuItemButton(child: new Text("Open"), onPressed: () => { }),
+                        new SubmenuButton(
+                            [new MenuItemButton(child: new Text("Report"), onPressed: () => { })],
+                            new Text("Recent"),
+                            controller: recentController),
+                    ],
+                    new Text("File"),
+                    controller: fileController),
+                new SubmenuButton(
+                    [new MenuItemButton(child: new Text("Paste"), onPressed: () => { })],
+                    new Text("Edit"),
+                    controller: editController),
+                empty,
+            ])));
+        harness.Pump(new Size(500, 360));
+
+        Assert.False(empty.Enabled);
+        Assert.False(fileController.IsOpen);
+        fileController.Open();
+        harness.Pump(new Size(500, 360));
+        Assert.True(fileController.IsOpen);
+        Assert.Contains(FindDescendants<RenderMenuAnchorLayout>(harness.RenderView), layout =>
+            layout.PanelOrientation == Axis.Vertical);
+
+        recentController.Open();
+        harness.Pump(new Size(500, 360));
+        Assert.True(fileController.IsOpen);
+        Assert.True(recentController.IsOpen);
+        Assert.Contains(FindDescendants<RenderMenuAnchorLayout>(harness.RenderView), layout =>
+            layout.PanelOrientation == Axis.Horizontal && layout.ChildCount == 2);
+
+        editController.Open();
+        harness.Pump(new Size(500, 360));
+        Assert.False(fileController.IsOpen);
+        Assert.False(recentController.IsOpen);
+        Assert.True(editController.IsOpen);
+
+        editController.Close();
+        harness.Pump(new Size(500, 360));
+        Assert.False(editController.IsOpen);
+
+        fileController.Open();
+        harness.Pump(new Size(500, 360));
+        var fileLayout = Assert.Single(
+            FindDescendants<RenderMenuAnchorLayout>(harness.RenderView),
+            layout => layout.PanelOrientation == Axis.Vertical && layout.ChildCount == 2);
+        Assert.True(fileLayout.Size.Height > 0);
+    }
+
+    [Fact]
+    public void SubmenuButton_ExposesFlutterDefaultsAndValidatesHoverDelay()
+    {
+        var button = new SubmenuButton([], null);
+        Assert.Null(button.Child);
+        Assert.Empty(button.MenuChildren);
+        Assert.Equal(Clip.HardEdge, button.ClipBehavior);
+        Assert.Equal(TimeSpan.Zero, button.HoverOpenDelay);
+        Assert.False(button.Enabled);
+        Assert.False(button.UseRootOverlay);
+        Assert.False(button.Animated);
+        Assert.Throws<ArgumentOutOfRangeException>(() => new SubmenuButton(
+            [],
+            null,
+            hoverOpenDelay: TimeSpan.FromMilliseconds(-1)));
+    }
+
+    [Fact]
     public void DropdownMenuFormField_ValidationSelectionSaveAndResetSynchronizeController()
     {
         var entries = new[]
