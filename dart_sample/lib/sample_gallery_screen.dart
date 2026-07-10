@@ -23,6 +23,7 @@ import 'demos/material/autocomplete_demo_page.dart';
 import 'demos/general/aspect_ratio_demo_page.dart';
 import 'demos/general/bloc_counter_demo_page.dart';
 import 'demos/material/card_demo_page.dart';
+import 'demos/material/carousel_demo_page.dart';
 import 'demos/material/circular_progress_indicator_demo_page.dart';
 import 'demos/material/circle_avatar_demo_page.dart';
 import 'demos/cupertino/checkbox_demo_page.dart';
@@ -268,6 +269,12 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'Card',
       subtitle: 'elevated/filled/outlined variants + theme/clip probes',
       builder: () => const CardDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.carousel,
+      title: 'CarouselView',
+      subtitle: 'fixed/weighted item extents + snapping + theme',
+      builder: () => const CarouselDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.gridTile,

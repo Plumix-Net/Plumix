@@ -252,7 +252,7 @@ public sealed class BallisticScrollActivity : ScrollActivity
     }
 }
 
-public sealed class ScrollPosition : ChangeNotifier, IScrollMetrics
+public class ScrollPosition : ChangeNotifier, IScrollMetrics
 {
     private readonly ScrollPhysics _physics;
     private double _pixels;
@@ -316,7 +316,7 @@ public sealed class ScrollPosition : ChangeNotifier, IScrollMetrics
         SetPixels(Pixels + delta);
     }
 
-    public bool ApplyViewportDimension(double viewportDimension)
+    public virtual bool ApplyViewportDimension(double viewportDimension)
     {
         if (Math.Abs(_viewportDimension - viewportDimension) < 0.0001)
         {
@@ -327,7 +327,7 @@ public sealed class ScrollPosition : ChangeNotifier, IScrollMetrics
         return true;
     }
 
-    public bool ApplyContentDimensions(double minScrollExtent, double maxScrollExtent)
+    public virtual bool ApplyContentDimensions(double minScrollExtent, double maxScrollExtent)
     {
         bool minChanged = Math.Abs(_minScrollExtent - minScrollExtent) > 0.0001;
         bool maxChanged = Math.Abs(_maxScrollExtent - maxScrollExtent) > 0.0001;
@@ -365,7 +365,19 @@ public sealed class ScrollPosition : ChangeNotifier, IScrollMetrics
         return SetPixels(value);
     }
 
-    private bool SetPixels(double value)
+    protected bool CorrectPixels(double value)
+    {
+        if (Math.Abs(value - _pixels) < 0.0001)
+        {
+            return false;
+        }
+
+        _pixels = value;
+        NotifyListeners();
+        return true;
+    }
+
+    protected virtual bool SetPixels(double value)
     {
         double overscroll = Physics.ApplyBoundaryConditions(this, value);
         double newPixels = value - overscroll;

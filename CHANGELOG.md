@@ -1,5 +1,9 @@
 # Changelog
 
+- Added Material `SearchDelegate<T>` and `MaterialSearch.ShowSearch<T>` full-screen route support, focused lifecycle coverage, and mirrored C#/Dart demo probes. Advanced `Plumix.Material` to `0.3.0-alpha.1`; generic transition/input configuration gaps are tracked in `docs/ai/DIVERGENCES.md`.
+
+- Added paired Material `Ink` and `TooltipVisibility` ports with Flutter-shaped decoration/image shorthand, inherited tooltip suppression, focused tests, and mirrored C#/Dart demo probes. Added core `BoxConstraints.Expand` and advanced `Plumix`/`Plumix.Material` to `0.2.0-alpha.1`. Ancestor-owned ink features remain documented in `docs/ai/DIVERGENCES.md`.
+
 All notable framework changes are documented in this file.
 
 This project follows the spirit of [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
@@ -14,6 +18,7 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 ### Changed
 
+- Added Flutter-structured Material `CarouselView`/`CarouselViewTheme` with fixed, weighted, and lazy constructors; a carousel-specific controller/scroll position preserves the leading item across viewport changes and supports item snapping. Added a core variable-extent sliver adapter, focused carousel coverage, and mirrored C#/Dart gallery demos.
 - Added `Plumix.Elmish` `0.1.0-alpha.1` — Elmish (MVU) integration hosting an `Elmish.Program` inside a `StatefulWidget` (`Program.toWidget`/`toWidgetWith`), with framework element reconciliation as the diffing layer and command dispatch marshaled to the UI thread; the F# sample's root counter is now the MVU variant. Known gap (tracked in the F# note): program termination/subscription teardown is not wired to widget disposal yet.
 - Added `Plumix.FSharp` `0.1.0-alpha.1` — F# bindings with Feliz-style `Ui.*` widget factory functions over `Plumix`/`Plumix.Material` plus a one-`open` prelude re-exporting common widget/layout/painting types; `src/Sample/Plumix.FSharpSample` (F# desktop counter) now builds its UI with the DSL. Requires an explicit `FSharp.Core` reference under central package management. Interop findings: `docs/ai/notes/2026-07-10-fsharp-sample.md`.
 - Added paired Flutter-structured `TabPageSelector` + `TabPageSelectorIndicator` ports with explicit/default controllers, animated and drag-offset color interpolation, theme-secondary defaults, border-style/size controls, localized semantics, zero-area coverage, and expanded mirrored tabs demos. Added source-required core `BorderStyle` support to `BorderSide`/`BoxDecoration`; included in the `Plumix` and `Plumix.Material` `0.2.0-alpha.1` feature train.

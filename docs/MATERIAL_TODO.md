@@ -26,8 +26,6 @@ Size legend: **S** — one focused widget, few states. **M** — widget family o
 | `Magnifier` (Material text magnifier) | `magnifier.dart` | M | Depends on selection overlay infra; claim after toolbar family lands. |
 | Spell-check suggestions toolbar | `spell_check_suggestions_toolbar.dart` + layout delegate | M | Low priority until text-selection toolbars exist. |
 | `AnimatedIcon` + `AnimatedIcons` catalog | `animated_icons.dart`, `animated_icons/` | M | Vector interpolation data; port a subset of the icon catalog first (e.g. `menu_arrow`). |
-| `SearchDelegate` / `showSearch` | `search.dart` | M | Legacy full-screen search route; `SearchAnchor`/`SearchBar` already ported. |
-| `Ink` (ink decoration) | `ink_decoration.dart` | S | `InkResponse`/`InkWell` already ported (`InkWell.cs`); this adds the decoration-on-Material widget. |
 | `InkRipple`, `InkSparkle` splash factories | `ink_ripple.dart`, `ink_sparkle.dart` | M | Only the base `InkSplash` behavior exists today; needs pluggable `InteractiveInkFeatureFactory`. `InkSparkle` is shader-based — a paint-approximation divergence is acceptable if documented in [`ai/DIVERGENCES.md`](ai/DIVERGENCES.md). |
 
 ## Open infrastructure (align with maintainer first)

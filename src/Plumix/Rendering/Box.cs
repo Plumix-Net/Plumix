@@ -119,6 +119,16 @@ public readonly record struct BoxConstraints(
             height ?? 0.0,
             height ?? double.PositiveInfinity);
 
+    /// <summary>
+    /// Creates constraints that expand to fill the maximum size permitted by the parent.
+    /// </summary>
+    public static BoxConstraints Expand(double? width = null, double? height = null)
+        => new BoxConstraints(
+            width ?? double.PositiveInfinity,
+            width ?? double.PositiveInfinity,
+            height ?? double.PositiveInfinity,
+            height ?? double.PositiveInfinity);
+
     public static BoxConstraints Loose(Size s) => new BoxConstraints(0, s.Width, 0, s.Height);
 
     public BoxConstraints Loosen() => new BoxConstraints(MaxWidth: MaxWidth, MaxHeight: MaxHeight);

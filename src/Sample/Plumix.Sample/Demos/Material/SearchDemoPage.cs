@@ -36,11 +36,21 @@ internal sealed class SearchDemoPageState : State
 
     private readonly SearchController _controller = new();
     private readonly TextEditingController _standaloneController = new("Standalone");
+    private SearchDelegate<string>? _legacyDelegate;
     private bool _enabled = true;
     private bool _useFullScreen;
     private bool _useThemeOverrides;
     private string _selected = "none";
     private string _status = "idle";
+
+    public override void InitState()
+    {
+        _legacyDelegate = new TermSearchDelegate(SearchTerms, value => SetState(() =>
+        {
+            _selected = value;
+            _status = $"legacy selected: {value}";
+        }));
+    }
 
     public override Widget Build(BuildContext context)
     {
@@ -78,7 +88,7 @@ internal sealed class SearchDemoPageState : State
                     spacing: 12,
                     children:
                     [
-                        new Text("SearchBar + SearchAnchor", fontSize: 20, color: Colors.Black),
+                        new Text("SearchBar + SearchAnchor + SearchDelegate", fontSize: 20, color: Colors.Black),
                         new Text(
                             "Controller-backed search view with suggestions, open/close callbacks, M3 defaults, and theme precedence probes.",
                             fontSize: 14,
@@ -90,6 +100,7 @@ internal sealed class SearchDemoPageState : State
                                 ControlButton(_enabled ? "Enabled" : "Disabled", () => SetState(() => _enabled = !_enabled)),
                                 ControlButton(_useFullScreen ? "Full screen" : "Docked view", () => SetState(() => _useFullScreen = !_useFullScreen)),
                                 ControlButton(_useThemeOverrides ? "Theme on" : "Theme off", () => SetState(() => _useThemeOverrides = !_useThemeOverrides)),
+                                ControlButton("Legacy route", () => OpenLegacySearch(context)),
                             ]),
                         new Row(
                             spacing: 8,
@@ -154,6 +165,7 @@ internal sealed class SearchDemoPageState : State
     {
         _controller.Dispose();
         _standaloneController.Dispose();
+        _legacyDelegate?.Dispose();
     }
 
     private IReadOnlyList<Widget> BuildSuggestions(BuildContext context, SearchController controller)
@@ -197,5 +209,86 @@ internal sealed class SearchDemoPageState : State
     private static string FormatEmpty(string value)
     {
         return string.IsNullOrEmpty(value) ? "empty" : value;
+    }
+
+    private async void OpenLegacySearch(BuildContext context)
+    {
+        var searchDelegate = _legacyDelegate;
+        if (searchDelegate is null || searchDelegate.IsActive)
+        {
+            return;
+        }
+
+        _status = "legacy opened";
+        string? result = await MaterialSearch.ShowSearch(context, searchDelegate, query: _controller.Text);
+        if (result is not null && Mounted)
+        {
+            SetState(() => _status = $"legacy closed: {result}");
+        }
+    }
+
+    private sealed class TermSearchDelegate : SearchDelegate<string>
+    {
+        private readonly IReadOnlyList<string> _terms;
+        private readonly Action<string> _onSelected;
+
+        public TermSearchDelegate(IReadOnlyList<string> terms, Action<string> onSelected) : base(
+            searchFieldLabel: "Search framework terms")
+        {
+            _terms = terms;
+            _onSelected = onSelected;
+        }
+
+        public override Widget BuildSuggestions(BuildContext context) => BuildTerms(context, "Suggestions");
+
+        public override Widget BuildResults(BuildContext context) => BuildTerms(context, "Results");
+
+        public override Widget? BuildLeading(BuildContext context) => new BackButton(
+            onPressed: () => Navigator.MaybePop(context));
+
+        public override IReadOnlyList<Widget>? BuildActions(BuildContext context) =>
+        [
+            new Tooltip(
+                message: MaterialLocalizations.Of(context).ClearButtonTooltip,
+                child: new IconButton(
+                    icon: new Icon(Icons.Clear),
+                    onPressed: () =>
+                    {
+                        Query = string.Empty;
+                        ShowSuggestions();
+                    })),
+        ];
+
+        private Widget BuildTerms(BuildContext context, string label)
+        {
+            string query = Query.Trim();
+            var children = new List<Widget> { new Text($"{label} for {FormatEmpty(query)}", fontSize: 13) };
+            foreach (string term in _terms)
+            {
+                if (query.Length > 0 && !term.Contains(query, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                children.Add(new ListTile(
+                    leading: new Icon(Icons.Search),
+                    title: new Text(term),
+                    onTap: () =>
+                    {
+                        if (label == "Suggestions")
+                        {
+                            Query = term;
+                            ShowResults();
+                        }
+                        else
+                        {
+                            _onSelected(term);
+                            Close(context, term);
+                        }
+                    }));
+            }
+
+            return new ListView(children: children);
+        }
     }
 }

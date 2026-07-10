@@ -40,6 +40,49 @@ public sealed class MaterialTooltipTests
     }
 
     [Fact]
+    public void TooltipVisibility_DisablesProgrammaticAndPointerTooltipDisplayButPreservesSemantics()
+    {
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                ThemeData.Light,
+                new TooltipVisibility(
+                    visible: false,
+                    child: new Tooltip(message: "Hidden tip", child: new SizedBox(width: 24, height: 24)))));
+
+        harness.Pump(new Size(120, 60));
+
+        var state = harness.FindState<TooltipState>();
+        Assert.False(state.EnsureTooltipVisible());
+        var listener = FindTooltipListener(harness.RenderView);
+        Assert.NotNull(listener);
+        listener!.HandleEvent(PointerEnter(91), new BoxHitTestEntry(listener, new Point(5, 5)));
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.2));
+        harness.Pump(new Size(120, 60));
+
+        Assert.Null(FindParagraph(harness.RenderView, "Hidden tip"));
+        Assert.NotNull(FindSemantics(harness.PumpAndGetSemantics(new Size(120, 60)), node => node.Label == "Hidden tip"));
+    }
+
+    [Fact]
+    public void TooltipVisibility_ClosestScopeWins()
+    {
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                ThemeData.Light,
+                new TooltipVisibility(
+                    visible: false,
+                    child: new TooltipVisibility(
+                        visible: true,
+                        child: new Tooltip(message: "Inner tip", child: new SizedBox(width: 24, height: 24))))));
+
+        harness.Pump(new Size(120, 60));
+
+        Assert.True(harness.FindState<TooltipState>().EnsureTooltipVisible());
+        harness.Pump(new Size(120, 60));
+        Assert.NotNull(FindParagraph(harness.RenderView, "Inner tip"));
+    }
+
+    [Fact]
     public void Tooltip_DefaultDesktopAppearance_UsesPlatformMetricsAndBrightnessColors()
     {
         Scheduler.ResetForTests();

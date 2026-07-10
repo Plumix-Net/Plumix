@@ -19,6 +19,7 @@ internal sealed class BadgeTooltipDemoPageState : State
     private int _count = 7;
     private bool _isLabelVisible = true;
     private bool _useThemeOverrides;
+    private bool _tooltipsVisible = true;
 
     public override Widget Build(BuildContext context)
     {
@@ -39,6 +40,7 @@ internal sealed class BadgeTooltipDemoPageState : State
                         ControlButton("Count +1", () => SetState(() => _count++)),
                         ControlButton(_isLabelVisible ? "Label on" : "Label off", () => SetState(() => _isLabelVisible = !_isLabelVisible)),
                         ControlButton(_useThemeOverrides ? "Theme on" : "Theme off", () => SetState(() => _useThemeOverrides = !_useThemeOverrides)),
+                        ControlButton(_tooltipsVisible ? "Tooltips on" : "Tooltips off", () => SetState(() => _tooltipsVisible = !_tooltipsVisible)),
                     ]),
                 new Container(
                     color: Color.Parse("#FFF7F2FA"),
@@ -65,28 +67,30 @@ internal sealed class BadgeTooltipDemoPageState : State
                                 child: new Icon(Icons.Check, size: 32))),
                         ])),
                 new Text("Hover or long-press these controls:", fontSize: 14, color: Colors.Black),
-                new Row(
-                    spacing: 12,
-                    children:
-                    [
-                        new Tooltip(
-                            message: "Default tooltip",
-                            child: new OutlinedButton(
-                                onPressed: () => { },
-                                child: new Text("Default"))),
-                        new Tooltip(
-                            message: "Widget override tooltip",
-                            preferBelow: false,
-                            verticalOffset: 28,
-                            decoration: new BoxDecoration(
-                                Color: Color.Parse("#FF4527A0"),
-                                BorderRadius: BorderRadius.Circular(8)),
-                            textStyle: new TextStyle(Color: Colors.White, FontSize: 13),
-                            waitDuration: TimeSpan.FromMilliseconds(250),
-                            child: new OutlinedButton(
-                                onPressed: () => { },
-                                child: new Text("Above + delay"))),
-                    ]),
+                new TooltipVisibility(
+                    visible: _tooltipsVisible,
+                    child: new Row(
+                        spacing: 12,
+                        children:
+                        [
+                            new Tooltip(
+                                message: "Default tooltip",
+                                child: new OutlinedButton(
+                                    onPressed: () => { },
+                                    child: new Text("Default"))),
+                            new Tooltip(
+                                message: "Widget override tooltip",
+                                preferBelow: false,
+                                verticalOffset: 28,
+                                decoration: new BoxDecoration(
+                                    Color: Color.Parse("#FF4527A0"),
+                                    BorderRadius: BorderRadius.Circular(8)),
+                                textStyle: new TextStyle(Color: Colors.White, FontSize: 13),
+                                waitDuration: TimeSpan.FromMilliseconds(250),
+                                child: new OutlinedButton(
+                                    onPressed: () => { },
+                                    child: new Text("Above + delay"))),
+                        ])),
             ]);
 
         if (!_useThemeOverrides)

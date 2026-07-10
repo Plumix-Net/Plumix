@@ -90,7 +90,7 @@ class _SearchDemoPageState extends State<SearchDemoPage> {
           spacing: 12,
           children: <Widget>[
             const Text(
-              'SearchBar + SearchAnchor',
+              'SearchBar + SearchAnchor + SearchDelegate',
               style: TextStyle(fontSize: 20, color: Colors.black),
             ),
             const Text(
@@ -112,6 +112,10 @@ class _SearchDemoPageState extends State<SearchDemoPage> {
                   _useThemeOverrides ? 'Theme on' : 'Theme off',
                   () =>
                       setState(() => _useThemeOverrides = !_useThemeOverrides),
+                ),
+                _controlButton(
+                  'Legacy route',
+                  () => _openLegacySearch(context),
                 ),
               ],
             ),
@@ -257,5 +261,82 @@ class _SearchDemoPageState extends State<SearchDemoPage> {
 
   static String _formatEmpty(String value) {
     return value.isEmpty ? 'empty' : value;
+  }
+
+  Future<void> _openLegacySearch(BuildContext context) async {
+    final String? result = await showSearch<String>(
+      context: context,
+      query: _controller.text,
+      delegate: _TermSearchDelegate(_searchTerms, (String value) {
+        setState(() {
+          _selected = value;
+          _status = 'legacy selected: $value';
+        });
+      }),
+    );
+    if (result != null && mounted) {
+      setState(() => _status = 'legacy closed: $result');
+    }
+  }
+}
+
+class _TermSearchDelegate extends SearchDelegate<String> {
+  _TermSearchDelegate(this._terms, this._onSelected)
+    : super(searchFieldLabel: 'Search framework terms');
+
+  final List<String> _terms;
+  final ValueChanged<String> _onSelected;
+
+  @override
+  List<Widget>? buildActions(BuildContext context) {
+    return <Widget>[
+      IconButton(
+        icon: const Icon(Icons.clear),
+        tooltip: MaterialLocalizations.of(context).clearButtonTooltip,
+        onPressed: () {
+          query = '';
+          showSuggestions(context);
+        },
+      ),
+    ];
+  }
+
+  @override
+  Widget? buildLeading(BuildContext context) {
+    return BackButton(onPressed: () => close(context, null));
+  }
+
+  @override
+  Widget buildResults(BuildContext context) => _buildTerms(context, 'Results');
+
+  @override
+  Widget buildSuggestions(BuildContext context) =>
+      _buildTerms(context, 'Suggestions');
+
+  Widget _buildTerms(BuildContext context, String label) {
+    final String normalizedQuery = query.trim();
+    return ListView(
+      children: <Widget>[
+        Text(
+          '$label for ${_SearchDemoPageState._formatEmpty(normalizedQuery)}',
+        ),
+        for (final String term in _terms)
+          if (normalizedQuery.isEmpty ||
+              term.toLowerCase().contains(normalizedQuery.toLowerCase()))
+            ListTile(
+              leading: const Icon(Icons.search),
+              title: Text(term),
+              onTap: () {
+                if (label == 'Suggestions') {
+                  query = term;
+                  showResults(context);
+                } else {
+                  _onSelected(term);
+                  close(context, term);
+                }
+              },
+            ),
+      ],
+    );
   }
 }

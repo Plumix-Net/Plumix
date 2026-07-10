@@ -165,6 +165,50 @@ public sealed class MaterialSearchTests : IDisposable
     }
 
     [Fact]
+    public async Task SearchDelegate_ShowSearchCoordinatesQueryBodiesTypedCloseAndDelegateReuse()
+    {
+        var searchDelegate = new TestSearchDelegate();
+        var host = new SearchLaunchHost(searchDelegate, "wi");
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new Navigator(new BuilderPageRoute(_ => host))));
+        var state = harness.FindState<SearchLaunchHostState>();
+        state.Open();
+        harness.Pump(new Size(640, 420));
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.4));
+        harness.Pump(new Size(640, 420));
+
+        Assert.True(searchDelegate.IsActive);
+        Assert.Equal("wi", searchDelegate.Query);
+        Assert.NotNull(FindParagraph(harness.RenderView, "Suggestions: wi"));
+        Assert.NotNull(FindParagraph(harness.RenderView, "Leading"));
+        Assert.NotNull(FindParagraph(harness.RenderView, "Action"));
+
+        searchDelegate.ShowResults();
+        harness.Pump(new Size(640, 420));
+        Assert.NotNull(FindParagraph(harness.RenderView, "Results: wi"));
+
+        searchDelegate.Query = "widget";
+        harness.Pump(new Size(640, 420));
+        Assert.NotNull(FindParagraph(harness.RenderView, "Results: widget"));
+
+        searchDelegate.Close("Widget");
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.4));
+        harness.Pump(new Size(640, 420));
+
+        Assert.Equal("Widget", await state.Result);
+        Assert.False(searchDelegate.IsActive);
+    }
+
+    [Fact]
+    public void SearchDelegate_ValidatesFieldStyleDecorationExclusivity()
+    {
+        Assert.Throws<ArgumentException>(() => new TestSearchDelegate(
+            searchFieldStyle: new TextStyle(FontSize: 16),
+            searchFieldDecorationTheme: new InputDecorationThemeData()));
+    }
+
+    [Fact]
     public void SearchViewTheme_ControlsRouteSurfaceAndHeaderDefaults()
     {
         var controller = new SearchController("seed");
@@ -225,6 +269,53 @@ public sealed class MaterialSearchTests : IDisposable
         return result;
     }
 
+    private sealed class TestSearchDelegate : SearchDelegate<string>
+    {
+        public TestSearchDelegate(
+            TextStyle? searchFieldStyle = null,
+            InputDecorationThemeData? searchFieldDecorationTheme = null) : base(
+            searchFieldLabel: "Find framework term",
+            searchFieldStyle: searchFieldStyle,
+            searchFieldDecorationTheme: searchFieldDecorationTheme)
+        {
+        }
+
+        public override Widget BuildSuggestions(BuildContext context) => new Text($"Suggestions: {Query}");
+
+        public override Widget BuildResults(BuildContext context) => new Text($"Results: {Query}");
+
+        public override Widget? BuildLeading(BuildContext context) => new Text("Leading");
+
+        public override IReadOnlyList<Widget>? BuildActions(BuildContext context) => [new Text("Action")];
+    }
+
+    private sealed class SearchLaunchHost : StatefulWidget
+    {
+        public SearchLaunchHost(TestSearchDelegate searchDelegate, string query) : base(key: null)
+        {
+            SearchDelegate = searchDelegate;
+            Query = query;
+        }
+
+        public TestSearchDelegate SearchDelegate { get; }
+
+        public string Query { get; }
+
+        public override State CreateState() => new SearchLaunchHostState();
+    }
+
+    private sealed class SearchLaunchHostState : State
+    {
+        private SearchLaunchHost Current => (SearchLaunchHost)StateWidget;
+
+        public Task<string?> Result { get; private set; } = Task.FromResult<string?>(null);
+
+        public override Widget Build(BuildContext context) => new SizedBox();
+
+        public void Open() => Result = MaterialSearch.ShowSearch(Context, Current.SearchDelegate, Current.Query);
+
+    }
+
     private sealed class WidgetRenderHarness : IDisposable
     {
         private readonly BuildOwner _owner = new();
@@ -254,6 +345,23 @@ public sealed class MaterialSearchTests : IDisposable
         }
 
         public void Dispose() => _rootElement.Unmount();
+
+        public T FindState<T>() where T : State
+        {
+            var states = new List<T>();
+            CollectStates(_rootElement, states);
+            return Assert.Single(states);
+        }
+
+        private static void CollectStates<T>(Element element, List<T> states) where T : State
+        {
+            if (element is StatefulElement stateful && stateful.State is T state)
+            {
+                states.Add(state);
+            }
+
+            element.VisitChildren(child => CollectStates(child, states));
+        }
 
         private sealed class HarnessRootElement : Element, IRenderObjectHost
         {

@@ -155,6 +155,7 @@ Status: `in_progress`
 
 Kickoff note (2026-03-12):
 
+- Added Flutter-structured `CarouselView`/`CarouselViewTheme` with fixed, weighted, and lazy item sources; core now exposes a variable-extent sliver adapter and subclassable scroll positions so carousel geometry and leading-item preservation remain framework-owned.
 - Prioritized immediately after M3 to unblock practical control rewrites and reduce sample-level styling drift by introducing a Flutter-like Material layer in framework widgets.
 - Added paired `CalendarDatePicker` + `YearPicker` parity with calendar delegates/date utilities, M2/M3 date-picker theming, bounded month paging, day/year states, keyboard/accessibility behavior, focused tests, and mirrored C#/Dart sample coverage.
 - Added paired `TextFormField` + `DropdownButtonFormField<T>` parity on shared core `Form`/`FormField<T>` primitives, covering typed global-key state access, field registration, validation modes, save/reset/error lifecycle, controller/focus synchronization, decorated error/hint composition, callback ordering, invalid/form semantics, focused tests, and mirrored C#/Dart sample probes.
@@ -659,6 +660,14 @@ Progress update (2026-03-19):
   - replaced the earlier `InkWell` subset with a shared Flutter-shaped interaction state machine covering primary/secondary taps, tap-up/cancel, double tap, long-press/up, focus, hover, feedback, semantics, and external `MaterialStatesController` synchronization;
   - matched circle/uncontained `InkResponse` versus rectangle/contained `InkWell` geometry, radius/border resolution, splash migration, and `overlayColor -> legacy color -> ThemeData` state-color precedence;
   - added source-required gesture callback and long-press semantics plumbing, fixed `RenderTabBar` indicator geometry refresh when ink-child layout remains stable, added focused `MaterialInkResponseTests`, and a mirrored `/ink-response` C#/Dart runtime demo. Pluggable ink factories and ancestor-Material ink ownership remain documented shared-primitive gaps.
+- Added paired Material `Ink` + `TooltipVisibility` ports:
+  - `Ink` now provides Flutter-shaped color/decoration/image shorthand, padding and sizing composition, preserving decoration-under-response paint for ordinary `InkWell`/`InkResponse` descendants;
+  - `TooltipVisibility` now supplies inherited nearest-scope suppression for pointer, long-press, tap, and programmatic tooltip display while preserving tooltip semantics;
+  - added focused coverage and mirrored C#/Dart probes in the existing ink-response and badge-tooltip sample pages. Shared ancestor-Material ink ownership remains tracked in `DIVERGENCES.md`.
+- Added paired Material `SearchDelegate<T>` + `showSearch` (`MaterialSearch.ShowSearch<T>`) ports:
+  - added a full-screen route with fade lifecycle, captured ambient theme/media/directionality, typed completion result, single-active-delegate guard, query cursor placement, focused suggestions/results switching, escape/back dismissal, and AppBar leading/actions/bottom/flexible-space composition;
+  - added Flutter-shaped delegate hooks for search-field defaults, query control, app-bar theme override, suggestions/results, close/reuse lifecycle, and transition-controller exposure;
+  - expanded focused search tests and the mirrored C#/Dart Search demo with a legacy full-screen delegate route. Generic transition animation and complete platform input configuration remain tracked in `DIVERGENCES.md`.
 - Remaining divergence for floating action button in current framework scope:
   - none documented in current framework scope.
 
