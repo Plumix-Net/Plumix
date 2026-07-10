@@ -52,7 +52,17 @@ Material Scaffold/AppBar/FAB) written directly against the C# API.
 
 ## Next steps (per fsharp-branch plan)
 
-1. `Plumix.FSharp` package: factory functions returning `Widget` (Feliz-style).
+1. ~~`Plumix.FSharp` package: factory functions returning `Widget` (Feliz-style).~~
+   Done same day: `src/Plumix.FSharp` (`Ui` static factories + `Prelude.fs` type
+   re-exports so app code needs only `open Plumix.FSharp`); the sample now uses
+   it. Design notes: factories return `Widget` and take `Widget seq` children, so
+   F# lists compose without upcasts; F# optional args (`?param`) are mapped to
+   the C# defaults via `Option.toNullable`/`Option.toObj`/`defaultArg`, which is
+   the boilerplate the package absorbs. `Ui.appBar` returns typed `AppBar`
+   because `Scaffold` requires it. Package layering follows INVARIANTS: depends
+   on `Plumix` + `Plumix.Material` only (downstream edge, like samples).
 2. `Plumix.Elmish`: MVU host inside a `StatefulWidget`, framework reconciliation
    as the diffing layer.
 3. Optional CE-based DSL experiment on top.
+4. Grow `Ui` coverage on demand (ListView, Container decoration surface,
+   gesture/ink widgets) as F# samples exercise more of the framework.

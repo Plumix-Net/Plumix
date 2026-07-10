@@ -1,13 +1,10 @@
 namespace Plumix.FSharpSample
 
-open Avalonia.Media
-open Plumix.Material
-open Plumix.Rendering
-open Plumix.Widgets
+open Plumix.FSharp
 
-/// Classic Flutter counter written against the raw (C#-shaped) Plumix API,
-/// to exercise F# interop: subclassing, named/optional args, widget lists,
-/// callbacks and SetState.
+/// Classic Flutter counter built with the Plumix.FSharp factory functions
+/// (`Ui.*`). One `open Plumix.FSharp` brings in the factories plus the
+/// commonly used widget/layout/painting types.
 type CounterPage() =
     inherit StatefulWidget()
 
@@ -20,31 +17,31 @@ and CounterPageState() =
 
     override this.Build(_context) =
         // F#: protected State.SetState is not callable from inside a lambda
-        // (FS0405), so callbacks go through the public InvokeSetState helper.
-        let changeBy delta =
-            fun () -> this.InvokeSetState(fun () -> count <- count + delta)
+        // (FS0491), so callbacks go through the public InvokeSetState helper.
+        let update f = fun () -> this.InvokeSetState(fun () -> count <- f count)
 
-        Scaffold(
-            appBar = AppBar(titleText = "Plumix + F#"),
+        Ui.scaffold (
+            appBar = Ui.appBar (titleText = "Plumix + F#"),
             body =
-                Center(
-                    child =
-                        Column(
-                            mainAxisAlignment = MainAxisAlignment.Center,
-                            spacing = 12.0,
-                            children =
-                                [| Text("You have pushed the button this many times:")
-                                   Text(string count, fontSize = 34.0, color = Colors.DarkSlateBlue)
-                                   Row(
-                                       mainAxisAlignment = MainAxisAlignment.Center,
-                                       spacing = 12.0,
-                                       children =
-                                           [| ElevatedButton(child = Text("-1"), onPressed = changeBy -1)
-                                              ElevatedButton(child = Text("Reset"), onPressed = (fun () -> this.InvokeSetState(fun () -> count <- 0))) |]) |])),
+                Ui.center (
+                    Ui.column (
+                        mainAxisAlignment = MainAxisAlignment.Center,
+                        spacing = 12.0,
+                        children = [
+                            Ui.text "You have pushed the button this many times:"
+                            Ui.text (string count, fontSize = 34.0, color = Colors.DarkSlateBlue)
+                            Ui.row (
+                                mainAxisAlignment = MainAxisAlignment.Center,
+                                spacing = 12.0,
+                                children = [
+                                    Ui.elevatedButton (Ui.text "-1", onPressed = update (fun c -> c - 1))
+                                    Ui.elevatedButton (Ui.text "Reset", onPressed = update (fun _ -> 0))
+                                ])
+                        ])),
             floatingActionButton =
-                FloatingActionButton(
-                    child = Icon(Icons.Add),
-                    onPressed = changeBy 1,
+                Ui.floatingActionButton (
+                    child = Ui.icon Icons.Add,
+                    onPressed = update (fun c -> c + 1),
                     tooltip = "Increment"))
 
 /// Root widget: same Theme/ScaffoldMessenger shell as the C# sample.
@@ -52,6 +49,4 @@ type FSharpCounterApp() =
     inherit StatelessWidget()
 
     override _.Build(_context) =
-        Theme(
-            data = ThemeData.Light,
-            child = ScaffoldMessenger(child = CounterPage()))
+        Ui.theme (data = ThemeData.Light, child = Ui.scaffoldMessenger (CounterPage()))
