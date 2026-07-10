@@ -1391,6 +1391,7 @@ public sealed class AppBar : StatelessWidget, IPreferredSizeWidget
         Color? foregroundColor = null,
         SystemUiOverlayStyle? systemOverlayStyle = null,
         Widget? bottom = null,
+        Widget? flexibleSpace = null,
         Key? key = null) : base(key)
     {
         if (toolbarHeight.HasValue && (double.IsNaN(toolbarHeight.Value) || double.IsInfinity(toolbarHeight.Value) || toolbarHeight.Value <= 0))
@@ -1429,6 +1430,7 @@ public sealed class AppBar : StatelessWidget, IPreferredSizeWidget
         ForegroundColor = foregroundColor;
         SystemOverlayStyle = systemOverlayStyle;
         Bottom = bottom;
+        FlexibleSpace = flexibleSpace;
     }
 
     public string? TitleText { get; }
@@ -1472,6 +1474,8 @@ public sealed class AppBar : StatelessWidget, IPreferredSizeWidget
     public SystemUiOverlayStyle? SystemOverlayStyle { get; }
 
     public Widget? Bottom { get; }
+
+    public Widget? FlexibleSpace { get; }
 
     public Size PreferredSize => new(
         0,
@@ -1554,6 +1558,17 @@ public sealed class AppBar : StatelessWidget, IPreferredSizeWidget
                 mainAxisSize: MainAxisSize.Min,
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
                 children: [appBarContent, Bottom]);
+        }
+
+        if (FlexibleSpace is not null)
+        {
+            appBarContent = new Stack(
+                fit: StackFit.Passthrough,
+                children:
+                [
+                    new Positioned(left: 0, top: 0, right: 0, bottom: 0, child: FlexibleSpace),
+                    appBarContent,
+                ]);
         }
 
         if (Primary && MediaQuery.MaybeOf(context) != null)
