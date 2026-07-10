@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <PackageId>Plumix.FSharp</PackageId>
+    <Version>0.1.0-alpha.1</Version>
+    <Description>F# bindings for Plumix — a Flutter-inspired UI framework for .NET. Feliz-style widget factory functions over the Plumix and Plumix.Material widget sets.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- F#: compilation order is significant -->
+    <Compile Include="Prelude.fs" />
+    <Compile Include="Ui.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Explicit because central package management disables the SDK's implicit reference -->
+    <PackageReference Include="FSharp.Core" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Plumix\Plumix.csproj" />
+    <ProjectReference Include="..\Plumix.Material\Plumix.Material.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
+    <None Include="..\..\icon.png" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+</Project>

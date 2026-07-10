@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <OutputType>WinExe</OutputType>
+        <TargetFramework>net10.0</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <!-- F#: compilation order is significant -->
+        <Compile Include="CounterApp.fs" />
+        <Compile Include="ElmishCounter.fs" />
+        <Compile Include="App.fs" />
+        <Compile Include="Program.fs" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <!-- Explicit because central package management disables the SDK's implicit reference -->
+        <PackageReference Include="FSharp.Core" />
+        <PackageReference Include="Avalonia.Desktop" />
+        <PackageReference Include="Avalonia.Themes.Fluent" />
+        <PackageReference Include="Avalonia.Fonts.Inter" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\Plumix.FSharp\Plumix.FSharp.fsproj" />
+        <ProjectReference Include="..\..\Plumix.Elmish\Plumix.Elmish.fsproj" />
+    </ItemGroup>
+</Project>

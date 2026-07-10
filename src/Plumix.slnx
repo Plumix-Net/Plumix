@@ -1,0 +1,35 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/Sample/">
+    <Project Path="Sample/Plumix.Android/Plumix.Android.csproj" />
+    <Project Path="Sample/Plumix.Browser/Plumix.Browser.csproj" />
+    <Project Path="Sample/Plumix.Desktop/Plumix.Desktop.csproj" />
+    <Project Path="Sample/Plumix.FSharpSample/Plumix.FSharpSample.fsproj" />
+    <Project Path="Sample/Plumix.iOS/Plumix.iOS.csproj" />
+    <Project Path="Sample/Plumix.Sample/Plumix.Sample.csproj" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path="../AGENTS.md" />
+    <File Path="../CHANGELOG.md" />
+    <File Path="../docs/FRAMEWORK_PLAN.md" />
+    <File Path="Directory.Packages.props" />
+  </Folder>
+  <Folder Name="/Solution Items/ai/">
+    <File Path="../docs/ai/FEATURE_TEMPLATE.md" />
+    <File Path="../docs/ai/INVARIANTS.md" />
+    <File Path="../docs/ai/MODULE_INDEX.md" />
+    <File Path="../docs/ai/PARITY_MATRIX.md" />
+    <File Path="../docs/ai/rendering-2026-03-10-layout-exception-surfacing.md" />
+    <File Path="../docs/ai/TEST_MATRIX.md" />
+  </Folder>
+  <Project Path="Plumix.Cupertino/Plumix.Cupertino.csproj" />
+  <Project Path="Plumix.Elmish/Plumix.Elmish.fsproj" />
+  <Project Path="Plumix.FSharp/Plumix.FSharp.fsproj" />
+  <Project Path="Plumix.Material/Plumix.Material.csproj" />
+  <Project Path="Plumix.Tests/Plumix.Tests.csproj" />
+  <Project Path="Plumix/Plumix.csproj" />
+</Solution>
