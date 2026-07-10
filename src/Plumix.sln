@@ -1,4 +1,4 @@
-
+﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.3.32811.315
@@ -21,7 +21,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		..\docs\FRAMEWORK_PLAN.md = ..\docs\FRAMEWORK_PLAN.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Plumix.Core", "Plumix\Plumix.csproj", "{326C3424-9279-4043-ACA2-2ED611A15254}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Plumix", "Plumix\Plumix.csproj", "{326C3424-9279-4043-ACA2-2ED611A15254}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Sample", "Sample", "{46D891D7-0DAC-4F08-BA48-49F968F1EDCE}"
 EndProject
@@ -40,6 +40,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Plumix.Material", "Plumix.Material\Plumix.Material.csproj", "{43264679-E820-44D5-8F7B-9E70ACF5F191}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Plumix.Cupertino", "Plumix.Cupertino\Plumix.Cupertino.csproj", "{DB33F73F-2C6A-431A-9895-3ED80F803C7B}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Plumix.FSharpSample", "Sample\Plumix.FSharpSample\Plumix.FSharpSample.fsproj", "{A4BA1E58-9E5A-42A7-A6A7-AF9BCDB06F86}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -159,6 +161,18 @@ Global
 		{DB33F73F-2C6A-431A-9895-3ED80F803C7B}.Release|x64.Build.0 = Release|Any CPU
 		{DB33F73F-2C6A-431A-9895-3ED80F803C7B}.Release|x86.ActiveCfg = Release|Any CPU
 		{DB33F73F-2C6A-431A-9895-3ED80F803C7B}.Release|x86.Build.0 = Release|Any CPU
+		{A4BA1E58-9E5A-42A7-A6A7-AF9BCDB06F86}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A4BA1E58-9E5A-42A7-A6A7-AF9BCDB06F86}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A4BA1E58-9E5A-42A7-A6A7-AF9BCDB06F86}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A4BA1E58-9E5A-42A7-A6A7-AF9BCDB06F86}.Debug|x64.Build.0 = Debug|Any CPU
+		{A4BA1E58-9E5A-42A7-A6A7-AF9BCDB06F86}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A4BA1E58-9E5A-42A7-A6A7-AF9BCDB06F86}.Debug|x86.Build.0 = Debug|Any CPU
+		{A4BA1E58-9E5A-42A7-A6A7-AF9BCDB06F86}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A4BA1E58-9E5A-42A7-A6A7-AF9BCDB06F86}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A4BA1E58-9E5A-42A7-A6A7-AF9BCDB06F86}.Release|x64.ActiveCfg = Release|Any CPU
+		{A4BA1E58-9E5A-42A7-A6A7-AF9BCDB06F86}.Release|x64.Build.0 = Release|Any CPU
+		{A4BA1E58-9E5A-42A7-A6A7-AF9BCDB06F86}.Release|x86.ActiveCfg = Release|Any CPU
+		{A4BA1E58-9E5A-42A7-A6A7-AF9BCDB06F86}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -170,6 +184,7 @@ Global
 		{EBD9022F-BC83-4846-9A11-6F7F3772DC64} = {46D891D7-0DAC-4F08-BA48-49F968F1EDCE}
 		{7AD1DAC8-7FBE-49D5-8614-7321233DB82E} = {46D891D7-0DAC-4F08-BA48-49F968F1EDCE}
 		{55D8FD4B-7A91-4067-BFEA-E80B0F767D4E} = {3DA99C4E-89E3-4049-9C22-0A7EC60D83D8}
+		{A4BA1E58-9E5A-42A7-A6A7-AF9BCDB06F86} = {46D891D7-0DAC-4F08-BA48-49F968F1EDCE}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {83CB65B8-011F-4ED7-BCD3-A6CFA935EF7E}
