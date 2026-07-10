@@ -7,6 +7,7 @@
     <ItemGroup>
         <!-- F#: compilation order is significant -->
         <Compile Include="CounterApp.fs" />
+        <Compile Include="ElmishCounter.fs" />
         <Compile Include="App.fs" />
         <Compile Include="Program.fs" />
     </ItemGroup>
@@ -21,5 +22,6 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\Plumix.FSharp\Plumix.FSharp.fsproj" />
+        <ProjectReference Include="..\..\Plumix.Elmish\Plumix.Elmish.fsproj" />
     </ItemGroup>
 </Project>

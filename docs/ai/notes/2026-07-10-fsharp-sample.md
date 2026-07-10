@@ -61,8 +61,20 @@ Material Scaffold/AppBar/FAB) written directly against the C# API.
    the boilerplate the package absorbs. `Ui.appBar` returns typed `AppBar`
    because `Scaffold` requires it. Package layering follows INVARIANTS: depends
    on `Plumix` + `Plumix.Material` only (downstream edge, like samples).
-2. `Plumix.Elmish`: MVU host inside a `StatefulWidget`, framework reconciliation
-   as the diffing layer.
+2. ~~`Plumix.Elmish`: MVU host inside a `StatefulWidget`, framework reconciliation
+   as the diffing layer.~~ Done same day: `src/Plumix.Elmish` on the `Elmish`
+   5.0.2 package (depends on core `Plumix` only). `ElmishWidget<'arg,'model,'msg>`
+   runs the program from `InitState` via `Program.withSetState` (stores model,
+   triggers `InvokeSetState`) + `Program.runWithDispatch` (marshals dispatch to
+   the Avalonia UI thread, so `Cmd.OfAsync` from thread-pool threads is safe);
+   `Build` calls `Program.view program`. Public sugar: `Program.toWidget` /
+   `Program.toWidgetWith` (module fallback resolution alongside `Elmish.Program`,
+   same pattern as Avalonia.FuncUI). Verified end-to-end with a temporary
+   `Program.withConsoleTrace` + delayed-command run: background dispatch →
+   UI-thread rebuild confirmed in the trace. Known gap: no termination hook —
+   subscriptions started by a program outlive the widget; `Dispose` only stops
+   rebuilds. Wire `Program.withTermination` (or an optional terminate msg
+   parameter) before promoting past alpha.
 3. Optional CE-based DSL experiment on top.
 4. Grow `Ui` coverage on demand (ListView, Container decoration surface,
    gesture/ink widgets) as F# samples exercise more of the framework.

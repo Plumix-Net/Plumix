@@ -4,7 +4,7 @@
 
 # Plumix
 
-Flutter-inspired UI framework for .NET — build declarative, widget-based UIs in C# with Flutter's `Widget`/`Element`/`RenderObject` architecture.
+Flutter-inspired UI framework for .NET — build declarative, widget-based UIs in C# or F# with Flutter's `Widget`/`Element`/`RenderObject` architecture.
 
 [![Website](https://img.shields.io/badge/website-plumix.net-blue)](https://plumix.net/)
 [![Plumix](https://img.shields.io/nuget/v/Plumix?label=Plumix&logo=nuget)](https://www.nuget.org/packages/Plumix/)
@@ -36,6 +36,8 @@ Flutter-inspired UI framework for .NET — build declarative, widget-based UIs i
 - Additional packages: [Plumix.Packages](https://github.com/Plumix-Net/Plumix.Packages)
 
 ## Example
+
+### C#
 
 ```csharp
 using Avalonia.Media;
@@ -71,6 +73,47 @@ public sealed class MyApp : StatelessWidget
     }
 }
 ```
+
+### F#
+
+Plumix also ships first-class F# support: `Plumix.FSharp` provides Feliz-style `Ui.*` widget factories, and `Plumix.Elmish` hosts a standard [Elmish](https://elmish.github.io/elmish/) (MVU) program as a widget — Plumix's own element reconciliation does the diffing, so there is no extra virtual-DOM layer.
+
+```fsharp
+open Elmish
+open Plumix.Elmish
+open Plumix.FSharp
+
+type Model = { Count: int }
+type Msg = Increment
+
+let init () = { Count = 0 }, Cmd.none
+
+let update msg model =
+    match msg with
+    | Increment -> { model with Count = model.Count + 1 }, Cmd.none
+
+let view model dispatch =
+    Ui.scaffold (
+        appBar = Ui.appBar (titleText = "Hello, Plumix!"),
+        body =
+            Ui.center (
+                Ui.column (
+                    mainAxisAlignment = MainAxisAlignment.Center,
+                    spacing = 12.0,
+                    children = [
+                        Ui.text ("Hello, Plumix!", fontSize = 32.0, fontWeight = FontWeight.Bold)
+                        Ui.text "Flutter-like widgets, powered by .NET and Avalonia."
+                        Ui.text (string model.Count, fontSize = 24.0)
+                    ])),
+        floatingActionButton =
+            Ui.floatingActionButton (child = Ui.icon Icons.Add, onPressed = fun () -> dispatch Increment))
+
+/// The MVU program as a plain Plumix widget — mount it anywhere in a widget tree.
+let app () : Widget =
+    Program.mkProgram init update view |> Program.toWidget
+```
+
+Prefer classic Flutter style? `StatefulWidget`/`SetState` work from F# too — see [`src/Sample/Plumix.FSharpSample`](src/Sample/Plumix.FSharpSample) for both variants side by side.
 
 ## Contributing
 

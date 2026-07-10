@@ -3,8 +3,8 @@ namespace Plumix.FSharpSample
 open Plumix.FSharp
 
 /// Classic Flutter counter built with the Plumix.FSharp factory functions
-/// (`Ui.*`). One `open Plumix.FSharp` brings in the factories plus the
-/// commonly used widget/layout/painting types.
+/// (`Ui.*`) and StatefulWidget/SetState — the non-Elmish style; the app root
+/// mounts the MVU variant from ElmishCounter.fs instead.
 type CounterPage() =
     inherit StatefulWidget()
 
@@ -44,9 +44,3 @@ and CounterPageState() =
                     onPressed = update (fun c -> c + 1),
                     tooltip = "Increment"))
 
-/// Root widget: same Theme/ScaffoldMessenger shell as the C# sample.
-type FSharpCounterApp() =
-    inherit StatelessWidget()
-
-    override _.Build(_context) =
-        Ui.theme (data = ThemeData.Light, child = Ui.scaffoldMessenger (CounterPage()))

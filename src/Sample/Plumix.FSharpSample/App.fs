@@ -3,6 +3,7 @@ namespace Plumix.FSharpSample
 open Avalonia
 open Avalonia.Themes.Fluent
 open Plumix
+open Plumix.FSharp
 
 type App() =
     inherit PlumixApplication()
@@ -10,7 +11,9 @@ type App() =
     // FluentTheme is added in code instead of App.axaml: no XAML in the F# sample.
     override this.Initialize() = this.Styles.Add(FluentTheme())
 
-    override _.CreateRootWidget() = FSharpCounterApp()
+    // Same Theme/ScaffoldMessenger shell as the C# sample, around the MVU counter.
+    override _.CreateRootWidget() =
+        Ui.theme (data = ThemeData.Light, child = Ui.scaffoldMessenger (ElmishCounter.widget ()))
 
     override _.CreateOptions() =
         PlumixOptions(

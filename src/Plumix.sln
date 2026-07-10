@@ -45,6 +45,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Plumix.FSharpSample", "Samp
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Plumix.FSharp", "Plumix.FSharp\Plumix.FSharp.fsproj", "{45A9C7A5-D773-448E-9FDE-17975B6CC4E3}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Plumix.Elmish", "Plumix.Elmish\Plumix.Elmish.fsproj", "{36A51AFA-5D28-4CB2-933A-145BD444EDA8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -187,6 +189,18 @@ Global
 		{45A9C7A5-D773-448E-9FDE-17975B6CC4E3}.Release|x64.Build.0 = Release|Any CPU
 		{45A9C7A5-D773-448E-9FDE-17975B6CC4E3}.Release|x86.ActiveCfg = Release|Any CPU
 		{45A9C7A5-D773-448E-9FDE-17975B6CC4E3}.Release|x86.Build.0 = Release|Any CPU
+		{36A51AFA-5D28-4CB2-933A-145BD444EDA8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{36A51AFA-5D28-4CB2-933A-145BD444EDA8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{36A51AFA-5D28-4CB2-933A-145BD444EDA8}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{36A51AFA-5D28-4CB2-933A-145BD444EDA8}.Debug|x64.Build.0 = Debug|Any CPU
+		{36A51AFA-5D28-4CB2-933A-145BD444EDA8}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{36A51AFA-5D28-4CB2-933A-145BD444EDA8}.Debug|x86.Build.0 = Debug|Any CPU
+		{36A51AFA-5D28-4CB2-933A-145BD444EDA8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{36A51AFA-5D28-4CB2-933A-145BD444EDA8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{36A51AFA-5D28-4CB2-933A-145BD444EDA8}.Release|x64.ActiveCfg = Release|Any CPU
+		{36A51AFA-5D28-4CB2-933A-145BD444EDA8}.Release|x64.Build.0 = Release|Any CPU
+		{36A51AFA-5D28-4CB2-933A-145BD444EDA8}.Release|x86.ActiveCfg = Release|Any CPU
+		{36A51AFA-5D28-4CB2-933A-145BD444EDA8}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

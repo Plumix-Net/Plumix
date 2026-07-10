@@ -27,6 +27,7 @@
     <File Path="../docs/ai/TEST_MATRIX.md" />
   </Folder>
   <Project Path="Plumix.Cupertino/Plumix.Cupertino.csproj" />
+  <Project Path="Plumix.Elmish/Plumix.Elmish.fsproj" />
   <Project Path="Plumix.FSharp/Plumix.FSharp.fsproj" />
   <Project Path="Plumix.Material/Plumix.Material.csproj" />
   <Project Path="Plumix.Tests/Plumix.Tests.csproj" />
