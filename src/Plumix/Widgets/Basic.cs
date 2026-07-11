@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
+using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.UI;
 
@@ -263,9 +264,71 @@ public sealed class Offstage : SingleChildRenderObjectWidget
     }
 }
 
+public sealed class IgnorePointer : SingleChildRenderObjectWidget
+{
+    public IgnorePointer(
+        Widget? child = null,
+        bool ignoring = true,
+        bool? ignoringSemantics = null,
+        Key? key = null) : base(child, key)
+    {
+        Ignoring = ignoring;
+        IgnoringSemantics = ignoringSemantics;
+    }
+
+    public bool Ignoring { get; }
+
+    public bool? IgnoringSemantics { get; }
+
+    internal override RenderObject CreateRenderObject(BuildContext context)
+    {
+        return new RenderIgnorePointer(
+            ignoring: Ignoring,
+            ignoringSemantics: IgnoringSemantics);
+    }
+
+    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    {
+        var ignorePointer = (RenderIgnorePointer)renderObject;
+        ignorePointer.Ignoring = Ignoring;
+        ignorePointer.IgnoringSemantics = IgnoringSemantics;
+    }
+}
+
+public sealed class AbsorbPointer : SingleChildRenderObjectWidget
+{
+    public AbsorbPointer(
+        Widget? child = null,
+        bool absorbing = true,
+        bool? ignoringSemantics = null,
+        Key? key = null) : base(child, key)
+    {
+        Absorbing = absorbing;
+        IgnoringSemantics = ignoringSemantics;
+    }
+
+    public bool Absorbing { get; }
+
+    public bool? IgnoringSemantics { get; }
+
+    internal override RenderObject CreateRenderObject(BuildContext context)
+    {
+        return new RenderAbsorbPointer(
+            absorbing: Absorbing,
+            ignoringSemantics: IgnoringSemantics);
+    }
+
+    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    {
+        var absorbPointer = (RenderAbsorbPointer)renderObject;
+        absorbPointer.Absorbing = Absorbing;
+        absorbPointer.IgnoringSemantics = IgnoringSemantics;
+    }
+}
+
 public sealed class Padding : SingleChildRenderObjectWidget
 {
-    public Padding(Thickness insets, Widget child, Key? key = null) : base(child, key)
+    public Padding(Thickness insets, Widget? child = null, Key? key = null) : base(child, key)
     {
         Insets = insets;
     }
@@ -974,6 +1037,71 @@ public sealed class Column : Flex
         key: key,
         textDirection: textDirection)
     {
+    }
+}
+
+public sealed class Wrap : MultiChildRenderObjectWidget
+{
+    public Wrap(
+        IReadOnlyList<Widget>? children = null,
+        Axis direction = Axis.Horizontal,
+        WrapAlignment alignment = WrapAlignment.Start,
+        double spacing = 0,
+        WrapAlignment runAlignment = WrapAlignment.Start,
+        double runSpacing = 0,
+        WrapCrossAlignment crossAxisAlignment = WrapCrossAlignment.Start,
+        TextDirection? textDirection = null,
+        VerticalDirection verticalDirection = VerticalDirection.Down,
+        Clip clipBehavior = Clip.None,
+        Key? key = null) : base(children, key)
+    {
+        Direction = direction;
+        Alignment = alignment;
+        Spacing = spacing;
+        RunAlignment = runAlignment;
+        RunSpacing = runSpacing;
+        CrossAxisAlignment = crossAxisAlignment;
+        TextDirection = textDirection;
+        VerticalDirection = verticalDirection;
+        ClipBehavior = clipBehavior;
+    }
+
+    public Axis Direction { get; }
+    public WrapAlignment Alignment { get; }
+    public double Spacing { get; }
+    public WrapAlignment RunAlignment { get; }
+    public double RunSpacing { get; }
+    public WrapCrossAlignment CrossAxisAlignment { get; }
+    public TextDirection? TextDirection { get; }
+    public VerticalDirection VerticalDirection { get; }
+    public Clip ClipBehavior { get; }
+
+    internal override RenderObject CreateRenderObject(BuildContext context)
+    {
+        return new RenderWrap(
+            direction: Direction,
+            alignment: Alignment,
+            spacing: Spacing,
+            runAlignment: RunAlignment,
+            runSpacing: RunSpacing,
+            crossAxisAlignment: CrossAxisAlignment,
+            textDirection: TextDirection ?? Directionality.Of(context),
+            verticalDirection: VerticalDirection,
+            clipBehavior: ClipBehavior);
+    }
+
+    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    {
+        var wrap = (RenderWrap)renderObject;
+        wrap.Direction = Direction;
+        wrap.Alignment = Alignment;
+        wrap.Spacing = Spacing;
+        wrap.RunAlignment = RunAlignment;
+        wrap.RunSpacing = RunSpacing;
+        wrap.CrossAxisAlignment = CrossAxisAlignment;
+        wrap.TextDirection = TextDirection ?? Directionality.Of(context);
+        wrap.VerticalDirection = VerticalDirection;
+        wrap.ClipBehavior = ClipBehavior;
     }
 }
 

@@ -21,6 +21,15 @@ public enum ListTileControlAffinity
     Platform,
 }
 
+public enum ListTileTitleAlignment
+{
+    ThreeLine,
+    TitleHeight,
+    Top,
+    Center,
+    Bottom,
+}
+
 public sealed record ListTileThemeData(
     bool? Dense = null,
     BorderRadius? Shape = null,
@@ -41,7 +50,9 @@ public sealed record ListTileThemeData(
     bool? EnableFeedback = null,
     MouseCursor? MouseCursor = null,
     bool? IsThreeLine = null,
-    ListTileControlAffinity? ControlAffinity = null);
+    ListTileControlAffinity? ControlAffinity = null,
+    VisualDensity? VisualDensity = null,
+    ListTileTitleAlignment? TitleAlignment = null);
 
 public sealed class ListTileTheme : InheritedWidget
 {

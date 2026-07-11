@@ -29,6 +29,13 @@ public sealed class DropdownDemoPage : StatefulWidget
         private string _modernStatus = "idle";
         private string? _modernFormValue;
         private string _modernFormStatus = "not validated";
+        private string _anchorStatus = "closed";
+        private bool? _menuCheckbox = false;
+        private string? _menuRadio = "one";
+        private string _menuBarStatus = "closed";
+        private readonly MenuController _anchorController = new();
+        private readonly MenuController _fileMenuController = new();
+        private readonly MenuController _editMenuController = new();
         private readonly LabeledGlobalKey<FormState> _formKey = new("dropdown-form");
         private readonly LabeledGlobalKey<FormState> _modernFormKey = new("dropdown-menu-form");
 
@@ -120,6 +127,112 @@ public sealed class DropdownDemoPage : StatefulWidget
                                 }))),
                         new Text($"Modern value: {_modernValue ?? "none"}", fontSize: 13),
                         new Text($"Modern status: {_modernStatus}", fontSize: 13),
+                        new Divider(),
+                        new Text("MenuAnchor + MenuItemButton", fontSize: 18),
+                        new Text(
+                            "Controller-owned menu with leaf, checkbox, and radio items plus close-on-activate policy.",
+                            fontSize: 14,
+                            color: Colors.DimGray),
+                        new Align(
+                            alignment: Alignment.CenterLeft,
+                            child: new MenuAnchor(
+                                controller: _anchorController,
+                                onOpen: () => SetState(() => _anchorStatus = "opened"),
+                                onClose: () => SetState(() => _anchorStatus = "closed"),
+                                menuChildren:
+                                [
+                                    new MenuItemButton(
+                                        child: new Text("Run action"),
+                                        onPressed: () => SetState(() => _anchorStatus = "activated")),
+                                    new MenuItemButton(child: new Text("Disabled item")),
+                                    new MenuItemButton(
+                                        child: new Text("Keep open"),
+                                        closeOnActivate: false,
+                                        onPressed: () => SetState(() => _anchorStatus = "kept open")),
+                                    new CheckboxMenuButton(
+                                        _menuCheckbox,
+                                        value => SetState(() => _menuCheckbox = value),
+                                        new Text("Pin menu"),
+                                        closeOnActivate: false),
+                                    new RadioMenuButton<string>(
+                                        "one",
+                                        _menuRadio,
+                                        value => SetState(() => _menuRadio = value),
+                                        new Text("Layout one"),
+                                        closeOnActivate: false),
+                                    new RadioMenuButton<string>(
+                                        "two",
+                                        _menuRadio,
+                                        value => SetState(() => _menuRadio = value),
+                                        new Text("Layout two"),
+                                        closeOnActivate: false),
+                                ],
+                                builder: (_, controller, _) => new TextButton(
+                                    new Text(controller.IsOpen ? "Close menu" : "Open menu"),
+                                    () =>
+                                    {
+                                        if (controller.IsOpen) controller.Close(); else controller.Open();
+                                    }))),
+                        new Text($"Anchor menu: {_anchorStatus}", fontSize: 13),
+                        new Text(
+                            $"Menu choices: pinned={_menuCheckbox}, layout={_menuRadio}",
+                            fontSize: 13),
+                        new Divider(),
+                        new Text("MenuBar + SubmenuButton", fontSize: 18),
+                        new Text(
+                            "Horizontal menu bar with controller-owned sibling closing, nested side submenu, "
+                            + "and local menu themes.",
+                            fontSize: 14,
+                            color: Colors.DimGray),
+                        new Align(
+                            alignment: Alignment.CenterLeft,
+                            child: new MenuTheme(
+                                new MenuThemeData(
+                                    Style: new MenuStyle(
+                                        BackgroundColor: MaterialStateProperty<Color?>.All(Color.Parse("#FFFFF3E0"))),
+                                    SubmenuIcon: MaterialStateProperty<Widget?>.All(new Icon(Icons.InfoOutline))),
+                                new MenuBarTheme(
+                                    new MenuBarThemeData(new MenuStyle(
+                                        BackgroundColor: MaterialStateProperty<Color?>.All(Color.Parse("#FFF3E5F5")))),
+                                    new MenuButtonTheme(
+                                    new MenuButtonThemeData(new ButtonStyle(
+                                        ForegroundColor: MaterialStateProperty<Color?>.All(Colors.DarkSlateBlue))),
+                                    new MenuBar(
+                                        children:
+                                        [
+                                    new SubmenuButton(
+                                        [
+                                            new MenuItemButton(
+                                                child: new Text("New document"),
+                                                onPressed: () => SetState(() => _menuBarStatus = "new document")),
+                                            new SubmenuButton(
+                                                [
+                                                    new MenuItemButton(
+                                                        child: new Text("Quarterly report"),
+                                                        onPressed: () => SetState(() => _menuBarStatus = "recent report")),
+                                                ],
+                                                new Text("Recent"),
+                                                onOpen: () => SetState(() => _menuBarStatus = "recent opened")),
+                                        ],
+                                        new Text("File"),
+                                        controller: _fileMenuController,
+                                        style: new ButtonStyle(
+                                            ForegroundColor: MaterialStateProperty<Color?>.All(Colors.OrangeRed)),
+                                        onOpen: () => SetState(() => _menuBarStatus = "file opened"),
+                                        onClose: () => SetState(() => _menuBarStatus = "file closed")),
+                                    new SubmenuButton(
+                                        [
+                                            new MenuItemButton(
+                                                child: new Text("Paste"),
+                                                onPressed: () => SetState(() => _menuBarStatus = "paste")),
+                                        ],
+                                        new Text("Edit"),
+                                        controller: _editMenuController,
+                                        onOpen: () => SetState(() => _menuBarStatus = "edit opened"),
+                                        onClose: () => SetState(() => _menuBarStatus = "edit closed")),
+                                    new SubmenuButton([], new Text("Disabled")),
+                                        ]))))),
+                        new Text($"Menu bar: {_menuBarStatus}", fontSize: 13),
                         new Divider(),
                         new Text("DropdownMenuFormField + Form", fontSize: 18),
                         new Form(

@@ -623,6 +623,161 @@ public sealed class RenderOffstage : RenderProxyBox
     }
 }
 
+public sealed class RenderIgnorePointer : RenderProxyBox
+{
+    private bool _ignoring;
+    private bool? _ignoringSemantics;
+
+    public RenderIgnorePointer(
+        bool ignoring = true,
+        bool? ignoringSemantics = null,
+        RenderBox? child = null)
+    {
+        _ignoring = ignoring;
+        _ignoringSemantics = ignoringSemantics;
+        Child = child;
+    }
+
+    public bool Ignoring
+    {
+        get => _ignoring;
+        set
+        {
+            if (_ignoring == value)
+            {
+                return;
+            }
+
+            _ignoring = value;
+            if (_ignoringSemantics == null)
+            {
+                MarkNeedsSemanticsUpdate();
+            }
+        }
+    }
+
+    public bool? IgnoringSemantics
+    {
+        get => _ignoringSemantics;
+        set
+        {
+            if (_ignoringSemantics == value)
+            {
+                return;
+            }
+
+            _ignoringSemantics = value;
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
+    public override bool HitTest(BoxHitTestResult result, Point position)
+    {
+        return !_ignoring && base.HitTest(result, position);
+    }
+
+    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    {
+        if (_ignoringSemantics == true)
+        {
+            return;
+        }
+
+        base.VisitChildrenForSemantics(visitor);
+    }
+
+    protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
+    {
+        base.DescribeSemanticsConfiguration(configuration);
+        configuration.IsBlockingUserActions = _ignoring && (_ignoringSemantics ?? true);
+    }
+}
+
+public sealed class RenderAbsorbPointer : RenderProxyBox
+{
+    private bool _absorbing;
+    private bool? _ignoringSemantics;
+
+    public RenderAbsorbPointer(
+        bool absorbing = true,
+        bool? ignoringSemantics = null,
+        RenderBox? child = null)
+    {
+        _absorbing = absorbing;
+        _ignoringSemantics = ignoringSemantics;
+        Child = child;
+    }
+
+    public bool Absorbing
+    {
+        get => _absorbing;
+        set
+        {
+            if (_absorbing == value)
+            {
+                return;
+            }
+
+            _absorbing = value;
+            if (_ignoringSemantics == null)
+            {
+                MarkNeedsSemanticsUpdate();
+            }
+        }
+    }
+
+    public bool? IgnoringSemantics
+    {
+        get => _ignoringSemantics;
+        set
+        {
+            if (_ignoringSemantics == value)
+            {
+                return;
+            }
+
+            _ignoringSemantics = value;
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
+    public override bool HitTest(BoxHitTestResult result, Point position)
+    {
+        if (!_absorbing)
+        {
+            return base.HitTest(result, position);
+        }
+
+        if (!HasSize
+            || position.X < 0
+            || position.Y < 0
+            || position.X > Size.Width
+            || position.Y > Size.Height)
+        {
+            return false;
+        }
+
+        result.Add(new BoxHitTestEntry(this, position));
+        return true;
+    }
+
+    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    {
+        if (_ignoringSemantics == true)
+        {
+            return;
+        }
+
+        base.VisitChildrenForSemantics(visitor);
+    }
+
+    protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
+    {
+        base.DescribeSemanticsConfiguration(configuration);
+        configuration.IsBlockingUserActions = _absorbing && (_ignoringSemantics ?? true);
+    }
+}
+
 public sealed class RenderPadding : RenderProxyBox
 {
     private Thickness _padding;

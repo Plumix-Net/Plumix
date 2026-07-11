@@ -25,22 +25,22 @@ class _ChipsDemoPageState extends State<ChipsDemoPage> {
         const Text('Material chips', style: TextStyle(fontSize: 20)),
         const SizedBox(height: 14),
         const Text(
-          'Action, choice, filter, and input chips with flat/elevated variants, selection, deletion, and ChipTheme precedence.',
+          'Informational, action, choice, filter, and input chips use Wrap for multi-run layouts, with deletion and ChipTheme precedence.',
           style: TextStyle(fontSize: 14, color: Color(0x8A000000)),
         ),
         const SizedBox(height: 14),
-        Row(
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
           children: <Widget>[
             _controlButton(
               _enabled ? 'Enabled' : 'Disabled',
               () => setState(() => _enabled = !_enabled),
             ),
-            const SizedBox(width: 8),
             _controlButton(
               _useLocalTheme ? 'Theme override on' : 'Theme override off',
               () => setState(() => _useLocalTheme = !_useLocalTheme),
             ),
-            const SizedBox(width: 8),
             _controlButton(
               _inputVisible ? 'Remove input' : 'Restore input',
               () => setState(() => _inputVisible = !_inputVisible),
@@ -50,19 +50,19 @@ class _ChipsDemoPageState extends State<ChipsDemoPage> {
         const SizedBox(height: 14),
         const Text('Action chips', style: TextStyle(fontSize: 14)),
         const SizedBox(height: 14),
-        Row(
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
           children: <Widget>[
             ActionChip(
               label: const Text('Suggest'),
               onPressed: _enabled ? _handleAction : null,
             ),
-            const SizedBox(width: 10),
             ActionChip(
               avatar: const Icon(Icons.star),
               label: const Text('Assist'),
               onPressed: _enabled ? _handleAction : null,
             ),
-            const SizedBox(width: 10),
             ActionChip.elevated(
               label: const Text('Elevated'),
               onPressed: _enabled ? _handleAction : null,
@@ -70,9 +70,29 @@ class _ChipsDemoPageState extends State<ChipsDemoPage> {
           ],
         ),
         const SizedBox(height: 14),
+        const Text('Informational chips', style: TextStyle(fontSize: 14)),
+        const SizedBox(height: 14),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: <Widget>[
+            const Chip(
+              avatar: Icon(Icons.info_outline),
+              label: Text('Read only'),
+            ),
+            Chip(
+              avatar: const Icon(Icons.info_outline),
+              label: const Text('Deletable'),
+              onDeleted: _enabled ? _handleDelete : null,
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
         const Text('Choice chips', style: TextStyle(fontSize: 14)),
         const SizedBox(height: 14),
-        Row(
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
           children: <Widget>[
             ChoiceChip(
               label: const Text('Standard'),
@@ -81,7 +101,6 @@ class _ChipsDemoPageState extends State<ChipsDemoPage> {
                   ? (bool value) => setState(() => _selected = !value)
                   : null,
             ),
-            const SizedBox(width: 10),
             ChoiceChip(
               label: const Text('Selected'),
               selected: _selected,
@@ -89,7 +108,6 @@ class _ChipsDemoPageState extends State<ChipsDemoPage> {
                   ? (bool value) => setState(() => _selected = value)
                   : null,
             ),
-            const SizedBox(width: 10),
             ChoiceChip.elevated(
               avatar: const Icon(Icons.star_outline),
               label: const Text('Elevated'),
@@ -103,7 +121,9 @@ class _ChipsDemoPageState extends State<ChipsDemoPage> {
         const SizedBox(height: 14),
         const Text('Filter chips', style: TextStyle(fontSize: 14)),
         const SizedBox(height: 14),
-        Row(
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
           children: <Widget>[
             FilterChip(
               avatar: const Icon(Icons.star_outline),
@@ -113,7 +133,6 @@ class _ChipsDemoPageState extends State<ChipsDemoPage> {
                   ? (bool value) => setState(() => _filterSelected = value)
                   : null,
             ),
-            const SizedBox(width: 10),
             FilterChip.elevated(
               label: const Text('Elevated'),
               selected: !_filterSelected,
@@ -121,7 +140,6 @@ class _ChipsDemoPageState extends State<ChipsDemoPage> {
                   ? (bool value) => setState(() => _filterSelected = !value)
                   : null,
             ),
-            const SizedBox(width: 10),
             FilterChip(
               label: const Text('Deletable'),
               selected: _filterSelected,
@@ -135,7 +153,9 @@ class _ChipsDemoPageState extends State<ChipsDemoPage> {
         const SizedBox(height: 14),
         const Text('Input chips', style: TextStyle(fontSize: 14)),
         const SizedBox(height: 14),
-        Row(
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
           children: <Widget>[
             if (_inputVisible)
               InputChip(
@@ -155,7 +175,6 @@ class _ChipsDemoPageState extends State<ChipsDemoPage> {
                 'Input removed',
                 style: TextStyle(fontSize: 13, color: Color(0xFF49454F)),
               ),
-            const SizedBox(width: 10),
             InputChip(
               avatar: const Icon(Icons.info_outline),
               label: const Text('Pressable'),

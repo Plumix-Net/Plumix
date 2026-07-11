@@ -182,6 +182,8 @@ public sealed class Scaffold : StatefulWidget
         bool drawerEnableOpenDragGesture = true,
         bool endDrawerEnableOpenDragGesture = true,
         Widget? floatingActionButton = null,
+        FloatingActionButtonLocation? floatingActionButtonLocation = null,
+        FloatingActionButtonAnimator? floatingActionButtonAnimator = null,
         Widget? bottomNavigationBar = null,
         Color? backgroundColor = null,
         Key? key = null,
@@ -205,6 +207,10 @@ public sealed class Scaffold : StatefulWidget
         DrawerEnableOpenDragGesture = drawerEnableOpenDragGesture;
         EndDrawerEnableOpenDragGesture = endDrawerEnableOpenDragGesture;
         FloatingActionButton = floatingActionButton;
+        FloatingActionButtonLocation = floatingActionButtonLocation
+                                      ?? Plumix.Material.FloatingActionButtonLocation.EndFloat;
+        FloatingActionButtonAnimator = floatingActionButtonAnimator
+                                      ?? Plumix.Material.FloatingActionButtonAnimator.Scaling;
         BottomNavigationBar = bottomNavigationBar;
         BottomSheet = bottomSheet;
         BackgroundColor = backgroundColor;
@@ -229,6 +235,10 @@ public sealed class Scaffold : StatefulWidget
     public bool EndDrawerEnableOpenDragGesture { get; }
 
     public Widget? FloatingActionButton { get; }
+
+    public FloatingActionButtonLocation FloatingActionButtonLocation { get; }
+
+    public FloatingActionButtonAnimator FloatingActionButtonAnimator { get; }
 
     public Widget? BottomNavigationBar { get; }
 
@@ -584,20 +594,35 @@ public sealed class ScaffoldState : State
 
         if (CurrentWidget.FloatingActionButton != null)
         {
-            var fabSize = FloatingActionButtonSize;
-            double bottom = CurrentWidget.BottomNavigationBar is BottomAppBar bottomAppBar
-                ? Math.Max(0, bottomAppBar.ResolveHeightForScaffold(context) - (fabSize.Height / 2))
-                : 16;
+            var mediaQuery = MediaQuery.MaybeOf(context) ?? new MediaQueryData();
+            double appBarHeight = CurrentWidget.AppBar?.PreferredSize.Height ?? 0.0;
+            double bottomNavigationHeight = CurrentWidget.BottomNavigationBar is BottomAppBar bottomAppBar
+                ? bottomAppBar.ResolveHeightForScaffold(context)
+                : 0.0;
+            var geometry = new ScaffoldPrelayoutGeometry(
+                ScaffoldSize: mediaQuery.Size,
+                ContentTop: appBarHeight,
+                ContentBottom: Math.Max(0.0, mediaQuery.Size.Height - bottomNavigationHeight),
+                FloatingActionButtonSize: FloatingActionButtonSize,
+                BottomSheetSize: new Size(),
+                SnackBarSize: new Size(),
+                MinInsets: mediaQuery.ViewInsets,
+                MinViewPadding: mediaQuery.ViewPadding,
+                TextDirection: textDirection);
             content = new Stack(
                 fit: StackFit.Expand,
                 children:
                 [
                     content,
                     new Positioned(
-                        left: textDirection == TextDirection.Rtl ? 16 : null,
-                        right: textDirection == TextDirection.Ltr ? 16 : null,
-                        bottom: bottom,
-                        child: CurrentWidget.FloatingActionButton),
+                        left: 0,
+                        top: 0,
+                        right: 0,
+                        bottom: 0,
+                        child: new FloatingActionButtonPosition(
+                            geometry,
+                            CurrentWidget.FloatingActionButtonLocation,
+                            CurrentWidget.FloatingActionButton)),
                 ]);
         }
 

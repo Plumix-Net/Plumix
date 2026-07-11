@@ -78,6 +78,16 @@ internal sealed class FloatingActionButtonDemoPageState : State
                         $"enabled={(_enabled ? "true" : "false")}, extended={(_extendedOpen ? "open" : "icon")}, regular={_regularTaps}, small={_smallTaps}, large={_largeTaps}, extendedTaps={_extendedTaps}, themed={_themedTaps}",
                         fontSize: 12,
                         color: Color.Parse("#FF607D8B")),
+                    new SizedBox(
+                        height: 160,
+                        child: new Scaffold(
+                            body: new Center(child: new Text("Scaffold: centerFloat")),
+                            bottomNavigationBar: new BottomAppBar(),
+                            floatingActionButtonLocation: FloatingActionButtonLocation.CenterFloat,
+                            floatingActionButton: new FloatingActionButton(
+                                child: new Icon(Icons.Add),
+                                tooltip: "Center float action",
+                                onPressed: _enabled ? OnRegularTap : null))),
                     new Column(
                         mainAxisSize: MainAxisSize.Min,
                         spacing: 8,

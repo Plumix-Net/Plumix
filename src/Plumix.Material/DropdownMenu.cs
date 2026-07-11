@@ -76,7 +76,7 @@ public sealed class MenuController : ChangeNotifier
     public void CloseChildren()
     {
         if (_owner is null) throw new InvalidOperationException("The MenuController is not attached to a menu anchor.");
-        // The current DropdownMenu route has no nested menu anchors.
+        (_owner as IMenuControllerHost)?.CloseChildren();
     }
 
     internal void Attach(object owner, Action open, Action close)
@@ -103,6 +103,49 @@ public sealed class MenuController : ChangeNotifier
         IsOpen = value;
         NotifyListeners();
     }
+
+    /// <summary>Returns the nearest menu-anchor controller without creating an inherited dependency.</summary>
+    public static MenuController? MaybeOf(BuildContext context)
+    {
+        return context.GetInherited<MenuControllerScope>()?.Controller;
+    }
+
+    internal static MenuControllerScope? MaybeScopeOf(BuildContext context)
+    {
+        return context.GetInherited<MenuControllerScope>();
+    }
+}
+
+internal interface IMenuControllerHost
+{
+    void CloseChildren();
+}
+
+internal sealed class MenuControllerScope : InheritedWidget
+{
+    public MenuControllerScope(
+        MenuController controller,
+        MenuAnchorState host,
+        bool isOpen,
+        Axis orientation,
+        Widget child) : base()
+    {
+        Controller = controller;
+        Host = host;
+        IsOpen = isOpen;
+        Orientation = orientation;
+        Child = child;
+    }
+
+    public MenuController Controller { get; }
+    public MenuAnchorState Host { get; }
+    public bool IsOpen { get; }
+    public Axis Orientation { get; }
+    public Widget Child { get; }
+    public override Widget Build(BuildContext context) => Child;
+    protected override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
+        ((MenuControllerScope)oldWidget).IsOpen != IsOpen
+        || ((MenuControllerScope)oldWidget).Orientation != Orientation;
 }
 
 public sealed class DropdownMenu<T> : StatefulWidget

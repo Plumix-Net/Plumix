@@ -560,6 +560,418 @@ public sealed class MaterialDropdownTests : IDisposable
     }
 
     [Fact]
+    public void MenuAnchor_ControllerAndMenuItem_FollowOpenCloseAndActivationContracts()
+    {
+        var controller = new MenuController();
+        int activations = 0;
+        using var harness = new WidgetRenderHarness(Wrap(new MenuAnchor(
+            controller: controller,
+            child: new SizedBox(width: 80, height: 40),
+            menuChildren:
+            [
+                new MenuItemButton(child: new Text("Run"), onPressed: () => activations++),
+                new MenuItemButton(child: new Text("Disabled")),
+            ])));
+        harness.Pump(new Size(500, 360));
+
+        Assert.False(controller.IsOpen);
+        controller.Open();
+        harness.Pump(new Size(500, 360));
+        Assert.True(controller.IsOpen);
+        Assert.NotNull(FindDescendants<RenderMenuAnchorLayout>(harness.RenderView).SingleOrDefault());
+        Assert.NotNull(FindParagraph(harness.RenderView, "Run"));
+        var semantics = harness.PumpAndGetSemantics(new Size(500, 360));
+        var item = FindSemantics(semantics, node => node.Actions.HasFlag(SemanticsActions.Tap));
+        Assert.NotNull(item);
+        Assert.True(item!.PerformAction(SemanticsActions.Tap));
+        harness.Pump(new Size(500, 360));
+        Assert.False(controller.IsOpen);
+        Assert.Equal(1, activations);
+    }
+
+    [Fact]
+    public void MenuBarAndSubmenuButton_ManageNestedMenusSiblingClosingAndPanelOrientation()
+    {
+        var fileController = new MenuController();
+        var editController = new MenuController();
+        var recentController = new MenuController();
+        var empty = new SubmenuButton([], new Text("Disabled"));
+        using var harness = new WidgetRenderHarness(Wrap(new MenuBar(
+            children:
+            [
+                new SubmenuButton(
+                    [
+                        new MenuItemButton(child: new Text("Open"), onPressed: () => { }),
+                        new SubmenuButton(
+                            [new MenuItemButton(child: new Text("Report"), onPressed: () => { })],
+                            new Text("Recent"),
+                            controller: recentController),
+                    ],
+                    new Text("File"),
+                    controller: fileController),
+                new SubmenuButton(
+                    [new MenuItemButton(child: new Text("Paste"), onPressed: () => { })],
+                    new Text("Edit"),
+                    controller: editController),
+                empty,
+            ])));
+        harness.Pump(new Size(500, 360));
+
+        Assert.False(empty.Enabled);
+        Assert.False(fileController.IsOpen);
+        fileController.Open();
+        harness.Pump(new Size(500, 360));
+        Assert.True(fileController.IsOpen);
+        Assert.Contains(FindDescendants<RenderMenuAnchorLayout>(harness.RenderView), layout =>
+            layout.PanelOrientation == Axis.Vertical);
+
+        recentController.Open();
+        harness.Pump(new Size(500, 360));
+        Assert.True(fileController.IsOpen);
+        Assert.True(recentController.IsOpen);
+        Assert.Contains(FindDescendants<RenderMenuAnchorLayout>(harness.RenderView), layout =>
+            layout.PanelOrientation == Axis.Horizontal && layout.ChildCount == 2);
+
+        editController.Open();
+        harness.Pump(new Size(500, 360));
+        Assert.False(fileController.IsOpen);
+        Assert.False(recentController.IsOpen);
+        Assert.True(editController.IsOpen);
+
+        editController.Close();
+        harness.Pump(new Size(500, 360));
+        Assert.False(editController.IsOpen);
+
+        fileController.Open();
+        harness.Pump(new Size(500, 360));
+        var fileLayout = Assert.Single(
+            FindDescendants<RenderMenuAnchorLayout>(harness.RenderView),
+            layout => layout.PanelOrientation == Axis.Vertical && layout.ChildCount == 2);
+        Assert.True(fileLayout.Size.Height > 0);
+    }
+
+    [Fact]
+    public void MenuBarAndMenuButtonThemes_ResolveThemeLocalAndWidgetStylePrecedence()
+    {
+        Color themeBackground = Color.Parse("#FFE3F2FD");
+        Color localBackground = Color.Parse("#FFFFF3E0");
+        Color widgetBackground = Color.Parse("#FFE8F5E9");
+        ThemeData theme = ThemeData.Light with
+        {
+            MenuBarTheme = new MenuBarThemeData(new MenuStyle(
+                BackgroundColor: MaterialStateProperty<Color?>.All(themeBackground))),
+            MenuButtonTheme = new MenuButtonThemeData(new ButtonStyle(
+                ForegroundColor: MaterialStateProperty<Color?>.All(Colors.CadetBlue))),
+        };
+
+        Widget themedBar = new MenuBar(
+            [new SubmenuButton(
+                [new MenuItemButton(child: new Text("Open"), onPressed: () => { })],
+                new Text("File"))]);
+        using var themed = new WidgetRenderHarness(Wrap(themedBar, theme));
+        themed.Pump(new Size(500, 180));
+        Assert.Contains(
+            FindDescendants<RenderDecoratedBox>(themed.RenderView),
+            box => box.Decoration.Color == themeBackground);
+        Assert.Equal(
+            Colors.CadetBlue,
+            Assert.IsType<SolidColorBrush>(FindParagraph(themed.RenderView, "File")!.Foreground).Color);
+
+        var itemController = new MenuController();
+        Widget themedItem = new MenuButtonTheme(
+            new MenuButtonThemeData(new ButtonStyle(
+                ForegroundColor: MaterialStateProperty<Color?>.All(Colors.ForestGreen))),
+            new MenuAnchor(
+                [new MenuItemButton(child: new Text("Run"), onPressed: () => { })],
+                child: new SizedBox(width: 80, height: 40),
+                controller: itemController));
+        using var item = new WidgetRenderHarness(Wrap(themedItem, theme));
+        item.Pump(new Size(500, 180));
+        itemController.Open();
+        item.Pump(new Size(500, 180));
+        Assert.Equal(
+            Colors.ForestGreen,
+            Assert.IsType<SolidColorBrush>(FindParagraph(item.RenderView, "Run")!.Foreground).Color);
+
+        Widget localBar = new MenuBarTheme(
+            new MenuBarThemeData(new MenuStyle(BackgroundColor: MaterialStateProperty<Color?>.All(localBackground))),
+            new MenuButtonTheme(
+                new MenuButtonThemeData(new ButtonStyle(
+                    ForegroundColor: MaterialStateProperty<Color?>.All(Colors.MediumVioletRed))),
+                new MenuBar(
+                    [new SubmenuButton(
+                        [new MenuItemButton(child: new Text("Save"), onPressed: () => { })],
+                        new Text("Edit"))])));
+        using var local = new WidgetRenderHarness(Wrap(localBar, theme));
+        local.Pump(new Size(500, 180));
+        Assert.Contains(
+            FindDescendants<RenderDecoratedBox>(local.RenderView),
+            box => box.Decoration.Color == localBackground);
+        Assert.Equal(
+            Colors.MediumVioletRed,
+            Assert.IsType<SolidColorBrush>(FindParagraph(local.RenderView, "Edit")!.Foreground).Color);
+
+        Widget widgetBar = new MenuBar(
+            [new SubmenuButton(
+                [new MenuItemButton(child: new Text("Close"), onPressed: () => { })],
+                new Text("View"),
+                style: new ButtonStyle(ForegroundColor: MaterialStateProperty<Color?>.All(Colors.OrangeRed)))],
+            style: new MenuStyle(BackgroundColor: MaterialStateProperty<Color?>.All(widgetBackground)));
+        using var widget = new WidgetRenderHarness(Wrap(widgetBar, theme));
+        widget.Pump(new Size(500, 180));
+        Assert.Contains(
+            FindDescendants<RenderDecoratedBox>(widget.RenderView),
+            box => box.Decoration.Color == widgetBackground);
+        Assert.Equal(
+            Colors.OrangeRed,
+            Assert.IsType<SolidColorBrush>(FindParagraph(widget.RenderView, "View")!.Foreground).Color);
+    }
+
+    [Fact]
+    public void MenuTheme_ResolvesGlobalLocalAndWidgetPanelStylePrecedence()
+    {
+        Color globalBackground = Color.Parse("#FFE3F2FD");
+        Color localBackground = Color.Parse("#FFFFF3E0");
+        Color widgetBackground = Color.Parse("#FFE8F5E9");
+        ThemeData theme = ThemeData.Light with
+        {
+            MenuTheme = new MenuThemeData(new MenuStyle(
+                BackgroundColor: MaterialStateProperty<Color?>.All(globalBackground))),
+        };
+
+        var globalController = new MenuController();
+        using var global = new WidgetRenderHarness(Wrap(new MenuAnchor(
+            [new MenuItemButton(child: new Text("Global"), onPressed: () => { })],
+            child: new SizedBox(width: 80, height: 40),
+            controller: globalController), theme));
+        global.Pump(new Size(500, 180));
+        globalController.Open();
+        global.Pump(new Size(500, 180));
+        Assert.Contains(
+            FindDescendants<RenderDecoratedBox>(global.RenderView),
+            box => box.Decoration.Color == globalBackground);
+
+        var localController = new MenuController();
+        using var local = new WidgetRenderHarness(Wrap(new MenuTheme(
+            new MenuThemeData(new MenuStyle(
+                BackgroundColor: MaterialStateProperty<Color?>.All(localBackground))),
+            new MenuAnchor(
+                [new MenuItemButton(child: new Text("Local"), onPressed: () => { })],
+                child: new SizedBox(width: 80, height: 40),
+                controller: localController)), theme));
+        local.Pump(new Size(500, 180));
+        localController.Open();
+        local.Pump(new Size(500, 180));
+        Assert.Contains(
+            FindDescendants<RenderDecoratedBox>(local.RenderView),
+            box => box.Decoration.Color == localBackground);
+
+        var widgetController = new MenuController();
+        using var widget = new WidgetRenderHarness(Wrap(new MenuTheme(
+            new MenuThemeData(new MenuStyle(
+                BackgroundColor: MaterialStateProperty<Color?>.All(localBackground))),
+            new MenuAnchor(
+                [new MenuItemButton(child: new Text("Widget"), onPressed: () => { })],
+                child: new SizedBox(width: 80, height: 40),
+                controller: widgetController,
+                style: new MenuStyle(
+                    BackgroundColor: MaterialStateProperty<Color?>.All(widgetBackground)))), theme));
+        widget.Pump(new Size(500, 180));
+        widgetController.Open();
+        widget.Pump(new Size(500, 180));
+        Assert.Contains(
+            FindDescendants<RenderDecoratedBox>(widget.RenderView),
+            box => box.Decoration.Color == widgetBackground);
+    }
+
+    [Fact]
+    public void MenuTheme_SubmenuIconUsesWidgetThenLocalThenThemePrecedence()
+    {
+        ThemeData theme = ThemeData.Light with
+        {
+            MenuTheme = new MenuThemeData(
+                SubmenuIcon: MaterialStateProperty<Widget?>.All(new Text("theme icon"))),
+        };
+
+        Widget themed = new MenuTheme(
+            new MenuThemeData(
+                SubmenuIcon: MaterialStateProperty<Widget?>.All(new Text("local icon"))),
+            new MenuBar(
+            [
+                new SubmenuButton(
+                    [new MenuItemButton(child: new Text("Open"), onPressed: () => { })],
+                    new Text("Local")),
+                new SubmenuButton(
+                    [new MenuItemButton(child: new Text("Save"), onPressed: () => { })],
+                    new Text("Widget"),
+                    submenuIcon: MaterialStateProperty<Widget?>.All(new Text("widget icon"))),
+            ]));
+        using var harness = new WidgetRenderHarness(Wrap(themed, theme));
+        harness.Pump(new Size(500, 180));
+
+        Assert.NotNull(FindParagraph(harness.RenderView, "local icon"));
+        Assert.NotNull(FindParagraph(harness.RenderView, "widget icon"));
+        Assert.Null(FindParagraph(harness.RenderView, "theme icon"));
+    }
+
+    [Fact]
+    public void SubmenuButton_ExposesFlutterDefaultsAndValidatesHoverDelay()
+    {
+        var button = new SubmenuButton([], null);
+        Assert.Null(button.Child);
+        Assert.Empty(button.MenuChildren);
+        Assert.Equal(Clip.HardEdge, button.ClipBehavior);
+        Assert.Equal(TimeSpan.Zero, button.HoverOpenDelay);
+        Assert.False(button.Enabled);
+        Assert.False(button.UseRootOverlay);
+        Assert.False(button.Animated);
+        Assert.Throws<ArgumentOutOfRangeException>(() => new SubmenuButton(
+            [],
+            null,
+            hoverOpenDelay: TimeSpan.FromMilliseconds(-1)));
+    }
+
+    [Fact]
+    public void CheckboxAndRadioMenuButtons_ExposeFlutterDefaultsAndContracts()
+    {
+        var checkbox = new CheckboxMenuButton(false, _ => { }, new Text("Check"));
+        Assert.False(checkbox.Value);
+        Assert.False(checkbox.Tristate);
+        Assert.False(checkbox.IsError);
+        Assert.True(checkbox.Enabled);
+        Assert.Equal(Clip.None, checkbox.ClipBehavior);
+        Assert.True(checkbox.CloseOnActivate);
+        Assert.Null(checkbox.TrailingIcon);
+
+        var radio = new RadioMenuButton<string>("one", "two", _ => { }, new Text("Radio"));
+        Assert.Equal("one", radio.Value);
+        Assert.Equal("two", radio.GroupValue);
+        Assert.False(radio.Toggleable);
+        Assert.True(radio.Enabled);
+        Assert.Equal(Clip.None, radio.ClipBehavior);
+        Assert.True(radio.CloseOnActivate);
+        Assert.Null(radio.TrailingIcon);
+
+        Assert.Throws<ArgumentException>(() => new CheckboxMenuButton(null, _ => { }, new Text("Invalid")));
+        Assert.False(new CheckboxMenuButton(false, null, new Text("Disabled")).Enabled);
+        Assert.False(new RadioMenuButton<string>("one", null, null, new Text("Disabled")).Enabled);
+    }
+
+    [Theory]
+    [InlineData(false, false, true)]
+    [InlineData(true, false, false)]
+    [InlineData(true, true, null)]
+    [InlineData(null, true, false)]
+    public void CheckboxMenuButton_CyclesValuesAndHonorsClosePolicy(
+        bool? value,
+        bool tristate,
+        bool? expected)
+    {
+        var controller = new MenuController();
+        bool? changed = null;
+        bool invoked = false;
+        using var harness = new WidgetRenderHarness(Wrap(new MenuAnchor(
+            controller: controller,
+            child: new SizedBox(width: 80, height: 40),
+            menuChildren:
+            [
+                new CheckboxMenuButton(
+                    value,
+                    next =>
+                    {
+                        changed = next;
+                        invoked = true;
+                    },
+                    new Text("Toggle option"),
+                    tristate: tristate,
+                    closeOnActivate: false),
+            ])));
+        harness.Pump(new Size(500, 360));
+        controller.Open();
+        var semantics = harness.PumpAndGetSemantics(new Size(500, 360));
+
+        Assert.Equal(1, CountSemantics(semantics, node => node.Actions.HasFlag(SemanticsActions.Tap)));
+        var item = FindSemantics(semantics, node => node.Actions.HasFlag(SemanticsActions.Tap));
+        Assert.NotNull(item);
+        Assert.True(item!.PerformAction(SemanticsActions.Tap));
+        harness.Pump(new Size(500, 360));
+
+        Assert.True(invoked);
+        Assert.Equal(expected, changed);
+        Assert.True(controller.IsOpen);
+        Assert.Contains(
+            FindDescendants<RenderConstrainedBox>(harness.RenderView),
+            box => Close(box.AdditionalConstraints.MaxWidth, Checkbox.Width)
+                   && Close(box.AdditionalConstraints.MaxHeight, Checkbox.Width));
+    }
+
+    [Fact]
+    public void RadioMenuButton_SelectsOrTogglesAndDisabledItemHasNoTapAction()
+    {
+        var controller = new MenuController();
+        string? changed = "unchanged";
+        using var harness = new WidgetRenderHarness(Wrap(new MenuAnchor(
+            controller: controller,
+            child: new SizedBox(width: 80, height: 40),
+            menuChildren:
+            [
+                new RadioMenuButton<string>(
+                    "one",
+                    "one",
+                    value => changed = value,
+                    new Text("Selected radio"),
+                    toggleable: true),
+                new RadioMenuButton<string>("two", "one", null, new Text("Disabled radio")),
+            ])));
+        harness.Pump(new Size(500, 360));
+        controller.Open();
+        var semantics = harness.PumpAndGetSemantics(new Size(500, 360));
+
+        Assert.Equal(1, CountSemantics(semantics, node => node.Actions.HasFlag(SemanticsActions.Tap)));
+        var item = FindSemantics(semantics, node => node.Actions.HasFlag(SemanticsActions.Tap));
+        Assert.NotNull(item);
+        Assert.True(item!.PerformAction(SemanticsActions.Tap));
+        harness.Pump(new Size(500, 360));
+
+        Assert.Null(changed);
+        Assert.False(controller.IsOpen);
+    }
+
+    [Fact]
+    public void CheckboxAndRadioMenuButtons_DoNotCrashAtZeroArea()
+    {
+        using var checkbox = new WidgetRenderHarness(Wrap(new Center(
+            child: new SizedBox(
+                width: 0,
+                height: 0,
+                child: new CheckboxMenuButton(true, _ => { }, new Text("X"))))));
+        checkbox.Pump(new Size(500, 360));
+
+        using var radio = new WidgetRenderHarness(Wrap(new Center(
+            child: new SizedBox(
+                width: 0,
+                height: 0,
+                child: new RadioMenuButton<bool>(true, true, _ => { }, null)))));
+        radio.Pump(new Size(500, 360));
+
+        Assert.Contains(
+            FindDescendants<RenderConstrainedBox>(checkbox.RenderView),
+            box => box.AdditionalConstraints == BoxConstraints.Tight(new Size(0, 0)));
+        Assert.Contains(
+            FindDescendants<RenderConstrainedBox>(radio.RenderView),
+            box => box.AdditionalConstraints == BoxConstraints.Tight(new Size(0, 0)));
+    }
+
+    [Fact]
+    public void DropdownDemoPage_BuildsWithValidCheckboxMenuInitialValue()
+    {
+        using var harness = new WidgetRenderHarness(Wrap(new DropdownDemoPage()));
+        harness.Pump(new Size(900, 1400));
+
+        Assert.NotNull(FindParagraph(harness.RenderView, "MenuAnchor + MenuItemButton"));
+    }
+
+    [Fact]
     public void DropdownMenuFormField_ValidationSelectionSaveAndResetSynchronizeController()
     {
         var entries = new[]
@@ -624,11 +1036,11 @@ public sealed class MaterialDropdownTests : IDisposable
         Assert.Equal(string.Empty, key.CurrentState.EffectiveController.Text);
     }
 
-    private static Widget Wrap(Widget child) => new Directionality(
+    private static Widget Wrap(Widget child, ThemeData? theme = null) => new Directionality(
         TextDirection.Ltr,
         new MediaQuery(
             new MediaQueryData(Size: new Size(500, 360)),
-            new Theme(ThemeData.Light, child)));
+            new Theme(theme ?? ThemeData.Light, child)));
 
     private static void PumpAnimation()
     {
@@ -665,6 +1077,13 @@ public sealed class MaterialDropdownTests : IDisposable
             if (result is not null) return result;
         }
         return null;
+    }
+
+    private static int CountSemantics(SemanticsNode? node, Func<SemanticsNode, bool> predicate)
+    {
+        if (node is null) return 0;
+        int count = predicate(node) ? 1 : 0;
+        return count + node.Children.Sum(child => CountSemantics(child, predicate));
     }
 
     private sealed class WidgetRenderHarness : IDisposable

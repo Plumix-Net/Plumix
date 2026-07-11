@@ -127,7 +127,9 @@ public abstract class MaterialLocalizations
     public virtual string PostMeridiemAbbreviation => "PM";
 
     public virtual TimeOfDayFormat TimeOfDayFormat(bool alwaysUse24HourFormat = false) =>
-        alwaysUse24HourFormat ? Material.TimeOfDayFormat.HHColonMm : Material.TimeOfDayFormat.HColonMmSpaceA;
+        alwaysUse24HourFormat
+            ? global::Plumix.Material.TimeOfDayFormat.HHColonMm
+            : global::Plumix.Material.TimeOfDayFormat.HColonMmSpaceA;
 
     public virtual string FormatHour(TimeOfDay timeOfDay, bool alwaysUse24HourFormat = false)
     {
@@ -152,11 +154,11 @@ public abstract class MaterialLocalizations
         string minute = FormatMinute(timeOfDay);
         return format switch
         {
-            Material.TimeOfDayFormat.HHDotMm => $"{hour}.{minute}",
-            Material.TimeOfDayFormat.FrenchCanadian => $"{hour} h {minute}",
-            Material.TimeOfDayFormat.ASpaceHColonMm =>
+            global::Plumix.Material.TimeOfDayFormat.HHDotMm => $"{hour}.{minute}",
+            global::Plumix.Material.TimeOfDayFormat.FrenchCanadian => $"{hour} h {minute}",
+            global::Plumix.Material.TimeOfDayFormat.ASpaceHColonMm =>
                 $"{(timeOfDay.Period == DayPeriod.Am ? AnteMeridiemAbbreviation : PostMeridiemAbbreviation)} {hour}:{minute}",
-            Material.TimeOfDayFormat.HColonMmSpaceA =>
+            global::Plumix.Material.TimeOfDayFormat.HColonMmSpaceA =>
                 $"{hour}:{minute} {(timeOfDay.Period == DayPeriod.Am ? AnteMeridiemAbbreviation : PostMeridiemAbbreviation)}",
             _ => $"{hour}:{minute}",
         };

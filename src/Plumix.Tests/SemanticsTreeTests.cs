@@ -270,6 +270,66 @@ public sealed class SemanticsTreeTests
     }
 
     [Fact]
+    public void IgnoreAndAbsorbPointer_IgnoringSemantics_DropsChildSubtree()
+    {
+        var ignored = new RenderIgnorePointer(
+            ignoringSemantics: true,
+            child: new FixedSemanticBox("Ignored", new Size(40, 20)));
+        var ignoredPipeline = BuildPipelineForSemantics(ignored);
+
+        Assert.Null(FindNodeByLabel(ignoredPipeline.SemanticsOwner.RootNode, "Ignored"));
+
+        ignored.IgnoringSemantics = false;
+        ignoredPipeline.FlushSemantics();
+        Assert.NotNull(FindNodeByLabel(ignoredPipeline.SemanticsOwner.RootNode, "Ignored"));
+
+        var absorbed = new RenderAbsorbPointer(
+            ignoringSemantics: true,
+            child: new FixedSemanticBox("Absorbed", new Size(40, 20)));
+        var absorbedPipeline = BuildPipelineForSemantics(absorbed);
+
+        Assert.Null(FindNodeByLabel(absorbedPipeline.SemanticsOwner.RootNode, "Absorbed"));
+
+        absorbed.IgnoringSemantics = null;
+        absorbedPipeline.FlushSemantics();
+        Assert.NotNull(FindNodeByLabel(absorbedPipeline.SemanticsOwner.RootNode, "Absorbed"));
+    }
+
+    [Fact]
+    public void IgnoreAndAbsorbPointer_BlockUserActionsWithoutDroppingLabelsByDefault()
+    {
+        var ignored = new RenderIgnorePointer(
+            ignoring: true,
+            child: new ActionSemanticBox("Ignored action", new Size(40, 20), static () => { }));
+        var ignoredPipeline = BuildPipelineForSemantics(ignored);
+
+        var ignoredNode = FindNodeByLabel(ignoredPipeline.SemanticsOwner.RootNode, "Ignored action");
+        Assert.NotNull(ignoredNode);
+        Assert.False(ignoredNode!.Actions.HasFlag(SemanticsActions.Tap));
+
+        ignored.IgnoringSemantics = false;
+        ignoredPipeline.FlushSemantics();
+        ignoredNode = FindNodeByLabel(ignoredPipeline.SemanticsOwner.RootNode, "Ignored action");
+        Assert.NotNull(ignoredNode);
+        Assert.True(ignoredNode!.Actions.HasFlag(SemanticsActions.Tap));
+
+        var absorbed = new RenderAbsorbPointer(
+            absorbing: true,
+            child: new ActionSemanticBox("Absorbed action", new Size(40, 20), static () => { }));
+        var absorbedPipeline = BuildPipelineForSemantics(absorbed);
+
+        var absorbedNode = FindNodeByLabel(absorbedPipeline.SemanticsOwner.RootNode, "Absorbed action");
+        Assert.NotNull(absorbedNode);
+        Assert.False(absorbedNode!.Actions.HasFlag(SemanticsActions.Tap));
+
+        absorbed.Absorbing = false;
+        absorbedPipeline.FlushSemantics();
+        absorbedNode = FindNodeByLabel(absorbedPipeline.SemanticsOwner.RootNode, "Absorbed action");
+        Assert.NotNull(absorbedNode);
+        Assert.True(absorbedNode!.Actions.HasFlag(SemanticsActions.Tap));
+    }
+
+    [Fact]
     public void DebugDumpTree_ContainsNodeActionsAndLabels()
     {
         var button = new RenderButton(
@@ -1227,6 +1287,20 @@ public sealed class SemanticsTreeTests
         }
 
         return null;
+    }
+
+    private static PipelineOwner BuildPipelineForSemantics(RenderBox child)
+    {
+        var renderView = new RenderView
+        {
+            Child = child
+        };
+
+        var pipeline = new PipelineOwner(renderView);
+        pipeline.Attach(renderView);
+        pipeline.FlushLayout(new Size(220, 120));
+        pipeline.FlushSemantics();
+        return pipeline;
     }
 
     private sealed class MutableSemanticBoundaryRenderBox : RenderProxyBox

@@ -16,6 +16,7 @@
     <File Path="../AGENTS.md" />
     <File Path="../CHANGELOG.md" />
     <File Path="../docs/FRAMEWORK_PLAN.md" />
+    <File Path="..\docs\MATERIAL_TODO.md" />
     <File Path="Directory.Packages.props" />
   </Folder>
   <Folder Name="/Solution Items/ai/">

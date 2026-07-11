@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using Avalonia;
 using Avalonia.Media;
+using Plumix.Foundation;
 using Plumix.Material;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
 using Xunit;
+using MaterialSurface = Plumix.Material.Material;
 
 namespace Plumix.Tests;
 
@@ -199,6 +201,114 @@ public sealed class MaterialCardTests
         var clip = FindDescendant<RenderClipRRect>(clippedHarness.RenderView);
         Assert.NotNull(clip);
         Assert.Equal(20, clip!.BorderRadius.Radius);
+    }
+
+    [Fact]
+    public void Material_ValidatesShapeCircleAndElevationArguments()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => new MaterialSurface(elevation: -0.1));
+        Assert.Throws<ArgumentException>(() => new MaterialSurface(
+            shape: ShapeBorder.RoundedRectangle(4),
+            borderRadius: BorderRadius.Circular(4)));
+        Assert.Throws<ArgumentException>(() => new MaterialSurface(
+            type: MaterialType.Circle,
+            borderRadius: BorderRadius.Circular(4)));
+    }
+
+    [Fact]
+    public void Material_ResolvesCanvasAndCardDefaultsAndAppliesSurfaceTint()
+    {
+        var theme = ThemeData.Light with
+        {
+            CanvasColor = Color.Parse("#FFF7F2FA"),
+            CardColor = Color.Parse("#FFEAF6FF"),
+        };
+
+        using var canvasHarness = new WidgetRenderHarness(
+            BuildThemedCard(new MaterialSurface(child: new SizedBox(width: 80, height: 32)), theme));
+        canvasHarness.Pump(new Size(220, 140));
+
+        var canvas = FindMaterialDecoration(canvasHarness.RenderView);
+        Assert.NotNull(canvas);
+        Assert.Equal(theme.CanvasColor, canvas!.Decoration.Color);
+        Assert.Equal(0, canvas.Decoration.EffectiveBorderRadius.Radius);
+
+        using var cardHarness = new WidgetRenderHarness(
+            BuildThemedCard(new MaterialSurface(
+                type: MaterialType.Card,
+                elevation: 3,
+                surfaceTintColor: Colors.Red,
+                child: new SizedBox(width: 80, height: 32)), theme));
+        cardHarness.Pump(new Size(220, 140));
+
+        var card = FindMaterialDecoration(cardHarness.RenderView);
+        Assert.NotNull(card);
+        Assert.Equal(2, card!.Decoration.EffectiveBorderRadius.Radius);
+        Assert.True(card.Decoration.BoxShadows.HasValue);
+        Assert.Equal(ApplySurfaceTint(theme.CardColor, Colors.Red, 3), card.Decoration.Color);
+    }
+
+    [Fact]
+    public void Material_ClipsAndPaintsShapeBorderAtConfiguredPaintOrder()
+    {
+        var side = new BorderSide(Colors.DarkGreen, 2);
+        using var foregroundHarness = new WidgetRenderHarness(
+            BuildThemedCard(new MaterialSurface(
+                borderOnForeground: true,
+                clipBehavior: Clip.AntiAlias,
+                shape: ShapeBorder.RoundedRectangle(9, side),
+                child: new SizedBox(width: 80, height: 32))));
+        foregroundHarness.Pump(new Size(220, 140));
+
+        Assert.NotNull(FindDescendant<RenderClipRRect>(foregroundHarness.RenderView));
+        Assert.Single(FindDescendants<RenderDecoratedBox>(foregroundHarness.RenderView)
+            .Where(box => box.Decoration.Border.HasValue)
+            .ToArray());
+        Assert.NotNull(FindDescendant<RenderStack>(foregroundHarness.RenderView));
+
+        using var backgroundHarness = new WidgetRenderHarness(
+            BuildThemedCard(new MaterialSurface(
+                borderOnForeground: false,
+                shape: ShapeBorder.RoundedRectangle(9, side),
+                child: new SizedBox(width: 80, height: 32))));
+        backgroundHarness.Pump(new Size(220, 140));
+
+        var backgroundBorders = FindDescendants<RenderDecoratedBox>(backgroundHarness.RenderView)
+            .Where(box => box.Decoration.Border.HasValue)
+            .ToArray();
+        Assert.Single(backgroundBorders);
+    }
+
+    [Fact]
+    public void MergeableMaterial_ComposesCardMaterialSurfaceForEachConnectedSliceGroup()
+    {
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light,
+                child: new SizedBox(
+                    width: 180,
+                    child: new MergeableMaterial(
+                        elevation: 2,
+                        hasDividers: true,
+                        children:
+                        [
+                            new MaterialSlice(
+                                new ValueKey<string>("first"),
+                                new SizedBox(width: 120, height: 24),
+                                color: Colors.LightBlue),
+                            new MaterialGap(new ValueKey<string>("gap"), 12),
+                            new MaterialSlice(
+                                new ValueKey<string>("second"),
+                                new SizedBox(width: 120, height: 24),
+                                color: Colors.LightGreen),
+                        ]))));
+        harness.Pump(new Size(220, 140));
+
+        var surfaces = FindDescendants<RenderDecoratedBox>(harness.RenderView)
+            .Where(box => box.Decoration.BoxShadows.HasValue)
+            .ToArray();
+        Assert.Equal(2, surfaces.Length);
+        Assert.All(surfaces, surface => Assert.Equal(2, surface.Decoration.EffectiveBorderRadius.Radius));
     }
 
     [Fact]

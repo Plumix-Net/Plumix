@@ -8,7 +8,7 @@ Use this block as the fastest machine-readable status summary.
 
 ```yaml
 framework_plan_version: 1
-last_updated: 2026-07-10
+last_updated: 2026-07-11
 north_star: "Flutter-like widget/rendering framework in C# with Avalonia as host infrastructure."
 current_phase: "M4 material library rewrite (theme/scaffold/material controls) in progress."
 status:
@@ -120,6 +120,9 @@ Completion note:
 - Overflow-debug parity progression: `RenderFlex` now paints Flutter-style yellow/black overflow indicators with clipped overflow child paint, 45-degree marker geometry, and edge-aligned/rotated labels for main-axis overflow; both samples include a dedicated overflow-indicator demo page for runtime verification.
 - Continued image-pipeline parity hardening: core now includes Flutter-shaped image providers/streams/cache/configuration plus `DecorationImage` integration in `BoxDecoration`, including DPR asset selection, resize keys, async repaint, fit/crop/repeat/RTL geometry, clipping, opacity, and scaled nine-patch paint.
 - Continued port-first primitive/control expansion: core now supports `AnimatedContainer`, foreground decorations, circular `BoxDecoration` paint, and decoration/image interpolation; Material now uses those primitives for a Flutter-structured `CircleAvatar` with image fallback and M2/M3 theme behavior.
+- Continued implicit-animation parity with paired `AnimatedAlign` + `AnimatedPadding` ports, including Dart-shaped
+  constructor/default guards, alignment/factor and inset interpolation, interrupted-transition continuity,
+  curve/duration updates, `onEnd`, focused tests, and mirrored C#/Dart runtime probes.
 
 Completion snapshot:
 
@@ -155,6 +158,11 @@ Status: `in_progress`
 
 Kickoff note (2026-03-12):
 
+- Added paired Material `CheckboxMenuButton` + `RadioMenuButton<T>` parity with exact checkbox tri-state cycles,
+  radio selection/toggle behavior, disabled states, isolated constrained leading controls, menu-button styling and
+  close policy, focused tests, and mirrored C#/Dart menu probes.
+- Added paired Material `MenuTheme` + `SubmenuButton` theme integration: submenu panels and disclosure icons now resolve Flutter-like widget -> local inherited -> `ThemeData` -> defaults precedence, with focused coverage and mirrored C#/Dart menu probes.
+- Added paired Material `MenuBarTheme` + `MenuButtonTheme` parity: `ThemeData` and inherited scopes now resolve menu-bar surfaces and menu-button state styles through Flutter-like `widget -> local -> ThemeData -> defaults` precedence, with focused tests and mirrored sample probes.
 - Added Flutter-structured `CarouselView`/`CarouselViewTheme` with fixed, weighted, and lazy item sources; core now exposes a variable-extent sliver adapter and subclassable scroll positions so carousel geometry and leading-item preservation remain framework-owned.
 - Prioritized immediately after M3 to unblock practical control rewrites and reduce sample-level styling drift by introducing a Flutter-like Material layer in framework widgets.
 - Added paired `CalendarDatePicker` + `YearPicker` parity with calendar delegates/date utilities, M2/M3 date-picker theming, bounded month paging, day/year states, keyboard/accessibility behavior, focused tests, and mirrored C#/Dart sample coverage.
@@ -165,6 +173,8 @@ Kickoff note (2026-03-12):
 - Added paired `SearchBar` + `SearchAnchor` parity baseline with controller open/close, route-owned search view, sync suggestions, M3 bar/view themes, focused tests, and mirrored C#/Dart sample probes.
 - Added paired core `RawAutocomplete<T>` + Material `Autocomplete<T>` parity with sync/async option resolution, stale-result suppression, split/custom fields, anchored direction selection, keyboard highlighting/selection, Material defaults, focused tests, and mirrored C#/Dart sample probes.
 - Added paired `TabPageSelector` + `TabPageSelectorIndicator` parity with explicit/inherited controllers, animated and drag-driven color interpolation, theme-secondary defaults, border styles, localized semantics, focused tests, and expanded mirrored tabs demos.
+- Added paired `FloatingActionButtonLocation` + `FloatingActionButtonAnimator` baseline: `Scaffold` now exposes Flutter-shaped location/animator APIs and applies standard start/center/end, top/float/docked/contained, mini, RTL, and inset placement through a framework render adapter; the public geometry model also carries snackbar/bottom-sheet inputs for the full Dart formulas. Focused geometry/animator tests and a mirrored centered-FAB sample probe were added. Location-transition motion and live snackbar/bottom-sheet avoidance remain tracked in `DIVERGENCES.md` pending live scaffold geometry.
+- Added paired core `IgnorePointer` + `AbsorbPointer` parity with Dart-shaped hit-test blocking/absorption, default semantics action blocking, `ignoringSemantics` subtree omission, and focused widget/render/semantics coverage.
 
 Progress update (2026-03-19):
 
@@ -470,10 +480,13 @@ Progress update (2026-03-19):
   - added C#/Dart sample parity demo route/page for runtime verification (`ListTile` route in Material tab with state and local theme override probes).
 - Added paired Material list-tile control parity baseline in `Plumix.Material`:
   - introduced `CheckboxListTile` and `SwitchListTile` with Flutter-like controlled values, whole-tile interaction, checkbox tristate cycling, selected styling, disabled behavior, adaptive branches, and `ListTileControlAffinity` resolution through widget/local/global list-tile theme precedence;
+  - closed the paired density/state/layout follow-up: both controls now forward `VisualDensity` and external
+    `MaterialStatesController` into the shared tile interaction path; checkbox tiles also expose Flutter's
+    `ListTileTitleAlignment`, and both controls honor the source semantic-button opt-in policy;
   - preserved Flutter composition through shared `ExcludeFocus` + `MergeSemantics` primitives and shrink-wrap embedded `Checkbox`/`Switch` controls, with explicit checked/enabled/tap semantics on the merged tile;
   - fixed base `ListTile` layout override assignment and leading-slot shrink geometry required by `controlAffinity.leading`;
   - added focused regression coverage and a mirrored C#/Dart runtime demo route for material/adaptive, leading/trailing, selected, disabled, and tristate paths;
-  - remaining shared-primitive gaps are switch thumb-image support, `WidgetStatesController`, `VisualDensity`, and `ListTileTitleAlignment`.
+  - remaining shared-primitive gap is switch thumb-image support.
 - Added paired `RadioListTile<T>` + `ExpansionTile` parity baseline in `Plumix.Material`:
   - `RadioListTile<T>` supports inherited `RadioGroup<T>` value/callback coordination, legacy group API, toggleable selection, adaptive branch, selected/theme color precedence, platform/explicit control affinity, scaling, disabled behavior, and merged checked/enabled/tap semantics;
   - reusable `ExpansibleController`/`Expansible` primitives now own external expansion state, forward/reverse animation, clipped height layout, and `maintainState` body lifecycle;
@@ -664,10 +677,26 @@ Progress update (2026-03-19):
   - `Ink` now provides Flutter-shaped color/decoration/image shorthand, padding and sizing composition, preserving decoration-under-response paint for ordinary `InkWell`/`InkResponse` descendants;
   - `TooltipVisibility` now supplies inherited nearest-scope suppression for pointer, long-press, tap, and programmatic tooltip display while preserving tooltip semantics;
   - added focused coverage and mirrored C#/Dart probes in the existing ink-response and badge-tooltip sample pages. Shared ancestor-Material ink ownership remains tracked in `DIVERGENCES.md`.
+- Added paired Material surface + `MergeableMaterial` parity pass:
+  - introduced public `Material`/`MaterialType` with Flutter-shaped canvas/card/circle/button/transparency defaults, elevation shadow and surface-tint resolution, shape/border/clip/default-text composition, and animated surface values;
+  - rewired `MergeableMaterial` slice groups through the shared card `Material` surface while preserving keyed gap animation and divider behavior;
+  - added focused surface/mergeable regression coverage and expanded the mirrored Card runtime demo. Oval clipping, shared ink ownership, and default-text-style interpolation remain tracked in `DIVERGENCES.md`.
 - Added paired Material `SearchDelegate<T>` + `showSearch` (`MaterialSearch.ShowSearch<T>`) ports:
   - added a full-screen route with fade lifecycle, captured ambient theme/media/directionality, typed completion result, single-active-delegate guard, query cursor placement, focused suggestions/results switching, escape/back dismissal, and AppBar leading/actions/bottom/flexible-space composition;
   - added Flutter-shaped delegate hooks for search-field defaults, query control, app-bar theme override, suggestions/results, close/reuse lifecycle, and transition-controller exposure;
   - expanded focused search tests and the mirrored C#/Dart Search demo with a legacy full-screen delegate route. Generic transition animation and complete platform input configuration remain tracked in `DIVERGENCES.md`.
+- Added paired Material `MenuAnchor` + `MenuItemButton` ports:
+  - introduced shared `MenuController` anchor attachment, nearest-anchor lookup, programmatic open/close, local anchored panel layout, Flutter-shaped leaf item API/state/focus/semantics composition, and close-on-activate behavior;
+  - added focused controller/layout/item coverage and mirrored controller/disabled/keep-open probes in the C# and Dart dropdown demos;
+  - added paired `MenuBar` + `SubmenuButton` with nested controller registration, sibling close policy, horizontal bar composition, and below/side submenu layout; focused controller/default/layout coverage and both dropdown demos now exercise a nested cascade;
+  - root-overlay placement, animated panel choreography, and keyboard traversal remain tracked in `DIVERGENCES.md`.
+- Added paired core `Wrap` + Material `Chip` ports:
+  - `Wrap` now follows Flutter run construction, main/run alignment, cross-axis alignment, spacing, RTL/vertical-direction ordering, and overflow clipping through a framework-owned `RenderWrap`;
+  - `Chip` now forwards its information/delete-only API through `RawChip` with source-shaped delete slots and semantics;
+  - added focused render/control coverage and switched both chips demos to matching multi-run `Wrap` composition.
+- Added paired `MaterialStateOutlineInputBorder` + `MaterialStateUnderlineInputBorder` parity:
+  - `InputDecorator` now resolves stateful borders against combined focus, hover, error, and disabled states;
+  - added focused border-resolution coverage and mirrored C#/Dart text-field demo probes.
 - Remaining divergence for floating action button in current framework scope:
   - none documented in current framework scope.
 

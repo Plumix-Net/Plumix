@@ -1589,6 +1589,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
         Action<bool>? onHoverChanged = null,
         Action<bool>? onFocusChange = null,
         FocusNode? focusNode = null,
+        MaterialStatesController? statesController = null,
         bool isSelected = false,
         bool includeSemanticSelected = true,
         bool isSemanticButton = true,
@@ -1612,6 +1613,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
         OnHoverChanged = onHoverChanged;
         OnFocusChange = onFocusChange;
         FocusNode = focusNode;
+        StatesController = statesController;
         IsSelected = isSelected;
         IncludeSemanticSelected = includeSemanticSelected;
         IsSemanticButton = isSemanticButton;
@@ -1642,6 +1644,8 @@ internal sealed class MaterialButtonCore : StatefulWidget
     public Action<bool>? OnFocusChange { get; }
 
     public FocusNode? FocusNode { get; }
+
+    public MaterialStatesController? StatesController { get; }
 
     public bool IsSelected { get; }
 
@@ -2027,6 +2031,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
         private AnimationController? _splashController;
         private AnimationController? _keyboardPressController;
         private IDisposable? _mouseCursorHandle;
+        private MaterialStatesController? _statesController;
 
         private MaterialButtonCore CurrentWidget => (MaterialButtonCore)StateWidget;
 
@@ -2039,6 +2044,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
         public override void InitState()
         {
             AttachFocusNode(CurrentWidget.FocusNode);
+            AttachStatesController(CurrentWidget.StatesController);
 
             _splashController = new AnimationController(TimeSpan.FromMilliseconds(225))
             {
@@ -2058,6 +2064,12 @@ internal sealed class MaterialButtonCore : StatefulWidget
             {
                 DetachFocusNode(disposeOwned: true);
                 AttachFocusNode(CurrentWidget.FocusNode);
+            }
+
+            if (!ReferenceEquals(oldButtonWidget.StatesController, CurrentWidget.StatesController))
+            {
+                DetachStatesController();
+                AttachStatesController(CurrentWidget.StatesController);
             }
 
             if (!Interactive && _isPressed)
@@ -2105,12 +2117,15 @@ internal sealed class MaterialButtonCore : StatefulWidget
             {
                 UpdateMouseCursor();
             }
+
+            SyncFixedControllerStates();
         }
 
         public override void Dispose()
         {
             ReleaseMouseCursor();
             DetachFocusNode(disposeOwned: true);
+            DetachStatesController();
 
             if (_splashController != null)
             {
@@ -2414,6 +2429,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
                     _suppressFocusOverlay = false;
                 }
             });
+            _statesController?.Update(MaterialState.Focused, hasFocus);
             CurrentWidget.OnFocusChange?.Invoke(hasFocus);
         }
 
@@ -2435,6 +2451,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
                 _isPressed = value;
                 _suppressFocusOverlay = nextSuppressFocusOverlay;
             });
+            _statesController?.Update(MaterialState.Pressed, value || _isKeyboardPressed);
             CurrentWidget.OnHighlightChanged?.Invoke(value);
         }
 
@@ -2456,6 +2473,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
             }
 
             SetState(() => _isHovered = value);
+            _statesController?.Update(MaterialState.Hovered, value);
             if (value)
             {
                 UpdateMouseCursor();
@@ -2509,6 +2527,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
             if (!_isKeyboardPressed)
             {
                 SetState(() => _isKeyboardPressed = true);
+                _statesController?.Update(MaterialState.Pressed, true);
             }
 
             _keyboardPressController.Forward(0);
@@ -2541,9 +2560,10 @@ internal sealed class MaterialButtonCore : StatefulWidget
         {
             if (!enabled)
             {
-                return CurrentWidget.IsSelected
+                MaterialState disabledStates = CurrentWidget.IsSelected
                     ? MaterialState.Disabled | MaterialState.Selected
                     : MaterialState.Disabled;
+                return disabledStates | (_statesController?.Value ?? MaterialState.None);
             }
 
             var states = MaterialState.None;
@@ -2572,7 +2592,37 @@ internal sealed class MaterialButtonCore : StatefulWidget
                 states |= MaterialState.Focused;
             }
 
-            return states;
+            return states | (_statesController?.Value ?? MaterialState.None);
+        }
+
+        private void AttachStatesController(MaterialStatesController? controller)
+        {
+            _statesController = controller;
+            if (_statesController is not null)
+            {
+                _statesController.AddListener(HandleStatesControllerChanged);
+                SyncFixedControllerStates();
+            }
+        }
+
+        private void DetachStatesController()
+        {
+            if (_statesController is not null)
+            {
+                _statesController.RemoveListener(HandleStatesControllerChanged);
+                _statesController = null;
+            }
+        }
+
+        private void HandleStatesControllerChanged()
+        {
+            SetState(static () => { });
+        }
+
+        private void SyncFixedControllerStates()
+        {
+            _statesController?.Update(MaterialState.Disabled, !Enabled);
+            _statesController?.Update(MaterialState.Selected, CurrentWidget.IsSelected);
         }
 
         private Color ResolveForegroundColor(ButtonStyle style, MaterialState states)
@@ -3004,6 +3054,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
             }
 
             SetState(() => _isKeyboardPressed = false);
+            _statesController?.Update(MaterialState.Pressed, _isPressed);
         }
 
         private static bool IsActivateKey(string key)

@@ -458,7 +458,11 @@ public abstract class RenderObject : IRenderObject
 
     internal void EnsureSemanticsNode(SemanticsOwner owner, List<SemanticsNode> output)
     {
-        _semantics.EnsureSemanticsNode(owner, output, inheritedExplicitChildNodes: true);
+        _semantics.EnsureSemanticsNode(
+            owner,
+            output,
+            inheritedExplicitChildNodes: true,
+            inheritedUserActionsBlocked: false);
     }
 
     protected virtual void PerformUpdateCompositingBits()

@@ -4,7 +4,7 @@ using Avalonia.Media;
 using Plumix.Rendering;
 using Plumix.Widgets;
 
-// Dart parity source (reference): dart_sample/lib/align_demo_page.dart (exact sample parity)
+// Dart parity source (reference): dart_sample/lib/demos/general/align_demo_page.dart (exact sample parity)
 
 namespace Plumix;
 
@@ -20,6 +20,8 @@ internal sealed class AlignDemoPageState : State
 {
     private Alignment _alignment = Alignment.Center;
     private bool _shrinkWrap;
+    private bool _expandedPadding;
+    private int _completedAnimations;
 
     public override Widget Build(BuildContext context)
     {
@@ -28,9 +30,9 @@ internal sealed class AlignDemoPageState : State
             spacing: 10,
             children:
             [
-                new Text("Align + Center", fontSize: 20, color: Colors.Black),
+                new Text("AnimatedAlign + AnimatedPadding", fontSize: 20, color: Colors.Black),
                 new Text(
-                    "Move a fixed card inside preview using Align; shrink mode applies width/height factors.",
+                    "Move the card and change its inset; both values transition implicitly with easeInOut.",
                     fontSize: 14,
                     color: Colors.DimGray),
                 new Row(
@@ -39,27 +41,48 @@ internal sealed class AlignDemoPageState : State
                     [
                         BuildButton("TopLeft", () => SetAlignment(Alignment.TopLeft), width: 96, colorHex: "#FFDCE3ED"),
                         BuildButton("Center", () => SetAlignment(Alignment.Center), width: 96, colorHex: "#FFDCE3ED"),
-                        BuildButton("BottomRight", () => SetAlignment(Alignment.BottomRight), width: 112, colorHex: "#FFDCE3ED"),
+                        BuildButton(
+                            "BottomRight",
+                            () => SetAlignment(Alignment.BottomRight),
+                            width: 112,
+                            colorHex: "#FFDCE3ED"),
                     ]),
                 new Row(
                     spacing: 8,
                     children:
                     [
-                        BuildButton(_shrinkWrap ? "Shrink: on" : "Shrink: off", ToggleShrinkWrap, width: 120, colorHex: "#FFE9F5EC"),
+                        BuildButton(
+                            _shrinkWrap ? "Shrink: on" : "Shrink: off",
+                            ToggleShrinkWrap,
+                            width: 120,
+                            colorHex: "#FFE9F5EC"),
+                        BuildButton(
+                            _expandedPadding ? "Padding: 24" : "Padding: 8",
+                            TogglePadding,
+                            width: 120,
+                            colorHex: "#FFFFE8CC"),
                     ]),
                 new Text(
-                    $"alignment={AlignmentLabel(_alignment)}, shrink={(_shrinkWrap ? "on" : "off")}",
+                    $"alignment={AlignmentLabel(_alignment)}, shrink={(_shrinkWrap ? "on" : "off")}, "
+                    + $"padding={(_expandedPadding ? 24 : 8)}, completed={_completedAnimations}",
                     fontSize: 12,
                     color: Colors.DarkSlateGray),
                 new Container(
                     width: 220,
                     height: 140,
                     color: Color.Parse("#FFE7EDF6"),
-                    padding: new Thickness(8),
-                    child: new Container(
-                        color: Colors.White,
-                        child: new Align(
+                    child: new AnimatedPadding(
+                        padding: new Thickness(_expandedPadding ? 24 : 8),
+                        duration: TimeSpan.FromMilliseconds(350),
+                        curve: Curves.EaseInOut,
+                        onEnd: HandleAnimationEnd,
+                        child: new Container(
+                            color: Colors.White,
+                            child: new AnimatedAlign(
                             alignment: _alignment,
+                            duration: TimeSpan.FromMilliseconds(350),
+                            curve: Curves.EaseInOut,
+                            onEnd: HandleAnimationEnd,
                             widthFactor: _shrinkWrap ? 1.5 : null,
                             heightFactor: _shrinkWrap ? 1.5 : null,
                             child: new Container(
@@ -67,7 +90,7 @@ internal sealed class AlignDemoPageState : State
                                 height: 40,
                                 color: Color.Parse("#FF1D3557"),
                                 child: new Center(
-                                    child: new Text("A", fontSize: 16, color: Colors.White)))))),
+                                    child: new Text("A", fontSize: 16, color: Colors.White))))))),
             ]);
     }
 
@@ -92,6 +115,16 @@ internal sealed class AlignDemoPageState : State
     private void ToggleShrinkWrap()
     {
         SetState(() => _shrinkWrap = !_shrinkWrap);
+    }
+
+    private void TogglePadding()
+    {
+        SetState(() => _expandedPadding = !_expandedPadding);
+    }
+
+    private void HandleAnimationEnd()
+    {
+        SetState(() => _completedAnimations++);
     }
 
     private static string AlignmentLabel(Alignment alignment)

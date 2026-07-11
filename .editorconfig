@@ -4,6 +4,10 @@ root = true
 indent_style = space
 indent_size = 4
 
+# Max line length: 120. Wrap longer lines (arguments, chained calls, conditions).
+# Enforced by convention for all new/edited code; see AGENTS.md and docs/ai/INVARIANTS.md (Code Style).
+max_line_length = 120
+
 # Code style: explicit types for primitives/string, var only when the type is apparent.
 # See AGENTS.md (Change Guidelines) and docs/ai/INVARIANTS.md (Code Style).
 csharp_style_var_for_built_in_types = false:warning

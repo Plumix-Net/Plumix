@@ -21,6 +21,13 @@ class _DropdownDemoPageState extends State<DropdownDemoPage> {
   String _modernStatus = 'idle';
   String? _modernFormValue;
   String _modernFormStatus = 'not validated';
+  String _anchorStatus = 'closed';
+  bool? _menuCheckbox = false;
+  String? _menuRadio = 'one';
+  String _menuBarStatus = 'closed';
+  final MenuController _anchorController = MenuController();
+  final MenuController _fileMenuController = MenuController();
+  final MenuController _editMenuController = MenuController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final GlobalKey<FormState> _modernFormKey = GlobalKey<FormState>();
 
@@ -135,6 +142,181 @@ class _DropdownDemoPageState extends State<DropdownDemoPage> {
           ),
           Text(
             'Modern status: $_modernStatus',
+            style: const TextStyle(fontSize: 13),
+          ),
+          const Divider(),
+          const Text(
+            'MenuAnchor + MenuItemButton',
+            style: TextStyle(fontSize: 18),
+          ),
+          const Text(
+            'Controller-owned menu with leaf, checkbox, and radio items plus close-on-activate policy.',
+            style: TextStyle(fontSize: 14, color: Colors.black54),
+          ),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: MenuAnchor(
+              controller: _anchorController,
+              onOpen: () => setState(() => _anchorStatus = 'opened'),
+              onClose: () => setState(() => _anchorStatus = 'closed'),
+              menuChildren: <Widget>[
+                MenuItemButton(
+                  onPressed: () => setState(() => _anchorStatus = 'activated'),
+                  child: const Text('Run action'),
+                ),
+                const MenuItemButton(child: Text('Disabled item')),
+                MenuItemButton(
+                  closeOnActivate: false,
+                  onPressed: () => setState(() => _anchorStatus = 'kept open'),
+                  child: const Text('Keep open'),
+                ),
+                CheckboxMenuButton(
+                  value: _menuCheckbox,
+                  closeOnActivate: false,
+                  onChanged: (bool? value) =>
+                      setState(() => _menuCheckbox = value),
+                  child: const Text('Pin menu'),
+                ),
+                RadioMenuButton<String>(
+                  value: 'one',
+                  groupValue: _menuRadio,
+                  closeOnActivate: false,
+                  onChanged: (String? value) =>
+                      setState(() => _menuRadio = value),
+                  child: const Text('Layout one'),
+                ),
+                RadioMenuButton<String>(
+                  value: 'two',
+                  groupValue: _menuRadio,
+                  closeOnActivate: false,
+                  onChanged: (String? value) =>
+                      setState(() => _menuRadio = value),
+                  child: const Text('Layout two'),
+                ),
+              ],
+              builder:
+                  (
+                    BuildContext context,
+                    MenuController controller,
+                    Widget? child,
+                  ) {
+                    return TextButton(
+                      onPressed: controller.isOpen
+                          ? controller.close
+                          : controller.open,
+                      child: Text(
+                        controller.isOpen ? 'Close menu' : 'Open menu',
+                      ),
+                    );
+                  },
+            ),
+          ),
+          Text(
+            'Anchor menu: $_anchorStatus',
+            style: const TextStyle(fontSize: 13),
+          ),
+          Text(
+            'Menu choices: pinned=$_menuCheckbox, layout=$_menuRadio',
+            style: const TextStyle(fontSize: 13),
+          ),
+          const Divider(),
+          const Text('MenuBar + SubmenuButton', style: TextStyle(fontSize: 18)),
+          const Text(
+            'Horizontal menu bar with controller-owned sibling closing, nested side submenu, and local menu themes.',
+            style: TextStyle(fontSize: 14, color: Colors.black54),
+          ),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: MenuTheme(
+              data: MenuThemeData(
+                style: MenuStyle(
+                  backgroundColor: WidgetStatePropertyAll<Color>(
+                    const Color(0xFFFFF3E0),
+                  ),
+                ),
+                submenuIcon: const WidgetStatePropertyAll<Widget>(
+                  Icon(Icons.info_outline),
+                ),
+              ),
+              child: MenuBarTheme(
+                data: MenuBarThemeData(
+                  style: MenuStyle(
+                    backgroundColor: WidgetStatePropertyAll<Color>(
+                      const Color(0xFFF3E5F5),
+                    ),
+                  ),
+                ),
+                child: MenuButtonTheme(
+                  data: MenuButtonThemeData(
+                    style: ButtonStyle(
+                      foregroundColor: WidgetStatePropertyAll<Color>(
+                        Colors.deepPurple,
+                      ),
+                    ),
+                  ),
+                  child: MenuBar(
+                    children: <Widget>[
+                      SubmenuButton(
+                        controller: _fileMenuController,
+                        onOpen: () =>
+                            setState(() => _menuBarStatus = 'file opened'),
+                        onClose: () =>
+                            setState(() => _menuBarStatus = 'file closed'),
+                        menuChildren: <Widget>[
+                          MenuItemButton(
+                            onPressed: () =>
+                                setState(() => _menuBarStatus = 'new document'),
+                            child: const Text('New document'),
+                          ),
+                          SubmenuButton(
+                            onOpen: () => setState(
+                              () => _menuBarStatus = 'recent opened',
+                            ),
+                            menuChildren: <Widget>[
+                              MenuItemButton(
+                                onPressed: () => setState(
+                                  () => _menuBarStatus = 'recent report',
+                                ),
+                                child: const Text('Quarterly report'),
+                              ),
+                            ],
+                            child: const Text('Recent'),
+                          ),
+                        ],
+                        style: ButtonStyle(
+                          foregroundColor: WidgetStatePropertyAll<Color>(
+                            Colors.deepOrange,
+                          ),
+                        ),
+                        child: const Text('File'),
+                      ),
+                      SubmenuButton(
+                        controller: _editMenuController,
+                        onOpen: () =>
+                            setState(() => _menuBarStatus = 'edit opened'),
+                        onClose: () =>
+                            setState(() => _menuBarStatus = 'edit closed'),
+                        menuChildren: <Widget>[
+                          MenuItemButton(
+                            onPressed: () =>
+                                setState(() => _menuBarStatus = 'paste'),
+                            child: const Text('Paste'),
+                          ),
+                        ],
+                        child: const Text('Edit'),
+                      ),
+                      const SubmenuButton(
+                        menuChildren: <Widget>[],
+                        child: Text('Disabled'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Text(
+            'Menu bar: $_menuBarStatus',
             style: const TextStyle(fontSize: 13),
           ),
           const Divider(),

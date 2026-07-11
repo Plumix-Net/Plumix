@@ -12,6 +12,8 @@ class AlignDemoPage extends StatefulWidget {
 class _AlignDemoPageState extends State<AlignDemoPage> {
   Alignment _alignment = Alignment.center;
   bool _shrinkWrap = false;
+  bool _expandedPadding = false;
+  int _completedAnimations = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -20,11 +22,11 @@ class _AlignDemoPageState extends State<AlignDemoPage> {
       spacing: 10,
       children: <Widget>[
         const Text(
-          'Align + Center',
+          'AnimatedAlign + AnimatedPadding',
           style: TextStyle(fontSize: 20, color: Colors.black),
         ),
         const Text(
-          'Move a fixed card inside preview using Align; shrink mode applies width/height factors.',
+          'Move the card and change its inset; both values transition implicitly with easeInOut.',
           style: TextStyle(fontSize: 14, color: Colors.black54),
         ),
         Row(
@@ -59,31 +61,46 @@ class _AlignDemoPageState extends State<AlignDemoPage> {
               width: 120,
               background: const Color(0xFFE9F5EC),
             ),
+            _buildButton(
+              label: _expandedPadding ? 'Padding: 24' : 'Padding: 8',
+              onTap: _togglePadding,
+              width: 120,
+              background: const Color(0xFFFFE8CC),
+            ),
           ],
         ),
         Text(
-          'alignment=${_alignmentLabel(_alignment)}, shrink=${_shrinkWrap ? 'on' : 'off'}',
+          'alignment=${_alignmentLabel(_alignment)}, shrink=${_shrinkWrap ? 'on' : 'off'}, '
+          'padding=${_expandedPadding ? 24 : 8}, completed=$_completedAnimations',
           style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
         ),
         Container(
           width: 220,
           height: 140,
           color: const Color(0xFFE7EDF6),
-          padding: const EdgeInsets.all(8),
-          child: Container(
-            color: Colors.white,
-            child: Align(
-              alignment: _alignment,
-              widthFactor: _shrinkWrap ? 1.5 : null,
-              heightFactor: _shrinkWrap ? 1.5 : null,
-              child: Container(
-                width: 64,
-                height: 40,
-                color: const Color(0xFF1D3557),
-                child: const Center(
-                  child: Text(
-                    'A',
-                    style: TextStyle(fontSize: 16, color: Colors.white),
+          child: AnimatedPadding(
+            padding: EdgeInsets.all(_expandedPadding ? 24 : 8),
+            duration: const Duration(milliseconds: 350),
+            curve: Curves.easeInOut,
+            onEnd: _handleAnimationEnd,
+            child: Container(
+              color: Colors.white,
+              child: AnimatedAlign(
+                alignment: _alignment,
+                duration: const Duration(milliseconds: 350),
+                curve: Curves.easeInOut,
+                onEnd: _handleAnimationEnd,
+                widthFactor: _shrinkWrap ? 1.5 : null,
+                heightFactor: _shrinkWrap ? 1.5 : null,
+                child: Container(
+                  width: 64,
+                  height: 40,
+                  color: const Color(0xFF1D3557),
+                  child: const Center(
+                    child: Text(
+                      'A',
+                      style: TextStyle(fontSize: 16, color: Colors.white),
+                    ),
                   ),
                 ),
               ),
@@ -122,6 +139,18 @@ class _AlignDemoPageState extends State<AlignDemoPage> {
   void _toggleShrinkWrap() {
     setState(() {
       _shrinkWrap = !_shrinkWrap;
+    });
+  }
+
+  void _togglePadding() {
+    setState(() {
+      _expandedPadding = !_expandedPadding;
+    });
+  }
+
+  void _handleAnimationEnd() {
+    setState(() {
+      _completedAnimations += 1;
     });
   }
 

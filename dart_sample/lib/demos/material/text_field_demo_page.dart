@@ -35,7 +35,7 @@ class _TextFieldDemoPageState extends State<TextFieldDemoPage> {
             style: TextStyle(fontSize: 20),
           ),
           const Text(
-            'Filled/outlined borders, floating labels, hint/helper/error/counter slots, prefix/suffix icons, focus, submit, read-only and multiline input.',
+            'Filled/outlined/state-aware borders, floating labels, hint/helper/error/counter slots, prefix/suffix icons, focus, submit, read-only and multiline input.',
             style: TextStyle(fontSize: 14, color: Colors.black54),
           ),
           Wrap(
@@ -96,6 +96,16 @@ class _TextFieldDemoPageState extends State<TextFieldDemoPage> {
               alignLabelWithHint: true,
               border: OutlineInputBorder(),
               helperText: 'Multiline EditableText path',
+            ),
+          ),
+          TextField(
+            enabled: _enabled,
+            decoration: InputDecoration(
+              labelText: 'State-aware border',
+              hintText: 'Focus or hover this field',
+              errorText: _error ? 'Error state' : null,
+              border: WidgetStateInputBorder.resolveWith(_resolveStateBorder),
+              helperText: 'Resolves focus, hover, error, and disabled together',
             ),
           ),
           TextField(
@@ -182,6 +192,23 @@ class _TextFieldDemoPageState extends State<TextFieldDemoPage> {
   void _resetForm() {
     _formKey.currentState?.reset();
     setState(() => _formStatus = 'reset');
+  }
+
+  InputBorder _resolveStateBorder(Set<WidgetState> states) {
+    final Color color = states.contains(WidgetState.disabled)
+        ? Colors.grey
+        : states.contains(WidgetState.error)
+        ? Colors.red
+        : states.contains(WidgetState.focused)
+        ? Colors.blue
+        : states.contains(WidgetState.hovered)
+        ? Colors.green
+        : Colors.blueGrey;
+    final double width = states.contains(WidgetState.focused) ? 3 : 1;
+    return OutlineInputBorder(
+      borderSide: BorderSide(color: color, width: width),
+      borderRadius: BorderRadius.circular(10),
+    );
   }
 
   Widget _control(String label, VoidCallback onPressed) => TextButton(

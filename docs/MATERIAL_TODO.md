@@ -17,7 +17,7 @@ Size legend: **S** — one focused widget, few states. **M** — widget family o
 
 | Widget / family | Flutter source (`lib/src/material/`) | Size | Notes / dependencies |
 | --- | --- | --- | --- |
-| `MenuAnchor`, `MenuBar`, `SubmenuButton`, `MenuItemButton` + `MenuStyle`, `MenuTheme`, `MenuBarTheme`, `MenuButtonTheme` | `menu_anchor.dart`, `menu_style.dart`, `menu_theme.dart`, `menu_bar_theme.dart`, `menu_button_theme.dart` | L | Desktop-critical menu system. Overlay/anchor infra partially exists (see `DropdownMenu`, `SearchAnchor` ports for prior art). |
+| `MenuTheme`, `MenuBarTheme`, `MenuButtonTheme` | `menu_theme.dart`, `menu_bar_theme.dart`, `menu_button_theme.dart` | M | `MenuAnchor`/`MenuBar`/`SubmenuButton`/`MenuItemButton` and `MenuStyle` have a baseline port with nested controller closure and local panel positioning. Complete inherited theme resolution alongside the existing overlay/focus/shortcut divergence work. |
 | `CarouselView` + `CarouselTheme` | `carousel.dart`, `carousel_theme.dart` | M | Scrollable/sliver infra already in core (`Widgets/Scroll.cs`, `Rendering/Sliver.cs`). |
 | `ReorderableListView` | `reorderable_list.dart` | L | Requires core `SliverReorderableList`/drag infra first (`widgets/reorderable_list.dart`) — not yet in `src/Plumix`. |
 | `SelectableText` | `selectable_text.dart` | M | Builds on `EditableText` (already ported); needs selection gestures without editing. |

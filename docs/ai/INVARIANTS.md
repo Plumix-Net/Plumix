@@ -78,6 +78,7 @@ Allowed dependency direction (mirrors Flutter's `widgets <- cupertino <- materia
   - Example: `double effectiveWidth = width ?? theme?.Thickness ?? 0.0;` (not `var`).
 - Keep `var` for complex/reference types where the type is evident from the right-hand side: constructor calls (`new Size(...)`), factory/`Of` accessors (`Theme.Of(context)`), LINQ results, and other non-primitive expressions.
 - This is a non-negotiable convention for all new and ported code; agents must emit it correctly on first pass rather than relying on a follow-up refactor.
+- **Max line length: 120 characters** (see `.editorconfig`). Wrap longer lines: one argument per line for long parameter/argument lists, break chained calls before `.`, split long conditions before `&&`/`||`. Applies to all new and edited lines; do not reformat untouched legacy lines just to satisfy the limit.
 
 ## Fast Safety Checks
 

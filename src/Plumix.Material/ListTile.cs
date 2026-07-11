@@ -49,6 +49,10 @@ public sealed class ListTile : StatelessWidget
         double? minVerticalPadding = null,
         double? minLeadingWidth = null,
         double? minTileHeight = null,
+        VisualDensity? visualDensity = null,
+        ListTileTitleAlignment? titleAlignment = null,
+        bool internalAddSemanticForOnTap = true,
+        MaterialStatesController? statesController = null,
         BorderRadius? shape = null,
         Key? key = null) : base(key)
     {
@@ -94,6 +98,10 @@ public sealed class ListTile : StatelessWidget
         MinVerticalPadding = minVerticalPadding;
         MinLeadingWidth = minLeadingWidth;
         MinTileHeight = minTileHeight;
+        VisualDensity = visualDensity;
+        TitleAlignment = titleAlignment;
+        InternalAddSemanticForOnTap = internalAddSemanticForOnTap;
+        StatesController = statesController;
         Shape = shape;
     }
 
@@ -161,6 +169,14 @@ public sealed class ListTile : StatelessWidget
 
     public double? MinTileHeight { get; }
 
+    public VisualDensity? VisualDensity { get; }
+
+    public ListTileTitleAlignment? TitleAlignment { get; }
+
+    public bool InternalAddSemanticForOnTap { get; }
+
+    public MaterialStatesController? StatesController { get; }
+
     public BorderRadius? Shape { get; }
 
     public override Widget Build(BuildContext context)
@@ -173,10 +189,25 @@ public sealed class ListTile : StatelessWidget
         bool hasSubtitle = Subtitle is not null;
         bool isThreeLine = hasSubtitle && (IsThreeLine ?? tileTheme.IsThreeLine ?? false);
         int lineCount = hasSubtitle ? (isThreeLine ? 3 : 2) : 1;
-        double effectiveHorizontalTitleGap = HorizontalTitleGap ?? tileTheme.HorizontalTitleGap ?? 16;
-        double effectiveMinVerticalPadding = MinVerticalPadding ?? tileTheme.MinVerticalPadding ?? (useMaterial3 ? 8 : 4);
+        var visualDensity = VisualDensity ?? tileTheme.VisualDensity ?? theme.VisualDensity;
+        double effectiveHorizontalTitleGap = HorizontalTitleGap
+                                             ?? tileTheme.HorizontalTitleGap
+                                             ?? 16;
+        effectiveHorizontalTitleGap += visualDensity.Horizontal * 2.0;
+        double effectiveMinVerticalPadding = MinVerticalPadding
+                                             ?? tileTheme.MinVerticalPadding
+                                             ?? (useMaterial3 ? 8 : 4);
         double effectiveMinLeadingWidth = MinLeadingWidth ?? tileTheme.MinLeadingWidth ?? (useMaterial3 ? 24 : 40);
-        double effectiveMinTileHeight = MinTileHeight ?? tileTheme.MinTileHeight ?? ResolveDefaultTileHeight(lineCount, isDense);
+        double effectiveMinTileHeight = MinTileHeight
+                                        ?? tileTheme.MinTileHeight
+                                        ?? ResolveDefaultTileHeight(lineCount, isDense)
+                                        + visualDensity.BaseSizeAdjustment.Y;
+        effectiveMinTileHeight = Math.Max(0, effectiveMinTileHeight);
+        var effectiveTitleAlignment = TitleAlignment
+                                      ?? tileTheme.TitleAlignment
+                                      ?? (useMaterial3
+                                          ? ListTileTitleAlignment.ThreeLine
+                                          : ListTileTitleAlignment.TitleHeight);
         var textDirection = Directionality.Of(context);
         var effectiveContentPadding = ContentPadding
             ?? tileTheme.ContentPadding
@@ -238,6 +269,17 @@ public sealed class ListTile : StatelessWidget
                     child: child));
         }
 
+        Widget AlignSlot(Widget child, bool isLeading)
+        {
+            return new ListTileSlotAlign(
+                tileHeight: effectiveMinTileHeight,
+                minVerticalPadding: effectiveMinVerticalPadding,
+                titleAlignment: effectiveTitleAlignment,
+                isThreeLine: isThreeLine,
+                isLeading: isLeading,
+                child: child);
+        }
+
         Widget textChild;
         if (Subtitle is null)
         {
@@ -266,11 +308,7 @@ public sealed class ListTile : StatelessWidget
         {
             rowChildren.Add(new ConstrainedBox(
                 constraints: new BoxConstraints(MinWidth: effectiveMinLeadingWidth),
-                child: new Align(
-                    alignment: Alignment.CenterLeft,
-                    widthFactor: 1,
-                    heightFactor: 1,
-                    child: BuildSlotWidget(Leading))));
+                child: AlignSlot(BuildSlotWidget(Leading), isLeading: true)));
             rowChildren.Add(new SizedBox(width: effectiveHorizontalTitleGap));
         }
 
@@ -279,14 +317,14 @@ public sealed class ListTile : StatelessWidget
         if (Trailing is not null)
         {
             rowChildren.Add(new SizedBox(width: effectiveHorizontalTitleGap));
-            rowChildren.Add(BuildSlotWidget(Trailing));
+            rowChildren.Add(AlignSlot(BuildSlotWidget(Trailing), isLeading: false));
         }
 
         var padding = new Thickness(
             effectiveContentPadding.Left,
-            effectiveContentPadding.Top + effectiveMinVerticalPadding,
+            effectiveContentPadding.Top,
             effectiveContentPadding.Right,
-            effectiveContentPadding.Bottom + effectiveMinVerticalPadding);
+            effectiveContentPadding.Bottom);
 
         var tileBody = new Align(
             alignment: Alignment.CenterLeft,
@@ -326,11 +364,12 @@ public sealed class ListTile : StatelessWidget
             style: style,
             mouseCursor: effectiveMouseCursor,
             focusNode: FocusNode,
+            statesController: StatesController,
             onFocusChange: OnFocusChange,
             autofocus: Autofocus,
             isSelected: Selected,
             includeSemanticSelected: true,
-            isSemanticButton: hasAnyAction,
+            isSemanticButton: InternalAddSemanticForOnTap && hasAnyAction,
             enableFeedback: EnableFeedback ?? tileTheme.EnableFeedback ?? true);
     }
 
@@ -595,5 +634,144 @@ public sealed class ListTile : StatelessWidget
         }
 
         return value.Value;
+    }
+}
+
+internal sealed class ListTileSlotAlign : SingleChildRenderObjectWidget
+{
+    public ListTileSlotAlign(
+        double tileHeight,
+        double minVerticalPadding,
+        ListTileTitleAlignment titleAlignment,
+        bool isThreeLine,
+        bool isLeading,
+        Widget child) : base(child)
+    {
+        TileHeight = tileHeight;
+        MinVerticalPadding = minVerticalPadding;
+        TitleAlignment = titleAlignment;
+        IsThreeLine = isThreeLine;
+        IsLeading = isLeading;
+    }
+
+    public double TileHeight { get; }
+    public double MinVerticalPadding { get; }
+    public ListTileTitleAlignment TitleAlignment { get; }
+    public bool IsThreeLine { get; }
+    public bool IsLeading { get; }
+
+    internal override RenderObject CreateRenderObject(BuildContext context)
+    {
+        return new RenderListTileSlotAlign(
+            tileHeight: TileHeight,
+            minVerticalPadding: MinVerticalPadding,
+            titleAlignment: TitleAlignment,
+            isThreeLine: IsThreeLine,
+            isLeading: IsLeading);
+    }
+
+    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    {
+        var align = (RenderListTileSlotAlign)renderObject;
+        align.TileHeight = TileHeight;
+        align.MinVerticalPadding = MinVerticalPadding;
+        align.TitleAlignment = TitleAlignment;
+        align.IsThreeLine = IsThreeLine;
+        align.IsLeading = IsLeading;
+    }
+}
+
+internal sealed class RenderListTileSlotAlign : RenderProxyBox
+{
+    private double _tileHeight;
+    private double _minVerticalPadding;
+    private ListTileTitleAlignment _titleAlignment;
+    private bool _isThreeLine;
+    private bool _isLeading;
+
+    public RenderListTileSlotAlign(
+        double tileHeight,
+        double minVerticalPadding,
+        ListTileTitleAlignment titleAlignment,
+        bool isThreeLine,
+        bool isLeading)
+    {
+        _tileHeight = tileHeight;
+        _minVerticalPadding = minVerticalPadding;
+        _titleAlignment = titleAlignment;
+        _isThreeLine = isThreeLine;
+        _isLeading = isLeading;
+    }
+
+    public double TileHeight
+    {
+        get => _tileHeight;
+        set => SetLayoutValue(ref _tileHeight, value);
+    }
+
+    public double MinVerticalPadding
+    {
+        get => _minVerticalPadding;
+        set => SetLayoutValue(ref _minVerticalPadding, value);
+    }
+
+    public ListTileTitleAlignment TitleAlignment
+    {
+        get => _titleAlignment;
+        set => SetLayoutValue(ref _titleAlignment, value);
+    }
+
+    public bool IsThreeLine
+    {
+        get => _isThreeLine;
+        set => SetLayoutValue(ref _isThreeLine, value);
+    }
+
+    public bool IsLeading
+    {
+        get => _isLeading;
+        set => SetLayoutValue(ref _isLeading, value);
+    }
+
+    protected override void PerformLayout()
+    {
+        if (Child is null)
+        {
+            Size = Constraints.Constrain(new Size(0, TileHeight));
+            return;
+        }
+
+        Child.Layout(Constraints.Loosen(), parentUsesSize: true);
+        double height = Math.Max(TileHeight, Child.Size.Height);
+        Size = Constraints.Constrain(new Size(Child.Size.Width, height));
+        double y = ResolveYOffset(Child.Size.Height, Size.Height);
+        ((BoxParentData)Child.parentData!).offset = new Point(0, y);
+    }
+
+    private double ResolveYOffset(double childHeight, double tileHeight)
+    {
+        ListTileTitleAlignment alignment = TitleAlignment == ListTileTitleAlignment.ThreeLine
+            ? IsThreeLine ? ListTileTitleAlignment.Top : ListTileTitleAlignment.Center
+            : TitleAlignment;
+        return alignment switch
+        {
+            ListTileTitleAlignment.TitleHeight when tileHeight > 72 => 16,
+            ListTileTitleAlignment.TitleHeight when IsLeading => Math.Min((tileHeight - childHeight) / 2.0, 16),
+            ListTileTitleAlignment.TitleHeight => (tileHeight - childHeight) / 2.0,
+            ListTileTitleAlignment.Top => MinVerticalPadding,
+            ListTileTitleAlignment.Bottom => tileHeight - childHeight - MinVerticalPadding,
+            _ => (tileHeight - childHeight) / 2.0,
+        };
+    }
+
+    private void SetLayoutValue<T>(ref T field, T value)
+    {
+        if (EqualityComparer<T>.Default.Equals(field, value))
+        {
+            return;
+        }
+
+        field = value;
+        MarkNeedsLayout();
     }
 }

@@ -290,6 +290,41 @@ public sealed class MaterialChipTests : IDisposable
     }
 
     [Fact]
+    public void Chip_IsDeleteOnlyAndForwardsDeleteAppearanceAndSemanticsToRawChip()
+    {
+        int deleted = 0;
+        var deleteConstraints = BoxConstraints.Tight(new Size(20, 20));
+        using var harness = new WidgetRenderHarness(Root(
+            ThemeData.Light,
+            new Chip(
+                label: new Text("Information"),
+                avatar: new Icon(Icons.InfoOutline),
+                onDeleted: () => deleted++,
+                deleteIcon: new Icon(Icons.Clear),
+                deleteIconColor: Colors.Purple,
+                deleteIconBoxConstraints: deleteConstraints,
+                deleteButtonTooltipMessage: "Remove information")));
+
+        var semantics = harness.PumpAndGetSemantics(new Size(320, 120));
+
+        Assert.Equal(Colors.Transparent, FindChipDecoration(harness.RenderView).Decoration.Color);
+        RenderParagraph clear = FindDescendants<RenderParagraph>(harness.RenderView)
+            .Single(paragraph => paragraph.Text == IconText(Icons.Clear));
+        Assert.Equal(Colors.Purple, ForegroundColor(clear));
+        Assert.Contains(FindDescendants<RenderConstrainedBox>(harness.RenderView),
+            box => box.AdditionalConstraints == deleteConstraints);
+
+        var body = FindSemantics(semantics, node => node.Label == "Information"
+                                                 && node.Actions.HasFlag(SemanticsActions.Tap));
+        Assert.Null(body);
+        var delete = FindSemantics(semantics, node => node.Label == "Remove information");
+        Assert.NotNull(delete);
+        Assert.True(delete!.Flags.HasFlag(SemanticsFlags.IsEnabled));
+        Assert.True(delete.PerformAction(SemanticsActions.Tap));
+        Assert.Equal(1, deleted);
+    }
+
+    [Fact]
     public void FilterChip_M3SelectedDefaultsUseSecondaryTokensCheckmarkAndClearDeleteIcon()
     {
         var theme = ThemeData.Light with

@@ -80,6 +80,58 @@ public sealed class MaterialTextFieldTests : IDisposable
     }
 
     [Fact]
+    public void InputDecorator_MaterialStateOutlineInputBorder_ReceivesCombinedInteractiveStates()
+    {
+        MaterialState receivedStates = MaterialState.None;
+        var border = MaterialStateOutlineInputBorder.ResolveWith(states =>
+        {
+            receivedStates = states;
+            return new OutlineInputBorder(new BorderSide(Colors.OrangeRed, 3));
+        });
+
+        using var harness = new WidgetRenderHarness(Wrap(new InputDecorator(
+            decoration: new InputDecoration(errorText: "Invalid", border: border),
+            isFocused: true,
+            isHovering: true,
+            isEmpty: false,
+            child: new Text("bad"))));
+        harness.Pump(new Size(360, 120));
+
+        var customPaint = Assert.Single(FindDescendants<RenderCustomPaint>(harness.RenderView));
+        var painter = Assert.IsType<InputBorderPainter>(customPaint.Painter);
+        Assert.Equal(MaterialState.Focused | MaterialState.Hovered | MaterialState.Error, receivedStates);
+        Assert.IsType<OutlineInputBorder>(painter.Border);
+        Assert.Equal(Colors.OrangeRed, painter.Border.BorderSide.Color);
+        Assert.Equal(3, painter.Border.BorderSide.Width, precision: 3);
+    }
+
+    [Fact]
+    public void InputDecorator_MaterialStateUnderlineInputBorder_ResolvesDisabledSpecializedBorder()
+    {
+        MaterialState receivedStates = MaterialState.None;
+        var disabledBorder = MaterialStateUnderlineInputBorder.ResolveWith(states =>
+        {
+            receivedStates = states;
+            return new UnderlineInputBorder(new BorderSide(Colors.SlateGray, 2));
+        });
+
+        using var harness = new WidgetRenderHarness(Wrap(new InputDecorator(
+            decoration: new InputDecoration(disabledBorder: disabledBorder, enabled: false),
+            isFocused: false,
+            isHovering: true,
+            isEmpty: true,
+            child: new Text(""))));
+        harness.Pump(new Size(360, 120));
+
+        var customPaint = Assert.Single(FindDescendants<RenderCustomPaint>(harness.RenderView));
+        var painter = Assert.IsType<InputBorderPainter>(customPaint.Painter);
+        Assert.Equal(MaterialState.Disabled | MaterialState.Hovered, receivedStates);
+        Assert.IsType<UnderlineInputBorder>(painter.Border);
+        Assert.Equal(Colors.SlateGray, painter.Border.BorderSide.Color);
+        Assert.Equal(2, painter.Border.BorderSide.Width, precision: 3);
+    }
+
+    [Fact]
     public void TextField_EnforcesMaxLengthUpdatesCounterAndSubmits()
     {
         var controller = new TextEditingController();

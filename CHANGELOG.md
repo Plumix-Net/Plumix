@@ -1,5 +1,29 @@
 # Changelog
 
+- Added paired Flutter core `AnimatedAlign` + `AnimatedPadding` ports with alignment/factor and inset
+  interpolation, interrupted-transition continuity, curve/duration updates, `onEnd`, focused tests, and mirrored
+  C#/Dart runtime probes. Advanced `Plumix` to `0.2.0-alpha.1`.
+
+- Added paired Material `CheckboxMenuButton` + `RadioMenuButton<T>` ports with Dart-matching value transitions,
+  disabled/toggleable states, leading-control constraints, focus/pointer isolation, state-controller forwarding,
+  close policy, focused tests, and mirrored C#/Dart menu probes. Advanced `Plumix.Material` to `0.2.0-alpha.1`.
+
+- Closed paired `CheckboxListTile` + `SwitchListTile` parity for visual density, external material-state control,
+  checkbox title alignment, and semantic-button policy; shared `ListTile` geometry/state wiring, focused tests, and
+  mirrored C#/Dart runtime probes were updated.
+
+- Added paired Material `MenuTheme` + `SubmenuButton` theme integration, including global/local/widget precedence for submenu-panel styles and disclosure icons, focused coverage, and mirrored C#/Dart menu probes.
+
+- Added paired Material `MenuBarTheme` + `MenuButtonTheme` ports with global/local/theme/widget style precedence for `MenuBar`, `SubmenuButton`, and `MenuItemButton`, focused coverage, and mirrored C#/Dart menu-theme probes.
+
+- Added paired state-aware `MaterialStateOutlineInputBorder` and `MaterialStateUnderlineInputBorder` ports. `InputDecorator` now resolves focus, hover, error, and disabled state sets for supported borders; focused tests and mirrored text-field demo probes were added.
+
+- Added paired Material `MenuBar` + `SubmenuButton` ports with nested `MenuController` ownership, sibling submenu closing, horizontal/side panel placement, focused coverage, and mirrored C#/Dart dropdown-demo probes. Root-overlay/follower positioning, keyboard traversal, animation, and complete menu theming remain tracked in `docs/ai/DIVERGENCES.md`.
+
+- Added paired Material `MenuAnchor` + `MenuItemButton` ports with shared `MenuController` ownership, programmatic open/close, inherited nearest-anchor lookup, anchored overlay layout, menu-item state/focus/semantics composition, close-on-activate behavior, focused coverage, and mirrored C#/Dart dropdown-demo probes. Root-overlay placement, cascading submenus, menu animation, and complete menu theming remain tracked in `docs/ai/DIVERGENCES.md`.
+
+- Added Flutter-structured Material surface and completed its `MergeableMaterial` integration: surface type/color/elevation/tint/shape/clip/default-text behavior, animated visual values, focused regression coverage, and mirrored C#/Dart runtime probes. Shared ink ownership, oval clipping, and text-style interpolation remain tracked in `docs/ai/DIVERGENCES.md`.
+
 - Added Material `SearchDelegate<T>` and `MaterialSearch.ShowSearch<T>` full-screen route support, focused lifecycle coverage, and mirrored C#/Dart demo probes. Advanced `Plumix.Material` to `0.3.0-alpha.1`; generic transition/input configuration gaps are tracked in `docs/ai/DIVERGENCES.md`.
 
 - Added paired Material `Ink` and `TooltipVisibility` ports with Flutter-shaped decoration/image shorthand, inherited tooltip suppression, focused tests, and mirrored C#/Dart demo probes. Added core `BoxConstraints.Expand` and advanced `Plumix`/`Plumix.Material` to `0.2.0-alpha.1`. Ancestor-owned ink features remain documented in `docs/ai/DIVERGENCES.md`.
@@ -18,6 +42,10 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 ### Changed
 
+- Added paired Flutter core `IgnorePointer` + `AbsorbPointer` ports with Dart-shaped hit-test behavior, default
+  semantics action blocking, `ignoringSemantics` subtree omission, and focused widget/render/semantics coverage.
+- Added paired Material `FloatingActionButtonLocation` + `FloatingActionButtonAnimator` baseline with all standard static FAB placement formulas, `Scaffold` API wiring, focused geometry/RTL/animator tests, and mirrored C#/Dart centered-FAB sample probes. Location-transition animation remains documented in `DIVERGENCES.md` pending live scaffold geometry.
+- Added paired Flutter `Wrap` + Material `Chip` ports. `Wrap` now owns multi-run layout, alignment, RTL/vertical ordering, and optional overflow clipping; `Chip` composes through `RawChip` with Flutter-shaped delete-only semantics. Added focused tests and mirrored C#/Dart chips-demo coverage.
 - Added Flutter-structured Material `CarouselView`/`CarouselViewTheme` with fixed, weighted, and lazy constructors; a carousel-specific controller/scroll position preserves the leading item across viewport changes and supports item snapping. Added a core variable-extent sliver adapter, focused carousel coverage, and mirrored C#/Dart gallery demos.
 - Added `Plumix.Elmish` `0.1.0-alpha.1` — Elmish (MVU) integration hosting an `Elmish.Program` inside a `StatefulWidget` (`Program.toWidget`/`toWidgetWith`), with framework element reconciliation as the diffing layer and command dispatch marshaled to the UI thread; the F# sample's root counter is now the MVU variant. Known gap (tracked in the F# note): program termination/subscription teardown is not wired to widget disposal yet.
 - Added `Plumix.FSharp` `0.1.0-alpha.1` — F# bindings with Feliz-style `Ui.*` widget factory functions over `Plumix`/`Plumix.Material` plus a one-`open` prelude re-exporting common widget/layout/painting types; `src/Sample/Plumix.FSharpSample` (F# desktop counter) now builds its UI with the DSL. Requires an explicit `FSharp.Core` reference under central package management. Interop findings: `docs/ai/notes/2026-07-10-fsharp-sample.md`.
