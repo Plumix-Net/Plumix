@@ -832,6 +832,146 @@ public sealed class MaterialDropdownTests : IDisposable
     }
 
     [Fact]
+    public void CheckboxAndRadioMenuButtons_ExposeFlutterDefaultsAndContracts()
+    {
+        var checkbox = new CheckboxMenuButton(false, _ => { }, new Text("Check"));
+        Assert.False(checkbox.Value);
+        Assert.False(checkbox.Tristate);
+        Assert.False(checkbox.IsError);
+        Assert.True(checkbox.Enabled);
+        Assert.Equal(Clip.None, checkbox.ClipBehavior);
+        Assert.True(checkbox.CloseOnActivate);
+        Assert.Null(checkbox.TrailingIcon);
+
+        var radio = new RadioMenuButton<string>("one", "two", _ => { }, new Text("Radio"));
+        Assert.Equal("one", radio.Value);
+        Assert.Equal("two", radio.GroupValue);
+        Assert.False(radio.Toggleable);
+        Assert.True(radio.Enabled);
+        Assert.Equal(Clip.None, radio.ClipBehavior);
+        Assert.True(radio.CloseOnActivate);
+        Assert.Null(radio.TrailingIcon);
+
+        Assert.Throws<ArgumentException>(() => new CheckboxMenuButton(null, _ => { }, new Text("Invalid")));
+        Assert.False(new CheckboxMenuButton(false, null, new Text("Disabled")).Enabled);
+        Assert.False(new RadioMenuButton<string>("one", null, null, new Text("Disabled")).Enabled);
+    }
+
+    [Theory]
+    [InlineData(false, false, true)]
+    [InlineData(true, false, false)]
+    [InlineData(true, true, null)]
+    [InlineData(null, true, false)]
+    public void CheckboxMenuButton_CyclesValuesAndHonorsClosePolicy(
+        bool? value,
+        bool tristate,
+        bool? expected)
+    {
+        var controller = new MenuController();
+        bool? changed = null;
+        bool invoked = false;
+        using var harness = new WidgetRenderHarness(Wrap(new MenuAnchor(
+            controller: controller,
+            child: new SizedBox(width: 80, height: 40),
+            menuChildren:
+            [
+                new CheckboxMenuButton(
+                    value,
+                    next =>
+                    {
+                        changed = next;
+                        invoked = true;
+                    },
+                    new Text("Toggle option"),
+                    tristate: tristate,
+                    closeOnActivate: false),
+            ])));
+        harness.Pump(new Size(500, 360));
+        controller.Open();
+        var semantics = harness.PumpAndGetSemantics(new Size(500, 360));
+
+        Assert.Equal(1, CountSemantics(semantics, node => node.Actions.HasFlag(SemanticsActions.Tap)));
+        var item = FindSemantics(semantics, node => node.Actions.HasFlag(SemanticsActions.Tap));
+        Assert.NotNull(item);
+        Assert.True(item!.PerformAction(SemanticsActions.Tap));
+        harness.Pump(new Size(500, 360));
+
+        Assert.True(invoked);
+        Assert.Equal(expected, changed);
+        Assert.True(controller.IsOpen);
+        Assert.Contains(
+            FindDescendants<RenderConstrainedBox>(harness.RenderView),
+            box => Close(box.AdditionalConstraints.MaxWidth, Checkbox.Width)
+                   && Close(box.AdditionalConstraints.MaxHeight, Checkbox.Width));
+    }
+
+    [Fact]
+    public void RadioMenuButton_SelectsOrTogglesAndDisabledItemHasNoTapAction()
+    {
+        var controller = new MenuController();
+        string? changed = "unchanged";
+        using var harness = new WidgetRenderHarness(Wrap(new MenuAnchor(
+            controller: controller,
+            child: new SizedBox(width: 80, height: 40),
+            menuChildren:
+            [
+                new RadioMenuButton<string>(
+                    "one",
+                    "one",
+                    value => changed = value,
+                    new Text("Selected radio"),
+                    toggleable: true),
+                new RadioMenuButton<string>("two", "one", null, new Text("Disabled radio")),
+            ])));
+        harness.Pump(new Size(500, 360));
+        controller.Open();
+        var semantics = harness.PumpAndGetSemantics(new Size(500, 360));
+
+        Assert.Equal(1, CountSemantics(semantics, node => node.Actions.HasFlag(SemanticsActions.Tap)));
+        var item = FindSemantics(semantics, node => node.Actions.HasFlag(SemanticsActions.Tap));
+        Assert.NotNull(item);
+        Assert.True(item!.PerformAction(SemanticsActions.Tap));
+        harness.Pump(new Size(500, 360));
+
+        Assert.Null(changed);
+        Assert.False(controller.IsOpen);
+    }
+
+    [Fact]
+    public void CheckboxAndRadioMenuButtons_DoNotCrashAtZeroArea()
+    {
+        using var checkbox = new WidgetRenderHarness(Wrap(new Center(
+            child: new SizedBox(
+                width: 0,
+                height: 0,
+                child: new CheckboxMenuButton(true, _ => { }, new Text("X"))))));
+        checkbox.Pump(new Size(500, 360));
+
+        using var radio = new WidgetRenderHarness(Wrap(new Center(
+            child: new SizedBox(
+                width: 0,
+                height: 0,
+                child: new RadioMenuButton<bool>(true, true, _ => { }, null)))));
+        radio.Pump(new Size(500, 360));
+
+        Assert.Contains(
+            FindDescendants<RenderConstrainedBox>(checkbox.RenderView),
+            box => box.AdditionalConstraints == BoxConstraints.Tight(new Size(0, 0)));
+        Assert.Contains(
+            FindDescendants<RenderConstrainedBox>(radio.RenderView),
+            box => box.AdditionalConstraints == BoxConstraints.Tight(new Size(0, 0)));
+    }
+
+    [Fact]
+    public void DropdownDemoPage_BuildsWithValidCheckboxMenuInitialValue()
+    {
+        using var harness = new WidgetRenderHarness(Wrap(new DropdownDemoPage()));
+        harness.Pump(new Size(900, 1400));
+
+        Assert.NotNull(FindParagraph(harness.RenderView, "MenuAnchor + MenuItemButton"));
+    }
+
+    [Fact]
     public void DropdownMenuFormField_ValidationSelectionSaveAndResetSynchronizeController()
     {
         var entries = new[]
@@ -937,6 +1077,13 @@ public sealed class MaterialDropdownTests : IDisposable
             if (result is not null) return result;
         }
         return null;
+    }
+
+    private static int CountSemantics(SemanticsNode? node, Func<SemanticsNode, bool> predicate)
+    {
+        if (node is null) return 0;
+        int count = predicate(node) ? 1 : 0;
+        return count + node.Children.Sum(child => CountSemantics(child, predicate));
     }
 
     private sealed class WidgetRenderHarness : IDisposable

@@ -30,6 +30,8 @@ public sealed class DropdownDemoPage : StatefulWidget
         private string? _modernFormValue;
         private string _modernFormStatus = "not validated";
         private string _anchorStatus = "closed";
+        private bool? _menuCheckbox = false;
+        private string? _menuRadio = "one";
         private string _menuBarStatus = "closed";
         private readonly MenuController _anchorController = new();
         private readonly MenuController _fileMenuController = new();
@@ -128,7 +130,7 @@ public sealed class DropdownDemoPage : StatefulWidget
                         new Divider(),
                         new Text("MenuAnchor + MenuItemButton", fontSize: 18),
                         new Text(
-                            "Controller-owned anchored menu with enabled/disabled leaf items and close-on-activate policy.",
+                            "Controller-owned menu with leaf, checkbox, and radio items plus close-on-activate policy.",
                             fontSize: 14,
                             color: Colors.DimGray),
                         new Align(
@@ -147,6 +149,23 @@ public sealed class DropdownDemoPage : StatefulWidget
                                         child: new Text("Keep open"),
                                         closeOnActivate: false,
                                         onPressed: () => SetState(() => _anchorStatus = "kept open")),
+                                    new CheckboxMenuButton(
+                                        _menuCheckbox,
+                                        value => SetState(() => _menuCheckbox = value),
+                                        new Text("Pin menu"),
+                                        closeOnActivate: false),
+                                    new RadioMenuButton<string>(
+                                        "one",
+                                        _menuRadio,
+                                        value => SetState(() => _menuRadio = value),
+                                        new Text("Layout one"),
+                                        closeOnActivate: false),
+                                    new RadioMenuButton<string>(
+                                        "two",
+                                        _menuRadio,
+                                        value => SetState(() => _menuRadio = value),
+                                        new Text("Layout two"),
+                                        closeOnActivate: false),
                                 ],
                                 builder: (_, controller, _) => new TextButton(
                                     new Text(controller.IsOpen ? "Close menu" : "Open menu"),
@@ -155,6 +174,9 @@ public sealed class DropdownDemoPage : StatefulWidget
                                         if (controller.IsOpen) controller.Close(); else controller.Open();
                                     }))),
                         new Text($"Anchor menu: {_anchorStatus}", fontSize: 13),
+                        new Text(
+                            $"Menu choices: pinned={_menuCheckbox}, layout={_menuRadio}",
+                            fontSize: 13),
                         new Divider(),
                         new Text("MenuBar + SubmenuButton", fontSize: 18),
                         new Text(

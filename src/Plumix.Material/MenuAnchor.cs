@@ -298,10 +298,187 @@ public sealed class MenuItemButton : StatelessWidget
             },
             onFocusChange: OnFocusChange,
             focusNode: FocusNode,
+            statesController: StatesController,
             autofocus: Autofocus,
             semanticLabel: SemanticsLabel,
             clipBehavior: ClipBehavior,
             enabled: Enabled);
+    }
+}
+
+/// <summary>A menu item that combines a <see cref="Checkbox"/> with a <see cref="MenuItemButton"/>.</summary>
+/// <remarks>Dart parity source: flutter/packages/flutter/lib/src/material/menu_anchor.dart.</remarks>
+public sealed class CheckboxMenuButton : StatelessWidget
+{
+    public CheckboxMenuButton(
+        bool? value,
+        Action<bool?>? onChanged,
+        Widget? child,
+        bool tristate = false,
+        bool isError = false,
+        Action<bool>? onHover = null,
+        Action<bool>? onFocusChange = null,
+        FocusNode? focusNode = null,
+        ButtonStyle? style = null,
+        MaterialStatesController? statesController = null,
+        Clip clipBehavior = Clip.None,
+        Widget? trailingIcon = null,
+        bool closeOnActivate = true,
+        Key? key = null) : base(key)
+    {
+        if (!tristate && value is null)
+        {
+            throw new ArgumentException(
+                "CheckboxMenuButton value cannot be null when tristate is false.",
+                nameof(value));
+        }
+
+        Value = value;
+        OnChanged = onChanged;
+        Child = child;
+        Tristate = tristate;
+        IsError = isError;
+        OnHover = onHover;
+        OnFocusChange = onFocusChange;
+        FocusNode = focusNode;
+        Style = style;
+        StatesController = statesController;
+        ClipBehavior = clipBehavior;
+        TrailingIcon = trailingIcon;
+        CloseOnActivate = closeOnActivate;
+    }
+
+    public bool? Value { get; }
+    public Action<bool?>? OnChanged { get; }
+    public Widget? Child { get; }
+    public bool Tristate { get; }
+    public bool IsError { get; }
+    public Action<bool>? OnHover { get; }
+    public Action<bool>? OnFocusChange { get; }
+    public FocusNode? FocusNode { get; }
+    public ButtonStyle? Style { get; }
+    public MaterialStatesController? StatesController { get; }
+    public Clip ClipBehavior { get; }
+    public Widget? TrailingIcon { get; }
+    public bool CloseOnActivate { get; }
+    public bool Enabled => OnChanged is not null;
+
+    public override Widget Build(BuildContext context)
+    {
+        return new MenuItemButton(
+            child: Child,
+            onPressed: OnChanged is null ? null : HandleChanged,
+            onHover: OnHover,
+            onFocusChange: OnFocusChange,
+            focusNode: FocusNode,
+            style: Style,
+            statesController: StatesController,
+            clipBehavior: ClipBehavior,
+            leadingIcon: new ExcludeFocus(
+                new IgnorePointer(
+                    child: new ConstrainedBox(
+                        new BoxConstraints(MaxWidth: Checkbox.Width, MaxHeight: Checkbox.Width),
+                        new Checkbox(
+                            value: Value,
+                            onChanged: OnChanged,
+                            tristate: Tristate,
+                            isError: IsError)))),
+            trailingIcon: TrailingIcon,
+            closeOnActivate: CloseOnActivate,
+            key: Key);
+    }
+
+    private void HandleChanged()
+    {
+        bool? nextValue = Value switch
+        {
+            false => true,
+            true => Tristate ? null : false,
+            null => false,
+        };
+        OnChanged!(nextValue);
+    }
+}
+
+/// <summary>A menu item that combines a <see cref="Radio{T}"/> with a <see cref="MenuItemButton"/>.</summary>
+/// <remarks>Dart parity source: flutter/packages/flutter/lib/src/material/menu_anchor.dart.</remarks>
+public sealed class RadioMenuButton<T> : StatelessWidget
+{
+    public RadioMenuButton(
+        T value,
+        T? groupValue,
+        Action<T?>? onChanged,
+        Widget? child,
+        bool toggleable = false,
+        Action<bool>? onHover = null,
+        Action<bool>? onFocusChange = null,
+        FocusNode? focusNode = null,
+        ButtonStyle? style = null,
+        MaterialStatesController? statesController = null,
+        Clip clipBehavior = Clip.None,
+        Widget? trailingIcon = null,
+        bool closeOnActivate = true,
+        Key? key = null) : base(key)
+    {
+        Value = value;
+        GroupValue = groupValue;
+        OnChanged = onChanged;
+        Child = child;
+        Toggleable = toggleable;
+        OnHover = onHover;
+        OnFocusChange = onFocusChange;
+        FocusNode = focusNode;
+        Style = style;
+        StatesController = statesController;
+        ClipBehavior = clipBehavior;
+        TrailingIcon = trailingIcon;
+        CloseOnActivate = closeOnActivate;
+    }
+
+    public T Value { get; }
+    public T? GroupValue { get; }
+    public Action<T?>? OnChanged { get; }
+    public Widget? Child { get; }
+    public bool Toggleable { get; }
+    public Action<bool>? OnHover { get; }
+    public Action<bool>? OnFocusChange { get; }
+    public FocusNode? FocusNode { get; }
+    public ButtonStyle? Style { get; }
+    public MaterialStatesController? StatesController { get; }
+    public Clip ClipBehavior { get; }
+    public Widget? TrailingIcon { get; }
+    public bool CloseOnActivate { get; }
+    public bool Enabled => OnChanged is not null;
+
+    public override Widget Build(BuildContext context)
+    {
+        return new MenuItemButton(
+            child: Child,
+            onPressed: OnChanged is null ? null : HandleChanged,
+            onHover: OnHover,
+            onFocusChange: OnFocusChange,
+            focusNode: FocusNode,
+            style: Style,
+            statesController: StatesController,
+            clipBehavior: ClipBehavior,
+            leadingIcon: new ExcludeFocus(
+                new IgnorePointer(
+                    child: new ConstrainedBox(
+                        new BoxConstraints(MaxWidth: Checkbox.Width, MaxHeight: Checkbox.Width),
+                        new Radio<T>(
+                            value: Value,
+                            groupValue: GroupValue,
+                            onChanged: OnChanged,
+                            toggleable: Toggleable)))),
+            trailingIcon: TrailingIcon,
+            closeOnActivate: CloseOnActivate,
+            key: Key);
+    }
+
+    private void HandleChanged()
+    {
+        bool selected = EqualityComparer<T?>.Default.Equals(GroupValue, Value);
+        OnChanged!(Toggleable && selected ? default : Value);
     }
 }
 

@@ -22,6 +22,8 @@ class _DropdownDemoPageState extends State<DropdownDemoPage> {
   String? _modernFormValue;
   String _modernFormStatus = 'not validated';
   String _anchorStatus = 'closed';
+  bool? _menuCheckbox = false;
+  String? _menuRadio = 'one';
   String _menuBarStatus = 'closed';
   final MenuController _anchorController = MenuController();
   final MenuController _fileMenuController = MenuController();
@@ -148,7 +150,7 @@ class _DropdownDemoPageState extends State<DropdownDemoPage> {
             style: TextStyle(fontSize: 18),
           ),
           const Text(
-            'Controller-owned anchored menu with enabled/disabled leaf items and close-on-activate policy.',
+            'Controller-owned menu with leaf, checkbox, and radio items plus close-on-activate policy.',
             style: TextStyle(fontSize: 14, color: Colors.black54),
           ),
           Align(
@@ -167,6 +169,29 @@ class _DropdownDemoPageState extends State<DropdownDemoPage> {
                   closeOnActivate: false,
                   onPressed: () => setState(() => _anchorStatus = 'kept open'),
                   child: const Text('Keep open'),
+                ),
+                CheckboxMenuButton(
+                  value: _menuCheckbox,
+                  closeOnActivate: false,
+                  onChanged: (bool? value) =>
+                      setState(() => _menuCheckbox = value),
+                  child: const Text('Pin menu'),
+                ),
+                RadioMenuButton<String>(
+                  value: 'one',
+                  groupValue: _menuRadio,
+                  closeOnActivate: false,
+                  onChanged: (String? value) =>
+                      setState(() => _menuRadio = value),
+                  child: const Text('Layout one'),
+                ),
+                RadioMenuButton<String>(
+                  value: 'two',
+                  groupValue: _menuRadio,
+                  closeOnActivate: false,
+                  onChanged: (String? value) =>
+                      setState(() => _menuRadio = value),
+                  child: const Text('Layout two'),
                 ),
               ],
               builder:
@@ -188,6 +213,10 @@ class _DropdownDemoPageState extends State<DropdownDemoPage> {
           ),
           Text(
             'Anchor menu: $_anchorStatus',
+            style: const TextStyle(fontSize: 13),
+          ),
+          Text(
+            'Menu choices: pinned=$_menuCheckbox, layout=$_menuRadio',
             style: const TextStyle(fontSize: 13),
           ),
           const Divider(),

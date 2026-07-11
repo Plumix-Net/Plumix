@@ -1,5 +1,9 @@
 # Changelog
 
+- Added paired Material `CheckboxMenuButton` + `RadioMenuButton<T>` ports with Dart-matching value transitions,
+  disabled/toggleable states, leading-control constraints, focus/pointer isolation, state-controller forwarding,
+  close policy, focused tests, and mirrored C#/Dart menu probes. Advanced `Plumix.Material` to `0.2.0-alpha.1`.
+
 - Closed paired `CheckboxListTile` + `SwitchListTile` parity for visual density, external material-state control,
   checkbox title alignment, and semantic-button policy; shared `ListTile` geometry/state wiring, focused tests, and
   mirrored C#/Dart runtime probes were updated.

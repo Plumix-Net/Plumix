@@ -155,6 +155,9 @@ Status: `in_progress`
 
 Kickoff note (2026-03-12):
 
+- Added paired Material `CheckboxMenuButton` + `RadioMenuButton<T>` parity with exact checkbox tri-state cycles,
+  radio selection/toggle behavior, disabled states, isolated constrained leading controls, menu-button styling and
+  close policy, focused tests, and mirrored C#/Dart menu probes.
 - Added paired Material `MenuTheme` + `SubmenuButton` theme integration: submenu panels and disclosure icons now resolve Flutter-like widget -> local inherited -> `ThemeData` -> defaults precedence, with focused coverage and mirrored C#/Dart menu probes.
 - Added paired Material `MenuBarTheme` + `MenuButtonTheme` parity: `ThemeData` and inherited scopes now resolve menu-bar surfaces and menu-button state styles through Flutter-like `widget -> local -> ThemeData -> defaults` precedence, with focused tests and mirrored sample probes.
 - Added Flutter-structured `CarouselView`/`CarouselViewTheme` with fixed, weighted, and lazy item sources; core now exposes a variable-extent sliver adapter and subclassable scroll positions so carousel geometry and leading-item preservation remain framework-owned.
