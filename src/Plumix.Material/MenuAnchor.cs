@@ -176,7 +176,7 @@ public sealed class MenuAnchorState : State, IMenuControllerHost
     private Widget BuildPanel(BuildContext context)
     {
         ThemeData theme = Theme.Of(context);
-        MenuStyle style = Current.Style ?? DropdownMenuTheme.Of(context).MenuStyle ?? new MenuStyle();
+        MenuStyle style = Current.Style ?? MenuTheme.Of(context).Style ?? new MenuStyle();
         MaterialState state = MaterialState.None;
         Color color = style.BackgroundColor?.Resolve(state) ?? theme.SurfaceContainerColor;
         Color shadowColor = style.ShadowColor?.Resolve(state) ?? theme.ShadowColor;
@@ -494,6 +494,7 @@ public sealed class SubmenuButtonState : State
             states |= MaterialState.Disabled;
         }
         Widget submenuIcon = Current.SubmenuIcon?.Resolve(states)
+            ?? MenuTheme.Of(context).SubmenuIcon?.Resolve(states)
             ?? new Icon(parentOrientation == Axis.Horizontal ? Icons.ArrowDropDown : Icons.ChevronRight);
         var row = new List<Widget>();
         if (Current.LeadingIcon is not null) row.Add(Current.LeadingIcon);

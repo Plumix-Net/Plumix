@@ -155,6 +155,7 @@ Status: `in_progress`
 
 Kickoff note (2026-03-12):
 
+- Added paired Material `MenuTheme` + `SubmenuButton` theme integration: submenu panels and disclosure icons now resolve Flutter-like widget -> local inherited -> `ThemeData` -> defaults precedence, with focused coverage and mirrored C#/Dart menu probes.
 - Added paired Material `MenuBarTheme` + `MenuButtonTheme` parity: `ThemeData` and inherited scopes now resolve menu-bar surfaces and menu-button state styles through Flutter-like `widget -> local -> ThemeData -> defaults` precedence, with focused tests and mirrored sample probes.
 - Added Flutter-structured `CarouselView`/`CarouselViewTheme` with fixed, weighted, and lazy item sources; core now exposes a variable-extent sliver adapter and subclassable scroll positions so carousel geometry and leading-item preservation remain framework-owned.
 - Prioritized immediately after M3 to unblock practical control rewrites and reduce sample-level styling drift by introducing a Flutter-like Material layer in framework widgets.
@@ -678,7 +679,7 @@ Progress update (2026-03-19):
   - introduced shared `MenuController` anchor attachment, nearest-anchor lookup, programmatic open/close, local anchored panel layout, Flutter-shaped leaf item API/state/focus/semantics composition, and close-on-activate behavior;
   - added focused controller/layout/item coverage and mirrored controller/disabled/keep-open probes in the C# and Dart dropdown demos;
   - added paired `MenuBar` + `SubmenuButton` with nested controller registration, sibling close policy, horizontal bar composition, and below/side submenu layout; focused controller/default/layout coverage and both dropdown demos now exercise a nested cascade;
-  - root-overlay placement, animated panel choreography, keyboard traversal, and full `MenuTheme`/`MenuButtonTheme` resolution remain tracked in `DIVERGENCES.md`.
+  - root-overlay placement, animated panel choreography, and keyboard traversal remain tracked in `DIVERGENCES.md`.
 - Added paired core `Wrap` + Material `Chip` ports:
   - `Wrap` now follows Flutter run construction, main/run alignment, cross-axis alignment, spacing, RTL/vertical-direction ordering, and overflow clipping through a framework-owned `RenderWrap`;
   - `Chip` now forwards its information/delete-only API through `RawChip` with source-shaped delete slots and semantics;

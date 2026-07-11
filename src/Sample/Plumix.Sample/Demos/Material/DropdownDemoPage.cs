@@ -164,10 +164,15 @@ public sealed class DropdownDemoPage : StatefulWidget
                             color: Colors.DimGray),
                         new Align(
                             alignment: Alignment.CenterLeft,
-                            child: new MenuBarTheme(
-                                new MenuBarThemeData(new MenuStyle(
-                                    BackgroundColor: MaterialStateProperty<Color?>.All(Color.Parse("#FFF3E5F5")))),
-                                new MenuButtonTheme(
+                            child: new MenuTheme(
+                                new MenuThemeData(
+                                    Style: new MenuStyle(
+                                        BackgroundColor: MaterialStateProperty<Color?>.All(Color.Parse("#FFFFF3E0"))),
+                                    SubmenuIcon: MaterialStateProperty<Widget?>.All(new Icon(Icons.InfoOutline))),
+                                new MenuBarTheme(
+                                    new MenuBarThemeData(new MenuStyle(
+                                        BackgroundColor: MaterialStateProperty<Color?>.All(Color.Parse("#FFF3E5F5")))),
+                                    new MenuButtonTheme(
                                     new MenuButtonThemeData(new ButtonStyle(
                                         ForegroundColor: MaterialStateProperty<Color?>.All(Colors.DarkSlateBlue))),
                                     new MenuBar(
@@ -204,7 +209,7 @@ public sealed class DropdownDemoPage : StatefulWidget
                                         onOpen: () => SetState(() => _menuBarStatus = "edit opened"),
                                         onClose: () => SetState(() => _menuBarStatus = "edit closed")),
                                     new SubmenuButton([], new Text("Disabled")),
-                                        ])))),
+                                        ]))))),
                         new Text($"Menu bar: {_menuBarStatus}", fontSize: 13),
                         new Divider(),
                         new Text("DropdownMenuFormField + Form", fontSize: 18),

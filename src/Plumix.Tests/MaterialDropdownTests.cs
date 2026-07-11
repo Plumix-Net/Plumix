@@ -728,6 +728,93 @@ public sealed class MaterialDropdownTests : IDisposable
     }
 
     [Fact]
+    public void MenuTheme_ResolvesGlobalLocalAndWidgetPanelStylePrecedence()
+    {
+        Color globalBackground = Color.Parse("#FFE3F2FD");
+        Color localBackground = Color.Parse("#FFFFF3E0");
+        Color widgetBackground = Color.Parse("#FFE8F5E9");
+        ThemeData theme = ThemeData.Light with
+        {
+            MenuTheme = new MenuThemeData(new MenuStyle(
+                BackgroundColor: MaterialStateProperty<Color?>.All(globalBackground))),
+        };
+
+        var globalController = new MenuController();
+        using var global = new WidgetRenderHarness(Wrap(new MenuAnchor(
+            [new MenuItemButton(child: new Text("Global"), onPressed: () => { })],
+            child: new SizedBox(width: 80, height: 40),
+            controller: globalController), theme));
+        global.Pump(new Size(500, 180));
+        globalController.Open();
+        global.Pump(new Size(500, 180));
+        Assert.Contains(
+            FindDescendants<RenderDecoratedBox>(global.RenderView),
+            box => box.Decoration.Color == globalBackground);
+
+        var localController = new MenuController();
+        using var local = new WidgetRenderHarness(Wrap(new MenuTheme(
+            new MenuThemeData(new MenuStyle(
+                BackgroundColor: MaterialStateProperty<Color?>.All(localBackground))),
+            new MenuAnchor(
+                [new MenuItemButton(child: new Text("Local"), onPressed: () => { })],
+                child: new SizedBox(width: 80, height: 40),
+                controller: localController)), theme));
+        local.Pump(new Size(500, 180));
+        localController.Open();
+        local.Pump(new Size(500, 180));
+        Assert.Contains(
+            FindDescendants<RenderDecoratedBox>(local.RenderView),
+            box => box.Decoration.Color == localBackground);
+
+        var widgetController = new MenuController();
+        using var widget = new WidgetRenderHarness(Wrap(new MenuTheme(
+            new MenuThemeData(new MenuStyle(
+                BackgroundColor: MaterialStateProperty<Color?>.All(localBackground))),
+            new MenuAnchor(
+                [new MenuItemButton(child: new Text("Widget"), onPressed: () => { })],
+                child: new SizedBox(width: 80, height: 40),
+                controller: widgetController,
+                style: new MenuStyle(
+                    BackgroundColor: MaterialStateProperty<Color?>.All(widgetBackground)))), theme));
+        widget.Pump(new Size(500, 180));
+        widgetController.Open();
+        widget.Pump(new Size(500, 180));
+        Assert.Contains(
+            FindDescendants<RenderDecoratedBox>(widget.RenderView),
+            box => box.Decoration.Color == widgetBackground);
+    }
+
+    [Fact]
+    public void MenuTheme_SubmenuIconUsesWidgetThenLocalThenThemePrecedence()
+    {
+        ThemeData theme = ThemeData.Light with
+        {
+            MenuTheme = new MenuThemeData(
+                SubmenuIcon: MaterialStateProperty<Widget?>.All(new Text("theme icon"))),
+        };
+
+        Widget themed = new MenuTheme(
+            new MenuThemeData(
+                SubmenuIcon: MaterialStateProperty<Widget?>.All(new Text("local icon"))),
+            new MenuBar(
+            [
+                new SubmenuButton(
+                    [new MenuItemButton(child: new Text("Open"), onPressed: () => { })],
+                    new Text("Local")),
+                new SubmenuButton(
+                    [new MenuItemButton(child: new Text("Save"), onPressed: () => { })],
+                    new Text("Widget"),
+                    submenuIcon: MaterialStateProperty<Widget?>.All(new Text("widget icon"))),
+            ]));
+        using var harness = new WidgetRenderHarness(Wrap(themed, theme));
+        harness.Pump(new Size(500, 180));
+
+        Assert.NotNull(FindParagraph(harness.RenderView, "local icon"));
+        Assert.NotNull(FindParagraph(harness.RenderView, "widget icon"));
+        Assert.Null(FindParagraph(harness.RenderView, "theme icon"));
+    }
+
+    [Fact]
     public void SubmenuButton_ExposesFlutterDefaultsAndValidatesHoverDelay()
     {
         var button = new SubmenuButton([], null);
