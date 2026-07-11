@@ -117,6 +117,66 @@ public sealed class BasicWidgetProxyTests
     }
 
     [Fact]
+    public void IgnorePointerWidget_CreatesRenderIgnorePointer_AndUpdatesProperties()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new IgnorePointer(
+                ignoring: true,
+                ignoringSemantics: null,
+                child: new SizedBox(width: 16, height: 16)));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var ignorePointer = RequireRenderObject<RenderIgnorePointer>(root.ChildElement);
+        Assert.True(ignorePointer.Ignoring);
+        Assert.Null(ignorePointer.IgnoringSemantics);
+
+        root.Update(new IgnorePointer(
+            ignoring: false,
+            ignoringSemantics: true,
+            child: new SizedBox(width: 16, height: 16)));
+        owner.FlushBuild();
+
+        var updated = RequireRenderObject<RenderIgnorePointer>(root.ChildElement);
+        Assert.Same(ignorePointer, updated);
+        Assert.False(updated.Ignoring);
+        Assert.True(updated.IgnoringSemantics);
+    }
+
+    [Fact]
+    public void AbsorbPointerWidget_CreatesRenderAbsorbPointer_AndUpdatesProperties()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new AbsorbPointer(
+                absorbing: true,
+                ignoringSemantics: null,
+                child: new SizedBox(width: 16, height: 16)));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var absorbPointer = RequireRenderObject<RenderAbsorbPointer>(root.ChildElement);
+        Assert.True(absorbPointer.Absorbing);
+        Assert.Null(absorbPointer.IgnoringSemantics);
+
+        root.Update(new AbsorbPointer(
+            absorbing: false,
+            ignoringSemantics: true,
+            child: new SizedBox(width: 16, height: 16)));
+        owner.FlushBuild();
+
+        var updated = RequireRenderObject<RenderAbsorbPointer>(root.ChildElement);
+        Assert.Same(absorbPointer, updated);
+        Assert.False(updated.Absorbing);
+        Assert.True(updated.IgnoringSemantics);
+    }
+
+    [Fact]
     public void WrapWidget_CreatesRenderWrap_AndUpdatesRunConfiguration()
     {
         var owner = new BuildOwner();

@@ -219,7 +219,8 @@ internal sealed class RenderObjectSemantics
     internal void EnsureSemanticsNode(
         SemanticsOwner owner,
         List<SemanticsNode> output,
-        bool inheritedExplicitChildNodes)
+        bool inheritedExplicitChildNodes,
+        bool inheritedUserActionsBlocked)
     {
         _detachedNodeCursor = 0;
 
@@ -236,6 +237,12 @@ internal sealed class RenderObjectSemantics
         }
 
         bool contributesToSemanticsTree = ContributesToSemanticsTree(config);
+        bool userActionsBlocked = inheritedUserActionsBlocked || config.IsBlockingUserActions;
+        if (userActionsBlocked)
+        {
+            config.ClearActionHandlers();
+        }
+
         bool explicitChildNodesForChildren = _owner.Parent == null
                                              || config.ExplicitChildNodes
                                              || (!contributesToSemanticsTree && inheritedExplicitChildNodes);
@@ -244,7 +251,11 @@ internal sealed class RenderObjectSemantics
         _owner.VisitChildrenForSemantics((child, _, _) =>
         {
             var childNodes = new List<SemanticsNode>();
-            child.Semantics.EnsureSemanticsNode(owner, childNodes, explicitChildNodesForChildren);
+            child.Semantics.EnsureSemanticsNode(
+                owner,
+                childNodes,
+                explicitChildNodesForChildren,
+                userActionsBlocked);
 
             if (childNodes.Any(static node => node.BlocksPreviousNodes))
             {
@@ -656,6 +667,11 @@ internal sealed class RenderObjectSemantics
         SemanticsOwner owner,
         SemanticsConfiguration configuration)
     {
+        if (configuration.IsBlockingUserActions)
+        {
+            configuration.ClearActionHandlers();
+        }
+
         if (configuration.IsExcluded || !HasOwnSemantics(configuration))
         {
             return null;

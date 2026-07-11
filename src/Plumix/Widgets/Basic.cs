@@ -264,6 +264,68 @@ public sealed class Offstage : SingleChildRenderObjectWidget
     }
 }
 
+public sealed class IgnorePointer : SingleChildRenderObjectWidget
+{
+    public IgnorePointer(
+        Widget? child = null,
+        bool ignoring = true,
+        bool? ignoringSemantics = null,
+        Key? key = null) : base(child, key)
+    {
+        Ignoring = ignoring;
+        IgnoringSemantics = ignoringSemantics;
+    }
+
+    public bool Ignoring { get; }
+
+    public bool? IgnoringSemantics { get; }
+
+    internal override RenderObject CreateRenderObject(BuildContext context)
+    {
+        return new RenderIgnorePointer(
+            ignoring: Ignoring,
+            ignoringSemantics: IgnoringSemantics);
+    }
+
+    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    {
+        var ignorePointer = (RenderIgnorePointer)renderObject;
+        ignorePointer.Ignoring = Ignoring;
+        ignorePointer.IgnoringSemantics = IgnoringSemantics;
+    }
+}
+
+public sealed class AbsorbPointer : SingleChildRenderObjectWidget
+{
+    public AbsorbPointer(
+        Widget? child = null,
+        bool absorbing = true,
+        bool? ignoringSemantics = null,
+        Key? key = null) : base(child, key)
+    {
+        Absorbing = absorbing;
+        IgnoringSemantics = ignoringSemantics;
+    }
+
+    public bool Absorbing { get; }
+
+    public bool? IgnoringSemantics { get; }
+
+    internal override RenderObject CreateRenderObject(BuildContext context)
+    {
+        return new RenderAbsorbPointer(
+            absorbing: Absorbing,
+            ignoringSemantics: IgnoringSemantics);
+    }
+
+    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    {
+        var absorbPointer = (RenderAbsorbPointer)renderObject;
+        absorbPointer.Absorbing = Absorbing;
+        absorbPointer.IgnoringSemantics = IgnoringSemantics;
+    }
+}
+
 public sealed class Padding : SingleChildRenderObjectWidget
 {
     public Padding(Thickness insets, Widget child, Key? key = null) : base(child, key)

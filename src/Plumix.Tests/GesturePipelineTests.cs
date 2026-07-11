@@ -63,6 +63,43 @@ public sealed class GesturePipelineTests
     }
 
     [Fact]
+    public void RenderIgnorePointer_HitTest_SkipsSubtreeWhenIgnoring()
+    {
+        var child = new FixedHitTestBox(new Size(80, 80), hitSelf: true);
+        var ignorePointer = new RenderIgnorePointer(ignoring: true, child: child);
+        var pipeline = BuildPipeline(ignorePointer);
+
+        var ignoredResult = new BoxHitTestResult();
+        Assert.False(pipeline.Root.HitTest(ignoredResult, new Point(10, 10)));
+        Assert.DoesNotContain(ignoredResult.Path, entry => ReferenceEquals(entry.Target, child));
+
+        ignorePointer.Ignoring = false;
+        var activeResult = new BoxHitTestResult();
+        Assert.True(pipeline.Root.HitTest(activeResult, new Point(10, 10)));
+        Assert.Contains(activeResult.Path, entry => ReferenceEquals(entry.Target, child));
+        Assert.Contains(activeResult.Path, entry => ReferenceEquals(entry.Target, ignorePointer));
+    }
+
+    [Fact]
+    public void RenderAbsorbPointer_HitTest_TerminatesAtItselfWhenAbsorbing()
+    {
+        var child = new FixedHitTestBox(new Size(80, 80), hitSelf: true);
+        var absorbPointer = new RenderAbsorbPointer(absorbing: true, child: child);
+        var pipeline = BuildPipeline(absorbPointer);
+
+        var absorbedResult = new BoxHitTestResult();
+        Assert.True(pipeline.Root.HitTest(absorbedResult, new Point(10, 10)));
+        Assert.Contains(absorbedResult.Path, entry => ReferenceEquals(entry.Target, absorbPointer));
+        Assert.DoesNotContain(absorbedResult.Path, entry => ReferenceEquals(entry.Target, child));
+
+        absorbPointer.Absorbing = false;
+        var activeResult = new BoxHitTestResult();
+        Assert.True(pipeline.Root.HitTest(activeResult, new Point(10, 10)));
+        Assert.Contains(activeResult.Path, entry => ReferenceEquals(entry.Target, child));
+        Assert.Contains(activeResult.Path, entry => ReferenceEquals(entry.Target, absorbPointer));
+    }
+
+    [Fact]
     public void GestureBinding_TapRecognizer_InvokesOnTapOnPointerUp()
     {
         var binding = GestureBinding.Instance;

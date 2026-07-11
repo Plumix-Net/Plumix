@@ -74,6 +74,7 @@ public sealed class SemanticsConfiguration
     public bool IsMergingSemanticsOfDescendants { get; set; }
     public bool ExplicitChildNodes { get; set; }
     public bool IsBlockingSemanticsOfPreviouslyPaintedNodes { get; set; }
+    public bool IsBlockingUserActions { get; set; }
     public ChildSemanticsConfigurationsDelegate? ChildConfigurationsDelegate { get; set; }
     public bool IsExcluded { get; set; }
     public string? Label { get; set; }
@@ -115,6 +116,7 @@ public sealed class SemanticsConfiguration
             IsMergingSemanticsOfDescendants = IsMergingSemanticsOfDescendants,
             ExplicitChildNodes = ExplicitChildNodes,
             IsBlockingSemanticsOfPreviouslyPaintedNodes = IsBlockingSemanticsOfPreviouslyPaintedNodes,
+            IsBlockingUserActions = IsBlockingUserActions,
             ChildConfigurationsDelegate = ChildConfigurationsDelegate,
             IsExcluded = IsExcluded,
             Label = Label,
@@ -131,6 +133,12 @@ public sealed class SemanticsConfiguration
         }
 
         return clone;
+    }
+
+    internal void ClearActionHandlers()
+    {
+        Actions = SemanticsActions.None;
+        _actionHandlers = null;
     }
 
     internal bool HasBeenAnnotated =>
