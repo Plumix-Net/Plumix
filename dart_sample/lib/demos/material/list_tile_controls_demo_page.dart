@@ -14,6 +14,7 @@ class _ListTileControlsDemoPageState extends State<ListTileControlsDemoPage> {
   bool _switchValue = true;
   bool _enabled = true;
   bool _adaptive = false;
+  bool _compact = false;
   ListTileControlAffinity _affinity = ListTileControlAffinity.trailing;
 
   @override
@@ -27,8 +28,18 @@ class _ListTileControlsDemoPageState extends State<ListTileControlsDemoPage> {
           style: TextStyle(fontSize: 20, color: Colors.black),
         ),
         const Text(
-          'Whole-tile interaction, tristate cycle, affinity, selected styling, disabled state, and adaptive branches.',
+          'Whole-tile interaction, tristate cycle, affinity, density/alignment, selected styling, disabled state, and adaptive branches.',
           style: TextStyle(fontSize: 14, color: Colors.black54),
+        ),
+        Row(
+          children: <Widget>[
+            _buildControlButton(
+              _compact ? 'Compact / top' : 'Standard / center',
+              () => setState(() => _compact = !_compact),
+              144,
+              const Color(0xFFF3E5F5),
+            ),
+          ],
         ),
         Row(
           spacing: 8,
@@ -67,7 +78,15 @@ class _ListTileControlsDemoPageState extends State<ListTileControlsDemoPage> {
           child: ColoredBox(
             color: const Color(0xFFF7F9FC),
             child: ListTileTheme(
-              data: ListTileThemeData(controlAffinity: _affinity),
+              data: ListTileThemeData(
+                controlAffinity: _affinity,
+                visualDensity: _compact
+                    ? VisualDensity.compact
+                    : VisualDensity.standard,
+                titleAlignment: _compact
+                    ? ListTileTitleAlignment.top
+                    : ListTileTitleAlignment.center,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
@@ -94,6 +113,9 @@ class _ListTileControlsDemoPageState extends State<ListTileControlsDemoPage> {
         title: const Text('Wi-Fi discovery'),
         subtitle: const Text('Tap anywhere on the row to toggle.'),
         secondary: const Icon(Icons.info_outline),
+        titleAlignment: _compact
+            ? ListTileTitleAlignment.top
+            : ListTileTitleAlignment.center,
         selected: _checkboxValue,
       );
     }
@@ -103,6 +125,9 @@ class _ListTileControlsDemoPageState extends State<ListTileControlsDemoPage> {
       title: const Text('Wi-Fi discovery'),
       subtitle: const Text('Tap anywhere on the row to toggle.'),
       secondary: const Icon(Icons.info_outline),
+      titleAlignment: _compact
+          ? ListTileTitleAlignment.top
+          : ListTileTitleAlignment.center,
       selected: _checkboxValue,
       selectedTileColor: const Color(0xFFE8DEF8),
     );

@@ -1,5 +1,9 @@
 # Changelog
 
+- Closed paired `CheckboxListTile` + `SwitchListTile` parity for visual density, external material-state control,
+  checkbox title alignment, and semantic-button policy; shared `ListTile` geometry/state wiring, focused tests, and
+  mirrored C#/Dart runtime probes were updated.
+
 - Added paired Material `MenuTheme` + `SubmenuButton` theme integration, including global/local/widget precedence for submenu-panel styles and disclosure icons, focused coverage, and mirrored C#/Dart menu probes.
 
 - Added paired Material `MenuBarTheme` + `MenuButtonTheme` ports with global/local/theme/widget style precedence for `MenuBar`, `SubmenuButton`, and `MenuItemButton`, focused coverage, and mirrored C#/Dart menu-theme probes.

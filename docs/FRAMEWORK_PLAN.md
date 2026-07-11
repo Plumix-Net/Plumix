@@ -474,10 +474,13 @@ Progress update (2026-03-19):
   - added C#/Dart sample parity demo route/page for runtime verification (`ListTile` route in Material tab with state and local theme override probes).
 - Added paired Material list-tile control parity baseline in `Plumix.Material`:
   - introduced `CheckboxListTile` and `SwitchListTile` with Flutter-like controlled values, whole-tile interaction, checkbox tristate cycling, selected styling, disabled behavior, adaptive branches, and `ListTileControlAffinity` resolution through widget/local/global list-tile theme precedence;
+  - closed the paired density/state/layout follow-up: both controls now forward `VisualDensity` and external
+    `MaterialStatesController` into the shared tile interaction path; checkbox tiles also expose Flutter's
+    `ListTileTitleAlignment`, and both controls honor the source semantic-button opt-in policy;
   - preserved Flutter composition through shared `ExcludeFocus` + `MergeSemantics` primitives and shrink-wrap embedded `Checkbox`/`Switch` controls, with explicit checked/enabled/tap semantics on the merged tile;
   - fixed base `ListTile` layout override assignment and leading-slot shrink geometry required by `controlAffinity.leading`;
   - added focused regression coverage and a mirrored C#/Dart runtime demo route for material/adaptive, leading/trailing, selected, disabled, and tristate paths;
-  - remaining shared-primitive gaps are switch thumb-image support, `WidgetStatesController`, `VisualDensity`, and `ListTileTitleAlignment`.
+  - remaining shared-primitive gap is switch thumb-image support.
 - Added paired `RadioListTile<T>` + `ExpansionTile` parity baseline in `Plumix.Material`:
   - `RadioListTile<T>` supports inherited `RadioGroup<T>` value/callback coordination, legacy group API, toggleable selection, adaptive branch, selected/theme color precedence, platform/explicit control affinity, scaling, disabled behavior, and merged checked/enabled/tap semantics;
   - reusable `ExpansibleController`/`Expansible` primitives now own external expansion state, forward/reverse animation, clipped height layout, and `maintainState` body lifecycle;

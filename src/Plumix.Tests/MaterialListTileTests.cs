@@ -451,6 +451,103 @@ public sealed class MaterialListTileTests
     }
 
     [Fact]
+    public void CheckboxAndSwitchListTile_VisualDensityAdjustsSharedTileGeometry()
+    {
+        using var checkboxHarness = new WidgetRenderHarness(
+            BuildThemedTile(new CheckboxListTile(
+                value: false,
+                onChanged: _ => { },
+                visualDensity: VisualDensity.Compact,
+                title: new Text("Compact checkbox"))));
+        using var switchHarness = new WidgetRenderHarness(
+            BuildThemedTile(new SwitchListTile(
+                value: false,
+                onChanged: _ => { },
+                visualDensity: VisualDensity.Compact,
+                title: new Text("Compact switch"))));
+
+        checkboxHarness.Pump(new Size(400, 200));
+        switchHarness.Pump(new Size(400, 200));
+
+        Assert.NotNull(FindTileSurface(checkboxHarness.RenderView, expectedHeight: 48));
+        Assert.NotNull(FindTileSurface(switchHarness.RenderView, expectedHeight: 48));
+    }
+
+    [Fact]
+    public void CheckboxListTile_TitleAlignment_OverridesThemeAndMovesSecondarySlot()
+    {
+        var theme = ThemeData.Light with
+        {
+            ListTileTheme = new ListTileThemeData(TitleAlignment: ListTileTitleAlignment.Bottom)
+        };
+        using var topHarness = new WidgetRenderHarness(
+            BuildThemedTile(
+                new CheckboxListTile(
+                    value: false,
+                    onChanged: _ => { },
+                    title: new Text("Top title"),
+                    subtitle: new Text("Subtitle"),
+                    isThreeLine: true,
+                    secondary: new Icon(Icons.InfoOutline),
+                    titleAlignment: ListTileTitleAlignment.Top),
+                theme));
+        using var bottomHarness = new WidgetRenderHarness(
+            BuildThemedTile(
+                new CheckboxListTile(
+                    value: false,
+                    onChanged: _ => { },
+                    title: new Text("Bottom title"),
+                    subtitle: new Text("Subtitle"),
+                    isThreeLine: true,
+                    secondary: new Icon(Icons.InfoOutline)),
+                theme));
+
+        topHarness.Pump(new Size(400, 200));
+        bottomHarness.Pump(new Size(400, 200));
+
+        string glyph = char.ConvertFromUtf32(Icons.InfoOutline.CodePoint);
+        var topIcon = Assert.IsType<RenderParagraph>(FindParagraphByText(topHarness.RenderView, glyph));
+        var bottomIcon = Assert.IsType<RenderParagraph>(FindParagraphByText(bottomHarness.RenderView, glyph));
+        Assert.True(GlobalOffsetOf(topIcon).Y < GlobalOffsetOf(bottomIcon).Y);
+    }
+
+    [Fact]
+    public void CheckboxAndSwitchListTile_ExternalStatesControllerDrivesTileOverlay()
+    {
+        var checkboxStates = new MaterialStatesController();
+        var switchStates = new MaterialStatesController();
+        using var checkboxHarness = new WidgetRenderHarness(
+            BuildThemedTile(new CheckboxListTile(
+                value: false,
+                onChanged: _ => { },
+                selected: true,
+                statesController: checkboxStates,
+                title: new Text("Stateful checkbox"))));
+        using var switchHarness = new WidgetRenderHarness(
+            BuildThemedTile(new SwitchListTile(
+                value: false,
+                onChanged: _ => { },
+                statesController: switchStates,
+                title: new Text("Stateful switch"))));
+
+        checkboxHarness.Pump(new Size(400, 200));
+        switchHarness.Pump(new Size(400, 200));
+        Assert.True(checkboxStates.Value.HasFlag(MaterialState.Selected));
+        Color? checkboxIdle = FindTileSurface(checkboxHarness.RenderView, 56)?.Decoration.Color;
+        Color? switchIdle = FindTileSurface(switchHarness.RenderView, 56)?.Decoration.Color;
+
+        checkboxStates.Update(MaterialState.Pressed, true);
+        switchStates.Update(MaterialState.Pressed, true);
+        checkboxHarness.Pump(new Size(400, 200));
+        switchHarness.Pump(new Size(400, 200));
+
+        Color? checkboxPressed = FindTileSurface(checkboxHarness.RenderView, 56)?.Decoration.Color;
+        Color? switchPressed = FindTileSurface(switchHarness.RenderView, 56)?.Decoration.Color;
+        Assert.NotEqual(checkboxIdle, checkboxPressed);
+        Assert.NotEqual(switchIdle, switchPressed);
+    }
+
+    [Fact]
     public void CheckboxListTile_ScaleFactor_AppliesCenteredPaintTransform()
     {
         const double scaleFactor = 1.5;
@@ -603,6 +700,32 @@ public sealed class MaterialListTileTests
     {
         return FindDescendants<RenderParagraph>(root)
             .FirstOrDefault(paragraph => string.Equals(paragraph.Text, text, StringComparison.Ordinal));
+    }
+
+    private static RenderDecoratedBox? FindTileSurface(RenderObject? root, double expectedHeight)
+    {
+        return FindDescendants<RenderDecoratedBox>(root).FirstOrDefault(box =>
+            Math.Abs(box.Size.Width - 300) < 0.001
+            && Math.Abs(box.Size.Height - expectedHeight) < 0.001);
+    }
+
+    private static Point GlobalOffsetOf(RenderObject renderObject)
+    {
+        var result = new Point();
+        RenderObject? current = renderObject;
+        while (current is not null)
+        {
+            if (current.parentData is BoxParentData parentData)
+            {
+                result = new Point(
+                    result.X + parentData.offset.X,
+                    result.Y + parentData.offset.Y);
+            }
+
+            current = current.Parent;
+        }
+
+        return result;
     }
 
     private static IEnumerable<T> FindDescendants<T>(RenderObject? root) where T : RenderObject

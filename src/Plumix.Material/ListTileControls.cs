@@ -22,7 +22,9 @@ public sealed class CheckboxListTile : StatelessWidget
         MaterialStateProperty<Color?>? overlayColor = null,
         double? splashRadius = null,
         MaterialTapTargetSize? materialTapTargetSize = null,
+        VisualDensity? visualDensity = null,
         FocusNode? focusNode = null,
+        MaterialStatesController? statesController = null,
         bool autofocus = false,
         BorderRadius? shape = null,
         BorderSide? side = null,
@@ -48,6 +50,8 @@ public sealed class CheckboxListTile : StatelessWidget
         double? minTileHeight = null,
         string? checkboxSemanticLabel = null,
         double checkboxScaleFactor = 1.0,
+        ListTileTitleAlignment? titleAlignment = null,
+        bool internalAddSemanticForOnTap = false,
         MouseCursor? mouseCursor = null,
         Key? key = null) : this(
             value,
@@ -59,7 +63,9 @@ public sealed class CheckboxListTile : StatelessWidget
             overlayColor,
             splashRadius,
             materialTapTargetSize,
+            visualDensity,
             focusNode,
+            statesController,
             autofocus,
             shape,
             side,
@@ -85,6 +91,8 @@ public sealed class CheckboxListTile : StatelessWidget
             minTileHeight,
             checkboxSemanticLabel,
             checkboxScaleFactor,
+            titleAlignment,
+            internalAddSemanticForOnTap,
             mouseCursor,
             adaptive: false,
             key)
@@ -101,7 +109,9 @@ public sealed class CheckboxListTile : StatelessWidget
         MaterialStateProperty<Color?>? overlayColor,
         double? splashRadius,
         MaterialTapTargetSize? materialTapTargetSize,
+        VisualDensity? visualDensity,
         FocusNode? focusNode,
+        MaterialStatesController? statesController,
         bool autofocus,
         BorderRadius? shape,
         BorderSide? side,
@@ -127,6 +137,8 @@ public sealed class CheckboxListTile : StatelessWidget
         double? minTileHeight,
         string? checkboxSemanticLabel,
         double checkboxScaleFactor,
+        ListTileTitleAlignment? titleAlignment,
+        bool internalAddSemanticForOnTap,
         MouseCursor? mouseCursor,
         bool adaptive,
         Key? key) : base(key)
@@ -155,7 +167,9 @@ public sealed class CheckboxListTile : StatelessWidget
         OverlayColor = overlayColor;
         SplashRadius = splashRadius;
         MaterialTapTargetSize = materialTapTargetSize;
+        VisualDensity = visualDensity;
         FocusNode = focusNode;
+        StatesController = statesController;
         Autofocus = autofocus;
         Shape = shape;
         Side = side;
@@ -181,6 +195,8 @@ public sealed class CheckboxListTile : StatelessWidget
         MinTileHeight = minTileHeight;
         CheckboxSemanticLabel = checkboxSemanticLabel;
         CheckboxScaleFactor = checkboxScaleFactor;
+        TitleAlignment = titleAlignment;
+        InternalAddSemanticForOnTap = internalAddSemanticForOnTap;
         MouseCursor = mouseCursor;
         _adaptive = adaptive;
     }
@@ -194,7 +210,9 @@ public sealed class CheckboxListTile : StatelessWidget
     public MaterialStateProperty<Color?>? OverlayColor { get; }
     public double? SplashRadius { get; }
     public MaterialTapTargetSize? MaterialTapTargetSize { get; }
+    public VisualDensity? VisualDensity { get; }
     public FocusNode? FocusNode { get; }
+    public MaterialStatesController? StatesController { get; }
     public bool Autofocus { get; }
     public BorderRadius? Shape { get; }
     public BorderSide? Side { get; }
@@ -220,6 +238,8 @@ public sealed class CheckboxListTile : StatelessWidget
     public double? MinTileHeight { get; }
     public string? CheckboxSemanticLabel { get; }
     public double CheckboxScaleFactor { get; }
+    public ListTileTitleAlignment? TitleAlignment { get; }
+    public bool InternalAddSemanticForOnTap { get; }
     public MouseCursor? MouseCursor { get; }
 
     public static CheckboxListTile Adaptive(
@@ -232,7 +252,9 @@ public sealed class CheckboxListTile : StatelessWidget
         MaterialStateProperty<Color?>? overlayColor = null,
         double? splashRadius = null,
         MaterialTapTargetSize? materialTapTargetSize = null,
+        VisualDensity? visualDensity = null,
         FocusNode? focusNode = null,
+        MaterialStatesController? statesController = null,
         bool autofocus = false,
         BorderRadius? shape = null,
         BorderSide? side = null,
@@ -258,6 +280,8 @@ public sealed class CheckboxListTile : StatelessWidget
         double? minTileHeight = null,
         string? checkboxSemanticLabel = null,
         double checkboxScaleFactor = 1.0,
+        ListTileTitleAlignment? titleAlignment = null,
+        bool internalAddSemanticForOnTap = false,
         MouseCursor? mouseCursor = null,
         Key? key = null)
     {
@@ -271,7 +295,9 @@ public sealed class CheckboxListTile : StatelessWidget
             overlayColor,
             splashRadius,
             materialTapTargetSize,
+            visualDensity,
             focusNode,
+            statesController,
             autofocus,
             shape,
             side,
@@ -297,6 +323,8 @@ public sealed class CheckboxListTile : StatelessWidget
             minTileHeight,
             checkboxSemanticLabel,
             checkboxScaleFactor,
+            titleAlignment,
+            internalAddSemanticForOnTap,
             mouseCursor,
             adaptive: true,
             key);
@@ -385,7 +413,11 @@ public sealed class CheckboxListTile : StatelessWidget
                 horizontalTitleGap: HorizontalTitleGap,
                 minVerticalPadding: MinVerticalPadding,
                 minLeadingWidth: MinLeadingWidth,
-                minTileHeight: MinTileHeight);
+                minTileHeight: MinTileHeight,
+                visualDensity: VisualDensity,
+                titleAlignment: TitleAlignment,
+                internalAddSemanticForOnTap: InternalAddSemanticForOnTap,
+                statesController: StatesController);
         var semanticFlags = Value == true ? SemanticsFlags.IsChecked : SemanticsFlags.None;
         if (tileEnabled)
         {
@@ -434,10 +466,12 @@ public sealed class SwitchListTile : StatelessWidget
         MaterialStateProperty<Color?>? trackOutlineColor = null,
         MaterialStateProperty<Icon?>? thumbIcon = null,
         MaterialTapTargetSize? materialTapTargetSize = null,
+        VisualDensity? visualDensity = null,
         MouseCursor? mouseCursor = null,
         MaterialStateProperty<Color?>? overlayColor = null,
         double? splashRadius = null,
         FocusNode? focusNode = null,
+        MaterialStatesController? statesController = null,
         Action<bool>? onFocusChange = null,
         bool autofocus = false,
         Color? tileColor = null,
@@ -457,6 +491,7 @@ public sealed class SwitchListTile : StatelessWidget
         double? minLeadingWidth = null,
         double? minTileHeight = null,
         Color? hoverColor = null,
+        bool internalAddSemanticForOnTap = false,
         Key? key = null) : this(
             value,
             onChanged,
@@ -470,10 +505,12 @@ public sealed class SwitchListTile : StatelessWidget
             trackOutlineColor,
             thumbIcon,
             materialTapTargetSize,
+            visualDensity,
             mouseCursor,
             overlayColor,
             splashRadius,
             focusNode,
+            statesController,
             onFocusChange,
             autofocus,
             tileColor,
@@ -493,6 +530,7 @@ public sealed class SwitchListTile : StatelessWidget
             minLeadingWidth,
             minTileHeight,
             hoverColor,
+            internalAddSemanticForOnTap,
             adaptive: false,
             key)
     {
@@ -511,10 +549,12 @@ public sealed class SwitchListTile : StatelessWidget
         MaterialStateProperty<Color?>? trackOutlineColor,
         MaterialStateProperty<Icon?>? thumbIcon,
         MaterialTapTargetSize? materialTapTargetSize,
+        VisualDensity? visualDensity,
         MouseCursor? mouseCursor,
         MaterialStateProperty<Color?>? overlayColor,
         double? splashRadius,
         FocusNode? focusNode,
+        MaterialStatesController? statesController,
         Action<bool>? onFocusChange,
         bool autofocus,
         Color? tileColor,
@@ -534,6 +574,7 @@ public sealed class SwitchListTile : StatelessWidget
         double? minLeadingWidth,
         double? minTileHeight,
         Color? hoverColor,
+        bool internalAddSemanticForOnTap,
         bool adaptive,
         Key? key) : base(key)
     {
@@ -554,10 +595,12 @@ public sealed class SwitchListTile : StatelessWidget
         TrackOutlineColor = trackOutlineColor;
         ThumbIcon = thumbIcon;
         MaterialTapTargetSize = materialTapTargetSize;
+        VisualDensity = visualDensity;
         MouseCursor = mouseCursor;
         OverlayColor = overlayColor;
         SplashRadius = splashRadius;
         FocusNode = focusNode;
+        StatesController = statesController;
         OnFocusChange = onFocusChange;
         Autofocus = autofocus;
         TileColor = tileColor;
@@ -577,6 +620,7 @@ public sealed class SwitchListTile : StatelessWidget
         MinLeadingWidth = minLeadingWidth;
         MinTileHeight = minTileHeight;
         HoverColor = hoverColor;
+        InternalAddSemanticForOnTap = internalAddSemanticForOnTap;
         _adaptive = adaptive;
     }
 
@@ -592,10 +636,12 @@ public sealed class SwitchListTile : StatelessWidget
     public MaterialStateProperty<Color?>? TrackOutlineColor { get; }
     public MaterialStateProperty<Icon?>? ThumbIcon { get; }
     public MaterialTapTargetSize? MaterialTapTargetSize { get; }
+    public VisualDensity? VisualDensity { get; }
     public MouseCursor? MouseCursor { get; }
     public MaterialStateProperty<Color?>? OverlayColor { get; }
     public double? SplashRadius { get; }
     public FocusNode? FocusNode { get; }
+    public MaterialStatesController? StatesController { get; }
     public Action<bool>? OnFocusChange { get; }
     public bool Autofocus { get; }
     public Color? TileColor { get; }
@@ -615,6 +661,7 @@ public sealed class SwitchListTile : StatelessWidget
     public double? MinLeadingWidth { get; }
     public double? MinTileHeight { get; }
     public Color? HoverColor { get; }
+    public bool InternalAddSemanticForOnTap { get; }
 
     public static SwitchListTile Adaptive(
         bool value,
@@ -629,10 +676,12 @@ public sealed class SwitchListTile : StatelessWidget
         MaterialStateProperty<Color?>? trackOutlineColor = null,
         MaterialStateProperty<Icon?>? thumbIcon = null,
         MaterialTapTargetSize? materialTapTargetSize = null,
+        VisualDensity? visualDensity = null,
         MouseCursor? mouseCursor = null,
         MaterialStateProperty<Color?>? overlayColor = null,
         double? splashRadius = null,
         FocusNode? focusNode = null,
+        MaterialStatesController? statesController = null,
         Action<bool>? onFocusChange = null,
         bool autofocus = false,
         Color? tileColor = null,
@@ -652,6 +701,7 @@ public sealed class SwitchListTile : StatelessWidget
         double? minLeadingWidth = null,
         double? minTileHeight = null,
         Color? hoverColor = null,
+        bool internalAddSemanticForOnTap = false,
         Key? key = null)
     {
         return new SwitchListTile(
@@ -667,10 +717,12 @@ public sealed class SwitchListTile : StatelessWidget
             trackOutlineColor,
             thumbIcon,
             materialTapTargetSize,
+            visualDensity,
             mouseCursor,
             overlayColor,
             splashRadius,
             focusNode,
+            statesController,
             onFocusChange,
             autofocus,
             tileColor,
@@ -690,6 +742,7 @@ public sealed class SwitchListTile : StatelessWidget
             minLeadingWidth,
             minTileHeight,
             hoverColor,
+            internalAddSemanticForOnTap,
             adaptive: true,
             key);
     }
@@ -768,7 +821,10 @@ public sealed class SwitchListTile : StatelessWidget
                 minVerticalPadding: MinVerticalPadding,
                 minLeadingWidth: MinLeadingWidth,
                 minTileHeight: MinTileHeight,
-                hoverColor: HoverColor);
+                hoverColor: HoverColor,
+                visualDensity: VisualDensity,
+                internalAddSemanticForOnTap: InternalAddSemanticForOnTap,
+                statesController: StatesController);
         var semanticFlags = Value ? SemanticsFlags.IsChecked : SemanticsFlags.None;
         if (OnChanged is not null)
         {
