@@ -158,14 +158,21 @@ public sealed class DropdownDemoPage : StatefulWidget
                         new Divider(),
                         new Text("MenuBar + SubmenuButton", fontSize: 18),
                         new Text(
-                            "Horizontal menu bar with controller-owned sibling closing and a nested side submenu.",
+                            "Horizontal menu bar with controller-owned sibling closing, nested side submenu, "
+                            + "and local menu themes.",
                             fontSize: 14,
                             color: Colors.DimGray),
                         new Align(
                             alignment: Alignment.CenterLeft,
-                            child: new MenuBar(
-                                children:
-                                [
+                            child: new MenuBarTheme(
+                                new MenuBarThemeData(new MenuStyle(
+                                    BackgroundColor: MaterialStateProperty<Color?>.All(Color.Parse("#FFF3E5F5")))),
+                                new MenuButtonTheme(
+                                    new MenuButtonThemeData(new ButtonStyle(
+                                        ForegroundColor: MaterialStateProperty<Color?>.All(Colors.DarkSlateBlue))),
+                                    new MenuBar(
+                                        children:
+                                        [
                                     new SubmenuButton(
                                         [
                                             new MenuItemButton(
@@ -182,6 +189,8 @@ public sealed class DropdownDemoPage : StatefulWidget
                                         ],
                                         new Text("File"),
                                         controller: _fileMenuController,
+                                        style: new ButtonStyle(
+                                            ForegroundColor: MaterialStateProperty<Color?>.All(Colors.OrangeRed)),
                                         onOpen: () => SetState(() => _menuBarStatus = "file opened"),
                                         onClose: () => SetState(() => _menuBarStatus = "file closed")),
                                     new SubmenuButton(
@@ -195,7 +204,7 @@ public sealed class DropdownDemoPage : StatefulWidget
                                         onOpen: () => SetState(() => _menuBarStatus = "edit opened"),
                                         onClose: () => SetState(() => _menuBarStatus = "edit closed")),
                                     new SubmenuButton([], new Text("Disabled")),
-                                ])),
+                                        ])))),
                         new Text($"Menu bar: {_menuBarStatus}", fontSize: 13),
                         new Divider(),
                         new Text("DropdownMenuFormField + Form", fontSize: 18),

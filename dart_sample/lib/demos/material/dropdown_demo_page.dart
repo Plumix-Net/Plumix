@@ -193,55 +193,84 @@ class _DropdownDemoPageState extends State<DropdownDemoPage> {
           const Divider(),
           const Text('MenuBar + SubmenuButton', style: TextStyle(fontSize: 18)),
           const Text(
-            'Horizontal menu bar with controller-owned sibling closing and a nested side submenu.',
+            'Horizontal menu bar with controller-owned sibling closing, nested side submenu, and local menu themes.',
             style: TextStyle(fontSize: 14, color: Colors.black54),
           ),
           Align(
             alignment: Alignment.centerLeft,
-            child: MenuBar(
-              children: <Widget>[
-                SubmenuButton(
-                  controller: _fileMenuController,
-                  onOpen: () => setState(() => _menuBarStatus = 'file opened'),
-                  onClose: () => setState(() => _menuBarStatus = 'file closed'),
-                  menuChildren: <Widget>[
-                    MenuItemButton(
-                      onPressed: () =>
-                          setState(() => _menuBarStatus = 'new document'),
-                      child: const Text('New document'),
+            child: MenuBarTheme(
+              data: MenuBarThemeData(
+                style: MenuStyle(
+                  backgroundColor: WidgetStatePropertyAll<Color>(
+                    const Color(0xFFF3E5F5),
+                  ),
+                ),
+              ),
+              child: MenuButtonTheme(
+                data: MenuButtonThemeData(
+                  style: ButtonStyle(
+                    foregroundColor: WidgetStatePropertyAll<Color>(
+                      Colors.deepPurple,
                     ),
+                  ),
+                ),
+                child: MenuBar(
+                  children: <Widget>[
                     SubmenuButton(
+                      controller: _fileMenuController,
                       onOpen: () =>
-                          setState(() => _menuBarStatus = 'recent opened'),
+                          setState(() => _menuBarStatus = 'file opened'),
+                      onClose: () =>
+                          setState(() => _menuBarStatus = 'file closed'),
                       menuChildren: <Widget>[
                         MenuItemButton(
                           onPressed: () =>
-                              setState(() => _menuBarStatus = 'recent report'),
-                          child: const Text('Quarterly report'),
+                              setState(() => _menuBarStatus = 'new document'),
+                          child: const Text('New document'),
+                        ),
+                        SubmenuButton(
+                          onOpen: () =>
+                              setState(() => _menuBarStatus = 'recent opened'),
+                          menuChildren: <Widget>[
+                            MenuItemButton(
+                              onPressed: () => setState(
+                                () => _menuBarStatus = 'recent report',
+                              ),
+                              child: const Text('Quarterly report'),
+                            ),
+                          ],
+                          child: const Text('Recent'),
                         ),
                       ],
-                      child: const Text('Recent'),
+                      child: const Text('File'),
+                      style: ButtonStyle(
+                        foregroundColor: WidgetStatePropertyAll<Color>(
+                          Colors.deepOrange,
+                        ),
+                      ),
+                    ),
+                    SubmenuButton(
+                      controller: _editMenuController,
+                      onOpen: () =>
+                          setState(() => _menuBarStatus = 'edit opened'),
+                      onClose: () =>
+                          setState(() => _menuBarStatus = 'edit closed'),
+                      menuChildren: <Widget>[
+                        MenuItemButton(
+                          onPressed: () =>
+                              setState(() => _menuBarStatus = 'paste'),
+                          child: const Text('Paste'),
+                        ),
+                      ],
+                      child: const Text('Edit'),
+                    ),
+                    const SubmenuButton(
+                      menuChildren: <Widget>[],
+                      child: Text('Disabled'),
                     ),
                   ],
-                  child: const Text('File'),
                 ),
-                SubmenuButton(
-                  controller: _editMenuController,
-                  onOpen: () => setState(() => _menuBarStatus = 'edit opened'),
-                  onClose: () => setState(() => _menuBarStatus = 'edit closed'),
-                  menuChildren: <Widget>[
-                    MenuItemButton(
-                      onPressed: () => setState(() => _menuBarStatus = 'paste'),
-                      child: const Text('Paste'),
-                    ),
-                  ],
-                  child: const Text('Edit'),
-                ),
-                const SubmenuButton(
-                  menuChildren: <Widget>[],
-                  child: Text('Disabled'),
-                ),
-              ],
+              ),
             ),
           ),
           Text(

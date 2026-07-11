@@ -155,6 +155,7 @@ Status: `in_progress`
 
 Kickoff note (2026-03-12):
 
+- Added paired Material `MenuBarTheme` + `MenuButtonTheme` parity: `ThemeData` and inherited scopes now resolve menu-bar surfaces and menu-button state styles through Flutter-like `widget -> local -> ThemeData -> defaults` precedence, with focused tests and mirrored sample probes.
 - Added Flutter-structured `CarouselView`/`CarouselViewTheme` with fixed, weighted, and lazy item sources; core now exposes a variable-extent sliver adapter and subclassable scroll positions so carousel geometry and leading-item preservation remain framework-owned.
 - Prioritized immediately after M3 to unblock practical control rewrites and reduce sample-level styling drift by introducing a Flutter-like Material layer in framework widgets.
 - Added paired `CalendarDatePicker` + `YearPicker` parity with calendar delegates/date utilities, M2/M3 date-picker theming, bounded month paging, day/year states, keyboard/accessibility behavior, focused tests, and mirrored C#/Dart sample coverage.

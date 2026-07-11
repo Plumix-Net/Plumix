@@ -1,5 +1,7 @@
 # Changelog
 
+- Added paired Material `MenuBarTheme` + `MenuButtonTheme` ports with global/local/theme/widget style precedence for `MenuBar`, `SubmenuButton`, and `MenuItemButton`, focused coverage, and mirrored C#/Dart menu-theme probes.
+
 - Added paired state-aware `MaterialStateOutlineInputBorder` and `MaterialStateUnderlineInputBorder` ports. `InputDecorator` now resolves focus, hover, error, and disabled state sets for supported borders; focused tests and mirrored text-field demo probes were added.
 
 - Added paired Material `MenuBar` + `SubmenuButton` ports with nested `MenuController` ownership, sibling submenu closing, horizontal/side panel placement, focused coverage, and mirrored C#/Dart dropdown-demo probes. Root-overlay/follower positioning, keyboard traversal, animation, and complete menu theming remain tracked in `docs/ai/DIVERGENCES.md`.

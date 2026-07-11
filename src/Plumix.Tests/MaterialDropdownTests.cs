@@ -651,6 +651,83 @@ public sealed class MaterialDropdownTests : IDisposable
     }
 
     [Fact]
+    public void MenuBarAndMenuButtonThemes_ResolveThemeLocalAndWidgetStylePrecedence()
+    {
+        Color themeBackground = Color.Parse("#FFE3F2FD");
+        Color localBackground = Color.Parse("#FFFFF3E0");
+        Color widgetBackground = Color.Parse("#FFE8F5E9");
+        ThemeData theme = ThemeData.Light with
+        {
+            MenuBarTheme = new MenuBarThemeData(new MenuStyle(
+                BackgroundColor: MaterialStateProperty<Color?>.All(themeBackground))),
+            MenuButtonTheme = new MenuButtonThemeData(new ButtonStyle(
+                ForegroundColor: MaterialStateProperty<Color?>.All(Colors.CadetBlue))),
+        };
+
+        Widget themedBar = new MenuBar(
+            [new SubmenuButton(
+                [new MenuItemButton(child: new Text("Open"), onPressed: () => { })],
+                new Text("File"))]);
+        using var themed = new WidgetRenderHarness(Wrap(themedBar, theme));
+        themed.Pump(new Size(500, 180));
+        Assert.Contains(
+            FindDescendants<RenderDecoratedBox>(themed.RenderView),
+            box => box.Decoration.Color == themeBackground);
+        Assert.Equal(
+            Colors.CadetBlue,
+            Assert.IsType<SolidColorBrush>(FindParagraph(themed.RenderView, "File")!.Foreground).Color);
+
+        var itemController = new MenuController();
+        Widget themedItem = new MenuButtonTheme(
+            new MenuButtonThemeData(new ButtonStyle(
+                ForegroundColor: MaterialStateProperty<Color?>.All(Colors.ForestGreen))),
+            new MenuAnchor(
+                [new MenuItemButton(child: new Text("Run"), onPressed: () => { })],
+                child: new SizedBox(width: 80, height: 40),
+                controller: itemController));
+        using var item = new WidgetRenderHarness(Wrap(themedItem, theme));
+        item.Pump(new Size(500, 180));
+        itemController.Open();
+        item.Pump(new Size(500, 180));
+        Assert.Equal(
+            Colors.ForestGreen,
+            Assert.IsType<SolidColorBrush>(FindParagraph(item.RenderView, "Run")!.Foreground).Color);
+
+        Widget localBar = new MenuBarTheme(
+            new MenuBarThemeData(new MenuStyle(BackgroundColor: MaterialStateProperty<Color?>.All(localBackground))),
+            new MenuButtonTheme(
+                new MenuButtonThemeData(new ButtonStyle(
+                    ForegroundColor: MaterialStateProperty<Color?>.All(Colors.MediumVioletRed))),
+                new MenuBar(
+                    [new SubmenuButton(
+                        [new MenuItemButton(child: new Text("Save"), onPressed: () => { })],
+                        new Text("Edit"))])));
+        using var local = new WidgetRenderHarness(Wrap(localBar, theme));
+        local.Pump(new Size(500, 180));
+        Assert.Contains(
+            FindDescendants<RenderDecoratedBox>(local.RenderView),
+            box => box.Decoration.Color == localBackground);
+        Assert.Equal(
+            Colors.MediumVioletRed,
+            Assert.IsType<SolidColorBrush>(FindParagraph(local.RenderView, "Edit")!.Foreground).Color);
+
+        Widget widgetBar = new MenuBar(
+            [new SubmenuButton(
+                [new MenuItemButton(child: new Text("Close"), onPressed: () => { })],
+                new Text("View"),
+                style: new ButtonStyle(ForegroundColor: MaterialStateProperty<Color?>.All(Colors.OrangeRed)))],
+            style: new MenuStyle(BackgroundColor: MaterialStateProperty<Color?>.All(widgetBackground)));
+        using var widget = new WidgetRenderHarness(Wrap(widgetBar, theme));
+        widget.Pump(new Size(500, 180));
+        Assert.Contains(
+            FindDescendants<RenderDecoratedBox>(widget.RenderView),
+            box => box.Decoration.Color == widgetBackground);
+        Assert.Equal(
+            Colors.OrangeRed,
+            Assert.IsType<SolidColorBrush>(FindParagraph(widget.RenderView, "View")!.Foreground).Color);
+    }
+
+    [Fact]
     public void SubmenuButton_ExposesFlutterDefaultsAndValidatesHoverDelay()
     {
         var button = new SubmenuButton([], null);
@@ -732,11 +809,11 @@ public sealed class MaterialDropdownTests : IDisposable
         Assert.Equal(string.Empty, key.CurrentState.EffectiveController.Text);
     }
 
-    private static Widget Wrap(Widget child) => new Directionality(
+    private static Widget Wrap(Widget child, ThemeData? theme = null) => new Directionality(
         TextDirection.Ltr,
         new MediaQuery(
             new MediaQueryData(Size: new Size(500, 360)),
-            new Theme(ThemeData.Light, child)));
+            new Theme(theme ?? ThemeData.Light, child)));
 
     private static void PumpAnimation()
     {

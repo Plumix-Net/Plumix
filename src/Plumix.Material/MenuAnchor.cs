@@ -286,7 +286,11 @@ public sealed class MenuItemButton : StatelessWidget
         return new MaterialButtonCore(
             child: content,
             onPressed: activate,
-            style: MaterialButtonCore.ComposeStyles(defaults, null, Style, null),
+            style: MaterialButtonCore.ComposeStyles(
+                defaults,
+                MenuButtonTheme.Of(context).Style,
+                Style,
+                null),
             onHoverChanged: value =>
             {
                 OnHover?.Invoke(value);
@@ -326,7 +330,7 @@ public sealed class MenuBar : StatelessWidget
     public override Widget Build(BuildContext context)
     {
         ThemeData theme = Theme.Of(context);
-        MenuStyle style = Style ?? DropdownMenuTheme.Of(context).MenuStyle ?? new MenuStyle();
+        MenuStyle style = Style ?? MenuBarTheme.Of(context).Style ?? new MenuStyle();
         MaterialState states = MaterialState.None;
         Color color = style.BackgroundColor?.Resolve(states) ?? theme.SurfaceContainerColor;
         Color shadowColor = style.ShadowColor?.Resolve(states) ?? theme.ShadowColor;
@@ -515,7 +519,11 @@ public sealed class SubmenuButtonState : State
                 children: row,
                 textDirection: Directionality.Of(context)),
             onPressed: Current.Enabled ? Toggle : null,
-            style: MaterialButtonCore.ComposeStyles(defaults, null, Current.Style, null),
+            style: MaterialButtonCore.ComposeStyles(
+                defaults,
+                MenuButtonTheme.Of(context).Style,
+                Current.Style,
+                null),
             onHoverChanged: HandleHover,
             onFocusChange: Current.OnFocusChange,
             focusNode: Current.FocusNode,
