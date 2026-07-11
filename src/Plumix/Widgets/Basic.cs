@@ -328,7 +328,7 @@ public sealed class AbsorbPointer : SingleChildRenderObjectWidget
 
 public sealed class Padding : SingleChildRenderObjectWidget
 {
-    public Padding(Thickness insets, Widget child, Key? key = null) : base(child, key)
+    public Padding(Thickness insets, Widget? child = null, Key? key = null) : base(child, key)
     {
         Insets = insets;
     }

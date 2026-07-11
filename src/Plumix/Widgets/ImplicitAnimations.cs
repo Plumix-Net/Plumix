@@ -263,3 +263,307 @@ public sealed class AnimatedContainer : StatefulWidget
         }
     }
 }
+
+public sealed class AnimatedPadding : StatefulWidget
+{
+    public AnimatedPadding(
+        Thickness padding,
+        TimeSpan duration,
+        Widget? child = null,
+        Curve? curve = null,
+        Action? onEnd = null,
+        Key? key = null) : base(key)
+    {
+        if (duration < TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(duration));
+        ValidatePadding(padding);
+
+        Padding = padding;
+        Duration = duration;
+        Child = child;
+        Curve = curve ?? Curves.Linear;
+        OnEnd = onEnd;
+    }
+
+    public Thickness Padding { get; }
+
+    public TimeSpan Duration { get; }
+
+    public Widget? Child { get; }
+
+    public Curve Curve { get; }
+
+    public Action? OnEnd { get; }
+
+    public override State CreateState() => new AnimatedPaddingState();
+
+    private static void ValidatePadding(Thickness padding)
+    {
+        if (!(padding.Left >= 0) || !(padding.Top >= 0) || !(padding.Right >= 0) || !(padding.Bottom >= 0))
+        {
+            throw new ArgumentOutOfRangeException(nameof(padding), "Insets must be non-negative.");
+        }
+    }
+
+    private sealed class AnimatedPaddingState : State
+    {
+        private AnimationController? _controller;
+        private Thickness _begin;
+        private Thickness _end;
+
+        private AnimatedPadding CurrentWidget => (AnimatedPadding)StateWidget;
+
+        public override void InitState()
+        {
+            _begin = _end = CurrentWidget.Padding;
+            CreateController();
+        }
+
+        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        {
+            _controller!.Duration = CurrentWidget.Duration;
+            _controller.Curve = CurrentWidget.Curve;
+            Thickness current = Evaluate(_controller!.Evaluate());
+            bool targetChanged = CurrentWidget.Padding != _end;
+
+            if (targetChanged)
+            {
+                _begin = current;
+                _end = CurrentWidget.Padding;
+                _controller.Forward(from: 0);
+            }
+        }
+
+        public override Widget Build(BuildContext context)
+        {
+            return new Padding(Evaluate(_controller!.Evaluate()), CurrentWidget.Child);
+        }
+
+        public override void Dispose()
+        {
+            DisposeController();
+        }
+
+        private void CreateController()
+        {
+            _controller = new AnimationController(CurrentWidget.Duration) { Curve = CurrentWidget.Curve };
+            _controller.Changed += HandleChanged;
+            _controller.Completed += HandleCompleted;
+        }
+
+        private void DisposeController()
+        {
+            if (_controller is null) return;
+            _controller.Changed -= HandleChanged;
+            _controller.Completed -= HandleCompleted;
+            _controller.Dispose();
+            _controller = null;
+        }
+
+        private Thickness Evaluate(double t)
+        {
+            return new Thickness(
+                Math.Max(0, LerpDouble(_begin.Left, _end.Left, t)),
+                Math.Max(0, LerpDouble(_begin.Top, _end.Top, t)),
+                Math.Max(0, LerpDouble(_begin.Right, _end.Right, t)),
+                Math.Max(0, LerpDouble(_begin.Bottom, _end.Bottom, t)));
+        }
+
+        private void HandleChanged() => SetState(() => { });
+
+        private void HandleCompleted()
+        {
+            SetState(() => { });
+            CurrentWidget.OnEnd?.Invoke();
+        }
+    }
+
+    private static double LerpDouble(double a, double b, double t) => a + ((b - a) * t);
+}
+
+public sealed class AnimatedAlign : StatefulWidget
+{
+    public AnimatedAlign(
+        Alignment alignment,
+        TimeSpan duration,
+        Widget? child = null,
+        double? heightFactor = null,
+        double? widthFactor = null,
+        Curve? curve = null,
+        Action? onEnd = null,
+        Key? key = null) : base(key)
+    {
+        if (duration < TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(duration));
+        if (widthFactor is double width && !(width >= 0))
+        {
+            throw new ArgumentOutOfRangeException(nameof(widthFactor));
+        }
+        if (heightFactor is double height && !(height >= 0))
+        {
+            throw new ArgumentOutOfRangeException(nameof(heightFactor));
+        }
+
+        Alignment = alignment;
+        Duration = duration;
+        Child = child;
+        HeightFactor = heightFactor;
+        WidthFactor = widthFactor;
+        Curve = curve ?? Curves.Linear;
+        OnEnd = onEnd;
+    }
+
+    public Alignment Alignment { get; }
+
+    public TimeSpan Duration { get; }
+
+    public Widget? Child { get; }
+
+    public double? HeightFactor { get; }
+
+    public double? WidthFactor { get; }
+
+    public Curve Curve { get; }
+
+    public Action? OnEnd { get; }
+
+    public override State CreateState() => new AnimatedAlignState();
+
+    private sealed class AnimatedAlignState : State
+    {
+        private AnimationController? _controller;
+        private AnimatedAlignValues _begin = null!;
+        private AnimatedAlignValues _end = null!;
+
+        private AnimatedAlign CurrentWidget => (AnimatedAlign)StateWidget;
+
+        public override void InitState()
+        {
+            _begin = _end = AnimatedAlignValues.From(CurrentWidget);
+            CreateController();
+        }
+
+        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        {
+            _controller!.Duration = CurrentWidget.Duration;
+            _controller.Curve = CurrentWidget.Curve;
+            AnimatedAlignValues current = Evaluate(_controller!.Evaluate());
+            AnimatedAlignValues target = AnimatedAlignValues.From(CurrentWidget);
+            bool shouldStart = target.Alignment != _end.Alignment
+                               || IsTweenTargetChanged(_end.HeightFactor, target.HeightFactor)
+                               || IsTweenTargetChanged(_end.WidthFactor, target.WidthFactor);
+
+            if (shouldStart)
+            {
+                _begin = new AnimatedAlignValues(
+                    Alignment: current.Alignment,
+                    HeightFactor: ResolveTweenBegin(
+                        current.HeightFactor,
+                        _end.HeightFactor,
+                        target.HeightFactor),
+                    WidthFactor: ResolveTweenBegin(
+                        current.WidthFactor,
+                        _end.WidthFactor,
+                        target.WidthFactor));
+                _end = target;
+                _controller.Forward(from: 0);
+            }
+            else
+            {
+                _begin = _begin with
+                {
+                    HeightFactor = ResolveUnanimatedTarget(_begin.HeightFactor, target.HeightFactor),
+                    WidthFactor = ResolveUnanimatedTarget(_begin.WidthFactor, target.WidthFactor)
+                };
+                _end = _end with
+                {
+                    HeightFactor = target.HeightFactor,
+                    WidthFactor = target.WidthFactor
+                };
+            }
+        }
+
+        public override Widget Build(BuildContext context)
+        {
+            AnimatedAlignValues values = Evaluate(_controller!.Evaluate());
+            return new Align(
+                alignment: values.Alignment,
+                heightFactor: values.HeightFactor,
+                widthFactor: values.WidthFactor,
+                child: CurrentWidget.Child);
+        }
+
+        public override void Dispose()
+        {
+            DisposeController();
+        }
+
+        private void CreateController()
+        {
+            _controller = new AnimationController(CurrentWidget.Duration) { Curve = CurrentWidget.Curve };
+            _controller.Changed += HandleChanged;
+            _controller.Completed += HandleCompleted;
+        }
+
+        private void DisposeController()
+        {
+            if (_controller is null) return;
+            _controller.Changed -= HandleChanged;
+            _controller.Completed -= HandleCompleted;
+            _controller.Dispose();
+            _controller = null;
+        }
+
+        private AnimatedAlignValues Evaluate(double t)
+        {
+            return new AnimatedAlignValues(
+                Alignment: new Alignment(
+                    LerpDouble(_begin.Alignment.X, _end.Alignment.X, t),
+                    LerpDouble(_begin.Alignment.Y, _end.Alignment.Y, t)),
+                HeightFactor: LerpNullableDouble(_begin.HeightFactor, _end.HeightFactor, t),
+                WidthFactor: LerpNullableDouble(_begin.WidthFactor, _end.WidthFactor, t));
+        }
+
+        private void HandleChanged() => SetState(() => { });
+
+        private void HandleCompleted()
+        {
+            SetState(() => { });
+            CurrentWidget.OnEnd?.Invoke();
+        }
+
+        private static double? LerpNullableDouble(double? a, double? b, double t)
+        {
+            if (!b.HasValue) return null;
+            if (!a.HasValue) return b;
+            return LerpDouble(a.Value, b.Value, t);
+        }
+
+        private static bool IsTweenTargetChanged(double? previousTarget, double? target)
+        {
+            return previousTarget.HasValue && target.HasValue && previousTarget != target;
+        }
+
+        private static double? ResolveTweenBegin(double? current, double? previousTarget, double? target)
+        {
+            if (!target.HasValue) return null;
+            return previousTarget.HasValue ? current : target;
+        }
+
+        private static double? ResolveUnanimatedTarget(double? begin, double? target)
+        {
+            return target.HasValue ? begin ?? target : null;
+        }
+    }
+
+    private sealed record AnimatedAlignValues(
+        Alignment Alignment,
+        double? HeightFactor,
+        double? WidthFactor)
+    {
+        public static AnimatedAlignValues From(AnimatedAlign widget)
+        {
+            return new AnimatedAlignValues(widget.Alignment, widget.HeightFactor, widget.WidthFactor);
+        }
+    }
+
+    private static double LerpDouble(double a, double b, double t) => a + ((b - a) * t);
+}

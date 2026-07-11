@@ -443,8 +443,8 @@ class SampleGalleryScreen extends StatelessWidget {
         ),
         SampleRouteDefinition(
           routeName: SampleRoutes.align,
-          title: 'Align + Center',
-          subtitle: 'single-child alignment and shrink factors',
+          title: 'AnimatedAlign + AnimatedPadding',
+          subtitle: 'implicit alignment/inset transitions + shrink factors',
           builder: () => const AlignDemoPage(),
         ),
         SampleRouteDefinition(

@@ -120,6 +120,9 @@ Completion note:
 - Overflow-debug parity progression: `RenderFlex` now paints Flutter-style yellow/black overflow indicators with clipped overflow child paint, 45-degree marker geometry, and edge-aligned/rotated labels for main-axis overflow; both samples include a dedicated overflow-indicator demo page for runtime verification.
 - Continued image-pipeline parity hardening: core now includes Flutter-shaped image providers/streams/cache/configuration plus `DecorationImage` integration in `BoxDecoration`, including DPR asset selection, resize keys, async repaint, fit/crop/repeat/RTL geometry, clipping, opacity, and scaled nine-patch paint.
 - Continued port-first primitive/control expansion: core now supports `AnimatedContainer`, foreground decorations, circular `BoxDecoration` paint, and decoration/image interpolation; Material now uses those primitives for a Flutter-structured `CircleAvatar` with image fallback and M2/M3 theme behavior.
+- Continued implicit-animation parity with paired `AnimatedAlign` + `AnimatedPadding` ports, including Dart-shaped
+  constructor/default guards, alignment/factor and inset interpolation, interrupted-transition continuity,
+  curve/duration updates, `onEnd`, focused tests, and mirrored C#/Dart runtime probes.
 
 Completion snapshot:
 

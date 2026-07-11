@@ -1,5 +1,9 @@
 # Changelog
 
+- Added paired Flutter core `AnimatedAlign` + `AnimatedPadding` ports with alignment/factor and inset
+  interpolation, interrupted-transition continuity, curve/duration updates, `onEnd`, focused tests, and mirrored
+  C#/Dart runtime probes. Advanced `Plumix` to `0.2.0-alpha.1`.
+
 - Added paired Material `CheckboxMenuButton` + `RadioMenuButton<T>` ports with Dart-matching value transitions,
   disabled/toggleable states, leading-control constraints, focus/pointer isolation, state-controller forwarding,
   close policy, focused tests, and mirrored C#/Dart menu probes. Advanced `Plumix.Material` to `0.2.0-alpha.1`.
