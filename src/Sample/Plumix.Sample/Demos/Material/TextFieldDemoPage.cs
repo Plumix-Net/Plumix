@@ -35,7 +35,9 @@ public sealed class TextFieldDemoPage : StatefulWidget
                 children:
                 [
                     new Text("InputDecorator + TextField", fontSize: 20),
-                    new Text("Filled/outlined borders, floating labels, hint/helper/error/counter slots, prefix/suffix icons, focus, submit, read-only and multiline input.",
+                    new Text(
+                        "Filled/outlined/state-aware borders, floating labels, hint/helper/error/counter slots, "
+                        + "prefix/suffix icons, focus, submit, read-only and multiline input.",
                         fontSize: 14, color: Colors.DimGray),
                     new Row(
                         spacing: 8,
@@ -77,6 +79,14 @@ public sealed class TextFieldDemoPage : StatefulWidget
                             alignLabelWithHint: true,
                             border: new OutlineInputBorder(),
                             helperText: "Multiline EditableText path")),
+                    new TextField(
+                        enabled: _enabled,
+                        decoration: new InputDecoration(
+                            labelText: "State-aware border",
+                            hintText: "Focus or hover this field",
+                            errorText: _error ? "Error state" : null,
+                            border: MaterialStateOutlineInputBorder.ResolveWith(ResolveStateBorder),
+                            helperText: "Resolves focus, hover, error, and disabled together")),
                     new TextField(
                         controller: _readOnly,
                         readOnly: true,
@@ -140,6 +150,21 @@ public sealed class TextFieldDemoPage : StatefulWidget
         {
             _formKey.CurrentState?.Reset();
             SetState(() => _formStatus = "reset");
+        }
+
+        private static InputBorder ResolveStateBorder(MaterialState states)
+        {
+            Color color = states.HasFlag(MaterialState.Disabled)
+                ? Colors.Gray
+                : states.HasFlag(MaterialState.Error)
+                    ? Colors.Crimson
+                    : states.HasFlag(MaterialState.Focused)
+                        ? Colors.DodgerBlue
+                        : states.HasFlag(MaterialState.Hovered)
+                            ? Colors.MediumSeaGreen
+                            : Colors.SlateGray;
+            double width = states.HasFlag(MaterialState.Focused) ? 3 : 1;
+            return new OutlineInputBorder(new BorderSide(color, width), BorderRadius.Circular(10));
         }
 
         private static Widget Control(string label, Action action) => new TextButton(new Text(label, fontSize: 12), action);

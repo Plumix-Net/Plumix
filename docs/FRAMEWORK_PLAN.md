@@ -682,6 +682,9 @@ Progress update (2026-03-19):
   - `Wrap` now follows Flutter run construction, main/run alignment, cross-axis alignment, spacing, RTL/vertical-direction ordering, and overflow clipping through a framework-owned `RenderWrap`;
   - `Chip` now forwards its information/delete-only API through `RawChip` with source-shaped delete slots and semantics;
   - added focused render/control coverage and switched both chips demos to matching multi-run `Wrap` composition.
+- Added paired `MaterialStateOutlineInputBorder` + `MaterialStateUnderlineInputBorder` parity:
+  - `InputDecorator` now resolves stateful borders against combined focus, hover, error, and disabled states;
+  - added focused border-resolution coverage and mirrored C#/Dart text-field demo probes.
 - Remaining divergence for floating action button in current framework scope:
   - none documented in current framework scope.
 

@@ -23,7 +23,7 @@ public abstract class InputBorder
     public static InputBorder None { get; } = new NoInputBorder();
 }
 
-public sealed class UnderlineInputBorder : InputBorder
+public class UnderlineInputBorder : InputBorder
 {
     public UnderlineInputBorder(BorderSide? borderSide = null, BorderRadius? borderRadius = null)
         : base(borderSide ?? new BorderSide(Colors.Black, 1)) =>
@@ -33,7 +33,7 @@ public sealed class UnderlineInputBorder : InputBorder
     public override InputBorder CopyWith(BorderSide borderSide) => new UnderlineInputBorder(borderSide, BorderRadius);
 }
 
-public sealed class OutlineInputBorder : InputBorder
+public class OutlineInputBorder : InputBorder
 {
     public OutlineInputBorder(BorderSide? borderSide = null, BorderRadius? borderRadius = null, double gapPadding = 4)
         : base(borderSide ?? new BorderSide(Colors.Black, 1))
@@ -46,6 +46,82 @@ public sealed class OutlineInputBorder : InputBorder
     public override BorderRadius BorderRadius { get; }
     public double GapPadding { get; }
     public override InputBorder CopyWith(BorderSide borderSide) => new OutlineInputBorder(borderSide, BorderRadius, GapPadding);
+}
+
+// Dart parity source: flutter/packages/flutter/lib/src/material/material_state.dart
+// (MaterialStateOutlineInputBorder and MaterialStateUnderlineInputBorder).
+//
+// InputDecoration explicitly supports resolving these borders from its current
+// interactive states. Using an ordinary InputBorder elsewhere keeps its default
+// outline/underline geometry, just as it does in Flutter.
+public interface IStateInputBorder
+{
+    InputBorder Resolve(MaterialState states);
+}
+
+public abstract class MaterialStateOutlineInputBorder : OutlineInputBorder, IStateInputBorder
+{
+    protected MaterialStateOutlineInputBorder(
+        BorderSide? borderSide = null,
+        BorderRadius? borderRadius = null,
+        double gapPadding = 4) : base(borderSide, borderRadius, gapPadding)
+    {
+    }
+
+    public abstract InputBorder Resolve(MaterialState states);
+
+    public static MaterialStateOutlineInputBorder ResolveWith(Func<MaterialState, InputBorder> resolver)
+    {
+        return new ResolverMaterialStateOutlineInputBorder(resolver);
+    }
+
+    private sealed class ResolverMaterialStateOutlineInputBorder : MaterialStateOutlineInputBorder
+    {
+        private readonly Func<MaterialState, InputBorder> _resolver;
+
+        public ResolverMaterialStateOutlineInputBorder(Func<MaterialState, InputBorder> resolver)
+        {
+            _resolver = resolver ?? throw new ArgumentNullException(nameof(resolver));
+        }
+
+        public override InputBorder Resolve(MaterialState states)
+        {
+            return _resolver(states)
+                   ?? throw new InvalidOperationException("A state input-border resolver cannot return null.");
+        }
+    }
+}
+
+public abstract class MaterialStateUnderlineInputBorder : UnderlineInputBorder, IStateInputBorder
+{
+    protected MaterialStateUnderlineInputBorder(
+        BorderSide? borderSide = null,
+        BorderRadius? borderRadius = null) : base(borderSide, borderRadius)
+    {
+    }
+
+    public abstract InputBorder Resolve(MaterialState states);
+
+    public static MaterialStateUnderlineInputBorder ResolveWith(Func<MaterialState, InputBorder> resolver)
+    {
+        return new ResolverMaterialStateUnderlineInputBorder(resolver);
+    }
+
+    private sealed class ResolverMaterialStateUnderlineInputBorder : MaterialStateUnderlineInputBorder
+    {
+        private readonly Func<MaterialState, InputBorder> _resolver;
+
+        public ResolverMaterialStateUnderlineInputBorder(Func<MaterialState, InputBorder> resolver)
+        {
+            _resolver = resolver ?? throw new ArgumentNullException(nameof(resolver));
+        }
+
+        public override InputBorder Resolve(MaterialState states)
+        {
+            return _resolver(states)
+                   ?? throw new InvalidOperationException("A state input-border resolver cannot return null.");
+        }
+    }
 }
 
 internal sealed class NoInputBorder : InputBorder
@@ -385,6 +461,15 @@ public sealed class InputDecorator : StatefulWidget
                 : d.EnabledBorder;
             var border = selected ?? d.Border ?? new UnderlineInputBorder();
             if (ReferenceEquals(border, InputBorder.None)) return border;
+            if (border is IStateInputBorder stateBorder)
+            {
+                MaterialState states = MaterialState.None;
+                if (!d.Enabled) states |= MaterialState.Disabled;
+                if (Current.IsFocused) states |= MaterialState.Focused;
+                if (Current.IsHovering) states |= MaterialState.Hovered;
+                if (error) states |= MaterialState.Error;
+                return stateBorder.Resolve(states);
+            }
             if (selected is not null && selected.BorderSide.Width > 0) return selected;
             var color = !d.Enabled ? ApplyOpacity(theme.OnSurfaceColor, 0.12)
                 : error ? theme.ErrorColor : Current.IsFocused ? theme.PrimaryColor
