@@ -317,6 +317,7 @@ public sealed record ThemeData
     private MenuBarThemeData? _menuBarTheme;
     private MenuButtonThemeData? _menuButtonTheme;
     private MenuThemeData? _menuTheme;
+    private TextSelectionThemeData? _textSelectionTheme;
 
     public ThemeData(
         TargetPlatform? platform = null,
@@ -413,7 +414,8 @@ public sealed record ThemeData
         CarouselViewThemeData? carouselViewTheme = null,
         MenuBarThemeData? menuBarTheme = null,
         MenuButtonThemeData? menuButtonTheme = null,
-        MenuThemeData? menuTheme = null)
+        MenuThemeData? menuTheme = null,
+        TextSelectionThemeData? textSelectionTheme = null)
     {
         Platform = platform ?? ResolveDefaultPlatform();
         Brightness = brightness ?? Brightness.Light;
@@ -516,6 +518,7 @@ public sealed record ThemeData
         _menuBarTheme = menuBarTheme;
         _menuButtonTheme = menuButtonTheme;
         _menuTheme = menuTheme;
+        _textSelectionTheme = textSelectionTheme;
         VisualDensity = visualDensity ?? VisualDensity.Standard;
     }
 
@@ -887,6 +890,12 @@ public sealed record ThemeData
     {
         get => _menuTheme ?? new MenuThemeData();
         init => _menuTheme = value;
+    }
+
+    public TextSelectionThemeData TextSelectionTheme
+    {
+        get => _textSelectionTheme ?? new TextSelectionThemeData();
+        init => _textSelectionTheme = value;
     }
 
     public ButtonBarThemeData ButtonBarTheme

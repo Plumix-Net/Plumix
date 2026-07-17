@@ -69,13 +69,21 @@ public sealed class Text : LeafRenderObjectWidget
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
         var defaultTextStyle = DefaultTextStyle.MaybeOf(context);
+        var selection = SelectionContainer.MaybeOf(context);
         var paragraph = new RenderParagraph(Data)
         {
             TextAlign = TextAlign,
             SoftWrap = defaultTextStyle?.SoftWrap ?? SoftWrap,
             MaxLines = MaxLines,
             Overflow = defaultTextStyle?.Overflow ?? Overflow,
-            TextDirection = TextDirection
+            TextDirection = TextDirection,
+            SelectionRegistrar = selection?.Registrar,
+            SelectionEnabled = selection?.Enabled ?? false,
+            SelectionColor = selection?.SelectionColor ?? default,
+            CursorColor = selection?.CursorColor ?? default,
+            ShowCursor = selection?.ShowCursor ?? false,
+            CursorWidth = selection?.CursorWidth ?? 2.0,
+            CursorHeight = selection?.CursorHeight,
         };
 
         ApplyResolvedTextStyle(context, paragraph);
@@ -93,6 +101,21 @@ public sealed class Text : LeafRenderObjectWidget
         paragraph.MaxLines = MaxLines;
         paragraph.Overflow = defaultTextStyle?.Overflow ?? Overflow;
         paragraph.TextDirection = TextDirection;
+        var selection = SelectionContainer.MaybeOf(context);
+        paragraph.SelectionRegistrar = selection?.Registrar;
+        paragraph.SelectionEnabled = selection?.Enabled ?? false;
+        if (selection is not null)
+        {
+            paragraph.SelectionColor = selection.SelectionColor;
+            paragraph.CursorColor = selection.CursorColor;
+            paragraph.ShowCursor = selection.ShowCursor;
+            paragraph.CursorWidth = selection.CursorWidth;
+            paragraph.CursorHeight = selection.CursorHeight;
+        }
+        else
+        {
+            paragraph.ShowCursor = false;
+        }
     }
 
     private void ApplyResolvedTextStyle(BuildContext context, RenderParagraph paragraph)

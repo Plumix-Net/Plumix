@@ -1,0 +1,318 @@
+using Avalonia;
+using Avalonia.Media;
+using Plumix.Gestures;
+using Plumix.Material;
+using Plumix.Rendering;
+using Plumix.UI;
+using Plumix.Widgets;
+using Xunit;
+
+namespace Plumix.Tests;
+
+[Collection(SchedulerTestCollection.Name)]
+public sealed class MaterialSelectionTests
+{
+    [Fact]
+    public void SelectableText_DefaultsAndGuardsMatchFlutterContract()
+    {
+        var widget = new SelectableText("Selectable");
+
+        Assert.False(widget.ShowCursor);
+        Assert.False(widget.Autofocus);
+        Assert.True(widget.EnableInteractiveSelection);
+        Assert.True(widget.SelectionEnabled);
+        Assert.Equal(2, widget.CursorWidth);
+        Assert.Null(widget.MinLines);
+        Assert.Null(widget.MaxLines);
+        Assert.Throws<ArgumentOutOfRangeException>(() => new SelectableText("x", minLines: 0));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new SelectableText("x", maxLines: 0));
+        Assert.Throws<ArgumentException>(() => new SelectableText("x", minLines: 3, maxLines: 2));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new SelectableText("x", cursorWidth: 0));
+    }
+
+    [Fact]
+    public void SelectableText_ResolvesThemeStyleSelectionAndCursor()
+    {
+        var selection = Color.Parse("#55336699");
+        var cursor = Colors.Crimson;
+        var theme = ThemeData.Light with
+        {
+            TextSelectionTheme = new TextSelectionThemeData(
+                CursorColor: cursor,
+                SelectionColor: selection),
+        };
+        using var harness = new WidgetRenderHarness(Root(
+            new SelectableText(
+                "Styled",
+                style: new TextStyle(FontSize: 21, Color: Colors.DarkGreen),
+                showCursor: true,
+                autofocus: true),
+            theme));
+
+        harness.Pump(new Size(320, 120));
+        Assert.True(FindParagraphs(harness.RenderView).Single().SelectionEnabled);
+
+        RenderParagraph paragraph = FindParagraphs(harness.RenderView).Single();
+        Assert.Equal(21, paragraph.FontSize);
+        Assert.Equal(Colors.DarkGreen, ((SolidColorBrush)paragraph.Foreground).Color);
+        Assert.Equal(selection, paragraph.SelectionColor);
+        Assert.Equal(cursor, paragraph.CursorColor);
+        Assert.True(paragraph.ShowCursor);
+    }
+
+    [Fact]
+    public void SelectableText_SelectAllAndCopyUseReadOnlyKeyboardFlow()
+    {
+        TextSelection? changedSelection = null;
+        SelectionChangedCause? changedCause = null;
+        using var harness = new WidgetRenderHarness(Root(
+            new SelectableText(
+                "alpha beta",
+                autofocus: true,
+                onSelectionChanged: (selection, cause) =>
+                {
+                    changedSelection = selection;
+                    changedCause = cause;
+                }),
+            ThemeData.Light));
+
+        harness.Pump(new Size(320, 120));
+
+        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("A", true, isControlPressed: true)));
+        RenderParagraph paragraph = FindParagraphs(harness.RenderView).Single();
+        Assert.Equal(0, paragraph.SelectionBaseOffset);
+        Assert.Equal(10, paragraph.SelectionExtentOffset);
+        Assert.Equal(new TextSelection(0, 10), changedSelection);
+        Assert.Equal(SelectionChangedCause.Keyboard, changedCause);
+
+        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("C", true, isControlPressed: true)));
+        Assert.Equal("alpha beta", TextClipboard.GetText());
+    }
+
+    [Fact]
+    public void SelectableText_PointerDragPaintSelectionAndReportsDragCause()
+    {
+        SelectionChangedCause? cause = null;
+        using var harness = new WidgetRenderHarness(Root(
+            new SelectableText(
+                "drag selection",
+                onSelectionChanged: (_, nextCause) => cause = nextCause),
+            ThemeData.Light));
+        harness.Pump(new Size(320, 120));
+        Assert.True(FindParagraphs(harness.RenderView).Single().GetTextPosition(new Point(90, 8)) > 0);
+
+        var binding = GestureBinding.Instance;
+        DateTime now = DateTime.UtcNow;
+        binding.HandlePointerEvent(harness.RenderView, new PointerDownEvent(
+            91,
+            PointerDeviceKind.Mouse,
+            new Point(1, 8),
+            PointerButtons.Primary,
+            now));
+        Assert.Equal(SelectionChangedCause.Tap, cause);
+        binding.HandlePointerEvent(harness.RenderView, new PointerMoveEvent(
+            91,
+            PointerDeviceKind.Mouse,
+            new Point(90, 8),
+            PointerButtons.Primary,
+            down: true,
+            now.AddMilliseconds(16)));
+        binding.HandlePointerEvent(harness.RenderView, new PointerUpEvent(
+            91,
+            PointerDeviceKind.Mouse,
+            new Point(90, 8),
+            PointerButtons.None,
+            now.AddMilliseconds(32)));
+
+        RenderParagraph paragraph = FindParagraphs(harness.RenderView).Single();
+        Assert.NotEqual(paragraph.SelectionBaseOffset, paragraph.SelectionExtentOffset);
+        Assert.Equal(SelectionChangedCause.Drag, cause);
+    }
+
+    [Fact]
+    public void SelectionArea_SelectAllAggregatesTextSubtreeAndExposesState()
+    {
+        var key = new LabeledGlobalKey<SelectionAreaState>("area");
+        SelectedContent? selected = null;
+        using var harness = new WidgetRenderHarness(Root(
+            new SelectionArea(
+                key: key,
+                onSelectionChanged: content => selected = content,
+                child: new Column(
+                    crossAxisAlignment: CrossAxisAlignment.Start,
+                    children:
+                    [
+                        new Text("first "),
+                        new Text("second"),
+                    ])),
+            ThemeData.Light));
+        harness.Pump(new Size(320, 160));
+
+        key.CurrentState!.SelectableRegion.SelectAll();
+
+        Assert.Equal("first second", selected?.PlainText);
+        Assert.Equal("first second", key.CurrentState.SelectableRegion.SelectedContent?.PlainText);
+        List<RenderParagraph> paragraphs = FindParagraphs(harness.RenderView);
+        Assert.Equal(paragraphs[0].Text.Length, paragraphs[0].SelectionExtentOffset);
+        Assert.Equal(paragraphs[1].Text.Length, paragraphs[1].SelectionExtentOffset);
+
+        key.CurrentState.SelectableRegion.CopySelection();
+        Assert.Equal("first second", TextClipboard.GetText());
+        key.CurrentState.SelectableRegion.ClearSelection();
+        Assert.Null(key.CurrentState.SelectableRegion.SelectedContent);
+    }
+
+    [Fact]
+    public void SelectionArea_PointerDragCanCrossParagraphBoundaries()
+    {
+        SelectedContent? selected = null;
+        using var harness = new WidgetRenderHarness(Root(
+            new SelectionArea(
+                onSelectionChanged: content => selected = content,
+                child: new Column(
+                    crossAxisAlignment: CrossAxisAlignment.Start,
+                    children:
+                    [
+                        new Text("first "),
+                        new Text("second"),
+                    ])),
+            ThemeData.Light));
+        harness.Pump(new Size(320, 160));
+
+        var binding = GestureBinding.Instance;
+        DateTime now = DateTime.UtcNow;
+        binding.HandlePointerEvent(harness.RenderView, new PointerDownEvent(
+            92,
+            PointerDeviceKind.Mouse,
+            new Point(1, 8),
+            PointerButtons.Primary,
+            now));
+        binding.HandlePointerEvent(harness.RenderView, new PointerMoveEvent(
+            92,
+            PointerDeviceKind.Mouse,
+            new Point(80, 28),
+            PointerButtons.Primary,
+            down: true,
+            now.AddMilliseconds(16)));
+        binding.HandlePointerEvent(harness.RenderView, new PointerUpEvent(
+            92,
+            PointerDeviceKind.Mouse,
+            new Point(80, 28),
+            PointerButtons.None,
+            now.AddMilliseconds(32)));
+
+        Assert.Equal("first second", selected?.PlainText);
+        List<RenderParagraph> paragraphs = FindParagraphs(harness.RenderView);
+        Assert.Equal(paragraphs[0].Text.Length, paragraphs[0].SelectionExtentOffset);
+        Assert.Equal(paragraphs[1].Text.Length, paragraphs[1].SelectionExtentOffset);
+    }
+
+    [Fact]
+    public void SelectionArea_LocalThemeOverridesGlobalThemeData()
+    {
+        var global = Colors.Crimson;
+        var local = Colors.CornflowerBlue;
+        var theme = ThemeData.Light with
+        {
+            TextSelectionTheme = new TextSelectionThemeData(SelectionColor: global),
+        };
+        using var harness = new WidgetRenderHarness(Root(
+            new TextSelectionTheme(
+                data: new TextSelectionThemeData(SelectionColor: local),
+                child: new SelectionArea(child: new Text("themed area"))),
+            theme));
+
+        harness.Pump(new Size(320, 120));
+
+        Assert.Equal(local, FindParagraphs(harness.RenderView).Single().SelectionColor);
+    }
+
+    private static Widget Root(Widget child, ThemeData theme)
+    {
+        return new MediaQuery(
+            data: new MediaQueryData(Size: new Size(320, 180)),
+            child: new Directionality(TextDirection.Ltr, new Theme(theme, child)));
+    }
+
+    private static List<RenderParagraph> FindParagraphs(RenderObject? root)
+    {
+        var result = new List<RenderParagraph>();
+        if (root is null)
+        {
+            return result;
+        }
+        if (root is RenderParagraph paragraph)
+        {
+            result.Add(paragraph);
+        }
+        root.VisitChildren(child => result.AddRange(FindParagraphs(child)));
+        return result;
+    }
+
+    private sealed class WidgetRenderHarness : IDisposable
+    {
+        private readonly BuildOwner _owner = new();
+        private readonly HarnessRootElement _rootElement;
+        private readonly PipelineOwner _pipeline;
+
+        public WidgetRenderHarness(Widget rootWidget)
+        {
+            RenderView = new RenderView();
+            _pipeline = new PipelineOwner(RenderView);
+            _pipeline.Attach(RenderView);
+            _rootElement = new HarnessRootElement(RenderView, rootWidget);
+            _rootElement.Attach(_owner);
+            _rootElement.Mount(parent: null, newSlot: null);
+            _owner.FlushBuild();
+        }
+
+        public RenderView RenderView { get; }
+
+        public void Pump(Size size)
+        {
+            _owner.FlushBuild();
+            _pipeline.RequestLayout();
+            _pipeline.FlushLayout(size);
+            _pipeline.FlushCompositingBits();
+            _pipeline.FlushPaint();
+        }
+
+        public void Dispose()
+        {
+            _rootElement.Unmount();
+            FocusManager.Instance.ResetForTests();
+            GestureBinding.Instance.ResetForTests();
+        }
+
+        private sealed class HarnessRootElement : Element, IRenderObjectHost
+        {
+            private readonly RenderView _renderView;
+            private Element? _child;
+
+            public HarnessRootElement(RenderView renderView, Widget widget) : base(widget)
+            {
+                _renderView = renderView;
+            }
+
+            public override RenderObject? RenderObject => _child?.RenderObject;
+            internal override Element? RenderObjectAttachingChild => _child;
+            protected override void OnMount() { base.OnMount(); Rebuild(); }
+            internal override void Rebuild() { Dirty = false; _child = UpdateChild(_child, Widget, Slot); }
+            internal override void Update(Widget newWidget) { base.Update(newWidget); Rebuild(); }
+            internal override void ForgetChild(Element child) { if (ReferenceEquals(_child, child)) _child = null; }
+            internal override void VisitChildren(Action<Element> visitor) { if (_child is not null) visitor(_child); }
+            public void InsertRenderObjectChild(RenderObject child, object? slot) =>
+                _renderView.Child = (RenderBox)child;
+            public void MoveRenderObjectChild(RenderObject child, object? oldSlot, object? newSlot) { }
+            public void RemoveRenderObjectChild(RenderObject child, object? slot)
+            {
+                if (ReferenceEquals(_renderView.Child, child)) _renderView.Child = null;
+            }
+            internal override void Unmount()
+            {
+                if (_child is not null) { UnmountChild(_child); _child = null; }
+                base.Unmount();
+            }
+        }
+    }
+}

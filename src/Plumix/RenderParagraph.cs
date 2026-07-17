@@ -3,6 +3,7 @@ using Avalonia.Media;
 using Avalonia.Media.TextFormatting;
 using Plumix.Rendering;
 using Plumix.UI;
+using Plumix.Widgets;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/rendering/paragraph.dart (approximate)
 
@@ -25,6 +26,15 @@ public sealed class RenderParagraph : RenderBox
     private double? _height;
     private double _letterSpacing;
     private TextLayout? _layout;
+    private ITextSelectionRegistrar? _selectionRegistrar;
+    private Color _selectionColor = Color.FromArgb(0x66, 0x67, 0x50, 0xA4);
+    private Color _cursorColor = Color.Parse("#FF6750A4");
+    private int _selectionBaseOffset;
+    private int _selectionExtentOffset;
+    private bool _showCursor;
+    private double _cursorWidth = 2.0;
+    private double? _cursorHeight;
+    private bool _selectionEnabled;
 
     public RenderParagraph(string text)
     {
@@ -266,6 +276,114 @@ public sealed class RenderParagraph : RenderBox
         }
     }
 
+    internal ITextSelectionRegistrar? SelectionRegistrar
+    {
+        get => _selectionRegistrar;
+        set
+        {
+            if (ReferenceEquals(_selectionRegistrar, value))
+            {
+                return;
+            }
+
+            _selectionRegistrar?.Unregister(this);
+            _selectionRegistrar = value;
+            if (Attached)
+            {
+                _selectionRegistrar?.Register(this);
+            }
+            MarkNeedsPaint();
+        }
+    }
+
+    public Color SelectionColor
+    {
+        get => _selectionColor;
+        set
+        {
+            if (_selectionColor == value)
+            {
+                return;
+            }
+            _selectionColor = value;
+            MarkNeedsPaint();
+        }
+    }
+
+    public Color CursorColor
+    {
+        get => _cursorColor;
+        set
+        {
+            if (_cursorColor == value)
+            {
+                return;
+            }
+            _cursorColor = value;
+            MarkNeedsPaint();
+        }
+    }
+
+    public int SelectionBaseOffset => _selectionBaseOffset;
+
+    public int SelectionExtentOffset => _selectionExtentOffset;
+
+    public bool ShowCursor
+    {
+        get => _showCursor;
+        set
+        {
+            if (_showCursor == value)
+            {
+                return;
+            }
+            _showCursor = value;
+            MarkNeedsPaint();
+        }
+    }
+
+    public double CursorWidth
+    {
+        get => _cursorWidth;
+        set
+        {
+            if (Math.Abs(_cursorWidth - value) < 0.01)
+            {
+                return;
+            }
+            _cursorWidth = value;
+            MarkNeedsPaint();
+        }
+    }
+
+    public double? CursorHeight
+    {
+        get => _cursorHeight;
+        set
+        {
+            if (_cursorHeight == value)
+            {
+                return;
+            }
+            _cursorHeight = value;
+            MarkNeedsPaint();
+        }
+    }
+
+    public bool SelectionEnabled
+    {
+        get => _selectionEnabled;
+        set
+        {
+            if (_selectionEnabled == value)
+            {
+                return;
+            }
+            _selectionEnabled = value;
+            MarkNeedsPaint();
+        }
+    }
+
     protected override void PerformLayout()
     {
         double maxWidth = double.IsInfinity(Constraints.MaxWidth)
@@ -354,6 +472,7 @@ public sealed class RenderParagraph : RenderBox
     {
         if (_layout != null)
         {
+            PaintSelection(ctx, offset);
             if (_overflow == TextOverflow.Fade &&
                 _layout.WidthIncludingTrailingWhitespace > Size.Width + 0.01)
             {
@@ -367,7 +486,166 @@ public sealed class RenderParagraph : RenderBox
             {
                 ctx.DrawTextLayout(_layout, offset);
             }
+            PaintCursor(ctx, offset);
         }
+    }
+
+    protected override bool HitTestSelf(Point position)
+    {
+        return _selectionRegistrar is not null && _selectionEnabled;
+    }
+
+    public override void HandleEvent(PointerEvent @event, HitTestEntry entry)
+    {
+        if (_selectionRegistrar is null || !_selectionEnabled)
+        {
+            return;
+        }
+
+        switch (@event)
+        {
+            case PointerDownEvent { Buttons: var buttons } when buttons.HasFlag(PointerButtons.Primary):
+                _selectionRegistrar.StartSelection(this, @event.Position);
+                break;
+            case PointerMoveEvent { Down: true, Buttons: var buttons } when buttons.HasFlag(PointerButtons.Primary):
+                _selectionRegistrar.UpdateSelection(@event.Position);
+                break;
+            case PointerUpEvent:
+            case PointerCancelEvent:
+                _selectionRegistrar.EndSelection();
+                break;
+        }
+    }
+
+    internal void SetSelection(int baseOffset, int extentOffset)
+    {
+        int nextBaseOffset = Math.Clamp(baseOffset, 0, _text.Length);
+        int nextExtentOffset = Math.Clamp(extentOffset, 0, _text.Length);
+        if (_selectionBaseOffset == nextBaseOffset && _selectionExtentOffset == nextExtentOffset)
+        {
+            return;
+        }
+
+        _selectionBaseOffset = nextBaseOffset;
+        _selectionExtentOffset = nextExtentOffset;
+        MarkNeedsPaint();
+        MarkNeedsSemanticsUpdate();
+    }
+
+    internal int GetTextPosition(Point globalPosition)
+    {
+        if (!TryGlobalToLocal(globalPosition, out Point localPosition))
+        {
+            return 0;
+        }
+
+        var clamped = new Point(
+            Math.Clamp(localPosition.X, 0, Math.Max(0, Size.Width)),
+            Math.Clamp(localPosition.Y, 0, Math.Max(0, Size.Height)));
+        if (_layout is not null)
+        {
+            return Math.Clamp(_layout.HitTestPoint(clamped).TextPosition, 0, _text.Length);
+        }
+
+        return EstimateTextPosition(clamped);
+    }
+
+    internal bool ContainsGlobalPosition(Point globalPosition)
+    {
+        return TryGlobalToLocal(globalPosition, out Point local)
+               && local.X >= 0
+               && local.Y >= 0
+               && local.X <= Size.Width
+               && local.Y <= Size.Height;
+    }
+
+    internal double DistanceToGlobalPosition(Point globalPosition)
+    {
+        if (!TryGlobalToLocal(globalPosition, out Point local))
+        {
+            return double.PositiveInfinity;
+        }
+
+        double dx = local.X < 0 ? -local.X : local.X > Size.Width ? local.X - Size.Width : 0;
+        double dy = local.Y < 0 ? -local.Y : local.Y > Size.Height ? local.Y - Size.Height : 0;
+        return (dx * dx) + (dy * dy);
+    }
+
+    protected override void OnAttach()
+    {
+        base.OnAttach();
+        _selectionRegistrar?.Register(this);
+    }
+
+    protected override void OnDetach()
+    {
+        _selectionRegistrar?.Unregister(this);
+        base.OnDetach();
+    }
+
+    private void PaintSelection(PaintingContext context, Point offset)
+    {
+        if (_layout is null || _selectionBaseOffset == _selectionExtentOffset)
+        {
+            return;
+        }
+
+        int start = Math.Min(_selectionBaseOffset, _selectionExtentOffset);
+        int length = Math.Abs(_selectionExtentOffset - _selectionBaseOffset);
+        var brush = new SolidColorBrush(_selectionColor);
+        foreach (Rect rect in _layout.HitTestTextRange(start, length))
+        {
+            context.DrawRectangle(brush, null, new Rect(rect.Position + offset, rect.Size));
+        }
+    }
+
+    private void PaintCursor(PaintingContext context, Point offset)
+    {
+        if (!_showCursor || _layout is null || _selectionBaseOffset != _selectionExtentOffset)
+        {
+            return;
+        }
+
+        Rect hit = _layout.HitTestTextPosition(_selectionExtentOffset);
+        double height = _cursorHeight ?? hit.Height;
+        double top = hit.Top + Math.Max(0, (hit.Height - height) / 2.0);
+        context.DrawRectangle(
+            new SolidColorBrush(_cursorColor),
+            null,
+            new Rect(offset.X + hit.X, offset.Y + top, _cursorWidth, height));
+    }
+
+    private bool TryGlobalToLocal(Point globalPosition, out Point localPosition)
+    {
+        localPosition = globalPosition;
+        if (!TryGetTransformFromRoot(out Matrix transform) || !transform.TryInvert(out Matrix inverse))
+        {
+            return false;
+        }
+
+        localPosition = inverse.Transform(globalPosition);
+        return true;
+    }
+
+    private int EstimateTextPosition(Point localPosition)
+    {
+        if (_text.Length == 0)
+        {
+            return 0;
+        }
+
+        double characterWidth = Math.Max(1.0, (_fontSize * 0.55) + _letterSpacing);
+        double lineHeight = _height is > 0 ? _fontSize * _height.Value : _fontSize * 1.2;
+        string[] lines = _text.Split('\n');
+        int lineIndex = Math.Clamp((int)(localPosition.Y / Math.Max(1.0, lineHeight)), 0, lines.Length - 1);
+        int offset = 0;
+        for (int index = 0; index < lineIndex; index++)
+        {
+            offset += lines[index].Length + 1;
+        }
+
+        int column = Math.Clamp((int)Math.Round(localPosition.X / characterWidth), 0, lines[lineIndex].Length);
+        return Math.Clamp(offset + column, 0, _text.Length);
     }
 
     protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)

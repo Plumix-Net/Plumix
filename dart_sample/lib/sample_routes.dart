@@ -45,6 +45,7 @@ class SampleRoutes {
   static const String dropdown = '/dropdown';
   static const String search = '/search';
   static const String autocomplete = '/autocomplete';
+  static const String selection = '/selection';
   static const String chips = '/chips';
   static const String linearProgressIndicator = '/linear-progress-indicator';
   static const String circularProgressIndicator =

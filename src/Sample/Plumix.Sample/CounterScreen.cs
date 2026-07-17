@@ -23,7 +23,7 @@ public sealed class CounterScreen : StatelessWidget
                 onTap: model.Increment));
 
         return new Container(
-            color: Colors.White,
+            color: Colors.Red,
             padding: new Thickness(20),
             child: new SingleChildScrollView(
                 child: new Column(
@@ -32,7 +32,7 @@ public sealed class CounterScreen : StatelessWidget
                     children:
                     [
                         new Text("Plumix.Sample Counter", fontSize: 24, color: Colors.Black),
-                        new Text($"Count: {model.Count}", fontSize: 18, color: Colors.DarkSlateBlue),
+                        new Text($"Count: {model.Count}", fontSize: 18, color: Colors.Red),
                         new Row(
                             spacing: 12,
                             children:

@@ -8,7 +8,7 @@ Use this block as the fastest machine-readable status summary.
 
 ```yaml
 framework_plan_version: 1
-last_updated: 2026-07-11
+last_updated: 2026-07-17
 north_star: "Flutter-like widget/rendering framework in C# with Avalonia as host infrastructure."
 current_phase: "M4 material library rewrite (theme/scaffold/material controls) in progress."
 status:
@@ -172,6 +172,11 @@ Kickoff note (2026-03-12):
 - Added paired `DropdownMenu<T>` + `DropdownMenuFormField<T>` parity with editable/select-only anchors, filtering/search, disabled-item keyboard traversal, menu controllers/close policies, intrinsic and explicit sizing, Material 3 dropdown theming, form lifecycle, focused tests, and mirrored C#/Dart sample probes.
 - Added paired `SearchBar` + `SearchAnchor` parity baseline with controller open/close, route-owned search view, sync suggestions, M3 bar/view themes, focused tests, and mirrored C#/Dart sample probes.
 - Added paired core `RawAutocomplete<T>` + Material `Autocomplete<T>` parity with sync/async option resolution, stale-result suppression, split/custom fields, anchored direction selection, keyboard highlighting/selection, Material defaults, focused tests, and mirrored C#/Dart sample probes.
+- Added paired Material `SelectableText` + `SelectionArea` parity baseline over a shared core `SelectableRegion`:
+  single-run and multi-widget selection, glyph-range highlight paint, transformed cross-paragraph pointer drag,
+  select-all/copy keyboard flow, focus/cursor behavior, `TextSelectionTheme` precedence, callbacks, focused tests,
+  and mirrored C#/Dart sample probes. Rich spans, handles, toolbars, magnifiers, and advanced selection services
+  remain tracked in `DIVERGENCES.md`.
 - Added paired `TabPageSelector` + `TabPageSelectorIndicator` parity with explicit/inherited controllers, animated and drag-driven color interpolation, theme-secondary defaults, border styles, localized semantics, focused tests, and expanded mirrored tabs demos.
 - Added paired `FloatingActionButtonLocation` + `FloatingActionButtonAnimator` baseline: `Scaffold` now exposes Flutter-shaped location/animator APIs and applies standard start/center/end, top/float/docked/contained, mini, RTL, and inset placement through a framework render adapter; the public geometry model also carries snackbar/bottom-sheet inputs for the full Dart formulas. Focused geometry/animator tests and a mirrored centered-FAB sample probe were added. Location-transition motion and live snackbar/bottom-sheet avoidance remain tracked in `DIVERGENCES.md` pending live scaffold geometry.
 - Added paired core `IgnorePointer` + `AbsorbPointer` parity with Dart-shaped hit-test blocking/absorption, default semantics action blocking, `ignoringSemantics` subtree omission, and focused widget/render/semantics coverage.

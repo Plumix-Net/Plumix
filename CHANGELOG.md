@@ -1,5 +1,10 @@
 # Changelog
 
+- Added paired Material `SelectableText` + `SelectionArea` ports on a shared core selectable-region registrar,
+  including glyph-range highlight paint, cross-widget pointer drag, select-all/copy shortcuts,
+  `TextSelectionTheme`, focused tests, and mirrored C#/Dart runtime probes. Selection handles, context menus,
+  magnifiers, and rich spans remain tracked in `docs/ai/DIVERGENCES.md`.
+
 - Added paired Flutter core `AnimatedAlign` + `AnimatedPadding` ports with alignment/factor and inset
   interpolation, interrupted-transition continuity, curve/duration updates, `onEnd`, focused tests, and mirrored
   C#/Dart runtime probes. Advanced `Plumix` to `0.2.0-alpha.1`.

@@ -41,6 +41,10 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Bottom sheets enter through `BottomSheet.cs` + `BottomSheetTheme.cs`; persistent presentation integrates with `Scaffold.cs`, modal presentation with `Widgets/Navigation.cs`, and focused coverage lives in `MaterialBottomSheetTests.cs`.
 - Sliver app bars enter through `SliverAppBar.cs` + `FlexibleSpaceBar.cs`; persistent-header layout lives in `Widgets/Scroll.cs` and `Rendering/Sliver.cs`, with focused coverage in `MaterialSliverAppBarTests.cs`.
 - Material text inputs enter through `TextField.cs` + `TextFormField.cs` + `InputDecorator.cs` + `InputDecoratorTheme.cs`; form lifecycle lives in core `Widgets/Form.cs`, editing/IME behavior stays in `Widgets/TextInput.cs`, and focused coverage is split across `FormTests.cs` and `MaterialTextFieldTests.cs`.
+- Material read-only selection enters through `SelectableText.cs` + `SelectionArea.cs` + `TextSelectionTheme.cs`;
+  shared registration, keyboard/copy flow, and multi-paragraph coordination live in core `Widgets/Selection.cs`,
+  while glyph hit testing/highlight paint live in `RenderParagraph.cs`. Focused coverage is in
+  `MaterialSelectionTests.cs`.
 - Material search routes enter through `SearchDelegate.cs` alongside `SearchAnchor.cs`; route ownership uses core `Widgets/Navigation.cs`, query editing stays on `Widgets/TextInput.cs`, and focused coverage lives in `MaterialSearchTests.cs`.
 - Dialog-family controls (`Dialog`, `AlertDialog`, `SimpleDialog`, `SimpleDialogOption`) enter through `Dialog.cs` + `DialogTheme.cs`; modal stacking/result behavior also touches `Widgets/Navigation.cs` and is covered by `MaterialDialogTests.cs`.
 - Popup-menu controls (`PopupMenuButton`, item/checked/divider entries) enter through `PopupMenu.cs` + `PopupMenuTheme.cs`; anchor geometry and route lifecycle also touch `Widgets/Navigation.cs`/`Widgets/Scroll.cs` and are covered by `MaterialPopupMenuTests.cs`.

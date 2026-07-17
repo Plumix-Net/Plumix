@@ -189,6 +189,7 @@ public abstract class RenderObject : IRenderObject
     public void Attach(PipelineOwner owner)
     {
         Owner = owner;
+        OnAttach();
 
         // If the node was dirtied in some way while unattached, make sure to add
         // it to the appropriate dirty list now that an owner is available
@@ -234,6 +235,10 @@ public abstract class RenderObject : IRenderObject
     }
 
     protected virtual void OnDetach()
+    {
+    }
+
+    protected virtual void OnAttach()
     {
     }
 
@@ -700,6 +705,48 @@ public abstract class RenderObject : IRenderObject
 
         var intersection = inheritedClip.Value.Intersect(transformedLocalClip.Value);
         return intersection.Width <= 0 || intersection.Height <= 0 ? null : intersection;
+    }
+
+    internal bool TryGetTransformFromRoot(out Matrix transform)
+    {
+        transform = Matrix.Identity;
+        RenderObject? root = Owner?.Root;
+        if (root is null)
+        {
+            return false;
+        }
+
+        return Find(root, Matrix.Identity, this, out transform);
+
+        static bool Find(RenderObject node, Matrix current, RenderObject target, out Matrix result)
+        {
+            if (ReferenceEquals(node, target))
+            {
+                result = current;
+                return true;
+            }
+
+            bool found = false;
+            Matrix foundResult = Matrix.Identity;
+            node.VisitChildrenForSemantics((child, childOffset, childTransform) =>
+            {
+                if (found)
+                {
+                    return;
+                }
+
+                Matrix next = current
+                              * Matrix.CreateTranslation(childOffset.X, childOffset.Y)
+                              * childTransform;
+                if (Find(child, next, target, out Matrix childResult))
+                {
+                    foundResult = childResult;
+                    found = true;
+                }
+            });
+            result = foundResult;
+            return found;
+        }
     }
 
     /// <summary>
