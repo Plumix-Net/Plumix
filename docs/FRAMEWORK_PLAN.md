@@ -236,6 +236,11 @@ Kickoff note (2026-03-12):
 - Added paired `TabPageSelector` + `TabPageSelectorIndicator` parity with explicit/inherited controllers, animated and drag-driven color interpolation, theme-secondary defaults, border styles, localized semantics, focused tests, and expanded mirrored tabs demos.
 - Added paired `FloatingActionButtonLocation` + `FloatingActionButtonAnimator` baseline: `Scaffold` now exposes Flutter-shaped location/animator APIs and applies standard start/center/end, top/float/docked/contained, mini, RTL, and inset placement through a framework render adapter; the public geometry model also carries snackbar/bottom-sheet inputs for the full Dart formulas. Focused geometry/animator tests and a mirrored centered-FAB sample probe were added. Location-transition motion and live snackbar/bottom-sheet avoidance remain tracked in `DIVERGENCES.md` pending live scaffold geometry.
 - Added paired core `IgnorePointer` + `AbsorbPointer` parity with Dart-shaped hit-test blocking/absorption, default semantics action blocking, `ignoringSemantics` subtree omission, and focused widget/render/semantics coverage.
+- Added paired core `ReorderableList`/`SliverReorderableList` + Material `ReorderableListView` with keyed state,
+  immediate and delayed drag listeners, gesture-arena ownership, animated gaps and pickup proxy, legacy versus adjusted
+  reorder callbacks, fixed/variable extents, desktop/mobile handles, split header/footer padding, edge auto-scroll,
+  focused tests, and mirrored C#/Dart probes. Root-overlay proxy/drop choreography, prototype-forced extent, and custom
+  reorder semantics remain tracked in `DIVERGENCES.md` pending shared primitives.
 
 Progress update (2026-03-19):
 

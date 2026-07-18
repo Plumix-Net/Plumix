@@ -65,6 +65,7 @@ internal static class SampleRoutes
     public const string RangeSlider = "/range-slider";
     public const string Card = "/card";
     public const string Carousel = "/carousel";
+    public const string ReorderableList = "/reorderable-list";
     public const string GridTile = "/grid-tile";
     public const string ListTile = "/list-tile";
     public const string ListTileControls = "/list-tile-controls";
@@ -154,6 +155,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
         new(SampleRoutes.RangeSlider, "RangeSlider", "two-thumb range + continuous/discrete + theme/widget colors", () => new RangeSliderDemoPage()),
         new(SampleRoutes.Card, "Card", "elevated/filled/outlined variants + theme/clip probes", () => new CardDemoPage()),
         new(SampleRoutes.Carousel, "CarouselView", "fixed/weighted item extents + snapping + theme", () => new CarouselDemoPage()),
+        new(
+            SampleRoutes.ReorderableList,
+            "ReorderableListView",
+            "desktop handles + custom handles + keyed reorder callbacks",
+            () => new ReorderableListDemoPage()),
         new(SampleRoutes.GridTile, "GridTile + GridTileBar", "header/footer overlays + one/two-line bars + RTL", () => new GridTileDemoPage()),
         new(SampleRoutes.ListTile, "ListTile", "leading/title/subtitle/trailing + selected/dense/theme probes", () => new ListTileDemoPage()),
         new(SampleRoutes.ListTileControls, "CheckboxListTile + SwitchListTile", "whole-row toggle + tristate + affinity + adaptive probes", () => new ListTileControlsDemoPage()),

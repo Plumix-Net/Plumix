@@ -1,3 +1,5 @@
+using Plumix.Foundation;
+
 namespace Plumix.Widgets;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/services/mouse_cursor.dart (approximate)
@@ -13,6 +15,71 @@ public static class SystemMouseCursors
     public static MouseCursor Click { get; } = new SystemMouseCursor("click");
 
     public static MouseCursor Text { get; } = new SystemMouseCursor("text");
+
+    public static MouseCursor Grab { get; } = new SystemMouseCursor("grab");
+
+    public static MouseCursor Grabbing { get; } = new SystemMouseCursor("grabbing");
+}
+
+/// <summary>Changes the host cursor while the pointer is inside its child.</summary>
+public sealed class MouseRegion : StatefulWidget
+{
+    public MouseRegion(
+        Widget? child = null,
+        MouseCursor? cursor = null,
+        Key? key = null) : base(key)
+    {
+        Child = child;
+        Cursor = cursor ?? SystemMouseCursors.Basic;
+    }
+
+    public Widget? Child { get; }
+
+    public MouseCursor Cursor { get; }
+
+    public override State CreateState() => new MouseRegionState();
+
+    private sealed class MouseRegionState : State
+    {
+        private IDisposable? _cursorHandle;
+
+        private MouseRegion CurrentWidget => (MouseRegion)StateWidget;
+
+        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        {
+            if (_cursorHandle is null || Equals(((MouseRegion)oldWidget).Cursor, CurrentWidget.Cursor))
+            {
+                return;
+            }
+
+            _cursorHandle.Dispose();
+            _cursorHandle = MouseCursorManager.PushCursor(CurrentWidget.Cursor);
+        }
+
+        public override Widget Build(BuildContext context)
+        {
+            return new Listener(
+                onPointerEnter: _ => HandleEnter(),
+                onPointerExit: _ => HandleExit(),
+                child: CurrentWidget.Child);
+        }
+
+        public override void Dispose()
+        {
+            HandleExit();
+        }
+
+        private void HandleEnter()
+        {
+            _cursorHandle ??= MouseCursorManager.PushCursor(CurrentWidget.Cursor);
+        }
+
+        private void HandleExit()
+        {
+            _cursorHandle?.Dispose();
+            _cursorHandle = null;
+        }
+    }
 }
 
 public static class MouseCursorManager

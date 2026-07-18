@@ -17,7 +17,6 @@ Size legend: **S** — one focused widget, few states. **M** — widget family o
 
 | Widget / family | Flutter source (`lib/src/material/`) | Size | Notes / dependencies |
 | --- | --- | --- | --- |
-| `ReorderableListView` | `reorderable_list.dart` | L | Requires core `SliverReorderableList`/drag infra first (`widgets/reorderable_list.dart`) — not yet in `src/Plumix`. |
 | Mobile/adaptive text-selection toolbars + selection-overlay integration | `text_selection_toolbar.dart`, `adaptive_text_selection_toolbar.dart`, `text_selection.dart` | L | Desktop toolbar/button variants and `TextSelectionTheme` are ported. Remaining work needs mobile overflow layout plus copy/paste context-menu integration for `TextField`/`SelectableText`. |
 | `Magnifier` (Material text magnifier) | `magnifier.dart` | M | Depends on selection overlay infra; claim after toolbar family lands. |
 | Spell-check suggestions toolbar | `spell_check_suggestions_toolbar.dart` + layout delegate | M | Low priority until text-selection toolbars exist. |

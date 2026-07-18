@@ -26,6 +26,7 @@ import 'demos/general/aspect_ratio_demo_page.dart';
 import 'demos/general/bloc_counter_demo_page.dart';
 import 'demos/material/card_demo_page.dart';
 import 'demos/material/carousel_demo_page.dart';
+import 'demos/material/reorderable_list_demo_page.dart';
 import 'demos/material/circular_progress_indicator_demo_page.dart';
 import 'demos/material/circle_avatar_demo_page.dart';
 import 'demos/cupertino/checkbox_demo_page.dart';
@@ -289,6 +290,12 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'CarouselView',
       subtitle: 'fixed/weighted item extents + snapping + theme',
       builder: () => const CarouselDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.reorderableList,
+      title: 'ReorderableListView',
+      subtitle: 'desktop handles + custom handles + keyed reorder callbacks',
+      builder: () => const ReorderableListDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.gridTile,

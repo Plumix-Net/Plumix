@@ -38,6 +38,8 @@ public static class Icons
 
     public static IconData Done { get; } = new(0xe1f6, FontFamily: MaterialIconsFontFamily);
 
+    public static IconData DragHandle { get; } = new(0xe25d, FontFamily: MaterialIconsFontFamily);
+
     public static IconData Edit { get; } = new(0xe3c9, FontFamily: MaterialIconsFontFamily);
 
     public static IconData EditOutlined { get; } = new(0xf00d, FontFamily: MaterialIconsFontFamily);

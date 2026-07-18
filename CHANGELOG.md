@@ -1,5 +1,11 @@
 # Changelog
 
+- Added paired Flutter core `ReorderableList`/`SliverReorderableList` + Material `ReorderableListView` ports with
+  keyed drag state, immediate/long-press listeners, animated gaps/proxy elevation, adjusted and legacy callback
+  indices, variable extents, desktop/mobile handles, focused tests, and mirrored C#/Dart probes. Advanced `Plumix`
+  to `0.12.0-alpha.1` and `Plumix.Material` to `0.2.0-alpha.1`; remaining overlay/prototype/semantics gaps are
+  tracked in `DIVERGENCES.md`.
+
 - Fixed `RawScrollbar` pointer filtering so clicks routed through its content subtree no longer trigger thumb or
   track handling outside the scrollbar's interactive bounds; direct content interaction now leaves scroll offset
   unchanged while thumb dragging and track paging remain active.
