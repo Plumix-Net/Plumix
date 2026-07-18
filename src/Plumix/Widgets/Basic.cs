@@ -1216,6 +1216,30 @@ public sealed class Positioned : ParentDataWidget<StackParentData>
         Height = height;
     }
 
+    public static Positioned Directional(
+        TextDirection textDirection,
+        Widget child,
+        double? start = null,
+        double? top = null,
+        double? end = null,
+        double? bottom = null,
+        double? width = null,
+        double? height = null,
+        Key? key = null)
+    {
+        double? left = textDirection == TextDirection.Ltr ? start : end;
+        double? right = textDirection == TextDirection.Ltr ? end : start;
+        return new Positioned(
+            child: child,
+            left: left,
+            top: top,
+            right: right,
+            bottom: bottom,
+            width: width,
+            height: height,
+            key: key);
+    }
+
     public double? Left { get; }
 
     public double? Top { get; }

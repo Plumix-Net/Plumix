@@ -145,6 +145,30 @@ public sealed class ElementLifecycleTests
     }
 
     [Fact]
+    public void RemovingNestedInactiveSubtree_DisposesStateExactlyOnce()
+    {
+        LifecycleTracker.Reset();
+
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Padding(
+                insets: new Avalonia.Thickness(4),
+                child: new LifecycleRecorderWidget(new ValueKey<string>("nested"))));
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        root.Update(new SizedBox(width: 1, height: 1));
+        owner.FlushBuild();
+
+        Assert.Equal(1, LifecycleTracker.Events.Count(static eventName => eventName == "deactivate"));
+        Assert.Equal(1, LifecycleTracker.Events.Count(static eventName => eventName == "dispose"));
+
+        root.Unmount();
+        Assert.Equal(1, LifecycleTracker.Events.Count(static eventName => eventName == "dispose"));
+    }
+
+    [Fact]
     public void UpdateChildren_MixedKeyedAndUnkeyed_ReusesKeyedAndStableTailDisposesMovedUnkeyed()
     {
         MixedTracker.Reset();

@@ -65,6 +65,8 @@ Status: `done`
 Completion note:
 
 - Closed on 2026-03-10 after targeted parity hardening passes for layout exception surfacing, constraint clamping behavior, and render/compositing invalidation no-op guards.
+- Post-completion lifecycle hardening now retains inactive descendant parent links and finalizes only inactive
+  subtree roots, ensuring every nested `State.Dispose` callback runs exactly once during route removal.
 
 Exit criteria:
 
@@ -130,6 +132,12 @@ Completion note:
   defaults, centered/custom transform origins, `filterQuality` propagation through the composited transform layer,
   interrupted-transition continuity, curve/duration updates, `onEnd`, focused tests, and mirrored C#/Dart runtime
   probes.
+- Continued implicit-animation parity with paired `AnimatedPositioned` + `AnimatedPositionedDirectional` ports,
+  including Dart-shaped constructors/guards, `fromRect`, physical/logical Stack insets, ambient RTL/LTR resolution,
+  nullable-property behavior, interrupted-transition continuity, curve/duration updates, `onEnd`, focused tests,
+  and mirrored C#/Dart runtime probes.
+- Implicit-animations sample viewport hardening: both samples now share an always-visible scrollbar and scroll
+  controller around the complete probe column, preventing bottom overflow on short desktop windows.
 
 Completion snapshot:
 

@@ -17,215 +17,313 @@ class _AlignDemoPageState extends State<AlignDemoPage> {
   bool _shifted = false;
   bool _scaled = false;
   bool _rotated = false;
+  bool _positioned = false;
+  bool _rightToLeft = false;
   int _completedAnimations = 0;
+  late final ScrollController _scrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      spacing: 10,
-      children: <Widget>[
-        const Text(
-          'AnimatedAlign + AnimatedPadding',
-          style: TextStyle(fontSize: 20, color: Colors.black),
-        ),
-        const Text(
-          'Move the card and change its inset; both values transition implicitly with easeInOut.',
-          style: TextStyle(fontSize: 14, color: Colors.black54),
-        ),
-        Row(
-          spacing: 8,
+    return Scrollbar(
+      controller: _scrollController,
+      thumbVisibility: true,
+      child: SingleChildScrollView(
+        controller: _scrollController,
+        padding: const EdgeInsets.only(right: 12, bottom: 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          spacing: 10,
           children: <Widget>[
-            _buildButton(
-              label: 'TopLeft',
-              onTap: () => _setAlignment(Alignment.topLeft),
-              width: 96,
-              background: const Color(0xFFDCE3ED),
+            const Text(
+              'AnimatedAlign + AnimatedPadding',
+              style: TextStyle(fontSize: 20, color: Colors.black),
             ),
-            _buildButton(
-              label: 'Center',
-              onTap: () => _setAlignment(Alignment.center),
-              width: 96,
-              background: const Color(0xFFDCE3ED),
+            const Text(
+              'Move the card and change its inset; both values transition implicitly with easeInOut.',
+              style: TextStyle(fontSize: 14, color: Colors.black54),
             ),
-            _buildButton(
-              label: 'BottomRight',
-              onTap: () => _setAlignment(Alignment.bottomRight),
-              width: 112,
-              background: const Color(0xFFDCE3ED),
+            Row(
+              spacing: 8,
+              children: <Widget>[
+                _buildButton(
+                  label: 'TopLeft',
+                  onTap: () => _setAlignment(Alignment.topLeft),
+                  width: 96,
+                  background: const Color(0xFFDCE3ED),
+                ),
+                _buildButton(
+                  label: 'Center',
+                  onTap: () => _setAlignment(Alignment.center),
+                  width: 96,
+                  background: const Color(0xFFDCE3ED),
+                ),
+                _buildButton(
+                  label: 'BottomRight',
+                  onTap: () => _setAlignment(Alignment.bottomRight),
+                  width: 112,
+                  background: const Color(0xFFDCE3ED),
+                ),
+              ],
             ),
-          ],
-        ),
-        Row(
-          spacing: 8,
-          children: <Widget>[
-            _buildButton(
-              label: _shrinkWrap ? 'Shrink: on' : 'Shrink: off',
-              onTap: _toggleShrinkWrap,
-              width: 120,
-              background: const Color(0xFFE9F5EC),
+            Row(
+              spacing: 8,
+              children: <Widget>[
+                _buildButton(
+                  label: _shrinkWrap ? 'Shrink: on' : 'Shrink: off',
+                  onTap: _toggleShrinkWrap,
+                  width: 120,
+                  background: const Color(0xFFE9F5EC),
+                ),
+                _buildButton(
+                  label: _expandedPadding ? 'Padding: 24' : 'Padding: 8',
+                  onTap: _togglePadding,
+                  width: 120,
+                  background: const Color(0xFFFFE8CC),
+                ),
+              ],
             ),
-            _buildButton(
-              label: _expandedPadding ? 'Padding: 24' : 'Padding: 8',
-              onTap: _togglePadding,
-              width: 120,
-              background: const Color(0xFFFFE8CC),
+            Text(
+              'alignment=${_alignmentLabel(_alignment)}, shrink=${_shrinkWrap ? 'on' : 'off'}, '
+              'padding=${_expandedPadding ? 24 : 8}, completed=$_completedAnimations',
+              style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
             ),
-          ],
-        ),
-        Text(
-          'alignment=${_alignmentLabel(_alignment)}, shrink=${_shrinkWrap ? 'on' : 'off'}, '
-          'padding=${_expandedPadding ? 24 : 8}, completed=$_completedAnimations',
-          style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
-        ),
-        Container(
-          width: 220,
-          height: 140,
-          color: const Color(0xFFE7EDF6),
-          child: AnimatedPadding(
-            padding: EdgeInsets.all(_expandedPadding ? 24 : 8),
-            duration: const Duration(milliseconds: 350),
-            curve: Curves.easeInOut,
-            onEnd: _handleAnimationEnd,
-            child: Container(
-              color: Colors.white,
-              child: AnimatedAlign(
-                alignment: _alignment,
+            Container(
+              width: 220,
+              height: 140,
+              color: const Color(0xFFE7EDF6),
+              child: AnimatedPadding(
+                padding: EdgeInsets.all(_expandedPadding ? 24 : 8),
                 duration: const Duration(milliseconds: 350),
                 curve: Curves.easeInOut,
                 onEnd: _handleAnimationEnd,
-                widthFactor: _shrinkWrap ? 1.5 : null,
-                heightFactor: _shrinkWrap ? 1.5 : null,
                 child: Container(
-                  width: 64,
-                  height: 40,
-                  color: const Color(0xFF1D3557),
-                  child: const Center(
-                    child: Text(
-                      'A',
-                      style: TextStyle(fontSize: 16, color: Colors.white),
+                  color: Colors.white,
+                  child: AnimatedAlign(
+                    alignment: _alignment,
+                    duration: const Duration(milliseconds: 350),
+                    curve: Curves.easeInOut,
+                    onEnd: _handleAnimationEnd,
+                    widthFactor: _shrinkWrap ? 1.5 : null,
+                    heightFactor: _shrinkWrap ? 1.5 : null,
+                    child: Container(
+                      width: 64,
+                      height: 40,
+                      color: const Color(0xFF1D3557),
+                      child: const Center(
+                        child: Text(
+                          'A',
+                          style: TextStyle(fontSize: 16, color: Colors.white),
+                        ),
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
-        ),
-        const Text(
-          'AnimatedOpacity + AnimatedSlide',
-          style: TextStyle(fontSize: 20, color: Colors.black),
-        ),
-        const Text(
-          'Fade and move the same child by a size-relative offset; hit testing follows the slide.',
-          style: TextStyle(fontSize: 14, color: Colors.black54),
-        ),
-        Row(
-          spacing: 8,
-          children: <Widget>[
-            _buildButton(
-              label: _faded ? 'Opacity: 0.2' : 'Opacity: 1.0',
-              onTap: _toggleOpacity,
-              width: 120,
-              background: const Color(0xFFF4E1F0),
+            const Text(
+              'AnimatedOpacity + AnimatedSlide',
+              style: TextStyle(fontSize: 20, color: Colors.black),
             ),
-            _buildButton(
-              label: _shifted ? 'Offset: (0.75,-0.5)' : 'Offset: zero',
-              onTap: _toggleOffset,
-              width: 160,
-              background: const Color(0xFFE1F1F4),
+            const Text(
+              'Fade and move the same child by a size-relative offset; hit testing follows the slide.',
+              style: TextStyle(fontSize: 14, color: Colors.black54),
             ),
-          ],
-        ),
-        Container(
-          width: 220,
-          height: 110,
-          color: const Color(0xFFF3F5F8),
-          child: Center(
-            child: AnimatedSlide(
-              offset: _shifted ? const Offset(0.75, -0.5) : Offset.zero,
-              duration: const Duration(milliseconds: 350),
-              curve: Curves.easeInOut,
-              onEnd: _handleAnimationEnd,
-              child: AnimatedOpacity(
-                opacity: _faded ? 0.2 : 1,
-                duration: const Duration(milliseconds: 350),
-                curve: Curves.easeInOut,
-                onEnd: _handleAnimationEnd,
-                child: Container(
-                  width: 72,
-                  height: 44,
-                  color: const Color(0xFF7B2CBF),
-                  child: const Center(
-                    child: Text(
-                      'move',
-                      style: TextStyle(fontSize: 14, color: Colors.white),
+            Row(
+              spacing: 8,
+              children: <Widget>[
+                _buildButton(
+                  label: _faded ? 'Opacity: 0.2' : 'Opacity: 1.0',
+                  onTap: _toggleOpacity,
+                  width: 120,
+                  background: const Color(0xFFF4E1F0),
+                ),
+                _buildButton(
+                  label: _shifted ? 'Offset: (0.75,-0.5)' : 'Offset: zero',
+                  onTap: _toggleOffset,
+                  width: 160,
+                  background: const Color(0xFFE1F1F4),
+                ),
+              ],
+            ),
+            Container(
+              width: 220,
+              height: 110,
+              color: const Color(0xFFF3F5F8),
+              child: Center(
+                child: AnimatedSlide(
+                  offset: _shifted ? const Offset(0.75, -0.5) : Offset.zero,
+                  duration: const Duration(milliseconds: 350),
+                  curve: Curves.easeInOut,
+                  onEnd: _handleAnimationEnd,
+                  child: AnimatedOpacity(
+                    opacity: _faded ? 0.2 : 1,
+                    duration: const Duration(milliseconds: 350),
+                    curve: Curves.easeInOut,
+                    onEnd: _handleAnimationEnd,
+                    child: Container(
+                      width: 72,
+                      height: 44,
+                      color: const Color(0xFF7B2CBF),
+                      child: const Center(
+                        child: Text(
+                          'move',
+                          style: TextStyle(fontSize: 14, color: Colors.white),
+                        ),
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
-        ),
-        const Text(
-          'AnimatedScale + AnimatedRotation',
-          style: TextStyle(fontSize: 20, color: Colors.black),
-        ),
-        const Text(
-          'Scale and rotate around a bottom-right pivot; transform filtering follows the animated child.',
-          style: TextStyle(fontSize: 14, color: Colors.black54),
-        ),
-        Row(
-          spacing: 8,
-          children: <Widget>[
-            _buildButton(
-              label: _scaled ? 'Scale: 1.6' : 'Scale: 1.0',
-              onTap: _toggleScale,
-              width: 120,
-              background: const Color(0xFFE8E0F4),
+            const Text(
+              'AnimatedScale + AnimatedRotation',
+              style: TextStyle(fontSize: 20, color: Colors.black),
             ),
-            _buildButton(
-              label: _rotated ? 'Turns: 0.125' : 'Turns: 0',
-              onTap: _toggleRotation,
-              width: 128,
-              background: const Color(0xFFF7E6CF),
+            const Text(
+              'Scale and rotate around a bottom-right pivot; transform filtering follows the animated child.',
+              style: TextStyle(fontSize: 14, color: Colors.black54),
             ),
-          ],
-        ),
-        Container(
-          width: 220,
-          height: 130,
-          color: const Color(0xFFF3F5F8),
-          child: Center(
-            child: AnimatedRotation(
-              turns: _rotated ? 0.125 : 0,
-              duration: const Duration(milliseconds: 350),
-              alignment: Alignment.bottomRight,
-              filterQuality: FilterQuality.high,
-              curve: Curves.easeInOut,
-              onEnd: _handleAnimationEnd,
-              child: AnimatedScale(
-                scale: _scaled ? 1.6 : 1,
-                duration: const Duration(milliseconds: 350),
-                alignment: Alignment.bottomRight,
-                filterQuality: FilterQuality.high,
-                curve: Curves.easeInOut,
-                onEnd: _handleAnimationEnd,
-                child: Container(
-                  width: 72,
-                  height: 44,
-                  color: const Color(0xFFB85C38),
-                  child: const Center(
-                    child: Text(
-                      'turn',
-                      style: TextStyle(fontSize: 14, color: Colors.white),
+            Row(
+              spacing: 8,
+              children: <Widget>[
+                _buildButton(
+                  label: _scaled ? 'Scale: 1.6' : 'Scale: 1.0',
+                  onTap: _toggleScale,
+                  width: 120,
+                  background: const Color(0xFFE8E0F4),
+                ),
+                _buildButton(
+                  label: _rotated ? 'Turns: 0.125' : 'Turns: 0',
+                  onTap: _toggleRotation,
+                  width: 128,
+                  background: const Color(0xFFF7E6CF),
+                ),
+              ],
+            ),
+            Container(
+              width: 220,
+              height: 130,
+              color: const Color(0xFFF3F5F8),
+              child: Center(
+                child: AnimatedRotation(
+                  turns: _rotated ? 0.125 : 0,
+                  duration: const Duration(milliseconds: 350),
+                  alignment: Alignment.bottomRight,
+                  filterQuality: FilterQuality.high,
+                  curve: Curves.easeInOut,
+                  onEnd: _handleAnimationEnd,
+                  child: AnimatedScale(
+                    scale: _scaled ? 1.6 : 1,
+                    duration: const Duration(milliseconds: 350),
+                    alignment: Alignment.bottomRight,
+                    filterQuality: FilterQuality.high,
+                    curve: Curves.easeInOut,
+                    onEnd: _handleAnimationEnd,
+                    child: Container(
+                      width: 72,
+                      height: 44,
+                      color: const Color(0xFFB85C38),
+                      child: const Center(
+                        child: Text(
+                          'turn',
+                          style: TextStyle(fontSize: 14, color: Colors.white),
+                        ),
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
+            const Text(
+              'AnimatedPositioned + AnimatedPositionedDirectional',
+              style: TextStyle(fontSize: 20, color: Colors.black),
+            ),
+            const Text(
+              'Animate physical and logical Stack insets; switching direction resolves start/end immediately.',
+              style: TextStyle(fontSize: 14, color: Colors.black54),
+            ),
+            Row(
+              spacing: 8,
+              children: <Widget>[
+                _buildButton(
+                  label: _positioned ? 'Position: end' : 'Position: start',
+                  onTap: _togglePosition,
+                  width: 132,
+                  background: const Color(0xFFDDEBF7),
+                ),
+                _buildButton(
+                  label: _rightToLeft ? 'Direction: RTL' : 'Direction: LTR',
+                  onTap: _toggleDirection,
+                  width: 132,
+                  background: const Color(0xFFF4E6C8),
+                ),
+              ],
+            ),
+            Container(
+              width: 240,
+              height: 140,
+              color: const Color(0xFFF3F5F8),
+              child: Stack(
+                children: <Widget>[
+                  AnimatedPositioned(
+                    left: _positioned ? 154 : 10,
+                    top: _positioned ? 18 : 10,
+                    width: _positioned ? 70 : 48,
+                    height: 40,
+                    duration: const Duration(milliseconds: 350),
+                    curve: Curves.easeInOut,
+                    onEnd: _handleAnimationEnd,
+                    child: Container(
+                      color: const Color(0xFF2A6F97),
+                      child: const Center(
+                        child: Text(
+                          'left',
+                          style: TextStyle(fontSize: 12, color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Directionality(
+                    textDirection: _rightToLeft
+                        ? TextDirection.rtl
+                        : TextDirection.ltr,
+                    child: AnimatedPositionedDirectional(
+                      start: _positioned ? 136 : 10,
+                      top: 86,
+                      width: _positioned ? 88 : 58,
+                      height: 40,
+                      duration: const Duration(milliseconds: 350),
+                      curve: Curves.easeInOut,
+                      onEnd: _handleAnimationEnd,
+                      child: Container(
+                        color: const Color(0xFF6A4C93),
+                        child: const Center(
+                          child: Text(
+                            'start',
+                            style: TextStyle(fontSize: 12, color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 
@@ -287,6 +385,18 @@ class _AlignDemoPageState extends State<AlignDemoPage> {
   void _toggleRotation() {
     setState(() {
       _rotated = !_rotated;
+    });
+  }
+
+  void _togglePosition() {
+    setState(() {
+      _positioned = !_positioned;
+    });
+  }
+
+  void _toggleDirection() {
+    setState(() {
+      _rightToLeft = !_rightToLeft;
     });
   }
 

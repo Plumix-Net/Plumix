@@ -3,6 +3,7 @@ using Avalonia;
 using Avalonia.Media;
 using Plumix.Rendering;
 using Plumix.Widgets;
+using MaterialScrollbar = Plumix.Material.Scrollbar;
 
 // Dart parity source (reference): dart_sample/lib/demos/general/align_demo_page.dart (exact sample parity)
 
@@ -25,9 +26,33 @@ internal sealed class AlignDemoPageState : State
     private bool _shifted;
     private bool _scaled;
     private bool _rotated;
+    private bool _positioned;
+    private bool _rightToLeft;
     private int _completedAnimations;
+    private ScrollController _scrollController = null!;
+
+    public override void InitState()
+    {
+        _scrollController = new ScrollController();
+    }
+
+    public override void Dispose()
+    {
+        _scrollController.Dispose();
+    }
 
     public override Widget Build(BuildContext context)
+    {
+        return new MaterialScrollbar(
+            controller: _scrollController,
+            thumbVisibility: true,
+            child: new SingleChildScrollView(
+                controller: _scrollController,
+                padding: new Thickness(0, 0, 12, 12),
+                child: BuildContent()));
+    }
+
+    private Widget BuildContent()
     {
         return new Column(
             crossAxisAlignment: CrossAxisAlignment.Stretch,
@@ -181,6 +206,62 @@ internal sealed class AlignDemoPageState : State
                                     color: Color.Parse("#FFB85C38"),
                                     child: new Center(
                                         child: new Text("turn", fontSize: 14, color: Colors.White))))))),
+                new Text("AnimatedPositioned + AnimatedPositionedDirectional", fontSize: 20, color: Colors.Black),
+                new Text(
+                    "Animate physical and logical Stack insets; switching direction resolves start/end immediately.",
+                    fontSize: 14,
+                    color: Colors.DimGray),
+                new Row(
+                    spacing: 8,
+                    children:
+                    [
+                        BuildButton(
+                            _positioned ? "Position: end" : "Position: start",
+                            TogglePosition,
+                            width: 132,
+                            colorHex: "#FFDDEBF7"),
+                        BuildButton(
+                            _rightToLeft ? "Direction: RTL" : "Direction: LTR",
+                            ToggleDirection,
+                            width: 132,
+                            colorHex: "#FFF4E6C8"),
+                    ]),
+                new Container(
+                    width: 240,
+                    height: 140,
+                    color: Color.Parse("#FFF3F5F8"),
+                    child: new Stack(
+                        children:
+                        [
+                            new AnimatedPositioned(
+                                left: _positioned ? 154 : 10,
+                                top: _positioned ? 18 : 10,
+                                width: _positioned ? 70 : 48,
+                                height: 40,
+                                duration: TimeSpan.FromMilliseconds(350),
+                                curve: Curves.EaseInOut,
+                                onEnd: HandleAnimationEnd,
+                                child: new Container(
+                                    color: Color.Parse("#FF2A6F97"),
+                                    child: new Center(
+                                        child: new Text("left", fontSize: 12, color: Colors.White)))),
+                            new Directionality(
+                                textDirection: _rightToLeft
+                                    ? Plumix.UI.TextDirection.Rtl
+                                    : Plumix.UI.TextDirection.Ltr,
+                                child: new AnimatedPositionedDirectional(
+                                    start: _positioned ? 136 : 10,
+                                    top: 86,
+                                    width: _positioned ? 88 : 58,
+                                    height: 40,
+                                    duration: TimeSpan.FromMilliseconds(350),
+                                    curve: Curves.EaseInOut,
+                                    onEnd: HandleAnimationEnd,
+                                    child: new Container(
+                                        color: Color.Parse("#FF6A4C93"),
+                                        child: new Center(
+                                            child: new Text("start", fontSize: 12, color: Colors.White))))),
+                        ])),
             ]);
     }
 
@@ -230,6 +311,16 @@ internal sealed class AlignDemoPageState : State
     private void ToggleRotation()
     {
         SetState(() => _rotated = !_rotated);
+    }
+
+    private void TogglePosition()
+    {
+        SetState(() => _positioned = !_positioned);
+    }
+
+    private void ToggleDirection()
+    {
+        SetState(() => _rightToLeft = !_rightToLeft);
     }
 
     private void HandleAnimationEnd()

@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Rendering;
+using Plumix.UI;
 
 namespace Plumix.Widgets;
 
@@ -1001,4 +1002,452 @@ public sealed class AnimatedAlign : StatefulWidget
     }
 
     private static double LerpDouble(double a, double b, double t) => a + ((b - a) * t);
+}
+
+public sealed class AnimatedPositioned : StatefulWidget
+{
+    public AnimatedPositioned(
+        Widget child,
+        TimeSpan duration,
+        double? left = null,
+        double? top = null,
+        double? right = null,
+        double? bottom = null,
+        double? width = null,
+        double? height = null,
+        Curve? curve = null,
+        Action? onEnd = null,
+        Key? key = null) : base(key)
+    {
+        ValidatePosition(left, top, right, bottom, width, height);
+        if (duration < TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(duration));
+
+        Child = child;
+        Duration = duration;
+        Left = left;
+        Top = top;
+        Right = right;
+        Bottom = bottom;
+        Width = width;
+        Height = height;
+        Curve = curve ?? Curves.Linear;
+        OnEnd = onEnd;
+    }
+
+    public Widget Child { get; }
+
+    public TimeSpan Duration { get; }
+
+    public double? Left { get; }
+
+    public double? Top { get; }
+
+    public double? Right { get; }
+
+    public double? Bottom { get; }
+
+    public double? Width { get; }
+
+    public double? Height { get; }
+
+    public Curve Curve { get; }
+
+    public Action? OnEnd { get; }
+
+    public static AnimatedPositioned FromRect(
+        Rect rect,
+        Widget child,
+        TimeSpan duration,
+        Curve? curve = null,
+        Action? onEnd = null,
+        Key? key = null)
+    {
+        return new AnimatedPositioned(
+            child: child,
+            duration: duration,
+            left: rect.Left,
+            top: rect.Top,
+            width: rect.Width,
+            height: rect.Height,
+            curve: curve,
+            onEnd: onEnd,
+            key: key);
+    }
+
+    public override State CreateState() => new AnimatedPositionedState();
+
+    private static void ValidatePosition(
+        double? left,
+        double? top,
+        double? right,
+        double? bottom,
+        double? width,
+        double? height)
+    {
+        if (left.HasValue && right.HasValue && width.HasValue)
+        {
+            throw new ArgumentException("Cannot provide left, right, and width simultaneously.");
+        }
+
+        if (top.HasValue && bottom.HasValue && height.HasValue)
+        {
+            throw new ArgumentException("Cannot provide top, bottom, and height simultaneously.");
+        }
+    }
+
+    private sealed class AnimatedPositionedState : State
+    {
+        private AnimationController? _controller;
+        private AnimatedPositionedValues _begin = null!;
+        private AnimatedPositionedValues _end = null!;
+
+        private AnimatedPositioned CurrentWidget => (AnimatedPositioned)StateWidget;
+
+        public override void InitState()
+        {
+            _begin = _end = AnimatedPositionedValues.From(CurrentWidget);
+            CreateController();
+        }
+
+        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        {
+            _controller!.Duration = CurrentWidget.Duration;
+            _controller.Curve = CurrentWidget.Curve;
+            AnimatedPositionedValues current = Evaluate(_controller.Evaluate());
+            AnimatedPositionedValues target = AnimatedPositionedValues.From(CurrentWidget);
+            UpdateTweens(current, target);
+        }
+
+        public override Widget Build(BuildContext context)
+        {
+            AnimatedPositionedValues values = Evaluate(_controller!.Evaluate());
+            return new Positioned(
+                child: CurrentWidget.Child,
+                left: values.Left,
+                top: values.Top,
+                right: values.Right,
+                bottom: values.Bottom,
+                width: values.Width,
+                height: values.Height);
+        }
+
+        public override void Dispose()
+        {
+            DisposeController();
+        }
+
+        private void UpdateTweens(AnimatedPositionedValues current, AnimatedPositionedValues target)
+        {
+            bool shouldStart = AnimatedPositionedValues.HasAnimatedChange(_end, target);
+            if (shouldStart)
+            {
+                _begin = AnimatedPositionedValues.TweenBegins(current, _end, target);
+                _end = target;
+                _controller!.Forward(from: 0);
+                return;
+            }
+
+            _begin = AnimatedPositionedValues.ApplyNullTransitions(_begin, _end, target);
+            _end = AnimatedPositionedValues.ApplyNullTransitions(_end, _end, target);
+        }
+
+        private AnimatedPositionedValues Evaluate(double t)
+        {
+            return AnimatedPositionedValues.Lerp(_begin, _end, t);
+        }
+
+        private void CreateController()
+        {
+            _controller = new AnimationController(CurrentWidget.Duration) { Curve = CurrentWidget.Curve };
+            _controller.Changed += HandleChanged;
+            _controller.Completed += HandleCompleted;
+        }
+
+        private void DisposeController()
+        {
+            if (_controller is null) return;
+            _controller.Changed -= HandleChanged;
+            _controller.Completed -= HandleCompleted;
+            _controller.Dispose();
+            _controller = null;
+        }
+
+        private void HandleChanged() => SetState(() => { });
+
+        private void HandleCompleted()
+        {
+            SetState(() => { });
+            CurrentWidget.OnEnd?.Invoke();
+        }
+    }
+}
+
+public sealed class AnimatedPositionedDirectional : StatefulWidget
+{
+    public AnimatedPositionedDirectional(
+        Widget child,
+        TimeSpan duration,
+        double? start = null,
+        double? top = null,
+        double? end = null,
+        double? bottom = null,
+        double? width = null,
+        double? height = null,
+        Curve? curve = null,
+        Action? onEnd = null,
+        Key? key = null) : base(key)
+    {
+        ValidatePosition(start, top, end, bottom, width, height);
+        if (duration < TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(duration));
+
+        Child = child;
+        Duration = duration;
+        Start = start;
+        Top = top;
+        End = end;
+        Bottom = bottom;
+        Width = width;
+        Height = height;
+        Curve = curve ?? Curves.Linear;
+        OnEnd = onEnd;
+    }
+
+    public Widget Child { get; }
+
+    public TimeSpan Duration { get; }
+
+    public double? Start { get; }
+
+    public double? Top { get; }
+
+    public double? End { get; }
+
+    public double? Bottom { get; }
+
+    public double? Width { get; }
+
+    public double? Height { get; }
+
+    public Curve Curve { get; }
+
+    public Action? OnEnd { get; }
+
+    public override State CreateState() => new AnimatedPositionedDirectionalState();
+
+    private static void ValidatePosition(
+        double? start,
+        double? top,
+        double? end,
+        double? bottom,
+        double? width,
+        double? height)
+    {
+        if (start.HasValue && end.HasValue && width.HasValue)
+        {
+            throw new ArgumentException("Cannot provide start, end, and width simultaneously.");
+        }
+
+        if (top.HasValue && bottom.HasValue && height.HasValue)
+        {
+            throw new ArgumentException("Cannot provide top, bottom, and height simultaneously.");
+        }
+    }
+
+    private sealed class AnimatedPositionedDirectionalState : State
+    {
+        private AnimationController? _controller;
+        private AnimatedPositionedValues _begin = null!;
+        private AnimatedPositionedValues _end = null!;
+
+        private AnimatedPositionedDirectional CurrentWidget =>
+            (AnimatedPositionedDirectional)StateWidget;
+
+        public override void InitState()
+        {
+            _begin = _end = AnimatedPositionedValues.From(CurrentWidget);
+            CreateController();
+        }
+
+        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        {
+            _controller!.Duration = CurrentWidget.Duration;
+            _controller.Curve = CurrentWidget.Curve;
+            AnimatedPositionedValues current = Evaluate(_controller.Evaluate());
+            AnimatedPositionedValues target = AnimatedPositionedValues.From(CurrentWidget);
+            UpdateTweens(current, target);
+        }
+
+        public override Widget Build(BuildContext context)
+        {
+            AnimatedPositionedValues values = Evaluate(_controller!.Evaluate());
+            TextDirection textDirection = Directionality.MaybeOf(context)
+                ?? throw new InvalidOperationException(
+                    "AnimatedPositionedDirectional requires a Directionality ancestor.");
+            return Positioned.Directional(
+                textDirection: textDirection,
+                child: CurrentWidget.Child,
+                start: values.Left,
+                top: values.Top,
+                end: values.Right,
+                bottom: values.Bottom,
+                width: values.Width,
+                height: values.Height);
+        }
+
+        public override void Dispose()
+        {
+            DisposeController();
+        }
+
+        private void UpdateTweens(AnimatedPositionedValues current, AnimatedPositionedValues target)
+        {
+            bool shouldStart = AnimatedPositionedValues.HasAnimatedChange(_end, target);
+            if (shouldStart)
+            {
+                _begin = AnimatedPositionedValues.TweenBegins(current, _end, target);
+                _end = target;
+                _controller!.Forward(from: 0);
+                return;
+            }
+
+            _begin = AnimatedPositionedValues.ApplyNullTransitions(_begin, _end, target);
+            _end = AnimatedPositionedValues.ApplyNullTransitions(_end, _end, target);
+        }
+
+        private AnimatedPositionedValues Evaluate(double t)
+        {
+            return AnimatedPositionedValues.Lerp(_begin, _end, t);
+        }
+
+        private void CreateController()
+        {
+            _controller = new AnimationController(CurrentWidget.Duration) { Curve = CurrentWidget.Curve };
+            _controller.Changed += HandleChanged;
+            _controller.Completed += HandleCompleted;
+        }
+
+        private void DisposeController()
+        {
+            if (_controller is null) return;
+            _controller.Changed -= HandleChanged;
+            _controller.Completed -= HandleCompleted;
+            _controller.Dispose();
+            _controller = null;
+        }
+
+        private void HandleChanged() => SetState(() => { });
+
+        private void HandleCompleted()
+        {
+            SetState(() => { });
+            CurrentWidget.OnEnd?.Invoke();
+        }
+    }
+}
+
+internal sealed record AnimatedPositionedValues(
+    double? Left,
+    double? Top,
+    double? Right,
+    double? Bottom,
+    double? Width,
+    double? Height)
+{
+    public static AnimatedPositionedValues From(AnimatedPositioned widget)
+    {
+        return new AnimatedPositionedValues(
+            widget.Left,
+            widget.Top,
+            widget.Right,
+            widget.Bottom,
+            widget.Width,
+            widget.Height);
+    }
+
+    public static AnimatedPositionedValues From(AnimatedPositionedDirectional widget)
+    {
+        return new AnimatedPositionedValues(
+            widget.Start,
+            widget.Top,
+            widget.End,
+            widget.Bottom,
+            widget.Width,
+            widget.Height);
+    }
+
+    public static bool HasAnimatedChange(AnimatedPositionedValues previous, AnimatedPositionedValues target)
+    {
+        return IsAnimatedChange(previous.Left, target.Left)
+               || IsAnimatedChange(previous.Top, target.Top)
+               || IsAnimatedChange(previous.Right, target.Right)
+               || IsAnimatedChange(previous.Bottom, target.Bottom)
+               || IsAnimatedChange(previous.Width, target.Width)
+               || IsAnimatedChange(previous.Height, target.Height);
+    }
+
+    public static AnimatedPositionedValues TweenBegins(
+        AnimatedPositionedValues current,
+        AnimatedPositionedValues previous,
+        AnimatedPositionedValues target)
+    {
+        return new AnimatedPositionedValues(
+            TweenBegin(current.Left, previous.Left, target.Left),
+            TweenBegin(current.Top, previous.Top, target.Top),
+            TweenBegin(current.Right, previous.Right, target.Right),
+            TweenBegin(current.Bottom, previous.Bottom, target.Bottom),
+            TweenBegin(current.Width, previous.Width, target.Width),
+            TweenBegin(current.Height, previous.Height, target.Height));
+    }
+
+    public static AnimatedPositionedValues ApplyNullTransitions(
+        AnimatedPositionedValues values,
+        AnimatedPositionedValues previous,
+        AnimatedPositionedValues target)
+    {
+        return new AnimatedPositionedValues(
+            ApplyNullTransition(values.Left, previous.Left, target.Left),
+            ApplyNullTransition(values.Top, previous.Top, target.Top),
+            ApplyNullTransition(values.Right, previous.Right, target.Right),
+            ApplyNullTransition(values.Bottom, previous.Bottom, target.Bottom),
+            ApplyNullTransition(values.Width, previous.Width, target.Width),
+            ApplyNullTransition(values.Height, previous.Height, target.Height));
+    }
+
+    public static AnimatedPositionedValues Lerp(
+        AnimatedPositionedValues begin,
+        AnimatedPositionedValues end,
+        double t)
+    {
+        return new AnimatedPositionedValues(
+            LerpNullable(begin.Left, end.Left, t),
+            LerpNullable(begin.Top, end.Top, t),
+            LerpNullable(begin.Right, end.Right, t),
+            LerpNullable(begin.Bottom, end.Bottom, t),
+            LerpNullable(begin.Width, end.Width, t),
+            LerpNullable(begin.Height, end.Height, t));
+    }
+
+    private static bool IsAnimatedChange(double? previous, double? target)
+    {
+        return previous.HasValue && target.HasValue && previous.Value != target.Value;
+    }
+
+    private static double? TweenBegin(double? current, double? previous, double? target)
+    {
+        if (!target.HasValue) return null;
+        return previous.HasValue ? current : target;
+    }
+
+    private static double? ApplyNullTransition(double? value, double? previous, double? target)
+    {
+        if (!target.HasValue) return null;
+        return previous.HasValue ? value : target;
+    }
+
+    private static double? LerpNullable(double? begin, double? end, double t)
+    {
+        if (!end.HasValue) return null;
+        if (!begin.HasValue) return end;
+        return begin.Value + ((end.Value - begin.Value) * t);
+    }
 }

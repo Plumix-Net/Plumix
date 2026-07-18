@@ -191,7 +191,7 @@ public sealed class BuildOwner
 
         foreach (var element in toUnmount)
         {
-            if (element.IsInactive)
+            if (element.IsInactive && element.Parent is null)
             {
                 element.Unmount();
             }

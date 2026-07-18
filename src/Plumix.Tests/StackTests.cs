@@ -123,6 +123,32 @@ public sealed class StackTests
         Assert.Equal(5, updatedParentData.Bottom);
     }
 
+    [Fact]
+    public void Positioned_Directional_ResolvesStartAndEndFromTextDirection()
+    {
+        var child = new SizedBox(width: 10, height: 10);
+
+        var ltr = Positioned.Directional(
+            textDirection: Plumix.UI.TextDirection.Ltr,
+            child: child,
+            start: 3,
+            end: 7,
+            top: 5);
+        Assert.Equal(3, ltr.Left);
+        Assert.Equal(7, ltr.Right);
+        Assert.Equal(5, ltr.Top);
+
+        var rtl = Positioned.Directional(
+            textDirection: Plumix.UI.TextDirection.Rtl,
+            child: child,
+            start: 3,
+            end: 7,
+            top: 5);
+        Assert.Equal(7, rtl.Left);
+        Assert.Equal(3, rtl.Right);
+        Assert.Equal(5, rtl.Top);
+    }
+
     private static T RequireRenderObject<T>(Element? element) where T : RenderObject
     {
         Assert.NotNull(element);

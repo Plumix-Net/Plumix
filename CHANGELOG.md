@@ -1,5 +1,16 @@
 # Changelog
 
+- Fixed inactive element finalization to retain descendant parent links and unmount only inactive subtree roots,
+  preventing nested state objects such as `AnimatedOpacity` from receiving `Dispose()` twice when leaving a route.
+
+- Wrapped the mirrored C#/Dart implicit-animations demo in an always-visible Material scrollbar backed by a shared
+  scroll controller, keeping all animation probes reachable on short desktop viewports without flex overflow.
+
+- Added paired Flutter core `AnimatedPositioned` + `AnimatedPositionedDirectional` ports with source-matching
+  constructors/guards, `fromRect`, physical/logical Stack insets, RTL/LTR resolution, interrupted-transition
+  continuity, nullable-property behavior, `onEnd`, focused tests, and mirrored C#/Dart runtime probes. Added the
+  source-required `Positioned.Directional` factory and advanced `Plumix` to `0.3.0-alpha.1`.
+
 - Added paired Material `TextSelectionToolbar` + `TextSelectionToolbarTextButton` ports with source-matching
   safe-area anchors, Android surface/button styling, animated horizontal-to-vertical overflow paging, RTL geometry,
   semantics, focused tests, and mirrored C#/Dart runtime probes. Added the source-required core `AnimatedSize` and

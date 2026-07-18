@@ -565,6 +565,284 @@ public sealed class ImplicitAnimationsTests : IDisposable
         root.Unmount();
     }
 
+    [Fact]
+    public void AnimatedPositioned_ExposesFlutterDefaultsFactoriesAndGuards()
+    {
+        var child = new SizedBox(width: 10, height: 10);
+        var positioned = new AnimatedPositioned(
+            child: child,
+            duration: TimeSpan.FromMilliseconds(200),
+            left: 4,
+            top: 6);
+
+        Assert.Same(child, positioned.Child);
+        Assert.Equal(4, positioned.Left);
+        Assert.Equal(6, positioned.Top);
+        Assert.Null(positioned.Right);
+        Assert.Null(positioned.Bottom);
+        Assert.Null(positioned.Width);
+        Assert.Null(positioned.Height);
+        Assert.Equal(Curves.Linear(0.3), positioned.Curve(0.3));
+        Assert.Null(positioned.OnEnd);
+
+        var fromRect = AnimatedPositioned.FromRect(
+            rect: new Rect(3, 5, 40, 20),
+            child: child,
+            duration: TimeSpan.FromMilliseconds(200));
+        Assert.Equal(3, fromRect.Left);
+        Assert.Equal(5, fromRect.Top);
+        Assert.Equal(40, fromRect.Width);
+        Assert.Equal(20, fromRect.Height);
+        Assert.Null(fromRect.Right);
+        Assert.Null(fromRect.Bottom);
+
+        Assert.Throws<ArgumentException>(() => new AnimatedPositioned(
+            child: child,
+            duration: TimeSpan.Zero,
+            left: 0,
+            right: 0,
+            width: 10));
+        Assert.Throws<ArgumentException>(() => new AnimatedPositioned(
+            child: child,
+            duration: TimeSpan.Zero,
+            top: 0,
+            bottom: 0,
+            height: 10));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new AnimatedPositioned(
+            child: child,
+            duration: TimeSpan.FromMilliseconds(-1)));
+    }
+
+    [Fact]
+    public void AnimatedPositionedDirectional_ExposesFlutterDefaultsAndGuards()
+    {
+        var child = new SizedBox(width: 10, height: 10);
+        var positioned = new AnimatedPositionedDirectional(
+            child: child,
+            duration: TimeSpan.FromMilliseconds(200),
+            start: 4,
+            top: 6);
+
+        Assert.Same(child, positioned.Child);
+        Assert.Equal(4, positioned.Start);
+        Assert.Equal(6, positioned.Top);
+        Assert.Null(positioned.End);
+        Assert.Null(positioned.Bottom);
+        Assert.Null(positioned.Width);
+        Assert.Null(positioned.Height);
+        Assert.Equal(Curves.Linear(0.3), positioned.Curve(0.3));
+        Assert.Null(positioned.OnEnd);
+
+        Assert.Throws<ArgumentException>(() => new AnimatedPositionedDirectional(
+            child: child,
+            duration: TimeSpan.Zero,
+            start: 0,
+            end: 0,
+            width: 10));
+        Assert.Throws<ArgumentException>(() => new AnimatedPositionedDirectional(
+            child: child,
+            duration: TimeSpan.Zero,
+            top: 0,
+            bottom: 0,
+            height: 10));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new AnimatedPositionedDirectional(
+            child: child,
+            duration: TimeSpan.FromMilliseconds(-1)));
+    }
+
+    [Fact]
+    public void AnimatedPositioned_InterpolatesLayoutAndContinuesFromInterruptedValue()
+    {
+        int completed = 0;
+        var owner = new BuildOwner();
+        var root = new TestRootElement(BuildAnimatedPositioned(
+            left: 0,
+            top: 0,
+            width: 20,
+            height: 20,
+            onEnd: () => completed++));
+        Mount(root, owner);
+
+        root.Update(BuildAnimatedPositioned(
+            left: 80,
+            top: 40,
+            width: 40,
+            height: 30,
+            onEnd: () => completed++));
+        owner.FlushBuild();
+
+        double now = Scheduler.CurrentSeconds;
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
+        owner.FlushBuild();
+        StackParentData halfway = GetOnlyStackParentData(root);
+        Assert.InRange(halfway.Left!.Value, 0.1, 79.9);
+        Assert.InRange(halfway.Top!.Value, 0.1, 39.9);
+        Assert.InRange(halfway.Width!.Value, 20.1, 39.9);
+        Assert.InRange(halfway.Height!.Value, 20.1, 29.9);
+        Assert.Equal(0, completed);
+        double halfwayLeft = halfway.Left.Value;
+        double halfwayTop = halfway.Top.Value;
+
+        root.Update(BuildAnimatedPositioned(
+            left: 20,
+            top: 10,
+            width: 10,
+            height: 12,
+            onEnd: () => completed++));
+        owner.FlushBuild();
+        StackParentData interrupted = GetOnlyStackParentData(root);
+        Assert.Equal(halfwayLeft, interrupted.Left!.Value, precision: 6);
+        Assert.Equal(halfwayTop, interrupted.Top!.Value, precision: 6);
+
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
+        owner.FlushBuild();
+        StackParentData finished = GetOnlyStackParentData(root);
+        Assert.Equal(20, finished.Left);
+        Assert.Equal(10, finished.Top);
+        Assert.Equal(10, finished.Width);
+        Assert.Equal(12, finished.Height);
+        Assert.Equal(1, completed);
+
+        root.Unmount();
+    }
+
+    [Fact]
+    public void AnimatedPositioned_NullTargetsSwitchImmediatelyWithoutStartingAnimation()
+    {
+        int completed = 0;
+        var owner = new BuildOwner();
+        var root = new TestRootElement(BuildAnimatedPositioned(
+            left: 12,
+            top: 8,
+            width: null,
+            height: null,
+            onEnd: () => completed++));
+        Mount(root, owner);
+
+        root.Update(BuildAnimatedPositioned(
+            left: null,
+            top: null,
+            width: 24,
+            height: 18,
+            onEnd: () => completed++));
+        owner.FlushBuild();
+
+        StackParentData data = GetOnlyStackParentData(root);
+        Assert.Null(data.Left);
+        Assert.Null(data.Top);
+        Assert.Equal(24, data.Width);
+        Assert.Equal(18, data.Height);
+        Assert.Equal(0, completed);
+
+        root.Unmount();
+    }
+
+    [Fact]
+    public void AnimatedPositionedDirectional_AnimatesLogicalInsetsAndResolvesAmbientDirectionImmediately()
+    {
+        int completed = 0;
+        var owner = new BuildOwner();
+        var root = new TestRootElement(BuildDirectionalPositioned(
+            direction: Plumix.UI.TextDirection.Rtl,
+            start: 0,
+            onEnd: () => completed++));
+        Mount(root, owner);
+
+        root.Update(BuildDirectionalPositioned(
+            direction: Plumix.UI.TextDirection.Rtl,
+            start: 80,
+            onEnd: () => completed++));
+        owner.FlushBuild();
+
+        double now = Scheduler.CurrentSeconds;
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
+        owner.FlushBuild();
+        StackParentData rtlHalfway = GetOnlyStackParentData(root);
+        Assert.Null(rtlHalfway.Left);
+        Assert.InRange(rtlHalfway.Right!.Value, 0.1, 79.9);
+        double halfwayLogicalStart = rtlHalfway.Right.Value;
+
+        root.Update(BuildDirectionalPositioned(
+            direction: Plumix.UI.TextDirection.Ltr,
+            start: 80,
+            onEnd: () => completed++));
+        owner.FlushBuild();
+        StackParentData ltrHalfway = GetOnlyStackParentData(root);
+        Assert.Equal(halfwayLogicalStart, ltrHalfway.Left!.Value, precision: 6);
+        Assert.Null(ltrHalfway.Right);
+
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
+        owner.FlushBuild();
+        StackParentData finished = GetOnlyStackParentData(root);
+        Assert.Equal(80, finished.Left);
+        Assert.Null(finished.Right);
+        Assert.Equal(1, completed);
+
+        root.Unmount();
+    }
+
+    [Fact]
+    public void AlignDemoPage_LeavingRouteUnmountsNestedAnimationsWithoutDoubleDispose()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(new AlignDemoPage());
+        Mount(root, owner);
+
+        root.Update(new SizedBox(width: 1, height: 1));
+        owner.FlushBuild();
+
+        root.Unmount();
+    }
+
+    private static Widget BuildAnimatedPositioned(
+        double? left,
+        double? top,
+        double? width,
+        double? height,
+        Action onEnd)
+    {
+        return new Stack(children:
+        [
+            new AnimatedPositioned(
+                child: new SizedBox(width: 8, height: 8),
+                duration: TimeSpan.FromMilliseconds(200),
+                left: left,
+                top: top,
+                width: width,
+                height: height,
+                curve: Curves.Linear,
+                onEnd: onEnd),
+        ]);
+    }
+
+    private static Widget BuildDirectionalPositioned(
+        Plumix.UI.TextDirection direction,
+        double start,
+        Action onEnd)
+    {
+        return new Directionality(
+            textDirection: direction,
+            child: new Stack(children:
+            [
+                new AnimatedPositionedDirectional(
+                    child: new SizedBox(width: 8, height: 8),
+                    duration: TimeSpan.FromMilliseconds(200),
+                    start: start,
+                    top: 4,
+                    width: 16,
+                    height: 12,
+                    curve: Curves.Linear,
+                    onEnd: onEnd),
+            ]));
+    }
+
+    private static StackParentData GetOnlyStackParentData(TestRootElement root)
+    {
+        var stack = RequireRenderObject<RenderStack>(root.ChildElement);
+        var child = Assert.IsAssignableFrom<RenderBox>(stack.FirstChild);
+        return Assert.IsType<StackParentData>(child.parentData);
+    }
+
     private static void Mount(TestRootElement root, BuildOwner owner)
     {
         root.Attach(owner);

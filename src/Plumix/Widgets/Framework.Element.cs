@@ -176,7 +176,7 @@ public abstract class Element
     {
     }
 
-    internal void DeactivateRecursively()
+    internal void DeactivateRecursively(bool isRoot = true)
     {
         if (_lifecycleState != ElementLifecycleState.Active)
         {
@@ -188,10 +188,14 @@ public abstract class Element
 
         OnDeactivate();
 
-        VisitChildren(child => child.DeactivateRecursively());
+        VisitChildren(child => child.DeactivateRecursively(isRoot: false));
         RemoveDependencies();
 
-        Parent = null;
+        if (isRoot)
+        {
+            Parent = null;
+        }
+
         _lifecycleState = ElementLifecycleState.Inactive;
         Owner?.TrackInactive(this);
     }
