@@ -141,8 +141,8 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             () => new SelectionDemoPage()),
         new(
             SampleRoutes.DesktopTextSelectionToolbar,
-            "Desktop selection toolbar",
-            "anchored/clamped toolbar + desktop action-button styling",
+            "Text selection toolbars",
+            "Android overflow paging + anchored desktop action styling",
             () => new DesktopTextSelectionToolbarDemoPage()),
         new(SampleRoutes.Chips, "Material chips", "action/choice/filter/input + selection/deletion/theme probes", () => new ChipsDemoPage()),
         new(SampleRoutes.LinearProgressIndicator, "LinearProgressIndicator", "determinate/indeterminate + M2/M3 + theme/widget/RTL probes", () => new LinearProgressIndicatorDemoPage()),

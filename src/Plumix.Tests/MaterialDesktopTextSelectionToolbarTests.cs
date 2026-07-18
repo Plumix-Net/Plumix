@@ -167,6 +167,189 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
         Assert.Equal(Colors.DarkOrange, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color);
     }
 
+    [Fact]
+    public void TextSelectionToolbar_ValidatesChildrenAndExposesFlutterConstants()
+    {
+        Assert.Throws<ArgumentException>(() => new TextSelectionToolbar(default, default, []));
+        Assert.Equal(22.0, TextSelectionToolbar.HandleSize);
+        Assert.Equal(20.0, TextSelectionToolbar.ToolbarContentDistanceBelow);
+    }
+
+    [Fact]
+    public void TextSelectionToolbarLayoutDelegate_CentersClampsAndChoosesAnchor()
+    {
+        Assert.Equal(0.0, TextSelectionToolbarLayoutDelegate.CenterOn(10, 80, 200));
+        Assert.Equal(120.0, TextSelectionToolbarLayoutDelegate.CenterOn(190, 80, 200));
+        Assert.Equal(60.0, TextSelectionToolbarLayoutDelegate.CenterOn(100, 80, 200));
+
+        var above = new TextSelectionToolbarLayoutDelegate(
+            anchorAbove: new Point(100, 90),
+            anchorBelow: new Point(100, 120),
+            fitsAbove: true);
+        var below = new TextSelectionToolbarLayoutDelegate(
+            anchorAbove: new Point(100, 20),
+            anchorBelow: new Point(100, 55));
+
+        Assert.Equal(new Point(60, 50), above.GetPositionForChild(new Size(200, 160), new Size(80, 40)));
+        Assert.Equal(new Point(60, 55), below.GetPositionForChild(new Size(200, 160), new Size(80, 40)));
+        Assert.False(above.ShouldRelayout(new TextSelectionToolbarLayoutDelegate(
+            new Point(100, 90),
+            new Point(100, 120),
+            true)));
+        Assert.True(above.ShouldRelayout(below));
+    }
+
+    [Fact]
+    public void TextSelectionToolbarTextButton_UsesPositionPaddingAndAndroidStyle()
+    {
+        Assert.Equal(new Thickness(14.5, 0, 14.5, 0), TextSelectionToolbarTextButton.GetPadding(0, 1));
+        Assert.Equal(new Thickness(14.5, 0, 9.5, 0), TextSelectionToolbarTextButton.GetPadding(0, 3));
+        Assert.Equal(new Thickness(9.5, 0, 14.5, 0), TextSelectionToolbarTextButton.GetPadding(2, 3));
+        Assert.Equal(
+            new Thickness(9.5, 0, 14.5, 0),
+            TextSelectionToolbarTextButton.GetPadding(0, 3, TextDirection.Rtl));
+        Assert.Throws<ArgumentOutOfRangeException>(() => TextSelectionToolbarTextButton.GetPadding(1, 1));
+
+        using var harness = CreateHarness(
+            ThemeData.Light,
+            new TextSelectionToolbarTextButton(
+                child: new Text("Copy"),
+                padding: TextSelectionToolbarTextButton.GetPadding(0, 2),
+                onPressed: () => { }));
+
+        harness.Pump(new Size(180, 60));
+
+        Assert.Contains(FindDescendants<RenderPadding>(harness.RenderView), value =>
+            value.Padding == new Thickness(14.5, 0, 9.5, 0));
+        Assert.Contains(FindDescendants<RenderConstrainedBox>(harness.RenderView), box =>
+            box.AdditionalConstraints.MinWidth == 48
+            && box.AdditionalConstraints.MinHeight == 48);
+        RenderParagraph paragraph = Assert.Single(FindDescendants<RenderParagraph>(harness.RenderView), value =>
+            value.Text == "Copy");
+        Assert.Equal(Colors.Black, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color);
+        Assert.Equal(FontWeight.Normal, paragraph.FontWeight);
+    }
+
+    [Fact]
+    public void TextSelectionToolbar_DefaultSurfaceUsesSafePaddingAndFlutterAnchors()
+    {
+        using var harness = CreateHarness(
+            ThemeData.Light,
+            new TextSelectionToolbar(
+                anchorAbove: new Point(160, 100),
+                anchorBelow: new Point(160, 120),
+                children:
+                [
+                    new TextSelectionToolbarTextButton(
+                        new Text("Copy"),
+                        TextSelectionToolbarTextButton.GetPadding(0, 2),
+                        () => { }),
+                    new TextSelectionToolbarTextButton(
+                        new Text("Paste"),
+                        TextSelectionToolbarTextButton.GetPadding(1, 2),
+                        () => { }),
+                ]),
+            padding: new Thickness(0, 12, 0, 0));
+
+        harness.Pump(new Size(320, 200));
+
+        Assert.Contains(FindDescendants<RenderPadding>(harness.RenderView), value =>
+            value.Padding == new Thickness(8, 20, 8, 8));
+        var customLayout = Assert.Single(FindDescendants<RenderCustomSingleChildLayoutBox>(harness.RenderView));
+        var layoutDelegate = Assert.IsType<TextSelectionToolbarLayoutDelegate>(customLayout.LayoutDelegate);
+        Assert.Equal(new Point(152, 72), layoutDelegate.AnchorAbove);
+        Assert.Equal(new Point(152, 120), layoutDelegate.AnchorBelow);
+        Assert.True(layoutDelegate.FitsAbove);
+        Assert.Contains(FindDescendants<RenderClipRRect>(harness.RenderView), clip =>
+            clip.BorderRadius == BorderRadius.Circular(22));
+        Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView), box =>
+            box.Decoration.Color == Colors.White
+            && box.Decoration.EffectiveBorderRadius == BorderRadius.Circular(22));
+    }
+
+    [Fact]
+    public void TextSelectionToolbarItemsLayout_SplitsClosedAndOpenOverflowPages()
+    {
+        var layout = new RenderTextSelectionToolbarItemsLayout(
+            isAbove: false,
+            overflowOpen: false,
+            textDirection: TextDirection.Ltr);
+        var navigation = FixedRenderBox(48, 44);
+        var first = FixedRenderBox(70, 44);
+        var second = FixedRenderBox(70, 44);
+        var third = FixedRenderBox(70, 44);
+        layout.AddAll([navigation, first, second, third]);
+
+        layout.Layout(BoxConstraints.Loose(new Size(180, 300)));
+
+        Assert.Equal(new Size(118, 44), layout.Size);
+        Assert.True(((ToolbarItemsParentData)navigation.parentData!).ShouldPaint);
+        Assert.True(((ToolbarItemsParentData)first.parentData!).ShouldPaint);
+        Assert.False(((ToolbarItemsParentData)second.parentData!).ShouldPaint);
+        Assert.False(((ToolbarItemsParentData)third.parentData!).ShouldPaint);
+        Assert.Equal(new Point(70, 0), ((ToolbarItemsParentData)navigation.parentData!).offset);
+
+        layout.TextDirection = TextDirection.Rtl;
+        layout.Layout(BoxConstraints.Loose(new Size(180, 300)));
+        Assert.Equal(new Point(0, 0), ((ToolbarItemsParentData)navigation.parentData!).offset);
+        Assert.Equal(new Point(48, 0), ((ToolbarItemsParentData)first.parentData!).offset);
+
+        layout.TextDirection = TextDirection.Ltr;
+        layout.OverflowOpen = true;
+        layout.Layout(BoxConstraints.Loose(new Size(180, 300)));
+
+        Assert.Equal(new Size(70, 132), layout.Size);
+        Assert.True(((ToolbarItemsParentData)navigation.parentData!).ShouldPaint);
+        Assert.False(((ToolbarItemsParentData)first.parentData!).ShouldPaint);
+        Assert.True(((ToolbarItemsParentData)second.parentData!).ShouldPaint);
+        Assert.True(((ToolbarItemsParentData)third.parentData!).ShouldPaint);
+        Assert.Equal(new Point(0, 0), ((ToolbarItemsParentData)navigation.parentData!).offset);
+        Assert.Equal(new Point(0, 44), ((ToolbarItemsParentData)second.parentData!).offset);
+        Assert.Equal(new Point(0, 88), ((ToolbarItemsParentData)third.parentData!).offset);
+
+        layout.IsAbove = true;
+        layout.Layout(BoxConstraints.Loose(new Size(180, 300)));
+        Assert.Equal(new Point(0, 88), ((ToolbarItemsParentData)navigation.parentData!).offset);
+        Assert.Equal(new Point(0, 0), ((ToolbarItemsParentData)second.parentData!).offset);
+    }
+
+    [Fact]
+    public void TextSelectionToolbar_OverflowButtonOpensVerticalPageAndUpdatesTooltip()
+    {
+        using var harness = CreateHarness(
+            ThemeData.Light,
+            new TextSelectionToolbarOverflowable(
+                isAbove: false,
+                toolbarBuilder: (_, child) => child,
+                children:
+                [
+                    new SizedBox(width: 70, height: 44),
+                    new SizedBox(width: 70, height: 44),
+                    new SizedBox(width: 70, height: 44),
+                ]));
+
+        SemanticsNode? semantics = harness.PumpAndGetSemantics(new Size(180, 300));
+        RenderTextSelectionToolbarItemsLayout layout = Assert.Single(
+            FindDescendants<RenderTextSelectionToolbarItemsLayout>(harness.RenderView));
+        Assert.False(layout.OverflowOpen);
+
+        Assert.NotNull(FindSemantics(semantics, node => node.Label == "More"));
+        SemanticsNode moreButton = Assert.IsType<SemanticsNode>(FindSemantics(
+            semantics,
+            node => node.Actions.HasFlag(SemanticsActions.Tap)));
+        Assert.True(moreButton.PerformAction(SemanticsActions.Tap));
+
+        semantics = harness.PumpAndGetSemantics(new Size(180, 300));
+        layout = Assert.Single(FindDescendants<RenderTextSelectionToolbarItemsLayout>(harness.RenderView));
+        Assert.True(layout.OverflowOpen);
+        Assert.NotNull(FindSemantics(semantics, node => node.Label == "Back"));
+    }
+
+    private static RenderConstrainedBox FixedRenderBox(double width, double height)
+    {
+        return new RenderConstrainedBox(BoxConstraints.Tight(new Size(width, height)));
+    }
+
     private static WidgetRenderHarness CreateHarness(
         ThemeData theme,
         Widget child,

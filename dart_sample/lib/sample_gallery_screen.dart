@@ -226,8 +226,8 @@ class SampleGalleryScreen extends StatelessWidget {
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.desktopTextSelectionToolbar,
-      title: 'Desktop selection toolbar',
-      subtitle: 'anchored/clamped toolbar + desktop action-button styling',
+      title: 'Text selection toolbars',
+      subtitle: 'Android overflow paging + anchored desktop action styling',
       builder: () => const DesktopTextSelectionToolbarDemoPage(),
     ),
     SampleRouteDefinition(

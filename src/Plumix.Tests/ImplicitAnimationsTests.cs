@@ -63,6 +63,64 @@ public sealed class ImplicitAnimationsTests : IDisposable
     }
 
     [Fact]
+    public void AnimatedSize_ExposesFlutterDefaultsAndValidatesDurations()
+    {
+        var animatedSize = new AnimatedSize(duration: TimeSpan.FromMilliseconds(140));
+
+        Assert.Equal(TimeSpan.FromMilliseconds(140), animatedSize.Duration);
+        Assert.Null(animatedSize.Child);
+        Assert.Equal(Alignment.Center, animatedSize.Alignment);
+        Assert.Equal(Curves.Linear(0.3), animatedSize.Curve(0.3));
+        Assert.Null(animatedSize.ReverseDuration);
+        Assert.Equal(Plumix.UI.Clip.HardEdge, animatedSize.ClipBehavior);
+        Assert.Null(animatedSize.OnEnd);
+        Assert.Throws<ArgumentOutOfRangeException>(() => new AnimatedSize(TimeSpan.FromMilliseconds(-1)));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new AnimatedSize(
+            duration: TimeSpan.Zero,
+            reverseDuration: TimeSpan.FromMilliseconds(-1)));
+    }
+
+    [Fact]
+    public void RenderAnimatedSize_AnimatesStableChildSizeAndUsesReverseDuration()
+    {
+        using var controller = new AnimationController(TimeSpan.FromMilliseconds(200));
+        var child = new RenderConstrainedBox(BoxConstraints.Tight(new Size(10, 10)));
+        var animatedSize = new RenderAnimatedSize(
+            controller: controller,
+            duration: TimeSpan.FromMilliseconds(200),
+            reverseDuration: TimeSpan.FromMilliseconds(80),
+            alignment: Alignment.Center,
+            clipBehavior: Plumix.UI.Clip.HardEdge)
+        {
+            Child = child,
+        };
+        var constraints = BoxConstraints.Loose(new Size(100, 100));
+
+        animatedSize.Layout(constraints);
+        Assert.Equal(new Size(10, 10), animatedSize.Size);
+        Assert.Equal(RenderAnimatedSizeState.Stable, animatedSize.State);
+
+        child.AdditionalConstraints = BoxConstraints.Tight(new Size(30, 30));
+        animatedSize.Layout(constraints);
+        Assert.Equal(new Size(10, 10), animatedSize.Size);
+        Assert.Equal(RenderAnimatedSizeState.Changed, animatedSize.State);
+
+        controller.SetValue(0.5);
+        animatedSize.MarkNeedsLayout();
+        animatedSize.Layout(constraints);
+        Assert.InRange(animatedSize.Size.Width, 10.1, 29.9);
+
+        controller.SetValue(1.0);
+        animatedSize.MarkNeedsLayout();
+        animatedSize.Layout(constraints);
+        Assert.Equal(new Size(30, 30), animatedSize.Size);
+
+        child.AdditionalConstraints = BoxConstraints.Tight(new Size(12, 12));
+        animatedSize.Layout(constraints);
+        Assert.Equal(TimeSpan.FromMilliseconds(80), controller.Duration);
+    }
+
+    [Fact]
     public void AnimatedOpacity_InterpolatesFromCurrentValueAndUpdatesSemanticsPolicyImmediately()
     {
         int completed = 0;

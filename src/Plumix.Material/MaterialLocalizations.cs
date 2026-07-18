@@ -14,6 +14,8 @@ public abstract class MaterialLocalizations
 
     public virtual string BackButtonTooltip => "Back";
 
+    public virtual string MoreButtonTooltip => "More";
+
     public virtual string CloseButtonTooltip => "Close";
 
     public virtual string OpenAppDrawerTooltip => "Open navigation menu";

@@ -188,6 +188,10 @@ Kickoff note (2026-03-12):
   core `CustomSingleChildLayout` delegate/render primitive, safe-area-aware anchored placement, viewport clamping,
   desktop card/button geometry, light/dark typography, cursor/disabled/tap behavior, focused tests, and mirrored
   C#/Dart sample probes.
+- Added paired Material `TextSelectionToolbar` + `TextSelectionToolbarTextButton` parity with shared
+  `TextSelectionToolbarLayoutDelegate`/`AnimatedSize` primitives, safe-area-aware above/below anchor placement,
+  Android surface/button tokens, RTL-aware item geometry, animated overflow paging, tooltip/hidden-item semantics,
+  focused tests, and expanded mirrored C#/Dart toolbar probes.
 - Added paired `TabPageSelector` + `TabPageSelectorIndicator` parity with explicit/inherited controllers, animated and drag-driven color interpolation, theme-secondary defaults, border styles, localized semantics, focused tests, and expanded mirrored tabs demos.
 - Added paired `FloatingActionButtonLocation` + `FloatingActionButtonAnimator` baseline: `Scaffold` now exposes Flutter-shaped location/animator APIs and applies standard start/center/end, top/float/docked/contained, mini, RTL, and inset placement through a framework render adapter; the public geometry model also carries snackbar/bottom-sheet inputs for the full Dart formulas. Focused geometry/animator tests and a mirrored centered-FAB sample probe were added. Location-transition motion and live snackbar/bottom-sheet avoidance remain tracked in `DIVERGENCES.md` pending live scaffold geometry.
 - Added paired core `IgnorePointer` + `AbsorbPointer` parity with Dart-shaped hit-test blocking/absorption, default semantics action blocking, `ignoringSemantics` subtree omission, and focused widget/render/semantics coverage.

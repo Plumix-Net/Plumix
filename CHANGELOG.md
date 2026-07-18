@@ -1,5 +1,10 @@
 # Changelog
 
+- Added paired Material `TextSelectionToolbar` + `TextSelectionToolbarTextButton` ports with source-matching
+  safe-area anchors, Android surface/button styling, animated horizontal-to-vertical overflow paging, RTL geometry,
+  semantics, focused tests, and mirrored C#/Dart runtime probes. Added the source-required core `AnimatedSize` and
+  `TextSelectionToolbarLayoutDelegate` primitives.
+
 - Added paired Material `DesktopTextSelectionToolbar` + `DesktopTextSelectionToolbarButton` ports with the shared
   core `CustomSingleChildLayout` primitive, source-matching safe-area/viewport placement, card/button styling,
   disabled/cursor/tap behavior, focused tests, and mirrored C#/Dart runtime probes.
