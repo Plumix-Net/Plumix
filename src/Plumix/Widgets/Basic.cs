@@ -835,17 +835,27 @@ public class Align : SingleChildRenderObjectWidget
 {
     public Align(
         Widget? child = null,
-        Alignment alignment = default,
+        AlignmentGeometry alignment = default,
         double? widthFactor = null,
         double? heightFactor = null,
         Key? key = null) : base(child, key)
     {
+        if (widthFactor.HasValue && (double.IsNaN(widthFactor.Value) || widthFactor.Value < 0.0))
+        {
+            throw new ArgumentOutOfRangeException(nameof(widthFactor), "Width factor must be non-negative.");
+        }
+
+        if (heightFactor.HasValue && (double.IsNaN(heightFactor.Value) || heightFactor.Value < 0.0))
+        {
+            throw new ArgumentOutOfRangeException(nameof(heightFactor), "Height factor must be non-negative.");
+        }
+
         Alignment = alignment;
         WidthFactor = widthFactor;
         HeightFactor = heightFactor;
     }
 
-    public Alignment Alignment { get; }
+    public AlignmentGeometry Alignment { get; }
 
     public double? WidthFactor { get; }
 
@@ -854,7 +864,7 @@ public class Align : SingleChildRenderObjectWidget
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderAlign(
-            alignment: Alignment,
+            alignment: ResolveAlignment(context),
             widthFactor: WidthFactor,
             heightFactor: HeightFactor);
     }
@@ -862,9 +872,17 @@ public class Align : SingleChildRenderObjectWidget
     internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var align = (RenderAlign)renderObject;
-        align.Alignment = Alignment;
+        align.Alignment = ResolveAlignment(context);
         align.WidthFactor = WidthFactor;
         align.HeightFactor = HeightFactor;
+    }
+
+    private Alignment ResolveAlignment(BuildContext context)
+    {
+        TextDirection direction = Alignment.IsDirectional
+            ? Directionality.Of(context)
+            : TextDirection.Ltr;
+        return Alignment.Resolve(direction);
     }
 }
 
@@ -876,7 +894,7 @@ public sealed class Center : Align
         double? heightFactor = null,
         Key? key = null) : base(
         child: child,
-        alignment: Alignment.Center,
+        alignment: Plumix.Rendering.Alignment.Center,
         widthFactor: widthFactor,
         heightFactor: heightFactor,
         key: key)

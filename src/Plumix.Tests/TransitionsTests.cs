@@ -1,6 +1,8 @@
 using Avalonia;
+using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Rendering;
+using Plumix.UI;
 using Plumix.Widgets;
 using Xunit;
 using RelativeRect = Plumix.Rendering.RelativeRect;
@@ -530,6 +532,133 @@ public sealed class TransitionsTests : IDisposable
         Assert.Equal(new Size(), renderStack.FirstChild.Size);
 
         root.Unmount();
+    }
+
+    [Fact]
+    public void AlignTransition_ExposesContractsResolvesDirectionAndRebindsAnimation()
+    {
+        var child = new SizedBox(width: 40, height: 20);
+        var first = new TestValueAnimation<AlignmentGeometry>(
+            AlignmentDirectional.TopStart,
+            AnimationStatus.Forward);
+        var second = new TestValueAnimation<AlignmentGeometry>(
+            AlignmentDirectional.BottomEnd,
+            AnimationStatus.Reverse);
+        var transition = new AlignTransition(
+            alignment: first,
+            child: child,
+            widthFactor: 2.0,
+            heightFactor: 3.0);
+
+        Assert.Same(first, transition.Alignment);
+        Assert.Same(first, transition.Listenable);
+        Assert.Same(child, transition.Child);
+        Assert.Equal(2.0, transition.WidthFactor);
+        Assert.Equal(3.0, transition.HeightFactor);
+        Assert.Throws<ArgumentNullException>(() => new AlignTransition(null!, child));
+        Assert.Throws<ArgumentNullException>(() => new AlignTransition(first, null!));
+
+        var owner = new BuildOwner();
+        var root = new TestRootElement(new Directionality(
+            textDirection: TextDirection.Rtl,
+            child: transition));
+        Mount(root, owner);
+
+        var renderAlign = Assert.IsType<RenderAlign>(root.ChildElement!.RenderObject);
+        renderAlign.Layout(BoxConstraints.Loose(new Size(200, 200)));
+        Assert.Equal(Alignment.TopRight, renderAlign.Alignment);
+        Assert.Equal(new Size(80, 60), renderAlign.Size);
+        Assert.Equal(1, first.ListenerCount);
+
+        root.Update(new Directionality(
+            textDirection: TextDirection.Rtl,
+            child: new AlignTransition(
+                alignment: second,
+                child: child,
+                widthFactor: 2.0,
+                heightFactor: 3.0)));
+        owner.FlushBuild();
+
+        renderAlign = Assert.IsType<RenderAlign>(root.ChildElement.RenderObject);
+        Assert.Equal(Alignment.BottomLeft, renderAlign.Alignment);
+        Assert.Equal(0, first.ListenerCount);
+        Assert.Equal(1, second.ListenerCount);
+
+        root.Unmount();
+        Assert.Equal(0, second.ListenerCount);
+    }
+
+    [Fact]
+    public void DefaultTextStyleTransition_AppliesAnimatedStyleAndImmediateTextOptions()
+    {
+        var firstStyle = new TextStyle(
+            FontSize: 14,
+            Color: Colors.DarkBlue,
+            FontWeight: FontWeight.SemiBold,
+            LetterSpacing: 0.5);
+        var secondStyle = new TextStyle(
+            FontSize: 22,
+            Color: Colors.DarkRed,
+            FontWeight: FontWeight.Bold,
+            LetterSpacing: 1.5);
+        var first = new TestValueAnimation<TextStyle>(firstStyle, AnimationStatus.Forward);
+        var second = new TestValueAnimation<TextStyle>(secondStyle, AnimationStatus.Reverse);
+        var child = new Text("animated style");
+        var transition = new DefaultTextStyleTransition(first, child);
+
+        Assert.Same(first, transition.Style);
+        Assert.Same(first, transition.Listenable);
+        Assert.Same(child, transition.Child);
+        Assert.Null(transition.TextAlign);
+        Assert.True(transition.SoftWrap);
+        Assert.Equal(TextOverflow.Clip, transition.Overflow);
+        Assert.Null(transition.MaxLines);
+        Assert.Throws<ArgumentNullException>(() => new DefaultTextStyleTransition(null!, child));
+        Assert.Throws<ArgumentNullException>(() => new DefaultTextStyleTransition(first, null!));
+
+        var owner = new BuildOwner();
+        var root = new TestRootElement(new DefaultTextStyleTransition(
+            style: first,
+            child: child,
+            textAlign: TextAlign.Center,
+            softWrap: false,
+            overflow: TextOverflow.Ellipsis,
+            maxLines: 2));
+        Mount(root, owner);
+
+        var paragraph = Assert.IsType<RenderParagraph>(root.ChildElement!.RenderObject);
+        Assert.Equal(14, paragraph.FontSize);
+        Assert.Equal(FontWeight.SemiBold, paragraph.FontWeight);
+        Assert.Equal(0.5, paragraph.LetterSpacing);
+        Assert.Equal(Colors.DarkBlue, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color);
+        Assert.Equal(TextAlign.Center, paragraph.TextAlign);
+        Assert.False(paragraph.SoftWrap);
+        Assert.Equal(TextOverflow.Ellipsis, paragraph.Overflow);
+        Assert.Equal(2, paragraph.MaxLines);
+        Assert.Equal(1, first.ListenerCount);
+
+        root.Update(new DefaultTextStyleTransition(
+            style: second,
+            child: child,
+            textAlign: TextAlign.End,
+            overflow: TextOverflow.Fade,
+            maxLines: 1));
+        owner.FlushBuild();
+
+        paragraph = Assert.IsType<RenderParagraph>(root.ChildElement.RenderObject);
+        Assert.Equal(22, paragraph.FontSize);
+        Assert.Equal(FontWeight.Bold, paragraph.FontWeight);
+        Assert.Equal(1.5, paragraph.LetterSpacing);
+        Assert.Equal(Colors.DarkRed, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color);
+        Assert.Equal(TextAlign.End, paragraph.TextAlign);
+        Assert.True(paragraph.SoftWrap);
+        Assert.Equal(TextOverflow.Fade, paragraph.Overflow);
+        Assert.Equal(1, paragraph.MaxLines);
+        Assert.Equal(0, first.ListenerCount);
+        Assert.Equal(1, second.ListenerCount);
+
+        root.Unmount();
+        Assert.Equal(0, second.ListenerCount);
     }
 
     private static void Mount(TestRootElement root, BuildOwner owner)

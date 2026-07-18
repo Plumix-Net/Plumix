@@ -1,5 +1,6 @@
 using Avalonia;
 using Plumix.Rendering;
+using Plumix.UI;
 using Plumix.Widgets;
 using Xunit;
 
@@ -122,6 +123,26 @@ public sealed class AlignTests
         Assert.Equal(Alignment.Center, renderAlign.Alignment);
         Assert.Equal(2, renderAlign.WidthFactor);
         Assert.Equal(2, renderAlign.HeightFactor);
+    }
+
+    [Fact]
+    public void AlignWidget_ResolvesDirectionalAlignmentAndValidatesFactors()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(new Directionality(
+            textDirection: TextDirection.Rtl,
+            child: new Align(
+                alignment: AlignmentDirectional.TopStart,
+                child: new SizedBox(width: 10, height: 10))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var renderAlign = RequireRenderObject<RenderAlign>(root.ChildElement);
+        Assert.Equal(Alignment.TopRight, renderAlign.Alignment);
+        Assert.Throws<ArgumentOutOfRangeException>(() => new Align(widthFactor: -0.1));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new Align(heightFactor: double.NaN));
     }
 
     private static T RequireRenderObject<T>(Element? element) where T : RenderObject

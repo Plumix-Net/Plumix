@@ -108,10 +108,17 @@ type Ui private () =
     static member center(child: Widget, ?widthFactor: float, ?heightFactor: float, ?key: Key) : Widget =
         Center(child, widthFactor = nul widthFactor, heightFactor = nul heightFactor, key = obj' key)
 
-    static member align(child: Widget, ?alignment: Alignment, ?widthFactor: float, ?heightFactor: float, ?key: Key) : Widget =
+    static member align
+        (
+            child: Widget,
+            ?alignment: AlignmentGeometry,
+            ?widthFactor: float,
+            ?heightFactor: float,
+            ?key: Key
+        ) : Widget =
         Align(
             child,
-            alignment = defaultArg alignment (Alignment()),
+            alignment = defaultArg alignment (AlignmentGeometry()),
             widthFactor = nul widthFactor,
             heightFactor = nul heightFactor,
             key = obj' key)

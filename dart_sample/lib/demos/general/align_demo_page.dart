@@ -33,6 +33,8 @@ class _AlignDemoPageState extends State<AlignDemoPage>
   late final Animation<Offset> _explicitSlideAnimation;
   late final Animation<RelativeRect> _explicitPositionAnimation;
   late final Animation<Rect?> _explicitRelativePositionAnimation;
+  late final Animation<AlignmentGeometry> _explicitAlignmentAnimation;
+  late final Animation<TextStyle> _explicitTextStyleAnimation;
 
   @override
   void initState() {
@@ -54,6 +56,24 @@ class _AlignDemoPageState extends State<AlignDemoPage>
     _explicitRelativePositionAnimation = RectTween(
       begin: const Rect.fromLTWH(12, 74, 70, 40),
       end: const Rect.fromLTWH(158, 14, 70, 40),
+    ).animate(_explicitTransitionsController);
+    _explicitAlignmentAnimation = AlignmentTween(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    ).animate(_explicitTransitionsController);
+    _explicitTextStyleAnimation = TextStyleTween(
+      begin: const TextStyle(
+        fontSize: 12,
+        color: Color(0xFF315A7D),
+        fontWeight: FontWeight.normal,
+        letterSpacing: 0,
+      ),
+      end: const TextStyle(
+        fontSize: 20,
+        color: Color(0xFF9C4F63),
+        fontWeight: FontWeight.bold,
+        letterSpacing: 1.5,
+      ),
     ).animate(_explicitTransitionsController);
   }
 
@@ -437,6 +457,47 @@ class _AlignDemoPageState extends State<AlignDemoPage>
                   ),
                 ],
               ),
+            ),
+            const Text(
+              'AlignTransition + DefaultTextStyleTransition',
+              style: TextStyle(fontSize: 20, color: Colors.black),
+            ),
+            const Text(
+              'Animate alignment geometry and inherited text style from the same explicit controller.',
+              style: TextStyle(fontSize: 14, color: Colors.black54),
+            ),
+            Row(
+              spacing: 12,
+              children: <Widget>[
+                Container(
+                  width: 110,
+                  height: 90,
+                  color: const Color(0xFFF3F5F8),
+                  child: AlignTransition(
+                    alignment: _explicitAlignmentAnimation,
+                    widthFactor: 1.6,
+                    heightFactor: 2,
+                    child: Container(
+                      width: 48,
+                      height: 28,
+                      color: const Color(0xFF356A82),
+                    ),
+                  ),
+                ),
+                Container(
+                  width: 180,
+                  height: 90,
+                  color: const Color(0xFFF3F5F8),
+                  child: Center(
+                    child: DefaultTextStyleTransition(
+                      style: _explicitTextStyleAnimation,
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      child: const Text('animated text'),
+                    ),
+                  ),
+                ),
+              ],
             ),
             const Text(
               'AnimatedPositioned + AnimatedPositionedDirectional',

@@ -390,6 +390,80 @@ public sealed class RelativePositionedTransition : AnimatedWidget
     }
 }
 
+public sealed class AlignTransition : AnimatedWidget
+{
+    public AlignTransition(
+        Animation<AlignmentGeometry> alignment,
+        Widget child,
+        double? widthFactor = null,
+        double? heightFactor = null,
+        Key? key = null) : base(alignment ?? throw new ArgumentNullException(nameof(alignment)), key)
+    {
+        Child = child ?? throw new ArgumentNullException(nameof(child));
+        WidthFactor = widthFactor;
+        HeightFactor = heightFactor;
+    }
+
+    public Animation<AlignmentGeometry> Alignment => (Animation<AlignmentGeometry>)Listenable;
+
+    public double? WidthFactor { get; }
+
+    public double? HeightFactor { get; }
+
+    public Widget Child { get; }
+
+    public override Widget Build(BuildContext context)
+    {
+        return new Align(
+            alignment: Alignment.Value,
+            widthFactor: WidthFactor,
+            heightFactor: HeightFactor,
+            child: Child);
+    }
+}
+
+public sealed class DefaultTextStyleTransition : AnimatedWidget
+{
+    public DefaultTextStyleTransition(
+        Animation<TextStyle> style,
+        Widget child,
+        TextAlign? textAlign = null,
+        bool softWrap = true,
+        TextOverflow overflow = TextOverflow.Clip,
+        int? maxLines = null,
+        Key? key = null) : base(style ?? throw new ArgumentNullException(nameof(style)), key)
+    {
+        Child = child ?? throw new ArgumentNullException(nameof(child));
+        TextAlign = textAlign;
+        SoftWrap = softWrap;
+        Overflow = overflow;
+        MaxLines = maxLines;
+    }
+
+    public Animation<TextStyle> Style => (Animation<TextStyle>)Listenable;
+
+    public TextAlign? TextAlign { get; }
+
+    public bool SoftWrap { get; }
+
+    public TextOverflow Overflow { get; }
+
+    public int? MaxLines { get; }
+
+    public Widget Child { get; }
+
+    public override Widget Build(BuildContext context)
+    {
+        return new DefaultTextStyle(
+            style: Style.Value,
+            child: Child,
+            textAlign: TextAlign,
+            softWrap: SoftWrap,
+            overflow: Overflow,
+            maxLines: MaxLines);
+    }
+}
+
 public sealed class SliverFadeTransition : SingleChildRenderObjectWidget
 {
     public SliverFadeTransition(

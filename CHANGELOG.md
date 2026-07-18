@@ -1,5 +1,12 @@
 # Changelog
 
+- Added paired Flutter core `AlignTransition` + `DefaultTextStyleTransition` ports with source-shaped
+  `AnimatedWidget` lifecycle, directional alignment geometry, shrink factors, inherited animated typography,
+  immediate text-layout options, focused tests, and mirrored C#/Dart runtime probes. Advanced `Plumix` to
+  `0.11.0-alpha.1`.
+- Breaking: `Align.Alignment` and the F# `Ui.align` binding now use Flutter-shaped `AlignmentGeometry`; `Align`
+  resolves `AlignmentDirectional` from ambient `Directionality` and rejects negative/NaN width and height factors.
+
 - Added paired Flutter core `SlideTransition` + `SizeTransition` ports with source-shaped explicit-animation
   listener lifecycle, RTL-aware fractional translation, configurable hit-test transforms, clipped main/cross-axis
   factors, deprecated `axisAlignment` compatibility, full alignment overrides, focused tests, and mirrored C#/Dart
@@ -121,6 +128,9 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 ### Changed
 
+- Added paired Flutter core `AlignTransition` + `DefaultTextStyleTransition` ports with directional alignment,
+  shrink factors, inherited animated typography, immediate text-layout options, focused tests, and mirrored C#/Dart
+  probes.
 - Added paired Flutter core `PositionedTransition` + `RelativePositionedTransition` ports with source-matching
   animated inset/rect composition, declared-size conversion, null fallback, focused tests, and mirrored C#/Dart
   probes.

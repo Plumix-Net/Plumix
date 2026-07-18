@@ -43,6 +43,8 @@ internal sealed class AlignDemoPageState : State
     private Animation<Vector> _explicitSlideAnimation = null!;
     private Animation<RelativeRect> _explicitPositionAnimation = null!;
     private Animation<Rect?> _explicitRelativePositionAnimation = null!;
+    private Animation<AlignmentGeometry> _explicitAlignmentAnimation = null!;
+    private Animation<TextStyle> _explicitTextStyleAnimation = null!;
 
     public override void InitState()
     {
@@ -65,6 +67,22 @@ internal sealed class AlignDemoPageState : State
                 value,
                 new Rect(12, 74, 70, 40),
                 new Rect(158, 14, 70, 40)));
+        _explicitAlignmentAnimation = new DerivedAnimation<AlignmentGeometry>(
+            _explicitTransitionsController,
+            value => new Alignment(-1.0 + (2.0 * value), -1.0 + (2.0 * value)));
+        var textStyleBegin = new TextStyle(
+            FontSize: 12,
+            Color: Color.Parse("#FF315A7D"),
+            FontWeight: FontWeight.Normal,
+            LetterSpacing: 0);
+        var textStyleEnd = new TextStyle(
+            FontSize: 20,
+            Color: Color.Parse("#FF9C4F63"),
+            FontWeight: FontWeight.Bold,
+            LetterSpacing: 1.5);
+        _explicitTextStyleAnimation = new DerivedAnimation<TextStyle>(
+            _explicitTransitionsController,
+            value => TextStyle.Lerp(textStyleBegin, textStyleEnd, value));
     }
 
     public override void Dispose()
@@ -352,6 +370,38 @@ internal sealed class AlignDemoPageState : State
                                     child: new Center(
                                         child: new Text("rect", fontSize: 12, color: Colors.White)))),
                         ])),
+                new Text("AlignTransition + DefaultTextStyleTransition", fontSize: 20, color: Colors.Black),
+                new Text(
+                    "Animate alignment geometry and inherited text style from the same explicit controller.",
+                    fontSize: 14,
+                    color: Colors.DimGray),
+                new Row(
+                    spacing: 12,
+                    children:
+                    [
+                        new Container(
+                            width: 110,
+                            height: 90,
+                            color: Color.Parse("#FFF3F5F8"),
+                            child: new AlignTransition(
+                                alignment: _explicitAlignmentAnimation,
+                                widthFactor: 1.6,
+                                heightFactor: 2.0,
+                                child: new Container(
+                                    width: 48,
+                                    height: 28,
+                                    color: Color.Parse("#FF356A82")))),
+                        new Container(
+                            width: 180,
+                            height: 90,
+                            color: Color.Parse("#FFF3F5F8"),
+                            child: new Center(
+                                child: new DefaultTextStyleTransition(
+                                    style: _explicitTextStyleAnimation,
+                                    textAlign: Plumix.UI.TextAlign.Center,
+                                    maxLines: 1,
+                                    child: new Text("animated text")))),
+                    ]),
                 new Text("AnimatedPositioned + AnimatedPositionedDirectional", fontSize: 20, color: Colors.Black),
                 new Text(
                     "Animate physical and logical Stack insets; switching direction resolves start/end immediately.",
