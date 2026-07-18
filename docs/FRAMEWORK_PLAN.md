@@ -245,6 +245,10 @@ Kickoff note (2026-03-12):
   operations, incoming/outgoing controller reuse, separated item/separator coordination, ancestor state lookup,
   keyed child-index remapping, typed pixel/viewport cache extents, viewport clip policy, focused tests, and mirrored
   C#/Dart runtime probes.
+- Added paired core `AnimatedGrid` + `SliverAnimatedGrid` with the same source-shaped logical-index insert/remove and
+  bulk animation lifecycle, fixed/max-extent grid delegate layout, ancestor state lookup, keyed child-index remapping,
+  typed pixel/viewport cache extents, MediaQuery padding, viewport clip policy, focused tests, and mirrored C#/Dart
+  runtime probes.
 
 Progress update (2026-03-19):
 

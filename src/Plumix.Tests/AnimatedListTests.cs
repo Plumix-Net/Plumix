@@ -60,6 +60,199 @@ public sealed class AnimatedListTests : IDisposable
     }
 
     [Fact]
+    public void AnimatedGrids_ExposeFlutterDefaultsAndValidateContracts()
+    {
+        AnimatedItemBuilder builder = (_, _, _) => new SizedBox();
+        var gridDelegate = new SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2);
+        var grid = new AnimatedGrid(builder, gridDelegate);
+        var sliver = new SliverAnimatedGrid(builder, gridDelegate);
+
+        Assert.Same(builder, grid.ItemBuilder);
+        Assert.Same(gridDelegate, grid.GridDelegate);
+        Assert.Equal(0, grid.InitialItemCount);
+        Assert.Equal(Axis.Vertical, grid.ScrollDirection);
+        Assert.False(grid.Reverse);
+        Assert.Null(grid.Controller);
+        Assert.Null(grid.Primary);
+        Assert.Null(grid.Physics);
+        Assert.Null(grid.Padding);
+        Assert.Equal(Clip.HardEdge, grid.ClipBehavior);
+        Assert.Null(grid.ScrollCacheExtent);
+
+        Assert.Same(builder, sliver.ItemBuilder);
+        Assert.Same(gridDelegate, sliver.GridDelegate);
+        Assert.Null(sliver.FindChildIndexCallback);
+        Assert.Equal(0, sliver.InitialItemCount);
+
+        Assert.Throws<ArgumentNullException>(() => new AnimatedGrid(null!, gridDelegate));
+        Assert.Throws<ArgumentNullException>(() => new AnimatedGrid(builder, null!));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            new AnimatedGrid(builder, gridDelegate, initialItemCount: -1));
+        Assert.Throws<ArgumentNullException>(() => new SliverAnimatedGrid(null!, gridDelegate));
+        Assert.Throws<ArgumentNullException>(() => new SliverAnimatedGrid(builder, null!));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            new SliverAnimatedGrid(builder, gridDelegate, initialItemCount: -1));
+    }
+
+    [Fact]
+    public void SliverAnimatedGrid_InsertAndRemoveUseFlutterLogicalIndicesAndGridLayout()
+    {
+        var key = new LabeledGlobalKey<SliverAnimatedGridState>("sliver-animated-grid");
+        var itemBuilds = new List<(int Index, double Value, AnimationStatus Status)>();
+        var removedBuilds = new List<(double Value, AnimationStatus Status)>();
+        var gridDelegate = new SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            mainAxisSpacing: 4,
+            crossAxisSpacing: 6);
+        Widget grid = new CustomScrollView(
+            slivers:
+            [
+                new SliverAnimatedGrid(
+                    itemBuilder: (_, index, animation) =>
+                    {
+                        itemBuilds.Add((index, animation.Value, animation.Status));
+                        return new SizedBox();
+                    },
+                    gridDelegate: gridDelegate,
+                    initialItemCount: 4,
+                    key: key),
+            ]);
+        using WidgetRenderHarness harness = new(grid);
+        harness.Pump(new Size(206, 220));
+
+        Assert.Equal(4, key.CurrentState!.ItemsCount);
+        Assert.Contains(itemBuilds, build =>
+            build.Index == 0 && build.Value == 1.0 && build.Status == AnimationStatus.Completed);
+        RenderSliverGrid renderGrid = Assert.Single(FindDescendants<RenderSliverGrid>(harness.RenderView));
+        Assert.Same(gridDelegate, renderGrid.GridDelegate);
+
+        itemBuilds.Clear();
+        key.CurrentState.InsertItem(1);
+        harness.Pump(new Size(206, 220));
+
+        Assert.Equal(5, key.CurrentState.ItemsCount);
+        Assert.Contains(itemBuilds, build =>
+            build.Index == 1 && build.Value == 0.0 && build.Status == AnimationStatus.Forward);
+        Assert.Contains(itemBuilds, build => build.Index == 2 && build.Value == 1.0);
+
+        double insertStart = Scheduler.CurrentSeconds;
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(insertStart + 0.01));
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(insertStart + 0.35));
+        harness.Pump(new Size(206, 220));
+
+        key.CurrentState.RemoveItem(
+            1,
+            (_, animation) =>
+            {
+                removedBuilds.Add((animation.Value, animation.Status));
+                return new SizedBox();
+            });
+        itemBuilds.Clear();
+        harness.Pump(new Size(206, 220));
+
+        Assert.Equal(5, key.CurrentState.ItemsCount);
+        Assert.Contains(removedBuilds, build =>
+            build.Value == 1.0 && build.Status == AnimationStatus.Reverse);
+        Assert.Contains(itemBuilds, build => build.Index == 1);
+
+        double removeStart = Scheduler.CurrentSeconds;
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(removeStart + 0.01));
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(removeStart + 0.35));
+        harness.Pump(new Size(206, 220));
+
+        Assert.Equal(4, key.CurrentState.ItemsCount);
+    }
+
+    [Fact]
+    public void AnimatedGrid_OfMaybeOfMediaPaddingClipAndCacheMatchSourceComposition()
+    {
+        var key = new LabeledGlobalKey<AnimatedGridState>("animated-grid");
+        BuildContext? itemContext = null;
+        Widget grid = new MediaQuery(
+            data: new MediaQueryData(Padding: new Thickness(10, 20, 30, 40)),
+            child: new AnimatedGrid(
+                itemBuilder: (context, _, _) =>
+                {
+                    itemContext = context;
+                    return new SizedBox();
+                },
+                gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2),
+                initialItemCount: 1,
+                clipBehavior: Clip.None,
+                scrollCacheExtent: ScrollCacheExtent.Viewport(1.5),
+                key: key));
+        using WidgetRenderHarness harness = new(grid);
+        harness.Pump(new Size(200, 160));
+
+        Assert.NotNull(itemContext);
+        Assert.Same(key.CurrentState, AnimatedGrid.Of(itemContext!.Value));
+        Assert.Same(key.CurrentState, AnimatedGrid.MaybeOf(itemContext.Value));
+        Assert.NotNull(SliverAnimatedGrid.MaybeOf(itemContext.Value));
+
+        RenderViewport viewport = Assert.Single(FindDescendants<RenderViewport>(harness.RenderView));
+        Assert.Equal(Clip.None, viewport.ClipBehavior);
+        Assert.Equal(CacheExtentStyle.Viewport, viewport.CacheExtentStyle);
+        Assert.Equal(1.5, viewport.CacheExtent);
+        RenderSliverPadding padding = Assert.Single(FindDescendants<RenderSliverPadding>(harness.RenderView));
+        Assert.Equal(new Thickness(0, 20, 0, 40), padding.Padding);
+    }
+
+    [Fact]
+    public void SliverAnimatedGrid_BulkOperationsAndFindChildIndexMatchListStateMachine()
+    {
+        var ids = new List<int> { 0, 1, 2 };
+        var key = new LabeledGlobalKey<SliverAnimatedGridState>("keyed-sliver-animated-grid");
+        var removedValues = new List<double>();
+        Widget grid = new CustomScrollView(
+            slivers:
+            [
+                new SliverAnimatedGrid(
+                    itemBuilder: (_, index, _) => new KeyedProbe(
+                        ids[index],
+                        new ValueKey<int>(ids[index])),
+                    gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2),
+                    findChildIndexCallback: childKey => childKey is ValueKey<int> valueKey
+                        ? ids.IndexOf(valueKey.Value)
+                        : null,
+                    initialItemCount: ids.Count,
+                    key: key),
+            ]);
+        using WidgetRenderHarness harness = new(grid);
+        harness.Pump(new Size(200, 180));
+        Dictionary<int, Guid> initialStates = KeyedProbeState.StateIds.ToDictionary();
+
+        ids.InsertRange(1, [8, 9]);
+        key.CurrentState!.InsertAllItems(1, 2);
+        harness.Pump(new Size(200, 180));
+
+        Assert.Equal(5, key.CurrentState.ItemsCount);
+        Assert.Equal(initialStates[0], KeyedProbeState.StateIds[0]);
+        Assert.Equal(initialStates[1], KeyedProbeState.StateIds[1]);
+        Assert.Equal(initialStates[2], KeyedProbeState.StateIds[2]);
+
+        double insertStart = Scheduler.CurrentSeconds;
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(insertStart + 0.01));
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(insertStart + 0.35));
+        harness.Pump(new Size(200, 180));
+
+        ids.Clear();
+        key.CurrentState.RemoveAllItems(
+            (_, animation) =>
+            {
+                removedValues.Add(animation.Value);
+                return new SizedBox();
+            });
+        harness.Pump(new Size(200, 180));
+
+        Assert.Equal(5, removedValues.Count(value => value == 1.0));
+        double removeStart = Scheduler.CurrentSeconds;
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(removeStart + 0.01));
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(removeStart + 0.35));
+        harness.Pump(new Size(200, 180));
+        Assert.Equal(0, key.CurrentState.ItemsCount);
+    }
+
+    [Fact]
     public void SliverAnimatedList_InsertAndRemoveUseFlutterLogicalIndicesAndAnimations()
     {
         var key = new LabeledGlobalKey<SliverAnimatedListState>("sliver-animated-list");

@@ -67,6 +67,7 @@ internal static class SampleRoutes
     public const string Carousel = "/carousel";
     public const string ReorderableList = "/reorderable-list";
     public const string AnimatedList = "/animated-list";
+    public const string AnimatedGrid = "/animated-grid";
     public const string GridTile = "/grid-tile";
     public const string ListTile = "/list-tile";
     public const string ListTileControls = "/list-tile-controls";
@@ -195,6 +196,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "AnimatedList + SliverAnimatedList",
             "insert/remove animations + separated and sliver variants",
             () => new AnimatedListDemoPage()),
+        new(
+            SampleRoutes.AnimatedGrid,
+            "AnimatedGrid + SliverAnimatedGrid",
+            "insert/remove animations + grid delegate and keyed sliver variants",
+            () => new AnimatedGridDemoPage()),
         new(SampleRoutes.GridView, "GridView + SliverGrid", "delegate-based 2D layout", () => new GridViewDemoPage()),
         new(SampleRoutes.CustomSlivers, "Custom slivers", "SliverPadding + SliverFixedExtentList", () => new CustomSliversDemoPage()),
         new(SampleRoutes.Scrollbar, "Scrollbar", "controller + thumb", () => new ScrollbarDemoPage()),

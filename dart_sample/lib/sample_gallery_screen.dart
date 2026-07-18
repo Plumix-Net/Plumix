@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'demos/general/align_demo_page.dart';
 import 'demos/general/animated_list_demo_page.dart';
+import 'demos/general/animated_grid_demo_page.dart';
 import 'demos/material/app_bar_actions_padding_demo_page.dart';
 import 'demos/material/app_bar_icon_theme_demo_page.dart';
 import 'demos/material/app_bar_leading_width_demo_page.dart';
@@ -438,6 +439,13 @@ class SampleGalleryScreen extends StatelessWidget {
           title: 'AnimatedList + SliverAnimatedList',
           subtitle: 'insert/remove animations + separated and sliver variants',
           builder: () => const AnimatedListDemoPage(),
+        ),
+        SampleRouteDefinition(
+          routeName: SampleRoutes.animatedGrid,
+          title: 'AnimatedGrid + SliverAnimatedGrid',
+          subtitle:
+              'insert/remove animations + grid delegate and keyed sliver variants',
+          builder: () => const AnimatedGridDemoPage(),
         ),
         SampleRouteDefinition(
           routeName: SampleRoutes.gridView,

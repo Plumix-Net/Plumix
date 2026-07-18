@@ -1,5 +1,9 @@
 # Changelog
 
+- Added paired Flutter core `AnimatedGrid` + `SliverAnimatedGrid` ports with source-shaped insert/remove APIs,
+  fixed/max-extent grid delegate composition, keyed child remapping, MediaQuery padding, viewport cache/clip policy,
+  focused tests, and mirrored C#/Dart probes. Advanced `Plumix` to `0.14.0-alpha.1`.
+
 - Added paired Flutter core `AnimatedList` + `SliverAnimatedList` ports with source-shaped insert/remove APIs,
   separated-list coordination, keyed child remapping, MediaQuery padding, viewport cache/clip policy, focused tests,
   and mirrored C#/Dart probes. Advanced `Plumix` to `0.13.0-alpha.1`.
