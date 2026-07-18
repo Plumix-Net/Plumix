@@ -45,7 +45,8 @@ public class InkResponse : StatefulWidget
         bool autofocus = false,
         MaterialStatesController? statesController = null,
         TimeSpan? hoverDuration = null,
-        Key? key = null) : base(key)
+        Key? key = null,
+        InteractiveInkFeatureFactory? splashFactory = null) : base(key)
     {
         if (radius.HasValue && (!double.IsFinite(radius.Value) || radius.Value <= 0))
         {
@@ -90,6 +91,7 @@ public class InkResponse : StatefulWidget
         Autofocus = autofocus;
         StatesController = statesController;
         HoverDuration = hoverDuration;
+        SplashFactory = splashFactory;
     }
 
     public Widget? Child { get; }
@@ -125,6 +127,7 @@ public class InkResponse : StatefulWidget
     public bool Autofocus { get; }
     public MaterialStatesController? StatesController { get; }
     public TimeSpan? HoverDuration { get; }
+    public InteractiveInkFeatureFactory? SplashFactory { get; }
 
     public override State CreateState() => new InkResponseState();
 
@@ -141,6 +144,12 @@ public class InkResponse : StatefulWidget
         private Point _splashOrigin = CenterOrigin;
         private double _splashProgress;
         private Plumix.AnimationController? _splashController;
+        private InteractiveInkFeatureFactory? _resolvedSplashFactory;
+        private InteractiveInkFeature? _splashFeature;
+        private TextDirection _textDirection = TextDirection.Ltr;
+        private Color _resolvedSplashColor;
+        private bool _splashConfirmed;
+        private bool _splashCanceled;
         private IDisposable? _cursorHandle;
 
         private InkResponse CurrentWidget => (InkResponse)StateWidget;
@@ -161,7 +170,7 @@ public class InkResponse : StatefulWidget
             AttachStatesController(CurrentWidget.StatesController);
             _splashController = new Plumix.AnimationController(TimeSpan.FromMilliseconds(225))
             {
-                Curve = Curves.EaseOut,
+                Curve = Curves.Linear,
             };
             _splashController.Changed += HandleSplashChanged;
             _splashController.Completed += HandleSplashCompleted;
@@ -210,11 +219,14 @@ public class InkResponse : StatefulWidget
         {
             var widget = CurrentWidget;
             var theme = Theme.Of(context);
+            _resolvedSplashFactory = widget.SplashFactory ?? theme.SplashFactory;
+            _textDirection = Directionality.Of(context);
             var states = _statesController?.Value ?? MaterialState.None;
             var highlightColor = ResolveHighlightColor(theme, states);
             var splashColor = widget.OverlayColor?.Resolve(states | MaterialState.Pressed)
                               ?? widget.SplashColor
                               ?? theme.SplashColor;
+            _resolvedSplashColor = splashColor;
             var borderRadius = widget.CustomBorder?.BorderRadius
                                ?? widget.BorderRadius
                                ?? Plumix.Rendering.BorderRadius.Zero;
@@ -228,6 +240,9 @@ public class InkResponse : StatefulWidget
                 splashProgress: _splashProgress,
                 splashRadius: widget.Radius,
                 containedInkWell: widget.ContainedInkWell,
+                splashFeature: _splashFeature,
+                splashConfirmed: _splashConfirmed,
+                splashCanceled: _splashCanceled,
                 child: widget.Child ?? new SizedBox());
 
             if (Enabled)
@@ -309,6 +324,7 @@ public class InkResponse : StatefulWidget
 
         private void HandleTap()
         {
+            ConfirmSplash();
             SetPressed(false);
             if (CurrentWidget.OnTap is not null && CurrentWidget.EnableFeedback) Feedback.ForTap();
             CurrentWidget.OnTap?.Invoke();
@@ -316,18 +332,21 @@ public class InkResponse : StatefulWidget
 
         private void HandleTapCancel()
         {
+            CancelSplash();
             SetPressed(false);
             CurrentWidget.OnTapCancel?.Invoke();
         }
 
         private void HandleDoubleTap()
         {
+            ConfirmSplash();
             SetPressed(false);
             CurrentWidget.OnDoubleTap?.Invoke();
         }
 
         private void HandleLongPress()
         {
+            ConfirmSplash();
             if (CurrentWidget.OnLongPress is not null && CurrentWidget.EnableFeedback) Feedback.ForLongPress();
             CurrentWidget.OnLongPress?.Invoke();
         }
@@ -348,12 +367,14 @@ public class InkResponse : StatefulWidget
 
         private void HandleSecondaryTap()
         {
+            ConfirmSplash();
             SetPressed(false);
             CurrentWidget.OnSecondaryTap?.Invoke();
         }
 
         private void HandleSecondaryTapCancel()
         {
+            CancelSplash();
             SetPressed(false);
             CurrentWidget.OnSecondaryTapCancel?.Invoke();
         }
@@ -373,13 +394,55 @@ public class InkResponse : StatefulWidget
 
         private void StartSplash(Point origin)
         {
+            var widget = CurrentWidget;
+            var configuration = new InkFeatureConfiguration(
+                Position: origin,
+                Color: _resolvedSplashColor,
+                TextDirection: _textDirection,
+                ContainedInkWell: widget.ContainedInkWell,
+                BorderRadius: widget.BorderRadius,
+                CustomBorder: widget.CustomBorder,
+                Radius: widget.Radius);
+            InteractiveInkFeatureFactory factory = _resolvedSplashFactory ?? InkSplash.SplashFactory;
+            InteractiveInkFeature feature = factory.Create(configuration);
             SetState(() =>
             {
                 _splashOrigin = origin;
                 _splashProgress = 0;
+                _splashFeature = feature;
+                _splashConfirmed = false;
+                _splashCanceled = false;
             });
             SetPressed(true);
+            if (_splashController is not null)
+            {
+                _splashController.Duration = feature.UnconfirmedDuration;
+            }
             _splashController?.Forward(0);
+        }
+
+        private void ConfirmSplash()
+        {
+            if (_splashFeature is null || _splashController is null || _splashCanceled)
+            {
+                return;
+            }
+
+            _splashConfirmed = true;
+            _splashController.Duration = _splashFeature.ConfirmDuration;
+            _splashController.Forward();
+        }
+
+        private void CancelSplash()
+        {
+            if (_splashFeature is null || _splashController is null)
+            {
+                return;
+            }
+
+            _splashCanceled = true;
+            _splashController.Duration = _splashFeature.CancelDuration;
+            _splashController.Forward();
         }
 
         private KeyEventResult HandleKeyEvent(FocusNode node, KeyEvent @event)
@@ -478,6 +541,9 @@ public class InkResponse : StatefulWidget
             {
                 _splashProgress = 0;
                 _splashOrigin = CenterOrigin;
+                _splashFeature = null;
+                _splashConfirmed = false;
+                _splashCanceled = false;
             });
         }
 
@@ -538,7 +604,8 @@ public sealed class InkWell : InkResponse
         double? radius = null,
         ShapeBorder? customBorder = null,
         MaterialStatesController? statesController = null,
-        TimeSpan? hoverDuration = null)
+        TimeSpan? hoverDuration = null,
+        InteractiveInkFeatureFactory? splashFactory = null)
         : base(
             child: child,
             onTap: onTap,
@@ -573,6 +640,7 @@ public sealed class InkWell : InkResponse
             autofocus: autofocus,
             statesController: statesController,
             hoverDuration: hoverDuration,
+            splashFactory: splashFactory,
             key: key)
     {
     }
@@ -589,6 +657,9 @@ internal sealed class InkResponsePaint : SingleChildRenderObjectWidget
         double splashProgress,
         double? splashRadius,
         bool containedInkWell,
+        InteractiveInkFeature? splashFeature,
+        bool splashConfirmed,
+        bool splashCanceled,
         Widget child) : base(child)
     {
         HighlightColor = highlightColor;
@@ -599,6 +670,9 @@ internal sealed class InkResponsePaint : SingleChildRenderObjectWidget
         SplashProgress = splashProgress;
         SplashRadius = splashRadius;
         ContainedInkWell = containedInkWell;
+        SplashFeature = splashFeature;
+        SplashConfirmed = splashConfirmed;
+        SplashCanceled = splashCanceled;
     }
 
     public Color? HighlightColor { get; }
@@ -609,10 +683,13 @@ internal sealed class InkResponsePaint : SingleChildRenderObjectWidget
     public double SplashProgress { get; }
     public double? SplashRadius { get; }
     public bool ContainedInkWell { get; }
+    public InteractiveInkFeature? SplashFeature { get; }
+    public bool SplashConfirmed { get; }
+    public bool SplashCanceled { get; }
 
     internal override RenderObject CreateRenderObject(BuildContext context) => new RenderInkResponsePaint(
         HighlightColor, HighlightShape, BorderRadius, SplashColor, SplashOrigin, SplashProgress,
-        SplashRadius, ContainedInkWell);
+        SplashRadius, ContainedInkWell, SplashFeature, SplashConfirmed, SplashCanceled);
 
     internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
@@ -625,6 +702,9 @@ internal sealed class InkResponsePaint : SingleChildRenderObjectWidget
         paint.SplashProgress = SplashProgress;
         paint.SplashRadius = SplashRadius;
         paint.ContainedInkWell = ContainedInkWell;
+        paint.SplashFeature = SplashFeature;
+        paint.SplashConfirmed = SplashConfirmed;
+        paint.SplashCanceled = SplashCanceled;
     }
 }
 
@@ -638,9 +718,19 @@ internal sealed class RenderInkResponsePaint : RenderProxyBox
     private double _splashProgress;
     private double? _splashRadius;
     private bool _containedInkWell;
+    private InteractiveInkFeature? _splashFeature;
+    private bool _splashConfirmed;
+    private bool _splashCanceled;
 
     public RenderInkResponsePaint(Color? highlightColor, BoxShape highlightShape, BorderRadius borderRadius,
-        Color? splashColor, Point splashOrigin, double splashProgress, double? splashRadius, bool containedInkWell)
+        Color? splashColor,
+        Point splashOrigin,
+        double splashProgress,
+        double? splashRadius,
+        bool containedInkWell,
+        InteractiveInkFeature? splashFeature,
+        bool splashConfirmed,
+        bool splashCanceled)
     {
         _highlightColor = highlightColor;
         _highlightShape = highlightShape;
@@ -650,6 +740,9 @@ internal sealed class RenderInkResponsePaint : RenderProxyBox
         _splashProgress = Math.Clamp(splashProgress, 0, 1);
         _splashRadius = splashRadius;
         _containedInkWell = containedInkWell;
+        _splashFeature = splashFeature;
+        _splashConfirmed = splashConfirmed;
+        _splashCanceled = splashCanceled;
     }
 
     public Color? HighlightColor { get => _highlightColor; set => SetPaintValue(ref _highlightColor, value); }
@@ -660,6 +753,13 @@ internal sealed class RenderInkResponsePaint : RenderProxyBox
     public double SplashProgress { get => _splashProgress; set => SetPaintValue(ref _splashProgress, Math.Clamp(value, 0, 1)); }
     public double? SplashRadius { get => _splashRadius; set => SetPaintValue(ref _splashRadius, value); }
     public bool ContainedInkWell { get => _containedInkWell; set => SetPaintValue(ref _containedInkWell, value); }
+    public InteractiveInkFeature? SplashFeature
+    {
+        get => _splashFeature;
+        set => SetPaintValue(ref _splashFeature, value);
+    }
+    public bool SplashConfirmed { get => _splashConfirmed; set => SetPaintValue(ref _splashConfirmed, value); }
+    public bool SplashCanceled { get => _splashCanceled; set => SetPaintValue(ref _splashCanceled, value); }
 
     public override void Paint(PaintingContext context, Point offset)
     {
@@ -679,7 +779,16 @@ internal sealed class RenderInkResponsePaint : RenderProxyBox
                 }
             }
 
-            if (_splashColor.HasValue && _splashProgress > 0)
+            if (_splashFeature is not null && _splashProgress >= 0.0)
+            {
+                InkFeatureFrame frame = _splashFeature.ResolveFrame(
+                    Size,
+                    _splashProgress,
+                    confirmed: _splashConfirmed,
+                    canceled: _splashCanceled);
+                PaintFeature(target, offset, _splashFeature.Configuration.Color, frame);
+            }
+            else if (_splashColor.HasValue && _splashProgress > 0)
             {
                 var center = new Point(Size.Width / 2.0, Size.Height / 2.0);
                 var origin = double.IsNaN(_splashOrigin.X) || double.IsNaN(_splashOrigin.Y)
@@ -713,6 +822,59 @@ internal sealed class RenderInkResponsePaint : RenderProxyBox
         {
             PaintInk(context);
         }
+    }
+
+    private static void PaintFeature(
+        PaintingContext context,
+        Point offset,
+        Color color,
+        InkFeatureFrame frame)
+    {
+        Color featureColor = ApplyOpacity(color, frame.Opacity);
+        if (frame.Kind != InkFeatureKind.Sparkle)
+        {
+            context.DrawCircle(
+                new SolidColorBrush(featureColor),
+                null,
+                offset + frame.Center,
+                frame.Radius);
+            return;
+        }
+
+        context.DrawCircle(
+            new SolidColorBrush(featureColor),
+            null,
+            offset + frame.Center,
+            frame.Radius);
+        Color haloColor = ApplyOpacity(color, frame.Opacity * 0.32);
+        context.DrawCircle(
+            new SolidColorBrush(haloColor),
+            null,
+            offset + frame.Center + new Vector(frame.Radius * 0.08, -frame.Radius * 0.04),
+            frame.Radius * 0.72);
+
+        Random random = new(unchecked((int)Math.Round(frame.TurbulenceSeed * 1000.0)));
+        Color sparkleColor = ApplyOpacity(Colors.White, frame.SparkleOpacity);
+        var sparkleBrush = new SolidColorBrush(sparkleColor);
+        for (int index = 0; index < 18; index++)
+        {
+            double angle = random.NextDouble() * Math.PI * 2.0;
+            double distance = random.NextDouble() * frame.Radius * 0.82;
+            double dotRadius = 0.75 + (random.NextDouble() * 1.5);
+            var dotCenter = new Point(
+                frame.Center.X + (Math.Cos(angle) * distance),
+                frame.Center.Y + (Math.Sin(angle) * distance));
+            context.DrawCircle(sparkleBrush, null, offset + dotCenter, dotRadius);
+        }
+    }
+
+    private static Color ApplyOpacity(Color color, double opacity)
+    {
+        byte alpha = (byte)Math.Clamp(
+            (int)Math.Round(color.A * Math.Clamp(opacity, 0.0, 1.0)),
+            0,
+            255);
+        return Color.FromArgb(alpha, color.R, color.G, color.B);
     }
 
     private double ResolveSplashRadius(Point origin)

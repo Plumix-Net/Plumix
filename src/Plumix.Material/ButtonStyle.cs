@@ -127,7 +127,8 @@ public sealed record ButtonStyle(
     MaterialStateProperty<MouseCursor?>? MouseCursor = null,
     VisualDensity? VisualDensity = null,
     TimeSpan? AnimationDuration = null,
-    bool? EnableFeedback = null)
+    bool? EnableFeedback = null,
+    InteractiveInkFeatureFactory? SplashFactory = null)
 {
     public ButtonStyle Merge(ButtonStyle? style)
     {
@@ -160,7 +161,8 @@ public sealed record ButtonStyle(
             MouseCursor = MouseCursor ?? style.MouseCursor,
             VisualDensity = VisualDensity ?? style.VisualDensity,
             AnimationDuration = AnimationDuration ?? style.AnimationDuration,
-            EnableFeedback = EnableFeedback ?? style.EnableFeedback
+            EnableFeedback = EnableFeedback ?? style.EnableFeedback,
+            SplashFactory = SplashFactory ?? style.SplashFactory
         };
     }
 

@@ -1,5 +1,10 @@
 # Changelog
 
+- Breaking: added paired Material `InkRipple` + `InkSparkle` ports and pluggable
+  `InteractiveInkFeatureFactory` selection through ink responses, button styles, and `ThemeData`; M3 Android now
+  defaults to sparkle, other M3 platforms to ripple, and M2 to splash. Added focused tests and mirrored C#/Dart
+  probes; shader-identical sparkle noise remains documented. Advanced `Plumix.Material` to `0.4.0-alpha.1`.
+
 - Added Material `AnimatedIcon` + complete 14-entry `AnimatedIcons` catalog with Flutter-generated vector frames,
   linear frame interpolation, animation-driven `CustomPainter` repaint, icon-theme size/color/opacity, RTL mirroring,
   semantics, focused tests, and mirrored C#/Dart probes. Advanced `Plumix` to `0.15.0-alpha.1` and

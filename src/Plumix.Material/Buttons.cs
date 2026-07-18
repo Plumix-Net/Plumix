@@ -148,6 +148,7 @@ public sealed class TextButton : StatelessWidget
         Color? disabledIconColor = null,
         Color? overlayColor = null,
         Color? splashColor = null,
+        InteractiveInkFeatureFactory? splashFactory = null,
         double? elevation = null,
         BorderSide? side = null,
         Thickness? padding = null,
@@ -194,6 +195,7 @@ public sealed class TextButton : StatelessWidget
                 : null,
             OverlayColor: MaterialButtonCore.CreateStyleFromOverlayResolver(foregroundColor, overlayColor),
             SplashColor: MaterialButtonCore.CreateStyleFromSplashResolver(foregroundColor, overlayColor, splashColor),
+            SplashFactory: splashFactory,
             IconColor: iconColorProperty,
             IconSize: iconSize.HasValue
                 ? MaterialStateProperty<double?>.All(iconSize.Value)
@@ -485,6 +487,7 @@ public sealed class ElevatedButton : StatelessWidget
         Color? shadowColor = null,
         Color? overlayColor = null,
         Color? splashColor = null,
+        InteractiveInkFeatureFactory? splashFactory = null,
         BorderSide? side = null,
         Thickness? padding = null,
         BorderRadius? shape = null,
@@ -527,6 +530,7 @@ public sealed class ElevatedButton : StatelessWidget
                 : null,
             OverlayColor: MaterialButtonCore.CreateStyleFromOverlayResolver(foregroundColor, overlayColor),
             SplashColor: MaterialButtonCore.CreateStyleFromSplashResolver(foregroundColor, overlayColor, splashColor),
+            SplashFactory: splashFactory,
             IconColor: iconColorProperty,
             IconSize: iconSize.HasValue
                 ? MaterialStateProperty<double?>.All(iconSize.Value)
@@ -915,6 +919,7 @@ public sealed class FilledButton : StatelessWidget
         Color? disabledIconColor = null,
         Color? overlayColor = null,
         Color? splashColor = null,
+        InteractiveInkFeatureFactory? splashFactory = null,
         double? elevation = null,
         BorderSide? side = null,
         Thickness? padding = null,
@@ -957,6 +962,7 @@ public sealed class FilledButton : StatelessWidget
                 : null,
             OverlayColor: MaterialButtonCore.CreateStyleFromOverlayResolver(foregroundColor, overlayColor),
             SplashColor: MaterialButtonCore.CreateStyleFromSplashResolver(foregroundColor, overlayColor, splashColor),
+            SplashFactory: splashFactory,
             IconColor: iconColorProperty,
             IconSize: iconSize.HasValue
                 ? MaterialStateProperty<double?>.All(iconSize.Value)
@@ -1280,6 +1286,7 @@ public sealed class OutlinedButton : StatelessWidget
         Color? disabledIconColor = null,
         Color? overlayColor = null,
         Color? splashColor = null,
+        InteractiveInkFeatureFactory? splashFactory = null,
         double? elevation = null,
         BorderSide? side = null,
         Thickness? padding = null,
@@ -1326,6 +1333,7 @@ public sealed class OutlinedButton : StatelessWidget
                 : null,
             OverlayColor: MaterialButtonCore.CreateStyleFromOverlayResolver(foregroundColor, overlayColor),
             SplashColor: MaterialButtonCore.CreateStyleFromSplashResolver(foregroundColor, overlayColor, splashColor),
+            SplashFactory: splashFactory,
             IconColor: iconColorProperty,
             IconSize: iconSize.HasValue
                 ? MaterialStateProperty<double?>.All(iconSize.Value)
@@ -1793,7 +1801,11 @@ internal sealed class MaterialButtonCore : StatefulWidget
             EnableFeedback: legacyOverrides?.EnableFeedback
                             ?? widgetStyle?.EnableFeedback
                             ?? themeStyle?.EnableFeedback
-                            ?? defaults?.EnableFeedback);
+                            ?? defaults?.EnableFeedback,
+            SplashFactory: legacyOverrides?.SplashFactory
+                           ?? widgetStyle?.SplashFactory
+                           ?? themeStyle?.SplashFactory
+                           ?? defaults?.SplashFactory);
     }
 
     private static MaterialStateProperty<T>? ComposeStateProperty<T>(
@@ -2026,6 +2038,12 @@ internal sealed class MaterialButtonCore : StatefulWidget
         private double _splashProgress;
         private Point _splashOrigin = CenterSplashOrigin;
         private Color? _splashBaseColor;
+        private InteractiveInkFeature? _splashFeature;
+        private InteractiveInkFeatureFactory? _resolvedSplashFactory;
+        private BorderRadius _resolvedBorderRadius = BorderRadius.Zero;
+        private TextDirection _resolvedTextDirection = TextDirection.Ltr;
+        private bool _splashConfirmed;
+        private bool _splashCanceled;
         private FocusNode? _focusNode;
         private bool _ownsFocusNode;
         private AnimationController? _splashController;
@@ -2048,7 +2066,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
 
             _splashController = new AnimationController(TimeSpan.FromMilliseconds(225))
             {
-                Curve = Curves.EaseOut
+                Curve = Curves.Linear
             };
             _splashController.Changed += HandleSplashTick;
             _splashController.Completed += HandleSplashCompleted;
@@ -2167,6 +2185,9 @@ internal sealed class MaterialButtonCore : StatefulWidget
             var border = style.ResolveSide(baseStates);
             var padding = style.ResolvePadding(baseStates) ?? default;
             var borderRadius = style.ResolveShape(baseStates) ?? Plumix.Rendering.BorderRadius.Zero;
+            _resolvedSplashFactory = style.SplashFactory ?? theme.SplashFactory;
+            _resolvedBorderRadius = borderRadius;
+            _resolvedTextDirection = Directionality.Of(context);
             var minimumSize = style.ResolveMinimumSize(baseStates) ?? new Size(64, 40);
             ValidateMinimumSize(minimumSize);
             var densityAdjustment = (style.VisualDensity ?? theme.VisualDensity).BaseSizeAdjustment;
@@ -2211,12 +2232,18 @@ internal sealed class MaterialButtonCore : StatefulWidget
                 constraints: effectiveConstraints,
                 child: content);
 
-            content = new InkSplash(
+            content = new InkResponsePaint(
+                highlightColor: null,
+                highlightShape: BoxShape.Rectangle,
+                borderRadius: borderRadius,
                 splashColor: splashColor,
                 splashOrigin: _splashOrigin,
                 splashProgress: _splashProgress,
                 splashRadius: widget.SplashRadius,
-                clipToBounds: false,
+                containedInkWell: true,
+                splashFeature: _splashFeature,
+                splashConfirmed: _splashConfirmed,
+                splashCanceled: _splashCanceled,
                 child: content);
 
             if (widget.ClipBehavior != Clip.None)
@@ -2373,6 +2400,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
                 return;
             }
 
+            ConfirmSplash();
             if (IsFeedbackEnabled())
             {
                 Feedback.ForTap();
@@ -2409,6 +2437,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
 
         private void HandlePointerCancel(PointerCancelEvent @event)
         {
+            CancelSplash();
             SetPressed(false);
         }
 
@@ -2544,6 +2573,16 @@ internal sealed class MaterialButtonCore : StatefulWidget
             var style = CurrentWidget.Style;
             var splashBaseColor = style.ResolveSplashColor(splashStates)
                                   ?? style.ResolveOverlayColor(splashStates);
+            InteractiveInkFeature? feature = splashBaseColor.HasValue
+                ? (_resolvedSplashFactory ?? InkSplash.SplashFactory).Create(
+                    new InkFeatureConfiguration(
+                        Position: origin,
+                        Color: splashBaseColor.Value,
+                        TextDirection: _resolvedTextDirection,
+                        ContainedInkWell: true,
+                        BorderRadius: _resolvedBorderRadius,
+                        Radius: CurrentWidget.SplashRadius))
+                : null;
 
             SetState(() =>
             {
@@ -2551,9 +2590,40 @@ internal sealed class MaterialButtonCore : StatefulWidget
                 _splashProgress = 0;
                 _splashOrigin = origin;
                 _splashBaseColor = splashBaseColor;
+                _splashFeature = feature;
+                _splashConfirmed = false;
+                _splashCanceled = false;
             });
 
+            if (feature is not null)
+            {
+                _splashController.Duration = feature.UnconfirmedDuration;
+            }
             _splashController.Forward(0);
+        }
+
+        private void ConfirmSplash()
+        {
+            if (_splashFeature is null || _splashController is null || _splashCanceled)
+            {
+                return;
+            }
+
+            _splashConfirmed = true;
+            _splashController.Duration = _splashFeature.ConfirmDuration;
+            _splashController.Forward();
+        }
+
+        private void CancelSplash()
+        {
+            if (_splashFeature is null || _splashController is null)
+            {
+                return;
+            }
+
+            _splashCanceled = true;
+            _splashController.Duration = _splashFeature.CancelDuration;
+            _splashController.Forward();
         }
 
         private MaterialState BuildMaterialStates(bool enabled, bool includeFocus)
@@ -3043,6 +3113,9 @@ internal sealed class MaterialButtonCore : StatefulWidget
                 _splashProgress = 0;
                 _splashOrigin = CenterSplashOrigin;
                 _splashBaseColor = null;
+                _splashFeature = null;
+                _splashConfirmed = false;
+                _splashCanceled = false;
             });
         }
 

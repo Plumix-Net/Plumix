@@ -68,7 +68,9 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Animated grids enter through core `Widgets/AnimatedGrid.cs`; grid delegate layout, logical/physical index
   translation, incoming/outgoing animations, and keyed sliver remapping are covered by `AnimatedListTests.cs`.
 - Material tabs enter through `src/Plumix.Material/Tabs.cs` + `TabController.cs` + `TabPageSelector.cs` + `TabBarTheme.cs`; page motion lives in core `Widgets/PageView.cs`/`Rendering/PageView.cs`, indicator layout/paint in `RenderTabBar.cs`, and focused coverage in `MaterialTabsTests.cs`.
-- Material ink reactions enter through `src/Plumix.Material/InkWell.cs`; source-required primary/secondary gesture callbacks live in core `Widgets/Gestures.cs` and recognizers, with focused coverage in `MaterialInkResponseTests.cs`.
+- Material ink reactions enter through `src/Plumix.Material/InkWell.cs`; pluggable `InkSplash`/`InkRipple`/
+  `InkSparkle` features and factories live in `src/Plumix.Material/InkFeatures.cs`; source-required gesture callbacks
+  live in core `Widgets/Gestures.cs`, with focused coverage in `MaterialInkResponseTests.cs`.
 - Material date/time/range pickers enter through `src/Plumix.Material/CalendarDatePicker.cs` + `InputDatePickerFormField.cs` + `DatePickerDialog.cs` + `DateRangePickerDialog.cs` + `TimePickerDialog.cs` + `Date.cs`/`Time.cs` + their theme files; form lifecycle lives in core `Widgets/Form.cs`, dialog presentation uses `Dialog.cs`, localization hooks live in `MaterialLocalizations.cs`, and focused coverage lives in `MaterialDatePickerTests.cs`.
 - Primary Tests:
   - `src/Plumix.Tests/MaterialScaffoldTests.cs`

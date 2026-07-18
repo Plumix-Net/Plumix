@@ -3193,7 +3193,7 @@ public sealed class MaterialButtonsTests
         Assert.NotNull(pressedDecorated);
         Assert.Equal(ApplyOpacity(styleColor, 0.10), pressedDecorated!.Decoration.Color);
 
-        var splash = FindDescendant<RenderInkSplash>(RequireRenderObject<RenderObject>(root.ChildElement));
+        var splash = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(splash);
         Assert.Equal(ApplyOpacity(styleColor, 0.10), splash!.SplashColor);
     }
@@ -3253,7 +3253,7 @@ public sealed class MaterialButtonsTests
         Assert.NotNull(pressedDecorated);
         Assert.Equal(Colors.Transparent, pressedDecorated!.Decoration.Color);
 
-        var splash = FindDescendant<RenderInkSplash>(RequireRenderObject<RenderObject>(root.ChildElement));
+        var splash = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(splash);
         Assert.Null(splash!.SplashColor);
     }
@@ -3316,7 +3316,7 @@ public sealed class MaterialButtonsTests
         Assert.NotNull(pressedDecorated);
         Assert.Equal(ApplyOpacity(overlayColor, 0.10), pressedDecorated!.Decoration.Color);
 
-        var splash = FindDescendant<RenderInkSplash>(RequireRenderObject<RenderObject>(root.ChildElement));
+        var splash = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(splash);
         Assert.Equal(ApplyOpacity(overlayColor, 0.10), splash!.SplashColor);
     }
@@ -3404,7 +3404,7 @@ public sealed class MaterialButtonsTests
 
         owner.FlushBuild();
 
-        var pressedSplash = FindDescendant<RenderInkSplash>(RequireRenderObject<RenderObject>(root.ChildElement));
+        var pressedSplash = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(pressedSplash);
         Assert.Equal(ApplyOpacity(overlayColor, 0.10), pressedSplash!.SplashColor);
 
@@ -3421,7 +3421,7 @@ public sealed class MaterialButtonsTests
 
         owner.FlushBuild();
 
-        var releasedSplash = FindDescendant<RenderInkSplash>(RequireRenderObject<RenderObject>(root.ChildElement));
+        var releasedSplash = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(releasedSplash);
         Assert.Equal(ApplyOpacity(overlayColor, 0.10), releasedSplash!.SplashColor);
     }
@@ -4073,7 +4073,7 @@ public sealed class MaterialButtonsTests
 
         owner.FlushBuild();
 
-        var splash = FindDescendant<RenderInkSplash>(RequireRenderObject<RenderObject>(root.ChildElement));
+        var splash = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(splash);
         Assert.Equal(overlayColor, splash!.SplashColor);
     }
@@ -4111,7 +4111,7 @@ public sealed class MaterialButtonsTests
 
         owner.FlushBuild();
 
-        var splash = FindDescendant<RenderInkSplash>(RequireRenderObject<RenderObject>(root.ChildElement));
+        var splash = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(splash);
         Assert.Equal(overlayColor, splash!.SplashColor);
     }
@@ -4149,7 +4149,7 @@ public sealed class MaterialButtonsTests
 
         owner.FlushBuild();
 
-        var splash = FindDescendant<RenderInkSplash>(RequireRenderObject<RenderObject>(root.ChildElement));
+        var splash = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(splash);
         Assert.Equal(overlayColor, splash!.SplashColor);
     }
@@ -4868,7 +4868,7 @@ public sealed class MaterialButtonsTests
         var expectedPressedTint = ApplyOpacity(overlayColor, 0.10);
         Assert.Equal(BlendColorOverlay(theme.SurfaceContainerLowColor, expectedPressedTint), pressedDecorated!.Decoration.Color);
 
-        var splash = FindDescendant<RenderInkSplash>(RequireRenderObject<RenderObject>(root.ChildElement));
+        var splash = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(splash);
         Assert.Equal(expectedPressedTint, splash!.SplashColor);
     }
@@ -4927,7 +4927,7 @@ public sealed class MaterialButtonsTests
         var expectedPressedTint = ApplyOpacity(overlayColor, 0.10);
         Assert.Equal(BlendColorOverlay(theme.PrimaryColor, expectedPressedTint), pressedDecorated!.Decoration.Color);
 
-        var splash = FindDescendant<RenderInkSplash>(RequireRenderObject<RenderObject>(root.ChildElement));
+        var splash = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(splash);
         Assert.Equal(expectedPressedTint, splash!.SplashColor);
     }
@@ -4983,7 +4983,7 @@ public sealed class MaterialButtonsTests
 
         owner.FlushBuild();
 
-        var splash = FindDescendant<RenderInkSplash>(RequireRenderObject<RenderObject>(root.ChildElement));
+        var splash = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(splash);
         Assert.Null(splash!.SplashColor);
     }
@@ -5038,7 +5038,7 @@ public sealed class MaterialButtonsTests
 
         owner.FlushBuild();
 
-        var splash = FindDescendant<RenderInkSplash>(RequireRenderObject<RenderObject>(root.ChildElement));
+        var splash = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(splash);
         Assert.Null(splash!.SplashColor);
     }
@@ -5063,7 +5063,7 @@ public sealed class MaterialButtonsTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var initialSplash = FindDescendant<RenderInkSplash>(RequireRenderObject<RenderObject>(root.ChildElement));
+        var initialSplash = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(initialSplash);
         Assert.Null(initialSplash!.SplashColor);
         Assert.Equal(0, initialSplash.SplashProgress);
@@ -5081,7 +5081,7 @@ public sealed class MaterialButtonsTests
 
         owner.FlushBuild();
 
-        var activeSplash = FindDescendant<RenderInkSplash>(RequireRenderObject<RenderObject>(root.ChildElement));
+        var activeSplash = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(activeSplash);
         Assert.NotNull(activeSplash!.SplashColor);
         Assert.Equal(new Point(16, 12), activeSplash.SplashOrigin);
@@ -5104,12 +5104,12 @@ public sealed class MaterialButtonsTests
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
         var clip = FindDescendant<RenderClipRRect>(renderRoot);
-        var splash = FindDescendant<RenderInkSplash>(renderRoot);
+        var splash = FindInkPaint(renderRoot);
 
         Assert.NotNull(clip);
         Assert.Equal(BorderRadius.Circular(20), clip!.BorderRadius);
         Assert.NotNull(splash);
-        Assert.False(splash!.ClipToBounds);
+        Assert.True(splash!.ContainedInkWell);
     }
 
     [Fact]
@@ -5361,7 +5361,7 @@ public sealed class MaterialButtonsTests
         harness.Pump(new Size(300, 120));
 
         var renderRoot = harness.RenderView.Child;
-        var splash = FindDescendant<RenderInkSplash>(renderRoot);
+        var splash = FindInkPaint(renderRoot);
         var decorated = FindDescendant<RenderDecoratedBox>(renderRoot);
 
         Assert.NotNull(splash);
@@ -5643,6 +5643,11 @@ public sealed class MaterialButtonsTests
         });
 
         return result;
+    }
+
+    private static RenderInkResponsePaint? FindInkPaint(RenderObject? root)
+    {
+        return FindDescendant<RenderInkResponsePaint>(root);
     }
 
     private static RenderPointerListener? FindInteractivePointerListener(RenderObject? root)

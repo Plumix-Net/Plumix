@@ -17,10 +17,25 @@ public sealed class InkResponseDemoPage : StatefulWidget
     {
         private bool _enabled = true;
         private bool _customOverlay = true;
+        private int _splashMode;
         private int _responseTaps;
         private int _wellTaps;
         private int _secondaryTaps;
         private string _interaction = "Ready";
+
+        private InteractiveInkFeatureFactory SplashFactory => _splashMode switch
+        {
+            0 => InkRipple.SplashFactory,
+            1 => InkSparkle.ConstantTurbulenceSeedSplashFactory,
+            _ => Plumix.Material.InkSplash.SplashFactory,
+        };
+
+        private string SplashName => _splashMode switch
+        {
+            0 => "InkRipple",
+            1 => "InkSparkle",
+            _ => "InkSplash",
+        };
 
         public override Widget Build(BuildContext context)
         {
@@ -40,7 +55,8 @@ public sealed class InkResponseDemoPage : StatefulWidget
                     [
                         new Text("InkResponse + InkWell", fontSize: 20, color: Colors.Black),
                         new Text(
-                            "Circle/uncontained versus rectangle/contained ink, Ink decoration, primary + secondary gestures, hover/focus, and overlay states.",
+                            "Circle/uncontained versus rectangle/contained ink, selectable ripple/sparkle/splash "
+                            + "factories, primary + secondary gestures, hover/focus, and overlay states.",
                             fontSize: 14,
                             color: Colors.DimGray),
                         new Row(
@@ -56,6 +72,9 @@ public sealed class InkResponseDemoPage : StatefulWidget
                             fontSize: 14,
                             color: Colors.Black),
                         new Text($"Interaction: {_interaction}", fontSize: 13, color: Colors.DimGray),
+                        new OutlinedButton(
+                            onPressed: () => SetState(() => _splashMode = (_splashMode + 1) % 3),
+                            child: new Text($"Splash factory: {SplashName}")),
                         new Row(
                             spacing: 10,
                             children:
@@ -91,6 +110,7 @@ public sealed class InkResponseDemoPage : StatefulWidget
                             onHover: value => SetState(() => _interaction = $"InkResponse hover: {value}"),
                             onHighlightChanged: value => SetState(() => _interaction = $"InkResponse pressed: {value}"),
                             overlayColor: overlay,
+                            splashFactory: SplashFactory,
                             radius: 58,
                             child: new Center(child: new Icon(Icons.Star, size: 32, color: Color.Parse("#FF6750A4"))))),
                 ]);
@@ -116,6 +136,7 @@ public sealed class InkResponseDemoPage : StatefulWidget
                             onHover: value => SetState(() => _interaction = $"InkWell hover: {value}"),
                             onHighlightChanged: value => SetState(() => _interaction = $"InkWell pressed: {value}"),
                             overlayColor: overlay,
+                            splashFactory: SplashFactory,
                             borderRadius: BorderRadius.Circular(18),
                             child: new Center(child: new Text("Tap / hold", fontSize: 15, color: Colors.Black)))),
                 ]);

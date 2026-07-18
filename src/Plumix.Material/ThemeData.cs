@@ -415,7 +415,8 @@ public sealed record ThemeData
         MenuBarThemeData? menuBarTheme = null,
         MenuButtonThemeData? menuButtonTheme = null,
         MenuThemeData? menuTheme = null,
-        TextSelectionThemeData? textSelectionTheme = null)
+        TextSelectionThemeData? textSelectionTheme = null,
+        InteractiveInkFeatureFactory? splashFactory = null)
     {
         Platform = platform ?? ResolveDefaultPlatform();
         Brightness = brightness ?? Brightness.Light;
@@ -465,6 +466,7 @@ public sealed record ThemeData
         SplashColor = splashColor ?? (Brightness == Brightness.Dark
             ? Color.FromArgb(0x40, 0xCC, 0xCC, 0xCC)
             : Color.FromArgb(0x66, 0xC8, 0xC8, 0xC8));
+        SplashFactory = splashFactory ?? ResolveDefaultSplashFactory(UseMaterial3, Platform);
         MaterialTapTargetSize = materialTapTargetSize ?? MaterialTapTargetSize.Padded;
         TextButtonStyle = textButtonStyle;
         ElevatedButtonStyle = elevatedButtonStyle;
@@ -607,6 +609,8 @@ public sealed record ThemeData
     public Color HighlightColor { get; init; }
 
     public Color SplashColor { get; init; }
+
+    public InteractiveInkFeatureFactory SplashFactory { get; init; }
 
     public MaterialTapTargetSize MaterialTapTargetSize { get; init; }
 
@@ -992,5 +996,19 @@ public sealed record ThemeData
         }
 
         return TargetPlatform.Android;
+    }
+
+    private static InteractiveInkFeatureFactory ResolveDefaultSplashFactory(
+        bool useMaterial3,
+        TargetPlatform platform)
+    {
+        if (!useMaterial3)
+        {
+            return InkSplash.SplashFactory;
+        }
+
+        return platform == TargetPlatform.Android
+            ? InkSparkle.SplashFactory
+            : InkRipple.SplashFactory;
     }
 }

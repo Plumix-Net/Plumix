@@ -91,6 +91,163 @@ public sealed class MaterialInkResponseTests : IDisposable
     }
 
     [Fact]
+    public void ThemeData_SplashFactoryDefaultsMatchMaterialModeAndPlatform()
+    {
+        var material3Android = new ThemeData(
+            platform: TargetPlatform.Android,
+            useMaterial3: true);
+        var material3Windows = new ThemeData(
+            platform: TargetPlatform.Windows,
+            useMaterial3: true);
+        var material2Android = new ThemeData(
+            platform: TargetPlatform.Android,
+            useMaterial3: false);
+
+        Assert.Same(InkSparkle.SplashFactory, material3Android.SplashFactory);
+        Assert.Same(InkRipple.SplashFactory, material3Windows.SplashFactory);
+        Assert.Same(Plumix.Material.InkSplash.SplashFactory, material2Android.SplashFactory);
+
+        var explicitTheme = new ThemeData(splashFactory: InkRipple.SplashFactory);
+        Assert.Same(InkRipple.SplashFactory, explicitTheme.SplashFactory);
+    }
+
+    [Fact]
+    public void InkRipple_MatchesFlutterRadiusCenterAndTimingContract()
+    {
+        var feature = Assert.IsType<InkRipple>(InkRipple.SplashFactory.Create(
+            new InkFeatureConfiguration(
+                Position: new Point(10.0, 20.0),
+                Color: Colors.Blue,
+                ContainedInkWell: true)));
+
+        Assert.Equal(TimeSpan.FromSeconds(1.0), feature.UnconfirmedDuration);
+        Assert.Equal(TimeSpan.FromMilliseconds(375.0), feature.ConfirmDuration);
+        Assert.Equal(TimeSpan.FromMilliseconds(75.0), feature.CancelDuration);
+
+        InkFeatureFrame initial = feature.ResolveFrame(
+            new Size(100.0, 60.0),
+            progress: 0.0,
+            confirmed: true,
+            canceled: false);
+        InkFeatureFrame completed = feature.ResolveFrame(
+            new Size(100.0, 60.0),
+            progress: 1.0,
+            confirmed: true,
+            canceled: false);
+        double targetRadius = Math.Sqrt((100.0 * 100.0) + (60.0 * 60.0)) / 2.0;
+
+        Assert.Equal(InkFeatureKind.Ripple, initial.Kind);
+        Assert.Equal(new Point(10.0, 20.0), initial.Center);
+        Assert.Equal(targetRadius * 0.30, initial.Radius, 3);
+        Assert.Equal(new Point(50.0, 30.0), completed.Center);
+        Assert.Equal(targetRadius + 5.0, completed.Radius, 3);
+        Assert.Equal(0.0, completed.Opacity, 3);
+    }
+
+    [Fact]
+    public void InkSparkle_UsesFlutterSequencesAndDeterministicTestSeed()
+    {
+        var feature = Assert.IsType<InkSparkle>(
+            InkSparkle.ConstantTurbulenceSeedSplashFactory.Create(
+                new InkFeatureConfiguration(
+                    Position: new Point(12.0, 18.0),
+                    Color: Colors.Purple,
+                    ContainedInkWell: true)));
+
+        Assert.Equal(TimeSpan.FromMilliseconds(617.0), feature.ConfirmDuration);
+        Assert.Equal(1337.0, feature.TurbulenceSeed);
+
+        InkFeatureFrame hold = feature.ResolveFrame(
+            new Size(100.0, 60.0),
+            progress: 0.30,
+            confirmed: true,
+            canceled: false);
+        InkFeatureFrame completed = feature.ResolveFrame(
+            new Size(100.0, 60.0),
+            progress: 1.0,
+            confirmed: true,
+            canceled: false);
+
+        Assert.Equal(InkFeatureKind.Sparkle, hold.Kind);
+        Assert.Equal(1.0, hold.Opacity, 3);
+        Assert.Equal(1.0, hold.SparkleOpacity, 3);
+        Assert.True(hold.Radius > 0.0);
+        Assert.Equal(0.0, completed.Opacity, 3);
+        Assert.Equal(0.0, completed.SparkleOpacity, 3);
+    }
+
+    [Fact]
+    public void InkWell_WidgetSplashFactoryOverridesThemeFactory()
+    {
+        var theme = new ThemeData(
+            platform: TargetPlatform.Android,
+            splashFactory: InkSparkle.SplashFactory);
+        using var harness = CreateHarness(
+            new InkWell(
+                splashFactory: InkRipple.SplashFactory,
+                onTap: () => { },
+                child: new SizedBox(width: 80.0, height: 48.0)),
+            theme);
+        harness.Pump(new Size(120.0, 80.0));
+
+        GestureBinding.Instance.HandlePointerEvent(
+            harness.RenderView,
+            new PointerDownEvent(
+                705,
+                PointerDeviceKind.Mouse,
+                new Point(20.0, 20.0),
+                PointerButtons.Primary,
+                DateTime.UtcNow));
+        harness.Pump(new Size(120.0, 80.0));
+
+        RenderInkResponsePaint paint = Assert.Single(
+            FindDescendants<RenderInkResponsePaint>(harness.RenderView));
+        Assert.IsType<InkRipple>(paint.SplashFeature);
+    }
+
+    [Fact]
+    public void ButtonStylesExposeSplashFactoryWithWidgetPrecedence()
+    {
+        ButtonStyle baseStyle = TextButton.StyleFrom(splashFactory: InkRipple.SplashFactory);
+        ButtonStyle overrideStyle = FilledButton.StyleFrom(splashFactory: InkSparkle.SplashFactory);
+        ButtonStyle merged = baseStyle.Merge(overrideStyle);
+
+        Assert.Same(InkRipple.SplashFactory, baseStyle.SplashFactory);
+        Assert.Same(InkSparkle.SplashFactory, overrideStyle.SplashFactory);
+        Assert.Same(InkRipple.SplashFactory, merged.SplashFactory);
+        Assert.Same(
+            InkSparkle.SplashFactory,
+            IconButton.StyleFrom(splashFactory: InkSparkle.SplashFactory).SplashFactory);
+    }
+
+    [Fact]
+    public void MaterialButtonCore_UsesButtonStyleSplashFactory()
+    {
+        ButtonStyle style = TextButton.StyleFrom(
+            foregroundColor: Colors.Blue,
+            splashFactory: InkRipple.SplashFactory);
+        using var harness = CreateHarness(new TextButton(
+            onPressed: () => { },
+            style: style,
+            child: new Text("Ripple")));
+        harness.Pump(new Size(160.0, 80.0));
+
+        GestureBinding.Instance.HandlePointerEvent(
+            harness.RenderView,
+            new PointerDownEvent(
+                706,
+                PointerDeviceKind.Mouse,
+                new Point(30.0, 20.0),
+                PointerButtons.Primary,
+                DateTime.UtcNow));
+        harness.Pump(new Size(160.0, 80.0));
+
+        RenderInkResponsePaint paint = Assert.Single(
+            FindDescendants<RenderInkResponsePaint>(harness.RenderView));
+        Assert.IsType<InkRipple>(paint.SplashFeature);
+    }
+
+    [Fact]
     public void InkResponse_UsesCircleAndUncontainedSplashWhileInkWellClipsRectangle()
     {
         using var responseHarness = CreateHarness(new InkResponse(
@@ -221,8 +378,8 @@ public sealed class MaterialInkResponseTests : IDisposable
         Assert.Null(FindSemantics(excluded, node => node.Actions.HasFlag(SemanticsActions.Tap)));
     }
 
-    private static WidgetRenderHarness CreateHarness(Widget child) => new(
-        new Theme(ThemeData.Light, new Directionality(TextDirection.Ltr, child)));
+    private static WidgetRenderHarness CreateHarness(Widget child, ThemeData? theme = null) => new(
+        new Theme(theme ?? ThemeData.Light, new Directionality(TextDirection.Ltr, child)));
 
     private static List<T> FindDescendants<T>(RenderObject? root) where T : RenderObject
     {

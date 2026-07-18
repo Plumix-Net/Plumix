@@ -780,6 +780,13 @@ Progress update (2026-03-19):
     progress clamping, scale/color/opacity resolution, semantic labels, and directional mirroring;
   - added the source-required `CustomPainter(repaint:)` listener contract, focused control/render coverage, a
     deterministic data generator, and mirrored C#/Dart catalog runtime probes.
+- Added paired Material `InkRipple` + `InkSparkle` splash factories:
+  - introduced pluggable `InteractiveInkFeatureFactory` selection through `InkResponse`/`InkWell`, `ButtonStyle`,
+    button `styleFrom`, and `ThemeData`, including Flutter's M2/M3 platform defaults;
+  - matched splash/ripple/sparkle radius, center, opacity, confirmation/cancel timing, clipping, and deterministic
+    sparkle seed contracts, with an Avalonia paint approximation only for Flutter's runtime shader noise;
+  - added focused factory/default/precedence/geometry tests and mirrored factory switching in the existing C#/Dart
+    ink-response demo.
 - Remaining divergence for floating action button in current framework scope:
   - none documented in current framework scope.
 

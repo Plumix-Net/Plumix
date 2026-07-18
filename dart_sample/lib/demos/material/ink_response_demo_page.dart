@@ -10,10 +10,23 @@ class InkResponseDemoPage extends StatefulWidget {
 class _InkResponseDemoPageState extends State<InkResponseDemoPage> {
   bool _enabled = true;
   bool _customOverlay = true;
+  int _splashMode = 0;
   int _responseTaps = 0;
   int _wellTaps = 0;
   int _secondaryTaps = 0;
   String _interaction = 'Ready';
+
+  InteractiveInkFeatureFactory get _splashFactory => switch (_splashMode) {
+    0 => InkRipple.splashFactory,
+    1 => InkSparkle.constantTurbulenceSeedSplashFactory,
+    _ => InkSplash.splashFactory,
+  };
+
+  String get _splashName => switch (_splashMode) {
+    0 => 'InkRipple',
+    1 => 'InkSparkle',
+    _ => 'InkSplash',
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +55,9 @@ class _InkResponseDemoPageState extends State<InkResponseDemoPage> {
             style: TextStyle(fontSize: 20, color: Colors.black),
           ),
           const Text(
-            'Circle/uncontained versus rectangle/contained ink, Ink decoration, primary + secondary gestures, hover/focus, and overlay states.',
+            'Circle/uncontained versus rectangle/contained ink, selectable '
+            'ripple/sparkle/splash factories, primary + secondary gestures, '
+            'hover/focus, and overlay states.',
             style: TextStyle(fontSize: 14, color: Colors.black54),
           ),
           Row(
@@ -60,6 +75,11 @@ class _InkResponseDemoPageState extends State<InkResponseDemoPage> {
           Text(
             'Interaction: $_interaction',
             style: const TextStyle(fontSize: 13, color: Colors.black54),
+          ),
+          OutlinedButton(
+            onPressed: () =>
+                setState(() => _splashMode = (_splashMode + 1) % 3),
+            child: Text('Splash factory: $_splashName'),
           ),
           Row(
             spacing: 10,
@@ -109,6 +129,7 @@ class _InkResponseDemoPageState extends State<InkResponseDemoPage> {
             onHighlightChanged: (bool value) =>
                 setState(() => _interaction = 'InkResponse pressed: $value'),
             overlayColor: overlay,
+            splashFactory: _splashFactory,
             radius: 58,
             child: const Center(
               child: Icon(Icons.star, size: 32, color: Color(0xFF6750A4)),
@@ -145,6 +166,7 @@ class _InkResponseDemoPageState extends State<InkResponseDemoPage> {
             onHighlightChanged: (bool value) =>
                 setState(() => _interaction = 'InkWell pressed: $value'),
             overlayColor: overlay,
+            splashFactory: _splashFactory,
             borderRadius: BorderRadius.circular(18),
             child: const Center(
               child: Text(

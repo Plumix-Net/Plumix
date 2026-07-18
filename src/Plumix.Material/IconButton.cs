@@ -326,6 +326,7 @@ public sealed class IconButton : StatelessWidget
         Color? surfaceTintColor = null,
         Color? overlayColor = null,
         Color? splashColor = null,
+        InteractiveInkFeatureFactory? splashFactory = null,
         double? elevation = null,
         Size? minimumSize = null,
         Size? fixedSize = null,
@@ -360,6 +361,7 @@ public sealed class IconButton : StatelessWidget
             SplashColor: splashColor.HasValue
                 ? MaterialButtonCore.CreateExplicitSplashResolver(splashColor.Value)
                 : null,
+            SplashFactory: splashFactory,
             Elevation: elevation.HasValue
                 ? MaterialStateProperty<double?>.All(elevation.Value)
                 : null,

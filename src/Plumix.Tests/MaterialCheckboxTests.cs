@@ -679,7 +679,8 @@ public sealed class MaterialCheckboxTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var inkSplash = FindDescendant<RenderInkSplash>(RequireRenderObject<RenderObject>(root.ChildElement));
+        var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
+        var inkSplash = FindDescendant<RenderInkResponsePaint>(renderRoot);
         Assert.NotNull(inkSplash);
         Assert.Equal(7, inkSplash!.SplashRadius);
     }
