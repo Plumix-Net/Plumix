@@ -241,6 +241,10 @@ Kickoff note (2026-03-12):
   reorder callbacks, fixed/variable extents, desktop/mobile handles, split header/footer padding, edge auto-scroll,
   focused tests, and mirrored C#/Dart probes. Root-overlay proxy/drop choreography, prototype-forced extent, and custom
   reorder semantics remain tracked in `DIVERGENCES.md` pending shared primitives.
+- Added paired core `AnimatedList` + `SliverAnimatedList` with source-shaped logical-index insert/remove and bulk
+  operations, incoming/outgoing controller reuse, separated item/separator coordination, ancestor state lookup,
+  keyed child-index remapping, typed pixel/viewport cache extents, viewport clip policy, focused tests, and mirrored
+  C#/Dart runtime probes.
 
 Progress update (2026-03-19):
 

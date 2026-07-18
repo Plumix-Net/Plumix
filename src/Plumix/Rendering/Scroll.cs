@@ -19,6 +19,34 @@ public enum CacheExtentStyle
     Viewport
 }
 
+// Dart parity source: flutter/packages/flutter/lib/src/rendering/viewport.dart
+public sealed record ScrollCacheExtent
+{
+    private ScrollCacheExtent(double value, CacheExtentStyle style)
+    {
+        if (!double.IsFinite(value) || value < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(value));
+        }
+
+        Value = value;
+        Style = style;
+    }
+
+    public double Value { get; }
+
+    public CacheExtentStyle Style { get; }
+
+    public static ScrollCacheExtent Pixels(double pixels) => new(pixels, CacheExtentStyle.Pixel);
+
+    public static ScrollCacheExtent Viewport(double value) => new(value, CacheExtentStyle.Viewport);
+
+    internal double CalculateCacheOffset(double mainAxisExtent)
+    {
+        return Style == CacheExtentStyle.Viewport ? Value * mainAxisExtent : Value;
+    }
+}
+
 public enum AxisDirection
 {
     Up,

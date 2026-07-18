@@ -66,6 +66,7 @@ internal static class SampleRoutes
     public const string Card = "/card";
     public const string Carousel = "/carousel";
     public const string ReorderableList = "/reorderable-list";
+    public const string AnimatedList = "/animated-list";
     public const string GridTile = "/grid-tile";
     public const string ListTile = "/list-tile";
     public const string ListTileControls = "/list-tile-controls";
@@ -189,6 +190,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
         new(SampleRoutes.ListViewSeparated, "ListView.Separated", "item + separator builder", () => new ListViewSeparatedDemoPage()),
         new(SampleRoutes.ListViewFixedExtent, "ListView fixed extent", "itemExtent + padding", () => new ListViewFixedExtentDemoPage()),
         new(SampleRoutes.ListViewReverse, "ListView reverse", "reverse=true behavior", () => new ListViewReverseDemoPage()),
+        new(
+            SampleRoutes.AnimatedList,
+            "AnimatedList + SliverAnimatedList",
+            "insert/remove animations + separated and sliver variants",
+            () => new AnimatedListDemoPage()),
         new(SampleRoutes.GridView, "GridView + SliverGrid", "delegate-based 2D layout", () => new GridViewDemoPage()),
         new(SampleRoutes.CustomSlivers, "Custom slivers", "SliverPadding + SliverFixedExtentList", () => new CustomSliversDemoPage()),
         new(SampleRoutes.Scrollbar, "Scrollbar", "controller + thumb", () => new ScrollbarDemoPage()),

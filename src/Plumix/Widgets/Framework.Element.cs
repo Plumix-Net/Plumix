@@ -47,6 +47,20 @@ public readonly struct BuildContext
         return null;
     }
 
+    /// <summary>Returns the nearest ancestor state of type <typeparamref name="T"/>.</summary>
+    public T? FindAncestorStateOfType<T>() where T : State
+    {
+        for (var ancestor = Owner.Parent; ancestor != null; ancestor = ancestor.Parent)
+        {
+            if (ancestor is StatefulElement statefulElement && statefulElement.State is T state)
+            {
+                return state;
+            }
+        }
+
+        return null;
+    }
+
     public RenderObject? FindRenderObject() => Owner.RenderObject;
 }
 

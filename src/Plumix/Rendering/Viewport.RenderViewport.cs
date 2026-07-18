@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
+using Plumix.UI;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/rendering/viewport.dart (approximate)
 
@@ -15,6 +16,7 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer
     private double _cacheExtent;
     private CacheExtentStyle _cacheExtentStyle;
     private bool _shrinkWrap;
+    private Clip _clipBehavior;
     private double _maxScrollExtent;
     private RenderSliverToBoxAdapter? _legacyChildSliver;
 
@@ -27,7 +29,8 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer
         CacheExtentStyle cacheExtentStyle = CacheExtentStyle.Pixel,
         bool shrinkWrap = false,
         Action<double, double, double>? onViewportMetricsChanged = null,
-        RenderBox? child = null)
+        RenderBox? child = null,
+        Clip clipBehavior = Clip.HardEdge)
     {
         _container = new RenderBoxContainerDefaultsMixin<RenderSliver, SliverPhysicalParentData>(this);
         _axisDirection = axisDirection ?? ScrollDirectionUtils.DefaultAxisDirection(axis);
@@ -37,6 +40,7 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer
         _cacheExtent = Math.Max(0, cacheExtent);
         _cacheExtentStyle = cacheExtentStyle;
         _shrinkWrap = shrinkWrap;
+        _clipBehavior = clipBehavior;
         OnViewportMetricsChanged = onViewportMetricsChanged;
 
         if (child != null)
@@ -152,6 +156,22 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer
 
             _cacheExtentStyle = value;
             MarkNeedsLayout();
+        }
+    }
+
+    public Clip ClipBehavior
+    {
+        get => _clipBehavior;
+        set
+        {
+            if (_clipBehavior == value)
+            {
+                return;
+            }
+
+            _clipBehavior = value;
+            MarkNeedsPaint();
+            MarkNeedsSemanticsUpdate();
         }
     }
 
@@ -306,6 +326,12 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer
             return;
         }
 
+        if (ClipBehavior == Clip.None)
+        {
+            PaintChildrenFirstIsTop(ctx, offset);
+            return;
+        }
+
         var clipRect = new Rect(offset, Size);
         ctx.PushClipRect(clipRect, clippedContext => PaintChildrenFirstIsTop(clippedContext, offset));
     }
@@ -348,7 +374,7 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer
 
     protected override Rect? DescribeApproximatePaintClip(RenderObject? child)
     {
-        return new Rect(new Point(0, 0), Size);
+        return ClipBehavior == Clip.None ? null : new Rect(new Point(0, 0), Size);
     }
 
     internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)

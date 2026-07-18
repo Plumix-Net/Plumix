@@ -60,6 +60,7 @@ class SampleRoutes {
   static const String card = '/card';
   static const String carousel = '/carousel';
   static const String reorderableList = '/reorderable-list';
+  static const String animatedList = '/animated-list';
   static const String gridTile = '/grid-tile';
   static const String listTile = '/list-tile';
   static const String listTileControls = '/list-tile-controls';

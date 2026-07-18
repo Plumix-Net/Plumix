@@ -11,6 +11,8 @@ namespace Plumix.Widgets;
 
 public delegate Widget IndexedWidgetBuilder(BuildContext context, int index);
 
+public delegate int? ChildIndexGetter(Key key);
+
 public readonly record struct ScrollMetricsSnapshot(
     double Pixels,
     double MinScrollExtent,
@@ -362,7 +364,8 @@ public sealed class Scrollable : StatefulWidget
         CacheExtentStyle cacheExtentStyle = CacheExtentStyle.Pixel,
         bool shrinkWrap = false,
         HitTestBehavior hitTestBehavior = HitTestBehavior.Opaque,
-        Key? key = null) : base(key)
+        Key? key = null,
+        Clip clipBehavior = Clip.HardEdge) : base(key)
     {
         Child = child;
         Slivers = slivers;
@@ -373,6 +376,7 @@ public sealed class Scrollable : StatefulWidget
         CacheExtent = cacheExtent;
         CacheExtentStyle = cacheExtentStyle;
         ShrinkWrap = shrinkWrap;
+        ClipBehavior = clipBehavior;
         HitTestBehavior = hitTestBehavior;
     }
 
@@ -393,6 +397,8 @@ public sealed class Scrollable : StatefulWidget
     public CacheExtentStyle CacheExtentStyle { get; }
 
     public bool ShrinkWrap { get; }
+
+    public Clip ClipBehavior { get; }
 
     public HitTestBehavior HitTestBehavior { get; }
 
@@ -463,6 +469,7 @@ public sealed class Scrollable : StatefulWidget
                     cacheExtent: widget.CacheExtent,
                     cacheExtentStyle: widget.CacheExtentStyle,
                     shrinkWrap: widget.ShrinkWrap,
+                    clipBehavior: widget.ClipBehavior,
                     slivers: ResolveSlivers(widget),
                     onViewportMetricsChanged: HandleViewportMetricsChanged);
 
@@ -645,7 +652,8 @@ public sealed class Viewport : MultiChildRenderObjectWidget
         bool shrinkWrap,
         IReadOnlyList<Widget> slivers,
         Action<double, double, double>? onViewportMetricsChanged = null,
-        Key? key = null) : base(slivers, key)
+        Key? key = null,
+        Clip clipBehavior = Clip.HardEdge) : base(slivers, key)
     {
         Axis = axis;
         AxisDirection = axisDirection;
@@ -654,6 +662,7 @@ public sealed class Viewport : MultiChildRenderObjectWidget
         CacheExtent = cacheExtent;
         CacheExtentStyle = cacheExtentStyle;
         ShrinkWrap = shrinkWrap;
+        ClipBehavior = clipBehavior;
         OnViewportMetricsChanged = onViewportMetricsChanged;
     }
 
@@ -671,6 +680,8 @@ public sealed class Viewport : MultiChildRenderObjectWidget
 
     public bool ShrinkWrap { get; }
 
+    public Clip ClipBehavior { get; }
+
     public Action<double, double, double>? OnViewportMetricsChanged { get; }
 
     internal override RenderObject CreateRenderObject(BuildContext context)
@@ -683,6 +694,7 @@ public sealed class Viewport : MultiChildRenderObjectWidget
             cacheExtent: CacheExtent,
             cacheExtentStyle: CacheExtentStyle,
             shrinkWrap: ShrinkWrap,
+            clipBehavior: ClipBehavior,
             onViewportMetricsChanged: OnViewportMetricsChanged);
     }
 
@@ -696,6 +708,7 @@ public sealed class Viewport : MultiChildRenderObjectWidget
         viewport.CacheExtent = CacheExtent;
         viewport.CacheExtentStyle = CacheExtentStyle;
         viewport.ShrinkWrap = ShrinkWrap;
+        viewport.ClipBehavior = ClipBehavior;
         viewport.OnViewportMetricsChanged = OnViewportMetricsChanged;
     }
 }
@@ -736,7 +749,11 @@ public abstract class SliverChildDelegate
     public abstract Widget? Build(BuildContext context, int index);
 
     public virtual int? EstimatedChildCount => null;
+
+    public virtual int? FindIndexByKey(Key key) => null;
 }
+
+internal sealed record SliverChildKey(Key Value) : LocalKey;
 
 public sealed class SliverChildBuilderDelegate : SliverChildDelegate
 {
@@ -747,26 +764,42 @@ public sealed class SliverChildBuilderDelegate : SliverChildDelegate
     public SliverChildBuilderDelegate(
         IndexedWidgetBuilder builder,
         int? childCount = null,
-        bool addAutomaticKeepAlives = true)
+        bool addAutomaticKeepAlives = true,
+        ChildIndexGetter? findChildIndexCallback = null)
     {
-        _builder = builder;
+        _builder = builder ?? throw new ArgumentNullException(nameof(builder));
         _childCount = childCount;
         _addAutomaticKeepAlives = addAutomaticKeepAlives;
+        FindChildIndexCallback = findChildIndexCallback;
     }
 
     public override int? EstimatedChildCount => _childCount;
 
+    public ChildIndexGetter? FindChildIndexCallback { get; }
+
+    public override int? FindIndexByKey(Key key)
+    {
+        if (FindChildIndexCallback is null)
+        {
+            return null;
+        }
+
+        return FindChildIndexCallback(key is SliverChildKey childKey ? childKey.Value : key);
+    }
+
     public override Widget? Build(BuildContext context, int index)
     {
-        if (_childCount.HasValue && index >= _childCount.Value)
+        if (index < 0 || (_childCount.HasValue && index >= _childCount.Value))
         {
             return null;
         }
 
         var child = _builder(context, index);
-        return _addAutomaticKeepAlives
+        Key? key = child.Key is null ? null : new SliverChildKey(child.Key);
+        Widget result = _addAutomaticKeepAlives
             ? new AutomaticKeepAlive(child)
             : child;
+        return key is null ? result : new KeyedSubtree(result, key);
     }
 }
 
@@ -785,6 +818,20 @@ public sealed class SliverChildListDelegate : SliverChildDelegate
 
     public override int? EstimatedChildCount => _children.Count;
 
+    public override int? FindIndexByKey(Key key)
+    {
+        Key childKey = key is SliverChildKey saltedKey ? saltedKey.Value : key;
+        for (int index = 0; index < _children.Count; index++)
+        {
+            if (Equals(_children[index].Key, childKey))
+            {
+                return index;
+            }
+        }
+
+        return null;
+    }
+
     public override Widget? Build(BuildContext context, int index)
     {
         if (index < 0 || index >= _children.Count)
@@ -793,9 +840,12 @@ public sealed class SliverChildListDelegate : SliverChildDelegate
         }
 
         var child = _children[index];
-        return _addAutomaticKeepAlives
+        Widget result = _addAutomaticKeepAlives
             ? new AutomaticKeepAlive(child)
             : child;
+        return child.Key is null
+            ? result
+            : new KeyedSubtree(result, new SliverChildKey(child.Key));
     }
 }
 
@@ -1251,6 +1301,8 @@ internal sealed class SliverMultiBoxAdaptorElement : RenderObjectElement, IRende
 
     private void SyncChildWidgets()
     {
+        RemapChildrenByKey();
+
         foreach (int index in _childElements.Keys.ToArray())
         {
             if (!_childElements.TryGetValue(index, out var oldChild))
@@ -1287,6 +1339,48 @@ internal sealed class SliverMultiBoxAdaptorElement : RenderObjectElement, IRende
         if (_didUnderflow)
         {
             TypedRenderObject.MarkNeedsLayout();
+        }
+    }
+
+    private void RemapChildrenByKey()
+    {
+        var moves = new List<(int OldIndex, int NewIndex, Element Child)>();
+        foreach (var (index, child) in _childElements)
+        {
+            if (child.Widget.Key is not { } key)
+            {
+                continue;
+            }
+
+            int? newIndex = TypedWidget.Delegate.FindIndexByKey(key);
+            if (newIndex.HasValue && newIndex.Value >= 0 && newIndex.Value != index)
+            {
+                moves.Add((index, newIndex.Value, child));
+            }
+        }
+
+        if (moves.Count == 0)
+        {
+            return;
+        }
+
+        var movedChildren = moves.Select(static move => move.Child).ToHashSet();
+        foreach (var move in moves)
+        {
+            _childElements.Remove(move.OldIndex);
+        }
+
+        foreach (var move in moves)
+        {
+            if (_childElements.TryGetValue(move.NewIndex, out var displaced)
+                && !movedChildren.Contains(displaced))
+            {
+                RemoveMappings(displaced);
+                DeactivateChild(displaced);
+            }
+
+            _childElements[move.NewIndex] = move.Child;
+            _indexByElement[move.Child] = move.NewIndex;
         }
     }
 
@@ -1577,7 +1671,8 @@ public sealed class CustomScrollView : StatelessWidget
         double cacheExtent = 250.0,
         CacheExtentStyle cacheExtentStyle = CacheExtentStyle.Pixel,
         bool shrinkWrap = false,
-        Key? key = null) : base(key)
+        Key? key = null,
+        Clip clipBehavior = Clip.HardEdge) : base(key)
     {
         Slivers = slivers;
         ScrollDirection = scrollDirection;
@@ -1588,6 +1683,7 @@ public sealed class CustomScrollView : StatelessWidget
         CacheExtent = cacheExtent;
         CacheExtentStyle = cacheExtentStyle;
         ShrinkWrap = shrinkWrap;
+        ClipBehavior = clipBehavior;
     }
 
     public IReadOnlyList<Widget> Slivers { get; }
@@ -1608,6 +1704,8 @@ public sealed class CustomScrollView : StatelessWidget
 
     public bool ShrinkWrap { get; }
 
+    public Clip ClipBehavior { get; }
+
     public override Widget Build(BuildContext context)
     {
         bool usePrimary = Primary ?? (ScrollDirection == Axis.Vertical && Controller == null);
@@ -1625,7 +1723,8 @@ public sealed class CustomScrollView : StatelessWidget
             physics: Physics,
             cacheExtent: CacheExtent,
             cacheExtentStyle: CacheExtentStyle,
-            shrinkWrap: ShrinkWrap);
+            shrinkWrap: ShrinkWrap,
+            clipBehavior: ClipBehavior);
     }
 }
 
