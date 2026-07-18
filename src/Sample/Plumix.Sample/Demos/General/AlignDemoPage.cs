@@ -5,6 +5,7 @@ using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.Widgets;
 using MaterialScrollbar = Plumix.Material.Scrollbar;
+using RelativeRect = Plumix.Rendering.RelativeRect;
 
 // Dart parity source (reference): dart_sample/lib/demos/general/align_demo_page.dart (exact sample parity)
 
@@ -39,12 +40,27 @@ internal sealed class AlignDemoPageState : State
     private int _completedAnimations;
     private ScrollController _scrollController = null!;
     private AnimationController _explicitTransitionsController = null!;
+    private Animation<RelativeRect> _explicitPositionAnimation = null!;
+    private Animation<Rect?> _explicitRelativePositionAnimation = null!;
 
     public override void InitState()
     {
         _scrollController = new ScrollController();
         _explicitTransitionsController = new AnimationController(TimeSpan.FromMilliseconds(800));
         _explicitTransitionsController.SetValue(0.25);
+        var positionTween = new RelativeRectTween(
+            begin: new RelativeRect(10, 12, 160, 78),
+            end: new RelativeRect(160, 72, 10, 18));
+        _explicitPositionAnimation = new DerivedAnimation<RelativeRect>(
+            _explicitTransitionsController,
+            positionTween.Evaluate);
+        var rectTween = new RectTween();
+        _explicitRelativePositionAnimation = new DerivedAnimation<Rect?>(
+            _explicitTransitionsController,
+            value => rectTween.Evaluate(
+                value,
+                new Rect(12, 74, 70, 40),
+                new Rect(158, 14, 70, 40)));
     }
 
     public override void Dispose()
@@ -247,6 +263,35 @@ internal sealed class AlignDemoPageState : State
                                     color: Color.Parse("#FF356A82"),
                                     child: new Center(
                                         child: new Text("explicit", fontSize: 13, color: Colors.White))))))),
+                new Text(
+                    "PositionedTransition + RelativePositionedTransition",
+                    fontSize: 20,
+                    color: Colors.Black),
+                new Text(
+                    "The same explicit controller drives Stack insets and a Rect relative to a declared box size.",
+                    fontSize: 14,
+                    color: Colors.DimGray),
+                new Container(
+                    width: 240,
+                    height: 130,
+                    color: Color.Parse("#FFF3F5F8"),
+                    child: new Stack(
+                        children:
+                        [
+                            new PositionedTransition(
+                                rect: _explicitPositionAnimation,
+                                child: new Container(
+                                    color: Color.Parse("#FF315A7D"),
+                                    child: new Center(
+                                        child: new Text("insets", fontSize: 12, color: Colors.White)))),
+                            new RelativePositionedTransition(
+                                rect: _explicitRelativePositionAnimation,
+                                size: new Size(240, 130),
+                                child: new Container(
+                                    color: Color.Parse("#FF9C4F63"),
+                                    child: new Center(
+                                        child: new Text("rect", fontSize: 12, color: Colors.White)))),
+                        ])),
                 new Text("AnimatedPositioned + AnimatedPositionedDirectional", fontSize: 20, color: Colors.Black),
                 new Text(
                     "Animate physical and logical Stack insets; switching direction resolves start/end immediately.",
@@ -611,5 +656,35 @@ internal sealed class AlignDemoPageState : State
         }
 
         return $"({alignment.X:0.##},{alignment.Y:0.##})";
+    }
+
+    private sealed class DerivedAnimation<T> : Animation<T>
+    {
+        private readonly Animation<double> _parent;
+        private readonly Func<double, T> _transform;
+
+        public DerivedAnimation(Animation<double> parent, Func<double, T> transform)
+        {
+            _parent = parent;
+            _transform = transform;
+        }
+
+        public override T Value => _transform(_parent.Value);
+
+        public override AnimationStatus Status => _parent.Status;
+
+        public override void AddListener(Action listener) => _parent.AddListener(listener);
+
+        public override void RemoveListener(Action listener) => _parent.RemoveListener(listener);
+
+        public override void AddStatusListener(Action<AnimationStatus> listener)
+        {
+            _parent.AddStatusListener(listener);
+        }
+
+        public override void RemoveStatusListener(Action<AnimationStatus> listener)
+        {
+            _parent.RemoveStatusListener(listener);
+        }
     }
 }

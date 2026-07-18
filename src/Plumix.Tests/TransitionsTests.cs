@@ -3,6 +3,7 @@ using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.Widgets;
 using Xunit;
+using RelativeRect = Plumix.Rendering.RelativeRect;
 
 namespace Plumix.Tests;
 
@@ -186,6 +187,155 @@ public sealed class TransitionsTests : IDisposable
         root.Unmount();
     }
 
+    [Fact]
+    public void PositionedTransitions_ExposeFlutterContractsAndRelativeRectInterpolation()
+    {
+        var relativeRectAnimation = new TestValueAnimation<RelativeRect>(
+            new RelativeRect(10, 12, 30, 32),
+            AnimationStatus.Forward);
+        var child = new SizedBox(width: 24, height: 16);
+        var positioned = new PositionedTransition(relativeRectAnimation, child);
+
+        Assert.Same(relativeRectAnimation, positioned.Rect);
+        Assert.Same(relativeRectAnimation, positioned.Listenable);
+        Assert.Same(child, positioned.Child);
+
+        var rectAnimation = new TestValueAnimation<Rect?>(
+            new Rect(20, 24, 40, 32),
+            AnimationStatus.Forward);
+        var relative = new RelativePositionedTransition(
+            rect: rectAnimation,
+            size: new Size(200, 120),
+            child: child);
+
+        Assert.Same(rectAnimation, relative.Rect);
+        Assert.Equal(new Size(200, 120), relative.Size);
+        Assert.Same(child, relative.Child);
+
+        var tween = new RelativeRectTween(
+            begin: new RelativeRect(0, 10, 20, 30),
+            end: new RelativeRect(40, 30, 10, 0));
+        Assert.Equal(new RelativeRect(10, 15, 17.5, 22.5), tween.Evaluate(0.25));
+        Assert.Equal(new RelativeRect(60, 40, 5, -15), tween.Evaluate(1.5));
+        Assert.Equal(RelativeRect.Fill, new RelativeRectTween().Evaluate(0.5));
+
+        Assert.Throws<ArgumentNullException>(() => new PositionedTransition(null!, child));
+        Assert.Throws<ArgumentNullException>(() => new PositionedTransition(relativeRectAnimation, null!));
+        Assert.Throws<ArgumentNullException>(() => new RelativePositionedTransition(
+            rect: null!,
+            size: new Size(200, 120),
+            child: child));
+        Assert.Throws<ArgumentNullException>(() => new RelativePositionedTransition(
+            rect: rectAnimation,
+            size: new Size(200, 120),
+            child: null!));
+    }
+
+    [Fact]
+    public void PositionedTransition_RebuildsStackParentDataAndRebindsAnimation()
+    {
+        var firstAnimation = new TestValueAnimation<RelativeRect>(
+            new RelativeRect(10, 12, 30, 32),
+            AnimationStatus.Forward);
+        var secondAnimation = new TestValueAnimation<RelativeRect>(
+            new RelativeRect(7, 9, 11, 13),
+            AnimationStatus.Reverse);
+        var owner = new BuildOwner();
+        var root = new TestRootElement(new Stack(
+            children:
+            [
+                new PositionedTransition(
+                    rect: firstAnimation,
+                    child: new SizedBox(width: 24, height: 16)),
+            ]));
+        Mount(root, owner);
+
+        var renderStack = Assert.IsType<RenderStack>(root.ChildElement!.RenderObject);
+        renderStack.Layout(BoxConstraints.Tight(new Size(200, 120)));
+        var parentData = Assert.IsType<StackParentData>(renderStack.FirstChild!.parentData);
+        Assert.Equal(10, parentData.Left);
+        Assert.Equal(12, parentData.Top);
+        Assert.Equal(30, parentData.Right);
+        Assert.Equal(32, parentData.Bottom);
+        Assert.Equal(new Point(10, 12), parentData.offset);
+        Assert.Equal(new Size(160, 76), renderStack.FirstChild.Size);
+        Assert.Equal(1, firstAnimation.ListenerCount);
+
+        firstAnimation.Set(new RelativeRect(20, 22, 40, 42), AnimationStatus.Forward);
+        owner.FlushBuild();
+
+        renderStack.Layout(BoxConstraints.Tight(new Size(200, 120)));
+        parentData = Assert.IsType<StackParentData>(renderStack.FirstChild!.parentData);
+        Assert.Equal(20, parentData.Left);
+        Assert.Equal(22, parentData.Top);
+        Assert.Equal(40, parentData.Right);
+        Assert.Equal(42, parentData.Bottom);
+        Assert.Equal(new Point(20, 22), parentData.offset);
+        Assert.Equal(new Size(140, 56), renderStack.FirstChild.Size);
+
+        root.Update(new Stack(
+            children:
+            [
+                new PositionedTransition(
+                    rect: secondAnimation,
+                    child: new SizedBox(width: 24, height: 16)),
+            ]));
+        owner.FlushBuild();
+
+        parentData = Assert.IsType<StackParentData>(renderStack.FirstChild!.parentData);
+        Assert.Equal(7, parentData.Left);
+        Assert.Equal(9, parentData.Top);
+        Assert.Equal(11, parentData.Right);
+        Assert.Equal(13, parentData.Bottom);
+        Assert.Equal(0, firstAnimation.ListenerCount);
+        Assert.Equal(1, secondAnimation.ListenerCount);
+
+        root.Unmount();
+        Assert.Equal(0, secondAnimation.ListenerCount);
+    }
+
+    [Fact]
+    public void RelativePositionedTransition_ConvertsAnimatedRectAgainstDeclaredSize()
+    {
+        var animation = new TestValueAnimation<Rect?>(
+            new Rect(20, 15, 50, 30),
+            AnimationStatus.Forward);
+        var owner = new BuildOwner();
+        var root = new TestRootElement(new Stack(
+            children:
+            [
+                new RelativePositionedTransition(
+                    rect: animation,
+                    size: new Size(200, 120),
+                    child: new SizedBox()),
+            ]));
+        Mount(root, owner);
+
+        var renderStack = Assert.IsType<RenderStack>(root.ChildElement!.RenderObject);
+        renderStack.Layout(BoxConstraints.Tight(new Size(200, 120)));
+        var parentData = Assert.IsType<StackParentData>(renderStack.FirstChild!.parentData);
+        Assert.Equal(20, parentData.Left);
+        Assert.Equal(15, parentData.Top);
+        Assert.Equal(130, parentData.Right);
+        Assert.Equal(75, parentData.Bottom);
+        Assert.Equal(new Point(20, 15), parentData.offset);
+        Assert.Equal(new Size(50, 30), renderStack.FirstChild.Size);
+
+        animation.Set(null, AnimationStatus.Completed);
+        owner.FlushBuild();
+
+        renderStack.Layout(BoxConstraints.Tight(new Size(200, 120)));
+        parentData = Assert.IsType<StackParentData>(renderStack.FirstChild!.parentData);
+        Assert.Equal(0, parentData.Left);
+        Assert.Equal(0, parentData.Top);
+        Assert.Equal(200, parentData.Right);
+        Assert.Equal(120, parentData.Bottom);
+        Assert.Equal(new Point(), parentData.offset);
+        Assert.Equal(new Size(), renderStack.FirstChild.Size);
+
+        root.Unmount();
+    }
+
     private static void Mount(TestRootElement root, BuildOwner owner)
     {
         root.Attach(owner);
@@ -224,6 +374,56 @@ public sealed class TransitionsTests : IDisposable
         }
 
         public void Set(double value, AnimationStatus status)
+        {
+            AnimationStatus previousStatus = _status;
+            _value = value;
+            _status = status;
+            if (previousStatus != status)
+            {
+                foreach (var listener in _statusListeners.ToArray())
+                {
+                    listener(status);
+                }
+            }
+
+            foreach (var listener in _listeners.ToArray())
+            {
+                listener();
+            }
+        }
+    }
+
+    private sealed class TestValueAnimation<T> : Animation<T>
+    {
+        private readonly List<Action> _listeners = [];
+        private readonly List<Action<AnimationStatus>> _statusListeners = [];
+        private T _value;
+        private AnimationStatus _status;
+
+        public TestValueAnimation(T value, AnimationStatus status)
+        {
+            _value = value;
+            _status = status;
+        }
+
+        public override T Value => _value;
+
+        public override AnimationStatus Status => _status;
+
+        public int ListenerCount => _listeners.Count;
+
+        public override void AddListener(Action listener) => _listeners.Add(listener);
+
+        public override void RemoveListener(Action listener) => _listeners.Remove(listener);
+
+        public override void AddStatusListener(Action<AnimationStatus> listener) => _statusListeners.Add(listener);
+
+        public override void RemoveStatusListener(Action<AnimationStatus> listener)
+        {
+            _statusListeners.Remove(listener);
+        }
+
+        public void Set(T value, AnimationStatus status)
         {
             AnimationStatus previousStatus = _status;
             _value = value;

@@ -30,6 +30,8 @@ class _AlignDemoPageState extends State<AlignDemoPage>
   int _completedAnimations = 0;
   late final ScrollController _scrollController;
   late final AnimationController _explicitTransitionsController;
+  late final Animation<RelativeRect> _explicitPositionAnimation;
+  late final Animation<Rect?> _explicitRelativePositionAnimation;
 
   @override
   void initState() {
@@ -40,6 +42,14 @@ class _AlignDemoPageState extends State<AlignDemoPage>
       value: 0.25,
       vsync: this,
     );
+    _explicitPositionAnimation = RelativeRectTween(
+      begin: const RelativeRect.fromLTRB(10, 12, 160, 78),
+      end: const RelativeRect.fromLTRB(160, 72, 10, 18),
+    ).animate(_explicitTransitionsController);
+    _explicitRelativePositionAnimation = RectTween(
+      begin: const Rect.fromLTWH(12, 74, 70, 40),
+      end: const Rect.fromLTWH(158, 14, 70, 40),
+    ).animate(_explicitTransitionsController);
   }
 
   @override
@@ -303,6 +313,48 @@ class _AlignDemoPageState extends State<AlignDemoPage>
                     ),
                   ),
                 ),
+              ),
+            ),
+            const Text(
+              'PositionedTransition + RelativePositionedTransition',
+              style: TextStyle(fontSize: 20, color: Colors.black),
+            ),
+            const Text(
+              'The same explicit controller drives Stack insets and a Rect relative to a declared box size.',
+              style: TextStyle(fontSize: 14, color: Colors.black54),
+            ),
+            Container(
+              width: 240,
+              height: 130,
+              color: const Color(0xFFF3F5F8),
+              child: Stack(
+                children: <Widget>[
+                  PositionedTransition(
+                    rect: _explicitPositionAnimation,
+                    child: Container(
+                      color: const Color(0xFF315A7D),
+                      child: const Center(
+                        child: Text(
+                          'insets',
+                          style: TextStyle(fontSize: 12, color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  ),
+                  RelativePositionedTransition(
+                    rect: _explicitRelativePositionAnimation,
+                    size: const Size(240, 130),
+                    child: Container(
+                      color: const Color(0xFF9C4F63),
+                      child: const Center(
+                        child: Text(
+                          'rect',
+                          style: TextStyle(fontSize: 12, color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
             const Text(

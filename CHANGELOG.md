@@ -1,5 +1,10 @@
 # Changelog
 
+- Added paired Flutter core `PositionedTransition` + `RelativePositionedTransition` ports with source-shaped
+  `AnimatedWidget` listener lifecycle, direct `RelativeRect` insets, declared-size `Rect` conversion, null-rect
+  fallback, focused tests, and mirrored C#/Dart runtime probes. Added source-required `RelativeRectTween`,
+  `RelativeRect.Lerp`, and `Positioned.FromRelativeRect`; advanced `Plumix` to `0.9.0-alpha.1`.
+
 - Added paired Flutter core `ScaleTransition` + `RotationTransition` ports with source-shaped `AnimatedWidget` and
   `MatrixTransition`, shared-listenable lifecycle, centered/custom pivots, active-animation-only filter quality,
   exact turn matrices, focused tests, and mirrored C#/Dart runtime probes. Advanced `Plumix` to `0.8.0-alpha.1`.
@@ -111,6 +116,9 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 ### Changed
 
+- Added paired Flutter core `PositionedTransition` + `RelativePositionedTransition` ports with source-matching
+  animated inset/rect composition, declared-size conversion, null fallback, focused tests, and mirrored C#/Dart
+  probes.
 - Added paired Flutter core `Visibility` + `SliverVisibility` ports with replacement and maintain-state/animation/
   size/semantics/interactivity/focusability composition, nested visibility aggregation, source-required sliver
   pointer/offstage proxies, focused coverage, and mirrored C#/Dart probes.

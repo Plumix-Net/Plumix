@@ -1,6 +1,7 @@
 using Avalonia;
 using Plumix.Foundation;
 using Plumix.Rendering;
+using RelativeRect = Plumix.Rendering.RelativeRect;
 
 namespace Plumix.Widgets;
 
@@ -188,6 +189,81 @@ public sealed class RotationTransition : MatrixTransition
         }
 
         return new Matrix(cosine, sine, -sine, cosine, 0, 0);
+    }
+}
+
+public sealed class RelativeRectTween : Tween<RelativeRect>
+{
+    public RelativeRectTween(RelativeRect? begin = null, RelativeRect? end = null)
+    {
+        Begin = begin;
+        End = end;
+    }
+
+    public RelativeRect? Begin { get; set; }
+
+    public RelativeRect? End { get; set; }
+
+    public RelativeRect Evaluate(double t)
+    {
+        return RelativeRect.Lerp(Begin, End, t);
+    }
+
+    public override RelativeRect Lerp(RelativeRect a, RelativeRect b, double t)
+    {
+        return RelativeRect.Lerp(a, b, t);
+    }
+}
+
+public sealed class PositionedTransition : AnimatedWidget
+{
+    public PositionedTransition(
+        Animation<RelativeRect> rect,
+        Widget child,
+        Key? key = null) : base(rect ?? throw new ArgumentNullException(nameof(rect)), key)
+    {
+        Child = child ?? throw new ArgumentNullException(nameof(child));
+    }
+
+    public Animation<RelativeRect> Rect => (Animation<RelativeRect>)Listenable;
+
+    public Widget Child { get; }
+
+    public override Widget Build(BuildContext context)
+    {
+        return Positioned.FromRelativeRect(
+            rect: Rect.Value,
+            child: Child);
+    }
+}
+
+public sealed class RelativePositionedTransition : AnimatedWidget
+{
+    public RelativePositionedTransition(
+        Animation<Rect?> rect,
+        Size size,
+        Widget child,
+        Key? key = null) : base(rect ?? throw new ArgumentNullException(nameof(rect)), key)
+    {
+        Size = size;
+        Child = child ?? throw new ArgumentNullException(nameof(child));
+    }
+
+    public Animation<Rect?> Rect => (Animation<Rect?>)Listenable;
+
+    public Size Size { get; }
+
+    public Widget Child { get; }
+
+    public override Widget Build(BuildContext context)
+    {
+        RelativeRect offsets = RelativeRect.FromSize(Rect.Value ?? default, Size);
+        return new Positioned(
+            child: Child,
+            left: offsets.Left,
+            top: offsets.Top,
+            right: offsets.Right,
+            bottom: offsets.Bottom);
     }
 }
 

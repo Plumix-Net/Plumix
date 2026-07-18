@@ -4,6 +4,7 @@ using Plumix.Foundation;
 using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.UI;
+using RelativeRect = Plumix.Rendering.RelativeRect;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/widgets/basic.dart (approximate)
 
@@ -1220,6 +1221,20 @@ public sealed class Positioned : ParentDataWidget<StackParentData>
         Bottom = bottom;
         Width = width;
         Height = height;
+    }
+
+    public static Positioned FromRelativeRect(
+        RelativeRect rect,
+        Widget child,
+        Key? key = null)
+    {
+        return new Positioned(
+            child: child,
+            left: rect.Left,
+            top: rect.Top,
+            right: rect.Right,
+            bottom: rect.Bottom,
+            key: key);
     }
 
     public static Positioned Directional(
