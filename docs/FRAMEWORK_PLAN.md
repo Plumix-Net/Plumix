@@ -145,6 +145,11 @@ Completion note:
   durations and curves, reversible opacity/size choreography, bottom-child interaction isolation, `onEnd`, focused
   tests, and mirrored C#/Dart runtime probes. Source-required generic animation/listener, fade-transition,
   exclude-semantics, ticker-mode, and Stack clipping surfaces now live in core.
+- Completed implicit-animation source coverage with paired `AnimatedFractionallySizedBox` +
+  `SliverAnimatedOpacity` ports, including fractional factor/alignment interpolation, interrupted-transition
+  continuity, exact sliver geometry forwarding, zero-opacity paint/compositing and semantics policy, `onEnd`,
+  focused tests, and mirrored C#/Dart runtime probes. Source-required proxy/opacity/fade sliver primitives now live
+  in core.
 - Implicit-animations sample viewport hardening: both samples now share an always-visible scrollbar and scroll
   controller around the complete probe column, preventing bottom overflow on short desktop windows.
 

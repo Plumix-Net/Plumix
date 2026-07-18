@@ -107,6 +107,108 @@ public sealed class AnimatedOpacity : StatefulWidget
     }
 }
 
+public sealed class SliverAnimatedOpacity : StatefulWidget
+{
+    public SliverAnimatedOpacity(
+        double opacity,
+        TimeSpan duration,
+        Widget? sliver = null,
+        Curve? curve = null,
+        Action? onEnd = null,
+        bool alwaysIncludeSemantics = false,
+        Key? key = null) : base(key)
+    {
+        if (!double.IsFinite(opacity) || opacity < 0.0 || opacity > 1.0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(opacity), "Opacity must be between zero and one.");
+        }
+        if (duration < TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(duration));
+        }
+
+        Opacity = opacity;
+        Duration = duration;
+        Sliver = sliver;
+        Curve = curve ?? Curves.Linear;
+        OnEnd = onEnd;
+        AlwaysIncludeSemantics = alwaysIncludeSemantics;
+    }
+
+    public double Opacity { get; }
+
+    public TimeSpan Duration { get; }
+
+    public Widget? Sliver { get; }
+
+    public Curve Curve { get; }
+
+    public Action? OnEnd { get; }
+
+    public bool AlwaysIncludeSemantics { get; }
+
+    public override State CreateState() => new SliverAnimatedOpacityState();
+
+    private sealed class SliverAnimatedOpacityState : State
+    {
+        private AnimationController? _controller;
+        private CurvedAnimation? _animation;
+        private MappedDoubleAnimation? _opacityAnimation;
+        private double _begin;
+        private double _end;
+
+        private SliverAnimatedOpacity CurrentWidget => (SliverAnimatedOpacity)StateWidget;
+
+        public override void InitState()
+        {
+            _begin = _end = CurrentWidget.Opacity;
+            _controller = new AnimationController(CurrentWidget.Duration);
+            _animation = new CurvedAnimation(_controller, CurrentWidget.Curve);
+            _opacityAnimation = new MappedDoubleAnimation(_animation, Evaluate);
+            _controller.Completed += HandleCompleted;
+        }
+
+        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        {
+            _controller!.Duration = CurrentWidget.Duration;
+            _animation!.Curve = CurrentWidget.Curve;
+            double current = Evaluate(_animation.Value);
+            if (CurrentWidget.Opacity != _end)
+            {
+                _begin = current;
+                _end = CurrentWidget.Opacity;
+                _controller.Forward(from: 0.0);
+            }
+        }
+
+        public override Widget Build(BuildContext context)
+        {
+            return new SliverFadeTransition(
+                opacity: _opacityAnimation!,
+                sliver: CurrentWidget.Sliver,
+                alwaysIncludeSemantics: CurrentWidget.AlwaysIncludeSemantics);
+        }
+
+        public override void Dispose()
+        {
+            _controller!.Completed -= HandleCompleted;
+            _opacityAnimation!.Dispose();
+            _animation!.Dispose();
+            _controller.Dispose();
+            _opacityAnimation = null;
+            _animation = null;
+            _controller = null;
+        }
+
+        private double Evaluate(double t) => _begin + ((_end - _begin) * t);
+
+        private void HandleCompleted()
+        {
+            CurrentWidget.OnEnd?.Invoke();
+        }
+    }
+}
+
 public sealed class AnimatedSlide : StatefulWidget
 {
     public AnimatedSlide(
@@ -1619,6 +1721,203 @@ public sealed class AnimatedPhysicalModel : StatefulWidget
             CurrentWidget.OnEnd?.Invoke();
         }
     }
+}
+
+public sealed class AnimatedFractionallySizedBox : StatefulWidget
+{
+    public AnimatedFractionallySizedBox(
+        TimeSpan duration,
+        Widget? child = null,
+        Alignment alignment = default,
+        double? heightFactor = null,
+        double? widthFactor = null,
+        Curve? curve = null,
+        Action? onEnd = null,
+        Key? key = null) : base(key)
+    {
+        if (duration < TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(duration));
+        }
+
+        Child = child;
+        Alignment = alignment;
+        HeightFactor = ValidateFactor(heightFactor, nameof(heightFactor));
+        WidthFactor = ValidateFactor(widthFactor, nameof(widthFactor));
+        Duration = duration;
+        Curve = curve ?? Curves.Linear;
+        OnEnd = onEnd;
+    }
+
+    public Widget? Child { get; }
+
+    public Alignment Alignment { get; }
+
+    public double? HeightFactor { get; }
+
+    public double? WidthFactor { get; }
+
+    public TimeSpan Duration { get; }
+
+    public Curve Curve { get; }
+
+    public Action? OnEnd { get; }
+
+    public override State CreateState() => new AnimatedFractionallySizedBoxState();
+
+    private sealed class AnimatedFractionallySizedBoxState : State
+    {
+        private AnimationController? _controller;
+        private Alignment _alignmentBegin;
+        private Alignment _alignmentEnd;
+        private bool _hasHeightFactorTween;
+        private double _heightFactorBegin;
+        private double _heightFactorEnd;
+        private bool _hasWidthFactorTween;
+        private double _widthFactorBegin;
+        private double _widthFactorEnd;
+
+        private AnimatedFractionallySizedBox CurrentWidget =>
+            (AnimatedFractionallySizedBox)StateWidget;
+
+        public override void InitState()
+        {
+            _alignmentBegin = _alignmentEnd = CurrentWidget.Alignment;
+            if (CurrentWidget.HeightFactor is double heightFactor)
+            {
+                _hasHeightFactorTween = true;
+                _heightFactorBegin = _heightFactorEnd = heightFactor;
+            }
+            if (CurrentWidget.WidthFactor is double widthFactor)
+            {
+                _hasWidthFactorTween = true;
+                _widthFactorBegin = _widthFactorEnd = widthFactor;
+            }
+
+            _controller = new AnimationController(CurrentWidget.Duration) { Curve = CurrentWidget.Curve };
+            _controller.Changed += HandleChanged;
+            _controller.Completed += HandleCompleted;
+        }
+
+        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        {
+            _controller!.Duration = CurrentWidget.Duration;
+            _controller.Curve = CurrentWidget.Curve;
+            double t = _controller.Evaluate();
+            Alignment currentAlignment = EvaluateAlignment(t);
+            double? currentHeightFactor = EvaluateHeightFactor(t);
+            double? currentWidthFactor = EvaluateWidthFactor(t);
+            bool shouldStart = CurrentWidget.Alignment != _alignmentEnd;
+
+            if (CurrentWidget.HeightFactor is double heightFactor)
+            {
+                if (_hasHeightFactorTween)
+                {
+                    shouldStart |= heightFactor != _heightFactorEnd;
+                }
+                else
+                {
+                    _hasHeightFactorTween = true;
+                    _heightFactorBegin = _heightFactorEnd = heightFactor;
+                    currentHeightFactor = heightFactor;
+                }
+            }
+            if (CurrentWidget.WidthFactor is double widthFactor)
+            {
+                if (_hasWidthFactorTween)
+                {
+                    shouldStart |= widthFactor != _widthFactorEnd;
+                }
+                else
+                {
+                    _hasWidthFactorTween = true;
+                    _widthFactorBegin = _widthFactorEnd = widthFactor;
+                    currentWidthFactor = widthFactor;
+                }
+            }
+
+            if (shouldStart)
+            {
+                _alignmentBegin = currentAlignment;
+                _alignmentEnd = CurrentWidget.Alignment;
+                if (CurrentWidget.HeightFactor is double targetHeightFactor)
+                {
+                    _heightFactorBegin = currentHeightFactor ?? targetHeightFactor;
+                    _heightFactorEnd = targetHeightFactor;
+                }
+                if (CurrentWidget.WidthFactor is double targetWidthFactor)
+                {
+                    _widthFactorBegin = currentWidthFactor ?? targetWidthFactor;
+                    _widthFactorEnd = targetWidthFactor;
+                }
+
+                _controller.Forward(from: 0.0);
+            }
+        }
+
+        public override Widget Build(BuildContext context)
+        {
+            double t = _controller!.Evaluate();
+            return new FractionallySizedBox(
+                alignment: EvaluateAlignment(t),
+                heightFactor: EvaluateHeightFactor(t),
+                widthFactor: EvaluateWidthFactor(t),
+                child: CurrentWidget.Child);
+        }
+
+        public override void Dispose()
+        {
+            _controller!.Changed -= HandleChanged;
+            _controller.Completed -= HandleCompleted;
+            _controller.Dispose();
+            _controller = null;
+        }
+
+        private Alignment EvaluateAlignment(double t)
+        {
+            return new Alignment(
+                LerpDouble(_alignmentBegin.X, _alignmentEnd.X, t),
+                LerpDouble(_alignmentBegin.Y, _alignmentEnd.Y, t));
+        }
+
+        private double? EvaluateHeightFactor(double t)
+        {
+            return _hasHeightFactorTween
+                ? LerpDouble(_heightFactorBegin, _heightFactorEnd, t)
+                : null;
+        }
+
+        private double? EvaluateWidthFactor(double t)
+        {
+            return _hasWidthFactorTween
+                ? LerpDouble(_widthFactorBegin, _widthFactorEnd, t)
+                : null;
+        }
+
+        private void HandleChanged() => SetState(() => { });
+
+        private void HandleCompleted()
+        {
+            SetState(() => { });
+            CurrentWidget.OnEnd?.Invoke();
+        }
+    }
+
+    private static double? ValidateFactor(double? value, string parameterName)
+    {
+        if (!value.HasValue)
+        {
+            return null;
+        }
+        if (!double.IsFinite(value.Value) || value.Value < 0.0)
+        {
+            throw new ArgumentOutOfRangeException(parameterName, "Factor must be finite and non-negative.");
+        }
+
+        return value;
+    }
+
+    private static double LerpDouble(double from, double to, double t) => from + ((to - from) * t);
 }
 
 internal readonly record struct AnimatedPhysicalModelValues(

@@ -191,7 +191,7 @@ internal sealed class SampleGalleryScreen : StatelessWidget
         new(
             SampleRoutes.Align,
             "Implicit animations",
-            "align + padding + opacity + slide + scale + rotation",
+            "alignment + size + opacity + transforms + sliver fade",
             () => new AlignDemoPage()),
         new(SampleRoutes.Stack, "Stack + Positioned", "multi-child overlay layout", () => new StackDemoPage()),
         new(SampleRoutes.DecoratedBox, "DecoratedBox", "border + radius + fill decoration", () => new DecoratedBoxDemoPage()),

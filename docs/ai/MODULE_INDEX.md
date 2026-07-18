@@ -123,6 +123,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Primary Tests:
   - `src/Plumix.Tests/AnimatedSwitcherTests.cs`
   - `src/Plumix.Tests/ImplicitAnimationsTests.cs`
+  - `src/Plumix.Tests/SliverOpacityTests.cs`
 
 ### Images and Decoration Paint
 

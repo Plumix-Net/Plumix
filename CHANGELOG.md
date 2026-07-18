@@ -1,5 +1,11 @@
 # Changelog
 
+- Added paired Flutter core `AnimatedFractionallySizedBox` + `SliverAnimatedOpacity` ports with source-matching
+  defaults/guards, fractional factor and alignment interpolation, interrupted-transition continuity, sliver
+  geometry preservation, zero-opacity paint/compositing and semantics policy, `onEnd`, focused tests, and mirrored
+  C#/Dart runtime probes. Added source-required `RenderProxySliver`, static/animated render opacity,
+  `SliverOpacity`, and `SliverFadeTransition` primitives; advanced `Plumix` to `0.6.0-alpha.1`.
+
 - Added paired Flutter core `AnimatedSwitcher` + `AnimatedCrossFade` ports with keyed rapid-replacement retention,
   customizable transition/layout builders, independent forward/reverse durations and curves, reversible two-child
   fade/size choreography, focus/pointer/semantics isolation, `onEnd`, focused tests, and mirrored C#/Dart runtime

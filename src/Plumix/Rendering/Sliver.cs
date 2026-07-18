@@ -479,6 +479,347 @@ public abstract class RenderSliver : RenderBox
     protected abstract void PerformSliverLayout(SliverConstraints constraints);
 }
 
+// Dart parity source: flutter/packages/flutter/lib/src/rendering/proxy_sliver.dart
+public abstract class RenderProxySliver : RenderSliver, IRenderObjectSingleChildContainer
+{
+    private RenderSliver? _child;
+
+    protected RenderProxySliver(RenderSliver? child = null)
+    {
+        Child = child;
+    }
+
+    public RenderSliver? Child
+    {
+        get => _child;
+        set
+        {
+            if (ReferenceEquals(_child, value))
+            {
+                return;
+            }
+
+            if (_child != null)
+            {
+                DropChild(_child);
+            }
+
+            _child = value;
+            if (_child != null)
+            {
+                AdoptChild(_child);
+            }
+
+            MarkNeedsLayout();
+        }
+    }
+
+    RenderObject? IRenderObjectSingleChildContainer.Child
+    {
+        get => Child;
+        set => Child = (RenderSliver?)value;
+    }
+
+    public override void SetupParentData(RenderObject child)
+    {
+        if (child.parentData is not SliverPhysicalParentData)
+        {
+            child.parentData = new SliverPhysicalParentData();
+        }
+    }
+
+    public override void VisitChildren(Action<RenderObject> visitor)
+    {
+        if (_child != null)
+        {
+            visitor(_child);
+        }
+    }
+
+    public override void Paint(PaintingContext ctx, Point offset)
+    {
+        if (_child == null || Geometry.PaintExtent <= 0)
+        {
+            return;
+        }
+
+        var childParentData = (SliverPhysicalParentData)_child.parentData!;
+        ctx.PaintChild(_child, offset + childParentData.offset);
+    }
+
+    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    {
+        if (_child == null || Geometry.PaintExtent <= 0)
+        {
+            return false;
+        }
+
+        var childParentData = (SliverPhysicalParentData)_child.parentData!;
+        return _child.HitTest(result, position - childParentData.offset);
+    }
+
+    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    {
+        if (_child == null)
+        {
+            return;
+        }
+
+        var childParentData = (SliverPhysicalParentData)_child.parentData!;
+        visitor(_child, childParentData.offset, Matrix.Identity);
+    }
+
+    protected override void PerformSliverLayout(SliverConstraints constraints)
+    {
+        if (_child == null)
+        {
+            Geometry = default;
+            return;
+        }
+
+        _child.LayoutWithSliverConstraints(constraints);
+        ((SliverPhysicalParentData)_child.parentData!).offset = new Point(0, 0);
+        Geometry = _child.Geometry;
+    }
+}
+
+public sealed class RenderSliverOpacity : RenderProxySliver
+{
+    private double _opacity;
+    private bool _alwaysIncludeSemantics;
+
+    public RenderSliverOpacity(
+        double opacity = 1.0,
+        bool alwaysIncludeSemantics = false,
+        RenderSliver? sliver = null) : base(sliver)
+    {
+        _opacity = ValidateOpacity(opacity, nameof(opacity));
+        _alwaysIncludeSemantics = alwaysIncludeSemantics;
+    }
+
+    public double Opacity
+    {
+        get => _opacity;
+        set
+        {
+            double normalized = ValidateOpacity(value, nameof(value));
+            if (Math.Abs(_opacity - normalized) <= 0.000001)
+            {
+                return;
+            }
+
+            bool compositingChanged = (_opacity > 0.0) != (normalized > 0.0);
+            bool semanticsVisibilityChanged = (_opacity == 0.0) != (normalized == 0.0);
+            _opacity = normalized;
+            if (compositingChanged)
+            {
+                MarkNeedsCompositingBitsUpdate();
+            }
+
+            MarkNeedsCompositedLayerUpdate();
+            if (semanticsVisibilityChanged && !_alwaysIncludeSemantics)
+            {
+                MarkNeedsSemanticsUpdate();
+            }
+        }
+    }
+
+    public bool AlwaysIncludeSemantics
+    {
+        get => _alwaysIncludeSemantics;
+        set
+        {
+            if (_alwaysIncludeSemantics == value)
+            {
+                return;
+            }
+
+            _alwaysIncludeSemantics = value;
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
+    public override bool IsRepaintBoundary => Child != null && _opacity > 0.0;
+
+    protected override bool AlwaysNeedsCompositing => Child != null && _opacity > 0.0;
+
+    public override void Paint(PaintingContext ctx, Point offset)
+    {
+        if (_opacity == 0.0)
+        {
+            return;
+        }
+
+        base.Paint(ctx, offset);
+    }
+
+    protected override OffsetLayer CreateCompositedLayer(OffsetLayer? oldLayer)
+    {
+        return oldLayer as OpacityOffsetLayer ?? new OpacityOffsetLayer();
+    }
+
+    protected override void UpdateCompositedLayer(OffsetLayer layer)
+    {
+        if (layer is OpacityOffsetLayer opacityLayer)
+        {
+            opacityLayer.Opacity = _opacity;
+        }
+    }
+
+    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    {
+        if (_opacity > 0.0 || _alwaysIncludeSemantics)
+        {
+            base.VisitChildrenForSemantics(visitor);
+        }
+    }
+
+    private static double ValidateOpacity(double value, string parameterName)
+    {
+        if (!double.IsFinite(value) || value < 0.0 || value > 1.0)
+        {
+            throw new ArgumentOutOfRangeException(parameterName, "Opacity must be between zero and one.");
+        }
+
+        return value;
+    }
+}
+
+public sealed class RenderSliverAnimatedOpacity : RenderProxySliver
+{
+    private Animation<double> _opacity;
+    private double _currentOpacity;
+    private bool _alwaysIncludeSemantics;
+
+    public RenderSliverAnimatedOpacity(
+        Animation<double> opacity,
+        bool alwaysIncludeSemantics = false,
+        RenderSliver? sliver = null) : base(sliver)
+    {
+        _opacity = opacity ?? throw new ArgumentNullException(nameof(opacity));
+        _currentOpacity = NormalizeOpacity(opacity.Value);
+        _alwaysIncludeSemantics = alwaysIncludeSemantics;
+    }
+
+    public Animation<double> Opacity
+    {
+        get => _opacity;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            if (ReferenceEquals(_opacity, value))
+            {
+                return;
+            }
+
+            if (Attached)
+            {
+                _opacity.RemoveListener(HandleOpacityChanged);
+                value.AddListener(HandleOpacityChanged);
+            }
+
+            _opacity = value;
+            UpdateOpacity();
+        }
+    }
+
+    public bool AlwaysIncludeSemantics
+    {
+        get => _alwaysIncludeSemantics;
+        set
+        {
+            if (_alwaysIncludeSemantics == value)
+            {
+                return;
+            }
+
+            _alwaysIncludeSemantics = value;
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
+    public override bool IsRepaintBoundary => Child != null && _currentOpacity > 0.0;
+
+    protected override bool AlwaysNeedsCompositing => Child != null && _currentOpacity > 0.0;
+
+    public override void Paint(PaintingContext ctx, Point offset)
+    {
+        if (_currentOpacity == 0.0)
+        {
+            return;
+        }
+
+        base.Paint(ctx, offset);
+    }
+
+    protected override OffsetLayer CreateCompositedLayer(OffsetLayer? oldLayer)
+    {
+        return oldLayer as OpacityOffsetLayer ?? new OpacityOffsetLayer();
+    }
+
+    protected override void UpdateCompositedLayer(OffsetLayer layer)
+    {
+        if (layer is OpacityOffsetLayer opacityLayer)
+        {
+            opacityLayer.Opacity = _currentOpacity;
+        }
+    }
+
+    protected override void OnAttach()
+    {
+        base.OnAttach();
+        _opacity.AddListener(HandleOpacityChanged);
+        UpdateOpacity();
+    }
+
+    protected override void OnDetach()
+    {
+        _opacity.RemoveListener(HandleOpacityChanged);
+        base.OnDetach();
+    }
+
+    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    {
+        if (_currentOpacity > 0.0 || _alwaysIncludeSemantics)
+        {
+            base.VisitChildrenForSemantics(visitor);
+        }
+    }
+
+    private void HandleOpacityChanged()
+    {
+        UpdateOpacity();
+    }
+
+    private void UpdateOpacity()
+    {
+        double normalized = NormalizeOpacity(_opacity.Value);
+        if (Math.Abs(_currentOpacity - normalized) <= 0.000001)
+        {
+            return;
+        }
+
+        bool compositingChanged = (_currentOpacity > 0.0) != (normalized > 0.0);
+        bool semanticsVisibilityChanged = (_currentOpacity == 0.0) != (normalized == 0.0);
+        _currentOpacity = normalized;
+        if (compositingChanged)
+        {
+            MarkNeedsCompositingBitsUpdate();
+        }
+
+        MarkNeedsCompositedLayerUpdate();
+        if (semanticsVisibilityChanged && !_alwaysIncludeSemantics)
+        {
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
+    private static double NormalizeOpacity(double value)
+    {
+        return double.IsNaN(value) ? 0.0 : Math.Clamp(value, 0.0, 1.0);
+    }
+}
+
 public abstract class RenderSliverSingleBoxAdapter : RenderSliver, IRenderObjectSingleChildContainer
 {
     private RenderBox? _child;

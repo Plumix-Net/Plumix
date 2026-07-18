@@ -1,4 +1,5 @@
 using Plumix.Foundation;
+using Plumix.Rendering;
 
 namespace Plumix.Widgets;
 
@@ -66,6 +67,37 @@ public sealed class FadeTransition : StatefulWidget
                 SetState(() => { });
             }
         }
+    }
+}
+
+public sealed class SliverFadeTransition : SingleChildRenderObjectWidget
+{
+    public SliverFadeTransition(
+        Animation<double> opacity,
+        Widget? sliver = null,
+        bool alwaysIncludeSemantics = false,
+        Key? key = null) : base(sliver, key)
+    {
+        Opacity = opacity ?? throw new ArgumentNullException(nameof(opacity));
+        AlwaysIncludeSemantics = alwaysIncludeSemantics;
+    }
+
+    public Animation<double> Opacity { get; }
+
+    public bool AlwaysIncludeSemantics { get; }
+
+    internal override RenderObject CreateRenderObject(BuildContext context)
+    {
+        return new RenderSliverAnimatedOpacity(
+            opacity: Opacity,
+            alwaysIncludeSemantics: AlwaysIncludeSemantics);
+    }
+
+    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    {
+        var opacity = (RenderSliverAnimatedOpacity)renderObject;
+        opacity.Opacity = Opacity;
+        opacity.AlwaysIncludeSemantics = AlwaysIncludeSemantics;
     }
 }
 

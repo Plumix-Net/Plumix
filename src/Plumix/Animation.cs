@@ -62,9 +62,9 @@ public sealed class CurvedAnimation : Animation<double>, IDisposable
         _parent.AddStatusListener(HandleStatusChanged);
     }
 
-    public Curve Curve { get; }
+    public Curve Curve { get; set; }
 
-    public Curve? ReverseCurve { get; }
+    public Curve? ReverseCurve { get; set; }
 
     public override double Value
     {

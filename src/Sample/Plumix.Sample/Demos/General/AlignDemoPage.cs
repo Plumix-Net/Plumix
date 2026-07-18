@@ -33,6 +33,8 @@ internal sealed class AlignDemoPageState : State
     private bool _raisedSurface;
     private int _switcherValue;
     private bool _showSecondCrossFade;
+    private bool _expandedFraction;
+    private bool _visibleSliver = true;
     private int _completedAnimations;
     private ScrollController _scrollController = null!;
 
@@ -388,6 +390,66 @@ internal sealed class AlignDemoPageState : State
                     secondCurve: Curves.EaseInOut,
                     sizeCurve: Curves.EaseInOut,
                     onEnd: HandleAnimationEnd),
+                new Text(
+                    "AnimatedFractionallySizedBox + SliverAnimatedOpacity",
+                    fontSize: 20,
+                    color: Colors.Black),
+                new Text(
+                    "Animate fractional layout and a sliver paint layer while preserving their child geometry.",
+                    fontSize: 14,
+                    color: Colors.DimGray),
+                new Row(
+                    spacing: 8,
+                    children:
+                    [
+                        BuildButton(
+                            _expandedFraction ? "Fraction: 0.8" : "Fraction: 0.4",
+                            ToggleFraction,
+                            width: 128,
+                            colorHex: "#FFDDEAF2"),
+                        BuildButton(
+                            _visibleSliver ? "Sliver: visible" : "Sliver: faded",
+                            ToggleSliverOpacity,
+                            width: 132,
+                            colorHex: "#FFF0E1EA"),
+                    ]),
+                new Container(
+                    width: 240,
+                    height: 120,
+                    color: Color.Parse("#FFF3F5F8"),
+                    child: new AnimatedFractionallySizedBox(
+                        duration: TimeSpan.FromMilliseconds(350),
+                        alignment: _expandedFraction ? Alignment.BottomRight : Alignment.TopLeft,
+                        widthFactor: _expandedFraction ? 0.8 : 0.4,
+                        heightFactor: _expandedFraction ? 0.75 : 0.4,
+                        curve: Curves.EaseInOut,
+                        onEnd: HandleAnimationEnd,
+                        child: new Container(
+                            color: Color.Parse("#FF3F7D6B"),
+                            child: new Center(
+                                child: new Text("fraction", fontSize: 13, color: Colors.White))))),
+                new Container(
+                    width: 240,
+                    height: 100,
+                    color: Color.Parse("#FFF3F5F8"),
+                    child: new CustomScrollView(
+                        slivers:
+                        [
+                            new SliverAnimatedOpacity(
+                                opacity: _visibleSliver ? 1.0 : 0.15,
+                                duration: TimeSpan.FromMilliseconds(350),
+                                curve: Curves.EaseInOut,
+                                onEnd: HandleAnimationEnd,
+                                sliver: new SliverToBoxAdapter(
+                                    new Container(
+                                        height: 84,
+                                        color: Color.Parse("#FF8E5572"),
+                                        child: new Center(
+                                            child: new Text(
+                                                "sliver opacity",
+                                                fontSize: 13,
+                                                color: Colors.White))))),
+                        ])),
             ]);
     }
 
@@ -467,6 +529,16 @@ internal sealed class AlignDemoPageState : State
     private void ToggleCrossFade()
     {
         SetState(() => _showSecondCrossFade = !_showSecondCrossFade);
+    }
+
+    private void ToggleFraction()
+    {
+        SetState(() => _expandedFraction = !_expandedFraction);
+    }
+
+    private void ToggleSliverOpacity()
+    {
+        SetState(() => _visibleSliver = !_visibleSliver);
     }
 
     private void HandleAnimationEnd()

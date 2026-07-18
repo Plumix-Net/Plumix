@@ -811,6 +811,43 @@ public sealed class SliverToBoxAdapter : SingleChildRenderObjectWidget
     }
 }
 
+// Dart parity source: flutter/packages/flutter/lib/src/widgets/sliver.dart
+public sealed class SliverOpacity : SingleChildRenderObjectWidget
+{
+    public SliverOpacity(
+        double opacity,
+        Widget? sliver = null,
+        bool alwaysIncludeSemantics = false,
+        Key? key = null) : base(sliver, key)
+    {
+        if (!double.IsFinite(opacity) || opacity < 0.0 || opacity > 1.0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(opacity), "Opacity must be between zero and one.");
+        }
+
+        Opacity = opacity;
+        AlwaysIncludeSemantics = alwaysIncludeSemantics;
+    }
+
+    public double Opacity { get; }
+
+    public bool AlwaysIncludeSemantics { get; }
+
+    internal override RenderObject CreateRenderObject(BuildContext context)
+    {
+        return new RenderSliverOpacity(
+            opacity: Opacity,
+            alwaysIncludeSemantics: AlwaysIncludeSemantics);
+    }
+
+    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    {
+        var opacity = (RenderSliverOpacity)renderObject;
+        opacity.Opacity = Opacity;
+        opacity.AlwaysIncludeSemantics = AlwaysIncludeSemantics;
+    }
+}
+
 // Dart parity source: flutter/packages/flutter/lib/src/widgets/sliver_persistent_header.dart
 public abstract class SliverPersistentHeaderDelegate
 {

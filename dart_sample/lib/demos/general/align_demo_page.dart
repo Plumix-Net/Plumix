@@ -23,6 +23,8 @@ class _AlignDemoPageState extends State<AlignDemoPage> {
   bool _raisedSurface = false;
   int _switcherValue = 0;
   bool _showSecondCrossFade = false;
+  bool _expandedFraction = false;
+  bool _visibleSliver = true;
   int _completedAnimations = 0;
   late final ScrollController _scrollController;
 
@@ -488,6 +490,87 @@ class _AlignDemoPageState extends State<AlignDemoPage> {
               sizeCurve: Curves.easeInOut,
               onEnd: _handleAnimationEnd,
             ),
+            const Text(
+              'AnimatedFractionallySizedBox + SliverAnimatedOpacity',
+              style: TextStyle(fontSize: 20, color: Colors.black),
+            ),
+            const Text(
+              'Animate fractional layout and a sliver paint layer while preserving their child geometry.',
+              style: TextStyle(fontSize: 14, color: Colors.black54),
+            ),
+            Row(
+              spacing: 8,
+              children: <Widget>[
+                _buildButton(
+                  label: _expandedFraction ? 'Fraction: 0.8' : 'Fraction: 0.4',
+                  onTap: _toggleFraction,
+                  width: 128,
+                  background: const Color(0xFFDDEAF2),
+                ),
+                _buildButton(
+                  label: _visibleSliver ? 'Sliver: visible' : 'Sliver: faded',
+                  onTap: _toggleSliverOpacity,
+                  width: 132,
+                  background: const Color(0xFFF0E1EA),
+                ),
+              ],
+            ),
+            Container(
+              width: 240,
+              height: 120,
+              color: const Color(0xFFF3F5F8),
+              child: AnimatedFractionallySizedBox(
+                duration: const Duration(milliseconds: 350),
+                alignment: _expandedFraction
+                    ? Alignment.bottomRight
+                    : Alignment.topLeft,
+                widthFactor: _expandedFraction ? 0.8 : 0.4,
+                heightFactor: _expandedFraction ? 0.75 : 0.4,
+                curve: Curves.easeInOut,
+                onEnd: _handleAnimationEnd,
+                child: Container(
+                  color: const Color(0xFF3F7D6B),
+                  child: const Center(
+                    child: Text(
+                      'fraction',
+                      style: TextStyle(fontSize: 13, color: Colors.white),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Container(
+              width: 240,
+              height: 100,
+              color: const Color(0xFFF3F5F8),
+              child: CustomScrollView(
+                slivers: <Widget>[
+                  SliverAnimatedOpacity(
+                    opacity: _visibleSliver ? 1 : 0.15,
+                    duration: const Duration(milliseconds: 350),
+                    curve: Curves.easeInOut,
+                    onEnd: _handleAnimationEnd,
+                    sliver: const SliverToBoxAdapter(
+                      child: ColoredBox(
+                        color: Color(0xFF8E5572),
+                        child: SizedBox(
+                          height: 84,
+                          child: Center(
+                            child: Text(
+                              'sliver opacity',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -588,6 +671,18 @@ class _AlignDemoPageState extends State<AlignDemoPage> {
   void _toggleCrossFade() {
     setState(() {
       _showSecondCrossFade = !_showSecondCrossFade;
+    });
+  }
+
+  void _toggleFraction() {
+    setState(() {
+      _expandedFraction = !_expandedFraction;
+    });
+  }
+
+  void _toggleSliverOpacity() {
+    setState(() {
+      _visibleSliver = !_visibleSliver;
     });
   }
 

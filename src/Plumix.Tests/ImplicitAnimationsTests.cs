@@ -1015,6 +1015,133 @@ public sealed class ImplicitAnimationsTests : IDisposable
     }
 
     [Fact]
+    public void AnimatedFractionallySizedBox_ExposesFlutterDefaultsAndValidatesArguments()
+    {
+        var fraction = new AnimatedFractionallySizedBox(
+            duration: TimeSpan.FromMilliseconds(200),
+            widthFactor: 0.5,
+            heightFactor: 0.25);
+
+        Assert.Null(fraction.Child);
+        Assert.Equal(Alignment.Center, fraction.Alignment);
+        Assert.Equal(0.5, fraction.WidthFactor);
+        Assert.Equal(0.25, fraction.HeightFactor);
+        Assert.Equal(TimeSpan.FromMilliseconds(200), fraction.Duration);
+        Assert.Equal(Curves.Linear(0.3), fraction.Curve(0.3));
+        Assert.Null(fraction.OnEnd);
+        Assert.Throws<ArgumentOutOfRangeException>(() => new AnimatedFractionallySizedBox(
+            duration: TimeSpan.Zero,
+            widthFactor: -0.1));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new AnimatedFractionallySizedBox(
+            duration: TimeSpan.Zero,
+            heightFactor: double.NaN));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new AnimatedFractionallySizedBox(
+            duration: TimeSpan.FromMilliseconds(-1)));
+    }
+
+    [Fact]
+    public void AnimatedFractionallySizedBox_InterpolatesFactorsAlignmentAndCallsOnEnd()
+    {
+        int completed = 0;
+        var owner = new BuildOwner();
+        var root = new TestRootElement(new AnimatedFractionallySizedBox(
+            duration: TimeSpan.FromMilliseconds(200),
+            alignment: Alignment.TopLeft,
+            widthFactor: 0.25,
+            heightFactor: 0.5,
+            child: new SizedBox(width: 10, height: 10),
+            onEnd: () => completed++));
+        Mount(root, owner);
+
+        root.Update(new AnimatedFractionallySizedBox(
+            duration: TimeSpan.FromMilliseconds(200),
+            alignment: Alignment.BottomRight,
+            widthFactor: 0.75,
+            heightFactor: 1.0,
+            curve: Curves.Linear,
+            child: new SizedBox(width: 10, height: 10),
+            onEnd: () => completed++));
+        owner.FlushBuild();
+
+        double now = Scheduler.CurrentSeconds;
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
+        owner.FlushBuild();
+        var halfway = RequireRenderObject<RenderFractionallySizedBox>(root.ChildElement);
+        Assert.InRange(halfway.Alignment.X, -0.99, 0.99);
+        Assert.InRange(halfway.Alignment.Y, -0.99, 0.99);
+        Assert.InRange(halfway.WidthFactor!.Value, 0.26, 0.74);
+        Assert.InRange(halfway.HeightFactor!.Value, 0.51, 0.99);
+        double interruptedWidth = halfway.WidthFactor.Value;
+        double interruptedHeight = halfway.HeightFactor.Value;
+
+        root.Update(new AnimatedFractionallySizedBox(
+            duration: TimeSpan.FromMilliseconds(200),
+            alignment: Alignment.Center,
+            widthFactor: 0.4,
+            heightFactor: 0.6,
+            curve: Curves.Linear,
+            child: new SizedBox(width: 10, height: 10),
+            onEnd: () => completed++));
+        owner.FlushBuild();
+
+        var interrupted = RequireRenderObject<RenderFractionallySizedBox>(root.ChildElement);
+        Assert.Equal(interruptedWidth, interrupted.WidthFactor!.Value, precision: 6);
+        Assert.Equal(interruptedHeight, interrupted.HeightFactor!.Value, precision: 6);
+
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
+        owner.FlushBuild();
+        var finished = RequireRenderObject<RenderFractionallySizedBox>(root.ChildElement);
+        Assert.Equal(Alignment.Center, finished.Alignment);
+        Assert.Equal(0.4, finished.WidthFactor!.Value, precision: 6);
+        Assert.Equal(0.6, finished.HeightFactor!.Value, precision: 6);
+        Assert.Equal(1, completed);
+
+        root.Unmount();
+    }
+
+    [Fact]
+    public void AnimatedFractionallySizedBox_MatchesDartNullableTweenLifecycle()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(new AnimatedFractionallySizedBox(
+            duration: TimeSpan.FromMilliseconds(200),
+            widthFactor: 0.5,
+            child: new SizedBox(width: 10, height: 10)));
+        Mount(root, owner);
+
+        root.Update(new AnimatedFractionallySizedBox(
+            duration: TimeSpan.FromMilliseconds(200),
+            widthFactor: null,
+            heightFactor: 0.4,
+            child: new SizedBox(width: 10, height: 10)));
+        owner.FlushBuild();
+
+        var updated = RequireRenderObject<RenderFractionallySizedBox>(root.ChildElement);
+        Assert.Equal(0.5, updated.WidthFactor);
+        Assert.Equal(0.4, updated.HeightFactor);
+
+        root.Unmount();
+    }
+
+    [Fact]
+    public void AnimatedFractionallySizedBox_LaysOutAtZeroArea()
+    {
+        var fraction = new AnimatedFractionallySizedBox(
+            duration: TimeSpan.FromMilliseconds(200),
+            widthFactor: 0.5,
+            heightFactor: 0.5);
+        var owner = new BuildOwner();
+        var root = new TestRootElement(fraction);
+        Mount(root, owner);
+        var renderObject = RequireRenderObject<RenderFractionallySizedBox>(root.ChildElement);
+
+        renderObject.Layout(BoxConstraints.TightFor(width: 0, height: 0));
+
+        Assert.Equal(new Size(0, 0), renderObject.Size);
+        root.Unmount();
+    }
+
+    [Fact]
     public void AlignDemoPage_LeavingRouteUnmountsNestedAnimationsWithoutDoubleDispose()
     {
         var owner = new BuildOwner();
