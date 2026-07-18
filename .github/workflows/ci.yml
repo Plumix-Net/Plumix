@@ -49,13 +49,17 @@ jobs:
           dotnet pack src/Plumix/Plumix.csproj               -c Release -p:Version=$PKG_VERSION
           dotnet pack src/Plumix.Material/Plumix.Material.csproj   -c Release -p:Version=$PKG_VERSION
           dotnet pack src/Plumix.Cupertino/Plumix.Cupertino.csproj -c Release -p:Version=$PKG_VERSION
+          dotnet pack src/Plumix.FSharp/Plumix.FSharp.csproj -c Release -p:Version=$PKG_VERSION
+          dotnet pack src/Plumix.Elmish/Plumix.Elmish.csproj -c Release -p:Version=$PKG_VERSION
 
       - name: Push to NuGet.org
         run: |
           for pkg in \
             src/Plumix/bin/Release/Plumix.${PKG_VERSION}.nupkg \
             src/Plumix.Material/bin/Release/Plumix.Material.${PKG_VERSION}.nupkg \
-            src/Plumix.Cupertino/bin/Release/Plumix.Cupertino.${PKG_VERSION}.nupkg; do
+            src/Plumix.Cupertino/bin/Release/Plumix.Cupertino.${PKG_VERSION}.nupkg \
+            src/Plumix.Material/bin/Release/Plumix.FSharp.${PKG_VERSION}.nupkg \
+            src/Plumix.Cupertino/bin/Release/Plumix.Elmish.${PKG_VERSION}.nupkg; do
             dotnet nuget push "$pkg" \
               --api-key ${{ secrets.NUGET_API_KEY }} \
               --source https://api.nuget.org/v3/index.json \
