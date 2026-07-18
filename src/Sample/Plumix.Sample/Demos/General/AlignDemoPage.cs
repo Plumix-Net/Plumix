@@ -35,16 +35,21 @@ internal sealed class AlignDemoPageState : State
     private bool _showSecondCrossFade;
     private bool _expandedFraction;
     private bool _visibleSliver = true;
+    private bool _explicitTransitionsForward;
     private int _completedAnimations;
     private ScrollController _scrollController = null!;
+    private AnimationController _explicitTransitionsController = null!;
 
     public override void InitState()
     {
         _scrollController = new ScrollController();
+        _explicitTransitionsController = new AnimationController(TimeSpan.FromMilliseconds(800));
+        _explicitTransitionsController.SetValue(0.25);
     }
 
     public override void Dispose()
     {
+        _explicitTransitionsController.Dispose();
         _scrollController.Dispose();
     }
 
@@ -213,6 +218,35 @@ internal sealed class AlignDemoPageState : State
                                     color: Color.Parse("#FFB85C38"),
                                     child: new Center(
                                         child: new Text("turn", fontSize: 14, color: Colors.White))))))),
+                new Text("ScaleTransition + RotationTransition", fontSize: 20, color: Colors.Black),
+                new Text(
+                    "Drive explicit scale and turn animations from one controller; filtering is active only in motion.",
+                    fontSize: 14,
+                    color: Colors.DimGray),
+                BuildButton(
+                    _explicitTransitionsForward ? "Reverse transitions" : "Forward transitions",
+                    ToggleExplicitTransitions,
+                    width: 152,
+                    colorHex: "#FFDCEAF4"),
+                new Container(
+                    width: 220,
+                    height: 130,
+                    color: Color.Parse("#FFF3F5F8"),
+                    child: new Center(
+                        child: new RotationTransition(
+                            turns: _explicitTransitionsController,
+                            alignment: Alignment.BottomRight,
+                            filterQuality: FilterQuality.High,
+                            child: new ScaleTransition(
+                                scale: _explicitTransitionsController,
+                                alignment: Alignment.BottomRight,
+                                filterQuality: FilterQuality.High,
+                                child: new Container(
+                                    width: 72,
+                                    height: 44,
+                                    color: Color.Parse("#FF356A82"),
+                                    child: new Center(
+                                        child: new Text("explicit", fontSize: 13, color: Colors.White))))))),
                 new Text("AnimatedPositioned + AnimatedPositionedDirectional", fontSize: 20, color: Colors.Black),
                 new Text(
                     "Animate physical and logical Stack insets; switching direction resolves start/end immediately.",
@@ -499,6 +533,19 @@ internal sealed class AlignDemoPageState : State
     private void ToggleRotation()
     {
         SetState(() => _rotated = !_rotated);
+    }
+
+    private void ToggleExplicitTransitions()
+    {
+        SetState(() => _explicitTransitionsForward = !_explicitTransitionsForward);
+        if (_explicitTransitionsForward)
+        {
+            _explicitTransitionsController.Forward();
+        }
+        else
+        {
+            _explicitTransitionsController.Reverse();
+        }
     }
 
     private void TogglePosition()

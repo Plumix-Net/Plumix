@@ -9,7 +9,8 @@ class AlignDemoPage extends StatefulWidget {
   State<AlignDemoPage> createState() => _AlignDemoPageState();
 }
 
-class _AlignDemoPageState extends State<AlignDemoPage> {
+class _AlignDemoPageState extends State<AlignDemoPage>
+    with SingleTickerProviderStateMixin {
   Alignment _alignment = Alignment.center;
   bool _shrinkWrap = false;
   bool _expandedPadding = false;
@@ -25,17 +26,25 @@ class _AlignDemoPageState extends State<AlignDemoPage> {
   bool _showSecondCrossFade = false;
   bool _expandedFraction = false;
   bool _visibleSliver = true;
+  bool _explicitTransitionsForward = false;
   int _completedAnimations = 0;
   late final ScrollController _scrollController;
+  late final AnimationController _explicitTransitionsController;
 
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController();
+    _explicitTransitionsController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      value: 0.25,
+      vsync: this,
+    );
   }
 
   @override
   void dispose() {
+    _explicitTransitionsController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -245,6 +254,50 @@ class _AlignDemoPageState extends State<AlignDemoPage> {
                         child: Text(
                           'turn',
                           style: TextStyle(fontSize: 14, color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const Text(
+              'ScaleTransition + RotationTransition',
+              style: TextStyle(fontSize: 20, color: Colors.black),
+            ),
+            const Text(
+              'Drive explicit scale and turn animations from one controller; filtering is active only in motion.',
+              style: TextStyle(fontSize: 14, color: Colors.black54),
+            ),
+            _buildButton(
+              label: _explicitTransitionsForward
+                  ? 'Reverse transitions'
+                  : 'Forward transitions',
+              onTap: _toggleExplicitTransitions,
+              width: 152,
+              background: const Color(0xFFDCEAF4),
+            ),
+            Container(
+              width: 220,
+              height: 130,
+              color: const Color(0xFFF3F5F8),
+              child: Center(
+                child: RotationTransition(
+                  turns: _explicitTransitionsController,
+                  alignment: Alignment.bottomRight,
+                  filterQuality: FilterQuality.high,
+                  child: ScaleTransition(
+                    scale: _explicitTransitionsController,
+                    alignment: Alignment.bottomRight,
+                    filterQuality: FilterQuality.high,
+                    child: Container(
+                      width: 72,
+                      height: 44,
+                      color: const Color(0xFF356A82),
+                      child: const Center(
+                        child: Text(
+                          'explicit',
+                          style: TextStyle(fontSize: 13, color: Colors.white),
                         ),
                       ),
                     ),
@@ -636,6 +689,17 @@ class _AlignDemoPageState extends State<AlignDemoPage> {
     setState(() {
       _rotated = !_rotated;
     });
+  }
+
+  void _toggleExplicitTransitions() {
+    setState(() {
+      _explicitTransitionsForward = !_explicitTransitionsForward;
+    });
+    if (_explicitTransitionsForward) {
+      _explicitTransitionsController.forward();
+    } else {
+      _explicitTransitionsController.reverse();
+    }
   }
 
   void _togglePosition() {

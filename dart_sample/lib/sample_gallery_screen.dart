@@ -457,8 +457,9 @@ class SampleGalleryScreen extends StatelessWidget {
         ),
         SampleRouteDefinition(
           routeName: SampleRoutes.align,
-          title: 'Implicit animations',
-          subtitle: 'alignment + size + opacity + transforms + sliver fade',
+          title: 'Animations + transitions',
+          subtitle:
+              'implicit motion + explicit scale/rotation controllers + sliver fade',
           builder: () => const AlignDemoPage(),
         ),
         SampleRouteDefinition(

@@ -132,6 +132,10 @@ Completion note:
   defaults, centered/custom transform origins, `filterQuality` propagation through the composited transform layer,
   interrupted-transition continuity, curve/duration updates, `onEnd`, focused tests, and mirrored C#/Dart runtime
   probes.
+- Continued explicit-transition parity with paired `ScaleTransition` + `RotationTransition` ports, including the
+  source-shaped `AnimatedWidget`/`MatrixTransition` listenable lifecycle, centered/custom transform origins,
+  active-animation-only `filterQuality`, exact turn matrices, terminal-status frame ordering, focused tests, and
+  mirrored C#/Dart runtime probes.
 - Continued implicit-animation parity with paired `AnimatedPositioned` + `AnimatedPositionedDirectional` ports,
   including Dart-shaped constructors/guards, `fromRect`, physical/logical Stack insets, ambient RTL/LTR resolution,
   nullable-property behavior, interrupted-transition continuity, curve/duration updates, `onEnd`, focused tests,

@@ -1,5 +1,11 @@
 # Changelog
 
+- Added paired Flutter core `ScaleTransition` + `RotationTransition` ports with source-shaped `AnimatedWidget` and
+  `MatrixTransition`, shared-listenable lifecycle, centered/custom pivots, active-animation-only filter quality,
+  exact turn matrices, focused tests, and mirrored C#/Dart runtime probes. Advanced `Plumix` to `0.8.0-alpha.1`.
+- Fixed `AnimationController` terminal-frame notification ordering so value listeners observe the completed or
+  dismissed status while rebuilding the final frame, matching Flutter's filter-layer teardown behavior.
+
 - Added paired Flutter core `Visibility` + `SliverVisibility` ports with source-matching replacement and maintain
   APIs, state/focus/size/semantics/interactivity policies, nested visibility lookup, focused lifecycle/render/sliver
   tests, and mirrored C#/Dart runtime probes. Added source-required `SliverIgnorePointer`, `SliverOffstage`, and

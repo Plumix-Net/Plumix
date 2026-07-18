@@ -1,3 +1,4 @@
+using Avalonia;
 using Plumix.Foundation;
 using Plumix.Rendering;
 
@@ -5,59 +6,45 @@ namespace Plumix.Widgets;
 
 // Dart parity source: flutter/packages/flutter/lib/src/widgets/transitions.dart
 
-public sealed class FadeTransition : StatefulWidget
+public abstract class AnimatedWidget : StatefulWidget
 {
-    public FadeTransition(
-        Animation<double> opacity,
-        Widget? child = null,
-        bool alwaysIncludeSemantics = false,
-        Key? key = null) : base(key)
+    protected AnimatedWidget(IListenable listenable, Key? key = null) : base(key)
     {
-        Opacity = opacity ?? throw new ArgumentNullException(nameof(opacity));
-        Child = child;
-        AlwaysIncludeSemantics = alwaysIncludeSemantics;
+        Listenable = listenable ?? throw new ArgumentNullException(nameof(listenable));
     }
 
-    public Animation<double> Opacity { get; }
+    public IListenable Listenable { get; }
 
-    public Widget? Child { get; }
+    public abstract Widget Build(BuildContext context);
 
-    public bool AlwaysIncludeSemantics { get; }
+    public sealed override State CreateState() => new AnimatedWidgetState();
 
-    public override State CreateState() => new FadeTransitionState();
-
-    private sealed class FadeTransitionState : State
+    private sealed class AnimatedWidgetState : State
     {
-        private FadeTransition CurrentWidget => (FadeTransition)StateWidget;
+        private AnimatedWidget CurrentWidget => (AnimatedWidget)StateWidget;
 
         public override void InitState()
         {
-            CurrentWidget.Opacity.AddListener(HandleChanged);
+            CurrentWidget.Listenable.AddListener(HandleChanged);
         }
 
         public override void DidUpdateWidget(StatefulWidget oldWidget)
         {
-            var oldTransition = (FadeTransition)oldWidget;
-            if (ReferenceEquals(oldTransition.Opacity, CurrentWidget.Opacity))
+            var oldAnimatedWidget = (AnimatedWidget)oldWidget;
+            if (ReferenceEquals(oldAnimatedWidget.Listenable, CurrentWidget.Listenable))
             {
                 return;
             }
 
-            oldTransition.Opacity.RemoveListener(HandleChanged);
-            CurrentWidget.Opacity.AddListener(HandleChanged);
+            oldAnimatedWidget.Listenable.RemoveListener(HandleChanged);
+            CurrentWidget.Listenable.AddListener(HandleChanged);
         }
 
-        public override Widget Build(BuildContext context)
-        {
-            return new Opacity(
-                opacity: Math.Clamp(CurrentWidget.Opacity.Value, 0.0, 1.0),
-                child: CurrentWidget.Child,
-                alwaysIncludeSemantics: CurrentWidget.AlwaysIncludeSemantics);
-        }
+        public override Widget Build(BuildContext context) => CurrentWidget.Build(context);
 
         public override void Dispose()
         {
-            CurrentWidget.Opacity.RemoveListener(HandleChanged);
+            CurrentWidget.Listenable.RemoveListener(HandleChanged);
         }
 
         private void HandleChanged()
@@ -67,6 +54,140 @@ public sealed class FadeTransition : StatefulWidget
                 SetState(() => { });
             }
         }
+    }
+}
+
+public sealed class FadeTransition : AnimatedWidget
+{
+    public FadeTransition(
+        Animation<double> opacity,
+        Widget? child = null,
+        bool alwaysIncludeSemantics = false,
+        Key? key = null) : base(opacity ?? throw new ArgumentNullException(nameof(opacity)), key)
+    {
+        Child = child;
+        AlwaysIncludeSemantics = alwaysIncludeSemantics;
+    }
+
+    public Animation<double> Opacity => (Animation<double>)Listenable;
+
+    public Widget? Child { get; }
+
+    public bool AlwaysIncludeSemantics { get; }
+
+    public override Widget Build(BuildContext context)
+    {
+        return new Opacity(
+            opacity: Math.Clamp(Opacity.Value, 0.0, 1.0),
+            child: Child,
+            alwaysIncludeSemantics: AlwaysIncludeSemantics);
+    }
+}
+
+public delegate Matrix TransformCallback(double animationValue);
+
+public class MatrixTransition : AnimatedWidget
+{
+    public MatrixTransition(
+        Animation<double> animation,
+        TransformCallback onTransform,
+        Alignment alignment = default,
+        FilterQuality? filterQuality = null,
+        Widget? child = null,
+        Key? key = null) : base(animation ?? throw new ArgumentNullException(nameof(animation)), key)
+    {
+        OnTransform = onTransform ?? throw new ArgumentNullException(nameof(onTransform));
+        Alignment = alignment;
+        FilterQuality = filterQuality;
+        Child = child;
+    }
+
+    public TransformCallback OnTransform { get; }
+
+    public Animation<double> Animation => (Animation<double>)Listenable;
+
+    public Alignment Alignment { get; }
+
+    public FilterQuality? FilterQuality { get; }
+
+    public Widget? Child { get; }
+
+    public override Widget Build(BuildContext context)
+    {
+        return new Transform(
+            transform: OnTransform(Animation.Value),
+            alignment: Alignment,
+            filterQuality: Animation.Status.IsAnimating() ? FilterQuality : null,
+            child: Child);
+    }
+}
+
+public sealed class ScaleTransition : MatrixTransition
+{
+    public ScaleTransition(
+        Animation<double> scale,
+        Alignment alignment = default,
+        FilterQuality? filterQuality = null,
+        Widget? child = null,
+        Key? key = null) : base(
+            animation: scale,
+            onTransform: HandleScaleMatrix,
+            alignment: alignment,
+            filterQuality: filterQuality,
+            child: child,
+            key: key)
+    {
+    }
+
+    public Animation<double> Scale => Animation;
+
+    private static Matrix HandleScaleMatrix(double value) => Matrix.CreateScale(value, value);
+}
+
+public sealed class RotationTransition : MatrixTransition
+{
+    public RotationTransition(
+        Animation<double> turns,
+        Alignment alignment = default,
+        FilterQuality? filterQuality = null,
+        Widget? child = null,
+        Key? key = null) : base(
+            animation: turns,
+            onTransform: HandleTurnsMatrix,
+            alignment: alignment,
+            filterQuality: filterQuality,
+            child: child,
+            key: key)
+    {
+    }
+
+    public Animation<double> Turns => Animation;
+
+    private static Matrix HandleTurnsMatrix(double value)
+    {
+        double radians = value * Math.PI * 2.0;
+        if (radians == 0.0)
+        {
+            return Matrix.Identity;
+        }
+
+        double sine = Math.Sin(radians);
+        if (sine == 1.0)
+        {
+            return new Matrix(0, 1, -1, 0, 0, 0);
+        }
+        if (sine == -1.0)
+        {
+            return new Matrix(0, -1, 1, 0, 0, 0);
+        }
+
+        double cosine = Math.Cos(radians);
+        if (cosine == -1.0)
+        {
+            return new Matrix(-1, 0, 0, -1, 0, 0);
+        }
+
+        return new Matrix(cosine, sine, -sine, cosine, 0, 0);
     }
 }
 

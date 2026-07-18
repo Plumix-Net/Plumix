@@ -259,8 +259,7 @@ public sealed class AnimationController : Animation<double>, IDisposable
             if (raw >= 1.0)
             {
                 _value = 1.0;
-                Changed?.Invoke();
-                SetStatus(AnimationStatus.Completed);
+                SetTerminalValueAndStatus(AnimationStatus.Completed);
                 Completed?.Invoke();
                 Stop();
                 return;
@@ -269,8 +268,7 @@ public sealed class AnimationController : Animation<double>, IDisposable
             if (raw <= 0.0)
             {
                 _value = 0.0;
-                Changed?.Invoke();
-                SetStatus(AnimationStatus.Dismissed);
+                SetTerminalValueAndStatus(AnimationStatus.Dismissed);
                 Dismissed?.Invoke();
                 Stop();
                 return;
@@ -294,5 +292,16 @@ public sealed class AnimationController : Animation<double>, IDisposable
 
         _status = status;
         StatusChanged?.Invoke(status);
+    }
+
+    private void SetTerminalValueAndStatus(AnimationStatus status)
+    {
+        bool statusChanged = _status != status;
+        _status = status;
+        Changed?.Invoke();
+        if (statusChanged)
+        {
+            StatusChanged?.Invoke(status);
+        }
     }
 }
