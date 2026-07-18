@@ -1525,10 +1525,20 @@ public sealed class RenderDecoratedBox : RenderProxyBox
 public sealed class RenderOpacity : RenderProxyBox
 {
     private double _opacity;
+    private bool _alwaysIncludeSemantics;
 
     public RenderOpacity(double opacity = 1.0, RenderBox? child = null)
+        : this(opacity, alwaysIncludeSemantics: false, child)
+    {
+    }
+
+    public RenderOpacity(
+        double opacity,
+        bool alwaysIncludeSemantics,
+        RenderBox? child = null)
     {
         _opacity = Math.Clamp(opacity, 0.0, 1.0);
+        _alwaysIncludeSemantics = alwaysIncludeSemantics;
         Child = child;
     }
 
@@ -1543,11 +1553,31 @@ public sealed class RenderOpacity : RenderProxyBox
                 return;
             }
 
+            bool semanticsVisibilityChanged = (_opacity == 0.0) != (clamped == 0.0);
             _opacity = clamped;
             if (Child != null)
             {
                 MarkNeedsCompositedLayerUpdate();
+                if (semanticsVisibilityChanged)
+                {
+                    MarkNeedsSemanticsUpdate();
+                }
             }
+        }
+    }
+
+    public bool AlwaysIncludeSemantics
+    {
+        get => _alwaysIncludeSemantics;
+        set
+        {
+            if (_alwaysIncludeSemantics == value)
+            {
+                return;
+            }
+
+            _alwaysIncludeSemantics = value;
+            MarkNeedsSemanticsUpdate();
         }
     }
 
@@ -1564,6 +1594,14 @@ public sealed class RenderOpacity : RenderProxyBox
         if (layer is OpacityOffsetLayer opacityLayer)
         {
             opacityLayer.Opacity = Opacity;
+        }
+    }
+
+    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    {
+        if (Opacity > 0.0 || AlwaysIncludeSemantics)
+        {
+            base.VisitChildrenForSemantics(visitor);
         }
     }
 }

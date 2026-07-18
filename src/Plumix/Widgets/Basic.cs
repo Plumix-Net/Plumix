@@ -454,21 +454,35 @@ public sealed class InkSplash : SingleChildRenderObjectWidget
 
 public sealed class Opacity : SingleChildRenderObjectWidget
 {
-    public Opacity(double opacity, Widget? child = null, Key? key = null) : base(child, key)
+    public Opacity(double opacity, Widget? child = null, Key? key = null)
+        : this(opacity, child, alwaysIncludeSemantics: false, key)
+    {
+    }
+
+    public Opacity(
+        double opacity,
+        Widget? child,
+        bool alwaysIncludeSemantics,
+        Key? key = null) : base(child, key)
     {
         Value = opacity;
+        AlwaysIncludeSemantics = alwaysIncludeSemantics;
     }
 
     public double Value { get; }
 
+    public bool AlwaysIncludeSemantics { get; }
+
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
-        return new RenderOpacity(Value);
+        return new RenderOpacity(Value, AlwaysIncludeSemantics);
     }
 
     internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
-        ((RenderOpacity)renderObject).Opacity = Value;
+        var opacity = (RenderOpacity)renderObject;
+        opacity.Opacity = Value;
+        opacity.AlwaysIncludeSemantics = AlwaysIncludeSemantics;
     }
 }
 

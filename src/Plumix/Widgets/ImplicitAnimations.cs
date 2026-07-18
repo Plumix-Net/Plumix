@@ -7,6 +7,200 @@ namespace Plumix.Widgets;
 
 // Dart parity source: flutter/packages/flutter/lib/src/widgets/implicit_animations.dart
 
+public sealed class AnimatedOpacity : StatefulWidget
+{
+    public AnimatedOpacity(
+        double opacity,
+        TimeSpan duration,
+        Widget? child = null,
+        Curve? curve = null,
+        Action? onEnd = null,
+        bool alwaysIncludeSemantics = false,
+        Key? key = null) : base(key)
+    {
+        if (!double.IsFinite(opacity) || opacity < 0.0 || opacity > 1.0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(opacity), "Opacity must be between zero and one.");
+        }
+        if (duration < TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(duration));
+        }
+
+        Opacity = opacity;
+        Duration = duration;
+        Child = child;
+        Curve = curve ?? Curves.Linear;
+        OnEnd = onEnd;
+        AlwaysIncludeSemantics = alwaysIncludeSemantics;
+    }
+
+    public double Opacity { get; }
+
+    public TimeSpan Duration { get; }
+
+    public Widget? Child { get; }
+
+    public Curve Curve { get; }
+
+    public Action? OnEnd { get; }
+
+    public bool AlwaysIncludeSemantics { get; }
+
+    public override State CreateState() => new AnimatedOpacityState();
+
+    private sealed class AnimatedOpacityState : State
+    {
+        private AnimationController? _controller;
+        private double _begin;
+        private double _end;
+
+        private AnimatedOpacity CurrentWidget => (AnimatedOpacity)StateWidget;
+
+        public override void InitState()
+        {
+            _begin = _end = CurrentWidget.Opacity;
+            _controller = new AnimationController(CurrentWidget.Duration) { Curve = CurrentWidget.Curve };
+            _controller.Changed += HandleChanged;
+            _controller.Completed += HandleCompleted;
+        }
+
+        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        {
+            _controller!.Duration = CurrentWidget.Duration;
+            _controller.Curve = CurrentWidget.Curve;
+            double current = Evaluate(_controller.Evaluate());
+            if (CurrentWidget.Opacity != _end)
+            {
+                _begin = current;
+                _end = CurrentWidget.Opacity;
+                _controller.Forward(from: 0.0);
+            }
+        }
+
+        public override Widget Build(BuildContext context)
+        {
+            return new Opacity(
+                opacity: Evaluate(_controller!.Evaluate()),
+                alwaysIncludeSemantics: CurrentWidget.AlwaysIncludeSemantics,
+                child: CurrentWidget.Child);
+        }
+
+        public override void Dispose()
+        {
+            _controller!.Changed -= HandleChanged;
+            _controller.Completed -= HandleCompleted;
+            _controller.Dispose();
+            _controller = null;
+        }
+
+        private double Evaluate(double t) => _begin + ((_end - _begin) * t);
+
+        private void HandleChanged() => SetState(() => { });
+
+        private void HandleCompleted()
+        {
+            SetState(() => { });
+            CurrentWidget.OnEnd?.Invoke();
+        }
+    }
+}
+
+public sealed class AnimatedSlide : StatefulWidget
+{
+    public AnimatedSlide(
+        Vector offset,
+        TimeSpan duration,
+        Widget? child = null,
+        Curve? curve = null,
+        Action? onEnd = null,
+        Key? key = null) : base(key)
+    {
+        if (duration < TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(duration));
+        }
+
+        Offset = offset;
+        Duration = duration;
+        Child = child;
+        Curve = curve ?? Curves.Linear;
+        OnEnd = onEnd;
+    }
+
+    public Vector Offset { get; }
+
+    public TimeSpan Duration { get; }
+
+    public Widget? Child { get; }
+
+    public Curve Curve { get; }
+
+    public Action? OnEnd { get; }
+
+    public override State CreateState() => new AnimatedSlideState();
+
+    private sealed class AnimatedSlideState : State
+    {
+        private AnimationController? _controller;
+        private Vector _begin;
+        private Vector _end;
+
+        private AnimatedSlide CurrentWidget => (AnimatedSlide)StateWidget;
+
+        public override void InitState()
+        {
+            _begin = _end = CurrentWidget.Offset;
+            _controller = new AnimationController(CurrentWidget.Duration) { Curve = CurrentWidget.Curve };
+            _controller.Changed += HandleChanged;
+            _controller.Completed += HandleCompleted;
+        }
+
+        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        {
+            _controller!.Duration = CurrentWidget.Duration;
+            _controller.Curve = CurrentWidget.Curve;
+            Vector current = Evaluate(_controller.Evaluate());
+            if (CurrentWidget.Offset != _end)
+            {
+                _begin = current;
+                _end = CurrentWidget.Offset;
+                _controller.Forward(from: 0.0);
+            }
+        }
+
+        public override Widget Build(BuildContext context)
+        {
+            return new FractionalTranslation(
+                translation: Evaluate(_controller!.Evaluate()),
+                child: CurrentWidget.Child);
+        }
+
+        public override void Dispose()
+        {
+            _controller!.Changed -= HandleChanged;
+            _controller.Completed -= HandleCompleted;
+            _controller.Dispose();
+            _controller = null;
+        }
+
+        private Vector Evaluate(double t)
+        {
+            return new Vector(
+                _begin.X + ((_end.X - _begin.X) * t),
+                _begin.Y + ((_end.Y - _begin.Y) * t));
+        }
+
+        private void HandleChanged() => SetState(() => { });
+
+        private void HandleCompleted()
+        {
+            SetState(() => { });
+            CurrentWidget.OnEnd?.Invoke();
+        }
+    }
+}
+
 public sealed class AnimatedContainer : StatefulWidget
 {
     public AnimatedContainer(

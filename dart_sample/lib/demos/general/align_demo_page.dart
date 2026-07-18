@@ -13,6 +13,8 @@ class _AlignDemoPageState extends State<AlignDemoPage> {
   Alignment _alignment = Alignment.center;
   bool _shrinkWrap = false;
   bool _expandedPadding = false;
+  bool _faded = false;
+  bool _shifted = false;
   int _completedAnimations = 0;
 
   @override
@@ -107,6 +109,61 @@ class _AlignDemoPageState extends State<AlignDemoPage> {
             ),
           ),
         ),
+        const Text(
+          'AnimatedOpacity + AnimatedSlide',
+          style: TextStyle(fontSize: 20, color: Colors.black),
+        ),
+        const Text(
+          'Fade and move the same child by a size-relative offset; hit testing follows the slide.',
+          style: TextStyle(fontSize: 14, color: Colors.black54),
+        ),
+        Row(
+          spacing: 8,
+          children: <Widget>[
+            _buildButton(
+              label: _faded ? 'Opacity: 0.2' : 'Opacity: 1.0',
+              onTap: _toggleOpacity,
+              width: 120,
+              background: const Color(0xFFF4E1F0),
+            ),
+            _buildButton(
+              label: _shifted ? 'Offset: (0.75,-0.5)' : 'Offset: zero',
+              onTap: _toggleOffset,
+              width: 160,
+              background: const Color(0xFFE1F1F4),
+            ),
+          ],
+        ),
+        Container(
+          width: 220,
+          height: 110,
+          color: const Color(0xFFF3F5F8),
+          child: Center(
+            child: AnimatedSlide(
+              offset: _shifted ? const Offset(0.75, -0.5) : Offset.zero,
+              duration: const Duration(milliseconds: 350),
+              curve: Curves.easeInOut,
+              onEnd: _handleAnimationEnd,
+              child: AnimatedOpacity(
+                opacity: _faded ? 0.2 : 1,
+                duration: const Duration(milliseconds: 350),
+                curve: Curves.easeInOut,
+                onEnd: _handleAnimationEnd,
+                child: Container(
+                  width: 72,
+                  height: 44,
+                  color: const Color(0xFF7B2CBF),
+                  child: const Center(
+                    child: Text(
+                      'move',
+                      style: TextStyle(fontSize: 14, color: Colors.white),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -145,6 +202,18 @@ class _AlignDemoPageState extends State<AlignDemoPage> {
   void _togglePadding() {
     setState(() {
       _expandedPadding = !_expandedPadding;
+    });
+  }
+
+  void _toggleOpacity() {
+    setState(() {
+      _faded = !_faded;
+    });
+  }
+
+  void _toggleOffset() {
+    setState(() {
+      _shifted = !_shifted;
     });
   }
 

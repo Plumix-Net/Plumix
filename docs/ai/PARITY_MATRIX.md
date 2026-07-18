@@ -4,7 +4,7 @@ Scope: structural parity of sample routes/modules between C# and Dart samples.
 
 Policy note: sample parity updates must follow `docs/ai/PORTING_MODE.md` (Dart source of truth, strict `1:1` default, documented divergences).
 
-Last checked: 2026-07-11
+Last checked: 2026-07-18
 
 Status legend:
 
@@ -79,7 +79,7 @@ Status legend:
 | AppBar icon themes demo | `src/Sample/Plumix.Sample/Demos/Material/AppBarIconThemeDemoPage.cs` | `dart_sample/lib/demos/material/app_bar_icon_theme_demo_page.dart` | verify-runtime | Runtime probe for `AppBar` icon-theme precedence (`iconTheme` and `actionsIconTheme` with widget/theme/fallback chain) using real `Icon` widgets (`menu`, `close`, `info_outline`) in leading/actions slots. |
 | AppBar text styles demo | `src/Sample/Plumix.Sample/Demos/Material/AppBarTextStylesDemoPage.cs` | `dart_sample/lib/demos/material/app_bar_text_styles_demo_page.dart` | verify-runtime | Runtime probe for `AppBar` text-style precedence (`titleTextStyle`/`toolbarTextStyle` widget override vs theme fallback vs foreground-color defaults) with themed/default preview comparison. |
 | Proxy widgets demo | `src/Sample/Plumix.Sample/Demos/General/ProxyWidgetsDemoPage.cs` | `dart_sample/lib/demos/general/proxy_widgets_demo_page.dart` | verify-runtime | Demonstrates widget-level `Opacity`, `Transform`, and `ClipRect` composition with interactive controls. |
-| AnimatedAlign + AnimatedPadding demo | `src/Sample/Plumix.Sample/Demos/General/AlignDemoPage.cs` | `dart_sample/lib/demos/general/align_demo_page.dart` | verify-runtime | Demonstrates implicit alignment and inset transitions with `easeInOut`, shrink-wrap factors, interrupted target updates, and `onEnd` completion counts. |
+| Implicit animations demo | `src/Sample/Plumix.Sample/Demos/General/AlignDemoPage.cs` | `dart_sample/lib/demos/general/align_demo_page.dart` | verify-runtime | Demonstrates paired `AnimatedAlign`/`AnimatedPadding` and `AnimatedOpacity`/`AnimatedSlide` transitions with `easeInOut`, shrink-wrap factors, size-relative offsets, interrupted target updates, and `onEnd` completion counts. |
 | Stack demo | `src/Sample/Plumix.Sample/Demos/General/StackDemoPage.cs` | `dart_sample/lib/demos/general/stack_demo_page.dart` | verify-runtime | Demonstrates widget-level `Stack` and `Positioned` overlay behavior with movable/pinned badge positioning. |
 | DecoratedBox demo | `src/Sample/Plumix.Sample/Demos/General/DecoratedBoxDemoPage.cs` | `dart_sample/lib/demos/general/decorated_box_demo_page.dart` | verify-runtime | Demonstrates widget-level `DecoratedBox` with `BoxDecoration`, `BorderSide`, and `BorderRadius` controls. |
 | Container demo | `src/Sample/Plumix.Sample/Demos/General/ContainerDemoPage.cs` | `dart_sample/lib/demos/general/container_demo_page.dart` | verify-runtime | Demonstrates `Container` composition with `alignment`, `margin`, `constraints`, and `transform` behavior (including clamp/tighten interaction). |

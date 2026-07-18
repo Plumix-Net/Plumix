@@ -35,6 +35,21 @@ public sealed class BasicWidgetProxyTests
     }
 
     [Fact]
+    public void OpacityWidget_HidesZeroOpacitySemanticsUnlessAlwaysIncluded()
+    {
+        var child = new RenderConstrainedBox(BoxConstraints.TightFor(width: 16, height: 16));
+        var opacity = new RenderOpacity(opacity: 0.0, child: child);
+        int visits = 0;
+
+        opacity.VisitChildrenForSemantics((_, _, _) => visits++);
+        Assert.Equal(0, visits);
+
+        opacity.AlwaysIncludeSemantics = true;
+        opacity.VisitChildrenForSemantics((_, _, _) => visits++);
+        Assert.Equal(1, visits);
+    }
+
+    [Fact]
     public void TransformWidget_CreatesRenderTransform_AndUpdatesTransform()
     {
         var owner = new BuildOwner();

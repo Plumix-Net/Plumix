@@ -8,7 +8,7 @@ Use this block as the fastest machine-readable status summary.
 
 ```yaml
 framework_plan_version: 1
-last_updated: 2026-07-17
+last_updated: 2026-07-18
 north_star: "Flutter-like widget/rendering framework in C# with Avalonia as host infrastructure."
 current_phase: "M4 material library rewrite (theme/scaffold/material controls) in progress."
 status:
@@ -123,6 +123,9 @@ Completion note:
 - Continued implicit-animation parity with paired `AnimatedAlign` + `AnimatedPadding` ports, including Dart-shaped
   constructor/default guards, alignment/factor and inset interpolation, interrupted-transition continuity,
   curve/duration updates, `onEnd`, focused tests, and mirrored C#/Dart runtime probes.
+- Continued implicit-animation parity with paired `AnimatedOpacity` + `AnimatedSlide` ports, including Dart-shaped
+  defaults/guards, opacity semantics policy, fractional paint/hit-test translation, interrupted-transition
+  continuity, curve/duration updates, `onEnd`, focused tests, and mirrored C#/Dart runtime probes.
 
 Completion snapshot:
 

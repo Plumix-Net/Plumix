@@ -19,6 +19,148 @@ public sealed class ImplicitAnimationsTests : IDisposable
     }
 
     [Fact]
+    public void AnimatedOpacity_ValidatesArgumentsAndExposesFlutterDefaults()
+    {
+        var opacity = new AnimatedOpacity(
+            opacity: 0.4,
+            duration: TimeSpan.FromMilliseconds(200));
+
+        Assert.Equal(0.4, opacity.Opacity);
+        Assert.Equal(TimeSpan.FromMilliseconds(200), opacity.Duration);
+        Assert.Null(opacity.Child);
+        Assert.Equal(Curves.Linear(0.3), opacity.Curve(0.3));
+        Assert.Null(opacity.OnEnd);
+        Assert.False(opacity.AlwaysIncludeSemantics);
+        Assert.Throws<ArgumentOutOfRangeException>(() => new AnimatedOpacity(
+            opacity: -0.1,
+            duration: TimeSpan.Zero));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new AnimatedOpacity(
+            opacity: 1.1,
+            duration: TimeSpan.Zero));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new AnimatedOpacity(
+            opacity: double.NaN,
+            duration: TimeSpan.Zero));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new AnimatedOpacity(
+            opacity: 0.5,
+            duration: TimeSpan.FromMilliseconds(-1)));
+    }
+
+    [Fact]
+    public void AnimatedSlide_ExposesFlutterDefaultsAndValidatesDuration()
+    {
+        var slide = new AnimatedSlide(
+            offset: new Vector(0.25, -0.5),
+            duration: TimeSpan.FromMilliseconds(200));
+
+        Assert.Equal(new Vector(0.25, -0.5), slide.Offset);
+        Assert.Equal(TimeSpan.FromMilliseconds(200), slide.Duration);
+        Assert.Null(slide.Child);
+        Assert.Equal(Curves.Linear(0.3), slide.Curve(0.3));
+        Assert.Null(slide.OnEnd);
+        Assert.Throws<ArgumentOutOfRangeException>(() => new AnimatedSlide(
+            offset: default,
+            duration: TimeSpan.FromMilliseconds(-1)));
+    }
+
+    [Fact]
+    public void AnimatedOpacity_InterpolatesFromCurrentValueAndUpdatesSemanticsPolicyImmediately()
+    {
+        int completed = 0;
+        var owner = new BuildOwner();
+        var root = new TestRootElement(new AnimatedOpacity(
+            opacity: 1.0,
+            duration: TimeSpan.FromMilliseconds(200),
+            child: new SizedBox(width: 10, height: 10),
+            onEnd: () => completed++));
+        Mount(root, owner);
+
+        root.Update(new AnimatedOpacity(
+            opacity: 0.0,
+            duration: TimeSpan.FromMilliseconds(200),
+            curve: Curves.Linear,
+            child: new SizedBox(width: 10, height: 10),
+            onEnd: () => completed++));
+        owner.FlushBuild();
+
+        double now = Scheduler.CurrentSeconds;
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
+        owner.FlushBuild();
+        var halfway = RequireRenderObject<RenderOpacity>(root.ChildElement);
+        Assert.InRange(halfway.Opacity, 0.01, 0.99);
+        Assert.False(halfway.AlwaysIncludeSemantics);
+        double halfwayOpacity = halfway.Opacity;
+
+        root.Update(new AnimatedOpacity(
+            opacity: 0.8,
+            duration: TimeSpan.FromMilliseconds(200),
+            curve: Curves.Linear,
+            alwaysIncludeSemantics: true,
+            child: new SizedBox(width: 10, height: 10),
+            onEnd: () => completed++));
+        owner.FlushBuild();
+        var interrupted = RequireRenderObject<RenderOpacity>(root.ChildElement);
+        Assert.Equal(halfwayOpacity, interrupted.Opacity, precision: 6);
+        Assert.True(interrupted.AlwaysIncludeSemantics);
+
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
+        owner.FlushBuild();
+        Assert.Equal(0.8, RequireRenderObject<RenderOpacity>(root.ChildElement).Opacity, precision: 6);
+        Assert.Equal(1, completed);
+
+        root.Unmount();
+    }
+
+    [Fact]
+    public void AnimatedSlide_InterpolatesFractionalOffsetAndCallsOnEnd()
+    {
+        int completed = 0;
+        var owner = new BuildOwner();
+        var root = new TestRootElement(new AnimatedSlide(
+            offset: default,
+            duration: TimeSpan.FromMilliseconds(200),
+            child: new SizedBox(width: 10, height: 10),
+            onEnd: () => completed++));
+        Mount(root, owner);
+
+        root.Update(new AnimatedSlide(
+            offset: new Vector(1.0, -0.5),
+            duration: TimeSpan.FromMilliseconds(200),
+            curve: Curves.Linear,
+            child: new SizedBox(width: 10, height: 10),
+            onEnd: () => completed++));
+        owner.FlushBuild();
+
+        double now = Scheduler.CurrentSeconds;
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
+        owner.FlushBuild();
+        var halfway = RequireRenderObject<RenderFractionalTranslation>(root.ChildElement);
+        Assert.InRange(halfway.Translation.X, 0.01, 0.99);
+        Assert.InRange(halfway.Translation.Y, -0.49, -0.01);
+        Assert.Equal(0, completed);
+        Vector halfwayTranslation = halfway.Translation;
+
+        root.Update(new AnimatedSlide(
+            offset: new Vector(-0.5, 0.75),
+            duration: TimeSpan.FromMilliseconds(200),
+            curve: Curves.Linear,
+            child: new SizedBox(width: 10, height: 10),
+            onEnd: () => completed++));
+        owner.FlushBuild();
+        var interrupted = RequireRenderObject<RenderFractionalTranslation>(root.ChildElement);
+        Assert.Equal(halfwayTranslation.X, interrupted.Translation.X, precision: 6);
+        Assert.Equal(halfwayTranslation.Y, interrupted.Translation.Y, precision: 6);
+
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
+        owner.FlushBuild();
+        Vector finished = RequireRenderObject<RenderFractionalTranslation>(root.ChildElement).Translation;
+        Assert.Equal(-0.5, finished.X, precision: 6);
+        Assert.Equal(0.75, finished.Y, precision: 6);
+        Assert.Equal(1, completed);
+
+        root.Unmount();
+    }
+
+    [Fact]
     public void AnimatedPadding_ValidatesArgumentsAndExposesFlutterDefaults()
     {
         var padding = new AnimatedPadding(

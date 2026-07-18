@@ -137,10 +137,16 @@ public sealed class MaterialAboutTests : IDisposable
         harness.Pump(new Size(640, 480));
         Assert.NotNull(FindParagraph(harness.RenderView, "Dialog app"));
 
+        double now = Scheduler.CurrentSeconds;
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
         var semantics = harness.PumpAndGetSemantics(new Size(640, 480));
         var actionNodes = FindNodes(semantics!, node => node.Actions.HasFlag(SemanticsActions.Tap)).ToArray();
         Assert.True(actionNodes.Length >= 2);
         Assert.True(harness.PerformSemanticsAction(actionNodes[^1].Id, SemanticsActions.Tap));
+        now = Scheduler.CurrentSeconds;
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
         harness.Pump(new Size(640, 480));
         Assert.Null(FindParagraph(harness.RenderView, "Dialog app"));
         Assert.NotNull(FindParagraph(harness.RenderView, "Home"));

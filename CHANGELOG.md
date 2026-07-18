@@ -1,5 +1,11 @@
 # Changelog
 
+- Added paired Flutter core `AnimatedOpacity` + `AnimatedSlide` ports with source-matching defaults,
+  interrupted-transition continuity, curve/duration updates, `onEnd`, semantics policy, focused tests, and mirrored
+  C#/Dart runtime probes. Advanced `Plumix` to `0.2.0-alpha.1`.
+- Breaking: zero-opacity `Opacity` now omits descendant semantics unless `alwaysIncludeSemantics` is enabled,
+  matching Flutter.
+
 - Added paired Material `SelectableText` + `SelectionArea` ports on a shared core selectable-region registrar,
   including glyph-range highlight paint, cross-widget pointer drag, select-all/copy shortcuts,
   `TextSelectionTheme`, focused tests, and mirrored C#/Dart runtime probes. Selection handles, context menus,

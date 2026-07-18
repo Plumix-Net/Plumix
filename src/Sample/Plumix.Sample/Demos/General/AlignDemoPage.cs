@@ -21,6 +21,8 @@ internal sealed class AlignDemoPageState : State
     private Alignment _alignment = Alignment.Center;
     private bool _shrinkWrap;
     private bool _expandedPadding;
+    private bool _faded;
+    private bool _shifted;
     private int _completedAnimations;
 
     public override Widget Build(BuildContext context)
@@ -91,6 +93,47 @@ internal sealed class AlignDemoPageState : State
                                 color: Color.Parse("#FF1D3557"),
                                 child: new Center(
                                     child: new Text("A", fontSize: 16, color: Colors.White))))))),
+                new Text("AnimatedOpacity + AnimatedSlide", fontSize: 20, color: Colors.Black),
+                new Text(
+                    "Fade and move the same child by a size-relative offset; hit testing follows the slide.",
+                    fontSize: 14,
+                    color: Colors.DimGray),
+                new Row(
+                    spacing: 8,
+                    children:
+                    [
+                        BuildButton(
+                            _faded ? "Opacity: 0.2" : "Opacity: 1.0",
+                            ToggleOpacity,
+                            width: 120,
+                            colorHex: "#FFF4E1F0"),
+                        BuildButton(
+                            _shifted ? "Offset: (0.75,-0.5)" : "Offset: zero",
+                            ToggleOffset,
+                            width: 160,
+                            colorHex: "#FFE1F1F4"),
+                    ]),
+                new Container(
+                    width: 220,
+                    height: 110,
+                    color: Color.Parse("#FFF3F5F8"),
+                    child: new Center(
+                        child: new AnimatedSlide(
+                            offset: _shifted ? new Vector(0.75, -0.5) : default,
+                            duration: TimeSpan.FromMilliseconds(350),
+                            curve: Curves.EaseInOut,
+                            onEnd: HandleAnimationEnd,
+                            child: new AnimatedOpacity(
+                                opacity: _faded ? 0.2 : 1.0,
+                                duration: TimeSpan.FromMilliseconds(350),
+                                curve: Curves.EaseInOut,
+                                onEnd: HandleAnimationEnd,
+                                child: new Container(
+                                    width: 72,
+                                    height: 44,
+                                    color: Color.Parse("#FF7B2CBF"),
+                                    child: new Center(
+                                        child: new Text("move", fontSize: 14, color: Colors.White))))))),
             ]);
     }
 
@@ -120,6 +163,16 @@ internal sealed class AlignDemoPageState : State
     private void TogglePadding()
     {
         SetState(() => _expandedPadding = !_expandedPadding);
+    }
+
+    private void ToggleOpacity()
+    {
+        SetState(() => _faded = !_faded);
+    }
+
+    private void ToggleOffset()
+    {
+        SetState(() => _shifted = !_shifted);
     }
 
     private void HandleAnimationEnd()
