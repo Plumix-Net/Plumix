@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
+using Plumix.UI;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/rendering/stack.dart (approximate)
 
@@ -30,20 +31,26 @@ public sealed class StackParentData : ContainerBoxParentData<RenderBox>
         || Height.HasValue;
 }
 
-public sealed class RenderStack : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox, StackParentData>, IRenderObjectContainer
+public sealed class RenderStack : RenderBox,
+    IRenderBoxContainerDefaultsMixin<RenderBox, StackParentData>,
+    IRenderObjectContainer
 {
     private readonly RenderBoxContainerDefaultsMixin<RenderBox, StackParentData> _container;
     private Alignment _alignment;
     private StackFit _fit;
+    private Clip _clipBehavior;
+    private bool _hasVisualOverflow;
 
     public RenderStack(
         List<RenderBox>? children = null,
         Alignment alignment = default,
-        StackFit fit = StackFit.Loose)
+        StackFit fit = StackFit.Loose,
+        Clip clipBehavior = Clip.HardEdge)
     {
         _container = new RenderBoxContainerDefaultsMixin<RenderBox, StackParentData>(this);
         _alignment = alignment;
         _fit = fit;
+        _clipBehavior = clipBehavior;
 
         if (children != null)
         {
@@ -81,6 +88,22 @@ public sealed class RenderStack : RenderBox, IRenderBoxContainerDefaultsMixin<Re
         }
     }
 
+    public Clip ClipBehavior
+    {
+        get => _clipBehavior;
+        set
+        {
+            if (_clipBehavior == value)
+            {
+                return;
+            }
+
+            _clipBehavior = value;
+            MarkNeedsPaint();
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
     public int ChildCount => _container.ChildCount;
     public RenderBox? FirstChild => _container.FirstChild;
     public RenderBox? LastChild => _container.LastChild;
@@ -99,6 +122,8 @@ public sealed class RenderStack : RenderBox, IRenderBoxContainerDefaultsMixin<Re
     protected override void PerformLayout()
     {
         var constraints = Constraints;
+        bool hadVisualOverflow = _hasVisualOverflow;
+        _hasVisualOverflow = false;
         bool hasNonPositionedChild = false;
         double maxWidth = 0.0;
         double maxHeight = 0.0;
@@ -146,21 +171,46 @@ public sealed class RenderStack : RenderBox, IRenderBoxContainerDefaultsMixin<Re
             if (!childParentData.IsPositioned)
             {
                 childParentData.offset = _alignment.AlongOffset(Size, child.Size);
+                _hasVisualOverflow |= ChildOverflows(child, childParentData.offset);
                 continue;
             }
 
             LayoutPositionedChild(child, childParentData);
+            _hasVisualOverflow |= ChildOverflows(child, childParentData.offset);
+        }
+
+        if (hadVisualOverflow != _hasVisualOverflow)
+        {
+            MarkNeedsSemanticsUpdate();
         }
     }
 
     public override void Paint(PaintingContext ctx, Point offset)
     {
+        if (_hasVisualOverflow && ClipBehavior != Clip.None)
+        {
+            ctx.PushClipRect(new Rect(offset, Size), clippedContext => DefaultPaint(clippedContext, offset));
+            return;
+        }
+
         DefaultPaint(ctx, offset);
     }
 
     protected override bool HitTestChildren(BoxHitTestResult result, Point position)
     {
         return DefaultHitTestChildren(result, position);
+    }
+
+    protected override Rect? DescribeApproximatePaintClip(RenderObject? child)
+    {
+        return _hasVisualOverflow && ClipBehavior != Clip.None
+            ? new Rect(new Point(), Size)
+            : null;
+    }
+
+    protected override Rect? DescribeSemanticsClip(RenderObject? child)
+    {
+        return DescribeApproximatePaintClip(child);
     }
 
     public override void VisitChildren(Action<RenderObject> visitor)
@@ -258,5 +308,13 @@ public sealed class RenderStack : RenderBox, IRenderBoxContainerDefaultsMixin<Re
         }
 
         return null;
+    }
+
+    private bool ChildOverflows(RenderBox child, Point offset)
+    {
+        return offset.X < 0.0
+               || offset.Y < 0.0
+               || offset.X + child.Size.Width > Size.Width
+               || offset.Y + child.Size.Height > Size.Height;
     }
 }

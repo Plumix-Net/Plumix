@@ -140,6 +140,11 @@ Completion note:
   including Dart-shaped defaults, immediate non-animated text/shape fields, inherited text layout options,
   physical surface fill/shadow/clip paint, optional color/shadow interpolation, interrupted-transition continuity,
   curve/duration updates, `onEnd`, focused tests, and mirrored C#/Dart runtime probes.
+- Continued transition-control parity with paired `AnimatedSwitcher` + `AnimatedCrossFade` ports, including
+  Dart-shaped keyed outgoing-entry retention, replaceable transition/layout builders, separate forward/reverse
+  durations and curves, reversible opacity/size choreography, bottom-child interaction isolation, `onEnd`, focused
+  tests, and mirrored C#/Dart runtime probes. Source-required generic animation/listener, fade-transition,
+  exclude-semantics, ticker-mode, and Stack clipping surfaces now live in core.
 - Implicit-animations sample viewport hardening: both samples now share an always-visible scrollbar and scroll
   controller around the complete probe column, preventing bottom overflow on short desktop windows.
 

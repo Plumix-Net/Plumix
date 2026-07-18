@@ -1129,21 +1129,26 @@ public sealed class Stack : MultiChildRenderObjectWidget
         IReadOnlyList<Widget>? children = null,
         Alignment alignment = default,
         StackFit fit = StackFit.Loose,
+        Clip clipBehavior = Clip.HardEdge,
         Key? key = null) : base(children, key)
     {
         Alignment = alignment;
         Fit = fit;
+        ClipBehavior = clipBehavior;
     }
 
     public Alignment Alignment { get; }
 
     public StackFit Fit { get; }
 
+    public Clip ClipBehavior { get; }
+
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderStack(
             alignment: Alignment,
-            fit: Fit);
+            fit: Fit,
+            clipBehavior: ClipBehavior);
     }
 
     internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
@@ -1151,6 +1156,7 @@ public sealed class Stack : MultiChildRenderObjectWidget
         var stack = (RenderStack)renderObject;
         stack.Alignment = Alignment;
         stack.Fit = Fit;
+        stack.ClipBehavior = ClipBehavior;
     }
 }
 

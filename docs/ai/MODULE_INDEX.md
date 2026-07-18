@@ -110,6 +110,20 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix.Tests/CompositingLayerTests.cs`
   - `src/Plumix.Tests/LayerV2Tests.cs`
 
+### Core Animation and Transitions
+
+- Goal: Flutter-shaped animation values, controller status, transition widgets, and implicit replacement motion.
+- Read First:
+  - `src/Plumix/Animation.cs`
+  - `src/Plumix/AnimationController.cs`
+  - `src/Plumix/Widgets/Transitions.cs`
+  - `src/Plumix/Widgets/AnimatedSwitcher.cs`
+  - `src/Plumix/Widgets/AnimatedSize.cs`
+  - `src/Plumix/Widgets/ImplicitAnimations.cs`
+- Primary Tests:
+  - `src/Plumix.Tests/AnimatedSwitcherTests.cs`
+  - `src/Plumix.Tests/ImplicitAnimationsTests.cs`
+
 ### Images and Decoration Paint
 
 - Goal: Flutter-like image resolution, caching, stream lifetime, and decoration paint geometry.

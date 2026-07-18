@@ -1,6 +1,7 @@
 using System;
 using Avalonia;
 using Avalonia.Media;
+using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.Widgets;
 using MaterialScrollbar = Plumix.Material.Scrollbar;
@@ -30,6 +31,8 @@ internal sealed class AlignDemoPageState : State
     private bool _rightToLeft;
     private bool _emphasizedText;
     private bool _raisedSurface;
+    private int _switcherValue;
+    private bool _showSecondCrossFade;
     private int _completedAnimations;
     private ScrollController _scrollController = null!;
 
@@ -321,6 +324,70 @@ internal sealed class AlignDemoPageState : State
                             curve: Curves.EaseInOut,
                             onEnd: HandleAnimationEnd),
                     ]),
+                new Text("AnimatedSwitcher + AnimatedCrossFade", fontSize: 20, color: Colors.Black),
+                new Text(
+                    "Rapid keyed replacements keep outgoing switcher children while cross-fade also animates height.",
+                    fontSize: 14,
+                    color: Colors.DimGray),
+                new Row(
+                    spacing: 8,
+                    children:
+                    [
+                        BuildButton(
+                            $"Switcher: {_switcherValue}",
+                            AdvanceSwitcher,
+                            width: 128,
+                            colorHex: "#FFE4EAF4"),
+                        BuildButton(
+                            _showSecondCrossFade ? "Cross-fade: second" : "Cross-fade: first",
+                            ToggleCrossFade,
+                            width: 152,
+                            colorHex: "#FFF3E4D3"),
+                    ]),
+                new Container(
+                    width: 240,
+                    height: 90,
+                    color: Color.Parse("#FFF3F5F8"),
+                    child: new Center(
+                        child: new AnimatedSwitcher(
+                            duration: TimeSpan.FromMilliseconds(350),
+                            reverseDuration: TimeSpan.FromMilliseconds(220),
+                            switchInCurve: Curves.EaseInOut,
+                            switchOutCurve: Curves.EaseInOut,
+                            child: new Container(
+                                key: new ValueKey<int>(_switcherValue),
+                                width: 96,
+                                height: 48,
+                                color: _switcherValue % 2 == 0
+                                    ? Color.Parse("#FF315A7D")
+                                    : Color.Parse("#FF9C4F63"),
+                                child: new Center(
+                                    child: new Text(
+                                        $"child {_switcherValue}",
+                                        fontSize: 13,
+                                        color: Colors.White)))))),
+                new AnimatedCrossFade(
+                    firstChild: new Container(
+                        width: 240,
+                        height: 54,
+                        color: Color.Parse("#FFDCEBF2"),
+                        child: new Center(
+                            child: new Text("first / 54", fontSize: 13, color: Colors.Black))),
+                    secondChild: new Container(
+                        width: 240,
+                        height: 92,
+                        color: Color.Parse("#FFF2D9DF"),
+                        child: new Center(
+                            child: new Text("second / 92", fontSize: 13, color: Colors.Black))),
+                    crossFadeState: _showSecondCrossFade
+                        ? CrossFadeState.ShowSecond
+                        : CrossFadeState.ShowFirst,
+                    duration: TimeSpan.FromMilliseconds(350),
+                    reverseDuration: TimeSpan.FromMilliseconds(260),
+                    firstCurve: Curves.EaseInOut,
+                    secondCurve: Curves.EaseInOut,
+                    sizeCurve: Curves.EaseInOut,
+                    onEnd: HandleAnimationEnd),
             ]);
     }
 
@@ -390,6 +457,16 @@ internal sealed class AlignDemoPageState : State
     private void TogglePhysicalModel()
     {
         SetState(() => _raisedSurface = !_raisedSurface);
+    }
+
+    private void AdvanceSwitcher()
+    {
+        SetState(() => _switcherValue++);
+    }
+
+    private void ToggleCrossFade()
+    {
+        SetState(() => _showSecondCrossFade = !_showSecondCrossFade);
     }
 
     private void HandleAnimationEnd()

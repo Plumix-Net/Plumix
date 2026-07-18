@@ -109,13 +109,20 @@ public sealed class RectTween : Tween<Rect>
     }
 }
 
-public sealed class AnimationController : IDisposable
+public sealed class AnimationController : Animation<double>, IDisposable
 {
     public event Action? Changed;
     public event Action? Completed;
     public event Action? Dismissed;
+    private event Action<AnimationStatus>? StatusChanged;
 
-    public double Value { get; private set; } // 0..1
+    private double _value;
+    private AnimationStatus _status = AnimationStatus.Dismissed;
+
+    public override double Value => _value;
+
+    public override AnimationStatus Status => _status;
+
     public bool IsAnimating { get; private set; }
     private TimeSpan _duration;
     public TimeSpan Duration
@@ -124,6 +131,8 @@ public sealed class AnimationController : IDisposable
         set => _duration = value <= TimeSpan.Zero ? TimeSpan.FromMilliseconds(1) : value;
     }
     public Curve Curve { get; set; } = Curves.Linear;
+
+    public TimeSpan? ReverseDuration { get; set; }
 
     private readonly Ticker _ticker;
     private bool _reversing;
@@ -138,19 +147,21 @@ public sealed class AnimationController : IDisposable
 
     public void Forward(double? from = null)
     {
-        if (from.HasValue) Value = Math.Clamp(from.Value, 0, 1);
+        if (from.HasValue) SetValue(from.Value);
         _reversing = false;
         _repeat = false;
         _repeatReverse = false;
+        SetStatus(AnimationStatus.Forward);
         Start();
     }
 
     public void Reverse(double? from = null)
     {
-        if (from.HasValue) Value = Math.Clamp(from.Value, 0, 1);
+        if (from.HasValue) SetValue(from.Value);
         _reversing = true;
         _repeat = false;
         _repeatReverse = false;
+        SetStatus(AnimationStatus.Reverse);
         Start();
     }
 
@@ -159,6 +170,7 @@ public sealed class AnimationController : IDisposable
         _repeat = true;
         _repeatReverse = reverse;
         _reversing = false;
+        SetStatus(AnimationStatus.Forward);
         Start();
     }
 
@@ -168,12 +180,40 @@ public sealed class AnimationController : IDisposable
         _ticker.Stop();
     }
 
-    internal void SetValue(double value)
+    public void SetValue(double value)
     {
         double next = Math.Clamp(value, 0, 1);
-        if (Math.Abs(Value - next) <= 0.000001) return;
-        Value = next;
+        if (Math.Abs(_value - next) <= 0.000001) return;
+        _value = next;
+        if (!IsAnimating)
+        {
+            SetStatus(next <= 0.0
+                ? AnimationStatus.Dismissed
+                : next >= 1.0
+                    ? AnimationStatus.Completed
+                    : _status);
+        }
         Changed?.Invoke();
+    }
+
+    public override void AddListener(Action listener)
+    {
+        Changed += listener;
+    }
+
+    public override void RemoveListener(Action listener)
+    {
+        Changed -= listener;
+    }
+
+    public override void AddStatusListener(Action<AnimationStatus> listener)
+    {
+        StatusChanged += listener;
+    }
+
+    public override void RemoveStatusListener(Action<AnimationStatus> listener)
+    {
+        StatusChanged -= listener;
     }
 
     private void Start()
@@ -185,10 +225,11 @@ public sealed class AnimationController : IDisposable
 
     private void OnTick(TimeSpan dt)
     {
-        double delta = dt.TotalSeconds / Duration.TotalSeconds;
+        TimeSpan effectiveDuration = _reversing ? ReverseDuration ?? Duration : Duration;
+        double delta = dt.TotalSeconds / effectiveDuration.TotalSeconds;
         if (_reversing) delta = -delta;
 
-        double raw = Value + delta;
+        double raw = _value + delta;
         if (_repeat)
         {
             if (_repeatReverse)
@@ -198,11 +239,13 @@ public sealed class AnimationController : IDisposable
                 {
                     raw = 2 - raw;
                     _reversing = true;
+                    SetStatus(AnimationStatus.Reverse);
                 }
                 else if (raw <= 0)
                 {
                     raw = -raw;
                     _reversing = false;
+                    SetStatus(AnimationStatus.Forward);
                 }
             }
             else
@@ -215,8 +258,9 @@ public sealed class AnimationController : IDisposable
         {
             if (raw >= 1.0)
             {
-                Value = 1.0;
+                _value = 1.0;
                 Changed?.Invoke();
+                SetStatus(AnimationStatus.Completed);
                 Completed?.Invoke();
                 Stop();
                 return;
@@ -224,19 +268,31 @@ public sealed class AnimationController : IDisposable
 
             if (raw <= 0.0)
             {
-                Value = 0.0;
+                _value = 0.0;
                 Changed?.Invoke();
+                SetStatus(AnimationStatus.Dismissed);
                 Dismissed?.Invoke();
                 Stop();
                 return;
             }
         }
 
-        Value = Math.Clamp(raw, 0, 1);
+        _value = Math.Clamp(raw, 0, 1);
         Changed?.Invoke();
     }
 
     public double Evaluate() => Curve(Math.Clamp(Value, 0, 1));
 
     public void Dispose() => Stop();
+
+    private void SetStatus(AnimationStatus status)
+    {
+        if (_status == status)
+        {
+            return;
+        }
+
+        _status = status;
+        StatusChanged?.Invoke(status);
+    }
 }

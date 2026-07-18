@@ -21,6 +21,8 @@ class _AlignDemoPageState extends State<AlignDemoPage> {
   bool _rightToLeft = false;
   bool _emphasizedText = false;
   bool _raisedSurface = false;
+  int _switcherValue = 0;
+  bool _showSecondCrossFade = false;
   int _completedAnimations = 0;
   late final ScrollController _scrollController;
 
@@ -396,6 +398,96 @@ class _AlignDemoPageState extends State<AlignDemoPage> {
                 ),
               ],
             ),
+            const Text(
+              'AnimatedSwitcher + AnimatedCrossFade',
+              style: TextStyle(fontSize: 20, color: Colors.black),
+            ),
+            const Text(
+              'Rapid keyed replacements keep outgoing switcher children while cross-fade also animates height.',
+              style: TextStyle(fontSize: 14, color: Colors.black54),
+            ),
+            Row(
+              spacing: 8,
+              children: <Widget>[
+                _buildButton(
+                  label: 'Switcher: $_switcherValue',
+                  onTap: _advanceSwitcher,
+                  width: 128,
+                  background: const Color(0xFFE4EAF4),
+                ),
+                _buildButton(
+                  label: _showSecondCrossFade
+                      ? 'Cross-fade: second'
+                      : 'Cross-fade: first',
+                  onTap: _toggleCrossFade,
+                  width: 152,
+                  background: const Color(0xFFF3E4D3),
+                ),
+              ],
+            ),
+            Container(
+              width: 240,
+              height: 90,
+              color: const Color(0xFFF3F5F8),
+              child: Center(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 350),
+                  reverseDuration: const Duration(milliseconds: 220),
+                  switchInCurve: Curves.easeInOut,
+                  switchOutCurve: Curves.easeInOut,
+                  child: Container(
+                    key: ValueKey<int>(_switcherValue),
+                    width: 96,
+                    height: 48,
+                    color: _switcherValue.isEven
+                        ? const Color(0xFF315A7D)
+                        : const Color(0xFF9C4F63),
+                    child: Center(
+                      child: Text(
+                        'child $_switcherValue',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            AnimatedCrossFade(
+              firstChild: Container(
+                width: 240,
+                height: 54,
+                color: const Color(0xFFDCEBF2),
+                child: const Center(
+                  child: Text(
+                    'first / 54',
+                    style: TextStyle(fontSize: 13, color: Colors.black),
+                  ),
+                ),
+              ),
+              secondChild: Container(
+                width: 240,
+                height: 92,
+                color: const Color(0xFFF2D9DF),
+                child: const Center(
+                  child: Text(
+                    'second / 92',
+                    style: TextStyle(fontSize: 13, color: Colors.black),
+                  ),
+                ),
+              ),
+              crossFadeState: _showSecondCrossFade
+                  ? CrossFadeState.showSecond
+                  : CrossFadeState.showFirst,
+              duration: const Duration(milliseconds: 350),
+              reverseDuration: const Duration(milliseconds: 260),
+              firstCurve: Curves.easeInOut,
+              secondCurve: Curves.easeInOut,
+              sizeCurve: Curves.easeInOut,
+              onEnd: _handleAnimationEnd,
+            ),
           ],
         ),
       ),
@@ -484,6 +576,18 @@ class _AlignDemoPageState extends State<AlignDemoPage> {
   void _togglePhysicalModel() {
     setState(() {
       _raisedSurface = !_raisedSurface;
+    });
+  }
+
+  void _advanceSwitcher() {
+    setState(() {
+      _switcherValue += 1;
+    });
+  }
+
+  void _toggleCrossFade() {
+    setState(() {
+      _showSecondCrossFade = !_showSecondCrossFade;
     });
   }
 

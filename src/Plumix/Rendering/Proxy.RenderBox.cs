@@ -103,6 +103,40 @@ public abstract class RenderProxyBox : RenderBox, IRenderObjectSingleChildContai
     }
 }
 
+public sealed class RenderExcludeSemantics : RenderProxyBox
+{
+    private bool _excluding;
+
+    public RenderExcludeSemantics(bool excluding = true, RenderBox? child = null)
+    {
+        _excluding = excluding;
+        Child = child;
+    }
+
+    public bool Excluding
+    {
+        get => _excluding;
+        set
+        {
+            if (_excluding == value)
+            {
+                return;
+            }
+
+            _excluding = value;
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
+    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    {
+        if (!_excluding)
+        {
+            base.VisitChildrenForSemantics(visitor);
+        }
+    }
+}
+
 public sealed class RenderConstrainedBox : RenderProxyBox
 {
     private BoxConstraints _additionalConstraints;

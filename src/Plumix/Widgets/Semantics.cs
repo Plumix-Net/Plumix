@@ -151,3 +151,27 @@ public sealed class MergeSemantics : StatelessWidget
             container: true);
     }
 }
+
+// Dart parity source: flutter/packages/flutter/lib/src/widgets/basic.dart (ExcludeSemantics)
+public sealed class ExcludeSemantics : SingleChildRenderObjectWidget
+{
+    public ExcludeSemantics(
+        Widget? child = null,
+        bool excluding = true,
+        Key? key = null) : base(child, key)
+    {
+        Excluding = excluding;
+    }
+
+    public bool Excluding { get; }
+
+    internal override RenderObject CreateRenderObject(BuildContext context)
+    {
+        return new RenderExcludeSemantics(Excluding);
+    }
+
+    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    {
+        ((RenderExcludeSemantics)renderObject).Excluding = Excluding;
+    }
+}

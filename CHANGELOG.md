@@ -1,5 +1,13 @@
 # Changelog
 
+- Added paired Flutter core `AnimatedSwitcher` + `AnimatedCrossFade` ports with keyed rapid-replacement retention,
+  customizable transition/layout builders, independent forward/reverse durations and curves, reversible two-child
+  fade/size choreography, focus/pointer/semantics isolation, `onEnd`, focused tests, and mirrored C#/Dart runtime
+  probes. Added source-required `Animation<T>`, `CurvedAnimation`, `FadeTransition`, `TickerMode`, and
+  `ExcludeSemantics` primitives; advanced `Plumix` to `0.5.0-alpha.1`.
+- Breaking: `Stack` now defaults to Flutter's `Clip.hardEdge` overflow policy and exposes `clipBehavior`; pass
+  `Clip.none` to preserve the previous unclipped behavior.
+
 - Added paired Flutter core `AnimatedDefaultTextStyle` + `AnimatedPhysicalModel` ports with source-matching API
   defaults, immediate non-animated text/shape fields, interrupted-transition continuity, optional color/shadow
   animation, `onEnd`, focused text/layout/paint tests, and mirrored C#/Dart runtime probes. Added the source-required
