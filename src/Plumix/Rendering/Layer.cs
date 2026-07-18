@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/rendering/layer.dart (approximate)
 
@@ -104,10 +105,23 @@ public sealed class OpacityOffsetLayer : OffsetLayer
 public sealed class TransformOffsetLayer : OffsetLayer
 {
     public Matrix Transform { get; set; } = Matrix.Identity;
+    public FilterQuality? FilterQuality { get; set; }
 
     internal override void AddToScene(DrawingContext context, Point offset)
     {
         var sceneOffset = offset + Offset;
+        using IDisposable? renderOptions = FilterQuality.HasValue
+            ? context.PushRenderOptions(new RenderOptions
+            {
+                BitmapInterpolationMode = FilterQuality.Value switch
+                {
+                    Rendering.FilterQuality.None => BitmapInterpolationMode.None,
+                    Rendering.FilterQuality.Low => BitmapInterpolationMode.LowQuality,
+                    Rendering.FilterQuality.High => BitmapInterpolationMode.HighQuality,
+                    _ => BitmapInterpolationMode.MediumQuality,
+                }
+            })
+            : null;
         using (context.PushTransform(Matrix.CreateTranslation(sceneOffset.X, sceneOffset.Y)))
         using (context.PushTransform(Transform))
         {

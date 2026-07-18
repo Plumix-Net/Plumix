@@ -1,5 +1,9 @@
 # Changelog
 
+- Added paired Flutter core `AnimatedScale` + `AnimatedRotation` ports with source-matching defaults,
+  centered/custom transform origins, `filterQuality` propagation, interrupted-transition continuity,
+  curve/duration updates, `onEnd`, focused tests, and mirrored C#/Dart runtime probes.
+
 - Added paired Flutter core `AnimatedOpacity` + `AnimatedSlide` ports with source-matching defaults,
   interrupted-transition continuity, curve/duration updates, `onEnd`, semantics policy, focused tests, and mirrored
   C#/Dart runtime probes. Advanced `Plumix` to `0.2.0-alpha.1`.

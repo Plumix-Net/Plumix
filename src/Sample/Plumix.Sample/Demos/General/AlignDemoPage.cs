@@ -23,6 +23,8 @@ internal sealed class AlignDemoPageState : State
     private bool _expandedPadding;
     private bool _faded;
     private bool _shifted;
+    private bool _scaled;
+    private bool _rotated;
     private int _completedAnimations;
 
     public override Widget Build(BuildContext context)
@@ -134,6 +136,51 @@ internal sealed class AlignDemoPageState : State
                                     color: Color.Parse("#FF7B2CBF"),
                                     child: new Center(
                                         child: new Text("move", fontSize: 14, color: Colors.White))))))),
+                new Text("AnimatedScale + AnimatedRotation", fontSize: 20, color: Colors.Black),
+                new Text(
+                    "Scale and rotate around a bottom-right pivot; transform filtering follows the animated child.",
+                    fontSize: 14,
+                    color: Colors.DimGray),
+                new Row(
+                    spacing: 8,
+                    children:
+                    [
+                        BuildButton(
+                            _scaled ? "Scale: 1.6" : "Scale: 1.0",
+                            ToggleScale,
+                            width: 120,
+                            colorHex: "#FFE8E0F4"),
+                        BuildButton(
+                            _rotated ? "Turns: 0.125" : "Turns: 0",
+                            ToggleRotation,
+                            width: 128,
+                            colorHex: "#FFF7E6CF"),
+                    ]),
+                new Container(
+                    width: 220,
+                    height: 130,
+                    color: Color.Parse("#FFF3F5F8"),
+                    child: new Center(
+                        child: new AnimatedRotation(
+                            turns: _rotated ? 0.125 : 0,
+                            duration: TimeSpan.FromMilliseconds(350),
+                            alignment: Alignment.BottomRight,
+                            filterQuality: FilterQuality.High,
+                            curve: Curves.EaseInOut,
+                            onEnd: HandleAnimationEnd,
+                            child: new AnimatedScale(
+                                scale: _scaled ? 1.6 : 1,
+                                duration: TimeSpan.FromMilliseconds(350),
+                                alignment: Alignment.BottomRight,
+                                filterQuality: FilterQuality.High,
+                                curve: Curves.EaseInOut,
+                                onEnd: HandleAnimationEnd,
+                                child: new Container(
+                                    width: 72,
+                                    height: 44,
+                                    color: Color.Parse("#FFB85C38"),
+                                    child: new Center(
+                                        child: new Text("turn", fontSize: 14, color: Colors.White))))))),
             ]);
     }
 
@@ -173,6 +220,16 @@ internal sealed class AlignDemoPageState : State
     private void ToggleOffset()
     {
         SetState(() => _shifted = !_shifted);
+    }
+
+    private void ToggleScale()
+    {
+        SetState(() => _scaled = !_scaled);
+    }
+
+    private void ToggleRotation()
+    {
+        SetState(() => _rotated = !_rotated);
     }
 
     private void HandleAnimationEnd()

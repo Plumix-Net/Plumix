@@ -450,8 +450,8 @@ class SampleGalleryScreen extends StatelessWidget {
         ),
         SampleRouteDefinition(
           routeName: SampleRoutes.align,
-          title: 'AnimatedAlign + AnimatedPadding',
-          subtitle: 'implicit alignment/inset transitions + shrink factors',
+          title: 'Implicit animations',
+          subtitle: 'align + padding + opacity + slide + scale + rotation',
           builder: () => const AlignDemoPage(),
         ),
         SampleRouteDefinition(

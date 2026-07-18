@@ -184,8 +184,8 @@ internal sealed class SampleGalleryScreen : StatelessWidget
         new(SampleRoutes.ProxyWidgets, "Proxy widgets", "Opacity + Transform + ClipRect composition", () => new ProxyWidgetsDemoPage()),
         new(
             SampleRoutes.Align,
-            "AnimatedAlign + AnimatedPadding",
-            "implicit alignment/inset transitions + shrink factors",
+            "Implicit animations",
+            "align + padding + opacity + slide + scale + rotation",
             () => new AlignDemoPage()),
         new(SampleRoutes.Stack, "Stack + Positioned", "multi-child overlay layout", () => new StackDemoPage()),
         new(SampleRoutes.DecoratedBox, "DecoratedBox", "border + radius + fill decoration", () => new DecoratedBoxDemoPage()),

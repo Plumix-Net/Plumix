@@ -259,7 +259,11 @@ public sealed class CompositingLayerTests
     public void RenderTransform_UpdatesLayerTransform_WithoutRepaintingChild()
     {
         var leaf = new TestLeafRenderBox();
-        var transform = new RenderTransform(Matrix.CreateTranslation(8, 4), leaf);
+        var transform = new RenderTransform(
+            Matrix.CreateTranslation(8, 4),
+            alignment: null,
+            child: leaf,
+            filterQuality: FilterQuality.Low);
         var root = new RenderView
         {
             Child = transform
@@ -275,13 +279,16 @@ public sealed class CompositingLayerTests
         Assert.Equal(1, leaf.PaintCount);
         var transformLayer = Assert.IsType<TransformOffsetLayer>(Assert.Single(pipeline.RootLayer.Children));
         Assert.Equal(Matrix.CreateTranslation(8, 4), transformLayer.Transform);
+        Assert.Equal(FilterQuality.Low, transformLayer.FilterQuality);
 
         transform.Transform = Matrix.CreateTranslation(21, 13);
+        transform.FilterQuality = FilterQuality.High;
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
 
         Assert.Equal(1, leaf.PaintCount);
         Assert.Equal(Matrix.CreateTranslation(21, 13), transformLayer.Transform);
+        Assert.Equal(FilterQuality.High, transformLayer.FilterQuality);
     }
 
     [Fact]

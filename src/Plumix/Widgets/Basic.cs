@@ -492,18 +492,21 @@ public sealed class Transform : SingleChildRenderObjectWidget
         Matrix transform,
         Widget? child = null,
         Alignment? alignment = null,
+        FilterQuality? filterQuality = null,
         Key? key = null) : base(child, key)
     {
         Matrix = transform;
         Alignment = alignment;
+        FilterQuality = filterQuality;
     }
 
     public Matrix Matrix { get; }
     public Alignment? Alignment { get; }
+    public FilterQuality? FilterQuality { get; }
 
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
-        return new RenderTransform(Matrix, Alignment, child: null);
+        return new RenderTransform(Matrix, Alignment, child: null, FilterQuality);
     }
 
     internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
@@ -511,6 +514,7 @@ public sealed class Transform : SingleChildRenderObjectWidget
         var transform = (RenderTransform)renderObject;
         transform.Transform = Matrix;
         transform.Alignment = Alignment;
+        transform.FilterQuality = FilterQuality;
     }
 }
 

@@ -15,6 +15,8 @@ class _AlignDemoPageState extends State<AlignDemoPage> {
   bool _expandedPadding = false;
   bool _faded = false;
   bool _shifted = false;
+  bool _scaled = false;
+  bool _rotated = false;
   int _completedAnimations = 0;
 
   @override
@@ -164,6 +166,65 @@ class _AlignDemoPageState extends State<AlignDemoPage> {
             ),
           ),
         ),
+        const Text(
+          'AnimatedScale + AnimatedRotation',
+          style: TextStyle(fontSize: 20, color: Colors.black),
+        ),
+        const Text(
+          'Scale and rotate around a bottom-right pivot; transform filtering follows the animated child.',
+          style: TextStyle(fontSize: 14, color: Colors.black54),
+        ),
+        Row(
+          spacing: 8,
+          children: <Widget>[
+            _buildButton(
+              label: _scaled ? 'Scale: 1.6' : 'Scale: 1.0',
+              onTap: _toggleScale,
+              width: 120,
+              background: const Color(0xFFE8E0F4),
+            ),
+            _buildButton(
+              label: _rotated ? 'Turns: 0.125' : 'Turns: 0',
+              onTap: _toggleRotation,
+              width: 128,
+              background: const Color(0xFFF7E6CF),
+            ),
+          ],
+        ),
+        Container(
+          width: 220,
+          height: 130,
+          color: const Color(0xFFF3F5F8),
+          child: Center(
+            child: AnimatedRotation(
+              turns: _rotated ? 0.125 : 0,
+              duration: const Duration(milliseconds: 350),
+              alignment: Alignment.bottomRight,
+              filterQuality: FilterQuality.high,
+              curve: Curves.easeInOut,
+              onEnd: _handleAnimationEnd,
+              child: AnimatedScale(
+                scale: _scaled ? 1.6 : 1,
+                duration: const Duration(milliseconds: 350),
+                alignment: Alignment.bottomRight,
+                filterQuality: FilterQuality.high,
+                curve: Curves.easeInOut,
+                onEnd: _handleAnimationEnd,
+                child: Container(
+                  width: 72,
+                  height: 44,
+                  color: const Color(0xFFB85C38),
+                  child: const Center(
+                    child: Text(
+                      'turn',
+                      style: TextStyle(fontSize: 14, color: Colors.white),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -214,6 +275,18 @@ class _AlignDemoPageState extends State<AlignDemoPage> {
   void _toggleOffset() {
     setState(() {
       _shifted = !_shifted;
+    });
+  }
+
+  void _toggleScale() {
+    setState(() {
+      _scaled = !_scaled;
+    });
+  }
+
+  void _toggleRotation() {
+    setState(() {
+      _rotated = !_rotated;
     });
   }
 

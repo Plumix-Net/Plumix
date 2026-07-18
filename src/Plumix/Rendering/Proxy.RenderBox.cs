@@ -1610,11 +1610,17 @@ public sealed class RenderTransform : RenderProxyBox
 {
     private Matrix _transform;
     private Alignment? _alignment;
+    private FilterQuality? _filterQuality;
 
-    public RenderTransform(Matrix transform, Alignment? alignment, RenderBox? child)
+    public RenderTransform(
+        Matrix transform,
+        Alignment? alignment,
+        RenderBox? child,
+        FilterQuality? filterQuality = null)
     {
         _transform = transform;
         _alignment = alignment;
+        _filterQuality = filterQuality;
         Child = child;
     }
 
@@ -1631,6 +1637,20 @@ public sealed class RenderTransform : RenderProxyBox
             _alignment = value;
             MarkNeedsCompositedLayerUpdate();
             MarkNeedsSemanticsUpdate();
+        }
+    }
+
+    public FilterQuality? FilterQuality
+    {
+        get => _filterQuality;
+        set
+        {
+            if (_filterQuality == value) return;
+            _filterQuality = value;
+            if (Child != null)
+            {
+                MarkNeedsCompositedLayerUpdate();
+            }
         }
     }
 
@@ -1689,6 +1709,7 @@ public sealed class RenderTransform : RenderProxyBox
         if (layer is TransformOffsetLayer transformLayer)
         {
             transformLayer.Transform = EffectiveTransform;
+            transformLayer.FilterQuality = FilterQuality;
         }
     }
 

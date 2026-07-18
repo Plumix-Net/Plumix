@@ -201,6 +201,247 @@ public sealed class AnimatedSlide : StatefulWidget
     }
 }
 
+public sealed class AnimatedScale : StatefulWidget
+{
+    public AnimatedScale(
+        double scale,
+        TimeSpan duration,
+        Widget? child = null,
+        Alignment alignment = default,
+        FilterQuality? filterQuality = null,
+        Curve? curve = null,
+        Action? onEnd = null,
+        Key? key = null) : base(key)
+    {
+        if (duration < TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(duration));
+        }
+
+        Scale = scale;
+        Duration = duration;
+        Child = child;
+        Alignment = alignment;
+        FilterQuality = filterQuality;
+        Curve = curve ?? Curves.Linear;
+        OnEnd = onEnd;
+    }
+
+    public double Scale { get; }
+
+    public TimeSpan Duration { get; }
+
+    public Widget? Child { get; }
+
+    public Alignment Alignment { get; }
+
+    public FilterQuality? FilterQuality { get; }
+
+    public Curve Curve { get; }
+
+    public Action? OnEnd { get; }
+
+    public override State CreateState() => new AnimatedScaleState();
+
+    private sealed class AnimatedScaleState : State
+    {
+        private AnimationController? _controller;
+        private double _begin;
+        private double _end;
+
+        private AnimatedScale CurrentWidget => (AnimatedScale)StateWidget;
+
+        public override void InitState()
+        {
+            _begin = _end = CurrentWidget.Scale;
+            CreateController();
+        }
+
+        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        {
+            _controller!.Duration = CurrentWidget.Duration;
+            _controller.Curve = CurrentWidget.Curve;
+            double current = Evaluate(_controller.Evaluate());
+            if (CurrentWidget.Scale != _end)
+            {
+                _begin = current;
+                _end = CurrentWidget.Scale;
+                _controller.Forward(from: 0.0);
+            }
+        }
+
+        public override Widget Build(BuildContext context)
+        {
+            double scale = Evaluate(_controller!.Evaluate());
+            return new Transform(
+                transform: Matrix.CreateScale(scale, scale),
+                alignment: CurrentWidget.Alignment,
+                filterQuality: CurrentWidget.FilterQuality,
+                child: CurrentWidget.Child);
+        }
+
+        public override void Dispose()
+        {
+            DisposeController();
+        }
+
+        private void CreateController()
+        {
+            _controller = new AnimationController(CurrentWidget.Duration) { Curve = CurrentWidget.Curve };
+            _controller.Changed += HandleChanged;
+            _controller.Completed += HandleCompleted;
+        }
+
+        private void DisposeController()
+        {
+            if (_controller is null) return;
+            _controller.Changed -= HandleChanged;
+            _controller.Completed -= HandleCompleted;
+            _controller.Dispose();
+            _controller = null;
+        }
+
+        private double Evaluate(double t) => _begin + ((_end - _begin) * t);
+
+        private void HandleChanged() => SetState(() => { });
+
+        private void HandleCompleted()
+        {
+            SetState(() => { });
+            CurrentWidget.OnEnd?.Invoke();
+        }
+    }
+}
+
+public sealed class AnimatedRotation : StatefulWidget
+{
+    public AnimatedRotation(
+        double turns,
+        TimeSpan duration,
+        Widget? child = null,
+        Alignment alignment = default,
+        FilterQuality? filterQuality = null,
+        Curve? curve = null,
+        Action? onEnd = null,
+        Key? key = null) : base(key)
+    {
+        if (duration < TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(duration));
+        }
+        if (!double.IsFinite(turns))
+        {
+            throw new ArgumentOutOfRangeException(nameof(turns));
+        }
+
+        Turns = turns;
+        Duration = duration;
+        Child = child;
+        Alignment = alignment;
+        FilterQuality = filterQuality;
+        Curve = curve ?? Curves.Linear;
+        OnEnd = onEnd;
+    }
+
+    public double Turns { get; }
+
+    public TimeSpan Duration { get; }
+
+    public Widget? Child { get; }
+
+    public Alignment Alignment { get; }
+
+    public FilterQuality? FilterQuality { get; }
+
+    public Curve Curve { get; }
+
+    public Action? OnEnd { get; }
+
+    public override State CreateState() => new AnimatedRotationState();
+
+    private sealed class AnimatedRotationState : State
+    {
+        private AnimationController? _controller;
+        private double _begin;
+        private double _end;
+
+        private AnimatedRotation CurrentWidget => (AnimatedRotation)StateWidget;
+
+        public override void InitState()
+        {
+            _begin = _end = CurrentWidget.Turns;
+            CreateController();
+        }
+
+        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        {
+            _controller!.Duration = CurrentWidget.Duration;
+            _controller.Curve = CurrentWidget.Curve;
+            double current = Evaluate(_controller.Evaluate());
+            if (CurrentWidget.Turns != _end)
+            {
+                _begin = current;
+                _end = CurrentWidget.Turns;
+                _controller.Forward(from: 0.0);
+            }
+        }
+
+        public override Widget Build(BuildContext context)
+        {
+            double radians = Evaluate(_controller!.Evaluate()) * Math.PI * 2.0;
+            return new Transform(
+                transform: CreateRotationMatrix(radians),
+                alignment: CurrentWidget.Alignment,
+                filterQuality: CurrentWidget.FilterQuality,
+                child: CurrentWidget.Child);
+        }
+
+        public override void Dispose()
+        {
+            DisposeController();
+        }
+
+        private void CreateController()
+        {
+            _controller = new AnimationController(CurrentWidget.Duration) { Curve = CurrentWidget.Curve };
+            _controller.Changed += HandleChanged;
+            _controller.Completed += HandleCompleted;
+        }
+
+        private void DisposeController()
+        {
+            if (_controller is null) return;
+            _controller.Changed -= HandleChanged;
+            _controller.Completed -= HandleCompleted;
+            _controller.Dispose();
+            _controller = null;
+        }
+
+        private double Evaluate(double t) => _begin + ((_end - _begin) * t);
+
+        private static Matrix CreateRotationMatrix(double radians)
+        {
+            if (radians == 0.0) return Matrix.Identity;
+
+            double sine = Math.Sin(radians);
+            if (sine == 1.0) return new Matrix(0, 1, -1, 0, 0, 0);
+            if (sine == -1.0) return new Matrix(0, -1, 1, 0, 0, 0);
+
+            double cosine = Math.Cos(radians);
+            if (cosine == -1.0) return new Matrix(-1, 0, 0, -1, 0, 0);
+            return new Matrix(cosine, sine, -sine, cosine, 0, 0);
+        }
+
+        private void HandleChanged() => SetState(() => { });
+
+        private void HandleCompleted()
+        {
+            SetState(() => { });
+            CurrentWidget.OnEnd?.Invoke();
+        }
+    }
+}
+
 public sealed class AnimatedContainer : StatefulWidget
 {
     public AnimatedContainer(

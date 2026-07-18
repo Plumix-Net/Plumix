@@ -126,6 +126,10 @@ Completion note:
 - Continued implicit-animation parity with paired `AnimatedOpacity` + `AnimatedSlide` ports, including Dart-shaped
   defaults/guards, opacity semantics policy, fractional paint/hit-test translation, interrupted-transition
   continuity, curve/duration updates, `onEnd`, focused tests, and mirrored C#/Dart runtime probes.
+- Continued implicit-animation parity with paired `AnimatedScale` + `AnimatedRotation` ports, including Dart-shaped
+  defaults, centered/custom transform origins, `filterQuality` propagation through the composited transform layer,
+  interrupted-transition continuity, curve/duration updates, `onEnd`, focused tests, and mirrored C#/Dart runtime
+  probes.
 
 Completion snapshot:
 

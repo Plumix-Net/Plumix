@@ -56,6 +56,8 @@ public sealed class BasicWidgetProxyTests
         var root = new TestRootElement(
             new Transform(
                 transform: Matrix.CreateTranslation(12, 6),
+                alignment: Alignment.TopLeft,
+                filterQuality: FilterQuality.Low,
                 child: new SizedBox(width: 20, height: 12)));
 
         root.Attach(owner);
@@ -64,15 +66,21 @@ public sealed class BasicWidgetProxyTests
 
         var renderTransform = RequireRenderObject<RenderTransform>(root.ChildElement);
         Assert.Equal(Matrix.CreateTranslation(12, 6), renderTransform.Transform);
+        Assert.Equal(Alignment.TopLeft, renderTransform.Alignment);
+        Assert.Equal(FilterQuality.Low, renderTransform.FilterQuality);
 
         root.Update(new Transform(
             transform: Matrix.CreateTranslation(30, 18),
+            alignment: Alignment.BottomRight,
+            filterQuality: FilterQuality.High,
             child: new SizedBox(width: 20, height: 12)));
         owner.FlushBuild();
 
         var updatedRenderTransform = RequireRenderObject<RenderTransform>(root.ChildElement);
         Assert.Same(renderTransform, updatedRenderTransform);
         Assert.Equal(Matrix.CreateTranslation(30, 18), updatedRenderTransform.Transform);
+        Assert.Equal(Alignment.BottomRight, updatedRenderTransform.Alignment);
+        Assert.Equal(FilterQuality.High, updatedRenderTransform.FilterQuality);
     }
 
     [Fact]

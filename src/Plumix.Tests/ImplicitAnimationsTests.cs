@@ -161,6 +161,167 @@ public sealed class ImplicitAnimationsTests : IDisposable
     }
 
     [Fact]
+    public void AnimatedScale_ExposesFlutterDefaultsAndValidatesDuration()
+    {
+        var scale = new AnimatedScale(
+            scale: 1.5,
+            duration: TimeSpan.FromMilliseconds(200));
+
+        Assert.Equal(1.5, scale.Scale);
+        Assert.Equal(TimeSpan.FromMilliseconds(200), scale.Duration);
+        Assert.Null(scale.Child);
+        Assert.Equal(Alignment.Center, scale.Alignment);
+        Assert.Null(scale.FilterQuality);
+        Assert.Equal(Curves.Linear(0.3), scale.Curve(0.3));
+        Assert.Null(scale.OnEnd);
+        Assert.Throws<ArgumentOutOfRangeException>(() => new AnimatedScale(
+            scale: 1,
+            duration: TimeSpan.FromMilliseconds(-1)));
+    }
+
+    [Fact]
+    public void AnimatedRotation_ExposesFlutterDefaultsAndValidatesDuration()
+    {
+        var rotation = new AnimatedRotation(
+            turns: 0.25,
+            duration: TimeSpan.FromMilliseconds(200));
+
+        Assert.Equal(0.25, rotation.Turns);
+        Assert.Equal(TimeSpan.FromMilliseconds(200), rotation.Duration);
+        Assert.Null(rotation.Child);
+        Assert.Equal(Alignment.Center, rotation.Alignment);
+        Assert.Null(rotation.FilterQuality);
+        Assert.Equal(Curves.Linear(0.3), rotation.Curve(0.3));
+        Assert.Null(rotation.OnEnd);
+        Assert.Throws<ArgumentOutOfRangeException>(() => new AnimatedRotation(
+            turns: 0,
+            duration: TimeSpan.FromMilliseconds(-1)));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new AnimatedRotation(
+            turns: double.NaN,
+            duration: TimeSpan.Zero));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new AnimatedRotation(
+            turns: double.PositiveInfinity,
+            duration: TimeSpan.Zero));
+    }
+
+    [Fact]
+    public void AnimatedScale_InterpolatesFromCurrentValueAndUpdatesTransformOptionsImmediately()
+    {
+        int completed = 0;
+        var owner = new BuildOwner();
+        var root = new TestRootElement(new AnimatedScale(
+            scale: 1,
+            duration: TimeSpan.FromMilliseconds(200),
+            child: new SizedBox(width: 10, height: 10),
+            onEnd: () => completed++));
+        Mount(root, owner);
+
+        root.Update(new AnimatedScale(
+            scale: 2,
+            duration: TimeSpan.FromMilliseconds(200),
+            curve: Curves.Linear,
+            alignment: Alignment.TopLeft,
+            filterQuality: FilterQuality.Low,
+            child: new SizedBox(width: 10, height: 10),
+            onEnd: () => completed++));
+        owner.FlushBuild();
+
+        double now = Scheduler.CurrentSeconds;
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
+        owner.FlushBuild();
+        var halfway = RequireRenderObject<RenderTransform>(root.ChildElement);
+        Assert.InRange(halfway.Transform.M11, 1.01, 1.99);
+        Assert.Equal(halfway.Transform.M11, halfway.Transform.M22, precision: 6);
+        Assert.Equal(Alignment.TopLeft, halfway.Alignment);
+        Assert.Equal(FilterQuality.Low, halfway.FilterQuality);
+        double halfwayScale = halfway.Transform.M11;
+
+        root.Update(new AnimatedScale(
+            scale: 0.5,
+            duration: TimeSpan.FromMilliseconds(200),
+            curve: Curves.Linear,
+            alignment: Alignment.BottomRight,
+            filterQuality: FilterQuality.High,
+            child: new SizedBox(width: 10, height: 10),
+            onEnd: () => completed++));
+        owner.FlushBuild();
+        var interrupted = RequireRenderObject<RenderTransform>(root.ChildElement);
+        Assert.Equal(halfwayScale, interrupted.Transform.M11, precision: 6);
+        Assert.Equal(Alignment.BottomRight, interrupted.Alignment);
+        Assert.Equal(FilterQuality.High, interrupted.FilterQuality);
+
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
+        owner.FlushBuild();
+        var finished = RequireRenderObject<RenderTransform>(root.ChildElement);
+        Assert.Equal(0.5, finished.Transform.M11, precision: 6);
+        Assert.Equal(0.5, finished.Transform.M22, precision: 6);
+        Assert.Equal(1, completed);
+
+        root.Unmount();
+    }
+
+    [Fact]
+    public void AnimatedRotation_UsesTurnsAndCallsOnEnd()
+    {
+        int completed = 0;
+        var owner = new BuildOwner();
+        var root = new TestRootElement(new AnimatedRotation(
+            turns: 0,
+            duration: TimeSpan.FromMilliseconds(200),
+            child: new SizedBox(width: 10, height: 10),
+            onEnd: () => completed++));
+        Mount(root, owner);
+
+        root.Update(new AnimatedRotation(
+            turns: 0.25,
+            duration: TimeSpan.FromMilliseconds(200),
+            curve: Curves.Linear,
+            child: new SizedBox(width: 10, height: 10),
+            onEnd: () => completed++));
+        owner.FlushBuild();
+
+        double now = Scheduler.CurrentSeconds;
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
+        owner.FlushBuild();
+        Matrix halfway = RequireRenderObject<RenderTransform>(root.ChildElement).Transform;
+        Assert.InRange(halfway.M11, 0.01, 0.99);
+        Assert.InRange(halfway.M12, 0.01, 0.99);
+        Assert.Equal(-halfway.M12, halfway.M21, precision: 6);
+        Assert.Equal(0, completed);
+
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
+        owner.FlushBuild();
+        Matrix finished = RequireRenderObject<RenderTransform>(root.ChildElement).Transform;
+        Assert.Equal(0, finished.M11, precision: 6);
+        Assert.Equal(1, finished.M12, precision: 6);
+        Assert.Equal(-1, finished.M21, precision: 6);
+        Assert.Equal(0, finished.M22, precision: 6);
+        Assert.Equal(1, completed);
+
+        root.Unmount();
+    }
+
+    [Fact]
+    public void AnimatedScaleAndRotation_AllowZeroAreaLayout()
+    {
+        var child = new RenderConstrainedBox(BoxConstraints.TightFor(width: 0, height: 0));
+        var scale = new RenderTransform(
+            Matrix.CreateScale(2, 2),
+            Alignment.Center,
+            child);
+
+        scale.Layout(BoxConstraints.TightFor(width: 0, height: 0));
+        Assert.Equal(default, scale.Size);
+
+        var rotation = new RenderTransform(
+            new Matrix(0, 1, -1, 0, 0, 0),
+            Alignment.Center,
+            scale);
+        rotation.Layout(BoxConstraints.TightFor(width: 0, height: 0));
+        Assert.Equal(default, rotation.Size);
+    }
+
+    [Fact]
     public void AnimatedPadding_ValidatesArgumentsAndExposesFlutterDefaults()
     {
         var padding = new AnimatedPadding(
