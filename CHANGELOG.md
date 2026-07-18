@@ -1,5 +1,10 @@
 # Changelog
 
+- Added paired Flutter core `SlideTransition` + `SizeTransition` ports with source-shaped explicit-animation
+  listener lifecycle, RTL-aware fractional translation, configurable hit-test transforms, clipped main/cross-axis
+  factors, deprecated `axisAlignment` compatibility, full alignment overrides, focused tests, and mirrored C#/Dart
+  runtime probes. Advanced `Plumix` to `0.10.0-alpha.1`.
+
 - Added paired Flutter core `PositionedTransition` + `RelativePositionedTransition` ports with source-shaped
   `AnimatedWidget` listener lifecycle, direct `RelativeRect` insets, declared-size `Rect` conversion, null-rect
   fallback, focused tests, and mirrored C#/Dart runtime probes. Added source-required `RelativeRectTween`,

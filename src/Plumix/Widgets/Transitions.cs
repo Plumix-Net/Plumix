@@ -1,6 +1,7 @@
 using Avalonia;
 using Plumix.Foundation;
 using Plumix.Rendering;
+using Plumix.UI;
 using RelativeRect = Plumix.Rendering.RelativeRect;
 
 namespace Plumix.Widgets;
@@ -55,6 +56,43 @@ public abstract class AnimatedWidget : StatefulWidget
                 SetState(() => { });
             }
         }
+    }
+}
+
+public sealed class SlideTransition : AnimatedWidget
+{
+    public SlideTransition(
+        Animation<Vector> position,
+        bool transformHitTests = true,
+        TextDirection? textDirection = null,
+        Widget? child = null,
+        Key? key = null) : base(position ?? throw new ArgumentNullException(nameof(position)), key)
+    {
+        TransformHitTests = transformHitTests;
+        TextDirection = textDirection;
+        Child = child;
+    }
+
+    public Animation<Vector> Position => (Animation<Vector>)Listenable;
+
+    public bool TransformHitTests { get; }
+
+    public TextDirection? TextDirection { get; }
+
+    public Widget? Child { get; }
+
+    public override Widget Build(BuildContext context)
+    {
+        Vector offset = Position.Value;
+        if (TextDirection == Plumix.UI.TextDirection.Rtl)
+        {
+            offset = new Vector(-offset.X, offset.Y);
+        }
+
+        return new FractionalTranslation(
+            translation: offset,
+            transformHitTests: TransformHitTests,
+            child: Child);
     }
 }
 
@@ -189,6 +227,91 @@ public sealed class RotationTransition : MatrixTransition
         }
 
         return new Matrix(cosine, sine, -sine, cosine, 0, 0);
+    }
+}
+
+public sealed class SizeTransition : AnimatedWidget
+{
+    private readonly double? _axisAlignment;
+
+    public SizeTransition(
+        Animation<double> sizeFactor,
+        Axis axis = Axis.Vertical,
+        double? axisAlignment = null,
+        AlignmentGeometry? alignment = null,
+        double? fixedCrossAxisSizeFactor = null,
+        Widget? child = null,
+        Key? key = null) : base(sizeFactor ?? throw new ArgumentNullException(nameof(sizeFactor)), key)
+    {
+        if (axisAlignment.HasValue && alignment.HasValue)
+        {
+            throw new ArgumentException(
+                "Cannot provide both axisAlignment and alignment because alignment supersedes axisAlignment.",
+                nameof(alignment));
+        }
+
+        if (fixedCrossAxisSizeFactor.HasValue
+            && (double.IsNaN(fixedCrossAxisSizeFactor.Value) || fixedCrossAxisSizeFactor.Value < 0.0))
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(fixedCrossAxisSizeFactor),
+                "The fixed cross-axis size factor must be non-negative.");
+        }
+
+        Axis = axis;
+        _axisAlignment = axisAlignment;
+        Alignment = alignment;
+        FixedCrossAxisSizeFactor = fixedCrossAxisSizeFactor;
+        Child = child;
+    }
+
+    public Axis Axis { get; }
+
+    public Animation<double> SizeFactor => (Animation<double>)Listenable;
+
+    [Obsolete("Use Alignment instead. Alignment provides control over both axes.")]
+    public double? AxisAlignment => _axisAlignment;
+
+    public AlignmentGeometry? Alignment { get; }
+
+    public double? FixedCrossAxisSizeFactor { get; }
+
+    public Widget? Child { get; }
+
+    public override Widget Build(BuildContext context)
+    {
+        Alignment effectiveAlignment = ResolveAlignment(context);
+        double factor = Math.Max(SizeFactor.Value, 0.0);
+
+        return new ClipRect(
+            child: new Align(
+                alignment: effectiveAlignment,
+                heightFactor: Axis == Axis.Vertical ? factor : FixedCrossAxisSizeFactor,
+                widthFactor: Axis == Axis.Horizontal ? factor : FixedCrossAxisSizeFactor,
+                child: Child));
+    }
+
+    private Alignment ResolveAlignment(BuildContext context)
+    {
+        if (!Alignment.HasValue)
+        {
+            return ResolveDirectionalAlignment(context);
+        }
+
+        AlignmentGeometry alignment = Alignment.Value;
+        TextDirection direction = alignment.IsDirectional
+            ? Directionality.Of(context)
+            : Plumix.UI.TextDirection.Ltr;
+        return alignment.Resolve(direction);
+    }
+
+    private Alignment ResolveDirectionalAlignment(BuildContext context)
+    {
+        bool rightToLeft = Directionality.Of(context) == Plumix.UI.TextDirection.Rtl;
+        double logicalX = Axis == Axis.Horizontal ? _axisAlignment ?? 0.0 : -1.0;
+        double resolvedX = rightToLeft ? -logicalX : logicalX;
+        double y = Axis == Axis.Vertical ? _axisAlignment ?? 0.0 : -1.0;
+        return new Alignment(resolvedX, y);
     }
 }
 

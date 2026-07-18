@@ -139,6 +139,10 @@ Completion note:
 - Continued explicit-transition parity with paired `PositionedTransition` + `RelativePositionedTransition` ports,
   including source-shaped animated-listenable lifecycle, direct relative-inset application, declared-size `Rect`
   conversion, null-rect fallback, `RelativeRectTween`, focused tests, and mirrored C#/Dart runtime probes.
+- Continued explicit-transition parity with paired `SlideTransition` + `SizeTransition` ports, including
+  source-shaped animated-listenable lifecycle, RTL-aware fractional offsets, configurable hit-test transforms,
+  non-negative clipped size factors, directional/deprecated axis alignment, fixed cross-axis sizing, focused tests,
+  and mirrored C#/Dart runtime probes.
 - Continued implicit-animation parity with paired `AnimatedPositioned` + `AnimatedPositionedDirectional` ports,
   including Dart-shaped constructors/guards, `fromRect`, physical/logical Stack insets, ambient RTL/LTR resolution,
   nullable-property behavior, interrupted-transition continuity, curve/duration updates, `onEnd`, focused tests,

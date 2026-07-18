@@ -21,6 +21,202 @@ public sealed class TransitionsTests : IDisposable
     }
 
     [Fact]
+    public void SlideTransition_ExposesFlutterDefaultsAndResolvesTextDirection()
+    {
+        var animation = new TestValueAnimation<Vector>(
+            new Vector(0.25, -0.5),
+            AnimationStatus.Forward);
+        var child = new SizedBox(width: 40, height: 20);
+        var transition = new SlideTransition(animation, child: child);
+
+        Assert.Same(animation, transition.Position);
+        Assert.Same(animation, transition.Listenable);
+        Assert.True(transition.TransformHitTests);
+        Assert.Null(transition.TextDirection);
+        Assert.Same(child, transition.Child);
+        Assert.Throws<ArgumentNullException>(() => new SlideTransition(null!));
+
+        var owner = new BuildOwner();
+        var root = new TestRootElement(new SlideTransition(
+            position: animation,
+            transformHitTests: false,
+            textDirection: Plumix.UI.TextDirection.Rtl,
+            child: child));
+        Mount(root, owner);
+
+        var translation = Assert.IsType<RenderFractionalTranslation>(root.ChildElement!.RenderObject);
+        Assert.Equal(new Vector(-0.25, -0.5), translation.Translation);
+        Assert.False(translation.TransformHitTests);
+        Assert.Equal(1, animation.ListenerCount);
+
+        animation.Set(new Vector(-0.4, 0.75), AnimationStatus.Reverse);
+        owner.FlushBuild();
+
+        translation = Assert.IsType<RenderFractionalTranslation>(root.ChildElement.RenderObject);
+        Assert.Equal(new Vector(0.4, 0.75), translation.Translation);
+
+        root.Unmount();
+        Assert.Equal(0, animation.ListenerCount);
+    }
+
+    [Fact]
+    public void SlideTransition_RebindsAnimationAndPreservesFractionalHitTestPolicy()
+    {
+        var first = new TestValueAnimation<Vector>(new Vector(0.2, 0.3), AnimationStatus.Forward);
+        var second = new TestValueAnimation<Vector>(new Vector(-0.5, 0.1), AnimationStatus.Reverse);
+        var owner = new BuildOwner();
+        var root = new TestRootElement(new SlideTransition(
+            position: first,
+            transformHitTests: false,
+            child: new SizedBox(width: 80, height: 40)));
+        Mount(root, owner);
+
+        var translation = Assert.IsType<RenderFractionalTranslation>(root.ChildElement!.RenderObject);
+        translation.Layout(BoxConstraints.Tight(new Size(80, 40)));
+        Assert.Equal(new Vector(0.2, 0.3), translation.Translation);
+        Assert.False(translation.TransformHitTests);
+        Assert.Equal(1, first.ListenerCount);
+
+        root.Update(new SlideTransition(
+            position: second,
+            transformHitTests: false,
+            child: new SizedBox(width: 80, height: 40)));
+        owner.FlushBuild();
+
+        translation = Assert.IsType<RenderFractionalTranslation>(root.ChildElement.RenderObject);
+        Assert.Equal(new Vector(-0.5, 0.1), translation.Translation);
+        Assert.False(translation.TransformHitTests);
+        Assert.Equal(0, first.ListenerCount);
+        Assert.Equal(1, second.ListenerCount);
+
+        root.Unmount();
+        Assert.Equal(0, second.ListenerCount);
+    }
+
+    [Fact]
+    public void SizeTransition_ExposesFlutterContractsAndValidatesArguments()
+    {
+        var animation = new TestAnimation(0.5, AnimationStatus.Forward);
+        var child = new SizedBox(width: 80, height: 40);
+        var transition = new SizeTransition(
+            sizeFactor: animation,
+            axis: Axis.Horizontal,
+            alignment: Alignment.BottomRight,
+            fixedCrossAxisSizeFactor: 0.75,
+            child: child);
+
+        Assert.Same(animation, transition.SizeFactor);
+        Assert.Same(animation, transition.Listenable);
+        Assert.Equal(Axis.Horizontal, transition.Axis);
+        Assert.Equal(
+            Alignment.BottomRight,
+            transition.Alignment!.Value.Resolve(Plumix.UI.TextDirection.Ltr));
+        Assert.Equal(0.75, transition.FixedCrossAxisSizeFactor);
+        Assert.Same(child, transition.Child);
+
+        Assert.Throws<ArgumentNullException>(() => new SizeTransition(null!));
+        Assert.Throws<ArgumentException>(() => new SizeTransition(
+            animation,
+            axisAlignment: 0.5,
+            alignment: Alignment.Center));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new SizeTransition(
+            animation,
+            fixedCrossAxisSizeFactor: -0.01));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new SizeTransition(
+            animation,
+            fixedCrossAxisSizeFactor: double.NaN));
+
+        var directional = new SizeTransition(
+            animation,
+            alignment: AlignmentDirectional.BottomStart);
+        Assert.Equal(
+            Alignment.BottomRight,
+            directional.Alignment!.Value.Resolve(Plumix.UI.TextDirection.Rtl));
+    }
+
+    [Fact]
+    public void SizeTransition_ClampsFactorClipsAndResolvesDirectionalAlignment()
+    {
+        var animation = new TestAnimation(-0.25, AnimationStatus.Forward);
+        var owner = new BuildOwner();
+        var root = new TestRootElement(new Directionality(
+            textDirection: Plumix.UI.TextDirection.Ltr,
+            child: new SizeTransition(
+                sizeFactor: animation,
+                axis: Axis.Vertical,
+                axisAlignment: 1.0,
+                fixedCrossAxisSizeFactor: 0.5,
+                child: new SizedBox(width: 80, height: 40))));
+        Mount(root, owner);
+
+        var clip = Assert.IsType<RenderClipRect>(root.ChildElement!.RenderObject);
+        var align = Assert.IsType<RenderAlign>(clip.Child);
+        clip.Layout(BoxConstraints.Loose(new Size(200, 200)));
+
+        Assert.Equal(Alignment.BottomLeft, align.Alignment);
+        Assert.Equal(0.5, align.WidthFactor);
+        Assert.Equal(0.0, align.HeightFactor);
+        Assert.Equal(new Size(40, 0), clip.Size);
+        Assert.Equal(new Point(0, -40), ((BoxParentData)align.Child!.parentData!).offset);
+
+        animation.Set(0.5, AnimationStatus.Forward);
+        owner.FlushBuild();
+        clip.Layout(BoxConstraints.Loose(new Size(200, 200)));
+
+        Assert.Equal(0.5, align.HeightFactor);
+        Assert.Equal(new Size(40, 20), clip.Size);
+        Assert.Equal(new Point(0, -20), ((BoxParentData)align.Child!.parentData!).offset);
+
+        root.Unmount();
+        Assert.Equal(0, animation.ListenerCount);
+    }
+
+    [Fact]
+    public void SizeTransition_HorizontalDefaultUsesRtlAndRebindsAnimation()
+    {
+        var first = new TestAnimation(0.25, AnimationStatus.Forward);
+        var second = new TestAnimation(0.75, AnimationStatus.Reverse);
+        var owner = new BuildOwner();
+        var root = new TestRootElement(new Directionality(
+            textDirection: Plumix.UI.TextDirection.Rtl,
+            child: new SizeTransition(
+                sizeFactor: first,
+                axis: Axis.Horizontal,
+                axisAlignment: 0.5,
+                child: new SizedBox(width: 80, height: 40))));
+        Mount(root, owner);
+
+        var clip = Assert.IsType<RenderClipRect>(root.ChildElement!.RenderObject);
+        var align = Assert.IsType<RenderAlign>(clip.Child);
+        clip.Layout(BoxConstraints.Loose(new Size(200, 200)));
+
+        Assert.Equal(new Alignment(-0.5, -1.0), align.Alignment);
+        Assert.Equal(0.25, align.WidthFactor);
+        Assert.Null(align.HeightFactor);
+        Assert.Equal(new Size(20, 200), clip.Size);
+        Assert.Equal(new Point(-15, 0), ((BoxParentData)align.Child!.parentData!).offset);
+        Assert.Equal(1, first.ListenerCount);
+
+        root.Update(new Directionality(
+            textDirection: Plumix.UI.TextDirection.Rtl,
+            child: new SizeTransition(
+                sizeFactor: second,
+                axis: Axis.Horizontal,
+                axisAlignment: 0.5,
+                child: new SizedBox(width: 80, height: 40))));
+        owner.FlushBuild();
+        clip.Layout(BoxConstraints.Loose(new Size(200, 200)));
+
+        Assert.Equal(0.75, align.WidthFactor);
+        Assert.Equal(new Size(60, 200), clip.Size);
+        Assert.Equal(0, first.ListenerCount);
+        Assert.Equal(1, second.ListenerCount);
+
+        root.Unmount();
+        Assert.Equal(0, second.ListenerCount);
+    }
+
+    [Fact]
     public void ScaleAndRotationTransition_ExposeFlutterDefaultsAndSharedMatrixSurface()
     {
         var scaleAnimation = new TestAnimation(1.5, AnimationStatus.Completed);

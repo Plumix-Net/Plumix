@@ -30,6 +30,7 @@ class _AlignDemoPageState extends State<AlignDemoPage>
   int _completedAnimations = 0;
   late final ScrollController _scrollController;
   late final AnimationController _explicitTransitionsController;
+  late final Animation<Offset> _explicitSlideAnimation;
   late final Animation<RelativeRect> _explicitPositionAnimation;
   late final Animation<Rect?> _explicitRelativePositionAnimation;
 
@@ -42,6 +43,10 @@ class _AlignDemoPageState extends State<AlignDemoPage>
       value: 0.25,
       vsync: this,
     );
+    _explicitSlideAnimation = Tween<Offset>(
+      begin: Offset.zero,
+      end: const Offset(0.75, -0.5),
+    ).animate(_explicitTransitionsController);
     _explicitPositionAnimation = RelativeRectTween(
       begin: const RelativeRect.fromLTRB(10, 12, 160, 78),
       end: const RelativeRect.fromLTRB(160, 72, 10, 18),
@@ -314,6 +319,82 @@ class _AlignDemoPageState extends State<AlignDemoPage>
                   ),
                 ),
               ),
+            ),
+            const Text(
+              'SlideTransition + SizeTransition',
+              style: TextStyle(fontSize: 20, color: Colors.black),
+            ),
+            const Text(
+              'Move in reading direction and reveal clipped size from the bottom-right alignment.',
+              style: TextStyle(fontSize: 14, color: Colors.black54),
+            ),
+            Row(
+              spacing: 8,
+              children: <Widget>[
+                _buildButton(
+                  label: _rightToLeft ? 'Direction: RTL' : 'Direction: LTR',
+                  onTap: _toggleDirection,
+                  width: 132,
+                  background: const Color(0xFFF4E6C8),
+                ),
+                const Text(
+                  'factor follows the explicit controller',
+                  style: TextStyle(fontSize: 12, color: Color(0xFF2F4F4F)),
+                ),
+              ],
+            ),
+            Row(
+              spacing: 12,
+              children: <Widget>[
+                Container(
+                  width: 110,
+                  height: 90,
+                  color: const Color(0xFFF3F5F8),
+                  child: Center(
+                    child: SlideTransition(
+                      position: _explicitSlideAnimation,
+                      textDirection: _rightToLeft
+                          ? TextDirection.rtl
+                          : TextDirection.ltr,
+                      child: Container(
+                        width: 58,
+                        height: 40,
+                        color: const Color(0xFF2A6F97),
+                        child: const Center(
+                          child: Text(
+                            'slide',
+                            style: TextStyle(fontSize: 12, color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Container(
+                  width: 110,
+                  height: 90,
+                  color: const Color(0xFFF3F5F8),
+                  child: Center(
+                    child: SizeTransition(
+                      sizeFactor: _explicitTransitionsController,
+                      axis: Axis.vertical,
+                      alignment: Alignment.bottomRight,
+                      fixedCrossAxisSizeFactor: 0.75,
+                      child: Container(
+                        width: 72,
+                        height: 60,
+                        color: const Color(0xFF9C4F63),
+                        child: const Center(
+                          child: Text(
+                            'size',
+                            style: TextStyle(fontSize: 12, color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
             const Text(
               'PositionedTransition + RelativePositionedTransition',

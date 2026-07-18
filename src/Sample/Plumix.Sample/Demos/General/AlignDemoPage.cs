@@ -40,6 +40,7 @@ internal sealed class AlignDemoPageState : State
     private int _completedAnimations;
     private ScrollController _scrollController = null!;
     private AnimationController _explicitTransitionsController = null!;
+    private Animation<Vector> _explicitSlideAnimation = null!;
     private Animation<RelativeRect> _explicitPositionAnimation = null!;
     private Animation<Rect?> _explicitRelativePositionAnimation = null!;
 
@@ -48,6 +49,9 @@ internal sealed class AlignDemoPageState : State
         _scrollController = new ScrollController();
         _explicitTransitionsController = new AnimationController(TimeSpan.FromMilliseconds(800));
         _explicitTransitionsController.SetValue(0.25);
+        _explicitSlideAnimation = new DerivedAnimation<Vector>(
+            _explicitTransitionsController,
+            value => new Vector(value * 0.75, value * -0.5));
         var positionTween = new RelativeRectTween(
             begin: new RelativeRect(10, 12, 160, 78),
             end: new RelativeRect(160, 72, 10, 18));
@@ -263,6 +267,62 @@ internal sealed class AlignDemoPageState : State
                                     color: Color.Parse("#FF356A82"),
                                     child: new Center(
                                         child: new Text("explicit", fontSize: 13, color: Colors.White))))))),
+                new Text("SlideTransition + SizeTransition", fontSize: 20, color: Colors.Black),
+                new Text(
+                    "Move in reading direction and reveal clipped size from the bottom-right alignment.",
+                    fontSize: 14,
+                    color: Colors.DimGray),
+                new Row(
+                    spacing: 8,
+                    children:
+                    [
+                        BuildButton(
+                            _rightToLeft ? "Direction: RTL" : "Direction: LTR",
+                            ToggleDirection,
+                            width: 132,
+                            colorHex: "#FFF4E6C8"),
+                        new Text(
+                            "factor follows the explicit controller",
+                            fontSize: 12,
+                            color: Colors.DarkSlateGray),
+                    ]),
+                new Row(
+                    spacing: 12,
+                    children:
+                    [
+                        new Container(
+                            width: 110,
+                            height: 90,
+                            color: Color.Parse("#FFF3F5F8"),
+                            child: new Center(
+                                child: new SlideTransition(
+                                    position: _explicitSlideAnimation,
+                                    textDirection: _rightToLeft
+                                        ? Plumix.UI.TextDirection.Rtl
+                                        : Plumix.UI.TextDirection.Ltr,
+                                    child: new Container(
+                                        width: 58,
+                                        height: 40,
+                                        color: Color.Parse("#FF2A6F97"),
+                                        child: new Center(
+                                            child: new Text("slide", fontSize: 12, color: Colors.White)))))),
+                        new Container(
+                            width: 110,
+                            height: 90,
+                            color: Color.Parse("#FFF3F5F8"),
+                            child: new Center(
+                                child: new SizeTransition(
+                                    sizeFactor: _explicitTransitionsController,
+                                    axis: Axis.Vertical,
+                                    alignment: Alignment.BottomRight,
+                                    fixedCrossAxisSizeFactor: 0.75,
+                                    child: new Container(
+                                        width: 72,
+                                        height: 60,
+                                        color: Color.Parse("#FF9C4F63"),
+                                        child: new Center(
+                                            child: new Text("size", fontSize: 12, color: Colors.White)))))),
+                    ]),
                 new Text(
                     "PositionedTransition + RelativePositionedTransition",
                     fontSize: 20,
