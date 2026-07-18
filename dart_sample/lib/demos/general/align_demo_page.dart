@@ -19,6 +19,8 @@ class _AlignDemoPageState extends State<AlignDemoPage> {
   bool _rotated = false;
   bool _positioned = false;
   bool _rightToLeft = false;
+  bool _emphasizedText = false;
+  bool _raisedSurface = false;
   int _completedAnimations = 0;
   late final ScrollController _scrollController;
 
@@ -321,6 +323,79 @@ class _AlignDemoPageState extends State<AlignDemoPage> {
                 ],
               ),
             ),
+            const Text(
+              'AnimatedDefaultTextStyle + AnimatedPhysicalModel',
+              style: TextStyle(fontSize: 20, color: Colors.black),
+            ),
+            const Text(
+              'Animate inherited typography and physical surface radius, elevation, fill, and shadow.',
+              style: TextStyle(fontSize: 14, color: Colors.black54),
+            ),
+            Row(
+              spacing: 8,
+              children: <Widget>[
+                _buildButton(
+                  label: _emphasizedText ? 'Text: emphasized' : 'Text: normal',
+                  onTap: _toggleTextStyle,
+                  width: 144,
+                  background: const Color(0xFFE7E0F2),
+                ),
+                _buildButton(
+                  label: _raisedSurface ? 'Surface: raised' : 'Surface: flat',
+                  onTap: _togglePhysicalModel,
+                  width: 136,
+                  background: const Color(0xFFE2EFE7),
+                ),
+              ],
+            ),
+            Row(
+              spacing: 18,
+              children: <Widget>[
+                SizedBox(
+                  width: 150,
+                  child: AnimatedDefaultTextStyle(
+                    style: TextStyle(
+                      fontSize: _emphasizedText ? 22 : 14,
+                      color: _emphasizedText
+                          ? const Color(0xFF6A1B9A)
+                          : const Color(0xFF264653),
+                      fontWeight: _emphasizedText
+                          ? FontWeight.bold
+                          : FontWeight.normal,
+                      letterSpacing: _emphasizedText ? 1.2 : 0.1,
+                    ),
+                    duration: const Duration(milliseconds: 350),
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    curve: Curves.easeInOut,
+                    onEnd: _handleAnimationEnd,
+                    child: const Text('inherited style'),
+                  ),
+                ),
+                AnimatedPhysicalModel(
+                  color: _raisedSurface
+                      ? const Color(0xFF2A9D8F)
+                      : const Color(0xFF457B9D),
+                  shadowColor: const Color(0xFF1D3557),
+                  duration: const Duration(milliseconds: 350),
+                  clipBehavior: Clip.antiAlias,
+                  borderRadius: BorderRadius.circular(_raisedSurface ? 24 : 4),
+                  elevation: _raisedSurface ? 12 : 0,
+                  curve: Curves.easeInOut,
+                  onEnd: _handleAnimationEnd,
+                  child: const SizedBox(
+                    width: 110,
+                    height: 64,
+                    child: Center(
+                      child: Text(
+                        'surface',
+                        style: TextStyle(fontSize: 13, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
@@ -397,6 +472,18 @@ class _AlignDemoPageState extends State<AlignDemoPage> {
   void _toggleDirection() {
     setState(() {
       _rightToLeft = !_rightToLeft;
+    });
+  }
+
+  void _toggleTextStyle() {
+    setState(() {
+      _emphasizedText = !_emphasizedText;
+    });
+  }
+
+  void _togglePhysicalModel() {
+    setState(() {
+      _raisedSurface = !_raisedSurface;
     });
   }
 

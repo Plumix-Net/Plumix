@@ -1,5 +1,13 @@
 # Changelog
 
+- Added paired Flutter core `AnimatedDefaultTextStyle` + `AnimatedPhysicalModel` ports with source-matching API
+  defaults, immediate non-animated text/shape fields, interrupted-transition continuity, optional color/shadow
+  animation, `onEnd`, focused text/layout/paint tests, and mirrored C#/Dart runtime probes. Added the source-required
+  `PhysicalModel`/`RenderPhysicalModel`, expanded `DefaultTextStyle` text-layout inheritance, and advanced `Plumix`
+  to `0.4.0-alpha.1`.
+- Breaking: `Text` layout-option defaults are now nullable and inherit `DefaultTextStyle` values for alignment,
+  wrapping, overflow, line count, width basis, and height behavior, matching Flutter.
+
 - Fixed inactive element finalization to retain descendant parent links and unmount only inactive subtree roots,
   preventing nested state objects such as `AnimatedOpacity` from receiving `Dispose()` twice when leaving a route.
 

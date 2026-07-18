@@ -23,6 +23,8 @@ public sealed class RenderParagraph : RenderBox
     private bool _softWrap = true;
     private int? _maxLines;
     private TextOverflow _overflow = TextOverflow.Clip;
+    private TextWidthBasis _textWidthBasis = TextWidthBasis.Parent;
+    private TextHeightBehavior? _textHeightBehavior;
     private double? _height;
     private double _letterSpacing;
     private TextLayout? _layout;
@@ -246,6 +248,36 @@ public sealed class RenderParagraph : RenderBox
         }
     }
 
+    public TextWidthBasis TextWidthBasis
+    {
+        get => _textWidthBasis;
+        set
+        {
+            if (_textWidthBasis == value)
+            {
+                return;
+            }
+
+            _textWidthBasis = value;
+            MarkNeedsLayout();
+        }
+    }
+
+    public TextHeightBehavior? TextHeightBehavior
+    {
+        get => _textHeightBehavior;
+        set
+        {
+            if (_textHeightBehavior == value)
+            {
+                return;
+            }
+
+            _textHeightBehavior = value;
+            MarkNeedsLayout();
+        }
+    }
+
     public double? Height
     {
         get => _height;
@@ -410,7 +442,10 @@ public sealed class RenderParagraph : RenderBox
                 }
             }
 
-            Size = Constraints.Constrain(new Size(_layout.Width, _layout.Height));
+            double layoutWidth = _textWidthBasis == TextWidthBasis.LongestLine
+                ? _layout.WidthIncludingTrailingWhitespace
+                : _layout.Width;
+            Size = Constraints.Constrain(new Size(layoutWidth, _layout.Height));
         }
         catch (Exception exception) when (TextLayoutFallback.IsMissingFontManager(exception))
         {

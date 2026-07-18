@@ -1345,6 +1345,288 @@ public sealed class AnimatedPositionedDirectional : StatefulWidget
     }
 }
 
+public sealed class AnimatedDefaultTextStyle : StatefulWidget
+{
+    public AnimatedDefaultTextStyle(
+        Widget child,
+        TextStyle style,
+        TimeSpan duration,
+        TextAlign? textAlign = null,
+        bool softWrap = true,
+        TextOverflow overflow = TextOverflow.Clip,
+        int? maxLines = null,
+        TextWidthBasis textWidthBasis = TextWidthBasis.Parent,
+        TextHeightBehavior? textHeightBehavior = null,
+        Curve? curve = null,
+        Action? onEnd = null,
+        Key? key = null) : base(key)
+    {
+        ArgumentNullException.ThrowIfNull(child);
+        ArgumentNullException.ThrowIfNull(style);
+        if (duration < TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(duration));
+        }
+        if (maxLines is <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(maxLines), "Max lines must be greater than zero.");
+        }
+
+        Child = child;
+        Style = style;
+        Duration = duration;
+        TextAlign = textAlign;
+        SoftWrap = softWrap;
+        Overflow = overflow;
+        MaxLines = maxLines;
+        TextWidthBasis = textWidthBasis;
+        TextHeightBehavior = textHeightBehavior;
+        Curve = curve ?? Curves.Linear;
+        OnEnd = onEnd;
+    }
+
+    public Widget Child { get; }
+
+    public TextStyle Style { get; }
+
+    public TextAlign? TextAlign { get; }
+
+    public bool SoftWrap { get; }
+
+    public TextOverflow Overflow { get; }
+
+    public int? MaxLines { get; }
+
+    public TextWidthBasis TextWidthBasis { get; }
+
+    public TextHeightBehavior? TextHeightBehavior { get; }
+
+    public TimeSpan Duration { get; }
+
+    public Curve Curve { get; }
+
+    public Action? OnEnd { get; }
+
+    public override State CreateState() => new AnimatedDefaultTextStyleState();
+
+    private sealed class AnimatedDefaultTextStyleState : State
+    {
+        private AnimationController? _controller;
+        private TextStyle _begin = null!;
+        private TextStyle _end = null!;
+
+        private AnimatedDefaultTextStyle CurrentWidget => (AnimatedDefaultTextStyle)StateWidget;
+
+        public override void InitState()
+        {
+            _begin = _end = CurrentWidget.Style;
+            _controller = new AnimationController(CurrentWidget.Duration) { Curve = CurrentWidget.Curve };
+            _controller.Changed += HandleChanged;
+            _controller.Completed += HandleCompleted;
+        }
+
+        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        {
+            _controller!.Duration = CurrentWidget.Duration;
+            _controller.Curve = CurrentWidget.Curve;
+            TextStyle current = Evaluate(_controller.Evaluate());
+            if (!Equals(CurrentWidget.Style, _end))
+            {
+                _begin = current;
+                _end = CurrentWidget.Style;
+                _controller.Forward(from: 0.0);
+            }
+        }
+
+        public override Widget Build(BuildContext context)
+        {
+            return new DefaultTextStyle(
+                style: Evaluate(_controller!.Evaluate()),
+                textAlign: CurrentWidget.TextAlign,
+                softWrap: CurrentWidget.SoftWrap,
+                overflow: CurrentWidget.Overflow,
+                maxLines: CurrentWidget.MaxLines,
+                textWidthBasis: CurrentWidget.TextWidthBasis,
+                textHeightBehavior: CurrentWidget.TextHeightBehavior,
+                child: CurrentWidget.Child);
+        }
+
+        public override void Dispose()
+        {
+            _controller!.Changed -= HandleChanged;
+            _controller.Completed -= HandleCompleted;
+            _controller.Dispose();
+            _controller = null;
+        }
+
+        private TextStyle Evaluate(double t) => TextStyle.Lerp(_begin, _end, t);
+
+        private void HandleChanged() => SetState(() => { });
+
+        private void HandleCompleted()
+        {
+            SetState(() => { });
+            CurrentWidget.OnEnd?.Invoke();
+        }
+    }
+}
+
+public sealed class AnimatedPhysicalModel : StatefulWidget
+{
+    public AnimatedPhysicalModel(
+        Widget child,
+        Color color,
+        Color shadowColor,
+        TimeSpan duration,
+        BoxShape shape = BoxShape.Rectangle,
+        Clip clipBehavior = Clip.None,
+        BorderRadius? borderRadius = null,
+        double elevation = 0.0,
+        bool animateColor = true,
+        bool animateShadowColor = true,
+        Curve? curve = null,
+        Action? onEnd = null,
+        Key? key = null) : base(key)
+    {
+        ArgumentNullException.ThrowIfNull(child);
+        if (duration < TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(duration));
+        }
+        if (!double.IsFinite(elevation) || elevation < 0.0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(elevation), "Elevation must be finite and non-negative.");
+        }
+
+        Child = child;
+        Shape = shape;
+        ClipBehavior = clipBehavior;
+        BorderRadius = borderRadius;
+        Elevation = elevation;
+        Color = color;
+        AnimateColor = animateColor;
+        ShadowColor = shadowColor;
+        AnimateShadowColor = animateShadowColor;
+        Duration = duration;
+        Curve = curve ?? Curves.Linear;
+        OnEnd = onEnd;
+    }
+
+    public Widget Child { get; }
+
+    public BoxShape Shape { get; }
+
+    public Clip ClipBehavior { get; }
+
+    public BorderRadius? BorderRadius { get; }
+
+    public double Elevation { get; }
+
+    public Color Color { get; }
+
+    public bool AnimateColor { get; }
+
+    public Color ShadowColor { get; }
+
+    public bool AnimateShadowColor { get; }
+
+    public TimeSpan Duration { get; }
+
+    public Curve Curve { get; }
+
+    public Action? OnEnd { get; }
+
+    public override State CreateState() => new AnimatedPhysicalModelState();
+
+    private sealed class AnimatedPhysicalModelState : State
+    {
+        private readonly ColorTween _colorTween = new();
+        private AnimationController? _controller;
+        private AnimatedPhysicalModelValues _begin;
+        private AnimatedPhysicalModelValues _end;
+
+        private AnimatedPhysicalModel CurrentWidget => (AnimatedPhysicalModel)StateWidget;
+
+        public override void InitState()
+        {
+            _begin = _end = ValuesFromWidget();
+            _controller = new AnimationController(CurrentWidget.Duration) { Curve = CurrentWidget.Curve };
+            _controller.Changed += HandleChanged;
+            _controller.Completed += HandleCompleted;
+        }
+
+        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        {
+            _controller!.Duration = CurrentWidget.Duration;
+            _controller.Curve = CurrentWidget.Curve;
+            AnimatedPhysicalModelValues current = Evaluate(_controller.Evaluate());
+            AnimatedPhysicalModelValues target = ValuesFromWidget();
+            if (target != _end)
+            {
+                _begin = current;
+                _end = target;
+                _controller.Forward(from: 0.0);
+            }
+        }
+
+        public override Widget Build(BuildContext context)
+        {
+            AnimatedPhysicalModelValues values = Evaluate(_controller!.Evaluate());
+            return new PhysicalModel(
+                shape: CurrentWidget.Shape,
+                clipBehavior: CurrentWidget.ClipBehavior,
+                borderRadius: values.BorderRadius,
+                elevation: values.Elevation,
+                color: CurrentWidget.AnimateColor ? values.Color : CurrentWidget.Color,
+                shadowColor: CurrentWidget.AnimateShadowColor ? values.ShadowColor : CurrentWidget.ShadowColor,
+                child: CurrentWidget.Child);
+        }
+
+        public override void Dispose()
+        {
+            _controller!.Changed -= HandleChanged;
+            _controller.Completed -= HandleCompleted;
+            _controller.Dispose();
+            _controller = null;
+        }
+
+        private AnimatedPhysicalModelValues ValuesFromWidget()
+        {
+            return new AnimatedPhysicalModelValues(
+                CurrentWidget.BorderRadius ?? Plumix.Rendering.BorderRadius.Zero,
+                CurrentWidget.Elevation,
+                CurrentWidget.Color,
+                CurrentWidget.ShadowColor);
+        }
+
+        private AnimatedPhysicalModelValues Evaluate(double t)
+        {
+            double radius = _begin.BorderRadius.Radius
+                + ((_end.BorderRadius.Radius - _begin.BorderRadius.Radius) * t);
+            double elevation = _begin.Elevation + ((_end.Elevation - _begin.Elevation) * t);
+            return new AnimatedPhysicalModelValues(
+                Plumix.Rendering.BorderRadius.Circular(radius),
+                elevation,
+                _colorTween.Evaluate(t, _begin.Color, _end.Color),
+                _colorTween.Evaluate(t, _begin.ShadowColor, _end.ShadowColor));
+        }
+
+        private void HandleChanged() => SetState(() => { });
+
+        private void HandleCompleted()
+        {
+            SetState(() => { });
+            CurrentWidget.OnEnd?.Invoke();
+        }
+    }
+}
+
+internal readonly record struct AnimatedPhysicalModelValues(
+    BorderRadius BorderRadius,
+    double Elevation,
+    Color Color,
+    Color ShadowColor);
+
 internal sealed record AnimatedPositionedValues(
     double? Left,
     double? Top,

@@ -18,13 +18,20 @@ public sealed class Text : LeafRenderObjectWidget
         FontFamily? fontFamily = null,
         double? height = null,
         double? letterSpacing = null,
-        TextAlign textAlign = TextAlign.Start,
-        bool softWrap = true,
+        TextAlign? textAlign = null,
+        bool? softWrap = null,
         int? maxLines = null,
-        TextOverflow overflow = TextOverflow.Clip,
+        TextOverflow? overflow = null,
         TextDirection textDirection = TextDirection.Ltr,
+        TextWidthBasis? textWidthBasis = null,
+        TextHeightBehavior? textHeightBehavior = null,
         Key? key = null) : base(key)
     {
+        if (maxLines is <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(maxLines), "Max lines must be greater than zero.");
+        }
+
         Data = data;
         FontSize = fontSize;
         Color = color;
@@ -38,6 +45,8 @@ public sealed class Text : LeafRenderObjectWidget
         MaxLines = maxLines;
         Overflow = overflow;
         TextDirection = textDirection;
+        TextWidthBasis = textWidthBasis;
+        TextHeightBehavior = textHeightBehavior;
     }
 
     public string Data { get; }
@@ -56,15 +65,19 @@ public sealed class Text : LeafRenderObjectWidget
 
     public double? LetterSpacing { get; }
 
-    public TextAlign TextAlign { get; }
+    public TextAlign? TextAlign { get; }
 
-    public bool SoftWrap { get; }
+    public bool? SoftWrap { get; }
 
     public int? MaxLines { get; }
 
-    public TextOverflow Overflow { get; }
+    public TextOverflow? Overflow { get; }
 
     public TextDirection TextDirection { get; }
+
+    public TextWidthBasis? TextWidthBasis { get; }
+
+    public TextHeightBehavior? TextHeightBehavior { get; }
 
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
@@ -72,11 +85,13 @@ public sealed class Text : LeafRenderObjectWidget
         var selection = SelectionContainer.MaybeOf(context);
         var paragraph = new RenderParagraph(Data)
         {
-            TextAlign = TextAlign,
-            SoftWrap = defaultTextStyle?.SoftWrap ?? SoftWrap,
-            MaxLines = MaxLines,
-            Overflow = defaultTextStyle?.Overflow ?? Overflow,
+            TextAlign = TextAlign ?? defaultTextStyle?.TextAlign ?? Plumix.UI.TextAlign.Start,
+            SoftWrap = SoftWrap ?? defaultTextStyle?.SoftWrap ?? true,
+            MaxLines = defaultTextStyle?.MaxLines ?? MaxLines,
+            Overflow = Overflow ?? defaultTextStyle?.Overflow ?? TextOverflow.Clip,
             TextDirection = TextDirection,
+            TextWidthBasis = TextWidthBasis ?? defaultTextStyle?.TextWidthBasis ?? Plumix.UI.TextWidthBasis.Parent,
+            TextHeightBehavior = TextHeightBehavior ?? defaultTextStyle?.TextHeightBehavior,
             SelectionRegistrar = selection?.Registrar,
             SelectionEnabled = selection?.Enabled ?? false,
             SelectionColor = selection?.SelectionColor ?? default,
@@ -95,12 +110,16 @@ public sealed class Text : LeafRenderObjectWidget
         var paragraph = (RenderParagraph)renderObject;
         paragraph.Text = Data;
         ApplyResolvedTextStyle(context, paragraph);
-        paragraph.TextAlign = TextAlign;
         var defaultTextStyle = DefaultTextStyle.MaybeOf(context);
-        paragraph.SoftWrap = defaultTextStyle?.SoftWrap ?? SoftWrap;
-        paragraph.MaxLines = MaxLines;
-        paragraph.Overflow = defaultTextStyle?.Overflow ?? Overflow;
+        paragraph.TextAlign = TextAlign ?? defaultTextStyle?.TextAlign ?? Plumix.UI.TextAlign.Start;
+        paragraph.SoftWrap = SoftWrap ?? defaultTextStyle?.SoftWrap ?? true;
+        paragraph.MaxLines = defaultTextStyle?.MaxLines ?? MaxLines;
+        paragraph.Overflow = Overflow ?? defaultTextStyle?.Overflow ?? TextOverflow.Clip;
         paragraph.TextDirection = TextDirection;
+        paragraph.TextWidthBasis = TextWidthBasis
+            ?? defaultTextStyle?.TextWidthBasis
+            ?? Plumix.UI.TextWidthBasis.Parent;
+        paragraph.TextHeightBehavior = TextHeightBehavior ?? defaultTextStyle?.TextHeightBehavior;
         var selection = SelectionContainer.MaybeOf(context);
         paragraph.SelectionRegistrar = selection?.Registrar;
         paragraph.SelectionEnabled = selection?.Enabled ?? false;

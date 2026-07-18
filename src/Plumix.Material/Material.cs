@@ -282,7 +282,12 @@ public sealed class Material : StatefulWidget
             {
                 Shape = clampedT < 0.5 ? begin.Shape.Shape : end.Shape.Shape,
             };
-            return new MaterialVisual(color, shadow, elevation, shape, clampedT < 1 ? begin.TextStyle : end.TextStyle);
+            return new MaterialVisual(
+                color,
+                shadow,
+                elevation,
+                shape,
+                Plumix.Widgets.TextStyle.Lerp(begin.TextStyle, end.TextStyle, clampedT));
         }
     }
 }

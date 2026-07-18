@@ -38,4 +38,16 @@ public enum TextOverflow
     Fade
 }
 
+/// The horizontal extent used to compute the width of a paragraph.
+public enum TextWidthBasis
+{
+    Parent,
+    LongestLine,
+}
+
+/// Controls whether the first ascent and last descent include TextStyle height adjustments.
+public readonly record struct TextHeightBehavior(
+    bool ApplyHeightToFirstAscent = true,
+    bool ApplyHeightToLastDescent = true);
+
 // Dart parity source (reference): flutter/engine/src/flutter/lib/ui/text.dart (engine parity, approximate)

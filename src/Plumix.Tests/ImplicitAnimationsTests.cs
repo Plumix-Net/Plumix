@@ -1,5 +1,7 @@
 using Avalonia;
+using Avalonia.Media;
 using Plumix.Rendering;
+using Plumix.UI;
 using Plumix.Widgets;
 using Xunit;
 
@@ -776,6 +778,237 @@ public sealed class ImplicitAnimationsTests : IDisposable
         StackParentData finished = GetOnlyStackParentData(root);
         Assert.Equal(80, finished.Left);
         Assert.Null(finished.Right);
+        Assert.Equal(1, completed);
+
+        root.Unmount();
+    }
+
+    [Fact]
+    public void AnimatedDefaultTextStyle_ExposesFlutterDefaultsAndValidatesArguments()
+    {
+        var child = new Text("label");
+        var style = new TextStyle(FontSize: 14, Color: Colors.Black);
+        var animated = new AnimatedDefaultTextStyle(
+            child: child,
+            style: style,
+            duration: TimeSpan.FromMilliseconds(200));
+
+        Assert.Same(child, animated.Child);
+        Assert.Same(style, animated.Style);
+        Assert.Null(animated.TextAlign);
+        Assert.True(animated.SoftWrap);
+        Assert.Equal(TextOverflow.Clip, animated.Overflow);
+        Assert.Null(animated.MaxLines);
+        Assert.Equal(TextWidthBasis.Parent, animated.TextWidthBasis);
+        Assert.Null(animated.TextHeightBehavior);
+        Assert.Equal(Curves.Linear(0.3), animated.Curve(0.3));
+        Assert.Null(animated.OnEnd);
+        Assert.Throws<ArgumentOutOfRangeException>(() => new AnimatedDefaultTextStyle(
+            child,
+            style,
+            TimeSpan.FromMilliseconds(-1)));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new AnimatedDefaultTextStyle(
+            child,
+            style,
+            TimeSpan.Zero,
+            maxLines: 0));
+    }
+
+    [Fact]
+    public void AnimatedDefaultTextStyle_InterpolatesStyleAndAppliesOtherTextPropertiesImmediately()
+    {
+        int completed = 0;
+        var owner = new BuildOwner();
+        var root = new TestRootElement(new AnimatedDefaultTextStyle(
+            child: new Text("animated text"),
+            style: new TextStyle(FontSize: 10, Color: Colors.Red, LetterSpacing: 0),
+            duration: TimeSpan.FromMilliseconds(200),
+            onEnd: () => completed++));
+        Mount(root, owner);
+
+        root.Update(new AnimatedDefaultTextStyle(
+            child: new Text("animated text"),
+            style: new TextStyle(FontSize: 30, Color: Colors.Blue, LetterSpacing: 4),
+            duration: TimeSpan.FromMilliseconds(200),
+            textAlign: TextAlign.End,
+            softWrap: false,
+            overflow: TextOverflow.Ellipsis,
+            maxLines: 1,
+            textWidthBasis: TextWidthBasis.LongestLine,
+            textHeightBehavior: new TextHeightBehavior(false, false),
+            curve: Curves.Linear,
+            onEnd: () => completed++));
+        owner.FlushBuild();
+
+        double now = Scheduler.CurrentSeconds;
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
+        owner.FlushBuild();
+        var halfway = RequireRenderObject<RenderParagraph>(root.ChildElement);
+        Assert.InRange(halfway.FontSize, 10.1, 29.9);
+        Assert.InRange(halfway.LetterSpacing, 0.1, 3.9);
+        Assert.Equal(TextAlign.End, halfway.TextAlign);
+        Assert.False(halfway.SoftWrap);
+        Assert.Equal(TextOverflow.Ellipsis, halfway.Overflow);
+        Assert.Equal(1, halfway.MaxLines);
+        Assert.Equal(TextWidthBasis.LongestLine, halfway.TextWidthBasis);
+        Assert.Equal(new TextHeightBehavior(false, false), halfway.TextHeightBehavior);
+        double interruptedFontSize = halfway.FontSize;
+
+        root.Update(new AnimatedDefaultTextStyle(
+            child: new Text("animated text"),
+            style: new TextStyle(FontSize: 18, Color: Colors.Green, LetterSpacing: 1),
+            duration: TimeSpan.FromMilliseconds(200),
+            curve: Curves.Linear,
+            onEnd: () => completed++));
+        owner.FlushBuild();
+        Assert.Equal(
+            interruptedFontSize,
+            RequireRenderObject<RenderParagraph>(root.ChildElement).FontSize,
+            precision: 6);
+
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
+        owner.FlushBuild();
+        var finished = RequireRenderObject<RenderParagraph>(root.ChildElement);
+        Assert.Equal(18, finished.FontSize, precision: 6);
+        Assert.Equal(Colors.Green, Assert.IsType<SolidColorBrush>(finished.Foreground).Color);
+        Assert.Equal(1, completed);
+
+        root.Unmount();
+    }
+
+    [Fact]
+    public void PhysicalModel_CreatesAndUpdatesSourceShapedRenderObject()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(new PhysicalModel(
+            color: Colors.Red,
+            shape: BoxShape.Rectangle,
+            clipBehavior: Clip.HardEdge,
+            borderRadius: BorderRadius.Circular(6),
+            elevation: 2,
+            shadowColor: Colors.Black,
+            child: new SizedBox(width: 40, height: 24)));
+        Mount(root, owner);
+
+        var physical = RequireRenderObject<RenderPhysicalModel>(root.ChildElement);
+        Assert.Equal(BoxShape.Rectangle, physical.Shape);
+        Assert.Equal(Clip.HardEdge, physical.ClipBehavior);
+        Assert.Equal(BorderRadius.Circular(6), physical.BorderRadius);
+        Assert.Equal(2, physical.Elevation);
+        Assert.Equal(Colors.Red, physical.Color);
+        Assert.Equal(Colors.Black, physical.ShadowColor);
+
+        root.Update(new PhysicalModel(
+            color: Colors.Blue,
+            shape: BoxShape.Circle,
+            clipBehavior: Clip.AntiAlias,
+            elevation: 8,
+            shadowColor: Colors.Purple,
+            child: new SizedBox(width: 40, height: 24)));
+        owner.FlushBuild();
+
+        var updated = RequireRenderObject<RenderPhysicalModel>(root.ChildElement);
+        Assert.Same(physical, updated);
+        Assert.Equal(BoxShape.Circle, updated.Shape);
+        Assert.Equal(Clip.AntiAlias, updated.ClipBehavior);
+        Assert.Equal(8, updated.Elevation);
+        Assert.Equal(Colors.Blue, updated.Color);
+        Assert.Equal(Colors.Purple, updated.ShadowColor);
+        Assert.Throws<ArgumentOutOfRangeException>(() => new PhysicalModel(
+            color: Colors.Red,
+            elevation: -1));
+
+        root.Unmount();
+    }
+
+    [Fact]
+    public void RenderPhysicalModel_PaintsSurfaceShadowAndShapeAwareClip()
+    {
+        var physical = new RenderPhysicalModel(
+            color: Colors.Orange,
+            child: new RenderColoredBox(
+                Colors.Green,
+                new RenderConstrainedBox(BoxConstraints.TightFor(width: 40, height: 24))),
+            shape: BoxShape.Circle,
+            clipBehavior: Clip.AntiAlias,
+            elevation: 4,
+            shadowColor: Colors.Black);
+        var renderView = new RenderView { Child = physical };
+        var pipeline = new PipelineOwner(renderView);
+        pipeline.Attach(renderView);
+
+        pipeline.FlushLayout(new Size(40, 24));
+        pipeline.FlushCompositingBits();
+        pipeline.FlushPaint();
+
+        Assert.Equal(new Size(40, 24), physical.Size);
+        Assert.IsType<PictureLayer>(pipeline.RootLayer.Children[0]);
+        var clip = Assert.IsType<ClipGeometryLayer>(pipeline.RootLayer.Children[1]);
+        Assert.IsType<EllipseGeometry>(clip.Geometry);
+        Assert.IsType<PictureLayer>(Assert.Single(clip.Children));
+    }
+
+    [Fact]
+    public void AnimatedPhysicalModel_InterpolatesVisualsAndHonorsColorAnimationFlags()
+    {
+        int completed = 0;
+        var owner = new BuildOwner();
+        var root = new TestRootElement(new AnimatedPhysicalModel(
+            child: new SizedBox(width: 40, height: 24),
+            color: Colors.Red,
+            shadowColor: Colors.Black,
+            duration: TimeSpan.FromMilliseconds(200)));
+        Mount(root, owner);
+
+        root.Update(new AnimatedPhysicalModel(
+            child: new SizedBox(width: 40, height: 24),
+            color: Colors.Blue,
+            shadowColor: Colors.Purple,
+            duration: TimeSpan.FromMilliseconds(200),
+            shape: BoxShape.Circle,
+            clipBehavior: Clip.HardEdge,
+            borderRadius: BorderRadius.Circular(20),
+            elevation: 12,
+            curve: Curves.Linear,
+            onEnd: () => completed++));
+        owner.FlushBuild();
+
+        var immediate = RequireRenderObject<RenderPhysicalModel>(root.ChildElement);
+        Assert.Equal(BoxShape.Circle, immediate.Shape);
+        Assert.Equal(Clip.HardEdge, immediate.ClipBehavior);
+
+        double now = Scheduler.CurrentSeconds;
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
+        owner.FlushBuild();
+        var halfway = RequireRenderObject<RenderPhysicalModel>(root.ChildElement);
+        Assert.InRange(halfway.BorderRadius!.Value.Radius, 0.1, 19.9);
+        Assert.InRange(halfway.Elevation, 0.1, 11.9);
+        Assert.NotEqual(Colors.Red, halfway.Color);
+        Assert.NotEqual(Colors.Blue, halfway.Color);
+        double interruptedElevation = halfway.Elevation;
+
+        root.Update(new AnimatedPhysicalModel(
+            child: new SizedBox(width: 40, height: 24),
+            color: Colors.Green,
+            shadowColor: Colors.Orange,
+            duration: TimeSpan.FromMilliseconds(200),
+            borderRadius: BorderRadius.Circular(4),
+            elevation: 6,
+            animateColor: false,
+            animateShadowColor: false,
+            curve: Curves.Linear,
+            onEnd: () => completed++));
+        owner.FlushBuild();
+        var interrupted = RequireRenderObject<RenderPhysicalModel>(root.ChildElement);
+        Assert.Equal(interruptedElevation, interrupted.Elevation, precision: 6);
+        Assert.Equal(Colors.Green, interrupted.Color);
+        Assert.Equal(Colors.Orange, interrupted.ShadowColor);
+
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
+        owner.FlushBuild();
+        var finished = RequireRenderObject<RenderPhysicalModel>(root.ChildElement);
+        Assert.Equal(4, finished.BorderRadius!.Value.Radius, precision: 6);
+        Assert.Equal(6, finished.Elevation, precision: 6);
         Assert.Equal(1, completed);
 
         root.Unmount();

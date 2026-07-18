@@ -136,6 +136,8 @@ public sealed class GridTileBar : StatelessWidget
             maxLines: text.MaxLines,
             overflow: text.Overflow,
             textDirection: direction,
+            textWidthBasis: text.TextWidthBasis,
+            textHeightBehavior: text.TextHeightBehavior,
             key: text.Key);
     }
 }

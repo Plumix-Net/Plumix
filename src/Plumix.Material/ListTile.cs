@@ -598,11 +598,9 @@ public sealed class ListTile : StatelessWidget
 
         int effectiveMaxLines = text.MaxLines ?? maxLines;
         bool effectiveSoftWrap = text.MaxLines.HasValue
-            ? text.SoftWrap
+            ? text.SoftWrap ?? true
             : effectiveMaxLines > 1;
-        var effectiveOverflow = text.MaxLines.HasValue || text.Overflow != TextOverflow.Clip
-            ? text.Overflow
-            : TextOverflow.Ellipsis;
+        TextOverflow effectiveOverflow = text.Overflow ?? TextOverflow.Ellipsis;
 
         return new Text(
             data: text.Data,
@@ -618,6 +616,8 @@ public sealed class ListTile : StatelessWidget
             maxLines: effectiveMaxLines,
             overflow: effectiveOverflow,
             textDirection: text.TextDirection,
+            textWidthBasis: text.TextWidthBasis,
+            textHeightBehavior: text.TextHeightBehavior,
             key: text.Key);
     }
 

@@ -113,6 +113,12 @@ public sealed class TextWidgetTests
         var root = new TestRootElement(
             new DefaultTextStyle(
                 style: style1,
+                textAlign: TextAlign.Center,
+                softWrap: false,
+                overflow: TextOverflow.Ellipsis,
+                maxLines: 2,
+                textWidthBasis: TextWidthBasis.LongestLine,
+                textHeightBehavior: new TextHeightBehavior(false, false),
                 child: new Text("alpha")));
 
         root.Attach(owner);
@@ -127,6 +133,12 @@ public sealed class TextWidgetTests
         Assert.Equal(1.4, paragraph.Height);
         Assert.Equal(0.4, paragraph.LetterSpacing);
         Assert.Equal(style1.Color, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color);
+        Assert.Equal(TextAlign.Center, paragraph.TextAlign);
+        Assert.False(paragraph.SoftWrap);
+        Assert.Equal(TextOverflow.Ellipsis, paragraph.Overflow);
+        Assert.Equal(2, paragraph.MaxLines);
+        Assert.Equal(TextWidthBasis.LongestLine, paragraph.TextWidthBasis);
+        Assert.Equal(new TextHeightBehavior(false, false), paragraph.TextHeightBehavior);
 
         var style2 = new TextStyle(
             FontFamily: new FontFamily("Times New Roman"),
@@ -143,7 +155,13 @@ public sealed class TextWidgetTests
                 child: new Text(
                     "alpha",
                     color: Colors.Blue,
-                    letterSpacing: 0)));
+                    letterSpacing: 0,
+                    textAlign: TextAlign.Right,
+                    softWrap: true,
+                    maxLines: 4,
+                    overflow: TextOverflow.Fade,
+                    textWidthBasis: TextWidthBasis.Parent,
+                    textHeightBehavior: new TextHeightBehavior(true, false))));
         owner.FlushBuild();
 
         var updated = RequireRenderObject<RenderParagraph>(root.ChildElement);
@@ -155,6 +173,12 @@ public sealed class TextWidgetTests
         Assert.Equal(1.6, updated.Height);
         Assert.Equal(0, updated.LetterSpacing);
         Assert.Equal(Colors.Blue, Assert.IsType<SolidColorBrush>(updated.Foreground).Color);
+        Assert.Equal(TextAlign.Right, updated.TextAlign);
+        Assert.True(updated.SoftWrap);
+        Assert.Equal(TextOverflow.Fade, updated.Overflow);
+        Assert.Equal(4, updated.MaxLines);
+        Assert.Equal(TextWidthBasis.Parent, updated.TextWidthBasis);
+        Assert.Equal(new TextHeightBehavior(true, false), updated.TextHeightBehavior);
     }
 
     [Fact]

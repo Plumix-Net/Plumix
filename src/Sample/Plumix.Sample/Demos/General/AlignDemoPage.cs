@@ -28,6 +28,8 @@ internal sealed class AlignDemoPageState : State
     private bool _rotated;
     private bool _positioned;
     private bool _rightToLeft;
+    private bool _emphasizedText;
+    private bool _raisedSurface;
     private int _completedAnimations;
     private ScrollController _scrollController = null!;
 
@@ -262,6 +264,63 @@ internal sealed class AlignDemoPageState : State
                                         child: new Center(
                                             child: new Text("start", fontSize: 12, color: Colors.White))))),
                         ])),
+                new Text("AnimatedDefaultTextStyle + AnimatedPhysicalModel", fontSize: 20, color: Colors.Black),
+                new Text(
+                    "Animate inherited typography and physical surface radius, elevation, fill, and shadow.",
+                    fontSize: 14,
+                    color: Colors.DimGray),
+                new Row(
+                    spacing: 8,
+                    children:
+                    [
+                        BuildButton(
+                            _emphasizedText ? "Text: emphasized" : "Text: normal",
+                            ToggleTextStyle,
+                            width: 144,
+                            colorHex: "#FFE7E0F2"),
+                        BuildButton(
+                            _raisedSurface ? "Surface: raised" : "Surface: flat",
+                            TogglePhysicalModel,
+                            width: 136,
+                            colorHex: "#FFE2EFE7"),
+                    ]),
+                new Row(
+                    spacing: 18,
+                    children:
+                    [
+                        new SizedBox(
+                            width: 150,
+                            child: new AnimatedDefaultTextStyle(
+                                child: new Text("inherited style"),
+                                style: new TextStyle(
+                                    FontSize: _emphasizedText ? 22 : 14,
+                                    Color: _emphasizedText
+                                        ? Color.Parse("#FF6A1B9A")
+                                        : Color.Parse("#FF264653"),
+                                    FontWeight: _emphasizedText ? FontWeight.Bold : FontWeight.Normal,
+                                    LetterSpacing: _emphasizedText ? 1.2 : 0.1),
+                                duration: TimeSpan.FromMilliseconds(350),
+                                textAlign: Plumix.UI.TextAlign.Center,
+                                maxLines: 1,
+                                curve: Curves.EaseInOut,
+                                onEnd: HandleAnimationEnd)),
+                        new AnimatedPhysicalModel(
+                            child: new SizedBox(
+                                width: 110,
+                                height: 64,
+                                child: new Center(
+                                    child: new Text("surface", fontSize: 13, color: Colors.White))),
+                            color: _raisedSurface
+                                ? Color.Parse("#FF2A9D8F")
+                                : Color.Parse("#FF457B9D"),
+                            shadowColor: Color.Parse("#FF1D3557"),
+                            duration: TimeSpan.FromMilliseconds(350),
+                            clipBehavior: Plumix.UI.Clip.AntiAlias,
+                            borderRadius: BorderRadius.Circular(_raisedSurface ? 24 : 4),
+                            elevation: _raisedSurface ? 12 : 0,
+                            curve: Curves.EaseInOut,
+                            onEnd: HandleAnimationEnd),
+                    ]),
             ]);
     }
 
@@ -321,6 +380,16 @@ internal sealed class AlignDemoPageState : State
     private void ToggleDirection()
     {
         SetState(() => _rightToLeft = !_rightToLeft);
+    }
+
+    private void ToggleTextStyle()
+    {
+        SetState(() => _emphasizedText = !_emphasizedText);
+    }
+
+    private void TogglePhysicalModel()
+    {
+        SetState(() => _raisedSurface = !_raisedSurface);
     }
 
     private void HandleAnimationEnd()

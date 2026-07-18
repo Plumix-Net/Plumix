@@ -136,6 +136,10 @@ Completion note:
   including Dart-shaped constructors/guards, `fromRect`, physical/logical Stack insets, ambient RTL/LTR resolution,
   nullable-property behavior, interrupted-transition continuity, curve/duration updates, `onEnd`, focused tests,
   and mirrored C#/Dart runtime probes.
+- Continued implicit-animation parity with paired `AnimatedDefaultTextStyle` + `AnimatedPhysicalModel` ports,
+  including Dart-shaped defaults, immediate non-animated text/shape fields, inherited text layout options,
+  physical surface fill/shadow/clip paint, optional color/shadow interpolation, interrupted-transition continuity,
+  curve/duration updates, `onEnd`, focused tests, and mirrored C#/Dart runtime probes.
 - Implicit-animations sample viewport hardening: both samples now share an always-visible scrollbar and scroll
   controller around the complete probe column, preventing bottom overflow on short desktop windows.
 
