@@ -712,7 +712,11 @@ Progress update (2026-03-19):
 - Added paired `RawScrollbar` + Material `Scrollbar` ports:
   - replaced the early row/column scrollbar layout insertion with a Flutter-shaped render overlay that preserves child size and paints vertical/horizontal, reversed, RTL, padded, margin, thumb, track, border, radius, and minimum-length geometry from live scroll metrics;
   - matched Flutter's mouse-proximity behavior: a faded scrollbar animates back in only inside the expanded 48px scrollbar hover target, while ordinary content hover remains inert;
-  - matched transient fade visibility, forced thumb/track visibility, thumb drag mapping, track page actions, notification filtering, and Material hovered/dragged theme/platform precedence, including Android non-interactive defaults; retained hit-test entries now advance local move/up coordinates so dragging also works through the complete host pointer route;
+  - matched transient fade visibility, forced thumb/track visibility, thumb drag mapping, track page actions,
+    notification filtering, and Material hovered/dragged theme/platform precedence, including Android non-interactive
+    defaults; retained hit-test entries now advance local move/up coordinates so dragging also works through the
+    complete host pointer route, while pointer-down filtering prevents content-subtree clicks from being treated as
+    scrollbar interactions;
   - added the source-required adaptive `CupertinoScrollbar` branch with Cupertino sizing/fade/margins and delayed thumb-drag behavior, focused `MaterialScrollbarTests`, and a mirrored C#/Dart comparison demo.
 - Added paired `TabBar` + `TabBarView` ports:
   - added `Tab`, `TabController`/`DefaultTabController`, `TabBarTheme`, primary/secondary M2/M3 token paths, fill/center/scrollable alignment, automatic selected-tab centering, real-label indicator geometry, linear/elastic motion, divider/custom box-decoration paint, hover/focus/tap callbacks, and localized tab semantics;

@@ -945,17 +945,26 @@ internal sealed class RenderRawScrollbarOverlay : RenderProxyBox
 
     public override void HandleEvent(PointerEvent @event, HitTestEntry entry)
     {
-        if (entry is not BoxHitTestEntry boxEntry || ComputeGeometry() is not { } geometry) return;
+        if (entry is not BoxHitTestEntry || ComputeGeometry() is not { } geometry) return;
         var localEvent = @event;
         switch (localEvent)
         {
-            case PointerDownEvent down: _onPointerDown(down, geometry); break;
+            case PointerDownEvent down when IsInteractivePointerDown(down, geometry):
+                _onPointerDown(down, geometry);
+                break;
             case PointerMoveEvent move: _onPointerMove(move, geometry); break;
             case PointerUpEvent up: _onPointerUp(up, geometry); break;
             case PointerCancelEvent cancel: _onPointerCancel(cancel, geometry); break;
             case PointerHoverEvent hover: _onPointerHover(hover, geometry); break;
             case PointerExitEvent exit: _onPointerExit(exit, geometry); break;
         }
+    }
+
+    private bool IsInteractivePointerDown(PointerDownEvent @event, ScrollbarGeometry geometry)
+    {
+        return _interactive &&
+               _opacity > 0.001 &&
+               geometry.TrackRect.Contains(@event.LocalPosition);
     }
 
     private ScrollbarGeometry? ComputeGeometry()

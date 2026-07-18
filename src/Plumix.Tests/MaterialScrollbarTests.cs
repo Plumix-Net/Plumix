@@ -200,6 +200,38 @@ public sealed class MaterialScrollbarTests
     }
 
     [Fact]
+    public void RawScrollbar_ContentClickDoesNotTriggerTrackPaging()
+    {
+        using var controller = new ScrollController();
+        int tappedIndex = -1;
+        using var harness = new WidgetRenderHarness(new RawScrollbar(
+            controller: controller,
+            thumbVisibility: true,
+            interactive: true,
+            child: ListView.Builder(
+                itemCount: 30,
+                controller: controller,
+                itemExtent: 40,
+                itemBuilder: (_, index) => new GestureDetector(
+                    behavior: HitTestBehavior.Opaque,
+                    onTap: () => tappedIndex = index,
+                    child: new SizedBox(height: 40, child: new Text($"row {index}"))),
+                addAutomaticKeepAlives: false)));
+        harness.Pump(new Size(200, 240));
+
+        var point = new Point(100, 100);
+        var now = DateTime.UtcNow;
+        var binding = GestureBinding.Instance;
+        binding.HandlePointerEvent(harness.RenderView, new PointerDownEvent(
+            18, PointerDeviceKind.Mouse, point, PointerButtons.Primary, now));
+        binding.HandlePointerEvent(harness.RenderView, new PointerUpEvent(
+            18, PointerDeviceKind.Mouse, point, PointerButtons.None, now.AddMilliseconds(20)));
+
+        Assert.Equal(2, tappedIndex);
+        Assert.Equal(0, controller.Offset);
+    }
+
+    [Fact]
     public void RawScrollbar_ThumbDragMapsTrackTravelToScrollExtent()
     {
         using var controller = new ScrollController();

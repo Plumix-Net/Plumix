@@ -1,5 +1,9 @@
 # Changelog
 
+- Fixed `RawScrollbar` pointer filtering so clicks routed through its content subtree no longer trigger thumb or
+  track handling outside the scrollbar's interactive bounds; direct content interaction now leaves scroll offset
+  unchanged while thumb dragging and track paging remain active.
+
 - Added paired Flutter core `AlignTransition` + `DefaultTextStyleTransition` ports with source-shaped
   `AnimatedWidget` lifecycle, directional alignment geometry, shrink factors, inherited animated typography,
   immediate text-layout options, focused tests, and mirrored C#/Dart runtime probes. Advanced `Plumix` to
