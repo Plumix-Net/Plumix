@@ -1,5 +1,10 @@
 # Changelog
 
+- Added Material `AnimatedIcon` + complete 14-entry `AnimatedIcons` catalog with Flutter-generated vector frames,
+  linear frame interpolation, animation-driven `CustomPainter` repaint, icon-theme size/color/opacity, RTL mirroring,
+  semantics, focused tests, and mirrored C#/Dart probes. Advanced `Plumix` to `0.15.0-alpha.1` and
+  `Plumix.Material` to `0.3.0-alpha.1`.
+
 - Added paired Flutter core `AnimatedGrid` + `SliverAnimatedGrid` ports with source-shaped insert/remove APIs,
   fixed/max-extent grid delegate composition, keyed child remapping, MediaQuery padding, viewport cache/clip policy,
   focused tests, and mirrored C#/Dart probes. Advanced `Plumix` to `0.14.0-alpha.1`.

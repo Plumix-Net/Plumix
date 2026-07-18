@@ -6,12 +6,23 @@ namespace Plumix.Widgets;
 // Dart parity source (reference): flutter/packages/flutter/lib/src/widgets/icon_theme_data.dart; flutter/packages/flutter/lib/src/widgets/icon_theme.dart (approximate)
 
 public sealed record IconThemeData(
-    Color? Color = null,
-    double? Size = null)
+    Color? Color,
+    double? Size,
+    double? Opacity)
 {
-    public IconThemeData CopyWith(Color? color = null, double? size = null)
+    public IconThemeData(Color? Color = null, double? Size = null) : this(Color, Size, null)
     {
-        return new IconThemeData(color ?? Color, size ?? Size);
+    }
+
+    public IconThemeData CopyWith(Color? color = null, double? size = null, double? opacity = null)
+    {
+        return new IconThemeData(color ?? Color, size ?? Size, opacity ?? Opacity);
+    }
+
+    public void Deconstruct(out Color? color, out double? size)
+    {
+        color = Color;
+        size = Size;
     }
 
     internal static IconThemeData Fallback { get; } = new();

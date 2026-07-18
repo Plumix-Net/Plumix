@@ -31,6 +31,7 @@ internal static class SampleRoutes
     public const string Scrollbar = "/scrollbar";
     public const string EditableText = "/editable-text";
     public const string MaterialButtons = "/material-buttons";
+    public const string AnimatedIcon = "/animated-icon";
     public const string Tabs = "/tabs";
     public const string InkResponse = "/ink-response";
     public const string DatePicker = "/date-picker";
@@ -114,6 +115,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
 {
     private static readonly IReadOnlyList<SampleRouteDefinition> MaterialDemoPages =
     [
+        new(
+            SampleRoutes.AnimatedIcon,
+            "AnimatedIcon + AnimatedIcons",
+            "complete generated vector catalog + progress/RTL/theme probes",
+            () => new AnimatedIconDemoPage()),
         new(SampleRoutes.MaterialButtons, "Material buttons", "TextButton + ElevatedButton + OutlinedButton + FilledButton", () => new MaterialButtonsDemoPage()),
         new(SampleRoutes.Tabs, "TabBar + TabBarView", "controller + indicator + scrollable tabs + swipe pages", () => new TabsDemoPage()),
         new(SampleRoutes.InkResponse, "InkResponse + InkWell", "circle/rectangle ink + gestures + overlay states", () => new InkResponseDemoPage()),

@@ -67,6 +67,8 @@ public sealed class Icon : StatelessWidget
 
         var textDirection = TextDirection ?? Directionality.Of(context);
         var iconColor = Color ?? iconTheme.Color ?? Colors.Black;
+        double iconOpacity = Math.Clamp(iconTheme.Opacity ?? 1.0, 0.0, 1.0);
+        iconColor = ApplyOpacity(iconColor, iconOpacity);
 
         Widget iconWidget = new Text(
             char.ConvertFromUtf32(IconData.CodePoint),
@@ -116,5 +118,11 @@ public sealed class Icon : StatelessWidget
         return string.IsNullOrWhiteSpace(iconData.FontFamily)
             ? FontFamily.Default
             : new FontFamily(iconData.FontFamily);
+    }
+
+    private static Color ApplyOpacity(Color color, double opacity)
+    {
+        byte alpha = (byte)Math.Clamp((int)Math.Round(color.A * opacity), 0, 255);
+        return Avalonia.Media.Color.FromArgb(alpha, color.R, color.G, color.B);
     }
 }

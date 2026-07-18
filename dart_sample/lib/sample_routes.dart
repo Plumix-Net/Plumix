@@ -23,6 +23,7 @@ class SampleRoutes {
   static const String scrollbar = '/scrollbar';
   static const String editableText = '/editable-text';
   static const String materialButtons = '/material-buttons';
+  static const String animatedIcon = '/animated-icon';
   static const String tabs = '/tabs';
   static const String inkResponse = '/ink-response';
   static const String datePicker = '/date-picker';

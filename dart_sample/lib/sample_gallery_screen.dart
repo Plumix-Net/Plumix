@@ -4,6 +4,7 @@ import 'demos/general/align_demo_page.dart';
 import 'demos/general/animated_list_demo_page.dart';
 import 'demos/general/animated_grid_demo_page.dart';
 import 'demos/material/app_bar_actions_padding_demo_page.dart';
+import 'demos/material/animated_icon_demo_page.dart';
 import 'demos/material/app_bar_icon_theme_demo_page.dart';
 import 'demos/material/app_bar_leading_width_demo_page.dart';
 import 'demos/material/app_bar_text_styles_demo_page.dart';
@@ -82,6 +83,12 @@ class SampleGalleryScreen extends StatelessWidget {
 
   static final List<SampleRouteDefinition>
   _materialDemoPages = <SampleRouteDefinition>[
+    SampleRouteDefinition(
+      routeName: SampleRoutes.animatedIcon,
+      title: 'AnimatedIcon + AnimatedIcons',
+      subtitle: 'complete generated vector catalog + progress/RTL/theme probes',
+      builder: () => const AnimatedIconDemoPage(),
+    ),
     SampleRouteDefinition(
       routeName: SampleRoutes.actionButtons,
       title: 'Material action buttons',

@@ -1,4 +1,5 @@
 using Avalonia;
+using Plumix.Foundation;
 
 namespace Plumix.Rendering;
 
@@ -6,6 +7,17 @@ namespace Plumix.Rendering;
 
 public abstract class CustomPainter : IDisposable
 {
+    protected CustomPainter() : this(null)
+    {
+    }
+
+    protected CustomPainter(IListenable? repaint)
+    {
+        Repaint = repaint;
+    }
+
+    internal IListenable? Repaint { get; }
+
     public abstract void Paint(PaintingContext context, Size size);
 
     public abstract bool ShouldRepaint(CustomPainter oldDelegate);
@@ -96,7 +108,26 @@ public sealed class RenderCustomPaint : RenderProxyBox
     {
         if (ReferenceEquals(field, value)) return;
         bool shouldRepaint = field is null || value is null || value.ShouldRepaint(field);
+        if (Attached)
+        {
+            field?.Repaint?.RemoveListener(MarkNeedsPaint);
+            value?.Repaint?.AddListener(MarkNeedsPaint);
+        }
         field = value;
         if (shouldRepaint) MarkNeedsPaint();
+    }
+
+    protected override void OnAttach()
+    {
+        base.OnAttach();
+        Painter?.Repaint?.AddListener(MarkNeedsPaint);
+        ForegroundPainter?.Repaint?.AddListener(MarkNeedsPaint);
+    }
+
+    protected override void OnDetach()
+    {
+        Painter?.Repaint?.RemoveListener(MarkNeedsPaint);
+        ForegroundPainter?.Repaint?.RemoveListener(MarkNeedsPaint);
+        base.OnDetach();
     }
 }

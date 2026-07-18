@@ -775,6 +775,11 @@ Progress update (2026-03-19):
 - Added paired `MaterialStateOutlineInputBorder` + `MaterialStateUnderlineInputBorder` parity:
   - `InputDecorator` now resolves stateful borders against combined focus, hover, error, and disabled states;
   - added focused border-resolution coverage and mirrored C#/Dart text-field demo probes.
+- Added Material `AnimatedIcon` + complete `AnimatedIcons` catalog parity:
+  - ported all 14 Flutter vitool vector datasets with the same path commands, opacity frames, linear interpolation,
+    progress clamping, scale/color/opacity resolution, semantic labels, and directional mirroring;
+  - added the source-required `CustomPainter(repaint:)` listener contract, focused control/render coverage, a
+    deterministic data generator, and mirrored C#/Dart catalog runtime probes.
 - Remaining divergence for floating action button in current framework scope:
   - none documented in current framework scope.
 

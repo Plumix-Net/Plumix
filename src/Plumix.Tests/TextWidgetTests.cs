@@ -266,6 +266,29 @@ public sealed class TextWidgetTests
     }
 
     [Fact]
+    public void IconWidget_IconThemeOpacityAppliesToExplicitColor()
+    {
+        var owner = new BuildOwner();
+        var explicitColor = Color.Parse("#FF663399");
+        var root = new TestRootElement(
+            new IconTheme(
+                data: new IconThemeData(Color: Colors.DarkOrange, Size: 28, Opacity: 0.5),
+                child: new Icon(
+                    icon: Plumix.Material.Icons.Add,
+                    color: explicitColor)));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderConstrainedBox>(root.ChildElement));
+        Assert.NotNull(paragraph);
+        Assert.Equal(
+            Color.FromArgb(128, explicitColor.R, explicitColor.G, explicitColor.B),
+            Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+    }
+
+    [Fact]
     public void IconWidget_NullIcon_RendersSquareByResolvedSize()
     {
         var owner = new BuildOwner();
