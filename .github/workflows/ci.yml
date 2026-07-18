@@ -49,8 +49,8 @@ jobs:
           dotnet pack src/Plumix/Plumix.csproj               -c Release -p:Version=$PKG_VERSION
           dotnet pack src/Plumix.Material/Plumix.Material.csproj   -c Release -p:Version=$PKG_VERSION
           dotnet pack src/Plumix.Cupertino/Plumix.Cupertino.csproj -c Release -p:Version=$PKG_VERSION
-          dotnet pack src/Plumix.FSharp/Plumix.FSharp.csproj -c Release -p:Version=$PKG_VERSION
-          dotnet pack src/Plumix.Elmish/Plumix.Elmish.csproj -c Release -p:Version=$PKG_VERSION
+          dotnet pack src/Plumix.FSharp/Plumix.FSharp.fsproj -c Release -p:Version=$PKG_VERSION
+          dotnet pack src/Plumix.Elmish/Plumix.Elmish.fsproj -c Release -p:Version=$PKG_VERSION
 
       - name: Push to NuGet.org
         run: |
