@@ -1,5 +1,9 @@
 # Changelog
 
+- Added paired Material `DesktopTextSelectionToolbar` + `DesktopTextSelectionToolbarButton` ports with the shared
+  core `CustomSingleChildLayout` primitive, source-matching safe-area/viewport placement, card/button styling,
+  disabled/cursor/tap behavior, focused tests, and mirrored C#/Dart runtime probes.
+
 - Added paired Flutter core `AnimatedScale` + `AnimatedRotation` ports with source-matching defaults,
   centered/custom transform origins, `filterQuality` propagation, interrupted-transition continuity,
   curve/duration updates, `onEnd`, focused tests, and mirrored C#/Dart runtime probes.

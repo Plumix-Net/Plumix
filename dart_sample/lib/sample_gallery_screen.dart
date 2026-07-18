@@ -21,6 +21,7 @@ import 'demos/material/dropdown_demo_page.dart';
 import 'demos/material/search_demo_page.dart';
 import 'demos/material/autocomplete_demo_page.dart';
 import 'demos/material/selection_demo_page.dart';
+import 'demos/material/desktop_text_selection_toolbar_demo_page.dart';
 import 'demos/general/aspect_ratio_demo_page.dart';
 import 'demos/general/bloc_counter_demo_page.dart';
 import 'demos/material/card_demo_page.dart';
@@ -222,6 +223,12 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'SelectableText + SelectionArea',
       subtitle: 'single/subtree selection + keyboard/copy/theme probes',
       builder: () => const SelectionDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.desktopTextSelectionToolbar,
+      title: 'Desktop selection toolbar',
+      subtitle: 'anchored/clamped toolbar + desktop action-button styling',
+      builder: () => const DesktopTextSelectionToolbarDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.chips,

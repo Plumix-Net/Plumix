@@ -54,6 +54,7 @@ internal static class SampleRoutes
     public const string Search = "/search";
     public const string Autocomplete = "/autocomplete";
     public const string Selection = "/selection";
+    public const string DesktopTextSelectionToolbar = "/desktop-text-selection-toolbar";
     public const string Chips = "/chips";
     public const string LinearProgressIndicator = "/linear-progress-indicator";
     public const string CircularProgressIndicator = "/circular-progress-indicator";
@@ -138,6 +139,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "SelectableText + SelectionArea",
             "single/subtree selection + keyboard/copy/theme probes",
             () => new SelectionDemoPage()),
+        new(
+            SampleRoutes.DesktopTextSelectionToolbar,
+            "Desktop selection toolbar",
+            "anchored/clamped toolbar + desktop action-button styling",
+            () => new DesktopTextSelectionToolbarDemoPage()),
         new(SampleRoutes.Chips, "Material chips", "action/choice/filter/input + selection/deletion/theme probes", () => new ChipsDemoPage()),
         new(SampleRoutes.LinearProgressIndicator, "LinearProgressIndicator", "determinate/indeterminate + M2/M3 + theme/widget/RTL probes", () => new LinearProgressIndicatorDemoPage()),
         new(SampleRoutes.CircularProgressIndicator, "CircularProgressIndicator", "determinate/indeterminate + M2/M3 + theme/widget probes", () => new CircularProgressIndicatorDemoPage()),

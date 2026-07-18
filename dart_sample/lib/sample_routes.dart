@@ -46,6 +46,8 @@ class SampleRoutes {
   static const String search = '/search';
   static const String autocomplete = '/autocomplete';
   static const String selection = '/selection';
+  static const String desktopTextSelectionToolbar =
+      '/desktop-text-selection-toolbar';
   static const String chips = '/chips';
   static const String linearProgressIndicator = '/linear-progress-indicator';
   static const String circularProgressIndicator =
