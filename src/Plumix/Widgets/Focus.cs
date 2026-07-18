@@ -1118,6 +1118,6 @@ public sealed class ExcludeFocus : InheritedWidget
 
     internal static bool DescendantsAreFocusableOf(BuildContext context)
     {
-        return context.DependOnInherited<ExcludeFocus>()?.Excluding != true;
+        return context.DependOnInheritedAncestors<ExcludeFocus>().All(scope => !scope.Excluding);
     }
 }

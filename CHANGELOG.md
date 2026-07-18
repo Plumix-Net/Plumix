@@ -1,5 +1,11 @@
 # Changelog
 
+- Added paired Flutter core `Visibility` + `SliverVisibility` ports with source-matching replacement and maintain
+  APIs, state/focus/size/semantics/interactivity policies, nested visibility lookup, focused lifecycle/render/sliver
+  tests, and mirrored C#/Dart runtime probes. Added source-required `SliverIgnorePointer`, `SliverOffstage`, and
+  non-composited visibility render proxies; advanced `Plumix` to `0.7.0-alpha.1`. Descendant ticker muting remains
+  tracked in `DIVERGENCES.md` against the shared `TickerMode` ownership gap.
+
 - Added paired Flutter core `AnimatedFractionallySizedBox` + `SliverAnimatedOpacity` ports with source-matching
   defaults/guards, fractional factor and alignment interpolation, interrupted-transition continuity, sliver
   geometry preservation, zero-opacity paint/compositing and semantics policy, `onEnd`, focused tests, and mirrored
@@ -99,6 +105,9 @@ This project follows the spirit of [Keep a Changelog](https://keepachangelog.com
 
 ### Changed
 
+- Added paired Flutter core `Visibility` + `SliverVisibility` ports with replacement and maintain-state/animation/
+  size/semantics/interactivity/focusability composition, nested visibility aggregation, source-required sliver
+  pointer/offstage proxies, focused coverage, and mirrored C#/Dart probes.
 - Added paired Flutter core `IgnorePointer` + `AbsorbPointer` ports with Dart-shaped hit-test behavior, default
   semantics action blocking, `ignoringSemantics` subtree omission, and focused widget/render/semantics coverage.
 - Added paired Material `FloatingActionButtonLocation` + `FloatingActionButtonAnimator` baseline with all standard static FAB placement formulas, `Scaffold` API wiring, focused geometry/RTL/animator tests, and mirrored C#/Dart centered-FAB sample probes. Location-transition animation remains documented in `DIVERGENCES.md` pending live scaffold geometry.

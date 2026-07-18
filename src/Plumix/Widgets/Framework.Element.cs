@@ -29,6 +29,9 @@ public readonly struct BuildContext
 
     public T? DependOnInherited<T>(object? aspect = null) where T : InheritedWidget => Owner.DependOnInherited<T>(aspect);
 
+    internal IReadOnlyList<T> DependOnInheritedAncestors<T>() where T : InheritedWidget =>
+        Owner.DependOnInheritedAncestors<T>();
+
     /// <summary>
     /// Finds the nearest ancestor <typeparamref name="T"/> without registering a dependency.
     /// Use this when you want to read a value once without subscribing to future changes.
@@ -545,6 +548,31 @@ public abstract class Element
 
         _hadUnsatisfiedDependencies = true;
         return null;
+    }
+
+    internal IReadOnlyList<T> DependOnInheritedAncestors<T>() where T : InheritedWidget
+    {
+        if (!IsActive)
+        {
+            throw new InvalidOperationException("Cannot lookup inherited widgets from an inactive element.");
+        }
+
+        var widgets = new List<T>();
+        for (var ancestor = Parent; ancestor != null; ancestor = ancestor.Parent)
+        {
+            if (ancestor is InheritedElement inheritedElement && inheritedElement.Widget is T typedWidget)
+            {
+                _ = DependOnInheritedElement(inheritedElement, aspect: null);
+                widgets.Add(typedWidget);
+            }
+        }
+
+        if (widgets.Count == 0)
+        {
+            _hadUnsatisfiedDependencies = true;
+        }
+
+        return widgets;
     }
 
     public virtual RenderObject? RenderObject => null;

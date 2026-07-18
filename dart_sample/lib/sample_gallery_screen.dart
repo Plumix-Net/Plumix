@@ -517,8 +517,9 @@ class SampleGalleryScreen extends StatelessWidget {
         ),
         SampleRouteDefinition(
           routeName: SampleRoutes.offstage,
-          title: 'Offstage',
-          subtitle: 'layout-without-paint and zero-space behavior',
+          title: 'Visibility + SliverVisibility + Offstage',
+          subtitle:
+              'replacement + maintained size + sliver and offstage behavior',
           builder: () => const OffstageDemoPage(),
         ),
       ];

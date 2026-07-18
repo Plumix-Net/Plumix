@@ -202,7 +202,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
         new(SampleRoutes.UnconstrainedLimitedBox, "UnconstrainedBox + LimitedBox", "axis unconstraint + unbounded max clamps", () => new UnconstrainedLimitedBoxDemoPage()),
         new(SampleRoutes.OverflowBox, "OverflowBox + SizedOverflowBox", "constraint override + fixed-size overflow", () => new OverflowBoxDemoPage()),
         new(SampleRoutes.OverflowIndicator, "Overflow indicator", "RenderFlex debug stripes + overflow label", () => new OverflowIndicatorDemoPage()),
-        new(SampleRoutes.Offstage, "Offstage", "layout-without-paint and zero-space behavior", () => new OffstageDemoPage()),
+        new(
+            SampleRoutes.Offstage,
+            "Visibility + SliverVisibility + Offstage",
+            "replacement + maintained size + sliver and offstage behavior",
+            () => new OffstageDemoPage()),
     ];
 
     private static readonly IReadOnlyList<SampleMenuTabDefinition> DemoTabs =

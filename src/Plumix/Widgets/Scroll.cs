@@ -801,13 +801,69 @@ public sealed class SliverChildListDelegate : SliverChildDelegate
 
 public sealed class SliverToBoxAdapter : SingleChildRenderObjectWidget
 {
-    public SliverToBoxAdapter(Widget child, Key? key = null) : base(child, key)
+    public SliverToBoxAdapter(Widget? child = null, Key? key = null) : base(child, key)
     {
     }
 
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderSliverToBoxAdapter();
+    }
+}
+
+// Dart parity source: flutter/packages/flutter/lib/src/widgets/sliver.dart
+public sealed class SliverIgnorePointer : SingleChildRenderObjectWidget
+{
+    public SliverIgnorePointer(
+        Widget? sliver = null,
+        bool ignoring = true,
+        bool? ignoringSemantics = null,
+        Key? key = null) : base(sliver, key)
+    {
+        Ignoring = ignoring;
+        IgnoringSemantics = ignoringSemantics;
+    }
+
+    public bool Ignoring { get; }
+
+    public bool? IgnoringSemantics { get; }
+
+    internal override RenderObject CreateRenderObject(BuildContext context)
+    {
+        return new RenderSliverIgnorePointer(
+            ignoring: Ignoring,
+            ignoringSemantics: IgnoringSemantics);
+    }
+
+    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    {
+        var ignorePointer = (RenderSliverIgnorePointer)renderObject;
+        ignorePointer.Ignoring = Ignoring;
+        ignorePointer.IgnoringSemantics = IgnoringSemantics;
+    }
+}
+
+// Dart parity source: flutter/packages/flutter/lib/src/widgets/sliver.dart
+public sealed class SliverOffstage : SingleChildRenderObjectWidget
+{
+    public SliverOffstage(
+        Widget? sliver = null,
+        bool offstage = true,
+        Key? key = null) : base(sliver, key)
+    {
+        Offstage = offstage;
+    }
+
+    public bool Offstage { get; }
+
+    internal override RenderObject CreateRenderObject(BuildContext context)
+    {
+        return new RenderSliverOffstage(offstage: Offstage);
+    }
+
+    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    {
+        ((RenderSliverOffstage)renderObject).Offstage = Offstage;
     }
 }
 

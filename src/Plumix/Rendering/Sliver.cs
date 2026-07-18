@@ -583,6 +583,186 @@ public abstract class RenderProxySliver : RenderSliver, IRenderObjectSingleChild
     }
 }
 
+public sealed class RenderSliverIgnorePointer : RenderProxySliver
+{
+    private bool _ignoring;
+    private bool? _ignoringSemantics;
+
+    public RenderSliverIgnorePointer(
+        bool ignoring = true,
+        bool? ignoringSemantics = null,
+        RenderSliver? sliver = null) : base(sliver)
+    {
+        _ignoring = ignoring;
+        _ignoringSemantics = ignoringSemantics;
+    }
+
+    public bool Ignoring
+    {
+        get => _ignoring;
+        set
+        {
+            if (_ignoring == value)
+            {
+                return;
+            }
+
+            _ignoring = value;
+            if (_ignoringSemantics == null)
+            {
+                MarkNeedsSemanticsUpdate();
+            }
+        }
+    }
+
+    public bool? IgnoringSemantics
+    {
+        get => _ignoringSemantics;
+        set
+        {
+            if (_ignoringSemantics == value)
+            {
+                return;
+            }
+
+            _ignoringSemantics = value;
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
+    public override bool HitTest(BoxHitTestResult result, Point position)
+    {
+        return !_ignoring && base.HitTest(result, position);
+    }
+
+    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    {
+        if (_ignoringSemantics != true)
+        {
+            base.VisitChildrenForSemantics(visitor);
+        }
+    }
+
+    protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
+    {
+        base.DescribeSemanticsConfiguration(configuration);
+        configuration.IsBlockingUserActions = _ignoring && (_ignoringSemantics ?? true);
+    }
+}
+
+public sealed class RenderSliverOffstage : RenderProxySliver
+{
+    private bool _offstage;
+
+    public RenderSliverOffstage(bool offstage = true, RenderSliver? sliver = null) : base(sliver)
+    {
+        _offstage = offstage;
+    }
+
+    public bool Offstage
+    {
+        get => _offstage;
+        set
+        {
+            if (_offstage == value)
+            {
+                return;
+            }
+
+            _offstage = value;
+            MarkNeedsLayout();
+        }
+    }
+
+    public override bool HitTest(BoxHitTestResult result, Point position)
+    {
+        return !_offstage && base.HitTest(result, position);
+    }
+
+    public override void Paint(PaintingContext ctx, Point offset)
+    {
+        if (!_offstage)
+        {
+            base.Paint(ctx, offset);
+        }
+    }
+
+    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    {
+        if (!_offstage)
+        {
+            base.VisitChildrenForSemantics(visitor);
+        }
+    }
+
+    protected override void PerformSliverLayout(SliverConstraints constraints)
+    {
+        base.PerformSliverLayout(constraints);
+        if (_offstage)
+        {
+            Geometry = default;
+        }
+    }
+}
+
+internal sealed class RenderSliverVisibility : RenderProxySliver
+{
+    private bool _visible;
+    private bool _maintainSemantics;
+
+    public RenderSliverVisibility(bool visible, bool maintainSemantics, RenderSliver? sliver = null) : base(sliver)
+    {
+        _visible = visible;
+        _maintainSemantics = maintainSemantics;
+    }
+
+    public bool Visible
+    {
+        get => _visible;
+        set
+        {
+            if (_visible == value)
+            {
+                return;
+            }
+
+            _visible = value;
+            MarkNeedsPaint();
+        }
+    }
+
+    public bool MaintainSemantics
+    {
+        get => _maintainSemantics;
+        set
+        {
+            if (_maintainSemantics == value)
+            {
+                return;
+            }
+
+            _maintainSemantics = value;
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
+    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    {
+        if (_maintainSemantics || _visible)
+        {
+            base.VisitChildrenForSemantics(visitor);
+        }
+    }
+
+    public override void Paint(PaintingContext ctx, Point offset)
+    {
+        if (_visible)
+        {
+            base.Paint(ctx, offset);
+        }
+    }
+}
+
 public sealed class RenderSliverOpacity : RenderProxySliver
 {
     private double _opacity;

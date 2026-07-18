@@ -150,6 +150,11 @@ Completion note:
   continuity, exact sliver geometry forwarding, zero-opacity paint/compositing and semantics policy, `onEnd`,
   focused tests, and mirrored C#/Dart runtime probes. Source-required proxy/opacity/fade sliver primitives now live
   in core.
+- Continued paired core-control coverage with `Visibility` + `SliverVisibility`, including source-shaped
+  replacement and maintain-state/animation/size/semantics/interactivity/focusability policies, nested visibility
+  aggregation, non-composited paint suppression, exact sliver geometry forwarding, focused lifecycle/render tests,
+  and mirrored C#/Dart probes. Source-required `SliverIgnorePointer` and `SliverOffstage` now live in core; actual
+  descendant ticker muting remains tracked against the shared `TickerMode` ownership gap.
 - Implicit-animations sample viewport hardening: both samples now share an always-visible scrollbar and scroll
   controller around the complete probe column, preventing bottom overflow on short desktop windows.
 

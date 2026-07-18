@@ -11,97 +11,236 @@ class OffstageDemoPage extends StatefulWidget {
 
 class _OffstageDemoPageState extends State<OffstageDemoPage> {
   bool _offstage = true;
+  bool _visible = true;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      spacing: 10,
-      children: <Widget>[
-        const Text(
-          'Offstage',
-          style: TextStyle(fontSize: 20, color: Colors.black),
-        ),
-        const Text(
-          'When offstage=true, child is laid out but not painted/hit-tested and takes no room in parent layout.',
-          style: TextStyle(fontSize: 14, color: Colors.black54),
-        ),
-        Row(
-          spacing: 8,
-          children: <Widget>[
-            _buildButton(
-              label: 'offstage=true',
-              onTap: () => _setOffstage(true),
-              width: 112,
-              background: const Color(0xFFDCE3ED),
-            ),
-            _buildButton(
-              label: 'offstage=false',
-              onTap: () => _setOffstage(false),
-              width: 118,
-              background: const Color(0xFFDCE3ED),
-            ),
-          ],
-        ),
-        Text(
-          'state: offstage=${_offstage ? 'true' : 'false'}',
-          style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
-        ),
-        Container(
-          width: 260,
-          height: 190,
-          color: const Color(0xFFE7EDF6),
-          padding: const EdgeInsets.all(10),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: 10,
+        children: <Widget>[
+          const Text(
+            'Visibility + SliverVisibility + Offstage',
+            style: TextStyle(fontSize: 20, color: Colors.black),
+          ),
+          const Text(
+            'Compare replacement, maintained layout space, and layout-without-paint behavior.',
+            style: TextStyle(fontSize: 14, color: Colors.black54),
+          ),
+          Row(
             spacing: 8,
             children: <Widget>[
-              const Text(
-                'Row layout (middle child disappears from layout when offstage=true)',
-                style: TextStyle(fontSize: 11, color: Colors.black54),
+              _buildButton(
+                label: 'visible=true',
+                onTap: () => _setVisible(true),
+                width: 104,
+                background: const Color(0xFFDCE3ED),
               ),
-              Container(
-                height: 72,
-                color: Colors.white,
-                padding: const EdgeInsets.fromLTRB(8, 10, 8, 10),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  spacing: 8,
-                  children: <Widget>[
-                    _buildMarker('L', const Color(0xFF1D3557)),
-                    Offstage(
-                      offstage: _offstage,
-                      child: Container(
-                        width: 120,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFCCE3FF),
-                          border: Border.all(
-                            color: const Color(0xFF1D3557),
-                            width: 2,
-                          ),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Center(
-                          child: Text(
-                            'Offstage child',
-                            style: TextStyle(fontSize: 11, color: Colors.black),
-                          ),
-                        ),
-                      ),
-                    ),
-                    _buildMarker('R', const Color(0xFF457B9D)),
-                  ],
-                ),
-              ),
-              const Text(
-                'Tip: switch state and watch L/R gap change.',
-                style: TextStyle(fontSize: 11, color: Colors.black54),
+              _buildButton(
+                label: 'visible=false',
+                onTap: () => _setVisible(false),
+                width: 110,
+                background: const Color(0xFFDCE3ED),
               ),
             ],
           ),
-        ),
-      ],
+          Text(
+            'state: visible=${_visible ? 'true' : 'false'}',
+            style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
+          ),
+          Container(
+            height: 82,
+            color: const Color(0xFFF6F8FB),
+            padding: const EdgeInsets.all(8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              spacing: 8,
+              children: <Widget>[
+                _buildMarker('L', const Color(0xFF1D3557)),
+                Visibility.maintain(
+                  visible: _visible,
+                  child: Container(
+                    width: 88,
+                    height: 42,
+                    color: const Color(0xFFA8DADC),
+                    child: const Center(
+                      child: Text(
+                        'keeps size',
+                        style: TextStyle(fontSize: 11, color: Colors.black),
+                      ),
+                    ),
+                  ),
+                ),
+                _buildMarker('R', const Color(0xFF457B9D)),
+              ],
+            ),
+          ),
+          Visibility(
+            visible: _visible,
+            replacement: Container(
+              height: 42,
+              color: const Color(0xFFFFE8CC),
+              child: const Center(
+                child: Text(
+                  'Visibility replacement',
+                  style: TextStyle(fontSize: 11, color: Colors.black),
+                ),
+              ),
+            ),
+            child: Container(
+              height: 42,
+              color: const Color(0xFFD8F3DC),
+              child: const Center(
+                child: Text(
+                  'Visibility child',
+                  style: TextStyle(fontSize: 11, color: Colors.black),
+                ),
+              ),
+            ),
+          ),
+          SizedBox(
+            height: 150,
+            child: CustomScrollView(
+              slivers: <Widget>[
+                SliverToBoxAdapter(
+                  child: Container(
+                    height: 42,
+                    color: const Color(0xFFE9ECEF),
+                    child: const Center(
+                      child: Text(
+                        'sliver before',
+                        style: TextStyle(fontSize: 11, color: Colors.black),
+                      ),
+                    ),
+                  ),
+                ),
+                SliverVisibility(
+                  visible: _visible,
+                  replacementSliver: SliverToBoxAdapter(
+                    child: Container(
+                      height: 42,
+                      color: const Color(0xFFFFE8CC),
+                      child: const Center(
+                        child: Text(
+                          'replacement sliver',
+                          style: TextStyle(fontSize: 11, color: Colors.black),
+                        ),
+                      ),
+                    ),
+                  ),
+                  sliver: SliverToBoxAdapter(
+                    child: Container(
+                      height: 42,
+                      color: const Color(0xFFBDE0FE),
+                      child: const Center(
+                        child: Text(
+                          'SliverVisibility child',
+                          style: TextStyle(fontSize: 11, color: Colors.black),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: Container(
+                    height: 42,
+                    color: const Color(0xFFE9ECEF),
+                    child: const Center(
+                      child: Text(
+                        'sliver after',
+                        style: TextStyle(fontSize: 11, color: Colors.black),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Text(
+            'When offstage=true, child is laid out but not painted/hit-tested and takes no room in parent layout.',
+            style: TextStyle(fontSize: 14, color: Colors.black54),
+          ),
+          Row(
+            spacing: 8,
+            children: <Widget>[
+              _buildButton(
+                label: 'offstage=true',
+                onTap: () => _setOffstage(true),
+                width: 112,
+                background: const Color(0xFFDCE3ED),
+              ),
+              _buildButton(
+                label: 'offstage=false',
+                onTap: () => _setOffstage(false),
+                width: 118,
+                background: const Color(0xFFDCE3ED),
+              ),
+            ],
+          ),
+          Text(
+            'state: offstage=${_offstage ? 'true' : 'false'}',
+            style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
+          ),
+          Container(
+            width: 260,
+            height: 190,
+            color: const Color(0xFFE7EDF6),
+            padding: const EdgeInsets.all(10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              spacing: 8,
+              children: <Widget>[
+                const Text(
+                  'Row layout (middle child disappears from layout when offstage=true)',
+                  style: TextStyle(fontSize: 11, color: Colors.black54),
+                ),
+                Container(
+                  height: 72,
+                  color: Colors.white,
+                  padding: const EdgeInsets.fromLTRB(8, 10, 8, 10),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    spacing: 8,
+                    children: <Widget>[
+                      _buildMarker('L', const Color(0xFF1D3557)),
+                      Offstage(
+                        offstage: _offstage,
+                        child: Container(
+                          width: 120,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFCCE3FF),
+                            border: Border.all(
+                              color: const Color(0xFF1D3557),
+                              width: 2,
+                            ),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Center(
+                            child: Text(
+                              'Offstage child',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      _buildMarker('R', const Color(0xFF457B9D)),
+                    ],
+                  ),
+                ),
+                const Text(
+                  'Tip: switch state and watch L/R gap change.',
+                  style: TextStyle(fontSize: 11, color: Colors.black54),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -141,6 +280,12 @@ class _OffstageDemoPageState extends State<OffstageDemoPage> {
   void _setOffstage(bool value) {
     setState(() {
       _offstage = value;
+    });
+  }
+
+  void _setVisible(bool value) {
+    setState(() {
+      _visible = value;
     });
   }
 }
