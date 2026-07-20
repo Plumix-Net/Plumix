@@ -32,6 +32,7 @@ class SampleRoutes {
   static const String drawerHeaders = '/drawer-headers';
   static const String divider = '/divider';
   static const String badgeTooltip = '/badge-tooltip';
+  static const String magnifier = '/magnifier';
   static const String circleAvatar = '/circle-avatar';
   static const String navigationSurfaces = '/navigation-surfaces';
   static const String navigationDrawer = '/navigation-drawer';

@@ -250,7 +250,28 @@ public sealed class PipelineOwner
 
     public void CompositeFrame(DrawingContext context)
     {
-        _rootLayer.AddToScene(context, new Point(0, 0));
+        if (!_rootLayer.ContainsMagnifier)
+        {
+            _rootLayer.AddToScene(context, new Point(0, 0));
+            return;
+        }
+
+        var backdrop = new DrawingGroup();
+        Layer.BeginMagnifierBackdropCapture();
+        try
+        {
+            using (DrawingContext backdropContext = backdrop.Open())
+            {
+                _rootLayer.AddToScene(backdropContext, new Point(0, 0));
+            }
+
+            Layer.EndMagnifierBackdropCapture(backdrop);
+            _rootLayer.AddToScene(context, new Point(0, 0));
+        }
+        finally
+        {
+            Layer.ClearMagnifierBackdrop();
+        }
     }
 
     public void FlushSemantics()

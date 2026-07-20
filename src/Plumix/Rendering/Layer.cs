@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
+using Plumix.UI;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/rendering/layer.dart (approximate)
 
@@ -8,7 +9,53 @@ namespace Plumix.Rendering;
 
 public abstract class Layer
 {
+    [ThreadStatic]
+    private static Drawing? _magnifierBackdrop;
+
+    [ThreadStatic]
+    private static bool _capturingMagnifierBackdrop;
+
     public ContainerLayer? Parent { get; private set; }
+
+    internal virtual bool ContainsMagnifier => false;
+
+    internal static Drawing? MagnifierBackdrop => _magnifierBackdrop;
+
+    internal static bool CapturingMagnifierBackdrop => _capturingMagnifierBackdrop;
+
+    internal static void BeginMagnifierBackdropCapture()
+    {
+        _capturingMagnifierBackdrop = true;
+        _magnifierBackdrop = null;
+    }
+
+    internal static void EndMagnifierBackdropCapture(Drawing drawing)
+    {
+        _capturingMagnifierBackdrop = false;
+        _magnifierBackdrop = drawing;
+    }
+
+    internal static void ClearMagnifierBackdrop()
+    {
+        _capturingMagnifierBackdrop = false;
+        _magnifierBackdrop = null;
+    }
+
+    internal static DrawingContext.PushedState PushRoundedRectClip(
+        DrawingContext context,
+        Rect rect,
+        double radius)
+    {
+        double clampedRadius = Math.Min(Math.Max(0, radius), Math.Min(rect.Width, rect.Height) / 2.0);
+        if (CapturingMagnifierBackdrop)
+        {
+            // Avalonia's DrawingGroup recording context does not implement PushClip(RoundedRect), but its
+            // geometry-clip path records the equivalent rounded rectangle correctly.
+            return context.PushGeometryClip(new RectangleGeometry(rect, clampedRadius, clampedRadius));
+        }
+
+        return context.PushClip(new RoundedRect(rect, clampedRadius));
+    }
 
     internal void Attach(ContainerLayer parent)
     {
@@ -28,6 +75,8 @@ public class ContainerLayer : Layer
     private readonly List<Layer> _children = [];
 
     public IReadOnlyList<Layer> Children => _children;
+
+    internal override bool ContainsMagnifier => _children.Any(static child => child.ContainsMagnifier);
 
     public void Append(Layer child)
     {
@@ -69,6 +118,134 @@ public class ContainerLayer : Layer
         for (int index = 0; index < _children.Count; index++)
         {
             _children[index].AddToScene(context, offset);
+        }
+    }
+}
+
+public sealed class MagnifierLayer : ContainerLayer
+{
+    public Rect LensRect { get; set; }
+
+    public Point FocalPointOffset { get; set; }
+
+    public double MagnificationScale { get; set; } = 1.0;
+
+    public MagnifierDecoration Decoration { get; set; } = new();
+
+    public Clip ClipBehavior { get; set; } = Clip.None;
+
+    internal override bool ContainsMagnifier => true;
+
+    internal override void AddToScene(DrawingContext context, Point offset)
+    {
+        if (CapturingMagnifierBackdrop)
+        {
+            return;
+        }
+
+        Rect lensRect = new(LensRect.Position + offset, LensRect.Size);
+        if (lensRect.Width <= 0 || lensRect.Height <= 0)
+        {
+            return;
+        }
+
+        double radius = Decoration.Shape.Shape == BoxShape.Circle
+            ? Math.Min(lensRect.Width, lensRect.Height) / 2.0
+            : Math.Min(
+                Decoration.Shape.BorderRadius.Radius,
+                Math.Min(lensRect.Width, lensRect.Height) / 2.0);
+        using (context.PushOpacity(Math.Clamp(Decoration.Opacity, 0.0, 1.0)))
+        {
+            using (PushRoundedRectClip(context, lensRect, radius))
+            {
+                DrawMagnifiedBackdrop(context, lensRect);
+                AddChildrenToScene(context, offset);
+            }
+
+            DrawDecoration(context, lensRect, radius);
+        }
+    }
+
+    private void DrawMagnifiedBackdrop(DrawingContext context, Rect lensRect)
+    {
+        Drawing? backdrop = MagnifierBackdrop;
+        if (backdrop == null)
+        {
+            return;
+        }
+
+        double scale = MagnificationScale;
+        double absoluteScale = Math.Abs(scale);
+        if (absoluteScale <= double.Epsilon)
+        {
+            return;
+        }
+
+        Point focalPoint = lensRect.Center + FocalPointOffset;
+        var sourceSize = new Size(lensRect.Width / absoluteScale, lensRect.Height / absoluteScale);
+        var sourceRect = new Rect(
+            focalPoint.X - (sourceSize.Width / 2.0),
+            focalPoint.Y - (sourceSize.Height / 2.0),
+            sourceSize.Width,
+            sourceSize.Height);
+        var image = new DrawingImage(backdrop)
+        {
+            Viewbox = backdrop.GetBounds(),
+        };
+
+        if (scale > 0)
+        {
+            context.DrawImage(image, sourceRect, lensRect);
+            return;
+        }
+
+        using (context.PushTransform(
+                   Matrix.CreateTranslation(lensRect.Center.X, lensRect.Center.Y)
+                   * Matrix.CreateScale(-1, -1)
+                   * Matrix.CreateTranslation(-lensRect.Center.X, -lensRect.Center.Y)))
+        {
+            context.DrawImage(image, sourceRect, lensRect);
+        }
+    }
+
+    private void DrawDecoration(DrawingContext context, Rect lensRect, double radius)
+    {
+        BoxShadows shadows = Decoration.Shadows ?? default;
+        BorderSide? side = Decoration.Shape.Side;
+        IPen? pen = side is { Style: BorderStyle.Solid, Width: > 0 }
+            ? new Pen(new SolidColorBrush(side.Value.Color), side.Value.Width)
+            : null;
+
+        if (shadows.Count == 0 && pen == null)
+        {
+            return;
+        }
+
+        DrawingContext.PushedState? clip = null;
+        try
+        {
+            if (ClipBehavior != Clip.None)
+            {
+                var outer = lensRect.Inflate(Math.Max(lensRect.Width, lensRect.Height));
+                var geometry = new CombinedGeometry(
+                    GeometryCombineMode.Exclude,
+                    new RectangleGeometry(outer),
+                    new RectangleGeometry(
+                        new Rect(
+                            lensRect.X + (pen?.Thickness ?? 0),
+                            lensRect.Y + (pen?.Thickness ?? 0),
+                            Math.Max(0, lensRect.Width - ((pen?.Thickness ?? 0) * 2)),
+                            Math.Max(0, lensRect.Height - ((pen?.Thickness ?? 0) * 2))),
+                        radius,
+                        radius));
+                clip = context.PushGeometryClip(geometry);
+            }
+
+            context.DrawRectangle(Brushes.Transparent, pen, new RoundedRect(lensRect, radius), shadows);
+        }
+        finally
+        {
+            clip?.Dispose();
         }
     }
 }
@@ -155,7 +332,7 @@ public sealed class ClipRRectOffsetLayer : OffsetLayer
     {
         var sceneOffset = offset + Offset;
         var translatedRect = new Rect(ClipRect.Position + sceneOffset, ClipRect.Size);
-        using (context.PushClip(new RoundedRect(translatedRect, ClampRadius(translatedRect, BorderRadius))))
+        using (PushRoundedRectClip(context, translatedRect, ClampRadius(translatedRect, BorderRadius)))
         {
             AddChildrenToScene(context, sceneOffset);
         }
@@ -191,7 +368,7 @@ public sealed class ClipRRectLayer : ContainerLayer
     internal override void AddToScene(DrawingContext context, Point offset)
     {
         var translatedRect = new Rect(ClipRect.Position + offset, ClipRect.Size);
-        using (context.PushClip(new RoundedRect(translatedRect, ClampRadius(translatedRect, BorderRadius))))
+        using (PushRoundedRectClip(context, translatedRect, ClampRadius(translatedRect, BorderRadius)))
         {
             base.AddToScene(context, offset);
         }

@@ -40,6 +40,7 @@ internal static class SampleRoutes
     public const string DrawerHeaders = "/drawer-headers";
     public const string Divider = "/divider";
     public const string BadgeTooltip = "/badge-tooltip";
+    public const string Magnifier = "/magnifier";
     public const string CircleAvatar = "/circle-avatar";
     public const string NavigationSurfaces = "/navigation-surfaces";
     public const string NavigationDrawer = "/navigation-drawer";
@@ -129,6 +130,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
         new(SampleRoutes.DrawerHeaders, "Drawer headers", "DrawerHeader + UserAccountsDrawerHeader", () => new DrawerHeadersDemoPage()),
         new(SampleRoutes.Divider, "Divider", "horizontal/vertical divider + theme/widget precedence probes", () => new DividerDemoPage()),
         new(SampleRoutes.BadgeTooltip, "Badge + Tooltip", "count/small badges + hover/long-press tooltip theming", () => new BadgeTooltipDemoPage()),
+        new(
+            SampleRoutes.Magnifier,
+            "RawMagnifier + Magnifier",
+            "backdrop zoom + focal offsets + Material lens styling",
+            () => new MagnifierDemoPage()),
         new(SampleRoutes.CircleAvatar, "CircleAvatar", "initials + image layers + animated radius + fallback", () => new CircleAvatarDemoPage()),
         new(SampleRoutes.NavigationSurfaces, "NavigationBar + NavigationRail", "horizontal/vertical Material navigation + labels/themes", () => new NavigationSurfacesDemoPage()),
         new(SampleRoutes.NavigationDrawer, "NavigationDrawer", "destinations + custom children + selection/theme probes", () => new NavigationDrawerDemoPage()),

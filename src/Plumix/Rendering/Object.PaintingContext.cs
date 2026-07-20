@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Media.TextFormatting;
+using Plumix.UI;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/rendering/object.dart (approximate)
 
@@ -244,9 +245,7 @@ public sealed class PaintingContext
                 {
                     var translatedClip = new Rect(clipRect.Value.Position + sceneOffset, clipRect.Value.Size);
                     clip = clipRadius.HasValue && clipRadius.Value.Radius > 0
-                        ? drawingContext.PushClip(new RoundedRect(
-                            translatedClip,
-                            Math.Min(clipRadius.Value.Radius, Math.Min(translatedClip.Width, translatedClip.Height) / 2.0)))
+                        ? Layer.PushRoundedRectClip(drawingContext, translatedClip, clipRadius.Value.Radius)
                         : drawingContext.PushClip(translatedClip);
                 }
 
@@ -364,6 +363,33 @@ public sealed class PaintingContext
             Opacity = opacity
         };
 
+        _containerLayer.Append(layer);
+
+        var childContext = new PaintingContext(layer);
+        painter(childContext);
+        childContext.StopRecordingIfNeeded();
+    }
+
+    public void PushMagnifier(
+        Rect lensRect,
+        Point focalPointOffset,
+        double magnificationScale,
+        MagnifierDecoration decoration,
+        Clip clipBehavior,
+        Action<PaintingContext> painter)
+    {
+        ArgumentNullException.ThrowIfNull(decoration);
+        ArgumentNullException.ThrowIfNull(painter);
+        StopRecordingIfNeeded();
+
+        var layer = new MagnifierLayer
+        {
+            LensRect = lensRect,
+            FocalPointOffset = focalPointOffset,
+            MagnificationScale = magnificationScale,
+            Decoration = decoration,
+            ClipBehavior = clipBehavior,
+        };
         _containerLayer.Append(layer);
 
         var childContext = new PaintingContext(layer);

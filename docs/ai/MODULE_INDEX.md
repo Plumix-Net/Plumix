@@ -47,6 +47,9 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   shared registration, keyboard/copy flow, and multi-paragraph coordination live in core `Widgets/Selection.cs`,
   while glyph hit testing/highlight paint live in `RenderParagraph.cs`. Focused coverage is in
   `MaterialSelectionTests.cs`.
+- Magnifiers enter through core `Widgets/Magnifier.cs` + `Rendering/Magnifier.cs`, Material `Magnifier.cs`, and
+  Cupertino `CupertinoMagnifier.cs`; backdrop capture/composition lives in `Rendering/Layer.cs`, with focused
+  coverage in `MagnifierTests.cs`.
 - Material text-selection toolbar controls enter through `TextSelectionToolbar.cs` and
   `DesktopTextSelectionToolbar.cs`; delegated viewport placement and size transitions live in core
   `Widgets/TextSelectionToolbarLayoutDelegate.cs`, `Widgets/DesktopTextSelectionToolbarLayoutDelegate.cs`,

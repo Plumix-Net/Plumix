@@ -171,8 +171,11 @@ public sealed class ImageProviderDecorationTests : IDisposable
         Assert.Equal(new ImageCacheStatus(Pending: true, KeepAlive: false, Live: true), cache.StatusForKey("image"));
 
         completion.SetResult(new ImageInfo(new FakeImage(new Size(2, 3))));
-        Assert.True(SpinWait.SpinUntil(() => cache.CurrentSize == 1, TimeSpan.FromSeconds(2)));
-        Assert.Equal(new ImageCacheStatus(Pending: false, KeepAlive: true, Live: false), cache.StatusForKey("image"));
+        var completedStatus = new ImageCacheStatus(Pending: false, KeepAlive: true, Live: false);
+        Assert.True(SpinWait.SpinUntil(
+            () => cache.StatusForKey("image") == completedStatus,
+            TimeSpan.FromSeconds(2)));
+        Assert.Equal(completedStatus, cache.StatusForKey("image"));
 
         cache.PutIfAbsent("image", () => throw new Exception("must not reload"));
         Assert.True(cache.StatusForKey("image").Live);

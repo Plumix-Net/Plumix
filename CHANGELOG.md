@@ -1,5 +1,13 @@
 # Changelog
 
+- Stabilized the image-cache lifetime regression test by waiting for pending completion and last-listener cleanup as
+  one final cache state, avoiding a thread-scheduling race in CI.
+
+- Added the Flutter magnifier family: core `RawMagnifier`/controller/configuration, Material `Magnifier`/
+  `TextMagnifier`, and adaptive Cupertino lens/positioning controls, backed by framework-owned scene magnification.
+  Added focused geometry/layer tests and a mirrored C#/Dart runtime probe; advanced `Plumix`, `Plumix.Cupertino`,
+  and `Plumix.Material` to `0.2.0-alpha.1`. Fixed rounded-clip recording in the magnifier backdrop capture path.
+
 - Added paired Flutter core `ValueListenableBuilder<T>` + `TweenAnimationBuilder<T>` ports with source-shaped
   listener rebinding, stable-child builder contracts, owned tween retargeting, interrupted-animation continuity,
   curve/duration/`onEnd` behavior, focused tests, and mirrored C#/Dart runtime probes.

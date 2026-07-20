@@ -227,8 +227,8 @@ Kickoff note (2026-03-12):
 - Added paired Material `SelectableText` + `SelectionArea` parity baseline over a shared core `SelectableRegion`:
   single-run and multi-widget selection, glyph-range highlight paint, transformed cross-paragraph pointer drag,
   select-all/copy keyboard flow, focus/cursor behavior, `TextSelectionTheme` precedence, callbacks, focused tests,
-  and mirrored C#/Dart sample probes. Rich spans, handles, toolbars, magnifiers, and advanced selection services
-  remain tracked in `DIVERGENCES.md`.
+  and mirrored C#/Dart sample probes. Rich spans, handles, automatic toolbar/magnifier integration, and advanced
+  selection services remain tracked in `DIVERGENCES.md`.
 - Added paired Material `DesktopTextSelectionToolbar` + `DesktopTextSelectionToolbarButton` parity with the shared
   core `CustomSingleChildLayout` delegate/render primitive, safe-area-aware anchored placement, viewport clamping,
   desktop card/button geometry, light/dark typography, cursor/disabled/tap behavior, focused tests, and mirrored
@@ -242,6 +242,10 @@ Kickoff note (2026-03-12):
   suggestion/delete styling, keyboard-inset-aware placement, focused tests, and expanded mirrored C#/Dart probes.
   Cupertino toolbar visuals and automatic editable selection/spell-check integration remain tracked in
   `DIVERGENCES.md` pending shared overlay and spell-check services.
+- Added the paired core `RawMagnifier` + Material `Magnifier`/`TextMagnifier` family with source-shaped geometry,
+  focal clamping, line-jump motion, controller/configuration contracts, framework-owned scene magnification,
+  adaptive Cupertino lens behavior, focused tests, and a mirrored C#/Dart runtime probe. Root-overlay insertion,
+  transformed-backdrop capture, and multiple-lens ordering limits remain tracked in `DIVERGENCES.md`.
 - Added paired `TabPageSelector` + `TabPageSelectorIndicator` parity with explicit/inherited controllers, animated and drag-driven color interpolation, theme-secondary defaults, border styles, localized semantics, focused tests, and expanded mirrored tabs demos.
 - Added paired `FloatingActionButtonLocation` + `FloatingActionButtonAnimator` baseline: `Scaffold` now exposes Flutter-shaped location/animator APIs and applies standard start/center/end, top/float/docked/contained, mini, RTL, and inset placement through a framework render adapter; the public geometry model also carries snackbar/bottom-sheet inputs for the full Dart formulas. Focused geometry/animator tests and a mirrored centered-FAB sample probe were added. Location-transition motion and live snackbar/bottom-sheet avoidance remain tracked in `DIVERGENCES.md` pending live scaffold geometry.
 - Added paired core `IgnorePointer` + `AbsorbPointer` parity with Dart-shaped hit-test blocking/absorption, default semantics action blocking, `ignoringSemantics` subtree omission, and focused widget/render/semantics coverage.
