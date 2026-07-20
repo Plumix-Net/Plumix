@@ -902,6 +902,86 @@ class _AlignDemoPageState extends State<AlignDemoPage>
                 ),
               ),
             ),
+            const Text(
+              'ListenableBuilder + AnimatedBuilder',
+              style: TextStyle(fontSize: 20, color: Colors.black),
+            ),
+            const Text(
+              'The generic listenable and animation aliases share listener lifecycle and stable-child reuse.',
+              style: TextStyle(fontSize: 14, color: Colors.black54),
+            ),
+            Row(
+              spacing: 8,
+              children: <Widget>[
+                _buildButton(
+                  label: 'Notify listenable',
+                  onTap: () {
+                    _builderCounter.value += 1;
+                  },
+                  width: 132,
+                  background: const Color(0xFFE5EDF5),
+                ),
+                _buildButton(
+                  label: _explicitTransitionsForward
+                      ? 'Reverse builder'
+                      : 'Forward builder',
+                  onTap: _toggleExplicitTransitions,
+                  width: 132,
+                  background: const Color(0xFFF1E5D8),
+                ),
+              ],
+            ),
+            ListenableBuilder(
+              listenable: _builderCounter,
+              child: Container(
+                width: 84,
+                height: 28,
+                color: const Color(0xFFE4E8EE),
+                child: const Center(
+                  child: Text(
+                    'stable child',
+                    style: TextStyle(fontSize: 11, color: Color(0xFF2F4F4F)),
+                  ),
+                ),
+              ),
+              builder: (BuildContext context, Widget? child) {
+                return Row(
+                  spacing: 8,
+                  children: <Widget>[
+                    Text(
+                      'listenable notifications=${_builderCounter.value}',
+                      style: const TextStyle(fontSize: 13, color: Colors.black),
+                    ),
+                    child ?? const SizedBox.shrink(),
+                  ],
+                );
+              },
+            ),
+            Container(
+              width: 240,
+              height: 56,
+              color: const Color(0xFFF3F5F8),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: AnimatedBuilder(
+                  animation: _explicitTransitionsController,
+                  child: const Center(
+                    child: Text(
+                      'animated child',
+                      style: TextStyle(fontSize: 12, color: Colors.white),
+                    ),
+                  ),
+                  builder: (BuildContext context, Widget? child) {
+                    return Container(
+                      width: 72 + (_explicitTransitionsController.value * 108),
+                      height: 36,
+                      color: const Color(0xFF6B5B95),
+                      child: child,
+                    );
+                  },
+                ),
+              ),
+            ),
           ],
         ),
       ),

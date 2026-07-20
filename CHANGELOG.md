@@ -1,5 +1,9 @@
 # Changelog
 
+- Added paired Flutter core `ListenableBuilder` + `AnimatedBuilder` ports with source-identical inheritance,
+  shared `AnimatedWidget` listener rebinding/disposal, stable-child fast paths, focused tests, and mirrored C#/Dart
+  runtime probes. Advanced `Plumix` to `0.3.0-alpha.1`.
+
 - Added automatic selection context menus for paired Material `TextField`/`TextFormField` and
   `SelectableText`/`SelectionArea`: pointer drag and word selection, source-shaped context-menu builders,
   Copy/Cut/Paste/Select all policies, adaptive toolbar anchors, route-backed presentation, focused tests, and

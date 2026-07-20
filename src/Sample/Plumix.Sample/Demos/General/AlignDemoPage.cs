@@ -696,6 +696,59 @@ internal sealed class AlignDemoPageState : State
                                 height: 36,
                                 color: Color.Parse("#FF356A82"),
                                 child: child)))),
+                new Text("ListenableBuilder + AnimatedBuilder", fontSize: 20, color: Colors.Black),
+                new Text(
+                    "The generic listenable and animation aliases share listener lifecycle and stable-child reuse.",
+                    fontSize: 14,
+                    color: Colors.DimGray),
+                new Row(
+                    spacing: 8,
+                    children:
+                    [
+                        BuildButton(
+                            "Notify listenable",
+                            () => _builderCounter.Value++,
+                            width: 132,
+                            colorHex: "#FFE5EDF5"),
+                        BuildButton(
+                            _explicitTransitionsForward ? "Reverse builder" : "Forward builder",
+                            ToggleExplicitTransitions,
+                            width: 132,
+                            colorHex: "#FFF1E5D8"),
+                    ]),
+                new ListenableBuilder(
+                    listenable: _builderCounter,
+                    child: new Container(
+                        width: 84,
+                        height: 28,
+                        color: Color.Parse("#FFE4E8EE"),
+                        child: new Center(
+                            child: new Text("stable child", fontSize: 11, color: Colors.DarkSlateGray))),
+                    builder: (_, child) => new Row(
+                        spacing: 8,
+                        children:
+                        [
+                            new Text(
+                                $"listenable notifications={_builderCounter.Value}",
+                                fontSize: 13,
+                                color: Colors.Black),
+                            child ?? new SizedBox(),
+                        ])),
+                new Container(
+                    width: 240,
+                    height: 56,
+                    color: Color.Parse("#FFF3F5F8"),
+                    child: new Align(
+                        alignment: Alignment.CenterLeft,
+                        child: new AnimatedBuilder(
+                            animation: _explicitTransitionsController,
+                            child: new Center(
+                                child: new Text("animated child", fontSize: 12, color: Colors.White)),
+                            builder: (_, child) => new Container(
+                                width: 72 + (_explicitTransitionsController.Value * 108),
+                                height: 36,
+                                color: Color.Parse("#FF6B5B95"),
+                                child: child)))),
             ]);
     }
 

@@ -59,6 +59,44 @@ public abstract class AnimatedWidget : StatefulWidget
     }
 }
 
+public delegate Widget TransitionBuilder(BuildContext context, Widget? child);
+
+public class ListenableBuilder : AnimatedWidget
+{
+    public ListenableBuilder(
+        IListenable listenable,
+        TransitionBuilder builder,
+        Widget? child = null,
+        Key? key = null) : base(listenable, key)
+    {
+        Builder = builder ?? throw new ArgumentNullException(nameof(builder));
+        Child = child;
+    }
+
+    public TransitionBuilder Builder { get; }
+
+    public Widget? Child { get; }
+
+    public override Widget Build(BuildContext context) => Builder(context, Child);
+}
+
+public sealed class AnimatedBuilder : ListenableBuilder
+{
+    public AnimatedBuilder(
+        IListenable animation,
+        TransitionBuilder builder,
+        Widget? child = null,
+        Key? key = null) : base(
+            listenable: animation,
+            builder: builder,
+            child: child,
+            key: key)
+    {
+    }
+
+    public IListenable Animation => Listenable;
+}
+
 public sealed class SlideTransition : AnimatedWidget
 {
     public SlideTransition(

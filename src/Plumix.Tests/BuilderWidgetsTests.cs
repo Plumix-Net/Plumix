@@ -19,6 +19,127 @@ public sealed class BuilderWidgetsTests : IDisposable
     }
 
     [Fact]
+    public void ListenableAndAnimatedBuilder_ExposeSourceContractsAndValidateArguments()
+    {
+        var listenable = new TrackingListenable();
+        var child = new SizedBox(width: 10, height: 10);
+        TransitionBuilder builder = (_, passedChild) => passedChild ?? new SizedBox();
+        var listenableBuilder = new ListenableBuilder(
+            listenable: listenable,
+            builder: builder,
+            child: child);
+        var animatedBuilder = new AnimatedBuilder(
+            animation: listenable,
+            builder: builder,
+            child: child);
+
+        Assert.Same(listenable, listenableBuilder.Listenable);
+        Assert.Same(builder, listenableBuilder.Builder);
+        Assert.Same(child, listenableBuilder.Child);
+        Assert.Same(listenable, animatedBuilder.Animation);
+        Assert.Same(listenable, animatedBuilder.Listenable);
+        Assert.Same(builder, animatedBuilder.Builder);
+        Assert.Same(child, animatedBuilder.Child);
+        Assert.Throws<ArgumentNullException>(() => new ListenableBuilder(null!, builder));
+        Assert.Throws<ArgumentNullException>(() => new ListenableBuilder(listenable, null!));
+        Assert.Throws<ArgumentNullException>(() => new AnimatedBuilder(null!, builder));
+        Assert.Throws<ArgumentNullException>(() => new AnimatedBuilder(listenable, null!));
+    }
+
+    [Fact]
+    public void ListenableBuilder_RebuildsOnNotifyRebindsAndPreservesChildSubtree()
+    {
+        var first = new TrackingListenable();
+        var second = new TrackingListenable();
+        var child = new BuildCounterWidget();
+        var passedChildren = new List<Widget?>();
+        int builderCalls = 0;
+        var owner = new BuildOwner();
+        var root = new TestRootElement(Build(first));
+        Mount(root, owner);
+
+        Assert.Equal(1, builderCalls);
+        Assert.Equal(1, child.BuildCount);
+        Assert.Same(child, Assert.Single(passedChildren));
+        Assert.Equal(1, first.ListenerCount);
+
+        owner.FlushBuild();
+        Assert.Equal(1, builderCalls);
+        Assert.Equal(1, child.BuildCount);
+
+        first.Notify();
+        owner.FlushBuild();
+        Assert.Equal(2, builderCalls);
+        Assert.Equal(1, child.BuildCount);
+        Assert.Same(child, passedChildren[^1]);
+
+        root.Update(Build(second));
+        owner.FlushBuild();
+        Assert.Equal(3, builderCalls);
+        Assert.Equal(1, child.BuildCount);
+        Assert.Equal(0, first.ListenerCount);
+        Assert.Equal(1, second.ListenerCount);
+
+        first.Notify();
+        owner.FlushBuild();
+        Assert.Equal(3, builderCalls);
+
+        second.Notify();
+        owner.FlushBuild();
+        Assert.Equal(4, builderCalls);
+        Assert.Equal(1, child.BuildCount);
+
+        root.Unmount();
+        Assert.Equal(0, second.ListenerCount);
+
+        ListenableBuilder Build(IListenable listenable)
+        {
+            return new ListenableBuilder(
+                listenable: listenable,
+                child: child,
+                builder: (_, passedChild) =>
+                {
+                    builderCalls++;
+                    passedChildren.Add(passedChild);
+                    return passedChild ?? new SizedBox();
+                });
+        }
+    }
+
+    [Fact]
+    public void AnimatedBuilder_RebuildsOnAnimationNotificationsWithoutRebuildingChild()
+    {
+        var animation = new TrackingListenable();
+        var child = new BuildCounterWidget();
+        int builderCalls = 0;
+        var owner = new BuildOwner();
+        var root = new TestRootElement(new AnimatedBuilder(
+            animation: animation,
+            child: child,
+            builder: (_, passedChild) =>
+            {
+                builderCalls++;
+                return passedChild ?? new SizedBox();
+            }));
+        Mount(root, owner);
+
+        Assert.Equal(1, builderCalls);
+        Assert.Equal(1, child.BuildCount);
+
+        animation.Notify();
+        owner.FlushBuild();
+        Assert.Equal(2, builderCalls);
+        Assert.Equal(1, child.BuildCount);
+
+        owner.FlushBuild();
+        Assert.Equal(2, builderCalls);
+        Assert.Equal(1, child.BuildCount);
+
+        root.Unmount();
+        Assert.Equal(0, animation.ListenerCount);
+    }
+
+    [Fact]
     public void ValueListenableBuilder_ExposesSourceContractAndValidatesArguments()
     {
         var listenable = new TrackingValueListenable<int>(4);
@@ -245,6 +366,42 @@ public sealed class BuilderWidgetsTests : IDisposable
             foreach (var listener in _listeners.ToArray())
             {
                 listener();
+            }
+        }
+    }
+
+    private sealed class TrackingListenable : IListenable
+    {
+        private readonly List<Action> _listeners = [];
+
+        public int ListenerCount => _listeners.Count;
+
+        public void AddListener(Action listener) => _listeners.Add(listener);
+
+        public void RemoveListener(Action listener) => _listeners.Remove(listener);
+
+        public void Notify()
+        {
+            foreach (var listener in _listeners.ToArray())
+            {
+                listener();
+            }
+        }
+    }
+
+    private sealed class BuildCounterWidget : StatefulWidget
+    {
+        public int BuildCount { get; private set; }
+
+        public override State CreateState() => new BuildCounterState();
+
+        private sealed class BuildCounterState : State
+        {
+            public override Widget Build(BuildContext context)
+            {
+                var currentWidget = (BuildCounterWidget)StateWidget;
+                currentWidget.BuildCount++;
+                return new SizedBox(width: 10, height: 10);
             }
         }
     }
