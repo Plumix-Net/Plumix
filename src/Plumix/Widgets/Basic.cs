@@ -519,6 +519,8 @@ public sealed class Transform : SingleChildRenderObjectWidget
     }
 }
 
+// Dart parity source: flutter/packages/flutter/lib/src/widgets/basic.dart
+// (FractionalTranslation, RotatedBox)
 public sealed class FractionalTranslation : SingleChildRenderObjectWidget
 {
     public FractionalTranslation(
@@ -527,10 +529,6 @@ public sealed class FractionalTranslation : SingleChildRenderObjectWidget
         bool transformHitTests = true,
         Key? key = null) : base(child, key)
     {
-        if (!double.IsFinite(translation.X) || !double.IsFinite(translation.Y))
-        {
-            throw new ArgumentOutOfRangeException(nameof(translation));
-        }
         Translation = translation;
         TransformHitTests = transformHitTests;
     }
@@ -548,6 +546,29 @@ public sealed class FractionalTranslation : SingleChildRenderObjectWidget
         var translation = (RenderFractionalTranslation)renderObject;
         translation.Translation = Translation;
         translation.TransformHitTests = TransformHitTests;
+    }
+}
+
+public sealed class RotatedBox : SingleChildRenderObjectWidget
+{
+    public RotatedBox(
+        int quarterTurns,
+        Widget? child = null,
+        Key? key = null) : base(child, key)
+    {
+        QuarterTurns = quarterTurns;
+    }
+
+    public int QuarterTurns { get; }
+
+    internal override RenderObject CreateRenderObject(BuildContext context)
+    {
+        return new RenderRotatedBox(QuarterTurns);
+    }
+
+    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    {
+        ((RenderRotatedBox)renderObject).QuarterTurns = QuarterTurns;
     }
 }
 

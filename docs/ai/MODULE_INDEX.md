@@ -117,6 +117,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/Rendering/Object.RenderObject.cs`
   - `src/Plumix/Rendering/Box.RenderBox.cs`
   - `src/Plumix/Rendering/Proxy.RenderBox.cs`
+  - `src/Plumix/Widgets/Basic.cs`
   - `src/Plumix/Rendering/Baseline.cs`
   - `src/Plumix/Widgets/Baseline.cs`
   - `src/Plumix/Widgets/LayoutBuilder.cs`
@@ -129,6 +130,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/Rendering/Layer.cs`
   - `src/Plumix/Rendering/Object.PaintingContext.cs`
 - Primary Tests:
+  - `src/Plumix.Tests/BasicWidgetProxyTests.cs`
   - `src/Plumix.Tests/RenderingParityTests.cs`
   - `src/Plumix.Tests/BaselineTests.cs`
   - `src/Plumix.Tests/LayoutBuilderTests.cs`

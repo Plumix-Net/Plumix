@@ -1790,6 +1790,9 @@ public sealed class RenderTransform : RenderProxyBox
     }
 }
 
+// Dart parity sources:
+// - flutter/packages/flutter/lib/src/rendering/proxy_box.dart (RenderFractionalTranslation)
+// - flutter/packages/flutter/lib/src/rendering/rotated_box.dart (RenderRotatedBox)
 public sealed class RenderFractionalTranslation : RenderProxyBox
 {
     private Vector _translation;
@@ -1820,10 +1823,15 @@ public sealed class RenderFractionalTranslation : RenderProxyBox
     public bool TransformHitTests
     {
         get => _transformHitTests;
-        set { if (_transformHitTests != value) { _transformHitTests = value; MarkNeedsSemanticsUpdate(); } }
+        set => _transformHitTests = value;
     }
 
     private Vector PaintOffset => new(Size.Width * Translation.X, Size.Height * Translation.Y);
+
+    public override bool HitTest(BoxHitTestResult result, Point position)
+    {
+        return HitTestChildren(result, position);
+    }
 
     public override void Paint(PaintingContext ctx, Point offset)
     {
@@ -1846,6 +1854,119 @@ public sealed class RenderFractionalTranslation : RenderProxyBox
         var data = (BoxParentData)Child.parentData!;
         var offset = PaintOffset;
         visitor(Child, data.offset, Matrix.CreateTranslation(offset.X, offset.Y));
+    }
+}
+
+public sealed class RenderRotatedBox : RenderProxyBox
+{
+    private const double QuarterTurnRadians = Math.PI / 2.0;
+
+    private int _quarterTurns;
+    private Matrix _paintTransform = Matrix.Identity;
+
+    public RenderRotatedBox(int quarterTurns, RenderBox? child = null)
+    {
+        _quarterTurns = quarterTurns;
+        Child = child;
+    }
+
+    public int QuarterTurns
+    {
+        get => _quarterTurns;
+        set
+        {
+            if (_quarterTurns == value)
+            {
+                return;
+            }
+
+            _quarterTurns = value;
+            MarkNeedsLayout();
+        }
+    }
+
+    private bool IsVertical => QuarterTurns % 2 != 0;
+
+    protected override void PerformLayout()
+    {
+        _paintTransform = Matrix.Identity;
+        if (Child is null)
+        {
+            Size = Constraints.Smallest;
+            return;
+        }
+
+        Child.Layout(IsVertical ? Constraints.Flipped : Constraints, parentUsesSize: true);
+        Size = IsVertical
+            ? new Size(Child.Size.Height, Child.Size.Width)
+            : Child.Size;
+        ((BoxParentData)Child.parentData!).offset = default;
+
+        double radians = QuarterTurnRadians * (QuarterTurns % 4);
+        _paintTransform = Matrix.CreateTranslation(-Child.Size.Width / 2.0, -Child.Size.Height / 2.0)
+                          * CreateRotationMatrix(radians)
+                          * Matrix.CreateTranslation(Size.Width / 2.0, Size.Height / 2.0);
+    }
+
+    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    {
+        if (Child is null || !_paintTransform.TryInvert(out Matrix inverse))
+        {
+            return false;
+        }
+
+        return Child.HitTest(result, inverse.Transform(position));
+    }
+
+    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    {
+        if (Child != null)
+        {
+            visitor(Child, default, _paintTransform);
+        }
+    }
+
+    protected override double? ComputeDistanceToActualBaseline(TextBaseline baseline)
+    {
+        return null;
+    }
+
+    public override void Paint(PaintingContext ctx, Point offset)
+    {
+        if (Child is null)
+        {
+            return;
+        }
+
+        ctx.PushTransform(Matrix.CreateTranslation(offset.X, offset.Y), translatedContext =>
+        {
+            translatedContext.PushTransform(_paintTransform, transformedContext =>
+            {
+                transformedContext.PaintChild(Child, default);
+            });
+        });
+    }
+
+    private static Matrix CreateRotationMatrix(double radians)
+    {
+        double sine = Math.Sin(radians);
+        if (sine == 1.0)
+        {
+            return new Matrix(0, 1, -1, 0, 0, 0);
+        }
+
+        if (sine == -1.0)
+        {
+            return new Matrix(0, -1, 1, 0, 0, 0);
+        }
+
+        double cosine = Math.Cos(radians);
+        if (cosine == -1.0)
+        {
+            return new Matrix(-1, 0, 0, -1, 0, 0);
+        }
+
+        return new Matrix(cosine, sine, -sine, cosine, 0, 0);
     }
 }
 

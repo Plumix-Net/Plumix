@@ -15,6 +15,8 @@ class _ProxyWidgetsDemoPageState extends State<ProxyWidgetsDemoPage> {
   double _opacity = 0.8;
   double _shiftX = 0;
   bool _tightClip = true;
+  double _fractionalShift = 0;
+  int _quarterTurns = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +29,7 @@ class _ProxyWidgetsDemoPageState extends State<ProxyWidgetsDemoPage> {
       spacing: 10,
       children: <Widget>[
         const Text(
-          'Proxy widgets: Opacity + Transform + clips',
+          'Proxy widgets: transforms + clips',
           style: TextStyle(fontSize: 20, color: Colors.black),
         ),
         const Text(
@@ -127,6 +129,78 @@ class _ProxyWidgetsDemoPageState extends State<ProxyWidgetsDemoPage> {
           ),
         ),
         const Text(
+          'FractionalTranslation + RotatedBox',
+          style: TextStyle(fontSize: 14, color: Colors.black),
+        ),
+        Row(
+          spacing: 8,
+          children: <Widget>[
+            _buildButton(
+              label: 'Shift',
+              onTap: _cycleFractionalShift,
+              width: 88,
+              background: const Color(0xFFE8EDF9),
+            ),
+            _buildButton(
+              label: 'Rotate',
+              onTap: _rotateQuarterTurn,
+              width: 88,
+              background: const Color(0xFFF3E8D8),
+            ),
+            Text(
+              'fraction=${_fractionalShift.toStringAsFixed(1)}, turns=$_quarterTurns',
+              style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
+            ),
+          ],
+        ),
+        Row(
+          spacing: 16,
+          children: <Widget>[
+            Container(
+              width: 120,
+              height: 80,
+              color: const Color(0xFFE7EDF6),
+              child: Center(
+                child: FractionalTranslation(
+                  translation: Offset(_fractionalShift, 0),
+                  child: Container(
+                    width: 56,
+                    height: 32,
+                    color: const Color(0xFF6750A4),
+                    child: const Center(
+                      child: Text(
+                        'Shift',
+                        style: TextStyle(fontSize: 12, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Container(
+              width: 120,
+              height: 80,
+              color: const Color(0xFFE7EDF6),
+              child: Center(
+                child: RotatedBox(
+                  quarterTurns: _quarterTurns,
+                  child: Container(
+                    width: 64,
+                    height: 28,
+                    color: const Color(0xFF386A20),
+                    child: const Center(
+                      child: Text(
+                        'Rotate',
+                        style: TextStyle(fontSize: 12, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const Text(
           'ClipOval + ClipPath',
           style: TextStyle(fontSize: 14, color: Colors.black),
         ),
@@ -213,11 +287,27 @@ class _ProxyWidgetsDemoPageState extends State<ProxyWidgetsDemoPage> {
     });
   }
 
+  void _cycleFractionalShift() {
+    setState(() {
+      _fractionalShift = _fractionalShift >= 0.5
+          ? -0.5
+          : _fractionalShift + 0.5;
+    });
+  }
+
+  void _rotateQuarterTurn() {
+    setState(() {
+      _quarterTurns = (_quarterTurns + 1) % 4;
+    });
+  }
+
   void _reset() {
     setState(() {
       _opacity = 0.8;
       _shiftX = 0;
       _tightClip = true;
+      _fractionalShift = 0;
+      _quarterTurns = 0;
     });
   }
 }

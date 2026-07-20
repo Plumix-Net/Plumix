@@ -22,6 +22,8 @@ internal sealed class ProxyWidgetsDemoPageState : State
     private double _opacity = 0.8;
     private double _shiftX;
     private bool _tightClip = true;
+    private double _fractionalShift;
+    private int _quarterTurns;
 
     public override Widget Build(BuildContext context)
     {
@@ -35,7 +37,7 @@ internal sealed class ProxyWidgetsDemoPageState : State
             children:
             [
                 new Text(
-                    "Proxy widgets: Opacity + Transform + clips",
+                    "Proxy widgets: transforms + clips",
                     fontSize: 20,
                     color: Colors.Black),
                 new Text(
@@ -86,6 +88,49 @@ internal sealed class ProxyWidgetsDemoPageState : State
                                     color: Color.Parse("#FF111111"),
                                     padding: new Thickness(8),
                                     child: new Text("Layer", fontSize: 14, color: Colors.White)))))),
+                new Text("FractionalTranslation + RotatedBox", fontSize: 14, color: Colors.Black),
+                new Row(
+                    spacing: 8,
+                    children:
+                    [
+                        BuildButton("Shift", CycleFractionalShift, width: 88, colorHex: "#FFE8EDF9"),
+                        BuildButton("Rotate", RotateQuarterTurn, width: 88, colorHex: "#FFF3E8D8"),
+                        new Text(
+                            $"fraction={_fractionalShift:0.0}, turns={_quarterTurns}",
+                            fontSize: 12,
+                            color: Colors.DarkSlateGray),
+                    ]),
+                new Row(
+                    spacing: 16,
+                    children:
+                    [
+                        new Container(
+                            width: 120,
+                            height: 80,
+                            color: Color.Parse("#FFE7EDF6"),
+                            child: new Center(
+                                new FractionalTranslation(
+                                    translation: new Vector(_fractionalShift, 0),
+                                    child: new Container(
+                                        width: 56,
+                                        height: 32,
+                                        color: Color.Parse("#FF6750A4"),
+                                        child: new Center(
+                                            new Text("Shift", fontSize: 12, color: Colors.White)))))),
+                        new Container(
+                            width: 120,
+                            height: 80,
+                            color: Color.Parse("#FFE7EDF6"),
+                            child: new Center(
+                                new RotatedBox(
+                                    quarterTurns: _quarterTurns,
+                                    child: new Container(
+                                        width: 64,
+                                        height: 28,
+                                        color: Color.Parse("#FF386A20"),
+                                        child: new Center(
+                                            new Text("Rotate", fontSize: 12, color: Colors.White)))))),
+                    ]),
                 new Text("ClipOval + ClipPath", fontSize: 14, color: Colors.Black),
                 new Row(
                     spacing: 16,
@@ -143,6 +188,16 @@ internal sealed class ProxyWidgetsDemoPageState : State
         SetState(() => _tightClip = !_tightClip);
     }
 
+    private void CycleFractionalShift()
+    {
+        SetState(() => _fractionalShift = _fractionalShift >= 0.5 ? -0.5 : _fractionalShift + 0.5);
+    }
+
+    private void RotateQuarterTurn()
+    {
+        SetState(() => _quarterTurns = (_quarterTurns + 1) % 4);
+    }
+
     private void Reset()
     {
         SetState(() =>
@@ -150,6 +205,8 @@ internal sealed class ProxyWidgetsDemoPageState : State
             _opacity = 0.8;
             _shiftX = 0;
             _tightClip = true;
+            _fractionalShift = 0;
+            _quarterTurns = 0;
         });
     }
 

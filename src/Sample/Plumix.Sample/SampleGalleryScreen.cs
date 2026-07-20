@@ -228,7 +228,7 @@ internal sealed class SampleGalleryScreen : StatelessWidget
         new(
             SampleRoutes.ProxyWidgets,
             "Proxy widgets",
-            "Opacity + Transform + ClipRect/ClipOval/ClipPath",
+            "Opacity + fractional/layout transforms + custom clips",
             () => new ProxyWidgetsDemoPage()),
         new(
             SampleRoutes.Align,
