@@ -32,6 +32,8 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     permissions:
       contents: read
+    env:
+      NUGET_OUTPUT: ${{ github.workspace }}/artifacts/nuget
 
     steps:
       - uses: actions/checkout@v4
@@ -42,26 +44,45 @@ jobs:
           dotnet-version: '10.x'
 
       - name: Extract version from tag
-        run: echo "PKG_VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
+        run: echo "PKG_VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
 
       - name: Pack
+        shell: bash
         run: |
-          dotnet pack src/Plumix/Plumix.csproj               -c Release -p:Version=$PKG_VERSION
-          dotnet pack src/Plumix.Material/Plumix.Material.csproj   -c Release -p:Version=$PKG_VERSION
-          dotnet pack src/Plumix.Cupertino/Plumix.Cupertino.csproj -c Release -p:Version=$PKG_VERSION
-          dotnet pack src/Plumix.FSharp/Plumix.FSharp.fsproj -c Release -p:Version=$PKG_VERSION
-          dotnet pack src/Plumix.Elmish/Plumix.Elmish.fsproj -c Release -p:Version=$PKG_VERSION
+          set -euo pipefail
+          mkdir -p "$NUGET_OUTPUT"
+          dotnet pack src/Plumix/Plumix.csproj -c Release -p:Version="$PKG_VERSION" \
+            --output "$NUGET_OUTPUT"
+          dotnet pack src/Plumix.Material/Plumix.Material.csproj -c Release \
+            -p:Version="$PKG_VERSION" --output "$NUGET_OUTPUT"
+          dotnet pack src/Plumix.Cupertino/Plumix.Cupertino.csproj -c Release \
+            -p:Version="$PKG_VERSION" --output "$NUGET_OUTPUT"
+          dotnet pack src/Plumix.FSharp/Plumix.FSharp.fsproj -c Release \
+            -p:Version="$PKG_VERSION" --output "$NUGET_OUTPUT"
+          dotnet pack src/Plumix.Elmish/Plumix.Elmish.fsproj -c Release \
+            -p:Version="$PKG_VERSION" --output "$NUGET_OUTPUT"
 
       - name: Push to NuGet.org
+        shell: bash
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
         run: |
-          for pkg in \
-            src/Plumix/bin/Release/Plumix.${PKG_VERSION}.nupkg \
-            src/Plumix.Material/bin/Release/Plumix.Material.${PKG_VERSION}.nupkg \
-            src/Plumix.Cupertino/bin/Release/Plumix.Cupertino.${PKG_VERSION}.nupkg \
-            src/Plumix.Material/bin/Release/Plumix.FSharp.${PKG_VERSION}.nupkg \
-            src/Plumix.Cupertino/bin/Release/Plumix.Elmish.${PKG_VERSION}.nupkg; do
-            dotnet nuget push "$pkg" \
-              --api-key ${{ secrets.NUGET_API_KEY }} \
+          set -euo pipefail
+          package_ids=(
+            "Plumix"
+            "Plumix.Material"
+            "Plumix.Cupertino"
+            "Plumix.FSharp"
+            "Plumix.Elmish"
+          )
+          for package_id in "${package_ids[@]}"; do
+            package="$NUGET_OUTPUT/${package_id}.${PKG_VERSION}.nupkg"
+            if [[ ! -f "$package" ]]; then
+              echo "::error::NuGet package was not created: $package"
+              exit 1
+            fi
+            dotnet nuget push "$package" \
+              --api-key "$NUGET_API_KEY" \
               --source https://api.nuget.org/v3/index.json \
               --skip-duplicate
           done
