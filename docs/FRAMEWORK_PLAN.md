@@ -183,6 +183,11 @@ Completion note:
   subtree construction from live `BoxConstraints`, equivalent-constraint rebuild suppression, widget/dependency
   invalidation, portrait/landscape reduction (including the fully unbounded portrait fallback), focused tests, and
   mirrored C#/Dart runtime probes.
+- Continued paired core keyboard-control coverage with `KeyboardListener` + deprecated-compatible
+  `RawKeyboardListener`, including Dart-shaped focus-node/default surfaces, key-down/up delivery, ignored modern
+  callbacks, focus-bound raw listener attach/detach/rebind lifecycle, focusable/focused semantics and accessibility
+  focus actions, focused tests, and mirrored C#/Dart runtime probes. Platform physical/logical raw-key metadata
+  remains tracked against the shared host input model in `DIVERGENCES.md`.
 - Implicit-animations sample viewport hardening: both samples now share an always-visible scrollbar and scroll
   controller around the complete probe column, preventing bottom overflow on short desktop windows.
 

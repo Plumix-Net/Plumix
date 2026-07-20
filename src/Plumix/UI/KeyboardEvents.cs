@@ -36,3 +36,91 @@ public sealed class KeyEvent
 
     public DateTime TimestampUtc { get; }
 }
+
+// Dart parity source: flutter/packages/flutter/lib/src/services/raw_keyboard.dart
+[Obsolete("Use KeyEvent and KeyboardListener instead.")]
+public abstract class RawKeyEvent
+{
+    protected RawKeyEvent(KeyEvent keyEvent)
+    {
+        KeyEvent = keyEvent ?? throw new ArgumentNullException(nameof(keyEvent));
+    }
+
+    public KeyEvent KeyEvent { get; }
+
+    public string Key => KeyEvent.Key;
+
+    public bool IsShiftPressed => KeyEvent.IsShiftPressed;
+
+    public bool IsControlPressed => KeyEvent.IsControlPressed;
+
+    public bool IsAltPressed => KeyEvent.IsAltPressed;
+
+    public bool IsMetaPressed => KeyEvent.IsMetaPressed;
+
+    public DateTime TimestampUtc => KeyEvent.TimestampUtc;
+
+    internal static RawKeyEvent FromKeyEvent(KeyEvent keyEvent)
+    {
+        return keyEvent.IsDown
+            ? new RawKeyDownEvent(keyEvent)
+            : new RawKeyUpEvent(keyEvent);
+    }
+}
+
+[Obsolete("Use KeyEvent and KeyboardListener instead.")]
+public sealed class RawKeyDownEvent : RawKeyEvent
+{
+    public RawKeyDownEvent(KeyEvent keyEvent) : base(keyEvent)
+    {
+    }
+}
+
+[Obsolete("Use KeyEvent and KeyboardListener instead.")]
+public sealed class RawKeyUpEvent : RawKeyEvent
+{
+    public RawKeyUpEvent(KeyEvent keyEvent) : base(keyEvent)
+    {
+    }
+}
+
+// Dart parity source: flutter/packages/flutter/lib/src/services/raw_keyboard.dart
+[Obsolete("Use the Focus/KeyboardListener key event pipeline instead.")]
+public sealed class RawKeyboard
+{
+    private readonly List<Action<RawKeyEvent>> _listeners = [];
+
+    private RawKeyboard()
+    {
+    }
+
+    public static RawKeyboard Instance { get; } = new();
+
+    public void AddListener(Action<RawKeyEvent> listener)
+    {
+        ArgumentNullException.ThrowIfNull(listener);
+        if (!_listeners.Contains(listener))
+        {
+            _listeners.Add(listener);
+        }
+    }
+
+    public void RemoveListener(Action<RawKeyEvent> listener)
+    {
+        _listeners.Remove(listener);
+    }
+
+    internal void HandleKeyEvent(KeyEvent keyEvent)
+    {
+        RawKeyEvent rawEvent = RawKeyEvent.FromKeyEvent(keyEvent);
+        foreach (Action<RawKeyEvent> listener in _listeners.ToArray())
+        {
+            listener(rawEvent);
+        }
+    }
+
+    internal void ResetForTests()
+    {
+        _listeners.Clear();
+    }
+}

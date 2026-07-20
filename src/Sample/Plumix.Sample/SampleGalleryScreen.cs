@@ -99,6 +99,7 @@ internal static class SampleRoutes
     public const string Offstage = "/offstage";
     public const string Baseline = "/baseline";
     public const string LayoutBuilder = "/layout-builder";
+    public const string KeyboardListener = "/keyboard-listener";
 }
 
 internal readonly record struct SampleRouteDefinition(
@@ -253,6 +254,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "LayoutBuilder + OrientationBuilder",
             "layout-time constraints + landscape/portrait composition",
             () => new LayoutBuilderDemoPage()),
+        new(
+            SampleRoutes.KeyboardListener,
+            "Keyboard listeners",
+            "focused key down/up dispatch + legacy raw compatibility",
+            () => new KeyboardListenerDemoPage()),
     ];
 
     private static readonly IReadOnlyList<SampleMenuTabDefinition> DemoTabs =

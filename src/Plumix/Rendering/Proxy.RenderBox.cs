@@ -2166,6 +2166,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
     private Action? _onTap;
     private Action? _onLongPress;
     private Action? _onDismiss;
+    private Action? _onFocus;
     private bool _liveRegion;
     private bool _container;
     private bool _explicitChildNodes;
@@ -2274,6 +2275,17 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         }
     }
 
+    public Action? OnFocus
+    {
+        get => _onFocus;
+        set
+        {
+            if (ReferenceEquals(_onFocus, value)) return;
+            _onFocus = value;
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
     public Action? OnLongPress
     {
         get => _onLongPress;
@@ -2335,6 +2347,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
             && _onTap is null
             && _onLongPress is null
             && _onDismiss is null
+            && _onFocus is null
             && !_liveRegion
             && !_container
             && !_explicitChildNodes)
@@ -2377,6 +2390,10 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         if (_onDismiss is not null)
         {
             configuration.AddActionHandler(SemanticsActions.Dismiss, _onDismiss);
+        }
+        if (_onFocus is not null)
+        {
+            configuration.AddActionHandler(SemanticsActions.Focus, _onFocus);
         }
     }
 }

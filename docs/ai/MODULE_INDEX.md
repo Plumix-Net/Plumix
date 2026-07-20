@@ -173,6 +173,18 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Primary Tests:
   - `src/Plumix.Tests/GesturePipelineTests.cs`
 
+### Focus and Keyboard
+
+- Goal: focus ownership/traversal, host key dispatch, focused keyboard listeners, and focus semantics.
+- Read First:
+  - `src/Plumix/Widgets/Focus.cs`
+  - `src/Plumix/Widgets/KeyboardListener.cs`
+  - `src/Plumix/UI/KeyboardEvents.cs`
+- Primary Tests:
+  - `src/Plumix.Tests/FocusTests.cs`
+  - `src/Plumix.Tests/KeyboardListenerTests.cs`
+  - `src/Plumix.Tests/FlutterHostInputTests.cs`
+
 ### Navigation
 
 - Goal: route stack operations, named routes, observers, back handling, hero flights.

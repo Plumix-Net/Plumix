@@ -31,6 +31,7 @@ public enum SemanticsFlags
     NamesRoute = 1 << 18,
     HasCheckedState = 1 << 19,
     IsInvalid = 1 << 20,
+    IsFocusable = 1 << 21,
 }
 
 [Flags]

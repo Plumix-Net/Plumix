@@ -1,5 +1,10 @@
 # Changelog
 
+- Added paired Flutter core `KeyboardListener` + deprecated-compatible `RawKeyboardListener` ports with
+  source-shaped focus-node ownership, key-down/up delivery, raw listener attach/detach/rebind lifecycle,
+  `includeSemantics` focus actions/flags, focused tests, and mirrored C#/Dart runtime probes. Advanced `Plumix` to
+  `0.6.0-alpha.1`; platform physical/logical raw-key metadata remains tracked in `DIVERGENCES.md`.
+
 - Added paired Flutter core `LayoutBuilder` + `OrientationBuilder` ports with layout-phase child construction,
   constraint-change rebuild suppression, widget/dependency invalidation, portrait/landscape reduction, focused tests,
   and mirrored C#/Dart runtime probes. Advanced `Plumix` to `0.5.0-alpha.1`.

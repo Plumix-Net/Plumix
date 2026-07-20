@@ -438,6 +438,10 @@ public sealed class FocusManager
 
     public bool HandleKeyEvent(KeyEvent @event)
     {
+#pragma warning disable CS0618
+        RawKeyboard.Instance.HandleKeyEvent(@event);
+#pragma warning restore CS0618
+
         if (PrimaryFocus != null && PrimaryFocus.HandleKeyEvent(@event) == KeyEventResult.Handled)
         {
             return true;
@@ -912,6 +916,34 @@ public sealed class Focus : StatefulWidget
         FocusOnTextCompositionCallback? onTextComposition = null,
         FocusOnTextInputStateCallback? onTextInputState = null,
         FocusOnTextSelectionChangedCallback? onTextSelectionChanged = null,
+        Key? key = null) : this(
+            child: child,
+            includeSemantics: false,
+            focusNode: focusNode,
+            autofocus: autofocus,
+            canRequestFocus: canRequestFocus,
+            skipTraversal: skipTraversal,
+            onKeyEvent: onKeyEvent,
+            onTextInput: onTextInput,
+            onTextComposition: onTextComposition,
+            onTextInputState: onTextInputState,
+            onTextSelectionChanged: onTextSelectionChanged,
+            key: key)
+    {
+    }
+
+    public Focus(
+        Widget child,
+        bool includeSemantics,
+        FocusNode? focusNode = null,
+        bool autofocus = false,
+        bool canRequestFocus = true,
+        bool skipTraversal = false,
+        FocusOnKeyEventCallback? onKeyEvent = null,
+        FocusOnTextInputCallback? onTextInput = null,
+        FocusOnTextCompositionCallback? onTextComposition = null,
+        FocusOnTextInputStateCallback? onTextInputState = null,
+        FocusOnTextSelectionChangedCallback? onTextSelectionChanged = null,
         Key? key = null) : base(key)
     {
         Child = child;
@@ -919,6 +951,7 @@ public sealed class Focus : StatefulWidget
         Autofocus = autofocus;
         CanRequestFocus = canRequestFocus;
         SkipTraversal = skipTraversal;
+        IncludeSemantics = includeSemantics;
         OnKeyEvent = onKeyEvent;
         OnTextInput = onTextInput;
         OnTextComposition = onTextComposition;
@@ -935,6 +968,8 @@ public sealed class Focus : StatefulWidget
     public bool CanRequestFocus { get; }
 
     public bool SkipTraversal { get; }
+
+    public bool IncludeSemantics { get; }
 
     public FocusOnKeyEventCallback? OnKeyEvent { get; }
 
@@ -997,10 +1032,30 @@ public sealed class Focus : StatefulWidget
 
         public override Widget Build(BuildContext context)
         {
-            return new Listener(
+            Widget child = new Listener(
                 child: Widget.Child,
                 behavior: HitTestBehavior.Translucent,
                 onPointerDown: HandlePointerDown);
+
+            if (Widget.IncludeSemantics)
+            {
+                SemanticsFlags flags = _focusNode!.CanRequestFocus
+                    ? SemanticsFlags.IsFocusable
+                    : SemanticsFlags.None;
+                if (_focusNode.CanRequestFocus && _focusNode.HasFocus)
+                {
+                    flags |= SemanticsFlags.IsFocused;
+                }
+
+                child = new Semantics(
+                    child: child,
+                    flags: flags)
+                {
+                    OnFocus = _focusNode.CanRequestFocus ? RequestSemanticFocus : null
+                };
+            }
+
+            return child;
         }
 
         public override void Dispose()
@@ -1023,6 +1078,7 @@ public sealed class Focus : StatefulWidget
             _focusNode = externalNode ?? new FocusNode();
             _ownsFocusNode = externalNode is null;
             _focusNode.AttachElement(Element);
+            _focusNode.AddListener(HandleFocusChanged);
         }
 
         private FocusScopeNode ResolveScope()
@@ -1037,6 +1093,7 @@ public sealed class Focus : StatefulWidget
                 return;
             }
 
+            _focusNode.RemoveListener(HandleFocusChanged);
             FocusManager.Instance.UnregisterNode(_focusNode);
             _focusNode.DetachElement(Element);
 
@@ -1086,6 +1143,16 @@ public sealed class Focus : StatefulWidget
 
             _autofocusApplied = true;
             _focusNode!.RequestFocus();
+        }
+
+        private void HandleFocusChanged()
+        {
+            SetState(static () => { });
+        }
+
+        private void RequestSemanticFocus()
+        {
+            _focusNode?.RequestFocus();
         }
     }
 }

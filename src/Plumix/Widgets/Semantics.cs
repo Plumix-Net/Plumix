@@ -77,6 +77,8 @@ public sealed class Semantics : SingleChildRenderObjectWidget
 
     public Action? OnDismiss { get; }
 
+    public Action? OnFocus { get; init; }
+
     public bool LiveRegion { get; }
 
     public bool Container { get; }
@@ -97,7 +99,7 @@ public sealed class Semantics : SingleChildRenderObjectWidget
 
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
-        return new RenderSemanticsAnnotations(
+        var semantics = new RenderSemanticsAnnotations(
             label: Label,
             hint: Hint,
             role: Role,
@@ -108,6 +110,8 @@ public sealed class Semantics : SingleChildRenderObjectWidget
             liveRegion: LiveRegion,
             container: Container,
             explicitChildNodes: ExplicitChildNodes);
+        semantics.OnFocus = OnFocus;
+        return semantics;
     }
 
     internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
@@ -120,6 +124,7 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         semantics.OnTap = OnTap;
         semantics.OnLongPress = OnLongPress;
         semantics.OnDismiss = OnDismiss;
+        semantics.OnFocus = OnFocus;
         semantics.LiveRegion = LiveRegion;
         semantics.Container = Container;
         semantics.ExplicitChildNodes = ExplicitChildNodes;

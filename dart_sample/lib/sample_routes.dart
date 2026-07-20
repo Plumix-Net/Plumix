@@ -93,6 +93,7 @@ class SampleRoutes {
   static const String offstage = '/offstage';
   static const String baseline = '/baseline';
   static const String layoutBuilder = '/layout-builder';
+  static const String keyboardListener = '/keyboard-listener';
 }
 
 class SampleRouteDefinition {
