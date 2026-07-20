@@ -1,5 +1,9 @@
 # Changelog
 
+- Added paired Flutter core `ValueListenableBuilder<T>` + `TweenAnimationBuilder<T>` ports with source-shaped
+  listener rebinding, stable-child builder contracts, owned tween retargeting, interrupted-animation continuity,
+  curve/duration/`onEnd` behavior, focused tests, and mirrored C#/Dart runtime probes.
+
 - Added paired Flutter core `ModalBarrier` + `AnimatedModalBarrier` ports with source-shaped dismiss/pop behavior,
   any-button opaque gesture capture, platform-aware accessibility actions, semantic focus clipping, system-alert
   dispatch,

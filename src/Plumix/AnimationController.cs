@@ -75,17 +75,193 @@ public static class Curves
 
 public abstract class Tween<T>
 {
+    private T _begin = default!;
+    private T _end = default!;
+
+    protected Tween()
+    {
+    }
+
+    public T? Begin
+    {
+        get => HasBeginValue ? _begin : default;
+        set
+        {
+            if (value is null)
+            {
+                _begin = default!;
+                HasBeginValue = false;
+                return;
+            }
+
+            _begin = value;
+            HasBeginValue = true;
+        }
+    }
+
+    public T? End
+    {
+        get => HasEndValue ? _end : default;
+        set
+        {
+            if (value is null)
+            {
+                _end = default!;
+                HasEndValue = false;
+                return;
+            }
+
+            _end = value;
+            HasEndValue = true;
+        }
+    }
+
+    internal bool HasBeginValue { get; private set; }
+
+    internal bool HasEndValue { get; private set; }
+
     public abstract T Lerp(T a, T b, double t);
+
     public T Evaluate(double t, T from, T to) => Lerp(from, to, Math.Clamp(t, 0, 1));
+
+    public virtual T Evaluate(double t)
+    {
+        if (!HasBeginValue || !HasEndValue)
+        {
+            throw new InvalidOperationException("Tween begin and end values must both be set before evaluation.");
+        }
+
+        return Evaluate(t, _begin, _end);
+    }
+
+    internal T GetBeginValue()
+    {
+        if (!HasBeginValue)
+        {
+            throw new InvalidOperationException("Tween begin value is not set.");
+        }
+
+        return _begin;
+    }
+
+    internal T GetEndValue()
+    {
+        if (!HasEndValue)
+        {
+            throw new InvalidOperationException("Tween end value is not set.");
+        }
+
+        return _end;
+    }
+
+    internal void SetBeginValue(T value)
+    {
+        _begin = value;
+        HasBeginValue = true;
+    }
+
+    internal void SetEndValue(T value)
+    {
+        _end = value;
+        HasEndValue = true;
+    }
+
+    internal void ClearBeginValue()
+    {
+        _begin = default!;
+        HasBeginValue = false;
+    }
+
+    internal void ClearEndValue()
+    {
+        _end = default!;
+        HasEndValue = false;
+    }
 }
 
 public sealed class DoubleTween : Tween<double>
 {
+    public DoubleTween(double? begin = null, double? end = null)
+    {
+        Begin = begin;
+        End = end;
+    }
+
+    public new double? Begin
+    {
+        get => HasBeginValue ? GetBeginValue() : null;
+        set
+        {
+            if (value.HasValue)
+            {
+                SetBeginValue(value.Value);
+            }
+            else
+            {
+                ClearBeginValue();
+            }
+        }
+    }
+
+    public new double? End
+    {
+        get => HasEndValue ? GetEndValue() : null;
+        set
+        {
+            if (value.HasValue)
+            {
+                SetEndValue(value.Value);
+            }
+            else
+            {
+                ClearEndValue();
+            }
+        }
+    }
+
     public override double Lerp(double a, double b, double t) => a + (b - a) * t;
 }
 
 public sealed class ColorTween : Tween<Color>
 {
+    public ColorTween(Color? begin = null, Color? end = null)
+    {
+        Begin = begin;
+        End = end;
+    }
+
+    public new Color? Begin
+    {
+        get => HasBeginValue ? GetBeginValue() : null;
+        set
+        {
+            if (value.HasValue)
+            {
+                SetBeginValue(value.Value);
+            }
+            else
+            {
+                ClearBeginValue();
+            }
+        }
+    }
+
+    public new Color? End
+    {
+        get => HasEndValue ? GetEndValue() : null;
+        set
+        {
+            if (value.HasValue)
+            {
+                SetEndValue(value.Value);
+            }
+            else
+            {
+                ClearEndValue();
+            }
+        }
+    }
+
     public override Color Lerp(Color a, Color b, double t)
     {
         byte L(byte x, byte y) => (byte)(x + (y - x) * t);
@@ -99,6 +275,44 @@ public sealed class ColorTween : Tween<Color>
 
 public sealed class RectTween : Tween<Rect>
 {
+    public RectTween(Rect? begin = null, Rect? end = null)
+    {
+        Begin = begin;
+        End = end;
+    }
+
+    public new Rect? Begin
+    {
+        get => HasBeginValue ? GetBeginValue() : null;
+        set
+        {
+            if (value.HasValue)
+            {
+                SetBeginValue(value.Value);
+            }
+            else
+            {
+                ClearBeginValue();
+            }
+        }
+    }
+
+    public new Rect? End
+    {
+        get => HasEndValue ? GetEndValue() : null;
+        set
+        {
+            if (value.HasValue)
+            {
+                SetEndValue(value.Value);
+            }
+            else
+            {
+                ClearEndValue();
+            }
+        }
+    }
+
     public override Rect Lerp(Rect a, Rect b, double t)
     {
         double x = a.X + ((b.X - a.X) * t);

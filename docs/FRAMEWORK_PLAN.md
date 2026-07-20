@@ -146,6 +146,10 @@ Completion note:
 - Continued explicit-transition parity with paired `AlignTransition` + `DefaultTextStyleTransition` ports, including
   source-shaped animated-listenable lifecycle, `AlignmentGeometry`/ambient-direction resolution, shrink factors,
   inherited animated typography, immediate text-layout options, focused tests, and mirrored C#/Dart runtime probes.
+- Continued builder-control parity with paired `ValueListenableBuilder<T>` + `TweenAnimationBuilder<T>` ports,
+  including source-shaped listener replacement/disposal, stable-child fast paths, first-tween ownership, ignored
+  replacement `begin` values, interrupted-target continuity, curve/duration updates, `onEnd`, focused tests, and
+  mirrored C#/Dart runtime probes.
 - Continued implicit-animation parity with paired `AnimatedPositioned` + `AnimatedPositionedDirectional` ports,
   including Dart-shaped constructors/guards, `fromRect`, physical/logical Stack insets, ambient RTL/LTR resolution,
   nullable-property behavior, interrupted-transition continuity, curve/duration updates, `onEnd`, focused tests,

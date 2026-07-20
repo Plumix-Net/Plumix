@@ -26,8 +26,10 @@ class _AlignDemoPageState extends State<AlignDemoPage>
   bool _showSecondCrossFade = false;
   bool _expandedFraction = false;
   bool _visibleSliver = true;
+  double _builderExtent = 72;
   bool _explicitTransitionsForward = false;
   int _completedAnimations = 0;
+  final ValueNotifier<int> _builderCounter = ValueNotifier<int>(0);
   late final ScrollController _scrollController;
   late final AnimationController _explicitTransitionsController;
   late final Animation<Offset> _explicitSlideAnimation;
@@ -79,6 +81,7 @@ class _AlignDemoPageState extends State<AlignDemoPage>
 
   @override
   void dispose() {
+    _builderCounter.dispose();
     _explicitTransitionsController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -818,6 +821,87 @@ class _AlignDemoPageState extends State<AlignDemoPage>
                 ],
               ),
             ),
+            const Text(
+              'ValueListenableBuilder + TweenAnimationBuilder',
+              style: TextStyle(fontSize: 20, color: Colors.black),
+            ),
+            const Text(
+              'The notifier rebuilds only its builder; the tween owns and retargets its animation.',
+              style: TextStyle(fontSize: 14, color: Colors.black54),
+            ),
+            Row(
+              spacing: 8,
+              children: <Widget>[
+                _buildButton(
+                  label: 'Increment notifier',
+                  onTap: () {
+                    _builderCounter.value += 1;
+                  },
+                  width: 140,
+                  background: const Color(0xFFDDEAF2),
+                ),
+                _buildButton(
+                  label: _builderExtent > 72 ? 'Tween: 72' : 'Tween: 180',
+                  onTap: _toggleBuilderExtent,
+                  width: 112,
+                  background: const Color(0xFFF0E1EA),
+                ),
+              ],
+            ),
+            ValueListenableBuilder<int>(
+              valueListenable: _builderCounter,
+              child: Container(
+                width: 84,
+                height: 28,
+                color: const Color(0xFFE4E8EE),
+                child: const Center(
+                  child: Text(
+                    'stable child',
+                    style: TextStyle(fontSize: 11, color: Color(0xFF2F4F4F)),
+                  ),
+                ),
+              ),
+              builder: (BuildContext context, int value, Widget? child) {
+                return Row(
+                  spacing: 8,
+                  children: <Widget>[
+                    Text(
+                      'notifier value=$value',
+                      style: const TextStyle(fontSize: 13, color: Colors.black),
+                    ),
+                    child ?? const SizedBox.shrink(),
+                  ],
+                );
+              },
+            ),
+            Container(
+              width: 240,
+              height: 56,
+              color: const Color(0xFFF3F5F8),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: TweenAnimationBuilder<double>(
+                  tween: Tween<double>(end: _builderExtent),
+                  duration: const Duration(milliseconds: 450),
+                  curve: Curves.easeInOut,
+                  onEnd: _handleAnimationEnd,
+                  child: const Center(
+                    child: Text(
+                      'tween child',
+                      style: TextStyle(fontSize: 12, color: Colors.white),
+                    ),
+                  ),
+                  builder: (BuildContext context, double value, Widget? child) {
+                    return Container(
+                      width: value,
+                      height: 36,
+                      color: const Color(0xFF356A82),
+                      child: child,
+                    );
+                  },
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -941,6 +1025,12 @@ class _AlignDemoPageState extends State<AlignDemoPage>
   void _toggleSliverOpacity() {
     setState(() {
       _visibleSliver = !_visibleSliver;
+    });
+  }
+
+  void _toggleBuilderExtent() {
+    setState(() {
+      _builderExtent = _builderExtent > 72 ? 72 : 180;
     });
   }
 

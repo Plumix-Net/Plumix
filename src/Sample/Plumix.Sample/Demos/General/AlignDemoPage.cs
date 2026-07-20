@@ -36,8 +36,10 @@ internal sealed class AlignDemoPageState : State
     private bool _showSecondCrossFade;
     private bool _expandedFraction;
     private bool _visibleSliver = true;
+    private double _builderExtent = 72;
     private bool _explicitTransitionsForward;
     private int _completedAnimations;
+    private ValueNotifier<int> _builderCounter = null!;
     private ScrollController _scrollController = null!;
     private AnimationController _explicitTransitionsController = null!;
     private Animation<Vector> _explicitSlideAnimation = null!;
@@ -48,6 +50,7 @@ internal sealed class AlignDemoPageState : State
 
     public override void InitState()
     {
+        _builderCounter = new ValueNotifier<int>(0);
         _scrollController = new ScrollController();
         _explicitTransitionsController = new AnimationController(TimeSpan.FromMilliseconds(800));
         _explicitTransitionsController.SetValue(0.25);
@@ -87,6 +90,7 @@ internal sealed class AlignDemoPageState : State
 
     public override void Dispose()
     {
+        _builderCounter.Dispose();
         _explicitTransitionsController.Dispose();
         _scrollController.Dispose();
     }
@@ -639,6 +643,59 @@ internal sealed class AlignDemoPageState : State
                                                 fontSize: 13,
                                                 color: Colors.White))))),
                         ])),
+                new Text("ValueListenableBuilder + TweenAnimationBuilder", fontSize: 20, color: Colors.Black),
+                new Text(
+                    "The notifier rebuilds only its builder; the tween owns and retargets its animation.",
+                    fontSize: 14,
+                    color: Colors.DimGray),
+                new Row(
+                    spacing: 8,
+                    children:
+                    [
+                        BuildButton(
+                            "Increment notifier",
+                            () => _builderCounter.Value++,
+                            width: 140,
+                            colorHex: "#FFDDEAF2"),
+                        BuildButton(
+                            _builderExtent > 72 ? "Tween: 72" : "Tween: 180",
+                            ToggleBuilderExtent,
+                            width: 112,
+                            colorHex: "#FFF0E1EA"),
+                    ]),
+                new ValueListenableBuilder<int>(
+                    valueListenable: _builderCounter,
+                    child: new Container(
+                        width: 84,
+                        height: 28,
+                        color: Color.Parse("#FFE4E8EE"),
+                        child: new Center(
+                            child: new Text("stable child", fontSize: 11, color: Colors.DarkSlateGray))),
+                    builder: (_, value, child) => new Row(
+                        spacing: 8,
+                        children:
+                        [
+                            new Text($"notifier value={value}", fontSize: 13, color: Colors.Black),
+                            child ?? new SizedBox(),
+                        ])),
+                new Container(
+                    width: 240,
+                    height: 56,
+                    color: Color.Parse("#FFF3F5F8"),
+                    child: new Align(
+                        alignment: Alignment.CenterLeft,
+                        child: new TweenAnimationBuilder<double>(
+                            tween: new DoubleTween(end: _builderExtent),
+                            duration: TimeSpan.FromMilliseconds(450),
+                            curve: Curves.EaseInOut,
+                            onEnd: HandleAnimationEnd,
+                            child: new Center(
+                                child: new Text("tween child", fontSize: 12, color: Colors.White)),
+                            builder: (_, value, child) => new Container(
+                                width: value,
+                                height: 36,
+                                color: Color.Parse("#FF356A82"),
+                                child: child)))),
             ]);
     }
 
@@ -741,6 +798,11 @@ internal sealed class AlignDemoPageState : State
     private void ToggleSliverOpacity()
     {
         SetState(() => _visibleSliver = !_visibleSliver);
+    }
+
+    private void ToggleBuilderExtent()
+    {
+        SetState(() => _builderExtent = _builderExtent > 72 ? 72 : 180);
     }
 
     private void HandleAnimationEnd()

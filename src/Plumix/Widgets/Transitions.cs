@@ -323,11 +323,39 @@ public sealed class RelativeRectTween : Tween<RelativeRect>
         End = end;
     }
 
-    public RelativeRect? Begin { get; set; }
+    public new RelativeRect? Begin
+    {
+        get => HasBeginValue ? GetBeginValue() : null;
+        set
+        {
+            if (value.HasValue)
+            {
+                SetBeginValue(value.Value);
+            }
+            else
+            {
+                ClearBeginValue();
+            }
+        }
+    }
 
-    public RelativeRect? End { get; set; }
+    public new RelativeRect? End
+    {
+        get => HasEndValue ? GetEndValue() : null;
+        set
+        {
+            if (value.HasValue)
+            {
+                SetEndValue(value.Value);
+            }
+            else
+            {
+                ClearEndValue();
+            }
+        }
+    }
 
-    public RelativeRect Evaluate(double t)
+    public override RelativeRect Evaluate(double t)
     {
         return RelativeRect.Lerp(Begin, End, t);
     }
