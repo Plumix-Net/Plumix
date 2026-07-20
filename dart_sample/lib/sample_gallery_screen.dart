@@ -67,6 +67,7 @@ import 'demos/material/chips_demo_page.dart';
 import 'demos/general/navigator_demo_page.dart';
 import 'demos/general/offstage_demo_page.dart';
 import 'demos/general/baseline_demo_page.dart';
+import 'demos/general/layout_builder_demo_page.dart';
 import 'demos/general/overflow_box_demo_page.dart';
 import 'demos/general/overflow_indicator_demo_page.dart';
 import 'demos/general/proxy_widgets_demo_page.dart';
@@ -566,6 +567,12 @@ class SampleGalleryScreen extends StatelessWidget {
           title: 'Baseline + IgnoreBaseline',
           subtitle: 'real text baselines + bottom fallback + Row exclusion',
           builder: () => const BaselineDemoPage(),
+        ),
+        SampleRouteDefinition(
+          routeName: SampleRoutes.layoutBuilder,
+          title: 'LayoutBuilder + OrientationBuilder',
+          subtitle: 'layout-time constraints + landscape/portrait composition',
+          builder: () => const LayoutBuilderDemoPage(),
         ),
       ];
 

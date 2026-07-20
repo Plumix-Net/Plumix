@@ -322,6 +322,28 @@ public abstract class RenderObject : IRenderObject
     {
     }
 
+    /// <summary>
+    /// Invokes a callback that is allowed to mutate this render object's child tree during layout.
+    /// </summary>
+    protected void InvokeLayoutCallback<TConstraints>(
+        Action<TConstraints> callback,
+        TConstraints constraints)
+        where TConstraints : IConstraints
+    {
+        ArgumentNullException.ThrowIfNull(callback);
+
+        bool wasDoingLayoutWithCallback = DebugDoingThisLayoutWithCallback;
+        DebugDoingThisLayoutWithCallback = true;
+        try
+        {
+            callback(constraints);
+        }
+        finally
+        {
+            DebugDoingThisLayoutWithCallback = wasDoingLayoutWithCallback;
+        }
+    }
+
     public virtual void VisitChildren(Action<RenderObject> visitor)
     {
     }

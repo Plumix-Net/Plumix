@@ -246,7 +246,7 @@ public abstract class Element
 
     internal abstract void Rebuild();
 
-    internal void MarkNeedsBuild()
+    internal virtual void MarkNeedsBuild()
     {
         if (Dirty)
         {

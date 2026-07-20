@@ -1,5 +1,9 @@
 # Changelog
 
+- Added paired Flutter core `LayoutBuilder` + `OrientationBuilder` ports with layout-phase child construction,
+  constraint-change rebuild suppression, widget/dependency invalidation, portrait/landscape reduction, focused tests,
+  and mirrored C#/Dart runtime probes. Advanced `Plumix` to `0.5.0-alpha.1`.
+
 - Added paired Flutter core `Baseline` + `IgnoreBaseline` ports with source-shaped child positioning, bottom-edge
   fallback, proxy baseline forwarding, paragraph metrics, Flex/Row/Column `textBaseline` wiring, focused tests, and
   mirrored C#/Dart runtime probes. Advanced `Plumix` to `0.4.0-alpha.1`; Avalonia ideographic metrics remain tracked.

@@ -98,6 +98,7 @@ internal static class SampleRoutes
     public const string OverflowIndicator = "/overflow-indicator";
     public const string Offstage = "/offstage";
     public const string Baseline = "/baseline";
+    public const string LayoutBuilder = "/layout-builder";
 }
 
 internal readonly record struct SampleRouteDefinition(
@@ -247,6 +248,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "Baseline + IgnoreBaseline",
             "real text baselines + bottom fallback + Row exclusion",
             () => new BaselineDemoPage()),
+        new(
+            SampleRoutes.LayoutBuilder,
+            "LayoutBuilder + OrientationBuilder",
+            "layout-time constraints + landscape/portrait composition",
+            () => new LayoutBuilderDemoPage()),
     ];
 
     private static readonly IReadOnlyList<SampleMenuTabDefinition> DemoTabs =

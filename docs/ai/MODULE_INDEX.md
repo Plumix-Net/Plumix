@@ -119,11 +119,14 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/Rendering/Proxy.RenderBox.cs`
   - `src/Plumix/Rendering/Baseline.cs`
   - `src/Plumix/Widgets/Baseline.cs`
+  - `src/Plumix/Widgets/LayoutBuilder.cs`
+  - `src/Plumix/Widgets/OrientationBuilder.cs`
   - `src/Plumix/Rendering/Layer.cs`
   - `src/Plumix/Rendering/Object.PaintingContext.cs`
 - Primary Tests:
   - `src/Plumix.Tests/RenderingParityTests.cs`
   - `src/Plumix.Tests/BaselineTests.cs`
+  - `src/Plumix.Tests/LayoutBuilderTests.cs`
   - `src/Plumix.Tests/CompositingLayerTests.cs`
   - `src/Plumix.Tests/LayerV2Tests.cs`
 
