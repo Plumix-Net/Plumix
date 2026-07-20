@@ -2,7 +2,7 @@
 
 Widgets and subsystems from Flutter's Material library (`packages/flutter/lib/src/material`) that are **not yet ported** to `src/Plumix.Material`. Pick one, claim it, and submit a PR.
 
-Last verified against Flutter source and `src/Plumix.Material`: **2026-07-18**.
+Last verified against Flutter source and `src/Plumix.Material`: **2026-07-20**.
 
 ## How to claim and deliver
 
@@ -17,9 +17,8 @@ Size legend: **S** — one focused widget, few states. **M** — widget family o
 
 | Widget / family | Flutter source (`lib/src/material/`) | Size | Notes / dependencies |
 | --- | --- | --- | --- |
-| Mobile/adaptive text-selection toolbars + selection-overlay integration | `text_selection_toolbar.dart`, `adaptive_text_selection_toolbar.dart`, `text_selection.dart` | L | Desktop toolbar/button variants and `TextSelectionTheme` are ported. Remaining work needs mobile overflow layout plus copy/paste context-menu integration for `TextField`/`SelectableText`. |
+| Selection-overlay integration | `text_selection.dart`, `text_field.dart`, `selectable_text.dart` | L | Android, adaptive, desktop, and spell-check toolbar widgets are ported. Remaining work needs overlay/handle ownership plus automatic copy/paste and spell-check integration for `TextField`/`SelectableText`. |
 | `Magnifier` (Material text magnifier) | `magnifier.dart` | M | Depends on selection overlay infra; claim after toolbar family lands. |
-| Spell-check suggestions toolbar | `spell_check_suggestions_toolbar.dart` + layout delegate | M | Low priority until text-selection toolbars exist. |
 
 ## Open infrastructure (align with maintainer first)
 

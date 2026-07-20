@@ -18,15 +18,19 @@ public sealed class DesktopTextSelectionToolbarDemoPage : StatefulWidget
 internal sealed class DesktopTextSelectionToolbarDemoPageState : State
 {
     private bool _nearViewportEdge;
-    private bool _showMaterialToolbar;
+    private int _toolbarKind;
     private string _lastAction = "None";
 
     public override Widget Build(BuildContext context)
     {
         var anchor = _nearViewportEdge ? new Point(360, 260) : new Point(24, 24);
-        Widget toolbar = _showMaterialToolbar
-            ? BuildMaterialToolbar(context, anchor)
-            : BuildDesktopToolbar(context, anchor);
+        Widget toolbar = _toolbarKind switch
+        {
+            1 => BuildMaterialToolbar(context, anchor),
+            2 => BuildAdaptiveToolbar(context, anchor),
+            3 => BuildSpellCheckToolbar(anchor),
+            _ => BuildDesktopToolbar(context, anchor),
+        };
         return new Column(
             crossAxisAlignment: CrossAxisAlignment.Stretch,
             spacing: 10,
@@ -34,7 +38,7 @@ internal sealed class DesktopTextSelectionToolbarDemoPageState : State
             [
                 new Text("Material text selection toolbars", fontSize: 20, color: Colors.Black),
                 new Text(
-                    "Android overflow paging plus the 222px desktop card, anchor clamping, and disabled actions.",
+                    "Android, adaptive, spell-check, and desktop toolbars with edge clamping and disabled actions.",
                     fontSize: 14,
                     color: Colors.DimGray),
                 new Row(
@@ -45,8 +49,8 @@ internal sealed class DesktopTextSelectionToolbarDemoPageState : State
                             child: new Text(_nearViewportEdge ? "Move to origin" : "Move near edge"),
                             onPressed: () => SetState(() => _nearViewportEdge = !_nearViewportEdge)),
                         new TextButton(
-                            child: new Text(_showMaterialToolbar ? "Show desktop" : "Show Android"),
-                            onPressed: () => SetState(() => _showMaterialToolbar = !_showMaterialToolbar)),
+                            child: new Text($"Show {NextToolbarLabel}"),
+                            onPressed: () => SetState(() => _toolbarKind = (_toolbarKind + 1) % 4)),
                         new Text($"Last action: {_lastAction}"),
                     ]),
                 new Expanded(
@@ -88,6 +92,43 @@ internal sealed class DesktopTextSelectionToolbarDemoPageState : State
             anchorBelow: anchor + new Vector(0, 20),
             children: children);
     }
+
+    private Widget BuildAdaptiveToolbar(BuildContext context, Point anchor)
+    {
+        ContextMenuButtonItem[] items =
+        [
+            new(() => SetAction("Cut"), ContextMenuButtonType.Cut),
+            new(() => SetAction("Copy"), ContextMenuButtonType.Copy),
+            new(null, ContextMenuButtonType.Paste),
+            new(() => SetAction("Select all"), ContextMenuButtonType.SelectAll),
+        ];
+        ThemeData windowsTheme = Theme.Of(context) with { Platform = TargetPlatform.Windows };
+        return new Theme(
+            windowsTheme,
+            AdaptiveTextSelectionToolbar.FromButtonItems(
+                items,
+                new TextSelectionToolbarAnchors(anchor, anchor + new Vector(0, 20))));
+    }
+
+    private Widget BuildSpellCheckToolbar(Point anchor)
+    {
+        return new SpellCheckSuggestionsToolbar(
+            anchor: anchor,
+            buttonItems:
+            [
+                new ContextMenuButtonItem(() => SetAction("framework"), label: "framework"),
+                new ContextMenuButtonItem(() => SetAction("frameworks"), label: "frameworks"),
+                new ContextMenuButtonItem(() => SetAction("Delete"), ContextMenuButtonType.Delete),
+            ]);
+    }
+
+    private string NextToolbarLabel => ((_toolbarKind + 1) % 4) switch
+    {
+        1 => "Android",
+        2 => "adaptive",
+        3 => "spell check",
+        _ => "desktop",
+    };
 
     private void SetAction(string action)
     {

@@ -11,7 +11,7 @@ class DesktopTextSelectionToolbarDemoPage extends StatefulWidget {
 class _DesktopTextSelectionToolbarDemoPageState
     extends State<DesktopTextSelectionToolbarDemoPage> {
   bool _nearViewportEdge = false;
-  bool _showMaterialToolbar = false;
+  int _toolbarKind = 0;
   String _lastAction = 'None';
 
   @override
@@ -19,9 +19,12 @@ class _DesktopTextSelectionToolbarDemoPageState
     final Offset anchor = _nearViewportEdge
         ? const Offset(360, 260)
         : const Offset(24, 24);
-    final Widget toolbar = _showMaterialToolbar
-        ? _buildMaterialToolbar(context, anchor)
-        : _buildDesktopToolbar(context, anchor);
+    final Widget toolbar = switch (_toolbarKind) {
+      1 => _buildMaterialToolbar(context, anchor),
+      2 => _buildAdaptiveToolbar(context, anchor),
+      3 => _buildSpellCheckToolbar(anchor),
+      _ => _buildDesktopToolbar(context, anchor),
+    };
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: 10,
@@ -31,7 +34,7 @@ class _DesktopTextSelectionToolbarDemoPageState
           style: TextStyle(fontSize: 20, color: Colors.black),
         ),
         const Text(
-          'Android overflow paging plus the 222px desktop card, anchor clamping, and disabled actions.',
+          'Android, adaptive, spell-check, and desktop toolbars with edge clamping and disabled actions.',
           style: TextStyle(fontSize: 14, color: Colors.black54),
         ),
         Row(
@@ -50,12 +53,10 @@ class _DesktopTextSelectionToolbarDemoPageState
             TextButton(
               onPressed: () {
                 setState(() {
-                  _showMaterialToolbar = !_showMaterialToolbar;
+                  _toolbarKind = (_toolbarKind + 1) % 4;
                 });
               },
-              child: Text(
-                _showMaterialToolbar ? 'Show desktop' : 'Show Android',
-              ),
+              child: Text('Show $_nextToolbarLabel'),
             ),
             Text('Last action: $_lastAction'),
           ],
@@ -121,6 +122,64 @@ class _DesktopTextSelectionToolbarDemoPageState
       }),
     );
   }
+
+  Widget _buildAdaptiveToolbar(BuildContext context, Offset anchor) {
+    final List<ContextMenuButtonItem> items = <ContextMenuButtonItem>[
+      ContextMenuButtonItem(
+        onPressed: () => _setAction('Cut'),
+        type: ContextMenuButtonType.cut,
+      ),
+      ContextMenuButtonItem(
+        onPressed: () => _setAction('Copy'),
+        type: ContextMenuButtonType.copy,
+      ),
+      const ContextMenuButtonItem(
+        onPressed: null,
+        type: ContextMenuButtonType.paste,
+      ),
+      ContextMenuButtonItem(
+        onPressed: () => _setAction('Select all'),
+        type: ContextMenuButtonType.selectAll,
+      ),
+    ];
+    return Theme(
+      data: Theme.of(context).copyWith(platform: TargetPlatform.windows),
+      child: AdaptiveTextSelectionToolbar.buttonItems(
+        buttonItems: items,
+        anchors: TextSelectionToolbarAnchors(
+          primaryAnchor: anchor,
+          secondaryAnchor: anchor + const Offset(0, 20),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSpellCheckToolbar(Offset anchor) {
+    return SpellCheckSuggestionsToolbar(
+      anchor: anchor,
+      buttonItems: <ContextMenuButtonItem>[
+        ContextMenuButtonItem(
+          onPressed: () => _setAction('framework'),
+          label: 'framework',
+        ),
+        ContextMenuButtonItem(
+          onPressed: () => _setAction('frameworks'),
+          label: 'frameworks',
+        ),
+        ContextMenuButtonItem(
+          onPressed: () => _setAction('Delete'),
+          type: ContextMenuButtonType.delete,
+        ),
+      ],
+    );
+  }
+
+  String get _nextToolbarLabel => switch ((_toolbarKind + 1) % 4) {
+    1 => 'Android',
+    2 => 'adaptive',
+    3 => 'spell check',
+    _ => 'desktop',
+  };
 
   void _setAction(String action) {
     setState(() {

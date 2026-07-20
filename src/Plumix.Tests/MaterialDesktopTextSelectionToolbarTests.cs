@@ -345,6 +345,128 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
         Assert.NotNull(FindSemantics(semantics, node => node.Label == "Back"));
     }
 
+    [Fact]
+    public void AdaptiveToolbar_MapsButtonItemsLabelsAndPlatformComposition()
+    {
+        var items = new ContextMenuButtonItem[]
+        {
+            new(() => { }, ContextMenuButtonType.Copy),
+            new(() => { }, ContextMenuButtonType.Delete),
+            new(null, label: "Custom action"),
+        };
+        var anchors = new TextSelectionToolbarAnchors(
+            PrimaryAnchor: new Point(120, 80),
+            SecondaryAnchor: new Point(120, 104));
+
+        using var androidHarness = CreateHarness(
+            ThemeData.Light with { Platform = TargetPlatform.Android },
+            AdaptiveTextSelectionToolbar.FromButtonItems(items, anchors));
+        androidHarness.Pump(new Size(300, 220));
+
+        Assert.Single(FindDescendants<RenderTextSelectionToolbarItemsLayout>(androidHarness.RenderView));
+        Assert.Contains(FindDescendants<RenderParagraph>(androidHarness.RenderView), value => value.Text == "Copy");
+        Assert.Contains(FindDescendants<RenderParagraph>(androidHarness.RenderView), value => value.Text == "DELETE");
+        Assert.Contains(
+            FindDescendants<RenderParagraph>(androidHarness.RenderView),
+            value => value.Text == "Custom action");
+
+        using var desktopHarness = CreateHarness(
+            ThemeData.Light with { Platform = TargetPlatform.Windows },
+            AdaptiveTextSelectionToolbar.FromButtonItems(items, anchors));
+        desktopHarness.Pump(new Size(300, 220));
+
+        Assert.DoesNotContain(
+            FindDescendants<RenderTextSelectionToolbarItemsLayout>(desktopHarness.RenderView),
+            _ => true);
+        Assert.Contains(FindDescendants<RenderConstrainedBox>(desktopHarness.RenderView), value =>
+            value.AdditionalConstraints == BoxConstraints.TightFor(width: DesktopTextSelectionToolbar.ToolbarWidth));
+    }
+
+    [Fact]
+    public void AdaptiveToolbar_EditableOmitsUnavailableActionsAndEmptyShrinks()
+    {
+        var anchors = new TextSelectionToolbarAnchors(new Point(50, 50));
+        AdaptiveTextSelectionToolbar toolbar = AdaptiveTextSelectionToolbar.Editable(
+            onCopy: () => { },
+            onCut: null,
+            onPaste: null,
+            onSelectAll: () => { },
+            onLookUp: null,
+            onSearchWeb: null,
+            onShare: null,
+            onLiveTextInput: null,
+            anchors: anchors);
+
+        Assert.Equal(2, toolbar.ButtonItems!.Count);
+        Assert.Equal(ContextMenuButtonType.Copy, toolbar.ButtonItems[0].Type);
+        Assert.Equal(ContextMenuButtonType.SelectAll, toolbar.ButtonItems[1].Type);
+
+        using var harness = CreateHarness(
+            ThemeData.Light,
+            AdaptiveTextSelectionToolbar.FromButtonItems([], anchors));
+        harness.Pump(new Size(200, 120));
+
+        RenderConstrainedBox box = Assert.Single(FindDescendants<RenderConstrainedBox>(harness.RenderView));
+        Assert.Equal(BoxConstraints.Tight(new Size(0, 0)), box.AdditionalConstraints);
+    }
+
+    [Fact]
+    public void SpellCheckLayoutDelegate_CentersAndRaisesToolbarAboveViewportBottom()
+    {
+        var layoutDelegate = new SpellCheckSuggestionsToolbarLayoutDelegate(new Point(140, 170));
+        var constraints = new BoxConstraints(MinWidth: 50, MaxWidth: 280, MinHeight: 40, MaxHeight: 190);
+
+        Assert.Equal(new BoxConstraints(MaxWidth: 280, MaxHeight: 190),
+            layoutDelegate.GetConstraintsForChild(constraints));
+        Assert.Equal(new Point(57.5, 1),
+            layoutDelegate.GetPositionForChild(new Size(280, 190), new Size(165, 189)));
+        Assert.False(layoutDelegate.ShouldRelayout(
+            new SpellCheckSuggestionsToolbarLayoutDelegate(new Point(140, 170))));
+        Assert.True(layoutDelegate.ShouldRelayout(
+            new SpellCheckSuggestionsToolbarLayoutDelegate(new Point(20, 30))));
+    }
+
+    [Fact]
+    public void SpellCheckToolbar_ValidatesItemsAndMatchesMaterialGeometry()
+    {
+        var tooManyItems = Enumerable.Range(0, 5)
+            .Select(index => new ContextMenuButtonItem(() => { }, label: index.ToString()))
+            .ToArray();
+        Assert.Throws<ArgumentException>(() => new SpellCheckSuggestionsToolbar(default, tooManyItems));
+        Assert.Equal(
+            new Point(20, 30),
+            SpellCheckSuggestionsToolbar.GetToolbarAnchor(
+                new TextSelectionToolbarAnchors(new Point(10, 12), new Point(20, 30))));
+
+        var items = new ContextMenuButtonItem[]
+        {
+            new(() => { }, label: "replacement"),
+            new(() => { }, ContextMenuButtonType.Delete),
+        };
+        using var harness = CreateHarness(
+            ThemeData.Light,
+            new SpellCheckSuggestionsToolbar(new Point(150, 180), items),
+            padding: new Thickness(0, 10, 0, 0),
+            viewInsets: new Thickness(0, 0, 0, 30));
+        harness.Pump(new Size(300, 250));
+
+        Assert.Contains(FindDescendants<RenderPadding>(harness.RenderView), value =>
+            value.Padding == new Thickness(8, 18, 8, 38));
+        Assert.Contains(FindDescendants<RenderConstrainedBox>(harness.RenderView), value =>
+            value.AdditionalConstraints == BoxConstraints.TightFor(width: 165, height: 97));
+        Assert.Contains(
+            FindDescendants<RenderParagraph>(harness.RenderView),
+            value => value.Text == "replacement");
+        RenderParagraph delete = Assert.Single(
+            FindDescendants<RenderParagraph>(harness.RenderView),
+            value => value.Text == "DELETE");
+        Assert.Equal(
+            Color.Parse("#FF2196F3"),
+            Assert.IsType<SolidColorBrush>(delete.Foreground).Color);
+        Assert.Contains(FindDescendants<RenderColoredBox>(harness.RenderView), value =>
+            value.Color == Color.Parse("#FF9E9E9E"));
+    }
+
     private static RenderConstrainedBox FixedRenderBox(double width, double height)
     {
         return new RenderConstrainedBox(BoxConstraints.Tight(new Size(width, height)));
@@ -353,13 +475,14 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
     private static WidgetRenderHarness CreateHarness(
         ThemeData theme,
         Widget child,
-        Thickness padding = default)
+        Thickness padding = default,
+        Thickness viewInsets = default)
     {
         return new WidgetRenderHarness(
             new Theme(
                 theme,
                 new MediaQuery(
-                    new MediaQueryData(Padding: padding),
+                    new MediaQueryData(Padding: padding, ViewInsets: viewInsets),
                     new Directionality(TextDirection.Ltr, child))));
     }
 

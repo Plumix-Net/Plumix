@@ -12,6 +12,22 @@ public abstract class MaterialLocalizations
 
     public virtual string DeleteButtonTooltip => "Delete";
 
+    public virtual string CutButtonLabel => "Cut";
+
+    public virtual string CopyButtonLabel => "Copy";
+
+    public virtual string PasteButtonLabel => "Paste";
+
+    public virtual string SelectAllButtonLabel => "Select all";
+
+    public virtual string LookUpButtonLabel => "Look up";
+
+    public virtual string SearchWebButtonLabel => "Search web";
+
+    public virtual string ShareButtonLabel => "Share";
+
+    public virtual string ScanTextButtonLabel => "Scan text";
+
     public virtual string BackButtonTooltip => "Back";
 
     public virtual string MoreButtonTooltip => "More";

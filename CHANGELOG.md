@@ -1,5 +1,11 @@
 # Changelog
 
+- Added paired Material `AdaptiveTextSelectionToolbar` + `SpellCheckSuggestionsToolbar` ports with shared
+  context-menu button/anchor contracts, localized button mapping, Android/desktop platform routing, safe-inset and
+  keyboard-aware spell-check placement, focused tests, and mirrored C#/Dart probes. Advanced `Plumix` and
+  `Plumix.Material` to `0.2.0-alpha.1`; Cupertino visuals and automatic editable selection/spell-check integration
+  remain tracked in `DIVERGENCES.md`.
+
 - Added paired Flutter core `SliverCrossAxisGroup` + `SliverMainAxisGroup` ports with inflexible/proportional
   cross-axis allocation, sequential scroll/cache constraints, pinned-child confinement, correction propagation,
   focused tests, and mirrored C#/Dart probes. Added source-required `SliverConstrainedCrossAxis` and
