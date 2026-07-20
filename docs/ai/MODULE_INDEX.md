@@ -126,6 +126,10 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/Widgets/GridPaper.cs`
   - `src/Plumix/Widgets/Clip.cs`
   - `src/Plumix/Rendering/CustomClip.cs`
+  - `src/Plumix/Widgets/Flow.cs`
+  - `src/Plumix/Widgets/RepaintBoundary.cs`
+  - `src/Plumix/Rendering/Flow.cs`
+  - `src/Plumix/Rendering/RepaintBoundary.cs`
   - `src/Plumix/UI/Path.cs`
   - `src/Plumix/Rendering/Layer.cs`
   - `src/Plumix/Rendering/Object.PaintingContext.cs`
@@ -136,6 +140,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix.Tests/LayoutBuilderTests.cs`
   - `src/Plumix.Tests/DebugPaintingWidgetsTests.cs`
   - `src/Plumix.Tests/ClipWidgetsTests.cs`
+  - `src/Plumix.Tests/FlowRepaintBoundaryTests.cs`
   - `src/Plumix.Tests/CompositingLayerTests.cs`
   - `src/Plumix.Tests/LayerV2Tests.cs`
 

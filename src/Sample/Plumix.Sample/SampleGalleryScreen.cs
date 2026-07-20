@@ -101,6 +101,7 @@ internal static class SampleRoutes
     public const string LayoutBuilder = "/layout-builder";
     public const string KeyboardListener = "/keyboard-listener";
     public const string DebugPainting = "/debug-painting";
+    public const string Flow = "/flow";
 }
 
 internal readonly record struct SampleRouteDefinition(
@@ -269,6 +270,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "Placeholder + GridPaper",
             "unbounded fallback sizing + foreground layout grid",
             () => new DebugPaintingDemoPage()),
+        new(
+            SampleRoutes.Flow,
+            "Flow + RepaintBoundary",
+            "paint-time transforms + isolated child display lists",
+            () => new FlowDemoPage()),
     ];
 
     private static readonly IReadOnlyList<SampleMenuTabDefinition> DemoTabs =

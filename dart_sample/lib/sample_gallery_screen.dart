@@ -44,6 +44,7 @@ import 'demos/material/drawer_headers_demo_page.dart';
 import 'demos/material/divider_demo_page.dart';
 import 'demos/general/editable_text_demo_page.dart';
 import 'demos/general/fitted_box_demo_page.dart';
+import 'demos/general/flow_demo_page.dart';
 import 'demos/material/floating_action_button_demo_page.dart';
 import 'demos/material/ink_response_demo_page.dart';
 import 'demos/general/fractionally_sized_box_demo_page.dart';
@@ -587,6 +588,12 @@ class SampleGalleryScreen extends StatelessWidget {
           title: 'Placeholder + GridPaper',
           subtitle: 'unbounded fallback sizing + foreground layout grid',
           builder: () => const DebugPaintingDemoPage(),
+        ),
+        SampleRouteDefinition(
+          routeName: SampleRoutes.flow,
+          title: 'Flow + RepaintBoundary',
+          subtitle: 'paint-time transforms + isolated child display lists',
+          builder: () => const FlowDemoPage(),
         ),
       ];
 

@@ -200,6 +200,9 @@ Completion note:
 - Continued paired core transform coverage with `FractionalTranslation` + `RotatedBox`, including source-shaped
   fractional paint/hit-test offsets, layout-time quarter-turn constraint and size transposition, transformed paint/
   semantics geometry, negative turn support, focused tests, and mirrored C#/Dart probes.
+- Continued paired core paint-layout coverage with `Flow` + `RepaintBoundary`, including default per-child repaint
+  isolation, delegate-controlled size/constraints/transforms/opacity, listenable repaint without layout, reverse
+  paint-order hit testing, transformed semantics, focused tests, and mirrored C#/Dart probes.
 - Implicit-animations sample viewport hardening: both samples now share an always-visible scrollbar and scroll
   controller around the complete probe column, preventing bottom overflow on short desktop windows.
 

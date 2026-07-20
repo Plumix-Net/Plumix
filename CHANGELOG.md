@@ -1,5 +1,10 @@
 # Changelog
 
+- Added paired Flutter core `Flow` + `RepaintBoundary` ports with source-shaped automatic child isolation,
+  delegate/listenable layout and repaint ownership, paint-order transforms/opacity, transformed hit testing and
+  semantics, focused tests, and mirrored C#/Dart probes. Advanced `Plumix` to `0.11.0-alpha.1`; shared Matrix4,
+  intrinsic/dry-layout, and render-subtree image-capture gaps remain tracked in `DIVERGENCES.md`.
+
 - Added paired Flutter core `FractionalTranslation` + `RotatedBox` ports with source-shaped paint-offset hit testing,
   layout-time quarter-turn constraint/size transposition, transformed paint/semantics geometry, focused tests, and
   mirrored C#/Dart probes. Advanced `Plumix` to `0.10.0-alpha.1`; the shared intrinsic/dry-layout query gap remains

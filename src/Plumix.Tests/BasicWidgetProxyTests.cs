@@ -1,6 +1,7 @@
 using Avalonia;
 using Plumix.Foundation;
 using Plumix.Rendering;
+using Plumix.UI;
 using Plumix.Widgets;
 using Xunit;
 
@@ -376,6 +377,69 @@ public sealed class BasicWidgetProxyTests
     }
 
     [Fact]
+    public void FlowWidget_WrapsChildrenInRepaintBoundariesAndUpdatesRenderObject()
+    {
+        var keyedChild = new SizedBox(
+            width: 10,
+            height: 10,
+            key: new ValueKey<string>("keyed"));
+        var plainChild = new SizedBox(width: 20, height: 10);
+        var initialDelegate = new FlowDelegateProbe();
+        var widget = new Flow(
+            initialDelegate,
+            children: [keyedChild, plainChild]);
+
+        Assert.Equal(Clip.HardEdge, widget.ClipBehavior);
+        Assert.All(widget.Children, child => Assert.IsType<RepaintBoundary>(child));
+        Assert.Equal(
+            new ValueKey<object>(keyedChild.Key!),
+            Assert.IsType<RepaintBoundary>(widget.Children[0]).Key);
+        Assert.Equal(
+            new ValueKey<object>(1),
+            Assert.IsType<RepaintBoundary>(widget.Children[1]).Key);
+
+        var owner = new BuildOwner();
+        var root = new TestRootElement(widget);
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var renderFlow = RequireRenderObject<RenderFlow>(root.ChildElement);
+        Assert.Same(initialDelegate, renderFlow.Delegate);
+        Assert.Equal(Clip.HardEdge, renderFlow.ClipBehavior);
+        Assert.IsType<RenderRepaintBoundary>(renderFlow.FirstChild);
+
+        var updatedDelegate = new FlowDelegateProbe();
+        root.Update(new Flow(
+            updatedDelegate,
+            children: [keyedChild, plainChild],
+            clipBehavior: Clip.None));
+        owner.FlushBuild();
+
+        var updated = RequireRenderObject<RenderFlow>(root.ChildElement);
+        Assert.Same(renderFlow, updated);
+        Assert.Same(updatedDelegate, updated.Delegate);
+        Assert.Equal(Clip.None, updated.ClipBehavior);
+    }
+
+    [Fact]
+    public void FlowUnwrappedAndRepaintBoundaryWrapHelpersMatchFlutterShape()
+    {
+        var child = new SizedBox(width: 10, height: 10);
+        Flow flow = Flow.Unwrapped(new FlowDelegateProbe(), children: [child]);
+
+        Assert.Same(child, Assert.Single(flow.Children));
+
+        RepaintBoundary wrapped = RepaintBoundary.Wrap(child, 7);
+        Assert.Same(child, wrapped.Child);
+        Assert.Equal(new ValueKey<object>(7), wrapped.Key);
+
+        IReadOnlyList<RepaintBoundary> wrappedAll = RepaintBoundary.WrapAll([child]);
+        Assert.Single(wrappedAll);
+        Assert.IsType<RepaintBoundary>(wrappedAll[0]);
+    }
+
+    [Fact]
     public void RowWidget_ForwardsAndUpdatesTextBaseline()
     {
         var owner = new BuildOwner();
@@ -443,6 +507,19 @@ public sealed class BasicWidgetProxyTests
         public override void Paint(PaintingContext ctx, Point offset)
         {
         }
+    }
+
+    private sealed class FlowDelegateProbe : FlowDelegate
+    {
+        public override void PaintChildren(FlowPaintingContext context)
+        {
+            for (int index = 0; index < context.ChildCount; index++)
+            {
+                context.PaintChild(index);
+            }
+        }
+
+        public override bool ShouldRepaint(FlowDelegate oldDelegate) => false;
     }
 
     private sealed class TestRootElement : Element, IRenderObjectHost
