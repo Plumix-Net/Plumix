@@ -27,7 +27,7 @@ class _ProxyWidgetsDemoPageState extends State<ProxyWidgetsDemoPage> {
       spacing: 10,
       children: <Widget>[
         const Text(
-          'Proxy widgets: Opacity + Transform + ClipRect',
+          'Proxy widgets: Opacity + Transform + clips',
           style: TextStyle(fontSize: 20, color: Colors.black),
         ),
         const Text(
@@ -126,6 +126,46 @@ class _ProxyWidgetsDemoPageState extends State<ProxyWidgetsDemoPage> {
             ),
           ),
         ),
+        const Text(
+          'ClipOval + ClipPath',
+          style: TextStyle(fontSize: 14, color: Colors.black),
+        ),
+        Row(
+          spacing: 16,
+          children: <Widget>[
+            SizedBox(
+              width: 96,
+              height: 72,
+              child: ClipOval(
+                child: ColoredBox(
+                  color: Color(0xFF6750A4),
+                  child: Center(
+                    child: Text(
+                      'Oval',
+                      style: TextStyle(fontSize: 13, color: Colors.white),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(
+              width: 96,
+              height: 72,
+              child: ClipPath(
+                clipper: _TrianglePathClipper(),
+                child: ColoredBox(
+                  color: Color(0xFF386A20),
+                  child: Center(
+                    child: Text(
+                      'Path',
+                      style: TextStyle(fontSize: 13, color: Colors.white),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -192,4 +232,20 @@ class _FixedRectClipper extends CustomClipper<Rect> {
 
   @override
   bool shouldReclip(_FixedRectClipper oldClipper) => oldClipper.rect != rect;
+}
+
+class _TrianglePathClipper extends CustomClipper<Path> {
+  const _TrianglePathClipper();
+
+  @override
+  Path getClip(Size size) {
+    return Path()
+      ..moveTo(size.width / 2, 0)
+      ..lineTo(size.width, size.height)
+      ..lineTo(0, size.height)
+      ..close();
+  }
+
+  @override
+  bool shouldReclip(_TrianglePathClipper oldClipper) => false;
 }

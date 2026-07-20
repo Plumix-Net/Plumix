@@ -1,5 +1,9 @@
 # Changelog
 
+- Added paired Flutter core `ClipOval` + `ClipPath` ports with source-shaped `CustomClipper<T>` reclip lifecycle,
+  shape-aware hit testing, geometry-layer clipping, `ClipPath.Shape(...)`, focused tests, and mirrored C#/Dart
+  probes. Added the framework-owned path subset required by custom clips; advanced `Plumix` to `0.9.0-alpha.1`.
+
 - Added paired Flutter core `Placeholder` + `GridPaper` ports with source-shaped custom-paint composition,
   unbounded fallback sizing, foreground grid hierarchy, hit-test/repaint behavior, focused tests, and mirrored
   C#/Dart probes. Advanced `Plumix` to `0.8.0-alpha.1`.

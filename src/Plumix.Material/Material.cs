@@ -167,8 +167,8 @@ public sealed class Material : StatefulWidget
 
             if (CurrentWidget.ClipBehavior != Clip.None)
             {
-                // The core clip primitive currently supports rounded rectangles. A circle
-                // therefore uses the equivalent maximal rounded-rectangle approximation.
+                // The complete Material shape/ink migration will adopt ClipOval for circles.
+                // Until then, retain the existing rounded-rectangle composition.
                 content = new ClipRRect(visual.Shape.BorderRadius, content);
             }
 

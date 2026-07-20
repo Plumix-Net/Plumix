@@ -6,6 +6,7 @@ using Avalonia;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Plumix.UI;
+using IOPath = System.IO.Path;
 
 namespace Plumix.Rendering;
 
@@ -322,7 +323,7 @@ public sealed class FileImage : ImageProvider<FileImage>, IEquatable<FileImage>
     public FileImage(string filePath, double scale = 1.0)
     {
         if (string.IsNullOrWhiteSpace(filePath)) throw new ArgumentException("File path is required.", nameof(filePath));
-        FilePath = Path.GetFullPath(filePath);
+        FilePath = IOPath.GetFullPath(filePath);
         Scale = MemoryImage.ValidateScale(scale);
     }
 
@@ -591,7 +592,7 @@ public sealed class AssetImage : AssetBundleImageProvider, IEquatable<AssetImage
     private static bool TryParseVariantScale(string keyName, string candidate, out double scale)
     {
         scale = 0;
-        string fileName = Path.GetFileName(keyName);
+        string fileName = IOPath.GetFileName(keyName);
         if (!candidate.EndsWith(fileName, StringComparison.OrdinalIgnoreCase)) return false;
         string[] segments = candidate.Replace('\\', '/').Split('/');
         if (segments.Length < 2) return false;

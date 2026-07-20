@@ -194,6 +194,9 @@ Completion note:
 - Continued paired core developer-visualization coverage with `Placeholder` + `GridPaper`, including source-shaped
   background/foreground custom-paint composition, unbounded fallback sizing, child preservation, three-level grid
   strokes, non-interactive hit testing, focused tests, and mirrored C#/Dart runtime probes.
+- Continued paired core clipping coverage with `ClipOval` + `ClipPath`, including source-shaped generic
+  `CustomClipper<T>` listener/reclip ownership, cached size-dependent clips, oval/path hit testing, approximate
+  semantics clips, `Clip.none` paint policy, `ClipPath.Shape(...)`, focused tests, and mirrored C#/Dart probes.
 - Implicit-animations sample viewport hardening: both samples now share an always-visible scrollbar and scroll
   controller around the complete probe column, preventing bottom overflow on short desktop windows.
 

@@ -385,10 +385,20 @@ public sealed class ClipGeometryLayer : ContainerLayer
 {
     public Geometry Geometry { get; set; } = new RectangleGeometry();
 
+    public Clip ClipBehavior { get; set; } = Clip.AntiAlias;
+
+    public Point GeometryOffset { get; set; }
+
     internal override void AddToScene(DrawingContext context, Point offset)
     {
-        using (context.PushTransform(Matrix.CreateTranslation(offset.X, offset.Y)))
+        Point clipOffset = offset + GeometryOffset;
+        using IDisposable renderOptions = context.PushRenderOptions(new RenderOptions
+        {
+            EdgeMode = ClipBehavior == Clip.HardEdge ? EdgeMode.Aliased : EdgeMode.Antialias,
+        });
+        using (context.PushTransform(Matrix.CreateTranslation(clipOffset.X, clipOffset.Y)))
         using (context.PushGeometryClip(Geometry))
+        using (context.PushTransform(Matrix.CreateTranslation(-GeometryOffset.X, -GeometryOffset.Y)))
         {
             base.AddToScene(context, new Point(0, 0));
         }

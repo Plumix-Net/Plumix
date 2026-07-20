@@ -3,6 +3,7 @@ using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
+using IOPath = System.IO.Path;
 using Plumix.Widgets;
 
 namespace Plumix.Material;
@@ -412,7 +413,7 @@ internal sealed class PackageLicensePage : StatelessWidget
 public static class AboutDialogs
 {
     public static string DefaultApplicationName =>
-        Path.GetFileName(Environment.ProcessPath) is { Length: > 0 } name ? name : "application";
+        IOPath.GetFileName(Environment.ProcessPath) is { Length: > 0 } name ? name : "application";
 
     public static Task<object?> ShowAboutDialog(
         BuildContext context,

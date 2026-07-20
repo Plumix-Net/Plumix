@@ -322,14 +322,21 @@ public sealed class PaintingContext
         childContext.StopRecordingIfNeeded();
     }
 
-    public void PushClipGeometry(Geometry geometry, Action<PaintingContext> painter)
+    public void PushClipGeometry(
+        Geometry geometry,
+        Action<PaintingContext> painter,
+        Clip clipBehavior = Clip.AntiAlias,
+        Point geometryOffset = default)
     {
         ArgumentNullException.ThrowIfNull(geometry);
+        ArgumentNullException.ThrowIfNull(painter);
         StopRecordingIfNeeded();
 
         var layer = new ClipGeometryLayer
         {
-            Geometry = geometry
+            Geometry = geometry,
+            ClipBehavior = clipBehavior,
+            GeometryOffset = geometryOffset,
         };
         _containerLayer.Append(layer);
 

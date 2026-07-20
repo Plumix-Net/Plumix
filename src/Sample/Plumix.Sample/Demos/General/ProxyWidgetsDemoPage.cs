@@ -3,6 +3,7 @@ using Avalonia;
 using Avalonia.Media;
 using Plumix.Rendering;
 using Plumix.Widgets;
+using Path = Plumix.UI.Path;
 
 // Dart parity source (reference): dart_sample/lib/proxy_widgets_demo_page.dart (exact sample parity)
 
@@ -33,7 +34,10 @@ internal sealed class ProxyWidgetsDemoPageState : State
             spacing: 10,
             children:
             [
-                new Text("Proxy widgets: Opacity + Transform + ClipRect", fontSize: 20, color: Colors.Black),
+                new Text(
+                    "Proxy widgets: Opacity + Transform + clips",
+                    fontSize: 20,
+                    color: Colors.Black),
                 new Text(
                     "Use controls to fade a high-contrast black card over white canvas.",
                     fontSize: 14,
@@ -82,6 +86,27 @@ internal sealed class ProxyWidgetsDemoPageState : State
                                     color: Color.Parse("#FF111111"),
                                     padding: new Thickness(8),
                                     child: new Text("Layer", fontSize: 14, color: Colors.White)))))),
+                new Text("ClipOval + ClipPath", fontSize: 14, color: Colors.Black),
+                new Row(
+                    spacing: 16,
+                    children:
+                    [
+                        new SizedBox(
+                            width: 96,
+                            height: 72,
+                            child: new ClipOval(
+                                child: new ColoredBox(
+                                    Color.Parse("#FF6750A4"),
+                                    new Center(new Text("Oval", fontSize: 13, color: Colors.White))))),
+                        new SizedBox(
+                            width: 96,
+                            height: 72,
+                            child: new ClipPath(
+                                clipper: new TrianglePathClipper(),
+                                child: new ColoredBox(
+                                    Color.Parse("#FF386A20"),
+                                    new Center(new Text("Path", fontSize: 13, color: Colors.White))))),
+                    ]),
             ]);
     }
 
@@ -126,5 +151,20 @@ internal sealed class ProxyWidgetsDemoPageState : State
             _shiftX = 0;
             _tightClip = true;
         });
+    }
+
+    private sealed class TrianglePathClipper : CustomClipper<Path>
+    {
+        public override Path GetClip(Size size)
+        {
+            var path = new Path();
+            path.MoveTo(size.Width / 2.0, 0);
+            path.LineTo(size.Width, size.Height);
+            path.LineTo(0, size.Height);
+            path.Close();
+            return path;
+        }
+
+        public override bool ShouldReclip(CustomClipper<Path> oldClipper) => false;
     }
 }

@@ -225,7 +225,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             () => new CustomSliversDemoPage()),
         new(SampleRoutes.Scrollbar, "Scrollbar", "controller + thumb", () => new ScrollbarDemoPage()),
         new(SampleRoutes.EditableText, "EditableText", "focus + IME + multiline caret", () => new EditableTextDemoPage()),
-        new(SampleRoutes.ProxyWidgets, "Proxy widgets", "Opacity + Transform + ClipRect composition", () => new ProxyWidgetsDemoPage()),
+        new(
+            SampleRoutes.ProxyWidgets,
+            "Proxy widgets",
+            "Opacity + Transform + ClipRect/ClipOval/ClipPath",
+            () => new ProxyWidgetsDemoPage()),
         new(
             SampleRoutes.Align,
             "Animations + transitions",

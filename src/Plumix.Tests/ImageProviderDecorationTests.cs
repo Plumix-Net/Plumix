@@ -5,6 +5,7 @@ using Avalonia.Media;
 using Plumix.Rendering;
 using Plumix.UI;
 using Xunit;
+using IOPath = System.IO.Path;
 
 namespace Plumix.Tests;
 
@@ -193,7 +194,7 @@ public sealed class ImageProviderDecorationTests : IDisposable
         Assert.Equal(new MemoryImage(bytes, 2), new MemoryImage(bytes, 2));
         Assert.NotEqual(new MemoryImage(bytes, 2), new MemoryImage([1, 2, 3], 2));
 
-        string file = Path.Combine(Path.GetTempPath(), "plumix-image.png");
+        string file = IOPath.Combine(IOPath.GetTempPath(), "plumix-image.png");
         Assert.Equal(new FileImage(file, 1.5), new FileImage(file, 1.5));
         Assert.NotEqual(new FileImage(file, 1), new FileImage(file, 2));
 
