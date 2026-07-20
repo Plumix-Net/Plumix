@@ -389,9 +389,21 @@ public sealed class MaterialDialogTests : IDisposable
         PumpAnimation();
         var semantics = harness.PumpAndGetSemantics(new Size(500, 320));
         var barrier = FindSemantics(semantics, node => node.Label == "Close modal");
-        Assert.NotNull(barrier);
-        Assert.True(barrier!.Actions.HasFlag(SemanticsActions.Tap));
-        Assert.True(barrier.PerformAction(SemanticsActions.Tap));
+        bool platformSupportsDismissingBarrier = OperatingSystem.IsAndroid()
+                                                  || OperatingSystem.IsIOS()
+                                                  || OperatingSystem.IsMacOS();
+        if (platformSupportsDismissingBarrier)
+        {
+            Assert.NotNull(barrier);
+            Assert.True(barrier!.Actions.HasFlag(SemanticsActions.Tap));
+            Assert.True(barrier.PerformAction(SemanticsActions.Tap));
+        }
+        else
+        {
+            Assert.Null(barrier);
+            Navigator.Of(captured).Pop();
+        }
+
         PumpAnimation();
         harness.Pump(new Size(500, 320));
         Assert.Null(await result);

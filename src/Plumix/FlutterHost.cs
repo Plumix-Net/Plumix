@@ -39,6 +39,7 @@ public class PlumixHost : Control
     private bool _isSubscribedToSystemUiOverlayStyle;
     private bool _isSubscribedToMouseCursor;
     private bool _isSubscribedToFeedback;
+    private bool _isSubscribedToSystemSound;
     private SystemUiOverlayStyle _currentSystemUiOverlayStyle = SystemChrome.CurrentSystemUiOverlayStyle;
     private MouseCursor _currentMouseCursor = MouseCursorManager.CurrentCursor;
 
@@ -275,6 +276,7 @@ public class PlumixHost : Control
         AttachSystemUiOverlayStyleListener();
         AttachMouseCursorListener();
         AttachFeedbackListener();
+        AttachSystemSoundListener();
         AttachMetricSources();
         OnMetricsChanged();
     }
@@ -282,6 +284,7 @@ public class PlumixHost : Control
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
     {
         DetachMetricSources();
+        DetachSystemSoundListener();
         DetachFeedbackListener();
         DetachMouseCursorListener();
         DetachSystemUiOverlayStyleListener();
@@ -558,6 +561,37 @@ public class PlumixHost : Control
     }
 
     protected virtual void OnFrameworkFeedback(FeedbackType type)
+    {
+    }
+
+    private void AttachSystemSoundListener()
+    {
+        if (_isSubscribedToSystemSound)
+        {
+            return;
+        }
+
+        SystemSound.SoundRequested += HandleSystemSoundRequested;
+        _isSubscribedToSystemSound = true;
+    }
+
+    private void DetachSystemSoundListener()
+    {
+        if (!_isSubscribedToSystemSound)
+        {
+            return;
+        }
+
+        SystemSound.SoundRequested -= HandleSystemSoundRequested;
+        _isSubscribedToSystemSound = false;
+    }
+
+    private void HandleSystemSoundRequested(SystemSoundType type)
+    {
+        OnFrameworkSystemSound(type);
+    }
+
+    protected virtual void OnFrameworkSystemSound(SystemSoundType type)
     {
     }
 

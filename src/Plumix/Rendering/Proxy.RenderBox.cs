@@ -196,6 +196,38 @@ public sealed class RenderExcludeSemantics : RenderProxyBox
     }
 }
 
+public sealed class RenderBlockSemantics : RenderProxyBox
+{
+    private bool _blocking;
+
+    public RenderBlockSemantics(bool blocking = true, RenderBox? child = null)
+    {
+        _blocking = blocking;
+        Child = child;
+    }
+
+    public bool Blocking
+    {
+        get => _blocking;
+        set
+        {
+            if (_blocking == value)
+            {
+                return;
+            }
+
+            _blocking = value;
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
+    protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
+    {
+        base.DescribeSemanticsConfiguration(configuration);
+        configuration.IsBlockingSemanticsOfPreviouslyPaintedNodes = _blocking;
+    }
+}
+
 public sealed class RenderConstrainedBox : RenderProxyBox
 {
     private BoxConstraints _additionalConstraints;

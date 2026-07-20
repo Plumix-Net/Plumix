@@ -175,3 +175,27 @@ public sealed class ExcludeSemantics : SingleChildRenderObjectWidget
         ((RenderExcludeSemantics)renderObject).Excluding = Excluding;
     }
 }
+
+// Dart parity source: flutter/packages/flutter/lib/src/widgets/basic.dart (BlockSemantics)
+public sealed class BlockSemantics : SingleChildRenderObjectWidget
+{
+    public BlockSemantics(
+        Widget? child = null,
+        bool blocking = true,
+        Key? key = null) : base(child, key)
+    {
+        Blocking = blocking;
+    }
+
+    public bool Blocking { get; }
+
+    internal override RenderObject CreateRenderObject(BuildContext context)
+    {
+        return new RenderBlockSemantics(Blocking);
+    }
+
+    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    {
+        ((RenderBlockSemantics)renderObject).Blocking = Blocking;
+    }
+}

@@ -688,6 +688,7 @@ public sealed class DialogRoute<T> : PageRoute
     private readonly MediaQueryData _capturedMediaQuery;
     private readonly TextDirection _capturedDirection;
     private readonly Plumix.AnimationController _animation;
+    private readonly Animation<Color?> _barrierColorAnimation;
     private readonly TaskCompletionSource<T?> _completed = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private object? _pendingResult;
     private bool _isExiting;
@@ -717,6 +718,7 @@ public sealed class DialogRoute<T> : PageRoute
         TransitionDuration = transitionDuration ?? TimeSpan.FromMilliseconds(150);
         if (TransitionDuration < TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(transitionDuration));
         _animation = new Plumix.AnimationController(TransitionDuration) { Curve = Curves.EaseOut };
+        _barrierColorAnimation = new DialogBarrierColorAnimation(_animation, BarrierColor);
         _animation.Changed += HandleAnimationChanged;
         _animation.Dismissed += HandleDismissed;
     }
@@ -763,14 +765,11 @@ public sealed class DialogRoute<T> : PageRoute
     public override Widget BuildPage(BuildContext context)
     {
         double progress = Math.Clamp(_animation.Value, 0, 1);
-        var barrier = new Semantics(
-            label: BarrierLabel,
-            container: true,
-            onTap: BarrierDismissible ? () => Navigator?.MaybePop() : null,
-            child: new GestureDetector(
-                behavior: HitTestBehavior.Opaque,
-                onTap: BarrierDismissible ? () => Navigator?.MaybePop() : null,
-                child: new ColoredBox(ApplyOpacity(BarrierColor, progress))));
+        var barrier = new AnimatedModalBarrier(
+            color: _barrierColorAnimation,
+            dismissible: BarrierDismissible,
+            semanticsLabel: BarrierLabel,
+            onDismiss: () => Navigator?.MaybePop());
 
         Widget page = new Builder(_builder);
         if (UseSafeArea) page = new SafeArea(child: page);
@@ -804,8 +803,39 @@ public sealed class DialogRoute<T> : PageRoute
         if (_isExiting) Navigator?.MaybePop(_pendingResult);
     }
 
-    private static Color ApplyOpacity(Color color, double opacity) => Color.FromArgb(
-        (byte)Math.Round(color.A * Math.Clamp(opacity, 0, 1)), color.R, color.G, color.B);
+    private sealed class DialogBarrierColorAnimation : Animation<Color?>
+    {
+        private readonly Animation<double> _parent;
+        private readonly Color _color;
+
+        public DialogBarrierColorAnimation(Animation<double> parent, Color color)
+        {
+            _parent = parent;
+            _color = color;
+        }
+
+        public override Color? Value => Color.FromArgb(
+            (byte)Math.Round(_color.A * Math.Clamp(_parent.Value, 0, 1)),
+            _color.R,
+            _color.G,
+            _color.B);
+
+        public override AnimationStatus Status => _parent.Status;
+
+        public override void AddListener(Action listener) => _parent.AddListener(listener);
+
+        public override void RemoveListener(Action listener) => _parent.RemoveListener(listener);
+
+        public override void AddStatusListener(Action<AnimationStatus> listener)
+        {
+            _parent.AddStatusListener(listener);
+        }
+
+        public override void RemoveStatusListener(Action<AnimationStatus> listener)
+        {
+            _parent.RemoveStatusListener(listener);
+        }
+    }
 }
 
 public static class MaterialDialogs

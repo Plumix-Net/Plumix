@@ -1,5 +1,10 @@
 # Changelog
 
+- Added paired Flutter core `ModalBarrier` + `AnimatedModalBarrier` ports with source-shaped dismiss/pop behavior,
+  any-button opaque gesture capture, platform-aware accessibility actions, semantic focus clipping, system-alert
+  dispatch,
+  animated colors, and `BlockSemantics`; Material dialog routes now use the shared animated barrier.
+
 - Added paired Material `AdaptiveTextSelectionToolbar` + `SpellCheckSuggestionsToolbar` ports with shared
   context-menu button/anchor contracts, localized button mapping, Android/desktop platform routing, safe-inset and
   keyboard-aware spell-check placement, focused tests, and mirrored C#/Dart probes. Advanced `Plumix` and

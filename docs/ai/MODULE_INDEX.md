@@ -53,7 +53,9 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   `Widgets/AnimatedSize.cs`, and their rendering counterparts, with focused coverage in
   `MaterialDesktopTextSelectionToolbarTests.cs` and `ImplicitAnimationsTests.cs`.
 - Material search routes enter through `SearchDelegate.cs` alongside `SearchAnchor.cs`; route ownership uses core `Widgets/Navigation.cs`, query editing stays on `Widgets/TextInput.cs`, and focused coverage lives in `MaterialSearchTests.cs`.
-- Dialog-family controls (`Dialog`, `AlertDialog`, `SimpleDialog`, `SimpleDialogOption`) enter through `Dialog.cs` + `DialogTheme.cs`; modal stacking/result behavior also touches `Widgets/Navigation.cs` and is covered by `MaterialDialogTests.cs`.
+- Dialog-family controls (`Dialog`, `AlertDialog`, `SimpleDialog`, `SimpleDialogOption`) enter through `Dialog.cs` +
+  `DialogTheme.cs`; modal stacking/result behavior uses core `Widgets/ModalBarrier.cs` + `Widgets/Navigation.cs` and
+  is covered by `ModalBarrierTests.cs` + `MaterialDialogTests.cs`.
 - Popup-menu controls (`PopupMenuButton`, item/checked/divider entries) enter through `PopupMenu.cs` + `PopupMenuTheme.cs`; anchor geometry and route lifecycle also touch `Widgets/Navigation.cs`/`Widgets/Scroll.cs` and are covered by `MaterialPopupMenuTests.cs`.
 - Legacy Material dropdown controls enter through `Dropdown.cs` + `DropdownButtonFormField.cs`; form lifecycle lives in core `Widgets/Form.cs`, selected-size behavior uses core `IndexedStack`, and positioned route/scroll/focus/form behavior is covered by `MaterialDropdownTests.cs`.
 - Modern Material dropdown controls enter through `DropdownMenu.cs` + `DropdownMenuFormField.cs` + `DropdownMenuTheme.cs`; editable key dispatch lives in core `Widgets/TextInput.cs`, the anchored menu reuses the framework-owned positioned dropdown route, and filtering/search/controller/form behavior is covered by `MaterialDropdownTests.cs`.
@@ -200,8 +202,11 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/Rendering/Semantics.cs`
   - `src/Plumix/Rendering/Object.RenderObjectSemantics.cs`
   - `src/Plumix/Rendering/SemanticsConfigurationProvider.cs`
+  - `src/Plumix/Widgets/Semantics.cs`
+  - `src/Plumix/Widgets/ModalBarrier.cs`
 - Primary Tests:
   - `src/Plumix.Tests/SemanticsTreeTests.cs`
+  - `src/Plumix.Tests/ModalBarrierTests.cs`
 
 ### Sample and Dart Parity
 
