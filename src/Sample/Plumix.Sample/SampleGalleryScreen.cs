@@ -97,6 +97,7 @@ internal static class SampleRoutes
     public const string OverflowBox = "/overflow-box";
     public const string OverflowIndicator = "/overflow-indicator";
     public const string Offstage = "/offstage";
+    public const string Baseline = "/baseline";
 }
 
 internal readonly record struct SampleRouteDefinition(
@@ -241,6 +242,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "Visibility + SliverVisibility + Offstage",
             "replacement + maintained size + sliver and offstage behavior",
             () => new OffstageDemoPage()),
+        new(
+            SampleRoutes.Baseline,
+            "Baseline + IgnoreBaseline",
+            "real text baselines + bottom fallback + Row exclusion",
+            () => new BaselineDemoPage()),
     ];
 
     private static readonly IReadOnlyList<SampleMenuTabDefinition> DemoTabs =

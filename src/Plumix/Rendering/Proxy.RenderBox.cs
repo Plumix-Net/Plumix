@@ -101,6 +101,18 @@ public abstract class RenderProxyBox : RenderBox, IRenderObjectSingleChildContai
         var childParentData = (BoxParentData)_child.parentData!;
         return _child.HitTest(result, position - childParentData.offset);
     }
+
+    protected override double? ComputeDistanceToActualBaseline(TextBaseline baseline)
+    {
+        if (_child is null)
+        {
+            return null;
+        }
+
+        var childParentData = (BoxParentData)_child.parentData!;
+        double? childBaseline = _child.GetDistanceToBaseline(baseline, onlyReal: true);
+        return childBaseline + childParentData.offset.Y;
+    }
 }
 
 internal sealed class RenderVisibility : RenderProxyBox

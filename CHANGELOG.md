@@ -1,5 +1,9 @@
 # Changelog
 
+- Added paired Flutter core `Baseline` + `IgnoreBaseline` ports with source-shaped child positioning, bottom-edge
+  fallback, proxy baseline forwarding, paragraph metrics, Flex/Row/Column `textBaseline` wiring, focused tests, and
+  mirrored C#/Dart runtime probes. Advanced `Plumix` to `0.4.0-alpha.1`; Avalonia ideographic metrics remain tracked.
+
 - Added paired Flutter core `ListenableBuilder` + `AnimatedBuilder` ports with source-identical inheritance,
   shared `AnimatedWidget` listener rebinding/disposal, stable-child fast paths, focused tests, and mirrored C#/Dart
   runtime probes. Advanced `Plumix` to `0.3.0-alpha.1`.

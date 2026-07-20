@@ -107,7 +107,7 @@ public abstract class RenderBox : RenderObject
 
         try
         {
-            result = GetDistanceToActualBaseline(baseline);
+            result = ComputeDistanceToActualBaseline(baseline);
         }
         finally
         {
@@ -127,7 +127,7 @@ public abstract class RenderBox : RenderObject
     /// This function must only be called from [getDistanceToBaseline] and
     /// [computeDistanceToActualBaseline]. Do not call this function directly from
     /// outside those two methods.
-    protected double? GetDistanceToActualBaseline(TextBaseline baseline)
+    protected virtual double? ComputeDistanceToActualBaseline(TextBaseline baseline)
     {
         // Debug.Assert(
         //     _debugDoingBaseline,

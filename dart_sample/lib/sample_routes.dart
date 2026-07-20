@@ -91,6 +91,7 @@ class SampleRoutes {
   static const String overflowBox = '/overflow-box';
   static const String overflowIndicator = '/overflow-indicator';
   static const String offstage = '/offstage';
+  static const String baseline = '/baseline';
 }
 
 class SampleRouteDefinition {

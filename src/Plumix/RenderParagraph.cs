@@ -459,6 +459,22 @@ public sealed class RenderParagraph : RenderBox
         }
     }
 
+    protected override double? ComputeDistanceToActualBaseline(TextBaseline baseline)
+    {
+        if (_layout is not null)
+        {
+            return _layout.Baseline;
+        }
+
+        if (!HasSize)
+        {
+            return null;
+        }
+
+        double lineHeight = _height is > 0 ? _fontSize * _height.Value : _fontSize * 1.2;
+        return Math.Min(Size.Height, lineHeight * 0.8);
+    }
+
     private TextLayout CreateTextLayout(Typeface typeface, double maxWidth, double maxHeight, double lineHeight)
     {
         return new TextLayout(

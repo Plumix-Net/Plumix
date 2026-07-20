@@ -912,7 +912,8 @@ public class Flex : MultiChildRenderObjectWidget
         CrossAxisAlignment crossAxisAlignment = CrossAxisAlignment.Center,
         double spacing = 0,
         Key? key = null,
-        TextDirection? textDirection = null) : base(children, key)
+        TextDirection? textDirection = null,
+        TextBaseline? textBaseline = null) : base(children, key)
     {
         Direction = direction;
         MainAxisSize = mainAxisSize;
@@ -920,6 +921,7 @@ public class Flex : MultiChildRenderObjectWidget
         CrossAxisAlignment = crossAxisAlignment;
         Spacing = spacing;
         TextDirection = textDirection;
+        TextBaseline = textBaseline;
     }
 
     public Axis Direction { get; }
@@ -934,6 +936,8 @@ public class Flex : MultiChildRenderObjectWidget
 
     public TextDirection? TextDirection { get; }
 
+    public TextBaseline? TextBaseline { get; }
+
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderFlex(
@@ -943,6 +947,7 @@ public class Flex : MultiChildRenderObjectWidget
             mainAxisAlignment: MainAxisAlignment,
             crossAxisAlignment: CrossAxisAlignment,
             textDirection: TextDirection,
+            textBaseline: TextBaseline,
             spacing: Spacing);
     }
 
@@ -954,6 +959,7 @@ public class Flex : MultiChildRenderObjectWidget
         flex.MainAxisAlignment = MainAxisAlignment;
         flex.CrossAxisAlignment = CrossAxisAlignment;
         flex.TextDirection = TextDirection;
+        flex.TextBaseline = TextBaseline;
         flex.Spacing = Spacing;
     }
 }
@@ -1042,7 +1048,8 @@ public sealed class Row : Flex
         CrossAxisAlignment crossAxisAlignment = CrossAxisAlignment.Center,
         double spacing = 0,
         Key? key = null,
-        TextDirection? textDirection = null) : base(
+        TextDirection? textDirection = null,
+        TextBaseline? textBaseline = null) : base(
         direction: Axis.Horizontal,
         children: children,
         mainAxisSize: mainAxisSize,
@@ -1050,7 +1057,8 @@ public sealed class Row : Flex
         crossAxisAlignment: crossAxisAlignment,
         spacing: spacing,
         key: key,
-        textDirection: textDirection)
+        textDirection: textDirection,
+        textBaseline: textBaseline)
     {
     }
 }
@@ -1064,7 +1072,8 @@ public sealed class Column : Flex
         CrossAxisAlignment crossAxisAlignment = CrossAxisAlignment.Center,
         double spacing = 0,
         Key? key = null,
-        TextDirection? textDirection = null) : base(
+        TextDirection? textDirection = null,
+        TextBaseline? textBaseline = null) : base(
         direction: Axis.Vertical,
         children: children,
         mainAxisSize: mainAxisSize,
@@ -1072,7 +1081,8 @@ public sealed class Column : Flex
         crossAxisAlignment: crossAxisAlignment,
         spacing: spacing,
         key: key,
-        textDirection: textDirection)
+        textDirection: textDirection,
+        textBaseline: textBaseline)
     {
     }
 }

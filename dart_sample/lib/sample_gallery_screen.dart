@@ -66,6 +66,7 @@ import 'demos/material/segmented_buttons_demo_page.dart';
 import 'demos/material/chips_demo_page.dart';
 import 'demos/general/navigator_demo_page.dart';
 import 'demos/general/offstage_demo_page.dart';
+import 'demos/general/baseline_demo_page.dart';
 import 'demos/general/overflow_box_demo_page.dart';
 import 'demos/general/overflow_indicator_demo_page.dart';
 import 'demos/general/proxy_widgets_demo_page.dart';
@@ -559,6 +560,12 @@ class SampleGalleryScreen extends StatelessWidget {
           subtitle:
               'replacement + maintained size + sliver and offstage behavior',
           builder: () => const OffstageDemoPage(),
+        ),
+        SampleRouteDefinition(
+          routeName: SampleRoutes.baseline,
+          title: 'Baseline + IgnoreBaseline',
+          subtitle: 'real text baselines + bottom fallback + Row exclusion',
+          builder: () => const BaselineDemoPage(),
         ),
       ];
 

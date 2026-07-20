@@ -255,6 +255,33 @@ public sealed class BasicWidgetProxyTests
         Assert.Equal(Plumix.Painting.VerticalDirection.Up, updated.VerticalDirection);
     }
 
+    [Fact]
+    public void RowWidget_ForwardsAndUpdatesTextBaseline()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(new Row(
+            crossAxisAlignment: CrossAxisAlignment.Baseline,
+            textBaseline: Plumix.UI.TextBaseline.Alphabetic,
+            children: [new SizedBox(width: 10, height: 10)]));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var flex = RequireRenderObject<RenderFlex>(root.ChildElement);
+        Assert.Equal(Plumix.UI.TextBaseline.Alphabetic, flex.TextBaseline);
+
+        root.Update(new Row(
+            crossAxisAlignment: CrossAxisAlignment.Baseline,
+            textBaseline: Plumix.UI.TextBaseline.Ideographic,
+            children: [new SizedBox(width: 10, height: 10)]));
+        owner.FlushBuild();
+
+        var updated = RequireRenderObject<RenderFlex>(root.ChildElement);
+        Assert.Same(flex, updated);
+        Assert.Equal(Plumix.UI.TextBaseline.Ideographic, updated.TextBaseline);
+    }
+
     private static T RequireRenderObject<T>(Element? element) where T : RenderObject
     {
         Assert.NotNull(element);

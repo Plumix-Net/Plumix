@@ -98,6 +98,21 @@ public sealed class TextWidgetTests
     }
 
     [Fact]
+    public void RenderParagraph_ReportsARealTextBaseline()
+    {
+        var paragraph = new RenderParagraph("Baseline")
+        {
+            FontSize = 20
+        };
+
+        paragraph.Layout(new BoxConstraints(MaxWidth: 200, MaxHeight: 100));
+
+        double? baseline = paragraph.GetDistanceToBaseline(TextBaseline.Alphabetic, onlyReal: true);
+        Assert.NotNull(baseline);
+        Assert.InRange(baseline.Value, 0.01, paragraph.Size.Height);
+    }
+
+    [Fact]
     public void TextWidget_InheritsAndOverrides_DefaultTextStyle()
     {
         var owner = new BuildOwner();

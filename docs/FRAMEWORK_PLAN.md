@@ -176,6 +176,9 @@ Completion note:
   aggregation, non-composited paint suppression, exact sliver geometry forwarding, focused lifecycle/render tests,
   and mirrored C#/Dart probes. Source-required `SliverIgnorePointer` and `SliverOffstage` now live in core; actual
   descendant ticker muting remains tracked against the shared `TickerMode` ownership gap.
+- Continued paired core layout-control coverage with `Baseline` + `IgnoreBaseline`, including source-shaped target
+  offsets, bottom-edge fallback, real paragraph baseline propagation through proxy render boxes, Flex/Row/Column
+  `textBaseline` wiring, focused layout tests, and mirrored C#/Dart runtime probes.
 - Implicit-animations sample viewport hardening: both samples now share an always-visible scrollbar and scroll
   controller around the complete probe column, preventing bottom overflow on short desktop windows.
 

@@ -929,7 +929,7 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
         {
             return !baselineOffset.HasValue
                 ? None
-                : new _AscentDescent((baselineOffset.Value, crossSize));
+                : new _AscentDescent((baselineOffset.Value, crossSize - baselineOffset.Value));
         }
 
         public static _AscentDescent operator +(_AscentDescent a, _AscentDescent b)
