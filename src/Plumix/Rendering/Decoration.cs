@@ -1,3 +1,4 @@
+using Avalonia;
 using Avalonia.Media;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/painting/box_decoration.dart; flutter/packages/flutter/lib/src/painting/borders.dart (approximate)
@@ -20,6 +21,32 @@ public enum BorderStyle
 {
     None,
     Solid,
+}
+
+// Dart parity source: flutter/packages/flutter/lib/src/painting/decoration.dart
+public abstract record Decoration
+{
+    public abstract BoxPainter CreateBoxPainter(Action? onChanged = null);
+}
+
+// Dart parity source: flutter/packages/flutter/lib/src/painting/decoration.dart
+public abstract class BoxPainter : IDisposable
+{
+    protected BoxPainter(Action? onChanged = null)
+    {
+        OnChanged = onChanged;
+    }
+
+    protected Action? OnChanged { get; }
+
+    public abstract void Paint(
+        PaintingContext context,
+        Point offset,
+        ImageConfiguration configuration);
+
+    public virtual void Dispose()
+    {
+    }
 }
 
 public readonly record struct BorderRadius
@@ -83,11 +110,16 @@ public sealed record BoxDecoration(
     BorderRadius? BorderRadius = null,
     BoxShadows? BoxShadows = null,
     DecorationImage? Image = null,
-    BoxShape Shape = BoxShape.Rectangle)
+    BoxShape Shape = BoxShape.Rectangle) : Decoration
 {
     public BorderRadius EffectiveBorderRadius => BorderRadius ?? Plumix.Rendering.BorderRadius.Zero;
 
     public BoxShadows EffectiveBoxShadows => BoxShadows ?? default;
+
+    public override BoxPainter CreateBoxPainter(Action? onChanged = null)
+    {
+        return new BoxDecorationPainter(this, onChanged);
+    }
 
     public static BoxDecoration? Lerp(BoxDecoration? a, BoxDecoration? b, double t)
     {
@@ -149,5 +181,113 @@ public sealed record BoxDecoration(
         double from = a?.Radius ?? 0;
         double to = b?.Radius ?? 0;
         return new BorderRadius(from + ((to - from) * t));
+    }
+}
+
+internal sealed class BoxDecorationPainter : BoxPainter
+{
+    private readonly BoxDecoration _decoration;
+    private DecorationImagePainter? _imagePainter;
+
+    public BoxDecorationPainter(BoxDecoration decoration, Action? onChanged = null) : base(onChanged)
+    {
+        _decoration = decoration;
+    }
+
+    public override void Paint(
+        PaintingContext context,
+        Point offset,
+        ImageConfiguration configuration)
+    {
+        Size size = configuration.Size ?? default;
+        var rect = new Rect(offset, size);
+        double radius = _decoration.EffectiveBorderRadius.Radius;
+        BoxShadows boxShadows = _decoration.EffectiveBoxShadows;
+        IBrush? fill = _decoration.Brush;
+        if (fill is null && _decoration.Color.HasValue)
+        {
+            fill = new SolidColorBrush(_decoration.Color.Value);
+        }
+
+        IPen? borderPen = null;
+        if (_decoration.Border.HasValue)
+        {
+            BorderSide border = _decoration.Border.Value;
+            if (border.Style == BorderStyle.Solid && border.Width > 0)
+            {
+                borderPen = new Pen(new SolidColorBrush(border.Color), border.Width);
+            }
+        }
+
+        if (_decoration.Shape == BoxShape.Circle)
+        {
+            if (fill != null || boxShadows.Count > 0)
+            {
+                double side = Math.Min(rect.Width, rect.Height);
+                var circleRect = new Rect(
+                    rect.Center.X - (side / 2.0),
+                    rect.Center.Y - (side / 2.0),
+                    side,
+                    side);
+                context.DrawRectangle(
+                    fill ?? Brushes.Transparent,
+                    null,
+                    circleRect,
+                    side / 2.0,
+                    side / 2.0,
+                    boxShadows);
+            }
+        }
+        else if (fill != null || boxShadows.Count > 0)
+        {
+            context.DrawRectangle(fill ?? Brushes.Transparent, null, rect, radius, radius, boxShadows);
+        }
+
+        if (_decoration.Image is not null)
+        {
+            _imagePainter ??= _decoration.Image.CreatePainter(HandleImageChanged);
+            _imagePainter.Paint(
+                context,
+                rect,
+                configuration,
+                clipRadius: _decoration.BorderRadius,
+                shape: _decoration.Shape);
+        }
+
+        if (borderPen is null)
+        {
+            return;
+        }
+
+        if (_decoration.Shape == BoxShape.Circle)
+        {
+            double side = Math.Min(rect.Width, rect.Height);
+            var circleRect = new Rect(
+                rect.Center.X - (side / 2.0),
+                rect.Center.Y - (side / 2.0),
+                side,
+                side);
+            context.DrawRectangle(
+                Brushes.Transparent,
+                borderPen,
+                circleRect,
+                side / 2.0,
+                side / 2.0);
+        }
+        else
+        {
+            context.DrawRectangle(Brushes.Transparent, borderPen, rect, radius, radius);
+        }
+    }
+
+    public override void Dispose()
+    {
+        _imagePainter?.Dispose();
+        _imagePainter = null;
+    }
+
+    private void HandleImageChanged()
+    {
+        OnChanged?.Invoke();
     }
 }

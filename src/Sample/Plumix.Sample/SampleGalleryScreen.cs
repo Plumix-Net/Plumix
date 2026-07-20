@@ -208,7 +208,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "insert/remove animations + grid delegate and keyed sliver variants",
             () => new AnimatedGridDemoPage()),
         new(SampleRoutes.GridView, "GridView + SliverGrid", "delegate-based 2D layout", () => new GridViewDemoPage()),
-        new(SampleRoutes.CustomSlivers, "Custom slivers", "SliverPadding + SliverFixedExtentList", () => new CustomSliversDemoPage()),
+        new(
+            SampleRoutes.CustomSlivers,
+            "Custom slivers",
+            "DecoratedSliver + PinnedHeaderSliver + fixed/list adapters",
+            () => new CustomSliversDemoPage()),
         new(SampleRoutes.Scrollbar, "Scrollbar", "controller + thumb", () => new ScrollbarDemoPage()),
         new(SampleRoutes.EditableText, "EditableText", "focus + IME + multiline caret", () => new EditableTextDemoPage()),
         new(SampleRoutes.ProxyWidgets, "Proxy widgets", "Opacity + Transform + ClipRect composition", () => new ProxyWidgetsDemoPage()),

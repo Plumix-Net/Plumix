@@ -14,34 +14,42 @@ public sealed class CustomSliversDemoPage : StatelessWidget
         return new CustomScrollView(
             slivers:
             [
-                new SliverToBoxAdapter(
+                new PinnedHeaderSliver(
                     new Container(
-                        color: Colors.White,
-                        padding: new Thickness(12),
+                        height: 88,
+                        color: Color.Parse("#FFF8FAFF"),
+                        padding: new Thickness(12, 10),
                         child: new Column(
                             crossAxisAlignment: CrossAxisAlignment.Stretch,
-                            spacing: 6,
+                            spacing: 4,
                             children:
                             [
-                                new Text("CustomScrollView + Slivers", fontSize: 20, color: Colors.Black),
+                                new Text("PinnedHeaderSliver", fontSize: 20, color: Colors.Black),
                                 new Text(
-                                    "SliverPadding and SliverFixedExtentList are used directly.",
+                                    "This measured header remains pinned while the decorated list scrolls behind it.",
                                     fontSize: 14,
                                     color: Colors.DimGray),
                             ]))),
-                new SliverPadding(
-                    padding: new Thickness(12, 10, 12, 8),
-                    sliver: SliverFixedExtentList.Builder(
-                        childCount: 18,
-                        itemExtent: 42,
-                        itemBuilder: (_, index) => new Container(
-                            color: index % 2 == 0 ? Color.Parse("#FFE8F5E9") : Color.Parse("#FFEAF4FF"),
-                            padding: new Thickness(10, 8),
-                            child: new Text(
-                                $"fixed sliver row #{index}",
-                                fontSize: 13,
-                                color: Colors.Black)),
-                        addAutomaticKeepAlives: false)),
+                new DecoratedSliver(
+                    decoration: new BoxDecoration(
+                        Color: Color.Parse("#FFEAF4FF"),
+                        Border: new BorderSide(Color.Parse("#FF90CAF9"), 2),
+                        BorderRadius: BorderRadius.Circular(18)),
+                    sliver: new SliverPadding(
+                        padding: new Thickness(12, 10, 12, 8),
+                        sliver: SliverFixedExtentList.Builder(
+                            childCount: 18,
+                            itemExtent: 42,
+                            itemBuilder: (_, index) => new Container(
+                                color: index % 2 == 0
+                                    ? Color.Parse("#CCFFFFFF")
+                                    : Color.Parse("#CCE8F5E9"),
+                                padding: new Thickness(10, 8),
+                                child: new Text(
+                                    $"decorated sliver row #{index}",
+                                    fontSize: 13,
+                                    color: Colors.Black)),
+                            addAutomaticKeepAlives: false))),
                 new SliverPadding(
                     padding: new Thickness(12, 8, 12, 16),
                     sliver: SliverList.Builder(

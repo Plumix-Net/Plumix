@@ -1,5 +1,10 @@
 # Changelog
 
+- Added paired Flutter core `DecoratedSliver` + `PinnedHeaderSliver` ports with general `Decoration`/`BoxPainter`
+  support, max/cache-extent decoration paint, measured pinned geometry, overlapping viewport layout, focused tests,
+  and mirrored C#/Dart probes. Advanced `Plumix` to `0.1.0-alpha.9`; viewport semantics-tag partitioning remains
+  tracked in `DIVERGENCES.md`.
+
 - Breaking: added paired Material `InkRipple` + `InkSparkle` ports and pluggable
   `InteractiveInkFeatureFactory` selection through ink responses, button styles, and `ThemeData`; M3 Android now
   defaults to sparkle, other M3 platforms to ripple, and M2 to splash. Added focused tests and mirrored C#/Dart

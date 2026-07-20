@@ -8,7 +8,7 @@ Use this block as the fastest machine-readable status summary.
 
 ```yaml
 framework_plan_version: 1
-last_updated: 2026-07-18
+last_updated: 2026-07-20
 north_star: "Flutter-like widget/rendering framework in C# with Avalonia as host infrastructure."
 current_phase: "M4 material library rewrite (theme/scaffold/material controls) in progress."
 status:
@@ -249,6 +249,9 @@ Kickoff note (2026-03-12):
   bulk animation lifecycle, fixed/max-extent grid delegate layout, ancestor state lookup, keyed child-index remapping,
   typed pixel/viewport cache extents, MediaQuery padding, viewport clip policy, focused tests, and mirrored C#/Dart
   runtime probes.
+- Added paired core `DecoratedSliver` + `PinnedHeaderSliver` with source-shaped public composition, shared
+  `Decoration`/`BoxPainter` lifecycle, finite/infinite max-paint decoration geometry, measured changing header extent,
+  pinned obstruction geometry, overlapping sliver layout, focused tests, and mirrored C#/Dart runtime probes.
 
 Progress update (2026-03-19):
 

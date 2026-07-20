@@ -15,7 +15,28 @@ public readonly record struct SliverConstraints(
     double CacheOrigin = 0,
     double RemainingCacheExtent = 0,
     AxisDirection AxisDirection = AxisDirection.Down,
-    GrowthDirection GrowthDirection = GrowthDirection.Forward);
+    GrowthDirection GrowthDirection = GrowthDirection.Forward,
+    double Overlap = 0)
+{
+    public BoxConstraints AsBoxConstraints(
+        double minExtent = 0.0,
+        double maxExtent = double.PositiveInfinity,
+        double? crossAxisExtent = null)
+    {
+        double effectiveCrossAxisExtent = crossAxisExtent ?? CrossAxisExtent;
+        return Axis == Axis.Vertical
+            ? new BoxConstraints(
+                MinWidth: effectiveCrossAxisExtent,
+                MaxWidth: effectiveCrossAxisExtent,
+                MinHeight: minExtent,
+                MaxHeight: maxExtent)
+            : new BoxConstraints(
+                MinWidth: minExtent,
+                MaxWidth: maxExtent,
+                MinHeight: effectiveCrossAxisExtent,
+                MaxHeight: effectiveCrossAxisExtent);
+    }
+}
 
 public readonly record struct SliverGeometry(
     double ScrollExtent = 0,
@@ -24,7 +45,10 @@ public readonly record struct SliverGeometry(
     double MaxPaintExtent = 0,
     double CacheExtent = 0,
     double ScrollOffsetCorrection = 0,
-    bool HasVisualOverflow = false);
+    bool HasVisualOverflow = false,
+    double PaintOrigin = 0,
+    double MaxScrollObstructionExtent = 0,
+    double? CrossAxisExtent = null);
 
 /// <summary>
 /// Maps a variable-extent sliver's child indexes to the current viewport geometry.
@@ -477,6 +501,97 @@ public abstract class RenderSliver : RenderBox
     }
 
     protected abstract void PerformSliverLayout(SliverConstraints constraints);
+
+    protected double CalculatePaintOffset(
+        SliverConstraints constraints,
+        double from,
+        double to)
+    {
+        if (from > to)
+        {
+            throw new ArgumentOutOfRangeException(nameof(from), "from must be less than or equal to to.");
+        }
+
+        double leading = constraints.ScrollOffset;
+        double trailing = constraints.ScrollOffset + constraints.RemainingPaintExtent;
+        return Math.Clamp(
+            Math.Clamp(to, leading, trailing) - Math.Clamp(from, leading, trailing),
+            0.0,
+            constraints.RemainingPaintExtent);
+    }
+
+    protected double CalculateCacheOffset(
+        SliverConstraints constraints,
+        double from,
+        double to)
+    {
+        if (from > to)
+        {
+            throw new ArgumentOutOfRangeException(nameof(from), "from must be less than or equal to to.");
+        }
+
+        double leading = constraints.ScrollOffset + constraints.CacheOrigin;
+        double trailing = constraints.ScrollOffset + constraints.RemainingCacheExtent;
+        return Math.Clamp(
+            Math.Clamp(to, leading, trailing) - Math.Clamp(from, leading, trailing),
+            0.0,
+            constraints.RemainingCacheExtent);
+    }
+
+    protected Rect GetMaxPaintRect()
+    {
+        SliverGeometry geometry = Geometry;
+        if (geometry == default)
+        {
+            return default;
+        }
+
+        SliverConstraints constraints = ConstraintsForSliver;
+        double maxPaintExtent = geometry.MaxPaintExtent;
+        if (double.IsPositiveInfinity(maxPaintExtent))
+        {
+            maxPaintExtent = constraints.ScrollOffset + geometry.CacheExtent + constraints.CacheOrigin;
+        }
+
+        double obstructionAdjustedScrollExtent = Math.Max(
+            0.0,
+            geometry.ScrollExtent - geometry.MaxScrollObstructionExtent);
+        double leadingOffset = Math.Clamp(
+            constraints.ScrollOffset,
+            0.0,
+            obstructionAdjustedScrollExtent);
+        double crossAxisExtent = geometry.CrossAxisExtent ?? constraints.CrossAxisExtent;
+        var rect = constraints.Axis == Axis.Horizontal
+            ? new Rect(-leadingOffset, 0.0, maxPaintExtent, crossAxisExtent)
+            : new Rect(0.0, -leadingOffset, crossAxisExtent, maxPaintExtent);
+
+        AxisDirection effectiveAxisDirection = constraints.GrowthDirection == GrowthDirection.Forward
+            ? constraints.AxisDirection
+            : ReverseAxisDirection(constraints.AxisDirection);
+        return effectiveAxisDirection switch
+        {
+            AxisDirection.Left => new Rect(
+                geometry.PaintExtent - rect.Right,
+                rect.Top,
+                rect.Width,
+                rect.Height),
+            AxisDirection.Up => new Rect(
+                rect.Left,
+                geometry.PaintExtent - rect.Bottom,
+                rect.Width,
+                rect.Height),
+            _ => rect,
+        };
+    }
+
+    private static AxisDirection ReverseAxisDirection(AxisDirection direction) => direction switch
+    {
+        AxisDirection.Up => AxisDirection.Down,
+        AxisDirection.Right => AxisDirection.Left,
+        AxisDirection.Down => AxisDirection.Up,
+        AxisDirection.Left => AxisDirection.Right,
+        _ => direction,
+    };
 }
 
 // Dart parity source: flutter/packages/flutter/lib/src/rendering/proxy_sliver.dart

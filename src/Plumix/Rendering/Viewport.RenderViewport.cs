@@ -422,7 +422,8 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer
         double crossAxisExtent)
     {
         double precedingScrollExtent = 0.0;
-        double paintedExtent = 0.0;
+        double layoutOffset = 0.0;
+        double maxPaintOffset = 0.0;
         double cacheExtent = Math.Max(0, _cacheExtentStyle == CacheExtentStyle.Viewport
             ? _cacheExtent * viewportMainAxisExtent
             : _cacheExtent);
@@ -432,7 +433,7 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer
         for (var child = FirstChild; child != null; child = _container.ChildAfter(child))
         {
             double localScrollOffset = Math.Max(0, scrollOffset - precedingScrollExtent);
-            double remainingPaintExtent = Math.Max(0, viewportMainAxisExtent - paintedExtent);
+            double remainingPaintExtent = Math.Max(0, viewportMainAxisExtent - layoutOffset);
             double localCacheStart = Math.Max(0, cacheStart - precedingScrollExtent);
             double localCacheEnd = Math.Max(localCacheStart, cacheEnd - precedingScrollExtent);
             double remainingCacheExtent = Math.Max(0, localCacheEnd - localCacheStart);
@@ -447,23 +448,28 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer
                 CacheOrigin: cacheOrigin,
                 RemainingCacheExtent: remainingCacheExtent,
                 AxisDirection: _axisDirection,
-                GrowthDirection: _growthDirection));
+                GrowthDirection: _growthDirection,
+                Overlap: maxPaintOffset - layoutOffset));
 
             if (Math.Abs(child.Geometry.ScrollOffsetCorrection) > 0.0001)
             {
-                return (precedingScrollExtent, paintedExtent, child.Geometry.ScrollOffsetCorrection);
+                return (precedingScrollExtent, maxPaintOffset, child.Geometry.ScrollOffsetCorrection);
             }
 
             var parentData = (SliverPhysicalParentData)child.parentData!;
+            double effectiveLayoutOffset = layoutOffset + child.Geometry.PaintOrigin;
             parentData.offset = Axis == Axis.Vertical
-                ? new Point(0, paintedExtent)
-                : new Point(paintedExtent, 0);
+                ? new Point(0, effectiveLayoutOffset)
+                : new Point(effectiveLayoutOffset, 0);
 
+            maxPaintOffset = Math.Max(
+                maxPaintOffset,
+                effectiveLayoutOffset + child.Geometry.PaintExtent);
             precedingScrollExtent += child.Geometry.ScrollExtent;
-            paintedExtent += child.Geometry.PaintExtent;
+            layoutOffset += child.Geometry.LayoutExtent;
         }
 
-        return (precedingScrollExtent, paintedExtent, null);
+        return (precedingScrollExtent, maxPaintOffset, null);
     }
 
     private double EffectiveScrollOffsetForLayout(double userOffset, double maxScrollExtent)

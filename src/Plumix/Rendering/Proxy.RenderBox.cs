@@ -1440,7 +1440,7 @@ public sealed class RenderDecoratedBox : RenderProxyBox
     private BoxDecoration _decoration;
     private DecorationPosition _position;
     private ImageConfiguration _configuration;
-    private DecorationImagePainter? _imagePainter;
+    private BoxPainter? _painter;
 
     public RenderDecoratedBox(
         BoxDecoration decoration,
@@ -1476,11 +1476,7 @@ public sealed class RenderDecoratedBox : RenderProxyBox
                 return;
             }
 
-            if (!Equals(_decoration.Image, next.Image))
-            {
-                DisposeImagePainter();
-            }
-
+            DisposePainter();
             _decoration = next;
             MarkNeedsPaint();
         }
@@ -1519,87 +1515,13 @@ public sealed class RenderDecoratedBox : RenderProxyBox
 
     private void PaintDecoration(PaintingContext ctx, Point offset)
     {
-        var rect = new Rect(offset, Size);
-        double radius = _decoration.EffectiveBorderRadius.Radius;
-        var boxShadows = _decoration.EffectiveBoxShadows;
-        IBrush? fill = _decoration.Brush;
-        if (fill is null && _decoration.Color.HasValue)
-        {
-            fill = new SolidColorBrush(_decoration.Color.Value);
-        }
-
-        IPen? borderPen = null;
-        if (_decoration.Border.HasValue)
-        {
-            var border = _decoration.Border.Value;
-            if (border.Style == BorderStyle.Solid && border.Width > 0)
-            {
-                borderPen = new Pen(new SolidColorBrush(border.Color), border.Width);
-            }
-        }
-
-        if (_decoration.Shape == BoxShape.Circle)
-        {
-            if (fill != null || boxShadows.Count > 0)
-            {
-                double side = Math.Min(rect.Width, rect.Height);
-                var circleRect = new Rect(
-                    rect.Center.X - (side / 2.0),
-                    rect.Center.Y - (side / 2.0),
-                    side,
-                    side);
-                ctx.DrawRectangle(
-                    fill ?? Brushes.Transparent,
-                    null,
-                    circleRect,
-                    side / 2.0,
-                    side / 2.0,
-                    boxShadows);
-            }
-        }
-        else if (fill != null || boxShadows.Count > 0)
-        {
-            ctx.DrawRectangle(fill ?? Brushes.Transparent, null, rect, radius, radius, boxShadows);
-        }
-
-        if (_decoration.Image is not null)
-        {
-            _imagePainter ??= _decoration.Image.CreatePainter(HandleImageChanged);
-            _imagePainter.Paint(
-                ctx,
-                rect,
-                _configuration.CopyWith(size: Size),
-                clipRadius: _decoration.BorderRadius,
-                shape: _decoration.Shape);
-        }
-
-        if (borderPen is not null)
-        {
-            if (_decoration.Shape == BoxShape.Circle)
-            {
-                double side = Math.Min(rect.Width, rect.Height);
-                var circleRect = new Rect(
-                    rect.Center.X - (side / 2.0),
-                    rect.Center.Y - (side / 2.0),
-                    side,
-                    side);
-                ctx.DrawRectangle(
-                    Brushes.Transparent,
-                    borderPen,
-                    circleRect,
-                    side / 2.0,
-                    side / 2.0);
-            }
-            else
-            {
-                ctx.DrawRectangle(Brushes.Transparent, borderPen, rect, radius, radius);
-            }
-        }
+        _painter ??= _decoration.CreateBoxPainter(HandleImageChanged);
+        _painter.Paint(ctx, offset, _configuration.CopyWith(size: Size));
     }
 
     protected override void OnDetach()
     {
-        DisposeImagePainter();
+        DisposePainter();
         base.OnDetach();
     }
 
@@ -1608,10 +1530,10 @@ public sealed class RenderDecoratedBox : RenderProxyBox
         MarkNeedsPaint();
     }
 
-    private void DisposeImagePainter()
+    private void DisposePainter()
     {
-        _imagePainter?.Dispose();
-        _imagePainter = null;
+        _painter?.Dispose();
+        _painter = null;
     }
 }
 

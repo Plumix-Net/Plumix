@@ -463,7 +463,8 @@ class SampleGalleryScreen extends StatelessWidget {
         SampleRouteDefinition(
           routeName: SampleRoutes.customSlivers,
           title: 'Custom slivers',
-          subtitle: 'SliverPadding + SliverFixedExtentList',
+          subtitle:
+              'DecoratedSliver + PinnedHeaderSliver + fixed/list adapters',
           builder: () => const CustomSliversDemoPage(),
         ),
         SampleRouteDefinition(

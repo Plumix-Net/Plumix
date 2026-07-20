@@ -4,7 +4,7 @@ Scope: structural parity of sample routes/modules between C# and Dart samples.
 
 Policy note: sample parity updates must follow `docs/ai/PORTING_MODE.md` (Dart source of truth, strict `1:1` default, documented divergences).
 
-Last checked: 2026-07-18
+Last checked: 2026-07-20
 
 Status legend:
 
@@ -30,7 +30,7 @@ Status legend:
 | AnimatedList + SliverAnimatedList demo | `src/Sample/Plumix.Sample/Demos/General/AnimatedListDemoPage.cs` | `dart_sample/lib/demos/general/animated_list_demo_page.dart` | verify-runtime | Demonstrates insert/remove animations for `AnimatedList.separated` and direct `SliverAnimatedList`, including keyed sliver index remapping and `SizeTransition` entry/exit composition. |
 | AnimatedGrid + SliverAnimatedGrid demo | `src/Sample/Plumix.Sample/Demos/General/AnimatedGridDemoPage.cs` | `dart_sample/lib/demos/general/animated_grid_demo_page.dart` | verify-runtime | Demonstrates insert/remove animations for direct `AnimatedGrid` and `SliverAnimatedGrid`, including fixed-count delegate geometry, keyed sliver index remapping, and `ScaleTransition` entry/exit composition. |
 | GridView demo | `src/Sample/Plumix.Sample/Demos/General/GridViewDemoPage.cs` | `dart_sample/lib/demos/general/grid_view_demo_page.dart` | verify-runtime | |
-| Custom slivers demo | `src/Sample/Plumix.Sample/Demos/General/CustomSliversDemoPage.cs` | `dart_sample/lib/demos/general/custom_slivers_demo_page.dart` | verify-runtime | |
+| Custom slivers demo | `src/Sample/Plumix.Sample/Demos/General/CustomSliversDemoPage.cs` | `dart_sample/lib/demos/general/custom_slivers_demo_page.dart` | verify-runtime | Demonstrates measured `PinnedHeaderSliver` overlap plus background `DecoratedSliver` paint around a fixed-extent list, followed by an ordinary sliver list. |
 | Scrollbar demo | `src/Sample/Plumix.Sample/Demos/General/ScrollbarDemoPage.cs` | `dart_sample/lib/demos/general/scrollbar_demo_page.dart` | verify-runtime | Side-by-side Material `Scrollbar` and always-visible themed `RawScrollbar` use independent controllers/lists on both sides, covering transient fade, overlay geometry, tracks, draggable thumbs, and custom colors. |
 | Editable text demo | `src/Sample/Plumix.Sample/Demos/General/EditableTextDemoPage.cs` | `dart_sample/lib/demos/general/editable_text_demo_page.dart` | verify-runtime | Includes baseline input flow plus multiline Notes demo (`Enter` newline, Up/Down caret travel), seed action, and escaped live value summary. |
 | Material buttons demo | `src/Sample/Plumix.Sample/Demos/Material/MaterialButtonsDemoPage.cs` | `dart_sample/lib/demos/material/material_buttons_demo_page.dart` | verify-runtime | Demonstrates Material control set (`TextButton`, `ElevatedButton`, `OutlinedButton`, `FilledButton`, `FilledButton.tonal`, `IconButton`, legacy `MaterialButton`, and `RawMaterialButton`) with enabled/disabled toggles, per-button tap counters, custom color overrides, raw fill/state colors, and icon-button selected/filled/outlined probes; C# demo text colors/string formatting mirror Dart literals, and button defaults resolve their matching M2/M3 or legacy Flutter paths. Tap-target behavior mirrors Flutter `_InputPadding` semantics, while real framework icons cover the shared probes. |
