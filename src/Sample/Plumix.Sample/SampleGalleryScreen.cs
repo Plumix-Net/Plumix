@@ -100,6 +100,7 @@ internal static class SampleRoutes
     public const string Baseline = "/baseline";
     public const string LayoutBuilder = "/layout-builder";
     public const string KeyboardListener = "/keyboard-listener";
+    public const string DebugPainting = "/debug-painting";
 }
 
 internal readonly record struct SampleRouteDefinition(
@@ -259,6 +260,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "Keyboard listeners",
             "focused key down/up dispatch + legacy raw compatibility",
             () => new KeyboardListenerDemoPage()),
+        new(
+            SampleRoutes.DebugPainting,
+            "Placeholder + GridPaper",
+            "unbounded fallback sizing + foreground layout grid",
+            () => new DebugPaintingDemoPage()),
     ];
 
     private static readonly IReadOnlyList<SampleMenuTabDefinition> DemoTabs =

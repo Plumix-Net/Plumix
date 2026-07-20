@@ -38,6 +38,7 @@ import 'counter_screen.dart';
 import 'demos/general/container_demo_page.dart';
 import 'demos/general/custom_slivers_demo_page.dart';
 import 'demos/general/decorated_box_demo_page.dart';
+import 'demos/general/debug_painting_demo_page.dart';
 import 'demos/material/drawer_demo_page.dart';
 import 'demos/material/drawer_headers_demo_page.dart';
 import 'demos/material/divider_demo_page.dart';
@@ -580,6 +581,12 @@ class SampleGalleryScreen extends StatelessWidget {
           title: 'Keyboard listeners',
           subtitle: 'focused key down/up dispatch + legacy raw compatibility',
           builder: () => const KeyboardListenerDemoPage(),
+        ),
+        SampleRouteDefinition(
+          routeName: SampleRoutes.debugPainting,
+          title: 'Placeholder + GridPaper',
+          subtitle: 'unbounded fallback sizing + foreground layout grid',
+          builder: () => const DebugPaintingDemoPage(),
         ),
       ];
 

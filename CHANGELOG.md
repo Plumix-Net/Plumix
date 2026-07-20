@@ -1,5 +1,9 @@
 # Changelog
 
+- Added paired Flutter core `Placeholder` + `GridPaper` ports with source-shaped custom-paint composition,
+  unbounded fallback sizing, foreground grid hierarchy, hit-test/repaint behavior, focused tests, and mirrored
+  C#/Dart probes. Advanced `Plumix` to `0.8.0-alpha.1`.
+
 - Added paired Flutter core `DualTransitionBuilder` + `RepeatingAnimationBuilder<T>` ports with nested directional
   transitions, interruption continuity, restart/reverse loops, pause/resume, curve/duration updates, stable children,
   focused tests, and mirrored C#/Dart probes. Added source-required `Animatable<T>`, `ProxyAnimation`, and
