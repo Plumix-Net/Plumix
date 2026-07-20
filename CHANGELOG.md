@@ -1,5 +1,10 @@
 # Changelog
 
+- Added paired Flutter core `SliverCrossAxisGroup` + `SliverMainAxisGroup` ports with inflexible/proportional
+  cross-axis allocation, sequential scroll/cache constraints, pinned-child confinement, correction propagation,
+  focused tests, and mirrored C#/Dart probes. Added source-required `SliverConstrainedCrossAxis` and
+  `SliverCrossAxisExpanded`; advanced `Plumix` to `0.1.0-alpha.10`.
+
 - Added paired Flutter core `DecoratedSliver` + `PinnedHeaderSliver` ports with general `Decoration`/`BoxPainter`
   support, max/cache-extent decoration paint, measured pinned geometry, overlapping viewport layout, focused tests,
   and mirrored C#/Dart probes. Advanced `Plumix` to `0.1.0-alpha.9`; viewport semantics-tag partitioning remains

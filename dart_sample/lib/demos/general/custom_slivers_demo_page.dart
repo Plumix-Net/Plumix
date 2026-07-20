@@ -23,8 +23,8 @@ class CustomSliversDemoPage extends StatelessWidget {
                       style: TextStyle(fontSize: 20, color: Colors.black),
                     ),
                     Text(
-                      'This measured header remains pinned while the decorated '
-                      'list scrolls behind it.',
+                      'Decorated and grouped slivers share Flutter\'s layout '
+                      'protocol.',
                       style: TextStyle(fontSize: 14, color: Colors.black54),
                     ),
                   ],
@@ -43,7 +43,7 @@ class CustomSliversDemoPage extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
             sliver: SliverFixedExtentList.builder(
               itemExtent: 42,
-              itemCount: 18,
+              itemCount: 8,
               itemBuilder: (BuildContext context, int index) {
                 return Container(
                   color: index.isEven
@@ -61,6 +61,66 @@ class CustomSliversDemoPage extends StatelessWidget {
               },
             ),
           ),
+        ),
+        SliverMainAxisGroup(
+          slivers: <Widget>[
+            const PinnedHeaderSliver(
+              child: SizedBox(
+                height: 56,
+                child: ColoredBox(
+                  color: Color(0xFFFFF3E0),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      spacing: 2,
+                      children: <Widget>[
+                        Text(
+                          'SliverMainAxisGroup',
+                          style: TextStyle(fontSize: 17, color: Colors.black),
+                        ),
+                        Text(
+                          'This header stops pinning at the end of its group.',
+                          style: TextStyle(fontSize: 12, color: Colors.black54),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            SliverCrossAxisGroup(
+              slivers: <Widget>[
+                SliverFixedExtentList.builder(
+                  itemExtent: 38,
+                  itemCount: 8,
+                  itemBuilder: (BuildContext context, int index) {
+                    return _groupCell('1x #$index', const Color(0xFFE3F2FD));
+                  },
+                ),
+                SliverConstrainedCrossAxis(
+                  maxExtent: 96,
+                  sliver: SliverFixedExtentList.builder(
+                    itemExtent: 46,
+                    itemCount: 6,
+                    itemBuilder: (BuildContext context, int index) {
+                      return _groupCell('96 #$index', const Color(0xFFFFF9C4));
+                    },
+                  ),
+                ),
+                SliverCrossAxisExpanded(
+                  flex: 2,
+                  sliver: SliverFixedExtentList.builder(
+                    itemExtent: 34,
+                    itemCount: 10,
+                    itemBuilder: (BuildContext context, int index) {
+                      return _groupCell('2x #$index', const Color(0xFFE8F5E9));
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
@@ -82,6 +142,19 @@ class CustomSliversDemoPage extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+
+  static Widget _groupCell(String label, Color color) {
+    return ColoredBox(
+      color: color,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+        child: Text(
+          label,
+          style: const TextStyle(fontSize: 12, color: Colors.black),
+        ),
+      ),
     );
   }
 }

@@ -181,12 +181,15 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/Rendering/Sliver.cs`
   - `src/Plumix/Widgets/SliverDecoratedPinned.cs`
   - `src/Plumix/Rendering/DecoratedSliver.cs`
+  - `src/Plumix/Widgets/SliverGroup.cs`
+  - `src/Plumix/Rendering/SliverGroup.cs`
 - Primary Tests:
   - `src/Plumix.Tests/ScrollPipelineTests.cs`
   - `src/Plumix.Tests/ScrollInfrastructureTests.cs`
   - `src/Plumix.Tests/MaterialScrollbarTests.cs`
   - `src/Plumix.Tests/MaterialSliverAppBarTests.cs`
   - `src/Plumix.Tests/DecoratedPinnedSliverTests.cs`
+  - `src/Plumix.Tests/SliverGroupTests.cs`
 - Note:
   - `Scroll.cs` and `Sliver.cs` are large. Enter through tests first.
 

@@ -252,6 +252,11 @@ Kickoff note (2026-03-12):
 - Added paired core `DecoratedSliver` + `PinnedHeaderSliver` with source-shaped public composition, shared
   `Decoration`/`BoxPainter` lifecycle, finite/infinite max-paint decoration geometry, measured changing header extent,
   pinned obstruction geometry, overlapping sliver layout, focused tests, and mirrored C#/Dart runtime probes.
+- Added paired core `SliverCrossAxisGroup` + `SliverMainAxisGroup` with source-shaped multi-sliver composition,
+  constrained/proportional cross-axis allocation, sequential main-axis scroll/cache constraints, pinned-child group
+  confinement, correction propagation, focused tests, and mirrored C#/Dart runtime probes. Source-required
+  `SliverConstrainedCrossAxis`, `SliverCrossAxisExpanded`, cross-axis flex parent data, and preceding-scroll constraints
+  now live in core.
 
 Progress update (2026-03-19):
 

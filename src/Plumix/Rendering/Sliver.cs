@@ -16,7 +16,8 @@ public readonly record struct SliverConstraints(
     double RemainingCacheExtent = 0,
     AxisDirection AxisDirection = AxisDirection.Down,
     GrowthDirection GrowthDirection = GrowthDirection.Forward,
-    double Overlap = 0)
+    double Overlap = 0,
+    double PrecedingScrollExtent = 0)
 {
     public BoxConstraints AsBoxConstraints(
         double minExtent = 0.0,
@@ -430,6 +431,7 @@ public interface IRenderSliverBoxChildManager
 
 public sealed class SliverPhysicalParentData : ContainerBoxParentData<RenderSliver>
 {
+    public int? CrossAxisFlex { get; set; }
 }
 
 public class SliverMultiBoxAdaptorParentData : ContainerBoxParentData<RenderBox>

@@ -449,7 +449,8 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer
                 RemainingCacheExtent: remainingCacheExtent,
                 AxisDirection: _axisDirection,
                 GrowthDirection: _growthDirection,
-                Overlap: maxPaintOffset - layoutOffset));
+                Overlap: maxPaintOffset - layoutOffset,
+                PrecedingScrollExtent: precedingScrollExtent));
 
             if (Math.Abs(child.Geometry.ScrollOffsetCorrection) > 0.0001)
             {
