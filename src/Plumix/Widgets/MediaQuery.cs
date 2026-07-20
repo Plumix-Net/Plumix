@@ -20,7 +20,9 @@ public sealed record MediaQueryData(
     Thickness ViewPadding = default,
     double TextScaleFactor = 1.0,
     bool AccessibleNavigation = false,
-    bool AlwaysUse24HourFormat = false)
+    bool AlwaysUse24HourFormat = false,
+    bool DisableAnimations = false,
+    bool InvertColors = false)
 {
     public Orientation Orientation => Size.Width > Size.Height
         ? Orientation.Landscape
@@ -35,7 +37,9 @@ public sealed record MediaQueryData(
         Thickness? viewPadding = null,
         double? textScaleFactor = null,
         bool? accessibleNavigation = null,
-        bool? alwaysUse24HourFormat = null)
+        bool? alwaysUse24HourFormat = null,
+        bool? disableAnimations = null,
+        bool? invertColors = null)
     {
         return new MediaQueryData(
             Size: size ?? Size,
@@ -46,7 +50,9 @@ public sealed record MediaQueryData(
             ViewPadding: viewPadding ?? ViewPadding,
             TextScaleFactor: textScaleFactor ?? TextScaleFactor,
             AccessibleNavigation: accessibleNavigation ?? AccessibleNavigation,
-            AlwaysUse24HourFormat: alwaysUse24HourFormat ?? AlwaysUse24HourFormat);
+            AlwaysUse24HourFormat: alwaysUse24HourFormat ?? AlwaysUse24HourFormat,
+            DisableAnimations: disableAnimations ?? DisableAnimations,
+            InvertColors: invertColors ?? InvertColors);
     }
 
     public MediaQueryData RemovePadding(
@@ -205,6 +211,14 @@ public sealed class MediaQuery : InheritedWidget
     public static bool AlwaysUse24HourFormatOf(BuildContext context) => Of(context).AlwaysUse24HourFormat;
 
     public static bool? MaybeAlwaysUse24HourFormatOf(BuildContext context) => MaybeOf(context)?.AlwaysUse24HourFormat;
+
+    public static bool DisableAnimationsOf(BuildContext context) => Of(context).DisableAnimations;
+
+    public static bool? MaybeDisableAnimationsOf(BuildContext context) => MaybeOf(context)?.DisableAnimations;
+
+    public static bool InvertColorsOf(BuildContext context) => Of(context).InvertColors;
+
+    public static bool? MaybeInvertColorsOf(BuildContext context) => MaybeOf(context)?.InvertColors;
 
     public static Orientation OrientationOf(BuildContext context) => Of(context).Orientation;
 

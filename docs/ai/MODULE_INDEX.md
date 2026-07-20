@@ -173,9 +173,12 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/Rendering/ImageStream.cs`
   - `src/Plumix/Rendering/ImageCache.cs`
   - `src/Plumix/Rendering/DecorationImage.cs`
+  - `src/Plumix/Rendering/Image.cs`
+  - `src/Plumix/Widgets/Image.cs`
   - `src/Plumix/Rendering/Proxy.RenderBox.cs`
 - Primary Tests:
   - `src/Plumix.Tests/ImageProviderDecorationTests.cs`
+  - `src/Plumix.Tests/ImageWidgetTests.cs`
 
 ### Gestures and Input
 

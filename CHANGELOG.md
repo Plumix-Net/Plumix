@@ -1,5 +1,11 @@
 # Changelog
 
+- Added paired Flutter core `Image` + `RawImage` ports with provider constructors, stream/cache lifecycle,
+  frame/loading/error builder ordering, gapless replacement, paused-stream keep-alive, aspect-preserving layout,
+  fit/repeat/directional paint, opacity updates, semantics, focused tests, and mirrored C#/Dart probes. Advanced
+  `Plumix` to `0.12.0-alpha.1`; animated codecs, backend pixel effects, intrinsic/dry queries, scroll-aware deferral,
+  and cloneable raw image handles remain tracked in `DIVERGENCES.md`.
+
 - Added paired Flutter core `Flow` + `RepaintBoundary` ports with source-shaped automatic child isolation,
   delegate/listenable layout and repaint ownership, paint-order transforms/opacity, transformed hit testing and
   semantics, focused tests, and mirrored C#/Dart probes. Advanced `Plumix` to `0.11.0-alpha.1`; shared Matrix4,

@@ -45,6 +45,7 @@ import 'demos/material/divider_demo_page.dart';
 import 'demos/general/editable_text_demo_page.dart';
 import 'demos/general/fitted_box_demo_page.dart';
 import 'demos/general/flow_demo_page.dart';
+import 'demos/general/image_demo_page.dart';
 import 'demos/material/floating_action_button_demo_page.dart';
 import 'demos/material/ink_response_demo_page.dart';
 import 'demos/general/fractionally_sized_box_demo_page.dart';
@@ -594,6 +595,12 @@ class SampleGalleryScreen extends StatelessWidget {
           title: 'Flow + RepaintBoundary',
           subtitle: 'paint-time transforms + isolated child display lists',
           builder: () => const FlowDemoPage(),
+        ),
+        SampleRouteDefinition(
+          routeName: SampleRoutes.image,
+          title: 'Image + RawImage',
+          subtitle: 'provider streams + decoded image layout/paint',
+          builder: () => const ImageDemoPage(),
         ),
       ];
 

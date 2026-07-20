@@ -96,6 +96,7 @@ class SampleRoutes {
   static const String keyboardListener = '/keyboard-listener';
   static const String debugPainting = '/debug-painting';
   static const String flow = '/flow';
+  static const String image = '/image';
 }
 
 class SampleRouteDefinition {

@@ -102,6 +102,7 @@ internal static class SampleRoutes
     public const string KeyboardListener = "/keyboard-listener";
     public const string DebugPainting = "/debug-painting";
     public const string Flow = "/flow";
+    public const string Image = "/image";
 }
 
 internal readonly record struct SampleRouteDefinition(
@@ -275,6 +276,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "Flow + RepaintBoundary",
             "paint-time transforms + isolated child display lists",
             () => new FlowDemoPage()),
+        new(
+            SampleRoutes.Image,
+            "Image + RawImage",
+            "provider streams + decoded image layout/paint",
+            () => new ImageDemoPage()),
     ];
 
     private static readonly IReadOnlyList<SampleMenuTabDefinition> DemoTabs =
