@@ -73,7 +73,12 @@ public static class Curves
     }
 }
 
-public abstract class Tween<T>
+public abstract class Animatable<T>
+{
+    public abstract T Transform(double t);
+}
+
+public abstract class Tween<T> : Animatable<T>
 {
     private T _begin = default!;
     private T _end = default!;
@@ -133,6 +138,8 @@ public abstract class Tween<T>
 
         return Evaluate(t, _begin, _end);
     }
+
+    public override T Transform(double t) => Evaluate(t);
 
     internal T GetBeginValue()
     {
@@ -439,37 +446,34 @@ public sealed class AnimationController : Animation<double>, IDisposable
 
     private void OnTick(TimeSpan dt)
     {
-        TimeSpan effectiveDuration = _reversing ? ReverseDuration ?? Duration : Duration;
+        TimeSpan effectiveDuration = _repeat
+            ? Duration
+            : _reversing
+                ? ReverseDuration ?? Duration
+                : Duration;
         double delta = dt.TotalSeconds / effectiveDuration.TotalSeconds;
-        if (_reversing) delta = -delta;
-
-        double raw = _value + delta;
+        double raw;
         if (_repeat)
         {
             if (_repeatReverse)
             {
-                // пинг-понг 0→1→0→1...
-                if (raw >= 1)
-                {
-                    raw = 2 - raw;
-                    _reversing = true;
-                    SetStatus(AnimationStatus.Reverse);
-                }
-                else if (raw <= 0)
-                {
-                    raw = -raw;
-                    _reversing = false;
-                    SetStatus(AnimationStatus.Forward);
-                }
+                double phase = _reversing ? 2.0 - _value : _value;
+                phase = (phase + delta) % 2.0;
+                bool reversing = phase > 1.0;
+                raw = reversing ? 2.0 - phase : phase;
+                _reversing = reversing;
+                SetStatus(reversing ? AnimationStatus.Reverse : AnimationStatus.Forward);
             }
             else
             {
+                raw = _value + delta;
                 raw %= 1.0;
                 if (raw < 0) raw += 1.0;
             }
         }
         else
         {
+            raw = _value + (_reversing ? -delta : delta);
             if (raw >= 1.0)
             {
                 _value = 1.0;

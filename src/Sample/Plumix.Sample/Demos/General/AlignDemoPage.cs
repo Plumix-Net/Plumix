@@ -38,6 +38,8 @@ internal sealed class AlignDemoPageState : State
     private bool _visibleSliver = true;
     private double _builderExtent = 72;
     private bool _explicitTransitionsForward;
+    private bool _repeatingPaused;
+    private bool _repeatingReverse;
     private int _completedAnimations;
     private ValueNotifier<int> _builderCounter = null!;
     private ScrollController _scrollController = null!;
@@ -749,6 +751,69 @@ internal sealed class AlignDemoPageState : State
                                 height: 36,
                                 color: Color.Parse("#FF6B5B95"),
                                 child: child)))),
+                new Text("DualTransitionBuilder + RepeatingAnimationBuilder", fontSize: 20, color: Colors.Black),
+                new Text(
+                    "Enter/exit builders stay nested while a reusable animatable loops, reverses, and pauses.",
+                    fontSize: 14,
+                    color: Colors.DimGray),
+                new Row(
+                    spacing: 8,
+                    children:
+                    [
+                        BuildButton(
+                            _explicitTransitionsForward ? "Dual: reverse" : "Dual: forward",
+                            ToggleExplicitTransitions,
+                            width: 124,
+                            colorHex: "#FFE5EDF5"),
+                        BuildButton(
+                            _repeatingPaused ? "Repeat: resume" : "Repeat: pause",
+                            ToggleRepeatingPaused,
+                            width: 124,
+                            colorHex: "#FFF1E5D8"),
+                        BuildButton(
+                            _repeatingReverse ? "Mode: reverse" : "Mode: restart",
+                            ToggleRepeatingMode,
+                            width: 124,
+                            colorHex: "#FFE6F0E2"),
+                    ]),
+                new Container(
+                    width: 240,
+                    height: 72,
+                    color: Color.Parse("#FFF3F5F8"),
+                    child: new Center(
+                        child: new DualTransitionBuilder(
+                            animation: _explicitTransitionsController,
+                            forwardBuilder: (_, animation, child) => new ScaleTransition(
+                                scale: animation,
+                                child: child),
+                            reverseBuilder: (_, animation, child) => new RotationTransition(
+                                turns: animation,
+                                child: child),
+                            child: new Container(
+                                width: 64,
+                                height: 40,
+                                color: Color.Parse("#FF356A82"),
+                                child: new Center(
+                                    child: new Text("dual", fontSize: 12, color: Colors.White)))))),
+                new Container(
+                    width: 240,
+                    height: 56,
+                    color: Color.Parse("#FFF3F5F8"),
+                    child: new Align(
+                        alignment: Alignment.CenterLeft,
+                        child: new RepeatingAnimationBuilder<double>(
+                            animatable: new DoubleTween(begin: 64, end: 220),
+                            duration: TimeSpan.FromMilliseconds(1400),
+                            curve: Curves.EaseInOut,
+                            repeatMode: _repeatingReverse ? RepeatMode.Reverse : RepeatMode.Restart,
+                            paused: _repeatingPaused,
+                            child: new Center(
+                                child: new Text("repeat child", fontSize: 12, color: Colors.White)),
+                            builder: (_, value, child) => new Container(
+                                width: value,
+                                height: 36,
+                                color: Color.Parse("#FF6D7F47"),
+                                child: child)))),
             ]);
     }
 
@@ -856,6 +921,16 @@ internal sealed class AlignDemoPageState : State
     private void ToggleBuilderExtent()
     {
         SetState(() => _builderExtent = _builderExtent > 72 ? 72 : 180);
+    }
+
+    private void ToggleRepeatingPaused()
+    {
+        SetState(() => _repeatingPaused = !_repeatingPaused);
+    }
+
+    private void ToggleRepeatingMode()
+    {
+        SetState(() => _repeatingReverse = !_repeatingReverse);
     }
 
     private void HandleAnimationEnd()

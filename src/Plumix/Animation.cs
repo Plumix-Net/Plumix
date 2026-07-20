@@ -42,6 +42,202 @@ public abstract class Animation<T> : IValueListenable<T>
     public abstract void RemoveStatusListener(Action<AnimationStatus> listener);
 }
 
+public sealed class ProxyAnimation : Animation<double>
+{
+    private readonly List<Action> _listeners = [];
+    private readonly List<Action<AnimationStatus>> _statusListeners = [];
+    private Animation<double>? _parent;
+    private AnimationStatus _status = AnimationStatus.Dismissed;
+    private double _value;
+
+    public ProxyAnimation(Animation<double>? animation = null)
+    {
+        _parent = animation;
+    }
+
+    public Animation<double>? Parent
+    {
+        get => _parent;
+        set
+        {
+            if (ReferenceEquals(_parent, value))
+            {
+                return;
+            }
+
+            double previousValue = Value;
+            AnimationStatus previousStatus = Status;
+            StopListening();
+            _parent = value;
+            if (_parent is null)
+            {
+                _value = previousValue;
+                _status = previousStatus;
+            }
+            StartListening();
+
+            if (Value != previousValue)
+            {
+                NotifyListeners();
+            }
+            if (Status != previousStatus)
+            {
+                NotifyStatusListeners(Status);
+            }
+        }
+    }
+
+    public override double Value => _parent?.Value ?? _value;
+
+    public override AnimationStatus Status => _parent?.Status ?? _status;
+
+    public override void AddListener(Action listener)
+    {
+        ArgumentNullException.ThrowIfNull(listener);
+        bool wasListening = IsListening;
+        _listeners.Add(listener);
+        if (!wasListening)
+        {
+            StartListening();
+        }
+    }
+
+    public override void RemoveListener(Action listener)
+    {
+        _ = _listeners.Remove(listener);
+        if (!IsListening)
+        {
+            StopListening();
+        }
+    }
+
+    public override void AddStatusListener(Action<AnimationStatus> listener)
+    {
+        ArgumentNullException.ThrowIfNull(listener);
+        bool wasListening = IsListening;
+        _statusListeners.Add(listener);
+        if (!wasListening)
+        {
+            StartListening();
+        }
+    }
+
+    public override void RemoveStatusListener(Action<AnimationStatus> listener)
+    {
+        _ = _statusListeners.Remove(listener);
+        if (!IsListening)
+        {
+            StopListening();
+        }
+    }
+
+    private bool IsListening => _listeners.Count > 0 || _statusListeners.Count > 0;
+
+    private void StartListening()
+    {
+        if (!IsListening || _parent is null)
+        {
+            return;
+        }
+
+        _parent.AddListener(NotifyListeners);
+        _parent.AddStatusListener(NotifyStatusListeners);
+    }
+
+    private void StopListening()
+    {
+        if (_parent is null)
+        {
+            return;
+        }
+
+        _parent.RemoveListener(NotifyListeners);
+        _parent.RemoveStatusListener(NotifyStatusListeners);
+    }
+
+    private void NotifyListeners()
+    {
+        foreach (var listener in _listeners.ToArray())
+        {
+            listener();
+        }
+    }
+
+    private void NotifyStatusListeners(AnimationStatus status)
+    {
+        foreach (var listener in _statusListeners.ToArray())
+        {
+            listener(status);
+        }
+    }
+}
+
+public sealed class ReverseAnimation : Animation<double>
+{
+    private readonly List<Action<AnimationStatus>> _statusListeners = [];
+
+    public ReverseAnimation(Animation<double> parent)
+    {
+        Parent = parent ?? throw new ArgumentNullException(nameof(parent));
+    }
+
+    public Animation<double> Parent { get; }
+
+    public override double Value => 1.0 - Parent.Value;
+
+    public override AnimationStatus Status => ReverseStatus(Parent.Status);
+
+    public override void AddListener(Action listener)
+    {
+        Parent.AddListener(listener ?? throw new ArgumentNullException(nameof(listener)));
+    }
+
+    public override void RemoveListener(Action listener)
+    {
+        Parent.RemoveListener(listener);
+    }
+
+    public override void AddStatusListener(Action<AnimationStatus> listener)
+    {
+        ArgumentNullException.ThrowIfNull(listener);
+        if (_statusListeners.Count == 0)
+        {
+            Parent.AddStatusListener(HandleStatusChanged);
+        }
+        _statusListeners.Add(listener);
+    }
+
+    public override void RemoveStatusListener(Action<AnimationStatus> listener)
+    {
+        _ = _statusListeners.Remove(listener);
+        if (_statusListeners.Count == 0)
+        {
+            Parent.RemoveStatusListener(HandleStatusChanged);
+        }
+    }
+
+    private static AnimationStatus ReverseStatus(AnimationStatus status)
+    {
+        return status switch
+        {
+            AnimationStatus.Forward => AnimationStatus.Reverse,
+            AnimationStatus.Reverse => AnimationStatus.Forward,
+            AnimationStatus.Completed => AnimationStatus.Dismissed,
+            AnimationStatus.Dismissed => AnimationStatus.Completed,
+            _ => throw new ArgumentOutOfRangeException(nameof(status)),
+        };
+    }
+
+    private void HandleStatusChanged(AnimationStatus status)
+    {
+        AnimationStatus reversedStatus = ReverseStatus(status);
+        foreach (var listener in _statusListeners.ToArray())
+        {
+            listener(reversedStatus);
+        }
+    }
+}
+
 public sealed class CurvedAnimation : Animation<double>, IDisposable
 {
     private readonly Animation<double> _parent;

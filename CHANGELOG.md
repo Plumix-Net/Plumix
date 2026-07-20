@@ -1,5 +1,10 @@
 # Changelog
 
+- Added paired Flutter core `DualTransitionBuilder` + `RepeatingAnimationBuilder<T>` ports with nested directional
+  transitions, interruption continuity, restart/reverse loops, pause/resume, curve/duration updates, stable children,
+  focused tests, and mirrored C#/Dart probes. Added source-required `Animatable<T>`, `ProxyAnimation`, and
+  `ReverseAnimation`; advanced `Plumix` to `0.7.0-alpha.1`.
+
 - Added paired Flutter core `KeyboardListener` + deprecated-compatible `RawKeyboardListener` ports with
   source-shaped focus-node ownership, key-down/up delivery, raw listener attach/detach/rebind lifecycle,
   `includeSemantics` focus actions/flags, focused tests, and mirrored C#/Dart runtime probes. Advanced `Plumix` to

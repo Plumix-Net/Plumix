@@ -28,6 +28,8 @@ class _AlignDemoPageState extends State<AlignDemoPage>
   bool _visibleSliver = true;
   double _builderExtent = 72;
   bool _explicitTransitionsForward = false;
+  bool _repeatingPaused = false;
+  bool _repeatingReverse = false;
   int _completedAnimations = 0;
   final ValueNotifier<int> _builderCounter = ValueNotifier<int>(0);
   late final ScrollController _scrollController;
@@ -982,6 +984,110 @@ class _AlignDemoPageState extends State<AlignDemoPage>
                 ),
               ),
             ),
+            const Text(
+              'DualTransitionBuilder + RepeatingAnimationBuilder',
+              style: TextStyle(fontSize: 20, color: Colors.black),
+            ),
+            const Text(
+              'Enter/exit builders stay nested while a reusable animatable loops, reverses, and pauses.',
+              style: TextStyle(fontSize: 14, color: Colors.black54),
+            ),
+            Row(
+              spacing: 8,
+              children: <Widget>[
+                _buildButton(
+                  label: _explicitTransitionsForward
+                      ? 'Dual: reverse'
+                      : 'Dual: forward',
+                  onTap: _toggleExplicitTransitions,
+                  width: 124,
+                  background: const Color(0xFFE5EDF5),
+                ),
+                _buildButton(
+                  label: _repeatingPaused ? 'Repeat: resume' : 'Repeat: pause',
+                  onTap: _toggleRepeatingPaused,
+                  width: 124,
+                  background: const Color(0xFFF1E5D8),
+                ),
+                _buildButton(
+                  label: _repeatingReverse ? 'Mode: reverse' : 'Mode: restart',
+                  onTap: _toggleRepeatingMode,
+                  width: 124,
+                  background: const Color(0xFFE6F0E2),
+                ),
+              ],
+            ),
+            Container(
+              width: 240,
+              height: 72,
+              color: const Color(0xFFF3F5F8),
+              child: Center(
+                child: DualTransitionBuilder(
+                  animation: _explicitTransitionsController,
+                  forwardBuilder:
+                      (
+                        BuildContext context,
+                        Animation<double> animation,
+                        Widget? child,
+                      ) {
+                        return ScaleTransition(scale: animation, child: child);
+                      },
+                  reverseBuilder:
+                      (
+                        BuildContext context,
+                        Animation<double> animation,
+                        Widget? child,
+                      ) {
+                        return RotationTransition(
+                          turns: animation,
+                          child: child,
+                        );
+                      },
+                  child: Container(
+                    width: 64,
+                    height: 40,
+                    color: const Color(0xFF356A82),
+                    child: const Center(
+                      child: Text(
+                        'dual',
+                        style: TextStyle(fontSize: 12, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Container(
+              width: 240,
+              height: 56,
+              color: const Color(0xFFF3F5F8),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: RepeatingAnimationBuilder<double>(
+                  animatable: Tween<double>(begin: 64, end: 220),
+                  duration: const Duration(milliseconds: 1400),
+                  curve: Curves.easeInOut,
+                  repeatMode: _repeatingReverse
+                      ? RepeatMode.reverse
+                      : RepeatMode.restart,
+                  paused: _repeatingPaused,
+                  child: const Center(
+                    child: Text(
+                      'repeat child',
+                      style: TextStyle(fontSize: 12, color: Colors.white),
+                    ),
+                  ),
+                  builder: (BuildContext context, double value, Widget? child) {
+                    return Container(
+                      width: value,
+                      height: 36,
+                      color: const Color(0xFF6D7F47),
+                      child: child,
+                    );
+                  },
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -1111,6 +1217,18 @@ class _AlignDemoPageState extends State<AlignDemoPage>
   void _toggleBuilderExtent() {
     setState(() {
       _builderExtent = _builderExtent > 72 ? 72 : 180;
+    });
+  }
+
+  void _toggleRepeatingPaused() {
+    setState(() {
+      _repeatingPaused = !_repeatingPaused;
+    });
+  }
+
+  void _toggleRepeatingMode() {
+    setState(() {
+      _repeatingReverse = !_repeatingReverse;
     });
   }
 

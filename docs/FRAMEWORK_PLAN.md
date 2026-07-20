@@ -153,6 +153,9 @@ Completion note:
 - Continued builder-control parity with paired `ListenableBuilder` + `AnimatedBuilder` ports, including the exact
   Dart inheritance chain, shared `AnimatedWidget` listener replacement/disposal, notify-only rebuilding,
   stable-child subtree reuse, focused tests, and mirrored C#/Dart runtime probes.
+- Continued builder-control parity with paired `DualTransitionBuilder` + `RepeatingAnimationBuilder<T>` ports,
+  including source-shaped nested enter/exit transitions, interrupted-direction continuity, restart/reverse looping,
+  pause/resume behavior, curve/duration updates, stable-child reuse, focused tests, and mirrored C#/Dart probes.
 - Continued implicit-animation parity with paired `AnimatedPositioned` + `AnimatedPositionedDirectional` ports,
   including Dart-shaped constructors/guards, `fromRect`, physical/logical Stack insets, ambient RTL/LTR resolution,
   nullable-property behavior, interrupted-transition continuity, curve/duration updates, `onEnd`, focused tests,

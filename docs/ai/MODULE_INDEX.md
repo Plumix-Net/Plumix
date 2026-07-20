@@ -142,6 +142,8 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/Widgets/ImplicitAnimations.cs`
   - `src/Plumix/Widgets/ValueListenableBuilder.cs`
   - `src/Plumix/Widgets/TweenAnimationBuilder.cs`
+  - `src/Plumix/Widgets/DualTransitionBuilder.cs`
+  - `src/Plumix/Widgets/RepeatingAnimationBuilder.cs`
 - Primary Tests:
   - `src/Plumix.Tests/BuilderWidgetsTests.cs`
   - `src/Plumix.Tests/AnimatedSwitcherTests.cs`

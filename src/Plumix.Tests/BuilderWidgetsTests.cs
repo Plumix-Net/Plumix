@@ -336,6 +336,341 @@ public sealed class BuilderWidgetsTests : IDisposable
         root.Unmount();
     }
 
+    [Fact]
+    public void DualTransitionBuilder_ExposesSourceContractAndValidatesArguments()
+    {
+        var animation = new TrackingAnimation(0.25, AnimationStatus.Forward);
+        var child = new SizedBox(width: 10, height: 10);
+        AnimatedTransitionBuilder forwardBuilder = (_, _, passedChild) => passedChild ?? new SizedBox();
+        AnimatedTransitionBuilder reverseBuilder = (_, _, passedChild) => passedChild ?? new SizedBox();
+        var widget = new DualTransitionBuilder(
+            animation: animation,
+            forwardBuilder: forwardBuilder,
+            reverseBuilder: reverseBuilder,
+            child: child);
+
+        Assert.Same(animation, widget.Animation);
+        Assert.Same(forwardBuilder, widget.ForwardBuilder);
+        Assert.Same(reverseBuilder, widget.ReverseBuilder);
+        Assert.Same(child, widget.Child);
+        Assert.Throws<ArgumentNullException>(() => new DualTransitionBuilder(
+            animation: null!,
+            forwardBuilder: forwardBuilder,
+            reverseBuilder: reverseBuilder));
+        Assert.Throws<ArgumentNullException>(() => new DualTransitionBuilder(
+            animation: animation,
+            forwardBuilder: null!,
+            reverseBuilder: reverseBuilder));
+        Assert.Throws<ArgumentNullException>(() => new DualTransitionBuilder(
+            animation: animation,
+            forwardBuilder: forwardBuilder,
+            reverseBuilder: null!));
+    }
+
+    [Fact]
+    public void ProxyAndReverseAnimation_RelayValuesStatusesAndParentChanges()
+    {
+        var first = new TrackingAnimation(0.2, AnimationStatus.Forward);
+        var second = new TrackingAnimation(0.7, AnimationStatus.Reverse);
+        var proxy = new ProxyAnimation(first);
+        int valueNotifications = 0;
+        var statuses = new List<AnimationStatus>();
+        Action valueListener = () => valueNotifications++;
+        Action<AnimationStatus> statusListener = status => statuses.Add(status);
+        proxy.AddListener(valueListener);
+        proxy.AddStatusListener(statusListener);
+
+        Assert.Equal(0.2, proxy.Value, precision: 6);
+        Assert.Equal(AnimationStatus.Forward, proxy.Status);
+        Assert.Equal(1, first.ListenerCount);
+        Assert.Equal(1, first.StatusListenerCount);
+
+        first.Set(0.4, AnimationStatus.Completed);
+        Assert.Equal(1, valueNotifications);
+        Assert.Equal([AnimationStatus.Completed], statuses);
+
+        proxy.Parent = second;
+        Assert.Equal(0, first.ListenerCount);
+        Assert.Equal(0, first.StatusListenerCount);
+        Assert.Equal(1, second.ListenerCount);
+        Assert.Equal(1, second.StatusListenerCount);
+        Assert.Equal(0.7, proxy.Value, precision: 6);
+        Assert.Equal(AnimationStatus.Reverse, proxy.Status);
+        Assert.Equal(2, valueNotifications);
+        Assert.Equal([AnimationStatus.Completed, AnimationStatus.Reverse], statuses);
+
+        var reversed = new ReverseAnimation(proxy);
+        Assert.Equal(0.3, reversed.Value, precision: 6);
+        Assert.Equal(AnimationStatus.Forward, reversed.Status);
+        var reversedStatuses = new List<AnimationStatus>();
+        Action<AnimationStatus> reversedStatusListener = status => reversedStatuses.Add(status);
+        reversed.AddStatusListener(reversedStatusListener);
+        second.Set(0.9, AnimationStatus.Forward);
+        Assert.Equal(0.1, reversed.Value, precision: 6);
+        Assert.Equal(AnimationStatus.Reverse, reversed.Status);
+        Assert.Equal([AnimationStatus.Reverse], reversedStatuses);
+
+        reversed.RemoveStatusListener(reversedStatusListener);
+        proxy.RemoveListener(valueListener);
+        proxy.RemoveStatusListener(statusListener);
+        Assert.Equal(0, second.ListenerCount);
+        Assert.Equal(0, second.StatusListenerCount);
+    }
+
+    [Fact]
+    public void DualTransitionBuilder_NestsTransitionsAndKeepsInterruptedDirection()
+    {
+        var first = new TrackingAnimation(0.25, AnimationStatus.Forward);
+        var second = new TrackingAnimation(0.8, AnimationStatus.Completed);
+        var child = new SizedBox(width: 10, height: 10);
+        var buildOrder = new List<string>();
+        Animation<double>? forwardAnimation = null;
+        Animation<double>? reverseAnimation = null;
+        var owner = new BuildOwner();
+        var root = new TestRootElement(Build(first));
+        Mount(root, owner);
+
+        Assert.Equal(["reverse", "forward"], buildOrder);
+        Assert.NotNull(forwardAnimation);
+        Assert.NotNull(reverseAnimation);
+        Assert.Equal(0.25, forwardAnimation.Value, precision: 6);
+        Assert.Equal(AnimationStatus.Forward, forwardAnimation.Status);
+        Assert.Equal(0.0, reverseAnimation.Value, precision: 6);
+        Assert.Equal(AnimationStatus.Dismissed, reverseAnimation.Status);
+        Assert.Equal(1, first.StatusListenerCount);
+
+        first.Set(0.6, AnimationStatus.Reverse);
+        Assert.Equal(0.6, forwardAnimation.Value, precision: 6);
+        Assert.Equal(AnimationStatus.Reverse, forwardAnimation.Status);
+        Assert.Equal(0.0, reverseAnimation.Value, precision: 6);
+
+        first.Set(1.0, AnimationStatus.Completed);
+        Assert.Equal(1.0, forwardAnimation.Value, precision: 6);
+        Assert.Equal(AnimationStatus.Completed, forwardAnimation.Status);
+        Assert.Equal(0.0, reverseAnimation.Value, precision: 6);
+        Assert.Equal(AnimationStatus.Dismissed, reverseAnimation.Status);
+
+        first.Set(0.8, AnimationStatus.Reverse);
+        Assert.Equal(1.0, forwardAnimation.Value, precision: 6);
+        Assert.Equal(0.2, reverseAnimation.Value, precision: 6);
+        Assert.Equal(AnimationStatus.Forward, reverseAnimation.Status);
+
+        first.Set(0.7, AnimationStatus.Forward);
+        Assert.Equal(1.0, forwardAnimation.Value, precision: 6);
+        Assert.Equal(0.3, reverseAnimation.Value, precision: 6);
+        Assert.Equal(AnimationStatus.Reverse, reverseAnimation.Status);
+
+        buildOrder.Clear();
+        root.Update(Build(second));
+        owner.FlushBuild();
+        Assert.Equal(["reverse", "forward"], buildOrder);
+        Assert.Equal(0, first.StatusListenerCount);
+        Assert.Equal(1, second.StatusListenerCount);
+        Assert.Equal(1.0, forwardAnimation.Value, precision: 6);
+        Assert.Equal(0.2, reverseAnimation.Value, precision: 6);
+
+        root.Unmount();
+        Assert.Equal(0, second.StatusListenerCount);
+
+        DualTransitionBuilder Build(Animation<double> animation)
+        {
+            return new DualTransitionBuilder(
+                animation: animation,
+                child: child,
+                reverseBuilder: (_, proxy, passedChild) =>
+                {
+                    buildOrder.Add("reverse");
+                    reverseAnimation = proxy;
+                    return passedChild ?? new SizedBox();
+                },
+                forwardBuilder: (_, proxy, reverseTransition) =>
+                {
+                    buildOrder.Add("forward");
+                    forwardAnimation = proxy;
+                    return reverseTransition ?? new SizedBox();
+                });
+        }
+    }
+
+    [Fact]
+    public void RepeatingAnimationBuilder_ExposesSourceDefaultsAndValidatesArguments()
+    {
+        var tween = new DoubleTween(begin: 2.0, end: 8.0);
+        var child = new SizedBox(width: 10, height: 10);
+        ValueWidgetBuilder<double> builder = (_, value, _) => new Text(value.ToString("F1"));
+        var widget = new RepeatingAnimationBuilder<double>(
+            animatable: tween,
+            duration: TimeSpan.FromMilliseconds(300),
+            builder: builder,
+            child: child);
+
+        Assert.Same(tween, widget.Animatable);
+        Assert.Equal(TimeSpan.FromMilliseconds(300), widget.Duration);
+        Assert.Equal(Curves.Linear(0.3), widget.Curve(0.3));
+        Assert.Same(builder, widget.Builder);
+        Assert.Equal(RepeatMode.Restart, widget.RepeatMode);
+        Assert.False(widget.Paused);
+        Assert.Same(child, widget.Child);
+        Assert.Throws<ArgumentNullException>(() => new RepeatingAnimationBuilder<double>(
+            animatable: null!,
+            duration: TimeSpan.FromMilliseconds(300),
+            builder: builder));
+        Assert.Throws<ArgumentNullException>(() => new RepeatingAnimationBuilder<double>(
+            animatable: tween,
+            duration: TimeSpan.FromMilliseconds(300),
+            builder: null!));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new RepeatingAnimationBuilder<double>(
+            animatable: tween,
+            duration: TimeSpan.Zero,
+            builder: builder));
+    }
+
+    [Fact]
+    public void RepeatingAnimationBuilder_RestartsPausesAndPreservesStableChild()
+    {
+        var tween = new DoubleTween(begin: 0.0, end: 100.0);
+        var child = new BuildCounterWidget();
+        var values = new List<double>();
+        var passedChildren = new List<Widget?>();
+        var owner = new BuildOwner();
+        var root = new TestRootElement(Build(paused: false));
+        Mount(root, owner);
+
+        Assert.Equal(0.0, Assert.Single(values), precision: 6);
+        Assert.Same(child, Assert.Single(passedChildren));
+        Assert.Equal(1, child.BuildCount);
+
+        double now = Scheduler.CurrentSeconds;
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
+        owner.FlushBuild();
+        Assert.InRange(values[^1], 20.0, 30.0);
+        Assert.Equal(1, child.BuildCount);
+
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.10));
+        owner.FlushBuild();
+        Assert.InRange(values[^1], 5.0, 15.0);
+
+        root.Update(Build(paused: true));
+        owner.FlushBuild();
+        int pausedBuildCount = values.Count;
+        double pausedValue = values[^1];
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 2.10));
+        owner.FlushBuild();
+        Assert.Equal(pausedBuildCount, values.Count);
+        Assert.Equal(pausedValue, values[^1], precision: 6);
+        Assert.Equal(1, child.BuildCount);
+
+        root.Update(Build(paused: false));
+        owner.FlushBuild();
+        int resumedBuildCount = values.Count;
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 2.35));
+        owner.FlushBuild();
+        Assert.True(values.Count > resumedBuildCount);
+        Assert.Equal(1, child.BuildCount);
+
+        root.Unmount();
+
+        RepeatingAnimationBuilder<double> Build(bool paused)
+        {
+            return new RepeatingAnimationBuilder<double>(
+                animatable: tween,
+                duration: TimeSpan.FromSeconds(1),
+                paused: paused,
+                child: child,
+                builder: (_, value, passedChild) =>
+                {
+                    values.Add(value);
+                    passedChildren.Add(passedChild);
+                    return passedChild ?? new SizedBox();
+                });
+        }
+    }
+
+    [Fact]
+    public void RepeatingAnimationBuilder_ReverseModePingPongsAndAppliesCurve()
+    {
+        var values = new List<double>();
+        var owner = new BuildOwner();
+        var root = new TestRootElement(new RepeatingAnimationBuilder<double>(
+            animatable: new DoubleTween(begin: 0.0, end: 1.0),
+            duration: TimeSpan.FromSeconds(1),
+            curve: Curves.EaseIn,
+            repeatMode: RepeatMode.Reverse,
+            builder: (_, value, _) =>
+            {
+                values.Add(value);
+                return new SizedBox(width: 10, height: 10);
+            }));
+        Mount(root, owner);
+
+        double now = Scheduler.CurrentSeconds;
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.50));
+        owner.FlushBuild();
+        Assert.InRange(values[^1], 0.20, 0.30);
+
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.25));
+        owner.FlushBuild();
+        Assert.InRange(values[^1], 0.50, 0.60);
+
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.75));
+        owner.FlushBuild();
+        Assert.InRange(values[^1], 0.05, 0.10);
+
+        root.Unmount();
+    }
+
+    [Fact]
+    public void RepeatingAnimationBuilder_UpdatesDurationCurveAndRepeatModeInPlace()
+    {
+        var values = new List<double>();
+        var tween = new DoubleTween(begin: 0.0, end: 1.0);
+        var owner = new BuildOwner();
+        var root = new TestRootElement(Build(
+            duration: TimeSpan.FromSeconds(1),
+            curve: Curves.Linear,
+            repeatMode: RepeatMode.Restart));
+        Mount(root, owner);
+
+        double now = Scheduler.CurrentSeconds;
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
+        owner.FlushBuild();
+        Assert.InRange(values[^1], 0.20, 0.30);
+
+        root.Update(Build(
+            duration: TimeSpan.FromSeconds(2),
+            curve: Curves.EaseIn,
+            repeatMode: RepeatMode.Reverse));
+        owner.FlushBuild();
+        Assert.InRange(values[^1], 0.05, 0.10);
+
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.75));
+        owner.FlushBuild();
+        Assert.InRange(values[^1], 0.20, 0.30);
+
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 4.25));
+        owner.FlushBuild();
+        Assert.InRange(values[^1], 0.05, 0.10);
+
+        root.Unmount();
+
+        RepeatingAnimationBuilder<double> Build(
+            TimeSpan duration,
+            Curve curve,
+            RepeatMode repeatMode)
+        {
+            return new RepeatingAnimationBuilder<double>(
+                animatable: tween,
+                duration: duration,
+                curve: curve,
+                repeatMode: repeatMode,
+                builder: (_, value, _) =>
+                {
+                    values.Add(value);
+                    return new SizedBox(width: 10, height: 10);
+                });
+        }
+    }
+
     private static void Mount(TestRootElement root, BuildOwner owner)
     {
         root.Attach(owner);
@@ -382,6 +717,58 @@ public sealed class BuilderWidgetsTests : IDisposable
 
         public void Notify()
         {
+            foreach (var listener in _listeners.ToArray())
+            {
+                listener();
+            }
+        }
+    }
+
+    private sealed class TrackingAnimation : Animation<double>
+    {
+        private readonly List<Action> _listeners = [];
+        private readonly List<Action<AnimationStatus>> _statusListeners = [];
+        private double _value;
+        private AnimationStatus _status;
+
+        public TrackingAnimation(double value, AnimationStatus status)
+        {
+            _value = value;
+            _status = status;
+        }
+
+        public override double Value => _value;
+
+        public override AnimationStatus Status => _status;
+
+        public int StatusListenerCount => _statusListeners.Count;
+
+        public int ListenerCount => _listeners.Count;
+
+        public override void AddListener(Action listener) => _listeners.Add(listener);
+
+        public override void RemoveListener(Action listener) => _listeners.Remove(listener);
+
+        public override void AddStatusListener(Action<AnimationStatus> listener) => _statusListeners.Add(listener);
+
+        public override void RemoveStatusListener(Action<AnimationStatus> listener)
+        {
+            _statusListeners.Remove(listener);
+        }
+
+        public void Set(double value, AnimationStatus status)
+        {
+            AnimationStatus previousStatus = _status;
+            _value = value;
+            _status = status;
+            if (previousStatus != status)
+            {
+                foreach (var listener in _statusListeners.ToArray())
+                {
+                    listener(status);
+                }
+            }
+
             foreach (var listener in _listeners.ToArray())
             {
                 listener();
