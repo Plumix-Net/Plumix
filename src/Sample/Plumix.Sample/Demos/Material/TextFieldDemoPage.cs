@@ -37,7 +37,8 @@ public sealed class TextFieldDemoPage : StatefulWidget
                     new Text("InputDecorator + TextField", fontSize: 20),
                     new Text(
                         "Filled/outlined/state-aware borders, floating labels, hint/helper/error/counter slots, "
-                        + "prefix/suffix icons, focus, submit, read-only and multiline input.",
+                        + "prefix/suffix icons, pointer selection, adaptive context menus, read-only and "
+                        + "multiline input.",
                         fontSize: 14, color: Colors.DimGray),
                     new Row(
                         spacing: 8,

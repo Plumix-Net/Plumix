@@ -1,5 +1,11 @@
 # Changelog
 
+- Added automatic selection context menus for paired Material `TextField`/`TextFormField` and
+  `SelectableText`/`SelectionArea`: pointer drag and word selection, source-shaped context-menu builders,
+  Copy/Cut/Paste/Select all policies, adaptive toolbar anchors, route-backed presentation, focused tests, and
+  mirrored runtime instructions. Text fields now use the complete decorated area for focus, caret placement, and
+  pointer selection. Automatic touch magnifiers and draggable selection handles remain tracked.
+
 - Stabilized the image-cache lifetime regression test by waiting for pending completion and last-listener cleanup as
   one final cache state, avoiding a thread-scheduling race in CI.
 

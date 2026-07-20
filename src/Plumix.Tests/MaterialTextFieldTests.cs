@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
+using Plumix.Gestures;
 using Plumix.Material;
 using Plumix.Rendering;
 using Plumix.UI;
@@ -189,6 +190,123 @@ public sealed class MaterialTextFieldTests : IDisposable
         Assert.Throws<ArgumentException>(() => new TextField(obscureText: true, maxLines: 2));
         Assert.Throws<ArgumentOutOfRangeException>(() => new TextField(maxLength: 0));
         Assert.NotNull(new TextField(maxLength: TextField.NoMaxLength));
+
+        var editable = new TextField();
+        Assert.True(editable.EnableInteractiveSelection);
+        Assert.NotNull(editable.ContextMenuBuilder);
+        Assert.Same(TextMagnifier.AdaptiveMagnifierConfiguration, editable.MagnifierConfiguration);
+        Assert.False(new TextField(readOnly: true, obscureText: true).EnableInteractiveSelection);
+    }
+
+    [Fact]
+    public void TextField_PointerDragUpdatesControllerSelection()
+    {
+        var controller = new TextEditingController("drag selection");
+        SelectionChangedCause? cause = null;
+        using var harness = new WidgetRenderHarness(Wrap(new SizedBox(
+            width: 260,
+            child: new TextField(
+                controller: controller,
+                decoration: null,
+                useDecoration: false,
+                onSelectionChanged: (_, nextCause) => cause = nextCause))));
+        harness.Pump(new Size(360, 120));
+
+        var binding = GestureBinding.Instance;
+        DateTime now = DateTime.UtcNow;
+        binding.HandlePointerEvent(harness.RenderView, new PointerDownEvent(
+            211,
+            PointerDeviceKind.Mouse,
+            new Point(2, 10),
+            PointerButtons.Primary,
+            now));
+        binding.HandlePointerEvent(harness.RenderView, new PointerMoveEvent(
+            211,
+            PointerDeviceKind.Mouse,
+            new Point(90, 10),
+            PointerButtons.Primary,
+            down: true,
+            now.AddMilliseconds(16)));
+        binding.HandlePointerEvent(harness.RenderView, new PointerUpEvent(
+            211,
+            PointerDeviceKind.Mouse,
+            new Point(90, 10),
+            PointerButtons.None,
+            now.AddMilliseconds(32)));
+
+        Assert.False(controller.Selection.IsCollapsed);
+        Assert.True(controller.Selection.End > controller.Selection.Start);
+        Assert.Equal(SelectionChangedCause.Drag, cause);
+    }
+
+    [Fact]
+    public void TextField_DecoratedPointerTapFocusesPlacesCaretAndAcceptsTextInput()
+    {
+        var controller = new TextEditingController();
+        var focusNode = new FocusNode();
+        using var harness = new WidgetRenderHarness(Wrap(new TextField(
+            controller: controller,
+            focusNode: focusNode,
+            decoration: new InputDecoration(
+                labelText: "Message",
+                prefixIcon: new Icon(Icons.Email),
+                border: new OutlineInputBorder()))));
+        harness.Pump(new Size(360, 120));
+
+        var binding = GestureBinding.Instance;
+        DateTime now = DateTime.UtcNow;
+        binding.HandlePointerEvent(harness.RenderView, new PointerDownEvent(
+            212,
+            PointerDeviceKind.Mouse,
+            new Point(170, 44),
+            PointerButtons.Primary,
+            now));
+        binding.HandlePointerEvent(harness.RenderView, new PointerUpEvent(
+            212,
+            PointerDeviceKind.Mouse,
+            new Point(170, 44),
+            PointerButtons.None,
+            now.AddMilliseconds(16)));
+        harness.Pump(new Size(360, 120));
+
+        Assert.True(focusNode.HasFocus);
+        Assert.Equal(TextSelection.Collapsed(0), controller.Selection);
+        Assert.True(FocusManager.Instance.HandleTextInput("!"));
+        Assert.Equal("!", controller.Text);
+    }
+
+    [Fact]
+    public void TextFormField_DecoratedPointerTapFocusesAndAcceptsTextInput()
+    {
+        var controller = new TextEditingController();
+        var focusNode = new FocusNode();
+        using var harness = new WidgetRenderHarness(Wrap(new TextFormField(
+            controller: controller,
+            focusNode: focusNode,
+            decoration: new InputDecoration(
+                labelText: "Form message",
+                border: new OutlineInputBorder()))));
+        harness.Pump(new Size(360, 120));
+
+        var binding = GestureBinding.Instance;
+        DateTime now = DateTime.UtcNow;
+        binding.HandlePointerEvent(harness.RenderView, new PointerDownEvent(
+            213,
+            PointerDeviceKind.Mouse,
+            new Point(170, 44),
+            PointerButtons.Primary,
+            now));
+        binding.HandlePointerEvent(harness.RenderView, new PointerUpEvent(
+            213,
+            PointerDeviceKind.Mouse,
+            new Point(170, 44),
+            PointerButtons.None,
+            now.AddMilliseconds(16)));
+        harness.Pump(new Size(360, 120));
+
+        Assert.True(focusNode.HasFocus);
+        Assert.True(FocusManager.Instance.HandleTextInput("form"));
+        Assert.Equal("form", controller.Text);
     }
 
     [Fact]
@@ -202,6 +320,9 @@ public sealed class MaterialTextFieldTests : IDisposable
         Assert.False(field.ReadOnly);
         Assert.False(field.Autofocus);
         Assert.NotNull(field.Decoration);
+        Assert.True(field.EnableInteractiveSelection);
+        Assert.NotNull(field.ContextMenuBuilder);
+        Assert.Same(TextMagnifier.AdaptiveMagnifierConfiguration, field.MagnifierConfiguration);
 
         var controller = new TextEditingController("external");
         Assert.Throws<ArgumentException>(() => new TextFormField(controller: controller, initialValue: "duplicate"));

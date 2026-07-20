@@ -35,7 +35,8 @@ class _TextFieldDemoPageState extends State<TextFieldDemoPage> {
             style: TextStyle(fontSize: 20),
           ),
           const Text(
-            'Filled/outlined/state-aware borders, floating labels, hint/helper/error/counter slots, prefix/suffix icons, focus, submit, read-only and multiline input.',
+            'Filled/outlined/state-aware borders, floating labels, hint/helper/error/counter slots, '
+            'prefix/suffix icons, pointer selection, adaptive context menus, read-only and multiline input.',
             style: TextStyle(fontSize: 14, color: Colors.black54),
           ),
           Wrap(

@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
+using Plumix.Foundation;
 using Plumix.Gestures;
 using Plumix.Material;
 using Plumix.Rendering;
@@ -24,10 +25,70 @@ public sealed class MaterialSelectionTests
         Assert.Equal(2, widget.CursorWidth);
         Assert.Null(widget.MinLines);
         Assert.Null(widget.MaxLines);
+        Assert.NotNull(widget.ContextMenuBuilder);
+        Assert.Same(TextMagnifier.AdaptiveMagnifierConfiguration, widget.MagnifierConfiguration);
         Assert.Throws<ArgumentOutOfRangeException>(() => new SelectableText("x", minLines: 0));
         Assert.Throws<ArgumentOutOfRangeException>(() => new SelectableText("x", maxLines: 0));
         Assert.Throws<ArgumentException>(() => new SelectableText("x", minLines: 3, maxLines: 2));
         Assert.Throws<ArgumentOutOfRangeException>(() => new SelectableText("x", cursorWidth: 0));
+    }
+
+    [Fact]
+    public void SelectionArea_ContextMenuItemsTrackSelectionAndInvokeCopy()
+    {
+        TextClipboard.ResetForTests();
+        var key = new LabeledGlobalKey<SelectionAreaState>("context-menu-area");
+        using var harness = new WidgetRenderHarness(Root(
+            new SelectionArea(
+                key: key,
+                child: new Text("copy me")),
+            ThemeData.Light));
+        harness.Pump(new Size(320, 120));
+
+        SelectableRegionState state = key.CurrentState!.SelectableRegion;
+        Assert.Single(state.ContextMenuButtonItems);
+        Assert.Equal(ContextMenuButtonType.SelectAll, state.ContextMenuButtonItems[0].Type);
+
+        state.SelectAll();
+        ContextMenuButtonItem copy = Assert.Single(state.ContextMenuButtonItems);
+        Assert.Equal(ContextMenuButtonType.Copy, copy.Type);
+        Assert.True(double.IsFinite(state.ContextMenuAnchors.PrimaryAnchor.X));
+        copy.OnPressed!.Invoke();
+
+        Assert.Equal("copy me", TextClipboard.GetText());
+        Assert.False(state.ContextMenuIsVisible);
+    }
+
+    [Fact]
+    public void EditableText_ContextMenuItemsFollowReadOnlyAndClipboardPolicies()
+    {
+        TextClipboard.ResetForTests();
+        TextClipboard.SetText("paste");
+        var key = new LabeledGlobalKey<EditableText.EditableTextState>("editable-menu");
+        var controller = new TextEditingController("alpha beta", new TextSelection(0, 5));
+        using var harness = new WidgetRenderHarness(Root(
+            new EditableText(
+                key: key,
+                controller: controller,
+                contextMenuBuilder: (_, state) => new SizedBox(
+                    child: new Text(state.ContextMenuButtonItems.Count.ToString()))),
+            ThemeData.Light));
+        harness.Pump(new Size(320, 120));
+
+        IReadOnlyList<ContextMenuButtonItem> items = key.CurrentState!.ContextMenuButtonItems;
+        Assert.Equal(
+            [
+                ContextMenuButtonType.Cut,
+                ContextMenuButtonType.Copy,
+                ContextMenuButtonType.Paste,
+                ContextMenuButtonType.SelectAll,
+            ],
+            items.Select(item => item.Type));
+
+        ContextMenuButtonItem cut = items[0];
+        cut.OnPressed!.Invoke();
+        Assert.Equal("alpha", TextClipboard.GetText());
+        Assert.Equal(" beta", controller.Text);
     }
 
     [Fact]

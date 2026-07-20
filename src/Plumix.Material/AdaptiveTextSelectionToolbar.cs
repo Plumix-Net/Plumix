@@ -46,6 +46,28 @@ public sealed class AdaptiveTextSelectionToolbar : StatelessWidget
         return new AdaptiveTextSelectionToolbar(null, buttonItems, anchors, key);
     }
 
+    public static AdaptiveTextSelectionToolbar EditableText(
+        EditableText.EditableTextState editableTextState,
+        Key? key = null)
+    {
+        ArgumentNullException.ThrowIfNull(editableTextState);
+        return FromButtonItems(
+            editableTextState.ContextMenuButtonItems,
+            editableTextState.ContextMenuAnchors,
+            key);
+    }
+
+    public static AdaptiveTextSelectionToolbar SelectableRegion(
+        SelectableRegionState selectableRegionState,
+        Key? key = null)
+    {
+        ArgumentNullException.ThrowIfNull(selectableRegionState);
+        return FromButtonItems(
+            selectableRegionState.ContextMenuButtonItems,
+            selectableRegionState.ContextMenuAnchors,
+            key);
+    }
+
     public static AdaptiveTextSelectionToolbar Editable(
         Action? onCopy,
         Action? onCut,

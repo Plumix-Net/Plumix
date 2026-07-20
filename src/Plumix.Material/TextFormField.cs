@@ -39,6 +39,10 @@ public sealed class TextFormField : FormField<string>
         string? restorationId = null,
         MouseCursor? mouseCursor = null,
         bool canRequestFocus = true,
+        bool? enableInteractiveSelection = null,
+        EditableTextContextMenuBuilder? contextMenuBuilder = null,
+        TextMagnifierConfiguration? magnifierConfiguration = null,
+        Action<TextSelection, SelectionChangedCause?>? onSelectionChanged = null,
         Key? key = null)
         : base(
             builder: field => BuildField(
@@ -64,6 +68,10 @@ public sealed class TextFormField : FormField<string>
                 buildCounter,
                 mouseCursor,
                 canRequestFocus,
+                enableInteractiveSelection,
+                contextMenuBuilder,
+                magnifierConfiguration,
+                onSelectionChanged,
                 errorBuilder),
             onSaved: onSaved,
             forceErrorText: forceErrorText,
@@ -99,6 +107,10 @@ public sealed class TextFormField : FormField<string>
         BuildCounter = buildCounter;
         MouseCursor = mouseCursor;
         CanRequestFocus = canRequestFocus;
+        EnableInteractiveSelection = enableInteractiveSelection ?? (!readOnly || !obscureText);
+        ContextMenuBuilder = contextMenuBuilder ?? TextField.DefaultContextMenuBuilder;
+        MagnifierConfiguration = magnifierConfiguration ?? TextMagnifier.AdaptiveMagnifierConfiguration;
+        OnSelectionChanged = onSelectionChanged;
     }
 
     public TextEditingController? Controller { get; }
@@ -124,6 +136,10 @@ public sealed class TextFormField : FormField<string>
     public TextFieldCounterBuilder? BuildCounter { get; }
     public MouseCursor? MouseCursor { get; }
     public bool CanRequestFocus { get; }
+    public bool EnableInteractiveSelection { get; }
+    public EditableTextContextMenuBuilder? ContextMenuBuilder { get; }
+    public TextMagnifierConfiguration MagnifierConfiguration { get; }
+    public Action<TextSelection, SelectionChangedCause?>? OnSelectionChanged { get; }
 
     public override State CreateState() => new TextFormFieldState();
 
@@ -184,6 +200,10 @@ public sealed class TextFormField : FormField<string>
         TextFieldCounterBuilder? buildCounter,
         MouseCursor? mouseCursor,
         bool canRequestFocus,
+        bool? enableInteractiveSelection,
+        EditableTextContextMenuBuilder? contextMenuBuilder,
+        TextMagnifierConfiguration? magnifierConfiguration,
+        Action<TextSelection, SelectionChangedCause?>? onSelectionChanged,
         FormFieldErrorBuilder? errorBuilder)
     {
         var effectiveDecoration = decoration;
@@ -215,7 +235,11 @@ public sealed class TextFormField : FormField<string>
             enabled: enabled,
             buildCounter: buildCounter,
             mouseCursor: mouseCursor,
-            canRequestFocus: canRequestFocus);
+            canRequestFocus: canRequestFocus,
+            enableInteractiveSelection: enableInteractiveSelection,
+            contextMenuBuilder: contextMenuBuilder,
+            magnifierConfiguration: magnifierConfiguration,
+            onSelectionChanged: onSelectionChanged);
     }
 }
 

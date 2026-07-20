@@ -25,7 +25,8 @@ class _SelectionDemoPageState extends State<SelectionDemoPage> {
             style: TextStyle(fontSize: 20, color: Colors.black),
           ),
           const Text(
-            'Drag across text or focus it and use Ctrl/Cmd+A and Ctrl/Cmd+C. '
+            'Drag across text, then right-click or long-press for the adaptive context menu. '
+            'Ctrl/Cmd+A and Ctrl/Cmd+C also work. '
             'The second probe spans several Text widgets.',
             style: TextStyle(fontSize: 14, color: Color(0x8A000000)),
           ),

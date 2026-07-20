@@ -227,8 +227,16 @@ Kickoff note (2026-03-12):
 - Added paired Material `SelectableText` + `SelectionArea` parity baseline over a shared core `SelectableRegion`:
   single-run and multi-widget selection, glyph-range highlight paint, transformed cross-paragraph pointer drag,
   select-all/copy keyboard flow, focus/cursor behavior, `TextSelectionTheme` precedence, callbacks, focused tests,
-  and mirrored C#/Dart sample probes. Rich spans, handles, automatic toolbar/magnifier integration, and advanced
+  and mirrored C#/Dart sample probes. Rich spans, handles, automatic magnifier integration, and advanced
   selection services remain tracked in `DIVERGENCES.md`.
+- Expanded paired `TextField`/`TextFormField` + `SelectableText`/`SelectionArea` selection-overlay parity:
+  - core `EditableText` now maps pointer drag/double-tap selection through text-layout geometry and exposes
+    Flutter-shaped context-menu button items, anchors, builder configuration, and toolbar visibility control;
+  - editable and read-only selection paths now open route-backed adaptive Material context menus on secondary tap
+    or long press with source policies for Copy/Cut/Paste/Select all, closing after actions or selection loss;
+  - Material controls expose adaptive magnifier configuration and forward the new selection contracts through
+    `TextFormField`, with focused tests and mirrored runtime instructions;
+  - draggable selection handles and automatic touch magnifier presentation remain tracked shared-overlay gaps.
 - Added paired Material `DesktopTextSelectionToolbar` + `DesktopTextSelectionToolbarButton` parity with the shared
   core `CustomSingleChildLayout` delegate/render primitive, safe-area-aware anchored placement, viewport clamping,
   desktop card/button geometry, light/dark typography, cursor/disabled/tap behavior, focused tests, and mirrored
@@ -240,8 +248,8 @@ Kickoff note (2026-03-12):
 - Added paired Material `AdaptiveTextSelectionToolbar` + `SpellCheckSuggestionsToolbar` parity with shared
   `ContextMenuButtonItem`/anchor primitives, localized standard action labels, Android/desktop platform routing,
   suggestion/delete styling, keyboard-inset-aware placement, focused tests, and expanded mirrored C#/Dart probes.
-  Cupertino toolbar visuals and automatic editable selection/spell-check integration remain tracked in
-  `DIVERGENCES.md` pending shared overlay and spell-check services.
+  Cupertino toolbar visuals, draggable handles, touch magnifiers, and automatic spell-check integration remain
+  tracked in `DIVERGENCES.md` pending shared follower-overlay and spell-check services.
 - Added the paired core `RawMagnifier` + Material `Magnifier`/`TextMagnifier` family with source-shaped geometry,
   focal clamping, line-jump motion, controller/configuration contracts, framework-owned scene magnification,
   adaptive Cupertino lens behavior, focused tests, and a mirrored C#/Dart runtime probe. Root-overlay insertion,
@@ -771,7 +779,9 @@ Progress update (2026-03-19):
 - Added paired `InputDecorator` + Material `TextField` ports:
   - added `InputDecoration`, underline/outline/no-border shapes, `InputDecorationThemeData`/`InputDecorationTheme`, M2/M3 fill and state-border resolution, floating/inline labels, hint/helper/error/counter, prefix/suffix/icon slots, dense/collapsed and constraints composition;
   - expanded core `EditableText` for source-required styled, read-only, obscured, submitted, semantic, and grapheme-limited input while preserving the existing IME/selection/clipboard/focus pipeline;
-  - added focused `MaterialTextFieldTests` and a mirrored `/text-field` C#/Dart runtime demo. Advanced selection overlays/context menus, autofill/spellcheck/restoration and exact private decorator render geometry remain documented shared-primitive gaps.
+  - added focused `MaterialTextFieldTests` and a mirrored `/text-field` C#/Dart runtime demo. Draggable handles,
+    touch magnifiers, autofill/spellcheck/restoration, and exact private decorator render geometry remain documented
+    shared-primitive gaps.
 - Added paired `InkResponse` + `InkWell` ports:
   - replaced the earlier `InkWell` subset with a shared Flutter-shaped interaction state machine covering primary/secondary taps, tap-up/cancel, double tap, long-press/up, focus, hover, feedback, semantics, and external `MaterialStatesController` synchronization;
   - matched circle/uncontained `InkResponse` versus rectangle/contained `InkWell` geometry, radius/border resolution, splash migration, and `overlayColor -> legacy color -> ThemeData` state-color precedence;

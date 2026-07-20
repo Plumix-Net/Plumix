@@ -624,6 +624,11 @@ public sealed class EditableText : StatefulWidget
         TextDirection? textDirection = null,
         bool canRequestFocus = true,
         FocusOnKeyEventCallback? onKeyEvent = null,
+        bool enableInteractiveSelection = true,
+        EditableTextContextMenuBuilder? contextMenuBuilder = null,
+        TextMagnifierConfiguration? magnifierConfiguration = null,
+        Action<TextSelection, SelectionChangedCause?>? onSelectionChanged = null,
+        bool rendererIgnoresPointer = false,
         Key? key = null) : base(key)
     {
         if (string.IsNullOrEmpty(obscuringCharacter) || obscuringCharacter.Length != 1)
@@ -655,6 +660,11 @@ public sealed class EditableText : StatefulWidget
         TextDirection = textDirection;
         CanRequestFocus = canRequestFocus;
         OnKeyEvent = onKeyEvent;
+        EnableInteractiveSelection = enableInteractiveSelection;
+        ContextMenuBuilder = contextMenuBuilder;
+        MagnifierConfiguration = magnifierConfiguration ?? TextMagnifierConfiguration.Disabled;
+        OnSelectionChanged = onSelectionChanged;
+        RendererIgnoresPointer = rendererIgnoresPointer;
     }
 
     public TextEditingController Controller { get; }
@@ -694,26 +704,86 @@ public sealed class EditableText : StatefulWidget
     public TextDirection? TextDirection { get; }
     public bool CanRequestFocus { get; }
     public FocusOnKeyEventCallback? OnKeyEvent { get; }
+    public bool EnableInteractiveSelection { get; }
+    public EditableTextContextMenuBuilder? ContextMenuBuilder { get; }
+    public TextMagnifierConfiguration MagnifierConfiguration { get; }
+    public Action<TextSelection, SelectionChangedCause?>? OnSelectionChanged { get; }
+    public bool RendererIgnoresPointer { get; }
 
     public override State CreateState()
     {
         return new EditableTextState();
     }
 
-    private sealed class EditableTextState : State
+    public sealed class EditableTextState : State
     {
         private TextEditingController? _controller;
         private FocusNode? _focusNode;
         private bool _ownsFocusNode;
         private double? _verticalNavigationX;
         private int? _verticalNavigationColumn;
+        private readonly ContextMenuController _contextMenuController = new();
+        private Point? _lastPointerPosition;
+        private int? _pointerSelectionAnchor;
+        private TextSelection _lastSelection;
+        private SelectionChangedCause? _pendingSelectionCause;
 
         private EditableText Widget => (EditableText)Element.Widget;
+
+        public IReadOnlyList<ContextMenuButtonItem> ContextMenuButtonItems
+        {
+            get
+            {
+                TextEditingController controller = _controller!;
+                bool hasSelection = !controller.Selection.IsCollapsed;
+                bool selectionCoversAll = controller.Selection.Start == 0
+                                          && controller.Selection.End == controller.Text.Length;
+                var items = new List<ContextMenuButtonItem>();
+                if (!Widget.ReadOnly && hasSelection)
+                {
+                    items.Add(new ContextMenuButtonItem(CutAndHide, ContextMenuButtonType.Cut));
+                }
+                if (hasSelection)
+                {
+                    items.Add(new ContextMenuButtonItem(CopyAndHide, ContextMenuButtonType.Copy));
+                }
+                if (!Widget.ReadOnly && !string.IsNullOrEmpty(TextClipboard.GetText()))
+                {
+                    items.Add(new ContextMenuButtonItem(PasteAndHide, ContextMenuButtonType.Paste));
+                }
+                if (!selectionCoversAll && controller.Text.Length > 0)
+                {
+                    items.Add(new ContextMenuButtonItem(SelectAllAndHide, ContextMenuButtonType.SelectAll));
+                }
+                return items;
+            }
+        }
+
+        public TextSelectionToolbarAnchors ContextMenuAnchors
+        {
+            get
+            {
+                TextEditingController controller = _controller!;
+                TextSelection selection = controller.Selection.Clamp(controller.Text.Length);
+                Rect start = ResolveCursorRectangle(_focusNode!, controller.Text.Length, selection.Start);
+                Rect end = ResolveCursorRectangle(_focusNode!, controller.Text.Length, selection.End);
+                Point primary = _lastPointerPosition ?? new Point(
+                    (start.Center.X + end.Center.X) / 2.0,
+                    Math.Min(start.Top, end.Top));
+                Point secondary = new(
+                    (start.Center.X + end.Center.X) / 2.0,
+                    Math.Max(start.Bottom, end.Bottom));
+                return new TextSelectionToolbarAnchors(primary, secondary);
+            }
+        }
+
+        public bool ContextMenuIsVisible => _contextMenuController.IsShown;
 
         public override void InitState()
         {
             AttachController(Widget.Controller);
             AttachFocusNode(Widget.FocusNode);
+            _lastSelection = Widget.Controller.Selection;
         }
 
         public override void DidUpdateWidget(StatefulWidget oldWidget)
@@ -730,10 +800,16 @@ public sealed class EditableText : StatefulWidget
                 DetachFocusNode(disposeOwned: true);
                 AttachFocusNode(Widget.FocusNode);
             }
+            if (!Widget.EnableInteractiveSelection
+                || oldEditableText.ContextMenuBuilder != Widget.ContextMenuBuilder)
+            {
+                HideToolbar();
+            }
         }
 
         public override void Dispose()
         {
+            _contextMenuController.Hide();
             DetachController();
             DetachFocusNode(disposeOwned: true);
         }
@@ -780,6 +856,23 @@ public sealed class EditableText : StatefulWidget
                         textAlign: Widget.TextAlign,
                         textDirection: Widget.TextDirection ?? Directionality.Of(context),
                         softWrap: Widget.Multiline)));
+            if (!Widget.RendererIgnoresPointer)
+            {
+                result = new Listener(
+                    behavior: HitTestBehavior.Translucent,
+                    onPointerDown: HandlePointerDown,
+                    onPointerMove: HandlePointerMove,
+                    onPointerUp: HandlePointerUp,
+                    onPointerCancel: HandlePointerCancel,
+                    child: result);
+                result = new GestureDetector(
+                    behavior: HitTestBehavior.Translucent,
+                    onDoubleTap: HandleDoubleTap,
+                    onLongPress: HandleLongPress,
+                    onSecondaryTap: () => ShowToolbar(),
+                    child: result);
+            }
+
             return new Semantics(
                 label: Widget.SemanticsLabel,
                 flags: SemanticsFlags.IsTextField
@@ -789,9 +882,26 @@ public sealed class EditableText : StatefulWidget
                 child: result);
         }
 
+        public bool ShowToolbar()
+        {
+            if (!Widget.EnableInteractiveSelection
+                || Widget.ContextMenuBuilder is null
+                || ContextMenuButtonItems.Count == 0)
+            {
+                return false;
+            }
+
+            return _contextMenuController.Show(
+                Context,
+                context => Widget.ContextMenuBuilder(context, this));
+        }
+
+        public void HideToolbar() => _contextMenuController.Hide();
+
         private void AttachController(TextEditingController controller)
         {
             _controller = controller;
+            _lastSelection = controller.Selection;
             _controller.AddListener(HandleControllerChanged);
         }
 
@@ -838,6 +948,197 @@ public sealed class EditableText : StatefulWidget
 
             _focusNode = null;
             _ownsFocusNode = false;
+        }
+
+        public void HandlePointerDown(PointerDownEvent @event)
+        {
+            if (!Widget.Enabled)
+            {
+                return;
+            }
+
+            _lastPointerPosition = @event.Position;
+            if (!@event.Buttons.HasFlag(PointerButtons.Primary))
+            {
+                return;
+            }
+
+            _focusNode!.RequestFocus();
+            int offset = GetTextPosition(@event.Position);
+            _pointerSelectionAnchor = offset;
+            SetSelection(TextSelection.Collapsed(offset), SelectionChangedCause.Tap);
+        }
+
+        public void HandlePointerMove(PointerMoveEvent @event)
+        {
+            if (!Widget.EnableInteractiveSelection
+                || !@event.Down
+                || !@event.Buttons.HasFlag(PointerButtons.Primary)
+                || !_pointerSelectionAnchor.HasValue)
+            {
+                return;
+            }
+
+            _lastPointerPosition = @event.Position;
+            SetSelection(
+                new TextSelection(
+                    _pointerSelectionAnchor.Value,
+                    GetTextPosition(@event.Position)),
+                SelectionChangedCause.Drag);
+        }
+
+        public void HandlePointerUp(PointerUpEvent @event)
+        {
+            _lastPointerPosition = @event.Position;
+            _pointerSelectionAnchor = null;
+        }
+
+        public void HandlePointerCancel(PointerCancelEvent @event)
+        {
+            _pointerSelectionAnchor = null;
+        }
+
+        public void HandleDoubleTap()
+        {
+            if (Widget.Enabled && Widget.EnableInteractiveSelection && _lastPointerPosition.HasValue)
+            {
+                SelectWordAt(_lastPointerPosition.Value, SelectionChangedCause.DoubleTap);
+            }
+        }
+
+        public void HandleLongPress()
+        {
+            if (!Widget.Enabled || !Widget.EnableInteractiveSelection)
+            {
+                return;
+            }
+
+            if (_lastPointerPosition.HasValue && _controller!.Selection.IsCollapsed)
+            {
+                SelectWordAt(_lastPointerPosition.Value, SelectionChangedCause.LongPress);
+            }
+            ShowToolbar();
+        }
+
+        private int GetTextPosition(Point globalPosition)
+        {
+            TextEditingController controller = _controller!;
+            if (TryCreateTextLayout(_focusNode!, controller.Text, out TextLayout? layout, out Rect contentRect))
+            {
+                using (layout!)
+                {
+                    Point localPosition = new(
+                        Math.Clamp(globalPosition.X - contentRect.X, 0, Math.Max(0, contentRect.Width)),
+                        Math.Clamp(globalPosition.Y - contentRect.Y, 0, Math.Max(0, contentRect.Height)));
+                    return Math.Clamp(
+                        layout!.HitTestPoint(localPosition).TextPosition,
+                        0,
+                        controller.Text.Length);
+                }
+            }
+
+            double characterWidth = Math.Max(1.0, Widget.FontSize * 0.6);
+            int offset = (int)Math.Round(
+                Math.Max(0, globalPosition.X - contentRect.X) / characterWidth);
+            return Math.Clamp(offset, 0, controller.Text.Length);
+        }
+
+        private void SelectWordAt(
+            Point globalPosition,
+            SelectionChangedCause cause)
+        {
+            TextEditingController controller = _controller!;
+            string text = controller.Text;
+            if (text.Length == 0)
+            {
+                return;
+            }
+
+            int index = Math.Clamp(GetTextPosition(globalPosition), 0, text.Length - 1);
+            bool whitespace = char.IsWhiteSpace(text[index]);
+            int start = index;
+            int end = index + 1;
+            while (start > 0 && char.IsWhiteSpace(text[start - 1]) == whitespace)
+            {
+                start--;
+            }
+            while (end < text.Length && char.IsWhiteSpace(text[end]) == whitespace)
+            {
+                end++;
+            }
+
+            if (!whitespace)
+            {
+                while (start > 0 && !char.IsWhiteSpace(text[start - 1]))
+                {
+                    start--;
+                }
+                while (end < text.Length && !char.IsWhiteSpace(text[end]))
+                {
+                    end++;
+                }
+            }
+
+            SetSelection(new TextSelection(start, end), cause);
+        }
+
+        private void CutAndHide()
+        {
+            TextEditingController controller = _controller!;
+            if (!Widget.ReadOnly && !controller.Selection.IsCollapsed)
+            {
+                TextClipboard.SetText(controller.SelectedText);
+                _pendingSelectionCause = SelectionChangedCause.Toolbar;
+                if (controller.DeleteBackward())
+                {
+                    Widget.OnChanged?.Invoke(controller.Text);
+                }
+                _pendingSelectionCause = null;
+            }
+            HideToolbar();
+        }
+
+        private void CopyAndHide()
+        {
+            TextEditingController controller = _controller!;
+            if (!controller.Selection.IsCollapsed)
+            {
+                TextClipboard.SetText(controller.SelectedText);
+            }
+            HideToolbar();
+        }
+
+        private void PasteAndHide()
+        {
+            string value = TextClipboard.GetText() ?? string.Empty;
+            if (!Widget.ReadOnly && !string.IsNullOrEmpty(value))
+            {
+                TextEditingController controller = _controller!;
+                _pendingSelectionCause = SelectionChangedCause.Toolbar;
+                if (controller.Insert(LimitInsertion(value)))
+                {
+                    Widget.OnChanged?.Invoke(controller.Text);
+                }
+                _pendingSelectionCause = null;
+            }
+            HideToolbar();
+        }
+
+        private void SelectAllAndHide()
+        {
+            _pendingSelectionCause = SelectionChangedCause.Toolbar;
+            _controller!.SelectAll();
+            _pendingSelectionCause = null;
+            HideToolbar();
+        }
+
+        private void SetSelection(
+            TextSelection selection,
+            SelectionChangedCause cause)
+        {
+            _pendingSelectionCause = cause;
+            _controller!.Selection = selection;
+            _pendingSelectionCause = null;
         }
 
         private KeyEventResult HandleKeyEvent(FocusNode node, KeyEvent @event)
@@ -1271,6 +1572,16 @@ public sealed class EditableText : StatefulWidget
 
         private void HandleControllerChanged()
         {
+            TextSelection selection = _controller!.Selection;
+            if (!_lastSelection.Equals(selection))
+            {
+                _lastSelection = selection;
+                Widget.OnSelectionChanged?.Invoke(selection, _pendingSelectionCause);
+            }
+            if (selection.IsCollapsed)
+            {
+                HideToolbar();
+            }
             SetState(static () => { });
         }
 
@@ -1278,6 +1589,10 @@ public sealed class EditableText : StatefulWidget
         {
             _verticalNavigationX = null;
             _verticalNavigationColumn = null;
+            if (_focusNode?.HasFocus == false)
+            {
+                HideToolbar();
+            }
             SetState(static () => { });
         }
 

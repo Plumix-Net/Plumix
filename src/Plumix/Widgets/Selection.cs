@@ -17,6 +17,11 @@ public enum SelectionChangedCause
     LongPress,
     Drag,
     Keyboard,
+    ForcePress,
+    Toolbar,
+    StylusHandwriting,
+    [Obsolete("Use StylusHandwriting instead.")]
+    Scribble = StylusHandwriting,
 }
 
 public sealed record SelectedContent(string PlainText);
@@ -39,6 +44,7 @@ internal sealed class TextSelectionRegistrar : ITextSelectionRegistrar
     private RenderParagraph? _extentParagraph;
     private int _extentOffset;
     private bool _dragging;
+    private Point? _lastGlobalPosition;
 
     public TextSelectionRegistrar(
         Action<SelectedContent?, TextSelection, SelectionChangedCause?> onSelectionChanged)
@@ -79,6 +85,7 @@ internal sealed class TextSelectionRegistrar : ITextSelectionRegistrar
         _anchorOffset = paragraph.GetTextPosition(globalPosition);
         _extentOffset = _anchorOffset;
         _dragging = true;
+        _lastGlobalPosition = globalPosition;
         ApplySelection(SelectionChangedCause.Tap);
     }
 
@@ -103,6 +110,7 @@ internal sealed class TextSelectionRegistrar : ITextSelectionRegistrar
 
         _extentParagraph = target;
         _extentOffset = offset;
+        _lastGlobalPosition = globalPosition;
         ApplySelection(SelectionChangedCause.Drag);
     }
 
@@ -111,7 +119,7 @@ internal sealed class TextSelectionRegistrar : ITextSelectionRegistrar
         _dragging = false;
     }
 
-    public void SelectAll()
+    public void SelectAll(SelectionChangedCause cause = SelectionChangedCause.Keyboard)
     {
         var ordered = OrderedParagraphs();
         if (ordered.Count == 0)
@@ -123,10 +131,11 @@ internal sealed class TextSelectionRegistrar : ITextSelectionRegistrar
         _anchorOffset = 0;
         _extentParagraph = ordered[^1];
         _extentOffset = ordered[^1].Text.Length;
-        ApplySelection(SelectionChangedCause.Keyboard);
+        _lastGlobalPosition = null;
+        ApplySelection(cause);
     }
 
-    public void SelectWord()
+    public void SelectWord(SelectionChangedCause cause = SelectionChangedCause.DoubleTap)
     {
         if (_extentParagraph is null)
         {
@@ -167,7 +176,7 @@ internal sealed class TextSelectionRegistrar : ITextSelectionRegistrar
         _anchorParagraph = _extentParagraph;
         _anchorOffset = start;
         _extentOffset = end;
-        ApplySelection(SelectionChangedCause.DoubleTap);
+        ApplySelection(cause);
     }
 
     public void ClearSelection(SelectionChangedCause cause)
@@ -182,7 +191,43 @@ internal sealed class TextSelectionRegistrar : ITextSelectionRegistrar
         _anchorOffset = 0;
         _extentOffset = 0;
         _dragging = false;
+        _lastGlobalPosition = null;
         _onSelectionChanged(null, TextSelection.Collapsed(0), cause);
+    }
+
+    public bool HasSelection => !string.IsNullOrEmpty(SelectedText());
+
+    public bool IsEntireSelection
+    {
+        get
+        {
+            List<RenderParagraph> ordered = OrderedParagraphs();
+            if (!TryGetOrderedEndpoints(
+                    ordered,
+                    out int startIndex,
+                    out int endIndex,
+                    out int startOffset,
+                    out int endOffset))
+            {
+                return false;
+            }
+
+            return startIndex == 0
+                   && endIndex == ordered.Count - 1
+                   && startOffset == 0
+                   && endOffset == ordered[^1].Text.Length;
+        }
+    }
+
+    public TextSelectionToolbarAnchors ContextMenuAnchors
+    {
+        get
+        {
+            Point anchor = _lastGlobalPosition ?? ResolveFallbackAnchor();
+            return new TextSelectionToolbarAnchors(
+                PrimaryAnchor: anchor,
+                SecondaryAnchor: anchor);
+        }
     }
 
     public string SelectedText()
@@ -336,6 +381,18 @@ internal sealed class TextSelectionRegistrar : ITextSelectionRegistrar
         }
     }
 
+    private Point ResolveFallbackAnchor()
+    {
+        RenderParagraph? paragraph = _extentParagraph ?? _anchorParagraph ?? OrderedParagraphs().FirstOrDefault();
+        if (paragraph is null || !paragraph.TryGetTransformFromRoot(out Matrix transform))
+        {
+            return default;
+        }
+
+        Rect bounds = RenderObject.TransformRect(transform, new Rect(default, paragraph.Size));
+        return new Point(bounds.Center.X, bounds.Top);
+    }
+
     private static int FlattenOffset(
         IReadOnlyList<RenderParagraph> ordered,
         RenderParagraph target,
@@ -433,6 +490,8 @@ public sealed class SelectableRegion : StatefulWidget
         Action<SelectedContent?>? onSelectionChanged = null,
         Action<TextSelection, SelectionChangedCause?>? onTextSelectionChanged = null,
         Action? onTap = null,
+        SelectableRegionContextMenuBuilder? contextMenuBuilder = null,
+        TextMagnifierConfiguration? magnifierConfiguration = null,
         Key? key = null) : base(key)
     {
         Child = child ?? throw new ArgumentNullException(nameof(child));
@@ -447,6 +506,8 @@ public sealed class SelectableRegion : StatefulWidget
         OnSelectionChanged = onSelectionChanged;
         OnTextSelectionChanged = onTextSelectionChanged;
         OnTap = onTap;
+        ContextMenuBuilder = contextMenuBuilder;
+        MagnifierConfiguration = magnifierConfiguration ?? TextMagnifierConfiguration.Disabled;
 
         if (!double.IsFinite(cursorWidth) || cursorWidth <= 0)
         {
@@ -470,6 +531,8 @@ public sealed class SelectableRegion : StatefulWidget
     public Action<SelectedContent?>? OnSelectionChanged { get; }
     public Action<TextSelection, SelectionChangedCause?>? OnTextSelectionChanged { get; }
     public Action? OnTap { get; }
+    public SelectableRegionContextMenuBuilder? ContextMenuBuilder { get; }
+    public TextMagnifierConfiguration MagnifierConfiguration { get; }
 
     public override State CreateState() => new SelectableRegionState();
 }
@@ -480,9 +543,31 @@ public sealed class SelectableRegionState : State
     private SelectedContent? _selectedContent;
     private FocusNode? _focusNode;
     private bool _ownsFocusNode;
+    private readonly ContextMenuController _contextMenuController = new();
     private SelectableRegion Current => (SelectableRegion)StateWidget;
 
     public SelectedContent? SelectedContent => _selectedContent;
+
+    public IReadOnlyList<ContextMenuButtonItem> ContextMenuButtonItems
+    {
+        get
+        {
+            var items = new List<ContextMenuButtonItem>();
+            if (_registrar.HasSelection)
+            {
+                items.Add(new ContextMenuButtonItem(CopyAndHide, ContextMenuButtonType.Copy));
+            }
+            if (!_registrar.IsEntireSelection)
+            {
+                items.Add(new ContextMenuButtonItem(SelectAllAndHide, ContextMenuButtonType.SelectAll));
+            }
+            return items;
+        }
+    }
+
+    public TextSelectionToolbarAnchors ContextMenuAnchors => _registrar.ContextMenuAnchors;
+
+    public bool ContextMenuIsVisible => _contextMenuController.IsShown;
 
     public override void InitState()
     {
@@ -498,10 +583,16 @@ public sealed class SelectableRegionState : State
             DetachFocusNode();
             AttachFocusNode(Current.FocusNode);
         }
+        if (!Current.Enabled
+            || oldRegion.ContextMenuBuilder != Current.ContextMenuBuilder)
+        {
+            HideToolbar();
+        }
     }
 
     public override void Dispose()
     {
+        _contextMenuController.Hide();
         DetachFocusNode();
     }
 
@@ -527,7 +618,13 @@ public sealed class SelectableRegionState : State
         return new GestureDetector(
             behavior: HitTestBehavior.Translucent,
             onTap: Current.OnTap,
-            onDoubleTap: _registrar.SelectWord,
+            onDoubleTap: () => _registrar.SelectWord(),
+            onLongPress: () =>
+            {
+                _registrar.SelectWord(SelectionChangedCause.LongPress);
+                ShowToolbar();
+            },
+            onSecondaryTap: () => ShowToolbar(),
             child: child);
     }
 
@@ -544,12 +641,30 @@ public sealed class SelectableRegionState : State
         }
     }
 
+    public bool ShowToolbar()
+    {
+        if (!Current.Enabled || Current.ContextMenuBuilder is null || ContextMenuButtonItems.Count == 0)
+        {
+            return false;
+        }
+
+        return _contextMenuController.Show(
+            Context,
+            context => Current.ContextMenuBuilder(context, this));
+    }
+
+    public void HideToolbar() => _contextMenuController.Hide();
+
     private void HandleSelectionChanged(
         SelectedContent? selectedContent,
         TextSelection selection,
         SelectionChangedCause? cause)
     {
         _selectedContent = selectedContent;
+        if (selectedContent is null)
+        {
+            HideToolbar();
+        }
         Current.OnSelectionChanged?.Invoke(selectedContent);
         Current.OnTextSelectionChanged?.Invoke(selection, cause);
     }
@@ -615,5 +730,17 @@ public sealed class SelectableRegionState : State
             _registrar.ClearSelection(SelectionChangedCause.Keyboard);
         }
         SetState(() => { });
+    }
+
+    private void CopyAndHide()
+    {
+        CopySelection();
+        HideToolbar();
+    }
+
+    private void SelectAllAndHide()
+    {
+        _registrar.SelectAll(SelectionChangedCause.Toolbar);
+        HideToolbar();
     }
 }

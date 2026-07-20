@@ -17,7 +17,7 @@ Size legend: **S** — one focused widget, few states. **M** — widget family o
 
 | Widget / family | Flutter source (`lib/src/material/`) | Size | Notes / dependencies |
 | --- | --- | --- | --- |
-| Selection-overlay integration | `text_selection.dart`, `text_field.dart`, `selectable_text.dart` | L | Android, adaptive, desktop, and spell-check toolbar widgets are ported. Remaining work needs overlay/handle ownership plus automatic copy/paste and spell-check integration for `TextField`/`SelectableText`. |
+| Selection handles + touch magnifier integration | `text_selection.dart`, `text_field.dart`, `selectable_text.dart` | L | `TextField`/`SelectableText` now own automatic adaptive Copy/Cut/Paste/Select all context menus. Remaining work needs draggable handle overlays, automatic touch magnifiers, and spell-check-service integration. |
 
 ## Open infrastructure (align with maintainer first)
 

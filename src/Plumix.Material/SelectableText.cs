@@ -28,6 +28,8 @@ public sealed class SelectableText : StatefulWidget
         Action? onTap = null,
         string? semanticsLabel = null,
         Action<TextSelection, SelectionChangedCause?>? onSelectionChanged = null,
+        SelectableRegionContextMenuBuilder? contextMenuBuilder = null,
+        TextMagnifierConfiguration? magnifierConfiguration = null,
         Key? key = null) : base(key)
     {
         Data = data ?? throw new ArgumentNullException(nameof(data));
@@ -47,6 +49,8 @@ public sealed class SelectableText : StatefulWidget
         OnTap = onTap;
         SemanticsLabel = semanticsLabel;
         OnSelectionChanged = onSelectionChanged;
+        ContextMenuBuilder = contextMenuBuilder ?? DefaultContextMenuBuilder;
+        MagnifierConfiguration = magnifierConfiguration ?? TextMagnifier.AdaptiveMagnifierConfiguration;
 
         if (minLines.HasValue && minLines.Value <= 0)
         {
@@ -87,9 +91,18 @@ public sealed class SelectableText : StatefulWidget
     public Action? OnTap { get; }
     public string? SemanticsLabel { get; }
     public Action<TextSelection, SelectionChangedCause?>? OnSelectionChanged { get; }
+    public SelectableRegionContextMenuBuilder? ContextMenuBuilder { get; }
+    public TextMagnifierConfiguration MagnifierConfiguration { get; }
     public bool SelectionEnabled => EnableInteractiveSelection;
 
     public override State CreateState() => new SelectableTextState();
+
+    private static Widget DefaultContextMenuBuilder(
+        BuildContext context,
+        SelectableRegionState selectableRegionState)
+    {
+        return AdaptiveTextSelectionToolbar.SelectableRegion(selectableRegionState);
+    }
 }
 
 internal sealed class SelectableTextState : State
@@ -141,6 +154,8 @@ internal sealed class SelectableTextState : State
             cursorWidth: Current.CursorWidth,
             cursorHeight: Current.CursorHeight,
             onTextSelectionChanged: Current.OnSelectionChanged,
+            contextMenuBuilder: Current.ContextMenuBuilder,
+            magnifierConfiguration: Current.MagnifierConfiguration,
             onTap: Current.OnTap);
 
         if (Current.SemanticsLabel is not null)

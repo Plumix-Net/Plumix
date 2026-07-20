@@ -11,19 +11,32 @@ public sealed class SelectionArea : StatefulWidget
     public SelectionArea(
         Widget child,
         FocusNode? focusNode = null,
+        SelectableRegionContextMenuBuilder? contextMenuBuilder = null,
+        TextMagnifierConfiguration? magnifierConfiguration = null,
         Action<SelectedContent?>? onSelectionChanged = null,
         Key? key = null) : base(key)
     {
         Child = child ?? throw new ArgumentNullException(nameof(child));
         FocusNode = focusNode;
+        ContextMenuBuilder = contextMenuBuilder ?? DefaultContextMenuBuilder;
+        MagnifierConfiguration = magnifierConfiguration ?? TextMagnifier.AdaptiveMagnifierConfiguration;
         OnSelectionChanged = onSelectionChanged;
     }
 
     public Widget Child { get; }
     public FocusNode? FocusNode { get; }
+    public SelectableRegionContextMenuBuilder? ContextMenuBuilder { get; }
+    public TextMagnifierConfiguration MagnifierConfiguration { get; }
     public Action<SelectedContent?>? OnSelectionChanged { get; }
 
     public override State CreateState() => new SelectionAreaState();
+
+    private static Widget DefaultContextMenuBuilder(
+        BuildContext context,
+        SelectableRegionState selectableRegionState)
+    {
+        return AdaptiveTextSelectionToolbar.SelectableRegion(selectableRegionState);
+    }
 }
 
 public sealed class SelectionAreaState : State
@@ -49,6 +62,8 @@ public sealed class SelectionAreaState : State
             focusNode: Current.FocusNode,
             selectionColor: selectionColor,
             cursorColor: cursorColor,
+            contextMenuBuilder: Current.ContextMenuBuilder,
+            magnifierConfiguration: Current.MagnifierConfiguration,
             onSelectionChanged: Current.OnSelectionChanged);
     }
 

@@ -44,6 +44,10 @@ public sealed class TextField : StatefulWidget
         TextFieldCounterBuilder? buildCounter = null,
         bool canRequestFocus = true,
         FocusOnKeyEventCallback? onKeyEvent = null,
+        bool? enableInteractiveSelection = null,
+        EditableTextContextMenuBuilder? contextMenuBuilder = null,
+        TextMagnifierConfiguration? magnifierConfiguration = null,
+        Action<TextSelection, SelectionChangedCause?>? onSelectionChanged = null,
         Key? key = null) : base(key)
     {
         if (string.IsNullOrEmpty(obscuringCharacter) || obscuringCharacter.Length != 1)
@@ -81,6 +85,10 @@ public sealed class TextField : StatefulWidget
         BuildCounter = buildCounter;
         CanRequestFocus = canRequestFocus;
         OnKeyEvent = onKeyEvent;
+        EnableInteractiveSelection = enableInteractiveSelection ?? (!readOnly || !obscureText);
+        ContextMenuBuilder = contextMenuBuilder ?? DefaultContextMenuBuilder;
+        MagnifierConfiguration = magnifierConfiguration ?? TextMagnifier.AdaptiveMagnifierConfiguration;
+        OnSelectionChanged = onSelectionChanged;
     }
 
     public TextEditingController? Controller { get; }
@@ -106,11 +114,24 @@ public sealed class TextField : StatefulWidget
     public TextFieldCounterBuilder? BuildCounter { get; }
     public bool CanRequestFocus { get; }
     public FocusOnKeyEventCallback? OnKeyEvent { get; }
+    public bool EnableInteractiveSelection { get; }
+    public EditableTextContextMenuBuilder? ContextMenuBuilder { get; }
+    public TextMagnifierConfiguration MagnifierConfiguration { get; }
+    public Action<TextSelection, SelectionChangedCause?>? OnSelectionChanged { get; }
 
     public override State CreateState() => new TextFieldState();
 
+    internal static Widget DefaultContextMenuBuilder(
+        BuildContext context,
+        EditableText.EditableTextState editableTextState)
+    {
+        return AdaptiveTextSelectionToolbar.EditableText(editableTextState);
+    }
+
     private sealed class TextFieldState : State
     {
+        private readonly GlobalKey<EditableText.EditableTextState> _editableTextKey =
+            new GlobalObjectKey<EditableText.EditableTextState>(new object());
         private TextEditingController? _controller;
         private FocusNode? _focusNode;
         private bool _ownsController;
@@ -165,7 +186,13 @@ public sealed class TextField : StatefulWidget
                 textAlign: Current.TextAlign,
                 textDirection: Current.TextDirection,
                 canRequestFocus: Current.CanRequestFocus,
-                onKeyEvent: Current.OnKeyEvent);
+                onKeyEvent: Current.OnKeyEvent,
+                enableInteractiveSelection: Current.EnableInteractiveSelection,
+                contextMenuBuilder: Current.ContextMenuBuilder,
+                magnifierConfiguration: Current.MagnifierConfiguration,
+                onSelectionChanged: Current.OnSelectionChanged,
+                rendererIgnoresPointer: true,
+                key: _editableTextKey);
 
             if (multiline && !Current.Expands)
             {
@@ -200,8 +227,20 @@ public sealed class TextField : StatefulWidget
                     child: editable);
             }
 
-            if (Current.OnTap is not null)
-                result = new GestureDetector(onTap: Current.OnTap, behavior: HitTestBehavior.Translucent, child: result);
+            result = new Listener(
+                onPointerDown: @event => _editableTextKey.CurrentState?.HandlePointerDown(@event),
+                onPointerMove: @event => _editableTextKey.CurrentState?.HandlePointerMove(@event),
+                onPointerUp: @event => _editableTextKey.CurrentState?.HandlePointerUp(@event),
+                onPointerCancel: @event => _editableTextKey.CurrentState?.HandlePointerCancel(@event),
+                behavior: HitTestBehavior.Translucent,
+                child: result);
+            result = new GestureDetector(
+                onTap: Current.OnTap,
+                onDoubleTap: () => _editableTextKey.CurrentState?.HandleDoubleTap(),
+                onLongPress: () => _editableTextKey.CurrentState?.HandleLongPress(),
+                onSecondaryTap: () => _editableTextKey.CurrentState?.ShowToolbar(),
+                behavior: HitTestBehavior.Translucent,
+                child: result);
             return new Listener(
                 onPointerEnter: _ => BeginHover(),
                 onPointerExit: _ => EndHover(),

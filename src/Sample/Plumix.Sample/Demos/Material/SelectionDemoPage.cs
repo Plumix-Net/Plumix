@@ -29,7 +29,8 @@ internal sealed class SelectionDemoPageState : State
                 [
                     new Text("SelectableText + SelectionArea", fontSize: 20, color: Colors.Black),
                     new Text(
-                        "Drag across text or focus it and use Ctrl/Cmd+A and Ctrl/Cmd+C. "
+                        "Drag across text, then right-click or long-press for the adaptive context menu. "
+                        + "Ctrl/Cmd+A and Ctrl/Cmd+C also work. "
                         + "The second probe spans several Text widgets.",
                         fontSize: 14,
                         color: Color.Parse("#8A000000")),
