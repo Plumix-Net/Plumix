@@ -1,5 +1,10 @@
 # Changelog
 
+- Breaking: added paired Flutter core `SliverResizingHeader` + `SliverFloatingHeader` ports with measured prototypes,
+  pinned resize geometry, user-direction reveal/hide, overlay/scroll snap modes, animation-style overrides, focused
+  tests, and mirrored C#/Dart custom-sliver probes. Added shared scroll-direction/is-scrolling contracts and advanced
+  `Plumix` to `0.9.0-alpha.1`; `Curves.EaseInOut` now uses Flutter's exact cubic instead of smoothstep.
+
 - Added paired Flutter core `SliverPrototypeExtentList` + `SliverVariedExtentList` ports with offstage prototype
   measurement, per-index layout dimensions, exact constrained extents, lazy keyed child reuse, focused tests, and
   mirrored C#/Dart custom-sliver probes. Reorderable lists now honor `prototypeItem` and share the varied-extent

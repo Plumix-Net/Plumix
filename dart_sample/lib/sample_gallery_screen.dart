@@ -482,7 +482,7 @@ class SampleGalleryScreen extends StatelessWidget {
         SampleRouteDefinition(
           routeName: SampleRoutes.customSlivers,
           title: 'Custom slivers',
-          subtitle: 'fill/group/prototype/varied sliver adapters',
+          subtitle: 'resizing/floating/fill/group/prototype/varied sliver adapters',
           builder: () => const CustomSliversDemoPage(),
         ),
         SampleRouteDefinition(

@@ -15,6 +15,57 @@ public sealed class CustomSliversDemoPage : StatelessWidget
         return new CustomScrollView(
             slivers:
             [
+                new SliverMainAxisGroup(
+                    slivers:
+                    [
+                        new SliverResizingHeader(
+                            minExtentPrototype: new SizedBox(height: 64),
+                            maxExtentPrototype: new SizedBox(height: 140),
+                            child: new Container(
+                                color: Color.Parse("#FFE8EAF6"),
+                                padding: new Thickness(16, 12),
+                                child: new Column(
+                                    mainAxisAlignment: MainAxisAlignment.Center,
+                                    crossAxisAlignment: CrossAxisAlignment.Stretch,
+                                    spacing: 4,
+                                    children:
+                                    [
+                                        new Text(
+                                            "SliverResizingHeader",
+                                            fontSize: 20,
+                                            color: Colors.Black),
+                                        new Text(
+                                            "140px → 64px prototype extents",
+                                            fontSize: 13,
+                                            color: Colors.DimGray),
+                                    ]))),
+                        SliverFixedExtentList.Builder(
+                            childCount: 5,
+                            itemExtent: 44,
+                            itemBuilder: (_, index) => BuildExtentCell(
+                                $"resizing-header group row #{index}",
+                                index % 2 == 0
+                                    ? Color.Parse("#FFF5F5F5")
+                                    : Color.Parse("#FFFFFFFF")),
+                            addAutomaticKeepAlives: false),
+                    ]),
+                new SliverFloatingHeader(
+                    snapMode: FloatingHeaderSnapMode.Overlay,
+                    child: new Container(
+                        height: 64,
+                        color: Color.Parse("#FFFFECB3"),
+                        padding: new Thickness(16, 10),
+                        child: new Column(
+                            crossAxisAlignment: CrossAxisAlignment.Stretch,
+                            spacing: 2,
+                            children:
+                            [
+                                new Text("SliverFloatingHeader", fontSize: 18, color: Colors.Black),
+                                new Text(
+                                    "Reverse the scroll direction to reveal and snap it.",
+                                    fontSize: 12,
+                                    color: Colors.DimGray),
+                            ]))),
                 new SliverSafeArea(
                     minimum: new Thickness(12, 8, 12, 0),
                     sliver: new SliverLayoutBuilder((_, constraints) =>

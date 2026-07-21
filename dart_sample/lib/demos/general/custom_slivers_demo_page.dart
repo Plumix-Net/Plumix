@@ -8,6 +8,76 @@ class CustomSliversDemoPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return CustomScrollView(
       slivers: <Widget>[
+        SliverMainAxisGroup(
+          slivers: <Widget>[
+            SliverResizingHeader(
+              minExtentPrototype: const SizedBox(height: 64),
+              maxExtentPrototype: const SizedBox(height: 140),
+              child: ColoredBox(
+                color: const Color(0xFFE8EAF6),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    spacing: 4,
+                    children: const <Widget>[
+                      Text(
+                        'SliverResizingHeader',
+                        style: TextStyle(fontSize: 20, color: Colors.black),
+                      ),
+                      Text(
+                        '140px → 64px prototype extents',
+                        style: TextStyle(fontSize: 13, color: Colors.black54),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            SliverFixedExtentList.builder(
+              itemCount: 5,
+              itemExtent: 44,
+              itemBuilder: (BuildContext context, int index) {
+                return _extentCell(
+                  'resizing-header group row #$index',
+                  index.isEven
+                      ? const Color(0xFFF5F5F5)
+                      : const Color(0xFFFFFFFF),
+                );
+              },
+            ),
+          ],
+        ),
+        const SliverFloatingHeader(
+          snapMode: FloatingHeaderSnapMode.overlay,
+          child: SizedBox(
+            height: 64,
+            child: ColoredBox(
+              color: Color(0xFFFFECB3),
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  spacing: 2,
+                  children: <Widget>[
+                    Text(
+                      'SliverFloatingHeader',
+                      style: TextStyle(fontSize: 18, color: Colors.black),
+                    ),
+                    Text(
+                      'Reverse the scroll direction to reveal and snap it.',
+                      style: TextStyle(fontSize: 12, color: Colors.black54),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
         SliverSafeArea(
           minimum: const EdgeInsets.fromLTRB(12, 8, 12, 0),
           sliver: SliverLayoutBuilder(

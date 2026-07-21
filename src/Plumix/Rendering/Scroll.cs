@@ -61,6 +61,14 @@ public enum GrowthDirection
     Reverse
 }
 
+// Dart parity source: flutter/packages/flutter/lib/src/rendering/viewport_offset.dart
+public enum ScrollDirection
+{
+    Idle,
+    Forward,
+    Reverse
+}
+
 public static class ScrollDirectionUtils
 {
     public static Axis AxisDirectionToAxis(AxisDirection direction)
@@ -237,6 +245,10 @@ public sealed class DragScrollActivity(ScrollPosition position) : ScrollActivity
 {
 }
 
+public sealed class PointerScrollActivity(ScrollPosition position) : ScrollActivity(position)
+{
+}
+
 public sealed class BallisticScrollActivity : ScrollActivity
 {
     private readonly Simulation _simulation;
@@ -288,12 +300,14 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
     private double _maxScrollExtent;
     private double _viewportDimension;
     private ScrollActivity _activity;
+    private ScrollDirection _userScrollDirection = ScrollDirection.Idle;
 
     public ScrollPosition(double initialPixels = 0.0, ScrollPhysics? physics = null)
     {
         _pixels = initialPixels;
         _physics = physics ?? new ClampingScrollPhysics();
         _activity = new IdleScrollActivity(this);
+        IsScrollingNotifier = new ValueNotifier<bool>(false);
     }
 
     public double Pixels => _pixels;
@@ -307,6 +321,10 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
     public ScrollPhysics Physics => _physics;
 
     public ScrollActivity Activity => _activity;
+
+    public ValueNotifier<bool> IsScrollingNotifier { get; }
+
+    public ScrollDirection UserScrollDirection => _userScrollDirection;
 
     public void JumpTo(double value)
     {
@@ -351,13 +369,18 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
     public void ApplyUserOffset(double delta)
     {
         double adjusted = Physics.ApplyPhysicsToUserOffset(this, delta);
-        SetPixels(Pixels - adjusted);
+        double targetPixels = Pixels - adjusted;
+        UpdateUserScrollDirection(targetPixels);
+        SetPixels(targetPixels);
     }
 
     public void ApplyPointerScrollDelta(double delta)
     {
+        BeginActivity(new PointerScrollActivity(this));
+        double targetPixels = Pixels + delta;
+        UpdateUserScrollDirection(targetPixels);
+        SetPixels(targetPixels);
         GoIdle();
-        SetPixels(Pixels + delta);
     }
 
     public virtual bool ApplyViewportDimension(double viewportDimension)
@@ -385,6 +408,7 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
     public override void Dispose()
     {
         _activity.Dispose();
+        IsScrollingNotifier.Dispose();
         base.Dispose();
     }
 
@@ -397,6 +421,7 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
 
         _activity.Dispose();
         _activity = activity;
+        IsScrollingNotifier.Value = activity is not IdleScrollActivity;
     }
 
     internal void GoIdle()
@@ -435,5 +460,17 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
         _pixels = newPixels;
         NotifyListeners();
         return true;
+    }
+
+    private void UpdateUserScrollDirection(double targetPixels)
+    {
+        if (targetPixels < Pixels)
+        {
+            _userScrollDirection = ScrollDirection.Forward;
+        }
+        else if (targetPixels > Pixels)
+        {
+            _userScrollDirection = ScrollDirection.Reverse;
+        }
     }
 }

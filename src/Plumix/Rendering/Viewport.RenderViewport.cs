@@ -12,6 +12,7 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer
     private Axis _axis;
     private AxisDirection _axisDirection;
     private GrowthDirection _growthDirection;
+    private ScrollDirection _userScrollDirection;
     private double _offsetPixels;
     private double _cacheExtent;
     private CacheExtentStyle _cacheExtentStyle;
@@ -30,12 +31,14 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer
         bool shrinkWrap = false,
         Action<double, double, double>? onViewportMetricsChanged = null,
         RenderBox? child = null,
-        Clip clipBehavior = Clip.HardEdge)
+        Clip clipBehavior = Clip.HardEdge,
+        ScrollDirection userScrollDirection = ScrollDirection.Idle)
     {
         _container = new RenderBoxContainerDefaultsMixin<RenderSliver, SliverPhysicalParentData>(this);
         _axisDirection = axisDirection ?? ScrollDirectionUtils.DefaultAxisDirection(axis);
         _axis = ScrollDirectionUtils.AxisDirectionToAxis(_axisDirection);
         _growthDirection = growthDirection;
+        _userScrollDirection = userScrollDirection;
         _offsetPixels = offsetPixels;
         _cacheExtent = Math.Max(0, cacheExtent);
         _cacheExtentStyle = cacheExtentStyle;
@@ -96,6 +99,21 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer
             }
 
             _growthDirection = value;
+            MarkNeedsLayout();
+        }
+    }
+
+    public ScrollDirection UserScrollDirection
+    {
+        get => _userScrollDirection;
+        set
+        {
+            if (_userScrollDirection == value)
+            {
+                return;
+            }
+
+            _userScrollDirection = value;
             MarkNeedsLayout();
         }
     }
@@ -450,7 +468,8 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer
                 AxisDirection: _axisDirection,
                 GrowthDirection: _growthDirection,
                 Overlap: maxPaintOffset - layoutOffset,
-                PrecedingScrollExtent: precedingScrollExtent));
+                PrecedingScrollExtent: precedingScrollExtent,
+                UserScrollDirection: _userScrollDirection));
 
             if (Math.Abs(child.Geometry.ScrollOffsetCorrection) > 0.0001)
             {

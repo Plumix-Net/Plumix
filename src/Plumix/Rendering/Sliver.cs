@@ -17,7 +17,8 @@ public readonly record struct SliverConstraints(
     AxisDirection AxisDirection = AxisDirection.Down,
     GrowthDirection GrowthDirection = GrowthDirection.Forward,
     double Overlap = 0,
-    double PrecedingScrollExtent = 0) : IConstraints
+    double PrecedingScrollExtent = 0,
+    ScrollDirection UserScrollDirection = ScrollDirection.Idle) : IConstraints
 {
     public bool IsTight => false;
 

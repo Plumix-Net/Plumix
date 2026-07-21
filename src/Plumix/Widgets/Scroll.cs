@@ -415,7 +415,18 @@ public sealed class Scrollable : StatefulWidget
         return new ScrollableState();
     }
 
-    private sealed class ScrollableState : State
+    public static ScrollableState? MaybeOf(BuildContext context)
+    {
+        return context.FindAncestorStateOfType<ScrollableState>();
+    }
+
+    public static ScrollableState Of(BuildContext context)
+    {
+        return MaybeOf(context)
+               ?? throw new InvalidOperationException("Scrollable operation requested with no Scrollable ancestor.");
+    }
+
+    public sealed class ScrollableState : State
     {
         private ScrollController? _fallbackController;
         private ScrollController? _attachedController;
@@ -423,6 +434,8 @@ public sealed class Scrollable : StatefulWidget
         private bool _isApplyingDrag;
 
         private Scrollable CurrentWidget => (Scrollable)Element.Widget;
+
+        public ScrollPosition Position => _position;
 
         public override void InitState()
         {
@@ -477,6 +490,7 @@ public sealed class Scrollable : StatefulWidget
                     axis: widget.Axis,
                     axisDirection: axisDirection,
                     growthDirection: GrowthDirection.Forward,
+                    userScrollDirection: _position.UserScrollDirection,
                     offsetPixels: _position.Pixels,
                     cacheExtent: widget.CacheExtent,
                     cacheExtentStyle: widget.CacheExtentStyle,
@@ -690,11 +704,13 @@ public sealed class Viewport : MultiChildRenderObjectWidget
         IReadOnlyList<Widget> slivers,
         Action<double, double, double>? onViewportMetricsChanged = null,
         Key? key = null,
-        Clip clipBehavior = Clip.HardEdge) : base(slivers, key)
+        Clip clipBehavior = Clip.HardEdge,
+        ScrollDirection userScrollDirection = ScrollDirection.Idle) : base(slivers, key)
     {
         Axis = axis;
         AxisDirection = axisDirection;
         GrowthDirection = growthDirection;
+        UserScrollDirection = userScrollDirection;
         OffsetPixels = offsetPixels;
         CacheExtent = cacheExtent;
         CacheExtentStyle = cacheExtentStyle;
@@ -708,6 +724,8 @@ public sealed class Viewport : MultiChildRenderObjectWidget
     public AxisDirection AxisDirection { get; }
 
     public GrowthDirection GrowthDirection { get; }
+
+    public ScrollDirection UserScrollDirection { get; }
 
     public double OffsetPixels { get; }
 
@@ -727,6 +745,7 @@ public sealed class Viewport : MultiChildRenderObjectWidget
             axis: Axis,
             axisDirection: AxisDirection,
             growthDirection: GrowthDirection,
+            userScrollDirection: UserScrollDirection,
             offsetPixels: OffsetPixels,
             cacheExtent: CacheExtent,
             cacheExtentStyle: CacheExtentStyle,
@@ -741,6 +760,7 @@ public sealed class Viewport : MultiChildRenderObjectWidget
         viewport.Axis = Axis;
         viewport.AxisDirection = AxisDirection;
         viewport.GrowthDirection = GrowthDirection;
+        viewport.UserScrollDirection = UserScrollDirection;
         viewport.OffsetPixels = OffsetPixels;
         viewport.CacheExtent = CacheExtent;
         viewport.CacheExtentStyle = CacheExtentStyle;
