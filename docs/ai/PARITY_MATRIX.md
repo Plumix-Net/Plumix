@@ -4,7 +4,7 @@ Scope: structural parity of sample routes/modules between C# and Dart samples.
 
 Policy note: sample parity updates must follow `docs/ai/PORTING_MODE.md` (Dart source of truth, strict `1:1` default, documented divergences).
 
-Last checked: 2026-07-20
+Last checked: 2026-07-21
 
 Status legend:
 
@@ -101,7 +101,7 @@ Status legend:
 | LayoutBuilder + OrientationBuilder demo | `src/Sample/Plumix.Sample/Demos/General/LayoutBuilderDemoPage.cs` | `dart_sample/lib/demos/general/layout_builder_demo_page.dart` | verify-runtime | Demonstrates live layout-time constraints, compact/wide breakpoint composition, and deterministic landscape/portrait probes. |
 | Placeholder + GridPaper demo | `src/Sample/Plumix.Sample/Demos/General/DebugPaintingDemoPage.cs` | `dart_sample/lib/demos/general/debug_painting_demo_page.dart` | verify-runtime | Demonstrates unbounded fallback sizing with optional child shrinkage plus default/custom foreground grid intervals, divisions, subdivisions, colors, and stroke hierarchy. |
 | Flow + RepaintBoundary demo | `src/Sample/Plumix.Sample/Demos/General/FlowDemoPage.cs` | `dart_sample/lib/demos/general/flow_demo_page.dart` | verify-runtime | Demonstrates collapsed/spread paint-time child transforms, per-child opacity, default automatic repaint-boundary wrapping, and an explicit isolated footer boundary. |
-| Image + RawImage demo | `src/Sample/Plumix.Sample/Demos/General/ImageDemoPage.cs` | `dart_sample/lib/demos/general/image_demo_page.dart` | verify-runtime | Demonstrates provider-owned versus decoded-image paths, frame placeholders, aspect fit, opacity, semantic labels, and LTR/RTL directional alignment/mirroring. |
+| Image controls demo | `src/Sample/Plumix.Sample/Demos/General/ImageDemoPage.cs` | `dart_sample/lib/demos/general/image_demo_page.dart` | verify-runtime | Demonstrates `Image`/`RawImage` provider and decoded paths, frame placeholders, fit/opacity/RTL behavior, restartable `FadeInImage` placeholder transitions, and IconTheme-driven `ImageIcon`. |
 | Shared counter widgets | `src/Sample/Plumix.Sample/CounterWidgets.cs` | `dart_sample/lib/counter_widgets.dart` | verify-runtime | Includes keyed/movable/keep-alive helper widgets and `CounterTapButton` centered text alignment parity. |
 | Counter state container | `src/Sample/Plumix.Sample/CounterAppModel.cs`, `src/Sample/Plumix.Sample/CounterScope.cs` | `dart_sample/lib/counter_app_model.dart`, `dart_sample/lib/counter_scope.dart` | done | |
 

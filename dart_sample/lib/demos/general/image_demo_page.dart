@@ -22,6 +22,8 @@ class _ImageDemoPageState extends State<ImageDemoPage> {
   bool _cover = false;
   bool _rtl = false;
   bool _dimmed = false;
+  int _fadeGeneration = 0;
+  late Uint8List _fadeTargetBytes = Uint8List.fromList(_sampleBytes);
 
   @override
   void initState() {
@@ -56,9 +58,9 @@ class _ImageDemoPageState extends State<ImageDemoPage> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         spacing: 12,
         children: <Widget>[
-          const Text('Image + RawImage', style: TextStyle(fontSize: 20)),
+          const Text('Image controls', style: TextStyle(fontSize: 20)),
           const Text(
-            'Image owns provider/stream state and builders; RawImage paints an already decoded image.',
+            'Provider streams, decoded handles, placeholder cross-fades, and image-backed icons.',
             style: TextStyle(fontSize: 14, color: Colors.black54),
           ),
           Row(
@@ -76,44 +78,87 @@ class _ImageDemoPageState extends State<ImageDemoPage> {
                 _dimmed ? 'opacity: 45%' : 'opacity: 100%',
                 () => _dimmed = !_dimmed,
               ),
+              _controlButton('restart fade', () {
+                _fadeGeneration++;
+                _fadeTargetBytes = Uint8List.fromList(_sampleBytes);
+              }),
             ],
           ),
           Expanded(
-            child: Row(
+            child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
+              spacing: 10,
               children: <Widget>[
-                _probe(
-                  'Image.memory',
-                  Image.memory(
-                    _sampleBytes,
-                    width: 150,
-                    height: 150,
-                    fit: fit,
-                    alignment: AlignmentDirectional.centerStart,
-                    matchTextDirection: true,
-                    opacity: AlwaysStoppedAnimation<double>(opacity),
-                    semanticLabel: 'Memory image sample',
-                    frameBuilder: (context, child, frame, synchronous) {
-                      return frame != null
-                          ? child
-                          : const Placeholder(
-                              fallbackWidth: 150,
-                              fallbackHeight: 150,
-                            );
-                    },
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: <Widget>[
+                    _probe(
+                      'Image.memory',
+                      Image.memory(
+                        _sampleBytes,
+                        width: 96,
+                        height: 96,
+                        fit: fit,
+                        alignment: AlignmentDirectional.centerStart,
+                        matchTextDirection: true,
+                        opacity: AlwaysStoppedAnimation<double>(opacity),
+                        semanticLabel: 'Memory image sample',
+                        frameBuilder: (context, child, frame, synchronous) {
+                          return frame != null
+                              ? child
+                              : const Placeholder(
+                                  fallbackWidth: 96,
+                                  fallbackHeight: 96,
+                                );
+                        },
+                      ),
+                    ),
+                    _probe(
+                      'RawImage',
+                      RawImage(
+                        image: _rawImage,
+                        width: 96,
+                        height: 96,
+                        fit: fit,
+                        alignment: AlignmentDirectional.centerStart,
+                        matchTextDirection: true,
+                        opacity: AlwaysStoppedAnimation<double>(opacity),
+                      ),
+                    ),
+                  ],
                 ),
-                _probe(
-                  'RawImage',
-                  RawImage(
-                    image: _rawImage,
-                    width: 150,
-                    height: 150,
-                    fit: fit,
-                    alignment: AlignmentDirectional.centerStart,
-                    matchTextDirection: true,
-                    opacity: AlwaysStoppedAnimation<double>(opacity),
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: <Widget>[
+                    _probe(
+                      'FadeInImage',
+                      FadeInImage(
+                        key: ValueKey<int>(_fadeGeneration),
+                        placeholder: MemoryImage(_sampleBytes),
+                        image: MemoryImage(_fadeTargetBytes),
+                        width: 96,
+                        height: 96,
+                        fit: fit,
+                        placeholderColor: const Color(0xFF808080),
+                        color: const Color(0xFF4682B4),
+                        imageSemanticLabel: 'Cross-fading image sample',
+                      ),
+                    ),
+                    _probe(
+                      'ImageIcon',
+                      IconTheme(
+                        data: IconThemeData(
+                          color: const Color(0xFF800080),
+                          size: 64,
+                          opacity: opacity,
+                        ),
+                        child: ImageIcon(
+                          MemoryImage(_sampleBytes),
+                          semanticLabel: 'Image icon sample',
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -151,8 +196,8 @@ class _ImageDemoPageState extends State<ImageDemoPage> {
       children: <Widget>[
         Text(label, style: const TextStyle(fontSize: 13)),
         Container(
-          width: 180,
-          height: 180,
+          width: 150,
+          height: 112,
           color: const Color(0xFFE8EEF5),
           alignment: Alignment.center,
           child: child,

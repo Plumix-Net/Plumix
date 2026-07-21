@@ -8,7 +8,7 @@ Use this block as the fastest machine-readable status summary.
 
 ```yaml
 framework_plan_version: 1
-last_updated: 2026-07-20
+last_updated: 2026-07-21
 north_star: "Flutter-like widget/rendering framework in C# with Avalonia as host infrastructure."
 current_phase: "M4 material library rewrite (theme/scaffold/material controls) in progress."
 status:
@@ -207,6 +207,10 @@ Completion note:
   stream/listener ownership, frame/loading/error builders, gapless replacement, paused-stream keep-alive,
   aspect-preserving layout, fit/repeat/directional paint, opacity, semantics, focused tests, and mirrored C#/Dart
   probes.
+- Continued paired core image-control coverage with `FadeInImage` + `ImageIcon`, including source-shaped provider
+  factories, gapless placeholder/target streams, synchronous-load bypass, sequential fade timing, IconTheme
+  size/color/opacity resolution, semantics, focused tests, and expanded mirrored C#/Dart image probes. Shared
+  `Curves.easeIn`/`easeOut` now use Flutter's exact cubic Bézier definitions.
 - Implicit-animations sample viewport hardening: both samples now share an always-visible scrollbar and scroll
   controller around the complete probe column, preventing bottom overflow on short desktop windows.
 

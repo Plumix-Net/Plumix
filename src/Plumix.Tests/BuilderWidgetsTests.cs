@@ -606,11 +606,11 @@ public sealed class BuilderWidgetsTests : IDisposable
         double now = Scheduler.CurrentSeconds;
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.50));
         owner.FlushBuild();
-        Assert.InRange(values[^1], 0.20, 0.30);
+        Assert.InRange(values[^1], 0.30, 0.33);
 
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.25));
         owner.FlushBuild();
-        Assert.InRange(values[^1], 0.50, 0.60);
+        Assert.InRange(values[^1], 0.60, 0.65);
 
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.75));
         owner.FlushBuild();
@@ -645,7 +645,7 @@ public sealed class BuilderWidgetsTests : IDisposable
 
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.75));
         owner.FlushBuild();
-        Assert.InRange(values[^1], 0.20, 0.30);
+        Assert.InRange(values[^1], 0.30, 0.33);
 
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 4.25));
         owner.FlushBuild();

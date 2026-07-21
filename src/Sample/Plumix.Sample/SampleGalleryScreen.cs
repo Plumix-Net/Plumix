@@ -278,8 +278,8 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             () => new FlowDemoPage()),
         new(
             SampleRoutes.Image,
-            "Image + RawImage",
-            "provider streams + decoded image layout/paint",
+            "Image controls",
+            "streams + decoded handles + fade + image icons",
             () => new ImageDemoPage()),
     ];
 

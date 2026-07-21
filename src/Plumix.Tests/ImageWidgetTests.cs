@@ -68,6 +68,180 @@ public sealed class ImageWidgetTests : IDisposable
     }
 
     [Fact]
+    public void FadeInImage_DefaultsFactoriesAndGuardsMatchFlutterSurface()
+    {
+        byte[] bytes = [1, 2, 3];
+        var placeholder = new MemoryImage(bytes);
+        var target = new NetworkImage("https://example.com/target.png");
+        var fade = new FadeInImage(placeholder, target);
+
+        Assert.Same(placeholder, fade.Placeholder);
+        Assert.Same(target, fade.Image);
+        Assert.Equal(TimeSpan.FromMilliseconds(300), fade.FadeOutDuration);
+        Assert.Equal(TimeSpan.FromMilliseconds(700), fade.FadeInDuration);
+        Assert.Equal(0.684643, fade.FadeOutCurve(0.5), 6);
+        Assert.Equal(0.315357, fade.FadeInCurve(0.5), 6);
+        Assert.Equal(FilterQuality.Medium, fade.FilterQuality);
+        Assert.Null(fade.PlaceholderFilterQuality);
+        Assert.Equal((AlignmentGeometry)Alignment.Center, fade.Alignment);
+        Assert.Equal(ImageRepeat.NoRepeat, fade.Repeat);
+        Assert.False(fade.ExcludeFromSemantics);
+        Assert.False(fade.MatchTextDirection);
+
+        var memoryNetwork = FadeInImage.MemoryNetwork(
+            bytes,
+            "https://example.com/memory.png",
+            placeholderScale: 2.0,
+            imageScale: 3.0,
+            placeholderCacheWidth: 12,
+            imageCacheHeight: 18);
+        var placeholderResize = Assert.IsType<ResizeImage>(memoryNetwork.Placeholder);
+        var memoryProvider = Assert.IsType<MemoryImage>(placeholderResize.ImageProvider);
+        var imageResize = Assert.IsType<ResizeImage>(memoryNetwork.Image);
+        var networkProvider = Assert.IsType<NetworkImage>(imageResize.ImageProvider);
+        Assert.Equal(12, placeholderResize.Width);
+        Assert.Equal(2.0, memoryProvider.Scale);
+        Assert.Equal(18, imageResize.Height);
+        Assert.Equal(3.0, networkProvider.Scale);
+
+        var assetNetwork = FadeInImage.AssetNetwork(
+            "images/placeholder.png",
+            "https://example.com/asset.png",
+            placeholderScale: 2.0);
+        Assert.IsType<ExactAssetImage>(assetNetwork.Placeholder);
+        Assert.IsType<NetworkImage>(assetNetwork.Image);
+        Assert.IsType<AssetImage>(FadeInImage.AssetNetwork(
+            "images/placeholder.png",
+            "https://example.com/asset.png").Placeholder);
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => new FadeInImage(
+            placeholder,
+            target,
+            fadeOutDuration: TimeSpan.FromMilliseconds(-1)));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new FadeInImage(placeholder, target, width: -1));
+        Assert.Throws<ArgumentOutOfRangeException>(() => FadeInImage.MemoryNetwork(
+            bytes,
+            "https://example.com/image.png",
+            imageCacheWidth: 0));
+    }
+
+    [Fact]
+    public void ImageIcon_UsesIconThemeSizeColorOpacityAndSemantics()
+    {
+        byte[] bytes = [1, 2, 3];
+        var provider = new MemoryImage(bytes);
+        var icon = new ImageIcon(provider, semanticLabel: "Photo icon");
+        Widget widget = new IconTheme(
+            new IconThemeData(Color: Colors.Red, Size: 36, Opacity: 0.5),
+            icon);
+        using var harness = new WidgetRenderHarness(widget);
+
+        Assert.Same(provider, icon.Image);
+        var image = Assert.IsType<Image>(harness.FindWidget<Image>());
+        Assert.Same(provider, image.ImageProvider);
+        Assert.Equal(36, image.Width);
+        Assert.Equal(36, image.Height);
+        Assert.Equal(BoxFit.ScaleDown, image.Fit);
+        Assert.True(image.ExcludeFromSemantics);
+        Assert.Equal(Color.FromArgb(128, 255, 0, 0), image.Color);
+
+        var semantics = Assert.IsType<Semantics>(harness.FindWidget<Semantics>());
+        Assert.Equal("Photo icon", semantics.Label);
+        Assert.False(semantics.Flags.HasFlag(SemanticsFlags.IsImage));
+
+        using var emptyHarness = new WidgetRenderHarness(new ImageIcon(null, semanticLabel: "Empty icon"));
+        var box = Assert.IsType<SizedBox>(emptyHarness.FindWidget<SizedBox>());
+        Assert.Equal(24, box.Width);
+        Assert.Equal(24, box.Height);
+        Assert.Throws<ArgumentOutOfRangeException>(() => new ImageIcon(provider, size: -1));
+    }
+
+    [Fact]
+    public async Task FadeInImage_FadesPlaceholderThenTargetAndPublishesSingleImageSemantics()
+    {
+        var targetCompletion = new TaskCompletionSource<ImageInfo>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var placeholderImage = new FakeImage(new Size(10, 10));
+        var targetImage = new FakeImage(new Size(20, 20));
+        var placeholderProvider = new SynchronousImageProvider("fade-placeholder", placeholderImage);
+        var targetProvider = new TestImageProvider("fade-target", targetCompletion.Task);
+        var fade = new FadeInImage(
+            placeholderProvider,
+            targetProvider,
+            imageSemanticLabel: "Fading image",
+            fadeOutDuration: TimeSpan.FromMilliseconds(300),
+            fadeInDuration: TimeSpan.FromMilliseconds(700),
+            width: 40,
+            height: 40);
+        using var harness = new WidgetRenderHarness(fade);
+
+        await PumpUntilAsync(
+            harness,
+            () => FindRenderImages(harness.RenderView).Any(image => ReferenceEquals(image.Image, placeholderImage)));
+        IReadOnlyList<RenderImage> initialImages = FindRenderImages(harness.RenderView);
+        RenderImage initialTarget = Assert.Single(initialImages, image => image.Image is null);
+        RenderImage placeholder = Assert.Single(
+            initialImages,
+            image => ReferenceEquals(image.Image, placeholderImage));
+        Assert.Equal(0.0, initialTarget.Opacity!.Value, 6);
+        Assert.Equal(1.0, placeholder.Opacity!.Value, 6);
+
+        targetCompletion.SetResult(new ImageInfo(targetImage));
+        await PumpUntilAsync(
+            harness,
+            () => FindRenderImages(harness.RenderView).Any(image => ReferenceEquals(image.Image, targetImage)));
+        double start = Scheduler.CurrentSeconds;
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(start + 0.15));
+        harness.FlushBuild();
+
+        IReadOnlyList<RenderImage> fadeOutImages = FindRenderImages(harness.RenderView);
+        RenderImage fadingTarget = Assert.Single(
+            fadeOutImages,
+            image => ReferenceEquals(image.Image, targetImage));
+        RenderImage fadingPlaceholder = Assert.Single(
+            fadeOutImages,
+            image => ReferenceEquals(image.Image, placeholderImage));
+        Assert.Equal(0.0, fadingTarget.Opacity!.Value, 6);
+        Assert.InRange(fadingPlaceholder.Opacity!.Value, 0.27, 0.35);
+
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(start + 0.65));
+        harness.FlushBuild();
+        IReadOnlyList<RenderImage> fadeInImages = FindRenderImages(harness.RenderView);
+        fadingTarget = Assert.Single(fadeInImages, image => ReferenceEquals(image.Image, targetImage));
+        fadingPlaceholder = Assert.Single(
+            fadeInImages,
+            image => ReferenceEquals(image.Image, placeholderImage));
+        Assert.InRange(fadingTarget.Opacity!.Value, 0.27, 0.35);
+        Assert.Equal(0.0, fadingPlaceholder.Opacity!.Value, 6);
+
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(start + 1.1));
+        harness.FlushBuild();
+        RenderImage finalImage = Assert.Single(FindRenderImages(harness.RenderView));
+        Assert.Same(targetImage, finalImage.Image);
+        Assert.Equal(1.0, finalImage.Opacity!.Value, 6);
+
+        harness.Pump(new Size(80, 80));
+        harness.Pipeline.FlushSemantics();
+        var root = Assert.IsType<SemanticsNode>(harness.Pipeline.SemanticsOwner.RootNode);
+        var imageNode = Assert.Single(Flatten(root), node => node.Flags.HasFlag(SemanticsFlags.IsImage));
+        Assert.Equal("Fading image", imageNode.Label);
+    }
+
+    [Fact]
+    public void FadeInImage_SynchronouslyLoadedTargetSkipsPlaceholder()
+    {
+        var targetImage = new FakeImage(new Size(20, 20));
+        var placeholderImage = new FakeImage(new Size(10, 10));
+        var fade = new FadeInImage(
+            new SynchronousImageProvider("sync-placeholder", placeholderImage),
+            new SynchronousImageProvider("sync-target", targetImage));
+        using var harness = new WidgetRenderHarness(fade);
+
+        RenderImage image = Assert.Single(FindRenderImages(harness.RenderView));
+        Assert.Same(targetImage, image.Image);
+        Assert.Equal(1.0, image.Opacity!.Value, 6);
+    }
+
+    [Fact]
     public void RenderImage_PreservesIntrinsicAspectRatioAndHonorsExplicitDimensions()
     {
         var image = new FakeImage(new Size(240, 120));
@@ -239,6 +413,23 @@ public sealed class ImageWidgetTests : IDisposable
         return result;
     }
 
+    private static IReadOnlyList<RenderImage> FindRenderImages(RenderObject root)
+    {
+        var result = new List<RenderImage>();
+        void Visit(RenderObject current)
+        {
+            if (current is RenderImage image)
+            {
+                result.Add(image);
+            }
+
+            current.VisitChildren(Visit);
+        }
+
+        Visit(root);
+        return result;
+    }
+
     private static IEnumerable<SemanticsNode> Flatten(SemanticsNode node)
     {
         yield return node;
@@ -269,6 +460,31 @@ public sealed class ImageWidgetTests : IDisposable
         protected override ImageStreamCompleter LoadImage(string key)
         {
             return LastCompleter = new OneFrameImageStreamCompleter(_image, key);
+        }
+    }
+
+    private sealed class SynchronousImageProvider : ImageProvider<string>
+    {
+        private readonly string _key;
+        private readonly IImage _image;
+
+        public SynchronousImageProvider(string key, IImage image)
+        {
+            _key = key;
+            _image = image;
+        }
+
+        public override ValueTask<string> ObtainKey(ImageConfiguration configuration) => ValueTask.FromResult(_key);
+
+        protected override ImageStreamCompleter LoadImage(string key) => new SynchronousImageCompleter(_image, key);
+    }
+
+    private sealed class SynchronousImageCompleter : ImageStreamCompleter
+    {
+        public SynchronousImageCompleter(IImage image, string debugLabel)
+        {
+            DebugLabel = debugLabel;
+            SetImage(new ImageInfo(image, debugLabel: debugLabel));
         }
     }
 
@@ -306,6 +522,8 @@ public sealed class ImageWidgetTests : IDisposable
 
         public PipelineOwner Pipeline { get; }
 
+        public T? FindWidget<T>() where T : Widget => FindWidget<T>(_root);
+
         public void FlushBuild() => _owner.FlushBuild();
 
         public void Update(Widget widget)
@@ -327,6 +545,18 @@ public sealed class ImageWidgetTests : IDisposable
         {
             _root.Unmount();
             Scheduler.PumpFrameForTests();
+        }
+
+        private static T? FindWidget<T>(Element element) where T : Widget
+        {
+            if (element.Widget is T widget)
+            {
+                return widget;
+            }
+
+            T? result = null;
+            element.VisitChildren(child => result ??= FindWidget<T>(child));
+            return result;
         }
 
         private sealed class HarnessRootElement : Element, IRenderObjectHost

@@ -1,5 +1,11 @@
 # Changelog
 
+- Breaking: added paired Flutter core `FadeInImage` + `ImageIcon` ports with memory/asset-network factories,
+  gapless stream replacement, cached-image bypass, sequential placeholder/target fades, independent image styling,
+  IconTheme size/color/opacity resolution, single-node semantics, focused tests, and mirrored C#/Dart probes.
+  `Curves.EaseIn`/`EaseOut` now use Flutter's exact cubic Bézier definitions instead of quadratic approximations;
+  synchronized published packages at `1.0.0-alpha.1`.
+
 - Added paired Flutter core `Image` + `RawImage` ports with provider constructors, stream/cache lifecycle,
   frame/loading/error builder ordering, gapless replacement, paused-stream keep-alive, aspect-preserving layout,
   fit/repeat/directional paint, opacity updates, semantics, focused tests, and mirrored C#/Dart probes. Advanced

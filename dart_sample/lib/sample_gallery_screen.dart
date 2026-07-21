@@ -598,8 +598,8 @@ class SampleGalleryScreen extends StatelessWidget {
         ),
         SampleRouteDefinition(
           routeName: SampleRoutes.image,
-          title: 'Image + RawImage',
-          subtitle: 'provider streams + decoded image layout/paint',
+          title: 'Image controls',
+          subtitle: 'streams + decoded handles + fade + image icons',
           builder: () => const ImageDemoPage(),
         ),
       ];

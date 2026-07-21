@@ -31,6 +31,8 @@ internal sealed class ImageDemoPageState : State
     private bool _cover;
     private bool _rtl;
     private bool _dimmed;
+    private int _fadeGeneration;
+    private byte[] _fadeTargetBytes = (byte[])SampleBytes.Clone();
 
     public override void DidChangeDependencies()
     {
@@ -66,9 +68,9 @@ internal sealed class ImageDemoPageState : State
             spacing: 12,
             children:
             [
-                new Text("Image + RawImage", fontSize: 20, color: Colors.Black),
+                new Text("Image controls", fontSize: 20, color: Colors.Black),
                 new Text(
-                    "Image owns provider/stream state and builders; RawImage paints an already decoded image.",
+                    "Provider streams, decoded handles, placeholder cross-fades, and image-backed icons.",
                     fontSize: 14,
                     color: Colors.DimGray),
                 new Row(
@@ -78,38 +80,74 @@ internal sealed class ImageDemoPageState : State
                         ControlButton(_cover ? "fit: cover" : "fit: contain", () => _cover = !_cover),
                         ControlButton(_rtl ? "direction: RTL" : "direction: LTR", () => _rtl = !_rtl),
                         ControlButton(_dimmed ? "opacity: 45%" : "opacity: 100%", () => _dimmed = !_dimmed),
+                        ControlButton("restart fade", () =>
+                        {
+                            _fadeGeneration++;
+                            _fadeTargetBytes = (byte[])SampleBytes.Clone();
+                        }),
                     ]),
                 new Expanded(
-                    child: new Row(
+                    child: new Column(
                         mainAxisAlignment: MainAxisAlignment.SpaceAround,
+                        spacing: 10,
                         children:
                         [
-                            Probe(
-                                "Image.memory",
-                                Plumix.Widgets.Image.Memory(
-                                    SampleBytes,
-                                    width: 150,
-                                    height: 150,
-                                    fit: fit,
-                                    alignment: AlignmentDirectional.CenterStart,
-                                    matchTextDirection: true,
-                                    opacity: new AlwaysStoppedAnimation<double>(opacity),
-                                    semanticLabel: "Memory image sample",
-                                    frameBuilder: (_, child, frame, _) => frame.HasValue
-                                        ? child
-                                        : new Placeholder(fallbackWidth: 150, fallbackHeight: 150))),
-                            Probe(
-                                "RawImage",
-                                new RawImage(
-                                    image: _rawInfo?.Image,
-                                    debugImageLabel: _rawInfo?.DebugLabel,
-                                    width: 150,
-                                    height: 150,
-                                    scale: _rawInfo?.Scale ?? 1.0,
-                                    fit: fit,
-                                    alignment: AlignmentDirectional.CenterStart,
-                                    matchTextDirection: true,
-                                    opacity: new AlwaysStoppedAnimation<double>(opacity))),
+                            new Row(
+                                mainAxisAlignment: MainAxisAlignment.SpaceAround,
+                                children:
+                                [
+                                    Probe(
+                                        "Image.memory",
+                                        Plumix.Widgets.Image.Memory(
+                                            SampleBytes,
+                                            width: 96,
+                                            height: 96,
+                                            fit: fit,
+                                            alignment: AlignmentDirectional.CenterStart,
+                                            matchTextDirection: true,
+                                            opacity: new AlwaysStoppedAnimation<double>(opacity),
+                                            semanticLabel: "Memory image sample",
+                                            frameBuilder: (_, child, frame, _) => frame.HasValue
+                                                ? child
+                                                : new Placeholder(fallbackWidth: 96, fallbackHeight: 96))),
+                                    Probe(
+                                        "RawImage",
+                                        new RawImage(
+                                            image: _rawInfo?.Image,
+                                            debugImageLabel: _rawInfo?.DebugLabel,
+                                            width: 96,
+                                            height: 96,
+                                            scale: _rawInfo?.Scale ?? 1.0,
+                                            fit: fit,
+                                            alignment: AlignmentDirectional.CenterStart,
+                                            matchTextDirection: true,
+                                            opacity: new AlwaysStoppedAnimation<double>(opacity))),
+                                ]),
+                            new Row(
+                                mainAxisAlignment: MainAxisAlignment.SpaceAround,
+                                children:
+                                [
+                                    Probe(
+                                        "FadeInImage",
+                                        new FadeInImage(
+                                            key: new ValueKey<int>(_fadeGeneration),
+                                            placeholder: SampleProvider,
+                                            image: new MemoryImage(_fadeTargetBytes),
+                                            width: 96,
+                                            height: 96,
+                                            fit: fit,
+                                            placeholderColor: Color.Parse("#FF808080"),
+                                            color: Color.Parse("#FF4682B4"),
+                                            imageSemanticLabel: "Cross-fading image sample")),
+                                    Probe(
+                                        "ImageIcon",
+                                        new IconTheme(
+                                            new IconThemeData(
+                                                Color: Color.Parse("#FF800080"),
+                                                Size: 64,
+                                                Opacity: opacity),
+                                            new ImageIcon(SampleProvider, semanticLabel: "Image icon sample"))),
+                                ]),
                         ])),
                 new Text(
                     _rawInfo is null ? "Raw image: decoding..." : "Raw image: decoded handle is active",
@@ -150,8 +188,8 @@ internal sealed class ImageDemoPageState : State
             [
                 new Text(label, fontSize: 13, color: Colors.Black),
                 new Container(
-                    width: 180,
-                    height: 180,
+                    width: 150,
+                    height: 112,
                     color: Color.Parse("#FFE8EEF5"),
                     alignment: Alignment.Center,
                     child: child),

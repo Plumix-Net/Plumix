@@ -22,8 +22,11 @@ public static class Curves
         return t * t * (3 - 2 * t);
     }
 
-    public static double EaseIn(double t) => t * t;
-    public static double EaseOut(double t) => 1 - (1 - t) * (1 - t);
+    // Flutter Curves.easeIn: Cubic(0.42, 0.0, 1.0, 1.0).
+    public static double EaseIn(double t) => CubicBezier(t, 0.42, 0.0, 1.0, 1.0);
+
+    // Flutter Curves.easeOut: Cubic(0.0, 0.0, 0.58, 1.0).
+    public static double EaseOut(double t) => CubicBezier(t, 0.0, 0.0, 0.58, 1.0);
 
     public static double FastOutSlowIn(double t)
     {
