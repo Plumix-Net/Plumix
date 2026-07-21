@@ -37,6 +37,7 @@ import 'demos/cupertino/checkbox_demo_page.dart';
 import 'counter_screen.dart';
 import 'demos/general/container_demo_page.dart';
 import 'demos/general/custom_multi_child_layout_demo_page.dart';
+import 'demos/general/dismissible_size_changed_layout_demo_page.dart';
 import 'demos/general/custom_slivers_demo_page.dart';
 import 'demos/general/decorated_box_demo_page.dart';
 import 'demos/general/debug_painting_demo_page.dart';
@@ -609,6 +610,13 @@ class SampleGalleryScreen extends StatelessWidget {
           subtitle:
               'delegate slots + dependent sizing + centered/start LTR/RTL toolbar',
           builder: () => const CustomMultiChildLayoutDemoPage(),
+        ),
+        SampleRouteDefinition(
+          routeName: SampleRoutes.dismissibleSizeChangedLayout,
+          title: 'Dismissible + size notifications',
+          subtitle:
+              'directional swipe thresholds + collapse + layout-change notifications',
+          builder: () => const DismissibleSizeChangedLayoutDemoPage(),
         ),
       ];
 
