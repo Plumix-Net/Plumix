@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'demos/general/align_demo_page.dart';
+import 'demos/general/async_builder_demo_page.dart';
 import 'demos/general/animated_list_demo_page.dart';
 import 'demos/general/animated_grid_demo_page.dart';
 import 'demos/material/app_bar_actions_padding_demo_page.dart';
@@ -638,6 +639,12 @@ class SampleGalleryScreen extends StatelessWidget {
           title: 'PopScope + NavigatorPopHandler',
           subtitle: 'route veto/results + nested navigator Back handling',
           builder: () => const NavigationPopDemoPage(),
+        ),
+        SampleRouteDefinition(
+          routeName: SampleRoutes.asyncBuilders,
+          title: 'FutureBuilder + StreamBuilder',
+          subtitle: 'waiting/data/error/done snapshots + source replacement',
+          builder: () => const AsyncBuilderDemoPage(),
         ),
       ];
 

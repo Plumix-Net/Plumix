@@ -1,5 +1,10 @@
 # Changelog
 
+- Added paired Flutter core `FutureBuilder<T>` + `StreamBuilder<T>` ports with source-shaped `AsyncSnapshot<T>` and
+  `ConnectionState`, initial/retained data, waiting/active/done/error transitions, stream-fold hooks, source
+  replacement, stale-completion suppression, focused tests, and a mirrored C#/Dart runtime probe. The C# async
+  substrate maps Dart `Future`/`Stream` to `Task<T>`/`IObservable<T>`; advanced `Plumix` to `0.6.0-alpha.1`.
+
 - Added paired Flutter core `SliverLayoutBuilder` + `SliverSafeArea` ports with layout-phase sliver-constraint
   building, equivalent-constraint rebuild suppression, exact child geometry forwarding, safe-inset/minimum/edge
   composition, focused tests, and a mirrored C#/Dart custom-sliver probe. `SliverConstraints` now implements the

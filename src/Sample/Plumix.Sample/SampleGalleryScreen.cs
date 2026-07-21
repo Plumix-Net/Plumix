@@ -108,6 +108,7 @@ internal static class SampleRoutes
     public const string DismissibleSizeChangedLayout = "/dismissible-size-changed-layout";
     public const string StateStorage = "/state-storage";
     public const string NavigationPop = "/navigation-pop";
+    public const string AsyncBuilders = "/async-builders";
 }
 
 internal readonly record struct SampleRouteDefinition(
@@ -311,6 +312,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "PopScope + NavigatorPopHandler",
             "route veto/results + nested navigator Back handling",
             () => new NavigationPopDemoPage()),
+        new(
+            SampleRoutes.AsyncBuilders,
+            "FutureBuilder + StreamBuilder",
+            "waiting/data/error/done snapshots + source replacement",
+            () => new AsyncBuilderDemoPage()),
     ];
 
     private static readonly IReadOnlyList<SampleMenuTabDefinition> DemoTabs =

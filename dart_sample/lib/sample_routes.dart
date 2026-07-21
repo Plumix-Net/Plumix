@@ -103,6 +103,7 @@ class SampleRoutes {
       '/dismissible-size-changed-layout';
   static const String stateStorage = '/state-storage';
   static const String navigationPop = '/navigation-pop';
+  static const String asyncBuilders = '/async-builders';
 }
 
 class SampleRouteDefinition {
