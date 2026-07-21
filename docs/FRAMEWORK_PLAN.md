@@ -224,6 +224,10 @@ Completion note:
   `PageStorageKey` identity, explicit bucket identifiers, route-owned storage lifetime, automatic
   `ScrollController.keepScrollOffset` restoration, lazy typed values, aspect-selective rebuilds, focused tests, and
   mirrored C#/Dart probes.
+- Continued paired core navigation-control coverage with `PopScope<T>` + `NavigatorPopHandler<T>`, including
+  route-owned pop-entry registration, collective dynamic veto, successful/rejected typed result callbacks,
+  nested-navigator `NavigationNotification` propagation, modern `Form` pop integration, focused tests, and mirrored
+  C#/Dart probes.
 - Implicit-animations sample viewport hardening: both samples now share an always-visible scrollbar and scroll
   controller around the complete probe column, preventing bottom overflow on short desktop windows.
 

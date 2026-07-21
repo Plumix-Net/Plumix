@@ -25,14 +25,33 @@ public sealed class Form : StatefulWidget
         Widget child,
         Action? onChanged = null,
         AutovalidateMode autovalidateMode = AutovalidateMode.Disabled,
-        Key? key = null) : base(key)
+        Key? key = null,
+        bool? canPop = null,
+        PopInvokedCallback? onPopInvoked = null,
+        PopInvokedWithResultCallback<object?>? onPopInvokedWithResult = null) : base(key)
     {
+        if (onPopInvokedWithResult != null && onPopInvoked != null)
+        {
+            throw new ArgumentException(
+                "onPopInvoked and onPopInvokedWithResult cannot both be provided.",
+                nameof(onPopInvoked));
+        }
+
         Child = child ?? throw new ArgumentNullException(nameof(child));
+        CanPop = canPop;
+#pragma warning disable CS0618
+        OnPopInvoked = onPopInvoked;
+#pragma warning restore CS0618
+        OnPopInvokedWithResult = onPopInvokedWithResult;
         OnChanged = onChanged;
         AutovalidateMode = autovalidateMode;
     }
 
     public Widget Child { get; }
+    public bool? CanPop { get; }
+    [Obsolete("Use OnPopInvokedWithResult instead.")]
+    public PopInvokedCallback? OnPopInvoked { get; }
+    public PopInvokedWithResultCallback<object?>? OnPopInvokedWithResult { get; }
     public Action? OnChanged { get; }
     public AutovalidateMode AutovalidateMode { get; }
 
@@ -117,11 +136,36 @@ public sealed class FormState : State
                 break;
         }
 
+        Widget form = new FormScope(this, _generation, Current.Child);
+        if (Current.CanPop != null || Current.OnPopInvokedWithResult != null
+#pragma warning disable CS0618
+            || Current.OnPopInvoked != null)
+#pragma warning restore CS0618
+        {
+            form = new PopScope<object?>(
+                canPop: Current.CanPop ?? true,
+                onPopInvokedWithResult: CallPopInvoked,
+                child: form);
+        }
+
         return new Semantics(
             container: true,
             explicitChildNodes: true,
             role: SemanticsRole.Form,
-            child: new FormScope(this, _generation, Current.Child));
+            child: form);
+    }
+
+    private void CallPopInvoked(bool didPop, object? result)
+    {
+        if (Current.OnPopInvokedWithResult != null)
+        {
+            Current.OnPopInvokedWithResult(didPop, result);
+            return;
+        }
+
+#pragma warning disable CS0618
+        Current.OnPopInvoked?.Invoke(didPop);
+#pragma warning restore CS0618
     }
 
     private void ForceRebuild() => SetState(() => _generation++);

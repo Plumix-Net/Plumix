@@ -82,6 +82,7 @@ import 'sample_routes.dart';
 import 'demos/general/scrollbar_demo_page.dart';
 import 'demos/general/stack_demo_page.dart';
 import 'demos/general/state_storage_demo_page.dart';
+import 'demos/general/navigation_pop_demo_page.dart';
 import 'demos/cupertino/switch_demo_page.dart';
 import 'demos/material/range_slider_demo_page.dart';
 import 'demos/material/refresh_indicator_demo_page.dart';
@@ -624,6 +625,12 @@ class SampleGalleryScreen extends StatelessWidget {
           title: 'PageStorage + SharedAppData',
           subtitle: 'scroll restoration + keyed inherited-model rebuilds',
           builder: () => const StateStorageDemoPage(),
+        ),
+        SampleRouteDefinition(
+          routeName: SampleRoutes.navigationPop,
+          title: 'PopScope + NavigatorPopHandler',
+          subtitle: 'route veto/results + nested navigator Back handling',
+          builder: () => const NavigationPopDemoPage(),
         ),
       ];
 

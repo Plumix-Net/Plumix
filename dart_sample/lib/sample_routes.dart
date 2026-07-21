@@ -101,6 +101,7 @@ class SampleRoutes {
   static const String dismissibleSizeChangedLayout =
       '/dismissible-size-changed-layout';
   static const String stateStorage = '/state-storage';
+  static const String navigationPop = '/navigation-pop';
 }
 
 class SampleRouteDefinition {

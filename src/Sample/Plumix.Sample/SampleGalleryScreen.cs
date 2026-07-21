@@ -106,6 +106,7 @@ internal static class SampleRoutes
     public const string CustomMultiChildLayout = "/custom-multi-child-layout";
     public const string DismissibleSizeChangedLayout = "/dismissible-size-changed-layout";
     public const string StateStorage = "/state-storage";
+    public const string NavigationPop = "/navigation-pop";
 }
 
 internal readonly record struct SampleRouteDefinition(
@@ -299,6 +300,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "PageStorage + SharedAppData",
             "scroll restoration + keyed inherited-model rebuilds",
             () => new StateStorageDemoPage()),
+        new(
+            SampleRoutes.NavigationPop,
+            "PopScope + NavigatorPopHandler",
+            "route veto/results + nested navigator Back handling",
+            () => new NavigationPopDemoPage()),
     ];
 
     private static readonly IReadOnlyList<SampleMenuTabDefinition> DemoTabs =

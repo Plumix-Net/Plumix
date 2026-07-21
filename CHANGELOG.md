@@ -1,5 +1,10 @@
 # Changelog
 
+- Added paired Flutter core `PopScope<T>` + `NavigatorPopHandler<T>` ports with route-scoped pop entries,
+  collective veto, successful/rejected result callbacks, dynamic `canPop`, nested-navigator navigation
+  notifications, focused tests, and a mirrored C#/Dart runtime probe. `Form` now delegates its modern pop-veto and
+  result APIs through `PopScope`; advanced `Plumix` to `0.3.0-alpha.1`.
+
 - Added paired Flutter core `PageStorage` + `SharedAppData` ports with composite keyed bucket identity, explicit
   identifiers, lazy typed values, aspect-selective inherited-model rebuilds, route-owned storage buckets, and
   automatic `ScrollController.keepScrollOffset` save/restore across scrollable disposal. Added focused tests and a

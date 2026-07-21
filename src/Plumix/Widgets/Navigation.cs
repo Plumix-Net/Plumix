@@ -13,6 +13,31 @@ public sealed record RouteSettings(string? Name = null, object? Arguments = null
 public delegate Route? RouteFactory(RouteSettings settings);
 public delegate bool RoutePredicate(Route route);
 
+public enum RoutePopDisposition
+{
+    Pop,
+    DoNotPop,
+    Bubble,
+}
+
+public delegate void PopInvokedCallback(bool didPop);
+public delegate void PopInvokedWithResultCallback<T>(bool didPop, T? result);
+public delegate void PopResultCallback<T>(T? result);
+
+public interface PopEntry
+{
+    IValueListenable<bool> CanPopNotifier { get; }
+
+    void OnPopInvoked(bool didPop)
+    {
+    }
+
+    void OnPopInvokedWithResult(bool didPop, object? result)
+    {
+        OnPopInvoked(didPop);
+    }
+}
+
 public sealed class RouteData
 {
     private static readonly IReadOnlyDictionary<string, string> EmptyQueryParameters =
@@ -168,6 +193,10 @@ public abstract class Route
 
     public virtual bool Opaque => true;
 
+    public virtual RoutePopDisposition PopDisposition => Navigator?.IsFirst(this) == false
+        ? RoutePopDisposition.Pop
+        : RoutePopDisposition.Bubble;
+
     internal NavigatorState? Navigator { get; private set; }
 
     public virtual bool ImpliesAppBarDismissal
@@ -225,6 +254,15 @@ public abstract class Route
 
     public virtual void DidComplete(object? result)
     {
+    }
+
+    public virtual void OnPopInvoked(bool didPop)
+    {
+    }
+
+    public virtual void OnPopInvokedWithResult(bool didPop, object? result)
+    {
+        OnPopInvoked(didPop);
     }
 
     public virtual void DidPopNext(Route nextRoute)
@@ -312,12 +350,71 @@ public abstract class Route
 public abstract class ModalRoute : Route
 {
     private readonly PageStorageBucket _storageBucket = new();
+    private readonly List<PopEntry> _popEntries = [];
 
     protected ModalRoute(RouteSettings? settings = null) : base(settings)
     {
     }
 
     internal PageStorageBucket StorageBucket => _storageBucket;
+
+    public override RoutePopDisposition PopDisposition => _popEntries.Any(entry => !entry.CanPopNotifier.Value)
+        ? RoutePopDisposition.DoNotPop
+        : base.PopDisposition;
+
+    public override void OnPopInvokedWithResult(bool didPop, object? result)
+    {
+        foreach (var popEntry in _popEntries.ToArray())
+        {
+            popEntry.OnPopInvokedWithResult(didPop, result);
+        }
+
+        base.OnPopInvokedWithResult(didPop, result);
+    }
+
+    public void RegisterPopEntry(PopEntry popEntry)
+    {
+        if (popEntry == null)
+        {
+            throw new ArgumentNullException(nameof(popEntry));
+        }
+
+        if (_popEntries.Contains(popEntry))
+        {
+            return;
+        }
+
+        _popEntries.Add(popEntry);
+        popEntry.CanPopNotifier.AddListener(HandlePopEntryChanged);
+        HandlePopEntryChanged();
+    }
+
+    public void UnregisterPopEntry(PopEntry popEntry)
+    {
+        if (!_popEntries.Remove(popEntry))
+        {
+            return;
+        }
+
+        popEntry.CanPopNotifier.RemoveListener(HandlePopEntryChanged);
+        HandlePopEntryChanged();
+    }
+
+    public override void Dispose()
+    {
+        foreach (var popEntry in _popEntries.ToArray())
+        {
+            popEntry.CanPopNotifier.RemoveListener(HandlePopEntryChanged);
+        }
+
+        _popEntries.Clear();
+        base.Dispose();
+    }
+
+    private void HandlePopEntryChanged()
+    {
+        NotifyRouteChanged();
+    }
 
     public static ModalRoute Of(BuildContext context)
     {
@@ -717,6 +814,8 @@ public sealed class NavigatorState : State
     private readonly Plumix.AnimationController _heroFlightController;
     private int _userGestureCount;
     private HeroTransitionSession? _heroTransitionSession;
+    private bool? _lastCanHandlePop;
+    private bool _navigationNotificationPending;
 
     public NavigatorState()
     {
@@ -818,6 +917,8 @@ public sealed class NavigatorState : State
             child = BuildHeroTransitionHost(_heroTransitionSession);
         }
 
+        bool routeBlocksPop = !CanPop && CurrentRoute?.PopDisposition == RoutePopDisposition.DoNotPop;
+        ScheduleNavigationNotification(CanPop || routeBlocksPop);
         return new NavigatorScope(this, child);
     }
 
@@ -827,6 +928,11 @@ public sealed class NavigatorState : State
         {
             SetState(() => { });
         }
+    }
+
+    internal bool IsFirst(Route route)
+    {
+        return _history.Count > 0 && ReferenceEquals(_history[0], route);
     }
 
     private IReadOnlyList<Route> VisibleRoutes()
@@ -1006,9 +1112,17 @@ public sealed class NavigatorState : State
             return true;
         }
 
-        if (!CanPop)
+        switch (route.PopDisposition)
         {
-            return false;
+            case RoutePopDisposition.Bubble:
+                return false;
+            case RoutePopDisposition.DoNotPop:
+                route.OnPopInvokedWithResult(didPop: false, result);
+                return true;
+            case RoutePopDisposition.Pop:
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
         }
 
         SetState(() =>
@@ -1020,10 +1134,23 @@ public sealed class NavigatorState : State
 
     public void Pop(object? result = null)
     {
-        if (!MaybePop(result))
+        var route = CurrentRoute;
+        if (route == null)
+        {
+            throw new InvalidOperationException("Navigator cannot pop without a current route.");
+        }
+
+        if (!route.WillPop(result))
+        {
+            return;
+        }
+
+        if (!CanPop)
         {
             throw new InvalidOperationException("Navigator cannot pop the current route.");
         }
+
+        SetState(() => PopCurrentRoute(result));
     }
 
     public bool MaybePopFromUserGesture(object? result = null)
@@ -1381,6 +1508,7 @@ public sealed class NavigatorState : State
 
         route.DidPop(previousRoute);
         route.DidComplete(result);
+        route.OnPopInvokedWithResult(didPop: true, result);
         previousRoute?.DidPopNext(route);
         previousRoute?.DidChangeNext(nextRoute: null);
 
@@ -1401,6 +1529,32 @@ public sealed class NavigatorState : State
         CancelHeroTransition(disposeDetachedRoute: true);
         route.Dispose();
         route.Detach();
+    }
+
+    private void ScheduleNavigationNotification(bool canHandlePop)
+    {
+        if (_lastCanHandlePop == canHandlePop)
+        {
+            return;
+        }
+
+        _lastCanHandlePop = canHandlePop;
+        if (_navigationNotificationPending)
+        {
+            return;
+        }
+
+        _navigationNotificationPending = true;
+        Scheduler.AddPostFrameCallback(_ =>
+        {
+            _navigationNotificationPending = false;
+            if (!Mounted)
+            {
+                return;
+            }
+
+            new NavigationNotification(_lastCanHandlePop ?? false).Dispatch(Context);
+        });
     }
 
     private void InstallRoute(Route route)
