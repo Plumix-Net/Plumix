@@ -137,7 +137,7 @@ public sealed class MaterialDropdownTests : IDisposable
     }
 
     [Fact]
-    public async Task DropdownButton_OpensPositionedMenuAndCompletesKeyboardSelectionSkippingDisabled()
+    public void DropdownButton_OpensPositionedMenuAndCompletesKeyboardSelectionSkippingDisabled()
     {
         int buttonTap = 0;
         int firstTap = 0;
@@ -184,13 +184,12 @@ public sealed class MaterialDropdownTests : IDisposable
         Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("Enter", true)));
         PumpAnimation();
         harness.Pump(new Size(500, 360));
-        await WaitForConditionAsync(() => selected is not null);
         Assert.Equal("three", selected);
         Assert.Equal(0, firstTap);
     }
 
     [Fact]
-    public async Task DropdownButton_ItemTapRunsBeforeNullableSelectionAndBarrierPolicyIsHonored()
+    public void DropdownButton_ItemTapRunsBeforeNullableSelectionAndBarrierPolicyIsHonored()
     {
         int itemTap = 0;
         bool changed = false;
@@ -221,7 +220,7 @@ public sealed class MaterialDropdownTests : IDisposable
         Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("Enter", true)));
         PumpAnimation();
         harness.Pump(new Size(500, 360));
-        await WaitForConditionAsync(() => changed);
+        Assert.True(changed);
         Assert.Null(value);
         Assert.Equal(1, itemTap);
     }

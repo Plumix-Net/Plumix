@@ -1180,6 +1180,16 @@ public abstract class RenderSliverSingleBoxAdapter : RenderSliver, IRenderObject
         return axis == Axis.Vertical ? size.Height : size.Width;
     }
 
+    protected static void SetChildParentData(
+        RenderBox child,
+        SliverConstraints constraints)
+    {
+        var childParentData = (BoxParentData)child.parentData!;
+        childParentData.offset = constraints.Axis == Axis.Vertical
+            ? new Point(0.0, -constraints.ScrollOffset)
+            : new Point(-constraints.ScrollOffset, 0.0);
+    }
+
     public override void Paint(PaintingContext ctx, Point offset)
     {
         if (Child == null || Geometry.PaintExtent <= 0)
@@ -1259,11 +1269,6 @@ public class RenderSliverToBoxAdapter : RenderSliverSingleBoxAdapter
         double cacheEnd = cacheStart + Math.Max(0, constraints.RemainingCacheExtent);
         double cacheExtent = Math.Max(0, Math.Min(childExtent, cacheEnd) - Math.Max(0, cacheStart));
 
-        var childParentData = (BoxParentData)Child.parentData!;
-        childParentData.offset = constraints.Axis == Axis.Vertical
-            ? new Point(0, -effectiveScrollOffset)
-            : new Point(-effectiveScrollOffset, 0);
-
         Geometry = new SliverGeometry(
             ScrollExtent: childExtent,
             PaintExtent: paintedExtent,
@@ -1271,6 +1276,7 @@ public class RenderSliverToBoxAdapter : RenderSliverSingleBoxAdapter
             MaxPaintExtent: childExtent,
             CacheExtent: cacheExtent,
             HasVisualOverflow: remaining > constraints.RemainingPaintExtent);
+        SetChildParentData(Child, constraints with { ScrollOffset = effectiveScrollOffset });
     }
 }
 
@@ -1392,7 +1398,7 @@ public sealed class RenderSliverPersistentHeader : RenderSliverSingleBoxAdapter
     private static bool Close(double a, double b) => Math.Abs(a - b) <= 0.0001;
 }
 
-public sealed class RenderSliverPadding : RenderSliver, IRenderObjectSingleChildContainer
+public class RenderSliverPadding : RenderSliver, IRenderObjectSingleChildContainer
 {
     private RenderSliver? _child;
     private Thickness _padding;
@@ -1500,7 +1506,9 @@ public sealed class RenderSliverPadding : RenderSliver, IRenderObjectSingleChild
 
     protected override void PerformSliverLayout(SliverConstraints constraints)
     {
-        (double mainStartPadding, double mainEndPadding, double crossStartPadding, double crossEndPadding) = ResolvePadding(_padding, constraints);
+        Thickness resolvedPadding = ResolvePaddingForConstraints(constraints);
+        (double mainStartPadding, double mainEndPadding, double crossStartPadding, double crossEndPadding) =
+            ResolvePadding(resolvedPadding, constraints);
         double mainAxisPadding = mainStartPadding + mainEndPadding;
         double crossAxisPadding = crossStartPadding + crossEndPadding;
         double remainingCacheExtent = constraints.RemainingCacheExtent > 0
@@ -1597,6 +1605,11 @@ public sealed class RenderSliverPadding : RenderSliver, IRenderObjectSingleChild
             _child.Geometry.HasVisualOverflow
             || totalScrollExtent > targetEndScrollOffsetForPaint
             || constraints.ScrollOffset > 0);
+    }
+
+    protected virtual Thickness ResolvePaddingForConstraints(SliverConstraints constraints)
+    {
+        return _padding;
     }
 
     private static (double mainStart, double mainEnd, double crossStart, double crossEnd) ResolvePadding(
@@ -2478,7 +2491,7 @@ public sealed class RenderSliverGrid : RenderSliverMultiBoxAdaptor
 
 public class RenderSliverFixedExtentList : RenderSliverMultiBoxAdaptor
 {
-    private double _itemExtent;
+    private protected double _itemExtent;
 
     public RenderSliverFixedExtentList(double itemExtent, IRenderSliverBoxChildManager? childManager = null) : base(childManager)
     {
@@ -2504,7 +2517,8 @@ public class RenderSliverFixedExtentList : RenderSliverMultiBoxAdaptor
     protected override void PerformSliverLayout(SliverConstraints constraints)
     {
         var childManager = ChildManager;
-        if (childManager == null || _itemExtent <= 0)
+        double itemExtent = GetItemExtent(constraints);
+        if (childManager == null || itemExtent <= 0)
         {
             Geometry = default;
             return;
@@ -2532,8 +2546,8 @@ public class RenderSliverFixedExtentList : RenderSliverMultiBoxAdaptor
         double scrollOffset = Math.Max(0, constraints.ScrollOffset + constraints.CacheOrigin);
         double targetEndScrollOffset = scrollOffset + Math.Max(0, remainingCacheExtent);
 
-        int firstIndex = GetMinChildIndexForScrollOffset(scrollOffset, _itemExtent);
-        int targetLastIndex = GetMaxChildIndexForScrollOffset(targetEndScrollOffset, _itemExtent);
+        int firstIndex = GetMinChildIndexForScrollOffset(scrollOffset, itemExtent);
+        int targetLastIndex = GetMaxChildIndexForScrollOffset(targetEndScrollOffset, itemExtent);
         if (childCount.HasValue)
         {
             int maxIndex = Math.Max(0, childCount.Value - 1);
@@ -2545,12 +2559,12 @@ public class RenderSliverFixedExtentList : RenderSliverMultiBoxAdaptor
             }
         }
 
-        var childConstraints = FixedExtentChildConstraints(constraints, _itemExtent);
-        if (FirstChild == null && !AddInitialChild(firstIndex, firstIndex * _itemExtent))
+        var childConstraints = FixedExtentChildConstraints(constraints, itemExtent);
+        if (FirstChild == null && !AddInitialChild(firstIndex, firstIndex * itemExtent))
         {
             Geometry = new SliverGeometry(
-                ScrollExtent: childCount.HasValue ? childCount.Value * _itemExtent : 0,
-                MaxPaintExtent: childCount.HasValue ? childCount.Value * _itemExtent : 0);
+                ScrollExtent: childCount.HasValue ? childCount.Value * itemExtent : 0,
+                MaxPaintExtent: childCount.HasValue ? childCount.Value * itemExtent : 0);
             childManager.SetDidUnderflow(true);
             return;
         }
@@ -2575,7 +2589,7 @@ public class RenderSliverFixedExtentList : RenderSliverMultiBoxAdaptor
 
             var newLeadingParentData = (SliverMultiBoxAdaptorParentData)newLeadingChild.parentData!;
             newLeadingParentData.Index = targetIndex;
-            newLeadingParentData.LayoutOffset = targetIndex * _itemExtent;
+            newLeadingParentData.LayoutOffset = targetIndex * itemExtent;
             firstChild = newLeadingChild;
         }
 
@@ -2615,7 +2629,7 @@ public class RenderSliverFixedExtentList : RenderSliverMultiBoxAdaptor
         {
             var childParentData = (SliverMultiBoxAdaptorParentData)child.parentData!;
             childParentData.Index = index;
-            childParentData.LayoutOffset = index * _itemExtent;
+            childParentData.LayoutOffset = index * itemExtent;
             child.Layout(childConstraints, parentUsesSize: true);
             childParentData.offset = constraints.Axis == Axis.Vertical
                 ? new Point(0, childParentData.LayoutOffset - constraints.ScrollOffset)
@@ -2659,15 +2673,15 @@ public class RenderSliverFixedExtentList : RenderSliverMultiBoxAdaptor
 
         CollectGarbage(leadingGarbage, trailingGarbage);
 
-        double leadingScrollOffset = firstIndex * _itemExtent;
-        double trailingScrollOffset = (index + 1) * _itemExtent;
+        double leadingScrollOffset = firstIndex * itemExtent;
+        double trailingScrollOffset = (index + 1) * itemExtent;
         if (reachedEnd && childCount.HasValue)
         {
-            trailingScrollOffset = Math.Min(trailingScrollOffset, childCount.Value * _itemExtent);
+            trailingScrollOffset = Math.Min(trailingScrollOffset, childCount.Value * itemExtent);
         }
 
         double estimatedMaxScrollOffset = childCount.HasValue
-            ? childCount.Value * _itemExtent
+            ? childCount.Value * itemExtent
             : reachedEnd
                 ? trailingScrollOffset
                 : double.PositiveInfinity;
@@ -2691,6 +2705,11 @@ public class RenderSliverFixedExtentList : RenderSliverMultiBoxAdaptor
             MaxPaintExtent: estimatedMaxScrollOffset,
             CacheExtent: cacheExtent,
             HasVisualOverflow: trailingScrollOffset > targetEndScrollOffsetForPaint || constraints.ScrollOffset > 0);
+    }
+
+    protected virtual double GetItemExtent(SliverConstraints constraints)
+    {
+        return _itemExtent;
     }
 
     protected static int GetMinChildIndexForScrollOffset(double scrollOffset, double itemExtent)

@@ -235,6 +235,9 @@ Completion note:
 - Continued paired core adaptive-sliver coverage with `SliverLayoutBuilder` + `SliverSafeArea`, including
   layout-phase `SliverConstraints`, equivalent-constraint rebuild suppression, direct child-geometry forwarding,
   MediaQuery edge removal, minimum safe insets, focused tests, and a mirrored C#/Dart custom-sliver probe.
+- Continued paired core sliver-fill coverage with `SliverFillViewport` + `SliverFillRemaining`, including fractional
+  fixed extents, centered end padding, lazy child creation, implicit-scrolling semantics filtering, scrollable,
+  non-scrollable, and overscroll-aware remaining-space render paths, focused tests, and mirrored C#/Dart probes.
 - Continued paired core asynchronous-builder coverage with `FutureBuilder<T>` + `StreamBuilder<T>`, including
   source-shaped snapshots and connection states, retained data/error transitions, stream summary folding,
   source replacement, stale callback suppression, focused tests, and a mirrored C#/Dart runtime probe.

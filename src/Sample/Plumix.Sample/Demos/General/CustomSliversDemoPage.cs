@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Rendering;
+using Plumix.UI;
 using Plumix.Widgets;
 
 // Dart parity source (reference): dart_sample/lib/custom_slivers_demo_page.dart (exact sample parity)
@@ -41,6 +42,35 @@ public sealed class CustomSliversDemoPage : StatelessWidget
                                             color: Colors.DimGray),
                                     ])));
                     })),
+                new SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: new Container(
+                        color: Color.Parse("#FFF3E5F5"),
+                        padding: new Thickness(24),
+                        alignment: Alignment.Center,
+                        child: new Column(
+                            mainAxisAlignment: MainAxisAlignment.Center,
+                            spacing: 8,
+                            children:
+                            [
+                                new Text("SliverFillRemaining", fontSize: 22, color: Colors.Black),
+                                new Text(
+                                    "Non-scrollable child fills the first viewport below the pinned header.",
+                                    fontSize: 13,
+                                    color: Colors.DimGray,
+                                    textAlign: TextAlign.Center),
+                            ]))),
+                new SliverFillViewport(
+                    viewportFraction: 0.55,
+                    padEnds: true,
+                    allowImplicitScrolling: false,
+                    @delegate: new SliverChildListDelegate(
+                        [
+                            BuildViewportPage("viewport page 1", Color.Parse("#FFE3F2FD")),
+                            BuildViewportPage("viewport page 2", Color.Parse("#FFE8F5E9")),
+                            BuildViewportPage("viewport page 3", Color.Parse("#FFFFF3E0")),
+                        ],
+                        addAutomaticKeepAlives: false)),
                 new DecoratedSliver(
                     decoration: new BoxDecoration(
                         Color: Color.Parse("#FFEAF4FF"),
@@ -131,5 +161,24 @@ public sealed class CustomSliversDemoPage : StatelessWidget
             color: color,
             padding: new Thickness(6, 8),
             child: new Text(label, fontSize: 12, color: Colors.Black));
+    }
+
+    private static Widget BuildViewportPage(string label, Color color)
+    {
+        return new Container(
+            color: color,
+            padding: new Thickness(20),
+            alignment: Alignment.Center,
+            child: new Column(
+                mainAxisAlignment: MainAxisAlignment.Center,
+                spacing: 6,
+                children:
+                [
+                    new Text(label, fontSize: 20, color: Colors.Black),
+                    new Text(
+                        "55% of the viewport · padded ends",
+                        fontSize: 13,
+                        color: Colors.DimGray),
+                ]));
     }
 }

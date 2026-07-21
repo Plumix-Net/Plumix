@@ -229,8 +229,13 @@ internal sealed class DropdownButtonState<T> : State
 
     public override void Dispose()
     {
-        if (_route?.Navigator is { } navigator) navigator.RemoveRoute(_route);
+        var route = _route;
         _route = null;
+        if (route is not null)
+        {
+            route.RouteCompleted -= HandleRouteCompleted;
+            if (route.Navigator is { } navigator) navigator.RemoveRoute(route);
+        }
         DetachFocusNode();
     }
 
@@ -365,7 +370,7 @@ internal sealed class DropdownButtonState<T> : State
         }
 
         int selectedIndex = _selectedIndex ?? 0;
-        _route = new DropdownRoute<T>(
+        var route = new DropdownRoute<T>(
             context: Context,
             items: widget.Items!,
             buttonRect: bounds,
@@ -380,16 +385,17 @@ internal sealed class DropdownButtonState<T> : State
             borderRadius: widget.BorderRadius,
             barrierDismissible: widget.BarrierDismissible,
             mouseCursor: widget.DropdownMenuItemMouseCursor);
-        navigator.Push(_route);
+        route.RouteCompleted += HandleRouteCompleted;
+        _route = route;
+        navigator.Push(route);
         _focusNode?.RequestFocus();
         widget.OnTap?.Invoke();
         SetState(() => _isMenuExpanded = true);
-        _ = HandleRouteResult(_route);
     }
 
-    private async Task HandleRouteResult(DropdownRoute<T> route)
+    private void HandleRouteCompleted(DropdownRoute<T> route, DropdownRouteResult<T>? result)
     {
-        var result = await route.Completed;
+        route.RouteCompleted -= HandleRouteCompleted;
         if (!Mounted || !ReferenceEquals(_route, route)) return;
         SetState(() =>
         {
@@ -564,6 +570,7 @@ internal sealed class DropdownRoute<T> : PageRoute
     public double Progress => Math.Clamp(_animation.Value, 0, 1);
     public bool IsExiting => _isExiting;
     public Task<DropdownRouteResult<T>?> Completed => _completed.Task;
+    public event Action<DropdownRoute<T>, DropdownRouteResult<T>?>? RouteCompleted;
 
     protected override void OnAttach() => _animation.Forward(0);
 
@@ -578,7 +585,8 @@ internal sealed class DropdownRoute<T> : PageRoute
 
     public override void DidComplete(object? result)
     {
-        _completed.TrySetResult(result as DropdownRouteResult<T>);
+        var typedResult = result as DropdownRouteResult<T>;
+        if (_completed.TrySetResult(typedResult)) RouteCompleted?.Invoke(this, typedResult);
     }
 
     public override Widget BuildPage(BuildContext context)

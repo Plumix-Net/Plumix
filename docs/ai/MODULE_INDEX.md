@@ -124,6 +124,8 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/Widgets/OrientationBuilder.cs`
   - `src/Plumix/Widgets/SliverLayoutBuilder.cs`
   - `src/Plumix/Widgets/SafeArea.cs`
+  - `src/Plumix/Widgets/SliverFill.cs`
+  - `src/Plumix/Rendering/SliverFill.cs`
   - `src/Plumix/Widgets/Placeholder.cs`
   - `src/Plumix/Widgets/GridPaper.cs`
   - `src/Plumix/Widgets/Clip.cs`
@@ -148,6 +150,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix.Tests/RenderingParityTests.cs`
   - `src/Plumix.Tests/BaselineTests.cs`
   - `src/Plumix.Tests/LayoutBuilderTests.cs`
+  - `src/Plumix.Tests/SliverFillTests.cs`
   - `src/Plumix.Tests/DebugPaintingWidgetsTests.cs`
   - `src/Plumix.Tests/ClipWidgetsTests.cs`
   - `src/Plumix.Tests/FlowRepaintBoundaryTests.cs`

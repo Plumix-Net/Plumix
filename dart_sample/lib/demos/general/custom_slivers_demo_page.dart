@@ -52,6 +52,41 @@ class CustomSliversDemoPage extends StatelessWidget {
             },
           ),
         ),
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: ColoredBox(
+            color: const Color(0xFFF3E5F5),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                spacing: 8,
+                children: const <Widget>[
+                  Text(
+                    'SliverFillRemaining',
+                    style: TextStyle(fontSize: 22, color: Colors.black),
+                  ),
+                  Text(
+                    'Non-scrollable child fills the first viewport below the '
+                    'pinned header.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 13, color: Colors.black54),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        SliverFillViewport(
+          viewportFraction: 0.55,
+          padEnds: true,
+          allowImplicitScrolling: false,
+          delegate: SliverChildListDelegate(<Widget>[
+            _viewportPage('viewport page 1', const Color(0xFFE3F2FD)),
+            _viewportPage('viewport page 2', const Color(0xFFE8F5E9)),
+            _viewportPage('viewport page 3', const Color(0xFFFFF3E0)),
+          ]),
+        ),
         DecoratedSliver(
           decoration: BoxDecoration(
             color: const Color(0xFFEAF4FF),
@@ -172,6 +207,29 @@ class CustomSliversDemoPage extends StatelessWidget {
         child: Text(
           label,
           style: const TextStyle(fontSize: 12, color: Colors.black),
+        ),
+      ),
+    );
+  }
+
+  static Widget _viewportPage(String label, Color color) {
+    return ColoredBox(
+      color: color,
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          spacing: 6,
+          children: <Widget>[
+            Text(
+              label,
+              style: const TextStyle(fontSize: 20, color: Colors.black),
+            ),
+            const Text(
+              '55% of the viewport · padded ends',
+              style: TextStyle(fontSize: 13, color: Colors.black54),
+            ),
+          ],
         ),
       ),
     );

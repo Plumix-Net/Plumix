@@ -1,5 +1,12 @@
 # Changelog
 
+- Fixed `DropdownButton` route-result delivery to complete on the navigation lifecycle instead of a thread-pool
+  continuation, removing a keyboard-selection race under CI load.
+
+- Added paired Flutter core `SliverFillViewport` + `SliverFillRemaining` ports with fractional page extents,
+  centered end padding, lazy child lifecycle, implicit-scrolling semantics policy, all three remaining-space layout
+  modes, focused tests, and mirrored runtime probes. Advanced `Plumix` to `0.7.0-alpha.1`.
+
 - Breaking: expanded paired Material `Slider` + `RangeSlider` parity with Flutter-shaped labels/value indicators,
   discrete tick marks, cursor and padding resolution, slider interaction policies, 2023/2024 thumb and gapped-track
   geometry, shared `SliderThemeData` tokens, focused tests, and mirrored C#/Dart runtime probes.
