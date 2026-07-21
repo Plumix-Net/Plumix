@@ -716,11 +716,17 @@ Progress update (2026-03-19):
   - expanded slider semantics parity with `semanticFormatterCallback` support (formatter label precedence over static `semanticLabel` within current framework semantics surface).
   - expanded `MaterialSliderTests` coverage with secondary-track constructor guards, secondary-track normalization, default/theme/widget/disabled secondary color precedence, and semantic formatter precedence checks.
   - expanded C#/Dart slider runtime demos with `secondaryTrackValue` and `secondaryActiveColor` probes, dedicated secondary-step controls, and status summary of secondary-track state.
+  - expanded paired slider parity with `label`, `mouseCursor`, `allowedInteraction`, explicit padding,
+    `showValueIndicator`, and `year2023`; shared theme resolution now paints discrete tick marks, value indicators,
+    2024 handle thumbs, and gapped tracks, with focused API/theme/interaction coverage and mirrored runtime probes.
 - Added Material `RangeSlider` baseline in `Plumix.Material`:
   - introduced framework `RangeSlider` and `RangeValues` in `src/Plumix.Material/RangeSlider.cs` with two-thumb controlled-value API (`values`, `onChanged`, `onChangeStart`, `onChangeEnd`), range/division guards, drag/tap thumb selection, and focused keyboard adjustment baseline;
   - reused slider theming surface (`SliderThemeData` + inherited `SliderTheme` + `ThemeData.SliderTheme`) with mode-aware fallback defaults and widget-over-theme precedence for active/inactive/overlay color paths;
   - added focused `MaterialRangeSliderTests` coverage in `src/Plumix.Tests/MaterialRangeSliderTests.cs` for constructor guards, M2/M3 default color resolution, theme/widget color precedence, discrete snapping + change lifecycle callbacks, keyboard adjustment baseline, and formatted range semantics label/flags;
   - added C#/Dart sample parity demo route/page for runtime verification (`RangeSlider` route in Material tab with enabled/disabled + continuous/discrete probes, M2/M3 mode switch, theme/widget color override probes, callback-status output, and LTR/RTL preview).
+  - expanded range parity with `RangeLabels`, state-resolved mouse cursors, explicit padding, `year2023`, shared
+    tick/value-indicator tokens, and 2024 handle/gapped-track geometry; focused tests cover public API storage,
+    theme propagation, layout tokens, and indicator policy.
 - Added C#/Dart sample parity demo route/page for runtime `Drawer` verification in the Material tab (`Drawer` route with start/end drawer open/close choreography controls plus `DrawerTheme`/widget override probes for scrim/color/elevation/width precedence).
 - Added paired Material `Badge` + `Tooltip` parity pass in `Plumix.Material`:
   - `Badge` now matches Flutter count formatting, small/large geometry, intrinsic horizontal stadium sizing, label visibility, LTR/RTL placement offsets, M3 error/on-error tokens, and `BadgeTheme`/`ThemeData.BadgeTheme` precedence;

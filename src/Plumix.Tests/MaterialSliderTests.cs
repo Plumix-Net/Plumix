@@ -23,6 +23,77 @@ public sealed class MaterialSliderTests
         Assert.Throws<ArgumentOutOfRangeException>(() => new Slider(value: double.NaN, min: 0, max: 1, onChanged: _ => { }));
         Assert.Throws<ArgumentOutOfRangeException>(() => new Slider(value: 0.5, min: 0, max: 1, secondaryTrackValue: 1.1, onChanged: _ => { }));
         Assert.Throws<ArgumentOutOfRangeException>(() => new Slider(value: 0.5, min: 0, max: 1, secondaryTrackValue: double.NaN, onChanged: _ => { }));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new Slider(
+            value: 0.5,
+            onChanged: _ => { },
+            padding: new Thickness(-1, 0, 0, 0)));
+    }
+
+    [Fact]
+    public void Slider_ExtendedApi_StoresFlutterParityValues()
+    {
+        var cursor = new SystemMouseCursor("slider");
+        var slider = new Slider(
+            value: 0.5,
+            onChanged: _ => { },
+            divisions: 4,
+            label: "50",
+            mouseCursor: cursor,
+            allowedInteraction: SliderInteraction.SlideThumb,
+            padding: new Thickness(12, 6),
+            showValueIndicator: ShowValueIndicator.AlwaysVisible,
+            year2023: false);
+
+        Assert.Equal("50", slider.Label);
+        Assert.Same(cursor, slider.MouseCursor);
+        Assert.Equal(SliderInteraction.SlideThumb, slider.AllowedInteraction);
+        Assert.Equal(new Thickness(12, 6), slider.Padding);
+        Assert.Equal(ShowValueIndicator.AlwaysVisible, slider.ShowValueIndicator);
+        Assert.False(slider.Year2023);
+    }
+
+    [Fact]
+    public void Slider_ExtendedThemeTokensReachRenderObject()
+    {
+        var theme = ThemeData.Light with
+        {
+            SliderTheme = new SliderThemeData(
+                ActiveTickMarkColor: Colors.Gold,
+                InactiveTickMarkColor: Colors.DarkSlateBlue,
+                TickMarkRadius: 3,
+                ValueIndicatorColor: Colors.OrangeRed,
+                ShowValueIndicator: ShowValueIndicator.AlwaysVisible,
+                Padding: new Thickness(14, 5),
+                AllowedInteraction: SliderInteraction.TapOnly,
+                TrackGap: 7,
+                Year2023: false)
+        };
+
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: theme,
+                child: new SizedBox(
+                    width: 220,
+                    child: new Slider(
+                        value: 0.5,
+                        divisions: 4,
+                        label: "50",
+                        onChanged: _ => { }))));
+
+        harness.Pump(new Size(260, 120));
+        object? render = FindDescendantByTypeName(harness.RenderView, "RenderSlider");
+        Assert.NotNull(render);
+        Assert.Equal(Colors.Gold, ReadProperty<Color>(render!, "ActiveTickMarkColor"));
+        Assert.Equal(Colors.DarkSlateBlue, ReadProperty<Color>(render, "InactiveTickMarkColor"));
+        Assert.Equal(3, ReadProperty<double>(render, "TickMarkRadius"));
+        Assert.Equal(Colors.OrangeRed, ReadProperty<Color>(render, "ValueIndicatorColor"));
+        Assert.Equal(ShowValueIndicator.AlwaysVisible, ReadProperty<ShowValueIndicator>(render, "ShowValueIndicator"));
+        Assert.Equal(new Thickness(14, 5), ReadProperty<Thickness>(render, "Padding"));
+        Assert.Equal(SliderInteraction.TapOnly, ReadProperty<SliderInteraction>(render, "AllowedInteraction"));
+        Assert.Equal(7, ReadProperty<double>(render, "TrackGap"));
+        Assert.Equal(new Size(4, 44), ReadProperty<Size>(render, "ThumbSize"));
+        Assert.Equal(16, ReadProperty<double>(render, "TrackHeight"));
+        Assert.Equal(theme.SecondaryContainerColor, ReadProperty<Color>(render, "InactiveTrackColor"));
     }
 
     [Fact]
@@ -273,6 +344,41 @@ public sealed class MaterialSliderTests
             Assert.Equal(0.2, start!.Value, 3);
             Assert.Equal(1.0, end!.Value, 3);
             Assert.Equal(1.0, changed, 3);
+        }
+        finally
+        {
+            binding.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void Slider_TapOnly_UpdatesOnDownAndIgnoresPointerMove()
+    {
+        var binding = GestureBinding.Instance;
+        binding.ResetForTests();
+        try
+        {
+            var changed = new List<double>();
+            using var harness = new WidgetRenderHarness(
+                new Theme(
+                    data: ThemeData.Light,
+                    child: new Align(
+                        alignment: Alignment.TopLeft,
+                        child: new SizedBox(
+                            width: 220,
+                            child: new Slider(
+                                value: 0.2,
+                                allowedInteraction: SliderInteraction.TapOnly,
+                                onChanged: changed.Add)))));
+
+            harness.Pump(new Size(280, 120));
+            DispatchPointerDown(binding, harness.RenderView, pointer: 709, position: new Point(110, 24));
+            int countAfterDown = changed.Count;
+            DispatchPointerMove(binding, harness.RenderView, pointer: 709, position: new Point(210, 24));
+            DispatchPointerUp(binding, harness.RenderView, pointer: 709, position: new Point(210, 24));
+
+            Assert.True(countAfterDown > 0);
+            Assert.Equal(countAfterDown, changed.Count);
         }
         finally
         {

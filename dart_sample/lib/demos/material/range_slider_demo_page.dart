@@ -15,6 +15,7 @@ class _RangeSliderDemoPageState extends State<RangeSliderDemoPage> {
   bool _useThemeOverrides = false;
   bool _useWidgetColorOverride = false;
   bool _useMaterial3 = true;
+  bool _year2023 = true;
   RangeValues _values = const RangeValues(0.2, 0.7);
   String _status = 'idle';
 
@@ -135,6 +136,17 @@ class _RangeSliderDemoPageState extends State<RangeSliderDemoPage> {
             ],
           ),
           const SizedBox(height: 10),
+          Row(
+            children: <Widget>[
+              _buildControlButton(
+                label: _year2023 ? '2023 look' : '2024 look',
+                onTap: () => setState(() => _year2023 = !_year2023),
+                width: 96,
+                background: const Color(0xFFEAF6F7),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
           Expanded(
             child: SingleChildScrollView(
               child: Column(
@@ -195,16 +207,21 @@ class _RangeSliderDemoPageState extends State<RangeSliderDemoPage> {
       min: 0,
       max: 1,
       divisions: _discrete ? 5 : null,
+      labels: RangeLabels(
+        '${(_values.start * 100).round()}',
+        '${(_values.end * 100).round()}',
+      ),
       activeColor: _useWidgetColorOverride ? const Color(0xFFB71C1C) : null,
       inactiveColor: _useWidgetColorOverride ? const Color(0xFFFFCDD2) : null,
+      year2023: _year2023,
       onChanged: _enabled ? _handleValuesChanged : null,
       onChangeStart: (RangeValues values) => setState(
-        () =>
-            _status = 'start ${values.start.toStringAsFixed(2)}-${values.end.toStringAsFixed(2)}',
+        () => _status =
+            'start ${values.start.toStringAsFixed(2)}-${values.end.toStringAsFixed(2)}',
       ),
       onChangeEnd: (RangeValues values) => setState(
-        () =>
-            _status = 'end ${values.start.toStringAsFixed(2)}-${values.end.toStringAsFixed(2)}',
+        () => _status =
+            'end ${values.start.toStringAsFixed(2)}-${values.end.toStringAsFixed(2)}',
       ),
       semanticFormatterCallback: (double value) => '${(value * 100).round()}%',
     );

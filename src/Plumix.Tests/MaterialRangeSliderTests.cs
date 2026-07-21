@@ -23,10 +23,75 @@ public sealed class MaterialRangeSliderTests
         Assert.Throws<ArgumentOutOfRangeException>(() => new RangeSlider(values: new RangeValues(0.2, 1.1), min: 0, max: 1, onChanged: _ => { }));
         Assert.Throws<ArgumentOutOfRangeException>(() => new RangeSlider(values: new RangeValues(0.2, 0.7), min: 0, max: 1, divisions: 0, onChanged: _ => { }));
         Assert.Throws<ArgumentOutOfRangeException>(() => new RangeSlider(values: new RangeValues(double.NaN, 0.7), min: 0, max: 1, onChanged: _ => { }));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new RangeSlider(
+            values: new RangeValues(0.2, 0.7),
+            onChanged: _ => { },
+            padding: new Thickness(0, -1, 0, 0)));
     }
 
     [Fact]
-    public void RangeSlider_DefaultM3_UsesPrimaryAndSurfaceContainerHighestColors()
+    public void RangeSlider_ExtendedApi_StoresFlutterParityValues()
+    {
+        var cursor = MaterialStateProperty<MouseCursor?>.All(new SystemMouseCursor("range-slider"));
+        var slider = new RangeSlider(
+            values: new RangeValues(0.2, 0.8),
+            onChanged: _ => { },
+            divisions: 5,
+            labels: new RangeLabels("20", "80"),
+            mouseCursor: cursor,
+            padding: new Thickness(10, 4),
+            year2023: false);
+
+        Assert.Equal(new RangeLabels("20", "80"), slider.Labels);
+        Assert.Same(cursor, slider.MouseCursor);
+        Assert.Equal(new Thickness(10, 4), slider.Padding);
+        Assert.False(slider.Year2023);
+    }
+
+    [Fact]
+    public void RangeSlider_ExtendedThemeTokensReachRenderObject()
+    {
+        var theme = ThemeData.Light with
+        {
+            SliderTheme = new SliderThemeData(
+                ActiveTickMarkColor: Colors.Gold,
+                InactiveTickMarkColor: Colors.DarkSlateBlue,
+                TickMarkRadius: 2.5,
+                ValueIndicatorColor: Colors.OrangeRed,
+                ShowValueIndicator: ShowValueIndicator.AlwaysVisible,
+                Padding: new Thickness(16, 6),
+                TrackGap: 8,
+                Year2023: false)
+        };
+
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: theme,
+                child: new SizedBox(
+                    width: 220,
+                    child: new RangeSlider(
+                        values: new RangeValues(0.2, 0.8),
+                        divisions: 5,
+                        labels: new RangeLabels("20", "80"),
+                        onChanged: _ => { }))));
+
+        harness.Pump(new Size(260, 120));
+        object? render = FindDescendantByTypeName(harness.RenderView, "RenderRangeSlider");
+        Assert.NotNull(render);
+        Assert.Equal(Colors.Gold, ReadProperty<Color>(render!, "ActiveTickMarkColor"));
+        Assert.Equal(Colors.DarkSlateBlue, ReadProperty<Color>(render, "InactiveTickMarkColor"));
+        Assert.Equal(2.5, ReadProperty<double>(render, "TickMarkRadius"));
+        Assert.Equal(Colors.OrangeRed, ReadProperty<Color>(render, "ValueIndicatorColor"));
+        Assert.Equal(ShowValueIndicator.AlwaysVisible, ReadProperty<ShowValueIndicator>(render, "ShowValueIndicator"));
+        Assert.Equal(new Thickness(16, 6), ReadProperty<Thickness>(render, "Padding"));
+        Assert.Equal(8, ReadProperty<double>(render, "TrackGap"));
+        Assert.Equal(new Size(4, 44), ReadProperty<Size>(render, "ThumbSize"));
+        Assert.Equal(16, ReadProperty<double>(render, "TrackHeight"));
+        Assert.Equal(theme.SecondaryContainerColor, ReadProperty<Color>(render, "InactiveTrackColor"));
+    }
+
+    [Fact]
+    public void RangeSlider_DefaultM3Year2023_UsesM2TrackColors()
     {
         var theme = ThemeData.Light with
         {
@@ -49,7 +114,7 @@ public sealed class MaterialRangeSliderTests
         object? render = FindDescendantByTypeName(harness.RenderView, "RenderRangeSlider");
         Assert.NotNull(render);
         Assert.Equal(Colors.Coral, ReadProperty<Color>(render!, "ActiveTrackColor"));
-        Assert.Equal(Colors.PowderBlue, ReadProperty<Color>(render, "InactiveTrackColor"));
+        Assert.Equal(ApplyOpacity(Colors.Coral, 0.24), ReadProperty<Color>(render, "InactiveTrackColor"));
         Assert.Equal(Colors.Coral, ReadProperty<Color>(render, "ThumbColor"));
     }
 
@@ -306,6 +371,12 @@ public sealed class MaterialRangeSliderTests
         object? value = property!.GetValue(target);
         Assert.NotNull(value);
         return (T)value!;
+    }
+
+    private static Color ApplyOpacity(Color color, double opacity)
+    {
+        byte alpha = (byte)Math.Clamp((int)(255 * opacity), 0, 255);
+        return Color.FromArgb(alpha, color.R, color.G, color.B);
     }
 
     private static void DispatchPointerDown(GestureBinding binding, RenderView renderView, int pointer, Point position)

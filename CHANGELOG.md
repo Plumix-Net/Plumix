@@ -1,5 +1,9 @@
 # Changelog
 
+- Breaking: expanded paired Material `Slider` + `RangeSlider` parity with Flutter-shaped labels/value indicators,
+  discrete tick marks, cursor and padding resolution, slider interaction policies, 2023/2024 thumb and gapped-track
+  geometry, shared `SliderThemeData` tokens, focused tests, and mirrored C#/Dart runtime probes.
+
 - Added paired Flutter core `FutureBuilder<T>` + `StreamBuilder<T>` ports with source-shaped `AsyncSnapshot<T>` and
   `ConnectionState`, initial/retained data, waiting/active/done/error transitions, stream-fold hooks, source
   replacement, stale-completion suppression, focused tests, and a mirrored C#/Dart runtime probe. The C# async

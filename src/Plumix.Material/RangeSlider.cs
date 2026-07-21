@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
+using Avalonia.Media.TextFormatting;
 using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
@@ -7,7 +8,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/material/range_slider.dart (approximate)
+// Dart parity source: flutter/packages/flutter/lib/src/material/range_slider.dart
 
 public readonly record struct RangeValues(double Start, double End);
 
@@ -30,7 +31,11 @@ public sealed class RangeSlider : StatefulWidget
         FocusNode? focusNode = null,
         bool autofocus = false,
         SemanticFormatterCallback? semanticFormatterCallback = null,
-        Key? key = null) : base(key)
+        Key? key = null,
+        RangeLabels? labels = null,
+        MaterialStateProperty<MouseCursor?>? mouseCursor = null,
+        Thickness? padding = null,
+        bool? year2023 = null) : base(key)
     {
         if (double.IsNaN(min) || double.IsInfinity(min))
         {
@@ -77,6 +82,12 @@ public sealed class RangeSlider : StatefulWidget
             throw new ArgumentOutOfRangeException(nameof(divisions), "RangeSlider divisions must be greater than zero.");
         }
 
+        if (padding.HasValue && (padding.Value.Left < 0 || padding.Value.Top < 0
+                                 || padding.Value.Right < 0 || padding.Value.Bottom < 0))
+        {
+            throw new ArgumentOutOfRangeException(nameof(padding), "RangeSlider padding cannot be negative.");
+        }
+
         Values = values;
         OnChanged = onChanged;
         OnChangeStart = onChangeStart;
@@ -84,13 +95,17 @@ public sealed class RangeSlider : StatefulWidget
         Min = min;
         Max = max;
         Divisions = divisions;
+        Labels = labels;
         ActiveColor = activeColor;
         InactiveColor = inactiveColor;
         OverlayColor = overlayColor;
+        MouseCursor = mouseCursor;
         MaterialTapTargetSize = materialTapTargetSize;
         FocusNode = focusNode;
         Autofocus = autofocus;
         SemanticFormatterCallback = semanticFormatterCallback;
+        Padding = padding;
+        Year2023 = year2023;
     }
 
     public RangeValues Values { get; }
@@ -107,11 +122,15 @@ public sealed class RangeSlider : StatefulWidget
 
     public int? Divisions { get; }
 
+    public RangeLabels? Labels { get; }
+
     public Color? ActiveColor { get; }
 
     public Color? InactiveColor { get; }
 
     public MaterialStateProperty<Color?>? OverlayColor { get; }
+
+    public MaterialStateProperty<MouseCursor?>? MouseCursor { get; }
 
     public MaterialTapTargetSize? MaterialTapTargetSize { get; }
 
@@ -120,6 +139,10 @@ public sealed class RangeSlider : StatefulWidget
     public bool Autofocus { get; }
 
     public SemanticFormatterCallback? SemanticFormatterCallback { get; }
+
+    public Thickness? Padding { get; }
+
+    public bool? Year2023 { get; }
 
     public override State CreateState()
     {
@@ -166,7 +189,8 @@ public sealed class RangeSlider : StatefulWidget
         {
             var theme = Theme.Of(context);
             var sliderTheme = SliderTheme.Of(context);
-            double trackHeight = ResolveTrackHeight(sliderTheme);
+            bool year2023 = !theme.UseMaterial3 || (CurrentWidget.Year2023 ?? sliderTheme.Year2023 ?? true);
+            double trackHeight = ResolveTrackHeight(sliderTheme, theme, year2023);
             double thumbRadius = ResolveThumbRadius(sliderTheme);
             var tapTargetSize = CurrentWidget.MaterialTapTargetSize
                                 ?? sliderTheme.MaterialTapTargetSize
@@ -174,7 +198,19 @@ public sealed class RangeSlider : StatefulWidget
             double minPreferredHeight = tapTargetSize == Plumix.Material.MaterialTapTargetSize.Padded
                 ? Math.Max(PaddedTapTargetExtent, thumbRadius * 2)
                 : Math.Max(trackHeight, thumbRadius * 2);
-            double overlayRadius = Math.Max(thumbRadius, theme.UseMaterial3 ? 20.0 : 16.0);
+            double overlayRadius = sliderTheme.OverlayRadius
+                                   ?? Math.Max(thumbRadius, theme.UseMaterial3 ? 20.0 : 16.0);
+            Thickness padding = CurrentWidget.Padding ?? sliderTheme.Padding ?? new Thickness();
+            var showValueIndicator = sliderTheme.ShowValueIndicator
+                                     ?? Plumix.Material.ShowValueIndicator.OnlyForDiscrete;
+            double tickMarkRadius = sliderTheme.TickMarkRadius ?? Math.Max(1.0, trackHeight / 4.0);
+            double trackGap = year2023 ? 0.0 : sliderTheme.TrackGap ?? 6.0;
+            var thumbStates = BuildStates(interactive: IsInteractive);
+            Size thumbSize = sliderTheme.ThumbSize?.Resolve(thumbStates)
+                             ?? (year2023
+                                 ? new Size(thumbRadius * 2.0, thumbRadius * 2.0)
+                                 : new Size(4.0, 44.0));
+            minPreferredHeight = Math.Max(minPreferredHeight, thumbSize.Height);
 
             var activeTrackColor = ResolveActiveTrackColor(theme, sliderTheme);
             var inactiveTrackColor = ResolveInactiveTrackColor(theme, sliderTheme);
@@ -182,6 +218,17 @@ public sealed class RangeSlider : StatefulWidget
             var disabledActiveTrackColor = ResolveDisabledActiveTrackColor(theme, sliderTheme);
             var disabledInactiveTrackColor = ResolveDisabledInactiveTrackColor(theme, sliderTheme);
             var disabledThumbColor = ResolveDisabledThumbColor(theme, sliderTheme);
+            var activeTickMarkColor = ResolveActiveTickMarkColor(theme, sliderTheme, year2023);
+            var inactiveTickMarkColor = ResolveInactiveTickMarkColor(theme, sliderTheme, year2023);
+            var valueIndicatorColor = sliderTheme.ValueIndicatorColor
+                                      ?? (theme.UseMaterial3 && !year2023
+                                          ? theme.InverseSurfaceColor
+                                          : theme.PrimaryColor);
+            var valueIndicatorTextStyle = sliderTheme.ValueIndicatorTextStyle
+                                          ?? (theme.UseMaterial3 && !year2023
+                                              ? theme.TextTheme.LabelLarge.CopyWith(
+                                                  color: theme.OnInverseSurfaceColor)
+                                              : theme.TextTheme.BodyLarge.CopyWith(color: theme.OnPrimaryColor));
 
             var focusedStates = BuildStates(interactive: IsInteractive, focused: true);
             var hoveredStates = BuildStates(interactive: IsInteractive, hovered: true);
@@ -199,7 +246,7 @@ public sealed class RangeSlider : StatefulWidget
             string? semanticsLabel = ResolveSemanticsLabel();
             var normalizedValues = Normalize(CurrentWidget.Values);
 
-            return new Semantics(
+            Widget result = new Semantics(
                 label: semanticsLabel,
                 flags: semanticsFlags,
                 child: new Focus(
@@ -215,6 +262,7 @@ public sealed class RangeSlider : StatefulWidget
                         isFocused: _hasFocus,
                         trackHeight: trackHeight,
                         thumbRadius: thumbRadius,
+                        thumbSize: thumbSize,
                         overlayRadius: overlayRadius,
                         minPreferredHeight: minPreferredHeight,
                         activeTrackColor: IsInteractive ? activeTrackColor : disabledActiveTrackColor,
@@ -223,10 +271,25 @@ public sealed class RangeSlider : StatefulWidget
                         overlayFocusedColor: overlayFocusedColor,
                         overlayHoveredColor: overlayHoveredColor,
                         overlayDraggedColor: overlayDraggedColor,
+                        activeTickMarkColor: activeTickMarkColor,
+                        inactiveTickMarkColor: inactiveTickMarkColor,
+                        tickMarkRadius: tickMarkRadius,
+                        labels: CurrentWidget.Labels,
+                        showValueIndicator: showValueIndicator,
+                        valueIndicatorColor: valueIndicatorColor,
+                        valueIndicatorTextStyle: valueIndicatorTextStyle,
+                        padding: padding,
+                        trackGap: trackGap,
                         textDirection: Directionality.Of(context),
                         onChangeStartNormalized: IsInteractive ? HandleChangeStartNormalized : null,
                         onChangedNormalized: IsInteractive ? HandleChangedNormalized : null,
                         onChangeEndNormalized: IsInteractive ? HandleChangeEndNormalized : null)));
+
+            var cursorStates = BuildStates(interactive: IsInteractive, focused: _hasFocus);
+            MouseCursor cursor = CurrentWidget.MouseCursor?.Resolve(cursorStates)
+                                 ?? sliderTheme.MouseCursor?.Resolve(cursorStates)
+                                 ?? (IsInteractive ? SystemMouseCursors.Click : SystemMouseCursors.Basic);
+            return new MouseRegion(cursor: cursor, child: result);
         }
 
         private void AttachFocusNode(FocusNode? externalNode)
@@ -476,12 +539,16 @@ public sealed class RangeSlider : StatefulWidget
             return Math.Clamp(Math.Round(clamped * divisions) / divisions, 0.0, 1.0);
         }
 
-        private double ResolveTrackHeight(SliderThemeData sliderTheme)
+        private static double ResolveTrackHeight(
+            SliderThemeData sliderTheme,
+            ThemeData theme,
+            bool year2023)
         {
-            double resolved = sliderTheme.TrackHeight ?? DefaultTrackHeight;
+            double defaultHeight = theme.UseMaterial3 && !year2023 ? 16.0 : DefaultTrackHeight;
+            double resolved = sliderTheme.TrackHeight ?? defaultHeight;
             if (double.IsNaN(resolved) || double.IsInfinity(resolved) || resolved <= 0)
             {
-                return DefaultTrackHeight;
+                return defaultHeight;
             }
 
             return resolved;
@@ -507,10 +574,11 @@ public sealed class RangeSlider : StatefulWidget
 
         private Color ResolveInactiveTrackColor(ThemeData theme, SliderThemeData sliderTheme)
         {
+            bool year2023 = !theme.UseMaterial3 || (CurrentWidget.Year2023 ?? sliderTheme.Year2023 ?? true);
             return CurrentWidget.InactiveColor
                    ?? sliderTheme.InactiveTrackColor
-                   ?? (theme.UseMaterial3
-                       ? theme.SurfaceContainerHighestColor
+                   ?? (theme.UseMaterial3 && !year2023
+                       ? theme.SecondaryContainerColor
                        : MaterialButtonCore.ApplyOpacity(theme.PrimaryColor, 0.24));
         }
 
@@ -537,6 +605,34 @@ public sealed class RangeSlider : StatefulWidget
         {
             return sliderTheme.DisabledThumbColor
                    ?? MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.38);
+        }
+
+        private Color ResolveActiveTickMarkColor(
+            ThemeData theme,
+            SliderThemeData sliderTheme,
+            bool year2023)
+        {
+            Color fallback = theme.UseMaterial3 && !year2023
+                ? theme.OnPrimaryColor
+                : MaterialButtonCore.ApplyOpacity(theme.OnPrimaryColor, 0.54);
+            return IsInteractive
+                ? sliderTheme.ActiveTickMarkColor ?? fallback
+                : sliderTheme.DisabledActiveTickMarkColor
+                  ?? MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.12);
+        }
+
+        private Color ResolveInactiveTickMarkColor(
+            ThemeData theme,
+            SliderThemeData sliderTheme,
+            bool year2023)
+        {
+            Color fallback = theme.UseMaterial3 && !year2023
+                ? theme.OnSecondaryContainerColor
+                : MaterialButtonCore.ApplyOpacity(theme.PrimaryColor, 0.54);
+            return IsInteractive
+                ? sliderTheme.InactiveTickMarkColor ?? fallback
+                : sliderTheme.DisabledInactiveTickMarkColor
+                  ?? MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.12);
         }
 
         private Color? ResolveOverlayColor(ThemeData theme, SliderThemeData sliderTheme, MaterialState states)
@@ -631,6 +727,7 @@ internal sealed class RangeSliderRenderWidget : LeafRenderObjectWidget
         bool isFocused,
         double trackHeight,
         double thumbRadius,
+        Size thumbSize,
         double overlayRadius,
         double minPreferredHeight,
         Color activeTrackColor,
@@ -639,6 +736,15 @@ internal sealed class RangeSliderRenderWidget : LeafRenderObjectWidget
         Color? overlayFocusedColor,
         Color? overlayHoveredColor,
         Color? overlayDraggedColor,
+        Color activeTickMarkColor,
+        Color inactiveTickMarkColor,
+        double tickMarkRadius,
+        RangeLabels? labels,
+        ShowValueIndicator showValueIndicator,
+        Color valueIndicatorColor,
+        TextStyle valueIndicatorTextStyle,
+        Thickness padding,
+        double trackGap,
         TextDirection textDirection,
         Action<NormalizedRangeValues, RangeSliderThumb>? onChangeStartNormalized,
         Action<NormalizedRangeValues, RangeSliderThumb>? onChangedNormalized,
@@ -652,6 +758,7 @@ internal sealed class RangeSliderRenderWidget : LeafRenderObjectWidget
         IsFocused = isFocused;
         TrackHeight = trackHeight;
         ThumbRadius = thumbRadius;
+        ThumbSize = thumbSize;
         OverlayRadius = overlayRadius;
         MinPreferredHeight = minPreferredHeight;
         ActiveTrackColor = activeTrackColor;
@@ -660,6 +767,15 @@ internal sealed class RangeSliderRenderWidget : LeafRenderObjectWidget
         OverlayFocusedColor = overlayFocusedColor;
         OverlayHoveredColor = overlayHoveredColor;
         OverlayDraggedColor = overlayDraggedColor;
+        ActiveTickMarkColor = activeTickMarkColor;
+        InactiveTickMarkColor = inactiveTickMarkColor;
+        TickMarkRadius = tickMarkRadius;
+        Labels = labels;
+        ShowValueIndicator = showValueIndicator;
+        ValueIndicatorColor = valueIndicatorColor;
+        ValueIndicatorTextStyle = valueIndicatorTextStyle;
+        Padding = padding;
+        TrackGap = trackGap;
         TextDirection = textDirection;
         OnChangeStartNormalized = onChangeStartNormalized;
         OnChangedNormalized = onChangedNormalized;
@@ -680,6 +796,8 @@ internal sealed class RangeSliderRenderWidget : LeafRenderObjectWidget
 
     public double ThumbRadius { get; }
 
+    public Size ThumbSize { get; }
+
     public double OverlayRadius { get; }
 
     public double MinPreferredHeight { get; }
@@ -695,6 +813,24 @@ internal sealed class RangeSliderRenderWidget : LeafRenderObjectWidget
     public Color? OverlayHoveredColor { get; }
 
     public Color? OverlayDraggedColor { get; }
+
+    public Color ActiveTickMarkColor { get; }
+
+    public Color InactiveTickMarkColor { get; }
+
+    public double TickMarkRadius { get; }
+
+    public RangeLabels? Labels { get; }
+
+    public ShowValueIndicator ShowValueIndicator { get; }
+
+    public Color ValueIndicatorColor { get; }
+
+    public TextStyle ValueIndicatorTextStyle { get; }
+
+    public Thickness Padding { get; }
+
+    public double TrackGap { get; }
 
     public TextDirection TextDirection { get; }
 
@@ -714,6 +850,7 @@ internal sealed class RangeSliderRenderWidget : LeafRenderObjectWidget
             isFocused: IsFocused,
             trackHeight: TrackHeight,
             thumbRadius: ThumbRadius,
+            thumbSize: ThumbSize,
             overlayRadius: OverlayRadius,
             minPreferredHeight: MinPreferredHeight,
             activeTrackColor: ActiveTrackColor,
@@ -722,6 +859,15 @@ internal sealed class RangeSliderRenderWidget : LeafRenderObjectWidget
             overlayFocusedColor: OverlayFocusedColor,
             overlayHoveredColor: OverlayHoveredColor,
             overlayDraggedColor: OverlayDraggedColor,
+            activeTickMarkColor: ActiveTickMarkColor,
+            inactiveTickMarkColor: InactiveTickMarkColor,
+            tickMarkRadius: TickMarkRadius,
+            labels: Labels,
+            showValueIndicator: ShowValueIndicator,
+            valueIndicatorColor: ValueIndicatorColor,
+            valueIndicatorTextStyle: ValueIndicatorTextStyle,
+            padding: Padding,
+            trackGap: TrackGap,
             textDirection: TextDirection,
             onChangeStartNormalized: OnChangeStartNormalized,
             onChangedNormalized: OnChangedNormalized,
@@ -738,6 +884,7 @@ internal sealed class RangeSliderRenderWidget : LeafRenderObjectWidget
         rangeSlider.IsFocused = IsFocused;
         rangeSlider.TrackHeight = TrackHeight;
         rangeSlider.ThumbRadius = ThumbRadius;
+        rangeSlider.ThumbSize = ThumbSize;
         rangeSlider.OverlayRadius = OverlayRadius;
         rangeSlider.MinPreferredHeight = MinPreferredHeight;
         rangeSlider.ActiveTrackColor = ActiveTrackColor;
@@ -746,6 +893,15 @@ internal sealed class RangeSliderRenderWidget : LeafRenderObjectWidget
         rangeSlider.OverlayFocusedColor = OverlayFocusedColor;
         rangeSlider.OverlayHoveredColor = OverlayHoveredColor;
         rangeSlider.OverlayDraggedColor = OverlayDraggedColor;
+        rangeSlider.ActiveTickMarkColor = ActiveTickMarkColor;
+        rangeSlider.InactiveTickMarkColor = InactiveTickMarkColor;
+        rangeSlider.TickMarkRadius = TickMarkRadius;
+        rangeSlider.Labels = Labels;
+        rangeSlider.ShowValueIndicator = ShowValueIndicator;
+        rangeSlider.ValueIndicatorColor = ValueIndicatorColor;
+        rangeSlider.ValueIndicatorTextStyle = ValueIndicatorTextStyle;
+        rangeSlider.Padding = Padding;
+        rangeSlider.TrackGap = TrackGap;
         rangeSlider.TextDirection = TextDirection;
         rangeSlider.OnChangeStartNormalized = OnChangeStartNormalized;
         rangeSlider.OnChangedNormalized = OnChangedNormalized;
@@ -765,6 +921,7 @@ internal sealed class RenderRangeSlider : RenderBox
     private bool _isFocused;
     private double _trackHeight;
     private double _thumbRadius;
+    private Size _thumbSize;
     private double _overlayRadius;
     private double _minPreferredHeight;
     private Color _activeTrackColor;
@@ -773,6 +930,15 @@ internal sealed class RenderRangeSlider : RenderBox
     private Color? _overlayFocusedColor;
     private Color? _overlayHoveredColor;
     private Color? _overlayDraggedColor;
+    private Color _activeTickMarkColor;
+    private Color _inactiveTickMarkColor;
+    private double _tickMarkRadius;
+    private RangeLabels? _labels;
+    private ShowValueIndicator _showValueIndicator;
+    private Color _valueIndicatorColor;
+    private TextStyle _valueIndicatorTextStyle;
+    private Thickness _padding;
+    private double _trackGap;
     private TextDirection _textDirection;
     private Action<NormalizedRangeValues, RangeSliderThumb>? _onChangeStartNormalized;
     private Action<NormalizedRangeValues, RangeSliderThumb>? _onChangedNormalized;
@@ -793,6 +959,7 @@ internal sealed class RenderRangeSlider : RenderBox
         bool isFocused,
         double trackHeight,
         double thumbRadius,
+        Size thumbSize,
         double overlayRadius,
         double minPreferredHeight,
         Color activeTrackColor,
@@ -801,6 +968,15 @@ internal sealed class RenderRangeSlider : RenderBox
         Color? overlayFocusedColor,
         Color? overlayHoveredColor,
         Color? overlayDraggedColor,
+        Color activeTickMarkColor,
+        Color inactiveTickMarkColor,
+        double tickMarkRadius,
+        RangeLabels? labels,
+        ShowValueIndicator showValueIndicator,
+        Color valueIndicatorColor,
+        TextStyle valueIndicatorTextStyle,
+        Thickness padding,
+        double trackGap,
         TextDirection textDirection,
         Action<NormalizedRangeValues, RangeSliderThumb>? onChangeStartNormalized,
         Action<NormalizedRangeValues, RangeSliderThumb>? onChangedNormalized,
@@ -814,6 +990,7 @@ internal sealed class RenderRangeSlider : RenderBox
         _isFocused = isFocused;
         _trackHeight = trackHeight;
         _thumbRadius = thumbRadius;
+        _thumbSize = thumbSize;
         _overlayRadius = overlayRadius;
         _minPreferredHeight = minPreferredHeight;
         _activeTrackColor = activeTrackColor;
@@ -822,6 +999,15 @@ internal sealed class RenderRangeSlider : RenderBox
         _overlayFocusedColor = overlayFocusedColor;
         _overlayHoveredColor = overlayHoveredColor;
         _overlayDraggedColor = overlayDraggedColor;
+        _activeTickMarkColor = activeTickMarkColor;
+        _inactiveTickMarkColor = inactiveTickMarkColor;
+        _tickMarkRadius = tickMarkRadius;
+        _labels = labels;
+        _showValueIndicator = showValueIndicator;
+        _valueIndicatorColor = valueIndicatorColor;
+        _valueIndicatorTextStyle = valueIndicatorTextStyle;
+        _padding = padding;
+        _trackGap = trackGap;
         _textDirection = textDirection;
         _onChangeStartNormalized = onChangeStartNormalized;
         _onChangedNormalized = onChangedNormalized;
@@ -952,6 +1138,18 @@ internal sealed class RenderRangeSlider : RenderBox
         }
     }
 
+    public Size ThumbSize
+    {
+        get => _thumbSize;
+        set
+        {
+            if (_thumbSize == value) return;
+            _thumbSize = value;
+            MarkNeedsLayout();
+            MarkNeedsPaint();
+        }
+    }
+
     public double OverlayRadius
     {
         get => _overlayRadius;
@@ -1073,6 +1271,66 @@ internal sealed class RenderRangeSlider : RenderBox
         }
     }
 
+    public Color ActiveTickMarkColor
+    {
+        get => _activeTickMarkColor;
+        set { if (_activeTickMarkColor != value) { _activeTickMarkColor = value; MarkNeedsPaint(); } }
+    }
+
+    public Color InactiveTickMarkColor
+    {
+        get => _inactiveTickMarkColor;
+        set { if (_inactiveTickMarkColor != value) { _inactiveTickMarkColor = value; MarkNeedsPaint(); } }
+    }
+
+    public double TickMarkRadius
+    {
+        get => _tickMarkRadius;
+        set { if (Math.Abs(_tickMarkRadius - value) > Epsilon) { _tickMarkRadius = value; MarkNeedsPaint(); } }
+    }
+
+    public RangeLabels? Labels
+    {
+        get => _labels;
+        set { if (_labels != value) { _labels = value; MarkNeedsPaint(); } }
+    }
+
+    public ShowValueIndicator ShowValueIndicator
+    {
+        get => _showValueIndicator;
+        set { if (_showValueIndicator != value) { _showValueIndicator = value; MarkNeedsPaint(); } }
+    }
+
+    public Color ValueIndicatorColor
+    {
+        get => _valueIndicatorColor;
+        set { if (_valueIndicatorColor != value) { _valueIndicatorColor = value; MarkNeedsPaint(); } }
+    }
+
+    public TextStyle ValueIndicatorTextStyle
+    {
+        get => _valueIndicatorTextStyle;
+        set { if (!Equals(_valueIndicatorTextStyle, value)) { _valueIndicatorTextStyle = value; MarkNeedsPaint(); } }
+    }
+
+    public Thickness Padding
+    {
+        get => _padding;
+        set
+        {
+            if (_padding == value) return;
+            _padding = value;
+            MarkNeedsLayout();
+            MarkNeedsPaint();
+        }
+    }
+
+    public double TrackGap
+    {
+        get => _trackGap;
+        set { if (Math.Abs(_trackGap - value) > Epsilon) { _trackGap = value; MarkNeedsPaint(); } }
+    }
+
     public TextDirection TextDirection
     {
         get => _textDirection;
@@ -1119,10 +1377,11 @@ internal sealed class RenderRangeSlider : RenderBox
             desiredWidth = DefaultTrackWidth;
         }
 
-        double desiredHeight = Math.Max(MinPreferredHeight, Math.Max(TrackHeight, ThumbRadius * 2.0));
+        double contentHeight = Math.Max(MinPreferredHeight, Math.Max(TrackHeight, ThumbSize.Height));
+        double desiredHeight = contentHeight + Padding.Top + Padding.Bottom;
         if (!double.IsFinite(desiredHeight) || desiredHeight <= 0)
         {
-            desiredHeight = Math.Max(TrackHeight, ThumbRadius * 2.0);
+            desiredHeight = Math.Max(TrackHeight, ThumbSize.Height);
         }
 
         Size = Constraints.Constrain(new Size(desiredWidth, desiredHeight));
@@ -1136,42 +1395,22 @@ internal sealed class RenderRangeSlider : RenderBox
         }
 
         var values = ResolveVisualValues();
-        double centerY = offset.Y + (Size.Height / 2.0);
+        double contentHeight = Math.Max(0.0, Size.Height - Padding.Top - Padding.Bottom);
+        double centerY = offset.Y + Padding.Top + (contentHeight / 2.0);
         var geometry = ResolveTrackGeometry(offset.X);
 
         if (geometry.Width > 0 && TrackHeight > 0)
         {
-            var trackRect = new Rect(
-                geometry.Left,
-                centerY - (TrackHeight / 2.0),
-                geometry.Width,
-                TrackHeight);
-            ctx.DrawRectangle(
-                brush: new SolidColorBrush(InactiveTrackColor),
-                pen: null,
-                rect: trackRect,
-                radiusX: TrackHeight / 2.0,
-                radiusY: TrackHeight / 2.0);
-
             double startThumbCenterX = ResolveThumbCenterX(geometry, values.Start);
             double endThumbCenterX = ResolveThumbCenterX(geometry, values.End);
             double activeLeft = Math.Min(startThumbCenterX, endThumbCenterX);
             double activeRight = Math.Max(startThumbCenterX, endThumbCenterX);
-            double activeWidth = Math.Max(0.0, activeRight - activeLeft);
-            if (activeWidth > 0)
-            {
-                var activeRect = new Rect(
-                    activeLeft,
-                    centerY - (TrackHeight / 2.0),
-                    activeWidth,
-                    TrackHeight);
-                ctx.DrawRectangle(
-                    brush: new SolidColorBrush(ActiveTrackColor),
-                    pen: null,
-                    rect: activeRect,
-                    radiusX: TrackHeight / 2.0,
-                    radiusY: TrackHeight / 2.0);
-            }
+            double gapExtent = (ThumbSize.Width / 2.0) + TrackGap;
+            PaintTrackSegment(ctx, geometry.Left, activeLeft - gapExtent, centerY, InactiveTrackColor);
+            PaintTrackSegment(ctx, activeLeft + gapExtent, activeRight - gapExtent, centerY, ActiveTrackColor);
+            PaintTrackSegment(ctx, activeRight + gapExtent, geometry.Right, centerY, InactiveTrackColor);
+
+            PaintTickMarks(ctx, geometry, centerY, values);
 
             var overlayColor = ResolveOverlayColor();
             if (overlayColor.HasValue && overlayColor.Value.A > 0 && OverlayRadius > 0)
@@ -1184,16 +1423,130 @@ internal sealed class RenderRangeSlider : RenderBox
                     radius: OverlayRadius);
             }
 
-            ctx.DrawCircle(
-                brush: new SolidColorBrush(ThumbColor),
+            PaintThumb(ctx, new Point(startThumbCenterX, centerY));
+            PaintThumb(ctx, new Point(endThumbCenterX, centerY));
+
+            if (ShouldShowValueIndicator())
+            {
+                PaintValueIndicator(ctx, new Point(startThumbCenterX, centerY), Labels!.Value.Start);
+                PaintValueIndicator(ctx, new Point(endThumbCenterX, centerY), Labels.Value.End);
+            }
+        }
+    }
+
+    private void PaintTrackSegment(
+        PaintingContext context,
+        double start,
+        double end,
+        double centerY,
+        Color color)
+    {
+        double left = start;
+        double width = end - start;
+        if (width <= Epsilon)
+        {
+            return;
+        }
+
+        context.DrawRectangle(
+            brush: new SolidColorBrush(color),
+            pen: null,
+            rect: new Rect(left, centerY - (TrackHeight / 2.0), width, TrackHeight),
+            radiusX: TrackHeight / 2.0,
+            radiusY: TrackHeight / 2.0);
+    }
+
+    private void PaintTickMarks(
+        PaintingContext context,
+        TrackGeometry geometry,
+        double centerY,
+        NormalizedRangeValues values)
+    {
+        if (!Divisions.HasValue || Divisions.Value <= 0 || TickMarkRadius <= 0)
+        {
+            return;
+        }
+
+        int divisions = Divisions.Value;
+        for (int index = 0; index <= divisions; index++)
+        {
+            double value = (double)index / divisions;
+            double centerX = ResolveThumbCenterX(geometry, value);
+            bool isActive = value >= values.Start - Epsilon && value <= values.End + Epsilon;
+            context.DrawCircle(
+                brush: new SolidColorBrush(isActive ? ActiveTickMarkColor : InactiveTickMarkColor),
                 pen: null,
-                center: new Point(startThumbCenterX, centerY),
-                radius: ThumbRadius);
-            ctx.DrawCircle(
-                brush: new SolidColorBrush(ThumbColor),
+                center: new Point(centerX, centerY),
+                radius: TickMarkRadius);
+        }
+    }
+
+    private void PaintThumb(PaintingContext context, Point center)
+    {
+        var thumbRect = new Rect(
+            center.X - (ThumbSize.Width / 2.0),
+            center.Y - (ThumbSize.Height / 2.0),
+            ThumbSize.Width,
+            ThumbSize.Height);
+        double radius = Math.Min(ThumbSize.Width, ThumbSize.Height) / 2.0;
+        context.DrawRectangle(
+            brush: new SolidColorBrush(ThumbColor),
+            pen: null,
+            rect: thumbRect,
+            radiusX: radius,
+            radiusY: radius);
+    }
+
+    private bool ShouldShowValueIndicator()
+    {
+        if (!IsInteractive || !Labels.HasValue)
+        {
+            return false;
+        }
+
+        return ShowValueIndicator switch
+        {
+            Plumix.Material.ShowValueIndicator.AlwaysVisible => true,
+            Plumix.Material.ShowValueIndicator.Never => false,
+            Plumix.Material.ShowValueIndicator.OnlyForDiscrete => _dragging && Divisions.HasValue,
+            Plumix.Material.ShowValueIndicator.OnlyForContinuous => _dragging && !Divisions.HasValue,
+            _ => _dragging,
+        };
+    }
+
+    private void PaintValueIndicator(PaintingContext context, Point thumbCenter, string label)
+    {
+        const double horizontalPadding = 8.0;
+        const double verticalPadding = 4.0;
+        try
+        {
+            var typeface = new Typeface(
+                ValueIndicatorTextStyle.FontFamily ?? FontFamily.Default,
+                ValueIndicatorTextStyle.FontStyle ?? FontStyle.Normal,
+                ValueIndicatorTextStyle.FontWeight ?? FontWeight.Normal,
+                FontStretch.Normal);
+            var textLayout = new TextLayout(
+                text: label,
+                typeface: typeface,
+                fontSize: ValueIndicatorTextStyle.FontSize ?? 14.0,
+                foreground: new SolidColorBrush(ValueIndicatorTextStyle.Color ?? Colors.White));
+            double width = Math.Max(32.0, textLayout.Width + (horizontalPadding * 2.0));
+            double height = textLayout.Height + (verticalPadding * 2.0);
+            double bottom = thumbCenter.Y - (ThumbSize.Height / 2.0) - 8.0;
+            var indicatorRect = new Rect(thumbCenter.X - (width / 2.0), bottom - height, width, height);
+            context.DrawRectangle(
+                brush: new SolidColorBrush(ValueIndicatorColor),
                 pen: null,
-                center: new Point(endThumbCenterX, centerY),
-                radius: ThumbRadius);
+                rect: indicatorRect,
+                radiusX: height / 2.0,
+                radiusY: height / 2.0);
+            context.DrawTextLayout(
+                textLayout,
+                new Point(indicatorRect.X + ((width - textLayout.Width) / 2.0), indicatorRect.Y + verticalPadding));
+        }
+        catch (Exception exception) when (TextLayoutFallback.IsMissingFontManager(exception))
+        {
+            // Host-less tests may not have a font manager; the indicator surface still remains testable.
         }
     }
 
@@ -1449,8 +1802,8 @@ internal sealed class RenderRangeSlider : RenderBox
 
     private TrackGeometry ResolveTrackGeometry(double offsetX)
     {
-        double left = offsetX + ThumbRadius;
-        double right = offsetX + Size.Width - ThumbRadius;
+        double left = offsetX + Padding.Left + (ThumbSize.Width / 2.0);
+        double right = offsetX + Size.Width - Padding.Right - (ThumbSize.Width / 2.0);
         if (right < left)
         {
             double center = offsetX + (Size.Width / 2.0);

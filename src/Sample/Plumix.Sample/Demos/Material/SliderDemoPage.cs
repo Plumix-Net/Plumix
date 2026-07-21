@@ -27,6 +27,8 @@ internal sealed class SliderDemoPageState : State
     private bool _showSecondaryTrack = true;
     private bool _useSecondaryColorOverride;
     private bool _useMaterial3 = true;
+    private bool _year2023 = true;
+    private bool _tapOnly;
     private double _value = 0.35;
     private double _secondaryTrackValue = 0.7;
     private string _status = "idle";
@@ -137,6 +139,21 @@ internal sealed class SliderDemoPageState : State
                                 width: 56,
                                 background: Color.Parse("#FFFFF3E0")),
                         ]),
+                    new Row(
+                        spacing: 8,
+                        children:
+                        [
+                            BuildControlButton(
+                                label: _year2023 ? "2023 look" : "2024 look",
+                                onTap: () => SetState(() => _year2023 = !_year2023),
+                                width: 96,
+                                background: Color.Parse("#FFEAF6F7")),
+                            BuildControlButton(
+                                label: _tapOnly ? "Tap only" : "Tap + slide",
+                                onTap: () => SetState(() => _tapOnly = !_tapOnly),
+                                width: 104,
+                                background: Color.Parse("#FFF0E8FF")),
+                        ]),
                     new Expanded(
                         child: new SingleChildScrollView(
                             child: new Column(
@@ -181,11 +198,15 @@ internal sealed class SliderDemoPageState : State
             min: 0,
             max: 1,
             divisions: _discrete ? 5 : null,
+            label: $"{Math.Round(_value * 100)}",
             secondaryTrackValue: _showSecondaryTrack ? _secondaryTrackValue : null,
             activeColor: _useWidgetColorOverride ? Color.Parse("#FFB71C1C") : null,
             inactiveColor: _useWidgetColorOverride ? Color.Parse("#FFFFCDD2") : null,
             secondaryActiveColor: _useSecondaryColorOverride ? Color.Parse("#FF1B5E20") : null,
             thumbColor: _useWidgetColorOverride ? Color.Parse("#FF880E4F") : null,
+            allowedInteraction: _tapOnly ? SliderInteraction.TapOnly : SliderInteraction.TapAndSlide,
+            showValueIndicator: ShowValueIndicator.OnlyForDiscrete,
+            year2023: _year2023,
             onChanged: _enabled ? HandleValueChanged : null,
             onChangeStart: value => SetState(() => _status = $"start {value:0.00}"),
             onChangeEnd: value => SetState(() => _status = $"end {value:0.00}"),

@@ -25,6 +25,7 @@ internal sealed class RangeSliderDemoPageState : State
     private bool _useThemeOverrides;
     private bool _useWidgetColorOverride;
     private bool _useMaterial3 = true;
+    private bool _year2023 = true;
     private RangeValues _values = new(0.2, 0.7);
     private string _status = "idle";
 
@@ -119,6 +120,15 @@ internal sealed class RangeSliderDemoPageState : State
                                     fontSize: 12,
                                     color: Color.Parse("#FF607D8B"))),
                         ]),
+                    new Row(
+                        children:
+                        [
+                            BuildControlButton(
+                                label: _year2023 ? "2023 look" : "2024 look",
+                                onTap: () => SetState(() => _year2023 = !_year2023),
+                                width: 96,
+                                background: Color.Parse("#FFEAF6F7")),
+                        ]),
                     new Expanded(
                         child: new SingleChildScrollView(
                             child: new Column(
@@ -163,8 +173,12 @@ internal sealed class RangeSliderDemoPageState : State
             min: 0,
             max: 1,
             divisions: _discrete ? 5 : null,
+            labels: new RangeLabels(
+                $"{Math.Round(_values.Start * 100)}",
+                $"{Math.Round(_values.End * 100)}"),
             activeColor: _useWidgetColorOverride ? Color.Parse("#FFB71C1C") : null,
             inactiveColor: _useWidgetColorOverride ? Color.Parse("#FFFFCDD2") : null,
+            year2023: _year2023,
             onChanged: _enabled ? HandleValuesChanged : null,
             onChangeStart: values => SetState(() => _status = $"start {values.Start:0.00}-{values.End:0.00}"),
             onChangeEnd: values => SetState(() => _status = $"end {values.Start:0.00}-{values.End:0.00}"),

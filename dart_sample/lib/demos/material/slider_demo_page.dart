@@ -17,6 +17,8 @@ class _SliderDemoPageState extends State<SliderDemoPage> {
   bool _showSecondaryTrack = true;
   bool _useSecondaryColorOverride = false;
   bool _useMaterial3 = true;
+  bool _year2023 = true;
+  bool _tapOnly = false;
   double _value = 0.35;
   double _secondaryTrackValue = 0.7;
   String _status = 'idle';
@@ -108,16 +110,14 @@ class _SliderDemoPageState extends State<SliderDemoPage> {
               const SizedBox(width: 8),
               _buildControlButton(
                 label: '-',
-                onTap: () =>
-                    setState(() => _value = math.max(0, _value - 0.1)),
+                onTap: () => setState(() => _value = math.max(0, _value - 0.1)),
                 width: 42,
                 background: const Color(0xFFFFF3E0),
               ),
               const SizedBox(width: 8),
               _buildControlButton(
                 label: '+',
-                onTap: () =>
-                    setState(() => _value = math.min(1, _value + 0.1)),
+                onTap: () => setState(() => _value = math.min(1, _value + 0.1)),
                 width: 42,
                 background: const Color(0xFFFFF3E0),
               ),
@@ -151,8 +151,10 @@ class _SliderDemoPageState extends State<SliderDemoPage> {
               _buildControlButton(
                 label: 'Sec -',
                 onTap: () => setState(
-                  () => _secondaryTrackValue =
-                      math.max(0, _secondaryTrackValue - 0.1),
+                  () => _secondaryTrackValue = math.max(
+                    0,
+                    _secondaryTrackValue - 0.1,
+                  ),
                 ),
                 width: 56,
                 background: const Color(0xFFFFF3E0),
@@ -161,11 +163,31 @@ class _SliderDemoPageState extends State<SliderDemoPage> {
               _buildControlButton(
                 label: 'Sec +',
                 onTap: () => setState(
-                  () => _secondaryTrackValue =
-                      math.min(1, _secondaryTrackValue + 0.1),
+                  () => _secondaryTrackValue = math.min(
+                    1,
+                    _secondaryTrackValue + 0.1,
+                  ),
                 ),
                 width: 56,
                 background: const Color(0xFFFFF3E0),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: <Widget>[
+              _buildControlButton(
+                label: _year2023 ? '2023 look' : '2024 look',
+                onTap: () => setState(() => _year2023 = !_year2023),
+                width: 96,
+                background: const Color(0xFFEAF6F7),
+              ),
+              const SizedBox(width: 8),
+              _buildControlButton(
+                label: _tapOnly ? 'Tap only' : 'Tap + slide',
+                onTap: () => setState(() => _tapOnly = !_tapOnly),
+                width: 104,
+                background: const Color(0xFFF0E8FF),
               ),
             ],
           ),
@@ -227,12 +249,19 @@ class _SliderDemoPageState extends State<SliderDemoPage> {
       min: 0,
       max: 1,
       divisions: _discrete ? 5 : null,
+      label: '${(_value * 100).round()}',
       secondaryTrackValue: _showSecondaryTrack ? _secondaryTrackValue : null,
       activeColor: _useWidgetColorOverride ? const Color(0xFFB71C1C) : null,
       inactiveColor: _useWidgetColorOverride ? const Color(0xFFFFCDD2) : null,
-      secondaryActiveColor:
-          _useSecondaryColorOverride ? const Color(0xFF1B5E20) : null,
+      secondaryActiveColor: _useSecondaryColorOverride
+          ? const Color(0xFF1B5E20)
+          : null,
       thumbColor: _useWidgetColorOverride ? const Color(0xFF880E4F) : null,
+      allowedInteraction: _tapOnly
+          ? SliderInteraction.tapOnly
+          : SliderInteraction.tapAndSlide,
+      showValueIndicator: ShowValueIndicator.onlyForDiscrete,
+      year2023: _year2023,
       onChanged: _enabled ? _handleValueChanged : null,
       onChangeStart: (double value) =>
           setState(() => _status = 'start ${value.toStringAsFixed(2)}'),
@@ -251,7 +280,9 @@ class _SliderDemoPageState extends State<SliderDemoPage> {
   }
 
   String _resolveSecondaryLabel() {
-    return _showSecondaryTrack ? _secondaryTrackValue.toStringAsFixed(2) : 'off';
+    return _showSecondaryTrack
+        ? _secondaryTrackValue.toStringAsFixed(2)
+        : 'off';
   }
 
   Widget _buildControlButton({
