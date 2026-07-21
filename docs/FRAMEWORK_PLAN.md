@@ -232,6 +232,9 @@ Completion note:
   `CompositedTransformFollower`, including shared `LayerLink`/leader/follower ownership, target/follower anchors,
   linked offsets, hidden/visible unlinked policy, transformed hit testing and semantics, focused tests, and mirrored
   C#/Dart probes.
+- Continued paired core adaptive-sliver coverage with `SliverLayoutBuilder` + `SliverSafeArea`, including
+  layout-phase `SliverConstraints`, equivalent-constraint rebuild suppression, direct child-geometry forwarding,
+  MediaQuery edge removal, minimum safe insets, focused tests, and a mirrored C#/Dart custom-sliver probe.
 - Implicit-animations sample viewport hardening: both samples now share an always-visible scrollbar and scroll
   controller around the complete probe column, preventing bottom overflow on short desktop windows.
 

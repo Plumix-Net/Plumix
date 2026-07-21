@@ -122,6 +122,8 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/Widgets/Baseline.cs`
   - `src/Plumix/Widgets/LayoutBuilder.cs`
   - `src/Plumix/Widgets/OrientationBuilder.cs`
+  - `src/Plumix/Widgets/SliverLayoutBuilder.cs`
+  - `src/Plumix/Widgets/SafeArea.cs`
   - `src/Plumix/Widgets/Placeholder.cs`
   - `src/Plumix/Widgets/GridPaper.cs`
   - `src/Plumix/Widgets/Clip.cs`

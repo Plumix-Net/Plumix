@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 class CustomSliversDemoPage extends StatelessWidget {
   const CustomSliversDemoPage({super.key});
@@ -7,30 +8,48 @@ class CustomSliversDemoPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return CustomScrollView(
       slivers: <Widget>[
-        const PinnedHeaderSliver(
-          child: SizedBox(
-            height: 88,
-            child: ColoredBox(
-              color: Color(0xFFF8FAFF),
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  spacing: 4,
-                  children: <Widget>[
-                    Text(
-                      'PinnedHeaderSliver',
-                      style: TextStyle(fontSize: 20, color: Colors.black),
+        SliverSafeArea(
+          minimum: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+          sliver: SliverLayoutBuilder(
+            builder: (BuildContext context, SliverConstraints constraints) {
+              final bool compact = constraints.crossAxisExtent < 420;
+              final double height = compact ? 104 : 88;
+              final String width = constraints.crossAxisExtent.toStringAsFixed(
+                0,
+              );
+              return PinnedHeaderSliver(
+                child: SizedBox(
+                  height: height,
+                  child: ColoredBox(
+                    color: const Color(0xFFF8FAFF),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        spacing: 4,
+                        children: <Widget>[
+                          const Text(
+                            'SliverLayoutBuilder + SliverSafeArea',
+                            style: TextStyle(fontSize: 20, color: Colors.black),
+                          ),
+                          Text(
+                            '$width px safe cross-axis — '
+                            '${compact ? "compact" : "wide"} header',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.black54,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    Text(
-                      'Decorated and grouped slivers share Flutter\'s layout '
-                      'protocol.',
-                      style: TextStyle(fontSize: 14, color: Colors.black54),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
+              );
+            },
           ),
         ),
         DecoratedSliver(

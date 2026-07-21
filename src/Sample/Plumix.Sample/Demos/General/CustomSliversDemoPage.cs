@@ -14,22 +14,33 @@ public sealed class CustomSliversDemoPage : StatelessWidget
         return new CustomScrollView(
             slivers:
             [
-                new PinnedHeaderSliver(
-                    new Container(
-                        height: 88,
-                        color: Color.Parse("#FFF8FAFF"),
-                        padding: new Thickness(12, 10),
-                        child: new Column(
-                            crossAxisAlignment: CrossAxisAlignment.Stretch,
-                            spacing: 4,
-                            children:
-                            [
-                                new Text("PinnedHeaderSliver", fontSize: 20, color: Colors.Black),
-                                new Text(
-                                    "Decorated and grouped slivers share Flutter's layout protocol.",
-                                    fontSize: 14,
-                                    color: Colors.DimGray),
-                            ]))),
+                new SliverSafeArea(
+                    minimum: new Thickness(12, 8, 12, 0),
+                    sliver: new SliverLayoutBuilder((_, constraints) =>
+                    {
+                        bool compact = constraints.CrossAxisExtent < 420;
+                        double height = compact ? 104 : 88;
+                        string width = constraints.CrossAxisExtent.ToString("0");
+                        return new PinnedHeaderSliver(
+                            new Container(
+                                height: height,
+                                color: Color.Parse("#FFF8FAFF"),
+                                padding: new Thickness(12, 10),
+                                child: new Column(
+                                    crossAxisAlignment: CrossAxisAlignment.Stretch,
+                                    spacing: 4,
+                                    children:
+                                    [
+                                        new Text(
+                                            "SliverLayoutBuilder + SliverSafeArea",
+                                            fontSize: 20,
+                                            color: Colors.Black),
+                                        new Text(
+                                            $"{width}px safe cross-axis — {(compact ? "compact" : "wide")} header",
+                                            fontSize: 14,
+                                            color: Colors.DimGray),
+                                    ])));
+                    })),
                 new DecoratedSliver(
                     decoration: new BoxDecoration(
                         Color: Color.Parse("#FFEAF4FF"),

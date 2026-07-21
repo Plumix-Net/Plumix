@@ -1,5 +1,10 @@
 # Changelog
 
+- Added paired Flutter core `SliverLayoutBuilder` + `SliverSafeArea` ports with layout-phase sliver-constraint
+  building, equivalent-constraint rebuild suppression, exact child geometry forwarding, safe-inset/minimum/edge
+  composition, focused tests, and a mirrored C#/Dart custom-sliver probe. `SliverConstraints` now implements the
+  shared constraints contract; advanced `Plumix` to `0.5.0-alpha.1`.
+
 - Breaking: added paired Flutter core `CompositedTransformTarget` + `CompositedTransformFollower` ports with shared
   `LayerLink`/leader/follower compositing primitives, anchor and offset alignment, linked/unlinked visibility,
   transformed hit testing and semantics, focused tests, and a mirrored C#/Dart runtime probe. Nested root-transform

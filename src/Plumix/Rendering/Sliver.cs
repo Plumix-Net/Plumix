@@ -17,8 +17,15 @@ public readonly record struct SliverConstraints(
     AxisDirection AxisDirection = AxisDirection.Down,
     GrowthDirection GrowthDirection = GrowthDirection.Forward,
     double Overlap = 0,
-    double PrecedingScrollExtent = 0)
+    double PrecedingScrollExtent = 0) : IConstraints
 {
+    public bool IsTight => false;
+
+    public bool IsNormalized => ScrollOffset >= 0.0
+                                && CrossAxisExtent >= 0.0
+                                && ViewportMainAxisExtent >= 0.0
+                                && RemainingPaintExtent >= 0.0;
+
     public BoxConstraints AsBoxConstraints(
         double minExtent = 0.0,
         double maxExtent = double.PositiveInfinity,

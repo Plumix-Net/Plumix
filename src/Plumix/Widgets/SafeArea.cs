@@ -68,3 +68,56 @@ public sealed class SafeArea : StatelessWidget
                 child: Child));
     }
 }
+
+/// <summary>A sliver that insets another sliver to avoid operating system intrusions.</summary>
+public sealed class SliverSafeArea : StatelessWidget
+{
+    public SliverSafeArea(
+        Widget sliver,
+        bool left = true,
+        bool top = true,
+        bool right = true,
+        bool bottom = true,
+        Thickness? minimum = null,
+        Key? key = null) : base(key)
+    {
+        Sliver = sliver ?? throw new ArgumentNullException(nameof(sliver));
+        Left = left;
+        Top = top;
+        Right = right;
+        Bottom = bottom;
+        Minimum = minimum ?? default;
+    }
+
+    public Widget Sliver { get; }
+
+    public bool Left { get; }
+
+    public bool Top { get; }
+
+    public bool Right { get; }
+
+    public bool Bottom { get; }
+
+    public Thickness Minimum { get; }
+
+    public override Widget Build(BuildContext context)
+    {
+        Thickness padding = MediaQuery.PaddingOf(context);
+        var resolvedPadding = new Thickness(
+            Math.Max(Left ? padding.Left : 0.0, Minimum.Left),
+            Math.Max(Top ? padding.Top : 0.0, Minimum.Top),
+            Math.Max(Right ? padding.Right : 0.0, Minimum.Right),
+            Math.Max(Bottom ? padding.Bottom : 0.0, Minimum.Bottom));
+
+        return new SliverPadding(
+            padding: resolvedPadding,
+            sliver: MediaQuery.RemovePadding(
+                context: context,
+                removeLeft: Left,
+                removeTop: Top,
+                removeRight: Right,
+                removeBottom: Bottom,
+                child: Sliver));
+    }
+}

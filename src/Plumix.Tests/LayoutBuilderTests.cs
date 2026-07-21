@@ -8,9 +8,164 @@ namespace Plumix.Tests;
 // Dart parity sources:
 // flutter/packages/flutter/lib/src/widgets/layout_builder.dart
 // flutter/packages/flutter/lib/src/widgets/orientation_builder.dart
+// flutter/packages/flutter/lib/src/widgets/sliver_layout_builder.dart
 
 public sealed class LayoutBuilderTests
 {
+    [Fact]
+    public void SliverLayoutBuilder_ExposesSourceContractAndValidatesBuilder()
+    {
+        SliverLayoutWidgetBuilder builder = (_, _) => new SliverToBoxAdapter();
+        var widget = new SliverLayoutBuilder(builder);
+
+        Assert.Same(builder, widget.Builder);
+        Assert.Throws<ArgumentNullException>(() => new SliverLayoutBuilder(null!));
+    }
+
+    [Fact]
+    public void SliverLayoutBuilder_DefersBuildUntilLayoutAndForwardsConstraintsAndGeometry()
+    {
+        int builderCalls = 0;
+        SliverConstraints? receivedConstraints = null;
+        var owner = new BuildOwner();
+        var root = new TestRootElement(new SliverLayoutBuilder((_, constraints) =>
+        {
+            builderCalls++;
+            receivedConstraints = constraints;
+            return new SliverToBoxAdapter(new SizedBox(height: 140));
+        }));
+        Mount(root, owner);
+
+        Assert.Equal(0, builderCalls);
+        var renderObject = Assert.IsType<RenderSliverLayoutBuilder>(root.ChildElement!.RenderObject);
+        var constraints = new SliverConstraints(
+            Axis: Axis.Vertical,
+            ScrollOffset: 20,
+            RemainingPaintExtent: 80,
+            CrossAxisExtent: 100,
+            ViewportMainAxisExtent: 80,
+            RemainingCacheExtent: 100);
+
+        renderObject.LayoutWithSliverConstraints(constraints);
+
+        Assert.Equal(1, builderCalls);
+        Assert.Equal(constraints, receivedConstraints);
+        Assert.NotNull(renderObject.Child);
+        Assert.Equal(renderObject.Child!.Geometry, renderObject.Geometry);
+        Assert.Equal(140, renderObject.Geometry.ScrollExtent);
+        Assert.Equal(80, renderObject.Geometry.PaintExtent);
+        Assert.Equal(new Size(100, 80), renderObject.Size);
+    }
+
+    [Fact]
+    public void SliverLayoutBuilder_RebuildsForChangedConstraintsButSkipsEquivalentLayoutInfo()
+    {
+        int builderCalls = 0;
+        var owner = new BuildOwner();
+        var root = new TestRootElement(new SliverLayoutBuilder((_, constraints) =>
+        {
+            builderCalls++;
+            return new SliverToBoxAdapter(
+                new SizedBox(height: Math.Max(1.0, constraints.RemainingPaintExtent)));
+        }));
+        Mount(root, owner);
+
+        var renderObject = Assert.IsType<RenderSliverLayoutBuilder>(root.ChildElement!.RenderObject);
+        var firstConstraints = new SliverConstraints(
+            Axis: Axis.Vertical,
+            ScrollOffset: 0,
+            RemainingPaintExtent: 80,
+            CrossAxisExtent: 100,
+            ViewportMainAxisExtent: 80,
+            RemainingCacheExtent: 80);
+        renderObject.LayoutWithSliverConstraints(firstConstraints);
+        Assert.Equal(1, builderCalls);
+
+        renderObject.ScheduleLayoutCallback();
+        renderObject.LayoutWithSliverConstraints(firstConstraints);
+        Assert.Equal(1, builderCalls);
+
+        var secondConstraints = firstConstraints with { RemainingPaintExtent = 120 };
+        renderObject.LayoutWithSliverConstraints(secondConstraints);
+        Assert.Equal(2, builderCalls);
+        Assert.Equal(120, renderObject.Geometry.ScrollExtent);
+    }
+
+    [Fact]
+    public void SliverLayoutBuilder_WidgetUpdateUsesNewBuilderAtNextLayout()
+    {
+        int firstBuilderCalls = 0;
+        int secondBuilderCalls = 0;
+        var owner = new BuildOwner();
+        var root = new TestRootElement(new SliverLayoutBuilder((_, _) =>
+        {
+            firstBuilderCalls++;
+            return new SliverToBoxAdapter(new SizedBox(height: 20));
+        }));
+        Mount(root, owner);
+
+        var renderObject = Assert.IsType<RenderSliverLayoutBuilder>(root.ChildElement!.RenderObject);
+        var constraints = new SliverConstraints(
+            Axis: Axis.Vertical,
+            ScrollOffset: 0,
+            RemainingPaintExtent: 100,
+            CrossAxisExtent: 100,
+            ViewportMainAxisExtent: 100,
+            RemainingCacheExtent: 100);
+        renderObject.LayoutWithSliverConstraints(constraints);
+
+        root.Update(new SliverLayoutBuilder((_, _) =>
+        {
+            secondBuilderCalls++;
+            return new SliverToBoxAdapter(new SizedBox(height: 40));
+        }));
+
+        Assert.Equal(1, firstBuilderCalls);
+        Assert.Equal(0, secondBuilderCalls);
+        Assert.Same(renderObject, root.ChildElement!.RenderObject);
+
+        renderObject.LayoutWithSliverConstraints(constraints);
+
+        Assert.Equal(1, firstBuilderCalls);
+        Assert.Equal(1, secondBuilderCalls);
+        Assert.Equal(40, renderObject.Geometry.ScrollExtent);
+    }
+
+    [Fact]
+    public void SliverLayoutBuilder_RebuildsAtLayoutWhenInheritedDependencyChanges()
+    {
+        int builderCalls = 0;
+        var values = new List<int>();
+        var layoutBuilder = new SliverLayoutBuilder((context, _) =>
+        {
+            builderCalls++;
+            values.Add(context.DependOnInherited<TestInheritedValue>()!.Value);
+            return new SliverToBoxAdapter(new SizedBox(height: 20));
+        });
+        var owner = new BuildOwner();
+        var root = new TestRootElement(new TestInheritedValue(1, layoutBuilder));
+        Mount(root, owner);
+
+        var renderObject = Assert.IsType<RenderSliverLayoutBuilder>(root.ChildElement!.RenderObject);
+        var constraints = new SliverConstraints(
+            Axis: Axis.Vertical,
+            ScrollOffset: 0,
+            RemainingPaintExtent: 100,
+            CrossAxisExtent: 100,
+            ViewportMainAxisExtent: 100,
+            RemainingCacheExtent: 100);
+        renderObject.LayoutWithSliverConstraints(constraints);
+        Assert.Equal([1], values);
+
+        root.Update(new TestInheritedValue(2, layoutBuilder));
+        owner.FlushBuild();
+        Assert.Equal(1, builderCalls);
+
+        renderObject.LayoutWithSliverConstraints(constraints);
+        Assert.Equal(2, builderCalls);
+        Assert.Equal([1, 2], values);
+    }
+
     [Fact]
     public void LayoutBuilder_ExposesSourceContractAndValidatesBuilder()
     {

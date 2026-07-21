@@ -9,6 +9,96 @@ namespace Plumix.Tests;
 public sealed class SafeAreaTests
 {
     [Fact]
+    public void SliverSafeArea_AppliesSliverPaddingAndRemovesConsumedPaddingFromDescendants()
+    {
+        MediaQueryProbe.Reset();
+
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new MediaQuery(
+                data: new MediaQueryData(
+                    Padding: new Thickness(10, 20, 30, 40),
+                    ViewPadding: new Thickness(10, 20, 30, 40)),
+                child: new SliverSafeArea(
+                    sliver: new SliverToBoxAdapter(new MediaQueryProbeWidget()))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var outerPadding = RequireRenderObject<RenderSliverPadding>(root.ChildElement);
+        Assert.Equal(new Thickness(10, 20, 30, 40), outerPadding.Padding);
+        Assert.Equal(new Thickness(), MediaQueryProbe.Padding);
+        Assert.Equal(new Thickness(), MediaQueryProbe.ViewPadding);
+    }
+
+    [Fact]
+    public void SliverSafeArea_RespectsMinimumAndSideFlags()
+    {
+        MediaQueryProbe.Reset();
+
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new MediaQuery(
+                data: new MediaQueryData(
+                    Padding: new Thickness(4, 10, 3, 2),
+                    ViewPadding: new Thickness(4, 10, 3, 2)),
+                child: new SliverSafeArea(
+                    left: false,
+                    top: true,
+                    right: true,
+                    bottom: false,
+                    minimum: new Thickness(5, 1, 8, 4),
+                    sliver: new SliverToBoxAdapter(new MediaQueryProbeWidget()))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var outerPadding = RequireRenderObject<RenderSliverPadding>(root.ChildElement);
+        Assert.Equal(new Thickness(5, 10, 8, 4), outerPadding.Padding);
+        Assert.Equal(new Thickness(4, 0, 0, 2), MediaQueryProbe.Padding);
+    }
+
+    [Fact]
+    public void SliverSafeArea_RequiresSliver()
+    {
+        Assert.Throws<ArgumentNullException>(() => new SliverSafeArea(null!));
+    }
+
+    [Fact]
+    public void SliverSafeArea_ForwardsResolvedInsetsIntoSliverGeometryAndCrossAxisConstraints()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new MediaQuery(
+                data: new MediaQueryData(
+                    Padding: new Thickness(10, 20, 30, 40),
+                    ViewPadding: new Thickness(10, 20, 30, 40)),
+                child: new SliverSafeArea(
+                    sliver: new SliverToBoxAdapter(new SizedBox(height: 50)))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var outerPadding = RequireRenderObject<RenderSliverPadding>(root.ChildElement);
+        var constraints = new SliverConstraints(
+            Axis: Axis.Vertical,
+            ScrollOffset: 0,
+            RemainingPaintExtent: 120,
+            CrossAxisExtent: 100,
+            ViewportMainAxisExtent: 120,
+            RemainingCacheExtent: 120);
+        outerPadding.LayoutWithSliverConstraints(constraints);
+
+        Assert.Equal(110, outerPadding.Geometry.ScrollExtent);
+        Assert.Equal(110, outerPadding.Geometry.PaintExtent);
+        Assert.NotNull(outerPadding.Child);
+        Assert.Equal(60, outerPadding.Child!.ConstraintsForSliver.CrossAxisExtent);
+    }
+
+    [Fact]
     public void SafeArea_AppliesPaddingAndRemovesConsumedPaddingFromDescendants()
     {
         MediaQueryProbe.Reset();
