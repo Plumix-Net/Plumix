@@ -102,6 +102,7 @@ internal static class SampleRoutes
     public const string KeyboardListener = "/keyboard-listener";
     public const string DebugPainting = "/debug-painting";
     public const string Flow = "/flow";
+    public const string CompositedTransform = "/composited-transform";
     public const string Image = "/image";
     public const string CustomMultiChildLayout = "/custom-multi-child-layout";
     public const string DismissibleSizeChangedLayout = "/dismissible-size-changed-layout";
@@ -280,6 +281,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "Flow + RepaintBoundary",
             "paint-time transforms + isolated child display lists",
             () => new FlowDemoPage()),
+        new(
+            SampleRoutes.CompositedTransform,
+            "Composited transforms",
+            "linked target/follower anchors + unlinked visibility",
+            () => new CompositedTransformDemoPage()),
         new(
             SampleRoutes.Image,
             "Image controls",

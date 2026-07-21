@@ -361,6 +361,20 @@ public sealed class PaintingContext
         childContext.StopRecordingIfNeeded();
     }
 
+    public void PushLayer(ContainerLayer layer, Action<PaintingContext> painter)
+    {
+        ArgumentNullException.ThrowIfNull(layer);
+        ArgumentNullException.ThrowIfNull(painter);
+        StopRecordingIfNeeded();
+
+        layer.RemoveAllChildren();
+        _containerLayer.Append(layer);
+
+        var childContext = new PaintingContext(layer);
+        painter(childContext);
+        childContext.StopRecordingIfNeeded();
+    }
+
     public void PushOpacity(double opacity, Action<PaintingContext> painter)
     {
         StopRecordingIfNeeded();

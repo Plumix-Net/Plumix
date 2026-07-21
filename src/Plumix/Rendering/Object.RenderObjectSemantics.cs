@@ -142,9 +142,9 @@ internal sealed class RenderObjectSemantics
         _owner.VisitChildrenForSemantics((child, childOffset, childTransform) =>
         {
             var childMatrix =
-                transform
+                childTransform
                 * Matrix.CreateTranslation(childOffset.X, childOffset.Y)
-                * childTransform;
+                * transform;
 
             var localPaintClip = _owner.InvokeDescribeApproximatePaintClip(child);
             var localSemanticsClip = _owner.InvokeDescribeSemanticsClip(child) ?? localPaintClip;

@@ -1,5 +1,10 @@
 # Changelog
 
+- Breaking: added paired Flutter core `CompositedTransformTarget` + `CompositedTransformFollower` ports with shared
+  `LayerLink`/leader/follower compositing primitives, anchor and offset alignment, linked/unlinked visibility,
+  transformed hit testing and semantics, focused tests, and a mirrored C#/Dart runtime probe. Nested root-transform
+  composition now follows child-to-parent paint order; advanced `Plumix` to `0.4.0-alpha.1`.
+
 - Added paired Flutter core `PopScope<T>` + `NavigatorPopHandler<T>` ports with route-scoped pop entries,
   collective veto, successful/rejected result callbacks, dynamic `canPop`, nested-navigator navigation
   notifications, focused tests, and a mirrored C#/Dart runtime probe. `Form` now delegates its modern pop-veto and

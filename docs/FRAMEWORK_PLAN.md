@@ -228,6 +228,10 @@ Completion note:
   route-owned pop-entry registration, collective dynamic veto, successful/rejected typed result callbacks,
   nested-navigator `NavigationNotification` propagation, modern `Form` pop integration, focused tests, and mirrored
   C#/Dart probes.
+- Continued paired core composited-positioning coverage with `CompositedTransformTarget` +
+  `CompositedTransformFollower`, including shared `LayerLink`/leader/follower ownership, target/follower anchors,
+  linked offsets, hidden/visible unlinked policy, transformed hit testing and semantics, focused tests, and mirrored
+  C#/Dart probes.
 - Implicit-animations sample viewport hardening: both samples now share an always-visible scrollbar and scroll
   controller around the complete probe column, preventing bottom overflow on short desktop windows.
 

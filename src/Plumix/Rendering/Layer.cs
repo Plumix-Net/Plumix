@@ -57,12 +57,12 @@ public abstract class Layer
         return context.PushClip(new RoundedRect(rect, clampedRadius));
     }
 
-    internal void Attach(ContainerLayer parent)
+    internal virtual void Attach(ContainerLayer parent)
     {
         Parent = parent;
     }
 
-    internal void Detach()
+    internal virtual void Detach()
     {
         Parent = null;
     }
@@ -118,6 +118,168 @@ public class ContainerLayer : Layer
         for (int index = 0; index < _children.Count; index++)
         {
             _children[index].AddToScene(context, offset);
+        }
+    }
+}
+
+/// <summary>
+/// Connects one <see cref="LeaderLayer"/> with one or more <see cref="FollowerLayer"/> instances.
+/// </summary>
+/// <remarks>
+/// Dart parity source: flutter/packages/flutter/lib/src/rendering/layer.dart (LayerLink).
+/// </remarks>
+public sealed class LayerLink
+{
+    private LeaderLayer? _leader;
+    private RenderLeaderLayer? _renderLeader;
+
+    public LeaderLayer? Leader => _leader;
+
+    public Size? LeaderSize { get; set; }
+
+    internal RenderLeaderLayer? RenderLeader => _renderLeader;
+
+    internal void RegisterLeader(LeaderLayer leader)
+    {
+        if (_leader != null && !ReferenceEquals(_leader, leader))
+        {
+            throw new InvalidOperationException(
+                "A LayerLink cannot be attached to more than one LeaderLayer at the same time.");
+        }
+
+        _leader = leader;
+    }
+
+    internal void UnregisterLeader(LeaderLayer leader)
+    {
+        if (ReferenceEquals(_leader, leader))
+        {
+            _leader = null;
+        }
+    }
+
+    internal void RegisterRenderLeader(RenderLeaderLayer leader)
+    {
+        if (_renderLeader != null && !ReferenceEquals(_renderLeader, leader))
+        {
+            throw new InvalidOperationException(
+                "A LayerLink cannot be attached to more than one RenderLeaderLayer at the same time.");
+        }
+
+        _renderLeader = leader;
+    }
+
+    internal void UnregisterRenderLeader(RenderLeaderLayer leader)
+    {
+        if (ReferenceEquals(_renderLeader, leader))
+        {
+            _renderLeader = null;
+        }
+    }
+}
+
+/// <summary>
+/// A composited anchor layer followed by <see cref="FollowerLayer"/> instances sharing its link.
+/// </summary>
+public sealed class LeaderLayer : ContainerLayer
+{
+    private LayerLink _link;
+
+    public LeaderLayer(LayerLink link, Point offset = default)
+    {
+        _link = link ?? throw new ArgumentNullException(nameof(link));
+        Offset = offset;
+    }
+
+    public LayerLink Link
+    {
+        get => _link;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            if (ReferenceEquals(_link, value))
+            {
+                return;
+            }
+
+            if (Parent != null)
+            {
+                _link.UnregisterLeader(this);
+                value.RegisterLeader(this);
+            }
+
+            _link = value;
+        }
+    }
+
+    public Point Offset { get; set; }
+
+    internal override void Attach(ContainerLayer parent)
+    {
+        base.Attach(parent);
+        _link.RegisterLeader(this);
+    }
+
+    internal override void Detach()
+    {
+        _link.UnregisterLeader(this);
+        base.Detach();
+    }
+
+    internal override void AddToScene(DrawingContext context, Point offset)
+    {
+        AddChildrenToScene(context, offset + Offset);
+    }
+}
+
+/// <summary>
+/// A composited layer that transforms its children into a linked leader's coordinate space.
+/// </summary>
+public sealed class FollowerLayer : ContainerLayer
+{
+    public FollowerLayer(
+        LayerLink link,
+        bool showWhenUnlinked = true,
+        Point unlinkedOffset = default,
+        Matrix? linkedTransform = null)
+    {
+        Link = link ?? throw new ArgumentNullException(nameof(link));
+        ShowWhenUnlinked = showWhenUnlinked;
+        UnlinkedOffset = unlinkedOffset;
+        LinkedTransform = linkedTransform;
+    }
+
+    public LayerLink Link { get; set; }
+
+    public bool ShowWhenUnlinked { get; set; }
+
+    public Point UnlinkedOffset { get; set; }
+
+    public Matrix? LinkedTransform { get; set; }
+
+    public Matrix? GetLastTransform()
+    {
+        return Link.Leader != null ? LinkedTransform : null;
+    }
+
+    internal override void AddToScene(DrawingContext context, Point offset)
+    {
+        Matrix? linkedTransform = GetLastTransform();
+        if (!linkedTransform.HasValue)
+        {
+            if (ShowWhenUnlinked)
+            {
+                AddChildrenToScene(context, offset + UnlinkedOffset);
+            }
+
+            return;
+        }
+
+        Point sceneOffset = offset + UnlinkedOffset;
+        using (context.PushTransform(Matrix.CreateTranslation(sceneOffset.X, sceneOffset.Y)))
+        using (context.PushTransform(linkedTransform.Value))
+        {
+            AddChildrenToScene(context, default);
         }
     }
 }

@@ -757,9 +757,9 @@ public abstract class RenderObject : IRenderObject
                     return;
                 }
 
-                Matrix next = current
+                Matrix next = childTransform
                               * Matrix.CreateTranslation(childOffset.X, childOffset.Y)
-                              * childTransform;
+                              * current;
                 if (Find(child, next, target, out Matrix childResult))
                 {
                     foundResult = childResult;
