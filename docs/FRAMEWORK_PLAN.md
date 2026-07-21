@@ -220,6 +220,10 @@ Completion note:
   classification, async confirmation/veto, clipped primary/secondary backgrounds, move/collapse callbacks,
   post-initial size-change bubbling, focused tests, and mirrored C#/Dart probes. Source-required shared gesture
   start behavior, two-axis velocity, spring fling, and listenable rectangular clipping now live in core.
+- Continued paired core state-storage coverage with `PageStorage` + `SharedAppData`, including composite
+  `PageStorageKey` identity, explicit bucket identifiers, route-owned storage lifetime, automatic
+  `ScrollController.keepScrollOffset` restoration, lazy typed values, aspect-selective rebuilds, focused tests, and
+  mirrored C#/Dart probes.
 - Implicit-animations sample viewport hardening: both samples now share an always-visible scrollbar and scroll
   controller around the complete probe column, preventing bottom overflow on short desktop windows.
 

@@ -289,13 +289,19 @@ public class ScrollController : ChangeNotifier
 {
     private readonly List<ScrollPosition> _positions = [];
 
-    public ScrollController(double initialScrollOffset = 0.0, ScrollPhysics? physics = null)
+    public ScrollController(
+        double initialScrollOffset = 0.0,
+        ScrollPhysics? physics = null,
+        bool keepScrollOffset = true)
     {
         InitialScrollOffset = initialScrollOffset;
+        KeepScrollOffset = keepScrollOffset;
         Physics = physics ?? new ClampingScrollPhysics();
     }
 
     public double InitialScrollOffset { get; }
+
+    public bool KeepScrollOffset { get; }
 
     public ScrollPhysics Physics { get; }
 
@@ -421,6 +427,7 @@ public sealed class Scrollable : StatefulWidget
         public override void InitState()
         {
             _position = AttachToController(CurrentWidget.Controller, CurrentWidget.Physics);
+            RestoreScrollOffset();
             _position.AddListener(HandlePositionChanged);
         }
 
@@ -437,9 +444,12 @@ public sealed class Scrollable : StatefulWidget
             }
 
             _position.RemoveListener(HandlePositionChanged);
+            SaveScrollOffset();
             _attachedController?.Detach(_position);
+            _position.Dispose();
 
             _position = AttachToController(current.Controller, current.Physics);
+            RestoreScrollOffset();
             _position.AddListener(HandlePositionChanged);
             SetState(static () => { });
         }
@@ -447,7 +457,9 @@ public sealed class Scrollable : StatefulWidget
         public override void Dispose()
         {
             _position.RemoveListener(HandlePositionChanged);
+            SaveScrollOffset();
             _attachedController?.Detach(_position);
+            _position.Dispose();
             _fallbackController?.Dispose();
         }
 
@@ -508,8 +520,33 @@ public sealed class Scrollable : StatefulWidget
             return position;
         }
 
+        private void RestoreScrollOffset()
+        {
+            if (_attachedController?.KeepScrollOffset != true)
+            {
+                return;
+            }
+
+            object? value = PageStorage.MaybeOf(Context)?.ReadState(Context);
+            if (value is double offset && double.IsFinite(offset))
+            {
+                _position.RestoreOffset(offset, initialRestore: true);
+            }
+        }
+
+        private void SaveScrollOffset()
+        {
+            if (_attachedController?.KeepScrollOffset != true)
+            {
+                return;
+            }
+
+            PageStorage.MaybeOf(Context)?.WriteState(Context, _position.Pixels);
+        }
+
         private void HandlePositionChanged()
         {
+            SaveScrollOffset();
             if (_isApplyingDrag)
             {
                 return;

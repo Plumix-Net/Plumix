@@ -49,7 +49,7 @@ public sealed record UniqueKey : LocalKey
 /// </summary>
 /// <param name="Value">The value to which this key delegates its</param>
 /// <typeparam name="T"></typeparam>
-public sealed record ValueKey<T>(T Value) : LocalKey
+public record ValueKey<T>(T Value) : LocalKey
 {
     public override string ToString()
     {

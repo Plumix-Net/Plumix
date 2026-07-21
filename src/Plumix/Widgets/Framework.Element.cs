@@ -47,6 +47,33 @@ public readonly struct BuildContext
         return null;
     }
 
+    /// <summary>Returns the nearest ancestor widget of the requested type without creating a dependency.</summary>
+    public T? FindAncestorWidgetOfExactType<T>() where T : Widget
+    {
+        for (var ancestor = Owner.Parent; ancestor != null; ancestor = ancestor.Parent)
+        {
+            if (ancestor.Widget is T widget)
+            {
+                return widget;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>Walks ancestor elements until <paramref name="visitor"/> returns false.</summary>
+    public void VisitAncestorElements(Func<Element, bool> visitor)
+    {
+        ArgumentNullException.ThrowIfNull(visitor);
+        for (var ancestor = Owner.Parent; ancestor != null; ancestor = ancestor.Parent)
+        {
+            if (!visitor(ancestor))
+            {
+                return;
+            }
+        }
+    }
+
     /// <summary>Returns the nearest ancestor state of type <typeparamref name="T"/>.</summary>
     public T? FindAncestorStateOfType<T>() where T : State
     {

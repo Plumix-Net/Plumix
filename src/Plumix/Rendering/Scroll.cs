@@ -314,6 +314,22 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
         SetPixels(value);
     }
 
+    public void RestoreOffset(double offset, bool initialRestore = false)
+    {
+        if (!double.IsFinite(offset))
+        {
+            throw new ArgumentOutOfRangeException(nameof(offset), "offset must be finite.");
+        }
+
+        if (initialRestore)
+        {
+            _pixels = offset;
+            return;
+        }
+
+        JumpTo(offset);
+    }
+
     public void BeginDrag()
     {
         BeginActivity(new DragScrollActivity(this));

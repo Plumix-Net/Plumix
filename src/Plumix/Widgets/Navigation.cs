@@ -311,9 +311,13 @@ public abstract class Route
 
 public abstract class ModalRoute : Route
 {
+    private readonly PageStorageBucket _storageBucket = new();
+
     protected ModalRoute(RouteSettings? settings = null) : base(settings)
     {
     }
+
+    internal PageStorageBucket StorageBucket => _storageBucket;
 
     public static ModalRoute Of(BuildContext context)
     {
@@ -1727,7 +1731,10 @@ internal sealed class RoutePageHost : StatelessWidget
 
     public override Widget Build(BuildContext context)
     {
-        return _route.BuildPage(context);
+        Widget page = _route.BuildPage(context);
+        return _route is ModalRoute modalRoute
+            ? new PageStorage(modalRoute.StorageBucket, page)
+            : page;
     }
 }
 

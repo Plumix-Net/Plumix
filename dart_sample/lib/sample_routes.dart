@@ -100,6 +100,7 @@ class SampleRoutes {
   static const String customMultiChildLayout = '/custom-multi-child-layout';
   static const String dismissibleSizeChangedLayout =
       '/dismissible-size-changed-layout';
+  static const String stateStorage = '/state-storage';
 }
 
 class SampleRouteDefinition {

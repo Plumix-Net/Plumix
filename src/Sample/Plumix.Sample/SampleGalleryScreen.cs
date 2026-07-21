@@ -105,6 +105,7 @@ internal static class SampleRoutes
     public const string Image = "/image";
     public const string CustomMultiChildLayout = "/custom-multi-child-layout";
     public const string DismissibleSizeChangedLayout = "/dismissible-size-changed-layout";
+    public const string StateStorage = "/state-storage";
 }
 
 internal readonly record struct SampleRouteDefinition(
@@ -293,6 +294,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "Dismissible + size notifications",
             "directional swipe thresholds + collapse + layout-change notifications",
             () => new DismissibleSizeChangedLayoutDemoPage()),
+        new(
+            SampleRoutes.StateStorage,
+            "PageStorage + SharedAppData",
+            "scroll restoration + keyed inherited-model rebuilds",
+            () => new StateStorageDemoPage()),
     ];
 
     private static readonly IReadOnlyList<SampleMenuTabDefinition> DemoTabs =
