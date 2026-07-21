@@ -108,6 +108,7 @@ public sealed class RawGestureDetector : StatefulWidget
         Action<DragUpdateDetails>? onVerticalDragUpdate = null,
         Action<DragEndDetails>? onVerticalDragEnd = null,
         Action? onVerticalDragCancel = null,
+        DragStartBehavior dragStartBehavior = DragStartBehavior.Start,
         Key? key = null) : base(key)
     {
         Child = child;
@@ -135,6 +136,7 @@ public sealed class RawGestureDetector : StatefulWidget
         OnVerticalDragUpdate = onVerticalDragUpdate;
         OnVerticalDragEnd = onVerticalDragEnd;
         OnVerticalDragCancel = onVerticalDragCancel;
+        DragStartBehavior = dragStartBehavior;
     }
 
     public Widget? Child { get; }
@@ -177,6 +179,8 @@ public sealed class RawGestureDetector : StatefulWidget
     public Action<DragEndDetails>? OnVerticalDragEnd { get; }
 
     public Action? OnVerticalDragCancel { get; }
+
+    public DragStartBehavior DragStartBehavior { get; }
 
     public override State CreateState()
     {
@@ -277,6 +281,7 @@ public sealed class RawGestureDetector : StatefulWidget
                 _horizontalDrag.OnUpdate = widget.OnHorizontalDragUpdate;
                 _horizontalDrag.OnEnd = widget.OnHorizontalDragEnd;
                 _horizontalDrag.OnCancel = widget.OnHorizontalDragCancel;
+                _horizontalDrag.DragStartBehavior = widget.DragStartBehavior;
             }
             else
             {
@@ -293,6 +298,7 @@ public sealed class RawGestureDetector : StatefulWidget
                 _verticalDrag.OnUpdate = widget.OnVerticalDragUpdate;
                 _verticalDrag.OnEnd = widget.OnVerticalDragEnd;
                 _verticalDrag.OnCancel = widget.OnVerticalDragCancel;
+                _verticalDrag.DragStartBehavior = widget.DragStartBehavior;
             }
             else
             {
@@ -332,6 +338,7 @@ public sealed class GestureDetector : StatelessWidget
         Action<DragUpdateDetails>? onVerticalDragUpdate = null,
         Action<DragEndDetails>? onVerticalDragEnd = null,
         Action? onVerticalDragCancel = null,
+        DragStartBehavior dragStartBehavior = DragStartBehavior.Start,
         Key? key = null) : base(key)
     {
         Child = child;
@@ -355,6 +362,7 @@ public sealed class GestureDetector : StatelessWidget
         OnVerticalDragUpdate = onVerticalDragUpdate;
         OnVerticalDragEnd = onVerticalDragEnd;
         OnVerticalDragCancel = onVerticalDragCancel;
+        DragStartBehavior = dragStartBehavior;
     }
 
     public Widget? Child { get; }
@@ -390,6 +398,8 @@ public sealed class GestureDetector : StatelessWidget
 
     public Action? OnVerticalDragCancel { get; }
 
+    public DragStartBehavior DragStartBehavior { get; }
+
     public override Widget Build(BuildContext context)
     {
         return new RawGestureDetector(
@@ -413,6 +423,7 @@ public sealed class GestureDetector : StatelessWidget
             onVerticalDragStart: OnVerticalDragStart,
             onVerticalDragUpdate: OnVerticalDragUpdate,
             onVerticalDragEnd: OnVerticalDragEnd,
-            onVerticalDragCancel: OnVerticalDragCancel);
+            onVerticalDragCancel: OnVerticalDragCancel,
+            dragStartBehavior: DragStartBehavior);
     }
 }

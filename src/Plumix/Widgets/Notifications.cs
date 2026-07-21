@@ -20,6 +20,10 @@ public abstract class Notification
     }
 }
 
+public abstract class LayoutChangedNotification : Notification
+{
+}
+
 internal interface INotificationListener
 {
     bool OnNotification(Notification notification);

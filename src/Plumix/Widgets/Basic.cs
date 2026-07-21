@@ -574,16 +574,23 @@ public sealed class RotatedBox : SingleChildRenderObjectWidget
 
 public sealed class ClipRect : SingleChildRenderObjectWidget
 {
-    public ClipRect(Rect? clipRect = null, Widget? child = null, Key? key = null) : base(child, key)
+    public ClipRect(
+        Rect? clipRect = null,
+        CustomClipper<Rect>? clipper = null,
+        Widget? child = null,
+        Key? key = null) : base(child, key)
     {
         Clip = clipRect;
+        Clipper = clipper;
     }
 
     public Rect? Clip { get; }
 
+    public CustomClipper<Rect>? Clipper { get; }
+
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
-        var renderObject = new RenderClipRect();
+        var renderObject = new RenderClipRect(clipper: Clipper);
         if (Clip.HasValue)
         {
             renderObject.ClipRect = Clip.Value;
@@ -595,6 +602,7 @@ public sealed class ClipRect : SingleChildRenderObjectWidget
     internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var clipRect = (RenderClipRect)renderObject;
+        clipRect.Clipper = Clipper;
         if (Clip.HasValue)
         {
             clipRect.ClipRect = Clip.Value;

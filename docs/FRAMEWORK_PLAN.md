@@ -215,6 +215,11 @@ Completion note:
   source-shaped `LayoutId` parent data, exactly-once child layout contracts, listenable relayout, delegate sizing,
   dependent constraints/positions, default paint/hit-test/semantics order, centered/start LTR/RTL toolbar geometry,
   focused tests, and mirrored C#/Dart probes.
+- Continued paired core interaction/layout-notification coverage with `Dismissible` +
+  `SizeChangedLayoutNotifier`, including keyed directional drag restrictions, thresholds, full-velocity fling
+  classification, async confirmation/veto, clipped primary/secondary backgrounds, move/collapse callbacks,
+  post-initial size-change bubbling, focused tests, and mirrored C#/Dart probes. Source-required shared gesture
+  start behavior, two-axis velocity, spring fling, and listenable rectangular clipping now live in core.
 - Implicit-animations sample viewport hardening: both samples now share an always-visible scrollbar and scroll
   controller around the complete probe column, preventing bottom overflow on short desktop windows.
 

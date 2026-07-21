@@ -76,4 +76,26 @@ public readonly record struct DragUpdateDetails(
     Point Delta,
     double PrimaryDelta);
 
-public readonly record struct DragEndDetails(double PrimaryVelocity);
+public readonly record struct Velocity(Vector PixelsPerSecond)
+{
+    public static Velocity Zero { get; } = new(default);
+}
+
+public readonly record struct DragEndDetails
+{
+    public DragEndDetails(double primaryVelocity) : this(
+        velocity: new Velocity(new Vector(primaryVelocity, 0)),
+        primaryVelocity: primaryVelocity)
+    {
+    }
+
+    public DragEndDetails(Velocity velocity, double primaryVelocity)
+    {
+        Velocity = velocity;
+        PrimaryVelocity = primaryVelocity;
+    }
+
+    public Velocity Velocity { get; }
+
+    public double PrimaryVelocity { get; }
+}

@@ -362,6 +362,7 @@ public sealed class AnimationController : Animation<double>, IDisposable
     private bool _reversing;
     private bool _repeat;
     private bool _repeatReverse;
+    private FlingSimulation? _flingSimulation;
 
     public AnimationController(TimeSpan duration)
     {
@@ -372,6 +373,7 @@ public sealed class AnimationController : Animation<double>, IDisposable
     public void Forward(double? from = null)
     {
         if (from.HasValue) SetValue(from.Value);
+        _flingSimulation = null;
         _reversing = false;
         _repeat = false;
         _repeatReverse = false;
@@ -382,6 +384,7 @@ public sealed class AnimationController : Animation<double>, IDisposable
     public void Reverse(double? from = null)
     {
         if (from.HasValue) SetValue(from.Value);
+        _flingSimulation = null;
         _reversing = true;
         _repeat = false;
         _repeatReverse = false;
@@ -391,6 +394,7 @@ public sealed class AnimationController : Animation<double>, IDisposable
 
     public void Repeat(bool reverse = false)
     {
+        _flingSimulation = null;
         _repeat = true;
         _repeatReverse = reverse;
         _reversing = false;
@@ -398,10 +402,29 @@ public sealed class AnimationController : Animation<double>, IDisposable
         Start();
     }
 
+    public void Fling(double velocity = 1.0)
+    {
+        if (double.IsNaN(velocity) || double.IsInfinity(velocity) || velocity == 0.0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(velocity), "Fling velocity must be finite and non-zero.");
+        }
+
+        _reversing = velocity < 0.0;
+        _repeat = false;
+        _repeatReverse = false;
+        _flingSimulation = new FlingSimulation(
+            initialValue: Value,
+            target: _reversing ? -0.01 : 1.01,
+            initialVelocity: velocity);
+        SetStatus(_reversing ? AnimationStatus.Reverse : AnimationStatus.Forward);
+        Start();
+    }
+
     public void Stop()
     {
         IsAnimating = false;
         _ticker.Stop();
+        _flingSimulation = null;
     }
 
     public void SetValue(double value)
@@ -449,6 +472,12 @@ public sealed class AnimationController : Animation<double>, IDisposable
 
     private void OnTick(TimeSpan dt)
     {
+        if (_flingSimulation is not null)
+        {
+            TickFling(dt);
+            return;
+        }
+
         TimeSpan effectiveDuration = _repeat
             ? Duration
             : _reversing
@@ -480,18 +509,18 @@ public sealed class AnimationController : Animation<double>, IDisposable
             if (raw >= 1.0)
             {
                 _value = 1.0;
+                Stop();
                 SetTerminalValueAndStatus(AnimationStatus.Completed);
                 Completed?.Invoke();
-                Stop();
                 return;
             }
 
             if (raw <= 0.0)
             {
                 _value = 0.0;
+                Stop();
                 SetTerminalValueAndStatus(AnimationStatus.Dismissed);
                 Dismissed?.Invoke();
-                Stop();
                 return;
             }
         }
@@ -524,5 +553,51 @@ public sealed class AnimationController : Animation<double>, IDisposable
         {
             StatusChanged?.Invoke(status);
         }
+    }
+
+    private void TickFling(TimeSpan delta)
+    {
+        FlingSimulation simulation = _flingSimulation!;
+        simulation.ElapsedSeconds += delta.TotalSeconds;
+        const double angularFrequency = 22.360679774997898;
+        double displacement = simulation.InitialValue - simulation.Target;
+        double coefficient = simulation.InitialVelocity + angularFrequency * displacement;
+        double exponential = Math.Exp(-angularFrequency * simulation.ElapsedSeconds);
+        double position = simulation.Target
+                          + (displacement + coefficient * simulation.ElapsedSeconds) * exponential;
+        _value = Math.Clamp(position, 0.0, 1.0);
+
+        if (Math.Abs(position - simulation.Target) < 0.01)
+        {
+            AnimationStatus terminalStatus = _reversing
+                ? AnimationStatus.Dismissed
+                : AnimationStatus.Completed;
+            _value = _reversing ? 0.0 : 1.0;
+            Stop();
+            SetTerminalValueAndStatus(terminalStatus);
+            if (_reversing)
+            {
+                Dismissed?.Invoke();
+            }
+            else
+            {
+                Completed?.Invoke();
+            }
+
+            return;
+        }
+
+        Changed?.Invoke();
+    }
+
+    private sealed class FlingSimulation(double initialValue, double target, double initialVelocity)
+    {
+        public double InitialValue { get; } = initialValue;
+
+        public double Target { get; } = target;
+
+        public double InitialVelocity { get; } = initialVelocity;
+
+        public double ElapsedSeconds { get; set; }
     }
 }

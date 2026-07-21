@@ -1974,10 +1974,34 @@ public sealed class RenderClipRect : RenderProxyBox
 {
     private Rect _clipRect;
     private bool _hasExplicitClipRect;
+    private CustomClipper<Rect>? _clipper;
 
-    public RenderClipRect(RenderBox? child = null)
+    public RenderClipRect(RenderBox? child = null, CustomClipper<Rect>? clipper = null)
     {
+        _clipper = clipper;
         Child = child;
+    }
+
+    public CustomClipper<Rect>? Clipper
+    {
+        get => _clipper;
+        set
+        {
+            if (ReferenceEquals(_clipper, value))
+            {
+                return;
+            }
+
+            CustomClipper<Rect>? oldClipper = _clipper;
+            _clipper = value;
+            if (Attached)
+            {
+                oldClipper?.RemoveListener(MarkNeedsClip);
+                value?.AddListener(MarkNeedsClip);
+            }
+
+            MarkNeedsClip();
+        }
     }
 
     public Rect ClipRect
@@ -2015,6 +2039,18 @@ public sealed class RenderClipRect : RenderProxyBox
     public override bool IsRepaintBoundary => Child != null;
     protected override bool AlwaysNeedsCompositing => Child != null;
 
+    protected override void OnAttach()
+    {
+        base.OnAttach();
+        _clipper?.AddListener(MarkNeedsClip);
+    }
+
+    protected override void OnDetach()
+    {
+        _clipper?.RemoveListener(MarkNeedsClip);
+        base.OnDetach();
+    }
+
     protected override void PerformLayout()
     {
         bool hadSize = HasSize;
@@ -2042,7 +2078,7 @@ public sealed class RenderClipRect : RenderProxyBox
     {
         if (layer is ClipRectOffsetLayer clipLayer)
         {
-            clipLayer.ClipRect = _hasExplicitClipRect ? _clipRect : new Rect(new Point(0, 0), Size);
+            clipLayer.ClipRect = EffectiveClip;
         }
     }
 
@@ -2053,18 +2089,30 @@ public sealed class RenderClipRect : RenderProxyBox
 
     protected override Rect? DescribeApproximatePaintClip(RenderObject? child)
     {
-        return _hasExplicitClipRect ? _clipRect : new Rect(new Point(0, 0), Size);
+        return _hasExplicitClipRect
+            ? _clipRect
+            : _clipper?.GetApproximateClipRect(Size) ?? new Rect(new Point(0, 0), Size);
     }
 
     public override bool HitTest(BoxHitTestResult result, Point position)
     {
-        var clip = _hasExplicitClipRect ? _clipRect : new Rect(new Point(0, 0), Size);
+        Rect clip = EffectiveClip;
         if (!clip.Contains(position))
         {
             return false;
         }
 
         return base.HitTest(result, position);
+    }
+
+    private Rect EffectiveClip => _hasExplicitClipRect
+        ? _clipRect
+        : _clipper?.GetClip(Size) ?? new Rect(new Point(0, 0), Size);
+
+    private void MarkNeedsClip()
+    {
+        MarkNeedsCompositedLayerUpdate();
+        MarkNeedsSemanticsUpdate();
     }
 }
 

@@ -22,6 +22,8 @@ public abstract class DragGestureRecognizer : GestureRecognizer, IGestureArenaMe
 
     public Action? OnCancel { get; set; }
 
+    public DragStartBehavior DragStartBehavior { get; set; } = DragStartBehavior.Start;
+
     public override void AddPointer(PointerDownEvent @event)
     {
         if (_trackers.ContainsKey(@event.Pointer))
@@ -42,8 +44,19 @@ public abstract class DragGestureRecognizer : GestureRecognizer, IGestureArenaMe
         }
 
         tracker.Accepted = true;
-        tracker.LastPosition = tracker.InitialPosition;
-        OnStart?.Invoke(new DragStartDetails(tracker.InitialPosition));
+        if (DragStartBehavior == DragStartBehavior.Start && tracker.PendingPosition is null)
+        {
+            return;
+        }
+
+        Point startPosition = DragStartBehavior == DragStartBehavior.Down
+            ? tracker.InitialPosition
+            : ResolveStartPosition(
+                tracker.InitialPosition,
+                tracker.PendingPosition ?? tracker.LastPosition);
+        tracker.LastPosition = startPosition;
+        tracker.Started = true;
+        OnStart?.Invoke(new DragStartDetails(startPosition));
     }
 
     public void RejectGesture(int pointer)
@@ -70,6 +83,7 @@ public abstract class DragGestureRecognizer : GestureRecognizer, IGestureArenaMe
 
                     if (primary > TouchSlop && primary > cross)
                     {
+                        tracker.PendingPosition = @event.Position;
                         tracker.Entry.Resolve(GestureDisposition.Accepted);
                     }
                     else if (cross > TouchSlop && cross > primary)
@@ -82,6 +96,24 @@ public abstract class DragGestureRecognizer : GestureRecognizer, IGestureArenaMe
 
                 if (tracker.Accepted)
                 {
+                    if (!tracker.Started)
+                    {
+                        double primary = Math.Abs(GetPrimaryValue(totalDelta));
+                        double cross = Math.Abs(GetCrossValue(totalDelta));
+                        if (primary <= TouchSlop || primary <= cross)
+                        {
+                            tracker.RecordPosition(@event.Position, @event.TimestampUtc);
+                            break;
+                        }
+
+                        tracker.Started = true;
+                        Point startPosition = ResolveStartPosition(
+                            tracker.InitialPosition,
+                            @event.Position);
+                        tracker.LastPosition = startPosition;
+                        OnStart?.Invoke(new DragStartDetails(startPosition));
+                    }
+
                     var delta = @event.Position - tracker.LastPosition;
                     double primaryDelta = GetPrimaryValue(delta);
                     if (Math.Abs(primaryDelta) > double.Epsilon)
@@ -99,7 +131,7 @@ public abstract class DragGestureRecognizer : GestureRecognizer, IGestureArenaMe
             }
             case PointerUpEvent:
             {
-                if (!tracker.Accepted)
+                if (!tracker.Accepted || !tracker.Started)
                 {
                     tracker.Entry.Resolve(GestureDisposition.Rejected);
                     Cleanup(@event.Pointer);
@@ -107,14 +139,19 @@ public abstract class DragGestureRecognizer : GestureRecognizer, IGestureArenaMe
                 }
 
                 tracker.RecordPosition(@event.Position, @event.TimestampUtc);
-                double endVelocity = tracker.EstimateVelocity(GetPrimaryValue);
-                OnEnd?.Invoke(new DragEndDetails(endVelocity));
+                Vector pixelsPerSecond = tracker.EstimateVelocity();
+                double primaryVelocity = GetPrimaryValue(new Point(
+                    pixelsPerSecond.X,
+                    pixelsPerSecond.Y));
+                OnEnd?.Invoke(new DragEndDetails(
+                    velocity: new Velocity(pixelsPerSecond),
+                    primaryVelocity: primaryVelocity));
                 Cleanup(@event.Pointer);
                 break;
             }
             case PointerCancelEvent:
             {
-                if (tracker.Accepted)
+                if (tracker.Started)
                 {
                     OnCancel?.Invoke();
                 }
@@ -136,6 +173,15 @@ public abstract class DragGestureRecognizer : GestureRecognizer, IGestureArenaMe
 
     protected abstract double GetCrossValue(Point offset);
 
+    protected abstract Point GetPrimaryOffset(double value);
+
+    private Point ResolveStartPosition(Point initialPosition, Point currentPosition)
+    {
+        Point delta = currentPosition - initialPosition;
+        double primaryDelta = GetPrimaryValue(delta);
+        return initialPosition + GetPrimaryOffset(Math.Sign(primaryDelta) * TouchSlop);
+    }
+
     private sealed class DragTracker
     {
         private readonly List<VelocitySample> _samples = [];
@@ -155,6 +201,10 @@ public abstract class DragGestureRecognizer : GestureRecognizer, IGestureArenaMe
         public GestureArenaEntry Entry { get; }
 
         public bool Accepted { get; set; }
+
+        public Point? PendingPosition { get; set; }
+
+        public bool Started { get; set; }
 
         public void RecordPosition(Point position, DateTime timestampUtc)
         {
@@ -176,11 +226,11 @@ public abstract class DragGestureRecognizer : GestureRecognizer, IGestureArenaMe
             }
         }
 
-        public double EstimateVelocity(Func<Point, double> primaryValue)
+        public Vector EstimateVelocity()
         {
             if (_samples.Count < 2)
             {
-                return 0;
+                return default;
             }
 
             var newest = _samples[^1];
@@ -193,10 +243,11 @@ public abstract class DragGestureRecognizer : GestureRecognizer, IGestureArenaMe
                     continue;
                 }
 
-                return primaryValue(newest.Position - older.Position) / elapsedSeconds;
+                Point delta = newest.Position - older.Position;
+                return new Vector(delta.X / elapsedSeconds, delta.Y / elapsedSeconds);
             }
 
-            return 0;
+            return default;
         }
     }
 
@@ -218,6 +269,8 @@ public sealed class HorizontalDragGestureRecognizer : DragGestureRecognizer
     {
         return offset.Y;
     }
+
+    protected override Point GetPrimaryOffset(double value) => new(value, 0.0);
 }
 
 public sealed class VerticalDragGestureRecognizer : DragGestureRecognizer
@@ -235,4 +288,6 @@ public sealed class VerticalDragGestureRecognizer : DragGestureRecognizer
     {
         return offset.X;
     }
+
+    protected override Point GetPrimaryOffset(double value) => new(0.0, value);
 }

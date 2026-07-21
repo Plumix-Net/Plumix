@@ -1292,8 +1292,8 @@ public sealed class MaterialScaffoldTests
             Assert.True(scaffoldContext.HasValue);
 
             DispatchPointerDown(binding, harness.RenderView, pointer: 7105, position: new Point(2, 120));
-            DispatchPointerMove(binding, harness.RenderView, pointer: 7105, position: new Point(112, 120));
-            DispatchPointerCancel(binding, harness.RenderView, pointer: 7105, position: new Point(112, 120));
+            DispatchPointerMove(binding, harness.RenderView, pointer: 7105, position: new Point(122, 120));
+            DispatchPointerCancel(binding, harness.RenderView, pointer: 7105, position: new Point(122, 120));
             harness.Pump(size);
 
             double now = Scheduler.CurrentSeconds;

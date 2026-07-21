@@ -1,5 +1,11 @@
 # Changelog
 
+- Breaking: added paired Flutter core `Dismissible` + `SizeChangedLayoutNotifier` ports with keyed directional
+  drags, threshold/fling/confirmation/update contracts, clipped primary/secondary backgrounds, move/collapse
+  choreography, bubbled post-initial size notifications, focused tests, and mirrored C#/Dart probes. Shared drag
+  recognizers now honor `DragStartBehavior.start`, expose two-axis velocity, and `AnimationController.Fling(...)`
+  uses Flutter's default critically damped spring; `ClipRect` now accepts a listenable `CustomClipper<Rect>`.
+
 - Added paired Flutter core `CustomMultiChildLayout` + `NavigationToolbar` ports with source-shaped `LayoutId`
   parent data, exactly-once delegate layout contracts, listenable relayout, dependent child constraints, default
   paint/hit-test/semantics order, centered/start LTR/RTL toolbar geometry, focused tests, and mirrored C#/Dart probes.

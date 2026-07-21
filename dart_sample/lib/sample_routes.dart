@@ -98,6 +98,8 @@ class SampleRoutes {
   static const String flow = '/flow';
   static const String image = '/image';
   static const String customMultiChildLayout = '/custom-multi-child-layout';
+  static const String dismissibleSizeChangedLayout =
+      '/dismissible-size-changed-layout';
 }
 
 class SampleRouteDefinition {

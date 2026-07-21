@@ -104,6 +104,7 @@ internal static class SampleRoutes
     public const string Flow = "/flow";
     public const string Image = "/image";
     public const string CustomMultiChildLayout = "/custom-multi-child-layout";
+    public const string DismissibleSizeChangedLayout = "/dismissible-size-changed-layout";
 }
 
 internal readonly record struct SampleRouteDefinition(
@@ -287,6 +288,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "CustomMultiChildLayout + NavigationToolbar",
             "delegate slots + dependent sizing + centered/start LTR/RTL toolbar",
             () => new CustomMultiChildLayoutDemoPage()),
+        new(
+            SampleRoutes.DismissibleSizeChangedLayout,
+            "Dismissible + size notifications",
+            "directional swipe thresholds + collapse + layout-change notifications",
+            () => new DismissibleSizeChangedLayoutDemoPage()),
     ];
 
     private static readonly IReadOnlyList<SampleMenuTabDefinition> DemoTabs =
