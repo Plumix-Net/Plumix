@@ -1,5 +1,9 @@
 # Changelog
 
+- Added paired Flutter core `CustomMultiChildLayout` + `NavigationToolbar` ports with source-shaped `LayoutId`
+  parent data, exactly-once delegate layout contracts, listenable relayout, dependent child constraints, default
+  paint/hit-test/semantics order, centered/start LTR/RTL toolbar geometry, focused tests, and mirrored C#/Dart probes.
+
 - Breaking: added paired Flutter core `FadeInImage` + `ImageIcon` ports with memory/asset-network factories,
   gapless stream replacement, cached-image bypass, sequential placeholder/target fades, independent image styling,
   IconTheme size/color/opacity resolution, single-node semantics, focused tests, and mirrored C#/Dart probes.

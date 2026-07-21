@@ -36,6 +36,7 @@ import 'demos/material/circle_avatar_demo_page.dart';
 import 'demos/cupertino/checkbox_demo_page.dart';
 import 'counter_screen.dart';
 import 'demos/general/container_demo_page.dart';
+import 'demos/general/custom_multi_child_layout_demo_page.dart';
 import 'demos/general/custom_slivers_demo_page.dart';
 import 'demos/general/decorated_box_demo_page.dart';
 import 'demos/general/debug_painting_demo_page.dart';
@@ -601,6 +602,13 @@ class SampleGalleryScreen extends StatelessWidget {
           title: 'Image controls',
           subtitle: 'streams + decoded handles + fade + image icons',
           builder: () => const ImageDemoPage(),
+        ),
+        SampleRouteDefinition(
+          routeName: SampleRoutes.customMultiChildLayout,
+          title: 'CustomMultiChildLayout + NavigationToolbar',
+          subtitle:
+              'delegate slots + dependent sizing + centered/start LTR/RTL toolbar',
+          builder: () => const CustomMultiChildLayoutDemoPage(),
         ),
       ];
 

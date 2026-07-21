@@ -103,6 +103,7 @@ internal static class SampleRoutes
     public const string DebugPainting = "/debug-painting";
     public const string Flow = "/flow";
     public const string Image = "/image";
+    public const string CustomMultiChildLayout = "/custom-multi-child-layout";
 }
 
 internal readonly record struct SampleRouteDefinition(
@@ -281,6 +282,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "Image controls",
             "streams + decoded handles + fade + image icons",
             () => new ImageDemoPage()),
+        new(
+            SampleRoutes.CustomMultiChildLayout,
+            "CustomMultiChildLayout + NavigationToolbar",
+            "delegate slots + dependent sizing + centered/start LTR/RTL toolbar",
+            () => new CustomMultiChildLayoutDemoPage()),
     ];
 
     private static readonly IReadOnlyList<SampleMenuTabDefinition> DemoTabs =

@@ -97,6 +97,7 @@ class SampleRoutes {
   static const String debugPainting = '/debug-painting';
   static const String flow = '/flow';
   static const String image = '/image';
+  static const String customMultiChildLayout = '/custom-multi-child-layout';
 }
 
 class SampleRouteDefinition {

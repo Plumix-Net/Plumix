@@ -211,6 +211,10 @@ Completion note:
   factories, gapless placeholder/target streams, synchronous-load bypass, sequential fade timing, IconTheme
   size/color/opacity resolution, semantics, focused tests, and expanded mirrored C#/Dart image probes. Shared
   `Curves.easeIn`/`easeOut` now use Flutter's exact cubic Bézier definitions.
+- Continued paired core delegate-layout coverage with `CustomMultiChildLayout` + `NavigationToolbar`, including
+  source-shaped `LayoutId` parent data, exactly-once child layout contracts, listenable relayout, delegate sizing,
+  dependent constraints/positions, default paint/hit-test/semantics order, centered/start LTR/RTL toolbar geometry,
+  focused tests, and mirrored C#/Dart probes.
 - Implicit-animations sample viewport hardening: both samples now share an always-visible scrollbar and scroll
   controller around the complete probe column, preventing bottom overflow on short desktop windows.
 
