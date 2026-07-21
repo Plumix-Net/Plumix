@@ -1,4 +1,5 @@
 using Avalonia;
+using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.Widgets;
 using Xunit;
@@ -503,6 +504,168 @@ public sealed class ScrollPipelineTests
     }
 
     [Fact]
+    public void SliverVariedExtentList_ExposesSourceShapedConstructorsAndUpdatesBuilder()
+    {
+        ItemExtentBuilder initialBuilder = (index, _) => 24 + index;
+        var childDelegate = new SliverChildListDelegate([new SizedBox(), new SizedBox()]);
+        var widget = new SliverVariedExtentList(childDelegate, initialBuilder);
+
+        Assert.Same(childDelegate, widget.Delegate);
+        Assert.Same(initialBuilder, widget.ItemExtentBuilder);
+        Assert.Throws<ArgumentNullException>(() => new SliverVariedExtentList(childDelegate, null!));
+        Assert.Throws<ArgumentOutOfRangeException>(() => SliverVariedExtentList.Builder(
+            childCount: -1,
+            itemBuilder: (_, _) => new SizedBox(),
+            itemExtentBuilder: initialBuilder));
+
+        var renderObject = Assert.IsType<RenderSliverVariedExtentList>(widget.CreateRenderObject(default));
+        ItemExtentBuilder updatedBuilder = (index, _) => 48 + index;
+        var updatedWidget = new SliverVariedExtentList(childDelegate, updatedBuilder);
+        updatedWidget.UpdateRenderObject(default, renderObject);
+
+        Assert.Same(updatedBuilder, renderObject.ItemExtentBuilder);
+        Assert.Equal(2, SliverVariedExtentList.FromChildren(
+            [new SizedBox(), new SizedBox()],
+            initialBuilder).Delegate.EstimatedChildCount);
+        Assert.Equal(3, SliverVariedExtentList.Builder(
+            childCount: 3,
+            itemBuilder: (_, _) => new SizedBox(),
+            itemExtentBuilder: initialBuilder).Delegate.EstimatedChildCount);
+    }
+
+    [Fact]
+    public void RenderSliverVariedExtentList_UsesKnownExtentsLazilyAndPreservesLayoutDimensions()
+    {
+        double[] extents = [30, 50, 20, 40];
+        var dimensions = new List<SliverLayoutDimensions>();
+        ItemExtentBuilder builder = (index, currentDimensions) =>
+        {
+            dimensions.Add(currentDimensions);
+            return index < extents.Length ? extents[index] : null;
+        };
+        var manager = new TestSliverChildManager(childCount: extents.Length, childExtent: 5);
+        var sliver = new RenderSliverVariedExtentList(builder, manager);
+        manager.AttachOwner(sliver);
+
+        sliver.LayoutWithSliverConstraints(new SliverConstraints(
+            Axis: Axis.Vertical,
+            ScrollOffset: 0,
+            RemainingPaintExtent: 100,
+            CrossAxisExtent: 120,
+            ViewportMainAxisExtent: 100,
+            RemainingCacheExtent: 100,
+            PrecedingScrollExtent: 17));
+
+        Assert.Equal(140, sliver.Geometry.ScrollExtent);
+        Assert.Equal([0, 1, 2], ActiveIndices(sliver));
+        Assert.Equal([30, 50, 20], ActiveChildren(sliver).Select(child => child.Size.Height));
+        Assert.Equal([0, 30, 80], ActiveChildren(sliver).Select(
+            child => ((SliverMultiBoxAdaptorParentData)child.parentData!).LayoutOffset));
+        Assert.Equal(4, dimensions.Count);
+        Assert.All(dimensions, current =>
+        {
+            Assert.Equal(0, current.ScrollOffset);
+            Assert.Equal(17, current.PrecedingScrollExtent);
+            Assert.Equal(100, current.ViewportMainAxisExtent);
+            Assert.Equal(120, current.CrossAxisExtent);
+        });
+
+        sliver.LayoutWithSliverConstraints(new SliverConstraints(
+            Axis: Axis.Vertical,
+            ScrollOffset: 80,
+            RemainingPaintExtent: 60,
+            CrossAxisExtent: 120,
+            ViewportMainAxisExtent: 100,
+            RemainingCacheExtent: 60));
+
+        Assert.Equal([2, 3], ActiveIndices(sliver));
+        Assert.Equal(new Point(0, 0),
+            ((SliverMultiBoxAdaptorParentData)sliver.FirstChild!.parentData!).offset);
+        Assert.True(manager.RemoveCount > 0);
+    }
+
+    [Fact]
+    public void RenderSliverVariedExtentList_RejectsInvalidBuilderExtents()
+    {
+        var manager = new TestSliverChildManager(childCount: 1, childExtent: 10);
+        var sliver = new RenderSliverVariedExtentList((_, _) => double.NaN, manager);
+        manager.AttachOwner(sliver);
+
+        Assert.Throws<InvalidOperationException>(() => sliver.LayoutWithSliverConstraints(new SliverConstraints(
+            Axis: Axis.Vertical,
+            ScrollOffset: 0,
+            RemainingPaintExtent: 100,
+            CrossAxisExtent: 100,
+            ViewportMainAxisExtent: 100,
+            RemainingCacheExtent: 100)));
+    }
+
+    [Fact]
+    public void RenderSliverPrototypeExtentList_MeasuresOffstagePrototypeAndExcludesItFromSemantics()
+    {
+        var manager = new TestSliverChildManager(childCount: 4, childExtent: 5);
+        var prototype = new FixedSizeBox(new Size(40, 60));
+        var sliver = new RenderSliverPrototypeExtentList(prototype, manager);
+        manager.AttachOwner(sliver);
+        var constraints = new SliverConstraints(
+            Axis: Axis.Vertical,
+            ScrollOffset: 0,
+            RemainingPaintExtent: 120,
+            CrossAxisExtent: 100,
+            ViewportMainAxisExtent: 120,
+            RemainingCacheExtent: 120);
+
+        sliver.LayoutWithSliverConstraints(constraints);
+
+        Assert.Equal(new Size(100, 60), prototype.Size);
+        Assert.Equal(240, sliver.Geometry.ScrollExtent);
+        Assert.Equal([0, 1], ActiveIndices(sliver));
+        Assert.All(ActiveChildren(sliver), child => Assert.Equal(new Size(100, 60), child.Size));
+
+        var lifecycleChildren = new List<RenderObject>();
+        sliver.VisitChildren(lifecycleChildren.Add);
+        Assert.Contains(prototype, lifecycleChildren);
+
+        var semanticChildren = new List<RenderObject>();
+        sliver.VisitChildrenForSemantics((child, _, _) => semanticChildren.Add(child));
+        Assert.DoesNotContain(prototype, semanticChildren);
+        Assert.Equal(2, semanticChildren.Count);
+
+        sliver.PrototypeChild = new FixedSizeBox(new Size(40, 40));
+        sliver.LayoutWithSliverConstraints(constraints);
+        Assert.Equal(160, sliver.Geometry.ScrollExtent);
+        Assert.All(ActiveChildren(sliver), child => Assert.Equal(40, child.Size.Height));
+    }
+
+    [Fact]
+    public void SliverPrototypeExtentList_ElementOwnsPrototypeOutsideLazyChildList()
+    {
+        var widget = new CustomScrollView(
+            cacheExtent: 0,
+            slivers:
+            [
+                SliverPrototypeExtentList.Builder(
+                    childCount: 5,
+                    prototypeItem: new SizedBox(height: 55),
+                    itemBuilder: (_, index) => new SizedBox(
+                        height: 10,
+                        key: new ValueKey<int>(index)),
+                    addAutomaticKeepAlives: false),
+            ]);
+        var harness = new WidgetRenderHarness(widget);
+
+        harness.Pump(new Size(100, 120));
+
+        var sliver = Assert.IsType<RenderSliverPrototypeExtentList>(
+            FindRenderObject<RenderSliverPrototypeExtentList>(harness.RenderView));
+        Assert.NotNull(sliver.PrototypeChild);
+        Assert.Equal(new Size(100, 55), sliver.PrototypeChild!.Size);
+        Assert.Equal(275, sliver.Geometry.ScrollExtent);
+        Assert.Equal([0, 1, 2], ActiveIndices(sliver));
+        Assert.Equal(3, sliver.ChildCount);
+    }
+
+    [Fact]
     public void RenderSliverGrid_ComputesVisibleChildren_AndCrossAxisOffsets()
     {
         double maxExtent = -1;
@@ -593,6 +756,17 @@ public sealed class ScrollPipelineTests
         }
 
         return indices;
+    }
+
+    private static IReadOnlyList<RenderBox> ActiveChildren(RenderSliverMultiBoxAdaptor sliverList)
+    {
+        var children = new List<RenderBox>();
+        for (var child = sliverList.FirstChild; child != null; child = sliverList.ChildAfter(child))
+        {
+            children.Add(child);
+        }
+
+        return children;
     }
 
     private static bool CoversViewportPosition(RenderSliverMultiBoxAdaptor sliverList, double viewportY)

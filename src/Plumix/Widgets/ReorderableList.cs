@@ -359,14 +359,14 @@ public sealed class SliverReorderableListState : State
         }
         else if (widget.ItemExtentBuilder is not null)
         {
-            sliver = new SliverVariableExtentList(
-                childDelegate,
-                new ReorderableVariableExtentLayout(widget.ItemCount, widget.ItemExtentBuilder));
+            sliver = new SliverVariedExtentList(childDelegate, widget.ItemExtentBuilder);
+        }
+        else if (widget.PrototypeItem is not null)
+        {
+            sliver = new SliverPrototypeExtentList(childDelegate, widget.PrototypeItem);
         }
         else
         {
-            // Without a dedicated prototype-extent sliver, natural child layout remains behaviorally
-            // correct for heterogeneous lists; PrototypeItem is retained in the public parity surface.
             sliver = new SliverList(childDelegate);
         }
 
@@ -1187,96 +1187,6 @@ internal sealed class ReorderDragRecognizer : GestureRecognizer, IGestureArenaMe
         double dx = first.X - second.X;
         double dy = first.Y - second.Y;
         return Math.Sqrt((dx * dx) + (dy * dy));
-    }
-}
-
-internal sealed class ReorderableVariableExtentLayout : SliverVariableExtentLayout
-{
-    private readonly int _itemCount;
-    private readonly ItemExtentBuilder _builder;
-
-    public ReorderableVariableExtentLayout(int itemCount, ItemExtentBuilder builder)
-    {
-        _itemCount = itemCount;
-        _builder = builder;
-    }
-
-    public override int GetMinChildIndexForScrollOffset(SliverConstraints constraints, double scrollOffset)
-    {
-        double preceding = 0;
-        for (int index = 0; index < _itemCount; index++)
-        {
-            double extent = ExtentAt(constraints, index, preceding);
-            if (preceding + extent > scrollOffset)
-            {
-                return index;
-            }
-
-            preceding += extent;
-        }
-
-        return Math.Max(0, _itemCount - 1);
-    }
-
-    public override int GetMaxChildIndexForScrollOffset(SliverConstraints constraints, double scrollOffset)
-    {
-        double preceding = 0;
-        for (int index = 0; index < _itemCount; index++)
-        {
-            double extent = ExtentAt(constraints, index, preceding);
-            if (preceding >= scrollOffset)
-            {
-                return Math.Max(0, index - 1);
-            }
-
-            preceding += extent;
-        }
-
-        return Math.Max(0, _itemCount - 1);
-    }
-
-    public override double GetChildMainAxisExtent(SliverConstraints constraints, int index)
-    {
-        return ExtentAt(constraints, index, OffsetAt(constraints, index));
-    }
-
-    public override double GetChildLayoutOffset(SliverConstraints constraints, int index)
-    {
-        return OffsetAt(constraints, index);
-    }
-
-    public override double ComputeMaxScrollOffset(SliverConstraints constraints, int? childCount)
-    {
-        int count = Math.Min(childCount ?? _itemCount, _itemCount);
-        return OffsetAt(constraints, count);
-    }
-
-    private double OffsetAt(SliverConstraints constraints, int index)
-    {
-        double offset = 0;
-        int cappedIndex = Math.Clamp(index, 0, _itemCount);
-        for (int childIndex = 0; childIndex < cappedIndex; childIndex++)
-        {
-            offset += ExtentAt(constraints, childIndex, offset);
-        }
-
-        return offset;
-    }
-
-    private double ExtentAt(SliverConstraints constraints, int index, double preceding)
-    {
-        var dimensions = new SliverLayoutDimensions(
-            ScrollOffset: constraints.ScrollOffset,
-            PrecedingScrollExtent: preceding,
-            ViewportMainAxisExtent: constraints.ViewportMainAxisExtent,
-            CrossAxisExtent: constraints.CrossAxisExtent);
-        double? extent = _builder(index, dimensions);
-        if (!extent.HasValue || !double.IsFinite(extent.Value) || extent.Value <= 0)
-        {
-            throw new InvalidOperationException("itemExtentBuilder must return a finite value greater than zero.");
-        }
-
-        return extent.Value;
     }
 }
 

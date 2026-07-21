@@ -141,6 +141,33 @@ public sealed class CustomSliversDemoPage : StatelessWidget
                             ]),
                     ]),
                 new SliverPadding(
+                    padding: new Thickness(12, 10, 12, 4),
+                    sliver: SliverPrototypeExtentList.Builder(
+                        childCount: 4,
+                        prototypeItem: new SizedBox(height: 54),
+                        itemBuilder: (_, index) => BuildExtentCell(
+                            $"prototype extent row #{index}",
+                            index % 2 == 0
+                                ? Color.Parse("#FFE8EAF6")
+                                : Color.Parse("#FFF3E5F5")),
+                        addAutomaticKeepAlives: false)),
+                new SliverPadding(
+                    padding: new Thickness(12, 4, 12, 8),
+                    sliver: SliverVariedExtentList.Builder(
+                        childCount: 6,
+                        itemExtentBuilder: (index, _) => index % 3 switch
+                        {
+                            0 => 38,
+                            1 => 54,
+                            _ => 46,
+                        },
+                        itemBuilder: (_, index) => BuildExtentCell(
+                            $"varied extent row #{index}",
+                            index % 2 == 0
+                                ? Color.Parse("#FFE0F2F1")
+                                : Color.Parse("#FFE8F5E9")),
+                        addAutomaticKeepAlives: false)),
+                new SliverPadding(
                     padding: new Thickness(12, 8, 12, 16),
                     sliver: SliverList.Builder(
                         childCount: 8,
@@ -180,5 +207,14 @@ public sealed class CustomSliversDemoPage : StatelessWidget
                         fontSize: 13,
                         color: Colors.DimGray),
                 ]));
+    }
+
+    private static Widget BuildExtentCell(string label, Color color)
+    {
+        return new Container(
+            color: color,
+            padding: new Thickness(10, 8),
+            alignment: Alignment.CenterLeft,
+            child: new Text(label, fontSize: 13, color: Colors.Black));
     }
 }

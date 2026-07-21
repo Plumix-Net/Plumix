@@ -229,7 +229,7 @@ internal sealed class SampleGalleryScreen : StatelessWidget
         new(
             SampleRoutes.CustomSlivers,
             "Custom slivers",
-            "DecoratedSliver + PinnedHeaderSliver + fixed/list adapters",
+            "fill/group/prototype/varied sliver adapters",
             () => new CustomSliversDemoPage()),
         new(SampleRoutes.Scrollbar, "Scrollbar", "controller + thumb", () => new ScrollbarDemoPage()),
         new(SampleRoutes.EditableText, "EditableText", "focus + IME + multiline caret", () => new EditableTextDemoPage()),

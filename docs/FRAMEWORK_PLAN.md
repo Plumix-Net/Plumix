@@ -8,7 +8,7 @@ Use this block as the fastest machine-readable status summary.
 
 ```yaml
 framework_plan_version: 1
-last_updated: 2026-07-21
+last_updated: 2026-07-22
 north_star: "Flutter-like widget/rendering framework in C# with Avalonia as host infrastructure."
 current_phase: "M4 material library rewrite (theme/scaffold/material controls) in progress."
 status:
@@ -238,6 +238,9 @@ Completion note:
 - Continued paired core sliver-fill coverage with `SliverFillViewport` + `SliverFillRemaining`, including fractional
   fixed extents, centered end padding, lazy child creation, implicit-scrolling semantics filtering, scrollable,
   non-scrollable, and overscroll-aware remaining-space render paths, focused tests, and mirrored C#/Dart probes.
+- Continued paired core extent-list coverage with `SliverPrototypeExtentList` + `SliverVariedExtentList`, including
+  offstage prototype ownership, per-index `SliverLayoutDimensions`, exact main-axis constraints/offsets, lazy keyed
+  child reuse, reorderable-list integration, focused tests, and mirrored C#/Dart custom-sliver probes.
 - Continued paired core asynchronous-builder coverage with `FutureBuilder<T>` + `StreamBuilder<T>`, including
   source-shaped snapshots and connection states, retained data/error transitions, stream summary folding,
   source replacement, stale callback suppression, focused tests, and a mirrored C#/Dart runtime probe.

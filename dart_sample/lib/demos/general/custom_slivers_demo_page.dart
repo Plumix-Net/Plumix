@@ -177,6 +177,41 @@ class CustomSliversDemoPage extends StatelessWidget {
           ],
         ),
         SliverPadding(
+          padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
+          sliver: SliverPrototypeExtentList.builder(
+            itemCount: 4,
+            prototypeItem: const SizedBox(height: 54),
+            itemBuilder: (BuildContext context, int index) {
+              return _extentCell(
+                'prototype extent row #$index',
+                index.isEven
+                    ? const Color(0xFFE8EAF6)
+                    : const Color(0xFFF3E5F5),
+              );
+            },
+          ),
+        ),
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+          sliver: SliverVariedExtentList.builder(
+            itemCount: 6,
+            itemExtentBuilder: (int index, SliverLayoutDimensions dimensions) =>
+                switch (index % 3) {
+                  0 => 38,
+                  1 => 54,
+                  _ => 46,
+                },
+            itemBuilder: (BuildContext context, int index) {
+              return _extentCell(
+                'varied extent row #$index',
+                index.isEven
+                    ? const Color(0xFFE0F2F1)
+                    : const Color(0xFFE8F5E9),
+              );
+            },
+          ),
+        ),
+        SliverPadding(
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
           sliver: SliverList.builder(
             itemCount: 8,
@@ -230,6 +265,22 @@ class CustomSliversDemoPage extends StatelessWidget {
               style: TextStyle(fontSize: 13, color: Colors.black54),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  static Widget _extentCell(String label, Color color) {
+    return ColoredBox(
+      color: color,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: Text(
+            label,
+            style: const TextStyle(fontSize: 13, color: Colors.black),
+          ),
         ),
       ),
     );

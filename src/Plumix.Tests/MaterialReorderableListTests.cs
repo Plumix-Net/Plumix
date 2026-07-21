@@ -290,6 +290,37 @@ public sealed class MaterialReorderableListTests
         Assert.Equal(150, sliver.Geometry.ScrollExtent);
     }
 
+    [Fact]
+    public void SliverReorderableList_PrototypeItemControlsEveryChildExtent()
+    {
+        Widget list = new CustomScrollView(
+            cacheExtent: 0,
+            slivers:
+            [
+                new SliverReorderableList(
+                    itemBuilder: (_, index) => new SizedBox(
+                        height: 12,
+                        key: new ValueKey<int>(index)),
+                    itemCount: 4,
+                    onReorderItem: (_, _) => { },
+                    prototypeItem: new SizedBox(height: 44)),
+            ]);
+        using WidgetRenderHarness harness = new(Wrap(list));
+        harness.Pump(new Size(200, 120));
+
+        RenderSliverPrototypeExtentList sliver = Assert.Single(
+            FindDescendants<RenderSliverPrototypeExtentList>(harness.RenderView));
+        List<double> heights = [];
+        for (RenderBox? child = sliver.FirstChild; child is not null; child = sliver.ChildAfter(child))
+        {
+            heights.Add(child.Size.Height);
+        }
+
+        Assert.Equal([44, 44, 44], heights);
+        Assert.Equal(176, sliver.Geometry.ScrollExtent);
+        Assert.Equal(new Size(200, 44), sliver.PrototypeChild!.Size);
+    }
+
     private static Widget Wrap(Widget child, ThemeData? theme = null)
     {
         return new Directionality(

@@ -1,5 +1,10 @@
 # Changelog
 
+- Added paired Flutter core `SliverPrototypeExtentList` + `SliverVariedExtentList` ports with offstage prototype
+  measurement, per-index layout dimensions, exact constrained extents, lazy keyed child reuse, focused tests, and
+  mirrored C#/Dart custom-sliver probes. Reorderable lists now honor `prototypeItem` and share the varied-extent
+  render path; advanced `Plumix` to `0.8.0-alpha.1`.
+
 - Fixed `DropdownButton` route-result delivery to complete on the navigation lifecycle instead of a thread-pool
   continuation, removing a keyboard-selection race under CI load.
 

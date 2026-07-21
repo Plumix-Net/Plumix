@@ -1159,7 +1159,7 @@ public abstract class SliverMultiBoxAdaptorWidget : RenderObjectWidget
     }
 }
 
-internal sealed class SliverMultiBoxAdaptorElement : RenderObjectElement, IRenderSliverBoxChildManager
+internal class SliverMultiBoxAdaptorElement : RenderObjectElement, IRenderSliverBoxChildManager
 {
     private readonly SortedDictionary<int, Element> _childElements = [];
     private readonly Dictionary<Element, int> _indexByElement = [];
@@ -1170,9 +1170,9 @@ internal sealed class SliverMultiBoxAdaptorElement : RenderObjectElement, IRende
     {
     }
 
-    private SliverMultiBoxAdaptorWidget TypedWidget => (SliverMultiBoxAdaptorWidget)Widget;
+    protected SliverMultiBoxAdaptorWidget TypedWidget => (SliverMultiBoxAdaptorWidget)Widget;
 
-    private RenderSliverMultiBoxAdaptor TypedRenderObject => (RenderSliverMultiBoxAdaptor)RequireRenderObject();
+    protected RenderSliverMultiBoxAdaptor TypedRenderObject => (RenderSliverMultiBoxAdaptor)RequireRenderObject();
 
     int? IRenderSliverBoxChildManager.ChildCount => TypedWidget.Delegate.EstimatedChildCount;
 
@@ -1586,6 +1586,229 @@ public sealed class SliverFixedExtentList : SliverMultiBoxAdaptorWidget
     internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         ((RenderSliverFixedExtentList)renderObject).ItemExtent = ItemExtent;
+    }
+}
+
+// Dart parity sources:
+// flutter/packages/flutter/lib/src/widgets/sliver.dart (SliverVariedExtentList)
+// flutter/packages/flutter/lib/src/widgets/sliver_prototype_extent_list.dart (SliverPrototypeExtentList)
+
+/// <summary>
+/// Places box children in a linear array and forces each child to the main-axis
+/// extent returned by <see cref="ItemExtentBuilder"/>.
+/// </summary>
+public sealed class SliverVariedExtentList : SliverMultiBoxAdaptorWidget
+{
+    public SliverVariedExtentList(
+        SliverChildDelegate @delegate,
+        ItemExtentBuilder itemExtentBuilder,
+        Key? key = null) : base(@delegate, key)
+    {
+        ItemExtentBuilder = itemExtentBuilder ?? throw new ArgumentNullException(nameof(itemExtentBuilder));
+    }
+
+    public ItemExtentBuilder ItemExtentBuilder { get; }
+
+    public static SliverVariedExtentList FromChildren(
+        IReadOnlyList<Widget> children,
+        ItemExtentBuilder itemExtentBuilder,
+        bool addAutomaticKeepAlives = true,
+        Key? key = null)
+    {
+        return new SliverVariedExtentList(
+            new SliverChildListDelegate(
+                children,
+                addAutomaticKeepAlives: addAutomaticKeepAlives),
+            itemExtentBuilder,
+            key);
+    }
+
+    public static SliverVariedExtentList Builder(
+        int childCount,
+        IndexedWidgetBuilder itemBuilder,
+        ItemExtentBuilder itemExtentBuilder,
+        bool addAutomaticKeepAlives = true,
+        ChildIndexGetter? findChildIndexCallback = null,
+        Key? key = null)
+    {
+        if (childCount < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(childCount));
+        }
+
+        return new SliverVariedExtentList(
+            new SliverChildBuilderDelegate(
+                itemBuilder,
+                childCount,
+                addAutomaticKeepAlives,
+                findChildIndexCallback),
+            itemExtentBuilder,
+            key);
+    }
+
+    internal override RenderObject CreateRenderObject(BuildContext context)
+    {
+        return new RenderSliverVariedExtentList(ItemExtentBuilder);
+    }
+
+    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    {
+        ((RenderSliverVariedExtentList)renderObject).ItemExtentBuilder = ItemExtentBuilder;
+    }
+}
+
+/// <summary>
+/// Places box children in a linear array and derives their common main-axis
+/// extent from an offstage prototype child.
+/// </summary>
+public sealed class SliverPrototypeExtentList : SliverMultiBoxAdaptorWidget
+{
+    public SliverPrototypeExtentList(
+        SliverChildDelegate @delegate,
+        Widget prototypeItem,
+        Key? key = null) : base(@delegate, key)
+    {
+        PrototypeItem = prototypeItem ?? throw new ArgumentNullException(nameof(prototypeItem));
+    }
+
+    public Widget PrototypeItem { get; }
+
+    public static SliverPrototypeExtentList FromChildren(
+        IReadOnlyList<Widget> children,
+        Widget prototypeItem,
+        bool addAutomaticKeepAlives = true,
+        Key? key = null)
+    {
+        return new SliverPrototypeExtentList(
+            new SliverChildListDelegate(
+                children,
+                addAutomaticKeepAlives: addAutomaticKeepAlives),
+            prototypeItem,
+            key);
+    }
+
+    public static SliverPrototypeExtentList Builder(
+        int childCount,
+        IndexedWidgetBuilder itemBuilder,
+        Widget prototypeItem,
+        bool addAutomaticKeepAlives = true,
+        ChildIndexGetter? findChildIndexCallback = null,
+        Key? key = null)
+    {
+        if (childCount < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(childCount));
+        }
+
+        return new SliverPrototypeExtentList(
+            new SliverChildBuilderDelegate(
+                itemBuilder,
+                childCount,
+                addAutomaticKeepAlives,
+                findChildIndexCallback),
+            prototypeItem,
+            key);
+    }
+
+    internal override Element CreateElement()
+    {
+        return new SliverPrototypeExtentListElement(this);
+    }
+
+    internal override RenderObject CreateRenderObject(BuildContext context)
+    {
+        return new RenderSliverPrototypeExtentList();
+    }
+}
+
+internal sealed class SliverPrototypeExtentListElement : SliverMultiBoxAdaptorElement
+{
+    private static readonly object PrototypeSlot = new();
+    private Element? _prototype;
+
+    public SliverPrototypeExtentListElement(SliverPrototypeExtentList widget) : base(widget)
+    {
+    }
+
+    private SliverPrototypeExtentList PrototypeWidget => (SliverPrototypeExtentList)Widget;
+
+    private RenderSliverPrototypeExtentList PrototypeRenderObject =>
+        (RenderSliverPrototypeExtentList)TypedRenderObject;
+
+    protected override void OnMount()
+    {
+        base.OnMount();
+        _prototype = UpdateChild(_prototype, PrototypeWidget.PrototypeItem, PrototypeSlot);
+    }
+
+    internal override void Update(Widget newWidget)
+    {
+        base.Update(newWidget);
+        _prototype = UpdateChild(_prototype, PrototypeWidget.PrototypeItem, PrototypeSlot);
+    }
+
+    internal override void VisitChildren(Action<Element> visitor)
+    {
+        if (_prototype != null)
+        {
+            visitor(_prototype);
+        }
+
+        base.VisitChildren(visitor);
+    }
+
+    internal override void ForgetChild(Element child)
+    {
+        if (ReferenceEquals(child, _prototype))
+        {
+            _prototype = null;
+            return;
+        }
+
+        base.ForgetChild(child);
+    }
+
+    public override void InsertRenderObjectChild(RenderObject child, object? slot)
+    {
+        if (ReferenceEquals(slot, PrototypeSlot))
+        {
+            PrototypeRenderObject.PrototypeChild = (RenderBox)child;
+            return;
+        }
+
+        base.InsertRenderObjectChild(child, slot);
+    }
+
+    public override void MoveRenderObjectChild(RenderObject child, object? oldSlot, object? newSlot)
+    {
+        if (ReferenceEquals(newSlot, PrototypeSlot))
+        {
+            throw new InvalidOperationException("A SliverPrototypeExtentList prototype cannot move.");
+        }
+
+        base.MoveRenderObjectChild(child, oldSlot, newSlot);
+    }
+
+    public override void RemoveRenderObjectChild(RenderObject child, object? slot)
+    {
+        if (ReferenceEquals(child, PrototypeRenderObject.PrototypeChild))
+        {
+            PrototypeRenderObject.PrototypeChild = null;
+            return;
+        }
+
+        base.RemoveRenderObjectChild(child, slot);
+    }
+
+    internal override void Unmount()
+    {
+        if (_prototype != null)
+        {
+            UnmountChild(_prototype);
+            _prototype = null;
+        }
+
+        base.Unmount();
     }
 }
 
