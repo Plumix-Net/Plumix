@@ -84,6 +84,7 @@ import 'sample_routes.dart';
 import 'demos/general/scrollbar_demo_page.dart';
 import 'demos/general/stack_demo_page.dart';
 import 'demos/general/state_storage_demo_page.dart';
+import 'demos/general/stateful_builder_lookup_boundary_demo_page.dart';
 import 'demos/general/navigation_pop_demo_page.dart';
 import 'demos/cupertino/switch_demo_page.dart';
 import 'demos/material/range_slider_demo_page.dart';
@@ -644,6 +645,12 @@ class SampleGalleryScreen extends StatelessWidget {
           title: 'FutureBuilder + StreamBuilder',
           subtitle: 'waiting/data/error/done snapshots + source replacement',
           builder: () => const AsyncBuilderDemoPage(),
+        ),
+        SampleRouteDefinition(
+          routeName: SampleRoutes.statefulBuilderLookupBoundary,
+          title: 'StatefulBuilder + LookupBoundary',
+          subtitle: 'local state rebuilds + bounded ancestor lookup',
+          builder: () => const StatefulBuilderLookupBoundaryDemoPage(),
         ),
       ];
 

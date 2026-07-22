@@ -244,6 +244,9 @@ Completion note:
 - Continued paired core header-sliver coverage with `SliverResizingHeader` + `SliverFloatingHeader`, including
   focus-excluded min/max prototype measurement, pinned resize geometry, user-direction reveal/hide, scrolling-end
   snap animation, overlay/scroll layout modes, animation-style overrides, focused tests, and mirrored C#/Dart probes.
+- Continued paired core utility-widget coverage with `StatefulBuilder` + `LookupBoundary`, including local
+  state-setter rebuild ownership, exact-type inherited dependency and non-dependent reads, bounded widget/state/
+  render-object ancestor queries, boundary-aware element visitors, focused tests, and a mirrored C#/Dart probe.
 - Continued paired core asynchronous-builder coverage with `FutureBuilder<T>` + `StreamBuilder<T>`, including
   source-shaped snapshots and connection states, retained data/error transitions, stream summary folding,
   source replacement, stale callback suppression, focused tests, and a mirrored C#/Dart runtime probe.

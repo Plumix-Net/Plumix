@@ -1,5 +1,10 @@
 # Changelog
 
+- Added paired Flutter core `StatefulBuilder` + `LookupBoundary` ports with local state-setter rebuilds, exact-type
+  inherited lookup/dependency registration, bounded widget/state/render-object ancestor queries, boundary-aware
+  element visitors, focused tests, and a mirrored C#/Dart runtime probe. Added the source-required `BuildContext`
+  element/root-state/render-object/child lookup helpers and advanced `Plumix` to `0.10.0-alpha.1`.
+
 - Breaking: added paired Flutter core `SliverResizingHeader` + `SliverFloatingHeader` ports with measured prototypes,
   pinned resize geometry, user-direction reveal/hide, overlay/scroll snap modes, animation-style overrides, focused
   tests, and mirrored C#/Dart custom-sliver probes. Added shared scroll-direction/is-scrolling contracts and advanced

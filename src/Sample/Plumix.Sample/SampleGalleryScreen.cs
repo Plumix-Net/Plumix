@@ -109,6 +109,7 @@ internal static class SampleRoutes
     public const string StateStorage = "/state-storage";
     public const string NavigationPop = "/navigation-pop";
     public const string AsyncBuilders = "/async-builders";
+    public const string StatefulBuilderLookupBoundary = "/stateful-builder-lookup-boundary";
 }
 
 internal readonly record struct SampleRouteDefinition(
@@ -317,6 +318,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "FutureBuilder + StreamBuilder",
             "waiting/data/error/done snapshots + source replacement",
             () => new AsyncBuilderDemoPage()),
+        new(
+            SampleRoutes.StatefulBuilderLookupBoundary,
+            "StatefulBuilder + LookupBoundary",
+            "local state rebuilds + bounded ancestor lookup",
+            () => new StatefulBuilderLookupBoundaryDemoPage()),
     ];
 
     private static readonly IReadOnlyList<SampleMenuTabDefinition> DemoTabs =

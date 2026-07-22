@@ -47,6 +47,20 @@ public readonly struct BuildContext
         return null;
     }
 
+    /// <summary>Returns the nearest inherited element of the exact requested widget type.</summary>
+    public InheritedElement? GetElementForInheritedWidgetOfExactType<T>() where T : InheritedWidget
+    {
+        for (var ancestor = Owner.Parent; ancestor != null; ancestor = ancestor.Parent)
+        {
+            if (ancestor is InheritedElement inheritedElement && ancestor.Widget.GetType() == typeof(T))
+            {
+                return inheritedElement;
+            }
+        }
+
+        return null;
+    }
+
     /// <summary>Returns the nearest ancestor widget of the requested type without creating a dependency.</summary>
     public T? FindAncestorWidgetOfExactType<T>() where T : Widget
     {
@@ -86,6 +100,42 @@ public readonly struct BuildContext
         }
 
         return null;
+    }
+
+    /// <summary>Returns the furthest ancestor state assignable to <typeparamref name="T"/>.</summary>
+    public T? FindRootAncestorStateOfType<T>() where T : State
+    {
+        T? result = null;
+        for (var ancestor = Owner.Parent; ancestor != null; ancestor = ancestor.Parent)
+        {
+            if (ancestor is StatefulElement statefulElement && statefulElement.State is T state)
+            {
+                result = state;
+            }
+        }
+
+        return result;
+    }
+
+    /// <summary>Returns the nearest ancestor render object assignable to <typeparamref name="T"/>.</summary>
+    public T? FindAncestorRenderObjectOfType<T>() where T : RenderObject
+    {
+        for (var ancestor = Owner.Parent; ancestor != null; ancestor = ancestor.Parent)
+        {
+            if (ancestor is RenderObjectElement { RenderObject: T renderObject })
+            {
+                return renderObject;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>Visits each direct child element of this build context.</summary>
+    public void VisitChildElements(Action<Element> visitor)
+    {
+        ArgumentNullException.ThrowIfNull(visitor);
+        Owner.VisitChildren(visitor);
     }
 
     public RenderObject? FindRenderObject() => Owner.RenderObject;
