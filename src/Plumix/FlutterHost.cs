@@ -37,10 +37,13 @@ public class PlumixHost : Control
     private IInsetsManager? _insetsManager;
     private IInputPane? _inputPane;
     private bool _isSubscribedToSystemUiOverlayStyle;
+    private bool _isSubscribedToApplicationSwitcherDescription;
     private bool _isSubscribedToMouseCursor;
     private bool _isSubscribedToFeedback;
     private bool _isSubscribedToSystemSound;
     private SystemUiOverlayStyle _currentSystemUiOverlayStyle = SystemChrome.CurrentSystemUiOverlayStyle;
+    private ApplicationSwitcherDescription? _currentApplicationSwitcherDescription =
+        SystemChrome.CurrentApplicationSwitcherDescription;
     private MouseCursor _currentMouseCursor = MouseCursorManager.CurrentCursor;
 
     public event Action<SemanticsNode?>? SemanticsUpdated;
@@ -274,6 +277,7 @@ public class PlumixHost : Control
         base.OnAttachedToVisualTree(e);
         EnsureSchedulerSubscription();
         AttachSystemUiOverlayStyleListener();
+        AttachApplicationSwitcherDescriptionListener();
         AttachMouseCursorListener();
         AttachFeedbackListener();
         AttachSystemSoundListener();
@@ -287,6 +291,7 @@ public class PlumixHost : Control
         DetachSystemSoundListener();
         DetachFeedbackListener();
         DetachMouseCursorListener();
+        DetachApplicationSwitcherDescriptionListener();
         DetachSystemUiOverlayStyleListener();
         RemoveSchedulerSubscription();
         base.OnDetachedFromVisualTree(e);
@@ -419,6 +424,7 @@ public class PlumixHost : Control
             return;
         }
 
+        ApplyApplicationSwitcherDescription();
         _insetsManager = _attachedTopLevel.InsetsManager;
         if (_insetsManager != null)
         {
@@ -481,6 +487,29 @@ public class PlumixHost : Control
 
         SystemChrome.SystemUiOverlayStyleChanged -= HandleSystemUiOverlayStyleChanged;
         _isSubscribedToSystemUiOverlayStyle = false;
+    }
+
+    private void AttachApplicationSwitcherDescriptionListener()
+    {
+        if (_isSubscribedToApplicationSwitcherDescription)
+        {
+            return;
+        }
+
+        _currentApplicationSwitcherDescription = SystemChrome.CurrentApplicationSwitcherDescription;
+        SystemChrome.ApplicationSwitcherDescriptionChanged += HandleApplicationSwitcherDescriptionChanged;
+        _isSubscribedToApplicationSwitcherDescription = true;
+    }
+
+    private void DetachApplicationSwitcherDescriptionListener()
+    {
+        if (!_isSubscribedToApplicationSwitcherDescription)
+        {
+            return;
+        }
+
+        SystemChrome.ApplicationSwitcherDescriptionChanged -= HandleApplicationSwitcherDescriptionChanged;
+        _isSubscribedToApplicationSwitcherDescription = false;
     }
 
     private void AttachMouseCursorListener()
@@ -599,6 +628,32 @@ public class PlumixHost : Control
     {
         _currentSystemUiOverlayStyle = style;
         ApplySystemUiOverlayStyle();
+    }
+
+    private void HandleApplicationSwitcherDescriptionChanged(ApplicationSwitcherDescription description)
+    {
+        _currentApplicationSwitcherDescription = description;
+        ApplyApplicationSwitcherDescription();
+    }
+
+    private void ApplyApplicationSwitcherDescription()
+    {
+        if (_currentApplicationSwitcherDescription == null)
+        {
+            return;
+        }
+
+        if (_attachedTopLevel is Window window)
+        {
+            window.Title = _currentApplicationSwitcherDescription.Label;
+        }
+
+        OnFrameworkApplicationSwitcherDescription(_currentApplicationSwitcherDescription);
+    }
+
+    protected virtual void OnFrameworkApplicationSwitcherDescription(
+        ApplicationSwitcherDescription description)
+    {
     }
 
     private void ApplySystemUiOverlayStyle()

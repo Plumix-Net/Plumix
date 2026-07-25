@@ -43,7 +43,7 @@ public sealed class AboutListTile : StatelessWidget
 
     public override Widget Build(BuildContext context)
     {
-        string name = ApplicationName ?? AboutDialogs.DefaultApplicationName;
+        string name = AboutDialogs.ResolveApplicationName(context, ApplicationName);
         return new ListTile(
             leading: Icon,
             title: Child ?? new Text(MaterialLocalizations.Of(context).AboutListTileTitle(name)),
@@ -101,7 +101,7 @@ public sealed class AboutDialog : StatelessWidget
     {
         var theme = Theme.Of(context);
         var localizations = MaterialLocalizations.Of(context);
-        string name = ApplicationName ?? AboutDialogs.DefaultApplicationName;
+        string name = AboutDialogs.ResolveApplicationName(context, ApplicationName);
         string version = ApplicationVersion ?? string.Empty;
         var information = new List<Widget>
         {
@@ -243,7 +243,9 @@ public sealed class LicensePage : StatefulWidget
             {
                 new DefaultTextStyle(
                     theme.TextTheme.HeadlineSmall,
-                    new Text(CurrentWidget.ApplicationName ?? AboutDialogs.DefaultApplicationName, textAlign: TextAlign.Center)),
+                    new Text(
+                        AboutDialogs.ResolveApplicationName(context, CurrentWidget.ApplicationName),
+                        textAlign: TextAlign.Center)),
             };
             if (CurrentWidget.ApplicationIcon is not null)
             {
@@ -414,6 +416,13 @@ public static class AboutDialogs
 {
     public static string DefaultApplicationName =>
         IOPath.GetFileName(Environment.ProcessPath) is { Length: > 0 } name ? name : "application";
+
+    internal static string ResolveApplicationName(BuildContext context, string? applicationName)
+    {
+        return applicationName
+               ?? context.FindAncestorWidgetOfExactType<Title>()?.TitleText
+               ?? DefaultApplicationName;
+    }
 
     public static Task<object?> ShowAboutDialog(
         BuildContext context,

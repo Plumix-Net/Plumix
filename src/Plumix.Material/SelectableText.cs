@@ -24,6 +24,7 @@ public sealed class SelectableText : StatefulWidget
         double? cursorHeight = null,
         Color? cursorColor = null,
         Color? selectionColor = null,
+        MouseCursor? mouseCursor = null,
         bool enableInteractiveSelection = true,
         Action? onTap = null,
         string? semanticsLabel = null,
@@ -45,6 +46,7 @@ public sealed class SelectableText : StatefulWidget
         CursorHeight = cursorHeight;
         CursorColor = cursorColor;
         SelectionColor = selectionColor;
+        MouseCursor = mouseCursor;
         EnableInteractiveSelection = enableInteractiveSelection;
         OnTap = onTap;
         SemanticsLabel = semanticsLabel;
@@ -87,6 +89,7 @@ public sealed class SelectableText : StatefulWidget
     public double? CursorHeight { get; }
     public Color? CursorColor { get; }
     public Color? SelectionColor { get; }
+    public MouseCursor? MouseCursor { get; }
     public bool EnableInteractiveSelection { get; }
     public Action? OnTap { get; }
     public string? SemanticsLabel { get; }
@@ -112,10 +115,15 @@ internal sealed class SelectableTextState : State
     public override Widget Build(BuildContext context)
     {
         var theme = Theme.Of(context);
-        var selectionTheme = TextSelectionTheme.Of(context);
+        DefaultSelectionStyle selectionStyle = DefaultSelectionStyle.Of(context);
+        TextSelectionThemeData selectionTheme = TextSelectionTheme.Of(context);
         var defaultStyle = DefaultTextStyle.Of(context);
-        Color cursorColor = Current.CursorColor ?? selectionTheme.CursorColor ?? theme.PrimaryColor;
+        Color cursorColor = Current.CursorColor
+                            ?? selectionStyle.CursorColor
+                            ?? selectionTheme.CursorColor
+                            ?? theme.PrimaryColor;
         Color selectionColor = Current.SelectionColor
+                               ?? selectionStyle.SelectionColor
                                ?? selectionTheme.SelectionColor
                                ?? ApplyOpacity(theme.PrimaryColor, 0.40);
         var style = Current.Style;
@@ -153,6 +161,7 @@ internal sealed class SelectableTextState : State
             showCursor: Current.ShowCursor,
             cursorWidth: Current.CursorWidth,
             cursorHeight: Current.CursorHeight,
+            mouseCursor: Current.MouseCursor ?? selectionStyle.MouseCursor,
             onTextSelectionChanged: Current.OnSelectionChanged,
             contextMenuBuilder: Current.ContextMenuBuilder,
             magnifierConfiguration: Current.MagnifierConfiguration,

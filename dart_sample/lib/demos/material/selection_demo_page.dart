@@ -115,6 +115,19 @@ class _SelectionDemoPageState extends State<SelectionDemoPage> {
             maxLines: 3,
             style: const TextStyle(fontSize: 13),
           ),
+          const Divider(),
+          const Text(
+            'DefaultSelectionStyle scope',
+            style: TextStyle(fontSize: 18, color: Colors.black),
+          ),
+          const DefaultSelectionStyle(
+            cursorColor: Colors.deepOrange,
+            selectionColor: Color(0x66FF5722),
+            mouseCursor: SystemMouseCursors.click,
+            child: SelectableText(
+              'Cursor, selection, and mouse cursor inherit from the core selection style.',
+            ),
+          ),
         ],
       ),
     );

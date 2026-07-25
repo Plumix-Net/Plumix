@@ -52,9 +52,14 @@ public sealed class SelectionAreaState : State
     public override Widget Build(BuildContext context)
     {
         var theme = Theme.Of(context);
-        var selectionTheme = TextSelectionTheme.Of(context);
-        Color cursorColor = selectionTheme.CursorColor ?? theme.PrimaryColor;
-        Color selectionColor = selectionTheme.SelectionColor ?? ApplyOpacity(theme.PrimaryColor, 0.40);
+        DefaultSelectionStyle selectionStyle = DefaultSelectionStyle.Of(context);
+        TextSelectionThemeData selectionTheme = TextSelectionTheme.Of(context);
+        Color cursorColor = selectionStyle.CursorColor
+                            ?? selectionTheme.CursorColor
+                            ?? theme.PrimaryColor;
+        Color selectionColor = selectionStyle.SelectionColor
+                               ?? selectionTheme.SelectionColor
+                               ?? ApplyOpacity(theme.PrimaryColor, 0.40);
 
         return new SelectableRegion(
             key: _selectableRegionKey,
@@ -62,6 +67,7 @@ public sealed class SelectionAreaState : State
             focusNode: Current.FocusNode,
             selectionColor: selectionColor,
             cursorColor: cursorColor,
+            mouseCursor: selectionStyle.MouseCursor,
             contextMenuBuilder: Current.ContextMenuBuilder,
             magnifierConfiguration: Current.MagnifierConfiguration,
             onSelectionChanged: Current.OnSelectionChanged);

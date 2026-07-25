@@ -89,6 +89,14 @@ internal sealed class SelectionDemoPageState : State
                                                 ]),
                                         ]))))),
                     new Text($"Area selection: {_areaSelection}", fontSize: 13, maxLines: 3),
+                    new Divider(),
+                    new Text("DefaultSelectionStyle scope", fontSize: 18, color: Colors.Black),
+                    new DefaultSelectionStyle(
+                        cursorColor: Color.Parse("#FFFF5722"),
+                        selectionColor: Color.FromArgb(0x66, 0xFF, 0x57, 0x22),
+                        mouseCursor: SystemMouseCursors.Click,
+                        child: new SelectableText(
+                            "Cursor, selection, and mouse cursor inherit from the core selection style.")),
                 ]));
     }
 }

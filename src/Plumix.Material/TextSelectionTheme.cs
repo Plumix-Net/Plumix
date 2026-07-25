@@ -11,7 +11,7 @@ public sealed record TextSelectionThemeData(
     Color? SelectionColor = null,
     Color? SelectionHandleColor = null);
 
-public sealed class TextSelectionTheme : InheritedWidget
+public sealed class TextSelectionTheme : InheritedTheme
 {
     public TextSelectionTheme(TextSelectionThemeData data, Widget child, Key? key = null) : base(key)
     {
@@ -22,7 +22,18 @@ public sealed class TextSelectionTheme : InheritedWidget
     public TextSelectionThemeData Data { get; }
     public Widget Child { get; }
 
-    public override Widget Build(BuildContext context) => Child;
+    public override Widget Build(BuildContext context)
+    {
+        return new DefaultSelectionStyle(
+            child: Child,
+            cursorColor: Data.CursorColor,
+            selectionColor: Data.SelectionColor);
+    }
+
+    public override Widget Wrap(BuildContext context, Widget child)
+    {
+        return new TextSelectionTheme(Data, child);
+    }
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {

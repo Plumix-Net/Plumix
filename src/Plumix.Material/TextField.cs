@@ -138,6 +138,7 @@ public sealed class TextField : StatefulWidget
         private bool _ownsFocusNode;
         private bool _hovering;
         private IDisposable? _cursorHandle;
+        private MouseCursor? _resolvedMouseCursor;
         private TextField Current => (TextField)StateWidget;
 
         public override void InitState()
@@ -156,7 +157,18 @@ public sealed class TextField : StatefulWidget
         public override Widget Build(BuildContext context)
         {
             var theme = Theme.Of(context);
+            DefaultSelectionStyle selectionStyle = DefaultSelectionStyle.Of(context);
+            TextSelectionThemeData selectionTheme = TextSelectionTheme.Of(context);
             bool enabled = Current.Enabled ?? Current.Decoration?.Enabled ?? true;
+            _resolvedMouseCursor = Current.MouseCursor
+                                   ?? selectionStyle.MouseCursor
+                                   ?? (enabled ? SystemMouseCursors.Text : SystemMouseCursors.Basic);
+            Color cursorColor = selectionStyle.CursorColor
+                                ?? selectionTheme.CursorColor
+                                ?? theme.PrimaryColor;
+            Color selectionColor = selectionStyle.SelectionColor
+                                   ?? selectionTheme.SelectionColor
+                                   ?? ApplyOpacity(theme.PrimaryColor, 0.40);
             var baseStyle = Current.Style ?? (theme.UseMaterial3 ? theme.TextTheme.BodyLarge : theme.TextTheme.TitleMedium);
             if (!enabled && Current.Style?.Color is null)
                 baseStyle = baseStyle.CopyWith(color: ApplyOpacity(theme.OnSurfaceColor, 0.38));
@@ -174,6 +186,9 @@ public sealed class TextField : StatefulWidget
                 textColor: baseStyle.Color ?? theme.OnSurfaceColor,
                 backgroundColor: Colors.Transparent,
                 focusedBackgroundColor: Colors.Transparent,
+                cursorColor: cursorColor,
+                selectionColor: selectionColor,
+                mouseCursor: _resolvedMouseCursor,
                 padding: new Avalonia.Thickness(0),
                 style: baseStyle,
                 readOnly: Current.ReadOnly,
@@ -280,7 +295,7 @@ public sealed class TextField : StatefulWidget
             if (!_hovering) SetState(() => _hovering = true);
             bool enabled = Current.Enabled ?? Current.Decoration?.Enabled ?? true;
             _cursorHandle ??= MouseCursorManager.PushCursor(
-                Current.MouseCursor ?? (enabled ? SystemMouseCursors.Text : SystemMouseCursors.Basic));
+                _resolvedMouseCursor ?? (enabled ? SystemMouseCursors.Text : SystemMouseCursors.Basic));
         }
         private void EndHover()
         {

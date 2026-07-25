@@ -1,5 +1,11 @@
 # Changelog
 
+- Added paired Flutter core `Title` + `DefaultSelectionStyle` ports with opaque-color validation, application-
+  switcher metadata dispatch and desktop window-title updates, fallback/merge selection inheritance, mouse-cursor
+  propagation, source-shaped `InheritedTheme` capture, Material selection consumers, `About*` title ancestry,
+  focused tests, and mirrored C#/Dart sample probes. Advanced `Plumix` to `0.1.0-alpha.14` and `Plumix.Material`
+  to `0.1.0-alpha.13`.
+
 - Added paired Flutter core `NotificationListener<T>` + `ScrollNotificationObserver` parity with typed/cancellable
   bubbling, dependency-scoped multi-listener registration, mutation-safe/error-isolated delivery, initial and
   dimension-change `ScrollMetricsNotification` forwarding, focused tests, and a mirrored C#/Dart observer readout.

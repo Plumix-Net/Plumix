@@ -1,3 +1,4 @@
+using Avalonia.Media;
 using Plumix.Material;
 using Plumix.Widgets;
 
@@ -27,10 +28,13 @@ public sealed class CounterApp : StatefulWidget
         {
             return new CounterScope(
                 _model,
-                new Theme(
-                    data: ThemeData.Light,
-                    child: new ScaffoldMessenger(
-                        child: new SampleGalleryScreen())));
+                new Title(
+                    title: "Flutter.Net Sample",
+                    color: ThemeData.Light.PrimaryColor,
+                    child: new Theme(
+                        data: ThemeData.Light,
+                        child: new ScaffoldMessenger(
+                            child: new SampleGalleryScreen()))));
         }
     }
 }

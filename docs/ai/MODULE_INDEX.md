@@ -44,6 +44,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Sliver app bars enter through `SliverAppBar.cs` + `FlexibleSpaceBar.cs`; persistent-header layout lives in `Widgets/Scroll.cs` and `Rendering/Sliver.cs`, with focused coverage in `MaterialSliverAppBarTests.cs`.
 - Material text inputs enter through `TextField.cs` + `TextFormField.cs` + `InputDecorator.cs` + `InputDecoratorTheme.cs`; form lifecycle lives in core `Widgets/Form.cs`, editing/IME behavior stays in `Widgets/TextInput.cs`, and focused coverage is split across `FormTests.cs` and `MaterialTextFieldTests.cs`.
 - Material read-only selection enters through `SelectableText.cs` + `SelectionArea.cs` + `TextSelectionTheme.cs`;
+  core default inheritance lives in `Widgets/DefaultSelectionStyle.cs` and `Widgets/InheritedTheme.cs`;
   shared registration, keyboard/copy flow, and multi-paragraph coordination live in core `Widgets/Selection.cs`,
   while glyph hit testing/highlight paint live in `RenderParagraph.cs`. Focused coverage is in
   `MaterialSelectionTests.cs`.
@@ -63,7 +64,9 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Legacy Material dropdown controls enter through `Dropdown.cs` + `DropdownButtonFormField.cs`; form lifecycle lives in core `Widgets/Form.cs`, selected-size behavior uses core `IndexedStack`, and positioned route/scroll/focus/form behavior is covered by `MaterialDropdownTests.cs`.
 - Modern Material dropdown controls enter through `DropdownMenu.cs` + `DropdownMenuFormField.cs` + `DropdownMenuTheme.cs`; editable key dispatch lives in core `Widgets/TextInput.cs`, the anchored menu reuses the framework-owned positioned dropdown route, and filtering/search/controller/form behavior is covered by `MaterialDropdownTests.cs`.
 - Disclosure/progress controls enter through `ExpandIcon.cs` + `Stepper.cs`; integration with expansion controls and vertical/horizontal step behavior is covered by `MaterialStepperTests.cs`.
-- About/license controls enter through `About.cs` plus core `Foundation/Licenses.cs`; dialog/list/detail navigation and registry parsing are covered by `MaterialAboutTests.cs`.
+- About/license controls enter through `About.cs` plus core `Foundation/Licenses.cs` and `Widgets/Title.cs`;
+  dialog/list/detail navigation, title-derived application names, and registry parsing are covered by
+  `MaterialAboutTests.cs`.
 - Bottom/action bar controls enter through `BottomAppBar.cs` + `BottomAppBarTheme.cs` and `ButtonBar.cs` + `ButtonBarTheme.cs`; standard FAB placement/animator contracts enter through `FloatingActionButtonLocation.cs` and `Scaffold.cs`, with focused coverage in `MaterialFloatingActionButtonLocationTests.cs`.
 - Data-table controls enter through `DataTable.cs` + `DataTableTheme.cs` and `PaginatedDataTable.cs`; shared column negotiation lives in core `Widgets/Table.cs` + `Rendering/Table.cs`, with coverage in `MaterialDataTableTests.cs`.
 - Material scrollbars enter through `src/Plumix.Material/Scrollbar.cs` + `ScrollbarTheme.cs`; raw overlay/interaction behavior lives in core `Widgets/Scrollbar.cs`, with adaptive defaults in `src/Plumix.Cupertino/CupertinoScrollbar.cs` and focused coverage in `MaterialScrollbarTests.cs`.
@@ -88,6 +91,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Read First:
   - `src/Plumix/FlutterHost.cs`
   - `src/Plumix/WidgetHost.cs`
+  - `src/Plumix/UI/SystemChrome.cs`
   - `src/Plumix/Scheduler.cs`
   - `src/Plumix/PipelineOwner.cs`
   - `src/Plumix/RenderView.cs`
@@ -105,6 +109,9 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/Widgets/Framework.RenderObject.cs`
   - `src/Plumix/Widgets/StatefulBuilder.cs`
   - `src/Plumix/Widgets/LookupBoundary.cs`
+  - `src/Plumix/Widgets/InheritedTheme.cs`
+  - `src/Plumix/Widgets/DefaultSelectionStyle.cs`
+  - `src/Plumix/Widgets/Title.cs`
   - `src/Plumix/Foundation/Key.cs`
 - Primary Tests:
   - `src/Plumix.Tests/ElementLifecycleTests.cs`
@@ -112,6 +119,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix.Tests/InheritedModelTests.cs`
   - `src/Plumix.Tests/InheritedNotifierTests.cs`
   - `src/Plumix.Tests/StatefulBuilderLookupBoundaryTests.cs`
+  - `src/Plumix.Tests/TitleDefaultSelectionStyleTests.cs`
 
 ### Core Layout/Paint/Compositing
 

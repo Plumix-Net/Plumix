@@ -611,6 +611,9 @@ public sealed class EditableText : StatefulWidget
         Color? placeholderColor = null,
         Color? backgroundColor = null,
         Color? focusedBackgroundColor = null,
+        Color? cursorColor = null,
+        Color? selectionColor = null,
+        MouseCursor? mouseCursor = null,
         Thickness? padding = null,
         TextStyle? style = null,
         bool readOnly = false,
@@ -647,6 +650,9 @@ public sealed class EditableText : StatefulWidget
         PlaceholderColor = placeholderColor ?? Color.Parse("#FF757575");
         BackgroundColor = backgroundColor ?? Color.Parse("#FFF5F5F5");
         FocusedBackgroundColor = focusedBackgroundColor ?? Color.Parse("#FFE8F0FE");
+        CursorColor = cursorColor;
+        SelectionColor = selectionColor;
+        MouseCursor = mouseCursor;
         Padding = padding ?? new Thickness(8, 6);
         Style = style;
         ReadOnly = readOnly;
@@ -690,6 +696,9 @@ public sealed class EditableText : StatefulWidget
     public Color BackgroundColor { get; }
 
     public Color FocusedBackgroundColor { get; }
+    public Color? CursorColor { get; }
+    public Color? SelectionColor { get; }
+    public MouseCursor? MouseCursor { get; }
 
     public Thickness Padding { get; }
     public TextStyle? Style { get; }
@@ -816,6 +825,7 @@ public sealed class EditableText : StatefulWidget
 
         public override Widget Build(BuildContext context)
         {
+            DefaultSelectionStyle selectionStyle = DefaultSelectionStyle.Of(context);
             string text = _controller!.Text;
             bool showPlaceholder = string.IsNullOrEmpty(text) && !string.IsNullOrEmpty(Widget.Placeholder);
             string renderedText = Widget.ObscureText
@@ -872,6 +882,12 @@ public sealed class EditableText : StatefulWidget
                     onSecondaryTap: () => ShowToolbar(),
                     child: result);
             }
+
+            result = new MouseRegion(
+                cursor: Widget.MouseCursor
+                        ?? selectionStyle.MouseCursor
+                        ?? SystemMouseCursors.Text,
+                child: result);
 
             return new Semantics(
                 label: Widget.SemanticsLabel,

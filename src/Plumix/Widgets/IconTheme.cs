@@ -28,7 +28,7 @@ public sealed record IconThemeData(
     internal static IconThemeData Fallback { get; } = new();
 }
 
-public sealed class IconTheme : InheritedWidget
+public sealed class IconTheme : InheritedTheme
 {
     public IconTheme(
         IconThemeData data,
@@ -44,6 +44,11 @@ public sealed class IconTheme : InheritedWidget
     public Widget Child { get; }
 
     public override Widget Build(BuildContext context) => Child;
+
+    public override Widget Wrap(BuildContext context, Widget child)
+    {
+        return new IconTheme(Data, child);
+    }
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {

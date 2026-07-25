@@ -8,7 +8,7 @@ Use this block as the fastest machine-readable status summary.
 
 ```yaml
 framework_plan_version: 1
-last_updated: 2026-07-25
+last_updated: 2026-07-26
 north_star: "Flutter-like widget/rendering framework in C# with Avalonia as host infrastructure."
 current_phase: "M4 material library rewrite (theme/scaffold/material controls) in progress."
 status:
@@ -258,6 +258,10 @@ Completion note:
   including typed/cancellable bubbling, dependency-scoped multi-listener lookup, mutation-safe delivery, initial
   and dimension-change metrics forwarding, Flutter extent calculations, focused tests, and a mirrored C#/Dart
   observer readout.
+- Continued paired core application/selection-scope coverage with `Title` + `DefaultSelectionStyle`, including
+  opaque application metadata, host window-title propagation, fallback/merge cursor and selection inheritance,
+  mouse-cursor resolution, source-shaped `InheritedTheme` capture, Material selection/About integration, focused
+  tests, and mirrored C#/Dart probes.
 - Continued paired core asynchronous-builder coverage with `FutureBuilder<T>` + `StreamBuilder<T>`, including
   source-shaped snapshots and connection states, retained data/error transitions, stream summary folding,
   source replacement, stale callback suppression, focused tests, and a mirrored C#/Dart runtime probe.

@@ -490,6 +490,7 @@ public sealed class SelectableRegion : StatefulWidget
         Action<SelectedContent?>? onSelectionChanged = null,
         Action<TextSelection, SelectionChangedCause?>? onTextSelectionChanged = null,
         Action? onTap = null,
+        MouseCursor? mouseCursor = null,
         SelectableRegionContextMenuBuilder? contextMenuBuilder = null,
         TextMagnifierConfiguration? magnifierConfiguration = null,
         Key? key = null) : base(key)
@@ -506,6 +507,7 @@ public sealed class SelectableRegion : StatefulWidget
         OnSelectionChanged = onSelectionChanged;
         OnTextSelectionChanged = onTextSelectionChanged;
         OnTap = onTap;
+        MouseCursor = mouseCursor;
         ContextMenuBuilder = contextMenuBuilder;
         MagnifierConfiguration = magnifierConfiguration ?? TextMagnifierConfiguration.Disabled;
 
@@ -531,6 +533,7 @@ public sealed class SelectableRegion : StatefulWidget
     public Action<SelectedContent?>? OnSelectionChanged { get; }
     public Action<TextSelection, SelectionChangedCause?>? OnTextSelectionChanged { get; }
     public Action? OnTap { get; }
+    public MouseCursor? MouseCursor { get; }
     public SelectableRegionContextMenuBuilder? ContextMenuBuilder { get; }
     public TextMagnifierConfiguration MagnifierConfiguration { get; }
 
@@ -615,7 +618,7 @@ public sealed class SelectableRegionState : State
             onKeyEvent: HandleKeyEvent,
             child: child);
 
-        return new GestureDetector(
+        Widget result = new GestureDetector(
             behavior: HitTestBehavior.Translucent,
             onTap: Current.OnTap,
             onDoubleTap: () => _registrar.SelectWord(),
@@ -626,6 +629,10 @@ public sealed class SelectableRegionState : State
             },
             onSecondaryTap: () => ShowToolbar(),
             child: child);
+
+        return new MouseRegion(
+            cursor: Current.MouseCursor ?? SystemMouseCursors.Text,
+            child: result);
     }
 
     public void SelectAll() => _registrar.SelectAll();

@@ -126,7 +126,7 @@ public sealed record TextStyle(
         FontStyle: Avalonia.Media.FontStyle.Normal);
 }
 
-public sealed class DefaultTextStyle : InheritedWidget
+public sealed class DefaultTextStyle : InheritedTheme
 {
     public DefaultTextStyle(
         TextStyle style,
@@ -171,6 +171,19 @@ public sealed class DefaultTextStyle : InheritedWidget
     public TextHeightBehavior? TextHeightBehavior { get; }
 
     public override Widget Build(BuildContext context) => Child;
+
+    public override Widget Wrap(BuildContext context, Widget child)
+    {
+        return new DefaultTextStyle(
+            style: Style,
+            child: child,
+            textAlign: TextAlign,
+            softWrap: SoftWrap,
+            overflow: Overflow,
+            maxLines: MaxLines,
+            textWidthBasis: TextWidthBasis,
+            textHeightBehavior: TextHeightBehavior);
+    }
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {

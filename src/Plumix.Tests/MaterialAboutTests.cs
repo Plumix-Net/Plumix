@@ -120,6 +120,25 @@ public sealed class MaterialAboutTests : IDisposable
     }
 
     [Fact]
+    public void AboutControls_DefaultApplicationNameComesFromNearestTitle()
+    {
+        using var harness = new WidgetRenderHarness(new Title(
+            title: "Titled application",
+            color: Colors.CornflowerBlue,
+            child: BuildThemed(new Column(
+                children:
+                [
+                    new AboutListTile(),
+                    new AboutDialog(),
+                ]))));
+
+        harness.Pump(new Size(640, 480));
+
+        Assert.NotNull(FindParagraph(harness.RenderView, "About Titled application"));
+        Assert.NotNull(FindParagraph(harness.RenderView, "Titled application"));
+    }
+
+    [Fact]
     public void ShowAboutDialog_PushesDialogAndClosePopsIt()
     {
         BuildContext? capturedContext = null;

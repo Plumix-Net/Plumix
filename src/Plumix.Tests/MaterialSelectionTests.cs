@@ -288,6 +288,40 @@ public sealed class MaterialSelectionTests
         Assert.Equal(local, FindParagraphs(harness.RenderView).Single().SelectionColor);
     }
 
+    [Fact]
+    public void DefaultSelectionStyle_OverridesMaterialThemeForSelectableControls()
+    {
+        var global = Colors.Crimson;
+        var local = Colors.CornflowerBlue;
+        var cursor = Colors.DarkGreen;
+        var theme = ThemeData.Light with
+        {
+            TextSelectionTheme = new TextSelectionThemeData(
+                CursorColor: global,
+                SelectionColor: global),
+        };
+        using var harness = new WidgetRenderHarness(Root(
+            new DefaultSelectionStyle(
+                cursorColor: cursor,
+                selectionColor: local,
+                mouseCursor: SystemMouseCursors.Click,
+                child: new Column(
+                    children:
+                    [
+                        new SelectableText("styled text", showCursor: true, autofocus: true),
+                        new SelectionArea(child: new Text("styled area")),
+                    ])),
+            theme));
+
+        harness.Pump(new Size(320, 160));
+
+        List<RenderParagraph> paragraphs = FindParagraphs(harness.RenderView);
+        Assert.Equal(local, paragraphs[0].SelectionColor);
+        Assert.Equal(cursor, paragraphs[0].CursorColor);
+        Assert.Equal(local, paragraphs[1].SelectionColor);
+        Assert.Equal(cursor, paragraphs[1].CursorColor);
+    }
+
     private static Widget Root(Widget child, ThemeData theme)
     {
         return new MediaQuery(

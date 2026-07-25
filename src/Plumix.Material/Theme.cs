@@ -5,7 +5,7 @@ namespace Plumix.Material;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/material/theme.dart (approximate)
 
-public sealed class Theme : InheritedWidget
+public sealed class Theme : InheritedTheme
 {
     public Theme(
         ThemeData data,
@@ -25,6 +25,11 @@ public sealed class Theme : InheritedWidget
         return new DefaultTextStyle(
             style: Data.TextTheme.BodyMedium,
             child: Child);
+    }
+
+    public override Widget Wrap(BuildContext context, Widget child)
+    {
+        return new Theme(Data, child);
     }
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
