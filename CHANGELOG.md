@@ -1,5 +1,12 @@
 # Changelog
 
+- Added paired Flutter core `GlowingOverscrollIndicator` + `StretchingOverscrollIndicator` ports with leading/
+  trailing edge policy, notification veto/paint offsets, source glow/stretch formulas and return motion,
+  direction-aware paint/transform geometry, conditional clipping, Material platform/M2/M3 selection, focused tests,
+  and a mirrored C#/Dart runtime switch. Expanded scroll drag notification detail and advanced `Plumix`/
+  `Plumix.Material` to `0.1.0-alpha.12`; Avalonia uses Flutter's affine stretch fallback until fragment-shader
+  filters are available.
+
 - Breaking: added paired Flutter core `PrimaryScrollController` + `ScrollConfiguration` ports with nullable/none
   scopes, platform-and-axis automatic inheritance, nested primary shielding, behavior copying, platform physics,
   drag-device filtering, keyboard dismissal, and desktop scrollbar chrome. Moved `TargetPlatform` from

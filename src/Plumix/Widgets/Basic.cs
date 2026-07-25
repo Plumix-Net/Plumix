@@ -578,19 +578,25 @@ public sealed class ClipRect : SingleChildRenderObjectWidget
         Rect? clipRect = null,
         CustomClipper<Rect>? clipper = null,
         Widget? child = null,
-        Key? key = null) : base(child, key)
+        Key? key = null,
+        Clip clipBehavior = Plumix.UI.Clip.HardEdge) : base(child, key)
     {
         Clip = clipRect;
         Clipper = clipper;
+        ClipBehavior = clipBehavior;
     }
 
     public Rect? Clip { get; }
 
     public CustomClipper<Rect>? Clipper { get; }
 
+    public Clip ClipBehavior { get; }
+
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
-        var renderObject = new RenderClipRect(clipper: Clipper);
+        var renderObject = new RenderClipRect(
+            clipper: Clipper,
+            clipBehavior: ClipBehavior);
         if (Clip.HasValue)
         {
             renderObject.ClipRect = Clip.Value;
@@ -603,6 +609,7 @@ public sealed class ClipRect : SingleChildRenderObjectWidget
     {
         var clipRect = (RenderClipRect)renderObject;
         clipRect.Clipper = Clipper;
+        clipRect.ClipBehavior = ClipBehavior;
         if (Clip.HasValue)
         {
             clipRect.ClipRect = Clip.Value;

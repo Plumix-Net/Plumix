@@ -39,7 +39,8 @@ class _StateStorageDemoPageState extends State<StateStorageDemoPage> {
           'Jump the list, unmount it, then restore it. The same PageStorageKey '
           'restores the offset; the shared counter rebuilds only its keyed dependent. '
           'The list inherits its controller through PrimaryScrollController and '
-          'its desktop chrome through ScrollConfiguration.',
+          'its desktop chrome through ScrollConfiguration. Drag past an edge to '
+          'compare Flutter glow and stretch indicators.',
           style: TextStyle(fontSize: 14, color: Colors.black54),
         ),
         Row(
@@ -94,15 +95,36 @@ class _RestorableStorageList extends StatefulWidget {
 class _RestorableStorageListState extends State<_RestorableStorageList> {
   final ScrollController _controller = ScrollController();
   bool _showScrollbar = true;
+  bool _useStretch = true;
 
   @override
   Widget build(BuildContext context) {
+    final Widget scrollView = SingleChildScrollView(
+      key: const PageStorageKey<String>('state-storage-list'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: 6,
+        children: List<Widget>.generate(18, _buildRow),
+      ),
+    );
+    final Widget indicatedScrollView = _useStretch
+        ? StretchingOverscrollIndicator(
+            axisDirection: AxisDirection.down,
+            child: scrollView,
+          )
+        : GlowingOverscrollIndicator(
+            axisDirection: AxisDirection.down,
+            color: const Color(0xFF625B71),
+            child: scrollView,
+          );
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: 8,
       children: <Widget>[
-        Row(
+        Wrap(
           spacing: 8,
+          runSpacing: 8,
           children: <Widget>[
             SizedBox(
               width: 180,
@@ -124,6 +146,15 @@ class _RestorableStorageListState extends State<_RestorableStorageList> {
                 ),
               ),
             ),
+            SizedBox(
+              width: 180,
+              child: FilledButton(
+                onPressed: () => setState(() {
+                  _useStretch = !_useStretch;
+                }),
+                child: Text(_useStretch ? 'Effect: stretch' : 'Effect: glow'),
+              ),
+            ),
           ],
         ),
         Expanded(
@@ -141,14 +172,7 @@ class _RestorableStorageListState extends State<_RestorableStorageList> {
                 TargetPlatform.windows,
               },
               controller: _controller,
-              child: SingleChildScrollView(
-                key: const PageStorageKey<String>('state-storage-list'),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  spacing: 6,
-                  children: List<Widget>.generate(18, _buildRow),
-                ),
-              ),
+              child: indicatedScrollView,
             ),
           ),
         ),

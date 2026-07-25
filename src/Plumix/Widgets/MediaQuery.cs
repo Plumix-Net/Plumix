@@ -202,6 +202,14 @@ public sealed class MediaQuery : InheritedWidget
 
     public static Thickness? MaybeViewPaddingOf(BuildContext context) => MaybeOf(context)?.ViewPadding;
 
+    public static Size SizeOf(BuildContext context) => Of(context).Size;
+
+    public static Size? MaybeSizeOf(BuildContext context) => MaybeOf(context)?.Size;
+
+    public static double WidthOf(BuildContext context) => SizeOf(context).Width;
+
+    public static double HeightOf(BuildContext context) => SizeOf(context).Height;
+
     public static double TextScaleFactorOf(BuildContext context) => Of(context).TextScaleFactor;
 
     public static double? MaybeTextScaleFactorOf(BuildContext context) => MaybeOf(context)?.TextScaleFactor;

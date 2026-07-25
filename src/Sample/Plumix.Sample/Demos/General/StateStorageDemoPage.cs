@@ -43,7 +43,8 @@ internal sealed class StateStorageDemoPageState : State
                 new Text(
                     "Jump the list, unmount it, then restore it. The same PageStorageKey restores the offset; " +
                     "the shared counter rebuilds only its keyed dependent. The list inherits its controller " +
-                    "through PrimaryScrollController and its desktop chrome through ScrollConfiguration.",
+                    "through PrimaryScrollController and its desktop chrome through ScrollConfiguration. " +
+                    "Drag past an edge to compare Flutter glow and stretch indicators.",
                     fontSize: 14,
                     color: Colors.DimGray),
                 new Row(
@@ -92,22 +93,44 @@ internal sealed class RestorableStorageListState : State
 {
     private readonly ScrollController _controller = new();
     private bool _showScrollbar = true;
+    private bool _useStretch = true;
 
     public override Widget Build(BuildContext context)
     {
+        Widget scrollView = new SingleChildScrollView(
+            key: new PageStorageKey<string>("state-storage-list"),
+            child: new Column(
+                crossAxisAlignment: CrossAxisAlignment.Stretch,
+                spacing: 6,
+                children: Enumerable.Range(0, 18)
+                    .Select(BuildRow)
+                    .ToArray()));
+        Widget indicatedScrollView = _useStretch
+            ? new StretchingOverscrollIndicator(
+                axisDirection: AxisDirection.Down,
+                child: scrollView)
+            : new GlowingOverscrollIndicator(
+                axisDirection: AxisDirection.Down,
+                color: Color.Parse("#FF625B71"),
+                child: scrollView);
+
         return new Column(
             crossAxisAlignment: CrossAxisAlignment.Stretch,
             spacing: 8,
             children:
             [
-                new Row(
+                new Wrap(
                     spacing: 8,
+                    runSpacing: 8,
                     children:
                     [
                         BuildButton("Jump to offset 240", () => _controller.JumpTo(240)),
                         BuildButton(
                             _showScrollbar ? "Hide config scrollbar" : "Show config scrollbar",
                             () => SetState(() => _showScrollbar = !_showScrollbar)),
+                        BuildButton(
+                            _useStretch ? "Effect: stretch" : "Effect: glow",
+                            () => SetState(() => _useStretch = !_useStretch)),
                     ]),
                 new Expanded(
                     child: new ScrollConfiguration(
@@ -123,14 +146,7 @@ internal sealed class RestorableStorageListState : State
                             controller: _controller,
                             automaticallyInheritForPlatforms:
                                 new HashSet<TargetPlatform> { TargetPlatform.Windows },
-                            child: new SingleChildScrollView(
-                                key: new PageStorageKey<string>("state-storage-list"),
-                                child: new Column(
-                                    crossAxisAlignment: CrossAxisAlignment.Stretch,
-                                    spacing: 6,
-                                    children: Enumerable.Range(0, 18)
-                                        .Select(BuildRow)
-                                        .ToArray()))))),
+                            child: indicatedScrollView))),
             ]);
     }
 

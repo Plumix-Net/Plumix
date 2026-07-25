@@ -1975,11 +1975,33 @@ public sealed class RenderClipRect : RenderProxyBox
     private Rect _clipRect;
     private bool _hasExplicitClipRect;
     private CustomClipper<Rect>? _clipper;
+    private Clip _clipBehavior;
 
-    public RenderClipRect(RenderBox? child = null, CustomClipper<Rect>? clipper = null)
+    public RenderClipRect(
+        RenderBox? child = null,
+        CustomClipper<Rect>? clipper = null,
+        Clip clipBehavior = Clip.HardEdge)
     {
         _clipper = clipper;
+        _clipBehavior = clipBehavior;
         Child = child;
+    }
+
+    public Clip ClipBehavior
+    {
+        get => _clipBehavior;
+        set
+        {
+            if (_clipBehavior == value)
+            {
+                return;
+            }
+
+            _clipBehavior = value;
+            MarkNeedsPaint();
+            MarkNeedsCompositingBitsUpdate();
+            MarkNeedsSemanticsUpdate();
+        }
     }
 
     public CustomClipper<Rect>? Clipper
@@ -2036,8 +2058,8 @@ public sealed class RenderClipRect : RenderProxyBox
         MarkNeedsSemanticsUpdate();
     }
 
-    public override bool IsRepaintBoundary => Child != null;
-    protected override bool AlwaysNeedsCompositing => Child != null;
+    public override bool IsRepaintBoundary => Child != null && _clipBehavior != Clip.None;
+    protected override bool AlwaysNeedsCompositing => Child != null && _clipBehavior != Clip.None;
 
     protected override void OnAttach()
     {
@@ -2089,7 +2111,9 @@ public sealed class RenderClipRect : RenderProxyBox
 
     protected override Rect? DescribeApproximatePaintClip(RenderObject? child)
     {
-        return _hasExplicitClipRect
+        return _clipBehavior == Clip.None
+            ? null
+            : _hasExplicitClipRect
             ? _clipRect
             : _clipper?.GetApproximateClipRect(Size) ?? new Rect(new Point(0, 0), Size);
     }

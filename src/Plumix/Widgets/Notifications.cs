@@ -6,8 +6,11 @@ namespace Plumix.Widgets;
 
 public abstract class Notification
 {
+    public BuildContext? Context { get; private set; }
+
     public virtual bool Dispatch(BuildContext target)
     {
+        SetContext(target);
         for (var ancestor = target.Owner.Parent; ancestor != null; ancestor = ancestor.Parent)
         {
             if (ancestor is INotificationListener listener && listener.OnNotification(this))
@@ -17,6 +20,11 @@ public abstract class Notification
         }
 
         return false;
+    }
+
+    protected void SetContext(BuildContext target)
+    {
+        Context ??= target;
     }
 }
 

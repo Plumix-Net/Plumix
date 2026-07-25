@@ -39,6 +39,7 @@ public abstract class ScrollNotification(ScrollMetricsSnapshot metrics, int dept
 
     public override bool Dispatch(BuildContext target)
     {
+        SetContext(target);
         for (var ancestor = target.Owner.Parent; ancestor != null; ancestor = ancestor.Parent)
         {
             if (ancestor.Widget is Viewport)
@@ -56,40 +57,129 @@ public abstract class ScrollNotification(ScrollMetricsSnapshot metrics, int dept
     }
 }
 
-public sealed class ScrollStartNotification(
-    ScrollMetricsSnapshot metrics,
-    bool hasDragDetails = false,
-    int depth = 0) : ScrollNotification(metrics, depth)
+public sealed class ScrollStartNotification : ScrollNotification
 {
-    public bool HasDragDetails { get; } = hasDragDetails;
+    public ScrollStartNotification(
+        ScrollMetricsSnapshot metrics,
+        DragStartDetails? dragDetails = null,
+        int depth = 0) : base(metrics, depth)
+    {
+        DragDetails = dragDetails;
+    }
+
+    public ScrollStartNotification(
+        ScrollMetricsSnapshot metrics,
+        bool hasDragDetails,
+        int depth = 0) : this(
+        metrics,
+        hasDragDetails ? new DragStartDetails(default) : null,
+        depth)
+    {
+    }
+
+    public DragStartDetails? DragDetails { get; }
+
+    public bool HasDragDetails => DragDetails.HasValue;
 }
 
-public sealed class ScrollUpdateNotification(
-    ScrollMetricsSnapshot metrics,
-    double? scrollDelta = null,
-    bool hasDragDetails = false,
-    int depth = 0) : ScrollNotification(metrics, depth)
+public sealed class ScrollUpdateNotification : ScrollNotification
 {
-    public double? ScrollDelta { get; } = scrollDelta;
+    public ScrollUpdateNotification(
+        ScrollMetricsSnapshot metrics,
+        DragUpdateDetails? dragDetails = null,
+        double? scrollDelta = null,
+        int depth = 0) : base(metrics, depth)
+    {
+        DragDetails = dragDetails;
+        ScrollDelta = scrollDelta;
+    }
 
-    public bool HasDragDetails { get; } = hasDragDetails;
+    public ScrollUpdateNotification(
+        ScrollMetricsSnapshot metrics,
+        double? scrollDelta,
+        bool hasDragDetails,
+        int depth = 0) : this(
+        metrics,
+        hasDragDetails
+            ? new DragUpdateDetails(default, default, default, 0.0)
+            : null,
+        scrollDelta,
+        depth)
+    {
+    }
+
+    public DragUpdateDetails? DragDetails { get; }
+
+    public double? ScrollDelta { get; }
+
+    public bool HasDragDetails => DragDetails.HasValue;
 }
 
-public sealed class OverscrollNotification(
-    ScrollMetricsSnapshot metrics,
-    double overscroll,
-    bool hasDragDetails = false,
-    int depth = 0) : ScrollNotification(metrics, depth)
+public sealed class OverscrollNotification : ScrollNotification
 {
-    public double Overscroll { get; } = overscroll;
+    public OverscrollNotification(
+        ScrollMetricsSnapshot metrics,
+        double overscroll,
+        DragUpdateDetails? dragDetails = null,
+        double velocity = 0.0,
+        int depth = 0) : base(metrics, depth)
+    {
+        if (!double.IsFinite(overscroll) || Math.Abs(overscroll) <= double.Epsilon)
+        {
+            throw new ArgumentOutOfRangeException(nameof(overscroll));
+        }
 
-    public bool HasDragDetails { get; } = hasDragDetails;
+        if (!double.IsFinite(velocity))
+        {
+            throw new ArgumentOutOfRangeException(nameof(velocity));
+        }
+
+        Overscroll = overscroll;
+        DragDetails = dragDetails;
+        Velocity = velocity;
+    }
+
+    public OverscrollNotification(
+        ScrollMetricsSnapshot metrics,
+        double overscroll,
+        bool hasDragDetails,
+        int depth = 0) : this(
+        metrics,
+        overscroll,
+        hasDragDetails
+            ? new DragUpdateDetails(default, default, default, 0.0)
+            : null,
+        velocity: 0.0,
+        depth)
+    {
+    }
+
+    public double Overscroll { get; }
+
+    public DragUpdateDetails? DragDetails { get; }
+
+    public double Velocity { get; }
+
+    public bool HasDragDetails => DragDetails.HasValue;
 }
 
-public sealed class ScrollEndNotification(
-    ScrollMetricsSnapshot metrics,
-    int depth = 0) : ScrollNotification(metrics, depth)
+public sealed class ScrollEndNotification : ScrollNotification
 {
+    public ScrollEndNotification(
+        ScrollMetricsSnapshot metrics,
+        DragEndDetails? dragDetails = null,
+        int depth = 0) : base(metrics, depth)
+    {
+        DragDetails = dragDetails;
+    }
+
+    public ScrollEndNotification(
+        ScrollMetricsSnapshot metrics,
+        int depth) : this(metrics, dragDetails: null, depth)
+    {
+    }
+
+    public DragEndDetails? DragDetails { get; }
 }
 
 public sealed class KeepAliveNotification : Notification
@@ -678,7 +768,7 @@ public sealed class Scrollable : StatefulWidget
             SetState(static () => { });
         }
 
-        private void HandleDragStart(DragStartDetails _)
+        private void HandleDragStart(DragStartDetails details)
         {
             ScrollViewKeyboardDismissBehavior keyboardDismissBehavior =
                 CurrentWidget.KeyboardDismissBehavior
@@ -692,7 +782,7 @@ public sealed class Scrollable : StatefulWidget
             }
 
             _position.BeginDrag();
-            new ScrollStartNotification(CurrentMetrics(), hasDragDetails: true).Dispatch(Context);
+            new ScrollStartNotification(CurrentMetrics(), dragDetails: details).Dispatch(Context);
         }
 
         private bool IsDescendantFocus(FocusNode focusNode)
@@ -713,7 +803,7 @@ public sealed class Scrollable : StatefulWidget
             double delta = IsReversedAxisDirection()
                 ? -details.PrimaryDelta
                 : details.PrimaryDelta;
-            ApplyDragOffset(delta);
+            ApplyDragOffset(delta, details);
         }
 
         private void HandleVerticalDragUpdate(DragUpdateDetails details)
@@ -721,7 +811,7 @@ public sealed class Scrollable : StatefulWidget
             double delta = IsReversedAxisDirection()
                 ? -details.PrimaryDelta
                 : details.PrimaryDelta;
-            ApplyDragOffset(delta);
+            ApplyDragOffset(delta, details);
         }
 
         private void HandleDragEnd(DragEndDetails details)
@@ -730,7 +820,7 @@ public sealed class Scrollable : StatefulWidget
                 ? -details.PrimaryVelocity
                 : details.PrimaryVelocity;
             _position.EndDrag(velocity);
-            new ScrollEndNotification(CurrentMetrics()).Dispatch(Context);
+            new ScrollEndNotification(CurrentMetrics(), dragDetails: details).Dispatch(Context);
         }
 
         private void HandleDragCancel()
@@ -739,7 +829,7 @@ public sealed class Scrollable : StatefulWidget
             new ScrollEndNotification(CurrentMetrics()).Dispatch(Context);
         }
 
-        private void ApplyDragOffset(double delta)
+        private void ApplyDragOffset(double delta, DragUpdateDetails details)
         {
             double before = _position.Pixels;
             double adjusted = _position.Physics.ApplyPhysicsToUserOffset(_position, delta);
@@ -760,8 +850,8 @@ public sealed class Scrollable : StatefulWidget
             {
                 new ScrollUpdateNotification(
                     CurrentMetrics(),
-                    scrollDelta: actualScrollDelta,
-                    hasDragDetails: true).Dispatch(Context);
+                    dragDetails: details,
+                    scrollDelta: actualScrollDelta).Dispatch(Context);
                 SetState(static () => { });
             }
 
@@ -771,7 +861,7 @@ public sealed class Scrollable : StatefulWidget
                 new OverscrollNotification(
                     CurrentMetrics(),
                     overscroll: overscroll,
-                    hasDragDetails: true).Dispatch(Context);
+                    dragDetails: details).Dispatch(Context);
             }
         }
 
