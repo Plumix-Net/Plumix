@@ -227,11 +227,18 @@ public sealed class MaterialRefreshIndicatorTests : IDisposable
     {
         using var harness = new WidgetRenderHarness(Wrap(RefreshIndicator.NoSpinner(
             onRefresh: () => Task.CompletedTask,
-            child: ListView.Builder(
-                itemCount: 30,
-                itemExtent: 54,
-                addAutomaticKeepAlives: false,
-                itemBuilder: (_, index) => new SizedBox(height: 54, child: new Text($"row {index}"))))));
+            child: new ScrollConfiguration(
+                behavior: new ScrollBehavior().CopyWith(
+                    dragDevices: new HashSet<PointerDeviceKind>
+                    {
+                        PointerDeviceKind.Touch,
+                        PointerDeviceKind.Mouse,
+                    }),
+                child: ListView.Builder(
+                    itemCount: 30,
+                    itemExtent: 54,
+                    addAutomaticKeepAlives: false,
+                    itemBuilder: (_, index) => new SizedBox(height: 54, child: new Text($"row {index}")))))));
         harness.Pump(Viewport);
         var state = harness.FindState<RefreshIndicatorState>();
         var binding = GestureBinding.Instance;

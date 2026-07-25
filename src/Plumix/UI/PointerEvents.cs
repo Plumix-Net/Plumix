@@ -10,6 +10,7 @@ public enum PointerDeviceKind
     Mouse,
     Stylus,
     InvertedStylus,
+    Trackpad,
     Unknown
 }
 

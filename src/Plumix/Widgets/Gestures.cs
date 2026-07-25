@@ -108,6 +108,7 @@ public sealed class RawGestureDetector : StatefulWidget
         Action<DragUpdateDetails>? onVerticalDragUpdate = null,
         Action<DragEndDetails>? onVerticalDragEnd = null,
         Action? onVerticalDragCancel = null,
+        IReadOnlySet<PointerDeviceKind>? supportedDevices = null,
         DragStartBehavior dragStartBehavior = DragStartBehavior.Start,
         Key? key = null) : base(key)
     {
@@ -136,6 +137,7 @@ public sealed class RawGestureDetector : StatefulWidget
         OnVerticalDragUpdate = onVerticalDragUpdate;
         OnVerticalDragEnd = onVerticalDragEnd;
         OnVerticalDragCancel = onVerticalDragCancel;
+        SupportedDevices = supportedDevices;
         DragStartBehavior = dragStartBehavior;
     }
 
@@ -179,6 +181,8 @@ public sealed class RawGestureDetector : StatefulWidget
     public Action<DragEndDetails>? OnVerticalDragEnd { get; }
 
     public Action? OnVerticalDragCancel { get; }
+
+    public IReadOnlySet<PointerDeviceKind>? SupportedDevices { get; }
 
     public DragStartBehavior DragStartBehavior { get; }
 
@@ -230,6 +234,11 @@ public sealed class RawGestureDetector : StatefulWidget
         {
             var widget = CurrentWidget;
             widget.OnPointerDown?.Invoke(@event);
+            if (widget.SupportedDevices != null && !widget.SupportedDevices.Contains(@event.Kind))
+            {
+                return;
+            }
+
             _tap?.AddPointer(@event);
             _longPress?.AddPointer(@event);
             _horizontalDrag?.AddPointer(@event);

@@ -1,6 +1,8 @@
 using Avalonia;
 using Plumix.Foundation;
+using Plumix.Gestures;
 using Plumix.Rendering;
+using Plumix.UI;
 using Plumix.Widgets;
 using Xunit;
 
@@ -11,6 +13,55 @@ namespace Plumix.Tests;
 [Collection(SchedulerTestCollection.Name)]
 public sealed class ScrollPipelineTests
 {
+    [Fact]
+    public void ScrollView_OnDragKeyboardDismissBehavior_UnfocusesDescendant()
+    {
+        GestureBinding.Instance.ResetForTests();
+        FocusManager.Instance.ResetForTests();
+        var focusNode = new FocusNode();
+        var harness = new WidgetRenderHarness(
+            new SingleChildScrollView(
+                keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.OnDrag,
+                child: new Focus(
+                    focusNode: focusNode,
+                    autofocus: true,
+                    child: new SizedBox(width: 100, height: 800))));
+        harness.Pump(new Size(200, 240));
+        Assert.True(focusNode.HasFocus);
+
+        DateTime now = DateTime.UtcNow;
+        GestureBinding.Instance.HandlePointerEvent(
+            harness.RenderView,
+            new PointerDownEvent(
+                700,
+                PointerDeviceKind.Touch,
+                new Point(80, 100),
+                PointerButtons.Primary,
+                now));
+        GestureBinding.Instance.HandlePointerEvent(
+            harness.RenderView,
+            new PointerMoveEvent(
+                700,
+                PointerDeviceKind.Touch,
+                new Point(80, 140),
+                PointerButtons.Primary,
+                true,
+                now.AddMilliseconds(16)));
+
+        Assert.False(focusNode.HasFocus);
+        GestureBinding.Instance.HandlePointerEvent(
+            harness.RenderView,
+            new PointerUpEvent(
+                700,
+                PointerDeviceKind.Touch,
+                new Point(80, 140),
+                PointerButtons.None,
+                now.AddMilliseconds(32)));
+        focusNode.Dispose();
+        FocusManager.Instance.ResetForTests();
+        GestureBinding.Instance.ResetForTests();
+    }
+
     [Fact]
     public void ScrollPosition_ClampingPhysics_ClampsToContentBounds()
     {

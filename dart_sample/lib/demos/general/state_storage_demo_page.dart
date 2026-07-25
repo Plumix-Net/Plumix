@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 class StateStorageDemoPage extends StatefulWidget {
@@ -36,7 +37,9 @@ class _StateStorageDemoPageState extends State<StateStorageDemoPage> {
         ),
         const Text(
           'Jump the list, unmount it, then restore it. The same PageStorageKey '
-          'restores the offset; the shared counter rebuilds only its keyed dependent.',
+          'restores the offset; the shared counter rebuilds only its keyed dependent. '
+          'The list inherits its controller through PrimaryScrollController and '
+          'its desktop chrome through ScrollConfiguration.',
           style: TextStyle(fontSize: 14, color: Colors.black54),
         ),
         Row(
@@ -90,6 +93,7 @@ class _RestorableStorageList extends StatefulWidget {
 
 class _RestorableStorageListState extends State<_RestorableStorageList> {
   final ScrollController _controller = ScrollController();
+  bool _showScrollbar = true;
 
   @override
   Widget build(BuildContext context) {
@@ -97,24 +101,54 @@ class _RestorableStorageListState extends State<_RestorableStorageList> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: 8,
       children: <Widget>[
-        Align(
-          alignment: Alignment.centerLeft,
-          child: SizedBox(
-            width: 180,
-            child: FilledButton(
-              onPressed: () => _controller.jumpTo(240),
-              child: const Text('Jump to offset 240'),
+        Row(
+          spacing: 8,
+          children: <Widget>[
+            SizedBox(
+              width: 180,
+              child: FilledButton(
+                onPressed: () => _controller.jumpTo(240),
+                child: const Text('Jump to offset 240'),
+              ),
             ),
-          ),
+            SizedBox(
+              width: 180,
+              child: FilledButton(
+                onPressed: () => setState(() {
+                  _showScrollbar = !_showScrollbar;
+                }),
+                child: Text(
+                  _showScrollbar
+                      ? 'Hide config scrollbar'
+                      : 'Show config scrollbar',
+                ),
+              ),
+            ),
+          ],
         ),
         Expanded(
-          child: SingleChildScrollView(
-            key: const PageStorageKey<String>('state-storage-list'),
-            controller: _controller,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              spacing: 6,
-              children: List<Widget>.generate(18, _buildRow),
+          child: ScrollConfiguration(
+            behavior: const _DesktopDemoScrollBehavior().copyWith(
+              scrollbars: _showScrollbar,
+              dragDevices: <PointerDeviceKind>{
+                PointerDeviceKind.touch,
+                PointerDeviceKind.mouse,
+                PointerDeviceKind.trackpad,
+              },
+            ),
+            child: PrimaryScrollController(
+              automaticallyInheritForPlatforms: const <TargetPlatform>{
+                TargetPlatform.windows,
+              },
+              controller: _controller,
+              child: SingleChildScrollView(
+                key: const PageStorageKey<String>('state-storage-list'),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  spacing: 6,
+                  children: List<Widget>.generate(18, _buildRow),
+                ),
+              ),
             ),
           ),
         ),
@@ -137,4 +171,11 @@ class _RestorableStorageListState extends State<_RestorableStorageList> {
       child: Text('Stored row ${index + 1}'),
     );
   }
+}
+
+class _DesktopDemoScrollBehavior extends ScrollBehavior {
+  const _DesktopDemoScrollBehavior();
+
+  @override
+  TargetPlatform getPlatform(BuildContext context) => TargetPlatform.windows;
 }

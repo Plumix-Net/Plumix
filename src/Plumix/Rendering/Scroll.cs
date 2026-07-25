@@ -173,6 +173,87 @@ public abstract class ScrollPhysics
     }
 }
 
+public sealed class RangeMaintainingScrollPhysics : ScrollPhysics
+{
+    public RangeMaintainingScrollPhysics(ScrollPhysics? parent = null) : base(parent)
+    {
+    }
+
+    public override double ApplyBoundaryConditions(IScrollMetrics position, double value)
+    {
+        if (position.Pixels < position.MinScrollExtent && value < position.Pixels)
+        {
+            return value - position.Pixels;
+        }
+
+        if (position.MaxScrollExtent < position.Pixels && position.Pixels < value)
+        {
+            return value - position.Pixels;
+        }
+
+        return base.ApplyBoundaryConditions(position, value);
+    }
+}
+
+public enum ScrollDecelerationRate
+{
+    Normal,
+    Fast,
+}
+
+public sealed class BouncingScrollPhysics : ScrollPhysics
+{
+    public BouncingScrollPhysics(
+        ScrollDecelerationRate decelerationRate = ScrollDecelerationRate.Normal,
+        ScrollPhysics? parent = null) : base(parent)
+    {
+        DecelerationRate = decelerationRate;
+    }
+
+    public ScrollDecelerationRate DecelerationRate { get; }
+
+    public override double ApplyPhysicsToUserOffset(IScrollMetrics position, double offset)
+    {
+        if (offset == 0.0)
+        {
+            return 0.0;
+        }
+
+        double overscrollPastStart = Math.Max(position.MinScrollExtent - position.Pixels, 0.0);
+        double overscrollPastEnd = Math.Max(position.Pixels - position.MaxScrollExtent, 0.0);
+        double overscrollPast = Math.Max(overscrollPastStart, overscrollPastEnd);
+        bool easing = (overscrollPastStart > 0.0 && offset < 0.0)
+                      || (overscrollPastEnd > 0.0 && offset > 0.0);
+        double viewportDimension = Math.Max(position.ViewportDimension, 1.0);
+        double fraction = Math.Clamp(
+            (overscrollPast - (easing ? Math.Abs(offset) : 0.0)) / viewportDimension,
+            0.0,
+            1.0);
+        double friction = 0.52 * Math.Pow(1.0 - fraction, 2.0);
+        return offset * friction;
+    }
+
+    public override double ApplyBoundaryConditions(IScrollMetrics position, double value) => 0.0;
+
+    public override Simulation? CreateBallisticSimulation(IScrollMetrics position, double velocity)
+    {
+        if (position.Pixels < position.MinScrollExtent || position.Pixels > position.MaxScrollExtent)
+        {
+            double target = Math.Clamp(position.Pixels, position.MinScrollExtent, position.MaxScrollExtent);
+            double springVelocity = velocity + ((target - position.Pixels) * 12.0);
+            return new FrictionSimulation(8.0, position.Pixels, springVelocity);
+        }
+
+        if (Math.Abs(velocity) < 20.0)
+        {
+            return null;
+        }
+
+        double drag = DecelerationRate == ScrollDecelerationRate.Fast ? 2.6 : 3.4;
+        return new FrictionSimulation(drag, position.Pixels, velocity);
+    }
+}
+
 public sealed class ClampingScrollPhysics : ScrollPhysics
 {
     public ClampingScrollPhysics(ScrollPhysics? parent = null) : base(parent)

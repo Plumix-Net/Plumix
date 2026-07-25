@@ -1,5 +1,12 @@
 # Changelog
 
+- Breaking: added paired Flutter core `PrimaryScrollController` + `ScrollConfiguration` ports with nullable/none
+  scopes, platform-and-axis automatic inheritance, nested primary shielding, behavior copying, platform physics,
+  drag-device filtering, keyboard dismissal, and desktop scrollbar chrome. Moved `TargetPlatform` from
+  `Plumix.Material` to the shared `Plumix` namespace, added focused tests and a mirrored C#/Dart state-storage
+  probe, and advanced `Plumix`/`Plumix.Material` to `0.1.0-alpha.11`; overscroll visuals and advanced pointer
+  velocity/axis policies remain tracked in `DIVERGENCES.md`.
+
 - Added paired Flutter core `StatefulBuilder` + `LookupBoundary` ports with local state-setter rebuilds, exact-type
   inherited lookup/dependency registration, bounded widget/state/render-object ancestor queries, boundary-aware
   element visitors, focused tests, and a mirrored C#/Dart runtime probe. Added the source-required `BuildContext`

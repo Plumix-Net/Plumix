@@ -8,16 +8,6 @@ namespace Plumix.Material;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/material/theme_data.dart; flutter/packages/flutter/lib/src/material/app_bar_theme.dart (approximate)
 
-public enum TargetPlatform
-{
-    Android,
-    Fuchsia,
-    IOS,
-    Linux,
-    MacOS,
-    Windows,
-}
-
 public enum Brightness
 {
     Light,

@@ -1,9 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Rendering;
+using Plumix.UI;
 using Plumix.Widgets;
 
 namespace Plumix;
@@ -40,7 +42,8 @@ internal sealed class StateStorageDemoPageState : State
                 new Text("PageStorage + SharedAppData", fontSize: 20, color: Colors.Black),
                 new Text(
                     "Jump the list, unmount it, then restore it. The same PageStorageKey restores the offset; " +
-                    "the shared counter rebuilds only its keyed dependent.",
+                    "the shared counter rebuilds only its keyed dependent. The list inherits its controller " +
+                    "through PrimaryScrollController and its desktop chrome through ScrollConfiguration.",
                     fontSize: 14,
                     color: Colors.DimGray),
                 new Row(
@@ -88,6 +91,7 @@ internal sealed class RestorableStorageList : StatefulWidget
 internal sealed class RestorableStorageListState : State
 {
     private readonly ScrollController _controller = new();
+    private bool _showScrollbar = true;
 
     public override Widget Build(BuildContext context)
     {
@@ -96,27 +100,37 @@ internal sealed class RestorableStorageListState : State
             spacing: 8,
             children:
             [
-                new Align(
-                    alignment: Alignment.CenterLeft,
-                    child: new SizedBox(
-                        width: 180,
-                        child: new CounterTapButton(
-                            label: "Jump to offset 240",
-                            onTap: () => _controller.JumpTo(240),
-                            background: Color.Parse("#FF31506F"),
-                            foreground: Colors.White,
-                            fontSize: 12,
-                            padding: new Thickness(8, 7)))),
+                new Row(
+                    spacing: 8,
+                    children:
+                    [
+                        BuildButton("Jump to offset 240", () => _controller.JumpTo(240)),
+                        BuildButton(
+                            _showScrollbar ? "Hide config scrollbar" : "Show config scrollbar",
+                            () => SetState(() => _showScrollbar = !_showScrollbar)),
+                    ]),
                 new Expanded(
-                    child: new SingleChildScrollView(
-                        key: new PageStorageKey<string>("state-storage-list"),
-                        controller: _controller,
-                        child: new Column(
-                            crossAxisAlignment: CrossAxisAlignment.Stretch,
-                            spacing: 6,
-                            children: Enumerable.Range(0, 18)
-                                .Select(BuildRow)
-                                .ToArray()))),
+                    child: new ScrollConfiguration(
+                        behavior: new DesktopDemoScrollBehavior().CopyWith(
+                            scrollbars: _showScrollbar,
+                            dragDevices: new HashSet<PointerDeviceKind>
+                            {
+                                PointerDeviceKind.Touch,
+                                PointerDeviceKind.Mouse,
+                                PointerDeviceKind.Trackpad,
+                            }),
+                        child: new PrimaryScrollController(
+                            controller: _controller,
+                            automaticallyInheritForPlatforms:
+                                new HashSet<TargetPlatform> { TargetPlatform.Windows },
+                            child: new SingleChildScrollView(
+                                key: new PageStorageKey<string>("state-storage-list"),
+                                child: new Column(
+                                    crossAxisAlignment: CrossAxisAlignment.Stretch,
+                                    spacing: 6,
+                                    children: Enumerable.Range(0, 18)
+                                        .Select(BuildRow)
+                                        .ToArray()))))),
             ]);
     }
 
@@ -135,4 +149,22 @@ internal sealed class RestorableStorageListState : State
             alignment: Alignment.CenterLeft,
             child: new Text($"Stored row {index + 1}", color: Colors.Black));
     }
+
+    private static Widget BuildButton(string label, Action onTap)
+    {
+        return new SizedBox(
+            width: 180,
+            child: new CounterTapButton(
+                label: label,
+                onTap: onTap,
+                background: Color.Parse("#FF31506F"),
+                foreground: Colors.White,
+                fontSize: 12,
+                padding: new Thickness(8, 7)));
+    }
+}
+
+internal sealed class DesktopDemoScrollBehavior : ScrollBehavior
+{
+    public override TargetPlatform GetPlatform(BuildContext context) => TargetPlatform.Windows;
 }

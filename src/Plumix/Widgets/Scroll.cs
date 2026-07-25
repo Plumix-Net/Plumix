@@ -264,24 +264,76 @@ public abstract class AutomaticKeepAliveClientMixin : State
     }
 }
 
-public sealed class PrimaryScrollController : InheritedNotifier<ScrollController>
+// Dart parity source: flutter/packages/flutter/lib/src/widgets/primary_scroll_controller.dart
+public sealed class PrimaryScrollController : InheritedWidget
 {
-    public PrimaryScrollController(
-        ScrollController controller,
-        Widget child,
-        Key? key = null) : base(controller, child, key)
+    private static readonly IReadOnlySet<TargetPlatform> MobilePlatforms = new HashSet<TargetPlatform>
     {
+        TargetPlatform.Android,
+        TargetPlatform.IOS,
+        TargetPlatform.Fuchsia,
+    };
+
+    public PrimaryScrollController(
+        ScrollController? controller,
+        Widget child,
+        IReadOnlySet<TargetPlatform>? automaticallyInheritForPlatforms = null,
+        Axis? scrollDirection = Axis.Vertical,
+        Key? key = null) : base(key)
+    {
+        Controller = controller;
+        Child = child ?? throw new ArgumentNullException(nameof(child));
+        AutomaticallyInheritForPlatforms = automaticallyInheritForPlatforms ?? MobilePlatforms;
+        ScrollDirection = scrollDirection;
+    }
+
+    public ScrollController? Controller { get; }
+
+    public Widget Child { get; }
+
+    public IReadOnlySet<TargetPlatform> AutomaticallyInheritForPlatforms { get; }
+
+    public Axis? ScrollDirection { get; }
+
+    public static PrimaryScrollController None(Widget child, Key? key = null)
+    {
+        return new PrimaryScrollController(
+            controller: null,
+            child: child,
+            automaticallyInheritForPlatforms: new HashSet<TargetPlatform>(),
+            scrollDirection: null,
+            key: key);
+    }
+
+    public static bool ShouldInherit(BuildContext context, Axis scrollDirection)
+    {
+        PrimaryScrollController? result = context.FindAncestorWidgetOfExactType<PrimaryScrollController>();
+        if (result == null)
+        {
+            return false;
+        }
+
+        TargetPlatform platform = ScrollConfiguration.Of(context).GetPlatform(context);
+        return result.AutomaticallyInheritForPlatforms.Contains(platform)
+               && result.ScrollDirection == scrollDirection;
     }
 
     public static ScrollController? MaybeOf(BuildContext context)
     {
-        return context.DependOnInherited<PrimaryScrollController>()?.Notifier;
+        return context.DependOnInherited<PrimaryScrollController>()?.Controller;
     }
 
     public static ScrollController Of(BuildContext context)
     {
         return MaybeOf(context)
                ?? throw new InvalidOperationException("PrimaryScrollController not found in context.");
+    }
+
+    public override Widget Build(BuildContext context) => Child;
+
+    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    {
+        return !ReferenceEquals(((PrimaryScrollController)oldWidget).Controller, Controller);
     }
 }
 
@@ -370,6 +422,8 @@ public sealed class Scrollable : StatefulWidget
         CacheExtentStyle cacheExtentStyle = CacheExtentStyle.Pixel,
         bool shrinkWrap = false,
         HitTestBehavior hitTestBehavior = HitTestBehavior.Opaque,
+        ScrollBehavior? scrollBehavior = null,
+        ScrollViewKeyboardDismissBehavior? keyboardDismissBehavior = null,
         Key? key = null,
         Clip clipBehavior = Clip.HardEdge) : base(key)
     {
@@ -384,6 +438,8 @@ public sealed class Scrollable : StatefulWidget
         ShrinkWrap = shrinkWrap;
         ClipBehavior = clipBehavior;
         HitTestBehavior = hitTestBehavior;
+        ScrollBehavior = scrollBehavior;
+        KeyboardDismissBehavior = keyboardDismissBehavior;
     }
 
     public Widget? Child { get; }
@@ -407,6 +463,10 @@ public sealed class Scrollable : StatefulWidget
     public Clip ClipBehavior { get; }
 
     public HitTestBehavior HitTestBehavior { get; }
+
+    public ScrollBehavior? ScrollBehavior { get; }
+
+    public ScrollViewKeyboardDismissBehavior? KeyboardDismissBehavior { get; }
 
     internal bool UseSingleChildViewport { get; init; }
 
@@ -432,16 +492,37 @@ public sealed class Scrollable : StatefulWidget
         private ScrollController? _attachedController;
         private ScrollPosition _position = null!;
         private bool _isApplyingDrag;
+        private ScrollBehavior _configuration = null!;
+        private ScrollPhysics _effectivePhysics = null!;
+        private bool _hasPosition;
 
         private Scrollable CurrentWidget => (Scrollable)Element.Widget;
 
         public ScrollPosition Position => _position;
 
-        public override void InitState()
+        public override void DidChangeDependencies()
         {
-            _position = AttachToController(CurrentWidget.Controller, CurrentWidget.Physics);
-            RestoreScrollOffset();
-            _position.AddListener(HandlePositionChanged);
+            base.DidChangeDependencies();
+            ScrollBehavior configuration =
+                CurrentWidget.ScrollBehavior ?? ScrollConfiguration.Of(Context);
+            ScrollPhysics effectivePhysics = CurrentWidget.Physics ?? configuration.GetScrollPhysics(Context);
+            if (!_hasPosition)
+            {
+                _configuration = configuration;
+                _effectivePhysics = effectivePhysics;
+                _position = AttachToController(CurrentWidget.Controller, effectivePhysics);
+                _hasPosition = true;
+                RestoreScrollOffset();
+                _position.AddListener(HandlePositionChanged);
+                return;
+            }
+
+            bool physicsChanged = !ReferenceEquals(_effectivePhysics, effectivePhysics);
+            _configuration = configuration;
+            if (physicsChanged)
+            {
+                ReplacePosition(CurrentWidget.Controller, effectivePhysics);
+            }
         }
 
         public override void DidUpdateWidget(StatefulWidget oldWidget)
@@ -449,10 +530,24 @@ public sealed class Scrollable : StatefulWidget
             var oldScrollable = (Scrollable)oldWidget;
             var current = CurrentWidget;
             bool controllerChanged = !ReferenceEquals(oldScrollable.Controller, current.Controller);
-            bool physicsChanged = !ReferenceEquals(oldScrollable.Physics, current.Physics);
+            ScrollBehavior configuration = current.ScrollBehavior ?? ScrollConfiguration.Of(Context);
+            ScrollPhysics effectivePhysics = current.Physics ?? configuration.GetScrollPhysics(Context);
+            bool physicsChanged = !ReferenceEquals(_effectivePhysics, effectivePhysics);
+            _configuration = configuration;
 
             if (!controllerChanged && !physicsChanged)
             {
+                return;
+            }
+
+            ReplacePosition(current.Controller, effectivePhysics);
+        }
+
+        public override void Dispose()
+        {
+            if (!_hasPosition)
+            {
+                _fallbackController?.Dispose();
                 return;
             }
 
@@ -460,20 +555,8 @@ public sealed class Scrollable : StatefulWidget
             SaveScrollOffset();
             _attachedController?.Detach(_position);
             _position.Dispose();
-
-            _position = AttachToController(current.Controller, current.Physics);
-            RestoreScrollOffset();
-            _position.AddListener(HandlePositionChanged);
-            SetState(static () => { });
-        }
-
-        public override void Dispose()
-        {
-            _position.RemoveListener(HandlePositionChanged);
-            SaveScrollOffset();
-            _attachedController?.Detach(_position);
-            _position.Dispose();
             _fallbackController?.Dispose();
+            _hasPosition = false;
         }
 
         public override Widget Build(BuildContext context)
@@ -499,7 +582,7 @@ public sealed class Scrollable : StatefulWidget
                     slivers: ResolveSlivers(widget),
                     onViewportMetricsChanged: HandleViewportMetricsChanged);
 
-            return new Listener(
+            Widget scrollable = new Listener(
                 behavior: widget.HitTestBehavior,
                 onPointerSignal: HandlePointerSignal,
                 child: new RawGestureDetector(
@@ -512,7 +595,18 @@ public sealed class Scrollable : StatefulWidget
                     onVerticalDragUpdate: widget.Axis == Axis.Vertical ? HandleVerticalDragUpdate : null,
                     onVerticalDragEnd: widget.Axis == Axis.Vertical ? HandleDragEnd : null,
                     onVerticalDragCancel: widget.Axis == Axis.Vertical ? HandleDragCancel : null,
+                    supportedDevices: _configuration.DragDevices,
                     child: viewport));
+
+            var details = new ScrollableDetails(
+                Direction: axisDirection,
+                Controller: _attachedController,
+                Physics: _effectivePhysics,
+                DecorationClipBehavior: widget.ClipBehavior);
+            return _configuration.BuildScrollbar(
+                context,
+                _configuration.BuildOverscrollIndicator(context, scrollable, details),
+                details);
         }
 
         private IReadOnlyList<Widget> ResolveSlivers(Scrollable widget)
@@ -532,6 +626,20 @@ public sealed class Scrollable : StatefulWidget
             var position = _attachedController.CreateScrollPosition(physics);
             _attachedController.Attach(position);
             return position;
+        }
+
+        private void ReplacePosition(ScrollController? controller, ScrollPhysics physics)
+        {
+            _position.RemoveListener(HandlePositionChanged);
+            SaveScrollOffset();
+            _attachedController?.Detach(_position);
+            _position.Dispose();
+
+            _effectivePhysics = physics;
+            _position = AttachToController(controller, physics);
+            RestoreScrollOffset();
+            _position.AddListener(HandlePositionChanged);
+            SetState(static () => { });
         }
 
         private void RestoreScrollOffset()
@@ -572,8 +680,32 @@ public sealed class Scrollable : StatefulWidget
 
         private void HandleDragStart(DragStartDetails _)
         {
+            ScrollViewKeyboardDismissBehavior keyboardDismissBehavior =
+                CurrentWidget.KeyboardDismissBehavior
+                ?? _configuration.GetKeyboardDismissBehavior(Context);
+            FocusNode? primaryFocus = FocusManager.Instance.PrimaryFocus;
+            if (keyboardDismissBehavior == ScrollViewKeyboardDismissBehavior.OnDrag
+                && primaryFocus != null
+                && IsDescendantFocus(primaryFocus))
+            {
+                primaryFocus.Unfocus();
+            }
+
             _position.BeginDrag();
             new ScrollStartNotification(CurrentMetrics(), hasDragDetails: true).Dispatch(Context);
+        }
+
+        private bool IsDescendantFocus(FocusNode focusNode)
+        {
+            for (Element? ancestor = focusNode.AttachmentElement; ancestor != null; ancestor = ancestor.Parent)
+            {
+                if (ReferenceEquals(ancestor, Element))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private void HandleHorizontalDragUpdate(DragUpdateDetails details)
@@ -1948,18 +2080,27 @@ public sealed class CustomScrollView : StatelessWidget
         ScrollController? controller = null,
         bool? primary = null,
         ScrollPhysics? physics = null,
+        ScrollBehavior? scrollBehavior = null,
+        ScrollViewKeyboardDismissBehavior? keyboardDismissBehavior = null,
         double cacheExtent = 250.0,
         CacheExtentStyle cacheExtentStyle = CacheExtentStyle.Pixel,
         bool shrinkWrap = false,
         Key? key = null,
         Clip clipBehavior = Clip.HardEdge) : base(key)
     {
+        if (primary == true && controller != null)
+        {
+            throw new ArgumentException("Primary scroll views cannot be given an explicit controller.");
+        }
+
         Slivers = slivers;
         ScrollDirection = scrollDirection;
         Reverse = reverse;
         Controller = controller;
         Primary = primary;
         Physics = physics;
+        ScrollBehavior = scrollBehavior;
+        KeyboardDismissBehavior = keyboardDismissBehavior;
         CacheExtent = cacheExtent;
         CacheExtentStyle = cacheExtentStyle;
         ShrinkWrap = shrinkWrap;
@@ -1978,6 +2119,10 @@ public sealed class CustomScrollView : StatelessWidget
 
     public ScrollPhysics? Physics { get; }
 
+    public ScrollBehavior? ScrollBehavior { get; }
+
+    public ScrollViewKeyboardDismissBehavior? KeyboardDismissBehavior { get; }
+
     public double CacheExtent { get; }
 
     public CacheExtentStyle CacheExtentStyle { get; }
@@ -1988,23 +2133,28 @@ public sealed class CustomScrollView : StatelessWidget
 
     public override Widget Build(BuildContext context)
     {
-        bool usePrimary = Primary ?? (ScrollDirection == Axis.Vertical && Controller == null);
-        var effectiveController = Controller;
+        bool usePrimary = Primary
+                          ?? (Controller == null
+                              && PrimaryScrollController.ShouldInherit(context, ScrollDirection));
+        ScrollController? effectiveController = Controller;
         if (effectiveController == null && usePrimary)
         {
             effectiveController = PrimaryScrollController.MaybeOf(context);
         }
 
-        return new Scrollable(
+        Widget scrollable = new Scrollable(
             slivers: Slivers,
             axis: ScrollDirection,
             reverse: Reverse,
             controller: effectiveController,
             physics: Physics,
+            scrollBehavior: ScrollBehavior,
+            keyboardDismissBehavior: KeyboardDismissBehavior,
             cacheExtent: CacheExtent,
             cacheExtentStyle: CacheExtentStyle,
             shrinkWrap: ShrinkWrap,
             clipBehavior: ClipBehavior);
+        return usePrimary ? PrimaryScrollController.None(scrollable) : scrollable;
     }
 }
 
@@ -2015,20 +2165,31 @@ public sealed class SingleChildScrollView : StatelessWidget
         Axis scrollDirection = Axis.Vertical,
         bool reverse = false,
         ScrollController? controller = null,
+        bool? primary = null,
         ScrollPhysics? physics = null,
+        ScrollBehavior? scrollBehavior = null,
         double cacheExtent = 250.0,
         CacheExtentStyle cacheExtentStyle = CacheExtentStyle.Pixel,
         Thickness? padding = null,
+        ScrollViewKeyboardDismissBehavior? keyboardDismissBehavior = null,
         Key? key = null) : base(key)
     {
+        if (primary == true && controller != null)
+        {
+            throw new ArgumentException("Primary scroll views cannot be given an explicit controller.");
+        }
+
         Child = child;
         ScrollDirection = scrollDirection;
         Reverse = reverse;
         Controller = controller;
+        Primary = primary;
         Physics = physics;
+        ScrollBehavior = scrollBehavior;
         CacheExtent = cacheExtent;
         CacheExtentStyle = cacheExtentStyle;
         Padding = padding;
+        KeyboardDismissBehavior = keyboardDismissBehavior;
     }
 
     public Widget Child { get; }
@@ -2039,7 +2200,11 @@ public sealed class SingleChildScrollView : StatelessWidget
 
     public ScrollController? Controller { get; }
 
+    public bool? Primary { get; }
+
     public ScrollPhysics? Physics { get; }
+
+    public ScrollBehavior? ScrollBehavior { get; }
 
     public double CacheExtent { get; }
 
@@ -2047,22 +2212,37 @@ public sealed class SingleChildScrollView : StatelessWidget
 
     public Thickness? Padding { get; }
 
+    public ScrollViewKeyboardDismissBehavior? KeyboardDismissBehavior { get; }
+
     public override Widget Build(BuildContext context)
     {
         Widget child = Child;
-        if (Padding.HasValue) child = new Padding(Padding.Value, child);
-        return new Scrollable(
+        if (Padding.HasValue)
+        {
+            child = new Padding(Padding.Value, child);
+        }
+
+        bool usePrimary = Primary
+                          ?? (Controller == null
+                              && PrimaryScrollController.ShouldInherit(context, ScrollDirection));
+        ScrollController? effectiveController = usePrimary
+            ? PrimaryScrollController.MaybeOf(context)
+            : Controller;
+        Widget scrollable = new Scrollable(
             child: child,
             axis: ScrollDirection,
             reverse: Reverse,
-            controller: Controller,
+            controller: effectiveController,
             physics: Physics,
+            scrollBehavior: ScrollBehavior,
+            keyboardDismissBehavior: KeyboardDismissBehavior,
             cacheExtent: CacheExtent,
             cacheExtentStyle: CacheExtentStyle,
             shrinkWrap: true)
         {
             UseSingleChildViewport = true,
         };
+        return usePrimary ? PrimaryScrollController.None(scrollable) : scrollable;
     }
 }
 
@@ -2084,7 +2264,10 @@ public sealed class ListView : StatelessWidget
         Axis scrollDirection = Axis.Vertical,
         bool reverse = false,
         ScrollController? controller = null,
+        bool? primary = null,
         ScrollPhysics? physics = null,
+        ScrollBehavior? scrollBehavior = null,
+        ScrollViewKeyboardDismissBehavior? keyboardDismissBehavior = null,
         double? itemExtent = null,
         Thickness? padding = null,
         bool addAutomaticKeepAlives = true,
@@ -2093,6 +2276,11 @@ public sealed class ListView : StatelessWidget
         Key? key = null,
         bool shrinkWrap = false) : base(key)
     {
+        if (primary == true && controller != null)
+        {
+            throw new ArgumentException("Primary scroll views cannot be given an explicit controller.");
+        }
+
         if (itemExtent.HasValue && itemExtent.Value <= 0)
         {
             throw new ArgumentOutOfRangeException(nameof(itemExtent), "itemExtent must be greater than 0.");
@@ -2102,7 +2290,10 @@ public sealed class ListView : StatelessWidget
         ScrollDirection = scrollDirection;
         Reverse = reverse;
         Controller = controller;
+        Primary = primary;
         Physics = physics;
+        ScrollBehavior = scrollBehavior;
+        KeyboardDismissBehavior = keyboardDismissBehavior;
         _itemExtent = itemExtent;
         _padding = padding ?? default;
         _shrinkWrap = shrinkWrap;
@@ -2118,7 +2309,10 @@ public sealed class ListView : StatelessWidget
         Axis scrollDirection,
         bool reverse,
         ScrollController? controller,
+        bool? primary,
         ScrollPhysics? physics,
+        ScrollBehavior? scrollBehavior,
+        ScrollViewKeyboardDismissBehavior? keyboardDismissBehavior,
         double? itemExtent,
         Thickness? padding,
         bool shrinkWrap,
@@ -2127,6 +2321,11 @@ public sealed class ListView : StatelessWidget
         CacheExtentStyle cacheExtentStyle,
         Key? key) : base(key)
     {
+        if (primary == true && controller != null)
+        {
+            throw new ArgumentException("Primary scroll views cannot be given an explicit controller.");
+        }
+
         if (itemCount < 0)
         {
             throw new ArgumentOutOfRangeException(nameof(itemCount), "itemCount cannot be negative.");
@@ -2143,7 +2342,10 @@ public sealed class ListView : StatelessWidget
         ScrollDirection = scrollDirection;
         Reverse = reverse;
         Controller = controller;
+        Primary = primary;
         Physics = physics;
+        ScrollBehavior = scrollBehavior;
+        KeyboardDismissBehavior = keyboardDismissBehavior;
         _itemExtent = itemExtent;
         _padding = padding ?? default;
         _shrinkWrap = shrinkWrap;
@@ -2158,7 +2360,13 @@ public sealed class ListView : StatelessWidget
 
     public ScrollController? Controller { get; }
 
+    public bool? Primary { get; }
+
     public ScrollPhysics? Physics { get; }
+
+    public ScrollBehavior? ScrollBehavior { get; }
+
+    public ScrollViewKeyboardDismissBehavior? KeyboardDismissBehavior { get; }
 
     public static ListView Builder(
         int itemCount,
@@ -2166,7 +2374,10 @@ public sealed class ListView : StatelessWidget
         Axis scrollDirection = Axis.Vertical,
         bool reverse = false,
         ScrollController? controller = null,
+        bool? primary = null,
         ScrollPhysics? physics = null,
+        ScrollBehavior? scrollBehavior = null,
+        ScrollViewKeyboardDismissBehavior? keyboardDismissBehavior = null,
         double? itemExtent = null,
         Thickness? padding = null,
         bool addAutomaticKeepAlives = true,
@@ -2182,7 +2393,10 @@ public sealed class ListView : StatelessWidget
             scrollDirection: scrollDirection,
             reverse: reverse,
             controller: controller,
+            primary: primary,
             physics: physics,
+            scrollBehavior: scrollBehavior,
+            keyboardDismissBehavior: keyboardDismissBehavior,
             itemExtent: itemExtent,
             padding: padding,
             shrinkWrap: shrinkWrap,
@@ -2199,7 +2413,10 @@ public sealed class ListView : StatelessWidget
         Axis scrollDirection = Axis.Vertical,
         bool reverse = false,
         ScrollController? controller = null,
+        bool? primary = null,
         ScrollPhysics? physics = null,
+        ScrollBehavior? scrollBehavior = null,
+        ScrollViewKeyboardDismissBehavior? keyboardDismissBehavior = null,
         double? itemExtent = null,
         Thickness? padding = null,
         bool addAutomaticKeepAlives = true,
@@ -2215,7 +2432,10 @@ public sealed class ListView : StatelessWidget
             scrollDirection: scrollDirection,
             reverse: reverse,
             controller: controller,
+            primary: primary,
             physics: physics,
+            scrollBehavior: scrollBehavior,
+            keyboardDismissBehavior: keyboardDismissBehavior,
             itemExtent: itemExtent,
             padding: padding,
             shrinkWrap: shrinkWrap,
@@ -2280,7 +2500,10 @@ public sealed class ListView : StatelessWidget
             scrollDirection: ScrollDirection,
             reverse: Reverse,
             controller: Controller,
+            primary: Primary,
             physics: Physics,
+            scrollBehavior: ScrollBehavior,
+            keyboardDismissBehavior: KeyboardDismissBehavior,
             cacheExtent: _cacheExtent,
             cacheExtentStyle: _cacheExtentStyle,
             shrinkWrap: _shrinkWrap);
@@ -2322,19 +2545,30 @@ public sealed class GridView : StatelessWidget
         Axis scrollDirection = Axis.Vertical,
         bool reverse = false,
         ScrollController? controller = null,
+        bool? primary = null,
         ScrollPhysics? physics = null,
+        ScrollBehavior? scrollBehavior = null,
+        ScrollViewKeyboardDismissBehavior? keyboardDismissBehavior = null,
         Thickness? padding = null,
         bool addAutomaticKeepAlives = true,
         double cacheExtent = 250.0,
         CacheExtentStyle cacheExtentStyle = CacheExtentStyle.Pixel,
         Key? key = null) : base(key)
     {
+        if (primary == true && controller != null)
+        {
+            throw new ArgumentException("Primary scroll views cannot be given an explicit controller.");
+        }
+
         _gridDelegate = gridDelegate ?? throw new ArgumentNullException(nameof(gridDelegate));
         _children = children ?? [];
         ScrollDirection = scrollDirection;
         Reverse = reverse;
         Controller = controller;
+        Primary = primary;
         Physics = physics;
+        ScrollBehavior = scrollBehavior;
+        KeyboardDismissBehavior = keyboardDismissBehavior;
         _padding = padding ?? default;
         _addAutomaticKeepAlives = addAutomaticKeepAlives;
         _cacheExtent = cacheExtent;
@@ -2348,13 +2582,21 @@ public sealed class GridView : StatelessWidget
         Axis scrollDirection,
         bool reverse,
         ScrollController? controller,
+        bool? primary,
         ScrollPhysics? physics,
+        ScrollBehavior? scrollBehavior,
+        ScrollViewKeyboardDismissBehavior? keyboardDismissBehavior,
         Thickness? padding,
         bool addAutomaticKeepAlives,
         double cacheExtent,
         CacheExtentStyle cacheExtentStyle,
         Key? key) : base(key)
     {
+        if (primary == true && controller != null)
+        {
+            throw new ArgumentException("Primary scroll views cannot be given an explicit controller.");
+        }
+
         if (itemCount < 0)
         {
             throw new ArgumentOutOfRangeException(nameof(itemCount), "itemCount cannot be negative.");
@@ -2366,7 +2608,10 @@ public sealed class GridView : StatelessWidget
         ScrollDirection = scrollDirection;
         Reverse = reverse;
         Controller = controller;
+        Primary = primary;
         Physics = physics;
+        ScrollBehavior = scrollBehavior;
+        KeyboardDismissBehavior = keyboardDismissBehavior;
         _padding = padding ?? default;
         _addAutomaticKeepAlives = addAutomaticKeepAlives;
         _cacheExtent = cacheExtent;
@@ -2379,7 +2624,13 @@ public sealed class GridView : StatelessWidget
 
     public ScrollController? Controller { get; }
 
+    public bool? Primary { get; }
+
     public ScrollPhysics? Physics { get; }
+
+    public ScrollBehavior? ScrollBehavior { get; }
+
+    public ScrollViewKeyboardDismissBehavior? KeyboardDismissBehavior { get; }
 
     public static GridView Builder(
         int itemCount,
@@ -2388,7 +2639,10 @@ public sealed class GridView : StatelessWidget
         Axis scrollDirection = Axis.Vertical,
         bool reverse = false,
         ScrollController? controller = null,
+        bool? primary = null,
         ScrollPhysics? physics = null,
+        ScrollBehavior? scrollBehavior = null,
+        ScrollViewKeyboardDismissBehavior? keyboardDismissBehavior = null,
         Thickness? padding = null,
         bool addAutomaticKeepAlives = true,
         double cacheExtent = 250.0,
@@ -2402,7 +2656,10 @@ public sealed class GridView : StatelessWidget
             scrollDirection: scrollDirection,
             reverse: reverse,
             controller: controller,
+            primary: primary,
             physics: physics,
+            scrollBehavior: scrollBehavior,
+            keyboardDismissBehavior: keyboardDismissBehavior,
             padding: padding,
             addAutomaticKeepAlives: addAutomaticKeepAlives,
             cacheExtent: cacheExtent,
@@ -2416,7 +2673,10 @@ public sealed class GridView : StatelessWidget
         Axis scrollDirection = Axis.Vertical,
         bool reverse = false,
         ScrollController? controller = null,
+        bool? primary = null,
         ScrollPhysics? physics = null,
+        ScrollBehavior? scrollBehavior = null,
+        ScrollViewKeyboardDismissBehavior? keyboardDismissBehavior = null,
         Thickness? padding = null,
         double mainAxisSpacing = 0,
         double crossAxisSpacing = 0,
@@ -2438,7 +2698,10 @@ public sealed class GridView : StatelessWidget
             scrollDirection: scrollDirection,
             reverse: reverse,
             controller: controller,
+            primary: primary,
             physics: physics,
+            scrollBehavior: scrollBehavior,
+            keyboardDismissBehavior: keyboardDismissBehavior,
             padding: padding,
             addAutomaticKeepAlives: addAutomaticKeepAlives,
             cacheExtent: cacheExtent,
@@ -2452,7 +2715,10 @@ public sealed class GridView : StatelessWidget
         Axis scrollDirection = Axis.Vertical,
         bool reverse = false,
         ScrollController? controller = null,
+        bool? primary = null,
         ScrollPhysics? physics = null,
+        ScrollBehavior? scrollBehavior = null,
+        ScrollViewKeyboardDismissBehavior? keyboardDismissBehavior = null,
         Thickness? padding = null,
         double mainAxisSpacing = 0,
         double crossAxisSpacing = 0,
@@ -2474,7 +2740,10 @@ public sealed class GridView : StatelessWidget
             scrollDirection: scrollDirection,
             reverse: reverse,
             controller: controller,
+            primary: primary,
             physics: physics,
+            scrollBehavior: scrollBehavior,
+            keyboardDismissBehavior: keyboardDismissBehavior,
             padding: padding,
             addAutomaticKeepAlives: addAutomaticKeepAlives,
             cacheExtent: cacheExtent,
@@ -2505,7 +2774,10 @@ public sealed class GridView : StatelessWidget
             scrollDirection: ScrollDirection,
             reverse: Reverse,
             controller: Controller,
+            primary: Primary,
             physics: Physics,
+            scrollBehavior: ScrollBehavior,
+            keyboardDismissBehavior: KeyboardDismissBehavior,
             cacheExtent: _cacheExtent,
             cacheExtentStyle: _cacheExtentStyle);
     }

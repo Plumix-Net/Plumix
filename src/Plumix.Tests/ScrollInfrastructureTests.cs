@@ -1,4 +1,5 @@
 using Plumix.Rendering;
+using Plumix.UI;
 using Plumix.Widgets;
 using Xunit;
 
@@ -62,6 +63,184 @@ public sealed class ScrollInfrastructureTests
         owner.FlushBuild();
 
         Assert.Same(injected, resolved);
+    }
+
+    [Fact]
+    public void PrimaryScrollController_DefaultsAndNone_MatchFlutter()
+    {
+        using var controller = new ScrollController();
+        var primary = new PrimaryScrollController(controller, new SizedBox());
+        var none = PrimaryScrollController.None(new SizedBox());
+
+        Assert.Equal(Axis.Vertical, primary.ScrollDirection);
+        Assert.Equal(
+            new[] { TargetPlatform.Android, TargetPlatform.Fuchsia, TargetPlatform.IOS },
+            primary.AutomaticallyInheritForPlatforms.OrderBy(platform => platform));
+        Assert.Null(none.Controller);
+        Assert.Null(none.ScrollDirection);
+        Assert.Empty(none.AutomaticallyInheritForPlatforms);
+    }
+
+    [Fact]
+    public void PrimaryScrollController_ShouldInherit_UsesConfiguredPlatformAndAxis()
+    {
+        bool vertical = false;
+        bool horizontal = true;
+        var owner = new BuildOwner();
+        using var controller = new ScrollController();
+        var root = new TestRootElement(
+            new ScrollConfiguration(
+                behavior: new FixedPlatformScrollBehavior(TargetPlatform.Android),
+                child: new PrimaryScrollController(
+                    controller,
+                    new ScrollInheritanceProbe((verticalResult, horizontalResult) =>
+                    {
+                        vertical = verticalResult;
+                        horizontal = horizontalResult;
+                    }))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.True(vertical);
+        Assert.False(horizontal);
+    }
+
+    [Fact]
+    public void PrimaryScrollController_DoesNotRebuildDependentsWhenControllerScrolls()
+    {
+        int builds = 0;
+        var owner = new BuildOwner();
+        using var controller = new TestScrollController();
+        var root = new TestRootElement(
+            new PrimaryScrollController(
+                controller,
+                new PrimaryControllerProbe(_ => builds += 1)));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+        controller.Signal();
+        owner.FlushBuild();
+
+        Assert.Equal(1, builds);
+    }
+
+    [Fact]
+    public void CustomScrollView_AutomaticallyUsesMobilePrimaryController()
+    {
+        var owner = new BuildOwner();
+        using var controller = new ScrollController();
+        var root = new TestRootElement(
+            new ScrollConfiguration(
+                behavior: new FixedPlatformScrollBehavior(TargetPlatform.Android),
+                child: new PrimaryScrollController(
+                    controller,
+                    new CustomScrollView(
+                        slivers: [new SliverToBoxAdapter(new SizedBox(width: 10, height: 100))]))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.True(controller.HasClients);
+    }
+
+    [Fact]
+    public void PrimaryScrollController_AutomaticInheritanceIsShieldedFromNestedScrollViews()
+    {
+        var owner = new BuildOwner();
+        using var controller = new TestScrollController();
+        var root = new TestRootElement(
+            new ScrollConfiguration(
+                behavior: new FixedPlatformScrollBehavior(TargetPlatform.Android),
+                child: new PrimaryScrollController(
+                    controller,
+                    new CustomScrollView(
+                        slivers:
+                        [
+                            new SliverToBoxAdapter(
+                                new SingleChildScrollView(
+                                    child: new SizedBox(width: 10, height: 100))),
+                        ]))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.Equal(1, controller.CreatedPositions);
+    }
+
+    [Fact]
+    public void ScrollConfiguration_DefaultsAndCopyWith_MatchFlutterPolicy()
+    {
+        var owner = new BuildOwner();
+        ScrollBehavior? inherited = null;
+        Widget? desktopChrome = null;
+        Widget child = new SizedBox();
+        var behavior = new FixedPlatformScrollBehavior(TargetPlatform.MacOS);
+        using var desktopController = new ScrollController();
+        var root = new TestRootElement(
+            new ScrollConfiguration(
+                behavior,
+                new ScrollBehaviorProbe((context, value) =>
+                {
+                    inherited = value;
+                    desktopChrome = value.BuildScrollbar(
+                        context,
+                        child,
+                        ScrollableDetails.Vertical(controller: desktopController));
+                })));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.Same(behavior, inherited);
+        Assert.IsType<RawScrollbar>(desktopChrome);
+        Assert.IsType<BouncingScrollPhysics>(behavior.GetScrollPhysics(new BuildContext(root)));
+        Assert.Equal(
+            MultitouchDragStrategy.AverageBoundaryPointers,
+            behavior.GetMultitouchDragStrategy(new BuildContext(root)));
+        Assert.DoesNotContain(PointerDeviceKind.Mouse, behavior.DragDevices);
+        Assert.Contains(PointerDeviceKind.Trackpad, behavior.DragDevices);
+
+        ScrollBehavior withoutChrome = behavior.CopyWith(scrollbars: false, overscroll: false);
+        Widget undecorated = withoutChrome.BuildScrollbar(
+            new BuildContext(root),
+            child,
+            ScrollableDetails.Vertical());
+        Assert.Same(child, undecorated);
+        Widget restoredChrome = withoutChrome
+            .CopyWith(scrollbars: true)
+            .BuildScrollbar(
+                new BuildContext(root),
+                child,
+                ScrollableDetails.Vertical(controller: desktopController));
+        Assert.IsType<RawScrollbar>(restoredChrome);
+    }
+
+    [Fact]
+    public void PrimaryScrollController_RejectsPrimaryViewWithExplicitController()
+    {
+        using var controller = new ScrollController();
+
+        Assert.Throws<ArgumentException>(() => new CustomScrollView(
+            slivers: [],
+            controller: controller,
+            primary: true));
+        Assert.Throws<ArgumentException>(() => new SingleChildScrollView(
+            child: new SizedBox(),
+            controller: controller,
+            primary: true));
+        Assert.Throws<ArgumentException>(() => new ListView(
+            controller: controller,
+            primary: true));
+        Assert.Throws<ArgumentException>(() => GridView.Count(
+            crossAxisCount: 2,
+            controller: controller,
+            primary: true));
     }
 
     [Fact]
@@ -388,6 +567,68 @@ public sealed class ScrollInfrastructureTests
         {
             _onResolved(PrimaryScrollController.Of(context));
             return new SizedBox(width: 1, height: 1);
+        }
+    }
+
+    private sealed class ScrollInheritanceProbe : StatelessWidget
+    {
+        private readonly Action<bool, bool> _onResolved;
+
+        public ScrollInheritanceProbe(Action<bool, bool> onResolved)
+        {
+            _onResolved = onResolved;
+        }
+
+        public override Widget Build(BuildContext context)
+        {
+            _onResolved(
+                PrimaryScrollController.ShouldInherit(context, Axis.Vertical),
+                PrimaryScrollController.ShouldInherit(context, Axis.Horizontal));
+            return new SizedBox(width: 1, height: 1);
+        }
+    }
+
+    private sealed class ScrollBehaviorProbe : StatelessWidget
+    {
+        private readonly Action<BuildContext, ScrollBehavior> _onResolved;
+
+        public ScrollBehaviorProbe(Action<BuildContext, ScrollBehavior> onResolved)
+        {
+            _onResolved = onResolved;
+        }
+
+        public override Widget Build(BuildContext context)
+        {
+            _onResolved(context, ScrollConfiguration.Of(context));
+            return new SizedBox(width: 1, height: 1);
+        }
+    }
+
+    private sealed class FixedPlatformScrollBehavior : ScrollBehavior
+    {
+        private readonly TargetPlatform _platform;
+
+        public FixedPlatformScrollBehavior(TargetPlatform platform)
+        {
+            _platform = platform;
+        }
+
+        public override TargetPlatform GetPlatform(BuildContext context) => _platform;
+    }
+
+    private sealed class TestScrollController : ScrollController
+    {
+        public int CreatedPositions { get; private set; }
+
+        public override ScrollPosition CreateScrollPosition(ScrollPhysics? physics = null)
+        {
+            CreatedPositions += 1;
+            return base.CreateScrollPosition(physics);
+        }
+
+        public void Signal()
+        {
+            NotifyListeners();
         }
     }
 

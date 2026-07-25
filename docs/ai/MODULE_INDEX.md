@@ -244,6 +244,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Goal: scroll activities, viewport behavior, sliver child lifecycle, keep-alive.
 - Read First:
   - `src/Plumix/Widgets/Scroll.cs`
+  - `src/Plumix/Widgets/ScrollConfiguration.cs`
   - `src/Plumix/Widgets/PageStorage.cs`
   - `src/Plumix/Widgets/SharedAppData.cs`
   - `src/Plumix/Rendering/Scroll.cs`
