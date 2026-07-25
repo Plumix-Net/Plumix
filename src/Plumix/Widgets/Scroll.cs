@@ -24,6 +24,18 @@ public readonly record struct ScrollMetricsSnapshot(
 
     public double ExtentAfter => Math.Max(MaxScrollExtent - Pixels, 0.0);
 
+    public double ExtentInside
+    {
+        get
+        {
+            double leadingOverscroll = Math.Clamp(MinScrollExtent - Pixels, 0.0, ViewportDimension);
+            double trailingOverscroll = Math.Clamp(Pixels - MaxScrollExtent, 0.0, ViewportDimension);
+            return Math.Max(0.0, ViewportDimension - leadingOverscroll - trailingOverscroll);
+        }
+    }
+
+    public double ExtentTotal => ExtentBefore + ExtentInside + ExtentAfter;
+
     public Axis Axis => AxisDirection is AxisDirection.Left or AxisDirection.Right
         ? Axis.Horizontal
         : Axis.Vertical;
@@ -31,29 +43,61 @@ public readonly record struct ScrollMetricsSnapshot(
     public bool AtEdge => ExtentBefore <= 0.0001 || ExtentAfter <= 0.0001;
 }
 
-public abstract class ScrollNotification(ScrollMetricsSnapshot metrics, int depth = 0) : Notification
+public abstract class ScrollNotification : LayoutChangedNotification, IViewportNotification
 {
-    public ScrollMetricsSnapshot Metrics { get; } = metrics;
-
-    public int Depth { get; private set; } = Math.Max(0, depth);
-
-    public override bool Dispatch(BuildContext target)
+    protected ScrollNotification(
+        ScrollMetricsSnapshot metrics,
+        int depth = 0,
+        BuildContext? sourceContext = null)
     {
-        SetContext(target);
-        for (var ancestor = target.Owner.Parent; ancestor != null; ancestor = ancestor.Parent)
+        Metrics = metrics;
+        Depth = Math.Max(0, depth);
+        if (sourceContext is BuildContext context)
         {
-            if (ancestor.Widget is Viewport)
-            {
-                Depth += 1;
-            }
-
-            if (ancestor is INotificationListener listener && listener.OnNotification(this))
-            {
-                return true;
-            }
+            SetContext(context);
         }
+    }
 
-        return false;
+    public ScrollMetricsSnapshot Metrics { get; }
+
+    public int Depth { get; private set; }
+
+    void IViewportNotification.IncrementDepth()
+    {
+        Depth += 1;
+    }
+}
+
+public sealed class ScrollMetricsNotification : Notification, IViewportNotification
+{
+    public ScrollMetricsNotification(
+        ScrollMetricsSnapshot metrics,
+        BuildContext context,
+        int depth = 0)
+    {
+        Metrics = metrics;
+        Depth = Math.Max(0, depth);
+        SetContext(context);
+    }
+
+    public ScrollMetricsSnapshot Metrics { get; }
+
+    public int Depth { get; private set; }
+
+    public ScrollUpdateNotification AsScrollUpdate()
+    {
+        BuildContext sourceContext = Context
+                                     ?? throw new InvalidOperationException(
+                                         "ScrollMetricsNotification requires a source context.");
+        return new ScrollUpdateNotification(
+            Metrics,
+            depth: Depth,
+            sourceContext: sourceContext);
+    }
+
+    void IViewportNotification.IncrementDepth()
+    {
+        Depth += 1;
     }
 }
 
@@ -88,7 +132,8 @@ public sealed class ScrollUpdateNotification : ScrollNotification
         ScrollMetricsSnapshot metrics,
         DragUpdateDetails? dragDetails = null,
         double? scrollDelta = null,
-        int depth = 0) : base(metrics, depth)
+        int depth = 0,
+        BuildContext? sourceContext = null) : base(metrics, depth, sourceContext)
     {
         DragDetails = dragDetails;
         ScrollDelta = scrollDelta;
@@ -585,6 +630,8 @@ public sealed class Scrollable : StatefulWidget
         private ScrollBehavior _configuration = null!;
         private ScrollPhysics _effectivePhysics = null!;
         private bool _hasPosition;
+        private bool _hasDispatchedScrollMetrics;
+        private ScrollMetricsSnapshot _lastDispatchedScrollMetrics;
 
         private Scrollable CurrentWidget => (Scrollable)Element.Widget;
 
@@ -727,6 +774,7 @@ public sealed class Scrollable : StatefulWidget
 
             _effectivePhysics = physics;
             _position = AttachToController(controller, physics);
+            _hasDispatchedScrollMetrics = false;
             RestoreScrollOffset();
             _position.AddListener(HandlePositionChanged);
             SetState(static () => { });
@@ -883,6 +931,14 @@ public sealed class Scrollable : StatefulWidget
         {
             _position.ApplyViewportDimension(viewportExtent);
             _position.ApplyContentDimensions(minScrollExtent, maxScrollExtent);
+            ScrollMetricsSnapshot currentMetrics = CurrentMetrics();
+            if (!_hasDispatchedScrollMetrics
+                || !MetricsEqual(_lastDispatchedScrollMetrics, currentMetrics))
+            {
+                _lastDispatchedScrollMetrics = currentMetrics;
+                _hasDispatchedScrollMetrics = true;
+                new ScrollMetricsNotification(currentMetrics, Context).Dispatch(Context);
+            }
         }
 
         private ScrollMetricsSnapshot CurrentMetrics()
@@ -893,6 +949,15 @@ public sealed class Scrollable : StatefulWidget
                 MaxScrollExtent: _position.MaxScrollExtent,
                 ViewportDimension: _position.ViewportDimension,
                 AxisDirection: ResolveAxisDirection(CurrentWidget.Axis, CurrentWidget.Reverse));
+        }
+
+        private static bool MetricsEqual(ScrollMetricsSnapshot left, ScrollMetricsSnapshot right)
+        {
+            return Math.Abs(left.Pixels - right.Pixels) <= 0.0001
+                   && Math.Abs(left.MinScrollExtent - right.MinScrollExtent) <= 0.0001
+                   && Math.Abs(left.MaxScrollExtent - right.MaxScrollExtent) <= 0.0001
+                   && Math.Abs(left.ViewportDimension - right.ViewportDimension) <= 0.0001
+                   && left.AxisDirection == right.AxisDirection;
         }
 
         private bool IsReversedAxisDirection()

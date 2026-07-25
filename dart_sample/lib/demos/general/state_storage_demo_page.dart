@@ -40,7 +40,8 @@ class _StateStorageDemoPageState extends State<StateStorageDemoPage> {
           'restores the offset; the shared counter rebuilds only its keyed dependent. '
           'The list inherits its controller through PrimaryScrollController and '
           'its desktop chrome through ScrollConfiguration. Drag past an edge to '
-          'compare Flutter glow and stretch indicators.',
+          'compare Flutter glow and stretch indicators; the observer readout '
+          'receives scroll and dimension notifications across sibling subtrees.',
           style: TextStyle(fontSize: 14, color: Colors.black54),
         ),
         Row(
@@ -118,65 +119,68 @@ class _RestorableStorageListState extends State<_RestorableStorageList> {
             child: scrollView,
           );
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      spacing: 8,
-      children: <Widget>[
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: <Widget>[
-            SizedBox(
-              width: 180,
-              child: FilledButton(
-                onPressed: () => _controller.jumpTo(240),
-                child: const Text('Jump to offset 240'),
-              ),
-            ),
-            SizedBox(
-              width: 180,
-              child: FilledButton(
-                onPressed: () => setState(() {
-                  _showScrollbar = !_showScrollbar;
-                }),
-                child: Text(
-                  _showScrollbar
-                      ? 'Hide config scrollbar'
-                      : 'Show config scrollbar',
+    return ScrollNotificationObserver(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: 8,
+        children: <Widget>[
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: <Widget>[
+              SizedBox(
+                width: 180,
+                child: FilledButton(
+                  onPressed: () => _controller.jumpTo(240),
+                  child: const Text('Jump to offset 240'),
                 ),
               ),
-            ),
-            SizedBox(
-              width: 180,
-              child: FilledButton(
-                onPressed: () => setState(() {
-                  _useStretch = !_useStretch;
-                }),
-                child: Text(_useStretch ? 'Effect: stretch' : 'Effect: glow'),
+              SizedBox(
+                width: 180,
+                child: FilledButton(
+                  onPressed: () => setState(() {
+                    _showScrollbar = !_showScrollbar;
+                  }),
+                  child: Text(
+                    _showScrollbar
+                        ? 'Hide config scrollbar'
+                        : 'Show config scrollbar',
+                  ),
+                ),
+              ),
+              SizedBox(
+                width: 180,
+                child: FilledButton(
+                  onPressed: () => setState(() {
+                    _useStretch = !_useStretch;
+                  }),
+                  child: Text(_useStretch ? 'Effect: stretch' : 'Effect: glow'),
+                ),
+              ),
+            ],
+          ),
+          const _ScrollObserverReadout(),
+          Expanded(
+            child: ScrollConfiguration(
+              behavior: const _DesktopDemoScrollBehavior().copyWith(
+                scrollbars: _showScrollbar,
+                dragDevices: <PointerDeviceKind>{
+                  PointerDeviceKind.touch,
+                  PointerDeviceKind.mouse,
+                  PointerDeviceKind.trackpad,
+                },
+              ),
+              child: PrimaryScrollController(
+                automaticallyInheritForPlatforms: const <TargetPlatform>{
+                  TargetPlatform.windows,
+                },
+                controller: _controller,
+                child: indicatedScrollView,
               ),
             ),
-          ],
-        ),
-        Expanded(
-          child: ScrollConfiguration(
-            behavior: const _DesktopDemoScrollBehavior().copyWith(
-              scrollbars: _showScrollbar,
-              dragDevices: <PointerDeviceKind>{
-                PointerDeviceKind.touch,
-                PointerDeviceKind.mouse,
-                PointerDeviceKind.trackpad,
-              },
-            ),
-            child: PrimaryScrollController(
-              automaticallyInheritForPlatforms: const <TargetPlatform>{
-                TargetPlatform.windows,
-              },
-              controller: _controller,
-              child: indicatedScrollView,
-            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -194,6 +198,56 @@ class _RestorableStorageListState extends State<_RestorableStorageList> {
       alignment: Alignment.centerLeft,
       child: Text('Stored row ${index + 1}'),
     );
+  }
+}
+
+class _ScrollObserverReadout extends StatefulWidget {
+  const _ScrollObserverReadout();
+
+  @override
+  State<_ScrollObserverReadout> createState() => _ScrollObserverReadoutState();
+}
+
+class _ScrollObserverReadoutState extends State<_ScrollObserverReadout> {
+  ScrollNotificationObserverState? _observer;
+  String _summary = 'Observer: waiting for viewport metrics';
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final ScrollNotificationObserverState observer =
+        ScrollNotificationObserver.of(context);
+    if (identical(observer, _observer)) {
+      return;
+    }
+    _observer?.removeListener(_handleNotification);
+    _observer = observer..addListener(_handleNotification);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      _summary,
+      style: const TextStyle(fontSize: 12, color: Color(0xFF31506F)),
+    );
+  }
+
+  @override
+  void dispose() {
+    _observer?.removeListener(_handleNotification);
+    _observer = null;
+    super.dispose();
+  }
+
+  void _handleNotification(ScrollNotification notification) {
+    final ScrollMetrics metrics = notification.metrics;
+    setState(() {
+      _summary =
+          'Observer: ${notification.runtimeType}, '
+          'offset ${metrics.pixels.toStringAsFixed(0)}, '
+          'viewport ${metrics.viewportDimension.toStringAsFixed(0)}, '
+          'max ${metrics.maxScrollExtent.toStringAsFixed(0)}';
+    });
   }
 }
 

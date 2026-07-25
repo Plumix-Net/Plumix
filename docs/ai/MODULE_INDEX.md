@@ -244,6 +244,8 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Goal: scroll activities, viewport behavior, sliver child lifecycle, keep-alive.
 - Read First:
   - `src/Plumix/Widgets/Scroll.cs`
+  - `src/Plumix/Widgets/Notifications.cs`
+  - `src/Plumix/Widgets/ScrollNotificationObserver.cs`
   - `src/Plumix/Widgets/ScrollConfiguration.cs`
   - `src/Plumix/Widgets/OverscrollIndicator.cs`
   - `src/Plumix.Material/MaterialScrollBehavior.cs`
@@ -261,6 +263,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Primary Tests:
   - `src/Plumix.Tests/ScrollPipelineTests.cs`
   - `src/Plumix.Tests/ScrollInfrastructureTests.cs`
+  - `src/Plumix.Tests/ScrollNotificationObserverTests.cs`
   - `src/Plumix.Tests/OverscrollIndicatorTests.cs`
   - `src/Plumix.Tests/StateStorageWidgetsTests.cs`
   - `src/Plumix.Tests/MaterialScrollbarTests.cs`

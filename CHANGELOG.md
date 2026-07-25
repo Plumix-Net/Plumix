@@ -1,5 +1,10 @@
 # Changelog
 
+- Added paired Flutter core `NotificationListener<T>` + `ScrollNotificationObserver` parity with typed/cancellable
+  bubbling, dependency-scoped multi-listener registration, mutation-safe/error-isolated delivery, initial and
+  dimension-change `ScrollMetricsNotification` forwarding, focused tests, and a mirrored C#/Dart observer readout.
+  Expanded scroll metrics with Flutter extent calculations and advanced `Plumix` to `0.1.0-alpha.13`.
+
 - Added paired Flutter core `GlowingOverscrollIndicator` + `StretchingOverscrollIndicator` ports with leading/
   trailing edge policy, notification veto/paint offsets, source glow/stretch formulas and return motion,
   direction-aware paint/transform geometry, conditional clipping, Material platform/M2/M3 selection, focused tests,

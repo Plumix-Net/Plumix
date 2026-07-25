@@ -254,6 +254,10 @@ Completion note:
   `StretchingOverscrollIndicator`, including notification veto/paint offsets, source glow/stretch response and
   return motion, directional geometry, conditional clipping, Material M2/M3/platform selection, focused tests, and
   a mirrored C#/Dart state-storage probe.
+- Continued paired core notification coverage with `NotificationListener<T>` + `ScrollNotificationObserver`,
+  including typed/cancellable bubbling, dependency-scoped multi-listener lookup, mutation-safe delivery, initial
+  and dimension-change metrics forwarding, Flutter extent calculations, focused tests, and a mirrored C#/Dart
+  observer readout.
 - Continued paired core asynchronous-builder coverage with `FutureBuilder<T>` + `StreamBuilder<T>`, including
   source-shaped snapshots and connection states, retained data/error transitions, stream summary folding,
   source replacement, stale callback suppression, focused tests, and a mirrored C#/Dart runtime probe.

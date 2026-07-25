@@ -254,7 +254,7 @@ public sealed class ScrollInfrastructureTests
             new AutomaticKeepAlive(
                 child: new KeepAliveNotificationEmitter(
                     handle,
-                    value => dispatched = value)));
+                    () => dispatched = true)));
 
         root.Attach(owner);
         root.Mount(parent: null, newSlot: null);
@@ -635,9 +635,9 @@ public sealed class ScrollInfrastructureTests
     private sealed class KeepAliveNotificationEmitter : StatelessWidget
     {
         private readonly KeepAliveHandle _handle;
-        private readonly Action<bool> _onDispatched;
+        private readonly Action _onDispatched;
 
-        public KeepAliveNotificationEmitter(KeepAliveHandle handle, Action<bool> onDispatched)
+        public KeepAliveNotificationEmitter(KeepAliveHandle handle, Action onDispatched)
         {
             _handle = handle;
             _onDispatched = onDispatched;
@@ -645,7 +645,8 @@ public sealed class ScrollInfrastructureTests
 
         public override Widget Build(BuildContext context)
         {
-            _onDispatched(new KeepAliveNotification(_handle).Dispatch(context));
+            new KeepAliveNotification(_handle).Dispatch(context);
+            _onDispatched();
             return new SizedBox(width: 1, height: 1);
         }
     }

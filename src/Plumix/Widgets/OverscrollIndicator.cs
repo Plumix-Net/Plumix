@@ -11,7 +11,7 @@ namespace Plumix.Widgets;
 // - flutter/packages/flutter/lib/src/widgets/overscroll_indicator.dart
 // - flutter/packages/flutter/lib/src/widgets/stretch_effect.dart
 
-public sealed class OverscrollIndicatorNotification : Notification
+public sealed class OverscrollIndicatorNotification : Notification, IViewportNotification
 {
     public OverscrollIndicatorNotification(bool leading)
     {
@@ -20,6 +20,8 @@ public sealed class OverscrollIndicatorNotification : Notification
 
     public bool Leading { get; }
 
+    public int Depth { get; private set; }
+
     public double PaintOffset { get; set; }
 
     public bool Accepted { get; private set; } = true;
@@ -27,6 +29,11 @@ public sealed class OverscrollIndicatorNotification : Notification
     public void DisallowIndicator()
     {
         Accepted = false;
+    }
+
+    void IViewportNotification.IncrementDepth()
+    {
+        Depth += 1;
     }
 }
 

@@ -1,6 +1,6 @@
 using Plumix.Foundation;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/widgets/notification_listener.dart (approximate)
+// Dart parity source: flutter/packages/flutter/lib/src/widgets/notification_listener.dart
 
 namespace Plumix.Widgets;
 
@@ -8,11 +8,21 @@ public abstract class Notification
 {
     public BuildContext? Context { get; private set; }
 
-    public virtual bool Dispatch(BuildContext target)
+    public virtual bool Dispatch(BuildContext? target)
     {
-        SetContext(target);
-        for (var ancestor = target.Owner.Parent; ancestor != null; ancestor = ancestor.Parent)
+        if (target is not BuildContext resolvedTarget)
         {
+            return false;
+        }
+
+        SetContext(resolvedTarget);
+        for (Element? ancestor = resolvedTarget.Owner.Parent; ancestor != null; ancestor = ancestor.Parent)
+        {
+            if (ancestor.Widget is Viewport && this is IViewportNotification viewportNotification)
+            {
+                viewportNotification.IncrementDepth();
+            }
+
             if (ancestor is INotificationListener listener && listener.OnNotification(this))
             {
                 return true;
@@ -37,7 +47,12 @@ internal interface INotificationListener
     bool OnNotification(Notification notification);
 }
 
-public sealed class NotificationListener<TNotification> : ProxyWidget
+internal interface IViewportNotification
+{
+    void IncrementDepth();
+}
+
+public class NotificationListener<TNotification> : ProxyWidget
     where TNotification : Notification
 {
     public NotificationListener(
@@ -45,6 +60,7 @@ public sealed class NotificationListener<TNotification> : ProxyWidget
         Func<TNotification, bool>? onNotification = null,
         Key? key = null) : base(child, key)
     {
+        ArgumentNullException.ThrowIfNull(child);
         OnNotification = onNotification;
     }
 

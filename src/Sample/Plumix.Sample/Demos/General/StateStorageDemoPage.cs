@@ -44,7 +44,8 @@ internal sealed class StateStorageDemoPageState : State
                     "Jump the list, unmount it, then restore it. The same PageStorageKey restores the offset; " +
                     "the shared counter rebuilds only its keyed dependent. The list inherits its controller " +
                     "through PrimaryScrollController and its desktop chrome through ScrollConfiguration. " +
-                    "Drag past an edge to compare Flutter glow and stretch indicators.",
+                    "Drag past an edge to compare Flutter glow and stretch indicators; the observer readout " +
+                    "receives scroll and dimension notifications across sibling subtrees.",
                     fontSize: 14,
                     color: Colors.DimGray),
                 new Row(
@@ -114,40 +115,42 @@ internal sealed class RestorableStorageListState : State
                 color: Color.Parse("#FF625B71"),
                 child: scrollView);
 
-        return new Column(
-            crossAxisAlignment: CrossAxisAlignment.Stretch,
-            spacing: 8,
-            children:
-            [
-                new Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children:
-                    [
-                        BuildButton("Jump to offset 240", () => _controller.JumpTo(240)),
-                        BuildButton(
-                            _showScrollbar ? "Hide config scrollbar" : "Show config scrollbar",
-                            () => SetState(() => _showScrollbar = !_showScrollbar)),
-                        BuildButton(
-                            _useStretch ? "Effect: stretch" : "Effect: glow",
-                            () => SetState(() => _useStretch = !_useStretch)),
-                    ]),
-                new Expanded(
-                    child: new ScrollConfiguration(
-                        behavior: new DesktopDemoScrollBehavior().CopyWith(
-                            scrollbars: _showScrollbar,
-                            dragDevices: new HashSet<PointerDeviceKind>
-                            {
-                                PointerDeviceKind.Touch,
-                                PointerDeviceKind.Mouse,
-                                PointerDeviceKind.Trackpad,
-                            }),
-                        child: new PrimaryScrollController(
-                            controller: _controller,
-                            automaticallyInheritForPlatforms:
-                                new HashSet<TargetPlatform> { TargetPlatform.Windows },
-                            child: indicatedScrollView))),
-            ]);
+        return new ScrollNotificationObserver(
+            child: new Column(
+                crossAxisAlignment: CrossAxisAlignment.Stretch,
+                spacing: 8,
+                children:
+                [
+                    new Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children:
+                        [
+                            BuildButton("Jump to offset 240", () => _controller.JumpTo(240)),
+                            BuildButton(
+                                _showScrollbar ? "Hide config scrollbar" : "Show config scrollbar",
+                                () => SetState(() => _showScrollbar = !_showScrollbar)),
+                            BuildButton(
+                                _useStretch ? "Effect: stretch" : "Effect: glow",
+                                () => SetState(() => _useStretch = !_useStretch)),
+                        ]),
+                    new ScrollObserverReadout(),
+                    new Expanded(
+                        child: new ScrollConfiguration(
+                            behavior: new DesktopDemoScrollBehavior().CopyWith(
+                                scrollbars: _showScrollbar,
+                                dragDevices: new HashSet<PointerDeviceKind>
+                                {
+                                    PointerDeviceKind.Touch,
+                                    PointerDeviceKind.Mouse,
+                                    PointerDeviceKind.Trackpad,
+                                }),
+                            child: new PrimaryScrollController(
+                                controller: _controller,
+                                automaticallyInheritForPlatforms:
+                                    new HashSet<TargetPlatform> { TargetPlatform.Windows },
+                                child: indicatedScrollView))),
+                ]));
     }
 
     public override void Dispose()
@@ -177,6 +180,54 @@ internal sealed class RestorableStorageListState : State
                 foreground: Colors.White,
                 fontSize: 12,
                 padding: new Thickness(8, 7)));
+    }
+}
+
+internal sealed class ScrollObserverReadout : StatefulWidget
+{
+    public override State CreateState() => new ScrollObserverReadoutState();
+}
+
+internal sealed class ScrollObserverReadoutState : State
+{
+    private ScrollNotificationObserverState? _observer;
+    private string _summary = "Observer: waiting for viewport metrics";
+
+    public override void DidChangeDependencies()
+    {
+        base.DidChangeDependencies();
+        ScrollNotificationObserverState observer = ScrollNotificationObserver.Of(Context);
+        if (ReferenceEquals(observer, _observer))
+        {
+            return;
+        }
+
+        _observer?.RemoveListener(HandleNotification);
+        _observer = observer;
+        _observer.AddListener(HandleNotification);
+    }
+
+    public override Widget Build(BuildContext context)
+    {
+        return new Text(_summary, fontSize: 12, color: Color.Parse("#FF31506F"));
+    }
+
+    public override void Dispose()
+    {
+        _observer?.RemoveListener(HandleNotification);
+        _observer = null;
+        base.Dispose();
+    }
+
+    private void HandleNotification(ScrollNotification notification)
+    {
+        ScrollMetricsSnapshot metrics = notification.Metrics;
+        SetState(() =>
+        {
+            _summary =
+                $"Observer: {notification.GetType().Name}, offset {metrics.Pixels:0}, " +
+                $"viewport {metrics.ViewportDimension:0}, max {metrics.MaxScrollExtent:0}";
+        });
     }
 }
 
