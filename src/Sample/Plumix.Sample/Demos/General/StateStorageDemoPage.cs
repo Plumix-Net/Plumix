@@ -45,7 +45,8 @@ internal sealed class StateStorageDemoPageState : State
                     "the shared counter rebuilds only its keyed dependent. The list inherits its controller " +
                     "through PrimaryScrollController and its desktop chrome through ScrollConfiguration. " +
                     "Drag past an edge to compare Flutter glow and stretch indicators; the observer readout " +
-                    "receives scroll and dimension notifications across sibling subtrees.",
+                    "receives scroll and dimension notifications across sibling subtrees. The readout is also " +
+                    "wrapped in translucent MetaData and IndexedSemantics(index: 0) without changing layout.",
                     fontSize: 14,
                     color: Colors.DimGray),
                 new Row(
@@ -134,7 +135,12 @@ internal sealed class RestorableStorageListState : State
                                 _useStretch ? "Effect: stretch" : "Effect: glow",
                                 () => SetState(() => _useStretch = !_useStretch)),
                         ]),
-                    new ScrollObserverReadout(),
+                    new MetaData(
+                        metaData: "scroll-observer-readout",
+                        behavior: HitTestBehavior.Translucent,
+                        child: new IndexedSemantics(
+                            index: 0,
+                            child: new ScrollObserverReadout())),
                     new Expanded(
                         child: new ScrollConfiguration(
                             behavior: new DesktopDemoScrollBehavior().CopyWith(

@@ -115,6 +115,100 @@ public abstract class RenderProxyBox : RenderBox, IRenderObjectSingleChildContai
     }
 }
 
+// Dart parity source: flutter/packages/flutter/lib/src/rendering/proxy_box.dart
+public abstract class RenderProxyBoxWithHitTestBehavior : RenderProxyBox
+{
+    private HitTestBehavior _behavior;
+
+    protected RenderProxyBoxWithHitTestBehavior(
+        HitTestBehavior behavior = HitTestBehavior.DeferToChild,
+        RenderBox? child = null)
+    {
+        _behavior = behavior;
+        Child = child;
+    }
+
+    public HitTestBehavior Behavior
+    {
+        get => _behavior;
+        set => _behavior = value;
+    }
+
+    public override bool HitTest(BoxHitTestResult result, Point position)
+    {
+        if (!HasSize
+            || position.X < 0
+            || position.Y < 0
+            || position.X > Size.Width
+            || position.Y > Size.Height)
+        {
+            return false;
+        }
+
+        bool hitTarget = HitTestChildren(result, position) || HitTestSelf(position);
+        if (hitTarget || Behavior == HitTestBehavior.Translucent)
+        {
+            result.Add(new BoxHitTestEntry(this, position));
+        }
+
+        return hitTarget;
+    }
+
+    protected override bool HitTestSelf(Point position)
+    {
+        return Behavior == HitTestBehavior.Opaque;
+    }
+}
+
+// Dart parity source: flutter/packages/flutter/lib/src/rendering/proxy_box.dart (RenderMetaData)
+public sealed class RenderMetaData : RenderProxyBoxWithHitTestBehavior
+{
+    public RenderMetaData(
+        object? metaData = null,
+        HitTestBehavior behavior = HitTestBehavior.DeferToChild,
+        RenderBox? child = null) : base(behavior, child)
+    {
+        MetaData = metaData;
+    }
+
+    public object? MetaData { get; set; }
+}
+
+// Dart parity source: flutter/packages/flutter/lib/src/rendering/proxy_box.dart (RenderIndexedSemantics)
+public sealed class RenderIndexedSemantics : RenderProxyBox
+{
+    private int _index;
+
+    public RenderIndexedSemantics(
+        int index,
+        RenderBox? child = null)
+    {
+        _index = index;
+        Child = child;
+    }
+
+    public int Index
+    {
+        get => _index;
+        set
+        {
+            if (_index == value)
+            {
+                return;
+            }
+
+            _index = value;
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
+    protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
+    {
+        base.DescribeSemanticsConfiguration(configuration);
+        configuration.IndexInParent = _index;
+    }
+}
+
 internal sealed class RenderVisibility : RenderProxyBox
 {
     private bool _visible;

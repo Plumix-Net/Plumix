@@ -1,5 +1,10 @@
 # Changelog
 
+- Added paired Flutter core `MetaData` + `IndexedSemantics` ports with source hit-test behavior, opaque payload
+  updates, first-child semantic indexes, stable semantics-node identity, focused tests, and a mirrored C#/Dart
+  state-storage probe. Exposed semantic indexes through the host-visible tree and advanced `Plumix` to
+  `0.1.0-alpha.15`.
+
 - Added paired Flutter core `Title` + `DefaultSelectionStyle` ports with opaque-color validation, application-
   switcher metadata dispatch and desktop window-title updates, fallback/merge selection inheritance, mouse-cursor
   propagation, source-shaped `InheritedTheme` capture, Material selection consumers, `About*` title ancestry,

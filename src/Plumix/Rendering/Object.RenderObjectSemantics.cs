@@ -272,6 +272,8 @@ internal sealed class RenderObjectSemantics
             MergeChildSemanticsIntoConfiguration(config, children);
         }
 
+        ForwardIndexToFirstChild(config, children, siblingNodes);
+
         if (!HasOwnSemantics(config))
         {
             _owner._semanticsNode = null;
@@ -387,6 +389,28 @@ internal sealed class RenderObjectSemantics
                || config.Flags != SemanticsFlags.None
                || config.Actions != SemanticsActions.None
                || config.HasActionHandlers;
+    }
+
+    private static void ForwardIndexToFirstChild(
+        SemanticsConfiguration configuration,
+        List<SemanticsNode> children,
+        List<SemanticsNode> siblingNodes)
+    {
+        if (!configuration.IndexInParent.HasValue || HasOwnSemantics(configuration))
+        {
+            return;
+        }
+
+        if (children.Count > 0)
+        {
+            children[0].IndexInParent = configuration.IndexInParent;
+        }
+        else if (siblingNodes.Count > 0)
+        {
+            siblingNodes[0].IndexInParent = configuration.IndexInParent;
+        }
+
+        configuration.IndexInParent = null;
     }
 
     private static bool ContributesToSemanticsTree(SemanticsConfiguration configuration)
@@ -719,7 +743,8 @@ internal sealed class RenderObjectSemantics
             Hint = node.Hint,
             Role = node.Role,
             Flags = node.Flags,
-            Actions = node.Actions
+            Actions = node.Actions,
+            IndexInParent = node.IndexInParent
         };
 
         var handlers = new Dictionary<SemanticsActions, Action>();
@@ -751,6 +776,7 @@ internal sealed class RenderObjectSemantics
         node.Role = configuration.Role;
         node.Flags = configuration.Flags;
         node.Actions = configuration.Actions;
+        node.IndexInParent = configuration.IndexInParent;
         node.IsHidden = isHidden;
         node.BlocksPreviousNodes = blocksPreviousNodes;
         node.ReplaceChildren(children);

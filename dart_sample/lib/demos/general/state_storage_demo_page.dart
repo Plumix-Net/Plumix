@@ -41,7 +41,9 @@ class _StateStorageDemoPageState extends State<StateStorageDemoPage> {
           'The list inherits its controller through PrimaryScrollController and '
           'its desktop chrome through ScrollConfiguration. Drag past an edge to '
           'compare Flutter glow and stretch indicators; the observer readout '
-          'receives scroll and dimension notifications across sibling subtrees.',
+          'receives scroll and dimension notifications across sibling subtrees. '
+          'The readout is also wrapped in translucent MetaData and '
+          'IndexedSemantics(index: 0) without changing layout.',
           style: TextStyle(fontSize: 14, color: Colors.black54),
         ),
         Row(
@@ -159,7 +161,11 @@ class _RestorableStorageListState extends State<_RestorableStorageList> {
               ),
             ],
           ),
-          const _ScrollObserverReadout(),
+          const MetaData(
+            metaData: 'scroll-observer-readout',
+            behavior: HitTestBehavior.translucent,
+            child: IndexedSemantics(index: 0, child: _ScrollObserverReadout()),
+          ),
           Expanded(
             child: ScrollConfiguration(
               behavior: const _DesktopDemoScrollBehavior().copyWith(

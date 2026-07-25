@@ -262,6 +262,9 @@ Completion note:
   opaque application metadata, host window-title propagation, fallback/merge cursor and selection inheritance,
   mouse-cursor resolution, source-shaped `InheritedTheme` capture, Material selection/About integration, focused
   tests, and mirrored C#/Dart probes.
+- Continued paired core hit-test/semantics coverage with `MetaData` + `IndexedSemantics`, including source
+  defer/opaque/translucent hit behavior, opaque payload updates, first-child semantic index propagation,
+  host-visible index data, stable node identity, focused tests, and a mirrored C#/Dart state-storage probe.
 - Continued paired core asynchronous-builder coverage with `FutureBuilder<T>` + `StreamBuilder<T>`, including
   source-shaped snapshots and connection states, retained data/error transitions, stream summary folding,
   source replacement, stale callback suppression, focused tests, and a mirrored C#/Dart runtime probe.

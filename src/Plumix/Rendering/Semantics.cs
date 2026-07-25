@@ -84,6 +84,7 @@ public sealed class SemanticsConfiguration
     public SemanticsFlags Flags { get; set; } = SemanticsFlags.None;
     public SemanticsActions Actions { get; set; } = SemanticsActions.None;
     public Rect? ExplicitRect { get; set; }
+    public int? IndexInParent { get; set; }
 
     private Dictionary<SemanticsActions, Action>? _actionHandlers;
     internal bool HasActionHandlers => _actionHandlers is { Count: > 0 };
@@ -125,7 +126,8 @@ public sealed class SemanticsConfiguration
             Role = Role,
             Flags = Flags,
             Actions = Actions,
-            ExplicitRect = ExplicitRect
+            ExplicitRect = ExplicitRect,
+            IndexInParent = IndexInParent
         };
 
         if (_actionHandlers is { Count: > 0 })
@@ -148,6 +150,7 @@ public sealed class SemanticsConfiguration
         || Role != SemanticsRole.None
         || Flags != SemanticsFlags.None
         || Actions != SemanticsActions.None
+        || IndexInParent.HasValue
         || HasActionHandlers;
 
     internal bool IsCompatibleWith(SemanticsConfiguration? other)
@@ -191,6 +194,7 @@ public sealed class SemanticsConfiguration
 
         Flags |= child.Flags;
         Actions |= child.Actions;
+        IndexInParent ??= child.IndexInParent;
         if (Role == SemanticsRole.None)
         {
             Role = child.Role;
@@ -241,6 +245,7 @@ public sealed class SemanticsNode
     public SemanticsRole Role { get; internal set; }
     public SemanticsFlags Flags { get; internal set; }
     public SemanticsActions Actions { get; internal set; }
+    public int? IndexInParent { get; internal set; }
     public bool IsHidden { get; internal set; }
     public IReadOnlyList<SemanticsNode> Children => _children;
     internal bool BlocksPreviousNodes { get; set; }
@@ -344,6 +349,7 @@ public sealed class SemanticsOwner
         _syntheticRoot.Hint = null;
         _syntheticRoot.Flags = SemanticsFlags.None;
         _syntheticRoot.Actions = SemanticsActions.None;
+        _syntheticRoot.IndexInParent = null;
         _syntheticRoot.IsHidden = false;
         _syntheticRoot.SetActionHandlers(new Dictionary<SemanticsActions, Action>());
         RootNode = _syntheticRoot;
@@ -413,6 +419,11 @@ public sealed class SemanticsOwner
         if (node.Actions != SemanticsActions.None)
         {
             builder.Append(" actions=").Append(node.Actions);
+        }
+
+        if (node.IndexInParent.HasValue)
+        {
+            builder.Append(" indexInParent=").Append(node.IndexInParent.Value);
         }
 
         if (node.IsHidden)

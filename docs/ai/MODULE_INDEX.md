@@ -290,9 +290,12 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/Rendering/Object.RenderObjectSemantics.cs`
   - `src/Plumix/Rendering/SemanticsConfigurationProvider.cs`
   - `src/Plumix/Widgets/Semantics.cs`
+  - `src/Plumix/Widgets/MetaData.cs`
+  - `src/Plumix/Rendering/Proxy.RenderBox.cs`
   - `src/Plumix/Widgets/ModalBarrier.cs`
 - Primary Tests:
   - `src/Plumix.Tests/SemanticsTreeTests.cs`
+  - `src/Plumix.Tests/MetaDataIndexedSemanticsTests.cs`
   - `src/Plumix.Tests/ModalBarrierTests.cs`
 
 ### Sample and Dart Parity

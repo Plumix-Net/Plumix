@@ -204,3 +204,27 @@ public sealed class BlockSemantics : SingleChildRenderObjectWidget
         ((RenderBlockSemantics)renderObject).Blocking = Blocking;
     }
 }
+
+// Dart parity source: flutter/packages/flutter/lib/src/widgets/basic.dart (IndexedSemantics)
+public sealed class IndexedSemantics : SingleChildRenderObjectWidget
+{
+    public IndexedSemantics(
+        int index,
+        Widget? child = null,
+        Key? key = null) : base(child, key)
+    {
+        Index = index;
+    }
+
+    public int Index { get; }
+
+    internal override RenderObject CreateRenderObject(BuildContext context)
+    {
+        return new RenderIndexedSemantics(Index);
+    }
+
+    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    {
+        ((RenderIndexedSemantics)renderObject).Index = Index;
+    }
+}
