@@ -1414,3 +1414,53 @@ public sealed class Positioned : ParentDataWidget<StackParentData>
         }
     }
 }
+
+// Dart parity source: flutter/packages/flutter/lib/src/widgets/basic.dart (PositionedDirectional)
+public sealed class PositionedDirectional : StatelessWidget
+{
+    public PositionedDirectional(
+        Widget child,
+        double? start = null,
+        double? top = null,
+        double? end = null,
+        double? bottom = null,
+        double? width = null,
+        double? height = null,
+        Key? key = null) : base(key)
+    {
+        Child = child ?? throw new ArgumentNullException(nameof(child));
+        Start = start;
+        Top = top;
+        End = end;
+        Bottom = bottom;
+        Width = width;
+        Height = height;
+    }
+
+    public double? Start { get; }
+
+    public double? Top { get; }
+
+    public double? End { get; }
+
+    public double? Bottom { get; }
+
+    public double? Width { get; }
+
+    public double? Height { get; }
+
+    public Widget Child { get; }
+
+    public override Widget Build(BuildContext context)
+    {
+        return Positioned.Directional(
+            textDirection: Directionality.Of(context),
+            child: Child,
+            start: Start,
+            top: Top,
+            end: End,
+            bottom: Bottom,
+            width: Width,
+            height: Height);
+    }
+}

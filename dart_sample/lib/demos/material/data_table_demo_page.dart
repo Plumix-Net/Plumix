@@ -78,6 +78,16 @@ class _DataTableDemoPageState extends State<DataTableDemoPage> {
             ),
             const SizedBox(height: 12),
             const Text(
+              'Core TableCell vertical alignment',
+              style: TextStyle(fontSize: 16, color: Colors.black),
+            ),
+            const SizedBox(height: 8),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: _buildTableCellProbe(),
+            ),
+            const SizedBox(height: 12),
+            const Text(
               'PaginatedDataTable',
               style: TextStyle(fontSize: 16, color: Colors.black),
             ),
@@ -123,6 +133,54 @@ class _DataTableDemoPageState extends State<DataTableDemoPage> {
       showCheckboxColumn: _showCheckboxes,
       showBottomBorder: true,
       onSelectAll: (bool? value) => _source.selectAll(value ?? false),
+    );
+  }
+
+  Table _buildTableCellProbe() {
+    return Table(
+      defaultColumnWidth: const FixedColumnWidth(100),
+      border: TableBorder.all(color: const Color(0xFF94A3B8)),
+      children: <TableRow>[
+        TableRow(
+          children: <Widget>[
+            _buildProbeCell(
+              'top',
+              28,
+              TableCellVerticalAlignment.top,
+              const Color(0xFFE0F2FE),
+            ),
+            _buildProbeCell(
+              'middle',
+              52,
+              TableCellVerticalAlignment.middle,
+              const Color(0xFFDCFCE7),
+            ),
+            _buildProbeCell(
+              'bottom',
+              32,
+              TableCellVerticalAlignment.bottom,
+              const Color(0xFFFFEDD5),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  TableCell _buildProbeCell(
+    String label,
+    double height,
+    TableCellVerticalAlignment alignment,
+    Color color,
+  ) {
+    return TableCell(
+      verticalAlignment: alignment,
+      child: Container(
+        height: height,
+        color: color,
+        alignment: Alignment.center,
+        child: Text(label, style: const TextStyle(fontSize: 12)),
+      ),
     );
   }
 

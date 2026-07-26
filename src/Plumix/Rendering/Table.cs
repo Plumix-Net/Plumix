@@ -1,15 +1,27 @@
 using Avalonia;
 using Avalonia.Media;
+using Plumix.UI;
 using Plumix.Widgets;
 
 namespace Plumix.Rendering;
 
 // Dart parity source: flutter/packages/flutter/lib/src/rendering/table.dart
 
+public enum TableCellVerticalAlignment
+{
+    Top,
+    Middle,
+    Bottom,
+    Baseline,
+    Fill,
+    IntrinsicHeight,
+}
+
 public sealed class TableCellParentData : ContainerBoxParentData<RenderBox>
 {
     public int X { get; internal set; }
     public int Y { get; internal set; }
+    public TableCellVerticalAlignment? VerticalAlignment { get; set; }
 }
 
 public sealed class RenderTable : RenderBox,
@@ -23,8 +35,12 @@ public sealed class RenderTable : RenderBox,
     private TableColumnWidth _defaultColumnWidth;
     private IReadOnlyList<BoxDecoration?> _rowDecorations;
     private TableBorder? _border;
+    private TextDirection _textDirection;
+    private TableCellVerticalAlignment _defaultVerticalAlignment;
+    private TextBaseline? _textBaseline;
     private double[] _resolvedColumnWidths = [];
     private double[] _resolvedRowHeights = [];
+    private double? _baselineDistance;
 
     public RenderTable(
         int columns,
@@ -32,14 +48,21 @@ public sealed class RenderTable : RenderBox,
         IReadOnlyDictionary<int, TableColumnWidth> columnWidths,
         TableColumnWidth defaultColumnWidth,
         IReadOnlyList<BoxDecoration?> rowDecorations,
-        TableBorder? border)
+        TableBorder? border,
+        TextDirection textDirection = TextDirection.Ltr,
+        TableCellVerticalAlignment defaultVerticalAlignment = TableCellVerticalAlignment.Top,
+        TextBaseline? textBaseline = null)
     {
+        ValidateBaseline(defaultVerticalAlignment, textBaseline);
         _columns = columns;
         _rows = rows;
         _columnWidths = columnWidths;
         _defaultColumnWidth = defaultColumnWidth;
         _rowDecorations = rowDecorations;
         _border = border;
+        _textDirection = textDirection;
+        _defaultVerticalAlignment = defaultVerticalAlignment;
+        _textBaseline = textBaseline;
         _children = new RenderBoxContainerDefaultsMixin<RenderBox, TableCellParentData>(this);
     }
 
@@ -79,6 +102,41 @@ public sealed class RenderTable : RenderBox,
         set { if (Equals(_border, value)) return; _border = value; MarkNeedsPaint(); }
     }
 
+    public TextDirection TextDirection
+    {
+        get => _textDirection;
+        set
+        {
+            if (_textDirection == value) return;
+            _textDirection = value;
+            MarkNeedsLayout();
+        }
+    }
+
+    public TableCellVerticalAlignment DefaultVerticalAlignment
+    {
+        get => _defaultVerticalAlignment;
+        set
+        {
+            if (_defaultVerticalAlignment == value) return;
+            ValidateBaseline(value, _textBaseline);
+            _defaultVerticalAlignment = value;
+            MarkNeedsLayout();
+        }
+    }
+
+    public TextBaseline? TextBaseline
+    {
+        get => _textBaseline;
+        set
+        {
+            if (_textBaseline == value) return;
+            ValidateBaseline(_defaultVerticalAlignment, value);
+            _textBaseline = value;
+            MarkNeedsLayout();
+        }
+    }
+
     public IReadOnlyList<double> ResolvedColumnWidths => _resolvedColumnWidths;
     public IReadOnlyList<double> ResolvedRowHeights => _resolvedRowHeights;
 
@@ -93,12 +151,14 @@ public sealed class RenderTable : RenderBox,
         {
             _resolvedColumnWidths = new double[Math.Max(0, _columns)];
             _resolvedRowHeights = new double[Math.Max(0, _rows)];
+            _baselineDistance = null;
             Size = Constraints.Constrain(new Size());
             return;
         }
 
         _resolvedColumnWidths = new double[_columns];
         _resolvedRowHeights = new double[_rows];
+        _baselineDistance = null;
         var children = EnumerateChildren().ToArray();
 
         // Flutter's intrinsic table layout first negotiates a width per column,
@@ -142,32 +202,16 @@ public sealed class RenderTable : RenderBox,
             }
         }
 
-        for (int index = 0; index < children.Length; index++)
+        double[] xOffsets = ResolveColumnOffsets(_resolvedColumnWidths, _textDirection);
+        for (int row = 0; row < _rows; row++)
         {
-            var child = children[index];
-            int row = index / _columns;
-            int column = index % _columns;
-            child.Layout(new BoxConstraints(
-                MinWidth: _resolvedColumnWidths[column],
-                MaxWidth: _resolvedColumnWidths[column]), parentUsesSize: true);
-            _resolvedRowHeights[row] = Math.Max(_resolvedRowHeights[row], child.Size.Height);
-        }
-
-        double[] xOffsets = PrefixOffsets(_resolvedColumnWidths);
-        double[] yOffsets = PrefixOffsets(_resolvedRowHeights);
-        for (int index = 0; index < children.Length; index++)
-        {
-            var child = children[index];
-            int row = index / _columns;
-            int column = index % _columns;
-            var data = (TableCellParentData)child.parentData!;
-            data.X = column;
-            data.Y = row;
-            data.offset = new Point(xOffsets[column], yOffsets[row] + ((_resolvedRowHeights[row] - child.Size.Height) / 2));
+            LayoutRow(children, row, xOffsets);
         }
 
         Size = Constraints.Constrain(new Size(_resolvedColumnWidths.Sum(), _resolvedRowHeights.Sum()));
     }
+
+    protected override double? ComputeDistanceToActualBaseline(TextBaseline baseline) => _baselineDistance;
 
     public Rect GetRowBox(int row)
     {
@@ -220,6 +264,125 @@ public sealed class RenderTable : RenderBox,
         double[] offsets = new double[values.Count];
         for (int index = 1; index < values.Count; index++) offsets[index] = offsets[index - 1] + values[index - 1];
         return offsets;
+    }
+
+    private void LayoutRow(IReadOnlyList<RenderBox> children, int row, IReadOnlyList<double> xOffsets)
+    {
+        double rowTop = _resolvedRowHeights.Take(row).Sum();
+        double rowHeight = 0;
+        bool haveBaseline = false;
+        double beforeBaselineDistance = 0;
+        double afterBaselineDistance = 0;
+        double[] baselines = new double[_columns];
+
+        for (int column = 0; column < _columns; column++)
+        {
+            RenderBox child = children[(row * _columns) + column];
+            var parentData = (TableCellParentData)child.parentData!;
+            parentData.X = column;
+            parentData.Y = row;
+            TableCellVerticalAlignment alignment = parentData.VerticalAlignment ?? _defaultVerticalAlignment;
+            if (alignment == TableCellVerticalAlignment.Fill)
+            {
+                continue;
+            }
+
+            child.Layout(
+                BoxConstraints.TightFor(width: _resolvedColumnWidths[column]),
+                parentUsesSize: true);
+            if (alignment != TableCellVerticalAlignment.Baseline)
+            {
+                rowHeight = Math.Max(rowHeight, child.Size.Height);
+                continue;
+            }
+
+            if (!_textBaseline.HasValue)
+            {
+                throw new InvalidOperationException(
+                    "An explicit textBaseline is required when using baseline alignment.");
+            }
+
+            double? childBaseline = child.GetDistanceToBaseline(_textBaseline.Value, onlyReal: true);
+            if (childBaseline.HasValue)
+            {
+                beforeBaselineDistance = Math.Max(beforeBaselineDistance, childBaseline.Value);
+                afterBaselineDistance = Math.Max(
+                    afterBaselineDistance,
+                    child.Size.Height - childBaseline.Value);
+                baselines[column] = childBaseline.Value;
+                haveBaseline = true;
+            }
+            else
+            {
+                rowHeight = Math.Max(rowHeight, child.Size.Height);
+            }
+        }
+
+        if (haveBaseline)
+        {
+            if (row == 0)
+            {
+                _baselineDistance = beforeBaselineDistance;
+            }
+
+            rowHeight = Math.Max(rowHeight, beforeBaselineDistance + afterBaselineDistance);
+        }
+
+        _resolvedRowHeights[row] = rowHeight;
+        for (int column = 0; column < _columns; column++)
+        {
+            RenderBox child = children[(row * _columns) + column];
+            var parentData = (TableCellParentData)child.parentData!;
+            TableCellVerticalAlignment alignment = parentData.VerticalAlignment ?? _defaultVerticalAlignment;
+            double y = alignment switch
+            {
+                TableCellVerticalAlignment.Top => rowTop,
+                TableCellVerticalAlignment.Middle => rowTop + ((rowHeight - child.Size.Height) / 2),
+                TableCellVerticalAlignment.Bottom => rowTop + rowHeight - child.Size.Height,
+                TableCellVerticalAlignment.Baseline => rowTop + beforeBaselineDistance - baselines[column],
+                TableCellVerticalAlignment.Fill or TableCellVerticalAlignment.IntrinsicHeight => rowTop,
+                _ => throw new ArgumentOutOfRangeException(),
+            };
+
+            if (alignment is TableCellVerticalAlignment.Fill or TableCellVerticalAlignment.IntrinsicHeight)
+            {
+                child.Layout(
+                    BoxConstraints.Tight(new Size(_resolvedColumnWidths[column], rowHeight)),
+                    parentUsesSize: true);
+            }
+
+            parentData.offset = new Point(xOffsets[column], y);
+        }
+    }
+
+    private static double[] ResolveColumnOffsets(
+        IReadOnlyList<double> widths,
+        TextDirection textDirection)
+    {
+        if (textDirection == TextDirection.Ltr)
+        {
+            return PrefixOffsets(widths);
+        }
+
+        double[] offsets = new double[widths.Count];
+        for (int column = widths.Count - 2; column >= 0; column--)
+        {
+            offsets[column] = offsets[column + 1] + widths[column + 1];
+        }
+
+        return offsets;
+    }
+
+    private static void ValidateBaseline(
+        TableCellVerticalAlignment defaultVerticalAlignment,
+        TextBaseline? textBaseline)
+    {
+        if (defaultVerticalAlignment == TableCellVerticalAlignment.Baseline && !textBaseline.HasValue)
+        {
+            throw new ArgumentException(
+                "textBaseline is required when defaultVerticalAlignment is baseline.",
+                nameof(textBaseline));
+        }
     }
 
     private void PaintBorder(PaintingContext context, Point offset)

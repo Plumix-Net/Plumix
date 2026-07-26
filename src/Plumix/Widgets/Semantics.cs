@@ -17,6 +17,7 @@ public enum SemanticsRole
     Tab,
     TabPanel,
     Form,
+    Cell,
 }
 
 public sealed class Semantics : SingleChildRenderObjectWidget

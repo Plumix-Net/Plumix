@@ -13,13 +13,14 @@ class _StackDemoPageState extends State<StackDemoPage> {
   double _left = 8;
   double _top = 8;
   bool _pinBottomRight = false;
+  bool _rtl = false;
 
   @override
   Widget build(BuildContext context) {
-    final Widget badge = Positioned(
-      left: _pinBottomRight ? null : _left,
+    final Widget badge = PositionedDirectional(
+      start: _pinBottomRight ? null : _left,
       top: _pinBottomRight ? null : _top,
-      right: _pinBottomRight ? 8 : null,
+      end: _pinBottomRight ? 8 : null,
       bottom: _pinBottomRight ? 8 : null,
       child: Container(
         width: 56,
@@ -39,11 +40,11 @@ class _StackDemoPageState extends State<StackDemoPage> {
       spacing: 10,
       children: <Widget>[
         const Text(
-          'Stack + Positioned',
+          'Stack + PositionedDirectional',
           style: TextStyle(fontSize: 20, color: Colors.black),
         ),
         const Text(
-          'Mix non-positioned and positioned children; toggle pinned mode and nudge offsets.',
+          'Move with logical start/end insets, toggle pinned mode, and flip LTR/RTL direction.',
           style: TextStyle(fontSize: 14, color: Colors.black54),
         ),
         Row(
@@ -79,9 +80,15 @@ class _StackDemoPageState extends State<StackDemoPage> {
           spacing: 8,
           children: <Widget>[
             _buildButton(
-              label: _pinBottomRight ? 'Pin: BR' : 'Pin: custom',
+              label: _pinBottomRight ? 'Pin: bottom-end' : 'Pin: custom',
               onTap: _togglePin,
-              width: 120,
+              width: 140,
+              background: const Color(0xFFE9F5EC),
+            ),
+            _buildButton(
+              label: _rtl ? 'RTL' : 'LTR',
+              onTap: _toggleDirection,
+              width: 72,
               background: const Color(0xFFE9F5EC),
             ),
             _buildButton(
@@ -93,7 +100,9 @@ class _StackDemoPageState extends State<StackDemoPage> {
           ],
         ),
         Text(
-          'left=${_left.toStringAsFixed(0)}, top=${_top.toStringAsFixed(0)}, mode=${_pinBottomRight ? 'bottomRight' : 'custom'}',
+          'start=${_left.toStringAsFixed(0)}, top=${_top.toStringAsFixed(0)}, '
+          'direction=${_rtl ? 'RTL' : 'LTR'}, '
+          'mode=${_pinBottomRight ? 'bottomEnd' : 'custom'}',
           style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
         ),
         Container(
@@ -103,22 +112,28 @@ class _StackDemoPageState extends State<StackDemoPage> {
           padding: const EdgeInsets.all(8),
           child: Container(
             color: Colors.white,
-            child: Stack(
-              alignment: Alignment.center,
-              children: <Widget>[
-                Container(
-                  width: 140,
-                  height: 80,
-                  color: const Color(0xFFCCE3FF),
-                  child: const Center(
-                    child: Text(
-                      'base',
-                      style: TextStyle(fontSize: 14, color: Color(0xFF1D3557)),
+            child: Directionality(
+              textDirection: _rtl ? TextDirection.rtl : TextDirection.ltr,
+              child: Stack(
+                alignment: Alignment.center,
+                children: <Widget>[
+                  Container(
+                    width: 140,
+                    height: 80,
+                    color: const Color(0xFFCCE3FF),
+                    child: const Center(
+                      child: Text(
+                        'base',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Color(0xFF1D3557),
+                        ),
+                      ),
                     ),
                   ),
-                ),
-                badge,
-              ],
+                  badge,
+                ],
+              ),
             ),
           ),
         ),
@@ -162,11 +177,18 @@ class _StackDemoPageState extends State<StackDemoPage> {
     });
   }
 
+  void _toggleDirection() {
+    setState(() {
+      _rtl = !_rtl;
+    });
+  }
+
   void _reset() {
     setState(() {
       _left = 8;
       _top = 8;
       _pinBottomRight = false;
+      _rtl = false;
     });
   }
 }

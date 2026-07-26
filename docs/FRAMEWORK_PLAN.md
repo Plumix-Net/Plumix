@@ -265,6 +265,9 @@ Completion note:
 - Continued paired core hit-test/semantics coverage with `MetaData` + `IndexedSemantics`, including source
   defer/opaque/translucent hit behavior, opaque payload updates, first-child semantic index propagation,
   host-visible index data, stable node identity, focused tests, and a mirrored C#/Dart state-storage probe.
+- Continued paired core directional/table layout coverage with `PositionedDirectional` + `TableCell`, including
+  ambient LTR/RTL logical-inset resolution, cell semantics, top/middle/bottom/baseline/fill/intrinsic-height row
+  alignment, RTL column order, focused tests, and mirrored Stack/DataTable probes.
 - Continued paired core asynchronous-builder coverage with `FutureBuilder<T>` + `StreamBuilder<T>`, including
   source-shaped snapshots and connection states, retained data/error transitions, stream summary folding,
   source replacement, stale callback suppression, focused tests, and a mirrored C#/Dart runtime probe.
@@ -278,6 +281,8 @@ Completion snapshot:
 - Fixed compositing edge case where repaint-boundary layer-property updates could be dropped when repaint and composited-layer invalidation happened in the same frame.
 - Added single-child alignment baseline in framework widget layer: `Align` and `Center` over new `RenderAlign`, including width/height shrink factors and parity sample route/page in both C# and Dart galleries.
 - Added multi-child overlay baseline in framework widget layer: `Stack` and `Positioned` over new `RenderStack`/`StackParentData`, including positioned insets/size behavior and parity sample route/page in both C# and Dart galleries.
+- Extended overlay/table layout parity with ambient `PositionedDirectional` and semantic `TableCell`; shared
+  `RenderTable` now follows Flutter's vertical-alignment and RTL column-positioning contracts.
 - Added decoration baseline in framework widget layer: `DecoratedBox` over `RenderDecoratedBox` plus value objects (`BoxDecoration`, `BorderSide`, `BorderRadius`) and parity sample route/page in both C# and Dart galleries.
 - Extended `Container` composition baseline with `alignment`, `margin`, `constraints`, and `transform` support (including Flutter-like width/height tightening against explicit constraints), plus parity sample route/page updates in both C# and Dart galleries.
 - Added ratio/flex layout primitive baseline in framework widget layer: `AspectRatio` over new `RenderAspectRatio` plus `Spacer` (expanded tight-flex gap helper), with regression coverage for ratio sizing, widget update wiring, and flex parent-data propagation.

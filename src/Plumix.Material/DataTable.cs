@@ -315,7 +315,11 @@ public sealed class DataTable : StatelessWidget
         var effectiveBorder = Border ?? new TableBorder(
             Bottom: ShowBottomBorder ? divider : null,
             HorizontalInside: divider);
-        Widget result = new Table(tableRows, widths, border: effectiveBorder);
+        Widget result = new Table(
+            tableRows,
+            widths,
+            border: effectiveBorder,
+            defaultVerticalAlignment: TableCellVerticalAlignment.Middle);
         var decoration = Decoration ?? localTheme.Decoration;
         if (decoration is not null) result = new DecoratedBox(decoration, result);
         if (ClipBehavior != Clip.None)

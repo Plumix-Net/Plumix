@@ -1,5 +1,11 @@
 # Changelog
 
+- Breaking: added paired Flutter core `PositionedDirectional` + `TableCell` parity with ambient LTR/RTL inset
+  resolution, cell semantics, all six vertical-alignment modes, baseline reporting, fill/intrinsic-height relayout,
+  RTL table columns, focused tests, and mirrored Stack/DataTable probes. Direct core `Table` cells now use Flutter's
+  `top` default instead of the former implicit center; Material `DataTable` retains its source `middle` default.
+  Advanced `Plumix` to `0.1.0-alpha.17`.
+
 - Added paired Flutter core `ConstraintsTransformBox` + `UnconstrainedBox` parity with all seven source constraint
   transforms, directional alignment, normalized-output guards, overflow-only clipping, debug overflow indicators,
   source-shaped widget composition, focused tests, and a mirrored C#/Dart runtime probe. Added the sample-root LTR

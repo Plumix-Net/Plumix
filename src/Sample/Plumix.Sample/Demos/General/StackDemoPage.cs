@@ -2,6 +2,7 @@ using System;
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Rendering;
+using Plumix.UI;
 using Plumix.Widgets;
 
 // Dart parity source (reference): dart_sample/lib/stack_demo_page.dart (exact sample parity)
@@ -21,13 +22,14 @@ internal sealed class StackDemoPageState : State
     private double _left = 8;
     private double _top = 8;
     private bool _pinBottomRight;
+    private bool _rtl;
 
     public override Widget Build(BuildContext context)
     {
-        Widget badge = new Positioned(
-            left: _pinBottomRight ? null : _left,
+        Widget badge = new PositionedDirectional(
+            start: _pinBottomRight ? null : _left,
             top: _pinBottomRight ? null : _top,
-            right: _pinBottomRight ? 8 : null,
+            end: _pinBottomRight ? 8 : null,
             bottom: _pinBottomRight ? 8 : null,
             child: new Container(
                 width: 56,
@@ -41,9 +43,9 @@ internal sealed class StackDemoPageState : State
             spacing: 10,
             children:
             [
-                new Text("Stack + Positioned", fontSize: 20, color: Colors.Black),
+                new Text("Stack + PositionedDirectional", fontSize: 20, color: Colors.Black),
                 new Text(
-                    "Mix non-positioned and positioned children; toggle pinned mode and nudge offsets.",
+                    "Move with logical start/end insets, toggle pinned mode, and flip LTR/RTL direction.",
                     fontSize: 14,
                     color: Colors.DimGray),
                 new Row(
@@ -59,11 +61,17 @@ internal sealed class StackDemoPageState : State
                     spacing: 8,
                     children:
                     [
-                        BuildButton(_pinBottomRight ? "Pin: BR" : "Pin: custom", TogglePin, width: 120, colorHex: "#FFE9F5EC"),
+                        BuildButton(
+                            _pinBottomRight ? "Pin: bottom-end" : "Pin: custom",
+                            TogglePin,
+                            width: 140,
+                            colorHex: "#FFE9F5EC"),
+                        BuildButton(_rtl ? "RTL" : "LTR", ToggleDirection, width: 72, colorHex: "#FFE9F5EC"),
                         BuildButton("Reset", Reset, width: 88, colorHex: "#FFF3E8D8"),
                     ]),
                 new Text(
-                    $"left={_left:0}, top={_top:0}, mode={(_pinBottomRight ? "bottomRight" : "custom")}",
+                    $"start={_left:0}, top={_top:0}, direction={(_rtl ? "RTL" : "LTR")}, "
+                    + $"mode={(_pinBottomRight ? "bottomEnd" : "custom")}",
                     fontSize: 12,
                     color: Colors.DarkSlateGray),
                 new Container(
@@ -73,18 +81,23 @@ internal sealed class StackDemoPageState : State
                     padding: new Thickness(8),
                     child: new Container(
                         color: Colors.White,
-                        child: new Stack(
-                            alignment: Alignment.Center,
-                            children:
-                            [
-                                new Container(
-                                    width: 140,
-                                    height: 80,
-                                    color: Color.Parse("#FFCCE3FF"),
-                                    child: new Center(
-                                        child: new Text("base", fontSize: 14, color: Color.Parse("#FF1D3557")))),
-                                badge,
-                            ]))),
+                        child: new Directionality(
+                            _rtl ? TextDirection.Rtl : TextDirection.Ltr,
+                            new Stack(
+                                alignment: Alignment.Center,
+                                children:
+                                [
+                                    new Container(
+                                        width: 140,
+                                        height: 80,
+                                        color: Color.Parse("#FFCCE3FF"),
+                                        child: new Center(
+                                            child: new Text(
+                                                "base",
+                                                fontSize: 14,
+                                                color: Color.Parse("#FF1D3557")))),
+                                    badge,
+                                ])))),
             ]);
     }
 
@@ -120,6 +133,11 @@ internal sealed class StackDemoPageState : State
         SetState(() => _pinBottomRight = !_pinBottomRight);
     }
 
+    private void ToggleDirection()
+    {
+        SetState(() => _rtl = !_rtl);
+    }
+
     private void Reset()
     {
         SetState(() =>
@@ -127,6 +145,7 @@ internal sealed class StackDemoPageState : State
             _left = 8;
             _top = 8;
             _pinBottomRight = false;
+            _rtl = false;
         });
     }
 }

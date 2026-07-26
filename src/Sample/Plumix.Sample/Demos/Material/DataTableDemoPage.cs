@@ -68,6 +68,10 @@ internal sealed class DataTableDemoPageState : State
                         new SingleChildScrollView(
                             scrollDirection: Axis.Horizontal,
                             child: BuildTable(_source.Items.Take(4).ToArray())),
+                        new Text("Core TableCell vertical alignment", fontSize: 16, color: Colors.Black),
+                        new SingleChildScrollView(
+                            scrollDirection: Axis.Horizontal,
+                            child: BuildTableCellProbe()),
                         new Text("PaginatedDataTable", fontSize: 16, color: Colors.Black),
                         new PaginatedDataTable(
                             header: new Text("People"),
@@ -96,6 +100,31 @@ internal sealed class DataTableDemoPageState : State
         showCheckboxColumn: _showCheckboxes,
         showBottomBorder: true,
         onSelectAll: value => _source.SelectAll(value ?? false));
+
+    private static Table BuildTableCellProbe() => new(
+        defaultColumnWidth: new FixedColumnWidth(100),
+        border: TableBorder.All(new BorderSide(Color.Parse("#FF94A3B8"))),
+        children:
+        [
+            new TableRow(
+            [
+                BuildProbeCell("top", 28, TableCellVerticalAlignment.Top, "#FFE0F2FE"),
+                BuildProbeCell("middle", 52, TableCellVerticalAlignment.Middle, "#FFDCFCE7"),
+                BuildProbeCell("bottom", 32, TableCellVerticalAlignment.Bottom, "#FFFFEDD5"),
+            ]),
+        ]);
+
+    private static TableCell BuildProbeCell(
+        string label,
+        double height,
+        TableCellVerticalAlignment alignment,
+        string colorHex) => new(
+        verticalAlignment: alignment,
+        child: new Container(
+            height: height,
+            color: Color.Parse(colorHex),
+            child: new Center(
+                child: new Text(label, fontSize: 12, color: Colors.Black))));
 
     private IReadOnlyList<DataColumn> BuildColumns() =>
     [

@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Rendering;
+using Plumix.UI;
 
 namespace Plumix.Widgets;
 
@@ -78,9 +79,19 @@ public sealed class Table : MultiChildRenderObjectWidget
         IReadOnlyDictionary<int, TableColumnWidth>? columnWidths = null,
         TableColumnWidth? defaultColumnWidth = null,
         TableBorder? border = null,
+        TextDirection? textDirection = null,
+        TableCellVerticalAlignment defaultVerticalAlignment = TableCellVerticalAlignment.Top,
+        TextBaseline? textBaseline = null,
         Key? key = null) : base(Flatten(children), key)
     {
         ArgumentNullException.ThrowIfNull(children);
+        if (defaultVerticalAlignment == TableCellVerticalAlignment.Baseline && !textBaseline.HasValue)
+        {
+            throw new ArgumentException(
+                "textBaseline is required when defaultVerticalAlignment is baseline.",
+                nameof(textBaseline));
+        }
+
         int columnCount = children.Count == 0 ? 0 : children[0].Children.Count;
         if (children.Any(row => row.Children.Count != columnCount))
         {
@@ -92,6 +103,9 @@ public sealed class Table : MultiChildRenderObjectWidget
         ColumnWidths = columnWidths ?? new Dictionary<int, TableColumnWidth>();
         DefaultColumnWidth = defaultColumnWidth ?? new IntrinsicColumnWidth();
         Border = border;
+        TextDirection = textDirection;
+        DefaultVerticalAlignment = defaultVerticalAlignment;
+        TextBaseline = textBaseline;
     }
 
     public IReadOnlyList<TableRow> Rows { get; }
@@ -99,6 +113,9 @@ public sealed class Table : MultiChildRenderObjectWidget
     public IReadOnlyDictionary<int, TableColumnWidth> ColumnWidths { get; }
     public TableColumnWidth DefaultColumnWidth { get; }
     public TableBorder? Border { get; }
+    public TextDirection? TextDirection { get; }
+    public TableCellVerticalAlignment DefaultVerticalAlignment { get; }
+    public TextBaseline? TextBaseline { get; }
 
     internal override RenderObject CreateRenderObject(BuildContext context) => new RenderTable(
         columns: ColumnCount,
@@ -106,7 +123,10 @@ public sealed class Table : MultiChildRenderObjectWidget
         columnWidths: ColumnWidths,
         defaultColumnWidth: DefaultColumnWidth,
         rowDecorations: Rows.Select(row => row.Decoration).ToArray(),
-        border: Border);
+        border: Border,
+        textDirection: TextDirection ?? Directionality.Of(context),
+        defaultVerticalAlignment: DefaultVerticalAlignment,
+        textBaseline: TextBaseline);
 
     internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
@@ -117,6 +137,17 @@ public sealed class Table : MultiChildRenderObjectWidget
         table.DefaultColumnWidth = DefaultColumnWidth;
         table.RowDecorations = Rows.Select(row => row.Decoration).ToArray();
         table.Border = Border;
+        table.TextDirection = TextDirection ?? Directionality.Of(context);
+        if (TextBaseline.HasValue)
+        {
+            table.TextBaseline = TextBaseline;
+            table.DefaultVerticalAlignment = DefaultVerticalAlignment;
+        }
+        else
+        {
+            table.DefaultVerticalAlignment = DefaultVerticalAlignment;
+            table.TextBaseline = null;
+        }
     }
 
     private static IReadOnlyList<Widget> Flatten(IReadOnlyList<TableRow> rows)
@@ -127,5 +158,57 @@ public sealed class Table : MultiChildRenderObjectWidget
             : row.Children.Select((child, column) => (Widget)new KeyedSubtree(
                 child,
                 new ValueKey<(Key Row, int Column)>((row.Key, column))))).ToArray();
+    }
+}
+
+// Dart parity source: flutter/packages/flutter/lib/src/widgets/table.dart (TableCell)
+public sealed class TableCell : StatelessWidget
+{
+    public TableCell(
+        Widget child,
+        TableCellVerticalAlignment? verticalAlignment = null,
+        Key? key = null) : base(key)
+    {
+        Child = child ?? throw new ArgumentNullException(nameof(child));
+        VerticalAlignment = verticalAlignment;
+    }
+
+    public TableCellVerticalAlignment? VerticalAlignment { get; }
+
+    public Widget Child { get; }
+
+    public override Widget Build(BuildContext context)
+    {
+        return new TableCellParentDataWidget(
+            verticalAlignment: VerticalAlignment,
+            child: new Semantics(
+                role: SemanticsRole.Cell,
+                child: Child));
+    }
+
+    private sealed class TableCellParentDataWidget : ParentDataWidget<TableCellParentData>
+    {
+        public TableCellParentDataWidget(
+            Widget child,
+            TableCellVerticalAlignment? verticalAlignment) : base(child)
+        {
+            VerticalAlignment = verticalAlignment;
+        }
+
+        public TableCellVerticalAlignment? VerticalAlignment { get; }
+
+        public override Type DebugTypicalAncestorWidgetType => typeof(Table);
+
+        protected override void ApplyParentData(RenderObject renderObject)
+        {
+            var parentData = (TableCellParentData)renderObject.parentData!;
+            if (parentData.VerticalAlignment == VerticalAlignment)
+            {
+                return;
+            }
+
+            parentData.VerticalAlignment = VerticalAlignment;
+            renderObject.Parent?.MarkNeedsLayout();
+        }
     }
 }
