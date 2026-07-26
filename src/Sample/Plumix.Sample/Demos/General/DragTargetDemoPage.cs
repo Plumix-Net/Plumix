@@ -55,9 +55,12 @@ internal sealed class DragTargetDemoContentState : State
                 spacing: 16,
                 children:
                 [
-                    new Text("Draggable + DragTarget", fontSize: 20, color: Colors.Black),
                     new Text(
-                        "The plum is accepted; the stone exercises rejectedData and onLeave.",
+                        "Draggable + LongPressDraggable + DragTarget",
+                        fontSize: 20,
+                        color: Colors.Black),
+                    new Text(
+                        "Long-press the plum to drag it; the immediate stone exercises rejectedData and onLeave.",
                         fontSize: 14,
                         color: Colors.DimGray),
                     new Wrap(
@@ -65,8 +68,8 @@ internal sealed class DragTargetDemoContentState : State
                         runSpacing: 16,
                         children:
                         [
-                            BuildDraggable("plum", "#FF6750A4"),
-                            BuildDraggable("stone", "#FF5F6368"),
+                            BuildDraggable("plum", "#FF6750A4", longPress: true),
+                            BuildDraggable("stone", "#FF5F6368", longPress: false),
                             BuildTarget(),
                         ]),
                     new Container(
@@ -84,14 +87,33 @@ internal sealed class DragTargetDemoContentState : State
                 ]));
     }
 
-    private Widget BuildDraggable(string data, string colorHex)
+    private Widget BuildDraggable(
+        string data,
+        string colorHex,
+        bool longPress)
     {
-        Widget tile = BuildTile(data, colorHex, opacity: 1.0);
+        string label = longPress ? $"{data}\n(long press)" : data;
+        Widget tile = BuildTile(label, colorHex, opacity: 1.0);
+        Widget childWhenDragging = BuildTile(label, colorHex, opacity: 0.35);
+        Widget feedback = BuildTile(label, colorHex, opacity: 0.9);
+        if (longPress)
+        {
+            return new LongPressDraggable<string>(
+                data: data,
+                child: tile,
+                childWhenDragging: childWhenDragging,
+                feedback: feedback,
+                hitTestBehavior: HitTestBehavior.Opaque,
+                onDragStarted: () => SetStatus($"long-press dragging {data}"),
+                onDragCompleted: () => SetStatus($"{data} accepted"),
+                onDraggableCanceled: (_, _) => SetStatus($"{data} not accepted"));
+        }
+
         return new Draggable<string>(
             data: data,
             child: tile,
-            childWhenDragging: BuildTile(data, colorHex, opacity: 0.35),
-            feedback: BuildTile(data, colorHex, opacity: 0.9),
+            childWhenDragging: childWhenDragging,
+            feedback: feedback,
             hitTestBehavior: HitTestBehavior.Opaque,
             onDragStarted: () => SetStatus($"dragging {data}"),
             onDragCompleted: () => SetStatus($"{data} accepted"),

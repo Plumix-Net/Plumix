@@ -280,6 +280,10 @@ Completion note:
   traversal, candidate/rejected data, move/leave/drop and source completion/cancellation callbacks, velocity/offset
   details, focused tests, and a mirrored C#/Dart runtime probe. The source-required `Overlay`/`OverlayEntry` baseline
   now lives in core.
+- Closed the paired drag/overlay follow-up with `LongPressDraggable<T>` + `Overlay`/`OverlayEntry`, including delayed
+  per-pointer recognition, pre-delay touch-slop cancellation, successful-start haptics, mutable opaque/maintained
+  entry policy, mounted listeners, atomic rearrangement, onstage theater paint/hit/semantics order,
+  `canSizeOverlay`/`alwaysSizeToContent`, focused tests, and an expanded mirrored C#/Dart runtime probe.
 - Implicit-animations sample viewport hardening: both samples now share an always-visible scrollbar and scroll
   controller around the complete probe column, preventing bottom overflow on short desktop windows.
 

@@ -1,4 +1,5 @@
 using Avalonia;
+using Avalonia.Threading;
 using Plumix.Foundation;
 using Plumix.Gestures;
 using Plumix.Rendering;
@@ -148,7 +149,82 @@ public class Draggable<T> : StatefulWidget
         return default;
     }
 
+    internal virtual DraggableGestureRecognizer CreateRecognizer(
+        Func<Point, IDragAvatar?> onStart)
+    {
+        return new DraggableGestureRecognizer(
+            affinity: Affinity,
+            allowedButtonsFilter: AllowedButtonsFilter,
+            onStart: onStart);
+    }
+
     public override State CreateState() => new DraggableState<T>();
+}
+
+public sealed class LongPressDraggable<T> : Draggable<T>
+{
+    public LongPressDraggable(
+        Widget child,
+        Widget feedback,
+        T? data = default,
+        Axis? axis = null,
+        Widget? childWhenDragging = null,
+        Point feedbackOffset = default,
+        DragAnchorStrategy<T>? dragAnchorStrategy = null,
+        int? maxSimultaneousDrags = null,
+        Action? onDragStarted = null,
+        Action<DragUpdateDetails>? onDragUpdate = null,
+        Action<Velocity, Point>? onDraggableCanceled = null,
+        Action<DraggableDetails>? onDragEnd = null,
+        Action? onDragCompleted = null,
+        bool hapticFeedbackOnStart = true,
+        bool ignoringFeedbackSemantics = true,
+        bool ignoringFeedbackPointer = true,
+        TimeSpan? delay = null,
+        Func<PointerButtons, bool>? allowedButtonsFilter = null,
+        HitTestBehavior hitTestBehavior = HitTestBehavior.DeferToChild,
+        bool rootOverlay = false,
+        Key? key = null) : base(
+        child: child,
+        feedback: feedback,
+        data: data,
+        axis: axis,
+        childWhenDragging: childWhenDragging,
+        feedbackOffset: feedbackOffset,
+        dragAnchorStrategy: dragAnchorStrategy,
+        maxSimultaneousDrags: maxSimultaneousDrags,
+        onDragStarted: onDragStarted,
+        onDragUpdate: onDragUpdate,
+        onDraggableCanceled: onDraggableCanceled,
+        onDragEnd: onDragEnd,
+        onDragCompleted: onDragCompleted,
+        ignoringFeedbackSemantics: ignoringFeedbackSemantics,
+        ignoringFeedbackPointer: ignoringFeedbackPointer,
+        rootOverlay: rootOverlay,
+        hitTestBehavior: hitTestBehavior,
+        allowedButtonsFilter: allowedButtonsFilter,
+        key: key)
+    {
+        HapticFeedbackOnStart = hapticFeedbackOnStart;
+        Delay = delay ?? TimeSpan.FromMilliseconds(500);
+    }
+
+    public bool HapticFeedbackOnStart { get; }
+
+    public TimeSpan Delay { get; }
+
+    internal override DraggableGestureRecognizer CreateRecognizer(
+        Func<Point, IDragAvatar?> onStart)
+    {
+        return new DraggableGestureRecognizer(
+            affinity: null,
+            allowedButtonsFilter: AllowedButtonsFilter,
+            onStart: onStart,
+            delay: Delay,
+            onAvatarStarted: HapticFeedbackOnStart
+                ? Plumix.UI.Feedback.ForSelectionClick
+                : null);
+    }
 }
 
 internal sealed class DraggableState<T> : State
@@ -184,10 +260,7 @@ internal sealed class DraggableState<T> : State
 
     private DraggableGestureRecognizer CreateRecognizer()
     {
-        return new DraggableGestureRecognizer(
-            affinity: CurrentWidget.Affinity,
-            allowedButtonsFilter: CurrentWidget.AllowedButtonsFilter,
-            onStart: StartDrag);
+        return CurrentWidget.CreateRecognizer(StartDrag);
     }
 
     private void RoutePointer(PointerDownEvent @event)
@@ -677,22 +750,28 @@ internal sealed class DragAvatar<T> : IDragAvatar
     }
 }
 
-internal sealed class DraggableGestureRecognizer : GestureRecognizer, IGestureArenaMember
+internal class DraggableGestureRecognizer : GestureRecognizer, IGestureArenaMember
 {
     private const double TouchSlop = 18.0;
     private readonly Axis? _affinity;
     private readonly Func<PointerButtons, bool>? _allowedButtonsFilter;
     private readonly Func<Point, IDragAvatar?> _onStart;
+    private readonly TimeSpan? _delay;
+    private readonly Action? _onAvatarStarted;
     private readonly Dictionary<int, DragTracker> _trackers = [];
 
     public DraggableGestureRecognizer(
         Axis? affinity,
         Func<PointerButtons, bool>? allowedButtonsFilter,
-        Func<Point, IDragAvatar?> onStart)
+        Func<Point, IDragAvatar?> onStart,
+        TimeSpan? delay = null,
+        Action? onAvatarStarted = null)
     {
         _affinity = affinity;
         _allowedButtonsFilter = allowedButtonsFilter;
         _onStart = onStart;
+        _delay = delay;
+        _onAvatarStarted = onAvatarStarted;
     }
 
     public override void AddPointer(PointerDownEvent @event)
@@ -711,7 +790,11 @@ internal sealed class DraggableGestureRecognizer : GestureRecognizer, IGestureAr
             @event.TimestampUtc,
             entry);
         StartTrackingPointer(@event.Pointer);
-        if (_affinity is null)
+        if (_delay.HasValue)
+        {
+            StartDelayTimer(@event.Pointer, _trackers[@event.Pointer]);
+        }
+        else if (_affinity is null)
         {
             entry.Resolve(GestureDisposition.Accepted);
         }
@@ -725,10 +808,9 @@ internal sealed class DraggableGestureRecognizer : GestureRecognizer, IGestureAr
         }
 
         tracker.Accepted = true;
-        tracker.Avatar = _onStart(tracker.InitialPosition);
-        if (tracker.Avatar is null)
+        if (!_delay.HasValue || tracker.DelayPassed)
         {
-            Cleanup(pointer);
+            StartAvatar(pointer, tracker);
         }
     }
 
@@ -786,6 +868,15 @@ internal sealed class DraggableGestureRecognizer : GestureRecognizer, IGestureAr
 
     private void HandleMove(PointerMoveEvent move, DragTracker tracker)
     {
+        if (_delay.HasValue
+            && !tracker.DelayPassed
+            && Distance(tracker.InitialPosition, move.Position) > TouchSlop)
+        {
+            tracker.Entry.Resolve(GestureDisposition.Rejected);
+            Cleanup(move.Pointer);
+            return;
+        }
+
         Point totalDelta = move.Position - new Vector(
             tracker.InitialPosition.X,
             tracker.InitialPosition.Y);
@@ -838,8 +929,82 @@ internal sealed class DraggableGestureRecognizer : GestureRecognizer, IGestureAr
 
     private void Cleanup(int pointer)
     {
+        if (_trackers.TryGetValue(pointer, out DragTracker? tracker))
+        {
+            tracker.DelayCancellation.Cancel();
+            tracker.DelayCancellation.Dispose();
+        }
+
         StopTrackingPointer(pointer);
         _trackers.Remove(pointer);
+    }
+
+    private void StartDelayTimer(int pointer, DragTracker tracker)
+    {
+        TimeSpan delay = _delay!.Value;
+        if (delay <= TimeSpan.Zero)
+        {
+            HandleDelayPassed(pointer, tracker);
+            return;
+        }
+
+        CancellationToken token = tracker.DelayCancellation.Token;
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(delay, token).ConfigureAwait(false);
+            }
+            catch (TaskCanceledException)
+            {
+                return;
+            }
+
+            await Dispatcher.UIThread.InvokeAsync(() => HandleDelayPassed(pointer, tracker));
+        });
+    }
+
+    private void HandleDelayPassed(int pointer, DragTracker tracker)
+    {
+        if (!_trackers.TryGetValue(pointer, out DragTracker? activeTracker)
+            || !ReferenceEquals(activeTracker, tracker))
+        {
+            return;
+        }
+
+        tracker.DelayPassed = true;
+        if (tracker.Accepted)
+        {
+            StartAvatar(pointer, tracker);
+        }
+        else
+        {
+            tracker.Entry.Resolve(GestureDisposition.Accepted);
+        }
+    }
+
+    private void StartAvatar(int pointer, DragTracker tracker)
+    {
+        if (tracker.Avatar is not null)
+        {
+            return;
+        }
+
+        tracker.Avatar = _onStart(tracker.InitialPosition);
+        if (tracker.Avatar is null)
+        {
+            Cleanup(pointer);
+            return;
+        }
+
+        _onAvatarStarted?.Invoke();
+    }
+
+    private static double Distance(Point first, Point second)
+    {
+        double dx = first.X - second.X;
+        double dy = first.Y - second.Y;
+        return Math.Sqrt(dx * dx + dy * dy);
     }
 
     private sealed class DragTracker
@@ -866,6 +1031,10 @@ internal sealed class DraggableGestureRecognizer : GestureRecognizer, IGestureAr
         public bool Accepted { get; set; }
 
         public IDragAvatar? Avatar { get; set; }
+
+        public CancellationTokenSource DelayCancellation { get; } = new();
+
+        public bool DelayPassed { get; set; }
 
         public void RecordPosition(Point position, DateTime timestampUtc)
         {

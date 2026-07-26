@@ -1,5 +1,13 @@
 # Changelog
 
+- Breaking: added Flutter core `LongPressDraggable<T>` parity with delayed per-pointer recognition, pre-delay
+  touch-slop rejection, configurable delay/button filtering, child/feedback lifecycle, and selection haptics only
+  after a successful drag start. Completed the paired `Overlay`/`OverlayEntry` follow-up with a framework-owned
+  theater render path, onstage/maintained entry handling, `canSizeOverlay`/`alwaysSizeToContent`, `Overlay.Wrap`,
+  mutable opacity/state retention, mounted listeners, visibility checks, and atomic entry rearrangement. Added
+  focused tests and an expanded mirrored C#/Dart drag demo, removed the closed overlay divergence, and advanced
+  `Plumix` to `0.4.0-alpha.1`.
+
 - Added paired Flutter core `Draggable<T>` + `DragTarget<T>` ports with source-shaped overlay feedback, child
   replacement, anchor/axis/affinity/button policies, accepted/rejected target traversal, candidate/rejected data,
   move/leave/drop and source completion/cancellation callbacks, velocity/offset details, focused tests, and a

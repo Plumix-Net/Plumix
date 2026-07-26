@@ -6,6 +6,7 @@ public enum FeedbackType
 {
     Tap,
     LongPress,
+    SelectionClick,
 }
 
 public static class Feedback
@@ -26,6 +27,11 @@ public static class Feedback
     public static void ForLongPress()
     {
         _feedbackTriggered?.Invoke(FeedbackType.LongPress);
+    }
+
+    public static void ForSelectionClick()
+    {
+        _feedbackTriggered?.Invoke(FeedbackType.SelectionClick);
     }
 
     internal static void ResetForTests()

@@ -19,19 +19,24 @@ class _DragTargetDemoPageState extends State<DragTargetDemoPage> {
         spacing: 16,
         children: <Widget>[
           const Text(
-            'Draggable + DragTarget',
+            'Draggable + LongPressDraggable + DragTarget',
             style: TextStyle(fontSize: 20, color: Colors.black),
           ),
           const Text(
-            'The plum is accepted; the stone exercises rejectedData and onLeave.',
+            'Long-press the plum to drag it; the immediate stone exercises '
+            'rejectedData and onLeave.',
             style: TextStyle(fontSize: 14, color: Colors.black54),
           ),
           Wrap(
             spacing: 16,
             runSpacing: 16,
             children: <Widget>[
-              _buildDraggable('plum', const Color(0xFF6750A4)),
-              _buildDraggable('stone', const Color(0xFF5F6368)),
+              _buildDraggable('plum', const Color(0xFF6750A4), longPress: true),
+              _buildDraggable(
+                'stone',
+                const Color(0xFF5F6368),
+                longPress: false,
+              ),
               _buildTarget(),
             ],
           ),
@@ -52,12 +57,28 @@ class _DragTargetDemoPageState extends State<DragTargetDemoPage> {
     );
   }
 
-  Widget _buildDraggable(String data, Color color) {
-    final Widget tile = _buildTile(data, color, opacity: 1);
+  Widget _buildDraggable(String data, Color color, {required bool longPress}) {
+    final String label = longPress ? '$data\n(long press)' : data;
+    final Widget tile = _buildTile(label, color, opacity: 1);
+    final Widget childWhenDragging = _buildTile(label, color, opacity: 0.35);
+    final Widget feedback = _buildTile(label, color, opacity: 0.9);
+    if (longPress) {
+      return LongPressDraggable<String>(
+        data: data,
+        childWhenDragging: childWhenDragging,
+        feedback: feedback,
+        hitTestBehavior: HitTestBehavior.opaque,
+        onDragStarted: () => _setStatus('long-press dragging $data'),
+        onDragCompleted: () => _setStatus('$data accepted'),
+        onDraggableCanceled: (_, _) => _setStatus('$data not accepted'),
+        child: tile,
+      );
+    }
+
     return Draggable<String>(
       data: data,
-      childWhenDragging: _buildTile(data, color, opacity: 0.35),
-      feedback: _buildTile(data, color, opacity: 0.9),
+      childWhenDragging: childWhenDragging,
+      feedback: feedback,
       hitTestBehavior: HitTestBehavior.opaque,
       onDragStarted: () => _setStatus('dragging $data'),
       onDragCompleted: () => _setStatus('$data accepted'),

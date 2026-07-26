@@ -57,6 +57,99 @@ public sealed class DragTargetTests
     }
 
     [Fact]
+    public void LongPressDraggable_DefaultsAndDelayedStartMatchFlutter()
+    {
+        var child = new SizedBox(width: 20, height: 20);
+        var feedback = new SizedBox(width: 18, height: 18);
+        var draggable = new LongPressDraggable<string>(
+            child: child,
+            feedback: feedback,
+            data: "payload");
+
+        Assert.Same(child, draggable.Child);
+        Assert.Same(feedback, draggable.Feedback);
+        Assert.Equal("payload", draggable.Data);
+        Assert.True(draggable.HapticFeedbackOnStart);
+        Assert.Equal(TimeSpan.FromMilliseconds(500), draggable.Delay);
+        Assert.Null(draggable.Affinity);
+        Assert.True(draggable.IgnoringFeedbackSemantics);
+        Assert.True(draggable.IgnoringFeedbackPointer);
+        Assert.False(draggable.RootOverlay);
+        Assert.Equal(HitTestBehavior.DeferToChild, draggable.HitTestBehavior);
+
+        int starts = 0;
+        var delayedEntry = new OverlayEntry(_ =>
+            new LongPressDraggable<string>(
+                child: new SizedBox(width: 40, height: 40),
+                feedback: new SizedBox(width: 20, height: 20),
+                delay: TimeSpan.FromSeconds(5),
+                hitTestBehavior: HitTestBehavior.Opaque,
+                onDragStarted: () => starts += 1));
+        using var harness = new WidgetHarness(new Overlay(initialEntries: [delayedEntry]));
+        DateTime now = DateTime.UtcNow;
+        harness.Dispatch(new PointerDownEvent(
+            10,
+            PointerDeviceKind.Touch,
+            new Point(10, 10),
+            PointerButtons.Primary,
+            now));
+        Assert.Equal(0, starts);
+
+        harness.Dispatch(new PointerUpEvent(
+            10,
+            PointerDeviceKind.Touch,
+            new Point(10, 10),
+            PointerButtons.None,
+            now.AddMilliseconds(50)));
+        Assert.Equal(0, starts);
+    }
+
+    [Fact]
+    public void LongPressDraggable_StartsAfterDelayAndEmitsSelectionHaptic()
+    {
+        int starts = 0;
+        var feedbackEvents = new List<FeedbackType>();
+        Feedback.ResetForTests();
+        Feedback.FeedbackTriggered += feedbackEvents.Add;
+
+        try
+        {
+            var entry = new OverlayEntry(_ =>
+                new LongPressDraggable<string>(
+                    child: new SizedBox(width: 40, height: 40),
+                    feedback: new SizedBox(width: 20, height: 20),
+                    delay: TimeSpan.Zero,
+                    hitTestBehavior: HitTestBehavior.Opaque,
+                    onDragStarted: () => starts += 1));
+            using var harness = new WidgetHarness(new Overlay(initialEntries: [entry]));
+            DateTime now = DateTime.UtcNow;
+
+            harness.Dispatch(new PointerDownEvent(
+                11,
+                PointerDeviceKind.Touch,
+                new Point(10, 10),
+                PointerButtons.Primary,
+                now));
+            harness.Pump();
+
+            Assert.Equal(1, starts);
+            Assert.Equal([FeedbackType.SelectionClick], feedbackEvents);
+
+            harness.Dispatch(new PointerUpEvent(
+                11,
+                PointerDeviceKind.Touch,
+                new Point(10, 10),
+                PointerButtons.None,
+                now.AddMilliseconds(20)));
+            harness.Pump();
+        }
+        finally
+        {
+            Feedback.ResetForTests();
+        }
+    }
+
+    [Fact]
     public void OverlayEntry_InsertRebuildRemoveLifecycleMatchesFlutter()
     {
         int builds = 0;
@@ -93,6 +186,101 @@ public sealed class DragTargetTests
         Assert.False(inserted.Mounted);
         Assert.Single(state.Entries);
         inserted.Dispose();
+    }
+
+    [Fact]
+    public void OverlayEntry_OpaqueAndMaintainStateMutationsUpdateVisibilityAndMounting()
+    {
+        int baseBuilds = 0;
+        int mountChanges = 0;
+        var baseEntry = new OverlayEntry(_ =>
+        {
+            baseBuilds += 1;
+            return new SizedBox(width: 20, height: 20);
+        });
+        var opaqueEntry = new OverlayEntry(
+            _ => new SizedBox(width: 20, height: 20),
+            opaque: true);
+
+        using (var harness = new WidgetHarness(
+                   new Overlay(initialEntries: [baseEntry, opaqueEntry])))
+        {
+            OverlayState state = harness.FindState<OverlayState>();
+            Assert.False(baseEntry.Mounted);
+            Assert.True(opaqueEntry.Mounted);
+            Assert.False(state.DebugIsVisible(baseEntry));
+
+            baseEntry.AddListener(() => mountChanges += 1);
+            baseEntry.MaintainState = true;
+            harness.Pump();
+
+            Assert.True(baseEntry.Mounted);
+            Assert.Equal(1, baseBuilds);
+            Assert.Equal(1, mountChanges);
+            Assert.False(state.DebugIsVisible(baseEntry));
+
+            opaqueEntry.Opaque = false;
+            harness.Pump();
+            Assert.True(state.DebugIsVisible(baseEntry));
+            Assert.Equal(1, mountChanges);
+
+            opaqueEntry.Opaque = true;
+            baseEntry.MaintainState = false;
+            harness.Pump();
+            Assert.False(baseEntry.Mounted);
+            Assert.Equal(2, mountChanges);
+        }
+
+        baseEntry.Dispose();
+        opaqueEntry.Dispose();
+    }
+
+    [Fact]
+    public void OverlayState_RearrangePreservesEntriesAndInsertsNewOnesAtomically()
+    {
+        var first = new OverlayEntry(_ => new SizedBox(width: 10, height: 10));
+        var second = new OverlayEntry(_ => new SizedBox(width: 12, height: 12));
+        var third = new OverlayEntry(_ => new SizedBox(width: 14, height: 14));
+        var inserted = new OverlayEntry(_ => new SizedBox(width: 16, height: 16));
+
+        using (var harness = new WidgetHarness(
+                   new Overlay(initialEntries: [first, second, third])))
+        {
+            OverlayState state = harness.FindState<OverlayState>();
+            state.Rearrange([third, first], below: third);
+            harness.Pump();
+            Assert.Equal([second, third, first], state.Entries);
+
+            state.Rearrange([inserted, first]);
+            harness.Pump();
+            Assert.Equal([inserted, first, second, third], state.Entries);
+            Assert.True(inserted.Mounted);
+
+            Assert.Throws<ArgumentException>(() =>
+                state.Rearrange([first, first]));
+            Assert.Throws<ArgumentException>(() =>
+                state.Rearrange([first], above: third));
+        }
+
+        first.Dispose();
+        second.Dispose();
+        third.Dispose();
+        inserted.Dispose();
+    }
+
+    [Fact]
+    public void Overlay_CanSizeOverlayAndWrapSizeUnboundedTheater()
+    {
+        Widget wrapped = Overlay.Wrap(
+            child: new SizedBox(width: 80, height: 42),
+            alwaysSizeToContent: true);
+        using var harness = new WidgetHarness(
+            new UnconstrainedBox(child: wrapped));
+
+        RenderOverlayTheater theater = harness.FindRenderObject<RenderOverlayTheater>();
+        Assert.Equal(new Size(80, 42), theater.Size);
+        Assert.True(theater.AlwaysSizeToContent);
+        Assert.Equal(Clip.HardEdge, theater.ClipBehavior);
     }
 
     [Fact]
@@ -484,6 +672,29 @@ public sealed class DragTargetTests
                 }
 
                 element.VisitChildren(Visit);
+            }
+        }
+
+        public T FindRenderObject<T>() where T : RenderObject
+        {
+            T? result = null;
+            Visit(_renderView);
+            return Assert.IsType<T>(result);
+
+            void Visit(RenderObject renderObject)
+            {
+                if (result is not null)
+                {
+                    return;
+                }
+
+                if (renderObject is T typed)
+                {
+                    result = typed;
+                    return;
+                }
+
+                renderObject.VisitChildren(Visit);
             }
         }
 

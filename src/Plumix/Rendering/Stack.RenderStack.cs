@@ -13,7 +13,7 @@ public enum StackFit
     Passthrough
 }
 
-public sealed class StackParentData : ContainerBoxParentData<RenderBox>
+public class StackParentData : ContainerBoxParentData<RenderBox>
 {
     public double? Left { get; set; }
     public double? Top { get; set; }

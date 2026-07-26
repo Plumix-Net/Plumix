@@ -306,6 +306,10 @@ public sealed class MaterialPopupMenuTests : IDisposable
         int opened = 0;
         int canceled = 0;
         string? selected = null;
+        var selectedCompletion = new TaskCompletionSource<string>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        var canceledCompletion = new TaskCompletionSource(
+            TaskCreationOptions.RunContinuationsAsynchronously);
         using var harness = new WidgetRenderHarness(Wrap(
             ThemeData.Light,
             new Navigator(new BuilderPageRoute(_ => new Align(
@@ -319,8 +323,16 @@ public sealed class MaterialPopupMenuTests : IDisposable
                         new PopupMenuItem<string>(new Text("Three"), value: "three"),
                     ],
                     onOpened: () => opened++,
-                    onSelected: value => selected = value,
-                    onCanceled: () => canceled++,
+                    onSelected: value =>
+                    {
+                        selected = value;
+                        selectedCompletion.TrySetResult(value);
+                    },
+                    onCanceled: () =>
+                    {
+                        canceled++;
+                        canceledCompletion.TrySetResult();
+                    },
                     position: PopupMenuPosition.Under,
                     offset: new Vector(5, 7),
                     child: new SizedBox(width: 80, height: 32, child: new Text("OPEN"))))))));
@@ -344,7 +356,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
         Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("Enter", true)));
         PumpAnimation();
         harness.Pump(new Size(500, 360));
-        await WaitForConditionAsync(() => selected is not null);
+        await selectedCompletion.Task.WaitAsync(TimeSpan.FromSeconds(5));
         Assert.Equal("three", selected);
 
         var reopenSemantics = harness.PumpAndGetSemantics(new Size(500, 360));
@@ -358,13 +370,8 @@ public sealed class MaterialPopupMenuTests : IDisposable
         Assert.True(barrier!.PerformAction(SemanticsActions.Tap));
         PumpAnimation();
         harness.Pump(new Size(500, 360));
-        await WaitForConditionAsync(() => canceled == 1);
+        await canceledCompletion.Task.WaitAsync(TimeSpan.FromSeconds(5));
         Assert.Equal(1, canceled);
-    }
-
-    private static async Task WaitForConditionAsync(Func<bool> condition)
-    {
-        for (int i = 0; i < 100 && !condition(); i++) await Task.Delay(10);
     }
 
     private static Widget Wrap(ThemeData theme, Widget child) =>

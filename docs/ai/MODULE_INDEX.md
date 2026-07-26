@@ -229,6 +229,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/Widgets/Gestures.cs`
   - `src/Plumix/Widgets/DragTarget.cs`
   - `src/Plumix/Widgets/Overlay.cs`
+  - `src/Plumix/Rendering/Overlay.cs`
   - `src/Plumix/Widgets/MetaData.cs`
   - `src/Plumix/Rendering/Object.HitTest.cs`
 - Primary Tests:
