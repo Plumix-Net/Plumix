@@ -1,5 +1,10 @@
 # Changelog
 
+- Breaking: completed paired Flutter core `IntrinsicWidth` + `IntrinsicHeight` parity with source-shaped zero-step
+  normalization, positive render-step guards, speculative intrinsic-axis sizing, parent constraint clamping,
+  tight-height fast paths, tallest-child Row stretch behavior, focused tests, and a mirrored C#/Dart runtime probe.
+  Advanced `Plumix` to `0.2.0-alpha.1`; cached intrinsic/dry-layout queries remain tracked in `DIVERGENCES.md`.
+
 - Breaking: added paired Flutter core `PositionedDirectional` + `TableCell` parity with ambient LTR/RTL inset
   resolution, cell semantics, all six vertical-alignment modes, baseline reporting, fill/intrinsic-height relayout,
   RTL table columns, focused tests, and mirrored Stack/DataTable probes. Direct core `Table` cells now use Flutter's

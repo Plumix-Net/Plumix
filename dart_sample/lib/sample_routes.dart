@@ -92,6 +92,7 @@ class SampleRoutes {
   static const String overflowIndicator = '/overflow-indicator';
   static const String offstage = '/offstage';
   static const String baseline = '/baseline';
+  static const String intrinsicWidgets = '/intrinsic-widgets';
   static const String layoutBuilder = '/layout-builder';
   static const String keyboardListener = '/keyboard-listener';
   static const String debugPainting = '/debug-painting';

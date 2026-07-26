@@ -182,6 +182,10 @@ Completion note:
 - Continued paired core layout-control coverage with `Baseline` + `IgnoreBaseline`, including source-shaped target
   offsets, bottom-edge fallback, real paragraph baseline propagation through proxy render boxes, Flex/Row/Column
   `textBaseline` wiring, focused layout tests, and mirrored C#/Dart runtime probes.
+- Continued paired core intrinsic-layout coverage with `IntrinsicWidth` + `IntrinsicHeight`, including source-shaped
+  zero-step normalization, step rounding, parent constraint clamping, tight-axis fast paths, tallest-child Row
+  stretch behavior, focused tests, and mirrored C#/Dart runtime probes. Cached intrinsic/dry-layout queries remain
+  tracked against the shared `RenderBox` protocol gap.
 - Continued paired core adaptive-layout coverage with `LayoutBuilder` + `OrientationBuilder`, including layout-phase
   subtree construction from live `BoxConstraints`, equivalent-constraint rebuild suppression, widget/dependency
   invalidation, portrait/landscape reduction (including the fully unbounded portrait fallback), focused tests, and

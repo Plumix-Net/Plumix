@@ -74,6 +74,7 @@ import 'demos/material/chips_demo_page.dart';
 import 'demos/general/navigator_demo_page.dart';
 import 'demos/general/offstage_demo_page.dart';
 import 'demos/general/baseline_demo_page.dart';
+import 'demos/general/intrinsic_widgets_demo_page.dart';
 import 'demos/general/layout_builder_demo_page.dart';
 import 'demos/general/keyboard_listener_demo_page.dart';
 import 'demos/general/overflow_box_demo_page.dart';
@@ -577,6 +578,12 @@ class SampleGalleryScreen extends StatelessWidget {
           title: 'Baseline + IgnoreBaseline',
           subtitle: 'real text baselines + bottom fallback + Row exclusion',
           builder: () => const BaselineDemoPage(),
+        ),
+        SampleRouteDefinition(
+          routeName: SampleRoutes.intrinsicWidgets,
+          title: 'IntrinsicWidth + IntrinsicHeight',
+          subtitle: 'step-snapped width + tallest-child stretch height',
+          builder: () => const IntrinsicWidgetsDemoPage(),
         ),
         SampleRouteDefinition(
           routeName: SampleRoutes.layoutBuilder,

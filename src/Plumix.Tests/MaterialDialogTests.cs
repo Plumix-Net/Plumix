@@ -412,7 +412,6 @@ public sealed class MaterialDialogTests : IDisposable
     [Fact]
     public void IntrinsicWidth_RoundsToStepAndFlexStretchHandlesUnboundedProbe()
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() => new IntrinsicWidth(stepWidth: 0));
         using var harness = new WidgetRenderHarness(Wrap(
             ThemeData.Light,
             new IntrinsicWidth(
