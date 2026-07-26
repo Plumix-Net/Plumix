@@ -1,5 +1,8 @@
 # Changelog
 
+- Stabilized `ConstraintsTransformBox` clip regression coverage across Debug/Release by painting actual child content
+  instead of relying on the debug-only overflow indicator to create a picture layer.
+
 - Breaking: completed paired Flutter core `IntrinsicWidth` + `IntrinsicHeight` parity with source-shaped zero-step
   normalization, positive render-step guards, speculative intrinsic-axis sizing, parent constraint clamping,
   tight-height fast paths, tallest-child Row stretch behavior, focused tests, and a mirrored C#/Dart runtime probe.

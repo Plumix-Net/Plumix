@@ -1,4 +1,5 @@
 using Avalonia;
+using Avalonia.Media;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -190,7 +191,7 @@ public sealed class UnconstrainedLimitedBoxTests
     [Fact]
     public void RenderConstraintsTransformBox_ClipsOnlyOverflowAndReportsPaintClip()
     {
-        var child = new FixedSizeRenderBox(new Size(120, 40));
+        var child = new FixedSizeRenderBox(new Size(120, 40), paints: true);
         var transform = new RenderConstraintsTransformBox(
             alignment: Alignment.Center,
             textDirection: TextDirection.Ltr,
@@ -211,6 +212,7 @@ public sealed class UnconstrainedLimitedBoxTests
         var clipLayer = Assert.Single(FindLayers<ClipRectLayer>(pipeline.RootLayer));
         Assert.Equal(new Rect(0, 0, 80, 40), clipLayer.ClipRect);
         Assert.Equal(Clip.AntiAlias, clipLayer.ClipBehavior);
+        Assert.NotEmpty(FindLayers<PictureLayer>(clipLayer));
         Assert.Equal(
             new Rect(0, 0, 80, 40),
             transform.InvokeDescribeApproximatePaintClip(child));
@@ -351,10 +353,12 @@ public sealed class UnconstrainedLimitedBoxTests
     private sealed class FixedSizeRenderBox : RenderBox
     {
         private readonly Size _size;
+        private readonly bool _paints;
 
-        public FixedSizeRenderBox(Size size)
+        public FixedSizeRenderBox(Size size, bool paints = false)
         {
             _size = size;
+            _paints = paints;
         }
 
         protected override void PerformLayout()
@@ -364,6 +368,10 @@ public sealed class UnconstrainedLimitedBoxTests
 
         public override void Paint(PaintingContext ctx, Point offset)
         {
+            if (_paints)
+            {
+                ctx.DrawRectangle(Brushes.Red, pen: null, new Rect(offset, Size));
+            }
         }
     }
 
