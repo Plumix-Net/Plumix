@@ -8,6 +8,10 @@ class DragTargetDemoPage extends StatefulWidget {
 }
 
 class _DragTargetDemoPageState extends State<DragTargetDemoPage> {
+  final OverlayPortalController _portalController = OverlayPortalController(
+    debugLabel: 'drag-demo',
+  );
+  final Object _portalGroup = Object();
   int _acceptedCount = 0;
   String _status = 'Drag either item onto the target.';
 
@@ -52,7 +56,70 @@ class _DragTargetDemoPageState extends State<DragTargetDemoPage> {
             alignment: Alignment.centerLeft,
             child: TextButton(onPressed: _reset, child: const Text('Reset')),
           ),
+          const Text(
+            'OverlayPortal + TapRegion',
+            style: TextStyle(fontSize: 20, color: Colors.black),
+          ),
+          const Text(
+            'Open the portal, interact with it as one grouped region, then tap '
+            'elsewhere to dismiss.',
+            style: TextStyle(fontSize: 14, color: Colors.black54),
+          ),
+          _buildPortalProbe(),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPortalProbe() {
+    return OverlayPortal.overlayChildLayoutBuilder(
+      controller: _portalController,
+      overlayChildBuilder:
+          (BuildContext context, OverlayChildLayoutInfo info) {
+        final Offset origin = MatrixUtils.transformPoint(
+          info.childPaintTransform,
+          Offset.zero,
+        );
+        return Positioned(
+          left: origin.dx,
+          top: origin.dy + info.childSize.height + 8,
+          width: 220,
+          height: 72,
+          child: TapRegion(
+            groupId: _portalGroup,
+            onTapOutside: (_) {
+              _portalController.hide();
+              _setStatus('portal dismissed by outside tap');
+            },
+            behavior: HitTestBehavior.opaque,
+            child: Container(
+              color: const Color(0xFFEADDFF),
+              padding: const EdgeInsets.all(12),
+              alignment: Alignment.center,
+              child: const Text(
+                'Portal inherits page context.\nTap here, then outside.',
+                style: TextStyle(fontSize: 13, color: Color(0xFF332D41)),
+              ),
+            ),
+          ),
+        );
+      },
+      child: TapRegion(
+        groupId: _portalGroup,
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton(
+            onPressed: () {
+              _portalController.toggle();
+              _setStatus(
+                _portalController.isShowing
+                    ? 'portal opened'
+                    : 'portal closed',
+              );
+            },
+            child: const Text('Toggle portal'),
+          ),
+        ),
       ),
     );
   }

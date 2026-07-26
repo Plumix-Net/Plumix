@@ -426,6 +426,12 @@ public abstract class ModalRoute : Route
     {
         return context.DependOnInherited<RouteScope>()?.Route as ModalRoute;
     }
+
+    public static bool? IsCurrentOf(BuildContext context)
+    {
+        RouteScope? scope = context.DependOnInherited<RouteScope>();
+        return scope?.Route is ModalRoute ? scope.IsCurrent : null;
+    }
 }
 
 public abstract class PageRoute : ModalRoute
@@ -951,6 +957,7 @@ public sealed class NavigatorState : State
     {
         return new ActiveRouteHost(
             route: route,
+            isCurrent: ReferenceEquals(CurrentRoute, route),
             heroTransitionController: _heroTransitionController,
             key: new ObjectKey(route));
     }
@@ -1827,14 +1834,18 @@ internal sealed class RouteScope : InheritedWidget
 {
     public RouteScope(
         Route route,
+        bool isCurrent,
         Widget child,
         Key? key = null) : base(key)
     {
         Route = route;
+        IsCurrent = isCurrent;
         Child = child;
     }
 
     public Route Route { get; }
+
+    public bool IsCurrent { get; }
 
     public Widget Child { get; }
 
@@ -1845,21 +1856,26 @@ internal sealed class RouteScope : InheritedWidget
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
-        return !ReferenceEquals(((RouteScope)oldWidget).Route, Route);
+        var oldScope = (RouteScope)oldWidget;
+        return !ReferenceEquals(oldScope.Route, Route)
+               || oldScope.IsCurrent != IsCurrent;
     }
 }
 
 internal sealed class ActiveRouteHost : StatelessWidget
 {
     private readonly Route _route;
+    private readonly bool _isCurrent;
     private readonly HeroTransitionController _heroTransitionController;
 
     public ActiveRouteHost(
         Route route,
+        bool isCurrent,
         HeroTransitionController heroTransitionController,
         Key? key = null) : base(key)
     {
         _route = route;
+        _isCurrent = isCurrent;
         _heroTransitionController = heroTransitionController;
     }
 
@@ -1867,6 +1883,7 @@ internal sealed class ActiveRouteHost : StatelessWidget
     {
         return new RouteScope(
             route: _route,
+            isCurrent: _isCurrent,
             child: new HeroControllerScope(
                 controller: _heroTransitionController,
                 route: _route,

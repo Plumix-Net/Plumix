@@ -10,6 +10,12 @@ internal sealed class OverlayTheaterParentData : StackParentData
     public bool CanSizeOverlay { get; set; }
 
     public bool IsOnstage { get; set; } = true;
+
+    public bool IsPortal { get; set; }
+
+    public RenderBox? PortalAnchor { get; set; }
+
+    public long PortalZOrder { get; set; }
 }
 
 internal sealed class RenderOverlayTheater : RenderBox,
@@ -118,7 +124,7 @@ internal sealed class RenderOverlayTheater : RenderBox,
         for (RenderBox? child = FirstChild; child is not null; child = ChildAfter(child))
         {
             var parentData = (OverlayTheaterParentData)child.parentData!;
-            if (!parentData.IsOnstage)
+            if (!parentData.IsOnstage || parentData.IsPortal)
             {
                 continue;
             }
@@ -130,6 +136,27 @@ internal sealed class RenderOverlayTheater : RenderBox,
                     child.Layout(nonPositionedConstraints, parentUsesSize: true);
                 }
 
+                parentData.offset = _alignment.AlongOffset(Size, child.Size);
+            }
+            else
+            {
+                LayoutPositionedChild(child, parentData);
+            }
+
+            _hasVisualOverflow |= ChildOverflows(child, parentData.offset);
+        }
+
+        foreach (RenderBox child in PortalChildrenInPaintOrder())
+        {
+            var parentData = (OverlayTheaterParentData)child.parentData!;
+            if (child is RenderOverlayPortalLayoutBuilder layoutBuilder)
+            {
+                layoutBuilder.ScheduleLayoutCallback();
+            }
+
+            if (!parentData.IsPositioned)
+            {
+                child.Layout(nonPositionedConstraints, parentUsesSize: true);
                 parentData.offset = _alignment.AlongOffset(Size, child.Size);
             }
             else
@@ -161,14 +188,9 @@ internal sealed class RenderOverlayTheater : RenderBox,
 
     protected override bool HitTestChildren(BoxHitTestResult result, Point position)
     {
-        for (RenderBox? child = LastChild; child is not null; child = ChildBefore(child))
+        foreach (RenderBox child in ChildrenInHitTestOrder())
         {
             var parentData = (OverlayTheaterParentData)child.parentData!;
-            if (!parentData.IsOnstage)
-            {
-                continue;
-            }
-
             Point transformedPosition = position - parentData.offset;
             if (child.HitTest(result, transformedPosition))
             {
@@ -201,10 +223,10 @@ internal sealed class RenderOverlayTheater : RenderBox,
 
     internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
     {
-        for (RenderBox? child = FirstChild; child is not null; child = ChildAfter(child))
+        foreach (RenderBox child in ChildrenInPaintOrder())
         {
             var parentData = (OverlayTheaterParentData)child.parentData!;
-            if (parentData.IsOnstage)
+            if (!parentData.IsPortal)
             {
                 visitor(child, parentData.offset, Matrix.Identity);
             }
@@ -248,12 +270,48 @@ internal sealed class RenderOverlayTheater : RenderBox,
         Remove((RenderBox)child);
     }
 
+    internal void InsertPortal(
+        RenderBox child,
+        RenderBox anchor,
+        long zOrder)
+    {
+        if (!ReferenceEquals(anchor.Parent, this))
+        {
+            throw new InvalidOperationException("An OverlayPortal anchor must belong to the target Overlay.");
+        }
+
+        Insert(child, after: anchor);
+        UpdatePortalParentData(child, anchor, zOrder);
+    }
+
+    internal void MovePortal(
+        RenderBox child,
+        RenderOverlayTheater oldTheater,
+        RenderBox anchor,
+        long zOrder)
+    {
+        if (!ReferenceEquals(oldTheater, this))
+        {
+            oldTheater.Remove(child);
+            InsertPortal(child, anchor, zOrder);
+            return;
+        }
+
+        UpdatePortalParentData(child, anchor, zOrder);
+    }
+
+    internal void RemovePortal(RenderBox child)
+    {
+        Remove(child);
+    }
+
     private RenderBox FindSizeDeterminingChild()
     {
         for (RenderBox? child = LastChild; child is not null; child = ChildBefore(child))
         {
             var parentData = (OverlayTheaterParentData)child.parentData!;
             if (parentData.IsOnstage
+                && !parentData.IsPortal
                 && parentData.CanSizeOverlay
                 && !parentData.IsPositioned)
             {
@@ -269,14 +327,88 @@ internal sealed class RenderOverlayTheater : RenderBox,
 
     private void PaintOnstageChildren(PaintingContext context, Point offset)
     {
+        foreach (RenderBox child in ChildrenInPaintOrder())
+        {
+            var parentData = (OverlayTheaterParentData)child.parentData!;
+            context.PaintChild(child, parentData.offset + offset);
+        }
+    }
+
+    private IEnumerable<RenderBox> ChildrenInPaintOrder()
+    {
         for (RenderBox? child = FirstChild; child is not null; child = ChildAfter(child))
         {
             var parentData = (OverlayTheaterParentData)child.parentData!;
-            if (parentData.IsOnstage)
+            if (!parentData.IsOnstage || parentData.IsPortal)
             {
-                context.PaintChild(child, parentData.offset + offset);
+                continue;
+            }
+
+            yield return child;
+            foreach (RenderBox portal in PortalChildrenForAnchor(child))
+            {
+                yield return portal;
             }
         }
+    }
+
+    private IEnumerable<RenderBox> ChildrenInHitTestOrder()
+    {
+        return ChildrenInPaintOrder().Reverse();
+    }
+
+    private IEnumerable<RenderBox> PortalChildrenInPaintOrder()
+    {
+        return EnumerateChildren()
+            .Where(child => ((OverlayTheaterParentData)child.parentData!).IsPortal)
+            .Where(child => IsPortalAnchorOnstage((OverlayTheaterParentData)child.parentData!))
+            .OrderBy(child => ((OverlayTheaterParentData)child.parentData!).PortalZOrder);
+    }
+
+    private IEnumerable<RenderBox> PortalChildrenForAnchor(RenderBox anchor)
+    {
+        return EnumerateChildren()
+            .Where(child =>
+            {
+                var parentData = (OverlayTheaterParentData)child.parentData!;
+                return parentData.IsPortal
+                       && ReferenceEquals(parentData.PortalAnchor, anchor)
+                       && IsPortalAnchorOnstage(parentData);
+            })
+            .OrderBy(child => ((OverlayTheaterParentData)child.parentData!).PortalZOrder);
+    }
+
+    private IEnumerable<RenderBox> EnumerateChildren()
+    {
+        for (RenderBox? child = FirstChild; child is not null; child = ChildAfter(child))
+        {
+            yield return child;
+        }
+    }
+
+    private static bool IsPortalAnchorOnstage(OverlayTheaterParentData parentData)
+    {
+        return parentData.PortalAnchor?.parentData is OverlayTheaterParentData
+        {
+            IsOnstage: true,
+            IsPortal: false,
+        };
+    }
+
+    private void UpdatePortalParentData(
+        RenderBox child,
+        RenderBox anchor,
+        long zOrder)
+    {
+        var parentData = (OverlayTheaterParentData)child.parentData!;
+        parentData.IsPortal = true;
+        parentData.IsOnstage = true;
+        parentData.CanSizeOverlay = false;
+        parentData.PortalAnchor = anchor;
+        parentData.PortalZOrder = zOrder;
+        MarkNeedsLayout();
+        MarkNeedsPaint();
+        MarkNeedsSemanticsUpdate();
     }
 
     private void LayoutPositionedChild(RenderBox child, OverlayTheaterParentData parentData)
@@ -330,5 +462,46 @@ internal sealed class RenderOverlayTheater : RenderBox,
                || offset.Y < 0.0
                || offset.X + child.Size.Width > Size.Width
                || offset.Y + child.Size.Height > Size.Height;
+    }
+}
+
+internal sealed class RenderOverlayPortalLayoutBuilder : RenderProxyBox
+{
+    private Action<BoxConstraints>? _callback;
+
+    internal void UpdateCallback(Action<BoxConstraints>? callback)
+    {
+        if (_callback == callback)
+        {
+            return;
+        }
+
+        _callback = callback;
+        ScheduleLayoutCallback();
+    }
+
+    internal void ScheduleLayoutCallback()
+    {
+        MarkNeedsLayout();
+    }
+
+    protected override void PerformLayout()
+    {
+        BoxConstraints constraints = Constraints;
+        if (_callback is not null)
+        {
+            InvokeLayoutCallback(_callback, constraints);
+        }
+
+        if (Child is not null)
+        {
+            Child.Layout(constraints, parentUsesSize: true);
+            Size = constraints.Constrain(Child.Size);
+            ((BoxParentData)Child.parentData!).offset = new Point();
+        }
+        else
+        {
+            Size = constraints.Biggest;
+        }
     }
 }

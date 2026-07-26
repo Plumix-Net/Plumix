@@ -1,5 +1,10 @@
 # Changelog
 
+- Added paired Flutter core `OverlayPortal` + `TapRegion` ports with nearest/root overlay targeting, controller
+  show/hide/toggle and z-order promotion, inherited-subtree ownership, overlay child layout information, grouped
+  inside/outside down/up callbacks, route-current filtering, outside-tap arena consumption, focused tests, and an
+  expanded mirrored C#/Dart drag demo. Advanced `Plumix` to `0.5.0-alpha.1`.
+
 - Breaking: added Flutter core `LongPressDraggable<T>` parity with delayed per-pointer recognition, pre-delay
   touch-slop rejection, configurable delay/button filtering, child/feedback lifecycle, and selection haptics only
   after a successful drag start. Completed the paired `Overlay`/`OverlayEntry` follow-up with a framework-owned

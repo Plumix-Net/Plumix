@@ -44,6 +44,8 @@ internal sealed class DragTargetDemoContent : StatefulWidget
 
 internal sealed class DragTargetDemoContentState : State
 {
+    private readonly OverlayPortalController _portalController = new("drag-demo");
+    private readonly object _portalGroup = new();
     private int _acceptedCount;
     private string _status = "Drag either item onto the target.";
 
@@ -84,7 +86,60 @@ internal sealed class DragTargetDemoContentState : State
                         child: new TextButton(
                             onPressed: Reset,
                             child: new Text("Reset"))),
+                    new Text(
+                        "OverlayPortal + TapRegion",
+                        fontSize: 20,
+                        color: Colors.Black),
+                    new Text(
+                        "Open the portal, interact with it as one grouped region, then tap elsewhere to dismiss.",
+                        fontSize: 14,
+                        color: Colors.DimGray),
+                    BuildPortalProbe(),
                 ]));
+    }
+
+    private Widget BuildPortalProbe()
+    {
+        return OverlayPortal.WithLayoutBuilder(
+            controller: _portalController,
+            overlayChildBuilder: (_, info) =>
+            {
+                Point origin = info.ChildPaintTransform.Transform(new Point());
+                return new Positioned(
+                    left: origin.X,
+                    top: origin.Y + info.ChildSize.Height + 8,
+                    width: 220,
+                    height: 72,
+                    child: new TapRegion(
+                        groupId: _portalGroup,
+                        onTapOutside: _ =>
+                        {
+                            _portalController.Hide();
+                            SetStatus("portal dismissed by outside tap");
+                        },
+                        behavior: HitTestBehavior.Opaque,
+                        child: new Container(
+                            color: Color.Parse("#FFEADDFF"),
+                            padding: new Thickness(12),
+                            alignment: Alignment.Center,
+                            child: new Text(
+                                "Portal inherits page context.\nTap here, then outside.",
+                                fontSize: 13,
+                                color: Color.Parse("#FF332D41")))));
+            },
+            child: new TapRegion(
+                groupId: _portalGroup,
+                child: new Align(
+                    alignment: Alignment.CenterLeft,
+                    child: new TextButton(
+                        onPressed: () =>
+                        {
+                            _portalController.Toggle();
+                            SetStatus(_portalController.IsShowing
+                                ? "portal opened"
+                                : "portal closed");
+                        },
+                        child: new Text("Toggle portal")))));
     }
 
     private Widget BuildDraggable(

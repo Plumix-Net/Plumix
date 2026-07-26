@@ -230,11 +230,14 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/Widgets/DragTarget.cs`
   - `src/Plumix/Widgets/Overlay.cs`
   - `src/Plumix/Rendering/Overlay.cs`
+  - `src/Plumix/Widgets/TapRegion.cs`
+  - `src/Plumix/Rendering/TapRegion.cs`
   - `src/Plumix/Widgets/MetaData.cs`
   - `src/Plumix/Rendering/Object.HitTest.cs`
 - Primary Tests:
   - `src/Plumix.Tests/GesturePipelineTests.cs`
   - `src/Plumix.Tests/DragTargetTests.cs`
+  - `src/Plumix.Tests/TapRegionTests.cs`
 
 ### Focus and Keyboard
 

@@ -284,6 +284,237 @@ public sealed class DragTargetTests
     }
 
     [Fact]
+    public void OverlayPortal_ControllerAndInheritedSubtreeMatchFlutter()
+    {
+        var controller = new OverlayPortalController("test");
+        int inheritedValue = -1;
+        int overlayBuilds = 0;
+        int overlayTaps = 0;
+        MediaQueryData? portalMedia = null;
+        controller.Show();
+
+        var entry = new OverlayEntry(_ =>
+            new ProbeScope(
+                value: 42,
+                child: new MediaQuery(
+                    data: new MediaQueryData(
+                        Padding: new Thickness(1),
+                        TextScaleFactor: 2.0),
+                    child: new Stack(
+                        fit: StackFit.Expand,
+                        children:
+                        [
+                            new Positioned(
+                                left: 0,
+                                top: 0,
+                                width: 40,
+                                height: 40,
+                                child: new OverlayPortal(
+                                    controller: controller,
+                                    overlayChildBuilder: context =>
+                                    {
+                                        overlayBuilds += 1;
+                                        inheritedValue = ProbeScope.Of(context);
+                                        portalMedia = MediaQuery.Of(context);
+                                        return new Positioned(
+                                            left: 80,
+                                            top: 10,
+                                            width: 30,
+                                            height: 20,
+                                            child: new GestureDetector(
+                                                behavior: HitTestBehavior.Opaque,
+                                                onTap: () => overlayTaps += 1,
+                                                child: new ColoredBox(Colors.CornflowerBlue)));
+                                    },
+                                    child: new SizedBox(width: 40, height: 40))),
+                        ]))));
+
+        using var harness = new WidgetHarness(
+            new MediaQuery(
+                data: new MediaQueryData(
+                    Padding: new Thickness(10),
+                    TextScaleFactor: 1.0),
+                child: new Overlay(initialEntries: [entry])));
+        RenderOverlayTheater theater = harness.FindRenderObject<RenderOverlayTheater>();
+
+        Assert.True(controller.IsShowing);
+        Assert.Equal(42, inheritedValue);
+        Assert.Equal(new Thickness(10), portalMedia?.Padding);
+        Assert.Equal(2.0, portalMedia?.TextScaleFactor);
+        Assert.Equal(1, overlayBuilds);
+        Assert.Equal(2, theater.ChildCount);
+        Assert.Equal(new Size(30, 20), harness.FindRenderObject<RenderColoredBox>().Size);
+
+        DateTime now = DateTime.UtcNow;
+        harness.Dispatch(new PointerDownEvent(
+            20,
+            PointerDeviceKind.Mouse,
+            new Point(90, 15),
+            PointerButtons.Primary,
+            now));
+        harness.Dispatch(new PointerUpEvent(
+            20,
+            PointerDeviceKind.Mouse,
+            new Point(90, 15),
+            PointerButtons.None,
+            now.AddMilliseconds(20)));
+        Assert.Equal(1, overlayTaps);
+
+        controller.Show();
+        harness.Pump();
+        Assert.True(controller.IsShowing);
+        Assert.Equal(2, theater.ChildCount);
+
+        controller.Hide();
+        harness.Pump();
+        Assert.False(controller.IsShowing);
+        Assert.Equal(1, theater.ChildCount);
+        Assert.Empty(harness.FindWidgets<ColoredBox>());
+    }
+
+    [Fact]
+    public void OverlayPortal_TargetsRootOverlayAndDoesNotOutlivePortal()
+    {
+        var controller = new OverlayPortalController();
+        controller.Show();
+        var innerEntry = new OverlayEntry(_ =>
+            new OverlayPortal(
+                controller: controller,
+                overlayLocation: OverlayChildLocation.RootOverlay,
+                overlayChildBuilder: _ => new ColoredBox(Colors.Orange),
+                child: new SizedBox(width: 20, height: 20)));
+        var rootEntry = new OverlayEntry(_ =>
+            new Overlay(
+                initialEntries: [innerEntry]));
+
+        using var harness = new WidgetHarness(new Overlay(initialEntries: [rootEntry]));
+        IReadOnlyList<RenderOverlayTheater> theaters = harness.FindRenderObjects<RenderOverlayTheater>();
+
+        Assert.Equal(2, theaters.Count);
+        Assert.Equal(2, theaters[0].ChildCount);
+        Assert.Equal(1, theaters[1].ChildCount);
+
+        controller.Hide();
+        harness.Pump();
+        Assert.Equal(1, theaters[0].ChildCount);
+        Assert.Empty(harness.FindWidgets<ColoredBox>());
+    }
+
+    [Fact]
+    public void OverlayPortal_LayoutBuilderReceivesChildTransformAndOverlaySize()
+    {
+        var controller = new OverlayPortalController();
+        OverlayChildLayoutInfo? layoutInfo = null;
+        controller.Show();
+        var entry = new OverlayEntry(_ =>
+            new Stack(
+                fit: StackFit.Expand,
+                children:
+                [
+                    new Positioned(
+                        left: 20,
+                        top: 10,
+                        width: 40,
+                        height: 30,
+                        child: OverlayPortal.WithLayoutBuilder(
+                            controller: controller,
+                            overlayChildBuilder: (_, info) =>
+                            {
+                                layoutInfo = info;
+                                return new Positioned(
+                                    left: 70,
+                                    top: 20,
+                                    width: 25,
+                                    height: 15,
+                                    child: new ColoredBox(Colors.MediumPurple));
+                            },
+                            child: new SizedBox())),
+                ]));
+
+        using var harness = new WidgetHarness(new Overlay(initialEntries: [entry]));
+
+        Assert.NotNull(layoutInfo);
+        Assert.Equal(new Size(40, 30), layoutInfo.ChildSize);
+        Assert.Equal(new Size(240, 120), layoutInfo.OverlaySize);
+        Assert.Equal(new Point(20, 10), layoutInfo.ChildPaintTransform.Transform(new Point()));
+        Assert.Equal(new Size(25, 15), harness.FindRenderObject<RenderColoredBox>().Size);
+    }
+
+    [Fact]
+    public void OverlayPortal_ShowPromotesExistingPortalToTop()
+    {
+        var firstController = new OverlayPortalController();
+        var secondController = new OverlayPortalController();
+        int firstTaps = 0;
+        int secondTaps = 0;
+        firstController.Show();
+        secondController.Show();
+
+        var entry = new OverlayEntry(_ =>
+            new Stack(
+                fit: StackFit.Expand,
+                children:
+                [
+                    BuildPortal(firstController, () => firstTaps += 1),
+                    BuildPortal(secondController, () => secondTaps += 1),
+                ]));
+        using var harness = new WidgetHarness(new Overlay(initialEntries: [entry]));
+        DateTime now = DateTime.UtcNow;
+
+        Tap(harness, pointer: 30, now);
+        Assert.Equal(0, firstTaps);
+        Assert.Equal(1, secondTaps);
+
+        firstController.Show();
+        harness.Pump();
+        Tap(harness, pointer: 31, now.AddMilliseconds(40));
+        Assert.Equal(1, firstTaps);
+        Assert.Equal(1, secondTaps);
+
+        static Widget BuildPortal(
+            OverlayPortalController controller,
+            Action onTap)
+        {
+            return new Positioned(
+                left: 0,
+                top: 0,
+                width: 20,
+                height: 20,
+                child: new OverlayPortal(
+                    controller: controller,
+                    overlayChildBuilder: _ => new Positioned(
+                        left: 80,
+                        top: 10,
+                        width: 30,
+                        height: 20,
+                        child: new GestureDetector(
+                            behavior: HitTestBehavior.Opaque,
+                            onTap: onTap,
+                            child: new SizedBox())),
+                    child: new SizedBox()));
+        }
+
+        static void Tap(
+            WidgetHarness harness,
+            int pointer,
+            DateTime timestamp)
+        {
+            harness.Dispatch(new PointerDownEvent(
+                pointer,
+                PointerDeviceKind.Mouse,
+                new Point(90, 15),
+                PointerButtons.Primary,
+                timestamp));
+            harness.Dispatch(new PointerUpEvent(
+                pointer,
+                PointerDeviceKind.Mouse,
+                new Point(90, 15),
+                PointerButtons.None,
+                timestamp.AddMilliseconds(20)));
+        }
+    }
+
+    [Fact]
     public void Draggable_DropOnAcceptingTargetRunsSourceAndTargetLifecycle()
     {
         var candidateSnapshots = new List<IReadOnlyList<string?>>();
@@ -698,6 +929,23 @@ public sealed class DragTargetTests
             }
         }
 
+        public IReadOnlyList<T> FindRenderObjects<T>() where T : RenderObject
+        {
+            var results = new List<T>();
+            Visit(_renderView);
+            return results;
+
+            void Visit(RenderObject renderObject)
+            {
+                if (renderObject is T typed)
+                {
+                    results.Add(typed);
+                }
+
+                renderObject.VisitChildren(Visit);
+            }
+        }
+
         public void Dispose()
         {
             GestureBinding.Instance.ResetForTests();
@@ -776,6 +1024,32 @@ public sealed class DragTargetTests
             {
                 throw new InvalidOperationException("TestRootElement expects a null slot.");
             }
+        }
+    }
+
+    private sealed class ProbeScope : InheritedWidget
+    {
+        public ProbeScope(int value, Widget child)
+        {
+            Value = value;
+            Child = child;
+        }
+
+        public int Value { get; }
+
+        public Widget Child { get; }
+
+        public static int Of(BuildContext context)
+        {
+            return context.DependOnInherited<ProbeScope>()?.Value
+                   ?? throw new InvalidOperationException("ProbeScope not found.");
+        }
+
+        public override Widget Build(BuildContext context) => Child;
+
+        protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+        {
+            return ((ProbeScope)oldWidget).Value != Value;
         }
     }
 }

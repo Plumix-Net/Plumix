@@ -284,6 +284,10 @@ Completion note:
   per-pointer recognition, pre-delay touch-slop cancellation, successful-start haptics, mutable opaque/maintained
   entry policy, mounted listeners, atomic rearrangement, onstage theater paint/hit/semantics order,
   `canSizeOverlay`/`alwaysSizeToContent`, focused tests, and an expanded mirrored C#/Dart runtime probe.
+- Continued paired overlay/interaction coverage with `OverlayPortal` + `TapRegion`, including nearest/root targets,
+  inherited overlay-child ownership, controller z-order promotion, source-shaped child layout information, grouped
+  inside/outside down/up callbacks, route-current filtering, outside-tap arena consumption, focused tests, and an
+  expanded mirrored C#/Dart runtime probe.
 - Implicit-animations sample viewport hardening: both samples now share an always-visible scrollbar and scroll
   controller around the complete probe column, preventing bottom overflow on short desktop windows.
 

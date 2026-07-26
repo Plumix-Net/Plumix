@@ -36,8 +36,9 @@ public sealed class CounterApp : StatefulWidget
                         color: ThemeData.Light.PrimaryColor,
                         child: new Theme(
                             data: ThemeData.Light,
-                            child: new ScaffoldMessenger(
-                                child: new SampleGalleryScreen())))));
+                            child: new TapRegionSurface(
+                                child: new ScaffoldMessenger(
+                                    child: new SampleGalleryScreen()))))));
         }
     }
 }
