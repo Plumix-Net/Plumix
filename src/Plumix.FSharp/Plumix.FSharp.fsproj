@@ -7,7 +7,7 @@
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <PackageId>Plumix.FSharp</PackageId>
-    <Version>0.1.0-alpha.10</Version>
+    <Version>0.1.0-alpha.11</Version>
     <Description>F# bindings for Plumix — a Flutter-inspired UI framework for .NET. Feliz-style widget factory functions over the Plumix and Plumix.Material widget sets.</Description>
   </PropertyGroup>
 
