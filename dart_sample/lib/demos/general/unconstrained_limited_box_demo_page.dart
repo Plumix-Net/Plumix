@@ -15,6 +15,7 @@ class _UnconstrainedLimitedBoxDemoPageState
   Axis? _constrainedAxis;
   double _maxWidth = 120;
   double _maxHeight = 64;
+  bool _clipTransformOverflow = true;
 
   @override
   Widget build(BuildContext context) {
@@ -23,11 +24,12 @@ class _UnconstrainedLimitedBoxDemoPageState
       spacing: 10,
       children: <Widget>[
         const Text(
-          'UnconstrainedBox + LimitedBox',
+          'ConstraintsTransformBox + UnconstrainedBox',
           style: TextStyle(fontSize: 20, color: Colors.black),
         ),
         const Text(
-          'LimitedBox max values apply only on unbounded axes; UnconstrainedBox controls which axes become unbounded.',
+          'UnconstrainedBox delegates axis removal to ConstraintsTransformBox; '
+          'the direct probe removes maxWidth and toggles clipping.',
           style: TextStyle(fontSize: 14, color: Colors.black54),
         ),
         Row(
@@ -100,12 +102,27 @@ class _UnconstrainedLimitedBoxDemoPageState
           ],
         ),
         Text(
-          'axis=${_axisLabel(_constrainedAxis)}, maxWidth=${_maxWidth.toStringAsFixed(0)}, maxHeight=${_maxHeight.toStringAsFixed(0)}',
+          'axis=${_axisLabel(_constrainedAxis)}, '
+          'maxWidth=${_maxWidth.toStringAsFixed(0)}, '
+          'maxHeight=${_maxHeight.toStringAsFixed(0)}, '
+          'transformClip=$_clipTransformOverflow',
           style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
+        ),
+        _buildButton(
+          label: _clipTransformOverflow
+              ? 'Transform clip: antiAlias'
+              : 'Transform clip: none',
+          onTap: () {
+            setState(() {
+              _clipTransformOverflow = !_clipTransformOverflow;
+            });
+          },
+          width: 180,
+          background: const Color(0xFFE8DFF5),
         ),
         Container(
           width: 260,
-          height: 220,
+          height: 304,
           color: const Color(0xFFE7EDF6),
           padding: const EdgeInsets.all(10),
           child: Column(
@@ -144,6 +161,34 @@ class _UnconstrainedLimitedBoxDemoPageState
                       maxWidth: _maxWidth,
                       maxHeight: _maxHeight,
                       child: _buildProbeCard(),
+                    ),
+                  ),
+                ),
+              ),
+              const Text(
+                'Direct ConstraintsTransformBox: maxWidth removed.',
+                style: TextStyle(fontSize: 11, color: Colors.black54),
+              ),
+              Container(
+                height: 58,
+                color: Colors.white,
+                padding: const EdgeInsets.all(6),
+                child: ConstraintsTransformBox(
+                  constraintsTransform:
+                      ConstraintsTransformBox.maxWidthUnconstrained,
+                  textDirection: TextDirection.ltr,
+                  alignment: AlignmentDirectional.centerStart,
+                  clipBehavior: _clipTransformOverflow
+                      ? Clip.antiAlias
+                      : Clip.none,
+                  child: Container(
+                    width: 280,
+                    height: 42,
+                    color: const Color(0xFFFFD7A8),
+                    alignment: Alignment.center,
+                    child: const Text(
+                      'natural width 280',
+                      style: TextStyle(fontSize: 11, color: Colors.black),
                     ),
                   ),
                 ),

@@ -511,9 +511,15 @@ public sealed class ClipRectLayer : ContainerLayer
 {
     public Rect ClipRect { get; set; }
 
+    public Clip ClipBehavior { get; set; } = Clip.HardEdge;
+
     internal override void AddToScene(DrawingContext context, Point offset)
     {
         var translatedRect = new Rect(ClipRect.Position + offset, ClipRect.Size);
+        using IDisposable renderOptions = context.PushRenderOptions(new RenderOptions
+        {
+            EdgeMode = ClipBehavior == Clip.HardEdge ? EdgeMode.Aliased : EdgeMode.Antialias,
+        });
         using (context.PushClip(translatedRect))
         {
             base.AddToScene(context, offset);

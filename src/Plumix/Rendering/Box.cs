@@ -4,6 +4,11 @@
 
 namespace Plumix.Rendering;
 
+/// <summary>
+/// Transforms the constraints a render box passes to its child.
+/// </summary>
+public delegate BoxConstraints BoxConstraintsTransform(BoxConstraints constraints);
+
 /// Parent data used by [RenderBox] and its subclasses.
 ///
 /// {@tool dartpad}

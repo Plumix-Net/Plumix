@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
+using Plumix.Foundation;
 using Plumix.UI;
 using Plumix.Widgets;
 
@@ -376,6 +377,8 @@ public sealed class RenderConstrainedBox : RenderProxyBox
     }
 }
 
+// Retained as a compatibility surface for direct render-object consumers.
+// New UnconstrainedBox widgets compose RenderConstraintsTransformBox, matching Flutter.
 public sealed class RenderUnconstrainedBox : RenderProxyBox
 {
     private Alignment _alignment;
@@ -452,6 +455,197 @@ public sealed class RenderUnconstrainedBox : RenderProxyBox
         Child.Layout(childConstraints, parentUsesSize: true);
         Size = Constraints.Constrain(Child.Size);
         ((BoxParentData)Child.parentData!).offset = _alignment.AlongOffset(Size, Child.Size);
+    }
+}
+
+// Dart parity source: flutter/packages/flutter/lib/src/rendering/shifted_box.dart
+// (RenderConstraintsTransformBox)
+public sealed class RenderConstraintsTransformBox : RenderProxyBox
+{
+    private AlignmentGeometry _alignment;
+    private TextDirection? _textDirection;
+    private BoxConstraintsTransform _constraintsTransform;
+    private Clip _clipBehavior;
+    private BoxConstraints? _childConstraints;
+    private bool _isOverflowing;
+
+    public RenderConstraintsTransformBox(
+        AlignmentGeometry alignment,
+        TextDirection? textDirection,
+        BoxConstraintsTransform constraintsTransform,
+        RenderBox? child = null,
+        Clip clipBehavior = Clip.None)
+    {
+        _alignment = alignment;
+        _textDirection = textDirection;
+        _constraintsTransform = constraintsTransform
+            ?? throw new ArgumentNullException(nameof(constraintsTransform));
+        _clipBehavior = clipBehavior;
+        Child = child;
+    }
+
+    public AlignmentGeometry Alignment
+    {
+        get => _alignment;
+        set
+        {
+            if (_alignment == value)
+            {
+                return;
+            }
+
+            _alignment = value;
+            MarkNeedsLayout();
+        }
+    }
+
+    public TextDirection? TextDirection
+    {
+        get => _textDirection;
+        set
+        {
+            if (_textDirection == value)
+            {
+                return;
+            }
+
+            _textDirection = value;
+            MarkNeedsLayout();
+        }
+    }
+
+    public BoxConstraintsTransform ConstraintsTransform
+    {
+        get => _constraintsTransform;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            if (ReferenceEquals(_constraintsTransform, value))
+            {
+                return;
+            }
+
+            _constraintsTransform = value;
+            bool needsLayout = _childConstraints is null
+                || !HasBoxConstraints
+                || !_childConstraints.Value.Equals(TransformConstraints(CurrentBoxConstraints));
+            if (needsLayout)
+            {
+                MarkNeedsLayout();
+            }
+        }
+    }
+
+    public Clip ClipBehavior
+    {
+        get => _clipBehavior;
+        set
+        {
+            if (_clipBehavior == value)
+            {
+                return;
+            }
+
+            _clipBehavior = value;
+            MarkNeedsPaint();
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
+    public bool IsOverflowing => _isOverflowing;
+
+    public BoxConstraints? ChildConstraints => _childConstraints;
+
+    protected override void PerformLayout()
+    {
+        if (Child == null)
+        {
+            Size = Constraints.Smallest;
+            _childConstraints = null;
+            _isOverflowing = false;
+            return;
+        }
+
+        BoxConstraints childConstraints = TransformConstraints(Constraints);
+        _childConstraints = childConstraints;
+        Child.Layout(childConstraints, parentUsesSize: true);
+        Size = Constraints.Constrain(Child.Size);
+
+        Alignment resolvedAlignment = ResolveAlignment();
+        var childParentData = (BoxParentData)Child.parentData!;
+        childParentData.offset = resolvedAlignment.AlongOffset(Size, Child.Size);
+        _isOverflowing = HasOverflow(
+            container: new Rect(default, Size),
+            child: new Rect(childParentData.offset, Child.Size));
+    }
+
+    public override void Paint(PaintingContext context, Point offset)
+    {
+        if (Child == null)
+        {
+            return;
+        }
+
+        if (!_isOverflowing || _clipBehavior == Clip.None)
+        {
+            base.Paint(context, offset);
+#if DEBUG
+            if (_isOverflowing && _clipBehavior == Clip.None && Size.Width > 0 && Size.Height > 0)
+            {
+                var childParentData = (BoxParentData)Child.parentData!;
+                DebugOverflowIndicator.Paint(
+                    context,
+                    offset,
+                    new Rect(default, Size),
+                    new Rect(childParentData.offset, Child.Size));
+            }
+#endif
+            return;
+        }
+
+        context.PushClipRect(
+            new Rect(offset, Size),
+            clippedContext => base.Paint(clippedContext, offset),
+            _clipBehavior);
+    }
+
+    protected override Rect? DescribeApproximatePaintClip(RenderObject? child)
+    {
+        return _clipBehavior == Clip.None || !_isOverflowing
+            ? null
+            : new Rect(default, Size);
+    }
+
+    private BoxConstraints TransformConstraints(BoxConstraints constraints)
+    {
+        BoxConstraints transformed = _constraintsTransform(constraints);
+        if (!transformed.IsNormalized)
+        {
+            throw new InvalidOperationException(
+                $"ConstraintsTransformBox returned non-normalized constraints: {transformed}.");
+        }
+
+        return transformed;
+    }
+
+    private Alignment ResolveAlignment()
+    {
+        if (_alignment.IsDirectional && !_textDirection.HasValue)
+        {
+            throw new InvalidOperationException(
+                "A directional ConstraintsTransformBox alignment requires a TextDirection.");
+        }
+
+        return _alignment.Resolve(_textDirection ?? UI.TextDirection.Ltr);
+    }
+
+    private static bool HasOverflow(Rect container, Rect child)
+    {
+        const double tolerance = Constants.PrecisionErrorTolerance;
+        return child.Left < container.Left - tolerance
+            || child.Top < container.Top - tolerance
+            || child.Right > container.Right + tolerance
+            || child.Bottom > container.Bottom + tolerance;
     }
 }
 

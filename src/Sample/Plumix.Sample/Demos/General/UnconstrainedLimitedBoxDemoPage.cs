@@ -22,6 +22,7 @@ internal sealed class UnconstrainedLimitedBoxDemoPageState : State
     private Axis? _constrainedAxis;
     private double _maxWidth = 120;
     private double _maxHeight = 64;
+    private bool _clipTransformOverflow = true;
 
     public override Widget Build(BuildContext context)
     {
@@ -30,9 +31,13 @@ internal sealed class UnconstrainedLimitedBoxDemoPageState : State
             spacing: 10,
             children:
             [
-                new Text("UnconstrainedBox + LimitedBox", fontSize: 20, color: Colors.Black),
                 new Text(
-                    "LimitedBox max values apply only on unbounded axes; UnconstrainedBox controls which axes become unbounded.",
+                    "ConstraintsTransformBox + UnconstrainedBox",
+                    fontSize: 20,
+                    color: Colors.Black),
+                new Text(
+                    "UnconstrainedBox delegates axis removal to ConstraintsTransformBox; "
+                    + "the direct probe removes maxWidth and toggles clipping.",
                     fontSize: 14,
                     color: Colors.DimGray),
                 new Row(
@@ -60,12 +65,18 @@ internal sealed class UnconstrainedLimitedBoxDemoPageState : State
                         BuildButton("maxH 88", () => SetMaxHeight(88), width: 96, colorHex: "#FFF3E8D8"),
                     ]),
                 new Text(
-                    $"axis={AxisLabel(_constrainedAxis)}, maxWidth={_maxWidth:0}, maxHeight={_maxHeight:0}",
+                    $"axis={AxisLabel(_constrainedAxis)}, maxWidth={_maxWidth:0}, "
+                    + $"maxHeight={_maxHeight:0}, transformClip={_clipTransformOverflow}",
                     fontSize: 12,
                     color: Colors.DarkSlateGray),
+                BuildButton(
+                    _clipTransformOverflow ? "Transform clip: antiAlias" : "Transform clip: none",
+                    () => SetState(() => _clipTransformOverflow = !_clipTransformOverflow),
+                    width: 180,
+                    colorHex: "#FFE8DFF5"),
                 new Container(
                     width: 260,
-                    height: 220,
+                    height: 304,
                     color: Color.Parse("#FFE7EDF6"),
                     padding: new Thickness(10),
                     child: new Column(
@@ -96,6 +107,30 @@ internal sealed class UnconstrainedLimitedBoxDemoPageState : State
                                             maxWidth: _maxWidth,
                                             maxHeight: _maxHeight,
                                             child: BuildProbeCard())))),
+                            new Text(
+                                "Direct ConstraintsTransformBox: maxWidth removed.",
+                                fontSize: 11,
+                                color: Colors.DimGray),
+                            new Container(
+                                height: 58,
+                                color: Colors.White,
+                                padding: new Thickness(6),
+                                child: new ConstraintsTransformBox(
+                                    constraintsTransform: ConstraintsTransformBox.MaxWidthUnconstrained,
+                                    textDirection: TextDirection.Ltr,
+                                    alignment: AlignmentDirectional.CenterStart,
+                                    clipBehavior: _clipTransformOverflow
+                                        ? Clip.AntiAlias
+                                        : Clip.None,
+                                    child: new Container(
+                                        width: 280,
+                                        height: 42,
+                                        color: Color.Parse("#FFFFD7A8"),
+                                        child: new Center(
+                                            child: new Text(
+                                                "natural width 280",
+                                                fontSize: 11,
+                                                color: Colors.Black))))),
                         ])),
             ]);
     }

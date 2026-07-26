@@ -53,34 +53,62 @@ public sealed class ConstrainedBox : SingleChildRenderObjectWidget
     }
 }
 
-public sealed class UnconstrainedBox : SingleChildRenderObjectWidget
+// Dart parity source: flutter/packages/flutter/lib/src/widgets/basic.dart (UnconstrainedBox)
+public sealed class UnconstrainedBox : StatelessWidget
 {
     public UnconstrainedBox(
-        Widget? child = null,
-        Alignment alignment = default,
+        Widget? child,
+        Alignment alignment,
         Axis? constrainedAxis = null,
-        Key? key = null) : base(child, key)
+        Key? key = null) : this(
+            child: child,
+            alignment: (AlignmentGeometry)alignment,
+            constrainedAxis: constrainedAxis,
+            key: key)
     {
-        Alignment = alignment;
-        ConstrainedAxis = constrainedAxis;
     }
 
-    public Alignment Alignment { get; }
+    public UnconstrainedBox(
+        Widget? child = null,
+        TextDirection? textDirection = null,
+        AlignmentGeometry alignment = default,
+        Axis? constrainedAxis = null,
+        Clip clipBehavior = Clip.None,
+        Key? key = null) : base(key)
+    {
+        Child = child;
+        TextDirection = textDirection;
+        Alignment = alignment;
+        ConstrainedAxis = constrainedAxis;
+        ClipBehavior = clipBehavior;
+    }
+
+    public Widget? Child { get; }
+
+    public TextDirection? TextDirection { get; }
+
+    public AlignmentGeometry Alignment { get; }
 
     public Axis? ConstrainedAxis { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
-    {
-        return new RenderUnconstrainedBox(
-            alignment: Alignment,
-            constrainedAxis: ConstrainedAxis);
-    }
+    public Clip ClipBehavior { get; }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override Widget Build(BuildContext context)
     {
-        var unconstrainedBox = (RenderUnconstrainedBox)renderObject;
-        unconstrainedBox.Alignment = Alignment;
-        unconstrainedBox.ConstrainedAxis = ConstrainedAxis;
+        BoxConstraintsTransform transform = ConstrainedAxis switch
+        {
+            Axis.Horizontal => ConstraintsTransformBox.HeightUnconstrained,
+            Axis.Vertical => ConstraintsTransformBox.WidthUnconstrained,
+            null => ConstraintsTransformBox.Unconstrained,
+            _ => throw new ArgumentOutOfRangeException(),
+        };
+
+        return new ConstraintsTransformBox(
+            constraintsTransform: transform,
+            child: Child,
+            textDirection: TextDirection,
+            alignment: Alignment,
+            clipBehavior: ClipBehavior);
     }
 }
 

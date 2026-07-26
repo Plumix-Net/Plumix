@@ -1,5 +1,6 @@
 using Avalonia;
 using Plumix.Rendering;
+using Plumix.UI;
 using Plumix.Widgets;
 using Xunit;
 
@@ -51,33 +52,210 @@ public sealed class UnconstrainedLimitedBoxTests
     }
 
     [Fact]
-    public void UnconstrainedBoxWidget_CreatesRenderObject_AndUpdatesProperties()
+    public void UnconstrainedBoxWidget_ComposesConstraintsTransformBox_AndUpdatesProperties()
     {
         var owner = new BuildOwner();
         var root = new TestRootElement(
+            new Directionality(
+                TextDirection.Rtl,
+                new UnconstrainedBox(
+                    alignment: AlignmentDirectional.TopStart,
+                    constrainedAxis: Axis.Vertical,
+                    clipBehavior: Clip.HardEdge,
+                    child: new SizedBox(width: 10, height: 10))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var renderBox = RequireRenderObject<RenderConstraintsTransformBox>(root.ChildElement);
+        Assert.Equal((AlignmentGeometry)AlignmentDirectional.TopStart, renderBox.Alignment);
+        Assert.Equal(TextDirection.Rtl, renderBox.TextDirection);
+        Assert.Equal(Clip.HardEdge, renderBox.ClipBehavior);
+        Assert.Equal(
+            new BoxConstraints(MinHeight: 5, MaxHeight: 15),
+            renderBox.ConstraintsTransform(new BoxConstraints(
+                MinWidth: 4,
+                MaxWidth: 14,
+                MinHeight: 5,
+                MaxHeight: 15)));
+
+        root.Update(new Directionality(
+            TextDirection.Ltr,
             new UnconstrainedBox(
-                alignment: Alignment.TopLeft,
-                constrainedAxis: Axis.Vertical,
+                alignment: Alignment.BottomRight,
+                constrainedAxis: null,
+                clipBehavior: Clip.AntiAlias,
+                child: new SizedBox(width: 10, height: 10))));
+        owner.FlushBuild();
+
+        var updated = RequireRenderObject<RenderConstraintsTransformBox>(root.ChildElement);
+        Assert.Same(renderBox, updated);
+        Assert.Equal((AlignmentGeometry)Alignment.BottomRight, updated.Alignment);
+        Assert.Equal(TextDirection.Ltr, updated.TextDirection);
+        Assert.Equal(Clip.AntiAlias, updated.ClipBehavior);
+        Assert.Equal(
+            new BoxConstraints(MaxWidth: double.PositiveInfinity, MaxHeight: double.PositiveInfinity),
+            updated.ConstraintsTransform(new BoxConstraints(
+                MinWidth: 4,
+                MaxWidth: 14,
+                MinHeight: 5,
+                MaxHeight: 15)));
+    }
+
+    [Fact]
+    public void ConstraintsTransformBoxWidget_ExplicitDirectionResolvesDirectionalAlignment()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new ConstraintsTransformBox(
+                constraintsTransform: ConstraintsTransformBox.Unconstrained,
+                textDirection: TextDirection.Ltr,
+                alignment: AlignmentDirectional.CenterStart,
                 child: new SizedBox(width: 10, height: 10)));
 
         root.Attach(owner);
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var renderBox = RequireRenderObject<RenderUnconstrainedBox>(root.ChildElement);
-        Assert.Equal(Alignment.TopLeft, renderBox.Alignment);
-        Assert.Equal(Axis.Vertical, renderBox.ConstrainedAxis);
+        var renderBox = RequireRenderObject<RenderConstraintsTransformBox>(root.ChildElement);
+        Assert.Equal(TextDirection.Ltr, renderBox.TextDirection);
 
-        root.Update(new UnconstrainedBox(
-            alignment: Alignment.BottomRight,
-            constrainedAxis: null,
-            child: new SizedBox(width: 10, height: 10)));
-        owner.FlushBuild();
+        renderBox.Layout(BoxConstraints.Tight(new Size(40, 20)));
 
-        var updated = RequireRenderObject<RenderUnconstrainedBox>(root.ChildElement);
-        Assert.Same(renderBox, updated);
-        Assert.Equal(Alignment.BottomRight, updated.Alignment);
-        Assert.Null(updated.ConstrainedAxis);
+        Assert.Equal(new Point(0, 5), ((BoxParentData)renderBox.Child!.parentData!).offset);
+    }
+
+    [Fact]
+    public void ConstraintsTransformBox_PredefinedTransformsMatchFlutterContracts()
+    {
+        var constraints = new BoxConstraints(
+            MinWidth: 10,
+            MaxWidth: 100,
+            MinHeight: 20,
+            MaxHeight: 200);
+
+        Assert.Equal(constraints, ConstraintsTransformBox.Unmodified(constraints));
+        Assert.Equal(
+            new BoxConstraints(MaxWidth: double.PositiveInfinity, MaxHeight: double.PositiveInfinity),
+            ConstraintsTransformBox.Unconstrained(constraints));
+        Assert.Equal(
+            new BoxConstraints(
+                MaxWidth: double.PositiveInfinity,
+                MinHeight: 20,
+                MaxHeight: 200),
+            ConstraintsTransformBox.WidthUnconstrained(constraints));
+        Assert.Equal(
+            new BoxConstraints(
+                MinWidth: 10,
+                MaxWidth: 100,
+                MaxHeight: double.PositiveInfinity),
+            ConstraintsTransformBox.HeightUnconstrained(constraints));
+        Assert.Equal(
+            constraints with { MaxWidth = double.PositiveInfinity },
+            ConstraintsTransformBox.MaxWidthUnconstrained(constraints));
+        Assert.Equal(
+            constraints with { MaxHeight = double.PositiveInfinity },
+            ConstraintsTransformBox.MaxHeightUnconstrained(constraints));
+        Assert.Equal(
+            constraints with
+            {
+                MaxWidth = double.PositiveInfinity,
+                MaxHeight = double.PositiveInfinity,
+            },
+            ConstraintsTransformBox.MaxUnconstrained(constraints));
+    }
+
+    [Fact]
+    public void RenderConstraintsTransformBox_TransformsAlignsAndTracksOverflow()
+    {
+        var child = new FixedSizeRenderBox(new Size(120, 40));
+        var transform = new RenderConstraintsTransformBox(
+            alignment: Alignment.Center,
+            textDirection: TextDirection.Ltr,
+            constraintsTransform: ConstraintsTransformBox.Unconstrained,
+            child: child);
+
+        transform.Layout(BoxConstraints.Tight(new Size(80, 80)));
+
+        Assert.Equal(
+            new BoxConstraints(MaxWidth: double.PositiveInfinity, MaxHeight: double.PositiveInfinity),
+            transform.ChildConstraints);
+        Assert.Equal(new Size(120, 40), child.Size);
+        Assert.Equal(new Size(80, 80), transform.Size);
+        Assert.Equal(new Point(-20, 20), ((BoxParentData)child.parentData!).offset);
+        Assert.True(transform.IsOverflowing);
+    }
+
+    [Fact]
+    public void RenderConstraintsTransformBox_ClipsOnlyOverflowAndReportsPaintClip()
+    {
+        var child = new FixedSizeRenderBox(new Size(120, 40));
+        var transform = new RenderConstraintsTransformBox(
+            alignment: Alignment.Center,
+            textDirection: TextDirection.Ltr,
+            constraintsTransform: ConstraintsTransformBox.Unconstrained,
+            child: child,
+            clipBehavior: Clip.AntiAlias);
+        var root = new RenderView
+        {
+            Child = transform,
+        };
+        var pipeline = new PipelineOwner(root);
+        pipeline.Attach(root);
+
+        pipeline.FlushLayout(new Size(80, 80));
+        pipeline.FlushCompositingBits();
+        pipeline.FlushPaint();
+
+        var clipLayer = Assert.Single(FindLayers<ClipRectLayer>(pipeline.RootLayer));
+        Assert.Equal(new Rect(0, 0, 80, 40), clipLayer.ClipRect);
+        Assert.Equal(Clip.AntiAlias, clipLayer.ClipBehavior);
+        Assert.Equal(
+            new Rect(0, 0, 80, 40),
+            transform.InvokeDescribeApproximatePaintClip(child));
+
+        transform.ClipBehavior = Clip.None;
+        pipeline.FlushCompositingBits();
+        pipeline.FlushPaint();
+        Assert.Empty(FindLayers<ClipRectLayer>(pipeline.RootLayer));
+        Assert.NotEmpty(FindLayers<PictureLayer>(pipeline.RootLayer));
+        Assert.Null(transform.InvokeDescribeApproximatePaintClip(child));
+    }
+
+    [Fact]
+    public void RenderConstraintsTransformBox_RejectsNonNormalizedChildConstraints()
+    {
+        var transform = new RenderConstraintsTransformBox(
+            alignment: Alignment.Center,
+            textDirection: TextDirection.Ltr,
+            constraintsTransform: _ => new BoxConstraints(MinWidth: 20, MaxWidth: 10),
+            child: new FixedSizeRenderBox(new Size(10, 10)));
+
+        var error = Assert.Throws<InvalidOperationException>(() =>
+            transform.Layout(BoxConstraints.Loose(new Size(100, 100))));
+
+        Assert.Contains("non-normalized", error.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void RenderConstraintsTransformBox_RequiresDirectionOnlyForDirectionalAlignment()
+    {
+        var physical = new RenderConstraintsTransformBox(
+            alignment: Alignment.CenterRight,
+            textDirection: null,
+            constraintsTransform: ConstraintsTransformBox.Unconstrained,
+            child: new FixedSizeRenderBox(new Size(10, 10)));
+        physical.Layout(BoxConstraints.Tight(new Size(40, 20)));
+        Assert.Equal(new Point(30, 5), ((BoxParentData)physical.Child!.parentData!).offset);
+
+        var directional = new RenderConstraintsTransformBox(
+            alignment: AlignmentDirectional.CenterEnd,
+            textDirection: null,
+            constraintsTransform: ConstraintsTransformBox.Unmodified,
+            child: new FixedSizeRenderBox(new Size(10, 10)));
+        Assert.Throws<InvalidOperationException>(() =>
+            directional.Layout(BoxConstraints.Tight(new Size(40, 20))));
     }
 
     [Fact]
@@ -149,6 +327,25 @@ public sealed class UnconstrainedLimitedBoxTests
         Assert.NotNull(element);
         Assert.NotNull(element!.RenderObject);
         return Assert.IsType<T>(element.RenderObject);
+    }
+
+    private static List<T> FindLayers<T>(Layer layer) where T : Layer
+    {
+        var result = new List<T>();
+        if (layer is T target)
+        {
+            result.Add(target);
+        }
+
+        if (layer is ContainerLayer container)
+        {
+            foreach (Layer child in container.Children)
+            {
+                result.AddRange(FindLayers<T>(child));
+            }
+        }
+
+        return result;
     }
 
     private sealed class FixedSizeRenderBox : RenderBox

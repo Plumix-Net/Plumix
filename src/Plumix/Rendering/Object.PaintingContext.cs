@@ -289,13 +289,17 @@ public sealed class PaintingContext
         });
     }
 
-    public void PushClipRect(Rect clipRect, Action<PaintingContext> painter)
+    public void PushClipRect(
+        Rect clipRect,
+        Action<PaintingContext> painter,
+        Clip clipBehavior = Clip.HardEdge)
     {
         StopRecordingIfNeeded();
 
         var layer = new ClipRectLayer
         {
-            ClipRect = clipRect
+            ClipRect = clipRect,
+            ClipBehavior = clipBehavior,
         };
 
         _containerLayer.Append(layer);

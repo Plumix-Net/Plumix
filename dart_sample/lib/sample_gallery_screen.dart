@@ -549,8 +549,8 @@ class SampleGalleryScreen extends StatelessWidget {
         ),
         SampleRouteDefinition(
           routeName: SampleRoutes.unconstrainedLimitedBox,
-          title: 'UnconstrainedBox + LimitedBox',
-          subtitle: 'axis unconstraint + unbounded max clamps',
+          title: 'ConstraintsTransformBox + UnconstrainedBox',
+          subtitle: 'arbitrary/axis constraint transforms + overflow clipping',
           builder: () => const UnconstrainedLimitedBoxDemoPage(),
         ),
         SampleRouteDefinition(

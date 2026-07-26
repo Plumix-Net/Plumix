@@ -286,8 +286,11 @@ Completion snapshot:
 - Added fractional sizing baseline in framework widget layer: `FractionallySizedBox` over new `RenderFractionallySizedBox` with bounded-axis factor constraints and alignment-aware child placement, plus parity sample route/page in both C# and Dart galleries.
 - Added fitted scaling baseline in framework widget layer: `FittedBox` over new `RenderFittedBox` with `BoxFit` sizing semantics, transform-aware paint/hit-test mapping, and alignment-controlled placement.
 - Added sample parity route/page in both C# and Dart sample galleries for interactive `FittedBox` (`contain/cover/fill/none/scaleDown`) and alignment checks.
-- Added unconstrained/limited constraints baseline in framework widget layer: `UnconstrainedBox` over `RenderUnconstrainedBox` (axis-specific unconstraining + alignment) and `LimitedBox` over `RenderLimitedBox` (max clamp applied only on unbounded axes).
-- Added sample parity route/page in both C# and Dart sample galleries for interactive `UnconstrainedBox + LimitedBox` behavior checks (`constrainedAxis` and `maxWidth/maxHeight`).
+- Replaced the earlier unconstrained layout baseline with paired `ConstraintsTransformBox` + `UnconstrainedBox`
+  source parity: all standard constraint transforms, arbitrary normalized transform delegates, physical/directional
+  alignment, overflow-only clip policy, debug overflow markers, and Flutter's thin `UnconstrainedBox` composition
+  over the shared render primitive. `LimitedBox` retains max clamps only on parent-unbounded axes.
+- Expanded the mirrored C#/Dart unconstrained-layout demo with a direct max-width transform and runtime clip toggle.
 - Added overflow constraints baseline in framework widget layer: `OverflowBox` over `RenderConstrainedOverflowBox` (optional min/max overrides + `OverflowBoxFit` sizing mode) and `SizedOverflowBox` over `RenderSizedOverflowBox` (fixed own size with parent constraints passed through to child).
 - Added sample parity route/page in both C# and Dart sample galleries for interactive `OverflowBox + SizedOverflowBox` behavior checks (`fit`, `alignment`, override max constraints, requested own size).
 - Added offstage layout baseline in framework widget layer: `Offstage` over `RenderOffstage` with Flutter-like offstage behavior (child still laid out, parent collapses to smallest size, and paint/hit-test/semantics participation suppressed while offstage).

@@ -1,5 +1,11 @@
 # Changelog
 
+- Added paired Flutter core `ConstraintsTransformBox` + `UnconstrainedBox` parity with all seven source constraint
+  transforms, directional alignment, normalized-output guards, overflow-only clipping, debug overflow indicators,
+  source-shaped widget composition, focused tests, and a mirrored C#/Dart runtime probe. Added the sample-root LTR
+  `Directionality` supplied automatically by Dart's `MaterialApp`. Advanced `Plumix` to
+  `0.1.0-alpha.16`; isolated `antiAliasWithSaveLayer` clipping remains tracked in `DIVERGENCES.md`.
+
 - Added paired Flutter core `MetaData` + `IndexedSemantics` ports with source hit-test behavior, opaque payload
   updates, first-child semantic indexes, stable semantics-node identity, focused tests, and a mirrored C#/Dart
   state-storage probe. Exposed semantic indexes through the host-visible tree and advanced `Plumix` to
