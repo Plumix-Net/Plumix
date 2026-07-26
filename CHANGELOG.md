@@ -1,5 +1,11 @@
 # Changelog
 
+- Added paired Flutter core `Draggable<T>` + `DragTarget<T>` ports with source-shaped overlay feedback, child
+  replacement, anchor/axis/affinity/button policies, accepted/rejected target traversal, candidate/rejected data,
+  move/leave/drop and source completion/cancellation callbacks, velocity/offset details, focused tests, and a
+  mirrored C#/Dart runtime probe. Added the required `Overlay`/`OverlayEntry` baseline and advanced `Plumix` to
+  `0.3.0-alpha.1`; advanced theater sizing/rearrangement and `LongPressDraggable` remain follow-up controls.
+
 - Stabilized `ConstraintsTransformBox` clip regression coverage across Debug/Release by painting actual child content
   instead of relying on the debug-only overflow indicator to create a picture layer.
 

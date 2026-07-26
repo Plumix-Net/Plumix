@@ -275,6 +275,11 @@ Completion note:
 - Continued paired core asynchronous-builder coverage with `FutureBuilder<T>` + `StreamBuilder<T>`, including
   source-shaped snapshots and connection states, retained data/error transitions, stream summary folding,
   source replacement, stale callback suppression, focused tests, and a mirrored C#/Dart runtime probe.
+- Continued paired core drag-and-drop coverage with `Draggable<T>` + `DragTarget<T>`, including source-shaped
+  overlay feedback, child replacement, anchor/axis/affinity/button policies, nested accepted/rejected target
+  traversal, candidate/rejected data, move/leave/drop and source completion/cancellation callbacks, velocity/offset
+  details, focused tests, and a mirrored C#/Dart runtime probe. The source-required `Overlay`/`OverlayEntry` baseline
+  now lives in core.
 - Implicit-animations sample viewport hardening: both samples now share an always-visible scrollbar and scroll
   controller around the complete probe column, preventing bottom overflow on short desktop windows.
 

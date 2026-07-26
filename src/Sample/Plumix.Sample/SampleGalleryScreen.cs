@@ -111,6 +111,7 @@ internal static class SampleRoutes
     public const string NavigationPop = "/navigation-pop";
     public const string AsyncBuilders = "/async-builders";
     public const string StatefulBuilderLookupBoundary = "/stateful-builder-lookup-boundary";
+    public const string DragTarget = "/drag-target";
 }
 
 internal readonly record struct SampleRouteDefinition(
@@ -333,6 +334,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "StatefulBuilder + LookupBoundary",
             "local state rebuilds + bounded ancestor lookup",
             () => new StatefulBuilderLookupBoundaryDemoPage()),
+        new(
+            SampleRoutes.DragTarget,
+            "Draggable + DragTarget",
+            "overlay feedback + accepted/rejected target lifecycle",
+            () => new DragTargetDemoPage()),
     ];
 
     private static readonly IReadOnlyList<SampleMenuTabDefinition> DemoTabs =

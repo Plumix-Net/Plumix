@@ -1,0 +1,145 @@
+import 'package:flutter/material.dart';
+
+class DragTargetDemoPage extends StatefulWidget {
+  const DragTargetDemoPage({super.key});
+
+  @override
+  State<DragTargetDemoPage> createState() => _DragTargetDemoPageState();
+}
+
+class _DragTargetDemoPageState extends State<DragTargetDemoPage> {
+  int _acceptedCount = 0;
+  String _status = 'Drag either item onto the target.';
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: 16,
+        children: <Widget>[
+          const Text(
+            'Draggable + DragTarget',
+            style: TextStyle(fontSize: 20, color: Colors.black),
+          ),
+          const Text(
+            'The plum is accepted; the stone exercises rejectedData and onLeave.',
+            style: TextStyle(fontSize: 14, color: Colors.black54),
+          ),
+          Wrap(
+            spacing: 16,
+            runSpacing: 16,
+            children: <Widget>[
+              _buildDraggable('plum', const Color(0xFF6750A4)),
+              _buildDraggable('stone', const Color(0xFF5F6368)),
+              _buildTarget(),
+            ],
+          ),
+          Container(
+            color: const Color(0xFFF4F0FA),
+            padding: const EdgeInsets.all(12),
+            child: Text(
+              'accepted=$_acceptedCount; $_status',
+              style: const TextStyle(fontSize: 13, color: Color(0xFF332D41)),
+            ),
+          ),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton(onPressed: _reset, child: const Text('Reset')),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDraggable(String data, Color color) {
+    final Widget tile = _buildTile(data, color, opacity: 1);
+    return Draggable<String>(
+      data: data,
+      childWhenDragging: _buildTile(data, color, opacity: 0.35),
+      feedback: _buildTile(data, color, opacity: 0.9),
+      hitTestBehavior: HitTestBehavior.opaque,
+      onDragStarted: () => _setStatus('dragging $data'),
+      onDragCompleted: () => _setStatus('$data accepted'),
+      onDraggableCanceled: (_, _) => _setStatus('$data not accepted'),
+      child: tile,
+    );
+  }
+
+  Widget _buildTarget() {
+    return DragTarget<String>(
+      onWillAcceptWithDetails: (DragTargetDetails<String> details) =>
+          details.data == 'plum',
+      onAcceptWithDetails: (DragTargetDetails<String> details) {
+        setState(() {
+          _acceptedCount += 1;
+          _status =
+              '${details.data} dropped at '
+              '(${details.offset.dx.toStringAsFixed(0)}, '
+              '${details.offset.dy.toStringAsFixed(0)})';
+        });
+      },
+      onLeave: (String? data) => _setStatus('${data ?? 'item'} left target'),
+      builder:
+          (
+            BuildContext context,
+            List<String?> candidates,
+            List<dynamic> rejected,
+          ) {
+            final Color color = candidates.isNotEmpty
+                ? const Color(0xFFD8F5D0)
+                : rejected.isNotEmpty
+                ? const Color(0xFFFFDAD6)
+                : const Color(0xFFE7E0EC);
+            final String label = candidates.isNotEmpty
+                ? 'Release to accept'
+                : rejected.isNotEmpty
+                ? 'Rejected'
+                : 'Drop target';
+            return Container(
+              width: 190,
+              height: 96,
+              color: color,
+              alignment: Alignment.center,
+              child: Text(
+                label,
+                style: const TextStyle(fontSize: 14, color: Colors.black),
+              ),
+            );
+          },
+    );
+  }
+
+  static Widget _buildTile(
+    String label,
+    Color color, {
+    required double opacity,
+  }) {
+    return Opacity(
+      opacity: opacity,
+      child: Container(
+        width: 96,
+        height: 64,
+        color: color,
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          style: const TextStyle(fontSize: 14, color: Colors.white),
+        ),
+      ),
+    );
+  }
+
+  void _setStatus(String status) {
+    if (mounted) {
+      setState(() => _status = status);
+    }
+  }
+
+  void _reset() {
+    setState(() {
+      _acceptedCount = 0;
+      _status = 'Drag either item onto the target.';
+    });
+  }
+}

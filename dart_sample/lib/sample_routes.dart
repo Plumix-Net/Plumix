@@ -107,6 +107,7 @@ class SampleRoutes {
   static const String asyncBuilders = '/async-builders';
   static const String statefulBuilderLookupBoundary =
       '/stateful-builder-lookup-boundary';
+  static const String dragTarget = '/drag-target';
 }
 
 class SampleRouteDefinition {

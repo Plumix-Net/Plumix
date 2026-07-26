@@ -42,6 +42,7 @@ import 'demos/general/dismissible_size_changed_layout_demo_page.dart';
 import 'demos/general/custom_slivers_demo_page.dart';
 import 'demos/general/decorated_box_demo_page.dart';
 import 'demos/general/debug_painting_demo_page.dart';
+import 'demos/general/drag_target_demo_page.dart';
 import 'demos/material/drawer_demo_page.dart';
 import 'demos/material/drawer_headers_demo_page.dart';
 import 'demos/material/divider_demo_page.dart';
@@ -658,6 +659,12 @@ class SampleGalleryScreen extends StatelessWidget {
           title: 'StatefulBuilder + LookupBoundary',
           subtitle: 'local state rebuilds + bounded ancestor lookup',
           builder: () => const StatefulBuilderLookupBoundaryDemoPage(),
+        ),
+        SampleRouteDefinition(
+          routeName: SampleRoutes.dragTarget,
+          title: 'Draggable + DragTarget',
+          subtitle: 'overlay feedback + accepted/rejected target lifecycle',
+          builder: () => const DragTargetDemoPage(),
         ),
       ];
 
