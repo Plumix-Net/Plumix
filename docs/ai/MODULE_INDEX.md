@@ -220,10 +220,16 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/Widgets/Image.cs`
   - `src/Plumix/Widgets/FadeInImage.cs`
   - `src/Plumix/Widgets/ImageIcon.cs`
+  - `src/Plumix/Widgets/ColorFiltered.cs`
+  - `src/Plumix/Widgets/ImageFiltered.cs`
+  - `src/Plumix/Rendering/ImageFilter.cs`
+  - `src/Plumix/Rendering/Filter.RenderBox.cs`
+  - `src/Plumix/Rendering/FilterLayerRasterizer.cs`
   - `src/Plumix/Rendering/Proxy.RenderBox.cs`
 - Primary Tests:
   - `src/Plumix.Tests/ImageProviderDecorationTests.cs`
   - `src/Plumix.Tests/ImageWidgetTests.cs`
+  - `src/Plumix.Tests/FilterWidgetsTests.cs`
 
 ### Gestures and Input
 

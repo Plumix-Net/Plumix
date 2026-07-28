@@ -31,6 +31,7 @@ internal sealed class ImageDemoPageState : State
     private bool _cover;
     private bool _rtl;
     private bool _dimmed;
+    private bool _filtersEnabled = true;
     private int _fadeGeneration;
     private byte[] _fadeTargetBytes = (byte[])SampleBytes.Clone();
 
@@ -80,6 +81,9 @@ internal sealed class ImageDemoPageState : State
                         ControlButton(_cover ? "fit: cover" : "fit: contain", () => _cover = !_cover),
                         ControlButton(_rtl ? "direction: RTL" : "direction: LTR", () => _rtl = !_rtl),
                         ControlButton(_dimmed ? "opacity: 45%" : "opacity: 100%", () => _dimmed = !_dimmed),
+                        ControlButton(
+                            _filtersEnabled ? "filters: on" : "filters: off",
+                            () => _filtersEnabled = !_filtersEnabled),
                         ControlButton("restart fade", () =>
                         {
                             _fadeGeneration++;
@@ -147,6 +151,45 @@ internal sealed class ImageDemoPageState : State
                                                 Size: 64,
                                                 Opacity: opacity),
                                             new ImageIcon(SampleProvider, semanticLabel: "Image icon sample"))),
+                                ]),
+                            new Row(
+                                mainAxisAlignment: MainAxisAlignment.SpaceAround,
+                                children:
+                                [
+                                    Probe(
+                                        "ColorFiltered",
+                                        _filtersEnabled
+                                            ? new ColorFiltered(
+                                                new ColorFilter.Matrix(
+                                                [
+                                                    0.2126, 0.7152, 0.0722, 0.0, 0.0,
+                                                    0.2126, 0.7152, 0.0722, 0.0, 0.0,
+                                                    0.2126, 0.7152, 0.0722, 0.0, 0.0,
+                                                    0.0, 0.0, 0.0, 1.0, 0.0,
+                                                ]),
+                                                Plumix.Widgets.Image.Memory(
+                                                    SampleBytes,
+                                                    width: 96,
+                                                    height: 96,
+                                                    fit: fit))
+                                            : Plumix.Widgets.Image.Memory(
+                                                SampleBytes,
+                                                width: 96,
+                                                height: 96,
+                                                fit: fit)),
+                                    Probe(
+                                        "ImageFiltered",
+                                        new ImageFiltered(
+                                            new ImageFilter.Blur(
+                                                sigmaX: 3.0,
+                                                sigmaY: 3.0,
+                                                tileMode: Plumix.Rendering.TileMode.Decal),
+                                            Plumix.Widgets.Image.Memory(
+                                                SampleBytes,
+                                                width: 96,
+                                                height: 96,
+                                                fit: fit),
+                                            enabled: _filtersEnabled)),
                                 ]),
                         ])),
                 new Text(

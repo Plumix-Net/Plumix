@@ -1,5 +1,12 @@
 # Changelog
 
+- Added paired Flutter core `ColorFiltered` + `ImageFiltered` parity with retained color-filter layers,
+  enabled-dependent image-filter repaint boundaries, layer-only filter updates, Flutter-shaped color/image filter
+  values, CPU-backed matrix/mode/blur/matrix/morphology/compose rendering, focused tests, and mirrored C#/Dart image
+  probes. Filter layers render directly into bitmap-compatible offscreen contexts so image children are supported.
+  Added Flutter `BlendMode`/`TileMode` surfaces while retaining Avalonia blend-mode compatibility, and advanced
+  `Plumix` to `0.4.0-alpha.1`.
+
 - Breaking: added paired Flutter core `RadioGroup<T>` + `RawRadio<T>` parity with registry/client ownership,
   toggleable selection animation, checked/group semantics, selected-only Tab traversal, wraparound arrow/Space
   keyboard behavior, and focused tests. Material `Radio`/`RadioListTile` now consume the shared registry while

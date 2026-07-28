@@ -441,6 +441,72 @@ public sealed class OpacityOffsetLayer : OffsetLayer
     }
 }
 
+public sealed class ColorFilterLayer : ContainerLayer
+{
+    private WriteableBitmap? _filteredBitmap;
+
+    public ColorFilter? ColorFilter { get; set; }
+
+    public Rect FilterBounds { get; set; }
+
+    internal override void AddToScene(DrawingContext context, Point offset)
+    {
+        if (ColorFilter is null)
+        {
+            AddChildrenToScene(context, offset);
+            return;
+        }
+
+        _filteredBitmap?.Dispose();
+        _filteredBitmap = FilterLayerRasterizer.DrawColorFiltered(
+            context,
+            drawingContext => AddChildrenToScene(drawingContext, offset),
+            ColorFilter,
+            new Rect(FilterBounds.Position + offset, FilterBounds.Size));
+    }
+
+    internal override void Detach()
+    {
+        _filteredBitmap?.Dispose();
+        _filteredBitmap = null;
+        base.Detach();
+    }
+}
+
+public sealed class ImageFilterLayer : OffsetLayer
+{
+    private WriteableBitmap? _filteredBitmap;
+
+    public ImageFilter? ImageFilter { get; set; }
+
+    public Rect FilterBounds { get; set; }
+
+    internal override void AddToScene(DrawingContext context, Point offset)
+    {
+        if (ImageFilter is null)
+        {
+            base.AddToScene(context, offset);
+            return;
+        }
+
+        Point sceneOffset = offset + Offset;
+        _filteredBitmap?.Dispose();
+        _filteredBitmap = FilterLayerRasterizer.DrawImageFiltered(
+            context,
+            drawingContext => AddChildrenToScene(drawingContext, default),
+            ImageFilter,
+            sceneOffset,
+            FilterBounds);
+    }
+
+    internal override void Detach()
+    {
+        _filteredBitmap?.Dispose();
+        _filteredBitmap = null;
+        base.Detach();
+    }
+}
+
 public sealed class TransformOffsetLayer : OffsetLayer
 {
     public Matrix Transform { get; set; } = Matrix.Identity;

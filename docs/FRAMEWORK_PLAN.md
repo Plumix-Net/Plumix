@@ -288,6 +288,9 @@ Completion note:
   inherited overlay-child ownership, controller z-order promotion, source-shaped child layout information, grouped
   inside/outside down/up callbacks, route-current filtering, outside-tap arena consumption, focused tests, and an
   expanded mirrored C#/Dart runtime probe.
+- Continued paired core filter-control coverage with `ColorFiltered` + `ImageFiltered`, including source-shaped
+  retained/layer-only compositing updates, enabled-dependent repaint boundaries, Flutter color/image filter values,
+  CPU-backed mode/matrix/blur/morphology/compose rendering, focused tests, and mirrored C#/Dart image probes.
 - Implicit-animations sample viewport hardening: both samples now share an always-visible scrollbar and scroll
   controller around the complete probe column, preventing bottom overflow on short desktop windows.
 

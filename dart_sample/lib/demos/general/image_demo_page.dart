@@ -22,6 +22,7 @@ class _ImageDemoPageState extends State<ImageDemoPage> {
   bool _cover = false;
   bool _rtl = false;
   bool _dimmed = false;
+  bool _filtersEnabled = true;
   int _fadeGeneration = 0;
   late Uint8List _fadeTargetBytes = Uint8List.fromList(_sampleBytes);
 
@@ -77,6 +78,10 @@ class _ImageDemoPageState extends State<ImageDemoPage> {
               _controlButton(
                 _dimmed ? 'opacity: 45%' : 'opacity: 100%',
                 () => _dimmed = !_dimmed,
+              ),
+              _controlButton(
+                _filtersEnabled ? 'filters: on' : 'filters: off',
+                () => _filtersEnabled = !_filtersEnabled,
               ),
               _controlButton('restart fade', () {
                 _fadeGeneration++;
@@ -155,6 +160,68 @@ class _ImageDemoPageState extends State<ImageDemoPage> {
                         child: ImageIcon(
                           MemoryImage(_sampleBytes),
                           semanticLabel: 'Image icon sample',
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: <Widget>[
+                    _probe(
+                      'ColorFiltered',
+                      _filtersEnabled
+                          ? ColorFiltered(
+                              colorFilter: const ColorFilter.matrix(<double>[
+                                0.2126,
+                                0.7152,
+                                0.0722,
+                                0,
+                                0,
+                                0.2126,
+                                0.7152,
+                                0.0722,
+                                0,
+                                0,
+                                0.2126,
+                                0.7152,
+                                0.0722,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                1,
+                                0,
+                              ]),
+                              child: Image.memory(
+                                _sampleBytes,
+                                width: 96,
+                                height: 96,
+                                fit: fit,
+                              ),
+                            )
+                          : Image.memory(
+                              _sampleBytes,
+                              width: 96,
+                              height: 96,
+                              fit: fit,
+                            ),
+                    ),
+                    _probe(
+                      'ImageFiltered',
+                      ImageFiltered(
+                        imageFilter: ui.ImageFilter.blur(
+                          sigmaX: 3,
+                          sigmaY: 3,
+                          tileMode: ui.TileMode.decal,
+                        ),
+                        enabled: _filtersEnabled,
+                        child: Image.memory(
+                          _sampleBytes,
+                          width: 96,
+                          height: 96,
+                          fit: fit,
                         ),
                       ),
                     ),

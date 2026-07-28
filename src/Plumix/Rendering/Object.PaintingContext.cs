@@ -395,6 +395,22 @@ public sealed class PaintingContext
         childContext.StopRecordingIfNeeded();
     }
 
+    public ColorFilterLayer PushColorFilter(
+        Point offset,
+        ColorFilter colorFilter,
+        Action<PaintingContext> painter,
+        ColorFilterLayer? oldLayer = null)
+    {
+        ArgumentNullException.ThrowIfNull(colorFilter);
+        ArgumentNullException.ThrowIfNull(painter);
+        StopRecordingIfNeeded();
+
+        ColorFilterLayer layer = oldLayer ?? new ColorFilterLayer();
+        layer.ColorFilter = colorFilter;
+        PushLayer(layer, painter);
+        return layer;
+    }
+
     public void PushMagnifier(
         Rect lensRect,
         Point focalPointOffset,
