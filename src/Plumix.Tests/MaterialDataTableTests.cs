@@ -118,6 +118,80 @@ public sealed class MaterialDataTableTests : IDisposable
     }
 
     [Fact]
+    public void TableRowInkWell_ResolvesTheEntireNearestTableRowInLocalCoordinates()
+    {
+        var rowInkWell = new TableRowInkWell(
+            onTap: () => { },
+            child: new SizedBox(width: 100.0, height: 48.0));
+        Assert.True(rowInkWell.ContainedInkWell);
+        Assert.Equal(BoxShape.Rectangle, rowInkWell.HighlightShape);
+
+        using var harness = new WidgetRenderHarness(Wrap(new Table(
+            columnWidths: new Dictionary<int, TableColumnWidth>
+            {
+                [0] = new FixedColumnWidth(100.0),
+                [1] = new FixedColumnWidth(100.0),
+            },
+            children:
+            [
+                new TableRow(
+                [
+                    new TableCell(new SizedBox(width: 100.0, height: 48.0)),
+                    new TableCell(rowInkWell),
+                ]),
+            ])));
+        harness.Pump(new Size(240.0, 100.0));
+
+        RenderInkResponsePaint paint = Assert.Single(
+            FindDescendants<RenderInkResponsePaint>(harness.RenderView));
+        Assert.Equal(new Rect(-100.0, 0.0, 200.0, 48.0), paint.ResolvedInkRect);
+
+        var feature = new Plumix.Material.InkSplash(new InkFeatureConfiguration(
+            Position: new Point(20.0, 24.0),
+            Color: Colors.Blue,
+            ContainedInkWell: true));
+        InkFeatureFrame frame = feature.ResolveFrame(
+            paint.ResolvedInkRect,
+            progress: 1.0,
+            confirmed: false,
+            canceled: false);
+        Assert.Equal(new Point(20.0, 24.0), frame.Center);
+        Assert.Equal(Math.Sqrt((120.0 * 120.0) + (24.0 * 24.0)), frame.Radius, 3);
+    }
+
+    [Fact]
+    public void DataTable_UsesRowInkUnlessTheCellOwnsItsGesture()
+    {
+        using var harness = new WidgetRenderHarness(Wrap(new DataTable(
+            columns:
+            [
+                new DataColumn(new Text("Name")),
+                new DataColumn(new Text("Score")),
+            ],
+            rows:
+            [
+                new DataRow(
+                    cells:
+                    [
+                        new DataCell(new Text("Ada"), onTap: () => { }),
+                        new DataCell(new Text("10")),
+                    ],
+                    onSelectChanged: _ => { }),
+            ],
+            showCheckboxColumn: false)));
+        harness.Pump(new Size(320.0, 140.0));
+
+        RenderTable table = Assert.Single(FindDescendants<RenderTable>(harness.RenderView));
+        RenderInkResponsePaint[] paints = FindDescendants<RenderInkResponsePaint>(harness.RenderView).ToArray();
+        Assert.Equal(4, paints.Length);
+        Assert.Contains(paints, paint => Math.Abs(paint.ResolvedInkRect.Width - paint.Size.Width) < 0.001);
+        RenderInkResponsePaint rowPaint = Assert.Single(
+            paints,
+            paint => paint.ResolvedInkRect.Width > paint.Size.Width + 0.001);
+        Assert.Equal(table.Size.Width, rowPaint.ResolvedInkRect.Width, 3);
+    }
+
+    [Fact]
     public void DataTable_SortAndSelectAllCallbacksFollowSourceRules()
     {
         int? sortedColumn = null;

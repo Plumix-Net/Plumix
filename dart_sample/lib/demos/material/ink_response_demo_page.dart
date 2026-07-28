@@ -19,13 +19,15 @@ class _InkResponseDemoPageState extends State<InkResponseDemoPage> {
   InteractiveInkFeatureFactory get _splashFactory => switch (_splashMode) {
     0 => InkRipple.splashFactory,
     1 => InkSparkle.constantTurbulenceSeedSplashFactory,
-    _ => InkSplash.splashFactory,
+    2 => InkSplash.splashFactory,
+    _ => NoSplash.splashFactory,
   };
 
   String get _splashName => switch (_splashMode) {
     0 => 'InkRipple',
     1 => 'InkSparkle',
-    _ => 'InkSplash',
+    2 => 'InkSplash',
+    _ => 'NoSplash',
   };
 
   @override
@@ -56,8 +58,8 @@ class _InkResponseDemoPageState extends State<InkResponseDemoPage> {
           ),
           const Text(
             'Circle/uncontained versus rectangle/contained ink, selectable '
-            'ripple/sparkle/splash factories, primary + secondary gestures, '
-            'hover/focus, and overlay states.',
+            'ripple/sparkle/splash/no-splash factories, primary + secondary '
+            'gestures, hover/focus, and overlay states.',
             style: TextStyle(fontSize: 14, color: Colors.black54),
           ),
           Row(
@@ -78,7 +80,7 @@ class _InkResponseDemoPageState extends State<InkResponseDemoPage> {
           ),
           OutlinedButton(
             onPressed: () =>
-                setState(() => _splashMode = (_splashMode + 1) % 3),
+                setState(() => _splashMode = (_splashMode + 1) % 4),
             child: Text('Splash factory: $_splashName'),
           ),
           Row(

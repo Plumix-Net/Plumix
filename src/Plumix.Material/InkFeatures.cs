@@ -9,6 +9,7 @@ namespace Plumix.Material;
 // - flutter/packages/flutter/lib/src/material/ink_splash.dart
 // - flutter/packages/flutter/lib/src/material/ink_ripple.dart
 // - flutter/packages/flutter/lib/src/material/ink_sparkle.dart
+// - flutter/packages/flutter/lib/src/material/no_splash.dart
 // - flutter/packages/flutter/lib/src/material/ink_well.dart
 
 public sealed record InkFeatureConfiguration(
@@ -22,6 +23,7 @@ public sealed record InkFeatureConfiguration(
 
 public enum InkFeatureKind
 {
+    None,
     Splash,
     Ripple,
     Sparkle,
@@ -64,9 +66,30 @@ public abstract class InteractiveInkFeature
 
     public abstract InkFeatureFrame ResolveFrame(Size size, double progress, bool confirmed, bool canceled);
 
-    protected Point ResolvePosition(Size size)
+    internal virtual InkFeatureFrame ResolveFrame(Rect bounds, double progress, bool confirmed, bool canceled)
     {
-        Point position = Configuration.Position;
+        InkFeatureFrame frame = ResolveFrame(bounds.Size, progress, confirmed, canceled);
+        return frame with { Center = frame.Center + (Vector)bounds.Position };
+    }
+
+    protected InkFeatureFrame ResolveFrameInBounds(
+        Rect bounds,
+        double progress,
+        bool confirmed,
+        bool canceled,
+        Func<Size, Point, double, bool, bool, InkFeatureFrame> resolver)
+    {
+        Point configuredPosition = Configuration.Position;
+        Point localPosition = double.IsNaN(configuredPosition.X) || double.IsNaN(configuredPosition.Y)
+            ? configuredPosition
+            : configuredPosition - bounds.Position;
+        Point position = ResolvePosition(bounds.Size, localPosition);
+        InkFeatureFrame frame = resolver(bounds.Size, position, progress, confirmed, canceled);
+        return frame with { Center = frame.Center + (Vector)bounds.Position };
+    }
+
+    protected static Point ResolvePosition(Size size, Point position)
+    {
         return double.IsNaN(position.X) || double.IsNaN(position.Y)
             ? new Point(size.Width / 2.0, size.Height / 2.0)
             : position;
@@ -114,6 +137,52 @@ public abstract class InteractiveInkFeature
     }
 }
 
+/// <summary>An interactive ink feature that deliberately paints no splash.</summary>
+/// <remarks>Dart parity source: flutter/packages/flutter/lib/src/material/no_splash.dart.</remarks>
+public sealed class NoSplash : InteractiveInkFeature
+{
+    public NoSplash(InkFeatureConfiguration configuration) : base(configuration)
+    {
+    }
+
+    public static InteractiveInkFeatureFactory SplashFactory { get; } = new NoSplashFactory();
+
+    public override TimeSpan UnconfirmedDuration => TimeSpan.Zero;
+
+    public override TimeSpan ConfirmDuration => TimeSpan.Zero;
+
+    public override TimeSpan CancelDuration => TimeSpan.Zero;
+
+    public override InkFeatureFrame ResolveFrame(Size size, double progress, bool confirmed, bool canceled)
+    {
+        Point position = ResolvePosition(size, Configuration.Position);
+        return ResolveFrameCore(size, position, progress, confirmed, canceled);
+    }
+
+    internal override InkFeatureFrame ResolveFrame(Rect bounds, double progress, bool confirmed, bool canceled)
+    {
+        return ResolveFrameInBounds(bounds, progress, confirmed, canceled, ResolveFrameCore);
+    }
+
+    private static InkFeatureFrame ResolveFrameCore(
+        Size size,
+        Point position,
+        double progress,
+        bool confirmed,
+        bool canceled)
+    {
+        return new InkFeatureFrame(InkFeatureKind.None, position, 0.0, 0.0);
+    }
+
+    private sealed class NoSplashFactory : InteractiveInkFeatureFactory
+    {
+        public override InteractiveInkFeature Create(InkFeatureConfiguration configuration)
+        {
+            return new NoSplash(configuration);
+        }
+    }
+}
+
 public sealed class InkSplash : InteractiveInkFeature
 {
     private const double DefaultSplashRadius = 35.0;
@@ -132,8 +201,23 @@ public sealed class InkSplash : InteractiveInkFeature
 
     public override InkFeatureFrame ResolveFrame(Size size, double progress, bool confirmed, bool canceled)
     {
+        Point position = ResolvePosition(size, Configuration.Position);
+        return ResolveFrameCore(size, position, progress, confirmed, canceled);
+    }
+
+    internal override InkFeatureFrame ResolveFrame(Rect bounds, double progress, bool confirmed, bool canceled)
+    {
+        return ResolveFrameInBounds(bounds, progress, confirmed, canceled, ResolveFrameCore);
+    }
+
+    private InkFeatureFrame ResolveFrameCore(
+        Size size,
+        Point position,
+        double progress,
+        bool confirmed,
+        bool canceled)
+    {
         double t = Math.Clamp(progress, 0.0, 1.0);
-        Point position = ResolvePosition(size);
         Point center = Configuration.ContainedInkWell
             ? position
             : Lerp(position, new Point(size.Width / 2.0, size.Height / 2.0), t);
@@ -177,9 +261,24 @@ public sealed class InkRipple : InteractiveInkFeature
 
     public override InkFeatureFrame ResolveFrame(Size size, double progress, bool confirmed, bool canceled)
     {
+        Point position = ResolvePosition(size, Configuration.Position);
+        return ResolveFrameCore(size, position, progress, confirmed, canceled);
+    }
+
+    internal override InkFeatureFrame ResolveFrame(Rect bounds, double progress, bool confirmed, bool canceled)
+    {
+        return ResolveFrameInBounds(bounds, progress, confirmed, canceled, ResolveFrameCore);
+    }
+
+    private InkFeatureFrame ResolveFrameCore(
+        Size size,
+        Point position,
+        double progress,
+        bool confirmed,
+        bool canceled)
+    {
         double t = Math.Clamp(progress, 0.0, 1.0);
         double eased = Curves.Ease(t);
-        Point position = ResolvePosition(size);
         Point targetCenter = new(size.Width / 2.0, size.Height / 2.0);
         Point center = new(
             position.X + ((targetCenter.X - position.X) * eased),
@@ -250,10 +349,25 @@ public sealed class InkSparkle : InteractiveInkFeature
 
     public override InkFeatureFrame ResolveFrame(Size size, double progress, bool confirmed, bool canceled)
     {
+        Point position = ResolvePosition(size, Configuration.Position);
+        return ResolveFrameCore(size, position, progress, confirmed, canceled);
+    }
+
+    internal override InkFeatureFrame ResolveFrame(Rect bounds, double progress, bool confirmed, bool canceled)
+    {
+        return ResolveFrameInBounds(bounds, progress, confirmed, canceled, ResolveFrameCore);
+    }
+
+    private InkFeatureFrame ResolveFrameCore(
+        Size size,
+        Point position,
+        double progress,
+        bool confirmed,
+        bool canceled)
+    {
         double t = Math.Clamp(progress, 0.0, 1.0);
         double radiusProgress = t < 0.75 ? Curves.FastOutSlowIn(t / 0.75) : 1.0;
         double centerProgress = Math.Clamp(radiusProgress * 2.0, 0.0, 1.0);
-        Point position = ResolvePosition(size);
         Point targetCenter = new(size.Width / 2.0, size.Height / 2.0);
         Point center = new(
             position.X + ((targetCenter.X - position.X) * centerProgress),

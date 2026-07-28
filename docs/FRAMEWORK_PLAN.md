@@ -967,6 +967,13 @@ Progress update (2026-03-19):
     sparkle seed contracts, with an Avalonia paint approximation only for Flutter's runtime shader noise;
   - added focused factory/default/precedence/geometry tests and mirrored factory switching in the existing C#/Dart
     ink-response demo.
+- Added paired Material `NoSplash` + `TableRowInkWell` ports:
+  - added Flutter's non-painting splash factory with immediate confirm/cancel lifetime and preserved highlight states;
+  - added source-shaped `InkResponse.GetRectCallback`, translation-only nearest-table row resolution, whole-row
+    highlight/splash clipping and radius geometry, plus exact `DataTable` cell-owned versus row-owned gesture
+    composition (including fill-aligned checkbox cells);
+  - added focused feature/factory/row-geometry/composition tests and expanded the mirrored ink-response/data-table
+    runtime probes.
 - Remaining divergence for floating action button in current framework scope:
   - none documented in current framework scope.
 

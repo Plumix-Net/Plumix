@@ -129,6 +129,12 @@ public class InkResponse : StatefulWidget
     public TimeSpan? HoverDuration { get; }
     public InteractiveInkFeatureFactory? SplashFactory { get; }
 
+    public virtual Func<Rect>? GetRectCallback(RenderBox referenceBox)
+    {
+        ArgumentNullException.ThrowIfNull(referenceBox);
+        return ContainedInkWell ? () => new Rect(referenceBox.Size) : null;
+    }
+
     public override State CreateState() => new InkResponseState();
 
     private sealed class InkResponseState : State
@@ -243,6 +249,7 @@ public class InkResponse : StatefulWidget
                 splashFeature: _splashFeature,
                 splashConfirmed: _splashConfirmed,
                 splashCanceled: _splashCanceled,
+                rectCallbackFactory: widget.GetRectCallback,
                 child: widget.Child ?? new SizedBox());
 
             if (Enabled)
@@ -418,13 +425,22 @@ public class InkResponse : StatefulWidget
             {
                 _splashController.Duration = feature.UnconfirmedDuration;
             }
-            _splashController?.Forward(0);
+            if (feature is not NoSplash)
+            {
+                _splashController?.Forward(0);
+            }
         }
 
         private void ConfirmSplash()
         {
             if (_splashFeature is null || _splashController is null || _splashCanceled)
             {
+                return;
+            }
+
+            if (_splashFeature is NoSplash)
+            {
+                ClearSplash();
                 return;
             }
 
@@ -437,6 +453,12 @@ public class InkResponse : StatefulWidget
         {
             if (_splashFeature is null || _splashController is null)
             {
+                return;
+            }
+
+            if (_splashFeature is NoSplash)
+            {
+                ClearSplash();
                 return;
             }
 
@@ -535,7 +557,9 @@ public class InkResponse : StatefulWidget
             SetState(() => _splashProgress = _splashController.Evaluate());
         }
 
-        private void HandleSplashCompleted()
+        private void HandleSplashCompleted() => ClearSplash();
+
+        private void ClearSplash()
         {
             SetState(() =>
             {
@@ -646,6 +670,95 @@ public sealed class InkWell : InkResponse
     }
 }
 
+/// <summary>An ink response whose highlight and splash are clipped to its nearest table row.</summary>
+/// <remarks>Dart parity source: flutter/packages/flutter/lib/src/material/data_table.dart.</remarks>
+public sealed class TableRowInkWell : InkResponse
+{
+    public TableRowInkWell(
+        Widget? child = null,
+        Action? onTap = null,
+        Action? onDoubleTap = null,
+        Action? onLongPress = null,
+        Action<bool>? onHighlightChanged = null,
+        Action<bool>? onHover = null,
+        Action? onSecondaryTap = null,
+        Action<PointerDownEvent>? onSecondaryTapDown = null,
+        MaterialStateProperty<Color?>? overlayColor = null,
+        MouseCursor? mouseCursor = null,
+        Key? key = null)
+        : base(
+            child: child,
+            onTap: onTap,
+            onDoubleTap: onDoubleTap,
+            onLongPress: onLongPress,
+            onHighlightChanged: onHighlightChanged,
+            onHover: onHover,
+            onSecondaryTap: onSecondaryTap,
+            onSecondaryTapDown: onSecondaryTapDown,
+            overlayColor: overlayColor,
+            mouseCursor: mouseCursor,
+            containedInkWell: true,
+            highlightShape: BoxShape.Rectangle,
+            key: key)
+    {
+    }
+
+    public override Func<Rect> GetRectCallback(RenderBox referenceBox)
+    {
+        ArgumentNullException.ThrowIfNull(referenceBox);
+        return () => ResolveTableRowRect(referenceBox);
+    }
+
+    private static Rect ResolveTableRowRect(RenderBox referenceBox)
+    {
+        var transform = Matrix.Identity;
+        RenderObject cell = referenceBox;
+        RenderObject? table = cell.Parent;
+        while (table is not null && table is not RenderTable)
+        {
+            Matrix childTransform = ResolveChildTransform(cell, table);
+            transform = childTransform * transform;
+            cell = table;
+            table = table.Parent;
+        }
+
+        if (table is not RenderTable renderTable
+            || cell.parentData is not TableCellParentData cellParentData)
+        {
+            return new Rect();
+        }
+
+        transform = ResolveChildTransform(cell, renderTable) * transform;
+        Point origin = transform.Transform(default);
+        Point horizontal = transform.Transform(new Point(1.0, 0.0));
+        Point vertical = transform.Transform(new Point(0.0, 1.0));
+        const double epsilon = 0.000001;
+        bool isTranslation = Math.Abs(horizontal.X - origin.X - 1.0) < epsilon
+                             && Math.Abs(horizontal.Y - origin.Y) < epsilon
+                             && Math.Abs(vertical.X - origin.X) < epsilon
+                             && Math.Abs(vertical.Y - origin.Y - 1.0) < epsilon;
+        if (!isTranslation)
+        {
+            return new Rect();
+        }
+
+        Rect row = renderTable.GetRowBox(cellParentData.Y);
+        return row.Translate(new Vector(-origin.X, -origin.Y));
+    }
+
+    private static Matrix ResolveChildTransform(RenderObject child, RenderObject parent)
+    {
+        Point childOffset = child.parentData is BoxParentData data ? data.offset : default;
+        Matrix transform = Matrix.CreateTranslation(childOffset.X, childOffset.Y);
+        if (parent is RenderTransform renderTransform)
+        {
+            transform *= renderTransform.Transform;
+        }
+
+        return transform;
+    }
+}
+
 internal sealed class InkResponsePaint : SingleChildRenderObjectWidget
 {
     public InkResponsePaint(
@@ -660,6 +773,7 @@ internal sealed class InkResponsePaint : SingleChildRenderObjectWidget
         InteractiveInkFeature? splashFeature,
         bool splashConfirmed,
         bool splashCanceled,
+        Func<RenderBox, Func<Rect>?> rectCallbackFactory,
         Widget child) : base(child)
     {
         HighlightColor = highlightColor;
@@ -673,6 +787,8 @@ internal sealed class InkResponsePaint : SingleChildRenderObjectWidget
         SplashFeature = splashFeature;
         SplashConfirmed = splashConfirmed;
         SplashCanceled = splashCanceled;
+        RectCallbackFactory = rectCallbackFactory
+                              ?? throw new ArgumentNullException(nameof(rectCallbackFactory));
     }
 
     public Color? HighlightColor { get; }
@@ -686,10 +802,25 @@ internal sealed class InkResponsePaint : SingleChildRenderObjectWidget
     public InteractiveInkFeature? SplashFeature { get; }
     public bool SplashConfirmed { get; }
     public bool SplashCanceled { get; }
+    public Func<RenderBox, Func<Rect>?> RectCallbackFactory { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context) => new RenderInkResponsePaint(
-        HighlightColor, HighlightShape, BorderRadius, SplashColor, SplashOrigin, SplashProgress,
-        SplashRadius, ContainedInkWell, SplashFeature, SplashConfirmed, SplashCanceled);
+    internal override RenderObject CreateRenderObject(BuildContext context)
+    {
+        var paint = new RenderInkResponsePaint(
+            HighlightColor,
+            HighlightShape,
+            BorderRadius,
+            SplashColor,
+            SplashOrigin,
+            SplashProgress,
+            SplashRadius,
+            ContainedInkWell,
+            SplashFeature,
+            SplashConfirmed,
+            SplashCanceled);
+        paint.RectCallback = RectCallbackFactory(paint);
+        return paint;
+    }
 
     internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
@@ -705,6 +836,7 @@ internal sealed class InkResponsePaint : SingleChildRenderObjectWidget
         paint.SplashFeature = SplashFeature;
         paint.SplashConfirmed = SplashConfirmed;
         paint.SplashCanceled = SplashCanceled;
+        paint.RectCallback = RectCallbackFactory(paint);
     }
 }
 
@@ -721,6 +853,7 @@ internal sealed class RenderInkResponsePaint : RenderProxyBox
     private InteractiveInkFeature? _splashFeature;
     private bool _splashConfirmed;
     private bool _splashCanceled;
+    private Func<Rect>? _rectCallback;
 
     public RenderInkResponsePaint(Color? highlightColor, BoxShape highlightShape, BorderRadius borderRadius,
         Color? splashColor,
@@ -760,9 +893,18 @@ internal sealed class RenderInkResponsePaint : RenderProxyBox
     }
     public bool SplashConfirmed { get => _splashConfirmed; set => SetPaintValue(ref _splashConfirmed, value); }
     public bool SplashCanceled { get => _splashCanceled; set => SetPaintValue(ref _splashCanceled, value); }
+    public Func<Rect>? RectCallback
+    {
+        get => _rectCallback;
+        set => SetPaintValue(ref _rectCallback, value);
+    }
+
+    internal Rect ResolvedInkRect => ResolveInkRect();
 
     public override void Paint(PaintingContext context, Point offset)
     {
+        Rect inkRect = ResolveInkRect();
+
         void PaintInk(PaintingContext target)
         {
             if (_highlightColor.HasValue)
@@ -775,14 +917,19 @@ internal sealed class RenderInkResponsePaint : RenderProxyBox
                 }
                 else
                 {
-                    target.DrawRectangle(brush, null, new Rect(offset, Size), _borderRadius.Radius, _borderRadius.Radius);
+                    target.DrawRectangle(
+                        brush,
+                        null,
+                        inkRect.Translate((Vector)offset),
+                        _borderRadius.Radius,
+                        _borderRadius.Radius);
                 }
             }
 
             if (_splashFeature is not null && _splashProgress >= 0.0)
             {
                 InkFeatureFrame frame = _splashFeature.ResolveFrame(
-                    Size,
+                    inkRect,
                     _splashProgress,
                     confirmed: _splashConfirmed,
                     canceled: _splashCanceled);
@@ -815,7 +962,7 @@ internal sealed class RenderInkResponsePaint : RenderProxyBox
             }
             else
             {
-                context.PushClipRRect(new Rect(offset, Size), _borderRadius, PaintInk);
+                context.PushClipRRect(inkRect.Translate((Vector)offset), _borderRadius, PaintInk);
             }
         }
         else
@@ -824,12 +971,23 @@ internal sealed class RenderInkResponsePaint : RenderProxyBox
         }
     }
 
+    private Rect ResolveInkRect()
+    {
+        Rect rect = _rectCallback?.Invoke() ?? new Rect(Size);
+        return rect.Width < 0.0 || rect.Height < 0.0 ? new Rect() : rect;
+    }
+
     private static void PaintFeature(
         PaintingContext context,
         Point offset,
         Color color,
         InkFeatureFrame frame)
     {
+        if (frame.Kind == InkFeatureKind.None)
+        {
+            return;
+        }
+
         Color featureColor = ApplyOpacity(color, frame.Opacity);
         if (frame.Kind != InkFeatureKind.Sparkle)
         {

@@ -249,6 +249,7 @@ public sealed class DataTable : StatelessWidget
                 tristate: true,
                 horizontalStart: checkboxMargin,
                 horizontalEnd: checkboxMargin / 2,
+                onRowTap: null,
                 onChanged: value => HandleSelectAll(value, someChecked)));
         }
         for (int columnIndex = 0; columnIndex < Columns.Count; columnIndex++)
@@ -279,7 +280,12 @@ public sealed class DataTable : StatelessWidget
                     tristate: false,
                     horizontalStart: checkboxMargin,
                     horizontalEnd: checkboxMargin / 2,
-                    onChanged: row.OnSelectChanged));
+                    onRowTap: row.OnSelectChanged is null
+                        ? null
+                        : () => row.OnSelectChanged(!row.Selected),
+                    onChanged: row.OnSelectChanged,
+                    overlayColor: row.Color ?? effectiveDataRowColor,
+                    mouseCursor: row.MouseCursor?.Resolve(rowStates) ?? localTheme.DataRowCursor?.Resolve(rowStates)));
             }
             for (int columnIndex = 0; columnIndex < Columns.Count; columnIndex++)
             {
@@ -292,6 +298,7 @@ public sealed class DataTable : StatelessWidget
                     dataMinHeight,
                     dataMaxHeight,
                     dataStyle,
+                    row.Color ?? effectiveDataRowColor,
                     row.MouseCursor?.Resolve(rowStates) ?? localTheme.DataRowCursor?.Resolve(rowStates)));
             }
             var rowColor = (row.Color ?? effectiveDataRowColor)?.Resolve(rowStates)
@@ -384,6 +391,7 @@ public sealed class DataTable : StatelessWidget
         double minHeight,
         double maxHeight,
         TextStyle style,
+        MaterialStateProperty<Color?>? overlayColor,
         MouseCursor? cursor)
     {
         var effectiveStyle = cell.Placeholder && style.Color.HasValue
@@ -403,31 +411,57 @@ public sealed class DataTable : StatelessWidget
             alignment: column.Numeric ? Alignment.CenterRight : Alignment.CenterLeft,
             child: new DefaultTextStyle(effectiveStyle, new DropdownButtonHideUnderline(label)));
 
-        var tap = cell.OnTap ?? (row.OnSelectChanged is null ? null : () => row.OnSelectChanged(!row.Selected));
-        var longPress = cell.OnLongPress ?? row.OnLongPress;
-        if (cell.IsInteractive || row.OnSelectChanged is not null || row.OnLongPress is not null || row.OnHover is not null)
+        if (cell.IsInteractive)
         {
             label = new InkWell(
-                onTap: tap,
+                onTap: cell.OnTap,
                 onDoubleTap: cell.OnDoubleTap,
                 onTapDown: cell.OnTapDown,
                 onTapCancel: cell.OnTapCancel,
-                onLongPress: longPress,
+                onLongPress: cell.OnLongPress,
+                overlayColor: overlayColor,
+                child: label);
+        }
+        else if (row.OnSelectChanged is not null
+                 || row.OnLongPress is not null
+                 || row.OnHover is not null)
+        {
+            label = new TableRowInkWell(
+                onTap: row.OnSelectChanged is null ? null : () => row.OnSelectChanged(!row.Selected),
+                onLongPress: row.OnLongPress,
                 onHover: row.OnHover,
+                overlayColor: overlayColor,
                 mouseCursor: cursor,
                 child: label);
         }
-        return label;
+
+        return new TableCell(label);
     }
 
-    private static Widget BuildCheckbox(
+    private static TableCell BuildCheckbox(
         bool? value,
         bool tristate,
         double horizontalStart,
         double horizontalEnd,
-        Action<bool?>? onChanged) => new Padding(
+        Action? onRowTap,
+        Action<bool?>? onChanged,
+        MaterialStateProperty<Color?>? overlayColor = null,
+        MouseCursor? mouseCursor = null)
+    {
+        Widget contents = new Padding(
             new Thickness(horizontalStart, 0, horizontalEnd, 0),
             new Center(child: new Checkbox(value, onChanged, tristate: tristate)));
+        if (onRowTap is not null)
+        {
+            contents = new TableRowInkWell(
+                onTap: onRowTap,
+                overlayColor: overlayColor,
+                mouseCursor: mouseCursor,
+                child: contents);
+        }
+
+        return new TableCell(contents, TableCellVerticalAlignment.Fill);
+    }
 
     private void HandleSelectAll(bool? value, bool someChecked)
     {

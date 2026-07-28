@@ -177,6 +177,68 @@ public sealed class MaterialInkResponseTests : IDisposable
     }
 
     [Fact]
+    public void NoSplash_FactoryCreatesNonPaintingImmediateFeature()
+    {
+        var configuration = new InkFeatureConfiguration(
+            Position: new Point(12.0, 18.0),
+            Color: Colors.Blue,
+            ContainedInkWell: true);
+        var feature = Assert.IsType<NoSplash>(NoSplash.SplashFactory.Create(configuration));
+
+        Assert.Equal(TimeSpan.Zero, feature.UnconfirmedDuration);
+        Assert.Equal(TimeSpan.Zero, feature.ConfirmDuration);
+        Assert.Equal(TimeSpan.Zero, feature.CancelDuration);
+
+        InkFeatureFrame frame = feature.ResolveFrame(
+            new Size(100.0, 60.0),
+            progress: 0.5,
+            confirmed: true,
+            canceled: false);
+        Assert.Equal(InkFeatureKind.None, frame.Kind);
+        Assert.Equal(new Point(12.0, 18.0), frame.Center);
+        Assert.Equal(0.0, frame.Radius);
+        Assert.Equal(0.0, frame.Opacity);
+    }
+
+    [Fact]
+    public void NoSplash_CanOverrideInkWellAndButtonStyleFactories()
+    {
+        using var harness = CreateHarness(new InkWell(
+            splashFactory: NoSplash.SplashFactory,
+            onTap: () => { },
+            child: new SizedBox(width: 80.0, height: 48.0)));
+        harness.Pump(new Size(120.0, 80.0));
+
+        GestureBinding.Instance.HandlePointerEvent(
+            harness.RenderView,
+            new PointerDownEvent(
+                707,
+                PointerDeviceKind.Mouse,
+                new Point(20.0, 20.0),
+                PointerButtons.Primary,
+                DateTime.UtcNow));
+        harness.Pump(new Size(120.0, 80.0));
+
+        RenderInkResponsePaint paint = Assert.Single(
+            FindDescendants<RenderInkResponsePaint>(harness.RenderView));
+        Assert.IsType<NoSplash>(paint.SplashFeature);
+        Assert.Same(
+            NoSplash.SplashFactory,
+            TextButton.StyleFrom(splashFactory: NoSplash.SplashFactory).SplashFactory);
+
+        GestureBinding.Instance.HandlePointerEvent(
+            harness.RenderView,
+            new PointerUpEvent(
+                707,
+                PointerDeviceKind.Mouse,
+                new Point(20.0, 20.0),
+                PointerButtons.None,
+                DateTime.UtcNow.AddMilliseconds(20.0)));
+        harness.Pump(new Size(120.0, 80.0));
+        Assert.Null(Assert.Single(FindDescendants<RenderInkResponsePaint>(harness.RenderView)).SplashFeature);
+    }
+
+    [Fact]
     public void InkWell_WidgetSplashFactoryOverridesThemeFactory()
     {
         var theme = new ThemeData(

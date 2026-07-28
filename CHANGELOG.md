@@ -1,5 +1,10 @@
 # Changelog
 
+- Added paired Material `NoSplash` + `TableRowInkWell` parity with a non-painting public splash factory,
+  source-shaped row-rectangle callbacks, translation-aware whole-row ink geometry, and exact `DataTable` cell-versus-
+  row gesture composition. Added focused tests and mirrored NoSplash/DataTable runtime probes; advanced
+  `Plumix.Material` to `0.4.0-alpha.1`.
+
 - Added paired Flutter core `BackdropFilter` + `BackdropGroup` parity with direct/bounded/composed
   `ImageFilterConfig`, retained backdrop layers, bitmap-backed scene-prefix sampling, grouped input reuse, blend
   modes, focused tests, and mirrored C#/Dart image probes. Advanced `Plumix` to `0.6.0-alpha.1`; Avalonia CPU-filters

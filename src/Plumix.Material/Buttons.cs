@@ -2244,6 +2244,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
                 splashFeature: _splashFeature,
                 splashConfirmed: _splashConfirmed,
                 splashCanceled: _splashCanceled,
+                rectCallbackFactory: referenceBox => () => new Rect(referenceBox.Size),
                 child: content);
 
             if (widget.ClipBehavior != Clip.None)

@@ -49,7 +49,8 @@ class _DataTableDemoPageState extends State<DataTableDemoPage> {
             ),
             const SizedBox(height: 8),
             const Text(
-              'Intrinsic column negotiation, numeric alignment, sort direction, row selection, theme precedence, source caching, and page controls.',
+              'Intrinsic columns, numeric alignment, row-wide TableRowInkWell '
+              'selection, theme precedence, source caching, and page controls.',
               style: TextStyle(fontSize: 14, color: Color(0x8A000000)),
             ),
             const SizedBox(height: 12),

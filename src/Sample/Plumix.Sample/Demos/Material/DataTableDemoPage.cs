@@ -54,7 +54,8 @@ internal sealed class DataTableDemoPageState : State
                     [
                         new Text("DataTable + PaginatedDataTable", fontSize: 20, color: Colors.Black),
                         new Text(
-                            "Intrinsic column negotiation, numeric alignment, sort direction, row selection, theme precedence, source caching, and page controls.",
+                            "Intrinsic columns, numeric alignment, row-wide TableRowInkWell selection, theme "
+                            + "precedence, source caching, and page controls.",
                             fontSize: 14,
                             color: Color.Parse("#8A000000")),
                         new Row(

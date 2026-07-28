@@ -27,14 +27,16 @@ public sealed class InkResponseDemoPage : StatefulWidget
         {
             0 => InkRipple.SplashFactory,
             1 => InkSparkle.ConstantTurbulenceSeedSplashFactory,
-            _ => Plumix.Material.InkSplash.SplashFactory,
+            2 => Plumix.Material.InkSplash.SplashFactory,
+            _ => NoSplash.SplashFactory,
         };
 
         private string SplashName => _splashMode switch
         {
             0 => "InkRipple",
             1 => "InkSparkle",
-            _ => "InkSplash",
+            2 => "InkSplash",
+            _ => "NoSplash",
         };
 
         public override Widget Build(BuildContext context)
@@ -55,8 +57,8 @@ public sealed class InkResponseDemoPage : StatefulWidget
                     [
                         new Text("InkResponse + InkWell", fontSize: 20, color: Colors.Black),
                         new Text(
-                            "Circle/uncontained versus rectangle/contained ink, selectable ripple/sparkle/splash "
-                            + "factories, primary + secondary gestures, hover/focus, and overlay states.",
+                            "Circle/uncontained versus rectangle/contained ink, selectable ripple/sparkle/splash/"
+                            + "no-splash factories, primary + secondary gestures, hover/focus, and overlay states.",
                             fontSize: 14,
                             color: Colors.DimGray),
                         new Row(
@@ -73,7 +75,7 @@ public sealed class InkResponseDemoPage : StatefulWidget
                             color: Colors.Black),
                         new Text($"Interaction: {_interaction}", fontSize: 13, color: Colors.DimGray),
                         new OutlinedButton(
-                            onPressed: () => SetState(() => _splashMode = (_splashMode + 1) % 3),
+                            onPressed: () => SetState(() => _splashMode = (_splashMode + 1) % 4),
                             child: new Text($"Splash factory: {SplashName}")),
                         new Row(
                             spacing: 10,
