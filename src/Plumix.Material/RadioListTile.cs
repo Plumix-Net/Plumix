@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
@@ -8,43 +7,8 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/widgets/radio_group.dart (current subset)
-public sealed class RadioGroup<T> : InheritedWidget
-{
-    public RadioGroup(
-        T? groupValue,
-        Action<T?> onChanged,
-        Widget child,
-        Key? key = null) : base(key)
-    {
-        GroupValue = groupValue;
-        OnChanged = onChanged ?? throw new ArgumentNullException(nameof(onChanged));
-        Child = child ?? throw new ArgumentNullException(nameof(child));
-    }
-
-    public T? GroupValue { get; }
-
-    public Action<T?> OnChanged { get; }
-
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
-
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
-    {
-        var oldGroup = (RadioGroup<T>)oldWidget;
-        return !EqualityComparer<T?>.Default.Equals(oldGroup.GroupValue, GroupValue)
-               || !ReferenceEquals(oldGroup.OnChanged, OnChanged);
-    }
-
-    public static RadioGroup<T>? MaybeOf(BuildContext context)
-    {
-        return context.DependOnInherited<RadioGroup<T>>();
-    }
-}
-
 // Dart parity source (reference): flutter/packages/flutter/lib/src/material/radio_list_tile.dart
-public sealed class RadioListTile<T> : StatelessWidget
+public sealed class RadioListTile<T> : StatefulWidget
 {
     private readonly bool _adaptive;
 
@@ -332,23 +296,24 @@ public sealed class RadioListTile<T> : StatelessWidget
             key);
     }
 
-    public override Widget Build(BuildContext context)
+    public override State CreateState()
     {
-        var group = RadioGroup<T>.MaybeOf(context);
-        var effectiveGroupValue = group is not null ? group.GroupValue : GroupValue;
-        bool isEnabled = Enabled ?? (OnChanged is not null || group is not null);
-        if (Enabled == true && OnChanged is null && group is null)
-        {
-            throw new InvalidOperationException("An enabled RadioListTile requires onChanged or an ancestor RadioGroup.");
-        }
+        return new RadioListTileState();
+    }
 
+    private Widget BuildContent(
+        BuildContext context,
+        RadioGroupRegistry<T>? groupRegistry,
+        RadioGroupRegistry<T> controlRegistry,
+        FocusNode focusNode,
+        bool isEnabled)
+    {
+        T? effectiveGroupValue = groupRegistry is not null ? groupRegistry.GroupValue : GroupValue;
         bool isChecked = EqualityComparer<T?>.Default.Equals(Value, effectiveGroupValue);
-        Action<T?>? controlOnChanged = isEnabled ? HandleChange : null;
         Widget control = _adaptive
             ? Radio<T>.Adaptive(
                 value: Value,
                 groupValue: effectiveGroupValue,
-                onChanged: controlOnChanged,
                 toggleable: Toggleable,
                 activeColor: ActiveColor,
                 fillColor: FillColor,
@@ -360,11 +325,12 @@ public sealed class RadioListTile<T> : StatelessWidget
                 innerRadius: RadioInnerRadius,
                 splashRadius: SplashRadius,
                 autofocus: Autofocus,
+                enabled: isEnabled,
+                groupRegistry: controlRegistry,
                 useCupertinoCheckmarkStyle: UseCupertinoCheckmarkStyle)
             : new Radio<T>(
                 value: Value,
                 groupValue: effectiveGroupValue,
-                onChanged: controlOnChanged,
                 toggleable: Toggleable,
                 activeColor: ActiveColor,
                 fillColor: FillColor,
@@ -375,7 +341,9 @@ public sealed class RadioListTile<T> : StatelessWidget
                 side: RadioSide,
                 innerRadius: RadioInnerRadius,
                 splashRadius: SplashRadius,
-                autofocus: Autofocus);
+                autofocus: Autofocus,
+                enabled: isEnabled,
+                groupRegistry: controlRegistry);
         control = new ExcludeFocus(child: control);
 
         if (RadioScaleFactor != 1.0)
@@ -416,7 +384,7 @@ public sealed class RadioListTile<T> : StatelessWidget
             selected: Selected,
             autofocus: Autofocus,
             contentPadding: ContentPadding,
-            focusNode: FocusNode,
+            focusNode: focusNode,
             mouseCursor: MouseCursor,
             onFocusChange: OnFocusChange,
             enableFeedback: EnableFeedback,
@@ -439,7 +407,7 @@ public sealed class RadioListTile<T> : StatelessWidget
 
         void HandleChange(T? value)
         {
-            group?.OnChanged(value);
+            groupRegistry?.OnChanged(value);
             OnChanged?.Invoke(value);
         }
 
@@ -451,6 +419,137 @@ public sealed class RadioListTile<T> : StatelessWidget
             }
 
             HandleChange(isChecked ? default : Value);
+        }
+    }
+
+    private sealed class RadioListTileState : State, RadioClient<T>
+    {
+        private FocusNode? _focusNode;
+        private bool _ownsFocusNode;
+        private RadioGroupRegistry<T>? _registry;
+        private InternalRadioRegistry? _internalRegistry;
+
+        private RadioListTile<T> CurrentWidget => (RadioListTile<T>)StateWidget;
+
+        public bool Tristate => CurrentWidget.Toggleable;
+
+        public T RadioValue => CurrentWidget.Value;
+
+        public bool Enabled => CurrentWidget.Enabled
+                               ?? (CurrentWidget.OnChanged is not null || _registry is not null);
+
+        public FocusNode FocusNode => _focusNode!;
+
+        public override void InitState()
+        {
+            AttachFocusNode(CurrentWidget.FocusNode);
+            _internalRegistry = new InternalRadioRegistry(this);
+        }
+
+        public override void DidChangeDependencies()
+        {
+            SetRegistry(RadioGroup<T>.MaybeOf(Context));
+        }
+
+        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        {
+            var oldTile = (RadioListTile<T>)oldWidget;
+            if (!ReferenceEquals(oldTile.FocusNode, CurrentWidget.FocusNode))
+            {
+                SetRegistry(null);
+                DetachFocusNode(disposeOwned: true);
+                AttachFocusNode(CurrentWidget.FocusNode);
+            }
+
+            SetRegistry(RadioGroup<T>.MaybeOf(Context));
+        }
+
+        public override Widget Build(BuildContext context)
+        {
+            if (CurrentWidget.Enabled == true
+                && CurrentWidget.OnChanged is null
+                && _registry is null)
+            {
+                throw new InvalidOperationException(
+                    "An enabled RadioListTile requires onChanged or an ancestor RadioGroup.");
+            }
+
+            return CurrentWidget.BuildContent(
+                context,
+                _registry,
+                _internalRegistry!,
+                _focusNode!,
+                Enabled);
+        }
+
+        public override void Dispose()
+        {
+            SetRegistry(null);
+            DetachFocusNode(disposeOwned: true);
+        }
+
+        private void SetRegistry(RadioGroupRegistry<T>? registry)
+        {
+            if (ReferenceEquals(_registry, registry))
+            {
+                return;
+            }
+
+            _registry?.UnregisterClient(this);
+            _registry = registry;
+            _registry?.RegisterClient(this);
+        }
+
+        private void AttachFocusNode(FocusNode? focusNode)
+        {
+            _focusNode = focusNode ?? new FocusNode();
+            _ownsFocusNode = focusNode is null;
+        }
+
+        private void DetachFocusNode(bool disposeOwned)
+        {
+            if (_focusNode is null)
+            {
+                return;
+            }
+
+            if (disposeOwned && _ownsFocusNode)
+            {
+                _focusNode.Dispose();
+            }
+
+            _focusNode = null;
+            _ownsFocusNode = false;
+        }
+
+        private sealed class InternalRadioRegistry : RadioGroupRegistry<T>
+        {
+            private readonly RadioListTileState _state;
+
+            public InternalRadioRegistry(RadioListTileState state)
+            {
+                _state = state;
+            }
+
+            public override T? GroupValue => _state._registry is null
+                ? _state.CurrentWidget.GroupValue
+                : _state._registry.GroupValue;
+
+            public override Action<T?> OnChanged => HandleChange;
+
+            public override void RegisterClient(RadioClient<T> radio)
+            {
+            }
+
+            public override void UnregisterClient(RadioClient<T> radio)
+            {
+            }
+
+            private void HandleChange(T? value)
+            {
+                _state._registry?.OnChanged(value);
+                _state.CurrentWidget.OnChanged?.Invoke(value);
+            }
         }
     }
 }

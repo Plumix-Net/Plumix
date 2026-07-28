@@ -50,7 +50,7 @@ internal sealed class RadioDemoPageState : State
             [
                 new Text("Radio baseline + adaptive", fontSize: 20, color: Colors.Black),
                 new Text(
-                    "Material Radio plus adaptive Cupertino probe with platform/checkmark toggles.",
+                    "RadioGroup keyboard navigation plus adaptive Cupertino platform/checkmark probes.",
                     fontSize: 14,
                     color: Color.Parse("#8A000000")),
                 new Row(
@@ -108,103 +108,111 @@ internal sealed class RadioDemoPageState : State
                                 "Material path",
                                 fontSize: 13,
                                 color: Color.Parse("#FF37474F")),
-                            BuildRadioRow(
-                                radio: new Radio<string>(
-                                    value: "first",
-                                    groupValue: _materialGroupValue,
-                                    onChanged: _enabled ? OnMaterialChanged : null,
-                                    toggleable: _toggleable),
-                                title: "Default radio #1",
-                                subtitle: "value: first"),
-                            BuildRadioRow(
-                                radio: new Radio<string>(
-                                    value: "second",
-                                    groupValue: _materialGroupValue,
-                                    onChanged: _enabled ? OnMaterialChanged : null,
-                                    toggleable: _toggleable),
-                                title: "Default radio #2",
-                                subtitle: "value: second"),
-                            BuildRadioRow(
-                                radio: new Radio<string>(
-                                    value: "custom",
-                                    groupValue: _materialGroupValue,
-                                    onChanged: _enabled ? OnMaterialChanged : null,
-                                    toggleable: _toggleable,
-                                    activeColor: Color.Parse("#FF00695C"),
-                                    fillColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                                    {
-                                        if (states.HasFlag(MaterialState.Disabled))
-                                        {
-                                            return Color.Parse("#6100695C");
-                                        }
-
-                                        if (states.HasFlag(MaterialState.Selected))
-                                        {
-                                            return Color.Parse("#FF00695C");
-                                        }
-
-                                        return Color.Parse("#FF455A64");
-                                    }),
-                                    backgroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                                    {
-                                        return states.HasFlag(MaterialState.Selected)
-                                            ? Color.Parse("#1400695C")
-                                            : Colors.Transparent;
-                                    }),
-                                    overlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                                    {
-                                        if (states.HasFlag(MaterialState.Pressed))
-                                        {
-                                            return Color.Parse("#3300695C");
-                                        }
-
-                                        if (states.HasFlag(MaterialState.Hovered))
-                                        {
-                                            return Color.Parse("#2200695C");
-                                        }
-
-                                        if (states.HasFlag(MaterialState.Focused))
-                                        {
-                                            return Color.Parse("#2900695C");
-                                        }
-
-                                        return null;
-                                    }),
-                                    side: new BorderSide(Color.Parse("#FF00695C"), 2),
-                                    innerRadius: MaterialStateProperty<double?>.All(5)),
-                                title: "Custom colors",
-                                subtitle: "fill/overlay/side/background overrides"),
-                            new Text(
-                                "Adaptive path",
-                                fontSize: 13,
-                                color: Color.Parse("#FF37474F")),
-                            new Theme(
-                                data: adaptiveTheme,
+                            new RadioGroup<string>(
+                                groupValue: _materialGroupValue,
+                                onChanged: OnMaterialChanged,
                                 child: new Column(
                                     crossAxisAlignment: CrossAxisAlignment.Stretch,
                                     spacing: 8,
                                     children:
                                     [
                                         BuildRadioRow(
-                                            radio: Radio<string>.Adaptive(
-                                                value: "adaptive-first",
-                                                groupValue: _adaptiveGroupValue,
-                                                onChanged: _enabled ? OnAdaptiveChanged : null,
+                                            radio: new Radio<string>(
+                                                value: "first",
+                                                enabled: _enabled,
                                                 toggleable: _toggleable),
-                                            title: "Adaptive default #1",
-                                            subtitle: "value: adaptive-first"),
+                                            title: "Default radio #1",
+                                            subtitle: "value: first"),
                                         BuildRadioRow(
-                                            radio: Radio<string>.Adaptive(
-                                                value: "adaptive-second",
-                                                groupValue: _adaptiveGroupValue,
-                                                onChanged: _enabled ? OnAdaptiveChanged : null,
+                                            radio: new Radio<string>(
+                                                value: "second",
+                                                enabled: _enabled,
+                                                toggleable: _toggleable),
+                                            title: "Default radio #2",
+                                            subtitle: "value: second"),
+                                        BuildRadioRow(
+                                            radio: new Radio<string>(
+                                                value: "custom",
+                                                enabled: _enabled,
                                                 toggleable: _toggleable,
                                                 activeColor: Color.Parse("#FF00695C"),
-                                                fillColor: MaterialStateProperty<Color?>.All(Color.Parse("#FF8E24AA")),
-                                                useCupertinoCheckmarkStyle: _adaptiveUseCheckmarkStyle),
-                                            title: "Adaptive style probe",
-                                            subtitle: "checkmark style + fillColor ignore on iOS/macOS"),
+                                                fillColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+                                                {
+                                                    if (states.HasFlag(MaterialState.Disabled))
+                                                    {
+                                                        return Color.Parse("#6100695C");
+                                                    }
+
+                                                    if (states.HasFlag(MaterialState.Selected))
+                                                    {
+                                                        return Color.Parse("#FF00695C");
+                                                    }
+
+                                                    return Color.Parse("#FF455A64");
+                                                }),
+                                                backgroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+                                                {
+                                                    return states.HasFlag(MaterialState.Selected)
+                                                        ? Color.Parse("#1400695C")
+                                                        : Colors.Transparent;
+                                                }),
+                                                overlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+                                                {
+                                                    if (states.HasFlag(MaterialState.Pressed))
+                                                    {
+                                                        return Color.Parse("#3300695C");
+                                                    }
+
+                                                    if (states.HasFlag(MaterialState.Hovered))
+                                                    {
+                                                        return Color.Parse("#2200695C");
+                                                    }
+
+                                                    if (states.HasFlag(MaterialState.Focused))
+                                                    {
+                                                        return Color.Parse("#2900695C");
+                                                    }
+
+                                                    return null;
+                                                }),
+                                                side: new BorderSide(Color.Parse("#FF00695C"), 2),
+                                                innerRadius: MaterialStateProperty<double?>.All(5)),
+                                            title: "Custom colors",
+                                            subtitle: "fill/overlay/side/background overrides"),
                                     ])),
+                            new Text(
+                                "Adaptive path",
+                                fontSize: 13,
+                                color: Color.Parse("#FF37474F")),
+                            new Theme(
+                                data: adaptiveTheme,
+                                child: new RadioGroup<string>(
+                                    groupValue: _adaptiveGroupValue,
+                                    onChanged: OnAdaptiveChanged,
+                                    child: new Column(
+                                        crossAxisAlignment: CrossAxisAlignment.Stretch,
+                                        spacing: 8,
+                                        children:
+                                        [
+                                            BuildRadioRow(
+                                                radio: Radio<string>.Adaptive(
+                                                    value: "adaptive-first",
+                                                    enabled: _enabled,
+                                                    toggleable: _toggleable),
+                                                title: "Adaptive default #1",
+                                                subtitle: "value: adaptive-first"),
+                                            BuildRadioRow(
+                                                radio: Radio<string>.Adaptive(
+                                                    value: "adaptive-second",
+                                                    enabled: _enabled,
+                                                    toggleable: _toggleable,
+                                                    activeColor: Color.Parse("#FF00695C"),
+                                                    fillColor: MaterialStateProperty<Color?>.All(
+                                                        Color.Parse("#FF8E24AA")),
+                                                    useCupertinoCheckmarkStyle: _adaptiveUseCheckmarkStyle),
+                                                title: "Adaptive style probe",
+                                                subtitle: "checkmark style + fillColor ignore on iOS/macOS"),
+                                        ]))),
                         ])),
             ]);
     }

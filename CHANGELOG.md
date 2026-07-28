@@ -1,5 +1,11 @@
 # Changelog
 
+- Breaking: added paired Flutter core `RadioGroup<T>` + `RawRadio<T>` parity with registry/client ownership,
+  toggleable selection animation, checked/group semantics, selected-only Tab traversal, wraparound arrow/Space
+  keyboard behavior, and focused tests. Material `Radio`/`RadioListTile` now consume the shared registry while
+  retaining deprecated direct-value compatibility; the mirrored radio demo uses the modern ancestor API. Moved
+  `RadioGroup<T>` from `Plumix.Material` to `Plumix` and advanced both packages to `0.3.0-alpha.1`.
+
 - Breaking: added paired Flutter core `RawTooltip` + Material `Tooltip` parity with `OverlayPortal` ownership,
   viewport-aware auto-flipping and custom position delegates, source timing/trigger/feedback/global-dismiss behavior,
   tooltip semantics, focused tests, and an expanded mirrored C#/Dart demo. `WidgetHost` now installs the baseline root

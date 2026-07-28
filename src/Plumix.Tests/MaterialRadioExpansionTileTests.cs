@@ -59,6 +59,40 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
     }
 
     [Fact]
+    public void RadioListTile_RadioGroupArrowKey_SelectsAndFocusesNextTile()
+    {
+        string? changed = null;
+        var firstFocus = new FocusNode();
+        var secondFocus = new FocusNode();
+        using var harness = new WidgetRenderHarness(
+            BuildThemed(new RadioGroup<string>(
+                groupValue: "a",
+                onChanged: value => changed = value,
+                child: new Column(
+                    children:
+                    [
+                        new RadioListTile<string>(
+                            value: "a",
+                            title: new Text("Option A"),
+                            focusNode: firstFocus),
+                        new RadioListTile<string>(
+                            value: "b",
+                            title: new Text("Option B"),
+                            focusNode: secondFocus),
+                    ]))));
+
+        harness.Pump(new Size(360, 180));
+        Assert.True(firstFocus.RequestFocus());
+        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("ArrowRight", isDown: true)));
+
+        Assert.Equal("b", changed);
+        Assert.True(secondFocus.HasFocus);
+
+        firstFocus.Dispose();
+        secondFocus.Dispose();
+    }
+
+    [Fact]
     public void RadioListTile_ToggleableSelectedTap_ReturnsNull()
     {
         string? changed = "unchanged";

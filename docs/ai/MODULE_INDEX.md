@@ -54,6 +54,9 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Tooltips enter through core `Widgets/RawTooltip.cs` and Material `Tooltip.cs` + `TooltipTheme.cs`; overlay geometry
   uses `Widgets/Overlay.cs` and `CustomSingleChildLayout.cs`, while hover/touch ownership uses `Widgets/Gestures.cs`,
   with focused coverage in `RawTooltipTests.cs` and `MaterialTooltipTests.cs`.
+- Radio grouping enters through core `Widgets/RadioGroup.cs` + `RawRadio.cs`; Material `Radio.cs` and
+  `RadioListTile.cs` consume the shared registry/client contract, with group, keyboard, animation, and semantics
+  coverage in `RadioGroupRawRadioTests.cs` plus the existing Material radio suites.
 - Material text-selection toolbar controls enter through `TextSelectionToolbar.cs` and
   `DesktopTextSelectionToolbar.cs`; delegated viewport placement and size transitions live in core
   `Widgets/TextSelectionToolbarLayoutDelegate.cs`, `Widgets/DesktopTextSelectionToolbarLayoutDelegate.cs`,

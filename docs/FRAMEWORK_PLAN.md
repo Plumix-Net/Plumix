@@ -348,6 +348,10 @@ Kickoff note (2026-03-12):
   viewport-aware side flipping, custom position delegates, focused tests, and expanded mirrored C#/Dart probes.
   `WidgetHost` now installs the baseline root overlay required by portal-backed controls. Material `richMessage`
   remains tracked against the shared rich-span gap.
+- Added paired core `RadioGroup<T>` + `RawRadio<T>` parity with shared registry/client ownership, selected/toggleable
+  state animation, checked/group semantics, selected-only Tab traversal, disabled-radio skipping, wraparound arrow
+  selection, Space toggling, focused tests, and a modernized mirrored C#/Dart radio probe. Material `Radio` and
+  `RadioListTile` now use the shared group registry while retaining their deprecated direct-value compatibility.
 - Added paired core `RawAutocomplete<T>` + Material `Autocomplete<T>` parity with sync/async option resolution, stale-result suppression, split/custom fields, anchored direction selection, keyboard highlighting/selection, Material defaults, focused tests, and mirrored C#/Dart sample probes.
 - Added paired Material `SelectableText` + `SelectionArea` parity baseline over a shared core `SelectableRegion`:
   single-run and multi-widget selection, glyph-range highlight paint, transformed cross-paragraph pointer drag,

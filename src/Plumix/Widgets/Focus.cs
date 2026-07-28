@@ -46,6 +46,7 @@ public delegate bool FocusOnTextSelectionChangedCallback(FocusNode node, int bas
 public class FocusNode : ChangeNotifier
 {
     private readonly List<FocusOnKeyEventCallback> _keyEventHandlers = [];
+    private readonly Dictionary<object, bool> _traversalEligibility = [];
     private bool _hasFocus;
     private bool _canRequestFocus = true;
     private bool _skipTraversal;
@@ -94,6 +95,8 @@ public class FocusNode : ChangeNotifier
     internal FocusScopeNode? Scope { get; private set; }
 
     internal Element? AttachmentElement { get; private set; }
+
+    internal bool IsTraversalEligible => _traversalEligibility.Values.All(eligible => eligible);
 
     public bool RequestFocus()
     {
@@ -179,6 +182,17 @@ public class FocusNode : ChangeNotifier
         _keyEventHandlers.Remove(handler);
     }
 
+    internal void SetTraversalEligibility(object owner, bool eligible)
+    {
+        ArgumentNullException.ThrowIfNull(owner);
+        _traversalEligibility[owner] = eligible;
+    }
+
+    internal void RemoveTraversalEligibility(object owner)
+    {
+        _traversalEligibility.Remove(owner);
+    }
+
     internal bool HandleTextInput(string text)
     {
         return OnTextInput?.Invoke(this, text) ?? false;
@@ -244,6 +258,7 @@ public class FocusNode : ChangeNotifier
     public override void Dispose()
     {
         _keyEventHandlers.Clear();
+        _traversalEligibility.Clear();
         (Manager ?? FocusManager.Instance).UnregisterNode(this);
         base.Dispose();
     }
@@ -587,7 +602,7 @@ public sealed class FocusManager
                 continue;
             }
 
-            if (!candidate.CanRequestFocus || candidate.SkipTraversal)
+            if (!candidate.CanRequestFocus || candidate.SkipTraversal || !candidate.IsTraversalEligible)
             {
                 continue;
             }

@@ -26,9 +26,10 @@ public sealed class Radio<T> : StatefulWidget
 
     public Radio(
         T value,
-        T? groupValue,
-        Action<T?>? onChanged,
+        T? groupValue = default,
+        Action<T?>? onChanged = null,
         bool toggleable = false,
+        MouseCursor? mouseCursor = null,
         Color? activeColor = null,
         MaterialStateProperty<Color?>? fillColor = null,
         MaterialStateProperty<Color?>? overlayColor = null,
@@ -41,12 +42,15 @@ public sealed class Radio<T> : StatefulWidget
         double? splashRadius = null,
         FocusNode? focusNode = null,
         bool autofocus = false,
+        bool? enabled = null,
+        RadioGroupRegistry<T>? groupRegistry = null,
         Key? key = null)
         : this(
             value: value,
             groupValue: groupValue,
             onChanged: onChanged,
             toggleable: toggleable,
+            mouseCursor: mouseCursor,
             activeColor: activeColor,
             fillColor: fillColor,
             overlayColor: overlayColor,
@@ -59,6 +63,8 @@ public sealed class Radio<T> : StatefulWidget
             splashRadius: splashRadius,
             focusNode: focusNode,
             autofocus: autofocus,
+            enabled: enabled,
+            groupRegistry: groupRegistry,
             useCupertinoCheckmarkStyle: false,
             radioType: RadioType.Material,
             key: key)
@@ -70,6 +76,7 @@ public sealed class Radio<T> : StatefulWidget
         T? groupValue,
         Action<T?>? onChanged,
         bool toggleable,
+        MouseCursor? mouseCursor,
         Color? activeColor,
         MaterialStateProperty<Color?>? fillColor,
         MaterialStateProperty<Color?>? overlayColor,
@@ -82,6 +89,8 @@ public sealed class Radio<T> : StatefulWidget
         double? splashRadius,
         FocusNode? focusNode,
         bool autofocus,
+        bool? enabled,
+        RadioGroupRegistry<T>? groupRegistry,
         bool useCupertinoCheckmarkStyle,
         RadioType radioType,
         Key? key = null) : base(key)
@@ -90,6 +99,7 @@ public sealed class Radio<T> : StatefulWidget
         GroupValue = groupValue;
         OnChanged = onChanged;
         Toggleable = toggleable;
+        MouseCursor = mouseCursor;
         ActiveColor = activeColor;
         FillColor = fillColor;
         OverlayColor = overlayColor;
@@ -102,6 +112,8 @@ public sealed class Radio<T> : StatefulWidget
         SplashRadius = splashRadius;
         FocusNode = focusNode;
         Autofocus = autofocus;
+        Enabled = enabled;
+        GroupRegistry = groupRegistry;
         UseCupertinoCheckmarkStyle = useCupertinoCheckmarkStyle;
         _radioType = radioType;
     }
@@ -113,6 +125,8 @@ public sealed class Radio<T> : StatefulWidget
     public Action<T?>? OnChanged { get; }
 
     public bool Toggleable { get; }
+
+    public MouseCursor? MouseCursor { get; }
 
     public Color? ActiveColor { get; }
 
@@ -138,13 +152,18 @@ public sealed class Radio<T> : StatefulWidget
 
     public bool Autofocus { get; }
 
+    public bool? Enabled { get; }
+
+    public RadioGroupRegistry<T>? GroupRegistry { get; }
+
     public bool UseCupertinoCheckmarkStyle { get; }
 
     public static Radio<T> Adaptive(
         T value,
-        T? groupValue,
-        Action<T?>? onChanged,
+        T? groupValue = default,
+        Action<T?>? onChanged = null,
         bool toggleable = false,
+        MouseCursor? mouseCursor = null,
         Color? activeColor = null,
         MaterialStateProperty<Color?>? fillColor = null,
         MaterialStateProperty<Color?>? overlayColor = null,
@@ -158,6 +177,8 @@ public sealed class Radio<T> : StatefulWidget
         FocusNode? focusNode = null,
         bool autofocus = false,
         bool useCupertinoCheckmarkStyle = false,
+        bool? enabled = null,
+        RadioGroupRegistry<T>? groupRegistry = null,
         Key? key = null)
     {
         return new Radio<T>(
@@ -165,6 +186,7 @@ public sealed class Radio<T> : StatefulWidget
             groupValue: groupValue,
             onChanged: onChanged,
             toggleable: toggleable,
+            mouseCursor: mouseCursor,
             activeColor: activeColor,
             fillColor: fillColor,
             overlayColor: overlayColor,
@@ -177,6 +199,8 @@ public sealed class Radio<T> : StatefulWidget
             splashRadius: splashRadius,
             focusNode: focusNode,
             autofocus: autofocus,
+            enabled: enabled,
+            groupRegistry: groupRegistry,
             useCupertinoCheckmarkStyle: useCupertinoCheckmarkStyle,
             radioType: RadioType.Adaptive,
             key: key);
@@ -187,30 +211,74 @@ public sealed class Radio<T> : StatefulWidget
         return new RadioState();
     }
 
-    private sealed class RadioState : State
+    private sealed class RadioState : State, RadioClient<T>
     {
+        private FocusNode? _focusNode;
+        private bool _ownsFocusNode;
+        private RadioGroupRegistry<T>? _registry;
+        private LegacyRadioRegistry? _legacyRegistry;
+        private bool _registryEnablesInteraction;
+
         private Radio<T> CurrentWidget => (Radio<T>)StateWidget;
+
+        public bool Tristate => CurrentWidget.Toggleable;
+
+        public T RadioValue => CurrentWidget.Value;
+
+        public bool Enabled => ResolveEnabled();
+
+        public FocusNode FocusNode => _focusNode!;
+
+        public override void InitState()
+        {
+            AttachFocusNode(CurrentWidget.FocusNode);
+        }
+
+        public override void DidChangeDependencies()
+        {
+            SyncRegistry();
+        }
+
+        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        {
+            var oldRadio = (Radio<T>)oldWidget;
+            if (!ReferenceEquals(oldRadio.FocusNode, CurrentWidget.FocusNode))
+            {
+                SetRegistry(null);
+                DetachFocusNode(disposeOwned: true);
+                AttachFocusNode(CurrentWidget.FocusNode);
+            }
+
+            SyncRegistry();
+        }
 
         public override Widget Build(BuildContext context)
         {
+            SyncRegistry();
+            bool enabled = ResolveEnabled();
+            if (CurrentWidget.Enabled == true && _registry is null)
+            {
+                throw new InvalidOperationException(
+                    "Radio is enabled but has no onChanged callback or group registry.");
+            }
+
             var theme = Theme.Of(context);
             if (IsAdaptiveCupertino(theme))
             {
                 return new CupertinoRadio<T>(
                     value: CurrentWidget.Value,
-                    groupValue: CurrentWidget.GroupValue,
-                    onChanged: CurrentWidget.OnChanged,
+                    groupValue: _registry is null ? default : _registry.GroupValue,
+                    onChanged: enabled ? _registry?.OnChanged : null,
                     toggleable: CurrentWidget.Toggleable,
                     activeColor: CurrentWidget.ActiveColor,
                     focusColor: CurrentWidget.FocusColor,
                     useCheckmarkStyle: CurrentWidget.UseCupertinoCheckmarkStyle,
-                    focusNode: CurrentWidget.FocusNode,
+                    focusNode: _focusNode,
                     autofocus: CurrentWidget.Autofocus,
                     isDark: theme.Brightness == Brightness.Dark);
             }
 
             var radioTheme = RadioTheme.Of(context);
-            bool enabled = CurrentWidget.OnChanged is not null;
             bool selected = IsSelected();
             var selectedStates = BuildStates(enabled, selected: true);
             var tapTargetSize = CurrentWidget.MaterialTapTargetSize
@@ -256,7 +324,8 @@ public sealed class Radio<T> : StatefulWidget
                             : new SizedBox())),
                 onPressed: enabled ? HandleTap : null,
                 style: style,
-                focusNode: CurrentWidget.FocusNode,
+                focusNode: _focusNode,
+                mouseCursor: CurrentWidget.MouseCursor,
                 isSelected: selected,
                 includeSemanticSelected: false,
                 isSemanticButton: false,
@@ -265,9 +334,15 @@ public sealed class Radio<T> : StatefulWidget
                 autofocus: CurrentWidget.Autofocus);
         }
 
+        public override void Dispose()
+        {
+            SetRegistry(null);
+            DetachFocusNode(disposeOwned: true);
+        }
+
         private void HandleTap()
         {
-            if (CurrentWidget.OnChanged is null)
+            if (!ResolveEnabled() || _registry is null)
             {
                 return;
             }
@@ -276,18 +351,98 @@ public sealed class Radio<T> : StatefulWidget
             {
                 if (CurrentWidget.Toggleable)
                 {
-                    CurrentWidget.OnChanged.Invoke(default);
+                    _registry.OnChanged(default);
                 }
 
                 return;
             }
 
-            CurrentWidget.OnChanged.Invoke(CurrentWidget.Value);
+            _registry.OnChanged(CurrentWidget.Value);
         }
 
         private bool IsSelected()
         {
-            return EqualityComparer<T?>.Default.Equals(CurrentWidget.Value, CurrentWidget.GroupValue);
+            return EqualityComparer<T?>.Default.Equals(
+                CurrentWidget.Value,
+                _registry is null ? default : _registry.GroupValue);
+        }
+
+        private bool ResolveEnabled()
+        {
+            return CurrentWidget.Enabled ?? (CurrentWidget.OnChanged is not null || _registryEnablesInteraction);
+        }
+
+        private void SyncRegistry()
+        {
+            RadioGroupRegistry<T>? registry = CurrentWidget.GroupRegistry ?? RadioGroup<T>.MaybeOf(Context);
+            _registryEnablesInteraction = registry is not null;
+            if (registry is null)
+            {
+                _legacyRegistry ??= new LegacyRadioRegistry(this);
+                registry = _legacyRegistry;
+            }
+
+            SetRegistry(registry);
+        }
+
+        private void SetRegistry(RadioGroupRegistry<T>? registry)
+        {
+            if (ReferenceEquals(_registry, registry))
+            {
+                return;
+            }
+
+            _registry?.UnregisterClient(this);
+            _registry = registry;
+            _registry?.RegisterClient(this);
+        }
+
+        private void AttachFocusNode(FocusNode? focusNode)
+        {
+            _focusNode = focusNode ?? new FocusNode();
+            _ownsFocusNode = focusNode is null;
+        }
+
+        private void DetachFocusNode(bool disposeOwned)
+        {
+            if (_focusNode is null)
+            {
+                return;
+            }
+
+            if (disposeOwned && _ownsFocusNode)
+            {
+                _focusNode.Dispose();
+            }
+
+            _focusNode = null;
+            _ownsFocusNode = false;
+        }
+
+        private sealed class LegacyRadioRegistry : RadioGroupRegistry<T>
+        {
+            private readonly RadioState _state;
+
+            public LegacyRadioRegistry(RadioState state)
+            {
+                _state = state;
+            }
+
+            public override T? GroupValue => _state.CurrentWidget.GroupValue;
+
+            public override Action<T?> OnChanged => _state.CurrentWidget.OnChanged ?? Noop;
+
+            public override void RegisterClient(RadioClient<T> radio)
+            {
+            }
+
+            public override void UnregisterClient(RadioClient<T> radio)
+            {
+            }
+
+            private static void Noop(T? value)
+            {
+            }
         }
 
         private double ResolveInnerRadius(RadioThemeData radioTheme, MaterialState states)

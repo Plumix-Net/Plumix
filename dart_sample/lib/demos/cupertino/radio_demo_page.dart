@@ -38,7 +38,8 @@ class _RadioDemoPageState extends State<RadioDemoPage> {
           style: TextStyle(fontSize: 20, color: Colors.black),
         ),
         const Text(
-          'Material Radio plus adaptive Cupertino probe with platform/checkmark toggles.',
+          'RadioGroup keyboard navigation plus adaptive Cupertino '
+          'platform/checkmark probes.',
           style: TextStyle(fontSize: 14, color: Colors.black54),
         ),
         Row(
@@ -103,75 +104,85 @@ class _RadioDemoPageState extends State<RadioDemoPage> {
                 'Material path',
                 style: TextStyle(fontSize: 13, color: Color(0xFF37474F)),
               ),
-              _buildRadioRow(
-                radio: Radio<String>(
-                  value: 'first',
-                  groupValue: _materialGroupValue,
-                  onChanged: _enabled ? _onMaterialChanged : null,
-                  toggleable: _toggleable,
+              RadioGroup<String>(
+                groupValue: _materialGroupValue,
+                onChanged: _onMaterialChanged,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  spacing: 8,
+                  children: <Widget>[
+                    _buildRadioRow(
+                      radio: Radio<String>(
+                        value: 'first',
+                        enabled: _enabled,
+                        toggleable: _toggleable,
+                      ),
+                      title: 'Default radio #1',
+                      subtitle: 'value: first',
+                    ),
+                    _buildRadioRow(
+                      radio: Radio<String>(
+                        value: 'second',
+                        enabled: _enabled,
+                        toggleable: _toggleable,
+                      ),
+                      title: 'Default radio #2',
+                      subtitle: 'value: second',
+                    ),
+                    _buildRadioRow(
+                      radio: Radio<String>(
+                        value: 'custom',
+                        enabled: _enabled,
+                        toggleable: _toggleable,
+                        activeColor: const Color(0xFF00695C),
+                        fillColor: WidgetStateProperty.resolveWith((
+                          Set<WidgetState> states,
+                        ) {
+                          if (states.contains(WidgetState.disabled)) {
+                            return const Color(0x6100695C);
+                          }
+
+                          if (states.contains(WidgetState.selected)) {
+                            return const Color(0xFF00695C);
+                          }
+
+                          return const Color(0xFF455A64);
+                        }),
+                        backgroundColor: WidgetStateProperty.resolveWith((
+                          Set<WidgetState> states,
+                        ) {
+                          return states.contains(WidgetState.selected)
+                              ? const Color(0x1400695C)
+                              : Colors.transparent;
+                        }),
+                        overlayColor: WidgetStateProperty.resolveWith((
+                          Set<WidgetState> states,
+                        ) {
+                          if (states.contains(WidgetState.pressed)) {
+                            return const Color(0x3300695C);
+                          }
+
+                          if (states.contains(WidgetState.hovered)) {
+                            return const Color(0x2200695C);
+                          }
+
+                          if (states.contains(WidgetState.focused)) {
+                            return const Color(0x2900695C);
+                          }
+
+                          return null;
+                        }),
+                        side: const BorderSide(
+                          color: Color(0xFF00695C),
+                          width: 2,
+                        ),
+                        innerRadius: WidgetStateProperty.all(5.0),
+                      ),
+                      title: 'Custom colors',
+                      subtitle: 'fill/overlay/side/background overrides',
+                    ),
+                  ],
                 ),
-                title: 'Default radio #1',
-                subtitle: 'value: first',
-              ),
-              _buildRadioRow(
-                radio: Radio<String>(
-                  value: 'second',
-                  groupValue: _materialGroupValue,
-                  onChanged: _enabled ? _onMaterialChanged : null,
-                  toggleable: _toggleable,
-                ),
-                title: 'Default radio #2',
-                subtitle: 'value: second',
-              ),
-              _buildRadioRow(
-                radio: Radio<String>(
-                  value: 'custom',
-                  groupValue: _materialGroupValue,
-                  onChanged: _enabled ? _onMaterialChanged : null,
-                  toggleable: _toggleable,
-                  activeColor: const Color(0xFF00695C),
-                  fillColor: WidgetStateProperty.resolveWith((
-                    Set<WidgetState> states,
-                  ) {
-                    if (states.contains(WidgetState.disabled)) {
-                      return const Color(0x6100695C);
-                    }
-
-                    if (states.contains(WidgetState.selected)) {
-                      return const Color(0xFF00695C);
-                    }
-
-                    return const Color(0xFF455A64);
-                  }),
-                  backgroundColor: WidgetStateProperty.resolveWith((
-                    Set<WidgetState> states,
-                  ) {
-                    return states.contains(WidgetState.selected)
-                        ? const Color(0x1400695C)
-                        : Colors.transparent;
-                  }),
-                  overlayColor: WidgetStateProperty.resolveWith((
-                    Set<WidgetState> states,
-                  ) {
-                    if (states.contains(WidgetState.pressed)) {
-                      return const Color(0x3300695C);
-                    }
-
-                    if (states.contains(WidgetState.hovered)) {
-                      return const Color(0x2200695C);
-                    }
-
-                    if (states.contains(WidgetState.focused)) {
-                      return const Color(0x2900695C);
-                    }
-
-                    return null;
-                  }),
-                  side: const BorderSide(color: Color(0xFF00695C), width: 2),
-                  innerRadius: WidgetStateProperty.all(5.0),
-                ),
-                title: 'Custom colors',
-                subtitle: 'fill/overlay/side/background overrides',
               ),
               const Text(
                 'Adaptive path',
@@ -179,37 +190,40 @@ class _RadioDemoPageState extends State<RadioDemoPage> {
               ),
               Theme(
                 data: adaptiveTheme,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  spacing: 8,
-                  children: <Widget>[
-                    _buildRadioRow(
-                      radio: Radio<String>.adaptive(
-                        value: 'adaptive-first',
-                        groupValue: _adaptiveGroupValue,
-                        onChanged: _enabled ? _onAdaptiveChanged : null,
-                        toggleable: _toggleable,
-                      ),
-                      title: 'Adaptive default #1',
-                      subtitle: 'value: adaptive-first',
-                    ),
-                    _buildRadioRow(
-                      radio: Radio<String>.adaptive(
-                        value: 'adaptive-second',
-                        groupValue: _adaptiveGroupValue,
-                        onChanged: _enabled ? _onAdaptiveChanged : null,
-                        toggleable: _toggleable,
-                        activeColor: const Color(0xFF00695C),
-                        fillColor: WidgetStateProperty.all(
-                          const Color(0xFF8E24AA),
+                child: RadioGroup<String>(
+                  groupValue: _adaptiveGroupValue,
+                  onChanged: _onAdaptiveChanged,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    spacing: 8,
+                    children: <Widget>[
+                      _buildRadioRow(
+                        radio: Radio<String>.adaptive(
+                          value: 'adaptive-first',
+                          enabled: _enabled,
+                          toggleable: _toggleable,
                         ),
-                        useCupertinoCheckmarkStyle: _adaptiveUseCheckmarkStyle,
+                        title: 'Adaptive default #1',
+                        subtitle: 'value: adaptive-first',
                       ),
-                      title: 'Adaptive style probe',
-                      subtitle:
-                          'checkmark style + fillColor ignore on iOS/macOS',
-                    ),
-                  ],
+                      _buildRadioRow(
+                        radio: Radio<String>.adaptive(
+                          value: 'adaptive-second',
+                          enabled: _enabled,
+                          toggleable: _toggleable,
+                          activeColor: const Color(0xFF00695C),
+                          fillColor: WidgetStateProperty.all(
+                            const Color(0xFF8E24AA),
+                          ),
+                          useCupertinoCheckmarkStyle:
+                              _adaptiveUseCheckmarkStyle,
+                        ),
+                        title: 'Adaptive style probe',
+                        subtitle:
+                            'checkmark style + fillColor ignore on iOS/macOS',
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],

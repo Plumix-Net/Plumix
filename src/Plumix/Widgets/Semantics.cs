@@ -18,6 +18,7 @@ public enum SemanticsRole
     TabPanel,
     Form,
     Cell,
+    RadioGroup,
 }
 
 public sealed class Semantics : SingleChildRenderObjectWidget
