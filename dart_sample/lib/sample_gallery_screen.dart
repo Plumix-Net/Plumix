@@ -595,8 +595,8 @@ class SampleGalleryScreen extends StatelessWidget {
         ),
         SampleRouteDefinition(
           routeName: SampleRoutes.keyboardListener,
-          title: 'Keyboard listeners',
-          subtitle: 'focused key down/up dispatch + legacy raw compatibility',
+          title: 'Keyboard listeners + actions',
+          subtitle: 'focused key events + Actions/Shortcuts intent dispatch',
           builder: () => const KeyboardListenerDemoPage(),
         ),
         SampleRouteDefinition(

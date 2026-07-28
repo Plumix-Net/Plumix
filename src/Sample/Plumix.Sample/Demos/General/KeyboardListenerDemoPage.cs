@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Material;
@@ -21,13 +23,32 @@ internal sealed class KeyboardListenerDemoPageState : State
 {
     private readonly FocusNode _keyboardFocusNode = new();
     private readonly FocusNode _rawFocusNode = new();
+    private readonly FocusNode _shortcutFocusNode = new();
+    private IReadOnlyDictionary<ShortcutActivator, Intent> _shortcuts = null!;
+    private IReadOnlyDictionary<Type, FlutterAction> _actions = null!;
     private string _keyboardEvent = "none";
     private string _rawEvent = "none";
+    private int _shortcutCount;
 
     public override void InitState()
     {
         _keyboardFocusNode.AddListener(HandleFocusChanged);
         _rawFocusNode.AddListener(HandleFocusChanged);
+        _shortcutFocusNode.AddListener(HandleFocusChanged);
+        _shortcuts = new Dictionary<ShortcutActivator, Intent>
+        {
+            [new SingleActivator("K", control: true)] = new CounterShortcutIntent(1),
+            [new SingleActivator("J", control: true)] = new CounterShortcutIntent(-1),
+        };
+        _actions = new Dictionary<Type, FlutterAction>
+        {
+            [typeof(CounterShortcutIntent)] = new CallbackAction<CounterShortcutIntent>(
+                intent =>
+                {
+                    SetState(() => _shortcutCount += intent.Delta);
+                    return _shortcutCount;
+                })
+        };
     }
 
     public override Widget Build(BuildContext context)
@@ -44,6 +65,7 @@ internal sealed class KeyboardListenerDemoPageState : State
                     color: Colors.DimGray),
                 BuildKeyboardListenerProbe(),
                 BuildRawKeyboardListenerProbe(),
+                BuildActionsShortcutsProbe(),
             ]);
     }
 
@@ -51,8 +73,10 @@ internal sealed class KeyboardListenerDemoPageState : State
     {
         _keyboardFocusNode.RemoveListener(HandleFocusChanged);
         _rawFocusNode.RemoveListener(HandleFocusChanged);
+        _shortcutFocusNode.RemoveListener(HandleFocusChanged);
         _keyboardFocusNode.Dispose();
         _rawFocusNode.Dispose();
+        _shortcutFocusNode.Dispose();
     }
 
     private Widget BuildKeyboardListenerProbe()
@@ -104,6 +128,29 @@ internal sealed class KeyboardListenerDemoPageState : State
 #pragma warning restore CS0618
     }
 
+    private Widget BuildActionsShortcutsProbe()
+    {
+        return new Column(
+            crossAxisAlignment: CrossAxisAlignment.Stretch,
+            spacing: 8,
+            children:
+            [
+                new TextButton(
+                    onPressed: () => _shortcutFocusNode.RequestFocus(),
+                    child: new Text("Focus Actions + Shortcuts")),
+                new Shortcuts(
+                    shortcuts: _shortcuts,
+                    child: new Actions(
+                        actions: _actions,
+                        child: new Focus(
+                            focusNode: _shortcutFocusNode,
+                            child: BuildPanel(
+                                title: "Actions + Shortcuts",
+                                detail: $"count {_shortcutCount} — Ctrl+K / Ctrl+J",
+                                focused: _shortcutFocusNode.HasFocus)))),
+            ]);
+    }
+
     private static Widget BuildPanel(string title, string detail, bool focused)
     {
         return new Container(
@@ -135,4 +182,14 @@ internal sealed class KeyboardListenerDemoPageState : State
     {
         SetState(static () => { });
     }
+}
+
+internal sealed class CounterShortcutIntent : Intent
+{
+    public CounterShortcutIntent(int delta)
+    {
+        Delta = delta;
+    }
+
+    public int Delta { get; }
 }

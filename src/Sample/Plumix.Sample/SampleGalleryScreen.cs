@@ -282,8 +282,8 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             () => new LayoutBuilderDemoPage()),
         new(
             SampleRoutes.KeyboardListener,
-            "Keyboard listeners",
-            "focused key down/up dispatch + legacy raw compatibility",
+            "Keyboard listeners + actions",
+            "focused key events + Actions/Shortcuts intent dispatch",
             () => new KeyboardListenerDemoPage()),
         new(
             SampleRoutes.DebugPainting,

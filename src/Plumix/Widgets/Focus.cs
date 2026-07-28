@@ -11,7 +11,8 @@ namespace Plumix.Widgets;
 public enum KeyEventResult
 {
     Ignored,
-    Handled
+    Handled,
+    SkipRemainingHandlers
 }
 
 public readonly record struct FocusTextInputState(
@@ -159,9 +160,10 @@ public class FocusNode : ChangeNotifier
     {
         foreach (FocusOnKeyEventCallback handler in _keyEventHandlers.ToArray())
         {
-            if (handler(this, @event) == KeyEventResult.Handled)
+            KeyEventResult result = handler(this, @event);
+            if (result != KeyEventResult.Ignored)
             {
-                return KeyEventResult.Handled;
+                return result;
             }
         }
 
@@ -464,9 +466,32 @@ public sealed class FocusManager
             return true;
         }
 
-        if (PrimaryFocus != null && PrimaryFocus.HandleKeyEvent(@event) == KeyEventResult.Handled)
+        if (PrimaryFocus != null)
         {
-            return true;
+            KeyEventResult result = PrimaryFocus.HandleKeyEvent(@event);
+            if (result != KeyEventResult.Ignored)
+            {
+                return result == KeyEventResult.Handled;
+            }
+
+            for (Element? ancestor = PrimaryFocus.AttachmentElement?.Parent;
+                 ancestor != null;
+                 ancestor = ancestor.Parent)
+            {
+                FocusNode? ancestorNode = _nodes.FirstOrDefault(
+                    node => !ReferenceEquals(node, PrimaryFocus)
+                            && ReferenceEquals(node.AttachmentElement, ancestor));
+                if (ancestorNode == null)
+                {
+                    continue;
+                }
+
+                result = ancestorNode.HandleKeyEvent(@event);
+                if (result != KeyEventResult.Ignored)
+                {
+                    return result == KeyEventResult.Handled;
+                }
+            }
         }
 
         if (!@event.IsDown)

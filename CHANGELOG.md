@@ -1,5 +1,11 @@
 # Changelog
 
+- Breaking: added paired Flutter core `Actions` + `Shortcuts` parity with typed intents/actions, hierarchical
+  override/dispatcher lookup, enabled and key-consumption policy, exact modifier/repeat/character/NumLock
+  activators, nested/modal focus dispatch, callback shortcuts, deferred `ShortcutRegistrar` entries, focused tests,
+  and a mirrored C#/Dart keyboard demo. The host now forwards key symbols and repeat state; advanced `Plumix` to
+  `0.9.0-alpha.1`. Flutter's `Action<T>` is named `FlutterAction<T>` to avoid the CLR `System.Action<T>` collision.
+
 - Added paired Material `MenuAcceleratorCallbackBinding` + `MenuAcceleratorLabel` parity with source marker parsing,
   grapheme-safe indexes, Alt-driven underlining/invocation, submenu suppression, Apple-platform policy, automatic
   menu-button bindings, focused tests, and a mirrored C#/Dart menu-bar probe. Added shared `HardwareKeyboard` and text

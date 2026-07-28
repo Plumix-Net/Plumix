@@ -11,14 +11,20 @@ public sealed class KeyEvent
         bool isControlPressed = false,
         bool isAltPressed = false,
         bool isMetaPressed = false,
+        bool isRepeat = false,
+        string? character = null,
+        bool isNumLockOn = false,
         DateTime? timestampUtc = null)
     {
-        Key = key;
+        Key = key ?? throw new ArgumentNullException(nameof(key));
         IsDown = isDown;
         IsShiftPressed = isShiftPressed;
         IsControlPressed = isControlPressed;
         IsAltPressed = isAltPressed;
         IsMetaPressed = isMetaPressed;
+        IsRepeat = isRepeat;
+        Character = character;
+        IsNumLockOn = isNumLockOn;
         TimestampUtc = timestampUtc ?? DateTime.UtcNow;
     }
 
@@ -33,6 +39,12 @@ public sealed class KeyEvent
     public bool IsAltPressed { get; }
 
     public bool IsMetaPressed { get; }
+
+    public bool IsRepeat { get; }
+
+    public string? Character { get; }
+
+    public bool IsNumLockOn { get; }
 
     public DateTime TimestampUtc { get; }
 }

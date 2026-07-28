@@ -127,7 +127,9 @@ public class PlumixHost : Control
             isShiftPressed: e.KeyModifiers.HasFlag(KeyModifiers.Shift),
             isControlPressed: e.KeyModifiers.HasFlag(KeyModifiers.Control),
             isAltPressed: e.KeyModifiers.HasFlag(KeyModifiers.Alt),
-            isMetaPressed: e.KeyModifiers.HasFlag(KeyModifiers.Meta));
+            isMetaPressed: e.KeyModifiers.HasFlag(KeyModifiers.Meta),
+            isRepeat: HardwareKeyboard.Instance.LogicalKeysPressed.Contains(e.Key.ToString()),
+            character: e.KeySymbol);
 
         if (FrameworkFocusManager.Instance.HandleKeyEvent(keyEvent))
         {
@@ -170,7 +172,8 @@ public class PlumixHost : Control
             isShiftPressed: e.KeyModifiers.HasFlag(KeyModifiers.Shift),
             isControlPressed: e.KeyModifiers.HasFlag(KeyModifiers.Control),
             isAltPressed: e.KeyModifiers.HasFlag(KeyModifiers.Alt),
-            isMetaPressed: e.KeyModifiers.HasFlag(KeyModifiers.Meta));
+            isMetaPressed: e.KeyModifiers.HasFlag(KeyModifiers.Meta),
+            character: e.KeySymbol);
 
         if (FrameworkFocusManager.Instance.HandleKeyEvent(keyEvent))
         {

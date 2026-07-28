@@ -14,14 +14,35 @@ class KeyboardListenerDemoPage extends StatefulWidget {
 class _KeyboardListenerDemoPageState extends State<KeyboardListenerDemoPage> {
   final FocusNode _keyboardFocusNode = FocusNode();
   final FocusNode _rawFocusNode = FocusNode();
+  final FocusNode _shortcutFocusNode = FocusNode();
+  late final Map<ShortcutActivator, Intent> _shortcuts;
+  late final Map<Type, Action<Intent>> _actions;
   String _keyboardEvent = 'none';
   String _rawEvent = 'none';
+  int _shortcutCount = 0;
 
   @override
   void initState() {
     super.initState();
     _keyboardFocusNode.addListener(_handleFocusChanged);
     _rawFocusNode.addListener(_handleFocusChanged);
+    _shortcutFocusNode.addListener(_handleFocusChanged);
+    _shortcuts = <ShortcutActivator, Intent>{
+      const SingleActivator(LogicalKeyboardKey.keyK, control: true):
+          const _CounterShortcutIntent(1),
+      const SingleActivator(LogicalKeyboardKey.keyJ, control: true):
+          const _CounterShortcutIntent(-1),
+    };
+    _actions = <Type, Action<Intent>>{
+      _CounterShortcutIntent: CallbackAction<_CounterShortcutIntent>(
+        onInvoke: (_CounterShortcutIntent intent) {
+          setState(() {
+            _shortcutCount += intent.delta;
+          });
+          return _shortcutCount;
+        },
+      ),
+    };
   }
 
   @override
@@ -40,6 +61,7 @@ class _KeyboardListenerDemoPageState extends State<KeyboardListenerDemoPage> {
         ),
         _buildKeyboardListenerProbe(),
         _buildRawKeyboardListenerProbe(),
+        _buildActionsShortcutsProbe(),
       ],
     );
   }
@@ -48,8 +70,10 @@ class _KeyboardListenerDemoPageState extends State<KeyboardListenerDemoPage> {
   void dispose() {
     _keyboardFocusNode.removeListener(_handleFocusChanged);
     _rawFocusNode.removeListener(_handleFocusChanged);
+    _shortcutFocusNode.removeListener(_handleFocusChanged);
     _keyboardFocusNode.dispose();
     _rawFocusNode.dispose();
+    _shortcutFocusNode.dispose();
     super.dispose();
   }
 
@@ -106,6 +130,33 @@ class _KeyboardListenerDemoPageState extends State<KeyboardListenerDemoPage> {
     );
   }
 
+  Widget _buildActionsShortcutsProbe() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      spacing: 8,
+      children: <Widget>[
+        TextButton(
+          onPressed: _shortcutFocusNode.requestFocus,
+          child: const Text('Focus Actions + Shortcuts'),
+        ),
+        Shortcuts(
+          shortcuts: _shortcuts,
+          child: Actions(
+            actions: _actions,
+            child: Focus(
+              focusNode: _shortcutFocusNode,
+              child: _buildPanel(
+                title: 'Actions + Shortcuts',
+                detail: 'count $_shortcutCount — Ctrl+K / Ctrl+J',
+                focused: _shortcutFocusNode.hasFocus,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   static Widget _buildPanel({
     required String title,
     required String detail,
@@ -148,4 +199,10 @@ class _KeyboardListenerDemoPageState extends State<KeyboardListenerDemoPage> {
   void _handleFocusChanged() {
     setState(() {});
   }
+}
+
+class _CounterShortcutIntent extends Intent {
+  const _CounterShortcutIntent(this.delta);
+
+  final int delta;
 }

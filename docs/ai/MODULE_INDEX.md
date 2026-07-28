@@ -267,16 +267,20 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix.Tests/DragTargetTests.cs`
   - `src/Plumix.Tests/TapRegionTests.cs`
 
-### Focus and Keyboard
+### Focus, Keyboard, Actions, and Shortcuts
 
-- Goal: focus ownership/traversal, host key dispatch, focused keyboard listeners, and focus semantics.
+- Goal: focus ownership/traversal, host key dispatch, focused keyboard listeners, intent/action routing, shortcuts,
+  and focus semantics.
 - Read First:
   - `src/Plumix/Widgets/Focus.cs`
   - `src/Plumix/Widgets/KeyboardListener.cs`
+  - `src/Plumix/Widgets/Actions.cs`
+  - `src/Plumix/Widgets/Shortcuts.cs`
   - `src/Plumix/UI/KeyboardEvents.cs`
 - Primary Tests:
   - `src/Plumix.Tests/FocusTests.cs`
   - `src/Plumix.Tests/KeyboardListenerTests.cs`
+  - `src/Plumix.Tests/ActionsShortcutsTests.cs`
   - `src/Plumix.Tests/FlutterHostInputTests.cs`
 
 ### Navigation
