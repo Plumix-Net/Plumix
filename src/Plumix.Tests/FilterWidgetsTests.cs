@@ -56,6 +56,110 @@ public sealed class FilterWidgetsTests
     }
 
     [Fact]
+    public void ImageFilterConfig_ResolvesDirectBoundedAndComposedFilters()
+    {
+        var bounds = new Rect(4.0, 5.0, 20.0, 10.0);
+        var context = new ImageFilterContext(bounds);
+        var directFilter = new ImageFilter.Dilate(2.0, 3.0);
+        var direct = new ImageFilterConfig(directFilter);
+        var bounded = new ImageFilterConfig.Blur(
+            sigmaX: 4.0,
+            sigmaY: 5.0,
+            tileMode: Plumix.Rendering.TileMode.Decal,
+            bounded: true);
+        var compose = new ImageFilterConfig.Compose(direct, bounded);
+
+        Assert.Same(directFilter, direct.Filter);
+        Assert.Same(directFilter, direct.Resolve(context));
+        var resolvedBlur = Assert.IsType<ImageFilter.Blur>(bounded.Resolve(context));
+        Assert.Equal(4.0, resolvedBlur.SigmaX);
+        Assert.Equal(5.0, resolvedBlur.SigmaY);
+        Assert.Equal(Plumix.Rendering.TileMode.Decal, resolvedBlur.TileMode);
+        Assert.Equal(bounds, resolvedBlur.Bounds);
+        var resolvedCompose = Assert.IsType<ImageFilter.Compose>(compose.Resolve(context));
+        Assert.Same(directFilter, resolvedCompose.Outer);
+        Assert.Equal(resolvedBlur, resolvedCompose.Inner);
+
+        Assert.Throws<ArgumentNullException>(() => new ImageFilterConfig(null!));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new ImageFilterConfig.Blur(sigmaX: -1.0));
+        Assert.Throws<ArgumentNullException>(() => new ImageFilterConfig.Compose(null!, direct));
+        Assert.Throws<ArgumentNullException>(() => new ImageFilterConfig.Compose(direct, null!));
+    }
+
+    [Fact]
+    public void BackdropFilter_ExposesFlutterDefaultsAndValidatesFilterChoice()
+    {
+        var filter = new ImageFilter.Blur(3.0, 4.0);
+        var widget = new BackdropFilter(filter);
+        var configured = new BackdropFilter(
+            filterConfig: new ImageFilterConfig.Blur(2.0, 2.0));
+        var grouped = BackdropFilter.Grouped(filter);
+
+        Assert.Same(filter, widget.Filter);
+        Assert.Null(widget.FilterConfig);
+        Assert.Equal(BlendMode.SourceOver, widget.BlendMode);
+        Assert.True(widget.Enabled);
+        Assert.Null(widget.BackdropGroupKey);
+        Assert.Null(widget.Child);
+        Assert.NotNull(configured.FilterConfig);
+        Assert.Null(configured.Filter);
+        Assert.Same(filter, grouped.Filter);
+
+        Assert.Throws<ArgumentException>(() => new BackdropFilter());
+        Assert.Throws<ArgumentException>(() => new BackdropFilter(
+            filter,
+            filterConfig: new ImageFilterConfig(filter)));
+        Assert.Throws<ArgumentException>(() => BackdropFilter.Grouped());
+    }
+
+    [Fact]
+    public void BackdropGroup_GroupedFilterUsesNearestKeyAndUpdatesRenderObject()
+    {
+        var initialKey = new BackdropKey();
+        var updatedKey = new BackdropKey();
+        var initialFilter = new ImageFilter.Blur(2.0, 3.0);
+        var updatedConfig = new ImageFilterConfig.Blur(4.0, 5.0, bounded: true);
+        var owner = new BuildOwner();
+        var root = new TestRootElement(new BackdropGroup(
+            new SizedBox(
+                width: 20.0,
+                height: 10.0,
+                child: BackdropFilter.Grouped(
+                    initialFilter,
+                    child: new SizedBox(width: 20.0, height: 10.0))),
+            initialKey));
+        Mount(root, owner);
+
+        var renderObject = FindElementRenderObject<RenderBackdropFilter>(root.ChildElement);
+        Assert.NotNull(renderObject);
+        Assert.Same(initialKey, renderObject!.BackdropKey);
+        Assert.Same(initialFilter, renderObject.Filter);
+        Assert.True(renderObject.Enabled);
+        Assert.Equal(BlendMode.SourceOver, renderObject.BlendMode);
+
+        root.Update(new BackdropGroup(
+            new SizedBox(
+                width: 20.0,
+                height: 10.0,
+                child: BackdropFilter.Grouped(
+                    filterConfig: updatedConfig,
+                    child: new SizedBox(width: 20.0, height: 10.0),
+                    blendMode: BlendMode.Source,
+                    enabled: false)),
+            updatedKey));
+        owner.FlushBuild();
+
+        var updated = FindElementRenderObject<RenderBackdropFilter>(root.ChildElement);
+        Assert.Same(renderObject, updated);
+        Assert.Same(updatedKey, updated!.BackdropKey);
+        Assert.Same(updatedConfig, updated.FilterConfig);
+        Assert.False(updated.Enabled);
+        Assert.Equal(BlendMode.Source, updated.BlendMode);
+
+        root.Unmount();
+    }
+
+    [Fact]
     public void FilterWidgets_RequireFiltersAndExposeFlutterDefaults()
     {
         var colorFilter = new ColorFilter.Mode(Colors.Red, BitmapBlendingMode.Multiply);
@@ -294,6 +398,101 @@ public sealed class FilterWidgetsTests
     }
 
     [Fact]
+    public void RenderBackdropFilter_RetainsLayerAndCapturesPaintedScenePrefix()
+    {
+        var backgroundChild = new PaintProbeRenderBox();
+        var background = new RenderColorFilter(
+            new ColorFilter.Mode(Colors.Blue, BlendMode.SourceIn),
+            backgroundChild);
+        var filteredChild = new PaintProbeRenderBox();
+        var backdrop = new RenderBackdropFilter(
+            new ImageFilterConfig(new ImageFilter.Blur(2.0, 2.0)),
+            child: filteredChild);
+        var stack = new RenderStack([background, backdrop]);
+        var renderView = new RenderView { Child = stack };
+        var pipeline = new PipelineOwner(renderView);
+        pipeline.Attach(renderView);
+
+        Pump(pipeline);
+
+        var layer = FindLayer<BackdropFilterLayer>(pipeline.RootLayer);
+        Assert.NotNull(layer);
+        Assert.IsType<ImageFilter.Blur>(layer!.ImageFilter);
+        Assert.Equal(BlendMode.SourceOver, layer.BlendMode);
+        Assert.Null(layer.BackdropKey);
+        Assert.Equal(1, backgroundChild.PaintCount);
+        Assert.Equal(1, filteredChild.PaintCount);
+
+        BackdropCapture captured = CreateTestBackdropCapture();
+        pipeline.PrepareBackdropCaptures(_ => captured);
+
+        Assert.Same(captured, layer.Backdrop);
+        pipeline.ClearBackdropInputs();
+        Assert.Null(layer.Backdrop);
+
+        var updatedFilter = new ImageFilter.Dilate(1.0, 1.0);
+        backdrop.Filter = updatedFilter;
+        backdrop.BlendMode = BlendMode.Source;
+        pipeline.FlushCompositingBits();
+        pipeline.FlushPaint();
+
+        var updatedLayer = FindLayer<BackdropFilterLayer>(pipeline.RootLayer);
+        Assert.Same(layer, updatedLayer);
+        Assert.Same(updatedFilter, updatedLayer!.ImageFilter);
+        Assert.Equal(BlendMode.Source, updatedLayer.BlendMode);
+        Assert.Equal(2, filteredChild.PaintCount);
+
+        backdrop.Enabled = false;
+        pipeline.FlushCompositingBits();
+        pipeline.FlushPaint();
+        Assert.Null(FindLayer<BackdropFilterLayer>(pipeline.RootLayer));
+        Assert.Equal(3, filteredChild.PaintCount);
+
+        backdrop.Enabled = true;
+        pipeline.FlushCompositingBits();
+        pipeline.FlushPaint();
+        Assert.Same(layer, FindLayer<BackdropFilterLayer>(pipeline.RootLayer));
+        Assert.Equal(4, filteredChild.PaintCount);
+    }
+
+    [Fact]
+    public void BackdropFilterLayers_WithSharedKeyReuseTheSameCapturedInput()
+    {
+        var sharedKey = new BackdropKey();
+        var first = new RenderBackdropFilter(
+            new ImageFilterConfig(new ImageFilter.Blur(1.0, 1.0)),
+            child: new PaintProbeRenderBox(),
+            backdropKey: sharedKey);
+        var second = new RenderBackdropFilter(
+            new ImageFilterConfig(new ImageFilter.Blur(1.0, 1.0)),
+            child: new PaintProbeRenderBox(),
+            backdropKey: sharedKey);
+        var stack = new RenderStack([new PaintProbeRenderBox(), first, second]);
+        var renderView = new RenderView { Child = stack };
+        var pipeline = new PipelineOwner(renderView);
+        pipeline.Attach(renderView);
+
+        Pump(pipeline);
+        int captureCount = 0;
+        pipeline.PrepareBackdropCaptures(_ =>
+        {
+            captureCount++;
+            return CreateTestBackdropCapture();
+        });
+
+        List<BackdropFilterLayer> layers = FindLayers<BackdropFilterLayer>(pipeline.RootLayer);
+        Assert.Equal(2, layers.Count);
+        Assert.Equal(1, captureCount);
+        Assert.Same(sharedKey, layers[0].BackdropKey);
+        Assert.Same(sharedKey, layers[1].BackdropKey);
+        Assert.NotNull(layers[0].Backdrop);
+        Assert.Same(layers[0].Backdrop, layers[1].Backdrop);
+        pipeline.ClearBackdropInputs();
+        Assert.Null(layers[0].Backdrop);
+        Assert.Null(layers[1].Backdrop);
+    }
+
+    [Fact]
     public void ColorFilterRasterization_AppliesMatrixAndFlutterModulate()
     {
         byte[] swapped = FilterLayerRasterizer.ApplyColorFilterForTests(
@@ -352,6 +551,20 @@ public sealed class FilterWidgetsTests
         {
             Assert.Equal(byte.MaxValue, clampedBlur.Pixels[index]);
         }
+
+        var boundedBlur = FilterLayerRasterizer.ApplyImageFilterForTests(
+            [0, 0, 255, 255],
+            width: 1,
+            height: 1,
+            imageFilter: new ImageFilter.Blur(
+                1.0,
+                1.0,
+                Plumix.Rendering.TileMode.Clamp,
+                new Rect(0.0, 0.0, 1.0, 1.0)));
+        Assert.Equal(1, boundedBlur.Width);
+        Assert.Equal(1, boundedBlur.Height);
+        Assert.Equal(new Rect(0.0, 0.0, 1.0, 1.0), boundedBlur.Bounds);
+        Assert.Equal([0, 0, 255, 255], boundedBlur.Pixels);
 
         var translated = FilterLayerRasterizer.ApplyImageFilterForTests(
             [255, 0, 0, 255],
@@ -414,6 +627,59 @@ public sealed class FilterWidgetsTests
         Assert.NotNull(element);
         Assert.NotNull(element!.RenderObject);
         return Assert.IsType<T>(element.RenderObject);
+    }
+
+    private static T? FindElementRenderObject<T>(Element? element) where T : RenderObject
+    {
+        if (element is null)
+        {
+            return null;
+        }
+
+        if (element.RenderObject is T match)
+        {
+            return match;
+        }
+
+        T? result = null;
+        element.VisitChildren(child => result ??= FindElementRenderObject<T>(child));
+        return result;
+    }
+
+    private static T? FindLayer<T>(Layer layer) where T : Layer
+    {
+        return FindLayers<T>(layer).FirstOrDefault();
+    }
+
+    private static BackdropCapture CreateTestBackdropCapture()
+    {
+        var drawing = new DrawingGroup();
+        var image = new DrawingImage(drawing)
+        {
+            Viewbox = new Rect(0.0, 0.0, 40.0, 30.0),
+        };
+        return new BackdropCapture(
+            image,
+            new Rect(0.0, 0.0, 40.0, 30.0));
+    }
+
+    private static List<T> FindLayers<T>(Layer layer) where T : Layer
+    {
+        var result = new List<T>();
+        if (layer is T match)
+        {
+            result.Add(match);
+        }
+
+        if (layer is ContainerLayer container)
+        {
+            foreach (Layer child in container.Children)
+            {
+                result.AddRange(FindLayers<T>(child));
+            }
+        }
+
+        return result;
     }
 
     private sealed class PaintProbeRenderBox : RenderBox

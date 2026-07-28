@@ -163,6 +163,37 @@ internal static class FilterLayerRasterizer
         }
     }
 
+    public static WriteableBitmap? DrawBackdropFiltered(
+        DrawingContext context,
+        IImage backdrop,
+        Rect bounds,
+        ImageFilter imageFilter,
+        BlendMode blendMode)
+    {
+        if (!CanRasterize(bounds))
+        {
+            return null;
+        }
+
+        try
+        {
+            RasterFrame frame = ApplyImageFilter(
+                Rasterize(
+                    drawingContext => drawingContext.DrawImage(backdrop, bounds, bounds),
+                    bounds),
+                imageFilter);
+            return DrawFrame(context, frame, ToBitmapBlendingMode(blendMode));
+        }
+        catch (InvalidOperationException)
+        {
+            return null;
+        }
+        catch (NotSupportedException)
+        {
+            return null;
+        }
+    }
+
     private static bool CanRasterize(Rect bounds)
     {
         return bounds.Width > 0.0
@@ -210,7 +241,10 @@ internal static class FilterLayerRasterizer
         return pixels;
     }
 
-    private static WriteableBitmap? DrawFrame(DrawingContext context, RasterFrame frame)
+    private static WriteableBitmap? DrawFrame(
+        DrawingContext context,
+        RasterFrame frame,
+        BitmapBlendingMode blendMode = BitmapBlendingMode.SourceOver)
     {
         if (frame.Width <= 0 || frame.Height <= 0)
         {
@@ -231,11 +265,54 @@ internal static class FilterLayerRasterizer
             }
         }
 
-        context.DrawImage(
-            bitmap,
-            new Rect(0.0, 0.0, frame.Width, frame.Height),
-            frame.Bounds);
+        using (context.PushRenderOptions(new RenderOptions
+               {
+                   BitmapBlendingMode = blendMode,
+               }))
+        {
+            context.DrawImage(
+                bitmap,
+                new Rect(0.0, 0.0, frame.Width, frame.Height),
+                frame.Bounds);
+        }
+
         return bitmap;
+    }
+
+    private static BitmapBlendingMode ToBitmapBlendingMode(BlendMode blendMode)
+    {
+        return blendMode switch
+        {
+            BlendMode.Clear => BitmapBlendingMode.Source,
+            BlendMode.Source => BitmapBlendingMode.Source,
+            BlendMode.Destination => BitmapBlendingMode.Destination,
+            BlendMode.DestinationOver => BitmapBlendingMode.DestinationOver,
+            BlendMode.SourceIn => BitmapBlendingMode.SourceIn,
+            BlendMode.DestinationIn => BitmapBlendingMode.DestinationIn,
+            BlendMode.SourceOut => BitmapBlendingMode.SourceOut,
+            BlendMode.DestinationOut => BitmapBlendingMode.DestinationOut,
+            BlendMode.SourceAtop => BitmapBlendingMode.SourceAtop,
+            BlendMode.DestinationAtop => BitmapBlendingMode.DestinationAtop,
+            BlendMode.Xor => BitmapBlendingMode.Xor,
+            BlendMode.Plus => BitmapBlendingMode.Plus,
+            BlendMode.Modulate => BitmapBlendingMode.Multiply,
+            BlendMode.Screen => BitmapBlendingMode.Screen,
+            BlendMode.Overlay => BitmapBlendingMode.Overlay,
+            BlendMode.Darken => BitmapBlendingMode.Darken,
+            BlendMode.Lighten => BitmapBlendingMode.Lighten,
+            BlendMode.ColorDodge => BitmapBlendingMode.ColorDodge,
+            BlendMode.ColorBurn => BitmapBlendingMode.ColorBurn,
+            BlendMode.HardLight => BitmapBlendingMode.HardLight,
+            BlendMode.SoftLight => BitmapBlendingMode.SoftLight,
+            BlendMode.Difference => BitmapBlendingMode.Difference,
+            BlendMode.Exclusion => BitmapBlendingMode.Exclusion,
+            BlendMode.Multiply => BitmapBlendingMode.Multiply,
+            BlendMode.Hue => BitmapBlendingMode.Hue,
+            BlendMode.Saturation => BitmapBlendingMode.Saturation,
+            BlendMode.Color => BitmapBlendingMode.Color,
+            BlendMode.Luminosity => BitmapBlendingMode.Luminosity,
+            _ => BitmapBlendingMode.SourceOver,
+        };
     }
 
     private static void ApplyColorFilter(byte[] pixels, ColorFilter colorFilter)
@@ -561,16 +638,24 @@ internal static class FilterLayerRasterizer
 
     private static RasterFrame ApplyBlur(RasterFrame frame, ImageFilter.Blur blur)
     {
+        RasterFrame sourceFrame = blur.Bounds.HasValue
+            ? CropFrame(frame, blur.Bounds.Value)
+            : frame;
+        if (sourceFrame.Width == 0 || sourceFrame.Height == 0)
+        {
+            return sourceFrame;
+        }
+
         int radiusX = (int)Math.Ceiling(blur.SigmaX * 3.0);
         int radiusY = (int)Math.Ceiling(blur.SigmaY * 3.0);
         if (radiusX == 0 && radiusY == 0)
         {
-            return frame;
+            return sourceFrame;
         }
 
-        int width = checked(frame.Width + (radiusX * 2));
-        int height = checked(frame.Height + (radiusY * 2));
-        int horizontalHeight = checked(frame.Height + (radiusY * 4));
+        int width = checked(sourceFrame.Width + (radiusX * 2));
+        int height = checked(sourceFrame.Height + (radiusY * 2));
+        int horizontalHeight = checked(sourceFrame.Height + (radiusY * 4));
         byte[] horizontal = new byte[checked(width * horizontalHeight * 4)];
         byte[] output = new byte[checked(width * height * 4)];
         double[] kernelX = GaussianKernel(radiusX, blur.SigmaX);
@@ -582,9 +667,9 @@ internal static class FilterLayerRasterizer
             {
                 int sourceX = x - radiusX;
                 AccumulateKernel(
-                    frame.Pixels,
-                    frame.Width,
-                    frame.Height,
+                    sourceFrame.Pixels,
+                    sourceFrame.Width,
+                    sourceFrame.Height,
                     sourceX,
                     sourceY,
                     kernelX,
@@ -593,7 +678,7 @@ internal static class FilterLayerRasterizer
                     x,
                     y,
                     horizontalAxis: true,
-                    blur.TileMode);
+                    blur.Bounds.HasValue ? TileMode.Clamp : blur.TileMode);
             }
         }
 
@@ -617,13 +702,64 @@ internal static class FilterLayerRasterizer
             }
         }
 
-        return new RasterFrame(
+        var result = new RasterFrame(
             output,
             width,
             height,
             new Rect(
-                frame.Bounds.X - radiusX,
-                frame.Bounds.Y - radiusY,
+                sourceFrame.Bounds.X - radiusX,
+                sourceFrame.Bounds.Y - radiusY,
+                width,
+                height));
+        return blur.Bounds.HasValue
+            ? CropFrame(result, blur.Bounds.Value)
+            : result;
+    }
+
+    private static RasterFrame CropFrame(RasterFrame frame, Rect bounds)
+    {
+        double left = Math.Max(frame.Bounds.Left, bounds.Left);
+        double top = Math.Max(frame.Bounds.Top, bounds.Top);
+        double right = Math.Min(frame.Bounds.Right, bounds.Right);
+        double bottom = Math.Min(frame.Bounds.Bottom, bounds.Bottom);
+        if (right <= left || bottom <= top)
+        {
+            return new RasterFrame([], 0, 0, default);
+        }
+
+        int sourceLeft = Math.Clamp(
+            (int)Math.Floor(left - frame.Bounds.Left),
+            0,
+            frame.Width);
+        int sourceTop = Math.Clamp(
+            (int)Math.Floor(top - frame.Bounds.Top),
+            0,
+            frame.Height);
+        int sourceRight = Math.Clamp(
+            (int)Math.Ceiling(right - frame.Bounds.Left),
+            sourceLeft,
+            frame.Width);
+        int sourceBottom = Math.Clamp(
+            (int)Math.Ceiling(bottom - frame.Bounds.Top),
+            sourceTop,
+            frame.Height);
+        int width = sourceRight - sourceLeft;
+        int height = sourceBottom - sourceTop;
+        int rowBytes = checked(width * 4);
+        byte[] pixels = new byte[checked(rowBytes * height)];
+        for (int row = 0; row < height; row++)
+        {
+            int sourceIndex = (((sourceTop + row) * frame.Width) + sourceLeft) * 4;
+            Buffer.BlockCopy(frame.Pixels, sourceIndex, pixels, row * rowBytes, rowBytes);
+        }
+
+        return new RasterFrame(
+            pixels,
+            width,
+            height,
+            new Rect(
+                frame.Bounds.X + sourceLeft,
+                frame.Bounds.Y + sourceTop,
                 width,
                 height));
     }

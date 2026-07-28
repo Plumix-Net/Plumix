@@ -1,3 +1,5 @@
+using Avalonia;
+
 namespace Plumix.Rendering;
 
 // Dart parity source: dart:ui ImageFilter and TileMode.
@@ -17,7 +19,8 @@ public abstract record ImageFilter
         public Blur(
             double sigmaX = 0.0,
             double sigmaY = 0.0,
-            TileMode tileMode = TileMode.Clamp)
+            TileMode tileMode = TileMode.Clamp,
+            Rect? bounds = null)
         {
             if (!double.IsFinite(sigmaX) || sigmaX < 0.0)
             {
@@ -32,6 +35,7 @@ public abstract record ImageFilter
             SigmaX = sigmaX;
             SigmaY = sigmaY;
             TileMode = tileMode;
+            Bounds = bounds;
         }
 
         public double SigmaX { get; }
@@ -39,6 +43,8 @@ public abstract record ImageFilter
         public double SigmaY { get; }
 
         public TileMode TileMode { get; }
+
+        public Rect? Bounds { get; }
     }
 
     public sealed record Matrix : ImageFilter

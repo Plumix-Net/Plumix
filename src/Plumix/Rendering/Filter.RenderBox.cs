@@ -6,7 +6,7 @@ namespace Plumix.Rendering;
 // Dart parity source:
 // flutter/packages/flutter/lib/src/widgets/color_filter.dart
 // flutter/packages/flutter/lib/src/widgets/image_filter.dart
-// flutter/packages/flutter/lib/src/rendering/proxy_box.dart (RenderShaderMask)
+// flutter/packages/flutter/lib/src/rendering/proxy_box.dart (RenderShaderMask, RenderBackdropFilter)
 
 public delegate IBrush ShaderCallback(Rect bounds);
 
@@ -121,6 +121,126 @@ public sealed class RenderImageFilter : RenderProxyBox
         var imageFilterLayer = (ImageFilterLayer)layer;
         imageFilterLayer.ImageFilter = ImageFilter;
         imageFilterLayer.FilterBounds = new Rect(default, Size);
+    }
+}
+
+public sealed class RenderBackdropFilter : RenderProxyBox
+{
+    private ImageFilterConfig _filterConfig;
+    private bool _enabled;
+    private BlendMode _blendMode;
+    private BackdropKey? _backdropKey;
+
+    public RenderBackdropFilter(
+        ImageFilterConfig filterConfig,
+        RenderBox? child = null,
+        BlendMode blendMode = BlendMode.SourceOver,
+        bool enabled = true,
+        BackdropKey? backdropKey = null)
+    {
+        _filterConfig = filterConfig ?? throw new ArgumentNullException(nameof(filterConfig));
+        _blendMode = blendMode;
+        _enabled = enabled;
+        _backdropKey = backdropKey;
+        Child = child;
+    }
+
+    public bool Enabled
+    {
+        get => _enabled;
+        set
+        {
+            if (_enabled == value)
+            {
+                return;
+            }
+
+            _enabled = value;
+            MarkNeedsPaint();
+        }
+    }
+
+    public ImageFilter Filter
+    {
+        get => FilterConfig.Filter
+            ?? throw new InvalidOperationException(
+                "Filter is only available when FilterConfig directly wraps an ImageFilter.");
+        set => FilterConfig = new ImageFilterConfig(
+            value ?? throw new ArgumentNullException(nameof(value)));
+    }
+
+    public ImageFilterConfig FilterConfig
+    {
+        get => _filterConfig;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            if (_filterConfig == value)
+            {
+                return;
+            }
+
+            _filterConfig = value;
+            MarkNeedsPaint();
+        }
+    }
+
+    public BlendMode BlendMode
+    {
+        get => _blendMode;
+        set
+        {
+            if (_blendMode == value)
+            {
+                return;
+            }
+
+            _blendMode = value;
+            MarkNeedsPaint();
+        }
+    }
+
+    public BackdropKey? BackdropKey
+    {
+        get => _backdropKey;
+        set
+        {
+            if (ReferenceEquals(_backdropKey, value))
+            {
+                return;
+            }
+
+            _backdropKey = value;
+            MarkNeedsPaint();
+        }
+    }
+
+    protected override bool AlwaysNeedsCompositing => Child != null;
+
+    public override void Paint(PaintingContext context, Point offset)
+    {
+        if (!Enabled)
+        {
+            base.Paint(context, offset);
+            return;
+        }
+
+        if (Child is null)
+        {
+            _layer = null;
+            return;
+        }
+
+        ImageFilter effectiveFilter = FilterConfig.Resolve(
+            new ImageFilterContext(new Rect(offset, Size)));
+        var layer = _layer as BackdropFilterLayer ?? new BackdropFilterLayer();
+        layer.ImageFilter = effectiveFilter;
+        layer.BlendMode = BlendMode;
+        layer.BackdropKey = BackdropKey;
+        context.PushLayer(
+            layer,
+            childContext => base.Paint(childContext, offset));
+        _layer = layer;
     }
 }
 

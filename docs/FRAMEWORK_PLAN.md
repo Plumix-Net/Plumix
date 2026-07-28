@@ -294,6 +294,10 @@ Completion note:
 - Continued paired core visual-surface coverage with `ShaderMask` + `PhysicalShape`, including source-shaped
   widget/render-object APIs, retained CPU-backed shader blending, origin-sized callbacks, custom-path hit testing,
   reclip ownership, physical fill/shadow/clip composition, focused tests, and mirrored C#/Dart runtime probes.
+- Continued paired core backdrop-filter coverage with `BackdropFilter` + `BackdropGroup`, including direct,
+  bounded-blur, and composed filter configurations, inherited/manual group keys, bitmap-backed scene-prefix
+  sampling, grouped input reuse, retained layers, blend and enabled policies, focused tests, and mirrored C#/Dart
+  image probes.
 - Implicit-animations sample viewport hardening: both samples now share an always-visible scrollbar and scroll
   controller around the complete probe column, preventing bottom overflow on short desktop windows.
 

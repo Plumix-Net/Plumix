@@ -226,6 +226,34 @@ internal sealed class ImageDemoPageState : State
                                                 width: 96,
                                                 height: 96,
                                                 fit: fit)),
+                                    Probe(
+                                        "BackdropFilter.grouped",
+                                        new BackdropGroup(
+                                            new SizedBox(
+                                                width: 96,
+                                                height: 96,
+                                                child: new Stack(
+                                                    children:
+                                                    [
+                                                        Plumix.Widgets.Image.Memory(
+                                                            SampleBytes,
+                                                            width: 96,
+                                                            height: 96,
+                                                            fit: BoxFit.Cover),
+                                                        new Center(
+                                                            child: new ClipRect(
+                                                                child: BackdropFilter.Grouped(
+                                                                    filterConfig:
+                                                                        new ImageFilterConfig.Blur(
+                                                                            sigmaX: 5.0,
+                                                                            sigmaY: 5.0,
+                                                                            bounded: true),
+                                                                    enabled: _filtersEnabled,
+                                                                    child: new Container(
+                                                                        width: 64,
+                                                                        height: 64,
+                                                                        color: Color.Parse("#30FFFFFF"))))),
+                                                    ])))),
                                 ]),
                         ])),
                 new Text(

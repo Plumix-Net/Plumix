@@ -254,6 +254,42 @@ class _ImageDemoPageState extends State<ImageDemoPage> {
                               fit: fit,
                             ),
                     ),
+                    _probe(
+                      'BackdropFilter.grouped',
+                      BackdropGroup(
+                        child: SizedBox(
+                          width: 96,
+                          height: 96,
+                          child: Stack(
+                            children: <Widget>[
+                              Image.memory(
+                                _sampleBytes,
+                                width: 96,
+                                height: 96,
+                                fit: BoxFit.cover,
+                              ),
+                              Center(
+                                child: ClipRect(
+                                  child: BackdropFilter.grouped(
+                                    filterConfig: const ImageFilterConfig.blur(
+                                      sigmaX: 5,
+                                      sigmaY: 5,
+                                      bounded: true,
+                                    ),
+                                    enabled: _filtersEnabled,
+                                    child: Container(
+                                      width: 64,
+                                      height: 64,
+                                      color: const Color(0x30FFFFFF),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ],

@@ -1,5 +1,6 @@
 ﻿using Avalonia;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using Plumix.Rendering;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/rendering/object.dart (approximate)
@@ -250,27 +251,122 @@ public sealed class PipelineOwner
 
     public void CompositeFrame(DrawingContext context)
     {
-        if (!_rootLayer.ContainsMagnifier)
-        {
-            _rootLayer.AddToScene(context, new Point(0, 0));
-            return;
-        }
-
-        var backdrop = new DrawingGroup();
-        Layer.BeginMagnifierBackdropCapture();
+        bool hasBackdropFilters = _rootLayer.ContainsBackdropFilter;
         try
         {
-            using (DrawingContext backdropContext = backdrop.Open())
+            if (hasBackdropFilters)
             {
-                _rootLayer.AddToScene(backdropContext, new Point(0, 0));
+                CaptureBackdropInputs();
             }
 
-            Layer.EndMagnifierBackdropCapture(backdrop);
-            _rootLayer.AddToScene(context, new Point(0, 0));
+            if (!_rootLayer.ContainsMagnifier)
+            {
+                _rootLayer.AddToScene(context, new Point(0, 0));
+                return;
+            }
+
+            Layer.BeginMagnifierBackdropCapture();
+            try
+            {
+                BackdropCapture backdrop = CaptureScene();
+                Layer.EndMagnifierBackdropCapture(backdrop);
+                _rootLayer.AddToScene(context, new Point(0, 0));
+            }
+            finally
+            {
+                Layer.ClearMagnifierBackdrop();
+            }
         }
         finally
         {
-            Layer.ClearMagnifierBackdrop();
+            if (hasBackdropFilters)
+            {
+                ClearBackdropInputs();
+            }
+        }
+    }
+
+    private void CaptureBackdropInputs()
+    {
+        PrepareBackdropCaptures(CaptureBackdropInput);
+    }
+
+    internal void PrepareBackdropCaptures(Func<BackdropFilterLayer, BackdropCapture> capture)
+    {
+        ArgumentNullException.ThrowIfNull(capture);
+        var filters = new List<BackdropFilterLayer>();
+        _rootLayer.CollectBackdropFilters(filters);
+        var groupedBackdrops = new Dictionary<BackdropKey, BackdropCapture>();
+        foreach (BackdropFilterLayer filter in filters)
+        {
+            if (filter.BackdropKey != null
+                && groupedBackdrops.TryGetValue(filter.BackdropKey, out BackdropCapture? groupedBackdrop))
+            {
+                filter.Backdrop = groupedBackdrop;
+                continue;
+            }
+
+            BackdropCapture backdrop = capture(filter)
+                ?? throw new InvalidOperationException("Backdrop capture must return an image.");
+            filter.Backdrop = backdrop;
+            if (filter.BackdropKey != null)
+            {
+                groupedBackdrops[filter.BackdropKey] = backdrop;
+            }
+        }
+    }
+
+    internal void ClearBackdropInputs()
+    {
+        var filters = new List<BackdropFilterLayer>();
+        _rootLayer.CollectBackdropFilters(filters);
+        var captures = new HashSet<BackdropCapture>();
+        foreach (BackdropFilterLayer filter in filters)
+        {
+            if (filter.Backdrop != null)
+            {
+                captures.Add(filter.Backdrop);
+                filter.Backdrop = null;
+            }
+        }
+
+        foreach (BackdropCapture capture in captures)
+        {
+            capture.Dispose();
+        }
+    }
+
+    private BackdropCapture CaptureBackdropInput(BackdropFilterLayer filter)
+    {
+        Layer.BeginBackdropCapture(filter);
+        try
+        {
+            return CaptureScene();
+        }
+        finally
+        {
+            Layer.ClearBackdropCapture();
+        }
+    }
+
+    private BackdropCapture CaptureScene()
+    {
+        int width = Math.Max(1, (int)Math.Ceiling(Root.Size.Width));
+        int height = Math.Max(1, (int)Math.Ceiling(Root.Size.Height));
+        var bounds = new Rect(0.0, 0.0, width, height);
+        var image = new RenderTargetBitmap(
+            new PixelSize(width, height),
+            new Vector(96.0, 96.0));
+        try
+        {
+            using DrawingContext backdropContext = image.CreateDrawingContext();
+            _rootLayer.AddToScene(backdropContext, new Point(0, 0));
+            return new BackdropCapture(image, bounds, ownsImage: true);
+        }
+        catch
+        {
+            image.Dispose();
+            throw;
         }
     }
 

@@ -1,5 +1,10 @@
 # Changelog
 
+- Added paired Flutter core `BackdropFilter` + `BackdropGroup` parity with direct/bounded/composed
+  `ImageFilterConfig`, retained backdrop layers, bitmap-backed scene-prefix sampling, grouped input reuse, blend
+  modes, focused tests, and mirrored C#/Dart image probes. Advanced `Plumix` to `0.6.0-alpha.1`; Avalonia CPU-filters
+  each grouped output separately until the backend exposes native backdrop-ID fusion.
+
 - Added paired Flutter core `ShaderMask` + `PhysicalShape` parity with source-shaped widget/render-object APIs,
   retained shader-mask layers, all Flutter blend modes, origin-sized shader callbacks, custom-path hit testing,
   clip/reclip lifecycle, physical fill/shadow composition, focused tests, and mirrored C#/Dart image/proxy probes.

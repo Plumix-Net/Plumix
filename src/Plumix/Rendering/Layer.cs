@@ -10,18 +10,30 @@ namespace Plumix.Rendering;
 public abstract class Layer
 {
     [ThreadStatic]
-    private static Drawing? _magnifierBackdrop;
+    private static BackdropCapture? _magnifierBackdrop;
 
     [ThreadStatic]
     private static bool _capturingMagnifierBackdrop;
+
+    [ThreadStatic]
+    private static BackdropFilterLayer? _backdropCaptureTarget;
+
+    [ThreadStatic]
+    private static bool _backdropCaptureStopped;
 
     public ContainerLayer? Parent { get; private set; }
 
     internal virtual bool ContainsMagnifier => false;
 
-    internal static Drawing? MagnifierBackdrop => _magnifierBackdrop;
+    internal virtual bool ContainsBackdropFilter => false;
+
+    internal static BackdropCapture? MagnifierBackdrop => _magnifierBackdrop;
 
     internal static bool CapturingMagnifierBackdrop => _capturingMagnifierBackdrop;
+
+    internal static bool CapturingBackdrop => _backdropCaptureTarget != null;
+
+    internal static bool BackdropCaptureStopped => _backdropCaptureStopped;
 
     internal static void BeginMagnifierBackdropCapture()
     {
@@ -29,16 +41,39 @@ public abstract class Layer
         _magnifierBackdrop = null;
     }
 
-    internal static void EndMagnifierBackdropCapture(Drawing drawing)
+    internal static void EndMagnifierBackdropCapture(BackdropCapture backdrop)
     {
         _capturingMagnifierBackdrop = false;
-        _magnifierBackdrop = drawing;
+        _magnifierBackdrop = backdrop;
     }
 
     internal static void ClearMagnifierBackdrop()
     {
         _capturingMagnifierBackdrop = false;
+        _magnifierBackdrop?.Dispose();
         _magnifierBackdrop = null;
+    }
+
+    internal static void BeginBackdropCapture(BackdropFilterLayer target)
+    {
+        _backdropCaptureTarget = target ?? throw new ArgumentNullException(nameof(target));
+        _backdropCaptureStopped = false;
+    }
+
+    internal static bool IsBackdropCaptureTarget(BackdropFilterLayer layer)
+    {
+        return ReferenceEquals(_backdropCaptureTarget, layer);
+    }
+
+    internal static void StopBackdropCapture()
+    {
+        _backdropCaptureStopped = true;
+    }
+
+    internal static void ClearBackdropCapture()
+    {
+        _backdropCaptureTarget = null;
+        _backdropCaptureStopped = false;
     }
 
     internal static DrawingContext.PushedState PushRoundedRectClip(
@@ -47,7 +82,7 @@ public abstract class Layer
         double radius)
     {
         double clampedRadius = Math.Min(Math.Max(0, radius), Math.Min(rect.Width, rect.Height) / 2.0);
-        if (CapturingMagnifierBackdrop)
+        if (CapturingMagnifierBackdrop || CapturingBackdrop)
         {
             // Avalonia's DrawingGroup recording context does not implement PushClip(RoundedRect), but its
             // geometry-clip path records the equivalent rounded rectangle correctly.
@@ -68,6 +103,10 @@ public abstract class Layer
     }
 
     internal abstract void AddToScene(DrawingContext context, Point offset);
+
+    internal virtual void CollectBackdropFilters(ICollection<BackdropFilterLayer> filters)
+    {
+    }
 }
 
 public class ContainerLayer : Layer
@@ -77,6 +116,8 @@ public class ContainerLayer : Layer
     public IReadOnlyList<Layer> Children => _children;
 
     internal override bool ContainsMagnifier => _children.Any(static child => child.ContainsMagnifier);
+
+    internal override bool ContainsBackdropFilter => _children.Any(static child => child.ContainsBackdropFilter);
 
     public void Append(Layer child)
     {
@@ -117,7 +158,20 @@ public class ContainerLayer : Layer
     {
         for (int index = 0; index < _children.Count; index++)
         {
+            if (BackdropCaptureStopped)
+            {
+                return;
+            }
+
             _children[index].AddToScene(context, offset);
+        }
+    }
+
+    internal override void CollectBackdropFilters(ICollection<BackdropFilterLayer> filters)
+    {
+        foreach (Layer child in _children)
+        {
+            child.CollectBackdropFilters(filters);
         }
     }
 }
@@ -300,7 +354,7 @@ public sealed class MagnifierLayer : ContainerLayer
 
     internal override void AddToScene(DrawingContext context, Point offset)
     {
-        if (CapturingMagnifierBackdrop)
+        if (CapturingMagnifierBackdrop || CapturingBackdrop)
         {
             return;
         }
@@ -330,7 +384,7 @@ public sealed class MagnifierLayer : ContainerLayer
 
     private void DrawMagnifiedBackdrop(DrawingContext context, Rect lensRect)
     {
-        Drawing? backdrop = MagnifierBackdrop;
+        BackdropCapture? backdrop = MagnifierBackdrop;
         if (backdrop == null)
         {
             return;
@@ -350,14 +404,9 @@ public sealed class MagnifierLayer : ContainerLayer
             focalPoint.Y - (sourceSize.Height / 2.0),
             sourceSize.Width,
             sourceSize.Height);
-        var image = new DrawingImage(backdrop)
-        {
-            Viewbox = backdrop.GetBounds(),
-        };
-
         if (scale > 0)
         {
-            context.DrawImage(image, sourceRect, lensRect);
+            context.DrawImage(backdrop.Image, sourceRect, lensRect);
             return;
         }
 
@@ -366,7 +415,7 @@ public sealed class MagnifierLayer : ContainerLayer
                    * Matrix.CreateScale(-1, -1)
                    * Matrix.CreateTranslation(-lensRect.Center.X, -lensRect.Center.Y)))
         {
-            context.DrawImage(image, sourceRect, lensRect);
+            context.DrawImage(backdrop.Image, sourceRect, lensRect);
         }
     }
 
@@ -503,6 +552,99 @@ public sealed class ImageFilterLayer : OffsetLayer
     {
         _filteredBitmap?.Dispose();
         _filteredBitmap = null;
+        base.Detach();
+    }
+}
+
+// Dart parity source: flutter/packages/flutter/lib/src/rendering/layer.dart (BackdropFilterLayer)
+public sealed class BackdropKey
+{
+    private static int _nextKey;
+
+    public BackdropKey()
+    {
+        Id = Interlocked.Increment(ref _nextKey) - 1;
+    }
+
+    internal int Id { get; }
+}
+
+internal sealed class BackdropCapture : IDisposable
+{
+    private readonly bool _ownsImage;
+
+    public BackdropCapture(IImage image, Rect bounds, bool ownsImage = false)
+    {
+        Image = image ?? throw new ArgumentNullException(nameof(image));
+        Bounds = bounds;
+        _ownsImage = ownsImage;
+    }
+
+    public IImage Image { get; }
+
+    public Rect Bounds { get; }
+
+    public void Dispose()
+    {
+        if (_ownsImage && Image is IDisposable disposable)
+        {
+            disposable.Dispose();
+        }
+    }
+}
+
+public sealed class BackdropFilterLayer : ContainerLayer
+{
+    private WriteableBitmap? _filteredBitmap;
+
+    internal BackdropCapture? Backdrop { get; set; }
+
+    public ImageFilter? ImageFilter { get; set; }
+
+    public BlendMode BlendMode { get; set; } = BlendMode.SourceOver;
+
+    public BackdropKey? BackdropKey { get; set; }
+
+    internal override bool ContainsBackdropFilter => true;
+
+    internal override void CollectBackdropFilters(ICollection<BackdropFilterLayer> filters)
+    {
+        filters.Add(this);
+        base.CollectBackdropFilters(filters);
+    }
+
+    internal override void AddToScene(DrawingContext context, Point offset)
+    {
+        if (IsBackdropCaptureTarget(this))
+        {
+            StopBackdropCapture();
+            return;
+        }
+
+        if (BackdropCaptureStopped)
+        {
+            return;
+        }
+
+        if (ImageFilter != null && Backdrop != null)
+        {
+            _filteredBitmap?.Dispose();
+            _filteredBitmap = FilterLayerRasterizer.DrawBackdropFiltered(
+                context,
+                Backdrop.Image,
+                Backdrop.Bounds,
+                ImageFilter,
+                BlendMode);
+        }
+
+        AddChildrenToScene(context, offset);
+    }
+
+    internal override void Detach()
+    {
+        _filteredBitmap?.Dispose();
+        _filteredBitmap = null;
+        Backdrop = null;
         base.Detach();
     }
 }

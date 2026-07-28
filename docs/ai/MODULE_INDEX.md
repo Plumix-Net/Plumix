@@ -225,7 +225,9 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/Widgets/ColorFiltered.cs`
   - `src/Plumix/Widgets/ImageFiltered.cs`
   - `src/Plumix/Widgets/ShaderMask.cs`
+  - `src/Plumix/Widgets/BackdropFilter.cs`
   - `src/Plumix/Rendering/ImageFilter.cs`
+  - `src/Plumix/Rendering/ImageFilterConfig.cs`
   - `src/Plumix/Rendering/Filter.RenderBox.cs`
   - `src/Plumix/Rendering/FilterLayerRasterizer.cs`
   - `src/Plumix/Rendering/Proxy.RenderBox.cs`
