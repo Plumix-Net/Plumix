@@ -40,7 +40,7 @@ public sealed class MaterialTooltipTests
     }
 
     [Fact]
-    public void TooltipVisibility_DisablesProgrammaticAndPointerTooltipDisplayButPreservesSemantics()
+    public void TooltipVisibility_DisablesProgrammaticPointerAndSemanticTooltipOutput()
     {
         using var harness = new WidgetRenderHarness(
             new Theme(
@@ -54,13 +54,15 @@ public sealed class MaterialTooltipTests
         var state = harness.FindState<TooltipState>();
         Assert.False(state.EnsureTooltipVisible());
         var listener = FindTooltipListener(harness.RenderView);
-        Assert.NotNull(listener);
-        listener!.HandleEvent(PointerEnter(91), new BoxHitTestEntry(listener, new Point(5, 5)));
+        Assert.Null(listener);
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.2));
         harness.Pump(new Size(120, 60));
 
         Assert.Null(FindParagraph(harness.RenderView, "Hidden tip"));
-        Assert.NotNull(FindSemantics(harness.PumpAndGetSemantics(new Size(120, 60)), node => node.Label == "Hidden tip"));
+        Assert.Null(
+            FindSemantics(
+                harness.PumpAndGetSemantics(new Size(120, 60)),
+                node => node.Tooltip == "Hidden tip"));
     }
 
     [Fact]
@@ -191,7 +193,7 @@ public sealed class MaterialTooltipTests
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.40));
             harness.Pump(new Size(160, 80));
             Assert.NotNull(FindParagraph(harness.RenderView, "Delayed tip"));
-            Assert.Equal(1, triggered);
+            Assert.Equal(0, triggered);
 
             listener = FindTooltipListener(harness.RenderView);
             listener!.HandleEvent(PointerExit(1), new BoxHitTestEntry(listener, new Point(100, 5)));
@@ -221,8 +223,54 @@ public sealed class MaterialTooltipTests
 
         var semantics = harness.PumpAndGetSemantics(new Size(100, 60));
 
-        Assert.NotNull(FindSemantics(semantics, node => node.Label == "Semantic tip"));
+        Assert.NotNull(FindSemantics(semantics, node => node.Tooltip == "Semantic tip"));
         Assert.Null(FindParagraph(harness.RenderView, "Semantic tip"));
+    }
+
+    [Fact]
+    public void Tooltip_PositionPolicyFlipsAboveAndCustomDelegateReceivesResolvedValues()
+    {
+        TooltipPositionContext? received = null;
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                ThemeData.Light,
+                new Align(
+                    alignment: Alignment.BottomCenter,
+                    child: new Tooltip(
+                        message: "Positioned tip",
+                        constraints: new BoxConstraints(
+                            MinWidth: 50,
+                            MaxWidth: 50,
+                            MinHeight: 20,
+                            MaxHeight: 20),
+                        verticalOffset: 10,
+                        preferBelow: true,
+                        positionDelegate: context =>
+                        {
+                            received = context;
+                            return RawTooltipPositionLayoutDelegate.PositionDependentBox(
+                                context.OverlaySize,
+                                context.TooltipSize,
+                                context.Target,
+                                context.PreferBelow,
+                                context.VerticalOffset);
+                        },
+                        child: new SizedBox(width: 20, height: 20)))));
+
+        harness.Pump(new Size(200, 100));
+        Assert.True(harness.FindState<TooltipState>().EnsureTooltipVisible());
+        harness.Pump(new Size(200, 100));
+
+        Assert.NotNull(received);
+        Assert.Equal(10, received!.VerticalOffset);
+        Assert.True(received.PreferBelow);
+        Assert.Equal(new Point(100, 90), received.Target);
+        RenderCustomSingleChildLayoutBox layout =
+            Assert.Single(FindDescendants<RenderCustomSingleChildLayoutBox>(harness.RenderView));
+        Assert.Equal(
+            60,
+            Assert.IsType<BoxParentData>(layout.Child!.parentData).offset.Y,
+            precision: 3);
     }
 
     [Fact]
@@ -241,13 +289,16 @@ public sealed class MaterialTooltipTests
                             new Tooltip(message: "Two", child: new SizedBox(width: 24, height: 24)),
                         ])));
             harness.Pump(new Size(120, 60));
-            foreach (var state in harness.FindStates<TooltipState>())
+            IReadOnlyList<TooltipState> tooltipStates = harness.FindStates<TooltipState>();
+            Assert.Equal(2, tooltipStates.Count);
+            foreach (TooltipState state in tooltipStates)
             {
-                state.EnsureTooltipVisible();
+                Assert.True(state.EnsureTooltipVisible());
             }
             harness.Pump(new Size(120, 60));
-            Assert.NotNull(FindParagraph(harness.RenderView, "One"));
-            Assert.NotNull(FindParagraph(harness.RenderView, "Two"));
+            List<RenderParagraph> paragraphs = FindDescendants<RenderParagraph>(harness.RenderView);
+            Assert.Contains(paragraphs, paragraph => paragraph.Text == "One");
+            Assert.Contains(paragraphs, paragraph => paragraph.Text == "Two");
 
             Assert.True(Tooltip.DismissAllToolTips());
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.20));
@@ -309,7 +360,7 @@ public sealed class MaterialTooltipTests
             RenderView = new RenderView();
             _pipeline = new PipelineOwner(RenderView);
             _pipeline.Attach(RenderView);
-            _rootElement = new HarnessRootElement(RenderView, rootWidget);
+            _rootElement = new HarnessRootElement(RenderView, Overlay.Wrap(rootWidget));
             _rootElement.Attach(_owner);
             _rootElement.Mount(parent: null, newSlot: null);
             _owner.FlushBuild();

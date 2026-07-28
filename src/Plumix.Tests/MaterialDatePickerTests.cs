@@ -574,7 +574,7 @@ public sealed class MaterialDatePickerTests : IDisposable
             && Close(box.AdditionalConstraints.MinHeight, 468)
             && Close(box.AdditionalConstraints.MaxHeight, 468));
         Assert.NotNull(FindSemantics(semantics, node => node.Label == "10" && node.Flags.HasFlag(SemanticsFlags.IsSelected)));
-        Assert.NotNull(FindSemantics(semantics, node => node.Label == "Switch to text input mode"));
+        Assert.NotNull(FindSemantics(semantics, node => node.Tooltip == "Switch to text input mode"));
     }
 
     [Fact]

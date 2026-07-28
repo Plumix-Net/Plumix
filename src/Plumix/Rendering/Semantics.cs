@@ -80,6 +80,7 @@ public sealed class SemanticsConfiguration
     public bool IsExcluded { get; set; }
     public string? Label { get; set; }
     public string? Hint { get; set; }
+    public string? Tooltip { get; set; }
     public SemanticsRole Role { get; set; }
     public SemanticsFlags Flags { get; set; } = SemanticsFlags.None;
     public SemanticsActions Actions { get; set; } = SemanticsActions.None;
@@ -123,6 +124,7 @@ public sealed class SemanticsConfiguration
             IsExcluded = IsExcluded,
             Label = Label,
             Hint = Hint,
+            Tooltip = Tooltip,
             Role = Role,
             Flags = Flags,
             Actions = Actions,
@@ -147,6 +149,7 @@ public sealed class SemanticsConfiguration
     internal bool HasBeenAnnotated =>
         !string.IsNullOrWhiteSpace(Label)
         || !string.IsNullOrWhiteSpace(Hint)
+        || !string.IsNullOrWhiteSpace(Tooltip)
         || Role != SemanticsRole.None
         || Flags != SemanticsFlags.None
         || Actions != SemanticsActions.None
@@ -217,6 +220,13 @@ public sealed class SemanticsConfiguration
             Hint = string.IsNullOrWhiteSpace(Hint) ? child.Hint : $"{Hint} {child.Hint}";
         }
 
+        if (!string.IsNullOrWhiteSpace(child.Tooltip))
+        {
+            Tooltip = string.IsNullOrWhiteSpace(Tooltip)
+                ? child.Tooltip
+                : $"{Tooltip} {child.Tooltip}";
+        }
+
         if (child.HasActionHandlers)
         {
             _actionHandlers ??= [];
@@ -242,6 +252,7 @@ public sealed class SemanticsNode
     public Rect Rect { get; internal set; }
     public string? Label { get; internal set; }
     public string? Hint { get; internal set; }
+    public string? Tooltip { get; internal set; }
     public SemanticsRole Role { get; internal set; }
     public SemanticsFlags Flags { get; internal set; }
     public SemanticsActions Actions { get; internal set; }
@@ -347,6 +358,7 @@ public sealed class SemanticsOwner
         _syntheticRoot.Rect = UnionBounds(roots);
         _syntheticRoot.Label = null;
         _syntheticRoot.Hint = null;
+        _syntheticRoot.Tooltip = null;
         _syntheticRoot.Flags = SemanticsFlags.None;
         _syntheticRoot.Actions = SemanticsActions.None;
         _syntheticRoot.IndexInParent = null;

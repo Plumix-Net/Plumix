@@ -51,6 +51,9 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Magnifiers enter through core `Widgets/Magnifier.cs` + `Rendering/Magnifier.cs`, Material `Magnifier.cs`, and
   Cupertino `CupertinoMagnifier.cs`; backdrop capture/composition lives in `Rendering/Layer.cs`, with focused
   coverage in `MagnifierTests.cs`.
+- Tooltips enter through core `Widgets/RawTooltip.cs` and Material `Tooltip.cs` + `TooltipTheme.cs`; overlay geometry
+  uses `Widgets/Overlay.cs` and `CustomSingleChildLayout.cs`, while hover/touch ownership uses `Widgets/Gestures.cs`,
+  with focused coverage in `RawTooltipTests.cs` and `MaterialTooltipTests.cs`.
 - Material text-selection toolbar controls enter through `TextSelectionToolbar.cs` and
   `DesktopTextSelectionToolbar.cs`; delegated viewport placement and size transitions live in core
   `Widgets/TextSelectionToolbarLayoutDelegate.cs`, `Widgets/DesktopTextSelectionToolbarLayoutDelegate.cs`,

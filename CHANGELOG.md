@@ -1,5 +1,11 @@
 # Changelog
 
+- Breaking: added paired Flutter core `RawTooltip` + Material `Tooltip` parity with `OverlayPortal` ownership,
+  viewport-aware auto-flipping and custom position delegates, source timing/trigger/feedback/global-dismiss behavior,
+  tooltip semantics, focused tests, and an expanded mirrored C#/Dart demo. `WidgetHost` now installs the baseline root
+  overlay required by portal controls. Moved shared tooltip trigger/callback types into core and advanced
+  `Plumix`/`Plumix.Material` to `0.2.0-alpha.1`; Material rich messages await shared spans.
+
 - Added paired Flutter core `OverlayPortal` + `TapRegion` ports with nearest/root overlay targeting, controller
   show/hide/toggle and z-order promotion, inherited-subtree ownership, overlay child layout information, grouped
   inside/outside down/up callbacks, route-current filtering, outside-tap arena consumption, focused tests, and an

@@ -271,8 +271,6 @@ public sealed class MaterialBottomNavigationBarTests
     public void BottomNavigationBar_Tooltip_ShowsOnPointerEnter_AndHidesOnPointerExit()
     {
         Scheduler.ResetForTests();
-        var binding = GestureBinding.Instance;
-        binding.ResetForTests();
         try
         {
             var bar = new BottomNavigationBar(
@@ -284,33 +282,37 @@ public sealed class MaterialBottomNavigationBarTests
                 ]);
 
             using var harness = new WidgetRenderHarness(
-                WrapWithThemeAndMediaQuery(ThemeData.Light, bar));
+                Overlay.Wrap(WrapWithThemeAndMediaQuery(ThemeData.Light, bar)));
 
             harness.Pump(new Size(320, 120));
             var renderRoot = harness.RenderView.Child;
             Assert.Null(FindParagraphByText(renderRoot, "First tooltip"));
 
-            binding.HandlePointerEvent(
-                harness.RenderView,
-                new PointerHoverEvent(
+            var tooltipListener = FindTooltipHoverPointerListener(renderRoot);
+            Assert.NotNull(tooltipListener);
+            tooltipListener!.HandleEvent(
+                new PointerEnterEvent(
                     pointer: 501,
                     kind: PointerDeviceKind.Mouse,
                     position: new Point(40, 20),
                     buttons: PointerButtons.None,
-                    timestampUtc: DateTime.UtcNow));
+                    timestampUtc: DateTime.UtcNow),
+                new BoxHitTestEntry(tooltipListener, new Point(40, 20)));
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.20));
             harness.Pump(new Size(320, 120));
             renderRoot = harness.RenderView.Child;
             Assert.NotNull(FindParagraphByText(renderRoot, "First tooltip"));
 
-            binding.HandlePointerEvent(
-                harness.RenderView,
-                new PointerHoverEvent(
+            tooltipListener = FindTooltipHoverPointerListener(renderRoot);
+            Assert.NotNull(tooltipListener);
+            tooltipListener!.HandleEvent(
+                new PointerExitEvent(
                     pointer: 501,
                     kind: PointerDeviceKind.Mouse,
                     position: new Point(1200, 20),
                     buttons: PointerButtons.None,
-                    timestampUtc: DateTime.UtcNow));
+                    timestampUtc: DateTime.UtcNow),
+                new BoxHitTestEntry(tooltipListener, new Point(1200, 20)));
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.50));
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.70));
             harness.Pump(new Size(320, 120));
@@ -319,7 +321,6 @@ public sealed class MaterialBottomNavigationBarTests
         }
         finally
         {
-            binding.ResetForTests();
             Scheduler.ResetForTests();
         }
     }
@@ -596,6 +597,29 @@ public sealed class MaterialBottomNavigationBarTests
             result = FindParagraphByText(child, text);
         });
 
+        return result;
+    }
+
+    private static RenderExclusiveMouseRegion? FindTooltipHoverPointerListener(RenderObject? root)
+    {
+        if (root is null)
+        {
+            return null;
+        }
+
+        if (root is RenderExclusiveMouseRegion listener)
+        {
+            return listener;
+        }
+
+        RenderExclusiveMouseRegion? result = null;
+        root.VisitChildren(child =>
+        {
+            if (result is null)
+            {
+                result = FindTooltipHoverPointerListener(child);
+            }
+        });
         return result;
     }
 

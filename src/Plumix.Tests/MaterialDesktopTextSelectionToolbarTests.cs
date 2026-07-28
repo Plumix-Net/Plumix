@@ -333,7 +333,7 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
             FindDescendants<RenderTextSelectionToolbarItemsLayout>(harness.RenderView));
         Assert.False(layout.OverflowOpen);
 
-        Assert.NotNull(FindSemantics(semantics, node => node.Label == "More"));
+        Assert.NotNull(FindSemantics(semantics, node => node.Tooltip == "More"));
         SemanticsNode moreButton = Assert.IsType<SemanticsNode>(FindSemantics(
             semantics,
             node => node.Actions.HasFlag(SemanticsActions.Tap)));
@@ -342,7 +342,7 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
         semantics = harness.PumpAndGetSemantics(new Size(180, 300));
         layout = Assert.Single(FindDescendants<RenderTextSelectionToolbarItemsLayout>(harness.RenderView));
         Assert.True(layout.OverflowOpen);
-        Assert.NotNull(FindSemantics(semantics, node => node.Label == "Back"));
+        Assert.NotNull(FindSemantics(semantics, node => node.Tooltip == "Back"));
     }
 
     [Fact]

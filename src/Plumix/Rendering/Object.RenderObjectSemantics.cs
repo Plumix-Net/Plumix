@@ -385,6 +385,8 @@ internal sealed class RenderObjectSemantics
                || config.IsMergingSemanticsOfDescendants
                || config.IsBlockingSemanticsOfPreviouslyPaintedNodes
                || !string.IsNullOrEmpty(config.Label)
+               || !string.IsNullOrEmpty(config.Hint)
+               || !string.IsNullOrEmpty(config.Tooltip)
                || config.Role != SemanticsRole.None
                || config.Flags != SemanticsFlags.None
                || config.Actions != SemanticsActions.None
@@ -741,6 +743,7 @@ internal sealed class RenderObjectSemantics
         {
             Label = node.Label,
             Hint = node.Hint,
+            Tooltip = node.Tooltip,
             Role = node.Role,
             Flags = node.Flags,
             Actions = node.Actions,
@@ -773,6 +776,7 @@ internal sealed class RenderObjectSemantics
         node.Rect = rect;
         node.Label = configuration.Label;
         node.Hint = configuration.Hint;
+        node.Tooltip = configuration.Tooltip;
         node.Role = configuration.Role;
         node.Flags = configuration.Flags;
         node.Actions = configuration.Actions;

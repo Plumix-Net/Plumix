@@ -30,7 +30,7 @@ internal sealed class BadgeTooltipDemoPageState : State
             [
                 new Text("Badge + Tooltip", fontSize: 20, color: Colors.Black),
                 new Text(
-                    "Count/stadium/small badge geometry plus hover, long-press, timing, and theme precedence.",
+                    "Badge geometry plus overlay tooltips with hover, edge-aware placement, and custom positioning.",
                     fontSize: 14,
                     color: Color.Parse("#8A000000")),
                 new Row(
@@ -90,6 +90,14 @@ internal sealed class BadgeTooltipDemoPageState : State
                                 child: new OutlinedButton(
                                     onPressed: () => { },
                                     child: new Text("Above + delay"))),
+                            new Tooltip(
+                                message: "Custom right tooltip",
+                                positionDelegate: position => new Point(
+                                    position.Target.X + (position.TargetSize.Width / 2.0) + 8,
+                                    position.Target.Y - (position.TooltipSize.Height / 2.0)),
+                                child: new OutlinedButton(
+                                    onPressed: () => { },
+                                    child: new Text("Custom right"))),
                         ])),
             ]);
 

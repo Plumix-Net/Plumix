@@ -8,7 +8,7 @@ Use this block as the fastest machine-readable status summary.
 
 ```yaml
 framework_plan_version: 1
-last_updated: 2026-07-26
+last_updated: 2026-07-28
 north_star: "Flutter-like widget/rendering framework in C# with Avalonia as host infrastructure."
 current_phase: "M4 material library rewrite (theme/scaffold/material controls) in progress."
 status:
@@ -343,6 +343,11 @@ Kickoff note (2026-03-12):
 - Added paired `TimePickerDialog` + `DateRangePickerDialog` parity with Flutter-shaped `TimeOfDay`, dial/input and calendar/input modes, 12/24-hour formatting, time/range theming, lazy multi-month range layout, connected range paint, typed dialog results, focused tests, and mirrored C#/Dart sample probes.
 - Added paired `DropdownMenu<T>` + `DropdownMenuFormField<T>` parity with editable/select-only anchors, filtering/search, disabled-item keyboard traversal, menu controllers/close policies, intrinsic and explicit sizing, Material 3 dropdown theming, form lifecycle, focused tests, and mirrored C#/Dart sample probes.
 - Added paired `SearchBar` + `SearchAnchor` parity baseline with controller open/close, route-owned search view, sync suggestions, M3 bar/view themes, focused tests, and mirrored C#/Dart sample probes.
+- Added paired core `RawTooltip` + Material `Tooltip` parity with overlay-portal ownership, exclusive nested hover,
+  touch/manual triggers, source timers/feedback/global dismissal, curved fade animation, tooltip semantics,
+  viewport-aware side flipping, custom position delegates, focused tests, and expanded mirrored C#/Dart probes.
+  `WidgetHost` now installs the baseline root overlay required by portal-backed controls. Material `richMessage`
+  remains tracked against the shared rich-span gap.
 - Added paired core `RawAutocomplete<T>` + Material `Autocomplete<T>` parity with sync/async option resolution, stale-result suppression, split/custom fields, anchored direction selection, keyboard highlighting/selection, Material defaults, focused tests, and mirrored C#/Dart sample probes.
 - Added paired Material `SelectableText` + `SelectionArea` parity baseline over a shared core `SelectableRegion`:
   single-run and multi-widget selection, glyph-range highlight paint, transformed cross-paragraph pointer drag,

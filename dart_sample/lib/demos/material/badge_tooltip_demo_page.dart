@@ -21,7 +21,7 @@ class _BadgeTooltipDemoPageState extends State<BadgeTooltipDemoPage> {
         const Text('Badge + Tooltip', style: TextStyle(fontSize: 20)),
         const SizedBox(height: 14),
         const Text(
-          'Count/stadium/small badge geometry plus hover, long-press, timing, and theme precedence.',
+          'Badge geometry plus overlay tooltips with hover, edge-aware placement, and custom positioning.',
           style: TextStyle(fontSize: 14, color: Color(0x8A000000)),
         ),
         const SizedBox(height: 14),
@@ -116,6 +116,15 @@ class _BadgeTooltipDemoPageState extends State<BadgeTooltipDemoPage> {
                   child: const Text('Above + delay'),
                 ),
               ),
+              const SizedBox(width: 12),
+              Tooltip(
+                message: 'Custom right tooltip',
+                positionDelegate: _positionTooltipRight,
+                child: OutlinedButton(
+                  onPressed: _noop,
+                  child: const Text('Custom right'),
+                ),
+              ),
             ],
           ),
         ),
@@ -172,4 +181,13 @@ class _BadgeTooltipDemoPageState extends State<BadgeTooltipDemoPage> {
       child: Text(label, style: const TextStyle(fontSize: 12)),
     );
   }
+
+  static Offset _positionTooltipRight(TooltipPositionContext position) {
+    return Offset(
+      position.target.dx + position.targetSize.width / 2 + 8,
+      position.target.dy - position.tooltipSize.height / 2,
+    );
+  }
+
+  static void _noop() {}
 }

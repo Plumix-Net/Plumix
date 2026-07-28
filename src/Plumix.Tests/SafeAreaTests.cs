@@ -243,7 +243,28 @@ public sealed class SafeAreaTests
         Assert.Equal(new Thickness(), MediaQueryProbe.Padding);
         Assert.Equal(new Thickness(), MediaQueryProbe.ViewPadding);
         Assert.Equal(new Size(0, 0), MediaQueryProbe.Size);
+        Assert.True(MediaQueryProbe.HasOverlay);
 
+        _ = host;
+    }
+
+    [Fact]
+    public void WidgetHost_RootOverlaySupportsInitiallyVisiblePortal()
+    {
+        var controller = new OverlayPortalController();
+        controller.Show();
+
+        var host = new WidgetHost
+        {
+            RootWidget = new OverlayPortal(
+                controller: controller,
+                overlayChildBuilder: _ => new SizedBox(width: 8, height: 8),
+                child: new SizedBox(width: 16, height: 16)),
+        };
+
+        Assert.True(controller.IsShowing);
+        host.Arrange(new Rect(0, 0, 320, 180));
+        Assert.True(controller.IsShowing);
         _ = host;
     }
 
@@ -264,12 +285,19 @@ public sealed class SafeAreaTests
 
         public static Size Size { get; private set; }
 
-        public static void Record(Thickness padding, Thickness viewPadding, Size size)
+        public static bool HasOverlay { get; private set; }
+
+        public static void Record(
+            Thickness padding,
+            Thickness viewPadding,
+            Size size,
+            bool hasOverlay)
         {
             DidBuild = true;
             Padding = padding;
             ViewPadding = viewPadding;
             Size = size;
+            HasOverlay = hasOverlay;
         }
 
         public static void Reset()
@@ -278,6 +306,7 @@ public sealed class SafeAreaTests
             Padding = default;
             ViewPadding = default;
             Size = default;
+            HasOverlay = false;
         }
     }
 
@@ -286,7 +315,11 @@ public sealed class SafeAreaTests
         public override Widget Build(BuildContext context)
         {
             var mediaQuery = MediaQuery.Of(context);
-            MediaQueryProbe.Record(mediaQuery.Padding, mediaQuery.ViewPadding, mediaQuery.Size);
+            MediaQueryProbe.Record(
+                mediaQuery.Padding,
+                mediaQuery.ViewPadding,
+                mediaQuery.Size,
+                Overlay.MaybeOf(context) is not null);
             return new SizedBox(width: 1, height: 1);
         }
     }

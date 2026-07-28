@@ -2535,7 +2535,7 @@ public sealed class RenderClipRRect : RenderProxyBox
     }
 }
 
-public sealed class RenderPointerListener : RenderProxyBox
+public class RenderPointerListener : RenderProxyBox
 {
     private HitTestBehavior _behavior;
 
@@ -2642,6 +2642,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
 {
     private string? _label;
     private string? _hint;
+    private string? _tooltip;
     private SemanticsRole _role;
     private SemanticsFlags _flags;
     private Action? _onTap;
@@ -2655,6 +2656,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
     public RenderSemanticsAnnotations(
         string? label = null,
         string? hint = null,
+        string? tooltip = null,
         SemanticsRole role = SemanticsRole.None,
         SemanticsFlags flags = SemanticsFlags.None,
         Action? onTap = null,
@@ -2667,6 +2669,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
     {
         _label = label;
         _hint = hint;
+        _tooltip = tooltip;
         _role = role;
         _flags = flags;
         _onTap = onTap;
@@ -2700,6 +2703,21 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         {
             if (_hint == value) return;
             _hint = value;
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
+    public string? Tooltip
+    {
+        get => _tooltip;
+        set
+        {
+            if (_tooltip == value)
+            {
+                return;
+            }
+
+            _tooltip = value;
             MarkNeedsSemanticsUpdate();
         }
     }
@@ -2823,6 +2841,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
     {
         if (string.IsNullOrWhiteSpace(_label)
             && string.IsNullOrWhiteSpace(_hint)
+            && string.IsNullOrWhiteSpace(_tooltip)
             && _role == SemanticsRole.None
             && _flags == SemanticsFlags.None
             && _onTap is null
@@ -2853,6 +2872,11 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         if (!string.IsNullOrWhiteSpace(_hint))
         {
             configuration.Hint = _hint;
+        }
+
+        if (!string.IsNullOrWhiteSpace(_tooltip))
+        {
+            configuration.Tooltip = _tooltip;
         }
 
         configuration.Flags |= _flags;

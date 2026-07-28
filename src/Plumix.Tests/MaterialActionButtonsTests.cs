@@ -85,7 +85,7 @@ public sealed class MaterialActionButtonsTests
                     ]))));
 
         var semantics = harness.PumpAndGetSemantics(new Size(180, 80));
-        Assert.NotNull(FindSemantics(semantics, node => node.Label == "Ouvrir le menu"));
+        Assert.NotNull(FindSemantics(semantics, node => node.Tooltip == "Ouvrir le menu"));
         var buttons = FindAllSemantics(
             semantics,
             node => node.Flags.HasFlag(SemanticsFlags.IsButton)
@@ -153,8 +153,8 @@ public sealed class MaterialActionButtonsTests
                     ]))));
 
         var semantics = harness.PumpAndGetSemantics(new Size(180, 80));
-        var back = FindSemantics(semantics, node => node.Label == "Retour");
-        var close = FindSemantics(semantics, node => node.Label == "Fermer");
+        var back = FindSemantics(semantics, node => node.Tooltip == "Retour");
+        var close = FindSemantics(semantics, node => node.Tooltip == "Fermer");
 
         Assert.NotNull(back);
         Assert.NotNull(close);
@@ -192,7 +192,7 @@ public sealed class MaterialActionButtonsTests
         var semantics = harness.PumpAndGetSemantics(new Size(180, 80));
         Assert.True(navigator.CanPop);
 
-        var action = FindSemantics(semantics, node => node.Label == tooltip);
+        var action = FindSemantics(semantics, node => node.Tooltip == tooltip);
         Assert.NotNull(action);
         var button = FindSemantics(
             semantics,
@@ -223,7 +223,7 @@ public sealed class MaterialActionButtonsTests
     }
 
     [Fact]
-    public void AndroidActionIcons_DuplicateTooltipLabelForPlatformSemantics()
+    public void AndroidActionIcons_ExposePlatformLabelAndTooltipSemantics()
     {
         using var harness = new WidgetRenderHarness(
             new Theme(
@@ -234,7 +234,10 @@ public sealed class MaterialActionButtonsTests
 
         int labels = FindDescendants<RenderSemanticsAnnotations>(harness.RenderView)
             .Count(semantics => semantics.Label == "Back");
-        Assert.Equal(2, labels);
+        int tooltips = FindDescendants<RenderSemanticsAnnotations>(harness.RenderView)
+            .Count(semantics => semantics.Tooltip == "Back");
+        Assert.Equal(1, labels);
+        Assert.Equal(1, tooltips);
     }
 
     private static RenderParagraph? FindParagraph(RenderObject? root, string text)

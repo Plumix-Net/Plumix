@@ -92,14 +92,16 @@ public sealed class WidgetHost : PlumixHost
         }
 
         _lastMediaQueryData = nextData;
-        _rootElement.Update(new MediaQuery(data: nextData, child: _rootWidget));
+        _rootElement.Update(BuildRootWidget(_rootWidget));
     }
 
     private Widget BuildRootWidget(Widget rootWidget)
     {
         var data = GetMediaQueryData();
         _lastMediaQueryData = data;
-        return new MediaQuery(data: data, child: rootWidget);
+        return new MediaQuery(
+            data: data,
+            child: Overlay.Wrap(rootWidget));
     }
 
     private sealed class RootElement : Element, IRenderObjectHost

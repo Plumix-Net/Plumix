@@ -8,13 +8,6 @@ namespace Plumix.Material;
 
 // Dart parity source: flutter/packages/flutter/lib/src/material/tooltip_theme.dart
 
-public enum TooltipTriggerMode
-{
-    Manual,
-    Tap,
-    LongPress,
-}
-
 public sealed record TooltipThemeData(
     double? Height = null,
     BoxConstraints? Constraints = null,
