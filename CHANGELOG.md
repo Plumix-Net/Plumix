@@ -1,5 +1,11 @@
 # Changelog
 
+- Breaking: added paired Flutter core `AppLifecycleListener` + `StatusTransitionWidget` parity with source state-
+  transition synthesis, per-transition callbacks, collective cancelable exit requests, status-only animation
+  rebuilding, listener replacement/disposal, Avalonia focus/minimize/attach host wiring, focused tests, and a
+  mirrored C#/Dart runtime probe. Added source-required `DisposableBuildContext<T>` and aligned `State.Mounted`/
+  `State.Context` with Flutter inactive/unmounted behavior; advanced `Plumix` to `0.7.0-alpha.1`.
+
 - Added paired Material `NoSplash` + `TableRowInkWell` parity with a non-painting public splash factory,
   source-shaped row-rectangle callbacks, translation-aware whole-row ink geometry, and exact `DataTable` cell-versus-
   row gesture composition. Added focused tests and mirrored NoSplash/DataTable runtime probes; advanced

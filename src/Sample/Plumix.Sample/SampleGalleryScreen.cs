@@ -112,6 +112,7 @@ internal static class SampleRoutes
     public const string AsyncBuilders = "/async-builders";
     public const string StatefulBuilderLookupBoundary = "/stateful-builder-lookup-boundary";
     public const string DragTarget = "/drag-target";
+    public const string LifecycleUtilities = "/lifecycle-utilities";
 }
 
 internal readonly record struct SampleRouteDefinition(
@@ -339,6 +340,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "Draggable + DragTarget",
             "overlay feedback + accepted/rejected target lifecycle",
             () => new DragTargetDemoPage()),
+        new(
+            SampleRoutes.LifecycleUtilities,
+            "Lifecycle listener controls",
+            "AppLifecycleListener + StatusTransitionWidget + safe BuildContext",
+            () => new LifecycleUtilitiesDemoPage()),
     ];
 
     private static readonly IReadOnlyList<SampleMenuTabDefinition> DemoTabs =

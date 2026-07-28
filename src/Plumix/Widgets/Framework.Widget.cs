@@ -94,8 +94,21 @@ public abstract class ParentDataWidget<T> : ProxyWidget, IParentDataWidget where
 public abstract class State
 {
     internal StatefulElement Element = null!;
-    public BuildContext Context => new(Element);
-    public bool Mounted => Element is not null && Element.IsActive;
+    public BuildContext Context
+    {
+        get
+        {
+            if (!Mounted)
+            {
+                throw new InvalidOperationException(
+                    "This State no longer has a context because its Element was unmounted.");
+            }
+
+            return new BuildContext(Element);
+        }
+    }
+
+    public bool Mounted => Element is not null && Element.IsMounted;
     protected StatefulWidget StateWidget => (StatefulWidget)Element.Widget;
 
     public virtual void InitState()

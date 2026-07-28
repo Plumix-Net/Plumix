@@ -78,6 +78,7 @@ import 'demos/general/baseline_demo_page.dart';
 import 'demos/general/intrinsic_widgets_demo_page.dart';
 import 'demos/general/layout_builder_demo_page.dart';
 import 'demos/general/keyboard_listener_demo_page.dart';
+import 'demos/general/lifecycle_utilities_demo_page.dart';
 import 'demos/general/overflow_box_demo_page.dart';
 import 'demos/general/overflow_indicator_demo_page.dart';
 import 'demos/general/proxy_widgets_demo_page.dart';
@@ -665,6 +666,13 @@ class SampleGalleryScreen extends StatelessWidget {
           title: 'Draggable + DragTarget',
           subtitle: 'overlay feedback + accepted/rejected target lifecycle',
           builder: () => const DragTargetDemoPage(),
+        ),
+        SampleRouteDefinition(
+          routeName: SampleRoutes.lifecycleUtilities,
+          title: 'Lifecycle listener controls',
+          subtitle:
+              'AppLifecycleListener + StatusTransitionWidget + safe BuildContext',
+          builder: () => const LifecycleUtilitiesDemoPage(),
         ),
       ];
 

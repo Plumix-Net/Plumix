@@ -195,6 +195,11 @@ Completion note:
   callbacks, focus-bound raw listener attach/detach/rebind lifecycle, focusable/focused semantics and accessibility
   focus actions, focused tests, and mirrored C#/Dart runtime probes. Platform physical/logical raw-key metadata
   remains tracked against the shared host input model in `DIVERGENCES.md`.
+- Continued paired core lifecycle-listener coverage with `AppLifecycleListener` + `StatusTransitionWidget`,
+  including source-ordered lifecycle transition synthesis/callbacks, collective exit veto, status-only rebuilds,
+  listener replacement/disposal, host focus/minimize/attach mapping, focused tests, and mirrored C#/Dart probes.
+  Source-required `DisposableBuildContext<T>` now releases state ownership explicitly, while `State.Mounted` and
+  `State.Context` retain Flutter behavior across inactive and unmounted elements.
 - Continued paired core developer-visualization coverage with `Placeholder` + `GridPaper`, including source-shaped
   background/foreground custom-paint composition, unbounded fallback sizing, child preservation, three-level grid
   strokes, non-interactive hit testing, focused tests, and mirrored C#/Dart runtime probes.

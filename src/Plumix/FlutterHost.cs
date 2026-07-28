@@ -41,6 +41,7 @@ public class PlumixHost : Control
     private bool _isSubscribedToMouseCursor;
     private bool _isSubscribedToFeedback;
     private bool _isSubscribedToSystemSound;
+    private bool _allowWindowClose;
     private SystemUiOverlayStyle _currentSystemUiOverlayStyle = SystemChrome.CurrentSystemUiOverlayStyle;
     private ApplicationSwitcherDescription? _currentApplicationSwitcherDescription =
         SystemChrome.CurrentApplicationSwitcherDescription;
@@ -275,6 +276,7 @@ public class PlumixHost : Control
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
     {
         base.OnAttachedToVisualTree(e);
+        WidgetsBinding.Instance.HandleAppLifecycleStateChanged(AppLifecycleState.Resumed);
         EnsureSchedulerSubscription();
         AttachSystemUiOverlayStyleListener();
         AttachApplicationSwitcherDescriptionListener();
@@ -294,6 +296,7 @@ public class PlumixHost : Control
         DetachApplicationSwitcherDescriptionListener();
         DetachSystemUiOverlayStyleListener();
         RemoveSchedulerSubscription();
+        WidgetsBinding.Instance.HandleAppLifecycleStateChanged(AppLifecycleState.Detached);
         base.OnDetachedFromVisualTree(e);
     }
 
@@ -424,6 +427,18 @@ public class PlumixHost : Control
             return;
         }
 
+        if (_attachedTopLevel is WindowBase windowBase)
+        {
+            windowBase.Activated += HandleWindowActivated;
+            windowBase.Deactivated += HandleWindowDeactivated;
+        }
+
+        if (_attachedTopLevel is Window window)
+        {
+            window.PropertyChanged += HandleWindowPropertyChanged;
+            window.Closing += HandleWindowClosing;
+        }
+
         ApplyApplicationSwitcherDescription();
         _insetsManager = _attachedTopLevel.InsetsManager;
         if (_insetsManager != null)
@@ -441,6 +456,18 @@ public class PlumixHost : Control
 
     private void DetachMetricSources()
     {
+        if (_attachedTopLevel is WindowBase windowBase)
+        {
+            windowBase.Activated -= HandleWindowActivated;
+            windowBase.Deactivated -= HandleWindowDeactivated;
+        }
+
+        if (_attachedTopLevel is Window window)
+        {
+            window.PropertyChanged -= HandleWindowPropertyChanged;
+            window.Closing -= HandleWindowClosing;
+        }
+
         if (_insetsManager != null)
         {
             _insetsManager.SafeAreaChanged -= HandleSafeAreaChanged;
@@ -454,6 +481,53 @@ public class PlumixHost : Control
         _attachedTopLevel = null;
         _insetsManager = null;
         _inputPane = null;
+    }
+
+    private static void HandleWindowActivated(object? sender, EventArgs e)
+    {
+        AppLifecycleState state = sender is Window { WindowState: WindowState.Minimized }
+            ? AppLifecycleState.Hidden
+            : AppLifecycleState.Resumed;
+        WidgetsBinding.Instance.HandleAppLifecycleStateChanged(state);
+    }
+
+    private static void HandleWindowDeactivated(object? sender, EventArgs e)
+    {
+        AppLifecycleState state = sender is Window { WindowState: WindowState.Minimized }
+            ? AppLifecycleState.Hidden
+            : AppLifecycleState.Inactive;
+        WidgetsBinding.Instance.HandleAppLifecycleStateChanged(state);
+    }
+
+    private static void HandleWindowPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+    {
+        if (e.Property != Window.WindowStateProperty || sender is not Window window)
+        {
+            return;
+        }
+
+        WidgetsBinding.Instance.HandleAppLifecycleStateChanged(
+            window.WindowState == WindowState.Minimized
+                ? AppLifecycleState.Hidden
+                : window.IsActive
+                    ? AppLifecycleState.Resumed
+                    : AppLifecycleState.Inactive);
+    }
+
+    private async void HandleWindowClosing(object? sender, WindowClosingEventArgs e)
+    {
+        if (_allowWindowClose || sender is not Window window)
+        {
+            return;
+        }
+
+        e.Cancel = true;
+        AppExitResponse response = await WidgetsBinding.Instance.HandleRequestAppExit();
+        if (response == AppExitResponse.Exit)
+        {
+            _allowWindowClose = true;
+            window.Close();
+        }
     }
 
     private void HandleSafeAreaChanged(object? sender, SafeAreaChangedArgs e)

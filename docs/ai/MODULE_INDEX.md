@@ -99,6 +99,10 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Read First:
   - `src/Plumix/FlutterHost.cs`
   - `src/Plumix/WidgetHost.cs`
+  - `src/Plumix/Widgets/AppLifecycleListener.cs`
+  - `src/Plumix/UI/AppLifecycle.cs`
+  - `src/Plumix/Widgets/StatusTransitionWidget.cs`
+  - `src/Plumix/Widgets/DisposableBuildContext.cs`
   - `src/Plumix/UI/SystemChrome.cs`
   - `src/Plumix/Scheduler.cs`
   - `src/Plumix/PipelineOwner.cs`
@@ -106,6 +110,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Primary Tests:
   - `src/Plumix.Tests/FramePipelineTests.cs`
   - `src/Plumix.Tests/RenderingParityTests.cs`
+  - `src/Plumix.Tests/AppLifecycleListenerTests.cs`
 
 ### Widget/Element Lifecycle
 

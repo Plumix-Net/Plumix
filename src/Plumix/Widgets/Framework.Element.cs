@@ -168,6 +168,8 @@ public abstract class Element
 
     internal bool IsActive => _lifecycleState == ElementLifecycleState.Active;
     internal bool IsInactive => _lifecycleState == ElementLifecycleState.Inactive;
+    internal bool IsMounted =>
+        _lifecycleState is ElementLifecycleState.Active or ElementLifecycleState.Inactive;
 
     protected Element(Widget widget)
     {
