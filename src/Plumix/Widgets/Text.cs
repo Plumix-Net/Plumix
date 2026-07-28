@@ -25,7 +25,8 @@ public sealed class Text : LeafRenderObjectWidget
         TextDirection textDirection = TextDirection.Ltr,
         TextWidthBasis? textWidthBasis = null,
         TextHeightBehavior? textHeightBehavior = null,
-        Key? key = null) : base(key)
+        Key? key = null,
+        TextDecorationCollection? textDecorations = null) : base(key)
     {
         if (maxLines is <= 0)
         {
@@ -47,6 +48,7 @@ public sealed class Text : LeafRenderObjectWidget
         TextDirection = textDirection;
         TextWidthBasis = textWidthBasis;
         TextHeightBehavior = textHeightBehavior;
+        TextDecorations = textDecorations;
     }
 
     public string Data { get; }
@@ -79,6 +81,8 @@ public sealed class Text : LeafRenderObjectWidget
 
     public TextHeightBehavior? TextHeightBehavior { get; }
 
+    public TextDecorationCollection? TextDecorations { get; }
+
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
         var defaultTextStyle = DefaultTextStyle.MaybeOf(context);
@@ -92,6 +96,7 @@ public sealed class Text : LeafRenderObjectWidget
             TextDirection = TextDirection,
             TextWidthBasis = TextWidthBasis ?? defaultTextStyle?.TextWidthBasis ?? Plumix.UI.TextWidthBasis.Parent,
             TextHeightBehavior = TextHeightBehavior ?? defaultTextStyle?.TextHeightBehavior,
+            TextDecorations = TextDecorations,
             SelectionRegistrar = selection?.Registrar,
             SelectionEnabled = selection?.Enabled ?? false,
             SelectionColor = selection?.SelectionColor ?? default,
@@ -120,6 +125,7 @@ public sealed class Text : LeafRenderObjectWidget
             ?? defaultTextStyle?.TextWidthBasis
             ?? Plumix.UI.TextWidthBasis.Parent;
         paragraph.TextHeightBehavior = TextHeightBehavior ?? defaultTextStyle?.TextHeightBehavior;
+        paragraph.TextDecorations = TextDecorations;
         var selection = SelectionContainer.MaybeOf(context);
         paragraph.SelectionRegistrar = selection?.Registrar;
         paragraph.SelectionEnabled = selection?.Enabled ?? false;

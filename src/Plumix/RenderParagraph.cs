@@ -27,6 +27,7 @@ public sealed class RenderParagraph : RenderBox
     private TextHeightBehavior? _textHeightBehavior;
     private double? _height;
     private double _letterSpacing;
+    private TextDecorationCollection? _textDecorations;
     private TextLayout? _layout;
     private ITextSelectionRegistrar? _selectionRegistrar;
     private Color _selectionColor = Color.FromArgb(0x66, 0x67, 0x50, 0xA4);
@@ -170,6 +171,21 @@ public sealed class RenderParagraph : RenderBox
 
             _foreground = next;
             MarkNeedsPaint();
+        }
+    }
+
+    public TextDecorationCollection? TextDecorations
+    {
+        get => _textDecorations;
+        set
+        {
+            if (ReferenceEquals(_textDecorations, value))
+            {
+                return;
+            }
+
+            _textDecorations = value;
+            MarkNeedsLayout();
         }
     }
 
@@ -485,6 +501,7 @@ public sealed class RenderParagraph : RenderBox
             textAlignment: ResolveTextAlignment(_textAlign, _textDirection),
             textWrapping: _softWrap ? TextWrapping.Wrap : TextWrapping.NoWrap,
             textTrimming: ResolveTextTrimming(_overflow),
+            textDecorations: _textDecorations,
             flowDirection: _textDirection == TextDirection.Rtl ? FlowDirection.RightToLeft : FlowDirection.LeftToRight,
             maxWidth: maxWidth,
             maxHeight: maxHeight,

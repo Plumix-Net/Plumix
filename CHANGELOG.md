@@ -1,5 +1,11 @@
 # Changelog
 
+- Added paired Material `MenuAcceleratorCallbackBinding` + `MenuAcceleratorLabel` parity with source marker parsing,
+  grapheme-safe indexes, Alt-driven underlining/invocation, submenu suppression, Apple-platform policy, automatic
+  menu-button bindings, focused tests, and a mirrored C#/Dart menu-bar probe. Added shared `HardwareKeyboard` and text
+  decoration plumbing; advanced `Plumix` to `0.8.0-alpha.1` and `Plumix.Material` to `0.5.0-alpha.1`. Rich-span
+  kerning and focus-local shortcut priority remain tracked in `DIVERGENCES.md`.
+
 - Breaking: added paired Flutter core `AppLifecycleListener` + `StatusTransitionWidget` parity with source state-
   transition synthesis, per-transition callbacks, collective cancelable exit requests, status-only animation
   rebuilding, listener replacement/disposal, Avalonia focus/minimize/attach host wiring, focused tests, and a

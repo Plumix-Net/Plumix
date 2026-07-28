@@ -37,6 +37,66 @@ public sealed class KeyEvent
     public DateTime TimestampUtc { get; }
 }
 
+// Dart parity source: flutter/packages/flutter/lib/src/services/hardware_keyboard.dart
+public sealed class HardwareKeyboard
+{
+    private readonly List<Func<KeyEvent, bool>> _handlers = [];
+    private readonly HashSet<string> _logicalKeysPressed = new(StringComparer.Ordinal);
+
+    private HardwareKeyboard()
+    {
+    }
+
+    public static HardwareKeyboard Instance { get; } = new();
+
+    public IReadOnlySet<string> LogicalKeysPressed => _logicalKeysPressed;
+
+    public bool IsAltPressed => _logicalKeysPressed.Contains("Alt")
+                                || _logicalKeysPressed.Contains("LeftAlt")
+                                || _logicalKeysPressed.Contains("RightAlt");
+
+    public void AddHandler(Func<KeyEvent, bool> handler)
+    {
+        ArgumentNullException.ThrowIfNull(handler);
+        if (!_handlers.Contains(handler))
+        {
+            _handlers.Add(handler);
+        }
+    }
+
+    public void RemoveHandler(Func<KeyEvent, bool> handler)
+    {
+        _handlers.Remove(handler);
+    }
+
+    internal bool HandleKeyEvent(KeyEvent keyEvent)
+    {
+        ArgumentNullException.ThrowIfNull(keyEvent);
+        if (keyEvent.IsDown)
+        {
+            _logicalKeysPressed.Add(keyEvent.Key);
+        }
+        else
+        {
+            _logicalKeysPressed.Remove(keyEvent.Key);
+        }
+
+        bool handled = false;
+        foreach (Func<KeyEvent, bool> handler in _handlers.ToArray())
+        {
+            handled |= handler(keyEvent);
+        }
+
+        return handled;
+    }
+
+    internal void ResetForTests()
+    {
+        _handlers.Clear();
+        _logicalKeysPressed.Clear();
+    }
+}
+
 // Dart parity source: flutter/packages/flutter/lib/src/services/raw_keyboard.dart
 [Obsolete("Use KeyEvent and KeyboardListener instead.")]
 public abstract class RawKeyEvent

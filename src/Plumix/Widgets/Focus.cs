@@ -453,9 +453,16 @@ public sealed class FocusManager
 
     public bool HandleKeyEvent(KeyEvent @event)
     {
+        bool handledByHardwareKeyboard = HardwareKeyboard.Instance.HandleKeyEvent(@event);
+
 #pragma warning disable CS0618
         RawKeyboard.Instance.HandleKeyEvent(@event);
 #pragma warning restore CS0618
+
+        if (handledByHardwareKeyboard)
+        {
+            return true;
+        }
 
         if (PrimaryFocus != null && PrimaryFocus.HandleKeyEvent(@event) == KeyEventResult.Handled)
         {
@@ -555,6 +562,10 @@ public sealed class FocusManager
 
         _nodes.Clear();
         _rootScope.ResetForTests();
+        HardwareKeyboard.Instance.ResetForTests();
+#pragma warning disable CS0618
+        RawKeyboard.Instance.ResetForTests();
+#pragma warning restore CS0618
     }
 
     private void SetPrimaryFocus(FocusNode? next)

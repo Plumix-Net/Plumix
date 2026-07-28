@@ -283,7 +283,7 @@ public sealed class MenuItemButton : StatelessWidget
             OnPressed();
             if (CloseOnActivate) MenuController.MaybeOf(context)?.Close();
         };
-        return new MaterialButtonCore(
+        Widget result = new MaterialButtonCore(
             child: content,
             onPressed: activate,
             style: MaterialButtonCore.ComposeStyles(
@@ -303,6 +303,15 @@ public sealed class MenuItemButton : StatelessWidget
             semanticLabel: SemanticsLabel,
             clipBehavior: ClipBehavior,
             enabled: Enabled);
+
+        if (Enabled && MenuAcceleratorLabel.PlatformSupportsAccelerators(context))
+        {
+            result = new MenuAcceleratorCallbackBinding(
+                child: result,
+                onInvoke: activate);
+        }
+
+        return result;
     }
 }
 
@@ -708,7 +717,7 @@ public sealed class SubmenuButtonState : State
             clipBehavior: Current.ClipBehavior,
             enabled: Current.Enabled);
 
-        return new MenuAnchor(
+        Widget result = new MenuAnchor(
             menuChildren: Current.MenuChildren,
             controller: Controller,
             childFocusNode: Current.FocusNode,
@@ -732,6 +741,16 @@ public sealed class SubmenuButtonState : State
         {
             PanelOrientation = parentOrientation == Axis.Horizontal ? Axis.Vertical : Axis.Horizontal,
         };
+
+        if (Current.Enabled && MenuAcceleratorLabel.PlatformSupportsAccelerators(context))
+        {
+            result = new MenuAcceleratorCallbackBinding(
+                child: result,
+                onInvoke: Toggle,
+                hasSubmenu: true);
+        }
+
+        return result;
     }
 
     private void Toggle()

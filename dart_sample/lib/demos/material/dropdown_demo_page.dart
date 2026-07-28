@@ -222,7 +222,8 @@ class _DropdownDemoPageState extends State<DropdownDemoPage> {
           const Divider(),
           const Text('MenuBar + SubmenuButton', style: TextStyle(fontSize: 18)),
           const Text(
-            'Horizontal menu bar with controller-owned sibling closing, nested side submenu, and local menu themes.',
+            'Horizontal menu bar with controller-owned sibling closing, '
+            'nested side submenu, local menu themes, and Alt-key accelerators.',
             style: TextStyle(fontSize: 14, color: Colors.black54),
           ),
           Align(
@@ -266,7 +267,7 @@ class _DropdownDemoPageState extends State<DropdownDemoPage> {
                           MenuItemButton(
                             onPressed: () =>
                                 setState(() => _menuBarStatus = 'new document'),
-                            child: const Text('New document'),
+                            child: const MenuAcceleratorLabel('&New document'),
                           ),
                           SubmenuButton(
                             onOpen: () => setState(
@@ -277,10 +278,12 @@ class _DropdownDemoPageState extends State<DropdownDemoPage> {
                                 onPressed: () => setState(
                                   () => _menuBarStatus = 'recent report',
                                 ),
-                                child: const Text('Quarterly report'),
+                                child: const MenuAcceleratorLabel(
+                                  '&Quarterly report',
+                                ),
                               ),
                             ],
-                            child: const Text('Recent'),
+                            child: const MenuAcceleratorLabel('&Recent'),
                           ),
                         ],
                         style: ButtonStyle(
@@ -288,7 +291,7 @@ class _DropdownDemoPageState extends State<DropdownDemoPage> {
                             Colors.deepOrange,
                           ),
                         ),
-                        child: const Text('File'),
+                        child: const MenuAcceleratorLabel('&File'),
                       ),
                       SubmenuButton(
                         controller: _editMenuController,
@@ -300,14 +303,14 @@ class _DropdownDemoPageState extends State<DropdownDemoPage> {
                           MenuItemButton(
                             onPressed: () =>
                                 setState(() => _menuBarStatus = 'paste'),
-                            child: const Text('Paste'),
+                            child: const MenuAcceleratorLabel('&Paste'),
                           ),
                         ],
-                        child: const Text('Edit'),
+                        child: const MenuAcceleratorLabel('&Edit'),
                       ),
                       const SubmenuButton(
                         menuChildren: <Widget>[],
-                        child: Text('Disabled'),
+                        child: MenuAcceleratorLabel('&Disabled'),
                       ),
                     ],
                   ),
