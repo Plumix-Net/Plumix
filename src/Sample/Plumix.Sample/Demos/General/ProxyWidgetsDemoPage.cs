@@ -2,6 +2,7 @@ using System;
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Rendering;
+using Plumix.UI;
 using Plumix.Widgets;
 using Path = Plumix.UI.Path;
 
@@ -131,7 +132,7 @@ internal sealed class ProxyWidgetsDemoPageState : State
                                         child: new Center(
                                             new Text("Rotate", fontSize: 12, color: Colors.White)))))),
                     ]),
-                new Text("ClipOval + ClipPath", fontSize: 14, color: Colors.Black),
+                new Text("ClipOval + ClipPath + PhysicalShape", fontSize: 14, color: Colors.Black),
                 new Row(
                     spacing: 16,
                     children:
@@ -146,11 +147,22 @@ internal sealed class ProxyWidgetsDemoPageState : State
                         new SizedBox(
                             width: 96,
                             height: 72,
-                            child: new ClipPath(
+                                child: new ClipPath(
+                                    clipper: new TrianglePathClipper(),
+                                    child: new ColoredBox(
+                                        Color.Parse("#FF386A20"),
+                                        new Center(new Text("Path", fontSize: 13, color: Colors.White))))),
+                        new SizedBox(
+                            width: 96,
+                            height: 72,
+                            child: new PhysicalShape(
                                 clipper: new TrianglePathClipper(),
-                                child: new ColoredBox(
-                                    Color.Parse("#FF386A20"),
-                                    new Center(new Text("Path", fontSize: 13, color: Colors.White))))),
+                                color: Color.Parse("#FFB3261E"),
+                                clipBehavior: Clip.AntiAlias,
+                                elevation: 6,
+                                shadowColor: Colors.Black,
+                                child: new Center(
+                                    new Text("Physical", fontSize: 13, color: Colors.White)))),
                     ]),
             ]);
     }

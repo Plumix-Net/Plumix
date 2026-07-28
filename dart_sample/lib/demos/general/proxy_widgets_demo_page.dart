@@ -201,7 +201,7 @@ class _ProxyWidgetsDemoPageState extends State<ProxyWidgetsDemoPage> {
           ],
         ),
         const Text(
-          'ClipOval + ClipPath',
+          'ClipOval + ClipPath + PhysicalShape',
           style: TextStyle(fontSize: 14, color: Colors.black),
         ),
         Row(
@@ -234,6 +234,23 @@ class _ProxyWidgetsDemoPageState extends State<ProxyWidgetsDemoPage> {
                       'Path',
                       style: TextStyle(fontSize: 13, color: Colors.white),
                     ),
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(
+              width: 96,
+              height: 72,
+              child: PhysicalShape(
+                clipper: _TrianglePathClipper(),
+                color: Color(0xFFB3261E),
+                clipBehavior: Clip.antiAlias,
+                elevation: 6,
+                shadowColor: Colors.black,
+                child: Center(
+                  child: Text(
+                    'Physical',
+                    style: TextStyle(fontSize: 13, color: Colors.white),
                   ),
                 ),
               ),

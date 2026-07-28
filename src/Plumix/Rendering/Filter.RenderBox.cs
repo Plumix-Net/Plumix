@@ -1,10 +1,14 @@
 using Avalonia;
+using Avalonia.Media;
 
 namespace Plumix.Rendering;
 
 // Dart parity source:
 // flutter/packages/flutter/lib/src/widgets/color_filter.dart
 // flutter/packages/flutter/lib/src/widgets/image_filter.dart
+// flutter/packages/flutter/lib/src/rendering/proxy_box.dart (RenderShaderMask)
+
+public delegate IBrush ShaderCallback(Rect bounds);
 
 public sealed class RenderColorFilter : RenderProxyBox
 {
@@ -117,5 +121,74 @@ public sealed class RenderImageFilter : RenderProxyBox
         var imageFilterLayer = (ImageFilterLayer)layer;
         imageFilterLayer.ImageFilter = ImageFilter;
         imageFilterLayer.FilterBounds = new Rect(default, Size);
+    }
+}
+
+public sealed class RenderShaderMask : RenderProxyBox
+{
+    private ShaderCallback _shaderCallback;
+    private BlendMode _blendMode;
+
+    public RenderShaderMask(
+        ShaderCallback shaderCallback,
+        RenderBox? child = null,
+        BlendMode blendMode = BlendMode.Modulate)
+    {
+        _shaderCallback = shaderCallback ?? throw new ArgumentNullException(nameof(shaderCallback));
+        _blendMode = blendMode;
+        Child = child;
+    }
+
+    public ShaderCallback ShaderCallback
+    {
+        get => _shaderCallback;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            if (_shaderCallback == value)
+            {
+                return;
+            }
+
+            _shaderCallback = value;
+            MarkNeedsPaint();
+        }
+    }
+
+    public BlendMode BlendMode
+    {
+        get => _blendMode;
+        set
+        {
+            if (_blendMode == value)
+            {
+                return;
+            }
+
+            _blendMode = value;
+            MarkNeedsPaint();
+        }
+    }
+
+    protected override bool AlwaysNeedsCompositing => Child != null;
+
+    public override void Paint(PaintingContext context, Point offset)
+    {
+        if (Child is null)
+        {
+            _layer = null;
+            return;
+        }
+
+        var bounds = new Rect(default, Size);
+        var layer = _layer as ShaderMaskLayer ?? new ShaderMaskLayer();
+        layer.Shader = ShaderCallback(bounds)
+            ?? throw new InvalidOperationException("ShaderCallback must return a non-null brush.");
+        layer.MaskRect = new Rect(offset, Size);
+        layer.BlendMode = BlendMode;
+        context.PushLayer(
+            layer,
+            childContext => base.Paint(childContext, offset));
+        _layer = layer;
     }
 }

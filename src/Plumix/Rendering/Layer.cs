@@ -507,6 +507,43 @@ public sealed class ImageFilterLayer : OffsetLayer
     }
 }
 
+// Dart parity source: flutter/packages/flutter/lib/src/rendering/layer.dart (ShaderMaskLayer)
+public sealed class ShaderMaskLayer : ContainerLayer
+{
+    private WriteableBitmap? _maskedBitmap;
+
+    public IBrush? Shader { get; set; }
+
+    public Rect MaskRect { get; set; }
+
+    public BlendMode BlendMode { get; set; } = BlendMode.Modulate;
+
+    internal override void AddToScene(DrawingContext context, Point offset)
+    {
+        if (Shader is null)
+        {
+            AddChildrenToScene(context, offset);
+            return;
+        }
+
+        Rect sceneMaskRect = new(MaskRect.Position + offset, MaskRect.Size);
+        _maskedBitmap?.Dispose();
+        _maskedBitmap = FilterLayerRasterizer.DrawShaderMasked(
+            context,
+            drawingContext => AddChildrenToScene(drawingContext, offset),
+            Shader,
+            BlendMode,
+            sceneMaskRect);
+    }
+
+    internal override void Detach()
+    {
+        _maskedBitmap?.Dispose();
+        _maskedBitmap = null;
+        base.Detach();
+    }
+}
+
 public sealed class TransformOffsetLayer : OffsetLayer
 {
     public Matrix Transform { get; set; } = Matrix.Identity;

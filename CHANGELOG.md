@@ -1,5 +1,11 @@
 # Changelog
 
+- Added paired Flutter core `ShaderMask` + `PhysicalShape` parity with source-shaped widget/render-object APIs,
+  retained shader-mask layers, all Flutter blend modes, origin-sized shader callbacks, custom-path hit testing,
+  clip/reclip lifecycle, physical fill/shadow composition, focused tests, and mirrored C#/Dart image/proxy probes.
+  Advanced `Plumix` to `0.5.0-alpha.1`; exact save-layer clipping and arbitrary-path shadow rasterization remain
+  tracked in `DIVERGENCES.md`.
+
 - Added paired Flutter core `ColorFiltered` + `ImageFiltered` parity with retained color-filter layers,
   enabled-dependent image-filter repaint boundaries, layer-only filter updates, Flutter-shaped color/image filter
   values, CPU-backed matrix/mode/blur/matrix/morphology/compose rendering, focused tests, and mirrored C#/Dart image

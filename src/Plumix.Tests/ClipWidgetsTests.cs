@@ -218,6 +218,85 @@ public sealed class ClipWidgetsTests
         Assert.IsType<PictureLayer>(Assert.Single(pipeline.RootLayer.Children));
     }
 
+    [Fact]
+    public void PhysicalShape_ExposesFlutterDefaultsAndUpdatesExistingRenderObject()
+    {
+        var initialClipper = new TriangleClipper();
+        var updatedClipper = new RectPathClipper();
+        var widget = new PhysicalShape(
+            clipper: initialClipper,
+            color: Colors.Orange);
+
+        Assert.Same(initialClipper, widget.Clipper);
+        Assert.Equal(Clip.None, widget.ClipBehavior);
+        Assert.Equal(0.0, widget.Elevation);
+        Assert.Equal(Colors.Orange, widget.Color);
+        Assert.Equal(Colors.Black, widget.ShadowColor);
+        Assert.Null(widget.Child);
+        Assert.Throws<ArgumentNullException>(() => new PhysicalShape(null!, Colors.Red));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new PhysicalShape(
+            initialClipper,
+            Colors.Red,
+            elevation: -1.0));
+
+        var owner = new BuildOwner();
+        var root = new TestRootElement(new PhysicalShape(
+            clipper: initialClipper,
+            color: Colors.Orange,
+            child: new SizedBox(width: 100.0, height: 60.0)));
+        Mount(root, owner);
+
+        var renderObject = RequireRenderObject<RenderPhysicalShape>(root.ChildElement);
+        Assert.Same(initialClipper, renderObject.Clipper);
+        Assert.Equal(Clip.None, renderObject.ClipBehavior);
+
+        root.Update(new PhysicalShape(
+            clipper: updatedClipper,
+            color: Colors.Blue,
+            child: new SizedBox(width: 100.0, height: 60.0),
+            clipBehavior: Clip.AntiAlias,
+            elevation: 6.0,
+            shadowColor: Colors.Purple));
+        owner.FlushBuild();
+
+        var updatedRenderObject = RequireRenderObject<RenderPhysicalShape>(root.ChildElement);
+        Assert.Same(renderObject, updatedRenderObject);
+        Assert.Same(updatedClipper, updatedRenderObject.Clipper);
+        Assert.Equal(Clip.AntiAlias, updatedRenderObject.ClipBehavior);
+        Assert.Equal(6.0, updatedRenderObject.Elevation);
+        Assert.Equal(Colors.Blue, updatedRenderObject.Color);
+        Assert.Equal(Colors.Purple, updatedRenderObject.ShadowColor);
+
+        root.Unmount();
+    }
+
+    [Fact]
+    public void RenderPhysicalShape_UsesPathForHitTestingSurfaceShadowAndClip()
+    {
+        var clipRect = new Rect(10.0, 5.0, 80.0, 50.0);
+        var physicalShape = new RenderPhysicalShape(
+            clipper: new FixedRectPathClipper(clipRect),
+            color: Colors.Orange,
+            child: new PaintBox(),
+            clipBehavior: Clip.AntiAlias,
+            elevation: 5.0,
+            shadowColor: Colors.Black);
+        var pipeline = BuildPipeline(physicalShape, new Size(100.0, 60.0));
+        pipeline.FlushCompositingBits();
+        pipeline.FlushPaint();
+
+        Assert.True(physicalShape.HitTest(new BoxHitTestResult(), new Point(50.0, 20.0)));
+        Assert.False(physicalShape.HitTest(new BoxHitTestResult(), new Point(5.0, 50.0)));
+        Assert.Equal(clipRect, physicalShape.InvokeDescribeApproximatePaintClip(physicalShape.Child));
+
+        Assert.Equal(2, pipeline.RootLayer.Children.Count);
+        Assert.IsType<PictureLayer>(pipeline.RootLayer.Children[0]);
+        var clipLayer = Assert.IsType<ClipGeometryLayer>(pipeline.RootLayer.Children[1]);
+        Assert.Equal(Clip.AntiAlias, clipLayer.ClipBehavior);
+        Assert.Equal(clipRect, Assert.IsType<RectangleGeometry>(clipLayer.Geometry).Rect);
+        Assert.IsType<PictureLayer>(Assert.Single(clipLayer.Children));
+    }
+
     private static void Mount(TestRootElement root, BuildOwner owner)
     {
         root.Attach(owner);
@@ -297,6 +376,30 @@ public sealed class ClipWidgetsTests
         public override bool ShouldReclip(CustomClipper<Path> oldClipper) => false;
     }
 
+    private sealed class FixedRectPathClipper : CustomClipper<Path>
+    {
+        public FixedRectPathClipper(Rect rect)
+        {
+            Rect = rect;
+        }
+
+        public Rect Rect { get; }
+
+        public override Path GetClip(Size size)
+        {
+            var path = new Path();
+            path.AddRect(Rect);
+            return path;
+        }
+
+        public override Rect GetApproximateClipRect(Size size) => Rect;
+
+        public override bool ShouldReclip(CustomClipper<Path> oldClipper)
+        {
+            return oldClipper is not FixedRectPathClipper old || old.Rect != Rect;
+        }
+    }
+
     private sealed class ListeningOvalClipper : CustomClipper<Rect>
     {
         public ListeningOvalClipper(IListenable reclip) : base(reclip)
@@ -360,6 +463,8 @@ public sealed class ClipWidgetsTests
         {
             Size = Constraints.Constrain(new Size(100, 60));
         }
+
+        protected override bool HitTestSelf(Point position) => true;
 
         public override void Paint(PaintingContext ctx, Point offset)
         {

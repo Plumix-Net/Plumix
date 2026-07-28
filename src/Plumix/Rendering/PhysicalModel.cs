@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Media;
 using Plumix.UI;
+using Path = Plumix.UI.Path;
 
 namespace Plumix.Rendering;
 
@@ -182,6 +183,141 @@ public sealed class RenderPhysicalModel : RenderProxyBox
             IsInset = false,
         };
         return new BoxShadows(shadow);
+    }
+
+    private static void ValidateElevation(double elevation)
+    {
+        if (!double.IsFinite(elevation) || elevation < 0.0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(elevation), "Elevation must be finite and non-negative.");
+        }
+    }
+}
+
+// Dart parity source: flutter/packages/flutter/lib/src/rendering/proxy_box.dart (RenderPhysicalShape)
+public sealed class RenderPhysicalShape : RenderCustomClip<Path>
+{
+    private double _elevation;
+    private Color _color;
+    private Color _shadowColor;
+
+    public RenderPhysicalShape(
+        CustomClipper<Path> clipper,
+        Color color,
+        RenderBox? child = null,
+        Clip clipBehavior = Clip.None,
+        double elevation = 0.0,
+        Color? shadowColor = null) : base(
+            child: child,
+            clipper: clipper ?? throw new ArgumentNullException(nameof(clipper)),
+            clipBehavior: clipBehavior)
+    {
+        ValidateElevation(elevation);
+        _elevation = elevation;
+        _color = color;
+        _shadowColor = shadowColor ?? Colors.Black;
+    }
+
+    public double Elevation
+    {
+        get => _elevation;
+        set
+        {
+            ValidateElevation(value);
+            if (_elevation == value)
+            {
+                return;
+            }
+
+            _elevation = value;
+            MarkNeedsPaint();
+        }
+    }
+
+    public Color Color
+    {
+        get => _color;
+        set
+        {
+            if (_color == value)
+            {
+                return;
+            }
+
+            _color = value;
+            MarkNeedsPaint();
+        }
+    }
+
+    public Color ShadowColor
+    {
+        get => _shadowColor;
+        set
+        {
+            if (_shadowColor == value)
+            {
+                return;
+            }
+
+            _shadowColor = value;
+            MarkNeedsPaint();
+        }
+    }
+
+    protected override Path DefaultClip
+    {
+        get
+        {
+            var path = new Path();
+            path.AddRect(new Rect(default, Size));
+            return path;
+        }
+    }
+
+    public override bool HitTest(BoxHitTestResult result, Point position)
+    {
+        if (Clipper is not null && !EffectiveClip.Contains(position))
+        {
+            return false;
+        }
+
+        return base.HitTest(result, position);
+    }
+
+    public override void Paint(PaintingContext context, Point offset)
+    {
+        if (Child is null)
+        {
+            return;
+        }
+
+        Geometry geometry = EffectiveClip.ToGeometry();
+        if (_elevation > 0.0 && _shadowColor.A > 0)
+        {
+            context.DrawShadow(
+                geometry,
+                _shadowColor,
+                _elevation,
+                transparentOccluder: _color.A != byte.MaxValue,
+                geometryOffset: offset);
+        }
+
+        context.DrawGeometry(
+            new SolidColorBrush(_color),
+            null,
+            geometry,
+            geometryOffset: offset);
+        if (ClipBehavior == Clip.None)
+        {
+            base.Paint(context, offset);
+            return;
+        }
+
+        context.PushClipGeometry(
+            geometry,
+            clippedContext => base.Paint(clippedContext, offset),
+            clipBehavior: ClipBehavior,
+            geometryOffset: offset);
     }
 
     private static void ValidateElevation(double elevation)

@@ -152,15 +152,59 @@ public sealed class PaintingContext
         });
     }
 
-    public void DrawGeometry(IBrush? brush, IPen? pen, Geometry geometry)
+    public void DrawGeometry(
+        IBrush? brush,
+        IPen? pen,
+        Geometry geometry,
+        Point geometryOffset = default)
     {
         ArgumentNullException.ThrowIfNull(geometry);
         var pictureLayer = EnsurePictureLayer();
         pictureLayer.AddDrawCommand((drawingContext, sceneOffset) =>
         {
-            using var transform = drawingContext.PushTransform(
-                Matrix.CreateTranslation(sceneOffset.X, sceneOffset.Y));
+            Point effectiveOffset = sceneOffset + geometryOffset;
+            using var transform = drawingContext.PushTransform(Matrix.CreateTranslation(
+                effectiveOffset.X,
+                effectiveOffset.Y));
             drawingContext.DrawGeometry(brush, pen, geometry);
+        });
+    }
+
+    public void DrawShadow(
+        Geometry geometry,
+        Color color,
+        double elevation,
+        bool transparentOccluder,
+        Point geometryOffset = default)
+    {
+        ArgumentNullException.ThrowIfNull(geometry);
+        if (elevation <= 0.0 || color.A == 0)
+        {
+            return;
+        }
+
+        var pictureLayer = EnsurePictureLayer();
+        pictureLayer.AddDrawCommand((drawingContext, sceneOffset) =>
+        {
+            Point effectiveOffset = sceneOffset + geometryOffset + new Vector(0.0, elevation * 0.5);
+            using var transform = drawingContext.PushTransform(Matrix.CreateTranslation(
+                effectiveOffset.X,
+                effectiveOffset.Y));
+            int steps = Math.Max(1, (int)Math.Ceiling(elevation * 2.0));
+            for (int step = steps; step >= 1; step--)
+            {
+                double fraction = step / (double)steps;
+                byte alpha = (byte)Math.Clamp(
+                    (int)Math.Round(color.A * 0.12 * (1.0 - (fraction * 0.75))),
+                    1,
+                    byte.MaxValue);
+                var shadowBrush = new SolidColorBrush(Color.FromArgb(alpha, color.R, color.G, color.B));
+                var shadowPen = new Pen(shadowBrush, step * 2.0);
+                drawingContext.DrawGeometry(
+                    transparentOccluder ? shadowBrush : null,
+                    shadowPen,
+                    geometry);
+            }
         });
     }
 

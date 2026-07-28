@@ -149,7 +149,9 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/Widgets/Placeholder.cs`
   - `src/Plumix/Widgets/GridPaper.cs`
   - `src/Plumix/Widgets/Clip.cs`
+  - `src/Plumix/Widgets/PhysicalModel.cs`
   - `src/Plumix/Rendering/CustomClip.cs`
+  - `src/Plumix/Rendering/PhysicalModel.cs`
   - `src/Plumix/Widgets/Flow.cs`
   - `src/Plumix/Widgets/RepaintBoundary.cs`
   - `src/Plumix/Rendering/Flow.cs`
@@ -222,6 +224,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/Widgets/ImageIcon.cs`
   - `src/Plumix/Widgets/ColorFiltered.cs`
   - `src/Plumix/Widgets/ImageFiltered.cs`
+  - `src/Plumix/Widgets/ShaderMask.cs`
   - `src/Plumix/Rendering/ImageFilter.cs`
   - `src/Plumix/Rendering/Filter.RenderBox.cs`
   - `src/Plumix/Rendering/FilterLayerRasterizer.cs`

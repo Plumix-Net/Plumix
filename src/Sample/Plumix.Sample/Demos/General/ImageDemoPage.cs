@@ -191,6 +191,42 @@ internal sealed class ImageDemoPageState : State
                                                 fit: fit),
                                             enabled: _filtersEnabled)),
                                 ]),
+                            new Row(
+                                mainAxisAlignment: MainAxisAlignment.SpaceAround,
+                                children:
+                                [
+                                    Probe(
+                                        "ShaderMask",
+                                        _filtersEnabled
+                                            ? new ShaderMask(
+                                                shaderCallback: _ => new LinearGradientBrush
+                                                {
+                                                    StartPoint = new RelativePoint(
+                                                        0.0,
+                                                        0.0,
+                                                        RelativeUnit.Relative),
+                                                    EndPoint = new RelativePoint(
+                                                        1.0,
+                                                        1.0,
+                                                        RelativeUnit.Relative),
+                                                    GradientStops =
+                                                    [
+                                                        new GradientStop(Colors.Yellow, 0.0),
+                                                        new GradientStop(Colors.Purple, 1.0),
+                                                    ],
+                                                },
+                                                child: Plumix.Widgets.Image.Memory(
+                                                    SampleBytes,
+                                                    width: 96,
+                                                    height: 96,
+                                                    fit: fit),
+                                                blendMode: BlendMode.Modulate)
+                                            : Plumix.Widgets.Image.Memory(
+                                                SampleBytes,
+                                                width: 96,
+                                                height: 96,
+                                                fit: fit)),
+                                ]),
                         ])),
                 new Text(
                     _rawInfo is null ? "Raw image: decoding..." : "Raw image: decoded handle is active",

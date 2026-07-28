@@ -227,6 +227,35 @@ class _ImageDemoPageState extends State<ImageDemoPage> {
                     ),
                   ],
                 ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: <Widget>[
+                    _probe(
+                      'ShaderMask',
+                      _filtersEnabled
+                          ? ShaderMask(
+                              shaderCallback: (Rect bounds) {
+                                return const LinearGradient(
+                                  colors: <Color>[Colors.yellow, Colors.purple],
+                                ).createShader(bounds);
+                              },
+                              blendMode: BlendMode.modulate,
+                              child: Image.memory(
+                                _sampleBytes,
+                                width: 96,
+                                height: 96,
+                                fit: fit,
+                              ),
+                            )
+                          : Image.memory(
+                              _sampleBytes,
+                              width: 96,
+                              height: 96,
+                              fit: fit,
+                            ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),

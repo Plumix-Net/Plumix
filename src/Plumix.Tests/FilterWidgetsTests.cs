@@ -127,6 +127,42 @@ public sealed class FilterWidgetsTests
     }
 
     [Fact]
+    public void ShaderMask_ExposesFlutterDefaultsAndUpdatesExistingRenderObject()
+    {
+        ShaderCallback initialCallback = _ => Brushes.Red;
+        ShaderCallback updatedCallback = _ => Brushes.Blue;
+        var widget = new ShaderMask(initialCallback);
+
+        Assert.Same(initialCallback, widget.ShaderCallback);
+        Assert.Equal(BlendMode.Modulate, widget.BlendMode);
+        Assert.Null(widget.Child);
+        Assert.Throws<ArgumentNullException>(() => new ShaderMask(null!));
+
+        var owner = new BuildOwner();
+        var root = new TestRootElement(new ShaderMask(
+            initialCallback,
+            child: new SizedBox(width: 20.0, height: 10.0)));
+        Mount(root, owner);
+
+        var renderObject = RequireRenderObject<RenderShaderMask>(root.ChildElement);
+        Assert.Same(initialCallback, renderObject.ShaderCallback);
+        Assert.Equal(BlendMode.Modulate, renderObject.BlendMode);
+
+        root.Update(new ShaderMask(
+            updatedCallback,
+            child: new SizedBox(width: 20.0, height: 10.0),
+            blendMode: BlendMode.SourceIn));
+        owner.FlushBuild();
+
+        var updatedRenderObject = RequireRenderObject<RenderShaderMask>(root.ChildElement);
+        Assert.Same(renderObject, updatedRenderObject);
+        Assert.Same(updatedCallback, updatedRenderObject.ShaderCallback);
+        Assert.Equal(BlendMode.SourceIn, updatedRenderObject.BlendMode);
+
+        root.Unmount();
+    }
+
+    [Fact]
     public void RenderColorFilter_RetainsLayerAndRepaintsForFilterChanges()
     {
         var child = new PaintProbeRenderBox();
@@ -217,6 +253,47 @@ public sealed class FilterWidgetsTests
     }
 
     [Fact]
+    public void RenderShaderMask_UsesOriginBoundsAndRetainsLayerAcrossUpdates()
+    {
+        Rect callbackBounds = default;
+        var child = new PaintProbeRenderBox();
+        var renderObject = new RenderShaderMask(
+            bounds =>
+            {
+                callbackBounds = bounds;
+                return Brushes.Red;
+            },
+            child: child);
+        var padding = new RenderPadding(new Thickness(7.0, 5.0, 0.0, 0.0))
+        {
+            Child = renderObject,
+        };
+        var renderView = new RenderView { Child = padding };
+        var pipeline = new PipelineOwner(renderView);
+        pipeline.Attach(renderView);
+
+        Pump(pipeline);
+
+        Assert.Equal(new Rect(0.0, 0.0, 20.0, 10.0), callbackBounds);
+        var layer = Assert.IsType<ShaderMaskLayer>(Assert.Single(pipeline.RootLayer.Children));
+        Assert.Equal(new Rect(7.0, 5.0, 20.0, 10.0), layer.MaskRect);
+        Assert.Equal(BlendMode.Modulate, layer.BlendMode);
+        Assert.Same(Brushes.Red, layer.Shader);
+        Assert.IsType<PictureLayer>(Assert.Single(layer.Children));
+        Assert.Equal(1, child.PaintCount);
+
+        renderObject.ShaderCallback = _ => Brushes.Blue;
+        renderObject.BlendMode = BlendMode.Screen;
+        pipeline.FlushCompositingBits();
+        pipeline.FlushPaint();
+
+        Assert.Same(layer, Assert.Single(pipeline.RootLayer.Children));
+        Assert.Equal(BlendMode.Screen, layer.BlendMode);
+        Assert.Same(Brushes.Blue, layer.Shader);
+        Assert.Equal(2, child.PaintCount);
+    }
+
+    [Fact]
     public void ColorFilterRasterization_AppliesMatrixAndFlutterModulate()
     {
         byte[] swapped = FilterLayerRasterizer.ApplyColorFilterForTests(
@@ -234,6 +311,22 @@ public sealed class FilterWidgetsTests
             [0, 0, 255, 255],
             new ColorFilter.Mode(Colors.Green, BlendMode.Modulate));
         Assert.Equal([0, 0, 0, 255], modulated);
+    }
+
+    [Fact]
+    public void ShaderMaskRasterization_BlendsShaderAsSourceOverChild()
+    {
+        byte[] modulated = FilterLayerRasterizer.ApplyShaderMaskForTests(
+            childPixels: [0, 0, 255, 255],
+            shaderPixels: [0, 255, 0, 255],
+            blendMode: BlendMode.Modulate);
+        Assert.Equal([0, 0, 0, 255], modulated);
+
+        byte[] sourceIn = FilterLayerRasterizer.ApplyShaderMaskForTests(
+            childPixels: [0, 0, 255, 255],
+            shaderPixels: [0, 255, 0, 255],
+            blendMode: BlendMode.SourceIn);
+        Assert.Equal([0, 255, 0, 255], sourceIn);
     }
 
     [Fact]

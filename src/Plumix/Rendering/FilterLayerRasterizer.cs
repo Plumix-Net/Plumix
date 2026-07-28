@@ -40,6 +40,21 @@ internal static class FilterLayerRasterizer
             output.Bounds);
     }
 
+    internal static byte[] ApplyShaderMaskForTests(
+        IReadOnlyList<byte> childPixels,
+        IReadOnlyList<byte> shaderPixels,
+        BlendMode blendMode)
+    {
+        if (childPixels.Count == 0 || childPixels.Count != shaderPixels.Count || childPixels.Count % 4 != 0)
+        {
+            throw new ArgumentException("Child and shader pixel data must contain equal BGRA pixel counts.");
+        }
+
+        byte[] output = childPixels.ToArray();
+        ApplyShaderMask(output, shaderPixels, blendMode);
+        return output;
+    }
+
     public static WriteableBitmap? DrawColorFiltered(
         DrawingContext context,
         Action<DrawingContext> drawChildren,
@@ -110,6 +125,40 @@ internal static class FilterLayerRasterizer
                 drawChildren(context);
             }
 
+            return null;
+        }
+    }
+
+    public static WriteableBitmap? DrawShaderMasked(
+        DrawingContext context,
+        Action<DrawingContext> drawChildren,
+        IBrush shader,
+        BlendMode blendMode,
+        Rect bounds)
+    {
+        if (!CanRasterize(bounds))
+        {
+            drawChildren(context);
+            return null;
+        }
+
+        try
+        {
+            RasterFrame childFrame = Rasterize(drawChildren, bounds);
+            RasterFrame shaderFrame = Rasterize(
+                drawingContext => drawingContext.DrawRectangle(shader, null, bounds),
+                bounds);
+            ApplyShaderMask(childFrame.Pixels, shaderFrame.Pixels, blendMode);
+            return DrawFrame(context, childFrame);
+        }
+        catch (InvalidOperationException)
+        {
+            drawChildren(context);
+            return null;
+        }
+        catch (NotSupportedException)
+        {
+            drawChildren(context);
             return null;
         }
     }
@@ -257,6 +306,33 @@ internal static class FilterLayerRasterizer
             pixels[index + 1] = ToByte(output.Green * output.Alpha * 255.0);
             pixels[index + 2] = ToByte(output.Red * output.Alpha * 255.0);
             pixels[index + 3] = ToByte(output.Alpha * 255.0);
+        }
+    }
+
+    private static void ApplyShaderMask(
+        byte[] childPixels,
+        IReadOnlyList<byte> shaderPixels,
+        BlendMode blendMode)
+    {
+        for (int index = 0; index < childPixels.Length; index += 4)
+        {
+            double sourceAlpha = shaderPixels[index + 3] / 255.0;
+            var source = new Pixel(
+                Unpremultiply(shaderPixels[index + 2], sourceAlpha) / 255.0,
+                Unpremultiply(shaderPixels[index + 1], sourceAlpha) / 255.0,
+                Unpremultiply(shaderPixels[index], sourceAlpha) / 255.0,
+                sourceAlpha);
+            double destinationAlpha = childPixels[index + 3] / 255.0;
+            var destination = new Pixel(
+                Unpremultiply(childPixels[index + 2], destinationAlpha) / 255.0,
+                Unpremultiply(childPixels[index + 1], destinationAlpha) / 255.0,
+                Unpremultiply(childPixels[index], destinationAlpha) / 255.0,
+                destinationAlpha);
+            Pixel output = Blend(source, destination, blendMode);
+            childPixels[index] = ToByte(output.Blue * output.Alpha * 255.0);
+            childPixels[index + 1] = ToByte(output.Green * output.Alpha * 255.0);
+            childPixels[index + 2] = ToByte(output.Red * output.Alpha * 255.0);
+            childPixels[index + 3] = ToByte(output.Alpha * 255.0);
         }
     }
 
