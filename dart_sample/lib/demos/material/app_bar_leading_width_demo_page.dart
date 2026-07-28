@@ -123,13 +123,11 @@ class _AppBarLeadingWidthDemoPageState
   }
 
   Widget _buildThemedPreview() {
-    return Theme(
-      data: ThemeData.light().copyWith(
-        appBarTheme: AppBarTheme(
-          backgroundColor: const Color(0xFF1E3A5F),
-          foregroundColor: Colors.white,
-          leadingWidth: _themeLeadingWidth,
-        ),
+    return AppBarTheme(
+      data: AppBarThemeData(
+        backgroundColor: const Color(0xFF1E3A5F),
+        foregroundColor: Colors.white,
+        leadingWidth: _themeLeadingWidth,
       ),
       child: AppBar(
         title: const Text('Theme leading width'),

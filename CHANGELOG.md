@@ -1,5 +1,10 @@
 # Changelog
 
+- Breaking: added paired Material `AppBarTheme` + `DrawerController` parity with inherited local app-bar precedence,
+  `copyWith`/lerp contracts, standalone start/end drawer open/close and drag/fling behavior, safe-area edge activation,
+  animated scrims, focus/history/back handling, semantics, and Scaffold drawer scopes. Expanded `Drawer` theme,
+  shape/clip/surface/semantic composition and focused shell coverage; advanced `Plumix.Material` to `0.6.0-alpha.1`.
+
 - Breaking: added paired Flutter core `FocusableActionDetector` + `ExcludeFocusTraversal` parity with exact
   shortcuts/actions gating, focus/hover highlight callbacks, input-driven highlight modes, directional-navigation
   focusability, independent descendant focus/traversal policies, state-preserving wrapper changes, focused tests,

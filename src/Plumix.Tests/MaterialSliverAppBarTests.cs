@@ -176,6 +176,35 @@ public sealed class MaterialSliverAppBarTests
     }
 
     [Fact]
+    public void SliverAppBar_LocalAppBarTheme_OverridesGlobalThemeData()
+    {
+        var globalTheme = ThemeData.Light with
+        {
+            AppBarTheme = new AppBarThemeData(BackgroundColor: Colors.Purple),
+        };
+        using var harness = new WidgetRenderHarness(Wrap(
+            new AppBarTheme(
+                data: new AppBarThemeData(
+                    BackgroundColor: Colors.CadetBlue,
+                    Shape: ShapeBorder.RoundedRectangle(12)),
+                child: new CustomScrollView(
+                    slivers:
+                    [
+                        new SliverAppBar(
+                            title: new Text("Local theme"),
+                            pinned: true),
+                        new SliverToBoxAdapter(new SizedBox(height: 800)),
+                    ])),
+            globalTheme));
+
+        harness.Pump(new Size(360, 320));
+
+        Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView), value =>
+            value.Decoration.Color == Colors.CadetBlue
+            && value.Decoration.EffectiveBorderRadius == BorderRadius.Circular(12));
+    }
+
+    [Fact]
     public void AlignedTransform_ScalesAroundRequestedAnchorAndFeedsSemanticsTransform()
     {
         using var harness = new WidgetRenderHarness(new Plumix.Widgets.Transform(

@@ -389,6 +389,7 @@ internal sealed class SliverAppBarDelegate : SliverPersistentHeaderDelegate
     public override Widget Build(BuildContext context, double shrinkOffset, bool overlapsContent)
     {
         var theme = Theme.Of(context);
+        var appBarTheme = AppBarTheme.Of(context);
         double delta = Math.Max(0.0001, MaxExtent - MinExtent);
         double t = Math.Clamp(shrinkOffset / delta, 0, 1);
         double currentExtent = Math.Max(MinExtent, MaxExtent - shrinkOffset);
@@ -396,21 +397,25 @@ internal sealed class SliverAppBarDelegate : SliverPersistentHeaderDelegate
         double toolbarOpacity = variant == SliverAppBarVariant.Small ? 1 : t;
         double flexibleTitleOpacity = variant == SliverAppBarVariant.Small ? 1 : 1 - t;
         bool elevated = _widget.ForceElevated || overlapsContent;
-        double baseElevation = _widget.Elevation ?? theme.AppBarTheme.Elevation ?? (theme.UseMaterial3 ? 0 : 4);
+        double baseElevation = _widget.Elevation ?? appBarTheme.Elevation ?? (theme.UseMaterial3 ? 0 : 4);
         double elevation = elevated
-            ? _widget.ScrolledUnderElevation ?? theme.AppBarTheme.ScrolledUnderElevation ?? (theme.UseMaterial3 ? 3 : baseElevation)
+            ? _widget.ScrolledUnderElevation
+              ?? appBarTheme.ScrolledUnderElevation
+              ?? (theme.UseMaterial3 ? 3 : baseElevation)
             : baseElevation;
         var background = _widget.BackgroundColor
-                         ?? theme.AppBarTheme.BackgroundColor
+                         ?? appBarTheme.BackgroundColor
                          ?? (theme.UseMaterial3 || theme.Brightness == Brightness.Dark ? theme.CanvasColor : theme.PrimaryColor);
         var foreground = _widget.ForegroundColor
-                         ?? theme.AppBarTheme.ForegroundColor
+                         ?? appBarTheme.ForegroundColor
                          ?? (theme.UseMaterial3 || theme.Brightness == Brightness.Dark ? theme.OnSurfaceColor : theme.OnPrimaryColor);
-        var surfaceTint = _widget.SurfaceTintColor ?? theme.AppBarTheme.SurfaceTintColor ?? Colors.Transparent;
+        var surfaceTint = _widget.SurfaceTintColor ?? appBarTheme.SurfaceTintColor ?? Colors.Transparent;
         if (surfaceTint.A > 0 && elevation > 0)
             background = NavigationSurfaceUtilities.ApplySurfaceTint(background, surfaceTint, elevation);
-        var shadow = _widget.ShadowColor ?? theme.AppBarTheme.ShadowColor ?? (theme.UseMaterial3 ? Colors.Transparent : theme.ShadowColor);
-        var shape = _widget.Shape ?? theme.AppBarTheme.Shape ?? ShapeBorder.RoundedRectangle(0);
+        var shadow = _widget.ShadowColor
+                     ?? appBarTheme.ShadowColor
+                     ?? (theme.UseMaterial3 ? Colors.Transparent : theme.ShadowColor);
+        var shape = _widget.Shape ?? appBarTheme.Shape ?? ShapeBorder.RoundedRectangle(0);
 
         var children = new List<Widget>();
         if (_flexibleSpace is not null)

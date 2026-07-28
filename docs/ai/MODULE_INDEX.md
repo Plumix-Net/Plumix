@@ -28,7 +28,9 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Read First:
   - `src/Plumix.Material/ThemeData.cs`
   - `src/Plumix.Material/Theme.cs`
+  - `src/Plumix.Material/AppBarTheme.cs`
   - `src/Plumix.Material/Scaffold.cs`
+  - `src/Plumix.Material/DrawerController.cs`
   - `src/Plumix.Material/Buttons.cs`
   - `src/Plumix.Material/ButtonStyle.cs`
   - `src/Plumix.Material/MaterialLocalizations.cs`
@@ -37,6 +39,8 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Animated Material icons enter through `AnimatedIcon.cs` + generated `AnimatedIcons.Data.g.cs`; shared animation
   repaint ownership lives in core `Rendering/CustomPaint.cs`, with coverage in `MaterialAnimatedIconTests.cs`.
 - AppBar action controls enter through `ActionButtons.cs` + `ActionIconTheme.cs`, with implied-leading integration covered in `MaterialScaffoldTests.cs`.
+- App-bar and drawer shell control state enters through `AppBarTheme.cs` + `DrawerController.cs`; local theme
+  precedence and standalone/Scaffold drawer choreography are covered in `MaterialScaffoldTests.cs`.
 - Legacy Material buttons enter through `MaterialButton.cs` + `ButtonTheme.cs`; shared interaction/rendering remains in `Buttons.cs`, with focused coverage in `MaterialLegacyButtonTests.cs`.
 - Drawer header controls enter through `DrawerHeader.cs`, with geometry and account-details behavior covered in `MaterialDrawerHeaderTests.cs`.
 - Transient message controls enter through `SnackBar.cs` + `SnackBarTheme.cs`, with queue/presentation lifecycle in `ScaffoldMessenger.cs` and coverage in `MaterialSnackBarTests.cs`.

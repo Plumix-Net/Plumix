@@ -6,7 +6,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/material/theme_data.dart; flutter/packages/flutter/lib/src/material/app_bar_theme.dart (approximate)
+// Dart parity source (reference): flutter/packages/flutter/lib/src/material/theme_data.dart (approximate)
 
 public enum Brightness
 {
@@ -48,7 +48,148 @@ public sealed record AppBarThemeData(
     double? ScrolledUnderElevation = null,
     Color? ShadowColor = null,
     Color? SurfaceTintColor = null,
-    ShapeBorder? Shape = null);
+    ShapeBorder? Shape = null)
+{
+    public AppBarThemeData CopyWith(
+        Color? color = null,
+        Color? backgroundColor = null,
+        Color? foregroundColor = null,
+        IconThemeData? iconTheme = null,
+        IconThemeData? actionsIconTheme = null,
+        bool? centerTitle = null,
+        double? titleSpacing = null,
+        double? leadingWidth = null,
+        double? toolbarHeight = null,
+        TextStyle? toolbarTextStyle = null,
+        TextStyle? titleTextStyle = null,
+        Thickness? actionsPadding = null,
+        SystemUiOverlayStyle? systemOverlayStyle = null,
+        double? elevation = null,
+        double? scrolledUnderElevation = null,
+        Color? shadowColor = null,
+        Color? surfaceTintColor = null,
+        ShapeBorder? shape = null)
+    {
+        if (color.HasValue && backgroundColor.HasValue)
+        {
+            throw new ArgumentException(
+                "color and backgroundColor mean the same thing. Only specify one.");
+        }
+
+        return new AppBarThemeData(
+            BackgroundColor: backgroundColor ?? color ?? BackgroundColor,
+            ForegroundColor: foregroundColor ?? ForegroundColor,
+            IconTheme: iconTheme ?? IconTheme,
+            ActionsIconTheme: actionsIconTheme ?? ActionsIconTheme,
+            CenterTitle: centerTitle ?? CenterTitle,
+            TitleSpacing: titleSpacing ?? TitleSpacing,
+            LeadingWidth: leadingWidth ?? LeadingWidth,
+            ToolbarHeight: toolbarHeight ?? ToolbarHeight,
+            ToolbarTextStyle: toolbarTextStyle ?? ToolbarTextStyle,
+            TitleTextStyle: titleTextStyle ?? TitleTextStyle,
+            ActionsPadding: actionsPadding ?? ActionsPadding,
+            SystemOverlayStyle: systemOverlayStyle ?? SystemOverlayStyle,
+            Elevation: elevation ?? Elevation,
+            ScrolledUnderElevation: scrolledUnderElevation ?? ScrolledUnderElevation,
+            ShadowColor: shadowColor ?? ShadowColor,
+            SurfaceTintColor: surfaceTintColor ?? SurfaceTintColor,
+            Shape: shape ?? Shape);
+    }
+
+    public static AppBarThemeData Lerp(AppBarThemeData? a, AppBarThemeData? b, double t)
+    {
+        if (ReferenceEquals(a, b) && a is not null)
+        {
+            return a;
+        }
+
+        double clampedT = Math.Clamp(t, 0.0, 1.0);
+        return new AppBarThemeData(
+            BackgroundColor: LerpColor(a?.BackgroundColor, b?.BackgroundColor, clampedT),
+            ForegroundColor: LerpColor(a?.ForegroundColor, b?.ForegroundColor, clampedT),
+            IconTheme: LerpIconTheme(a?.IconTheme, b?.IconTheme, clampedT),
+            ActionsIconTheme: LerpIconTheme(a?.ActionsIconTheme, b?.ActionsIconTheme, clampedT),
+            CenterTitle: clampedT < 0.5 ? a?.CenterTitle : b?.CenterTitle,
+            TitleSpacing: LerpDouble(a?.TitleSpacing, b?.TitleSpacing, clampedT),
+            LeadingWidth: LerpDouble(a?.LeadingWidth, b?.LeadingWidth, clampedT),
+            ToolbarHeight: LerpDouble(a?.ToolbarHeight, b?.ToolbarHeight, clampedT),
+            ToolbarTextStyle: LerpTextStyle(a?.ToolbarTextStyle, b?.ToolbarTextStyle, clampedT),
+            TitleTextStyle: LerpTextStyle(a?.TitleTextStyle, b?.TitleTextStyle, clampedT),
+            ActionsPadding: LerpThickness(a?.ActionsPadding, b?.ActionsPadding, clampedT),
+            SystemOverlayStyle: clampedT < 0.5 ? a?.SystemOverlayStyle : b?.SystemOverlayStyle,
+            Elevation: LerpDouble(a?.Elevation, b?.Elevation, clampedT),
+            ScrolledUnderElevation: LerpDouble(
+                a?.ScrolledUnderElevation,
+                b?.ScrolledUnderElevation,
+                clampedT),
+            ShadowColor: LerpColor(a?.ShadowColor, b?.ShadowColor, clampedT),
+            SurfaceTintColor: LerpColor(a?.SurfaceTintColor, b?.SurfaceTintColor, clampedT),
+            Shape: clampedT < 0.5 ? a?.Shape : b?.Shape);
+    }
+
+    private static double? LerpDouble(double? a, double? b, double t)
+    {
+        if (!a.HasValue && !b.HasValue)
+        {
+            return null;
+        }
+
+        double from = a ?? 0.0;
+        double to = b ?? 0.0;
+        return from + ((to - from) * t);
+    }
+
+    private static Color? LerpColor(Color? a, Color? b, double t)
+    {
+        if (!a.HasValue && !b.HasValue)
+        {
+            return null;
+        }
+
+        var from = a ?? Color.FromArgb(0, b!.Value.R, b.Value.G, b.Value.B);
+        var to = b ?? Color.FromArgb(0, a!.Value.R, a.Value.G, a.Value.B);
+        return new ColorTween().Evaluate(t, from, to);
+    }
+
+    private static IconThemeData? LerpIconTheme(IconThemeData? a, IconThemeData? b, double t)
+    {
+        if (a is null && b is null)
+        {
+            return null;
+        }
+
+        return new IconThemeData(
+            Color: LerpColor(a?.Color, b?.Color, t),
+            Size: LerpDouble(a?.Size, b?.Size, t),
+            Opacity: LerpDouble(a?.Opacity, b?.Opacity, t));
+    }
+
+    private static TextStyle? LerpTextStyle(TextStyle? a, TextStyle? b, double t)
+    {
+        if (a is null && b is null)
+        {
+            return null;
+        }
+
+        return TextStyle.Lerp(a ?? new TextStyle(), b ?? new TextStyle(), t);
+    }
+
+    private static Thickness? LerpThickness(Thickness? a, Thickness? b, double t)
+    {
+        if (!a.HasValue && !b.HasValue)
+        {
+            return null;
+        }
+
+        var from = a ?? default;
+        var to = b ?? default;
+        return new Thickness(
+            from.Left + ((to.Left - from.Left) * t),
+            from.Top + ((to.Top - from.Top) * t),
+            from.Right + ((to.Right - from.Right) * t),
+            from.Bottom + ((to.Bottom - from.Bottom) * t));
+    }
+}
 
 public sealed record MaterialTextTheme
 {

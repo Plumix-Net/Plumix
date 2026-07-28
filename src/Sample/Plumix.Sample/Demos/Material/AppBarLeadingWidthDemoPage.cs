@@ -81,14 +81,11 @@ internal sealed class AppBarLeadingWidthDemoPageState : State
 
     private Widget BuildThemedPreview()
     {
-        return new Theme(
-            data: ThemeData.Light with
-            {
-                AppBarTheme = new AppBarThemeData(
-                    BackgroundColor: Color.Parse("#FF1E3A5F"),
-                    ForegroundColor: Colors.White,
-                    LeadingWidth: _themeLeadingWidth),
-            },
+        return new AppBarTheme(
+            data: new AppBarThemeData(
+                BackgroundColor: Color.Parse("#FF1E3A5F"),
+                ForegroundColor: Colors.White,
+                LeadingWidth: _themeLeadingWidth),
             child: new AppBar(
                 titleText: "Theme leading width",
                 leadingWidth: _useWidgetOverride ? _widgetLeadingWidth : null,

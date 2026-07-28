@@ -48,6 +48,8 @@ public abstract class MaterialLocalizations
 
     public virtual string ModalBarrierDismissLabel => "Dismiss";
 
+    public virtual string DrawerLabel => "Navigation menu";
+
     public virtual string ShowMenuTooltip => "Show menu";
 
     public virtual string PopupMenuLabel => "Popup menu";

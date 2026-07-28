@@ -1,5 +1,7 @@
 using Avalonia.Media;
 using Plumix.Foundation;
+using Plumix.Rendering;
+using Plumix.UI;
 using Plumix.Widgets;
 
 namespace Plumix.Material;
@@ -12,7 +14,10 @@ public sealed record DrawerThemeData(
     double? Elevation = null,
     Color? ShadowColor = null,
     double? Width = null,
-    Color? SurfaceTintColor = null);
+    Color? SurfaceTintColor = null,
+    ShapeBorder? Shape = null,
+    ShapeBorder? EndShape = null,
+    Clip? ClipBehavior = null);
 
 public sealed class DrawerTheme : InheritedWidget
 {

@@ -992,6 +992,16 @@ Progress update (2026-03-19):
     composition (including fill-aligned checkbox cells);
   - added focused feature/factory/row-geometry/composition tests and expanded the mirrored ink-response/data-table
     runtime probes.
+- Added paired Material `AppBarTheme` + `DrawerController` ports:
+  - added Flutter-shaped inherited local app-bar theme data, legacy/data constructor guards, `copyWith`/lerp behavior,
+    and local-over-global precedence for both `AppBar` and `SliverAppBar`;
+  - added standalone start/end drawer controller state with programmatic open/close, drag/fling settle, safe-area edge
+    activation, animated scrim, focus scope, route history/back behavior, localized semantics, and Scaffold alignment
+    scopes;
+  - expanded `Drawer`/`DrawerThemeData` with source surface, shape, clip, semantic-label, and start/end shape
+    resolution, plus focused default/API/state/layout/paint coverage in `MaterialScaffoldTests`;
+  - Flutter's asymmetric M3 drawer corners remain limited by the shared uniform `ShapeBorder` model and are tracked
+    in `DIVERGENCES.md`.
 - Remaining divergence for floating action button in current framework scope:
   - none documented in current framework scope.
 

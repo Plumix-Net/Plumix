@@ -9,7 +9,8 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/material/scaffold.dart; flutter/packages/flutter/lib/src/material/app_bar.dart (approximate)
+// Dart parity sources (reference): flutter/packages/flutter/lib/src/material/scaffold.dart;
+// flutter/packages/flutter/lib/src/material/app_bar.dart; flutter/packages/flutter/lib/src/material/drawer.dart
 
 public sealed class Drawer : StatelessWidget
 {
@@ -24,7 +25,10 @@ public sealed class Drawer : StatelessWidget
         Color? shadowColor = null,
         double? width = null,
         Key? key = null,
-        Color? surfaceTintColor = null) : base(key)
+        Color? surfaceTintColor = null,
+        ShapeBorder? shape = null,
+        string? semanticLabel = null,
+        Clip? clipBehavior = null) : base(key)
     {
         if (elevation.HasValue && (double.IsNaN(elevation.Value) || double.IsInfinity(elevation.Value) || elevation.Value < 0))
         {
@@ -42,6 +46,9 @@ public sealed class Drawer : StatelessWidget
         ShadowColor = shadowColor;
         SurfaceTintColor = surfaceTintColor;
         Width = width;
+        Shape = shape;
+        SemanticLabel = semanticLabel;
+        ClipBehavior = clipBehavior;
     }
 
     public Widget? Child { get; }
@@ -56,11 +63,18 @@ public sealed class Drawer : StatelessWidget
 
     public double? Width { get; }
 
+    public ShapeBorder? Shape { get; }
+
+    public string? SemanticLabel { get; }
+
+    public Clip? ClipBehavior { get; }
+
     public override Widget Build(BuildContext context)
     {
         var theme = Theme.Of(context);
         var drawerTheme = DrawerTheme.Of(context);
         bool useMaterial3 = theme.UseMaterial3;
+        bool isDrawerStart = DrawerController.MaybeOf(context)?.Alignment != DrawerAlignment.End;
         var effectiveBackground = BackgroundColor ?? drawerTheme.BackgroundColor ?? (useMaterial3
             ? theme.SurfaceContainerLowColor
             : theme.CanvasColor);
@@ -71,21 +85,31 @@ public sealed class Drawer : StatelessWidget
             : theme.ShadowColor);
         var effectiveSurfaceTintColor = SurfaceTintColor ?? drawerTheme.SurfaceTintColor
             ?? (useMaterial3 ? Colors.Transparent : null);
-        if (effectiveSurfaceTintColor.HasValue && effectiveSurfaceTintColor.Value.A > 0 && effectiveElevation > 0)
-        {
-            effectiveBackground = NavigationSurfaceUtilities.ApplySurfaceTint(
-                effectiveBackground,
-                effectiveSurfaceTintColor.Value,
-                effectiveElevation);
-        }
-        var effectiveBoxShadows = BuildBoxShadows(effectiveShadowColor, effectiveElevation);
+        ShapeBorder? effectiveShape = Shape
+                                      ?? (isDrawerStart ? drawerTheme.Shape : drawerTheme.EndShape)
+                                      ?? ResolveDefaultShape(useMaterial3);
+        Clip effectiveClip = effectiveShape is null
+            ? Clip.None
+            : ClipBehavior ?? drawerTheme.ClipBehavior ?? Clip.HardEdge;
+        string? label = theme.Platform is TargetPlatform.IOS or TargetPlatform.MacOS
+            ? SemanticLabel
+            : SemanticLabel ?? MaterialLocalizations.Of(context).DrawerLabel;
 
-        return new Container(
-            width: effectiveWidth,
-            decoration: new BoxDecoration(
-                Color: effectiveBackground,
-                BoxShadows: effectiveBoxShadows),
-            child: Child ?? new SizedBox());
+        return new Semantics(
+            scopesRoute: true,
+            namesRoute: true,
+            explicitChildNodes: true,
+            label: label,
+            child: new ConstrainedBox(
+                constraints: BoxConstraints.Expand(width: effectiveWidth),
+                child: new Material(
+                    color: effectiveBackground,
+                    elevation: effectiveElevation,
+                    shadowColor: effectiveShadowColor,
+                    surfaceTintColor: effectiveSurfaceTintColor,
+                    shape: effectiveShape,
+                    clipBehavior: effectiveClip,
+                    child: Child ?? new SizedBox())));
     }
 
     internal double ResolveEffectiveWidthForScaffold(BuildContext context)
@@ -121,42 +145,14 @@ public sealed class Drawer : StatelessWidget
         return effectiveWidth;
     }
 
-    private static BoxShadows? BuildBoxShadows(Color shadowColor, double elevation)
+    private static ShapeBorder? ResolveDefaultShape(bool useMaterial3)
     {
-        if (elevation <= 0 || shadowColor.A == 0)
+        if (!useMaterial3)
         {
             return null;
         }
 
-        var keyShadow = new BoxShadow
-        {
-            OffsetX = 0,
-            OffsetY = Math.Max(1, Math.Round(elevation * 0.5)),
-            Blur = Math.Max(2, elevation * 2.4),
-            Spread = 0,
-            Color = ApplyOpacity(shadowColor, 0.20),
-            IsInset = false,
-        };
-
-        var ambientShadow = new BoxShadow
-        {
-            OffsetX = 0,
-            OffsetY = Math.Max(1, Math.Round(elevation * 0.5)),
-            Blur = Math.Max(3, elevation * 3.2),
-            Spread = 0,
-            Color = ApplyOpacity(shadowColor, 0.14),
-            IsInset = false,
-        };
-
-        return new BoxShadows(keyShadow, [ambientShadow]);
-    }
-
-    private static Color ApplyOpacity(Color color, double opacityMultiplier)
-    {
-        double baseOpacity = color.A / 255.0;
-        double effectiveOpacity = Math.Clamp(baseOpacity * opacityMultiplier, 0, 1);
-        byte alpha = (byte)Math.Clamp((int)(effectiveOpacity * 255), 0, 255);
-        return Color.FromArgb(alpha, color.R, color.G, color.B);
+        return ShapeBorder.RoundedRectangle(16);
     }
 }
 
@@ -849,6 +845,20 @@ public sealed class ScaffoldState : State
         double drawerWidth = ResolveDrawerWidth(context, child);
         bool isOnLeft = IsDrawerOnLeft(side, textDirection);
         double offset = -(1 - progress) * drawerWidth;
+        var alignment = side == DrawerSide.Start
+            ? DrawerAlignment.Start
+            : DrawerAlignment.End;
+        var controller = new DrawerController(
+            child: child,
+            alignment: alignment,
+            isDrawerOpen: progress >= DefaultOpenThreshold,
+            drawerCallback: isOpen => CommitDrawerVisibility(side, isOpen),
+            scrimColor: CurrentWidget.DrawerScrimColor,
+            edgeDragWidth: CurrentWidget.DrawerEdgeDragWidth,
+            enableOpenDragGesture: side == DrawerSide.Start
+                ? CurrentWidget.DrawerEnableOpenDragGesture
+                : CurrentWidget.EndDrawerEnableOpenDragGesture,
+            drawerBarrierDismissible: CurrentWidget.DrawerBarrierDismissible);
 
         return new Positioned(
             left: isOnLeft ? offset : null,
@@ -861,7 +871,9 @@ public sealed class ScaffoldState : State
                 onHorizontalDragUpdate: details => UpdateDrag(side, details.PrimaryDelta, textDirection),
                 onHorizontalDragEnd: details => EndDrag(side, details, textDirection),
                 onHorizontalDragCancel: () => CancelDragGesture(side),
-                child: child));
+                child: new DrawerControllerScope(
+                    controller: controller,
+                    child: child)));
     }
 
     private bool ShouldEnableOpenDragGesture(DrawerSide side, ThemeData theme)
@@ -1509,20 +1521,32 @@ public sealed class AppBar : StatelessWidget, IPreferredSizeWidget
     public override Widget Build(BuildContext context)
     {
         var theme = Theme.Of(context);
-        var effectiveBackground = BackgroundColor ?? theme.AppBarTheme.BackgroundColor ?? ResolveDefaultBackgroundColor(theme);
-        var effectiveForeground = ForegroundColor ?? theme.AppBarTheme.ForegroundColor ?? ResolveDefaultForegroundColor(theme);
-        bool effectiveCenterTitle = ResolveEffectiveCenterTitle(theme);
-        double effectiveTitleSpacing = TitleSpacing ?? theme.AppBarTheme.TitleSpacing ?? 16;
-        var effectiveIconTheme = ResolveEffectiveIconTheme(theme, effectiveForeground);
-        var effectiveActionsIconTheme = ResolveEffectiveActionsIconTheme(theme, effectiveForeground, effectiveIconTheme);
+        var appBarTheme = AppBarTheme.Of(context);
+        var effectiveBackground = BackgroundColor
+                                  ?? appBarTheme.BackgroundColor
+                                  ?? ResolveDefaultBackgroundColor(theme);
+        var effectiveForeground = ForegroundColor
+                                  ?? appBarTheme.ForegroundColor
+                                  ?? ResolveDefaultForegroundColor(theme);
+        bool effectiveCenterTitle = ResolveEffectiveCenterTitle(theme, appBarTheme);
+        double effectiveTitleSpacing = TitleSpacing ?? appBarTheme.TitleSpacing ?? 16;
+        var effectiveIconTheme = ResolveEffectiveIconTheme(theme, appBarTheme, effectiveForeground);
+        var effectiveActionsIconTheme = ResolveEffectiveActionsIconTheme(
+            theme,
+            appBarTheme,
+            effectiveForeground,
+            effectiveIconTheme);
         var effectiveLeading = ResolveEffectiveLeading(context);
         var effectiveActions = ResolveEffectiveActions(context);
-        double effectiveLeadingWidth = ResolveEffectiveLeadingWidth(theme);
-        var effectiveActionsPadding = ActionsPadding ?? theme.AppBarTheme.ActionsPadding ?? new Thickness();
-        double effectiveToolbarHeight = ResolveEffectiveToolbarHeight(theme);
-        var effectiveToolbarTextStyle = ResolveToolbarTextStyle(theme, effectiveForeground);
-        var effectiveTitleTextStyle = ResolveTitleTextStyle(theme, effectiveForeground);
-        var effectiveSystemOverlayStyle = ResolveEffectiveSystemOverlayStyle(theme, effectiveBackground);
+        double effectiveLeadingWidth = ResolveEffectiveLeadingWidth(appBarTheme);
+        var effectiveActionsPadding = ActionsPadding ?? appBarTheme.ActionsPadding ?? new Thickness();
+        double effectiveToolbarHeight = ResolveEffectiveToolbarHeight(appBarTheme);
+        var effectiveToolbarTextStyle = ResolveToolbarTextStyle(theme, appBarTheme, effectiveForeground);
+        var effectiveTitleTextStyle = ResolveTitleTextStyle(theme, appBarTheme, effectiveForeground);
+        var effectiveSystemOverlayStyle = ResolveEffectiveSystemOverlayStyle(
+            theme,
+            appBarTheme,
+            effectiveBackground);
 
         var titleWidget = (Widget)new DefaultTextStyle(
             style: effectiveTitleTextStyle,
@@ -1609,16 +1633,16 @@ public sealed class AppBar : StatelessWidget, IPreferredSizeWidget
             child: appBarContent);
     }
 
-    private bool ResolveEffectiveCenterTitle(ThemeData theme)
+    private bool ResolveEffectiveCenterTitle(ThemeData theme, AppBarThemeData appBarTheme)
     {
         if (CenterTitle.HasValue)
         {
             return CenterTitle.Value;
         }
 
-        if (theme.AppBarTheme.CenterTitle.HasValue)
+        if (appBarTheme.CenterTitle.HasValue)
         {
-            return theme.AppBarTheme.CenterTitle.Value;
+            return appBarTheme.CenterTitle.Value;
         }
 
         return ResolvePlatformDefaultCenterTitle(theme.Platform);
@@ -1694,9 +1718,9 @@ public sealed class AppBar : StatelessWidget, IPreferredSizeWidget
             : new BackButton();
     }
 
-    private double ResolveEffectiveLeadingWidth(ThemeData theme)
+    private double ResolveEffectiveLeadingWidth(AppBarThemeData appBarTheme)
     {
-        double effectiveLeadingWidth = LeadingWidth ?? theme.AppBarTheme.LeadingWidth ?? 56;
+        double effectiveLeadingWidth = LeadingWidth ?? appBarTheme.LeadingWidth ?? 56;
         if (double.IsNaN(effectiveLeadingWidth)
             || double.IsInfinity(effectiveLeadingWidth)
             || effectiveLeadingWidth <= 0)
@@ -1709,10 +1733,13 @@ public sealed class AppBar : StatelessWidget, IPreferredSizeWidget
         return effectiveLeadingWidth;
     }
 
-    private IconThemeData ResolveEffectiveIconTheme(ThemeData theme, Color effectiveForeground)
+    private IconThemeData ResolveEffectiveIconTheme(
+        ThemeData theme,
+        AppBarThemeData appBarTheme,
+        Color effectiveForeground)
     {
         var baseTheme = IconTheme
-                        ?? theme.AppBarTheme.IconTheme
+                        ?? appBarTheme.IconTheme
                         ?? ResolveDefaultIconTheme(theme, effectiveForeground);
         return baseTheme with
         {
@@ -1722,14 +1749,15 @@ public sealed class AppBar : StatelessWidget, IPreferredSizeWidget
 
     private IconThemeData ResolveEffectiveActionsIconTheme(
         ThemeData theme,
+        AppBarThemeData appBarTheme,
         Color effectiveForeground,
         IconThemeData effectiveIconTheme)
     {
-        var actionForeground = ForegroundColor ?? theme.AppBarTheme.ForegroundColor;
+        var actionForeground = ForegroundColor ?? appBarTheme.ForegroundColor;
         var baseTheme = ActionsIconTheme
-                        ?? theme.AppBarTheme.ActionsIconTheme
+                        ?? appBarTheme.ActionsIconTheme
                         ?? IconTheme
-                        ?? theme.AppBarTheme.IconTheme
+                        ?? appBarTheme.IconTheme
                         ?? ResolveDefaultActionsIconTheme(theme, actionForeground, effectiveIconTheme);
 
         return baseTheme with
@@ -1738,10 +1766,10 @@ public sealed class AppBar : StatelessWidget, IPreferredSizeWidget
         };
     }
 
-    private double ResolveEffectiveToolbarHeight(ThemeData theme)
+    private double ResolveEffectiveToolbarHeight(AppBarThemeData appBarTheme)
     {
         double effectiveToolbarHeight = ToolbarHeight
-                                        ?? theme.AppBarTheme.ToolbarHeight
+                                        ?? appBarTheme.ToolbarHeight
                                         ?? ResolveDefaultToolbarHeight();
         if (double.IsNaN(effectiveToolbarHeight)
             || double.IsInfinity(effectiveToolbarHeight)
@@ -1816,32 +1844,41 @@ public sealed class AppBar : StatelessWidget, IPreferredSizeWidget
         return false;
     }
 
-    private TextStyle ResolveToolbarTextStyle(ThemeData theme, Color effectiveForeground)
+    private TextStyle ResolveToolbarTextStyle(
+        ThemeData theme,
+        AppBarThemeData appBarTheme,
+        Color effectiveForeground)
     {
         var baseStyle = theme.TextTheme.BodyMedium with
         {
             Color = effectiveForeground,
         };
 
-        var overrideStyle = ToolbarTextStyle ?? theme.AppBarTheme.ToolbarTextStyle;
+        var overrideStyle = ToolbarTextStyle ?? appBarTheme.ToolbarTextStyle;
         return ComposeTextStyle(baseStyle, overrideStyle);
     }
 
-    private TextStyle ResolveTitleTextStyle(ThemeData theme, Color effectiveForeground)
+    private TextStyle ResolveTitleTextStyle(
+        ThemeData theme,
+        AppBarThemeData appBarTheme,
+        Color effectiveForeground)
     {
         var baseStyle = theme.TextTheme.TitleLarge with
         {
             Color = effectiveForeground,
         };
 
-        var overrideStyle = TitleTextStyle ?? theme.AppBarTheme.TitleTextStyle;
+        var overrideStyle = TitleTextStyle ?? appBarTheme.TitleTextStyle;
         return ComposeTextStyle(baseStyle, overrideStyle);
     }
 
-    private SystemUiOverlayStyle ResolveEffectiveSystemOverlayStyle(ThemeData theme, Color effectiveBackground)
+    private SystemUiOverlayStyle ResolveEffectiveSystemOverlayStyle(
+        ThemeData theme,
+        AppBarThemeData appBarTheme,
+        Color effectiveBackground)
     {
         return SystemOverlayStyle
-               ?? theme.AppBarTheme.SystemOverlayStyle
+               ?? appBarTheme.SystemOverlayStyle
                ?? ResolveDefaultSystemOverlayStyle(theme, effectiveBackground);
     }
 

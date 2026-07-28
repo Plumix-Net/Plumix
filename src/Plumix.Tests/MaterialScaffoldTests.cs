@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Media;
 using Plumix;
+using Plumix.Foundation;
 using Plumix.Gestures;
 using Plumix.Material;
 using Plumix.Rendering;
@@ -85,6 +86,25 @@ public sealed class MaterialScaffoldTests
                 && Math.Abs(constraints.MaxWidth - 304) < 0.001);
 
         Assert.NotNull(constrained);
+    }
+
+    [Fact]
+    public void Drawer_ExpandsToAvailableHeightLikeFlutterConstrainedBox()
+    {
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light,
+                child: new Drawer(child: new Text("Expanded drawer"))));
+
+        harness.Pump(new Size(420, 300));
+
+        var constrained = FindConstrainedBox(
+            harness.RenderView,
+            constraints =>
+                Math.Abs(constraints.MinWidth - 304) < 0.001
+                && Math.Abs(constraints.MaxWidth - 304) < 0.001);
+        Assert.NotNull(constrained);
+        Assert.Equal(300, constrained!.Size.Height, 3);
     }
 
     [Fact]
@@ -3627,6 +3647,409 @@ public sealed class MaterialScaffoldTests
             root.Mount(parent: null, newSlot: null);
             owner.FlushBuild();
         });
+    }
+
+    [Fact]
+    public void AppBarTheme_LocalData_OverridesThemeData_AndWidgetOverridesLocalData()
+    {
+        var localOwner = new BuildOwner();
+        var localRoot = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    AppBarTheme = new AppBarThemeData(BackgroundColor: Colors.CadetBlue),
+                },
+                child: new AppBarTheme(
+                    data: new AppBarThemeData(BackgroundColor: Colors.Crimson),
+                    child: new AppBar(titleText: "Local theme"))));
+
+        localRoot.Attach(localOwner);
+        localRoot.Mount(parent: null, newSlot: null);
+        localOwner.FlushBuild();
+        Assert.NotNull(FindColoredBox(
+            localRoot.ChildElement?.RenderObject,
+            color => color == Colors.Crimson));
+
+        var widgetOwner = new BuildOwner();
+        var widgetRoot = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new AppBarTheme(
+                    data: new AppBarThemeData(BackgroundColor: Colors.Crimson),
+                    child: new AppBar(
+                        titleText: "Widget override",
+                        backgroundColor: Colors.DarkGreen))));
+
+        widgetRoot.Attach(widgetOwner);
+        widgetRoot.Mount(parent: null, newSlot: null);
+        widgetOwner.FlushBuild();
+        Assert.NotNull(FindColoredBox(
+            widgetRoot.ChildElement?.RenderObject,
+            color => color == Colors.DarkGreen));
+    }
+
+    [Fact]
+    public void AppBarTheme_Of_UsesNearestLocalData()
+    {
+        var owner = new BuildOwner();
+        AppBarThemeData? captured = null;
+        var localData = new AppBarThemeData(
+            ForegroundColor: Colors.Goldenrod,
+            ToolbarHeight: 72);
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    AppBarTheme = new AppBarThemeData(ForegroundColor: Colors.CadetBlue),
+                },
+                child: new AppBarTheme(
+                    data: localData,
+                    child: new CaptureBuildContextWidget(
+                        capture: context => captured = AppBarTheme.Of(context)))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.Equal(localData, captured);
+    }
+
+    [Fact]
+    public void AppBarTheme_RejectsDataCombinedWithIndividualProperties()
+    {
+        Assert.Throws<ArgumentException>(() => new AppBarTheme(
+            data: new AppBarThemeData(),
+            backgroundColor: Colors.Crimson));
+        Assert.Throws<ArgumentException>(() => new AppBarTheme(
+            color: Colors.Crimson,
+            backgroundColor: Colors.CadetBlue));
+    }
+
+    [Fact]
+    public void AppBarThemeData_Lerp_InterpolatesContinuousAndStepsDiscreteProperties()
+    {
+        var begin = new AppBarThemeData(
+            BackgroundColor: Colors.Black,
+            Elevation: 2,
+            ToolbarHeight: 40,
+            CenterTitle: false);
+        var end = new AppBarThemeData(
+            BackgroundColor: Colors.White,
+            Elevation: 10,
+            ToolbarHeight: 80,
+            CenterTitle: true);
+
+        var firstHalf = AppBarThemeData.Lerp(begin, end, 0.25);
+        var secondHalf = AppBarThemeData.Lerp(begin, end, 0.75);
+
+        Assert.Equal(4, firstHalf.Elevation);
+        Assert.Equal(50, firstHalf.ToolbarHeight);
+        Assert.False(firstHalf.CenterTitle);
+        Assert.True(secondHalf.CenterTitle);
+        Assert.NotEqual(begin.BackgroundColor, firstHalf.BackgroundColor);
+        Assert.NotEqual(end.BackgroundColor, firstHalf.BackgroundColor);
+
+        var copied = new AppBarTheme(
+            backgroundColor: Colors.Crimson,
+            centerTitle: false)
+            .CopyWith(
+                toolbarHeight: 72,
+                centerTitle: true);
+        Assert.Equal(Colors.Crimson, copied.BackgroundColor);
+        Assert.Equal(72, copied.ToolbarHeight);
+        Assert.True(copied.CenterTitle);
+
+        var aliased = begin.CopyWith(color: Colors.Crimson);
+        Assert.Equal(Colors.Crimson, aliased.BackgroundColor);
+        Assert.Throws<ArgumentException>(() => begin.CopyWith(
+            color: Colors.Crimson,
+            backgroundColor: Colors.CadetBlue));
+    }
+
+    [Fact]
+    public void DrawerController_DefaultsAndGuards_MatchFlutterContract()
+    {
+        var controller = new DrawerController(
+            child: new SizedBox(),
+            alignment: DrawerAlignment.Start);
+
+        Assert.False(controller.IsDrawerOpen);
+        Assert.Null(controller.DrawerCallback);
+        Assert.Equal(DragStartBehavior.Start, controller.DragStartBehavior);
+        Assert.Null(controller.ScrimColor);
+        Assert.Null(controller.EdgeDragWidth);
+        Assert.True(controller.EnableOpenDragGesture);
+        Assert.True(controller.DrawerBarrierDismissible);
+        Assert.Throws<ArgumentOutOfRangeException>(() => new DrawerController(
+            child: new SizedBox(),
+            alignment: DrawerAlignment.Start,
+            edgeDragWidth: 0));
+    }
+
+    [Fact]
+    public void DrawerController_Of_ExposesAlignmentInsideOpenDrawer()
+    {
+        var owner = new BuildOwner();
+        DrawerController? captured = null;
+        var root = new TestRootElement(
+            new Directionality(
+                textDirection: TextDirection.Ltr,
+                child: new Theme(
+                    data: ThemeData.Light,
+                    child: new DrawerController(
+                        alignment: DrawerAlignment.End,
+                        isDrawerOpen: true,
+                        child: new CaptureBuildContextWidget(
+                            capture: context => captured = DrawerController.Of(context))))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.NotNull(captured);
+        Assert.Equal(DrawerAlignment.End, captured!.Alignment);
+    }
+
+    [Fact]
+    public void Drawer_UsesAlignmentSpecificThemeShapeFromDrawerControllerScope()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Directionality(
+                textDirection: TextDirection.Ltr,
+                child: new Theme(
+                    data: ThemeData.Light with
+                    {
+                        DrawerTheme = new DrawerThemeData(
+                            Shape: ShapeBorder.RoundedRectangle(4),
+                            EndShape: ShapeBorder.RoundedRectangle(18)),
+                    },
+                    child: new DrawerController(
+                        alignment: DrawerAlignment.End,
+                        isDrawerOpen: true,
+                        child: new Drawer(child: new Text("End shape"))))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var decorated = FindDescendant<RenderDecoratedBox>(root.ChildElement?.RenderObject);
+        Assert.NotNull(decorated);
+        Assert.Equal(BorderRadius.Circular(18), decorated!.Decoration.EffectiveBorderRadius);
+    }
+
+    [Fact]
+    public void DrawerController_OpenAndClose_DriveAnimationAndCallback()
+    {
+        var key = new LabeledGlobalKey<DrawerControllerState>("drawer-controller");
+        var callbacks = new List<bool>();
+        using var harness = new WidgetRenderHarness(
+            new Directionality(
+                textDirection: TextDirection.Ltr,
+                child: new Theme(
+                    data: ThemeData.Light with { Platform = TargetPlatform.Android },
+                    child: new DrawerController(
+                        key: key,
+                        alignment: DrawerAlignment.Start,
+                        drawerCallback: callbacks.Add,
+                        child: new Drawer(child: new Text("Drawer content"))))));
+
+        harness.Pump(new Size(400, 300));
+        Assert.NotNull(key.CurrentState);
+        Assert.False(key.CurrentState!.IsOpen);
+
+        key.CurrentState.Open();
+        double now = Scheduler.CurrentSeconds;
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
+        harness.Pump(new Size(400, 300));
+        Assert.True(key.CurrentState.IsOpen);
+
+        key.CurrentState.Close();
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.80));
+        harness.Pump(new Size(400, 300));
+        Assert.False(key.CurrentState.IsOpen);
+        Assert.Equal([true, false], callbacks);
+    }
+
+    [Fact]
+    public void DrawerController_EdgeDrag_UsesSafePaddingAndPaintsAnimatedScrim()
+    {
+        var binding = GestureBinding.Instance;
+        binding.ResetForTests();
+        var key = new LabeledGlobalKey<DrawerControllerState>("edge-drag-drawer");
+        var callbacks = new List<bool>();
+        using var harness = new WidgetRenderHarness(
+            new MediaQuery(
+                data: new MediaQueryData(Padding: new Thickness(12, 0, 0, 0)),
+                child: new Directionality(
+                    textDirection: TextDirection.Ltr,
+                    child: new Theme(
+                        data: ThemeData.Light with { Platform = TargetPlatform.Android },
+                        child: new DrawerController(
+                            key: key,
+                            alignment: DrawerAlignment.Start,
+                            drawerCallback: callbacks.Add,
+                            child: new Drawer(
+                                width: 240,
+                                child: new Text("Dragged drawer")))))));
+
+        try
+        {
+            harness.Pump(new Size(400, 300));
+            var edgeArea = FindDescendant<RenderPointerListener>(harness.RenderView);
+            Assert.NotNull(edgeArea);
+            Assert.Equal(32, edgeArea!.Size.Width, 3);
+
+            DateTime start = DateTime.UtcNow;
+            DispatchPointerDown(
+                binding,
+                harness.RenderView,
+                pointer: 7201,
+                position: new Point(2, 120),
+                timestampUtc: start);
+            DispatchPointerMove(
+                binding,
+                harness.RenderView,
+                pointer: 7201,
+                position: new Point(180, 120),
+                timestampUtc: start.AddMilliseconds(100));
+            DispatchPointerUp(
+                binding,
+                harness.RenderView,
+                pointer: 7201,
+                position: new Point(200, 120),
+                timestampUtc: start.AddMilliseconds(150));
+
+            double now = Scheduler.CurrentSeconds;
+            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
+            harness.Pump(new Size(400, 300));
+
+            Assert.True(key.CurrentState!.IsOpen);
+            Assert.Contains(true, callbacks);
+            Assert.NotNull(FindParagraphByText(harness.RenderView, "Dragged drawer"));
+            Assert.NotNull(FindColoredBox(
+                harness.RenderView,
+                color => color == Color.FromArgb(0x8A, 0, 0, 0)));
+        }
+        finally
+        {
+            binding.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void DrawerController_DragSettle_UsesMeasuredChildWidth()
+    {
+        var binding = GestureBinding.Instance;
+        binding.ResetForTests();
+        var key = new LabeledGlobalKey<DrawerControllerState>("measured-drawer");
+        using var harness = new WidgetRenderHarness(
+            new Directionality(
+                textDirection: TextDirection.Ltr,
+                child: new Theme(
+                    data: ThemeData.Light with { Platform = TargetPlatform.Android },
+                    child: new DrawerController(
+                        key: key,
+                        alignment: DrawerAlignment.Start,
+                        isDrawerOpen: true,
+                        child: new SizedBox(
+                            width: 180,
+                            child: new Text("Narrow drawer"))))));
+
+        try
+        {
+            harness.Pump(new Size(400, 300));
+            DateTime start = DateTime.UtcNow;
+            DispatchPointerDown(
+                binding,
+                harness.RenderView,
+                pointer: 7202,
+                position: new Point(160, 120),
+                timestampUtc: start);
+            DispatchPointerMove(
+                binding,
+                harness.RenderView,
+                pointer: 7202,
+                position: new Point(40, 120),
+                timestampUtc: start.AddSeconds(1));
+            DispatchPointerUp(
+                binding,
+                harness.RenderView,
+                pointer: 7202,
+                position: new Point(40, 120),
+                timestampUtc: start.AddSeconds(1.1));
+
+            double now = Scheduler.CurrentSeconds;
+            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
+            harness.Pump(new Size(400, 300));
+
+            Assert.False(key.CurrentState!.IsOpen);
+        }
+        finally
+        {
+            binding.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void DrawerController_Open_AddsLocalHistoryAndBackClosesWithoutPoppingRoute()
+    {
+        var owner = new BuildOwner();
+        var drawerKey = new LabeledGlobalKey<DrawerControllerState>("history-drawer");
+        var navigatorKey = new LabeledGlobalKey<NavigatorState>("history-navigator");
+        var callbacks = new List<bool>();
+        var root = new TestRootElement(
+            new Directionality(
+                textDirection: TextDirection.Ltr,
+                child: new Theme(
+                    data: ThemeData.Light,
+                    child: new Navigator(
+                        key: navigatorKey,
+                        initialRoute: new BuilderPageRoute(
+                            _ => new DrawerController(
+                                key: drawerKey,
+                                alignment: DrawerAlignment.Start,
+                                drawerCallback: callbacks.Add,
+                                child: new Drawer(child: new Text("History drawer"))))))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Route? initialRoute = navigatorKey.CurrentState!.CurrentRoute;
+        drawerKey.CurrentState!.Open();
+        owner.FlushBuild();
+        Assert.True(navigatorKey.CurrentState.MaybePop());
+        owner.FlushBuild();
+
+        Assert.Same(initialRoute, navigatorKey.CurrentState.CurrentRoute);
+        Assert.Equal([true, false], callbacks);
+    }
+
+    [Fact]
+    public void Scaffold_OpenEndDrawer_ProvidesEndAlignedDrawerControllerScope()
+    {
+        var owner = new BuildOwner();
+        BuildContext? scaffoldContext = null;
+        DrawerController? captured = null;
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new Scaffold(
+                    endDrawer: new Drawer(
+                        child: new CaptureBuildContextWidget(
+                            capture: context => captured = DrawerController.Of(context))),
+                    body: new CaptureBuildContextWidget(
+                        capture: context => scaffoldContext = context))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+        Scaffold.Of(scaffoldContext!.Value).OpenEndDrawer();
+        owner.FlushBuild();
+
+        Assert.NotNull(captured);
+        Assert.Equal(DrawerAlignment.End, captured!.Alignment);
     }
 
     private static T RequireRenderObject<T>(Element? element) where T : RenderObject

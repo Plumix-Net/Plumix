@@ -268,7 +268,7 @@ public sealed class MaterialNavigationSurfacesTests
     {
         var background = Colors.White;
         var tint = Colors.DarkRed;
-        var expected = NavigationSurfaceUtilities.ApplySurfaceTint(background, tint, 1);
+        var expected = MaterialSurface.ApplySurfaceTint(background, tint, 1);
         var theme = ThemeData.Light with
         {
             NavigationDrawerTheme = new NavigationDrawerThemeData(

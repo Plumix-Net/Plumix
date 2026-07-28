@@ -19,6 +19,7 @@ class _DrawerDemoPageState extends State<DrawerDemoPage> {
   Widget build(BuildContext context) {
     final ThemeData baseTheme = Theme.of(context);
     final ThemeData pageTheme = baseTheme.copyWith(
+      // ignore: deprecated_member_use
       useMaterial3: _useMaterial3,
       drawerTheme: _useThemeOverrides
           ? const DrawerThemeData(
@@ -204,6 +205,10 @@ class _DrawerDemoPageState extends State<DrawerDemoPage> {
                 const Text(
                   'Widget/theme/default precedence is visible through color, elevation, and width.',
                   style: TextStyle(fontSize: 12, color: Colors.black54),
+                ),
+                Text(
+                  'DrawerController alignment=${DrawerController.of(context).alignment.name}',
+                  style: const TextStyle(fontSize: 11, color: Colors.blueGrey),
                 ),
                 Row(
                   spacing: 8,

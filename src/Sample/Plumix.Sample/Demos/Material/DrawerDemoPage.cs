@@ -180,6 +180,10 @@ internal sealed class DrawerDemoPageState : State
                                 "Widget/theme/default precedence is visible through color, elevation, and width.",
                                 fontSize: 12,
                                 color: Color.Parse("#8A000000")),
+                            new Text(
+                                BuildControllerAlignmentLabel(context),
+                                fontSize: 11,
+                                color: Color.Parse("#FF607D8B")),
                             new Row(
                                 spacing: 8,
                                 children:
@@ -200,6 +204,12 @@ internal sealed class DrawerDemoPageState : State
                                         background: Color.Parse("#FFEFE8F8")),
                                 ]),
                         ]))));
+    }
+
+    private static string BuildControllerAlignmentLabel(BuildContext context)
+    {
+        string alignment = DrawerController.Of(context).Alignment.ToString().ToLowerInvariant();
+        return $"DrawerController alignment={alignment}";
     }
 
     private Widget BuildControlButton(
