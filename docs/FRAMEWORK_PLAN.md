@@ -199,6 +199,10 @@ Completion note:
   context-action dispatch, nearest-scope overrides/dispatchers, action enable/listener/key-consumption policy,
   logical/single/character activators with modifier/repeat/NumLock matching, nested/modal focus routing, callback
   shortcuts, deferred `ShortcutRegistrar` entries, focused tests, and a mirrored C#/Dart keyboard probe.
+- Continued paired core focus-interaction coverage with `FocusableActionDetector` + `ExcludeFocusTraversal`,
+  including source-shaped actions/shortcuts gating, focus/hover highlights, input-mode switching, directional
+  navigation policy, independent descendant focusability/traversability, state-preserving wrapper changes, focused
+  tests, and an expanded mirrored C#/Dart keyboard probe.
 - Continued paired core lifecycle-listener coverage with `AppLifecycleListener` + `StatusTransitionWidget`,
   including source-ordered lifecycle transition synthesis/callbacks, collective exit veto, status-only rebuilds,
   listener replacement/disposal, host focus/minimize/attach mapping, focused tests, and mirrored C#/Dart probes.

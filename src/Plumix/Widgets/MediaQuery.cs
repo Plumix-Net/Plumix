@@ -11,6 +11,12 @@ public enum Orientation
     Landscape,
 }
 
+public enum NavigationMode
+{
+    Traditional,
+    Directional,
+}
+
 public sealed record MediaQueryData(
     Size Size = default,
     double DevicePixelRatio = 1.0,
@@ -22,7 +28,8 @@ public sealed record MediaQueryData(
     bool AccessibleNavigation = false,
     bool AlwaysUse24HourFormat = false,
     bool DisableAnimations = false,
-    bool InvertColors = false)
+    bool InvertColors = false,
+    NavigationMode NavigationMode = NavigationMode.Traditional)
 {
     public Orientation Orientation => Size.Width > Size.Height
         ? Orientation.Landscape
@@ -39,7 +46,8 @@ public sealed record MediaQueryData(
         bool? accessibleNavigation = null,
         bool? alwaysUse24HourFormat = null,
         bool? disableAnimations = null,
-        bool? invertColors = null)
+        bool? invertColors = null,
+        NavigationMode? navigationMode = null)
     {
         return new MediaQueryData(
             Size: size ?? Size,
@@ -52,7 +60,8 @@ public sealed record MediaQueryData(
             AccessibleNavigation: accessibleNavigation ?? AccessibleNavigation,
             AlwaysUse24HourFormat: alwaysUse24HourFormat ?? AlwaysUse24HourFormat,
             DisableAnimations: disableAnimations ?? DisableAnimations,
-            InvertColors: invertColors ?? InvertColors);
+            InvertColors: invertColors ?? InvertColors,
+            NavigationMode: navigationMode ?? NavigationMode);
     }
 
     public MediaQueryData RemovePadding(
@@ -227,6 +236,10 @@ public sealed class MediaQuery : InheritedWidget
     public static bool InvertColorsOf(BuildContext context) => Of(context).InvertColors;
 
     public static bool? MaybeInvertColorsOf(BuildContext context) => MaybeOf(context)?.InvertColors;
+
+    public static NavigationMode NavigationModeOf(BuildContext context) => Of(context).NavigationMode;
+
+    public static NavigationMode? MaybeNavigationModeOf(BuildContext context) => MaybeOf(context)?.NavigationMode;
 
     public static Orientation OrientationOf(BuildContext context) => Of(context).Orientation;
 

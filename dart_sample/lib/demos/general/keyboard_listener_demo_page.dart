@@ -15,11 +15,15 @@ class _KeyboardListenerDemoPageState extends State<KeyboardListenerDemoPage> {
   final FocusNode _keyboardFocusNode = FocusNode();
   final FocusNode _rawFocusNode = FocusNode();
   final FocusNode _shortcutFocusNode = FocusNode();
+  final FocusNode _excludedFocusNode = FocusNode();
   late final Map<ShortcutActivator, Intent> _shortcuts;
   late final Map<Type, Action<Intent>> _actions;
   String _keyboardEvent = 'none';
   String _rawEvent = 'none';
   int _shortcutCount = 0;
+  int _excludedClickCount = 0;
+  bool _shortcutFocusHighlight = false;
+  bool _shortcutHoverHighlight = false;
 
   @override
   void initState() {
@@ -27,6 +31,7 @@ class _KeyboardListenerDemoPageState extends State<KeyboardListenerDemoPage> {
     _keyboardFocusNode.addListener(_handleFocusChanged);
     _rawFocusNode.addListener(_handleFocusChanged);
     _shortcutFocusNode.addListener(_handleFocusChanged);
+    _excludedFocusNode.addListener(_handleFocusChanged);
     _shortcuts = <ShortcutActivator, Intent>{
       const SingleActivator(LogicalKeyboardKey.keyK, control: true):
           const _CounterShortcutIntent(1),
@@ -52,7 +57,7 @@ class _KeyboardListenerDemoPageState extends State<KeyboardListenerDemoPage> {
       spacing: 12,
       children: <Widget>[
         const Text(
-          'KeyboardListener + RawKeyboardListener',
+          'Keyboard + focus action detectors',
           style: TextStyle(fontSize: 20, color: Colors.black),
         ),
         const Text(
@@ -71,9 +76,11 @@ class _KeyboardListenerDemoPageState extends State<KeyboardListenerDemoPage> {
     _keyboardFocusNode.removeListener(_handleFocusChanged);
     _rawFocusNode.removeListener(_handleFocusChanged);
     _shortcutFocusNode.removeListener(_handleFocusChanged);
+    _excludedFocusNode.removeListener(_handleFocusChanged);
     _keyboardFocusNode.dispose();
     _rawFocusNode.dispose();
     _shortcutFocusNode.dispose();
+    _excludedFocusNode.dispose();
     super.dispose();
   }
 
@@ -139,17 +146,40 @@ class _KeyboardListenerDemoPageState extends State<KeyboardListenerDemoPage> {
           onPressed: _shortcutFocusNode.requestFocus,
           child: const Text('Focus Actions + Shortcuts'),
         ),
-        Shortcuts(
+        FocusableActionDetector(
+          focusNode: _shortcutFocusNode,
           shortcuts: _shortcuts,
-          child: Actions(
-            actions: _actions,
-            child: Focus(
-              focusNode: _shortcutFocusNode,
-              child: _buildPanel(
-                title: 'Actions + Shortcuts',
-                detail: 'count $_shortcutCount — Ctrl+K / Ctrl+J',
-                focused: _shortcutFocusNode.hasFocus,
-              ),
+          actions: _actions,
+          onShowFocusHighlight: (bool value) {
+            setState(() {
+              _shortcutFocusHighlight = value;
+            });
+          },
+          onShowHoverHighlight: (bool value) {
+            setState(() {
+              _shortcutHoverHighlight = value;
+            });
+          },
+          child: _buildPanel(
+            title: 'FocusableActionDetector',
+            detail:
+                'count $_shortcutCount — Ctrl+K / Ctrl+J — focus highlight '
+                '${_onOff(_shortcutFocusHighlight)} — hover '
+                '${_onOff(_shortcutHoverHighlight)}',
+            focused: _shortcutFocusNode.hasFocus,
+          ),
+        ),
+        ExcludeFocusTraversal(
+          child: TextButton(
+            focusNode: _excludedFocusNode,
+            onPressed: () {
+              setState(() {
+                _excludedClickCount++;
+              });
+            },
+            child: Text(
+              'ExcludeFocusTraversal: Tab skips, click works '
+              '($_excludedClickCount)',
             ),
           ),
         ),
@@ -195,6 +225,8 @@ class _KeyboardListenerDemoPageState extends State<KeyboardListenerDemoPage> {
     final String phase = event is KeyDownEvent ? 'down' : 'up';
     return '${event.logicalKey.keyLabel} — $phase';
   }
+
+  static String _onOff(bool value) => value ? 'on' : 'off';
 
   void _handleFocusChanged() {
     setState(() {});

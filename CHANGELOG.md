@@ -1,5 +1,12 @@
 # Changelog
 
+- Breaking: added paired Flutter core `FocusableActionDetector` + `ExcludeFocusTraversal` parity with exact
+  shortcuts/actions gating, focus/hover highlight callbacks, input-driven highlight modes, directional-navigation
+  focusability, independent descendant focus/traversal policies, state-preserving wrapper changes, focused tests,
+  and an expanded mirrored C#/Dart keyboard demo. `Focus` now exposes source-shaped descendant and focus-change
+  contracts, `MediaQueryData` includes `navigationMode`, and `MouseRegion` defaults to `MouseCursor.defer`; advanced
+  `Plumix` to `0.10.0-alpha.1`.
+
 - Breaking: added paired Flutter core `Actions` + `Shortcuts` parity with typed intents/actions, hierarchical
   override/dispatcher lookup, enabled and key-consumption policy, exact modifier/repeat/character/NumLock
   activators, nested/modal focus dispatch, callback shortcuts, deferred `ShortcutRegistrar` entries, focused tests,

@@ -281,6 +281,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix.Tests/FocusTests.cs`
   - `src/Plumix.Tests/KeyboardListenerTests.cs`
   - `src/Plumix.Tests/ActionsShortcutsTests.cs`
+  - `src/Plumix.Tests/FocusableActionDetectorTests.cs`
   - `src/Plumix.Tests/FlutterHostInputTests.cs`
 
 ### Navigation

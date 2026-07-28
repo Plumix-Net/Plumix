@@ -8,6 +8,8 @@ namespace Plumix.Gestures;
 
 public sealed class GestureBinding
 {
+    internal static event Action<PointerEvent>? PointerEventReceived;
+
     public static GestureBinding Instance { get; } = new();
 
     private readonly Dictionary<int, HitTestResult> _hitTests = [];
@@ -20,6 +22,7 @@ public sealed class GestureBinding
 
     public void HandlePointerEvent(RenderView root, PointerEvent @event)
     {
+        PointerEventReceived?.Invoke(@event);
         var eventWithDelta = AttachDelta(@event);
         HitTestResult? hitTestResult = null;
 

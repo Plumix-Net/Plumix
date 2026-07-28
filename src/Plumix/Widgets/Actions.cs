@@ -1,4 +1,5 @@
 using Plumix.Foundation;
+using Plumix.UI;
 
 namespace Plumix.Widgets;
 
@@ -506,6 +507,225 @@ internal sealed class ActionsScope : InheritedWidget
         return !ReferenceEquals(oldScope.ActionsMap, ActionsMap)
                || !ReferenceEquals(oldScope.Dispatcher, Dispatcher)
                || oldScope.Version != Version;
+    }
+}
+
+// Dart parity source: flutter/packages/flutter/lib/src/widgets/actions.dart
+public sealed class FocusableActionDetector : StatefulWidget
+{
+    public FocusableActionDetector(
+        Widget child,
+        bool enabled = true,
+        FocusNode? focusNode = null,
+        bool autofocus = false,
+        bool descendantsAreFocusable = true,
+        bool descendantsAreTraversable = true,
+        IReadOnlyDictionary<ShortcutActivator, Intent>? shortcuts = null,
+        IReadOnlyDictionary<Type, FlutterAction>? actions = null,
+        Action<bool>? onShowFocusHighlight = null,
+        Action<bool>? onShowHoverHighlight = null,
+        Action<bool>? onFocusChange = null,
+        MouseCursor? mouseCursor = null,
+        bool includeFocusSemantics = true,
+        Key? key = null) : base(key)
+    {
+        Child = child ?? throw new ArgumentNullException(nameof(child));
+        Enabled = enabled;
+        FocusNode = focusNode;
+        Autofocus = autofocus;
+        DescendantsAreFocusable = descendantsAreFocusable;
+        DescendantsAreTraversable = descendantsAreTraversable;
+        Shortcuts = shortcuts;
+        Actions = actions;
+        OnShowFocusHighlight = onShowFocusHighlight;
+        OnShowHoverHighlight = onShowHoverHighlight;
+        OnFocusChange = onFocusChange;
+        MouseCursor = mouseCursor ?? Plumix.Widgets.MouseCursor.Defer;
+        IncludeFocusSemantics = includeFocusSemantics;
+    }
+
+    public bool Enabled { get; }
+
+    public FocusNode? FocusNode { get; }
+
+    public bool Autofocus { get; }
+
+    public bool DescendantsAreFocusable { get; }
+
+    public bool DescendantsAreTraversable { get; }
+
+    public IReadOnlyDictionary<Type, FlutterAction>? Actions { get; }
+
+    public IReadOnlyDictionary<ShortcutActivator, Intent>? Shortcuts { get; }
+
+    public Action<bool>? OnShowFocusHighlight { get; }
+
+    public Action<bool>? OnShowHoverHighlight { get; }
+
+    public Action<bool>? OnFocusChange { get; }
+
+    public MouseCursor MouseCursor { get; }
+
+    public bool IncludeFocusSemantics { get; }
+
+    public Widget Child { get; }
+
+    public override State CreateState() => new FocusableActionDetectorState();
+
+    private sealed class FocusableActionDetectorState : State
+    {
+        private readonly GlobalObjectKey<State> _mouseRegionKey;
+        private bool _canShowHighlight;
+        private bool _hovering;
+        private bool _focused;
+
+        public FocusableActionDetectorState()
+        {
+            _mouseRegionKey = new GlobalObjectKey<State>(this);
+        }
+
+        private FocusableActionDetector Current => (FocusableActionDetector)StateWidget;
+
+        public override void InitState()
+        {
+            Scheduler.AddPostFrameCallback(_ =>
+            {
+                if (Mounted)
+                {
+                    UpdateHighlightMode(FocusManager.Instance.HighlightMode);
+                }
+            });
+            FocusManager.Instance.AddHighlightModeListener(HandleFocusHighlightModeChange);
+        }
+
+        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        {
+            var oldDetector = (FocusableActionDetector)oldWidget;
+            if (oldDetector.Enabled == Current.Enabled)
+            {
+                return;
+            }
+
+            Scheduler.AddPostFrameCallback(_ =>
+            {
+                if (Mounted)
+                {
+                    MayTriggerCallback(oldWidget: oldDetector);
+                }
+            });
+        }
+
+        public override Widget Build(BuildContext context)
+        {
+            Widget child = new MouseRegion(
+                key: _mouseRegionKey,
+                onEnter: HandleMouseEnter,
+                onExit: HandleMouseExit,
+                cursor: Current.MouseCursor,
+                child: new Focus(
+                    focusNode: Current.FocusNode,
+                    autofocus: Current.Autofocus,
+                    descendantsAreFocusable: Current.DescendantsAreFocusable,
+                    descendantsAreTraversable: Current.DescendantsAreTraversable,
+                    canRequestFocus: CanRequestFocus,
+                    onFocusChange: HandleFocusChange,
+                    includeSemantics: Current.IncludeFocusSemantics,
+                    child: Current.Child));
+
+            if (Current.Enabled && Current.Actions is { Count: > 0 })
+            {
+                child = new Actions(Current.Actions, child);
+            }
+
+            if (Current.Enabled && Current.Shortcuts is { Count: > 0 })
+            {
+                child = new Shortcuts(Current.Shortcuts, child);
+            }
+
+            return child;
+        }
+
+        public override void Dispose()
+        {
+            FocusManager.Instance.RemoveHighlightModeListener(HandleFocusHighlightModeChange);
+        }
+
+        private bool CanRequestFocus =>
+            MediaQuery.MaybeNavigationModeOf(Context) == NavigationMode.Directional || Current.Enabled;
+
+        private void UpdateHighlightMode(FocusHighlightMode mode)
+        {
+            MayTriggerCallback(() => _canShowHighlight = mode == FocusHighlightMode.Traditional);
+        }
+
+        private void HandleFocusHighlightModeChange(FocusHighlightMode mode)
+        {
+            if (Mounted)
+            {
+                UpdateHighlightMode(mode);
+            }
+        }
+
+        private void HandleMouseEnter(PointerEnterEvent @event)
+        {
+            if (!_hovering)
+            {
+                MayTriggerCallback(() => _hovering = true);
+            }
+        }
+
+        private void HandleMouseExit(PointerExitEvent @event)
+        {
+            if (_hovering)
+            {
+                MayTriggerCallback(() => _hovering = false);
+            }
+        }
+
+        private void HandleFocusChange(bool focused)
+        {
+            if (_focused == focused)
+            {
+                return;
+            }
+
+            MayTriggerCallback(() => _focused = focused);
+            Current.OnFocusChange?.Invoke(_focused);
+        }
+
+        private void MayTriggerCallback(
+            System.Action? task = null,
+            FocusableActionDetector? oldWidget = null)
+        {
+            FocusableActionDetector oldTarget = oldWidget ?? Current;
+            bool didShowHoverHighlight = ShouldShowHoverHighlight(oldTarget);
+            bool didShowFocusHighlight = ShouldShowFocusHighlight(oldTarget);
+            task?.Invoke();
+            bool doShowHoverHighlight = ShouldShowHoverHighlight(Current);
+            bool doShowFocusHighlight = ShouldShowFocusHighlight(Current);
+
+            if (didShowFocusHighlight != doShowFocusHighlight)
+            {
+                Current.OnShowFocusHighlight?.Invoke(doShowFocusHighlight);
+            }
+
+            if (didShowHoverHighlight != doShowHoverHighlight)
+            {
+                Current.OnShowHoverHighlight?.Invoke(doShowHoverHighlight);
+            }
+        }
+
+        private bool ShouldShowHoverHighlight(FocusableActionDetector target)
+        {
+            return _hovering && target.Enabled && _canShowHighlight;
+        }
+
+        private bool ShouldShowFocusHighlight(FocusableActionDetector target)
+        {
+            bool canRequestFocus = MediaQuery.MaybeNavigationModeOf(Context) == NavigationMode.Directional
+                                   || target.Enabled;
+            return _focused && _canShowHighlight && canRequestFocus;
+        }
     }
 }
 

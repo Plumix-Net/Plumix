@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
+using Plumix.Gestures;
 using Plumix.Rendering;
 using Plumix.UI;
 
@@ -13,6 +14,19 @@ public enum KeyEventResult
     Ignored,
     Handled,
     SkipRemainingHandlers
+}
+
+public enum FocusHighlightMode
+{
+    Touch,
+    Traditional,
+}
+
+public enum FocusHighlightStrategy
+{
+    Automatic,
+    AlwaysTouch,
+    AlwaysTraditional,
 }
 
 public readonly record struct FocusTextInputState(
@@ -317,24 +331,68 @@ public sealed class FocusScopeNode : FocusNode
 public sealed class FocusManager
 {
     private readonly List<FocusNode> _nodes = [];
+    private readonly List<Action<FocusHighlightMode>> _highlightModeListeners = [];
     private readonly FocusScopeNode _rootScope = new()
     {
         CanRequestFocus = false,
         SkipTraversal = true
     };
 
-    public FocusManager()
+    public FocusManager() : this(registerGlobalHandlers: false)
     {
-        _rootScope.AttachManager(this);
     }
 
-    public static FocusManager Instance { get; } = new();
+    private FocusManager(bool registerGlobalHandlers)
+    {
+        _rootScope.AttachManager(this);
+        if (registerGlobalHandlers)
+        {
+            GestureBinding.PointerEventReceived += HandlePointerEvent;
+        }
+    }
+
+    public static FocusManager Instance { get; } = new(registerGlobalHandlers: true);
 
     public FocusNode? PrimaryFocus { get; private set; }
 
     internal event Action? PrimaryFocusChanged;
 
+    private FocusHighlightMode _highlightMode = ResolveDefaultHighlightMode();
+    private FocusHighlightStrategy _highlightStrategy = FocusHighlightStrategy.Automatic;
+    private bool? _lastInteractionRequiresTraditionalHighlights;
+
     public FocusScopeNode RootScope => _rootScope;
+
+    public FocusHighlightMode HighlightMode => _highlightMode;
+
+    public FocusHighlightStrategy HighlightStrategy
+    {
+        get => _highlightStrategy;
+        set
+        {
+            if (_highlightStrategy == value)
+            {
+                return;
+            }
+
+            _highlightStrategy = value;
+            UpdateHighlightMode();
+        }
+    }
+
+    public void AddHighlightModeListener(Action<FocusHighlightMode> listener)
+    {
+        ArgumentNullException.ThrowIfNull(listener);
+        if (!_highlightModeListeners.Contains(listener))
+        {
+            _highlightModeListeners.Add(listener);
+        }
+    }
+
+    public void RemoveHighlightModeListener(Action<FocusHighlightMode> listener)
+    {
+        _highlightModeListeners.Remove(listener);
+    }
 
     public void RegisterNode(FocusNode node, FocusScopeNode? scope = null)
     {
@@ -455,6 +513,7 @@ public sealed class FocusManager
 
     public bool HandleKeyEvent(KeyEvent @event)
     {
+        UpdateHighlightModeForKeyEvent();
         bool handledByHardwareKeyboard = HardwareKeyboard.Instance.HandleKeyEvent(@event);
 
 #pragma warning disable CS0618
@@ -587,10 +646,72 @@ public sealed class FocusManager
 
         _nodes.Clear();
         _rootScope.ResetForTests();
+        _highlightModeListeners.Clear();
+        _highlightMode = ResolveDefaultHighlightMode();
+        _highlightStrategy = FocusHighlightStrategy.Automatic;
+        _lastInteractionRequiresTraditionalHighlights = null;
         HardwareKeyboard.Instance.ResetForTests();
 #pragma warning disable CS0618
         RawKeyboard.Instance.ResetForTests();
 #pragma warning restore CS0618
+    }
+
+    internal void HandlePointerEvent(PointerEvent @event)
+    {
+        if (@event.Kind is not (PointerDeviceKind.Touch
+            or PointerDeviceKind.Stylus
+            or PointerDeviceKind.InvertedStylus))
+        {
+            return;
+        }
+
+        if (_lastInteractionRequiresTraditionalHighlights == true)
+        {
+            return;
+        }
+
+        _lastInteractionRequiresTraditionalHighlights = true;
+        UpdateHighlightMode();
+    }
+
+    private void UpdateHighlightModeForKeyEvent()
+    {
+        if (_lastInteractionRequiresTraditionalHighlights == false)
+        {
+            return;
+        }
+
+        _lastInteractionRequiresTraditionalHighlights = false;
+        UpdateHighlightMode();
+    }
+
+    private void UpdateHighlightMode()
+    {
+        FocusHighlightMode nextMode = _highlightStrategy switch
+        {
+            FocusHighlightStrategy.AlwaysTouch => FocusHighlightMode.Touch,
+            FocusHighlightStrategy.AlwaysTraditional => FocusHighlightMode.Traditional,
+            _ when _lastInteractionRequiresTraditionalHighlights == true => FocusHighlightMode.Touch,
+            _ => FocusHighlightMode.Traditional,
+        };
+
+        if (_highlightMode == nextMode)
+        {
+            return;
+        }
+
+        _highlightMode = nextMode;
+        foreach (Action<FocusHighlightMode> listener in _highlightModeListeners.ToArray())
+        {
+            listener(_highlightMode);
+        }
+    }
+
+    private static FocusHighlightMode ResolveDefaultHighlightMode()
+    {
+        return OperatingSystem.IsAndroid() || OperatingSystem.IsIOS()
+            ? FocusHighlightMode.Touch
+            : FocusHighlightMode.Traditional;
     }
 
     private void SetPrimaryFocus(FocusNode? next)
@@ -807,6 +928,47 @@ internal sealed class FocusScopeMarker : InheritedWidget
     }
 }
 
+internal sealed class FocusDescendantsScope : InheritedWidget
+{
+    public FocusDescendantsScope(
+        bool descendantsAreFocusable,
+        bool descendantsAreTraversable,
+        Widget child) : base()
+    {
+        DescendantsAreFocusable = descendantsAreFocusable;
+        DescendantsAreTraversable = descendantsAreTraversable;
+        Child = child;
+    }
+
+    public bool DescendantsAreFocusable { get; }
+
+    public bool DescendantsAreTraversable { get; }
+
+    public Widget Child { get; }
+
+    public override Widget Build(BuildContext context) => Child;
+
+    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    {
+        var oldScope = (FocusDescendantsScope)oldWidget;
+        return oldScope.DescendantsAreFocusable != DescendantsAreFocusable
+               || oldScope.DescendantsAreTraversable != DescendantsAreTraversable;
+    }
+
+    internal static (bool Focusable, bool Traversable) Resolve(BuildContext context)
+    {
+        bool focusable = true;
+        bool traversable = true;
+        foreach (FocusDescendantsScope scope in context.DependOnInheritedAncestors<FocusDescendantsScope>())
+        {
+            focusable &= scope.DescendantsAreFocusable;
+            traversable &= scope.DescendantsAreTraversable;
+        }
+
+        return (focusable, traversable);
+    }
+}
+
 public sealed class FocusScope : StatefulWidget
 {
     public FocusScope(
@@ -962,6 +1124,9 @@ public sealed class Focus : StatefulWidget
         bool autofocus = false,
         bool canRequestFocus = true,
         bool skipTraversal = false,
+        bool descendantsAreFocusable = true,
+        bool descendantsAreTraversable = true,
+        Action<bool>? onFocusChange = null,
         FocusOnKeyEventCallback? onKeyEvent = null,
         FocusOnTextInputCallback? onTextInput = null,
         FocusOnTextCompositionCallback? onTextComposition = null,
@@ -974,6 +1139,9 @@ public sealed class Focus : StatefulWidget
             autofocus: autofocus,
             canRequestFocus: canRequestFocus,
             skipTraversal: skipTraversal,
+            descendantsAreFocusable: descendantsAreFocusable,
+            descendantsAreTraversable: descendantsAreTraversable,
+            onFocusChange: onFocusChange,
             onKeyEvent: onKeyEvent,
             onTextInput: onTextInput,
             onTextComposition: onTextComposition,
@@ -990,6 +1158,9 @@ public sealed class Focus : StatefulWidget
         bool autofocus = false,
         bool canRequestFocus = true,
         bool skipTraversal = false,
+        bool descendantsAreFocusable = true,
+        bool descendantsAreTraversable = true,
+        Action<bool>? onFocusChange = null,
         FocusOnKeyEventCallback? onKeyEvent = null,
         FocusOnTextInputCallback? onTextInput = null,
         FocusOnTextCompositionCallback? onTextComposition = null,
@@ -1002,6 +1173,9 @@ public sealed class Focus : StatefulWidget
         Autofocus = autofocus;
         CanRequestFocus = canRequestFocus;
         SkipTraversal = skipTraversal;
+        DescendantsAreFocusable = descendantsAreFocusable;
+        DescendantsAreTraversable = descendantsAreTraversable;
+        OnFocusChange = onFocusChange;
         IncludeSemantics = includeSemantics;
         OnKeyEvent = onKeyEvent;
         OnTextInput = onTextInput;
@@ -1019,6 +1193,12 @@ public sealed class Focus : StatefulWidget
     public bool CanRequestFocus { get; }
 
     public bool SkipTraversal { get; }
+
+    public bool DescendantsAreFocusable { get; }
+
+    public bool DescendantsAreTraversable { get; }
+
+    public Action<bool>? OnFocusChange { get; }
 
     public bool IncludeSemantics { get; }
 
@@ -1042,6 +1222,7 @@ public sealed class Focus : StatefulWidget
         private FocusNode? _focusNode;
         private bool _ownsFocusNode;
         private bool _autofocusApplied;
+        private bool _focused;
 
         private Focus Widget => (Focus)Element.Widget;
 
@@ -1083,8 +1264,12 @@ public sealed class Focus : StatefulWidget
 
         public override Widget Build(BuildContext context)
         {
-            Widget child = new Listener(
-                child: Widget.Child,
+            Widget child = new FocusDescendantsScope(
+                descendantsAreFocusable: Widget.DescendantsAreFocusable,
+                descendantsAreTraversable: Widget.DescendantsAreTraversable,
+                child: Widget.Child);
+            child = new Listener(
+                child: child,
                 behavior: HitTestBehavior.Translucent,
                 onPointerDown: HandlePointerDown);
 
@@ -1145,6 +1330,7 @@ public sealed class Focus : StatefulWidget
             }
 
             _focusNode.RemoveListener(HandleFocusChanged);
+            _focusNode.RemoveTraversalEligibility(this);
             FocusManager.Instance.UnregisterNode(_focusNode);
             _focusNode.DetachElement(Element);
 
@@ -1175,9 +1361,13 @@ public sealed class Focus : StatefulWidget
         private void ApplyWidgetConfiguration()
         {
             var node = _focusNode!;
-            bool descendantsAreFocusable = ExcludeFocus.DescendantsAreFocusableOf(Context);
-            node.CanRequestFocus = Widget.CanRequestFocus && descendantsAreFocusable;
-            node.SkipTraversal = Widget.SkipTraversal || !descendantsAreFocusable;
+            bool includedByExcludeFocus = ExcludeFocus.DescendantsAreFocusableOf(Context);
+            (bool focusable, bool traversable) = FocusDescendantsScope.Resolve(Context);
+            node.CanRequestFocus = Widget.CanRequestFocus && includedByExcludeFocus && focusable;
+            node.SkipTraversal = Widget.SkipTraversal;
+            node.SetTraversalEligibility(
+                this,
+                includedByExcludeFocus && focusable && traversable);
             node.OnKeyEvent = Widget.OnKeyEvent;
             node.OnTextInput = Widget.OnTextInput;
             node.OnTextComposition = Widget.OnTextComposition;
@@ -1198,6 +1388,13 @@ public sealed class Focus : StatefulWidget
 
         private void HandleFocusChanged()
         {
+            bool focused = _focusNode?.HasFocus == true;
+            if (_focused != focused)
+            {
+                _focused = focused;
+                Widget.OnFocusChange?.Invoke(focused);
+            }
+
             SetState(static () => { });
         }
 
@@ -1205,6 +1402,33 @@ public sealed class Focus : StatefulWidget
         {
             _focusNode?.RequestFocus();
         }
+    }
+}
+
+// Dart parity source: flutter/packages/flutter/lib/src/widgets/focus_traversal.dart
+public sealed class ExcludeFocusTraversal : StatelessWidget
+{
+    public ExcludeFocusTraversal(
+        Widget child,
+        bool excluding = true,
+        Key? key = null) : base(key)
+    {
+        Child = child ?? throw new ArgumentNullException(nameof(child));
+        Excluding = excluding;
+    }
+
+    public Widget Child { get; }
+
+    public bool Excluding { get; }
+
+    public override Widget Build(BuildContext context)
+    {
+        return new Focus(
+            child: Child,
+            canRequestFocus: false,
+            skipTraversal: true,
+            includeSemantics: false,
+            descendantsAreTraversable: !Excluding);
     }
 }
 

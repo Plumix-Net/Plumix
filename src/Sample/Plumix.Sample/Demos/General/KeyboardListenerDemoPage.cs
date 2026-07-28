@@ -24,17 +24,22 @@ internal sealed class KeyboardListenerDemoPageState : State
     private readonly FocusNode _keyboardFocusNode = new();
     private readonly FocusNode _rawFocusNode = new();
     private readonly FocusNode _shortcutFocusNode = new();
+    private readonly FocusNode _excludedFocusNode = new();
     private IReadOnlyDictionary<ShortcutActivator, Intent> _shortcuts = null!;
     private IReadOnlyDictionary<Type, FlutterAction> _actions = null!;
     private string _keyboardEvent = "none";
     private string _rawEvent = "none";
     private int _shortcutCount;
+    private int _excludedClickCount;
+    private bool _shortcutFocusHighlight;
+    private bool _shortcutHoverHighlight;
 
     public override void InitState()
     {
         _keyboardFocusNode.AddListener(HandleFocusChanged);
         _rawFocusNode.AddListener(HandleFocusChanged);
         _shortcutFocusNode.AddListener(HandleFocusChanged);
+        _excludedFocusNode.AddListener(HandleFocusChanged);
         _shortcuts = new Dictionary<ShortcutActivator, Intent>
         {
             [new SingleActivator("K", control: true)] = new CounterShortcutIntent(1),
@@ -58,7 +63,7 @@ internal sealed class KeyboardListenerDemoPageState : State
             spacing: 12,
             children:
             [
-                new Text("KeyboardListener + RawKeyboardListener", fontSize: 20, color: Colors.Black),
+                new Text("Keyboard + focus action detectors", fontSize: 20, color: Colors.Black),
                 new Text(
                     "Click a panel or use its button, then press and release keyboard keys.",
                     fontSize: 14,
@@ -74,9 +79,11 @@ internal sealed class KeyboardListenerDemoPageState : State
         _keyboardFocusNode.RemoveListener(HandleFocusChanged);
         _rawFocusNode.RemoveListener(HandleFocusChanged);
         _shortcutFocusNode.RemoveListener(HandleFocusChanged);
+        _excludedFocusNode.RemoveListener(HandleFocusChanged);
         _keyboardFocusNode.Dispose();
         _rawFocusNode.Dispose();
         _shortcutFocusNode.Dispose();
+        _excludedFocusNode.Dispose();
     }
 
     private Widget BuildKeyboardListenerProbe()
@@ -138,16 +145,24 @@ internal sealed class KeyboardListenerDemoPageState : State
                 new TextButton(
                     onPressed: () => _shortcutFocusNode.RequestFocus(),
                     child: new Text("Focus Actions + Shortcuts")),
-                new Shortcuts(
+                new FocusableActionDetector(
+                    focusNode: _shortcutFocusNode,
                     shortcuts: _shortcuts,
-                    child: new Actions(
-                        actions: _actions,
-                        child: new Focus(
-                            focusNode: _shortcutFocusNode,
-                            child: BuildPanel(
-                                title: "Actions + Shortcuts",
-                                detail: $"count {_shortcutCount} — Ctrl+K / Ctrl+J",
-                                focused: _shortcutFocusNode.HasFocus)))),
+                    actions: _actions,
+                    onShowFocusHighlight: value => SetState(() => _shortcutFocusHighlight = value),
+                    onShowHoverHighlight: value => SetState(() => _shortcutHoverHighlight = value),
+                    child: BuildPanel(
+                        title: "FocusableActionDetector",
+                        detail:
+                        $"count {_shortcutCount} — Ctrl+K / Ctrl+J — focus highlight "
+                        + $"{OnOff(_shortcutFocusHighlight)} — hover {OnOff(_shortcutHoverHighlight)}",
+                        focused: _shortcutFocusNode.HasFocus)),
+                new ExcludeFocusTraversal(
+                    child: new TextButton(
+                        focusNode: _excludedFocusNode,
+                        onPressed: () => SetState(() => _excludedClickCount++),
+                        child: new Text(
+                            $"ExcludeFocusTraversal: Tab skips, click works ({_excludedClickCount})"))),
             ]);
     }
 
@@ -177,6 +192,8 @@ internal sealed class KeyboardListenerDemoPageState : State
     {
         return $"{keyEvent.Key} — {(keyEvent.IsDown ? "down" : "up")}";
     }
+
+    private static string OnOff(bool value) => value ? "on" : "off";
 
     private void HandleFocusChanged()
     {

@@ -1,10 +1,16 @@
 using Plumix.Foundation;
+using Plumix.UI;
 
 namespace Plumix.Widgets;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/services/mouse_cursor.dart (approximate)
 
-public abstract record MouseCursor;
+public abstract record MouseCursor
+{
+    public static MouseCursor Defer { get; } = new DeferredMouseCursor();
+
+    private sealed record DeferredMouseCursor : MouseCursor;
+}
 
 public sealed record SystemMouseCursor(string Kind) : MouseCursor;
 
@@ -27,15 +33,23 @@ public sealed class MouseRegion : StatefulWidget
     public MouseRegion(
         Widget? child = null,
         MouseCursor? cursor = null,
+        Action<PointerEnterEvent>? onEnter = null,
+        Action<PointerExitEvent>? onExit = null,
         Key? key = null) : base(key)
     {
         Child = child;
-        Cursor = cursor ?? SystemMouseCursors.Basic;
+        Cursor = cursor ?? MouseCursor.Defer;
+        OnEnter = onEnter;
+        OnExit = onExit;
     }
 
     public Widget? Child { get; }
 
     public MouseCursor Cursor { get; }
+
+    public Action<PointerEnterEvent>? OnEnter { get; }
+
+    public Action<PointerExitEvent>? OnExit { get; }
 
     public override State CreateState() => new MouseRegionState();
 
@@ -53,31 +67,40 @@ public sealed class MouseRegion : StatefulWidget
             }
 
             _cursorHandle.Dispose();
-            _cursorHandle = MouseCursorManager.PushCursor(CurrentWidget.Cursor);
+            _cursorHandle = Equals(CurrentWidget.Cursor, MouseCursor.Defer)
+                ? null
+                : MouseCursorManager.PushCursor(CurrentWidget.Cursor);
         }
 
         public override Widget Build(BuildContext context)
         {
             return new Listener(
-                onPointerEnter: _ => HandleEnter(),
-                onPointerExit: _ => HandleExit(),
+                onPointerEnter: HandleEnter,
+                onPointerExit: HandleExit,
                 child: CurrentWidget.Child);
         }
 
         public override void Dispose()
         {
-            HandleExit();
+            _cursorHandle?.Dispose();
+            _cursorHandle = null;
         }
 
-        private void HandleEnter()
+        private void HandleEnter(PointerEnterEvent @event)
         {
-            _cursorHandle ??= MouseCursorManager.PushCursor(CurrentWidget.Cursor);
+            if (!Equals(CurrentWidget.Cursor, MouseCursor.Defer))
+            {
+                _cursorHandle ??= MouseCursorManager.PushCursor(CurrentWidget.Cursor);
+            }
+
+            CurrentWidget.OnEnter?.Invoke(@event);
         }
 
-        private void HandleExit()
+        private void HandleExit(PointerExitEvent @event)
         {
             _cursorHandle?.Dispose();
             _cursorHandle = null;
+            CurrentWidget.OnExit?.Invoke(@event);
         }
     }
 }
