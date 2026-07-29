@@ -28,6 +28,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Read First:
   - `src/Plumix.Material/ThemeData.cs`
   - `src/Plumix.Material/Theme.cs`
+  - `src/Plumix.Material/App.cs`
   - `src/Plumix.Material/PageTransitionsTheme.cs`
   - `src/Plumix.Material/AppBarTheme.cs`
   - `src/Plumix.Material/Scaffold.cs`
@@ -98,9 +99,10 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Animated grids enter through core `Widgets/AnimatedGrid.cs`; grid delegate layout, logical/physical index
   translation, incoming/outgoing animations, and keyed sliver remapping are covered by `AnimatedListTests.cs`.
 - Material tabs enter through `src/Plumix.Material/Tabs.cs` + `TabController.cs` + `TabPageSelector.cs` + `TabBarTheme.cs`; page motion lives in core `Widgets/PageView.cs`/`Rendering/PageView.cs`, indicator layout/paint in `RenderTabBar.cs`, and focused coverage in `MaterialTabsTests.cs`.
-- Application theme motion and Material page routing enter through `Theme.cs` + `ThemeData.cs` +
-  `PageTransitionsTheme.cs`; primary/secondary route ownership and delayed reverse disposal live in core
-  `Widgets/Navigation.cs`, with focused coverage in `MaterialThemeAnimationTests.cs` + `NavigationTests.cs`.
+- Application shells enter through core `Widgets/App.cs` + `Localizations.cs` and Material `App.cs`; theme motion
+  and Material page routing use `Theme.cs` + `ThemeData.cs` + `PageTransitionsTheme.cs`, while route ownership and
+  deep-link initial generation live in core `Widgets/Navigation.cs`. Focused coverage is in
+  `ApplicationWidgetsTests.cs`, `MaterialThemeAnimationTests.cs`, and `NavigationTests.cs`.
 - Material ink reactions enter through `src/Plumix.Material/InkWell.cs`; pluggable `InkSplash`/`InkRipple`/
   `InkSparkle`/`NoSplash` features and factories live in `src/Plumix.Material/InkFeatures.cs`; source-required gesture
   callbacks live in core `Widgets/Gestures.cs`, with focused coverage in `MaterialInkResponseTests.cs`.

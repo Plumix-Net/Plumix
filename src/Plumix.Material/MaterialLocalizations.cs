@@ -228,7 +228,8 @@ public abstract class MaterialLocalizations
 
     public static MaterialLocalizations Of(BuildContext context)
     {
-        return MaterialLocalizationsScope.Of(context);
+        return Localizations.MaybeOf<MaterialLocalizations>(context)
+               ?? MaterialLocalizationsScope.Of(context);
     }
 
     private static CultureInfo EnglishCulture { get; } = CultureInfo.GetCultureInfo("en-US");
@@ -241,6 +242,9 @@ public sealed class DefaultMaterialLocalizations : MaterialLocalizations
     }
 
     public static DefaultMaterialLocalizations Instance { get; } = new();
+
+    public static LocalizationsDelegate<MaterialLocalizations> Delegate { get; } =
+        new DefaultMaterialLocalizationsDelegate();
 
     public override string DeleteButtonTooltip => "Delete";
 
@@ -286,6 +290,18 @@ public sealed class DefaultMaterialLocalizations : MaterialLocalizations
 
         return $"Tab {tabIndex + 1} of {tabCount}";
     }
+}
+
+public sealed class DefaultMaterialLocalizationsDelegate : LocalizationsDelegate<MaterialLocalizations>
+{
+    public override bool IsSupported(Locale locale) => true;
+
+    public override MaterialLocalizations LoadTyped(Locale locale)
+    {
+        return DefaultMaterialLocalizations.Instance;
+    }
+
+    public override bool ShouldReload(LocalizationsDelegate oldDelegate) => false;
 }
 
 public sealed class MaterialLocalizationsScope : InheritedWidget

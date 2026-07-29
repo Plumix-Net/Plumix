@@ -360,11 +360,17 @@ Status: `in_progress`
 
 Kickoff note (2026-03-12):
 
+- Added the joint application shell: core `WidgetsApp`, locale/delegate resolution, default widget
+  localizations/directionality, named/deep-link initial-route generation, app title/builder/shortcut/action/tap-region
+  composition, and restoration-scope metadata; Material now provides `MaterialApp` with `MaterialPageRoute`,
+  `ScaffoldMessenger`, selection defaults, Material/Cupertino localizations, scroll behavior, and animated
+  system/light/dark/high-contrast theme policy. `WidgetHost` now forwards host brightness/contrast media changes,
+  and the C# sample boots through the same `MaterialApp` structure as Dart.
 - Added the shared Material-app motion foundation: core `TransitionRoute`/`PageRouteBuilder` now expose
   primary/secondary animations, forward/reverse durations, outgoing-route retention, transition compatibility, and
   hero-safe delayed disposal; Material now includes platform-selected `PageTransitionsTheme`, `MaterialPageRoute`,
-  `ThemeData.Lerp`, `ThemeDataTween`, and interruption-safe `AnimatedTheme`. This unblocks a direct `WidgetsApp`/
-  `MaterialApp` composition pass; snapshot/delegated/predictive-back specialization remains tracked separately.
+  `ThemeData.Lerp`, `ThemeDataTween`, and interruption-safe `AnimatedTheme`. The joint `WidgetsApp`/`MaterialApp`
+  pass now consumes this foundation; snapshot/delegated/predictive-back specialization remains tracked separately.
 - Closed Material `Badge` directional-alignment parity with public `AlignmentGeometry` widget/theme APIs, exact
   physical/logical/mixed LTR/RTL resolution, source `Clip.none` overlay and anti-aliased stadium/circle clipping,
   captured inherited `BadgeTheme`, `BadgeThemeData.copyWith`/lerp behavior, focused tests, and an expanded mirrored
@@ -465,7 +471,8 @@ Progress update (2026-03-19):
 - Added dedicated framework Material assembly: `src/Plumix.Material/Plumix.Material.csproj`.
 - Introduced initial theming primitives: `ThemeData`, `MaterialTextTheme`, and inherited `Theme`.
 - `Theme` now propagates baseline `TextTheme.BodyMedium` through `DefaultTextStyle`, enabling framework `Text` defaults without sample-only wrappers.
-- C# sample app root now uses `Theme(data: ThemeData.Light, child: ...)`; Dart sample root now sets explicit `MaterialApp` text-theme baseline (`bodyMedium` 14/1.43/0.25) for parity.
+- Both sample app roots now use `MaterialApp` with the same explicit text-theme baseline
+  (`bodyMedium` 14/1.43/0.25).
 - Added regression coverage for theme-to-text propagation in `src/Plumix.Tests/TextWidgetTests.cs`.
 - Added Material shell primitives: `Scaffold` and `AppBar` in `src/Plumix.Material` with baseline slot wiring (`body`, `appBar`, `floatingActionButton`, `bottomNavigationBar`, title/leading/actions).
 - C# sample gallery pages now use framework `Scaffold`/`AppBar` composition for menu/demo shells; Dart sample gallery mirrors the same structural shell usage.

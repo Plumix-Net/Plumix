@@ -11,6 +11,9 @@ namespace Plumix.Widgets;
 
 public sealed record RouteSettings(string? Name = null, object? Arguments = null);
 public delegate Route? RouteFactory(RouteSettings settings);
+public delegate IReadOnlyList<Route> NavigatorInitialRouteListFactory(
+    NavigatorState navigator,
+    string initialRouteName);
 public delegate bool RoutePredicate(Route route);
 public delegate Widget RoutePageBuilder(
     BuildContext context,
@@ -891,18 +894,22 @@ public sealed class Navigator : StatefulWidget
         RouteFactory onGenerateRoute,
         RouteData initialRouteData,
         IReadOnlyList<NavigatorObserver>? observers = null,
-        Key? key = null) : base(key)
+        Key? key = null,
+        RouteFactory? onUnknownRoute = null) : base(key)
     {
         OnGenerateRoute = onGenerateRoute ?? throw new ArgumentNullException(nameof(onGenerateRoute));
         InitialRouteData = initialRouteData ?? throw new ArgumentNullException(nameof(initialRouteData));
         Observers = observers ?? [];
+        OnUnknownRoute = onUnknownRoute;
     }
 
     public Navigator(
         RouteFactory onGenerateRoute,
         string initialRouteName = "/",
         IReadOnlyList<NavigatorObserver>? observers = null,
-        Key? key = null) : base(key)
+        Key? key = null,
+        NavigatorInitialRouteListFactory? onGenerateInitialRoutes = null,
+        RouteFactory? onUnknownRoute = null) : base(key)
     {
         if (string.IsNullOrWhiteSpace(initialRouteName))
         {
@@ -912,6 +919,8 @@ public sealed class Navigator : StatefulWidget
         OnGenerateRoute = onGenerateRoute ?? throw new ArgumentNullException(nameof(onGenerateRoute));
         InitialRouteName = initialRouteName;
         Observers = observers ?? [];
+        OnGenerateInitialRoutes = onGenerateInitialRoutes;
+        OnUnknownRoute = onUnknownRoute;
     }
 
     public Route? InitialRoute { get; }
@@ -921,6 +930,10 @@ public sealed class Navigator : StatefulWidget
     public RouteData? InitialRouteData { get; }
 
     public RouteFactory? OnGenerateRoute { get; }
+
+    public NavigatorInitialRouteListFactory? OnGenerateInitialRoutes { get; }
+
+    public RouteFactory? OnUnknownRoute { get; }
 
     public IReadOnlyList<NavigatorObserver> Observers { get; }
 
@@ -1774,10 +1787,17 @@ public sealed class NavigatorState : State
             return;
         }
 
-        var initialRoute = ResolveInitialRoute();
-        InstallRoute(initialRoute);
-        initialRoute.DidPush();
-        NotifyObserversPush(initialRoute, previousRoute: null);
+        IReadOnlyList<Route> initialRoutes = ResolveInitialRoutes();
+        Route? previousRoute = null;
+        foreach (Route initialRoute in initialRoutes)
+        {
+            InstallRoute(initialRoute);
+            previousRoute?.DidChangeNext(initialRoute);
+            initialRoute.DidChangePrevious(previousRoute);
+            initialRoute.DidPush();
+            NotifyObserversPush(initialRoute, previousRoute);
+            previousRoute = initialRoute;
+        }
     }
 
     private void PopCurrentRoute(object? result)
@@ -1938,16 +1958,16 @@ public sealed class NavigatorState : State
         NotifyObserversRemove(removedRoute, previousRoute);
     }
 
-    private Route ResolveInitialRoute()
+    private IReadOnlyList<Route> ResolveInitialRoutes()
     {
         if (CurrentWidget.InitialRoute != null)
         {
-            return CurrentWidget.InitialRoute;
+            return [CurrentWidget.InitialRoute];
         }
 
         if (CurrentWidget.InitialRouteData != null)
         {
-            return ResolveRouteData(CurrentWidget.InitialRouteData);
+            return [ResolveRouteData(CurrentWidget.InitialRouteData)];
         }
 
         string? routeName = CurrentWidget.InitialRouteName;
@@ -1956,7 +1976,56 @@ public sealed class NavigatorState : State
             throw new InvalidOperationException("Navigator requires either InitialRoute or InitialRouteName.");
         }
 
-        return ResolveRouteLocation(routeName, arguments: null);
+        if (CurrentWidget.OnGenerateInitialRoutes != null)
+        {
+            IReadOnlyList<Route> generated = CurrentWidget.OnGenerateInitialRoutes(this, routeName);
+            if (generated.Count == 0)
+            {
+                throw new InvalidOperationException("onGenerateInitialRoutes must return at least one route.");
+            }
+
+            return generated;
+        }
+
+        if (!routeName.StartsWith("/", StringComparison.Ordinal) || routeName == "/")
+        {
+            Route? directRoute = TryResolveGeneratedRoute(routeName, arguments: null);
+            return directRoute != null
+                ? [directRoute]
+                : [ResolveDefaultInitialRoute()];
+        }
+
+        var routeNames = new List<string> { "/" };
+        string[] segments = routeName.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        string currentPath = string.Empty;
+        foreach (string segment in segments)
+        {
+            currentPath += "/" + segment;
+            routeNames.Add(currentPath);
+        }
+
+        var routes = new List<Route>(routeNames.Count);
+        foreach (string candidateName in routeNames)
+        {
+            Route? candidate = TryResolveGeneratedRoute(candidateName, arguments: null);
+            if (candidate != null)
+            {
+                routes.Add(candidate);
+                continue;
+            }
+
+            if (string.Equals(candidateName, routeName, StringComparison.Ordinal))
+            {
+                foreach (Route generatedRoute in routes)
+                {
+                    generatedRoute.Dispose();
+                }
+
+                return [ResolveDefaultInitialRoute()];
+            }
+        }
+
+        return routes.Count > 0 ? routes : [ResolveDefaultInitialRoute()];
     }
 
     private Route ResolveNamedRoute(string routeName, object? arguments = null)
@@ -1966,21 +2035,28 @@ public sealed class NavigatorState : State
             throw new ArgumentException("routeName cannot be null or whitespace.", nameof(routeName));
         }
 
-        var routeFactory = CurrentWidget.OnGenerateRoute;
-        if (routeFactory == null)
-        {
-            throw new InvalidOperationException(
-                $"Navigator does not have onGenerateRoute. Cannot resolve route '{routeName}'.");
-        }
-
         var settings = new RouteSettings(Name: routeName, Arguments: arguments);
-        var route = routeFactory(settings);
+        Route? route = CurrentWidget.OnGenerateRoute?.Invoke(settings);
+        route ??= CurrentWidget.OnUnknownRoute?.Invoke(settings);
         if (route == null)
         {
-            throw new InvalidOperationException($"onGenerateRoute returned null for route '{routeName}'.");
+            throw new InvalidOperationException(
+                $"Neither onGenerateRoute nor onUnknownRoute generated route '{routeName}'.");
         }
 
         return route;
+    }
+
+    private Route ResolveDefaultInitialRoute()
+    {
+        Route? route = TryResolveGeneratedRoute("/", arguments: null);
+        return route ?? ResolveNamedRoute("/", arguments: null);
+    }
+
+    private Route? TryResolveGeneratedRoute(string routeName, object? arguments)
+    {
+        return CurrentWidget.OnGenerateRoute?.Invoke(
+            new RouteSettings(Name: routeName, Arguments: arguments));
     }
 
     private Route ResolveRouteData(RouteData routeData)

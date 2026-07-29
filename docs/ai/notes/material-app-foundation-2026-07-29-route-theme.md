@@ -83,7 +83,7 @@
 - [x] `docs/ai/TEST_MATRIX.md` updated
 - [x] `docs/MATERIAL_TODO.md` narrowed to the remaining work
 
-## Next Closure
+## Closure
 
-- Port `WidgetsApp` and `MaterialApp` together, using `MaterialPageRoute` as the default route factory and
-  `AnimatedTheme` for theme-mode changes.
+- Closed on 2026-07-29 by the joint `WidgetsApp` + `MaterialApp` port, using `MaterialPageRoute` as the default
+  route factory and `AnimatedTheme` for theme-mode changes.

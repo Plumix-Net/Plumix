@@ -4,7 +4,7 @@ Scope: structural parity of sample routes/modules between C# and Dart samples.
 
 Policy note: sample parity updates must follow `docs/ai/PORTING_MODE.md` (Dart source of truth, strict `1:1` default, documented divergences).
 
-Last checked: 2026-07-28
+Last checked: 2026-07-29
 
 Status legend:
 
@@ -16,7 +16,7 @@ Status legend:
 
 | Feature | C# sample | Dart sample | Status | Notes |
 | --- | --- | --- | --- | --- |
-| App bootstrap | `src/Sample/Plumix.Sample/CounterApp.cs` | `dart_sample/lib/counter_app.dart` | done | Counter model + scope app root present on both sides; C# root uses framework Material `Theme` + `ScaffoldMessenger`, while Dart `MaterialApp` provides the matching theme/messenger infrastructure. C# `ThemeData.Light` defaults are aligned to Flutter M3 token values for key sample surfaces/buttons and button typography. |
+| App bootstrap | `src/Sample/Plumix.Sample/CounterApp.cs` | `dart_sample/lib/counter_app.dart` | done | Both roots use `MaterialApp` with the same title, debug-banner policy, body text-theme baseline, counter scope, and gallery home. C# `MaterialApp` now owns the matching navigator, localization, theme, messenger, selection, and app-title infrastructure. |
 | Route constants + route data | `src/Sample/Plumix.Sample/SampleGalleryScreen.cs` | `dart_sample/lib/sample_routes.dart` | done | Same route set including navigator details, Material/Cupertino controls, navigation surfaces, banners, snackbars, dialogs, progress indicators, sliders, search controls, chips, and general rendering demos. |
 | Sample gallery menu | `src/Sample/Plumix.Sample/SampleGalleryScreen.cs` | `dart_sample/lib/sample_gallery_screen.dart` | done | Menu is now tab-structured on both sides through bottom navigation (`Material` / `Cupertino` / `General`) with the same demo-to-tab mapping and unchanged route set; menu and demo shells still use Material structure (`Scaffold` + `AppBar`), route entries remain outlined buttons, and demo pages now rely on default `AppBar` implied back leading (title-only app bars) on non-root routes. |
 | InkResponse + InkWell + Ink demo | `src/Sample/Plumix.Sample/Demos/Material/InkResponseDemoPage.cs` | `dart_sample/lib/demos/material/ink_response_demo_page.dart` | verify-runtime | Demonstrates `Ink` decoration beneath circle/uncontained and rectangle/contained reactions, selectable `InkRipple`/`InkSparkle`/`InkSplash`/`NoSplash` factories, enabled/disabled gestures, long press, hover/highlight callbacks, and custom `overlayColor` state resolution. |

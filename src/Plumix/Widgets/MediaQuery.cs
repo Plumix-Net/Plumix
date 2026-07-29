@@ -17,6 +17,12 @@ public enum NavigationMode
     Directional,
 }
 
+public enum PlatformBrightness
+{
+    Light,
+    Dark,
+}
+
 public sealed record MediaQueryData(
     Size Size = default,
     double DevicePixelRatio = 1.0,
@@ -29,7 +35,9 @@ public sealed record MediaQueryData(
     bool AlwaysUse24HourFormat = false,
     bool DisableAnimations = false,
     bool InvertColors = false,
-    NavigationMode NavigationMode = NavigationMode.Traditional)
+    NavigationMode NavigationMode = NavigationMode.Traditional,
+    PlatformBrightness PlatformBrightness = PlatformBrightness.Light,
+    bool HighContrast = false)
 {
     public Orientation Orientation => Size.Width > Size.Height
         ? Orientation.Landscape
@@ -47,7 +55,9 @@ public sealed record MediaQueryData(
         bool? alwaysUse24HourFormat = null,
         bool? disableAnimations = null,
         bool? invertColors = null,
-        NavigationMode? navigationMode = null)
+        NavigationMode? navigationMode = null,
+        PlatformBrightness? platformBrightness = null,
+        bool? highContrast = null)
     {
         return new MediaQueryData(
             Size: size ?? Size,
@@ -61,7 +71,9 @@ public sealed record MediaQueryData(
             AlwaysUse24HourFormat: alwaysUse24HourFormat ?? AlwaysUse24HourFormat,
             DisableAnimations: disableAnimations ?? DisableAnimations,
             InvertColors: invertColors ?? InvertColors,
-            NavigationMode: navigationMode ?? NavigationMode);
+            NavigationMode: navigationMode ?? NavigationMode,
+            PlatformBrightness: platformBrightness ?? PlatformBrightness,
+            HighContrast: highContrast ?? HighContrast);
     }
 
     public MediaQueryData RemovePadding(
@@ -218,6 +230,11 @@ public sealed class MediaQuery : InheritedWidget
     public static double WidthOf(BuildContext context) => SizeOf(context).Width;
 
     public static double HeightOf(BuildContext context) => SizeOf(context).Height;
+
+    public static PlatformBrightness PlatformBrightnessOf(BuildContext context) =>
+        Of(context).PlatformBrightness;
+
+    public static bool HighContrastOf(BuildContext context) => Of(context).HighContrast;
 
     public static double TextScaleFactorOf(BuildContext context) => Of(context).TextScaleFactor;
 

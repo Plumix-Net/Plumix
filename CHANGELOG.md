@@ -1,5 +1,11 @@
 # Changelog
 
+- Added the joint Flutter-structured `WidgetsApp` + `MaterialApp` app shell: named/deep-link initial routing,
+  localization and directionality resolution, title/builder/shortcut/action infrastructure, Material page routes,
+  messenger/selection defaults, animated system/light/dark/high-contrast themes, and Material/Cupertino default
+  localizations. The mirrored C# sample now boots through `MaterialApp`; added focused app-shell tests and advanced
+  `Plumix` to `0.16.0-alpha.1`, `Plumix.Material` to `0.10.0-alpha.1`, and `Plumix.Cupertino` to `0.2.0-alpha.1`.
+
 - Added the shared app-motion foundation: core `TransitionRoute`/`PageRouteBuilder` now own primary and secondary
   animations, reverse-exit retention, duration contracts, and hero-safe finalization; Material adds
   `PageTransitionsTheme`, `MaterialPageRoute`, `ThemeData.Lerp`, and interruptible `AnimatedTheme`. Added focused

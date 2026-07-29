@@ -2,7 +2,7 @@
 
 Widgets and subsystems from Flutter's Material library (`packages/flutter/lib/src/material`) that are **not yet ported** to `src/Plumix.Material`. Pick one, claim it, and submit a PR.
 
-Last verified against Flutter source and `src/Plumix.Material`: **2026-07-20**.
+Last verified against Flutter source and `src/Plumix.Material`: **2026-07-29**.
 
 ## How to claim and deliver
 
@@ -23,7 +23,6 @@ Size legend: **S** — one focused widget, few states. **M** — widget family o
 
 | Subsystem | Flutter source | Size | Notes |
 | --- | --- | --- | --- |
-| `MaterialApp` (+ core `WidgetsApp`) | `app.dart`, `widgets/app.dart` | L | Route-transition ownership, Material page builders, and animated-theme foundations now exist. The remaining pass must compose routing, title/directionality/localization/selection defaults, messenger, builder, and theme-mode policy end to end. |
 | `ColorScheme` + `Typography` | `color_scheme.dart`, `typography.dart`, `text_theme.dart` | L | `ThemeData` currently exposes flat color/text fields; migrating to token-based `ColorScheme`/`Typography` touches every ported control. Maintainer coordination required. |
 | Predictive-back + snapshot transition specialization | `page_transitions_theme.dart`, `predictive_back_page_transitions_builder.dart` | L | Core route hooks and live-widget Material/Cupertino builders now exist. Remaining work is snapshot/delegated-transition ownership, predictive-back progress, and host gesture plumbing. |
 | `ElevationOverlay` | `elevation_overlay.dart` | S | M2 overlay tinting utility; mostly used by already-ported surfaces. |

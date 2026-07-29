@@ -1,6 +1,4 @@
-using Avalonia.Media;
 using Plumix.Material;
-using Plumix.UI;
 using Plumix.Widgets;
 
 // Dart parity source (reference): dart_sample/lib/counter_app.dart (exact sample parity)
@@ -27,18 +25,18 @@ public sealed class CounterApp : StatefulWidget
 
         public override Widget Build(BuildContext context)
         {
-            return new Directionality(
-                TextDirection.Ltr,
-                new CounterScope(
+            return new MaterialApp(
+                debugShowCheckedModeBanner: false,
+                title: "Flutter.Net Sample",
+                theme: new ThemeData(
+                    textTheme: new MaterialTextTheme(
+                        bodyMedium: MaterialTextTheme.DefaultBodyMedium.CopyWith(
+                            fontSize: 14,
+                            height: 1.43,
+                            letterSpacing: 0.25))),
+                home: new CounterScope(
                     _model,
-                    new Title(
-                        title: "Flutter.Net Sample",
-                        color: ThemeData.Light.PrimaryColor,
-                        child: new Theme(
-                            data: ThemeData.Light,
-                            child: new TapRegionSurface(
-                                child: new ScaffoldMessenger(
-                                    child: new SampleGalleryScreen()))))));
+                    new SampleGalleryScreen()));
         }
     }
 }

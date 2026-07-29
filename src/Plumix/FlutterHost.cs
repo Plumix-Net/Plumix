@@ -5,6 +5,7 @@ using Avalonia.Input;
 using Avalonia.Input.Platform;
 using Avalonia.Input.TextInput;
 using Avalonia.Media;
+using Avalonia.Styling;
 using System.Reflection;
 using Plumix.Gestures;
 using Plumix.Rendering;
@@ -327,7 +328,9 @@ public class PlumixHost : Control
             DevicePixelRatio: scale,
             Padding: MediaQueryData.ComputePadding(viewPadding, viewInsets),
             ViewInsets: viewInsets,
-            ViewPadding: viewPadding);
+            ViewPadding: viewPadding,
+            PlatformBrightness: ResolvePlatformBrightness(),
+            HighContrast: ResolveHighContrast());
     }
 
     protected void ScheduleVisualUpdate()
@@ -443,6 +446,7 @@ public class PlumixHost : Control
         }
 
         ApplyApplicationSwitcherDescription();
+        _attachedTopLevel.ActualThemeVariantChanged += HandleActualThemeVariantChanged;
         _insetsManager = _attachedTopLevel.InsetsManager;
         if (_insetsManager != null)
         {
@@ -455,6 +459,7 @@ public class PlumixHost : Control
         {
             _inputPane.StateChanged += HandleInputPaneStateChanged;
         }
+
     }
 
     private void DetachMetricSources()
@@ -479,6 +484,11 @@ public class PlumixHost : Control
         if (_inputPane != null)
         {
             _inputPane.StateChanged -= HandleInputPaneStateChanged;
+        }
+
+        if (_attachedTopLevel != null)
+        {
+            _attachedTopLevel.ActualThemeVariantChanged -= HandleActualThemeVariantChanged;
         }
 
         _attachedTopLevel = null;
@@ -541,6 +551,24 @@ public class PlumixHost : Control
     private void HandleInputPaneStateChanged(object? sender, InputPaneStateEventArgs e)
     {
         OnMetricsChanged();
+    }
+
+    private void HandleActualThemeVariantChanged(object? sender, EventArgs e)
+    {
+        OnMetricsChanged();
+    }
+
+    private PlatformBrightness ResolvePlatformBrightness()
+    {
+        return _attachedTopLevel?.ActualThemeVariant == ThemeVariant.Dark
+            ? PlatformBrightness.Dark
+            : PlatformBrightness.Light;
+    }
+
+    private bool ResolveHighContrast()
+    {
+        string? themeKey = _attachedTopLevel?.ActualThemeVariant.Key.ToString();
+        return themeKey?.Contains("HighContrast", StringComparison.OrdinalIgnoreCase) == true;
     }
 
     private void AttachSystemUiOverlayStyleListener()
