@@ -259,8 +259,14 @@ public sealed class Material : StatefulWidget
                 _ => Colors.Transparent,
             };
             Color baseColor = material.Color ?? defaultColor;
-            Color tint = material.SurfaceTintColor ?? Colors.Transparent;
-            Color effectiveColor = MaterialSurface.ApplySurfaceTint(baseColor, tint, material.Elevation);
+            Color effectiveColor = material.Type == MaterialType.Transparency
+                ? Colors.Transparent
+                : theme.UseMaterial3
+                    ? ElevationOverlay.ApplySurfaceTint(
+                        baseColor,
+                        material.SurfaceTintColor,
+                        material.Elevation)
+                    : ElevationOverlay.ApplyOverlay(theme, baseColor, material.Elevation);
             return new MaterialVisual(
                 effectiveColor,
                 material.ShadowColor ?? theme.ShadowColor,
@@ -324,55 +330,12 @@ internal static class MaterialSurface
 
     public static Color ApplySurfaceTint(Color color, Color surfaceTint, double elevation)
     {
-        if (surfaceTint.A == 0 || elevation <= 0)
-        {
-            return color;
-        }
-
-        double opacity = ResolveSurfaceTintOpacityForElevation(elevation);
-        if (opacity <= 0)
-        {
-            return color;
-        }
-
-        byte overlayAlpha = (byte)Math.Clamp((int)(opacity * 255), 0, 255);
-        double quantizedOpacity = overlayAlpha / 255.0;
-        static byte Blend(byte from, byte to, double amount)
-        {
-            return (byte)Math.Clamp((int)(from + ((to - from) * amount)), 0, 255);
-        }
-
-        return Color.FromArgb(
-            color.A,
-            Blend(color.R, surfaceTint.R, quantizedOpacity),
-            Blend(color.G, surfaceTint.G, quantizedOpacity),
-            Blend(color.B, surfaceTint.B, quantizedOpacity));
+        return ElevationOverlay.ApplySurfaceTint(color, surfaceTint, elevation);
     }
 
     public static Color LerpColor(Color from, Color to, double t)
     {
         return new ColorTween().Evaluate(Math.Clamp(t, 0, 1), from, to);
-    }
-
-    private static double ResolveSurfaceTintOpacityForElevation(double elevation)
-    {
-        ReadOnlySpan<(double Elevation, double Opacity)> stops =
-        [
-            (0.0, 0.0), (1.0, 0.05), (3.0, 0.08), (6.0, 0.11),
-            (8.0, 0.12), (12.0, 0.14),
-        ];
-        for (int index = 1; index < stops.Length; index++)
-        {
-            if (elevation <= stops[index].Elevation)
-            {
-                var lower = stops[index - 1];
-                var upper = stops[index];
-                double progress = (elevation - lower.Elevation) / (upper.Elevation - lower.Elevation);
-                return lower.Opacity + ((upper.Opacity - lower.Opacity) * Math.Clamp(progress, 0, 1));
-            }
-        }
-
-        return stops[^1].Opacity;
     }
 
     private static Color ApplyOpacity(Color color, double multiplier)

@@ -2858,7 +2858,10 @@ internal sealed class MaterialButtonCore : StatefulWidget
 
                 if (surfaceTintColor.HasValue)
                 {
-                    background = ApplySurfaceTint(background.Value, surfaceTintColor.Value, elevation);
+                    background = ElevationOverlay.ApplySurfaceTint(
+                        background.Value,
+                        surfaceTintColor,
+                        elevation);
                 }
             }
 
@@ -2877,64 +2880,6 @@ internal sealed class MaterialButtonCore : StatefulWidget
             }
 
             return BlendColorOverlay(background.Value, overlay.Value);
-        }
-
-        private static Color ApplySurfaceTint(Color color, Color surfaceTint, double elevation)
-        {
-            if (surfaceTint.A == 0)
-            {
-                return color;
-            }
-
-            double opacity = ResolveSurfaceTintOpacityForElevation(elevation);
-            if (opacity <= 0)
-            {
-                return color;
-            }
-
-            var tintOverlay = Color.FromArgb(
-                (byte)Math.Clamp((int)(opacity * 255), 0, 255),
-                surfaceTint.R,
-                surfaceTint.G,
-                surfaceTint.B);
-
-            return BlendColorOverlay(color, tintOverlay);
-        }
-
-        private static double ResolveSurfaceTintOpacityForElevation(double elevation)
-        {
-            ReadOnlySpan<(double Elevation, double Opacity)> stops =
-            [
-                (0.0, 0.0),
-                (1.0, 0.05),
-                (3.0, 0.08),
-                (6.0, 0.11),
-                (8.0, 0.12),
-                (12.0, 0.14)
-            ];
-
-            if (elevation <= stops[0].Elevation)
-            {
-                return stops[0].Opacity;
-            }
-
-            for (int i = 1; i < stops.Length; i++)
-            {
-                var current = stops[i];
-                if (elevation == current.Elevation)
-                {
-                    return current.Opacity;
-                }
-
-                if (elevation < current.Elevation)
-                {
-                    var lower = stops[i - 1];
-                    double t = (elevation - lower.Elevation) / (current.Elevation - lower.Elevation);
-                    return lower.Opacity + (t * (current.Opacity - lower.Opacity));
-                }
-            }
-
-            return stops[^1].Opacity;
         }
 
         private static bool HasOverlayState(MaterialState states)

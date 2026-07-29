@@ -104,6 +104,31 @@ public sealed class MaterialBarControlsTests
     }
 
     [Fact]
+    public void BottomAppBar_M2DarkSurfaceUsesElevationOverlayPolicy()
+    {
+        Color surface = Color.Parse("#FF121212");
+        Color onSurface = Color.Parse("#FF69F0AE");
+        var theme = new ThemeData(
+            brightness: Brightness.Dark,
+            useMaterial3: false,
+            applyElevationOverlayColor: true,
+            surfaceColor: surface,
+            onSurfaceColor: onSurface);
+        using var harness = new WidgetRenderHarness(Wrap(
+            new BottomAppBar(
+                color: surface,
+                elevation: 8.0,
+                child: new SizedBox(height: 20)),
+            theme));
+
+        harness.Pump(new Size(320, 160));
+
+        var rendered = FindDescendant<RenderBottomAppBarSurface>(harness.RenderView);
+        Assert.NotNull(rendered);
+        Assert.Equal(ElevationOverlay.ColorWithOverlay(surface, onSurface, 8.0), rendered!.Color);
+    }
+
+    [Fact]
     public void BottomAppBar_SafeAreaAddsBottomInsetOutsideConfiguredHeight()
     {
         using var harness = new WidgetRenderHarness(Wrap(

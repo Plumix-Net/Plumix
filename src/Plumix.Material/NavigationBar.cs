@@ -580,16 +580,7 @@ internal static class NavigationSurfaceUtilities
 {
     public static Color ApplySurfaceTint(Color background, Color surfaceTint, double elevation)
     {
-        double opacity = elevation switch
-        {
-            <= 0 => 0,
-            <= 1 => 0.05,
-            <= 3 => 0.08,
-            <= 6 => 0.11,
-            <= 8 => 0.12,
-            _ => 0.14
-        };
-        return Blend(background, surfaceTint, opacity);
+        return ElevationOverlay.ApplySurfaceTint(background, surfaceTint, elevation);
     }
 
     public static BoxDecoration CreateDecoration(
@@ -599,18 +590,9 @@ internal static class NavigationSurfaceUtilities
         Color? surfaceTintColor,
         bool useMaterial3)
     {
-        if (useMaterial3 && surfaceTintColor.HasValue && surfaceTintColor.Value.A > 0 && elevation > 0)
+        if (useMaterial3)
         {
-            double opacity = elevation switch
-            {
-                <= 0 => 0,
-                <= 1 => 0.05,
-                <= 3 => 0.08,
-                <= 6 => 0.11,
-                <= 8 => 0.12,
-                _ => 0.14
-            };
-            background = Blend(background, surfaceTintColor.Value, opacity);
+            background = ElevationOverlay.ApplySurfaceTint(background, surfaceTintColor, elevation);
         }
 
         BoxShadows? shadows = null;

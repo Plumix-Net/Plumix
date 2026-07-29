@@ -174,7 +174,10 @@ public sealed class Card : StatelessWidget
         var effectiveColor = Color ?? cardTheme.Color ?? defaults.Color ?? theme.CardColor;
         if (effectiveSurfaceTint.HasValue)
         {
-            effectiveColor = ApplySurfaceTint(effectiveColor, effectiveSurfaceTint.Value, effectiveElevation);
+            effectiveColor = ElevationOverlay.ApplySurfaceTint(
+                effectiveColor,
+                effectiveSurfaceTint,
+                effectiveElevation);
         }
 
         Widget content = Child ?? new SizedBox();
@@ -316,79 +319,6 @@ public sealed class Card : StatelessWidget
         };
 
         return new BoxShadows(keyShadow, [ambientShadow]);
-    }
-
-    private static Color ApplySurfaceTint(Color color, Color surfaceTint, double elevation)
-    {
-        if (surfaceTint.A == 0 || elevation <= 0)
-        {
-            return color;
-        }
-
-        double opacity = ResolveSurfaceTintOpacityForElevation(elevation);
-        if (opacity <= 0)
-        {
-            return color;
-        }
-
-        var tintOverlay = Avalonia.Media.Color.FromArgb(
-            (byte)Math.Clamp((int)(opacity * 255), 0, 255),
-            surfaceTint.R,
-            surfaceTint.G,
-            surfaceTint.B);
-
-        return BlendColorOverlay(color, tintOverlay);
-    }
-
-    private static double ResolveSurfaceTintOpacityForElevation(double elevation)
-    {
-        ReadOnlySpan<(double Elevation, double Opacity)> stops =
-        [
-            (0.0, 0.0),
-            (1.0, 0.05),
-            (3.0, 0.08),
-            (6.0, 0.11),
-            (8.0, 0.12),
-            (12.0, 0.14)
-        ];
-
-        if (elevation <= stops[0].Elevation)
-        {
-            return stops[0].Opacity;
-        }
-
-        for (int i = 1; i < stops.Length; i++)
-        {
-            var current = stops[i];
-            if (Math.Abs(elevation - current.Elevation) < 0.0001)
-            {
-                return current.Opacity;
-            }
-
-            if (elevation < current.Elevation)
-            {
-                var lower = stops[i - 1];
-                double t = (elevation - lower.Elevation) / (current.Elevation - lower.Elevation);
-                return lower.Opacity + (t * (current.Opacity - lower.Opacity));
-            }
-        }
-
-        return stops[^1].Opacity;
-    }
-
-    private static Color BlendColorOverlay(Color baseColor, Color overlayColor)
-    {
-        static byte Blend(byte from, byte to, double t)
-        {
-            return (byte)Math.Clamp((int)(from + ((to - from) * t)), 0, 255);
-        }
-
-        double clampedOpacity = Math.Clamp(overlayColor.A / 255.0, 0, 1);
-        return Avalonia.Media.Color.FromArgb(
-            baseColor.A,
-            Blend(baseColor.R, overlayColor.R, clampedOpacity),
-            Blend(baseColor.G, overlayColor.G, clampedOpacity),
-            Blend(baseColor.B, overlayColor.B, clampedOpacity));
     }
 
     private static Color ApplyOpacity(Color color, double opacityMultiplier)

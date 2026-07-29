@@ -28,6 +28,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Read First:
   - `src/Plumix.Material/ThemeData.cs`
   - `src/Plumix.Material/Theme.cs`
+  - `src/Plumix.Material/ElevationOverlay.cs`
   - `src/Plumix.Material/App.cs`
   - `src/Plumix.Material/PageTransitionsTheme.cs`
   - `src/Plumix.Material/AppBarTheme.cs`
@@ -103,6 +104,9 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   and Material page routing use `Theme.cs` + `ThemeData.cs` + `PageTransitionsTheme.cs`, while route ownership and
   deep-link initial generation live in core `Widgets/Navigation.cs`. Focused coverage is in
   `ApplicationWidgetsTests.cs`, `MaterialThemeAnimationTests.cs`, and `NavigationTests.cs`.
+- Material elevation color treatment enters through `ElevationOverlay.cs`; `Material.cs` consumes its M2/M3 policy,
+  while component surface helpers share its tint interpolation. Focused coverage is in
+  `MaterialElevationOverlayTests.cs`.
 - Material ink reactions enter through `src/Plumix.Material/InkWell.cs`; pluggable `InkSplash`/`InkRipple`/
   `InkSparkle`/`NoSplash` features and factories live in `src/Plumix.Material/InkFeatures.cs`; source-required gesture
   callbacks live in core `Widgets/Gestures.cs`, with focused coverage in `MaterialInkResponseTests.cs`.

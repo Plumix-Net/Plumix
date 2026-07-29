@@ -575,10 +575,13 @@ public sealed record ThemeData
         MenuThemeData? menuTheme = null,
         TextSelectionThemeData? textSelectionTheme = null,
         InteractiveInkFeatureFactory? splashFactory = null,
-        PageTransitionsTheme? pageTransitionsTheme = null)
+        PageTransitionsTheme? pageTransitionsTheme = null,
+        bool? applyElevationOverlayColor = null)
     {
         Platform = platform ?? ResolveDefaultPlatform();
         Brightness = brightness ?? Brightness.Light;
+        ApplyElevationOverlayColor = applyElevationOverlayColor
+                                     ?? ((useMaterial3 ?? true) && Brightness == Brightness.Dark);
         TextTheme = textTheme ?? MaterialTextTheme.Fallback;
         ScaffoldBackgroundColor = scaffoldBackgroundColor ?? LightScaffoldAndCanvasColor;
         CanvasColor = canvasColor ?? LightScaffoldAndCanvasColor;
@@ -687,6 +690,8 @@ public sealed record ThemeData
     public TargetPlatform Platform { get; init; }
 
     public Brightness Brightness { get; init; }
+
+    public bool ApplyElevationOverlayColor { get; init; }
 
     public MaterialTextTheme TextTheme { get; init; }
 

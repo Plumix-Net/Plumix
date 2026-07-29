@@ -360,6 +360,9 @@ Status: `in_progress`
 
 Kickoff note (2026-03-12):
 
+- Added Flutter-structured `ElevationOverlay`: exact M3 surface-tint opacity table with between-level interpolation,
+  M2 logarithmic dark-surface overlays, `ThemeData.applyElevationOverlayColor` policy, and shared use by Material,
+  card, button, navigation, dialog, sheet, menu, search, and app-bar surface paths.
 - Added the joint application shell: core `WidgetsApp`, locale/delegate resolution, default widget
   localizations/directionality, named/deep-link initial-route generation, app title/builder/shortcut/action/tap-region
   composition, and restoration-scope metadata; Material now provides `MaterialApp` with `MaterialPageRoute`,

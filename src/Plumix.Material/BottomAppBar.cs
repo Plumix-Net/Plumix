@@ -106,7 +106,7 @@ internal sealed class BottomAppBarState : State
         }
         else if (!useMaterial3 && theme.Brightness == Brightness.Dark && elevation > 0)
         {
-            color = NavigationSurfaceUtilities.ApplySurfaceTint(color, theme.PrimaryColor, elevation);
+            color = ElevationOverlay.ApplyOverlay(theme, color, elevation);
         }
 
         Widget child = new SizedBox(
