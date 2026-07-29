@@ -12,6 +12,7 @@ class _CardDemoPageState extends State<CardDemoPage> {
   bool _useThemeOverrides = false;
   bool _clip = false;
   bool _dense = false;
+  bool _borderOnForeground = true;
 
   @override
   Widget build(BuildContext context) {
@@ -84,6 +85,13 @@ class _CardDemoPageState extends State<CardDemoPage> {
                 background: const Color(0xFFF8EFE2),
               ),
               _buildControlButton(
+                label: _borderOnForeground ? 'Border front' : 'Border back',
+                onTap: () =>
+                    setState(() => _borderOnForeground = !_borderOnForeground),
+                width: 118,
+                background: const Color(0xFFE8F5E9),
+              ),
+              _buildControlButton(
                 label: 'Reset',
                 onTap: _resetState,
                 width: 88,
@@ -92,7 +100,9 @@ class _CardDemoPageState extends State<CardDemoPage> {
             ],
           ),
           Text(
-            'useMaterial3=$_useMaterial3, theme=$_useThemeOverrides, clip=$_clip, dense=$_dense',
+            'useMaterial3=$_useMaterial3, theme=$_useThemeOverrides, '
+            'clip=$_clip, dense=$_dense, '
+            'borderOnForeground=$_borderOnForeground',
             style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
           ),
           Expanded(
@@ -146,6 +156,7 @@ class _CardDemoPageState extends State<CardDemoPage> {
   Widget _buildOutlinedCard() {
     return Card.outlined(
       clipBehavior: _clip ? Clip.antiAlias : null,
+      borderOnForeground: _borderOnForeground,
       child: _buildCardBody(
         title: 'Outlined card',
         body:
@@ -257,6 +268,7 @@ class _CardDemoPageState extends State<CardDemoPage> {
       _useThemeOverrides = false;
       _clip = false;
       _dense = false;
+      _borderOnForeground = true;
     });
   }
 }

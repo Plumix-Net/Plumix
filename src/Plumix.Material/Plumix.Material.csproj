@@ -1,36 +1,36 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
 
-  <PropertyGroup>
-    <IsPackable>true</IsPackable>
-    <PackageId>Plumix.Material</PackageId>
-        <Version>0.20.0-alpha.1</Version>
-    <Description>Material Design 3 component library for Plumix — a Flutter-inspired UI framework for .NET. Includes buttons, app bars, navigation, dialogs, and full Material theming.</Description>
-  </PropertyGroup>
+    <PropertyGroup>
+        <IsPackable>true</IsPackable>
+        <PackageId>Plumix.Material</PackageId>
+        <Version>0.1.0-alpha.12</Version>
+        <Description>Material Design 3 component library for Plumix — a Flutter-inspired UI framework for .NET. Includes buttons, app bars, navigation, dialogs, and full Material theming.</Description>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="MaterialTheming" />
-    <ProjectReference Include="..\Plumix.Cupertino\Plumix.Cupertino.csproj" />
-    <ProjectReference Include="..\Plumix\Plumix.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="MaterialTheming" />
+        <ProjectReference Include="..\Plumix.Cupertino\Plumix.Cupertino.csproj" />
+        <ProjectReference Include="..\Plumix\Plumix.csproj" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <InternalsVisibleTo Include="Plumix.Tests" />
-  </ItemGroup>
+    <ItemGroup>
+        <InternalsVisibleTo Include="Plumix.Tests" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
-    <None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
-    <None Include="..\..\icon.png" Pack="true" PackagePath="\" />
-  </ItemGroup>
+    <ItemGroup>
+        <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+        <None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
+        <None Include="..\..\icon.png" Pack="true" PackagePath="\" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <AvaloniaResource Include="Assets\**" />
-  </ItemGroup>
+    <ItemGroup>
+        <AvaloniaResource Include="Assets\**" />
+    </ItemGroup>
 
 </Project>

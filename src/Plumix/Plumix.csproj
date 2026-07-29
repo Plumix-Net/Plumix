@@ -9,7 +9,7 @@
     <PropertyGroup>
         <IsPackable>true</IsPackable>
         <PackageId>Plumix</PackageId>
-        <Version>0.16.0-alpha.1</Version>
+        <Version>0.1.0-alpha.12</Version>
         <Description>A Flutter-inspired declarative UI framework for .NET, built on Avalonia. Provides the widget/element/render-object architecture, state management, and cross-platform rendering.</Description>
     </PropertyGroup>
 
@@ -28,7 +28,7 @@
         <InternalsVisibleTo Include="Plumix.Material" />
         <InternalsVisibleTo Include="Plumix.Cupertino" />
     </ItemGroup>
-    
+
     <ItemGroup>
         <Compile Update="Widgets\Framework.Widget.cs">
             <DependentUpon>Framework.cs</DependentUpon>
@@ -49,7 +49,7 @@
             <DependentUpon>Flex.cs</DependentUpon>
         </Compile>
         <Compile Update="Rendering\Object.PaintingContext.cs">
-          <DependentUpon>Object.cs</DependentUpon>
+            <DependentUpon>Object.cs</DependentUpon>
         </Compile>
     </ItemGroup>
 

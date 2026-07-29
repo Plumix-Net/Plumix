@@ -1,34 +1,34 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+    </PropertyGroup>
 
-  <PropertyGroup>
-    <IsPackable>true</IsPackable>
-    <PackageId>Plumix.Elmish</PackageId>
-    <Version>0.1.0-alpha.11</Version>
-    <Description>Elmish (MVU) integration for Plumix — a Flutter-inspired UI framework for .NET. Hosts an Elmish program inside a widget and lets Plumix's element reconciliation do the diffing: Elmish without a virtual DOM.</Description>
-  </PropertyGroup>
+    <PropertyGroup>
+        <IsPackable>true</IsPackable>
+        <PackageId>Plumix.Elmish</PackageId>
+        <Version>0.1.0-alpha.12</Version>
+        <Description>Elmish (MVU) integration for Plumix — a Flutter-inspired UI framework for .NET. Hosts an Elmish program inside a widget and lets Plumix's element reconciliation do the diffing: Elmish without a virtual DOM.</Description>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <Compile Include="ElmishWidget.fs" />
-  </ItemGroup>
+    <ItemGroup>
+        <Compile Include="ElmishWidget.fs" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <!-- Explicit because central package management disables the SDK's implicit reference -->
-    <PackageReference Include="FSharp.Core" />
-    <PackageReference Include="Elmish" />
-  </ItemGroup>
+    <ItemGroup>
+        <!-- Explicit because central package management disables the SDK's implicit reference -->
+        <PackageReference Include="FSharp.Core" />
+        <PackageReference Include="Elmish" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Plumix\Plumix.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\Plumix\Plumix.csproj" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
-    <None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
-    <None Include="..\..\icon.png" Pack="true" PackagePath="\" />
-  </ItemGroup>
+    <ItemGroup>
+        <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+        <None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
+        <None Include="..\..\icon.png" Pack="true" PackagePath="\" />
+    </ItemGroup>
 
 </Project>
