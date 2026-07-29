@@ -661,6 +661,115 @@ public sealed class TransitionsTests : IDisposable
         Assert.Equal(0, second.ListenerCount);
     }
 
+    [Fact]
+    public void DecorationTween_UsesDecorationPolymorphicLerpAndSupportsNullableEndpoints()
+    {
+        var begin = new BoxDecoration(
+            Color: Color.Parse("#FF102030"),
+            Border: new BorderSide(Color.Parse("#FF203040"), 2),
+            BorderRadius: BorderRadius.Circular(4));
+        var end = new BoxDecoration(
+            Color: Color.Parse("#FF90A0B0"),
+            Border: new BorderSide(Color.Parse("#FFA0B0C0"), 6),
+            BorderRadius: BorderRadius.Circular(20));
+        var tween = new DecorationTween(begin, end);
+
+        Assert.Same(begin, tween.Begin);
+        Assert.Same(end, tween.End);
+
+        var midpoint = Assert.IsType<BoxDecoration>(tween.Evaluate(0.5));
+        Assert.Equal(Color.Parse("#FF506070"), midpoint.Color);
+        Assert.Equal(4, midpoint.Border!.Value.Width);
+        Assert.Equal(12, midpoint.BorderRadius!.Value.Radius);
+
+        tween.Begin = null;
+        var scaled = Assert.IsType<BoxDecoration>(tween.Evaluate(0.5));
+        Assert.Equal(0x7F, scaled.Color!.Value.A);
+        Assert.Equal(3, scaled.Border!.Value.Width);
+
+        tween.End = null;
+        Assert.Throws<InvalidOperationException>(() => tween.Evaluate(0.5));
+    }
+
+    [Fact]
+    public void DecoratedBoxTransition_ExposesDefaultsRebuildsAndRebindsAnimation()
+    {
+        var firstDecoration = new BoxDecoration(Color: Color.Parse("#FF123456"));
+        var secondDecoration = new BoxDecoration(Color: Color.Parse("#FFABCDEF"));
+        var replacementDecoration = new BoxDecoration(Color: Color.Parse("#FF654321"));
+        var first = new TestValueAnimation<Decoration>(
+            firstDecoration,
+            AnimationStatus.Forward);
+        var second = new TestValueAnimation<Decoration>(
+            replacementDecoration,
+            AnimationStatus.Reverse);
+        var child = new SizedBox(width: 40, height: 20);
+        var transition = new DecoratedBoxTransition(first, child);
+
+        Assert.Same(first, transition.Decoration);
+        Assert.Same(first, transition.Listenable);
+        Assert.Equal(DecorationPosition.Background, transition.Position);
+        Assert.Same(child, transition.Child);
+        Assert.Throws<ArgumentNullException>(() => new DecoratedBoxTransition(null!, child));
+        Assert.Throws<ArgumentNullException>(() => new DecoratedBoxTransition(first, null!));
+
+        var owner = new BuildOwner();
+        var root = new TestRootElement(new DecoratedBoxTransition(
+            decoration: first,
+            position: DecorationPosition.Foreground,
+            child: child));
+        Mount(root, owner);
+
+        var render = Assert.IsType<RenderDecoratedBox>(root.ChildElement!.RenderObject);
+        Assert.Same(firstDecoration, render.DecorationValue);
+        Assert.Equal(DecorationPosition.Foreground, render.Position);
+        Assert.Equal(1, first.ListenerCount);
+
+        first.Set(secondDecoration, AnimationStatus.Completed);
+        owner.FlushBuild();
+        render = Assert.IsType<RenderDecoratedBox>(root.ChildElement.RenderObject);
+        Assert.Same(secondDecoration, render.DecorationValue);
+
+        root.Update(new DecoratedBoxTransition(
+            decoration: second,
+            position: DecorationPosition.Background,
+            child: child));
+        owner.FlushBuild();
+
+        render = Assert.IsType<RenderDecoratedBox>(root.ChildElement.RenderObject);
+        Assert.Same(replacementDecoration, render.DecorationValue);
+        Assert.Equal(DecorationPosition.Background, render.Position);
+        Assert.Equal(0, first.ListenerCount);
+        Assert.Equal(1, second.ListenerCount);
+
+        root.Unmount();
+        Assert.Equal(0, second.ListenerCount);
+    }
+
+    [Fact]
+    public void AnimatableAnimate_ForwardsParentLifecycleAndEvaluatesTween()
+    {
+        var parent = new TestAnimation(0.25, AnimationStatus.Forward);
+        var tween = new DecorationTween(
+            begin: new BoxDecoration(Color: Color.Parse("#FF000000")),
+            end: new BoxDecoration(Color: Color.Parse("#FFFFFFFF")));
+        Animation<Decoration> animation = tween.Animate(parent);
+        int valueChanges = 0;
+        AnimationStatus? status = null;
+        animation.AddListener(() => valueChanges++);
+        animation.AddStatusListener(value => status = value);
+
+        Assert.Equal(AnimationStatus.Forward, animation.Status);
+        Assert.Equal(Color.Parse("#FF3F3F3F"), Assert.IsType<BoxDecoration>(animation.Value).Color);
+        Assert.Equal(1, parent.ListenerCount);
+
+        parent.Set(0.75, AnimationStatus.Reverse);
+
+        Assert.Equal(1, valueChanges);
+        Assert.Equal(AnimationStatus.Reverse, status);
+        Assert.Equal(Color.Parse("#FFBFBFBF"), Assert.IsType<BoxDecoration>(animation.Value).Color);
+    }
+
     private static void Mount(TestRootElement root, BuildOwner owner)
     {
         root.Attach(owner);

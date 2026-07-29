@@ -39,6 +39,7 @@ class _AlignDemoPageState extends State<AlignDemoPage>
   late final Animation<Rect?> _explicitRelativePositionAnimation;
   late final Animation<AlignmentGeometry> _explicitAlignmentAnimation;
   late final Animation<TextStyle> _explicitTextStyleAnimation;
+  late final Animation<Decoration> _explicitDecorationAnimation;
 
   @override
   void initState() {
@@ -77,6 +78,18 @@ class _AlignDemoPageState extends State<AlignDemoPage>
         color: Color(0xFF9C4F63),
         fontWeight: FontWeight.bold,
         letterSpacing: 1.5,
+      ),
+    ).animate(_explicitTransitionsController);
+    _explicitDecorationAnimation = DecorationTween(
+      begin: BoxDecoration(
+        color: const Color(0xFF315A7D),
+        border: Border.all(color: const Color(0xFF9EC5E5), width: 2),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      end: BoxDecoration(
+        color: const Color(0xFF9C4F63),
+        border: Border.all(color: const Color(0xFFF4B6C2), width: 6),
+        borderRadius: BorderRadius.circular(24),
       ),
     ).animate(_explicitTransitionsController);
   }
@@ -339,6 +352,35 @@ class _AlignDemoPageState extends State<AlignDemoPage>
                           'explicit',
                           style: TextStyle(fontSize: 13, color: Colors.white),
                         ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const Text(
+              'DecoratedBoxTransition',
+              style: TextStyle(fontSize: 20, color: Colors.black),
+            ),
+            const Text(
+              'Interpolate fill, border width/color, and radius through DecorationTween.',
+              style: TextStyle(fontSize: 14, color: Colors.black54),
+            ),
+            Container(
+              width: 220,
+              height: 100,
+              color: const Color(0xFFF3F5F8),
+              child: Center(
+                child: DecoratedBoxTransition(
+                  decoration: _explicitDecorationAnimation,
+                  position: DecorationPosition.foreground,
+                  child: const SizedBox(
+                    width: 112,
+                    height: 56,
+                    child: Center(
+                      child: Text(
+                        'decoration',
+                        style: TextStyle(fontSize: 13, color: Colors.white),
                       ),
                     ),
                   ),

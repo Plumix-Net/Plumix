@@ -8,7 +8,7 @@ Use this block as the fastest machine-readable status summary.
 
 ```yaml
 framework_plan_version: 1
-last_updated: 2026-07-28
+last_updated: 2026-07-29
 north_star: "Flutter-like widget/rendering framework in C# with Avalonia as host infrastructure."
 current_phase: "M4 material library rewrite (theme/scaffold/material controls) in progress."
 status:
@@ -146,6 +146,10 @@ Completion note:
 - Continued explicit-transition parity with paired `AlignTransition` + `DefaultTextStyleTransition` ports, including
   source-shaped animated-listenable lifecycle, `AlignmentGeometry`/ambient-direction resolution, shrink factors,
   inherited animated typography, immediate text-layout options, focused tests, and mirrored C#/Dart runtime probes.
+- Continued explicit-transition parity with `DecoratedBoxTransition` + `DecorationTween`, including source-shaped
+  `AnimatedWidget` listener ownership, polymorphic and nullable-endpoint decoration interpolation, generic
+  background/foreground decoration painting, `Animatable.animate` lifecycle forwarding, focused tests, and a
+  mirrored C#/Dart runtime probe.
 - Continued builder-control parity with paired `ValueListenableBuilder<T>` + `TweenAnimationBuilder<T>` ports,
   including source-shaped listener replacement/disposal, stable-child fast paths, first-tween ownership, ignored
   replacement `begin` values, interrupted-target continuity, curve/duration updates, `onEnd`, focused tests, and

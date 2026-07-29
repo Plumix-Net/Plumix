@@ -1,5 +1,10 @@
 # Changelog
 
+- Added Flutter core `DecoratedBoxTransition` + `DecorationTween` parity with polymorphic/null-endpoint decoration
+  interpolation, generic `DecoratedBox` paint ownership, source-shaped `Animatable.animate` lifecycle forwarding,
+  foreground/background composition, focused tests, and a mirrored C#/Dart runtime probe. Advanced `Plumix` to
+  `0.11.0-alpha.1`.
+
 - Breaking: added paired Material `AppBarTheme` + `DrawerController` parity with inherited local app-bar precedence,
   `copyWith`/lerp contracts, standalone start/end drawer open/close and drag/fling behavior, safe-area edge activation,
   animated scrims, focus/history/back handling, semantics, and Scaffold drawer scopes. Expanded `Drawer` theme,

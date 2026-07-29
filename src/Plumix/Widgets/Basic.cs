@@ -398,16 +398,16 @@ public sealed class ColoredBox : SingleChildRenderObjectWidget
 public sealed class DecoratedBox : SingleChildRenderObjectWidget
 {
     public DecoratedBox(
-        BoxDecoration decoration,
+        Decoration decoration,
         Widget? child = null,
         Key? key = null,
         DecorationPosition position = DecorationPosition.Background) : base(child, key)
     {
-        Decoration = decoration ?? new BoxDecoration();
+        Decoration = decoration ?? throw new ArgumentNullException(nameof(decoration));
         Position = position;
     }
 
-    public BoxDecoration Decoration { get; }
+    public Decoration Decoration { get; }
     public DecorationPosition Position { get; }
 
     internal override RenderObject CreateRenderObject(BuildContext context)
@@ -421,7 +421,7 @@ public sealed class DecoratedBox : SingleChildRenderObjectWidget
     internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var decoratedBox = (RenderDecoratedBox)renderObject;
-        decoratedBox.Decoration = Decoration;
+        decoratedBox.DecorationValue = Decoration;
         decoratedBox.Position = Position;
         decoratedBox.Configuration = CreateImageConfiguration(context);
     }

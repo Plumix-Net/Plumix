@@ -8,6 +8,46 @@ namespace Plumix.Widgets;
 
 // Dart parity source: flutter/packages/flutter/lib/src/widgets/implicit_animations.dart
 
+public sealed class DecorationTween : Tween<Decoration>
+{
+    private sealed record NullDecoration : Decoration
+    {
+        public override BoxPainter CreateBoxPainter(Action? onChanged = null)
+        {
+            throw new InvalidOperationException("The null decoration sentinel cannot be painted.");
+        }
+    }
+
+    private static readonly Decoration BeginNull = new NullDecoration();
+    private static readonly Decoration EndNull = new NullDecoration();
+
+    public DecorationTween(Decoration? begin = null, Decoration? end = null)
+    {
+        Begin = begin;
+        End = end;
+    }
+
+    public new Decoration? Begin
+    {
+        get => ReferenceEquals(GetBeginValue(), BeginNull) ? null : GetBeginValue();
+        set => SetBeginValue(value ?? BeginNull);
+    }
+
+    public new Decoration? End
+    {
+        get => ReferenceEquals(GetEndValue(), EndNull) ? null : GetEndValue();
+        set => SetEndValue(value ?? EndNull);
+    }
+
+    public override Decoration Lerp(Decoration a, Decoration b, double t)
+    {
+        Decoration? begin = ReferenceEquals(a, BeginNull) ? null : a;
+        Decoration? end = ReferenceEquals(b, EndNull) ? null : b;
+        return Decoration.Lerp(begin, end, t)
+               ?? throw new InvalidOperationException("DecorationTween cannot interpolate two null decorations.");
+    }
+}
+
 public sealed class AnimatedOpacity : StatefulWidget
 {
     public AnimatedOpacity(

@@ -49,6 +49,7 @@ internal sealed class AlignDemoPageState : State
     private Animation<Rect?> _explicitRelativePositionAnimation = null!;
     private Animation<AlignmentGeometry> _explicitAlignmentAnimation = null!;
     private Animation<TextStyle> _explicitTextStyleAnimation = null!;
+    private Animation<Decoration> _explicitDecorationAnimation = null!;
 
     public override void InitState()
     {
@@ -88,6 +89,15 @@ internal sealed class AlignDemoPageState : State
         _explicitTextStyleAnimation = new DerivedAnimation<TextStyle>(
             _explicitTransitionsController,
             value => TextStyle.Lerp(textStyleBegin, textStyleEnd, value));
+        _explicitDecorationAnimation = new DecorationTween(
+            begin: new BoxDecoration(
+                Color: Color.Parse("#FF315A7D"),
+                Border: new BorderSide(Color.Parse("#FF9EC5E5"), 2),
+                BorderRadius: BorderRadius.Circular(4)),
+            end: new BoxDecoration(
+                Color: Color.Parse("#FF9C4F63"),
+                Border: new BorderSide(Color.Parse("#FFF4B6C2"), 6),
+                BorderRadius: BorderRadius.Circular(24))).Animate(_explicitTransitionsController);
     }
 
     public override void Dispose()
@@ -291,6 +301,27 @@ internal sealed class AlignDemoPageState : State
                                     color: Color.Parse("#FF356A82"),
                                     child: new Center(
                                         child: new Text("explicit", fontSize: 13, color: Colors.White))))))),
+                new Text("DecoratedBoxTransition", fontSize: 20, color: Colors.Black),
+                new Text(
+                    "Interpolate fill, border width/color, and radius through DecorationTween.",
+                    fontSize: 14,
+                    color: Colors.DimGray),
+                new Container(
+                    width: 220,
+                    height: 100,
+                    color: Color.Parse("#FFF3F5F8"),
+                    child: new Center(
+                        child: new DecoratedBoxTransition(
+                            decoration: _explicitDecorationAnimation,
+                            position: DecorationPosition.Foreground,
+                            child: new SizedBox(
+                                width: 112,
+                                height: 56,
+                                child: new Center(
+                                    child: new Text(
+                                        "decoration",
+                                        fontSize: 13,
+                                        color: Colors.White)))))),
                 new Text("SlideTransition + SizeTransition", fontSize: 20, color: Colors.Black),
                 new Text(
                     "Move in reading direction and reveal clipped size from the bottom-right alignment.",

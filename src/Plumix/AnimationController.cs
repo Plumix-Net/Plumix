@@ -75,6 +75,43 @@ public static class Curves
 public abstract class Animatable<T>
 {
     public abstract T Transform(double t);
+
+    public Animation<T> Animate(Animation<double> parent)
+    {
+        return new AnimatedEvaluation<T>(
+            parent ?? throw new ArgumentNullException(nameof(parent)),
+            this);
+    }
+}
+
+internal sealed class AnimatedEvaluation<T> : Animation<T>
+{
+    private readonly Animation<double> _parent;
+    private readonly Animatable<T> _evaluatable;
+
+    public AnimatedEvaluation(Animation<double> parent, Animatable<T> evaluatable)
+    {
+        _parent = parent;
+        _evaluatable = evaluatable;
+    }
+
+    public override T Value => _evaluatable.Transform(_parent.Value);
+
+    public override AnimationStatus Status => _parent.Status;
+
+    public override void AddListener(Action listener) => _parent.AddListener(listener);
+
+    public override void RemoveListener(Action listener) => _parent.RemoveListener(listener);
+
+    public override void AddStatusListener(Action<AnimationStatus> listener)
+    {
+        _parent.AddStatusListener(listener);
+    }
+
+    public override void RemoveStatusListener(Action<AnimationStatus> listener)
+    {
+        _parent.RemoveStatusListener(listener);
+    }
 }
 
 public abstract class Tween<T> : Animatable<T>

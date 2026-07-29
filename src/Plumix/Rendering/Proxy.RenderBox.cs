@@ -1769,18 +1769,18 @@ public sealed class RenderColoredBox : RenderProxyBox
 
 public sealed class RenderDecoratedBox : RenderProxyBox
 {
-    private BoxDecoration _decoration;
+    private Decoration _decoration;
     private DecorationPosition _position;
     private ImageConfiguration _configuration;
     private BoxPainter? _painter;
 
     public RenderDecoratedBox(
-        BoxDecoration decoration,
+        Decoration decoration,
         RenderBox? child = null,
         ImageConfiguration? configuration = null,
         DecorationPosition position = DecorationPosition.Background)
     {
-        _decoration = decoration ?? new BoxDecoration();
+        _decoration = decoration ?? throw new ArgumentNullException(nameof(decoration));
         _position = position;
         _configuration = configuration ?? ImageConfiguration.Empty;
         Child = child;
@@ -1799,10 +1799,17 @@ public sealed class RenderDecoratedBox : RenderProxyBox
 
     public BoxDecoration Decoration
     {
+        get => _decoration as BoxDecoration
+               ?? throw new InvalidOperationException("The current decoration is not a BoxDecoration.");
+        set => DecorationValue = value;
+    }
+
+    public Decoration DecorationValue
+    {
         get => _decoration;
         set
         {
-            var next = value ?? new BoxDecoration();
+            Decoration next = value ?? throw new ArgumentNullException(nameof(value));
             if (_decoration == next)
             {
                 return;

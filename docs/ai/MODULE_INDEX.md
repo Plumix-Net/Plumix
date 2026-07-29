@@ -209,6 +209,8 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/Animation.cs`
   - `src/Plumix/AnimationController.cs`
   - `src/Plumix/Widgets/Transitions.cs`
+  - `src/Plumix/Rendering/Decoration.cs`
+  - `src/Plumix/Widgets/Basic.cs`
   - `src/Plumix/Widgets/AnimatedSwitcher.cs`
   - `src/Plumix/Widgets/AnimatedSize.cs`
   - `src/Plumix/Widgets/ImplicitAnimations.cs`

@@ -161,6 +161,36 @@ public sealed class FadeTransition : AnimatedWidget
     }
 }
 
+public sealed class DecoratedBoxTransition : AnimatedWidget
+{
+    public DecoratedBoxTransition(
+        Animation<Decoration> decoration,
+        Widget child,
+        DecorationPosition position = DecorationPosition.Background,
+        Key? key = null) : base(
+            decoration ?? throw new ArgumentNullException(nameof(decoration)),
+            key)
+    {
+        Decoration = decoration;
+        Position = position;
+        Child = child ?? throw new ArgumentNullException(nameof(child));
+    }
+
+    public Animation<Decoration> Decoration { get; }
+
+    public DecorationPosition Position { get; }
+
+    public Widget Child { get; }
+
+    public override Widget Build(BuildContext context)
+    {
+        return new DecoratedBox(
+            decoration: Decoration.Value,
+            position: Position,
+            child: Child);
+    }
+}
+
 public delegate Matrix TransformCallback(double animationValue);
 
 public class MatrixTransition : AnimatedWidget

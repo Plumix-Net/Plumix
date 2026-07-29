@@ -27,6 +27,50 @@ public enum BorderStyle
 public abstract record Decoration
 {
     public abstract BoxPainter CreateBoxPainter(Action? onChanged = null);
+
+    public virtual Decoration? LerpFrom(Decoration? a, double t)
+    {
+        return null;
+    }
+
+    public virtual Decoration? LerpTo(Decoration? b, double t)
+    {
+        return null;
+    }
+
+    public static Decoration? Lerp(Decoration? a, Decoration? b, double t)
+    {
+        if (ReferenceEquals(a, b) || Equals(a, b))
+        {
+            return a;
+        }
+
+        if (a is null)
+        {
+            return b!.LerpFrom(null, t) ?? b;
+        }
+
+        if (b is null)
+        {
+            return a.LerpTo(null, t) ?? a;
+        }
+
+        if (t == 0.0)
+        {
+            return a;
+        }
+
+        if (t == 1.0)
+        {
+            return b;
+        }
+
+        return b.LerpFrom(a, t)
+               ?? a.LerpTo(b, t)
+               ?? (t < 0.5
+                   ? a.LerpTo(null, t * 2.0) ?? a
+                   : b.LerpFrom(null, (t - 0.5) * 2.0) ?? b);
+    }
 }
 
 // Dart parity source: flutter/packages/flutter/lib/src/painting/decoration.dart
@@ -121,14 +165,27 @@ public sealed record BoxDecoration(
         return new BoxDecorationPainter(this, onChanged);
     }
 
+    public override Decoration? LerpFrom(Decoration? a, double t)
+    {
+        return a is null or BoxDecoration
+            ? Lerp(a as BoxDecoration, this, t)
+            : base.LerpFrom(a, t);
+    }
+
+    public override Decoration? LerpTo(Decoration? b, double t)
+    {
+        return b is null or BoxDecoration
+            ? Lerp(this, b as BoxDecoration, t)
+            : base.LerpTo(b, t);
+    }
+
     public static BoxDecoration? Lerp(BoxDecoration? a, BoxDecoration? b, double t)
     {
-        t = Math.Clamp(t, 0, 1);
         if (ReferenceEquals(a, b) || Equals(a, b)) return a;
         if (a is null) return b?.Scale(t);
         if (b is null) return a.Scale(1 - t);
-        if (t <= 0) return a;
-        if (t >= 1) return b;
+        if (t == 0) return a;
+        if (t == 1) return b;
 
         return new BoxDecoration(
             Color: LerpColor(a.Color, b.Color, t),
@@ -155,7 +212,16 @@ public sealed record BoxDecoration(
         if (!a.HasValue && !b.HasValue) return null;
         var from = a ?? Avalonia.Media.Color.FromArgb(0, b!.Value.R, b.Value.G, b.Value.B);
         var to = b ?? Avalonia.Media.Color.FromArgb(0, a!.Value.R, a.Value.G, a.Value.B);
-        return new ColorTween().Evaluate(t, from, to);
+        return Avalonia.Media.Color.FromArgb(
+            LerpChannel(from.A, to.A, t),
+            LerpChannel(from.R, to.R, t),
+            LerpChannel(from.G, to.G, t),
+            LerpChannel(from.B, to.B, t));
+    }
+
+    private static byte LerpChannel(byte a, byte b, double t)
+    {
+        return (byte)Math.Clamp((int)(a + ((b - a) * t)), byte.MinValue, byte.MaxValue);
     }
 
     private static BorderSide? LerpBorder(BorderSide? a, BorderSide? b, double t)
