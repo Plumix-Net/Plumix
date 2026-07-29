@@ -1134,6 +1134,102 @@ public sealed class NavigationTests
         Assert.Equal("payload", capturedRouteData.Arguments);
     }
 
+    [Fact]
+    public void PageRouteBuilder_DrivesPrimaryAndSecondaryAnimations_AndDefersPopDisposal()
+    {
+        Scheduler.ResetForTests();
+        var owner = new BuildOwner();
+        NavigatorState? navigatorState = null;
+        Animation<double>? rootSecondaryAnimation = null;
+        Animation<double>? detailsAnimation = null;
+
+        var initialRoute = new PageRouteBuilder(
+            pageBuilder: (context, _, secondaryAnimation) =>
+            {
+                navigatorState ??= Navigator.Of(context);
+                rootSecondaryAnimation = secondaryAnimation;
+                return new SizedBox(width: 1, height: 1);
+            },
+            transitionDuration: TimeSpan.Zero,
+            reverseTransitionDuration: TimeSpan.Zero,
+            settings: new RouteSettings(Name: "root"));
+        var detailsRoute = new PageRouteBuilder(
+            pageBuilder: (_, animation, _) =>
+            {
+                detailsAnimation = animation;
+                return new SizedBox(width: 1, height: 1);
+            },
+            transitionsBuilder: (_, animation, secondaryAnimation, child) =>
+            {
+                Assert.Same(detailsAnimation, animation);
+                Assert.NotNull(secondaryAnimation);
+                return child;
+            },
+            transitionDuration: TimeSpan.FromMilliseconds(200),
+            reverseTransitionDuration: TimeSpan.FromMilliseconds(100),
+            settings: new RouteSettings(Name: "details"));
+
+        var root = new TestRootElement(new Navigator(initialRoute));
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        navigatorState!.Push(detailsRoute);
+        owner.FlushBuild();
+
+        Assert.NotNull(detailsAnimation);
+        Assert.Equal(AnimationStatus.Forward, detailsAnimation!.Status);
+        Assert.Equal(detailsAnimation.Value, rootSecondaryAnimation!.Value, precision: 6);
+
+        double now = Scheduler.CurrentSeconds;
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.1));
+        owner.FlushBuild();
+        Assert.InRange(detailsAnimation.Value, 0.01, 0.99);
+        Assert.Equal(detailsAnimation.Value, rootSecondaryAnimation.Value, precision: 6);
+
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.3));
+        owner.FlushBuild();
+        Assert.Equal(AnimationStatus.Completed, detailsAnimation.Status);
+
+        navigatorState.Pop();
+        owner.FlushBuild();
+        Assert.Same(initialRoute, navigatorState.CurrentRoute);
+        Assert.Equal(AnimationStatus.Reverse, detailsAnimation.Status);
+        Assert.Equal(detailsAnimation.Value, rootSecondaryAnimation.Value, precision: 6);
+
+        double reverseNow = Scheduler.CurrentSeconds;
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(reverseNow + 0.05));
+        owner.FlushBuild();
+        Assert.InRange(detailsAnimation.Value, 0.01, 0.99);
+
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(reverseNow + 0.2));
+        owner.FlushBuild();
+        Assert.Equal(AnimationStatus.Dismissed, rootSecondaryAnimation.Status);
+        Assert.Throws<InvalidOperationException>(() => _ = detailsRoute.Animation);
+
+        root.Unmount();
+        Scheduler.ResetForTests();
+    }
+
+    [Fact]
+    public void PageRouteBuilder_ExposesFlutterDefaultsAndValidatesDurations()
+    {
+        var route = new PageRouteBuilder(
+            pageBuilder: (_, _, _) => new SizedBox());
+
+        Assert.Equal(TimeSpan.FromMilliseconds(300), route.TransitionDuration);
+        Assert.Equal(TimeSpan.FromMilliseconds(300), route.ReverseTransitionDuration);
+        Assert.True(route.Opaque);
+        Assert.True(route.AllowSnapshotting);
+        Assert.False(route.FullscreenDialog);
+        Assert.Throws<ArgumentOutOfRangeException>(() => new PageRouteBuilder(
+            pageBuilder: (_, _, _) => new SizedBox(),
+            transitionDuration: TimeSpan.FromMilliseconds(-1)));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new PageRouteBuilder(
+            pageBuilder: (_, _, _) => new SizedBox(),
+            reverseTransitionDuration: TimeSpan.FromMilliseconds(-1)));
+    }
+
     private static Route BuildRoute(
         string name,
         Action<string> onBuild,

@@ -728,7 +728,7 @@ public sealed class DialogRoute<T> : PageRoute
     public bool BarrierDismissible { get; }
     public string BarrierLabel { get; }
     public bool UseSafeArea { get; }
-    public TimeSpan TransitionDuration { get; }
+    public new TimeSpan TransitionDuration { get; }
     public Task<T?> Completed => _completed.Task;
 
     protected override void OnAttach()

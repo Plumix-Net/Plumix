@@ -360,6 +360,11 @@ Status: `in_progress`
 
 Kickoff note (2026-03-12):
 
+- Added the shared Material-app motion foundation: core `TransitionRoute`/`PageRouteBuilder` now expose
+  primary/secondary animations, forward/reverse durations, outgoing-route retention, transition compatibility, and
+  hero-safe delayed disposal; Material now includes platform-selected `PageTransitionsTheme`, `MaterialPageRoute`,
+  `ThemeData.Lerp`, `ThemeDataTween`, and interruption-safe `AnimatedTheme`. This unblocks a direct `WidgetsApp`/
+  `MaterialApp` composition pass; snapshot/delegated/predictive-back specialization remains tracked separately.
 - Closed Material `Badge` directional-alignment parity with public `AlignmentGeometry` widget/theme APIs, exact
   physical/logical/mixed LTR/RTL resolution, source `Clip.none` overlay and anti-aliased stadium/circle clipping,
   captured inherited `BadgeTheme`, `BadgeThemeData.copyWith`/lerp behavior, focused tests, and an expanded mirrored

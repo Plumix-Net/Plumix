@@ -377,7 +377,7 @@ public sealed class ModalBottomSheetRoute<T> : PageRoute
     public bool UseSafeArea { get; }
     public string BarrierLabel { get; }
     public Task<T?> Completed => _completed.Task;
-    internal AnimationController Animation => _animation;
+    internal new AnimationController Animation => _animation;
 
     protected override void OnAttach()
     {

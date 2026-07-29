@@ -1,5 +1,10 @@
 # Changelog
 
+- Added the shared app-motion foundation: core `TransitionRoute`/`PageRouteBuilder` now own primary and secondary
+  animations, reverse-exit retention, duration contracts, and hero-safe finalization; Material adds
+  `PageTransitionsTheme`, `MaterialPageRoute`, `ThemeData.Lerp`, and interruptible `AnimatedTheme`. Added focused
+  navigation/theme tests and advanced `Plumix` to `0.15.0-alpha.1` and `Plumix.Material` to `0.9.0-alpha.1`.
+
 - Breaking: completed Material `Badge` directional-alignment parity by widening widget/theme alignment to
   `AlignmentGeometry`, resolving physical/logical/mixed alignment in the render object for LTR/RTL, restoring
   source `Clip.none` overlay and anti-aliased badge clipping, and adding inherited-theme capture plus

@@ -12,6 +12,15 @@ namespace Plumix.Widgets;
 public sealed record RouteSettings(string? Name = null, object? Arguments = null);
 public delegate Route? RouteFactory(RouteSettings settings);
 public delegate bool RoutePredicate(Route route);
+public delegate Widget RoutePageBuilder(
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation);
+public delegate Widget RouteTransitionsBuilder(
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child);
 
 public enum RoutePopDisposition
 {
@@ -211,13 +220,23 @@ public abstract class Route
     internal void Attach(NavigatorState navigator)
     {
         Navigator = navigator;
+        Install();
         OnAttach();
     }
 
     internal void Detach()
     {
         OnDetach();
+        Uninstall();
         Navigator = null;
+    }
+
+    protected virtual void Install()
+    {
+    }
+
+    protected virtual void Uninstall()
+    {
     }
 
     protected virtual void OnAttach()
@@ -347,7 +366,169 @@ public abstract class Route
     public abstract Widget BuildPage(BuildContext context);
 }
 
-public abstract class ModalRoute : Route
+public abstract class TransitionRoute : Route
+{
+    private static readonly Animation<double> AlwaysDismissedAnimation =
+        new ConstantAnimation<double>(0.0, AnimationStatus.Dismissed);
+    private readonly ProxyAnimation _secondaryAnimation = new(AlwaysDismissedAnimation);
+    private AnimationController? _controller;
+    private bool _isPopped;
+
+    protected TransitionRoute(RouteSettings? settings = null) : base(settings)
+    {
+    }
+
+    public virtual TimeSpan TransitionDuration => TimeSpan.Zero;
+
+    public virtual TimeSpan ReverseTransitionDuration => TransitionDuration;
+
+    public virtual bool AllowSnapshotting => true;
+
+    public Animation<double> Animation => _controller
+        ?? throw new InvalidOperationException("The route animation is unavailable before the route is installed.");
+
+    public Animation<double> SecondaryAnimation => _secondaryAnimation;
+
+    protected AnimationController Controller => _controller
+        ?? throw new InvalidOperationException("The route controller is unavailable before the route is installed.");
+
+    internal bool IsTransitionDismissed => _controller?.Status == AnimationStatus.Dismissed;
+
+    internal bool EffectiveOpaque => Opaque && _controller?.Status == AnimationStatus.Completed;
+
+    protected override void Install()
+    {
+        ValidateDuration(TransitionDuration, nameof(TransitionDuration));
+        ValidateDuration(ReverseTransitionDuration, nameof(ReverseTransitionDuration));
+        _isPopped = false;
+        _controller = CreateAnimationController();
+        _controller.Changed += HandleAnimationChanged;
+        _controller.AddStatusListener(HandleStatusChanged);
+        base.Install();
+    }
+
+    protected override void Uninstall()
+    {
+        if (_controller is not null)
+        {
+            _controller.Changed -= HandleAnimationChanged;
+            _controller.RemoveStatusListener(HandleStatusChanged);
+            _controller.Dispose();
+            _controller = null;
+        }
+
+        _secondaryAnimation.Parent = AlwaysDismissedAnimation;
+        base.Uninstall();
+    }
+
+    protected virtual AnimationController CreateAnimationController()
+    {
+        return new AnimationController(NormalizeDuration(TransitionDuration))
+        {
+            ReverseDuration = NormalizeDuration(ReverseTransitionDuration),
+        };
+    }
+
+    public virtual bool CanTransitionTo(TransitionRoute nextRoute) => true;
+
+    public virtual bool CanTransitionFrom(TransitionRoute previousRoute) => true;
+
+    public virtual Widget BuildTransitions(
+        BuildContext context,
+        Animation<double> animation,
+        Animation<double> secondaryAnimation,
+        Widget child)
+    {
+        return child;
+    }
+
+    public override void DidPush()
+    {
+        base.DidPush();
+        _isPopped = false;
+        if (TransitionDuration == TimeSpan.Zero)
+        {
+            Controller.SetValue(1.0);
+            return;
+        }
+
+        Controller.Duration = TransitionDuration;
+        Controller.Forward(from: 0.0);
+    }
+
+    public override void DidPop(Route? previousRoute)
+    {
+        _isPopped = true;
+        if (ReverseTransitionDuration == TimeSpan.Zero)
+        {
+            Controller.Stop();
+            Controller.SetValue(0.0);
+        }
+        else
+        {
+            Controller.ReverseDuration = ReverseTransitionDuration;
+            Controller.Reverse();
+        }
+
+        base.DidPop(previousRoute);
+    }
+
+    public override void DidPopNext(Route nextRoute)
+    {
+        UpdateSecondaryAnimation(nextRoute);
+        base.DidPopNext(nextRoute);
+    }
+
+    public override void DidChangeNext(Route? nextRoute)
+    {
+        UpdateSecondaryAnimation(nextRoute);
+        base.DidChangeNext(nextRoute);
+    }
+
+    public override void Dispose()
+    {
+        _secondaryAnimation.Parent = AlwaysDismissedAnimation;
+        base.Dispose();
+    }
+
+    private void UpdateSecondaryAnimation(Route? nextRoute)
+    {
+        _secondaryAnimation.Parent = nextRoute is TransitionRoute transitionRoute
+                                     && CanTransitionTo(transitionRoute)
+                                     && transitionRoute.CanTransitionFrom(this)
+            ? transitionRoute.Animation
+            : AlwaysDismissedAnimation;
+    }
+
+    private void HandleAnimationChanged()
+    {
+        NotifyRouteChanged();
+    }
+
+    private void HandleStatusChanged(AnimationStatus status)
+    {
+        NotifyRouteChanged();
+        if (status == AnimationStatus.Dismissed && _isPopped)
+        {
+            Navigator?.FinalizeTransitionRoute(this);
+        }
+    }
+
+    private static TimeSpan NormalizeDuration(TimeSpan duration)
+    {
+        return duration == TimeSpan.Zero ? TimeSpan.FromMilliseconds(1) : duration;
+    }
+
+    private static void ValidateDuration(TimeSpan duration, string propertyName)
+    {
+        if (duration < TimeSpan.Zero)
+        {
+            throw new InvalidOperationException($"{propertyName} cannot be negative.");
+        }
+    }
+}
+
+public abstract class ModalRoute : TransitionRoute
 {
     private readonly PageStorageBucket _storageBucket = new();
     private readonly List<PopEntry> _popEntries = [];
@@ -442,6 +623,8 @@ public abstract class PageRoute : ModalRoute
     }
 
     public bool FullscreenDialog { get; }
+
+    public override TimeSpan TransitionDuration => TimeSpan.Zero;
 }
 
 public sealed class BuilderPageRoute : PageRoute
@@ -459,6 +642,74 @@ public sealed class BuilderPageRoute : PageRoute
     public override Widget BuildPage(BuildContext context)
     {
         return _builder(context);
+    }
+}
+
+public sealed class PageRouteBuilder : PageRoute
+{
+    public PageRouteBuilder(
+        RoutePageBuilder pageBuilder,
+        RouteTransitionsBuilder? transitionsBuilder = null,
+        TimeSpan? transitionDuration = null,
+        TimeSpan? reverseTransitionDuration = null,
+        bool opaque = true,
+        bool fullscreenDialog = false,
+        bool allowSnapshotting = true,
+        RouteSettings? settings = null) : base(settings, fullscreenDialog)
+    {
+        TimeSpan effectiveTransitionDuration = transitionDuration ?? TimeSpan.FromMilliseconds(300);
+        TimeSpan effectiveReverseTransitionDuration =
+            reverseTransitionDuration ?? TimeSpan.FromMilliseconds(300);
+        if (effectiveTransitionDuration < TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(transitionDuration));
+        }
+        if (effectiveReverseTransitionDuration < TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(reverseTransitionDuration));
+        }
+
+        PageBuilder = pageBuilder ?? throw new ArgumentNullException(nameof(pageBuilder));
+        TransitionsBuilder = transitionsBuilder ?? DefaultTransitionsBuilder;
+        TransitionDuration = effectiveTransitionDuration;
+        ReverseTransitionDuration = effectiveReverseTransitionDuration;
+        Opaque = opaque;
+        AllowSnapshotting = allowSnapshotting;
+    }
+
+    public RoutePageBuilder PageBuilder { get; }
+
+    public RouteTransitionsBuilder TransitionsBuilder { get; }
+
+    public override TimeSpan TransitionDuration { get; }
+
+    public override TimeSpan ReverseTransitionDuration { get; }
+
+    public override bool Opaque { get; }
+
+    public override bool AllowSnapshotting { get; }
+
+    public override Widget BuildPage(BuildContext context)
+    {
+        return PageBuilder(context, Animation, SecondaryAnimation);
+    }
+
+    public override Widget BuildTransitions(
+        BuildContext context,
+        Animation<double> animation,
+        Animation<double> secondaryAnimation,
+        Widget child)
+    {
+        return TransitionsBuilder(context, animation, secondaryAnimation, child);
+    }
+
+    private static Widget DefaultTransitionsBuilder(
+        BuildContext context,
+        Animation<double> animation,
+        Animation<double> secondaryAnimation,
+        Widget child)
+    {
+        return child;
     }
 }
 
@@ -814,6 +1065,10 @@ public sealed class NavigatorState : State
 {
     private const double HeroTransitionDurationMilliseconds = 300;
     private readonly List<Route> _history = [];
+    private readonly List<Route> _exitingRoutes = [];
+    private readonly Dictionary<Route, Route?> _exitingPreviousRoutes = [];
+    private readonly HashSet<Route> _heroDeferredRoutes = [];
+    private readonly HashSet<Route> _routesBeingPopped = [];
     private readonly List<NavigatorObserver> _observers = [];
     private readonly Func<bool> _backButtonHandler;
     private readonly HeroTransitionController _heroTransitionController = new();
@@ -885,13 +1140,17 @@ public sealed class NavigatorState : State
         _heroFlightController.Dismissed -= HandleHeroFlightCompleted;
         _heroFlightController.Dispose();
 
-        foreach (var route in _history.ToArray())
+        foreach (var route in _history.Concat(_exitingRoutes).Distinct().ToArray())
         {
             route.Dispose();
             route.Detach();
         }
 
         _history.Clear();
+        _exitingRoutes.Clear();
+        _exitingPreviousRoutes.Clear();
+        _heroDeferredRoutes.Clear();
+        _routesBeingPopped.Clear();
         foreach (var observer in _observers)
         {
             if (ReferenceEquals(observer.Navigator, this))
@@ -936,6 +1195,11 @@ public sealed class NavigatorState : State
         }
     }
 
+    internal void FinalizeTransitionRoute(TransitionRoute route)
+    {
+        TryFinalizePoppedRoute(route);
+    }
+
     internal bool IsFirst(Route route)
     {
         return _history.Count > 0 && ReferenceEquals(_history[0], route);
@@ -943,14 +1207,28 @@ public sealed class NavigatorState : State
 
     private IReadOnlyList<Route> VisibleRoutes()
     {
-        if (_history.Count == 0) return [];
-        int firstVisible = _history.Count - 1;
-        while (firstVisible > 0 && !_history[firstVisible].Opaque)
+        var routes = new List<Route>(_history.Count + _exitingRoutes.Count);
+        routes.AddRange(_history);
+        routes.AddRange(_exitingRoutes);
+        if (routes.Count == 0)
+        {
+            return routes;
+        }
+
+        int firstVisible = routes.Count - 1;
+        while (firstVisible > 0 && !IsEffectivelyOpaque(routes[firstVisible]))
         {
             firstVisible--;
         }
 
-        return _history.Skip(firstVisible).ToArray();
+        return routes.Skip(firstVisible).ToArray();
+    }
+
+    private static bool IsEffectivelyOpaque(Route route)
+    {
+        return route is TransitionRoute transitionRoute
+            ? transitionRoute.EffectiveOpaque
+            : route.Opaque;
     }
 
     private ActiveRouteHost BuildRouteHost(Route route)
@@ -1229,6 +1507,7 @@ public sealed class NavigatorState : State
             var previousRoute = _history.Count > 1 ? _history[^2] : null;
             _history[^1] = newRoute;
             InstallRoute(newRoute);
+            previousRoute?.DidPopNext(oldRoute);
             previousRoute?.DidChangeNext(newRoute);
             newRoute.DidChangePrevious(previousRoute);
             newRoute.DidPush();
@@ -1237,7 +1516,6 @@ public sealed class NavigatorState : State
             oldRoute.DidComplete(result);
             oldRoute.Dispose();
             oldRoute.Detach();
-            previousRoute?.DidPopNext(oldRoute);
             NotifyObserversReplace(newRoute, oldRoute);
             _ = result;
         });
@@ -1485,8 +1763,8 @@ public sealed class NavigatorState : State
             return;
         }
 
-        session.FromRoute.Dispose();
-        session.FromRoute.Detach();
+        _heroDeferredRoutes.Remove(session.FromRoute);
+        TryFinalizePoppedRoute(session.FromRoute);
     }
 
     private void PushInitialRoute()
@@ -1512,16 +1790,29 @@ public sealed class NavigatorState : State
         var route = _history[^1];
         _history.RemoveAt(_history.Count - 1);
         var previousRoute = CurrentRoute;
+        bool shouldAnimateHero = previousRoute != null && _heroTransitionController.HasHeroes(route);
+        _exitingRoutes.Add(route);
+        _exitingPreviousRoutes[route] = previousRoute;
+        if (shouldAnimateHero)
+        {
+            _heroDeferredRoutes.Add(route);
+        }
 
-        route.DidPop(previousRoute);
-        route.DidComplete(result);
-        route.OnPopInvokedWithResult(didPop: true, result);
-        previousRoute?.DidPopNext(route);
-        previousRoute?.DidChangeNext(nextRoute: null);
+        _routesBeingPopped.Add(route);
+        try
+        {
+            previousRoute?.DidPopNext(route);
+            route.DidPop(previousRoute);
+            route.DidComplete(result);
+            route.OnPopInvokedWithResult(didPop: true, result);
+        }
+        finally
+        {
+            _routesBeingPopped.Remove(route);
+        }
 
         NotifyObserversPop(route, previousRoute);
 
-        bool shouldAnimateHero = previousRoute != null && _heroTransitionController.HasHeroes(route);
         if (shouldAnimateHero)
         {
             TryStartHeroTransition(
@@ -1534,8 +1825,33 @@ public sealed class NavigatorState : State
         }
 
         CancelHeroTransition(disposeDetachedRoute: true);
+        TryFinalizePoppedRoute(route);
+    }
+
+    private void TryFinalizePoppedRoute(Route route)
+    {
+        if (!_exitingRoutes.Contains(route)
+            || _heroDeferredRoutes.Contains(route)
+            || _routesBeingPopped.Contains(route))
+        {
+            return;
+        }
+
+        if (route is TransitionRoute transitionRoute && !transitionRoute.IsTransitionDismissed)
+        {
+            return;
+        }
+
+        Route? previousRoute = _exitingPreviousRoutes.GetValueOrDefault(route);
+        _exitingRoutes.Remove(route);
+        _exitingPreviousRoutes.Remove(route);
         route.Dispose();
         route.Detach();
+        previousRoute?.DidChangeNext(nextRoute: null);
+        if (Element.IsActive)
+        {
+            SetState(() => { });
+        }
     }
 
     private void ScheduleNavigationNotification(bool canHandlePop)
@@ -1609,17 +1925,16 @@ public sealed class NavigatorState : State
         var removedRoute = _history[index];
         _history.RemoveAt(index);
 
+        if (wasTopRoute)
+        {
+            previousRoute?.DidPopNext(removedRoute);
+        }
         removedRoute.DidComplete(result);
         removedRoute.Dispose();
         removedRoute.Detach();
 
         previousRoute?.DidChangeNext(nextRoute);
         nextRoute?.DidChangePrevious(previousRoute);
-        if (wasTopRoute)
-        {
-            previousRoute?.DidPopNext(removedRoute);
-        }
-
         NotifyObserversRemove(removedRoute, previousRoute);
     }
 
@@ -1903,8 +2218,15 @@ internal sealed class RoutePageHost : StatelessWidget
     public override Widget Build(BuildContext context)
     {
         Widget page = _route.BuildPage(context);
-        return _route is ModalRoute modalRoute
+        page = _route is ModalRoute modalRoute
             ? new PageStorage(modalRoute.StorageBucket, page)
+            : page;
+        return _route is TransitionRoute transitionRoute
+            ? transitionRoute.BuildTransitions(
+                context,
+                transitionRoute.Animation,
+                transitionRoute.SecondaryAnimation,
+                page)
             : page;
     }
 }

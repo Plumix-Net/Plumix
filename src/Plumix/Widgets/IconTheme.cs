@@ -19,6 +19,20 @@ public sealed record IconThemeData(
         return new IconThemeData(color ?? Color, size ?? Size, opacity ?? Opacity);
     }
 
+    public static IconThemeData Lerp(IconThemeData? a, IconThemeData? b, double t)
+    {
+        if (ReferenceEquals(a, b) && a is not null)
+        {
+            return a;
+        }
+
+        double clampedT = Math.Clamp(t, 0.0, 1.0);
+        return new IconThemeData(
+            Color: LerpColor(a?.Color, b?.Color, clampedT),
+            Size: LerpDouble(a?.Size, b?.Size, clampedT),
+            Opacity: LerpDouble(a?.Opacity, b?.Opacity, clampedT));
+    }
+
     public void Deconstruct(out Color? color, out double? size)
     {
         color = Color;
@@ -26,6 +40,30 @@ public sealed record IconThemeData(
     }
 
     internal static IconThemeData Fallback { get; } = new();
+
+    private static double? LerpDouble(double? a, double? b, double t)
+    {
+        if (!a.HasValue && !b.HasValue)
+        {
+            return null;
+        }
+
+        double from = a ?? b!.Value;
+        double to = b ?? a!.Value;
+        return from + ((to - from) * t);
+    }
+
+    private static Color? LerpColor(Color? a, Color? b, double t)
+    {
+        if (!a.HasValue && !b.HasValue)
+        {
+            return null;
+        }
+
+        Color from = a ?? Avalonia.Media.Color.FromArgb(0, b!.Value.R, b.Value.G, b.Value.B);
+        Color to = b ?? Avalonia.Media.Color.FromArgb(0, a!.Value.R, a.Value.G, a.Value.B);
+        return new ColorTween().Evaluate(t, from, to);
+    }
 }
 
 public sealed class IconTheme : InheritedTheme

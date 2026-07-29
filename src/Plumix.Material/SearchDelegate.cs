@@ -253,7 +253,7 @@ internal sealed class SearchPageRoute<T> : PageRoute
 
     public bool MaintainState { get; }
 
-    public AnimationController Animation { get; }
+    public new AnimationController Animation { get; }
 
     public Task<T?> Completed => _completed.Task;
 

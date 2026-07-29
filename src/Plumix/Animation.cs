@@ -42,6 +42,37 @@ public abstract class Animation<T> : IValueListenable<T>
     public abstract void RemoveStatusListener(Action<AnimationStatus> listener);
 }
 
+internal sealed class ConstantAnimation<T> : Animation<T>
+{
+    public ConstantAnimation(T value, AnimationStatus status = AnimationStatus.Completed)
+    {
+        Value = value;
+        Status = status;
+    }
+
+    public override T Value { get; }
+
+    public override AnimationStatus Status { get; }
+
+    public override void AddListener(Action listener)
+    {
+        ArgumentNullException.ThrowIfNull(listener);
+    }
+
+    public override void RemoveListener(Action listener)
+    {
+    }
+
+    public override void AddStatusListener(Action<AnimationStatus> listener)
+    {
+        ArgumentNullException.ThrowIfNull(listener);
+    }
+
+    public override void RemoveStatusListener(Action<AnimationStatus> listener)
+    {
+    }
+}
+
 public sealed class ProxyAnimation : Animation<double>
 {
     private readonly List<Action> _listeners = [];

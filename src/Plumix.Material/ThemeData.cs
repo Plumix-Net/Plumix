@@ -29,6 +29,14 @@ public readonly record struct VisualDensity(double Horizontal = 0, double Vertic
     public static VisualDensity Compact => new(-2, -2);
 
     public Vector BaseSizeAdjustment => new(Horizontal * 4, Vertical * 4);
+
+    public static VisualDensity Lerp(VisualDensity a, VisualDensity b, double t)
+    {
+        double clampedT = Math.Clamp(t, 0.0, 1.0);
+        return new VisualDensity(
+            Horizontal: a.Horizontal + ((b.Horizontal - a.Horizontal) * clampedT),
+            Vertical: a.Vertical + ((b.Vertical - a.Vertical) * clampedT));
+    }
 }
 
 public sealed record AppBarThemeData(
@@ -243,6 +251,24 @@ public sealed record MaterialTextTheme
 
     public TextStyle TitleSmall { get; init; }
 
+    public static MaterialTextTheme Lerp(MaterialTextTheme a, MaterialTextTheme b, double t)
+    {
+        ArgumentNullException.ThrowIfNull(a);
+        ArgumentNullException.ThrowIfNull(b);
+        return new MaterialTextTheme(
+            bodyMedium: TextStyle.Lerp(a.BodyMedium, b.BodyMedium, t),
+            bodyLarge: TextStyle.Lerp(a.BodyLarge, b.BodyLarge, t),
+            bodySmall: TextStyle.Lerp(a.BodySmall, b.BodySmall, t),
+            titleLarge: TextStyle.Lerp(a.TitleLarge, b.TitleLarge, t),
+            labelLarge: TextStyle.Lerp(a.LabelLarge, b.LabelLarge, t),
+            labelMedium: TextStyle.Lerp(a.LabelMedium, b.LabelMedium, t),
+            labelSmall: TextStyle.Lerp(a.LabelSmall, b.LabelSmall, t),
+            titleMedium: TextStyle.Lerp(a.TitleMedium, b.TitleMedium, t),
+            headlineSmall: TextStyle.Lerp(a.HeadlineSmall, b.HeadlineSmall, t),
+            headlineMedium: TextStyle.Lerp(a.HeadlineMedium, b.HeadlineMedium, t),
+            titleSmall: TextStyle.Lerp(a.TitleSmall, b.TitleSmall, t));
+    }
+
     public static TextStyle DefaultBodyMedium { get; } = new(
         FontFamily: DefaultBodyFontFamily,
         FontSize: 14,
@@ -449,6 +475,7 @@ public sealed record ThemeData
     private MenuButtonThemeData? _menuButtonTheme;
     private MenuThemeData? _menuTheme;
     private TextSelectionThemeData? _textSelectionTheme;
+    private PageTransitionsTheme? _pageTransitionsTheme;
 
     public ThemeData(
         TargetPlatform? platform = null,
@@ -547,7 +574,8 @@ public sealed record ThemeData
         MenuButtonThemeData? menuButtonTheme = null,
         MenuThemeData? menuTheme = null,
         TextSelectionThemeData? textSelectionTheme = null,
-        InteractiveInkFeatureFactory? splashFactory = null)
+        InteractiveInkFeatureFactory? splashFactory = null,
+        PageTransitionsTheme? pageTransitionsTheme = null)
     {
         Platform = platform ?? ResolveDefaultPlatform();
         Brightness = brightness ?? Brightness.Light;
@@ -652,6 +680,7 @@ public sealed record ThemeData
         _menuButtonTheme = menuButtonTheme;
         _menuTheme = menuTheme;
         _textSelectionTheme = textSelectionTheme;
+        _pageTransitionsTheme = pageTransitionsTheme;
         VisualDensity = visualDensity ?? VisualDensity.Standard;
     }
 
@@ -1033,6 +1062,12 @@ public sealed record ThemeData
         init => _textSelectionTheme = value;
     }
 
+    public PageTransitionsTheme PageTransitionsTheme
+    {
+        get => _pageTransitionsTheme ?? new PageTransitionsTheme();
+        init => _pageTransitionsTheme = value;
+    }
+
     public ButtonBarThemeData ButtonBarTheme
     {
         get => _buttonBarTheme ?? new ButtonBarThemeData();
@@ -1081,6 +1116,92 @@ public sealed record ThemeData
         cardColor: Color.Parse("#FF1E1E1E"),
         iconTheme: new IconThemeData(Color: Colors.White, Size: 24));
 
+    public static ThemeData Lerp(ThemeData a, ThemeData b, double t)
+    {
+        ArgumentNullException.ThrowIfNull(a);
+        ArgumentNullException.ThrowIfNull(b);
+        if (ReferenceEquals(a, b) || t <= 0.0)
+        {
+            return a;
+        }
+        if (t >= 1.0)
+        {
+            return b;
+        }
+
+        double clampedT = Math.Clamp(t, 0.0, 1.0);
+        ThemeData selected = clampedT < 0.5 ? a : b;
+        return selected with
+        {
+            TextTheme = MaterialTextTheme.Lerp(a.TextTheme, b.TextTheme, clampedT),
+            PrimaryTextTheme = MaterialTextTheme.Lerp(a.PrimaryTextTheme, b.PrimaryTextTheme, clampedT),
+            IconTheme = IconThemeData.Lerp(a.IconTheme, b.IconTheme, clampedT),
+            VisualDensity = VisualDensity.Lerp(a.VisualDensity, b.VisualDensity, clampedT),
+            ScaffoldBackgroundColor = LerpColor(a.ScaffoldBackgroundColor, b.ScaffoldBackgroundColor, clampedT),
+            CanvasColor = LerpColor(a.CanvasColor, b.CanvasColor, clampedT),
+            PrimaryColor = LerpColor(a.PrimaryColor, b.PrimaryColor, clampedT),
+            PrimaryColorLight = LerpColor(a.PrimaryColorLight, b.PrimaryColorLight, clampedT),
+            PrimaryColorDark = LerpColor(a.PrimaryColorDark, b.PrimaryColorDark, clampedT),
+            SecondaryColor = LerpColor(a.SecondaryColor, b.SecondaryColor, clampedT),
+            OnPrimaryColor = LerpColor(a.OnPrimaryColor, b.OnPrimaryColor, clampedT),
+            PrimaryContainerColor = LerpColor(a.PrimaryContainerColor, b.PrimaryContainerColor, clampedT),
+            OnPrimaryContainerColor = LerpColor(
+                a.OnPrimaryContainerColor,
+                b.OnPrimaryContainerColor,
+                clampedT),
+            ShadowColor = LerpColor(a.ShadowColor, b.ShadowColor, clampedT),
+            SurfaceColor = LerpColor(a.SurfaceColor, b.SurfaceColor, clampedT),
+            OnSurfaceColor = LerpColor(a.OnSurfaceColor, b.OnSurfaceColor, clampedT),
+            OnSurfaceVariantColor = LerpColor(a.OnSurfaceVariantColor, b.OnSurfaceVariantColor, clampedT),
+            OutlineColor = LerpColor(a.OutlineColor, b.OutlineColor, clampedT),
+            OutlineVariantColor = LerpColor(a.OutlineVariantColor, b.OutlineVariantColor, clampedT),
+            DividerColor = LerpColor(a.DividerColor, b.DividerColor, clampedT),
+            CardColor = LerpColor(a.CardColor, b.CardColor, clampedT),
+            SurfaceContainerLowColor = LerpColor(
+                a.SurfaceContainerLowColor,
+                b.SurfaceContainerLowColor,
+                clampedT),
+            SurfaceContainerColor = LerpColor(a.SurfaceContainerColor, b.SurfaceContainerColor, clampedT),
+            SurfaceContainerHighColor = LerpColor(
+                a.SurfaceContainerHighColor,
+                b.SurfaceContainerHighColor,
+                clampedT),
+            SurfaceContainerHighestColor = LerpColor(
+                a.SurfaceContainerHighestColor,
+                b.SurfaceContainerHighestColor,
+                clampedT),
+            SecondaryContainerColor = LerpColor(
+                a.SecondaryContainerColor,
+                b.SecondaryContainerColor,
+                clampedT),
+            OnSecondaryContainerColor = LerpColor(
+                a.OnSecondaryContainerColor,
+                b.OnSecondaryContainerColor,
+                clampedT),
+            InverseSurfaceColor = LerpColor(a.InverseSurfaceColor, b.InverseSurfaceColor, clampedT),
+            OnInverseSurfaceColor = LerpColor(a.OnInverseSurfaceColor, b.OnInverseSurfaceColor, clampedT),
+            InversePrimaryColor = LerpColor(a.InversePrimaryColor, b.InversePrimaryColor, clampedT),
+            ErrorColor = LerpColor(a.ErrorColor, b.ErrorColor, clampedT),
+            OnErrorColor = LerpColor(a.OnErrorColor, b.OnErrorColor, clampedT),
+            DisabledColor = LerpColor(a.DisabledColor, b.DisabledColor, clampedT),
+            HintColor = LerpColor(a.HintColor, b.HintColor, clampedT),
+            FocusColor = LerpColor(a.FocusColor, b.FocusColor, clampedT),
+            HoverColor = LerpColor(a.HoverColor, b.HoverColor, clampedT),
+            HighlightColor = LerpColor(a.HighlightColor, b.HighlightColor, clampedT),
+            SplashColor = LerpColor(a.SplashColor, b.SplashColor, clampedT),
+            AppBarTheme = AppBarThemeData.Lerp(a.AppBarTheme, b.AppBarTheme, clampedT),
+            BadgeTheme = BadgeThemeData.Lerp(a.BadgeTheme, b.BadgeTheme, clampedT),
+            BottomAppBarTheme = BottomAppBarThemeData.Lerp(
+                a.BottomAppBarTheme,
+                b.BottomAppBarTheme,
+                clampedT) ?? new BottomAppBarThemeData(),
+            ButtonBarTheme = ButtonBarThemeData.Lerp(
+                a.ButtonBarTheme,
+                b.ButtonBarTheme,
+                clampedT) ?? new ButtonBarThemeData(),
+        };
+    }
+
     public static Brightness EstimateBrightnessForColor(Color color)
     {
         static double Linearize(byte component)
@@ -1127,6 +1248,11 @@ public sealed record ThemeData
         }
 
         return TargetPlatform.Android;
+    }
+
+    private static Color LerpColor(Color a, Color b, double t)
+    {
+        return new ColorTween().Evaluate(t, a, b);
     }
 
     private static InteractiveInkFeatureFactory ResolveDefaultSplashFactory(
