@@ -1069,6 +1069,10 @@ public sealed record ThemeData
                 a.IconButtonTheme,
                 b.IconButtonTheme,
                 clampedT) ?? new IconButtonThemeData(),
+            CardTheme = CardThemeData.Lerp(
+                a.CardTheme,
+                b.CardTheme,
+                clampedT),
             ButtonBarTheme = ButtonBarThemeData.Lerp(
                 a.ButtonBarTheme,
                 b.ButtonBarTheme,

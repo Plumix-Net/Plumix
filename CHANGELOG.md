@@ -1,5 +1,11 @@
 # Changelog
 
+- Breaking: completed the `Card` Dart closeout: elevated/filled/outlined variants now use direct M2/M3
+  `ColorScheme` roles and the source `Semantics -> Padding -> Material(type: card) -> Semantics` composition,
+  including exact tint, shadow, shape, clipping, border paint order, and theme precedence. Added
+  `CardThemeData.CopyWith`/`Lerp`, the source-compatible local `CardTheme`, `ThemeData.Lerp` integration, focused
+  tests, and an expanded mirrored runtime probe; advanced `Plumix.Material` to `0.20.0-alpha.1`.
+
 - Breaking: completed the `IconButton` Dart closeout: all four constructors now expose the source API, Material 2
   uses the legacy `InkResponse` composition, and Material 3 uses direct `ColorScheme` roles, stadium geometry,
   standard density, external state controllers, tooltips, adaptive cursors, and source style precedence. Added

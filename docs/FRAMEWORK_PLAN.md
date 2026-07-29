@@ -365,7 +365,7 @@ Kickoff note (2026-03-12):
   2021 type scale, scheme-driven legacy color compatibility fields, theme interpolation, focused tests, and a
   mirrored palette/typography runtime probe.
 - Started direct component-token closeout with `NavigationBar`, `NavigationRail`, `NavigationDrawer`, legacy
-  `BottomNavigationBar`, `BottomAppBar`, `FloatingActionButton`, and `IconButton`: the navigation/action surfaces now
+  `BottomNavigationBar`, `BottomAppBar`, `FloatingActionButton`, `IconButton`, and `Card`: the migrated surfaces now
   consume exact
   `ColorScheme` roles,
   including fixed/shifting bottom-bar policies, M2 overlay/icon-opacity policies, M3 drawer surfaces, disabled
@@ -376,6 +376,10 @@ Kickoff note (2026-03-12):
   composition, while M3 uses direct scheme roles, source style layering, stadium geometry, standard density,
   external state controllers, tooltips, and adaptive cursors. Material `Theme` now installs its `IconTheme`, and
   `IconButtonThemeData` copy/lerp participates in `ThemeData.Lerp` through shared `ButtonStyle.Lerp`.
+- Closed `Card` against current `card.dart` + `card_theme.dart`: elevated/filled/outlined variants use direct
+  M2/M3 scheme roles and the source two-level semantics/Material composition, including exact margin, tint, shadow,
+  elevation, shape, clipping, and foreground/background border paint order. `CardThemeData` copy/lerp, inherited
+  theme precedence, `ThemeData.Lerp`, focused tests, and the mirrored border-order runtime probe are included.
 - Added Flutter-structured `ElevationOverlay`: exact M3 surface-tint opacity table with between-level interpolation,
   M2 logarithmic dark-surface overlays, `ThemeData.applyElevationOverlayColor` policy, and shared use by Material,
   card, button, navigation, dialog, sheet, menu, search, and app-bar surface paths.

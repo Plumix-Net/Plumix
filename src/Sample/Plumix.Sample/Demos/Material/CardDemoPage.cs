@@ -26,6 +26,7 @@ internal sealed class CardDemoPageState : State
     private bool _useThemeOverrides;
     private bool _clip;
     private bool _dense;
+    private bool _borderOnForeground = true;
 
     public override Widget Build(BuildContext context)
     {
@@ -87,13 +88,21 @@ internal sealed class CardDemoPageState : State
                                 width: 98,
                                 background: Color.Parse("#FFF8EFE2")),
                             BuildControlButton(
+                                label: _borderOnForeground ? "Border front" : "Border back",
+                                onTap: () => SetState(() => _borderOnForeground = !_borderOnForeground),
+                                width: 118,
+                                background: Color.Parse("#FFE8F5E9")),
+                            BuildControlButton(
                                 label: "Reset",
                                 onTap: ResetState,
                                 width: 88,
                                 background: Color.Parse("#FFF3E8D8")),
                         ]),
                     new Text(
-                        $"useMaterial3={(_useMaterial3 ? "true" : "false")}, theme={(_useThemeOverrides ? "true" : "false")}, clip={(_clip ? "true" : "false")}, dense={(_dense ? "true" : "false")}",
+                        $"useMaterial3={(_useMaterial3 ? "true" : "false")}, "
+                        + $"theme={(_useThemeOverrides ? "true" : "false")}, "
+                        + $"clip={(_clip ? "true" : "false")}, dense={(_dense ? "true" : "false")}, "
+                        + $"borderOnForeground={(_borderOnForeground ? "true" : "false")}",
                         fontSize: 12,
                         color: Color.Parse("#FF607D8B")),
                     new Expanded(
@@ -138,6 +147,7 @@ internal sealed class CardDemoPageState : State
     {
         return Card.Outlined(
             clipBehavior: _clip ? Clip.AntiAlias : null,
+            borderOnForeground: _borderOnForeground,
             child: BuildCardBody(
                 title: "Outlined card",
                 body: "Outlined cards add the default outlineVariant border while keeping elevation at zero."));
@@ -155,7 +165,8 @@ internal sealed class CardDemoPageState : State
                 clipBehavior: _clip ? Clip.AntiAlias : Clip.None,
                 child: BuildCardBody(
                     title: "Material surface",
-                    body: "Card-type Material resolves surface tint, elevation, clipping, and its default text style.")));
+                    body: "Card-type Material resolves surface tint, elevation, clipping, "
+                          + "and its default text style.")));
     }
 
     private Widget BuildMergeableMaterial()
@@ -174,7 +185,9 @@ internal sealed class CardDemoPageState : State
                     new MaterialGap(new ValueKey<string>("material-slice-gap"), _dense ? 8 : 16),
                     new MaterialSlice(
                         new ValueKey<string>("material-slice-second"),
-                        BuildCardBody("Second mergeable slice", "The gap is controller-animated when the item list changes."),
+                        BuildCardBody(
+                            "Second mergeable slice",
+                            "The gap is controller-animated when the item list changes."),
                         Color.Parse("#FFE3F2FD")),
                 ]));
     }
@@ -219,6 +232,7 @@ internal sealed class CardDemoPageState : State
             _useThemeOverrides = false;
             _clip = false;
             _dense = false;
+            _borderOnForeground = true;
         });
     }
 }

@@ -71,6 +71,8 @@
     default/null hero-tag policy, extended overflow layout, merged semantics, inherited theme copy/lerp).
   - `IconButton` (exact M2 legacy versus M3 styled composition, direct scheme roles, all variants, density/cursor/
     tooltip/state-controller surfaces, inherited theme copy/lerp, and Material `Theme` icon inheritance).
+  - `Card` (exact M2/M3 elevated/filled/outlined roles, source Material/semantics composition, tint/shadow/shape/
+    clip/border-order behavior, local theme copy/lerp).
 - Add `Typography.Material2014`/`Material2018`, exact platform black/white themes, dense/tall geometry, and locale
   script-category selection.
 - Remove the narrowed `ColorScheme + Typography closeout` row from `docs/MATERIAL_TODO.md` only after those checks

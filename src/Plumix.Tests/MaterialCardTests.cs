@@ -74,6 +74,53 @@ public sealed class MaterialCardTests
     }
 
     [Fact]
+    public void Card_Material3DefaultsReadColorSchemeRolesDirectly()
+    {
+        Color elevated = Color.Parse("#FF102030");
+        Color filled = Color.Parse("#FF203040");
+        Color outlined = Color.Parse("#FF304050");
+        Color outline = Color.Parse("#FF405060");
+        Color shadow = Color.Parse("#FF506070");
+        var scheme = ThemeData.Light.ColorScheme.CopyWith(
+            surfaceContainerLow: elevated,
+            surfaceContainerHighest: filled,
+            surface: outlined,
+            outlineVariant: outline,
+            shadow: shadow);
+        var theme = ThemeData.Light with
+        {
+            ColorScheme = scheme,
+            SurfaceContainerLowColor = Colors.Red,
+            SurfaceContainerHighestColor = Colors.Green,
+            SurfaceColor = Colors.Blue,
+            OutlineVariantColor = Colors.Yellow,
+            ShadowColor = Colors.Purple,
+        };
+
+        using var elevatedHarness = new WidgetRenderHarness(
+            BuildThemedCard(new Card(child: new SizedBox(width: 80, height: 32)), theme));
+        elevatedHarness.Pump(new Size(220, 140));
+        var elevatedSurface = FindMaterialDecoration(elevatedHarness.RenderView);
+        Assert.NotNull(elevatedSurface);
+        Assert.Equal(elevated, elevatedSurface!.Decoration.Color);
+        AssertShadowUsesColor(elevatedSurface, shadow);
+
+        using var filledHarness = new WidgetRenderHarness(
+            BuildThemedCard(Card.Filled(child: new SizedBox(width: 80, height: 32)), theme));
+        filledHarness.Pump(new Size(220, 140));
+        Assert.Equal(filled, FindMaterialDecoration(filledHarness.RenderView)!.Decoration.Color);
+
+        using var outlinedHarness = new WidgetRenderHarness(
+            BuildThemedCard(Card.Outlined(child: new SizedBox(width: 80, height: 32)), theme));
+        outlinedHarness.Pump(new Size(220, 140));
+        var outlinedSurface = FindMaterialDecoration(outlinedHarness.RenderView);
+        var outlinedBorder = FindDescendants<RenderDecoratedBox>(outlinedHarness.RenderView)
+            .Single(box => box.Decoration.Border.HasValue);
+        Assert.Equal(outlined, outlinedSurface!.Decoration.Color);
+        Assert.Equal(outline, outlinedBorder.Decoration.Border!.Value.Color);
+    }
+
+    [Fact]
     public void Card_M2Variants_FallBackToElevatedM2Defaults()
     {
         var cardColor = Color.Parse("#FFFAFAFA");
@@ -164,6 +211,89 @@ public sealed class MaterialCardTests
     }
 
     [Fact]
+    public void CardTheme_RejectsDataCombinedWithLegacyProperties()
+    {
+        Assert.Throws<ArgumentException>(() => new CardTheme(
+            data: new CardThemeData(),
+            color: Colors.Red));
+    }
+
+    [Fact]
+    public void CardThemeData_CopyAndLerpFollowFlutterContracts()
+    {
+        var a = new CardThemeData(
+            ClipBehavior: Clip.HardEdge,
+            Color: Colors.Red,
+            ShadowColor: Colors.Black,
+            SurfaceTintColor: Colors.Blue,
+            Elevation: 2,
+            Margin: new Thickness(2, 4, 6, 8),
+            Shape: ShapeBorder.RoundedRectangle(4, new BorderSide(Colors.Red, 1)));
+        CardThemeData copy = a.CopyWith(color: Colors.Green, elevation: 6);
+        Assert.Equal(Colors.Green, copy.Color);
+        Assert.Equal(6, copy.Elevation);
+        Assert.Equal(a.Margin, copy.Margin);
+
+        var b = new CardThemeData(
+            ClipBehavior: Clip.AntiAlias,
+            Color: Colors.Blue,
+            ShadowColor: Colors.White,
+            SurfaceTintColor: Colors.Green,
+            Elevation: 10,
+            Margin: new Thickness(10, 12, 14, 16),
+            Shape: ShapeBorder.RoundedRectangle(12, new BorderSide(Colors.Blue, 3)));
+        CardThemeData midpoint = Assert.IsType<CardThemeData>(CardThemeData.Lerp(a, b, 0.5));
+
+        Assert.Equal(Clip.AntiAlias, midpoint.ClipBehavior);
+        Assert.Equal(6, midpoint.Elevation);
+        Assert.Equal(new Thickness(6, 8, 10, 12), midpoint.Margin);
+        Assert.Equal(8, midpoint.Shape!.BorderRadius.Radius);
+        Assert.Equal(2, midpoint.Shape.Side!.Value.Width);
+        Assert.Equal(new ColorTween().Evaluate(0.5, Colors.Red, Colors.Blue), midpoint.Color);
+
+        CardThemeData scaled = Assert.IsType<CardThemeData>(
+            CardThemeData.Lerp(null, new CardThemeData(
+                Elevation: 8,
+                Shape: ShapeBorder.RoundedRectangle(12, new BorderSide(Colors.Blue, 2))), 0.25));
+        Assert.Equal(2, scaled.Elevation);
+        Assert.Equal(3, scaled.Shape!.BorderRadius.Radius);
+        Assert.Equal(0.5, scaled.Shape.Side!.Value.Width);
+        Assert.Equal(new CardThemeData(), CardThemeData.Lerp(null, null, 0.5));
+
+        var themeA = new CardTheme(data: a);
+        CardTheme copiedTheme = themeA.CopyWith(color: Colors.Green, elevation: 6);
+        Assert.Equal(Colors.Green, copiedTheme.Color);
+        Assert.Equal(6, copiedTheme.Elevation);
+        CardTheme lerpedTheme = CardTheme.Lerp(themeA, new CardTheme(data: b), 0.5);
+        Assert.Equal(midpoint, lerpedTheme.Data);
+    }
+
+    [Fact]
+    public void ThemeDataLerp_InterpolatesCardTheme()
+    {
+        var a = ThemeData.Light with
+        {
+            CardTheme = new CardThemeData(
+                Color: Colors.Red,
+                Elevation: 2,
+                Margin: new Thickness(2)),
+        };
+        var b = ThemeData.Dark with
+        {
+            CardTheme = new CardThemeData(
+                Color: Colors.Blue,
+                Elevation: 10,
+                Margin: new Thickness(10)),
+        };
+
+        ThemeData midpoint = ThemeData.Lerp(a, b, 0.5);
+
+        Assert.Equal(new ColorTween().Evaluate(0.5, Colors.Red, Colors.Blue), midpoint.CardTheme.Color);
+        Assert.Equal(6, midpoint.CardTheme.Elevation);
+        Assert.Equal(new Thickness(6), midpoint.CardTheme.Margin);
+    }
+
+    [Fact]
     public void Card_SurfaceTintColor_TintsBackgroundByElevation()
     {
         var baseColor = Color.Parse("#FFF7F2FA");
@@ -201,6 +331,47 @@ public sealed class MaterialCardTests
         var clip = FindDescendant<RenderClipRRect>(clippedHarness.RenderView);
         Assert.NotNull(clip);
         Assert.Equal(20, clip!.BorderRadius.Radius);
+    }
+
+    [Fact]
+    public void Card_BorderOnForegroundControlsMaterialPaintOrder()
+    {
+        ShapeBorder shape = ShapeBorder.RoundedRectangle(9, new BorderSide(Colors.DarkGreen, 2));
+        using var foregroundHarness = new WidgetRenderHarness(
+            BuildThemedCard(new Card(
+                shape: shape,
+                borderOnForeground: true,
+                child: new SizedBox(width: 80, height: 32))));
+        foregroundHarness.Pump(new Size(220, 140));
+
+        Assert.NotNull(FindDescendant<RenderStack>(foregroundHarness.RenderView));
+        var foregroundBorders = FindDescendants<RenderDecoratedBox>(foregroundHarness.RenderView)
+            .Where(box => box.Decoration.Border.HasValue)
+            .ToArray();
+        Assert.Single(foregroundBorders);
+
+        using var backgroundHarness = new WidgetRenderHarness(
+            BuildThemedCard(new Card(
+                shape: shape,
+                borderOnForeground: false,
+                child: new SizedBox(width: 80, height: 32))));
+        backgroundHarness.Pump(new Size(220, 140));
+
+        Assert.Null(FindDescendant<RenderStack>(backgroundHarness.RenderView));
+        var backgroundBorders = FindDescendants<RenderDecoratedBox>(backgroundHarness.RenderView)
+            .Where(box => box.Decoration.Border.HasValue)
+            .ToArray();
+        Assert.Single(backgroundBorders);
+    }
+
+    [Fact]
+    public void Card_AllowsNullChild()
+    {
+        using var harness = new WidgetRenderHarness(BuildThemedCard(new Card()));
+
+        harness.Pump(new Size(220, 140));
+
+        Assert.NotNull(FindMaterialDecoration(harness.RenderView));
     }
 
     [Fact]
@@ -318,10 +489,10 @@ public sealed class MaterialCardTests
             BuildThemedCard(new Card(child: new SizedBox(width: 80, height: 32))));
         defaultHarness.Pump(new Size(220, 140));
 
-        var defaultSemantics = FindDescendant<RenderSemanticsAnnotations>(defaultHarness.RenderView);
-        Assert.NotNull(defaultSemantics);
-        Assert.True(defaultSemantics!.Container);
-        Assert.False(defaultSemantics.ExplicitChildNodes);
+        var defaultSemantics = FindDescendants<RenderSemanticsAnnotations>(defaultHarness.RenderView).ToArray();
+        Assert.Equal(2, defaultSemantics.Length);
+        Assert.Contains(defaultSemantics, semantics => semantics.Container);
+        Assert.Contains(defaultSemantics, semantics => semantics.ExplicitChildNodes == false);
 
         using var explicitHarness = new WidgetRenderHarness(
             BuildThemedCard(new Card(
@@ -329,10 +500,10 @@ public sealed class MaterialCardTests
                 child: new SizedBox(width: 80, height: 32))));
         explicitHarness.Pump(new Size(220, 140));
 
-        var explicitSemantics = FindDescendant<RenderSemanticsAnnotations>(explicitHarness.RenderView);
-        Assert.NotNull(explicitSemantics);
-        Assert.False(explicitSemantics!.Container);
-        Assert.True(explicitSemantics.ExplicitChildNodes);
+        var explicitSemantics = FindDescendants<RenderSemanticsAnnotations>(explicitHarness.RenderView).ToArray();
+        Assert.Equal(2, explicitSemantics.Length);
+        Assert.All(explicitSemantics, semantics => Assert.False(semantics.Container));
+        Assert.Contains(explicitSemantics, semantics => semantics.ExplicitChildNodes);
     }
 
     private static Widget BuildThemedCard(Widget card, ThemeData? theme = null)
@@ -381,6 +552,15 @@ public sealed class MaterialCardTests
     private static Color ApplySurfaceTint(Color color, Color surfaceTint, double elevation)
     {
         return ElevationOverlay.ApplySurfaceTint(color, surfaceTint, elevation);
+    }
+
+    private static void AssertShadowUsesColor(RenderDecoratedBox surface, Color shadowColor)
+    {
+        Assert.True(surface.Decoration.BoxShadows.HasValue);
+        var shadows = surface.Decoration.BoxShadows!.Value;
+        Assert.Equal(shadowColor.R, shadows[0].Color.R);
+        Assert.Equal(shadowColor.G, shadows[0].Color.G);
+        Assert.Equal(shadowColor.B, shadows[0].Color.B);
     }
 
     private sealed class WidgetRenderHarness : IDisposable

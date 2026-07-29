@@ -66,9 +66,19 @@ internal static class MaterialThemeLerp
 
     public static ShapeBorder? Shape(ShapeBorder? a, ShapeBorder? b, double t)
     {
-        if (a is null || b is null)
+        if (a is null && b is null)
         {
-            return t < 0.5 ? a : b;
+            return null;
+        }
+
+        if (a is null)
+        {
+            return ScaleShape(b!, t);
+        }
+
+        if (b is null)
+        {
+            return ScaleShape(a, 1.0 - t);
         }
 
         BorderSide? side = BorderSide(a.Side, b.Side, t);
@@ -191,6 +201,23 @@ internal static class MaterialThemeLerp
             Color(from.Color, to.Color, t)!.Value,
             from.Width + ((to.Width - from.Width) * t),
             t < 0.5 ? from.Style : to.Style);
+    }
+
+    private static ShapeBorder ScaleShape(ShapeBorder shape, double factor)
+    {
+        double clampedFactor = Math.Clamp(factor, 0.0, 1.0);
+        BorderSide? side = shape.Side.HasValue
+            ? new Plumix.Rendering.BorderSide(
+                shape.Side.Value.Color,
+                shape.Side.Value.Width * clampedFactor,
+                shape.Side.Value.Style)
+            : null;
+        return new ShapeBorder(
+            BorderRadius.Circular(shape.BorderRadius.Radius * clampedFactor),
+            side)
+        {
+            Shape = shape.Shape,
+        };
     }
 
     private static double LerpConstraint(double a, double b, double t)

@@ -18,9 +18,11 @@ class _MaterialButtonsDemoPageState extends State<MaterialButtonsDemoPage> {
   int _filledTonalButtonTaps = 0;
   int _iconButtonTaps = 0;
   int _filledIconButtonTaps = 0;
+  int _filledTonalIconButtonTaps = 0;
   int _outlinedIconButtonTaps = 0;
   int _materialButtonTaps = 0;
   int _rawMaterialButtonTaps = 0;
+  bool _useMaterial3 = true;
 
   @override
   Widget build(BuildContext context) {
@@ -51,10 +53,23 @@ class _MaterialButtonsDemoPageState extends State<MaterialButtonsDemoPage> {
               width: 88,
               background: const Color(0xFFF3E8D8),
             ),
+            _buildControlButton(
+              label: _useMaterial3 ? 'Icons M3' : 'Icons M2',
+              onTap: _toggleIconMaterialVersion,
+              width: 96,
+              background: const Color(0xFFE8F5E9),
+            ),
           ],
         ),
         Text(
-          'enabled=$_enabled, text=$_textButtonTaps, elevated=$_elevatedButtonTaps, outlined=$_outlinedButtonTaps, filled=$_filledButtonTaps, tonal=$_filledTonalButtonTaps, material=$_materialButtonTaps, raw=$_rawMaterialButtonTaps, icon=$_iconButtonTaps, filledIcon=$_filledIconButtonTaps, outlinedIcon=$_outlinedIconButtonTaps, iconSelected=$_iconButtonSelected',
+          'enabled=$_enabled, iconsM3=$_useMaterial3, text=$_textButtonTaps, '
+          'elevated=$_elevatedButtonTaps, outlined=$_outlinedButtonTaps, '
+          'filled=$_filledButtonTaps, tonal=$_filledTonalButtonTaps, '
+          'material=$_materialButtonTaps, raw=$_rawMaterialButtonTaps, '
+          'icon=$_iconButtonTaps, filledIcon=$_filledIconButtonTaps, '
+          'tonalIcon=$_filledTonalIconButtonTaps, '
+          'outlinedIcon=$_outlinedIconButtonTaps, '
+          'iconSelected=$_iconButtonSelected',
           style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
         ),
         SizedBox(
@@ -117,37 +132,7 @@ class _MaterialButtonsDemoPageState extends State<MaterialButtonsDemoPage> {
             ),
           ],
         ),
-        Row(
-          spacing: 8,
-          children: <Widget>[
-            SizedBox(
-              width: 56,
-              height: 56,
-              child: IconButton(
-                isSelected: _iconButtonSelected,
-                icon: const Icon(Icons.star_outline),
-                selectedIcon: const Icon(Icons.star),
-                onPressed: _enabled ? _onIconButtonTap : null,
-              ),
-            ),
-            SizedBox(
-              width: 56,
-              height: 56,
-              child: IconButton.filled(
-                icon: const Icon(Icons.add),
-                onPressed: _enabled ? _onFilledIconButtonTap : null,
-              ),
-            ),
-            SizedBox(
-              width: 56,
-              height: 56,
-              child: IconButton.outlined(
-                icon: const Icon(Icons.info_outline),
-                onPressed: _enabled ? _onOutlinedIconButtonTap : null,
-              ),
-            ),
-          ],
-        ),
+        _buildIconButtonProbe(context),
         Row(
           spacing: 8,
           children: <Widget>[
@@ -224,9 +209,73 @@ class _MaterialButtonsDemoPageState extends State<MaterialButtonsDemoPage> {
     );
   }
 
+  Widget _buildIconButtonProbe(BuildContext context) {
+    final Widget tonalButton = IconButtonTheme(
+      data: IconButtonThemeData(
+        style: IconButton.styleFrom(foregroundColor: const Color(0xFF6A1B9A)),
+      ),
+      child: SizedBox(
+        width: 56,
+        height: 56,
+        child: IconButton.filledTonal(
+          icon: const Icon(Icons.star),
+          visualDensity: VisualDensity.compact,
+          tooltip: 'Compact tonal favorite',
+          onPressed: _enabled ? _onFilledTonalIconButtonTap : null,
+        ),
+      ),
+    );
+
+    return Theme(
+      // ignore: deprecated_member_use
+      data: Theme.of(context).copyWith(useMaterial3: _useMaterial3),
+      child: Row(
+        spacing: 8,
+        children: <Widget>[
+          SizedBox(
+            width: 56,
+            height: 56,
+            child: IconButton(
+              isSelected: _iconButtonSelected,
+              icon: const Icon(Icons.star_outline),
+              selectedIcon: const Icon(Icons.star),
+              tooltip: 'Toggle favorite',
+              onPressed: _enabled ? _onIconButtonTap : null,
+            ),
+          ),
+          SizedBox(
+            width: 56,
+            height: 56,
+            child: IconButton.filled(
+              icon: const Icon(Icons.add),
+              tooltip: 'Add',
+              onPressed: _enabled ? _onFilledIconButtonTap : null,
+            ),
+          ),
+          tonalButton,
+          SizedBox(
+            width: 56,
+            height: 56,
+            child: IconButton.outlined(
+              icon: const Icon(Icons.info_outline),
+              tooltip: 'Info',
+              onPressed: _enabled ? _onOutlinedIconButtonTap : null,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _toggleEnabled() {
     setState(() {
       _enabled = !_enabled;
+    });
+  }
+
+  void _toggleIconMaterialVersion() {
+    setState(() {
+      _useMaterial3 = !_useMaterial3;
     });
   }
 
@@ -239,11 +288,13 @@ class _MaterialButtonsDemoPageState extends State<MaterialButtonsDemoPage> {
       _filledTonalButtonTaps = 0;
       _iconButtonTaps = 0;
       _filledIconButtonTaps = 0;
+      _filledTonalIconButtonTaps = 0;
       _outlinedIconButtonTaps = 0;
       _materialButtonTaps = 0;
       _rawMaterialButtonTaps = 0;
       _iconButtonSelected = false;
       _enabled = true;
+      _useMaterial3 = true;
     });
   }
 
@@ -299,6 +350,12 @@ class _MaterialButtonsDemoPageState extends State<MaterialButtonsDemoPage> {
   void _onFilledIconButtonTap() {
     setState(() {
       _filledIconButtonTaps += 1;
+    });
+  }
+
+  void _onFilledTonalIconButtonTap() {
+    setState(() {
+      _filledTonalIconButtonTaps += 1;
     });
   }
 

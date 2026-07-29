@@ -7,7 +7,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/material/card.dart (approximate)
+// Dart parity source: flutter/packages/flutter/lib/src/material/card.dart
 
 public enum CardVariant
 {
@@ -172,54 +172,23 @@ public sealed class Card : StatelessWidget
         var effectiveClipBehavior = ClipBehavior ?? cardTheme.ClipBehavior ?? defaults.ClipBehavior ?? Clip.None;
         var effectiveSurfaceTint = SurfaceTintColor ?? cardTheme.SurfaceTintColor ?? defaults.SurfaceTintColor;
         var effectiveColor = Color ?? cardTheme.Color ?? defaults.Color ?? theme.CardColor;
-        if (effectiveSurfaceTint.HasValue)
-        {
-            effectiveColor = ElevationOverlay.ApplySurfaceTint(
-                effectiveColor,
-                effectiveSurfaceTint,
-                effectiveElevation);
-        }
-
-        Widget content = Child ?? new SizedBox();
-        var foregroundBorder = BorderOnForeground ? effectiveShape.Side : null;
-        if (foregroundBorder.HasValue && foregroundBorder.Value.Width > 0)
-        {
-            content = new Stack(
-                fit: StackFit.Passthrough,
-                children:
-                [
-                    content,
-                    new Positioned(
-                        left: 0,
-                        top: 0,
-                        right: 0,
-                        bottom: 0,
-                        child: new DecoratedBox(
-                            new BoxDecoration(
-                                Border: foregroundBorder,
-                                BorderRadius: effectiveShape.BorderRadius),
-                            new SizedBox()))
-                ]);
-        }
-
-        if (effectiveClipBehavior != Clip.None)
-        {
-            content = new ClipRRect(effectiveShape.BorderRadius, content);
-        }
-
-        var backgroundBorder = BorderOnForeground ? null : effectiveShape.Side;
-        var material = new DecoratedBox(
-            new BoxDecoration(
-                Color: effectiveColor,
-                Border: backgroundBorder,
-                BorderRadius: effectiveShape.BorderRadius,
-                BoxShadows: BuildBoxShadows(effectiveShadowColor, effectiveElevation)),
-            content);
 
         return new Semantics(
             container: SemanticContainer,
-            explicitChildNodes: !SemanticContainer,
-            child: new Padding(effectiveMargin, material));
+            child: new Padding(
+                effectiveMargin,
+                new Material(
+                    type: MaterialType.Card,
+                    color: effectiveColor,
+                    shadowColor: effectiveShadowColor,
+                    surfaceTintColor: effectiveSurfaceTint,
+                    elevation: effectiveElevation,
+                    shape: effectiveShape,
+                    borderOnForeground: BorderOnForeground,
+                    clipBehavior: effectiveClipBehavior,
+                    child: new Semantics(
+                        explicitChildNodes: !SemanticContainer,
+                        child: Child))));
     }
 
     private CardThemeData ResolveDefaults(ThemeData theme)
@@ -239,26 +208,26 @@ public sealed class Card : StatelessWidget
         {
             CardVariant.Filled => new CardThemeData(
                 ClipBehavior: Clip.None,
-                Color: theme.SurfaceContainerHighestColor,
-                ShadowColor: theme.ShadowColor,
+                Color: theme.ColorScheme.SurfaceContainerHighest,
+                ShadowColor: theme.ColorScheme.Shadow,
                 SurfaceTintColor: Colors.Transparent,
                 Elevation: 0,
                 Margin: DefaultMargin,
                 Shape: ShapeBorder.RoundedRectangle(12)),
             CardVariant.Outlined => new CardThemeData(
                 ClipBehavior: Clip.None,
-                Color: theme.SurfaceColor,
-                ShadowColor: theme.ShadowColor,
+                Color: theme.ColorScheme.Surface,
+                ShadowColor: theme.ColorScheme.Shadow,
                 SurfaceTintColor: Colors.Transparent,
                 Elevation: 0,
                 Margin: DefaultMargin,
                 Shape: ShapeBorder.RoundedRectangle(
                     12,
-                    new BorderSide(theme.OutlineVariantColor))),
+                    new BorderSide(theme.ColorScheme.OutlineVariant))),
             _ => new CardThemeData(
                 ClipBehavior: Clip.None,
-                Color: theme.SurfaceContainerLowColor,
-                ShadowColor: theme.ShadowColor,
+                Color: theme.ColorScheme.SurfaceContainerLow,
+                ShadowColor: theme.ColorScheme.Shadow,
                 SurfaceTintColor: Colors.Transparent,
                 Elevation: 1,
                 Margin: DefaultMargin,
@@ -285,47 +254,9 @@ public sealed class Card : StatelessWidget
     {
         if (theme.UseMaterial3 && variant == CardVariant.Outlined)
         {
-            return ShapeBorder.RoundedRectangle(12, new BorderSide(theme.OutlineVariantColor));
+            return ShapeBorder.RoundedRectangle(12, new BorderSide(theme.ColorScheme.OutlineVariant));
         }
 
         return ShapeBorder.RoundedRectangle(theme.UseMaterial3 ? 12 : 4);
-    }
-
-    private static BoxShadows? BuildBoxShadows(Color shadowColor, double elevation)
-    {
-        if (elevation <= 0 || shadowColor.A == 0)
-        {
-            return null;
-        }
-
-        var keyShadow = new BoxShadow
-        {
-            OffsetX = 0,
-            OffsetY = Math.Max(1, Math.Round(elevation)),
-            Blur = Math.Max(2, elevation * 2.4),
-            Spread = 0,
-            Color = ApplyOpacity(shadowColor, 0.20),
-            IsInset = false
-        };
-
-        var ambientShadow = new BoxShadow
-        {
-            OffsetX = 0,
-            OffsetY = Math.Max(1, Math.Round(elevation * 0.5)),
-            Blur = Math.Max(3, elevation * 3.2),
-            Spread = 0,
-            Color = ApplyOpacity(shadowColor, 0.14),
-            IsInset = false
-        };
-
-        return new BoxShadows(keyShadow, [ambientShadow]);
-    }
-
-    private static Color ApplyOpacity(Color color, double opacityMultiplier)
-    {
-        double baseOpacity = color.A / 255.0;
-        double effectiveOpacity = Math.Clamp(baseOpacity * opacityMultiplier, 0, 1);
-        byte alpha = (byte)Math.Clamp((int)(effectiveOpacity * 255), 0, 255);
-        return Avalonia.Media.Color.FromArgb(alpha, color.R, color.G, color.B);
     }
 }

@@ -7,7 +7,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/material/card_theme.dart (approximate)
+// Dart parity source: flutter/packages/flutter/lib/src/material/card_theme.dart
 
 public sealed record CardThemeData
 {
@@ -25,7 +25,9 @@ public sealed record CardThemeData
                 || double.IsInfinity(Elevation.Value)
                 || Elevation.Value < 0))
         {
-            throw new ArgumentOutOfRangeException(nameof(Elevation), "Card theme elevation must be non-negative and finite.");
+            throw new ArgumentOutOfRangeException(
+                nameof(Elevation),
+                "Card theme elevation must be non-negative and finite.");
         }
 
         this.ClipBehavior = ClipBehavior;
@@ -50,22 +52,133 @@ public sealed record CardThemeData
     public Thickness? Margin { get; init; }
 
     public ShapeBorder? Shape { get; init; }
+
+    public CardThemeData CopyWith(
+        Clip? clipBehavior = null,
+        Color? color = null,
+        Color? shadowColor = null,
+        Color? surfaceTintColor = null,
+        double? elevation = null,
+        Thickness? margin = null,
+        ShapeBorder? shape = null)
+    {
+        return new CardThemeData(
+            ClipBehavior: clipBehavior ?? ClipBehavior,
+            Color: color ?? Color,
+            ShadowColor: shadowColor ?? ShadowColor,
+            SurfaceTintColor: surfaceTintColor ?? SurfaceTintColor,
+            Elevation: elevation ?? Elevation,
+            Margin: margin ?? Margin,
+            Shape: shape ?? Shape);
+    }
+
+    public static CardThemeData Lerp(CardThemeData? a, CardThemeData? b, double t)
+    {
+        if (ReferenceEquals(a, b) && a is not null)
+        {
+            return a;
+        }
+
+        double clampedT = Math.Clamp(t, 0.0, 1.0);
+        return new CardThemeData(
+            ClipBehavior: clampedT < 0.5 ? a?.ClipBehavior : b?.ClipBehavior,
+            Color: MaterialThemeLerp.Color(a?.Color, b?.Color, clampedT),
+            ShadowColor: MaterialThemeLerp.Color(a?.ShadowColor, b?.ShadowColor, clampedT),
+            SurfaceTintColor: MaterialThemeLerp.Color(
+                a?.SurfaceTintColor,
+                b?.SurfaceTintColor,
+                clampedT),
+            Elevation: MaterialThemeLerp.Double(a?.Elevation, b?.Elevation, clampedT),
+            Margin: MaterialThemeLerp.Thickness(a?.Margin, b?.Margin, clampedT),
+            Shape: MaterialThemeLerp.Shape(a?.Shape, b?.Shape, clampedT));
+    }
 }
 
 public sealed class CardTheme : InheritedWidget
 {
     public CardTheme(
-        CardThemeData data,
-        Widget child,
+        Widget? child = null,
+        Clip? clipBehavior = null,
+        Color? color = null,
+        Color? surfaceTintColor = null,
+        Color? shadowColor = null,
+        double? elevation = null,
+        Thickness? margin = null,
+        ShapeBorder? shape = null,
+        CardThemeData? data = null,
         Key? key = null) : base(key)
     {
-        Data = data ?? throw new ArgumentNullException(nameof(data));
-        Child = child ?? throw new ArgumentNullException(nameof(child));
+        bool hasLegacyProperties = clipBehavior.HasValue
+                                   || color.HasValue
+                                   || surfaceTintColor.HasValue
+                                   || shadowColor.HasValue
+                                   || elevation.HasValue
+                                   || margin.HasValue
+                                   || shape is not null;
+        if (data is not null && hasLegacyProperties)
+        {
+            throw new ArgumentException(
+                "data cannot be combined with individual CardTheme properties.",
+                nameof(data));
+        }
+
+        Data = data ?? new CardThemeData(
+            ClipBehavior: clipBehavior,
+            Color: color,
+            ShadowColor: shadowColor,
+            SurfaceTintColor: surfaceTintColor,
+            Elevation: elevation,
+            Margin: margin,
+            Shape: shape);
+        Child = child ?? new SizedBox();
+    }
+
+    public CardTheme(
+        CardThemeData themeData,
+        Widget content,
+        Key? key = null) : this(
+        child: content,
+        data: themeData,
+        key: key)
+    {
     }
 
     public CardThemeData Data { get; }
 
     public Widget Child { get; }
+
+    public Clip? ClipBehavior => Data.ClipBehavior;
+
+    public Color? Color => Data.Color;
+
+    public Color? ShadowColor => Data.ShadowColor;
+
+    public Color? SurfaceTintColor => Data.SurfaceTintColor;
+
+    public double? Elevation => Data.Elevation;
+
+    public Thickness? Margin => Data.Margin;
+
+    public ShapeBorder? Shape => Data.Shape;
+
+    public CardTheme CopyWith(
+        Clip? clipBehavior = null,
+        Color? color = null,
+        Color? shadowColor = null,
+        Color? surfaceTintColor = null,
+        double? elevation = null,
+        Thickness? margin = null,
+        ShapeBorder? shape = null)
+    {
+        return new CardTheme(
+            clipBehavior: clipBehavior ?? ClipBehavior,
+            color: color ?? Color,
+            shadowColor: shadowColor ?? ShadowColor,
+            surfaceTintColor: surfaceTintColor ?? SurfaceTintColor,
+            elevation: elevation ?? Elevation,
+            margin: margin ?? Margin,
+            shape: shape ?? Shape);
+    }
 
     public override Widget Build(BuildContext context)
     {
@@ -86,5 +199,15 @@ public sealed class CardTheme : InheritedWidget
         }
 
         return Theme.Of(context).CardTheme;
+    }
+
+    public static CardTheme Lerp(CardTheme? a, CardTheme? b, double t)
+    {
+        if (ReferenceEquals(a, b) && a is not null)
+        {
+            return a;
+        }
+
+        return new CardTheme(data: CardThemeData.Lerp(a?.Data, b?.Data, t));
     }
 }
