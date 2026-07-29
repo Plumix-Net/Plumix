@@ -35,6 +35,7 @@ public sealed class ReorderableListView : StatefulWidget
         bool shrinkWrap = false,
         double cacheExtent = 250.0,
         double? autoScrollerVelocityScalar = null,
+        ReorderDragBoundaryProvider? dragBoundaryProvider = null,
         MouseCursor? mouseCursor = null,
         Key? key = null) : this(
         itemBuilder: (_, index) => children[index],
@@ -59,6 +60,7 @@ public sealed class ReorderableListView : StatefulWidget
         shrinkWrap: shrinkWrap,
         cacheExtent: cacheExtent,
         autoScrollerVelocityScalar: autoScrollerVelocityScalar,
+        dragBoundaryProvider: dragBoundaryProvider,
         mouseCursor: mouseCursor,
         key: key)
     {
@@ -91,6 +93,7 @@ public sealed class ReorderableListView : StatefulWidget
         bool shrinkWrap,
         double cacheExtent,
         double? autoScrollerVelocityScalar,
+        ReorderDragBoundaryProvider? dragBoundaryProvider,
         MouseCursor? mouseCursor,
         Key? key) : base(key)
     {
@@ -125,6 +128,7 @@ public sealed class ReorderableListView : StatefulWidget
         ShrinkWrap = shrinkWrap;
         CacheExtent = cacheExtent;
         AutoScrollerVelocityScalar = autoScrollerVelocityScalar ?? 50.0;
+        DragBoundaryProvider = dragBoundaryProvider;
         MouseCursor = mouseCursor;
     }
 
@@ -173,6 +177,8 @@ public sealed class ReorderableListView : StatefulWidget
 
     public double AutoScrollerVelocityScalar { get; }
 
+    public ReorderDragBoundaryProvider? DragBoundaryProvider { get; }
+
     public MouseCursor? MouseCursor { get; }
 
     public static ReorderableListView Builder(
@@ -198,6 +204,7 @@ public sealed class ReorderableListView : StatefulWidget
         bool shrinkWrap = false,
         double cacheExtent = 250.0,
         double? autoScrollerVelocityScalar = null,
+        ReorderDragBoundaryProvider? dragBoundaryProvider = null,
         MouseCursor? mouseCursor = null,
         Key? key = null)
     {
@@ -224,6 +231,7 @@ public sealed class ReorderableListView : StatefulWidget
             shrinkWrap,
             cacheExtent,
             autoScrollerVelocityScalar,
+            dragBoundaryProvider,
             mouseCursor,
             key);
     }
@@ -270,6 +278,7 @@ public sealed class ReorderableListView : StatefulWidget
                     prototypeItem: widget.PrototypeItem,
                     proxyDecorator: widget.ProxyDecorator ?? DefaultProxyDecorator,
                     autoScrollerVelocityScalar: widget.AutoScrollerVelocityScalar,
+                    dragBoundaryProvider: widget.DragBoundaryProvider,
                     scrollController: effectiveController)));
 
             if (widget.Footer is not null)

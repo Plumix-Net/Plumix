@@ -19,6 +19,8 @@ public delegate Widget ReorderItemProxyDecorator(
     int index,
     Animation<double> animation);
 
+public delegate DragBoundaryDelegate<Rect>? ReorderDragBoundaryProvider(BuildContext context);
+
 public readonly record struct SliverLayoutDimensions(
     double ScrollOffset,
     double PrecedingScrollExtent,
@@ -50,6 +52,7 @@ public sealed class ReorderableList : StatefulWidget
         bool shrinkWrap = false,
         double cacheExtent = 250.0,
         double? autoScrollerVelocityScalar = null,
+        ReorderDragBoundaryProvider? dragBoundaryProvider = null,
         Key? key = null) : base(key)
     {
         ValidateArguments(
@@ -80,6 +83,7 @@ public sealed class ReorderableList : StatefulWidget
         ShrinkWrap = shrinkWrap;
         CacheExtent = cacheExtent;
         AutoScrollerVelocityScalar = autoScrollerVelocityScalar ?? 50.0;
+        DragBoundaryProvider = dragBoundaryProvider;
     }
 
     public IndexedWidgetBuilder ItemBuilder { get; }
@@ -120,6 +124,8 @@ public sealed class ReorderableList : StatefulWidget
     public double CacheExtent { get; }
 
     public double AutoScrollerVelocityScalar { get; }
+
+    public ReorderDragBoundaryProvider? DragBoundaryProvider { get; }
 
     public override State CreateState() => new ReorderableListState();
 
@@ -203,6 +209,7 @@ public sealed class ReorderableListState : State
             prototypeItem: widget.PrototypeItem,
             proxyDecorator: widget.ProxyDecorator,
             autoScrollerVelocityScalar: widget.AutoScrollerVelocityScalar,
+            dragBoundaryProvider: widget.DragBoundaryProvider,
             scrollController: effectiveController,
             key: _sliverKey);
 
@@ -243,6 +250,7 @@ public sealed class SliverReorderableList : StatefulWidget
         Widget? prototypeItem = null,
         ReorderItemProxyDecorator? proxyDecorator = null,
         double autoScrollerVelocityScalar = 50.0,
+        ReorderDragBoundaryProvider? dragBoundaryProvider = null,
         ScrollController? scrollController = null,
         Key? key = null) : base(key)
     {
@@ -266,6 +274,7 @@ public sealed class SliverReorderableList : StatefulWidget
         PrototypeItem = prototypeItem;
         ProxyDecorator = proxyDecorator;
         AutoScrollerVelocityScalar = autoScrollerVelocityScalar;
+        DragBoundaryProvider = dragBoundaryProvider;
         ScrollController = scrollController;
     }
 
@@ -291,6 +300,8 @@ public sealed class SliverReorderableList : StatefulWidget
     public ReorderItemProxyDecorator? ProxyDecorator { get; }
 
     public double AutoScrollerVelocityScalar { get; }
+
+    public ReorderDragBoundaryProvider? DragBoundaryProvider { get; }
 
     internal ScrollController? ScrollController { get; }
 
@@ -318,6 +329,7 @@ public sealed class SliverReorderableListState : State
     private Rect _dragOriginBounds;
     private Point _dragInitialPosition;
     private Point _dragPosition;
+    private DragBoundaryDelegate<Rect>? _dragBoundary;
 
     internal SliverReorderableList CurrentWidget => (SliverReorderableList)StateWidget;
 
@@ -463,7 +475,10 @@ public sealed class SliverReorderableListState : State
         _insertIndex = index;
         _dragOriginBounds = geometry;
         _dragInitialPosition = position;
-        _dragPosition = position;
+        _dragBoundary = CurrentWidget.DragBoundaryProvider is null
+            ? DragBoundary.ForRectMaybeOf(Context)
+            : CurrentWidget.DragBoundaryProvider(Context);
+        _dragPosition = ConstrainDragPosition(position);
         item.SetDragging(true);
         _proxyAnimation!.Forward(from: 0.0);
         CurrentWidget.OnReorderStart?.Invoke(index);
@@ -477,9 +492,9 @@ public sealed class SliverReorderableListState : State
             return;
         }
 
-        _dragPosition = position;
+        _dragPosition = ConstrainDragPosition(position);
         UpdateInsertionIndex();
-        AutoScroll(position);
+        AutoScroll(_dragPosition);
         SetState(static () => { });
     }
 
@@ -699,6 +714,7 @@ public sealed class SliverReorderableListState : State
         _dragOriginBounds = default;
         _dragInitialPosition = default;
         _dragPosition = default;
+        _dragBoundary = null;
         _proxyAnimation?.Stop();
         _proxyAnimation?.SetValue(0.0);
     }
@@ -733,6 +749,24 @@ public sealed class SliverReorderableListState : State
     private Vector ExtentOffset(double extent)
     {
         return CurrentWidgetAxis() == Axis.Vertical ? new Vector(0, extent) : new Vector(extent, 0);
+    }
+
+    private Point ConstrainDragPosition(Point position)
+    {
+        if (_dragBoundary is null)
+        {
+            return position;
+        }
+
+        Vector rawTranslation = position - _dragInitialPosition;
+        Rect draggedBounds = new(
+            _dragOriginBounds.X + rawTranslation.X,
+            _dragOriginBounds.Y + rawTranslation.Y,
+            _dragOriginBounds.Width,
+            _dragOriginBounds.Height);
+        Rect constrainedBounds = _dragBoundary.NearestPositionWithinBoundary(draggedBounds);
+        Vector constrainedTranslation = constrainedBounds.TopLeft - _dragOriginBounds.TopLeft;
+        return _dragInitialPosition + constrainedTranslation;
     }
 
     private void HandleProxyAnimationChanged()

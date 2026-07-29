@@ -27,7 +27,11 @@ public sealed class ReorderableListDemoPage : StatefulWidget
                 spacing: 10,
                 children:
                 [
-                    new Text("ReorderableListView", fontSize: 20, color: Colors.Black),
+                    new Text("ReorderableListView + DragBoundary", fontSize: 20, color: Colors.Black),
+                    new Text(
+                        "The nearest DragBoundary clamps the dragged proxy to the visible list bounds.",
+                        fontSize: 12,
+                        color: Color.Parse("#8A000000")),
                     new Row(
                         spacing: 8,
                         children:
@@ -39,20 +43,21 @@ public sealed class ReorderableListDemoPage : StatefulWidget
                             new Expanded(new Text(_status, fontSize: 12, color: Color.Parse("#8A000000"))),
                         ]),
                     new Expanded(
-                        new ReorderableListView(
-                            children: BuildItems(),
-                            onReorderItem: HandleReorder,
-                            onReorderStart: index => SetState(() => _status = $"Dragging {_items[index]}"),
-                            onReorderEnd: index => SetState(() => _status = $"Dropped at insertion index {index}"),
-                            buildDefaultDragHandles: _buildDefaultDragHandles,
-                            header: new Padding(
-                                new Thickness(12, 8),
-                                new Text("Header (not reorderable)", fontSize: 13, color: Colors.Black)),
-                            footer: new Padding(
-                                new Thickness(12, 8),
-                                new Text("Footer (not reorderable)", fontSize: 13, color: Colors.Black)),
-                            padding: new Thickness(4),
-                            itemExtent: 58)),
+                        new DragBoundary(
+                            new ReorderableListView(
+                                children: BuildItems(),
+                                onReorderItem: HandleReorder,
+                                onReorderStart: index => SetState(() => _status = $"Dragging {_items[index]}"),
+                                onReorderEnd: index => SetState(() => _status = $"Dropped at insertion index {index}"),
+                                buildDefaultDragHandles: _buildDefaultDragHandles,
+                                header: new Padding(
+                                    new Thickness(12, 8),
+                                    new Text("Header (not reorderable)", fontSize: 13, color: Colors.Black)),
+                                footer: new Padding(
+                                    new Thickness(12, 8),
+                                    new Text("Footer (not reorderable)", fontSize: 13, color: Colors.Black)),
+                                padding: new Thickness(4),
+                                itemExtent: 58))),
                 ]);
         }
 

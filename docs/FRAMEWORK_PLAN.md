@@ -428,8 +428,12 @@ Kickoff note (2026-03-12):
 - Added paired core `ReorderableList`/`SliverReorderableList` + Material `ReorderableListView` with keyed state,
   immediate and delayed drag listeners, gesture-arena ownership, animated gaps and pickup proxy, legacy versus adjusted
   reorder callbacks, fixed/variable extents, desktop/mobile handles, split header/footer padding, edge auto-scroll,
-  focused tests, and mirrored C#/Dart probes. Root-overlay proxy/drop choreography, prototype-forced extent, and custom
-  reorder semantics remain tracked in `DIVERGENCES.md` pending shared primitives.
+  focused tests, and mirrored C#/Dart probes. Root-overlay proxy/drop choreography and custom reorder semantics remain
+  tracked in `DIVERGENCES.md` pending shared primitives.
+- Added core `DragBoundary` parity with generic delegate contracts, local/global/free rectangle resolution,
+  shortest-distance clamping, and oversized-object errors. Core and Material reorderable lists now expose the
+  source `dragBoundaryProvider` API and otherwise consume the nearest inherited boundary, with focused geometry/drag
+  tests and an expanded mirrored reorderable-list probe.
 - Added paired core `AnimatedList` + `SliverAnimatedList` with source-shaped logical-index insert/remove and bulk
   operations, incoming/outgoing controller reuse, separated item/separator coordination, ancestor state lookup,
   keyed child-index remapping, typed pixel/viewport cache extents, viewport clip policy, focused tests, and mirrored

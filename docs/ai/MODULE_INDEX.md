@@ -86,7 +86,10 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Row-wide data-table ink enters through `TableRowInkWell` in `InkWell.cs`; its source rectangle comes from
   core `RenderTable.GetRowBox`, with geometry/composition coverage in `MaterialDataTableTests.cs`.
 - Material scrollbars enter through `src/Plumix.Material/Scrollbar.cs` + `ScrollbarTheme.cs`; raw overlay/interaction behavior lives in core `Widgets/Scrollbar.cs`, with adaptive defaults in `src/Plumix.Cupertino/CupertinoScrollbar.cs` and focused coverage in `MaterialScrollbarTests.cs`.
-- Reorderable lists enter through core `Widgets/ReorderableList.cs` and Material `ReorderableListView.cs`; gesture-arena drag ownership, keyed sliver items, gap animation, variable extents, and callback normalization are covered by `MaterialReorderableListTests.cs`.
+- Reorderable lists enter through core `Widgets/ReorderableList.cs` and Material `ReorderableListView.cs`; inherited
+  and explicit proxy bounds come from core `Widgets/DragBoundary.cs`. Gesture-arena drag ownership, keyed sliver
+  items, gap animation, variable extents, boundary clamping, and callback normalization are covered by
+  `MaterialReorderableListTests.cs`.
 - Animated lists enter through core `Widgets/AnimatedList.cs`; logical/physical index translation, incoming/outgoing
   item animations, separated coordination, and keyed sliver remapping are covered by `AnimatedListTests.cs`.
 - Animated grids enter through core `Widgets/AnimatedGrid.cs`; grid delegate layout, logical/physical index
@@ -266,6 +269,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/Gestures/GestureArena.cs`
   - `src/Plumix/Widgets/Gestures.cs`
   - `src/Plumix/Widgets/DragTarget.cs`
+  - `src/Plumix/Widgets/DragBoundary.cs`
   - `src/Plumix/Widgets/Overlay.cs`
   - `src/Plumix/Rendering/Overlay.cs`
   - `src/Plumix/Widgets/TapRegion.cs`

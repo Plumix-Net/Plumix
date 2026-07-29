@@ -27,8 +27,13 @@ class _ReorderableListDemoPageState extends State<ReorderableListDemoPage> {
       spacing: 10,
       children: <Widget>[
         const Text(
-          'ReorderableListView',
+          'ReorderableListView + DragBoundary',
           style: TextStyle(fontSize: 20, color: Colors.black),
+        ),
+        const Text(
+          'The nearest DragBoundary clamps the dragged proxy to the visible '
+          'list bounds.',
+          style: TextStyle(fontSize: 12, color: Colors.black54),
         ),
         Row(
           spacing: 8,
@@ -50,35 +55,37 @@ class _ReorderableListDemoPageState extends State<ReorderableListDemoPage> {
           ],
         ),
         Expanded(
-          child: ReorderableListView(
-            onReorderItem: _handleReorder,
-            onReorderStart: (int index) {
-              setState(() => _status = 'Dragging ${_items[index]}');
-            },
-            onReorderEnd: (int index) {
-              setState(() => _status = 'Dropped at insertion index $index');
-            },
-            buildDefaultDragHandles: _buildDefaultDragHandles,
-            header: const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              child: Text(
-                'Header (not reorderable)',
-                style: TextStyle(fontSize: 13, color: Colors.black),
+          child: DragBoundary(
+            child: ReorderableListView(
+              onReorderItem: _handleReorder,
+              onReorderStart: (int index) {
+                setState(() => _status = 'Dragging ${_items[index]}');
+              },
+              onReorderEnd: (int index) {
+                setState(() => _status = 'Dropped at insertion index $index');
+              },
+              buildDefaultDragHandles: _buildDefaultDragHandles,
+              header: const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                child: Text(
+                  'Header (not reorderable)',
+                  style: TextStyle(fontSize: 13, color: Colors.black),
+                ),
               ),
-            ),
-            footer: const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              child: Text(
-                'Footer (not reorderable)',
-                style: TextStyle(fontSize: 13, color: Colors.black),
+              footer: const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                child: Text(
+                  'Footer (not reorderable)',
+                  style: TextStyle(fontSize: 13, color: Colors.black),
+                ),
               ),
+              padding: const EdgeInsets.all(4),
+              itemExtent: 58,
+              children: <Widget>[
+                for (int index = 0; index < _items.length; index++)
+                  _buildItem(index),
+              ],
             ),
-            padding: const EdgeInsets.all(4),
-            itemExtent: 58,
-            children: <Widget>[
-              for (int index = 0; index < _items.length; index++)
-                _buildItem(index),
-            ],
           ),
         ),
       ],

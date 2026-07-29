@@ -1,5 +1,11 @@
 # Changelog
 
+- Added Flutter core `DragBoundary` parity with generic delegate contracts, local/global/free rectangle boundaries,
+  shortest-distance clamping, oversized-object errors, and always-notifying inherited behavior. Reorderable lists now
+  resolve the nearest boundary or explicit `dragBoundaryProvider` and clamp their dragged proxy accordingly, with
+  focused tests and a mirrored runtime probe. Advanced `Plumix` to `0.13.0-alpha.1` and `Plumix.Material` to
+  `0.7.0-alpha.1`.
+
 - Added Flutter core `AnnotatedRegion<T>` parity with source-shaped widget/render-object composition, typed
   front-to-back layer annotation lookup, exact-type matching, sized/local-position results, opaque traversal,
   offset/transform/clip propagation, focused tests, and a mirrored composited-layer runtime probe. Advanced `Plumix`

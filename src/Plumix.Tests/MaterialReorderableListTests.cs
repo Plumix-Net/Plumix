@@ -21,6 +21,8 @@ public sealed class MaterialReorderableListTests
     {
         IndexedWidgetBuilder builder = (_, index) => new SizedBox(key: new ValueKey<int>(index));
         ReorderCallback callback = (_, _) => { };
+        ReorderDragBoundaryProvider boundaryProvider = _ =>
+            new FixedRectDragBoundaryDelegate(new Rect(0, 0, 100, 100));
 
         Assert.Throws<ArgumentException>(() => new ReorderableList(builder, 1));
         Assert.Throws<ArgumentException>(() => new ReorderableList(
@@ -50,12 +52,151 @@ public sealed class MaterialReorderableListTests
         ReorderableListView list = ReorderableListView.Builder(
             builder,
             3,
-            onReorderItem: callback);
+            onReorderItem: callback,
+            dragBoundaryProvider: boundaryProvider);
         Assert.Equal(Axis.Vertical, list.ScrollDirection);
         Assert.True(list.BuildDefaultDragHandles);
         Assert.False(list.Reverse);
         Assert.False(list.ShrinkWrap);
         Assert.Equal(50, list.AutoScrollerVelocityScalar);
+        Assert.Same(boundaryProvider, list.DragBoundaryProvider);
+    }
+
+    [Fact]
+    public void DragBoundary_ProvidesGlobalLocalAndFreeRectDelegatesLikeFlutter()
+    {
+        var key = new LabeledGlobalKey<State>("drag-boundary-child");
+        Widget widget = new Align(
+            alignment: Alignment.TopLeft,
+            child: new Padding(
+                new Thickness(40, 30, 0, 0),
+                new DragBoundary(new SizedBox(width: 100, height: 100, key: key))));
+        using WidgetRenderHarness harness = new(Wrap(widget));
+        harness.Pump(new Size(240, 200));
+
+        BuildContext context = key.CurrentContext!.Value;
+        DragBoundaryDelegate<Rect> global = DragBoundary.ForRectOf(context);
+        Assert.False(global.IsWithinBoundary(new Rect(10, 10, 20, 20)));
+        Assert.True(global.IsWithinBoundary(new Rect(40, 30, 20, 20)));
+        Assert.Equal(
+            new Rect(40, 30, 20, 20),
+            global.NearestPositionWithinBoundary(new Rect(10, 10, 20, 20)));
+
+        DragBoundaryDelegate<Rect> local = DragBoundary.ForRectOf(
+            context,
+            useGlobalPosition: false);
+        Assert.True(local.IsWithinBoundary(new Rect(50, 50, 20, 20)));
+        Assert.False(local.IsWithinBoundary(new Rect(90, 90, 20, 20)));
+        Assert.Equal(
+            new Rect(80, 80, 20, 20),
+            local.NearestPositionWithinBoundary(new Rect(90, 90, 20, 20)));
+        Assert.Throws<InvalidOperationException>(() =>
+            local.NearestPositionWithinBoundary(new Rect(0, 0, 101, 20)));
+
+        var freeKey = new LabeledGlobalKey<State>("free-drag-boundary-child");
+        using WidgetRenderHarness freeHarness = new(Wrap(new SizedBox(
+            width: 100,
+            height: 100,
+            key: freeKey)));
+        freeHarness.Pump(new Size(100, 100));
+
+        BuildContext freeContext = freeKey.CurrentContext!.Value;
+        Assert.Null(DragBoundary.ForRectMaybeOf(freeContext));
+        DragBoundaryDelegate<Rect> free = DragBoundary.ForRectOf(freeContext);
+        var unrestricted = new Rect(300, 300, 300, 300);
+        Assert.True(free.IsWithinBoundary(unrestricted));
+        Assert.Equal(unrestricted, free.NearestPositionWithinBoundary(unrestricted));
+    }
+
+    [Fact]
+    public void SliverReorderableList_UsesNearestAncestorDragBoundary()
+    {
+        Scheduler.ResetForTests();
+        GestureBinding binding = GestureBinding.Instance;
+        binding.ResetForTests();
+        var listKey = new LabeledGlobalKey<SliverReorderableListState>("bounded-reorderable");
+
+        try
+        {
+            Widget list = new DragBoundary(
+                new SizedBox(
+                    height: 150,
+                    child: new CustomScrollView(
+                        slivers:
+                        [
+                            new SliverReorderableList(
+                                itemBuilder: (_, index) => new ReorderableDragStartListener(
+                                    child: new SizedBox(height: 50),
+                                    index: index,
+                                    key: new ValueKey<int>(index)),
+                                itemCount: 3,
+                                onReorderItem: (_, _) => { },
+                                itemExtent: 50,
+                                key: listKey),
+                        ])));
+            using WidgetRenderHarness harness = new(Wrap(list));
+            harness.Pump(new Size(200, 150));
+
+            DateTime start = DateTime.UtcNow;
+            DispatchDown(binding, harness.RenderView, 75, new Point(100, 25), start);
+            DispatchMove(binding, harness.RenderView, 75, new Point(100, -400), start.AddMilliseconds(100));
+
+            Assert.Equal(0, listKey.CurrentState!.DragTranslation.Y, precision: 6);
+
+            DispatchMove(binding, harness.RenderView, 75, new Point(100, 800), start.AddMilliseconds(200));
+
+            Assert.Equal(100, listKey.CurrentState.DragTranslation.Y, precision: 6);
+            DispatchUp(binding, harness.RenderView, 75, new Point(100, 800), start.AddMilliseconds(300));
+        }
+        finally
+        {
+            binding.ResetForTests();
+            Scheduler.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void SliverReorderableList_ExplicitNullBoundaryProviderOverridesAncestor()
+    {
+        Scheduler.ResetForTests();
+        GestureBinding binding = GestureBinding.Instance;
+        binding.ResetForTests();
+        var listKey = new LabeledGlobalKey<SliverReorderableListState>("unbounded-reorderable");
+
+        try
+        {
+            Widget list = new DragBoundary(
+                new SizedBox(
+                    height: 150,
+                    child: new CustomScrollView(
+                        slivers:
+                        [
+                            new SliverReorderableList(
+                                itemBuilder: (_, index) => new ReorderableDragStartListener(
+                                    child: new SizedBox(height: 50),
+                                    index: index,
+                                    key: new ValueKey<int>(index)),
+                                itemCount: 3,
+                                onReorderItem: (_, _) => { },
+                                itemExtent: 50,
+                                dragBoundaryProvider: _ => null,
+                                key: listKey),
+                        ])));
+            using WidgetRenderHarness harness = new(Wrap(list));
+            harness.Pump(new Size(200, 150));
+
+            DateTime start = DateTime.UtcNow;
+            DispatchDown(binding, harness.RenderView, 76, new Point(100, 25), start);
+            DispatchMove(binding, harness.RenderView, 76, new Point(100, -400), start.AddMilliseconds(100));
+
+            Assert.Equal(-425, listKey.CurrentState!.DragTranslation.Y, precision: 6);
+            DispatchUp(binding, harness.RenderView, 76, new Point(100, -400), start.AddMilliseconds(200));
+        }
+        finally
+        {
+            binding.ResetForTests();
+            Scheduler.ResetForTests();
+        }
     }
 
     [Fact]
@@ -387,6 +528,31 @@ public sealed class MaterialReorderableListTests
 
         root.VisitChildren(child => result.AddRange(FindDescendants<T>(child)));
         return result;
+    }
+
+    private sealed class FixedRectDragBoundaryDelegate : DragBoundaryDelegate<Rect>
+    {
+        private readonly Rect _boundary;
+
+        public FixedRectDragBoundaryDelegate(Rect boundary)
+        {
+            _boundary = boundary;
+        }
+
+        public override bool IsWithinBoundary(Rect draggedObject)
+        {
+            return _boundary.Contains(draggedObject.TopLeft)
+                   && _boundary.Contains(draggedObject.BottomRight);
+        }
+
+        public override Rect NearestPositionWithinBoundary(Rect draggedObject)
+        {
+            return new Rect(
+                Math.Clamp(draggedObject.X, _boundary.Left, _boundary.Right - draggedObject.Width),
+                Math.Clamp(draggedObject.Y, _boundary.Top, _boundary.Bottom - draggedObject.Height),
+                draggedObject.Width,
+                draggedObject.Height);
+        }
     }
 
     private sealed class WidgetRenderHarness : IDisposable
