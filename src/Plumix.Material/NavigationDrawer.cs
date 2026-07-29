@@ -214,6 +214,7 @@ internal sealed class NavigationDrawerDestinationTileState : State
         var widget = CurrentWidget;
         var destination = widget.Destination;
         var theme = Theme.Of(context);
+        ColorScheme colors = theme.ColorScheme;
         var drawerTheme = NavigationDrawerTheme.Of(context);
         var states = destination.Enabled ? MaterialState.None : MaterialState.Disabled;
         if (widget.Selected) states |= MaterialState.Selected;
@@ -225,11 +226,11 @@ internal sealed class NavigationDrawerDestinationTileState : State
                          ?? ResolveDefaultLabelStyle(theme, states);
         var indicatorShape = widget.IndicatorShape
                              ?? drawerTheme.IndicatorShape
-                             ?? ShapeBorder.RoundedRectangle(28);
+                             ?? ShapeBorder.Stadium();
         var indicatorSize = drawerTheme.IndicatorSize ?? new Size(336, 56);
         var indicatorColor = widget.IndicatorColor
                              ?? drawerTheme.IndicatorColor
-                             ?? theme.SecondaryContainerColor;
+                             ?? colors.SecondaryContainer;
         double tileHeight = drawerTheme.TileHeight ?? 56;
 
         var icon = widget.Selected && destination.SelectedIcon is not null
@@ -260,9 +261,9 @@ internal sealed class NavigationDrawerDestinationTileState : State
 
         var overlayColor = MaterialStateProperty<Color?>.ResolveWith(buttonStates =>
             buttonStates.HasFlag(MaterialState.Pressed) || buttonStates.HasFlag(MaterialState.Focused)
-                ? NavigationSurfaceUtilities.WithOpacity(theme.OnSurfaceColor, 0.10)
+                ? NavigationSurfaceUtilities.WithOpacity(colors.OnSurface, 0.10)
                 : buttonStates.HasFlag(MaterialState.Hovered)
-                    ? NavigationSurfaceUtilities.WithOpacity(theme.OnSurfaceColor, 0.08)
+                    ? NavigationSurfaceUtilities.WithOpacity(colors.OnSurface, 0.08)
                     : null);
         string indexLabel = MaterialLocalizations.Of(context).TabLabel(
             widget.Index,
@@ -332,21 +333,23 @@ internal sealed class NavigationDrawerDestinationTileState : State
 
     private static IconThemeData ResolveDefaultIconTheme(ThemeData theme, MaterialState states)
     {
-        var color = states.HasFlag(MaterialState.Disabled)
-            ? NavigationSurfaceUtilities.WithOpacity(theme.OnSurfaceVariantColor, 0.38)
+        ColorScheme colors = theme.ColorScheme;
+        Color color = states.HasFlag(MaterialState.Disabled)
+            ? NavigationSurfaceUtilities.WithOpacity(colors.OnSurfaceVariant, 0.38)
             : states.HasFlag(MaterialState.Selected)
-                ? theme.OnSecondaryContainerColor
-                : theme.OnSurfaceVariantColor;
+                ? colors.OnSecondaryContainer
+                : colors.OnSurfaceVariant;
         return new IconThemeData(Color: color, Size: 24);
     }
 
     private static TextStyle ResolveDefaultLabelStyle(ThemeData theme, MaterialState states)
     {
-        var color = states.HasFlag(MaterialState.Disabled)
-            ? NavigationSurfaceUtilities.WithOpacity(theme.OnSurfaceVariantColor, 0.38)
+        ColorScheme colors = theme.ColorScheme;
+        Color color = states.HasFlag(MaterialState.Disabled)
+            ? NavigationSurfaceUtilities.WithOpacity(colors.OnSurfaceVariant, 0.38)
             : states.HasFlag(MaterialState.Selected)
-                ? theme.OnSecondaryContainerColor
-                : theme.OnSurfaceVariantColor;
+                ? colors.OnSecondaryContainer
+                : colors.OnSurfaceVariant;
         return theme.TextTheme.LabelLarge.CopyWith(color: color);
     }
 }

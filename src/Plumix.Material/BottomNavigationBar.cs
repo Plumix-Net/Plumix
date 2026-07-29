@@ -268,7 +268,7 @@ public sealed class BottomNavigationBar : StatefulWidget
                 effectiveUnselectedColor,
                 CurrentWidget.IconSize);
 
-            var labelBaseStyle = theme.TextTheme.LabelLarge with
+            var labelBaseStyle = theme.TextTheme.BodyMedium with
             {
                 FontSize = CurrentWidget.SelectedFontSize,
             };
@@ -289,7 +289,7 @@ public sealed class BottomNavigationBar : StatefulWidget
             bool effectiveShowUnselectedLabels = CurrentWidget.ShowUnselectedLabels
                                                  ?? bottomTheme.ShowUnselectedLabels
                                                  ?? (effectiveType == BottomNavigationBarType.Fixed);
-            double? effectiveElevation = CurrentWidget.Elevation ?? bottomTheme.Elevation;
+            double effectiveElevation = CurrentWidget.Elevation ?? bottomTheme.Elevation ?? 8.0;
 
             var tiles = new List<Widget>(CurrentWidget.Items.Count);
             for (int index = 0; index < CurrentWidget.Items.Count; index++)
@@ -301,6 +301,8 @@ public sealed class BottomNavigationBar : StatefulWidget
                 var iconToColor = effectiveSelectedIconTheme.Color ?? effectiveSelectedColor;
                 double iconFromSize = effectiveUnselectedIconTheme.Size ?? CurrentWidget.IconSize;
                 double iconToSize = effectiveSelectedIconTheme.Size ?? CurrentWidget.IconSize;
+                double iconFromOpacity = effectiveUnselectedIconTheme.Opacity ?? 1.0;
+                double iconToOpacity = effectiveSelectedIconTheme.Opacity ?? 1.0;
                 var iconColor = _colorTween.Evaluate(
                     selectionValue,
                     iconFromColor,
@@ -311,7 +313,8 @@ public sealed class BottomNavigationBar : StatefulWidget
                     selectionValue);
                 var iconTheme = new IconThemeData(
                     Color: iconColor,
-                    Size: iconSize);
+                    Size: iconSize,
+                    Opacity: Lerp(iconFromOpacity, iconToOpacity, selectionValue));
 
                 bool selectedVisual = selectionValue >= 0.5;
                 var icon = selectedVisual ? item.ActiveIcon : item.Icon;
@@ -412,12 +415,12 @@ public sealed class BottomNavigationBar : StatefulWidget
                     height: DefaultHeight,
                     child: rowWithOverlay));
 
-            if (effectiveElevation.HasValue && effectiveElevation.Value > 0)
+            if (effectiveElevation > 0)
             {
                 return new Container(
                     decoration: new BoxDecoration(
                         Color: containerColor,
-                        BoxShadows: BuildBoxShadows(theme.ShadowColor, effectiveElevation.Value)),
+                        BoxShadows: BuildBoxShadows(theme.ColorScheme.Shadow, effectiveElevation)),
                     child: content);
             }
 
@@ -727,7 +730,7 @@ public sealed class BottomNavigationBar : StatefulWidget
 
         return BackgroundColor
                ?? bottomTheme.BackgroundColor
-               ?? theme.CanvasColor;
+               ?? theme.ColorScheme.Surface;
     }
 
     private static TextStyle ResolveLabelStyle(
@@ -754,7 +757,8 @@ public sealed class BottomNavigationBar : StatefulWidget
     {
         return new IconThemeData(
             Color: iconTheme?.Color ?? fallbackColor,
-            Size: iconTheme?.Size ?? fallbackSize);
+            Size: iconTheme?.Size ?? fallbackSize,
+            Opacity: iconTheme?.Opacity);
     }
 
     private static void ValidateIconTheme(string paramName, IconThemeData? iconTheme)
@@ -774,22 +778,24 @@ public sealed class BottomNavigationBar : StatefulWidget
     {
         if (type == BottomNavigationBarType.Shifting)
         {
-            return Colors.White;
+            return theme.ColorScheme.Surface;
         }
 
-        return theme.PrimaryColor;
+        return theme.ColorScheme.Brightness == Brightness.Light
+            ? theme.ColorScheme.Primary
+            : theme.ColorScheme.Secondary;
     }
 
     private static Color ResolveDefaultUnselectedColor(ThemeData theme, BottomNavigationBarType type)
     {
         if (type == BottomNavigationBarType.Shifting)
         {
-            return MaterialButtonCore.ApplyOpacity(Colors.White, 0.70);
+            return theme.ColorScheme.Surface;
         }
 
         return theme.UseMaterial3
-            ? theme.OnSurfaceVariantColor
-            : MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.60);
+            ? theme.ColorScheme.OnSurfaceVariant
+            : MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnSurface, 0.60);
     }
 
     private static BoxShadows? BuildBoxShadows(Color shadowColor, double elevation)

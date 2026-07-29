@@ -40,14 +40,22 @@ public sealed class MaterialBottomNavigationBarTests
     }
 
     [Fact]
-    public void BottomNavigationBar_DefaultColors_UseThemeCanvasPrimaryAndOnSurfaceVariant()
+    public void BottomNavigationBar_FixedDefaults_UseDirectMaterial3ColorSchemeRoles()
     {
         var owner = new BuildOwner();
         var theme = ThemeData.Light with
         {
-            CanvasColor = Colors.DarkSlateBlue,
-            PrimaryColor = Colors.OrangeRed,
-            OnSurfaceVariantColor = Colors.CadetBlue,
+            ColorScheme = ThemeData.Light.ColorScheme with
+            {
+                Surface = Colors.DarkSlateBlue,
+                Primary = Colors.OrangeRed,
+                OnSurfaceVariant = Colors.CadetBlue,
+                Shadow = Colors.DarkGreen,
+            },
+            CanvasColor = Colors.Pink,
+            PrimaryColor = Colors.Purple,
+            OnSurfaceVariantColor = Colors.Yellow,
+            ShadowColor = Colors.Transparent,
         };
 
         var root = new TestRootElement(
@@ -67,6 +75,17 @@ public sealed class MaterialBottomNavigationBarTests
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
         Assert.Equal(Colors.DarkSlateBlue, ResolveBackgroundColor(renderRoot));
+        var decorated = Assert.IsType<RenderDecoratedBox>(renderRoot);
+        Assert.True(decorated.Decoration.BoxShadows.HasValue);
+        var shadows = decorated.Decoration.BoxShadows.Value;
+        Assert.Equal(2, shadows.Count);
+        for (int index = 0; index < shadows.Count; index++)
+        {
+            Assert.Equal(Colors.DarkGreen.R, shadows[index].Color.R);
+            Assert.Equal(Colors.DarkGreen.G, shadows[index].Color.G);
+            Assert.Equal(Colors.DarkGreen.B, shadows[index].Color.B);
+            Assert.True(shadows[index].Color.A > 0);
+        }
 
         var firstLabel = FindParagraphByText(renderRoot, "First");
         var secondLabel = FindParagraphByText(renderRoot, "Second");
@@ -74,6 +93,132 @@ public sealed class MaterialBottomNavigationBarTests
         Assert.NotNull(secondLabel);
         Assert.Equal(Colors.CadetBlue, Assert.IsType<SolidColorBrush>(firstLabel!.Foreground).Color);
         Assert.Equal(Colors.OrangeRed, Assert.IsType<SolidColorBrush>(secondLabel!.Foreground).Color);
+        Assert.Equal(FontWeight.Normal, secondLabel.FontWeight);
+        Assert.Equal(1.43, secondLabel.Height);
+    }
+
+    [Fact]
+    public void BottomNavigationBar_FixedMaterial2Defaults_UseDirectOnSurfaceOpacity()
+    {
+        var owner = new BuildOwner();
+        var theme = ThemeData.Light with
+        {
+            UseMaterial3 = false,
+            ColorScheme = ThemeData.Light.ColorScheme with
+            {
+                Surface = Colors.DarkSlateBlue,
+                Primary = Colors.OrangeRed,
+                OnSurface = Colors.CadetBlue,
+            },
+            CanvasColor = Colors.Pink,
+            PrimaryColor = Colors.Purple,
+            OnSurfaceColor = Colors.Yellow,
+        };
+
+        var root = new TestRootElement(
+            WrapWithThemeAndMediaQuery(
+                theme,
+                new BottomNavigationBar(
+                    currentIndex: 1,
+                    items:
+                    [
+                        new BottomNavigationBarItem(icon: new Icon(Icons.Menu), label: "First"),
+                        new BottomNavigationBarItem(icon: new Icon(Icons.InfoOutline), label: "Second"),
+                    ])));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
+        var firstLabel = FindParagraphByText(renderRoot, "First");
+        var secondLabel = FindParagraphByText(renderRoot, "Second");
+
+        Assert.Equal(Colors.DarkSlateBlue, ResolveBackgroundColor(renderRoot));
+        Assert.NotNull(firstLabel);
+        Assert.NotNull(secondLabel);
+        Assert.Equal(
+            Color.FromArgb(153, Colors.CadetBlue.R, Colors.CadetBlue.G, Colors.CadetBlue.B),
+            Assert.IsType<SolidColorBrush>(firstLabel!.Foreground).Color);
+        Assert.Equal(Colors.OrangeRed, Assert.IsType<SolidColorBrush>(secondLabel!.Foreground).Color);
+    }
+
+    [Fact]
+    public void BottomNavigationBar_DarkFixedDefault_UsesColorSchemeSecondary()
+    {
+        var owner = new BuildOwner();
+        var theme = ThemeData.Dark with
+        {
+            ColorScheme = ThemeData.Dark.ColorScheme with
+            {
+                Primary = Colors.OrangeRed,
+                Secondary = Colors.Gold,
+            },
+            PrimaryColor = Colors.Purple,
+            SecondaryColor = Colors.Pink,
+        };
+
+        var root = new TestRootElement(
+            WrapWithThemeAndMediaQuery(
+                theme,
+                new BottomNavigationBar(
+                    currentIndex: 1,
+                    items:
+                    [
+                        new BottomNavigationBarItem(icon: new Icon(Icons.Menu), label: "First"),
+                        new BottomNavigationBarItem(icon: new Icon(Icons.InfoOutline), label: "Second"),
+                    ])));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var selectedLabel = FindParagraphByText(
+            RequireRenderObject<RenderObject>(root.ChildElement),
+            "Second");
+        Assert.NotNull(selectedLabel);
+        Assert.Equal(Colors.Gold, Assert.IsType<SolidColorBrush>(selectedLabel!.Foreground).Color);
+    }
+
+    [Fact]
+    public void BottomNavigationBar_ShiftingDefaults_UseColorSchemeSurfaceForAllItems()
+    {
+        var owner = new BuildOwner();
+        var theme = ThemeData.Light with
+        {
+            ColorScheme = ThemeData.Light.ColorScheme with
+            {
+                Surface = Colors.DarkSlateBlue,
+            },
+            CanvasColor = Colors.Pink,
+        };
+
+        var root = new TestRootElement(
+            WrapWithThemeAndMediaQuery(
+                theme,
+                new BottomNavigationBar(
+                    currentIndex: 1,
+                    type: BottomNavigationBarType.Shifting,
+                    showUnselectedLabels: true,
+                    items:
+                    [
+                        new BottomNavigationBarItem(icon: new Icon(Icons.Menu), label: "First"),
+                        new BottomNavigationBarItem(icon: new Icon(Icons.InfoOutline), label: "Second"),
+                    ])));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
+        var firstLabel = FindParagraphByText(renderRoot, "First");
+        var secondLabel = FindParagraphByText(renderRoot, "Second");
+
+        Assert.Equal(Colors.DarkSlateBlue, ResolveBackgroundColor(renderRoot));
+        Assert.NotNull(firstLabel);
+        Assert.NotNull(secondLabel);
+        Assert.Equal(Colors.DarkSlateBlue, Assert.IsType<SolidColorBrush>(firstLabel!.Foreground).Color);
+        Assert.Equal(Colors.DarkSlateBlue, Assert.IsType<SolidColorBrush>(secondLabel!.Foreground).Color);
     }
 
     [Fact]
@@ -554,6 +699,89 @@ public sealed class MaterialBottomNavigationBarTests
     }
 
     [Fact]
+    public void BottomNavigationBar_IconThemes_PreserveAndInterpolateOpacity()
+    {
+        IconThemeData? selectedTheme = null;
+        IconThemeData? unselectedTheme = null;
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            WrapWithThemeAndMediaQuery(
+                ThemeData.Light,
+                new BottomNavigationBar(
+                    currentIndex: 1,
+                    selectedIconTheme: new IconThemeData(
+                        Color: Colors.Gold,
+                        Size: 30,
+                        Opacity: 0.8),
+                    unselectedIconTheme: new IconThemeData(
+                        Color: Colors.Gray,
+                        Size: 18,
+                        Opacity: 0.4),
+                    items:
+                    [
+                        new BottomNavigationBarItem(
+                            icon: new CaptureIconThemeWidget(value => unselectedTheme = value),
+                            label: "First"),
+                        new BottomNavigationBarItem(
+                            icon: new CaptureIconThemeWidget(value => selectedTheme = value),
+                            label: "Second"),
+                    ])));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.NotNull(selectedTheme);
+        Assert.NotNull(unselectedTheme);
+        Assert.Equal(Colors.Gold, selectedTheme!.Color);
+        Assert.Equal(30, selectedTheme.Size);
+        Assert.Equal(0.8, selectedTheme.Opacity);
+        Assert.Equal(Colors.Gray, unselectedTheme!.Color);
+        Assert.Equal(18, unselectedTheme.Size);
+        Assert.Equal(0.4, unselectedTheme.Opacity);
+    }
+
+    [Fact]
+    public void BottomNavigationBarThemeData_CopyWithAndLerp_ParticipateInThemeDataLerp()
+    {
+        var begin = new BottomNavigationBarThemeData(
+            BackgroundColor: Colors.Black,
+            Elevation: 4,
+            SelectedIconTheme: new IconThemeData(Colors.Black, 16, 0.2),
+            SelectedLabelStyle: new TextStyle(FontSize: 10),
+            ShowSelectedLabels: false,
+            Type: BottomNavigationBarType.Fixed);
+        var end = new BottomNavigationBarThemeData(
+            BackgroundColor: Colors.White,
+            Elevation: 12,
+            SelectedIconTheme: new IconThemeData(Colors.White, 24, 1.0),
+            SelectedLabelStyle: new TextStyle(FontSize: 20),
+            ShowSelectedLabels: true,
+            Type: BottomNavigationBarType.Shifting);
+
+        var copied = begin.CopyWith(elevation: 8, selectedItemColor: Colors.Gold);
+        Assert.Equal(Colors.Black, copied.BackgroundColor);
+        Assert.Equal(8, copied.Elevation);
+        Assert.Equal(Colors.Gold, copied.SelectedItemColor);
+        Assert.False(copied.ShowSelectedLabels);
+
+        var midpoint = BottomNavigationBarThemeData.Lerp(begin, end, 0.5);
+        Assert.Equal(Color.FromRgb(127, 127, 127), midpoint.BackgroundColor);
+        Assert.Equal(8, midpoint.Elevation);
+        Assert.Equal(20, midpoint.SelectedIconTheme!.Size);
+        Assert.Equal(0.6, midpoint.SelectedIconTheme.Opacity!.Value, precision: 12);
+        Assert.Equal(15, midpoint.SelectedLabelStyle!.FontSize);
+        Assert.True(midpoint.ShowSelectedLabels);
+        Assert.Equal(BottomNavigationBarType.Shifting, midpoint.Type);
+
+        var themeMidpoint = ThemeData.Lerp(
+            ThemeData.Light with { BottomNavigationBarTheme = begin },
+            ThemeData.Light with { BottomNavigationBarTheme = end },
+            0.5);
+        Assert.Equal(midpoint, themeMidpoint.BottomNavigationBarTheme);
+    }
+
+    [Fact]
     public void BottomNavigationBar_IconThemesMustBeProvidedTogether()
     {
         Assert.Throws<ArgumentException>(() => new BottomNavigationBar(
@@ -714,6 +942,22 @@ public sealed class MaterialBottomNavigationBarTests
         public override string TabLabel(int tabIndex, int tabCount)
         {
             return $"Section {tabIndex + 1} / {tabCount}";
+        }
+    }
+
+    private sealed class CaptureIconThemeWidget : StatelessWidget
+    {
+        private readonly Action<IconThemeData> _capture;
+
+        public CaptureIconThemeWidget(Action<IconThemeData> capture)
+        {
+            _capture = capture;
+        }
+
+        public override Widget Build(BuildContext context)
+        {
+            _capture(IconTheme.Of(context));
+            return new SizedBox();
         }
     }
 

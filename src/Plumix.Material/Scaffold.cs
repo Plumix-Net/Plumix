@@ -76,7 +76,7 @@ public sealed class Drawer : StatelessWidget
         bool useMaterial3 = theme.UseMaterial3;
         bool isDrawerStart = DrawerController.MaybeOf(context)?.Alignment != DrawerAlignment.End;
         var effectiveBackground = BackgroundColor ?? drawerTheme.BackgroundColor ?? (useMaterial3
-            ? theme.SurfaceContainerLowColor
+            ? theme.ColorScheme.SurfaceContainerLow
             : theme.CanvasColor);
         double effectiveElevation = ResolveEffectiveElevation(drawerTheme, useMaterial3);
         double effectiveWidth = ResolveEffectiveWidth(drawerTheme);

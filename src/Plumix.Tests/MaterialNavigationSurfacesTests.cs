@@ -273,12 +273,14 @@ public sealed class MaterialNavigationSurfacesTests
     [Fact]
     public void NavigationDrawer_M3Defaults_UseSourceTokensAndSelectedVisuals()
     {
+        ColorScheme colors = ThemeData.Light.ColorScheme.CopyWith(
+            surfaceContainerLow: Colors.DarkSlateBlue,
+            secondaryContainer: Colors.DarkGreen,
+            onSecondaryContainer: Colors.Gold,
+            onSurfaceVariant: Colors.CadetBlue);
         var theme = ThemeData.Light with
         {
-            SurfaceContainerLowColor = Colors.DarkSlateBlue,
-            SecondaryContainerColor = Colors.DarkGreen,
-            OnSecondaryContainerColor = Colors.Gold,
-            OnSurfaceVariantColor = Colors.CadetBlue,
+            ColorScheme = colors,
         };
         using var harness = new WidgetRenderHarness(Wrap(
             theme,
@@ -293,6 +295,9 @@ public sealed class MaterialNavigationSurfacesTests
         Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView),
             box => box.Decoration.Color == Colors.DarkGreen);
         Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView),
+            box => box.Decoration.Color == Colors.DarkGreen
+                   && box.Decoration.BorderRadius?.Radius == 9999);
+        Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView),
             box => box.Decoration.Color == Colors.Yellow);
         Assert.Equal(Colors.CadetBlue,
             Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "Home")!.Foreground).Color);
@@ -303,6 +308,74 @@ public sealed class MaterialNavigationSurfacesTests
         Assert.Contains(FindDescendants<RenderConstrainedBox>(harness.RenderView),
             box => box.AdditionalConstraints.MinHeight == 56
                    && box.AdditionalConstraints.MaxHeight == 56);
+    }
+
+    [Fact]
+    public void NavigationDrawerThemeData_CopyWithAndLerp_CoverSourceFields()
+    {
+        var begin = new NavigationDrawerThemeData(
+            TileHeight: 48,
+            BackgroundColor: Colors.Black,
+            Elevation: 0,
+            ShadowColor: Colors.Black,
+            SurfaceTintColor: Colors.Black,
+            IndicatorColor: Colors.Black,
+            IndicatorShape: ShapeBorder.RoundedRectangle(4, new BorderSide(Colors.Black, 1)),
+            IndicatorSize: new Size(200, 40),
+            LabelTextStyle: MaterialStateProperty<TextStyle?>.All(
+                new TextStyle(Color: Colors.Black, FontSize: 10)),
+            IconTheme: MaterialStateProperty<IconThemeData?>.All(
+                new IconThemeData(Color: Colors.Black, Size: 16)));
+        NavigationDrawerThemeData end = begin.CopyWith(
+            tileHeight: 64,
+            backgroundColor: Colors.White,
+            elevation: 4,
+            shadowColor: Colors.White,
+            surfaceTintColor: Colors.White,
+            indicatorColor: Colors.White,
+            indicatorShape: ShapeBorder.RoundedRectangle(12, new BorderSide(Colors.White, 3)),
+            indicatorSize: new Size(300, 60),
+            labelTextStyle: MaterialStateProperty<TextStyle?>.All(
+                new TextStyle(Color: Colors.White, FontSize: 20)),
+            iconTheme: MaterialStateProperty<IconThemeData?>.All(
+                new IconThemeData(Color: Colors.White, Size: 24)));
+
+        NavigationDrawerThemeData midpoint = NavigationDrawerThemeData.Lerp(begin, end, 0.5)!;
+        MaterialState states = MaterialState.Selected | MaterialState.Hovered;
+
+        Assert.Equal(56, midpoint.TileHeight);
+        Assert.Equal(Color.FromRgb(127, 127, 127), midpoint.BackgroundColor);
+        Assert.Equal(2, midpoint.Elevation);
+        Assert.Equal(Color.FromRgb(127, 127, 127), midpoint.ShadowColor);
+        Assert.Equal(Color.FromRgb(127, 127, 127), midpoint.SurfaceTintColor);
+        Assert.Equal(Color.FromRgb(127, 127, 127), midpoint.IndicatorColor);
+        Assert.Equal(8, midpoint.IndicatorShape!.BorderRadius.Radius);
+        Assert.Equal(2, midpoint.IndicatorShape.Side!.Value.Width);
+        Assert.Equal(begin.IndicatorSize, midpoint.IndicatorSize);
+        Assert.Equal(15, midpoint.LabelTextStyle!.Resolve(states)!.FontSize);
+        Assert.Equal(20, midpoint.IconTheme!.Resolve(states)!.Size);
+    }
+
+    [Fact]
+    public void ThemeData_Lerp_InterpolatesNavigationDrawerTheme()
+    {
+        var begin = ThemeData.Light with
+        {
+            NavigationDrawerTheme = new NavigationDrawerThemeData(
+                TileHeight: 48,
+                IndicatorColor: Colors.Black),
+        };
+        var end = ThemeData.Dark with
+        {
+            NavigationDrawerTheme = new NavigationDrawerThemeData(
+                TileHeight: 64,
+                IndicatorColor: Colors.White),
+        };
+
+        ThemeData midpoint = ThemeData.Lerp(begin, end, 0.5);
+
+        Assert.Equal(56, midpoint.NavigationDrawerTheme.TileHeight);
+        Assert.Equal(Color.FromRgb(127, 127, 127), midpoint.NavigationDrawerTheme.IndicatorColor);
     }
 
     [Fact]
@@ -377,8 +450,14 @@ public sealed class MaterialNavigationSurfacesTests
     public void NavigationDrawer_IndexingTapDisabledAndSemanticsMatchFlutter()
     {
         int? selected = null;
+        ColorScheme colors = ThemeData.Light.ColorScheme.CopyWith(
+            onSurfaceVariant: Colors.DarkGreen);
+        var theme = ThemeData.Light with
+        {
+            ColorScheme = colors,
+        };
         using var harness = new WidgetRenderHarness(Wrap(
-            ThemeData.Light,
+            theme,
             new NavigationDrawer(
                 header: new Text("Header"),
                 footer: new Text("Footer"),
@@ -422,6 +501,10 @@ public sealed class MaterialNavigationSurfacesTests
         Assert.NotNull(disabledNode);
         Assert.False(disabledNode!.Flags.HasFlag(SemanticsFlags.IsEnabled));
         Assert.False(disabledNode.Actions.HasFlag(SemanticsActions.Tap));
+        Color disabledColor = NavigationSurfaceUtilities.WithOpacity(colors.OnSurfaceVariant, 0.38);
+        Assert.Equal(disabledColor,
+            Assert.IsType<SolidColorBrush>(
+                FindParagraph(harness.RenderView, "Disabled")!.Foreground).Color);
     }
 
     [Fact]
@@ -445,11 +528,15 @@ public sealed class MaterialNavigationSurfacesTests
     [Fact]
     public void NavigationRail_M3Defaults_UseIndicatorAndEightyPixelWidth()
     {
+        ColorScheme colors = ThemeData.Light.ColorScheme.CopyWith(
+            surface: Colors.DarkSlateBlue,
+            secondaryContainer: Colors.DarkGreen,
+            onSecondaryContainer: Colors.Gold,
+            onSurface: Colors.Purple,
+            onSurfaceVariant: Colors.CadetBlue);
         var theme = ThemeData.Light with
         {
-            SurfaceColor = Colors.DarkSlateBlue,
-            SecondaryContainerColor = Colors.DarkGreen,
-            OnSecondaryContainerColor = Colors.Gold,
+            ColorScheme = colors,
         };
         using var harness = new WidgetRenderHarness(Wrap(
             theme,
@@ -461,10 +548,135 @@ public sealed class MaterialNavigationSurfacesTests
             box => box.Decoration.Color == Colors.DarkSlateBlue);
         Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView),
             box => box.Decoration.Color == Colors.DarkGreen);
+        Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView),
+            box => box.Decoration.Color == Colors.DarkGreen
+                   && box.Decoration.BorderRadius?.Radius == 9999);
         Assert.Contains(FindDescendants<RenderConstrainedBox>(harness.RenderView),
             box => box.AdditionalConstraints.MinWidth == 80);
         Assert.NotNull(FindParagraph(harness.RenderView, "rail-selected-one"));
         Assert.Null(FindParagraph(harness.RenderView, "Rail one"));
+    }
+
+    [Fact]
+    public void NavigationRail_M2Defaults_UseColorSchemeAndPreserveDefaultUnselectedIconOpacity()
+    {
+        ColorScheme colors = ThemeData.Light.ColorScheme.CopyWith(
+            primary: Colors.DarkRed,
+            surface: Colors.DarkBlue,
+            onSurface: Colors.DarkGreen);
+        var theme = ThemeData.Light with
+        {
+            UseMaterial3 = false,
+            ColorScheme = colors,
+            NavigationRailTheme = new NavigationRailThemeData(
+                UnselectedIconTheme: new IconThemeData(Color: Colors.CadetBlue, Size: 24)),
+        };
+        IReadOnlyList<NavigationRailDestination> destinations =
+        [
+            new NavigationRailDestination(
+                icon: new Icon(Icons.Menu),
+                selectedIcon: new Icon(Icons.Menu),
+                label: new Text("Rail one")),
+            new NavigationRailDestination(
+                icon: new Icon(Icons.InfoOutline),
+                label: new Text("Rail two")),
+        ];
+        using var harness = new WidgetRenderHarness(Wrap(
+            theme,
+            RailHost(new NavigationRail(
+                destinations,
+                selectedIndex: 0,
+                labelType: NavigationRailLabelType.All))));
+
+        harness.Pump(new Size(420, 320));
+
+        Color unselectedLabelColor = NavigationSurfaceUtilities.WithOpacity(colors.OnSurface, 0.64);
+        Color unselectedIconColor = NavigationSurfaceUtilities.WithOpacity(Colors.CadetBlue, 0.64);
+        Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView),
+            box => box.Decoration.Color == colors.Surface);
+        Assert.Equal(colors.Primary,
+            Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "Rail one")!.Foreground).Color);
+        Assert.Equal(unselectedLabelColor,
+            Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "Rail two")!.Foreground).Color);
+        Assert.Equal(colors.Primary,
+            Assert.IsType<SolidColorBrush>(
+                FindParagraph(harness.RenderView, char.ConvertFromUtf32(Icons.Menu.CodePoint))!.Foreground).Color);
+        Assert.Equal(unselectedIconColor,
+            Assert.IsType<SolidColorBrush>(
+                FindParagraph(
+                    harness.RenderView,
+                    char.ConvertFromUtf32(Icons.InfoOutline.CodePoint))!.Foreground).Color);
+    }
+
+    [Fact]
+    public void NavigationRailThemeData_CopyWithAndLerp_CoverEveryField()
+    {
+        var begin = new NavigationRailThemeData(
+            BackgroundColor: Colors.Black,
+            Elevation: 0,
+            UnselectedLabelTextStyle: new TextStyle(Color: Colors.Black, FontSize: 10),
+            SelectedLabelTextStyle: new TextStyle(Color: Colors.Black, FontSize: 12),
+            UnselectedIconTheme: new IconThemeData(Color: Colors.Black, Size: 16, Opacity: 0.4),
+            SelectedIconTheme: new IconThemeData(Color: Colors.Black, Size: 18, Opacity: 0.6),
+            GroupAlignment: -1,
+            LabelType: NavigationRailLabelType.None,
+            UseIndicator: false,
+            IndicatorColor: Colors.Black,
+            IndicatorShape: ShapeBorder.RoundedRectangle(4, new BorderSide(Colors.Black, 1)),
+            MinWidth: 60,
+            MinExtendedWidth: 200);
+        NavigationRailThemeData end = begin.CopyWith(
+            backgroundColor: Colors.White,
+            elevation: 4,
+            unselectedLabelTextStyle: new TextStyle(Color: Colors.White, FontSize: 20),
+            selectedLabelTextStyle: new TextStyle(Color: Colors.White, FontSize: 22),
+            unselectedIconTheme: new IconThemeData(Color: Colors.White, Size: 24, Opacity: 0.8),
+            selectedIconTheme: new IconThemeData(Color: Colors.White, Size: 26, Opacity: 1.0),
+            groupAlignment: 1,
+            labelType: NavigationRailLabelType.All,
+            useIndicator: true,
+            indicatorColor: Colors.White,
+            indicatorShape: ShapeBorder.RoundedRectangle(12, new BorderSide(Colors.White, 3)),
+            minWidth: 80,
+            minExtendedWidth: 280);
+
+        NavigationRailThemeData midpoint = NavigationRailThemeData.Lerp(begin, end, 0.5)!;
+
+        Assert.Equal(Color.FromRgb(127, 127, 127), midpoint.BackgroundColor);
+        Assert.Equal(2, midpoint.Elevation);
+        Assert.Equal(15, midpoint.UnselectedLabelTextStyle!.FontSize);
+        Assert.Equal(17, midpoint.SelectedLabelTextStyle!.FontSize);
+        Assert.Equal(20, midpoint.UnselectedIconTheme!.Size);
+        Assert.Equal(22, midpoint.SelectedIconTheme!.Size);
+        Assert.Equal(0, midpoint.GroupAlignment);
+        Assert.Equal(NavigationRailLabelType.All, midpoint.LabelType);
+        Assert.True(midpoint.UseIndicator);
+        Assert.Equal(Color.FromRgb(127, 127, 127), midpoint.IndicatorColor);
+        Assert.Equal(8, midpoint.IndicatorShape!.BorderRadius.Radius);
+        Assert.Equal(70, midpoint.MinWidth);
+        Assert.Equal(240, midpoint.MinExtendedWidth);
+    }
+
+    [Fact]
+    public void ThemeData_Lerp_InterpolatesNavigationRailTheme()
+    {
+        var begin = ThemeData.Light with
+        {
+            NavigationRailTheme = new NavigationRailThemeData(
+                MinWidth: 60,
+                IndicatorColor: Colors.Black),
+        };
+        var end = ThemeData.Dark with
+        {
+            NavigationRailTheme = new NavigationRailThemeData(
+                MinWidth: 80,
+                IndicatorColor: Colors.White),
+        };
+
+        ThemeData midpoint = ThemeData.Lerp(begin, end, 0.5);
+
+        Assert.Equal(70, midpoint.NavigationRailTheme.MinWidth);
+        Assert.Equal(Color.FromRgb(127, 127, 127), midpoint.NavigationRailTheme.IndicatorColor);
     }
 
     [Fact]

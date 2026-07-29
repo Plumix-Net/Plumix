@@ -1021,10 +1021,22 @@ public sealed record ThemeData
             SplashColor = LerpColor(a.SplashColor, b.SplashColor, clampedT),
             AppBarTheme = AppBarThemeData.Lerp(a.AppBarTheme, b.AppBarTheme, clampedT),
             BadgeTheme = BadgeThemeData.Lerp(a.BadgeTheme, b.BadgeTheme, clampedT),
+            BottomNavigationBarTheme = BottomNavigationBarThemeData.Lerp(
+                a.BottomNavigationBarTheme,
+                b.BottomNavigationBarTheme,
+                clampedT),
             NavigationBarTheme = NavigationBarThemeData.Lerp(
                 a.NavigationBarTheme,
                 b.NavigationBarTheme,
                 clampedT) ?? new NavigationBarThemeData(),
+            NavigationRailTheme = NavigationRailThemeData.Lerp(
+                a.NavigationRailTheme,
+                b.NavigationRailTheme,
+                clampedT) ?? new NavigationRailThemeData(),
+            NavigationDrawerTheme = NavigationDrawerThemeData.Lerp(
+                a.NavigationDrawerTheme,
+                b.NavigationDrawerTheme,
+                clampedT) ?? new NavigationDrawerThemeData(),
             BottomAppBarTheme = BottomAppBarThemeData.Lerp(
                 a.BottomAppBarTheme,
                 b.BottomAppBarTheme,

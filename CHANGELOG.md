@@ -1,5 +1,21 @@
 # Changelog
 
+- Breaking: completed the legacy `BottomNavigationBar` ColorScheme/theme closeout: fixed and shifting defaults now
+  read source roles directly, dark fixed selection uses `secondary`, shifting content uses `surface`, icon-theme
+  opacity is preserved, and the default body typography/elevation/shadow paths match Flutter. Added
+  `BottomNavigationBarThemeData.CopyWith`/`Lerp` and `ThemeData.Lerp` integration; advanced `Plumix.Material` to
+  `0.16.0-alpha.1`.
+
+- Breaking: completed the `NavigationDrawer` ColorScheme/theme closeout: M3 drawer surfaces and destination
+  defaults now read source roles directly, selected/disabled colors and stadium indicator geometry match Flutter,
+  and `NavigationDrawerThemeData.CopyWith`/state-aware `Lerp` now participates in `ThemeData.Lerp`. Advanced
+  `Plumix.Material` to `0.15.0-alpha.1`.
+
+- Breaking: completed the `NavigationRail` ColorScheme/theme closeout: M2/M3 defaults and disabled/ink states now
+  read source roles directly, M2 preserves the source unselected-icon opacity contract, and M3 uses a stadium
+  indicator. Added `NavigationRailThemeData.CopyWith`/`Lerp`, shared component-theme lerp helpers, and
+  `ThemeData.Lerp` integration; advanced `Plumix.Material` to `0.14.0-alpha.1`.
+
 - Breaking: completed the `NavigationBar` ColorScheme/theme closeout: M2/M3 defaults now read source roles directly,
   the M2 surface uses Flutter's elevation-overlay formula, the M3 indicator uses a stadium shape, and
   `NavigationBarThemeData` now supports `CopyWith`/state-aware `Lerp` through `ThemeData.Lerp`. Advanced

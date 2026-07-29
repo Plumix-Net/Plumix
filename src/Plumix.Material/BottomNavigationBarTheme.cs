@@ -17,7 +17,83 @@ public sealed record BottomNavigationBarThemeData(
     TextStyle? UnselectedLabelStyle = null,
     bool? ShowSelectedLabels = null,
     bool? ShowUnselectedLabels = null,
-    BottomNavigationBarType? Type = null);
+    BottomNavigationBarType? Type = null)
+{
+    public BottomNavigationBarThemeData CopyWith(
+        Color? backgroundColor = null,
+        double? elevation = null,
+        IconThemeData? selectedIconTheme = null,
+        IconThemeData? unselectedIconTheme = null,
+        Color? selectedItemColor = null,
+        Color? unselectedItemColor = null,
+        TextStyle? selectedLabelStyle = null,
+        TextStyle? unselectedLabelStyle = null,
+        bool? showSelectedLabels = null,
+        bool? showUnselectedLabels = null,
+        BottomNavigationBarType? type = null)
+    {
+        return new BottomNavigationBarThemeData(
+            BackgroundColor: backgroundColor ?? BackgroundColor,
+            Elevation: elevation ?? Elevation,
+            SelectedIconTheme: selectedIconTheme ?? SelectedIconTheme,
+            UnselectedIconTheme: unselectedIconTheme ?? UnselectedIconTheme,
+            SelectedItemColor: selectedItemColor ?? SelectedItemColor,
+            UnselectedItemColor: unselectedItemColor ?? UnselectedItemColor,
+            SelectedLabelStyle: selectedLabelStyle ?? SelectedLabelStyle,
+            UnselectedLabelStyle: unselectedLabelStyle ?? UnselectedLabelStyle,
+            ShowSelectedLabels: showSelectedLabels ?? ShowSelectedLabels,
+            ShowUnselectedLabels: showUnselectedLabels ?? ShowUnselectedLabels,
+            Type: type ?? Type);
+    }
+
+    public static BottomNavigationBarThemeData Lerp(
+        BottomNavigationBarThemeData? a,
+        BottomNavigationBarThemeData? b,
+        double t)
+    {
+        if (ReferenceEquals(a, b) && a is not null)
+        {
+            return a;
+        }
+
+        double clampedT = Math.Clamp(t, 0.0, 1.0);
+        return new BottomNavigationBarThemeData(
+            BackgroundColor: MaterialThemeLerp.Color(
+                a?.BackgroundColor,
+                b?.BackgroundColor,
+                clampedT),
+            Elevation: MaterialThemeLerp.Double(a?.Elevation, b?.Elevation, clampedT),
+            SelectedIconTheme: MaterialThemeLerp.IconTheme(
+                a?.SelectedIconTheme,
+                b?.SelectedIconTheme,
+                clampedT),
+            UnselectedIconTheme: MaterialThemeLerp.IconTheme(
+                a?.UnselectedIconTheme,
+                b?.UnselectedIconTheme,
+                clampedT),
+            SelectedItemColor: MaterialThemeLerp.Color(
+                a?.SelectedItemColor,
+                b?.SelectedItemColor,
+                clampedT),
+            UnselectedItemColor: MaterialThemeLerp.Color(
+                a?.UnselectedItemColor,
+                b?.UnselectedItemColor,
+                clampedT),
+            SelectedLabelStyle: MaterialThemeLerp.TextStyle(
+                a?.SelectedLabelStyle,
+                b?.SelectedLabelStyle,
+                clampedT),
+            UnselectedLabelStyle: MaterialThemeLerp.TextStyle(
+                a?.UnselectedLabelStyle,
+                b?.UnselectedLabelStyle,
+                clampedT),
+            ShowSelectedLabels: clampedT < 0.5 ? a?.ShowSelectedLabels : b?.ShowSelectedLabels,
+            ShowUnselectedLabels: clampedT < 0.5
+                ? a?.ShowUnselectedLabels
+                : b?.ShowUnselectedLabels,
+            Type: clampedT < 0.5 ? a?.Type : b?.Type);
+    }
+}
 
 public sealed class BottomNavigationBarTheme : InheritedWidget
 {

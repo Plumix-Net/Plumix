@@ -220,7 +220,15 @@ internal sealed class NavigationRailState : State
         var indicatorShape = widget.IndicatorShape ?? railTheme.IndicatorShape ?? defaults.IndicatorShape;
         var unselectedLabelStyle = widget.UnselectedLabelTextStyle ?? railTheme.UnselectedLabelTextStyle ?? defaults.UnselectedLabelTextStyle!;
         var selectedLabelStyle = widget.SelectedLabelTextStyle ?? railTheme.SelectedLabelTextStyle ?? defaults.SelectedLabelTextStyle!;
-        var unselectedIconTheme = widget.UnselectedIconTheme ?? railTheme.UnselectedIconTheme ?? defaults.UnselectedIconTheme!;
+        IconThemeData unselectedIconTheme = widget.UnselectedIconTheme
+                                            ?? railTheme.UnselectedIconTheme
+                                            ?? defaults.UnselectedIconTheme!;
+        if (!theme.UseMaterial3 && !unselectedIconTheme.Opacity.HasValue)
+        {
+            unselectedIconTheme = unselectedIconTheme.CopyWith(
+                opacity: defaults.UnselectedIconTheme!.Opacity);
+        }
+
         var selectedIconTheme = widget.SelectedIconTheme ?? railTheme.SelectedIconTheme ?? defaults.SelectedIconTheme!;
         double extendedProgress = _extendedController?.Evaluate() ?? (widget.Extended ? 1 : 0);
         double effectiveWidth = minWidth + ((minExtendedWidth - minWidth) * extendedProgress);
@@ -311,18 +319,23 @@ internal sealed class NavigationRailState : State
 
     private static NavigationRailThemeData ResolveDefaults(ThemeData theme)
     {
+        ColorScheme colors = theme.ColorScheme;
         if (!theme.UseMaterial3)
         {
             return new NavigationRailThemeData(
-                BackgroundColor: theme.SurfaceColor,
+                BackgroundColor: colors.Surface,
                 Elevation: 0,
                 UnselectedLabelTextStyle: theme.TextTheme.BodyLarge.CopyWith(
-                    color: NavigationSurfaceUtilities.WithOpacity(theme.OnSurfaceColor, 0.64)),
-                SelectedLabelTextStyle: theme.TextTheme.BodyLarge.CopyWith(color: theme.PrimaryColor),
+                    color: NavigationSurfaceUtilities.WithOpacity(colors.OnSurface, 0.64)),
+                SelectedLabelTextStyle: theme.TextTheme.BodyLarge.CopyWith(color: colors.Primary),
                 UnselectedIconTheme: new IconThemeData(
-                    Color: NavigationSurfaceUtilities.WithOpacity(theme.OnSurfaceColor, 0.64),
-                    Size: 24),
-                SelectedIconTheme: new IconThemeData(Color: theme.PrimaryColor, Size: 24),
+                    Color: colors.OnSurface,
+                    Size: 24,
+                    Opacity: 0.64),
+                SelectedIconTheme: new IconThemeData(
+                    Color: colors.Primary,
+                    Size: 24,
+                    Opacity: 1.0),
                 GroupAlignment: -1,
                 LabelType: NavigationRailLabelType.None,
                 UseIndicator: false,
@@ -331,17 +344,17 @@ internal sealed class NavigationRailState : State
         }
 
         return new NavigationRailThemeData(
-            BackgroundColor: theme.SurfaceColor,
+            BackgroundColor: colors.Surface,
             Elevation: 0,
-            UnselectedLabelTextStyle: theme.TextTheme.LabelMedium.CopyWith(color: theme.OnSurfaceColor),
-            SelectedLabelTextStyle: theme.TextTheme.LabelMedium.CopyWith(color: theme.OnSurfaceColor),
-            UnselectedIconTheme: new IconThemeData(Color: theme.OnSurfaceVariantColor, Size: 24),
-            SelectedIconTheme: new IconThemeData(Color: theme.OnSecondaryContainerColor, Size: 24),
+            UnselectedLabelTextStyle: theme.TextTheme.LabelMedium.CopyWith(color: colors.OnSurface),
+            SelectedLabelTextStyle: theme.TextTheme.LabelMedium.CopyWith(color: colors.OnSurface),
+            UnselectedIconTheme: new IconThemeData(Color: colors.OnSurfaceVariant, Size: 24),
+            SelectedIconTheme: new IconThemeData(Color: colors.OnSecondaryContainer, Size: 24),
             GroupAlignment: -1,
             LabelType: NavigationRailLabelType.None,
             UseIndicator: true,
-            IndicatorColor: theme.SecondaryContainerColor,
-            IndicatorShape: ShapeBorder.RoundedRectangle(16),
+            IndicatorColor: colors.SecondaryContainer,
+            IndicatorShape: ShapeBorder.Stadium(),
             MinWidth: 80,
             MinExtendedWidth: 256);
     }
@@ -440,7 +453,8 @@ internal sealed class NavigationRailDestinationTileState : State
         var destination = widget.Destination;
         double selectionProgress = _selectionController?.Evaluate() ?? (widget.Selected ? 1 : 0);
         var icon = widget.Selected ? destination.SelectedIcon : destination.Icon;
-        var disabledColor = NavigationSurfaceUtilities.WithOpacity(Theme.Of(context).OnSurfaceColor, 0.38);
+        ColorScheme colors = Theme.Of(context).ColorScheme;
+        Color disabledColor = NavigationSurfaceUtilities.WithOpacity(colors.OnSurface, 0.38);
         var iconTheme = destination.Disabled
             ? widget.IconTheme.CopyWith(color: disabledColor)
             : widget.IconTheme;
@@ -508,16 +522,23 @@ internal sealed class NavigationRailDestinationTileState : State
                         children: children)));
         }
 
-        var primary = Theme.Of(context).PrimaryColor;
+        Color primary = colors.Primary;
+        bool primaryAlphaModified = primary.A < byte.MaxValue;
+        Color splashColor = primaryAlphaModified
+            ? primary
+            : NavigationSurfaceUtilities.WithOpacity(primary, 0.12);
+        Color hoverColor = primaryAlphaModified
+            ? primary
+            : NavigationSurfaceUtilities.WithOpacity(primary, 0.04);
         var style = new ButtonStyle(
             BackgroundColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
             OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
                 states.HasFlag(MaterialState.Pressed)
-                    ? NavigationSurfaceUtilities.WithOpacity(primary, 0.12)
+                    ? splashColor
                     : states.HasFlag(MaterialState.Hovered)
-                        ? NavigationSurfaceUtilities.WithOpacity(primary, 0.04)
+                        ? hoverColor
                         : null),
-            SplashColor: MaterialStateProperty<Color?>.All(NavigationSurfaceUtilities.WithOpacity(primary, 0.12)),
+            SplashColor: MaterialStateProperty<Color?>.All(splashColor),
             Padding: MaterialStateProperty<Thickness?>.All(default),
             Shape: MaterialStateProperty<BorderRadius?>.All(
                 widget.IndicatorShape?.BorderRadius ?? Plumix.Rendering.BorderRadius.Circular(widget.MinWidth / 2)),

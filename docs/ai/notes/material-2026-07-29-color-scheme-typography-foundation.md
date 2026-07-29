@@ -61,6 +61,10 @@
   `theme.colorScheme` roles, retaining legacy M2 paths where Dart does.
 - Completed component families:
   - `NavigationBar` (direct M2/M3 roles, exact M2 overlay background, M3 stadium indicator, theme copy/lerp).
+  - `NavigationRail` (direct M2/M3 roles, source M2 icon opacity/ink policy, M3 stadium indicator, theme copy/lerp).
+  - `NavigationDrawer` (direct M3 surface/destination roles, disabled states, stadium indicator, theme copy/lerp).
+  - Legacy `BottomNavigationBar` (direct fixed/shifting and light/dark roles, source body typography, icon opacity,
+    default elevation/shadow, theme copy/lerp).
 - Add `Typography.Material2014`/`Material2018`, exact platform black/white themes, dense/tall geometry, and locale
   script-category selection.
 - Remove the narrowed `ColorScheme + Typography closeout` row from `docs/MATERIAL_TODO.md` only after those checks

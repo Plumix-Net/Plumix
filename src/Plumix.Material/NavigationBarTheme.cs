@@ -63,145 +63,32 @@ public sealed record NavigationBarThemeData(
 
         double clampedT = Math.Clamp(t, 0.0, 1.0);
         return new NavigationBarThemeData(
-            Height: LerpDouble(a?.Height, b?.Height, clampedT),
-            BackgroundColor: LerpColor(a?.BackgroundColor, b?.BackgroundColor, clampedT),
-            Elevation: LerpDouble(a?.Elevation, b?.Elevation, clampedT),
-            ShadowColor: LerpColor(a?.ShadowColor, b?.ShadowColor, clampedT),
-            SurfaceTintColor: LerpColor(a?.SurfaceTintColor, b?.SurfaceTintColor, clampedT),
-            IndicatorColor: LerpColor(a?.IndicatorColor, b?.IndicatorColor, clampedT),
-            IndicatorShape: LerpShape(a?.IndicatorShape, b?.IndicatorShape, clampedT),
-            LabelTextStyle: LerpStateProperty(
+            Height: MaterialThemeLerp.Double(a?.Height, b?.Height, clampedT),
+            BackgroundColor: MaterialThemeLerp.Color(a?.BackgroundColor, b?.BackgroundColor, clampedT),
+            Elevation: MaterialThemeLerp.Double(a?.Elevation, b?.Elevation, clampedT),
+            ShadowColor: MaterialThemeLerp.Color(a?.ShadowColor, b?.ShadowColor, clampedT),
+            SurfaceTintColor: MaterialThemeLerp.Color(
+                a?.SurfaceTintColor,
+                b?.SurfaceTintColor,
+                clampedT),
+            IndicatorColor: MaterialThemeLerp.Color(a?.IndicatorColor, b?.IndicatorColor, clampedT),
+            IndicatorShape: MaterialThemeLerp.Shape(a?.IndicatorShape, b?.IndicatorShape, clampedT),
+            LabelTextStyle: MaterialThemeLerp.StateProperty(
                 a?.LabelTextStyle,
                 b?.LabelTextStyle,
                 clampedT,
-                LerpTextStyle),
-            IconTheme: LerpStateProperty(
+                MaterialThemeLerp.TextStyle),
+            IconTheme: MaterialThemeLerp.StateProperty(
                 a?.IconTheme,
                 b?.IconTheme,
                 clampedT,
-                IconThemeData.Lerp),
+                MaterialThemeLerp.IconTheme),
             LabelBehavior: clampedT < 0.5 ? a?.LabelBehavior : b?.LabelBehavior,
-            OverlayColor: LerpColorStateProperty(
+            OverlayColor: MaterialThemeLerp.ColorStateProperty(
                 a?.OverlayColor,
                 b?.OverlayColor,
                 clampedT),
-            LabelPadding: LerpThickness(a?.LabelPadding, b?.LabelPadding, clampedT));
-    }
-
-    private static MaterialStateProperty<T?>? LerpStateProperty<T>(
-        MaterialStateProperty<T?>? a,
-        MaterialStateProperty<T?>? b,
-        double t,
-        Func<T?, T?, double, T?> lerp) where T : class
-    {
-        if (a is null && b is null)
-        {
-            return null;
-        }
-
-        return MaterialStateProperty<T?>.ResolveWith(
-            states => lerp(a?.Resolve(states), b?.Resolve(states), t));
-    }
-
-    private static MaterialStateProperty<Color?>? LerpColorStateProperty(
-        MaterialStateProperty<Color?>? a,
-        MaterialStateProperty<Color?>? b,
-        double t)
-    {
-        if (a is null && b is null)
-        {
-            return null;
-        }
-
-        return MaterialStateProperty<Color?>.ResolveWith(
-            states => LerpColor(a?.Resolve(states), b?.Resolve(states), t));
-    }
-
-    private static double? LerpDouble(double? a, double? b, double t)
-    {
-        if (!a.HasValue && !b.HasValue)
-        {
-            return null;
-        }
-
-        double from = a ?? 0.0;
-        double to = b ?? 0.0;
-        return from + ((to - from) * t);
-    }
-
-    private static Color? LerpColor(Color? a, Color? b, double t)
-    {
-        if (!a.HasValue && !b.HasValue)
-        {
-            return null;
-        }
-
-        Color from = a ?? Color.FromArgb(0, b!.Value.R, b.Value.G, b.Value.B);
-        Color to = b ?? Color.FromArgb(0, a!.Value.R, a.Value.G, a.Value.B);
-        return new ColorTween().Evaluate(t, from, to);
-    }
-
-    private static TextStyle? LerpTextStyle(TextStyle? a, TextStyle? b, double t)
-    {
-        if (a is null && b is null)
-        {
-            return null;
-        }
-
-        return TextStyle.Lerp(a ?? new TextStyle(), b ?? new TextStyle(), t);
-    }
-
-    private static ShapeBorder? LerpShape(ShapeBorder? a, ShapeBorder? b, double t)
-    {
-        if (a is null || b is null)
-        {
-            return t < 0.5 ? a : b;
-        }
-
-        BorderSide? side = LerpBorderSide(a.Side, b.Side, t);
-        double radius = a.BorderRadius.Radius
-                        + ((b.BorderRadius.Radius - a.BorderRadius.Radius) * t);
-        return new ShapeBorder(BorderRadius.Circular(radius), side)
-        {
-            Shape = t < 0.5 ? a.Shape : b.Shape,
-        };
-    }
-
-    private static BorderSide? LerpBorderSide(BorderSide? a, BorderSide? b, double t)
-    {
-        if (!a.HasValue && !b.HasValue)
-        {
-            return null;
-        }
-
-        BorderSide from = a ?? new BorderSide(
-            Color.FromArgb(0, b!.Value.Color.R, b.Value.Color.G, b.Value.Color.B),
-            0.0,
-            b.Value.Style);
-        BorderSide to = b ?? new BorderSide(
-            Color.FromArgb(0, a!.Value.Color.R, a.Value.Color.G, a.Value.Color.B),
-            0.0,
-            a.Value.Style);
-        return new BorderSide(
-            LerpColor(from.Color, to.Color, t)!.Value,
-            from.Width + ((to.Width - from.Width) * t),
-            t < 0.5 ? from.Style : to.Style);
-    }
-
-    private static Thickness? LerpThickness(Thickness? a, Thickness? b, double t)
-    {
-        if (!a.HasValue && !b.HasValue)
-        {
-            return null;
-        }
-
-        Thickness from = a ?? default;
-        Thickness to = b ?? default;
-        return new Thickness(
-            from.Left + ((to.Left - from.Left) * t),
-            from.Top + ((to.Top - from.Top) * t),
-            from.Right + ((to.Right - from.Right) * t),
-            from.Bottom + ((to.Bottom - from.Bottom) * t));
+            LabelPadding: MaterialThemeLerp.Thickness(a?.LabelPadding, b?.LabelPadding, clampedT));
     }
 }
 
