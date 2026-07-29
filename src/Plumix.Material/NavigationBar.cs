@@ -205,23 +205,27 @@ public sealed class NavigationBar : StatelessWidget
 
     private static NavigationBarThemeData ResolveDefaults(ThemeData theme)
     {
+        ColorScheme colors = theme.ColorScheme;
         if (!theme.UseMaterial3)
         {
             return new NavigationBarThemeData(
                 Height: 80,
-                BackgroundColor: NavigationSurfaceUtilities.Blend(theme.SurfaceColor, theme.OnSurfaceColor, 0.08),
+                BackgroundColor: ElevationOverlay.ColorWithOverlay(
+                    colors.Surface,
+                    colors.OnSurface,
+                    3.0),
                 Elevation: 0,
-                IndicatorColor: NavigationSurfaceUtilities.WithOpacity(theme.SecondaryColor, 0.24),
+                IndicatorColor: NavigationSurfaceUtilities.WithOpacity(colors.Secondary, 0.24),
                 IndicatorShape: ShapeBorder.RoundedRectangle(16),
                 LabelTextStyle: MaterialStateProperty<TextStyle?>.All(
-                    theme.TextTheme.LabelSmall.CopyWith(color: theme.OnSurfaceColor)),
+                    theme.TextTheme.LabelSmall.CopyWith(color: colors.OnSurface)),
                 IconTheme: MaterialStateProperty<IconThemeData?>.All(
-                    new IconThemeData(Color: theme.OnSurfaceColor, Size: 24)),
+                    new IconThemeData(Color: colors.OnSurface, Size: 24)),
                 OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
                     states.HasFlag(MaterialState.Pressed) || states.HasFlag(MaterialState.Focused)
-                        ? NavigationSurfaceUtilities.WithOpacity(theme.OnSurfaceColor, 0.12)
+                        ? NavigationSurfaceUtilities.WithOpacity(colors.OnSurface, 0.12)
                         : states.HasFlag(MaterialState.Hovered)
-                            ? NavigationSurfaceUtilities.WithOpacity(theme.OnSurfaceColor, 0.04)
+                            ? NavigationSurfaceUtilities.WithOpacity(colors.OnSurface, 0.04)
                             : null),
                 LabelBehavior: NavigationDestinationLabelBehavior.AlwaysShow,
                 LabelPadding: new Thickness(0, 4, 0, 0));
@@ -229,32 +233,32 @@ public sealed class NavigationBar : StatelessWidget
 
         return new NavigationBarThemeData(
             Height: 80,
-            BackgroundColor: theme.SurfaceContainerColor,
+            BackgroundColor: colors.SurfaceContainer,
             Elevation: 3,
             ShadowColor: Colors.Transparent,
             SurfaceTintColor: Colors.Transparent,
-            IndicatorColor: theme.SecondaryContainerColor,
-            IndicatorShape: ShapeBorder.RoundedRectangle(16),
+            IndicatorColor: colors.SecondaryContainer,
+            IndicatorShape: ShapeBorder.Stadium(),
             LabelTextStyle: MaterialStateProperty<TextStyle?>.ResolveWith(states =>
                 theme.TextTheme.LabelMedium.CopyWith(color:
                     states.HasFlag(MaterialState.Disabled)
-                        ? NavigationSurfaceUtilities.WithOpacity(theme.OnSurfaceVariantColor, 0.38)
+                        ? NavigationSurfaceUtilities.WithOpacity(colors.OnSurfaceVariant, 0.38)
                         : states.HasFlag(MaterialState.Selected)
-                            ? theme.OnSurfaceColor
-                            : theme.OnSurfaceVariantColor)),
+                            ? colors.OnSurface
+                            : colors.OnSurfaceVariant)),
             IconTheme: MaterialStateProperty<IconThemeData?>.ResolveWith(states =>
                 new IconThemeData(
                     Color: states.HasFlag(MaterialState.Disabled)
-                        ? NavigationSurfaceUtilities.WithOpacity(theme.OnSurfaceVariantColor, 0.38)
+                        ? NavigationSurfaceUtilities.WithOpacity(colors.OnSurfaceVariant, 0.38)
                         : states.HasFlag(MaterialState.Selected)
-                            ? theme.OnSecondaryContainerColor
-                            : theme.OnSurfaceVariantColor,
+                            ? colors.OnSecondaryContainer
+                            : colors.OnSurfaceVariant,
                     Size: 24)),
             OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
                 states.HasFlag(MaterialState.Pressed) || states.HasFlag(MaterialState.Focused)
-                    ? NavigationSurfaceUtilities.WithOpacity(theme.OnSurfaceColor, 0.10)
+                    ? NavigationSurfaceUtilities.WithOpacity(colors.OnSurface, 0.10)
                     : states.HasFlag(MaterialState.Hovered)
-                        ? NavigationSurfaceUtilities.WithOpacity(theme.OnSurfaceColor, 0.08)
+                        ? NavigationSurfaceUtilities.WithOpacity(colors.OnSurface, 0.08)
                         : null),
             LabelBehavior: NavigationDestinationLabelBehavior.AlwaysShow,
             LabelPadding: new Thickness(0, 4, 0, 0));
@@ -342,7 +346,7 @@ public sealed class NavigationIndicator : StatelessWidget
                 height: Height,
                 child: new DecoratedBox(
                     decoration: new BoxDecoration(
-                        Color: Color ?? Theme.Of(context).SecondaryColor,
+                        Color: Color ?? Theme.Of(context).ColorScheme.Secondary,
                         Border: shape.Side,
                         BorderRadius: shape.BorderRadius))));
     }

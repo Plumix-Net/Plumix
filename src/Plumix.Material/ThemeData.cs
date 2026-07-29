@@ -1021,6 +1021,10 @@ public sealed record ThemeData
             SplashColor = LerpColor(a.SplashColor, b.SplashColor, clampedT),
             AppBarTheme = AppBarThemeData.Lerp(a.AppBarTheme, b.AppBarTheme, clampedT),
             BadgeTheme = BadgeThemeData.Lerp(a.BadgeTheme, b.BadgeTheme, clampedT),
+            NavigationBarTheme = NavigationBarThemeData.Lerp(
+                a.NavigationBarTheme,
+                b.NavigationBarTheme,
+                clampedT) ?? new NavigationBarThemeData(),
             BottomAppBarTheme = BottomAppBarThemeData.Lerp(
                 a.BottomAppBarTheme,
                 b.BottomAppBarTheme,

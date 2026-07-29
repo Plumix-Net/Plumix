@@ -31,12 +31,15 @@ public sealed class MaterialNavigationSurfacesTests
     [Fact]
     public void NavigationBar_M3Defaults_UseSurfaceContainerAndSelectedTokens()
     {
+        ColorScheme colors = ThemeData.Light.ColorScheme.CopyWith(
+            surfaceContainer: Colors.DarkSlateBlue,
+            secondaryContainer: Colors.DarkGreen,
+            onSecondaryContainer: Colors.Gold,
+            onSurface: Colors.Purple,
+            onSurfaceVariant: Colors.CadetBlue);
         var theme = ThemeData.Light with
         {
-            SurfaceContainerColor = Colors.DarkSlateBlue,
-            SecondaryContainerColor = Colors.DarkGreen,
-            OnSecondaryContainerColor = Colors.Gold,
-            OnSurfaceVariantColor = Colors.CadetBlue,
+            ColorScheme = colors,
         };
         using var harness = new WidgetRenderHarness(Wrap(
             theme,
@@ -50,7 +53,10 @@ public sealed class MaterialNavigationSurfacesTests
             box => box.Decoration.Color == Colors.DarkSlateBlue);
         Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView),
             box => box.Decoration.Color == Colors.DarkGreen);
-        Assert.Equal(theme.OnSurfaceColor,
+        Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView),
+            box => box.Decoration.Color == Colors.DarkGreen
+                   && box.Decoration.BorderRadius?.Radius == 9999);
+        Assert.Equal(colors.OnSurface,
             Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "Two")!.Foreground).Color);
         Assert.Equal(Colors.CadetBlue,
             Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "One")!.Foreground).Color);
@@ -92,10 +98,14 @@ public sealed class MaterialNavigationSurfacesTests
     [Fact]
     public void NavigationSurfaces_M2Defaults_UseLegacyLabelGeometryAndIndicatorPolicy()
     {
+        ColorScheme colors = ThemeData.Light.ColorScheme.CopyWith(
+            secondary: Colors.DarkGreen,
+            surface: Colors.DarkBlue,
+            onSurface: Colors.Gold);
         var theme = ThemeData.Light with
         {
             UseMaterial3 = false,
-            SecondaryColor = Colors.DarkGreen,
+            ColorScheme = colors,
         };
         using var barHarness = new WidgetRenderHarness(Wrap(
             theme,
@@ -103,6 +113,12 @@ public sealed class MaterialNavigationSurfacesTests
         barHarness.Pump(new Size(320, 160));
 
         var expectedIndicator = NavigationSurfaceUtilities.WithOpacity(Colors.DarkGreen, 0.24);
+        Color expectedBackground = ElevationOverlay.ColorWithOverlay(
+            colors.Surface,
+            colors.OnSurface,
+            3.0);
+        Assert.Contains(FindDescendants<RenderDecoratedBox>(barHarness.RenderView),
+            box => box.Decoration.Color == expectedBackground);
         Assert.Contains(FindDescendants<RenderDecoratedBox>(barHarness.RenderView),
             box => box.Decoration.Color == expectedIndicator);
         Assert.Equal(11, FindParagraph(barHarness.RenderView, "One")!.FontSize);
@@ -116,6 +132,77 @@ public sealed class MaterialNavigationSurfacesTests
             box => box.AdditionalConstraints.MinWidth == 72);
         Assert.DoesNotContain(FindDescendants<RenderDecoratedBox>(railHarness.RenderView),
             box => box.Decoration.Color == theme.SecondaryContainerColor);
+    }
+
+    [Fact]
+    public void NavigationBarThemeData_CopyWithAndLerp_CoverEveryStatefulField()
+    {
+        var begin = new NavigationBarThemeData(
+            Height: 60,
+            BackgroundColor: Colors.Black,
+            Elevation: 0,
+            ShadowColor: Colors.Black,
+            SurfaceTintColor: Colors.Black,
+            IndicatorColor: Colors.Black,
+            IndicatorShape: ShapeBorder.RoundedRectangle(4, new BorderSide(Colors.Black, 1)),
+            LabelTextStyle: MaterialStateProperty<TextStyle?>.All(
+                new TextStyle(Color: Colors.Black, FontSize: 10)),
+            IconTheme: MaterialStateProperty<IconThemeData?>.All(
+                new IconThemeData(Color: Colors.Black, Size: 16)),
+            LabelBehavior: NavigationDestinationLabelBehavior.AlwaysHide,
+            OverlayColor: MaterialStateProperty<Color?>.All(Colors.Black),
+            LabelPadding: new Thickness(0, 2, 0, 0));
+        NavigationBarThemeData end = begin.CopyWith(
+            height: 80,
+            backgroundColor: Colors.White,
+            elevation: 4,
+            shadowColor: Colors.White,
+            surfaceTintColor: Colors.White,
+            indicatorColor: Colors.White,
+            indicatorShape: ShapeBorder.RoundedRectangle(12, new BorderSide(Colors.White, 3)),
+            labelTextStyle: MaterialStateProperty<TextStyle?>.All(
+                new TextStyle(Color: Colors.White, FontSize: 20)),
+            iconTheme: MaterialStateProperty<IconThemeData?>.All(
+                new IconThemeData(Color: Colors.White, Size: 24)),
+            labelBehavior: NavigationDestinationLabelBehavior.AlwaysShow,
+            overlayColor: MaterialStateProperty<Color?>.All(Colors.White),
+            labelPadding: new Thickness(0, 6, 0, 0));
+
+        NavigationBarThemeData midpoint = NavigationBarThemeData.Lerp(begin, end, 0.5)!;
+        MaterialState states = MaterialState.Selected | MaterialState.Hovered;
+
+        Assert.Equal(70, midpoint.Height);
+        Assert.Equal(2, midpoint.Elevation);
+        Assert.Equal(Color.FromRgb(127, 127, 127), midpoint.BackgroundColor);
+        Assert.Equal(8, midpoint.IndicatorShape!.BorderRadius.Radius);
+        Assert.Equal(2, midpoint.IndicatorShape.Side!.Value.Width);
+        Assert.Equal(15, midpoint.LabelTextStyle!.Resolve(states)!.FontSize);
+        Assert.Equal(20, midpoint.IconTheme!.Resolve(states)!.Size);
+        Assert.Equal(Color.FromRgb(127, 127, 127), midpoint.OverlayColor!.Resolve(states));
+        Assert.Equal(new Thickness(0, 4, 0, 0), midpoint.LabelPadding);
+        Assert.Equal(NavigationDestinationLabelBehavior.AlwaysShow, midpoint.LabelBehavior);
+    }
+
+    [Fact]
+    public void ThemeData_Lerp_InterpolatesNavigationBarTheme()
+    {
+        var begin = ThemeData.Light with
+        {
+            NavigationBarTheme = new NavigationBarThemeData(
+                Height: 60,
+                IndicatorColor: Colors.Black),
+        };
+        var end = ThemeData.Dark with
+        {
+            NavigationBarTheme = new NavigationBarThemeData(
+                Height: 80,
+                IndicatorColor: Colors.White),
+        };
+
+        ThemeData midpoint = ThemeData.Lerp(begin, end, 0.5);
+
+        Assert.Equal(70, midpoint.NavigationBarTheme.Height);
+        Assert.Equal(Color.FromRgb(127, 127, 127), midpoint.NavigationBarTheme.IndicatorColor);
     }
 
     [Fact]

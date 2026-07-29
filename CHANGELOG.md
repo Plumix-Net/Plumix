@@ -1,5 +1,10 @@
 # Changelog
 
+- Breaking: completed the `NavigationBar` ColorScheme/theme closeout: M2/M3 defaults now read source roles directly,
+  the M2 surface uses Flutter's elevation-overlay formula, the M3 indicator uses a stadium shape, and
+  `NavigationBarThemeData` now supports `CopyWith`/state-aware `Lerp` through `ThemeData.Lerp`. Advanced
+  `Plumix.Material` to `0.13.0-alpha.1`.
+
 - Breaking: added a Flutter-shaped Material theme foundation with `ColorScheme`, `TextTheme`, and
   `Typography`. Added all Material 3 color roles, exact HCT seed generation for every dynamic scheme variant and
   contrast level, complete 2021 type-scale composition, scheme-driven `ThemeData` defaults/interpolation, focused

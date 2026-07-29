@@ -59,6 +59,8 @@
 
 - Migrate one related component family at a time from flat compatibility colors to the exact Dart
   `theme.colorScheme` roles, retaining legacy M2 paths where Dart does.
+- Completed component families:
+  - `NavigationBar` (direct M2/M3 roles, exact M2 overlay background, M3 stadium indicator, theme copy/lerp).
 - Add `Typography.Material2014`/`Material2018`, exact platform black/white themes, dense/tall geometry, and locale
   script-category selection.
 - Remove the narrowed `ColorScheme + Typography closeout` row from `docs/MATERIAL_TODO.md` only after those checks
