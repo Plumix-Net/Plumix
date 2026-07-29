@@ -28,6 +28,8 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Read First:
   - `src/Plumix.Material/ThemeData.cs`
   - `src/Plumix.Material/Theme.cs`
+  - `src/Plumix.Material/ColorScheme.cs`
+  - `src/Plumix.Material/Typography.cs`
   - `src/Plumix.Material/ElevationOverlay.cs`
   - `src/Plumix.Material/App.cs`
   - `src/Plumix.Material/PageTransitionsTheme.cs`
@@ -38,6 +40,8 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix.Material/ButtonStyle.cs`
   - `src/Plumix.Material/MaterialLocalizations.cs`
 - Then per target control: control file + its theme file + its `src/Plumix.Tests/Material*Tests.cs` + demo pages (`src/Sample/Plumix.Sample/Demos/Material/*`, `dart_sample/lib/demos/material/*`).
+- Material color/typography work enters through `ColorScheme.cs`, `Typography.cs`, and `ThemeData.cs`, with focused
+  coverage in `MaterialColorSchemeTests.cs` and `MaterialThemeAnimationTests.cs`.
 - Badges enter through `Badge.cs` + `BadgeTheme.cs`; physical/logical alignment resolution uses core
   `Rendering/AlignmentGeometry.cs`, with focused coverage in `MaterialBadgeTests.cs`.
 - Paired composition controls such as `GridTile` + `GridTileBar` share one focused test/demo surface when their Flutter implementations are directly coupled.

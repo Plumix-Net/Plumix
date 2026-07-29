@@ -20,16 +20,20 @@ internal sealed class NavigationSurfacesDemoPageState : State
     private bool _useMaterial3 = true;
     private bool _extended;
     private bool _useThemeOverrides;
+    private bool _useSeedScheme;
     private NavigationDestinationLabelBehavior _barLabelBehavior = NavigationDestinationLabelBehavior.AlwaysShow;
     private NavigationRailLabelType _railLabelType = NavigationRailLabelType.All;
 
     public override Widget Build(BuildContext context)
     {
         var baseTheme = Theme.Of(context);
-        var pageTheme = baseTheme with
-        {
-            UseMaterial3 = _useMaterial3,
-        };
+        ColorScheme colorScheme = _useSeedScheme
+            ? ColorScheme.FromSeed(Color.Parse("#FF006495"))
+            : baseTheme.ColorScheme;
+        var pageTheme = new ThemeData(
+            platform: baseTheme.Platform,
+            colorScheme: colorScheme,
+            useMaterial3: _useMaterial3);
         if (_useThemeOverrides)
         {
             pageTheme = pageTheme with
@@ -55,16 +59,26 @@ internal sealed class NavigationSurfacesDemoPageState : State
                 [
                     new Text("NavigationBar + NavigationRail", fontSize: 20),
                     new Text(
-                        "Selection animation, labels, disabled destinations, M2/M3 defaults, and theme precedence.",
+                        "Seed-generated ColorScheme, Material 2021 typography, navigation defaults, "
+                        + "and theme precedence.",
                         fontSize: 14,
                         color: Color.Parse("#8A000000")),
                     new Row(
                         spacing: 8,
                         children:
                         [
-                            ControlButton(_useMaterial3 ? "Material 3" : "Material 2", () => SetState(() => _useMaterial3 = !_useMaterial3)),
-                            ControlButton(_useThemeOverrides ? "Theme on" : "Theme off", () => SetState(() => _useThemeOverrides = !_useThemeOverrides)),
-                            ControlButton(_extended ? "Rail extended" : "Rail compact", () => SetState(() => _extended = !_extended)),
+                            ControlButton(
+                                _useMaterial3 ? "Material 3" : "Material 2",
+                                () => SetState(() => _useMaterial3 = !_useMaterial3)),
+                            ControlButton(
+                                _useSeedScheme ? "Seed scheme" : "Baseline scheme",
+                                () => SetState(() => _useSeedScheme = !_useSeedScheme)),
+                            ControlButton(
+                                _useThemeOverrides ? "Theme on" : "Theme off",
+                                () => SetState(() => _useThemeOverrides = !_useThemeOverrides)),
+                            ControlButton(
+                                _extended ? "Rail extended" : "Rail compact",
+                                () => SetState(() => _extended = !_extended)),
                         ]),
                     new Row(
                         spacing: 8,
@@ -74,6 +88,19 @@ internal sealed class NavigationSurfacesDemoPageState : State
                             ControlButton($"Rail: {Format(_railLabelType)}", CycleRailLabels),
                         ]),
                     new Text($"Selected destination: {_selectedIndex + 1}", fontSize: 13),
+                    new Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children:
+                        [
+                            PaletteChip("primary", colorScheme.Primary, colorScheme.OnPrimary),
+                            PaletteChip("secondary", colorScheme.Secondary, colorScheme.OnSecondary),
+                            PaletteChip("tertiary", colorScheme.Tertiary, colorScheme.OnTertiary),
+                        ]),
+                    new DefaultTextStyle(
+                        style: pageTheme.TextTheme.TitleMedium,
+                        child: new Text(
+                            $"titleMedium · {pageTheme.TextTheme.TitleMedium.FontSize:0}px")),
                     new Container(
                         decoration: new BoxDecoration(
                             Border: new BorderSide(Color.Parse("#33000000")),
@@ -135,6 +162,16 @@ internal sealed class NavigationSurfacesDemoPageState : State
     }
 
     private static string Format(object value) => value.ToString()!.ToLowerInvariant();
+
+    private static Widget PaletteChip(string label, Color color, Color onColor)
+    {
+        return new Container(
+            width: 104,
+            height: 48,
+            color: color,
+            alignment: Alignment.Center,
+            child: new Text(label, fontSize: 11, color: onColor));
+    }
 
     private static Widget ControlButton(string label, Action onPressed)
     {

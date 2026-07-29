@@ -14,6 +14,7 @@ class _NavigationSurfacesDemoPageState
   bool _useMaterial3 = true;
   bool _extended = false;
   bool _useThemeOverrides = false;
+  bool _useSeedScheme = false;
   NavigationDestinationLabelBehavior _barLabelBehavior =
       NavigationDestinationLabelBehavior.alwaysShow;
   NavigationRailLabelType _railLabelType = NavigationRailLabelType.all;
@@ -21,9 +22,11 @@ class _NavigationSurfacesDemoPageState
   @override
   Widget build(BuildContext context) {
     final ThemeData ambientTheme = Theme.of(context);
+    final ColorScheme colorScheme = _useSeedScheme
+        ? ColorScheme.fromSeed(seedColor: const Color(0xFF006495))
+        : ambientTheme.colorScheme;
     ThemeData pageTheme = ThemeData(
-      colorScheme: ambientTheme.colorScheme,
-      textTheme: ambientTheme.textTheme,
+      colorScheme: colorScheme,
       useMaterial3: _useMaterial3,
     );
     if (_useThemeOverrides) {
@@ -53,7 +56,7 @@ class _NavigationSurfacesDemoPageState
           ),
           const SizedBox(height: 14),
           const Text(
-            'Selection animation, labels, disabled destinations, M2/M3 defaults, and theme precedence.',
+            'Seed-generated ColorScheme, Material 2021 typography, navigation defaults, and theme precedence.',
             style: TextStyle(fontSize: 14, color: Color(0x8A000000)),
           ),
           const SizedBox(height: 14),
@@ -64,6 +67,10 @@ class _NavigationSurfacesDemoPageState
               _controlButton(
                 _useMaterial3 ? 'Material 3' : 'Material 2',
                 () => setState(() => _useMaterial3 = !_useMaterial3),
+              ),
+              _controlButton(
+                _useSeedScheme ? 'Seed scheme' : 'Baseline scheme',
+                () => setState(() => _useSeedScheme = !_useSeedScheme),
               ),
               _controlButton(
                 _useThemeOverrides ? 'Theme on' : 'Theme off',
@@ -79,6 +86,33 @@ class _NavigationSurfacesDemoPageState
           ),
           const SizedBox(height: 14),
           Text('Selected destination: ${_selectedIndex + 1}'),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: <Widget>[
+              _paletteChip(
+                'primary',
+                colorScheme.primary,
+                colorScheme.onPrimary,
+              ),
+              _paletteChip(
+                'secondary',
+                colorScheme.secondary,
+                colorScheme.onSecondary,
+              ),
+              _paletteChip(
+                'tertiary',
+                colorScheme.tertiary,
+                colorScheme.onTertiary,
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'titleMedium · ${pageTheme.textTheme.titleMedium?.fontSize?.toStringAsFixed(0)}px',
+            style: pageTheme.textTheme.titleMedium,
+          ),
           const SizedBox(height: 14),
           DecoratedBox(
             decoration: BoxDecoration(
@@ -190,6 +224,16 @@ class _NavigationSurfacesDemoPageState
         minimumSize: const Size(0, 36),
       ),
       child: Text(label, style: const TextStyle(fontSize: 12)),
+    );
+  }
+
+  Widget _paletteChip(String label, Color color, Color onColor) {
+    return Container(
+      width: 104,
+      height: 48,
+      alignment: Alignment.center,
+      color: color,
+      child: Text(label, style: TextStyle(fontSize: 11, color: onColor)),
     );
   }
 }

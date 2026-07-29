@@ -101,6 +101,6 @@ public sealed class TimePickerTheme : InheritedWidget
 
 internal static class TimePickerTextThemeExtensions
 {
-    public static TextStyle OverlineFallback(this MaterialTextTheme theme) =>
+    public static TextStyle OverlineFallback(this TextTheme theme) =>
         theme.LabelSmall.CopyWith(letterSpacing: 1.5);
 }

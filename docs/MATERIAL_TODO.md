@@ -23,7 +23,7 @@ Size legend: **S** — one focused widget, few states. **M** — widget family o
 
 | Subsystem | Flutter source | Size | Notes |
 | --- | --- | --- | --- |
-| `ColorScheme` + `Typography` | `color_scheme.dart`, `typography.dart`, `text_theme.dart` | L | `ThemeData` currently exposes flat color/text fields; migrating to token-based `ColorScheme`/`Typography` touches every ported control. Maintainer coordination required. |
+| `ColorScheme` + `Typography` closeout | `color_scheme.dart`, `typography.dart`, `text_theme.dart`, component defaults | L | The Material 3 role model, HCT seed generation, 2021 type scale, and `ThemeData` projection now exist. Remaining closeout is direct per-component `colorScheme` token consumption plus legacy 2014/2018 and locale-script typography geometry. See `docs/ai/notes/material-2026-07-29-color-scheme-typography-foundation.md`. |
 | Predictive-back + snapshot transition specialization | `page_transitions_theme.dart`, `predictive_back_page_transitions_builder.dart` | L | Core route hooks and live-widget Material/Cupertino builders now exist. Remaining work is snapshot/delegated-transition ownership, predictive-back progress, and host gesture plumbing. |
 
 ## Not listed / out of scope

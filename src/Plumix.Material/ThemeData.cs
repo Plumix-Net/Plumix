@@ -199,204 +199,6 @@ public sealed record AppBarThemeData(
     }
 }
 
-public sealed record MaterialTextTheme
-{
-    private static readonly FontFamily DefaultBodyFontFamily = ResolveDefaultBodyFontFamily();
-
-    public MaterialTextTheme(
-        TextStyle? bodyMedium = null,
-        TextStyle? titleLarge = null,
-        TextStyle? labelLarge = null,
-        TextStyle? labelSmall = null,
-        TextStyle? titleMedium = null,
-        TextStyle? bodyLarge = null,
-        TextStyle? labelMedium = null,
-        TextStyle? bodySmall = null,
-        TextStyle? headlineSmall = null,
-        TextStyle? titleSmall = null,
-        TextStyle? headlineMedium = null)
-    {
-        BodyMedium = bodyMedium ?? DefaultBodyMedium;
-        BodyLarge = bodyLarge ?? DefaultBodyLarge;
-        BodySmall = bodySmall ?? DefaultBodySmall;
-        TitleLarge = titleLarge ?? DefaultTitleLarge;
-        LabelLarge = labelLarge ?? DefaultLabelLarge;
-        LabelMedium = labelMedium ?? DefaultLabelMedium;
-        LabelSmall = labelSmall ?? DefaultLabelSmall;
-        TitleMedium = titleMedium ?? DefaultTitleMedium;
-        HeadlineSmall = headlineSmall ?? DefaultHeadlineSmall;
-        HeadlineMedium = headlineMedium ?? DefaultHeadlineMedium;
-        TitleSmall = titleSmall ?? DefaultTitleSmall;
-    }
-
-    public TextStyle BodyMedium { get; init; }
-
-    public TextStyle BodyLarge { get; init; }
-
-    public TextStyle BodySmall { get; init; }
-
-    public TextStyle TitleLarge { get; init; }
-
-    public TextStyle LabelLarge { get; init; }
-
-    public TextStyle LabelMedium { get; init; }
-
-    public TextStyle LabelSmall { get; init; }
-
-    public TextStyle TitleMedium { get; init; }
-
-    public TextStyle HeadlineSmall { get; init; }
-
-    public TextStyle HeadlineMedium { get; init; }
-
-    public TextStyle TitleSmall { get; init; }
-
-    public static MaterialTextTheme Lerp(MaterialTextTheme a, MaterialTextTheme b, double t)
-    {
-        ArgumentNullException.ThrowIfNull(a);
-        ArgumentNullException.ThrowIfNull(b);
-        return new MaterialTextTheme(
-            bodyMedium: TextStyle.Lerp(a.BodyMedium, b.BodyMedium, t),
-            bodyLarge: TextStyle.Lerp(a.BodyLarge, b.BodyLarge, t),
-            bodySmall: TextStyle.Lerp(a.BodySmall, b.BodySmall, t),
-            titleLarge: TextStyle.Lerp(a.TitleLarge, b.TitleLarge, t),
-            labelLarge: TextStyle.Lerp(a.LabelLarge, b.LabelLarge, t),
-            labelMedium: TextStyle.Lerp(a.LabelMedium, b.LabelMedium, t),
-            labelSmall: TextStyle.Lerp(a.LabelSmall, b.LabelSmall, t),
-            titleMedium: TextStyle.Lerp(a.TitleMedium, b.TitleMedium, t),
-            headlineSmall: TextStyle.Lerp(a.HeadlineSmall, b.HeadlineSmall, t),
-            headlineMedium: TextStyle.Lerp(a.HeadlineMedium, b.HeadlineMedium, t),
-            titleSmall: TextStyle.Lerp(a.TitleSmall, b.TitleSmall, t));
-    }
-
-    public static TextStyle DefaultBodyMedium { get; } = new(
-        FontFamily: DefaultBodyFontFamily,
-        FontSize: 14,
-        Color: Color.Parse("#FF1D1B20"),
-        FontWeight: FontWeight.Normal,
-        FontStyle: FontStyle.Normal,
-        Height: 1.43,
-        LetterSpacing: 0.25);
-
-    public static TextStyle DefaultBodyLarge { get; } = new(
-        FontFamily: DefaultBodyFontFamily,
-        FontSize: 16,
-        Color: Color.Parse("#FF1D1B20"),
-        FontWeight: FontWeight.Normal,
-        FontStyle: FontStyle.Normal,
-        Height: 1.5,
-        LetterSpacing: 0.5);
-
-    public static TextStyle DefaultBodySmall { get; } = new(
-        FontFamily: DefaultBodyFontFamily,
-        FontSize: 12,
-        Color: Color.Parse("#FF49454F"),
-        FontWeight: FontWeight.Normal,
-        FontStyle: FontStyle.Normal,
-        Height: 1.33,
-        LetterSpacing: 0.4);
-
-    public static TextStyle DefaultTitleLarge { get; } = new(
-        FontFamily: DefaultBodyFontFamily,
-        FontSize: 22,
-        Color: Color.Parse("#FF1D1B20"),
-        FontWeight: FontWeight.Normal,
-        FontStyle: FontStyle.Normal,
-        Height: 1.27,
-        LetterSpacing: 0.0);
-
-    public static TextStyle DefaultLabelLarge { get; } = new(
-        FontFamily: DefaultBodyFontFamily,
-        FontSize: 14,
-        Color: Color.Parse("#FF1D1B20"),
-        FontWeight: FontWeight.Medium,
-        FontStyle: FontStyle.Normal,
-        Height: 1.43,
-        LetterSpacing: 0.1);
-
-    public static TextStyle DefaultTitleSmall { get; } = new(
-        FontFamily: DefaultBodyFontFamily,
-        FontSize: 14,
-        Color: Color.Parse("#FF1D1B20"),
-        FontWeight: FontWeight.Medium,
-        FontStyle: FontStyle.Normal,
-        Height: 1.43,
-        LetterSpacing: 0.1);
-
-    public static TextStyle DefaultLabelMedium { get; } = new(
-        FontFamily: DefaultBodyFontFamily,
-        FontSize: 12,
-        Color: Color.Parse("#FF1D1B20"),
-        FontWeight: FontWeight.Medium,
-        FontStyle: FontStyle.Normal,
-        Height: 1.33,
-        LetterSpacing: 0.5);
-
-    public static TextStyle DefaultLabelSmall { get; } = new(
-        FontFamily: DefaultBodyFontFamily,
-        FontSize: 11,
-        Color: Color.Parse("#FF1D1B20"),
-        FontWeight: FontWeight.Medium,
-        FontStyle: FontStyle.Normal,
-        Height: 1.45,
-        LetterSpacing: 0.5);
-
-    public static TextStyle DefaultTitleMedium { get; } = new(
-        FontFamily: DefaultBodyFontFamily,
-        FontSize: 16,
-        Color: Color.Parse("#FF1D1B20"),
-        FontWeight: FontWeight.Normal,
-        FontStyle: FontStyle.Normal,
-        Height: 1.5,
-        LetterSpacing: 0.15);
-
-    public static TextStyle DefaultHeadlineSmall { get; } = new(
-        FontFamily: DefaultBodyFontFamily,
-        FontSize: 24,
-        Color: Color.Parse("#FF1D1B20"),
-        FontWeight: FontWeight.Normal,
-        FontStyle: FontStyle.Normal,
-        Height: 1.33,
-        LetterSpacing: 0.0);
-
-    public static TextStyle DefaultHeadlineMedium { get; } = new(
-        FontFamily: DefaultBodyFontFamily,
-        FontSize: 28,
-        Color: Color.Parse("#FF1D1B20"),
-        FontWeight: FontWeight.Normal,
-        FontStyle: FontStyle.Normal,
-        Height: 1.29,
-        LetterSpacing: 0.0);
-
-    public static MaterialTextTheme Fallback { get; } = new();
-
-    private static FontFamily ResolveDefaultBodyFontFamily()
-    {
-        if (OperatingSystem.IsIOS() || OperatingSystem.IsMacOS())
-        {
-            return new FontFamily(".AppleSystemUIFont");
-        }
-
-        if (OperatingSystem.IsAndroid())
-        {
-            // Plumix.Sample Material typography on Android resolves through Roboto.
-            return new FontFamily("Roboto");
-        }
-
-        if (OperatingSystem.IsWindows())
-        {
-            return new FontFamily("Segoe UI");
-        }
-
-        if (OperatingSystem.IsLinux())
-        {
-            return new FontFamily("Noto Sans");
-        }
-
-        return Avalonia.Media.FontFamily.Default;
-    }
-}
-
 public sealed record ThemeData
 {
     private static readonly Color LightScaffoldAndCanvasColor = Color.Parse("#FFFEF7FF");
@@ -480,7 +282,10 @@ public sealed record ThemeData
     public ThemeData(
         TargetPlatform? platform = null,
         Brightness? brightness = null,
-        MaterialTextTheme? textTheme = null,
+        ColorScheme? colorScheme = null,
+        Color? colorSchemeSeed = null,
+        Typography? typography = null,
+        TextTheme? textTheme = null,
         Color? scaffoldBackgroundColor = null,
         Color? canvasColor = null,
         Color? primaryColor = null,
@@ -533,7 +338,7 @@ public sealed record ThemeData
         TooltipThemeData? tooltipTheme = null,
         Color? primaryColorLight = null,
         Color? primaryColorDark = null,
-        MaterialTextTheme? primaryTextTheme = null,
+        TextTheme? primaryTextTheme = null,
         IconThemeData? iconTheme = null,
         Color? surfaceContainerColor = null,
         NavigationBarThemeData? navigationBarTheme = null,
@@ -579,43 +384,83 @@ public sealed record ThemeData
         bool? applyElevationOverlayColor = null)
     {
         Platform = platform ?? ResolveDefaultPlatform();
-        Brightness = brightness ?? Brightness.Light;
+        if (brightness.HasValue
+            && colorScheme is not null
+            && brightness.Value != colorScheme.Brightness)
+        {
+            throw new ArgumentException(
+                "ThemeData brightness must match ColorScheme brightness.");
+        }
+        if (colorSchemeSeed.HasValue && colorScheme is not null)
+        {
+            throw new ArgumentException(
+                "Only one of colorSchemeSeed and colorScheme may be specified.");
+        }
+        if (colorSchemeSeed.HasValue && primaryColor.HasValue)
+        {
+            throw new ArgumentException(
+                "Only one of colorSchemeSeed and primaryColor may be specified.");
+        }
+
+        Brightness = brightness ?? colorScheme?.Brightness ?? Brightness.Light;
+        UseMaterial3 = useMaterial3 ?? true;
+        ColorScheme = colorSchemeSeed.HasValue
+            ? ColorScheme.FromSeed(colorSchemeSeed.Value, Brightness)
+            : colorScheme
+              ?? (UseMaterial3
+                  ? Brightness == Brightness.Dark
+                      ? ColorScheme.Material3Dark
+                      : ColorScheme.Material3Light
+                  : Brightness == Brightness.Dark
+                      ? ColorScheme.Dark()
+                      : ColorScheme.Light());
+        Typography = typography
+                     ?? Plumix.Material.Typography.Material2021(
+                         platform: Platform,
+                         colorScheme: ColorScheme);
         ApplyElevationOverlayColor = applyElevationOverlayColor
-                                     ?? ((useMaterial3 ?? true) && Brightness == Brightness.Dark);
-        TextTheme = textTheme ?? MaterialTextTheme.Fallback;
-        ScaffoldBackgroundColor = scaffoldBackgroundColor ?? LightScaffoldAndCanvasColor;
-        CanvasColor = canvasColor ?? LightScaffoldAndCanvasColor;
-        PrimaryColor = primaryColor ?? LightPrimaryColor;
+                                     ?? (UseMaterial3 && Brightness == Brightness.Dark);
+        TextTheme defaultTextTheme = Brightness == Brightness.Dark
+            ? Typography.White
+            : Typography.Black;
+        TextTheme = defaultTextTheme.Merge(textTheme);
+        ScaffoldBackgroundColor = scaffoldBackgroundColor ?? ColorScheme.Surface;
+        CanvasColor = canvasColor ?? ColorScheme.Surface;
+        PrimaryColor = primaryColor
+                       ?? (Brightness == Brightness.Dark
+                           ? ColorScheme.Surface
+                           : ColorScheme.Primary);
         PrimaryColorLight = primaryColorLight ?? DefaultPrimaryColorLight;
         PrimaryColorDark = primaryColorDark ?? DefaultPrimaryColorDark;
-        PrimaryTextTheme = primaryTextTheme ?? new MaterialTextTheme(
-            titleMedium: MaterialTextTheme.DefaultTitleMedium.CopyWith(color: Colors.White));
-        IconTheme = iconTheme ?? new IconThemeData(Color: LightOnSurfaceColor, Size: 24);
-        SecondaryColor = secondaryColor ?? LightSecondaryColor;
-        OnPrimaryColor = onPrimaryColor ?? Colors.White;
-        PrimaryContainerColor = primaryContainerColor ?? LightPrimaryContainerColor;
-        OnPrimaryContainerColor = onPrimaryContainerColor ?? LightOnPrimaryContainerColor;
-        UseMaterial3 = useMaterial3 ?? true;
+        TextTheme defaultPrimaryTextTheme = EstimateBrightnessForColor(PrimaryColor) == Brightness.Dark
+            ? Typography.White
+            : Typography.Black;
+        PrimaryTextTheme = defaultPrimaryTextTheme.Merge(primaryTextTheme);
+        IconTheme = iconTheme ?? new IconThemeData(Color: ColorScheme.OnSurface, Size: 24);
+        SecondaryColor = secondaryColor ?? ColorScheme.Secondary;
+        OnPrimaryColor = onPrimaryColor ?? ColorScheme.OnPrimary;
+        PrimaryContainerColor = primaryContainerColor ?? ColorScheme.PrimaryContainer;
+        OnPrimaryContainerColor = onPrimaryContainerColor ?? ColorScheme.OnPrimaryContainer;
         _appBarTheme = appBarTheme;
-        ShadowColor = shadowColor ?? LightShadowColor;
-        SurfaceColor = surfaceColor ?? LightSurfaceColor;
-        OnSurfaceColor = onSurfaceColor ?? LightOnSurfaceColor;
-        OnSurfaceVariantColor = onSurfaceVariantColor ?? LightOnSurfaceVariantColor;
-        OutlineColor = outlineColor ?? LightOutlineColor;
-        OutlineVariantColor = outlineVariantColor ?? LightOutlineVariantColor;
-        DividerColor = dividerColor ?? LightDividerColor;
-        CardColor = cardColor ?? LightCardColor;
-        SurfaceContainerLowColor = surfaceContainerLowColor ?? LightSurfaceContainerLowColor;
-        SurfaceContainerColor = surfaceContainerColor ?? LightSurfaceContainerColor;
-        SurfaceContainerHighColor = surfaceContainerHighColor ?? LightSurfaceContainerHighColor;
-        SurfaceContainerHighestColor = surfaceContainerHighestColor ?? LightSurfaceContainerHighestColor;
-        SecondaryContainerColor = secondaryContainerColor ?? LightSecondaryContainerColor;
-        OnSecondaryContainerColor = onSecondaryContainerColor ?? LightOnSecondaryContainerColor;
-        InverseSurfaceColor = inverseSurfaceColor ?? LightInverseSurfaceColor;
-        OnInverseSurfaceColor = onInverseSurfaceColor ?? LightOnInverseSurfaceColor;
-        InversePrimaryColor = inversePrimaryColor ?? LightInversePrimaryColor;
-        ErrorColor = errorColor ?? LightErrorColor;
-        OnErrorColor = onErrorColor ?? LightOnErrorColor;
+        ShadowColor = shadowColor ?? ColorScheme.Shadow;
+        SurfaceColor = surfaceColor ?? ColorScheme.Surface;
+        OnSurfaceColor = onSurfaceColor ?? ColorScheme.OnSurface;
+        OnSurfaceVariantColor = onSurfaceVariantColor ?? ColorScheme.OnSurfaceVariant;
+        OutlineColor = outlineColor ?? ColorScheme.Outline;
+        OutlineVariantColor = outlineVariantColor ?? ColorScheme.OutlineVariant;
+        DividerColor = dividerColor ?? ColorScheme.Outline;
+        CardColor = cardColor ?? ColorScheme.Surface;
+        SurfaceContainerLowColor = surfaceContainerLowColor ?? ColorScheme.SurfaceContainerLow;
+        SurfaceContainerColor = surfaceContainerColor ?? ColorScheme.SurfaceContainer;
+        SurfaceContainerHighColor = surfaceContainerHighColor ?? ColorScheme.SurfaceContainerHigh;
+        SurfaceContainerHighestColor = surfaceContainerHighestColor ?? ColorScheme.SurfaceContainerHighest;
+        SecondaryContainerColor = secondaryContainerColor ?? ColorScheme.SecondaryContainer;
+        OnSecondaryContainerColor = onSecondaryContainerColor ?? ColorScheme.OnSecondaryContainer;
+        InverseSurfaceColor = inverseSurfaceColor ?? ColorScheme.InverseSurface;
+        OnInverseSurfaceColor = onInverseSurfaceColor ?? ColorScheme.OnInverseSurface;
+        InversePrimaryColor = inversePrimaryColor ?? ColorScheme.InversePrimary;
+        ErrorColor = errorColor ?? ColorScheme.Error;
+        OnErrorColor = onErrorColor ?? ColorScheme.OnError;
         DisabledColor = disabledColor ?? ApplyOpacity(OnSurfaceColor, 0.38);
         HintColor = hintColor ?? ApplyOpacity(OnSurfaceColor, 0.60);
         FocusColor = focusColor ?? ApplyOpacity(OnSurfaceColor, 0.12);
@@ -691,9 +536,13 @@ public sealed record ThemeData
 
     public Brightness Brightness { get; init; }
 
+    public ColorScheme ColorScheme { get; init; }
+
+    public Typography Typography { get; init; }
+
     public bool ApplyElevationOverlayColor { get; init; }
 
-    public MaterialTextTheme TextTheme { get; init; }
+    public TextTheme TextTheme { get; init; }
 
     public Color ScaffoldBackgroundColor { get; init; }
 
@@ -705,7 +554,7 @@ public sealed record ThemeData
 
     public Color PrimaryColorDark { get; init; }
 
-    public MaterialTextTheme PrimaryTextTheme { get; init; }
+    public TextTheme PrimaryTextTheme { get; init; }
 
     public IconThemeData IconTheme { get; init; }
 
@@ -1093,33 +942,7 @@ public sealed record ThemeData
 
     public static ThemeData Light { get; } = new();
 
-    public static ThemeData Dark { get; } = new(
-        brightness: Brightness.Dark,
-        textTheme: new MaterialTextTheme(
-            bodyMedium: MaterialTextTheme.DefaultBodyMedium.CopyWith(color: Colors.White),
-            bodyLarge: MaterialTextTheme.DefaultBodyLarge.CopyWith(color: Colors.White),
-            bodySmall: MaterialTextTheme.DefaultBodySmall.CopyWith(color: Color.FromArgb(0xB3, 0xFF, 0xFF, 0xFF)),
-            titleLarge: MaterialTextTheme.DefaultTitleLarge.CopyWith(color: Colors.White),
-            titleMedium: MaterialTextTheme.DefaultTitleMedium.CopyWith(color: Colors.White),
-            headlineSmall: MaterialTextTheme.DefaultHeadlineSmall.CopyWith(color: Colors.White),
-            headlineMedium: MaterialTextTheme.DefaultHeadlineMedium.CopyWith(color: Colors.White),
-            labelLarge: MaterialTextTheme.DefaultLabelLarge.CopyWith(color: Colors.White),
-            labelMedium: MaterialTextTheme.DefaultLabelMedium.CopyWith(color: Colors.White),
-            labelSmall: MaterialTextTheme.DefaultLabelSmall.CopyWith(color: Colors.White)),
-        scaffoldBackgroundColor: Color.Parse("#FF121212"),
-        canvasColor: Color.Parse("#FF121212"),
-        primaryColor: Color.Parse("#FFBB86FC"),
-        secondaryColor: Color.Parse("#FF03DAC6"),
-        onPrimaryColor: Colors.Black,
-        surfaceColor: Color.Parse("#FF121212"),
-        onSurfaceColor: Colors.White,
-        onSurfaceVariantColor: Color.FromArgb(0xB3, 0xFF, 0xFF, 0xFF),
-        inverseSurfaceColor: Color.Parse("#FFE6E1E5"),
-        onInverseSurfaceColor: Color.Parse("#FF322F35"),
-        inversePrimaryColor: Color.Parse("#FF6750A4"),
-        surfaceContainerHighColor: Color.Parse("#FF211F26"),
-        cardColor: Color.Parse("#FF1E1E1E"),
-        iconTheme: new IconThemeData(Color: Colors.White, Size: 24));
+    public static ThemeData Dark { get; } = new(brightness: Brightness.Dark);
 
     public static ThemeData Lerp(ThemeData a, ThemeData b, double t)
     {
@@ -1138,8 +961,10 @@ public sealed record ThemeData
         ThemeData selected = clampedT < 0.5 ? a : b;
         return selected with
         {
-            TextTheme = MaterialTextTheme.Lerp(a.TextTheme, b.TextTheme, clampedT),
-            PrimaryTextTheme = MaterialTextTheme.Lerp(a.PrimaryTextTheme, b.PrimaryTextTheme, clampedT),
+            ColorScheme = ColorScheme.Lerp(a.ColorScheme, b.ColorScheme, clampedT),
+            Typography = Typography.Lerp(a.Typography, b.Typography, clampedT),
+            TextTheme = TextTheme.Lerp(a.TextTheme, b.TextTheme, clampedT),
+            PrimaryTextTheme = TextTheme.Lerp(a.PrimaryTextTheme, b.PrimaryTextTheme, clampedT),
             IconTheme = IconThemeData.Lerp(a.IconTheme, b.IconTheme, clampedT),
             VisualDensity = VisualDensity.Lerp(a.VisualDensity, b.VisualDensity, clampedT),
             ScaffoldBackgroundColor = LerpColor(a.ScaffoldBackgroundColor, b.ScaffoldBackgroundColor, clampedT),

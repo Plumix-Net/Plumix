@@ -84,7 +84,9 @@ public sealed class MaterialGridTileTests
         var title = FindParagraph(harness.RenderView, "Title");
         Assert.NotNull(title);
         Assert.Equal(16, title!.FontSize);
-        Assert.Equal(Colors.White, Assert.IsType<SolidColorBrush>(title.Foreground).Color);
+        Assert.Equal(
+            ThemeData.Dark.TextTheme.TitleMedium.Color,
+            Assert.IsType<SolidColorBrush>(title.Foreground).Color);
         Assert.False(title.SoftWrap);
         Assert.Equal(TextOverflow.Ellipsis, title.Overflow);
     }
@@ -123,8 +125,12 @@ public sealed class MaterialGridTileTests
         Assert.NotNull(subtitle);
         Assert.Equal(16, title!.FontSize);
         Assert.Equal(12, subtitle!.FontSize);
-        Assert.Equal(Colors.White, Assert.IsType<SolidColorBrush>(title.Foreground).Color);
-        Assert.Equal(Color.FromArgb(0xB3, 0xFF, 0xFF, 0xFF), Assert.IsType<SolidColorBrush>(subtitle.Foreground).Color);
+        Assert.Equal(
+            ThemeData.Dark.TextTheme.TitleMedium.Color,
+            Assert.IsType<SolidColorBrush>(title.Foreground).Color);
+        Assert.Equal(
+            ThemeData.Dark.TextTheme.BodySmall.Color,
+            Assert.IsType<SolidColorBrush>(subtitle.Foreground).Color);
         Assert.False(title.SoftWrap);
         Assert.False(subtitle.SoftWrap);
         Assert.Equal(TextOverflow.Ellipsis, title.Overflow);

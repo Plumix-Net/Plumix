@@ -1,5 +1,10 @@
 # Changelog
 
+- Breaking: added a Flutter-shaped Material theme foundation with `ColorScheme`, `TextTheme`, and
+  `Typography`. Added all Material 3 color roles, exact HCT seed generation for every dynamic scheme variant and
+  contrast level, complete 2021 type-scale composition, scheme-driven `ThemeData` defaults/interpolation, focused
+  coverage, and a mirrored palette/typography runtime probe. Advanced `Plumix.Material` to `0.12.0-alpha.1`.
+
 - Breaking: added Flutter-structured `ElevationOverlay` with interpolated M3 surface-tint levels, logarithmic M2
   dark-surface overlays, ambient theme policy, and shared Material surface integration. Added focused coverage and
   advanced `Plumix.Material` to `0.11.0-alpha.1`.
