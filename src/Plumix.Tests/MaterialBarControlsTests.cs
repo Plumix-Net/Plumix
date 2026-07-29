@@ -28,7 +28,9 @@ public sealed class MaterialBarControlsTests
         var m3Theme = ThemeData.Light with
         {
             UseMaterial3 = true,
-            SurfaceContainerColor = Colors.MistyRose,
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(
+                surfaceContainer: Colors.MistyRose),
+            SurfaceContainerColor = Colors.Gold,
         };
         using var m3 = new WidgetRenderHarness(Wrap(
             new BottomAppBar(child: new SizedBox(height: 20)),
@@ -152,6 +154,7 @@ public sealed class MaterialBarControlsTests
                     new Scaffold(
                         body: new SizedBox(),
                         floatingActionButton: new FloatingActionButton(new Icon(Icons.Add), () => { }),
+                        floatingActionButtonLocation: FloatingActionButtonLocation.EndDocked,
                         bottomNavigationBar: new BottomAppBar(
                             shape: new CircularNotchedRectangle(),
                             notchMargin: 4,
@@ -176,6 +179,55 @@ public sealed class MaterialBarControlsTests
     }
 
     [Fact]
+    public void BottomAppBar_NotchTracksConfiguredFabLocationAndExcludesHits()
+    {
+        using var harness = new WidgetRenderHarness(Wrap(
+            new Scaffold(
+                body: new SizedBox(),
+                floatingActionButton: new FloatingActionButton(new Icon(Icons.Add), () => { }),
+                floatingActionButtonLocation: FloatingActionButtonLocation.CenterDocked,
+                bottomNavigationBar: new BottomAppBar(
+                    shape: new CircularNotchedRectangle(),
+                    clipBehavior: Clip.None,
+                    height: 80,
+                    child: new GestureDetector(
+                        behavior: HitTestBehavior.Opaque,
+                        child: new SizedBox())))));
+        harness.Pump(new Size(400, 600));
+
+        var surface = FindDescendant<RenderBottomAppBarSurface>(harness.RenderView);
+        Assert.NotNull(surface);
+        var guest = Assert.IsType<Rect>(surface!.GuestRect);
+        Assert.Equal(200, guest.Center.X, 3);
+        Assert.Equal(0, guest.Center.Y, 3);
+        Assert.False(surface.HitTest(new BoxHitTestResult(), new Point(200, 1)));
+        Assert.True(surface.HitTest(new BoxHitTestResult(), new Point(20, 20)));
+    }
+
+    [Fact]
+    public void BottomAppBar_FloatingFabDoesNotIntersectBarNotch()
+    {
+        using var harness = new WidgetRenderHarness(Wrap(
+            new Scaffold(
+                body: new SizedBox(),
+                floatingActionButton: new FloatingActionButton(new Icon(Icons.Add), () => { }),
+                floatingActionButtonLocation: FloatingActionButtonLocation.CenterFloat,
+                bottomNavigationBar: new BottomAppBar(
+                    shape: new CircularNotchedRectangle(),
+                    height: 80,
+                    child: new GestureDetector(
+                        behavior: HitTestBehavior.Opaque,
+                        child: new SizedBox())))));
+        harness.Pump(new Size(400, 600));
+
+        var surface = FindDescendant<RenderBottomAppBarSurface>(harness.RenderView);
+        Assert.NotNull(surface);
+        var guest = Assert.IsType<Rect>(surface!.GuestRect);
+        Assert.Equal(-44, guest.Center.Y, 3);
+        Assert.True(surface.HitTest(new BoxHitTestResult(), new Point(200, 20)));
+    }
+
+    [Fact]
     public void BottomAppBar_WithoutFab_DoesNotCutNotchAndPropagatesClipBehavior()
     {
         using var harness = new WidgetRenderHarness(Wrap(
@@ -191,6 +243,50 @@ public sealed class MaterialBarControlsTests
         Assert.False(surface!.HasFloatingActionButton);
         Assert.Null(surface.GuestRect);
         Assert.Equal(Clip.HardEdge, surface.ClipBehavior);
+    }
+
+    [Fact]
+    public void BottomAppBarTheme_CopyWithAndLerpMatchFlutterContracts()
+    {
+        var beginShape = new CircularNotchedRectangle();
+        var endShape = new CircularNotchedRectangle(inverted: true);
+        var begin = new BottomAppBarThemeData(
+            Color: Colors.Red,
+            Elevation: 2,
+            Shape: beginShape,
+            Height: 60,
+            SurfaceTintColor: Colors.Green,
+            ShadowColor: Colors.Black,
+            Padding: new Thickness(4));
+        var end = new BottomAppBarThemeData(
+            Color: Colors.Blue,
+            Elevation: 6,
+            Shape: endShape,
+            Height: 80,
+            SurfaceTintColor: Colors.Yellow,
+            ShadowColor: Colors.White,
+            Padding: new Thickness(12));
+
+        BottomAppBarThemeData copied = begin.CopyWith(
+            color: Colors.Gold,
+            height: 72);
+        BottomAppBarThemeData? midpoint = BottomAppBarThemeData.Lerp(begin, end, 0.5);
+
+        Assert.Equal(Colors.Gold, copied.Color);
+        Assert.Equal(72, copied.Height);
+        Assert.Same(beginShape, copied.Shape);
+        Assert.NotNull(midpoint);
+        Assert.Equal(4, midpoint!.Elevation);
+        Assert.Equal(70, midpoint.Height);
+        Assert.Equal(new Thickness(8), midpoint.Padding);
+        Assert.Same(endShape, midpoint.Shape);
+        Assert.Same(begin, BottomAppBarThemeData.Lerp(begin, begin, 0.5));
+
+        ThemeData animated = ThemeData.Lerp(
+            ThemeData.Light with { BottomAppBarTheme = begin },
+            ThemeData.Light with { BottomAppBarTheme = end },
+            0.5);
+        Assert.Equal(midpoint, animated.BottomAppBarTheme);
     }
 
     [Fact]

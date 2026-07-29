@@ -267,7 +267,16 @@ public sealed class Scaffold : StatefulWidget
     {
         return drawerEdgeDragWidth ?? DefaultDrawerEdgeDragWidth;
     }
+
+    internal static ScaffoldGeometryData? GeometryMaybeOf(BuildContext context)
+    {
+        return context.DependOnInherited<ScaffoldScope>()?.Geometry;
+    }
 }
+
+internal sealed record ScaffoldGeometryData(
+    Rect? FloatingActionButtonArea,
+    double? BottomNavigationBarTop);
 
 internal sealed class ScaffoldScope : InheritedWidget
 {
@@ -277,6 +286,7 @@ internal sealed class ScaffoldScope : InheritedWidget
         bool hasEndDrawer,
         bool isDrawerOpen,
         bool isEndDrawerOpen,
+        ScaffoldGeometryData geometry,
         Widget child,
         Key? key = null) : base(key)
     {
@@ -285,6 +295,7 @@ internal sealed class ScaffoldScope : InheritedWidget
         HasEndDrawer = hasEndDrawer;
         IsDrawerOpen = isDrawerOpen;
         IsEndDrawerOpen = isEndDrawerOpen;
+        Geometry = geometry ?? throw new ArgumentNullException(nameof(geometry));
         Child = child ?? throw new ArgumentNullException(nameof(child));
     }
 
@@ -298,6 +309,8 @@ internal sealed class ScaffoldScope : InheritedWidget
 
     public bool IsEndDrawerOpen { get; }
 
+    public ScaffoldGeometryData Geometry { get; }
+
     public Widget Child { get; }
 
     public override Widget Build(BuildContext context) => Child;
@@ -309,7 +322,8 @@ internal sealed class ScaffoldScope : InheritedWidget
                || HasDrawer != oldScope.HasDrawer
                || HasEndDrawer != oldScope.HasEndDrawer
                || IsDrawerOpen != oldScope.IsDrawerOpen
-               || IsEndDrawerOpen != oldScope.IsEndDrawerOpen;
+               || IsEndDrawerOpen != oldScope.IsEndDrawerOpen
+               || Geometry != oldScope.Geometry;
     }
 }
 
@@ -587,13 +601,22 @@ public sealed class ScaffoldState : State
             children: columnChildren);
 
         var textDirection = Directionality.Of(context);
+        var mediaQuery = MediaQuery.MaybeOf(context) ?? new MediaQueryData();
+        double? bottomNavigationBarTop = null;
+        if (CurrentWidget.BottomNavigationBar is BottomAppBar bottomAppBar)
+        {
+            bottomNavigationBarTop = Math.Max(
+                0.0,
+                mediaQuery.Size.Height - bottomAppBar.ResolveHeightForScaffold(context));
+        }
+
+        Rect? floatingActionButtonArea = null;
 
         if (CurrentWidget.FloatingActionButton != null)
         {
-            var mediaQuery = MediaQuery.MaybeOf(context) ?? new MediaQueryData();
             double appBarHeight = CurrentWidget.AppBar?.PreferredSize.Height ?? 0.0;
-            double bottomNavigationHeight = CurrentWidget.BottomNavigationBar is BottomAppBar bottomAppBar
-                ? bottomAppBar.ResolveHeightForScaffold(context)
+            double bottomNavigationHeight = bottomNavigationBarTop.HasValue
+                ? mediaQuery.Size.Height - bottomNavigationBarTop.Value
                 : 0.0;
             var geometry = new ScaffoldPrelayoutGeometry(
                 ScaffoldSize: mediaQuery.Size,
@@ -605,6 +628,10 @@ public sealed class ScaffoldState : State
                 MinInsets: mediaQuery.ViewInsets,
                 MinViewPadding: mediaQuery.ViewPadding,
                 TextDirection: textDirection);
+            Point floatingActionButtonOffset = CurrentWidget.FloatingActionButtonLocation.GetOffset(geometry);
+            floatingActionButtonArea = new Rect(
+                floatingActionButtonOffset,
+                geometry.FloatingActionButtonSize);
             content = new Stack(
                 fit: StackFit.Expand,
                 children:
@@ -698,6 +725,9 @@ public sealed class ScaffoldState : State
             hasEndDrawer: HasEndDrawer,
             isDrawerOpen: _isDrawerOpen,
             isEndDrawerOpen: _isEndDrawerOpen,
+            geometry: new ScaffoldGeometryData(
+                FloatingActionButtonArea: floatingActionButtonArea,
+                BottomNavigationBarTop: bottomNavigationBarTop),
             child: new Container(
                 color: effectiveBackground,
                 child: content));

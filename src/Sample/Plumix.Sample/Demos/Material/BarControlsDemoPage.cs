@@ -99,6 +99,7 @@ internal sealed class BarControlsDemoPageState : State
                             floatingActionButton: new FloatingActionButton(
                                 child: new Icon(Icons.Add),
                                 onPressed: () => SetState(() => _actionCount += 1)),
+                            floatingActionButtonLocation: FloatingActionButtonLocation.CenterDocked,
                             bottomNavigationBar: new BottomAppBar(
                                 shape: _showNotch ? new CircularNotchedRectangle() : null,
                                 notchMargin: 4,

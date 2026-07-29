@@ -65,6 +65,8 @@
   - `NavigationDrawer` (direct M3 surface/destination roles, disabled states, stadium indicator, theme copy/lerp).
   - Legacy `BottomNavigationBar` (direct fixed/shifting and light/dark roles, source body typography, icon opacity,
     default elevation/shadow, theme copy/lerp).
+  - `BottomAppBar` (direct M2/M3 surface/tint/shadow roles, physical surface composition, configured FAB geometry,
+    notch hit testing, inherited theme capture, theme copy/lerp).
 - Add `Typography.Material2014`/`Material2018`, exact platform black/white themes, dense/tall geometry, and locale
   script-category selection.
 - Remove the narrowed `ColorScheme + Typography closeout` row from `docs/MATERIAL_TODO.md` only after those checks

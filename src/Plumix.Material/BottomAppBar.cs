@@ -25,8 +25,15 @@ public sealed class BottomAppBar : StatefulWidget
         Key? key = null) : base(key)
     {
         ValidateNonNegative(nameof(elevation), elevation);
-        if (!double.IsFinite(notchMargin) || notchMargin < 0) throw new ArgumentOutOfRangeException(nameof(notchMargin));
-        if (height.HasValue && (!double.IsFinite(height.Value) || height.Value < 0)) throw new ArgumentOutOfRangeException(nameof(height));
+        if (!double.IsFinite(notchMargin) || notchMargin < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(notchMargin));
+        }
+
+        if (height.HasValue && (!double.IsFinite(height.Value) || height.Value < 0))
+        {
+            throw new ArgumentOutOfRangeException(nameof(height));
+        }
         Child = child;
         Color = color;
         Elevation = elevation;
@@ -56,7 +63,9 @@ public sealed class BottomAppBar : StatefulWidget
     {
         var theme = Theme.Of(context);
         var barTheme = BottomAppBarTheme.Of(context);
-        return Height ?? barTheme.Height ?? (theme.UseMaterial3 ? 80.0 : 56.0);
+        double contentHeight = Height ?? barTheme.Height ?? (theme.UseMaterial3 ? 80.0 : 56.0);
+        double bottomPadding = MediaQuery.MaybeOf(context)?.Padding.Bottom ?? 0.0;
+        return contentHeight + bottomPadding;
     }
 
     private static void ValidateNonNegative(string name, double? value)
@@ -83,11 +92,11 @@ internal sealed class BottomAppBarState : State
         var color = widget.Color
                     ?? barTheme.Color
                     ?? (useMaterial3
-                        ? theme.SurfaceContainerColor
+                        ? theme.ColorScheme.SurfaceContainer
                         : theme.Brightness == Brightness.Dark ? Color.Parse("#FF424242") : Colors.White);
         var surfaceTint = widget.SurfaceTintColor
                           ?? barTheme.SurfaceTintColor
-                          ?? Colors.Transparent;
+                          ?? (useMaterial3 ? Colors.Transparent : theme.ColorScheme.SurfaceTint);
         var shadowColor = widget.ShadowColor
                           ?? barTheme.ShadowColor
                           ?? (useMaterial3 ? Colors.Transparent : Colors.Black);
@@ -100,29 +109,26 @@ internal sealed class BottomAppBarState : State
                       ?? barTheme.Padding
                       ?? (useMaterial3 ? new Thickness(16, 12) : default);
 
-        if (useMaterial3 && surfaceTint.A > 0 && elevation > 0)
-        {
-            color = NavigationSurfaceUtilities.ApplySurfaceTint(color, surfaceTint, elevation);
-        }
-        else if (!useMaterial3 && theme.Brightness == Brightness.Dark && elevation > 0)
-        {
-            color = ElevationOverlay.ApplyOverlay(theme, color, elevation);
-        }
+        color = useMaterial3
+            ? ElevationOverlay.ApplySurfaceTint(color, surfaceTint, elevation)
+            : ElevationOverlay.ApplyOverlay(theme, color, elevation);
 
         Widget child = new SizedBox(
             height: height,
             child: new Padding(
                 padding,
                 widget.Child ?? new SizedBox()));
-        child = new SafeArea(
-            left: false,
-            top: false,
-            right: false,
-            child: child);
+        child = new Material(
+            type: MaterialType.Transparency,
+            child: new SafeArea(
+                left: false,
+                top: false,
+                right: false,
+                child: child));
 
         var scaffold = Scaffold.MaybeOf(context);
+        ScaffoldGeometryData? geometry = Scaffold.GeometryMaybeOf(context);
         bool hasFab = scaffold?.HasFloatingActionButton == true;
-        var fabSize = scaffold?.FloatingActionButtonSize ?? new Size(56, 56);
         return new BottomAppBarSurface(
             color: color,
             elevation: elevation,
@@ -131,8 +137,8 @@ internal sealed class BottomAppBarState : State
             notchMargin: widget.NotchMargin,
             clipBehavior: widget.ClipBehavior,
             hasFloatingActionButton: hasFab,
-            floatingActionButtonSize: fabSize,
-            textDirection: Directionality.Of(context),
+            floatingActionButtonArea: geometry?.FloatingActionButtonArea,
+            bottomNavigationBarTop: geometry?.BottomNavigationBarTop,
             child: child);
     }
 }
@@ -147,8 +153,8 @@ internal sealed class BottomAppBarSurface : SingleChildRenderObjectWidget
         double notchMargin,
         Clip clipBehavior,
         bool hasFloatingActionButton,
-        Size floatingActionButtonSize,
-        TextDirection textDirection,
+        Rect? floatingActionButtonArea,
+        double? bottomNavigationBarTop,
         Widget child) : base(child)
     {
         Color = color;
@@ -158,8 +164,8 @@ internal sealed class BottomAppBarSurface : SingleChildRenderObjectWidget
         NotchMargin = notchMargin;
         ClipBehavior = clipBehavior;
         HasFloatingActionButton = hasFloatingActionButton;
-        FloatingActionButtonSize = floatingActionButtonSize;
-        TextDirection = textDirection;
+        FloatingActionButtonArea = floatingActionButtonArea;
+        BottomNavigationBarTop = bottomNavigationBarTop;
     }
 
     public Color Color { get; }
@@ -169,8 +175,8 @@ internal sealed class BottomAppBarSurface : SingleChildRenderObjectWidget
     public double NotchMargin { get; }
     public Clip ClipBehavior { get; }
     public bool HasFloatingActionButton { get; }
-    public Size FloatingActionButtonSize { get; }
-    public TextDirection TextDirection { get; }
+    public Rect? FloatingActionButtonArea { get; }
+    public double? BottomNavigationBarTop { get; }
 
     internal override RenderObject CreateRenderObject(BuildContext context) => new RenderBottomAppBarSurface(
         Color,
@@ -180,8 +186,8 @@ internal sealed class BottomAppBarSurface : SingleChildRenderObjectWidget
         NotchMargin,
         ClipBehavior,
         HasFloatingActionButton,
-        FloatingActionButtonSize,
-        TextDirection);
+        FloatingActionButtonArea,
+        BottomNavigationBarTop);
 
     internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
@@ -193,8 +199,8 @@ internal sealed class BottomAppBarSurface : SingleChildRenderObjectWidget
         surface.NotchMargin = NotchMargin;
         surface.ClipBehavior = ClipBehavior;
         surface.HasFloatingActionButton = HasFloatingActionButton;
-        surface.FloatingActionButtonSize = FloatingActionButtonSize;
-        surface.TextDirection = TextDirection;
+        surface.FloatingActionButtonArea = FloatingActionButtonArea;
+        surface.BottomNavigationBarTop = BottomNavigationBarTop;
     }
 }
 
@@ -207,8 +213,8 @@ internal sealed class RenderBottomAppBarSurface : RenderProxyBox
     private double _notchMargin;
     private Clip _clipBehavior;
     private bool _hasFloatingActionButton;
-    private Size _floatingActionButtonSize;
-    private TextDirection _textDirection;
+    private Rect? _floatingActionButtonArea;
+    private double? _bottomNavigationBarTop;
 
     public RenderBottomAppBarSurface(
         Color color,
@@ -218,8 +224,8 @@ internal sealed class RenderBottomAppBarSurface : RenderProxyBox
         double notchMargin,
         Clip clipBehavior,
         bool hasFloatingActionButton,
-        Size floatingActionButtonSize,
-        TextDirection textDirection)
+        Rect? floatingActionButtonArea,
+        double? bottomNavigationBarTop)
     {
         _color = color;
         _elevation = elevation;
@@ -228,31 +234,183 @@ internal sealed class RenderBottomAppBarSurface : RenderProxyBox
         _notchMargin = notchMargin;
         _clipBehavior = clipBehavior;
         _hasFloatingActionButton = hasFloatingActionButton;
-        _floatingActionButtonSize = floatingActionButtonSize;
-        _textDirection = textDirection;
+        _floatingActionButtonArea = floatingActionButtonArea;
+        _bottomNavigationBarTop = bottomNavigationBarTop;
     }
 
-    public Color Color { get => _color; set { if (_color != value) { _color = value; MarkNeedsPaint(); } } }
-    public double Elevation { get => _elevation; set { if (Math.Abs(_elevation - value) > 0.0001) { _elevation = value; MarkNeedsPaint(); } } }
-    public Color ShadowColor { get => _shadowColor; set { if (_shadowColor != value) { _shadowColor = value; MarkNeedsPaint(); } } }
-    public NotchedShape? Shape { get => _shape; set { if (!Equals(_shape, value)) { _shape = value; MarkNeedsPaint(); } } }
-    public double NotchMargin { get => _notchMargin; set { if (Math.Abs(_notchMargin - value) > 0.0001) { _notchMargin = value; MarkNeedsPaint(); } } }
-    public Clip ClipBehavior { get => _clipBehavior; set { if (_clipBehavior != value) { _clipBehavior = value; MarkNeedsPaint(); } } }
-    public bool HasFloatingActionButton { get => _hasFloatingActionButton; set { if (_hasFloatingActionButton != value) { _hasFloatingActionButton = value; MarkNeedsPaint(); } } }
-    public Size FloatingActionButtonSize { get => _floatingActionButtonSize; set { if (_floatingActionButtonSize != value) { _floatingActionButtonSize = value; MarkNeedsPaint(); } } }
-    public TextDirection TextDirection { get => _textDirection; set { if (_textDirection != value) { _textDirection = value; MarkNeedsPaint(); } } }
+    public Color Color
+    {
+        get => _color;
+        set
+        {
+            if (_color == value) return;
+            _color = value;
+            MarkNeedsPaint();
+        }
+    }
+
+    public double Elevation
+    {
+        get => _elevation;
+        set
+        {
+            if (Math.Abs(_elevation - value) <= 0.0001) return;
+            _elevation = value;
+            MarkNeedsPaint();
+        }
+    }
+
+    public Color ShadowColor
+    {
+        get => _shadowColor;
+        set
+        {
+            if (_shadowColor == value) return;
+            _shadowColor = value;
+            MarkNeedsPaint();
+        }
+    }
+
+    public NotchedShape? Shape
+    {
+        get => _shape;
+        set
+        {
+            if (Equals(_shape, value)) return;
+            _shape = value;
+            MarkNeedsPaint();
+        }
+    }
+
+    public double NotchMargin
+    {
+        get => _notchMargin;
+        set
+        {
+            if (Math.Abs(_notchMargin - value) <= 0.0001) return;
+            _notchMargin = value;
+            MarkNeedsPaint();
+        }
+    }
+
+    public Clip ClipBehavior
+    {
+        get => _clipBehavior;
+        set
+        {
+            if (_clipBehavior == value) return;
+            _clipBehavior = value;
+            MarkNeedsPaint();
+        }
+    }
+
+    public bool HasFloatingActionButton
+    {
+        get => _hasFloatingActionButton;
+        set
+        {
+            if (_hasFloatingActionButton == value) return;
+            _hasFloatingActionButton = value;
+            MarkNeedsPaint();
+        }
+    }
+
+    public Rect? FloatingActionButtonArea
+    {
+        get => _floatingActionButtonArea;
+        set
+        {
+            if (_floatingActionButtonArea == value) return;
+            _floatingActionButtonArea = value;
+            MarkNeedsPaint();
+        }
+    }
+
+    public double? BottomNavigationBarTop
+    {
+        get => _bottomNavigationBarTop;
+        set
+        {
+            if (_bottomNavigationBarTop == value) return;
+            _bottomNavigationBarTop = value;
+            MarkNeedsPaint();
+        }
+    }
 
     internal Rect? GuestRect => ResolveGuestRect();
+
+    public override bool HitTest(BoxHitTestResult result, Point position)
+    {
+        var host = new Rect(Size);
+        if (!ShapeContains(host, ResolveGuestRect(), position))
+        {
+            return false;
+        }
+
+        return base.HitTest(result, position);
+    }
+
+    private bool ShapeContains(Rect host, Rect? guest, Point position)
+    {
+        if (!host.Contains(position))
+        {
+            return false;
+        }
+
+        if (Shape is null)
+        {
+            return true;
+        }
+
+        try
+        {
+            return Shape.GetOuterPath(host, guest).FillContains(position);
+        }
+        catch (InvalidOperationException)
+        {
+            // Host-less tests do not install Avalonia's platform geometry implementation.
+            if (!guest.HasValue || !host.Intersects(guest.Value))
+            {
+                return true;
+            }
+
+            if (Shape is AutomaticNotchedShape automaticShape)
+            {
+                return automaticShape.Guest is null || !guest.Value.Contains(position);
+            }
+
+            if (Shape is CircularNotchedRectangle)
+            {
+                Rect guestRect = guest.Value;
+                double radiusX = guestRect.Width / 2.0;
+                double radiusY = guestRect.Height / 2.0;
+                if (radiusX <= 0.0 || radiusY <= 0.0)
+                {
+                    return true;
+                }
+
+                double normalizedX = (position.X - guestRect.Center.X) / radiusX;
+                double normalizedY = (position.Y - guestRect.Center.Y) / radiusY;
+                return (normalizedX * normalizedX) + (normalizedY * normalizedY) > 1.0;
+            }
+
+            return true;
+        }
+    }
 
     public override void Paint(PaintingContext context, Point offset)
     {
         if (Size.Width <= 0 || Size.Height <= 0) return;
         var host = new Rect(Size);
         var geometry = Shape?.GetOuterPath(host, ResolveGuestRect()) ?? new RectangleGeometry(host);
-        var shadows = BuildBoxShadows(ShadowColor, Elevation);
-        if (shadows.HasValue)
+        if (Elevation > 0.0 && ShadowColor.A > 0)
         {
-            context.DrawRectangle(Brushes.Transparent, null, new Rect(offset, Size), boxShadows: shadows.Value);
+            context.DrawShadow(
+                geometry,
+                ShadowColor,
+                Elevation,
+                transparentOccluder: Color.A != byte.MaxValue,
+                geometryOffset: offset);
         }
         context.PushTransform(
             Matrix.CreateTranslation(offset.X, offset.Y),
@@ -275,23 +433,20 @@ internal sealed class RenderBottomAppBarSurface : RenderProxyBox
 
     private Rect? ResolveGuestRect()
     {
-        if (!HasFloatingActionButton || Shape is null) return null;
-        double width = Math.Max(0, FloatingActionButtonSize.Width + (NotchMargin * 2));
-        double height = Math.Max(0, FloatingActionButtonSize.Height + (NotchMargin * 2));
-        double centerX = TextDirection == TextDirection.Ltr
-            ? Size.Width - 16 - (FloatingActionButtonSize.Width / 2)
-            : 16 + (FloatingActionButtonSize.Width / 2);
-        return new Rect(centerX - (width / 2), -(height / 2), width, height);
-    }
-
-    private static BoxShadows? BuildBoxShadows(Color color, double elevation)
-    {
-        if (elevation <= 0 || color.A == 0) return null;
-        return new BoxShadows(new BoxShadow
+        if (!HasFloatingActionButton
+            || Shape is null
+            || !FloatingActionButtonArea.HasValue
+            || !BottomNavigationBarTop.HasValue)
         {
-            OffsetY = Math.Max(1, elevation * 0.5),
-            Blur = Math.Max(2, elevation * 2.4),
-            Color = NavigationSurfaceUtilities.WithOpacity(color, 0.20),
-        });
+            return null;
+        }
+
+        Rect area = FloatingActionButtonArea.Value;
+        var localArea = new Rect(
+            area.X,
+            area.Y - BottomNavigationBarTop.Value,
+            area.Width,
+            area.Height);
+        return localArea.Inflate(NotchMargin);
     }
 }

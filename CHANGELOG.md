@@ -1,5 +1,11 @@
 # Changelog
 
+- Breaking: completed the `BottomAppBar` ColorScheme/theme/geometry closeout: M2/M3 defaults now read exact source
+  roles, surface tint and elevation overlays follow Flutter, full-strength physical shadows and transparent
+  `Material` composition are restored, and notches track the configured FAB rectangle while excluding the cutout
+  from hit testing. Added `BottomAppBarThemeData.CopyWith`/`Lerp`, inherited-theme capture, and a mirrored
+  center-docked runtime probe; advanced `Plumix.Material` to `0.17.0-alpha.1`.
+
 - Breaking: completed the legacy `BottomNavigationBar` ColorScheme/theme closeout: fixed and shifting defaults now
   read source roles directly, dark fixed selection uses `secondary`, shifting content uses `surface`, icon-theme
   opacity is preserved, and the default body typography/elevation/shadow paths match Flutter. Added

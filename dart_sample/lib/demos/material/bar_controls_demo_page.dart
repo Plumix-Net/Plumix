@@ -138,6 +138,8 @@ class _BarControlsDemoPageState extends State<BarControlsDemoPage> {
                 onPressed: () => setState(() => _actionCount += 1),
                 child: const Icon(Icons.add),
               ),
+              floatingActionButtonLocation:
+                  FloatingActionButtonLocation.centerDocked,
               bottomNavigationBar: BottomAppBar(
                 shape: _showNotch ? const CircularNotchedRectangle() : null,
                 notchMargin: 4,
