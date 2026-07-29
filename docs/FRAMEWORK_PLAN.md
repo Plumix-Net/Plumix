@@ -360,6 +360,10 @@ Status: `in_progress`
 
 Kickoff note (2026-03-12):
 
+- Closed Material `Badge` directional-alignment parity with public `AlignmentGeometry` widget/theme APIs, exact
+  physical/logical/mixed LTR/RTL resolution, source `Clip.none` overlay and anti-aliased stadium/circle clipping,
+  captured inherited `BadgeTheme`, `BadgeThemeData.copyWith`/lerp behavior, focused tests, and an expanded mirrored
+  runtime probe.
 - Added paired Material `CheckboxMenuButton` + `RadioMenuButton<T>` parity with exact checkbox tri-state cycles,
   radio selection/toggle behavior, disabled states, isolated constrained leading controls, menu-button styling and
   close policy, focused tests, and mirrored C#/Dart menu probes.

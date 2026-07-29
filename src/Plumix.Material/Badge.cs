@@ -18,7 +18,7 @@ public sealed class Badge : StatelessWidget
         double? largeSize = null,
         TextStyle? textStyle = null,
         Thickness? padding = null,
-        Alignment? alignment = null,
+        AlignmentGeometry? alignment = null,
         Vector? offset = null,
         Widget? label = null,
         bool isLabelVisible = true,
@@ -47,7 +47,7 @@ public sealed class Badge : StatelessWidget
         double? largeSize = null,
         TextStyle? textStyle = null,
         Thickness? padding = null,
-        Alignment? alignment = null,
+        AlignmentGeometry? alignment = null,
         Vector? offset = null,
         bool isLabelVisible = true,
         Widget? child = null,
@@ -84,7 +84,7 @@ public sealed class Badge : StatelessWidget
     public double? LargeSize { get; }
     public TextStyle? TextStyle { get; }
     public Thickness? Padding { get; }
-    public Alignment? Alignment { get; }
+    public AlignmentGeometry? Alignment { get; }
     public Vector? Offset { get; }
     public Widget? Label { get; }
     public bool IsLabelVisible { get; }
@@ -115,24 +115,28 @@ public sealed class Badge : StatelessWidget
             };
             badge = new DefaultTextStyle(
                 style: style,
-                child: new BadgeHorizontalStadium(
-                    minSize: widthOffset,
-                    child: new Container(
-                        alignment: Plumix.Rendering.Alignment.Center,
-                        padding: Padding ?? badgeTheme.Padding ?? new Thickness(4, 0),
-                        decoration: new BoxDecoration(
-                            Color: backgroundColor,
-                            BorderRadius: BorderRadius.Circular(10_000)),
-                        child: Label)));
+                child: new ClipRRect(
+                    borderRadius: BorderRadius.Circular(10_000),
+                    child: new BadgeHorizontalStadium(
+                        minSize: widthOffset,
+                        child: new Container(
+                            alignment: Plumix.Rendering.Alignment.Center,
+                            padding: Padding ?? badgeTheme.Padding ?? new Thickness(4, 0),
+                            decoration: new BoxDecoration(
+                                Color: backgroundColor,
+                                BorderRadius: BorderRadius.Circular(10_000)),
+                            child: Label))));
         }
         else
         {
-            badge = new Container(
-                width: widthOffset,
-                height: widthOffset,
-                decoration: new BoxDecoration(
-                    Color: backgroundColor,
-                    BorderRadius: BorderRadius.Circular(10_000)));
+            badge = new ClipRRect(
+                borderRadius: BorderRadius.Circular(10_000),
+                child: new Container(
+                    width: widthOffset,
+                    height: widthOffset,
+                    decoration: new BoxDecoration(
+                        Color: backgroundColor,
+                        BorderRadius: BorderRadius.Circular(10_000))));
         }
 
         if (Child is null)
@@ -141,17 +145,16 @@ public sealed class Badge : StatelessWidget
         }
 
         var textDirection = Directionality.Of(context);
-        var resolvedAlignment = Alignment
-                                ?? badgeTheme.Alignment
-                                ?? (textDirection == TextDirection.Ltr
-                                    ? Plumix.Rendering.Alignment.TopRight
-                                    : Plumix.Rendering.Alignment.TopLeft);
+        AlignmentGeometry resolvedAlignment = Alignment
+                                              ?? badgeTheme.Alignment
+                                              ?? AlignmentDirectional.TopEnd;
         var defaultOffset = textDirection == TextDirection.Ltr
             ? new Vector(4, -4)
             : new Vector(-4, -4);
         var effectiveOffset = (Offset ?? badgeTheme.Offset ?? defaultOffset) + new Vector(0, 8);
 
         return new Stack(
+            clipBehavior: Clip.None,
             children:
             [
                 Child,
@@ -165,6 +168,7 @@ public sealed class Badge : StatelessWidget
                         offset: hasLabel ? effectiveOffset : default,
                         widthOffset: widthOffset,
                         hasLabel: hasLabel,
+                        textDirection: textDirection,
                         child: badge)),
             ]);
     }
@@ -173,26 +177,34 @@ public sealed class Badge : StatelessWidget
 internal sealed class BadgePositioner : SingleChildRenderObjectWidget
 {
     public BadgePositioner(
-        Alignment alignment,
+        AlignmentGeometry alignment,
         Vector offset,
         double widthOffset,
         bool hasLabel,
+        TextDirection textDirection,
         Widget child) : base(child)
     {
         Alignment = alignment;
         Offset = offset;
         WidthOffset = widthOffset;
         HasLabel = hasLabel;
+        TextDirection = textDirection;
     }
 
-    public Alignment Alignment { get; }
+    public AlignmentGeometry Alignment { get; }
     public Vector Offset { get; }
     public double WidthOffset { get; }
     public bool HasLabel { get; }
+    public TextDirection TextDirection { get; }
 
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
-        return new RenderBadgePositioner(Alignment, Offset, WidthOffset, HasLabel);
+        return new RenderBadgePositioner(
+            Alignment,
+            Offset,
+            WidthOffset,
+            HasLabel,
+            TextDirection);
     }
 
     internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
@@ -202,25 +214,33 @@ internal sealed class BadgePositioner : SingleChildRenderObjectWidget
         badge.Offset = Offset;
         badge.WidthOffset = WidthOffset;
         badge.HasLabel = HasLabel;
+        badge.TextDirection = TextDirection;
     }
 }
 
 internal sealed class RenderBadgePositioner : RenderProxyBox
 {
-    private Alignment _alignment;
+    private AlignmentGeometry _alignment;
     private Vector _offset;
     private double _widthOffset;
     private bool _hasLabel;
+    private TextDirection _textDirection;
 
-    public RenderBadgePositioner(Alignment alignment, Vector offset, double widthOffset, bool hasLabel)
+    public RenderBadgePositioner(
+        AlignmentGeometry alignment,
+        Vector offset,
+        double widthOffset,
+        bool hasLabel,
+        TextDirection textDirection)
     {
         _alignment = alignment;
         _offset = offset;
         _widthOffset = widthOffset;
         _hasLabel = hasLabel;
+        _textDirection = textDirection;
     }
 
-    public Alignment Alignment
+    public AlignmentGeometry Alignment
     {
         get => _alignment;
         set { if (_alignment != value) { _alignment = value; MarkNeedsLayout(); } }
@@ -244,6 +264,12 @@ internal sealed class RenderBadgePositioner : RenderProxyBox
         set { if (_hasLabel != value) { _hasLabel = value; MarkNeedsLayout(); } }
     }
 
+    public TextDirection TextDirection
+    {
+        get => _textDirection;
+        set { if (_textDirection != value) { _textDirection = value; MarkNeedsLayout(); } }
+    }
+
     protected override void PerformLayout()
     {
         if (!Constraints.HasBoundedWidth || !Constraints.HasBoundedHeight)
@@ -259,7 +285,8 @@ internal sealed class RenderBadgePositioner : RenderProxyBox
 
         Child.Layout(new BoxConstraints(), parentUsesSize: true);
         var alignmentSpace = new Size(Math.Max(0, Size.Width - WidthOffset), Size.Height);
-        var location = Alignment.AlongOffset(alignmentSpace, new Size()) + Offset;
+        Alignment resolvedAlignment = Alignment.Resolve(TextDirection);
+        var location = resolvedAlignment.AlongOffset(alignmentSpace, new Size()) + Offset;
         if (HasLabel)
         {
             location -= new Vector(0, Child.Size.Height / 2.0);

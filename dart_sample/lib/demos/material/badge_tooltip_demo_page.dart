@@ -12,6 +12,7 @@ class _BadgeTooltipDemoPageState extends State<BadgeTooltipDemoPage> {
   bool _isLabelVisible = true;
   bool _useThemeOverrides = false;
   bool _tooltipsVisible = true;
+  bool _useRtl = false;
 
   @override
   Widget build(BuildContext context) {
@@ -42,6 +43,15 @@ class _BadgeTooltipDemoPageState extends State<BadgeTooltipDemoPage> {
             _controlButton(
               _tooltipsVisible ? 'Tooltips on' : 'Tooltips off',
               () => setState(() => _tooltipsVisible = !_tooltipsVisible),
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        Row(
+          children: <Widget>[
+            _controlButton(
+              _useRtl ? 'Direction RTL' : 'Direction LTR',
+              () => setState(() => _useRtl = !_useRtl),
             ),
           ],
         ),
@@ -78,6 +88,20 @@ class _BadgeTooltipDemoPageState extends State<BadgeTooltipDemoPage> {
                   label: const Text('NEW'),
                   isLabelVisible: _isLabelVisible,
                   child: const Icon(Icons.check, size: 32),
+                ),
+              ),
+              _probe(
+                _useRtl ? 'Top end RTL' : 'Top end LTR',
+                Directionality(
+                  textDirection: _useRtl
+                      ? TextDirection.rtl
+                      : TextDirection.ltr,
+                  child: Badge(
+                    alignment: AlignmentDirectional.topEnd,
+                    label: const Text('END'),
+                    isLabelVisible: _isLabelVisible,
+                    child: const Icon(Icons.info_outline, size: 32),
+                  ),
                 ),
               ),
             ],
@@ -142,6 +166,7 @@ class _BadgeTooltipDemoPageState extends State<BadgeTooltipDemoPage> {
         largeSize: 18,
         smallSize: 8,
         padding: EdgeInsets.symmetric(horizontal: 5),
+        alignment: AlignmentDirectional.bottomEnd,
       ),
       child: TooltipTheme(
         data: TooltipThemeData(

@@ -3,6 +3,7 @@ using Avalonia;
 using Avalonia.Media;
 using Plumix.Material;
 using Plumix.Rendering;
+using Plumix.UI;
 using Plumix.Widgets;
 
 // Dart parity source: dart_sample/lib/demos/material/badge_tooltip_demo_page.dart (exact sample parity)
@@ -20,6 +21,7 @@ internal sealed class BadgeTooltipDemoPageState : State
     private bool _isLabelVisible = true;
     private bool _useThemeOverrides;
     private bool _tooltipsVisible = true;
+    private bool _useRtl;
 
     public override Widget Build(BuildContext context)
     {
@@ -38,9 +40,22 @@ internal sealed class BadgeTooltipDemoPageState : State
                     children:
                     [
                         ControlButton("Count +1", () => SetState(() => _count++)),
-                        ControlButton(_isLabelVisible ? "Label on" : "Label off", () => SetState(() => _isLabelVisible = !_isLabelVisible)),
-                        ControlButton(_useThemeOverrides ? "Theme on" : "Theme off", () => SetState(() => _useThemeOverrides = !_useThemeOverrides)),
-                        ControlButton(_tooltipsVisible ? "Tooltips on" : "Tooltips off", () => SetState(() => _tooltipsVisible = !_tooltipsVisible)),
+                        ControlButton(
+                            _isLabelVisible ? "Label on" : "Label off",
+                            () => SetState(() => _isLabelVisible = !_isLabelVisible)),
+                        ControlButton(
+                            _useThemeOverrides ? "Theme on" : "Theme off",
+                            () => SetState(() => _useThemeOverrides = !_useThemeOverrides)),
+                        ControlButton(
+                            _tooltipsVisible ? "Tooltips on" : "Tooltips off",
+                            () => SetState(() => _tooltipsVisible = !_tooltipsVisible)),
+                    ]),
+                new Row(
+                    children:
+                    [
+                        ControlButton(
+                            _useRtl ? "Direction RTL" : "Direction LTR",
+                            () => SetState(() => _useRtl = !_useRtl)),
                     ]),
                 new Container(
                     color: Color.Parse("#FFF7F2FA"),
@@ -65,6 +80,15 @@ internal sealed class BadgeTooltipDemoPageState : State
                                 label: new Text("NEW"),
                                 isLabelVisible: _isLabelVisible,
                                 child: new Icon(Icons.Check, size: 32))),
+                            Probe(
+                                _useRtl ? "Top end RTL" : "Top end LTR",
+                                new Directionality(
+                                    _useRtl ? TextDirection.Rtl : TextDirection.Ltr,
+                                    new Badge(
+                                        alignment: AlignmentDirectional.TopEnd,
+                                        label: new Text("END"),
+                                        isLabelVisible: _isLabelVisible,
+                                        child: new Icon(Icons.InfoOutline, size: 32)))),
                         ])),
                 new Text("Hover or long-press these controls:", fontSize: 14, color: Colors.Black),
                 new TooltipVisibility(
@@ -112,7 +136,8 @@ internal sealed class BadgeTooltipDemoPageState : State
                 TextColor: Colors.White,
                 LargeSize: 18,
                 SmallSize: 8,
-                Padding: new Thickness(5, 0)),
+                Padding: new Thickness(5, 0),
+                Alignment: AlignmentDirectional.BottomEnd),
             child: new TooltipTheme(
                 data: new TooltipThemeData(
                     Decoration: new BoxDecoration(

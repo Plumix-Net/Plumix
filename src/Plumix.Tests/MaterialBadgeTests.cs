@@ -92,6 +92,118 @@ public sealed class MaterialBadgeTests
     }
 
     [Fact]
+    public void Badge_DirectionalAlignment_ResolvesTopEndForLtrAndRtl()
+    {
+        using var ltrHarness = BuildBadgeHarness(
+            TextDirection.Ltr,
+            new Badge(
+                alignment: AlignmentDirectional.TopEnd,
+                label: new Text("L"),
+                child: new SizedBox(width: 24, height: 24)));
+        using var rtlHarness = BuildBadgeHarness(
+            TextDirection.Rtl,
+            new Badge(
+                alignment: AlignmentDirectional.TopEnd,
+                label: new Text("R"),
+                child: new SizedBox(width: 24, height: 24)));
+
+        ltrHarness.Pump(new Size(100, 100));
+        rtlHarness.Pump(new Size(100, 100));
+
+        RenderBadgePositioner ltr = FindDescendant<RenderBadgePositioner>(ltrHarness.RenderView)!;
+        RenderBadgePositioner rtl = FindDescendant<RenderBadgePositioner>(rtlHarness.RenderView)!;
+        Point ltrOffset = ((BoxParentData)ltr.Child!.parentData!).offset;
+        Point rtlOffset = ((BoxParentData)rtl.Child!.parentData!).offset;
+
+        Assert.Equal((AlignmentGeometry)AlignmentDirectional.TopEnd, ltr.Alignment);
+        Assert.Equal(TextDirection.Ltr, ltr.TextDirection);
+        Assert.Equal(TextDirection.Rtl, rtl.TextDirection);
+        Assert.True(ltrOffset.X > rtlOffset.X);
+        Assert.Equal(ltrOffset.Y, rtlOffset.Y, precision: 6);
+        Assert.Equal(Clip.None, Assert.IsType<RenderStack>(ltr.Parent).ClipBehavior);
+    }
+
+    [Fact]
+    public void Badge_PhysicalAlignment_DoesNotMirrorInRtl()
+    {
+        using var physicalHarness = BuildBadgeHarness(
+            TextDirection.Rtl,
+            new Badge(
+                alignment: Alignment.TopRight,
+                label: new Text("P"),
+                child: new SizedBox(width: 24, height: 24)));
+        using var directionalHarness = BuildBadgeHarness(
+            TextDirection.Rtl,
+            new Badge(
+                alignment: AlignmentDirectional.TopEnd,
+                label: new Text("D"),
+                child: new SizedBox(width: 24, height: 24)));
+
+        physicalHarness.Pump(new Size(100, 100));
+        directionalHarness.Pump(new Size(100, 100));
+
+        RenderBadgePositioner physical = FindDescendant<RenderBadgePositioner>(physicalHarness.RenderView)!;
+        RenderBadgePositioner directional = FindDescendant<RenderBadgePositioner>(directionalHarness.RenderView)!;
+        Point physicalOffset = ((BoxParentData)physical.Child!.parentData!).offset;
+        Point directionalOffset = ((BoxParentData)directional.Child!.parentData!).offset;
+
+        Assert.True(physicalOffset.X > directionalOffset.X);
+    }
+
+    [Fact]
+    public void Badge_DefaultAlignment_IsDirectionalTopEnd()
+    {
+        using var harness = BuildBadgeHarness(
+            TextDirection.Rtl,
+            new Badge(label: new Text("1"), child: new SizedBox(width: 24, height: 24)));
+
+        harness.Pump(new Size(100, 100));
+
+        RenderBadgePositioner positioner = FindDescendant<RenderBadgePositioner>(harness.RenderView)!;
+        Assert.Equal((AlignmentGeometry)AlignmentDirectional.TopEnd, positioner.Alignment);
+        Assert.NotEmpty(FindDescendants<RenderClipRRect>(harness.RenderView));
+    }
+
+    [Fact]
+    public void BadgeThemeData_CopyWithAndLerp_FollowSourceValueSemantics()
+    {
+        var begin = new BadgeThemeData(
+            BackgroundColor: Colors.Black,
+            TextColor: Colors.White,
+            SmallSize: 4,
+            LargeSize: 12,
+            TextStyle: new TextStyle(FontSize: 10),
+            Padding: new Thickness(2, 0),
+            Alignment: Alignment.TopLeft,
+            Offset: new Vector(2, -2));
+        var end = new BadgeThemeData(
+            BackgroundColor: Colors.White,
+            TextColor: Colors.Black,
+            SmallSize: 8,
+            LargeSize: 20,
+            TextStyle: new TextStyle(FontSize: 14),
+            Padding: new Thickness(6, 2),
+            Alignment: AlignmentDirectional.TopEnd,
+            Offset: new Vector(6, 2));
+
+        BadgeThemeData copy = begin.CopyWith(largeSize: 18, alignment: AlignmentDirectional.BottomEnd);
+        BadgeThemeData halfway = BadgeThemeData.Lerp(begin, end, 0.5);
+        Alignment mixedLtr = halfway.Alignment!.Value.Resolve(TextDirection.Ltr);
+        Alignment mixedRtl = halfway.Alignment.Value.Resolve(TextDirection.Rtl);
+
+        Assert.Equal(18, copy.LargeSize);
+        Assert.Equal((AlignmentGeometry)AlignmentDirectional.BottomEnd, copy.Alignment);
+        Assert.Equal(6, halfway.SmallSize);
+        Assert.Equal(16, halfway.LargeSize);
+        Assert.Equal(12, halfway.TextStyle!.FontSize);
+        Assert.Equal(new Thickness(4, 1), halfway.Padding);
+        Assert.Equal(new Vector(4, 0), halfway.Offset);
+        Assert.Equal(0, mixedLtr.X, precision: 6);
+        Assert.Equal(-1, mixedRtl.X, precision: 6);
+        Assert.Equal(-1, mixedLtr.Y, precision: 6);
+    }
+
+    [Fact]
     public void Badge_SmallBadge_UsesSixPixelCircleAndZeroOffset()
     {
         using var harness = new WidgetRenderHarness(
@@ -128,6 +240,14 @@ public sealed class MaterialBadgeTests
 
         Assert.Null(FindDescendant<RenderBadgePositioner>(harness.RenderView));
         Assert.Null(FindParagraph(harness.RenderView, "hidden"));
+    }
+
+    private static WidgetRenderHarness BuildBadgeHarness(TextDirection direction, Badge badge)
+    {
+        return new WidgetRenderHarness(
+            new Directionality(
+                direction,
+                new Theme(ThemeData.Light, badge)));
     }
 
     private static RenderParagraph? FindParagraph(RenderObject? root, string text)

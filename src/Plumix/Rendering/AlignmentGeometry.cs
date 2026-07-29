@@ -33,32 +33,56 @@ public readonly record struct AlignmentDirectional(double Start, double Y)
 
 public readonly record struct AlignmentGeometry
 {
-    private AlignmentGeometry(double x, double y, bool directional)
+    private AlignmentGeometry(double x, double start, double y)
     {
-        X = x;
+        PhysicalX = x;
+        Start = start;
         Y = y;
-        IsDirectional = directional;
     }
 
-    public double X { get; }
+    private double PhysicalX { get; }
+
+    private double Start { get; }
+
+    public double X => PhysicalX + Start;
 
     public double Y { get; }
 
-    internal bool IsDirectional { get; }
+    internal bool IsDirectional => Start != 0.0;
 
     public Alignment Resolve(TextDirection direction)
     {
-        double x = IsDirectional && direction == TextDirection.Rtl ? -X : X;
+        double x = PhysicalX + (direction == TextDirection.Rtl ? -Start : Start);
         return new Alignment(x, Y);
+    }
+
+    public static AlignmentGeometry? Lerp(
+        AlignmentGeometry? a,
+        AlignmentGeometry? b,
+        double t)
+    {
+        if (a == b)
+        {
+            return a;
+        }
+
+        AlignmentGeometry from = a ?? default;
+        AlignmentGeometry to = b ?? default;
+        return new AlignmentGeometry(
+            x: LerpDouble(from.PhysicalX, to.PhysicalX, t),
+            start: LerpDouble(from.Start, to.Start, t),
+            y: LerpDouble(from.Y, to.Y, t));
     }
 
     public static implicit operator AlignmentGeometry(Alignment alignment)
     {
-        return new AlignmentGeometry(alignment.X, alignment.Y, directional: false);
+        return new AlignmentGeometry(alignment.X, 0.0, alignment.Y);
     }
 
     public static implicit operator AlignmentGeometry(AlignmentDirectional alignment)
     {
-        return new AlignmentGeometry(alignment.Start, alignment.Y, directional: true);
+        return new AlignmentGeometry(0.0, alignment.Start, alignment.Y);
     }
+
+    private static double LerpDouble(double a, double b, double t) => a + ((b - a) * t);
 }

@@ -1,5 +1,11 @@
 # Changelog
 
+- Breaking: completed Material `Badge` directional-alignment parity by widening widget/theme alignment to
+  `AlignmentGeometry`, resolving physical/logical/mixed alignment in the render object for LTR/RTL, restoring
+  source `Clip.none` overlay and anti-aliased badge clipping, and adding inherited-theme capture plus
+  `BadgeThemeData.CopyWith`/`Lerp`. Added focused tests and a mirrored runtime probe; advanced `Plumix` to
+  `0.14.0-alpha.1` and `Plumix.Material` to `0.8.0-alpha.1`.
+
 - Added Flutter core `DragBoundary` parity with generic delegate contracts, local/global/free rectangle boundaries,
   shortest-distance clamping, oversized-object errors, and always-notifying inherited behavior. Reorderable lists now
   resolve the nearest boundary or explicit `dragBoundaryProvider` and clamp their dragged proxy accordingly, with

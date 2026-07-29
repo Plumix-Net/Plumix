@@ -35,6 +35,8 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix.Material/ButtonStyle.cs`
   - `src/Plumix.Material/MaterialLocalizations.cs`
 - Then per target control: control file + its theme file + its `src/Plumix.Tests/Material*Tests.cs` + demo pages (`src/Sample/Plumix.Sample/Demos/Material/*`, `dart_sample/lib/demos/material/*`).
+- Badges enter through `Badge.cs` + `BadgeTheme.cs`; physical/logical alignment resolution uses core
+  `Rendering/AlignmentGeometry.cs`, with focused coverage in `MaterialBadgeTests.cs`.
 - Paired composition controls such as `GridTile` + `GridTileBar` share one focused test/demo surface when their Flutter implementations are directly coupled.
 - Animated Material icons enter through `AnimatedIcon.cs` + generated `AnimatedIcons.Data.g.cs`; shared animation
   repaint ownership lives in core `Rendering/CustomPaint.cs`, with coverage in `MaterialAnimatedIconTests.cs`.
