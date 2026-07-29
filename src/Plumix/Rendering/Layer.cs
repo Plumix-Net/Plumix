@@ -7,6 +7,28 @@ using Plumix.UI;
 
 namespace Plumix.Rendering;
 
+// Dart parity source: flutter/packages/flutter/lib/src/rendering/layer.dart
+public sealed record AnnotationEntry<T>(
+    T Annotation,
+    Point LocalPosition)
+    where T : notnull;
+
+// Dart parity source: flutter/packages/flutter/lib/src/rendering/layer.dart
+public sealed class AnnotationResult<T> where T : notnull
+{
+    private readonly List<AnnotationEntry<T>> _entries = [];
+
+    public IReadOnlyList<AnnotationEntry<T>> Entries => _entries;
+
+    public IEnumerable<T> Annotations => _entries.Select(static entry => entry.Annotation);
+
+    public void Add(AnnotationEntry<T> entry)
+    {
+        ArgumentNullException.ThrowIfNull(entry);
+        _entries.Add(entry);
+    }
+}
+
 public abstract class Layer
 {
     [ThreadStatic]
@@ -92,6 +114,45 @@ public abstract class Layer
         return context.PushClip(new RoundedRect(rect, clampedRadius));
     }
 
+    internal static bool ContainsRoundedRect(
+        Rect rect,
+        BorderRadius borderRadius,
+        Point position)
+    {
+        if (!ContainsRect(rect, position))
+        {
+            return false;
+        }
+
+        double radius = Math.Min(
+            Math.Max(0.0, borderRadius.Radius),
+            Math.Min(rect.Width, rect.Height) / 2.0);
+        if (radius <= 0.0
+            || (position.X >= rect.Left + radius && position.X <= rect.Right - radius)
+            || (position.Y >= rect.Top + radius && position.Y <= rect.Bottom - radius))
+        {
+            return true;
+        }
+
+        double centerX = position.X < rect.Left + radius
+            ? rect.Left + radius
+            : rect.Right - radius;
+        double centerY = position.Y < rect.Top + radius
+            ? rect.Top + radius
+            : rect.Bottom - radius;
+        double dx = position.X - centerX;
+        double dy = position.Y - centerY;
+        return (dx * dx) + (dy * dy) <= radius * radius;
+    }
+
+    internal static bool ContainsRect(Rect rect, Point position)
+    {
+        return position.X >= rect.Left
+               && position.X < rect.Right
+               && position.Y >= rect.Top
+               && position.Y < rect.Bottom;
+    }
+
     internal virtual void Attach(ContainerLayer parent)
     {
         Parent = parent;
@@ -106,6 +167,32 @@ public abstract class Layer
 
     internal virtual void CollectBackdropFilters(ICollection<BackdropFilterLayer> filters)
     {
+    }
+
+    protected internal virtual bool FindAnnotations<T>(
+        AnnotationResult<T> result,
+        Point localPosition,
+        bool onlyFirst)
+        where T : notnull
+    {
+        ArgumentNullException.ThrowIfNull(result);
+        return false;
+    }
+
+    public T? Find<T>(Point localPosition)
+        where T : notnull
+    {
+        var result = new AnnotationResult<T>();
+        FindAnnotations(result, localPosition, onlyFirst: true);
+        return result.Entries.Count == 0 ? default : result.Entries[0].Annotation;
+    }
+
+    public AnnotationResult<T> FindAllAnnotations<T>(Point localPosition)
+        where T : notnull
+    {
+        var result = new AnnotationResult<T>();
+        FindAnnotations(result, localPosition, onlyFirst: false);
+        return result;
     }
 }
 
@@ -173,6 +260,29 @@ public class ContainerLayer : Layer
         {
             child.CollectBackdropFilters(filters);
         }
+    }
+
+    protected internal override bool FindAnnotations<T>(
+        AnnotationResult<T> result,
+        Point localPosition,
+        bool onlyFirst)
+    {
+        ArgumentNullException.ThrowIfNull(result);
+        for (int index = _children.Count - 1; index >= 0; index--)
+        {
+            bool isAbsorbed = _children[index].FindAnnotations(result, localPosition, onlyFirst);
+            if (isAbsorbed)
+            {
+                return true;
+            }
+
+            if (onlyFirst && result.Entries.Count > 0)
+            {
+                return false;
+            }
+        }
+
+        return false;
     }
 }
 
@@ -284,6 +394,14 @@ public sealed class LeaderLayer : ContainerLayer
     {
         AddChildrenToScene(context, offset + Offset);
     }
+
+    protected internal override bool FindAnnotations<T>(
+        AnnotationResult<T> result,
+        Point localPosition,
+        bool onlyFirst)
+    {
+        return base.FindAnnotations(result, localPosition - Offset, onlyFirst);
+    }
 }
 
 /// <summary>
@@ -335,6 +453,81 @@ public sealed class FollowerLayer : ContainerLayer
         {
             AddChildrenToScene(context, default);
         }
+    }
+
+    protected internal override bool FindAnnotations<T>(
+        AnnotationResult<T> result,
+        Point localPosition,
+        bool onlyFirst)
+    {
+        Matrix? transform = GetLastTransform();
+        if (!transform.HasValue)
+        {
+            return ShowWhenUnlinked
+                && base.FindAnnotations(result, localPosition - UnlinkedOffset, onlyFirst);
+        }
+
+        if (!transform.Value.TryInvert(out Matrix inverse))
+        {
+            return false;
+        }
+
+        Point transformedPosition = inverse.Transform(localPosition - UnlinkedOffset);
+        return base.FindAnnotations(result, transformedPosition, onlyFirst);
+    }
+}
+
+// Dart parity source: flutter/packages/flutter/lib/src/rendering/layer.dart (AnnotatedRegionLayer).
+public sealed class AnnotatedRegionLayer<T> : ContainerLayer where T : notnull
+{
+    public AnnotatedRegionLayer(
+        T value,
+        Size? size = null,
+        Point? offset = null,
+        bool opaque = false)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        Value = value;
+        Size = size;
+        Offset = offset ?? default;
+        Opaque = opaque;
+    }
+
+    public T Value { get; }
+
+    public Size? Size { get; }
+
+    public Point Offset { get; }
+
+    public bool Opaque { get; }
+
+    protected internal override bool FindAnnotations<S>(
+        AnnotationResult<S> result,
+        Point localPosition,
+        bool onlyFirst)
+    {
+        bool isAbsorbed = base.FindAnnotations(result, localPosition, onlyFirst);
+        if (onlyFirst && result.Entries.Count > 0)
+        {
+            return isAbsorbed;
+        }
+
+        if (Size.HasValue && !ContainsRect(new Rect(Offset, Size.Value), localPosition))
+        {
+            return isAbsorbed;
+        }
+
+        if (typeof(T) == typeof(S))
+        {
+            object untypedValue = Value;
+            var typedValue = (S)untypedValue;
+            result.Add(new AnnotationEntry<S>(
+                typedValue,
+                localPosition - Offset));
+            isAbsorbed |= Opaque;
+        }
+
+        return isAbsorbed;
     }
 }
 
@@ -468,6 +661,23 @@ public class OffsetLayer : ContainerLayer
     internal override void AddToScene(DrawingContext context, Point offset)
     {
         base.AddToScene(context, offset + Offset);
+    }
+
+    protected internal override bool FindAnnotations<T>(
+        AnnotationResult<T> result,
+        Point localPosition,
+        bool onlyFirst)
+    {
+        return FindAnnotationsInChildren(result, localPosition - Offset, onlyFirst);
+    }
+
+    protected bool FindAnnotationsInChildren<T>(
+        AnnotationResult<T> result,
+        Point localPosition,
+        bool onlyFirst)
+        where T : notnull
+    {
+        return base.FindAnnotations(result, localPosition, onlyFirst);
     }
 }
 
@@ -712,6 +922,20 @@ public sealed class TransformOffsetLayer : OffsetLayer
             AddChildrenToScene(context, new Point(0, 0));
         }
     }
+
+    protected internal override bool FindAnnotations<T>(
+        AnnotationResult<T> result,
+        Point localPosition,
+        bool onlyFirst)
+    {
+        if (!Transform.TryInvert(out Matrix inverse))
+        {
+            return false;
+        }
+
+        Point transformedPosition = inverse.Transform(localPosition - Offset);
+        return FindAnnotationsInChildren(result, transformedPosition, onlyFirst);
+    }
 }
 
 public sealed class ClipRectOffsetLayer : OffsetLayer
@@ -726,6 +950,16 @@ public sealed class ClipRectOffsetLayer : OffsetLayer
         {
             AddChildrenToScene(context, sceneOffset);
         }
+    }
+
+    protected internal override bool FindAnnotations<T>(
+        AnnotationResult<T> result,
+        Point localPosition,
+        bool onlyFirst)
+    {
+        Point transformedPosition = localPosition - Offset;
+        return ContainsRect(ClipRect, transformedPosition)
+            && FindAnnotationsInChildren(result, transformedPosition, onlyFirst);
     }
 }
 
@@ -750,6 +984,16 @@ public sealed class ClipRRectOffsetLayer : OffsetLayer
         double maxRadius = Math.Max(0, Math.Min(clipRect.Width, clipRect.Height) / 2);
         return Math.Min(borderRadius.Radius, maxRadius);
     }
+
+    protected internal override bool FindAnnotations<T>(
+        AnnotationResult<T> result,
+        Point localPosition,
+        bool onlyFirst)
+    {
+        Point transformedPosition = localPosition - Offset;
+        return ContainsRoundedRect(ClipRect, BorderRadius, transformedPosition)
+            && FindAnnotationsInChildren(result, transformedPosition, onlyFirst);
+    }
 }
 
 public sealed class ClipRectLayer : ContainerLayer
@@ -769,6 +1013,15 @@ public sealed class ClipRectLayer : ContainerLayer
         {
             base.AddToScene(context, offset);
         }
+    }
+
+    protected internal override bool FindAnnotations<T>(
+        AnnotationResult<T> result,
+        Point localPosition,
+        bool onlyFirst)
+    {
+        return ContainsRect(ClipRect, localPosition)
+            && base.FindAnnotations(result, localPosition, onlyFirst);
     }
 }
 
@@ -791,6 +1044,15 @@ public sealed class ClipRRectLayer : ContainerLayer
     {
         double maxRadius = Math.Max(0, Math.Min(clipRect.Width, clipRect.Height) / 2);
         return Math.Min(borderRadius.Radius, maxRadius);
+    }
+
+    protected internal override bool FindAnnotations<T>(
+        AnnotationResult<T> result,
+        Point localPosition,
+        bool onlyFirst)
+    {
+        return ContainsRoundedRect(ClipRect, BorderRadius, localPosition)
+            && base.FindAnnotations(result, localPosition, onlyFirst);
     }
 }
 
@@ -816,6 +1078,16 @@ public sealed class ClipGeometryLayer : ContainerLayer
             base.AddToScene(context, new Point(0, 0));
         }
     }
+
+    protected internal override bool FindAnnotations<T>(
+        AnnotationResult<T> result,
+        Point localPosition,
+        bool onlyFirst)
+    {
+        Point transformedPosition = localPosition - GeometryOffset;
+        return Geometry.FillContains(transformedPosition)
+            && base.FindAnnotations(result, transformedPosition, onlyFirst);
+    }
 }
 
 public sealed class TransformLayer : ContainerLayer
@@ -829,6 +1101,19 @@ public sealed class TransformLayer : ContainerLayer
         {
             base.AddToScene(context, new Point(0, 0));
         }
+    }
+
+    protected internal override bool FindAnnotations<T>(
+        AnnotationResult<T> result,
+        Point localPosition,
+        bool onlyFirst)
+    {
+        if (!Transform.TryInvert(out Matrix inverse))
+        {
+            return false;
+        }
+
+        return base.FindAnnotations(result, inverse.Transform(localPosition), onlyFirst);
     }
 }
 

@@ -32,7 +32,7 @@ public sealed class CompositedTransformDemoPage : StatefulWidget
                     new Text("CompositedTransformTarget + Follower", fontSize: 20, color: Colors.Black),
                     new Text(
                         "The blue follower is painted in a separate composited layer. Its top-center stays 12 px " +
-                        "below the orange target's bottom-center.",
+                        "below the orange target's bottom-center. Both labels also expose typed layer annotations.",
                         fontSize: 14,
                         color: Colors.DimGray),
                     BuildPreview(),
@@ -75,7 +75,9 @@ public sealed class CompositedTransformDemoPage : StatefulWidget
                     height: 52,
                     child: new CompositedTransformTarget(
                         _link,
-                        child: BuildLabel("TARGET", Color.Parse("#FFF59E0B")))));
+                        child: new AnnotatedRegion<string>(
+                            value: "target",
+                            child: BuildLabel("TARGET", Color.Parse("#FFF59E0B"))))));
             }
 
             children.Add(new Positioned(
@@ -89,7 +91,9 @@ public sealed class CompositedTransformDemoPage : StatefulWidget
                     offset: new Vector(0, 12),
                     targetAnchor: Alignment.BottomCenter,
                     followerAnchor: Alignment.TopCenter,
-                    child: BuildLabel("FOLLOWER", Color.Parse("#FF2563EB"), Colors.White))));
+                    child: new AnnotatedRegion<string>(
+                        value: "follower",
+                        child: BuildLabel("FOLLOWER", Color.Parse("#FF2563EB"), Colors.White)))));
 
             return new Container(
                 height: 190,

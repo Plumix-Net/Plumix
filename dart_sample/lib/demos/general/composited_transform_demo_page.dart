@@ -27,7 +27,7 @@ class _CompositedTransformDemoPageState
         ),
         const Text(
           "The blue follower is painted in a separate composited layer. Its top-center stays 12 px "
-          "below the orange target's bottom-center.",
+          "below the orange target's bottom-center. Both labels also expose typed layer annotations.",
           style: TextStyle(fontSize: 14, color: Colors.black54),
         ),
         _buildPreview(),
@@ -84,7 +84,10 @@ class _CompositedTransformDemoPageState
               height: 52,
               child: CompositedTransformTarget(
                 link: _link,
-                child: _buildLabel('TARGET', const Color(0xFFF59E0B)),
+                child: AnnotatedRegion<String>(
+                  value: 'target',
+                  child: _buildLabel('TARGET', const Color(0xFFF59E0B)),
+                ),
               ),
             ),
           Positioned(
@@ -98,10 +101,13 @@ class _CompositedTransformDemoPageState
               offset: const Offset(0, 12),
               targetAnchor: Alignment.bottomCenter,
               followerAnchor: Alignment.topCenter,
-              child: _buildLabel(
-                'FOLLOWER',
-                const Color(0xFF2563EB),
-                Colors.white,
+              child: AnnotatedRegion<String>(
+                value: 'follower',
+                child: _buildLabel(
+                  'FOLLOWER',
+                  const Color(0xFF2563EB),
+                  Colors.white,
+                ),
               ),
             ),
           ),

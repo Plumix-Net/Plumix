@@ -150,6 +150,9 @@ Completion note:
   `AnimatedWidget` listener ownership, polymorphic and nullable-endpoint decoration interpolation, generic
   background/foreground decoration painting, `Animatable.animate` lifecycle forwarding, focused tests, and a
   mirrored C#/Dart runtime probe.
+- Continued compositing-control parity with `AnnotatedRegion<T>` + `AnnotatedRegionLayer<T>`, including typed
+  front-to-back lookup, exact-type matching, sized/local-position results, opaque traversal, offset/transform/clip
+  propagation, source-shaped render-layer composition, focused tests, and a mirrored C#/Dart runtime probe.
 - Continued builder-control parity with paired `ValueListenableBuilder<T>` + `TweenAnimationBuilder<T>` ports,
   including source-shaped listener replacement/disposal, stable-child fast paths, first-tween ownership, ignored
   replacement `begin` values, interrupted-target continuity, curve/duration updates, `onEnd`, focused tests, and

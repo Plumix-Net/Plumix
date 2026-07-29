@@ -1,5 +1,10 @@
 # Changelog
 
+- Added Flutter core `AnnotatedRegion<T>` parity with source-shaped widget/render-object composition, typed
+  front-to-back layer annotation lookup, exact-type matching, sized/local-position results, opaque traversal,
+  offset/transform/clip propagation, focused tests, and a mirrored composited-layer runtime probe. Advanced `Plumix`
+  to `0.12.0-alpha.1`.
+
 - Added Flutter core `DecoratedBoxTransition` + `DecorationTween` parity with polymorphic/null-endpoint decoration
   interpolation, generic `DecoratedBox` paint ownership, source-shaped `Animatable.animate` lifecycle forwarding,
   foreground/background composition, focused tests, and a mirrored C#/Dart runtime probe. Advanced `Plumix` to

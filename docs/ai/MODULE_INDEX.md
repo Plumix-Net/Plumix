@@ -173,6 +173,9 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/Rendering/RepaintBoundary.cs`
   - `src/Plumix/Widgets/CompositedTransform.cs`
   - `src/Plumix/Rendering/CompositedTransform.cs`
+  - `src/Plumix/Widgets/AnnotatedRegion.cs`
+  - `src/Plumix/Rendering/AnnotatedRegion.cs`
+  - `src/Plumix/Rendering/Layer.cs`
   - `src/Plumix/Widgets/CustomMultiChildLayout.cs`
   - `src/Plumix/Rendering/CustomMultiChildLayout.cs`
   - `src/Plumix/Widgets/Table.cs`
@@ -196,6 +199,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix.Tests/ClipWidgetsTests.cs`
   - `src/Plumix.Tests/FlowRepaintBoundaryTests.cs`
   - `src/Plumix.Tests/CompositedTransformTests.cs`
+  - `src/Plumix.Tests/AnnotatedRegionTests.cs`
   - `src/Plumix.Tests/CustomMultiChildLayoutTests.cs`
   - `src/Plumix.Tests/DirectionalPositionedTableCellTests.cs`
   - `src/Plumix.Tests/DismissibleSizeChangedLayoutTests.cs`
