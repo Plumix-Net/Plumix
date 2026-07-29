@@ -1,5 +1,11 @@
 # Changelog
 
+- Breaking: completed the `FloatingActionButton` ColorScheme/theme/layout closeout: M2/M3 defaults now read exact
+  source roles and state colors, all variants use source shapes and adaptive cursors, omitted/default versus explicit
+  null hero tags match Flutter, extended content uses the source overflow layout, and output merges semantics. Added
+  `FloatingActionButtonThemeData.CopyWith`/`Lerp`, inherited-theme capture, and an M2/M3 runtime probe whose
+  secondary FABs explicitly disable hero registration; advanced `Plumix.Material` to `0.18.0-alpha.1`.
+
 - Breaking: completed the `BottomAppBar` ColorScheme/theme/geometry closeout: M2/M3 defaults now read exact source
   roles, surface tint and elevation overlays follow Flutter, full-strength physical shadows and transparent
   `Material` composition are restored, and notches track the configured FAB rectangle while excluding the cutout

@@ -19,8 +19,9 @@ public sealed class MaterialFloatingActionButtonTests
         IconThemeData? capturedIconTheme = null;
         var theme = ThemeData.Light with
         {
-            PrimaryContainerColor = Colors.Moccasin,
-            OnPrimaryContainerColor = Colors.MediumBlue,
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(
+                primaryContainer: Colors.Moccasin,
+                onPrimaryContainer: Colors.MediumBlue),
         };
 
         var root = new TestRootElement(
@@ -42,6 +43,50 @@ public sealed class MaterialFloatingActionButtonTests
         Assert.NotNull(capturedIconTheme);
         Assert.Equal(Colors.MediumBlue, capturedIconTheme!.Color);
         Assert.Equal(24, capturedIconTheme.Size);
+    }
+
+    [Fact]
+    public void FloatingActionButton_DefaultM2_UsesColorSchemeAndLegacyStateColors()
+    {
+        Color secondary = Color.Parse("#FF123456");
+        Color onSecondary = Color.Parse("#FFFEDCBA");
+        Color focus = Color.Parse("#33112233");
+        Color hover = Color.Parse("#22112233");
+        Color splash = Color.Parse("#44112233");
+        Widget? capturedBuiltWidget = null;
+        var theme = ThemeData.Light with
+        {
+            UseMaterial3 = false,
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(
+                secondary: secondary,
+                onSecondary: onSecondary),
+            FocusColor = focus,
+            HoverColor = hover,
+            SplashColor = splash,
+        };
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: new CaptureFloatingActionButtonBuild(
+                    floatingActionButton: new FloatingActionButton(
+                        child: new Icon(Icons.Add),
+                        onPressed: () => { }),
+                    onBuilt: widget => capturedBuiltWidget = widget)));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        MaterialButtonCore button = RequireBuiltButton(capturedBuiltWidget);
+        Assert.Equal(secondary, button.Style.ResolveBackgroundColor(MaterialState.None));
+        Assert.Equal(onSecondary, button.Style.ResolveForegroundColor(MaterialState.None));
+        Assert.Equal(focus, button.Style.ResolveOverlayColor(MaterialState.Focused));
+        Assert.Equal(hover, button.Style.ResolveOverlayColor(MaterialState.Hovered));
+        Assert.Equal(splash, button.Style.ResolveOverlayColor(MaterialState.Pressed));
+        Assert.Equal(splash, button.Style.ResolveSplashColor(MaterialState.Pressed));
+        Assert.Equal(BorderRadius.Circular(9999), button.Style.ResolveShape(MaterialState.None));
+        Assert.Equal(12, button.Style.ResolveElevation(MaterialState.Pressed));
     }
 
     [Fact]
@@ -150,12 +195,61 @@ public sealed class MaterialFloatingActionButtonTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var hero = Assert.IsType<Hero>(capturedBuiltWidget);
+        var mergeSemantics = Assert.IsType<MergeSemantics>(capturedBuiltWidget);
+        var hero = Assert.IsType<Hero>(mergeSemantics.Child);
         Assert.Same(heroTag, hero.Tag);
     }
 
     [Fact]
-    public void FloatingActionButton_DefaultMouseCursor_UsesClickOnHover()
+    public void FloatingActionButton_OmittedHeroTag_UsesSharedDefaultTag()
+    {
+        var first = new FloatingActionButton(new Icon(Icons.Add), () => { });
+        var second = FloatingActionButton.Small(new Icon(Icons.Add), () => { });
+        Widget? capturedBuiltWidget = null;
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new CaptureFloatingActionButtonBuild(
+                    floatingActionButton: first,
+                    onBuilt: widget => capturedBuiltWidget = widget)));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.NotNull(first.HeroTag);
+        Assert.Same(first.HeroTag, second.HeroTag);
+        var mergeSemantics = Assert.IsType<MergeSemantics>(capturedBuiltWidget);
+        var hero = Assert.IsType<Hero>(mergeSemantics.Child);
+        Assert.Same(first.HeroTag, hero.Tag);
+    }
+
+    [Fact]
+    public void FloatingActionButton_NullHeroTag_KeepsMergeSemanticsWithoutHero()
+    {
+        Widget? capturedBuiltWidget = null;
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new CaptureFloatingActionButtonBuild(
+                    floatingActionButton: new FloatingActionButton(
+                        child: new Icon(Icons.Add),
+                        onPressed: () => { },
+                        heroTag: null),
+                    onBuilt: widget => capturedBuiltWidget = widget)));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var mergeSemantics = Assert.IsType<MergeSemantics>(capturedBuiltWidget);
+        Assert.IsType<MaterialButtonCore>(mergeSemantics.Child);
+    }
+
+    [Fact]
+    public void FloatingActionButton_DefaultMouseCursor_UsesAdaptiveDesktopBasicOnHover()
     {
         MouseCursorManager.ResetForTests();
         try
@@ -186,7 +280,7 @@ public sealed class MaterialFloatingActionButtonTests
                 new BoxHitTestEntry(hoverListener, new Point(10, 8)));
             owner.FlushBuild();
 
-            Assert.Equal(SystemMouseCursors.Click, MouseCursorManager.CurrentCursor);
+            Assert.Equal(SystemMouseCursors.Basic, MouseCursorManager.CurrentCursor);
 
             hoverListener = FindHoverPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
             Assert.NotNull(hoverListener);
@@ -221,7 +315,7 @@ public sealed class MaterialFloatingActionButtonTests
                     data: ThemeData.Light with
                     {
                         FloatingActionButtonTheme = new FloatingActionButtonThemeData(
-                            MouseCursor: themeCursor),
+                            MouseCursor: MaterialStateProperty<MouseCursor?>.All(themeCursor)),
                     },
                     child: new FloatingActionButton(
                         child: new Icon(Icons.Add),
@@ -540,6 +634,100 @@ public sealed class MaterialFloatingActionButtonTests
     }
 
     [Fact]
+    public void FloatingActionButtonThemeData_CopyWithAndLerp_MatchSourceContracts()
+    {
+        var cursorA = MaterialStateProperty<MouseCursor?>.All(new SystemMouseCursor("a"));
+        var cursorB = MaterialStateProperty<MouseCursor?>.All(new SystemMouseCursor("b"));
+        var a = new FloatingActionButtonThemeData(
+            ForegroundColor: Colors.Red,
+            Elevation: 2,
+            Shape: ShapeBorder.RoundedRectangle(4),
+            EnableFeedback: false,
+            SizeConstraints: TightConstraints(40, 50),
+            ExtendedPadding: new Thickness(10, 0, 20, 0),
+            MouseCursor: cursorA);
+        var b = new FloatingActionButtonThemeData(
+            ForegroundColor: Colors.Blue,
+            Elevation: 6,
+            Shape: ShapeBorder.RoundedRectangle(12),
+            EnableFeedback: true,
+            SizeConstraints: TightConstraints(80, 90),
+            ExtendedPadding: new Thickness(30, 0, 40, 0),
+            MouseCursor: cursorB);
+
+        Assert.Equal(a, a.CopyWith());
+        Assert.Equal(10, a.CopyWith(elevation: 10).Elevation);
+
+        FloatingActionButtonThemeData? midpoint = FloatingActionButtonThemeData.Lerp(a, b, 0.5);
+        Assert.NotNull(midpoint);
+        Assert.Equal(4, midpoint!.Elevation);
+        Assert.Equal(BorderRadius.Circular(8), midpoint.Shape!.BorderRadius);
+        Assert.Equal(TightConstraints(60, 70), midpoint.SizeConstraints);
+        Assert.Equal(new Thickness(20, 0, 30, 0), midpoint.ExtendedPadding);
+        Assert.Same(cursorB, midpoint.MouseCursor);
+        Assert.True(midpoint.EnableFeedback);
+        Assert.Null(FloatingActionButtonThemeData.Lerp(null, null, 0.5));
+        Assert.Same(a, FloatingActionButtonThemeData.Lerp(a, a, 0.5));
+
+        FloatingActionButtonThemeData? fromNullFields = FloatingActionButtonThemeData.Lerp(
+            new FloatingActionButtonThemeData(),
+            b,
+            0.25);
+        Assert.Equal(TightConstraints(20, 22.5), fromNullFields!.SizeConstraints);
+    }
+
+    [Fact]
+    public void ThemeDataLerp_InterpolatesFloatingActionButtonTheme()
+    {
+        var a = ThemeData.Light with
+        {
+            FloatingActionButtonTheme = new FloatingActionButtonThemeData(Elevation: 2),
+        };
+        var b = ThemeData.Light with
+        {
+            FloatingActionButtonTheme = new FloatingActionButtonThemeData(Elevation: 10),
+        };
+
+        ThemeData midpoint = ThemeData.Lerp(a, b, 0.25);
+
+        Assert.Equal(4, midpoint.FloatingActionButtonTheme.Elevation);
+    }
+
+    [Fact]
+    public void FloatingActionButton_ThemeShapeAndStateCursor_AreResolved()
+    {
+        var enabledCursor = new SystemMouseCursor("enabled");
+        var disabledCursor = new SystemMouseCursor("disabled");
+        Widget? capturedBuiltWidget = null;
+        var theme = ThemeData.Light with
+        {
+            FloatingActionButtonTheme = new FloatingActionButtonThemeData(
+                Shape: ShapeBorder.Stadium(new BorderSide(Colors.Red, 2)),
+                MouseCursor: MaterialStateProperty<MouseCursor?>.ResolveWith(
+                    states => states.HasFlag(MaterialState.Disabled) ? disabledCursor : enabledCursor)),
+        };
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: new CaptureFloatingActionButtonBuild(
+                    floatingActionButton: new FloatingActionButton(
+                        child: new Icon(Icons.Add),
+                        onPressed: () => { }),
+                    onBuilt: widget => capturedBuiltWidget = widget)));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        MaterialButtonCore button = RequireBuiltButton(capturedBuiltWidget);
+        Assert.Equal(BorderRadius.Circular(9999), button.Style.ResolveShape(MaterialState.None));
+        Assert.Equal(new BorderSide(Colors.Red, 2), button.Style.ResolveSide(MaterialState.None));
+        Assert.Equal(enabledCursor, button.Style.ResolveMouseCursor(MaterialState.None));
+        Assert.Equal(disabledCursor, button.Style.ResolveMouseCursor(MaterialState.Disabled));
+    }
+
+    [Fact]
     public void FloatingActionButton_WidgetColors_OverrideThemeDefaults()
     {
         var owner = new BuildOwner();
@@ -669,6 +857,99 @@ public sealed class MaterialFloatingActionButtonTests
         Assert.Contains(
             FindDescendants<RenderSemanticsAnnotations>(renderRoot),
             semantics => semantics.Tooltip == "Create item");
+    }
+
+    [Fact]
+    public void FloatingActionButton_ExtendedCollapsed_PreservesSourcePaddingAndOverflowLayout()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: FloatingActionButton.Extended(
+                    label: new Text("Create"),
+                    icon: new Icon(Icons.Add),
+                    isExtended: false,
+                    onPressed: () => { })));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        RenderObject renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
+        Assert.NotNull(FindDescendant<RenderFloatingActionButtonChildOverflowBox>(renderRoot));
+        Assert.Null(FindParagraphByText(renderRoot, "Create"));
+        Assert.Contains(
+            FindDescendants<RenderPadding>(renderRoot),
+            padding => padding.Padding == new Thickness(16, 0, 20, 0));
+    }
+
+    [Fact]
+    public void FloatingActionButton_VariantFlags_MatchConstructors()
+    {
+        var regular = new FloatingActionButton(
+            child: new Icon(Icons.Add),
+            onPressed: () => { },
+            isExtended: true);
+        FloatingActionButton small = FloatingActionButton.Small(new Icon(Icons.Add), () => { });
+        FloatingActionButton large = FloatingActionButton.Large(new Icon(Icons.Add), () => { });
+        FloatingActionButton extended = FloatingActionButton.Extended(new Text("Create"), () => { });
+
+        Assert.False(regular.Mini);
+        Assert.True(regular.IsExtended);
+        Assert.True(small.Mini);
+        Assert.False(small.IsExtended);
+        Assert.False(large.Mini);
+        Assert.False(large.IsExtended);
+        Assert.False(extended.Mini);
+        Assert.True(extended.IsExtended);
+    }
+
+    [Fact]
+    public void FloatingActionButtonDemoPage_SecondaryProbesDoNotRegisterDuplicateDefaultHeroes()
+    {
+        Scheduler.ResetForTests();
+        NavigatorBackButtonDispatcher.ResetForTests();
+
+        try
+        {
+            var route = new MaterialPageRoute(
+                builder: _ => new FloatingActionButtonDemoPage());
+            var root = new TestRootElement(
+                new Theme(
+                    ThemeData.Light,
+                    new Directionality(
+                        TextDirection.Ltr,
+                        new MediaQuery(
+                            new MediaQueryData(Size: new Size(800, 600)),
+                            new Navigator(route)))));
+            var owner = new BuildOwner();
+
+            root.Attach(owner);
+            root.Mount(parent: null, newSlot: null);
+            owner.FlushBuild();
+
+            RenderObject renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
+            Assert.NotNull(FindParagraphByText(renderRoot, "FloatingActionButton baseline"));
+            root.Unmount();
+        }
+        finally
+        {
+            Scheduler.ResetForTests();
+            NavigatorBackButtonDispatcher.ResetForTests();
+        }
+    }
+
+    private static MaterialButtonCore RequireBuiltButton(Widget? builtWidget)
+    {
+        var mergeSemantics = Assert.IsType<MergeSemantics>(builtWidget);
+        Widget child = mergeSemantics.Child;
+        if (child is Hero hero)
+        {
+            child = hero.Child;
+        }
+
+        return Assert.IsType<MaterialButtonCore>(child);
     }
 
     private static BoxConstraints TightConstraints(double width, double height)

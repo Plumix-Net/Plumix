@@ -7,7 +7,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/material/floating_action_button.dart (approximate)
+// Dart parity source: flutter/packages/flutter/lib/src/material/floating_action_button.dart
 
 internal enum FloatingActionButtonType
 {
@@ -19,6 +19,17 @@ internal enum FloatingActionButtonType
 
 public sealed class FloatingActionButton : StatelessWidget
 {
+    private sealed class DefaultHeroTag
+    {
+        public static readonly DefaultHeroTag Instance = new();
+
+        private DefaultHeroTag()
+        {
+        }
+
+        public override string ToString() => "<default FloatingActionButton tag>";
+    }
+
     public FloatingActionButton(
         Widget? child,
         Action? onPressed,
@@ -36,20 +47,23 @@ public sealed class FloatingActionButton : StatelessWidget
         double? highlightElevation = null,
         double? disabledElevation = null,
         bool mini = false,
-        BorderRadius? shape = null,
+        ShapeBorder? shape = null,
         FocusNode? focusNode = null,
         bool? enableFeedback = null,
         Clip clipBehavior = Clip.None,
         bool autofocus = false,
         MaterialTapTargetSize? materialTapTargetSize = null,
-        Key? key = null) : this(
+        bool isExtended = false,
+        Key? key = null,
+        [System.Runtime.CompilerServices.CallerArgumentExpression(nameof(heroTag))]
+        string? heroTagExpression = null) : this(
             child: child,
             tooltip: tooltip,
             extendedLabel: null,
             onPressed: onPressed,
             type: mini ? FloatingActionButtonType.Small : FloatingActionButtonType.Regular,
-            isExtended: false,
-            heroTag: heroTag,
+            isExtended: isExtended,
+            heroTag: heroTagExpression is null ? DefaultHeroTag.Instance : heroTag,
             mouseCursor: mouseCursor,
             foregroundColor: foregroundColor,
             backgroundColor: backgroundColor,
@@ -93,7 +107,7 @@ public sealed class FloatingActionButton : StatelessWidget
         double? hoverElevation,
         double? highlightElevation,
         double? disabledElevation,
-        BorderRadius? shape,
+        ShapeBorder? shape,
         FocusNode? focusNode,
         bool? enableFeedback,
         Clip clipBehavior,
@@ -124,6 +138,7 @@ public sealed class FloatingActionButton : StatelessWidget
         ExtendedLabel = extendedLabel;
         OnPressed = onPressed;
         Type = type;
+        Mini = type == FloatingActionButtonType.Small;
         IsExtended = isExtended;
         HeroTag = heroTag;
         MouseCursor = mouseCursor;
@@ -158,6 +173,8 @@ public sealed class FloatingActionButton : StatelessWidget
 
     private FloatingActionButtonType Type { get; }
 
+    public bool Mini { get; }
+
     public bool IsExtended { get; }
 
     public object? HeroTag { get; }
@@ -184,7 +201,7 @@ public sealed class FloatingActionButton : StatelessWidget
 
     public double? DisabledElevation { get; }
 
-    public BorderRadius? Shape { get; }
+    public ShapeBorder? Shape { get; }
 
     public FocusNode? FocusNode { get; }
 
@@ -218,13 +235,15 @@ public sealed class FloatingActionButton : StatelessWidget
         double? hoverElevation = null,
         double? highlightElevation = null,
         double? disabledElevation = null,
-        BorderRadius? shape = null,
+        ShapeBorder? shape = null,
         FocusNode? focusNode = null,
         bool? enableFeedback = null,
         Clip clipBehavior = Clip.None,
         bool autofocus = false,
         MaterialTapTargetSize? materialTapTargetSize = null,
-        Key? key = null)
+        Key? key = null,
+        [System.Runtime.CompilerServices.CallerArgumentExpression(nameof(heroTag))]
+        string? heroTagExpression = null)
     {
         return new FloatingActionButton(
             child: child,
@@ -233,7 +252,7 @@ public sealed class FloatingActionButton : StatelessWidget
             onPressed: onPressed,
             type: FloatingActionButtonType.Small,
             isExtended: false,
-            heroTag: heroTag,
+            heroTag: heroTagExpression is null ? DefaultHeroTag.Instance : heroTag,
             mouseCursor: mouseCursor,
             foregroundColor: foregroundColor,
             backgroundColor: backgroundColor,
@@ -273,13 +292,15 @@ public sealed class FloatingActionButton : StatelessWidget
         double? hoverElevation = null,
         double? highlightElevation = null,
         double? disabledElevation = null,
-        BorderRadius? shape = null,
+        ShapeBorder? shape = null,
         FocusNode? focusNode = null,
         bool? enableFeedback = null,
         Clip clipBehavior = Clip.None,
         bool autofocus = false,
         MaterialTapTargetSize? materialTapTargetSize = null,
-        Key? key = null)
+        Key? key = null,
+        [System.Runtime.CompilerServices.CallerArgumentExpression(nameof(heroTag))]
+        string? heroTagExpression = null)
     {
         return new FloatingActionButton(
             child: child,
@@ -288,7 +309,7 @@ public sealed class FloatingActionButton : StatelessWidget
             onPressed: onPressed,
             type: FloatingActionButtonType.Large,
             isExtended: false,
-            heroTag: heroTag,
+            heroTag: heroTagExpression is null ? DefaultHeroTag.Instance : heroTag,
             mouseCursor: mouseCursor,
             foregroundColor: foregroundColor,
             backgroundColor: backgroundColor,
@@ -330,7 +351,7 @@ public sealed class FloatingActionButton : StatelessWidget
         double? hoverElevation = null,
         double? highlightElevation = null,
         double? disabledElevation = null,
-        BorderRadius? shape = null,
+        ShapeBorder? shape = null,
         FocusNode? focusNode = null,
         bool? enableFeedback = null,
         Clip clipBehavior = Clip.None,
@@ -339,7 +360,9 @@ public sealed class FloatingActionButton : StatelessWidget
         double? extendedIconLabelSpacing = null,
         Thickness? extendedPadding = null,
         TextStyle? extendedTextStyle = null,
-        Key? key = null)
+        Key? key = null,
+        [System.Runtime.CompilerServices.CallerArgumentExpression(nameof(heroTag))]
+        string? heroTagExpression = null)
     {
         return new FloatingActionButton(
             child: icon,
@@ -348,7 +371,7 @@ public sealed class FloatingActionButton : StatelessWidget
             onPressed: onPressed,
             type: FloatingActionButtonType.Extended,
             isExtended: isExtended,
-            heroTag: heroTag,
+            heroTag: heroTagExpression is null ? DefaultHeroTag.Instance : heroTag,
             mouseCursor: mouseCursor,
             foregroundColor: foregroundColor,
             backgroundColor: backgroundColor,
@@ -374,27 +397,27 @@ public sealed class FloatingActionButton : StatelessWidget
 
     public override Widget Build(BuildContext context)
     {
-        var theme = Theme.Of(context);
-        var floatingActionButtonTheme = FloatingActionButtonTheme.Of(context);
-        var defaults = theme.UseMaterial3
+        ThemeData theme = Theme.Of(context);
+        FloatingActionButtonThemeData floatingActionButtonTheme = FloatingActionButtonTheme.Of(context);
+        FloatingActionButtonDefaults defaults = theme.UseMaterial3
             ? FloatingActionButtonDefaults.Material3(context, Type, Child is not null)
             : FloatingActionButtonDefaults.Material2(context, Type, Child is not null);
 
-        var foregroundColor = ForegroundColor
-                              ?? floatingActionButtonTheme.ForegroundColor
-                              ?? defaults.ForegroundColor;
-        var backgroundColor = BackgroundColor
-                              ?? floatingActionButtonTheme.BackgroundColor
-                              ?? defaults.BackgroundColor;
-        var focusColor = FocusColor
-                         ?? floatingActionButtonTheme.FocusColor
-                         ?? defaults.FocusColor;
-        var hoverColor = HoverColor
-                         ?? floatingActionButtonTheme.HoverColor
-                         ?? defaults.HoverColor;
-        var splashColor = SplashColor
-                          ?? floatingActionButtonTheme.SplashColor
-                          ?? defaults.SplashColor;
+        Color foregroundColor = ForegroundColor
+                                ?? floatingActionButtonTheme.ForegroundColor
+                                ?? defaults.ForegroundColor;
+        Color backgroundColor = BackgroundColor
+                                ?? floatingActionButtonTheme.BackgroundColor
+                                ?? defaults.BackgroundColor;
+        Color focusColor = FocusColor
+                           ?? floatingActionButtonTheme.FocusColor
+                           ?? defaults.FocusColor;
+        Color hoverColor = HoverColor
+                           ?? floatingActionButtonTheme.HoverColor
+                           ?? defaults.HoverColor;
+        Color splashColor = SplashColor
+                            ?? floatingActionButtonTheme.SplashColor
+                            ?? defaults.SplashColor;
         double elevation = Elevation
                            ?? floatingActionButtonTheme.Elevation
                            ?? defaults.Elevation;
@@ -411,27 +434,22 @@ public sealed class FloatingActionButton : StatelessWidget
                                    ?? floatingActionButtonTheme.DisabledElevation
                                    ?? defaults.DisabledElevation
                                    ?? elevation;
-        var shape = Shape
-                    ?? floatingActionButtonTheme.Shape
-                    ?? defaults.Shape;
+        ShapeBorder shape = Shape
+                            ?? floatingActionButtonTheme.Shape
+                            ?? defaults.Shape;
         double iconSize = floatingActionButtonTheme.IconSize
                           ?? defaults.IconSize;
-        var extendedTextStyle = (ExtendedTextStyle
-                                 ?? floatingActionButtonTheme.ExtendedTextStyle
-                                 ?? defaults.ExtendedTextStyle) with
+        TextStyle extendedTextStyle = (ExtendedTextStyle
+                                       ?? floatingActionButtonTheme.ExtendedTextStyle
+                                       ?? defaults.ExtendedTextStyle) with
         {
             Color = foregroundColor
         };
-        var mouseCursor = MouseCursor
-                          ?? floatingActionButtonTheme.MouseCursor
-                          ?? defaults.MouseCursor;
-        var tapTargetSize = MaterialTapTargetSize
-                            ?? floatingActionButtonTheme.MaterialTapTargetSize
-                            ?? theme.MaterialTapTargetSize;
+        MaterialTapTargetSize tapTargetSize = MaterialTapTargetSize ?? theme.MaterialTapTargetSize;
         bool enableFeedback = EnableFeedback
                               ?? floatingActionButtonTheme.EnableFeedback
                               ?? defaults.EnableFeedback;
-        var sizeConstraints = ResolveSizeConstraints(floatingActionButtonTheme, defaults);
+        BoxConstraints sizeConstraints = ResolveSizeConstraints(floatingActionButtonTheme, defaults);
 
         var style = new ButtonStyle(
             ForegroundColor: MaterialStateProperty<Color?>.All(foregroundColor),
@@ -446,13 +464,16 @@ public sealed class FloatingActionButton : StatelessWidget
                 highlightElevation: highlightElevation,
                 disabledElevation: disabledElevation),
             IconSize: MaterialStateProperty<double?>.All(iconSize),
-            Side: MaterialStateProperty<BorderSide?>.All(null),
+            Side: MaterialStateProperty<BorderSide?>.All(shape.Side),
             Padding: MaterialStateProperty<Thickness?>.All(default),
-            Shape: MaterialStateProperty<BorderRadius?>.All(shape),
-            MinimumSize: MaterialStateProperty<Size?>.All(new Size(sizeConstraints.MinWidth, sizeConstraints.MinHeight)),
-            MaximumSize: MaterialStateProperty<Size?>.All(new Size(sizeConstraints.MaxWidth, sizeConstraints.MaxHeight)),
+            Shape: MaterialStateProperty<BorderRadius?>.All(shape.BorderRadius),
+            MinimumSize: MaterialStateProperty<Size?>.All(
+                new Size(sizeConstraints.MinWidth, sizeConstraints.MinHeight)),
+            MaximumSize: MaterialStateProperty<Size?>.All(
+                new Size(sizeConstraints.MaxWidth, sizeConstraints.MaxHeight)),
             TapTargetSize: tapTargetSize,
             TextStyle: MaterialStateProperty<TextStyle?>.All(extendedTextStyle),
+            MouseCursor: CreateMouseCursorResolver(MouseCursor, floatingActionButtonTheme.MouseCursor),
             Alignment: Plumix.Rendering.Alignment.Center);
 
         Widget result = new MaterialButtonCore(
@@ -460,15 +481,14 @@ public sealed class FloatingActionButton : StatelessWidget
             onPressed: OnPressed,
             style: style,
             focusNode: FocusNode,
-            mouseCursor: mouseCursor,
             clipBehavior: ClipBehavior,
             enableFeedback: enableFeedback,
             autofocus: Autofocus);
 
-        if (!string.IsNullOrWhiteSpace(Tooltip))
+        if (Tooltip is not null)
         {
             result = new Tooltip(
-                message: Tooltip!,
+                message: Tooltip,
                 child: result);
         }
 
@@ -479,7 +499,7 @@ public sealed class FloatingActionButton : StatelessWidget
                 child: result);
         }
 
-        return result;
+        return new MergeSemantics(child: result);
     }
 
     private Widget ResolveChild(
@@ -492,12 +512,6 @@ public sealed class FloatingActionButton : StatelessWidget
             return Child ?? new SizedBox();
         }
 
-        if (!IsExtended)
-        {
-            return Child ?? new SizedBox();
-        }
-
-        var label = ExtendedLabel ?? new SizedBox();
         double spacing = ExtendedIconLabelSpacing
                          ?? floatingActionButtonTheme.ExtendedIconLabelSpacing
                          ?? defaults.ExtendedIconLabelSpacing;
@@ -505,17 +519,24 @@ public sealed class FloatingActionButton : StatelessWidget
         if (Child is not null)
         {
             children.Add(Child);
-            children.Add(new SizedBox(width: spacing));
+            if (IsExtended)
+            {
+                children.Add(new SizedBox(width: spacing));
+            }
         }
 
-        children.Add(label);
+        if (IsExtended)
+        {
+            children.Add(ExtendedLabel!);
+        }
 
-        return new Padding(
-            insets: ResolveExtendedPadding(context, floatingActionButtonTheme, defaults),
-            child: new Row(
-                mainAxisSize: MainAxisSize.Min,
-                spacing: 0,
-                children: children));
+        return new FloatingActionButtonChildOverflowBox(
+            child: new Padding(
+                insets: ResolveExtendedPadding(context, floatingActionButtonTheme, defaults),
+                child: new Row(
+                    mainAxisSize: MainAxisSize.Min,
+                    spacing: 0,
+                    children: children)));
     }
 
     private Thickness ResolveExtendedPadding(
@@ -534,9 +555,12 @@ public sealed class FloatingActionButton : StatelessWidget
     {
         return Type switch
         {
-            FloatingActionButtonType.Small => floatingActionButtonTheme.SmallSizeConstraints ?? defaults.SmallSizeConstraints,
-            FloatingActionButtonType.Large => floatingActionButtonTheme.LargeSizeConstraints ?? defaults.LargeSizeConstraints,
-            FloatingActionButtonType.Extended => floatingActionButtonTheme.ExtendedSizeConstraints ?? defaults.ExtendedSizeConstraints,
+            FloatingActionButtonType.Small =>
+                floatingActionButtonTheme.SmallSizeConstraints ?? defaults.SmallSizeConstraints,
+            FloatingActionButtonType.Large =>
+                floatingActionButtonTheme.LargeSizeConstraints ?? defaults.LargeSizeConstraints,
+            FloatingActionButtonType.Extended =>
+                floatingActionButtonTheme.ExtendedSizeConstraints ?? defaults.ExtendedSizeConstraints,
             _ => floatingActionButtonTheme.SizeConstraints ?? defaults.SizeConstraints,
         };
     }
@@ -589,6 +613,24 @@ public sealed class FloatingActionButton : StatelessWidget
         });
     }
 
+    private static MaterialStateProperty<MouseCursor?> CreateMouseCursorResolver(
+        MouseCursor? widgetCursor,
+        MaterialStateProperty<MouseCursor?>? themeCursor)
+    {
+        return MaterialStateProperty<MouseCursor?>.ResolveWith(states =>
+        {
+            MouseCursor? resolvedCursor = widgetCursor ?? themeCursor?.Resolve(states);
+            if (resolvedCursor is not null)
+            {
+                return resolvedCursor;
+            }
+
+            return states.HasFlag(MaterialState.Disabled) || !OperatingSystem.IsBrowser()
+                ? SystemMouseCursors.Basic
+                : SystemMouseCursors.Click;
+        });
+    }
+
     private static MaterialStateProperty<double?> CreateElevationResolver(
         double elevation,
         double focusElevation,
@@ -636,6 +678,37 @@ public sealed class FloatingActionButton : StatelessWidget
     }
 }
 
+internal sealed class FloatingActionButtonChildOverflowBox : SingleChildRenderObjectWidget
+{
+    public FloatingActionButtonChildOverflowBox(Widget? child = null) : base(child)
+    {
+    }
+
+    internal override RenderObject CreateRenderObject(BuildContext context)
+    {
+        return new RenderFloatingActionButtonChildOverflowBox();
+    }
+}
+
+internal sealed class RenderFloatingActionButtonChildOverflowBox : RenderProxyBox
+{
+    protected override void PerformLayout()
+    {
+        if (Child is null)
+        {
+            Size = Constraints.Biggest;
+            return;
+        }
+
+        Child.Layout(new BoxConstraints(), parentUsesSize: true);
+        Size childSize = Child.Size;
+        Size = new Size(
+            Math.Max(Constraints.MinWidth, Math.Min(Constraints.MaxWidth, childSize.Width)),
+            Math.Max(Constraints.MinHeight, Math.Min(Constraints.MaxHeight, childSize.Height)));
+        ((BoxParentData)Child.parentData!).offset = Plumix.Rendering.Alignment.Center.AlongOffset(Size, childSize);
+    }
+}
+
 internal sealed record FloatingActionButtonDefaults(
     Color ForegroundColor,
     Color BackgroundColor,
@@ -647,7 +720,7 @@ internal sealed record FloatingActionButtonDefaults(
     double HoverElevation,
     double HighlightElevation,
     double? DisabledElevation,
-    BorderRadius Shape,
+    ShapeBorder Shape,
     double IconSize,
     BoxConstraints SizeConstraints,
     BoxConstraints SmallSizeConstraints,
@@ -656,7 +729,6 @@ internal sealed record FloatingActionButtonDefaults(
     double ExtendedIconLabelSpacing,
     Thickness ExtendedPadding,
     TextStyle ExtendedTextStyle,
-    MouseCursor MouseCursor,
     bool EnableFeedback)
 {
     public static FloatingActionButtonDefaults Material2(
@@ -664,13 +736,13 @@ internal sealed record FloatingActionButtonDefaults(
         FloatingActionButtonType type,
         bool hasChild)
     {
-        var theme = Theme.Of(context);
+        ThemeData theme = Theme.Of(context);
         return new FloatingActionButtonDefaults(
-            ForegroundColor: theme.OnSecondaryContainerColor,
-            BackgroundColor: theme.SecondaryContainerColor,
-            FocusColor: MaterialButtonCore.ApplyOpacity(theme.OnSecondaryContainerColor, 0.12),
-            HoverColor: MaterialButtonCore.ApplyOpacity(theme.OnSecondaryContainerColor, 0.08),
-            SplashColor: MaterialButtonCore.ApplyOpacity(theme.OnSecondaryContainerColor, 0.12),
+            ForegroundColor: theme.ColorScheme.OnSecondary,
+            BackgroundColor: theme.ColorScheme.Secondary,
+            FocusColor: theme.FocusColor,
+            HoverColor: theme.HoverColor,
+            SplashColor: theme.SplashColor,
             Elevation: 6,
             FocusElevation: 6,
             HoverElevation: 8,
@@ -694,7 +766,6 @@ internal sealed record FloatingActionButtonDefaults(
                 end: 20,
                 bottom: 0),
             ExtendedTextStyle: theme.TextTheme.LabelLarge with { LetterSpacing = 1.2 },
-            MouseCursor: SystemMouseCursors.Click,
             EnableFeedback: true);
     }
 
@@ -703,13 +774,13 @@ internal sealed record FloatingActionButtonDefaults(
         FloatingActionButtonType type,
         bool hasChild)
     {
-        var theme = Theme.Of(context);
+        ThemeData theme = Theme.Of(context);
         return new FloatingActionButtonDefaults(
-            ForegroundColor: theme.OnPrimaryContainerColor,
-            BackgroundColor: theme.PrimaryContainerColor,
-            FocusColor: MaterialButtonCore.ApplyOpacity(theme.OnPrimaryContainerColor, 0.10),
-            HoverColor: MaterialButtonCore.ApplyOpacity(theme.OnPrimaryContainerColor, 0.08),
-            SplashColor: MaterialButtonCore.ApplyOpacity(theme.OnPrimaryContainerColor, 0.10),
+            ForegroundColor: theme.ColorScheme.OnPrimaryContainer,
+            BackgroundColor: theme.ColorScheme.PrimaryContainer,
+            FocusColor: MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnPrimaryContainer, 0.10),
+            HoverColor: MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnPrimaryContainer, 0.08),
+            SplashColor: MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnPrimaryContainer, 0.10),
             Elevation: 6,
             FocusElevation: 6,
             HoverElevation: 8,
@@ -733,29 +804,24 @@ internal sealed record FloatingActionButtonDefaults(
                 end: 20,
                 bottom: 0),
             ExtendedTextStyle: theme.TextTheme.LabelLarge,
-            MouseCursor: SystemMouseCursors.Click,
             EnableFeedback: true);
     }
 
-    private static BorderRadius ResolveM2Shape(FloatingActionButtonType type)
+    private static ShapeBorder ResolveM2Shape(FloatingActionButtonType type)
     {
-        return type switch
-        {
-            FloatingActionButtonType.Small => BorderRadius.Circular(20),
-            FloatingActionButtonType.Large => BorderRadius.Circular(48),
-            FloatingActionButtonType.Extended => BorderRadius.Circular(999),
-            _ => BorderRadius.Circular(28),
-        };
+        return type == FloatingActionButtonType.Extended
+            ? ShapeBorder.Stadium()
+            : ShapeBorder.Circle();
     }
 
-    private static BorderRadius ResolveM3Shape(FloatingActionButtonType type)
+    private static ShapeBorder ResolveM3Shape(FloatingActionButtonType type)
     {
         return type switch
         {
-            FloatingActionButtonType.Small => BorderRadius.Circular(12),
-            FloatingActionButtonType.Large => BorderRadius.Circular(28),
-            FloatingActionButtonType.Extended => BorderRadius.Circular(16),
-            _ => BorderRadius.Circular(16),
+            FloatingActionButtonType.Small => ShapeBorder.RoundedRectangle(12),
+            FloatingActionButtonType.Large => ShapeBorder.RoundedRectangle(28),
+            FloatingActionButtonType.Extended => ShapeBorder.RoundedRectangle(16),
+            _ => ShapeBorder.RoundedRectangle(16),
         };
     }
 

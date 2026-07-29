@@ -110,6 +110,31 @@ internal static class MaterialThemeLerp
             from.Bottom + ((to.Bottom - from.Bottom) * t));
     }
 
+    public static BoxConstraints? BoxConstraints(BoxConstraints? a, BoxConstraints? b, double t)
+    {
+        if (!a.HasValue && !b.HasValue)
+        {
+            return null;
+        }
+
+        if (!a.HasValue)
+        {
+            return ScaleConstraints(b!.Value, t);
+        }
+
+        if (!b.HasValue)
+        {
+            return ScaleConstraints(a.Value, 1.0 - t);
+        }
+
+        ValidateConstraintFiniteness(a.Value, b.Value);
+        return new Plumix.Rendering.BoxConstraints(
+            MinWidth: LerpConstraint(a.Value.MinWidth, b.Value.MinWidth, t),
+            MaxWidth: LerpConstraint(a.Value.MaxWidth, b.Value.MaxWidth, t),
+            MinHeight: LerpConstraint(a.Value.MinHeight, b.Value.MinHeight, t),
+            MaxHeight: LerpConstraint(a.Value.MaxHeight, b.Value.MaxHeight, t));
+    }
+
     public static MaterialStateProperty<T?>? StateProperty<T>(
         MaterialStateProperty<T?>? a,
         MaterialStateProperty<T?>? b,
@@ -166,5 +191,41 @@ internal static class MaterialThemeLerp
             Color(from.Color, to.Color, t)!.Value,
             from.Width + ((to.Width - from.Width) * t),
             t < 0.5 ? from.Style : to.Style);
+    }
+
+    private static double LerpConstraint(double a, double b, double t)
+    {
+        if (double.IsPositiveInfinity(a) && double.IsPositiveInfinity(b))
+        {
+            return double.PositiveInfinity;
+        }
+
+        return a + ((b - a) * t);
+    }
+
+    private static BoxConstraints ScaleConstraints(BoxConstraints constraints, double factor)
+    {
+        return new BoxConstraints(
+            MinWidth: constraints.MinWidth * factor,
+            MaxWidth: double.IsPositiveInfinity(constraints.MaxWidth)
+                ? double.PositiveInfinity
+                : constraints.MaxWidth * factor,
+            MinHeight: constraints.MinHeight * factor,
+            MaxHeight: double.IsPositiveInfinity(constraints.MaxHeight)
+                ? double.PositiveInfinity
+                : constraints.MaxHeight * factor);
+    }
+
+    private static void ValidateConstraintFiniteness(BoxConstraints a, BoxConstraints b)
+    {
+        bool valid = double.IsFinite(a.MinWidth) == double.IsFinite(b.MinWidth)
+                     && double.IsFinite(a.MaxWidth) == double.IsFinite(b.MaxWidth)
+                     && double.IsFinite(a.MinHeight) == double.IsFinite(b.MinHeight)
+                     && double.IsFinite(a.MaxHeight) == double.IsFinite(b.MaxHeight);
+        if (!valid)
+        {
+            throw new ArgumentException(
+                "Cannot interpolate between finite and unbounded BoxConstraints fields.");
+        }
     }
 }

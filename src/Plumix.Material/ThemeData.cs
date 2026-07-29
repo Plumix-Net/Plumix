@@ -1041,6 +1041,10 @@ public sealed record ThemeData
                 a.BottomAppBarTheme,
                 b.BottomAppBarTheme,
                 clampedT) ?? new BottomAppBarThemeData(),
+            FloatingActionButtonTheme = FloatingActionButtonThemeData.Lerp(
+                a.FloatingActionButtonTheme,
+                b.FloatingActionButtonTheme,
+                clampedT) ?? new FloatingActionButtonThemeData(),
             ButtonBarTheme = ButtonBarThemeData.Lerp(
                 a.ButtonBarTheme,
                 b.ButtonBarTheme,

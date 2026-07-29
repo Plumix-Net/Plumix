@@ -21,6 +21,7 @@ internal sealed class FloatingActionButtonDemoPageState : State
 {
     private bool _enabled = true;
     private bool _extendedOpen = true;
+    private bool _useMaterial3 = true;
     private int _regularTaps;
     private int _smallTaps;
     private int _largeTaps;
@@ -29,7 +30,14 @@ internal sealed class FloatingActionButtonDemoPageState : State
 
     public override Widget Build(BuildContext context)
     {
-        var themedData = Theme.Of(context) with
+        var ambientTheme = Theme.Of(context);
+        var modeData = new ThemeData(
+            platform: ambientTheme.Platform,
+            colorScheme: ambientTheme.ColorScheme,
+            textTheme: ambientTheme.TextTheme,
+            useMaterial3: _useMaterial3,
+            materialTapTargetSize: ambientTheme.MaterialTapTargetSize);
+        var themedData = modeData with
         {
             FloatingActionButtonTheme = new FloatingActionButtonThemeData(
                 ForegroundColor: Colors.White,
@@ -42,8 +50,10 @@ internal sealed class FloatingActionButtonDemoPageState : State
                     MaxHeight: 60)),
         };
 
-        return new SingleChildScrollView(
-            child: new Column(
+        return new Theme(
+            data: modeData,
+            child: new SingleChildScrollView(
+                child: new Column(
                 mainAxisSize: MainAxisSize.Min,
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
                 spacing: 10,
@@ -54,8 +64,9 @@ internal sealed class FloatingActionButtonDemoPageState : State
                         "Regular/small/large/extended FAB defaults, elevation states, and theme overrides.",
                         fontSize: 14,
                         color: Color.Parse("#8A000000")),
-                    new Row(
+                    new Wrap(
                         spacing: 8,
+                        runSpacing: 8,
                         children:
                         [
                             BuildControlButton(
@@ -69,13 +80,21 @@ internal sealed class FloatingActionButtonDemoPageState : State
                                 width: 146,
                                 background: Color.Parse("#FFEAE4FF")),
                             BuildControlButton(
+                                label: _useMaterial3 ? "Material 3" : "Material 2",
+                                onTap: ToggleMaterialMode,
+                                width: 104,
+                                background: Color.Parse("#FFE4F3E8")),
+                            BuildControlButton(
                                 label: "Reset",
                                 onTap: ResetCounters,
                                 width: 88,
                                 background: Color.Parse("#FFF3E8D8")),
                         ]),
                     new Text(
-                        $"enabled={(_enabled ? "true" : "false")}, extended={(_extendedOpen ? "open" : "icon")}, regular={_regularTaps}, small={_smallTaps}, large={_largeTaps}, extendedTaps={_extendedTaps}, themed={_themedTaps}",
+                        $"mode={(_useMaterial3 ? "M3" : "M2")}, enabled={(_enabled ? "true" : "false")}, "
+                        + $"extended={(_extendedOpen ? "open" : "icon")}, regular={_regularTaps}, "
+                        + $"small={_smallTaps}, large={_largeTaps}, extendedTaps={_extendedTaps}, "
+                        + $"themed={_themedTaps}",
                         fontSize: 12,
                         color: Color.Parse("#FF607D8B")),
                     new SizedBox(
@@ -98,19 +117,22 @@ internal sealed class FloatingActionButtonDemoPageState : State
                                 subtitle: "56x56",
                                 fab: new FloatingActionButton(
                                     child: new Icon(Icons.Add),
-                                    onPressed: _enabled ? OnRegularTap : null)),
+                                    onPressed: _enabled ? OnRegularTap : null,
+                                    heroTag: null)),
                             BuildProbeCard(
                                 title: "Small",
                                 subtitle: "40x40",
                                 fab: FloatingActionButton.Small(
                                     child: new Icon(Icons.Menu),
-                                    onPressed: _enabled ? OnSmallTap : null)),
+                                    onPressed: _enabled ? OnSmallTap : null,
+                                    heroTag: null)),
                             BuildProbeCard(
                                 title: "Large",
                                 subtitle: "96x96",
                                 fab: FloatingActionButton.Large(
                                     child: new Icon(Icons.Star),
-                                    onPressed: _enabled ? OnLargeTap : null)),
+                                    onPressed: _enabled ? OnLargeTap : null,
+                                    heroTag: null)),
                         ]),
                     BuildProbeCard(
                         title: "Extended",
@@ -119,7 +141,8 @@ internal sealed class FloatingActionButtonDemoPageState : State
                             label: new Text("Create"),
                             icon: new Icon(Icons.Add),
                             isExtended: _extendedOpen,
-                            onPressed: _enabled ? OnExtendedTap : null)),
+                            onPressed: _enabled ? OnExtendedTap : null,
+                            heroTag: null)),
                     new Theme(
                         data: themedData,
                         child: BuildProbeCard(
@@ -127,8 +150,9 @@ internal sealed class FloatingActionButtonDemoPageState : State
                             subtitle: "FloatingActionButtonTheme colors + size",
                             fab: new FloatingActionButton(
                                 child: new Icon(Icons.InfoOutline),
-                                onPressed: _enabled ? OnThemedTap : null))),
-                ]));
+                                onPressed: _enabled ? OnThemedTap : null,
+                                heroTag: null))),
+                ])));
     }
 
     private Widget BuildProbeCard(string title, string subtitle, Widget fab)
@@ -192,12 +216,18 @@ internal sealed class FloatingActionButtonDemoPageState : State
         SetState(() => _extendedOpen = !_extendedOpen);
     }
 
+    private void ToggleMaterialMode()
+    {
+        SetState(() => _useMaterial3 = !_useMaterial3);
+    }
+
     private void ResetCounters()
     {
         SetState(() =>
         {
             _enabled = true;
             _extendedOpen = true;
+            _useMaterial3 = true;
             _regularTaps = 0;
             _smallTaps = 0;
             _largeTaps = 0;

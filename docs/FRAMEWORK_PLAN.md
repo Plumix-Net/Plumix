@@ -365,10 +365,11 @@ Kickoff note (2026-03-12):
   2021 type scale, scheme-driven legacy color compatibility fields, theme interpolation, focused tests, and a
   mirrored palette/typography runtime probe.
 - Started direct component-token closeout with `NavigationBar`, `NavigationRail`, `NavigationDrawer`, legacy
-  `BottomNavigationBar`, and `BottomAppBar`: the navigation surfaces now consume exact `ColorScheme` roles,
+  `BottomNavigationBar`, `BottomAppBar`, and `FloatingActionButton`: the navigation/action surfaces now consume exact
+  `ColorScheme` roles,
   including fixed/shifting bottom-bar policies, M2 overlay/icon-opacity policies, M3 drawer surfaces, disabled
-  states, stadium indicators, and FAB-positioned bottom-app-bar notches; their component themes expose source-shaped
-  copy/lerp contracts and participate in `ThemeData.Lerp`.
+  states, stadium indicators, FAB-positioned bottom-app-bar notches, adaptive FAB cursors, and M2/M3 FAB shapes;
+  their component themes expose source-shaped copy/lerp contracts and participate in `ThemeData.Lerp`.
 - Added Flutter-structured `ElevationOverlay`: exact M3 surface-tint opacity table with between-level interpolation,
   M2 logarithmic dark-surface overlays, `ThemeData.applyElevationOverlayColor` policy, and shared use by Material,
   card, button, navigation, dialog, sheet, menu, search, and app-bar surface paths.

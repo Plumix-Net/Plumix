@@ -12,6 +12,7 @@ class _FloatingActionButtonDemoPageState
     extends State<FloatingActionButtonDemoPage> {
   bool _enabled = true;
   bool _extendedOpen = true;
+  bool _useMaterial3 = true;
   int _regularTaps = 0;
   int _smallTaps = 0;
   int _largeTaps = 0;
@@ -20,7 +21,13 @@ class _FloatingActionButtonDemoPageState
 
   @override
   Widget build(BuildContext context) {
-    final ThemeData themedData = Theme.of(context).copyWith(
+    final ThemeData ambientTheme = Theme.of(context);
+    final ThemeData modeData = ThemeData.from(
+      colorScheme: ambientTheme.colorScheme,
+      textTheme: ambientTheme.textTheme,
+      useMaterial3: _useMaterial3,
+    );
+    final ThemeData themedData = modeData.copyWith(
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
         foregroundColor: Colors.white,
         backgroundColor: Color(0xFF00639B),
@@ -29,113 +36,131 @@ class _FloatingActionButtonDemoPageState
       ),
     );
 
-    return SingleChildScrollView(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        spacing: 10,
-        children: <Widget>[
-          const Text(
-            'FloatingActionButton baseline',
-            style: TextStyle(fontSize: 20, color: Colors.black),
-          ),
-          const Text(
-            'Regular/small/large/extended FAB defaults, elevation states, and theme overrides.',
-            style: TextStyle(fontSize: 14, color: Colors.black54),
-          ),
-          Row(
-            spacing: 8,
-            children: <Widget>[
-              _buildControlButton(
-                label: _enabled ? 'Enabled' : 'Disabled',
-                onTap: _toggleEnabled,
-                width: 108,
-                background: const Color(0xFFE9F0FF),
-              ),
-              _buildControlButton(
-                label: _extendedOpen ? 'Extended: open' : 'Extended: icon',
-                onTap: _toggleExtended,
-                width: 146,
-                background: const Color(0xFFEAE4FF),
-              ),
-              _buildControlButton(
-                label: 'Reset',
-                onTap: _resetCounters,
-                width: 88,
-                background: const Color(0xFFF3E8D8),
-              ),
-            ],
-          ),
-          Text(
-            'enabled=$_enabled, extended=${_extendedOpen ? 'open' : 'icon'}, regular=$_regularTaps, small=$_smallTaps, large=$_largeTaps, extendedTaps=$_extendedTaps, themed=$_themedTaps',
-            style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
-          ),
-          SizedBox(
-            height: 160,
-            child: Scaffold(
-              body: const Center(child: Text('Scaffold: centerFloat')),
-              bottomNavigationBar: const BottomAppBar(),
-              floatingActionButtonLocation:
-                  FloatingActionButtonLocation.centerFloat,
-              floatingActionButton: FloatingActionButton(
-                onPressed: _enabled ? _onRegularTap : null,
-                tooltip: 'Center float action',
-                child: const Icon(Icons.add),
-              ),
+    return Theme(
+      data: modeData,
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          spacing: 10,
+          children: <Widget>[
+            const Text(
+              'FloatingActionButton baseline',
+              style: TextStyle(fontSize: 20, color: Colors.black),
             ),
-          ),
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            spacing: 8,
-            children: <Widget>[
-              _buildProbeCard(
-                title: 'Regular',
-                subtitle: '56x56',
-                fab: FloatingActionButton(
+            const Text(
+              'Regular/small/large/extended FAB defaults, elevation states, and theme overrides.',
+              style: TextStyle(fontSize: 14, color: Colors.black54),
+            ),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: <Widget>[
+                _buildControlButton(
+                  label: _enabled ? 'Enabled' : 'Disabled',
+                  onTap: _toggleEnabled,
+                  width: 108,
+                  background: const Color(0xFFE9F0FF),
+                ),
+                _buildControlButton(
+                  label: _extendedOpen ? 'Extended: open' : 'Extended: icon',
+                  onTap: _toggleExtended,
+                  width: 146,
+                  background: const Color(0xFFEAE4FF),
+                ),
+                _buildControlButton(
+                  label: _useMaterial3 ? 'Material 3' : 'Material 2',
+                  onTap: _toggleMaterialMode,
+                  width: 104,
+                  background: const Color(0xFFE4F3E8),
+                ),
+                _buildControlButton(
+                  label: 'Reset',
+                  onTap: _resetCounters,
+                  width: 88,
+                  background: const Color(0xFFF3E8D8),
+                ),
+              ],
+            ),
+            Text(
+              'mode=${_useMaterial3 ? 'M3' : 'M2'}, enabled=$_enabled, '
+              'extended=${_extendedOpen ? 'open' : 'icon'}, regular=$_regularTaps, '
+              'small=$_smallTaps, large=$_largeTaps, extendedTaps=$_extendedTaps, '
+              'themed=$_themedTaps',
+              style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
+            ),
+            SizedBox(
+              height: 160,
+              child: Scaffold(
+                body: const Center(child: Text('Scaffold: centerFloat')),
+                bottomNavigationBar: const BottomAppBar(),
+                floatingActionButtonLocation:
+                    FloatingActionButtonLocation.centerFloat,
+                floatingActionButton: FloatingActionButton(
                   onPressed: _enabled ? _onRegularTap : null,
+                  tooltip: 'Center float action',
                   child: const Icon(Icons.add),
                 ),
               ),
-              _buildProbeCard(
-                title: 'Small',
-                subtitle: '40x40',
-                fab: FloatingActionButton.small(
-                  onPressed: _enabled ? _onSmallTap : null,
-                  child: const Icon(Icons.menu),
+            ),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              spacing: 8,
+              children: <Widget>[
+                _buildProbeCard(
+                  title: 'Regular',
+                  subtitle: '56x56',
+                  fab: FloatingActionButton(
+                    onPressed: _enabled ? _onRegularTap : null,
+                    heroTag: null,
+                    child: const Icon(Icons.add),
+                  ),
+                ),
+                _buildProbeCard(
+                  title: 'Small',
+                  subtitle: '40x40',
+                  fab: FloatingActionButton.small(
+                    onPressed: _enabled ? _onSmallTap : null,
+                    heroTag: null,
+                    child: const Icon(Icons.menu),
+                  ),
+                ),
+                _buildProbeCard(
+                  title: 'Large',
+                  subtitle: '96x96',
+                  fab: FloatingActionButton.large(
+                    onPressed: _enabled ? _onLargeTap : null,
+                    heroTag: null,
+                    child: const Icon(Icons.star),
+                  ),
+                ),
+              ],
+            ),
+            _buildProbeCard(
+              title: 'Extended',
+              subtitle: 'label + icon / collapsed icon',
+              fab: FloatingActionButton.extended(
+                onPressed: _enabled ? _onExtendedTap : null,
+                heroTag: null,
+                isExtended: _extendedOpen,
+                icon: const Icon(Icons.add),
+                label: const Text('Create'),
+              ),
+            ),
+            Theme(
+              data: themedData,
+              child: _buildProbeCard(
+                title: 'Theme override',
+                subtitle: 'FloatingActionButtonTheme colors + size',
+                fab: FloatingActionButton(
+                  onPressed: _enabled ? _onThemedTap : null,
+                  heroTag: null,
+                  child: const Icon(Icons.info_outline),
                 ),
               ),
-              _buildProbeCard(
-                title: 'Large',
-                subtitle: '96x96',
-                fab: FloatingActionButton.large(
-                  onPressed: _enabled ? _onLargeTap : null,
-                  child: const Icon(Icons.star),
-                ),
-              ),
-            ],
-          ),
-          _buildProbeCard(
-            title: 'Extended',
-            subtitle: 'label + icon / collapsed icon',
-            fab: FloatingActionButton.extended(
-              onPressed: _enabled ? _onExtendedTap : null,
-              isExtended: _extendedOpen,
-              icon: const Icon(Icons.add),
-              label: const Text('Create'),
             ),
-          ),
-          Theme(
-            data: themedData,
-            child: _buildProbeCard(
-              title: 'Theme override',
-              subtitle: 'FloatingActionButtonTheme colors + size',
-              fab: FloatingActionButton(
-                onPressed: _enabled ? _onThemedTap : null,
-                child: const Icon(Icons.info_outline),
-              ),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -205,10 +230,17 @@ class _FloatingActionButtonDemoPageState
     });
   }
 
+  void _toggleMaterialMode() {
+    setState(() {
+      _useMaterial3 = !_useMaterial3;
+    });
+  }
+
   void _resetCounters() {
     setState(() {
       _enabled = true;
       _extendedOpen = true;
+      _useMaterial3 = true;
       _regularTaps = 0;
       _smallTaps = 0;
       _largeTaps = 0;
