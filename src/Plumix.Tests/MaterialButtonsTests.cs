@@ -5377,7 +5377,8 @@ public sealed class MaterialButtonsTests
         var owner = new BuildOwner();
         var theme = ThemeData.Light with
         {
-            OnSurfaceVariantColor = Colors.MediumAquamarine
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(
+                onSurfaceVariant: Colors.MediumAquamarine)
         };
         IconThemeData? capturedTheme = null;
 
@@ -5395,6 +5396,116 @@ public sealed class MaterialButtonsTests
         Assert.NotNull(capturedTheme);
         Assert.Equal(Colors.MediumAquamarine, capturedTheme!.Color);
         Assert.Equal(24, capturedTheme.Size);
+    }
+
+    [Fact]
+    public void IconButton_Material3VariantsUseDirectColorSchemeRoles()
+    {
+        var scheme = ThemeData.Light.ColorScheme.CopyWith(
+            primary: Colors.DarkGreen,
+            onPrimary: Colors.Gold,
+            secondaryContainer: Colors.Navy,
+            onSecondaryContainer: Colors.Orange,
+            surfaceContainerHighest: Colors.CadetBlue,
+            onSurfaceVariant: Colors.Purple,
+            inverseSurface: Colors.White,
+            onInverseSurface: Colors.Black,
+            outline: Colors.Brown);
+        var theme = ThemeData.Light with
+        {
+            ColorScheme = scheme,
+            PrimaryColor = Colors.Red,
+            OnPrimaryColor = Colors.Red,
+            SecondaryContainerColor = Colors.Red,
+            OnSecondaryContainerColor = Colors.Red,
+            SurfaceContainerHighestColor = Colors.Red,
+            OnSurfaceVariantColor = Colors.Red,
+            InverseSurfaceColor = Colors.Red,
+            OnInverseSurfaceColor = Colors.Red,
+            OutlineColor = Colors.Red,
+        };
+
+        AssertVariant(
+            icon => new IconButton(icon: icon, onPressed: () => { }),
+            Colors.Purple,
+            Colors.Transparent,
+            null);
+        AssertVariant(
+            icon => IconButton.Filled(icon: icon, onPressed: () => { }),
+            Colors.Gold,
+            Colors.DarkGreen,
+            null);
+        AssertVariant(
+            icon => IconButton.Filled(icon: icon, isSelected: false, onPressed: () => { }),
+            Colors.DarkGreen,
+            Colors.CadetBlue,
+            null);
+        AssertVariant(
+            icon => IconButton.FilledTonal(icon: icon, onPressed: () => { }),
+            Colors.Orange,
+            Colors.Navy,
+            null);
+        AssertVariant(
+            icon => IconButton.Outlined(icon: icon, isSelected: true, onPressed: () => { }),
+            Colors.Black,
+            Colors.White,
+            null);
+        AssertVariant(
+            icon => IconButton.Outlined(icon: icon, isSelected: false, onPressed: () => { }),
+            Colors.Purple,
+            Colors.Transparent,
+            new BorderSide(Colors.Brown));
+
+        void AssertVariant(
+            Func<Widget, IconButton> factory,
+            Color expectedForeground,
+            Color expectedBackground,
+            BorderSide? expectedBorder)
+        {
+            var owner = new BuildOwner();
+            IconThemeData? capturedTheme = null;
+            var root = new TestRootElement(
+                new Theme(
+                    data: theme,
+                    child: factory(
+                        new CaptureIconThemeWidget(
+                            iconTheme => capturedTheme = iconTheme))));
+
+            root.Attach(owner);
+            root.Mount(parent: null, newSlot: null);
+            owner.FlushBuild();
+
+            Assert.NotNull(capturedTheme);
+            Assert.Equal(expectedForeground, capturedTheme!.Color);
+            var decorated = FindDescendant<RenderDecoratedBox>(
+                RequireRenderObject<RenderObject>(root.ChildElement));
+            Assert.NotNull(decorated);
+            Assert.Equal(expectedBackground, decorated!.Decoration.Color);
+            Assert.Equal(expectedBorder, decorated.Decoration.Border);
+            root.Unmount();
+        }
+    }
+
+    [Fact]
+    public void Theme_InstallsConfiguredIconThemeForWidgetDescendants()
+    {
+        var owner = new BuildOwner();
+        IconThemeData? capturedTheme = null;
+        var expected = new IconThemeData(
+            Color: Colors.DarkOrange,
+            Size: 29,
+            Opacity: 0.5);
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with { IconTheme = expected },
+                child: new CaptureIconThemeWidget(
+                    iconTheme => capturedTheme = iconTheme)));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.Equal(expected, capturedTheme);
     }
 
     [Fact]
@@ -5555,6 +5666,7 @@ public sealed class MaterialButtonsTests
                 child: IconButton.Outlined(
                     icon: new SizedBox(width: 20, height: 20),
                     isSelected: false,
+                    style: IconButton.StyleFrom(animationDuration: TimeSpan.Zero),
                     onPressed: () => { })));
 
         root.Attach(owner);
@@ -5571,6 +5683,7 @@ public sealed class MaterialButtonsTests
                 child: IconButton.Outlined(
                     icon: new SizedBox(width: 20, height: 20),
                     isSelected: true,
+                    style: IconButton.StyleFrom(animationDuration: TimeSpan.Zero),
                     onPressed: () => { })));
         owner.FlushBuild();
 
@@ -5610,6 +5723,228 @@ public sealed class MaterialButtonsTests
 
         var overrideHitResult = new BoxHitTestResult();
         Assert.False(overrideHarness.RenderView.HitTest(overrideHitResult, new Point(60, 46)));
+    }
+
+    [Fact]
+    public void IconButton_ConstructorsExposeCompleteDartApiSurface()
+    {
+        var statesController = new MaterialStatesController();
+        var focusNode = new FocusNode();
+        Widget selectedIcon = new Icon(Icons.Star);
+
+        IconButton button = IconButton.FilledTonal(
+            icon: new Icon(Icons.StarOutline),
+            onPressed: () => { },
+            iconSize: 28,
+            visualDensity: VisualDensity.Compact,
+            padding: new Thickness(6),
+            alignment: Alignment.BottomRight,
+            splashRadius: 31,
+            tooltip: "Favorite",
+            enableFeedback: false,
+            mouseCursor: SystemMouseCursors.Grab,
+            focusNode: focusNode,
+            autofocus: true,
+            constraints: new BoxConstraints(MinWidth: 44, MinHeight: 42),
+            isSelected: true,
+            selectedIcon: selectedIcon,
+            statesController: statesController);
+
+        Assert.Equal(28, button.IconSize);
+        Assert.Equal(VisualDensity.Compact, button.VisualDensity);
+        Assert.Equal(new Thickness(6), button.Padding);
+        Assert.Equal(Alignment.BottomRight, button.Alignment);
+        Assert.Equal(31, button.SplashRadius);
+        Assert.Equal("Favorite", button.Tooltip);
+        Assert.False(button.EnableFeedback);
+        Assert.Equal(SystemMouseCursors.Grab, button.MouseCursor);
+        Assert.Same(focusNode, button.FocusNode);
+        Assert.True(button.Autofocus);
+        Assert.True(button.IsSelected);
+        Assert.Same(selectedIcon, button.SelectedIcon);
+        Assert.Same(statesController, button.StatesController);
+    }
+
+    [Fact]
+    public void IconButton_StyleFromMapsCompleteButtonStyleSurface()
+    {
+        TimeSpan animationDuration = TimeSpan.FromMilliseconds(275);
+        ButtonStyle style = IconButton.StyleFrom(
+            enabledMouseCursor: SystemMouseCursors.Click,
+            disabledMouseCursor: SystemMouseCursors.Basic,
+            visualDensity: VisualDensity.Comfortable,
+            animationDuration: animationDuration,
+            enableFeedback: false);
+
+        Assert.Equal(
+            SystemMouseCursors.Click,
+            style.MouseCursor!.Resolve(MaterialState.None));
+        Assert.Equal(
+            SystemMouseCursors.Basic,
+            style.MouseCursor.Resolve(MaterialState.Disabled));
+        Assert.Equal(VisualDensity.Comfortable, style.VisualDensity);
+        Assert.Equal(animationDuration, style.AnimationDuration);
+        Assert.False(style.EnableFeedback);
+    }
+
+    [Fact]
+    public void IconButton_Material2UsesLegacyBranchAndIgnoresToggleIcon()
+    {
+        var owner = new BuildOwner();
+        IconThemeData? capturedTheme = null;
+        var theme = ThemeData.Light with
+        {
+            UseMaterial3 = false,
+            DisabledColor = Colors.DarkOrange,
+            IconButtonTheme = new IconButtonThemeData(
+                IconButton.StyleFrom(foregroundColor: Colors.ForestGreen)),
+        };
+
+        var root = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: new IconButton(
+                    icon: new CaptureIconThemeWidget(iconTheme => capturedTheme = iconTheme),
+                    selectedIcon: new Text("selected"),
+                    isSelected: true,
+                    visualDensity: VisualDensity.Compact,
+                    onPressed: null)));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.NotNull(capturedTheme);
+        Assert.Equal(Colors.DarkOrange, capturedTheme!.Color);
+        Assert.Equal(24, capturedTheme.Size);
+        Assert.Null(FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement)));
+
+        var constrainedBox = FindDescendant<RenderConstrainedBox>(
+            RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(constrainedBox);
+        Assert.Equal(40, constrainedBox!.AdditionalConstraints.MinWidth);
+        Assert.Equal(40, constrainedBox.AdditionalConstraints.MinHeight);
+    }
+
+    [Fact]
+    public void IconButton_ExternalStatesControllerTracksSelectedAndDisabled()
+    {
+        var owner = new BuildOwner();
+        var statesController = new MaterialStatesController();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new IconButton(
+                    icon: new Icon(Icons.Star),
+                    isSelected: true,
+                    statesController: statesController,
+                    onPressed: null)));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.True(statesController.Value.HasFlag(MaterialState.Selected));
+        Assert.True(statesController.Value.HasFlag(MaterialState.Disabled));
+
+        root.Update(
+            new Theme(
+                data: ThemeData.Light,
+                child: new IconButton(
+                    icon: new Icon(Icons.Star),
+                    isSelected: false,
+                    statesController: statesController,
+                    onPressed: () => { })));
+        owner.FlushBuild();
+
+        Assert.False(statesController.Value.HasFlag(MaterialState.Selected));
+        Assert.False(statesController.Value.HasFlag(MaterialState.Disabled));
+    }
+
+    [Fact]
+    public void IconButton_LocalThemeOverridesGlobalThemeAndAmbientIconTheme()
+    {
+        var owner = new BuildOwner();
+        IconThemeData? capturedTheme = null;
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    IconButtonTheme = new IconButtonThemeData(
+                        IconButton.StyleFrom(foregroundColor: Colors.Red)),
+                },
+                child: new Plumix.Widgets.IconTheme(
+                    data: new IconThemeData(Color: Colors.Blue),
+                    child: new IconButtonTheme(
+                        data: new IconButtonThemeData(
+                            IconButton.StyleFrom(foregroundColor: Colors.ForestGreen)),
+                        child: new IconButton(
+                            icon: new CaptureIconThemeWidget(
+                                iconTheme => capturedTheme = iconTheme),
+                            onPressed: () => { })))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.NotNull(capturedTheme);
+        Assert.Equal(Colors.ForestGreen, capturedTheme!.Color);
+    }
+
+    [Fact]
+    public void IconButtonThemeData_CopyAndLerpFollowButtonStyle()
+    {
+        var a = new IconButtonThemeData(
+            IconButton.StyleFrom(
+                foregroundColor: Colors.Black,
+                iconSize: 20,
+                visualDensity: VisualDensity.Compact,
+                animationDuration: TimeSpan.FromMilliseconds(100),
+                enableFeedback: false));
+        var b = a.CopyWith(
+            IconButton.StyleFrom(
+                foregroundColor: Colors.White,
+                iconSize: 28,
+                visualDensity: VisualDensity.Standard,
+                animationDuration: TimeSpan.FromMilliseconds(300),
+                enableFeedback: true));
+
+        IconButtonThemeData midpoint = Assert.IsType<IconButtonThemeData>(
+            IconButtonThemeData.Lerp(a, b, 0.5));
+
+        Assert.Equal(
+            new ColorTween().Evaluate(0.5, Colors.Black, Colors.White),
+            midpoint.Style!.ForegroundColor!.Resolve(MaterialState.None));
+        Assert.Equal(24, midpoint.Style.IconSize!.Resolve(MaterialState.None));
+        Assert.Equal(VisualDensity.Standard, midpoint.Style.VisualDensity);
+        Assert.Equal(TimeSpan.FromMilliseconds(300), midpoint.Style.AnimationDuration);
+        Assert.True(midpoint.Style.EnableFeedback);
+    }
+
+    [Fact]
+    public void IconButton_TooltipWrapsMaterial2AndMaterial3Branches()
+    {
+        using var material3Harness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light,
+                child: new IconButton(
+                    icon: new Icon(Icons.InfoOutline),
+                    tooltip: "Material 3 info",
+                    onPressed: () => { })));
+        material3Harness.Pump(new Size(120, 80));
+
+        Assert.NotNull(material3Harness.FindState<TooltipState>());
+
+        using var material2Harness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light with { UseMaterial3 = false },
+                child: new IconButton(
+                    icon: new Icon(Icons.InfoOutline),
+                    tooltip: "Material 2 info",
+                    onPressed: () => { })));
+        material2Harness.Pump(new Size(120, 80));
+
+        Assert.NotNull(material2Harness.FindState<TooltipState>());
     }
 
     private static T RequireRenderObject<T>(Element? element) where T : RenderObject
@@ -5809,6 +6144,31 @@ public sealed class MaterialButtonsTests
             _pipeline.FlushLayout(size);
             _pipeline.FlushCompositingBits();
             _pipeline.FlushPaint();
+        }
+
+        public T FindState<T>() where T : State
+        {
+            T? result = null;
+            void Visit(Element element)
+            {
+                if (result is not null)
+                {
+                    return;
+                }
+
+                if (element is StatefulElement stateful && stateful.State is T match)
+                {
+                    result = match;
+                    return;
+                }
+
+                element.VisitChildren(Visit);
+            }
+
+            Visit(_rootElement);
+            return result
+                   ?? throw new InvalidOperationException(
+                       $"State {typeof(T).Name} was not found.");
         }
 
         public void Dispose()

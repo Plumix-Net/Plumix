@@ -130,6 +130,47 @@ public sealed record ButtonStyle(
     bool? EnableFeedback = null,
     InteractiveInkFeatureFactory? SplashFactory = null)
 {
+    public static ButtonStyle? Lerp(ButtonStyle? a, ButtonStyle? b, double t)
+    {
+        if (ReferenceEquals(a, b))
+        {
+            return a;
+        }
+        if (a is null && b is null)
+        {
+            return null;
+        }
+
+        double clampedT = Math.Clamp(t, 0.0, 1.0);
+        return new ButtonStyle(
+            ForegroundColor: LerpColorProperty(a?.ForegroundColor, b?.ForegroundColor, clampedT),
+            BackgroundColor: LerpColorProperty(a?.BackgroundColor, b?.BackgroundColor, clampedT),
+            ShadowColor: LerpColorProperty(a?.ShadowColor, b?.ShadowColor, clampedT),
+            SurfaceTintColor: LerpColorProperty(a?.SurfaceTintColor, b?.SurfaceTintColor, clampedT),
+            OverlayColor: LerpColorProperty(a?.OverlayColor, b?.OverlayColor, clampedT),
+            SplashColor: LerpColorProperty(a?.SplashColor, b?.SplashColor, clampedT),
+            Elevation: LerpDoubleProperty(a?.Elevation, b?.Elevation, clampedT),
+            IconColor: LerpColorProperty(a?.IconColor, b?.IconColor, clampedT),
+            IconSize: LerpDoubleProperty(a?.IconSize, b?.IconSize, clampedT),
+            Side: LerpBorderSideProperty(a?.Side, b?.Side, clampedT),
+            Padding: LerpThicknessProperty(a?.Padding, b?.Padding, clampedT),
+            Shape: LerpBorderRadiusProperty(a?.Shape, b?.Shape, clampedT),
+            MinimumSize: LerpSizeProperty(a?.MinimumSize, b?.MinimumSize, clampedT),
+            FixedSize: LerpSizeProperty(a?.FixedSize, b?.FixedSize, clampedT),
+            MaximumSize: LerpSizeProperty(a?.MaximumSize, b?.MaximumSize, clampedT),
+            Alignment: LerpAlignment(a?.Alignment, b?.Alignment, clampedT),
+            IconAlignment: clampedT < 0.5 ? a?.IconAlignment : b?.IconAlignment,
+            TapTargetSize: clampedT < 0.5 ? a?.TapTargetSize : b?.TapTargetSize,
+            TextStyle: LerpTextStyleProperty(a?.TextStyle, b?.TextStyle, clampedT),
+            MouseCursor: clampedT < 0.5 ? a?.MouseCursor : b?.MouseCursor,
+            VisualDensity: clampedT < 0.5 ? a?.VisualDensity : b?.VisualDensity,
+            AnimationDuration: clampedT < 0.5
+                ? a?.AnimationDuration
+                : b?.AnimationDuration,
+            EnableFeedback: clampedT < 0.5 ? a?.EnableFeedback : b?.EnableFeedback,
+            SplashFactory: clampedT < 0.5 ? a?.SplashFactory : b?.SplashFactory);
+    }
+
     public ButtonStyle Merge(ButtonStyle? style)
     {
         if (style is null)
@@ -259,5 +300,169 @@ public sealed record ButtonStyle(
     internal MouseCursor? ResolveMouseCursor(MaterialState states)
     {
         return MouseCursor?.Resolve(states);
+    }
+
+    private static MaterialStateProperty<Color?>? LerpColorProperty(
+        MaterialStateProperty<Color?>? a,
+        MaterialStateProperty<Color?>? b,
+        double t)
+    {
+        if (a is null && b is null)
+        {
+            return null;
+        }
+
+        return MaterialStateProperty<Color?>.ResolveWith(
+            states => MaterialThemeLerp.Color(
+                a?.Resolve(states),
+                b?.Resolve(states),
+                t));
+    }
+
+    private static MaterialStateProperty<double?>? LerpDoubleProperty(
+        MaterialStateProperty<double?>? a,
+        MaterialStateProperty<double?>? b,
+        double t)
+    {
+        if (a is null && b is null)
+        {
+            return null;
+        }
+
+        return MaterialStateProperty<double?>.ResolveWith(
+            states => MaterialThemeLerp.Double(
+                a?.Resolve(states),
+                b?.Resolve(states),
+                t));
+    }
+
+    private static MaterialStateProperty<BorderSide?>? LerpBorderSideProperty(
+        MaterialStateProperty<BorderSide?>? a,
+        MaterialStateProperty<BorderSide?>? b,
+        double t)
+    {
+        if (a is null && b is null)
+        {
+            return null;
+        }
+
+        return MaterialStateProperty<BorderSide?>.ResolveWith(states =>
+        {
+            BorderSide? from = a?.Resolve(states);
+            BorderSide? to = b?.Resolve(states);
+            if (!from.HasValue && !to.HasValue)
+            {
+                return null;
+            }
+
+            BorderSide start = from ?? TransparentSide(to!.Value);
+            BorderSide end = to ?? TransparentSide(from!.Value);
+            return new BorderSide(
+                MaterialThemeLerp.Color(start.Color, end.Color, t)!.Value,
+                start.Width + ((end.Width - start.Width) * t),
+                t < 0.5 ? start.Style : end.Style);
+        });
+    }
+
+    private static MaterialStateProperty<Thickness?>? LerpThicknessProperty(
+        MaterialStateProperty<Thickness?>? a,
+        MaterialStateProperty<Thickness?>? b,
+        double t)
+    {
+        if (a is null && b is null)
+        {
+            return null;
+        }
+
+        return MaterialStateProperty<Thickness?>.ResolveWith(
+            states => MaterialThemeLerp.Thickness(
+                a?.Resolve(states),
+                b?.Resolve(states),
+                t));
+    }
+
+    private static MaterialStateProperty<BorderRadius?>? LerpBorderRadiusProperty(
+        MaterialStateProperty<BorderRadius?>? a,
+        MaterialStateProperty<BorderRadius?>? b,
+        double t)
+    {
+        if (a is null && b is null)
+        {
+            return null;
+        }
+
+        return MaterialStateProperty<BorderRadius?>.ResolveWith(states =>
+        {
+            BorderRadius? fromRadius = a?.Resolve(states);
+            BorderRadius? toRadius = b?.Resolve(states);
+            if (!fromRadius.HasValue && !toRadius.HasValue)
+            {
+                return null;
+            }
+
+            double from = fromRadius?.Radius ?? 0.0;
+            double to = toRadius?.Radius ?? 0.0;
+            return BorderRadius.Circular(from + ((to - from) * t));
+        });
+    }
+
+    private static MaterialStateProperty<Size?>? LerpSizeProperty(
+        MaterialStateProperty<Size?>? a,
+        MaterialStateProperty<Size?>? b,
+        double t)
+    {
+        if (a is null && b is null)
+        {
+            return null;
+        }
+
+        return MaterialStateProperty<Size?>.ResolveWith(
+            states => MaterialThemeLerp.Size(
+                a?.Resolve(states),
+                b?.Resolve(states),
+                t));
+    }
+
+    private static MaterialStateProperty<TextStyle?>? LerpTextStyleProperty(
+        MaterialStateProperty<TextStyle?>? a,
+        MaterialStateProperty<TextStyle?>? b,
+        double t)
+    {
+        if (a is null && b is null)
+        {
+            return null;
+        }
+
+        return MaterialStateProperty<TextStyle?>.ResolveWith(
+            states => MaterialThemeLerp.TextStyle(
+                a?.Resolve(states),
+                b?.Resolve(states),
+                t));
+    }
+
+    private static Alignment? LerpAlignment(Alignment? a, Alignment? b, double t)
+    {
+        if (!a.HasValue && !b.HasValue)
+        {
+            return null;
+        }
+
+        Alignment from = a ?? default;
+        Alignment to = b ?? default;
+        return new Alignment(
+            from.X + ((to.X - from.X) * t),
+            from.Y + ((to.Y - from.Y) * t));
+    }
+
+    private static BorderSide TransparentSide(BorderSide source)
+    {
+        return new BorderSide(
+            Avalonia.Media.Color.FromArgb(
+                0,
+                source.Color.R,
+                source.Color.G,
+                source.Color.B),
+            0.0,
+            source.Style);
     }
 }

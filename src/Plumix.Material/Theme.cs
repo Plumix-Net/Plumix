@@ -36,9 +36,11 @@ public sealed class Theme : InheritedTheme
 
     public override Widget Build(BuildContext context)
     {
-        return new DefaultTextStyle(
-            style: Data.TextTheme.BodyMedium,
-            child: Child);
+        return new IconTheme(
+            data: Data.IconTheme,
+            child: new DefaultTextStyle(
+                style: Data.TextTheme.BodyMedium,
+                child: Child));
     }
 
     public override Widget Wrap(BuildContext context, Widget child)

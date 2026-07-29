@@ -7,7 +7,8 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/material/icon_button.dart; flutter/packages/flutter/lib/src/material/icon_button_theme.dart (approximate)
+// Dart parity source: flutter/packages/flutter/lib/src/material/icon_button.dart;
+// flutter/packages/flutter/lib/src/material/icon_button_theme.dart
 
 internal enum IconButtonVariant
 {
@@ -23,6 +24,7 @@ public sealed class IconButton : StatelessWidget
         Widget icon,
         Action? onPressed,
         double? iconSize = null,
+        VisualDensity? visualDensity = null,
         Thickness? padding = null,
         Alignment? alignment = null,
         Color? color = null,
@@ -40,13 +42,16 @@ public sealed class IconButton : StatelessWidget
         bool? isSelected = null,
         Widget? selectedIcon = null,
         double? splashRadius = null,
+        string? tooltip = null,
         bool? enableFeedback = null,
         MouseCursor? mouseCursor = null,
+        MaterialStatesController? statesController = null,
         Key? key = null) : this(
             icon: icon,
             onPressed: onPressed,
             variant: IconButtonVariant.Standard,
             iconSize: iconSize,
+            visualDensity: visualDensity,
             padding: padding,
             alignment: alignment,
             color: color,
@@ -61,12 +66,14 @@ public sealed class IconButton : StatelessWidget
             autofocus: autofocus,
             constraints: constraints,
             style: style,
-        isSelected: isSelected,
-        selectedIcon: selectedIcon,
-        splashRadius: splashRadius,
-        enableFeedback: enableFeedback,
-        mouseCursor: mouseCursor,
-        key: key)
+            isSelected: isSelected,
+            selectedIcon: selectedIcon,
+            splashRadius: splashRadius,
+            tooltip: tooltip,
+            enableFeedback: enableFeedback,
+            mouseCursor: mouseCursor,
+            statesController: statesController,
+            key: key)
     {
     }
 
@@ -75,6 +82,7 @@ public sealed class IconButton : StatelessWidget
         Action? onPressed,
         IconButtonVariant variant,
         double? iconSize,
+        VisualDensity? visualDensity,
         Thickness? padding,
         Alignment? alignment,
         Color? color,
@@ -93,13 +101,16 @@ public sealed class IconButton : StatelessWidget
         Widget? selectedIcon,
         Key? key,
         double? splashRadius = null,
+        string? tooltip = null,
         bool? enableFeedback = null,
-        MouseCursor? mouseCursor = null) : base(key)
+        MouseCursor? mouseCursor = null,
+        MaterialStatesController? statesController = null) : base(key)
     {
         Icon = icon ?? throw new ArgumentNullException(nameof(icon));
         OnPressed = onPressed;
         Variant = variant;
         IconSize = iconSize;
+        VisualDensity = visualDensity;
         Padding = padding;
         Alignment = alignment;
         Color = color;
@@ -117,10 +128,15 @@ public sealed class IconButton : StatelessWidget
         IsSelected = isSelected;
         SelectedIcon = selectedIcon;
         SplashRadius = splashRadius;
+        Tooltip = tooltip;
         EnableFeedback = enableFeedback;
         MouseCursor = mouseCursor;
+        StatesController = statesController;
 
-        if (iconSize.HasValue && (double.IsNaN(iconSize.Value) || double.IsInfinity(iconSize.Value) || iconSize.Value <= 0))
+        if (iconSize.HasValue
+            && (double.IsNaN(iconSize.Value)
+                || double.IsInfinity(iconSize.Value)
+                || iconSize.Value <= 0))
         {
             throw new ArgumentOutOfRangeException(nameof(iconSize), "Icon size must be finite and positive.");
         }
@@ -137,6 +153,8 @@ public sealed class IconButton : StatelessWidget
     private IconButtonVariant Variant { get; }
 
     public double? IconSize { get; }
+
+    public VisualDensity? VisualDensity { get; }
 
     public Thickness? Padding { get; }
 
@@ -172,14 +190,19 @@ public sealed class IconButton : StatelessWidget
 
     public double? SplashRadius { get; }
 
+    public string? Tooltip { get; }
+
     public bool? EnableFeedback { get; }
 
     public MouseCursor? MouseCursor { get; }
+
+    public MaterialStatesController? StatesController { get; }
 
     public static IconButton Filled(
         Widget icon,
         Action? onPressed,
         double? iconSize = null,
+        VisualDensity? visualDensity = null,
         Thickness? padding = null,
         Alignment? alignment = null,
         Color? color = null,
@@ -196,6 +219,11 @@ public sealed class IconButton : StatelessWidget
         ButtonStyle? style = null,
         bool? isSelected = null,
         Widget? selectedIcon = null,
+        double? splashRadius = null,
+        string? tooltip = null,
+        bool? enableFeedback = null,
+        MouseCursor? mouseCursor = null,
+        MaterialStatesController? statesController = null,
         Key? key = null)
     {
         return new IconButton(
@@ -203,6 +231,7 @@ public sealed class IconButton : StatelessWidget
             onPressed: onPressed,
             variant: IconButtonVariant.Filled,
             iconSize: iconSize,
+            visualDensity: visualDensity,
             padding: padding,
             alignment: alignment,
             color: color,
@@ -219,6 +248,11 @@ public sealed class IconButton : StatelessWidget
             style: style,
             isSelected: isSelected,
             selectedIcon: selectedIcon,
+            splashRadius: splashRadius,
+            tooltip: tooltip,
+            enableFeedback: enableFeedback,
+            mouseCursor: mouseCursor,
+            statesController: statesController,
             key: key);
     }
 
@@ -226,6 +260,7 @@ public sealed class IconButton : StatelessWidget
         Widget icon,
         Action? onPressed,
         double? iconSize = null,
+        VisualDensity? visualDensity = null,
         Thickness? padding = null,
         Alignment? alignment = null,
         Color? color = null,
@@ -242,6 +277,11 @@ public sealed class IconButton : StatelessWidget
         ButtonStyle? style = null,
         bool? isSelected = null,
         Widget? selectedIcon = null,
+        double? splashRadius = null,
+        string? tooltip = null,
+        bool? enableFeedback = null,
+        MouseCursor? mouseCursor = null,
+        MaterialStatesController? statesController = null,
         Key? key = null)
     {
         return new IconButton(
@@ -249,6 +289,7 @@ public sealed class IconButton : StatelessWidget
             onPressed: onPressed,
             variant: IconButtonVariant.FilledTonal,
             iconSize: iconSize,
+            visualDensity: visualDensity,
             padding: padding,
             alignment: alignment,
             color: color,
@@ -265,6 +306,11 @@ public sealed class IconButton : StatelessWidget
             style: style,
             isSelected: isSelected,
             selectedIcon: selectedIcon,
+            splashRadius: splashRadius,
+            tooltip: tooltip,
+            enableFeedback: enableFeedback,
+            mouseCursor: mouseCursor,
+            statesController: statesController,
             key: key);
     }
 
@@ -272,6 +318,7 @@ public sealed class IconButton : StatelessWidget
         Widget icon,
         Action? onPressed,
         double? iconSize = null,
+        VisualDensity? visualDensity = null,
         Thickness? padding = null,
         Alignment? alignment = null,
         Color? color = null,
@@ -288,6 +335,11 @@ public sealed class IconButton : StatelessWidget
         ButtonStyle? style = null,
         bool? isSelected = null,
         Widget? selectedIcon = null,
+        double? splashRadius = null,
+        string? tooltip = null,
+        bool? enableFeedback = null,
+        MouseCursor? mouseCursor = null,
+        MaterialStatesController? statesController = null,
         Key? key = null)
     {
         return new IconButton(
@@ -295,6 +347,7 @@ public sealed class IconButton : StatelessWidget
             onPressed: onPressed,
             variant: IconButtonVariant.Outlined,
             iconSize: iconSize,
+            visualDensity: visualDensity,
             padding: padding,
             alignment: alignment,
             color: color,
@@ -311,6 +364,11 @@ public sealed class IconButton : StatelessWidget
             style: style,
             isSelected: isSelected,
             selectedIcon: selectedIcon,
+            splashRadius: splashRadius,
+            tooltip: tooltip,
+            enableFeedback: enableFeedback,
+            mouseCursor: mouseCursor,
+            statesController: statesController,
             key: key);
     }
 
@@ -335,10 +393,18 @@ public sealed class IconButton : StatelessWidget
         BorderSide? side = null,
         BorderRadius? shape = null,
         Thickness? padding = null,
+        MouseCursor? enabledMouseCursor = null,
+        MouseCursor? disabledMouseCursor = null,
+        VisualDensity? visualDensity = null,
         MaterialTapTargetSize? tapTargetSize = null,
+        TimeSpan? animationDuration = null,
+        bool? enableFeedback = null,
         Alignment? alignment = null)
     {
-        if (iconSize.HasValue && (double.IsNaN(iconSize.Value) || double.IsInfinity(iconSize.Value) || iconSize.Value <= 0))
+        if (iconSize.HasValue
+            && (double.IsNaN(iconSize.Value)
+                || double.IsInfinity(iconSize.Value)
+                || iconSize.Value <= 0))
         {
             throw new ArgumentOutOfRangeException(nameof(iconSize), "Icon size must be finite and positive.");
         }
@@ -386,16 +452,29 @@ public sealed class IconButton : StatelessWidget
             MaximumSize: maximumSize.HasValue
                 ? MaterialStateProperty<Size?>.All(maximumSize.Value)
                 : null,
+            MouseCursor: CreateMouseCursorResolver(
+                enabledMouseCursor,
+                disabledMouseCursor),
+            VisualDensity: visualDensity,
             Alignment: alignment,
-            TapTargetSize: tapTargetSize);
+            TapTargetSize: tapTargetSize,
+            AnimationDuration: animationDuration,
+            EnableFeedback: enableFeedback);
     }
 
     public override Widget Build(BuildContext context)
     {
         var theme = Theme.Of(context);
+        return theme.UseMaterial3
+            ? BuildMaterial3(context, theme)
+            : BuildMaterial2(context, theme);
+    }
+
+    private Widget BuildMaterial3(BuildContext context, ThemeData theme)
+    {
         var iconThemeData = Plumix.Widgets.IconTheme.Of(context);
-        bool canToggle = theme.UseMaterial3 && IsSelected.HasValue;
-        bool isSelected = canToggle && IsSelected!.Value;
+        bool canToggle = IsSelected.HasValue;
+        bool isSelected = IsSelected ?? false;
         Size? minimumSize = Constraints is not BoxConstraints explicitConstraints
             ? null
             : new Size(explicitConstraints.MinWidth, explicitConstraints.MinHeight);
@@ -404,6 +483,7 @@ public sealed class IconButton : StatelessWidget
             : new Size(maxConstraints.MaxWidth, maxConstraints.MaxHeight);
 
         var adjustedStyle = StyleFrom(
+            visualDensity: VisualDensity,
             foregroundColor: Color,
             disabledForegroundColor: DisabledColor,
             focusColor: FocusColor,
@@ -413,13 +493,16 @@ public sealed class IconButton : StatelessWidget
             minimumSize: minimumSize,
             maximumSize: maximumSize,
             iconSize: IconSize,
-            alignment: Alignment);
+            alignment: Alignment,
+            enabledMouseCursor: MouseCursor,
+            disabledMouseCursor: MouseCursor,
+            enableFeedback: EnableFeedback);
 
-        if (SplashColor.HasValue)
+        if (adjustedStyle.IconColor is null)
         {
             adjustedStyle = adjustedStyle with
             {
-                SplashColor = MaterialButtonCore.CreateExplicitSplashResolver(SplashColor.Value)
+                IconColor = adjustedStyle.ForegroundColor
             };
         }
 
@@ -439,25 +522,115 @@ public sealed class IconButton : StatelessWidget
             ? SelectedIcon
             : Icon;
 
-        return new MaterialButtonCore(
+        Widget result = new MaterialButtonCore(
             child: effectiveIcon,
             onPressed: OnPressed,
             onLongPress: OnPressed is null ? null : OnLongPress,
             onHoverChanged: OnHover,
             style: mergedStyle,
             focusNode: FocusNode,
+            statesController: StatesController,
             isSelected: isSelected,
-            splashRadius: SplashRadius,
-            enableFeedback: EnableFeedback,
-            mouseCursor: MouseCursor,
+            includeSemanticSelected: IsSelected.HasValue,
+            clipBehavior: Plumix.UI.Clip.None,
             autofocus: Autofocus);
+
+        if (Tooltip is not null)
+        {
+            result = new Tooltip(
+                message: Tooltip,
+                child: result);
+        }
+
+        return result;
     }
 
-    private static ButtonStyle ResolveThemeStyle(BuildContext context, IconThemeData iconTheme)
+    private Widget BuildMaterial2(BuildContext context, ThemeData theme)
     {
+        Color? currentColor = OnPressed is not null
+            ? Color
+            : DisabledColor ?? theme.DisabledColor;
+        VisualDensity effectiveVisualDensity = VisualDensity ?? theme.VisualDensity;
+        BoxConstraints unadjustedConstraints = Constraints
+                                               ?? new BoxConstraints(
+                                                   MinWidth: 48,
+                                                   MinHeight: 48);
+        BoxConstraints adjustedConstraints = effectiveVisualDensity.EffectiveConstraints(
+            unadjustedConstraints);
+        var ambientIconTheme = Plumix.Widgets.IconTheme.Of(context);
+        double effectiveIconSize = IconSize ?? ambientIconTheme.Size ?? 24.0;
+        Thickness effectivePadding = Padding ?? new Thickness(8);
+        Plumix.Rendering.Alignment effectiveAlignment = Alignment
+                                                         ?? Plumix.Rendering.Alignment.Center;
+        bool effectiveEnableFeedback = EnableFeedback ?? true;
+        double paddingExtent = Math.Min(
+            effectivePadding.Left + effectivePadding.Right,
+            effectivePadding.Top + effectivePadding.Bottom);
+        double effectiveSplashRadius = SplashRadius
+                                       ?? Math.Max(
+                                           35.0,
+                                           (effectiveIconSize + paddingExtent) * 0.7);
+
+        Widget result = new ConstrainedBox(
+            constraints: adjustedConstraints,
+            child: new Padding(
+                insets: effectivePadding,
+                child: new SizedBox(
+                    width: effectiveIconSize,
+                    height: effectiveIconSize,
+                    child: new Align(
+                        alignment: effectiveAlignment,
+                        child: new Plumix.Widgets.IconTheme(
+                            data: new IconThemeData(
+                                Color: currentColor ?? ambientIconTheme.Color,
+                                Size: effectiveIconSize,
+                                Opacity: ambientIconTheme.Opacity),
+                            child: Icon)))));
+
+        result = new InkResponse(
+            focusNode: FocusNode,
+            autofocus: Autofocus,
+            canRequestFocus: OnPressed is not null,
+            onTap: OnPressed,
+            onHover: OnHover,
+            onLongPress: OnPressed is null ? null : OnLongPress,
+            mouseCursor: MouseCursor ?? ResolveAdaptiveCursor(OnPressed is not null),
+            enableFeedback: effectiveEnableFeedback,
+            focusColor: FocusColor ?? theme.FocusColor,
+            hoverColor: HoverColor ?? theme.HoverColor,
+            highlightColor: HighlightColor ?? theme.HighlightColor,
+            splashColor: SplashColor ?? theme.SplashColor,
+            radius: effectiveSplashRadius,
+            child: result);
+
+        if (Tooltip is not null)
+        {
+            result = new Tooltip(
+                message: Tooltip,
+                child: result);
+        }
+
+        return new Semantics(
+            flags: SemanticsFlags.IsButton
+                   | (OnPressed is not null
+                       ? SemanticsFlags.IsEnabled
+                       : SemanticsFlags.None),
+            child: result);
+    }
+
+    private static ButtonStyle ResolveThemeStyle(
+        BuildContext context,
+        IconThemeData iconTheme)
+    {
+        var theme = Theme.Of(context);
+        Color defaultIconColor = theme.Brightness == Brightness.Dark
+            ? Colors.White
+            : Avalonia.Media.Color.FromArgb(0xDD, 0x00, 0x00, 0x00);
+        bool isDefaultColor = iconTheme.Color == defaultIconColor;
+        bool isDefaultSize = iconTheme.Size is null;
         var iconThemeStyle = StyleFrom(
-            foregroundColor: iconTheme.Color,
-            iconSize: iconTheme.Size);
+            foregroundColor: isDefaultColor ? null : iconTheme.Color,
+            iconSize: isDefaultSize ? null : iconTheme.Size);
 
         var iconButtonThemeStyle = IconButtonTheme.Of(context).Style;
         return iconButtonThemeStyle?.Merge(iconThemeStyle) ?? iconThemeStyle;
@@ -468,9 +641,6 @@ public sealed class IconButton : StatelessWidget
         bool isToggleable,
         IconButtonVariant variant)
     {
-        double minDimension = theme.UseMaterial3 ? 40.0 : 48.0;
-        var borderRadius = Plumix.Rendering.BorderRadius.Circular(theme.UseMaterial3 ? 20 : 24);
-
         return new ButtonStyle(
             ForegroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
                 ResolveDefaultForegroundColor(theme, variant, isToggleable, states)),
@@ -486,13 +656,20 @@ public sealed class IconButton : StatelessWidget
             Side: variant == IconButtonVariant.Outlined
                 ? MaterialStateProperty<BorderSide?>.ResolveWith(states =>
                     ResolveOutlinedBorderSide(theme, states))
-                : MaterialStateProperty<BorderSide?>.All(null),
+                : null,
             Padding: MaterialStateProperty<Thickness?>.All(new Thickness(8)),
-            Shape: MaterialStateProperty<BorderRadius?>.All(borderRadius),
-            MinimumSize: MaterialStateProperty<Size?>.All(new Size(minDimension, minDimension)),
+            Shape: MaterialStateProperty<BorderRadius?>.All(
+                Plumix.Rendering.BorderRadius.Circular(9999)),
+            MinimumSize: MaterialStateProperty<Size?>.All(new Size(40, 40)),
             MaximumSize: MaterialStateProperty<Size?>.All(new Size(double.PositiveInfinity, double.PositiveInfinity)),
             Alignment: Plumix.Rendering.Alignment.Center,
-            TapTargetSize: theme.MaterialTapTargetSize);
+            TapTargetSize: theme.MaterialTapTargetSize,
+            MouseCursor: MaterialStateProperty<MouseCursor?>.ResolveWith(
+                states => ResolveAdaptiveCursor(!states.HasFlag(MaterialState.Disabled))),
+            VisualDensity: Plumix.Material.VisualDensity.Standard,
+            AnimationDuration: TimeSpan.FromMilliseconds(200),
+            EnableFeedback: true,
+            SplashFactory: theme.SplashFactory);
     }
 
     private static Color ResolveDefaultForegroundColor(
@@ -503,28 +680,28 @@ public sealed class IconButton : StatelessWidget
     {
         if (states.HasFlag(MaterialState.Disabled))
         {
-            return MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.38);
+            return MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnSurface, 0.38);
         }
 
         bool isSelected = states.HasFlag(MaterialState.Selected);
         return variant switch
         {
             IconButtonVariant.Filled => isSelected
-                ? theme.OnPrimaryColor
+                ? theme.ColorScheme.OnPrimary
                 : isToggleable
-                    ? theme.PrimaryColor
-                    : theme.OnPrimaryColor,
+                    ? theme.ColorScheme.Primary
+                    : theme.ColorScheme.OnPrimary,
             IconButtonVariant.FilledTonal => isSelected
-                ? theme.OnSecondaryContainerColor
+                ? theme.ColorScheme.OnSecondaryContainer
                 : isToggleable
-                    ? theme.OnSurfaceVariantColor
-                    : theme.OnSecondaryContainerColor,
+                    ? theme.ColorScheme.OnSurfaceVariant
+                    : theme.ColorScheme.OnSecondaryContainer,
             IconButtonVariant.Outlined => isSelected
-                ? theme.OnInverseSurfaceColor
-                : theme.OnSurfaceVariantColor,
+                ? theme.ColorScheme.OnInverseSurface
+                : theme.ColorScheme.OnSurfaceVariant,
             _ => isSelected
-                ? theme.PrimaryColor
-                : theme.OnSurfaceVariantColor,
+                ? theme.ColorScheme.Primary
+                : theme.ColorScheme.OnSurfaceVariant,
         };
     }
 
@@ -540,25 +717,25 @@ public sealed class IconButton : StatelessWidget
         return variant switch
         {
             IconButtonVariant.Filled => isDisabled
-                ? MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.12)
+                ? MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnSurface, 0.12)
                 : isSelected
-                    ? theme.PrimaryColor
+                    ? theme.ColorScheme.Primary
                     : isToggleable
-                        ? theme.SurfaceContainerHighestColor
-                        : theme.PrimaryColor,
+                        ? theme.ColorScheme.SurfaceContainerHighest
+                        : theme.ColorScheme.Primary,
             IconButtonVariant.FilledTonal => isDisabled
-                ? MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.12)
+                ? MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnSurface, 0.12)
                 : isSelected
-                    ? theme.SecondaryContainerColor
+                    ? theme.ColorScheme.SecondaryContainer
                     : isToggleable
-                        ? theme.SurfaceContainerHighestColor
-                        : theme.SecondaryContainerColor,
+                        ? theme.ColorScheme.SurfaceContainerHighest
+                        : theme.ColorScheme.SecondaryContainer,
             IconButtonVariant.Outlined => isDisabled
                 ? isSelected
-                    ? MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.12)
+                    ? MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnSurface, 0.12)
                     : Colors.Transparent
                 : isSelected
-                    ? theme.InverseSurfaceColor
+                    ? theme.ColorScheme.InverseSurface
                     : Colors.Transparent,
             _ => Colors.Transparent,
         };
@@ -579,10 +756,10 @@ public sealed class IconButton : StatelessWidget
         {
             var selectedOverlay = variant switch
             {
-                IconButtonVariant.Filled => theme.OnPrimaryColor,
-                IconButtonVariant.FilledTonal => theme.OnSecondaryContainerColor,
-                IconButtonVariant.Outlined => theme.OnInverseSurfaceColor,
-                _ => theme.PrimaryColor,
+                IconButtonVariant.Filled => theme.ColorScheme.OnPrimary,
+                IconButtonVariant.FilledTonal => theme.ColorScheme.OnSecondaryContainer,
+                IconButtonVariant.Outlined => theme.ColorScheme.OnInverseSurface,
+                _ => theme.ColorScheme.Primary,
             };
 
             double selectedFocusOpacity = variant == IconButtonVariant.Outlined ? 0.08 : 0.10;
@@ -593,17 +770,17 @@ public sealed class IconButton : StatelessWidget
         {
             if (states.HasFlag(MaterialState.Pressed))
             {
-                return MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.10);
+                return MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnSurface, 0.10);
             }
 
             if (states.HasFlag(MaterialState.Hovered))
             {
-                return MaterialButtonCore.ApplyOpacity(theme.OnSurfaceVariantColor, 0.08);
+                return MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnSurfaceVariant, 0.08);
             }
 
             if (states.HasFlag(MaterialState.Focused))
             {
-                return MaterialButtonCore.ApplyOpacity(theme.OnSurfaceVariantColor, 0.08);
+                return MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnSurfaceVariant, 0.08);
             }
 
             return Colors.Transparent;
@@ -611,9 +788,13 @@ public sealed class IconButton : StatelessWidget
 
         var overlayColor = variant switch
         {
-            IconButtonVariant.Filled => isToggleable ? theme.PrimaryColor : theme.OnPrimaryColor,
-            IconButtonVariant.FilledTonal => isToggleable ? theme.OnSurfaceVariantColor : theme.OnSecondaryContainerColor,
-            _ => theme.OnSurfaceVariantColor,
+            IconButtonVariant.Filled => isToggleable
+                ? theme.ColorScheme.Primary
+                : theme.ColorScheme.OnPrimary,
+            IconButtonVariant.FilledTonal => isToggleable
+                ? theme.ColorScheme.OnSurfaceVariant
+                : theme.ColorScheme.OnSecondaryContainer,
+            _ => theme.ColorScheme.OnSurfaceVariant,
         };
 
         return ResolveStateLayerColor(overlayColor, states);
@@ -629,11 +810,11 @@ public sealed class IconButton : StatelessWidget
         if (states.HasFlag(MaterialState.Disabled))
         {
             return new BorderSide(
-                MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.12),
+                MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnSurface, 0.12),
                 1);
         }
 
-        return new BorderSide(theme.OutlineColor, 1);
+        return new BorderSide(theme.ColorScheme.Outline, 1);
     }
 
     private static Color ResolveStateLayerColor(
@@ -740,5 +921,27 @@ public sealed class IconButton : StatelessWidget
 
             return null;
         });
+    }
+
+    private static MaterialStateProperty<MouseCursor?>? CreateMouseCursorResolver(
+        MouseCursor? enabledMouseCursor,
+        MouseCursor? disabledMouseCursor)
+    {
+        if (enabledMouseCursor is null && disabledMouseCursor is null)
+        {
+            return null;
+        }
+
+        return MaterialStateProperty<MouseCursor?>.ResolveWith(
+            states => states.HasFlag(MaterialState.Disabled)
+                ? disabledMouseCursor
+                : enabledMouseCursor);
+    }
+
+    private static MouseCursor ResolveAdaptiveCursor(bool enabled)
+    {
+        return enabled && OperatingSystem.IsBrowser()
+            ? SystemMouseCursors.Click
+            : SystemMouseCursors.Basic;
     }
 }

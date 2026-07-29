@@ -69,6 +69,8 @@
     notch hit testing, inherited theme capture, theme copy/lerp).
   - `FloatingActionButton` (direct M2/M3 foreground/background/state roles, source shapes and adaptive cursors,
     default/null hero-tag policy, extended overflow layout, merged semantics, inherited theme copy/lerp).
+  - `IconButton` (exact M2 legacy versus M3 styled composition, direct scheme roles, all variants, density/cursor/
+    tooltip/state-controller surfaces, inherited theme copy/lerp, and Material `Theme` icon inheritance).
 - Add `Typography.Material2014`/`Material2018`, exact platform black/white themes, dense/tall geometry, and locale
   script-category selection.
 - Remove the narrowed `ColorScheme + Typography closeout` row from `docs/MATERIAL_TODO.md` only after those checks

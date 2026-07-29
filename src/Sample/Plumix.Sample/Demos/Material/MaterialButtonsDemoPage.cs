@@ -27,10 +27,12 @@ internal sealed class MaterialButtonsDemoPageState : State
     private int _filledTonalButtonTaps;
     private int _iconButtonTaps;
     private int _filledIconButtonTaps;
+    private int _filledTonalIconButtonTaps;
     private int _outlinedIconButtonTaps;
     private int _materialButtonTaps;
     private int _rawMaterialButtonTaps;
     private bool _iconButtonSelected;
+    private bool _useMaterial3 = true;
 
     public override Widget Build(BuildContext context)
     {
@@ -58,9 +60,20 @@ internal sealed class MaterialButtonsDemoPageState : State
                             onTap: ResetCounters,
                             width: 88,
                             background: Color.Parse("#FFF3E8D8")),
+                        BuildControlButton(
+                            label: _useMaterial3 ? "Icons M3" : "Icons M2",
+                            onTap: ToggleIconMaterialVersion,
+                            width: 96,
+                            background: Color.Parse("#FFE8F5E9")),
                     ]),
                 new Text(
-                    $"enabled={(_enabled ? "true" : "false")}, text={_textButtonTaps}, elevated={_elevatedButtonTaps}, outlined={_outlinedButtonTaps}, filled={_filledButtonTaps}, tonal={_filledTonalButtonTaps}, material={_materialButtonTaps}, raw={_rawMaterialButtonTaps}, icon={_iconButtonTaps}, filledIcon={_filledIconButtonTaps}, outlinedIcon={_outlinedIconButtonTaps}, iconSelected={(_iconButtonSelected ? "true" : "false")}",
+                    $"enabled={(_enabled ? "true" : "false")}, iconsM3={(_useMaterial3 ? "true" : "false")}, "
+                    + $"text={_textButtonTaps}, elevated={_elevatedButtonTaps}, outlined={_outlinedButtonTaps}, "
+                    + $"filled={_filledButtonTaps}, tonal={_filledTonalButtonTaps}, "
+                    + $"material={_materialButtonTaps}, raw={_rawMaterialButtonTaps}, icon={_iconButtonTaps}, "
+                    + $"filledIcon={_filledIconButtonTaps}, tonalIcon={_filledTonalIconButtonTaps}, "
+                    + $"outlinedIcon={_outlinedIconButtonTaps}, "
+                    + $"iconSelected={(_iconButtonSelected ? "true" : "false")}",
                     fontSize: 12,
                     color: Color.Parse("#FF607D8B")),
                 new SizedBox(
@@ -107,31 +120,7 @@ internal sealed class MaterialButtonsDemoPageState : State
                                 shape: BorderRadius.Circular(6),
                                 child: new Text($"Raw: {_rawMaterialButtonTaps}"))),
                     ]),
-                new Row(
-                    spacing: 8,
-                    children:
-                    [
-                        new SizedBox(
-                            width: 56,
-                            height: 56,
-                            child: new IconButton(
-                                icon: new Icon(Icons.StarOutline),
-                                selectedIcon: new Icon(Icons.Star),
-                                isSelected: _iconButtonSelected,
-                                onPressed: _enabled ? OnIconButtonTap : null)),
-                        new SizedBox(
-                            width: 56,
-                            height: 56,
-                            child: IconButton.Filled(
-                                icon: new Icon(Icons.Add),
-                                onPressed: _enabled ? OnFilledIconButtonTap : null)),
-                        new SizedBox(
-                            width: 56,
-                            height: 56,
-                            child: IconButton.Outlined(
-                                icon: new Icon(Icons.InfoOutline),
-                                onPressed: _enabled ? OnOutlinedIconButtonTap : null)),
-                    ]),
+                BuildIconButtonProbe(context),
                 new Row(
                     spacing: 8,
                     children:
@@ -189,9 +178,62 @@ internal sealed class MaterialButtonsDemoPageState : State
                     fontSize: 12)));
     }
 
+    private Widget BuildIconButtonProbe(BuildContext context)
+    {
+        Widget tonalButton = new IconButtonTheme(
+            data: new IconButtonThemeData(
+                style: IconButton.StyleFrom(
+                    foregroundColor: Color.Parse("#FF6A1B9A"))),
+            child: new SizedBox(
+                width: 56,
+                height: 56,
+                child: IconButton.FilledTonal(
+                    icon: new Icon(Icons.Star),
+                    visualDensity: VisualDensity.Compact,
+                    tooltip: "Compact tonal favorite",
+                    onPressed: _enabled ? OnFilledTonalIconButtonTap : null)));
+
+        return new Theme(
+            data: Theme.Of(context) with { UseMaterial3 = _useMaterial3 },
+            child: new Row(
+                spacing: 8,
+                children:
+                [
+                    new SizedBox(
+                        width: 56,
+                        height: 56,
+                        child: new IconButton(
+                            icon: new Icon(Icons.StarOutline),
+                            selectedIcon: new Icon(Icons.Star),
+                            isSelected: _iconButtonSelected,
+                            tooltip: "Toggle favorite",
+                            onPressed: _enabled ? OnIconButtonTap : null)),
+                    new SizedBox(
+                        width: 56,
+                        height: 56,
+                        child: IconButton.Filled(
+                            icon: new Icon(Icons.Add),
+                            tooltip: "Add",
+                            onPressed: _enabled ? OnFilledIconButtonTap : null)),
+                    tonalButton,
+                    new SizedBox(
+                        width: 56,
+                        height: 56,
+                        child: IconButton.Outlined(
+                            icon: new Icon(Icons.InfoOutline),
+                            tooltip: "Info",
+                            onPressed: _enabled ? OnOutlinedIconButtonTap : null)),
+                ]));
+    }
+
     private void ToggleEnabled()
     {
         SetState(() => _enabled = !_enabled);
+    }
+
+    private void ToggleIconMaterialVersion()
+    {
+        SetState(() => _useMaterial3 = !_useMaterial3);
     }
 
     private void ResetCounters()
@@ -205,11 +247,13 @@ internal sealed class MaterialButtonsDemoPageState : State
             _filledTonalButtonTaps = 0;
             _iconButtonTaps = 0;
             _filledIconButtonTaps = 0;
+            _filledTonalIconButtonTaps = 0;
             _outlinedIconButtonTaps = 0;
             _materialButtonTaps = 0;
             _rawMaterialButtonTaps = 0;
             _iconButtonSelected = false;
             _enabled = true;
+            _useMaterial3 = true;
         });
     }
 
@@ -260,6 +304,11 @@ internal sealed class MaterialButtonsDemoPageState : State
     private void OnFilledIconButtonTap()
     {
         SetState(() => _filledIconButtonTaps += 1);
+    }
+
+    private void OnFilledTonalIconButtonTap()
+    {
+        SetState(() => _filledTonalIconButtonTaps += 1);
     }
 
     private void OnOutlinedIconButtonTap()

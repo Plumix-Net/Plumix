@@ -3,7 +3,11 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/material/text_button_theme.dart; flutter/packages/flutter/lib/src/material/elevated_button_theme.dart; flutter/packages/flutter/lib/src/material/outlined_button_theme.dart; flutter/packages/flutter/lib/src/material/filled_button_theme.dart; flutter/packages/flutter/lib/src/material/icon_button_theme.dart (approximate)
+// Dart parity source (reference): flutter/packages/flutter/lib/src/material/text_button_theme.dart;
+// flutter/packages/flutter/lib/src/material/elevated_button_theme.dart;
+// flutter/packages/flutter/lib/src/material/outlined_button_theme.dart;
+// flutter/packages/flutter/lib/src/material/filled_button_theme.dart;
+// flutter/packages/flutter/lib/src/material/icon_button_theme.dart
 
 public sealed record TextButtonThemeData
 {
@@ -53,6 +57,28 @@ public sealed record IconButtonThemeData
     }
 
     public ButtonStyle? Style { get; init; }
+
+    public IconButtonThemeData CopyWith(ButtonStyle? style = null)
+    {
+        return new IconButtonThemeData(style ?? Style);
+    }
+
+    public static IconButtonThemeData? Lerp(
+        IconButtonThemeData? a,
+        IconButtonThemeData? b,
+        double t)
+    {
+        if (ReferenceEquals(a, b))
+        {
+            return a;
+        }
+        if (a is null && b is null)
+        {
+            return null;
+        }
+
+        return new IconButtonThemeData(ButtonStyle.Lerp(a?.Style, b?.Style, t));
+    }
 }
 
 public sealed class TextButtonTheme : InheritedWidget
@@ -203,7 +229,7 @@ public sealed class FilledButtonTheme : InheritedWidget
     }
 }
 
-public sealed class IconButtonTheme : InheritedWidget
+public sealed class IconButtonTheme : InheritedTheme
 {
     public IconButtonTheme(
         IconButtonThemeData data,
@@ -221,6 +247,11 @@ public sealed class IconButtonTheme : InheritedWidget
     public override Widget Build(BuildContext context)
     {
         return Child;
+    }
+
+    public override Widget Wrap(BuildContext context, Widget child)
+    {
+        return new IconButtonTheme(Data, child);
     }
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)

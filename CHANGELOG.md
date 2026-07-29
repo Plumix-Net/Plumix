@@ -1,5 +1,11 @@
 # Changelog
 
+- Breaking: completed the `IconButton` Dart closeout: all four constructors now expose the source API, Material 2
+  uses the legacy `InkResponse` composition, and Material 3 uses direct `ColorScheme` roles, stadium geometry,
+  standard density, external state controllers, tooltips, adaptive cursors, and source style precedence. Added
+  `IconButtonThemeData.CopyWith`/`Lerp`, `ButtonStyle.Lerp`, Material `Theme` icon inheritance, focused tests, and a
+  mirrored M2/M3 runtime probe; advanced `Plumix.Material` to `0.19.0-alpha.1`.
+
 - Breaking: completed the `FloatingActionButton` ColorScheme/theme/layout closeout: M2/M3 defaults now read exact
   source roles and state colors, all variants use source shapes and adaptive cursors, omitted/default versus explicit
   null hero tags match Flutter, extended content uses the source overflow layout, and output merges semantics. Added

@@ -30,6 +30,22 @@ public readonly record struct VisualDensity(double Horizontal = 0, double Vertic
 
     public Vector BaseSizeAdjustment => new(Horizontal * 4, Vertical * 4);
 
+    public BoxConstraints EffectiveConstraints(BoxConstraints constraints)
+    {
+        Vector adjustment = BaseSizeAdjustment;
+        return constraints with
+        {
+            MinWidth = Math.Clamp(
+                constraints.MinWidth + adjustment.X,
+                0.0,
+                constraints.MaxWidth),
+            MinHeight = Math.Clamp(
+                constraints.MinHeight + adjustment.Y,
+                0.0,
+                constraints.MaxHeight),
+        };
+    }
+
     public static VisualDensity Lerp(VisualDensity a, VisualDensity b, double t)
     {
         double clampedT = Math.Clamp(t, 0.0, 1.0);
@@ -436,7 +452,11 @@ public sealed record ThemeData
             ? Typography.White
             : Typography.Black;
         PrimaryTextTheme = defaultPrimaryTextTheme.Merge(primaryTextTheme);
-        IconTheme = iconTheme ?? new IconThemeData(Color: ColorScheme.OnSurface, Size: 24);
+        IconTheme = iconTheme
+                    ?? new IconThemeData(
+                        Color: Brightness == Brightness.Dark
+                            ? Colors.White
+                            : Color.FromArgb(0xDD, 0x00, 0x00, 0x00));
         SecondaryColor = secondaryColor ?? ColorScheme.Secondary;
         OnPrimaryColor = onPrimaryColor ?? ColorScheme.OnPrimary;
         PrimaryContainerColor = primaryContainerColor ?? ColorScheme.PrimaryContainer;
@@ -1045,6 +1065,10 @@ public sealed record ThemeData
                 a.FloatingActionButtonTheme,
                 b.FloatingActionButtonTheme,
                 clampedT) ?? new FloatingActionButtonThemeData(),
+            IconButtonTheme = IconButtonThemeData.Lerp(
+                a.IconButtonTheme,
+                b.IconButtonTheme,
+                clampedT) ?? new IconButtonThemeData(),
             ButtonBarTheme = ButtonBarThemeData.Lerp(
                 a.ButtonBarTheme,
                 b.ButtonBarTheme,
