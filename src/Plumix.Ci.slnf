@@ -1,0 +1,16 @@
+{
+  "solution": {
+    "path": "Plumix.sln",
+    "projects": [
+      "Plumix\\Plumix.csproj",
+      "Plumix.Cupertino\\Plumix.Cupertino.csproj",
+      "Plumix.Material\\Plumix.Material.csproj",
+      "Plumix.FSharp\\Plumix.FSharp.fsproj",
+      "Plumix.Elmish\\Plumix.Elmish.fsproj",
+      "Plumix.Tests\\Plumix.Tests.csproj",
+      "Sample\\Plumix.Sample\\Plumix.Sample.csproj",
+      "Sample\\Plumix.FSharpSample\\Plumix.FSharpSample.fsproj",
+      "Sample\\Plumix.Desktop\\Plumix.Desktop.csproj"
+    ]
+  }
+}

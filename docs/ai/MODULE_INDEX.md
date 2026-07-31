@@ -16,7 +16,9 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 ## Quick Start
 
 1. Follow the read order from `AGENTS.md` (Context Budget Protocol).
-2. For Dart-to-C# ports, read `docs/ai/PORTING_MODE.md` and open matching Flutter Dart source first.
+2. For Dart-to-C# ports, execute `docs/ai/PORT_PLAYBOOK.md`. `docs/ai/PORT_MAP.md` resolves the
+   Flutter file for an already-ported control (and the tests/demos that go with it) without searching;
+   sources over ~800 lines go through `docs/ai/DART_SPEC_PROTOCOL.md`.
 3. Pick one subsystem below, open its `Read First` files, then expand along the control you are closing: `src/Plumix.Material/<Control>.cs` + `<Control>Theme.cs` + `src/Plumix.Tests/Material<Control>Tests.cs` + demo pages in both samples.
 4. Enter unfamiliar subsystems through their tests, not through hotspot implementation files.
 

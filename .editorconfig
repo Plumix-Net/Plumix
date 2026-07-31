@@ -5,11 +5,23 @@ indent_style = space
 indent_size = 4
 
 # Max line length: 120. Wrap longer lines (arguments, chained calls, conditions).
-# Enforced by convention for all new/edited code; see AGENTS.md and docs/ai/INVARIANTS.md (Code Style).
+# Not expressible as a Roslyn diagnostic; enforced by scripts/check_line_length.sh
+# (run by the Claude Code PostToolUse hook and by CI). See docs/ai/INVARIANTS.md (Code Style).
 max_line_length = 120
 
 # Code style: explicit types for primitives/string, var only when the type is apparent.
 # See AGENTS.md (Change Guidelines) and docs/ai/INVARIANTS.md (Code Style).
-csharp_style_var_for_built_in_types = false:warning
-csharp_style_var_when_type_is_apparent = true:suggestion
-csharp_style_var_elsewhere = true:suggestion
+csharp_style_var_for_built_in_types = false
+csharp_style_var_when_type_is_apparent = true
+csharp_style_var_elsewhere = true
+
+# The `option = value:severity` form is IDE-only and is ignored by the compiler.
+# These entries are what actually makes the rule fail the build (EnforceCodeStyleInBuild
+# is set in src/Directory.Build.props), so an agent gets the diagnostic on first compile
+# instead of in human review.
+dotnet_diagnostic.IDE0008.severity = error   # use explicit type instead of 'var'
+dotnet_diagnostic.IDE0007.severity = silent  # inverse rule: never force 'var'
+
+# Generated code is exempt.
+[*.g.cs]
+dotnet_diagnostic.IDE0008.severity = none

@@ -771,7 +771,7 @@ internal static class FilterLayerRasterizer
             return [1.0];
         }
 
-        var kernel = new double[(radius * 2) + 1];
+        double[] kernel = new double[(radius * 2) + 1];
         double sum = 0.0;
         for (int index = -radius; index <= radius; index++)
         {

@@ -1,6 +1,9 @@
 # AGENTS.md
 
-This file defines expectations for coding agents working in this repository.
+This file defines expectations for coding agents working in this repository. It is the single
+instruction source for every agent — Claude Code (`CLAUDE.md` only imports this file), Codex, and
+anything else. Tool-specific wiring lives in `.claude/` and is optional convenience; nothing
+normative may live only there.
 
 ## Project Snapshot
 
@@ -39,10 +42,13 @@ This file defines expectations for coding agents working in this repository.
 ## Progress Source of Truth
 
 - Historical shipped changes: `CHANGELOG.md`
-- Current status + global roadmap: `docs/FRAMEWORK_PLAN.md`
+- Current status + global roadmap: `docs/FRAMEWORK_PLAN.md` (closed milestones: `docs/FRAMEWORK_PLAN-archive.md`)
 - Module entry points by task: `docs/ai/MODULE_INDEX.md`
+- Flutter file -> C# files/tests/demos (generated): `docs/ai/PORT_MAP.md`
 - Non-negotiable behavior rules (architecture, package boundaries, versioning): `docs/ai/INVARIANTS.md`
 - Mandatory Dart-to-C# porting workflow: `docs/ai/PORTING_MODE.md`
+- Step-by-step execution of that workflow: `docs/ai/PORT_PLAYBOOK.md`
+- Reading large Dart sources without exhausting context: `docs/ai/DART_SPEC_PROTOCOL.md`
 - Intentional divergences from Flutter: `docs/ai/DIVERGENCES.md`
 - Sample parity tracker: `docs/ai/PARITY_MATRIX.md`
 - Feature-to-tests map: `docs/ai/TEST_MATRIX.md`
@@ -56,9 +62,11 @@ This file defines expectations for coding agents working in this repository.
 
 ## Context Budget Protocol (For AI Agents)
 
-1. Start with read order: `AGENTS.md` -> `docs/FRAMEWORK_PLAN.md` -> `docs/ai/MODULE_INDEX.md` -> targeted tests -> targeted implementation files.
+1. Start with read order: `AGENTS.md` -> `docs/FRAMEWORK_PLAN.md` -> `docs/ai/MODULE_INDEX.md` -> targeted tests -> targeted implementation files. For a port, `docs/ai/PORT_PLAYBOOK.md` replaces steps 2-7 of this protocol.
 2. Default scope for Dart-to-C# parity requests: close one control end-to-end in one request (`API/defaults/composition/states/layout/paint/tests`), not a sequence of micro-fixes.
 3. Prefer entering unfamiliar subsystems through their tests (`docs/ai/TEST_MATRIX.md`); open implementation hotspot files (`Widgets/Scroll.cs`, `Rendering/Sliver.cs`, `Widgets/Navigation.cs`, `Widgets/Framework.Element.cs`, `SemanticsTreeTests.cs`) only when the task explicitly requires them.
+3a. `docs/ai/PORT_MAP.md`, `docs/ai/PARITY_MATRIX.md`, `docs/ai/TEST_MATRIX.md` and `docs/ai/DIVERGENCES.md` are lookup tables — grep them for the control/subsystem you are touching, never read them end-to-end. Same for `docs/FRAMEWORK_PLAN-archive.md` and `docs/ai/notes/`.
+3b. Flutter Dart sources over ~800 lines must go through `docs/ai/DART_SPEC_PROTOCOL.md` (separate context, dense spec back) instead of being read into the working context. `input_decorator.dart` alone is 6107 lines.
 4. Expand context proactively when needed to finish the current control in the same request; do not stop at partial parity unless blocked by a concrete missing primitive.
 5. A task note (`docs/ai/FEATURE_TEMPLATE.md`, stored in `docs/ai/notes/`) is required only when an iteration ends blocked (unclosed parity with a concrete blocker) or introduces a divergence. Routine closed iterations need only `CHANGELOG.md` and matrix updates.
 6. If sample behavior changes, update both `src/Sample/Plumix.Sample` and `dart_sample` in the same iteration and reflect status in `docs/ai/PARITY_MATRIX.md` (scope per `docs/ai/INVARIANTS.md` Sample Parity).
@@ -68,11 +76,40 @@ This file defines expectations for coding agents working in this repository.
 
 - .NET SDK 10 preview (projects target `net10.0` and platform-specific TFMs).
 - Avalonia tooling/workloads for browser/mobile targets where applicable.
+- Python 3 for `scripts/generate_port_map.py`.
+
+## Agent Tooling
+
+Everything normative is in this file and `docs/ai/*`, so any agent can follow it. `.claude/` adds
+convenience for Claude Code only:
+
+- `/port [control]` — runs `docs/ai/PORT_PLAYBOOK.md` end-to-end, picking the control if none given.
+- `/finish-port` — runs the four gates and the tracking-doc updates for whatever is in the tree.
+- `dart-spec` subagent — runs `docs/ai/DART_SPEC_PROTOCOL.md` in a throwaway context.
+- A `PostToolUse` hook checks line length on every edited `.cs` file.
+
+Codex and other agents get the same behavior by naming the doc: "follow `docs/ai/PORT_PLAYBOOK.md`"
+does what `/port` does, and the spec protocol works inline when subagents are unavailable.
 
 ## Local Reference Paths
 
-- Flutter source: `/Users/egorozh/Documents/flutter/flutter`
-- Avalonia source: `../Avalonia` (resolved: `/Users/egorozh/Flutter.Net.Local/Avalonia`)
+Both are gitignored symlinks in the repository root, so every reference in docs and code can use a
+stable relative path. Create them once after cloning:
+
+```bash
+ln -s /path/to/your/flutter flutter-src     # Flutter checkout (see pin below)
+ln -s /path/to/your/Avalonia avalonia-src   # optional, for host/backend questions
+```
+
+- `flutter-src` — Flutter source of truth. Controls: `flutter-src/packages/flutter/lib/src/<library>/`.
+  Flutter's own tests: `flutter-src/packages/flutter/test/<library>/` — the most reliable record of
+  exact defaults and contractual behavior; read them during ports.
+- `avalonia-src` — Avalonia source, host/platform questions only.
+
+**Pinned Flutter revision: 3.44.0 (`559ffa3f75e`, `flutter-3.44-candidate.0`).** Parity is defined
+against this revision. Material defaults change between Flutter releases, so a port validated against
+a different checkout is not validated. When the pin moves, update this line and re-run
+`python3 scripts/generate_port_map.py` — it flags markers whose Dart file no longer exists.
 
 ## Common Commands
 
@@ -80,10 +117,16 @@ Run from repository root:
 
 ```bash
 dotnet restore src/Plumix.sln
-dotnet build src/Plumix.sln -c Debug
+dotnet build src/Plumix.Ci.slnf -c Debug          # what CI builds; includes the F# DSL projects
+dotnet test src/Plumix.Tests/Plumix.Tests.csproj  # ~15 s for 1771 tests — always run it
+scripts/check_line_length.sh                      # 120-char rule on new/edited lines
+python3 scripts/generate_port_map.py              # regenerate docs/ai/PORT_MAP.md
 dotnet run --project src/Sample/Plumix.Desktop/Plumix.Desktop.csproj
 dotnet run --project src/Sample/Plumix.Browser/Plumix.Browser.csproj
 ```
+
+`src/Plumix.Ci.slnf` excludes the Browser/Android/iOS hosts (they need workloads CI does not have);
+build `src/Plumix.sln` locally when you touch those hosts.
 
 Platform-specific builds:
 
@@ -99,14 +142,16 @@ dotnet build src/Sample/Plumix.iOS/Plumix.iOS.csproj -c Debug
 3. Keep render-object semantics and naming close to Flutter unless there is a clear, documented reason to diverge.
 4. Use Avalonia primarily for host/platform integration and low-level drawing backend; avoid moving framework behavior into Avalonia controls.
 5. Preserve lifecycle contracts (`CreateElement`, mount/update/rebuild flow, render object attachment).
-6. Keep nullability correctness (`Nullable` is enabled) and avoid introducing nullable warnings.
-7. Code style: use explicit types for primitives and `string` (`double`, `int`, `bool`, `string`, `char`, `byte`, `long`, `float`, `decimal`, ...); keep `var` only for complex/reference types whose type is obvious from the right-hand side. See `docs/ai/INVARIANTS.md` (Code Style). Emit this correctly on first pass.
-8. Max line length is 120 characters (`.editorconfig` `max_line_length`). Wrap long argument lists, chained calls, and conditions instead of exceeding it. Applies to new/edited lines; do not mass-reformat untouched code.
+6. Keep nullability correctness (`Nullable` is enabled). Nullable warnings are promoted to errors in `src/Directory.Build.props`, so they fail the build.
+7. Code style: use explicit types for primitives and `string` (`double`, `int`, `bool`, `string`, `char`, `byte`, `long`, `float`, `decimal`, ...); keep `var` only for complex/reference types whose type is obvious from the right-hand side. See `docs/ai/INVARIANTS.md` (Code Style). Emit this correctly on first pass — `EnforceCodeStyleInBuild` makes IDE0008 a **build error**, so a violation breaks the build rather than surfacing in review.
+8. Max line length is 120 characters (`.editorconfig` `max_line_length`), checked by `scripts/check_line_length.sh` on new/edited lines only; do not mass-reformat untouched code. Wrap long argument lists, chained calls, and conditions instead of exceeding it.
+8a. Every framework file carries a `// Dart parity source: flutter/packages/flutter/lib/src/<library>/<file>.dart` header marker. Keep it on new files — `docs/ai/PORT_MAP.md` is generated from these markers, and a missing one drops the file out of the map. C#-only infrastructure states that in a header comment instead.
 9. Avoid broad dependency/framework upgrades unless explicitly requested.
 10. Demo feature/route/page-structure updates in `src/Sample/Plumix.Sample` must be mirrored in `dart_sample` in the same change; host glue is exempt (see `docs/ai/INVARIANTS.md`, Sample Parity).
 
 ## Porting Workflow (Mandatory)
 
+0. Execution order for a port is `docs/ai/PORT_PLAYBOOK.md` — including how to pick the control when the request does not name one. In Claude Code it is wrapped as `/port`; in other agents, follow the file directly.
 1. For control/widget ports, treat Flutter Dart source as source of truth and follow `docs/ai/PORTING_MODE.md`.
 2. Default mode is strict `1:1` structure/behavior port, not approximation.
 3. Default delivery unit for parity work is one complete control per request; avoid splitting one control into many token-level follow-ups (for example geometry/colors/overlay in separate requests) unless explicitly requested or blocked by missing primitives.
@@ -115,7 +160,7 @@ dotnet build src/Sample/Plumix.iOS/Plumix.iOS.csproj -c Debug
 
 ## Validation Checklist
 
-1. Build the full solution: `dotnet build src/Plumix.sln -c Debug`.
+1. Build what CI builds: `dotnet build src/Plumix.Ci.slnf -c Debug`. `Plumix.Tests` does not reference `Plumix.FSharp`/`Plumix.Elmish`, so a green test run alone does not prove the F# DSL still compiles against a changed public API.
 2. For UI behavior changes, run desktop sample and verify startup/rendering through the framework widget host path.
 3. For rendering changes, verify that layout/paint behavior is executed by framework render objects.
 4. For browser/mobile changes, build the affected sample project(s).

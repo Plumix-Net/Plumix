@@ -229,7 +229,7 @@ public abstract class StreamBuilderBase<T, TSummary> : StatefulWidget
                 return;
             }
 
-            var identity = new object();
+            object identity = new object();
             _subscriptionIdentity = identity;
             _subscription = stream.Subscribe(new StreamObserver(this, identity));
             _summary = CurrentWidget.AfterConnected(_summary);
@@ -440,7 +440,7 @@ public sealed class FutureBuilder<T> : StatefulWidget
                 return;
             }
 
-            var callbackIdentity = new object();
+            object callbackIdentity = new object();
             _activeCallbackIdentity = callbackIdentity;
             _ = ObserveFuture(future, callbackIdentity);
             if (_snapshot.ConnectionState != ConnectionState.Done)

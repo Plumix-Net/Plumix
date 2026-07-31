@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(dotnet build:*)",
+      "Bash(dotnet test:*)",
+      "Bash(dotnet restore:*)",
+      "Bash(dotnet run:*)",
+      "Bash(dotnet format:*)",
+      "Bash(dotnet list:*)",
+      "Bash(scripts/check_line_length.sh:*)",
+      "Bash(./scripts/check_line_length.sh:*)",
+      "Bash(python3 scripts/generate_port_map.py:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(wc:*)",
+      "Bash(rg:*)",
+      "Read(//Users/egorozh/Documents/flutter/flutter/**)",
+      "Read(//Users/egorozh/Plumix/Avalonia/**)"
+    ],
+    "additionalDirectories": [
+      "./flutter-src",
+      "./avalonia-src"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/check-style.sh",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -65,12 +65,27 @@ dotnet run --project src/Sample/Plumix.Desktop/Plumix.Desktop.csproj
 dotnet test src/Plumix.Tests/Plumix.Tests.csproj
 ```
 
+You also need a local Flutter checkout at the pinned revision (see `AGENTS.md` → Local Reference Paths) symlinked as `flutter-src` in the repo root — it is the spec for every port:
+
+```bash
+ln -s /path/to/your/flutter flutter-src
+```
+
 Point your agent at the repository and let it read, in order: `AGENTS.md` → `docs/FRAMEWORK_PLAN.md` → `docs/ai/MODULE_INDEX.md` → the tests for the subsystem you're touching. This is the same protocol the maintainer's agents use.
+
+For a port specifically, one instruction is enough: **"follow `docs/ai/PORT_PLAYBOOK.md`"** (add a control name, or let it pick one). In Claude Code that is `/port`. The playbook covers target selection, reading large Dart sources without exhausting context (`docs/ai/DART_SPEC_PROTOCOL.md`), the port itself, tests, samples, validation, and the tracking-doc updates.
 
 ## Pull request checklist
 
 1. Branch from `main`; one logical change per PR.
-2. `dotnet test src/Plumix.Tests/Plumix.Tests.csproj` passes locally (CI runs the same command in Release).
+2. All four gates pass locally (CI runs the same in Release):
+
+```bash
+dotnet build src/Plumix.Ci.slnf -c Debug
+dotnet test src/Plumix.Tests/Plumix.Tests.csproj
+scripts/check_line_length.sh
+python3 scripts/generate_port_map.py
+```
 3. New behavior is covered by tests and mapped in `docs/ai/TEST_MATRIX.md`.
 4. `CHANGELOG.md` has a short entry (a few lines, no test-inventory prose).
 5. Tracking docs updated where relevant: `docs/FRAMEWORK_PLAN.md`, `docs/ai/PARITY_MATRIX.md`, `docs/ai/DIVERGENCES.md`.

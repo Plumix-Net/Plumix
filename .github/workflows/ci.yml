@@ -15,14 +15,28 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Full history so the line-length check can diff against the PR base.
+          fetch-depth: 0
 
       - name: Setup .NET 10
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.x'
 
+      # Plumix.Tests references only Plumix/Cupertino/Material/Sample. Building the CI filter
+      # is what catches a parity pass breaking the F# DSL (Plumix.FSharp, Plumix.Elmish) or the
+      # desktop host — otherwise they are compiled for the first time at tag/pack time.
+      # Browser/Android/iOS hosts are excluded: they need workloads this runner does not have.
+      - name: Build
+        run: dotnet build src/Plumix.Ci.slnf -c Release
+
       - name: Test
         run: dotnet test src/Plumix.Tests/Plumix.Tests.csproj -c Release --logger "console;verbosity=normal"
+
+      - name: Line length (new/edited lines)
+        if: github.event_name == 'pull_request'
+        run: scripts/check_line_length.sh "origin/${{ github.base_ref }}"
 
   # ─── Pack & Publish (tags only) ────────────────────────────────────────────
   publish:

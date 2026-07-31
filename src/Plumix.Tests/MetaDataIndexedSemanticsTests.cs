@@ -29,7 +29,7 @@ public sealed class MetaDataIndexedSemanticsTests
         Assert.Null(renderMetaData.MetaData);
         Assert.Equal(HitTestBehavior.DeferToChild, renderMetaData.Behavior);
 
-        var marker = new object();
+        object marker = new object();
         root.Update(new MetaData(
             metaData: marker,
             behavior: HitTestBehavior.Opaque,

@@ -12,4 +12,17 @@
     <!-- Disable packaging by default; library projects opt in explicitly -->
     <IsPackable>false</IsPackable>
   </PropertyGroup>
+
+  <!--
+    Code-style enforcement.
+
+    The repo's non-negotiable style rule (explicit types for built-ins, see docs/ai/INVARIANTS.md)
+    only reaches an agent if the compiler reports it. EnforceCodeStyleInBuild runs the IDE
+    analyzers during `dotnet build`; severities live in .editorconfig (dotnet_diagnostic.IDE*).
+    Nullable warnings are errors so that "keep nullability correct" is checkable, not aspirational.
+  -->
+  <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'">
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <WarningsAsErrors>$(WarningsAsErrors);nullable</WarningsAsErrors>
+  </PropertyGroup>
 </Project>

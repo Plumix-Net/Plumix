@@ -1,5 +1,18 @@
 # Changelog
 
+- Agent/contributor tooling: the code-style contract is now machine-checked instead of review-only.
+  `EnforceCodeStyleInBuild` makes IDE0008 (explicit types for built-ins) a build error, nullable warnings
+  are errors, and `scripts/check_line_length.sh` enforces the 120-char rule on new/edited lines
+  (Claude Code hook + PR gate). CI now builds `src/Plumix.Ci.slnf`, so a public API change can no longer
+  break `Plumix.FSharp`/`Plumix.Elmish` unnoticed until pack time.
+
+- Agent/contributor tooling: added `docs/ai/PORT_PLAYBOOK.md` (executable port sequence, including target
+  selection), `docs/ai/DART_SPEC_PROTOCOL.md` (reading large Dart sources without exhausting context) and
+  generated `docs/ai/PORT_MAP.md` (Flutter file -> C# files/tests/demos, from the existing parity markers).
+  Pinned the Flutter parity revision to 3.44.0 in `AGENTS.md` and moved the reference checkouts behind the
+  `flutter-src`/`avalonia-src` symlinks. Rotated closed milestones out of `docs/FRAMEWORK_PLAN.md`
+  (156 KB -> 6 KB) into `docs/FRAMEWORK_PLAN-archive.md`.
+
 - Breaking: completed the `Card` Dart closeout: elevated/filled/outlined variants now use direct M2/M3
   `ColorScheme` roles and the source `Semantics -> Padding -> Material(type: card) -> Semantics` composition,
   including exact tint, shadow, shape, clipping, border paint order, and theme precedence. Added
