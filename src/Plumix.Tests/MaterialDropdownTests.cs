@@ -35,6 +35,7 @@ public sealed class MaterialDropdownTests : IDisposable
         Assert.Equal("one", item.Value);
         Assert.True(item.Enabled);
         Assert.Null(item.OnTap);
+        Assert.Equal((AlignmentGeometry)AlignmentDirectional.CenterStart, item.Alignment);
 
         var button = new DropdownButton<string>([item], _ => { }, value: "one");
         Assert.Equal(8, button.Elevation);
@@ -44,6 +45,7 @@ public sealed class MaterialDropdownTests : IDisposable
         Assert.Equal(48, button.ItemHeight);
         Assert.True(button.BarrierDismissible);
         Assert.False(button.Autofocus);
+        Assert.Equal((AlignmentGeometry)AlignmentDirectional.CenterStart, button.Alignment);
 
         Assert.Throws<ArgumentException>(() => new DropdownButton<string>(
             [
@@ -60,6 +62,36 @@ public sealed class MaterialDropdownTests : IDisposable
         Assert.Throws<ArgumentOutOfRangeException>(() => new DropdownButton<string>([item], _ => { }, iconSize: double.NaN));
         Assert.Throws<ArgumentOutOfRangeException>(() => new DropdownButton<string>([item], _ => { }, menuWidth: 0));
         Assert.Throws<ArgumentOutOfRangeException>(() => new DropdownButton<string>([item], _ => { }, menuMaxHeight: -1));
+    }
+
+    [Theory]
+    [InlineData(TextDirection.Ltr, -1.0)]
+    [InlineData(TextDirection.Rtl, 1.0)]
+    public void DropdownButtonAndMenuItem_ResolveDirectionalAlignment(
+        TextDirection direction,
+        double expectedX)
+    {
+        AlignmentGeometry alignment = AlignmentDirectional.BottomStart;
+        var item = new DropdownMenuItem<string>(
+            child: new SizedBox(width: 20, height: 10),
+            value: "one",
+            alignment: alignment);
+        using var menuItemHarness = new WidgetRenderHarness(Wrap(item, direction: direction));
+        menuItemHarness.Pump(new Size(100, 80));
+        var itemAlign = Assert.Single(FindDescendants<RenderAlign>(menuItemHarness.RenderView));
+        Assert.Equal(new Alignment(expectedX, 1.0), itemAlign.Alignment);
+
+        using var buttonHarness = new WidgetRenderHarness(Wrap(
+            new DropdownButton<string>(
+                items: [item],
+                onChanged: _ => { },
+                value: "one",
+                isExpanded: true,
+                alignment: alignment),
+            direction: direction));
+        buttonHarness.Pump(new Size(240, 100));
+        var indexedStack = Assert.Single(FindDescendants<RenderIndexedStack>(buttonHarness.RenderView));
+        Assert.Equal(new Alignment(expectedX, 1.0), indexedStack.Alignment);
     }
 
     [Fact]
@@ -300,6 +332,7 @@ public sealed class MaterialDropdownTests : IDisposable
         Assert.Equal(24, field.IconSize);
         Assert.True(field.BarrierDismissible);
         Assert.NotNull(field.Decoration);
+        Assert.Equal((AlignmentGeometry)AlignmentDirectional.CenterStart, field.Alignment);
 
         Assert.Throws<ArgumentException>(() => new DropdownButtonFormField<string>(items, _ => { }, initialValue: "missing"));
         Assert.Throws<ArgumentOutOfRangeException>(() => new DropdownButtonFormField<string>(items, _ => { }, itemHeight: 47));
@@ -1035,8 +1068,11 @@ public sealed class MaterialDropdownTests : IDisposable
         Assert.Equal(string.Empty, key.CurrentState.EffectiveController.Text);
     }
 
-    private static Widget Wrap(Widget child, ThemeData? theme = null) => new Directionality(
-        TextDirection.Ltr,
+    private static Widget Wrap(
+        Widget child,
+        ThemeData? theme = null,
+        TextDirection direction = TextDirection.Ltr) => new Directionality(
+        direction,
         new MediaQuery(
             new MediaQueryData(Size: new Size(500, 360)),
             new Theme(theme ?? ThemeData.Light, child)));

@@ -98,10 +98,10 @@ type Ui private () =
             spacing = defaultArg spacing 0.0,
             key = obj' key)
 
-    static member stack(children: Widget seq, ?alignment: Alignment, ?fit: StackFit, ?key: Key) : Widget =
+    static member stack(children: Widget seq, ?alignment: AlignmentGeometry, ?fit: StackFit, ?key: Key) : Widget =
         Stack(
             children = widgets children,
-            alignment = defaultArg alignment (Alignment()),
+            alignment = defaultArg alignment (AlignmentGeometry()),
             fit = defaultArg fit StackFit.Loose,
             key = obj' key)
 

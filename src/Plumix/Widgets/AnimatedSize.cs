@@ -12,7 +12,7 @@ public sealed class AnimatedSize : StatefulWidget
     public AnimatedSize(
         TimeSpan duration,
         Widget? child = null,
-        Alignment alignment = default,
+        AlignmentGeometry alignment = default,
         Curve? curve = null,
         TimeSpan? reverseDuration = null,
         Clip clipBehavior = Clip.HardEdge,
@@ -31,7 +31,7 @@ public sealed class AnimatedSize : StatefulWidget
 
         Duration = duration;
         Child = child;
-        Alignment = alignment == default ? Alignment.Center : alignment;
+        Alignment = alignment;
         Curve = curve ?? Curves.Linear;
         ReverseDuration = reverseDuration;
         ClipBehavior = clipBehavior;
@@ -42,7 +42,7 @@ public sealed class AnimatedSize : StatefulWidget
 
     public Widget? Child { get; }
 
-    public Alignment Alignment { get; }
+    public AlignmentGeometry Alignment { get; }
 
     public Curve Curve { get; }
 
@@ -103,7 +103,7 @@ internal sealed class AnimatedSizeRenderObjectWidget : SingleChildRenderObjectWi
         AnimationController controller,
         TimeSpan duration,
         TimeSpan? reverseDuration,
-        Alignment alignment,
+        AlignmentGeometry alignment,
         Clip clipBehavior,
         Widget? child,
         Key? key = null) : base(child, key)
@@ -121,7 +121,7 @@ internal sealed class AnimatedSizeRenderObjectWidget : SingleChildRenderObjectWi
 
     public TimeSpan? ReverseDuration { get; }
 
-    public Alignment Alignment { get; }
+    public AlignmentGeometry Alignment { get; }
 
     public Clip ClipBehavior { get; }
 
@@ -131,7 +131,7 @@ internal sealed class AnimatedSizeRenderObjectWidget : SingleChildRenderObjectWi
             controller: Controller,
             duration: Duration,
             reverseDuration: ReverseDuration,
-            alignment: Alignment,
+            alignment: ResolveAlignment(context),
             clipBehavior: ClipBehavior);
     }
 
@@ -141,7 +141,15 @@ internal sealed class AnimatedSizeRenderObjectWidget : SingleChildRenderObjectWi
         animatedSize.Controller = Controller;
         animatedSize.Duration = Duration;
         animatedSize.ReverseDuration = ReverseDuration;
-        animatedSize.Alignment = Alignment;
+        animatedSize.Alignment = ResolveAlignment(context);
         animatedSize.ClipBehavior = ClipBehavior;
+    }
+
+    private Alignment ResolveAlignment(BuildContext context)
+    {
+        TextDirection direction = Alignment.IsDirectional
+            ? Directionality.Of(context)
+            : TextDirection.Ltr;
+        return Alignment.Resolve(direction);
     }
 }

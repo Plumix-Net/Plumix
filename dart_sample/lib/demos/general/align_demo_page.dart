@@ -699,7 +699,7 @@ class _AlignDemoPageState extends State<AlignDemoPage>
               style: TextStyle(fontSize: 20, color: Colors.black),
             ),
             const Text(
-              'Rapid keyed replacements keep outgoing switcher children while cross-fade also animates height.',
+              'Rapid keyed replacements keep outgoing switcher children while cross-fade animates height from the logical bottom-end edge.',
               style: TextStyle(fontSize: 14, color: Colors.black54),
             ),
             Row(
@@ -751,38 +751,44 @@ class _AlignDemoPageState extends State<AlignDemoPage>
                 ),
               ),
             ),
-            AnimatedCrossFade(
-              firstChild: Container(
-                width: 240,
-                height: 54,
-                color: const Color(0xFFDCEBF2),
-                child: const Center(
-                  child: Text(
-                    'first / 54',
-                    style: TextStyle(fontSize: 13, color: Colors.black),
+            Directionality(
+              textDirection: _rightToLeft
+                  ? TextDirection.rtl
+                  : TextDirection.ltr,
+              child: AnimatedCrossFade(
+                firstChild: Container(
+                  width: 240,
+                  height: 54,
+                  color: const Color(0xFFDCEBF2),
+                  child: const Center(
+                    child: Text(
+                      'first / 54',
+                      style: TextStyle(fontSize: 13, color: Colors.black),
+                    ),
                   ),
                 ),
-              ),
-              secondChild: Container(
-                width: 240,
-                height: 92,
-                color: const Color(0xFFF2D9DF),
-                child: const Center(
-                  child: Text(
-                    'second / 92',
-                    style: TextStyle(fontSize: 13, color: Colors.black),
+                secondChild: Container(
+                  width: 240,
+                  height: 92,
+                  color: const Color(0xFFF2D9DF),
+                  child: const Center(
+                    child: Text(
+                      'second / 92',
+                      style: TextStyle(fontSize: 13, color: Colors.black),
+                    ),
                   ),
                 ),
+                crossFadeState: _showSecondCrossFade
+                    ? CrossFadeState.showSecond
+                    : CrossFadeState.showFirst,
+                duration: const Duration(milliseconds: 350),
+                reverseDuration: const Duration(milliseconds: 260),
+                firstCurve: Curves.easeInOut,
+                secondCurve: Curves.easeInOut,
+                sizeCurve: Curves.easeInOut,
+                alignment: AlignmentDirectional.bottomEnd,
+                onEnd: _handleAnimationEnd,
               ),
-              crossFadeState: _showSecondCrossFade
-                  ? CrossFadeState.showSecond
-                  : CrossFadeState.showFirst,
-              duration: const Duration(milliseconds: 350),
-              reverseDuration: const Duration(milliseconds: 260),
-              firstCurve: Curves.easeInOut,
-              secondCurve: Curves.easeInOut,
-              sizeCurve: Curves.easeInOut,
-              onEnd: _handleAnimationEnd,
             ),
             const Text(
               'AnimatedFractionallySizedBox + SliverAnimatedOpacity',

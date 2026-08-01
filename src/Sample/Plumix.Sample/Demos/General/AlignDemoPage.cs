@@ -554,7 +554,8 @@ internal sealed class AlignDemoPageState : State
                     ]),
                 new Text("AnimatedSwitcher + AnimatedCrossFade", fontSize: 20, color: Colors.Black),
                 new Text(
-                    "Rapid keyed replacements keep outgoing switcher children while cross-fade also animates height.",
+                    "Rapid keyed replacements keep outgoing switcher children while cross-fade animates height "
+                    + "from the logical bottom-end edge.",
                     fontSize: 14,
                     color: Colors.DimGray),
                 new Row(
@@ -594,28 +595,33 @@ internal sealed class AlignDemoPageState : State
                                         $"child {_switcherValue}",
                                         fontSize: 13,
                                         color: Colors.White)))))),
-                new AnimatedCrossFade(
-                    firstChild: new Container(
-                        width: 240,
-                        height: 54,
-                        color: Color.Parse("#FFDCEBF2"),
-                        child: new Center(
-                            child: new Text("first / 54", fontSize: 13, color: Colors.Black))),
-                    secondChild: new Container(
-                        width: 240,
-                        height: 92,
-                        color: Color.Parse("#FFF2D9DF"),
-                        child: new Center(
-                            child: new Text("second / 92", fontSize: 13, color: Colors.Black))),
-                    crossFadeState: _showSecondCrossFade
-                        ? CrossFadeState.ShowSecond
-                        : CrossFadeState.ShowFirst,
-                    duration: TimeSpan.FromMilliseconds(350),
-                    reverseDuration: TimeSpan.FromMilliseconds(260),
-                    firstCurve: Curves.EaseInOut,
-                    secondCurve: Curves.EaseInOut,
-                    sizeCurve: Curves.EaseInOut,
-                    onEnd: HandleAnimationEnd),
+                new Directionality(
+                    textDirection: _rightToLeft
+                        ? Plumix.UI.TextDirection.Rtl
+                        : Plumix.UI.TextDirection.Ltr,
+                    child: new AnimatedCrossFade(
+                        firstChild: new Container(
+                            width: 240,
+                            height: 54,
+                            color: Color.Parse("#FFDCEBF2"),
+                            child: new Center(
+                                child: new Text("first / 54", fontSize: 13, color: Colors.Black))),
+                        secondChild: new Container(
+                            width: 240,
+                            height: 92,
+                            color: Color.Parse("#FFF2D9DF"),
+                            child: new Center(
+                                child: new Text("second / 92", fontSize: 13, color: Colors.Black))),
+                        crossFadeState: _showSecondCrossFade
+                            ? CrossFadeState.ShowSecond
+                            : CrossFadeState.ShowFirst,
+                        duration: TimeSpan.FromMilliseconds(350),
+                        reverseDuration: TimeSpan.FromMilliseconds(260),
+                        firstCurve: Curves.EaseInOut,
+                        secondCurve: Curves.EaseInOut,
+                        sizeCurve: Curves.EaseInOut,
+                        alignment: AlignmentDirectional.BottomEnd,
+                        onEnd: HandleAnimationEnd)),
                 new Text(
                     "AnimatedFractionallySizedBox + SliverAnimatedOpacity",
                     fontSize: 20,

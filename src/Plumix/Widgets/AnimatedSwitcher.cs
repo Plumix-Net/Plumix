@@ -298,7 +298,7 @@ public sealed class AnimatedCrossFade : StatefulWidget
         Curve? firstCurve = null,
         Curve? secondCurve = null,
         Curve? sizeCurve = null,
-        Alignment alignment = default,
+        AlignmentGeometry? alignment = null,
         TimeSpan? reverseDuration = null,
         AnimatedCrossFadeBuilder? layoutBuilder = null,
         bool excludeBottomFocus = true,
@@ -321,7 +321,7 @@ public sealed class AnimatedCrossFade : StatefulWidget
         FirstCurve = firstCurve ?? Curves.Linear;
         SecondCurve = secondCurve ?? Curves.Linear;
         SizeCurve = sizeCurve ?? Curves.Linear;
-        Alignment = alignment == default ? Alignment.TopCenter : alignment;
+        Alignment = alignment ?? (AlignmentGeometry)Plumix.Rendering.Alignment.TopCenter;
         ReverseDuration = reverseDuration;
         LayoutBuilder = layoutBuilder ?? DefaultLayoutBuilder;
         ExcludeBottomFocus = excludeBottomFocus;
@@ -344,7 +344,7 @@ public sealed class AnimatedCrossFade : StatefulWidget
 
     public Curve SizeCurve { get; }
 
-    public Alignment Alignment { get; }
+    public AlignmentGeometry Alignment { get; }
 
     public AnimatedCrossFadeBuilder LayoutBuilder { get; }
 

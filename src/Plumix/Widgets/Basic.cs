@@ -1220,7 +1220,7 @@ public sealed class Stack : MultiChildRenderObjectWidget
 {
     public Stack(
         IReadOnlyList<Widget>? children = null,
-        Alignment alignment = default,
+        AlignmentGeometry alignment = default,
         StackFit fit = StackFit.Loose,
         Clip clipBehavior = Clip.HardEdge,
         Key? key = null) : base(children, key)
@@ -1230,7 +1230,7 @@ public sealed class Stack : MultiChildRenderObjectWidget
         ClipBehavior = clipBehavior;
     }
 
-    public Alignment Alignment { get; }
+    public AlignmentGeometry Alignment { get; }
 
     public StackFit Fit { get; }
 
@@ -1239,7 +1239,7 @@ public sealed class Stack : MultiChildRenderObjectWidget
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderStack(
-            alignment: Alignment,
+            alignment: ResolveAlignment(context),
             fit: Fit,
             clipBehavior: ClipBehavior);
     }
@@ -1247,9 +1247,17 @@ public sealed class Stack : MultiChildRenderObjectWidget
     internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var stack = (RenderStack)renderObject;
-        stack.Alignment = Alignment;
+        stack.Alignment = ResolveAlignment(context);
         stack.Fit = Fit;
         stack.ClipBehavior = ClipBehavior;
+    }
+
+    private Alignment ResolveAlignment(BuildContext context)
+    {
+        TextDirection direction = Alignment.IsDirectional
+            ? Directionality.Of(context)
+            : TextDirection.Ltr;
+        return Alignment.Resolve(direction);
     }
 }
 
@@ -1258,7 +1266,7 @@ public sealed class IndexedStack : MultiChildRenderObjectWidget
     public IndexedStack(
         IReadOnlyList<Widget>? children = null,
         int? index = 0,
-        Alignment alignment = default,
+        AlignmentGeometry alignment = default,
         Key? key = null) : base(children, key)
     {
         if (index.HasValue && (index.Value < 0 || index.Value >= Children.Count))
@@ -1272,16 +1280,24 @@ public sealed class IndexedStack : MultiChildRenderObjectWidget
 
     public int? Index { get; }
 
-    public Alignment Alignment { get; }
+    public AlignmentGeometry Alignment { get; }
 
     internal override RenderObject CreateRenderObject(BuildContext context) =>
-        new RenderIndexedStack(Index, Alignment);
+        new RenderIndexedStack(Index, ResolveAlignment(context));
 
     internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var stack = (RenderIndexedStack)renderObject;
         stack.Index = Index;
-        stack.Alignment = Alignment;
+        stack.Alignment = ResolveAlignment(context);
+    }
+
+    private Alignment ResolveAlignment(BuildContext context)
+    {
+        TextDirection direction = Alignment.IsDirectional
+            ? Directionality.Of(context)
+            : TextDirection.Ltr;
+        return Alignment.Resolve(direction);
     }
 }
 

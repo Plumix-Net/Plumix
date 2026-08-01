@@ -18,26 +18,23 @@ public sealed class DropdownMenuItem<T> : StatelessWidget
         T? value = default,
         Action? onTap = null,
         bool enabled = true,
-        Alignment? alignment = null,
+        AlignmentGeometry? alignment = null,
         Key? key = null) : base(key)
     {
         Child = child ?? throw new ArgumentNullException(nameof(child));
         Value = value;
         OnTap = onTap;
         Enabled = enabled;
-        Alignment = alignment;
+        Alignment = alignment ?? (AlignmentGeometry)AlignmentDirectional.CenterStart;
     }
 
     public Widget Child { get; }
     public T? Value { get; }
     public Action? OnTap { get; }
     public bool Enabled { get; }
-    public Alignment? Alignment { get; }
+    public AlignmentGeometry Alignment { get; }
 
-    public override Widget Build(BuildContext context) => DropdownMenuItemContainer.Build(
-        context,
-        Child,
-        Alignment);
+    public override Widget Build(BuildContext context) => DropdownMenuItemContainer.Build(Child, Alignment);
 }
 
 public sealed class DropdownButtonHideUnderline : InheritedWidget
@@ -84,7 +81,7 @@ public sealed class DropdownButton<T> : StatefulWidget
         Color? dropdownColor = null,
         double? menuMaxHeight = null,
         bool? enableFeedback = null,
-        Alignment? alignment = null,
+        AlignmentGeometry? alignment = null,
         BorderRadius? borderRadius = null,
         Thickness? padding = null,
         bool barrierDismissible = true,
@@ -125,7 +122,7 @@ public sealed class DropdownButton<T> : StatefulWidget
         DropdownColor = dropdownColor;
         MenuMaxHeight = menuMaxHeight;
         EnableFeedback = enableFeedback;
-        Alignment = alignment;
+        Alignment = alignment ?? (AlignmentGeometry)AlignmentDirectional.CenterStart;
         BorderRadius = borderRadius;
         Padding = padding;
         BarrierDismissible = barrierDismissible;
@@ -157,7 +154,7 @@ public sealed class DropdownButton<T> : StatefulWidget
     public Color? DropdownColor { get; }
     public double? MenuMaxHeight { get; }
     public bool? EnableFeedback { get; }
-    public Alignment? Alignment { get; }
+    public AlignmentGeometry Alignment { get; }
     public BorderRadius? BorderRadius { get; }
     public Thickness? Padding { get; }
     public bool BarrierDismissible { get; }
@@ -244,7 +241,6 @@ internal sealed class DropdownButtonState<T> : State
         var widget = CurrentWidget;
         var theme = Theme.Of(context);
         var direction = Directionality.Of(context);
-        var alignment = ResolveAlignment(widget.Alignment, direction);
         var style = widget.Style ?? theme.TextTheme.TitleMedium;
         var children = widget.SelectedItemBuilder?.Invoke(context)?.ToList()
                        ?? widget.Items?.Cast<Widget>().ToList()
@@ -262,7 +258,7 @@ internal sealed class DropdownButtonState<T> : State
             hintIndex = children.Count;
             children.Add(new DefaultTextStyle(
                 style.CopyWith(color: theme.HintColor),
-                DropdownMenuItemContainer.Build(context, displayedHint, widget.Alignment)));
+                DropdownMenuItemContainer.Build(displayedHint, widget.Alignment)));
         }
 
         Widget inner;
@@ -280,7 +276,7 @@ internal sealed class DropdownButtonState<T> : State
             inner = new IndexedStack(
                 children: sizedChildren,
                 index: _selectedIndex ?? hintIndex,
-                alignment: alignment);
+                alignment: widget.Alignment);
         }
 
         var iconColor = Enabled
@@ -441,9 +437,6 @@ internal sealed class DropdownButtonState<T> : State
         double scale = MediaQuery.MaybeTextScaleFactorOf(context) ?? 1;
         return Math.Max(fontSize * lineHeight * scale, Math.Max(CurrentWidget.IconSize, 24));
     }
-
-    private static Alignment ResolveAlignment(Alignment? alignment, TextDirection direction) =>
-        alignment ?? (direction == TextDirection.Rtl ? Alignment.CenterRight : Alignment.CenterLeft);
 
     private static Rect ResolveGlobalBounds(RenderBox renderBox)
     {
@@ -1047,14 +1040,9 @@ internal sealed class RenderDropdownMeasuredItem : RenderProxyBox
 
 internal static class DropdownMenuItemContainer
 {
-    public static Widget Build(BuildContext context, Widget child, Alignment? alignment) => new Semantics(
+    public static Widget Build(Widget child, AlignmentGeometry alignment) => new Semantics(
         flags: SemanticsFlags.IsButton,
         child: new ConstrainedBox(
             new BoxConstraints(MinHeight: 48),
-            new Align(
-                alignment: alignment
-                           ?? (Directionality.Of(context) == TextDirection.Rtl
-                               ? Alignment.CenterRight
-                               : Alignment.CenterLeft),
-                child: child)));
+            new Align(alignment: alignment, child: child)));
 }

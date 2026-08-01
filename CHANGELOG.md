@@ -1,5 +1,10 @@
 # Changelog
 
+- Breaking: closed legacy dropdown and cross-fade directional-alignment parity. `DropdownMenuItem`,
+  `DropdownButton`, `DropdownButtonFormField`, `Stack`, `IndexedStack`, `AnimatedSize`, and `AnimatedCrossFade`
+  now accept `AlignmentGeometry`, retain Flutter's logical defaults, and resolve mixed physical/logical values from
+  ambient text direction. Focused LTR/RTL tests and mirrored sample probes cover the new path.
+
 - Breaking: closed magnifier overlay-order parity. `MagnifierController.OverlayEntry` and `Show(... below:)` now
   use core `OverlayEntry` instead of a navigator route, capture inherited themes into the root overlay, preserve
   source animation lifecycle, and let `SelectionOverlay` keep selection handles above lenses that exclude handles.

@@ -41,7 +41,7 @@ public sealed class DropdownButtonFormField<T> : FormField<T>
         AutovalidateMode autovalidateMode = AutovalidateMode.Disabled,
         double? menuMaxHeight = null,
         bool? enableFeedback = null,
-        Alignment? alignment = null,
+        AlignmentGeometry? alignment = null,
         BorderRadius? borderRadius = null,
         Thickness? padding = null,
         bool barrierDismissible = true,
@@ -119,7 +119,7 @@ public sealed class DropdownButtonFormField<T> : FormField<T>
         Decoration = decoration ?? new InputDecoration();
         MenuMaxHeight = menuMaxHeight;
         EnableFeedback = enableFeedback;
-        Alignment = alignment;
+        Alignment = alignment ?? (AlignmentGeometry)AlignmentDirectional.CenterStart;
         BorderRadius = borderRadius;
         Padding = padding;
         BarrierDismissible = barrierDismissible;
@@ -151,7 +151,7 @@ public sealed class DropdownButtonFormField<T> : FormField<T>
     public InputDecoration Decoration { get; }
     public double? MenuMaxHeight { get; }
     public bool? EnableFeedback { get; }
-    public Alignment? Alignment { get; }
+    public AlignmentGeometry Alignment { get; }
     public BorderRadius? BorderRadius { get; }
     public Thickness? Padding { get; }
     public bool BarrierDismissible { get; }
@@ -203,7 +203,7 @@ public sealed class DropdownButtonFormField<T> : FormField<T>
         FormFieldErrorBuilder? errorBuilder,
         double? menuMaxHeight,
         bool? enableFeedback,
-        Alignment? alignment,
+        AlignmentGeometry? alignment,
         BorderRadius? borderRadius,
         Thickness? padding,
         bool barrierDismissible,

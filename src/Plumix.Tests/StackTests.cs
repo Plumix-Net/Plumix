@@ -1,5 +1,6 @@
 using Avalonia;
 using Plumix.Rendering;
+using Plumix.UI;
 using Plumix.Widgets;
 using Xunit;
 
@@ -124,6 +125,28 @@ public sealed class StackTests
     }
 
     [Fact]
+    public void StackAndIndexedStack_ResolveDirectionalAlignmentOnDirectionChange()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(BuildDirectionalStacks(TextDirection.Ltr));
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var stack = RequireRenderObject<RenderStack>(root.ChildElement);
+        var indexedStack = Assert.IsType<RenderIndexedStack>(stack.FirstChild);
+        Assert.Equal(Alignment.BottomRight, stack.Alignment);
+        Assert.Equal(Alignment.BottomRight, indexedStack.Alignment);
+
+        root.Update(BuildDirectionalStacks(TextDirection.Rtl));
+        owner.FlushBuild();
+
+        Assert.Equal(Alignment.BottomLeft, stack.Alignment);
+        Assert.Equal(Alignment.BottomLeft, indexedStack.Alignment);
+        root.Unmount();
+    }
+
+    [Fact]
     public void Positioned_Directional_ResolvesStartAndEndFromTextDirection()
     {
         var child = new SizedBox(width: 10, height: 10);
@@ -148,6 +171,17 @@ public sealed class StackTests
         Assert.Equal(3, rtl.Right);
         Assert.Equal(5, rtl.Top);
     }
+
+    private static Widget BuildDirectionalStacks(TextDirection direction) => new Directionality(
+        direction,
+        new Stack(
+            alignment: AlignmentDirectional.BottomEnd,
+            children:
+            [
+                new IndexedStack(
+                    alignment: AlignmentDirectional.BottomEnd,
+                    children: [new SizedBox(width: 10, height: 10)]),
+            ]));
 
     private static T RequireRenderObject<T>(Element? element) where T : RenderObject
     {

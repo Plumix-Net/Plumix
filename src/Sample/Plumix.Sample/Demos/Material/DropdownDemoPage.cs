@@ -22,6 +22,7 @@ public sealed class DropdownDemoPage : StatefulWidget
         private bool _expanded;
         private bool _hideUnderline;
         private bool _aligned;
+        private bool _rightToLeft;
         private string _status = "idle";
         private string? _formValue;
         private string _formStatus = "not validated";
@@ -64,12 +65,16 @@ public sealed class DropdownDemoPage : StatefulWidget
                 onTap: () => SetState(() => _status = "opened"),
                 isDense: _dense,
                 isExpanded: _expanded,
+                alignment: AlignmentDirectional.CenterEnd,
                 dropdownColor: Color.Parse("#FFFFF8E1"),
                 menuMaxHeight: 180,
                 borderRadius: BorderRadius.Circular(10),
                 padding: new Thickness(8, 4));
             if (_hideUnderline) dropdown = new DropdownButtonHideUnderline(dropdown);
             dropdown = new ButtonTheme(new ButtonThemeData(AlignedDropdown: _aligned), dropdown);
+            dropdown = new Directionality(
+                _rightToLeft ? Plumix.UI.TextDirection.Rtl : Plumix.UI.TextDirection.Ltr,
+                dropdown);
             dropdown = _expanded
                 ? new SizedBox(width: 320, child: dropdown)
                 : dropdown;
@@ -82,7 +87,8 @@ public sealed class DropdownDemoPage : StatefulWidget
                     [
                         new Text("DropdownButton + DropdownMenuItem", fontSize: 20),
                         new Text(
-                            "Controlled selection with nullable/disabled entries, selectedItemBuilder, route geometry, keyboard focus, and underline policy.",
+                            "Controlled selection with nullable/disabled entries, logical end alignment, "
+                            + "route geometry, keyboard focus, and underline policy.",
                             fontSize: 14,
                             color: Colors.DimGray),
                         new Row(
@@ -97,8 +103,15 @@ public sealed class DropdownDemoPage : StatefulWidget
                             spacing: 8,
                             children:
                             [
-                                ControlButton(_hideUnderline ? "Underline off" : "Underline on", () => SetState(() => _hideUnderline = !_hideUnderline)),
-                                ControlButton(_aligned ? "Aligned theme" : "Unaligned theme", () => SetState(() => _aligned = !_aligned)),
+                                ControlButton(
+                                    _hideUnderline ? "Underline off" : "Underline on",
+                                    () => SetState(() => _hideUnderline = !_hideUnderline)),
+                                ControlButton(
+                                    _aligned ? "Aligned theme" : "Unaligned theme",
+                                    () => SetState(() => _aligned = !_aligned)),
+                                ControlButton(
+                                    _rightToLeft ? "Direction: RTL" : "Direction: LTR",
+                                    () => SetState(() => _rightToLeft = !_rightToLeft)),
                             ]),
                         new Align(alignment: Alignment.CenterLeft, child: dropdown),
                         new Text($"Value: {_value ?? "none"}", fontSize: 13),

@@ -71,7 +71,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
 
         Assert.Equal(TimeSpan.FromMilliseconds(140), animatedSize.Duration);
         Assert.Null(animatedSize.Child);
-        Assert.Equal(Alignment.Center, animatedSize.Alignment);
+        Assert.Equal((AlignmentGeometry)Alignment.Center, animatedSize.Alignment);
         Assert.Equal(Curves.Linear(0.3), animatedSize.Curve(0.3));
         Assert.Null(animatedSize.ReverseDuration);
         Assert.Equal(Plumix.UI.Clip.HardEdge, animatedSize.ClipBehavior);

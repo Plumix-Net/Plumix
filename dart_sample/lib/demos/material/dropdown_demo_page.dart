@@ -14,6 +14,7 @@ class _DropdownDemoPageState extends State<DropdownDemoPage> {
   bool _expanded = false;
   bool _hideUnderline = false;
   bool _aligned = false;
+  bool _rightToLeft = false;
   String _status = 'idle';
   String? _formValue;
   String _formStatus = 'not validated';
@@ -54,6 +55,7 @@ class _DropdownDemoPageState extends State<DropdownDemoPage> {
       onTap: () => setState(() => _status = 'opened'),
       isDense: _dense,
       isExpanded: _expanded,
+      alignment: AlignmentDirectional.centerEnd,
       dropdownColor: Colors.amber.shade50,
       menuMaxHeight: 180,
       borderRadius: BorderRadius.circular(10),
@@ -63,6 +65,10 @@ class _DropdownDemoPageState extends State<DropdownDemoPage> {
       dropdown = DropdownButtonHideUnderline(child: dropdown);
     }
     dropdown = ButtonTheme(alignedDropdown: _aligned, child: dropdown);
+    dropdown = Directionality(
+      textDirection: _rightToLeft ? TextDirection.rtl : TextDirection.ltr,
+      child: dropdown,
+    );
     if (_expanded) dropdown = SizedBox(width: 320, child: dropdown);
 
     return SingleChildScrollView(
@@ -75,7 +81,7 @@ class _DropdownDemoPageState extends State<DropdownDemoPage> {
             style: TextStyle(fontSize: 20),
           ),
           const Text(
-            'Controlled selection with nullable/disabled entries, selectedItemBuilder, route geometry, keyboard focus, and underline policy.',
+            'Controlled selection with nullable/disabled entries, logical end alignment, route geometry, keyboard focus, and underline policy.',
             style: TextStyle(fontSize: 14, color: Colors.black54),
           ),
           Wrap(
@@ -101,6 +107,10 @@ class _DropdownDemoPageState extends State<DropdownDemoPage> {
               _controlButton(
                 _aligned ? 'Aligned theme' : 'Unaligned theme',
                 () => setState(() => _aligned = !_aligned),
+              ),
+              _controlButton(
+                _rightToLeft ? 'Direction: RTL' : 'Direction: LTR',
+                () => setState(() => _rightToLeft = !_rightToLeft),
               ),
             ],
           ),

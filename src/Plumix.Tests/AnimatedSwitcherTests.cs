@@ -170,7 +170,7 @@ public sealed class AnimatedSwitcherTests : IDisposable
         Assert.Equal(CrossFadeState.ShowFirst, crossFade.CrossFadeState);
         Assert.Equal(TimeSpan.FromMilliseconds(200), crossFade.Duration);
         Assert.Null(crossFade.ReverseDuration);
-        Assert.Equal(Alignment.TopCenter, crossFade.Alignment);
+        Assert.Equal((AlignmentGeometry)Alignment.TopCenter, crossFade.Alignment);
         Assert.True(crossFade.ExcludeBottomFocus);
         Assert.Null(crossFade.OnEnd);
         Assert.Equal(Curves.Linear(0.25), crossFade.FirstCurve(0.25));
@@ -206,6 +206,31 @@ public sealed class AnimatedSwitcherTests : IDisposable
             crossFadeState: CrossFadeState.ShowFirst,
             duration: TimeSpan.Zero,
             reverseDuration: TimeSpan.FromMilliseconds(-1)));
+    }
+
+    [Theory]
+    [InlineData(TextDirection.Ltr, 1.0)]
+    [InlineData(TextDirection.Rtl, -1.0)]
+    public void AnimatedCrossFade_ResolvesDirectionalAlignment(
+        TextDirection direction,
+        double expectedX)
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(new Directionality(
+            direction,
+            new AnimatedCrossFade(
+                firstChild: new SizedBox(width: 20, height: 20),
+                secondChild: new SizedBox(width: 40, height: 40),
+                crossFadeState: CrossFadeState.ShowFirst,
+                duration: TimeSpan.FromMilliseconds(200),
+                alignment: AlignmentDirectional.BottomEnd)));
+        Mount(root, owner);
+
+        var animatedSize = FindRenderObject<RenderAnimatedSize>(root.ChildElement!.RenderObject!);
+        Assert.NotNull(animatedSize);
+        Assert.Equal(new Alignment(expectedX, 1.0), animatedSize!.Alignment);
+
+        root.Unmount();
     }
 
     [Fact]
