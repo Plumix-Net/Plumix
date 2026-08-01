@@ -23,6 +23,26 @@ public enum PlatformBrightness
     Dark,
 }
 
+public enum DisplayFeatureType
+{
+    Fold,
+    Hinge,
+    Cutout,
+    Unknown,
+}
+
+public enum DisplayFeatureState
+{
+    Unknown,
+    PostureFlat,
+    PostureHalfOpened,
+}
+
+public sealed record DisplayFeature(
+    Rect Bounds,
+    DisplayFeatureType Type = DisplayFeatureType.Unknown,
+    DisplayFeatureState State = DisplayFeatureState.Unknown);
+
 public sealed record MediaQueryData(
     Size Size = default,
     double DevicePixelRatio = 1.0,
@@ -39,7 +59,8 @@ public sealed record MediaQueryData(
     PlatformBrightness PlatformBrightness = PlatformBrightness.Light,
     bool HighContrast = false,
     bool SupportsAnnounce = false,
-    int ViewId = 0)
+    int ViewId = 0,
+    IReadOnlyList<DisplayFeature>? DisplayFeatures = null)
 {
     public Orientation Orientation => Size.Width > Size.Height
         ? Orientation.Landscape
@@ -61,7 +82,8 @@ public sealed record MediaQueryData(
         PlatformBrightness? platformBrightness = null,
         bool? highContrast = null,
         bool? supportsAnnounce = null,
-        int? viewId = null)
+        int? viewId = null,
+        IReadOnlyList<DisplayFeature>? displayFeatures = null)
     {
         return new MediaQueryData(
             Size: size ?? Size,
@@ -79,7 +101,8 @@ public sealed record MediaQueryData(
             PlatformBrightness: platformBrightness ?? PlatformBrightness,
             HighContrast: highContrast ?? HighContrast,
             SupportsAnnounce: supportsAnnounce ?? SupportsAnnounce,
-            ViewId: viewId ?? ViewId);
+            ViewId: viewId ?? ViewId,
+            DisplayFeatures: displayFeatures ?? DisplayFeatures);
     }
 
     public MediaQueryData RemovePadding(

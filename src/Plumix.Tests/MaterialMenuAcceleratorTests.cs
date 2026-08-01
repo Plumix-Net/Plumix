@@ -261,7 +261,7 @@ public sealed class MaterialMenuAcceleratorTests : IDisposable
             TextDirection.Ltr,
             new Theme(
                 ThemeData.Light with { Platform = platform },
-                child));
+                new Overlay(initialEntries: [new OverlayEntry(_ => child)])));
     }
 
     private static RenderParagraph? FindParagraph(RenderObject? root, string text)

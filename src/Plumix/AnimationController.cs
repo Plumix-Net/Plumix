@@ -12,6 +12,29 @@ public static class Curves
 {
     public static double Linear(double t) => t;
 
+    public static Curve Cubic(double x1, double y1, double x2, double y2) =>
+        t => CubicBezier(t, x1, y1, x2, y2);
+
+    public static Curve Interval(double begin, double end, Curve? curve = null)
+    {
+        if (begin < 0.0 || begin > 1.0 || end < 0.0 || end > 1.0 || end < begin)
+        {
+            throw new ArgumentOutOfRangeException(nameof(begin));
+        }
+
+        Curve effectiveCurve = curve ?? Linear;
+        return t => effectiveCurve(Math.Clamp((t - begin) / Math.Max(end - begin, double.Epsilon), 0.0, 1.0));
+    }
+
+    public static Curve Flipped(Curve curve)
+    {
+        ArgumentNullException.ThrowIfNull(curve);
+        return t => 1.0 - curve(1.0 - t);
+    }
+
+    // Flutter Material Easing.emphasizedAccelerate.
+    public static Curve EmphasizedAccelerate { get; } = Cubic(0.3, 0.0, 0.8, 0.15);
+
     // Flutter Curves.ease: Cubic(0.25, 0.1, 0.25, 1.0).
     public static double Ease(double t) => CubicBezier(t, 0.25, 0.1, 0.25, 1.0);
 

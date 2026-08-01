@@ -143,13 +143,15 @@ public sealed class DropdownDemoPage : StatefulWidget
                         new Divider(),
                         new Text("MenuAnchor + MenuItemButton", fontSize: 18),
                         new Text(
-                            "Controller-owned menu with leaf, checkbox, and radio items plus close-on-activate policy.",
+                            "Animated overlay menu with consumed outside taps and close-on-activate policy.",
                             fontSize: 14,
                             color: Colors.DimGray),
                         new Align(
                             alignment: Alignment.CenterLeft,
                             child: new MenuAnchor(
                                 controller: _anchorController,
+                                consumeOutsideTap: true,
+                                animated: true,
                                 onOpen: () => SetState(() => _anchorStatus = "opened"),
                                 onClose: () => SetState(() => _anchorStatus = "closed"),
                                 menuChildren:

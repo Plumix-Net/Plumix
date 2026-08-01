@@ -160,13 +160,15 @@ class _DropdownDemoPageState extends State<DropdownDemoPage> {
             style: TextStyle(fontSize: 18),
           ),
           const Text(
-            'Controller-owned menu with leaf, checkbox, and radio items plus close-on-activate policy.',
+            'Animated overlay menu with consumed outside taps and close-on-activate policy.',
             style: TextStyle(fontSize: 14, color: Colors.black54),
           ),
           Align(
             alignment: Alignment.centerLeft,
             child: MenuAnchor(
               controller: _anchorController,
+              consumeOutsideTap: true,
+              animated: true,
               onOpen: () => setState(() => _anchorStatus = 'opened'),
               onClose: () => setState(() => _anchorStatus = 'closed'),
               menuChildren: <Widget>[

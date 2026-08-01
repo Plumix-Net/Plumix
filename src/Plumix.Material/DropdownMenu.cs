@@ -65,10 +65,12 @@ public sealed class MenuController : ChangeNotifier
 
     public bool IsOpen { get; private set; }
 
-    public void Open()
+    internal Vector? Position { get; private set; }
+
+    public void Open(Vector? position = null)
     {
-        if (_open is null) throw new InvalidOperationException("The MenuController is not attached to a menu anchor.");
-        _open();
+        Position = position;
+        _open?.Invoke();
     }
 
     public void Close() => _close?.Invoke();
@@ -101,6 +103,10 @@ public sealed class MenuController : ChangeNotifier
     {
         if (IsOpen == value) return;
         IsOpen = value;
+        if (!value)
+        {
+            Position = null;
+        }
         NotifyListeners();
     }
 

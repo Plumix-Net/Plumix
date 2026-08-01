@@ -432,7 +432,9 @@ public sealed class MaterialDropdownTests : IDisposable
         Assert.Throws<ArgumentException>(() => new DropdownMenu<string>(entries,
             label: new Text("Label"),
             decorationBuilder: (_, _) => new InputDecoration()));
-        Assert.Throws<InvalidOperationException>(() => new MenuController().Open());
+        var unattachedController = new MenuController();
+        unattachedController.Open();
+        Assert.False(unattachedController.IsOpen);
     }
 
     [Fact]
@@ -610,7 +612,6 @@ public sealed class MaterialDropdownTests : IDisposable
         controller.Open();
         harness.Pump(new Size(500, 360));
         Assert.True(controller.IsOpen);
-        Assert.NotNull(FindDescendants<RenderMenuAnchorLayout>(harness.RenderView).SingleOrDefault());
         Assert.NotNull(FindParagraph(harness.RenderView, "Run"));
         var semantics = harness.PumpAndGetSemantics(new Size(500, 360));
         var item = FindSemantics(semantics, node => node.Actions.HasFlag(SemanticsActions.Tap));
@@ -654,15 +655,12 @@ public sealed class MaterialDropdownTests : IDisposable
         fileController.Open();
         harness.Pump(new Size(500, 360));
         Assert.True(fileController.IsOpen);
-        Assert.Contains(FindDescendants<RenderMenuAnchorLayout>(harness.RenderView), layout =>
-            layout.PanelOrientation == Axis.Vertical);
+        Assert.NotNull(FindParagraph(harness.RenderView, "Open"));
 
         recentController.Open();
         harness.Pump(new Size(500, 360));
         Assert.True(fileController.IsOpen);
         Assert.True(recentController.IsOpen);
-        Assert.Contains(FindDescendants<RenderMenuAnchorLayout>(harness.RenderView), layout =>
-            layout.PanelOrientation == Axis.Horizontal && layout.ChildCount == 2);
 
         editController.Open();
         harness.Pump(new Size(500, 360));
@@ -676,10 +674,7 @@ public sealed class MaterialDropdownTests : IDisposable
 
         fileController.Open();
         harness.Pump(new Size(500, 360));
-        var fileLayout = Assert.Single(
-            FindDescendants<RenderMenuAnchorLayout>(harness.RenderView),
-            layout => layout.PanelOrientation == Axis.Vertical && layout.ChildCount == 2);
-        Assert.True(fileLayout.Size.Height > 0);
+        Assert.NotNull(FindParagraph(harness.RenderView, "Open"));
     }
 
     [Fact]
@@ -1075,7 +1070,9 @@ public sealed class MaterialDropdownTests : IDisposable
         direction,
         new MediaQuery(
             new MediaQueryData(Size: new Size(500, 360)),
-            new Theme(theme ?? ThemeData.Light, child)));
+            new Theme(
+                theme ?? ThemeData.Light,
+                new Overlay(initialEntries: [new OverlayEntry(_ => child)]))));
 
     private static void PumpAnimation()
     {

@@ -22,6 +22,7 @@ public sealed class MenuAnchor : StatefulWidget
         MenuStyle? style = null,
         Vector? alignmentOffset = null,
         Thickness? reservedPadding = null,
+        LayerLink? layerLink = null,
         Clip clipBehavior = Clip.HardEdge,
         bool anchorTapClosesMenu = false,
         bool consumeOutsideTap = false,
@@ -30,7 +31,7 @@ public sealed class MenuAnchor : StatefulWidget
         bool crossAxisUnconstrained = true,
         bool useRootOverlay = false,
         bool animated = false,
-        Action<bool>? onAnimationStatusChanged = null,
+        Action<AnimationStatus>? onAnimationStatusChanged = null,
         Key? key = null) : base(key)
     {
         MenuChildren = menuChildren ?? throw new ArgumentNullException(nameof(menuChildren));
@@ -41,6 +42,7 @@ public sealed class MenuAnchor : StatefulWidget
         Style = style;
         AlignmentOffset = alignmentOffset ?? default;
         ReservedPadding = reservedPadding;
+        LayerLink = layerLink;
         ClipBehavior = clipBehavior;
         AnchorTapClosesMenu = anchorTapClosesMenu;
         ConsumeOutsideTap = consumeOutsideTap;
@@ -60,6 +62,7 @@ public sealed class MenuAnchor : StatefulWidget
     public MenuStyle? Style { get; }
     public Vector AlignmentOffset { get; }
     public Thickness? ReservedPadding { get; }
+    public LayerLink? LayerLink { get; }
     public Clip ClipBehavior { get; }
     public bool AnchorTapClosesMenu { get; }
     public bool ConsumeOutsideTap { get; }
@@ -68,7 +71,7 @@ public sealed class MenuAnchor : StatefulWidget
     public bool CrossAxisUnconstrained { get; }
     public bool UseRootOverlay { get; }
     public bool Animated { get; }
-    public Action<bool>? OnAnimationStatusChanged { get; }
+    public Action<AnimationStatus>? OnAnimationStatusChanged { get; }
 
     // These assembly-local fields mirror the orientation contracts supplied by
     // Flutter's private _MenuBarAnchor and submenu layout delegates.
@@ -81,12 +84,36 @@ public sealed class MenuAnchor : StatefulWidget
 public sealed class MenuAnchorState : State, IMenuControllerHost
 {
     private readonly HashSet<MenuController> _childControllers = [];
+    private readonly RawMenuAnchorController _rawController = new();
     private MenuController? _internalController;
     private MenuController? _controller;
+    private AnimationController? _animationController;
+    private CurvedAnimation? _heightAnimation;
+    private CurvedAnimation? _opacityAnimation;
+    private Size? _mediaSize;
     private bool _isOpen;
+    private bool _isClosing;
     private MenuAnchor Current => (MenuAnchor)StateWidget;
 
-    public override void InitState() => AttachController();
+    public override void InitState()
+    {
+        AttachController();
+        _animationController = new AnimationController(
+            TimeSpan.FromMilliseconds(500),
+            this)
+        {
+            ReverseDuration = TimeSpan.FromMilliseconds(150),
+        };
+        _animationController.AddStatusListener(HandleAnimationStatusChanged);
+        _heightAnimation = new CurvedAnimation(
+            _animationController,
+            Curves.Cubic(0.3, 0.0, 0.0, 1.0),
+            Curves.Interval(0.35, 1.0, Curves.Flipped(Curves.EmphasizedAccelerate)));
+        _opacityAnimation = new CurvedAnimation(
+            _animationController,
+            Curves.Interval(0.0, 0.1),
+            Curves.Interval(0.0, 1.0 / 3.0));
+    }
 
     public override void DidUpdateWidget(StatefulWidget oldWidget)
     {
@@ -96,27 +123,64 @@ public sealed class MenuAnchorState : State, IMenuControllerHost
             DetachController();
             AttachController();
         }
+
+        if (oldAnchor.Animated && !Current.Animated && _isOpen)
+        {
+            _animationController!.Stop();
+            _animationController.SetValue(_isClosing ? 0.0 : 1.0);
+        }
     }
 
-    public override void Dispose() => DetachController();
+    public override void DidChangeDependencies()
+    {
+        Size? nextSize = MediaQuery.MaybeOf(Context)?.Size;
+        bool changedWhileOpen = _mediaSize.HasValue
+                                && nextSize.HasValue
+                                && _mediaSize.Value != nextSize.Value
+                                && _isOpen;
+        _mediaSize = nextSize;
+        if (changedWhileOpen)
+        {
+            Scheduler.AddPostFrameCallback(_ =>
+            {
+                if (Mounted)
+                {
+                    Close();
+                }
+            });
+        }
+    }
+
+    public override void Dispose()
+    {
+        DetachController();
+        _heightAnimation?.Dispose();
+        _opacityAnimation?.Dispose();
+        _animationController?.RemoveStatusListener(HandleAnimationStatusChanged);
+        _animationController?.Dispose();
+    }
 
     public override Widget Build(BuildContext context)
     {
         MenuController controller = _controller!;
         Widget anchor = Current.Builder?.Invoke(context, controller, Current.Child) ?? Current.Child ?? new SizedBox();
-        Widget? panel = _isOpen ? BuildPanel(context) : null;
+        Widget rawAnchor = new RawMenuAnchor(
+            controller: _rawController,
+            overlayBuilder: BuildOverlay,
+            child: anchor,
+            onTapOutside: Close,
+            consumeOutsideTaps: Current.ConsumeOutsideTap,
+            useRootOverlay: Current.UseRootOverlay);
+        if (Current.LayerLink is not null)
+        {
+            rawAnchor = new CompositedTransformTarget(Current.LayerLink, rawAnchor);
+        }
         return new MenuControllerScope(
             controller,
             this,
             _isOpen,
             Current.Orientation,
-            new MenuAnchorLayout(
-                anchor,
-                panel,
-                Current.AlignmentOffset,
-                Current.CrossAxisUnconstrained,
-                Current.PanelOrientation,
-                Directionality.Of(context)));
+            rawAnchor);
     }
 
     public void CloseChildren()
@@ -155,42 +219,119 @@ public sealed class MenuAnchorState : State, IMenuControllerHost
 
     private void Open()
     {
-        if (_isOpen) return;
+        if (_animationController!.Status.IsForwardOrCompleted()) return;
         MenuController.MaybeScopeOf(Context)?.Host.CloseChildrenExcept(_controller);
-        SetState(() => _isOpen = true);
+        _rawController.Open(_controller?.Position);
+        Current.ChildFocusNode?.RequestFocus();
+        SetState(() =>
+        {
+            _isOpen = true;
+            _isClosing = false;
+        });
         _controller!.SetOpen(true);
         Current.OnOpen?.Invoke();
-        Current.OnAnimationStatusChanged?.Invoke(true);
+        if (Current.Animated)
+        {
+            _animationController.Forward();
+        }
+        else
+        {
+            _animationController.Stop();
+            _animationController.SetValue(1.0);
+        }
     }
 
     private void Close()
     {
-        if (!_isOpen) return;
-        SetState(() => _isOpen = false);
-        _controller!.SetOpen(false);
-        Current.OnClose?.Invoke();
-        Current.OnAnimationStatusChanged?.Invoke(false);
+        if (!_isOpen || _isClosing) return;
+        CloseChildren();
+        SetState(() => _isClosing = true);
         Current.ChildFocusNode?.RequestFocus();
+        if (Current.Animated)
+        {
+            _animationController!.Reverse();
+        }
+        else
+        {
+            _animationController!.Stop();
+            _animationController.SetValue(0.0);
+        }
+    }
+
+    private Widget BuildOverlay(BuildContext context, RawMenuOverlayInfo info)
+    {
+        Widget panel = new AnimatedBuilder(
+            animation: _animationController!,
+            builder: (_, child) => new FadeTransition(
+                opacity: _opacityAnimation!,
+                alwaysIncludeSemantics: true,
+                child: new Align(
+                    alignment: AlignmentDirectional.TopStart,
+                    heightFactor: _heightAnimation!.Value,
+                    widthFactor: 1.0,
+                    child: child)),
+            child: BuildPanel(context));
+        panel = new ExcludeSemantics(
+            excluding: _isClosing,
+            child: new IgnorePointer(
+                ignoring: _isClosing,
+                child: new ExcludeFocus(
+                    excluding: _isClosing,
+                    child: panel)));
+        Thickness reservedPadding = Current.ReservedPadding ?? new Thickness(8.0);
+        MediaQueryData? mediaQuery = MediaQuery.MaybeOf(context);
+        Widget layout = new CustomSingleChildLayout(
+            layoutDelegate: new MenuOverlayLayoutDelegate(
+                info.AnchorRect,
+                Current.AlignmentOffset,
+                reservedPadding,
+                Current.PanelOrientation,
+                Directionality.Of(context),
+                mediaQuery?.ViewInsets ?? default,
+                info.Position,
+                mediaQuery?.DisplayFeatures),
+            child: panel);
+        return new TapRegion(
+            child: layout,
+            groupId: info.TapRegionGroupId,
+            consumeOutsideTaps: Current.ConsumeOutsideTap,
+            onTapOutside: _ => Close(),
+            debugLabel: "MenuAnchor panel");
     }
 
     private Widget BuildPanel(BuildContext context)
     {
         ThemeData theme = Theme.Of(context);
-        MenuStyle style = Current.Style ?? MenuTheme.Of(context).Style ?? new MenuStyle();
+        MenuStyle style = (Current.Style ?? new MenuStyle()).Merge(MenuTheme.Of(context).Style);
         MaterialState state = MaterialState.None;
         Color color = style.BackgroundColor?.Resolve(state) ?? theme.SurfaceContainerColor;
         Color shadowColor = style.ShadowColor?.Resolve(state) ?? theme.ShadowColor;
         Color surfaceTint = style.SurfaceTintColor?.Resolve(state) ?? Colors.Transparent;
         double elevation = style.Elevation?.Resolve(state) ?? 3;
         Thickness padding = style.Padding?.Resolve(state) ?? new Thickness(0, 8);
-        ShapeBorder? shape = style.Shape?.Resolve(state);
+        VisualDensity density = style.VisualDensity ?? theme.VisualDensity;
+        double horizontalDensityPadding = Math.Max(0.0, density.BaseSizeAdjustment.X);
+        padding = new Thickness(
+            padding.Left + horizontalDensityPadding,
+            padding.Top,
+            padding.Right + horizontalDensityPadding,
+            padding.Bottom);
+        ShapeBorder? shape = style.Shape?.Resolve(state) ?? ShapeBorder.RoundedRectangle(4.0);
+        BorderSide? side = style.Side?.Resolve(state);
+        if (side.HasValue)
+        {
+            shape = shape with { Side = side };
+        }
         Widget content = new Padding(
             padding,
-            new Column(
-                mainAxisSize: MainAxisSize.Min,
-                crossAxisAlignment: CrossAxisAlignment.Stretch,
-                children: Current.MenuChildren));
-        return new Material(
+            new IntrinsicWidth(
+                child: new SingleChildScrollView(
+                    child: new Column(
+                        mainAxisSize: MainAxisSize.Min,
+                        crossAxisAlignment: CrossAxisAlignment.Stretch,
+                        children: Current.MenuChildren),
+                    physics: new ClampingScrollPhysics())));
+        Widget panel = new Material(
             type: MaterialType.Card,
             color: color,
             shadowColor: shadowColor,
@@ -199,6 +340,53 @@ public sealed class MenuAnchorState : State, IMenuControllerHost
             shape: shape,
             clipBehavior: Current.ClipBehavior,
             child: content);
+        return new ConstrainedBox(ResolveMenuConstraints(style, state, density), panel);
+    }
+
+    internal static BoxConstraints ResolveMenuConstraints(
+        MenuStyle style,
+        MaterialState state,
+        VisualDensity density)
+    {
+        Size minimum = style.MinimumSize?.Resolve(state) ?? default;
+        Size maximum = style.MaximumSize?.Resolve(state)
+                       ?? new Size(double.PositiveInfinity, double.PositiveInfinity);
+        var constraints = new BoxConstraints(
+            MinWidth: minimum.Width,
+            MaxWidth: maximum.Width,
+            MinHeight: minimum.Height,
+            MaxHeight: maximum.Height);
+        constraints = density.EffectiveConstraints(constraints);
+        Size? fixedSize = style.FixedSize?.Resolve(state);
+        if (fixedSize.HasValue)
+        {
+            double? width = double.IsFinite(fixedSize.Value.Width) ? fixedSize.Value.Width : null;
+            double? height = double.IsFinite(fixedSize.Value.Height) ? fixedSize.Value.Height : null;
+            constraints = constraints.Tighten(width, height);
+        }
+        return constraints;
+    }
+
+    private void HandleAnimationStatusChanged(AnimationStatus status)
+    {
+        Current.OnAnimationStatusChanged?.Invoke(status);
+        if (status != AnimationStatus.Dismissed || !_isClosing)
+        {
+            if (Mounted)
+            {
+                SetState(static () => { });
+            }
+            return;
+        }
+
+        _rawController.Close();
+        _controller!.SetOpen(false);
+        SetState(() =>
+        {
+            _isOpen = false;
+            _isClosing = false;
+        });
+        Current.OnClose?.Invoke();
     }
 }
 
@@ -274,7 +462,7 @@ public sealed class MenuItemButton : StatelessWidget
                 states.HasFlag(MaterialState.Disabled) ? theme.DisabledColor : theme.OnSurfaceColor),
             OverlayColor: MaterialButtonCore.CreateDefaultOverlayResolver(theme.OnSurfaceColor),
             Padding: MaterialStateProperty<Thickness?>.All(new Thickness(12, 0)),
-            MinimumSize: MaterialStateProperty<Size?>.All(new Size(112, 48)),
+            MinimumSize: MaterialStateProperty<Size?>.All(new Size(64, 48)),
             Shape: MaterialStateProperty<BorderRadius?>.All(BorderRadius.Zero),
             TextStyle: MaterialStateProperty<TextStyle?>.All(theme.TextTheme.LabelLarge),
             TapTargetSize: MaterialTapTargetSize.ShrinkWrap);
@@ -516,16 +704,30 @@ public sealed class MenuBar : StatelessWidget
     public override Widget Build(BuildContext context)
     {
         ThemeData theme = Theme.Of(context);
-        MenuStyle style = Style ?? MenuBarTheme.Of(context).Style ?? new MenuStyle();
+        MenuStyle style = (Style ?? new MenuStyle()).Merge(MenuBarTheme.Of(context).Style);
         MaterialState states = MaterialState.None;
         Color color = style.BackgroundColor?.Resolve(states) ?? theme.SurfaceContainerColor;
         Color shadowColor = style.ShadowColor?.Resolve(states) ?? theme.ShadowColor;
         Color surfaceTint = style.SurfaceTintColor?.Resolve(states) ?? Colors.Transparent;
         double elevation = style.Elevation?.Resolve(states) ?? 3;
-        Thickness padding = style.Padding?.Resolve(states) ?? new Thickness(8, 0);
-        ShapeBorder? shape = style.Shape?.Resolve(states);
+        Thickness padding = style.Padding?.Resolve(states) ?? new Thickness(4, 0);
+        VisualDensity density = style.VisualDensity ?? theme.VisualDensity;
+        double horizontalDensityPadding = Math.Max(0.0, density.BaseSizeAdjustment.X);
+        padding = new Thickness(
+            padding.Left + horizontalDensityPadding,
+            padding.Top,
+            padding.Right + horizontalDensityPadding,
+            padding.Bottom);
+        ShapeBorder? shape = style.Shape?.Resolve(states) ?? ShapeBorder.RoundedRectangle(4.0);
+        BorderSide? side = style.Side?.Resolve(states);
+        if (side.HasValue)
+        {
+            shape = shape with { Side = side };
+        }
 
-        Widget content = new Material(
+        Widget content = new ConstrainedBox(
+            MenuAnchorState.ResolveMenuConstraints(style, states, density),
+            new Material(
             type: MaterialType.Card,
             color: color,
             shadowColor: shadowColor,
@@ -539,16 +741,17 @@ public sealed class MenuBar : StatelessWidget
                     mainAxisSize: MainAxisSize.Min,
                     crossAxisAlignment: CrossAxisAlignment.Stretch,
                     children: Children,
-                    textDirection: Directionality.Of(context))));
+                    textDirection: Directionality.Of(context)))));
 
-        return new MenuAnchor(
-            menuChildren: [],
-            controller: Controller,
-            clipBehavior: ClipBehavior,
-            builder: (_, _, _) => content)
-        {
-            Orientation = Axis.Horizontal,
-        };
+        return new RawMenuAnchorGroup(
+            new MenuAnchor(
+                menuChildren: [],
+                controller: Controller,
+                clipBehavior: ClipBehavior,
+                builder: (_, _, _) => content)
+            {
+                Orientation = Axis.Horizontal,
+            });
     }
 }
 
@@ -576,7 +779,7 @@ public sealed class SubmenuButton : StatefulWidget
         bool useRootOverlay = false,
         TimeSpan? hoverOpenDelay = null,
         bool animated = false,
-        Action<bool>? onAnimationStatusChanged = null,
+        Action<AnimationStatus>? onAnimationStatusChanged = null,
         Key? key = null) : base(key)
     {
         MenuChildren = menuChildren ?? throw new ArgumentNullException(nameof(menuChildren));
@@ -624,7 +827,7 @@ public sealed class SubmenuButton : StatefulWidget
     public bool UseRootOverlay { get; }
     public TimeSpan HoverOpenDelay { get; }
     public bool Animated { get; }
-    public Action<bool>? OnAnimationStatusChanged { get; }
+    public Action<AnimationStatus>? OnAnimationStatusChanged { get; }
     public bool Enabled => MenuChildren.Count > 0;
 
     public override State CreateState() => new SubmenuButtonState();
@@ -634,6 +837,8 @@ public sealed class SubmenuButtonState : State
 {
     private MenuController? _internalController;
     private MenuAnchorState? _parentHost;
+    private CancellationTokenSource? _hoverOpenCancellation;
+    private AnimationStatus _animationStatus = AnimationStatus.Dismissed;
     private SubmenuButton Current => (SubmenuButton)StateWidget;
     private MenuController Controller => Current.Controller ?? _internalController!;
 
@@ -648,6 +853,12 @@ public sealed class SubmenuButtonState : State
     public override void DidChangeDependencies()
     {
         MenuAnchorState? nextParent = MenuController.MaybeScopeOf(Context)?.Host;
+        Axis parentOrientation = MenuController.MaybeScopeOf(Context)?.Orientation ?? Axis.Vertical;
+        if (parentOrientation == Axis.Horizontal && Current.HoverOpenDelay > TimeSpan.Zero)
+        {
+            throw new InvalidOperationException(
+                "A direct MenuBar SubmenuButton must use a zero hoverOpenDelay.");
+        }
         if (ReferenceEquals(nextParent, _parentHost)) return;
         _parentHost?.UnregisterChild(Controller);
         _parentHost = nextParent;
@@ -667,6 +878,7 @@ public sealed class SubmenuButtonState : State
 
     public override void Dispose()
     {
+        CancelDelayedOpen();
         _parentHost?.UnregisterChild(Controller);
     }
 
@@ -681,7 +893,7 @@ public sealed class SubmenuButtonState : State
         }
         Widget submenuIcon = Current.SubmenuIcon?.Resolve(states)
             ?? MenuTheme.Of(context).SubmenuIcon?.Resolve(states)
-            ?? new Icon(parentOrientation == Axis.Horizontal ? Icons.ArrowDropDown : Icons.ChevronRight);
+            ?? new Icon(Icons.ChevronRight, size: 24.0);
         var row = new List<Widget>();
         if (Current.LeadingIcon is not null) row.Add(Current.LeadingIcon);
         row.Add(new Flexible(child: Current.Child ?? new SizedBox()));
@@ -694,8 +906,7 @@ public sealed class SubmenuButtonState : State
                 value.HasFlag(MaterialState.Disabled) ? theme.DisabledColor : theme.OnSurfaceColor),
             OverlayColor: MaterialButtonCore.CreateDefaultOverlayResolver(theme.OnSurfaceColor),
             Padding: MaterialStateProperty<Thickness?>.All(new Thickness(12, 0)),
-            MinimumSize: MaterialStateProperty<Size?>.All(
-                parentOrientation == Axis.Horizontal ? new Size(64, 48) : new Size(112, 48)),
+            MinimumSize: MaterialStateProperty<Size?>.All(new Size(64, 48)),
             Shape: MaterialStateProperty<BorderRadius?>.All(BorderRadius.Zero),
             TextStyle: MaterialStateProperty<TextStyle?>.All(theme.TextTheme.LabelLarge),
             TapTargetSize: MaterialTapTargetSize.ShrinkWrap);
@@ -712,7 +923,7 @@ public sealed class SubmenuButtonState : State
                 Current.Style,
                 null),
             onHoverChanged: HandleHover,
-            onFocusChange: Current.OnFocusChange,
+            onFocusChange: HandleFocusChange,
             focusNode: Current.FocusNode,
             clipBehavior: Current.ClipBehavior,
             enabled: Current.Enabled);
@@ -736,8 +947,11 @@ public sealed class SubmenuButtonState : State
             },
             useRootOverlay: Current.UseRootOverlay,
             animated: Current.Animated,
-            onAnimationStatusChanged: Current.OnAnimationStatusChanged,
-            child: new Semantics(expanded: Controller.IsOpen, child: button))
+            onAnimationStatusChanged: HandleAnimationStatusChanged,
+            child: new MergeSemantics(
+                new Semantics(
+                    expanded: Current.Enabled && _animationStatus.IsForwardOrCompleted(),
+                    child: button)))
         {
             PanelOrientation = parentOrientation == Axis.Horizontal ? Axis.Vertical : Axis.Horizontal,
         };
@@ -768,193 +982,229 @@ public sealed class SubmenuButtonState : State
     private void HandleHover(bool hovered)
     {
         Current.OnHover?.Invoke(hovered);
+        CancelDelayedOpen();
         if (!hovered || !Current.Enabled) return;
+        BeginOpen();
+    }
+
+    private void HandleFocusChange(bool focused)
+    {
+        Current.OnFocusChange?.Invoke(focused);
+        CancelDelayedOpen();
+        if (focused && Current.Enabled)
+        {
+            BeginOpen();
+        }
+    }
+
+    private void BeginOpen()
+    {
         if (Current.HoverOpenDelay == TimeSpan.Zero)
         {
             Controller.Open();
+            return;
+        }
+
+        _hoverOpenCancellation = new CancellationTokenSource();
+        _ = DelayOpenAsync(Current.HoverOpenDelay, _hoverOpenCancellation.Token);
+    }
+
+    private async Task DelayOpenAsync(TimeSpan delay, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await Task.Delay(delay, cancellationToken);
+            if (Mounted && Current.Enabled && !cancellationToken.IsCancellationRequested)
+            {
+                Controller.Open();
+            }
+        }
+        catch (TaskCanceledException)
+        {
+        }
+    }
+
+    private void CancelDelayedOpen()
+    {
+        _hoverOpenCancellation?.Cancel();
+        _hoverOpenCancellation?.Dispose();
+        _hoverOpenCancellation = null;
+    }
+
+    private void HandleAnimationStatusChanged(AnimationStatus status)
+    {
+        if (_animationStatus != status && Mounted)
+        {
+            SetState(() => _animationStatus = status);
         }
         else
         {
-            _ = DelayOpenAsync(Current.HoverOpenDelay);
+            _animationStatus = status;
         }
-    }
-
-    private async Task DelayOpenAsync(TimeSpan delay)
-    {
-        await Task.Delay(delay);
-        if (Mounted && Current.Enabled)
-        {
-            Controller.Open();
-        }
+        Current.OnAnimationStatusChanged?.Invoke(status);
     }
 }
 
-internal sealed class MenuAnchorLayout : MultiChildRenderObjectWidget
+internal sealed class MenuOverlayLayoutDelegate : SingleChildLayoutDelegate
 {
-    public MenuAnchorLayout(Widget anchor, Widget? panel, Vector offset, bool crossAxisUnconstrained)
-        : this(
-            anchor,
-            panel,
-            offset,
-            crossAxisUnconstrained,
-            Axis.Vertical,
-            TextDirection.Ltr)
+    public MenuOverlayLayoutDelegate(
+        Rect anchorRect,
+        Vector alignmentOffset,
+        Thickness reservedPadding,
+        Axis placementAxis,
+        TextDirection textDirection,
+        Thickness viewInsets,
+        Vector? position,
+        IReadOnlyList<DisplayFeature>? displayFeatures = null)
     {
-    }
-
-    public MenuAnchorLayout(
-        Widget anchor,
-        Widget? panel,
-        Vector offset,
-        bool crossAxisUnconstrained,
-        Axis panelOrientation,
-        TextDirection textDirection)
-        : base(panel is null ? [anchor] : [anchor, panel])
-    {
-        Offset = offset;
-        CrossAxisUnconstrained = crossAxisUnconstrained;
-        PanelOrientation = panelOrientation;
+        AnchorRect = anchorRect;
+        AlignmentOffset = alignmentOffset;
+        ReservedPadding = reservedPadding;
+        PlacementAxis = placementAxis;
         TextDirection = textDirection;
+        ViewInsets = viewInsets;
+        Position = position;
+        DisplayFeatures = displayFeatures ?? [];
     }
 
-    public Vector Offset { get; }
-    public bool CrossAxisUnconstrained { get; }
-    public Axis PanelOrientation { get; }
+    public Rect AnchorRect { get; }
+
+    public Vector AlignmentOffset { get; }
+
+    public Thickness ReservedPadding { get; }
+
+    public Axis PlacementAxis { get; }
+
     public TextDirection TextDirection { get; }
-    internal override RenderObject CreateRenderObject(BuildContext context) =>
-        new RenderMenuAnchorLayout(Offset, CrossAxisUnconstrained, PanelOrientation, TextDirection);
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
-    {
-        var layout = (RenderMenuAnchorLayout)renderObject;
-        layout.Offset = Offset;
-        layout.CrossAxisUnconstrained = CrossAxisUnconstrained;
-        layout.PanelOrientation = PanelOrientation;
-        layout.TextDirection = TextDirection;
-    }
-}
 
-internal sealed class MenuAnchorParentData : ContainerBoxParentData<RenderBox> { }
+    public Thickness ViewInsets { get; }
 
-internal sealed class RenderMenuAnchorLayout : RenderBox,
-    IRenderBoxContainerDefaultsMixin<RenderBox, MenuAnchorParentData>, IRenderObjectContainer
-{
-    private readonly RenderBoxContainerDefaultsMixin<RenderBox, MenuAnchorParentData> _container;
-    private Vector _offset;
-    private bool _crossAxisUnconstrained;
-    private Axis _panelOrientation;
-    private TextDirection _textDirection;
-    public RenderMenuAnchorLayout(
-        Vector offset,
-        bool crossAxisUnconstrained,
-        Axis panelOrientation,
-        TextDirection textDirection)
+    public Vector? Position { get; }
+
+    public IReadOnlyList<DisplayFeature> DisplayFeatures { get; }
+
+    public override BoxConstraints GetConstraintsForChild(BoxConstraints constraints)
     {
-        _container = new RenderBoxContainerDefaultsMixin<RenderBox, MenuAnchorParentData>(this);
-        _offset = offset;
-        _crossAxisUnconstrained = crossAxisUnconstrained;
-        _panelOrientation = panelOrientation;
-        _textDirection = textDirection;
+        Rect available = ResolveAvailableRegion(constraints.Biggest);
+        return BoxConstraints.Loose(available.Size);
     }
-    public Vector Offset { get => _offset; set { if (_offset == value) return; _offset = value; MarkNeedsLayout(); } }
-    public bool CrossAxisUnconstrained
+
+    public override Point GetPositionForChild(Size size, Size childSize)
     {
-        get => _crossAxisUnconstrained;
-        set
+        Rect available = ResolveAvailableRegion(size);
+        double leftLimit = available.Left;
+        double topLimit = available.Top;
+        double rightLimit = available.Right;
+        double bottomLimit = available.Bottom;
+        double x;
+        double y;
+        if (Position.HasValue)
         {
-            if (_crossAxisUnconstrained == value) return;
-            _crossAxisUnconstrained = value;
-            MarkNeedsLayout();
+            x = AnchorRect.Left + Position.Value.X;
+            y = AnchorRect.Top + Position.Value.Y;
         }
-    }
-    public Axis PanelOrientation
-    {
-        get => _panelOrientation;
-        set
+        else if (PlacementAxis == Axis.Horizontal)
         {
-            if (_panelOrientation == value) return;
-            _panelOrientation = value;
-            MarkNeedsLayout();
+            bool placeAfter = TextDirection == TextDirection.Ltr;
+            double after = placeAfter ? AnchorRect.Right : AnchorRect.Left - childSize.Width;
+            double before = placeAfter ? AnchorRect.Left - childSize.Width : AnchorRect.Right;
+            x = FitsHorizontally(after, childSize.Width, leftLimit, rightLimit) ? after : before;
+            y = AnchorRect.Top;
         }
-    }
-    public TextDirection TextDirection
-    {
-        get => _textDirection;
-        set
+        else
         {
-            if (_textDirection == value) return;
-            _textDirection = value;
-            MarkNeedsLayout();
+            x = TextDirection == TextDirection.Ltr
+                ? AnchorRect.Left
+                : AnchorRect.Right - childSize.Width;
+            double below = AnchorRect.Bottom;
+            double above = AnchorRect.Top - childSize.Height;
+            y = below + childSize.Height <= bottomLimit ? below : above;
         }
-    }
-    public RenderBox? FirstChild => _container.FirstChild;
-    public RenderBox? LastChild => _container.LastChild;
-    public int ChildCount => _container.ChildCount;
-    public void AddAll(List<RenderBox> children) => _container.AddAll(children);
-    public RenderBox? ChildBefore(RenderBox child) => _container.ChildBefore(child);
-    public RenderBox? ChildAfter(RenderBox child) => _container.ChildAfter(child);
-    public void Insert(RenderBox child, RenderBox? after = null) => _container.Insert(child, after);
-    public void Move(RenderBox child, RenderBox? after = null) => _container.Move(child, after);
-    public void Remove(RenderBox child) => _container.Remove(child);
-    public override void SetupParentData(RenderObject child)
-    {
-        if (child.parentData is not MenuAnchorParentData)
+
+        if (!Position.HasValue)
         {
-            child.parentData = new MenuAnchorParentData();
+            x += AlignmentOffset.X;
+            y += AlignmentOffset.Y;
         }
+        x = Math.Clamp(x, leftLimit, Math.Max(leftLimit, rightLimit - childSize.Width));
+        y = Math.Clamp(y, topLimit, Math.Max(topLimit, bottomLimit - childSize.Height));
+        return new Point(x, y);
     }
-    protected override void PerformLayout()
+
+    public override bool ShouldRelayout(SingleChildLayoutDelegate oldDelegate)
     {
-        RenderBox? anchor = FirstChild;
-        if (anchor is null) { Size = Constraints.Smallest; return; }
-        anchor.Layout(Constraints, parentUsesSize: true);
-        Size = Constraints.Constrain(anchor.Size);
-        ((MenuAnchorParentData)anchor.parentData!).offset = default;
-        RenderBox? panel = ChildAfter(anchor);
-        if (panel is null) return;
-        double maxWidth = CrossAxisUnconstrained ? Constraints.MaxWidth : Size.Width;
-        if (double.IsPositiveInfinity(maxWidth)) maxWidth = 10000;
-        double maxHeight = double.IsPositiveInfinity(Constraints.MaxHeight) ? 10000 : Constraints.MaxHeight;
-        panel.Layout(BoxConstraints.Loose(new Size(maxWidth, maxHeight)), parentUsesSize: true);
-        Point panelOffset = PanelOrientation == Axis.Horizontal
-            ? new Point(
-                TextDirection == TextDirection.Ltr ? Size.Width + Offset.X : -panel.Size.Width + Offset.X,
-                Offset.Y)
-            : new Point(Offset.X, Size.Height + Offset.Y);
-        ((MenuAnchorParentData)panel.parentData!).offset = panelOffset;
-    }
-    public override void Paint(PaintingContext ctx, Point offset) => _container.DefaultPaint(ctx, offset);
-    public void DefaultPaint(PaintingContext ctx, Point offset) => _container.DefaultPaint(ctx, offset);
-    public bool DefaultHitTestChildren(BoxHitTestResult result, Point position) =>
-        _container.DefaultHitTestChildren(result, position);
-    public override bool HitTest(BoxHitTestResult result, Point position)
-    {
-        if (!HasSize) return false;
-        if (_container.DefaultHitTestChildren(result, position))
+        if (oldDelegate is not MenuOverlayLayoutDelegate oldLayout)
         {
-            result.Add(new BoxHitTestEntry(this, position));
             return true;
         }
-        return position.X >= 0 && position.Y >= 0 && position.X <= Size.Width && position.Y <= Size.Height;
+
+        return AnchorRect != oldLayout.AnchorRect
+               || AlignmentOffset != oldLayout.AlignmentOffset
+               || ReservedPadding != oldLayout.ReservedPadding
+               || PlacementAxis != oldLayout.PlacementAxis
+               || TextDirection != oldLayout.TextDirection
+               || ViewInsets != oldLayout.ViewInsets
+               || Position != oldLayout.Position
+               || !DisplayFeatures.SequenceEqual(oldLayout.DisplayFeatures);
     }
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position) =>
-        _container.DefaultHitTestChildren(result, position);
-    public override void VisitChildren(Action<RenderObject> visitor)
+
+    private static bool FitsHorizontally(
+        double x,
+        double width,
+        double leftLimit,
+        double rightLimit)
     {
-        for (RenderBox? child = FirstChild; child is not null; child = ChildAfter(child))
-        {
-            visitor(child);
-        }
+        return x >= leftLimit && x + width <= rightLimit;
     }
-    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+
+    private Rect ResolveAvailableRegion(Size size)
     {
-        for (RenderBox? child = FirstChild; child is not null; child = ChildAfter(child))
+        var regions = new List<Rect>
         {
-            visitor(child, ((MenuAnchorParentData)child.parentData!).offset, Matrix.Identity);
+            new(
+                ReservedPadding.Left,
+                ReservedPadding.Top,
+                Math.Max(0.0, size.Width - ReservedPadding.Left - ReservedPadding.Right),
+                Math.Max(
+                    0.0,
+                    size.Height - ReservedPadding.Top - ReservedPadding.Bottom - ViewInsets.Bottom)),
+        };
+        foreach (DisplayFeature feature in DisplayFeatures)
+        {
+            var next = new List<Rect>();
+            foreach (Rect region in regions)
+            {
+                Rect bounds = feature.Bounds.Intersect(region);
+                if (bounds.Width <= 0.0 || bounds.Height <= 0.0)
+                {
+                    next.Add(region);
+                    continue;
+                }
+
+                if (bounds.Height >= region.Height && bounds.Width < region.Width)
+                {
+                    next.Add(new Rect(region.Left, region.Top, bounds.Left - region.Left, region.Height));
+                    next.Add(new Rect(bounds.Right, region.Top, region.Right - bounds.Right, region.Height));
+                }
+                else if (bounds.Width >= region.Width && bounds.Height < region.Height)
+                {
+                    next.Add(new Rect(region.Left, region.Top, region.Width, bounds.Top - region.Top));
+                    next.Add(new Rect(region.Left, bounds.Bottom, region.Width, region.Bottom - bounds.Bottom));
+                }
+                else
+                {
+                    next.Add(region);
+                }
+            }
+            regions = next.Where(region => region.Width > 0.0 && region.Height > 0.0).ToList();
         }
+
+        Point anchorCenter = AnchorRect.Center;
+        return regions.MinBy(region =>
+        {
+            double dx = region.Center.X - anchorCenter.X;
+            double dy = region.Center.Y - anchorCenter.Y;
+            return (dx * dx) + (dy * dy);
+        });
     }
-    void IRenderObjectContainer.Insert(RenderObject child, RenderObject? after) =>
-        Insert((RenderBox)child, after as RenderBox);
-    void IRenderObjectContainer.Move(RenderObject child, RenderObject? after) =>
-        Move((RenderBox)child, after as RenderBox);
-    void IRenderObjectContainer.Remove(RenderObject child) => Remove((RenderBox)child);
 }

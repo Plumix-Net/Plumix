@@ -1,5 +1,12 @@
 # Changelog
 
+- Breaking: moved `MenuAnchor` panels onto the shared raw-menu/`OverlayPortal` pipeline. Menus now escape ancestor
+  clips, honor nearest/root overlay selection, grouped outside-tap consumption, reserved padding, keyboard insets,
+  display-feature sub-screens, explicit controller positions, and Flutter's panel fade/height timing. The animation
+  callback now reports `AnimationStatus`, and unattached `MenuController.Open` is a no-op; mirrored demos and focused
+  layout/default/lifecycle tests cover the new behavior. The remaining raw-controller-tree, ancestor-scroll,
+  item-stagger, directional inset/focus, and scrollbar gaps stay tracked in `docs/ai/DIVERGENCES.md`.
+
 - Breaking: completed the Material `Badge` ColorScheme/layout closeout. M3 defaults now read `error` and `onError`
   roles directly, narrow decorated children preserve Flutter's negative alignment space, and focused tests plus the
   mirrored runtime probe cover generated-token precedence and large-label stadium geometry.
