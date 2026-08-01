@@ -5,7 +5,7 @@ namespace Plumix.Material;
 
 // Dart parity source: flutter/packages/flutter/lib/src/material/action_icons_theme.dart
 
-public sealed record ActionIconThemeData(
+public sealed partial record ActionIconThemeData(
     Func<BuildContext, Widget>? BackButtonIconBuilder = null,
     Func<BuildContext, Widget>? CloseButtonIconBuilder = null,
     Func<BuildContext, Widget>? DrawerButtonIconBuilder = null,

@@ -7,7 +7,7 @@ namespace Plumix.Material;
 
 // Dart parity source: flutter/packages/flutter/lib/src/material/date_picker_theme.dart
 
-public sealed record DatePickerThemeData(
+public sealed partial record DatePickerThemeData(
     Color? BackgroundColor = null,
     double? Elevation = null,
     Color? ShadowColor = null,

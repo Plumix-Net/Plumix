@@ -6,7 +6,7 @@ namespace Plumix.Material;
 
 // Dart parity source: flutter/packages/flutter/lib/src/material/scrollbar_theme.dart
 
-public sealed record ScrollbarThemeData
+public sealed partial record ScrollbarThemeData
 {
     public ScrollbarThemeData(
         MaterialStateProperty<bool?>? thumbVisibility = null,

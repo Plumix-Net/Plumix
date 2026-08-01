@@ -7,7 +7,7 @@ namespace Plumix.Material;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/material/checkbox_theme.dart (approximate)
 
-public sealed record CheckboxThemeData(
+public sealed partial record CheckboxThemeData(
     MaterialStateProperty<Color?>? FillColor = null,
     MaterialStateProperty<Color?>? CheckColor = null,
     MaterialStateProperty<Color?>? OverlayColor = null,

@@ -7,7 +7,7 @@ namespace Plumix.Material;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/material/switch_theme.dart (approximate)
 
-public sealed record SwitchThemeData(
+public sealed partial record SwitchThemeData(
     MaterialStateProperty<Color?>? ThumbColor = null,
     MaterialStateProperty<Color?>? TrackColor = null,
     MaterialStateProperty<Color?>? TrackOutlineColor = null,

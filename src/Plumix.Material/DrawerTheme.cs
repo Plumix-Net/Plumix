@@ -8,7 +8,7 @@ namespace Plumix.Material;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/material/drawer_theme.dart (approximate)
 
-public sealed record DrawerThemeData(
+public sealed partial record DrawerThemeData(
     Color? BackgroundColor = null,
     Color? ScrimColor = null,
     double? Elevation = null,

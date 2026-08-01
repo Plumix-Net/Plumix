@@ -26,7 +26,7 @@ public enum DismissDirection
     None,
 }
 
-public sealed record SnackBarThemeData
+public sealed partial record SnackBarThemeData
 {
     public SnackBarThemeData(
         Color? BackgroundColor = null,

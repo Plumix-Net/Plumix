@@ -7,7 +7,7 @@ namespace Plumix.Material;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/material/radio_theme.dart (approximate)
 
-public sealed record RadioThemeData(
+public sealed partial record RadioThemeData(
     MaterialStateProperty<Color?>? FillColor = null,
     MaterialStateProperty<Color?>? OverlayColor = null,
     MaterialTapTargetSize? MaterialTapTargetSize = null,

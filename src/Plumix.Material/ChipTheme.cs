@@ -8,7 +8,7 @@ namespace Plumix.Material;
 
 // Dart parity source: flutter/packages/flutter/lib/src/material/chip_theme.dart
 
-public sealed record ChipThemeData(
+public sealed partial record ChipThemeData(
     MaterialStateProperty<Color?>? Color = null,
     Color? BackgroundColor = null,
     Color? DeleteIconColor = null,

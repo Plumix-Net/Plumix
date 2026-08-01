@@ -14,7 +14,7 @@ public enum PopupMenuPosition
     Under,
 }
 
-public sealed record PopupMenuThemeData
+public sealed partial record PopupMenuThemeData
 {
     public PopupMenuThemeData(
         Color? Color = null,

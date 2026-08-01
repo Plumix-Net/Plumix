@@ -7,7 +7,7 @@ namespace Plumix.Material;
 
 // Dart parity source: flutter/packages/flutter/lib/src/material/toggle_buttons_theme.dart
 
-public sealed record ToggleButtonsThemeData(
+public sealed partial record ToggleButtonsThemeData(
     TextStyle? TextStyle = null,
     BoxConstraints? Constraints = null,
     Color? Color = null,

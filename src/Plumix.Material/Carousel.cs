@@ -12,7 +12,7 @@ namespace Plumix.Material;
 
 public delegate Widget? CarouselItemBuilder(BuildContext context, int index);
 
-public sealed record CarouselViewThemeData(
+public sealed partial record CarouselViewThemeData(
     double? Elevation = null,
     Color? BackgroundColor = null,
     MaterialStateProperty<Color?>? OverlayColor = null,

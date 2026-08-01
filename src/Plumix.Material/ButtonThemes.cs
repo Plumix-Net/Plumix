@@ -9,7 +9,7 @@ namespace Plumix.Material;
 // flutter/packages/flutter/lib/src/material/filled_button_theme.dart;
 // flutter/packages/flutter/lib/src/material/icon_button_theme.dart
 
-public sealed record TextButtonThemeData
+public sealed partial record TextButtonThemeData
 {
     public TextButtonThemeData(ButtonStyle? style = null)
     {
@@ -19,7 +19,7 @@ public sealed record TextButtonThemeData
     public ButtonStyle? Style { get; init; }
 }
 
-public sealed record ElevatedButtonThemeData
+public sealed partial record ElevatedButtonThemeData
 {
     public ElevatedButtonThemeData(ButtonStyle? style = null)
     {
@@ -29,7 +29,7 @@ public sealed record ElevatedButtonThemeData
     public ButtonStyle? Style { get; init; }
 }
 
-public sealed record OutlinedButtonThemeData
+public sealed partial record OutlinedButtonThemeData
 {
     public OutlinedButtonThemeData(ButtonStyle? style = null)
     {
@@ -39,7 +39,7 @@ public sealed record OutlinedButtonThemeData
     public ButtonStyle? Style { get; init; }
 }
 
-public sealed record FilledButtonThemeData
+public sealed partial record FilledButtonThemeData
 {
     public FilledButtonThemeData(ButtonStyle? style = null)
     {

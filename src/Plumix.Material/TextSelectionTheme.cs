@@ -6,7 +6,7 @@ namespace Plumix.Material;
 
 // Dart parity source: flutter/packages/flutter/lib/src/material/text_selection_theme.dart
 
-public sealed record TextSelectionThemeData(
+public sealed partial record TextSelectionThemeData(
     Color? CursorColor = null,
     Color? SelectionColor = null,
     Color? SelectionHandleColor = null);

@@ -8,7 +8,7 @@ namespace Plumix.Material;
 
 // Dart parity source: flutter/packages/flutter/lib/src/material/data_table_theme.dart
 
-public sealed record DataTableThemeData
+public sealed partial record DataTableThemeData
 {
     public DataTableThemeData(
         BoxDecoration? decoration = null,

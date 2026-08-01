@@ -7,7 +7,7 @@ namespace Plumix.Material;
 
 // Dart parity source: flutter/packages/flutter/lib/src/material/banner_theme.dart
 
-public sealed record MaterialBannerThemeData
+public sealed partial record MaterialBannerThemeData
 {
     public MaterialBannerThemeData(
         Color? BackgroundColor = null,

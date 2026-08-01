@@ -7,7 +7,7 @@ namespace Plumix.Material;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/material/divider_theme.dart (approximate)
 
-public sealed record DividerThemeData(
+public sealed partial record DividerThemeData(
     Color? Color = null,
     double? Space = null,
     double? Thickness = null,

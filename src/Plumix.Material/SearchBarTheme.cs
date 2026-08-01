@@ -8,7 +8,7 @@ namespace Plumix.Material;
 
 // Dart parity source: flutter/packages/flutter/lib/src/material/search_bar_theme.dart
 
-public sealed record SearchBarThemeData(
+public sealed partial record SearchBarThemeData(
     MaterialStateProperty<double?>? Elevation = null,
     MaterialStateProperty<Color?>? BackgroundColor = null,
     MaterialStateProperty<Color?>? ShadowColor = null,

@@ -8,7 +8,7 @@ namespace Plumix.Material;
 
 // Dart parity source: flutter/packages/flutter/lib/src/material/tooltip_theme.dart
 
-public sealed record TooltipThemeData(
+public sealed partial record TooltipThemeData(
     double? Height = null,
     BoxConstraints? Constraints = null,
     Thickness? Padding = null,

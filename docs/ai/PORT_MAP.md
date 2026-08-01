@@ -197,7 +197,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `material/text_selection_toolbar_text_button.dart` | `src/Plumix.Material/TextSelectionToolbar.cs` | `src/Plumix.Tests/MaterialDesktopTextSelectionToolbarTests.cs` | `dart_sample/lib/demos/material/desktop_text_selection_toolbar_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/DesktopTextSelectionToolbarDemoPage.cs` |
 | `material/text_theme.dart` | `src/Plumix.Material/Typography.cs` | — | — |
 | `material/theme.dart` | `src/Plumix.Material/Theme.cs` | — | — |
-| `material/theme_data.dart` | `src/Plumix.Material/ThemeData.cs` | — | — |
+| `material/theme_data.dart` | `src/Plumix.Material/ThemeData.cs`<br>`src/Plumix.Material/ThemeExtension.cs` | — | — |
 | `material/time.dart` | `src/Plumix.Material/Time.cs` | — | — |
 | `material/time_picker.dart` | `src/Plumix.Material/TimePickerDialog.cs` | — | — |
 | `material/time_picker_theme.dart` | `src/Plumix.Material/TimePickerTheme.cs` | — | — |
@@ -403,11 +403,12 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 - `src/Plumix.Material/MaterialThemeLerp.cs`
 - `src/Plumix.Material/RenderTabBar.cs`
 - `src/Plumix.Material/SegmentedControlLayout.cs`
+- `src/Plumix.Material/ThemeDataLerp.cs`
 
 ## Summary
 
 - Flutter files mapped: 358
-- C# files carrying a marker: 450
-- C# files without a marker: 13
+- C# files carrying a marker: 451
+- C# files without a marker: 14
 - Markers not resolvable in the pinned checkout: 4
 

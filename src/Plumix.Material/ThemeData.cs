@@ -243,6 +243,8 @@ public sealed record ThemeData
     private static readonly Color LightInversePrimaryColor = Color.Parse("#FFD0BCFF");
     private static readonly Color LightErrorColor = Color.Parse("#FFB3261E");
     private static readonly Color LightOnErrorColor = Colors.White;
+    private static readonly IReadOnlyDictionary<Type, ThemeExtension> EmptyExtensions =
+        new ThemeExtensionMap([]);
 
     private AppBarThemeData? _appBarTheme;
     private TextButtonThemeData? _textButtonTheme;
@@ -397,7 +399,8 @@ public sealed record ThemeData
         TextSelectionThemeData? textSelectionTheme = null,
         InteractiveInkFeatureFactory? splashFactory = null,
         PageTransitionsTheme? pageTransitionsTheme = null,
-        bool? applyElevationOverlayColor = null)
+        bool? applyElevationOverlayColor = null,
+        IEnumerable<ThemeExtension>? extensions = null)
     {
         Platform = platform ?? ResolveDefaultPlatform();
         if (brightness.HasValue
@@ -549,6 +552,7 @@ public sealed record ThemeData
         _menuTheme = menuTheme;
         _textSelectionTheme = textSelectionTheme;
         _pageTransitionsTheme = pageTransitionsTheme;
+        Extensions = CreateExtensionMap(extensions);
         VisualDensity = visualDensity ?? VisualDensity.Standard;
     }
 
@@ -954,6 +958,15 @@ public sealed record ThemeData
         init => _bottomAppBarTheme = value;
     }
 
+    public IReadOnlyDictionary<Type, ThemeExtension> Extensions { get; init; }
+
+    public T? Extension<T>() where T : ThemeExtension<T>
+    {
+        return Extensions.TryGetValue(typeof(T), out ThemeExtension? extension)
+            ? (T)extension
+            : null;
+    }
+
     private static Color ApplyOpacity(Color color, double opacity) => Color.FromArgb(
         (byte)Math.Round(color.A * Math.Clamp(opacity, 0, 1)),
         color.R,
@@ -968,116 +981,198 @@ public sealed record ThemeData
     {
         ArgumentNullException.ThrowIfNull(a);
         ArgumentNullException.ThrowIfNull(b);
-        if (ReferenceEquals(a, b) || t <= 0.0)
+        if (ReferenceEquals(a, b))
         {
             return a;
         }
-        if (t >= 1.0)
-        {
-            return b;
-        }
 
-        double clampedT = Math.Clamp(t, 0.0, 1.0);
-        ThemeData selected = clampedT < 0.5 ? a : b;
+        ThemeData selected = t < 0.5 ? a : b;
         return selected with
         {
-            ColorScheme = ColorScheme.Lerp(a.ColorScheme, b.ColorScheme, clampedT),
-            Typography = Typography.Lerp(a.Typography, b.Typography, clampedT),
-            TextTheme = TextTheme.Lerp(a.TextTheme, b.TextTheme, clampedT),
-            PrimaryTextTheme = TextTheme.Lerp(a.PrimaryTextTheme, b.PrimaryTextTheme, clampedT),
-            IconTheme = IconThemeData.Lerp(a.IconTheme, b.IconTheme, clampedT),
-            VisualDensity = VisualDensity.Lerp(a.VisualDensity, b.VisualDensity, clampedT),
-            ScaffoldBackgroundColor = LerpColor(a.ScaffoldBackgroundColor, b.ScaffoldBackgroundColor, clampedT),
-            CanvasColor = LerpColor(a.CanvasColor, b.CanvasColor, clampedT),
-            PrimaryColor = LerpColor(a.PrimaryColor, b.PrimaryColor, clampedT),
-            PrimaryColorLight = LerpColor(a.PrimaryColorLight, b.PrimaryColorLight, clampedT),
-            PrimaryColorDark = LerpColor(a.PrimaryColorDark, b.PrimaryColorDark, clampedT),
-            SecondaryColor = LerpColor(a.SecondaryColor, b.SecondaryColor, clampedT),
-            OnPrimaryColor = LerpColor(a.OnPrimaryColor, b.OnPrimaryColor, clampedT),
-            PrimaryContainerColor = LerpColor(a.PrimaryContainerColor, b.PrimaryContainerColor, clampedT),
+            ColorScheme = ColorScheme.Lerp(a.ColorScheme, b.ColorScheme, t),
+            Typography = Typography.Lerp(a.Typography, b.Typography, t),
+            TextTheme = TextTheme.Lerp(a.TextTheme, b.TextTheme, t),
+            PrimaryTextTheme = TextTheme.Lerp(a.PrimaryTextTheme, b.PrimaryTextTheme, t),
+            IconTheme = IconThemeData.Lerp(a.IconTheme, b.IconTheme, t),
+            VisualDensity = VisualDensity.Lerp(a.VisualDensity, b.VisualDensity, t),
+            ScaffoldBackgroundColor = LerpColor(a.ScaffoldBackgroundColor, b.ScaffoldBackgroundColor, t),
+            CanvasColor = LerpColor(a.CanvasColor, b.CanvasColor, t),
+            PrimaryColor = LerpColor(a.PrimaryColor, b.PrimaryColor, t),
+            PrimaryColorLight = LerpColor(a.PrimaryColorLight, b.PrimaryColorLight, t),
+            PrimaryColorDark = LerpColor(a.PrimaryColorDark, b.PrimaryColorDark, t),
+            SecondaryColor = LerpColor(a.SecondaryColor, b.SecondaryColor, t),
+            OnPrimaryColor = LerpColor(a.OnPrimaryColor, b.OnPrimaryColor, t),
+            PrimaryContainerColor = LerpColor(a.PrimaryContainerColor, b.PrimaryContainerColor, t),
             OnPrimaryContainerColor = LerpColor(
                 a.OnPrimaryContainerColor,
                 b.OnPrimaryContainerColor,
-                clampedT),
-            ShadowColor = LerpColor(a.ShadowColor, b.ShadowColor, clampedT),
-            SurfaceColor = LerpColor(a.SurfaceColor, b.SurfaceColor, clampedT),
-            OnSurfaceColor = LerpColor(a.OnSurfaceColor, b.OnSurfaceColor, clampedT),
-            OnSurfaceVariantColor = LerpColor(a.OnSurfaceVariantColor, b.OnSurfaceVariantColor, clampedT),
-            OutlineColor = LerpColor(a.OutlineColor, b.OutlineColor, clampedT),
-            OutlineVariantColor = LerpColor(a.OutlineVariantColor, b.OutlineVariantColor, clampedT),
-            DividerColor = LerpColor(a.DividerColor, b.DividerColor, clampedT),
-            CardColor = LerpColor(a.CardColor, b.CardColor, clampedT),
+                t),
+            ShadowColor = LerpColor(a.ShadowColor, b.ShadowColor, t),
+            SurfaceColor = LerpColor(a.SurfaceColor, b.SurfaceColor, t),
+            OnSurfaceColor = LerpColor(a.OnSurfaceColor, b.OnSurfaceColor, t),
+            OnSurfaceVariantColor = LerpColor(a.OnSurfaceVariantColor, b.OnSurfaceVariantColor, t),
+            OutlineColor = LerpColor(a.OutlineColor, b.OutlineColor, t),
+            OutlineVariantColor = LerpColor(a.OutlineVariantColor, b.OutlineVariantColor, t),
+            DividerColor = LerpColor(a.DividerColor, b.DividerColor, t),
+            CardColor = LerpColor(a.CardColor, b.CardColor, t),
             SurfaceContainerLowColor = LerpColor(
                 a.SurfaceContainerLowColor,
                 b.SurfaceContainerLowColor,
-                clampedT),
-            SurfaceContainerColor = LerpColor(a.SurfaceContainerColor, b.SurfaceContainerColor, clampedT),
+                t),
+            SurfaceContainerColor = LerpColor(a.SurfaceContainerColor, b.SurfaceContainerColor, t),
             SurfaceContainerHighColor = LerpColor(
                 a.SurfaceContainerHighColor,
                 b.SurfaceContainerHighColor,
-                clampedT),
+                t),
             SurfaceContainerHighestColor = LerpColor(
                 a.SurfaceContainerHighestColor,
                 b.SurfaceContainerHighestColor,
-                clampedT),
+                t),
             SecondaryContainerColor = LerpColor(
                 a.SecondaryContainerColor,
                 b.SecondaryContainerColor,
-                clampedT),
+                t),
             OnSecondaryContainerColor = LerpColor(
                 a.OnSecondaryContainerColor,
                 b.OnSecondaryContainerColor,
-                clampedT),
-            InverseSurfaceColor = LerpColor(a.InverseSurfaceColor, b.InverseSurfaceColor, clampedT),
-            OnInverseSurfaceColor = LerpColor(a.OnInverseSurfaceColor, b.OnInverseSurfaceColor, clampedT),
-            InversePrimaryColor = LerpColor(a.InversePrimaryColor, b.InversePrimaryColor, clampedT),
-            ErrorColor = LerpColor(a.ErrorColor, b.ErrorColor, clampedT),
-            OnErrorColor = LerpColor(a.OnErrorColor, b.OnErrorColor, clampedT),
-            DisabledColor = LerpColor(a.DisabledColor, b.DisabledColor, clampedT),
-            HintColor = LerpColor(a.HintColor, b.HintColor, clampedT),
-            FocusColor = LerpColor(a.FocusColor, b.FocusColor, clampedT),
-            HoverColor = LerpColor(a.HoverColor, b.HoverColor, clampedT),
-            HighlightColor = LerpColor(a.HighlightColor, b.HighlightColor, clampedT),
-            SplashColor = LerpColor(a.SplashColor, b.SplashColor, clampedT),
-            AppBarTheme = AppBarThemeData.Lerp(a.AppBarTheme, b.AppBarTheme, clampedT),
-            BadgeTheme = BadgeThemeData.Lerp(a.BadgeTheme, b.BadgeTheme, clampedT),
+                t),
+            InverseSurfaceColor = LerpColor(a.InverseSurfaceColor, b.InverseSurfaceColor, t),
+            OnInverseSurfaceColor = LerpColor(a.OnInverseSurfaceColor, b.OnInverseSurfaceColor, t),
+            InversePrimaryColor = LerpColor(a.InversePrimaryColor, b.InversePrimaryColor, t),
+            ErrorColor = LerpColor(a.ErrorColor, b.ErrorColor, t),
+            OnErrorColor = LerpColor(a.OnErrorColor, b.OnErrorColor, t),
+            DisabledColor = LerpColor(a.DisabledColor, b.DisabledColor, t),
+            HintColor = LerpColor(a.HintColor, b.HintColor, t),
+            FocusColor = LerpColor(a.FocusColor, b.FocusColor, t),
+            HoverColor = LerpColor(a.HoverColor, b.HoverColor, t),
+            HighlightColor = LerpColor(a.HighlightColor, b.HighlightColor, t),
+            SplashColor = LerpColor(a.SplashColor, b.SplashColor, t),
+            TextButtonStyle = ButtonStyle.Lerp(a.TextButtonStyle, b.TextButtonStyle, t),
+            ElevatedButtonStyle = ButtonStyle.Lerp(a.ElevatedButtonStyle, b.ElevatedButtonStyle, t),
+            OutlinedButtonStyle = ButtonStyle.Lerp(a.OutlinedButtonStyle, b.OutlinedButtonStyle, t),
+            FilledButtonStyle = ButtonStyle.Lerp(a.FilledButtonStyle, b.FilledButtonStyle, t),
+            IconButtonStyle = ButtonStyle.Lerp(a.IconButtonStyle, b.IconButtonStyle, t),
+            ActionIconTheme = ActionIconThemeData.Lerp(a.ActionIconTheme, b.ActionIconTheme, t),
+            AppBarTheme = AppBarThemeData.Lerp(a.AppBarTheme, b.AppBarTheme, t),
+            BadgeTheme = BadgeThemeData.Lerp(a.BadgeTheme, b.BadgeTheme, t),
+            BannerTheme = MaterialBannerThemeData.Lerp(a.BannerTheme, b.BannerTheme, t),
+            BottomAppBarTheme = BottomAppBarThemeData.Lerp(a.BottomAppBarTheme, b.BottomAppBarTheme, t)
+                ?? new BottomAppBarThemeData(),
             BottomNavigationBarTheme = BottomNavigationBarThemeData.Lerp(
                 a.BottomNavigationBarTheme,
                 b.BottomNavigationBarTheme,
-                clampedT),
-            NavigationBarTheme = NavigationBarThemeData.Lerp(
-                a.NavigationBarTheme,
-                b.NavigationBarTheme,
-                clampedT) ?? new NavigationBarThemeData(),
-            NavigationRailTheme = NavigationRailThemeData.Lerp(
-                a.NavigationRailTheme,
-                b.NavigationRailTheme,
-                clampedT) ?? new NavigationRailThemeData(),
-            NavigationDrawerTheme = NavigationDrawerThemeData.Lerp(
-                a.NavigationDrawerTheme,
-                b.NavigationDrawerTheme,
-                clampedT) ?? new NavigationDrawerThemeData(),
-            BottomAppBarTheme = BottomAppBarThemeData.Lerp(
-                a.BottomAppBarTheme,
-                b.BottomAppBarTheme,
-                clampedT) ?? new BottomAppBarThemeData(),
+                t),
+            BottomSheetTheme = BottomSheetThemeData.Lerp(a.BottomSheetTheme, b.BottomSheetTheme, t)
+                ?? new BottomSheetThemeData(),
+            CardTheme = CardThemeData.Lerp(a.CardTheme, b.CardTheme, t),
+            CarouselViewTheme = CarouselViewThemeData.Lerp(a.CarouselViewTheme, b.CarouselViewTheme, t),
+            CheckboxTheme = CheckboxThemeData.Lerp(a.CheckboxTheme, b.CheckboxTheme, t),
+            ChipTheme = ChipThemeData.Lerp(a.ChipTheme, b.ChipTheme, t) ?? new ChipThemeData(),
+            DataTableTheme = DataTableThemeData.Lerp(a.DataTableTheme, b.DataTableTheme, t),
+            DatePickerTheme = DatePickerThemeData.Lerp(a.DatePickerTheme, b.DatePickerTheme, t),
+            DialogTheme = DialogThemeData.Lerp(a.DialogTheme, b.DialogTheme, t),
+            DividerTheme = DividerThemeData.Lerp(a.DividerTheme, b.DividerTheme, t),
+            DrawerTheme = DrawerThemeData.Lerp(a.DrawerTheme, b.DrawerTheme, t) ?? new DrawerThemeData(),
+            DropdownMenuTheme = DropdownMenuThemeData.Lerp(
+                a.DropdownMenuTheme,
+                b.DropdownMenuTheme,
+                t),
+            ElevatedButtonTheme = ElevatedButtonThemeData.Lerp(
+                a.ElevatedButtonTheme,
+                b.ElevatedButtonTheme,
+                t) ?? new ElevatedButtonThemeData(),
+            ExpansionTileTheme = ExpansionTileThemeData.Lerp(
+                a.ExpansionTileTheme,
+                b.ExpansionTileTheme,
+                t) ?? new ExpansionTileThemeData(),
+            FilledButtonTheme = FilledButtonThemeData.Lerp(a.FilledButtonTheme, b.FilledButtonTheme, t)
+                ?? new FilledButtonThemeData(),
             FloatingActionButtonTheme = FloatingActionButtonThemeData.Lerp(
                 a.FloatingActionButtonTheme,
                 b.FloatingActionButtonTheme,
-                clampedT) ?? new FloatingActionButtonThemeData(),
-            IconButtonTheme = IconButtonThemeData.Lerp(
-                a.IconButtonTheme,
-                b.IconButtonTheme,
-                clampedT) ?? new IconButtonThemeData(),
-            CardTheme = CardThemeData.Lerp(
-                a.CardTheme,
-                b.CardTheme,
-                clampedT),
-            ButtonBarTheme = ButtonBarThemeData.Lerp(
-                a.ButtonBarTheme,
-                b.ButtonBarTheme,
-                clampedT) ?? new ButtonBarThemeData(),
+                t) ?? new FloatingActionButtonThemeData(),
+            IconButtonTheme = IconButtonThemeData.Lerp(a.IconButtonTheme, b.IconButtonTheme, t)
+                ?? new IconButtonThemeData(),
+            ListTileTheme = ListTileThemeData.Lerp(a.ListTileTheme, b.ListTileTheme, t)
+                ?? new ListTileThemeData(),
+            MenuBarTheme = MenuBarThemeData.Lerp(a.MenuBarTheme, b.MenuBarTheme, t)
+                ?? new MenuBarThemeData(),
+            MenuButtonTheme = MenuButtonThemeData.Lerp(a.MenuButtonTheme, b.MenuButtonTheme, t)
+                ?? new MenuButtonThemeData(),
+            MenuTheme = MenuThemeData.Lerp(a.MenuTheme, b.MenuTheme, t) ?? new MenuThemeData(),
+            NavigationBarTheme = NavigationBarThemeData.Lerp(
+                a.NavigationBarTheme,
+                b.NavigationBarTheme,
+                t) ?? new NavigationBarThemeData(),
+            NavigationRailTheme = NavigationRailThemeData.Lerp(
+                a.NavigationRailTheme,
+                b.NavigationRailTheme,
+                t) ?? new NavigationRailThemeData(),
+            NavigationDrawerTheme = NavigationDrawerThemeData.Lerp(
+                a.NavigationDrawerTheme,
+                b.NavigationDrawerTheme,
+                t) ?? new NavigationDrawerThemeData(),
+            OutlinedButtonTheme = OutlinedButtonThemeData.Lerp(
+                a.OutlinedButtonTheme,
+                b.OutlinedButtonTheme,
+                t) ?? new OutlinedButtonThemeData(),
+            PopupMenuTheme = PopupMenuThemeData.Lerp(a.PopupMenuTheme, b.PopupMenuTheme, t)
+                ?? new PopupMenuThemeData(),
+            ProgressIndicatorTheme = ProgressIndicatorThemeData.Lerp(
+                a.ProgressIndicatorTheme,
+                b.ProgressIndicatorTheme,
+                t) ?? new ProgressIndicatorThemeData(),
+            RadioTheme = RadioThemeData.Lerp(a.RadioTheme, b.RadioTheme, t),
+            ScrollbarTheme = ScrollbarThemeData.Lerp(a.ScrollbarTheme, b.ScrollbarTheme, t),
+            SearchBarTheme = SearchBarThemeData.Lerp(a.SearchBarTheme, b.SearchBarTheme, t)
+                ?? new SearchBarThemeData(),
+            SearchViewTheme = SearchViewThemeData.Lerp(a.SearchViewTheme, b.SearchViewTheme, t)
+                ?? new SearchViewThemeData(),
+            SegmentedButtonTheme = SegmentedButtonThemeData.Lerp(
+                a.SegmentedButtonTheme,
+                b.SegmentedButtonTheme,
+                t) ?? new SegmentedButtonThemeData(),
+            SliderTheme = SliderThemeData.Lerp(a.SliderTheme, b.SliderTheme, t),
+            SnackBarTheme = SnackBarThemeData.Lerp(a.SnackBarTheme, b.SnackBarTheme, t),
+            SwitchTheme = SwitchThemeData.Lerp(a.SwitchTheme, b.SwitchTheme, t),
+            TabBarTheme = TabBarThemeData.Lerp(a.TabBarTheme, b.TabBarTheme, t),
+            TextButtonTheme = TextButtonThemeData.Lerp(a.TextButtonTheme, b.TextButtonTheme, t)
+                ?? new TextButtonThemeData(),
+            TextSelectionTheme = TextSelectionThemeData.Lerp(
+                a.TextSelectionTheme,
+                b.TextSelectionTheme,
+                t) ?? new TextSelectionThemeData(),
+            TimePickerTheme = TimePickerThemeData.Lerp(a.TimePickerTheme, b.TimePickerTheme, t),
+            ToggleButtonsTheme = ToggleButtonsThemeData.Lerp(
+                a.ToggleButtonsTheme,
+                b.ToggleButtonsTheme,
+                t) ?? new ToggleButtonsThemeData(),
+            TooltipTheme = TooltipThemeData.Lerp(a.TooltipTheme, b.TooltipTheme, t)
+                ?? new TooltipThemeData(),
+            ButtonBarTheme = ButtonBarThemeData.Lerp(a.ButtonBarTheme, b.ButtonBarTheme, t)
+                ?? new ButtonBarThemeData(),
+            Extensions = LerpExtensions(a.Extensions, b.Extensions, t),
         };
+    }
+
+    private static IReadOnlyDictionary<Type, ThemeExtension> LerpExtensions(
+        IReadOnlyDictionary<Type, ThemeExtension> a,
+        IReadOnlyDictionary<Type, ThemeExtension> b,
+        double t)
+    {
+        var result = new Dictionary<Type, ThemeExtension>();
+        foreach ((Type type, ThemeExtension extension) in a)
+        {
+            b.TryGetValue(type, out ThemeExtension? other);
+            result[type] = extension.LerpUntyped(other, t);
+        }
+
+        foreach ((Type type, ThemeExtension extension) in b)
+        {
+            result.TryAdd(type, extension);
+        }
+
+        return CreateExtensionMap(result.Values);
     }
 
     public static Brightness EstimateBrightnessForColor(Color color)
@@ -1126,6 +1221,100 @@ public sealed record ThemeData
         }
 
         return TargetPlatform.Android;
+    }
+
+    private static IReadOnlyDictionary<Type, ThemeExtension> CreateExtensionMap(
+        IEnumerable<ThemeExtension>? extensions)
+    {
+        if (extensions is null)
+        {
+            return EmptyExtensions;
+        }
+
+        var result = new Dictionary<Type, ThemeExtension>();
+        foreach (ThemeExtension extension in extensions)
+        {
+            ArgumentNullException.ThrowIfNull(extension);
+            if (!result.TryAdd(extension.Type, extension))
+            {
+                throw new ArgumentException(
+                    $"Only one ThemeExtension with type {extension.Type.Name} may be provided.",
+                    nameof(extensions));
+            }
+        }
+
+        return result.Count == 0 ? EmptyExtensions : new ThemeExtensionMap(result.Values);
+    }
+
+    private sealed class ThemeExtensionMap : IReadOnlyDictionary<Type, ThemeExtension>
+    {
+        private readonly IReadOnlyDictionary<Type, ThemeExtension> _values;
+
+        public ThemeExtensionMap(IEnumerable<ThemeExtension> extensions)
+        {
+            _values = extensions.ToDictionary(extension => extension.Type);
+        }
+
+        public IEnumerable<Type> Keys => _values.Keys;
+
+        public IEnumerable<ThemeExtension> Values => _values.Values;
+
+        public int Count => _values.Count;
+
+        public ThemeExtension this[Type key] => _values[key];
+
+        public bool ContainsKey(Type key) => _values.ContainsKey(key);
+
+        public bool TryGetValue(Type key, out ThemeExtension value)
+        {
+            return _values.TryGetValue(key, out value!);
+        }
+
+        public IEnumerator<KeyValuePair<Type, ThemeExtension>> GetEnumerator()
+        {
+            return _values.GetEnumerator();
+        }
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public override bool Equals(object? obj)
+        {
+            if (ReferenceEquals(this, obj))
+            {
+                return true;
+            }
+
+            if (obj is not IReadOnlyDictionary<Type, ThemeExtension> other || Count != other.Count)
+            {
+                return false;
+            }
+
+            foreach ((Type type, ThemeExtension extension) in _values)
+            {
+                if (!other.TryGetValue(type, out ThemeExtension? otherExtension)
+                    || !Equals(extension, otherExtension))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        public override int GetHashCode()
+        {
+            var hash = new HashCode();
+            foreach ((Type type, ThemeExtension extension) in _values.OrderBy(pair => pair.Key.FullName))
+            {
+                hash.Add(type);
+                hash.Add(extension);
+            }
+
+            return hash.ToHashCode();
+        }
     }
 
     private static Color LerpColor(Color a, Color b, double t)

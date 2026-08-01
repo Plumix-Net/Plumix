@@ -9,7 +9,7 @@ namespace Plumix.Material;
 
 // Dart parity source: flutter/packages/flutter/lib/src/material/dialog_theme.dart
 
-public sealed record DialogThemeData
+public sealed partial record DialogThemeData
 {
     public DialogThemeData(
         Color? BackgroundColor = null,

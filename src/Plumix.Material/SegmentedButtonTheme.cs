@@ -5,7 +5,7 @@ namespace Plumix.Material;
 
 // Dart parity source: flutter/packages/flutter/lib/src/material/segmented_button_theme.dart
 
-public sealed record SegmentedButtonThemeData(
+public sealed partial record SegmentedButtonThemeData(
     ButtonStyle? Style = null,
     Widget? SelectedIcon = null);
 

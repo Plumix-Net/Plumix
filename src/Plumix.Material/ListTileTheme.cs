@@ -30,7 +30,7 @@ public enum ListTileTitleAlignment
     Bottom,
 }
 
-public sealed record ListTileThemeData(
+public sealed partial record ListTileThemeData(
     bool? Dense = null,
     BorderRadius? Shape = null,
     ListTileStyle? Style = null,

@@ -9,7 +9,7 @@ namespace Plumix.Material;
 
 // Dart parity source: flutter/packages/flutter/lib/src/material/tab_bar_theme.dart
 
-public sealed record TabBarThemeData(
+public sealed partial record TabBarThemeData(
     BoxDecoration? Indicator = null,
     Color? IndicatorColor = null,
     TabBarIndicatorSize? IndicatorSize = null,

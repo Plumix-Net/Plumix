@@ -8,7 +8,7 @@ namespace Plumix.Material;
 
 // Dart parity source: flutter/packages/flutter/lib/src/material/search_view_theme.dart
 
-public sealed record SearchViewThemeData(
+public sealed partial record SearchViewThemeData(
     Color? BackgroundColor = null,
     double? Elevation = null,
     Color? SurfaceTintColor = null,

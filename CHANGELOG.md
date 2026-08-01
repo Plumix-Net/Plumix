@@ -1,5 +1,9 @@
 # Changelog
 
+- Breaking: closed Material theme interpolation parity. Every component `*ThemeData` now exposes its source-shaped
+  `Lerp` contract and participates in `ThemeData.Lerp`; theme extensions interpolate with Flutter's union semantics,
+  and non-interpolable policy fields switch at the exact midpoint without endpoint identity shortcuts.
+
 - Breaking: closed Material text-field selection handles end to end. Core now renders editable text through
   `RenderEditable`, drives `TextSelectionOverlay` from retained caret/line/viewport geometry, and supports in-field
   handle drags, adaptive touch magnifiers, and explicit/default spell-check services. `SelectableText` now uses the

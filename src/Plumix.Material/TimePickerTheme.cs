@@ -8,7 +8,7 @@ namespace Plumix.Material;
 
 // Dart parity source: flutter/packages/flutter/lib/src/material/time_picker_theme.dart
 
-public sealed record TimePickerThemeData(
+public sealed partial record TimePickerThemeData(
     Color? BackgroundColor = null,
     ButtonStyle? CancelButtonStyle = null,
     ButtonStyle? ConfirmButtonStyle = null,

@@ -15,7 +15,7 @@ public enum StrokeCap
     Square
 }
 
-public sealed record ProgressIndicatorThemeData(
+public sealed partial record ProgressIndicatorThemeData(
     Color? Color = null,
     Color? LinearTrackColor = null,
     double? LinearMinHeight = null,

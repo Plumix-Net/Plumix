@@ -2,6 +2,7 @@ using Avalonia.Media;
 using Plumix.Material;
 using Plumix.Rendering;
 using Plumix.Widgets;
+using System.Reflection;
 using Xunit;
 
 namespace Plumix.Tests;
@@ -37,7 +38,13 @@ public sealed class MaterialThemeAnimationTests : IDisposable
                 bodyMedium: MaterialTextTheme.DefaultBodyMedium.CopyWith(fontSize: 10)),
             iconTheme: new IconThemeData(Color: Colors.Black, Size: 16),
             visualDensity: new VisualDensity(-2, 0),
-            useMaterial3: false);
+            useMaterial3: false,
+            platform: TargetPlatform.Windows,
+            materialTapTargetSize: MaterialTapTargetSize.Padded,
+            inputDecorationTheme: new InputDecorationThemeData(IsDense: false),
+            buttonTheme: new ButtonThemeData(AlignedDropdown: false),
+            splashFactory: Plumix.Material.InkSplash.SplashFactory,
+            applyElevationOverlayColor: false);
         var end = new ThemeData(
             brightness: Brightness.Dark,
             primaryColor: Color.FromArgb(255, 100, 120, 140),
@@ -45,13 +52,21 @@ public sealed class MaterialThemeAnimationTests : IDisposable
                 bodyMedium: MaterialTextTheme.DefaultBodyMedium.CopyWith(fontSize: 20)),
             iconTheme: new IconThemeData(Color: Colors.White, Size: 24),
             visualDensity: new VisualDensity(2, 4),
-            useMaterial3: true);
+            useMaterial3: true,
+            platform: TargetPlatform.Linux,
+            materialTapTargetSize: MaterialTapTargetSize.ShrinkWrap,
+            inputDecorationTheme: new InputDecorationThemeData(IsDense: true),
+            buttonTheme: new ButtonThemeData(AlignedDropdown: true),
+            splashFactory: InkRipple.SplashFactory,
+            applyElevationOverlayColor: true);
 
         ThemeData firstHalf = ThemeData.Lerp(begin, end, 0.25);
         ThemeData midpoint = ThemeData.Lerp(begin, end, 0.5);
 
-        Assert.Same(begin, ThemeData.Lerp(begin, end, 0.0));
-        Assert.Same(end, ThemeData.Lerp(begin, end, 1.0));
+        Assert.Same(begin, ThemeData.Lerp(begin, begin, 0.25));
+        Assert.NotSame(begin, ThemeData.Lerp(begin, end, 0.0));
+        Assert.NotSame(end, ThemeData.Lerp(begin, end, 1.0));
+        Assert.Equal(Color.FromArgb(255, 25, 45, 65), firstHalf.PrimaryColor);
         Assert.Equal(Color.FromArgb(255, 50, 70, 90), midpoint.PrimaryColor);
         Assert.Equal(15, midpoint.TextTheme.BodyMedium.FontSize);
         Assert.Equal(20, midpoint.IconTheme.Size);
@@ -60,6 +75,138 @@ public sealed class MaterialThemeAnimationTests : IDisposable
         Assert.False(firstHalf.UseMaterial3);
         Assert.Equal(Brightness.Dark, midpoint.Brightness);
         Assert.True(midpoint.UseMaterial3);
+        Assert.Equal(TargetPlatform.Windows, firstHalf.Platform);
+        Assert.Equal(TargetPlatform.Linux, midpoint.Platform);
+        Assert.Equal(MaterialTapTargetSize.Padded, firstHalf.MaterialTapTargetSize);
+        Assert.Equal(MaterialTapTargetSize.ShrinkWrap, midpoint.MaterialTapTargetSize);
+        Assert.False(firstHalf.InputDecorationTheme.IsDense);
+        Assert.True(midpoint.InputDecorationTheme.IsDense);
+        Assert.False(firstHalf.ButtonTheme.AlignedDropdown);
+        Assert.True(midpoint.ButtonTheme.AlignedDropdown);
+        Assert.Same(Plumix.Material.InkSplash.SplashFactory, firstHalf.SplashFactory);
+        Assert.Same(InkRipple.SplashFactory, midpoint.SplashFactory);
+        Assert.False(firstHalf.ApplyElevationOverlayColor);
+        Assert.True(midpoint.ApplyElevationOverlayColor);
+    }
+
+    [Fact]
+    public void ThemeData_Lerp_DelegatesToEveryContinuousComponentThemeContract()
+    {
+        Type[] componentThemeTypes =
+        [
+            typeof(ActionIconThemeData),
+            typeof(AppBarThemeData),
+            typeof(BadgeThemeData),
+            typeof(MaterialBannerThemeData),
+            typeof(BottomAppBarThemeData),
+            typeof(BottomNavigationBarThemeData),
+            typeof(BottomSheetThemeData),
+            typeof(ButtonBarThemeData),
+            typeof(CardThemeData),
+            typeof(CarouselViewThemeData),
+            typeof(CheckboxThemeData),
+            typeof(ChipThemeData),
+            typeof(DataTableThemeData),
+            typeof(DatePickerThemeData),
+            typeof(DialogThemeData),
+            typeof(DividerThemeData),
+            typeof(DrawerThemeData),
+            typeof(DropdownMenuThemeData),
+            typeof(ElevatedButtonThemeData),
+            typeof(ExpansionTileThemeData),
+            typeof(FilledButtonThemeData),
+            typeof(FloatingActionButtonThemeData),
+            typeof(IconButtonThemeData),
+            typeof(ListTileThemeData),
+            typeof(MenuBarThemeData),
+            typeof(MenuButtonThemeData),
+            typeof(MenuThemeData),
+            typeof(NavigationBarThemeData),
+            typeof(NavigationDrawerThemeData),
+            typeof(NavigationRailThemeData),
+            typeof(OutlinedButtonThemeData),
+            typeof(PopupMenuThemeData),
+            typeof(ProgressIndicatorThemeData),
+            typeof(RadioThemeData),
+            typeof(ScrollbarThemeData),
+            typeof(SearchBarThemeData),
+            typeof(SearchViewThemeData),
+            typeof(SegmentedButtonThemeData),
+            typeof(SliderThemeData),
+            typeof(SnackBarThemeData),
+            typeof(SwitchThemeData),
+            typeof(TabBarThemeData),
+            typeof(TextButtonThemeData),
+            typeof(TextSelectionThemeData),
+            typeof(TimePickerThemeData),
+            typeof(ToggleButtonsThemeData),
+            typeof(TooltipThemeData),
+        ];
+
+        foreach (Type componentThemeType in componentThemeTypes)
+        {
+            MethodInfo? lerp = componentThemeType.GetMethod(
+                "Lerp",
+                BindingFlags.Public | BindingFlags.Static);
+            Assert.NotNull(lerp);
+        }
+
+        var begin = new ThemeData(
+            dividerTheme: new DividerThemeData(Space: 4),
+            tooltipTheme: new TooltipThemeData(Height: 8),
+            sliderTheme: new SliderThemeData(TrackHeight: 2),
+            switchTheme: new SwitchThemeData(
+                ThumbColor: MaterialStateProperty<Color?>.All(Colors.Black)),
+            datePickerTheme: new DatePickerThemeData(RangePickerElevation: 4),
+            snackBarTheme: new SnackBarThemeData(Elevation: 2),
+            menuBarTheme: new MenuBarThemeData(
+                new MenuStyle(Elevation: MaterialStateProperty<double?>.All(2))));
+        var end = new ThemeData(
+            dividerTheme: new DividerThemeData(Space: 12),
+            tooltipTheme: new TooltipThemeData(Height: 24),
+            sliderTheme: new SliderThemeData(TrackHeight: 10),
+            switchTheme: new SwitchThemeData(
+                ThumbColor: MaterialStateProperty<Color?>.All(Colors.White)),
+            datePickerTheme: new DatePickerThemeData(RangePickerElevation: 12),
+            snackBarTheme: new SnackBarThemeData(Elevation: 10),
+            menuBarTheme: new MenuBarThemeData(
+                new MenuStyle(Elevation: MaterialStateProperty<double?>.All(10))));
+
+        ThemeData result = ThemeData.Lerp(begin, end, 0.25);
+
+        Assert.Equal(6, result.DividerTheme.Space);
+        Assert.Equal(12, result.TooltipTheme.Height);
+        Assert.Equal(4, result.SliderTheme.TrackHeight);
+        Assert.Equal(Color.FromRgb(63, 63, 63), result.SwitchTheme.ThumbColor!.Resolve(MaterialState.None));
+        Assert.Equal(6, result.DatePickerTheme.RangePickerElevation);
+        Assert.Equal(4, result.SnackBarTheme.Elevation);
+        Assert.Equal(4, result.MenuBarTheme.Style!.Elevation!.Resolve(MaterialState.None));
+    }
+
+    [Fact]
+    public void ThemeData_Lerp_InterpolatesAndUnionsThemeExtensions()
+    {
+        var colorBegin = new ColorThemeExtension(
+            Colors.Black,
+            Color.Parse("#FFFFC107"));
+        var colorEnd = new ColorThemeExtension(
+            Colors.White,
+            Color.Parse("#FF2196F3"));
+        var textBegin = new TextThemeExtension(new TextStyle(FontSize: 50));
+        var textEnd = new TextThemeExtension(new TextStyle(FontSize: 100));
+        var beginOnly = new BeginOnlyThemeExtension(30);
+        var endOnly = new EndOnlyThemeExtension(40);
+        var begin = new ThemeData(extensions: [colorBegin, textBegin, beginOnly]);
+        var end = new ThemeData(extensions: [colorEnd, textEnd, endOnly]);
+
+        ThemeData result = ThemeData.Lerp(begin, end, 0.5);
+
+        Assert.Equal(Color.Parse("#FF7F7F7F"), result.Extension<ColorThemeExtension>()!.First);
+        Assert.Equal(Color.Parse("#FF90AB7D"), result.Extension<ColorThemeExtension>()!.Second);
+        Assert.Equal(75, result.Extension<TextThemeExtension>()!.Style.FontSize);
+        Assert.Same(beginOnly, result.Extension<BeginOnlyThemeExtension>());
+        Assert.Same(endOnly, result.Extension<EndOnlyThemeExtension>());
+        Assert.Equal(4, result.Extensions.Count);
     }
 
     [Fact]
@@ -203,6 +350,75 @@ public sealed class MaterialThemeAnimationTests : IDisposable
         {
             BuildCount += 1;
             return child;
+        }
+    }
+
+    private sealed class ColorThemeExtension : ThemeExtension<ColorThemeExtension>
+    {
+        public ColorThemeExtension(Color first, Color second)
+        {
+            First = first;
+            Second = second;
+        }
+
+        public Color First { get; }
+
+        public Color Second { get; }
+
+        public override ColorThemeExtension Lerp(ColorThemeExtension? other, double t)
+        {
+            return other is null
+                ? this
+                : new ColorThemeExtension(
+                    new ColorTween().Evaluate(t, First, other.First),
+                    new ColorTween().Evaluate(t, Second, other.Second));
+        }
+    }
+
+    private sealed class TextThemeExtension : ThemeExtension<TextThemeExtension>
+    {
+        public TextThemeExtension(TextStyle style)
+        {
+            Style = style;
+        }
+
+        public TextStyle Style { get; }
+
+        public override TextThemeExtension Lerp(TextThemeExtension? other, double t)
+        {
+            return other is null
+                ? this
+                : new TextThemeExtension(TextStyle.Lerp(Style, other.Style, t));
+        }
+    }
+
+    private sealed class BeginOnlyThemeExtension : ThemeExtension<BeginOnlyThemeExtension>
+    {
+        public BeginOnlyThemeExtension(double value)
+        {
+            Value = value;
+        }
+
+        public double Value { get; }
+
+        public override BeginOnlyThemeExtension Lerp(BeginOnlyThemeExtension? other, double t)
+        {
+            return other is null ? this : new BeginOnlyThemeExtension(Value + ((other.Value - Value) * t));
+        }
+    }
+
+    private sealed class EndOnlyThemeExtension : ThemeExtension<EndOnlyThemeExtension>
+    {
+        public EndOnlyThemeExtension(double value)
+        {
+            Value = value;
+        }
+
+        public double Value { get; }
+
+        public override EndOnlyThemeExtension Lerp(EndOnlyThemeExtension? other, double t)
+        {
+            return other is null ? this : new EndOnlyThemeExtension(Value + ((other.Value - Value) * t));
         }
     }
 

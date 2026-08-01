@@ -84,10 +84,56 @@ internal static class MaterialThemeLerp
         BorderSide? side = BorderSide(a.Side, b.Side, t);
         double radius = a.BorderRadius.Radius
                         + ((b.BorderRadius.Radius - a.BorderRadius.Radius) * t);
-        return new ShapeBorder(BorderRadius.Circular(radius), side)
+        return new ShapeBorder(Plumix.Rendering.BorderRadius.Circular(radius), side)
         {
             Shape = t < 0.5 ? a.Shape : b.Shape,
         };
+    }
+
+    public static BorderRadius? BorderRadius(BorderRadius? a, BorderRadius? b, double t)
+    {
+        if (!a.HasValue && !b.HasValue)
+        {
+            return null;
+        }
+
+        double from = a?.Radius ?? 0.0;
+        double to = b?.Radius ?? 0.0;
+        return Plumix.Rendering.BorderRadius.Circular(from + ((to - from) * t));
+    }
+
+    public static BorderSide? BorderSide(BorderSide? a, BorderSide? b, double t)
+    {
+        if (!a.HasValue && !b.HasValue)
+        {
+            return null;
+        }
+
+        Plumix.Rendering.BorderSide from = a ?? new Plumix.Rendering.BorderSide(
+            Avalonia.Media.Color.FromArgb(
+                0,
+                b!.Value.Color.R,
+                b.Value.Color.G,
+                b.Value.Color.B),
+            0.0,
+            b.Value.Style);
+        Plumix.Rendering.BorderSide to = b ?? new Plumix.Rendering.BorderSide(
+            Avalonia.Media.Color.FromArgb(
+                0,
+                a!.Value.Color.R,
+                a.Value.Color.G,
+                a.Value.Color.B),
+            0.0,
+            a.Value.Style);
+        return new Plumix.Rendering.BorderSide(
+            Color(from.Color, to.Color, t)!.Value,
+            from.Width + ((to.Width - from.Width) * t),
+            t < 0.5 ? from.Style : to.Style);
+    }
+
+    public static BoxDecoration? Decoration(BoxDecoration? a, BoxDecoration? b, double t)
+    {
+        return BoxDecoration.Lerp(a, b, t);
     }
 
     public static Size? Size(Size? a, Size? b, double t)
@@ -102,6 +148,20 @@ internal static class MaterialThemeLerp
         return new Avalonia.Size(
             from.Width + ((to.Width - from.Width) * t),
             from.Height + ((to.Height - from.Height) * t));
+    }
+
+    public static Alignment? Alignment(Alignment? a, Alignment? b, double t)
+    {
+        if (!a.HasValue && !b.HasValue)
+        {
+            return null;
+        }
+
+        Plumix.Rendering.Alignment from = a ?? default;
+        Plumix.Rendering.Alignment to = b ?? default;
+        return new Plumix.Rendering.Alignment(
+            from.X + ((to.X - from.X) * t),
+            from.Y + ((to.Y - from.Y) * t));
     }
 
     public static Thickness? Thickness(Thickness? a, Thickness? b, double t)
@@ -149,15 +209,67 @@ internal static class MaterialThemeLerp
         MaterialStateProperty<T?>? a,
         MaterialStateProperty<T?>? b,
         double t,
-        Func<T?, T?, double, T?> lerp) where T : class
+        Func<T?, T?, double, T?> lerp)
     {
         if (a is null && b is null)
         {
             return null;
         }
 
-        return MaterialStateProperty<T?>.ResolveWith(
-            states => lerp(a?.Resolve(states), b?.Resolve(states), t));
+        return MaterialStateProperty<T?>.ResolveWith(states =>
+        {
+            T? aValue = a is null ? default : a.Resolve(states);
+            T? bValue = b is null ? default : b.Resolve(states);
+            return lerp(aValue, bValue, t);
+        });
+    }
+
+    public static MaterialStateProperty<double?>? DoubleStateProperty(
+        MaterialStateProperty<double?>? a,
+        MaterialStateProperty<double?>? b,
+        double t)
+    {
+        return StateProperty(a, b, t, Double);
+    }
+
+    public static MaterialStateProperty<BorderSide?>? BorderSideStateProperty(
+        MaterialStateProperty<BorderSide?>? a,
+        MaterialStateProperty<BorderSide?>? b,
+        double t)
+    {
+        return StateProperty(a, b, t, BorderSide);
+    }
+
+    public static MaterialStateProperty<Size?>? SizeStateProperty(
+        MaterialStateProperty<Size?>? a,
+        MaterialStateProperty<Size?>? b,
+        double t)
+    {
+        return StateProperty(a, b, t, Size);
+    }
+
+    public static MaterialStateProperty<Thickness?>? ThicknessStateProperty(
+        MaterialStateProperty<Thickness?>? a,
+        MaterialStateProperty<Thickness?>? b,
+        double t)
+    {
+        return StateProperty(a, b, t, Thickness);
+    }
+
+    public static MaterialStateProperty<TextStyle?>? TextStyleStateProperty(
+        MaterialStateProperty<TextStyle?>? a,
+        MaterialStateProperty<TextStyle?>? b,
+        double t)
+    {
+        return StateProperty(a, b, t, TextStyle);
+    }
+
+    public static MaterialStateProperty<ShapeBorder?>? ShapeStateProperty(
+        MaterialStateProperty<ShapeBorder?>? a,
+        MaterialStateProperty<ShapeBorder?>? b,
+        double t)
+    {
+        return StateProperty(a, b, t, Shape);
     }
 
     public static MaterialStateProperty<Color?>? ColorStateProperty(
@@ -174,35 +286,6 @@ internal static class MaterialThemeLerp
             states => Color(a?.Resolve(states), b?.Resolve(states), t));
     }
 
-    private static BorderSide? BorderSide(BorderSide? a, BorderSide? b, double t)
-    {
-        if (!a.HasValue && !b.HasValue)
-        {
-            return null;
-        }
-
-        Plumix.Rendering.BorderSide from = a ?? new Plumix.Rendering.BorderSide(
-            Avalonia.Media.Color.FromArgb(
-                0,
-                b!.Value.Color.R,
-                b.Value.Color.G,
-                b.Value.Color.B),
-            0.0,
-            b.Value.Style);
-        Plumix.Rendering.BorderSide to = b ?? new Plumix.Rendering.BorderSide(
-            Avalonia.Media.Color.FromArgb(
-                0,
-                a!.Value.Color.R,
-                a.Value.Color.G,
-                a.Value.Color.B),
-            0.0,
-            a.Value.Style);
-        return new Plumix.Rendering.BorderSide(
-            Color(from.Color, to.Color, t)!.Value,
-            from.Width + ((to.Width - from.Width) * t),
-            t < 0.5 ? from.Style : to.Style);
-    }
-
     private static ShapeBorder ScaleShape(ShapeBorder shape, double factor)
     {
         double clampedFactor = Math.Clamp(factor, 0.0, 1.0);
@@ -213,7 +296,7 @@ internal static class MaterialThemeLerp
                 shape.Side.Value.Style)
             : null;
         return new ShapeBorder(
-            BorderRadius.Circular(shape.BorderRadius.Radius * clampedFactor),
+            Plumix.Rendering.BorderRadius.Circular(shape.BorderRadius.Radius * clampedFactor),
             side)
         {
             Shape = shape.Shape,

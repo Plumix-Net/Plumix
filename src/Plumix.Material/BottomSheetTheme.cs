@@ -9,7 +9,7 @@ namespace Plumix.Material;
 
 // Dart parity source: flutter/packages/flutter/lib/src/material/bottom_sheet_theme.dart
 
-public sealed record BottomSheetThemeData
+public sealed partial record BottomSheetThemeData
 {
     public BottomSheetThemeData(
         Color? BackgroundColor = null,

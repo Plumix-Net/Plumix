@@ -6,7 +6,7 @@ namespace Plumix.Material;
 // Dart parity source: flutter/packages/flutter/lib/src/material/menu_theme.dart.
 
 /// <summary>Visual overrides for submenu panels and submenu disclosure icons.</summary>
-public sealed record MenuThemeData(
+public sealed partial record MenuThemeData(
     MenuStyle? Style = null,
     MaterialStateProperty<Widget?>? SubmenuIcon = null);
 

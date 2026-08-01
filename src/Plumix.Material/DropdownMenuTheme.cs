@@ -10,7 +10,7 @@ namespace Plumix.Material;
 // Dart parity sources: flutter/packages/flutter/lib/src/material/dropdown_menu_theme.dart;
 // flutter/packages/flutter/lib/src/material/menu_style.dart
 
-public sealed record MenuStyle(
+public sealed partial record MenuStyle(
     MaterialStateProperty<Color?>? BackgroundColor = null,
     MaterialStateProperty<Color?>? ShadowColor = null,
     MaterialStateProperty<Color?>? SurfaceTintColor = null,
@@ -43,7 +43,7 @@ public sealed record MenuStyle(
     };
 }
 
-public sealed record DropdownMenuThemeData(
+public sealed partial record DropdownMenuThemeData(
     TextStyle? TextStyle = null,
     InputDecorationThemeData? InputDecorationTheme = null,
     MenuStyle? MenuStyle = null,

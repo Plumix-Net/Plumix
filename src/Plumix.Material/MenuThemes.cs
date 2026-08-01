@@ -7,10 +7,10 @@ namespace Plumix.Material;
 // flutter/packages/flutter/lib/src/material/menu_button_theme.dart
 
 /// <summary>Visual overrides for a <see cref="MenuBar"/>, excluding its submenu panels.</summary>
-public sealed record MenuBarThemeData(MenuStyle? Style = null);
+public sealed partial record MenuBarThemeData(MenuStyle? Style = null);
 
 /// <summary>Button-style overrides shared by <see cref="MenuItemButton"/> and <see cref="SubmenuButton"/>.</summary>
-public sealed record MenuButtonThemeData(ButtonStyle? Style = null);
+public sealed partial record MenuButtonThemeData(ButtonStyle? Style = null);
 
 public sealed class MenuBarTheme : InheritedWidget
 {

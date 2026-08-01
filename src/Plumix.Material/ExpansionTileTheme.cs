@@ -16,7 +16,7 @@ public sealed record ExpansionAnimationStyle(
     public static ExpansionAnimationStyle NoAnimation { get; } = new(TimeSpan.Zero, Curves.Linear, Curves.Linear);
 }
 
-public sealed record ExpansionTileThemeData(
+public sealed partial record ExpansionTileThemeData(
     Color? BackgroundColor = null,
     Color? CollapsedBackgroundColor = null,
     Thickness? TilePadding = null,

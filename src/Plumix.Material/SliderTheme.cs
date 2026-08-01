@@ -33,7 +33,7 @@ public enum Thumb
 
 public readonly record struct RangeLabels(string Start, string End);
 
-public sealed record SliderThemeData(
+public sealed partial record SliderThemeData(
     Color? ActiveTrackColor = null,
     Color? InactiveTrackColor = null,
     Color? SecondaryActiveTrackColor = null,
