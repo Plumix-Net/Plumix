@@ -41,6 +41,7 @@ internal static class SampleRoutes
     public const string Divider = "/divider";
     public const string BadgeTooltip = "/badge-tooltip";
     public const string Magnifier = "/magnifier";
+    public const string SelectionHandles = "/selection-handles";
     public const string CircleAvatar = "/circle-avatar";
     public const string NavigationSurfaces = "/navigation-surfaces";
     public const string NavigationDrawer = "/navigation-drawer";
@@ -151,6 +152,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "RawMagnifier + Magnifier",
             "backdrop zoom + focal offsets + Material lens styling",
             () => new MagnifierDemoPage()),
+        new(
+            SampleRoutes.SelectionHandles,
+            "Selection handles",
+            "SelectionOverlay handles + drag endpoints + collapsed handle",
+            () => new SelectionHandlesDemoPage()),
         new(SampleRoutes.CircleAvatar, "CircleAvatar", "initials + image layers + animated radius + fallback", () => new CircleAvatarDemoPage()),
         new(SampleRoutes.NavigationSurfaces, "NavigationBar + NavigationRail", "horizontal/vertical Material navigation + labels/themes", () => new NavigationSurfacesDemoPage()),
         new(SampleRoutes.NavigationDrawer, "NavigationDrawer", "destinations + custom children + selection/theme probes", () => new NavigationDrawerDemoPage()),

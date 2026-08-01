@@ -724,7 +724,7 @@ public sealed class EditableText : StatefulWidget
         return new EditableTextState();
     }
 
-    public sealed class EditableTextState : State
+    public sealed class EditableTextState : State, ITextSelectionDelegate
     {
         private TextEditingController? _controller;
         private FocusNode? _focusNode;
@@ -912,7 +912,47 @@ public sealed class EditableText : StatefulWidget
                 context => Widget.ContextMenuBuilder(context, this));
         }
 
-        public void HideToolbar() => _contextMenuController.Hide();
+        public void HideToolbar(bool hideHandles = true) => _contextMenuController.Hide();
+
+        public TextEditingValue TextEditingValue => _controller!.Value;
+
+        public bool CutEnabled => !Widget.ReadOnly && !Widget.ObscureText;
+
+        public bool CopyEnabled => !Widget.ObscureText;
+
+        public bool PasteEnabled => !Widget.ReadOnly;
+
+        public bool SelectAllEnabled => Widget.EnableInteractiveSelection;
+
+        public void UserUpdateTextEditingValue(TextEditingValue value, SelectionChangedCause? cause)
+        {
+            TextEditingController controller = _controller!;
+            if (cause.HasValue)
+            {
+                _pendingSelectionCause = cause.Value;
+            }
+
+            bool textChanged = !string.Equals(controller.Text, value.Text, StringComparison.Ordinal);
+            controller.Value = value;
+            _pendingSelectionCause = null;
+            if (textChanged)
+            {
+                Widget.OnChanged?.Invoke(controller.Text);
+            }
+        }
+
+        public void CutSelection(SelectionChangedCause cause) => CutAndHide();
+
+        public void CopySelection(SelectionChangedCause cause) => CopyAndHide();
+
+        public void PasteText(SelectionChangedCause cause) => PasteAndHide();
+
+        public void SelectAll(SelectionChangedCause cause)
+        {
+            _pendingSelectionCause = cause;
+            _ = _controller!.SelectAll();
+            _pendingSelectionCause = null;
+        }
 
         private void AttachController(TextEditingController controller)
         {

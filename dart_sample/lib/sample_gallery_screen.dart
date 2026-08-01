@@ -12,6 +12,7 @@ import 'demos/material/app_bar_text_styles_demo_page.dart';
 import 'demos/material/action_buttons_demo_page.dart';
 import 'demos/material/badge_tooltip_demo_page.dart';
 import 'demos/material/magnifier_demo_page.dart';
+import 'demos/material/selection_handles_demo_page.dart';
 import 'demos/material/banner_demo_page.dart';
 import 'demos/material/bar_controls_demo_page.dart';
 import 'demos/material/data_table_demo_page.dart';
@@ -165,6 +166,12 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'RawMagnifier + Magnifier',
       subtitle: 'backdrop zoom + focal offsets + Material lens styling',
       builder: () => const MagnifierDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.selectionHandles,
+      title: 'Selection handles',
+      subtitle: 'SelectionOverlay handles + drag endpoints + collapsed handle',
+      builder: () => const SelectionHandlesDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.circleAvatar,

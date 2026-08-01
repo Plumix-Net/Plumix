@@ -108,8 +108,13 @@ public sealed class RawGestureDetector : StatefulWidget
         Action<DragUpdateDetails>? onVerticalDragUpdate = null,
         Action<DragEndDetails>? onVerticalDragEnd = null,
         Action? onVerticalDragCancel = null,
+        Action<DragStartDetails>? onPanStart = null,
+        Action<DragUpdateDetails>? onPanUpdate = null,
+        Action<DragEndDetails>? onPanEnd = null,
+        Action? onPanCancel = null,
         IReadOnlySet<PointerDeviceKind>? supportedDevices = null,
         DragStartBehavior dragStartBehavior = DragStartBehavior.Start,
+        DeviceGestureSettings? gestureSettings = null,
         Key? key = null) : base(key)
     {
         Child = child;
@@ -137,8 +142,13 @@ public sealed class RawGestureDetector : StatefulWidget
         OnVerticalDragUpdate = onVerticalDragUpdate;
         OnVerticalDragEnd = onVerticalDragEnd;
         OnVerticalDragCancel = onVerticalDragCancel;
+        OnPanStart = onPanStart;
+        OnPanUpdate = onPanUpdate;
+        OnPanEnd = onPanEnd;
+        OnPanCancel = onPanCancel;
         SupportedDevices = supportedDevices;
         DragStartBehavior = dragStartBehavior;
+        GestureSettings = gestureSettings;
     }
 
     public Widget? Child { get; }
@@ -182,9 +192,19 @@ public sealed class RawGestureDetector : StatefulWidget
 
     public Action? OnVerticalDragCancel { get; }
 
+    public Action<DragStartDetails>? OnPanStart { get; }
+
+    public Action<DragUpdateDetails>? OnPanUpdate { get; }
+
+    public Action<DragEndDetails>? OnPanEnd { get; }
+
+    public Action? OnPanCancel { get; }
+
     public IReadOnlySet<PointerDeviceKind>? SupportedDevices { get; }
 
     public DragStartBehavior DragStartBehavior { get; }
+
+    public DeviceGestureSettings? GestureSettings { get; }
 
     public override State CreateState()
     {
@@ -197,6 +217,7 @@ public sealed class RawGestureDetector : StatefulWidget
         private LongPressGestureRecognizer? _longPress;
         private HorizontalDragGestureRecognizer? _horizontalDrag;
         private VerticalDragGestureRecognizer? _verticalDrag;
+        private PanGestureRecognizer? _pan;
 
         private RawGestureDetector CurrentWidget => (RawGestureDetector)Element.Widget;
 
@@ -216,6 +237,7 @@ public sealed class RawGestureDetector : StatefulWidget
             DisposeRecognizer(ref _longPress);
             DisposeRecognizer(ref _horizontalDrag);
             DisposeRecognizer(ref _verticalDrag);
+            DisposeRecognizer(ref _pan);
         }
 
         public override Widget Build(BuildContext context)
@@ -243,6 +265,7 @@ public sealed class RawGestureDetector : StatefulWidget
             _longPress?.AddPointer(@event);
             _horizontalDrag?.AddPointer(@event);
             _verticalDrag?.AddPointer(@event);
+            _pan?.AddPointer(@event);
         }
 
         private void SyncRecognizers()
@@ -312,6 +335,25 @@ public sealed class RawGestureDetector : StatefulWidget
             else
             {
                 DisposeRecognizer(ref _verticalDrag);
+            }
+
+            if (widget.OnPanStart != null
+                || widget.OnPanUpdate != null
+                || widget.OnPanEnd != null
+                || widget.OnPanCancel != null)
+            {
+                _pan ??= new PanGestureRecognizer();
+                _pan.OnStart = widget.OnPanStart;
+                _pan.OnUpdate = widget.OnPanUpdate;
+                _pan.OnEnd = widget.OnPanEnd;
+                _pan.OnCancel = widget.OnPanCancel;
+                _pan.DragStartBehavior = widget.DragStartBehavior;
+                _pan.SupportedDevices = widget.SupportedDevices;
+                _pan.GestureSettings = widget.GestureSettings;
+            }
+            else
+            {
+                DisposeRecognizer(ref _pan);
             }
         }
 

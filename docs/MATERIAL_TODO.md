@@ -2,7 +2,7 @@
 
 Widgets and subsystems from Flutter's Material library (`packages/flutter/lib/src/material`) that are **not yet ported** to `src/Plumix.Material`. Pick one, claim it, and submit a PR.
 
-Last verified against Flutter source and `src/Plumix.Material`: **2026-07-29**.
+Last verified against Flutter source and `src/Plumix.Material`: **2026-08-01**.
 
 ## How to claim and deliver
 
@@ -17,7 +17,7 @@ Size legend: **S** — one focused widget, few states. **M** — widget family o
 
 | Widget / family | Flutter source (`lib/src/material/`) | Size | Notes / dependencies |
 | --- | --- | --- | --- |
-| Selection handles + touch magnifier integration | `text_selection.dart`, `text_field.dart`, `selectable_text.dart` | L | `TextField`/`SelectableText` now own automatic adaptive Copy/Cut/Paste/Select all context menus. Remaining work needs draggable handle overlays, automatic touch magnifiers, and spell-check-service integration. |
+| Selection handles in text fields + touch magnifier integration | `text_selection.dart`, `text_field.dart`, `selectable_text.dart` | L | `TextField`/`SelectableText` own automatic adaptive Copy/Cut/Paste/Select all context menus, and `SelectionOverlay` + `MaterialTextSelectionControls` now provide draggable handles for any editing surface that supplies its own endpoints. Remaining work needs a `RenderEditable` render object so `TextSelectionOverlay` can bind handles to real selection endpoints, plus automatic touch magnifiers during in-field drags and spell-check-service integration. |
 
 ## Open infrastructure (align with maintainer first)
 

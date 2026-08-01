@@ -22,7 +22,18 @@ public abstract class GestureRecognizer : IDisposable
 
     protected GestureArenaManager GestureArena => Binding.GestureArena;
 
+    /// <summary>Device kinds this recognizer accepts; null accepts every kind.</summary>
+    public IReadOnlySet<PointerDeviceKind>? SupportedDevices { get; set; }
+
+    /// <summary>Host-supplied gesture tuning that overrides framework defaults such as touch slop.</summary>
+    public DeviceGestureSettings? GestureSettings { get; set; }
+
     public abstract void AddPointer(PointerDownEvent @event);
+
+    protected virtual bool IsPointerAllowed(PointerDownEvent @event)
+    {
+        return SupportedDevices is null || SupportedDevices.Contains(@event.Kind);
+    }
 
     public virtual void Dispose()
     {
@@ -68,13 +79,19 @@ public abstract class GestureRecognizer : IDisposable
     }
 }
 
-public readonly record struct DragStartDetails(Point GlobalPosition);
+public readonly record struct DragStartDetails(
+    Point GlobalPosition,
+    Point LocalPosition = default,
+    DateTime? SourceTimeStampUtc = null,
+    PointerDeviceKind? Kind = null);
 
 public readonly record struct DragUpdateDetails(
     Point GlobalPosition,
     Point LocalPosition,
     Point Delta,
-    double PrimaryDelta);
+    double PrimaryDelta,
+    DateTime? SourceTimeStampUtc = null,
+    PointerDeviceKind? Kind = null);
 
 public readonly record struct Velocity(Vector PixelsPerSecond)
 {

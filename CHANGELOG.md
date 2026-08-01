@@ -1,5 +1,16 @@
 # Changelog
 
+- Ported the text selection handle overlay: core gains `TextSelectionControls`/`EmptyTextSelectionControls`,
+  `TextSelectionHandleType`, `TextSelectionPoint`, `ITextSelectionDelegate`, `ClipboardStatusNotifier`, and
+  `SelectionOverlay` with the source handle/toolbar overlay entries, 150 ms linear fades, `kMinInteractiveDimension`
+  hit padding, and the touch-gated drag state machine. Material gains `MaterialTextSelectionControls`,
+  `MaterialTextSelectionHandleControls`, the exact 22 px single-path handle painter, source anchors, and the legacy
+  Cut/Copy/Paste/Select all toolbar. Landed the supporting primitives (`PanGestureRecognizer`,
+  `DeviceGestureSettings`, drag details carrying pointer kind/local position/timestamp, `RawGestureDetector` pan
+  callbacks) and made `EditableTextState` a `ITextSelectionDelegate`. `TextSelectionOverlay` and the automatic
+  in-field magnifier remain blocked on a `RenderEditable` render object
+  (`docs/ai/notes/widgets-2026-08-01-selection-handle-overlay.md`).
+
 - Agent/contributor tooling: the code-style contract is now machine-checked instead of review-only.
   `EnforceCodeStyleInBuild` makes IDE0008 (explicit types for built-ins) a build error, nullable warnings
   are errors, and `scripts/check_line_length.sh` enforces the 120-char rule on new/edited lines
