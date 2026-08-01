@@ -1,5 +1,9 @@
 # Changelog
 
+- Breaking: closed magnifier overlay-order parity. `MagnifierController.OverlayEntry` and `Show(... below:)` now
+  use core `OverlayEntry` instead of a navigator route, capture inherited themes into the root overlay, preserve
+  source animation lifecycle, and let `SelectionOverlay` keep selection handles above lenses that exclude handles.
+
 - Closed cross-host app lifecycle delivery parity. Browser focus/visibility, Android activity/window-focus, and iOS
   foreground/background notifications now feed the Flutter-shaped lifecycle synthesizer, including hidden-state
   transitions, duplicate suppression, and focused Android channel coverage.

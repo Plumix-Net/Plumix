@@ -77,8 +77,9 @@ public sealed class SelectionOverlayTests : IDisposable
 
         SelectionHandleOverlay handle = Assert.Single(fixture.FindWidgets<SelectionHandleOverlay>());
         Assert.Equal(TextSelectionHandleType.Collapsed, handle.Type);
-        Assert.Empty(fixture.FindWidgets<TypedHandleProbe>()
-            .Where(probe => probe.Type != TextSelectionHandleType.Collapsed));
+        Assert.DoesNotContain(
+            fixture.FindWidgets<TypedHandleProbe>(),
+            probe => probe.Type != TextSelectionHandleType.Collapsed);
 
         Assert.Same(overlay.StartHandleLayerLink, handle.HandleLayerLink);
 
@@ -265,11 +266,13 @@ public sealed class SelectionOverlayTests : IDisposable
         SelectionOverlay overlay = fixture.CreateOverlay(
             startHandleType: TextSelectionHandleType.Left,
             endHandleType: TextSelectionHandleType.Right,
-            magnifierConfiguration: new TextMagnifierConfiguration((_, _, info) =>
-            {
-                capturedInfo = info;
-                return new SizedBox(width: 20, height: 10);
-            }));
+            magnifierConfiguration: new TextMagnifierConfiguration(
+                (_, _, info) =>
+                {
+                    capturedInfo = info;
+                    return new SizedBox(width: 20, height: 10);
+                },
+                shouldDisplayHandlesInMagnifier: false));
 
         var initial = new MagnifierInfo(
             GlobalGesturePosition: new Point(4, 5),
@@ -290,6 +293,32 @@ public sealed class SelectionOverlayTests : IDisposable
         overlay.HideMagnifier();
         fixture.Pump();
         Assert.False(overlay.MagnifierIsVisible);
+
+        overlay.Dispose();
+    }
+
+    [Fact]
+    public void SelectionOverlay_InsertsMagnifierBelowHandlesWhenTheyMustNotBeCaptured()
+    {
+        using var fixture = new OverlayFixture();
+        SelectionOverlay overlay = fixture.CreateOverlay(
+            startHandleType: TextSelectionHandleType.Left,
+            endHandleType: TextSelectionHandleType.Right,
+            magnifierConfiguration: new TextMagnifierConfiguration(
+                (_, _, _) => new SizedBox(width: 20, height: 10),
+                shouldDisplayHandlesInMagnifier: false));
+
+        overlay.ShowHandles();
+        fixture.Pump();
+        OverlayEntry[] before = fixture.OverlayEntries.ToArray();
+
+        overlay.ShowMagnifier(MagnifierInfo.Empty);
+        fixture.Pump();
+        OverlayEntry[] after = fixture.OverlayEntries.ToArray();
+
+        Assert.Equal(before.Length + 1, after.Length);
+        Assert.Same(before[^2], after[^2]);
+        Assert.DoesNotContain(after[^3], before);
 
         overlay.Dispose();
     }
@@ -603,6 +632,8 @@ public sealed class SelectionOverlayTests : IDisposable
         }
 
         public RenderView RenderView => _harness.RenderView;
+
+        public IReadOnlyList<OverlayEntry> OverlayEntries => _harness.FindState<OverlayState>().Entries;
 
         public SelectionOverlay CreateOverlay(
             TextSelectionHandleType startHandleType,

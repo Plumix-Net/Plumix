@@ -48,8 +48,7 @@ public sealed class TextMagnifierConfiguration
 
 public sealed class MagnifierController
 {
-    private MagnifierRoute? _route;
-    private NavigatorState? _navigator;
+    private OverlayEntry? _overlayEntry;
 
     public MagnifierController(AnimationController? animationController = null)
     {
@@ -59,9 +58,9 @@ public sealed class MagnifierController
 
     public AnimationController? AnimationController { get; set; }
 
-    public Route? OverlayEntry => _route;
+    public OverlayEntry? OverlayEntry => _overlayEntry;
 
-    public bool Shown => _route != null
+    public bool Shown => _overlayEntry is not null
                          && (AnimationController?.Status is null
                              or AnimationStatus.Forward
                              or AnimationStatus.Completed);
@@ -70,14 +69,18 @@ public sealed class MagnifierController
         BuildContext context,
         Func<BuildContext, Widget> builder,
         Widget? debugRequiredFor = null,
-        Route? below = null)
+        OverlayEntry? below = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
         RemoveFromOverlay();
 
-        _navigator = Navigator.Of(context, rootNavigator: true);
-        _route = new MagnifierRoute(builder);
-        _navigator.Push(_route);
+        OverlayState overlayState = Overlay.Of(context, rootOverlay: true);
+        CapturedThemes capturedThemes = InheritedTheme.Capture(
+            context,
+            Navigator.MaybeOf(context)?.Context);
+        _overlayEntry = new OverlayEntry(
+            overlayContext => capturedThemes.Wrap(builder(overlayContext)));
+        overlayState.Insert(_overlayEntry, below: below);
 
         AnimationController? controller = AnimationController;
         if (controller == null)
@@ -92,7 +95,7 @@ public sealed class MagnifierController
 
     public async Task Hide(bool removeFromOverlay = true)
     {
-        if (_route == null)
+        if (_overlayEntry is null)
         {
             return;
         }
@@ -113,14 +116,15 @@ public sealed class MagnifierController
 
     public void RemoveFromOverlay()
     {
-        MagnifierRoute? route = _route;
-        NavigatorState? navigator = _navigator;
-        _route = null;
-        _navigator = null;
-        if (route != null && navigator != null)
+        OverlayEntry? overlayEntry = _overlayEntry;
+        if (overlayEntry is null)
         {
-            navigator.RemoveRoute(route);
+            return;
         }
+
+        overlayEntry.Remove();
+        overlayEntry.Dispose();
+        _overlayEntry = null;
     }
 
     public static Rect ShiftWithinBounds(Rect rect, Rect bounds)
@@ -164,26 +168,6 @@ public sealed class MagnifierController
         };
         controller.AddStatusListener(listener);
         return completion.Task;
-    }
-
-    private sealed class MagnifierRoute : PageRoute
-    {
-        private readonly Func<BuildContext, Widget> _builder;
-
-        public MagnifierRoute(Func<BuildContext, Widget> builder)
-        {
-            _builder = builder;
-        }
-
-        public override bool Opaque => false;
-
-        public override Widget BuildPage(BuildContext context)
-        {
-            return new Stack(
-                fit: StackFit.Expand,
-                clipBehavior: Clip.None,
-                children: [_builder(context)]);
-        }
     }
 }
 

@@ -93,11 +93,80 @@ public sealed class MagnifierTests : IDisposable
     }
 
     [Fact]
-    public async Task MagnifierController_ShowsAndRemovesRootRoute()
+    public async Task MagnifierController_InsertsBelowAnchorInRootOverlay()
+    {
+        var anchorEntry = new OverlayEntry(_ => new ContextProbe());
+        using var harness = new WidgetRenderHarness(new Overlay(initialEntries: [anchorEntry]));
+        harness.Pump(new Size(240, 160));
+        var probeState = harness.FindState<ContextProbeState>();
+        OverlayState overlay = harness.FindState<OverlayState>();
+        var controller = new MagnifierController();
+
+        await controller.Show(
+            probeState.Context,
+            _ => new SizedBox(width: 20, height: 10),
+            below: anchorEntry);
+        harness.Pump(new Size(240, 160));
+
+        Assert.Equal(2, overlay.Entries.Count);
+        Assert.Same(controller.OverlayEntry, overlay.Entries[0]);
+        Assert.Same(anchorEntry, overlay.Entries[1]);
+        OverlayEntry firstEntry = overlay.Entries[0];
+        probeState = harness.FindState<ContextProbeState>();
+
+        await controller.Show(
+            probeState.Context,
+            _ => new SizedBox(width: 30, height: 15),
+            below: anchorEntry);
+
+        Assert.Equal(2, overlay.Entries.Count);
+        Assert.NotSame(firstEntry, controller.OverlayEntry);
+        Assert.Same(controller.OverlayEntry, overlay.Entries[0]);
+
+        controller.RemoveFromOverlay();
+        Assert.Null(controller.OverlayEntry);
+        Assert.Single(overlay.Entries);
+    }
+
+    [Fact]
+    public async Task MagnifierController_ShownTracksForwardAndReverseAnimationStatus()
+    {
+        var rootEntry = new OverlayEntry(_ => new ContextProbe());
+        using var harness = new WidgetRenderHarness(new Overlay(initialEntries: [rootEntry]));
+        harness.Pump(new Size(240, 160));
+        var probeState = harness.FindState<ContextProbeState>();
+        using var animation = new AnimationController(TimeSpan.FromMilliseconds(100));
+        var controller = new MagnifierController(animation);
+        double now = Scheduler.CurrentSeconds;
+
+        Task show = controller.Show(probeState.Context, _ => new SizedBox(width: 20, height: 10));
+        Assert.Equal(AnimationStatus.Forward, animation.Status);
+        Assert.True(controller.Shown);
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.2));
+        await show;
+
+        Assert.Equal(AnimationStatus.Completed, animation.Status);
+        Assert.True(controller.Shown);
+
+        Task hide = controller.Hide();
+        Assert.Equal(AnimationStatus.Reverse, animation.Status);
+        Assert.False(controller.Shown);
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.4));
+        await hide;
+
+        Assert.Equal(AnimationStatus.Dismissed, animation.Status);
+        Assert.False(controller.Shown);
+        Assert.Null(controller.OverlayEntry);
+    }
+
+    [Fact]
+    public async Task MagnifierController_ShowsAndRemovesRootOverlayEntry()
     {
         var probe = new ContextProbe();
-        using var harness = new WidgetRenderHarness(new Navigator(
-            new BuilderPageRoute(_ => probe)));
+        using var harness = new WidgetRenderHarness(new Overlay(initialEntries:
+        [
+            new OverlayEntry(_ => new Navigator(new BuilderPageRoute(_ => probe))),
+        ]));
         harness.Pump(new Size(240, 160));
         var probeState = harness.FindState<ContextProbeState>();
         var controller = new MagnifierController();

@@ -49,7 +49,8 @@ internal sealed class SelectionHandlesDemoPageState : State
             [
                 new Text("SelectionOverlay + Material handles", fontSize: 20, color: Colors.Black),
                 new Text(
-                    "Drag either handle to move its endpoint. Collapsed mode keeps a single upward handle.",
+                    "Long-press the field and drag through the touch lens: handles stay above it. "
+                    + "The direct probe below also covers ranged and collapsed handles.",
                     fontSize: 14,
                     color: Color.Parse("#8A000000")),
                 new TextField(

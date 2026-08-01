@@ -46,7 +46,9 @@ class _SelectionHandlesDemoPageState extends State<SelectionHandlesDemoPage> {
         ),
         const SizedBox(height: 12),
         const Text(
-          'Drag either handle to move its endpoint. Collapsed mode keeps a single upward handle.',
+          'Long-press the field and drag through the touch lens: handles stay '
+          'above it. The direct probe below also covers ranged and collapsed '
+          'handles.',
           style: TextStyle(fontSize: 14, color: Color(0x8A000000)),
         ),
         const SizedBox(height: 12),
@@ -66,7 +68,10 @@ class _SelectionHandlesDemoPageState extends State<SelectionHandlesDemoPage> {
               _toggleHandles,
             ),
             const SizedBox(width: 8),
-            _controlButton(_collapsed ? 'Ranged' : 'Collapsed', _toggleCollapsed),
+            _controlButton(
+              _collapsed ? 'Ranged' : 'Collapsed',
+              _toggleCollapsed,
+            ),
             const SizedBox(width: 8),
             _controlButton('Reset', _resetEndpoints),
           ],
@@ -213,10 +218,7 @@ class _SelectionHandlesDemoPageState extends State<SelectionHandlesDemoPage> {
 
   List<TextSelectionPoint> _buildEndpoints() {
     return <TextSelectionPoint>[
-      TextSelectionPoint(
-        Offset(_effectiveStartX, _lineTop),
-        TextDirection.ltr,
-      ),
+      TextSelectionPoint(Offset(_effectiveStartX, _lineTop), TextDirection.ltr),
       TextSelectionPoint(Offset(_endX, _lineTop), TextDirection.ltr),
     ];
   }

@@ -784,7 +784,10 @@ public sealed class SelectionOverlay : IDisposable
             return;
         }
 
-        _ = _magnifierController.Show(Context, _ => builtMagnifier);
+        _ = _magnifierController.Show(
+            Context,
+            _ => builtMagnifier,
+            below: MagnifierConfiguration.ShouldDisplayHandlesInMagnifier ? null : _startHandle);
     }
 
     /// <summary>
