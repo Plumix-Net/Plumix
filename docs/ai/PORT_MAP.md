@@ -254,6 +254,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `scheduler/binding.dart` | `src/Plumix/Scheduler.cs` | — | — |
 | `scheduler/scheduler.dart` ⚠️ | `src/Plumix/Scheduler.cs` | — | — |
 | `scheduler/ticker.dart` | `src/Plumix/Ticker.cs` | — | — |
+| `semantics/semantics.dart` | `src/Plumix/Rendering/Semantics.cs` | `src/Plumix.Tests/FlutterHostSemanticsTests.cs`<br>`src/Plumix.Tests/MetaDataIndexedSemanticsTests.cs`<br>`src/Plumix.Tests/SemanticsTreeTests.cs` | — |
 | `services/binding.dart` | `src/Plumix/Widgets/AppLifecycleListener.cs` | `src/Plumix.Tests/AppLifecycleListenerTests.cs` | — |
 | `services/clipboard.dart` | `src/Plumix/Widgets/TextClipboard.cs` | — | — |
 | `services/hardware_keyboard.dart` | `src/Plumix/UI/KeyboardEvents.cs` | — | — |
@@ -346,6 +347,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `widgets/scroll_position.dart` | `src/Plumix/Rendering/Scroll.cs` | `src/Plumix.Tests/MaterialScrollbarTests.cs`<br>`src/Plumix.Tests/ScrollInfrastructureTests.cs`<br>`src/Plumix.Tests/ScrollNotificationObserverTests.cs`<br>`src/Plumix.Tests/ScrollPipelineTests.cs` | `dart_sample/lib/demos/general/scrollbar_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/ScrollbarDemoPage.cs` |
 | `widgets/scroll_view.dart` | `src/Plumix/Widgets/Scroll.cs` | `src/Plumix.Tests/MaterialScrollbarTests.cs`<br>`src/Plumix.Tests/ScrollInfrastructureTests.cs`<br>`src/Plumix.Tests/ScrollNotificationObserverTests.cs`<br>`src/Plumix.Tests/ScrollPipelineTests.cs` | `dart_sample/lib/demos/general/scrollbar_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/ScrollbarDemoPage.cs` |
 | `widgets/scrollable.dart` | `src/Plumix/Widgets/Scroll.cs` | `src/Plumix.Tests/MaterialScrollbarTests.cs`<br>`src/Plumix.Tests/ScrollInfrastructureTests.cs`<br>`src/Plumix.Tests/ScrollNotificationObserverTests.cs`<br>`src/Plumix.Tests/ScrollPipelineTests.cs` | `dart_sample/lib/demos/general/scrollbar_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/ScrollbarDemoPage.cs` |
+| `widgets/scrollable_helpers.dart` | `src/Plumix/Widgets/ScrollableHelpers.cs` | — | — |
 | `widgets/scrollbar.dart` | `src/Plumix/Widgets/Scrollbar.cs` | `src/Plumix.Tests/MaterialScrollbarTests.cs` | `dart_sample/lib/demos/general/scrollbar_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/ScrollbarDemoPage.cs` |
 | `widgets/selectable_region.dart` | `src/Plumix/Widgets/Selection.cs` | `src/Plumix.Tests/MaterialDesktopTextSelectionToolbarTests.cs`<br>`src/Plumix.Tests/MaterialSelectionTests.cs`<br>`src/Plumix.Tests/MaterialTextSelectionControlsTests.cs`<br>`src/Plumix.Tests/SelectionOverlayTests.cs`<br>`src/Plumix.Tests/TitleDefaultSelectionStyleTests.cs` | `dart_sample/lib/demos/material/desktop_text_selection_toolbar_demo_page.dart`<br>`dart_sample/lib/demos/material/selection_demo_page.dart`<br>`dart_sample/lib/demos/material/selection_handles_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/DesktopTextSelectionToolbarDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/SelectionDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/SelectionHandlesDemoPage.cs` |
 | `widgets/selection_container.dart` | `src/Plumix/Widgets/Selection.cs` | `src/Plumix.Tests/MaterialDesktopTextSelectionToolbarTests.cs`<br>`src/Plumix.Tests/MaterialSelectionTests.cs`<br>`src/Plumix.Tests/MaterialTextSelectionControlsTests.cs`<br>`src/Plumix.Tests/SelectionOverlayTests.cs`<br>`src/Plumix.Tests/TitleDefaultSelectionStyleTests.cs` | `dart_sample/lib/demos/material/desktop_text_selection_toolbar_demo_page.dart`<br>`dart_sample/lib/demos/material/selection_demo_page.dart`<br>`dart_sample/lib/demos/material/selection_handles_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/DesktopTextSelectionToolbarDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/SelectionDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/SelectionHandlesDemoPage.cs` |
@@ -410,8 +412,8 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 
 ## Summary
 
-- Flutter files mapped: 359
-- C# files carrying a marker: 452
+- Flutter files mapped: 361
+- C# files carrying a marker: 454
 - C# files without a marker: 15
 - Markers not resolvable in the pinned checkout: 5
 

@@ -753,6 +753,9 @@ internal sealed class RenderObjectSemantics
         var handlers = new Dictionary<SemanticsActions, Action>();
         node.CopyActionHandlersTo(handlers);
         configuration.ReplaceActionHandlers(handlers);
+        var customHandlers = new Dictionary<CustomSemanticsAction, Action>();
+        node.CopyCustomActionHandlersTo(customHandlers);
+        configuration.ReplaceCustomActionHandlers(customHandlers);
         return configuration;
     }
 
@@ -785,5 +788,6 @@ internal sealed class RenderObjectSemantics
         node.BlocksPreviousNodes = blocksPreviousNodes;
         node.ReplaceChildren(children);
         node.SetActionHandlers(configuration.ActionHandlers);
+        node.SetCustomActionHandlers(configuration.CustomActionHandlers);
     }
 }

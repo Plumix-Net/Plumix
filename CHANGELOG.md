@@ -1,5 +1,12 @@
 # Changelog
 
+- Breaking: closed `ReorderableList`/`ReorderableListView` overlay parity. Dragged items now use a theme-captured
+  overlay proxy with source 250 ms pickup/drop choreography, constraints preservation, continuously ticking edge
+  auto-scroll, and localized custom reorder semantics. Reorder callbacks now complete after the drop animation;
+  deprecated `cacheExtent` is nullable and the controls expose `ScrollCacheExtent` plus sliver child-index lookup.
+  Internal item keys now include their source index, preventing sliver child-list corruption when callbacks mutate a
+  keyed backing list.
+
 - Breaking: closed legacy dropdown and cross-fade directional-alignment parity. `DropdownMenuItem`,
   `DropdownButton`, `DropdownButtonFormField`, `Stack`, `IndexedStack`, `AnimatedSize`, and `AnimatedCrossFade`
   now accept `AlignmentGeometry`, retain Flutter's logical defaults, and resolve mixed physical/logical values from

@@ -33,7 +33,8 @@ public sealed class ReorderableListView : StatefulWidget
         bool? primary = null,
         ScrollPhysics? physics = null,
         bool shrinkWrap = false,
-        double cacheExtent = 250.0,
+        double? cacheExtent = null,
+        ScrollCacheExtent? scrollCacheExtent = null,
         double? autoScrollerVelocityScalar = null,
         ReorderDragBoundaryProvider? dragBoundaryProvider = null,
         MouseCursor? mouseCursor = null,
@@ -59,6 +60,7 @@ public sealed class ReorderableListView : StatefulWidget
         physics: physics,
         shrinkWrap: shrinkWrap,
         cacheExtent: cacheExtent,
+        scrollCacheExtent: scrollCacheExtent,
         autoScrollerVelocityScalar: autoScrollerVelocityScalar,
         dragBoundaryProvider: dragBoundaryProvider,
         mouseCursor: mouseCursor,
@@ -91,7 +93,8 @@ public sealed class ReorderableListView : StatefulWidget
         bool? primary,
         ScrollPhysics? physics,
         bool shrinkWrap,
-        double cacheExtent,
+        double? cacheExtent,
+        ScrollCacheExtent? scrollCacheExtent,
         double? autoScrollerVelocityScalar,
         ReorderDragBoundaryProvider? dragBoundaryProvider,
         MouseCursor? mouseCursor,
@@ -127,6 +130,7 @@ public sealed class ReorderableListView : StatefulWidget
         Physics = physics;
         ShrinkWrap = shrinkWrap;
         CacheExtent = cacheExtent;
+        ScrollCacheExtent = scrollCacheExtent;
         AutoScrollerVelocityScalar = autoScrollerVelocityScalar ?? 50.0;
         DragBoundaryProvider = dragBoundaryProvider;
         MouseCursor = mouseCursor;
@@ -173,7 +177,10 @@ public sealed class ReorderableListView : StatefulWidget
 
     public bool ShrinkWrap { get; }
 
-    public double CacheExtent { get; }
+    [Obsolete("Use ScrollCacheExtent.")]
+    public double? CacheExtent { get; }
+
+    public ScrollCacheExtent? ScrollCacheExtent { get; }
 
     public double AutoScrollerVelocityScalar { get; }
 
@@ -202,7 +209,8 @@ public sealed class ReorderableListView : StatefulWidget
         bool? primary = null,
         ScrollPhysics? physics = null,
         bool shrinkWrap = false,
-        double cacheExtent = 250.0,
+        double? cacheExtent = null,
+        ScrollCacheExtent? scrollCacheExtent = null,
         double? autoScrollerVelocityScalar = null,
         ReorderDragBoundaryProvider? dragBoundaryProvider = null,
         MouseCursor? mouseCursor = null,
@@ -230,6 +238,7 @@ public sealed class ReorderableListView : StatefulWidget
             physics,
             shrinkWrap,
             cacheExtent,
+            scrollCacheExtent,
             autoScrollerVelocityScalar,
             dragBoundaryProvider,
             mouseCursor,
@@ -295,7 +304,8 @@ public sealed class ReorderableListView : StatefulWidget
                 controller: effectiveController,
                 primary: widget.Primary,
                 physics: widget.Physics,
-                cacheExtent: widget.CacheExtent,
+                cacheExtent: widget.ScrollCacheExtent?.Value ?? widget.CacheExtent ?? 250.0,
+                cacheExtentStyle: widget.ScrollCacheExtent?.Style ?? CacheExtentStyle.Pixel,
                 shrinkWrap: widget.ShrinkWrap);
         }
 

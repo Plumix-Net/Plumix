@@ -50,7 +50,8 @@ public sealed class ReorderableList : StatefulWidget
         bool? primary = null,
         ScrollPhysics? physics = null,
         bool shrinkWrap = false,
-        double cacheExtent = 250.0,
+        double? cacheExtent = null,
+        ScrollCacheExtent? scrollCacheExtent = null,
         double? autoScrollerVelocityScalar = null,
         ReorderDragBoundaryProvider? dragBoundaryProvider = null,
         Key? key = null) : base(key)
@@ -82,6 +83,7 @@ public sealed class ReorderableList : StatefulWidget
         Physics = physics;
         ShrinkWrap = shrinkWrap;
         CacheExtent = cacheExtent;
+        ScrollCacheExtent = scrollCacheExtent;
         AutoScrollerVelocityScalar = autoScrollerVelocityScalar ?? 50.0;
         DragBoundaryProvider = dragBoundaryProvider;
     }
@@ -121,13 +123,27 @@ public sealed class ReorderableList : StatefulWidget
 
     public bool ShrinkWrap { get; }
 
-    public double CacheExtent { get; }
+    [Obsolete("Use ScrollCacheExtent.")]
+    public double? CacheExtent { get; }
+
+    public ScrollCacheExtent? ScrollCacheExtent { get; }
 
     public double AutoScrollerVelocityScalar { get; }
 
     public ReorderDragBoundaryProvider? DragBoundaryProvider { get; }
 
     public override State CreateState() => new ReorderableListState();
+
+    public static ReorderableListState? MaybeOf(BuildContext context)
+    {
+        return context.FindAncestorStateOfType<ReorderableListState>();
+    }
+
+    public static ReorderableListState Of(BuildContext context)
+    {
+        return MaybeOf(context)
+               ?? throw new InvalidOperationException("No ReorderableList ancestor was found.");
+    }
 
     internal static void ValidateArguments(
         int itemCount,
@@ -136,7 +152,7 @@ public sealed class ReorderableList : StatefulWidget
         double? itemExtent,
         ItemExtentBuilder? itemExtentBuilder,
         Widget? prototypeItem,
-        double cacheExtent,
+        double? cacheExtent,
         double? autoScrollerVelocityScalar)
     {
         if (itemCount < 0)
@@ -162,7 +178,7 @@ public sealed class ReorderableList : StatefulWidget
             throw new ArgumentOutOfRangeException(nameof(itemExtent));
         }
 
-        if (!double.IsFinite(cacheExtent) || cacheExtent < 0)
+        if (cacheExtent.HasValue && (!double.IsFinite(cacheExtent.Value) || cacheExtent.Value < 0))
         {
             throw new ArgumentOutOfRangeException(nameof(cacheExtent));
         }
@@ -185,6 +201,11 @@ public sealed class ReorderableListState : State
     public void CancelReorder()
     {
         _sliverKey.CurrentState?.CancelReorder();
+    }
+
+    public void StartItemDragReorder(int index, PointerDownEvent @event, bool delayed = false)
+    {
+        _sliverKey.CurrentState?.StartItemDragReorder(index, @event, delayed);
     }
 
     public override Widget Build(BuildContext context)
@@ -225,7 +246,8 @@ public sealed class ReorderableListState : State
             controller: effectiveController,
             primary: widget.Primary,
             physics: widget.Physics,
-            cacheExtent: widget.CacheExtent,
+            cacheExtent: widget.ScrollCacheExtent?.Value ?? widget.CacheExtent ?? 250.0,
+            cacheExtentStyle: widget.ScrollCacheExtent?.Style ?? CacheExtentStyle.Pixel,
             shrinkWrap: widget.ShrinkWrap);
     }
 
@@ -241,6 +263,7 @@ public sealed class SliverReorderableList : StatefulWidget
     public SliverReorderableList(
         IndexedWidgetBuilder itemBuilder,
         int itemCount,
+        ChildIndexGetter? findChildIndexCallback = null,
         ReorderCallback? onReorder = null,
         ReorderCallback? onReorderItem = null,
         Action<int>? onReorderStart = null,
@@ -265,6 +288,7 @@ public sealed class SliverReorderableList : StatefulWidget
             autoScrollerVelocityScalar);
         ItemBuilder = itemBuilder ?? throw new ArgumentNullException(nameof(itemBuilder));
         ItemCount = itemCount;
+        FindChildIndexCallback = findChildIndexCallback;
         OnReorder = onReorder;
         OnReorderItem = onReorderItem;
         OnReorderStart = onReorderStart;
@@ -281,6 +305,8 @@ public sealed class SliverReorderableList : StatefulWidget
     public IndexedWidgetBuilder ItemBuilder { get; }
 
     public int ItemCount { get; }
+
+    public ChildIndexGetter? FindChildIndexCallback { get; }
 
     [Obsolete("Use OnReorderItem, which receives an index adjusted for the removed item.")]
     public ReorderCallback? OnReorder { get; }
@@ -324,11 +350,20 @@ public sealed class SliverReorderableListState : State
     private readonly Dictionary<int, ReorderableItemState> _items = [];
     private AnimationController? _proxyAnimation;
     private ReorderDragRecognizer? _recognizer;
+    private EdgeDraggingAutoScroller? _autoScroller;
+    private OverlayEntry? _overlayEntry;
+    private OverlayState? _overlay;
+    private CapturedThemes? _capturedThemes;
+    private Widget? _proxyChild;
     private int? _dragIndex;
     private int? _insertIndex;
     private Rect _dragOriginBounds;
+    private BoxConstraints _dragConstraints;
     private Point _dragInitialPosition;
     private Point _dragPosition;
+    private Point _dropStartPosition;
+    private Point _dropTargetPosition;
+    private bool _dropping;
     private DragBoundaryDelegate<Rect>? _dragBoundary;
 
     internal SliverReorderableList CurrentWidget => (SliverReorderableList)StateWidget;
@@ -343,27 +378,39 @@ public sealed class SliverReorderableListState : State
 
     internal Animation<double> ProxyAnimation => _proxyAnimation!;
 
+    internal Axis ScrollAxis => CurrentWidgetAxis();
+
     public override void InitState()
     {
-        _proxyAnimation = new AnimationController(TimeSpan.FromMilliseconds(300))
-        {
-            Curve = Curves.EaseInOut,
-        };
+        _proxyAnimation = new AnimationController(TimeSpan.FromMilliseconds(250));
         _proxyAnimation.Changed += HandleProxyAnimationChanged;
+        _proxyAnimation.Dismissed += HandleProxyAnimationDismissed;
     }
 
     public override void DidUpdateWidget(StatefulWidget oldWidget)
     {
-        if (((SliverReorderableList)oldWidget).ItemCount != CurrentWidget.ItemCount)
+        var oldList = (SliverReorderableList)oldWidget;
+        if (oldList.ItemCount != CurrentWidget.ItemCount)
         {
             CancelReorder();
+        }
+
+        if (oldList.AutoScrollerVelocityScalar != CurrentWidget.AutoScrollerVelocityScalar)
+        {
+            DisposeAutoScroller();
         }
     }
 
     public override Widget Build(BuildContext context)
     {
         var widget = CurrentWidget;
-        var childDelegate = new SliverChildBuilderDelegate(BuildItem, widget.ItemCount);
+        var childDelegate = new SliverChildBuilderDelegate(
+            BuildItem,
+            widget.ItemCount,
+            findChildIndexCallback: widget.FindChildIndexCallback is null
+                ? null
+                : key => widget.FindChildIndexCallback(
+                    key is ReorderableItemKey itemKey ? itemKey.SubKey : key));
         Widget sliver;
         if (widget.ItemExtent.HasValue)
         {
@@ -387,8 +434,10 @@ public sealed class SliverReorderableListState : State
 
     public override void Dispose()
     {
-        _recognizer?.Dispose();
+        ResetDrag();
+        DisposeAutoScroller();
         _proxyAnimation!.Changed -= HandleProxyAnimationChanged;
+        _proxyAnimation.Dismissed -= HandleProxyAnimationDismissed;
         _proxyAnimation.Dispose();
         _proxyAnimation = null;
     }
@@ -407,7 +456,7 @@ public sealed class SliverReorderableListState : State
         }
     }
 
-    internal void StartItemDragReorder(int index, PointerDownEvent @event, bool delayed)
+    public void StartItemDragReorder(int index, PointerDownEvent @event, bool delayed = false)
     {
         if (index < 0 || index >= CurrentWidget.ItemCount)
         {
@@ -417,6 +466,11 @@ public sealed class SliverReorderableListState : State
         if (!_items.ContainsKey(index))
         {
             throw new InvalidOperationException("Attempting to start a drag on a non-visible item.");
+        }
+
+        if (IsDragging)
+        {
+            CancelReorder();
         }
 
         _recognizer?.Dispose();
@@ -457,10 +511,59 @@ public sealed class SliverReorderableListState : State
             throw new InvalidOperationException("All ReorderableList items must have a key.");
         }
 
+        OverlayState overlay = Overlay.Of(context);
         return new ReorderableItem(
             index: index,
+            child: WrapWithSemantics(context, child, index),
+            capturedThemes: InheritedTheme.Capture(context, overlay.Context),
+            overlay: overlay,
+            key: new ReorderableItemKey(child.Key, index, this));
+    }
+
+    private Widget WrapWithSemantics(BuildContext context, Widget child, int index)
+    {
+        var actions = new Dictionary<CustomSemanticsAction, Action>();
+        WidgetsLocalizations localizations = WidgetsLocalizations.Of(context);
+        bool horizontal = CurrentWidgetAxis() == Axis.Horizontal;
+        TextDirection direction = Directionality.Of(context);
+
+        if (index > 0)
+        {
+            actions[new CustomSemanticsAction(localizations.ReorderItemToStart)] =
+                () => HandleSemanticsReorder(index, 0);
+            string before = horizontal
+                ? direction == TextDirection.Ltr
+                    ? localizations.ReorderItemLeft
+                    : localizations.ReorderItemRight
+                : localizations.ReorderItemUp;
+            actions[new CustomSemanticsAction(before)] = () => HandleSemanticsReorder(index, index - 1);
+        }
+
+        if (index < CurrentWidget.ItemCount - 1)
+        {
+            string after = horizontal
+                ? direction == TextDirection.Ltr
+                    ? localizations.ReorderItemRight
+                    : localizations.ReorderItemLeft
+                : localizations.ReorderItemDown;
+            actions[new CustomSemanticsAction(after)] = () => HandleSemanticsReorder(index, index + 2);
+            actions[new CustomSemanticsAction(localizations.ReorderItemToEnd)] =
+                () => HandleSemanticsReorder(index, CurrentWidget.ItemCount);
+        }
+
+        return new Semantics(
             child: child,
-            key: new ReorderableItemKey(child.Key, this));
+            container: true,
+            customSemanticsActions: actions);
+    }
+
+    private void HandleSemanticsReorder(int oldIndex, int insertionIndex)
+    {
+        InvokeReorder(oldIndex, insertionIndex);
+        if (Mounted)
+        {
+            SetState(static () => { });
+        }
     }
 
     private void BeginDrag(int index, Point position)
@@ -474,12 +577,18 @@ public sealed class SliverReorderableListState : State
         _dragIndex = index;
         _insertIndex = index;
         _dragOriginBounds = geometry;
+        _dragConstraints = item.Constraints;
         _dragInitialPosition = position;
         _dragBoundary = CurrentWidget.DragBoundaryProvider is null
             ? DragBoundary.ForRectMaybeOf(Context)
             : CurrentWidget.DragBoundaryProvider(Context);
         _dragPosition = ConstrainDragPosition(position);
+        _capturedThemes = item.CapturedThemes;
+        _proxyChild = item.Child;
+        _overlay = item.Overlay;
         item.SetDragging(true);
+        _overlayEntry = new OverlayEntry(BuildProxy);
+        _overlay.Insert(_overlayEntry);
         _proxyAnimation!.Forward(from: 0.0);
         CurrentWidget.OnReorderStart?.Invoke(index);
         SetState(static () => { });
@@ -494,7 +603,8 @@ public sealed class SliverReorderableListState : State
 
         _dragPosition = ConstrainDragPosition(position);
         UpdateInsertionIndex();
-        AutoScroll(_dragPosition);
+        EnsureAutoScroller().StartAutoScrollIfNecessary(DragTargetRect());
+        _overlayEntry?.MarkNeedsBuild();
         SetState(static () => { });
     }
 
@@ -506,30 +616,13 @@ public sealed class SliverReorderableListState : State
             return;
         }
 
-        int oldIndex = _dragIndex.Value;
-        int insertionIndex = _insertIndex.Value;
-        CurrentWidget.OnReorderEnd?.Invoke(insertionIndex);
-
-        if (CurrentWidget.OnReorder is not null)
-        {
-            if (oldIndex != insertionIndex)
-            {
-#pragma warning disable CS0618
-                CurrentWidget.OnReorder(oldIndex, insertionIndex);
-#pragma warning restore CS0618
-            }
-        }
-        else
-        {
-            int newIndex = insertionIndex > oldIndex ? insertionIndex - 1 : insertionIndex;
-            if (oldIndex != newIndex)
-            {
-                CurrentWidget.OnReorderItem?.Invoke(oldIndex, newIndex);
-            }
-        }
-
-        ResetDrag();
-        SetState(static () => { });
+        CurrentWidget.OnReorderEnd?.Invoke(_insertIndex.Value);
+        _autoScroller?.StopAutoScroll();
+        _dropStartPosition = ProxyGlobalPosition();
+        _dropTargetPosition = ResolveDropTargetPosition();
+        _dropping = true;
+        _proxyAnimation!.Reverse();
+        _overlayEntry?.MarkNeedsBuild();
     }
 
     private void UpdateInsertionIndex()
@@ -647,36 +740,42 @@ public sealed class SliverReorderableListState : State
         item.UpdateGap(target, animate);
     }
 
-    private void AutoScroll(Point position)
+    private EdgeDraggingAutoScroller EnsureAutoScroller()
     {
-        ScrollController? controller = CurrentWidget.ScrollController;
-        if (controller?.PrimaryPosition is not { } scrollPosition || !TryGetViewportBounds(out Rect viewport))
+        if (_autoScroller is not null)
+        {
+            return _autoScroller;
+        }
+
+        Scrollable.ScrollableState scrollable = Context.FindAncestorStateOfType<Scrollable.ScrollableState>()
+            ?? throw new InvalidOperationException("A SliverReorderableList requires a Scrollable ancestor.");
+        _autoScroller = new EdgeDraggingAutoScroller(
+            scrollable,
+            () => TryGetViewportBounds(out Rect bounds) ? bounds : null,
+            CurrentWidget.AutoScrollerVelocityScalar,
+            HandleAutoScroll);
+        return _autoScroller;
+    }
+
+    private void HandleAutoScroll()
+    {
+        if (!IsDragging || _dropping)
         {
             return;
         }
 
-        const double edgeExtent = 24.0;
-        double coordinate = MainAxisOffset(position);
-        double start = MainAxisOffset(viewport.TopLeft);
-        double end = CurrentWidgetAxis() == Axis.Vertical ? viewport.Bottom : viewport.Right;
-        double overscrollFraction = 0;
-        if (coordinate < start + edgeExtent)
+        UpdateInsertionIndex();
+        _overlayEntry?.MarkNeedsBuild();
+        if (Mounted)
         {
-            overscrollFraction = -Math.Clamp((start + edgeExtent - coordinate) / edgeExtent, 0, 1);
+            SetState(static () => { });
         }
-        else if (coordinate > end - edgeExtent)
-        {
-            overscrollFraction = Math.Clamp((coordinate - (end - edgeExtent)) / edgeExtent, 0, 1);
-        }
+    }
 
-        if (Math.Abs(overscrollFraction) <= double.Epsilon)
-        {
-            return;
-        }
-
-        double direction = CurrentWidgetIsReverse() ? -1.0 : 1.0;
-        double delta = overscrollFraction * direction * CurrentWidget.AutoScrollerVelocityScalar * 0.016;
-        controller.JumpTo(scrollPosition.Pixels + delta);
+    private void DisposeAutoScroller()
+    {
+        _autoScroller?.Dispose();
+        _autoScroller = null;
     }
 
     private bool TryGetViewportBounds(out Rect bounds)
@@ -703,18 +802,37 @@ public sealed class SliverReorderableListState : State
     {
         _recognizer?.Dispose();
         _recognizer = null;
+        _autoScroller?.StopAutoScroll();
         foreach (ReorderableItemState item in _items.Values)
         {
             item.SetDragging(false);
             item.UpdateGap(default, animate: false);
         }
 
+        if (_overlayEntry is not null)
+        {
+            if (_overlayEntry.Owner is not null)
+            {
+                _overlayEntry.Remove();
+            }
+
+            _overlayEntry.Dispose();
+            _overlayEntry = null;
+        }
+
         _dragIndex = null;
         _insertIndex = null;
         _dragOriginBounds = default;
+        _dragConstraints = default;
         _dragInitialPosition = default;
         _dragPosition = default;
+        _dropStartPosition = default;
+        _dropTargetPosition = default;
+        _dropping = false;
         _dragBoundary = null;
+        _capturedThemes = null;
+        _proxyChild = null;
+        _overlay = null;
         _proxyAnimation?.Stop();
         _proxyAnimation?.SetValue(0.0);
     }
@@ -769,9 +887,129 @@ public sealed class SliverReorderableListState : State
         return _dragInitialPosition + constrainedTranslation;
     }
 
+    private Rect DragTargetRect()
+    {
+        Point origin = ProxyGlobalPosition();
+        return new Rect(origin, _dragOriginBounds.Size);
+    }
+
+    private Point ProxyGlobalPosition()
+    {
+        if (_dropping)
+        {
+            double t = Curves.EaseOut(_proxyAnimation!.Value);
+            return new Point(
+                _dropTargetPosition.X + ((_dropStartPosition.X - _dropTargetPosition.X) * t),
+                _dropTargetPosition.Y + ((_dropStartPosition.Y - _dropTargetPosition.Y) * t));
+        }
+
+        return _dragOriginBounds.TopLeft + DragTranslation;
+    }
+
+    private Point ResolveDropTargetPosition()
+    {
+        int oldIndex = _dragIndex!.Value;
+        int insertionIndex = _insertIndex!.Value;
+        if (oldIndex == insertionIndex)
+        {
+            return _dragOriginBounds.TopLeft;
+        }
+
+        bool movingAfter = insertionIndex > oldIndex;
+        int targetIndex = movingAfter ? insertionIndex - 1 : insertionIndex;
+        if (!_items.TryGetValue(targetIndex, out ReorderableItemState? target)
+            || !target.TryGetTargetGeometry(out Rect targetGeometry))
+        {
+            return _dragOriginBounds.TopLeft;
+        }
+
+        double signedExtent = CurrentWidgetIsReverse()
+            ? -MainAxisExtent(_dragOriginBounds.Size)
+            : MainAxisExtent(_dragOriginBounds.Size);
+        return targetGeometry.TopLeft + ExtentOffset(movingAfter ? signedExtent : -signedExtent);
+    }
+
+    private Widget BuildProxy(BuildContext context)
+    {
+        _ = context;
+        Widget child = _proxyChild ?? new SizedBox();
+        if (_dragIndex.HasValue && CurrentWidget.ProxyDecorator is not null)
+        {
+            child = CurrentWidget.ProxyDecorator(child, _dragIndex.Value, ProxyAnimation);
+        }
+
+        Point globalPosition = ProxyGlobalPosition();
+        Point overlayOrigin = OverlayOrigin();
+        Point localPosition = globalPosition - new Vector(overlayOrigin.X, overlayOrigin.Y);
+        Widget constrainedChild = new SizedBox(
+            width: _dragOriginBounds.Width,
+            height: _dragOriginBounds.Height,
+            child: new OverflowBox(
+                alignment: ScrollAxis == Axis.Horizontal ? Alignment.CenterLeft : Alignment.TopCenter,
+                minWidth: _dragConstraints.MinWidth,
+                maxWidth: _dragConstraints.MaxWidth,
+                minHeight: _dragConstraints.MinHeight,
+                maxHeight: _dragConstraints.MaxHeight,
+                child: child));
+        Widget proxy = new Positioned(
+            left: localPosition.X,
+            top: localPosition.Y,
+            width: _dragOriginBounds.Width,
+            height: _dragOriginBounds.Height,
+            child: new IgnorePointer(ignoring: true, child: constrainedChild));
+        proxy = MediaQuery.RemovePadding(context, proxy, removeTop: true);
+        return _capturedThemes?.Wrap(proxy) ?? proxy;
+    }
+
+    private Point OverlayOrigin()
+    {
+        if (_overlay?.Context.FindRenderObject() is RenderBox renderBox
+            && renderBox.TryGetTransformFromRoot(out Matrix transform))
+        {
+            return transform.Transform(new Point());
+        }
+
+        return default;
+    }
+
+    private void InvokeReorder(int oldIndex, int insertionIndex)
+    {
+        if (CurrentWidget.OnReorder is not null)
+        {
+            if (oldIndex != insertionIndex)
+            {
+#pragma warning disable CS0618
+                CurrentWidget.OnReorder(oldIndex, insertionIndex);
+#pragma warning restore CS0618
+            }
+
+            return;
+        }
+
+        int newIndex = insertionIndex > oldIndex ? insertionIndex - 1 : insertionIndex;
+        if (oldIndex != newIndex)
+        {
+            CurrentWidget.OnReorderItem?.Invoke(oldIndex, newIndex);
+        }
+    }
+
     private void HandleProxyAnimationChanged()
     {
-        if (Mounted && IsDragging)
+        _overlayEntry?.MarkNeedsBuild();
+    }
+
+    private void HandleProxyAnimationDismissed()
+    {
+        if (!_dropping || !_dragIndex.HasValue || !_insertIndex.HasValue)
+        {
+            return;
+        }
+
+        int oldIndex = _dragIndex.Value;
+        int insertionIndex = _insertIndex.Value;
+        InvokeReorder(oldIndex, insertionIndex);
+        ResetDrag();
+        if (Mounted)
         {
             SetState(static () => { });
         }
@@ -798,19 +1036,30 @@ internal sealed class ReorderableListScope : InheritedWidget
     }
 }
 
-internal sealed record ReorderableItemKey(Key SubKey, SliverReorderableListState Owner) : GlobalKey;
+internal sealed record ReorderableItemKey(Key SubKey, int Index, SliverReorderableListState Owner) : GlobalKey;
 
 internal sealed class ReorderableItem : StatefulWidget
 {
-    public ReorderableItem(int index, Widget child, Key key) : base(key)
+    public ReorderableItem(
+        int index,
+        Widget child,
+        CapturedThemes capturedThemes,
+        OverlayState overlay,
+        Key key) : base(key)
     {
         Index = index;
         Child = child;
+        CapturedThemes = capturedThemes;
+        Overlay = overlay;
     }
 
     public int Index { get; }
 
     public Widget Child { get; }
+
+    public CapturedThemes CapturedThemes { get; }
+
+    public OverlayState Overlay { get; }
 
     public override State CreateState() => new ReorderableItemState();
 }
@@ -826,6 +1075,15 @@ internal sealed class ReorderableItemState : State
     private ReorderableItem CurrentWidget => (ReorderableItem)StateWidget;
 
     public int Index => CurrentWidget.Index;
+
+    internal Widget Child => CurrentWidget.Child;
+
+    internal CapturedThemes CapturedThemes => CurrentWidget.CapturedThemes;
+
+    internal OverlayState Overlay => CurrentWidget.Overlay;
+
+    internal BoxConstraints Constraints =>
+        Context.FindRenderObject() is RenderBox renderBox ? renderBox.Constraints : default;
 
     public override void DidChangeDependencies()
     {
@@ -854,18 +1112,10 @@ internal sealed class ReorderableItemState : State
         Widget child = CurrentWidget.Child;
         if (_dragging)
         {
-            if (_listState!.CurrentWidget.ProxyDecorator is not null)
-            {
-                child = _listState.CurrentWidget.ProxyDecorator(
-                    child,
-                    Index,
-                    _listState.ProxyAnimation);
-            }
-
-            Vector translation = _listState.DragTranslation;
-            child = new Transform(
-                Matrix.CreateTranslation(translation.X, translation.Y),
-                new IgnorePointer(ignoring: true, child: child));
+            Size size = _listState!.DragOriginBounds.Size;
+            child = _listState.ScrollAxis == Axis.Vertical
+                ? new SizedBox(height: size.Height)
+                : new SizedBox(width: size.Width);
         }
         else
         {

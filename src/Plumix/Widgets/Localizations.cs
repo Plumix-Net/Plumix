@@ -126,6 +126,18 @@ public abstract class WidgetsLocalizations
 
     public virtual string NoResultsFound => "No results found";
 
+    public virtual string ReorderItemToStart => "Move to the start";
+
+    public virtual string ReorderItemToEnd => "Move to the end";
+
+    public virtual string ReorderItemUp => "Move up";
+
+    public virtual string ReorderItemDown => "Move down";
+
+    public virtual string ReorderItemLeft => "Move left";
+
+    public virtual string ReorderItemRight => "Move right";
+
     public static WidgetsLocalizations Of(BuildContext context)
     {
         return Localizations.Of<WidgetsLocalizations>(context);

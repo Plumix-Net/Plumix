@@ -2655,6 +2655,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
     private Action? _onTap;
     private Action? _onLongPress;
     private Action? _onDismiss;
+    private IReadOnlyDictionary<CustomSemanticsAction, Action>? _customSemanticsActions;
     private Action? _onFocus;
     private bool _liveRegion;
     private bool _container;
@@ -2669,6 +2670,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         Action? onTap = null,
         Action? onLongPress = null,
         Action? onDismiss = null,
+        IReadOnlyDictionary<CustomSemanticsAction, Action>? customSemanticsActions = null,
         bool liveRegion = false,
         bool container = false,
         bool explicitChildNodes = false,
@@ -2682,6 +2684,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         _onTap = onTap;
         _onLongPress = onLongPress;
         _onDismiss = onDismiss;
+        _customSemanticsActions = customSemanticsActions;
         _liveRegion = liveRegion;
         _container = container;
         _explicitChildNodes = explicitChildNodes;
@@ -2792,6 +2795,21 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         }
     }
 
+    public IReadOnlyDictionary<CustomSemanticsAction, Action>? CustomSemanticsActions
+    {
+        get => _customSemanticsActions;
+        set
+        {
+            if (ReferenceEquals(_customSemanticsActions, value))
+            {
+                return;
+            }
+
+            _customSemanticsActions = value;
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
     public Action? OnLongPress
     {
         get => _onLongPress;
@@ -2854,6 +2872,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
             && _onTap is null
             && _onLongPress is null
             && _onDismiss is null
+            && _customSemanticsActions is null
             && _onFocus is null
             && !_liveRegion
             && !_container
@@ -2906,6 +2925,13 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         if (_onFocus is not null)
         {
             configuration.AddActionHandler(SemanticsActions.Focus, _onFocus);
+        }
+        if (_customSemanticsActions is not null)
+        {
+            foreach (var pair in _customSemanticsActions)
+            {
+                configuration.AddCustomActionHandler(pair.Key, pair.Value);
+            }
         }
     }
 }

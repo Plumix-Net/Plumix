@@ -23,6 +23,7 @@ public sealed class MaterialReorderableListTests
         ReorderCallback callback = (_, _) => { };
         ReorderDragBoundaryProvider boundaryProvider = _ =>
             new FixedRectDragBoundaryDelegate(new Rect(0, 0, 100, 100));
+        ChildIndexGetter childIndexGetter = _ => 0;
 
         Assert.Throws<ArgumentException>(() => new ReorderableList(builder, 1));
         Assert.Throws<ArgumentException>(() => new ReorderableList(
@@ -60,6 +61,25 @@ public sealed class MaterialReorderableListTests
         Assert.False(list.ShrinkWrap);
         Assert.Equal(50, list.AutoScrollerVelocityScalar);
         Assert.Same(boundaryProvider, list.DragBoundaryProvider);
+#pragma warning disable CS0618
+        Assert.Null(list.CacheExtent);
+#pragma warning restore CS0618
+        Assert.Null(list.ScrollCacheExtent);
+
+        var sliver = new SliverReorderableList(
+            builder,
+            3,
+            findChildIndexCallback: childIndexGetter,
+            onReorderItem: callback);
+        Assert.Same(childIndexGetter, sliver.FindChildIndexCallback);
+
+        ReorderableListView cachedList = ReorderableListView.Builder(
+            builder,
+            3,
+            onReorderItem: callback,
+            scrollCacheExtent: ScrollCacheExtent.Viewport(1.5));
+        Assert.Equal(1.5, cachedList.ScrollCacheExtent!.Value);
+        Assert.Equal(CacheExtentStyle.Viewport, cachedList.ScrollCacheExtent.Style);
     }
 
     [Fact]
@@ -228,6 +248,7 @@ public sealed class MaterialReorderableListTests
             DispatchDown(binding, harness.RenderView, 71, new Point(100, 25), start);
             DispatchMove(binding, harness.RenderView, 71, new Point(100, 115), start.AddMilliseconds(100));
             DispatchUp(binding, harness.RenderView, 71, new Point(100, 115), start.AddMilliseconds(200));
+            CompleteDropAnimation();
 
             Assert.Equal([0], starts);
             Assert.Equal([3], ends);
@@ -267,6 +288,7 @@ public sealed class MaterialReorderableListTests
             DispatchDown(binding, harness.RenderView, 72, new Point(100, 25), start);
             DispatchMove(binding, harness.RenderView, 72, new Point(100, 115), start.AddMilliseconds(100));
             DispatchUp(binding, harness.RenderView, 72, new Point(100, 115), start.AddMilliseconds(200));
+            CompleteDropAnimation();
 
             Assert.Equal([(0, 3)], reorders);
         }
@@ -303,6 +325,7 @@ public sealed class MaterialReorderableListTests
             DispatchDown(binding, harness.RenderView, 74, new Point(25, 50), start);
             DispatchMove(binding, harness.RenderView, 74, new Point(115, 50), start.AddMilliseconds(100));
             DispatchUp(binding, harness.RenderView, 74, new Point(115, 50), start.AddMilliseconds(200));
+            CompleteDropAnimation();
 
             Assert.Equal([(0, 2)], reorders);
         }
@@ -373,6 +396,7 @@ public sealed class MaterialReorderableListTests
             DispatchDown(binding, harness.RenderView, 73, new Point(220, 25), start);
             DispatchMove(binding, harness.RenderView, 73, new Point(220, 115), start.AddMilliseconds(100));
             DispatchUp(binding, harness.RenderView, 73, new Point(220, 115), start.AddMilliseconds(200));
+            CompleteDropAnimation();
 
             Assert.Equal([(0, 2)], reorders);
         }
@@ -462,13 +486,180 @@ public sealed class MaterialReorderableListTests
         Assert.Equal(new Size(200, 44), sliver.PrototypeChild!.Size);
     }
 
+    [Fact]
+    public void ReorderableList_UsesOverlayCapturedThemesAndCompletesCallbackAfterDropAnimation()
+    {
+        Scheduler.ResetForTests();
+        GestureBinding binding = GestureBinding.Instance;
+        binding.ResetForTests();
+        List<(int OldIndex, int NewIndex)> reorders = [];
+
+        try
+        {
+            Widget list = new DefaultTextStyle(
+                new TextStyle(FontSize: 31),
+                new ReorderableList(
+                    itemBuilder: (_, index) => new ReorderableDragStartListener(
+                        child: new Text($"Item {index}"),
+                        index: index,
+                        key: new ValueKey<int>(index)),
+                    itemCount: 3,
+                    onReorderItem: (oldIndex, newIndex) => reorders.Add((oldIndex, newIndex)),
+                    itemExtent: 50));
+            using WidgetRenderHarness harness = new(Wrap(list));
+            harness.Pump(new Size(200, 150));
+            int baselineEntries = harness.FindState<OverlayState>().Entries.Count;
+
+            DateTime start = DateTime.UtcNow;
+            DispatchDown(binding, harness.RenderView, 80, new Point(100, 25), start);
+            DispatchMove(binding, harness.RenderView, 80, new Point(100, 115), start.AddMilliseconds(100));
+            harness.Pump(new Size(200, 150));
+
+            Assert.Equal(baselineEntries + 1, harness.FindState<OverlayState>().Entries.Count);
+            RenderParagraph proxyText = Assert.Single(
+                FindDescendants<RenderParagraph>(harness.RenderView),
+                paragraph => paragraph.Text == "Item 0");
+            Assert.Equal(31, proxyText.FontSize);
+
+            double pickupClock = Scheduler.CurrentSeconds;
+            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(pickupClock + 0.01));
+            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(pickupClock + 0.30));
+
+            DispatchUp(binding, harness.RenderView, 80, new Point(100, 115), start.AddMilliseconds(200));
+            Assert.Empty(reorders);
+            Assert.Equal(baselineEntries + 1, harness.FindState<OverlayState>().Entries.Count);
+
+            double clock = Scheduler.CurrentSeconds;
+            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.01));
+            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.13));
+            Assert.Empty(reorders);
+
+            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.30));
+            Assert.Equal([(0, 2)], reorders);
+            Assert.Equal(baselineEntries, harness.FindState<OverlayState>().Entries.Count);
+        }
+        finally
+        {
+            binding.ResetForTests();
+            Scheduler.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void ReorderableList_DropRebuildsMutatedKeyedItemsWithoutCorruptingSliverChildren()
+    {
+        Scheduler.ResetForTests();
+        GestureBinding binding = GestureBinding.Instance;
+        binding.ResetForTests();
+
+        try
+        {
+            using WidgetRenderHarness harness = new(Wrap(new MutableReorderableList()));
+            harness.Pump(new Size(200, 150));
+
+            DateTime start = DateTime.UtcNow;
+            DispatchDown(binding, harness.RenderView, 82, new Point(100, 25), start);
+            DispatchMove(binding, harness.RenderView, 82, new Point(100, 115), start.AddMilliseconds(100));
+            DispatchUp(binding, harness.RenderView, 82, new Point(100, 115), start.AddMilliseconds(200));
+            CompleteDropAnimation();
+            harness.Pump(new Size(200, 150));
+
+            Assert.Equal(
+                ["Bravo", "Charlie", "Alpha"],
+                FindDescendants<RenderParagraph>(harness.RenderView)
+                    .Select(paragraph => paragraph.Text)
+                    .Where(text => text is "Alpha" or "Bravo" or "Charlie"));
+        }
+        finally
+        {
+            binding.ResetForTests();
+            Scheduler.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void ReorderableList_StationaryEdgeDragContinuesAutoScrolling()
+    {
+        Scheduler.ResetForTests();
+        GestureBinding binding = GestureBinding.Instance;
+        binding.ResetForTests();
+        var controller = new ScrollController();
+
+        try
+        {
+            Widget list = new ReorderableList(
+                itemBuilder: (_, index) => new ReorderableDragStartListener(
+                    child: new SizedBox(height: 50),
+                    index: index,
+                    key: new ValueKey<int>(index)),
+                itemCount: 20,
+                onReorderItem: (_, _) => { },
+                itemExtent: 50,
+                controller: controller);
+            using WidgetRenderHarness harness = new(Wrap(list));
+            harness.Pump(new Size(200, 150));
+
+            DateTime start = DateTime.UtcNow;
+            DispatchDown(binding, harness.RenderView, 81, new Point(100, 25), start);
+            DispatchMove(binding, harness.RenderView, 81, new Point(100, 190), start.AddMilliseconds(100));
+
+            double clock = Scheduler.CurrentSeconds;
+            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.01));
+            harness.Pump(new Size(200, 150));
+            double firstOffset = controller.Offset;
+            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.05));
+            harness.Pump(new Size(200, 150));
+
+            Assert.True(firstOffset > 0.0);
+            Assert.True(controller.Offset > firstOffset);
+            DispatchUp(binding, harness.RenderView, 81, new Point(100, 190), start.AddMilliseconds(200));
+        }
+        finally
+        {
+            controller.Dispose();
+            binding.ResetForTests();
+            Scheduler.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void ReorderableList_ProvidesAndInvokesLocalizedCustomSemanticsActions()
+    {
+        List<(int OldIndex, int NewIndex)> reorders = [];
+        Widget list = new ReorderableList(
+            itemBuilder: (_, index) => new SizedBox(
+                height: 50,
+                key: new ValueKey<int>(index)),
+            itemCount: 3,
+            onReorderItem: (oldIndex, newIndex) => reorders.Add((oldIndex, newIndex)),
+            itemExtent: 50);
+        using WidgetRenderHarness harness = new(Wrap(list));
+        SemanticsNode root = Assert.IsType<SemanticsNode>(harness.PumpAndGetSemantics(new Size(200, 150)));
+        List<SemanticsNode> items = FlattenSemantics(root)
+            .Where(node => node.CustomSemanticsActions.Count > 0)
+            .OrderBy(node => node.Rect.Top)
+            .ToList();
+
+        Assert.Equal([2, 4, 2], items.Select(node => node.CustomSemanticsActions.Count));
+        CustomSemanticsAction moveDown = Assert.Single(
+            items[0].CustomSemanticsActions.Keys,
+            action => action.Label == "Move down");
+        Assert.True(harness.PerformCustomSemanticsAction(items[0].Id, moveDown));
+        Assert.Equal([(0, 1)], reorders);
+    }
+
     private static Widget Wrap(Widget child, ThemeData? theme = null)
     {
         return new Directionality(
             TextDirection.Ltr,
             new MediaQuery(
                 new MediaQueryData(new Size(360, 640)),
-                new Theme(theme ?? ThemeData.Light, child)));
+                new Localizations(
+                    locale: new Locale("en"),
+                    delegates: [DefaultWidgetsLocalizations.Delegate],
+                    child: new Theme(
+                        theme ?? ThemeData.Light,
+                        Overlay.Wrap(child)))));
     }
 
     private static void DispatchDown(
@@ -513,6 +704,13 @@ public sealed class MaterialReorderableListTests
             new PointerUpEvent(pointer, PointerDeviceKind.Mouse, position, PointerButtons.None, timestamp));
     }
 
+    private static void CompleteDropAnimation()
+    {
+        double now = Scheduler.CurrentSeconds;
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.30));
+    }
+
     private static List<T> FindDescendants<T>(RenderObject? root) where T : RenderObject
     {
         List<T> result = [];
@@ -528,6 +726,18 @@ public sealed class MaterialReorderableListTests
 
         root.VisitChildren(child => result.AddRange(FindDescendants<T>(child)));
         return result;
+    }
+
+    private static IEnumerable<SemanticsNode> FlattenSemantics(SemanticsNode root)
+    {
+        yield return root;
+        foreach (SemanticsNode child in root.Children)
+        {
+            foreach (SemanticsNode descendant in FlattenSemantics(child))
+            {
+                yield return descendant;
+            }
+        }
     }
 
     private sealed class FixedRectDragBoundaryDelegate : DragBoundaryDelegate<Rect>
@@ -552,6 +762,38 @@ public sealed class MaterialReorderableListTests
                 Math.Clamp(draggedObject.Y, _boundary.Top, _boundary.Bottom - draggedObject.Height),
                 draggedObject.Width,
                 draggedObject.Height);
+        }
+    }
+
+    private sealed class MutableReorderableList : StatefulWidget
+    {
+        public override State CreateState() => new MutableReorderableListState();
+
+        private sealed class MutableReorderableListState : State
+        {
+            private readonly List<string> _items = ["Alpha", "Bravo", "Charlie"];
+
+            public override Widget Build(BuildContext context)
+            {
+                return new ReorderableList(
+                    itemBuilder: (_, index) => new ReorderableDragStartListener(
+                        child: new SizedBox(height: 50, child: new Text(_items[index])),
+                        index: index,
+                        key: new ValueKey<string>(_items[index])),
+                    itemCount: _items.Count,
+                    onReorderItem: HandleReorder,
+                    itemExtent: 50);
+            }
+
+            private void HandleReorder(int oldIndex, int newIndex)
+            {
+                SetState(() =>
+                {
+                    string item = _items[oldIndex];
+                    _items.RemoveAt(oldIndex);
+                    _items.Insert(newIndex, item);
+                });
+            }
         }
     }
 
@@ -581,6 +823,42 @@ public sealed class MaterialReorderableListTests
             _pipeline.FlushLayout(size);
             _pipeline.FlushCompositingBits();
             _pipeline.FlushPaint();
+        }
+
+        public SemanticsNode? PumpAndGetSemantics(Size size)
+        {
+            Pump(size);
+            _pipeline.RequestSemanticsUpdate();
+            _pipeline.FlushSemantics();
+            return _pipeline.SemanticsOwner.RootNode;
+        }
+
+        public bool PerformCustomSemanticsAction(int nodeId, CustomSemanticsAction action)
+        {
+            return _pipeline.SemanticsOwner.PerformCustomAction(nodeId, action);
+        }
+
+        public T FindState<T>() where T : State
+        {
+            T? result = null;
+            Visit(_root);
+            return Assert.IsType<T>(result);
+
+            void Visit(Element element)
+            {
+                if (result is not null)
+                {
+                    return;
+                }
+
+                if (element is StatefulElement { State: T state })
+                {
+                    result = state;
+                    return;
+                }
+
+                element.VisitChildren(Visit);
+            }
         }
 
         public void Dispose() => _root.Unmount();

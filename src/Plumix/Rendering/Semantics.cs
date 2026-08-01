@@ -51,6 +51,22 @@ public enum SemanticsActions
     ShowOnScreen = 1 << 10,
 }
 
+// Dart parity source: flutter/packages/flutter/lib/src/semantics/semantics.dart
+public sealed record CustomSemanticsAction
+{
+    public CustomSemanticsAction(string label)
+    {
+        if (string.IsNullOrWhiteSpace(label))
+        {
+            throw new ArgumentException("A custom semantics action label cannot be empty.", nameof(label));
+        }
+
+        Label = label;
+    }
+
+    public string Label { get; }
+}
+
 public delegate ChildSemanticsConfigurationsResult ChildSemanticsConfigurationsDelegate(
     List<SemanticsConfiguration> childConfigurations);
 
@@ -88,11 +104,17 @@ public sealed class SemanticsConfiguration
     public int? IndexInParent { get; set; }
 
     private Dictionary<SemanticsActions, Action>? _actionHandlers;
+    private Dictionary<CustomSemanticsAction, Action>? _customActionHandlers;
     internal bool HasActionHandlers => _actionHandlers is { Count: > 0 };
+    internal bool HasCustomActionHandlers => _customActionHandlers is { Count: > 0 };
     internal IReadOnlyDictionary<SemanticsActions, Action> ActionHandlers => _actionHandlers ?? EmptyHandlers;
+    internal IReadOnlyDictionary<CustomSemanticsAction, Action> CustomActionHandlers =>
+        _customActionHandlers ?? EmptyCustomHandlers;
 
     private static readonly IReadOnlyDictionary<SemanticsActions, Action> EmptyHandlers =
         new Dictionary<SemanticsActions, Action>();
+    private static readonly IReadOnlyDictionary<CustomSemanticsAction, Action> EmptyCustomHandlers =
+        new Dictionary<CustomSemanticsAction, Action>();
 
     public void AddActionHandler(SemanticsActions action, Action handler)
     {
@@ -106,9 +128,22 @@ public sealed class SemanticsConfiguration
         Actions |= action;
     }
 
+    public void AddCustomActionHandler(CustomSemanticsAction action, Action handler)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+        ArgumentNullException.ThrowIfNull(handler);
+        _customActionHandlers ??= [];
+        _customActionHandlers[action] = handler;
+    }
+
     internal void ReplaceActionHandlers(Dictionary<SemanticsActions, Action> handlers)
     {
         _actionHandlers = handlers.Count == 0 ? null : handlers;
+    }
+
+    internal void ReplaceCustomActionHandlers(Dictionary<CustomSemanticsAction, Action> handlers)
+    {
+        _customActionHandlers = handlers.Count == 0 ? null : handlers;
     }
 
     internal SemanticsConfiguration Clone()
@@ -137,6 +172,11 @@ public sealed class SemanticsConfiguration
             clone._actionHandlers = new Dictionary<SemanticsActions, Action>(_actionHandlers);
         }
 
+        if (_customActionHandlers is { Count: > 0 })
+        {
+            clone._customActionHandlers = new Dictionary<CustomSemanticsAction, Action>(_customActionHandlers);
+        }
+
         return clone;
     }
 
@@ -144,6 +184,7 @@ public sealed class SemanticsConfiguration
     {
         Actions = SemanticsActions.None;
         _actionHandlers = null;
+        _customActionHandlers = null;
     }
 
     internal bool HasBeenAnnotated =>
@@ -154,7 +195,8 @@ public sealed class SemanticsConfiguration
         || Flags != SemanticsFlags.None
         || Actions != SemanticsActions.None
         || IndexInParent.HasValue
-        || HasActionHandlers;
+        || HasActionHandlers
+        || HasCustomActionHandlers;
 
     internal bool IsCompatibleWith(SemanticsConfiguration? other)
     {
@@ -164,6 +206,11 @@ public sealed class SemanticsConfiguration
         }
 
         if ((Actions & other.Actions) != SemanticsActions.None)
+        {
+            return false;
+        }
+
+        if (CustomActionHandlers.Keys.Any(other.CustomActionHandlers.ContainsKey))
         {
             return false;
         }
@@ -235,6 +282,16 @@ public sealed class SemanticsConfiguration
                 _actionHandlers.TryAdd(pair.Key, pair.Value);
             }
         }
+
+
+        if (child.HasCustomActionHandlers)
+        {
+            _customActionHandlers ??= [];
+            foreach (var pair in child.CustomActionHandlers)
+            {
+                _customActionHandlers.TryAdd(pair.Key, pair.Value);
+            }
+        }
     }
 }
 
@@ -242,6 +299,7 @@ public sealed class SemanticsNode
 {
     private readonly List<SemanticsNode> _children = [];
     private readonly Dictionary<SemanticsActions, Action> _actionHandlers = [];
+    private readonly Dictionary<CustomSemanticsAction, Action> _customActionHandlers = [];
 
     internal SemanticsNode(int id)
     {
@@ -259,6 +317,7 @@ public sealed class SemanticsNode
     public int? IndexInParent { get; internal set; }
     public bool IsHidden { get; internal set; }
     public IReadOnlyList<SemanticsNode> Children => _children;
+    public IReadOnlyDictionary<CustomSemanticsAction, Action> CustomSemanticsActions => _customActionHandlers;
     internal bool BlocksPreviousNodes { get; set; }
 
     internal void ReplaceChildren(List<SemanticsNode> children)
@@ -284,9 +343,37 @@ public sealed class SemanticsNode
         }
     }
 
+    internal void SetCustomActionHandlers(IReadOnlyDictionary<CustomSemanticsAction, Action> handlers)
+    {
+        _customActionHandlers.Clear();
+        foreach (var pair in handlers)
+        {
+            _customActionHandlers[pair.Key] = pair.Value;
+        }
+    }
+
+    internal void CopyCustomActionHandlersTo(Dictionary<CustomSemanticsAction, Action> target)
+    {
+        foreach (var pair in _customActionHandlers)
+        {
+            target.TryAdd(pair.Key, pair.Value);
+        }
+    }
+
     internal bool PerformAction(SemanticsActions action)
     {
         if (_actionHandlers.TryGetValue(action, out var handler))
+        {
+            handler();
+            return true;
+        }
+
+        return false;
+    }
+
+    internal bool PerformCustomAction(CustomSemanticsAction action)
+    {
+        if (_customActionHandlers.TryGetValue(action, out var handler))
         {
             handler();
             return true;
@@ -364,6 +451,7 @@ public sealed class SemanticsOwner
         _syntheticRoot.IndexInParent = null;
         _syntheticRoot.IsHidden = false;
         _syntheticRoot.SetActionHandlers(new Dictionary<SemanticsActions, Action>());
+        _syntheticRoot.SetCustomActionHandlers(new Dictionary<CustomSemanticsAction, Action>());
         RootNode = _syntheticRoot;
         RebuildIndex();
         PruneUnusedRenderObjectNodes();
@@ -378,6 +466,12 @@ public sealed class SemanticsOwner
         }
 
         return _index.TryGetValue(nodeId, out var node) && node.PerformAction(action);
+    }
+
+    public bool PerformCustomAction(int nodeId, CustomSemanticsAction action)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+        return _index.TryGetValue(nodeId, out var node) && node.PerformCustomAction(action);
     }
 
     public string DebugDumpTree()

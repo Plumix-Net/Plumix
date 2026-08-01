@@ -32,6 +32,7 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         Action? onTap = null,
         Action? onLongPress = null,
         Action? onDismiss = null,
+        IReadOnlyDictionary<CustomSemanticsAction, Action>? customSemanticsActions = null,
         bool liveRegion = false,
         bool container = false,
         bool explicitChildNodes = false,
@@ -58,6 +59,7 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         OnTap = onTap;
         OnLongPress = onLongPress;
         OnDismiss = onDismiss;
+        CustomSemanticsActions = customSemanticsActions;
         LiveRegion = liveRegion;
         Container = container;
         ExplicitChildNodes = explicitChildNodes;
@@ -82,6 +84,8 @@ public sealed class Semantics : SingleChildRenderObjectWidget
     public Action? OnLongPress { get; }
 
     public Action? OnDismiss { get; }
+
+    public IReadOnlyDictionary<CustomSemanticsAction, Action>? CustomSemanticsActions { get; }
 
     public Action? OnFocus { get; init; }
 
@@ -114,6 +118,7 @@ public sealed class Semantics : SingleChildRenderObjectWidget
             onTap: OnTap,
             onLongPress: OnLongPress,
             onDismiss: OnDismiss,
+            customSemanticsActions: CustomSemanticsActions,
             liveRegion: LiveRegion,
             container: Container,
             explicitChildNodes: ExplicitChildNodes);
@@ -132,6 +137,7 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         semantics.OnTap = OnTap;
         semantics.OnLongPress = OnLongPress;
         semantics.OnDismiss = OnDismiss;
+        semantics.CustomSemanticsActions = CustomSemanticsActions;
         semantics.OnFocus = OnFocus;
         semantics.LiveRegion = LiveRegion;
         semantics.Container = Container;

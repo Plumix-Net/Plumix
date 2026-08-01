@@ -387,6 +387,11 @@ public class PlumixHost : Control
         return _pipeline.SemanticsOwner.PerformAction(nodeId, action);
     }
 
+    public bool PerformCustomSemanticsAction(int nodeId, CustomSemanticsAction action)
+    {
+        return _pipeline.SemanticsOwner.PerformCustomAction(nodeId, action);
+    }
+
     internal void FlushPipelineForTests(Size? viewport = null)
     {
         _pipeline.FlushLayout(viewport ?? Bounds.Size);
