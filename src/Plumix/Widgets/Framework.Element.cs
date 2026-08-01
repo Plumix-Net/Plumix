@@ -782,6 +782,7 @@ public sealed class StatefulElement : Element
     protected override void OnActivate()
     {
         base.OnActivate();
+        State.ActivateTickerProvider();
         State.Activate();
     }
 
@@ -849,7 +850,14 @@ public sealed class StatefulElement : Element
             _child = null;
         }
 
-        State.Dispose();
+        try
+        {
+            State.Dispose();
+        }
+        finally
+        {
+            State.DisposeTickerProvider();
+        }
         base.Unmount();
     }
 }

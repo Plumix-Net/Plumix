@@ -804,6 +804,7 @@ public sealed class Scrollable : StatefulWidget
             _fallbackController ??= new ScrollController();
             _attachedController = providedController ?? _fallbackController;
             var position = _attachedController.CreateScrollPosition(physics);
+            position.TickerProvider = this;
             _attachedController.Attach(position);
             return position;
         }

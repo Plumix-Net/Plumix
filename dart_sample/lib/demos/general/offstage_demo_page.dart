@@ -49,6 +49,18 @@ class _OffstageDemoPageState extends State<OffstageDemoPage> {
             'state: visible=${_visible ? 'true' : 'false'}',
             style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
           ),
+          const Text(
+            'maintainState=true keeps the indicator mounted; TickerMode pauses its frame callbacks while hidden.',
+            style: TextStyle(fontSize: 11, color: Colors.black54),
+          ),
+          Visibility(
+            visible: _visible,
+            maintainState: true,
+            child: const SizedBox(
+              height: 18,
+              child: LinearProgressIndicator(),
+            ),
+          ),
           Container(
             height: 82,
             color: const Color(0xFFF6F8FB),

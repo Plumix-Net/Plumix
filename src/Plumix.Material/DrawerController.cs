@@ -105,7 +105,7 @@ public sealed class DrawerControllerState : State
 
     public override void InitState()
     {
-        _controller = new AnimationController(BaseSettleDuration);
+        _controller = new AnimationController(BaseSettleDuration, this);
         _controller.Changed += HandleAnimationChanged;
         _controller.Dismissed += HandleAnimationDismissed;
         _controller.SetValue(CurrentWidget.IsDrawerOpen ? 1.0 : 0.0);

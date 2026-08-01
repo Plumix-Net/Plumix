@@ -244,7 +244,7 @@ public sealed class MergeableMaterial : StatefulWidget
 
         private void AddGap(GapDescriptor descriptor, bool initiallyOpen)
         {
-            var controller = new AnimationController(TimeSpan.FromMilliseconds(200))
+            var controller = new AnimationController(TimeSpan.FromMilliseconds(200), this)
             {
                 Curve = Curves.EaseInOut
             };

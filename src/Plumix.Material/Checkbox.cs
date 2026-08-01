@@ -203,7 +203,7 @@ public sealed class Checkbox : StatefulWidget
         public override void InitState()
         {
             _previousValue = CurrentWidget.Value;
-            _transitionController = new AnimationController(TimeSpan.FromMilliseconds(200))
+            _transitionController = new AnimationController(TimeSpan.FromMilliseconds(200), this)
             {
                 Curve = Curves.EaseInOut
             };

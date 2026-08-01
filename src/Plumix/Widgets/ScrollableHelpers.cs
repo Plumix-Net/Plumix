@@ -33,7 +33,7 @@ public sealed class EdgeDraggingAutoScroller : IDisposable
 
         VelocityScalar = velocityScalar;
         _onScrollViewScrolled = onScrollViewScrolled;
-        _ticker = new Ticker(HandleTick);
+        _ticker = _scrollable.CreateTicker(HandleTick);
     }
 
     public double VelocityScalar { get; }
@@ -66,7 +66,7 @@ public sealed class EdgeDraggingAutoScroller : IDisposable
         }
 
         _disposed = true;
-        _ticker.Stop();
+        _ticker.Dispose();
     }
 
     private void HandleTick(TimeSpan elapsed)

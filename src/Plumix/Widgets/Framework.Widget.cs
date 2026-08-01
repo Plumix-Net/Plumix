@@ -91,8 +91,11 @@ public abstract class ParentDataWidget<T> : ProxyWidget, IParentDataWidget where
     }
 }
 
-public abstract class State
+public abstract class State : ITickerProvider
 {
+    private HashSet<Ticker>? _tickers;
+    private IValueListenable<TickerModeData>? _tickerModeNotifier;
+
     internal StatefulElement Element = null!;
     public BuildContext Context
     {
@@ -133,6 +136,83 @@ public abstract class State
 
     public virtual void Dispose()
     {
+    }
+
+    public Ticker CreateTicker(Action<TimeSpan> onTick)
+    {
+        ArgumentNullException.ThrowIfNull(onTick);
+        UpdateTickerModeNotifier();
+        TickerModeData values = _tickerModeNotifier!.Value;
+        var ticker = new Ticker(onTick, RemoveTicker)
+        {
+            Muted = !values.Enabled,
+            ForceFrames = values.ForceFrames
+        };
+        _tickers ??= [];
+        _tickers.Add(ticker);
+        return ticker;
+    }
+
+    internal void ActivateTickerProvider()
+    {
+        if (_tickerModeNotifier is null && _tickers is null)
+        {
+            return;
+        }
+
+        UpdateTickerModeNotifier();
+        UpdateTickers();
+    }
+
+    internal void DisposeTickerProvider()
+    {
+        _tickerModeNotifier?.RemoveListener(UpdateTickers);
+        _tickerModeNotifier = null;
+
+        if (_tickers is null)
+        {
+            return;
+        }
+
+        foreach (Ticker ticker in _tickers.ToArray())
+        {
+            ticker.Dispose();
+        }
+
+        _tickers = null;
+    }
+
+    private void UpdateTickerModeNotifier()
+    {
+        IValueListenable<TickerModeData> newNotifier = TickerMode.GetValuesNotifier(Context);
+        if (ReferenceEquals(newNotifier, _tickerModeNotifier))
+        {
+            return;
+        }
+
+        _tickerModeNotifier?.RemoveListener(UpdateTickers);
+        newNotifier.AddListener(UpdateTickers);
+        _tickerModeNotifier = newNotifier;
+    }
+
+    private void UpdateTickers()
+    {
+        if (_tickers is null || _tickerModeNotifier is null)
+        {
+            return;
+        }
+
+        TickerModeData values = _tickerModeNotifier.Value;
+        foreach (Ticker ticker in _tickers)
+        {
+            ticker.Muted = !values.Enabled;
+            ticker.ForceFrames = values.ForceFrames;
+        }
+    }
+
+    private void RemoveTicker(Ticker ticker)
+    {
+        _tickers?.Remove(ticker);
     }
 
     /// Called whenever the application is reassembled during debugging, for

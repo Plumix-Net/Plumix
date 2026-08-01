@@ -57,7 +57,7 @@ public sealed class ExpandIcon : StatefulWidget
 
         public override void InitState()
         {
-            _controller = new AnimationController(ThemeAnimationDuration) { Curve = Curves.FastOutSlowIn };
+            _controller = new AnimationController(ThemeAnimationDuration, this) { Curve = Curves.FastOutSlowIn };
             _controller.Changed += HandleChanged;
             if (CurrentWidget.IsExpanded)
             {

@@ -432,13 +432,13 @@ public sealed class RawScrollbar : StatefulWidget
 
         private void CreateFadeControllers()
         {
-            _fadeController = new AnimationController(CurrentWidget.FadeDuration)
+            _fadeController = new AnimationController(CurrentWidget.FadeDuration, this)
             {
                 Curve = Curves.FastOutSlowIn,
             };
             SetFadeValue(1);
             _fadeController.Changed += HandleFadeTick;
-            _fadeDelayController = new AnimationController(CurrentWidget.TimeToFade);
+            _fadeDelayController = new AnimationController(CurrentWidget.TimeToFade, this);
             _fadeDelayController.Completed += HandleFadeDelayCompleted;
         }
 
@@ -472,7 +472,7 @@ public sealed class RawScrollbar : StatefulWidget
 
         private void CreatePressController()
         {
-            _pressController = new AnimationController(CurrentWidget.PressDuration);
+            _pressController = new AnimationController(CurrentWidget.PressDuration, this);
             _pressController.Completed += HandlePressDurationCompleted;
         }
 

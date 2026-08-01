@@ -340,7 +340,7 @@ public sealed class BallisticScrollActivity : ScrollActivity
     public BallisticScrollActivity(ScrollPosition position, Simulation simulation) : base(position)
     {
         _simulation = simulation;
-        _ticker = new Ticker(OnTick);
+        _ticker = position.TickerProvider?.CreateTicker(OnTick) ?? new Ticker(OnTick);
         _ticker.Start();
     }
 
@@ -352,7 +352,7 @@ public sealed class BallisticScrollActivity : ScrollActivity
         }
 
         _disposed = true;
-        _ticker.Stop();
+        _ticker.Dispose();
     }
 
     private void OnTick(TimeSpan elapsed)
@@ -404,6 +404,8 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
     public ScrollActivity Activity => _activity;
 
     public ValueNotifier<bool> IsScrollingNotifier { get; }
+
+    internal ITickerProvider? TickerProvider { get; set; }
 
     public ScrollDirection UserScrollDirection => _userScrollDirection;
 

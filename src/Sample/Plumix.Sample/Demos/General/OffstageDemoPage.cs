@@ -1,6 +1,7 @@
 using System;
 using Avalonia;
 using Avalonia.Media;
+using Plumix.Material;
 using Plumix.Rendering;
 using Plumix.Widgets;
 
@@ -49,6 +50,17 @@ internal sealed class OffstageDemoPageState : State
                         $"state: visible={(_visible ? "true" : "false")}",
                         fontSize: 12,
                         color: Colors.DarkSlateGray),
+                    new Text(
+                        "maintainState=true keeps the indicator mounted; TickerMode pauses its frame callbacks "
+                        + "while hidden.",
+                        fontSize: 11,
+                        color: Colors.DimGray),
+                    new Visibility(
+                        visible: _visible,
+                        maintainState: true,
+                        child: new SizedBox(
+                            height: 18,
+                            child: new LinearProgressIndicator())),
                     new Container(
                         height: 82,
                         color: Color.Parse("#FFF6F8FB"),

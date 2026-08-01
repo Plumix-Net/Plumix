@@ -237,6 +237,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Read First:
   - `src/Plumix/Animation.cs`
   - `src/Plumix/AnimationController.cs`
+  - `src/Plumix/Widgets/TickerProvider.cs`
   - `src/Plumix/Widgets/Transitions.cs`
   - `src/Plumix/Rendering/Decoration.cs`
   - `src/Plumix/Widgets/Basic.cs`
@@ -253,6 +254,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix.Tests/AsyncBuilderTests.cs`
   - `src/Plumix.Tests/AnimatedSwitcherTests.cs`
   - `src/Plumix.Tests/ImplicitAnimationsTests.cs`
+  - `src/Plumix.Tests/TickerProviderTickerModeTests.cs`
   - `src/Plumix.Tests/TransitionsTests.cs`
   - `src/Plumix.Tests/SliverOpacityTests.cs`
 

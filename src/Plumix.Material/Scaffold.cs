@@ -1192,7 +1192,7 @@ public sealed class ScaffoldState : State
 
         StopSettleAnimation(side);
         var duration = ResolveSettleDuration(currentProgress, targetProgress, normalizedVelocityHint);
-        var controller = new AnimationController(duration)
+        var controller = new AnimationController(duration, this)
         {
             Curve = Curves.Linear
         };

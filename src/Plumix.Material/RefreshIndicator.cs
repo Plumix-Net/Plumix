@@ -73,7 +73,7 @@ public sealed class RefreshProgressIndicator : CircularProgressIndicator
 
         public override void InitState()
         {
-            _controller = new AnimationController(IndeterminateDuration);
+            _controller = new AnimationController(IndeterminateDuration, this);
             _controller.Changed += HandleChanged;
             _mounted = true;
         }
@@ -491,7 +491,7 @@ public sealed class RefreshIndicatorState : State
 
     public override void InitState()
     {
-        _transitionController = new AnimationController(SnapDuration);
+        _transitionController = new AnimationController(SnapDuration, this);
         _transitionController.Changed += HandleTransitionChanged;
         _transitionController.Completed += HandleTransitionCompleted;
         _mounted = true;

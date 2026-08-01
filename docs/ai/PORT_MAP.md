@@ -253,7 +253,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `rendering/wrap.dart` | `src/Plumix/Rendering/Wrap.cs` | `src/Plumix.Tests/WrapTests.cs` | — |
 | `scheduler/binding.dart` | `src/Plumix/Scheduler.cs` | — | — |
 | `scheduler/scheduler.dart` ⚠️ | `src/Plumix/Scheduler.cs` | — | — |
-| `scheduler/ticker.dart` | `src/Plumix/Ticker.cs` | — | — |
+| `scheduler/ticker.dart` | `src/Plumix/Ticker.cs` | `src/Plumix.Tests/TickerProviderTickerModeTests.cs` | — |
 | `semantics/semantics.dart` | `src/Plumix/Rendering/Semantics.cs` | `src/Plumix.Tests/FlutterHostSemanticsTests.cs`<br>`src/Plumix.Tests/MetaDataIndexedSemanticsTests.cs`<br>`src/Plumix.Tests/SemanticsTreeTests.cs` | — |
 | `services/binding.dart` | `src/Plumix/Widgets/AppLifecycleListener.cs` | `src/Plumix.Tests/AppLifecycleListenerTests.cs` | — |
 | `services/clipboard.dart` | `src/Plumix/Widgets/TextClipboard.cs` | — | — |
@@ -369,6 +369,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `widgets/text_selection.dart` | `src/Plumix/Widgets/TextSelection.cs` | `src/Plumix.Tests/MaterialDesktopTextSelectionToolbarTests.cs`<br>`src/Plumix.Tests/MaterialTextSelectionControlsTests.cs` | `dart_sample/lib/demos/material/desktop_text_selection_toolbar_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/DesktopTextSelectionToolbarDemoPage.cs` |
 | `widgets/text_selection_toolbar_anchors.dart` | `src/Plumix/Widgets/ContextMenu.cs` | — | — |
 | `widgets/text_selection_toolbar_layout_delegate.dart` | `src/Plumix/Widgets/TextSelectionToolbarLayoutDelegate.cs` | — | — |
+| `widgets/ticker_provider.dart` | `src/Plumix/Widgets/TickerProvider.cs` | `src/Plumix.Tests/TickerProviderTickerModeTests.cs` | — |
 | `widgets/title.dart` | `src/Plumix/Widgets/Title.cs` | `src/Plumix.Tests/TitleDefaultSelectionStyleTests.cs` | — |
 | `widgets/transitions.dart` | `src/Plumix/Widgets/Transitions.cs` | `src/Plumix.Tests/TransitionsTests.cs` | — |
 | `widgets/tween_animation_builder.dart` | `src/Plumix/Widgets/TweenAnimationBuilder.cs` | — | — |
@@ -412,8 +413,8 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 
 ## Summary
 
-- Flutter files mapped: 361
-- C# files carrying a marker: 454
+- Flutter files mapped: 362
+- C# files carrying a marker: 455
 - C# files without a marker: 15
 - Markers not resolvable in the pinned checkout: 5
 

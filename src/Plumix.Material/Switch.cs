@@ -276,7 +276,7 @@ public sealed class Switch : StatefulWidget
             _fromPosition = _animatedPosition;
             _toPosition = _animatedPosition;
 
-            _positionController = new AnimationController(TimeSpan.FromMilliseconds(220))
+            _positionController = new AnimationController(TimeSpan.FromMilliseconds(220), this)
             {
                 Curve = Curves.EaseInOut
             };

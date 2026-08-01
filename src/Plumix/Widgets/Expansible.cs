@@ -172,7 +172,7 @@ public sealed class Expansible : StatefulWidget
 
         private void CreateAnimation(double initialValue)
         {
-            _animation = new AnimationController(CurrentWidget.Duration)
+            _animation = new AnimationController(CurrentWidget.Duration, this)
             {
                 Curve = CurrentWidget.Controller.IsExpanded
                     ? CurrentWidget.Curve

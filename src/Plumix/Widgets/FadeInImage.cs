@@ -475,7 +475,7 @@ public sealed class FadeInImage : StatefulWidget
                 return;
             }
 
-            _controller = new AnimationController(duration);
+            _controller = new AnimationController(duration, this);
             _targetOpacityAnimation = new MappedDoubleAnimation(
                 _controller,
                 value => EvaluateTarget(value, targetBegin));

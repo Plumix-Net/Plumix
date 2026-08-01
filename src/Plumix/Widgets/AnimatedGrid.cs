@@ -355,7 +355,7 @@ public sealed class SliverAnimatedGridState : State
 
     private AnimationController CreateController(TimeSpan duration)
     {
-        var controller = new AnimationController(duration);
+        var controller = new AnimationController(duration, this);
         controller.Changed += HandleAnimationChanged;
         controller.Completed += HandleAnimationCompleted;
         controller.Dismissed += HandleAnimationDismissed;

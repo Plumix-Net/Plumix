@@ -700,14 +700,16 @@ public sealed class RawChip : StatefulWidget
         {
             _selectionProgress = CurrentWidget.Selected ? 1 : 0;
             _selectionController = new AnimationController(
-                CurrentWidget.ChipAnimationStyle?.SelectAnimation ?? TimeSpan.FromMilliseconds(195))
+                CurrentWidget.ChipAnimationStyle?.SelectAnimation ?? TimeSpan.FromMilliseconds(195),
+                this)
             {
                 Curve = Curves.EaseInOut,
             };
             _selectionController.Changed += HandleSelectionTick;
             _deleteProgress = CurrentWidget.OnDeleted is null ? 0 : 1;
             _deleteController = new AnimationController(
-                CurrentWidget.ChipAnimationStyle?.DeleteDrawerAnimation ?? TimeSpan.FromMilliseconds(150))
+                CurrentWidget.ChipAnimationStyle?.DeleteDrawerAnimation ?? TimeSpan.FromMilliseconds(150),
+                this)
             {
                 Curve = Curves.EaseInOut,
             };
@@ -721,7 +723,8 @@ public sealed class RawChip : StatefulWidget
             {
                 DisposeController();
                 _selectionController = new AnimationController(
-                    CurrentWidget.ChipAnimationStyle?.SelectAnimation ?? TimeSpan.FromMilliseconds(195))
+                    CurrentWidget.ChipAnimationStyle?.SelectAnimation ?? TimeSpan.FromMilliseconds(195),
+                    this)
                 {
                     Curve = Curves.EaseInOut,
                 };
@@ -746,7 +749,8 @@ public sealed class RawChip : StatefulWidget
                 DisposeDeleteController();
                 _deleteProgress = CurrentWidget.OnDeleted is null ? 0 : 1;
                 _deleteController = new AnimationController(
-                    CurrentWidget.ChipAnimationStyle?.DeleteDrawerAnimation ?? TimeSpan.FromMilliseconds(150))
+                    CurrentWidget.ChipAnimationStyle?.DeleteDrawerAnimation ?? TimeSpan.FromMilliseconds(150),
+                    this)
                 {
                     Curve = Curves.EaseInOut,
                 };

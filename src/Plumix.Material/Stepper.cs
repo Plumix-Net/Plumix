@@ -612,7 +612,7 @@ public sealed class Stepper : StatefulWidget
 
         private AnimationController CreateController(Curve curve)
         {
-            var controller = new AnimationController(ThemeAnimationDuration) { Curve = curve };
+            var controller = new AnimationController(ThemeAnimationDuration, this) { Curve = curve };
             controller.Changed += HandleAnimationChanged;
             return controller;
         }

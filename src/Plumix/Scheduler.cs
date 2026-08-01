@@ -57,14 +57,31 @@ public static class Scheduler
             _active.Add(ticker);
         }
 
-        ScheduleFrame();
+        if (ticker.IsTicking)
+        {
+            ScheduleFrame();
+        }
     }
 
     internal static void Remove(Ticker ticker)
     {
         _active.Remove(ticker);
 
-        if (_active.Count == 0 && !_hasScheduledFrame && _postFrameCallbacks.Count == 0)
+        if (!HasTickingTickers() && !_hasScheduledFrame && _postFrameCallbacks.Count == 0)
+        {
+            Stop();
+        }
+    }
+
+    internal static void TickerSchedulingChanged()
+    {
+        if (HasTickingTickers())
+        {
+            ScheduleFrame();
+            return;
+        }
+
+        if (!_hasScheduledFrame && _postFrameCallbacks.Count == 0)
         {
             Stop();
         }
@@ -72,12 +89,12 @@ public static class Scheduler
 
     internal static void PumpFrameForTests(TimeSpan? timestamp = null)
     {
-        if (!_hasScheduledFrame && _active.Count == 0 && _postFrameCallbacks.Count == 0)
+        if (!_hasScheduledFrame && !HasTickingTickers() && _postFrameCallbacks.Count == 0)
         {
             return;
         }
 
-        if (!_hasScheduledFrame && _active.Count > 0)
+        if (!_hasScheduledFrame && HasTickingTickers())
         {
             _hasScheduledFrame = true;
         }
@@ -130,7 +147,7 @@ public static class Scheduler
 
     private static void Tick()
     {
-        if (!_hasScheduledFrame && _active.Count == 0 && _postFrameCallbacks.Count == 0)
+        if (!_hasScheduledFrame && !HasTickingTickers() && _postFrameCallbacks.Count == 0)
         {
             Stop();
             return;
@@ -141,7 +158,7 @@ public static class Scheduler
             return;
         }
 
-        if (!_hasScheduledFrame && _active.Count > 0)
+        if (!_hasScheduledFrame && HasTickingTickers())
         {
             _hasScheduledFrame = true;
         }
@@ -172,12 +189,12 @@ public static class Scheduler
             _handlingFrame = false;
         }
 
-        if (_active.Count > 0)
+        if (HasTickingTickers())
         {
             _hasScheduledFrame = true;
         }
 
-        if (!_hasScheduledFrame && _active.Count == 0 && _postFrameCallbacks.Count == 0)
+        if (!_hasScheduledFrame && !HasTickingTickers() && _postFrameCallbacks.Count == 0)
         {
             Stop();
         }
@@ -188,11 +205,16 @@ public static class Scheduler
         var snapshot = _active.ToArray();
         foreach (var ticker in snapshot)
         {
-            if (ticker.Active)
+            if (ticker.IsTicking)
             {
                 ticker.InternalTick(nowSeconds);
             }
         }
+    }
+
+    private static bool HasTickingTickers()
+    {
+        return _active.Any(ticker => ticker.IsTicking);
     }
 
     private static void RunPostFrameCallbacks(TimeSpan timestamp)

@@ -206,7 +206,7 @@ public sealed class Material : StatefulWidget
 
         private void CreateController()
         {
-            _controller = new AnimationController(CurrentWidget.AnimationDuration)
+            _controller = new AnimationController(CurrentWidget.AnimationDuration, this)
             {
                 Curve = Curves.FastOutSlowIn,
             };

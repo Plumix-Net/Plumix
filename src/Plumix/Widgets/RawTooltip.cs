@@ -339,7 +339,8 @@ public sealed class RawTooltipState : State
     private AnimationController CreateController()
     {
         var controller = new AnimationController(
-            CurrentWidget.AnimationStyle.Duration ?? TimeSpan.FromMilliseconds(150))
+            CurrentWidget.AnimationStyle.Duration ?? TimeSpan.FromMilliseconds(150),
+            this)
         {
             ReverseDuration = CurrentWidget.AnimationStyle.ReverseDuration
                               ?? TimeSpan.FromMilliseconds(75),
@@ -543,7 +544,7 @@ public sealed class RawTooltipState : State
             return;
         }
 
-        var timer = new AnimationController(delay);
+        var timer = new AnimationController(delay, this);
         Action? completed = null;
         completed = () =>
         {

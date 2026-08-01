@@ -176,7 +176,7 @@ internal sealed class NavigationRailState : State
 
     public override void InitState()
     {
-        _extendedController = new AnimationController(ThemeAnimationDuration)
+        _extendedController = new AnimationController(ThemeAnimationDuration, this)
         {
             Curve = Curves.EaseInOut
         };
@@ -420,7 +420,7 @@ internal sealed class NavigationRailDestinationTileState : State
 
     public override void InitState()
     {
-        _selectionController = new AnimationController(SelectionDuration)
+        _selectionController = new AnimationController(SelectionDuration, this)
         {
             Curve = Curves.EaseInOut
         };

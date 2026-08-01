@@ -592,7 +592,7 @@ public sealed class Dismissible : StatefulWidget
                 : _contentKey.CurrentContext?.FindRenderObject() is RenderBox content && content.HasSize
                     ? content.Size
                     : default;
-            _resizeController = new AnimationController(CurrentWidget.ResizeDuration.Value);
+            _resizeController = new AnimationController(CurrentWidget.ResizeDuration.Value, this);
             _resizeController.AddListener(HandleResizeProgressChanged);
             _resizeController.AddStatusListener(HandleResizeStatusChanged);
             _resizeAnimation = new MappedDoubleAnimation(

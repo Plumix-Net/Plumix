@@ -360,7 +360,10 @@ public sealed class InputDecorator : StatefulWidget
 
         public override void InitState()
         {
-            _labelController = new AnimationController(TimeSpan.FromMilliseconds(200)) { Curve = Curves.FastOutSlowIn };
+            _labelController = new AnimationController(TimeSpan.FromMilliseconds(200), this)
+            {
+                Curve = Curves.FastOutSlowIn
+            };
             _labelController.Changed += Changed;
             _labelController.Forward(from: 0); _labelController.Stop();
         }

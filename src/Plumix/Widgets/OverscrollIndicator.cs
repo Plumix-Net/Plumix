@@ -152,8 +152,8 @@ internal sealed class GlowingOverscrollIndicatorState : State
 
     public override void InitState()
     {
-        _leadingController = new GlowController(CurrentWidget.Color, CurrentWidget.Axis);
-        _trailingController = new GlowController(CurrentWidget.Color, CurrentWidget.Axis);
+        _leadingController = new GlowController(CurrentWidget.Color, CurrentWidget.Axis, this);
+        _trailingController = new GlowController(CurrentWidget.Color, CurrentWidget.Axis, this);
         _controllers = new MergedListenable(_leadingController, _trailingController);
     }
 
@@ -317,7 +317,7 @@ public sealed class StretchingOverscrollIndicator : StatefulWidget
 
 internal sealed class StretchingOverscrollIndicatorState : State
 {
-    private readonly StretchController _stretchController = new();
+    private StretchController _stretchController = null!;
     private ScrollNotification? _lastNotification;
     private OverscrollNotification? _lastOverscrollNotification;
     private double _totalOverscroll;
@@ -327,6 +327,12 @@ internal sealed class StretchingOverscrollIndicatorState : State
         (StretchingOverscrollIndicator)StateWidget;
 
     internal StretchController StretchController => _stretchController;
+
+    public override void InitState()
+    {
+        base.InitState();
+        _stretchController = new StretchController(this);
+    }
 
     public override Widget Build(BuildContext context)
     {
@@ -447,9 +453,9 @@ internal sealed class StretchController : ChangeNotifier
     private double _interruptedOverscroll;
     private double _overscroll;
 
-    public StretchController()
+    public StretchController(ITickerProvider? vsync = null)
     {
-        _ticker = new Ticker(HandleTick);
+        _ticker = vsync?.CreateTicker(HandleTick) ?? new Ticker(HandleTick);
     }
 
     public double Overscroll
@@ -522,7 +528,7 @@ internal sealed class StretchController : ChangeNotifier
 
     public override void Dispose()
     {
-        _ticker.Stop();
+        _ticker.Dispose();
         base.Dispose();
     }
 
@@ -593,11 +599,11 @@ internal sealed class GlowController : ChangeNotifier
     private double _pullHoldDeadline;
     private GlowState _state;
 
-    public GlowController(Color color, Axis axis)
+    public GlowController(Color color, Axis axis, ITickerProvider? vsync = null)
     {
         _color = color;
         _axis = axis;
-        _ticker = new Ticker(HandleTick);
+        _ticker = vsync?.CreateTicker(HandleTick) ?? new Ticker(HandleTick);
     }
 
     public Color Color
@@ -730,7 +736,7 @@ internal sealed class GlowController : ChangeNotifier
 
     public override void Dispose()
     {
-        _ticker.Stop();
+        _ticker.Dispose();
         base.Dispose();
     }
 

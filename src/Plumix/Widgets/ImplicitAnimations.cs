@@ -101,7 +101,7 @@ public sealed class AnimatedOpacity : StatefulWidget
         public override void InitState()
         {
             _begin = _end = CurrentWidget.Opacity;
-            _controller = new AnimationController(CurrentWidget.Duration) { Curve = CurrentWidget.Curve };
+            _controller = new AnimationController(CurrentWidget.Duration, this) { Curve = CurrentWidget.Curve };
             _controller.Changed += HandleChanged;
             _controller.Completed += HandleCompleted;
         }
@@ -202,7 +202,7 @@ public sealed class SliverAnimatedOpacity : StatefulWidget
         public override void InitState()
         {
             _begin = _end = CurrentWidget.Opacity;
-            _controller = new AnimationController(CurrentWidget.Duration);
+            _controller = new AnimationController(CurrentWidget.Duration, this);
             _animation = new CurvedAnimation(_controller, CurrentWidget.Curve);
             _opacityAnimation = new MappedDoubleAnimation(_animation, Evaluate);
             _controller.Completed += HandleCompleted;
@@ -294,7 +294,7 @@ public sealed class AnimatedSlide : StatefulWidget
         public override void InitState()
         {
             _begin = _end = CurrentWidget.Offset;
-            _controller = new AnimationController(CurrentWidget.Duration) { Curve = CurrentWidget.Curve };
+            _controller = new AnimationController(CurrentWidget.Duration, this) { Curve = CurrentWidget.Curve };
             _controller.Changed += HandleChanged;
             _controller.Completed += HandleCompleted;
         }
@@ -430,7 +430,7 @@ public sealed class AnimatedScale : StatefulWidget
 
         private void CreateController()
         {
-            _controller = new AnimationController(CurrentWidget.Duration) { Curve = CurrentWidget.Curve };
+            _controller = new AnimationController(CurrentWidget.Duration, this) { Curve = CurrentWidget.Curve };
             _controller.Changed += HandleChanged;
             _controller.Completed += HandleCompleted;
         }
@@ -546,7 +546,7 @@ public sealed class AnimatedRotation : StatefulWidget
 
         private void CreateController()
         {
-            _controller = new AnimationController(CurrentWidget.Duration) { Curve = CurrentWidget.Curve };
+            _controller = new AnimationController(CurrentWidget.Duration, this) { Curve = CurrentWidget.Curve };
             _controller.Changed += HandleChanged;
             _controller.Completed += HandleCompleted;
         }
@@ -726,7 +726,7 @@ public sealed class AnimatedContainer : StatefulWidget
 
         private void CreateController(TimeSpan duration)
         {
-            _controller = new AnimationController(duration) { Curve = CurrentWidget.Curve };
+            _controller = new AnimationController(duration, this) { Curve = CurrentWidget.Curve };
             _controller.Changed += HandleChanged;
             _controller.Completed += HandleCompleted;
         }
@@ -923,7 +923,7 @@ public sealed class AnimatedPadding : StatefulWidget
 
         private void CreateController()
         {
-            _controller = new AnimationController(CurrentWidget.Duration) { Curve = CurrentWidget.Curve };
+            _controller = new AnimationController(CurrentWidget.Duration, this) { Curve = CurrentWidget.Curve };
             _controller.Changed += HandleChanged;
             _controller.Completed += HandleCompleted;
         }
@@ -1076,7 +1076,7 @@ public sealed class AnimatedAlign : StatefulWidget
 
         private void CreateController()
         {
-            _controller = new AnimationController(CurrentWidget.Duration) { Curve = CurrentWidget.Curve };
+            _controller = new AnimationController(CurrentWidget.Duration, this) { Curve = CurrentWidget.Curve };
             _controller.Changed += HandleChanged;
             _controller.Completed += HandleCompleted;
         }
@@ -1300,7 +1300,7 @@ public sealed class AnimatedPositioned : StatefulWidget
 
         private void CreateController()
         {
-            _controller = new AnimationController(CurrentWidget.Duration) { Curve = CurrentWidget.Curve };
+            _controller = new AnimationController(CurrentWidget.Duration, this) { Curve = CurrentWidget.Curve };
             _controller.Changed += HandleChanged;
             _controller.Completed += HandleCompleted;
         }
@@ -1463,7 +1463,7 @@ public sealed class AnimatedPositionedDirectional : StatefulWidget
 
         private void CreateController()
         {
-            _controller = new AnimationController(CurrentWidget.Duration) { Curve = CurrentWidget.Curve };
+            _controller = new AnimationController(CurrentWidget.Duration, this) { Curve = CurrentWidget.Curve };
             _controller.Changed += HandleChanged;
             _controller.Completed += HandleCompleted;
         }
@@ -1562,7 +1562,7 @@ public sealed class AnimatedDefaultTextStyle : StatefulWidget
         public override void InitState()
         {
             _begin = _end = CurrentWidget.Style;
-            _controller = new AnimationController(CurrentWidget.Duration) { Curve = CurrentWidget.Curve };
+            _controller = new AnimationController(CurrentWidget.Duration, this) { Curve = CurrentWidget.Curve };
             _controller.Changed += HandleChanged;
             _controller.Completed += HandleCompleted;
         }
@@ -1692,7 +1692,7 @@ public sealed class AnimatedPhysicalModel : StatefulWidget
         public override void InitState()
         {
             _begin = _end = ValuesFromWidget();
-            _controller = new AnimationController(CurrentWidget.Duration) { Curve = CurrentWidget.Curve };
+            _controller = new AnimationController(CurrentWidget.Duration, this) { Curve = CurrentWidget.Curve };
             _controller.Changed += HandleChanged;
             _controller.Completed += HandleCompleted;
         }
@@ -1834,7 +1834,7 @@ public sealed class AnimatedFractionallySizedBox : StatefulWidget
                 _widthFactorBegin = _widthFactorEnd = widthFactor;
             }
 
-            _controller = new AnimationController(CurrentWidget.Duration) { Curve = CurrentWidget.Curve };
+            _controller = new AnimationController(CurrentWidget.Duration, this) { Curve = CurrentWidget.Curve };
             _controller.Changed += HandleChanged;
             _controller.Completed += HandleCompleted;
         }

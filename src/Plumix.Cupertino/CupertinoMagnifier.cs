@@ -73,7 +73,7 @@ public sealed class CupertinoTextMagnifier : StatefulWidget
         public override void InitState()
         {
             base.InitState();
-            _ioAnimationController = new AnimationController(CupertinoMagnifier.InOutAnimationDuration)
+            _ioAnimationController = new AnimationController(CupertinoMagnifier.InOutAnimationDuration, this)
             {
                 Curve = CurrentWidget.AnimationCurve,
             };

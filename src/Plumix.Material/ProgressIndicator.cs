@@ -118,7 +118,7 @@ public sealed class LinearProgressIndicator : StatefulWidget
 
         public override void InitState()
         {
-            _internalController = new AnimationController(IndeterminateDuration);
+            _internalController = new AnimationController(IndeterminateDuration, this);
             _isMounted = true;
         }
 
@@ -1055,7 +1055,7 @@ public class CircularProgressIndicator : StatefulWidget
 
         public override void InitState()
         {
-            _internalController = new AnimationController(IndeterminateDuration);
+            _internalController = new AnimationController(IndeterminateDuration, this);
             _isMounted = true;
         }
 

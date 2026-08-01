@@ -397,10 +397,10 @@ public sealed class AnimationController : Animation<double>, IDisposable
     private bool _repeatReverse;
     private FlingSimulation? _flingSimulation;
 
-    public AnimationController(TimeSpan duration)
+    public AnimationController(TimeSpan duration, ITickerProvider? vsync = null)
     {
         Duration = duration <= TimeSpan.Zero ? TimeSpan.FromMilliseconds(1) : duration;
-        _ticker = new Ticker(OnTick);
+        _ticker = vsync?.CreateTicker(OnTick) ?? new Ticker(OnTick);
     }
 
     public void Forward(double? from = null)
@@ -564,7 +564,11 @@ public sealed class AnimationController : Animation<double>, IDisposable
 
     public double Evaluate() => Curve(Math.Clamp(Value, 0, 1));
 
-    public void Dispose() => Stop();
+    public void Dispose()
+    {
+        Stop();
+        _ticker.Dispose();
+    }
 
     private void SetStatus(AnimationStatus status)
     {

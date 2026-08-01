@@ -1,5 +1,10 @@
 # Changelog
 
+- Breaking: closed `TickerMode` parity. The widget now composes a state-owned effective inherited mode with nested
+  enabled/force-frame AND/OR semantics, merge/value/notifier APIs, reparent-safe ticker providers, and scheduler-level
+  muting that preserves elapsed time without requesting hidden-subtree frames. Framework animation controllers now
+  register with their owning state, with focused Flutter-test coverage and a mirrored maintained-visibility demo.
+
 - Breaking: completed the strict `Divider`/`VerticalDivider` Dart closeout. Both controls now use direct M2/M3
   color roles and the source `SizedBox -> Center -> Container` composition, resolve directional indents and
   physical/directional per-corner radii, preserve hairline paint, and accept Flutter's non-negative numeric domain.

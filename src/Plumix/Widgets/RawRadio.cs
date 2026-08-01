@@ -152,13 +152,13 @@ public sealed class RawRadioState<T> : State, RadioClient<T>
 
     public override void InitState()
     {
-        _positionController = new AnimationController(TimeSpan.FromMilliseconds(200))
+        _positionController = new AnimationController(TimeSpan.FromMilliseconds(200), this)
         {
             Curve = Curves.Linear
         };
         _positionController.Changed += HandleAnimationChanged;
 
-        _reactionController = new AnimationController(TimeSpan.FromMilliseconds(100))
+        _reactionController = new AnimationController(TimeSpan.FromMilliseconds(100), this)
         {
             ReverseDuration = TimeSpan.FromMilliseconds(200),
             Curve = Curves.FastOutSlowIn

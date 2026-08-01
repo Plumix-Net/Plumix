@@ -64,7 +64,7 @@ public sealed class TweenAnimationBuilder<T> : StatefulWidget
                 _currentTween.SetBeginValue(_currentTween.GetEndValue());
             }
 
-            _controller = new AnimationController(CurrentWidget.Duration)
+            _controller = new AnimationController(CurrentWidget.Duration, this)
             {
                 Curve = CurrentWidget.Curve,
             };
