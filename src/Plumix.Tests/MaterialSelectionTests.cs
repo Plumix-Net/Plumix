@@ -111,14 +111,12 @@ public sealed class MaterialSelectionTests
             theme));
 
         harness.Pump(new Size(320, 120));
-        Assert.True(FindParagraphs(harness.RenderView).Single().SelectionEnabled);
-
-        RenderParagraph paragraph = FindParagraphs(harness.RenderView).Single();
-        Assert.Equal(21, paragraph.FontSize);
-        Assert.Equal(Colors.DarkGreen, ((SolidColorBrush)paragraph.Foreground).Color);
-        Assert.Equal(selection, paragraph.SelectionColor);
-        Assert.Equal(cursor, paragraph.CursorColor);
-        Assert.True(paragraph.ShowCursor);
+        RenderEditable editable = FindEditables(harness.RenderView).Single();
+        Assert.Equal(21, editable.FontSize);
+        Assert.Equal(Colors.DarkGreen, ((SolidColorBrush)editable.Foreground).Color);
+        Assert.Equal(selection, editable.SelectionColor);
+        Assert.Equal(cursor, editable.CursorColor);
+        Assert.True(editable.ShowCursor);
     }
 
     [Fact]
@@ -140,9 +138,9 @@ public sealed class MaterialSelectionTests
         harness.Pump(new Size(320, 120));
 
         Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("A", true, isControlPressed: true)));
-        RenderParagraph paragraph = FindParagraphs(harness.RenderView).Single();
-        Assert.Equal(0, paragraph.SelectionBaseOffset);
-        Assert.Equal(10, paragraph.SelectionExtentOffset);
+        RenderEditable editable = FindEditables(harness.RenderView).Single();
+        Assert.Equal(0, editable.Selection.BaseOffset);
+        Assert.Equal(10, editable.Selection.ExtentOffset);
         Assert.Equal(new TextSelection(0, 10), changedSelection);
         Assert.Equal(SelectionChangedCause.Keyboard, changedCause);
 
@@ -160,7 +158,7 @@ public sealed class MaterialSelectionTests
                 onSelectionChanged: (_, nextCause) => cause = nextCause),
             ThemeData.Light));
         harness.Pump(new Size(320, 120));
-        Assert.True(FindParagraphs(harness.RenderView).Single().GetTextPosition(new Point(90, 8)) > 0);
+        Assert.True(FindEditables(harness.RenderView).Single().GetPositionForPoint(new Point(90, 8)).Offset > 0);
 
         var binding = GestureBinding.Instance;
         DateTime now = DateTime.UtcNow;
@@ -185,8 +183,8 @@ public sealed class MaterialSelectionTests
             PointerButtons.None,
             now.AddMilliseconds(32)));
 
-        RenderParagraph paragraph = FindParagraphs(harness.RenderView).Single();
-        Assert.NotEqual(paragraph.SelectionBaseOffset, paragraph.SelectionExtentOffset);
+        RenderEditable editable = FindEditables(harness.RenderView).Single();
+        Assert.NotEqual(editable.Selection.BaseOffset, editable.Selection.ExtentOffset);
         Assert.Equal(SelectionChangedCause.Drag, cause);
     }
 
@@ -316,10 +314,11 @@ public sealed class MaterialSelectionTests
         harness.Pump(new Size(320, 160));
 
         List<RenderParagraph> paragraphs = FindParagraphs(harness.RenderView);
+        RenderEditable editable = FindEditables(harness.RenderView).Single();
+        Assert.Equal(local, editable.SelectionColor);
+        Assert.Equal(cursor, editable.CursorColor);
         Assert.Equal(local, paragraphs[0].SelectionColor);
         Assert.Equal(cursor, paragraphs[0].CursorColor);
-        Assert.Equal(local, paragraphs[1].SelectionColor);
-        Assert.Equal(cursor, paragraphs[1].CursorColor);
     }
 
     private static Widget Root(Widget child, ThemeData theme)
@@ -341,6 +340,15 @@ public sealed class MaterialSelectionTests
             result.Add(paragraph);
         }
         root.VisitChildren(child => result.AddRange(FindParagraphs(child)));
+        return result;
+    }
+
+    private static List<RenderEditable> FindEditables(RenderObject? root)
+    {
+        var result = new List<RenderEditable>();
+        if (root is null) return result;
+        if (root is RenderEditable editable) result.Add(editable);
+        root.VisitChildren(child => result.AddRange(FindEditables(child)));
         return result;
     }
 

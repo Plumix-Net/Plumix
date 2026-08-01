@@ -173,7 +173,9 @@ public sealed class MaterialTextFieldTests : IDisposable
             decoration: new InputDecoration(labelText: "Password"))));
         harness.Pump(new Size(360, 100));
 
-        Assert.Contains(FindDescendants<RenderParagraph>(harness.RenderView), value => value.Text == "••••••");
+        Assert.Contains(
+            FindDescendants<RenderEditable>(harness.RenderView),
+            value => value.Text == "••••••");
         Assert.False(FocusManager.Instance.HandleTextInput("x"));
         Assert.Equal("secret", controller.Text);
         var semantics = Assert.Single(FindDescendants<RenderSemanticsAnnotations>(harness.RenderView), value =>
@@ -394,6 +396,54 @@ public sealed class MaterialTextFieldTests : IDisposable
         Assert.DoesNotContain(FindDescendants<RenderParagraph>(harness.RenderView), value => value.Text == "raw error");
     }
 
+    [Fact]
+    public void TextField_UsesPersistentRenderEditableGeometry()
+    {
+        var controller = new TextEditingController("hello world", new TextSelection(0, 5));
+        using var harness = new WidgetRenderHarness(Wrap(new TextField(
+            controller: controller,
+            useDecoration: false)));
+        harness.Pump(new Size(360, 100));
+
+        RenderEditable editable = Assert.Single(FindDescendants<RenderEditable>(harness.RenderView));
+        Assert.Equal("hello world", editable.PlainText);
+        Assert.Equal(2, editable.GetEndpointsForSelection(controller.Selection).Count);
+        Assert.True(editable.PreferredLineHeight > 0.0);
+    }
+
+    [Fact]
+    public async Task TextField_CustomSpellCheckServiceUpdatesRetainedRenderResults()
+    {
+        var service = new TestSpellCheckService();
+        var controller = new TextEditingController();
+        using var harness = new WidgetRenderHarness(Wrap(new TextField(
+            controller: controller,
+            useDecoration: false,
+            spellCheckConfiguration: new SpellCheckConfiguration(spellCheckService: service))));
+        harness.Pump(new Size(360, 100));
+
+        controller.Text = "wrold";
+        await Task.Yield();
+        harness.Pump(new Size(360, 100));
+
+        RenderEditable editable = Assert.Single(FindDescendants<RenderEditable>(harness.RenderView));
+        Assert.Equal("wrold", service.LastText);
+        Assert.Single(editable.SuggestionSpans);
+        Assert.Equal(new TextRange(0, 5), editable.SuggestionSpans[0].Range);
+    }
+
+    [Fact]
+    public void DefaultSpellCheckService_MergesSortedResultsAndRetainsOlderDuplicate()
+    {
+        var oldAtTwo = new SuggestionSpan(new TextRange(2, 4), ["old"]);
+        IReadOnlyList<SuggestionSpan> merged = DefaultSpellCheckService.MergeResults(
+            [oldAtTwo, new SuggestionSpan(new TextRange(8, 10), ["late"])],
+            [new SuggestionSpan(new TextRange(2, 4), ["new"]), new SuggestionSpan(new TextRange(5, 7), ["mid"])]);
+
+        Assert.Equal([2, 5, 8], merged.Select(span => span.Range.Start));
+        Assert.Same(oldAtTwo, merged[0]);
+    }
+
     private static Widget Wrap(Widget child, ThemeData? theme = null) => new Directionality(
         TextDirection.Ltr,
         new MediaQuery(new MediaQueryData(Size: new Size(360, 640)), new Theme(theme ?? ThemeData.Light, child)));
@@ -405,6 +455,18 @@ public sealed class MaterialTextFieldTests : IDisposable
         if (root is T value) result.Add(value);
         root.VisitChildren(child => result.AddRange(FindDescendants<T>(child)));
         return result;
+    }
+
+    private sealed class TestSpellCheckService : ISpellCheckService
+    {
+        public string? LastText { get; private set; }
+
+        public Task<IReadOnlyList<SuggestionSpan>?> FetchSpellCheckSuggestions(Locale locale, string text)
+        {
+            LastText = text;
+            IReadOnlyList<SuggestionSpan> result = [new SuggestionSpan(new TextRange(0, text.Length), ["world"])];
+            return Task.FromResult<IReadOnlyList<SuggestionSpan>?>(result);
+        }
     }
 
     private sealed class WidgetRenderHarness : IDisposable

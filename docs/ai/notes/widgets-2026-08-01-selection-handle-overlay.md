@@ -1,5 +1,8 @@
 # Feature: Text selection handle overlay
 
+Resolved in the subsequent `RenderEditable` closeout: `TextSelectionOverlay`, in-field handle/magnifier wiring,
+read-only `SelectableText` composition, and spell-check service contracts are now implemented.
+
 ## Goal
 
 - Port Flutter's draggable selection-handle overlay (`widgets/text_selection.dart` +

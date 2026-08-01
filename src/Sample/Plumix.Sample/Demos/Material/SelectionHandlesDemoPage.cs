@@ -24,6 +24,8 @@ internal sealed class SelectionHandlesDemoPageState : State
     private readonly LayerLink _startHandleLink = new();
     private readonly LayerLink _endHandleLink = new();
     private readonly LayerLink _toolbarLink = new();
+    private readonly TextEditingController _fieldController = new(
+        "Long press this real text field, then drag either selection handle.");
 
     private SelectionOverlay? _overlay;
     private double _startX = 48;
@@ -35,6 +37,7 @@ internal sealed class SelectionHandlesDemoPageState : State
     {
         _overlay?.Dispose();
         _overlay = null;
+        _fieldController.Dispose();
     }
 
     public override Widget Build(BuildContext context)
@@ -49,6 +52,12 @@ internal sealed class SelectionHandlesDemoPageState : State
                     "Drag either handle to move its endpoint. Collapsed mode keeps a single upward handle.",
                     fontSize: 14,
                     color: Color.Parse("#8A000000")),
+                new TextField(
+                    controller: _fieldController,
+                    maxLines: 2,
+                    decoration: new InputDecoration(
+                        labelText: "RenderEditable-backed handles",
+                        border: new OutlineInputBorder())),
                 new Row(
                     spacing: 8,
                     children:

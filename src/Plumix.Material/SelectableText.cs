@@ -1,3 +1,4 @@
+using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Rendering;
@@ -26,10 +27,11 @@ public sealed class SelectableText : StatefulWidget
         Color? selectionColor = null,
         MouseCursor? mouseCursor = null,
         bool enableInteractiveSelection = true,
+        TextSelectionControls? selectionControls = null,
         Action? onTap = null,
         string? semanticsLabel = null,
         Action<TextSelection, SelectionChangedCause?>? onSelectionChanged = null,
-        SelectableRegionContextMenuBuilder? contextMenuBuilder = null,
+        EditableTextContextMenuBuilder? contextMenuBuilder = null,
         TextMagnifierConfiguration? magnifierConfiguration = null,
         Key? key = null) : base(key)
     {
@@ -48,6 +50,7 @@ public sealed class SelectableText : StatefulWidget
         SelectionColor = selectionColor;
         MouseCursor = mouseCursor;
         EnableInteractiveSelection = enableInteractiveSelection;
+        SelectionControls = selectionControls;
         OnTap = onTap;
         SemanticsLabel = semanticsLabel;
         OnSelectionChanged = onSelectionChanged;
@@ -91,10 +94,11 @@ public sealed class SelectableText : StatefulWidget
     public Color? SelectionColor { get; }
     public MouseCursor? MouseCursor { get; }
     public bool EnableInteractiveSelection { get; }
+    public TextSelectionControls? SelectionControls { get; }
     public Action? OnTap { get; }
     public string? SemanticsLabel { get; }
     public Action<TextSelection, SelectionChangedCause?>? OnSelectionChanged { get; }
-    public SelectableRegionContextMenuBuilder? ContextMenuBuilder { get; }
+    public EditableTextContextMenuBuilder? ContextMenuBuilder { get; }
     public TextMagnifierConfiguration MagnifierConfiguration { get; }
     public bool SelectionEnabled => EnableInteractiveSelection;
 
@@ -102,15 +106,35 @@ public sealed class SelectableText : StatefulWidget
 
     private static Widget DefaultContextMenuBuilder(
         BuildContext context,
-        SelectableRegionState selectableRegionState)
+        EditableText.EditableTextState editableTextState)
     {
-        return AdaptiveTextSelectionToolbar.SelectableRegion(selectableRegionState);
+        return AdaptiveTextSelectionToolbar.EditableText(editableTextState);
     }
 }
 
 internal sealed class SelectableTextState : State
 {
+    private readonly TextEditingController _controller = new();
+    private FocusNode? _focusNode;
+    private bool _ownsFocusNode;
     private SelectableText Current => (SelectableText)StateWidget;
+
+    public override void InitState()
+    {
+        _controller.Text = Current.Data;
+        AttachFocusNode(Current.FocusNode);
+    }
+
+    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    {
+        var previous = (SelectableText)oldWidget;
+        if (!string.Equals(previous.Data, Current.Data, StringComparison.Ordinal)) _controller.Text = Current.Data;
+        if (!ReferenceEquals(previous.FocusNode, Current.FocusNode))
+        {
+            DetachFocusNode();
+            AttachFocusNode(Current.FocusNode);
+        }
+    }
 
     public override Widget Build(BuildContext context)
     {
@@ -130,42 +154,41 @@ internal sealed class SelectableTextState : State
         double fontSize = style?.FontSize ?? defaultStyle.FontSize ?? 14.0;
         double height = style?.Height ?? defaultStyle.Height ?? 1.0;
 
-        Widget text = new Text(
-            Current.Data,
-            fontFamily: style?.FontFamily,
-            fontSize: style?.FontSize,
-            color: style?.Color,
-            fontWeight: style?.FontWeight,
-            fontStyle: style?.FontStyle,
-            height: style?.Height,
-            letterSpacing: style?.LetterSpacing,
+        Widget result = new EditableText(
+            controller: _controller,
+            focusNode: _focusNode,
+            autofocus: Current.Autofocus,
+            enabled: Current.EnableInteractiveSelection,
+            multiline: Current.MaxLines != 1,
+            fontSize: fontSize,
+            textColor: style?.Color ?? defaultStyle.Color ?? Colors.Black,
+            backgroundColor: Colors.Transparent,
+            focusedBackgroundColor: Colors.Transparent,
+            padding: new Thickness(0),
+            style: style,
+            readOnly: true,
             textAlign: Current.TextAlign ?? TextAlign.Start,
-            textDirection: Current.TextDirection ?? Directionality.Of(context),
-            softWrap: Current.MaxLines != 1,
-            maxLines: Current.MaxLines);
+            textDirection: Current.TextDirection,
+            enableInteractiveSelection: Current.EnableInteractiveSelection,
+            selectionControls: Current.SelectionControls ?? MaterialTextSelectionHandleControls.Instance,
+            selectionColor: selectionColor,
+            cursorColor: cursorColor,
+            mouseCursor: Current.MouseCursor ?? selectionStyle.MouseCursor,
+            onSelectionChanged: Current.OnSelectionChanged,
+            contextMenuBuilder: Current.ContextMenuBuilder,
+            magnifierConfiguration: Current.MagnifierConfiguration);
 
         if (Current.MinLines.HasValue)
         {
-            text = new ConstrainedBox(
+            result = new ConstrainedBox(
                 constraints: new BoxConstraints(MinHeight: fontSize * height * Current.MinLines.Value),
-                child: text);
+                child: result);
         }
 
-        Widget result = new SelectableRegion(
-            child: text,
-            focusNode: Current.FocusNode,
-            autofocus: Current.Autofocus,
-            enabled: Current.EnableInteractiveSelection,
-            selectionColor: selectionColor,
-            cursorColor: cursorColor,
-            showCursor: Current.ShowCursor,
-            cursorWidth: Current.CursorWidth,
-            cursorHeight: Current.CursorHeight,
-            mouseCursor: Current.MouseCursor ?? selectionStyle.MouseCursor,
-            onTextSelectionChanged: Current.OnSelectionChanged,
-            contextMenuBuilder: Current.ContextMenuBuilder,
-            magnifierConfiguration: Current.MagnifierConfiguration,
-            onTap: Current.OnTap);
+        if (Current.OnTap is not null)
+        {
+            result = new GestureDetector(onTap: Current.OnTap, child: result);
+        }
 
         if (Current.SemanticsLabel is not null)
         {
@@ -173,6 +196,25 @@ internal sealed class SelectableTextState : State
         }
 
         return result;
+    }
+
+    public override void Dispose()
+    {
+        DetachFocusNode();
+        _controller.Dispose();
+    }
+
+    private void AttachFocusNode(FocusNode? focusNode)
+    {
+        _focusNode = focusNode ?? new FocusNode();
+        _ownsFocusNode = focusNode is null;
+    }
+
+    private void DetachFocusNode()
+    {
+        if (_ownsFocusNode) _focusNode?.Dispose();
+        _focusNode = null;
+        _ownsFocusNode = false;
     }
 
     private static Color ApplyOpacity(Color color, double opacity)

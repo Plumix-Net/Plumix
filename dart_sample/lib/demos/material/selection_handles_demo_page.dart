@@ -15,6 +15,9 @@ class _SelectionHandlesDemoPageState extends State<SelectionHandlesDemoPage> {
   final LayerLink _startHandleLink = LayerLink();
   final LayerLink _endHandleLink = LayerLink();
   final LayerLink _toolbarLink = LayerLink();
+  final TextEditingController _fieldController = TextEditingController(
+    text: 'Long press this real text field, then drag either selection handle.',
+  );
 
   SelectionOverlay? _overlay;
   double _startX = 48;
@@ -26,6 +29,7 @@ class _SelectionHandlesDemoPageState extends State<SelectionHandlesDemoPage> {
   void dispose() {
     _overlay?.dispose();
     _overlay = null;
+    _fieldController.dispose();
     super.dispose();
   }
 
@@ -44,6 +48,15 @@ class _SelectionHandlesDemoPageState extends State<SelectionHandlesDemoPage> {
         const Text(
           'Drag either handle to move its endpoint. Collapsed mode keeps a single upward handle.',
           style: TextStyle(fontSize: 14, color: Color(0x8A000000)),
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: _fieldController,
+          maxLines: 2,
+          decoration: const InputDecoration(
+            labelText: 'RenderEditable-backed handles',
+            border: OutlineInputBorder(),
+          ),
         ),
         const SizedBox(height: 12),
         Row(

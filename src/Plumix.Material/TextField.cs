@@ -45,7 +45,9 @@ public sealed class TextField : StatefulWidget
         bool canRequestFocus = true,
         FocusOnKeyEventCallback? onKeyEvent = null,
         bool? enableInteractiveSelection = null,
+        TextSelectionControls? selectionControls = null,
         EditableTextContextMenuBuilder? contextMenuBuilder = null,
+        SpellCheckConfiguration? spellCheckConfiguration = null,
         TextMagnifierConfiguration? magnifierConfiguration = null,
         Action<TextSelection, SelectionChangedCause?>? onSelectionChanged = null,
         Key? key = null) : base(key)
@@ -86,7 +88,9 @@ public sealed class TextField : StatefulWidget
         CanRequestFocus = canRequestFocus;
         OnKeyEvent = onKeyEvent;
         EnableInteractiveSelection = enableInteractiveSelection ?? (!readOnly || !obscureText);
+        SelectionControls = selectionControls;
         ContextMenuBuilder = contextMenuBuilder ?? DefaultContextMenuBuilder;
+        SpellCheckConfiguration = spellCheckConfiguration;
         MagnifierConfiguration = magnifierConfiguration ?? TextMagnifier.AdaptiveMagnifierConfiguration;
         OnSelectionChanged = onSelectionChanged;
     }
@@ -115,7 +119,9 @@ public sealed class TextField : StatefulWidget
     public bool CanRequestFocus { get; }
     public FocusOnKeyEventCallback? OnKeyEvent { get; }
     public bool EnableInteractiveSelection { get; }
+    public TextSelectionControls? SelectionControls { get; }
     public EditableTextContextMenuBuilder? ContextMenuBuilder { get; }
+    public SpellCheckConfiguration? SpellCheckConfiguration { get; }
     public TextMagnifierConfiguration MagnifierConfiguration { get; }
     public Action<TextSelection, SelectionChangedCause?>? OnSelectionChanged { get; }
 
@@ -126,6 +132,25 @@ public sealed class TextField : StatefulWidget
         EditableText.EditableTextState editableTextState)
     {
         return AdaptiveTextSelectionToolbar.EditableText(editableTextState);
+    }
+
+    public static TextStyle MaterialMisspelledTextStyle { get; } = new(Color: Colors.Red);
+
+    public static Widget DefaultSpellCheckSuggestionsToolbarBuilder(
+        BuildContext context,
+        EditableText.EditableTextState editableTextState)
+    {
+        return SpellCheckSuggestionsToolbar.EditableText(editableTextState);
+    }
+
+    public static SpellCheckConfiguration InferAndroidSpellCheckConfiguration(
+        SpellCheckConfiguration? configuration)
+    {
+        if (configuration is null || !configuration.SpellCheckEnabled) return SpellCheckConfiguration.Disabled;
+        return configuration.CopyWith(
+            misspelledTextStyle: configuration.MisspelledTextStyle ?? MaterialMisspelledTextStyle,
+            spellCheckSuggestionsToolbarBuilder: configuration.SpellCheckSuggestionsToolbarBuilder
+                                                    ?? DefaultSpellCheckSuggestionsToolbarBuilder);
     }
 
     private sealed class TextFieldState : State
@@ -174,6 +199,10 @@ public sealed class TextField : StatefulWidget
                 baseStyle = baseStyle.CopyWith(color: ApplyOpacity(theme.OnSurfaceColor, 0.38));
             bool multiline = Current.MaxLines != 1;
             int? positiveMaxLength = Current.MaxLength is > 0 ? Current.MaxLength : null;
+            SpellCheckConfiguration spellCheckConfiguration = InferAndroidSpellCheckConfiguration(
+                Current.SpellCheckConfiguration);
+            TextSelectionControls selectionControls = Current.SelectionControls
+                                                       ?? MaterialTextSelectionHandleControls.Instance;
 
             Widget editable = new EditableText(
                 controller: _controller!,
@@ -204,6 +233,8 @@ public sealed class TextField : StatefulWidget
                 onKeyEvent: Current.OnKeyEvent,
                 enableInteractiveSelection: Current.EnableInteractiveSelection,
                 contextMenuBuilder: Current.ContextMenuBuilder,
+                selectionControls: Current.EnableInteractiveSelection ? selectionControls : null,
+                spellCheckConfiguration: spellCheckConfiguration,
                 magnifierConfiguration: Current.MagnifierConfiguration,
                 onSelectionChanged: Current.OnSelectionChanged,
                 rendererIgnoresPointer: true,

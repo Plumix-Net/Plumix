@@ -37,6 +37,33 @@ public sealed class SpellCheckSuggestionsToolbar : StatelessWidget
 
     public IReadOnlyList<ContextMenuButtonItem> ButtonItems { get; }
 
+    public static SpellCheckSuggestionsToolbar EditableText(EditableText.EditableTextState editableTextState)
+    {
+        return new SpellCheckSuggestionsToolbar(
+            GetToolbarAnchor(editableTextState.ContextMenuAnchors),
+            BuildButtonItems(editableTextState) ?? []);
+    }
+
+    public static IReadOnlyList<ContextMenuButtonItem>? BuildButtonItems(
+        EditableText.EditableTextState editableTextState)
+    {
+        SuggestionSpan? span = editableTextState.FindSuggestionSpanAtCursorIndex(
+            editableTextState.CurrentTextEditingValue.Selection.BaseOffset);
+        if (span is null) return null;
+        var items = new List<ContextMenuButtonItem>();
+        foreach (string suggestion in span.Suggestions.Take(MaxSuggestions))
+        {
+            string replacement = suggestion;
+            items.Add(new ContextMenuButtonItem(
+                () => editableTextState.ReplaceText(span.Range, replacement),
+                label: replacement));
+        }
+        items.Add(new ContextMenuButtonItem(
+            () => editableTextState.ReplaceText(span.Range, string.Empty),
+            ContextMenuButtonType.Delete));
+        return items;
+    }
+
     public static Point GetToolbarAnchor(TextSelectionToolbarAnchors anchors)
     {
         return anchors.SecondaryAnchor ?? anchors.PrimaryAnchor;

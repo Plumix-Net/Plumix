@@ -1,5 +1,11 @@
 # Changelog
 
+- Breaking: closed Material text-field selection handles end to end. Core now renders editable text through
+  `RenderEditable`, drives `TextSelectionOverlay` from retained caret/line/viewport geometry, and supports in-field
+  handle drags, adaptive touch magnifiers, and explicit/default spell-check services. `SelectableText` now uses the
+  source read-only `EditableText` composition; Material supplies handle controls, misspelling defaults, suggestion
+  replacement actions, focused tests, and a mirrored runtime probe.
+
 - Ported the text selection handle overlay: core gains `TextSelectionControls`/`EmptyTextSelectionControls`,
   `TextSelectionHandleType`, `TextSelectionPoint`, `ITextSelectionDelegate`, `ClipboardStatusNotifier`, and
   `SelectionOverlay` with the source handle/toolbar overlay entries, 150 ms linear fades, `kMinInteractiveDimension`

@@ -6,7 +6,7 @@ using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/widgets/editable_text.dart; flutter/packages/flutter/lib/src/widgets/text_field.dart (adapted)
+// Dart parity source: flutter/packages/flutter/lib/src/widgets/editable_text.dart
 
 namespace Plumix.Widgets;
 
@@ -630,6 +630,9 @@ public sealed class EditableText : StatefulWidget
         bool enableInteractiveSelection = true,
         EditableTextContextMenuBuilder? contextMenuBuilder = null,
         TextMagnifierConfiguration? magnifierConfiguration = null,
+        TextSelectionControls? selectionControls = null,
+        bool showSelectionHandles = false,
+        SpellCheckConfiguration? spellCheckConfiguration = null,
         Action<TextSelection, SelectionChangedCause?>? onSelectionChanged = null,
         bool rendererIgnoresPointer = false,
         Key? key = null) : base(key)
@@ -669,6 +672,15 @@ public sealed class EditableText : StatefulWidget
         EnableInteractiveSelection = enableInteractiveSelection;
         ContextMenuBuilder = contextMenuBuilder;
         MagnifierConfiguration = magnifierConfiguration ?? TextMagnifierConfiguration.Disabled;
+        SelectionControls = selectionControls;
+        ShowSelectionHandles = showSelectionHandles;
+        SpellCheckConfiguration = spellCheckConfiguration;
+        if (spellCheckConfiguration is { SpellCheckEnabled: true, MisspelledTextStyle: null })
+        {
+            throw new ArgumentException(
+                "An enabled spellCheckConfiguration must specify misspelledTextStyle.",
+                nameof(spellCheckConfiguration));
+        }
         OnSelectionChanged = onSelectionChanged;
         RendererIgnoresPointer = rendererIgnoresPointer;
     }
@@ -716,6 +728,9 @@ public sealed class EditableText : StatefulWidget
     public bool EnableInteractiveSelection { get; }
     public EditableTextContextMenuBuilder? ContextMenuBuilder { get; }
     public TextMagnifierConfiguration MagnifierConfiguration { get; }
+    public TextSelectionControls? SelectionControls { get; }
+    public bool ShowSelectionHandles { get; }
+    public SpellCheckConfiguration? SpellCheckConfiguration { get; }
     public Action<TextSelection, SelectionChangedCause?>? OnSelectionChanged { get; }
     public bool RendererIgnoresPointer { get; }
 
@@ -732,6 +747,17 @@ public sealed class EditableText : StatefulWidget
         private double? _verticalNavigationX;
         private int? _verticalNavigationColumn;
         private readonly ContextMenuController _contextMenuController = new();
+        private readonly GlobalKey _editableRenderKey = new EditableRenderKey(Guid.NewGuid());
+        private readonly LayerLink _startHandleLayerLink = new();
+        private readonly LayerLink _endHandleLayerLink = new();
+        private readonly LayerLink _toolbarLayerLink = new();
+        private readonly ClipboardStatusNotifier _clipboardStatus = new();
+        private TextSelectionOverlay? _selectionOverlay;
+        private SpellCheckResults? _spellCheckResults;
+        private int _spellCheckRequest;
+        private PointerDeviceKind _lastPointerKind = PointerDeviceKind.Unknown;
+
+        private sealed record EditableRenderKey(Guid Id) : GlobalKey;
         private Point? _lastPointerPosition;
         private int? _pointerSelectionAnchor;
         private TextSelection _lastSelection;
@@ -788,6 +814,12 @@ public sealed class EditableText : StatefulWidget
 
         public bool ContextMenuIsVisible => _contextMenuController.IsShown;
 
+        public TextEditingValue CurrentTextEditingValue => _controller!.Value;
+
+        public SpellCheckResults? SpellCheckResults => _spellCheckResults;
+
+        public TextSelectionOverlay? SelectionOverlay => _selectionOverlay;
+
         public override void InitState()
         {
             AttachController(Widget.Controller);
@@ -818,6 +850,9 @@ public sealed class EditableText : StatefulWidget
 
         public override void Dispose()
         {
+            _selectionOverlay?.Dispose();
+            _selectionOverlay = null;
+            _clipboardStatus.Dispose();
             _contextMenuController.Hide();
             DetachController();
             DetachFocusNode(disposeOwned: true);
@@ -831,13 +866,7 @@ public sealed class EditableText : StatefulWidget
             string renderedText = Widget.ObscureText
                 ? new string(Widget.ObscuringCharacter[0], text.Length)
                 : text;
-            string displayText = BuildDisplayText(
-                text: renderedText,
-                showPlaceholder: showPlaceholder,
-                placeholder: Widget.Placeholder,
-                hasFocus: _focusNode!.HasFocus,
-                selection: _controller.Selection,
-                composing: _controller.Composing);
+            string displayText = showPlaceholder ? Widget.Placeholder ?? string.Empty : renderedText;
             var textColor = showPlaceholder ? Widget.PlaceholderColor : Widget.TextColor;
             var backgroundColor = _focusNode!.HasFocus ? Widget.FocusedBackgroundColor : Widget.BackgroundColor;
 
@@ -854,8 +883,13 @@ public sealed class EditableText : StatefulWidget
                 child: new Container(
                     color: backgroundColor,
                     padding: Widget.Padding,
-                    child: new Text(
-                        displayText,
+                    child: new EditableRenderObjectWidget(
+                        text: displayText,
+                        selection: showPlaceholder ? TextSelection.Collapsed(0) : _controller.Selection,
+                        composing: showPlaceholder ? null : _controller.Composing,
+                        startHandleLayerLink: _startHandleLayerLink,
+                        endHandleLayerLink: _endHandleLayerLink,
+                        toolbarLayerLink: _toolbarLayerLink,
                         fontFamily: style?.FontFamily,
                         fontSize: style?.FontSize ?? Widget.FontSize,
                         color: style?.Color ?? textColor,
@@ -865,7 +899,13 @@ public sealed class EditableText : StatefulWidget
                         letterSpacing: style?.LetterSpacing,
                         textAlign: Widget.TextAlign,
                         textDirection: Widget.TextDirection ?? Directionality.Of(context),
-                        softWrap: Widget.Multiline)));
+                        multiline: Widget.Multiline,
+                        selectionColor: Widget.SelectionColor ?? selectionStyle.SelectionColor ?? default,
+                        cursorColor: Widget.CursorColor ?? selectionStyle.CursorColor ?? Widget.TextColor,
+                        showCursor: _focusNode.HasFocus && !showPlaceholder,
+                        suggestionSpans: _spellCheckResults?.SuggestionSpans,
+                        misspelledColor: Widget.SpellCheckConfiguration?.MisspelledTextStyle?.Color ?? Colors.Red,
+                        key: _editableRenderKey)));
             if (!Widget.RendererIgnoresPointer)
             {
                 result = new Listener(
@@ -907,12 +947,17 @@ public sealed class EditableText : StatefulWidget
                 return false;
             }
 
-            return _contextMenuController.Show(
-                Context,
-                context => Widget.ContextMenuBuilder(context, this));
+            TextSelectionOverlay overlay = EnsureSelectionOverlay();
+            overlay.ShowToolbar();
+            return overlay.ToolbarIsVisible;
         }
 
-        public void HideToolbar(bool hideHandles = true) => _contextMenuController.Hide();
+        public void HideToolbar(bool hideHandles = true)
+        {
+            _contextMenuController.Hide();
+            _selectionOverlay?.HideToolbar();
+            if (hideHandles) _selectionOverlay?.HideHandles();
+        }
 
         public TextEditingValue TextEditingValue => _controller!.Value;
 
@@ -1014,6 +1059,7 @@ public sealed class EditableText : StatefulWidget
             }
 
             _lastPointerPosition = @event.Position;
+            _lastPointerKind = @event.Kind;
             if (!@event.Buttons.HasFlag(PointerButtons.Primary))
             {
                 return;
@@ -1023,6 +1069,10 @@ public sealed class EditableText : StatefulWidget
             int offset = GetTextPosition(@event.Position);
             _pointerSelectionAnchor = offset;
             SetSelection(TextSelection.Collapsed(offset), SelectionChangedCause.Tap);
+            if (@event.Kind == PointerDeviceKind.Touch && Widget.ShowSelectionHandles)
+            {
+                ShowHandles();
+            }
         }
 
         public void HandlePointerMove(PointerMoveEvent @event)
@@ -1041,17 +1091,25 @@ public sealed class EditableText : StatefulWidget
                     _pointerSelectionAnchor.Value,
                     GetTextPosition(@event.Position)),
                 SelectionChangedCause.Drag);
+            if (@event.Kind == PointerDeviceKind.Touch)
+            {
+                TextSelectionOverlay overlay = EnsureSelectionOverlay();
+                overlay.ShowHandles();
+                overlay.ShowMagnifier(@event.Position);
+            }
         }
 
         public void HandlePointerUp(PointerUpEvent @event)
         {
             _lastPointerPosition = @event.Position;
             _pointerSelectionAnchor = null;
+            _selectionOverlay?.HideMagnifier();
         }
 
         public void HandlePointerCancel(PointerCancelEvent @event)
         {
             _pointerSelectionAnchor = null;
+            _selectionOverlay?.HideMagnifier();
         }
 
         public void HandleDoubleTap()
@@ -1073,11 +1131,21 @@ public sealed class EditableText : StatefulWidget
             {
                 SelectWordAt(_lastPointerPosition.Value, SelectionChangedCause.LongPress);
             }
+            if (_lastPointerKind is PointerDeviceKind.Touch or PointerDeviceKind.Stylus)
+            {
+                ShowHandles();
+                if (_lastPointerPosition.HasValue) EnsureSelectionOverlay().ShowMagnifier(_lastPointerPosition.Value);
+            }
             ShowToolbar();
         }
 
         private int GetTextPosition(Point globalPosition)
         {
+            if (RenderEditable is { } renderEditable)
+            {
+                return renderEditable.GetPositionForPoint(globalPosition).Offset;
+            }
+
             TextEditingController controller = _controller!;
             if (TryCreateTextLayout(_focusNode!, controller.Text, out TextLayout? layout, out Rect contentRect))
             {
@@ -1219,7 +1287,9 @@ public sealed class EditableText : StatefulWidget
 
             if (isEditingShortcut && string.Equals(key, "A", StringComparison.Ordinal))
             {
+                _pendingSelectionCause = SelectionChangedCause.Keyboard;
                 _ = controller.SelectAll();
+                _pendingSelectionCause = null;
                 _verticalNavigationX = null;
                 _verticalNavigationColumn = null;
                 return KeyEventResult.Handled;
@@ -1629,6 +1699,15 @@ public sealed class EditableText : StatefulWidget
         private void HandleControllerChanged()
         {
             TextSelection selection = _controller!.Selection;
+            if (RenderEditable is { } renderEditable)
+            {
+                string renderedText = Widget.ObscureText
+                    ? new string(Widget.ObscuringCharacter[0], _controller.Text.Length)
+                    : _controller.Text;
+                renderEditable.Text = renderedText;
+                renderEditable.Selection = selection;
+                renderEditable.Composing = _controller.Composing;
+            }
             if (!_lastSelection.Equals(selection))
             {
                 _lastSelection = selection;
@@ -1638,6 +1717,8 @@ public sealed class EditableText : StatefulWidget
             {
                 HideToolbar();
             }
+            _selectionOverlay?.Update(_controller.Value);
+            _ = RequestSpellCheckAsync();
             SetState(static () => { });
         }
 
@@ -1647,7 +1728,7 @@ public sealed class EditableText : StatefulWidget
             _verticalNavigationColumn = null;
             if (_focusNode?.HasFocus == false)
             {
-                HideToolbar();
+                _selectionOverlay?.Hide();
             }
             SetState(static () => { });
         }
@@ -1706,5 +1787,181 @@ public sealed class EditableText : StatefulWidget
             int end = clampedSelection.End;
             return text[..start] + "[" + text[start..end] + "]" + text[end..];
         }
+
+        public SuggestionSpan? FindSuggestionSpanAtCursorIndex(int cursorIndex)
+        {
+            return _spellCheckResults?.SuggestionSpans.FirstOrDefault(span =>
+                span.Range.Start <= cursorIndex && span.Range.End >= cursorIndex);
+        }
+
+        public void ReplaceText(TextRange range, string replacement)
+        {
+            TextRange normalized = range.Clamp(_controller!.Text.Length);
+            string next = _controller.Text[..normalized.Start] + replacement + _controller.Text[normalized.End..];
+            UserUpdateTextEditingValue(
+                new TextEditingValue(next, TextSelection.Collapsed(normalized.Start + replacement.Length)),
+                SelectionChangedCause.Toolbar);
+            HideToolbar();
+        }
+
+        public void ShowHandles() => EnsureSelectionOverlay().ShowHandles();
+
+        private RenderEditable? RenderEditable =>
+            _editableRenderKey.CurrentContext?.FindRenderObject() as RenderEditable;
+
+        private TextSelectionOverlay EnsureSelectionOverlay()
+        {
+            RenderEditable renderEditable = RenderEditable
+                ?? throw new InvalidOperationException("EditableText must be laid out before showing selection UI.");
+            if (_selectionOverlay is not null) return _selectionOverlay;
+            _clipboardStatus.Update();
+            _selectionOverlay = new TextSelectionOverlay(
+                value: _controller!.Value,
+                context: Context,
+                toolbarLayerLink: _toolbarLayerLink,
+                startHandleLayerLink: _startHandleLayerLink,
+                endHandleLayerLink: _endHandleLayerLink,
+                renderObject: renderEditable,
+                selectionControls: Widget.SelectionControls,
+                handlesVisible: Widget.ShowSelectionHandles,
+                selectionDelegate: this,
+                clipboardStatus: _clipboardStatus,
+                contextMenuBuilder: Widget.ContextMenuBuilder is null
+                    ? null
+                    : context => Widget.ContextMenuBuilder(context, this),
+                magnifierConfiguration: Widget.MagnifierConfiguration);
+            return _selectionOverlay;
+        }
+
+        private async Task RequestSpellCheckAsync()
+        {
+            SpellCheckConfiguration? configuration = Widget.SpellCheckConfiguration;
+            if (configuration is not { SpellCheckEnabled: true } || string.IsNullOrEmpty(_controller!.Text)) return;
+            ISpellCheckService? service = configuration.SpellCheckService;
+            if (service is null && DefaultSpellCheckService.PlatformHandler is not null)
+            {
+                service = new DefaultSpellCheckService();
+            }
+            if (service is null) return;
+            int request = ++_spellCheckRequest;
+            Locale locale = Localizations.MaybeLocaleOf(Context)
+                            ?? Locale.FromCultureInfo(CultureInfo.CurrentUICulture);
+            IReadOnlyList<SuggestionSpan>? suggestions = await service
+                .FetchSpellCheckSuggestions(locale, _controller.Text)
+                .ConfigureAwait(false);
+            if (!Mounted || request != _spellCheckRequest || suggestions is null) return;
+            _spellCheckResults = new SpellCheckResults(_controller.Text, suggestions);
+            SetState(static () => { });
+        }
+    }
+}
+
+internal sealed class EditableRenderObjectWidget : LeafRenderObjectWidget
+{
+    public EditableRenderObjectWidget(
+        string text,
+        TextSelection selection,
+        TextRange? composing,
+        LayerLink startHandleLayerLink,
+        LayerLink endHandleLayerLink,
+        LayerLink toolbarLayerLink,
+        FontFamily? fontFamily,
+        double fontSize,
+        Color color,
+        FontWeight? fontWeight,
+        FontStyle? fontStyle,
+        double? height,
+        double? letterSpacing,
+        TextAlign textAlign,
+        TextDirection textDirection,
+        bool multiline,
+        Color selectionColor,
+        Color cursorColor,
+        bool showCursor,
+        IReadOnlyList<SuggestionSpan>? suggestionSpans,
+        Color misspelledColor,
+        Key? key = null) : base(key)
+    {
+        Text = text;
+        Selection = selection;
+        Composing = composing;
+        StartHandleLayerLink = startHandleLayerLink;
+        EndHandleLayerLink = endHandleLayerLink;
+        ToolbarLayerLink = toolbarLayerLink;
+        FontFamily = fontFamily;
+        FontSize = fontSize;
+        Color = color;
+        FontWeight = fontWeight;
+        FontStyle = fontStyle;
+        Height = height;
+        LetterSpacing = letterSpacing;
+        TextAlign = textAlign;
+        TextDirection = textDirection;
+        Multiline = multiline;
+        SelectionColor = selectionColor;
+        CursorColor = cursorColor;
+        ShowCursor = showCursor;
+        SuggestionSpans = suggestionSpans ?? [];
+        MisspelledColor = misspelledColor;
+    }
+
+    public string Text { get; }
+    public TextSelection Selection { get; }
+    public TextRange? Composing { get; }
+    public LayerLink StartHandleLayerLink { get; }
+    public LayerLink EndHandleLayerLink { get; }
+    public LayerLink ToolbarLayerLink { get; }
+    public FontFamily? FontFamily { get; }
+    public double FontSize { get; }
+    public Color Color { get; }
+    public FontWeight? FontWeight { get; }
+    public FontStyle? FontStyle { get; }
+    public double? Height { get; }
+    public double? LetterSpacing { get; }
+    public TextAlign TextAlign { get; }
+    public TextDirection TextDirection { get; }
+    public bool Multiline { get; }
+    public Color SelectionColor { get; }
+    public Color CursorColor { get; }
+    public bool ShowCursor { get; }
+    public IReadOnlyList<SuggestionSpan> SuggestionSpans { get; }
+    public Color MisspelledColor { get; }
+
+    internal override RenderObject CreateRenderObject(BuildContext context)
+    {
+        var render = new RenderEditable(StartHandleLayerLink, EndHandleLayerLink, ToolbarLayerLink);
+        Apply(render);
+        return render;
+    }
+
+    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    {
+        Apply((RenderEditable)renderObject);
+    }
+
+    private void Apply(RenderEditable render)
+    {
+        render.Text = Text;
+        render.Selection = Selection;
+        render.Composing = Composing;
+        render.StartHandleLayerLink = StartHandleLayerLink;
+        render.EndHandleLayerLink = EndHandleLayerLink;
+        render.ToolbarLayerLink = ToolbarLayerLink;
+        render.FontFamily = FontFamily ?? Avalonia.Media.FontFamily.Default;
+        render.FontSize = FontSize;
+        render.Foreground = new SolidColorBrush(Color);
+        render.FontWeight = FontWeight ?? Avalonia.Media.FontWeight.Normal;
+        render.FontStyle = FontStyle ?? Avalonia.Media.FontStyle.Normal;
+        render.Height = Height;
+        render.LetterSpacing = LetterSpacing ?? 0.0;
+        render.TextAlign = TextAlign;
+        render.TextDirection = TextDirection;
+        render.Multiline = Multiline;
+        render.MaxLines = Multiline ? null : 1;
+        render.SelectionColor = SelectionColor;
+        render.CursorColor = CursorColor;
+        render.ShowCursor = ShowCursor;
+        render.SuggestionSpans = SuggestionSpans;
+        render.MisspelledColor = MisspelledColor;
     }
 }

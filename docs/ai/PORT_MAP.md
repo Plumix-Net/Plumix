@@ -227,6 +227,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `rendering/custom_paint.dart` | `src/Plumix/Rendering/CustomPaint.cs` | — | — |
 | `rendering/debug_overflow_indicator.dart` | `src/Plumix/Rendering/DebugOverflowIndicator.cs` | — | — |
 | `rendering/decorated_sliver.dart` | `src/Plumix/Rendering/DecoratedSliver.cs` | — | — |
+| `rendering/editable.dart` | `src/Plumix/Rendering/Editable.cs` | — | `dart_sample/lib/demos/general/editable_text_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/EditableTextDemoPage.cs` |
 | `rendering/flex.dart` | `src/Plumix/Rendering/Flex.RenderFlex.cs`<br>`src/Plumix/Rendering/Flex.cs` | — | — |
 | `rendering/flow.dart` | `src/Plumix/Rendering/Flow.cs` | `src/Plumix.Tests/FlowRepaintBoundaryTests.cs` | `dart_sample/lib/demos/general/flow_demo_page.dart`<br>`dart_sample/lib/demos/general/overflow_box_demo_page.dart`<br>`dart_sample/lib/demos/general/overflow_indicator_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/FlowDemoPage.cs` |
 | `rendering/image.dart` | `src/Plumix/Rendering/Image.cs` | `src/Plumix.Tests/ImageProviderDecorationTests.cs`<br>`src/Plumix.Tests/ImageWidgetTests.cs` | `dart_sample/lib/demos/general/image_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/ImageDemoPage.cs` |
@@ -257,6 +258,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `services/clipboard.dart` | `src/Plumix/Widgets/TextClipboard.cs` | — | — |
 | `services/hardware_keyboard.dart` | `src/Plumix/UI/KeyboardEvents.cs` | — | — |
 | `services/mouse_cursor.dart` | `src/Plumix/Widgets/MouseCursor.cs` | — | — |
+| `services/spell_check.dart` | `src/Plumix/Widgets/SpellCheck.cs` | — | — |
 | `services/system_chrome.dart` | `src/Plumix/UI/SystemChrome.cs` | — | — |
 | `services/system_sound.dart` | `src/Plumix/UI/SystemSound.cs` | — | — |
 | `services/text_input.dart` | `src/Plumix/Widgets/TextSelection.cs` | `src/Plumix.Tests/MaterialDesktopTextSelectionToolbarTests.cs`<br>`src/Plumix.Tests/MaterialTextSelectionControlsTests.cs` | `dart_sample/lib/demos/material/desktop_text_selection_toolbar_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/DesktopTextSelectionToolbarDemoPage.cs` |
@@ -355,12 +357,12 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `widgets/sliver_floating_header.dart` | `src/Plumix/Rendering/SliverHeaders.cs`<br>`src/Plumix/Widgets/SliverHeaders.cs` | — | — |
 | `widgets/sliver_layout_builder.dart` | `src/Plumix/Widgets/SliverLayoutBuilder.cs` | — | — |
 | `widgets/sliver_resizing_header.dart` | `src/Plumix/Rendering/SliverHeaders.cs`<br>`src/Plumix/Widgets/SliverHeaders.cs` | — | — |
+| `widgets/spell_check.dart` | `src/Plumix/Widgets/SpellCheck.cs` | — | — |
 | `widgets/status_transitions.dart` | `src/Plumix/Widgets/StatusTransitionWidget.cs` | — | — |
 | `widgets/stretch_effect.dart` | `src/Plumix/Widgets/OverscrollIndicator.cs` | `src/Plumix.Tests/OverscrollIndicatorTests.cs` | — |
 | `widgets/table.dart` | `src/Plumix/Widgets/Table.cs` | `src/Plumix.Tests/DirectionalPositionedTableCellTests.cs`<br>`src/Plumix.Tests/MaterialDataTableTests.cs` | `dart_sample/lib/demos/general/editable_text_demo_page.dart`<br>`dart_sample/lib/demos/material/data_table_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/DataTableDemoPage.cs` |
 | `widgets/tap_region.dart` | `src/Plumix/Rendering/TapRegion.cs`<br>`src/Plumix/Widgets/TapRegion.cs` | `src/Plumix.Tests/TapRegionTests.cs` | — |
 | `widgets/text.dart` | `src/Plumix/Widgets/DefaultTextStyle.cs`<br>`src/Plumix/Widgets/Text.cs` | `src/Plumix.Tests/MaterialDesktopTextSelectionToolbarTests.cs`<br>`src/Plumix.Tests/MaterialTextFieldTests.cs`<br>`src/Plumix.Tests/MaterialTextSelectionControlsTests.cs`<br>`src/Plumix.Tests/TextInputTests.cs`<br>`src/Plumix.Tests/TextWidgetTests.cs` | `dart_sample/lib/demos/general/editable_text_demo_page.dart`<br>`dart_sample/lib/demos/material/app_bar_text_styles_demo_page.dart`<br>`dart_sample/lib/demos/material/desktop_text_selection_toolbar_demo_page.dart`<br>`dart_sample/lib/demos/material/text_field_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/EditableTextDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/AppBarTextStylesDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/DesktopTextSelectionToolbarDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/TextFieldDemoPage.cs` |
-| `widgets/text_field.dart` ⚠️ | `src/Plumix/Widgets/TextInput.cs` | `src/Plumix.Tests/TextInputTests.cs` | — |
 | `widgets/text_selection.dart` | `src/Plumix/Widgets/TextSelection.cs` | `src/Plumix.Tests/MaterialDesktopTextSelectionToolbarTests.cs`<br>`src/Plumix.Tests/MaterialTextSelectionControlsTests.cs` | `dart_sample/lib/demos/material/desktop_text_selection_toolbar_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/DesktopTextSelectionToolbarDemoPage.cs` |
 | `widgets/text_selection_toolbar_anchors.dart` | `src/Plumix/Widgets/ContextMenu.cs` | — | — |
 | `widgets/text_selection_toolbar_layout_delegate.dart` | `src/Plumix/Widgets/TextSelectionToolbarLayoutDelegate.cs` | — | — |
@@ -382,7 +384,6 @@ Re-check parity against the current source before touching these.
 - `packages/flutter/lib/src/rendering/relative_rect.dart`
 - `packages/flutter/lib/src/rendering/semantics.dart`
 - `packages/flutter/lib/src/scheduler/scheduler.dart`
-- `packages/flutter/lib/src/widgets/text_field.dart`
 - `packages/flutter/lib/src/widgets/widgets_localizations.dart`
 
 ### Framework files without a `Dart parity source` marker
@@ -405,8 +406,8 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 
 ## Summary
 
-- Flutter files mapped: 356
-- C# files carrying a marker: 448
+- Flutter files mapped: 358
+- C# files carrying a marker: 450
 - C# files without a marker: 13
-- Markers not resolvable in the pinned checkout: 5
+- Markers not resolvable in the pinned checkout: 4
 

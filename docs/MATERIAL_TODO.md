@@ -17,7 +17,6 @@ Size legend: **S** — one focused widget, few states. **M** — widget family o
 
 | Widget / family | Flutter source (`lib/src/material/`) | Size | Notes / dependencies |
 | --- | --- | --- | --- |
-| Selection handles in text fields + touch magnifier integration | `text_selection.dart`, `text_field.dart`, `selectable_text.dart` | L | `TextField`/`SelectableText` own automatic adaptive Copy/Cut/Paste/Select all context menus, and `SelectionOverlay` + `MaterialTextSelectionControls` now provide draggable handles for any editing surface that supplies its own endpoints. Remaining work needs a `RenderEditable` render object so `TextSelectionOverlay` can bind handles to real selection endpoints, plus automatic touch magnifiers during in-field drags and spell-check-service integration. |
 
 ## Open infrastructure (align with maintainer first)
 

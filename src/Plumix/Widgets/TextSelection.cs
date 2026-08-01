@@ -225,6 +225,243 @@ public class EmptyTextSelectionControls : TextSelectionControls
     }
 }
 
+/// <summary>Binds selection overlay entries to retained <see cref="RenderEditable"/> geometry.</summary>
+public sealed class TextSelectionOverlay : IDisposable
+{
+    private readonly RenderEditable _renderObject;
+    private readonly ITextSelectionDelegate _selectionDelegate;
+    private readonly ValueNotifier<bool> _startVisible = new(true);
+    private readonly ValueNotifier<bool> _endVisible = new(true);
+    private readonly ValueNotifier<bool> _toolbarVisible = new(true);
+    private TextEditingValue _value;
+    private bool _handlesVisible;
+
+    public TextSelectionOverlay(
+        TextEditingValue value,
+        BuildContext context,
+        LayerLink toolbarLayerLink,
+        LayerLink startHandleLayerLink,
+        LayerLink endHandleLayerLink,
+        RenderEditable renderObject,
+        TextSelectionControls? selectionControls,
+        bool handlesVisible,
+        ITextSelectionDelegate selectionDelegate,
+        DragStartBehavior dragStartBehavior = DragStartBehavior.Start,
+        Action? onSelectionHandleTapped = null,
+        ClipboardStatusNotifier? clipboardStatus = null,
+        WidgetBuilder? contextMenuBuilder = null,
+        TextMagnifierConfiguration? magnifierConfiguration = null)
+    {
+        _value = value;
+        _renderObject = renderObject;
+        _selectionDelegate = selectionDelegate;
+        ContextMenuBuilder = contextMenuBuilder;
+        _handlesVisible = handlesVisible;
+        SelectionOverlay = new SelectionOverlay(
+            context: context,
+            startHandleType: StartHandleType(value.Selection),
+            lineHeightAtStart: LineHeight(value.Selection.Start),
+            endHandleType: EndHandleType(value.Selection),
+            lineHeightAtEnd: LineHeight(value.Selection.End),
+            selectionEndpoints: renderObject.GetEndpointsForSelection(value.Selection),
+            selectionControls: selectionControls,
+            selectionDelegate: selectionDelegate,
+            clipboardStatus: clipboardStatus,
+            startHandleLayerLink: startHandleLayerLink,
+            endHandleLayerLink: endHandleLayerLink,
+            toolbarLayerLink: toolbarLayerLink,
+            startHandlesVisible: _startVisible,
+            onStartHandleDragStart: details => HandleDragStart(details, isStart: true),
+            onStartHandleDragUpdate: details => HandleDragUpdate(details, isStart: true),
+            onStartHandleDragEnd: _ => HandleDragEnd(),
+            endHandlesVisible: _endVisible,
+            onEndHandleDragStart: details => HandleDragStart(details, isStart: false),
+            onEndHandleDragUpdate: details => HandleDragUpdate(details, isStart: false),
+            onEndHandleDragEnd: _ => HandleDragEnd(),
+            toolbarVisible: _toolbarVisible,
+            dragStartBehavior: dragStartBehavior,
+            onSelectionHandleTapped: onSelectionHandleTapped ?? ToggleToolbar,
+            magnifierConfiguration: magnifierConfiguration);
+        renderObject.SelectionStartInViewport.AddListener(UpdateVisibilities);
+        renderObject.SelectionEndInViewport.AddListener(UpdateVisibilities);
+        UpdateVisibilities();
+    }
+
+    public SelectionOverlay SelectionOverlay { get; }
+    public WidgetBuilder? ContextMenuBuilder { get; }
+    public TextEditingValue Value => _value;
+    public bool HandlesVisible
+    {
+        get => _handlesVisible;
+        set
+        {
+            _handlesVisible = value;
+            UpdateVisibilities();
+        }
+    }
+    public bool HandlesAreVisible => SelectionOverlay.HandlesAreInserted;
+    public bool ToolbarIsVisible => SelectionOverlay.ToolbarIsVisible;
+    public bool MagnifierIsVisible => SelectionOverlay.MagnifierIsVisible;
+    public bool MagnifierExists => SelectionOverlay.MagnifierExists;
+
+    public void ShowHandles()
+    {
+        HandlesVisible = true;
+        SelectionOverlay.ShowHandles();
+    }
+
+    public void HideHandles()
+    {
+        HandlesVisible = false;
+        SelectionOverlay.HideHandles();
+    }
+
+    public void ShowToolbar()
+    {
+        if (ContextMenuBuilder is null) SelectionOverlay.ShowToolbar();
+        else SelectionOverlay.ShowToolbar(SelectionOverlay.Context, ContextMenuBuilder);
+    }
+
+    public void HideToolbar() => SelectionOverlay.HideToolbar();
+
+    public void ShowMagnifier(Point globalPosition)
+    {
+        SelectionOverlay.ShowMagnifier(BuildMagnifierInfo(globalPosition));
+    }
+
+    public void UpdateMagnifier(Point globalPosition)
+    {
+        SelectionOverlay.UpdateMagnifier(BuildMagnifierInfo(globalPosition));
+    }
+
+    public void HideMagnifier() => SelectionOverlay.HideMagnifier();
+
+    public void Update(TextEditingValue value)
+    {
+        _value = value;
+        TextSelection selection = value.Selection;
+        SelectionOverlay.StartHandleType = StartHandleType(selection);
+        SelectionOverlay.EndHandleType = EndHandleType(selection);
+        SelectionOverlay.LineHeightAtStart = LineHeight(selection.Start);
+        SelectionOverlay.LineHeightAtEnd = LineHeight(selection.End);
+        SelectionOverlay.SelectionEndpoints = _renderObject.GetEndpointsForSelection(selection);
+        UpdateVisibilities();
+    }
+
+    public void UpdateForScroll() => Update(_value);
+    public void Hide() => SelectionOverlay.Hide();
+
+    public void Dispose()
+    {
+        _renderObject.SelectionStartInViewport.RemoveListener(UpdateVisibilities);
+        _renderObject.SelectionEndInViewport.RemoveListener(UpdateVisibilities);
+        SelectionOverlay.Dispose();
+        _startVisible.Dispose();
+        _endVisible.Dispose();
+        _toolbarVisible.Dispose();
+    }
+
+    private void HandleDragStart(DragStartDetails details, bool isStart)
+    {
+        ShowMagnifier(details.GlobalPosition);
+        HandleDragUpdate(
+            new DragUpdateDetails(
+                GlobalPosition: details.GlobalPosition,
+                LocalPosition: details.LocalPosition,
+                Delta: default,
+                PrimaryDelta: 0.0,
+                SourceTimeStampUtc: details.SourceTimeStampUtc,
+                Kind: details.Kind),
+            isStart);
+    }
+
+    private void HandleDragUpdate(DragUpdateDetails details, bool isStart)
+    {
+        int position = _renderObject.GetPositionForPoint(details.GlobalPosition).Offset;
+        TextSelection current = _value.Selection;
+        TextSelection next;
+        if (current.IsCollapsed)
+        {
+            next = TextSelection.Collapsed(position);
+        }
+        else if (isStart)
+        {
+            next = new TextSelection(position, current.ExtentOffset);
+        }
+        else
+        {
+            next = new TextSelection(current.BaseOffset, position);
+        }
+        bool cannotCross = PlatformDefaults.TargetPlatform is not (TargetPlatform.IOS or TargetPlatform.MacOS)
+                           && next.BaseOffset >= next.ExtentOffset;
+        if (!cannotCross)
+        {
+            _selectionDelegate.UserUpdateTextEditingValue(
+                new TextEditingValue(_value.Text, next, _value.Composing),
+                SelectionChangedCause.Drag);
+        }
+        UpdateMagnifier(details.GlobalPosition);
+    }
+
+    private void HandleDragEnd()
+    {
+        HideMagnifier();
+        if (!_value.Selection.IsCollapsed) ShowToolbar();
+    }
+
+    private void ToggleToolbar()
+    {
+        if (ToolbarIsVisible) HideToolbar();
+        else ShowToolbar();
+    }
+
+    private void UpdateVisibilities()
+    {
+        _startVisible.Value = _handlesVisible && _renderObject.SelectionStartInViewport.Value;
+        _endVisible.Value = _handlesVisible && _renderObject.SelectionEndInViewport.Value;
+        _toolbarVisible.Value = _renderObject.SelectionStartInViewport.Value
+                                || _renderObject.SelectionEndInViewport.Value;
+    }
+
+    private double LineHeight(int offset)
+    {
+        Rect? rect = _renderObject.GetRectForComposingRange(
+            new TextRange(offset, Math.Min(offset + 1, _value.Text.Length)));
+        return rect?.Height ?? _renderObject.PreferredLineHeight;
+    }
+
+    private MagnifierInfo BuildMagnifierInfo(Point globalPosition)
+    {
+        TextPosition position = _renderObject.GetPositionForPoint(globalPosition);
+        Rect caret = _renderObject.GetLocalRectForCaret(position);
+        TextSelection line = _renderObject.GetLineAtOffset(position);
+        Rect lineStart = _renderObject.GetLocalRectForCaret(new TextPosition(line.Start));
+        Rect lineEnd = _renderObject.GetLocalRectForCaret(new TextPosition(line.End, TextAffinity.Upstream));
+        Matrix transform = _renderObject.TryGetTransformFromRoot(out Matrix value) ? value : Matrix.Identity;
+        return new MagnifierInfo(
+            globalPosition,
+            RenderObject.TransformRect(transform, caret),
+            RenderObject.TransformRect(transform, new Rect(default, _renderObject.Size)),
+            RenderObject.TransformRect(
+                transform,
+                new Rect(
+                    lineStart.Center.X,
+                    lineStart.Top,
+                    Math.Max(0.0, lineEnd.Center.X - lineStart.Center.X),
+                    lineEnd.Bottom - lineStart.Top)));
+    }
+
+    private static TextSelectionHandleType StartHandleType(TextSelection selection)
+    {
+        return selection.IsCollapsed ? TextSelectionHandleType.Collapsed : TextSelectionHandleType.Left;
+    }
+
+    private static TextSelectionHandleType EndHandleType(TextSelection selection)
+    {
+        return selection.IsCollapsed ? TextSelectionHandleType.Collapsed : TextSelectionHandleType.Right;
+    }
+}
+
 /// <summary>
 /// Owns the overlay entries that draw the two selection handles, the selection toolbar, and the
 /// text magnifier for one editing surface.
