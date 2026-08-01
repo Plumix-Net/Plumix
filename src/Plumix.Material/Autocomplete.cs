@@ -157,27 +157,17 @@ internal sealed class AutocompleteOptions<T> : StatelessWidget
 
     public override Widget Build(BuildContext context)
     {
-        var theme = Theme.Of(context);
         int highlightedIndex = AutocompleteHighlightedOption.Of(context);
-        var shadow = new BoxShadows(new BoxShadow
-        {
-            OffsetY = 2,
-            Blur = 8,
-            Color = MaterialButtonCore.ApplyOpacity(theme.ShadowColor, 0.24),
-        });
         Widget list = new AutocompleteOptionsList<T>(
             DisplayStringForOption,
             highlightedIndex,
             OnSelected,
             Options);
-        Widget surface = new DecoratedBox(
-            new BoxDecoration(
-                Color: theme.CanvasColor,
-                BoxShadows: shadow),
-            list);
-        return new ConstrainedBox(
-            new BoxConstraints(MaxHeight: OptionsMaxHeight),
-            surface);
+        return new Material(
+            elevation: 4.0,
+            child: new ConstrainedBox(
+                new BoxConstraints(MaxHeight: OptionsMaxHeight),
+                list));
     }
 }
 
@@ -209,6 +199,7 @@ internal sealed class AutocompleteOptionsList<T> : StatefulWidget
 internal sealed class AutocompleteOptionsListState<T> : State
 {
     private readonly ScrollController _scrollController = new();
+    private readonly Dictionary<object, GlobalObjectKey<State>> _optionKeys = new();
 
     private AutocompleteOptionsList<T> Current => (AutocompleteOptionsList<T>)StateWidget;
 
@@ -220,26 +211,7 @@ internal sealed class AutocompleteOptionsListState<T> : State
             return;
         }
 
-        Scheduler.AddPostFrameCallback(timestamp =>
-        {
-            if (!Mounted || !_scrollController.HasClients)
-            {
-                return;
-            }
-
-            var position = _scrollController.PrimaryPosition;
-            if (position is null)
-            {
-                return;
-            }
-
-            double target = Current.HighlightedIndex == 0
-                ? 0
-                : Current.HighlightedIndex >= Current.Options.Count - 1
-                    ? position.MaxScrollExtent
-                    : Math.Clamp(Current.HighlightedIndex * 48.0, 0, position.MaxScrollExtent);
-            _scrollController.JumpTo(target);
-        });
+        ScheduleEnsureHighlightedVisible(remainingAttempts: 4);
     }
 
     public override void Dispose()
@@ -251,6 +223,7 @@ internal sealed class AutocompleteOptionsListState<T> : State
     {
         var theme = Theme.Of(context);
         int highlightedIndex = AutocompleteHighlightedOption.Of(context);
+        RemoveStaleOptionKeys();
         return ListView.Builder(
             itemCount: Current.Options.Count,
             controller: _scrollController,
@@ -271,8 +244,68 @@ internal sealed class AutocompleteOptionsListState<T> : State
                     flags: SemanticsFlags.IsButton,
                     onTap: () => Current.OnSelected(option),
                     child: new InkWell(
+                        key: KeyForOption(option),
                         onTap: () => Current.OnSelected(option),
                         child: optionContent));
             });
+    }
+
+    private GlobalObjectKey<State> KeyForOption(T option)
+    {
+        if (option is null)
+        {
+            throw new InvalidOperationException("Autocomplete options must not be null.");
+        }
+
+        object keyValue = option;
+        if (!_optionKeys.TryGetValue(keyValue, out GlobalObjectKey<State>? key))
+        {
+            key = new GlobalObjectKey<State>(keyValue);
+            _optionKeys.Add(keyValue, key);
+        }
+
+        return key;
+    }
+
+    private void RemoveStaleOptionKeys()
+    {
+        var retained = Current.Options.Cast<object>().ToHashSet();
+        foreach (object option in _optionKeys.Keys.Where(option => !retained.Contains(option)).ToArray())
+        {
+            _optionKeys.Remove(option);
+        }
+    }
+
+    private void ScheduleEnsureHighlightedVisible(int remainingAttempts)
+    {
+        Scheduler.AddPostFrameCallback(timestamp =>
+        {
+            if (!Mounted || !_scrollController.HasClients)
+            {
+                return;
+            }
+
+            ScrollPosition? position = _scrollController.PrimaryPosition;
+            if (position is null)
+            {
+                return;
+            }
+
+            T option = Current.Options[Current.HighlightedIndex];
+            BuildContext? highlightedContext = KeyForOption(option).CurrentContext;
+            if (highlightedContext.HasValue)
+            {
+                _ = Scrollable.EnsureVisible(highlightedContext.Value, alignment: 0.5);
+                return;
+            }
+
+            _scrollController.JumpTo(Current.HighlightedIndex == 0
+                ? 0.0
+                : position.MaxScrollExtent);
+            if (remainingAttempts > 1)
+            {
+                ScheduleEnsureHighlightedVisible(remainingAttempts - 1);
+            }
+        });
     }
 }

@@ -122,6 +122,10 @@ public abstract class WidgetsLocalizations
 {
     public abstract TextDirection TextDirection { get; }
 
+    public virtual string SearchResultsFound => "Search results found";
+
+    public virtual string NoResultsFound => "No results found";
+
     public static WidgetsLocalizations Of(BuildContext context)
     {
         return Localizations.Of<WidgetsLocalizations>(context);

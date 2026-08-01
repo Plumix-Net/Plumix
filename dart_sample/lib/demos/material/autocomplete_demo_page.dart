@@ -40,7 +40,9 @@ class _AutocompleteDemoPageState extends State<AutocompleteDemoPage> {
             style: TextStyle(fontSize: 20, color: Colors.black),
           ),
           const Text(
-            'Material defaults and a custom raw field/options view with shared filtering, keyboard highlighting, and anchored direction probes.',
+            'Material defaults and a route-free raw options portal with shared '
+            'filtering, keyboard highlighting, inherited theme, and anchored '
+            'direction probes.',
             style: TextStyle(fontSize: 14, color: Color(0x8A000000)),
           ),
           Align(
@@ -75,72 +77,76 @@ class _AutocompleteDemoPageState extends State<AutocompleteDemoPage> {
             'RawAutocomplete',
             style: TextStyle(fontSize: 18, color: Colors.black),
           ),
-          RawAutocomplete<String>(
-            textEditingController: _rawController,
-            focusNode: _rawFocusNode,
-            optionsBuilder: _filterTerms,
-            optionsViewOpenDirection: _openDirection,
-            displayStringForOption: (String value) => value,
-            fieldViewBuilder:
-                (
-                  BuildContext context,
-                  TextEditingController controller,
-                  FocusNode focusNode,
-                  VoidCallback onSubmitted,
-                ) {
-                  return TextField(
-                    controller: controller,
-                    focusNode: focusNode,
-                    decoration: const InputDecoration(
-                      labelText: 'Framework concept',
-                      hintText: 'Type to filter',
-                    ),
-                    onSubmitted: (String value) => onSubmitted(),
-                  );
-                },
-            optionsViewBuilder:
-                (
-                  BuildContext context,
-                  AutocompleteOnSelected<String> onSelected,
-                  Iterable<String> options,
-                ) {
-                  final int highlightedIndex = AutocompleteHighlightedOption.of(
-                    context,
-                  );
-                  final List<String> materialized = options.toList();
-                  return Material(
-                    elevation: 4,
-                    borderRadius: BorderRadius.circular(12),
-                    clipBehavior: Clip.antiAlias,
-                    child: ListView(
-                      padding: EdgeInsets.zero,
-                      shrinkWrap: true,
-                      children: <Widget>[
-                        for (
-                          int index = 0;
-                          index < materialized.length;
-                          index += 1
-                        )
-                          InkWell(
-                            onTap: () => onSelected(materialized[index]),
-                            child: Container(
-                              color: index == highlightedIndex
-                                  ? Theme.of(context).focusColor
-                                  : null,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 12,
+          Theme(
+            data: Theme.of(
+              context,
+            ).copyWith(focusColor: const Color(0x243F51B5)),
+            child: RawAutocomplete<String>(
+              textEditingController: _rawController,
+              focusNode: _rawFocusNode,
+              optionsBuilder: _filterTerms,
+              optionsViewOpenDirection: _openDirection,
+              displayStringForOption: (String value) => value,
+              fieldViewBuilder:
+                  (
+                    BuildContext context,
+                    TextEditingController controller,
+                    FocusNode focusNode,
+                    VoidCallback onSubmitted,
+                  ) {
+                    return TextField(
+                      controller: controller,
+                      focusNode: focusNode,
+                      decoration: const InputDecoration(
+                        labelText: 'Framework concept',
+                        hintText: 'Type to filter',
+                      ),
+                      onSubmitted: (String value) => onSubmitted(),
+                    );
+                  },
+              optionsViewBuilder:
+                  (
+                    BuildContext context,
+                    AutocompleteOnSelected<String> onSelected,
+                    Iterable<String> options,
+                  ) {
+                    final int highlightedIndex =
+                        AutocompleteHighlightedOption.of(context);
+                    final List<String> materialized = options.toList();
+                    return Material(
+                      elevation: 4,
+                      borderRadius: BorderRadius.circular(12),
+                      clipBehavior: Clip.antiAlias,
+                      child: ListView(
+                        padding: EdgeInsets.zero,
+                        shrinkWrap: true,
+                        children: <Widget>[
+                          for (
+                            int index = 0;
+                            index < materialized.length;
+                            index += 1
+                          )
+                            InkWell(
+                              onTap: () => onSelected(materialized[index]),
+                              child: Container(
+                                color: index == highlightedIndex
+                                    ? Theme.of(context).focusColor
+                                    : null,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
+                                ),
+                                child: Text(materialized[index]),
                               ),
-                              child: Text(materialized[index]),
                             ),
-                          ),
-                      ],
-                    ),
-                  );
-                },
-            onSelected: (String value) {
-              setState(() => _rawSelection = value);
-            },
+                        ],
+                      ),
+                    );
+                  },
+              onSelected: (String value) {
+                setState(() => _rawSelection = value);
+              },
+            ),
           ),
           Text(
             'Selected: $_rawSelection',

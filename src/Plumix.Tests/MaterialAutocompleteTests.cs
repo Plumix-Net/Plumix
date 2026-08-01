@@ -1,4 +1,5 @@
 using Avalonia;
+using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Gestures;
 using Plumix.Material;
@@ -27,10 +28,12 @@ public sealed class MaterialAutocompleteTests : IDisposable
         Scheduler.ResetForTests();
         FocusManager.Instance.ResetForTests();
         GestureBinding.Instance.ResetForTests();
+        SemanticsService.ResetForTests();
     }
 
     public void Dispose()
     {
+        SemanticsService.ResetForTests();
         GestureBinding.Instance.ResetForTests();
         FocusManager.Instance.ResetForTests();
         Scheduler.ResetForTests();
@@ -134,8 +137,10 @@ public sealed class MaterialAutocompleteTests : IDisposable
         Assert.NotNull(FindParagraph(harness.RenderView, "aardvark"));
         Assert.Contains(FindDescendants<RenderConstrainedBox>(harness.RenderView), box =>
             Math.Abs(box.AdditionalConstraints.MaxHeight - 96) < 0.01);
-        Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView), box =>
-            box.Decoration.Color == ThemeData.Light.CanvasColor && box.Decoration.BoxShadows is not null);
+        Plumix.Material.Material surface = Assert.Single(
+            harness.FindWidgets<Plumix.Material.Material>(),
+            material => material.Elevation == 4.0);
+        Assert.Equal(MaterialType.Canvas, surface.Type);
     }
 
     [Fact]
@@ -157,8 +162,9 @@ public sealed class MaterialAutocompleteTests : IDisposable
         focusNode.RequestFocus();
         harness.Pump(new Size(480, 240));
 
-        var position = Assert.Single(FindDescendants<RenderAutocompleteOptionsPosition>(harness.RenderView));
-        Assert.True(position.OpensUp);
+        RenderEditable field = Assert.Single(FindDescendants<RenderEditable>(harness.RenderView));
+        RenderParagraph option = Assert.IsType<RenderParagraph>(FindParagraph(harness.RenderView, "aardvark"));
+        Assert.True(GlobalRect(option).Bottom <= GlobalRect(field).Top + 0.01);
     }
 
     [Fact]
@@ -191,18 +197,180 @@ public sealed class MaterialAutocompleteTests : IDisposable
         Assert.Null(FindParagraph(harness.RenderView, "stale-result"));
     }
 
-    private static Widget Wrap(Widget child)
+    [Fact]
+    public void RawAutocomplete_UsesPortalWithoutPushingRouteAndKeepsLocalTheme()
+    {
+        var controller = new TextEditingController();
+        var focusNode = new FocusNode();
+        var navigatorKey = new LabeledGlobalKey<NavigatorState>("autocomplete navigator");
+        var route = new BuilderPageRoute(_ =>
+            new Theme(
+                ThemeData.Light with { CanvasColor = Colors.Crimson },
+                new RawAutocomplete<string>(
+                    textEditingController: controller,
+                    focusNode: focusNode,
+                    optionsBuilder: value => Options,
+                    optionsViewBuilder: (context, onSelected, options) => new ColoredBox(
+                        Theme.Of(context).CanvasColor,
+                        new Text(options.First())),
+                    fieldViewBuilder: (_, textController, node, onSubmitted) => new TextField(
+                        controller: textController,
+                        focusNode: node))));
+        using var harness = new WidgetRenderHarness(Wrap(new Navigator(route, key: navigatorKey)));
+        harness.Pump(new Size(480, 320));
+
+        focusNode.RequestFocus();
+        harness.Pump(new Size(480, 320));
+
+        Assert.Same(route, navigatorKey.CurrentState?.CurrentRoute);
+        Assert.False(navigatorKey.CurrentState?.CanPop);
+        Assert.Contains(
+            FindDescendants<RenderColoredBox>(harness.RenderView),
+            box => box.Color == Colors.Crimson);
+    }
+
+    [Fact]
+    public async Task RawAutocomplete_AnnouncesOnlyEmptyStateTransitionsForOwningView()
+    {
+        var controller = new TextEditingController();
+        var focusNode = new FocusNode();
+        var announcements = new List<SemanticsAnnouncement>();
+        SemanticsService.AnnouncementRequested += announcements.Add;
+        using var harness = new WidgetRenderHarness(Wrap(
+            new Navigator(new BuilderPageRoute(_ => new Autocomplete<string>(
+                optionsBuilder: value => Options.Where(option => option.Contains(value.Text)),
+                textEditingController: controller,
+                focusNode: focusNode))),
+            new MediaQueryData(Size: new Size(480, 320), SupportsAnnounce: true, ViewId: 7)));
+        harness.Pump(new Size(480, 320));
+
+        focusNode.RequestFocus();
+        await PumpUntilAsync(harness, new Size(480, 320), () => announcements.Count == 1);
+        controller.Text = "e";
+        harness.Pump(new Size(480, 320));
+        controller.Text = "no matches";
+        await PumpUntilAsync(harness, new Size(480, 320), () => announcements.Count == 2);
+
+        Assert.Equal(
+            ["Search results found", "No results found"],
+            announcements.Select(announcement => announcement.Message));
+        Assert.All(announcements, announcement => Assert.Equal(7, announcement.ViewId));
+        Assert.All(announcements, announcement => Assert.Equal(TextDirection.Ltr, announcement.TextDirection));
+    }
+
+    [Fact]
+    public async Task RawAutocomplete_ReportsAnnouncementFailures()
+    {
+        var focusNode = new FocusNode();
+        Exception? reported = null;
+        SemanticsService.PlatformHandler = announcement =>
+            Task.FromException(new FormatException("invalid announcement response"));
+        SemanticsService.AnnouncementFailed += exception => reported = exception;
+        using var harness = new WidgetRenderHarness(Wrap(
+            new Navigator(new BuilderPageRoute(_ => new Autocomplete<string>(
+                optionsBuilder: value => Options,
+                focusNode: focusNode,
+                textEditingController: new TextEditingController()))),
+            new MediaQueryData(Size: new Size(480, 320), SupportsAnnounce: true)));
+        harness.Pump(new Size(480, 320));
+
+        focusNode.RequestFocus();
+        await PumpUntilAsync(harness, new Size(480, 320), () => reported is not null);
+
+        Assert.IsType<FormatException>(reported);
+    }
+
+    [Fact]
+    public void RawAutocomplete_EscapeDelegatesAfterClosingPortal()
+    {
+        var controller = new TextEditingController();
+        var focusNode = new FocusNode();
+        int dismissals = 0;
+        Widget navigator = new Navigator(new BuilderPageRoute(_ => new Autocomplete<string>(
+            optionsBuilder: value => Options,
+            textEditingController: controller,
+            focusNode: focusNode)));
+        navigator = new Actions(
+            new Dictionary<Type, FlutterAction>
+            {
+                [typeof(DismissIntent)] = new CallbackAction<DismissIntent>(_ =>
+                {
+                    dismissals += 1;
+                    return null;
+                }),
+            },
+            navigator);
+        using var harness = new WidgetRenderHarness(Wrap(navigator));
+        harness.Pump(new Size(480, 320));
+        focusNode.RequestFocus();
+        harness.Pump(new Size(480, 320));
+        Assert.NotNull(FindParagraph(harness.RenderView, "aardvark"));
+
+        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("Escape", isDown: true)));
+        harness.Pump(new Size(480, 320));
+        Assert.Null(FindParagraph(harness.RenderView, "aardvark"));
+        Assert.Equal(0, dismissals);
+
+        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("Escape", isDown: true)));
+        Assert.Equal(1, dismissals);
+    }
+
+    [Fact]
+    public void MaterialAutocomplete_EndShortcutBuildsAndHighlightsLastLazyOption()
+    {
+        string[] options = Enumerable.Range(0, 30).Select(index => $"option-{index}").ToArray();
+        var controller = new TextEditingController();
+        var focusNode = new FocusNode();
+        using var harness = new WidgetRenderHarness(Wrap(new Navigator(new BuilderPageRoute(_ =>
+            new Autocomplete<string>(
+                optionsBuilder: value => options,
+                textEditingController: controller,
+                focusNode: focusNode,
+                optionsMaxHeight: 96)))));
+        harness.Pump(new Size(480, 320));
+        focusNode.RequestFocus();
+        harness.Pump(new Size(480, 320));
+
+        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent(
+            "ArrowDown",
+            isDown: true,
+            isControlPressed: true)));
+        for (int frame = 0; frame < 4; frame++)
+        {
+            Scheduler.PumpFrameForTests();
+            harness.Pump(new Size(480, 320));
+        }
+
+        RenderViewport viewport = Assert.Single(FindDescendants<RenderViewport>(harness.RenderView));
+        Assert.True(
+            FindParagraph(harness.RenderView, "option-29") is not null,
+            $"Expected last option at scroll offset {viewport.OffsetPixels}.");
+        Assert.Null(FindParagraph(harness.RenderView, "option-0"));
+    }
+
+    private static Widget Wrap(Widget child, MediaQueryData? mediaQueryData = null)
     {
         return new Directionality(
             TextDirection.Ltr,
             new MediaQuery(
-                new MediaQueryData(Size: new Size(480, 320)),
-                new Theme(ThemeData.Light, child)));
+                mediaQueryData ?? new MediaQueryData(Size: new Size(480, 320)),
+                new Localizations(
+                    locale: new Locale("en"),
+                    delegates: [DefaultWidgetsLocalizations.Delegate],
+                    child: new Theme(
+                        ThemeData.Light,
+                        Overlay.Wrap(child)))));
     }
 
     private static RenderParagraph? FindParagraph(RenderObject? root, string text)
     {
         return FindDescendants<RenderParagraph>(root).FirstOrDefault(paragraph => paragraph.Text == text);
+    }
+
+    private static Rect GlobalRect(RenderBox renderBox)
+    {
+        Assert.True(renderBox.TryGetTransformFromRoot(out Matrix transform));
+        return RenderObject.TransformRect(transform, new Rect(renderBox.Size));
     }
 
     private static async Task PumpUntilAsync(
@@ -250,6 +418,23 @@ public sealed class MaterialAutocompleteTests : IDisposable
         }
 
         public RenderView RenderView { get; }
+
+        public IReadOnlyList<T> FindWidgets<T>() where T : Widget
+        {
+            var result = new List<T>();
+            Visit(_rootElement);
+            return result;
+
+            void Visit(Element element)
+            {
+                if (element.Widget is T widget)
+                {
+                    result.Add(widget);
+                }
+
+                element.VisitChildren(Visit);
+            }
+        }
 
         public void Pump(Size size)
         {

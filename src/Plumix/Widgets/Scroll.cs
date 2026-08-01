@@ -621,6 +621,47 @@ public sealed class Scrollable : StatefulWidget
                ?? throw new InvalidOperationException("Scrollable operation requested with no Scrollable ancestor.");
     }
 
+    public static bool EnsureVisible(BuildContext context, double alignment = 0.0)
+    {
+        if (!double.IsFinite(alignment) || alignment < 0.0 || alignment > 1.0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(alignment), "Alignment must be between zero and one.");
+        }
+
+        ScrollableState? scrollable = MaybeOf(context);
+        if (scrollable is null
+            || context.FindRenderObject() is not RenderBox target
+            || !target.HasSize
+            || scrollable.Context.FindRenderObject() is not RenderBox viewport
+            || !viewport.HasSize
+            || !target.TryGetTransformFromRoot(out Matrix targetTransform)
+            || !viewport.TryGetTransformFromRoot(out Matrix viewportTransform))
+        {
+            return false;
+        }
+
+        Rect targetRect = RenderObject.TransformRect(
+            targetTransform,
+            new Rect(target.Size));
+        Rect viewportRect = RenderObject.TransformRect(
+            viewportTransform,
+            new Rect(viewport.Size));
+        bool vertical = scrollable.AxisDirection is AxisDirection.Up or AxisDirection.Down;
+        double targetStart = vertical ? targetRect.Top : targetRect.Left;
+        double targetExtent = vertical ? targetRect.Height : targetRect.Width;
+        double viewportStart = vertical ? viewportRect.Top : viewportRect.Left;
+        double viewportExtent = vertical ? viewportRect.Height : viewportRect.Width;
+        double delta = targetStart + targetExtent * alignment
+                       - (viewportStart + viewportExtent * alignment);
+        if (ScrollDirectionUtils.AxisDirectionIsReversed(scrollable.AxisDirection))
+        {
+            delta = -delta;
+        }
+
+        scrollable.Position.JumpTo(scrollable.Position.Pixels + delta);
+        return true;
+    }
+
     public sealed class ScrollableState : State
     {
         private ScrollController? _fallbackController;
@@ -636,6 +677,8 @@ public sealed class Scrollable : StatefulWidget
         private Scrollable CurrentWidget => (Scrollable)Element.Widget;
 
         public ScrollPosition Position => _position;
+
+        internal AxisDirection AxisDirection => ResolveAxisDirection(CurrentWidget.Axis, CurrentWidget.Reverse);
 
         public override void DidChangeDependencies()
         {

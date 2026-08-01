@@ -258,6 +258,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `services/clipboard.dart` | `src/Plumix/Widgets/TextClipboard.cs` | — | — |
 | `services/hardware_keyboard.dart` | `src/Plumix/UI/KeyboardEvents.cs` | — | — |
 | `services/mouse_cursor.dart` | `src/Plumix/Widgets/MouseCursor.cs` | — | — |
+| `services/semantics.dart` ⚠️ | `src/Plumix/UI/SemanticsService.cs` | — | — |
 | `services/spell_check.dart` | `src/Plumix/Widgets/SpellCheck.cs` | — | — |
 | `services/system_chrome.dart` | `src/Plumix/UI/SystemChrome.cs` | — | — |
 | `services/system_sound.dart` | `src/Plumix/UI/SystemSound.cs` | — | — |
@@ -384,6 +385,7 @@ Re-check parity against the current source before touching these.
 - `packages/flutter/lib/src/rendering/relative_rect.dart`
 - `packages/flutter/lib/src/rendering/semantics.dart`
 - `packages/flutter/lib/src/scheduler/scheduler.dart`
+- `packages/flutter/lib/src/services/semantics.dart`
 - `packages/flutter/lib/src/widgets/widgets_localizations.dart`
 
 ### Framework files without a `Dart parity source` marker
@@ -407,8 +409,8 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 
 ## Summary
 
-- Flutter files mapped: 358
-- C# files carrying a marker: 451
+- Flutter files mapped: 359
+- C# files carrying a marker: 452
 - C# files without a marker: 14
-- Markers not resolvable in the pinned checkout: 4
+- Markers not resolvable in the pinned checkout: 5
 

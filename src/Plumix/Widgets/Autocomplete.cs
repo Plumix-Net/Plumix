@@ -32,6 +32,30 @@ public enum OptionsViewOpenDirection
     MostSpace,
 }
 
+public sealed class AutocompletePreviousOptionIntent : Intent
+{
+}
+
+public sealed class AutocompleteNextOptionIntent : Intent
+{
+}
+
+public sealed class AutocompleteFirstOptionIntent : Intent
+{
+}
+
+public sealed class AutocompleteLastOptionIntent : Intent
+{
+}
+
+public sealed class AutocompleteNextPageOptionIntent : Intent
+{
+}
+
+public sealed class AutocompletePreviousPageOptionIntent : Intent
+{
+}
+
 public sealed class RawAutocomplete<T> : StatefulWidget
 {
     public RawAutocomplete(
@@ -145,6 +169,8 @@ public sealed class RawAutocomplete<T> : StatefulWidget
 internal sealed class RawAutocompleteState<T> : State
 {
     private const int PageSize = 4;
+    private const double MinimumOptionsHeight = 48.0;
+    private readonly OverlayPortalController _optionsViewController = new("RawAutocomplete");
     private readonly ValueNotifier<int> _highlightedOptionIndex = new(0);
     private TextEditingController? _textEditingController;
     private FocusNode? _focusNode;
@@ -156,7 +182,8 @@ internal sealed class RawAutocompleteState<T> : State
     private T? _selection;
     private string? _lastFieldText;
     private int _onChangedCallId;
-    private AutocompleteRoute<T>? _optionsRoute;
+    private FlutterAction? _previousDismissAction;
+    private BuildContext _previousDismissContext;
 
     private RawAutocomplete<T> Current => (RawAutocomplete<T>)StateWidget;
 
@@ -207,27 +234,89 @@ internal sealed class RawAutocompleteState<T> : State
 
     public override Widget Build(BuildContext context)
     {
-        return Current.FieldViewBuilder?.Invoke(
-                   context,
-                   _textEditingController!,
-                   _focusNode!,
-                   OnFieldSubmitted)
-               ?? new SizedBox(height: 0);
-    }
-
-    internal Widget BuildOptionsView(BuildContext context)
-    {
-        return Current.OptionsViewBuilder(context, Select, _options);
+        Widget field = Current.FieldViewBuilder?.Invoke(
+                           context,
+                           _textEditingController!,
+                           _focusNode!,
+                           OnFieldSubmitted)
+                       ?? new SizedBox(width: double.PositiveInfinity, height: 0.0);
+        field = new Actions(BuildActions(context), field);
+        field = new Shortcuts(BuildShortcuts(), field);
+        field = new TextFieldTapRegion(field);
+        return OverlayPortal.WithLayoutBuilder(
+            controller: _optionsViewController,
+            overlayChildBuilder: BuildOptionsView,
+            child: field);
     }
 
     internal void OnFieldSubmitted()
     {
-        if (_optionsRoute is null || _options.Count == 0)
+        if (!_optionsViewController.IsShowing || _options.Count == 0)
         {
             return;
         }
 
         Select(_options[_highlightedOptionIndex.Value]);
+    }
+
+    private Widget BuildOptionsView(
+        BuildContext context,
+        OverlayChildLayoutInfo layoutInfo)
+    {
+        if (!layoutInfo.ChildPaintTransform.TryInvert(out Matrix overlayToField))
+        {
+            return new SizedBox();
+        }
+
+        MediaQueryData mediaQuery = MediaQuery.Of(context);
+        Rect usableOverlayRect = DeflateRect(
+            DeflateRect(
+                new Rect(layoutInfo.OverlaySize),
+                mediaQuery.ViewInsets),
+            mediaQuery.Padding);
+        Rect overlayRectInField = TransformRect(overlayToField, usableOverlayRect);
+        double spaceAbove = -overlayRectInField.Top;
+        double spaceBelow = overlayRectInField.Bottom - layoutInfo.ChildSize.Height;
+        bool opensUp = Current.OptionsViewOpenDirection switch
+        {
+            OptionsViewOpenDirection.Up => true,
+            OptionsViewOpenDirection.MostSpace => spaceAbove > spaceBelow,
+            _ => false,
+        };
+        double availableHeight = opensUp ? spaceAbove : spaceBelow;
+        double boundingHeight = Math.Max(availableHeight, MinimumOptionsHeight);
+        double originY = opensUp
+            ? overlayRectInField.Top
+            : overlayRectInField.Bottom - boundingHeight;
+
+        Widget options = new AutocompleteHighlightedOption(
+            _highlightedOptionIndex,
+            new Builder(optionsContext => Current.OptionsViewBuilder(
+                optionsContext,
+                Select,
+                _options)));
+        options = new TextFieldTapRegion(options);
+        options = new Align(
+            child: options,
+            alignment: opensUp
+                ? AlignmentDirectional.BottomStart
+                : AlignmentDirectional.TopStart);
+        options = new ConstrainedBox(
+            new BoxConstraints(
+                MinWidth: layoutInfo.ChildSize.Width,
+                MaxWidth: layoutInfo.ChildSize.Width,
+                MinHeight: boundingHeight,
+                MaxHeight: boundingHeight),
+            options);
+        options = new Align(
+            child: options,
+            alignment: Alignment.TopLeft,
+            widthFactor: 1.0,
+            heightFactor: 1.0);
+        options = new Transform(
+            Matrix.CreateTranslation(0.0, originY),
+            options);
+        return new Transform(layoutInfo.ChildPaintTransform, options);
     }
 
     private void HandleFocusChange()
@@ -275,7 +364,13 @@ internal sealed class RawAutocompleteState<T> : State
             return;
         }
 
-        _options = result?.ToArray() ?? [];
+        IReadOnlyList<T> options = result?.ToArray() ?? [];
+        if (_options.Count == 0 != (options.Count == 0))
+        {
+            _ = AnnounceSemanticsAsync(options.Count > 0);
+        }
+
+        _options = options;
         UpdateHighlight(_highlightedOptionIndex.Value);
         if (_selection is not null
             && !string.Equals(value.Text, Current.DisplayStringForOption(_selection), StringComparison.Ordinal))
@@ -300,32 +395,15 @@ internal sealed class RawAutocompleteState<T> : State
 
     private void ShowOptions()
     {
-        if (_optionsRoute is not null)
-        {
-            _optionsRoute.Refresh();
-            return;
-        }
-
-        if (Context.FindRenderObject() is not RenderBox anchor || !anchor.HasSize)
-        {
-            return;
-        }
-
-        var route = new AutocompleteRoute<T>(
-            this,
-            ResolveGlobalBounds(anchor),
-            Current.OptionsViewOpenDirection,
-            MediaQuery.Of(Context),
-            Directionality.Of(Context));
-        _optionsRoute = route;
-        Navigator.Of(Context).Push(route);
+        _optionsViewController.Show();
     }
 
     private void HideOptions()
     {
-        var route = _optionsRoute;
-        _optionsRoute = null;
-        route?.Navigator?.MaybePop();
+        if (_optionsViewController.IsShowing)
+        {
+            _optionsViewController.Hide();
+        }
     }
 
     private void Select(T nextSelection)
@@ -347,6 +425,23 @@ internal sealed class RawAutocompleteState<T> : State
         _selecting = false;
     }
 
+    private IReadOnlyDictionary<ShortcutActivator, Intent> BuildShortcuts()
+    {
+        bool apple = PlatformDefaults.TargetPlatform is TargetPlatform.IOS or TargetPlatform.MacOS;
+        return new Dictionary<ShortcutActivator, Intent>
+        {
+            [new SingleActivator("ArrowUp")] = new AutocompletePreviousOptionIntent(),
+            [new SingleActivator("ArrowDown")] = new AutocompleteNextOptionIntent(),
+            [new SingleActivator("PageUp")] = new AutocompletePreviousPageOptionIntent(),
+            [new SingleActivator("PageDown")] = new AutocompleteNextPageOptionIntent(),
+            [new SingleActivator("ArrowUp", control: !apple, meta: apple)] =
+                new AutocompleteFirstOptionIntent(),
+            [new SingleActivator("ArrowDown", control: !apple, meta: apple)] =
+                new AutocompleteLastOptionIntent(),
+            [new SingleActivator("Escape")] = new DismissIntent(),
+        };
+    }
+
     private KeyEventResult HandleKeyEvent(FocusNode node, KeyEvent @event)
     {
         if (!@event.IsDown)
@@ -354,22 +449,33 @@ internal sealed class RawAutocompleteState<T> : State
             return KeyEventResult.Ignored;
         }
 
-        bool canNavigate = _optionsRoute is not null && _options.Count > 0;
         string key = @event.Key;
-        if ((key is "Escape" or "Esc") && _optionsRoute is not null)
+        if (key is "Escape" or "Esc")
         {
+            if (!_optionsViewController.IsShowing)
+            {
+                var intent = new DismissIntent();
+                if (_previousDismissAction?.IsEnabledObject(intent, _previousDismissContext) != true)
+                {
+                    return KeyEventResult.Ignored;
+                }
+
+                object? result = _previousDismissAction.InvokeObject(intent, _previousDismissContext);
+                return _previousDismissAction.ToKeyEventResultObject(intent, result);
+            }
+
             HideOptions();
             return KeyEventResult.Handled;
         }
 
-        if (!canNavigate)
+        if (_focusNode?.HasFocus != true || _options.Count == 0)
         {
             return KeyEventResult.Ignored;
         }
 
         if (key is "ArrowUp" or "Up")
         {
-            HighlightOption((@event.IsMetaPressed || @event.IsControlPressed)
+            HighlightOption(@event.IsMetaPressed || @event.IsControlPressed
                 ? 0
                 : _highlightedOptionIndex.Value - 1);
             return KeyEventResult.Handled;
@@ -377,7 +483,7 @@ internal sealed class RawAutocompleteState<T> : State
 
         if (key is "ArrowDown" or "Down")
         {
-            HighlightOption((@event.IsMetaPressed || @event.IsControlPressed)
+            HighlightOption(@event.IsMetaPressed || @event.IsControlPressed
                 ? _options.Count - 1
                 : _highlightedOptionIndex.Value + 1);
             return KeyEventResult.Handled;
@@ -395,19 +501,55 @@ internal sealed class RawAutocompleteState<T> : State
             return KeyEventResult.Handled;
         }
 
-        if (key is "Enter" or "Return" or "NumPadEnter" or "NumpadEnter")
-        {
-            OnFieldSubmitted();
-            return KeyEventResult.Handled;
-        }
-
         return KeyEventResult.Ignored;
+    }
+
+    private IReadOnlyDictionary<Type, FlutterAction> BuildActions(BuildContext context)
+    {
+        FlutterAction? previousDismissAction = Actions.MaybeFind(context, new DismissIntent());
+        _previousDismissAction = previousDismissAction;
+        _previousDismissContext = context;
+        return new Dictionary<Type, FlutterAction>
+        {
+            [typeof(AutocompletePreviousOptionIntent)] =
+                NavigationAction<AutocompletePreviousOptionIntent>(-1),
+            [typeof(AutocompleteNextOptionIntent)] =
+                NavigationAction<AutocompleteNextOptionIntent>(1),
+            [typeof(AutocompleteFirstOptionIntent)] =
+                NavigationAction<AutocompleteFirstOptionIntent>(int.MinValue),
+            [typeof(AutocompleteLastOptionIntent)] =
+                NavigationAction<AutocompleteLastOptionIntent>(int.MaxValue),
+            [typeof(AutocompletePreviousPageOptionIntent)] =
+                NavigationAction<AutocompletePreviousPageOptionIntent>(-PageSize),
+            [typeof(AutocompleteNextPageOptionIntent)] =
+                NavigationAction<AutocompleteNextPageOptionIntent>(PageSize),
+            [typeof(DismissIntent)] = new AutocompleteDismissAction(
+                this,
+                previousDismissAction,
+                context),
+        };
+    }
+
+    private FlutterAction NavigationAction<TIntent>(int delta) where TIntent : Intent
+    {
+        return new AutocompleteNavigationAction<TIntent>(
+            () => _focusNode?.HasFocus == true && _options.Count > 0,
+            () =>
+            {
+                int index = delta switch
+                {
+                    int.MinValue => 0,
+                    int.MaxValue => _options.Count - 1,
+                    _ => _highlightedOptionIndex.Value + delta,
+                };
+                HighlightOption(index);
+            });
     }
 
     private void HighlightOption(int index)
     {
         UpdateHighlight(index);
-        _optionsRoute?.Refresh();
+        UpdateOptionsViewVisibility();
     }
 
     private void UpdateHighlight(int index)
@@ -467,36 +609,106 @@ internal sealed class RawAutocompleteState<T> : State
         _ownsFocusNode = false;
     }
 
-    private static Rect ResolveGlobalBounds(RenderBox renderBox)
+    private async Task AnnounceSemanticsAsync(bool hasOptions)
     {
-        var transform = Matrix.Identity;
-        RenderObject? child = renderBox;
-        while (child?.Parent is not null)
+        if (!MediaQuery.SupportsAnnounceOf(Context))
         {
-            RenderObject parent = child.Parent;
-            Point childOffset = child.parentData is BoxParentData data ? data.offset : default;
-            Matrix childTransform = Matrix.CreateTranslation(childOffset.X, childOffset.Y);
-            if (parent is RenderTransform renderTransform)
-            {
-                childTransform *= renderTransform.EffectiveTransform;
-            }
-
-            transform = childTransform * transform;
-            child = parent;
+            return;
         }
 
+        WidgetsLocalizations localizations = WidgetsLocalizations.Of(Context);
+        string message = hasOptions
+            ? localizations.SearchResultsFound
+            : localizations.NoResultsFound;
+        await SemanticsService.SendAnnouncement(
+            MediaQuery.ViewIdOf(Context),
+            message,
+            localizations.TextDirection);
+    }
+
+    private static Rect DeflateRect(Rect rect, Thickness insets)
+    {
+        double left = rect.Left + insets.Left;
+        double top = rect.Top + insets.Top;
+        double right = Math.Max(left, rect.Right - insets.Right);
+        double bottom = Math.Max(top, rect.Bottom - insets.Bottom);
+        return new Rect(left, top, right - left, bottom - top);
+    }
+
+    private static Rect TransformRect(Matrix transform, Rect rect)
+    {
         Point[] points =
         [
-            transform.Transform(default),
-            transform.Transform(new Point(renderBox.Size.Width, 0)),
-            transform.Transform(new Point(0, renderBox.Size.Height)),
-            transform.Transform(new Point(renderBox.Size.Width, renderBox.Size.Height)),
+            transform.Transform(rect.TopLeft),
+            transform.Transform(rect.TopRight),
+            transform.Transform(rect.BottomLeft),
+            transform.Transform(rect.BottomRight),
         ];
         double left = points.Min(point => point.X);
         double top = points.Min(point => point.Y);
         double right = points.Max(point => point.X);
         double bottom = points.Max(point => point.Y);
         return new Rect(left, top, Math.Max(0, right - left), Math.Max(0, bottom - top));
+    }
+
+    private sealed class AutocompleteNavigationAction<TIntent> : FlutterAction<TIntent> where TIntent : Intent
+    {
+        private readonly Func<bool> _isEnabled;
+        private readonly Action _invoke;
+
+        public AutocompleteNavigationAction(Func<bool> isEnabled, Action invoke)
+        {
+            _isEnabled = isEnabled;
+            _invoke = invoke;
+        }
+
+        public override bool IsEnabled(TIntent intent) => _isEnabled();
+
+        public override object? Invoke(TIntent intent)
+        {
+            _invoke();
+            return null;
+        }
+    }
+
+    private sealed class AutocompleteDismissAction : FlutterAction<DismissIntent>
+    {
+        private readonly RawAutocompleteState<T> _owner;
+        private readonly FlutterAction? _previousAction;
+        private readonly BuildContext _previousActionContext;
+
+        public AutocompleteDismissAction(
+            RawAutocompleteState<T> owner,
+            FlutterAction? previousAction,
+            BuildContext previousActionContext)
+        {
+            _owner = owner;
+            _previousAction = previousAction;
+            _previousActionContext = previousActionContext;
+        }
+
+        public override bool IsEnabled(DismissIntent intent)
+        {
+            return _owner._optionsViewController.IsShowing
+                   || _previousAction?.IsEnabledObject(intent, _previousActionContext) == true;
+        }
+
+        public override bool ConsumesKey(DismissIntent intent)
+        {
+            return _owner._optionsViewController.IsShowing
+                   || _previousAction?.ConsumesKeyObject(intent) == true;
+        }
+
+        public override object? Invoke(DismissIntent intent)
+        {
+            if (_owner._optionsViewController.IsShowing)
+            {
+                _owner.HideOptions();
+                return null;
+            }
+
+            return _previousAction?.InvokeObject(intent, _previousActionContext);
+        }
     }
 }
 
@@ -512,186 +724,5 @@ public sealed class AutocompleteHighlightedOption : InheritedNotifier<ValueNotif
     public static int Of(BuildContext context)
     {
         return context.DependOnInherited<AutocompleteHighlightedOption>()?.Notifier?.Value ?? 0;
-    }
-}
-
-internal sealed class AutocompleteRoute<T> : PageRoute
-{
-    private readonly RawAutocompleteState<T> _owner;
-    private readonly MediaQueryData _mediaQuery;
-    private readonly TextDirection _textDirection;
-
-    public AutocompleteRoute(
-        RawAutocompleteState<T> owner,
-        Rect fieldRect,
-        OptionsViewOpenDirection openDirection,
-        MediaQueryData mediaQuery,
-        TextDirection textDirection)
-    {
-        _owner = owner;
-        FieldRect = fieldRect;
-        OpenDirection = openDirection;
-        _mediaQuery = mediaQuery;
-        _textDirection = textDirection;
-    }
-
-    public override bool Opaque => false;
-
-    public Rect FieldRect { get; }
-
-    public OptionsViewOpenDirection OpenDirection { get; }
-
-    public override Widget BuildPage(BuildContext context)
-    {
-        Widget options = new AutocompleteHighlightedOption(
-            _owner.HighlightedOptionIndex,
-            new Builder(_owner.BuildOptionsView));
-        options = new AutocompleteOptionsPosition(
-            FieldRect,
-            OpenDirection,
-            _mediaQuery.Padding,
-            _mediaQuery.ViewInsets,
-            options);
-        return new Directionality(_textDirection, new MediaQuery(_mediaQuery, options));
-    }
-
-    public void Refresh() => NotifyRouteChanged();
-}
-
-internal sealed class AutocompleteOptionsPosition : SingleChildRenderObjectWidget
-{
-    public AutocompleteOptionsPosition(
-        Rect fieldRect,
-        OptionsViewOpenDirection openDirection,
-        Thickness padding,
-        Thickness viewInsets,
-        Widget child) : base(child)
-    {
-        FieldRect = fieldRect;
-        OpenDirection = openDirection;
-        Padding = padding;
-        ViewInsets = viewInsets;
-    }
-
-    public Rect FieldRect { get; }
-
-    public OptionsViewOpenDirection OpenDirection { get; }
-
-    public Thickness Padding { get; }
-
-    public Thickness ViewInsets { get; }
-
-    internal override RenderObject CreateRenderObject(BuildContext context)
-    {
-        return new RenderAutocompleteOptionsPosition(FieldRect, OpenDirection, Padding, ViewInsets);
-    }
-
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
-    {
-        var position = (RenderAutocompleteOptionsPosition)renderObject;
-        position.FieldRect = FieldRect;
-        position.OpenDirection = OpenDirection;
-        position.Padding = Padding;
-        position.ViewInsets = ViewInsets;
-    }
-}
-
-internal sealed class RenderAutocompleteOptionsPosition : RenderProxyBox
-{
-    private Rect _fieldRect;
-    private OptionsViewOpenDirection _openDirection;
-    private Thickness _padding;
-    private Thickness _viewInsets;
-
-    public RenderAutocompleteOptionsPosition(
-        Rect fieldRect,
-        OptionsViewOpenDirection openDirection,
-        Thickness padding,
-        Thickness viewInsets)
-    {
-        _fieldRect = fieldRect;
-        _openDirection = openDirection;
-        _padding = padding;
-        _viewInsets = viewInsets;
-    }
-
-    public Rect FieldRect
-    {
-        get => _fieldRect;
-        set
-        {
-            if (_fieldRect == value) return;
-            _fieldRect = value;
-            MarkNeedsLayout();
-        }
-    }
-
-    public OptionsViewOpenDirection OpenDirection
-    {
-        get => _openDirection;
-        set
-        {
-            if (_openDirection == value) return;
-            _openDirection = value;
-            MarkNeedsLayout();
-        }
-    }
-
-    public Thickness Padding
-    {
-        get => _padding;
-        set
-        {
-            if (_padding == value) return;
-            _padding = value;
-            MarkNeedsLayout();
-        }
-    }
-
-    public Thickness ViewInsets
-    {
-        get => _viewInsets;
-        set
-        {
-            if (_viewInsets == value) return;
-            _viewInsets = value;
-            MarkNeedsLayout();
-        }
-    }
-
-    internal bool OpensUp { get; private set; }
-
-    protected override void PerformLayout()
-    {
-        Size = Constraints.Biggest;
-        if (Child is null)
-        {
-            return;
-        }
-
-        double safeLeft = Math.Max(_padding.Left, _viewInsets.Left);
-        double safeTop = Math.Max(_padding.Top, _viewInsets.Top);
-        double safeRight = Math.Max(safeLeft, Size.Width - Math.Max(_padding.Right, _viewInsets.Right));
-        double safeBottom = Math.Max(safeTop, Size.Height - Math.Max(_padding.Bottom, _viewInsets.Bottom));
-        double spaceAbove = Math.Max(0, _fieldRect.Top - safeTop);
-        double spaceBelow = Math.Max(0, safeBottom - _fieldRect.Bottom);
-        OpensUp = _openDirection switch
-        {
-            OptionsViewOpenDirection.Up => true,
-            OptionsViewOpenDirection.MostSpace => spaceAbove > spaceBelow,
-            _ => false,
-        };
-
-        double availableHeight = Math.Max(48, OpensUp ? spaceAbove : spaceBelow);
-        double width = Math.Clamp(_fieldRect.Width, 0, Math.Max(0, safeRight - safeLeft));
-        Child.Layout(
-            new BoxConstraints(
-                MinWidth: width,
-                MaxWidth: width,
-                MaxHeight: availableHeight),
-            parentUsesSize: true);
-        double x = Math.Clamp(_fieldRect.Left, safeLeft, Math.Max(safeLeft, safeRight - Child.Size.Width));
-        double y = OpensUp ? _fieldRect.Top - Child.Size.Height : _fieldRect.Bottom;
-        ((BoxParentData)Child.parentData!).offset = new Point(x, y);
     }
 }

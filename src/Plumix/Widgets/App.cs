@@ -223,6 +223,8 @@ public sealed class WidgetsApp : StatefulWidget
                 result = new CheckedModeBanner(result);
             }
 
+            result = Overlay.Wrap(result);
+
             result = new Focus(
                 canRequestFocus: false,
                 onKeyEvent: HandleRootKeyEvent,

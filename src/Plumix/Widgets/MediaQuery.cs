@@ -37,7 +37,9 @@ public sealed record MediaQueryData(
     bool InvertColors = false,
     NavigationMode NavigationMode = NavigationMode.Traditional,
     PlatformBrightness PlatformBrightness = PlatformBrightness.Light,
-    bool HighContrast = false)
+    bool HighContrast = false,
+    bool SupportsAnnounce = false,
+    int ViewId = 0)
 {
     public Orientation Orientation => Size.Width > Size.Height
         ? Orientation.Landscape
@@ -57,7 +59,9 @@ public sealed record MediaQueryData(
         bool? invertColors = null,
         NavigationMode? navigationMode = null,
         PlatformBrightness? platformBrightness = null,
-        bool? highContrast = null)
+        bool? highContrast = null,
+        bool? supportsAnnounce = null,
+        int? viewId = null)
     {
         return new MediaQueryData(
             Size: size ?? Size,
@@ -73,7 +77,9 @@ public sealed record MediaQueryData(
             InvertColors: invertColors ?? InvertColors,
             NavigationMode: navigationMode ?? NavigationMode,
             PlatformBrightness: platformBrightness ?? PlatformBrightness,
-            HighContrast: highContrast ?? HighContrast);
+            HighContrast: highContrast ?? HighContrast,
+            SupportsAnnounce: supportsAnnounce ?? SupportsAnnounce,
+            ViewId: viewId ?? ViewId);
     }
 
     public MediaQueryData RemovePadding(
@@ -235,6 +241,10 @@ public sealed class MediaQuery : InheritedWidget
         Of(context).PlatformBrightness;
 
     public static bool HighContrastOf(BuildContext context) => Of(context).HighContrast;
+
+    public static bool SupportsAnnounceOf(BuildContext context) => Of(context).SupportsAnnounce;
+
+    public static int ViewIdOf(BuildContext context) => Of(context).ViewId;
 
     public static double TextScaleFactorOf(BuildContext context) => Of(context).TextScaleFactor;
 

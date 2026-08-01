@@ -78,6 +78,9 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   `Widgets/AnimatedSize.cs`, and their rendering counterparts, with focused coverage in
   `MaterialDesktopTextSelectionToolbarTests.cs` and `ImplicitAnimationsTests.cs`.
 - Material search routes enter through `SearchDelegate.cs` alongside `SearchAnchor.cs`; route ownership uses core `Widgets/Navigation.cs`, query editing stays on `Widgets/TextInput.cs`, and focused coverage lives in `MaterialSearchTests.cs`.
+- Autocomplete enters through core `Widgets/Autocomplete.cs` and Material `Autocomplete.cs`; direct options presentation
+  uses `Widgets/Overlay.cs` + `TapRegion.cs`, availability announcements use `UI/SemanticsService.cs`, and focused
+  coverage lives in `MaterialAutocompleteTests.cs`.
 - Dialog-family controls (`Dialog`, `AlertDialog`, `SimpleDialog`, `SimpleDialogOption`) enter through `Dialog.cs` +
   `DialogTheme.cs`; modal stacking/result behavior uses core `Widgets/ModalBarrier.cs` + `Widgets/Navigation.cs` and
   is covered by `ModalBarrierTests.cs` + `MaterialDialogTests.cs`.

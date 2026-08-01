@@ -49,7 +49,8 @@ internal sealed class AutocompleteDemoPageState : State
                 [
                     new Text("Autocomplete + RawAutocomplete", fontSize: 20, color: Colors.Black),
                     new Text(
-                        "Material defaults and a custom raw field/options view with shared filtering, keyboard highlighting, and anchored direction probes.",
+                        "Material defaults and a route-free raw options portal with shared filtering, keyboard " +
+                        "highlighting, inherited theme, and anchored direction probes.",
                         fontSize: 14,
                         color: Color.Parse("#8A000000")),
                     new Align(
@@ -68,21 +69,23 @@ internal sealed class AutocompleteDemoPageState : State
                     new Text($"Selected: {_materialSelection}", fontSize: 13),
                     new Divider(),
                     new Text("RawAutocomplete", fontSize: 18, color: Colors.Black),
-                    new RawAutocomplete<string>(
-                        textEditingController: _rawController,
-                        focusNode: _rawFocusNode,
-                        optionsBuilder: FilterTerms,
-                        optionsViewOpenDirection: _openDirection,
-                        displayStringForOption: value => value,
-                        fieldViewBuilder: (fieldContext, controller, focusNode, onSubmitted) => new TextField(
-                            controller: controller,
-                            focusNode: focusNode,
-                            decoration: new InputDecoration(
-                                labelText: "Framework concept",
-                                hintText: "Type to filter"),
-                            onSubmitted: value => onSubmitted()),
-                        optionsViewBuilder: BuildRawOptions,
-                        onSelected: value => SetState(() => _rawSelection = value)),
+                    new Theme(
+                        Theme.Of(context) with { FocusColor = Color.Parse("#243F51B5") },
+                        new RawAutocomplete<string>(
+                            textEditingController: _rawController,
+                            focusNode: _rawFocusNode,
+                            optionsBuilder: FilterTerms,
+                            optionsViewOpenDirection: _openDirection,
+                            displayStringForOption: value => value,
+                            fieldViewBuilder: (fieldContext, controller, focusNode, onSubmitted) => new TextField(
+                                controller: controller,
+                                focusNode: focusNode,
+                                decoration: new InputDecoration(
+                                    labelText: "Framework concept",
+                                    hintText: "Type to filter"),
+                                onSubmitted: value => onSubmitted()),
+                            optionsViewBuilder: BuildRawOptions,
+                            onSelected: value => SetState(() => _rawSelection = value))),
                     new Text($"Selected: {_rawSelection}", fontSize: 13),
                 ]));
     }

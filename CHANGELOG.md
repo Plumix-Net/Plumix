@@ -1,5 +1,11 @@
 # Changelog
 
+- Breaking: closed `RawAutocomplete<T>`/Material `Autocomplete<T>` overlay parity. Suggestions now use the
+  source `OverlayPortal` + grouped `TextFieldTapRegion` composition instead of pushing a route, follow live field
+  transforms and safe insets, preserve inherited state, announce localized availability changes, and use the exact
+  elevated Material surface plus keyed highlight scrolling. `WidgetsApp` now supplies the root overlay required by
+  portal-backed framework controls; focused tests and the mirrored runtime probe cover the new path.
+
 - Breaking: closed Material theme interpolation parity. Every component `*ThemeData` now exposes its source-shaped
   `Lerp` contract and participates in `ThemeData.Lerp`; theme extensions interpolate with Flutter's union semantics,
   and non-interpolable policy fields switch at the exact midpoint without endpoint identity shortcuts.
