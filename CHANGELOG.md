@@ -1,5 +1,9 @@
 # Changelog
 
+- Closed cross-host app lifecycle delivery parity. Browser focus/visibility, Android activity/window-focus, and iOS
+  foreground/background notifications now feed the Flutter-shaped lifecycle synthesizer, including hidden-state
+  transitions, duplicate suppression, and focused Android channel coverage.
+
 - Breaking: closed `RawAutocomplete<T>`/Material `Autocomplete<T>` overlay parity. Suggestions now use the
   source `OverlayPortal` + grouped `TextFieldTapRegion` composition instead of pushing a route, follow live field
   transforms and safe insets, preserve inherited state, announce localized availability changes, and use the exact

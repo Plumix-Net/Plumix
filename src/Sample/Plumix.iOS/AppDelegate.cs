@@ -4,6 +4,9 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.iOS;
 using Avalonia.Media;
+using System.Collections.Generic;
+using Plumix.UI;
+using Plumix.Widgets;
 
 // Dart parity source (reference): dart_sample/lib/main.dart (platform host bootstrap, adapted)
 
@@ -17,9 +20,39 @@ namespace Plumix.iOS;
 public partial class AppDelegate : AvaloniaAppDelegate<App>
 #pragma warning restore CA1711 // Identifiers should not have incorrect suffix
 {
+    private readonly List<NSObject> _lifecycleObservers;
+
+    public AppDelegate()
+    {
+        NSNotificationCenter center = NSNotificationCenter.DefaultCenter;
+        _lifecycleObservers =
+        [
+            center.AddObserver(
+                UIApplication.DidBecomeActiveNotification,
+                _ => DispatchLifecycleState(AppLifecycleState.Resumed)),
+            center.AddObserver(
+                UIApplication.WillResignActiveNotification,
+                _ => DispatchLifecycleState(AppLifecycleState.Inactive)),
+            center.AddObserver(
+                UIApplication.DidEnterBackgroundNotification,
+                _ => DispatchLifecycleState(AppLifecycleState.Paused)),
+            center.AddObserver(
+                UIApplication.WillEnterForegroundNotification,
+                _ => DispatchLifecycleState(AppLifecycleState.Inactive)),
+            center.AddObserver(
+                UIApplication.WillTerminateNotification,
+                _ => DispatchLifecycleState(AppLifecycleState.Detached)),
+        ];
+    }
+
     protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
     {
         return base.CustomizeAppBuilder(builder)
             .WithInterFont();
+    }
+
+    private static void DispatchLifecycleState(AppLifecycleState state)
+    {
+        WidgetsBinding.Instance.HandleAppLifecycleStateChanged(state);
     }
 }

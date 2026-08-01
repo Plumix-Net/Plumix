@@ -130,6 +130,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Goal: frame scheduling, pipeline wiring, Avalonia host integration.
 - Read First:
   - `src/Plumix/FlutterHost.cs`
+  - `src/Plumix/AndroidLifecycleChannel.cs`
   - `src/Plumix/WidgetHost.cs`
   - `src/Plumix/Widgets/AppLifecycleListener.cs`
   - `src/Plumix/UI/AppLifecycle.cs`

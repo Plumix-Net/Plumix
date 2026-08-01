@@ -392,6 +392,7 @@ Re-check parity against the current source before touching these.
 
 Either C#-only infrastructure (fine — say so in a header comment) or an undocumented port.
 
+- `src/Plumix/AndroidLifecycleChannel.cs`
 - `src/Plumix/AssemblyInfo.cs`
 - `src/Plumix/PlumixApplication.cs`
 - `src/Plumix/PlumixOptions.cs`
@@ -411,6 +412,6 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 
 - Flutter files mapped: 359
 - C# files carrying a marker: 452
-- C# files without a marker: 14
+- C# files without a marker: 15
 - Markers not resolvable in the pinned checkout: 5
 

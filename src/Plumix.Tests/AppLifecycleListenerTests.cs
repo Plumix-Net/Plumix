@@ -102,6 +102,39 @@ public sealed class AppLifecycleListenerTests
     }
 
     [Fact]
+    public void AndroidLifecycleChannel_CombinesActivityStateAndWindowFocusLikeFlutterEngine()
+    {
+        var states = new List<AppLifecycleState>();
+        var channel = new AndroidLifecycleChannel(states.Add);
+
+        channel.AppIsResumed();
+        channel.NoWindowsAreFocused();
+        channel.AWindowIsFocused();
+        channel.AppIsInactive();
+        channel.NoWindowsAreFocused();
+        channel.AppIsResumed();
+        channel.AppIsPaused();
+        channel.AWindowIsFocused();
+        channel.NoWindowsAreFocused();
+        channel.AppIsResumed();
+        channel.AWindowIsFocused();
+        channel.AppIsDetached();
+
+        Assert.Equal(
+            [
+                AppLifecycleState.Resumed,
+                AppLifecycleState.Inactive,
+                AppLifecycleState.Resumed,
+                AppLifecycleState.Inactive,
+                AppLifecycleState.Paused,
+                AppLifecycleState.Inactive,
+                AppLifecycleState.Resumed,
+                AppLifecycleState.Detached,
+            ],
+            states);
+    }
+
+    [Fact]
     public void DisposableBuildContext_ReturnsContextUntilExplicitlyDisposed()
     {
         var widget = new ContextOwnerWidget(disposeHandle: true);
