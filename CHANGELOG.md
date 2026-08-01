@@ -1,5 +1,9 @@
 # Changelog
 
+- Breaking: completed the `CircleAvatar` ColorScheme closeout. Material 3 foreground/background defaults now read
+  `onPrimaryContainer`/`primaryContainer` directly, with focused precedence and Material 2 brightness coverage plus
+  a mirrored local-scheme demo probe.
+
 - Breaking: completed the `RefreshIndicator`/`RefreshProgressIndicator` ColorScheme and composition closeout.
   Default value colors now read `ColorScheme.primary` directly, refresh surfaces use circular `Material`, pull and
   dismissal use the source two-controller transition tree, and active pulls suppress leading glow/stretch chrome.

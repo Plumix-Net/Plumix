@@ -80,7 +80,16 @@ internal sealed class CircleAvatarDemoPageState : State
                         mainAxisAlignment: MainAxisAlignment.SpaceAround,
                         children:
                         [
-                            Probe("Theme defaults", new CircleAvatar(child: new Text("ER"))),
+                            Probe(
+                                "Scheme roles",
+                                new Theme(
+                                    ThemeData.Light with
+                                    {
+                                        ColorScheme = ThemeData.Light.ColorScheme.CopyWith(
+                                            primaryContainer: Color.Parse("#FFFFD8E4"),
+                                            onPrimaryContainer: Color.Parse("#FF31111D")),
+                                    },
+                                    new CircleAvatar(child: new Text("ER")))),
                             Probe("Color + radius", new CircleAvatar(
                                 radius: radius,
                                 backgroundColor: Color.Parse("#FF00695C"),

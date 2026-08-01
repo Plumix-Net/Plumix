@@ -83,13 +83,13 @@ public sealed class CircleAvatar : StatelessWidget
     {
         var theme = Theme.Of(context);
         var effectiveForegroundColor = ForegroundColor
-                                       ?? (theme.UseMaterial3 ? theme.OnPrimaryContainerColor : null);
+                                       ?? (theme.UseMaterial3 ? theme.ColorScheme.OnPrimaryContainer : null);
         var effectiveTextStyle = theme.UseMaterial3
             ? theme.TextTheme.TitleMedium
             : theme.PrimaryTextTheme.TitleMedium;
         var textStyle = effectiveTextStyle.CopyWith(color: effectiveForegroundColor);
         var effectiveBackgroundColor = BackgroundColor
-                                       ?? (theme.UseMaterial3 ? theme.PrimaryContainerColor : null);
+                                       ?? (theme.UseMaterial3 ? theme.ColorScheme.PrimaryContainer : null);
 
         if (!effectiveBackgroundColor.HasValue)
         {

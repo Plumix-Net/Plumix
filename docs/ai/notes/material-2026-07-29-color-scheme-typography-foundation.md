@@ -79,6 +79,8 @@
     large-label stadium geometry, and inherited theme copy/lerp).
   - `RefreshIndicator`/`RefreshProgressIndicator` (direct primary role, source circular Material surface and
     two-controller transition composition, leading overscroll-chrome suppression, and runtime color updates).
+  - `CircleAvatar` (direct M3 primary-container/on-primary-container roles, exact M2 brightness fallback,
+    circular image layering, and implicit color/diameter transitions).
 - Add `Typography.Material2014`/`Material2018`, exact platform black/white themes, dense/tall geometry, and locale
   script-category selection.
 - Remove the narrowed `ColorScheme + Typography closeout` row from `docs/MATERIAL_TODO.md` only after those checks

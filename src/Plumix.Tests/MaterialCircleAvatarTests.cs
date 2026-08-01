@@ -36,13 +36,17 @@ public sealed class MaterialCircleAvatarTests : IDisposable
     }
 
     [Fact]
-    public void CircleAvatar_DefaultM3CompositionUsesFortyPixelCircleAndThemeTokens()
+    public void CircleAvatar_DefaultM3CompositionUsesFortyPixelCircleAndDirectColorSchemeTokens()
     {
         var titleMedium = MaterialTextTheme.DefaultTitleMedium.CopyWith(fontSize: 18);
+        var colorScheme = ThemeData.Light.ColorScheme.CopyWith(
+            primaryContainer: Colors.CornflowerBlue,
+            onPrimaryContainer: Colors.MidnightBlue);
         var theme = ThemeData.Light with
         {
-            PrimaryContainerColor = Colors.CornflowerBlue,
-            OnPrimaryContainerColor = Colors.MidnightBlue,
+            ColorScheme = colorScheme,
+            PrimaryContainerColor = Colors.Red,
+            OnPrimaryContainerColor = Colors.Blue,
             TextTheme = new MaterialTextTheme(titleMedium: titleMedium),
         };
         using var harness = new WidgetRenderHarness(BuildRoot(
@@ -160,6 +164,9 @@ public sealed class MaterialCircleAvatarTests : IDisposable
         Assert.Contains(
             FindDescendants<RenderDecoratedBox>(defaultHarness.RenderView),
             box => box.Decoration.Color == Colors.Navy);
+        var defaultParagraph = FindDescendants<RenderParagraph>(defaultHarness.RenderView)
+            .Single(value => value.Text == "default");
+        Assert.Equal(Colors.White, Assert.IsType<SolidColorBrush>(defaultParagraph.Foreground).Color);
 
         using var explicitHarness = new WidgetRenderHarness(BuildRoot(
             theme,
@@ -168,6 +175,22 @@ public sealed class MaterialCircleAvatarTests : IDisposable
         var paragraph = FindDescendants<RenderParagraph>(explicitHarness.RenderView)
             .Single(value => value.Text == "explicit");
         Assert.Equal(Colors.Gold, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color);
+
+        using var lightBackgroundHarness = new WidgetRenderHarness(BuildRoot(
+            theme,
+            new CircleAvatar(backgroundColor: Colors.White, child: new Text("light"))));
+        lightBackgroundHarness.Pump(new Size(100, 100));
+        var lightParagraph = FindDescendants<RenderParagraph>(lightBackgroundHarness.RenderView)
+            .Single(value => value.Text == "light");
+        Assert.Equal(Colors.Navy, Assert.IsType<SolidColorBrush>(lightParagraph.Foreground).Color);
+
+        using var foregroundHarness = new WidgetRenderHarness(BuildRoot(
+            theme,
+            new CircleAvatar(foregroundColor: Colors.White, child: new Text("foreground"))));
+        foregroundHarness.Pump(new Size(100, 100));
+        Assert.Contains(
+            FindDescendants<RenderDecoratedBox>(foregroundHarness.RenderView),
+            box => box.Decoration.Color == Colors.Navy);
     }
 
     [Fact]

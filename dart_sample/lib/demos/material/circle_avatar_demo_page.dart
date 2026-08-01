@@ -83,7 +83,18 @@ class _CircleAvatarDemoPageState extends State<CircleAvatarDemoPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: <Widget>[
-              _probe('Theme defaults', const CircleAvatar(child: Text('ER'))),
+              _probe(
+                'Scheme roles',
+                Theme(
+                  data: ThemeData().copyWith(
+                    colorScheme: ThemeData().colorScheme.copyWith(
+                      primaryContainer: const Color(0xFFFFD8E4),
+                      onPrimaryContainer: const Color(0xFF31111D),
+                    ),
+                  ),
+                  child: const CircleAvatar(child: Text('ER')),
+                ),
+              ),
               _probe(
                 'Color + radius',
                 CircleAvatar(
