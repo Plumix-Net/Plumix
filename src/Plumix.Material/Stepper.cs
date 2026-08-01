@@ -147,7 +147,6 @@ public sealed class Stepper : StatefulWidget
         {
             throw new ArgumentOutOfRangeException(nameof(elevation));
         }
-
         Controller = controller;
         Physics = physics;
         Type = type;
@@ -203,9 +202,8 @@ public sealed class Stepper : StatefulWidget
     private sealed class StepperState : State
     {
         private static readonly TimeSpan ThemeAnimationDuration = TimeSpan.FromMilliseconds(200);
-        private readonly List<AnimationController> _bodyControllers = [];
+        private readonly List<GlobalKey> _keys = [];
         private readonly Dictionary<int, StepState> _oldStates = [];
-        private readonly Dictionary<int, AnimationController> _iconControllers = [];
 
         private Stepper CurrentWidget => (Stepper)StateWidget;
 
@@ -213,10 +211,8 @@ public sealed class Stepper : StatefulWidget
         {
             for (int index = 0; index < CurrentWidget.Steps.Count; index++)
             {
+                _keys.Add(new LabeledGlobalKey<State>($"Stepper step {index}"));
                 _oldStates[index] = CurrentWidget.Steps[index].State;
-                var body = CreateController(Curves.FastOutSlowIn);
-                if (index == CurrentWidget.CurrentStep) SetControllerToEnd(body);
-                _bodyControllers.Add(body);
             }
         }
 
@@ -230,17 +226,7 @@ public sealed class Stepper : StatefulWidget
 
             for (int index = 0; index < CurrentWidget.Steps.Count; index++)
             {
-                if (index == CurrentWidget.CurrentStep) _bodyControllers[index].Forward();
-                else _bodyControllers[index].Reverse();
-
-                if (oldStepper.Steps[index].State != CurrentWidget.Steps[index].State)
-                {
-                    _oldStates[index] = oldStepper.Steps[index].State;
-                    if (_iconControllers.Remove(index, out var oldController)) DisposeController(oldController);
-                    var controller = CreateController(Curves.FastOutSlowIn);
-                    _iconControllers[index] = controller;
-                    controller.Forward(from: 0);
-                }
+                _oldStates[index] = oldStepper.Steps[index].State;
             }
         }
 
@@ -260,14 +246,6 @@ public sealed class Stepper : StatefulWidget
             return new StepperScope(child);
         }
 
-        public override void Dispose()
-        {
-            foreach (var controller in _bodyControllers) DisposeController(controller);
-            foreach (var controller in _iconControllers.Values) DisposeController(controller);
-            _bodyControllers.Clear();
-            _iconControllers.Clear();
-        }
-
         private Widget BuildVertical(BuildContext context)
         {
             var children = new List<Widget>(CurrentWidget.Steps.Count);
@@ -277,23 +255,22 @@ public sealed class Stepper : StatefulWidget
                 var step = CurrentWidget.Steps[index];
                 var header = new InkWell(
                     canRequestFocus: step.State != StepState.Disabled,
-                    onTap: step.State == StepState.Disabled ? null : () => CurrentWidget.OnStepTapped?.Invoke(captured),
+                    onTap: step.State == StepState.Disabled
+                        ? null
+                        : () => HandleStepTapped(captured, ensureVisible: true),
                     child: BuildVerticalHeader(context, index));
                 children.Add(new Column(
                     mainAxisSize: MainAxisSize.Min,
                     crossAxisAlignment: CrossAxisAlignment.Stretch,
-                    children: [header, BuildVerticalBody(context, index)]));
+                    children: [header, BuildVerticalBody(context, index)],
+                    key: _keys[index]));
             }
 
-            Widget result = new SingleChildScrollView(
+            return new ListView(
                 controller: CurrentWidget.Controller,
                 physics: CurrentWidget.Physics,
-                child: new Column(
-                    mainAxisSize: MainAxisSize.Min,
-                    crossAxisAlignment: CrossAxisAlignment.Stretch,
-                    children: children));
-            if (CurrentWidget.Margin.HasValue) result = new Padding(CurrentWidget.Margin.Value, result);
-            return result;
+                shrinkWrap: true,
+                children: children);
         }
 
         private Widget BuildVerticalHeader(BuildContext context, int index)
@@ -318,31 +295,36 @@ public sealed class Stepper : StatefulWidget
 
         private Widget BuildVerticalBody(BuildContext context, int index)
         {
-            double progress = _bodyControllers[index].Evaluate();
             double leftMargin = CurrentWidget.StepIconMargin?.Left ?? 0;
-            var textDirection = Directionality.Of(context);
-            var padding = CurrentWidget.ContentPadding ?? (textDirection == TextDirection.Rtl
-                ? new Thickness(24, 0, 60 + leftMargin, 24)
-                : new Thickness(60 + leftMargin, 0, 24, 24));
+            double rightMargin = CurrentWidget.StepIconMargin?.Right ?? 0;
+            TextDirection textDirection = Directionality.Of(context);
+            Thickness padding = ResolveVerticalContentPadding(textDirection, leftMargin);
             Widget content = new Column(
                 mainAxisSize: MainAxisSize.Min,
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
                 children: [ClipContent(CurrentWidget.Steps[index].Content), BuildControls(context, index)]);
             content = new Padding(padding, content);
-            content = new Opacity(progress, new Align(
-                alignment: Alignment.TopCenter,
-                heightFactor: progress,
-                child: content));
 
-            double connectorOffset = 24 + ((CurrentWidget.StepIconWidth ?? 24) / 2);
-            var connector = new Positioned(
-                left: textDirection == TextDirection.Rtl ? null : connectorOffset,
-                right: textDirection == TextDirection.Rtl ? connectorOffset : null,
+            double connectorThickness = CurrentWidget.ConnectorThickness ?? 1;
+            double connectorOffset = 24 + ((leftMargin + rightMargin) / 2)
+                                     + (((CurrentWidget.StepIconWidth ?? 24) - connectorThickness) / 2);
+            var connector = new PositionedDirectional(
+                start: connectorOffset,
                 top: 0,
                 bottom: 0,
                 width: index == CurrentWidget.Steps.Count - 1 ? 0 : CurrentWidget.ConnectorThickness ?? 1,
                 child: new ColoredBox(ResolveConnectorColor(CurrentWidget.Steps[index].IsActive)));
-            return new Stack(children: [connector, content]);
+            var body = new AnimatedCrossFade(
+                firstChild: new SizedBox(height: 0),
+                secondChild: content,
+                crossFadeState: index == CurrentWidget.CurrentStep
+                    ? CrossFadeState.ShowSecond
+                    : CrossFadeState.ShowFirst,
+                duration: ThemeAnimationDuration,
+                firstCurve: Curves.Interval(0.0, 0.6, Curves.FastOutSlowIn),
+                secondCurve: Curves.Interval(0.4, 1.0, Curves.FastOutSlowIn),
+                sizeCurve: Curves.FastOutSlowIn);
+            return new Stack(children: [connector, body]);
         }
 
         private Widget BuildHorizontal(BuildContext context)
@@ -352,9 +334,11 @@ public sealed class Stepper : StatefulWidget
             {
                 int captured = index;
                 var step = CurrentWidget.Steps[index];
-                headerChildren.Add(new InkWell(
+                headerChildren.Add(new InkResponse(
                     canRequestFocus: step.State != StepState.Disabled,
-                    onTap: step.State == StepState.Disabled ? null : () => CurrentWidget.OnStepTapped?.Invoke(captured),
+                    onTap: step.State == StepState.Disabled
+                        ? null
+                        : () => HandleStepTapped(captured, ensureVisible: false),
                     child: new Row(
                         mainAxisSize: MainAxisSize.Min,
                         children:
@@ -378,34 +362,35 @@ public sealed class Stepper : StatefulWidget
                 new SizedBox(
                     height: CurrentWidget.StepIconHeight.HasValue
                         ? CurrentWidget.StepIconHeight.Value * (HasLabels ? 2.5 : 2)
-                        : HasLabels ? 104 : 72,
+                        : null,
                     child: new Row(children: headerChildren)));
-            header = new DecoratedBox(
-                new BoxDecoration(
-                    Color: Theme.Of(context).SurfaceColor,
-                    BoxShadows: BuildShadow(Theme.Of(context).ShadowColor, CurrentWidget.Elevation ?? 2)),
-                header);
+            header = new Material(elevation: CurrentWidget.Elevation ?? 2, child: header);
 
-            Widget panel = new Column(
-                mainAxisSize: MainAxisSize.Min,
-                crossAxisAlignment: CrossAxisAlignment.Stretch,
-                children: CurrentWidget.Steps
-                    .Select((step, index) => (Widget)new Offstage(
-                        offstage: index != CurrentWidget.CurrentStep,
-                        child: ClipContent(step.Content)))
-                    .ToArray());
-            panel = new Column(
-                mainAxisSize: MainAxisSize.Min,
-                crossAxisAlignment: CrossAxisAlignment.Stretch,
-                children: [panel, BuildControls(context, CurrentWidget.CurrentStep)]);
-            panel = new SingleChildScrollView(
+            var panels = CurrentWidget.Steps
+                .Select((step, index) => (Widget)new Visibility(
+                    visible: index == CurrentWidget.CurrentStep,
+                    maintainState: true,
+                    child: ClipContent(step.Content)))
+                .ToArray();
+            Widget panel = new AnimatedSize(
+                duration: ThemeAnimationDuration,
+                curve: Curves.FastOutSlowIn,
+                child: new Column(
+                    mainAxisSize: MainAxisSize.Min,
+                    crossAxisAlignment: CrossAxisAlignment.Stretch,
+                    children: panels));
+            Widget content = new ListView(
                 controller: CurrentWidget.Controller,
                 physics: CurrentWidget.Physics,
                 padding: CurrentWidget.ContentPadding ?? new Thickness(24),
-                child: panel);
+                children:
+                [
+                    panel,
+                    BuildControls(context, CurrentWidget.CurrentStep),
+                ]);
             return new Column(
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
-                children: [header, new Expanded(panel)]);
+                children: [header, new Expanded(content)]);
         }
 
         private Widget BuildHorizontalIconAndLabel(BuildContext context, int index)
@@ -428,61 +413,88 @@ public sealed class Stepper : StatefulWidget
 
         private Widget BuildIcon(BuildContext context, int index)
         {
-            if (_iconControllers.TryGetValue(index, out var transition) && transition.IsAnimating)
+            StepState state = CurrentWidget.Steps[index].State;
+            Widget? custom = CurrentWidget.StepIconBuilder?.Invoke(index, state);
+            Widget icon;
+            if (custom is not null)
             {
-                double progress = transition.Evaluate();
-                return new Stack(
-                    alignment: Alignment.Center,
-                    children:
-                    [
-                        new Opacity(1 - progress, BuildIconForState(context, index, _oldStates[index])),
-                        new Opacity(progress, BuildIconForState(context, index, CurrentWidget.Steps[index].State)),
-                    ]);
-            }
-            return BuildIconForState(context, index, CurrentWidget.Steps[index].State);
-        }
-
-        private Widget BuildIconForState(BuildContext context, int index, StepState state)
-        {
-            var custom = CurrentWidget.StepIconBuilder?.Invoke(index, state);
-            if (custom is not null) return WrapIconBox(custom, index, state == StepState.Error);
-            Widget child = state switch
-            {
-                StepState.Editing => new Icon(Icons.Edit, size: 18, color: ResolveIconForeground(index)),
-                StepState.Complete => new Icon(Icons.Check, size: 18, color: ResolveIconForeground(index)),
-                StepState.Error => new Text("!", fontSize: 12, color: Colors.White),
-                _ => new Text((index + 1).ToString(), fontSize: 12, color: ResolveIndexColor(index),
-                    fontWeight: CurrentWidget.Steps[index].StepStyle?.IndexStyle?.FontWeight),
-            };
-            return WrapIconBox(child, index, state == StepState.Error);
-        }
-
-        private Widget WrapIconBox(Widget child, int index, bool error)
-        {
-            double width = CurrentWidget.StepIconWidth ?? 24;
-            double height = CurrentWidget.StepIconHeight ?? 24;
-            Widget decorated;
-            if (error)
-            {
-                decorated = new CustomPaint(
-                    painter: new TrianglePainter(CurrentWidget.Steps[index].StepStyle?.ErrorColor ?? Colors.Red),
-                    child: new Align(alignment: new Alignment(0, 0.8), child: child));
+                icon = custom;
             }
             else
             {
-                var style = CurrentWidget.Steps[index].StepStyle;
-                decorated = new DecoratedBox(
-                    new BoxDecoration(
-                        Color: style?.Gradient is null ? style?.Color ?? ResolveCircleColor(index) : null,
-                        Brush: style?.Gradient,
-                        Border: style?.Border,
-                        BoxShadows: style?.BoxShadow is { } shadow ? new BoxShadows(shadow) : null,
-                        Shape: BoxShape.Circle),
-                    new Center(child: child));
+                StepState oldState = _oldStates[index];
+                StepState circleState = state == StepState.Error ? oldState : state;
+                StepState triangleState = state == StepState.Error ? state : oldState;
+                icon = new AnimatedCrossFade(
+                    firstChild: BuildCircle(context, index, circleState),
+                    secondChild: BuildTriangle(context, index, triangleState),
+                    crossFadeState: state == StepState.Error
+                        ? CrossFadeState.ShowSecond
+                        : CrossFadeState.ShowFirst,
+                    duration: ThemeAnimationDuration,
+                    firstCurve: Curves.Interval(0.0, 0.6, Curves.FastOutSlowIn),
+                    secondCurve: Curves.Interval(0.4, 1.0, Curves.FastOutSlowIn),
+                    sizeCurve: Curves.FastOutSlowIn);
             }
+
             return new Padding(
                 CurrentWidget.StepIconMargin ?? new Thickness(0, 8),
-                new SizedBox(width: width, height: error ? height * 0.866025 : height, child: decorated));
+                new SizedBox(
+                    width: CurrentWidget.StepIconWidth ?? 24,
+                    height: CurrentWidget.StepIconHeight ?? 24,
+                    child: icon));
+        }
+
+        private Widget BuildCircle(BuildContext context, int index, StepState state)
+        {
+            var style = CurrentWidget.Steps[index].StepStyle;
+            return new AnimatedContainer(
+                duration: ThemeAnimationDuration,
+                curve: Curves.FastOutSlowIn,
+                decoration: new BoxDecoration(
+                    Color: style?.Gradient is null ? style?.Color ?? ResolveCircleColor(index) : null,
+                    Brush: style?.Gradient,
+                    Border: style?.Border,
+                    BoxShadows: style?.BoxShadow is { } shadow ? new BoxShadows(shadow) : null,
+                    Shape: BoxShape.Circle),
+                child: new Center(child: BuildIconChild(index, state)));
+        }
+
+        private Widget BuildTriangle(BuildContext context, int index, StepState state)
+        {
+            double height = (CurrentWidget.StepIconHeight ?? 24) * 0.866025;
+            Color color = ResolveErrorColor(context, index);
+            return new Center(
+                child: new SizedBox(
+                    width: CurrentWidget.StepIconWidth ?? 24,
+                    height: height,
+                    child: new CustomPaint(
+                        painter: new TrianglePainter(color),
+                        child: new Align(
+                            alignment: new Alignment(0, 0.8),
+                            child: BuildIconChild(index, state)))));
+        }
+
+        private Widget BuildIconChild(int index, StepState state)
+        {
+            if (state == StepState.Editing)
+            {
+                return new Icon(Icons.Edit, size: 18, color: ResolveIconForeground(index));
+            }
+            if (state == StepState.Complete)
+            {
+                return new Icon(Icons.Check, size: 18, color: ResolveIconForeground(index));
+            }
+            if (state == StepState.Error)
+            {
+                return new DefaultTextStyle(
+                    new TextStyle(FontSize: 12, Color: Colors.White),
+                    new Text("!"));
+            }
+
+            TextStyle style = CurrentWidget.Steps[index].StepStyle?.IndexStyle
+                              ?? new TextStyle(FontSize: 12, Color: ResolveIconForeground(index));
+            return new DefaultTextStyle(style, new Text((index + 1).ToString()));
         }
 
         private Widget BuildHeaderText(BuildContext context, int index)
@@ -491,7 +503,9 @@ public sealed class Stepper : StatefulWidget
             var children = new List<Widget> { StyledText(context, index, step.Title) };
             if (step.Subtitle is not null)
             {
-                children.Add(new Padding(new Thickness(0, 2, 0, 0), StyledText(context, index, step.Subtitle, subtitle: true)));
+                children.Add(new Padding(
+                    new Thickness(0, 2, 0, 0),
+                    StyledText(context, index, step.Subtitle, subtitle: true)));
             }
             return new Column(
                 mainAxisSize: MainAxisSize.Min,
@@ -499,7 +513,12 @@ public sealed class Stepper : StatefulWidget
                 children: children);
         }
 
-        private Widget StyledText(BuildContext context, int index, Widget child, bool subtitle = false, bool labelStyle = false)
+        private Widget StyledText(
+            BuildContext context,
+            int index,
+            Widget child,
+            bool subtitle = false,
+            bool labelStyle = false)
         {
             var theme = Theme.Of(context);
             var style = subtitle ? theme.TextTheme.BodySmall : theme.TextTheme.BodyLarge;
@@ -512,9 +531,13 @@ public sealed class Stepper : StatefulWidget
             }
             else if (state == StepState.Error)
             {
-                style = style.CopyWith(color: CurrentWidget.Steps[index].StepStyle?.ErrorColor ?? Colors.Red);
+                style = style.CopyWith(color: ResolveErrorColor(context, index));
             }
-            return new DefaultTextStyle(style, child);
+            return new AnimatedDefaultTextStyle(
+                child: child,
+                style: style,
+                duration: ThemeAnimationDuration,
+                curve: labelStyle ? Curves.Linear : Curves.FastOutSlowIn);
         }
 
         private Widget BuildControls(BuildContext context, int stepIndex)
@@ -569,9 +592,9 @@ public sealed class Stepper : StatefulWidget
             ResolveConnectorColor(active),
             new SizedBox(width: visible ? CurrentWidget.ConnectorThickness ?? 1 : 0, height: 16));
 
-        private Widget ClipContent(Widget content) => CurrentWidget.ClipBehavior == Clip.None
-            ? content
-            : new ClipRect(child: content);
+        private Widget ClipContent(Widget content) => new ClipRect(
+            clipBehavior: CurrentWidget.ClipBehavior,
+            child: content);
 
         private Color ResolveConnectorColor(bool active)
         {
@@ -589,9 +612,9 @@ public sealed class Stepper : StatefulWidget
             if (connector.HasValue) return connector.Value;
             if (theme.Brightness == Brightness.Dark)
             {
-                return step.IsActive ? theme.SecondaryColor : theme.CanvasColor;
+                return step.IsActive ? theme.ColorScheme.Secondary : theme.ColorScheme.Background;
             }
-            return step.IsActive ? theme.PrimaryColor : ApplyOpacity(theme.OnSurfaceColor, 0.38);
+            return step.IsActive ? theme.ColorScheme.Primary : ApplyOpacity(theme.ColorScheme.OnSurface, 0.38);
         }
 
         private Color ResolveIconForeground(int index)
@@ -602,48 +625,41 @@ public sealed class Stepper : StatefulWidget
                 : Colors.White;
         }
 
-        private Color ResolveIndexColor(int index)
+        private Color ResolveErrorColor(BuildContext context, int index)
         {
-            return CurrentWidget.Steps[index].StepStyle?.IndexStyle?.Color
-                   ?? ResolveIconForeground(index);
+            var theme = Theme.Of(context);
+            return CurrentWidget.Steps[index].StepStyle?.ErrorColor
+                   ?? (theme.Brightness == Brightness.Dark ? Color.Parse("#FFEF5350") : Colors.Red);
         }
 
         private bool HasLabels => CurrentWidget.Steps.Any(step => step.Label is not null);
 
-        private AnimationController CreateController(Curve curve)
+        private void HandleStepTapped(int index, bool ensureVisible)
         {
-            var controller = new AnimationController(ThemeAnimationDuration, this) { Curve = curve };
-            controller.Changed += HandleAnimationChanged;
-            return controller;
+            BuildContext? stepContext = _keys[index].CurrentContext;
+            if (ensureVisible && stepContext.HasValue)
+            {
+                _ = Scrollable.EnsureVisible(
+                    stepContext.Value,
+                    duration: ThemeAnimationDuration,
+                    curve: Curves.FastOutSlowIn);
+            }
+            CurrentWidget.OnStepTapped?.Invoke(index);
         }
 
-        private static void SetControllerToEnd(AnimationController controller)
+        private Thickness ResolveVerticalContentPadding(TextDirection textDirection, double iconMarginLeft)
         {
-            controller.Forward(from: 1);
-            controller.Stop();
+            Thickness padding = CurrentWidget.ContentPadding ?? (textDirection == TextDirection.Rtl
+                ? new Thickness(24, 0, 60, 24)
+                : new Thickness(60, 0, 24, 24));
+            return textDirection == TextDirection.Rtl
+                ? new Thickness(padding.Left, padding.Top, padding.Right + iconMarginLeft, padding.Bottom)
+                : new Thickness(padding.Left + iconMarginLeft, padding.Top, padding.Right, padding.Bottom);
         }
-
-        private void DisposeController(AnimationController controller)
-        {
-            controller.Changed -= HandleAnimationChanged;
-            controller.Dispose();
-        }
-
-        private void HandleAnimationChanged() => SetState(() => { });
 
         private static Color ApplyOpacity(Color color, double opacity) => Color.FromArgb(
             (byte)Math.Round(color.A * Math.Clamp(opacity, 0, 1)), color.R, color.G, color.B);
 
-        private static BoxShadows? BuildShadow(Color color, double elevation)
-        {
-            if (elevation <= 0) return null;
-            return new BoxShadows(new BoxShadow
-            {
-                Color = ApplyOpacity(color, 0.20),
-                OffsetY = elevation,
-                Blur = elevation * 2.4,
-            });
-        }
     }
 
     private sealed class StepperScope : InheritedWidget

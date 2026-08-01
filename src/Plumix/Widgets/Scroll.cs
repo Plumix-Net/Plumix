@@ -532,6 +532,14 @@ public class ScrollController : ChangeNotifier
         }
     }
 
+    public void AnimateTo(double value, TimeSpan duration, Curve? curve = null)
+    {
+        foreach (var position in _positions.ToArray())
+        {
+            position.AnimateTo(value, duration, curve);
+        }
+    }
+
     public override void Dispose()
     {
         foreach (var position in _positions.ToArray())
@@ -621,11 +629,19 @@ public sealed class Scrollable : StatefulWidget
                ?? throw new InvalidOperationException("Scrollable operation requested with no Scrollable ancestor.");
     }
 
-    public static bool EnsureVisible(BuildContext context, double alignment = 0.0)
+    public static bool EnsureVisible(
+        BuildContext context,
+        double alignment = 0.0,
+        TimeSpan? duration = null,
+        Curve? curve = null)
     {
         if (!double.IsFinite(alignment) || alignment < 0.0 || alignment > 1.0)
         {
             throw new ArgumentOutOfRangeException(nameof(alignment), "Alignment must be between zero and one.");
+        }
+        if (duration < TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(duration));
         }
 
         ScrollableState? scrollable = MaybeOf(context);
@@ -658,7 +674,15 @@ public sealed class Scrollable : StatefulWidget
             delta = -delta;
         }
 
-        scrollable.Position.JumpTo(scrollable.Position.Pixels + delta);
+        double targetPixels = scrollable.Position.Pixels + delta;
+        if (duration is { } animationDuration && animationDuration > TimeSpan.Zero)
+        {
+            scrollable.Position.AnimateTo(targetPixels, animationDuration, curve ?? Curves.Ease);
+        }
+        else
+        {
+            scrollable.Position.JumpTo(targetPixels);
+        }
         return true;
     }
 

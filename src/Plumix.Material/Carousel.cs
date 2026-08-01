@@ -108,7 +108,7 @@ public sealed class CarouselController : ScrollController
             return;
         }
 
-        AnimateTo(target.Value, duration ?? TimeSpan.FromMilliseconds(300), curve ?? Curves.Ease);
+        AnimateCarouselTo(target.Value, duration ?? TimeSpan.FromMilliseconds(300), curve ?? Curves.Ease);
     }
 
     public override void Dispose()
@@ -149,7 +149,7 @@ public sealed class CarouselController : ScrollController
         }
     }
 
-    private void AnimateTo(double target, TimeSpan duration, Curve curve)
+    private void AnimateCarouselTo(double target, TimeSpan duration, Curve curve)
     {
         if (duration <= TimeSpan.Zero || Math.Abs(Offset - target) < 0.0001)
         {

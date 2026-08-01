@@ -330,6 +330,68 @@ public sealed class PointerScrollActivity(ScrollPosition position) : ScrollActiv
 {
 }
 
+public sealed class DrivenScrollActivity : ScrollActivity
+{
+    private readonly Curve _curve;
+    private readonly TimeSpan _duration;
+    private readonly double _from;
+    private readonly Ticker _ticker;
+    private readonly double _to;
+    private TimeSpan _elapsed;
+    private bool _disposed;
+
+    public DrivenScrollActivity(
+        ScrollPosition position,
+        double to,
+        TimeSpan duration,
+        Curve curve) : base(position)
+    {
+        if (!double.IsFinite(to))
+        {
+            throw new ArgumentOutOfRangeException(nameof(to));
+        }
+        if (duration <= TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(duration));
+        }
+
+        _from = position.Pixels;
+        _to = to;
+        _duration = duration;
+        _curve = curve ?? throw new ArgumentNullException(nameof(curve));
+        _ticker = position.TickerProvider?.CreateTicker(OnTick) ?? new Ticker(OnTick);
+        _ticker.Start();
+    }
+
+    public override void Dispose()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _disposed = true;
+        _ticker.Dispose();
+    }
+
+    private void OnTick(TimeSpan elapsed)
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _elapsed += elapsed;
+        double progress = Math.Clamp(_elapsed.TotalSeconds / _duration.TotalSeconds, 0.0, 1.0);
+        double value = _from + ((_to - _from) * _curve(progress));
+        Position.SetPixelsFromActivity(value);
+        if (progress >= 1.0)
+        {
+            Position.GoIdle();
+        }
+    }
+}
+
 public sealed class BallisticScrollActivity : ScrollActivity
 {
     private readonly Simulation _simulation;
@@ -413,6 +475,25 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
     {
         GoIdle();
         SetPixels(value);
+    }
+
+    public void AnimateTo(double value, TimeSpan duration, Curve? curve = null)
+    {
+        if (!double.IsFinite(value))
+        {
+            throw new ArgumentOutOfRangeException(nameof(value));
+        }
+        if (duration < TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(duration));
+        }
+        if (duration == TimeSpan.Zero)
+        {
+            JumpTo(value);
+            return;
+        }
+
+        BeginActivity(new DrivenScrollActivity(this, value, duration, curve ?? Curves.Linear));
     }
 
     public void RestoreOffset(double offset, bool initialRestore = false)

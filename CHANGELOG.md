@@ -1,5 +1,9 @@
 # Changelog
 
+- Breaking: closed Material `Stepper` animation and scrolling parity. Vertical headers now animate into view before
+  callbacks, panels/icons/text use the shared 200 ms implicit-animation primitives, horizontal content preserves state
+  through `Visibility`, and the retained Flutter `margin` metadata no longer adds non-source layout padding.
+
 - Breaking: moved `MenuAnchor` panels onto the shared raw-menu/`OverlayPortal` pipeline. Menus now escape ancestor
   clips, honor nearest/root overlay selection, grouped outside-tap consumption, reserved padding, keyboard insets,
   display-feature sub-screens, explicit controller positions, and Flutter's panel fade/height timing. The animation

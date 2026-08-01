@@ -92,7 +92,8 @@ public sealed class MaterialStepperTests : IDisposable
                     new Stepper(steps: [new Step(new Text("Inner"), new Text("Inner content"))])),
             ]);
 
-        Assert.Throws<InvalidOperationException>(() => new WidgetRenderHarness(BuildThemed(nested)));
+        using var harness = new WidgetRenderHarness(BuildThemed(nested));
+        Assert.Throws<InvalidOperationException>(() => harness.Pump(new Size(420, 420)));
     }
 
     [Fact]
@@ -135,6 +136,58 @@ public sealed class MaterialStepperTests : IDisposable
         Assert.Single(tappable);
         Assert.True(harness.PerformSemanticsAction(tappable[0].Id, SemanticsActions.Tap));
         Assert.Equal([0], taps);
+    }
+
+    [Fact]
+    public void Stepper_VerticalHeaderTap_AnimatesStepIntoViewBeforeCallback()
+    {
+        var controller = new ScrollController();
+        bool callbackSawDrivenScroll = false;
+        using var harness = new WidgetRenderHarness(BuildThemed(new Stepper(
+            controller: controller,
+            onStepTapped: _ => callbackSawDrivenScroll = controller.PrimaryPosition?.Activity is DrivenScrollActivity,
+            steps:
+            [
+                new Step(new Text("One"), new SizedBox(height: 80)),
+                new Step(new Text("Two"), new SizedBox(height: 80)),
+                new Step(new Text("Three"), new SizedBox(height: 80)),
+            ])));
+
+        var semantics = harness.PumpAndGetSemantics(new Size(320, 300));
+        var headers = FindNodes(semantics!, node => node.Actions.HasFlag(SemanticsActions.Tap)).ToArray();
+        Assert.True(headers.Length >= 2);
+        Assert.True(harness.PerformSemanticsAction(headers[1].Id, SemanticsActions.Tap));
+        Assert.True(callbackSawDrivenScroll);
+        Assert.Equal(0, controller.Offset);
+
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.1));
+        harness.Pump(new Size(320, 300));
+        Assert.True(controller.Offset > 0);
+        Assert.IsType<DrivenScrollActivity>(controller.PrimaryPosition!.Activity);
+
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.2));
+        harness.Pump(new Size(320, 300));
+        Assert.IsType<IdleScrollActivity>(controller.PrimaryPosition.Activity);
+    }
+
+    [Fact]
+    public void Stepper_UsesSharedImplicitAnimationAndVisibilityPrimitives()
+    {
+        using var vertical = new WidgetRenderHarness(BuildThemed(new Stepper(steps: BuildSteps())));
+        vertical.Pump(new Size(420, 420));
+        Assert.True(vertical.FindWidgets<AnimatedCrossFade>().Count >= 4);
+        Assert.True(vertical.FindWidgets<AnimatedDefaultTextStyle>().Count >= 2);
+        Assert.True(vertical.FindWidgets<AnimatedContainer>().Count >= 2);
+
+        using var horizontal = new WidgetRenderHarness(BuildThemed(new Stepper(
+            type: StepperType.Horizontal,
+            steps: BuildSteps())));
+        horizontal.Pump(new Size(640, 360));
+        Assert.Contains(
+            horizontal.FindWidgets<AnimatedSize>(),
+            size => size.Duration == TimeSpan.FromMilliseconds(200) && size.Curve == Curves.FastOutSlowIn);
+        Assert.Equal(2, horizontal.FindWidgets<Visibility>().Count);
+        Assert.All(horizontal.FindWidgets<Visibility>(), visibility => Assert.True(visibility.MaintainState));
     }
 
     [Fact]
@@ -253,7 +306,23 @@ public sealed class MaterialStepperTests : IDisposable
         public bool PerformSemanticsAction(int id, SemanticsActions action) =>
             _pipeline.SemanticsOwner.PerformAction(id, action);
 
+        public IReadOnlyList<T> FindWidgets<T>() where T : Widget
+        {
+            var result = new List<T>();
+            Visit(_rootElement, result);
+            return result;
+        }
+
         public void Dispose() => _rootElement.Unmount();
+
+        private static void Visit<T>(Element element, List<T> result) where T : Widget
+        {
+            if (element.Widget is T widget)
+            {
+                result.Add(widget);
+            }
+            element.VisitChildren(child => Visit(child, result));
+        }
 
         private sealed class HarnessRootElement : Element, IRenderObjectHost
         {
