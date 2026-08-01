@@ -168,16 +168,12 @@ public sealed class MaterialRefreshIndicatorTests : IDisposable
         Assert.Equal(RefreshIndicatorStatus.Snap, state.Status);
 
         PumpAnimation(harness, TimeSpan.FromMilliseconds(160));
-        await Task.Yield();
-        Assert.Equal(RefreshIndicatorStatus.Refresh, state.Status);
+        await WaitForStatusAsync(state, RefreshIndicatorStatus.Refresh);
 
         refreshGate.SetResult();
-        await Task.Yield();
-        await Task.Yield();
-        Assert.Equal(RefreshIndicatorStatus.Done, state.Status);
+        await WaitForStatusAsync(state, RefreshIndicatorStatus.Done);
 
-        PumpAnimation(harness, TimeSpan.FromMilliseconds(210));
-        Assert.Null(state.Status);
+        await PumpUntilIdleAsync(harness, state, TimeSpan.FromMilliseconds(210));
         Assert.Equal(
             [
                 RefreshIndicatorStatus.Drag,
@@ -208,11 +204,9 @@ public sealed class MaterialRefreshIndicatorTests : IDisposable
         emitterState.Dispatch(new ScrollStartNotification(vertical, hasDragDetails: true));
         emitterState.Dispatch(new OverscrollNotification(vertical, overscroll: -20, hasDragDetails: true));
         emitterState.Dispatch(new ScrollEndNotification(vertical));
-        await Task.Yield();
-        Assert.Equal(RefreshIndicatorStatus.Canceled, state.Status);
+        await WaitForStatusAsync(state, RefreshIndicatorStatus.Canceled);
 
-        PumpAnimation(harness, TimeSpan.FromMilliseconds(210));
-        Assert.Null(state.Status);
+        await PumpUntilIdleAsync(harness, state, TimeSpan.FromMilliseconds(210));
     }
 
     [Fact]
@@ -304,8 +298,7 @@ public sealed class MaterialRefreshIndicatorTests : IDisposable
         var second = state.Show(atTop: false);
         Assert.Same(first, second);
         PumpAnimation(harness, TimeSpan.FromMilliseconds(160));
-        await Task.Yield();
-        Assert.Equal(RefreshIndicatorStatus.Refresh, state.Status);
+        await WaitForStatusAsync(state, RefreshIndicatorStatus.Refresh);
 
         gate.SetResult();
         await first;
@@ -353,6 +346,35 @@ public sealed class MaterialRefreshIndicatorTests : IDisposable
         var metrics = new ScrollMetricsSnapshot(0, 0, 600, 400, AxisDirection.Down);
         emitter.Dispatch(new ScrollStartNotification(metrics, hasDragDetails: true));
         emitter.Dispatch(new OverscrollNotification(metrics, overscroll: -80, hasDragDetails: true));
+    }
+
+    // Status transitions that follow an awaited refresh future or an awaited Task.Yield resume on the thread
+    // pool, so the test thread has to wait for them instead of assuming a fixed number of yields.
+    private static async Task WaitForStatusAsync(RefreshIndicatorState state, RefreshIndicatorStatus expected)
+    {
+        for (int attempt = 0; attempt < 500 && state.Status != expected; attempt++)
+        {
+            await Task.Delay(2);
+        }
+
+        Assert.Equal(expected, state.Status);
+    }
+
+    // The dismiss animation is started from one of those thread-pool continuations, so it can begin after the
+    // first pump; keep pumping until the indicator resets to idle.
+    private static async Task PumpUntilIdleAsync(
+        WidgetRenderHarness harness,
+        RefreshIndicatorState state,
+        TimeSpan step)
+    {
+        for (int attempt = 0; attempt < 100 && state.Status is not null; attempt++)
+        {
+            PumpAnimation(harness, step);
+            if (state.Status is null) break;
+            await Task.Delay(2);
+        }
+
+        Assert.Null(state.Status);
     }
 
     private static void PumpAnimation(WidgetRenderHarness harness, TimeSpan elapsed)
