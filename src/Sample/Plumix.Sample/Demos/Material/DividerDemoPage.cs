@@ -36,7 +36,11 @@ internal sealed class DividerDemoPageState : State
                     Thickness: 3,
                     Indent: 24,
                     EndIndent: 12,
-                    Radius: BorderRadius.Circular(2))
+                    Radius: BorderRadius.Only(
+                        topLeft: 1,
+                        topRight: 4,
+                        bottomRight: 2,
+                        bottomLeft: 6))
                 : new DividerThemeData()
         };
 
@@ -49,7 +53,7 @@ internal sealed class DividerDemoPageState : State
                 [
                     new Text("Divider baseline", fontSize: 20, color: Colors.Black),
                     new Text(
-                        "Horizontal/vertical divider defaults, theme precedence, and widget overrides.",
+                        "M2/M3 tokens, directional indents, asymmetric theme radii, and widget overrides.",
                         fontSize: 14,
                         color: Color.Parse("#8A000000")),
                     new Row(

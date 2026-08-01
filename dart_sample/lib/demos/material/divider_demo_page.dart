@@ -24,7 +24,12 @@ class _DividerDemoPageState extends State<DividerDemoPage> {
               thickness: 3,
               indent: 24,
               endIndent: 12,
-              radius: BorderRadius.all(Radius.circular(2)),
+              radius: BorderRadius.only(
+                topLeft: Radius.circular(1),
+                topRight: Radius.circular(4),
+                bottomRight: Radius.circular(2),
+                bottomLeft: Radius.circular(6),
+              ),
             )
           : const DividerThemeData(),
     );
@@ -37,7 +42,7 @@ class _DividerDemoPageState extends State<DividerDemoPage> {
           const Text('Divider baseline', style: TextStyle(fontSize: 20)),
           const SizedBox(height: 8),
           const Text(
-            'Horizontal/vertical divider defaults, theme precedence, and widget overrides.',
+            'M2/M3 tokens, directional indents, asymmetric theme radii, and widget overrides.',
             style: TextStyle(fontSize: 14, color: Color(0x8A000000)),
           ),
           const SizedBox(height: 10),

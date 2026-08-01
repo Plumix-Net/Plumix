@@ -70,6 +70,27 @@ public sealed class PaintingContext
         });
     }
 
+    public void DrawRectangle(
+        IBrush brush,
+        IPen? pen,
+        Rect rect,
+        BorderRadius borderRadius,
+        BoxShadows boxShadows = default)
+    {
+        var pictureLayer = EnsurePictureLayer();
+        pictureLayer.AddDrawCommand((drawingContext, sceneOffset) =>
+        {
+            var translatedRect = new Rect(rect.Position + sceneOffset, rect.Size);
+            var roundedRect = new RoundedRect(
+                translatedRect,
+                borderRadius.TopLeft,
+                borderRadius.TopRight,
+                borderRadius.BottomRight,
+                borderRadius.BottomLeft);
+            drawingContext.DrawRectangle(brush, pen, roundedRect, boxShadows);
+        });
+    }
+
     public void DrawCircle(IBrush brush, IPen? pen, Point center, double radius)
     {
         double clampedRadius = Math.Max(0, radius);

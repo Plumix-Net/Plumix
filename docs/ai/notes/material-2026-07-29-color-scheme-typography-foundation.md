@@ -73,6 +73,8 @@
     tooltip/state-controller surfaces, inherited theme copy/lerp, and Material `Theme` icon inheritance).
   - `Card` (exact M2/M3 elevated/filled/outlined roles, source Material/semantics composition, tint/shadow/shape/
     clip/border-order behavior, local theme copy/lerp).
+  - `Divider`/`VerticalDivider` (direct M2/M3 roles, source container/border composition, hairlines, directional
+    indents/radii, inherited theme copy/lerp).
 - Add `Typography.Material2014`/`Material2018`, exact platform black/white themes, dense/tall geometry, and locale
   script-category selection.
 - Remove the narrowed `ColorScheme + Typography closeout` row from `docs/MATERIAL_TODO.md` only after those checks

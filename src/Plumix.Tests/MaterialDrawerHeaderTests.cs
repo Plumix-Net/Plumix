@@ -35,8 +35,8 @@ public sealed class MaterialDrawerHeaderTests
             FindDescendants<RenderPadding>(harness.RenderView),
             padding => padding.Padding == new Thickness(16, 40, 16, 8));
         Assert.Contains(
-            FindDescendants<RenderDividerLine>(harness.RenderView),
-            divider => divider.Axis == Axis.Horizontal && divider.Color == Colors.Crimson);
+            FindDescendants<RenderDecoratedBox>(harness.RenderView),
+            box => box.Decoration.BorderSides?.Bottom?.Color == Colors.Crimson);
         Assert.Equal(19, FindParagraph(harness.RenderView, "Header")!.FontSize);
     }
 

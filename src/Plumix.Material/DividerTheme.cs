@@ -5,7 +5,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/material/divider_theme.dart (approximate)
+// Dart parity source: flutter/packages/flutter/lib/src/material/divider_theme.dart
 
 public sealed partial record DividerThemeData(
     Color? Color = null,
@@ -13,9 +13,27 @@ public sealed partial record DividerThemeData(
     double? Thickness = null,
     double? Indent = null,
     double? EndIndent = null,
-    BorderRadius? Radius = null);
+    BorderRadiusGeometry? Radius = null)
+{
+    public DividerThemeData CopyWith(
+        Color? color = null,
+        double? space = null,
+        double? thickness = null,
+        double? indent = null,
+        double? endIndent = null,
+        BorderRadiusGeometry? radius = null)
+    {
+        return new DividerThemeData(
+            Color: color ?? Color,
+            Space: space ?? Space,
+            Thickness: thickness ?? Thickness,
+            Indent: indent ?? Indent,
+            EndIndent: endIndent ?? EndIndent,
+            Radius: radius ?? Radius);
+    }
+}
 
-public sealed class DividerTheme : InheritedWidget
+public sealed class DividerTheme : InheritedTheme
 {
     public DividerTheme(
         DividerThemeData data,
@@ -33,6 +51,11 @@ public sealed class DividerTheme : InheritedWidget
     public override Widget Build(BuildContext context)
     {
         return Child;
+    }
+
+    public override Widget Wrap(BuildContext context, Widget child)
+    {
+        return new DividerTheme(Data, child);
     }
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)

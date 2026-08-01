@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using Avalonia;
 using Avalonia.Media;
 using Plumix;
 using Plumix.Material;
 using Plumix.Rendering;
+using Plumix.UI;
 using Plumix.Widgets;
 using Xunit;
 
@@ -15,86 +15,167 @@ namespace Plumix.Tests;
 public sealed class MaterialDividerTests
 {
     [Fact]
-    public void Divider_Constructors_Throw_OnInvalidNumericValues()
+    public void Divider_Constructors_MatchFlutterNonNegativeGuards()
     {
         Assert.Throws<ArgumentOutOfRangeException>(() => new Divider(height: -1));
         Assert.Throws<ArgumentOutOfRangeException>(() => new Divider(thickness: double.NaN));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new Divider(indent: double.PositiveInfinity));
         Assert.Throws<ArgumentOutOfRangeException>(() => new Divider(endIndent: -0.1));
 
         Assert.Throws<ArgumentOutOfRangeException>(() => new VerticalDivider(width: -1));
         Assert.Throws<ArgumentOutOfRangeException>(() => new VerticalDivider(thickness: double.NaN));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new VerticalDivider(indent: double.PositiveInfinity));
         Assert.Throws<ArgumentOutOfRangeException>(() => new VerticalDivider(endIndent: -0.1));
+
+        Assert.Equal(double.PositiveInfinity, new Divider(indent: double.PositiveInfinity).Indent);
+        Assert.Equal(double.PositiveInfinity, new VerticalDivider(indent: double.PositiveInfinity).Indent);
     }
 
     [Fact]
-    public void Divider_DefaultM3_UsesOutlineVariantSpaceAndThickness()
+    public void DividerThemeData_DefaultCopyEqualityAndLerpMatchFlutter()
+    {
+        var empty = new DividerThemeData();
+        Assert.Null(empty.Color);
+        Assert.Null(empty.Space);
+        Assert.Null(empty.Thickness);
+        Assert.Null(empty.Indent);
+        Assert.Null(empty.EndIndent);
+        Assert.Null(empty.Radius);
+        Assert.Equal(empty, empty.CopyWith());
+        Assert.Equal(empty.GetHashCode(), empty.CopyWith().GetHashCode());
+
+        var source = new DividerThemeData(
+            Color: Colors.Orange,
+            Space: 5.0,
+            Thickness: 4.0,
+            Indent: 3.0,
+            EndIndent: 2.0,
+            Radius: BorderRadius.Only(1.0, 2.0, 4.0, 3.0));
+        DividerThemeData copy = source.CopyWith(color: Colors.Purple, thickness: 8.0);
+        Assert.Equal(Colors.Purple, copy.Color);
+        Assert.Equal(5.0, copy.Space);
+        Assert.Equal(8.0, copy.Thickness);
+        Assert.Equal(source.Radius, copy.Radius);
+
+        DividerThemeData midpoint = DividerThemeData.Lerp(source, copy, 0.5);
+        Assert.Equal(6.0, midpoint.Thickness);
+        Assert.Equal(source.Radius, midpoint.Radius);
+    }
+
+    [Fact]
+    public void DividerTheme_IsInheritedThemeAndWrapsItsData()
+    {
+        var data = new DividerThemeData(Color: Colors.Teal);
+        var theme = new DividerTheme(data, new SizedBox());
+        var child = new Text("wrapped");
+
+        Assert.IsAssignableFrom<InheritedTheme>(theme);
+        var wrapped = Assert.IsType<DividerTheme>(theme.Wrap(default, child));
+        Assert.Same(data, wrapped.Data);
+        Assert.Same(child, wrapped.Child);
+    }
+
+    [Fact]
+    public void Divider_CreateBorderSide_HandlesNullContext()
+    {
+        BorderSide defaults = Divider.CreateBorderSide(null);
+        BorderSide explicitSide = Divider.CreateBorderSide(null, Colors.Orange, 5.0);
+
+        Assert.Equal(Colors.Black, defaults.Color);
+        Assert.Equal(0.0, defaults.Width);
+        Assert.Equal(Colors.Orange, explicitSide.Color);
+        Assert.Equal(5.0, explicitSide.Width);
+    }
+
+    [Fact]
+    public void Divider_DefaultM3_UsesDirectOutlineVariantTokens()
     {
         var theme = ThemeData.Light with
         {
-            UseMaterial3 = true
+            UseMaterial3 = true,
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(outlineVariant: Colors.CadetBlue),
+            DividerColor = Colors.Crimson,
         };
-
         using var harness = new WidgetRenderHarness(
-            new Theme(
-                data: theme,
-                child: new SizedBox(
+            Root(
+                theme,
+                new SizedBox(
                     width: 200,
                     height: 48,
                     child: new Divider())));
 
         harness.Pump(new Size(220, 80));
 
-        var line = FindDescendantByTypeName(harness.RenderView, "RenderDividerLine");
-        Assert.NotNull(line);
-
-        Assert.Equal(Axis.Horizontal, ReadProperty<Axis>(line!, "Axis"));
-        Assert.Equal(theme.OutlineVariantColor, ReadProperty<Color>(line!, "Color"));
-        Assert.Equal(1.0, ReadProperty<double>(line!, "Thickness"), 3);
-
-        var lineBox = Assert.IsAssignableFrom<RenderBox>(line);
-        Assert.Equal(1.0, lineBox.Size.Height, 3);
-
-        var space = FindConstrainedBox(
+        RenderDecoratedBox line = FindDividerBox(harness.RenderView, Axis.Horizontal);
+        BorderSide side = line.Decoration.BorderSides!.Bottom!.Value;
+        Assert.Equal(Colors.CadetBlue, side.Color);
+        Assert.Equal(1.0, side.Width, 3);
+        Assert.Equal(200.0, line.Size.Width, 3);
+        Assert.Equal(1.0, line.Size.Height, 3);
+        Assert.NotNull(FindConstrainedBox(
             harness.RenderView,
             constraints => Math.Abs(constraints.MinHeight - 16.0) < 0.001
-                           && Math.Abs(constraints.MaxHeight - 16.0) < 0.001);
-        Assert.NotNull(space);
+                           && Math.Abs(constraints.MaxHeight - 16.0) < 0.001));
     }
 
     [Fact]
-    public void Divider_DefaultM2_UsesDividerColorAndZeroLogicalThickness()
+    public void Divider_DefaultM2_UsesDividerColorAndHairlineWidth()
     {
         var theme = ThemeData.Light with
         {
             UseMaterial3 = false,
-            DividerColor = Colors.CadetBlue
+            DividerColor = Colors.CadetBlue,
         };
-
         using var harness = new WidgetRenderHarness(
-            new Theme(
-                data: theme,
-                child: new SizedBox(
+            Root(
+                theme,
+                new SizedBox(
                     width: 200,
                     height: 48,
                     child: new Divider())));
 
         harness.Pump(new Size(220, 80));
 
-        var line = FindDescendantByTypeName(harness.RenderView, "RenderDividerLine");
-        Assert.NotNull(line);
-
-        Assert.Equal(Axis.Horizontal, ReadProperty<Axis>(line!, "Axis"));
-        Assert.Equal(Colors.CadetBlue, ReadProperty<Color>(line!, "Color"));
-        Assert.Equal(0.0, ReadProperty<double>(line!, "Thickness"), 3);
-
-        var lineBox = Assert.IsAssignableFrom<RenderBox>(line);
-        Assert.Equal(0.0, lineBox.Size.Height, 3);
+        RenderDecoratedBox line = FindDividerBox(harness.RenderView, Axis.Horizontal);
+        BorderSide side = line.Decoration.BorderSides!.Bottom!.Value;
+        Assert.Equal(Colors.CadetBlue, side.Color);
+        Assert.Equal(0.0, side.Width, 3);
+        Assert.Equal(0.0, line.Size.Height, 3);
     }
 
     [Fact]
-    public void Divider_ResolvesPrecedence_WidgetOverThemeAndThemeOverDefaults()
+    public void VerticalDivider_DefaultsSplitBetweenMaterial3AndMaterial2()
+    {
+        var m3Theme = ThemeData.Light with
+        {
+            UseMaterial3 = true,
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(outlineVariant: Colors.DarkCyan),
+        };
+        var m2Theme = ThemeData.Light with
+        {
+            UseMaterial3 = false,
+            DividerColor = Colors.DarkGoldenrod,
+        };
+        using var m3Harness = new WidgetRenderHarness(
+            Root(m3Theme, new SizedBox(width: 48, height: 100, child: new VerticalDivider())));
+        using var m2Harness = new WidgetRenderHarness(
+            Root(m2Theme, new SizedBox(width: 48, height: 100, child: new VerticalDivider())));
+
+        m3Harness.Pump(new Size(80, 120));
+        m2Harness.Pump(new Size(80, 120));
+
+        RenderDecoratedBox m3Line = FindDividerBox(m3Harness.RenderView, Axis.Vertical);
+        RenderDecoratedBox m2Line = FindDividerBox(m2Harness.RenderView, Axis.Vertical);
+        BorderSide m3Side = m3Line.Decoration.BorderSides!.Left!.Value;
+        BorderSide m2Side = m2Line.Decoration.BorderSides!.Left!.Value;
+        Assert.Equal(Colors.DarkCyan, m3Side.Color);
+        Assert.Equal(1.0, m3Side.Width);
+        Assert.Equal(1.0, m3Line.Size.Width);
+        Assert.Equal(Colors.DarkGoldenrod, m2Side.Color);
+        Assert.Equal(0.0, m2Side.Width);
+        Assert.Equal(0.0, m2Line.Size.Width);
+    }
+
+    [Fact]
+    public void Divider_ResolvesWidgetLocalThemeAndGlobalThemePrecedence()
     {
         var rootTheme = ThemeData.Light with
         {
@@ -103,65 +184,63 @@ public sealed class MaterialDividerTests
                 Space: 30,
                 Thickness: 3,
                 Indent: 11,
-                EndIndent: 13)
+                EndIndent: 13),
         };
-
         using var themeHarness = new WidgetRenderHarness(
-            new Theme(
-                data: rootTheme,
-                child: new SizedBox(
+            Root(
+                rootTheme,
+                new SizedBox(
                     width: 220,
                     height: 64,
                     child: new Divider())));
 
         themeHarness.Pump(new Size(260, 90));
 
-        var themedLine = FindDescendantByTypeName(themeHarness.RenderView, "RenderDividerLine");
-        Assert.NotNull(themedLine);
+        RenderDecoratedBox themedLine = FindDividerBox(themeHarness.RenderView, Axis.Horizontal);
+        BorderSide themedSide = themedLine.Decoration.BorderSides!.Bottom!.Value;
+        Assert.Equal(Colors.DarkGreen, themedSide.Color);
+        Assert.Equal(3.0, themedSide.Width, 3);
+        Assert.Equal(196.0, themedLine.Size.Width, 3);
 
-        Assert.Equal(Colors.DarkGreen, ReadProperty<Color>(themedLine!, "Color"));
-        Assert.Equal(3.0, ReadProperty<double>(themedLine!, "Thickness"), 3);
-        Assert.Equal(11.0, ReadProperty<double>(themedLine!, "Indent"), 3);
-        Assert.Equal(13.0, ReadProperty<double>(themedLine!, "EndIndent"), 3);
-
-        var themedSpace = FindConstrainedBox(
-            themeHarness.RenderView,
-            constraints => Math.Abs(constraints.MinHeight - 30.0) < 0.001
-                           && Math.Abs(constraints.MaxHeight - 30.0) < 0.001);
-        Assert.NotNull(themedSpace);
-
+        var localTheme = new DividerThemeData(
+            Color: Colors.Orange,
+            Space: 32,
+            Thickness: 4,
+            Indent: 10,
+            EndIndent: 12);
+        var widgetRadius = BorderRadius.Only(1.0, 2.0, 4.0, 3.0);
         using var widgetHarness = new WidgetRenderHarness(
-            new Theme(
-                data: rootTheme,
-                child: new SizedBox(
+            Root(
+                rootTheme,
+                new SizedBox(
                     width: 220,
                     height: 64,
-                    child: new Divider(
-                        height: 36,
-                        thickness: 5,
-                        indent: 7,
-                        endIndent: 9,
-                        color: Colors.Crimson))));
+                    child: new DividerTheme(
+                        localTheme,
+                        new Divider(
+                            height: 36,
+                            thickness: 5,
+                            indent: 7,
+                            endIndent: 9,
+                            color: Colors.Crimson,
+                            radius: widgetRadius)))));
 
         widgetHarness.Pump(new Size(260, 90));
 
-        var widgetLine = FindDescendantByTypeName(widgetHarness.RenderView, "RenderDividerLine");
-        Assert.NotNull(widgetLine);
-
-        Assert.Equal(Colors.Crimson, ReadProperty<Color>(widgetLine!, "Color"));
-        Assert.Equal(5.0, ReadProperty<double>(widgetLine!, "Thickness"), 3);
-        Assert.Equal(7.0, ReadProperty<double>(widgetLine!, "Indent"), 3);
-        Assert.Equal(9.0, ReadProperty<double>(widgetLine!, "EndIndent"), 3);
-
-        var widgetSpace = FindConstrainedBox(
+        RenderDecoratedBox widgetLine = FindDividerBox(widgetHarness.RenderView, Axis.Horizontal);
+        BorderSide widgetSide = widgetLine.Decoration.BorderSides!.Bottom!.Value;
+        Assert.Equal(Colors.Crimson, widgetSide.Color);
+        Assert.Equal(5.0, widgetSide.Width, 3);
+        Assert.Equal(204.0, widgetLine.Size.Width, 3);
+        Assert.Equal(widgetRadius, widgetLine.Decoration.BorderRadius);
+        Assert.NotNull(FindConstrainedBox(
             widgetHarness.RenderView,
             constraints => Math.Abs(constraints.MinHeight - 36.0) < 0.001
-                           && Math.Abs(constraints.MaxHeight - 36.0) < 0.001);
-        Assert.NotNull(widgetSpace);
+                           && Math.Abs(constraints.MaxHeight - 36.0) < 0.001));
     }
 
     [Fact]
-    public void VerticalDivider_UsesThemeSpaceThicknessAndIndents()
+    public void VerticalDivider_UsesThemeSpaceThicknessIndentsAndRadius()
     {
         var theme = ThemeData.Light with
         {
@@ -170,73 +249,96 @@ public sealed class MaterialDividerTests
                 Space: 24,
                 Thickness: 2,
                 Indent: 6,
-                EndIndent: 10)
+                EndIndent: 10,
+                Radius: BorderRadius.Only(1.0, 2.0, 4.0, 3.0)),
         };
-
         using var harness = new WidgetRenderHarness(
-            new Theme(
-                data: theme,
-                child: new SizedBox(
+            Root(
+                theme,
+                new SizedBox(
                     width: 80,
                     height: 120,
                     child: new VerticalDivider())));
 
         harness.Pump(new Size(120, 160));
 
-        var line = FindDescendantByTypeName(harness.RenderView, "RenderDividerLine");
-        Assert.NotNull(line);
-
-        Assert.Equal(Axis.Vertical, ReadProperty<Axis>(line!, "Axis"));
-        Assert.Equal(Colors.Purple, ReadProperty<Color>(line!, "Color"));
-        Assert.Equal(2.0, ReadProperty<double>(line!, "Thickness"), 3);
-        Assert.Equal(6.0, ReadProperty<double>(line!, "Indent"), 3);
-        Assert.Equal(10.0, ReadProperty<double>(line!, "EndIndent"), 3);
-
-        var lineBox = Assert.IsAssignableFrom<RenderBox>(line);
-        Assert.Equal(2.0, lineBox.Size.Width, 3);
-
-        var space = FindConstrainedBox(
+        RenderDecoratedBox line = FindDividerBox(harness.RenderView, Axis.Vertical);
+        BorderSide side = line.Decoration.BorderSides!.Left!.Value;
+        Assert.Equal(Colors.Purple, side.Color);
+        Assert.Equal(2.0, side.Width, 3);
+        Assert.Equal(2.0, line.Size.Width, 3);
+        Assert.Equal(104.0, line.Size.Height, 3);
+        Assert.Equal(
+            theme.DividerTheme.Radius!.Value.Resolve(TextDirection.Ltr),
+            line.Decoration.BorderRadius);
+        Assert.NotNull(FindConstrainedBox(
             harness.RenderView,
             constraints => Math.Abs(constraints.MinWidth - 24.0) < 0.001
-                           && Math.Abs(constraints.MaxWidth - 24.0) < 0.001);
-        Assert.NotNull(space);
+                           && Math.Abs(constraints.MaxWidth - 24.0) < 0.001));
     }
 
-    private static T ReadProperty<T>(RenderObject target, string propertyName)
+    [Fact]
+    public void Divider_ResolvesDirectionalIndentsInRtl()
     {
-        var property = target.GetType().GetProperty(
-            propertyName,
-            BindingFlags.Instance | BindingFlags.Public);
-        Assert.NotNull(property);
-        object? value = property!.GetValue(target);
-        Assert.NotNull(value);
-        return (T)value!;
+        using var harness = new WidgetRenderHarness(
+            Root(
+                ThemeData.Light,
+                new SizedBox(
+                    width: 100,
+                    height: 30,
+                    child: new Divider(
+                        thickness: 2,
+                        indent: 10,
+                        endIndent: 20,
+                        radius: BorderRadiusDirectional.Only(
+                            topStart: 1,
+                            topEnd: 4,
+                            bottomEnd: 2,
+                            bottomStart: 6))),
+                TextDirection.Rtl));
+
+        harness.Pump(new Size(120, 50));
+
+        Assert.Contains(
+            FindDescendants<RenderPadding>(harness.RenderView),
+            padding => padding.Padding == new Thickness(20.0, 0.0, 10.0, 0.0));
+        RenderDecoratedBox line = FindDividerBox(harness.RenderView, Axis.Horizontal);
+        Assert.Equal(70.0, line.Size.Width, 3);
+        Assert.Equal(BorderRadius.Only(4, 1, 6, 2), line.Decoration.BorderRadius);
     }
 
-    private static RenderObject? FindDescendantByTypeName(RenderObject? root, string typeName)
+    [Fact]
+    public void Divider_AndVerticalDivider_DoNotCrashAtZeroArea()
     {
-        if (root is null)
-        {
-            return null;
-        }
+        using var horizontal = new WidgetRenderHarness(
+            Root(ThemeData.Light, new SizedBox(width: 0.0, height: 0.0, child: new Divider())));
+        using var vertical = new WidgetRenderHarness(
+            Root(ThemeData.Light, new SizedBox(width: 0.0, height: 0.0, child: new VerticalDivider())));
 
-        if (root.GetType().Name == typeName)
-        {
-            return root;
-        }
+        horizontal.Pump(new Size(100, 100));
+        vertical.Pump(new Size(100, 100));
 
-        RenderObject? match = null;
-        root.VisitChildren(child =>
-        {
-            if (match is not null)
-            {
-                return;
-            }
+        Assert.Equal(default, horizontal.RenderView.Child!.Size);
+        Assert.Equal(default, vertical.RenderView.Child!.Size);
+    }
 
-            match = FindDescendantByTypeName(child, typeName);
-        });
+    private static Widget Root(
+        ThemeData theme,
+        Widget child,
+        TextDirection textDirection = TextDirection.Ltr)
+    {
+        return new Directionality(
+            textDirection,
+            new Theme(data: theme, child: child));
+    }
 
-        return match;
+    private static RenderDecoratedBox FindDividerBox(RenderObject? root, Axis axis)
+    {
+        return Assert.Single(
+            FindDescendants<RenderDecoratedBox>(root),
+            box => axis == Axis.Horizontal
+                ? box.Decoration.BorderSides?.Bottom is not null
+                : box.Decoration.BorderSides?.Left is not null);
     }
 
     private static RenderConstrainedBox? FindConstrainedBox(

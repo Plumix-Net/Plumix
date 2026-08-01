@@ -82,9 +82,8 @@ internal static class MaterialThemeLerp
         }
 
         BorderSide? side = BorderSide(a.Side, b.Side, t);
-        double radius = a.BorderRadius.Radius
-                        + ((b.BorderRadius.Radius - a.BorderRadius.Radius) * t);
-        return new ShapeBorder(Plumix.Rendering.BorderRadius.Circular(radius), side)
+        BorderRadius radius = Plumix.Rendering.BorderRadius.Lerp(a.BorderRadius, b.BorderRadius, t)!.Value;
+        return new ShapeBorder(radius, side)
         {
             Shape = t < 0.5 ? a.Shape : b.Shape,
         };
@@ -97,9 +96,15 @@ internal static class MaterialThemeLerp
             return null;
         }
 
-        double from = a?.Radius ?? 0.0;
-        double to = b?.Radius ?? 0.0;
-        return Plumix.Rendering.BorderRadius.Circular(from + ((to - from) * t));
+        return Plumix.Rendering.BorderRadius.Lerp(a, b, t);
+    }
+
+    public static BorderRadiusGeometry? BorderRadiusGeometry(
+        BorderRadiusGeometry? a,
+        BorderRadiusGeometry? b,
+        double t)
+    {
+        return Plumix.Rendering.BorderRadiusGeometry.Lerp(a, b, t);
     }
 
     public static BorderSide? BorderSide(BorderSide? a, BorderSide? b, double t)

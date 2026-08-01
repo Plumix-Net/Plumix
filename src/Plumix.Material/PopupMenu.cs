@@ -42,14 +42,14 @@ public sealed class PopupMenuDivider : PopupMenuEntry
         double? thickness = null,
         double? indent = null,
         double? endIndent = null,
-        BorderRadius? radius = null,
+        BorderRadiusGeometry? radius = null,
         Color? color = null,
         Key? key = null) : base(key)
     {
-        Divider.ValidateNonNegativeFinite(height, nameof(height));
-        Divider.ValidateNonNegativeFinite(thickness, nameof(thickness));
-        Divider.ValidateNonNegativeFinite(indent, nameof(indent));
-        Divider.ValidateNonNegativeFinite(endIndent, nameof(endIndent));
+        Divider.ValidateNonNegative(height, nameof(height));
+        Divider.ValidateNonNegative(thickness, nameof(thickness));
+        Divider.ValidateNonNegative(indent, nameof(indent));
+        Divider.ValidateNonNegative(endIndent, nameof(endIndent));
         Height = height;
         Thickness = thickness;
         Indent = indent;
@@ -62,7 +62,7 @@ public sealed class PopupMenuDivider : PopupMenuEntry
     public double? Thickness { get; }
     public double? Indent { get; }
     public double? EndIndent { get; }
-    public BorderRadius? Radius { get; }
+    public BorderRadiusGeometry? Radius { get; }
     public Color? Color { get; }
     internal override bool IsEnabled => false;
 

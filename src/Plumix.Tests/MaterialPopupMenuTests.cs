@@ -87,12 +87,16 @@ public sealed class MaterialPopupMenuTests : IDisposable
                 color: Colors.Orange)));
         harness.Pump(new Size(240, 80));
 
-        var line = Assert.Single(FindDescendants<RenderDividerLine>(harness.RenderView));
-        Assert.Equal(5, line.Thickness);
-        Assert.Equal(7, line.Indent);
-        Assert.Equal(9, line.EndIndent);
-        Assert.Equal(radius, line.Radius);
-        Assert.Equal(Colors.Orange, line.Color);
+        var line = Assert.Single(
+            FindDescendants<RenderDecoratedBox>(harness.RenderView),
+            box => box.Decoration.BorderSides?.Bottom is not null);
+        BorderSide side = line.Decoration.BorderSides!.Bottom!.Value;
+        Assert.Equal(5, side.Width);
+        Assert.Equal(radius, line.Decoration.BorderRadius);
+        Assert.Equal(Colors.Orange, side.Color);
+        Assert.Contains(
+            FindDescendants<RenderPadding>(harness.RenderView),
+            padding => padding.Padding == new Thickness(7, 0, 9, 0));
         Assert.Equal(20, harness.RenderView.Child!.Size.Height);
     }
 

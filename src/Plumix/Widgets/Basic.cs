@@ -837,9 +837,30 @@ public sealed class Container : StatelessWidget
 
     public override Widget Build(BuildContext context)
     {
-        Widget current = Child ?? new SizedBox();
+        BoxConstraints? effectiveConstraints = Constraints;
+        if (Width.HasValue || Height.HasValue)
+        {
+            effectiveConstraints = effectiveConstraints.HasValue
+                ? effectiveConstraints.Value.Tighten(width: Width, height: Height)
+                : BoxConstraints.TightFor(width: Width, height: Height);
+        }
 
-        if (Alignment.HasValue)
+        bool expandsNullChild = Child is null
+                                && (!effectiveConstraints.HasValue || !effectiveConstraints.Value.IsTight);
+        Widget current;
+        if (expandsNullChild)
+        {
+            current = new LimitedBox(
+                maxWidth: 0.0,
+                maxHeight: 0.0,
+                child: new ConstrainedBox(BoxConstraints.Expand()));
+        }
+        else
+        {
+            current = Child ?? new SizedBox();
+        }
+
+        if (!expandsNullChild && Alignment.HasValue)
         {
             current = new Align(
                 alignment: Alignment.Value,
@@ -866,14 +887,6 @@ public sealed class Container : StatelessWidget
                 ForegroundDecoration,
                 position: DecorationPosition.Foreground,
                 child: current);
-        }
-
-        BoxConstraints? effectiveConstraints = Constraints;
-        if (Width.HasValue || Height.HasValue)
-        {
-            effectiveConstraints = effectiveConstraints.HasValue
-                ? effectiveConstraints.Value.Tighten(width: Width, height: Height)
-                : BoxConstraints.TightFor(width: Width, height: Height);
         }
 
         if (effectiveConstraints.HasValue)

@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
+using Plumix.UI;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/painting/box_decoration.dart; flutter/packages/flutter/lib/src/painting/borders.dart (approximate)
 
@@ -96,17 +97,183 @@ public abstract class BoxPainter : IDisposable
 public readonly record struct BorderRadius
 {
     public BorderRadius(double radius)
+        : this(radius, radius, radius, radius)
     {
-        Radius = Math.Max(0, radius);
     }
 
-    public double Radius { get; }
+    public BorderRadius(
+        double topLeft,
+        double topRight,
+        double bottomRight,
+        double bottomLeft)
+    {
+        TopLeft = Math.Max(0.0, topLeft);
+        TopRight = Math.Max(0.0, topRight);
+        BottomRight = Math.Max(0.0, bottomRight);
+        BottomLeft = Math.Max(0.0, bottomLeft);
+    }
+
+    public double TopLeft { get; }
+
+    public double TopRight { get; }
+
+    public double BottomRight { get; }
+
+    public double BottomLeft { get; }
+
+    public double Radius => TopLeft;
+
+    public bool IsUniform => TopLeft == TopRight
+                             && TopLeft == BottomRight
+                             && TopLeft == BottomLeft;
 
     public static BorderRadius Zero => new(0);
 
     public static BorderRadius Circular(double radius)
     {
         return new(Math.Max(0, radius));
+    }
+
+    public static BorderRadius Only(
+        double topLeft = 0.0,
+        double topRight = 0.0,
+        double bottomRight = 0.0,
+        double bottomLeft = 0.0)
+    {
+        return new BorderRadius(topLeft, topRight, bottomRight, bottomLeft);
+    }
+
+    public static BorderRadius? Lerp(BorderRadius? a, BorderRadius? b, double t)
+    {
+        if (!a.HasValue && !b.HasValue)
+        {
+            return null;
+        }
+
+        BorderRadius from = a ?? Zero;
+        BorderRadius to = b ?? Zero;
+        return new BorderRadius(
+            LerpDouble(from.TopLeft, to.TopLeft, t),
+            LerpDouble(from.TopRight, to.TopRight, t),
+            LerpDouble(from.BottomRight, to.BottomRight, t),
+            LerpDouble(from.BottomLeft, to.BottomLeft, t));
+    }
+
+    private static double LerpDouble(double a, double b, double t)
+    {
+        return a + ((b - a) * t);
+    }
+}
+
+public readonly record struct BorderRadiusDirectional
+{
+    public BorderRadiusDirectional(
+        double topStart,
+        double topEnd,
+        double bottomEnd,
+        double bottomStart)
+    {
+        TopStart = Math.Max(0.0, topStart);
+        TopEnd = Math.Max(0.0, topEnd);
+        BottomEnd = Math.Max(0.0, bottomEnd);
+        BottomStart = Math.Max(0.0, bottomStart);
+    }
+
+    public double TopStart { get; }
+
+    public double TopEnd { get; }
+
+    public double BottomEnd { get; }
+
+    public double BottomStart { get; }
+
+    public static BorderRadiusDirectional Circular(double radius)
+    {
+        double effectiveRadius = Math.Max(0.0, radius);
+        return new BorderRadiusDirectional(
+            effectiveRadius,
+            effectiveRadius,
+            effectiveRadius,
+            effectiveRadius);
+    }
+
+    public static BorderRadiusDirectional Only(
+        double topStart = 0.0,
+        double topEnd = 0.0,
+        double bottomEnd = 0.0,
+        double bottomStart = 0.0)
+    {
+        return new BorderRadiusDirectional(
+            topStart,
+            topEnd,
+            bottomEnd,
+            bottomStart);
+    }
+}
+
+public readonly record struct BorderRadiusGeometry
+{
+    private BorderRadiusGeometry(
+        BorderRadius physical,
+        BorderRadiusDirectional directional)
+    {
+        Physical = physical;
+        Directional = directional;
+    }
+
+    public BorderRadius Physical { get; }
+
+    public BorderRadiusDirectional Directional { get; }
+
+    public BorderRadius Resolve(TextDirection direction)
+    {
+        return direction == TextDirection.Ltr
+            ? new BorderRadius(
+                Physical.TopLeft + Directional.TopStart,
+                Physical.TopRight + Directional.TopEnd,
+                Physical.BottomRight + Directional.BottomEnd,
+                Physical.BottomLeft + Directional.BottomStart)
+            : new BorderRadius(
+                Physical.TopLeft + Directional.TopEnd,
+                Physical.TopRight + Directional.TopStart,
+                Physical.BottomRight + Directional.BottomStart,
+                Physical.BottomLeft + Directional.BottomEnd);
+    }
+
+    public static BorderRadiusGeometry? Lerp(
+        BorderRadiusGeometry? a,
+        BorderRadiusGeometry? b,
+        double t)
+    {
+        if (!a.HasValue && !b.HasValue)
+        {
+            return null;
+        }
+
+        BorderRadiusGeometry from = a ?? default;
+        BorderRadiusGeometry to = b ?? default;
+        BorderRadius physical = BorderRadius.Lerp(from.Physical, to.Physical, t)!.Value;
+        var directional = new BorderRadiusDirectional(
+            LerpDouble(from.Directional.TopStart, to.Directional.TopStart, t),
+            LerpDouble(from.Directional.TopEnd, to.Directional.TopEnd, t),
+            LerpDouble(from.Directional.BottomEnd, to.Directional.BottomEnd, t),
+            LerpDouble(from.Directional.BottomStart, to.Directional.BottomStart, t));
+        return new BorderRadiusGeometry(physical, directional);
+    }
+
+    public static implicit operator BorderRadiusGeometry(BorderRadius radius)
+    {
+        return new BorderRadiusGeometry(radius, default);
+    }
+
+    public static implicit operator BorderRadiusGeometry(BorderRadiusDirectional radius)
+    {
+        return new BorderRadiusGeometry(default, radius);
+    }
+
+    private static double LerpDouble(double a, double b, double t)
+    {
+        return a + ((b - a) * t);
     }
 }
 
@@ -127,6 +294,52 @@ public readonly record struct BorderSide
     public double Width { get; }
 
     public BorderStyle Style { get; }
+}
+
+public sealed record BoxBorder(
+    BorderSide? Left = null,
+    BorderSide? Top = null,
+    BorderSide? Right = null,
+    BorderSide? Bottom = null)
+{
+    public static BoxBorder All(BorderSide side)
+    {
+        return new BoxBorder(side, side, side, side);
+    }
+
+    public static BoxBorder? Lerp(BoxBorder? a, BoxBorder? b, double t)
+    {
+        if (a is null && b is null)
+        {
+            return null;
+        }
+
+        return new BoxBorder(
+            Left: LerpSide(a?.Left, b?.Left, t),
+            Top: LerpSide(a?.Top, b?.Top, t),
+            Right: LerpSide(a?.Right, b?.Right, t),
+            Bottom: LerpSide(a?.Bottom, b?.Bottom, t));
+    }
+
+    private static BorderSide? LerpSide(BorderSide? a, BorderSide? b, double t)
+    {
+        if (!a.HasValue && !b.HasValue)
+        {
+            return null;
+        }
+
+        BorderSide from = a ?? TransparentSide(b!.Value);
+        BorderSide to = b ?? TransparentSide(a!.Value);
+        return new BorderSide(
+            BoxDecoration.LerpColor(from.Color, to.Color, t)!.Value,
+            from.Width + ((to.Width - from.Width) * t),
+            t < 0.5 ? from.Style : to.Style);
+    }
+
+    private static BorderSide TransparentSide(BorderSide side)
+    {
+        return new BorderSide(Color.FromArgb(0, side.Color.R, side.Color.G, side.Color.B), 0.0, side.Style);
+    }
 }
 
 public sealed record ShapeBorder(
@@ -154,7 +367,8 @@ public sealed record BoxDecoration(
     BorderRadius? BorderRadius = null,
     BoxShadows? BoxShadows = null,
     DecorationImage? Image = null,
-    BoxShape Shape = BoxShape.Rectangle) : Decoration
+    BoxShape Shape = BoxShape.Rectangle,
+    BoxBorder? BorderSides = null) : Decoration
 {
     public BorderRadius EffectiveBorderRadius => BorderRadius ?? Plumix.Rendering.BorderRadius.Zero;
 
@@ -194,7 +408,8 @@ public sealed record BoxDecoration(
             BorderRadius: LerpBorderRadius(a.BorderRadius, b.BorderRadius, t),
             BoxShadows: t < 0.5 ? a.BoxShadows : b.BoxShadows,
             Image: DecorationImage.Lerp(a.Image, b.Image, t),
-            Shape: t < 0.5 ? a.Shape : b.Shape);
+            Shape: t < 0.5 ? a.Shape : b.Shape,
+            BorderSides: BoxBorder.Lerp(a.BorderSides, b.BorderSides, t));
     }
 
     private BoxDecoration Scale(double factor)
@@ -204,10 +419,11 @@ public sealed record BoxDecoration(
             Color = LerpColor(null, Color, factor),
             Border = LerpBorder(null, Border, factor),
             Image = DecorationImage.Lerp(null, Image, factor),
+            BorderSides = BoxBorder.Lerp(null, BorderSides, factor),
         };
     }
 
-    private static Color? LerpColor(Color? a, Color? b, double t)
+    internal static Color? LerpColor(Color? a, Color? b, double t)
     {
         if (!a.HasValue && !b.HasValue) return null;
         var from = a ?? Avalonia.Media.Color.FromArgb(0, b!.Value.R, b.Value.G, b.Value.B);
@@ -243,10 +459,7 @@ public sealed record BoxDecoration(
 
     private static BorderRadius? LerpBorderRadius(BorderRadius? a, BorderRadius? b, double t)
     {
-        if (!a.HasValue && !b.HasValue) return null;
-        double from = a?.Radius ?? 0;
-        double to = b?.Radius ?? 0;
-        return new BorderRadius(from + ((to - from) * t));
+        return Plumix.Rendering.BorderRadius.Lerp(a, b, t);
     }
 }
 
@@ -267,7 +480,7 @@ internal sealed class BoxDecorationPainter : BoxPainter
     {
         Size size = configuration.Size ?? default;
         var rect = new Rect(offset, size);
-        double radius = _decoration.EffectiveBorderRadius.Radius;
+        BorderRadius borderRadius = _decoration.EffectiveBorderRadius;
         BoxShadows boxShadows = _decoration.EffectiveBoxShadows;
         IBrush? fill = _decoration.Brush;
         if (fill is null && _decoration.Color.HasValue)
@@ -276,7 +489,7 @@ internal sealed class BoxDecorationPainter : BoxPainter
         }
 
         IPen? borderPen = null;
-        if (_decoration.Border.HasValue)
+        if (_decoration.Border.HasValue && _decoration.BorderSides is null)
         {
             BorderSide border = _decoration.Border.Value;
             if (border.Style == BorderStyle.Solid && border.Width > 0)
@@ -306,7 +519,12 @@ internal sealed class BoxDecorationPainter : BoxPainter
         }
         else if (fill != null || boxShadows.Count > 0)
         {
-            context.DrawRectangle(fill ?? Brushes.Transparent, null, rect, radius, radius, boxShadows);
+            context.DrawRectangle(
+                fill ?? Brushes.Transparent,
+                null,
+                rect,
+                borderRadius,
+                boxShadows);
         }
 
         if (_decoration.Image is not null)
@@ -318,6 +536,11 @@ internal sealed class BoxDecorationPainter : BoxPainter
                 configuration,
                 clipRadius: _decoration.BorderRadius,
                 shape: _decoration.Shape);
+        }
+
+        if (_decoration.BorderSides is { } borderSides)
+        {
+            PaintBorderSides(context, rect, borderRadius, borderSides);
         }
 
         if (borderPen is null)
@@ -342,8 +565,113 @@ internal sealed class BoxDecorationPainter : BoxPainter
         }
         else
         {
-            context.DrawRectangle(Brushes.Transparent, borderPen, rect, radius, radius);
+            context.DrawRectangle(Brushes.Transparent, borderPen, rect, borderRadius);
         }
+    }
+
+    private static void PaintBorderSides(
+        PaintingContext context,
+        Rect rect,
+        BorderRadius borderRadius,
+        BoxBorder border)
+    {
+        int visibleSideCount = CountVisibleSides(border);
+        if (visibleSideCount == 1)
+        {
+            if (border.Bottom is { } bottom)
+            {
+                PaintHorizontalSide(context, rect, borderRadius, bottom, atTop: false);
+                return;
+            }
+
+            if (border.Top is { } top)
+            {
+                PaintHorizontalSide(context, rect, borderRadius, top, atTop: true);
+                return;
+            }
+
+            if (border.Left is { } left)
+            {
+                PaintVerticalSide(context, rect, borderRadius, left, atLeft: true);
+                return;
+            }
+
+            if (border.Right is { } right)
+            {
+                PaintVerticalSide(context, rect, borderRadius, right, atLeft: false);
+                return;
+            }
+        }
+
+        PaintHorizontalSide(context, rect, BorderRadius.Zero, border.Top, atTop: true);
+        PaintHorizontalSide(context, rect, BorderRadius.Zero, border.Bottom, atTop: false);
+        PaintVerticalSide(context, rect, BorderRadius.Zero, border.Left, atLeft: true);
+        PaintVerticalSide(context, rect, BorderRadius.Zero, border.Right, atLeft: false);
+    }
+
+    private static int CountVisibleSides(BoxBorder border)
+    {
+        int count = 0;
+        count += IsVisible(border.Left) ? 1 : 0;
+        count += IsVisible(border.Top) ? 1 : 0;
+        count += IsVisible(border.Right) ? 1 : 0;
+        count += IsVisible(border.Bottom) ? 1 : 0;
+        return count;
+    }
+
+    private static bool IsVisible(BorderSide? side)
+    {
+        return side is { Style: BorderStyle.Solid };
+    }
+
+    private static void PaintHorizontalSide(
+        PaintingContext context,
+        Rect rect,
+        BorderRadius borderRadius,
+        BorderSide? side,
+        bool atTop)
+    {
+        if (!IsVisible(side))
+        {
+            return;
+        }
+
+        BorderSide resolvedSide = side!.Value;
+        double paintWidth = resolvedSide.Width == 0.0 ? 1.0 : resolvedSide.Width;
+        double y = atTop
+            ? resolvedSide.Width == 0.0 ? rect.Top - 0.5 : rect.Top
+            : resolvedSide.Width == 0.0 ? rect.Bottom - 0.5 : rect.Bottom - paintWidth;
+        var sideRect = new Rect(rect.Left, y, rect.Width, paintWidth);
+        context.DrawRectangle(
+            new SolidColorBrush(resolvedSide.Color),
+            null,
+            sideRect,
+            borderRadius);
+    }
+
+    private static void PaintVerticalSide(
+        PaintingContext context,
+        Rect rect,
+        BorderRadius borderRadius,
+        BorderSide? side,
+        bool atLeft)
+    {
+        if (!IsVisible(side))
+        {
+            return;
+        }
+
+        BorderSide resolvedSide = side!.Value;
+        double paintWidth = resolvedSide.Width == 0.0 ? 1.0 : resolvedSide.Width;
+        double x = atLeft
+            ? resolvedSide.Width == 0.0 ? rect.Left - 0.5 : rect.Left
+            : resolvedSide.Width == 0.0 ? rect.Right - 0.5 : rect.Right - paintWidth;
+        var sideRect = new Rect(x, rect.Top, paintWidth, rect.Height);
+        context.DrawRectangle(
+            new SolidColorBrush(resolvedSide.Color),
+            null,
+            sideRect,
+            borderRadius);
     }
 
     public override void Dispose()

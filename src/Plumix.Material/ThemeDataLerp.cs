@@ -133,7 +133,7 @@ public sealed partial record DividerThemeData
             Thickness: MaterialThemeLerp.Double(a?.Thickness, b?.Thickness, t),
             Indent: MaterialThemeLerp.Double(a?.Indent, b?.Indent, t),
             EndIndent: MaterialThemeLerp.Double(a?.EndIndent, b?.EndIndent, t),
-            Radius: MaterialThemeLerp.BorderRadius(a?.Radius, b?.Radius, t));
+            Radius: MaterialThemeLerp.BorderRadiusGeometry(a?.Radius, b?.Radius, t));
     }
 }
 

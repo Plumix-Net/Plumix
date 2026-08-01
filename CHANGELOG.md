@@ -1,5 +1,11 @@
 # Changelog
 
+- Breaking: completed the strict `Divider`/`VerticalDivider` Dart closeout. Both controls now use direct M2/M3
+  color roles and the source `SizedBox -> Center -> Container` composition, resolve directional indents and
+  physical/directional per-corner radii, preserve hairline paint, and accept Flutter's non-negative numeric domain.
+  Added per-side box borders, source null-child `Container` expansion, `DividerThemeData.CopyWith`/`Lerp`, inherited
+  theme capture, focused Flutter-test parity coverage, and an expanded mirrored runtime probe.
+
 - Breaking: closed `ReorderableList`/`ReorderableListView` overlay parity. Dragged items now use a theme-captured
   overlay proxy with source 250 ms pickup/drop choreography, constraints preservation, continuously ticking edge
   auto-scroll, and localized custom reorder semantics. Reorder callbacks now complete after the drop animation;

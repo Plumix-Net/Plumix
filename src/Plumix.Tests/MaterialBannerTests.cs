@@ -89,7 +89,9 @@ public sealed class MaterialBannerTests
         using var harness = new WidgetRenderHarness(Wrap(ThemeData.Light, Banner()));
         harness.Pump(new Size(360, 180));
 
-        var decoration = Assert.Single(FindDescendants<RenderDecoratedBox>(harness.RenderView));
+        var decoration = Assert.Single(
+            FindDescendants<RenderDecoratedBox>(harness.RenderView),
+            box => box.Decoration.Color.HasValue);
         Assert.Equal(ThemeData.Light.SurfaceContainerLowColor, decoration.Decoration.Color);
         Assert.Null(decoration.Decoration.BoxShadows);
         Assert.Contains(FindDescendants<RenderPadding>(harness.RenderView),
@@ -174,7 +176,9 @@ public sealed class MaterialBannerTests
         using var themed = new WidgetRenderHarness(Wrap(theme, Banner(leading: new Text("Leading"))));
         themed.Pump(new Size(360, 180));
 
-        var decoration = Assert.Single(FindDescendants<RenderDecoratedBox>(themed.RenderView));
+        var decoration = Assert.Single(
+            FindDescendants<RenderDecoratedBox>(themed.RenderView),
+            box => box.Decoration.Color.HasValue);
         Assert.Equal(Colors.Purple, decoration.Decoration.Color);
         Assert.NotNull(decoration.Decoration.BoxShadows);
         Assert.Equal(Colors.Orange,
@@ -190,7 +194,9 @@ public sealed class MaterialBannerTests
             Banner(backgroundColor: Colors.Green, elevation: 0)));
         explicitColor.Pump(new Size(360, 180));
         Assert.Equal(Colors.Green,
-            Assert.Single(FindDescendants<RenderDecoratedBox>(explicitColor.RenderView)).Decoration.Color);
+            Assert.Single(
+                FindDescendants<RenderDecoratedBox>(explicitColor.RenderView),
+                box => box.Decoration.Color.HasValue).Decoration.Color);
     }
 
     [Fact]

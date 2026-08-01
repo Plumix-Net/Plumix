@@ -245,8 +245,9 @@ public sealed class MaterialSearchTests : IDisposable
         Assert.Contains(FindDescendants<RenderConstrainedBox>(harness.RenderView),
             box => box.AdditionalConstraints.MinHeight == 64
                    && box.AdditionalConstraints.MaxHeight == 64);
-        Assert.NotNull(FindDescendants<RenderDividerLine>(harness.RenderView)
-            .FirstOrDefault(line => line.Color == Colors.Red));
+        Assert.Contains(
+            FindDescendants<RenderDecoratedBox>(harness.RenderView),
+            box => box.Decoration.BorderSides?.Bottom?.Color == Colors.Red);
         Assert.NotNull(FindParagraph(harness.RenderView, "Themed suggestion"));
     }
 
