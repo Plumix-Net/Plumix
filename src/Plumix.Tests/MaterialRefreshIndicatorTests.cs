@@ -90,6 +90,41 @@ public sealed class MaterialRefreshIndicatorTests : IDisposable
     }
 
     [Fact]
+    public void RefreshIndicators_DefaultToColorSchemePrimaryInsteadOfLegacyPrimaryColor()
+    {
+        var theme = ThemeData.Light with
+        {
+            PrimaryColor = Colors.DarkOrange,
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(primary: Colors.SeaGreen),
+        };
+
+        using var progressHarness = new WidgetRenderHarness(Wrap(
+            new RefreshProgressIndicator(value: 0.4),
+            theme));
+        progressHarness.Pump(new Size(120, 120));
+        object? progressRender = FindDescendantByTypeName(
+            progressHarness.RenderView,
+            "RenderCircularProgressIndicator");
+        Assert.NotNull(progressRender);
+        Assert.Equal(Colors.SeaGreen, ReadProperty<Color>(progressRender!, "ValueColor"));
+
+        var emitter = new NotificationEmitter();
+        using var refreshHarness = new WidgetRenderHarness(Wrap(
+            new RefreshIndicator(
+                onRefresh: () => Task.CompletedTask,
+                child: emitter),
+            theme));
+        refreshHarness.Pump(Viewport);
+        BeginDrag(refreshHarness.FindState<NotificationEmitterState>());
+        refreshHarness.Pump(Viewport);
+        object? refreshRender = FindDescendantByTypeName(
+            refreshHarness.RenderView,
+            "RenderCircularProgressIndicator");
+        Assert.NotNull(refreshRender);
+        Assert.Equal(Colors.SeaGreen, ReadProperty<Color>(refreshRender!, "ValueColor"));
+    }
+
+    [Fact]
     public void RefreshProgressIndicator_ValidatesNumericContractsAndBuildsPercentSemantics()
     {
         Assert.Throws<ArgumentOutOfRangeException>(() => new RefreshProgressIndicator(value: double.NaN));
@@ -133,6 +168,7 @@ public sealed class MaterialRefreshIndicatorTests : IDisposable
         Assert.Equal(RefreshIndicatorStatus.Snap, state.Status);
 
         PumpAnimation(harness, TimeSpan.FromMilliseconds(160));
+        await Task.Yield();
         Assert.Equal(RefreshIndicatorStatus.Refresh, state.Status);
 
         refreshGate.SetResult();
@@ -154,7 +190,7 @@ public sealed class MaterialRefreshIndicatorTests : IDisposable
     }
 
     [Fact]
-    public void RefreshIndicator_CancelsShortDragAndRejectsHorizontalNotifications()
+    public async Task RefreshIndicator_CancelsShortDragAndRejectsHorizontalNotifications()
     {
         var emitter = new NotificationEmitter();
         using var harness = new WidgetRenderHarness(Wrap(new RefreshIndicator(
@@ -172,10 +208,62 @@ public sealed class MaterialRefreshIndicatorTests : IDisposable
         emitterState.Dispatch(new ScrollStartNotification(vertical, hasDragDetails: true));
         emitterState.Dispatch(new OverscrollNotification(vertical, overscroll: -20, hasDragDetails: true));
         emitterState.Dispatch(new ScrollEndNotification(vertical));
+        await Task.Yield();
         Assert.Equal(RefreshIndicatorStatus.Canceled, state.Status);
 
         PumpAnimation(harness, TimeSpan.FromMilliseconds(210));
         Assert.Null(state.Status);
+    }
+
+    [Fact]
+    public void RefreshIndicator_DisallowsLeadingOverscrollChromeOnlyWhileDragging()
+    {
+        var emitter = new NotificationEmitter();
+        using var harness = new WidgetRenderHarness(Wrap(new RefreshIndicator(
+            onRefresh: () => Task.CompletedTask,
+            child: emitter)));
+        harness.Pump(Viewport);
+        var state = harness.FindState<RefreshIndicatorState>();
+        var emitterState = harness.FindState<NotificationEmitterState>();
+        var metrics = new ScrollMetricsSnapshot(0, 0, 600, 400, AxisDirection.Down);
+
+        var idleLeading = new OverscrollIndicatorNotification(leading: true);
+        Assert.False(idleLeading.Dispatch(emitterState.Context));
+        Assert.True(idleLeading.Accepted);
+
+        emitterState.Dispatch(new ScrollStartNotification(metrics, hasDragDetails: true));
+        Assert.Equal(RefreshIndicatorStatus.Drag, state.Status);
+
+        var trailing = new OverscrollIndicatorNotification(leading: false);
+        Assert.False(trailing.Dispatch(emitterState.Context));
+        Assert.True(trailing.Accepted);
+
+        var leading = new OverscrollIndicatorNotification(leading: true);
+        Assert.True(leading.Dispatch(emitterState.Context));
+        Assert.False(leading.Accepted);
+    }
+
+    [Fact]
+    public async Task AnimationController_AnimateToUsesTheRequestedTargetAndDuration()
+    {
+        using var controller = new AnimationController(TimeSpan.FromSeconds(1));
+        Task animation = controller.AnimateTo(0.4, TimeSpan.FromMilliseconds(100));
+
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.05));
+        Assert.InRange(controller.Value, 0.1, 0.3);
+        Assert.False(animation.IsCompleted);
+
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.1));
+        await animation;
+        Assert.Equal(0.4, controller.Value, 3);
+        Assert.Equal(AnimationStatus.Completed, controller.Status);
+
+        Task decreasingAnimation = controller.AnimateTo(0.1, TimeSpan.FromMilliseconds(50));
+        Assert.Equal(AnimationStatus.Forward, controller.Status);
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.06));
+        await decreasingAnimation;
+        Assert.Equal(0.1, controller.Value, 3);
+        Assert.Equal(AnimationStatus.Completed, controller.Status);
     }
 
     [Fact]
@@ -216,6 +304,7 @@ public sealed class MaterialRefreshIndicatorTests : IDisposable
         var second = state.Show(atTop: false);
         Assert.Same(first, second);
         PumpAnimation(harness, TimeSpan.FromMilliseconds(160));
+        await Task.Yield();
         Assert.Equal(RefreshIndicatorStatus.Refresh, state.Status);
 
         gate.SetResult();

@@ -8,7 +8,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity sources (reference):
+// Dart parity sources:
 // flutter/packages/flutter/lib/src/material/progress_indicator.dart (RefreshProgressIndicator)
 // flutter/packages/flutter/lib/src/material/refresh_indicator.dart (RefreshIndicator)
 
@@ -130,23 +130,18 @@ public sealed class RefreshProgressIndicator : CircularProgressIndicator
                 double rotationValue = converted * 0.3;
                 arcSweep = Math.Max(0.001, Math.Min(FullSweep, headValue * Math.PI * 1.5));
                 arcStart += (rotationValue * Math.PI * 2.0)
-                            + (offsetValue * Math.PI * 0.5)
-                            + (Math.PI * ResolveAdditionalRotation(value.Value));
+                            + (offsetValue * Math.PI * 0.5);
             }
             else
             {
                 arrowheadScale = 0.0;
                 ResolveIndeterminateArc(animationValue, out arcStart, out arcSweep);
-                if (_lastValue.HasValue)
-                {
-                    arcStart += Math.PI * ResolveAdditionalRotation(_lastValue.Value);
-                }
             }
 
             var resolvedValueColor = widget.ValueColor?.Value
                                      ?? widget.Color
                                      ?? indicatorTheme.Color
-                                     ?? theme.PrimaryColor;
+                                     ?? theme.ColorScheme.Primary;
             var resolvedBackground = widget.BackgroundColor
                                      ?? indicatorTheme.RefreshBackgroundColor
                                      ?? theme.CanvasColor;
@@ -156,12 +151,22 @@ public sealed class RefreshProgressIndicator : CircularProgressIndicator
             var resolvedStrokeCap = widget.StrokeCap
                                     ?? indicatorTheme.StrokeCap;
 
+            double rotation = value.HasValue || _lastValue.HasValue
+                ? Math.PI * ResolveAdditionalRotation(value ?? _lastValue!.Value)
+                : 0.0;
+            double opacity = resolvedValueColor.A / 255.0;
+            Color opaqueValueColor = Avalonia.Media.Color.FromArgb(
+                byte.MaxValue,
+                resolvedValueColor.R,
+                resolvedValueColor.G,
+                resolvedValueColor.B);
+
             Widget child = new CircularProgressIndicatorRenderWidget(
                 value: null,
                 arcStart: arcStart,
                 arcSweep: arcSweep,
                 trackColor: null,
-                valueColor: resolvedValueColor,
+                valueColor: opaqueValueColor,
                 strokeWidth: widget.StrokeWidth ?? DefaultStrokeWidth,
                 strokeAlign: resolvedStrokeAlign,
                 indicatorSize: 0,
@@ -170,14 +175,20 @@ public sealed class RefreshProgressIndicator : CircularProgressIndicator
                 year2023: true,
                 arrowheadScale: arrowheadScale);
 
-            child = new Container(
+            child = new Plumix.Widgets.Transform(
+                Matrix.CreateRotation(rotation),
+                alignment: Alignment.Center,
+                child: child);
+            child = new Opacity(opacity, child);
+            child = new Padding(widget.IndicatorPadding, child);
+            child = new Material(
+                type: MaterialType.Circle,
+                color: resolvedBackground,
+                elevation: widget.Elevation,
+                child: child);
+            child = new SizedBox(
                 width: IndicatorSize,
                 height: IndicatorSize,
-                padding: widget.IndicatorPadding,
-                decoration: new BoxDecoration(
-                    Color: resolvedBackground,
-                    BoxShadows: BuildBoxShadows(theme.ShadowColor, widget.Elevation),
-                    Shape: BoxShape.Circle),
                 child: child);
             child = new Padding(widget.IndicatorMargin, child);
 
@@ -264,30 +275,6 @@ public sealed class RefreshProgressIndicator : CircularProgressIndicator
             return transformed - Math.Floor(transformed);
         }
 
-        private static BoxShadows? BuildBoxShadows(Color shadowColor, double elevation)
-        {
-            if (elevation <= 0 || shadowColor.A == 0) return null;
-
-            static Color WithOpacity(Color color, double opacity) => Avalonia.Media.Color.FromArgb(
-                (byte)Math.Clamp((int)Math.Round(color.A * opacity), 0, 255),
-                color.R,
-                color.G,
-                color.B);
-
-            var keyShadow = new BoxShadow
-            {
-                OffsetY = Math.Max(1, Math.Round(elevation)),
-                Blur = Math.Max(2, elevation * 2.4),
-                Color = WithOpacity(shadowColor, 0.20)
-            };
-            var ambientShadow = new BoxShadow
-            {
-                OffsetY = Math.Max(1, Math.Round(elevation * 0.5)),
-                Blur = Math.Max(3, elevation * 3.2),
-                Color = WithOpacity(shadowColor, 0.14)
-            };
-            return new BoxShadows(keyShadow, [ambientShadow]);
-        }
     }
 }
 
@@ -472,80 +459,84 @@ public sealed class RefreshIndicatorState : State
     private static readonly TimeSpan SnapDuration = TimeSpan.FromMilliseconds(150);
     private static readonly TimeSpan ScaleDuration = TimeSpan.FromMilliseconds(200);
 
-    private AnimationController? _transitionController;
+    private AnimationController? _positionController;
+    private AnimationController? _scaleController;
+    private Animation<double>? _positionFactor;
+    private Animation<double>? _scaleFactor;
     private RefreshIndicatorStatus? _status;
     private bool? _isIndicatorAtTop;
     private double? _dragOffset;
-    private double _positionValue;
-    private double _scaleValue;
-    private double _transitionFrom;
-    private double _transitionTo;
     private TaskCompletionSource? _pendingRefresh;
-    private bool _mounted;
+    private Color _effectiveValueColor;
 
     private RefreshIndicator CurrentWidget => (RefreshIndicator)StateWidget;
 
     public RefreshIndicatorStatus? Status => _status;
 
-    public double PositionValue => _positionValue;
+    public double PositionValue => _positionController?.Value ?? 0.0;
 
     public override void InitState()
     {
-        _transitionController = new AnimationController(SnapDuration, this);
-        _transitionController.Changed += HandleTransitionChanged;
-        _transitionController.Completed += HandleTransitionCompleted;
-        _mounted = true;
+        _positionController = new AnimationController(SnapDuration, this);
+        _scaleController = new AnimationController(ScaleDuration, this);
+        _positionFactor = new DoubleTween(begin: 0.0, end: DragSizeFactorLimit).Animate(_positionController);
+        _scaleFactor = new DoubleTween(begin: 1.0, end: 0.0).Animate(_scaleController);
+    }
+
+    public override void DidChangeDependencies()
+    {
+        SetupColor();
+        base.DidChangeDependencies();
+    }
+
+    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    {
+        base.DidUpdateWidget(oldWidget);
+        var oldIndicator = (RefreshIndicator)oldWidget;
+        if (oldIndicator.Color != CurrentWidget.Color)
+        {
+            SetupColor();
+        }
     }
 
     public override void Dispose()
     {
-        _mounted = false;
-        if (_transitionController is not null)
-        {
-            _transitionController.Changed -= HandleTransitionChanged;
-            _transitionController.Completed -= HandleTransitionCompleted;
-            _transitionController.Dispose();
-            _transitionController = null;
-        }
+        _positionController?.Dispose();
+        _positionController = null;
+        _scaleController?.Dispose();
+        _scaleController = null;
     }
 
     public override Widget Build(BuildContext context)
     {
         var notificationChild = new NotificationListener<ScrollNotification>(
             onNotification: HandleScrollNotification,
-            child: CurrentWidget.Child);
+            child: new NotificationListener<OverscrollIndicatorNotification>(
+                onNotification: HandleIndicatorNotification,
+                child: CurrentWidget.Child));
         var children = new List<Widget> { notificationChild };
 
-        if (_status is not null && CurrentWidget.IndicatorType != RefreshIndicatorType.NoSpinner)
+        if (_status is not null)
         {
             bool atTop = _isIndicatorAtTop ?? true;
-            double revealFactor = Math.Clamp(_positionValue * DragSizeFactorLimit, 0.0, DragSizeFactorLimit);
-            Widget indicator = BuildIndicator(context);
-            if (_status == RefreshIndicatorStatus.Done)
-            {
-                double scale = Math.Clamp(1.0 - _scaleValue, 0.0, 1.0);
-                const double center = 24.5;
-                indicator = new Opacity(
-                    scale,
-                    new Plumix.Widgets.Transform(
-                        Matrix.CreateTranslation(center, center)
-                        * Matrix.CreateScale(scale, scale)
-                        * Matrix.CreateTranslation(-center, -center),
-                        indicator));
-            }
-
-            Widget transition = new Padding(
+            Widget transition = new AnimatedBuilder(
+                animation: _positionController!,
+                builder: (indicatorContext, _) => BuildIndicator(indicatorContext));
+            transition = new ScaleTransition(
+                scale: _scaleFactor!,
+                child: transition);
+            transition = new Align(
+                alignment: atTop ? Alignment.TopCenter : Alignment.BottomCenter,
+                child: transition);
+            transition = new Padding(
                 atTop
                     ? new Thickness(0, CurrentWidget.Displacement, 0, 0)
                     : new Thickness(0, 0, 0, CurrentWidget.Displacement),
-                new Align(
-                    alignment: atTop ? Alignment.TopCenter : Alignment.BottomCenter,
-                    child: indicator));
-            transition = new ClipRect(
-                child: new Align(
-                    alignment: atTop ? Alignment.BottomCenter : Alignment.TopCenter,
-                    heightFactor: revealFactor,
-                    child: transition));
+                transition);
+            transition = new SizeTransition(
+                sizeFactor: _positionFactor!,
+                alignment: new AlignmentDirectional(-1.0, atTop ? 1.0 : -1.0),
+                child: transition);
 
             children.Add(new Positioned(
                 left: 0,
@@ -570,7 +561,7 @@ public sealed class RefreshIndicatorState : State
             Start(atTop ? AxisDirection.Down : AxisDirection.Up);
         }
 
-        BeginSnap();
+        ShowIndicator();
         return _pendingRefresh?.Task ?? Task.CompletedTask;
     }
 
@@ -580,26 +571,33 @@ public sealed class RefreshIndicatorState : State
         var theme = Theme.Of(context);
         bool showIndeterminate = _status is RefreshIndicatorStatus.Refresh or RefreshIndicatorStatus.Done;
 
-        if (widget.IndicatorType == RefreshIndicatorType.Adaptive
-            && theme.Platform is TargetPlatform.IOS or TargetPlatform.MacOS)
+        if (widget.IndicatorType == RefreshIndicatorType.NoSpinner)
         {
-            return new CupertinoActivityIndicator(color: widget.Color, isDark: theme.Brightness == Brightness.Dark);
+            return new Container();
         }
 
-        var color = widget.Color ?? theme.PrimaryColor;
+        Color color = _effectiveValueColor;
         if (!showIndeterminate)
         {
-            color = WithOpacity(color, Math.Clamp(_positionValue * DragSizeFactorLimit, 0.0, 1.0));
+            color = WithOpacity(color, Math.Clamp(PositionValue * DragSizeFactorLimit, 0.0, 1.0));
         }
 
-        return new RefreshProgressIndicator(
-            value: showIndeterminate ? null : Math.Clamp(_positionValue * 0.75, 0.0, 0.75),
+        Widget materialIndicator = new RefreshProgressIndicator(
+            value: showIndeterminate ? null : Math.Clamp(PositionValue * 0.75, 0.0, 0.75),
             valueColor: new AlwaysStoppedAnimation<Color?>(color),
             backgroundColor: widget.BackgroundColor,
             strokeWidth: widget.StrokeWidth,
             elevation: widget.Elevation,
             semanticsLabel: widget.SemanticsLabel ?? MaterialLocalizations.Of(context).RefreshIndicatorSemanticLabel,
             semanticsValue: widget.SemanticsValue);
+
+        if (widget.IndicatorType == RefreshIndicatorType.Adaptive
+            && theme.Platform is TargetPlatform.IOS or TargetPlatform.MacOS)
+        {
+            return new CupertinoActivityIndicator(color: widget.Color, isDark: theme.Brightness == Brightness.Dark);
+        }
+
+        return materialIndicator;
     }
 
     private bool HandleScrollNotification(ScrollNotification notification)
@@ -639,7 +637,7 @@ public sealed class RefreshIndicatorState : State
 
             if (_status == RefreshIndicatorStatus.Armed && !update.HasDragDetails)
             {
-                BeginSnap();
+                ShowIndicator();
             }
         }
         else if (notification is OverscrollNotification overscroll
@@ -652,14 +650,30 @@ public sealed class RefreshIndicatorState : State
         }
         else if (notification is ScrollEndNotification)
         {
-            if (_status == RefreshIndicatorStatus.Armed && _positionValue >= 1.0)
+            if (_status == RefreshIndicatorStatus.Armed && PositionValue >= 1.0)
             {
-                BeginSnap();
+                ShowIndicator();
             }
             else if (_status is RefreshIndicatorStatus.Armed or RefreshIndicatorStatus.Drag)
             {
                 BeginDismiss(RefreshIndicatorStatus.Canceled);
             }
+        }
+
+        return false;
+    }
+
+    private bool HandleIndicatorNotification(OverscrollIndicatorNotification notification)
+    {
+        if (notification.Depth != 0 || !notification.Leading)
+        {
+            return false;
+        }
+
+        if (_status == RefreshIndicatorStatus.Drag)
+        {
+            notification.DisallowIndicator();
+            return true;
         }
 
         return false;
@@ -673,8 +687,8 @@ public sealed class RefreshIndicatorState : State
         if (!isDragStart && !isAnywhereUpdate) return false;
 
         var metrics = notification.Metrics;
-        bool atSupportedEdge = (metrics.AxisDirection == AxisDirection.Down && metrics.ExtentBefore <= 0.0001)
-                               || (metrics.AxisDirection == AxisDirection.Up && metrics.ExtentAfter <= 0.0001);
+        bool atSupportedEdge = (metrics.AxisDirection == AxisDirection.Down && metrics.ExtentBefore == 0.0)
+                               || (metrics.AxisDirection == AxisDirection.Up && metrics.ExtentAfter == 0.0);
         return atSupportedEdge && _status is null && Start(metrics.AxisDirection);
     }
 
@@ -683,8 +697,8 @@ public sealed class RefreshIndicatorState : State
         if (direction is AxisDirection.Left or AxisDirection.Right) return false;
         _isIndicatorAtTop = true;
         _dragOffset = 0;
-        _positionValue = 0;
-        _scaleValue = 0;
+        _scaleController!.SetValue(0.0);
+        _positionController!.SetValue(0.0);
         return true;
     }
 
@@ -697,79 +711,32 @@ public sealed class RefreshIndicatorState : State
             newValue = Math.Max(newValue, 1.0 / DragSizeFactorLimit);
         }
 
-        _positionValue = Math.Clamp(newValue, 0.0, 1.0);
-        if (_status == RefreshIndicatorStatus.Drag && _positionValue >= 1.0 / DragSizeFactorLimit)
+        _positionController!.SetValue(Math.Clamp(newValue, 0.0, 1.0));
+        if (_status == RefreshIndicatorStatus.Drag
+            && ResolveValueColor().A == _effectiveValueColor.A)
         {
             SetStatus(RefreshIndicatorStatus.Armed);
         }
-        else
-        {
-            SetState(static () => { });
-        }
     }
 
-    private void BeginSnap()
+    private void ShowIndicator()
     {
-        _pendingRefresh ??= new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        _pendingRefresh = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         SetStatus(RefreshIndicatorStatus.Snap);
-        BeginTransition(_positionValue, 1.0 / DragSizeFactorLimit, SnapDuration);
+        _ = SnapAndRefreshAsync();
     }
 
-    private void BeginDismiss(RefreshIndicatorStatus status)
+    private async Task SnapAndRefreshAsync()
     {
-        SetStatus(status);
-        if (status == RefreshIndicatorStatus.Done)
+        await _positionController!
+            .AnimateTo(1.0 / DragSizeFactorLimit, SnapDuration)
+            .ConfigureAwait(false);
+        if (!Mounted || _status != RefreshIndicatorStatus.Snap)
         {
-            _scaleValue = 0;
-            BeginTransition(0, 1, ScaleDuration);
+            return;
         }
-        else
-        {
-            BeginTransition(_positionValue, 0, ScaleDuration);
-        }
-    }
 
-    private void BeginTransition(double from, double to, TimeSpan duration)
-    {
-        if (_transitionController is null) return;
-        _transitionFrom = from;
-        _transitionTo = to;
-        _transitionController.Duration = duration;
-        _transitionController.Forward(from: 0);
-    }
-
-    private void HandleTransitionChanged()
-    {
-        if (!_mounted || _transitionController is null) return;
-        double value = _transitionFrom + ((_transitionTo - _transitionFrom) * _transitionController.Evaluate());
-        if (_status == RefreshIndicatorStatus.Done)
-        {
-            _scaleValue = value;
-        }
-        else
-        {
-            _positionValue = value;
-        }
-        SetState(static () => { });
-    }
-
-    private void HandleTransitionCompleted()
-    {
-        if (!_mounted) return;
-        if (_status == RefreshIndicatorStatus.Snap)
-        {
-            _positionValue = 1.0 / DragSizeFactorLimit;
-            SetStatus(RefreshIndicatorStatus.Refresh);
-            _ = RunRefreshAsync();
-        }
-        else if (_status is RefreshIndicatorStatus.Canceled or RefreshIndicatorStatus.Done)
-        {
-            ResetToIdle();
-        }
-    }
-
-    private async Task RunRefreshAsync()
-    {
+        SetStatus(RefreshIndicatorStatus.Refresh);
         try
         {
             await CurrentWidget.OnRefresh().ConfigureAwait(false);
@@ -780,9 +747,38 @@ public sealed class RefreshIndicatorState : State
         }
 
         _pendingRefresh?.TrySetResult();
-        if (_mounted && _status == RefreshIndicatorStatus.Refresh)
+        if (Mounted && _status == RefreshIndicatorStatus.Refresh)
         {
-            BeginDismiss(RefreshIndicatorStatus.Done);
+            await DismissAsync(RefreshIndicatorStatus.Done).ConfigureAwait(false);
+        }
+    }
+
+    private void BeginDismiss(RefreshIndicatorStatus status)
+    {
+        _ = DismissAsync(status);
+    }
+
+    private async Task DismissAsync(RefreshIndicatorStatus status)
+    {
+        await Task.Yield();
+        if (!Mounted)
+        {
+            return;
+        }
+
+        SetStatus(status);
+        if (status == RefreshIndicatorStatus.Done)
+        {
+            await _scaleController!.AnimateTo(1.0, ScaleDuration).ConfigureAwait(false);
+        }
+        else
+        {
+            await _positionController!.AnimateTo(0.0, ScaleDuration).ConfigureAwait(false);
+        }
+
+        if (Mounted && _status == status)
+        {
+            ResetToIdle();
         }
     }
 
@@ -791,8 +787,8 @@ public sealed class RefreshIndicatorState : State
         _status = null;
         _dragOffset = null;
         _isIndicatorAtTop = null;
-        _positionValue = 0;
-        _scaleValue = 0;
+        _positionController!.SetValue(0.0);
+        _scaleController!.SetValue(0.0);
         _pendingRefresh = null;
         SetState(static () => { });
     }
@@ -802,6 +798,23 @@ public sealed class RefreshIndicatorState : State
         _status = status;
         CurrentWidget.OnStatusChange?.Invoke(status);
         SetState(static () => { });
+    }
+
+    private void SetupColor()
+    {
+        _effectiveValueColor = CurrentWidget.Color ?? Theme.Of(Context).ColorScheme.Primary;
+    }
+
+    private Color ResolveValueColor()
+    {
+        if (_effectiveValueColor.A == 0)
+        {
+            return _effectiveValueColor;
+        }
+
+        return WithOpacity(
+            _effectiveValueColor,
+            Math.Clamp(PositionValue * DragSizeFactorLimit, 0.0, 1.0));
     }
 
     private static Color WithOpacity(Color color, double opacity) => Color.FromArgb(

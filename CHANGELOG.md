@@ -1,5 +1,10 @@
 # Changelog
 
+- Breaking: completed the `RefreshIndicator`/`RefreshProgressIndicator` ColorScheme and composition closeout.
+  Default value colors now read `ColorScheme.primary` directly, refresh surfaces use circular `Material`, pull and
+  dismissal use the source two-controller transition tree, and active pulls suppress leading glow/stretch chrome.
+  Added arbitrary-target `AnimationController.AnimateTo`, focused parity coverage, and a mirrored scheme-color probe.
+
 - Breaking: closed Material `Stepper` animation and scrolling parity. Vertical headers now animate into view before
   callbacks, panels/icons/text use the shared 200 ms implicit-animation primitives, horizontal content preserves state
   through `Visibility`, and the retained Flutter `margin` metadata no longer adds non-source layout padding.

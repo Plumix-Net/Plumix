@@ -20,6 +20,7 @@ internal sealed class RefreshIndicatorDemoPageState : State
     private int _variant;
     private bool _useCupertinoPlatform;
     private bool _useThemeOverrides;
+    private bool _useSchemeColor;
     private int _refreshCount;
     private string _status = "idle";
 
@@ -29,6 +30,8 @@ internal sealed class RefreshIndicatorDemoPageState : State
         var theme = baseTheme with
         {
             Platform = _useCupertinoPlatform ? TargetPlatform.IOS : TargetPlatform.Android,
+            PrimaryColor = Color.Parse("#FFFF6F00"),
+            ColorScheme = baseTheme.ColorScheme.CopyWith(primary: Color.Parse("#FF00897B")),
             ProgressIndicatorTheme = _useThemeOverrides
                 ? new ProgressIndicatorThemeData(
                     Color: Color.Parse("#FF6A1B9A"),
@@ -58,6 +61,18 @@ internal sealed class RefreshIndicatorDemoPageState : State
                             BuildButton(_useCupertinoPlatform ? "platform=iOS" : "platform=Android", () => SetState(() => _useCupertinoPlatform = !_useCupertinoPlatform), 132),
                             BuildButton(_useThemeOverrides ? "theme=on" : "theme=off", () => SetState(() => _useThemeOverrides = !_useThemeOverrides), 104),
                         ]),
+                    new Row(
+                        children:
+                        [
+                            BuildButton(
+                                _useSchemeColor ? "color=scheme" : "color=widget",
+                                () => SetState(() => _useSchemeColor = !_useSchemeColor),
+                                126),
+                            new Text(
+                                "scheme teal; legacy primary orange",
+                                fontSize: 12,
+                                color: Color.Parse("#FF607D8B")),
+                        ]),
                     new Text(
                         $"status={_status}, refreshCount={_refreshCount}; drag past the armed threshold, then release",
                         fontSize: 12,
@@ -73,7 +88,7 @@ internal sealed class RefreshIndicatorDemoPageState : State
             1 => RefreshIndicator.Adaptive(
                 onRefresh: HandleRefresh,
                 child: child,
-                color: Color.Parse("#FF1565C0"),
+                color: _useSchemeColor ? null : Color.Parse("#FF1565C0"),
                 semanticsLabel: "Refresh sample list"),
             2 => RefreshIndicator.NoSpinner(
                 onRefresh: HandleRefresh,
@@ -83,7 +98,7 @@ internal sealed class RefreshIndicatorDemoPageState : State
             _ => new RefreshIndicator(
                 onRefresh: HandleRefresh,
                 child: child,
-                color: Color.Parse("#FF1565C0"),
+                color: _useSchemeColor ? null : Color.Parse("#FF1565C0"),
                 backgroundColor: _useThemeOverrides ? null : Colors.White,
                 semanticsLabel: "Refresh sample list"),
         };

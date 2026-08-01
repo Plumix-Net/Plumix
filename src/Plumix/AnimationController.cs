@@ -419,6 +419,12 @@ public sealed class AnimationController : Animation<double>, IDisposable
     private bool _repeat;
     private bool _repeatReverse;
     private FlingSimulation? _flingSimulation;
+    private double? _animateTarget;
+    private double _animateStart;
+    private double _animateElapsedSeconds;
+    private TimeSpan _animateDuration;
+    private Curve _animateCurve = Curves.Linear;
+    private TaskCompletionSource? _animateCompletion;
 
     public AnimationController(TimeSpan duration, ITickerProvider? vsync = null)
     {
@@ -428,6 +434,7 @@ public sealed class AnimationController : Animation<double>, IDisposable
 
     public void Forward(double? from = null)
     {
+        CancelAnimateTo();
         if (from.HasValue) SetValue(from.Value);
         _flingSimulation = null;
         _reversing = false;
@@ -439,6 +446,7 @@ public sealed class AnimationController : Animation<double>, IDisposable
 
     public void Reverse(double? from = null)
     {
+        CancelAnimateTo();
         if (from.HasValue) SetValue(from.Value);
         _flingSimulation = null;
         _reversing = true;
@@ -450,6 +458,7 @@ public sealed class AnimationController : Animation<double>, IDisposable
 
     public void Repeat(bool reverse = false)
     {
+        CancelAnimateTo();
         _flingSimulation = null;
         _repeat = true;
         _repeatReverse = reverse;
@@ -465,6 +474,7 @@ public sealed class AnimationController : Animation<double>, IDisposable
             throw new ArgumentOutOfRangeException(nameof(velocity), "Fling velocity must be finite and non-zero.");
         }
 
+        CancelAnimateTo();
         _reversing = velocity < 0.0;
         _repeat = false;
         _repeatReverse = false;
@@ -476,8 +486,46 @@ public sealed class AnimationController : Animation<double>, IDisposable
         Start();
     }
 
+    public Task AnimateTo(double target, TimeSpan? duration = null, Curve? curve = null)
+    {
+        if (!double.IsFinite(target) || target is < 0.0 or > 1.0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(target), "Animation target must be between 0.0 and 1.0.");
+        }
+
+        if (duration.HasValue && duration.Value < TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(duration));
+        }
+
+        CancelAnimateTo();
+        double distance = Math.Abs(target - _value);
+        TimeSpan effectiveDuration = duration ?? TimeSpan.FromTicks((long)(Duration.Ticks * distance));
+        if (distance <= 0.000001 || effectiveDuration <= TimeSpan.Zero)
+        {
+            _value = target;
+            SetTerminalValueAndStatus(AnimationStatus.Completed);
+            return Task.CompletedTask;
+        }
+
+        _flingSimulation = null;
+        _repeat = false;
+        _repeatReverse = false;
+        _animateStart = _value;
+        _animateTarget = target;
+        _animateElapsedSeconds = 0.0;
+        _animateDuration = effectiveDuration;
+        _animateCurve = curve ?? Curves.Linear;
+        _animateCompletion = new TaskCompletionSource();
+        _reversing = false;
+        SetStatus(AnimationStatus.Forward);
+        Start();
+        return _animateCompletion.Task;
+    }
+
     public void Stop()
     {
+        CancelAnimateTo();
         IsAnimating = false;
         _ticker.Stop();
         _flingSimulation = null;
@@ -528,6 +576,12 @@ public sealed class AnimationController : Animation<double>, IDisposable
 
     private void OnTick(TimeSpan dt)
     {
+        if (_animateTarget.HasValue)
+        {
+            TickAnimateTo(dt);
+            return;
+        }
+
         if (_flingSimulation is not null)
         {
             TickFling(dt);
@@ -591,6 +645,53 @@ public sealed class AnimationController : Animation<double>, IDisposable
     {
         Stop();
         _ticker.Dispose();
+    }
+
+    private void TickAnimateTo(TimeSpan delta)
+    {
+        double target = _animateTarget!.Value;
+        _animateElapsedSeconds += delta.TotalSeconds;
+        double progress = Math.Clamp(
+            _animateElapsedSeconds / _animateDuration.TotalSeconds,
+            0.0,
+            1.0);
+        double transformed = _animateCurve(progress);
+        _value = Math.Clamp(_animateStart + ((target - _animateStart) * transformed), 0.0, 1.0);
+        if (progress < 1.0)
+        {
+            Changed?.Invoke();
+            return;
+        }
+
+        TaskCompletionSource? completion = _animateCompletion;
+        bool reversed = _reversing;
+        ClearAnimateTo();
+        IsAnimating = false;
+        _ticker.Stop();
+        SetTerminalValueAndStatus(reversed ? AnimationStatus.Dismissed : AnimationStatus.Completed);
+        completion?.TrySetResult();
+        if (reversed)
+        {
+            Dismissed?.Invoke();
+        }
+        else
+        {
+            Completed?.Invoke();
+        }
+    }
+
+    private void CancelAnimateTo()
+    {
+        TaskCompletionSource? completion = _animateCompletion;
+        ClearAnimateTo();
+        completion?.TrySetCanceled();
+    }
+
+    private void ClearAnimateTo()
+    {
+        _animateTarget = null;
+        _animateCompletion = null;
+        _animateElapsedSeconds = 0.0;
     }
 
     private void SetStatus(AnimationStatus status)

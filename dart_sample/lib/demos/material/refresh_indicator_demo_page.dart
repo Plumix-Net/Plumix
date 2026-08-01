@@ -12,6 +12,7 @@ class _RefreshIndicatorDemoPageState extends State<RefreshIndicatorDemoPage> {
   int _variant = 0;
   bool _useCupertinoPlatform = false;
   bool _useThemeOverrides = false;
+  bool _useSchemeColor = false;
   int _refreshCount = 0;
   String _status = 'idle';
 
@@ -22,6 +23,10 @@ class _RefreshIndicatorDemoPageState extends State<RefreshIndicatorDemoPage> {
       platform: _useCupertinoPlatform
           ? TargetPlatform.iOS
           : TargetPlatform.android,
+      primaryColor: const Color(0xFFFF6F00),
+      colorScheme: baseTheme.colorScheme.copyWith(
+        primary: const Color(0xFF00897B),
+      ),
       progressIndicatorTheme: _useThemeOverrides
           ? const ProgressIndicatorThemeData(
               color: Color(0xFF6A1B9A),
@@ -69,6 +74,21 @@ class _RefreshIndicatorDemoPageState extends State<RefreshIndicatorDemoPage> {
             ],
           ),
           const SizedBox(height: 8),
+          Row(
+            children: <Widget>[
+              _buildButton(
+                _useSchemeColor ? 'color=scheme' : 'color=widget',
+                () => setState(() => _useSchemeColor = !_useSchemeColor),
+                126,
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                'scheme teal; legacy primary orange',
+                style: TextStyle(fontSize: 12, color: Color(0xFF607D8B)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
           Text(
             'status=$_status, refreshCount=$_refreshCount; '
             'drag past the armed threshold, then release',
@@ -86,7 +106,7 @@ class _RefreshIndicatorDemoPageState extends State<RefreshIndicatorDemoPage> {
       case 1:
         return RefreshIndicator.adaptive(
           onRefresh: _handleRefresh,
-          color: const Color(0xFF1565C0),
+          color: _useSchemeColor ? null : const Color(0xFF1565C0),
           semanticsLabel: 'Refresh sample list',
           child: child,
         );
@@ -102,7 +122,7 @@ class _RefreshIndicatorDemoPageState extends State<RefreshIndicatorDemoPage> {
       default:
         return RefreshIndicator(
           onRefresh: _handleRefresh,
-          color: const Color(0xFF1565C0),
+          color: _useSchemeColor ? null : const Color(0xFF1565C0),
           backgroundColor: _useThemeOverrides ? null : Colors.white,
           semanticsLabel: 'Refresh sample list',
           child: child,
