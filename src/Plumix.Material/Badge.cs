@@ -99,8 +99,8 @@ public sealed class Badge : StatelessWidget
 
         var theme = Theme.Of(context);
         var badgeTheme = BadgeTheme.Of(context);
-        var backgroundColor = BackgroundColor ?? badgeTheme.BackgroundColor ?? theme.ErrorColor;
-        var textColor = TextColor ?? badgeTheme.TextColor ?? theme.OnErrorColor;
+        Color backgroundColor = BackgroundColor ?? badgeTheme.BackgroundColor ?? theme.ColorScheme.Error;
+        Color textColor = TextColor ?? badgeTheme.TextColor ?? theme.ColorScheme.OnError;
         bool hasLabel = Label is not null;
         double widthOffset = hasLabel
             ? LargeSize ?? badgeTheme.LargeSize ?? 16.0
@@ -284,7 +284,7 @@ internal sealed class RenderBadgePositioner : RenderProxyBox
         }
 
         Child.Layout(new BoxConstraints(), parentUsesSize: true);
-        var alignmentSpace = new Size(Math.Max(0, Size.Width - WidthOffset), Size.Height);
+        var alignmentSpace = new Size(Size.Width - WidthOffset, Size.Height);
         Alignment resolvedAlignment = Alignment.Resolve(TextDirection);
         var location = resolvedAlignment.AlongOffset(alignmentSpace, new Size()) + Offset;
         if (HasLabel)

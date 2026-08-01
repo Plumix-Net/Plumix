@@ -1,5 +1,9 @@
 # Changelog
 
+- Breaking: completed the Material `Badge` ColorScheme/layout closeout. M3 defaults now read `error` and `onError`
+  roles directly, narrow decorated children preserve Flutter's negative alignment space, and focused tests plus the
+  mirrored runtime probe cover generated-token precedence and large-label stadium geometry.
+
 - Breaking: closed `TickerMode` parity. The widget now composes a state-owned effective inherited mode with nested
   enabled/force-frame AND/OR semantics, merge/value/notifier APIs, reparent-safe ticker providers, and scheduler-level
   muting that preserves elapsed time without requesting hidden-subtree frames. Framework animation controllers now

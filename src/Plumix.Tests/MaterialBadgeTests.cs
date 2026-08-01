@@ -22,12 +22,17 @@ public sealed class MaterialBadgeTests
     }
 
     [Fact]
-    public void Badge_DefaultLabeledStyle_UsesErrorTokensAndLabelSmall()
+    public void Badge_DefaultLabeledStyle_UsesColorSchemeErrorTokensAndLabelSmall()
     {
         var theme = ThemeData.Light with
         {
             ErrorColor = Colors.OrangeRed,
             OnErrorColor = Colors.MidnightBlue,
+            ColorScheme = ThemeData.Light.ColorScheme with
+            {
+                Error = Colors.Crimson,
+                OnError = Colors.LightBlue,
+            },
             TextTheme = new MaterialTextTheme(
                 labelSmall: new TextStyle(FontSize: 9, FontWeight: FontWeight.Bold)),
         };
@@ -50,8 +55,8 @@ public sealed class MaterialBadgeTests
         Assert.NotNull(paragraph);
         Assert.Equal(9, paragraph!.FontSize);
         Assert.Equal(FontWeight.Bold, paragraph.FontWeight);
-        Assert.Equal(Colors.MidnightBlue, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color);
-        Assert.Contains(decorations, box => box.Decoration.Color == Colors.OrangeRed);
+        Assert.Equal(Colors.LightBlue, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color);
+        Assert.Contains(decorations, box => box.Decoration.Color == Colors.Crimson);
     }
 
     [Fact]
@@ -201,6 +206,42 @@ public sealed class MaterialBadgeTests
         Assert.Equal(0, mixedLtr.X, precision: 6);
         Assert.Equal(-1, mixedRtl.X, precision: 6);
         Assert.Equal(-1, mixedLtr.Y, precision: 6);
+        Assert.Equal(new BadgeThemeData(), BadgeThemeData.Lerp(null, null, 0.0));
+        Assert.Same(begin, BadgeThemeData.Lerp(begin, begin, 0.5));
+    }
+
+    [Fact]
+    public void Badge_LabeledAlignmentPreservesNegativeWidthOffsetForNarrowChild()
+    {
+        using var harness = BuildBadgeHarness(
+            TextDirection.Ltr,
+            new Badge(
+                alignment: Alignment.TopRight,
+                offset: new Vector(0, -8),
+                label: new SizedBox(width: 1, height: 1),
+                child: new SizedBox(width: 4, height: 4)));
+
+        harness.Pump(new Size(100, 100));
+
+        RenderBadgePositioner positioner = FindDescendant<RenderBadgePositioner>(harness.RenderView)!;
+        Point badgeOffset = ((BoxParentData)positioner.Child!.parentData!).offset;
+
+        Assert.Equal(-12, badgeOffset.X, precision: 6);
+    }
+
+    [Fact]
+    public void RenderBadgeHorizontalStadium_ExpandsBeyondLargeSizeForLargeContent()
+    {
+        var content = new RenderConstrainedBox(
+            BoxConstraints.TightFor(width: 38, height: 30));
+        var stadium = new RenderBadgeHorizontalStadium(16)
+        {
+            Child = content,
+        };
+
+        stadium.Layout(new BoxConstraints(MaxWidth: 100, MaxHeight: 100));
+
+        Assert.Equal(new Size(38, 30), stadium.Size);
     }
 
     [Fact]

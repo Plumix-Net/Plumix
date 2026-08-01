@@ -75,6 +75,8 @@
     clip/border-order behavior, local theme copy/lerp).
   - `Divider`/`VerticalDivider` (direct M2/M3 roles, source container/border composition, hairlines, directional
     indents/radii, inherited theme copy/lerp).
+  - `Badge` (direct M3 error/on-error roles, generated-default precedence, negative narrow-child alignment space,
+    large-label stadium geometry, and inherited theme copy/lerp).
 - Add `Typography.Material2014`/`Material2018`, exact platform black/white themes, dense/tall geometry, and locale
   script-category selection.
 - Remove the narrowed `ColorScheme + Typography closeout` row from `docs/MATERIAL_TODO.md` only after those checks

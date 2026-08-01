@@ -79,6 +79,22 @@ class _BadgeTooltipDemoPageState extends State<BadgeTooltipDemoPage> {
                 ),
               ),
               _probe(
+                'Scheme tokens',
+                Theme(
+                  data: Theme.of(context).copyWith(
+                    colorScheme: Theme.of(context).colorScheme.copyWith(
+                      error: const Color(0xFF00639B),
+                      onError: Colors.white,
+                    ),
+                  ),
+                  child: Badge(
+                    label: const Text('M3'),
+                    isLabelVisible: _isLabelVisible,
+                    child: const Icon(Icons.info_outline, size: 32),
+                  ),
+                ),
+              ),
+              _probe(
                 'Widget override',
                 Badge(
                   backgroundColor: const Color(0xFF00695C),

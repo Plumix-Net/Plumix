@@ -72,6 +72,21 @@ internal sealed class BadgeTooltipDemoPageState : State
                             Probe("Small", new Badge(
                                 isLabelVisible: _isLabelVisible,
                                 child: new Icon(Icons.StarOutline, size: 32))),
+                            Probe(
+                                "Scheme tokens",
+                                new Theme(
+                                    Theme.Of(context) with
+                                    {
+                                        ColorScheme = Theme.Of(context).ColorScheme with
+                                        {
+                                            Error = Color.Parse("#FF00639B"),
+                                            OnError = Colors.White,
+                                        },
+                                    },
+                                    new Badge(
+                                        label: new Text("M3"),
+                                        isLabelVisible: _isLabelVisible,
+                                        child: new Icon(Icons.InfoOutline, size: 32)))),
                             Probe("Widget override", new Badge(
                                 backgroundColor: Color.Parse("#FF00695C"),
                                 textColor: Colors.White,
