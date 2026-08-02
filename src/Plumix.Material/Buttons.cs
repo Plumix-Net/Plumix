@@ -24,6 +24,12 @@ public sealed class TextButton : StatelessWidget
         ButtonStyle? style = null,
         FocusNode? focusNode = null,
         bool autofocus = false,
+        Action? onLongPress = null,
+        Action<bool>? onHover = null,
+        Action<bool>? onFocusChange = null,
+        Clip? clipBehavior = null,
+        MaterialStatesController? statesController = null,
+        bool? isSemanticButton = true,
         Key? key = null) : this(
             child: child,
             onPressed: onPressed,
@@ -36,6 +42,12 @@ public sealed class TextButton : StatelessWidget
             style: style,
             focusNode: focusNode,
             autofocus: autofocus,
+            onLongPress: onLongPress,
+            onHover: onHover,
+            onFocusChange: onFocusChange,
+            clipBehavior: clipBehavior,
+            statesController: statesController,
+            isSemanticButton: isSemanticButton,
             applyIconFactoryPadding: false,
             key: key)
     {
@@ -53,6 +65,12 @@ public sealed class TextButton : StatelessWidget
         ButtonStyle? style,
         FocusNode? focusNode,
         bool autofocus,
+        Action? onLongPress,
+        Action<bool>? onHover,
+        Action<bool>? onFocusChange,
+        Clip? clipBehavior,
+        MaterialStatesController? statesController,
+        bool? isSemanticButton,
         bool applyIconFactoryPadding,
         Key? key) : base(key)
     {
@@ -68,6 +86,12 @@ public sealed class TextButton : StatelessWidget
         Style = style;
         FocusNode = focusNode;
         Autofocus = autofocus;
+        OnLongPress = onLongPress;
+        OnHover = onHover;
+        OnFocusChange = onFocusChange;
+        ClipBehavior = clipBehavior;
+        StatesController = statesController;
+        IsSemanticButton = isSemanticButton;
         ApplyIconFactoryPadding = applyIconFactoryPadding;
     }
 
@@ -95,6 +119,18 @@ public sealed class TextButton : StatelessWidget
 
     public bool Autofocus { get; }
 
+    public Action? OnLongPress { get; }
+
+    public Action<bool>? OnHover { get; }
+
+    public Action<bool>? OnFocusChange { get; }
+
+    public Clip? ClipBehavior { get; }
+
+    public MaterialStatesController? StatesController { get; }
+
+    public bool? IsSemanticButton { get; }
+
     private bool ApplyIconFactoryPadding { get; }
 
     public static TextButton Icon(
@@ -111,6 +147,11 @@ public sealed class TextButton : StatelessWidget
         IconAlignment? iconAlignment = null,
         FocusNode? focusNode = null,
         bool autofocus = false,
+        Action? onLongPress = null,
+        Action<bool>? onHover = null,
+        Action<bool>? onFocusChange = null,
+        Clip? clipBehavior = Clip.None,
+        MaterialStatesController? statesController = null,
         Key? key = null)
     {
         return new TextButton(
@@ -132,6 +173,12 @@ public sealed class TextButton : StatelessWidget
             style: style,
             focusNode: focusNode,
             autofocus: autofocus,
+            onLongPress: onLongPress,
+            onHover: onHover,
+            onFocusChange: onFocusChange,
+            clipBehavior: clipBehavior,
+            statesController: statesController,
+            isSemanticButton: true,
             applyIconFactoryPadding: icon is not null,
             key: key);
     }
@@ -246,7 +293,13 @@ public sealed class TextButton : StatelessWidget
             child: Child,
             onPressed: OnPressed,
             style: mergedStyle,
+            onLongPress: OnLongPress,
+            onHoverChanged: OnHover,
+            onFocusChange: OnFocusChange,
             focusNode: FocusNode,
+            statesController: StatesController,
+            isSemanticButton: IsSemanticButton ?? false,
+            clipBehavior: ClipBehavior ?? Clip.None,
             autofocus: Autofocus);
     }
 
@@ -259,8 +312,9 @@ public sealed class TextButton : StatelessWidget
         bool applyIconFactoryPadding)
     {
         bool useMaterial3 = theme.UseMaterial3;
-        var stateColor = theme.PrimaryColor;
-        double pressedFocusedOverlayOpacity = useMaterial3 ? 0.10 : 0.12;
+        ColorScheme colorScheme = theme.ColorScheme;
+        Color stateColor = colorScheme.Primary;
+        double pressedFocusedOverlayOpacity = 0.10;
         double resolvedMinHeight = hasExplicitMinHeight ? minHeight : useMaterial3 ? 40 : 36;
         double effectiveTextScale = MaterialButtonCore.ResolvePaddingFontSizeMultiplier(
             context,
@@ -292,23 +346,38 @@ public sealed class TextButton : StatelessWidget
         return new ButtonStyle(
             ForegroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
                 states.HasFlag(MaterialState.Disabled)
-                    ? MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.38)
+                    ? MaterialButtonCore.ApplyOpacity(colorScheme.OnSurface, 0.38)
                     : stateColor),
             BackgroundColor: MaterialStateProperty<Color?>.All(null),
             ShadowColor: MaterialStateProperty<Color?>.All(useMaterial3 ? Colors.Transparent : theme.ShadowColor),
+            SurfaceTintColor: useMaterial3
+                ? MaterialStateProperty<Color?>.All(Colors.Transparent)
+                : null,
             OverlayColor: MaterialButtonCore.CreateDefaultOverlayResolver(stateColor, pressedFocusedOverlayOpacity),
             SplashColor: null,
-            IconColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                states.HasFlag(MaterialState.Disabled)
-                    ? MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.38)
-                    : stateColor),
-            IconSize: MaterialStateProperty<double?>.All(18),
+            Elevation: MaterialStateProperty<double?>.All(0),
+            IconColor: useMaterial3
+                ? MaterialStateProperty<Color?>.ResolveWith(states =>
+                    states.HasFlag(MaterialState.Disabled)
+                        ? MaterialButtonCore.ApplyOpacity(colorScheme.OnSurface, 0.38)
+                        : stateColor)
+                : null,
+            IconSize: useMaterial3 ? MaterialStateProperty<double?>.All(18) : null,
             Side: MaterialStateProperty<BorderSide?>.All(null),
             Padding: MaterialStateProperty<Thickness?>.All(defaultPadding),
             Shape: MaterialStateProperty<BorderRadius?>.All(defaultShape),
             MinimumSize: MaterialStateProperty<Size?>.All(new Size(minWidth, resolvedMinHeight)),
+            MaximumSize: MaterialStateProperty<Size?>.All(
+                new Size(double.PositiveInfinity, double.PositiveInfinity)),
+            MouseCursor: MaterialStateProperty<MouseCursor?>.ResolveWith(states =>
+                states.HasFlag(MaterialState.Disabled) || !useMaterial3
+                    ? SystemMouseCursors.Basic
+                    : SystemMouseCursors.Click),
+            VisualDensity: theme.VisualDensity,
             TapTargetSize: theme.MaterialTapTargetSize,
-            TextStyle: MaterialStateProperty<TextStyle?>.All(theme.TextTheme.LabelLarge));
+            TextStyle: MaterialStateProperty<TextStyle?>.All(theme.TextTheme.LabelLarge),
+            EnableFeedback: true,
+            SplashFactory: useMaterial3 ? theme.SplashFactory : InkRipple.SplashFactory);
     }
 
     private ButtonStyle? CreateLegacyStyleOverrides(ThemeData theme)
@@ -325,7 +394,7 @@ public sealed class TextButton : StatelessWidget
             ForegroundColor: ForegroundColor.HasValue
                 ? MaterialStateProperty<Color?>.ResolveWith(states =>
                     states.HasFlag(MaterialState.Disabled)
-                        ? MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.38)
+                        ? MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnSurface, 0.38)
                         : ForegroundColor.Value)
                 : null,
             BackgroundColor: BackgroundColor.HasValue
@@ -2307,6 +2376,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
                 label: widget.SemanticLabel,
                 flags: ResolveSemanticsFlags(widget, enabled),
                 onTap: tapCallback,
+                onLongPress: longPressCallback,
                 child: tapTargetResult);
         }
 

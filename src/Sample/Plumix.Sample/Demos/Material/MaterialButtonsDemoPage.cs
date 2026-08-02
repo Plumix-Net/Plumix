@@ -81,6 +81,7 @@ internal sealed class MaterialButtonsDemoPageState : State
                     child: new TextButton(
                         onPressed: _enabled ? OnTextButtonTap : null,
                         child: new Text($"TextButton taps: {_textButtonTaps}"))),
+                BuildTextButtonSchemeProbe(context),
                 new SizedBox(
                     width: 240,
                     child: new ElevatedButton(
@@ -156,6 +157,35 @@ internal sealed class MaterialButtonsDemoPageState : State
                                 child: new Text("Custom tonal"))),
                     ]),
             ]);
+    }
+
+    private Widget BuildTextButtonSchemeProbe(BuildContext context)
+    {
+        ThemeData inherited = Theme.Of(context);
+        ColorScheme scheme = inherited.ColorScheme.CopyWith(
+            primary: Color.Parse("#FF006A6A"),
+            onSurface: Color.Parse("#FF4D2A6A"));
+        ThemeData probeTheme = inherited with
+        {
+            PrimaryColor = Colors.OrangeRed,
+            ColorScheme = scheme
+        };
+
+        return new Theme(
+            data: probeTheme,
+            child: new Row(
+                spacing: 8,
+                children:
+                [
+                    new Expanded(
+                        child: new TextButton(
+                            onPressed: _enabled ? OnTextButtonTap : null,
+                            child: new Text("Scheme primary"))),
+                    new Expanded(
+                        child: new TextButton(
+                            onPressed: null,
+                            child: new Text("Scheme disabled"))),
+                ]));
     }
 
     private Widget BuildControlButton(

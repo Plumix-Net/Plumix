@@ -38,12 +38,13 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
-    public void TextButton_UsesThemePrimaryColorAsDefaultForeground()
+    public void TextButton_M3DefaultForeground_ReadsColorSchemePrimaryDirectly()
     {
         var owner = new BuildOwner();
         var theme = ThemeData.Light with
         {
-            PrimaryColor = Colors.OrangeRed
+            PrimaryColor = Colors.OrangeRed,
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(primary: Colors.DarkCyan)
         };
 
         var root = new TestRootElement(
@@ -59,17 +60,18 @@ public sealed class MaterialButtonsTests
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(paragraph);
-        Assert.Equal(Colors.OrangeRed, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+        Assert.Equal(Colors.DarkCyan, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
     }
 
     [Fact]
-    public void TextButton_UseMaterial3Disabled_UsesThemePrimaryColorAsDefaultForeground()
+    public void TextButton_M2DefaultForeground_ReadsColorSchemePrimaryDirectly()
     {
         var owner = new BuildOwner();
         var theme = ThemeData.Light with
         {
             UseMaterial3 = false,
-            PrimaryColor = Colors.OrangeRed
+            PrimaryColor = Colors.OrangeRed,
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(primary: Colors.DarkCyan)
         };
 
         var root = new TestRootElement(
@@ -85,7 +87,37 @@ public sealed class MaterialButtonsTests
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(paragraph);
-        Assert.Equal(Colors.OrangeRed, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+        Assert.Equal(Colors.DarkCyan, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void TextButton_DisabledDefaultForeground_ReadsColorSchemeOnSurfaceDirectly(bool useMaterial3)
+    {
+        var owner = new BuildOwner();
+        var theme = ThemeData.Light with
+        {
+            UseMaterial3 = useMaterial3,
+            OnSurfaceColor = Colors.DarkSlateGray,
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(onSurface: Colors.MidnightBlue)
+        };
+        var root = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: new TextButton(
+                    onPressed: null,
+                    child: new Text("Disabled"))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(paragraph);
+        Assert.Equal(
+            ApplyOpacity(theme.ColorScheme.OnSurface, 0.38),
+            Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
     }
 
     [Fact]
@@ -94,7 +126,8 @@ public sealed class MaterialButtonsTests
         var owner = new BuildOwner();
         var theme = ThemeData.Light with
         {
-            PrimaryColor = Colors.OrangeRed
+            PrimaryColor = Colors.OrangeRed,
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(primary: Colors.DarkCyan)
         };
         IconThemeData? capturedTheme = null;
 
@@ -110,8 +143,65 @@ public sealed class MaterialButtonsTests
         owner.FlushBuild();
 
         Assert.NotNull(capturedTheme);
-        Assert.Equal(Colors.OrangeRed, capturedTheme!.Color);
+        Assert.Equal(Colors.DarkCyan, capturedTheme!.Color);
         Assert.Equal(18, capturedTheme.Size);
+    }
+
+    [Fact]
+    public void TextButton_ConstructorsExposeCallbacksStateAndSemanticSurface()
+    {
+        var statesController = new MaterialStatesController();
+        var focusNode = new FocusNode();
+        bool longPressed = false;
+        Action<bool> hover = _ => { };
+        Action<bool> focusChange = _ => { };
+        var button = new TextButton(
+            child: new Text("Hold"),
+            onPressed: null,
+            onLongPress: () => longPressed = true,
+            onHover: hover,
+            onFocusChange: focusChange,
+            focusNode: focusNode,
+            autofocus: true,
+            clipBehavior: Clip.AntiAlias,
+            statesController: statesController,
+            isSemanticButton: null);
+
+        Assert.NotNull(button.OnLongPress);
+        Assert.Same(hover, button.OnHover);
+        Assert.Same(focusChange, button.OnFocusChange);
+        Assert.Same(focusNode, button.FocusNode);
+        Assert.True(button.Autofocus);
+        Assert.Equal(Clip.AntiAlias, button.ClipBehavior);
+        Assert.Same(statesController, button.StatesController);
+        Assert.Null(button.IsSemanticButton);
+
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light,
+                child: new Directionality(TextDirection.Ltr, button)));
+        var semantics = harness.PumpAndGetSemantics(new Size(120, 80));
+        var actionNode = FindSemantics(
+            semantics,
+            node => node.Actions.HasFlag(SemanticsActions.LongPress));
+        Assert.NotNull(actionNode);
+        Assert.False(actionNode!.Flags.HasFlag(SemanticsFlags.IsButton));
+        Assert.True(actionNode.PerformAction(SemanticsActions.LongPress));
+        Assert.True(longPressed);
+    }
+
+    [Fact]
+    public void TextButtonTheme_WrapPreservesThemeData()
+    {
+        var data = new TextButtonThemeData(
+            style: TextButton.StyleFrom(foregroundColor: Colors.DarkCyan));
+        Widget child = new Text("Captured");
+        var theme = new TextButtonTheme(data, child);
+
+        var wrapped = Assert.IsType<TextButtonTheme>(theme.Wrap(default, child));
+
+        Assert.Same(data, wrapped.Data);
+        Assert.Same(child, wrapped.Child);
     }
 
     [Fact]
@@ -2579,6 +2669,7 @@ public sealed class MaterialButtonsTests
         var theme = ThemeData.Light with
         {
             PrimaryColor = Colors.OrangeRed,
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(primary: Colors.OrangeRed),
             TextButtonStyle = new ButtonStyle(
                 ForegroundColor: MaterialStateProperty<Color?>.All(Colors.DarkCyan))
         };
@@ -2833,6 +2924,7 @@ public sealed class MaterialButtonsTests
         var theme = ThemeData.Light with
         {
             PrimaryColor = Colors.OrangeRed,
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(primary: Colors.OrangeRed),
             TextButtonStyle = new ButtonStyle(
                 ForegroundColor: MaterialStateProperty<Color?>.All(Colors.DarkCyan))
         };
@@ -2896,6 +2988,7 @@ public sealed class MaterialButtonsTests
         var theme = ThemeData.Light with
         {
             PrimaryColor = Colors.OrangeRed,
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(primary: Colors.OrangeRed),
             TextButtonStyle = new ButtonStyle(
                 ForegroundColor: MaterialStateProperty<Color?>.All(Colors.DarkCyan))
         };
@@ -3461,7 +3554,8 @@ public sealed class MaterialButtonsTests
         var owner = new BuildOwner();
         var theme = ThemeData.Light with
         {
-            OnSurfaceColor = Colors.MidnightBlue
+            OnSurfaceColor = Colors.DarkSlateGray,
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(onSurface: Colors.MidnightBlue)
         };
 
         var root = new TestRootElement(
@@ -3478,7 +3572,9 @@ public sealed class MaterialButtonsTests
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(paragraph);
-        Assert.Equal(ApplyOpacity(theme.OnSurfaceColor, 0.38), Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+        Assert.Equal(
+            ApplyOpacity(theme.ColorScheme.OnSurface, 0.38),
+            Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
     }
 
     [Fact]
@@ -3513,7 +3609,8 @@ public sealed class MaterialButtonsTests
         var owner = new BuildOwner();
         var theme = ThemeData.Light with
         {
-            PrimaryColor = Colors.Crimson
+            PrimaryColor = Colors.DarkCyan,
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(primary: Colors.Crimson)
         };
 
         var root = new TestRootElement(
@@ -3530,7 +3627,7 @@ public sealed class MaterialButtonsTests
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(paragraph);
-        Assert.Equal(theme.PrimaryColor, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+        Assert.Equal(theme.ColorScheme.Primary, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
     }
 
     [Fact]
@@ -3565,7 +3662,8 @@ public sealed class MaterialButtonsTests
         var owner = new BuildOwner();
         var theme = ThemeData.Light with
         {
-            PrimaryColor = Colors.MediumPurple
+            PrimaryColor = Colors.DarkCyan,
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(primary: Colors.MediumPurple)
         };
 
         var root = new TestRootElement(
@@ -3584,7 +3682,7 @@ public sealed class MaterialButtonsTests
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(paragraph);
-        Assert.Equal(theme.PrimaryColor, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+        Assert.Equal(theme.ColorScheme.Primary, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
     }
 
     [Fact]
@@ -3927,7 +4025,8 @@ public sealed class MaterialButtonsTests
         var owner = new BuildOwner();
         var theme = ThemeData.Light with
         {
-            PrimaryColor = Colors.OrangeRed
+            PrimaryColor = Colors.OrangeRed,
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(primary: Colors.OrangeRed)
         };
 
         var pressedOverlay = Colors.YellowGreen;
@@ -4271,7 +4370,8 @@ public sealed class MaterialButtonsTests
         var owner = new BuildOwner();
         var theme = ThemeData.Light with
         {
-            PrimaryColor = Colors.IndianRed
+            PrimaryColor = Colors.IndianRed,
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(primary: Colors.IndianRed)
         };
 
         var root = new TestRootElement(
@@ -4330,7 +4430,8 @@ public sealed class MaterialButtonsTests
         var owner = new BuildOwner();
         var theme = ThemeData.Light with
         {
-            PrimaryColor = Colors.CornflowerBlue
+            PrimaryColor = Colors.CornflowerBlue,
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(primary: Colors.CornflowerBlue)
         };
 
         var root = new TestRootElement(
@@ -4402,7 +4503,8 @@ public sealed class MaterialButtonsTests
         var owner = new BuildOwner();
         var theme = ThemeData.Light with
         {
-            PrimaryColor = Colors.MediumSeaGreen
+            PrimaryColor = Colors.MediumSeaGreen,
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(primary: Colors.MediumSeaGreen)
         };
 
         var root = new TestRootElement(
@@ -4639,7 +4741,8 @@ public sealed class MaterialButtonsTests
         var owner = new BuildOwner();
         var theme = ThemeData.Light with
         {
-            PrimaryColor = Colors.DeepPink
+            PrimaryColor = Colors.DeepPink,
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(primary: Colors.DeepPink)
         };
 
         var root = new TestRootElement(
@@ -4689,7 +4792,7 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
-    public void TextButton_DefaultOverlay_UseMaterial3Disabled_UsesPressedFocusedOpacity012()
+    public void TextButton_M2DefaultOverlay_UsesExecutablePressedFocusedOpacity010()
     {
         FocusManager.Instance.ResetForTests();
 
@@ -4697,7 +4800,8 @@ public sealed class MaterialButtonsTests
         var theme = ThemeData.Light with
         {
             UseMaterial3 = false,
-            PrimaryColor = Colors.DeepPink
+            PrimaryColor = Colors.OrangeRed,
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(primary: Colors.DeepPink)
         };
         var focusNode = new FocusNode();
 
@@ -4718,7 +4822,7 @@ public sealed class MaterialButtonsTests
 
         var focusedDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(focusedDecorated);
-        Assert.Equal(ApplyOpacity(theme.PrimaryColor, 0.12), focusedDecorated!.Decoration.Color);
+        Assert.Equal(ApplyOpacity(theme.ColorScheme.Primary, 0.10), focusedDecorated!.Decoration.Color);
 
         var interactiveListener = FindInteractivePointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(interactiveListener);
@@ -4734,7 +4838,7 @@ public sealed class MaterialButtonsTests
 
         var pressedDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(pressedDecorated);
-        Assert.Equal(ApplyOpacity(theme.PrimaryColor, 0.12), pressedDecorated!.Decoration.Color);
+        Assert.Equal(ApplyOpacity(theme.ColorScheme.Primary, 0.10), pressedDecorated!.Decoration.Color);
 
         root.Unmount();
         FocusManager.Instance.ResetForTests();
@@ -5088,7 +5192,7 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
-    public void TextButton_UsesRoundedClipForInkSplash()
+    public void TextButton_HasNoClipByDefault_ButInkRemainsContained()
     {
         var owner = new BuildOwner();
         var root = new TestRootElement(
@@ -5106,14 +5210,13 @@ public sealed class MaterialButtonsTests
         var clip = FindDescendant<RenderClipRRect>(renderRoot);
         var splash = FindInkPaint(renderRoot);
 
-        Assert.NotNull(clip);
-        Assert.Equal(BorderRadius.Circular(20), clip!.BorderRadius);
+        Assert.Null(clip);
         Assert.NotNull(splash);
         Assert.True(splash!.ContainedInkWell);
     }
 
     [Fact]
-    public void TextButton_UsesRoundedClipRadius4_WhenUseMaterial3Disabled()
+    public void TextButton_ExplicitClip_UsesResolvedM2Radius4()
     {
         var owner = new BuildOwner();
         var root = new TestRootElement(
@@ -5121,6 +5224,7 @@ public sealed class MaterialButtonsTests
                 data: ThemeData.Light with { UseMaterial3 = false },
                 child: new TextButton(
                     onPressed: () => { },
+                    clipBehavior: Clip.AntiAlias,
                     child: new Text("Rounded splash"))));
 
         root.Attach(owner);
@@ -6146,6 +6250,14 @@ public sealed class MaterialButtonsTests
             _pipeline.FlushPaint();
         }
 
+        public SemanticsNode? PumpAndGetSemantics(Size size)
+        {
+            Pump(size);
+            _pipeline.RequestSemanticsUpdate();
+            _pipeline.FlushSemantics();
+            return _pipeline.SemanticsOwner.RootNode;
+        }
+
         public T FindState<T>() where T : State
         {
             T? result = null;
@@ -6271,6 +6383,32 @@ public sealed class MaterialButtonsTests
                 base.Unmount();
             }
         }
+    }
+
+    private static SemanticsNode? FindSemantics(
+        SemanticsNode? node,
+        Func<SemanticsNode, bool> predicate)
+    {
+        if (node is null)
+        {
+            return null;
+        }
+
+        if (predicate(node))
+        {
+            return node;
+        }
+
+        foreach (SemanticsNode child in node.Children)
+        {
+            SemanticsNode? match = FindSemantics(child, predicate);
+            if (match is not null)
+            {
+                return match;
+            }
+        }
+
+        return null;
     }
 
     private static Color ApplyOpacity(Color color, double opacity)

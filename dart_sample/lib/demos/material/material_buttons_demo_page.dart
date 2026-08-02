@@ -79,6 +79,7 @@ class _MaterialButtonsDemoPageState extends State<MaterialButtonsDemoPage> {
             child: Text('TextButton taps: $_textButtonTaps'),
           ),
         ),
+        _buildTextButtonSchemeProbe(context),
         SizedBox(
           width: 240,
           child: ElevatedButton(
@@ -184,6 +185,36 @@ class _MaterialButtonsDemoPageState extends State<MaterialButtonsDemoPage> {
           ],
         ),
       ],
+    );
+  }
+
+  Widget _buildTextButtonSchemeProbe(BuildContext context) {
+    final ThemeData inherited = Theme.of(context);
+    final ColorScheme scheme = inherited.colorScheme.copyWith(
+      primary: const Color(0xFF006A6A),
+      onSurface: const Color(0xFF4D2A6A),
+    );
+    final ThemeData probeTheme = inherited.copyWith(
+      primaryColor: Colors.deepOrange,
+      colorScheme: scheme,
+    );
+
+    return Theme(
+      data: probeTheme,
+      child: Row(
+        spacing: 8,
+        children: <Widget>[
+          Expanded(
+            child: TextButton(
+              onPressed: _enabled ? _onTextButtonTap : null,
+              child: const Text('Scheme primary'),
+            ),
+          ),
+          const Expanded(
+            child: TextButton(onPressed: null, child: Text('Scheme disabled')),
+          ),
+        ],
+      ),
     );
   }
 

@@ -81,6 +81,8 @@
     two-controller transition composition, leading overscroll-chrome suppression, and runtime color updates).
   - `CircleAvatar` (direct M3 primary-container/on-primary-container roles, exact M2 brightness fallback,
     circular image layering, and implicit color/diameter transitions).
+  - `TextButton` (direct M2/M3 primary/on-surface roles, executable overlay opacities, generated M3 icon defaults,
+    inherited theme capture, and source callback/state/semantic plumbing).
 - Add `Typography.Material2014`/`Material2018`, exact platform black/white themes, dense/tall geometry, and locale
   script-category selection.
 - Remove the narrowed `ColorScheme + Typography closeout` row from `docs/MATERIAL_TODO.md` only after those checks

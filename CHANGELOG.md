@@ -1,5 +1,10 @@
 # Changelog
 
+- Breaking: completed the `TextButton` ColorScheme/theme closeout. M2 and M3 foreground, disabled, icon, and
+  overlay defaults now read `ColorScheme.primary`/`onSurface` directly; M2 follows the pinned executable 0.10
+  pressed/focused opacity. Added source callback/state/semantic plumbing, inherited-theme capture, focused tests,
+  and a mirrored direct-scheme runtime probe.
+
 - Breaking: completed the `CircleAvatar` ColorScheme closeout. Material 3 foreground/background defaults now read
   `onPrimaryContainer`/`primaryContainer` directly, with focused precedence and Material 2 brightness coverage plus
   a mirrored local-scheme demo probe.

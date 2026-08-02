@@ -81,7 +81,7 @@ public sealed record IconButtonThemeData
     }
 }
 
-public sealed class TextButtonTheme : InheritedWidget
+public sealed class TextButtonTheme : InheritedTheme
 {
     public TextButtonTheme(
         TextButtonThemeData data,
@@ -99,6 +99,11 @@ public sealed class TextButtonTheme : InheritedWidget
     public override Widget Build(BuildContext context)
     {
         return Child;
+    }
+
+    public override Widget Wrap(BuildContext context, Widget child)
+    {
+        return new TextButtonTheme(Data, child);
     }
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
