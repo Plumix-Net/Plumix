@@ -1,5 +1,9 @@
 # Changelog
 
+- Breaking: completed the `FilledButton`/tonal ColorScheme and API closeout. Defaults now read the exact primary,
+  secondary-container, on-surface, and shadow roles; callbacks, state controllers, clipping, cursor/density/timing,
+  layer builders, inherited-theme capture, focused coverage, and the mirrored direct-scheme probe match Flutter.
+
 - Breaking: completed the `OutlinedButton` ColorScheme/theme closeout. M2/M3 foreground, disabled, overlay,
   outline, tint, icon, cursor, density, and timing defaults now match Flutter; constructor callbacks/state/semantics
   and inherited-theme capture are source-shaped. Added focused coverage and a mirrored direct-scheme probe.

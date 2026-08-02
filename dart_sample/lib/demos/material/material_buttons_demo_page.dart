@@ -110,6 +110,7 @@ class _MaterialButtonsDemoPageState extends State<MaterialButtonsDemoPage> {
             child: Text('FilledButton.tonal taps: $_filledTonalButtonTaps'),
           ),
         ),
+        _buildFilledButtonSchemeProbe(context),
         Row(
           spacing: 8,
           children: <Widget>[
@@ -284,6 +285,46 @@ class _MaterialButtonsDemoPageState extends State<MaterialButtonsDemoPage> {
               onPressed: null,
               child: Text('Scheme outlined off'),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilledButtonSchemeProbe(BuildContext context) {
+    final ThemeData inherited = Theme.of(context);
+    final ColorScheme scheme = inherited.colorScheme.copyWith(
+      primary: const Color(0xFF0057B8),
+      onPrimary: Colors.white,
+      secondaryContainer: const Color(0xFFD8E2FF),
+      onSecondaryContainer: const Color(0xFF001A41),
+      onSurface: const Color(0xFF3F3F46),
+      shadow: const Color(0xFF16233A),
+    );
+    final ThemeData probeTheme = inherited.copyWith(
+      primaryColor: Colors.deepOrange,
+      colorScheme: scheme,
+    );
+
+    return Theme(
+      data: probeTheme,
+      child: Row(
+        spacing: 8,
+        children: <Widget>[
+          Expanded(
+            child: FilledButton(
+              onPressed: _enabled ? _onFilledButtonTap : null,
+              child: const Text('Scheme filled'),
+            ),
+          ),
+          Expanded(
+            child: FilledButton.tonal(
+              onPressed: _enabled ? _onFilledTonalButtonTap : null,
+              child: const Text('Scheme tonal'),
+            ),
+          ),
+          const Expanded(
+            child: FilledButton(onPressed: null, child: Text('Scheme off')),
           ),
         ],
       ),

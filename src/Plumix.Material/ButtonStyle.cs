@@ -28,6 +28,8 @@ public enum IconAlignment
     End
 }
 
+public delegate Widget ButtonLayerBuilder(BuildContext context, MaterialState states, Widget? child);
+
 public sealed class MaterialStatesController : ChangeNotifier
 {
     private MaterialState _value;
@@ -128,7 +130,9 @@ public sealed record ButtonStyle(
     VisualDensity? VisualDensity = null,
     TimeSpan? AnimationDuration = null,
     bool? EnableFeedback = null,
-    InteractiveInkFeatureFactory? SplashFactory = null)
+    InteractiveInkFeatureFactory? SplashFactory = null,
+    ButtonLayerBuilder? BackgroundBuilder = null,
+    ButtonLayerBuilder? ForegroundBuilder = null)
 {
     public static ButtonStyle? Lerp(ButtonStyle? a, ButtonStyle? b, double t)
     {
@@ -168,7 +172,9 @@ public sealed record ButtonStyle(
                 ? a?.AnimationDuration
                 : b?.AnimationDuration,
             EnableFeedback: clampedT < 0.5 ? a?.EnableFeedback : b?.EnableFeedback,
-            SplashFactory: clampedT < 0.5 ? a?.SplashFactory : b?.SplashFactory);
+            SplashFactory: clampedT < 0.5 ? a?.SplashFactory : b?.SplashFactory,
+            BackgroundBuilder: clampedT < 0.5 ? a?.BackgroundBuilder : b?.BackgroundBuilder,
+            ForegroundBuilder: clampedT < 0.5 ? a?.ForegroundBuilder : b?.ForegroundBuilder);
     }
 
     public ButtonStyle Merge(ButtonStyle? style)
@@ -203,7 +209,9 @@ public sealed record ButtonStyle(
             VisualDensity = VisualDensity ?? style.VisualDensity,
             AnimationDuration = AnimationDuration ?? style.AnimationDuration,
             EnableFeedback = EnableFeedback ?? style.EnableFeedback,
-            SplashFactory = SplashFactory ?? style.SplashFactory
+            SplashFactory = SplashFactory ?? style.SplashFactory,
+            BackgroundBuilder = BackgroundBuilder ?? style.BackgroundBuilder,
+            ForegroundBuilder = ForegroundBuilder ?? style.ForegroundBuilder
         };
     }
 

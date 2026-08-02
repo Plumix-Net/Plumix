@@ -104,6 +104,7 @@ internal sealed class MaterialButtonsDemoPageState : State
                     child: FilledButton.Tonal(
                         onPressed: _enabled ? OnFilledTonalButtonTap : null,
                         child: new Text($"FilledButton.tonal taps: {_filledTonalButtonTaps}"))),
+                BuildFilledButtonSchemeProbe(context),
                 new Row(
                     spacing: 8,
                     children:
@@ -251,6 +252,46 @@ internal sealed class MaterialButtonsDemoPageState : State
                         child: new OutlinedButton(
                             onPressed: null,
                             child: new Text("Scheme outlined off"))),
+                ]));
+    }
+
+    private Widget BuildFilledButtonSchemeProbe(BuildContext context)
+    {
+        ThemeData inherited = Theme.Of(context);
+        ColorScheme scheme = inherited.ColorScheme.CopyWith(
+            primary: Color.Parse("#FF0057B8"),
+            onPrimary: Colors.White,
+            secondaryContainer: Color.Parse("#FFD8E2FF"),
+            onSecondaryContainer: Color.Parse("#FF001A41"),
+            onSurface: Color.Parse("#FF3F3F46"),
+            shadow: Color.Parse("#FF16233A"));
+        ThemeData probeTheme = inherited with
+        {
+            PrimaryColor = Colors.OrangeRed,
+            OnPrimaryColor = Colors.Gold,
+            SecondaryContainerColor = Colors.Bisque,
+            OnSecondaryContainerColor = Colors.DarkSlateBlue,
+            ColorScheme = scheme
+        };
+
+        return new Theme(
+            data: probeTheme,
+            child: new Row(
+                spacing: 8,
+                children:
+                [
+                    new Expanded(
+                        child: new FilledButton(
+                            onPressed: _enabled ? OnFilledButtonTap : null,
+                            child: new Text("Scheme filled"))),
+                    new Expanded(
+                        child: FilledButton.Tonal(
+                            onPressed: _enabled ? OnFilledTonalButtonTap : null,
+                            child: new Text("Scheme tonal"))),
+                    new Expanded(
+                        child: new FilledButton(
+                            onPressed: null,
+                            child: new Text("Scheme off"))),
                 ]));
     }
 

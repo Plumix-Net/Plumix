@@ -119,3 +119,105 @@ public sealed class IconTheme : InheritedTheme
             child: child));
     }
 }
+
+public sealed class AnimatedIconTheme : StatefulWidget
+{
+    public AnimatedIconTheme(
+        IconThemeData data,
+        Widget child,
+        TimeSpan duration,
+        Curve? curve = null,
+        Action? onEnd = null,
+        Key? key = null) : base(key)
+    {
+        if (duration < TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(duration));
+        }
+
+        Data = data ?? throw new ArgumentNullException(nameof(data));
+        Child = child ?? throw new ArgumentNullException(nameof(child));
+        Duration = duration;
+        Curve = curve ?? Curves.Linear;
+        OnEnd = onEnd;
+    }
+
+    public IconThemeData Data { get; }
+
+    public Widget Child { get; }
+
+    public TimeSpan Duration { get; }
+
+    public Curve Curve { get; }
+
+    public Action? OnEnd { get; }
+
+    public override State CreateState()
+    {
+        return new AnimatedIconThemeState();
+    }
+
+    private sealed class AnimatedIconThemeState : State
+    {
+        private AnimationController? _controller;
+        private IconThemeData _begin = null!;
+        private IconThemeData _end = null!;
+
+        private AnimatedIconTheme CurrentWidget => (AnimatedIconTheme)StateWidget;
+
+        public override void InitState()
+        {
+            _begin = _end = CurrentWidget.Data;
+            _controller = new AnimationController(CurrentWidget.Duration, this)
+            {
+                Curve = CurrentWidget.Curve
+            };
+            _controller.Changed += HandleChanged;
+            _controller.Completed += HandleCompleted;
+        }
+
+        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        {
+            _controller!.Duration = CurrentWidget.Duration;
+            _controller.Curve = CurrentWidget.Curve;
+            IconThemeData current = IconThemeData.Lerp(_begin, _end, _controller.Evaluate());
+            if (!Equals(CurrentWidget.Data, _end))
+            {
+                _begin = current;
+                _end = CurrentWidget.Data;
+                _controller.Forward(from: 0.0);
+            }
+        }
+
+        public override Widget Build(BuildContext context)
+        {
+            IconThemeData data = IconThemeData.Lerp(_begin, _end, _controller!.Evaluate());
+            return new IconTheme(data, CurrentWidget.Child);
+        }
+
+        public override void Dispose()
+        {
+            _controller!.Changed -= HandleChanged;
+            _controller.Completed -= HandleCompleted;
+            _controller.Dispose();
+            _controller = null;
+        }
+
+        private void HandleChanged()
+        {
+            if (Mounted)
+            {
+                SetState(() => { });
+            }
+        }
+
+        private void HandleCompleted()
+        {
+            if (Mounted)
+            {
+                SetState(() => { });
+                CurrentWidget.OnEnd?.Invoke();
+            }
+        }
+    }
+}

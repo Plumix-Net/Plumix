@@ -207,7 +207,7 @@ public sealed class OutlinedButtonTheme : InheritedTheme
     }
 }
 
-public sealed class FilledButtonTheme : InheritedWidget
+public sealed class FilledButtonTheme : InheritedTheme
 {
     public FilledButtonTheme(
         FilledButtonThemeData data,
@@ -225,6 +225,11 @@ public sealed class FilledButtonTheme : InheritedWidget
     public override Widget Build(BuildContext context)
     {
         return Child;
+    }
+
+    public override Widget Wrap(BuildContext context, Widget child)
+    {
+        return new FilledButtonTheme(Data, child);
     }
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
