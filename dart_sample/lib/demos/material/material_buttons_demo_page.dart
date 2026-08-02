@@ -87,6 +87,7 @@ class _MaterialButtonsDemoPageState extends State<MaterialButtonsDemoPage> {
             child: Text('ElevatedButton taps: $_elevatedButtonTaps'),
           ),
         ),
+        _buildElevatedButtonSchemeProbe(context),
         SizedBox(
           width: 240,
           child: OutlinedButton(
@@ -212,6 +213,42 @@ class _MaterialButtonsDemoPageState extends State<MaterialButtonsDemoPage> {
           ),
           const Expanded(
             child: TextButton(onPressed: null, child: Text('Scheme disabled')),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildElevatedButtonSchemeProbe(BuildContext context) {
+    final ThemeData inherited = Theme.of(context);
+    final ColorScheme scheme = inherited.colorScheme.copyWith(
+      primary: const Color(0xFF425F2D),
+      onPrimary: Colors.white,
+      surfaceContainerLow: const Color(0xFFE8F2DD),
+      onSurface: const Color(0xFF392E21),
+      shadow: const Color(0xFF2F3B26),
+    );
+    final ThemeData probeTheme = inherited.copyWith(
+      primaryColor: Colors.deepOrange,
+      colorScheme: scheme,
+    );
+
+    return Theme(
+      data: probeTheme,
+      child: Row(
+        spacing: 8,
+        children: <Widget>[
+          Expanded(
+            child: ElevatedButton(
+              onPressed: _enabled ? _onElevatedButtonTap : null,
+              child: const Text('Scheme elevated'),
+            ),
+          ),
+          const Expanded(
+            child: ElevatedButton(
+              onPressed: null,
+              child: Text('Scheme elevated off'),
+            ),
           ),
         ],
       ),

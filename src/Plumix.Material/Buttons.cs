@@ -432,6 +432,12 @@ public sealed class ElevatedButton : StatelessWidget
         ButtonStyle? style = null,
         FocusNode? focusNode = null,
         bool autofocus = false,
+        Action? onLongPress = null,
+        Action<bool>? onHover = null,
+        Action<bool>? onFocusChange = null,
+        Clip? clipBehavior = null,
+        MaterialStatesController? statesController = null,
+        bool? isSemanticButton = true,
         Key? key = null) : this(
             child: child,
             onPressed: onPressed,
@@ -444,6 +450,12 @@ public sealed class ElevatedButton : StatelessWidget
             style: style,
             focusNode: focusNode,
             autofocus: autofocus,
+            onLongPress: onLongPress,
+            onHover: onHover,
+            onFocusChange: onFocusChange,
+            clipBehavior: clipBehavior,
+            statesController: statesController,
+            isSemanticButton: isSemanticButton,
             applyIconFactoryPadding: false,
             key: key)
     {
@@ -461,6 +473,12 @@ public sealed class ElevatedButton : StatelessWidget
         ButtonStyle? style,
         FocusNode? focusNode,
         bool autofocus,
+        Action? onLongPress,
+        Action<bool>? onHover,
+        Action<bool>? onFocusChange,
+        Clip? clipBehavior,
+        MaterialStatesController? statesController,
+        bool? isSemanticButton,
         bool applyIconFactoryPadding,
         Key? key) : base(key)
     {
@@ -476,6 +494,12 @@ public sealed class ElevatedButton : StatelessWidget
         Style = style;
         FocusNode = focusNode;
         Autofocus = autofocus;
+        OnLongPress = onLongPress;
+        OnHover = onHover;
+        OnFocusChange = onFocusChange;
+        ClipBehavior = clipBehavior;
+        StatesController = statesController;
+        IsSemanticButton = isSemanticButton;
         ApplyIconFactoryPadding = applyIconFactoryPadding;
     }
 
@@ -503,6 +527,18 @@ public sealed class ElevatedButton : StatelessWidget
 
     public bool Autofocus { get; }
 
+    public Action? OnLongPress { get; }
+
+    public Action<bool>? OnHover { get; }
+
+    public Action<bool>? OnFocusChange { get; }
+
+    public Clip? ClipBehavior { get; }
+
+    public MaterialStatesController? StatesController { get; }
+
+    public bool? IsSemanticButton { get; }
+
     private bool ApplyIconFactoryPadding { get; }
 
     public static ElevatedButton Icon(
@@ -519,6 +555,11 @@ public sealed class ElevatedButton : StatelessWidget
         IconAlignment? iconAlignment = null,
         FocusNode? focusNode = null,
         bool autofocus = false,
+        Action? onLongPress = null,
+        Action<bool>? onHover = null,
+        Action<bool>? onFocusChange = null,
+        Clip? clipBehavior = Clip.None,
+        MaterialStatesController? statesController = null,
         Key? key = null)
     {
         return new ElevatedButton(
@@ -540,6 +581,12 @@ public sealed class ElevatedButton : StatelessWidget
             style: style,
             focusNode: focusNode,
             autofocus: autofocus,
+            onLongPress: onLongPress,
+            onHover: onHover,
+            onFocusChange: onFocusChange,
+            clipBehavior: clipBehavior,
+            statesController: statesController,
+            isSemanticButton: true,
             applyIconFactoryPadding: icon is not null,
             key: key);
     }
@@ -564,6 +611,11 @@ public sealed class ElevatedButton : StatelessWidget
         Size? fixedSize = null,
         Size? maximumSize = null,
         double? elevation = null,
+        MouseCursor? enabledMouseCursor = null,
+        MouseCursor? disabledMouseCursor = null,
+        VisualDensity? visualDensity = null,
+        TimeSpan? animationDuration = null,
+        bool? enableFeedback = null,
         Alignment? alignment = null,
         IconAlignment? iconAlignment = null,
         MaterialTapTargetSize? tapTargetSize = null,
@@ -632,6 +684,13 @@ public sealed class ElevatedButton : StatelessWidget
             MaximumSize: maximumSize.HasValue
                 ? MaterialStateProperty<Size?>.All(maximumSize.Value)
                 : null,
+            MouseCursor: MaterialStateProperty<MouseCursor?>.ResolveWith(states =>
+                states.HasFlag(MaterialState.Disabled)
+                    ? disabledMouseCursor
+                    : enabledMouseCursor),
+            VisualDensity: visualDensity,
+            AnimationDuration: animationDuration,
+            EnableFeedback: enableFeedback,
             Alignment: alignment,
             IconAlignment: iconAlignment,
             TapTargetSize: tapTargetSize,
@@ -657,7 +716,13 @@ public sealed class ElevatedButton : StatelessWidget
             child: Child,
             onPressed: OnPressed,
             style: mergedStyle,
+            onLongPress: OnLongPress,
+            onHoverChanged: OnHover,
+            onFocusChange: OnFocusChange,
             focusNode: FocusNode,
+            statesController: StatesController,
+            isSemanticButton: IsSemanticButton ?? false,
+            clipBehavior: ClipBehavior ?? Clip.None,
             autofocus: Autofocus);
     }
 
@@ -670,8 +735,9 @@ public sealed class ElevatedButton : StatelessWidget
         bool applyIconFactoryPadding)
     {
         bool useMaterial3 = theme.UseMaterial3;
-        var enabledForeground = useMaterial3 ? theme.PrimaryColor : theme.OnPrimaryColor;
-        var enabledBackground = useMaterial3 ? theme.SurfaceContainerLowColor : theme.PrimaryColor;
+        ColorScheme colorScheme = theme.ColorScheme;
+        Color enabledForeground = useMaterial3 ? colorScheme.Primary : colorScheme.OnPrimary;
+        Color enabledBackground = useMaterial3 ? colorScheme.SurfaceContainerLow : colorScheme.Primary;
         double pressedFocusedOverlayOpacity = useMaterial3 ? 0.10 : 0.12;
         double resolvedMinHeight = hasExplicitMinHeight ? minHeight : useMaterial3 ? 40 : 36;
         double effectiveTextScale = MaterialButtonCore.ResolvePaddingFontSizeMultiplier(
@@ -704,20 +770,25 @@ public sealed class ElevatedButton : StatelessWidget
         return new ButtonStyle(
             ForegroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
                 states.HasFlag(MaterialState.Disabled)
-                    ? MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.38)
+                    ? MaterialButtonCore.ApplyOpacity(colorScheme.OnSurface, 0.38)
                     : enabledForeground),
             BackgroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
                 states.HasFlag(MaterialState.Disabled)
-                    ? MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.12)
+                    ? MaterialButtonCore.ApplyOpacity(colorScheme.OnSurface, 0.12)
                     : enabledBackground),
-            ShadowColor: MaterialStateProperty<Color?>.All(theme.ShadowColor),
+            ShadowColor: MaterialStateProperty<Color?>.All(useMaterial3 ? colorScheme.Shadow : theme.ShadowColor),
+            SurfaceTintColor: useMaterial3
+                ? MaterialStateProperty<Color?>.All(Colors.Transparent)
+                : null,
             OverlayColor: MaterialButtonCore.CreateDefaultOverlayResolver(enabledForeground, pressedFocusedOverlayOpacity),
             SplashColor: null,
-            IconColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                states.HasFlag(MaterialState.Disabled)
-                    ? MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.38)
-                    : enabledForeground),
-            IconSize: MaterialStateProperty<double?>.All(18),
+            IconColor: useMaterial3
+                ? MaterialStateProperty<Color?>.ResolveWith(states =>
+                    states.HasFlag(MaterialState.Disabled)
+                        ? MaterialButtonCore.ApplyOpacity(colorScheme.OnSurface, 0.38)
+                        : colorScheme.Primary)
+                : null,
+            IconSize: useMaterial3 ? MaterialStateProperty<double?>.All(18) : null,
             Elevation: MaterialStateProperty<double?>.ResolveWith(states =>
                 states.HasFlag(MaterialState.Disabled)
                     ? 0
@@ -734,8 +805,19 @@ public sealed class ElevatedButton : StatelessWidget
             Padding: MaterialStateProperty<Thickness?>.All(defaultPadding),
             Shape: MaterialStateProperty<BorderRadius?>.All(defaultShape),
             MinimumSize: MaterialStateProperty<Size?>.All(new Size(minWidth, resolvedMinHeight)),
+            MaximumSize: MaterialStateProperty<Size?>.All(
+                new Size(double.PositiveInfinity, double.PositiveInfinity)),
+            Alignment: Alignment.Center,
+            MouseCursor: MaterialStateProperty<MouseCursor?>.ResolveWith(states =>
+                states.HasFlag(MaterialState.Disabled) || !OperatingSystem.IsBrowser()
+                    ? SystemMouseCursors.Basic
+                    : SystemMouseCursors.Click),
+            VisualDensity: theme.VisualDensity,
             TapTargetSize: theme.MaterialTapTargetSize,
-            TextStyle: MaterialStateProperty<TextStyle?>.All(theme.TextTheme.LabelLarge));
+            TextStyle: MaterialStateProperty<TextStyle?>.All(theme.TextTheme.LabelLarge),
+            AnimationDuration: TimeSpan.FromMilliseconds(200),
+            EnableFeedback: true,
+            SplashFactory: useMaterial3 ? theme.SplashFactory : InkRipple.SplashFactory);
     }
 
     private ButtonStyle? CreateLegacyStyleOverrides(ThemeData theme)
@@ -752,13 +834,13 @@ public sealed class ElevatedButton : StatelessWidget
             ForegroundColor: ForegroundColor.HasValue
                 ? MaterialStateProperty<Color?>.ResolveWith(states =>
                     states.HasFlag(MaterialState.Disabled)
-                        ? MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.38)
+                        ? MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnSurface, 0.38)
                         : ForegroundColor.Value)
                 : null,
             BackgroundColor: BackgroundColor.HasValue
                 ? MaterialStateProperty<Color?>.ResolveWith(states =>
                     states.HasFlag(MaterialState.Disabled)
-                        ? MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.12)
+                        ? MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnSurface, 0.12)
                         : BackgroundColor.Value)
                 : null,
             OverlayColor: ForegroundColor.HasValue

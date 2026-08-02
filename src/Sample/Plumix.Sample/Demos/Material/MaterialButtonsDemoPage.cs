@@ -87,6 +87,7 @@ internal sealed class MaterialButtonsDemoPageState : State
                     child: new ElevatedButton(
                         onPressed: _enabled ? OnElevatedButtonTap : null,
                         child: new Text($"ElevatedButton taps: {_elevatedButtonTaps}"))),
+                BuildElevatedButtonSchemeProbe(context),
                 new SizedBox(
                     width: 240,
                     child: new OutlinedButton(
@@ -185,6 +186,39 @@ internal sealed class MaterialButtonsDemoPageState : State
                         child: new TextButton(
                             onPressed: null,
                             child: new Text("Scheme disabled"))),
+                ]));
+    }
+
+    private Widget BuildElevatedButtonSchemeProbe(BuildContext context)
+    {
+        ThemeData inherited = Theme.Of(context);
+        ColorScheme scheme = inherited.ColorScheme.CopyWith(
+            primary: Color.Parse("#FF425F2D"),
+            onPrimary: Color.Parse("#FFFFFFFF"),
+            surfaceContainerLow: Color.Parse("#FFE8F2DD"),
+            onSurface: Color.Parse("#FF392E21"),
+            shadow: Color.Parse("#FF2F3B26"));
+        ThemeData probeTheme = inherited with
+        {
+            PrimaryColor = Colors.OrangeRed,
+            SurfaceContainerLowColor = Colors.Bisque,
+            ColorScheme = scheme
+        };
+
+        return new Theme(
+            data: probeTheme,
+            child: new Row(
+                spacing: 8,
+                children:
+                [
+                    new Expanded(
+                        child: new ElevatedButton(
+                            onPressed: _enabled ? OnElevatedButtonTap : null,
+                            child: new Text("Scheme elevated"))),
+                    new Expanded(
+                        child: new ElevatedButton(
+                            onPressed: null,
+                            child: new Text("Scheme elevated off"))),
                 ]));
     }
 

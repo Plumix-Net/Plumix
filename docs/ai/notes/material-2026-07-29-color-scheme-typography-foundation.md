@@ -83,6 +83,8 @@
     circular image layering, and implicit color/diameter transitions).
   - `TextButton` (direct M2/M3 primary/on-surface roles, executable overlay opacities, generated M3 icon defaults,
     inherited theme capture, and source callback/state/semantic plumbing).
+  - `ElevatedButton` (direct M2/M3 primary/on-primary/surface-container/on-surface/shadow roles, generated M3
+    tint/icon defaults, source animation/cursor/density metadata, callbacks/state/semantics, and theme capture).
 - Add `Typography.Material2014`/`Material2018`, exact platform black/white themes, dense/tall geometry, and locale
   script-category selection.
 - Remove the narrowed `ColorScheme + Typography closeout` row from `docs/MATERIAL_TODO.md` only after those checks

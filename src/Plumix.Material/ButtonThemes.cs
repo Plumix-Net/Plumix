@@ -123,7 +123,7 @@ public sealed class TextButtonTheme : InheritedTheme
     }
 }
 
-public sealed class ElevatedButtonTheme : InheritedWidget
+public sealed class ElevatedButtonTheme : InheritedTheme
 {
     public ElevatedButtonTheme(
         ElevatedButtonThemeData data,
@@ -141,6 +141,11 @@ public sealed class ElevatedButtonTheme : InheritedWidget
     public override Widget Build(BuildContext context)
     {
         return Child;
+    }
+
+    public override Widget Wrap(BuildContext context, Widget child)
+    {
+        return new ElevatedButtonTheme(Data, child);
     }
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)

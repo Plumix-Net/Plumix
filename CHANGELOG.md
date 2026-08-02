@@ -1,5 +1,9 @@
 # Changelog
 
+- Breaking: completed the `ElevatedButton` ColorScheme/theme closeout. M2/M3 enabled, disabled, overlay,
+  shadow, tint, and icon defaults now read the exact Flutter roles; constructor callbacks/state/semantics, style
+  metadata, and inherited-theme capture match the source. Added focused coverage and a mirrored scheme probe.
+
 - Breaking: completed the strict `GridTileBar` Dart closeout. The control now uses source-shaped directional
   padding, inherited row/column/text direction, and `IconTheme.Merge`; shared `Padding`, `Flex`, and `Text`
   primitives now resolve omitted direction from `Directionality`. Added constructor, RTL, zero-area, layout,
