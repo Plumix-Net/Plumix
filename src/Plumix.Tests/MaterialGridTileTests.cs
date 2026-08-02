@@ -171,6 +171,22 @@ public sealed class MaterialGridTileTests
         Assert.Equal(TextDirection.Rtl, FindParagraph(harness.RenderView, "عنوان")!.TextDirection);
     }
 
+    [Fact]
+    public void GridTileBar_ZeroArea_DoesNotCrashAndRemainsZeroSized()
+    {
+        using var harness = new WidgetRenderHarness(
+            new Directionality(
+                TextDirection.Ltr,
+                new SizedBox(
+                    width: 0,
+                    height: 0,
+                    child: new GridTileBar(title: new Text("X")))));
+
+        harness.Pump(new Size(300, 100));
+
+        Assert.Equal(new Size(0, 0), Assert.IsAssignableFrom<RenderBox>(harness.RenderView.Child).Size);
+    }
+
     private static RenderParagraph? FindParagraph(RenderObject? root, string text)
     {
         return FindDescendants<RenderParagraph>(root).FirstOrDefault(paragraph => paragraph.Text == text);

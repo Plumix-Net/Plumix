@@ -22,7 +22,7 @@ public sealed class Text : LeafRenderObjectWidget
         bool? softWrap = null,
         int? maxLines = null,
         TextOverflow? overflow = null,
-        TextDirection textDirection = TextDirection.Ltr,
+        TextDirection? textDirection = null,
         TextWidthBasis? textWidthBasis = null,
         TextHeightBehavior? textHeightBehavior = null,
         Key? key = null,
@@ -75,7 +75,7 @@ public sealed class Text : LeafRenderObjectWidget
 
     public TextOverflow? Overflow { get; }
 
-    public TextDirection TextDirection { get; }
+    public TextDirection? TextDirection { get; }
 
     public TextWidthBasis? TextWidthBasis { get; }
 
@@ -93,7 +93,7 @@ public sealed class Text : LeafRenderObjectWidget
             SoftWrap = SoftWrap ?? defaultTextStyle?.SoftWrap ?? true,
             MaxLines = defaultTextStyle?.MaxLines ?? MaxLines,
             Overflow = Overflow ?? defaultTextStyle?.Overflow ?? TextOverflow.Clip,
-            TextDirection = TextDirection,
+            TextDirection = TextDirection ?? Directionality.Of(context),
             TextWidthBasis = TextWidthBasis ?? defaultTextStyle?.TextWidthBasis ?? Plumix.UI.TextWidthBasis.Parent,
             TextHeightBehavior = TextHeightBehavior ?? defaultTextStyle?.TextHeightBehavior,
             TextDecorations = TextDecorations,
@@ -120,7 +120,7 @@ public sealed class Text : LeafRenderObjectWidget
         paragraph.SoftWrap = SoftWrap ?? defaultTextStyle?.SoftWrap ?? true;
         paragraph.MaxLines = defaultTextStyle?.MaxLines ?? MaxLines;
         paragraph.Overflow = Overflow ?? defaultTextStyle?.Overflow ?? TextOverflow.Clip;
-        paragraph.TextDirection = TextDirection;
+        paragraph.TextDirection = TextDirection ?? Directionality.Of(context);
         paragraph.TextWidthBasis = TextWidthBasis
             ?? defaultTextStyle?.TextWidthBasis
             ?? Plumix.UI.TextWidthBasis.Parent;

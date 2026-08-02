@@ -357,21 +357,35 @@ public sealed class AbsorbPointer : SingleChildRenderObjectWidget
 
 public sealed class Padding : SingleChildRenderObjectWidget
 {
-    public Padding(Thickness insets, Widget? child = null, Key? key = null) : base(child, key)
+    public Padding(Thickness insets, Widget? child = null, Key? key = null) : this(
+        insets: (EdgeInsetsGeometry)insets,
+        child: child,
+        key: key)
     {
-        Insets = insets;
     }
 
-    public Thickness Insets { get; }
+    public Padding(EdgeInsetsGeometry insets, Widget? child = null, Key? key = null) : base(child, key)
+    {
+        InsetsGeometry = insets;
+    }
+
+    public Thickness Insets => InsetsGeometry.Resolve(TextDirection.Ltr);
+
+    public EdgeInsetsGeometry InsetsGeometry { get; }
 
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
-        return new RenderPadding(Insets);
+        return new RenderPadding(ResolveInsets(context));
     }
 
     internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
-        ((RenderPadding)renderObject).Padding = Insets;
+        ((RenderPadding)renderObject).Padding = ResolveInsets(context);
+    }
+
+    private Thickness ResolveInsets(BuildContext context)
+    {
+        return InsetsGeometry.Resolve(Directionality.Of(context));
     }
 }
 
@@ -1017,13 +1031,14 @@ public class Flex : MultiChildRenderObjectWidget
 
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
+        TextDirection? effectiveTextDirection = TextDirection ?? Directionality.MaybeOf(context);
         return new RenderFlex(
             children: null,
             direction: Direction,
             mainAxisSize: MainAxisSize,
             mainAxisAlignment: MainAxisAlignment,
             crossAxisAlignment: CrossAxisAlignment,
-            textDirection: TextDirection,
+            textDirection: effectiveTextDirection,
             textBaseline: TextBaseline,
             spacing: Spacing);
     }
@@ -1035,7 +1050,7 @@ public class Flex : MultiChildRenderObjectWidget
         flex.MainAxisSize = MainAxisSize;
         flex.MainAxisAlignment = MainAxisAlignment;
         flex.CrossAxisAlignment = CrossAxisAlignment;
-        flex.TextDirection = TextDirection;
+        flex.TextDirection = TextDirection ?? Directionality.MaybeOf(context);
         flex.TextBaseline = TextBaseline;
         flex.Spacing = Spacing;
     }

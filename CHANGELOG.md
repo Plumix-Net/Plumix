@@ -1,5 +1,10 @@
 # Changelog
 
+- Breaking: completed the strict `GridTileBar` Dart closeout. The control now uses source-shaped directional
+  padding, inherited row/column/text direction, and `IconTheme.Merge`; shared `Padding`, `Flex`, and `Text`
+  primitives now resolve omitted direction from `Directionality`. Added constructor, RTL, zero-area, layout,
+  typography, icon, background, and overlay coverage against the pinned Flutter tests.
+
 - Breaking: closed core scroll input-policy parity. `ScrollBehavior` now selects Flutter's base/iOS/macOS
   velocity trackers per pointer, drag recognizers honor custom tracker builders, and mouse-wheel axes flip for the
   configured logical modifiers while trackpads remain unchanged. Pointer-scroll responses now report accepted versus

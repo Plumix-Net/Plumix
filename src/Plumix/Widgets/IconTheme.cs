@@ -19,6 +19,16 @@ public sealed record IconThemeData(
         return new IconThemeData(color ?? Color, size ?? Size, opacity ?? Opacity);
     }
 
+    public IconThemeData Merge(IconThemeData? other)
+    {
+        return other is null
+            ? this
+            : CopyWith(
+                color: other.Color,
+                size: other.Size,
+                opacity: other.Opacity);
+    }
+
     public static IconThemeData Lerp(IconThemeData? a, IconThemeData? b, double t)
     {
         if (ReferenceEquals(a, b) && a is not null)
@@ -96,5 +106,16 @@ public sealed class IconTheme : InheritedTheme
     public static IconThemeData Of(BuildContext context)
     {
         return context.DependOnInherited<IconTheme>()?.Data ?? IconThemeData.Fallback;
+    }
+
+    public static Widget Merge(
+        IconThemeData data,
+        Widget child,
+        Key? key = null)
+    {
+        return new Builder(context => new IconTheme(
+            key: key,
+            data: Of(context).Merge(data),
+            child: child));
     }
 }
