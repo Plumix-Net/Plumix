@@ -186,17 +186,26 @@ public abstract class PointerSignalEvent : PointerEvent
 
 public sealed class PointerScrollEvent : PointerSignalEvent
 {
+    private readonly Action<bool>? _onRespond;
+
     public PointerScrollEvent(
         int pointer,
         PointerDeviceKind kind,
         Point position,
         PointerButtons buttons,
         Point scrollDelta,
-        DateTime timestampUtc)
+        DateTime timestampUtc,
+        Action<bool>? onRespond = null)
         : base(pointer, kind, position, buttons, timestampUtc)
     {
         ScrollDelta = scrollDelta;
+        _onRespond = onRespond;
     }
 
     public Point ScrollDelta { get; }
+
+    public void Respond(bool allowPlatformDefault)
+    {
+        _onRespond?.Invoke(allowPlatformDefault);
+    }
 }

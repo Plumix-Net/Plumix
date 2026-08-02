@@ -1118,8 +1118,12 @@ public sealed class MaterialScaffoldTests
 
             var start = new DateTime(2026, 4, 12, 8, 0, 0, DateTimeKind.Utc);
             DispatchPointerDown(binding, harness.RenderView, pointer: 7101, position: new Point(2, 120), timestampUtc: start);
-            DispatchPointerMove(binding, harness.RenderView, pointer: 7101, position: new Point(80, 120), timestampUtc: start.AddMilliseconds(100));
-            DispatchPointerUp(binding, harness.RenderView, pointer: 7101, position: new Point(260, 120), timestampUtc: start.AddMilliseconds(150));
+            DispatchPointerMove(
+                binding, harness.RenderView, 7101, new Point(40, 120), start.AddMilliseconds(30));
+            DispatchPointerMove(
+                binding, harness.RenderView, 7101, new Point(80, 120), start.AddMilliseconds(60));
+            DispatchPointerUp(
+                binding, harness.RenderView, 7101, new Point(260, 120), start.AddMilliseconds(90));
             harness.Pump(size);
 
             double now = Scheduler.CurrentSeconds;
@@ -1174,8 +1178,12 @@ public sealed class MaterialScaffoldTests
 
             var start = new DateTime(2026, 4, 12, 8, 1, 0, DateTimeKind.Utc);
             DispatchPointerDown(binding, harness.RenderView, pointer: 7102, position: new Point(240, 120), timestampUtc: start);
-            DispatchPointerMove(binding, harness.RenderView, pointer: 7102, position: new Point(220, 120), timestampUtc: start.AddMilliseconds(100));
-            DispatchPointerUp(binding, harness.RenderView, pointer: 7102, position: new Point(40, 120), timestampUtc: start.AddMilliseconds(150));
+            DispatchPointerMove(
+                binding, harness.RenderView, 7102, new Point(220, 120), start.AddMilliseconds(30));
+            DispatchPointerMove(
+                binding, harness.RenderView, 7102, new Point(180, 120), start.AddMilliseconds(60));
+            DispatchPointerUp(
+                binding, harness.RenderView, 7102, new Point(40, 120), start.AddMilliseconds(90));
             harness.Pump(size);
 
             now = Scheduler.CurrentSeconds;
@@ -1359,8 +1367,12 @@ public sealed class MaterialScaffoldTests
 
             var start = new DateTime(2026, 4, 12, 8, 5, 0, DateTimeKind.Utc);
             DispatchPointerDown(binding, harness.RenderView, pointer: 7111, position: new Point(398, 120), timestampUtc: start);
-            DispatchPointerMove(binding, harness.RenderView, pointer: 7111, position: new Point(320, 120), timestampUtc: start.AddMilliseconds(100));
-            DispatchPointerUp(binding, harness.RenderView, pointer: 7111, position: new Point(120, 120), timestampUtc: start.AddMilliseconds(150));
+            DispatchPointerMove(
+                binding, harness.RenderView, 7111, new Point(360, 120), start.AddMilliseconds(30));
+            DispatchPointerMove(
+                binding, harness.RenderView, 7111, new Point(320, 120), start.AddMilliseconds(60));
+            DispatchPointerUp(
+                binding, harness.RenderView, 7111, new Point(120, 120), start.AddMilliseconds(90));
             harness.Pump(size);
 
             double now = Scheduler.CurrentSeconds;
@@ -1415,8 +1427,12 @@ public sealed class MaterialScaffoldTests
 
             var start = new DateTime(2026, 4, 12, 8, 6, 0, DateTimeKind.Utc);
             DispatchPointerDown(binding, harness.RenderView, pointer: 7112, position: new Point(160, 120), timestampUtc: start);
-            DispatchPointerMove(binding, harness.RenderView, pointer: 7112, position: new Point(180, 120), timestampUtc: start.AddMilliseconds(100));
-            DispatchPointerUp(binding, harness.RenderView, pointer: 7112, position: new Point(360, 120), timestampUtc: start.AddMilliseconds(150));
+            DispatchPointerMove(
+                binding, harness.RenderView, 7112, new Point(180, 120), start.AddMilliseconds(30));
+            DispatchPointerMove(
+                binding, harness.RenderView, 7112, new Point(220, 120), start.AddMilliseconds(60));
+            DispatchPointerUp(
+                binding, harness.RenderView, 7112, new Point(360, 120), start.AddMilliseconds(90));
             harness.Pump(size);
 
             now = Scheduler.CurrentSeconds;
@@ -1556,8 +1572,12 @@ public sealed class MaterialScaffoldTests
 
             var startOpenAt = new DateTime(2026, 5, 3, 9, 0, 0, DateTimeKind.Utc);
             DispatchPointerDown(binding, harness.RenderView, pointer: 7121, position: new Point(2, 120), timestampUtc: startOpenAt);
-            DispatchPointerMove(binding, harness.RenderView, pointer: 7121, position: new Point(80, 120), timestampUtc: startOpenAt.AddMilliseconds(100));
-            DispatchPointerUp(binding, harness.RenderView, pointer: 7121, position: new Point(260, 120), timestampUtc: startOpenAt.AddMilliseconds(150));
+            DispatchPointerMove(
+                binding, harness.RenderView, 7121, new Point(40, 120), startOpenAt.AddMilliseconds(30));
+            DispatchPointerMove(
+                binding, harness.RenderView, 7121, new Point(80, 120), startOpenAt.AddMilliseconds(60));
+            DispatchPointerUp(
+                binding, harness.RenderView, 7121, new Point(260, 120), startOpenAt.AddMilliseconds(90));
             harness.Pump(size);
 
             double now = Scheduler.CurrentSeconds;
@@ -1571,8 +1591,12 @@ public sealed class MaterialScaffoldTests
 
             var startCloseAt = new DateTime(2026, 5, 3, 9, 1, 0, DateTimeKind.Utc);
             DispatchPointerDown(binding, harness.RenderView, pointer: 7122, position: new Point(240, 120), timestampUtc: startCloseAt);
-            DispatchPointerMove(binding, harness.RenderView, pointer: 7122, position: new Point(220, 120), timestampUtc: startCloseAt.AddMilliseconds(100));
-            DispatchPointerUp(binding, harness.RenderView, pointer: 7122, position: new Point(40, 120), timestampUtc: startCloseAt.AddMilliseconds(150));
+            DispatchPointerMove(
+                binding, harness.RenderView, 7122, new Point(220, 120), startCloseAt.AddMilliseconds(30));
+            DispatchPointerMove(
+                binding, harness.RenderView, 7122, new Point(180, 120), startCloseAt.AddMilliseconds(60));
+            DispatchPointerUp(
+                binding, harness.RenderView, 7122, new Point(40, 120), startCloseAt.AddMilliseconds(90));
             harness.Pump(size);
 
             now = Scheduler.CurrentSeconds;
@@ -1585,8 +1609,12 @@ public sealed class MaterialScaffoldTests
 
             var endOpenAt = new DateTime(2026, 5, 3, 9, 2, 0, DateTimeKind.Utc);
             DispatchPointerDown(binding, harness.RenderView, pointer: 7123, position: new Point(398, 120), timestampUtc: endOpenAt);
-            DispatchPointerMove(binding, harness.RenderView, pointer: 7123, position: new Point(320, 120), timestampUtc: endOpenAt.AddMilliseconds(100));
-            DispatchPointerUp(binding, harness.RenderView, pointer: 7123, position: new Point(120, 120), timestampUtc: endOpenAt.AddMilliseconds(150));
+            DispatchPointerMove(
+                binding, harness.RenderView, 7123, new Point(360, 120), endOpenAt.AddMilliseconds(30));
+            DispatchPointerMove(
+                binding, harness.RenderView, 7123, new Point(320, 120), endOpenAt.AddMilliseconds(60));
+            DispatchPointerUp(
+                binding, harness.RenderView, 7123, new Point(120, 120), endOpenAt.AddMilliseconds(90));
             harness.Pump(size);
 
             now = Scheduler.CurrentSeconds;
@@ -1636,8 +1664,12 @@ public sealed class MaterialScaffoldTests
 
             var endOpenAt = new DateTime(2026, 5, 3, 9, 3, 0, DateTimeKind.Utc);
             DispatchPointerDown(binding, harness.RenderView, pointer: 7124, position: new Point(398, 120), timestampUtc: endOpenAt);
-            DispatchPointerMove(binding, harness.RenderView, pointer: 7124, position: new Point(320, 120), timestampUtc: endOpenAt.AddMilliseconds(100));
-            DispatchPointerUp(binding, harness.RenderView, pointer: 7124, position: new Point(120, 120), timestampUtc: endOpenAt.AddMilliseconds(150));
+            DispatchPointerMove(
+                binding, harness.RenderView, 7124, new Point(360, 120), endOpenAt.AddMilliseconds(30));
+            DispatchPointerMove(
+                binding, harness.RenderView, 7124, new Point(320, 120), endOpenAt.AddMilliseconds(60));
+            DispatchPointerUp(
+                binding, harness.RenderView, 7124, new Point(120, 120), endOpenAt.AddMilliseconds(90));
             harness.Pump(size);
 
             double now = Scheduler.CurrentSeconds;
@@ -1651,8 +1683,12 @@ public sealed class MaterialScaffoldTests
 
             var endCloseAt = new DateTime(2026, 5, 3, 9, 4, 0, DateTimeKind.Utc);
             DispatchPointerDown(binding, harness.RenderView, pointer: 7125, position: new Point(160, 120), timestampUtc: endCloseAt);
-            DispatchPointerMove(binding, harness.RenderView, pointer: 7125, position: new Point(180, 120), timestampUtc: endCloseAt.AddMilliseconds(100));
-            DispatchPointerUp(binding, harness.RenderView, pointer: 7125, position: new Point(360, 120), timestampUtc: endCloseAt.AddMilliseconds(150));
+            DispatchPointerMove(
+                binding, harness.RenderView, 7125, new Point(180, 120), endCloseAt.AddMilliseconds(30));
+            DispatchPointerMove(
+                binding, harness.RenderView, 7125, new Point(220, 120), endCloseAt.AddMilliseconds(60));
+            DispatchPointerUp(
+                binding, harness.RenderView, 7125, new Point(360, 120), endCloseAt.AddMilliseconds(90));
             harness.Pump(size);
 
             now = Scheduler.CurrentSeconds;
@@ -1665,8 +1701,12 @@ public sealed class MaterialScaffoldTests
 
             var startOpenAt = new DateTime(2026, 5, 3, 9, 5, 0, DateTimeKind.Utc);
             DispatchPointerDown(binding, harness.RenderView, pointer: 7126, position: new Point(2, 120), timestampUtc: startOpenAt);
-            DispatchPointerMove(binding, harness.RenderView, pointer: 7126, position: new Point(80, 120), timestampUtc: startOpenAt.AddMilliseconds(100));
-            DispatchPointerUp(binding, harness.RenderView, pointer: 7126, position: new Point(260, 120), timestampUtc: startOpenAt.AddMilliseconds(150));
+            DispatchPointerMove(
+                binding, harness.RenderView, 7126, new Point(40, 120), startOpenAt.AddMilliseconds(30));
+            DispatchPointerMove(
+                binding, harness.RenderView, 7126, new Point(80, 120), startOpenAt.AddMilliseconds(60));
+            DispatchPointerUp(
+                binding, harness.RenderView, 7126, new Point(260, 120), startOpenAt.AddMilliseconds(90));
             harness.Pump(size);
 
             now = Scheduler.CurrentSeconds;

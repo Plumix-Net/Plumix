@@ -247,13 +247,19 @@ public class PlumixHost : Control
     {
         base.OnPointerWheelChanged(e);
 
+        bool allowPlatformDefault = true;
         DispatchPointerEvent(new PointerScrollEvent(
             pointer: unchecked((int)e.Pointer.Id),
             kind: ToPointerKind(e.Pointer.Type),
             position: e.GetPosition(this),
             buttons: ToPointerButtons(e.GetCurrentPoint(this).Properties),
-            scrollDelta: new Point(e.Delta.X, e.Delta.Y),
-            timestampUtc: DateTime.UtcNow));
+            scrollDelta: new Point(-e.Delta.X * 40.0, -e.Delta.Y * 40.0),
+            timestampUtc: DateTime.UtcNow,
+            onRespond: allow => allowPlatformDefault = allow));
+        if (!allowPlatformDefault)
+        {
+            e.Handled = true;
+        }
     }
 
     protected override void OnPointerCaptureLost(PointerCaptureLostEventArgs e)

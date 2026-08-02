@@ -301,7 +301,7 @@ public sealed class GesturePipelineTests
                 new PointerMoveEvent(
                     pointer: 7,
                     kind: PointerDeviceKind.Mouse,
-                    position: new Point(40, 10),
+                    position: new Point(34, 10),
                     buttons: PointerButtons.Primary,
                     down: true,
                     timestampUtc: DateTime.UtcNow));
@@ -342,9 +342,11 @@ public sealed class GesturePipelineTests
         binding.ResetForTests();
 
         double? velocity = null;
+        var velocityTracker = new RecordingVelocityTracker(PointerDeviceKind.Mouse);
         var recognizer = new HorizontalDragGestureRecognizer
         {
-            OnEnd = details => velocity = details.PrimaryVelocity
+            OnEnd = details => velocity = details.PrimaryVelocity,
+            VelocityTrackerBuilder = _ => velocityTracker,
         };
 
         try
@@ -370,27 +372,49 @@ public sealed class GesturePipelineTests
                 new PointerMoveEvent(
                     pointer: 8,
                     kind: PointerDeviceKind.Mouse,
-                    position: new Point(50, 10),
+                    position: new Point(34, 10),
                     buttons: PointerButtons.Primary,
                     down: true,
-                    timestampUtc: start.AddMilliseconds(100)));
+                    timestampUtc: start.AddMilliseconds(30)));
+
+            binding.HandlePointerEvent(
+                pipeline.Root,
+                new PointerMoveEvent(
+                    pointer: 8,
+                    kind: PointerDeviceKind.Mouse,
+                    position: new Point(58, 10),
+                    buttons: PointerButtons.Primary,
+                    down: true,
+                    timestampUtc: start.AddMilliseconds(60)));
 
             binding.HandlePointerEvent(
                 pipeline.Root,
                 new PointerUpEvent(
                     pointer: 8,
                     kind: PointerDeviceKind.Mouse,
-                    position: new Point(80, 10),
+                    position: new Point(82, 10),
                     buttons: PointerButtons.None,
-                    timestampUtc: start.AddMilliseconds(150)));
+                    timestampUtc: start.AddMilliseconds(90)));
 
             Assert.True(velocity.HasValue);
-            Assert.Equal(600, velocity.Value, precision: 3);
+            Assert.Equal(new[] { 10.0, 34.0, 58.0 }, velocityTracker.Positions.Select(point => point.X));
+            Assert.Equal(800, velocity.Value, precision: 3);
         }
         finally
         {
             recognizer.Dispose();
             binding.ResetForTests();
+        }
+    }
+
+    private sealed class RecordingVelocityTracker(PointerDeviceKind kind) : VelocityTracker(kind)
+    {
+        public List<Point> Positions { get; } = [];
+
+        public override void AddPosition(DateTime timestampUtc, Point position)
+        {
+            Positions.Add(position);
+            base.AddPosition(timestampUtc, position);
         }
     }
 

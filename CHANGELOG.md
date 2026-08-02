@@ -1,5 +1,10 @@
 # Changelog
 
+- Breaking: closed core scroll input-policy parity. `ScrollBehavior` now selects Flutter's base/iOS/macOS
+  velocity trackers per pointer, drag recognizers honor custom tracker builders, and mouse-wheel axes flip for the
+  configured logical modifiers while trackpads remain unchanged. Pointer-scroll responses now report accepted versus
+  rejected platform-default handling, with focused estimator, behavior, modifier, and gesture integration coverage.
+
 - Breaking: closed `MaterialBanner` presentation parity. Banner animation and inset APIs now accept generic
   `Animation<double>` and directional `EdgeInsetsGeometry`; `ScaffoldMessenger` owns the source FIFO queue,
   close reasons, accessible dismissal, and root-Scaffold presentation, while `Scaffold` pushes or overlays its body

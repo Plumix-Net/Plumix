@@ -799,6 +799,7 @@ public sealed class Scrollable : StatefulWidget
                     onVerticalDragUpdate: widget.Axis == Axis.Vertical ? HandleVerticalDragUpdate : null,
                     onVerticalDragEnd: widget.Axis == Axis.Vertical ? HandleDragEnd : null,
                     onVerticalDragCancel: widget.Axis == Axis.Vertical ? HandleDragCancel : null,
+                    velocityTrackerBuilder: _configuration.VelocityTrackerBuilder(context),
                     supportedDevices: _configuration.DragDevices,
                     child: viewport));
 
@@ -988,11 +989,56 @@ public sealed class Scrollable : StatefulWidget
                 return;
             }
 
-            double rawDelta = CurrentWidget.Axis == Axis.Vertical ? scroll.ScrollDelta.Y : scroll.ScrollDelta.X;
-            double delta = IsReversedAxisDirection() ? rawDelta : -rawDelta;
+            double delta = PointerSignalEventDelta(scroll);
+            double targetPixels = Math.Clamp(
+                _position.Pixels + delta,
+                _position.MinScrollExtent,
+                _position.MaxScrollExtent);
+            if (Math.Abs(delta) <= double.Epsilon
+                || Math.Abs(targetPixels - _position.Pixels) <= double.Epsilon)
+            {
+                scroll.Respond(allowPlatformDefault: true);
+                return;
+            }
+
             new ScrollStartNotification(CurrentMetrics()).Dispatch(Context);
-            _position.ApplyPointerScrollDelta(delta * 40.0);
+            _position.ApplyPointerScrollDelta(delta);
             new ScrollEndNotification(CurrentMetrics()).Dispatch(Context);
+            scroll.Respond(allowPlatformDefault: false);
+        }
+
+        private double PointerSignalEventDelta(PointerScrollEvent @event)
+        {
+            bool flipAxes = @event.Kind == PointerDeviceKind.Mouse
+                            && _configuration.PointerAxisModifiers.Any(IsLogicalKeyPressed);
+            Axis axis = flipAxes
+                ? CurrentWidget.Axis == Axis.Horizontal ? Axis.Vertical : Axis.Horizontal
+                : CurrentWidget.Axis;
+            double delta = axis == Axis.Horizontal ? @event.ScrollDelta.X : @event.ScrollDelta.Y;
+            return IsReversedAxisDirection() ? -delta : delta;
+        }
+
+        private static bool IsLogicalKeyPressed(LogicalKeyboardKey key)
+        {
+            IReadOnlySet<string> pressed = HardwareKeyboard.Instance.LogicalKeysPressed;
+            return key switch
+            {
+                LogicalKeyboardKey.ShiftLeft => ContainsAny(pressed, "LeftShift", "ShiftLeft", "Shift"),
+                LogicalKeyboardKey.ShiftRight => ContainsAny(pressed, "RightShift", "ShiftRight", "Shift"),
+                LogicalKeyboardKey.AltLeft => ContainsAny(pressed, "LeftAlt", "AltLeft", "Alt"),
+                LogicalKeyboardKey.AltRight => ContainsAny(pressed, "RightAlt", "AltRight", "Alt"),
+                LogicalKeyboardKey.ControlLeft => ContainsAny(pressed, "LeftCtrl", "ControlLeft", "Control"),
+                LogicalKeyboardKey.ControlRight => ContainsAny(pressed, "RightCtrl", "ControlRight", "Control"),
+                LogicalKeyboardKey.MetaLeft => ContainsAny(pressed, "LeftMeta", "MetaLeft", "Meta"),
+                LogicalKeyboardKey.MetaRight => ContainsAny(pressed, "RightMeta", "MetaRight", "Meta"),
+                LogicalKeyboardKey.Space => pressed.Contains("Space"),
+                _ => false,
+            };
+        }
+
+        private static bool ContainsAny(IReadOnlySet<string> pressed, params string[] keys)
+        {
+            return keys.Any(pressed.Contains);
         }
 
         private void HandleViewportMetricsChanged(double viewportExtent, double minScrollExtent, double maxScrollExtent)

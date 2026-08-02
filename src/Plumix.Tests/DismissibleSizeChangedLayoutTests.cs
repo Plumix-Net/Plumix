@@ -271,16 +271,30 @@ public sealed class DismissibleSizeChangedLayoutTests : IDisposable
             GestureBinding.Instance.HandlePointerEvent(renderView, new PointerMoveEvent(
                 31,
                 PointerDeviceKind.Mouse,
-                new Point(40, 15),
+                new Point(19, 11.5),
                 PointerButtons.Primary,
                 true,
-                start.AddMilliseconds(100)));
+                start.AddMilliseconds(30)));
+            GestureBinding.Instance.HandlePointerEvent(renderView, new PointerMoveEvent(
+                31,
+                PointerDeviceKind.Mouse,
+                new Point(28, 13),
+                PointerButtons.Primary,
+                true,
+                start.AddMilliseconds(60)));
+            GestureBinding.Instance.HandlePointerEvent(renderView, new PointerMoveEvent(
+                31,
+                PointerDeviceKind.Mouse,
+                new Point(37, 14.5),
+                PointerButtons.Primary,
+                true,
+                start.AddMilliseconds(90)));
             GestureBinding.Instance.HandlePointerEvent(renderView, new PointerUpEvent(
                 31,
                 PointerDeviceKind.Mouse,
                 new Point(70, 20),
                 PointerButtons.None,
-                start.AddMilliseconds(200)));
+                start.AddMilliseconds(100)));
 
             Assert.Equal(new Point(28, 10), startPosition);
             Assert.NotNull(velocity);

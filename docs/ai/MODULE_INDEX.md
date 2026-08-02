@@ -344,6 +344,8 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/Widgets/Notifications.cs`
   - `src/Plumix/Widgets/ScrollNotificationObserver.cs`
   - `src/Plumix/Widgets/ScrollConfiguration.cs`
+  - `src/Plumix/Gestures/VelocityTracker.cs`
+  - `src/Plumix/Gestures/LeastSquaresSolver.cs`
   - `src/Plumix/Widgets/OverscrollIndicator.cs`
   - `src/Plumix.Material/MaterialScrollBehavior.cs`
   - `src/Plumix/Widgets/PageStorage.cs`
@@ -360,6 +362,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Primary Tests:
   - `src/Plumix.Tests/ScrollPipelineTests.cs`
   - `src/Plumix.Tests/ScrollInfrastructureTests.cs`
+  - `src/Plumix.Tests/ScrollBehaviorParityTests.cs`
   - `src/Plumix.Tests/ScrollNotificationObserverTests.cs`
   - `src/Plumix.Tests/OverscrollIndicatorTests.cs`
   - `src/Plumix.Tests/StateStorageWidgetsTests.cs`

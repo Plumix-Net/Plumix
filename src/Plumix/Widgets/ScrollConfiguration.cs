@@ -1,4 +1,5 @@
 using Plumix.Foundation;
+using Plumix.Gestures;
 using Plumix.Rendering;
 using Plumix.UI;
 
@@ -23,6 +24,13 @@ public enum LogicalKeyboardKey
 {
     ShiftLeft,
     ShiftRight,
+    AltLeft,
+    AltRight,
+    ControlLeft,
+    ControlRight,
+    MetaLeft,
+    MetaRight,
+    Space,
 }
 
 public enum ScrollViewKeyboardDismissBehavior
@@ -137,6 +145,16 @@ public class ScrollBehavior
         return child;
     }
 
+    public virtual GestureVelocityTrackerBuilder VelocityTrackerBuilder(BuildContext context)
+    {
+        return GetPlatform(context) switch
+        {
+            TargetPlatform.IOS => @event => new IOSScrollViewFlingVelocityTracker(@event.Kind),
+            TargetPlatform.MacOS => @event => new MacOSScrollViewFlingVelocityTracker(@event.Kind),
+            _ => @event => new VelocityTracker(@event.Kind),
+        };
+    }
+
     public virtual ScrollPhysics GetScrollPhysics(BuildContext context)
     {
         return GetPlatform(context) switch
@@ -244,6 +262,11 @@ internal sealed class WrappedScrollBehavior : ScrollBehavior
     public override ScrollPhysics GetScrollPhysics(BuildContext context)
     {
         return Physics ?? Delegate.GetScrollPhysics(context);
+    }
+
+    public override GestureVelocityTrackerBuilder VelocityTrackerBuilder(BuildContext context)
+    {
+        return Delegate.VelocityTrackerBuilder(context);
     }
 
     public override ScrollViewKeyboardDismissBehavior GetKeyboardDismissBehavior(BuildContext context)

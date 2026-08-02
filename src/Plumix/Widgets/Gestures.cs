@@ -112,6 +112,7 @@ public sealed class RawGestureDetector : StatefulWidget
         Action<DragUpdateDetails>? onPanUpdate = null,
         Action<DragEndDetails>? onPanEnd = null,
         Action? onPanCancel = null,
+        GestureVelocityTrackerBuilder? velocityTrackerBuilder = null,
         IReadOnlySet<PointerDeviceKind>? supportedDevices = null,
         DragStartBehavior dragStartBehavior = DragStartBehavior.Start,
         DeviceGestureSettings? gestureSettings = null,
@@ -146,6 +147,7 @@ public sealed class RawGestureDetector : StatefulWidget
         OnPanUpdate = onPanUpdate;
         OnPanEnd = onPanEnd;
         OnPanCancel = onPanCancel;
+        VelocityTrackerBuilder = velocityTrackerBuilder;
         SupportedDevices = supportedDevices;
         DragStartBehavior = dragStartBehavior;
         GestureSettings = gestureSettings;
@@ -199,6 +201,8 @@ public sealed class RawGestureDetector : StatefulWidget
     public Action<DragEndDetails>? OnPanEnd { get; }
 
     public Action? OnPanCancel { get; }
+
+    public GestureVelocityTrackerBuilder? VelocityTrackerBuilder { get; }
 
     public IReadOnlySet<PointerDeviceKind>? SupportedDevices { get; }
 
@@ -314,6 +318,10 @@ public sealed class RawGestureDetector : StatefulWidget
                 _horizontalDrag.OnEnd = widget.OnHorizontalDragEnd;
                 _horizontalDrag.OnCancel = widget.OnHorizontalDragCancel;
                 _horizontalDrag.DragStartBehavior = widget.DragStartBehavior;
+                _horizontalDrag.SupportedDevices = widget.SupportedDevices;
+                _horizontalDrag.GestureSettings = widget.GestureSettings;
+                _horizontalDrag.VelocityTrackerBuilder = widget.VelocityTrackerBuilder
+                    ?? DragGestureRecognizer.DefaultVelocityTrackerBuilder;
             }
             else
             {
@@ -331,6 +339,10 @@ public sealed class RawGestureDetector : StatefulWidget
                 _verticalDrag.OnEnd = widget.OnVerticalDragEnd;
                 _verticalDrag.OnCancel = widget.OnVerticalDragCancel;
                 _verticalDrag.DragStartBehavior = widget.DragStartBehavior;
+                _verticalDrag.SupportedDevices = widget.SupportedDevices;
+                _verticalDrag.GestureSettings = widget.GestureSettings;
+                _verticalDrag.VelocityTrackerBuilder = widget.VelocityTrackerBuilder
+                    ?? DragGestureRecognizer.DefaultVelocityTrackerBuilder;
             }
             else
             {
@@ -350,6 +362,8 @@ public sealed class RawGestureDetector : StatefulWidget
                 _pan.DragStartBehavior = widget.DragStartBehavior;
                 _pan.SupportedDevices = widget.SupportedDevices;
                 _pan.GestureSettings = widget.GestureSettings;
+                _pan.VelocityTrackerBuilder = widget.VelocityTrackerBuilder
+                    ?? DragGestureRecognizer.DefaultVelocityTrackerBuilder;
             }
             else
             {

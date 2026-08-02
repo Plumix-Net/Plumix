@@ -96,6 +96,40 @@ public readonly record struct DragUpdateDetails(
 public readonly record struct Velocity(Vector PixelsPerSecond)
 {
     public static Velocity Zero { get; } = new(default);
+
+    public static Velocity operator -(Velocity value) => new(-value.PixelsPerSecond);
+
+    public static Velocity operator -(Velocity left, Velocity right)
+    {
+        return new Velocity(left.PixelsPerSecond - right.PixelsPerSecond);
+    }
+
+    public static Velocity operator +(Velocity left, Velocity right)
+    {
+        return new Velocity(left.PixelsPerSecond + right.PixelsPerSecond);
+    }
+
+    public Velocity ClampMagnitude(double minimumValue, double maximumValue)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(minimumValue);
+        if (maximumValue < minimumValue)
+        {
+            throw new ArgumentOutOfRangeException(nameof(maximumValue));
+        }
+
+        double magnitude = PixelsPerSecond.Length;
+        if (magnitude > maximumValue)
+        {
+            return new Velocity(PixelsPerSecond / magnitude * maximumValue);
+        }
+
+        if (magnitude < minimumValue && magnitude > 0.0)
+        {
+            return new Velocity(PixelsPerSecond / magnitude * minimumValue);
+        }
+
+        return this;
+    }
 }
 
 public readonly record struct DragEndDetails
