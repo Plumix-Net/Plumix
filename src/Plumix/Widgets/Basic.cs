@@ -804,7 +804,7 @@ public sealed class Container : StatelessWidget
     public Container(
         Widget? child = null,
         Color? color = null,
-        BoxDecoration? decoration = null,
+        Decoration? decoration = null,
         Alignment? alignment = null,
         Thickness? margin = null,
         BoxConstraints? constraints = null,
@@ -813,7 +813,7 @@ public sealed class Container : StatelessWidget
         double? width = null,
         double? height = null,
         Key? key = null,
-        BoxDecoration? foregroundDecoration = null) : base(key)
+        Decoration? foregroundDecoration = null) : base(key)
     {
         Child = child;
         Color = color;
@@ -832,8 +832,8 @@ public sealed class Container : StatelessWidget
 
     public Color? Color { get; }
 
-    public BoxDecoration? Decoration { get; }
-    public BoxDecoration? ForegroundDecoration { get; }
+    public Decoration? Decoration { get; }
+    public Decoration? ForegroundDecoration { get; }
 
     public Alignment? Alignment { get; }
 

@@ -593,8 +593,8 @@ public sealed class AnimatedContainer : StatefulWidget
         Alignment? alignment = null,
         Thickness? padding = null,
         Color? color = null,
-        BoxDecoration? decoration = null,
-        BoxDecoration? foregroundDecoration = null,
+        Decoration? decoration = null,
+        Decoration? foregroundDecoration = null,
         double? width = null,
         double? height = null,
         BoxConstraints? constraints = null,
@@ -631,8 +631,8 @@ public sealed class AnimatedContainer : StatefulWidget
     public Widget? Child { get; }
     public Alignment? Alignment { get; }
     public Thickness? Padding { get; }
-    public BoxDecoration? Decoration { get; }
-    public BoxDecoration? ForegroundDecoration { get; }
+    public Decoration? Decoration { get; }
+    public Decoration? ForegroundDecoration { get; }
     public BoxConstraints? Constraints { get; }
     public Thickness? Margin { get; }
     public Matrix? Transform { get; }
@@ -745,8 +745,8 @@ public sealed class AnimatedContainer : StatefulWidget
             return new AnimatedContainerValues(
                 Alignment: LerpAlignment(_begin.Alignment, _end.Alignment, t),
                 Padding: LerpThickness(_begin.Padding, _end.Padding, t),
-                Decoration: BoxDecoration.Lerp(_begin.Decoration, _end.Decoration, t),
-                ForegroundDecoration: BoxDecoration.Lerp(
+                Decoration: Decoration.Lerp(_begin.Decoration, _end.Decoration, t),
+                ForegroundDecoration: Decoration.Lerp(
                     _begin.ForegroundDecoration,
                     _end.ForegroundDecoration,
                     t),
@@ -822,8 +822,8 @@ public sealed class AnimatedContainer : StatefulWidget
     private sealed record AnimatedContainerValues(
         Alignment? Alignment,
         Thickness? Padding,
-        BoxDecoration? Decoration,
-        BoxDecoration? ForegroundDecoration,
+        Decoration? Decoration,
+        Decoration? ForegroundDecoration,
         BoxConstraints? Constraints,
         Thickness? Margin,
         Matrix? Transform)

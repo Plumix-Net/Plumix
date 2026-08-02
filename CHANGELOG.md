@@ -1,5 +1,10 @@
 # Changelog
 
+- Breaking: completed the strict `DrawerHeader`/`UserAccountsDrawerHeader` closeout. Account surfaces now read
+  `ColorScheme.primary`, directional insets and generic decorations match Flutter, and pictures/details use the
+  source stack/custom-layout/ink/animation composition. Core icon labels and semantics container/merge behavior
+  now follow Flutter; focused source-test coverage and the mirrored default-scheme demo were expanded.
+
 - Breaking: completed the `FilledButton`/tonal ColorScheme and API closeout. Defaults now read the exact primary,
   secondary-container, on-surface, and shadow roles; callbacks, state controllers, clipping, cursor/density/timing,
   layer builders, inherited-theme capture, focused coverage, and the mirrored direct-scheme probe match Flutter.

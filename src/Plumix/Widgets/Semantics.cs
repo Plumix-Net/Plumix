@@ -42,7 +42,8 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         bool? expanded = null,
         bool? @checked = null,
         bool? selected = null,
-        Key? key = null) : base(child, key)
+        Key? key = null,
+        bool mergeDescendants = false) : base(child, key)
     {
         Label = label;
         Hint = hint;
@@ -69,6 +70,7 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         Expanded = expanded;
         Checked = @checked;
         Selected = selected;
+        MergeDescendants = mergeDescendants;
     }
 
     public string? Label { get; }
@@ -107,6 +109,8 @@ public sealed class Semantics : SingleChildRenderObjectWidget
 
     public bool? Selected { get; }
 
+    public bool MergeDescendants { get; }
+
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
         var semantics = new RenderSemanticsAnnotations(
@@ -121,7 +125,8 @@ public sealed class Semantics : SingleChildRenderObjectWidget
             customSemanticsActions: CustomSemanticsActions,
             liveRegion: LiveRegion,
             container: Container,
-            explicitChildNodes: ExplicitChildNodes);
+            explicitChildNodes: ExplicitChildNodes,
+            mergeDescendants: MergeDescendants);
         semantics.OnFocus = OnFocus;
         return semantics;
     }
@@ -142,6 +147,7 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         semantics.LiveRegion = LiveRegion;
         semantics.Container = Container;
         semantics.ExplicitChildNodes = ExplicitChildNodes;
+        semantics.MergeDescendants = MergeDescendants;
     }
 
     private static SemanticsFlags RoleFlags(SemanticsRole role) => role switch
@@ -167,7 +173,8 @@ public sealed class MergeSemantics : StatelessWidget
     {
         return new Semantics(
             child: Child,
-            container: true);
+            container: true,
+            mergeDescendants: true);
     }
 }
 

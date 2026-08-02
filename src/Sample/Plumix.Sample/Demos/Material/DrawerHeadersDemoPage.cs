@@ -26,7 +26,8 @@ public sealed class DrawerHeadersDemoPage : StatefulWidget
                 [
                     new Text("DrawerHeader + UserAccountsDrawerHeader", fontSize: 20, color: Colors.Black),
                     new Text(
-                        "Status-bar padding, animated decoration, account pictures, details toggle, and semantics.",
+                        "Status-bar padding, animated decoration, ColorScheme primary, pictures, "
+                        + "details, and semantics.",
                         fontSize: 14,
                         color: Colors.DimGray),
                     new Row(
@@ -52,8 +53,6 @@ public sealed class DrawerHeadersDemoPage : StatefulWidget
                                             child: new Text("Plain header", color: Colors.White)))),
                                 new Expanded(
                                     child: new UserAccountsDrawerHeader(
-                                        decoration: new BoxDecoration(
-                                            Color: _alternateDecoration ? Colors.Teal : Color.Parse("#FF673AB7")),
                                         accountName: new Text("Ada Lovelace"),
                                         accountEmail: new Text("ada@example.test"),
                                         currentAccountPicture: new CircleAvatar(child: new Text("AL")),

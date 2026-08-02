@@ -2660,6 +2660,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
     private bool _liveRegion;
     private bool _container;
     private bool _explicitChildNodes;
+    private bool _mergeDescendants;
 
     public RenderSemanticsAnnotations(
         string? label = null,
@@ -2674,6 +2675,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         bool liveRegion = false,
         bool container = false,
         bool explicitChildNodes = false,
+        bool mergeDescendants = false,
         RenderBox? child = null)
     {
         _label = label;
@@ -2688,6 +2690,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         _liveRegion = liveRegion;
         _container = container;
         _explicitChildNodes = explicitChildNodes;
+        _mergeDescendants = mergeDescendants;
         Child = child;
     }
 
@@ -2862,6 +2865,21 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         }
     }
 
+    public bool MergeDescendants
+    {
+        get => _mergeDescendants;
+        set
+        {
+            if (_mergeDescendants == value)
+            {
+                return;
+            }
+
+            _mergeDescendants = value;
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
     protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
     {
         if (string.IsNullOrWhiteSpace(_label)
@@ -2876,15 +2894,16 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
             && _onFocus is null
             && !_liveRegion
             && !_container
-            && !_explicitChildNodes)
+            && !_explicitChildNodes
+            && !_mergeDescendants)
         {
             return;
         }
 
-        configuration.IsSemanticBoundary = true;
+        configuration.IsSemanticBoundary = _container;
         configuration.Role = _role;
         configuration.ExplicitChildNodes = _explicitChildNodes;
-        if (_container && !_explicitChildNodes)
+        if (_mergeDescendants)
         {
             configuration.IsMergingSemanticsOfDescendants = true;
         }

@@ -718,7 +718,6 @@ public sealed class RenderParagraph : RenderBox
 
     protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
     {
-        configuration.IsSemanticBoundary = true;
         configuration.Label = _text;
     }
 

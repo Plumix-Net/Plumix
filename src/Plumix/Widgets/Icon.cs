@@ -62,7 +62,9 @@ public sealed class Icon : StatelessWidget
 
         if (IconData is null)
         {
-            return new SizedBox(width: iconSize, height: iconSize);
+            return new Semantics(
+                label: SemanticLabel,
+                child: new SizedBox(width: iconSize, height: iconSize));
         }
 
         var textDirection = TextDirection ?? Directionality.Of(context);
@@ -90,10 +92,13 @@ public sealed class Icon : StatelessWidget
                 child: iconWidget);
         }
 
-        return new SizedBox(
-            width: iconSize,
-            height: iconSize,
-            child: new Center(child: iconWidget));
+        return new Semantics(
+            label: SemanticLabel,
+            child: new ExcludeSemantics(
+                child: new SizedBox(
+                    width: iconSize,
+                    height: iconSize,
+                    child: new Center(child: iconWidget))));
     }
 
     private double ResolveIconSize(BuildContext context, IconThemeData iconTheme)

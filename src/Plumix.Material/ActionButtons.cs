@@ -28,10 +28,7 @@ public sealed class BackButtonIcon : StatelessWidget
         string? semanticLabel = theme.Platform == TargetPlatform.Android
             ? MaterialLocalizations.Of(context).BackButtonTooltip
             : null;
-        Widget icon = new Icon(iconData, semanticLabel: semanticLabel);
-        return semanticLabel is null
-            ? icon
-            : new Semantics(label: semanticLabel, child: icon);
+        return new Icon(iconData, semanticLabel: semanticLabel);
     }
 }
 
@@ -52,10 +49,7 @@ public sealed class CloseButtonIcon : StatelessWidget
         string? semanticLabel = Theme.Of(context).Platform == TargetPlatform.Android
             ? MaterialLocalizations.Of(context).CloseButtonTooltip
             : null;
-        Widget icon = new Icon(Icons.Close, semanticLabel: semanticLabel);
-        return semanticLabel is null
-            ? icon
-            : new Semantics(label: semanticLabel, child: icon);
+        return new Icon(Icons.Close, semanticLabel: semanticLabel);
     }
 }
 
@@ -151,10 +145,7 @@ public sealed class DrawerButtonIcon : StatelessWidget
         string? semanticLabel = Theme.Of(context).Platform == TargetPlatform.Android
             ? MaterialLocalizations.Of(context).OpenAppDrawerTooltip
             : null;
-        Widget icon = new Icon(Icons.Menu, semanticLabel: semanticLabel);
-        return semanticLabel is null
-            ? icon
-            : new Semantics(label: semanticLabel, child: icon);
+        return new Icon(Icons.Menu, semanticLabel: semanticLabel);
     }
 }
 

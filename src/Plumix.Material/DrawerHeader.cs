@@ -17,17 +17,17 @@ public sealed class DrawerHeader : StatelessWidget
 
     public DrawerHeader(
         Widget? child,
-        BoxDecoration? decoration = null,
-        Thickness? margin = null,
-        Thickness? padding = null,
+        Decoration? decoration = null,
+        EdgeInsetsGeometry? margin = null,
+        EdgeInsetsGeometry? padding = null,
         TimeSpan? duration = null,
         Curve? curve = null,
         Key? key = null) : base(key)
     {
         Child = child;
         Decoration = decoration;
-        Margin = margin ?? new Thickness(0, 0, 0, 8);
-        Padding = padding ?? new Thickness(16, 16, 16, 8);
+        Margin = margin ?? EdgeInsetsGeometry.Only(bottom: 8.0);
+        Padding = padding ?? EdgeInsetsGeometry.FromLTRB(16.0, 16.0, 16.0, 8.0);
         Duration = duration ?? TimeSpan.FromMilliseconds(250);
         Curve = curve ?? Curves.FastOutSlowIn;
 
@@ -38,16 +38,18 @@ public sealed class DrawerHeader : StatelessWidget
     }
 
     public Widget? Child { get; }
-    public BoxDecoration? Decoration { get; }
-    public Thickness? Margin { get; }
-    public Thickness Padding { get; }
+    public Decoration? Decoration { get; }
+    public EdgeInsetsGeometry? Margin { get; }
+    public EdgeInsetsGeometry Padding { get; }
     public TimeSpan Duration { get; }
     public Curve Curve { get; }
 
     public override Widget Build(BuildContext context)
     {
         double statusBarHeight = MediaQuery.PaddingOf(context).Top;
+        TextDirection direction = Directionality.Of(context);
         var divider = Divider.CreateBorderSide(context);
+        Thickness resolvedPadding = Padding.Resolve(direction);
         Widget? child = Child;
         if (child is not null)
         {
@@ -60,32 +62,33 @@ public sealed class DrawerHeader : StatelessWidget
             duration: Duration,
             curve: Curve,
             padding: new Thickness(
-                Padding.Left,
-                Padding.Top + statusBarHeight,
-                Padding.Right,
-                Padding.Bottom),
+                resolvedPadding.Left,
+                resolvedPadding.Top + statusBarHeight,
+                resolvedPadding.Right,
+                resolvedPadding.Bottom),
             decoration: Decoration,
             child: child);
 
         return new Container(
             height: statusBarHeight + DrawerHeaderHeight,
-            margin: Margin,
-            child: new Column(
-                children:
-                [
-                    new Expanded(child: animated),
-                    new Divider(height: 1, thickness: divider.Width, color: divider.Color),
-                ]));
+            margin: Margin?.Resolve(direction),
+            decoration: new BoxDecoration(
+                BorderSides: new BoxBorder(Bottom: divider)),
+            child: animated);
     }
 }
 
 public sealed class UserAccountsDrawerHeader : StatefulWidget
 {
+    private const string AccountNameId = "accountName";
+    private const string AccountEmailId = "accountEmail";
+    private const string DropdownIconId = "dropdownIcon";
+
     public UserAccountsDrawerHeader(
         Widget? accountName,
         Widget? accountEmail,
-        BoxDecoration? decoration = null,
-        Thickness? margin = null,
+        Decoration? decoration = null,
+        EdgeInsetsGeometry? margin = null,
         Widget? currentAccountPicture = null,
         IReadOnlyList<Widget>? otherAccountsPictures = null,
         Size? currentAccountPictureSize = null,
@@ -97,7 +100,7 @@ public sealed class UserAccountsDrawerHeader : StatefulWidget
         AccountName = accountName;
         AccountEmail = accountEmail;
         Decoration = decoration;
-        Margin = margin ?? new Thickness(0, 0, 0, 8);
+        Margin = margin ?? EdgeInsetsGeometry.Only(bottom: 8.0);
         CurrentAccountPicture = currentAccountPicture;
         OtherAccountsPictures = otherAccountsPictures;
         CurrentAccountPictureSize = currentAccountPictureSize ?? new Size(72, 72);
@@ -108,8 +111,8 @@ public sealed class UserAccountsDrawerHeader : StatefulWidget
         ValidateSize(OtherAccountsPicturesSize, nameof(otherAccountsPicturesSize));
     }
 
-    public BoxDecoration? Decoration { get; }
-    public Thickness? Margin { get; }
+    public Decoration? Decoration { get; }
+    public EdgeInsetsGeometry? Margin { get; }
     public Widget? CurrentAccountPicture { get; }
     public IReadOnlyList<Widget>? OtherAccountsPictures { get; }
     public Size CurrentAccountPictureSize { get; }
@@ -142,8 +145,7 @@ public sealed class UserAccountsDrawerHeader : StatefulWidget
             var widget = CurrentWidget;
             var theme = Theme.Of(context);
             var localizations = MaterialLocalizations.Of(context);
-            var direction = Directionality.Of(context);
-            var decoration = widget.Decoration ?? new BoxDecoration(Color: theme.PrimaryColor);
+            Decoration decoration = widget.Decoration ?? new BoxDecoration(Color: theme.ColorScheme.Primary);
 
             return new Semantics(
                 container: true,
@@ -151,7 +153,7 @@ public sealed class UserAccountsDrawerHeader : StatefulWidget
                 child: new DrawerHeader(
                     decoration: decoration,
                     margin: widget.Margin,
-                    padding: ResolveDirectionalThickness(direction, start: 16, top: 16),
+                    padding: EdgeInsetsGeometry.DirectionalOnly(start: 16.0, top: 16.0),
                     child: new SafeArea(
                         bottom: false,
                         child: new Column(
@@ -160,8 +162,8 @@ public sealed class UserAccountsDrawerHeader : StatefulWidget
                             [
                                 new Expanded(
                                     child: new Padding(
-                                        insets: ResolveDirectionalThickness(direction, end: 16),
-                                        child: BuildAccountPictures(widget, direction))),
+                                        insets: EdgeInsetsGeometry.DirectionalOnly(end: 16.0),
+                                        child: BuildAccountPictures(widget))),
                                 new AccountDetails(
                                     accountName: widget.AccountName,
                                     accountEmail: widget.AccountEmail,
@@ -177,47 +179,38 @@ public sealed class UserAccountsDrawerHeader : StatefulWidget
             CurrentWidget.OnDetailsPressed?.Invoke();
         }
 
-        private static Widget BuildAccountPictures(UserAccountsDrawerHeader widget, TextDirection direction)
+        private static Widget BuildAccountPictures(UserAccountsDrawerHeader widget)
         {
             var children = new List<Widget>();
-            if (widget.CurrentAccountPicture is not null)
-            {
-                children.Add(new Positioned(
-                    top: 0,
-                    left: direction == TextDirection.Ltr ? 0 : null,
-                    right: direction == TextDirection.Rtl ? 0 : null,
-                    child: new Semantics(
-                        explicitChildNodes: true,
-                        child: new SizedBox(
-                            width: widget.CurrentAccountPictureSize.Width,
-                            height: widget.CurrentAccountPictureSize.Height,
-                            child: widget.CurrentAccountPicture))));
-            }
-
             var otherPictures = widget.OtherAccountsPictures?.Take(3).ToList() ?? [];
-            if (otherPictures.Count > 0)
-            {
-                var rowChildren = otherPictures
-                    .Select(picture => (Widget)new Padding(
-                        insets: ResolveDirectionalThickness(direction, start: 8, bottom: 8),
-                        child: new Semantics(
-                            container: true,
+            var rowChildren = otherPictures
+                .Select(picture => (Widget)new Padding(
+                    insets: EdgeInsetsGeometry.DirectionalOnly(start: 8.0),
+                    child: new Semantics(
+                        container: true,
+                        child: new Padding(
+                            insets: EdgeInsetsGeometry.Only(left: 8.0, bottom: 8.0),
                             child: new SizedBox(
                                 width: widget.OtherAccountsPicturesSize.Width,
                                 height: widget.OtherAccountsPicturesSize.Height,
-                                child: picture))))
-                    .ToList();
-                children.Add(new Positioned(
-                    top: 0,
-                    left: direction == TextDirection.Rtl ? 0 : null,
-                    right: direction == TextDirection.Ltr ? 0 : null,
-                    child: new Row(
-                        mainAxisSize: MainAxisSize.Min,
-                        textDirection: direction,
-                        children: rowChildren)));
-            }
+                                child: picture)))))
+                .ToList();
+            children.Add(new PositionedDirectional(
+                top: 0.0,
+                end: 0.0,
+                child: new Row(children: rowChildren)));
+            children.Add(new Positioned(
+                top: 0.0,
+                child: new Semantics(
+                    explicitChildNodes: true,
+                    child: new SizedBox(
+                        width: widget.CurrentAccountPictureSize.Width,
+                        height: widget.CurrentAccountPictureSize.Height,
+                        child: widget.CurrentAccountPicture))));
 
-            return new Stack(children: children);
+            return new Stack(
+                alignment: AlignmentDirectional.TopStart,
+                children: children);
         }
     }
 
@@ -247,104 +240,186 @@ public sealed class UserAccountsDrawerHeader : StatefulWidget
 
     private sealed class AccountDetailsState : State
     {
+        private AnimationController? _controller;
+        private CurvedAnimation? _animation;
+
         private AccountDetails CurrentWidget => (AccountDetails)StateWidget;
+
+        public override void InitState()
+        {
+            _controller = new AnimationController(TimeSpan.FromMilliseconds(200), this);
+            _controller.SetValue(CurrentWidget.IsOpen ? 1.0 : 0.0);
+            _animation = new CurvedAnimation(
+                parent: _controller,
+                curve: Curves.FastOutSlowIn,
+                reverseCurve: Curves.Flipped(Curves.FastOutSlowIn));
+            _animation.AddListener(HandleAnimationChanged);
+        }
+
+        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        {
+            var oldDetails = (AccountDetails)oldWidget;
+            if (oldDetails.IsOpen == CurrentWidget.IsOpen)
+            {
+                return;
+            }
+
+            if (CurrentWidget.IsOpen)
+            {
+                _controller!.Forward();
+            }
+            else
+            {
+                _controller!.Reverse();
+            }
+        }
+
+        public override void Dispose()
+        {
+            _animation!.RemoveListener(HandleAnimationChanged);
+            _animation.Dispose();
+            _controller!.Dispose();
+            _animation = null;
+            _controller = null;
+        }
 
         public override Widget Build(BuildContext context)
         {
             var widget = CurrentWidget;
             var theme = Theme.Of(context);
             var direction = Directionality.Of(context);
-            var textChildren = new List<Widget>();
+            var children = new List<Widget>();
             if (widget.AccountName is not null)
             {
-                textChildren.Add(new DefaultTextStyle(
-                    style: theme.PrimaryTextTheme.BodyLarge,
-                    overflow: TextOverflow.Ellipsis,
-                    child: widget.AccountName));
+                children.Add(new LayoutId(
+                    id: AccountNameId,
+                    child: new Padding(
+                        insets: EdgeInsetsGeometry.Symmetric(vertical: 2.0),
+                        child: new DefaultTextStyle(
+                            style: theme.PrimaryTextTheme.BodyLarge,
+                            overflow: TextOverflow.Ellipsis,
+                            child: widget.AccountName))));
             }
             if (widget.AccountEmail is not null)
             {
-                textChildren.Add(new DefaultTextStyle(
-                    style: theme.PrimaryTextTheme.BodyMedium,
-                    overflow: TextOverflow.Ellipsis,
-                    child: widget.AccountEmail));
+                children.Add(new LayoutId(
+                    id: AccountEmailId,
+                    child: new Padding(
+                        insets: EdgeInsetsGeometry.Symmetric(vertical: 2.0),
+                        child: new DefaultTextStyle(
+                            style: theme.PrimaryTextTheme.BodyMedium,
+                            overflow: TextOverflow.Ellipsis,
+                            child: widget.AccountEmail))));
             }
-
-            var children = new List<Widget>
-            {
-                new Expanded(
-                    child: new Column(
-                        mainAxisSize: MainAxisSize.Min,
-                        mainAxisAlignment: MainAxisAlignment.Center,
-                        crossAxisAlignment: CrossAxisAlignment.Start,
-                        textDirection: direction,
-                        spacing: 4,
-                        children: textChildren)),
-            };
 
             if (widget.OnTap is not null)
             {
-                double angle = widget.IsOpen ? Math.PI : 0;
-                var transform = RotationAroundCenter(angle, 12);
                 string semanticLabel = widget.IsOpen
                     ? MaterialLocalizations.Of(context).HideAccountsLabel
                     : MaterialLocalizations.Of(context).ShowAccountsLabel;
-                children.Add(new SizedBox(
-                    width: 56,
-                    height: 56,
-                    child: new Center(
-                        child: new AnimatedContainer(
-                            duration: TimeSpan.FromMilliseconds(200),
-                            curve: Curves.FastOutSlowIn,
-                            transform: transform,
-                            child: new Semantics(
-                                label: semanticLabel,
-                                child: new Icon(
-                                    Icons.ArrowDropDown,
-                                    color: widget.ArrowColor,
-                                    semanticLabel: semanticLabel))))));
+                children.Add(new LayoutId(
+                    id: DropdownIconId,
+                    child: new Semantics(
+                        container: true,
+                        flags: SemanticsFlags.IsButton,
+                        onTap: widget.OnTap,
+                        child: new SizedBox(
+                            width: 56.0,
+                            height: 56.0,
+                            child: new Center(
+                                child: new Plumix.Widgets.Transform(
+                                    transform: Matrix.CreateRotation(_animation!.Value * Math.PI),
+                                    alignment: Alignment.Center,
+                                    child: new Icon(
+                                        Icons.ArrowDropDown,
+                                        color: widget.ArrowColor,
+                                        semanticLabel: semanticLabel)))))));
             }
 
             Widget result = new SizedBox(
-                height: 56,
-                child: new Row(textDirection: direction, children: children));
+                height: 56.0,
+                child: new CustomMultiChildLayout(
+                    @delegate: new AccountDetailsLayout(direction),
+                    children: children));
             if (widget.OnTap is not null)
             {
-                result = new Semantics(
-                    container: true,
-                    flags: SemanticsFlags.IsButton | SemanticsFlags.IsEnabled,
+                result = new InkWell(
                     onTap: widget.OnTap,
-                    child: new GestureDetector(
-                        behavior: HitTestBehavior.Opaque,
-                        onTap: widget.OnTap,
-                        child: result));
+                    excludeFromSemantics: true,
+                    child: result);
             }
             return result;
         }
 
-        private static Matrix RotationAroundCenter(double angle, double center)
-        {
-            double cos = Math.Cos(angle);
-            double sin = Math.Sin(angle);
-            return new Matrix(
-                cos,
-                sin,
-                -sin,
-                cos,
-                center - (center * cos) + (center * sin),
-                center - (center * sin) - (center * cos));
-        }
+        private void HandleAnimationChanged() => SetState(() => { });
     }
 
-    private static Thickness ResolveDirectionalThickness(
-        TextDirection direction,
-        double start = 0,
-        double top = 0,
-        double end = 0,
-        double bottom = 0)
+    private sealed class AccountDetailsLayout(TextDirection textDirection) : MultiChildLayoutDelegate
     {
-        return direction == TextDirection.Ltr
-            ? new Thickness(start, top, end, bottom)
-            : new Thickness(end, top, start, bottom);
+        public override void PerformLayout(Size size)
+        {
+            Size? iconSize = null;
+            if (HasChild(DropdownIconId))
+            {
+                iconSize = LayoutChild(DropdownIconId, BoxConstraints.Loose(size));
+                PositionChild(
+                    DropdownIconId,
+                    OffsetForIcon(size, iconSize.Value));
+            }
+
+            string? bottomLine = HasChild(AccountEmailId)
+                ? AccountEmailId
+                : HasChild(AccountNameId)
+                    ? AccountNameId
+                    : null;
+            if (bottomLine is null)
+            {
+                return;
+            }
+
+            Size constraintSize = iconSize is null
+                ? size
+                : new Size(size.Width - iconSize.Value.Width, size.Height);
+            iconSize ??= new Size(56.0, 56.0);
+            Size bottomLineSize = LayoutChild(bottomLine, BoxConstraints.Loose(constraintSize));
+            Point bottomLineOffset = OffsetForBottomLine(size, iconSize.Value, bottomLineSize);
+            PositionChild(bottomLine, bottomLineOffset);
+
+            if (bottomLine == AccountEmailId
+                && HasChild(AccountNameId))
+            {
+                Size nameSize = LayoutChild(
+                    AccountNameId,
+                    BoxConstraints.Loose(constraintSize));
+                PositionChild(
+                    AccountNameId,
+                    OffsetForName(size, nameSize, bottomLineOffset));
+            }
+        }
+
+        public override bool ShouldRelayout(MultiChildLayoutDelegate oldDelegate) => true;
+
+        private Point OffsetForIcon(Size size, Size iconSize)
+        {
+            return textDirection == TextDirection.Ltr
+                ? new Point(size.Width - iconSize.Width, size.Height - iconSize.Height)
+                : new Point(0.0, size.Height - iconSize.Height);
+        }
+
+        private Point OffsetForBottomLine(Size size, Size iconSize, Size bottomLineSize)
+        {
+            double y = size.Height - (0.5 * iconSize.Height) - (0.5 * bottomLineSize.Height);
+            return textDirection == TextDirection.Ltr
+                ? new Point(0.0, y)
+                : new Point(size.Width - bottomLineSize.Width, y);
+        }
+
+        private Point OffsetForName(Size size, Size nameSize, Point bottomLineOffset)
+        {
+            double y = bottomLineOffset.Y - nameSize.Height;
+            return textDirection == TextDirection.Ltr
+                ? new Point(0.0, y)
+                : new Point(size.Width - nameSize.Width, y);
+        }
     }
 }

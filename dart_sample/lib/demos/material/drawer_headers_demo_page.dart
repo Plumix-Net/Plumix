@@ -25,7 +25,7 @@ class _DrawerHeadersDemoPageState extends State<DrawerHeadersDemoPage> {
           style: TextStyle(fontSize: 20, color: Colors.black),
         ),
         const Text(
-          'Status-bar padding, animated decoration, account pictures, details toggle, and semantics.',
+          'Status-bar padding, animated decoration, ColorScheme primary, pictures, details, and semantics.',
           style: TextStyle(fontSize: 14, color: Colors.black54),
         ),
         Row(
@@ -60,11 +60,6 @@ class _DrawerHeadersDemoPageState extends State<DrawerHeadersDemoPage> {
               ),
               Expanded(
                 child: UserAccountsDrawerHeader(
-                  decoration: BoxDecoration(
-                    color: _alternateDecoration
-                        ? Colors.teal
-                        : Colors.deepPurple,
-                  ),
                   accountName: const Text('Ada Lovelace'),
                   accountEmail: const Text('ada@example.test'),
                   currentAccountPicture: const CircleAvatar(child: Text('AL')),

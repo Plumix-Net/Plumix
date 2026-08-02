@@ -247,7 +247,7 @@ public sealed class TextWidgetTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderConstrainedBox>(root.ChildElement));
+        var paragraph = FindDescendant<RenderParagraph>(root.ChildElement!.RenderObject);
         Assert.NotNull(paragraph);
         Assert.Equal(char.ConvertFromUtf32(0xe047), paragraph!.Text);
         Assert.Equal(28, paragraph.FontSize);
@@ -274,7 +274,7 @@ public sealed class TextWidgetTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderConstrainedBox>(root.ChildElement));
+        var paragraph = FindDescendant<RenderParagraph>(root.ChildElement!.RenderObject);
         Assert.NotNull(paragraph);
         Assert.Equal(32, paragraph!.FontSize);
         Assert.Equal(Colors.MediumPurple, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color);
@@ -296,7 +296,7 @@ public sealed class TextWidgetTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderConstrainedBox>(root.ChildElement));
+        var paragraph = FindDescendant<RenderParagraph>(root.ChildElement!.RenderObject);
         Assert.NotNull(paragraph);
         Assert.Equal(
             Color.FromArgb(128, explicitColor.R, explicitColor.G, explicitColor.B),
@@ -314,8 +314,9 @@ public sealed class TextWidgetTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var constrainedBox = RequireRenderObject<RenderConstrainedBox>(root.ChildElement);
-        Assert.Equal(18, constrainedBox.AdditionalConstraints.MinWidth);
+        var constrainedBox = FindDescendant<RenderConstrainedBox>(root.ChildElement!.RenderObject);
+        Assert.NotNull(constrainedBox);
+        Assert.Equal(18, constrainedBox!.AdditionalConstraints.MinWidth);
         Assert.Equal(18, constrainedBox.AdditionalConstraints.MaxWidth);
         Assert.Equal(18, constrainedBox.AdditionalConstraints.MinHeight);
         Assert.Equal(18, constrainedBox.AdditionalConstraints.MaxHeight);
@@ -337,7 +338,7 @@ public sealed class TextWidgetTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var transform = FindDescendant<RenderTransform>(RequireRenderObject<RenderConstrainedBox>(root.ChildElement));
+        var transform = FindDescendant<RenderTransform>(root.ChildElement!.RenderObject);
         Assert.NotNull(transform);
         Assert.Equal(Matrix.CreateTranslation(24, 0) * new Matrix(-1, 0, 0, 1, 0, 0), transform!.Transform);
     }

@@ -90,6 +90,8 @@
   - `FilledButton`/tonal (direct primary/on-primary and secondary-container/on-secondary-container roles, disabled
     on-surface and shadow roles, generated M3 icon/elevation defaults, callbacks/state/layer builders, and inherited
     theme capture).
+  - `DrawerHeader`/`UserAccountsDrawerHeader` (direct primary role, generic decoration and directional-inset API,
+    source picture/details layout, reversible arrow motion, localized semantics, and exact divider composition).
 - Add `Typography.Material2014`/`Material2018`, exact platform black/white themes, dense/tall geometry, and locale
   script-category selection.
 - Remove the narrowed `ColorScheme + Typography closeout` row from `docs/MATERIAL_TODO.md` only after those checks

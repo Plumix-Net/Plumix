@@ -154,7 +154,8 @@ public sealed class ModalBarrierTests
         Assert.NotNull(root);
         var clipperNode = Assert.Single(root!.Children);
         Assert.Equal(new Rect(10, 5, 70, 60), clipperNode.Rect);
-        Assert.Equal("Barrier", Assert.Single(clipperNode.Children).Label);
+        Assert.Equal("Barrier", clipperNode.Label);
+        Assert.Empty(clipperNode.Children);
 
         notifier.Value = new Thickness(4, 3, 6, 7);
         pipeline.FlushSemantics();

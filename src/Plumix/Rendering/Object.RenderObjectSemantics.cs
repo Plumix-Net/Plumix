@@ -267,6 +267,14 @@ internal sealed class RenderObjectSemantics
 
         var siblingNodes = ApplyChildConfigurationsDelegate(owner, config, children, explicitChildNodesForChildren);
 
+        if (config.IsSemanticBoundary
+            && !config.IsMergingSemanticsOfDescendants
+            && !explicitChildNodesForChildren
+            && children.Count > 0)
+        {
+            MergeNonBoundaryChildSemanticsIntoConfiguration(config, children);
+        }
+
         if (config.IsMergingSemanticsOfDescendants && !explicitChildNodesForChildren && children.Count > 0)
         {
             MergeChildSemanticsIntoConfiguration(config, children);
@@ -440,6 +448,39 @@ internal sealed class RenderObjectSemantics
             else
             {
                 childrenToKeep.Add(child);
+            }
+        }
+
+        children.Clear();
+        children.AddRange(childrenToKeep);
+    }
+
+    private static void MergeNonBoundaryChildSemanticsIntoConfiguration(
+        SemanticsConfiguration configuration,
+        List<SemanticsNode> children)
+    {
+        var pending = new Queue<SemanticsNode>(children);
+        var childrenToKeep = new List<SemanticsNode>();
+        while (pending.Count > 0)
+        {
+            SemanticsNode child = pending.Dequeue();
+            if (child.IsSemanticBoundary)
+            {
+                childrenToKeep.Add(child);
+                continue;
+            }
+
+            SemanticsConfiguration childConfiguration = CreateConfigurationFromSemanticsNode(child);
+            if (!configuration.IsCompatibleWith(childConfiguration))
+            {
+                childrenToKeep.Add(child);
+                continue;
+            }
+
+            configuration.Absorb(childConfiguration);
+            foreach (SemanticsNode grandchild in child.Children)
+            {
+                pending.Enqueue(grandchild);
             }
         }
 
@@ -741,6 +782,7 @@ internal sealed class RenderObjectSemantics
     {
         var configuration = new SemanticsConfiguration
         {
+            IsSemanticBoundary = node.IsSemanticBoundary,
             Label = node.Label,
             Hint = node.Hint,
             Tooltip = node.Tooltip,
@@ -786,6 +828,7 @@ internal sealed class RenderObjectSemantics
         node.IndexInParent = configuration.IndexInParent;
         node.IsHidden = isHidden;
         node.BlocksPreviousNodes = blocksPreviousNodes;
+        node.IsSemanticBoundary = configuration.IsSemanticBoundary;
         node.ReplaceChildren(children);
         node.SetActionHandlers(configuration.ActionHandlers);
         node.SetCustomActionHandlers(configuration.CustomActionHandlers);

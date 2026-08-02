@@ -319,6 +319,7 @@ public sealed class SemanticsNode
     public IReadOnlyList<SemanticsNode> Children => _children;
     public IReadOnlyDictionary<CustomSemanticsAction, Action> CustomSemanticsActions => _customActionHandlers;
     internal bool BlocksPreviousNodes { get; set; }
+    internal bool IsSemanticBoundary { get; set; }
 
     internal void ReplaceChildren(List<SemanticsNode> children)
     {
