@@ -1,5 +1,9 @@
 # Changelog
 
+- Breaking: completed the `OutlinedButton` ColorScheme/theme closeout. M2/M3 foreground, disabled, overlay,
+  outline, tint, icon, cursor, density, and timing defaults now match Flutter; constructor callbacks/state/semantics
+  and inherited-theme capture are source-shaped. Added focused coverage and a mirrored direct-scheme probe.
+
 - Breaking: completed the `ElevatedButton` ColorScheme/theme closeout. M2/M3 enabled, disabled, overlay,
   shadow, tint, and icon defaults now read the exact Flutter roles; constructor callbacks/state/semantics, style
   metadata, and inherited-theme capture match the source. Added focused coverage and a mirrored scheme probe.

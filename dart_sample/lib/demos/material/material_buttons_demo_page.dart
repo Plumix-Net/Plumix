@@ -95,6 +95,7 @@ class _MaterialButtonsDemoPageState extends State<MaterialButtonsDemoPage> {
             child: Text('OutlinedButton taps: $_outlinedButtonTaps'),
           ),
         ),
+        _buildOutlinedButtonSchemeProbe(context),
         SizedBox(
           width: 240,
           child: FilledButton(
@@ -248,6 +249,40 @@ class _MaterialButtonsDemoPageState extends State<MaterialButtonsDemoPage> {
             child: ElevatedButton(
               onPressed: null,
               child: Text('Scheme elevated off'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOutlinedButtonSchemeProbe(BuildContext context) {
+    final ThemeData inherited = Theme.of(context);
+    final ColorScheme scheme = inherited.colorScheme.copyWith(
+      primary: const Color(0xFF705D00),
+      onSurface: const Color(0xFF453A10),
+      outline: const Color(0xFF766F64),
+    );
+    final ThemeData probeTheme = inherited.copyWith(
+      primaryColor: Colors.deepOrange,
+      colorScheme: scheme,
+    );
+
+    return Theme(
+      data: probeTheme,
+      child: Row(
+        spacing: 8,
+        children: <Widget>[
+          Expanded(
+            child: OutlinedButton(
+              onPressed: _enabled ? _onOutlinedButtonTap : null,
+              child: const Text('Scheme outlined'),
+            ),
+          ),
+          const Expanded(
+            child: OutlinedButton(
+              onPressed: null,
+              child: Text('Scheme outlined off'),
             ),
           ),
         ],

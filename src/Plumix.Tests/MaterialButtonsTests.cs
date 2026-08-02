@@ -262,6 +262,84 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
+    public void OutlinedButton_ConstructorsExposeCallbacksStateAndSemanticSurface()
+    {
+        var statesController = new MaterialStatesController();
+        var focusNode = new FocusNode();
+        bool longPressed = false;
+        Action<bool> hover = _ => { };
+        Action<bool> focusChange = _ => { };
+        var button = new OutlinedButton(
+            child: new Text("Hold"),
+            onPressed: null,
+            onLongPress: () => longPressed = true,
+            onHover: hover,
+            onFocusChange: focusChange,
+            focusNode: focusNode,
+            autofocus: true,
+            clipBehavior: Clip.AntiAlias,
+            statesController: statesController,
+            isSemanticButton: null);
+
+        Assert.NotNull(button.OnLongPress);
+        Assert.Same(hover, button.OnHover);
+        Assert.Same(focusChange, button.OnFocusChange);
+        Assert.Same(focusNode, button.FocusNode);
+        Assert.True(button.Autofocus);
+        Assert.Equal(Clip.AntiAlias, button.ClipBehavior);
+        Assert.Same(statesController, button.StatesController);
+        Assert.Null(button.IsSemanticButton);
+
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light,
+                child: new Directionality(TextDirection.Ltr, button)));
+        var semantics = harness.PumpAndGetSemantics(new Size(120, 80));
+        var actionNode = FindSemantics(
+            semantics,
+            node => node.Actions.HasFlag(SemanticsActions.LongPress));
+        Assert.NotNull(actionNode);
+        Assert.False(actionNode!.Flags.HasFlag(SemanticsFlags.IsButton));
+        Assert.True(actionNode.PerformAction(SemanticsActions.LongPress));
+        Assert.True(longPressed);
+    }
+
+    [Fact]
+    public void OutlinedButtonTheme_WrapPreservesThemeData()
+    {
+        var data = new OutlinedButtonThemeData(
+            style: OutlinedButton.StyleFrom(foregroundColor: Colors.DarkCyan));
+        Widget child = new Text("Captured");
+        var theme = new OutlinedButtonTheme(data, child);
+
+        var wrapped = Assert.IsType<OutlinedButtonTheme>(theme.Wrap(default, child));
+
+        Assert.Same(data, wrapped.Data);
+        Assert.Same(child, wrapped.Child);
+    }
+
+    [Fact]
+    public void OutlinedButton_StyleFromCarriesCursorDensityTimingAndFeedback()
+    {
+        var enabledCursor = new SystemMouseCursor("outlined-enabled");
+        var disabledCursor = new SystemMouseCursor("outlined-disabled");
+        var density = new VisualDensity(Horizontal: -2, Vertical: 1);
+        TimeSpan duration = TimeSpan.FromMilliseconds(350);
+        ButtonStyle style = OutlinedButton.StyleFrom(
+            enabledMouseCursor: enabledCursor,
+            disabledMouseCursor: disabledCursor,
+            visualDensity: density,
+            animationDuration: duration,
+            enableFeedback: false);
+
+        Assert.Same(enabledCursor, style.MouseCursor!.Resolve(MaterialState.None));
+        Assert.Same(disabledCursor, style.MouseCursor.Resolve(MaterialState.Disabled));
+        Assert.Equal(density, style.VisualDensity);
+        Assert.Equal(duration, style.AnimationDuration);
+        Assert.False(style.EnableFeedback);
+    }
+
+    [Fact]
     public void TextButton_StyleFrom_IconColorAndSizeOverrideDefaults()
     {
         var owner = new BuildOwner();
@@ -2160,12 +2238,18 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
-    public void OutlinedButton_UsesThemeOutlineColorForBorderByDefault()
+    public void OutlinedButton_M3Defaults_ReadColorSchemeRolesDirectly()
     {
+        FocusManager.Instance.ResetForTests();
         var owner = new BuildOwner();
+        var focusNode = new FocusNode();
         var theme = ThemeData.Light with
         {
-            OutlineColor = Colors.CadetBlue
+            PrimaryColor = Colors.OrangeRed,
+            OutlineColor = Colors.Bisque,
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(
+                primary: Colors.MediumVioletRed,
+                outline: Colors.CadetBlue)
         };
 
         var root = new TestRootElement(
@@ -2173,6 +2257,8 @@ public sealed class MaterialButtonsTests
                 data: theme,
                 child: new OutlinedButton(
                     onPressed: () => { },
+                    focusNode: focusNode,
+                    style: new ButtonStyle(AnimationDuration: TimeSpan.Zero),
                     child: new Text("Outline"))));
 
         root.Attach(owner);
@@ -2180,8 +2266,24 @@ public sealed class MaterialButtonsTests
         owner.FlushBuild();
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
-        Assert.Equal(new BorderSide(Colors.CadetBlue, 1), decorated!.Decoration.Border);
+        Assert.Equal(Colors.Transparent, decorated!.Decoration.Color);
+        Assert.Equal(new BorderSide(theme.ColorScheme.Outline, 1), decorated.Decoration.Border);
+        Assert.NotNull(paragraph);
+        Assert.Equal(
+            theme.ColorScheme.Primary,
+            Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+
+        Assert.True(focusNode.RequestFocus());
+        owner.FlushBuild();
+
+        decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(decorated);
+        Assert.Equal(new BorderSide(theme.ColorScheme.Primary, 1), decorated!.Decoration.Border);
+
+        root.Unmount();
+        FocusManager.Instance.ResetForTests();
     }
 
     [Fact]
@@ -2192,7 +2294,8 @@ public sealed class MaterialButtonsTests
         {
             UseMaterial3 = false,
             OnSurfaceColor = Colors.DarkSlateBlue,
-            OutlineColor = Colors.CadetBlue
+            OutlineColor = Colors.CadetBlue,
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(onSurface: Colors.MidnightBlue)
         };
 
         var root = new TestRootElement(
@@ -2208,7 +2311,9 @@ public sealed class MaterialButtonsTests
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
-        Assert.Equal(new BorderSide(ApplyOpacity(theme.OnSurfaceColor, 0.12), 1), decorated!.Decoration.Border);
+        Assert.Equal(
+            new BorderSide(ApplyOpacity(theme.ColorScheme.OnSurface, 0.12), 1),
+            decorated!.Decoration.Border);
     }
 
     [Fact]
@@ -2221,7 +2326,10 @@ public sealed class MaterialButtonsTests
             UseMaterial3 = false,
             OnSurfaceColor = Colors.DarkSlateBlue,
             PrimaryColor = Colors.OrangeRed,
-            OutlineColor = Colors.CadetBlue
+            OutlineColor = Colors.CadetBlue,
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(
+                primary: Colors.MediumPurple,
+                onSurface: Colors.MidnightBlue)
         };
 
         var root = new TestRootElement(
@@ -2230,6 +2338,7 @@ public sealed class MaterialButtonsTests
                 child: new OutlinedButton(
                     onPressed: () => { },
                     focusNode: focusNode,
+                    style: new ButtonStyle(AnimationDuration: TimeSpan.Zero),
                     child: new Text("Outline m2 focus border"))));
 
         root.Attach(owner);
@@ -2241,17 +2350,20 @@ public sealed class MaterialButtonsTests
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
-        Assert.Equal(new BorderSide(ApplyOpacity(theme.OnSurfaceColor, 0.12), 1), decorated!.Decoration.Border);
+        Assert.Equal(
+            new BorderSide(ApplyOpacity(theme.ColorScheme.OnSurface, 0.12), 1),
+            decorated!.Decoration.Border);
     }
 
     [Fact]
-    public void OutlinedButton_DefaultForegroundUsesThemePrimaryColor()
+    public void OutlinedButton_DefaultForegroundUsesColorSchemePrimary()
     {
         var owner = new BuildOwner();
         var theme = ThemeData.Light with
         {
             PrimaryColor = Colors.MediumVioletRed,
-            OutlineColor = Colors.CadetBlue
+            OutlineColor = Colors.CadetBlue,
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(primary: Colors.DarkCyan)
         };
 
         var root = new TestRootElement(
@@ -2267,17 +2379,20 @@ public sealed class MaterialButtonsTests
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(paragraph);
-        Assert.Equal(Colors.MediumVioletRed, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+        Assert.Equal(
+            theme.ColorScheme.Primary,
+            Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
     }
 
     [Fact]
-    public void OutlinedButton_UseMaterial3Disabled_DefaultForegroundUsesThemePrimaryColor()
+    public void OutlinedButton_M2Defaults_ReadColorSchemePrimaryDirectly()
     {
         var owner = new BuildOwner();
         var theme = ThemeData.Light with
         {
             UseMaterial3 = false,
-            PrimaryColor = Colors.MediumVioletRed
+            PrimaryColor = Colors.MediumVioletRed,
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(primary: Colors.DarkCyan)
         };
 
         var root = new TestRootElement(
@@ -2293,7 +2408,9 @@ public sealed class MaterialButtonsTests
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(paragraph);
-        Assert.Equal(Colors.MediumVioletRed, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+        Assert.Equal(
+            theme.ColorScheme.Primary,
+            Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
     }
 
     [Fact]
@@ -3787,7 +3904,8 @@ public sealed class MaterialButtonsTests
         var owner = new BuildOwner();
         var theme = ThemeData.Light with
         {
-            PrimaryColor = Colors.MediumPurple
+            PrimaryColor = Colors.OrangeRed,
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(primary: Colors.MediumPurple)
         };
 
         var root = new TestRootElement(
@@ -3806,7 +3924,9 @@ public sealed class MaterialButtonsTests
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(paragraph);
-        Assert.Equal(theme.PrimaryColor, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+        Assert.Equal(
+            theme.ColorScheme.Primary,
+            Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
     }
 
     [Fact]
@@ -3872,7 +3992,8 @@ public sealed class MaterialButtonsTests
         var owner = new BuildOwner();
         var theme = ThemeData.Light with
         {
-            OutlineColor = Colors.CadetBlue
+            OutlineColor = Colors.Bisque,
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(outline: Colors.CadetBlue)
         };
 
         var root = new TestRootElement(
@@ -3893,7 +4014,7 @@ public sealed class MaterialButtonsTests
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
-        Assert.Equal(new BorderSide(theme.OutlineColor, 1), decorated!.Decoration.Border);
+        Assert.Equal(new BorderSide(theme.ColorScheme.Outline, 1), decorated!.Decoration.Border);
     }
 
     [Fact]
@@ -3902,7 +4023,8 @@ public sealed class MaterialButtonsTests
         var owner = new BuildOwner();
         var theme = ThemeData.Light with
         {
-            OnSurfaceColor = Colors.DarkOliveGreen
+            OnSurfaceColor = Colors.OrangeRed,
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(onSurface: Colors.DarkOliveGreen)
         };
 
         var root = new TestRootElement(
@@ -3923,7 +4045,9 @@ public sealed class MaterialButtonsTests
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
-        Assert.Equal(new BorderSide(ApplyOpacity(theme.OnSurfaceColor, 0.12), 1), decorated!.Decoration.Border);
+        Assert.Equal(
+            new BorderSide(ApplyOpacity(theme.ColorScheme.OnSurface, 0.12), 1),
+            decorated!.Decoration.Border);
     }
 
     [Fact]
@@ -4001,7 +4125,8 @@ public sealed class MaterialButtonsTests
         var owner = new BuildOwner();
         var theme = ThemeData.Light with
         {
-            PrimaryColor = Colors.OrangeRed
+            PrimaryColor = Colors.DarkSlateBlue,
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(primary: Colors.OrangeRed)
         };
 
         var pressedOverlay = Colors.YellowGreen;
@@ -4012,7 +4137,8 @@ public sealed class MaterialButtonsTests
                     onPressed: () => { },
                     style: new ButtonStyle(
                         OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                            states.HasFlag(MaterialState.Pressed) ? pressedOverlay : null)),
+                            states.HasFlag(MaterialState.Pressed) ? pressedOverlay : null),
+                        AnimationDuration: TimeSpan.Zero),
                     child: new Text("Outlined overlay resolver fallback"))));
 
         root.Attach(owner);
@@ -4034,7 +4160,7 @@ public sealed class MaterialButtonsTests
 
         var hoveredDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(hoveredDecorated);
-        Assert.Equal(ApplyOpacity(theme.PrimaryColor, 0.08), hoveredDecorated!.Decoration.Color);
+        Assert.Equal(ApplyOpacity(theme.ColorScheme.Primary, 0.08), hoveredDecorated!.Decoration.Color);
 
         var interactiveListener = FindInteractivePointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(interactiveListener);
@@ -4977,7 +5103,7 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
-    public void OutlinedButton_DefaultFocusedOverlay_UseMaterial3Disabled_UsesPrimaryOpacity012()
+    public void OutlinedButton_DefaultFocusedOverlay_UseMaterial3Disabled_UsesPrimaryOpacity010()
     {
         FocusManager.Instance.ResetForTests();
 
@@ -4985,7 +5111,8 @@ public sealed class MaterialButtonsTests
         var theme = ThemeData.Light with
         {
             UseMaterial3 = false,
-            PrimaryColor = Colors.MediumSlateBlue
+            PrimaryColor = Colors.OrangeRed,
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(primary: Colors.MediumSlateBlue)
         };
         var focusNode = new FocusNode();
 
@@ -4995,6 +5122,7 @@ public sealed class MaterialButtonsTests
                 child: new OutlinedButton(
                     onPressed: () => { },
                     focusNode: focusNode,
+                    style: new ButtonStyle(AnimationDuration: TimeSpan.Zero),
                     child: new Text("M2 outlined overlay"))));
 
         root.Attach(owner);
@@ -5006,7 +5134,7 @@ public sealed class MaterialButtonsTests
 
         var focusedDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(focusedDecorated);
-        Assert.Equal(ApplyOpacity(theme.PrimaryColor, 0.12), focusedDecorated!.Decoration.Color);
+        Assert.Equal(ApplyOpacity(theme.ColorScheme.Primary, 0.10), focusedDecorated!.Decoration.Color);
 
         root.Unmount();
         FocusManager.Instance.ResetForTests();
@@ -5201,7 +5329,9 @@ public sealed class MaterialButtonsTests
                 data: ThemeData.Light,
                 child: new OutlinedButton(
                     onPressed: () => { },
-                    style: OutlinedButton.StyleFrom(overlayColor: Colors.Transparent),
+                    style: OutlinedButton.StyleFrom(
+                        overlayColor: Colors.Transparent,
+                        animationDuration: TimeSpan.Zero),
                     child: new Text("Outlined transparent"))));
 
         root.Attach(owner);
@@ -5210,7 +5340,7 @@ public sealed class MaterialButtonsTests
 
         var initialDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(initialDecorated);
-        Assert.Null(initialDecorated!.Decoration.Color);
+        Assert.Equal(Colors.Transparent, initialDecorated!.Decoration.Color);
 
         var hoverListener = FindHoverPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(hoverListener);
@@ -5358,7 +5488,7 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
-    public void OutlinedButton_UsesRoundedClipRadius4_WhenUseMaterial3Disabled()
+    public void OutlinedButton_HasNoClipByDefault_WhenUseMaterial3Disabled()
     {
         var owner = new BuildOwner();
         var root = new TestRootElement(
@@ -5374,8 +5504,7 @@ public sealed class MaterialButtonsTests
 
         var clip = FindDescendant<RenderClipRRect>(RequireRenderObject<RenderObject>(root.ChildElement));
 
-        Assert.NotNull(clip);
-        Assert.Equal(BorderRadius.Circular(4), clip!.BorderRadius);
+        Assert.Null(clip);
     }
 
     [Fact]

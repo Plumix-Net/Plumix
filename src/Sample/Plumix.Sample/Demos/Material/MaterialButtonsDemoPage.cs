@@ -93,6 +93,7 @@ internal sealed class MaterialButtonsDemoPageState : State
                     child: new OutlinedButton(
                         onPressed: _enabled ? OnOutlinedButtonTap : null,
                         child: new Text($"OutlinedButton taps: {_outlinedButtonTaps}"))),
+                BuildOutlinedButtonSchemeProbe(context),
                 new SizedBox(
                     width: 240,
                     child: new FilledButton(
@@ -219,6 +220,37 @@ internal sealed class MaterialButtonsDemoPageState : State
                         child: new ElevatedButton(
                             onPressed: null,
                             child: new Text("Scheme elevated off"))),
+                ]));
+    }
+
+    private Widget BuildOutlinedButtonSchemeProbe(BuildContext context)
+    {
+        ThemeData inherited = Theme.Of(context);
+        ColorScheme scheme = inherited.ColorScheme.CopyWith(
+            primary: Color.Parse("#FF705D00"),
+            onSurface: Color.Parse("#FF453A10"),
+            outline: Color.Parse("#FF766F64"));
+        ThemeData probeTheme = inherited with
+        {
+            PrimaryColor = Colors.OrangeRed,
+            OutlineColor = Colors.MediumPurple,
+            ColorScheme = scheme
+        };
+
+        return new Theme(
+            data: probeTheme,
+            child: new Row(
+                spacing: 8,
+                children:
+                [
+                    new Expanded(
+                        child: new OutlinedButton(
+                            onPressed: _enabled ? OnOutlinedButtonTap : null,
+                            child: new Text("Scheme outlined"))),
+                    new Expanded(
+                        child: new OutlinedButton(
+                            onPressed: null,
+                            child: new Text("Scheme outlined off"))),
                 ]));
     }
 

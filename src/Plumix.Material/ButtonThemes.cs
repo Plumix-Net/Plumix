@@ -165,7 +165,7 @@ public sealed class ElevatedButtonTheme : InheritedTheme
     }
 }
 
-public sealed class OutlinedButtonTheme : InheritedWidget
+public sealed class OutlinedButtonTheme : InheritedTheme
 {
     public OutlinedButtonTheme(
         OutlinedButtonThemeData data,
@@ -183,6 +183,11 @@ public sealed class OutlinedButtonTheme : InheritedWidget
     public override Widget Build(BuildContext context)
     {
         return Child;
+    }
+
+    public override Widget Wrap(BuildContext context, Widget child)
+    {
+        return new OutlinedButtonTheme(Data, child);
     }
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
