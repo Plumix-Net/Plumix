@@ -245,11 +245,7 @@ public sealed class MaterialBannerTests
         harness.Pump(new Size(360, 180));
         Assert.Equal(1, visibleCalls);
 
-        Assert.True(liveRegion.PerformAction(SemanticsActions.Dismiss));
-        now = Scheduler.CurrentSeconds;
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.35));
-        Assert.Equal(0, controller.Value);
+        Assert.True(liveRegion.Actions.HasFlag(SemanticsActions.Dismiss));
     }
 
     [Fact]
@@ -267,17 +263,236 @@ public sealed class MaterialBannerTests
         Assert.DoesNotContain(FindDescendants<RenderAlign>(harness.RenderView), align => align.HeightFactor.HasValue);
     }
 
+    [Fact]
+    public void MaterialBanner_AcceptsGenericAnimationAndDirectionalInsets()
+    {
+        using var controller = MaterialBanner.CreateAnimationController();
+        var animation = new ProxyAnimation(controller);
+        var original = Banner();
+        var animated = original.WithAnimation(animation, new ValueKey<string>("fallback"));
+
+        Assert.Same(animation, animated.Animation);
+        Assert.Equal(original.Key ?? new ValueKey<string>("fallback"), animated.Key);
+
+        EdgeInsetsGeometry directional = EdgeInsetsDirectional.Only(
+            start: 3,
+            top: 5,
+            end: 7,
+            bottom: 11);
+        Assert.Equal(new Thickness(3, 5, 7, 11), directional.Resolve(TextDirection.Ltr));
+        Assert.Equal(new Thickness(7, 5, 3, 11), directional.Resolve(TextDirection.Rtl));
+        Assert.Equal(
+            EdgeInsetsGeometry.All(5),
+            EdgeInsetsGeometry.Lerp(EdgeInsetsGeometry.Zero, EdgeInsetsGeometry.All(10), 0.5));
+    }
+
+    [Fact]
+    public async Task ScaffoldMessenger_QueuesMaterialBannersAndCompletesClosedReasons()
+    {
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new ScaffoldMessenger(new Scaffold(body: new Text("Body")))));
+        harness.Pump(new Size(360, 220));
+        var messenger = harness.FindState<ScaffoldMessengerState>();
+
+        var first = messenger.ShowMaterialBanner(Banner(content: "First"));
+        var second = messenger.ShowMaterialBanner(Banner(content: "Second"));
+        harness.Pump(new Size(360, 220));
+
+        Assert.NotNull(FindParagraph(harness.RenderView, "First"));
+        Assert.Null(FindParagraph(harness.RenderView, "Second"));
+
+        messenger.RemoveCurrentMaterialBanner();
+        harness.Pump(new Size(360, 220));
+        Assert.Equal(MaterialBannerClosedReason.Remove, await first.Closed);
+        Assert.Null(FindParagraph(harness.RenderView, "First"));
+        Assert.NotNull(FindParagraph(harness.RenderView, "Second"));
+
+        second.Close();
+        PumpAnimation();
+        harness.Pump(new Size(360, 220));
+        Assert.Equal(MaterialBannerClosedReason.Hide, await second.Closed);
+        Assert.Null(FindParagraph(harness.RenderView, "Second"));
+    }
+
+    [Fact]
+    public async Task MaterialBanner_SemanticsDismissUsesMessengerReason()
+    {
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new ScaffoldMessenger(new Scaffold(body: new SizedBox()))));
+        harness.Pump(new Size(360, 220));
+        var messenger = harness.FindState<ScaffoldMessengerState>();
+        var controller = messenger.ShowMaterialBanner(Banner());
+        PumpAnimation();
+
+        var semantics = harness.PumpAndGetSemantics(new Size(360, 220));
+        var liveRegion = FindSemantics(semantics, node =>
+            node.Flags.HasFlag(SemanticsFlags.IsLiveRegion)
+            && node.Actions.HasFlag(SemanticsActions.Dismiss));
+
+        Assert.NotNull(liveRegion);
+        Assert.True(liveRegion!.PerformAction(SemanticsActions.Dismiss));
+        harness.Pump(new Size(360, 220));
+        Assert.Equal(MaterialBannerClosedReason.Dismiss, await controller.Closed);
+        Assert.Null(FindParagraph(harness.RenderView, "Content"));
+    }
+
+    [Fact]
+    public async Task MaterialBanner_AccessibleNavigationHidesImmediately()
+    {
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new ScaffoldMessenger(new Scaffold(body: new SizedBox())),
+            mediaQuery: new MediaQueryData(
+                Size: new Size(360, 220),
+                AccessibleNavigation: true)));
+        harness.Pump(new Size(360, 220));
+        var messenger = harness.FindState<ScaffoldMessengerState>();
+        var controller = messenger.ShowMaterialBanner(Banner());
+        harness.Pump(new Size(360, 220));
+
+        messenger.HideCurrentMaterialBanner();
+        harness.Pump(new Size(360, 220));
+
+        Assert.Equal(MaterialBannerClosedReason.Hide, await controller.Closed);
+        Assert.Null(FindParagraph(harness.RenderView, "Content"));
+    }
+
+    [Fact]
+    public async Task ScaffoldMessenger_ClearMaterialBannersRetainsAndHidesOnlyCurrentEntry()
+    {
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new ScaffoldMessenger(new Scaffold(body: new SizedBox()))));
+        harness.Pump(new Size(360, 220));
+        var messenger = harness.FindState<ScaffoldMessengerState>();
+        var current = messenger.ShowMaterialBanner(Banner(content: "Current"));
+        var queued = messenger.ShowMaterialBanner(Banner(content: "Queued"));
+        harness.Pump(new Size(360, 220));
+
+        messenger.ClearMaterialBanners();
+        PumpAnimation();
+        harness.Pump(new Size(360, 220));
+
+        Assert.Equal(MaterialBannerClosedReason.Hide, await current.Closed);
+        Assert.False(queued.Closed.IsCompleted);
+        Assert.Null(FindParagraph(harness.RenderView, "Current"));
+        Assert.Null(FindParagraph(harness.RenderView, "Queued"));
+    }
+
+    [Fact]
+    public void ScaffoldMessenger_RequiresDescendantScaffoldForMaterialBanner()
+    {
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new ScaffoldMessenger(new SizedBox())));
+        harness.Pump(new Size(360, 220));
+        var messenger = harness.FindState<ScaffoldMessengerState>();
+
+        var error = Assert.Throws<InvalidOperationException>(() => messenger.ShowMaterialBanner(Banner()));
+        Assert.Contains("no descendant Scaffold", error.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void ScaffoldMessenger_PresentsMaterialBannerAndSnackBarOnceEach()
+    {
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new ScaffoldMessenger(new Scaffold(body: new SizedBox()))));
+        harness.Pump(new Size(360, 220));
+        var messenger = harness.FindState<ScaffoldMessengerState>();
+
+        messenger.ShowSnackBar(new SnackBar(content: new Text("Snack")));
+        messenger.ShowMaterialBanner(Banner(content: "Banner"));
+        harness.Pump(new Size(360, 220));
+
+        Assert.Single(FindDescendants<RenderParagraph>(harness.RenderView), value => value.Text == "Snack");
+        Assert.Single(FindDescendants<RenderParagraph>(harness.RenderView), value => value.Text == "Banner");
+    }
+
+    [Fact]
+    public void ScaffoldMessenger_PresentsOnlyOnRootOfNestedScaffoldSet()
+    {
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new ScaffoldMessenger(
+                new Scaffold(body: new Scaffold(body: new SizedBox())))));
+        harness.Pump(new Size(360, 220));
+        var messenger = harness.FindState<ScaffoldMessengerState>();
+
+        messenger.ShowMaterialBanner(Banner(content: "Nested"));
+        harness.Pump(new Size(360, 220));
+
+        Assert.Single(FindDescendants<RenderParagraph>(harness.RenderView), value => value.Text == "Nested");
+    }
+
+    [Fact]
+    public void ScaffoldMessenger_PresentsOnEverySiblingRootScaffold()
+    {
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new ScaffoldMessenger(
+                new Row(
+                    children:
+                    [
+                        new Expanded(new Scaffold(body: new SizedBox())),
+                        new Expanded(new Scaffold(body: new SizedBox())),
+                    ]))));
+        harness.Pump(new Size(360, 220));
+        var messenger = harness.FindState<ScaffoldMessengerState>();
+
+        messenger.ShowMaterialBanner(Banner(content: "Sibling"));
+        harness.Pump(new Size(360, 220));
+
+        Assert.Equal(
+            2,
+            FindDescendants<RenderParagraph>(harness.RenderView).Count(value => value.Text == "Sibling"));
+    }
+
+    [Theory]
+    [InlineData(0.0, true)]
+    [InlineData(2.0, false)]
+    public void Scaffold_ZeroElevationBannerPushesBodyWhileElevatedBannerOverlays(
+        double elevation,
+        bool bodyIsPushed)
+    {
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new ScaffoldMessenger(new Scaffold(body: new Text("Body")))));
+        harness.Pump(new Size(360, 220));
+        var messenger = harness.FindState<ScaffoldMessengerState>();
+        messenger.ShowMaterialBanner(Banner(elevation: elevation));
+        PumpAnimation();
+        harness.Pump(new Size(360, 220));
+
+        var scaffoldColumn = Assert.Single(FindDescendants<RenderFlex>(harness.RenderView), flex =>
+            flex.Direction == Axis.Vertical
+            && flex.MainAxisSize == MainAxisSize.Max
+            && flex.CrossAxisAlignment == CrossAxisAlignment.Stretch
+            && flex.Size == new Size(360, 220));
+        RenderBox first = scaffoldColumn.FirstChild!;
+        RenderBox? second = scaffoldColumn.ChildAfter(first);
+
+        Assert.Equal(bodyIsPushed, second is not null);
+        if (second is not null)
+        {
+            Assert.True(((FlexParentData)second.parentData!).offset.Y >= first.Size.Height);
+        }
+    }
+
     private static MaterialBanner Banner(
+        string content = "Content",
         IReadOnlyList<Widget>? actions = null,
         double? elevation = null,
         Widget? leading = null,
         Color? backgroundColor = null,
         Thickness? padding = null,
         double minActionBarHeight = 52,
-        AnimationController? animation = null,
+        Animation<double>? animation = null,
         Action? onVisible = null,
         Key? key = null) => new(
-        content: new Text("Content"),
+        content: new Text(content),
         actions: actions ?? [new Text("ACTION")],
         elevation: elevation,
         leading: leading,
@@ -287,6 +502,13 @@ public sealed class MaterialBannerTests
         animation: animation,
         onVisible: onVisible,
         key: key);
+
+    private static void PumpAnimation()
+    {
+        double now = Scheduler.CurrentSeconds;
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.35));
+    }
 
     private static Widget Wrap(
         ThemeData theme,
@@ -359,6 +581,22 @@ public sealed class MaterialBannerTests
             _pipeline.RequestSemanticsUpdate();
             _pipeline.FlushSemantics();
             return _pipeline.SemanticsOwner.RootNode;
+        }
+
+        public T FindState<T>() where T : State
+        {
+            var states = new List<T>();
+            CollectStates(_rootElement, states);
+            return Assert.Single(states);
+        }
+
+        private static void CollectStates<T>(Element element, List<T> states) where T : State
+        {
+            if (element is StatefulElement stateful && stateful.State is T state)
+            {
+                states.Add(state);
+            }
+            element.VisitChildren(child => CollectStates(child, states));
         }
 
         public void Dispose() => _rootElement.Unmount();

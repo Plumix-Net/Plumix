@@ -351,6 +351,7 @@ public sealed class ScaffoldState : State
     private bool _isDisposed;
     private PersistentBottomSheetPresentation? _persistentBottomSheet;
     private AnimationController? _staticBottomSheetAnimation;
+    private ScaffoldMessengerState? _scaffoldMessenger;
 
     private Scaffold CurrentWidget => (Scaffold)StateWidget;
 
@@ -379,11 +380,27 @@ public sealed class ScaffoldState : State
     public override void Dispose()
     {
         _isDisposed = true;
+        _scaffoldMessenger?.Unregister(this);
+        _scaffoldMessenger = null;
         RemoveDrawerHistoryEntry();
         StopSettleAnimation(DrawerSide.Start);
         StopSettleAnimation(DrawerSide.End);
         DisposeStaticBottomSheetAnimation();
         DisposePersistentBottomSheet(complete: true);
+    }
+
+    public override void DidChangeDependencies()
+    {
+        base.DidChangeDependencies();
+        ScaffoldMessengerState? messenger = ScaffoldMessenger.MaybeOf(Context);
+        if (ReferenceEquals(messenger, _scaffoldMessenger))
+        {
+            return;
+        }
+
+        _scaffoldMessenger?.Unregister(this);
+        _scaffoldMessenger = messenger;
+        _scaffoldMessenger?.Register(this);
     }
 
     public void OpenDrawer()
@@ -573,7 +590,12 @@ public sealed class ScaffoldState : State
 
         var theme = Theme.Of(context);
         var effectiveBackground = CurrentWidget.BackgroundColor ?? theme.ScaffoldBackgroundColor;
-        var presentedSnackBar = ScaffoldMessenger.MaybeOf(context)?.CurrentSnackBar;
+        ScaffoldMessengerState? messenger = ScaffoldMessenger.MaybeOf(context);
+        var presentedSnackBar = messenger?.SnackBarFor(this);
+        MaterialBanner? presentedMaterialBanner = messenger?.MaterialBannerFor(this);
+        double materialBannerElevation = presentedMaterialBanner?.Elevation
+                                         ?? MaterialBannerTheme.Of(context).Elevation
+                                         ?? 0.0;
         var presentedSnackBarBehavior = presentedSnackBar?.Behavior
                                         ?? SnackBarTheme.Of(context).Behavior
                                         ?? SnackBarBehavior.Fixed;
@@ -582,6 +604,15 @@ public sealed class ScaffoldState : State
         if (CurrentWidget.AppBar != null)
         {
             columnChildren.Add(CurrentWidget.AppBar);
+        }
+
+        if (presentedMaterialBanner is not null && materialBannerElevation == 0.0)
+        {
+            columnChildren.Add(MediaQuery.RemovePadding(
+                context,
+                presentedMaterialBanner,
+                removeTop: CurrentWidget.AppBar is not null,
+                removeBottom: true));
         }
 
         columnChildren.Add(new Expanded(child: CurrentWidget.Body));
@@ -627,7 +658,8 @@ public sealed class ScaffoldState : State
                 SnackBarSize: new Size(),
                 MinInsets: mediaQuery.ViewInsets,
                 MinViewPadding: mediaQuery.ViewPadding,
-                TextDirection: textDirection);
+                TextDirection: textDirection,
+                MaterialBannerSize: new Size());
             Point floatingActionButtonOffset = CurrentWidget.FloatingActionButtonLocation.GetOffset(geometry);
             floatingActionButtonArea = new Rect(
                 floatingActionButtonOffset,
@@ -672,6 +704,20 @@ public sealed class ScaffoldState : State
                 right: 0,
                 bottom: 0,
                 child: bottomSheet));
+        }
+
+        if (presentedMaterialBanner is not null && materialBannerElevation != 0.0)
+        {
+            double appBarHeight = CurrentWidget.AppBar?.PreferredSize.Height ?? 0.0;
+            overlayChildren.Add(new Positioned(
+                left: 0,
+                top: appBarHeight,
+                right: 0,
+                child: MediaQuery.RemovePadding(
+                    context,
+                    presentedMaterialBanner,
+                    removeTop: CurrentWidget.AppBar is not null,
+                    removeBottom: true)));
         }
 
         if (!isAnyDrawerVisible)

@@ -48,7 +48,7 @@ public sealed class BannerDemoPage : StatefulWidget
                     [
                         new Text("Banner + MaterialBanner", fontSize: 20),
                         new Text(
-                            "Diagonal core ribbon and persistent Material message with leading content, actions, overflow, and theme precedence.",
+                            "Diagonal ribbon, direct Material layout, and queued ScaffoldMessenger presentation.",
                             fontSize: 14,
                             color: Colors.DimGray),
                         new Row(
@@ -57,6 +57,7 @@ public sealed class BannerDemoPage : StatefulWidget
                             [
                                 ControlButton(_forceActionsBelow ? "Actions below" : "Single row", () => SetState(() => _forceActionsBelow = !_forceActionsBelow)),
                                 ControlButton(_useThemeOverrides ? "Theme on" : "Theme off", () => SetState(() => _useThemeOverrides = !_useThemeOverrides)),
+                                ControlButton("Show through messenger", () => ShowMessengerBanner(context)),
                             ]),
                         new Align(
                             alignment: Alignment.CenterLeft,
@@ -76,6 +77,19 @@ public sealed class BannerDemoPage : StatefulWidget
                             forceActionsBelow: _forceActionsBelow,
                             actions: actions),
                     ]));
+        }
+
+        private static void ShowMessengerBanner(BuildContext context)
+        {
+            ScaffoldMessenger.Of(context).ShowMaterialBanner(new MaterialBanner(
+                leading: new Icon(Icons.InfoOutline),
+                content: new Text("This banner is queued and presented by ScaffoldMessenger."),
+                actions:
+                [
+                    new TextButton(
+                        new Text("DISMISS"),
+                        () => ScaffoldMessenger.Of(context).HideCurrentMaterialBanner()),
+                ]));
         }
 
         private static Widget ControlButton(string label, Action onPressed) =>

@@ -1,5 +1,10 @@
 # Changelog
 
+- Breaking: closed `MaterialBanner` presentation parity. Banner animation and inset APIs now accept generic
+  `Animation<double>` and directional `EdgeInsetsGeometry`; `ScaffoldMessenger` owns the source FIFO queue,
+  close reasons, accessible dismissal, and root-Scaffold presentation, while `Scaffold` pushes or overlays its body
+  according to banner elevation. Added focused queue/layout/semantics coverage and a mirrored messenger demo probe.
+
 - Breaking: completed the `TextButton` ColorScheme/theme closeout. M2 and M3 foreground, disabled, icon, and
   overlay defaults now read `ColorScheme.primary`/`onSurface` directly; M2 follows the pinned executable 0.10
   pressed/focused opacity. Added source callback/state/semantic plumbing, inherited-theme capture, focused tests,

@@ -432,8 +432,8 @@ public sealed partial record MaterialBannerThemeData
             DividerColor = MaterialThemeLerp.Color(a?.DividerColor, b?.DividerColor, t),
             ContentTextStyle = MaterialThemeLerp.TextStyle(a?.ContentTextStyle, b?.ContentTextStyle, t),
             Elevation = MaterialThemeLerp.Double(a?.Elevation, b?.Elevation, t),
-            Padding = MaterialThemeLerp.Thickness(a?.Padding, b?.Padding, t),
-            LeadingPadding = MaterialThemeLerp.Thickness(a?.LeadingPadding, b?.LeadingPadding, t),
+            Padding = EdgeInsetsGeometry.Lerp(a?.Padding, b?.Padding, t),
+            LeadingPadding = EdgeInsetsGeometry.Lerp(a?.LeadingPadding, b?.LeadingPadding, t),
         };
     }
 }

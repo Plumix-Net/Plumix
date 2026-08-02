@@ -50,16 +50,19 @@ internal sealed class ScaffoldMessengerScope : InheritedWidget
     public ScaffoldMessengerScope(
         ScaffoldMessengerState messenger,
         SnackBar? snackBar,
+        MaterialBanner? materialBanner,
         Widget child,
         Key? key = null) : base(key)
     {
         Messenger = messenger;
         SnackBar = snackBar;
+        MaterialBanner = materialBanner;
         Child = child;
     }
 
     public ScaffoldMessengerState Messenger { get; }
     public SnackBar? SnackBar { get; }
+    public MaterialBanner? MaterialBanner { get; }
     public Widget Child { get; }
 
     public override Widget Build(BuildContext context) => Child;
@@ -68,12 +71,20 @@ internal sealed class ScaffoldMessengerScope : InheritedWidget
     {
         var oldScope = (ScaffoldMessengerScope)oldWidget;
         return !ReferenceEquals(Messenger, oldScope.Messenger)
-               || !ReferenceEquals(SnackBar, oldScope.SnackBar);
+               || !ReferenceEquals(SnackBar, oldScope.SnackBar)
+               || !ReferenceEquals(MaterialBanner, oldScope.MaterialBanner);
     }
 }
 
 public sealed class ScaffoldMessengerState : State
 {
+    private sealed class MaterialBannerEntry
+    {
+        public required MaterialBanner Presented { get; init; }
+        public required ScaffoldFeatureController<MaterialBanner, MaterialBannerClosedReason> Controller { get; init; }
+        public MaterialBannerClosedReason PendingReason { get; set; } = MaterialBannerClosedReason.Hide;
+    }
+
     private sealed class SnackBarEntry
     {
         public required SnackBar Original { get; init; }
@@ -85,12 +96,43 @@ public sealed class ScaffoldMessengerState : State
     }
 
     private readonly Queue<SnackBarEntry> _snackBars = [];
+    private readonly Queue<MaterialBannerEntry> _materialBanners = [];
+    private readonly HashSet<ScaffoldState> _scaffolds = [];
     private SnackBarEntry? _currentSnackBar;
+    private MaterialBannerEntry? _currentMaterialBanner;
+    private AnimationController? _materialBannerAnimation;
     private bool _disposed;
 
     private ScaffoldMessenger CurrentWidget => (ScaffoldMessenger)StateWidget;
 
     internal SnackBar? CurrentSnackBar => _currentSnackBar?.Presented;
+
+    internal void Register(ScaffoldState scaffold)
+    {
+        ArgumentNullException.ThrowIfNull(scaffold);
+        _scaffolds.Add(scaffold);
+    }
+
+    internal void Unregister(ScaffoldState scaffold)
+    {
+        _scaffolds.Remove(scaffold);
+    }
+
+    internal SnackBar? SnackBarFor(ScaffoldState scaffold)
+    {
+        return IsRoot(scaffold) ? _currentSnackBar?.Presented : null;
+    }
+
+    internal MaterialBanner? MaterialBannerFor(ScaffoldState scaffold)
+    {
+        return IsRoot(scaffold) ? _currentMaterialBanner?.Presented : null;
+    }
+
+    private bool IsRoot(ScaffoldState scaffold)
+    {
+        ScaffoldState? parent = scaffold.Context.FindAncestorStateOfType<ScaffoldState>();
+        return parent is null || !_scaffolds.Contains(parent);
+    }
 
     public ScaffoldFeatureController<SnackBar, SnackBarClosedReason> ShowSnackBar(SnackBar snackBar)
     {
@@ -156,11 +198,100 @@ public sealed class ScaffoldMessengerState : State
         HideCurrentSnackBar();
     }
 
+    public ScaffoldFeatureController<MaterialBanner, MaterialBannerClosedReason> ShowMaterialBanner(
+        MaterialBanner materialBanner)
+    {
+        ArgumentNullException.ThrowIfNull(materialBanner);
+        if (_scaffolds.Count == 0)
+        {
+            throw new InvalidOperationException(
+                "ScaffoldMessenger.ShowMaterialBanner was called, but there are currently no "
+                + "descendant Scaffolds to present to.");
+        }
+
+        MaterialBannerEntry? entry = null;
+        if (_materialBannerAnimation is null)
+        {
+            _materialBannerAnimation = MaterialBanner.CreateAnimationController();
+            _materialBannerAnimation.AddStatusListener(HandleMaterialBannerAnimationStatusChanged);
+        }
+        MaterialBanner presented = materialBanner.WithAnimation(
+            _materialBannerAnimation,
+            materialBanner.Key ?? new UniqueKey());
+        var controller = new ScaffoldFeatureController<MaterialBanner, MaterialBannerClosedReason>(
+            presented,
+            () => CloseMaterialBannerEntry(entry!));
+        entry = new MaterialBannerEntry
+        {
+            Presented = presented,
+            Controller = controller,
+        };
+
+        SetState(() =>
+        {
+            _materialBanners.Enqueue(entry);
+            if (_currentMaterialBanner is null)
+            {
+                ShowNextMaterialBanner();
+            }
+        });
+        return controller;
+    }
+
+    public void HideCurrentMaterialBanner(
+        MaterialBannerClosedReason reason = MaterialBannerClosedReason.Hide)
+    {
+        MaterialBannerEntry? entry = _currentMaterialBanner;
+        if (entry is null)
+        {
+            return;
+        }
+
+        entry.PendingReason = reason;
+        bool accessibleNavigation = MediaQuery.MaybeOf(Context)?.AccessibleNavigation == true;
+        if (accessibleNavigation || _materialBannerAnimation!.Value <= 0.0)
+        {
+            CompleteCurrentMaterialBanner(entry);
+            return;
+        }
+
+        _materialBannerAnimation.Reverse();
+    }
+
+    public void RemoveCurrentMaterialBanner(
+        MaterialBannerClosedReason reason = MaterialBannerClosedReason.Remove)
+    {
+        MaterialBannerEntry? entry = _currentMaterialBanner;
+        if (entry is null)
+        {
+            return;
+        }
+
+        entry.PendingReason = reason;
+        CompleteCurrentMaterialBanner(entry);
+    }
+
+    public void ClearMaterialBanners()
+    {
+        MaterialBannerEntry? current = _currentMaterialBanner;
+        if (current is null)
+        {
+            return;
+        }
+
+        foreach (MaterialBannerEntry queued in _materialBanners.Skip(1).ToArray())
+        {
+            RemoveQueuedMaterialBanner(queued);
+        }
+        HideCurrentMaterialBanner();
+    }
+
     public override Widget Build(BuildContext context)
     {
         return new ScaffoldMessengerScope(
             messenger: this,
             snackBar: CurrentSnackBar,
+            materialBanner: _currentMaterialBanner?.Presented,
             child: CurrentWidget.Child);
     }
 
@@ -176,6 +307,15 @@ public sealed class ScaffoldMessengerState : State
 
         _snackBars.Clear();
         _currentSnackBar = null;
+        _materialBanners.Clear();
+        _currentMaterialBanner = null;
+        if (_materialBannerAnimation is not null)
+        {
+            _materialBannerAnimation.RemoveStatusListener(HandleMaterialBannerAnimationStatusChanged);
+            _materialBannerAnimation.Dispose();
+            _materialBannerAnimation = null;
+        }
+        _scaffolds.Clear();
     }
 
     private void CloseEntry(SnackBarEntry entry, SnackBarClosedReason reason)
@@ -205,6 +345,74 @@ public sealed class ScaffoldMessengerState : State
         if (_currentSnackBar is not null || _snackBars.Count == 0) return;
         _currentSnackBar = _snackBars.Peek();
         _currentSnackBar.Animation.Forward(from: 0);
+    }
+
+    private void CloseMaterialBannerEntry(MaterialBannerEntry entry)
+    {
+        if (!ReferenceEquals(entry, _currentMaterialBanner))
+        {
+            throw new InvalidOperationException("Only the current MaterialBanner can be closed.");
+        }
+
+        HideCurrentMaterialBanner();
+    }
+
+    private void ShowNextMaterialBanner()
+    {
+        if (_currentMaterialBanner is not null || _materialBanners.Count == 0)
+        {
+            return;
+        }
+
+        _currentMaterialBanner = _materialBanners.Peek();
+        _materialBannerAnimation!.Forward(from: 0.0);
+    }
+
+    private void CompleteCurrentMaterialBanner(MaterialBannerEntry entry)
+    {
+        if (!ReferenceEquals(entry, _currentMaterialBanner))
+        {
+            return;
+        }
+
+        entry.Controller.Complete(entry.PendingReason);
+        if (_materialBanners.Count > 0 && ReferenceEquals(_materialBanners.Peek(), entry))
+        {
+            _materialBanners.Dequeue();
+        }
+
+        _currentMaterialBanner = null;
+        if (_disposed)
+        {
+            return;
+        }
+
+        SetState(ShowNextMaterialBanner);
+    }
+
+    private void RemoveQueuedMaterialBanner(MaterialBannerEntry entry)
+    {
+        if (!_materialBanners.Contains(entry))
+        {
+            return;
+        }
+
+        MaterialBannerEntry[] retained = _materialBanners
+            .Where(candidate => !ReferenceEquals(candidate, entry))
+            .ToArray();
+        _materialBanners.Clear();
+        foreach (MaterialBannerEntry candidate in retained)
+        {
+            _materialBanners.Enqueue(candidate);
+        }
+    }
+
+    private void HandleMaterialBannerAnimationStatusChanged(AnimationStatus status)
+    {
+        if (status == AnimationStatus.Dismissed && _currentMaterialBanner is not null)
+        {
+            CompleteCurrentMaterialBanner(_currentMaterialBanner);
+        }
     }
 
     private void CompleteCurrent(SnackBarEntry entry)

@@ -32,12 +32,12 @@ public sealed class MaterialBanner : StatefulWidget
         Color? surfaceTintColor = null,
         Color? shadowColor = null,
         Color? dividerColor = null,
-        Thickness? padding = null,
-        Thickness? margin = null,
-        Thickness? leadingPadding = null,
+        EdgeInsetsGeometry? padding = null,
+        EdgeInsetsGeometry? margin = null,
+        EdgeInsetsGeometry? leadingPadding = null,
         bool forceActionsBelow = false,
         OverflowBarAlignment overflowAlignment = OverflowBarAlignment.End,
-        AnimationController? animation = null,
+        Animation<double>? animation = null,
         Action? onVisible = null,
         double minActionBarHeight = 52.0,
         Key? key = null) : base(key)
@@ -78,17 +78,17 @@ public sealed class MaterialBanner : StatefulWidget
     public Color? SurfaceTintColor { get; }
     public Color? ShadowColor { get; }
     public Color? DividerColor { get; }
-    public Thickness? Padding { get; }
-    public Thickness? Margin { get; }
-    public Thickness? LeadingPadding { get; }
+    public EdgeInsetsGeometry? Padding { get; }
+    public EdgeInsetsGeometry? Margin { get; }
+    public EdgeInsetsGeometry? LeadingPadding { get; }
     public bool ForceActionsBelow { get; }
     public OverflowBarAlignment OverflowAlignment { get; }
-    public AnimationController? Animation { get; }
+    public Animation<double>? Animation { get; }
     public Action? OnVisible { get; }
 
     public static AnimationController CreateAnimationController() => new(TransitionDuration);
 
-    public MaterialBanner WithAnimation(AnimationController animation, Key? fallbackKey = null)
+    public MaterialBanner WithAnimation(Animation<double> animation, Key? fallbackKey = null)
     {
         ArgumentNullException.ThrowIfNull(animation);
         return new MaterialBanner(
@@ -122,13 +122,15 @@ public sealed class MaterialBanner : StatefulWidget
         }
     }
 
-    private static void ValidateInsets(Thickness? value, string parameterName)
+    private static void ValidateInsets(EdgeInsetsGeometry? value, string parameterName)
     {
         if (!value.HasValue) return;
         var insets = value.Value;
         if (!double.IsFinite(insets.Left) || !double.IsFinite(insets.Top)
             || !double.IsFinite(insets.Right) || !double.IsFinite(insets.Bottom)
-            || insets.Left < 0 || insets.Top < 0 || insets.Right < 0 || insets.Bottom < 0)
+            || !double.IsFinite(insets.Start) || !double.IsFinite(insets.End)
+            || insets.Left < 0 || insets.Top < 0 || insets.Right < 0 || insets.Bottom < 0
+            || insets.Start < 0 || insets.End < 0)
         {
             throw new ArgumentOutOfRangeException(parameterName, "Insets must be non-negative and finite.");
         }
@@ -170,16 +172,24 @@ public sealed class MaterialBanner : StatefulWidget
             var direction = Directionality.Of(context);
             bool isSingleRow = widget.Actions.Count == 1 && !widget.ForceActionsBelow;
 
-            var contentPadding = widget.Padding
-                                 ?? bannerTheme.Padding
-                                 ?? (isSingleRow
-                                     ? ResolveDirectional(direction, start: 16, top: 2)
-                                     : ResolveDirectional(direction, start: 16, top: 24, end: 16, bottom: 4));
-            var leadingPadding = widget.LeadingPadding
-                                 ?? bannerTheme.LeadingPadding
-                                 ?? ResolveDirectional(direction, end: 16);
-            ValidateInsets(contentPadding, nameof(MaterialBannerThemeData.Padding));
-            ValidateInsets(leadingPadding, nameof(MaterialBannerThemeData.LeadingPadding));
+            EdgeInsetsGeometry contentPaddingGeometry = widget.Padding
+                                                         ?? bannerTheme.Padding
+                                                         ?? (isSingleRow
+                                                             ? EdgeInsetsDirectional.Only(
+                                                                 start: 16,
+                                                                 top: 2)
+                                                             : EdgeInsetsDirectional.Only(
+                                                                 start: 16,
+                                                                 top: 24,
+                                                                 end: 16,
+                                                                 bottom: 4));
+            EdgeInsetsGeometry leadingPaddingGeometry = widget.LeadingPadding
+                                                         ?? bannerTheme.LeadingPadding
+                                                         ?? EdgeInsetsDirectional.Only(end: 16);
+            ValidateInsets(contentPaddingGeometry, nameof(MaterialBannerThemeData.Padding));
+            ValidateInsets(leadingPaddingGeometry, nameof(MaterialBannerThemeData.LeadingPadding));
+            Thickness contentPadding = contentPaddingGeometry.Resolve(direction);
+            Thickness leadingPadding = leadingPaddingGeometry.Resolve(direction);
 
             Widget actionsBar = new ConstrainedBox(
                 constraints: new BoxConstraints(MinHeight: widget.MinActionBarHeight),
@@ -194,7 +204,9 @@ public sealed class MaterialBanner : StatefulWidget
                             children: widget.Actions))));
 
             double elevation = widget.Elevation ?? bannerTheme.Elevation ?? 0;
-            var margin = widget.Margin ?? new Thickness(0, 0, 0, elevation > 0 ? 10 : 0);
+            EdgeInsetsGeometry marginGeometry = widget.Margin
+                                                 ?? EdgeInsets.Only(bottom: elevation > 0 ? 10 : 0);
+            Thickness margin = marginGeometry.Resolve(direction);
             var backgroundColor = widget.BackgroundColor
                                   ?? bannerTheme.BackgroundColor
                                   ?? (theme.UseMaterial3 ? theme.SurfaceContainerLowColor : theme.SurfaceColor);
@@ -204,7 +216,7 @@ public sealed class MaterialBanner : StatefulWidget
             var shadowColor = widget.ShadowColor ?? bannerTheme.ShadowColor;
             var dividerColor = widget.DividerColor
                                ?? bannerTheme.DividerColor
-                               ?? (theme.UseMaterial3 ? theme.OutlineVariantColor : theme.DividerColor);
+                               ?? (theme.UseMaterial3 ? theme.OutlineVariantColor : null);
             var textStyle = widget.ContentTextStyle ?? bannerTheme.ContentTextStyle ?? theme.TextTheme.BodyMedium;
 
             Widget content = new Expanded(
@@ -241,14 +253,12 @@ public sealed class MaterialBanner : StatefulWidget
 
             Widget materialBanner = new Padding(
                 margin,
-                new DecoratedBox(
-                    NavigationSurfaceUtilities.CreateDecoration(
-                        background: backgroundColor,
-                        elevation: elevation,
-                        shadowColor: shadowColor ?? theme.ShadowColor,
-                        surfaceTintColor: surfaceTintColor,
-                        useMaterial3: theme.UseMaterial3),
-                    new Column(
+                new Material(
+                    elevation: elevation,
+                    color: backgroundColor,
+                    surfaceTintColor: surfaceTintColor,
+                    shadowColor: shadowColor,
+                    child: new Column(
                         mainAxisSize: MainAxisSize.Min,
                         children: columnChildren)));
 
@@ -284,42 +294,30 @@ public sealed class MaterialBanner : StatefulWidget
 
         private void HandleDismiss()
         {
-            CurrentWidget.Animation?.Reverse();
+            ScaffoldMessenger.Of(Context).RemoveCurrentMaterialBanner(MaterialBannerClosedReason.Dismiss);
         }
 
-        private void Subscribe(AnimationController? animation)
+        private void Subscribe(Animation<double>? animation)
         {
             if (animation is null) return;
-            animation.Changed += HandleAnimationChanged;
-            animation.Completed += HandleAnimationCompleted;
+            animation.AddListener(HandleAnimationChanged);
+            animation.AddStatusListener(HandleAnimationStatusChanged);
         }
 
-        private void Unsubscribe(AnimationController? animation)
+        private void Unsubscribe(Animation<double>? animation)
         {
             if (animation is null) return;
-            animation.Changed -= HandleAnimationChanged;
-            animation.Completed -= HandleAnimationCompleted;
+            animation.RemoveListener(HandleAnimationChanged);
+            animation.RemoveStatusListener(HandleAnimationStatusChanged);
         }
 
         private void HandleAnimationChanged() => SetState(() => { });
 
-        private void HandleAnimationCompleted()
+        private void HandleAnimationStatusChanged(AnimationStatus status)
         {
-            if (_wasVisible) return;
+            if (status != AnimationStatus.Completed || _wasVisible) return;
             _wasVisible = true;
             CurrentWidget.OnVisible?.Invoke();
-        }
-
-        private static Thickness ResolveDirectional(
-            TextDirection direction,
-            double start = 0,
-            double top = 0,
-            double end = 0,
-            double bottom = 0)
-        {
-            return direction == TextDirection.Ltr
-                ? new Thickness(start, top, end, bottom)
-                : new Thickness(end, top, start, bottom);
         }
     }
 }

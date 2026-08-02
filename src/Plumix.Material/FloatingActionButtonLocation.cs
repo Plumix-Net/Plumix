@@ -16,7 +16,8 @@ public sealed record ScaffoldPrelayoutGeometry(
     Size SnackBarSize,
     Thickness MinInsets,
     Thickness MinViewPadding,
-    TextDirection TextDirection);
+    TextDirection TextDirection,
+    Size MaterialBannerSize = default);
 
 public abstract class FloatingActionButtonLocation
 {

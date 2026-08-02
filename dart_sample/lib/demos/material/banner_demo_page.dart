@@ -35,7 +35,7 @@ class _BannerDemoPageState extends State<BannerDemoPage> {
         children: <Widget>[
           const Text('Banner + MaterialBanner', style: TextStyle(fontSize: 20)),
           const Text(
-            'Diagonal core ribbon and persistent Material message with leading content, actions, overflow, and theme precedence.',
+            'Diagonal ribbon, direct Material layout, and queued ScaffoldMessenger presentation.',
             style: TextStyle(fontSize: 14, color: Colors.black54),
           ),
           Wrap(
@@ -53,6 +53,27 @@ class _BannerDemoPageState extends State<BannerDemoPage> {
                 onPressed: () =>
                     setState(() => _useThemeOverrides = !_useThemeOverrides),
                 child: Text(_useThemeOverrides ? 'Theme on' : 'Theme off'),
+              ),
+              TextButton(
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showMaterialBanner(
+                    MaterialBanner(
+                      leading: const Icon(Icons.info_outline),
+                      content: const Text(
+                        'This banner is queued and presented by ScaffoldMessenger.',
+                      ),
+                      actions: <Widget>[
+                        TextButton(
+                          onPressed: () => ScaffoldMessenger.of(
+                            context,
+                          ).hideCurrentMaterialBanner(),
+                          child: const Text('DISMISS'),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+                child: const Text('Show through messenger'),
               ),
             ],
           ),

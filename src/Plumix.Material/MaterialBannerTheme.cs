@@ -1,6 +1,6 @@
-using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
+using Plumix.Rendering;
 using Plumix.Widgets;
 
 namespace Plumix.Material;
@@ -16,8 +16,8 @@ public sealed partial record MaterialBannerThemeData
         Color? DividerColor = null,
         TextStyle? ContentTextStyle = null,
         double? Elevation = null,
-        Thickness? Padding = null,
-        Thickness? LeadingPadding = null)
+        EdgeInsetsGeometry? Padding = null,
+        EdgeInsetsGeometry? LeadingPadding = null)
     {
         if (Elevation.HasValue && (!double.IsFinite(Elevation.Value) || Elevation.Value < 0))
         {
@@ -39,8 +39,8 @@ public sealed partial record MaterialBannerThemeData
     public Color? DividerColor { get; init; }
     public TextStyle? ContentTextStyle { get; init; }
     public double? Elevation { get; init; }
-    public Thickness? Padding { get; init; }
-    public Thickness? LeadingPadding { get; init; }
+    public EdgeInsetsGeometry? Padding { get; init; }
+    public EdgeInsetsGeometry? LeadingPadding { get; init; }
 
     public MaterialBannerThemeData CopyWith(
         Color? backgroundColor = null,
@@ -49,8 +49,8 @@ public sealed partial record MaterialBannerThemeData
         Color? dividerColor = null,
         TextStyle? contentTextStyle = null,
         double? elevation = null,
-        Thickness? padding = null,
-        Thickness? leadingPadding = null)
+        EdgeInsetsGeometry? padding = null,
+        EdgeInsetsGeometry? leadingPadding = null)
     {
         return new MaterialBannerThemeData(
             backgroundColor ?? BackgroundColor,
