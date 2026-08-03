@@ -95,6 +95,8 @@
     source picture/details layout, reversible arrow motion, localized semantics, and exact divider composition).
   - `MaterialBanner` (direct M2/M3 surface and outline-variant roles, inherited theme capture, exact threshold/vector
     transition composition, theme copy/lerp, and widget/theme/default precedence).
+  - `ExpansionPanel`/`ExpansionPanelList` (source card/divider/icon and interaction-color precedence, directional
+    header geometry, exact header/body composition, independent transition timing, and radio callback ownership).
 - Completed `Typography.Material2014`/`Material2018`, exact platform black/white themes, dense/tall geometry, and
   locale script-category selection.
 - Remove the narrowed `ColorScheme + Typography closeout` row from `docs/MATERIAL_TODO.md` only after those checks

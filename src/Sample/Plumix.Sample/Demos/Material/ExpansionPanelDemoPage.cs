@@ -40,6 +40,8 @@ internal sealed class ExpansionPanelDemoPageState : State
     {
         return new ExpansionPanelList(
             materialGapSize: 12,
+            dividerColor: Color.Parse("#FFE6E0E9"),
+            expandIconColor: Color.Parse("#FF6750A4"),
             expansionCallback: (index, expanded) => SetState(() =>
             {
                 if (index == 0)

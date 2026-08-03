@@ -8,7 +8,9 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/material/expansion_panel.dart
+// Dart parity source: flutter/packages/flutter/lib/src/material/expansion_panel.dart
+internal sealed record ExpansionPanelSaltedKey(BuildContext Salt, int Value) : LocalKey;
+
 public delegate void ExpansionPanelCallback(int panelIndex, bool isExpanded);
 
 public delegate Widget ExpansionPanelHeaderBuilder(BuildContext context, bool isExpanded);
@@ -19,10 +21,10 @@ public class ExpansionPanel
         ExpansionPanelHeaderBuilder headerBuilder,
         Widget body,
         bool isExpanded = false,
-        Color? splashColor = null,
-        Color? highlightColor = null,
         bool canTapOnHeader = false,
-        Color? backgroundColor = null)
+        Color? backgroundColor = null,
+        Color? splashColor = null,
+        Color? highlightColor = null)
     {
         HeaderBuilder = headerBuilder ?? throw new ArgumentNullException(nameof(headerBuilder));
         Body = body ?? throw new ArgumentNullException(nameof(body));
@@ -54,10 +56,10 @@ public sealed class ExpansionPanelRadio : ExpansionPanel
         object value,
         ExpansionPanelHeaderBuilder headerBuilder,
         Widget body,
-        Color? splashColor = null,
-        Color? highlightColor = null,
         bool canTapOnHeader = false,
-        Color? backgroundColor = null) : base(
+        Color? backgroundColor = null,
+        Color? splashColor = null,
+        Color? highlightColor = null) : base(
         headerBuilder: headerBuilder,
         body: body,
         splashColor: splashColor,
@@ -220,8 +222,7 @@ public sealed class ExpansionPanelList : StatefulWidget
 
     private sealed class ExpansionPanelListState : State
     {
-        private readonly Dictionary<PanelIdentity, ExpansibleController> _controllers = [];
-        private object? _currentOpenPanelValue;
+        private ExpansionPanelRadio? _currentOpenPanel;
 
         private ExpansionPanelList CurrentWidget => (ExpansionPanelList)StateWidget;
 
@@ -229,10 +230,8 @@ public sealed class ExpansionPanelList : StatefulWidget
         {
             if (CurrentWidget.AllowOnlyOnePanel)
             {
-                _currentOpenPanelValue = FindRadioValue(CurrentWidget.InitialOpenPanelValue);
+                _currentOpenPanel = SearchPanelByValue(CurrentWidget.InitialOpenPanelValue);
             }
-
-            SynchronizeControllers();
         }
 
         public override void DidUpdateWidget(StatefulWidget oldWidget)
@@ -241,24 +240,12 @@ public sealed class ExpansionPanelList : StatefulWidget
             CurrentWidget.ValidateRadioChildren();
             if (CurrentWidget.AllowOnlyOnePanel && !oldList.AllowOnlyOnePanel)
             {
-                _currentOpenPanelValue = FindRadioValue(CurrentWidget.InitialOpenPanelValue);
+                _currentOpenPanel = SearchPanelByValue(CurrentWidget.InitialOpenPanelValue);
             }
             else if (!CurrentWidget.AllowOnlyOnePanel)
             {
-                _currentOpenPanelValue = null;
+                _currentOpenPanel = null;
             }
-
-            SynchronizeControllers();
-        }
-
-        public override void Dispose()
-        {
-            foreach (var controller in _controllers.Values)
-            {
-                controller.Dispose();
-            }
-
-            _controllers.Clear();
         }
 
         public override Widget Build(BuildContext context)
@@ -266,36 +253,89 @@ public sealed class ExpansionPanelList : StatefulWidget
             var items = new List<MergeableMaterialItem>();
             for (int index = 0; index < CurrentWidget.Children.Count; index++)
             {
-                bool expanded = IsChildExpanded(index);
-                if (expanded
+                if (IsChildExpanded(index)
                     && index != 0
                     && !IsChildExpanded(index - 1))
                 {
                     items.Add(new MaterialGap(
-                        key: new ValueKey<string>($"expansion-panel-gap-{index * 2 - 1}"),
+                        key: new ExpansionPanelSaltedKey(context, (index * 2) - 1),
                         size: CurrentWidget.MaterialGapSize));
                 }
 
-                var panel = CurrentWidget.Children[index];
+                ExpansionPanel panel = CurrentWidget.Children[index];
+                bool expanded = IsChildExpanded(index);
                 int capturedIndex = index;
-                var controller = _controllers[IdentityFor(index, panel)];
+                Widget headerWidget = panel.HeaderBuilder(context, expanded);
+                Widget expandIconPadded = new Padding(
+                    insets: EdgeInsetsDirectional.Only(end: 8.0),
+                    child: new IgnorePointer(
+                        ignoring: panel.CanTapOnHeader,
+                        child: new ExpandIcon(
+                            color: CurrentWidget.ExpandIconColor,
+                            isExpanded: expanded,
+                            padding: new Thickness(12.0),
+                            splashColor: panel.SplashColor,
+                            highlightColor: panel.HighlightColor,
+                            onPressed: isExpanded => HandlePressed(capturedIndex, isExpanded))));
+
+                if (!panel.CanTapOnHeader)
+                {
+                    var localizations = MaterialLocalizations.Of(context);
+                    expandIconPadded = new Semantics(
+                        label: expanded
+                            ? localizations.ExpandedIconTapHint
+                            : localizations.CollapsedIconTapHint,
+                        container: true,
+                        child: expandIconPadded);
+                }
+
+                Widget header = new Row(
+                    children:
+                    [
+                        new Expanded(
+                            new AnimatedContainer(
+                                duration: CurrentWidget.AnimationDuration,
+                                curve: Curves.FastOutSlowIn,
+                                margin: expanded ? CurrentWidget.ExpandedHeaderPadding : default(Thickness),
+                                child: new ConstrainedBox(
+                                    constraints: new BoxConstraints(MinHeight: 48.0),
+                                    child: headerWidget))),
+                        expandIconPadded,
+                    ]);
+
+                if (panel.CanTapOnHeader)
+                {
+                    header = new MergeSemantics(
+                        child: new InkWell(
+                            splashColor: panel.SplashColor,
+                            highlightColor: panel.HighlightColor,
+                            onTap: () => HandlePressed(capturedIndex, IsChildExpanded(capturedIndex)),
+                            child: header));
+                }
+
                 items.Add(new MaterialSlice(
-                    key: new ValueKey<string>($"expansion-panel-slice-{index * 2}"),
+                    key: new ExpansionPanelSaltedKey(context, index * 2),
                     color: panel.BackgroundColor,
-                    child: new Expansible(
-                        key: new ValueKey<string>($"expansion-panel-expansible-{IdentityFor(index, panel)}"),
-                        controller: controller,
-                        duration: CurrentWidget.AnimationDuration,
-                        curve: Curves.EaseInOut,
-                        maintainState: false,
-                        headerBuilder: (buildContext, animation) =>
-                            BuildHeader(buildContext, panel, capturedIndex, expanded, animation),
-                        bodyBuilder: (_, animation) => BuildBody(panel, animation))));
+                    child: new Column(
+                        children:
+                        [
+                            header,
+                            new AnimatedCrossFade(
+                                firstChild: new LimitedBox(
+                                    maxWidth: 0.0,
+                                    child: new SizedBox(width: double.PositiveInfinity, height: 0.0)),
+                                secondChild: panel.Body,
+                                firstCurve: Curves.Interval(0.0, 0.6, Curves.FastOutSlowIn),
+                                secondCurve: Curves.Interval(0.4, 1.0, Curves.FastOutSlowIn),
+                                sizeCurve: Curves.FastOutSlowIn,
+                                crossFadeState: expanded ? CrossFadeState.ShowSecond : CrossFadeState.ShowFirst,
+                                duration: CurrentWidget.AnimationDuration),
+                        ])));
 
                 if (expanded && index != CurrentWidget.Children.Count - 1)
                 {
                     items.Add(new MaterialGap(
-                        key: new ValueKey<string>($"expansion-panel-gap-{index * 2 + 1}"),
+                        key: new ExpansionPanelSaltedKey(context, (index * 2) + 1),
                         size: CurrentWidget.MaterialGapSize));
                 }
             }
@@ -307,94 +347,6 @@ public sealed class ExpansionPanelList : StatefulWidget
                 dividerColor: CurrentWidget.DividerColor);
         }
 
-        private Widget BuildHeader(
-            BuildContext context,
-            ExpansionPanel panel,
-            int index,
-            bool expanded,
-            AnimationController animation)
-        {
-            double progress = Curves.EaseInOut(animation.Value);
-            var padding = LerpThickness(default, CurrentWidget.ExpandedHeaderPadding, progress);
-            var header = new Padding(
-                padding,
-                new ConstrainedBox(
-                    constraints: new BoxConstraints(MinHeight: 48),
-                    child: panel.HeaderBuilder(context, expanded)));
-            var iconColor = CurrentWidget.ExpandIconColor ?? Theme.Of(context).OnSurfaceVariantColor;
-            Widget arrow = new ExpandIcon(
-                isExpanded: expanded,
-                onPressed: panel.CanTapOnHeader ? null : _ => HandlePressed(index, expanded),
-                color: iconColor,
-                disabledColor: iconColor,
-                expandedColor: iconColor,
-                splashColor: panel.SplashColor,
-                highlightColor: panel.HighlightColor,
-                padding: panel.CanTapOnHeader ? default : new Thickness(12));
-
-            if (panel.CanTapOnHeader)
-            {
-                arrow = new SizedBox(
-                    width: 48,
-                    height: 48,
-                    child: new Center(child: arrow));
-            }
-            else
-            {
-                arrow = new SizedBox(width: 48, height: 48, child: arrow);
-            }
-
-            var flags = SemanticsFlags.HasExpandedState | SemanticsFlags.IsEnabled;
-            if (expanded)
-            {
-                flags |= SemanticsFlags.IsExpanded;
-            }
-
-            if (!panel.CanTapOnHeader)
-            {
-                var localizations = MaterialLocalizations.Of(context);
-                arrow = new Semantics(
-                    child: arrow,
-                    label: expanded
-                        ? localizations.ExpandedIconTapHint
-                        : localizations.CollapsedIconTapHint,
-                    flags: flags,
-                    onTap: () => HandlePressed(index, expanded),
-                    container: true);
-            }
-
-            Widget row = new Row(
-                children:
-                [
-                    new Expanded(header),
-                    new Padding(new Thickness(0, 0, 8, 0), arrow)
-                ]);
-            if (panel.CanTapOnHeader)
-            {
-                row = new MaterialButtonCore(
-                    child: row,
-                    onPressed: () => HandlePressed(index, expanded),
-                    style: BuildHeaderButtonStyle(panel, Theme.Of(context)));
-            }
-
-            return panel.CanTapOnHeader
-                ? new Semantics(
-                    child: row,
-                    flags: flags,
-                    onTap: () => HandlePressed(index, expanded),
-                    container: true)
-                : row;
-        }
-
-        private static Widget BuildBody(ExpansionPanel panel, AnimationController animation)
-        {
-            double progress = animation.Evaluate();
-            double opacity = progress <= 0.4
-                ? 0
-                : Curves.EaseInOut((progress - 0.4) / 0.6);
-            return new Opacity(opacity, panel.Body);
-        }
-
         private void HandlePressed(int index, bool isExpanded)
         {
             if (!CurrentWidget.AllowOnlyOnePanel)
@@ -403,20 +355,21 @@ public sealed class ExpansionPanelList : StatefulWidget
                 return;
             }
 
-            if (_currentOpenPanelValue is not null && !isExpanded)
+            var pressedChild = (ExpansionPanelRadio)CurrentWidget.Children[index];
+            for (int childIndex = 0; childIndex < CurrentWidget.Children.Count; childIndex++)
             {
-                int previousIndex = FindRadioIndex(_currentOpenPanelValue);
-                if (previousIndex >= 0 && previousIndex != index)
+                var child = (ExpansionPanelRadio)CurrentWidget.Children[childIndex];
+                if (CurrentWidget.ExpansionCallback is not null
+                    && childIndex != index
+                    && Equals(child.Value, _currentOpenPanel?.Value))
                 {
-                    CurrentWidget.ExpansionCallback?.Invoke(previousIndex, false);
+                    CurrentWidget.ExpansionCallback(childIndex, false);
                 }
             }
 
             SetState(() =>
             {
-                var pressed = (ExpansionPanelRadio)CurrentWidget.Children[index];
-                _currentOpenPanelValue = isExpanded ? null : pressed.Value;
-                SynchronizeControllers();
+                _currentOpenPanel = isExpanded ? null : pressedChild;
             });
             CurrentWidget.ExpansionCallback?.Invoke(index, !isExpanded);
         }
@@ -425,109 +378,15 @@ public sealed class ExpansionPanelList : StatefulWidget
         {
             var child = CurrentWidget.Children[index];
             return CurrentWidget.AllowOnlyOnePanel
-                ? child is ExpansionPanelRadio radio && Equals(radio.Value, _currentOpenPanelValue)
+                ? child is ExpansionPanelRadio radio && Equals(radio.Value, _currentOpenPanel?.Value)
                 : child.IsExpanded;
         }
 
-        private void SynchronizeControllers()
-        {
-            var desired = new HashSet<PanelIdentity>();
-            for (int index = 0; index < CurrentWidget.Children.Count; index++)
-            {
-                var identity = IdentityFor(index, CurrentWidget.Children[index]);
-                desired.Add(identity);
-                if (!_controllers.TryGetValue(identity, out var controller))
-                {
-                    controller = new ExpansibleController();
-                    _controllers.Add(identity, controller);
-                }
-
-                if (IsChildExpanded(index))
-                {
-                    controller.Expand();
-                }
-                else
-                {
-                    controller.Collapse();
-                }
-            }
-
-            foreach (var identity in _controllers.Keys.Where(key => !desired.Contains(key)).ToArray())
-            {
-                _controllers[identity].Dispose();
-                _controllers.Remove(identity);
-            }
-        }
-
-        private PanelIdentity IdentityFor(int index, ExpansionPanel panel)
-        {
-            return CurrentWidget.AllowOnlyOnePanel && panel is ExpansionPanelRadio radio
-                ? new PanelIdentity(true, radio.Value)
-                : new PanelIdentity(false, index);
-        }
-
-        private object? FindRadioValue(object? value)
+        private ExpansionPanelRadio? SearchPanelByValue(object? value)
         {
             return CurrentWidget.Children
                 .OfType<ExpansionPanelRadio>()
-                .FirstOrDefault(panel => Equals(panel.Value, value))
-                ?.Value;
+                .FirstOrDefault(panel => Equals(panel.Value, value));
         }
-
-        private int FindRadioIndex(object value)
-        {
-            for (int index = 0; index < CurrentWidget.Children.Count; index++)
-            {
-                if (CurrentWidget.Children[index] is ExpansionPanelRadio radio
-                    && Equals(radio.Value, value))
-                {
-                    return index;
-                }
-            }
-
-            return -1;
-        }
-
-        private static ButtonStyle BuildHeaderButtonStyle(ExpansionPanel panel, ThemeData theme)
-        {
-            var overlay = MaterialStateProperty<Color?>.ResolveWith(states =>
-            {
-                if (states.HasFlag(MaterialState.Pressed))
-                {
-                    return panel.HighlightColor ?? MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.12);
-                }
-
-                if (states.HasFlag(MaterialState.Focused) || states.HasFlag(MaterialState.Hovered))
-                {
-                    return MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.08);
-                }
-
-                return null;
-            });
-            return new ButtonStyle(
-                BackgroundColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
-                OverlayColor: overlay,
-                SplashColor: MaterialStateProperty<Color?>.All(
-                    panel.SplashColor ?? MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.12)),
-                Elevation: MaterialStateProperty<double?>.All(0),
-                Padding: MaterialStateProperty<Thickness?>.All(default),
-                Shape: MaterialStateProperty<BorderRadius?>.All(BorderRadius.Zero),
-                MinimumSize: MaterialStateProperty<Size?>.All(new Size(0, 48)),
-                MaximumSize: MaterialStateProperty<Size?>.All(new Size(double.PositiveInfinity, double.PositiveInfinity)),
-                Alignment: Alignment.CenterLeft,
-                TapTargetSize: MaterialTapTargetSize.ShrinkWrap);
-        }
-
-        private static Thickness LerpThickness(Thickness from, Thickness to, double progress)
-        {
-            double t = Math.Clamp(progress, 0, 1);
-            return new Thickness(
-                from.Left + ((to.Left - from.Left) * t),
-                from.Top + ((to.Top - from.Top) * t),
-                from.Right + ((to.Right - from.Right) * t),
-                from.Bottom + ((to.Bottom - from.Bottom) * t));
-        }
-
-        private sealed record PanelIdentity(bool Radio, object Value);
     }
 }

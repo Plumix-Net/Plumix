@@ -43,6 +43,8 @@ class _ExpansionPanelDemoPageState extends State<ExpansionPanelDemoPage> {
   Widget _buildControlledList() {
     return ExpansionPanelList(
       materialGapSize: 12,
+      dividerColor: const Color(0xFFE6E0E9),
+      expandIconColor: const Color(0xFF6750A4),
       expansionCallback: (int index, bool expanded) {
         setState(() {
           if (index == 0) {

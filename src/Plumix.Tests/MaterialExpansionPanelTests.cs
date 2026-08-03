@@ -60,23 +60,23 @@ public sealed class MaterialExpansionPanelTests : IDisposable
         using var harness = new WidgetRenderHarness(
             BuildThemed(new ControlledPanelHost(canTapOnHeader: true)));
 
-        var semantics = harness.PumpAndGetSemantics(new Size(360, 240));
-        var header = FindNodes(semantics!, node => node.Flags.HasFlag(SemanticsFlags.HasExpandedState)).Single();
-        Assert.False(header.Flags.HasFlag(SemanticsFlags.IsExpanded));
-        Assert.Null(FindParagraphByText(harness.RenderView, "Controlled body"));
+        harness.Pump(new Size(360, 240));
+        Assert.Equal(CrossFadeState.ShowFirst, Assert.Single(harness.FindWidgets<AnimatedCrossFade>()).CrossFadeState);
 
-        Assert.True(harness.PerformSemanticsAction(header.Id, SemanticsActions.Tap));
-        semantics = harness.PumpAndGetSemantics(new Size(360, 240));
+        TapParagraph(harness.RenderView, "Collapsed header", pointer: 810);
+        harness.Pump(new Size(360, 240));
 
-        header = FindNodes(semantics!, node => node.Flags.HasFlag(SemanticsFlags.HasExpandedState)).Single();
-        Assert.True(header.Flags.HasFlag(SemanticsFlags.IsExpanded));
-        Assert.NotNull(FindParagraphByText(harness.RenderView, "Controlled body"));
-        Assert.Contains(FindDescendants<RenderAlign>(harness.RenderView), align => align.HeightFactor is >= 0 and < 1);
+        Assert.Equal(CrossFadeState.ShowSecond, Assert.Single(harness.FindWidgets<AnimatedCrossFade>()).CrossFadeState);
+        Assert.Equal(
+            new Thickness(0, 16),
+            Assert.Single(
+                harness.FindWidgets<AnimatedContainer>(),
+                container => container.Child is ConstrainedBox box && box.Constraints.MinHeight == 48.0).Margin);
 
         double now = Scheduler.CurrentSeconds;
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
         harness.Pump(new Size(360, 240));
-        Assert.Contains(FindDescendants<RenderAlign>(harness.RenderView), align => align.HeightFactor is >= 0.99);
+        Assert.Equal(CrossFadeState.ShowSecond, Assert.Single(harness.FindWidgets<AnimatedCrossFade>()).CrossFadeState);
     }
 
     [Fact]
@@ -107,11 +107,8 @@ public sealed class MaterialExpansionPanelTests : IDisposable
         using var harness = new WidgetRenderHarness(
             BuildThemed(new TwoPanelHost()));
 
-        var semantics = harness.PumpAndGetSemantics(new Size(360, 280));
-        var firstHeader = FindNodes(
-            semantics!,
-            node => node.Flags.HasFlag(SemanticsFlags.HasExpandedState)).First();
-        Assert.True(harness.PerformSemanticsAction(firstHeader.Id, SemanticsActions.Tap));
+        harness.Pump(new Size(360, 280));
+        TapParagraph(harness.RenderView, "First gap panel", pointer: 813);
 
         double now = Scheduler.CurrentSeconds;
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
@@ -143,22 +140,18 @@ public sealed class MaterialExpansionPanelTests : IDisposable
                     RadioPanel("two", "Radio two", "Radio body two", canTapOnHeader: true),
                 ])));
 
-        var semantics = harness.PumpAndGetSemantics(new Size(360, 320));
-        var headers = FindNodes(semantics!, node => node.Flags.HasFlag(SemanticsFlags.HasExpandedState)).ToArray();
-        Assert.Equal(2, headers.Length);
-        Assert.True(headers[0].Flags.HasFlag(SemanticsFlags.IsExpanded));
-        Assert.False(headers[1].Flags.HasFlag(SemanticsFlags.IsExpanded));
-        Assert.NotNull(FindParagraphByText(harness.RenderView, "Radio body one"));
-        Assert.Null(FindParagraphByText(harness.RenderView, "Radio body two"));
+        harness.Pump(new Size(360, 320));
+        Assert.Equal(
+            [CrossFadeState.ShowSecond, CrossFadeState.ShowFirst],
+            harness.FindWidgets<AnimatedCrossFade>().Select(fade => fade.CrossFadeState).ToArray());
 
-        Assert.True(harness.PerformSemanticsAction(headers[1].Id, SemanticsActions.Tap));
-        semantics = harness.PumpAndGetSemantics(new Size(360, 320));
-        headers = FindNodes(semantics!, node => node.Flags.HasFlag(SemanticsFlags.HasExpandedState)).ToArray();
+        TapParagraph(harness.RenderView, "Radio two", pointer: 814);
+        harness.Pump(new Size(360, 320));
 
         Assert.Equal([(0, false), (1, true)], callbacks);
-        Assert.False(headers[0].Flags.HasFlag(SemanticsFlags.IsExpanded));
-        Assert.True(headers[1].Flags.HasFlag(SemanticsFlags.IsExpanded));
-        Assert.NotNull(FindParagraphByText(harness.RenderView, "Radio body two"));
+        Assert.Equal(
+            [CrossFadeState.ShowFirst, CrossFadeState.ShowSecond],
+            harness.FindWidgets<AnimatedCrossFade>().Select(fade => fade.CrossFadeState).ToArray());
     }
 
     [Fact]
@@ -175,19 +168,60 @@ public sealed class MaterialExpansionPanelTests : IDisposable
                     RadioPanel(2, "Closed radio", "Closed body", canTapOnHeader: true),
                 ])));
 
-        var semantics = harness.PumpAndGetSemantics(new Size(360, 300));
-        var openHeader = FindNodes(
-            semantics!,
-            node => node.Flags.HasFlag(SemanticsFlags.HasExpandedState)
-                    && node.Flags.HasFlag(SemanticsFlags.IsExpanded)).Single();
-
-        Assert.True(harness.PerformSemanticsAction(openHeader.Id, SemanticsActions.Tap));
-        semantics = harness.PumpAndGetSemantics(new Size(360, 300));
+        harness.Pump(new Size(360, 300));
+        TapParagraph(harness.RenderView, "Open radio", pointer: 815);
+        harness.Pump(new Size(360, 300));
 
         Assert.Equal([(0, false)], callbacks);
-        Assert.DoesNotContain(
-            FindNodes(semantics!, node => node.Flags.HasFlag(SemanticsFlags.HasExpandedState)),
-            node => node.Flags.HasFlag(SemanticsFlags.IsExpanded));
+        Assert.All(
+            harness.FindWidgets<AnimatedCrossFade>(),
+            fade => Assert.Equal(CrossFadeState.ShowFirst, fade.CrossFadeState));
+    }
+
+    [Fact]
+    public void ExpansionPanelList_CompositionAndInteractionColors_MatchFlutter()
+    {
+        var splash = Color.Parse("#FF006C4C");
+        var highlight = Color.Parse("#FFFFB4AB");
+        using var harness = new WidgetRenderHarness(
+            BuildThemed(new ExpansionPanelList(
+                animationDuration: TimeSpan.FromMilliseconds(800),
+                children:
+                [
+                    new ExpansionPanel(
+                        canTapOnHeader: true,
+                        splashColor: splash,
+                        highlightColor: highlight,
+                        headerBuilder: (_, _) => new Text("Structured header"),
+                        body: new Text("Structured body")),
+                ])));
+
+        harness.Pump(new Size(360, 200));
+
+        var crossFade = Assert.Single(harness.FindWidgets<AnimatedCrossFade>());
+        Assert.Equal(TimeSpan.FromMilliseconds(800), crossFade.Duration);
+        Assert.Equal(CrossFadeState.ShowFirst, crossFade.CrossFadeState);
+        Assert.Equal(Curves.FastOutSlowIn(0.5), crossFade.FirstCurve(0.3), precision: 6);
+        Assert.Equal(Curves.FastOutSlowIn(0.5), crossFade.SecondCurve(0.7), precision: 6);
+        Assert.Equal(Curves.FastOutSlowIn(0.5), crossFade.SizeCurve(0.5), precision: 6);
+
+        var inkWell = Assert.Single(harness.FindWidgets<InkWell>(), ink => ink.SplashColor == splash);
+        Assert.Equal(highlight, inkWell.HighlightColor);
+        Assert.NotNull(inkWell.OnTap);
+
+        var expandIcon = Assert.Single(harness.FindWidgets<ExpandIcon>());
+        var iconIgnorePointer = Assert.Single(
+            harness.FindWidgets<IgnorePointer>(),
+            ignore => ReferenceEquals(ignore.Child, expandIcon));
+        Assert.True(iconIgnorePointer.Ignoring);
+        Assert.Equal(new Thickness(12.0), expandIcon.Padding);
+        Assert.NotNull(expandIcon.OnPressed);
+
+        var mergeable = Assert.Single(harness.FindWidgets<MergeableMaterial>());
+        var slice = Assert.IsType<MaterialSlice>(Assert.Single(mergeable.Children));
+        var column = Assert.IsType<Column>(slice.Child);
+        Assert.IsType<MergeSemantics>(column.Children[0]);
+        Assert.Same(crossFade, column.Children[1]);
     }
 
     [Fact]
@@ -267,6 +301,36 @@ public sealed class MaterialExpansionPanelTests : IDisposable
                 timestamp.AddMilliseconds(20)));
     }
 
+    private static void TapParagraph(RenderView renderView, string text, int pointer)
+    {
+        var paragraph = FindParagraphByText(renderView, text)
+                        ?? throw new InvalidOperationException($"Paragraph '{text}' was not found.");
+        Point offset = GlobalOffsetOf(paragraph);
+        Tap(
+            renderView,
+            new Point(offset.X + (paragraph.Size.Width / 2.0), offset.Y + (paragraph.Size.Height / 2.0)),
+            pointer);
+    }
+
+    private static Point GlobalOffsetOf(RenderObject renderObject)
+    {
+        var result = new Point();
+        RenderObject? current = renderObject;
+        while (current is not null)
+        {
+            if (current.parentData is BoxParentData parentData)
+            {
+                result = new Point(
+                    result.X + parentData.offset.X,
+                    result.Y + parentData.offset.Y);
+            }
+
+            current = current.Parent;
+        }
+
+        return result;
+    }
+
     private static RenderParagraph? FindParagraphByText(RenderObject? root, string text)
     {
         return FindDescendants<RenderParagraph>(root).FirstOrDefault(paragraph => paragraph.Text == text);
@@ -292,24 +356,6 @@ public sealed class MaterialExpansionPanelTests : IDisposable
         }
 
         root.VisitChildren(child => CollectDescendants(child, results));
-    }
-
-    private static IEnumerable<SemanticsNode> FindNodes(
-        SemanticsNode node,
-        Func<SemanticsNode, bool> predicate)
-    {
-        if (predicate(node))
-        {
-            yield return node;
-        }
-
-        foreach (var child in node.Children)
-        {
-            foreach (var match in FindNodes(child, predicate))
-            {
-                yield return match;
-            }
-        }
     }
 
     private sealed class ControlledPanelHost(bool canTapOnHeader) : StatefulWidget
@@ -396,17 +442,21 @@ public sealed class MaterialExpansionPanelTests : IDisposable
             _pipeline.FlushPaint();
         }
 
-        public SemanticsNode? PumpAndGetSemantics(Size size)
+        public IReadOnlyList<T> FindWidgets<T>() where T : Widget
         {
-            Pump(size);
-            _pipeline.RequestSemanticsUpdate();
-            _pipeline.FlushSemantics();
-            return _pipeline.SemanticsOwner.RootNode;
-        }
+            var widgets = new List<T>();
+            Visit(_rootElement);
+            return widgets;
 
-        public bool PerformSemanticsAction(int nodeId, SemanticsActions action)
-        {
-            return _pipeline.SemanticsOwner.PerformAction(nodeId, action);
+            void Visit(Element element)
+            {
+                if (element.Widget is T widget)
+                {
+                    widgets.Add(widget);
+                }
+
+                element.VisitChildren(Visit);
+            }
         }
 
         public void Dispose() => _rootElement.Unmount();

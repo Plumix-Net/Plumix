@@ -1,5 +1,9 @@
 # Changelog
 
+- Breaking: completed the strict `ExpansionPanel`/`ExpansionPanelList` closeout. Public constructor ordering,
+  salted keys, directional header geometry, exact `InkWell`/`IgnorePointer`/`ExpandIcon` composition, independent
+  header/body/gap animations, radio ownership, callback ordering, colors, and focused source-test coverage now match.
+
 - Completed the strict `GridTile` Dart closeout. The constructor now enforces the source non-null child contract,
   while focused coverage locks the exact direct-child and ordered fill/header/footer `Stack` composition.
 
