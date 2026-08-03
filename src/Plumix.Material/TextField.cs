@@ -27,6 +27,10 @@ public sealed class TextField : StatefulWidget
         TextStyle? style = null,
         TextAlign textAlign = TextAlign.Start,
         TextDirection? textDirection = null,
+        TextInputType? keyboardType = null,
+        TextInputAction? textInputAction = null,
+        bool autocorrect = true,
+        bool enableSuggestions = true,
         bool readOnly = false,
         bool autofocus = false,
         string obscuringCharacter = "•",
@@ -70,6 +74,10 @@ public sealed class TextField : StatefulWidget
         Style = style;
         TextAlign = textAlign;
         TextDirection = textDirection;
+        KeyboardType = keyboardType;
+        TextInputAction = textInputAction;
+        Autocorrect = autocorrect;
+        EnableSuggestions = enableSuggestions;
         ReadOnly = readOnly;
         Autofocus = autofocus;
         ObscuringCharacter = obscuringCharacter;
@@ -101,6 +109,10 @@ public sealed class TextField : StatefulWidget
     public TextStyle? Style { get; }
     public TextAlign TextAlign { get; }
     public TextDirection? TextDirection { get; }
+    public TextInputType? KeyboardType { get; }
+    public TextInputAction? TextInputAction { get; }
+    public bool Autocorrect { get; }
+    public bool EnableSuggestions { get; }
     public bool ReadOnly { get; }
     public bool Autofocus { get; }
     public string ObscuringCharacter { get; }
@@ -229,6 +241,10 @@ public sealed class TextField : StatefulWidget
                 semanticsLabel: Current.Decoration?.LabelText ?? Current.Decoration?.HintText,
                 textAlign: Current.TextAlign,
                 textDirection: Current.TextDirection,
+                keyboardType: ResolveKeyboardType(Current.KeyboardType, multiline),
+                textInputAction: ResolveTextInputAction(Current.TextInputAction),
+                autocorrect: Current.Autocorrect,
+                enableSuggestions: Current.EnableSuggestions,
                 canRequestFocus: Current.CanRequestFocus,
                 onKeyEvent: Current.OnKeyEvent,
                 enableInteractiveSelection: Current.EnableInteractiveSelection,
@@ -335,6 +351,36 @@ public sealed class TextField : StatefulWidget
         }
         private void Changed() { if (Mounted) SetState(() => { }); }
         private static int TextLength(string value) => new StringInfo(value).LengthInTextElements;
+
+        private static TextInputKeyboardType ResolveKeyboardType(TextInputType? keyboardType, bool multiline)
+        {
+            return keyboardType switch
+            {
+                TextInputType.Multiline => TextInputKeyboardType.Multiline,
+                TextInputType.Number => TextInputKeyboardType.Number,
+                TextInputType.Phone => TextInputKeyboardType.Phone,
+                TextInputType.Datetime => TextInputKeyboardType.Datetime,
+                TextInputType.EmailAddress => TextInputKeyboardType.EmailAddress,
+                TextInputType.Url => TextInputKeyboardType.Url,
+                TextInputType.Text => TextInputKeyboardType.Text,
+                _ => multiline ? TextInputKeyboardType.Multiline : TextInputKeyboardType.Text,
+            };
+        }
+
+        private static TextInputActionType ResolveTextInputAction(TextInputAction? textInputAction)
+        {
+            return textInputAction switch
+            {
+                global::Plumix.Material.TextInputAction.None => TextInputActionType.None,
+                global::Plumix.Material.TextInputAction.Search => TextInputActionType.Search,
+                global::Plumix.Material.TextInputAction.Done => TextInputActionType.Done,
+                global::Plumix.Material.TextInputAction.Go => TextInputActionType.Go,
+                global::Plumix.Material.TextInputAction.Next => TextInputActionType.Next,
+                global::Plumix.Material.TextInputAction.Send => TextInputActionType.Send,
+                _ => TextInputActionType.Unspecified,
+            };
+        }
+
         private static Color ApplyOpacity(Color c, double opacity) => Color.FromArgb((byte)Math.Round(c.A * Math.Clamp(opacity, 0, 1)), c.R, c.G, c.B);
     }
 }

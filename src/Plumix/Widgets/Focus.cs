@@ -33,7 +33,8 @@ public readonly record struct FocusTextInputState(
     string SurroundingText,
     int SelectionBaseOffset,
     int SelectionExtentOffset,
-    Rect CursorRectangle)
+    Rect CursorRectangle,
+    TextInputConfiguration? Configuration = null)
 {
     public int SelectionStart => Math.Min(SelectionBaseOffset, SelectionExtentOffset);
 
@@ -48,7 +49,8 @@ public readonly record struct FocusTextInputState(
             normalizedText,
             clampedBaseOffset,
             clampedExtentOffset,
-            CursorRectangle);
+            CursorRectangle,
+            Configuration);
     }
 }
 

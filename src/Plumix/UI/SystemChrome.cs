@@ -14,7 +14,16 @@ public sealed record SystemUiOverlayStyle(
     Color? StatusBarColor = null,
     Color? NavigationBarColor = null,
     SystemUiIconBrightness? StatusBarIconBrightness = null,
-    SystemUiIconBrightness? NavigationBarIconBrightness = null);
+    SystemUiIconBrightness? NavigationBarIconBrightness = null)
+{
+    public static SystemUiOverlayStyle Light { get; } = new(
+        StatusBarIconBrightness: SystemUiIconBrightness.Light,
+        NavigationBarIconBrightness: SystemUiIconBrightness.Light);
+
+    public static SystemUiOverlayStyle Dark { get; } = new(
+        StatusBarIconBrightness: SystemUiIconBrightness.Dark,
+        NavigationBarIconBrightness: SystemUiIconBrightness.Dark);
+}
 
 public sealed record ApplicationSwitcherDescription(
     string Label,

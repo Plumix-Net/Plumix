@@ -94,7 +94,7 @@ class _SearchDemoPageState extends State<SearchDemoPage> {
               style: TextStyle(fontSize: 20, color: Colors.black),
             ),
             const Text(
-              'Controller-backed search view with suggestions, open/close callbacks, M3 defaults, and theme precedence probes.',
+              'Controller-backed search plus a legacy route with search-keyboard metadata and fade animation.',
               style: TextStyle(fontSize: 14, color: Color(0x8A000000)),
             ),
             Row(
@@ -282,7 +282,13 @@ class _SearchDemoPageState extends State<SearchDemoPage> {
 
 class _TermSearchDelegate extends SearchDelegate<String> {
   _TermSearchDelegate(this._terms, this._onSelected)
-    : super(searchFieldLabel: 'Search framework terms');
+    : super(
+        searchFieldLabel: 'Search framework terms',
+        keyboardType: TextInputType.text,
+        textInputAction: TextInputAction.search,
+        autocorrect: false,
+        enableSuggestions: true,
+      );
 
   final List<String> _terms;
   final ValueChanged<String> _onSelected;
@@ -303,7 +309,10 @@ class _TermSearchDelegate extends SearchDelegate<String> {
 
   @override
   Widget? buildLeading(BuildContext context) {
-    return BackButton(onPressed: () => close(context, null));
+    return FadeTransition(
+      opacity: transitionAnimation,
+      child: BackButton(onPressed: () => close(context, null)),
+    );
   }
 
   @override

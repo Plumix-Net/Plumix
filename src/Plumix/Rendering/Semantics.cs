@@ -6,6 +6,16 @@ using Plumix.Widgets;
 
 namespace Plumix.Rendering;
 
+public enum SemanticsInputType
+{
+    None,
+    Text,
+    Url,
+    Phone,
+    Search,
+    Email,
+}
+
 [Flags]
 public enum SemanticsFlags
 {
@@ -98,6 +108,7 @@ public sealed class SemanticsConfiguration
     public string? Hint { get; set; }
     public string? Tooltip { get; set; }
     public SemanticsRole Role { get; set; }
+    public SemanticsInputType InputType { get; set; }
     public SemanticsFlags Flags { get; set; } = SemanticsFlags.None;
     public SemanticsActions Actions { get; set; } = SemanticsActions.None;
     public Rect? ExplicitRect { get; set; }
@@ -161,6 +172,7 @@ public sealed class SemanticsConfiguration
             Hint = Hint,
             Tooltip = Tooltip,
             Role = Role,
+            InputType = InputType,
             Flags = Flags,
             Actions = Actions,
             ExplicitRect = ExplicitRect,
@@ -192,6 +204,7 @@ public sealed class SemanticsConfiguration
         || !string.IsNullOrWhiteSpace(Hint)
         || !string.IsNullOrWhiteSpace(Tooltip)
         || Role != SemanticsRole.None
+        || InputType != SemanticsInputType.None
         || Flags != SemanticsFlags.None
         || Actions != SemanticsActions.None
         || IndexInParent.HasValue
@@ -227,6 +240,13 @@ public sealed class SemanticsConfiguration
             return false;
         }
 
+        if (InputType != SemanticsInputType.None
+            && other.InputType != SemanticsInputType.None
+            && InputType != other.InputType)
+        {
+            return false;
+        }
+
         return true;
     }
 
@@ -248,6 +268,10 @@ public sealed class SemanticsConfiguration
         if (Role == SemanticsRole.None)
         {
             Role = child.Role;
+        }
+        if (InputType == SemanticsInputType.None)
+        {
+            InputType = child.InputType;
         }
 
         if (!string.IsNullOrWhiteSpace(child.Label))
@@ -312,6 +336,7 @@ public sealed class SemanticsNode
     public string? Hint { get; internal set; }
     public string? Tooltip { get; internal set; }
     public SemanticsRole Role { get; internal set; }
+    public SemanticsInputType InputType { get; internal set; }
     public SemanticsFlags Flags { get; internal set; }
     public SemanticsActions Actions { get; internal set; }
     public int? IndexInParent { get; internal set; }
@@ -447,6 +472,8 @@ public sealed class SemanticsOwner
         _syntheticRoot.Label = null;
         _syntheticRoot.Hint = null;
         _syntheticRoot.Tooltip = null;
+        _syntheticRoot.Role = SemanticsRole.None;
+        _syntheticRoot.InputType = SemanticsInputType.None;
         _syntheticRoot.Flags = SemanticsFlags.None;
         _syntheticRoot.Actions = SemanticsActions.None;
         _syntheticRoot.IndexInParent = null;
@@ -521,6 +548,11 @@ public sealed class SemanticsOwner
         if (node.Flags != SemanticsFlags.None)
         {
             builder.Append(" flags=").Append(node.Flags);
+        }
+
+        if (node.InputType != SemanticsInputType.None)
+        {
+            builder.Append(" inputType=").Append(node.InputType);
         }
 
         if (node.Actions != SemanticsActions.None)

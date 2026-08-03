@@ -625,6 +625,10 @@ public sealed class EditableText : StatefulWidget
         string? semanticsLabel = null,
         TextAlign textAlign = TextAlign.Start,
         TextDirection? textDirection = null,
+        TextInputKeyboardType keyboardType = TextInputKeyboardType.Text,
+        TextInputActionType textInputAction = TextInputActionType.Unspecified,
+        bool autocorrect = true,
+        bool enableSuggestions = true,
         bool canRequestFocus = true,
         FocusOnKeyEventCallback? onKeyEvent = null,
         bool enableInteractiveSelection = true,
@@ -667,6 +671,10 @@ public sealed class EditableText : StatefulWidget
         SemanticsLabel = semanticsLabel;
         TextAlign = textAlign;
         TextDirection = textDirection;
+        KeyboardType = keyboardType;
+        TextInputAction = textInputAction;
+        Autocorrect = autocorrect;
+        EnableSuggestions = enableSuggestions;
         CanRequestFocus = canRequestFocus;
         OnKeyEvent = onKeyEvent;
         EnableInteractiveSelection = enableInteractiveSelection;
@@ -723,6 +731,10 @@ public sealed class EditableText : StatefulWidget
     public string? SemanticsLabel { get; }
     public TextAlign TextAlign { get; }
     public TextDirection? TextDirection { get; }
+    public TextInputKeyboardType KeyboardType { get; }
+    public TextInputActionType TextInputAction { get; }
+    public bool Autocorrect { get; }
+    public bool EnableSuggestions { get; }
     public bool CanRequestFocus { get; }
     public FocusOnKeyEventCallback? OnKeyEvent { get; }
     public bool EnableInteractiveSelection { get; }
@@ -1505,7 +1517,14 @@ public sealed class EditableText : StatefulWidget
                 SurroundingText: text,
                 SelectionBaseOffset: selection.BaseOffset,
                 SelectionExtentOffset: selection.ExtentOffset,
-                CursorRectangle: cursorRectangle);
+                CursorRectangle: cursorRectangle,
+                Configuration: new TextInputConfiguration(
+                    KeyboardType: Widget.KeyboardType,
+                    InputAction: Widget.TextInputAction,
+                    Autocorrect: Widget.Autocorrect,
+                    EnableSuggestions: Widget.EnableSuggestions,
+                    ObscureText: Widget.ObscureText,
+                    Multiline: Widget.Multiline));
         }
 
         private bool HandleTextSelectionChanged(FocusNode node, int baseOffset, int extentOffset)

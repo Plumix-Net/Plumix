@@ -396,6 +396,7 @@ internal sealed class RenderObjectSemantics
                || !string.IsNullOrEmpty(config.Hint)
                || !string.IsNullOrEmpty(config.Tooltip)
                || config.Role != SemanticsRole.None
+               || config.InputType != SemanticsInputType.None
                || config.Flags != SemanticsFlags.None
                || config.Actions != SemanticsActions.None
                || config.HasActionHandlers;
@@ -787,6 +788,7 @@ internal sealed class RenderObjectSemantics
             Hint = node.Hint,
             Tooltip = node.Tooltip,
             Role = node.Role,
+            InputType = node.InputType,
             Flags = node.Flags,
             Actions = node.Actions,
             IndexInParent = node.IndexInParent
@@ -823,6 +825,7 @@ internal sealed class RenderObjectSemantics
         node.Hint = configuration.Hint;
         node.Tooltip = configuration.Tooltip;
         node.Role = configuration.Role;
+        node.InputType = configuration.InputType;
         node.Flags = configuration.Flags;
         node.Actions = configuration.Actions;
         node.IndexInParent = configuration.IndexInParent;

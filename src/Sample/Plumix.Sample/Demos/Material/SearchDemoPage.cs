@@ -90,7 +90,8 @@ internal sealed class SearchDemoPageState : State
                     [
                         new Text("SearchBar + SearchAnchor + SearchDelegate", fontSize: 20, color: Colors.Black),
                         new Text(
-                            "Controller-backed search view with suggestions, open/close callbacks, M3 defaults, and theme precedence probes.",
+                            "Controller-backed search plus a legacy route with search-keyboard metadata "
+                            + "and fade animation.",
                             fontSize: 14,
                             color: Color.Parse("#8A000000")),
                         new Row(
@@ -233,7 +234,11 @@ internal sealed class SearchDemoPageState : State
         private readonly Action<string> _onSelected;
 
         public TermSearchDelegate(IReadOnlyList<string> terms, Action<string> onSelected) : base(
-            searchFieldLabel: "Search framework terms")
+            searchFieldLabel: "Search framework terms",
+            keyboardType: TextInputType.Text,
+            textInputAction: TextInputAction.Search,
+            autocorrect: false,
+            enableSuggestions: true)
         {
             _terms = terms;
             _onSelected = onSelected;
@@ -243,8 +248,9 @@ internal sealed class SearchDemoPageState : State
 
         public override Widget BuildResults(BuildContext context) => BuildTerms(context, "Results");
 
-        public override Widget? BuildLeading(BuildContext context) => new BackButton(
-            onPressed: () => Navigator.MaybePop(context));
+        public override Widget? BuildLeading(BuildContext context) => new FadeTransition(
+            opacity: TransitionAnimation,
+            child: new BackButton(onPressed: () => Navigator.MaybePop(context)));
 
         public override IReadOnlyList<Widget>? BuildActions(BuildContext context) =>
         [

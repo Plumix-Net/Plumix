@@ -293,6 +293,7 @@ public class PlumixHost : Control
         AttachMouseCursorListener();
         AttachFeedbackListener();
         AttachSystemSoundListener();
+        AttachTextInputConfigurationListener();
         AttachMetricSources();
         OnMetricsChanged();
     }
@@ -302,6 +303,7 @@ public class PlumixHost : Control
         DetachMetricSources();
         DetachSystemSoundListener();
         DetachFeedbackListener();
+        DetachTextInputConfigurationListener();
         DetachMouseCursorListener();
         DetachApplicationSwitcherDescriptionListener();
         DetachSystemUiOverlayStyleListener();
@@ -316,6 +318,64 @@ public class PlumixHost : Control
 
     protected virtual void OnMetricsChanged()
     {
+    }
+
+    private void AttachTextInputConfigurationListener()
+    {
+        FrameworkFocusManager.Instance.PrimaryFocusChanged -= HandleFrameworkPrimaryFocusChanged;
+        FrameworkFocusManager.Instance.PrimaryFocusChanged += HandleFrameworkPrimaryFocusChanged;
+        HandleFrameworkPrimaryFocusChanged();
+    }
+
+    private void DetachTextInputConfigurationListener()
+    {
+        FrameworkFocusManager.Instance.PrimaryFocusChanged -= HandleFrameworkPrimaryFocusChanged;
+    }
+
+    private void HandleFrameworkPrimaryFocusChanged()
+    {
+        TextInputConfiguration? configuration =
+            FrameworkFocusManager.Instance.ResolveTextInputState()?.Configuration;
+        TextInputOptions.SetContentType(
+            this,
+            configuration.HasValue
+                ? ResolveContentType(configuration.Value.KeyboardType)
+                : TextInputContentType.Normal);
+        TextInputOptions.SetReturnKeyType(
+            this,
+            configuration.HasValue
+                ? ResolveReturnKeyType(configuration.Value.InputAction)
+                : TextInputReturnKeyType.Default);
+        TextInputOptions.SetMultiline(this, configuration?.Multiline ?? false);
+        TextInputOptions.SetIsSensitive(this, configuration?.ObscureText ?? false);
+        TextInputOptions.SetShowSuggestions(this, configuration?.EnableSuggestions);
+        _textInputClient.RefreshOptions();
+    }
+
+    private static TextInputContentType ResolveContentType(TextInputKeyboardType keyboardType)
+    {
+        return keyboardType switch
+        {
+            TextInputKeyboardType.Number => TextInputContentType.Number,
+            TextInputKeyboardType.Phone => TextInputContentType.Digits,
+            TextInputKeyboardType.EmailAddress => TextInputContentType.Email,
+            TextInputKeyboardType.Url => TextInputContentType.Url,
+            _ => TextInputContentType.Normal,
+        };
+    }
+
+    private static TextInputReturnKeyType ResolveReturnKeyType(TextInputActionType inputAction)
+    {
+        return inputAction switch
+        {
+            TextInputActionType.None => TextInputReturnKeyType.Return,
+            TextInputActionType.Search => TextInputReturnKeyType.Search,
+            TextInputActionType.Done => TextInputReturnKeyType.Done,
+            TextInputActionType.Go => TextInputReturnKeyType.Go,
+            TextInputActionType.Next => TextInputReturnKeyType.Next,
+            TextInputActionType.Send => TextInputReturnKeyType.Send,
+            _ => TextInputReturnKeyType.Default,
+        };
     }
 
     protected MediaQueryData GetMediaQueryData()
@@ -1096,6 +1156,11 @@ public class PlumixHost : Control
         public override void SetPreeditText(string? preeditText, int? cursorPos)
         {
             SetPreeditText(preeditText);
+        }
+
+        public void RefreshOptions()
+        {
+            RequestReset();
         }
 
         private static FocusTextInputState? ResolveTextInputState()

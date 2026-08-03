@@ -37,6 +37,7 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         bool container = false,
         bool explicitChildNodes = false,
         SemanticsRole role = SemanticsRole.None,
+        SemanticsInputType inputType = SemanticsInputType.None,
         bool scopesRoute = false,
         bool namesRoute = false,
         bool? expanded = null,
@@ -65,6 +66,7 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         Container = container;
         ExplicitChildNodes = explicitChildNodes;
         Role = role;
+        InputType = inputType;
         ScopesRoute = scopesRoute;
         NamesRoute = namesRoute;
         Expanded = expanded;
@@ -99,6 +101,8 @@ public sealed class Semantics : SingleChildRenderObjectWidget
 
     public SemanticsRole Role { get; }
 
+    public SemanticsInputType InputType { get; }
+
     public bool ScopesRoute { get; }
 
     public bool NamesRoute { get; }
@@ -118,6 +122,7 @@ public sealed class Semantics : SingleChildRenderObjectWidget
             hint: Hint,
             tooltip: Tooltip,
             role: Role,
+            inputType: InputType,
             flags: Flags,
             onTap: OnTap,
             onLongPress: OnLongPress,
@@ -138,6 +143,7 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         semantics.Hint = Hint;
         semantics.Tooltip = Tooltip;
         semantics.Role = Role;
+        semantics.InputType = InputType;
         semantics.Flags = Flags;
         semantics.OnTap = OnTap;
         semantics.OnLongPress = OnLongPress;

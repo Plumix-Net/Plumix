@@ -358,6 +358,7 @@ public sealed record ThemeData
         Color? primaryColorDark = null,
         TextTheme? primaryTextTheme = null,
         IconThemeData? iconTheme = null,
+        IconThemeData? primaryIconTheme = null,
         Color? surfaceContainerColor = null,
         NavigationBarThemeData? navigationBarTheme = null,
         NavigationRailThemeData? navigationRailTheme = null,
@@ -460,6 +461,11 @@ public sealed record ThemeData
                         Color: Brightness == Brightness.Dark
                             ? Colors.White
                             : Color.FromArgb(0xDD, 0x00, 0x00, 0x00));
+        PrimaryIconTheme = primaryIconTheme
+                           ?? new IconThemeData(
+                               Color: EstimateBrightnessForColor(PrimaryColor) == Brightness.Dark
+                                   ? Colors.White
+                                   : Colors.Black);
         SecondaryColor = secondaryColor ?? ColorScheme.Secondary;
         OnPrimaryColor = onPrimaryColor ?? ColorScheme.OnPrimary;
         PrimaryContainerColor = primaryContainerColor ?? ColorScheme.PrimaryContainer;
@@ -581,6 +587,8 @@ public sealed record ThemeData
     public TextTheme PrimaryTextTheme { get; init; }
 
     public IconThemeData IconTheme { get; init; }
+
+    public IconThemeData PrimaryIconTheme { get; init; }
 
     public Color SecondaryColor { get; init; }
 
@@ -994,6 +1002,7 @@ public sealed record ThemeData
             TextTheme = TextTheme.Lerp(a.TextTheme, b.TextTheme, t),
             PrimaryTextTheme = TextTheme.Lerp(a.PrimaryTextTheme, b.PrimaryTextTheme, t),
             IconTheme = IconThemeData.Lerp(a.IconTheme, b.IconTheme, t),
+            PrimaryIconTheme = IconThemeData.Lerp(a.PrimaryIconTheme, b.PrimaryIconTheme, t),
             VisualDensity = VisualDensity.Lerp(a.VisualDensity, b.VisualDensity, t),
             ScaffoldBackgroundColor = LerpColor(a.ScaffoldBackgroundColor, b.ScaffoldBackgroundColor, t),
             CanvasColor = LerpColor(a.CanvasColor, b.CanvasColor, t),

@@ -2651,6 +2651,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
     private string? _hint;
     private string? _tooltip;
     private SemanticsRole _role;
+    private SemanticsInputType _inputType;
     private SemanticsFlags _flags;
     private Action? _onTap;
     private Action? _onLongPress;
@@ -2667,6 +2668,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         string? hint = null,
         string? tooltip = null,
         SemanticsRole role = SemanticsRole.None,
+        SemanticsInputType inputType = SemanticsInputType.None,
         SemanticsFlags flags = SemanticsFlags.None,
         Action? onTap = null,
         Action? onLongPress = null,
@@ -2682,6 +2684,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         _hint = hint;
         _tooltip = tooltip;
         _role = role;
+        _inputType = inputType;
         _flags = flags;
         _onTap = onTap;
         _onLongPress = onLongPress;
@@ -2757,6 +2760,21 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         {
             if (_role == value) return;
             _role = value;
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
+    public SemanticsInputType InputType
+    {
+        get => _inputType;
+        set
+        {
+            if (_inputType == value)
+            {
+                return;
+            }
+
+            _inputType = value;
             MarkNeedsSemanticsUpdate();
         }
     }
@@ -2886,6 +2904,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
             && string.IsNullOrWhiteSpace(_hint)
             && string.IsNullOrWhiteSpace(_tooltip)
             && _role == SemanticsRole.None
+            && _inputType == SemanticsInputType.None
             && _flags == SemanticsFlags.None
             && _onTap is null
             && _onLongPress is null
@@ -2902,6 +2921,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
 
         configuration.IsSemanticBoundary = _container;
         configuration.Role = _role;
+        configuration.InputType = _inputType;
         configuration.ExplicitChildNodes = _explicitChildNodes;
         if (_mergeDescendants)
         {

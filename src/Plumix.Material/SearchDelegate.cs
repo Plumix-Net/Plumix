@@ -1,5 +1,6 @@
 using Avalonia.Media;
 using Plumix.Foundation;
+using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
 
@@ -10,8 +11,11 @@ namespace Plumix.Material;
 public abstract class SearchDelegate<T> : IDisposable
 {
     private readonly TextEditingController _queryController = new();
+    private readonly ProxyAnimation _proxyAnimation = new();
+    private readonly ValueNotifier<SearchBody?> _currentBodyNotifier = new(null);
     private SearchPageRoute<T>? _route;
     private SearchPageState<T>? _page;
+    private FocusNode? _focusNode;
 
     protected SearchDelegate(
         string? searchFieldLabel = null,
@@ -64,8 +68,7 @@ public abstract class SearchDelegate<T> : IDisposable
         }
     }
 
-    /// <summary>Current search-route fade controller, or <see langword="null"/> while inactive.</summary>
-    public AnimationController? TransitionAnimation => _route?.Animation;
+    public Animation<double> TransitionAnimation => _proxyAnimation;
 
     public abstract Widget BuildSuggestions(BuildContext context);
 
@@ -86,22 +89,22 @@ public abstract class SearchDelegate<T> : IDisposable
     public virtual ThemeData AppBarTheme(BuildContext context)
     {
         var theme = Theme.Of(context);
-        Color background = theme.Brightness == Brightness.Dark
+        Color background = theme.ColorScheme.Brightness == Brightness.Dark
             ? Color.Parse("#FF212121")
             : Colors.White;
-        Color foreground = theme.Brightness == Brightness.Dark ? Colors.White : Colors.Black;
         var decorationTheme = SearchFieldDecorationTheme
-                              ?? theme.InputDecorationTheme with
-                              {
-                                  HintStyle = SearchFieldStyle ?? theme.InputDecorationTheme.HintStyle,
-                                  Border = InputBorder.None,
-                              };
+                              ?? new InputDecorationThemeData(
+                                  HintStyle: SearchFieldStyle ?? theme.InputDecorationTheme.HintStyle,
+                                  Border: InputBorder.None);
         return theme with
         {
             AppBarTheme = theme.AppBarTheme with
             {
+                SystemOverlayStyle = theme.ColorScheme.Brightness == Brightness.Dark
+                    ? SystemUiOverlayStyle.Light
+                    : SystemUiOverlayStyle.Dark,
                 BackgroundColor = background,
-                ForegroundColor = foreground,
+                IconTheme = theme.PrimaryIconTheme.CopyWith(color: Colors.Gray),
                 TitleTextStyle = theme.TextTheme.TitleLarge,
                 ToolbarTextStyle = theme.TextTheme.BodyMedium,
             },
@@ -117,7 +120,8 @@ public abstract class SearchDelegate<T> : IDisposable
 
     public void ShowResults()
     {
-        _page?.ShowResults();
+        _focusNode?.Unfocus();
+        CurrentBody = SearchBody.Results;
     }
 
     public void ShowSuggestions(BuildContext context)
@@ -128,7 +132,14 @@ public abstract class SearchDelegate<T> : IDisposable
 
     public void ShowSuggestions()
     {
-        _page?.ShowSuggestions();
+        if (_focusNode is null)
+        {
+            throw new InvalidOperationException(
+                "SearchDelegate must be associated with an active search before showing suggestions.");
+        }
+
+        _focusNode.RequestFocus();
+        CurrentBody = SearchBody.Suggestions;
     }
 
     public void Close(BuildContext context, T? result)
@@ -138,8 +149,11 @@ public abstract class SearchDelegate<T> : IDisposable
             throw new InvalidOperationException("SearchDelegate is not associated with an active showSearch call.");
         }
 
-        _ = context;
-        Close(result);
+        CurrentBody = null;
+        _focusNode?.Unfocus();
+        NavigatorState navigator = Navigator.Of(context);
+        navigator.PopUntil(route => ReferenceEquals(route, _route));
+        navigator.Pop(result);
     }
 
     public void Close(T? result)
@@ -149,11 +163,18 @@ public abstract class SearchDelegate<T> : IDisposable
             throw new InvalidOperationException("SearchDelegate is not associated with an active showSearch call.");
         }
 
-        _page?.ClearFocus();
         _page?.Close(result);
     }
 
     internal TextEditingController QueryController => _queryController;
+
+    internal ValueNotifier<SearchBody?> CurrentBodyNotifier => _currentBodyNotifier;
+
+    internal SearchBody? CurrentBody
+    {
+        get => _currentBodyNotifier.Value;
+        set => _currentBodyNotifier.Value = value;
+    }
 
     public bool IsActive => _route is not null;
 
@@ -168,6 +189,11 @@ public abstract class SearchDelegate<T> : IDisposable
         _route = route;
     }
 
+    internal void AttachTransitionAnimation(Animation<double> animation)
+    {
+        _proxyAnimation.Parent = animation;
+    }
+
     internal void DetachRoute(SearchPageRoute<T> route)
     {
         if (ReferenceEquals(_route, route))
@@ -177,19 +203,27 @@ public abstract class SearchDelegate<T> : IDisposable
         }
     }
 
-    internal void AttachPage(SearchPageState<T> page) => _page = page;
+    internal void AttachPage(SearchPageState<T> page, FocusNode focusNode)
+    {
+        _page = page;
+        _focusNode = focusNode;
+    }
 
     internal void DetachPage(SearchPageState<T> page)
     {
         if (ReferenceEquals(_page, page))
         {
             _page = null;
+            _focusNode = null;
         }
     }
 
     public virtual void Dispose()
     {
+        _currentBodyNotifier.Dispose();
+        _focusNode?.Dispose();
         _queryController.Dispose();
+        _proxyAnimation.Parent = null;
     }
 }
 
@@ -214,6 +248,8 @@ public static class MaterialSearch
             searchDelegate.Query = query;
         }
 
+        searchDelegate.CurrentBody = SearchBody.Suggestions;
+
         var route = new SearchPageRoute<T>(context, searchDelegate, maintainState);
         Navigator.Of(context, rootNavigator: useRootNavigator).Push(route);
         return route.Completed;
@@ -229,52 +265,33 @@ internal enum SearchBody
 internal sealed class SearchPageRoute<T> : PageRoute
 {
     private readonly SearchDelegate<T> _delegate;
-    private readonly ThemeData _theme;
-    private readonly MediaQueryData _mediaQuery;
-    private readonly TextDirection _textDirection;
-    private readonly MaterialLocalizations _localizations;
     private readonly TaskCompletionSource<T?> _completed = new(TaskCreationOptions.RunContinuationsAsynchronously);
-    private object? _pendingResult;
-    private bool _isExiting;
 
     public SearchPageRoute(BuildContext context, SearchDelegate<T> searchDelegate, bool maintainState)
     {
         _delegate = searchDelegate ?? throw new ArgumentNullException(nameof(searchDelegate));
-        _theme = Theme.Of(context);
-        _mediaQuery = MediaQuery.Of(context);
-        _textDirection = Directionality.Of(context);
-        _localizations = MaterialLocalizations.Of(context);
+        _ = context;
         MaintainState = maintainState;
-        Animation = new AnimationController(TimeSpan.FromMilliseconds(300)) { Curve = Curves.EaseOut };
-        Animation.Changed += HandleAnimationChanged;
-        Animation.Dismissed += HandleAnimationDismissed;
         _delegate.AttachRoute(this);
     }
 
     public bool MaintainState { get; }
 
-    public new AnimationController Animation { get; }
+    public override TimeSpan TransitionDuration => TimeSpan.FromMilliseconds(300);
 
     public Task<T?> Completed => _completed.Task;
 
-    protected override void OnAttach() => Animation.Forward(from: 0);
-
-    public override bool WillPop(object? result)
+    protected override void Install()
     {
-        if (_isExiting || Animation.Value <= 0)
-        {
-            return base.WillPop(result);
-        }
-
-        _pendingResult = result;
-        _isExiting = true;
-        Animation.Reverse(from: Animation.Value);
-        return false;
+        base.Install();
+        _delegate.AttachTransitionAnimation(Animation);
     }
 
     public override void DidComplete(object? result)
     {
+        base.DidComplete(result);
         _delegate.DetachRoute(this);
+        _delegate.CurrentBody = null;
         if (result is null)
         {
             _completed.TrySetResult(default);
@@ -292,18 +309,23 @@ internal sealed class SearchPageRoute<T> : PageRoute
 
     public override Widget BuildPage(BuildContext context)
     {
-        Widget page = new SearchPage<T>(_delegate, _localizations);
-        page = new Opacity(Math.Clamp(Animation.Value, 0, 1), page);
-        page = new Theme(_theme, page);
-        page = new MediaQuery(_mediaQuery, page);
-        return new Directionality(_textDirection, page);
+        _ = context;
+        return new SearchPage<T>(_delegate, Animation);
+    }
+
+    public override Widget BuildTransitions(
+        BuildContext context,
+        Animation<double> animation,
+        Animation<double> secondaryAnimation,
+        Widget child)
+    {
+        _ = context;
+        _ = secondaryAnimation;
+        return new FadeTransition(opacity: animation, child: child);
     }
 
     public override void Dispose()
     {
-        Animation.Changed -= HandleAnimationChanged;
-        Animation.Dismissed -= HandleAnimationDismissed;
-        Animation.Dispose();
         _delegate.DetachRoute(this);
         if (!_completed.Task.IsCompleted)
         {
@@ -312,29 +334,19 @@ internal sealed class SearchPageRoute<T> : PageRoute
 
         base.Dispose();
     }
-
-    private void HandleAnimationChanged() => NotifyRouteChanged();
-
-    private void HandleAnimationDismissed()
-    {
-        if (_isExiting)
-        {
-            Navigator?.MaybePop(_pendingResult);
-        }
-    }
 }
 
 internal sealed class SearchPage<T> : StatefulWidget
 {
-    public SearchPage(SearchDelegate<T> searchDelegate, MaterialLocalizations localizations) : base(key: null)
+    public SearchPage(SearchDelegate<T> searchDelegate, Animation<double> animation) : base(key: null)
     {
         SearchDelegate = searchDelegate;
-        Localizations = localizations;
+        Animation = animation;
     }
 
     public SearchDelegate<T> SearchDelegate { get; }
 
-    public MaterialLocalizations Localizations { get; }
+    public Animation<double> Animation { get; }
 
     public override State CreateState() => new SearchPageState<T>();
 }
@@ -342,20 +354,27 @@ internal sealed class SearchPage<T> : StatefulWidget
 internal sealed class SearchPageState<T> : State
 {
     private readonly FocusNode _focusNode = new();
-    private SearchBody _body = SearchBody.Suggestions;
 
     private SearchPage<T> Current => (SearchPage<T>)StateWidget;
 
     public override void InitState()
     {
         Current.SearchDelegate.QueryController.AddListener(HandleQueryChanged);
+        Current.SearchDelegate.CurrentBodyNotifier.AddListener(HandleSearchBodyChanged);
+        Current.Animation.AddStatusListener(HandleAnimationStatusChanged);
         _focusNode.AddListener(HandleFocusChanged);
-        Current.SearchDelegate.AttachPage(this);
+        Current.SearchDelegate.AttachPage(this, _focusNode);
+        if (Current.Animation.Status == AnimationStatus.Completed)
+        {
+            HandleAnimationStatusChanged(AnimationStatus.Completed);
+        }
     }
 
     public override void Dispose()
     {
         Current.SearchDelegate.QueryController.RemoveListener(HandleQueryChanged);
+        Current.SearchDelegate.CurrentBodyNotifier.RemoveListener(HandleSearchBodyChanged);
+        Current.Animation.RemoveStatusListener(HandleAnimationStatusChanged);
         Current.SearchDelegate.DetachPage(this);
         _focusNode.RemoveListener(HandleFocusChanged);
         _focusNode.Dispose();
@@ -365,19 +384,33 @@ internal sealed class SearchPageState<T> : State
     {
         var searchDelegate = Current.SearchDelegate;
         var theme = searchDelegate.AppBarTheme(context);
-        string fieldLabel = searchDelegate.SearchFieldLabel ?? Current.Localizations.SearchFieldLabel;
-        Widget body = _body == SearchBody.Suggestions
-            ? searchDelegate.BuildSuggestions(context)
-            : searchDelegate.BuildResults(context);
+        string fieldLabel = searchDelegate.SearchFieldLabel ?? MaterialLocalizations.Of(context).SearchFieldLabel;
+        Widget? body = searchDelegate.CurrentBody switch
+        {
+            SearchBody.Suggestions => new KeyedSubtree(
+                key: new ValueKey<SearchBody>(SearchBody.Suggestions),
+                child: searchDelegate.BuildSuggestions(context)),
+            SearchBody.Results => new KeyedSubtree(
+                key: new ValueKey<SearchBody>(SearchBody.Results),
+                child: searchDelegate.BuildResults(context)),
+            _ => null,
+        };
         string routeLabel = theme.Platform is TargetPlatform.IOS or TargetPlatform.MacOS ? string.Empty : fieldLabel;
         var fieldStyle = searchDelegate.SearchFieldStyle ?? theme.TextTheme.TitleLarge;
         Widget title = new TextField(
             controller: searchDelegate.QueryController,
             focusNode: _focusNode,
             style: fieldStyle,
-            decoration: new InputDecoration(hintText: fieldLabel, border: InputBorder.None),
+            textInputAction: searchDelegate.TextInputAction,
+            autocorrect: searchDelegate.Autocorrect,
+            enableSuggestions: searchDelegate.EnableSuggestions,
+            keyboardType: searchDelegate.KeyboardType,
+            decoration: new InputDecoration(hintText: fieldLabel),
             onSubmitted: _ => ShowResults(),
             onKeyEvent: HandleKeyEvent);
+        title = new Semantics(
+            inputType: SemanticsInputType.Search,
+            child: title);
         Widget page = new Scaffold(
             appBar: new AppBar(
                 leading: searchDelegate.BuildLeading(context),
@@ -387,7 +420,9 @@ internal sealed class SearchPageState<T> : State
                 actions: searchDelegate.BuildActions(context),
                 bottom: searchDelegate.BuildBottom(context),
                 flexibleSpace: searchDelegate.BuildFlexibleSpace(context)),
-            body: body);
+            body: new AnimatedSwitcher(
+                duration: TimeSpan.FromMilliseconds(300),
+                child: body));
         page = new Theme(theme, page);
         return new Semantics(
             label: routeLabel,
@@ -399,33 +434,39 @@ internal sealed class SearchPageState<T> : State
 
     internal void ShowResults()
     {
-        _focusNode.Unfocus();
-        if (_body != SearchBody.Results)
-        {
-            SetState(() => _body = SearchBody.Results);
-        }
+        Current.SearchDelegate.ShowResults(Context);
     }
 
     internal void ShowSuggestions()
     {
-        _focusNode.RequestFocus();
-        if (_body != SearchBody.Suggestions)
-        {
-            SetState(() => _body = SearchBody.Suggestions);
-        }
+        Current.SearchDelegate.ShowSuggestions(Context);
     }
 
-    internal void ClearFocus() => _focusNode.Unfocus();
-
-    internal void Close(T? result) => Navigator.MaybePop(Context, result);
+    internal void Close(T? result) => Current.SearchDelegate.Close(Context, result);
 
     private void HandleQueryChanged() => SetState(static () => { });
 
+    private void HandleSearchBodyChanged() => SetState(static () => { });
+
+    private void HandleAnimationStatusChanged(AnimationStatus status)
+    {
+        if (status != AnimationStatus.Completed)
+        {
+            return;
+        }
+
+        Current.Animation.RemoveStatusListener(HandleAnimationStatusChanged);
+        if (Current.SearchDelegate.CurrentBody == SearchBody.Suggestions)
+        {
+            _focusNode.RequestFocus();
+        }
+    }
+
     private void HandleFocusChanged()
     {
-        if (_focusNode.HasFocus && _body != SearchBody.Suggestions)
+        if (_focusNode.HasFocus && Current.SearchDelegate.CurrentBody != SearchBody.Suggestions)
         {
-            SetState(() => _body = SearchBody.Suggestions);
+            Current.SearchDelegate.ShowSuggestions(Context);
         }
     }
 

@@ -1,5 +1,10 @@
 # Changelog
 
+- Breaking: completed the strict `SearchDelegate` closeout. Its transition contract is now the source-shaped
+  `Animation<double>` proxy backed by the shared 300 ms page-route fade; search fields forward keyboard type,
+  action, correction, and suggestion configuration through editable/platform input, and search-input semantics,
+  keyed body cross-fades, theme defaults, focused coverage, and the mirrored demo now match Flutter.
+
 - Breaking: completed the `MaterialBanner` ColorScheme/theme closeout. M2/M3 surfaces and M3 divider now read
   direct scheme roles, local banner themes participate in inherited-theme capture, and entrance/exit composition
   uses shared Flutter-shaped threshold/vector animation primitives. Added focused coverage and a mirrored M2/M3

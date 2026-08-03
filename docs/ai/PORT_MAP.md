@@ -266,7 +266,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `services/spell_check.dart` | `src/Plumix/Widgets/SpellCheck.cs` | — | — |
 | `services/system_chrome.dart` | `src/Plumix/UI/SystemChrome.cs` | — | — |
 | `services/system_sound.dart` | `src/Plumix/UI/SystemSound.cs` | — | — |
-| `services/text_input.dart` | `src/Plumix/Widgets/TextSelection.cs` | `src/Plumix.Tests/MaterialDesktopTextSelectionToolbarTests.cs`<br>`src/Plumix.Tests/MaterialTextSelectionControlsTests.cs` | `dart_sample/lib/demos/material/desktop_text_selection_toolbar_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/DesktopTextSelectionToolbarDemoPage.cs` |
+| `services/text_input.dart` | `src/Plumix/UI/TextInputConfiguration.cs`<br>`src/Plumix/Widgets/TextSelection.cs` | `src/Plumix.Tests/MaterialDesktopTextSelectionToolbarTests.cs`<br>`src/Plumix.Tests/MaterialTextSelectionControlsTests.cs` | `dart_sample/lib/demos/material/desktop_text_selection_toolbar_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/DesktopTextSelectionToolbarDemoPage.cs` |
 | `widgets/actions.dart` | `src/Plumix/Widgets/Actions.cs` | `src/Plumix.Tests/ActionsShortcutsTests.cs` | `dart_sample/lib/demos/material/app_bar_actions_padding_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/AppBarActionsPaddingDemoPage.cs` |
 | `widgets/animated_cross_fade.dart` | `src/Plumix/Widgets/AnimatedSwitcher.cs` | `src/Plumix.Tests/AnimatedSwitcherTests.cs` | — |
 | `widgets/animated_scroll_view.dart` | `src/Plumix/Widgets/AnimatedGrid.cs`<br>`src/Plumix/Widgets/AnimatedList.cs` | `src/Plumix.Tests/AnimatedListTests.cs` | `dart_sample/lib/demos/general/animated_grid_demo_page.dart`<br>`dart_sample/lib/demos/general/animated_list_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/AnimatedGridDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/AnimatedListDemoPage.cs` |
@@ -418,7 +418,7 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 ## Summary
 
 - Flutter files mapped: 366
-- C# files carrying a marker: 459
+- C# files carrying a marker: 460
 - C# files without a marker: 15
 - Markers not resolvable in the pinned checkout: 5
 

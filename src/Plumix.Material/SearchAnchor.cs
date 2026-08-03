@@ -1228,6 +1228,8 @@ public sealed class SearchBar : StatefulWidget
                     hintStyle: effectiveHintStyle,
                     enabled: CurrentWidget.Enabled),
                 style: effectiveTextStyle,
+                keyboardType: CurrentWidget.KeyboardType,
+                textInputAction: CurrentWidget.TextInputAction,
                 autofocus: CurrentWidget.AutoFocus,
                 readOnly: CurrentWidget.ReadOnly,
                 enabled: CurrentWidget.Enabled,

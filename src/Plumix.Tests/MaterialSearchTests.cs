@@ -168,16 +168,19 @@ public sealed class MaterialSearchTests : IDisposable
     public async Task SearchDelegate_ShowSearchCoordinatesQueryBodiesTypedCloseAndDelegateReuse()
     {
         var searchDelegate = new TestSearchDelegate();
+        Assert.Equal(AnimationStatus.Dismissed, searchDelegate.TransitionAnimation.Status);
         var host = new SearchLaunchHost(searchDelegate, "wi");
         using var harness = new WidgetRenderHarness(Wrap(
             ThemeData.Light,
             new Navigator(new BuilderPageRoute(_ => host))));
         var state = harness.FindState<SearchLaunchHostState>();
         state.Open();
+        Assert.Equal(AnimationStatus.Forward, searchDelegate.TransitionAnimation.Status);
         harness.Pump(new Size(640, 420));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.4));
         harness.Pump(new Size(640, 420));
 
+        Assert.Equal(AnimationStatus.Completed, searchDelegate.TransitionAnimation.Status);
         Assert.True(searchDelegate.IsActive);
         Assert.Equal("wi", searchDelegate.Query);
         Assert.NotNull(FindParagraph(harness.RenderView, "Suggestions: wi"));
@@ -186,6 +189,7 @@ public sealed class MaterialSearchTests : IDisposable
 
         searchDelegate.ShowResults();
         harness.Pump(new Size(640, 420));
+        Assert.Equal(AnimationStatus.Completed, searchDelegate.TransitionAnimation.Status);
         Assert.NotNull(FindParagraph(harness.RenderView, "Results: wi"));
 
         searchDelegate.Query = "widget";
@@ -193,11 +197,88 @@ public sealed class MaterialSearchTests : IDisposable
         Assert.NotNull(FindParagraph(harness.RenderView, "Results: widget"));
 
         searchDelegate.Close("Widget");
+        Assert.Equal(AnimationStatus.Reverse, searchDelegate.TransitionAnimation.Status);
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.4));
         harness.Pump(new Size(640, 420));
 
+        Assert.Equal(AnimationStatus.Dismissed, searchDelegate.TransitionAnimation.Status);
         Assert.Equal("Widget", await state.Result);
         Assert.False(searchDelegate.IsActive);
+    }
+
+    [Fact]
+    public void SearchDelegate_ForwardsInputConfigurationSwitcherAndSearchSemantics()
+    {
+        var searchDelegate = new TestSearchDelegate(
+            keyboardType: TextInputType.EmailAddress,
+            textInputAction: TextInputAction.Done,
+            autocorrect: false,
+            enableSuggestions: false);
+        var host = new SearchLaunchHost(searchDelegate, "mail");
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new Navigator(new BuilderPageRoute(_ => host))));
+
+        harness.FindState<SearchLaunchHostState>().Open();
+        harness.Pump(new Size(640, 420));
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.4));
+        harness.Pump(new Size(640, 420));
+
+        TextField field = Assert.Single(harness.FindWidgets<TextField>());
+        Assert.Equal(TextInputType.EmailAddress, field.KeyboardType);
+        Assert.Equal(TextInputAction.Done, field.TextInputAction);
+        Assert.False(field.Autocorrect);
+        Assert.False(field.EnableSuggestions);
+        FocusTextInputState inputState = Assert.IsType<FocusTextInputState>(
+            FocusManager.Instance.ResolveTextInputState());
+        Assert.Equal(TextInputKeyboardType.EmailAddress, inputState.Configuration?.KeyboardType);
+        Assert.Equal(TextInputActionType.Done, inputState.Configuration?.InputAction);
+        Assert.False(inputState.Configuration?.Autocorrect);
+        Assert.False(inputState.Configuration?.EnableSuggestions);
+        Assert.Contains(
+            harness.FindWidgets<AnimatedSwitcher>(),
+            switcher => switcher.Duration == TimeSpan.FromMilliseconds(300));
+        Assert.Contains(
+            harness.FindWidgets<Semantics>(),
+            semantics => semantics.InputType == SemanticsInputType.Search);
+        Assert.Contains(
+            FlattenSemantics(harness.SemanticsRoot),
+            node => node.InputType == SemanticsInputType.Search);
+    }
+
+    [Fact]
+    public void SearchDelegate_QueryDefaultsThemeAndInputMetadataMatchFlutter()
+    {
+        var searchDelegate = new TestSearchDelegate();
+        Assert.Null(searchDelegate.KeyboardType);
+        Assert.Equal(TextInputAction.Search, searchDelegate.TextInputAction);
+        Assert.True(searchDelegate.Autocorrect);
+        Assert.True(searchDelegate.EnableSuggestions);
+
+        searchDelegate.Query = "query";
+        Assert.Equal(TextSelection.Collapsed(5), searchDelegate.QueryController.Selection);
+        searchDelegate.Query = string.Empty;
+        Assert.Equal(TextSelection.Collapsed(0), searchDelegate.QueryController.Selection);
+
+        ThemeData? resolved = null;
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light with
+            {
+                PrimaryIconTheme = new IconThemeData(Color: Colors.Red, Size: 31),
+            },
+            new Builder(context =>
+            {
+                resolved = searchDelegate.AppBarTheme(context);
+                return new SizedBox();
+            })));
+        harness.Pump(new Size(100, 100));
+
+        Assert.NotNull(resolved);
+        Assert.Equal(Colors.White, resolved.AppBarTheme.BackgroundColor);
+        Assert.Equal(Colors.Gray, resolved.AppBarTheme.IconTheme?.Color);
+        Assert.Equal(31, resolved.AppBarTheme.IconTheme?.Size);
+        Assert.Equal(SystemUiIconBrightness.Dark, resolved.AppBarTheme.SystemOverlayStyle?.StatusBarIconBrightness);
+        Assert.Equal(InputBorder.None, resolved.InputDecorationTheme.Border);
     }
 
     [Fact]
@@ -270,14 +351,39 @@ public sealed class MaterialSearchTests : IDisposable
         return result;
     }
 
+    private static IEnumerable<SemanticsNode> FlattenSemantics(SemanticsNode? node)
+    {
+        if (node is null)
+        {
+            yield break;
+        }
+
+        yield return node;
+        foreach (SemanticsNode child in node.Children)
+        {
+            foreach (SemanticsNode descendant in FlattenSemantics(child))
+            {
+                yield return descendant;
+            }
+        }
+    }
+
     private sealed class TestSearchDelegate : SearchDelegate<string>
     {
         public TestSearchDelegate(
             TextStyle? searchFieldStyle = null,
-            InputDecorationThemeData? searchFieldDecorationTheme = null) : base(
+            InputDecorationThemeData? searchFieldDecorationTheme = null,
+            TextInputType? keyboardType = null,
+            TextInputAction textInputAction = TextInputAction.Search,
+            bool autocorrect = true,
+            bool enableSuggestions = true) : base(
             searchFieldLabel: "Find framework term",
             searchFieldStyle: searchFieldStyle,
-            searchFieldDecorationTheme: searchFieldDecorationTheme)
+            searchFieldDecorationTheme: searchFieldDecorationTheme,
+            keyboardType: keyboardType,
+            textInputAction: textInputAction,
+            autocorrect: autocorrect,
+            enableSuggestions: enableSuggestions)
         {
         }
 
@@ -336,6 +442,8 @@ public sealed class MaterialSearchTests : IDisposable
 
         public RenderView RenderView { get; }
 
+        public SemanticsNode? SemanticsRoot => _pipeline.SemanticsOwner.RootNode;
+
         public void Pump(Size size)
         {
             _owner.FlushBuild();
@@ -343,6 +451,7 @@ public sealed class MaterialSearchTests : IDisposable
             _pipeline.FlushLayout(size);
             _pipeline.FlushCompositingBits();
             _pipeline.FlushPaint();
+            _pipeline.FlushSemantics();
         }
 
         public void Dispose() => _rootElement.Unmount();
@@ -354,6 +463,13 @@ public sealed class MaterialSearchTests : IDisposable
             return Assert.Single(states);
         }
 
+        public IReadOnlyList<T> FindWidgets<T>() where T : Widget
+        {
+            var widgets = new List<T>();
+            CollectWidgets(_rootElement, widgets);
+            return widgets;
+        }
+
         private static void CollectStates<T>(Element element, List<T> states) where T : State
         {
             if (element is StatefulElement stateful && stateful.State is T state)
@@ -362,6 +478,16 @@ public sealed class MaterialSearchTests : IDisposable
             }
 
             element.VisitChildren(child => CollectStates(child, states));
+        }
+
+        private static void CollectWidgets<T>(Element element, List<T> widgets) where T : Widget
+        {
+            if (element.Widget is T widget)
+            {
+                widgets.Add(widget);
+            }
+
+            element.VisitChildren(child => CollectWidgets(child, widgets));
         }
 
         private sealed class HarnessRootElement : Element, IRenderObjectHost
