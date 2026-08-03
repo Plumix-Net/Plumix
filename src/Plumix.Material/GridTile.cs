@@ -4,7 +4,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/material/grid_tile.dart (strict structure/behavior port)
+// Dart parity source: flutter/packages/flutter/lib/src/material/grid_tile.dart
 
 /// <summary>
 /// A tile in a Material grid, with optional content overlaid at its top and bottom edges.
@@ -17,7 +17,7 @@ public sealed class GridTile : StatelessWidget
         Widget? footer = null,
         Key? key = null) : base(key)
     {
-        Child = child;
+        Child = child ?? throw new ArgumentNullException(nameof(child));
         Header = header;
         Footer = footer;
     }

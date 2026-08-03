@@ -12,6 +12,30 @@ namespace Plumix.Tests;
 public sealed class MaterialGridTileTests
 {
     [Fact]
+    public void GridTile_Constructor_PreservesSourceDefaultsAndSlots()
+    {
+        var child = new SizedBox(width: 40, height: 30);
+        var header = new SizedBox(height: 12);
+        var footer = new SizedBox(height: 16);
+
+        var defaultTile = new GridTile(child: child);
+        var slottedTile = new GridTile(child: child, header: header, footer: footer);
+
+        Assert.Same(child, defaultTile.Child);
+        Assert.Null(defaultTile.Header);
+        Assert.Null(defaultTile.Footer);
+        Assert.Same(child, slottedTile.Child);
+        Assert.Same(header, slottedTile.Header);
+        Assert.Same(footer, slottedTile.Footer);
+    }
+
+    [Fact]
+    public void GridTile_RequiresChild()
+    {
+        Assert.Throws<ArgumentNullException>(() => new GridTile(child: null!));
+    }
+
+    [Fact]
     public void GridTile_WithoutHeaderOrFooter_ReturnsChildDirectly()
     {
         using var harness = new WidgetRenderHarness(

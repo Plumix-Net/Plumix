@@ -1,5 +1,8 @@
 # Changelog
 
+- Completed the strict `GridTile` Dart closeout. The constructor now enforces the source non-null child contract,
+  while focused coverage locks the exact direct-child and ordered fill/header/footer `Stack` composition.
+
 - Breaking: completed the legacy and locale-aware Material typography foundation. `Typography.material2014`/
   `material2018`, exact platform color/font themes, dense/tall script geometry, localized `Theme.of` merging, M2/M3
   `ThemeData` selection, and the expanded Flutter-shaped `TextStyle` metadata now match the pinned source.
