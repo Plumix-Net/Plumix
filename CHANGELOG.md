@@ -1,5 +1,10 @@
 # Changelog
 
+- Breaking: completed the `MaterialBanner` ColorScheme/theme closeout. M2/M3 surfaces and M3 divider now read
+  direct scheme roles, local banner themes participate in inherited-theme capture, and entrance/exit composition
+  uses shared Flutter-shaped threshold/vector animation primitives. Added focused coverage and a mirrored M2/M3
+  direct-scheme demo probe.
+
 - Breaking: completed the strict `DrawerHeader`/`UserAccountsDrawerHeader` closeout. Account surfaces now read
   `ColorScheme.primary`, directional insets and generic decorations match Flutter, and pictures/details use the
   source stack/custom-layout/ink/animation composition. Core icon labels and semantics container/merge behavior

@@ -32,6 +32,25 @@ public static class Curves
         return t => 1.0 - curve(1.0 - t);
     }
 
+    public static Curve Threshold(double threshold)
+    {
+        if (threshold < 0.0 || threshold > 1.0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(threshold));
+        }
+
+        return t =>
+        {
+            double clampedT = Math.Clamp(t, 0.0, 1.0);
+            if (clampedT is 0.0 or 1.0)
+            {
+                return clampedT;
+            }
+
+            return clampedT < threshold ? 0.0 : 1.0;
+        };
+    }
+
     // Flutter Material Easing.emphasizedAccelerate.
     public static Curve EmphasizedAccelerate { get; } = Cubic(0.3, 0.0, 0.8, 0.15);
 
@@ -386,6 +405,54 @@ public sealed class RectTween : Tween<Rect>
         double width = a.Width + ((b.Width - a.Width) * t);
         double height = a.Height + ((b.Height - a.Height) * t);
         return new Rect(x, y, Math.Max(0, width), Math.Max(0, height));
+    }
+}
+
+public sealed class VectorTween : Tween<Vector>
+{
+    public VectorTween(Vector? begin = null, Vector? end = null)
+    {
+        Begin = begin;
+        End = end;
+    }
+
+    public new Vector? Begin
+    {
+        get => HasBeginValue ? GetBeginValue() : null;
+        set
+        {
+            if (value.HasValue)
+            {
+                SetBeginValue(value.Value);
+            }
+            else
+            {
+                ClearBeginValue();
+            }
+        }
+    }
+
+    public new Vector? End
+    {
+        get => HasEndValue ? GetEndValue() : null;
+        set
+        {
+            if (value.HasValue)
+            {
+                SetEndValue(value.Value);
+            }
+            else
+            {
+                ClearEndValue();
+            }
+        }
+    }
+
+    public override Vector Lerp(Vector a, Vector b, double t)
+    {
+        return new Vector(
+            a.X + ((b.X - a.X) * t),
+            a.Y + ((b.Y - a.Y) * t));
     }
 }
 

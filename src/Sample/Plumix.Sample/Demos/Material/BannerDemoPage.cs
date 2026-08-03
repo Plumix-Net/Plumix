@@ -17,6 +17,7 @@ public sealed class BannerDemoPage : StatefulWidget
     private sealed class BannerDemoPageState : State
     {
         private bool _forceActionsBelow;
+        private bool _useMaterial3 = true;
         private bool _useThemeOverrides;
 
         public override Widget Build(BuildContext context)
@@ -28,16 +29,24 @@ public sealed class BannerDemoPage : StatefulWidget
                     new TextButton(new Text("LEARN MORE"), () => { }),
                 ]
                 : [new TextButton(new Text("DISMISS"), () => { })];
-            var theme = Theme.Of(context) with
-            {
-                BannerTheme = _useThemeOverrides
-                    ? new MaterialBannerThemeData(
-                        BackgroundColor: Color.Parse("#FFE0F2F1"),
-                        DividerColor: Color.Parse("#FF00695C"),
-                        ContentTextStyle: Theme.Of(context).TextTheme.BodyMedium.CopyWith(color: Color.Parse("#FF004D40")),
-                        Elevation: 2)
-                    : new MaterialBannerThemeData(),
-            };
+            ThemeData ambientTheme = Theme.Of(context);
+            ColorScheme colorScheme = ambientTheme.ColorScheme.CopyWith(
+                surface: Color.Parse("#FFFFF8E1"),
+                surfaceContainerLow: Color.Parse("#FFE0F2F1"),
+                outlineVariant: Color.Parse("#FF00695C"));
+            MaterialBannerThemeData bannerTheme = _useThemeOverrides
+                ? new MaterialBannerThemeData(
+                    BackgroundColor: Color.Parse("#FFFCE4EC"),
+                    DividerColor: Color.Parse("#FFAD1457"),
+                    ContentTextStyle: ambientTheme.TextTheme.BodyMedium.CopyWith(
+                        color: Color.Parse("#FF880E4F")),
+                    Elevation: 2)
+                : new MaterialBannerThemeData();
+            var theme = new ThemeData(
+                colorScheme: colorScheme,
+                textTheme: ambientTheme.TextTheme,
+                useMaterial3: _useMaterial3,
+                bannerTheme: bannerTheme);
 
             return new Theme(
                 theme,
@@ -48,15 +57,23 @@ public sealed class BannerDemoPage : StatefulWidget
                     [
                         new Text("Banner + MaterialBanner", fontSize: 20),
                         new Text(
-                            "Diagonal ribbon, direct Material layout, and queued ScaffoldMessenger presentation.",
+                            "M2/M3 ColorScheme defaults, local theme precedence, and queued presentation.",
                             fontSize: 14,
                             color: Colors.DimGray),
-                        new Row(
+                        new Wrap(
                             spacing: 8,
+                            runSpacing: 8,
                             children:
                             [
-                                ControlButton(_forceActionsBelow ? "Actions below" : "Single row", () => SetState(() => _forceActionsBelow = !_forceActionsBelow)),
-                                ControlButton(_useThemeOverrides ? "Theme on" : "Theme off", () => SetState(() => _useThemeOverrides = !_useThemeOverrides)),
+                                ControlButton(
+                                    _useMaterial3 ? "Material 3" : "Material 2",
+                                    () => SetState(() => _useMaterial3 = !_useMaterial3)),
+                                ControlButton(
+                                    _forceActionsBelow ? "Actions below" : "Single row",
+                                    () => SetState(() => _forceActionsBelow = !_forceActionsBelow)),
+                                ControlButton(
+                                    _useThemeOverrides ? "Theme on" : "Theme off",
+                                    () => SetState(() => _useThemeOverrides = !_useThemeOverrides)),
                                 ControlButton("Show through messenger", () => ShowMessengerBanner(context)),
                             ]),
                         new Align(

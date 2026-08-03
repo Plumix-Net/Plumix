@@ -64,7 +64,7 @@ public sealed partial record MaterialBannerThemeData
     }
 }
 
-public sealed class MaterialBannerTheme : InheritedWidget
+public sealed class MaterialBannerTheme : InheritedTheme
 {
     public MaterialBannerTheme(MaterialBannerThemeData? data, Widget child, Key? key = null) : base(key)
     {
@@ -76,6 +76,8 @@ public sealed class MaterialBannerTheme : InheritedWidget
     public Widget Child { get; }
 
     public override Widget Build(BuildContext context) => Child;
+
+    public override Widget Wrap(BuildContext context, Widget child) => new MaterialBannerTheme(Data, child);
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
         !Equals(((MaterialBannerTheme)oldWidget).Data, Data);

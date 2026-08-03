@@ -139,13 +139,16 @@ public sealed class MaterialBanner : StatefulWidget
     private sealed class MaterialBannerState : State
     {
         private bool _wasVisible;
+        private CurvedAnimation? _heightAnimation;
+        private CurvedAnimation? _slideOutCurvedAnimation;
 
         private MaterialBanner CurrentWidget => (MaterialBanner)Element.Widget;
 
         public override void InitState()
         {
             base.InitState();
-            Subscribe(CurrentWidget.Animation);
+            CurrentWidget.Animation?.AddStatusListener(HandleAnimationStatusChanged);
+            SetCurvedAnimations();
         }
 
         public override void DidUpdateWidget(StatefulWidget oldWidget)
@@ -153,13 +156,16 @@ public sealed class MaterialBanner : StatefulWidget
             base.DidUpdateWidget(oldWidget);
             var oldBanner = (MaterialBanner)oldWidget;
             if (ReferenceEquals(oldBanner.Animation, CurrentWidget.Animation)) return;
-            Unsubscribe(oldBanner.Animation);
-            Subscribe(CurrentWidget.Animation);
+            oldBanner.Animation?.RemoveStatusListener(HandleAnimationStatusChanged);
+            CurrentWidget.Animation?.AddStatusListener(HandleAnimationStatusChanged);
+            SetCurvedAnimations();
         }
 
         public override void Dispose()
         {
-            Unsubscribe(CurrentWidget.Animation);
+            CurrentWidget.Animation?.RemoveStatusListener(HandleAnimationStatusChanged);
+            _heightAnimation?.Dispose();
+            _slideOutCurvedAnimation?.Dispose();
             base.Dispose();
         }
 
@@ -169,6 +175,7 @@ public sealed class MaterialBanner : StatefulWidget
             var mediaQuery = MediaQuery.Of(context);
             var theme = Theme.Of(context);
             var bannerTheme = MaterialBannerTheme.Of(context);
+            var defaults = ResolveDefaults(theme);
             var direction = Directionality.Of(context);
             bool isSingleRow = widget.Actions.Count == 1 && !widget.ForceActionsBelow;
 
@@ -203,21 +210,25 @@ public sealed class MaterialBanner : StatefulWidget
                             textDirection: direction,
                             children: widget.Actions))));
 
+            // Flutter intentionally does not consult defaults.elevation here, even though its generated M3
+            // defaults object carries 1.0. The effective fallback remains 0.0 in both Material generations.
             double elevation = widget.Elevation ?? bannerTheme.Elevation ?? 0;
             EdgeInsetsGeometry marginGeometry = widget.Margin
                                                  ?? EdgeInsets.Only(bottom: elevation > 0 ? 10 : 0);
             Thickness margin = marginGeometry.Resolve(direction);
             var backgroundColor = widget.BackgroundColor
                                   ?? bannerTheme.BackgroundColor
-                                  ?? (theme.UseMaterial3 ? theme.SurfaceContainerLowColor : theme.SurfaceColor);
+                                  ?? defaults.BackgroundColor;
             var surfaceTintColor = widget.SurfaceTintColor
                                    ?? bannerTheme.SurfaceTintColor
-                                   ?? (theme.UseMaterial3 ? Colors.Transparent : null);
+                                   ?? defaults.SurfaceTintColor;
             var shadowColor = widget.ShadowColor ?? bannerTheme.ShadowColor;
             var dividerColor = widget.DividerColor
                                ?? bannerTheme.DividerColor
-                               ?? (theme.UseMaterial3 ? theme.OutlineVariantColor : null);
-            var textStyle = widget.ContentTextStyle ?? bannerTheme.ContentTextStyle ?? theme.TextTheme.BodyMedium;
+                               ?? defaults.DividerColor;
+            var textStyle = widget.ContentTextStyle
+                            ?? bannerTheme.ContentTextStyle
+                            ?? defaults.ContentTextStyle!;
 
             Widget content = new Expanded(
                 new DefaultTextStyle(textStyle, widget.Content));
@@ -267,9 +278,12 @@ public sealed class MaterialBanner : StatefulWidget
             materialBanner = new SafeArea(materialBanner);
             if (!mediaQuery.AccessibleNavigation)
             {
-                double slideValue = widget.Animation.Value <= 0 ? -1.0 : 0.0;
-                materialBanner = new FractionalTranslation(
-                    translation: new Vector(0, slideValue),
+                var slideOutAnimation = new VectorTween(
+                        begin: new Vector(0.0, -1.0),
+                        end: new Vector(0.0, 0.0))
+                    .Animate(_slideOutCurvedAnimation!);
+                materialBanner = new SlideTransition(
+                    position: slideOutAnimation,
                     child: materialBanner);
             }
 
@@ -281,9 +295,13 @@ public sealed class MaterialBanner : StatefulWidget
 
             if (!mediaQuery.AccessibleNavigation)
             {
-                materialBanner = new Align(
-                    alignment: direction == TextDirection.Ltr ? Alignment.BottomLeft : Alignment.BottomRight,
-                    heightFactor: Curves.FastOutSlowIn(widget.Animation.Value),
+                CurvedAnimation heightAnimation = _heightAnimation!;
+                materialBanner = new AnimatedBuilder(
+                    animation: heightAnimation,
+                    builder: (_, child) => new Align(
+                        alignment: direction == TextDirection.Ltr ? Alignment.BottomLeft : Alignment.BottomRight,
+                        heightFactor: heightAnimation.Value,
+                        child: child),
                     child: materialBanner);
             }
 
@@ -297,25 +315,40 @@ public sealed class MaterialBanner : StatefulWidget
             ScaffoldMessenger.Of(Context).RemoveCurrentMaterialBanner(MaterialBannerClosedReason.Dismiss);
         }
 
-        private void Subscribe(Animation<double>? animation)
+        private static MaterialBannerThemeData ResolveDefaults(ThemeData theme)
         {
-            if (animation is null) return;
-            animation.AddListener(HandleAnimationChanged);
-            animation.AddStatusListener(HandleAnimationStatusChanged);
+            return theme.UseMaterial3
+                ? new MaterialBannerThemeData(
+                    BackgroundColor: theme.ColorScheme.SurfaceContainerLow,
+                    SurfaceTintColor: Colors.Transparent,
+                    DividerColor: theme.ColorScheme.OutlineVariant,
+                    ContentTextStyle: theme.TextTheme.BodyMedium,
+                    Elevation: 1.0)
+                : new MaterialBannerThemeData(
+                    BackgroundColor: theme.ColorScheme.Surface,
+                    ContentTextStyle: theme.TextTheme.BodyMedium,
+                    Elevation: 0.0);
         }
 
-        private void Unsubscribe(Animation<double>? animation)
+        private void SetCurvedAnimations()
         {
-            if (animation is null) return;
-            animation.RemoveListener(HandleAnimationChanged);
-            animation.RemoveStatusListener(HandleAnimationStatusChanged);
-        }
+            _heightAnimation?.Dispose();
+            _slideOutCurvedAnimation?.Dispose();
+            Animation<double>? animation = CurrentWidget.Animation;
+            if (animation is null)
+            {
+                _heightAnimation = null;
+                _slideOutCurvedAnimation = null;
+                return;
+            }
 
-        private void HandleAnimationChanged() => SetState(() => { });
+            _heightAnimation = new CurvedAnimation(animation, Curves.FastOutSlowIn);
+            _slideOutCurvedAnimation = new CurvedAnimation(animation, Curves.Threshold(0.0));
+        }
 
         private void HandleAnimationStatusChanged(AnimationStatus status)
         {
-            if (status != AnimationStatus.Completed || _wasVisible) return;
+            if (!status.IsCompleted() || _wasVisible) return;
             _wasVisible = true;
             CurrentWidget.OnVisible?.Invoke();
         }

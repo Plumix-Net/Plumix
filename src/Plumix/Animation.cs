@@ -25,6 +25,11 @@ public static class AnimationStatusExtensions
     {
         return status is AnimationStatus.Forward or AnimationStatus.Completed;
     }
+
+    public static bool IsCompleted(this AnimationStatus status)
+    {
+        return status == AnimationStatus.Completed;
+    }
 }
 
 public abstract class Animation<T> : IValueListenable<T>

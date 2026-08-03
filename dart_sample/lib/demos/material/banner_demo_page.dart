@@ -9,22 +9,32 @@ class BannerDemoPage extends StatefulWidget {
 
 class _BannerDemoPageState extends State<BannerDemoPage> {
   bool _forceActionsBelow = false;
+  bool _useMaterial3 = true;
   bool _useThemeOverrides = false;
 
   @override
   Widget build(BuildContext context) {
     final ThemeData ambientTheme = Theme.of(context);
-    final ThemeData theme = ambientTheme.copyWith(
-      bannerTheme: _useThemeOverrides
-          ? MaterialBannerThemeData(
-              backgroundColor: Colors.teal.shade50,
-              dividerColor: Colors.teal.shade800,
-              contentTextStyle: ambientTheme.textTheme.bodyMedium?.copyWith(
-                color: Colors.teal.shade900,
-              ),
-              elevation: 2,
-            )
-          : const MaterialBannerThemeData(),
+    final ColorScheme colorScheme = ambientTheme.colorScheme.copyWith(
+      surface: const Color(0xFFFFF8E1),
+      surfaceContainerLow: const Color(0xFFE0F2F1),
+      outlineVariant: const Color(0xFF00695C),
+    );
+    final MaterialBannerThemeData bannerTheme = _useThemeOverrides
+        ? MaterialBannerThemeData(
+            backgroundColor: const Color(0xFFFCE4EC),
+            dividerColor: const Color(0xFFAD1457),
+            contentTextStyle: ambientTheme.textTheme.bodyMedium?.copyWith(
+              color: const Color(0xFF880E4F),
+            ),
+            elevation: 2,
+          )
+        : const MaterialBannerThemeData();
+    final ThemeData theme = ThemeData(
+      useMaterial3: _useMaterial3,
+      colorScheme: colorScheme,
+      textTheme: ambientTheme.textTheme,
+      bannerTheme: bannerTheme,
     );
 
     return Theme(
@@ -35,13 +45,17 @@ class _BannerDemoPageState extends State<BannerDemoPage> {
         children: <Widget>[
           const Text('Banner + MaterialBanner', style: TextStyle(fontSize: 20)),
           const Text(
-            'Diagonal ribbon, direct Material layout, and queued ScaffoldMessenger presentation.',
+            'M2/M3 ColorScheme defaults, local theme precedence, and queued presentation.',
             style: TextStyle(fontSize: 14, color: Colors.black54),
           ),
           Wrap(
             spacing: 8,
             runSpacing: 8,
             children: <Widget>[
+              TextButton(
+                onPressed: () => setState(() => _useMaterial3 = !_useMaterial3),
+                child: Text(_useMaterial3 ? 'Material 3' : 'Material 2'),
+              ),
               TextButton(
                 onPressed: () =>
                     setState(() => _forceActionsBelow = !_forceActionsBelow),

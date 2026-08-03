@@ -96,6 +96,26 @@ public sealed class TransitionsTests : IDisposable
     }
 
     [Fact]
+    public void ThresholdCurveAndVectorTween_MatchFlutterEndpointAndInterpolationContracts()
+    {
+        Curve threshold = Curves.Threshold(0.25);
+
+        Assert.Equal(0.0, threshold(0.0));
+        Assert.Equal(0.0, threshold(0.249));
+        Assert.Equal(1.0, threshold(0.25));
+        Assert.Equal(1.0, threshold(1.0));
+        Assert.Throws<ArgumentOutOfRangeException>(() => Curves.Threshold(-0.01));
+        Assert.Throws<ArgumentOutOfRangeException>(() => Curves.Threshold(1.01));
+
+        var tween = new VectorTween(
+            begin: new Vector(2.0, -4.0),
+            end: new Vector(10.0, 8.0));
+        Assert.Equal(new Vector(4.0, -1.0), tween.Evaluate(0.25));
+        Assert.False(AnimationStatus.Forward.IsCompleted());
+        Assert.True(AnimationStatus.Completed.IsCompleted());
+    }
+
+    [Fact]
     public void SizeTransition_ExposesFlutterContractsAndValidatesArguments()
     {
         var animation = new TestAnimation(0.5, AnimationStatus.Forward);

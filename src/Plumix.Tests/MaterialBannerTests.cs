@@ -84,6 +84,91 @@ public sealed class MaterialBannerTests
     }
 
     [Fact]
+    public void MaterialBannerTheme_DefaultCopyLerpAndInheritedCaptureMatchFlutterContract()
+    {
+        var empty = new MaterialBannerThemeData();
+        Assert.Equal(empty, empty.CopyWith());
+        Assert.Null(empty.BackgroundColor);
+        Assert.Null(empty.SurfaceTintColor);
+        Assert.Null(empty.ShadowColor);
+        Assert.Null(empty.DividerColor);
+        Assert.Null(empty.ContentTextStyle);
+        Assert.Null(empty.Elevation);
+        Assert.Null(empty.Padding);
+        Assert.Null(empty.LeadingPadding);
+
+        var data = new MaterialBannerThemeData(
+            BackgroundColor: Colors.DarkCyan,
+            DividerColor: Colors.Gold,
+            Elevation: 2.0,
+            Padding: EdgeInsetsDirectional.Only(start: 6.0));
+        var child = new SizedBox();
+        var theme = new MaterialBannerTheme(data, child);
+
+        Assert.IsAssignableFrom<InheritedTheme>(theme);
+        var wrapped = Assert.IsType<MaterialBannerTheme>(theme.Wrap(default, child));
+        Assert.Equal(data, wrapped.Data);
+        Assert.Same(child, wrapped.Child);
+
+        var midpoint = MaterialBannerThemeData.Lerp(empty, data, 0.5);
+        Assert.Equal(1.0, midpoint.Elevation);
+        Assert.Equal(EdgeInsetsDirectional.Only(start: 3.0), midpoint.Padding);
+
+        using var local = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new MaterialBannerTheme(data, Banner())));
+        local.Pump(new Size(360, 180));
+        var localBackground = Assert.Single(
+            FindDescendants<RenderDecoratedBox>(local.RenderView),
+            box => box.Decoration.Color.HasValue);
+        Assert.Equal(Colors.DarkCyan, localBackground.Decoration.Color);
+        Assert.NotNull(localBackground.Decoration.BoxShadows);
+    }
+
+    [Fact]
+    public void MaterialBanner_M2AndM3DefaultsReadColorSchemeRolesDirectly()
+    {
+        Color m3Surface = Color.Parse("#FF102030");
+        Color m3Outline = Color.Parse("#FF405060");
+        var m3Theme = ThemeData.Light with
+        {
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(
+                surfaceContainerLow: m3Surface,
+                outlineVariant: m3Outline),
+            SurfaceContainerLowColor = Colors.Red,
+            OutlineVariantColor = Colors.Blue,
+        };
+        using var m3 = new WidgetRenderHarness(Wrap(m3Theme, Banner()));
+        m3.Pump(new Size(360, 180));
+
+        var m3Background = Assert.Single(
+            FindDescendants<RenderDecoratedBox>(m3.RenderView),
+            box => box.Decoration.Color.HasValue);
+        var m3Divider = Assert.Single(
+            FindDescendants<RenderDecoratedBox>(m3.RenderView),
+            box => box.Decoration.BorderSides?.Bottom is not null);
+        Assert.Equal(m3Surface, m3Background.Decoration.Color);
+        Assert.Equal(m3Outline, m3Divider.Decoration.BorderSides!.Bottom!.Value.Color);
+        Assert.Null(m3Background.Decoration.BoxShadows);
+
+        Color m2Surface = Color.Parse("#FF708090");
+        var m2Theme = ThemeData.Light with
+        {
+            UseMaterial3 = false,
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(surface: m2Surface),
+            SurfaceColor = Colors.Green,
+        };
+        using var m2 = new WidgetRenderHarness(Wrap(m2Theme, Banner()));
+        m2.Pump(new Size(360, 180));
+
+        var m2Background = Assert.Single(
+            FindDescendants<RenderDecoratedBox>(m2.RenderView),
+            box => box.Decoration.Color.HasValue);
+        Assert.Equal(m2Surface, m2Background.Decoration.Color);
+        Assert.Null(m2Background.Decoration.BoxShadows);
+    }
+
+    [Fact]
     public void MaterialBanner_M3SingleActionUsesFlutterDefaults()
     {
         using var harness = new WidgetRenderHarness(Wrap(ThemeData.Light, Banner()));
