@@ -23,7 +23,6 @@ Size legend: **S** — one focused widget, few states. **M** — widget family o
 | Subsystem | Flutter source | Size | Notes |
 | --- | --- | --- | --- |
 | `ColorScheme` + `Typography` closeout | `color_scheme.dart`, `typography.dart`, `text_theme.dart`, component defaults | L | The Material 3 role model, HCT seed generation, 2014/2018/2021 type scales, exact platform themes, locale-script geometry, and `ThemeData` projection now exist; navigation surfaces, bottom/FAB surfaces, `MaterialBanner`, `IconButton`, `Card`, `Divider`, `Badge`, `RefreshIndicator`, `CircleAvatar`, `DrawerHeader`, and the `TextButton`/`ElevatedButton`/`OutlinedButton`/`FilledButton` families have direct-token/theme-lerp closeouts. Remaining work is the other component families. See `docs/ai/notes/material-2026-07-29-color-scheme-typography-foundation.md`. |
-| Predictive-back + snapshot transition specialization | `page_transitions_theme.dart`, `predictive_back_page_transitions_builder.dart` | L | Core route hooks and live-widget Material/Cupertino builders now exist. Remaining work is snapshot/delegated-transition ownership, predictive-back progress, and host gesture plumbing. |
 
 ## Not listed / out of scope
 

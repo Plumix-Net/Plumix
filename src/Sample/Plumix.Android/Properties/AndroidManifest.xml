@@ -2,5 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" android:installLocation="auto">
 	<uses-permission android:name="android.permission.INTERNET" />
 	
-	<application android:name=".Application" android:label="Flutter.Net" android:icon="@drawable/Icon" />
+	<application
+		android:name=".Application"
+		android:label="Flutter.Net"
+		android:icon="@drawable/Icon"
+		android:enableOnBackInvokedCallback="true" />
 </manifest>

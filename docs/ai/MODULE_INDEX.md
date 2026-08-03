@@ -113,8 +113,10 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Material tabs enter through `src/Plumix.Material/Tabs.cs` + `TabController.cs` + `TabPageSelector.cs` + `TabBarTheme.cs`; page motion lives in core `Widgets/PageView.cs`/`Rendering/PageView.cs`, indicator layout/paint in `RenderTabBar.cs`, and focused coverage in `MaterialTabsTests.cs`.
 - Application shells enter through core `Widgets/App.cs` + `Localizations.cs` and Material `App.cs`; theme motion
   and Material page routing use `Theme.cs` + `ThemeData.cs` + `PageTransitionsTheme.cs`, while route ownership and
-  deep-link initial generation live in core `Widgets/Navigation.cs`. Focused coverage is in
-  `ApplicationWidgetsTests.cs`, `MaterialThemeAnimationTests.cs`, and `NavigationTests.cs`.
+  deep-link initial generation live in core `Widgets/Navigation.cs`. Route snapshots and predictive-back dispatch
+  enter through core `Widgets/SnapshotWidget.cs`, `Rendering/SnapshotWidget.cs`, and `Widgets/AppLifecycleListener.cs`.
+  Focused coverage is in `ApplicationWidgetsTests.cs`, `MaterialThemeAnimationTests.cs`, `NavigationTests.cs`, and
+  `MaterialPageTransitionsTests.cs`.
 - Material elevation color treatment enters through `ElevationOverlay.cs`; `Material.cs` consumes its M2/M3 policy,
   while component surface helpers share its tint interpolation. Focused coverage is in
   `MaterialElevationOverlayTests.cs`.

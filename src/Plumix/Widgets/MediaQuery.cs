@@ -1,5 +1,6 @@
 using Avalonia;
 using Plumix.Foundation;
+using Plumix.Rendering;
 
 namespace Plumix.Widgets;
 
@@ -60,6 +61,7 @@ public sealed record MediaQueryData(
     bool HighContrast = false,
     bool SupportsAnnounce = false,
     int ViewId = 0,
+    BorderRadius? DisplayCornerRadii = null,
     IReadOnlyList<DisplayFeature>? DisplayFeatures = null)
 {
     public Orientation Orientation => Size.Width > Size.Height
@@ -83,6 +85,8 @@ public sealed record MediaQueryData(
         bool? highContrast = null,
         bool? supportsAnnounce = null,
         int? viewId = null,
+        BorderRadius? displayCornerRadii = null,
+        bool clearDisplayCornerRadii = false,
         IReadOnlyList<DisplayFeature>? displayFeatures = null)
     {
         return new MediaQueryData(
@@ -102,6 +106,7 @@ public sealed record MediaQueryData(
             HighContrast: highContrast ?? HighContrast,
             SupportsAnnounce: supportsAnnounce ?? SupportsAnnounce,
             ViewId: viewId ?? ViewId,
+            DisplayCornerRadii: clearDisplayCornerRadii ? null : displayCornerRadii ?? DisplayCornerRadii,
             DisplayFeatures: displayFeatures ?? DisplayFeatures);
     }
 
@@ -268,6 +273,11 @@ public sealed class MediaQuery : InheritedWidget
     public static bool SupportsAnnounceOf(BuildContext context) => Of(context).SupportsAnnounce;
 
     public static int ViewIdOf(BuildContext context) => Of(context).ViewId;
+
+    public static BorderRadius? DisplayCornerRadiiOf(BuildContext context) => Of(context).DisplayCornerRadii;
+
+    public static BorderRadius? MaybeDisplayCornerRadiiOf(BuildContext context) =>
+        MaybeOf(context)?.DisplayCornerRadii;
 
     public static double TextScaleFactorOf(BuildContext context) => Of(context).TextScaleFactor;
 

@@ -1,5 +1,11 @@
 # Changelog
 
+- Breaking: completed the pinned Material page-transition closeout. Android now defaults to
+  `PredictiveBackPageTransitionsBuilder`; shared/fullscreen predictive peek, cancel, commit, display-corner radii,
+  exact fade/zoom timing, delegated transitions, retained subtree snapshots, and route snapshot permissions are
+  framework-owned. Android 14+ now forwards native predictive-back progress, with focused source-test coverage and
+  the mirrored nested-navigation demo updated to use Material routes.
+
 - Breaking: completed the strict `ExpansionPanel`/`ExpansionPanelList` closeout. Public constructor ordering,
   salted keys, directional header geometry, exact `InkWell`/`IgnorePointer`/`ExpandIcon` composition, independent
   header/body/gap animations, radio ownership, callback ordering, colors, and focused source-test coverage now match.

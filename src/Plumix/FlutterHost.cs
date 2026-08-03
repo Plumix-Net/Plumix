@@ -50,6 +50,26 @@ public class PlumixHost : Control
 
     public event Action<SemanticsNode?>? SemanticsUpdated;
 
+    public bool StartPredictiveBack(PredictiveBackEvent backEvent)
+    {
+        return WidgetsBinding.Instance.HandleStartBackGesture(backEvent);
+    }
+
+    public void UpdatePredictiveBack(PredictiveBackEvent backEvent)
+    {
+        WidgetsBinding.Instance.HandleUpdateBackGestureProgress(backEvent);
+    }
+
+    public bool CommitPredictiveBack()
+    {
+        return WidgetsBinding.Instance.HandleCommitBackGesture();
+    }
+
+    public void CancelPredictiveBack()
+    {
+        WidgetsBinding.Instance.HandleCancelBackGesture();
+    }
+
     public PlumixHost()
     {
         _pipeline = new PipelineOwner(_root);

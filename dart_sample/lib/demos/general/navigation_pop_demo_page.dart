@@ -35,7 +35,8 @@ class _NavigationPopDemoPageState extends State<NavigationPopDemoPage> {
           ),
           const Text(
             'Push a nested page, then simulate a parent Back. The handler consumes it in the nested '
-            'navigator. Disable route pop to probe PopScope veto behavior.',
+            'navigator. Nested routes use PageTransitionsTheme, including Android predictive-back '
+            'peek/commit/cancel. Disable route pop to probe PopScope veto behavior.',
             style: TextStyle(fontSize: 14, color: Colors.black54),
           ),
           Row(

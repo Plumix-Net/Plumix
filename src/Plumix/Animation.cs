@@ -47,7 +47,7 @@ public abstract class Animation<T> : IValueListenable<T>
     public abstract void RemoveStatusListener(Action<AnimationStatus> listener);
 }
 
-internal sealed class ConstantAnimation<T> : Animation<T>
+public sealed class ConstantAnimation<T> : Animation<T>
 {
     public ConstantAnimation(T value, AnimationStatus status = AnimationStatus.Completed)
     {

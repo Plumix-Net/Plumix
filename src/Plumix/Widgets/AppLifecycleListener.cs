@@ -21,12 +21,32 @@ public interface WidgetsBindingObserver
     {
         return Task.FromResult(AppExitResponse.Exit);
     }
+
+    bool HandleStartBackGesture(PredictiveBackEvent backEvent)
+    {
+        _ = backEvent;
+        return false;
+    }
+
+    void HandleUpdateBackGestureProgress(PredictiveBackEvent backEvent)
+    {
+        _ = backEvent;
+    }
+
+    void HandleCommitBackGesture()
+    {
+    }
+
+    void HandleCancelBackGesture()
+    {
+    }
 }
 
 public class WidgetsBinding
 {
     private static readonly WidgetsBinding SharedInstance = new();
     private readonly List<WidgetsBindingObserver> _observers = [];
+    private readonly List<WidgetsBindingObserver> _backGestureObservers = [];
 
     public static WidgetsBinding Instance => SharedInstance;
 
@@ -86,6 +106,66 @@ public class WidgetsBinding
         }
 
         return didCancel ? AppExitResponse.Cancel : AppExitResponse.Exit;
+    }
+
+    public bool HandleStartBackGesture(PredictiveBackEvent backEvent)
+    {
+        ArgumentNullException.ThrowIfNull(backEvent);
+        _backGestureObservers.Clear();
+        foreach (WidgetsBindingObserver observer in _observers.ToArray())
+        {
+            try
+            {
+                if (observer.HandleStartBackGesture(backEvent))
+                {
+                    _backGestureObservers.Add(observer);
+                }
+            }
+            catch (Exception exception)
+            {
+                Debug.WriteLine(
+                    $"Exception while dispatching {nameof(WidgetsBindingObserver.HandleStartBackGesture)}: "
+                    + exception);
+            }
+        }
+
+        return _backGestureObservers.Count > 0;
+    }
+
+    public void HandleUpdateBackGestureProgress(PredictiveBackEvent backEvent)
+    {
+        ArgumentNullException.ThrowIfNull(backEvent);
+        foreach (WidgetsBindingObserver observer in _backGestureObservers.ToArray())
+        {
+            observer.HandleUpdateBackGestureProgress(backEvent);
+        }
+    }
+
+    public bool HandleCommitBackGesture()
+    {
+        WidgetsBindingObserver[] observers = _backGestureObservers.ToArray();
+        _backGestureObservers.Clear();
+        if (observers.Length == 0)
+        {
+            return Navigator.TryHandleBackButton();
+        }
+
+        foreach (WidgetsBindingObserver observer in observers)
+        {
+            observer.HandleCommitBackGesture();
+        }
+
+        return true;
+    }
+
+    public void HandleCancelBackGesture()
+    {
+        WidgetsBindingObserver[] observers = _backGestureObservers.ToArray();
+        _backGestureObservers.Clear();
+        foreach (WidgetsBindingObserver observer in observers)
+        {
+            observer.HandleCancelBackGesture();
+        }
     }
 
     private static IReadOnlyList<AppLifecycleState> GenerateStateTransitions(

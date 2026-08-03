@@ -24,6 +24,12 @@ public delegate Widget RouteTransitionsBuilder(
     Animation<double> animation,
     Animation<double> secondaryAnimation,
     Widget child);
+public delegate Widget? DelegatedTransitionBuilder(
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    bool allowSnapshotting,
+    Widget? child);
 
 public enum RoutePopDisposition
 {
@@ -209,6 +215,16 @@ public abstract class Route
         ? RoutePopDisposition.Pop
         : RoutePopDisposition.Bubble;
 
+    public bool IsCurrent => Navigator?.CurrentRoute == this;
+
+    public bool IsFirst => Navigator?.IsFirst(this) == true;
+
+    public bool WillHandlePopInternally => _localHistoryEntries is { Count: > 0 };
+
+    public virtual bool PopGestureEnabled => false;
+
+    public virtual bool PopGestureInProgress => false;
+
     internal NavigatorState? Navigator { get; private set; }
 
     public virtual bool ImpliesAppBarDismissal
@@ -376,6 +392,7 @@ public abstract class TransitionRoute : Route
     private readonly ProxyAnimation _secondaryAnimation = new(AlwaysDismissedAnimation);
     private AnimationController? _controller;
     private bool _isPopped;
+    private bool _handlingPopGesture;
 
     protected TransitionRoute(RouteSettings? settings = null) : base(settings)
     {
@@ -421,6 +438,7 @@ public abstract class TransitionRoute : Route
         }
 
         _secondaryAnimation.Parent = AlwaysDismissedAnimation;
+        StopPopGestureIfNeeded();
         base.Uninstall();
     }
 
@@ -511,10 +529,70 @@ public abstract class TransitionRoute : Route
     private void HandleStatusChanged(AnimationStatus status)
     {
         NotifyRouteChanged();
+        if (_handlingPopGesture && status is AnimationStatus.Completed or AnimationStatus.Dismissed)
+        {
+            StopPopGestureIfNeeded();
+        }
+
         if (status == AnimationStatus.Dismissed && _isPopped)
         {
             Navigator?.FinalizeTransitionRoute(this);
         }
+    }
+
+    protected void StartPopGesture(double progress)
+    {
+        Controller.SetValueForUserGesture(progress);
+        if (_handlingPopGesture)
+        {
+            return;
+        }
+
+        _handlingPopGesture = true;
+        Navigator?.StartUserGesture();
+        NotifyRouteChanged();
+    }
+
+    protected void UpdatePopGesture(double progress)
+    {
+        if (_handlingPopGesture && IsCurrent)
+        {
+            Controller.SetValue(progress);
+        }
+    }
+
+    protected void CancelPopGesture()
+    {
+        if (_handlingPopGesture)
+        {
+            Controller.Forward();
+        }
+    }
+
+    protected void CommitPopGesture()
+    {
+        if (!_handlingPopGesture || Navigator is null)
+        {
+            return;
+        }
+
+        Navigator.Pop();
+        if (Controller.Status.IsAnimating())
+        {
+            Controller.Reverse(from: 1.0);
+        }
+    }
+
+    private void StopPopGestureIfNeeded()
+    {
+        if (!_handlingPopGesture)
+        {
+            return;
+        }
+
+        _handlingPopGesture = false;
+        Navigator?.StopUserGesture();
+        NotifyRouteChanged();
     }
 
     private static TimeSpan NormalizeDuration(TimeSpan duration)
@@ -541,6 +619,10 @@ public abstract class ModalRoute : TransitionRoute
     }
 
     internal PageStorageBucket StorageBucket => _storageBucket;
+
+    public virtual DelegatedTransitionBuilder? DelegatedTransition => null;
+
+    public DelegatedTransitionBuilder? ReceivedTransition { get; internal set; }
 
     public override RoutePopDisposition PopDisposition => _popEntries.Any(entry => !entry.CanPopNotifier.Value)
         ? RoutePopDisposition.DoNotPop
@@ -595,9 +677,52 @@ public abstract class ModalRoute : TransitionRoute
         base.Dispose();
     }
 
+    public override void DidChangeNext(Route? nextRoute)
+    {
+        UpdateReceivedTransition(nextRoute);
+        base.DidChangeNext(nextRoute);
+    }
+
+    public override void DidPopNext(Route nextRoute)
+    {
+        UpdateReceivedTransition(nextRoute);
+        base.DidPopNext(nextRoute);
+    }
+
+    internal Widget BuildFlexibleTransitions(
+        BuildContext context,
+        Animation<double> animation,
+        Animation<double> secondaryAnimation,
+        Widget child)
+    {
+        if (ReceivedTransition is null || secondaryAnimation.Status == AnimationStatus.Dismissed)
+        {
+            return BuildTransitions(context, animation, secondaryAnimation, child);
+        }
+
+        var proxyAnimation = new ProxyAnimation();
+        Widget originalTransitions = BuildTransitions(context, animation, proxyAnimation, child);
+        return ReceivedTransition(
+                   context,
+                   animation,
+                   secondaryAnimation,
+                   AllowSnapshotting,
+                   originalTransitions)
+               ?? originalTransitions;
+    }
+
     private void HandlePopEntryChanged()
     {
         NotifyRouteChanged();
+    }
+
+    private void UpdateReceivedTransition(Route? nextRoute)
+    {
+        ReceivedTransition = nextRoute is ModalRoute modalRoute
+                             && CanTransitionTo(modalRoute)
+                             && modalRoute.DelegatedTransition != DelegatedTransition
+            ? modalRoute.DelegatedTransition
+            : null;
     }
 
     public static ModalRoute Of(BuildContext context)
@@ -616,6 +741,13 @@ public abstract class ModalRoute : TransitionRoute
         RouteScope? scope = context.DependOnInherited<RouteScope>();
         return scope?.Route is ModalRoute ? scope.IsCurrent : null;
     }
+
+    public static bool? OpaqueOf(BuildContext context)
+    {
+        return context.DependOnInherited<RouteScope>()?.Route is ModalRoute route
+            ? route.Opaque
+            : null;
+    }
 }
 
 public abstract class PageRoute : ModalRoute
@@ -627,7 +759,34 @@ public abstract class PageRoute : ModalRoute
 
     public bool FullscreenDialog { get; }
 
+    public override bool PopGestureEnabled => !IsFirst
+                                              && !WillHandlePopInternally
+                                              && PopDisposition != RoutePopDisposition.DoNotPop
+                                              && Animation.Status == AnimationStatus.Completed;
+
+    public override bool PopGestureInProgress => Navigator?.UserGestureInProgress == true;
+
     public override TimeSpan TransitionDuration => TimeSpan.Zero;
+
+    public void HandleStartBackGesture(double progress = 0.0)
+    {
+        StartPopGesture(progress);
+    }
+
+    public void HandleUpdateBackGestureProgress(double progress)
+    {
+        UpdatePopGesture(progress);
+    }
+
+    public void HandleCancelBackGesture()
+    {
+        CancelPopGesture();
+    }
+
+    public void HandleCommitBackGesture()
+    {
+        CommitPopGesture();
+    }
 }
 
 public sealed class BuilderPageRoute : PageRoute
@@ -2297,7 +2456,13 @@ internal sealed class RoutePageHost : StatelessWidget
         page = _route is ModalRoute modalRoute
             ? new PageStorage(modalRoute.StorageBucket, page)
             : page;
-        return _route is TransitionRoute transitionRoute
+        return _route is ModalRoute transitionModalRoute
+            ? transitionModalRoute.BuildFlexibleTransitions(
+                context,
+                transitionModalRoute.Animation,
+                transitionModalRoute.SecondaryAnimation,
+                page)
+            : _route is TransitionRoute transitionRoute
             ? transitionRoute.BuildTransitions(
                 context,
                 transitionRoute.Animation,

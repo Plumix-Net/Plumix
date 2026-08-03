@@ -81,6 +81,48 @@ public static class Curves
         return Cubic(parameter, 0, 1);
     }
 
+    public static Curve ThreePointCubic(
+        Point firstControlPoint,
+        Point firstEndPoint,
+        Point midpoint,
+        Point secondControlPoint,
+        Point secondEndPoint)
+    {
+        if (midpoint.X <= 0.0 || midpoint.X >= 1.0 || midpoint.Y <= 0.0 || midpoint.Y >= 1.0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(midpoint));
+        }
+
+        Curve firstCurve = Cubic(
+            firstControlPoint.X / midpoint.X,
+            firstControlPoint.Y / midpoint.Y,
+            firstEndPoint.X / midpoint.X,
+            firstEndPoint.Y / midpoint.Y);
+        Curve secondCurve = Cubic(
+            (secondControlPoint.X - midpoint.X) / (1.0 - midpoint.X),
+            (secondControlPoint.Y - midpoint.Y) / (1.0 - midpoint.Y),
+            (secondEndPoint.X - midpoint.X) / (1.0 - midpoint.X),
+            (secondEndPoint.Y - midpoint.Y) / (1.0 - midpoint.Y));
+        return t =>
+        {
+            double clamped = Math.Clamp(t, 0.0, 1.0);
+            if (clamped < midpoint.X)
+            {
+                return firstCurve(clamped / midpoint.X) * midpoint.Y;
+            }
+
+            double transformed = (clamped - midpoint.X) / (1.0 - midpoint.X);
+            return midpoint.Y + (secondCurve(transformed) * (1.0 - midpoint.Y));
+        };
+    }
+
+    public static Curve EaseInOutCubicEmphasized { get; } = ThreePointCubic(
+        new Point(0.05, 0.0),
+        new Point(0.133333, 0.06),
+        new Point(0.166666, 0.4),
+        new Point(0.208333, 0.82),
+        new Point(0.25, 1.0));
+
     private static double CubicBezier(double t, double x1, double y1, double x2, double y2)
     {
         t = Math.Clamp(t, 0, 1);
@@ -124,6 +166,101 @@ public abstract class Animatable<T>
             parent ?? throw new ArgumentNullException(nameof(parent)),
             this);
     }
+}
+
+public sealed class ConstantTween<T> : Tween<T>
+{
+    public ConstantTween(T value)
+    {
+        Begin = value;
+        End = value;
+    }
+
+    public override T Lerp(T a, T b, double t)
+    {
+        _ = b;
+        _ = t;
+        return a;
+    }
+}
+
+public sealed class CurveTween : Tween<double>
+{
+    public CurveTween(Curve curve)
+    {
+        Curve = curve ?? throw new ArgumentNullException(nameof(curve));
+        Begin = 0.0;
+        End = 1.0;
+    }
+
+    public Curve Curve { get; }
+
+    public override double Lerp(double a, double b, double t)
+    {
+        return a + ((b - a) * Curve(Math.Clamp(t, 0.0, 1.0)));
+    }
+}
+
+public sealed record TweenSequenceItem<T>
+{
+    public TweenSequenceItem(Animatable<T> tween, double weight)
+    {
+        Tween = tween ?? throw new ArgumentNullException(nameof(tween));
+        Weight = weight > 0.0 && double.IsFinite(weight)
+            ? weight
+            : throw new ArgumentOutOfRangeException(nameof(weight));
+    }
+
+    public Animatable<T> Tween { get; }
+
+    public double Weight { get; }
+}
+
+public sealed class TweenSequence<T> : Animatable<T>
+{
+    private readonly IReadOnlyList<TweenSequenceEntry> _entries;
+
+    public TweenSequence(IReadOnlyList<TweenSequenceItem<T>> items)
+    {
+        ArgumentNullException.ThrowIfNull(items);
+        if (items.Count == 0)
+        {
+            throw new ArgumentException("A tween sequence needs at least one item.", nameof(items));
+        }
+
+        double totalWeight = items.Sum(static item => item.Weight);
+        double start = 0.0;
+        var entries = new List<TweenSequenceEntry>(items.Count);
+        foreach (TweenSequenceItem<T> item in items)
+        {
+            double end = start + (item.Weight / totalWeight);
+            entries.Add(new TweenSequenceEntry(item.Tween, start, end));
+            start = end;
+        }
+
+        _entries = entries;
+    }
+
+    public override T Transform(double t)
+    {
+        double clamped = Math.Clamp(t, 0.0, 1.0);
+        TweenSequenceEntry entry = _entries[^1];
+        foreach (TweenSequenceEntry candidate in _entries)
+        {
+            if (clamped <= candidate.End)
+            {
+                entry = candidate;
+                break;
+            }
+        }
+
+        double localT = entry.End == entry.Start
+            ? 1.0
+            : Math.Clamp((clamped - entry.Start) / (entry.End - entry.Start), 0.0, 1.0);
+        return entry.Tween.Transform(localT);
+    }
+
+    private sealed record TweenSequenceEntry(Animatable<T> Tween, double Start, double End);
 }
 
 internal sealed class AnimatedEvaluation<T> : Animation<T>
@@ -611,6 +748,17 @@ public sealed class AnimationController : Animation<double>, IDisposable
                     ? AnimationStatus.Completed
                     : _status);
         }
+        Changed?.Invoke();
+    }
+
+    internal void SetValueForUserGesture(double value)
+    {
+        CancelAnimateTo();
+        _ticker.Stop();
+        IsAnimating = false;
+        _flingSimulation = null;
+        _value = Math.Clamp(value, 0.0, 1.0);
+        SetStatus(AnimationStatus.Reverse);
         Changed?.Invoke();
     }
 
