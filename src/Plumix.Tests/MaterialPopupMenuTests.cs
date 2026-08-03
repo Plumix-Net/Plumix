@@ -149,7 +149,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
             new CheckedPopupMenuItem<string>(new Text("M2 checked"), @checked: true)));
         m2Harness.Pump(new Size(280, 100));
         Assert.Equal(
-            ThemeData.Light.TextTheme.TitleMedium.FontSize,
+            ThemeData.Localize(ThemeData.Light, Typography.EnglishLike2021).TextTheme.TitleMedium.FontSize,
             FindParagraph(m2Harness.RenderView, "M2 checked")!.FontSize);
     }
 
@@ -161,7 +161,9 @@ public sealed class MaterialPopupMenuTests : IDisposable
             new PopupMenuItem<string>(new Text("M3 item"), value: "m3")));
         var m3Semantics = m3.PumpAndGetSemantics(new Size(240, 80));
         Assert.Contains(FindDescendants<RenderPadding>(m3.RenderView), value => value.Padding == new Thickness(12, 0));
-        Assert.Equal(ThemeData.Light.TextTheme.LabelLarge.FontSize, FindParagraph(m3.RenderView, "M3 item")!.FontSize);
+        Assert.Equal(
+            ThemeData.Localize(ThemeData.Light, Typography.EnglishLike2021).TextTheme.LabelLarge.FontSize,
+            FindParagraph(m3.RenderView, "M3 item")!.FontSize);
         Assert.NotNull(FindSemantics(m3Semantics, node =>
             node.Flags.HasFlag(SemanticsFlags.IsButton)
             && node.Flags.HasFlag(SemanticsFlags.IsEnabled)));
@@ -171,7 +173,9 @@ public sealed class MaterialPopupMenuTests : IDisposable
             new PopupMenuItem<string>(new Text("M2 disabled"), enabled: false)));
         var m2Semantics = m2.PumpAndGetSemantics(new Size(240, 80));
         Assert.Contains(FindDescendants<RenderPadding>(m2.RenderView), value => value.Padding == new Thickness(16, 0));
-        Assert.Equal(ThemeData.Light.TextTheme.TitleMedium.FontSize, FindParagraph(m2.RenderView, "M2 disabled")!.FontSize);
+        Assert.Equal(
+            ThemeData.Localize(ThemeData.Light, Typography.EnglishLike2021).TextTheme.TitleMedium.FontSize,
+            FindParagraph(m2.RenderView, "M2 disabled")!.FontSize);
         Assert.NotNull(FindSemantics(m2Semantics, node => node.Flags.HasFlag(SemanticsFlags.IsButton)));
         Assert.Null(FindSemantics(m2Semantics, node => node.Actions.HasFlag(SemanticsActions.Tap)));
     }

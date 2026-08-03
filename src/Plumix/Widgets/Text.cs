@@ -147,7 +147,16 @@ public sealed class Text : LeafRenderObjectWidget
     {
         var defaultTextStyle = DefaultTextStyle.Of(context);
         double textScaleFactor = MediaQuery.MaybeTextScaleFactorOf(context) ?? 1.0;
-        paragraph.FontFamily = FontFamily ?? defaultTextStyle.FontFamily ?? Avalonia.Media.FontFamily.Default;
+        FontFamily effectiveFontFamily = FontFamily
+                                         ?? defaultTextStyle.FontFamily
+                                         ?? Avalonia.Media.FontFamily.Default;
+        if (FontFamily is null && defaultTextStyle.FontFamilyFallback is { Count: > 0 } fallback)
+        {
+            var familyNames = new List<string> { effectiveFontFamily.Name };
+            familyNames.AddRange(fallback);
+            effectiveFontFamily = new FontFamily(string.Join(',', familyNames));
+        }
+        paragraph.FontFamily = effectiveFontFamily;
         paragraph.FontSize = (FontSize ?? defaultTextStyle.FontSize ?? 14) * textScaleFactor;
         paragraph.Foreground = new SolidColorBrush(Color ?? defaultTextStyle.Color ?? Colors.Black);
         paragraph.FontWeight = FontWeight ?? defaultTextStyle.FontWeight ?? Avalonia.Media.FontWeight.Normal;

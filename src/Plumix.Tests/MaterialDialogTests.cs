@@ -134,8 +134,13 @@ public sealed class MaterialDialogTests : IDisposable
 
         Assert.Single(FindDescendants<RenderIntrinsicWidth>(harness.RenderView));
         Assert.Single(FindDescendants<RenderOverflowBar>(harness.RenderView));
-        Assert.Equal(ThemeData.Light.TextTheme.HeadlineSmall.FontSize, FindParagraph(harness.RenderView, "Title")!.FontSize);
-        Assert.Equal(ThemeData.Light.TextTheme.BodyMedium.FontSize, FindParagraph(harness.RenderView, "Content")!.FontSize);
+        ThemeData localizedTheme = ThemeData.Localize(ThemeData.Light, Typography.EnglishLike2021);
+        Assert.Equal(
+            localizedTheme.TextTheme.HeadlineSmall.FontSize,
+            FindParagraph(harness.RenderView, "Title")!.FontSize);
+        Assert.Equal(
+            localizedTheme.TextTheme.BodyMedium.FontSize,
+            FindParagraph(harness.RenderView, "Content")!.FontSize);
         Assert.Contains(FindDescendants<RenderPadding>(harness.RenderView), value => value.Padding == new Thickness(24, 24, 24, 16));
         Assert.Contains(FindDescendants<RenderPadding>(harness.RenderView), value => value.Padding == new Thickness(24, 16, 24, 24));
         Assert.Contains(FindDescendants<RenderPadding>(harness.RenderView), value => value.Padding == new Thickness(24, 0, 24, 24));
@@ -246,8 +251,13 @@ public sealed class MaterialDialogTests : IDisposable
             value.Padding == new Thickness(0, 12, 0, 16));
         Assert.Equal(2, FindDescendants<RenderPadding>(harness.RenderView).Count(value =>
             value.Padding == new Thickness(24, 8)));
-        Assert.Equal(ThemeData.Light.TextTheme.TitleLarge.FontSize, FindParagraph(harness.RenderView, "Choose account")!.FontSize);
-        Assert.Equal(ThemeData.Light.TextTheme.BodyMedium.FontSize, FindParagraph(harness.RenderView, "Personal")!.FontSize);
+        ThemeData localizedTheme = ThemeData.Localize(ThemeData.Light, Typography.EnglishLike2021);
+        Assert.Equal(
+            localizedTheme.TextTheme.TitleLarge.FontSize,
+            FindParagraph(harness.RenderView, "Choose account")!.FontSize);
+        Assert.Equal(
+            localizedTheme.TextTheme.BodyMedium.FontSize,
+            FindParagraph(harness.RenderView, "Personal")!.FontSize);
         Assert.NotNull(FindSemantics(semantics, node =>
             node.Label == "Dialog"
             && node.Flags.HasFlag(SemanticsFlags.ScopesRoute)

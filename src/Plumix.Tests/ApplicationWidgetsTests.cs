@@ -363,7 +363,7 @@ public sealed class ApplicationWidgetsTests : IDisposable
 
         MountAndFlush(root, owner);
 
-        Assert.Same(darkTheme, resolvedTheme);
+        Assert.Equal(ThemeData.Localize(darkTheme, darkTheme.Typography.EnglishLike), resolvedTheme);
         Assert.Equal(Color.FromArgb(102, 40, 50, 60), selectionStyle!.SelectionColor);
         Assert.Equal(darkTheme.PrimaryColor, selectionStyle.CursorColor);
         Assert.NotNull(messenger);
@@ -408,7 +408,9 @@ public sealed class ApplicationWidgetsTests : IDisposable
 
         MountAndFlush(root, owner);
 
-        Assert.Same(highContrastDarkTheme, resolvedTheme);
+        Assert.Equal(
+            ThemeData.Localize(highContrastDarkTheme, highContrastDarkTheme.Typography.EnglishLike),
+            resolvedTheme);
         root.Unmount();
     }
 

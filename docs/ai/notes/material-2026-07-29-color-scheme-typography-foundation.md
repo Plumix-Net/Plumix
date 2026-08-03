@@ -9,7 +9,6 @@
 
 - Directly rewrite every existing component default class from legacy `ThemeData` compatibility fields to
   `ThemeData.ColorScheme` in this foundation iteration.
-- Port the legacy Material 2014/2018 and locale-script-specific typography tables.
 
 ## Context Plan
 
@@ -30,6 +29,8 @@
   - [x] HCT seed variants and contrast levels
   - [x] Complete Material 2021 type scale
   - [x] ThemeData projection and interpolation
+  - [x] Material 2014/2018 scales and platform color/font themes
+  - [x] Locale script-category geometry and localized `Theme.of` resolution
   - [x] Focused tests
 
 ## Invariants Impacted
@@ -53,7 +54,7 @@
   - [x] Material 2021 typography mapped
   - [x] ThemeData construction/interpolation mapped
   - [ ] Every component default reads `ColorScheme` directly
-  - [ ] Material 2014/2018 and locale script geometry mapped
+  - [x] Material 2014/2018 and locale script geometry mapped
 
 ## Planned Closeout
 
@@ -94,8 +95,8 @@
     source picture/details layout, reversible arrow motion, localized semantics, and exact divider composition).
   - `MaterialBanner` (direct M2/M3 surface and outline-variant roles, inherited theme capture, exact threshold/vector
     transition composition, theme copy/lerp, and widget/theme/default precedence).
-- Add `Typography.Material2014`/`Material2018`, exact platform black/white themes, dense/tall geometry, and locale
-  script-category selection.
+- Completed `Typography.Material2014`/`Material2018`, exact platform black/white themes, dense/tall geometry, and
+  locale script-category selection.
 - Remove the narrowed `ColorScheme + Typography closeout` row from `docs/MATERIAL_TODO.md` only after those checks
   are complete.
 

@@ -1,5 +1,9 @@
 # Changelog
 
+- Breaking: completed the legacy and locale-aware Material typography foundation. `Typography.material2014`/
+  `material2018`, exact platform color/font themes, dense/tall script geometry, localized `Theme.of` merging, M2/M3
+  `ThemeData` selection, and the expanded Flutter-shaped `TextStyle` metadata now match the pinned source.
+
 - Breaking: completed the strict `SearchDelegate` closeout. Its transition contract is now the source-shaped
   `Animation<double>` proxy backed by the shared 300 ms page-route fade; search fields forward keyboard type,
   action, correction, and suggestion configuration through editable/platform input, and search-input semantics,

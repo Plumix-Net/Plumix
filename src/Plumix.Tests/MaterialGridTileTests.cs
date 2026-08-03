@@ -83,7 +83,7 @@ public sealed class MaterialGridTileTests
 
         var title = FindParagraph(harness.RenderView, "Title");
         Assert.NotNull(title);
-        Assert.Equal(16, title!.FontSize);
+        Assert.Equal(14, title!.FontSize);
         Assert.Equal(
             ThemeData.Dark.TextTheme.TitleMedium.Color,
             Assert.IsType<SolidColorBrush>(title.Foreground).Color);
@@ -123,8 +123,8 @@ public sealed class MaterialGridTileTests
         var subtitle = FindParagraph(harness.RenderView, "Subtitle");
         Assert.NotNull(title);
         Assert.NotNull(subtitle);
-        Assert.Equal(16, title!.FontSize);
-        Assert.Equal(12, subtitle!.FontSize);
+        Assert.Equal(14, title!.FontSize);
+        Assert.Equal(14, subtitle!.FontSize);
         Assert.Equal(
             ThemeData.Dark.TextTheme.TitleMedium.Color,
             Assert.IsType<SolidColorBrush>(title.Foreground).Color);

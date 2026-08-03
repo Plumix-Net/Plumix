@@ -36,10 +36,11 @@ public sealed class Theme : InheritedTheme
 
     public override Widget Build(BuildContext context)
     {
+        ThemeData localized = Localize(Data, context);
         return new IconTheme(
-            data: Data.IconTheme,
+            data: localized.IconTheme,
             child: new DefaultTextStyle(
-                style: Data.TextTheme.BodyMedium,
+                style: localized.TextTheme.BodyMedium,
                 child: Child));
     }
 
@@ -55,7 +56,14 @@ public sealed class Theme : InheritedTheme
 
     public static ThemeData Of(BuildContext context)
     {
-        return context.DependOnInherited<Theme>()?.Data ?? ThemeData.Light;
+        ThemeData data = context.DependOnInherited<Theme>()?.Data ?? ThemeData.Light;
+        return Localize(data, context);
+    }
+
+    private static ThemeData Localize(ThemeData data, BuildContext context)
+    {
+        ScriptCategory category = MaterialLocalizations.Of(context).ScriptCategory;
+        return ThemeData.Localize(data, data.Typography.GeometryThemeFor(category));
     }
 }
 

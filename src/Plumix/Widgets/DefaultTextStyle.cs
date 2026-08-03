@@ -14,25 +14,52 @@ public sealed record TextStyle(
     FontWeight? FontWeight = null,
     FontStyle? FontStyle = null,
     double? Height = null,
-    double? LetterSpacing = null)
+    double? LetterSpacing = null,
+    IReadOnlyList<string>? FontFamilyFallback = null,
+    string? Package = null,
+    double? WordSpacing = null,
+    bool Inherit = true,
+    TextBaseline? TextBaseline = null,
+    TextLeadingDistribution? LeadingDistribution = null,
+    Plumix.UI.TextDecoration? Decoration = null,
+    Color? DecorationColor = null,
+    Plumix.UI.TextDecorationStyle? DecorationStyle = null)
 {
     public TextStyle CopyWith(
         FontFamily? fontFamily = null,
+        IReadOnlyList<string>? fontFamilyFallback = null,
+        string? package = null,
         double? fontSize = null,
         Color? color = null,
         FontWeight? fontWeight = null,
         FontStyle? fontStyle = null,
         double? height = null,
-        double? letterSpacing = null)
+        double? letterSpacing = null,
+        double? wordSpacing = null,
+        bool? inherit = null,
+        TextBaseline? textBaseline = null,
+        TextLeadingDistribution? leadingDistribution = null,
+        Plumix.UI.TextDecoration? decoration = null,
+        Color? decorationColor = null,
+        Plumix.UI.TextDecorationStyle? decorationStyle = null)
     {
         return new TextStyle(
             FontFamily: fontFamily ?? FontFamily,
+            FontFamilyFallback: fontFamilyFallback ?? FontFamilyFallback,
+            Package: package ?? Package,
             FontSize: fontSize ?? FontSize,
             Color: color ?? Color,
             FontWeight: fontWeight ?? FontWeight,
             FontStyle: fontStyle ?? FontStyle,
             Height: height ?? Height,
-            LetterSpacing: letterSpacing ?? LetterSpacing);
+            LetterSpacing: letterSpacing ?? LetterSpacing,
+            WordSpacing: wordSpacing ?? WordSpacing,
+            Inherit: inherit ?? Inherit,
+            TextBaseline: textBaseline ?? TextBaseline,
+            LeadingDistribution: leadingDistribution ?? LeadingDistribution,
+            Decoration: decoration ?? Decoration,
+            DecorationColor: decorationColor ?? DecorationColor,
+            DecorationStyle: decorationStyle ?? DecorationStyle);
     }
 
     public static TextStyle Lerp(TextStyle a, TextStyle b, double t)
@@ -43,12 +70,21 @@ public sealed record TextStyle(
 
         return new TextStyle(
             FontFamily: t < 0.5 ? a.FontFamily : b.FontFamily,
+            FontFamilyFallback: t < 0.5 ? a.FontFamilyFallback : b.FontFamilyFallback,
+            Package: t < 0.5 ? a.Package : b.Package,
             FontSize: LerpNullable(a.FontSize, b.FontSize, t),
             Color: LerpColor(a.Color, b.Color, t),
             FontWeight: LerpFontWeight(a.FontWeight, b.FontWeight, t),
             FontStyle: t < 0.5 ? a.FontStyle : b.FontStyle,
             Height: LerpNullable(a.Height, b.Height, t),
-            LetterSpacing: LerpNullable(a.LetterSpacing, b.LetterSpacing, t));
+            LetterSpacing: LerpNullable(a.LetterSpacing, b.LetterSpacing, t),
+            WordSpacing: LerpNullable(a.WordSpacing, b.WordSpacing, t),
+            Inherit: t < 0.5 ? a.Inherit : b.Inherit,
+            TextBaseline: t < 0.5 ? a.TextBaseline : b.TextBaseline,
+            LeadingDistribution: t < 0.5 ? a.LeadingDistribution : b.LeadingDistribution,
+            Decoration: t < 0.5 ? a.Decoration : b.Decoration,
+            DecorationColor: LerpColor(a.DecorationColor, b.DecorationColor, t),
+            DecorationStyle: t < 0.5 ? a.DecorationStyle : b.DecorationStyle);
     }
 
     private static double? LerpNullable(double? a, double? b, double t)

@@ -1,4 +1,5 @@
 using Avalonia.Media;
+using Plumix.UI;
 using Plumix.Widgets;
 
 namespace Plumix.Material;
@@ -137,19 +138,28 @@ public record TextTheme
 
     public TextTheme Apply(
         FontFamily? fontFamily = null,
+        IReadOnlyList<string>? fontFamilyFallback = null,
+        string? package = null,
         double fontSizeFactor = 1.0,
         double fontSizeDelta = 0.0,
         double letterSpacingFactor = 1.0,
         double letterSpacingDelta = 0.0,
+        double wordSpacingFactor = 1.0,
+        double wordSpacingDelta = 0.0,
         double heightFactor = 1.0,
         double heightDelta = 0.0,
         Color? displayColor = null,
-        Color? bodyColor = null)
+        Color? bodyColor = null,
+        Plumix.UI.TextDecoration? decoration = null,
+        Color? decorationColor = null,
+        Plumix.UI.TextDecorationStyle? decorationStyle = null)
     {
         if (!double.IsFinite(fontSizeFactor)
             || !double.IsFinite(fontSizeDelta)
             || !double.IsFinite(letterSpacingFactor)
             || !double.IsFinite(letterSpacingDelta)
+            || !double.IsFinite(wordSpacingFactor)
+            || !double.IsFinite(wordSpacingDelta)
             || !double.IsFinite(heightFactor)
             || !double.IsFinite(heightDelta))
         {
@@ -157,50 +167,53 @@ public record TextTheme
         }
 
         return new TextTheme(
-            displayLarge: ApplyStyle(DisplayLarge, fontFamily, displayColor, true),
-            displayMedium: ApplyStyle(DisplayMedium, fontFamily, displayColor, true),
-            displaySmall: ApplyStyle(DisplaySmall, fontFamily, displayColor, true),
-            headlineLarge: ApplyStyle(HeadlineLarge, fontFamily, displayColor, true),
-            headlineMedium: ApplyStyle(HeadlineMedium, fontFamily, displayColor, true),
-            headlineSmall: ApplyStyle(HeadlineSmall, fontFamily, bodyColor, true),
-            titleLarge: ApplyStyle(TitleLarge, fontFamily, bodyColor, true),
-            titleMedium: ApplyStyle(TitleMedium, fontFamily, bodyColor, true),
-            titleSmall: ApplyStyle(TitleSmall, fontFamily, bodyColor, true),
-            bodyLarge: ApplyStyle(BodyLarge, fontFamily, bodyColor, true),
-            bodyMedium: ApplyStyle(BodyMedium, fontFamily, bodyColor, true),
-            bodySmall: ApplyStyle(BodySmall, fontFamily, displayColor, true),
-            labelLarge: ApplyStyle(LabelLarge, fontFamily, bodyColor, true),
-            labelMedium: ApplyStyle(LabelMedium, fontFamily, bodyColor, true),
-            labelSmall: ApplyStyle(LabelSmall, fontFamily, bodyColor, true));
+            displayLarge: ApplyStyle(DisplayLarge, displayColor),
+            displayMedium: ApplyStyle(DisplayMedium, displayColor),
+            displaySmall: ApplyStyle(DisplaySmall, displayColor),
+            headlineLarge: ApplyStyle(HeadlineLarge, displayColor),
+            headlineMedium: ApplyStyle(HeadlineMedium, displayColor),
+            headlineSmall: ApplyStyle(HeadlineSmall, bodyColor),
+            titleLarge: ApplyStyle(TitleLarge, bodyColor),
+            titleMedium: ApplyStyle(TitleMedium, bodyColor),
+            titleSmall: ApplyStyle(TitleSmall, bodyColor),
+            bodyLarge: ApplyStyle(BodyLarge, bodyColor),
+            bodyMedium: ApplyStyle(BodyMedium, bodyColor),
+            bodySmall: ApplyStyle(BodySmall, displayColor),
+            labelLarge: ApplyStyle(LabelLarge, bodyColor),
+            labelMedium: ApplyStyle(LabelMedium, bodyColor),
+            labelSmall: ApplyStyle(LabelSmall, bodyColor));
 
-        TextStyle ApplyStyle(
-            TextStyle style,
-            FontFamily? family,
-            Color? color,
-            bool applyGeometry)
+        TextStyle ApplyStyle(TextStyle style, Color? color)
         {
             double? fontSize = style.FontSize;
             double? letterSpacing = style.LetterSpacing;
+            double? wordSpacing = style.WordSpacing;
             double? height = style.Height;
-            if (applyGeometry)
-            {
-                fontSize = fontSize.HasValue
-                    ? (fontSize.Value * fontSizeFactor) + fontSizeDelta
-                    : null;
-                letterSpacing = letterSpacing.HasValue
-                    ? (letterSpacing.Value * letterSpacingFactor) + letterSpacingDelta
-                    : null;
-                height = height.HasValue
-                    ? (height.Value * heightFactor) + heightDelta
-                    : null;
-            }
+            fontSize = fontSize.HasValue
+                ? (fontSize.Value * fontSizeFactor) + fontSizeDelta
+                : null;
+            letterSpacing = letterSpacing.HasValue
+                ? (letterSpacing.Value * letterSpacingFactor) + letterSpacingDelta
+                : null;
+            wordSpacing = wordSpacing.HasValue
+                ? (wordSpacing.Value * wordSpacingFactor) + wordSpacingDelta
+                : null;
+            height = height.HasValue
+                ? (height.Value * heightFactor) + heightDelta
+                : null;
 
             return style.CopyWith(
-                fontFamily: family,
+                fontFamily: fontFamily,
+                fontFamilyFallback: fontFamilyFallback,
+                package: package,
                 fontSize: fontSize,
                 color: color,
                 height: height,
-                letterSpacing: letterSpacing);
+                letterSpacing: letterSpacing,
+                wordSpacing: wordSpacing,
+                decoration: decoration,
+                decorationColor: decorationColor,
+                decorationStyle: decorationStyle);
         }
     }
 
@@ -235,14 +248,31 @@ public record TextTheme
 
     public static TextTheme PrimaryOf(BuildContext context) => Theme.Of(context).PrimaryTextTheme;
 
-    private static TextStyle MergeStyle(TextStyle current, TextStyle other) => new(
-        FontFamily: other.FontFamily ?? current.FontFamily,
-        FontSize: other.FontSize ?? current.FontSize,
-        Color: other.Color ?? current.Color,
-        FontWeight: other.FontWeight ?? current.FontWeight,
-        FontStyle: other.FontStyle ?? current.FontStyle,
-        Height: other.Height ?? current.Height,
-        LetterSpacing: other.LetterSpacing ?? current.LetterSpacing);
+    private static TextStyle MergeStyle(TextStyle current, TextStyle other)
+    {
+        if (!other.Inherit)
+        {
+            return other;
+        }
+
+        return new TextStyle(
+            FontFamily: other.FontFamily ?? current.FontFamily,
+            FontFamilyFallback: other.FontFamilyFallback ?? current.FontFamilyFallback,
+            Package: other.Package ?? current.Package,
+            FontSize: other.FontSize ?? current.FontSize,
+            Color: other.Color ?? current.Color,
+            FontWeight: other.FontWeight ?? current.FontWeight,
+            FontStyle: other.FontStyle ?? current.FontStyle,
+            Height: other.Height ?? current.Height,
+            LetterSpacing: other.LetterSpacing ?? current.LetterSpacing,
+            WordSpacing: other.WordSpacing ?? current.WordSpacing,
+            Inherit: current.Inherit,
+            TextBaseline: other.TextBaseline ?? current.TextBaseline,
+            LeadingDistribution: other.LeadingDistribution ?? current.LeadingDistribution,
+            Decoration: other.Decoration ?? current.Decoration,
+            DecorationColor: other.DecorationColor ?? current.DecorationColor,
+            DecorationStyle: other.DecorationStyle ?? current.DecorationStyle);
+    }
 }
 
 public sealed record MaterialTextTheme : TextTheme
@@ -384,13 +414,125 @@ public sealed record MaterialTextTheme : TextTheme
     }
 }
 
-public sealed record Typography(
-    TextTheme Black,
-    TextTheme White,
-    TextTheme EnglishLike,
-    TextTheme Dense,
-    TextTheme Tall)
+public sealed record Typography
 {
+    private static readonly IReadOnlyList<string> LinuxFontFallback =
+    [
+        "Ubuntu",
+        "Adwaita Sans",
+        "Cantarell",
+        "DejaVu Sans",
+        "Liberation Sans",
+        "Arial",
+    ];
+
+    public Typography(
+        TargetPlatform? platform = TargetPlatform.Android,
+        TextTheme? black = null,
+        TextTheme? white = null,
+        TextTheme? englishLike = null,
+        TextTheme? dense = null,
+        TextTheme? tall = null)
+        : this(CreateMaterial2018Values(platform, black, white, englishLike, dense, tall))
+    {
+    }
+
+    public Typography(
+        TextTheme black,
+        TextTheme white,
+        TextTheme englishLike,
+        TextTheme dense,
+        TextTheme tall)
+    {
+        Black = black ?? throw new ArgumentNullException(nameof(black));
+        White = white ?? throw new ArgumentNullException(nameof(white));
+        EnglishLike = englishLike ?? throw new ArgumentNullException(nameof(englishLike));
+        Dense = dense ?? throw new ArgumentNullException(nameof(dense));
+        Tall = tall ?? throw new ArgumentNullException(nameof(tall));
+    }
+
+    private Typography(
+        (TextTheme Black, TextTheme White, TextTheme EnglishLike, TextTheme Dense, TextTheme Tall) values)
+        : this(values.Black, values.White, values.EnglishLike, values.Dense, values.Tall)
+    {
+    }
+
+    public TextTheme Black { get; init; }
+
+    public TextTheme White { get; init; }
+
+    public TextTheme EnglishLike { get; init; }
+
+    public TextTheme Dense { get; init; }
+
+    public TextTheme Tall { get; init; }
+
+    public static TextTheme BlackMountainView { get; } = CreatePlatformTheme(PlatformTypeface.MountainView, true);
+
+    public static TextTheme WhiteMountainView { get; } = CreatePlatformTheme(PlatformTypeface.MountainView, false);
+
+    public static TextTheme BlackRedmond { get; } = CreatePlatformTheme(PlatformTypeface.Redmond, true);
+
+    public static TextTheme WhiteRedmond { get; } = CreatePlatformTheme(PlatformTypeface.Redmond, false);
+
+    public static TextTheme BlackHelsinki { get; } = CreatePlatformTheme(PlatformTypeface.Helsinki, true);
+
+    public static TextTheme WhiteHelsinki { get; } = CreatePlatformTheme(PlatformTypeface.Helsinki, false);
+
+    public static TextTheme BlackCupertino { get; } = CreatePlatformTheme(PlatformTypeface.Cupertino, true);
+
+    public static TextTheme WhiteCupertino { get; } = CreatePlatformTheme(PlatformTypeface.Cupertino, false);
+
+    public static TextTheme BlackRedwoodCity { get; } = CreatePlatformTheme(PlatformTypeface.RedwoodCity, true);
+
+    public static TextTheme WhiteRedwoodCity { get; } = CreatePlatformTheme(PlatformTypeface.RedwoodCity, false);
+
+    public static TextTheme EnglishLike2014 { get; } = CreateEnglishLike2014();
+
+    public static TextTheme Dense2014 { get; } = CreateDense2014();
+
+    public static TextTheme Tall2014 { get; } = CreateTall2014();
+
+    public static TextTheme EnglishLike2018 { get; } = CreateEnglishLike2018();
+
+    public static TextTheme Dense2018 { get; } = CreateDense2018();
+
+    public static TextTheme Tall2018 { get; } = CreateTall2018();
+
+    public static TextTheme EnglishLike2021 { get; } = Create2021Geometry(TextBaseline.Alphabetic);
+
+    public static TextTheme Dense2021 { get; } = Create2021Geometry(TextBaseline.Ideographic);
+
+    public static TextTheme Tall2021 { get; } = Create2021Geometry(TextBaseline.Alphabetic);
+
+    public static Typography Material2014(
+        TargetPlatform? platform = TargetPlatform.Android,
+        TextTheme? black = null,
+        TextTheme? white = null,
+        TextTheme? englishLike = null,
+        TextTheme? dense = null,
+        TextTheme? tall = null)
+    {
+        (TextTheme platformBlack, TextTheme platformWhite) = WithPlatform(platform, black, white);
+        return new Typography(
+            platformBlack,
+            platformWhite,
+            englishLike ?? EnglishLike2014,
+            dense ?? Dense2014,
+            tall ?? Tall2014);
+    }
+
+    public static Typography Material2018(
+        TargetPlatform? platform = TargetPlatform.Android,
+        TextTheme? black = null,
+        TextTheme? white = null,
+        TextTheme? englishLike = null,
+        TextTheme? dense = null,
+        TextTheme? tall = null)
+    {
+        return new Typography(CreateMaterial2018Values(platform, black, white, englishLike, dense, tall));
+    }
+
     public static Typography Material2021(
         TargetPlatform? platform = TargetPlatform.Android,
         ColorScheme? colorScheme = null,
@@ -401,28 +543,19 @@ public sealed record Typography(
         TextTheme? tall = null)
     {
         ColorScheme effectiveScheme = colorScheme ?? ColorScheme.Light();
-        FontFamily fontFamily = ResolveFontFamily(platform);
-        TextTheme geometry = CreateGeometry(fontFamily);
-        TextTheme darkGlyphs = black ?? geometry.Apply(
-            displayColor: effectiveScheme.Brightness == Brightness.Light
-                ? effectiveScheme.OnSurface
-                : effectiveScheme.Surface,
-            bodyColor: effectiveScheme.Brightness == Brightness.Light
-                ? effectiveScheme.OnSurface
-                : effectiveScheme.Surface);
-        TextTheme lightGlyphs = white ?? geometry.Apply(
-            displayColor: effectiveScheme.Brightness == Brightness.Light
-                ? effectiveScheme.Surface
-                : effectiveScheme.OnSurface,
-            bodyColor: effectiveScheme.Brightness == Brightness.Light
-                ? effectiveScheme.Surface
-                : effectiveScheme.OnSurface);
+        (TextTheme platformBlack, TextTheme platformWhite) = WithPlatform(platform, black, white);
+        Color dark = effectiveScheme.Brightness == Brightness.Light
+            ? effectiveScheme.OnSurface
+            : effectiveScheme.Surface;
+        Color light = effectiveScheme.Brightness == Brightness.Light
+            ? effectiveScheme.Surface
+            : effectiveScheme.OnSurface;
         return new Typography(
-            Black: darkGlyphs,
-            White: lightGlyphs,
-            EnglishLike: englishLike ?? geometry,
-            Dense: dense ?? geometry,
-            Tall: tall ?? geometry);
+            platformBlack.Apply(displayColor: dark, bodyColor: dark, decorationColor: dark),
+            platformWhite.Apply(displayColor: light, bodyColor: light, decorationColor: light),
+            englishLike ?? EnglishLike2021,
+            dense ?? Dense2021,
+            tall ?? Tall2021);
     }
 
     public TextTheme GeometryThemeFor(ScriptCategory category) => category switch
@@ -441,11 +574,11 @@ public sealed record Typography(
         TextTheme? tall = null)
     {
         return new Typography(
-            Black: black ?? Black,
-            White: white ?? White,
-            EnglishLike: englishLike ?? EnglishLike,
-            Dense: dense ?? Dense,
-            Tall: tall ?? Tall);
+            black ?? Black,
+            white ?? White,
+            englishLike ?? EnglishLike,
+            dense ?? Dense,
+            tall ?? Tall);
     }
 
     public static Typography Lerp(Typography a, Typography b, double t)
@@ -458,28 +591,235 @@ public sealed record Typography(
         }
 
         return new Typography(
-            Black: TextTheme.Lerp(a.Black, b.Black, t),
-            White: TextTheme.Lerp(a.White, b.White, t),
-            EnglishLike: TextTheme.Lerp(a.EnglishLike, b.EnglishLike, t),
-            Dense: TextTheme.Lerp(a.Dense, b.Dense, t),
-            Tall: TextTheme.Lerp(a.Tall, b.Tall, t));
+            TextTheme.Lerp(a.Black, b.Black, t),
+            TextTheme.Lerp(a.White, b.White, t),
+            TextTheme.Lerp(a.EnglishLike, b.EnglishLike, t),
+            TextTheme.Lerp(a.Dense, b.Dense, t),
+            TextTheme.Lerp(a.Tall, b.Tall, t));
     }
 
-    private static TextTheme CreateGeometry(FontFamily fontFamily)
+    private static (TextTheme Black, TextTheme White, TextTheme EnglishLike, TextTheme Dense, TextTheme Tall)
+        CreateMaterial2018Values(
+        TargetPlatform? platform,
+        TextTheme? black,
+        TextTheme? white,
+        TextTheme? englishLike,
+        TextTheme? dense,
+        TextTheme? tall)
     {
-        var defaults = MaterialTextTheme.Fallback;
-        return defaults.Apply(fontFamily: fontFamily, displayColor: Colors.Black, bodyColor: Colors.Black);
+        (TextTheme platformBlack, TextTheme platformWhite) = WithPlatform(platform, black, white);
+        return (
+            platformBlack,
+            platformWhite,
+            englishLike ?? EnglishLike2018,
+            dense ?? Dense2018,
+            tall ?? Tall2018);
     }
 
-    private static FontFamily ResolveFontFamily(TargetPlatform? platform) => platform switch
+    private static (TextTheme Black, TextTheme White) WithPlatform(
+        TargetPlatform? platform,
+        TextTheme? black,
+        TextTheme? white)
     {
-        TargetPlatform.IOS or TargetPlatform.MacOS => new FontFamily(".AppleSystemUIFont"),
-        TargetPlatform.Android or TargetPlatform.Fuchsia => new FontFamily("Roboto"),
-        TargetPlatform.Windows => new FontFamily("Segoe UI"),
-        TargetPlatform.Linux => new FontFamily("Noto Sans"),
-        null => MaterialTextTheme.ResolveDefaultBodyFontFamily(),
-        _ => MaterialTextTheme.ResolveDefaultBodyFontFamily(),
-    };
+        if (platform is null)
+        {
+            if (black is null || white is null)
+            {
+                throw new ArgumentException("Black and white themes are required when platform is null.");
+            }
+
+            return (black, white);
+        }
+
+        return platform.Value switch
+        {
+            TargetPlatform.IOS => (black ?? BlackCupertino, white ?? WhiteCupertino),
+            TargetPlatform.Android or TargetPlatform.Fuchsia =>
+                (black ?? BlackMountainView, white ?? WhiteMountainView),
+            TargetPlatform.Windows => (black ?? BlackRedmond, white ?? WhiteRedmond),
+            TargetPlatform.MacOS => (black ?? BlackRedwoodCity, white ?? WhiteRedwoodCity),
+            TargetPlatform.Linux => (black ?? BlackHelsinki, white ?? WhiteHelsinki),
+            _ => throw new ArgumentOutOfRangeException(nameof(platform)),
+        };
+    }
+
+    private static TextTheme CreatePlatformTheme(PlatformTypeface typeface, bool black)
+    {
+        Color displayColor = black ? Color.FromArgb(0x8A, 0, 0, 0) : Color.FromArgb(0xB3, 255, 255, 255);
+        Color bodyColor = black ? Color.FromArgb(0xDD, 0, 0, 0) : Colors.White;
+        Color strongColor = black ? Colors.Black : Colors.White;
+        return new TextTheme(
+            displayLarge: PlatformStyle(typeface, displayColor, true),
+            displayMedium: PlatformStyle(typeface, displayColor, true),
+            displaySmall: PlatformStyle(typeface, displayColor, true),
+            headlineLarge: PlatformStyle(typeface, displayColor, true),
+            headlineMedium: PlatformStyle(typeface, displayColor, true),
+            headlineSmall: PlatformStyle(typeface, bodyColor, true),
+            titleLarge: PlatformStyle(typeface, bodyColor, true),
+            titleMedium: PlatformStyle(typeface, bodyColor, false),
+            titleSmall: PlatformStyle(typeface, strongColor, false),
+            bodyLarge: PlatformStyle(typeface, bodyColor, false),
+            bodyMedium: PlatformStyle(typeface, bodyColor, false),
+            bodySmall: PlatformStyle(typeface, displayColor, false),
+            labelLarge: PlatformStyle(typeface, bodyColor, false),
+            labelMedium: PlatformStyle(typeface, strongColor, false),
+            labelSmall: PlatformStyle(typeface, strongColor, false));
+    }
+
+    private static TextStyle PlatformStyle(
+        PlatformTypeface typeface,
+        Color color,
+        bool display)
+    {
+        FontFamily family = typeface switch
+        {
+            PlatformTypeface.MountainView or PlatformTypeface.Helsinki => new FontFamily("Roboto"),
+            PlatformTypeface.Redmond => new FontFamily("Segoe UI"),
+            PlatformTypeface.RedwoodCity => new FontFamily(".AppleSystemUIFont"),
+            PlatformTypeface.Cupertino => new FontFamily(
+                display ? "CupertinoSystemDisplay" : "CupertinoSystemText"),
+            _ => throw new ArgumentOutOfRangeException(nameof(typeface)),
+        };
+        return new TextStyle(
+            FontFamily: family,
+            FontFamilyFallback: typeface == PlatformTypeface.Helsinki ? LinuxFontFallback : null,
+            Color: color,
+            Decoration: Plumix.UI.TextDecoration.None);
+    }
+
+    private static TextTheme CreateEnglishLike2014() => new(
+        displayLarge: GeometryStyle(112, FontWeight.Thin),
+        displayMedium: GeometryStyle(56, FontWeight.Normal),
+        displaySmall: GeometryStyle(45, FontWeight.Normal),
+        headlineLarge: GeometryStyle(40, FontWeight.Normal),
+        headlineMedium: GeometryStyle(34, FontWeight.Normal),
+        headlineSmall: GeometryStyle(24, FontWeight.Normal),
+        titleLarge: GeometryStyle(20, FontWeight.Medium),
+        titleMedium: GeometryStyle(16, FontWeight.Normal),
+        titleSmall: GeometryStyle(14, FontWeight.Medium, 0.1),
+        bodyLarge: GeometryStyle(14, FontWeight.Medium),
+        bodyMedium: GeometryStyle(14, FontWeight.Normal),
+        bodySmall: GeometryStyle(12, FontWeight.Normal),
+        labelLarge: GeometryStyle(14, FontWeight.Medium),
+        labelMedium: GeometryStyle(12, FontWeight.Normal),
+        labelSmall: GeometryStyle(10, FontWeight.Normal, 1.5));
+
+    private static TextTheme CreateDense2014() => CreateLegacyDense(
+        displayLargeWeight: FontWeight.Thin,
+        displayMediumWeight: FontWeight.Normal,
+        bodyLargeWeight: FontWeight.Medium,
+        sizes: [112, 56, 45, 40, 34, 24, 21, 17, 15, 15, 15, 13, 15, 12, 11]);
+
+    private static TextTheme CreateTall2014() => CreateLegacyTall(
+        sizes: [112, 56, 45, 40, 34, 24, 21, 17, 15, 15, 15, 13, 15, 12, 11]);
+
+    private static TextTheme CreateEnglishLike2018() => new(
+        displayLarge: GeometryStyle(96, FontWeight.Light, -1.5),
+        displayMedium: GeometryStyle(60, FontWeight.Light, -0.5),
+        displaySmall: GeometryStyle(48, FontWeight.Normal, 0.0),
+        headlineLarge: GeometryStyle(40, FontWeight.Normal, 0.25),
+        headlineMedium: GeometryStyle(34, FontWeight.Normal, 0.25),
+        headlineSmall: GeometryStyle(24, FontWeight.Normal, 0.0),
+        titleLarge: GeometryStyle(20, FontWeight.Medium, 0.15),
+        titleMedium: GeometryStyle(16, FontWeight.Normal, 0.15),
+        titleSmall: GeometryStyle(14, FontWeight.Medium, 0.1),
+        bodyLarge: GeometryStyle(16, FontWeight.Normal, 0.5),
+        bodyMedium: GeometryStyle(14, FontWeight.Normal, 0.25),
+        bodySmall: GeometryStyle(12, FontWeight.Normal, 0.4),
+        labelLarge: GeometryStyle(14, FontWeight.Medium, 1.25),
+        labelMedium: GeometryStyle(11, FontWeight.Normal, 1.5),
+        labelSmall: GeometryStyle(10, FontWeight.Normal, 1.5));
+
+    private static TextTheme CreateDense2018() => CreateLegacyDense(
+        displayLargeWeight: FontWeight.Thin,
+        displayMediumWeight: FontWeight.Thin,
+        bodyLargeWeight: FontWeight.Normal,
+        sizes: [96, 60, 48, 40, 34, 24, 21, 17, 15, 17, 15, 13, 15, 12, 11]);
+
+    private static TextTheme CreateTall2018() => CreateLegacyTall(
+        sizes: [96, 60, 48, 40, 34, 24, 21, 17, 15, 17, 15, 13, 15, 12, 11]);
+
+    private static TextTheme CreateLegacyDense(
+        FontWeight displayLargeWeight,
+        FontWeight displayMediumWeight,
+        FontWeight bodyLargeWeight,
+        IReadOnlyList<double> sizes) => new(
+        displayLarge: GeometryStyle(sizes[0], displayLargeWeight, baseline: TextBaseline.Ideographic),
+        displayMedium: GeometryStyle(sizes[1], displayMediumWeight, baseline: TextBaseline.Ideographic),
+        displaySmall: GeometryStyle(sizes[2], FontWeight.Normal, baseline: TextBaseline.Ideographic),
+        headlineLarge: GeometryStyle(sizes[3], FontWeight.Normal, baseline: TextBaseline.Ideographic),
+        headlineMedium: GeometryStyle(sizes[4], FontWeight.Normal, baseline: TextBaseline.Ideographic),
+        headlineSmall: GeometryStyle(sizes[5], FontWeight.Normal, baseline: TextBaseline.Ideographic),
+        titleLarge: GeometryStyle(sizes[6], FontWeight.Medium, baseline: TextBaseline.Ideographic),
+        titleMedium: GeometryStyle(sizes[7], FontWeight.Normal, baseline: TextBaseline.Ideographic),
+        titleSmall: GeometryStyle(sizes[8], FontWeight.Medium, baseline: TextBaseline.Ideographic),
+        bodyLarge: GeometryStyle(sizes[9], bodyLargeWeight, baseline: TextBaseline.Ideographic),
+        bodyMedium: GeometryStyle(sizes[10], FontWeight.Normal, baseline: TextBaseline.Ideographic),
+        bodySmall: GeometryStyle(sizes[11], FontWeight.Normal, baseline: TextBaseline.Ideographic),
+        labelLarge: GeometryStyle(sizes[12], FontWeight.Medium, baseline: TextBaseline.Ideographic),
+        labelMedium: GeometryStyle(sizes[13], FontWeight.Normal, baseline: TextBaseline.Ideographic),
+        labelSmall: GeometryStyle(sizes[14], FontWeight.Normal, baseline: TextBaseline.Ideographic));
+
+    private static TextTheme CreateLegacyTall(IReadOnlyList<double> sizes) => new(
+        displayLarge: GeometryStyle(sizes[0], FontWeight.Normal),
+        displayMedium: GeometryStyle(sizes[1], FontWeight.Normal),
+        displaySmall: GeometryStyle(sizes[2], FontWeight.Normal),
+        headlineLarge: GeometryStyle(sizes[3], FontWeight.Normal),
+        headlineMedium: GeometryStyle(sizes[4], FontWeight.Normal),
+        headlineSmall: GeometryStyle(sizes[5], FontWeight.Normal),
+        titleLarge: GeometryStyle(sizes[6], FontWeight.Bold),
+        titleMedium: GeometryStyle(sizes[7], FontWeight.Normal),
+        titleSmall: GeometryStyle(sizes[8], FontWeight.Medium),
+        bodyLarge: GeometryStyle(sizes[9], FontWeight.Bold),
+        bodyMedium: GeometryStyle(sizes[10], FontWeight.Normal),
+        bodySmall: GeometryStyle(sizes[11], FontWeight.Normal),
+        labelLarge: GeometryStyle(sizes[12], FontWeight.Bold),
+        labelMedium: GeometryStyle(sizes[13], FontWeight.Normal),
+        labelSmall: GeometryStyle(sizes[14], FontWeight.Normal));
+
+    private static TextTheme Create2021Geometry(TextBaseline baseline) => new(
+        displayLarge: GeometryStyle(57, FontWeight.Normal, -0.25, 1.12, baseline, true),
+        displayMedium: GeometryStyle(45, FontWeight.Normal, 0.0, 1.16, baseline, true),
+        displaySmall: GeometryStyle(36, FontWeight.Normal, 0.0, 1.22, baseline, true),
+        headlineLarge: GeometryStyle(32, FontWeight.Normal, 0.0, 1.25, baseline, true),
+        headlineMedium: GeometryStyle(28, FontWeight.Normal, 0.0, 1.29, baseline, true),
+        headlineSmall: GeometryStyle(24, FontWeight.Normal, 0.0, 1.33, baseline, true),
+        titleLarge: GeometryStyle(22, FontWeight.Normal, 0.0, 1.27, baseline, true),
+        titleMedium: GeometryStyle(16, FontWeight.Medium, 0.15, 1.5, baseline, true),
+        titleSmall: GeometryStyle(14, FontWeight.Medium, 0.1, 1.43, baseline, true),
+        bodyLarge: GeometryStyle(16, FontWeight.Normal, 0.5, 1.5, baseline, true),
+        bodyMedium: GeometryStyle(14, FontWeight.Normal, 0.25, 1.43, baseline, true),
+        bodySmall: GeometryStyle(12, FontWeight.Normal, 0.4, 1.33, baseline, true),
+        labelLarge: GeometryStyle(14, FontWeight.Medium, 0.1, 1.43, baseline, true),
+        labelMedium: GeometryStyle(12, FontWeight.Medium, 0.5, 1.33, baseline, true),
+        labelSmall: GeometryStyle(11, FontWeight.Medium, 0.5, 1.45, baseline, true));
+
+    private static TextStyle GeometryStyle(
+        double fontSize,
+        FontWeight fontWeight,
+        double? letterSpacing = null,
+        double? height = null,
+        TextBaseline baseline = TextBaseline.Alphabetic,
+        bool evenLeading = false)
+    {
+        return new TextStyle(
+            FontSize: fontSize,
+            FontWeight: fontWeight,
+            Height: height,
+            LetterSpacing: letterSpacing,
+            Inherit: false,
+            TextBaseline: baseline,
+            LeadingDistribution: evenLeading ? TextLeadingDistribution.Even : null);
+    }
+
+    private enum PlatformTypeface
+    {
+        MountainView,
+        Redmond,
+        Helsinki,
+        Cupertino,
+        RedwoodCity,
+    }
 }
 
 public enum ScriptCategory

@@ -245,6 +245,8 @@ public sealed record ThemeData
     private static readonly Color LightOnErrorColor = Colors.White;
     private static readonly IReadOnlyDictionary<Type, ThemeExtension> EmptyExtensions =
         new ThemeExtensionMap([]);
+    private static readonly object LocalizedThemeCacheLock = new();
+    private static readonly List<LocalizedThemeEntry> LocalizedThemeCache = [];
 
     private AppBarThemeData? _appBarTheme;
     private TextButtonThemeData? _textButtonTheme;
@@ -304,6 +306,9 @@ public sealed record ThemeData
         Color? colorSchemeSeed = null,
         Typography? typography = null,
         TextTheme? textTheme = null,
+        FontFamily? fontFamily = null,
+        IReadOnlyList<string>? fontFamilyFallback = null,
+        string? package = null,
         Color? scaffoldBackgroundColor = null,
         Color? canvasColor = null,
         Color? primaryColor = null,
@@ -435,14 +440,28 @@ public sealed record ThemeData
                       ? ColorScheme.Dark()
                       : ColorScheme.Light());
         Typography = typography
-                     ?? Plumix.Material.Typography.Material2021(
-                         platform: Platform,
-                         colorScheme: ColorScheme);
+                     ?? (UseMaterial3
+                         ? Plumix.Material.Typography.Material2021(
+                             platform: Platform,
+                             colorScheme: ColorScheme)
+                         : Plumix.Material.Typography.Material2014(platform: Platform));
         ApplyElevationOverlayColor = applyElevationOverlayColor
                                      ?? (UseMaterial3 && Brightness == Brightness.Dark);
         TextTheme defaultTextTheme = Brightness == Brightness.Dark
             ? Typography.White
             : Typography.Black;
+        if (fontFamily is not null)
+        {
+            defaultTextTheme = defaultTextTheme.Apply(fontFamily: fontFamily);
+        }
+        if (fontFamilyFallback is not null)
+        {
+            defaultTextTheme = defaultTextTheme.Apply(fontFamilyFallback: fontFamilyFallback);
+        }
+        if (package is not null)
+        {
+            defaultTextTheme = defaultTextTheme.Apply(package: package);
+        }
         TextTheme = defaultTextTheme.Merge(textTheme);
         ScaffoldBackgroundColor = scaffoldBackgroundColor ?? ColorScheme.Surface;
         CanvasColor = canvasColor ?? ColorScheme.Surface;
@@ -455,6 +474,18 @@ public sealed record ThemeData
         TextTheme defaultPrimaryTextTheme = EstimateBrightnessForColor(PrimaryColor) == Brightness.Dark
             ? Typography.White
             : Typography.Black;
+        if (fontFamily is not null)
+        {
+            defaultPrimaryTextTheme = defaultPrimaryTextTheme.Apply(fontFamily: fontFamily);
+        }
+        if (fontFamilyFallback is not null)
+        {
+            defaultPrimaryTextTheme = defaultPrimaryTextTheme.Apply(fontFamilyFallback: fontFamilyFallback);
+        }
+        if (package is not null)
+        {
+            defaultPrimaryTextTheme = defaultPrimaryTextTheme.Apply(package: package);
+        }
         PrimaryTextTheme = defaultPrimaryTextTheme.Merge(primaryTextTheme);
         IconTheme = iconTheme
                     ?? new IconThemeData(
@@ -985,6 +1016,34 @@ public sealed record ThemeData
 
     public static ThemeData Dark { get; } = new(brightness: Brightness.Dark);
 
+    public static ThemeData Localize(ThemeData baseTheme, TextTheme localTextGeometry)
+    {
+        ArgumentNullException.ThrowIfNull(baseTheme);
+        ArgumentNullException.ThrowIfNull(localTextGeometry);
+        lock (LocalizedThemeCacheLock)
+        {
+            LocalizedThemeEntry? cached = LocalizedThemeCache.FirstOrDefault(
+                entry => ReferenceEquals(entry.BaseTheme, baseTheme)
+                         && ReferenceEquals(entry.LocalTextGeometry, localTextGeometry));
+            if (cached is not null)
+            {
+                return cached.Theme;
+            }
+
+            ThemeData localized = baseTheme with
+            {
+                PrimaryTextTheme = localTextGeometry.Merge(baseTheme.PrimaryTextTheme),
+                TextTheme = localTextGeometry.Merge(baseTheme.TextTheme),
+            };
+            if (LocalizedThemeCache.Count == 5)
+            {
+                LocalizedThemeCache.RemoveAt(0);
+            }
+            LocalizedThemeCache.Add(new LocalizedThemeEntry(baseTheme, localTextGeometry, localized));
+            return localized;
+        }
+    }
+
     public static ThemeData Lerp(ThemeData a, ThemeData b, double t)
     {
         ArgumentNullException.ThrowIfNull(a);
@@ -1344,4 +1403,9 @@ public sealed record ThemeData
             ? InkSparkle.SplashFactory
             : InkRipple.SplashFactory;
     }
+
+    private sealed record LocalizedThemeEntry(
+        ThemeData BaseTheme,
+        TextTheme LocalTextGeometry,
+        ThemeData Theme);
 }

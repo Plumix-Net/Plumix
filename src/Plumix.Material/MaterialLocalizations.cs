@@ -8,6 +8,8 @@ namespace Plumix.Material;
 
 public abstract class MaterialLocalizations
 {
+    public virtual ScriptCategory ScriptCategory => ScriptCategory.EnglishLike;
+
     public abstract string TabLabel(int tabIndex, int tabCount);
 
     public virtual string DeleteButtonTooltip => "Delete";
@@ -237,14 +239,27 @@ public abstract class MaterialLocalizations
 
 public sealed class DefaultMaterialLocalizations : MaterialLocalizations
 {
-    private DefaultMaterialLocalizations()
+    private static readonly IReadOnlySet<string> DenseLanguages = new HashSet<string>(StringComparer.Ordinal)
     {
+        "bo", "hi", "ja", "km", "ko", "mr", "ta", "zh",
+    };
+    private static readonly IReadOnlySet<string> TallLanguages = new HashSet<string>(StringComparer.Ordinal)
+    {
+        "ar", "bn", "fa", "gu", "kn", "lo", "ml", "my", "ne", "or", "pa", "ps", "te", "th", "ug",
+        "ur",
+    };
+
+    private DefaultMaterialLocalizations(ScriptCategory scriptCategory)
+    {
+        ScriptCategory = scriptCategory;
     }
 
-    public static DefaultMaterialLocalizations Instance { get; } = new();
+    public static DefaultMaterialLocalizations Instance { get; } = new(ScriptCategory.EnglishLike);
 
     public static LocalizationsDelegate<MaterialLocalizations> Delegate { get; } =
         new DefaultMaterialLocalizationsDelegate();
+
+    public override ScriptCategory ScriptCategory { get; }
 
     public override string DeleteButtonTooltip => "Delete";
 
@@ -290,6 +305,18 @@ public sealed class DefaultMaterialLocalizations : MaterialLocalizations
 
         return $"Tab {tabIndex + 1} of {tabCount}";
     }
+
+    internal static DefaultMaterialLocalizations ForLocale(Locale locale)
+    {
+        ScriptCategory category = DenseLanguages.Contains(locale.LanguageCode)
+            ? ScriptCategory.Dense
+            : TallLanguages.Contains(locale.LanguageCode)
+                ? ScriptCategory.Tall
+                : ScriptCategory.EnglishLike;
+        return category == ScriptCategory.EnglishLike
+            ? Instance
+            : new DefaultMaterialLocalizations(category);
+    }
 }
 
 public sealed class DefaultMaterialLocalizationsDelegate : LocalizationsDelegate<MaterialLocalizations>
@@ -298,7 +325,7 @@ public sealed class DefaultMaterialLocalizationsDelegate : LocalizationsDelegate
 
     public override MaterialLocalizations LoadTyped(Locale locale)
     {
-        return DefaultMaterialLocalizations.Instance;
+        return DefaultMaterialLocalizations.ForLocale(locale);
     }
 
     public override bool ShouldReload(LocalizationsDelegate oldDelegate) => false;

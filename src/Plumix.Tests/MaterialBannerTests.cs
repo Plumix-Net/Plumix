@@ -184,7 +184,7 @@ public sealed class MaterialBannerTests
         Assert.Contains(FindDescendants<RenderConstrainedBox>(harness.RenderView),
             box => box.AdditionalConstraints.MinHeight == 52);
         Assert.Single(FindDescendants<RenderOverflowBar>(harness.RenderView));
-        Assert.Equal(ThemeData.Light.TextTheme.BodyMedium.FontSize,
+        Assert.Equal(ThemeData.Localize(ThemeData.Light, Typography.EnglishLike2021).TextTheme.BodyMedium.FontSize,
             FindParagraph(harness.RenderView, "Content")!.FontSize);
     }
 
@@ -294,7 +294,10 @@ public sealed class MaterialBannerTests
             mediaQuery: new MediaQueryData(Size: new Size(360, 180), TextScaleFactor: 3)));
         harness.Pump(new Size(360, 180));
 
-        Assert.Equal(ThemeData.Light.TextTheme.BodyMedium.FontSize!.Value * 1.5,
+        double bodyMediumSize = ThemeData.Localize(
+            ThemeData.Light,
+            Typography.EnglishLike2021).TextTheme.BodyMedium.FontSize!.Value;
+        Assert.Equal(bodyMediumSize * 1.5,
             FindParagraph(harness.RenderView, "Content")!.FontSize,
             precision: 3);
         Assert.Contains(FindDescendants<RenderPadding>(harness.RenderView),

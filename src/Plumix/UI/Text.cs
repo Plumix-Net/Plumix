@@ -10,6 +10,33 @@ public enum TextBaseline
     Ideographic,
 }
 
+/// How extra line-height space is distributed above and below glyphs.
+public enum TextLeadingDistribution
+{
+    Proportional,
+    Even,
+}
+
+/// Decorations painted through text glyphs.
+[Flags]
+public enum TextDecoration
+{
+    None = 0,
+    Underline = 1 << 0,
+    Overline = 1 << 1,
+    LineThrough = 1 << 2,
+}
+
+/// Stroke style used to paint a text decoration.
+public enum TextDecorationStyle
+{
+    Solid,
+    Double,
+    Dotted,
+    Dashed,
+    Wavy,
+}
+
 public enum TextDirection
 {
     /// The text flows from right to left (e.g. Arabic, Hebrew).
