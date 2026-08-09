@@ -94,7 +94,15 @@ public sealed class Ink : StatelessWidget
 
         if (Decoration is not null)
         {
-            content = new DecoratedBox(Decoration, content);
+            MaterialInkController? controller = Material.MaybeOf(context);
+            content = controller is null
+                ? new DecoratedBox(Decoration, content)
+                : new InkDecorationWidget(
+                    decoration: Decoration,
+                    isVisible: Visibility.Of(context),
+                    configuration: ImageConfigurationUtils.CreateLocalImageConfiguration(context),
+                    controller: controller,
+                    child: content);
         }
 
         if (Width.HasValue || Height.HasValue)
@@ -123,5 +131,164 @@ public sealed class Ink : StatelessWidget
         {
             throw new ArgumentOutOfRangeException(nameof(padding), "Ink padding must be non-negative.");
         }
+    }
+}
+
+internal sealed class InkDecorationWidget : SingleChildRenderObjectWidget
+{
+    public InkDecorationWidget(
+        BoxDecoration decoration,
+        bool isVisible,
+        ImageConfiguration configuration,
+        MaterialInkController controller,
+        Widget child) : base(child)
+    {
+        Decoration = decoration;
+        IsVisible = isVisible;
+        Configuration = configuration;
+        Controller = controller;
+    }
+
+    public BoxDecoration Decoration { get; }
+
+    public bool IsVisible { get; }
+
+    public ImageConfiguration Configuration { get; }
+
+    public MaterialInkController Controller { get; }
+
+    internal override RenderObject CreateRenderObject(BuildContext context)
+    {
+        return new RenderInkDecoration(Decoration, IsVisible, Configuration, Controller);
+    }
+
+    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    {
+        var inkDecoration = (RenderInkDecoration)renderObject;
+        inkDecoration.Decoration = Decoration;
+        inkDecoration.IsVisible = IsVisible;
+        inkDecoration.Configuration = Configuration;
+        inkDecoration.Controller = Controller;
+    }
+}
+
+internal sealed class RenderInkDecoration : RenderProxyBox, IMaterialInkFeature
+{
+    private BoxDecoration _decoration;
+    private bool _isVisible;
+    private ImageConfiguration _configuration;
+    private MaterialInkController _controller;
+    private BoxPainter? _painter;
+
+    public RenderInkDecoration(
+        BoxDecoration decoration,
+        bool isVisible,
+        ImageConfiguration configuration,
+        MaterialInkController controller)
+    {
+        _decoration = decoration;
+        _isVisible = isVisible;
+        _configuration = configuration;
+        _controller = controller;
+        _controller.AddInkFeature(this);
+    }
+
+    public BoxDecoration Decoration
+    {
+        get => _decoration;
+        set
+        {
+            if (_decoration == value)
+            {
+                return;
+            }
+
+            DisposePainter();
+            _decoration = value;
+            _controller.MarkNeedsPaint();
+        }
+    }
+
+    public bool IsVisible
+    {
+        get => _isVisible;
+        set
+        {
+            if (_isVisible == value)
+            {
+                return;
+            }
+
+            _isVisible = value;
+            _controller.MarkNeedsPaint();
+        }
+    }
+
+    public ImageConfiguration Configuration
+    {
+        get => _configuration;
+        set
+        {
+            if (_configuration == value)
+            {
+                return;
+            }
+
+            _configuration = value;
+            _controller.MarkNeedsPaint();
+        }
+    }
+
+    public MaterialInkController Controller
+    {
+        get => _controller;
+        set
+        {
+            if (ReferenceEquals(_controller, value))
+            {
+                return;
+            }
+
+            _controller.RemoveInkFeature(this);
+            _controller = value;
+            _controller.AddInkFeature(this);
+        }
+    }
+
+    RenderBox IMaterialInkFeature.ReferenceBox => this;
+
+    public override void Paint(PaintingContext context, Avalonia.Point offset)
+    {
+        base.Paint(context, offset);
+    }
+
+    void IMaterialInkFeature.PaintFeature(PaintingContext context)
+    {
+        if (!_isVisible)
+        {
+            return;
+        }
+
+        _painter ??= _decoration.CreateBoxPainter(_controller.MarkNeedsPaint);
+        _painter.Paint(context, default, _configuration.CopyWith(size: Size));
+    }
+
+    protected override void OnAttach()
+    {
+        base.OnAttach();
+        _controller.AddInkFeature(this);
+    }
+
+    protected override void OnDetach()
+    {
+        _controller.RemoveInkFeature(this);
+        DisposePainter();
+        base.OnDetach();
+    }
+
+    private void DisposePainter()
+    {
+        _painter?.Dispose();
+        _painter = null;
     }
 }

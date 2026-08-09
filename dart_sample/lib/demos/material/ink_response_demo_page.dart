@@ -58,8 +58,8 @@ class _InkResponseDemoPageState extends State<InkResponseDemoPage> {
           ),
           const Text(
             'Circle/uncontained versus rectangle/contained ink, selectable '
-            'ripple/sparkle/splash/no-splash factories, primary + secondary '
-            'gestures, hover/focus, and overlay states.',
+            'ripple/sparkle/splash/no-splash factories, overlapping rapid-tap '
+            'fades, timed hover/focus, and overlay states.',
             style: TextStyle(fontSize: 14, color: Colors.black54),
           ),
           Row(
@@ -169,6 +169,7 @@ class _InkResponseDemoPageState extends State<InkResponseDemoPage> {
                 setState(() => _interaction = 'InkWell pressed: $value'),
             overlayColor: overlay,
             splashFactory: _splashFactory,
+            hoverDuration: const Duration(milliseconds: 400),
             borderRadius: BorderRadius.circular(18),
             child: const Center(
               child: Text(

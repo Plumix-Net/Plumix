@@ -56,7 +56,12 @@ public abstract class InteractiveInkFeature
         }
     }
 
-    public InkFeatureConfiguration Configuration { get; }
+    public InkFeatureConfiguration Configuration { get; private set; }
+
+    internal void UpdateConfiguration(InkFeatureConfiguration configuration)
+    {
+        Configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+    }
 
     public abstract TimeSpan UnconfirmedDuration { get; }
 

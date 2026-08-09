@@ -14,12 +14,14 @@ public sealed class MaterialInkResponseTests : IDisposable
 {
     public MaterialInkResponseTests()
     {
+        Scheduler.ResetForTests();
         FocusManager.Instance.ResetForTests();
         GestureBinding.Instance.ResetForTests();
     }
 
     public void Dispose()
     {
+        Scheduler.ResetForTests();
         FocusManager.Instance.ResetForTests();
         GestureBinding.Instance.ResetForTests();
     }
@@ -70,6 +72,132 @@ public sealed class MaterialInkResponseTests : IDisposable
 
         var decoration = Assert.Single(FindDescendants<RenderDecoratedBox>(harness.RenderView));
         Assert.Equal(new Size(160, 100), decoration.Size);
+    }
+
+    [Fact]
+    public void Material_OwnsInkDecorationAndResponseFeaturesBelowItsChild()
+    {
+        using var harness = CreateHarness(new Plumix.Material.Material(
+            color: Colors.White,
+            child: new Ink(
+                color: Colors.Blue,
+                child: new InkWell(
+                    onTap: () => { },
+                    child: new SizedBox(width: 80.0, height: 48.0)))));
+        harness.Pump(new Size(120.0, 80.0));
+
+        RenderMaterialInkFeatures controller = Assert.Single(
+            FindDescendants<RenderMaterialInkFeatures>(harness.RenderView));
+        RenderInkDecoration decoration = Assert.Single(
+            FindDescendants<RenderInkDecoration>(harness.RenderView));
+        RenderInkResponsePaint response = Assert.Single(
+            FindDescendants<RenderInkResponsePaint>(harness.RenderView));
+
+        Assert.Equal(2, controller.FeatureCount);
+        Assert.Same(controller.Controller, decoration.Controller);
+        Assert.Same(controller.Controller, response.Controller);
+    }
+
+    [Fact]
+    public void InkWell_RapidTapsKeepOlderFadingSplashAlive()
+    {
+        using var harness = CreateHarness(new Plumix.Material.Material(
+            child: new InkWell(
+                splashFactory: InkRipple.SplashFactory,
+                onTap: () => { },
+                child: new SizedBox(width: 80.0, height: 48.0))));
+        harness.Pump(new Size(120.0, 80.0));
+
+        DateTime now = DateTime.UtcNow;
+        Tap(harness, pointer: 801, now: now);
+        GestureBinding.Instance.HandlePointerEvent(
+            harness.RenderView,
+            new PointerDownEvent(
+                802,
+                PointerDeviceKind.Mouse,
+                new Point(30.0, 20.0),
+                PointerButtons.Primary,
+                now.AddMilliseconds(30.0)));
+        harness.Pump(new Size(120.0, 80.0));
+
+        RenderInkResponsePaint response = Assert.Single(
+            FindDescendants<RenderInkResponsePaint>(harness.RenderView));
+        Assert.Equal(2, response.SplashCount);
+    }
+
+    [Fact]
+    public void InkWell_HoverHighlightUsesConfiguredFadeDuration()
+    {
+        Color hoverColor = Color.Parse("#FF00AA00");
+        using var harness = CreateHarness(new Plumix.Material.Material(
+            child: new InkWell(
+                hoverColor: hoverColor,
+                hoverDuration: TimeSpan.FromMilliseconds(100.0),
+                onTap: () => { },
+                child: new SizedBox(width: 80.0, height: 48.0))));
+        harness.Pump(new Size(120.0, 80.0));
+
+        RenderPointerListener hoverListener = FindDescendants<RenderPointerListener>(harness.RenderView)
+            .Single(listener => listener.OnPointerEnter is not null && listener.OnPointerExit is not null);
+        hoverListener.HandleEvent(
+            new PointerEnterEvent(
+                803,
+                PointerDeviceKind.Mouse,
+                new Point(10.0, 10.0),
+                PointerButtons.None,
+                DateTime.UtcNow),
+            new BoxHitTestEntry(hoverListener, new Point(10.0, 10.0)));
+        harness.Pump(new Size(120.0, 80.0));
+
+        PumpAnimation(harness, new Size(120.0, 80.0), TimeSpan.FromMilliseconds(50.0));
+        RenderInkResponsePaint response = Assert.Single(
+            FindDescendants<RenderInkResponsePaint>(harness.RenderView));
+        InkHighlightVisual hover = Assert.Single(
+            response.Highlights!,
+            highlight => highlight.Kind == InkHighlightKind.Hover);
+
+        Assert.Equal(hoverColor, hover.Color);
+        Assert.InRange(hover.Opacity, 0.49, 0.51);
+    }
+
+    [Fact]
+    public void NestedInkWells_CreateOnlyTheInnerSplash()
+    {
+        using var harness = CreateHarness(new Plumix.Material.Material(
+            child: new InkWell(
+                onTap: () => { },
+                child: new InkWell(
+                    onTap: () => { },
+                    child: new SizedBox(width: 80.0, height: 48.0)))));
+        harness.Pump(new Size(120.0, 80.0));
+
+        GestureBinding.Instance.HandlePointerEvent(
+            harness.RenderView,
+            new PointerDownEvent(
+                804,
+                PointerDeviceKind.Mouse,
+                new Point(20.0, 20.0),
+                PointerButtons.Primary,
+                DateTime.UtcNow));
+        harness.Pump(new Size(120.0, 80.0));
+
+        List<RenderInkResponsePaint> responses = FindDescendants<RenderInkResponsePaint>(harness.RenderView);
+        Assert.Equal(2, responses.Count);
+        Assert.Equal(0, responses[0].SplashCount);
+        Assert.Equal(1, responses[1].SplashCount);
+    }
+
+    [Fact]
+    public void CircleMaterialUsesOvalClipForNonSquareChildren()
+    {
+        using var harness = CreateHarness(new Plumix.Material.Material(
+            type: MaterialType.Circle,
+            clipBehavior: Clip.AntiAlias,
+            child: new SizedBox(width: 80.0, height: 48.0)));
+        harness.Pump(new Size(120.0, 80.0));
+
+        Assert.Single(FindDescendants<RenderClipOval>(harness.RenderView));
+        Assert.Empty(FindDescendants<RenderClipRRect>(harness.RenderView));
     }
 
     [Fact]
@@ -442,6 +570,33 @@ public sealed class MaterialInkResponseTests : IDisposable
 
     private static WidgetRenderHarness CreateHarness(Widget child, ThemeData? theme = null) => new(
         new Theme(theme ?? ThemeData.Light, new Directionality(TextDirection.Ltr, child)));
+
+    private static void Tap(WidgetRenderHarness harness, int pointer, DateTime now)
+    {
+        GestureBinding.Instance.HandlePointerEvent(
+            harness.RenderView,
+            new PointerDownEvent(
+                pointer,
+                PointerDeviceKind.Mouse,
+                new Point(20.0, 20.0),
+                PointerButtons.Primary,
+                now));
+        GestureBinding.Instance.HandlePointerEvent(
+            harness.RenderView,
+            new PointerUpEvent(
+                pointer,
+                PointerDeviceKind.Mouse,
+                new Point(20.0, 20.0),
+                PointerButtons.None,
+                now.AddMilliseconds(20.0)));
+        harness.Pump(new Size(120.0, 80.0));
+    }
+
+    private static void PumpAnimation(WidgetRenderHarness harness, Size size, TimeSpan elapsed)
+    {
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds) + elapsed);
+        harness.Pump(size);
+    }
 
     private static List<T> FindDescendants<T>(RenderObject? root) where T : RenderObject
     {

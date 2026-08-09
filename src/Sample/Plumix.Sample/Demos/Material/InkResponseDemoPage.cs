@@ -58,7 +58,8 @@ public sealed class InkResponseDemoPage : StatefulWidget
                         new Text("InkResponse + InkWell", fontSize: 20, color: Colors.Black),
                         new Text(
                             "Circle/uncontained versus rectangle/contained ink, selectable ripple/sparkle/splash/"
-                            + "no-splash factories, primary + secondary gestures, hover/focus, and overlay states.",
+                            + "no-splash factories, overlapping rapid-tap fades, timed hover/focus, and overlay "
+                            + "states.",
                             fontSize: 14,
                             color: Colors.DimGray),
                         new Row(
@@ -139,6 +140,7 @@ public sealed class InkResponseDemoPage : StatefulWidget
                             onHighlightChanged: value => SetState(() => _interaction = $"InkWell pressed: {value}"),
                             overlayColor: overlay,
                             splashFactory: SplashFactory,
+                            hoverDuration: System.TimeSpan.FromMilliseconds(400),
                             borderRadius: BorderRadius.Circular(18),
                             child: new Center(child: new Text("Tap / hold", fontSize: 15, color: Colors.Black)))),
                 ]);

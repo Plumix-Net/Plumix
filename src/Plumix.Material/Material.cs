@@ -1,3 +1,4 @@
+using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Rendering;
@@ -29,6 +30,93 @@ public static class MaterialEdges
             _ => null,
         };
     }
+}
+
+/// <summary>Owns ink features painted by a descendant Material surface.</summary>
+public abstract class MaterialInkController
+{
+    public abstract Color? Color { get; }
+
+    public abstract ITickerProvider Vsync { get; }
+
+    public abstract void AddInkFeature(InkFeature feature);
+
+    protected internal abstract void RemoveInkFeature(InkFeature feature);
+
+    public abstract void MarkNeedsPaint();
+
+    internal void AddInkFeature(IMaterialInkFeature feature)
+    {
+        RequireRegistry().AddInkFeature(feature);
+    }
+
+    internal void RemoveInkFeature(IMaterialInkFeature feature)
+    {
+        RequireRegistry().RemoveInkFeature(feature);
+    }
+
+    private IMaterialInkRegistry RequireRegistry()
+    {
+        return this as IMaterialInkRegistry
+               ?? throw new InvalidOperationException(
+                   "This MaterialInkController does not own Plumix render-tree ink features.");
+    }
+}
+
+/// <summary>A feature painted on the nearest ancestor <see cref="Material"/>.</summary>
+public abstract class InkFeature : IDisposable, IMaterialInkFeature
+{
+    private bool _disposed;
+
+    protected InkFeature(
+        MaterialInkController controller,
+        RenderBox referenceBox,
+        Action? onRemoved = null)
+    {
+        Controller = controller ?? throw new ArgumentNullException(nameof(controller));
+        ReferenceBox = referenceBox ?? throw new ArgumentNullException(nameof(referenceBox));
+        OnRemoved = onRemoved;
+    }
+
+    protected MaterialInkController Controller { get; }
+
+    public RenderBox ReferenceBox { get; }
+
+    protected Action? OnRemoved { get; }
+
+    public void Dispose()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _disposed = true;
+        Controller.RemoveInkFeature(this);
+        OnRemoved?.Invoke();
+        GC.SuppressFinalize(this);
+    }
+
+    void IMaterialInkFeature.PaintFeature(PaintingContext context)
+    {
+        PaintFeature(context);
+    }
+
+    protected abstract void PaintFeature(PaintingContext context);
+}
+
+internal interface IMaterialInkFeature
+{
+    RenderBox ReferenceBox { get; }
+
+    void PaintFeature(PaintingContext context);
+}
+
+internal interface IMaterialInkRegistry
+{
+    void AddInkFeature(IMaterialInkFeature feature);
+
+    void RemoveInkFeature(IMaterialInkFeature feature);
 }
 
 /// <summary>
@@ -102,6 +190,18 @@ public sealed class Material : StatefulWidget
     public Widget? Child { get; }
     public bool AnimateColor { get; }
 
+    public static MaterialInkController? MaybeOf(BuildContext context)
+    {
+        return LookupBoundary.FindAncestorRenderObjectOfType<RenderMaterialInkFeatures>(context)?.Controller;
+    }
+
+    public static MaterialInkController Of(BuildContext context)
+    {
+        return MaybeOf(context)
+               ?? throw new InvalidOperationException(
+                   "Material.of() called with a context that does not contain a Material ancestor.");
+    }
+
     public override State CreateState() => new MaterialState();
 
     private sealed class MaterialState : State
@@ -165,11 +265,19 @@ public sealed class Material : StatefulWidget
                     ]);
             }
 
+            content = new MaterialInkFeatures(
+                color: visual.Color,
+                vsync: this,
+                absorbHitTest: CurrentWidget.Type != MaterialType.Transparency,
+                child: content);
+
             if (CurrentWidget.ClipBehavior != Clip.None)
             {
-                // The complete Material shape/ink migration will adopt ClipOval for circles.
-                // Until then, retain the existing rounded-rectangle composition.
-                content = new ClipRRect(visual.Shape.BorderRadius, content);
+                content = CurrentWidget.Type == MaterialType.Circle
+                    ? new ClipOval(child: content, clipBehavior: CurrentWidget.ClipBehavior)
+                    : new ClipRRect(
+                        visual.Shape.BorderRadius,
+                        content);
             }
 
             var backgroundBorder = CurrentWidget.BorderOnForeground ? null : visual.Shape.Side;
@@ -295,6 +403,198 @@ public sealed class Material : StatefulWidget
                 shape,
                 Plumix.Widgets.TextStyle.Lerp(begin.TextStyle, end.TextStyle, clampedT));
         }
+    }
+}
+
+internal sealed class MaterialInkFeatures : SingleChildRenderObjectWidget
+{
+    public MaterialInkFeatures(
+        Color color,
+        ITickerProvider vsync,
+        bool absorbHitTest,
+        Widget child) : base(child)
+    {
+        Color = color;
+        Vsync = vsync ?? throw new ArgumentNullException(nameof(vsync));
+        AbsorbHitTest = absorbHitTest;
+    }
+
+    public Color Color { get; }
+
+    public ITickerProvider Vsync { get; }
+
+    public bool AbsorbHitTest { get; }
+
+    internal override RenderObject CreateRenderObject(BuildContext context)
+    {
+        return new RenderMaterialInkFeatures(Color, Vsync, AbsorbHitTest);
+    }
+
+    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    {
+        var inkFeatures = (RenderMaterialInkFeatures)renderObject;
+        inkFeatures.Color = Color;
+        inkFeatures.Vsync = Vsync;
+        inkFeatures.AbsorbHitTest = AbsorbHitTest;
+    }
+}
+
+internal sealed class RenderMaterialInkFeatures : RenderProxyBoxWithHitTestBehavior
+{
+    private readonly List<IMaterialInkFeature> _inkFeatures = [];
+    private readonly ControllerAdapter _controller;
+    private Color _color;
+    private ITickerProvider _vsync;
+
+    public RenderMaterialInkFeatures(Color color, ITickerProvider vsync, bool absorbHitTest)
+        : base(absorbHitTest ? HitTestBehavior.Opaque : HitTestBehavior.DeferToChild)
+    {
+        _color = color;
+        _vsync = vsync;
+        _controller = new ControllerAdapter(this);
+    }
+
+    public MaterialInkController Controller => _controller;
+
+    public Color Color
+    {
+        get => _color;
+        set
+        {
+            if (_color == value)
+            {
+                return;
+            }
+
+            _color = value;
+            MarkNeedsPaint();
+        }
+    }
+
+    public ITickerProvider Vsync
+    {
+        get => _vsync;
+        set => _vsync = value ?? throw new ArgumentNullException(nameof(value));
+    }
+
+    public bool AbsorbHitTest
+    {
+        get => Behavior == HitTestBehavior.Opaque;
+        set => Behavior = value ? HitTestBehavior.Opaque : HitTestBehavior.DeferToChild;
+    }
+
+    internal int FeatureCount => _inkFeatures.Count;
+
+    public override void Paint(PaintingContext context, Point offset)
+    {
+        if (_inkFeatures.Count > 0)
+        {
+            context.PushClipRect(new Rect(offset, Size), clippedContext =>
+            {
+                foreach (IMaterialInkFeature feature in _inkFeatures.ToArray())
+                {
+                    if (!InkFeatureTransform.TryResolve(feature.ReferenceBox, this, out Matrix transform))
+                    {
+                        continue;
+                    }
+
+                    clippedContext.PushTransform(
+                        Matrix.CreateTranslation(offset.X, offset.Y),
+                        translatedContext => translatedContext.PushTransform(transform, feature.PaintFeature));
+                }
+            });
+        }
+
+        base.Paint(context, offset);
+    }
+
+    private void AddFeature(IMaterialInkFeature feature)
+    {
+        if (_inkFeatures.Contains(feature))
+        {
+            return;
+        }
+
+        _inkFeatures.Add(feature);
+        MarkNeedsPaint();
+    }
+
+    private void RemoveFeature(IMaterialInkFeature feature)
+    {
+        if (_inkFeatures.Remove(feature))
+        {
+            MarkNeedsPaint();
+        }
+    }
+
+    private sealed class ControllerAdapter : MaterialInkController, IMaterialInkRegistry
+    {
+        private readonly RenderMaterialInkFeatures _owner;
+
+        public ControllerAdapter(RenderMaterialInkFeatures owner)
+        {
+            _owner = owner;
+        }
+
+        public override Color? Color => _owner.Color;
+
+        public override ITickerProvider Vsync => _owner.Vsync;
+
+        public override void AddInkFeature(InkFeature feature)
+        {
+            ArgumentNullException.ThrowIfNull(feature);
+            _owner.AddFeature(feature);
+        }
+
+        protected internal override void RemoveInkFeature(InkFeature feature)
+        {
+            ArgumentNullException.ThrowIfNull(feature);
+            _owner.RemoveFeature(feature);
+        }
+
+        public override void MarkNeedsPaint()
+        {
+            _owner.MarkNeedsPaint();
+        }
+
+        void IMaterialInkRegistry.AddInkFeature(IMaterialInkFeature feature)
+        {
+            _owner.AddFeature(feature);
+        }
+
+        void IMaterialInkRegistry.RemoveInkFeature(IMaterialInkFeature feature)
+        {
+            _owner.RemoveFeature(feature);
+        }
+    }
+}
+
+internal static class InkFeatureTransform
+{
+    public static bool TryResolve(RenderBox referenceBox, RenderObject controller, out Matrix transform)
+    {
+        transform = Matrix.Identity;
+        RenderObject current = referenceBox;
+        while (!ReferenceEquals(current, controller))
+        {
+            RenderObject? parent = current.Parent;
+            if (parent is null)
+            {
+                transform = Matrix.Identity;
+                return false;
+            }
+
+            Point childOffset = current.parentData is BoxParentData data ? data.offset : default;
+            transform = Matrix.CreateTranslation(childOffset.X, childOffset.Y) * transform;
+            if (parent is RenderTransform renderTransform)
+            {
+                transform = renderTransform.Transform * transform;
+            }
+
+            current = parent;
+        }
+
+        return transform.TryInvert(out _);
     }
 }
 

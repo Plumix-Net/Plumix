@@ -1,5 +1,10 @@
 # Changelog
 
+- Breaking: closed the shared Material ink-ownership divergence. `Material` now owns ordered descendant ink
+  features, `Ink` decorations and responses paint beneath Material children, rapid splashes fade independently,
+  pressed/hover/focus highlights use source timing, nested responses coordinate press ownership, and circular
+  materials use oval clipping. Added focused source-test coverage and a mirrored timed-hover/rapid-tap demo probe.
+
 - Breaking: completed the strict Material `Checkbox` closeout. The control now uses shared Flutter-shaped toggleable
   state and custom-paint geometry, direct M2/M3 `ColorScheme` defaults, mixed semantics, stateful sides, outlined
   shapes, cursor/density/theme copy/lerp APIs, exact tap-target and transition timing, focused source-test coverage,
