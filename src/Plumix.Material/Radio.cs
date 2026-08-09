@@ -1,19 +1,17 @@
-using System.Collections.Generic;
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Cupertino;
 using Plumix.Foundation;
 using Plumix.Rendering;
+using Plumix.UI;
 using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/material/radio.dart (approximate)
+// Dart parity source: flutter/packages/flutter/lib/src/material/radio.dart
 
 public sealed class Radio<T> : StatefulWidget
 {
-    private const double DefaultSplashRadius = 20.0;
-    private const double DefaultInnerRadius = 4.5;
     private readonly RadioType _radioType;
 
     private enum RadioType
@@ -22,49 +20,51 @@ public sealed class Radio<T> : StatefulWidget
         Adaptive
     }
 
-    public const double Width = 20.0;
+    public const double Width = 16.0;
 
     public Radio(
         T value,
         T? groupValue = default,
         Action<T?>? onChanged = null,
-        bool toggleable = false,
         MouseCursor? mouseCursor = null,
+        bool toggleable = false,
         Color? activeColor = null,
         MaterialStateProperty<Color?>? fillColor = null,
-        MaterialStateProperty<Color?>? overlayColor = null,
         Color? focusColor = null,
         Color? hoverColor = null,
-        MaterialTapTargetSize? materialTapTargetSize = null,
-        MaterialStateProperty<Color?>? backgroundColor = null,
-        BorderSide? side = null,
-        MaterialStateProperty<double?>? innerRadius = null,
+        MaterialStateProperty<Color?>? overlayColor = null,
         double? splashRadius = null,
+        MaterialTapTargetSize? materialTapTargetSize = null,
+        VisualDensity? visualDensity = null,
         FocusNode? focusNode = null,
         bool autofocus = false,
         bool? enabled = null,
         RadioGroupRegistry<T>? groupRegistry = null,
+        MaterialStateProperty<Color?>? backgroundColor = null,
+        WidgetStateBorderSide? side = null,
+        MaterialStateProperty<double?>? innerRadius = null,
         Key? key = null)
         : this(
             value: value,
             groupValue: groupValue,
             onChanged: onChanged,
-            toggleable: toggleable,
             mouseCursor: mouseCursor,
+            toggleable: toggleable,
             activeColor: activeColor,
             fillColor: fillColor,
-            overlayColor: overlayColor,
             focusColor: focusColor,
             hoverColor: hoverColor,
-            materialTapTargetSize: materialTapTargetSize,
-            backgroundColor: backgroundColor,
-            side: side,
-            innerRadius: innerRadius,
+            overlayColor: overlayColor,
             splashRadius: splashRadius,
+            materialTapTargetSize: materialTapTargetSize,
+            visualDensity: visualDensity,
             focusNode: focusNode,
             autofocus: autofocus,
             enabled: enabled,
             groupRegistry: groupRegistry,
+            backgroundColor: backgroundColor,
+            side: side,
+            innerRadius: innerRadius,
             useCupertinoCheckmarkStyle: false,
             radioType: RadioType.Material,
             key: key)
@@ -75,45 +75,47 @@ public sealed class Radio<T> : StatefulWidget
         T value,
         T? groupValue,
         Action<T?>? onChanged,
-        bool toggleable,
         MouseCursor? mouseCursor,
+        bool toggleable,
         Color? activeColor,
         MaterialStateProperty<Color?>? fillColor,
-        MaterialStateProperty<Color?>? overlayColor,
         Color? focusColor,
         Color? hoverColor,
-        MaterialTapTargetSize? materialTapTargetSize,
-        MaterialStateProperty<Color?>? backgroundColor,
-        BorderSide? side,
-        MaterialStateProperty<double?>? innerRadius,
+        MaterialStateProperty<Color?>? overlayColor,
         double? splashRadius,
+        MaterialTapTargetSize? materialTapTargetSize,
+        VisualDensity? visualDensity,
         FocusNode? focusNode,
         bool autofocus,
         bool? enabled,
         RadioGroupRegistry<T>? groupRegistry,
+        MaterialStateProperty<Color?>? backgroundColor,
+        WidgetStateBorderSide? side,
+        MaterialStateProperty<double?>? innerRadius,
         bool useCupertinoCheckmarkStyle,
         RadioType radioType,
-        Key? key = null) : base(key)
+        Key? key) : base(key)
     {
         Value = value;
         GroupValue = groupValue;
         OnChanged = onChanged;
-        Toggleable = toggleable;
         MouseCursor = mouseCursor;
+        Toggleable = toggleable;
         ActiveColor = activeColor;
         FillColor = fillColor;
-        OverlayColor = overlayColor;
         FocusColor = focusColor;
         HoverColor = hoverColor;
-        MaterialTapTargetSize = materialTapTargetSize;
-        BackgroundColor = backgroundColor;
-        Side = side;
-        InnerRadius = innerRadius;
+        OverlayColor = overlayColor;
         SplashRadius = splashRadius;
+        MaterialTapTargetSize = materialTapTargetSize;
+        VisualDensity = visualDensity;
         FocusNode = focusNode;
         Autofocus = autofocus;
         Enabled = enabled;
         GroupRegistry = groupRegistry;
+        BackgroundColor = backgroundColor;
+        Side = side;
+        InnerRadius = innerRadius;
         UseCupertinoCheckmarkStyle = useCupertinoCheckmarkStyle;
         _radioType = radioType;
     }
@@ -124,29 +126,25 @@ public sealed class Radio<T> : StatefulWidget
 
     public Action<T?>? OnChanged { get; }
 
-    public bool Toggleable { get; }
-
     public MouseCursor? MouseCursor { get; }
+
+    public bool Toggleable { get; }
 
     public Color? ActiveColor { get; }
 
     public MaterialStateProperty<Color?>? FillColor { get; }
 
-    public MaterialStateProperty<Color?>? OverlayColor { get; }
-
     public Color? FocusColor { get; }
 
     public Color? HoverColor { get; }
 
-    public MaterialTapTargetSize? MaterialTapTargetSize { get; }
-
-    public MaterialStateProperty<Color?>? BackgroundColor { get; }
-
-    public BorderSide? Side { get; }
-
-    public MaterialStateProperty<double?>? InnerRadius { get; }
+    public MaterialStateProperty<Color?>? OverlayColor { get; }
 
     public double? SplashRadius { get; }
+
+    public MaterialTapTargetSize? MaterialTapTargetSize { get; }
+
+    public VisualDensity? VisualDensity { get; }
 
     public FocusNode? FocusNode { get; }
 
@@ -156,87 +154,82 @@ public sealed class Radio<T> : StatefulWidget
 
     public RadioGroupRegistry<T>? GroupRegistry { get; }
 
+    public MaterialStateProperty<Color?>? BackgroundColor { get; }
+
+    public WidgetStateBorderSide? Side { get; }
+
+    public MaterialStateProperty<double?>? InnerRadius { get; }
+
     public bool UseCupertinoCheckmarkStyle { get; }
 
     public static Radio<T> Adaptive(
         T value,
         T? groupValue = default,
         Action<T?>? onChanged = null,
-        bool toggleable = false,
         MouseCursor? mouseCursor = null,
+        bool toggleable = false,
         Color? activeColor = null,
         MaterialStateProperty<Color?>? fillColor = null,
-        MaterialStateProperty<Color?>? overlayColor = null,
         Color? focusColor = null,
         Color? hoverColor = null,
-        MaterialTapTargetSize? materialTapTargetSize = null,
-        MaterialStateProperty<Color?>? backgroundColor = null,
-        BorderSide? side = null,
-        MaterialStateProperty<double?>? innerRadius = null,
+        MaterialStateProperty<Color?>? overlayColor = null,
         double? splashRadius = null,
+        MaterialTapTargetSize? materialTapTargetSize = null,
+        VisualDensity? visualDensity = null,
         FocusNode? focusNode = null,
         bool autofocus = false,
         bool useCupertinoCheckmarkStyle = false,
         bool? enabled = null,
         RadioGroupRegistry<T>? groupRegistry = null,
+        MaterialStateProperty<Color?>? backgroundColor = null,
+        WidgetStateBorderSide? side = null,
+        MaterialStateProperty<double?>? innerRadius = null,
         Key? key = null)
     {
         return new Radio<T>(
             value: value,
             groupValue: groupValue,
             onChanged: onChanged,
-            toggleable: toggleable,
             mouseCursor: mouseCursor,
+            toggleable: toggleable,
             activeColor: activeColor,
             fillColor: fillColor,
-            overlayColor: overlayColor,
             focusColor: focusColor,
             hoverColor: hoverColor,
-            materialTapTargetSize: materialTapTargetSize,
-            backgroundColor: backgroundColor,
-            side: side,
-            innerRadius: innerRadius,
+            overlayColor: overlayColor,
             splashRadius: splashRadius,
+            materialTapTargetSize: materialTapTargetSize,
+            visualDensity: visualDensity,
             focusNode: focusNode,
             autofocus: autofocus,
             enabled: enabled,
             groupRegistry: groupRegistry,
+            backgroundColor: backgroundColor,
+            side: side,
+            innerRadius: innerRadius,
             useCupertinoCheckmarkStyle: useCupertinoCheckmarkStyle,
             radioType: RadioType.Adaptive,
             key: key);
     }
 
-    public override State CreateState()
-    {
-        return new RadioState();
-    }
+    public override State CreateState() => new RadioState();
 
-    private sealed class RadioState : State, RadioClient<T>
+    private sealed class RadioState : State
     {
+        private const double DefaultInnerRadius = 4.5;
+        private const double DefaultSplashRadius = 20.0;
+        private const byte RadialReactionAlpha = 0x1F;
+
         private FocusNode? _focusNode;
         private bool _ownsFocusNode;
-        private RadioGroupRegistry<T>? _registry;
         private LegacyRadioRegistry? _legacyRegistry;
-        private bool _registryEnablesInteraction;
+        private RadioPainter? _painter;
 
         private Radio<T> CurrentWidget => (Radio<T>)StateWidget;
-
-        public bool Tristate => CurrentWidget.Toggleable;
-
-        public T RadioValue => CurrentWidget.Value;
-
-        public bool Enabled => ResolveEnabled();
-
-        public FocusNode FocusNode => _focusNode!;
 
         public override void InitState()
         {
             AttachFocusNode(CurrentWidget.FocusNode);
-        }
-
-        public override void DidChangeDependencies()
-        {
-            SyncRegistry();
         }
 
         public override void DidUpdateWidget(StatefulWidget oldWidget)
@@ -244,157 +237,242 @@ public sealed class Radio<T> : StatefulWidget
             var oldRadio = (Radio<T>)oldWidget;
             if (!ReferenceEquals(oldRadio.FocusNode, CurrentWidget.FocusNode))
             {
-                SetRegistry(null);
                 DetachFocusNode(disposeOwned: true);
                 AttachFocusNode(CurrentWidget.FocusNode);
             }
-
-            SyncRegistry();
         }
 
         public override Widget Build(BuildContext context)
         {
-            SyncRegistry();
-            bool enabled = ResolveEnabled();
-            if (CurrentWidget.Enabled == true && _registry is null)
+            ThemeData theme = Theme.Of(context);
+            RadioGroupRegistry<T>? inheritedRegistry = CurrentWidget.GroupRegistry ?? RadioGroup<T>.MaybeOf(context);
+            bool enabled = CurrentWidget.Enabled
+                           ?? (CurrentWidget.OnChanged is not null || inheritedRegistry is not null);
+            if (CurrentWidget.Enabled == true
+                && CurrentWidget.OnChanged is null
+                && inheritedRegistry is null)
             {
                 throw new InvalidOperationException(
-                    "Radio is enabled but has no onChanged callback or group registry.");
+                    "An enabled Radio requires onChanged or a group registry.");
             }
 
-            var theme = Theme.Of(context);
             if (IsAdaptiveCupertino(theme))
             {
+                T? groupValue = inheritedRegistry is null
+                    ? CurrentWidget.GroupValue
+                    : inheritedRegistry.GroupValue;
+                Action<T?>? onChanged = enabled
+                    ? inheritedRegistry?.OnChanged ?? CurrentWidget.OnChanged
+                    : null;
                 return new CupertinoRadio<T>(
                     value: CurrentWidget.Value,
-                    groupValue: _registry is null ? default : _registry.GroupValue,
-                    onChanged: enabled ? _registry?.OnChanged : null,
+                    groupValue: groupValue,
+                    onChanged: onChanged,
                     toggleable: CurrentWidget.Toggleable,
                     activeColor: CurrentWidget.ActiveColor,
                     focusColor: CurrentWidget.FocusColor,
+                    mouseCursor: CurrentWidget.MouseCursor,
                     useCheckmarkStyle: CurrentWidget.UseCupertinoCheckmarkStyle,
                     focusNode: _focusNode,
                     autofocus: CurrentWidget.Autofocus,
+                    enabled: enabled,
+                    groupRegistry: inheritedRegistry,
                     isDark: theme.Brightness == Brightness.Dark);
             }
 
-            var radioTheme = RadioTheme.Of(context);
-            bool selected = IsSelected();
-            var selectedStates = BuildStates(enabled, selected: true);
-            var tapTargetSize = CurrentWidget.MaterialTapTargetSize
-                                ?? radioTheme.MaterialTapTargetSize
-                                ?? theme.MaterialTapTargetSize;
-            double splashRadius = ResolveSplashRadius(radioTheme);
-            double innerRadius = ResolveInnerRadius(radioTheme, selectedStates);
-            var shape = Plumix.Rendering.BorderRadius.Circular(Width / 2);
-
-            var style = new ButtonStyle(
-                ForegroundColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
-                BackgroundColor: MaterialStateProperty<Color?>.ResolveWith(states => ResolveBackgroundColor(theme, radioTheme, states)),
-                ShadowColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
-                SurfaceTintColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
-                OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states => ResolveOverlayColor(theme, radioTheme, states)),
-                SplashColor: null,
-                Elevation: MaterialStateProperty<double?>.All(0),
-                IconColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
-                IconSize: MaterialStateProperty<double?>.All(18),
-                Side: MaterialStateProperty<BorderSide?>.ResolveWith(states => ResolveSide(theme, radioTheme, states)),
-                Padding: MaterialStateProperty<Thickness?>.All(new Thickness(0)),
-                Shape: MaterialStateProperty<BorderRadius?>.All(shape),
-                MinimumSize: MaterialStateProperty<Size?>.All(new Size(Width, Width)),
-                FixedSize: MaterialStateProperty<Size?>.All(new Size(Width, Width)),
-                MaximumSize: MaterialStateProperty<Size?>.All(new Size(Width, Width)),
-                Alignment: Alignment.Center,
-                TapTargetSize: tapTargetSize);
-
-            var dotColor = ResolveFillColor(theme, radioTheme, selectedStates);
-
-            return new MaterialButtonCore(
-                child: new SizedBox(
-                    width: Width,
-                    height: Width,
-                    child: new Center(
-                        child: selected
-                            ? new Container(
-                                width: innerRadius * 2,
-                                height: innerRadius * 2,
-                                decoration: new BoxDecoration(
-                                    Color: dotColor,
-                                    BorderRadius: Plumix.Rendering.BorderRadius.Circular(innerRadius)))
-                            : new SizedBox())),
-                onPressed: enabled ? HandleTap : null,
-                style: style,
-                focusNode: _focusNode,
-                mouseCursor: CurrentWidget.MouseCursor,
-                isSelected: selected,
-                includeSemanticSelected: false,
-                isSemanticButton: false,
-                isSemanticChecked: selected,
-                splashRadius: splashRadius,
-                autofocus: CurrentWidget.Autofocus);
+            _legacyRegistry ??= new LegacyRadioRegistry(this);
+            RadioGroupRegistry<T> effectiveRegistry = inheritedRegistry ?? _legacyRegistry;
+            RadioThemeData radioTheme = RadioTheme.Of(context);
+            WidgetStateProperty<MouseCursor> mouseCursor = WidgetStateProperty<MouseCursor>.ResolveWith(
+                states => ResolveMouseCursor(radioTheme, ToMaterialState(states)));
+            return new RawRadio<T>(
+                value: CurrentWidget.Value,
+                mouseCursor: mouseCursor,
+                toggleable: CurrentWidget.Toggleable,
+                focusNode: _focusNode!,
+                autofocus: CurrentWidget.Autofocus,
+                groupRegistry: effectiveRegistry,
+                enabled: enabled,
+                builder: (_, state) => BuildRadioPaint(theme, radioTheme, state));
         }
 
         public override void Dispose()
         {
-            SetRegistry(null);
+            _painter?.Dispose();
+            _painter = null;
             DetachFocusNode(disposeOwned: true);
         }
 
-        private void HandleTap()
+        private Widget BuildRadioPaint(
+            ThemeData theme,
+            RadioThemeData radioTheme,
+            RawRadioState<T> state)
         {
-            if (!ResolveEnabled() || _registry is null)
+            _painter ??= new RadioPainter(
+                state.PositionAnimation,
+                state.ReactionAnimation,
+                state.ReactionHoverFadeAnimation,
+                state.ReactionFocusFadeAnimation);
+
+            MaterialState states = ToMaterialState(state.States);
+            MaterialState activeStates = WithSelected(states, selected: true);
+            MaterialState inactiveStates = WithSelected(states, selected: false);
+            Color? nonDefaultActiveColor = ResolveNonDefaultFillColor(radioTheme, activeStates);
+            Color? nonDefaultInactiveColor = ResolveNonDefaultFillColor(radioTheme, inactiveStates);
+            Color activeColor = nonDefaultActiveColor ?? ResolveDefaultFillColor(theme, activeStates);
+            Color inactiveColor = nonDefaultInactiveColor ?? ResolveDefaultFillColor(theme, inactiveStates);
+            Color activeBackgroundColor = ResolveBackgroundColor(radioTheme, activeStates);
+            Color inactiveBackgroundColor = ResolveBackgroundColor(radioTheme, inactiveStates);
+            BorderSide activeSide = ResolveSide(radioTheme, activeStates, activeColor);
+            BorderSide inactiveSide = ResolveSide(radioTheme, inactiveStates, inactiveColor);
+            double innerRadius = CurrentWidget.InnerRadius?.Resolve(activeStates)
+                                 ?? radioTheme.InnerRadius?.Resolve(activeStates)
+                                 ?? DefaultInnerRadius;
+            Color activeReactionColor = ResolvePressedOverlayColor(
+                theme,
+                radioTheme,
+                activeStates,
+                nonDefaultActiveColor);
+            Color inactiveReactionColor = ResolvePressedOverlayColor(
+                theme,
+                radioTheme,
+                inactiveStates,
+                nonDefaultInactiveColor);
+            Color hoverColor = ResolveLegacyOverlayColor(
+                theme,
+                radioTheme,
+                WithInteractionState(states, MaterialState.Hovered),
+                CurrentWidget.HoverColor);
+            Color focusColor = ResolveLegacyOverlayColor(
+                theme,
+                radioTheme,
+                WithInteractionState(states, MaterialState.Focused),
+                CurrentWidget.FocusColor);
+            Color reactionColor = state.Selected ? activeReactionColor : inactiveReactionColor;
+            if (state.PressPosition.HasValue)
             {
-                return;
+                hoverColor = reactionColor;
+                focusColor = reactionColor;
             }
 
-            if (IsSelected())
-            {
-                if (CurrentWidget.Toggleable)
-                {
-                    _registry.OnChanged(default);
-                }
+            double splashRadius = CurrentWidget.SplashRadius
+                                  ?? radioTheme.SplashRadius
+                                  ?? DefaultSplashRadius;
+            _painter.Configure(
+                activeColor: activeColor,
+                inactiveColor: inactiveColor,
+                activeBackgroundColor: activeBackgroundColor,
+                inactiveBackgroundColor: inactiveBackgroundColor,
+                activeSide: activeSide,
+                inactiveSide: inactiveSide,
+                innerRadius: innerRadius,
+                splashRadius: splashRadius,
+                reactionColor: activeReactionColor,
+                inactiveReactionColor: inactiveReactionColor,
+                hoverColor: hoverColor,
+                focusColor: focusColor);
 
-                return;
+            MaterialTapTargetSize tapTargetSize = CurrentWidget.MaterialTapTargetSize
+                                                  ?? radioTheme.MaterialTapTargetSize
+                                                  ?? theme.MaterialTapTargetSize;
+            VisualDensity visualDensity = CurrentWidget.VisualDensity
+                                          ?? radioTheme.VisualDensity
+                                          ?? theme.VisualDensity;
+            double baseSize = tapTargetSize == Plumix.Material.MaterialTapTargetSize.Padded
+                ? 48.0
+                : 40.0;
+            Vector densityAdjustment = visualDensity.BaseSizeAdjustment;
+            var size = new Size(
+                Math.Max(0.0, baseSize + densityAdjustment.X),
+                Math.Max(0.0, baseSize + densityAdjustment.Y));
+            return new CustomPaint(
+                painter: _painter,
+                size: size);
+        }
+
+        private Color? ResolveNonDefaultFillColor(
+            RadioThemeData radioTheme,
+            MaterialState states)
+        {
+            Color? widgetFill = CurrentWidget.FillColor?.Resolve(states);
+            if (widgetFill.HasValue)
+            {
+                return widgetFill;
             }
 
-            _registry.OnChanged(CurrentWidget.Value);
-        }
-
-        private bool IsSelected()
-        {
-            return EqualityComparer<T?>.Default.Equals(
-                CurrentWidget.Value,
-                _registry is null ? default : _registry.GroupValue);
-        }
-
-        private bool ResolveEnabled()
-        {
-            return CurrentWidget.Enabled ?? (CurrentWidget.OnChanged is not null || _registryEnablesInteraction);
-        }
-
-        private void SyncRegistry()
-        {
-            RadioGroupRegistry<T>? registry = CurrentWidget.GroupRegistry ?? RadioGroup<T>.MaybeOf(Context);
-            _registryEnablesInteraction = registry is not null;
-            if (registry is null)
+            if (!states.HasFlag(MaterialState.Disabled)
+                && states.HasFlag(MaterialState.Selected)
+                && CurrentWidget.ActiveColor.HasValue)
             {
-                _legacyRegistry ??= new LegacyRadioRegistry(this);
-                registry = _legacyRegistry;
+                return CurrentWidget.ActiveColor;
             }
 
-            SetRegistry(registry);
+            return radioTheme.FillColor?.Resolve(states);
         }
 
-        private void SetRegistry(RadioGroupRegistry<T>? registry)
+        private Color ResolveBackgroundColor(
+            RadioThemeData radioTheme,
+            MaterialState states)
         {
-            if (ReferenceEquals(_registry, registry))
-            {
-                return;
-            }
+            return CurrentWidget.BackgroundColor?.Resolve(states)
+                   ?? radioTheme.BackgroundColor?.Resolve(states)
+                   ?? Colors.Transparent;
+        }
 
-            _registry?.UnregisterClient(this);
-            _registry = registry;
-            _registry?.RegisterClient(this);
+        private BorderSide ResolveSide(
+            RadioThemeData radioTheme,
+            MaterialState states,
+            Color fillColor)
+        {
+            return CurrentWidget.Side?.Resolve(states)
+                   ?? radioTheme.Side?.Resolve(states)
+                   ?? new BorderSide(fillColor, 2.0);
+        }
+
+        private Color ResolvePressedOverlayColor(
+            ThemeData theme,
+            RadioThemeData radioTheme,
+            MaterialState states,
+            Color? nonDefaultFillColor)
+        {
+            MaterialState pressedStates = WithInteractionState(states, MaterialState.Pressed);
+            return CurrentWidget.OverlayColor?.Resolve(pressedStates)
+                   ?? radioTheme.OverlayColor?.Resolve(pressedStates)
+                   ?? (nonDefaultFillColor.HasValue
+                       ? WithAlpha(nonDefaultFillColor.Value, RadialReactionAlpha)
+                       : ResolveDefaultOverlayColor(theme, pressedStates));
+        }
+
+        private Color ResolveLegacyOverlayColor(
+            ThemeData theme,
+            RadioThemeData radioTheme,
+            MaterialState states,
+            Color? legacyColor)
+        {
+            return CurrentWidget.OverlayColor?.Resolve(states)
+                   ?? legacyColor
+                   ?? radioTheme.OverlayColor?.Resolve(states)
+                   ?? ResolveDefaultOverlayColor(theme, states);
+        }
+
+        private MouseCursor ResolveMouseCursor(
+            RadioThemeData radioTheme,
+            MaterialState states)
+        {
+            MouseCursor? widgetCursor = CurrentWidget.MouseCursor is WidgetStateMouseCursor stateCursor
+                ? stateCursor.Resolve(states)
+                : CurrentWidget.MouseCursor;
+            return widgetCursor
+                   ?? radioTheme.MouseCursor?.Resolve(states)
+                   ?? (OperatingSystem.IsBrowser() && !states.HasFlag(MaterialState.Disabled)
+                       ? SystemMouseCursors.Click
+                       : SystemMouseCursors.Basic);
+        }
+
+        private bool IsAdaptiveCupertino(ThemeData theme)
+        {
+            return CurrentWidget._radioType == RadioType.Adaptive
+                   && theme.Platform is TargetPlatform.IOS or TargetPlatform.MacOS;
         }
 
         private void AttachFocusNode(FocusNode? focusNode)
@@ -417,6 +495,143 @@ public sealed class Radio<T> : StatefulWidget
 
             _focusNode = null;
             _ownsFocusNode = false;
+        }
+
+        private static MaterialState WithSelected(MaterialState states, bool selected)
+        {
+            return selected
+                ? states | MaterialState.Selected
+                : states & ~MaterialState.Selected;
+        }
+
+        private static MaterialState WithInteractionState(
+            MaterialState states,
+            MaterialState interaction)
+        {
+            return states | interaction;
+        }
+
+        private static MaterialState ToMaterialState(IReadOnlySet<WidgetState> states)
+        {
+            MaterialState result = MaterialState.None;
+            if (states.Contains(WidgetState.Disabled))
+            {
+                result |= MaterialState.Disabled;
+            }
+            if (states.Contains(WidgetState.Selected))
+            {
+                result |= MaterialState.Selected;
+            }
+            if (states.Contains(WidgetState.Hovered))
+            {
+                result |= MaterialState.Hovered;
+            }
+            if (states.Contains(WidgetState.Focused))
+            {
+                result |= MaterialState.Focused;
+            }
+            if (states.Contains(WidgetState.Pressed))
+            {
+                result |= MaterialState.Pressed;
+            }
+            return result;
+        }
+
+        private static Color ResolveDefaultFillColor(ThemeData theme, MaterialState states)
+        {
+            bool disabled = states.HasFlag(MaterialState.Disabled);
+            bool selected = states.HasFlag(MaterialState.Selected);
+            if (!theme.UseMaterial3)
+            {
+                if (disabled)
+                {
+                    return theme.DisabledColor;
+                }
+                return selected ? theme.ColorScheme.Secondary : theme.UnselectedWidgetColor;
+            }
+
+            if (disabled)
+            {
+                return WithOpacity(theme.ColorScheme.OnSurface, 0.38);
+            }
+            if (selected)
+            {
+                return theme.ColorScheme.Primary;
+            }
+            if (states.HasFlag(MaterialState.Pressed)
+                || states.HasFlag(MaterialState.Hovered)
+                || states.HasFlag(MaterialState.Focused))
+            {
+                return theme.ColorScheme.OnSurface;
+            }
+            return theme.ColorScheme.OnSurfaceVariant;
+        }
+
+        private static Color ResolveDefaultOverlayColor(ThemeData theme, MaterialState states)
+        {
+            if (!theme.UseMaterial3)
+            {
+                if (states.HasFlag(MaterialState.Pressed))
+                {
+                    return WithAlpha(
+                        ResolveDefaultFillColor(theme, states),
+                        RadialReactionAlpha);
+                }
+                if (states.HasFlag(MaterialState.Hovered))
+                {
+                    return theme.HoverColor;
+                }
+                if (states.HasFlag(MaterialState.Focused))
+                {
+                    return theme.FocusColor;
+                }
+                return Colors.Transparent;
+            }
+
+            bool selected = states.HasFlag(MaterialState.Selected);
+            if (selected)
+            {
+                if (states.HasFlag(MaterialState.Pressed))
+                {
+                    return WithOpacity(theme.ColorScheme.OnSurface, 0.10);
+                }
+                if (states.HasFlag(MaterialState.Hovered))
+                {
+                    return WithOpacity(theme.ColorScheme.Primary, 0.08);
+                }
+                if (states.HasFlag(MaterialState.Focused))
+                {
+                    return WithOpacity(theme.ColorScheme.Primary, 0.10);
+                }
+                return Colors.Transparent;
+            }
+            if (states.HasFlag(MaterialState.Pressed))
+            {
+                return WithOpacity(theme.ColorScheme.Primary, 0.10);
+            }
+            if (states.HasFlag(MaterialState.Hovered))
+            {
+                return WithOpacity(theme.ColorScheme.OnSurface, 0.08);
+            }
+            if (states.HasFlag(MaterialState.Focused))
+            {
+                return WithOpacity(theme.ColorScheme.OnSurface, 0.10);
+            }
+            return Colors.Transparent;
+        }
+
+        private static Color WithAlpha(Color color, byte alpha)
+        {
+            return Color.FromArgb(alpha, color.R, color.G, color.B);
+        }
+
+        private static Color WithOpacity(Color color, double opacity)
+        {
+            byte alpha = (byte)Math.Clamp(
+                (int)Math.Round(byte.MaxValue * Math.Clamp(opacity, 0.0, 1.0)),
+                0,
+                byte.MaxValue);
+            return Color.FromArgb(alpha, color.R, color.G, color.B);
         }
 
         private sealed class LegacyRadioRegistry : RadioGroupRegistry<T>
@@ -444,253 +659,127 @@ public sealed class Radio<T> : StatefulWidget
             {
             }
         }
+    }
+}
 
-        private double ResolveInnerRadius(RadioThemeData radioTheme, MaterialState states)
+internal sealed class RadioPainter : ToggleablePainter
+{
+    private const double OuterRadius = 8.0;
+
+    private Color _activeColor;
+    private Color _inactiveColor;
+    private Color _activeBackgroundColor;
+    private Color _inactiveBackgroundColor;
+    private BorderSide _activeSide;
+    private BorderSide _inactiveSide;
+    private double _innerRadius;
+    private Color _inactiveReactionColor;
+
+    public RadioPainter(
+        Animation<double> position,
+        Animation<double> reaction,
+        Animation<double> reactionHoverFade,
+        Animation<double> reactionFocusFade)
+        : base(position, reaction, reactionHoverFade, reactionFocusFade)
+    {
+    }
+
+    internal Color ActiveColor => _activeColor;
+
+    internal Color InactiveColor => _inactiveColor;
+
+    internal Color ActiveBackgroundColor => _activeBackgroundColor;
+
+    internal Color InactiveBackgroundColor => _inactiveBackgroundColor;
+
+    internal BorderSide ActiveSide => _activeSide;
+
+    internal BorderSide InactiveSide => _inactiveSide;
+
+    internal double InnerRadius => _innerRadius;
+
+    internal Color ActiveReactionColor => ReactionColor;
+
+    internal Color InactiveReactionColor => _inactiveReactionColor;
+
+    internal Color ResolvedHoverColor => HoverColor;
+
+    internal Color ResolvedFocusColor => FocusColor;
+
+    internal double ResolvedSplashRadius => SplashRadius;
+
+    internal void Configure(
+        Color activeColor,
+        Color inactiveColor,
+        Color activeBackgroundColor,
+        Color inactiveBackgroundColor,
+        BorderSide activeSide,
+        BorderSide inactiveSide,
+        double innerRadius,
+        double splashRadius,
+        Color reactionColor,
+        Color inactiveReactionColor,
+        Color hoverColor,
+        Color focusColor)
+    {
+        _activeColor = activeColor;
+        _inactiveColor = inactiveColor;
+        _activeBackgroundColor = activeBackgroundColor;
+        _inactiveBackgroundColor = inactiveBackgroundColor;
+        _activeSide = activeSide;
+        _inactiveSide = inactiveSide;
+        _innerRadius = innerRadius;
+        SplashRadius = splashRadius;
+        ReactionColor = reactionColor;
+        _inactiveReactionColor = inactiveReactionColor;
+        HoverColor = hoverColor;
+        FocusColor = focusColor;
+        NotifyPainterChanged();
+    }
+
+    public override void Paint(PaintingContext context, Size size)
+    {
+        Point origin = new(size.Width / 2.0, size.Height / 2.0);
+        PaintRadialReaction(context, origin, _inactiveReactionColor);
+
+        Color backgroundColor = LerpColor(
+            _inactiveBackgroundColor,
+            _activeBackgroundColor,
+            Position.Value);
+        context.DrawCircle(
+            new SolidColorBrush(backgroundColor),
+            null,
+            origin,
+            OuterRadius);
+
+        BorderSide side = MaterialThemeLerp.BorderSide(
+            _inactiveSide,
+            _activeSide,
+            Position.Value) ?? _activeSide;
+        Pen? pen = side.Width > 0.0
+            ? new Pen(new SolidColorBrush(side.Color), side.Width)
+            : null;
+        context.DrawCircle(
+            new SolidColorBrush(Colors.Transparent),
+            pen,
+            origin,
+            OuterRadius);
+
+        if (Position.Value <= 0.0)
         {
-            double resolved = CurrentWidget.InnerRadius?.Resolve(states)
-                              ?? radioTheme.InnerRadius?.Resolve(states)
-                              ?? DefaultInnerRadius;
-
-            if (double.IsNaN(resolved) || double.IsInfinity(resolved))
-            {
-                return DefaultInnerRadius;
-            }
-
-            return Math.Clamp(resolved, 0, Width / 2);
+            return;
         }
 
-        private double ResolveSplashRadius(RadioThemeData radioTheme)
-        {
-            double resolved = CurrentWidget.SplashRadius
-                              ?? radioTheme.SplashRadius
-                              ?? DefaultSplashRadius;
+        Color innerColor = LerpColor(_inactiveColor, _activeColor, Position.Value);
+        context.DrawCircle(
+            new SolidColorBrush(innerColor),
+            null,
+            origin,
+            Math.Max(0.0, _innerRadius * Position.Value));
+    }
 
-            if (double.IsNaN(resolved) || double.IsInfinity(resolved) || resolved <= 0)
-            {
-                return DefaultSplashRadius;
-            }
-
-            return resolved;
-        }
-
-        private Color ResolveFillColor(ThemeData theme, RadioThemeData radioTheme, MaterialState states)
-        {
-            var widgetFill = CurrentWidget.FillColor?.Resolve(states);
-            if (widgetFill.HasValue)
-            {
-                return widgetFill.Value;
-            }
-
-            if (!states.HasFlag(MaterialState.Disabled)
-                && states.HasFlag(MaterialState.Selected)
-                && CurrentWidget.ActiveColor.HasValue)
-            {
-                return CurrentWidget.ActiveColor.Value;
-            }
-
-            var themeFill = radioTheme.FillColor?.Resolve(states);
-            if (themeFill.HasValue)
-            {
-                return themeFill.Value;
-            }
-
-            return ResolveDefaultFillColor(theme, states);
-        }
-
-        private Color ResolveBackgroundColor(ThemeData theme, RadioThemeData radioTheme, MaterialState states)
-        {
-            var widgetBackground = CurrentWidget.BackgroundColor?.Resolve(states);
-            if (widgetBackground.HasValue)
-            {
-                return widgetBackground.Value;
-            }
-
-            var themeBackground = radioTheme.BackgroundColor?.Resolve(states);
-            if (themeBackground.HasValue)
-            {
-                return themeBackground.Value;
-            }
-
-            return Colors.Transparent;
-        }
-
-        private BorderSide ResolveSide(ThemeData theme, RadioThemeData radioTheme, MaterialState states)
-        {
-            if (CurrentWidget.Side.HasValue && !states.HasFlag(MaterialState.Selected))
-            {
-                return CurrentWidget.Side.Value;
-            }
-
-            if (radioTheme.Side.HasValue && !states.HasFlag(MaterialState.Selected))
-            {
-                return radioTheme.Side.Value;
-            }
-
-            return new BorderSide(ResolveFillColor(theme, radioTheme, states), 2);
-        }
-
-        private Color? ResolveOverlayColor(ThemeData theme, RadioThemeData radioTheme, MaterialState states)
-        {
-            if (states.HasFlag(MaterialState.Disabled))
-            {
-                return null;
-            }
-
-            var widgetOverlay = CurrentWidget.OverlayColor?.Resolve(states);
-            if (widgetOverlay.HasValue)
-            {
-                return widgetOverlay.Value;
-            }
-
-            if (states.HasFlag(MaterialState.Hovered) && CurrentWidget.HoverColor.HasValue)
-            {
-                return CurrentWidget.HoverColor.Value;
-            }
-
-            if (states.HasFlag(MaterialState.Focused) && CurrentWidget.FocusColor.HasValue)
-            {
-                return CurrentWidget.FocusColor.Value;
-            }
-
-            if (states.HasFlag(MaterialState.Pressed) && CurrentWidget.ActiveColor.HasValue)
-            {
-                double pressedOpacity = theme.UseMaterial3 ? 0.10 : 0.12;
-                return MaterialButtonCore.ApplyOpacity(CurrentWidget.ActiveColor.Value, pressedOpacity);
-            }
-
-            var themeOverlay = radioTheme.OverlayColor?.Resolve(states);
-            if (themeOverlay.HasValue)
-            {
-                return themeOverlay.Value;
-            }
-
-            return ResolveDefaultOverlayColor(theme, states);
-        }
-
-        private static Color ResolveDefaultFillColor(ThemeData theme, MaterialState states)
-        {
-            if (theme.UseMaterial3)
-            {
-                if (states.HasFlag(MaterialState.Selected))
-                {
-                    return states.HasFlag(MaterialState.Disabled)
-                        ? MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.38)
-                        : theme.PrimaryColor;
-                }
-
-                if (states.HasFlag(MaterialState.Disabled))
-                {
-                    return MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.38);
-                }
-
-                if (states.HasFlag(MaterialState.Pressed)
-                    || states.HasFlag(MaterialState.Hovered)
-                    || states.HasFlag(MaterialState.Focused))
-                {
-                    return theme.OnSurfaceColor;
-                }
-
-                return theme.OnSurfaceVariantColor;
-            }
-
-            if (states.HasFlag(MaterialState.Disabled))
-            {
-                return MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.38);
-            }
-
-            if (states.HasFlag(MaterialState.Selected))
-            {
-                return theme.PrimaryColor;
-            }
-
-            return MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.54);
-        }
-
-        private static Color? ResolveDefaultOverlayColor(ThemeData theme, MaterialState states)
-        {
-            if (!theme.UseMaterial3)
-            {
-                var baseColor = states.HasFlag(MaterialState.Selected)
-                    ? theme.PrimaryColor
-                    : MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.54);
-                if (states.HasFlag(MaterialState.Pressed))
-                {
-                    return MaterialButtonCore.ApplyOpacity(baseColor, 0.12);
-                }
-
-                if (states.HasFlag(MaterialState.Hovered))
-                {
-                    return MaterialButtonCore.ApplyOpacity(baseColor, 0.08);
-                }
-
-                if (states.HasFlag(MaterialState.Focused))
-                {
-                    return MaterialButtonCore.ApplyOpacity(baseColor, 0.12);
-                }
-
-                return null;
-            }
-
-            if (states.HasFlag(MaterialState.Selected))
-            {
-                if (states.HasFlag(MaterialState.Pressed))
-                {
-                    return MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.10);
-                }
-
-                if (states.HasFlag(MaterialState.Hovered))
-                {
-                    return MaterialButtonCore.ApplyOpacity(theme.PrimaryColor, 0.08);
-                }
-
-                if (states.HasFlag(MaterialState.Focused))
-                {
-                    return MaterialButtonCore.ApplyOpacity(theme.PrimaryColor, 0.10);
-                }
-
-                return null;
-            }
-
-            if (states.HasFlag(MaterialState.Pressed))
-            {
-                return MaterialButtonCore.ApplyOpacity(theme.PrimaryColor, 0.10);
-            }
-
-            if (states.HasFlag(MaterialState.Hovered))
-            {
-                return MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.08);
-            }
-
-            if (states.HasFlag(MaterialState.Focused))
-            {
-                return MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.10);
-            }
-
-            return null;
-        }
-
-        private bool IsAdaptiveCupertino(ThemeData theme)
-        {
-            if (CurrentWidget._radioType != RadioType.Adaptive)
-            {
-                return false;
-            }
-
-            return theme.Platform is TargetPlatform.IOS or TargetPlatform.MacOS;
-        }
-
-        private static MaterialState BuildStates(bool enabled, bool selected)
-        {
-            var states = enabled
-                ? MaterialState.None
-                : MaterialState.Disabled;
-
-            if (selected)
-            {
-                states |= MaterialState.Selected;
-            }
-
-            return states;
-        }
+    public override bool ShouldRepaint(CustomPainter oldDelegate)
+    {
+        return !ReferenceEquals(this, oldDelegate);
     }
 }

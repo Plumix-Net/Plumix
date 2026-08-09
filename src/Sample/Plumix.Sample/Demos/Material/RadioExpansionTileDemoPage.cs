@@ -20,6 +20,7 @@ internal sealed class RadioExpansionTileDemoPageState : State
     private bool _toggleable;
     private bool _adaptive;
     private bool _maintainState;
+    private bool _useMaterial3 = true;
     private bool _expanded;
     private ListTileControlAffinity _affinity = ListTileControlAffinity.Leading;
 
@@ -76,9 +77,17 @@ internal sealed class RadioExpansionTileDemoPageState : State
                             () => SetState(() => _maintainState = !_maintainState),
                             112,
                             Color.Parse("#FFEAF6F7")),
+                        BuildControlButton(
+                            _useMaterial3 ? "Material 3" : "Material 2",
+                            () => SetState(() => _useMaterial3 = !_useMaterial3),
+                            104,
+                            Color.Parse("#FFFFF2CC")),
                     ]),
                 new Text(
-                    $"selected={_selectedSchedule ?? "null"}, expanded={_expanded.ToString().ToLowerInvariant()}, affinity={_affinity.ToString().ToLowerInvariant()}, adaptive={_adaptive.ToString().ToLowerInvariant()}, maintainState={_maintainState.ToString().ToLowerInvariant()}",
+                    $"selected={_selectedSchedule ?? "null"}, expanded={_expanded.ToString().ToLowerInvariant()}, "
+                    + $"affinity={_affinity.ToString().ToLowerInvariant()}, "
+                    + $"adaptive={_adaptive.ToString().ToLowerInvariant()}, "
+                    + $"material3={_useMaterial3.ToString().ToLowerInvariant()}",
                     fontSize: 12,
                     color: Color.Parse("#FF607D8B")),
                 new Expanded(
@@ -88,7 +97,7 @@ internal sealed class RadioExpansionTileDemoPageState : State
                             crossAxisAlignment: CrossAxisAlignment.Stretch,
                             children:
                             [
-                                BuildRadioGroup(),
+                                BuildRadioGroup(context),
                                 new ExpansionTile(
                                     title: new Text("Advanced schedule options"),
                                     subtitle: new Text("Tap row or use the controller button."),
@@ -111,21 +120,38 @@ internal sealed class RadioExpansionTileDemoPageState : State
             ]);
     }
 
-    private Widget BuildRadioGroup()
+    private Widget BuildRadioGroup(BuildContext context)
     {
-        return new RadioGroup<string>(
-            groupValue: _selectedSchedule,
-            onChanged: value => SetState(() => _selectedSchedule = value),
-            child: new Column(
-                crossAxisAlignment: CrossAxisAlignment.Stretch,
-                children:
-                [
-                    BuildRadioTile("daily", "Daily", Icons.Star),
-                    BuildRadioTile("weekly", "Weekly", Icons.StarOutline),
-                ]));
+        ThemeData ambient = Theme.Of(context);
+        ThemeData radioTheme = ambient with
+        {
+            UseMaterial3 = _useMaterial3,
+            ColorScheme = ambient.ColorScheme.CopyWith(
+                primary: Color.Parse("#FF6750A4"),
+                secondary: Color.Parse("#FF006C4C"),
+                onSurface: Color.Parse("#FF1D1B20"),
+                onSurfaceVariant: Color.Parse("#FF49454F"))
+        };
+        return new Theme(
+            data: radioTheme,
+            child: new RadioGroup<string>(
+                groupValue: _selectedSchedule,
+                onChanged: value => SetState(() => _selectedSchedule = value),
+                child: new Column(
+                    crossAxisAlignment: CrossAxisAlignment.Stretch,
+                    children:
+                    [
+                        BuildRadioTile("daily", "Daily", Icons.Star),
+                        BuildRadioTile("weekly", "Weekly", Icons.StarOutline),
+                        BuildRadioTile("paused", "Paused (disabled)", Icons.InfoOutline, enabled: false),
+                    ])));
     }
 
-    private Widget BuildRadioTile(string value, string label, IconData icon)
+    private Widget BuildRadioTile(
+        string value,
+        string label,
+        IconData icon,
+        bool? enabled = null)
     {
         return _adaptive
             ? RadioListTile<string>.Adaptive(
@@ -134,6 +160,7 @@ internal sealed class RadioExpansionTileDemoPageState : State
                 title: new Text(label),
                 secondary: new Icon(icon),
                 selected: _selectedSchedule == value,
+                enabled: enabled,
                 controlAffinity: _affinity,
                 useCupertinoCheckmarkStyle: true)
             : new RadioListTile<string>(
@@ -142,6 +169,7 @@ internal sealed class RadioExpansionTileDemoPageState : State
                 title: new Text(label),
                 secondary: new Icon(icon),
                 selected: _selectedSchedule == value,
+                enabled: enabled,
                 controlAffinity: _affinity,
                 selectedTileColor: Color.Parse("#FFE8DEF8"));
     }

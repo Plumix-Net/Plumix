@@ -7,7 +7,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/material/radio_list_tile.dart
+// Dart parity source: flutter/packages/flutter/lib/src/material/radio_list_tile.dart
 public sealed class RadioListTile<T> : StatefulWidget
 {
     private readonly bool _adaptive;
@@ -32,11 +32,13 @@ public sealed class RadioListTile<T> : StatefulWidget
         bool selected = false,
         ListTileControlAffinity? controlAffinity = null,
         bool autofocus = false,
-        Thickness? contentPadding = null,
-        BorderRadius? shape = null,
+        EdgeInsetsGeometry? contentPadding = null,
+        ShapeBorder? shape = null,
         Color? tileColor = null,
         Color? selectedTileColor = null,
+        VisualDensity? visualDensity = null,
         FocusNode? focusNode = null,
+        MaterialStatesController? statesController = null,
         Action<bool>? onFocusChange = null,
         bool? enableFeedback = null,
         double? horizontalTitleGap = null,
@@ -44,9 +46,11 @@ public sealed class RadioListTile<T> : StatefulWidget
         double? minLeadingWidth = null,
         double? minTileHeight = null,
         double radioScaleFactor = 1.0,
+        ListTileTitleAlignment? titleAlignment = null,
         bool? enabled = null,
+        bool internalAddSemanticForOnTap = false,
         MaterialStateProperty<Color?>? radioBackgroundColor = null,
-        BorderSide? radioSide = null,
+        WidgetStateBorderSide? radioSide = null,
         MaterialStateProperty<double?>? radioInnerRadius = null,
         Key? key = null) : this(
             value,
@@ -72,7 +76,9 @@ public sealed class RadioListTile<T> : StatefulWidget
             shape,
             tileColor,
             selectedTileColor,
+            visualDensity,
             focusNode,
+            statesController,
             onFocusChange,
             enableFeedback,
             horizontalTitleGap,
@@ -80,7 +86,9 @@ public sealed class RadioListTile<T> : StatefulWidget
             minLeadingWidth,
             minTileHeight,
             radioScaleFactor,
+            titleAlignment,
             enabled,
+            internalAddSemanticForOnTap,
             useCupertinoCheckmarkStyle: false,
             radioBackgroundColor,
             radioSide,
@@ -110,11 +118,13 @@ public sealed class RadioListTile<T> : StatefulWidget
         bool selected,
         ListTileControlAffinity? controlAffinity,
         bool autofocus,
-        Thickness? contentPadding,
-        BorderRadius? shape,
+        EdgeInsetsGeometry? contentPadding,
+        ShapeBorder? shape,
         Color? tileColor,
         Color? selectedTileColor,
+        VisualDensity? visualDensity,
         FocusNode? focusNode,
+        MaterialStatesController? statesController,
         Action<bool>? onFocusChange,
         bool? enableFeedback,
         double? horizontalTitleGap,
@@ -122,10 +132,12 @@ public sealed class RadioListTile<T> : StatefulWidget
         double? minLeadingWidth,
         double? minTileHeight,
         double radioScaleFactor,
+        ListTileTitleAlignment? titleAlignment,
         bool? enabled,
+        bool internalAddSemanticForOnTap,
         bool useCupertinoCheckmarkStyle,
         MaterialStateProperty<Color?>? radioBackgroundColor,
-        BorderSide? radioSide,
+        WidgetStateBorderSide? radioSide,
         MaterialStateProperty<double?>? radioInnerRadius,
         bool adaptive,
         Key? key) : base(key)
@@ -133,11 +145,6 @@ public sealed class RadioListTile<T> : StatefulWidget
         if (isThreeLine == true && subtitle is null)
         {
             throw new ArgumentException("RadioListTile with isThreeLine=true requires a subtitle.", nameof(isThreeLine));
-        }
-
-        if (!double.IsFinite(radioScaleFactor) || radioScaleFactor <= 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(radioScaleFactor), "Radio scale factor must be finite and positive.");
         }
 
         Value = value;
@@ -163,7 +170,9 @@ public sealed class RadioListTile<T> : StatefulWidget
         Shape = shape;
         TileColor = tileColor;
         SelectedTileColor = selectedTileColor;
+        VisualDensity = visualDensity;
         FocusNode = focusNode;
+        StatesController = statesController;
         OnFocusChange = onFocusChange;
         EnableFeedback = enableFeedback;
         HorizontalTitleGap = horizontalTitleGap;
@@ -171,7 +180,9 @@ public sealed class RadioListTile<T> : StatefulWidget
         MinLeadingWidth = minLeadingWidth;
         MinTileHeight = minTileHeight;
         RadioScaleFactor = radioScaleFactor;
+        TitleAlignment = titleAlignment;
         Enabled = enabled;
+        InternalAddSemanticForOnTap = internalAddSemanticForOnTap;
         UseCupertinoCheckmarkStyle = useCupertinoCheckmarkStyle;
         RadioBackgroundColor = radioBackgroundColor;
         RadioSide = radioSide;
@@ -198,11 +209,13 @@ public sealed class RadioListTile<T> : StatefulWidget
     public bool Selected { get; }
     public ListTileControlAffinity? ControlAffinity { get; }
     public bool Autofocus { get; }
-    public Thickness? ContentPadding { get; }
-    public BorderRadius? Shape { get; }
+    public EdgeInsetsGeometry? ContentPadding { get; }
+    public ShapeBorder? Shape { get; }
     public Color? TileColor { get; }
     public Color? SelectedTileColor { get; }
+    public VisualDensity? VisualDensity { get; }
     public FocusNode? FocusNode { get; }
+    public MaterialStatesController? StatesController { get; }
     public Action<bool>? OnFocusChange { get; }
     public bool? EnableFeedback { get; }
     public double? HorizontalTitleGap { get; }
@@ -210,10 +223,12 @@ public sealed class RadioListTile<T> : StatefulWidget
     public double? MinLeadingWidth { get; }
     public double? MinTileHeight { get; }
     public double RadioScaleFactor { get; }
+    public ListTileTitleAlignment? TitleAlignment { get; }
     public bool? Enabled { get; }
+    public bool InternalAddSemanticForOnTap { get; }
     public bool UseCupertinoCheckmarkStyle { get; }
     public MaterialStateProperty<Color?>? RadioBackgroundColor { get; }
-    public BorderSide? RadioSide { get; }
+    public WidgetStateBorderSide? RadioSide { get; }
     public MaterialStateProperty<double?>? RadioInnerRadius { get; }
 
     public static RadioListTile<T> Adaptive(
@@ -236,11 +251,13 @@ public sealed class RadioListTile<T> : StatefulWidget
         bool selected = false,
         ListTileControlAffinity? controlAffinity = null,
         bool autofocus = false,
-        Thickness? contentPadding = null,
-        BorderRadius? shape = null,
+        EdgeInsetsGeometry? contentPadding = null,
+        ShapeBorder? shape = null,
         Color? tileColor = null,
         Color? selectedTileColor = null,
+        VisualDensity? visualDensity = null,
         FocusNode? focusNode = null,
+        MaterialStatesController? statesController = null,
         Action<bool>? onFocusChange = null,
         bool? enableFeedback = null,
         double? horizontalTitleGap = null,
@@ -248,10 +265,12 @@ public sealed class RadioListTile<T> : StatefulWidget
         double? minLeadingWidth = null,
         double? minTileHeight = null,
         double radioScaleFactor = 1.0,
+        ListTileTitleAlignment? titleAlignment = null,
         bool? enabled = null,
         bool useCupertinoCheckmarkStyle = false,
+        bool internalAddSemanticForOnTap = false,
         MaterialStateProperty<Color?>? radioBackgroundColor = null,
-        BorderSide? radioSide = null,
+        WidgetStateBorderSide? radioSide = null,
         MaterialStateProperty<double?>? radioInnerRadius = null,
         Key? key = null)
     {
@@ -279,7 +298,9 @@ public sealed class RadioListTile<T> : StatefulWidget
             shape,
             tileColor,
             selectedTileColor,
+            visualDensity,
             focusNode,
+            statesController,
             onFocusChange,
             enableFeedback,
             horizontalTitleGap,
@@ -287,7 +308,9 @@ public sealed class RadioListTile<T> : StatefulWidget
             minLeadingWidth,
             minTileHeight,
             radioScaleFactor,
+            titleAlignment,
             enabled,
+            internalAddSemanticForOnTap,
             useCupertinoCheckmarkStyle,
             radioBackgroundColor,
             radioSide,
@@ -314,6 +337,7 @@ public sealed class RadioListTile<T> : StatefulWidget
             ? Radio<T>.Adaptive(
                 value: Value,
                 groupValue: effectiveGroupValue,
+                mouseCursor: MouseCursor,
                 toggleable: Toggleable,
                 activeColor: ActiveColor,
                 fillColor: FillColor,
@@ -331,6 +355,7 @@ public sealed class RadioListTile<T> : StatefulWidget
             : new Radio<T>(
                 value: Value,
                 groupValue: effectiveGroupValue,
+                mouseCursor: MouseCursor,
                 toggleable: Toggleable,
                 activeColor: ActiveColor,
                 fillColor: FillColor,
@@ -348,12 +373,10 @@ public sealed class RadioListTile<T> : StatefulWidget
 
         if (RadioScaleFactor != 1.0)
         {
-            double center = Radio<T>.Width / 2.0;
             var scale = new Matrix(RadioScaleFactor, 0, 0, RadioScaleFactor, 0, 0);
             control = new Plumix.Widgets.Transform(
-                transform: Matrix.CreateTranslation(center, center)
-                           * scale
-                           * Matrix.CreateTranslation(-center, -center),
+                transform: scale,
+                alignment: Alignment.Center,
                 child: control);
         }
 
@@ -366,7 +389,7 @@ public sealed class RadioListTile<T> : StatefulWidget
         var selectedStates = Selected ? MaterialState.Selected : MaterialState.None;
         var selectedColor = ActiveColor
                             ?? RadioTheme.Of(context).FillColor?.Resolve(selectedStates)
-                            ?? Theme.Of(context).SecondaryColor;
+                            ?? Theme.Of(context).ColorScheme.Secondary;
 
         var tile = new ListTile(
             selectedColor: selectedColor,
@@ -380,30 +403,24 @@ public sealed class RadioListTile<T> : StatefulWidget
             shape: Shape,
             tileColor: TileColor,
             selectedTileColor: SelectedTileColor,
+            visualDensity: VisualDensity,
             onTap: isEnabled ? HandleTileTap : null,
             selected: Selected,
             autofocus: Autofocus,
             contentPadding: ContentPadding,
             focusNode: focusNode,
+            statesController: StatesController,
             mouseCursor: MouseCursor,
             onFocusChange: OnFocusChange,
             enableFeedback: EnableFeedback,
             horizontalTitleGap: HorizontalTitleGap,
             minVerticalPadding: MinVerticalPadding,
             minLeadingWidth: MinLeadingWidth,
-            minTileHeight: MinTileHeight);
+            minTileHeight: MinTileHeight,
+            titleAlignment: TitleAlignment,
+            internalAddSemanticForOnTap: InternalAddSemanticForOnTap);
 
-        var flags = isChecked ? SemanticsFlags.IsChecked : SemanticsFlags.None;
-        if (isEnabled)
-        {
-            flags |= SemanticsFlags.IsEnabled;
-        }
-
-        return new Semantics(
-            child: new MergeSemantics(child: tile),
-            flags: flags,
-            onTap: isEnabled ? HandleTileTap : null,
-            container: true);
+        return new MergeSemantics(child: tile);
 
         void HandleChange(T? value)
         {

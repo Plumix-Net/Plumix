@@ -15,6 +15,7 @@ class _RadioExpansionTileDemoPageState
   bool _toggleable = false;
   bool _adaptive = false;
   bool _maintainState = false;
+  bool _useMaterial3 = true;
   bool _expanded = false;
   ListTileControlAffinity _affinity = ListTileControlAffinity.leading;
 
@@ -82,10 +83,18 @@ class _RadioExpansionTileDemoPageState
               112,
               const Color(0xFFEAF6F7),
             ),
+            _buildControlButton(
+              _useMaterial3 ? 'Material 3' : 'Material 2',
+              () => setState(() => _useMaterial3 = !_useMaterial3),
+              104,
+              const Color(0xFFFFF2CC),
+            ),
           ],
         ),
         Text(
-          'selected=$_selectedSchedule, expanded=$_expanded, affinity=${_affinity.name}, adaptive=$_adaptive, maintainState=$_maintainState',
+          'selected=$_selectedSchedule, expanded=$_expanded, '
+          'affinity=${_affinity.name}, adaptive=$_adaptive, '
+          'material3=$_useMaterial3',
           style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
         ),
         Expanded(
@@ -133,20 +142,46 @@ class _RadioExpansionTileDemoPageState
   }
 
   Widget _buildRadioGroup() {
-    return RadioGroup<String>(
-      groupValue: _selectedSchedule,
-      onChanged: (String? value) => setState(() => _selectedSchedule = value),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          _buildRadioTile('daily', 'Daily', Icons.star),
-          _buildRadioTile('weekly', 'Weekly', Icons.star_outline),
-        ],
+    final ThemeData ambient = Theme.of(context);
+    final ColorScheme radioScheme = ambient.colorScheme.copyWith(
+      primary: const Color(0xFF6750A4),
+      secondary: const Color(0xFF006C4C),
+      onSurface: const Color(0xFF1D1B20),
+      onSurfaceVariant: const Color(0xFF49454F),
+    );
+    final ThemeData radioTheme = ThemeData.from(
+      colorScheme: radioScheme,
+      textTheme: ambient.textTheme,
+      useMaterial3: _useMaterial3,
+    );
+    return Theme(
+      data: radioTheme,
+      child: RadioGroup<String>(
+        groupValue: _selectedSchedule,
+        onChanged: (String? value) => setState(() => _selectedSchedule = value),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            _buildRadioTile('daily', 'Daily', Icons.star),
+            _buildRadioTile('weekly', 'Weekly', Icons.star_outline),
+            _buildRadioTile(
+              'paused',
+              'Paused (disabled)',
+              Icons.info_outline,
+              enabled: false,
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildRadioTile(String value, String label, IconData icon) {
+  Widget _buildRadioTile(
+    String value,
+    String label,
+    IconData icon, {
+    bool? enabled,
+  }) {
     if (_adaptive) {
       return RadioListTile<String>.adaptive(
         value: value,
@@ -154,6 +189,7 @@ class _RadioExpansionTileDemoPageState
         title: Text(label),
         secondary: Icon(icon),
         selected: _selectedSchedule == value,
+        enabled: enabled,
         controlAffinity: _affinity,
         useCupertinoCheckmarkStyle: true,
       );
@@ -164,6 +200,7 @@ class _RadioExpansionTileDemoPageState
       title: Text(label),
       secondary: Icon(icon),
       selected: _selectedSchedule == value,
+      enabled: enabled,
       controlAffinity: _affinity,
       selectedTileColor: const Color(0xFFE8DEF8),
     );

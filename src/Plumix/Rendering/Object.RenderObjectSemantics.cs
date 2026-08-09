@@ -434,18 +434,24 @@ internal sealed class RenderObjectSemantics
         SemanticsConfiguration configuration,
         List<SemanticsNode> children)
     {
-        if (children.Count == 0)
-        {
-            return;
-        }
-
+        var pending = new Queue<SemanticsNode>(children);
         var childrenToKeep = new List<SemanticsNode>();
-        foreach (var child in children)
+        while (pending.Count > 0)
         {
+            SemanticsNode child = pending.Dequeue();
             var childConfiguration = CreateConfigurationFromSemanticsNode(child);
             if (configuration.IsCompatibleWith(childConfiguration))
             {
                 configuration.Absorb(childConfiguration);
+                if (!ContainsCheckableSemantics(child))
+                {
+                    continue;
+                }
+
+                foreach (SemanticsNode grandchild in child.Children)
+                {
+                    pending.Enqueue(grandchild);
+                }
             }
             else
             {
@@ -455,6 +461,21 @@ internal sealed class RenderObjectSemantics
 
         children.Clear();
         children.AddRange(childrenToKeep);
+    }
+
+    private static bool ContainsCheckableSemantics(SemanticsNode node)
+    {
+        foreach (SemanticsNode child in node.Children)
+        {
+            if (child.Flags.HasFlag(SemanticsFlags.HasCheckedState)
+                || child.Flags.HasFlag(SemanticsFlags.IsCheckStateMixed)
+                || ContainsCheckableSemantics(child))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static void MergeNonBoundaryChildSemanticsIntoConfiguration(

@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using Avalonia;
+using Plumix;
 using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
@@ -132,34 +134,45 @@ public sealed class RawRadio<T> : StatefulWidget
     }
 }
 
-public sealed class RawRadioState<T> : State, RadioClient<T>
+public sealed class RawRadioState<T> : ToggleableState, RadioClient<T>
 {
-    private readonly HashSet<WidgetState> _states = [];
-    private AnimationController? _positionController;
-    private AnimationController? _reactionController;
     private RadioGroupRegistry<T>? _registry;
-    private IDisposable? _mouseCursorHandle;
-    private bool _isHovered;
-    private bool _isFocused;
-    private bool _isPressed;
 
     private RawRadio<T> CurrentWidget => (RawRadio<T>)StateWidget;
 
-    public IReadOnlySet<WidgetState> States => _states;
+    protected override bool IsInteractive => CurrentWidget.Enabled && _registry is not null;
 
-    public double Position => _positionController?.Evaluate() ?? (Selected ? 1.0 : 0.0);
+    protected override bool IsValueSelected => Selected;
 
-    public double Reaction => _reactionController?.Evaluate() ?? 0.0;
+    public IReadOnlySet<WidgetState> States => CurrentWidgetStates;
+
+    public new double Position => base.Position.Value;
+
+    public new double Reaction => base.Reaction.Value;
+
+    public double HoverFade => ReactionHoverFade.Value;
+
+    public double FocusFade => ReactionFocusFade.Value;
+
+    public Point? PressPosition => DownPosition;
+
+    internal Animation<double> PositionAnimation => base.Position;
+
+    internal Animation<double> ReactionAnimation => base.Reaction;
+
+    internal Animation<double> ReactionHoverFadeAnimation => ReactionHoverFade;
+
+    internal Animation<double> ReactionFocusFadeAnimation => ReactionFocusFade;
 
     public bool Selected => EqualityComparer<T?>.Default.Equals(
         CurrentWidget.Value,
         _registry is null ? default : _registry.GroupValue);
 
-    public bool Hovered => _isHovered;
+    public bool Hovered => States.Contains(WidgetState.Hovered);
 
-    public bool Focused => _isFocused;
+    public bool Focused => States.Contains(WidgetState.Focused);
 
-    public bool Pressed => _isPressed;
+    public bool Pressed => States.Contains(WidgetState.Pressed);
 
     public bool Tristate => CurrentWidget.Toggleable;
 
@@ -171,124 +184,57 @@ public sealed class RawRadioState<T> : State, RadioClient<T>
 
     public override void InitState()
     {
-        _positionController = new AnimationController(TimeSpan.FromMilliseconds(200), this)
-        {
-            Curve = Curves.Linear
-        };
-        _positionController.Changed += HandleAnimationChanged;
-
-        _reactionController = new AnimationController(TimeSpan.FromMilliseconds(100), this)
-        {
-            ReverseDuration = TimeSpan.FromMilliseconds(200),
-            Curve = Curves.FastOutSlowIn
-        };
-        _reactionController.Changed += HandleAnimationChanged;
-
-        AttachFocusNode();
         SetRegistry(CurrentWidget.GroupRegistry);
-        _positionController.SetValue(Selected ? 1.0 : 0.0);
-        SyncStates();
+        base.InitState();
     }
 
     public override void DidUpdateWidget(StatefulWidget oldWidget)
     {
         var oldRadio = (RawRadio<T>)oldWidget;
-        if (!ReferenceEquals(oldRadio.FocusNode, CurrentWidget.FocusNode))
-        {
-            DetachFocusNode(oldRadio.FocusNode);
-            AttachFocusNode();
-        }
-
         SetRegistry(CurrentWidget.GroupRegistry);
+        base.DidUpdateWidget(oldWidget);
         AnimateToValue();
-
-        if (!Enabled)
-        {
-            _isPressed = false;
-            _reactionController?.Reverse();
-            ReleaseMouseCursor();
-        }
-
-        SyncStates();
     }
 
     public override Widget Build(BuildContext context)
     {
-        SyncStates();
         Widget result = CurrentWidget.Builder(context, this);
-        Action? onTap = Enabled && _registry is not null ? HandleTap : null;
-
-        if (Enabled)
-        {
-            result = new GestureDetector(
-                behavior: HitTestBehavior.Opaque,
-                onTap: onTap,
-                child: result);
-            result = new Listener(
-                behavior: HitTestBehavior.Opaque,
-                onPointerDown: HandlePointerDown,
-                onPointerUp: HandlePointerUp,
-                onPointerCancel: HandlePointerCancel,
-                onPointerEnter: _ => SetHovered(true),
-                onPointerExit: _ => SetHovered(false),
-                child: result);
-        }
-
-        result = new Focus(
+        MouseCursor mouseCursor = CurrentWidget.MouseCursor.Resolve(CurrentWidgetStates);
+        result = BuildToggleableChild(
+            child: result,
+            mouseCursor: mouseCursor,
+            onTap: HandleTap,
             focusNode: FocusNode,
-            autofocus: CurrentWidget.Autofocus,
-            canRequestFocus: Enabled,
-            child: result);
+            autofocus: CurrentWidget.Autofocus);
 
         SemanticsFlags flags = SemanticsFlags.IsInMutuallyExclusiveGroup;
-        if (Enabled)
+        if (IsInteractive)
         {
             flags |= SemanticsFlags.IsEnabled;
         }
 
+        bool applePlatform = PlatformDefaults.TargetPlatform is TargetPlatform.IOS or TargetPlatform.MacOS;
+        string? hint = applePlatform && !Selected
+            ? Localizations.MaybeOf<WidgetsLocalizations>(context)?.RadioButtonUnselectedLabel
+            : null;
         return new Semantics(
             child: result,
             flags: flags,
-            onTap: onTap,
-            @checked: Selected);
+            hint: hint,
+            onTap: IsInteractive ? HandleTap : null,
+            @checked: Selected,
+            selected: applePlatform ? Selected : null);
     }
 
     public override void Dispose()
     {
-        ReleaseMouseCursor();
-        DetachFocusNode(FocusNode);
         SetRegistry(null);
-
-        if (_positionController is not null)
-        {
-            _positionController.Changed -= HandleAnimationChanged;
-            _positionController.Dispose();
-            _positionController = null;
-        }
-
-        if (_reactionController is not null)
-        {
-            _reactionController.Changed -= HandleAnimationChanged;
-            _reactionController.Dispose();
-            _reactionController = null;
-        }
+        base.Dispose();
     }
 
     public void AnimateToValue()
     {
-        if (_positionController is null)
-        {
-            return;
-        }
-
-        if (Selected)
-        {
-            _positionController.Forward();
-        }
-        else
-        {
-            _positionController.Reverse();
-        }
+        AnimateToValue(Selected, CurrentWidget.Toggleable);
     }
 
     private void SetRegistry(RadioGroupRegistry<T>? registry)
@@ -303,20 +249,9 @@ public sealed class RawRadioState<T> : State, RadioClient<T>
         _registry?.RegisterClient(this);
     }
 
-    private void AttachFocusNode()
-    {
-        FocusNode.AddListener(HandleFocusChanged);
-        _isFocused = FocusNode.HasFocus;
-    }
-
-    private void DetachFocusNode(FocusNode focusNode)
-    {
-        focusNode.RemoveListener(HandleFocusChanged);
-    }
-
     private void HandleTap()
     {
-        if (!Enabled || _registry is null)
+        if (!IsInteractive || _registry is null)
         {
             return;
         }
@@ -331,120 +266,7 @@ public sealed class RawRadioState<T> : State, RadioClient<T>
         {
             _registry.OnChanged(default);
         }
-    }
-
-    private void HandlePointerDown(PointerDownEvent pointerEvent)
-    {
-        if (!Enabled)
-        {
-            return;
-        }
-
-        SetPressed(true);
-        _reactionController?.Forward();
-    }
-
-    private void HandlePointerUp(PointerUpEvent pointerEvent)
-    {
-        SetPressed(false);
-        _reactionController?.Reverse();
-    }
-
-    private void HandlePointerCancel(PointerCancelEvent pointerEvent)
-    {
-        SetPressed(false);
-        _reactionController?.Reverse();
-    }
-
-    private void SetPressed(bool value)
-    {
-        if (_isPressed == value)
-        {
-            return;
-        }
-
-        SetState(() => _isPressed = value);
-        SyncStates();
-    }
-
-    private void SetHovered(bool value)
-    {
-        if (_isHovered == value)
-        {
-            return;
-        }
-
-        SetState(() => _isHovered = value);
-        SyncStates();
-        if (value)
-        {
-            UpdateMouseCursor();
-        }
-        else
-        {
-            ReleaseMouseCursor();
-        }
-    }
-
-    private void HandleFocusChanged()
-    {
-        bool focused = FocusNode.HasFocus;
-        if (_isFocused == focused)
-        {
-            return;
-        }
-
-        SetState(() => _isFocused = focused);
-        SyncStates();
-        if (_isHovered)
-        {
-            UpdateMouseCursor();
-        }
-    }
-
-    private void HandleAnimationChanged()
-    {
-        SetState(static () => { });
-    }
-
-    private void SyncStates()
-    {
-        _states.Clear();
-        if (!Enabled)
-        {
-            _states.Add(WidgetState.Disabled);
-        }
-
-        if (Selected)
-        {
-            _states.Add(WidgetState.Selected);
-        }
-
-        if (_isHovered)
-        {
-            _states.Add(WidgetState.Hovered);
-        }
-
-        if (_isFocused)
-        {
-            _states.Add(WidgetState.Focused);
-        }
-
-        if (_isPressed)
-        {
-            _states.Add(WidgetState.Pressed);
-        }
-    }
-
-    private void UpdateMouseCursor()
-    {
-        ReleaseMouseCursor();
-        _mouseCursorHandle = MouseCursorManager.PushCursor(CurrentWidget.MouseCursor.Resolve(_states));
-    }
-
-    private void ReleaseMouseCursor()
-    {
-        _mouseCursorHandle?.Dispose();
-        _mouseCursorHandle = null;
+        SemanticsService.SendEvent(
+            new TapSemanticEvent(Context.FindRenderObject()?.SemanticsNodeId));
     }
 }

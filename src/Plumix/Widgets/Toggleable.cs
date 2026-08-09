@@ -161,10 +161,27 @@ public abstract class ToggleableState : State
         FocusNode? focusNode,
         bool autofocus)
     {
-        _onTap = onTap;
         Widget result = new CustomPaint(
             painter: painter,
             size: size);
+
+        return BuildToggleableChild(
+            child: result,
+            mouseCursor: mouseCursor,
+            onTap: onTap,
+            focusNode: focusNode,
+            autofocus: autofocus);
+    }
+
+    protected Widget BuildToggleableChild(
+        Widget child,
+        MouseCursor mouseCursor,
+        Action onTap,
+        FocusNode? focusNode,
+        bool autofocus)
+    {
+        _onTap = onTap;
+        Widget result = child;
 
         if (IsInteractive)
         {
@@ -180,8 +197,11 @@ public abstract class ToggleableState : State
         var shortcuts = new Dictionary<ShortcutActivator, Intent>
         {
             [new SingleActivator("Space")] = new ActivateIntent(),
-            [new SingleActivator("Enter")] = new ActivateIntent(),
         };
+        if (!OperatingSystem.IsBrowser())
+        {
+            shortcuts[new SingleActivator("Enter")] = new ActivateIntent();
+        }
         var actions = new Dictionary<Type, FlutterAction>
         {
             [typeof(ActivateIntent)] = new CallbackAction<ActivateIntent>(_ =>

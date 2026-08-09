@@ -30,14 +30,15 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
     }
 
     [Fact]
-    public void RadioListTile_Constructor_ValidatesThreeLineAndScaleFactor()
+    public void RadioListTile_Constructor_ValidatesThreeLineAndRetainsScaleFactor()
     {
         Assert.Throws<ArgumentException>(() => new RadioListTile<string>(
             value: "a",
             isThreeLine: true));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new RadioListTile<string>(
+        var tile = new RadioListTile<string>(
             value: "a",
-            radioScaleFactor: 0));
+            radioScaleFactor: 0);
+        Assert.Equal(0, tile.RadioScaleFactor);
     }
 
     [Fact]
@@ -157,8 +158,8 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
         string secondaryGlyph = char.ConvertFromUtf32(Icons.InfoOutline.CodePoint);
         var tile = Assert.IsType<RenderListTile>(FindDescendant<RenderListTile>(harness.RenderView));
         Assert.Contains(
-            FindDescendants<RenderDecoratedBox>(tile.Leading),
-            box => Math.Abs(box.Size.Width - Radio<string>.Width) < 0.001);
+            FindDescendants<RenderCustomPaint>(tile.Leading),
+            paint => Math.Abs(paint.Size.Width - 40.0) < 0.001);
         Assert.Contains(
             FindDescendants<RenderParagraph>(tile.Trailing),
             paragraph => paragraph.Text == secondaryGlyph);
@@ -200,11 +201,9 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
 
         var transform = FindDescendant<RenderTransform>(harness.RenderView);
         Assert.NotNull(transform);
-        double center = Radio<string>.Width / 2.0;
-        var expected = Matrix.CreateTranslation(center, center)
-                       * new Matrix(scaleFactor, 0, 0, scaleFactor, 0, 0)
-                       * Matrix.CreateTranslation(-center, -center);
+        var expected = new Matrix(scaleFactor, 0, 0, scaleFactor, 0, 0);
         Assert.Equal(expected, transform!.Transform);
+        Assert.Equal(Alignment.Center, transform.Alignment);
     }
 
     [Fact]
@@ -224,6 +223,41 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
 
         Assert.NotNull(FindParagraphByText(harness.RenderView, "Adaptive radio tile"));
         Assert.NotNull(FindDescendant<RenderStrokeGlyph>(harness.RenderView));
+    }
+
+    [Fact]
+    public void RadioListTile_AdaptiveIOS_RegistersWithRadioGroupForKeyboardTraversal()
+    {
+        string? changed = null;
+        var firstFocus = new FocusNode();
+        var secondFocus = new FocusNode();
+        using var harness = new WidgetRenderHarness(
+            BuildThemed(
+                new RadioGroup<string>(
+                    groupValue: "a",
+                    onChanged: value => changed = value,
+                    child: new Column(
+                        children:
+                        [
+                            RadioListTile<string>.Adaptive(
+                                value: "a",
+                                title: new Text("Adaptive A"),
+                                focusNode: firstFocus),
+                            RadioListTile<string>.Adaptive(
+                                value: "b",
+                                title: new Text("Adaptive B"),
+                                focusNode: secondFocus),
+                        ])),
+                ThemeData.Light with { Platform = TargetPlatform.IOS }));
+
+        harness.Pump(new Size(360, 180));
+        Assert.True(firstFocus.RequestFocus());
+        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("ArrowRight", isDown: true)));
+
+        Assert.Equal("b", changed);
+        Assert.True(secondFocus.HasFocus);
+        firstFocus.Dispose();
+        secondFocus.Dispose();
     }
 
     [Fact]

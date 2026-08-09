@@ -909,15 +909,17 @@ public sealed partial record RadioThemeData
         }
 
         return new RadioThemeData(
+            MouseCursor: t < 0.5 ? a?.MouseCursor : b?.MouseCursor,
             FillColor: MaterialThemeLerp.ColorStateProperty(a?.FillColor, b?.FillColor, t),
             OverlayColor: MaterialThemeLerp.ColorStateProperty(a?.OverlayColor, b?.OverlayColor, t),
-            MaterialTapTargetSize: t < 0.5 ? a?.MaterialTapTargetSize : b?.MaterialTapTargetSize,
             SplashRadius: MaterialThemeLerp.Double(a?.SplashRadius, b?.SplashRadius, t),
+            MaterialTapTargetSize: t < 0.5 ? a?.MaterialTapTargetSize : b?.MaterialTapTargetSize,
+            VisualDensity: t < 0.5 ? a?.VisualDensity : b?.VisualDensity,
             BackgroundColor: MaterialThemeLerp.ColorStateProperty(
                 a?.BackgroundColor,
                 b?.BackgroundColor,
                 t),
-            Side: MaterialThemeLerp.BorderSide(a?.Side, b?.Side, t),
+            Side: WidgetStateBorderSide.Lerp(a?.Side, b?.Side, t),
             InnerRadius: MaterialThemeLerp.DoubleStateProperty(a?.InnerRadius, b?.InnerRadius, t));
     }
 }

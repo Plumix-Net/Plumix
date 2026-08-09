@@ -45,9 +45,12 @@ public sealed class CupertinoRadio<T> : StatefulWidget
         Color? inactiveColor = null,
         Color? fillColor = null,
         Color? focusColor = null,
+        MouseCursor? mouseCursor = null,
         bool useCheckmarkStyle = false,
         FocusNode? focusNode = null,
         bool autofocus = false,
+        bool? enabled = null,
+        RadioGroupRegistry<T>? groupRegistry = null,
         Size? tapTargetSize = null,
         bool isDark = false,
         Key? key = null) : base(key)
@@ -60,9 +63,12 @@ public sealed class CupertinoRadio<T> : StatefulWidget
         InactiveColor = inactiveColor;
         FillColor = fillColor;
         FocusColor = focusColor;
+        MouseCursor = mouseCursor;
         UseCheckmarkStyle = useCheckmarkStyle;
         FocusNode = focusNode;
         Autofocus = autofocus;
+        Enabled = enabled;
+        GroupRegistry = groupRegistry;
         TapTargetSize = tapTargetSize;
         IsDark = isDark;
     }
@@ -83,11 +89,17 @@ public sealed class CupertinoRadio<T> : StatefulWidget
 
     public Color? FocusColor { get; }
 
+    public MouseCursor? MouseCursor { get; }
+
     public bool UseCheckmarkStyle { get; }
 
     public FocusNode? FocusNode { get; }
 
     public bool Autofocus { get; }
+
+    public bool? Enabled { get; }
+
+    public RadioGroupRegistry<T>? GroupRegistry { get; }
 
     public Size? TapTargetSize { get; }
 
@@ -98,25 +110,37 @@ public sealed class CupertinoRadio<T> : StatefulWidget
         return new CupertinoRadioState();
     }
 
-    private sealed class CupertinoRadioState : State
+    private sealed class CupertinoRadioState : State, RadioClient<T>
     {
         private FocusNode? _focusNode;
         private bool _ownsFocusNode;
         private bool _hasFocus;
         private bool _isPressed;
+        private RadioGroupRegistry<T>? _registry;
 
         private CupertinoRadio<T> CurrentWidget => (CupertinoRadio<T>)StateWidget;
 
-        private bool Enabled => CurrentWidget.OnChanged is not null;
+        private bool IsEnabled => CurrentWidget.Enabled
+                                  ?? (CurrentWidget.OnChanged is not null || _registry is not null);
+
+        public bool Tristate => CurrentWidget.Toggleable;
+
+        public T RadioValue => CurrentWidget.Value;
+
+        public bool Enabled => IsEnabled;
+
+        public FocusNode FocusNode => _focusNode!;
 
         public override void InitState()
         {
             AttachFocusNode(CurrentWidget.FocusNode);
+            SetRegistry(CurrentWidget.GroupRegistry);
         }
 
         public override void DidUpdateWidget(StatefulWidget oldWidget)
         {
             var oldRadio = (CupertinoRadio<T>)oldWidget;
+            SetRegistry(CurrentWidget.GroupRegistry);
             if (!ReferenceEquals(oldRadio.FocusNode, CurrentWidget.FocusNode))
             {
                 DetachFocusNode(disposeOwned: true);
@@ -136,6 +160,7 @@ public sealed class CupertinoRadio<T> : StatefulWidget
 
         public override void Dispose()
         {
+            SetRegistry(null);
             DetachFocusNode(disposeOwned: true);
         }
 
@@ -222,12 +247,17 @@ public sealed class CupertinoRadio<T> : StatefulWidget
                     child: result);
             }
 
-            return new Focus(
+            Widget focusedResult = new Focus(
                 focusNode: _focusNode,
                 autofocus: CurrentWidget.Autofocus,
                 canRequestFocus: Enabled,
                 onKeyEvent: HandleKeyEvent,
                 child: result);
+            return CurrentWidget.MouseCursor is null
+                ? focusedResult
+                : new MouseRegion(
+                    cursor: CurrentWidget.MouseCursor,
+                    child: focusedResult);
         }
 
         private Widget BuildIndicator(bool selected, Color innerColor, Color activeColor)
@@ -253,7 +283,7 @@ public sealed class CupertinoRadio<T> : StatefulWidget
 
         private void HandleTap()
         {
-            if (CurrentWidget.OnChanged is null)
+            if (!Enabled)
             {
                 return;
             }
@@ -262,13 +292,13 @@ public sealed class CupertinoRadio<T> : StatefulWidget
             {
                 if (CurrentWidget.Toggleable)
                 {
-                    CurrentWidget.OnChanged.Invoke(default);
+                    NotifyChanged(default);
                 }
 
                 return;
             }
 
-            CurrentWidget.OnChanged.Invoke(CurrentWidget.Value);
+            NotifyChanged(CurrentWidget.Value);
         }
 
         private void HandlePointerDown(PointerDownEvent @event)
@@ -336,7 +366,31 @@ public sealed class CupertinoRadio<T> : StatefulWidget
 
         private bool IsSelected()
         {
-            return EqualityComparer<T?>.Default.Equals(CurrentWidget.Value, CurrentWidget.GroupValue);
+            T? groupValue = _registry is null ? CurrentWidget.GroupValue : _registry.GroupValue;
+            return EqualityComparer<T?>.Default.Equals(CurrentWidget.Value, groupValue);
+        }
+
+        private void NotifyChanged(T? value)
+        {
+            if (_registry is not null)
+            {
+                _registry.OnChanged(value);
+                return;
+            }
+
+            CurrentWidget.OnChanged?.Invoke(value);
+        }
+
+        private void SetRegistry(RadioGroupRegistry<T>? registry)
+        {
+            if (ReferenceEquals(_registry, registry))
+            {
+                return;
+            }
+
+            _registry?.UnregisterClient(this);
+            _registry = registry;
+            _registry?.RegisterClient(this);
         }
 
         private Color ResolveActiveColor()

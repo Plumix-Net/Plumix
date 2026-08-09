@@ -1,5 +1,10 @@
 # Changelog
 
+- Breaking: completed the strict Material `Radio`/`RadioListTile` closeout. The family now uses the shared
+  `RawRadio` toggleable path, direct M2/M3 scheme roles, exact state/theme precedence, source painter geometry and
+  timing, density-adjusted targets, expanded theme/list-tile APIs, adaptive registry behavior, and merged semantics.
+  Added focused parity coverage and a mirrored live M2/M3 plus disabled-state demo probe.
+
 - Breaking: closed the Material chips render divergence. `RawChip` now uses Flutter's three-slot intrinsic/dry
   layout, mirrored avatar/label/delete geometry and hit routing, painted checkmarks/scrims, enabled-state fading,
   minimum delete semantics bounds, and independent forward/reverse selection/avatar/delete/enable animation styles.

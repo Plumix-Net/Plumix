@@ -126,6 +126,8 @@ public abstract class WidgetsLocalizations
 
     public virtual string NoResultsFound => "No results found";
 
+    public virtual string RadioButtonUnselectedLabel => "Unselected";
+
     public virtual string ReorderItemToStart => "Move to the start";
 
     public virtual string ReorderItemToEnd => "Move to the end";

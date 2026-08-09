@@ -5,16 +5,42 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/material/radio_theme.dart (approximate)
+// Dart parity source: flutter/packages/flutter/lib/src/material/radio_theme.dart
 
 public sealed partial record RadioThemeData(
+    MaterialStateProperty<MouseCursor?>? MouseCursor = null,
     MaterialStateProperty<Color?>? FillColor = null,
     MaterialStateProperty<Color?>? OverlayColor = null,
-    MaterialTapTargetSize? MaterialTapTargetSize = null,
     double? SplashRadius = null,
+    MaterialTapTargetSize? MaterialTapTargetSize = null,
+    VisualDensity? VisualDensity = null,
     MaterialStateProperty<Color?>? BackgroundColor = null,
-    BorderSide? Side = null,
-    MaterialStateProperty<double?>? InnerRadius = null);
+    WidgetStateBorderSide? Side = null,
+    MaterialStateProperty<double?>? InnerRadius = null)
+{
+    public RadioThemeData CopyWith(
+        MaterialStateProperty<MouseCursor?>? mouseCursor = null,
+        MaterialStateProperty<Color?>? fillColor = null,
+        MaterialStateProperty<Color?>? overlayColor = null,
+        double? splashRadius = null,
+        MaterialTapTargetSize? materialTapTargetSize = null,
+        VisualDensity? visualDensity = null,
+        MaterialStateProperty<Color?>? backgroundColor = null,
+        WidgetStateBorderSide? side = null,
+        MaterialStateProperty<double?>? innerRadius = null)
+    {
+        return new RadioThemeData(
+            MouseCursor: mouseCursor ?? MouseCursor,
+            FillColor: fillColor ?? FillColor,
+            OverlayColor: overlayColor ?? OverlayColor,
+            SplashRadius: splashRadius ?? SplashRadius,
+            MaterialTapTargetSize: materialTapTargetSize ?? MaterialTapTargetSize,
+            VisualDensity: visualDensity ?? VisualDensity,
+            BackgroundColor: backgroundColor ?? BackgroundColor,
+            Side: side ?? Side,
+            InnerRadius: innerRadius ?? InnerRadius);
+    }
+}
 
 public sealed class RadioTheme : InheritedWidget
 {

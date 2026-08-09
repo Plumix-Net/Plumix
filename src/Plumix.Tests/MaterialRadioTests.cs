@@ -18,7 +18,7 @@ public sealed class MaterialRadioTests
         var owner = new BuildOwner();
         var theme = ThemeData.Light with
         {
-            PrimaryColor = Colors.Coral
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(primary: Colors.Coral)
         };
 
         var root = new TestRootElement(
@@ -34,15 +34,11 @@ public sealed class MaterialRadioTests
         owner.FlushBuild();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
-        var outer = FindOuterDecoration(renderRoot);
-        var dot = FindInnerDotDecoration(renderRoot);
+        RadioPainter painter = FindRadioPainter(renderRoot);
 
-        Assert.NotNull(outer);
-        Assert.NotNull(dot);
-        Assert.True(outer!.Decoration.Border.HasValue);
-        Assert.Equal(Colors.Coral, outer.Decoration.Border!.Value.Color);
-        Assert.Equal(2, outer.Decoration.Border.Value.Width);
-        Assert.Equal(Colors.Coral, dot!.Decoration.Color);
+        Assert.Equal(Colors.Coral, painter.ActiveSide.Color);
+        Assert.Equal(2, painter.ActiveSide.Width);
+        Assert.Equal(Colors.Coral, painter.ActiveColor);
     }
 
     [Fact]
@@ -51,7 +47,7 @@ public sealed class MaterialRadioTests
         var owner = new BuildOwner();
         var theme = ThemeData.Light with
         {
-            OnSurfaceVariantColor = Colors.CadetBlue
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(onSurfaceVariant: Colors.CadetBlue)
         };
 
         var root = new TestRootElement(
@@ -67,13 +63,9 @@ public sealed class MaterialRadioTests
         owner.FlushBuild();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
-        var outer = FindOuterDecoration(renderRoot);
-        var dot = FindInnerDotDecoration(renderRoot);
+        RadioPainter painter = FindRadioPainter(renderRoot);
 
-        Assert.NotNull(outer);
-        Assert.True(outer!.Decoration.Border.HasValue);
-        Assert.Equal(Colors.CadetBlue, outer.Decoration.Border!.Value.Color);
-        Assert.Null(dot);
+        Assert.Equal(Colors.CadetBlue, painter.InactiveSide.Color);
     }
 
     [Fact]
@@ -82,7 +74,7 @@ public sealed class MaterialRadioTests
         var owner = new BuildOwner();
         var theme = ThemeData.Light with
         {
-            OnSurfaceColor = Colors.Brown
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(onSurface: Colors.Brown)
         };
 
         var root = new TestRootElement(
@@ -98,15 +90,11 @@ public sealed class MaterialRadioTests
         owner.FlushBuild();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
-        var outer = FindOuterDecoration(renderRoot);
-        var dot = FindInnerDotDecoration(renderRoot);
+        RadioPainter painter = FindRadioPainter(renderRoot);
         var expected = ApplyOpacity(Colors.Brown, 0.38);
 
-        Assert.NotNull(outer);
-        Assert.NotNull(dot);
-        Assert.True(outer!.Decoration.Border.HasValue);
-        Assert.Equal(expected, outer.Decoration.Border!.Value.Color);
-        Assert.Equal(expected, dot!.Decoration.Color);
+        Assert.Equal(expected, painter.ActiveSide.Color);
+        Assert.Equal(expected, painter.ActiveColor);
     }
 
     [Fact]
@@ -137,14 +125,10 @@ public sealed class MaterialRadioTests
         owner.FlushBuild();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
-        var outer = FindOuterDecoration(renderRoot);
-        var dot = FindInnerDotDecoration(renderRoot);
+        RadioPainter painter = FindRadioPainter(renderRoot);
 
-        Assert.NotNull(outer);
-        Assert.NotNull(dot);
-        Assert.True(outer!.Decoration.Border.HasValue);
-        Assert.Equal(Colors.ForestGreen, outer.Decoration.Border!.Value.Color);
-        Assert.Equal(Colors.ForestGreen, dot!.Decoration.Color);
+        Assert.Equal(Colors.ForestGreen, painter.ActiveSide.Color);
+        Assert.Equal(Colors.ForestGreen, painter.ActiveColor);
     }
 
     [Fact]
@@ -168,14 +152,10 @@ public sealed class MaterialRadioTests
         owner.FlushBuild();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
-        var outer = FindOuterDecoration(renderRoot);
-        var dot = FindInnerDotDecoration(renderRoot);
+        RadioPainter painter = FindRadioPainter(renderRoot);
 
-        Assert.NotNull(outer);
-        Assert.NotNull(dot);
-        Assert.True(outer!.Decoration.Border.HasValue);
-        Assert.Equal(Colors.MediumPurple, outer.Decoration.Border!.Value.Color);
-        Assert.Equal(Colors.MediumPurple, dot!.Decoration.Color);
+        Assert.Equal(Colors.MediumPurple, painter.ActiveSide.Color);
+        Assert.Equal(Colors.MediumPurple, painter.ActiveColor);
     }
 
     [Fact]
@@ -186,35 +166,28 @@ public sealed class MaterialRadioTests
         {
             var owner = new BuildOwner();
             string? nextValue = null;
+            var focusNode = new FocusNode();
             var root = new TestRootElement(
                 new Theme(
                     data: ThemeData.Light,
                     child: new Radio<string>(
                         value: "first",
                         groupValue: "second",
+                        focusNode: focusNode,
                         onChanged: value => nextValue = value)));
 
             root.Attach(owner);
             root.Mount(parent: null, newSlot: null);
             owner.FlushBuild();
 
-            var focusListener = FindFocusPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-            Assert.NotNull(focusListener);
-            focusListener!.HandleEvent(
-                new PointerDownEvent(
-                    pointer: 71,
-                    kind: PointerDeviceKind.Mouse,
-                    position: new Point(10, 10),
-                    buttons: PointerButtons.Primary,
-                    timestampUtc: DateTime.UtcNow),
-                new BoxHitTestEntry(focusListener, new Point(10, 10)));
-            owner.FlushBuild();
+            Assert.True(focusNode.RequestFocus());
 
             bool handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Space", isDown: true));
             Assert.True(handled);
             owner.FlushBuild();
 
             Assert.Equal("first", nextValue);
+            focusNode.Dispose();
         }
         finally
         {
@@ -230,6 +203,7 @@ public sealed class MaterialRadioTests
         {
             var owner = new BuildOwner();
             string? nextValue = "first";
+            var focusNode = new FocusNode();
             var root = new TestRootElement(
                 new Theme(
                     data: ThemeData.Light,
@@ -237,29 +211,21 @@ public sealed class MaterialRadioTests
                         value: "first",
                         groupValue: "first",
                         toggleable: true,
+                        focusNode: focusNode,
                         onChanged: value => nextValue = value)));
 
             root.Attach(owner);
             root.Mount(parent: null, newSlot: null);
             owner.FlushBuild();
 
-            var focusListener = FindFocusPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-            Assert.NotNull(focusListener);
-            focusListener!.HandleEvent(
-                new PointerDownEvent(
-                    pointer: 72,
-                    kind: PointerDeviceKind.Mouse,
-                    position: new Point(10, 10),
-                    buttons: PointerButtons.Primary,
-                    timestampUtc: DateTime.UtcNow),
-                new BoxHitTestEntry(focusListener, new Point(10, 10)));
-            owner.FlushBuild();
+            Assert.True(focusNode.RequestFocus());
 
             bool handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Space", isDown: true));
             Assert.True(handled);
             owner.FlushBuild();
 
             Assert.Null(nextValue);
+            focusNode.Dispose();
         }
         finally
         {
@@ -419,6 +385,219 @@ public sealed class MaterialRadioTests
         Assert.NotNull(radioBody);
     }
 
+    [Fact]
+    public void Radio_DefaultM2_UsesSecondaryUnselectedAndDisabledColors()
+    {
+        var selectedColor = Colors.Orange;
+        var unselectedColor = Colors.SlateGray;
+        var disabledColor = Colors.Brown;
+        ThemeData theme = ThemeData.Light with
+        {
+            UseMaterial3 = false,
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(secondary: selectedColor),
+            UnselectedWidgetColor = unselectedColor,
+            DisabledColor = disabledColor
+        };
+
+        using var enabledHarness = new WidgetRenderHarness(
+            new Theme(
+                data: theme,
+                child: new Radio<string>(
+                    value: "a",
+                    groupValue: "a",
+                    onChanged: _ => { })));
+        enabledHarness.Pump(new Size(80, 80));
+        RadioPainter enabledPainter = FindRadioPainter(enabledHarness.RenderView);
+
+        Assert.Equal(selectedColor, enabledPainter.ActiveColor);
+        Assert.Equal(unselectedColor, enabledPainter.InactiveColor);
+
+        using var disabledHarness = new WidgetRenderHarness(
+            new Theme(
+                data: theme,
+                child: new Radio<string>(
+                    value: "a",
+                    groupValue: "a")));
+        disabledHarness.Pump(new Size(80, 80));
+        RadioPainter disabledPainter = FindRadioPainter(disabledHarness.RenderView);
+
+        Assert.Equal(disabledColor, disabledPainter.ActiveColor);
+        Assert.Equal(disabledColor, disabledPainter.InactiveColor);
+    }
+
+    [Fact]
+    public void Radio_StatefulBackgroundSideAndInnerRadius_ResolveAllSelectionStates()
+    {
+        var activeBackground = Colors.Pink;
+        var inactiveBackground = Colors.Beige;
+        var activeSide = new BorderSide(Colors.Green, 4.0);
+        var inactiveSide = new BorderSide(Colors.Blue, 3.0);
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light,
+                child: new Radio<string>(
+                    value: "a",
+                    groupValue: "a",
+                    onChanged: _ => { },
+                    backgroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+                        states.HasFlag(MaterialState.Selected) ? activeBackground : inactiveBackground),
+                    side: WidgetStateBorderSide.ResolveWith(states =>
+                        states.HasFlag(MaterialState.Selected) ? activeSide : inactiveSide),
+                    innerRadius: MaterialStateProperty<double?>.ResolveWith(states =>
+                        states.HasFlag(MaterialState.Selected) ? 6.0 : 2.0))));
+
+        harness.Pump(new Size(80, 80));
+        RadioPainter painter = FindRadioPainter(harness.RenderView);
+
+        Assert.Equal(activeBackground, painter.ActiveBackgroundColor);
+        Assert.Equal(inactiveBackground, painter.InactiveBackgroundColor);
+        Assert.Equal(activeSide, painter.ActiveSide);
+        Assert.Equal(inactiveSide, painter.InactiveSide);
+        Assert.Equal(6.0, painter.InnerRadius);
+    }
+
+    [Fact]
+    public void Radio_PlainSide_AppliesOnlyToUnselectedState()
+    {
+        var side = new BorderSide(Colors.Orange, 5.0);
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light,
+                child: new Radio<string>(
+                    value: "a",
+                    groupValue: "a",
+                    side: side,
+                    onChanged: _ => { })));
+
+        harness.Pump(new Size(80, 80));
+        RadioPainter painter = FindRadioPainter(harness.RenderView);
+
+        Assert.Equal(side, painter.InactiveSide);
+        Assert.NotEqual(side, painter.ActiveSide);
+        Assert.Equal(2.0, painter.ActiveSide.Width);
+    }
+
+    [Fact]
+    public void Radio_VisualDensity_AdjustsPaddedTargetSize()
+    {
+        (VisualDensity density, Size expected)[] cases =
+        [
+            (VisualDensity.Standard, new Size(48.0, 48.0)),
+            (new VisualDensity(3.0, 3.0), new Size(60.0, 60.0)),
+            (new VisualDensity(-3.0, -3.0), new Size(36.0, 36.0)),
+            (new VisualDensity(3.0, -3.0), new Size(60.0, 36.0)),
+        ];
+
+        foreach ((VisualDensity density, Size expected) in cases)
+        {
+            using var harness = new WidgetRenderHarness(
+                new Theme(
+                    data: ThemeData.Light,
+                    child: new Radio<string>(
+                        value: "a",
+                        groupValue: "b",
+                        visualDensity: density,
+                        onChanged: _ => { })));
+            harness.Pump(new Size(100, 100));
+
+            RenderCustomPaint customPaint = Assert.Single(
+                FindDescendants<RenderCustomPaint>(harness.RenderView));
+            Assert.Equal(expected, customPaint.Size);
+        }
+    }
+
+    [Fact]
+    public void RadioThemeData_CopyWithAndLerp_CoverCompleteThemeSurface()
+    {
+        var cursor = MaterialStateProperty<MouseCursor?>.All(SystemMouseCursors.Click);
+        var fill = MaterialStateProperty<Color?>.All(Colors.Red);
+        var overlay = MaterialStateProperty<Color?>.All(Colors.Blue);
+        var background = MaterialStateProperty<Color?>.All(Colors.Green);
+        var innerRadius = MaterialStateProperty<double?>.All(3.0);
+        var side = WidgetStateBorderSide.All(new BorderSide(Colors.Purple, 2.0));
+        var data = new RadioThemeData(
+            MouseCursor: cursor,
+            FillColor: fill,
+            OverlayColor: overlay,
+            SplashRadius: 24.0,
+            MaterialTapTargetSize: MaterialTapTargetSize.ShrinkWrap,
+            VisualDensity: new VisualDensity(1.0, -1.0),
+            BackgroundColor: background,
+            Side: side,
+            InnerRadius: innerRadius);
+
+        Assert.Equal(data, data.CopyWith());
+        Assert.Same(data, RadioThemeData.Lerp(data, data, 0.25));
+
+        RadioThemeData midpoint = RadioThemeData.Lerp(
+            new RadioThemeData(
+                SplashRadius: 10.0,
+                Side: WidgetStateBorderSide.All(new BorderSide(Colors.Red, 1.0))),
+            new RadioThemeData(
+                SplashRadius: 30.0,
+                Side: WidgetStateBorderSide.All(new BorderSide(Colors.Blue, 3.0))),
+            0.5);
+        Assert.Equal(20.0, midpoint.SplashRadius);
+        BorderSide midpointSide = midpoint.Side!.Resolve(MaterialState.None)!.Value;
+        Assert.Equal(2.0, midpointSide.Width);
+    }
+
+    [Fact]
+    public void LocalRadioTheme_OverridesGlobalThemeAndWidgetOverridesLocal()
+    {
+        using var themedHarness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    RadioTheme = new RadioThemeData(
+                        FillColor: MaterialStateProperty<Color?>.All(Colors.Red))
+                },
+                child: new RadioTheme(
+                    data: new RadioThemeData(
+                        FillColor: MaterialStateProperty<Color?>.All(Colors.Blue)),
+                    child: new Radio<string>(
+                        value: "a",
+                        groupValue: "a",
+                        onChanged: _ => { }))));
+        themedHarness.Pump(new Size(80, 80));
+        Assert.Equal(Colors.Blue, FindRadioPainter(themedHarness.RenderView).ActiveColor);
+
+        using var widgetHarness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light,
+                child: new RadioTheme(
+                    data: new RadioThemeData(
+                        FillColor: MaterialStateProperty<Color?>.All(Colors.Blue)),
+                    child: new Radio<string>(
+                        value: "a",
+                        groupValue: "a",
+                        fillColor: MaterialStateProperty<Color?>.All(Colors.Green),
+                        onChanged: _ => { }))));
+        widgetHarness.Pump(new Size(80, 80));
+        Assert.Equal(Colors.Green, FindRadioPainter(widgetHarness.RenderView).ActiveColor);
+    }
+
+    [Fact]
+    public void Radio_DoesNotCrashAtZeroArea()
+    {
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light,
+                child: new SizedBox(
+                    width: 0.0,
+                    height: 0.0,
+                    child: new Radio<string>(
+                        value: "a",
+                        groupValue: "b",
+                        onChanged: _ => { }))));
+
+        var zeroSize = new Size(0.0, 0.0);
+        harness.Pump(zeroSize);
+        RenderCustomPaint customPaint = Assert.Single(
+            FindDescendants<RenderCustomPaint>(harness.RenderView));
+        Assert.Equal(zeroSize, customPaint.Size);
+    }
+
     private static T RequireRenderObject<T>(Element? element) where T : RenderObject
     {
         Assert.NotNull(element);
@@ -452,6 +631,13 @@ public sealed class MaterialRadioTests
                 && box.Decoration.Color.HasValue
                 && box.Decoration.Color.Value.A > 0
                 && box.Decoration.Color.Value != Colors.Transparent);
+    }
+
+    private static RadioPainter FindRadioPainter(RenderObject root)
+    {
+        RenderCustomPaint customPaint = Assert.IsType<RenderCustomPaint>(
+            FindDescendants<RenderCustomPaint>(root).Single());
+        return Assert.IsType<RadioPainter>(customPaint.Painter);
     }
 
     private static List<T> FindDescendants<T>(RenderObject? root) where T : RenderObject

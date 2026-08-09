@@ -106,6 +106,8 @@
     thumb-image/cursor/drag/padding APIs, theme copy/lerp, and mirrored runtime M2/M3 probes).
   - `Scrollbar` (direct on-surface roles without an M2/M3 split, source `WidgetStateProperty` theme copy/lerp/capture,
     public painter/state extension contracts, fade/hover/drag/track geometry, and adaptive Cupertino behavior).
+  - `Radio`/`RadioListTile` (direct M2/M3 roles, state/theme precedence, source painter and toggleable timing,
+    background/side/inner-radius APIs, density targets, adaptive registry behavior, and merged tile semantics).
 - Completed `Typography.Material2014`/`Material2018`, exact platform black/white themes, dense/tall geometry, and
   locale script-category selection.
 - Remove the narrowed `ColorScheme + Typography closeout` row from `docs/MATERIAL_TODO.md` only after those checks
