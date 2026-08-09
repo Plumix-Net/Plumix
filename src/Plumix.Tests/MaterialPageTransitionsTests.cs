@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
+using Plumix.Gestures;
 using Plumix.Material;
 using Plumix.Rendering;
 using Plumix.UI;
@@ -20,12 +21,14 @@ public sealed class MaterialPageTransitionsTests : IDisposable
     {
         Scheduler.ResetForTests();
         NavigatorBackButtonDispatcher.ResetForTests();
+        GestureBinding.Instance.ResetForTests();
     }
 
     public void Dispose()
     {
         Scheduler.ResetForTests();
         NavigatorBackButtonDispatcher.ResetForTests();
+        GestureBinding.Instance.ResetForTests();
     }
 
     [Fact]
@@ -85,6 +88,106 @@ public sealed class MaterialPageTransitionsTests : IDisposable
         Assert.Equal(0.0, sequence.Transform(0.0), precision: 6);
         Assert.Equal(0.4, sequence.Transform(0.166666), precision: 5);
         Assert.Equal(1.0, sequence.Transform(1.0), precision: 6);
+
+        Assert.Equal(0.0, Curves.FastEaseInToSlowEaseOut(0.0), precision: 6);
+        Assert.Equal(0.541, Curves.FastEaseInToSlowEaseOut(0.198), precision: 5);
+        Assert.Equal(1.0, Curves.FastEaseInToSlowEaseOut(1.0), precision: 6);
+        Assert.Equal(0.0, Curves.EaseInToLinear(0.0), precision: 6);
+        Assert.Equal(1.0, Curves.EaseInToLinear(1.0), precision: 6);
+        Assert.Equal(0.0, Curves.LinearToEaseOut(0.0), precision: 6);
+        Assert.Equal(1.0, Curves.LinearToEaseOut(1.0), precision: 6);
+    }
+
+    [Theory]
+    [InlineData(TextDirection.Ltr)]
+    [InlineData(TextDirection.Rtl)]
+    public void CupertinoPageTransition_EdgeSwipeTracksCancelsAndCommitsInLogicalDirection(
+        TextDirection textDirection)
+    {
+        const double width = 400.0;
+        const double height = 800.0;
+        NavigatorState? navigator = null;
+        var observer = new RecordingNavigatorObserver();
+        var rootRoute = new MaterialPageRoute(
+            context =>
+            {
+                navigator ??= Navigator.Of(context);
+                return new SizedBox(width: width, height: height, child: new ColoredBox(Colors.White));
+            },
+            settings: new RouteSettings(Name: "root"));
+        Widget app = new MediaQuery(
+            new MediaQueryData(
+                Size: new Size(width, height),
+                Padding: textDirection == TextDirection.Ltr
+                    ? new Thickness(24.0, 0.0, 0.0, 0.0)
+                    : new Thickness(0.0, 0.0, 24.0, 0.0)),
+            new Theme(
+                ThemeData.Light with { Platform = TargetPlatform.IOS },
+                new Directionality(
+                    textDirection,
+                    new Navigator(rootRoute, observers: [observer]))));
+        using var harness = new RenderHarness(app);
+        harness.Pump(new Size(width, height));
+        Settle(harness.Owner);
+        harness.Pump(new Size(width, height));
+
+        var detailsRoute = new MaterialPageRoute(
+            _ => new SizedBox(width: width, height: height, child: new ColoredBox(Colors.Blue)),
+            settings: new RouteSettings(Name: "details"));
+        navigator!.Push(detailsRoute);
+        harness.Pump(new Size(width, height));
+        Settle(harness.Owner);
+        harness.Pump(new Size(width, height));
+        Assert.Contains(
+            FindRenderObjects<RenderCustomPaint>(harness.RenderView),
+            renderObject => renderObject.Painter is not null);
+
+        DateTime start = new(2026, 8, 9, 12, 0, 0, DateTimeKind.Utc);
+        double edge = textDirection == TextDirection.Ltr ? 5.0 : width - 5.0;
+        double cancelX = textDirection == TextDirection.Ltr ? 125.0 : width - 125.0;
+        DispatchDrag(harness, pointer: 41, edge, cancelX, start);
+        harness.Pump(new Size(width, height));
+
+        Assert.Same(detailsRoute, navigator.CurrentRoute);
+        Assert.True(detailsRoute.PopGestureInProgress);
+        Assert.InRange(detailsRoute.Animation.Value, 0.70, 0.80);
+        Assert.Equal(1, observer.StartUserGestureCount);
+
+        DispatchUp(harness, pointer: 41, cancelX, start.AddSeconds(2.0));
+        PumpAfter(harness, new Size(width, height), TimeSpan.FromMilliseconds(351));
+
+        Assert.Same(detailsRoute, navigator.CurrentRoute);
+        Assert.False(detailsRoute.PopGestureInProgress);
+        Assert.Equal(1, observer.StopUserGestureCount);
+
+        DateTime commitStart = start.AddSeconds(3.0);
+        double commitX = textDirection == TextDirection.Ltr ? 325.0 : width - 325.0;
+        DispatchDrag(harness, pointer: 42, edge, commitX, commitStart);
+        harness.Pump(new Size(width, height));
+
+        Assert.InRange(detailsRoute.Animation.Value, 0.15, 0.30);
+        DispatchUp(harness, pointer: 42, commitX, commitStart.AddSeconds(2.0));
+        Assert.Same(rootRoute, navigator.CurrentRoute);
+
+        PumpAfter(harness, new Size(width, height), TimeSpan.FromMilliseconds(351));
+        Assert.False(navigator.UserGestureInProgress);
+        Assert.Equal(2, observer.StartUserGestureCount);
+        Assert.Equal(2, observer.StopUserGestureCount);
+        Assert.Equal(1, observer.PopCount);
+    }
+
+    [Fact]
+    public void CupertinoPageTransition_FlingThresholdAndShadowMatchPinnedConstants()
+    {
+        Assert.Equal(20.0, CupertinoPageTransitionsBuilder.BackGestureWidth);
+        Assert.Equal(1.0, CupertinoPageTransitionsBuilder.MinFlingVelocity);
+        Assert.Equal(
+            TimeSpan.FromMilliseconds(350),
+            CupertinoPageTransitionsBuilder.DroppedSwipePageAnimationDuration);
+
+        var builder = new CupertinoPageTransitionsBuilder();
+        Assert.Equal(TimeSpan.FromMilliseconds(500), builder.TransitionDuration);
+        Assert.NotNull(builder.DelegatedTransition);
     }
 
     [Fact]
@@ -265,6 +368,48 @@ public sealed class MaterialPageTransitionsTests : IDisposable
         owner.FlushBuild();
     }
 
+    private static void PumpAfter(RenderHarness harness, Size size, TimeSpan duration)
+    {
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds) + duration);
+        harness.Pump(size);
+    }
+
+    private static void DispatchDrag(
+        RenderHarness harness,
+        int pointer,
+        double startX,
+        double endX,
+        DateTime timestamp)
+    {
+        harness.Dispatch(new PointerDownEvent(
+            pointer,
+            PointerDeviceKind.Touch,
+            new Point(startX, 300.0),
+            PointerButtons.Primary,
+            timestamp));
+        harness.Dispatch(new PointerMoveEvent(
+            pointer,
+            PointerDeviceKind.Touch,
+            new Point(endX, 300.0),
+            PointerButtons.Primary,
+            true,
+            timestamp.AddMilliseconds(100.0)));
+    }
+
+    private static void DispatchUp(
+        RenderHarness harness,
+        int pointer,
+        double x,
+        DateTime timestamp)
+    {
+        harness.Dispatch(new PointerUpEvent(
+            pointer,
+            PointerDeviceKind.Touch,
+            new Point(x, 300.0),
+            PointerButtons.None,
+            timestamp));
+    }
+
     private static IReadOnlyList<T> FindWidgets<T>(TestRootElement root) where T : Widget
     {
         var widgets = new List<T>();
@@ -330,6 +475,34 @@ public sealed class MaterialPageTransitionsTests : IDisposable
         public void HandleCommitBackGesture()
         {
             CommitCount += 1;
+        }
+    }
+
+    private sealed class RecordingNavigatorObserver : NavigatorObserver
+    {
+        public int StartUserGestureCount { get; private set; }
+
+        public int StopUserGestureCount { get; private set; }
+
+        public int PopCount { get; private set; }
+
+        public override void DidStartUserGesture(Route route, Route? previousRoute)
+        {
+            _ = route;
+            _ = previousRoute;
+            StartUserGestureCount += 1;
+        }
+
+        public override void DidStopUserGesture()
+        {
+            StopUserGestureCount += 1;
+        }
+
+        public override void DidPop(Route route, Route? previousRoute)
+        {
+            _ = route;
+            _ = previousRoute;
+            PopCount += 1;
         }
     }
 
@@ -443,6 +616,8 @@ public sealed class MaterialPageTransitionsTests : IDisposable
 
         public RenderView RenderView { get; }
 
+        public BuildOwner Owner => _owner;
+
         public void Pump(Size size)
         {
             _owner.FlushBuild();
@@ -450,6 +625,11 @@ public sealed class MaterialPageTransitionsTests : IDisposable
             _pipeline.FlushLayout(size);
             _pipeline.FlushCompositingBits();
             _pipeline.FlushPaint();
+        }
+
+        public void Dispatch(PointerEvent @event)
+        {
+            GestureBinding.Instance.HandlePointerEvent(RenderView, @event);
         }
 
         public void Dispose()

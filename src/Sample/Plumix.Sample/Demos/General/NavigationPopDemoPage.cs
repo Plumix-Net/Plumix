@@ -43,7 +43,8 @@ internal sealed class NavigationPopDemoPageState : State
                     new Text(
                         "Push a nested page, then simulate a parent Back. The handler consumes it in the nested " +
                         "navigator. Nested routes use PageTransitionsTheme, including Android predictive-back " +
-                        "peek/commit/cancel. Disable route pop to probe PopScope veto behavior.",
+                        "peek/commit/cancel and iOS/macOS leading-edge swipe. Disable route pop to probe PopScope " +
+                        "veto behavior.",
                         fontSize: 14,
                         color: Colors.DimGray),
                     new Row(

@@ -123,6 +123,20 @@ public static class Curves
         new Point(0.208333, 0.82),
         new Point(0.25, 1.0));
 
+    // Flutter Curves.fastEaseInToSlowEaseOut.
+    public static Curve FastEaseInToSlowEaseOut { get; } = ThreePointCubic(
+        new Point(0.056, 0.024),
+        new Point(0.108, 0.3085),
+        new Point(0.198, 0.541),
+        new Point(0.3655, 1.0),
+        new Point(0.5465, 0.989));
+
+    // Flutter Curves.easeInToLinear: Cubic(0.67, 0.03, 0.65, 0.09).
+    public static Curve EaseInToLinear { get; } = Cubic(0.67, 0.03, 0.65, 0.09);
+
+    // Flutter Curves.linearToEaseOut: Cubic(0.35, 0.91, 0.33, 0.97).
+    public static Curve LinearToEaseOut { get; } = Cubic(0.35, 0.91, 0.33, 0.97);
+
     private static double CubicBezier(double t, double x1, double y1, double x2, double y2)
     {
         t = Math.Clamp(t, 0, 1);
@@ -692,6 +706,16 @@ public sealed class AnimationController : Animation<double>, IDisposable
 
     public Task AnimateTo(double target, TimeSpan? duration = null, Curve? curve = null)
     {
+        return AnimateToInternal(target, duration, curve, reversing: false);
+    }
+
+    public Task AnimateBack(double target, TimeSpan? duration = null, Curve? curve = null)
+    {
+        return AnimateToInternal(target, duration, curve, reversing: true);
+    }
+
+    private Task AnimateToInternal(double target, TimeSpan? duration, Curve? curve, bool reversing)
+    {
         if (!double.IsFinite(target) || target is < 0.0 or > 1.0)
         {
             throw new ArgumentOutOfRangeException(nameof(target), "Animation target must be between 0.0 and 1.0.");
@@ -708,7 +732,7 @@ public sealed class AnimationController : Animation<double>, IDisposable
         if (distance <= 0.000001 || effectiveDuration <= TimeSpan.Zero)
         {
             _value = target;
-            SetTerminalValueAndStatus(AnimationStatus.Completed);
+            SetTerminalValueAndStatus(reversing ? AnimationStatus.Dismissed : AnimationStatus.Completed);
             return Task.CompletedTask;
         }
 
@@ -721,8 +745,8 @@ public sealed class AnimationController : Animation<double>, IDisposable
         _animateDuration = effectiveDuration;
         _animateCurve = curve ?? Curves.Linear;
         _animateCompletion = new TaskCompletionSource();
-        _reversing = false;
-        SetStatus(AnimationStatus.Forward);
+        _reversing = reversing;
+        SetStatus(reversing ? AnimationStatus.Reverse : AnimationStatus.Forward);
         Start();
         return _animateCompletion.Task;
     }

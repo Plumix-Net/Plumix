@@ -114,7 +114,8 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Application shells enter through core `Widgets/App.cs` + `Localizations.cs` and Material `App.cs`; theme motion
   and Material page routing use `Theme.cs` + `ThemeData.cs` + `PageTransitionsTheme.cs`, while route ownership and
   deep-link initial generation live in core `Widgets/Navigation.cs`. Route snapshots and predictive-back dispatch
-  enter through core `Widgets/SnapshotWidget.cs`, `Rendering/SnapshotWidget.cs`, and `Widgets/AppLifecycleListener.cs`.
+  enter through core `Widgets/SnapshotWidget.cs`, `Rendering/SnapshotWidget.cs`, and `Widgets/AppLifecycleListener.cs`;
+  Cupertino leading-edge drags share the route gesture lifecycle and settle through the route animation controller.
   Focused coverage is in `ApplicationWidgetsTests.cs`, `MaterialThemeAnimationTests.cs`, `NavigationTests.cs`, and
   `MaterialPageTransitionsTests.cs`.
 - Material elevation color treatment enters through `ElevationOverlay.cs`; `Material.cs` consumes its M2/M3 policy,

@@ -24,6 +24,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `cupertino/localizations.dart` | `src/Plumix.Cupertino/CupertinoLocalizations.cs` | — | — |
 | `cupertino/magnifier.dart` | `src/Plumix.Cupertino/CupertinoMagnifier.cs` | — | — |
 | `cupertino/radio.dart` | `src/Plumix.Cupertino/CupertinoRadio.cs` | — | — |
+| `cupertino/route.dart` | `src/Plumix.Material/PageTransitionsTheme.cs` | — | — |
 | `cupertino/scrollbar.dart` | `src/Plumix.Cupertino/CupertinoScrollbar.cs` | — | — |
 | `foundation/binding.dart` | `src/Plumix/HotReload.cs` | `src/Plumix.Tests/HotReloadTests.cs` | — |
 | `foundation/change_notifier.dart` | `src/Plumix/Foundation/Listenable.cs` | — | — |
@@ -420,8 +421,8 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 
 ## Summary
 
-- Flutter files mapped: 369
-- C# files carrying a marker: 464
+- Flutter files mapped: 370
+- C# files carrying a marker: 465
 - C# files without a marker: 15
 - Markers not resolvable in the pinned checkout: 5
 

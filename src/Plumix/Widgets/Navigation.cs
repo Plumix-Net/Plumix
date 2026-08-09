@@ -219,6 +219,8 @@ public abstract class Route
 
     public bool IsFirst => Navigator?.IsFirst(this) == true;
 
+    public bool IsActive => Navigator?.IsActive(this) == true;
+
     public bool WillHandlePopInternally => _localHistoryEntries is { Count: > 0 };
 
     public virtual bool PopGestureEnabled => false;
@@ -786,6 +788,28 @@ public abstract class PageRoute : ModalRoute
     public void HandleCommitBackGesture()
     {
         CommitPopGesture();
+    }
+
+    internal void HandleSettleBackGesture(bool animateForward, TimeSpan duration, Curve curve)
+    {
+        ArgumentNullException.ThrowIfNull(curve);
+        if (!PopGestureInProgress)
+        {
+            return;
+        }
+
+        if (animateForward)
+        {
+            _ = Controller.AnimateTo(1.0, duration, curve);
+            return;
+        }
+
+        if (IsCurrent)
+        {
+            Navigator!.Pop();
+        }
+
+        _ = Controller.AnimateBack(0.0, duration, curve);
     }
 }
 
@@ -1375,6 +1399,11 @@ public sealed class NavigatorState : State
     internal bool IsFirst(Route route)
     {
         return _history.Count > 0 && ReferenceEquals(_history[0], route);
+    }
+
+    internal bool IsActive(Route route)
+    {
+        return _history.Contains(route);
     }
 
     private IReadOnlyList<Route> VisibleRoutes()

@@ -310,10 +310,13 @@ public sealed class ApplicationWidgetsTests : IDisposable
         var navigatorKey = new LabeledGlobalKey<NavigatorState>("material navigator");
         var app = new MaterialApp(
             navigatorKey: navigatorKey,
+            theme: new ThemeData(platform: TargetPlatform.Linux),
             home: new SizedBox(),
             debugShowCheckedModeBanner: false);
         var owner = new BuildOwner();
-        var root = new TestRootElement(app);
+        var root = new TestRootElement(new MediaQuery(
+            data: new MediaQueryData(),
+            child: app));
 
         Assert.Equal(ThemeMode.System, app.ThemeMode);
         Assert.Equal(AnimatedTheme.DefaultDuration, app.ThemeAnimationDuration);

@@ -1,5 +1,9 @@
 # Changelog
 
+- Breaking: closed the remaining Apple page-transition divergence. Cupertino routes now use leading-edge drag
+  ownership, linear finger tracking, exact velocity/position settle rules and timing, directional parallax and edge
+  shadow paint, balanced navigator gesture callbacks, and LTR/RTL focused coverage.
+
 - Breaking: completed the pinned Material page-transition closeout. Android now defaults to
   `PredictiveBackPageTransitionsBuilder`; shared/fullscreen predictive peek, cancel, commit, display-corner radii,
   exact fade/zoom timing, delegated transitions, retained subtree snapshots, and route snapshot permissions are
