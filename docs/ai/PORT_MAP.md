@@ -80,7 +80,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `material/checkbox.dart` | `src/Plumix.Material/Checkbox.cs` | `src/Plumix.Tests/MaterialCheckboxTests.cs` | `dart_sample/lib/demos/cupertino/checkbox_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CheckboxDemoPage.cs` |
 | `material/checkbox_list_tile.dart` | `src/Plumix.Material/ListTileControls.cs` | — | `dart_sample/lib/demos/material/list_tile_controls_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/ListTileControlsDemoPage.cs` |
 | `material/checkbox_theme.dart` | `src/Plumix.Material/CheckboxTheme.cs` | — | — |
-| `material/chip.dart` | `src/Plumix.Material/Chip.cs`<br>`src/Plumix.Material/Chips.cs` | `src/Plumix.Tests/MaterialChipTests.cs` | `dart_sample/lib/demos/material/chips_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/ChipsDemoPage.cs` |
+| `material/chip.dart` | `src/Plumix.Material/Chip.cs`<br>`src/Plumix.Material/Chips.cs`<br>`src/Plumix.Material/RenderChip.cs` | `src/Plumix.Tests/MaterialChipTests.cs` | `dart_sample/lib/demos/material/chips_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/ChipsDemoPage.cs` |
 | `material/chip_theme.dart` | `src/Plumix.Material/ChipTheme.cs` | — | — |
 | `material/choice_chip.dart` | `src/Plumix.Material/Chips.cs` | — | `dart_sample/lib/demos/material/chips_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/ChipsDemoPage.cs` |
 | `material/circle_avatar.dart` | `src/Plumix.Material/CircleAvatar.cs` | `src/Plumix.Tests/MaterialCircleAvatarTests.cs` | `dart_sample/lib/demos/material/circle_avatar_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/CircleAvatarDemoPage.cs` |
@@ -424,7 +424,7 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 ## Summary
 
 - Flutter files mapped: 372
-- C# files carrying a marker: 468
+- C# files carrying a marker: 469
 - C# files without a marker: 15
 - Markers not resolvable in the pinned checkout: 5
 

@@ -13,10 +13,10 @@ namespace Plumix.Material;
 // flutter/packages/flutter/lib/src/material/choice_chip.dart
 
 public sealed record ChipAnimationStyle(
-    TimeSpan? EnableAnimation = null,
-    TimeSpan? SelectAnimation = null,
-    TimeSpan? AvatarDrawerAnimation = null,
-    TimeSpan? DeleteDrawerAnimation = null);
+    AnimationStyle? EnableAnimation = null,
+    AnimationStyle? SelectAnimation = null,
+    AnimationStyle? AvatarDrawerAnimation = null,
+    AnimationStyle? DeleteDrawerAnimation = null);
 
 internal enum ChipVariant
 {
@@ -43,8 +43,8 @@ public sealed class ActionChip : StatelessWidget
         Thickness? labelPadding = null,
         double? pressElevation = null,
         string? tooltip = null,
-        BorderSide? side = null,
-        ShapeBorder? shape = null,
+        MaterialStateProperty<BorderSide?>? side = null,
+        MaterialStateProperty<ShapeBorder?>? shape = null,
         Clip clipBehavior = Clip.None,
         FocusNode? focusNode = null,
         bool autofocus = false,
@@ -77,8 +77,8 @@ public sealed class ActionChip : StatelessWidget
         Thickness? labelPadding,
         double? pressElevation,
         string? tooltip,
-        BorderSide? side,
-        ShapeBorder? shape,
+        MaterialStateProperty<BorderSide?>? side,
+        MaterialStateProperty<ShapeBorder?>? shape,
         Clip clipBehavior,
         FocusNode? focusNode,
         bool autofocus,
@@ -136,8 +136,8 @@ public sealed class ActionChip : StatelessWidget
         Thickness? labelPadding = null,
         double? pressElevation = null,
         string? tooltip = null,
-        BorderSide? side = null,
-        ShapeBorder? shape = null,
+        MaterialStateProperty<BorderSide?>? side = null,
+        MaterialStateProperty<ShapeBorder?>? shape = null,
         Clip clipBehavior = Clip.None,
         FocusNode? focusNode = null,
         bool autofocus = false,
@@ -170,8 +170,8 @@ public sealed class ActionChip : StatelessWidget
     public Action? OnPressed { get; }
     public double? PressElevation { get; }
     public string? Tooltip { get; }
-    public BorderSide? Side { get; }
-    public ShapeBorder? Shape { get; }
+    public MaterialStateProperty<BorderSide?>? Side { get; }
+    public MaterialStateProperty<ShapeBorder?>? Shape { get; }
     public Clip ClipBehavior { get; }
     public FocusNode? FocusNode { get; }
     public bool Autofocus { get; }
@@ -254,8 +254,8 @@ public sealed class ChoiceChip : StatelessWidget
         Color? selectedColor = null,
         Color? disabledColor = null,
         string? tooltip = null,
-        BorderSide? side = null,
-        ShapeBorder? shape = null,
+        MaterialStateProperty<BorderSide?>? side = null,
+        MaterialStateProperty<ShapeBorder?>? shape = null,
         Clip clipBehavior = Clip.None,
         FocusNode? focusNode = null,
         bool autofocus = false,
@@ -296,8 +296,8 @@ public sealed class ChoiceChip : StatelessWidget
         Color? selectedColor,
         Color? disabledColor,
         string? tooltip,
-        BorderSide? side,
-        ShapeBorder? shape,
+        MaterialStateProperty<BorderSide?>? side,
+        MaterialStateProperty<ShapeBorder?>? shape,
         Clip clipBehavior,
         FocusNode? focusNode,
         bool autofocus,
@@ -374,8 +374,8 @@ public sealed class ChoiceChip : StatelessWidget
         Color? selectedColor = null,
         Color? disabledColor = null,
         string? tooltip = null,
-        BorderSide? side = null,
-        ShapeBorder? shape = null,
+        MaterialStateProperty<BorderSide?>? side = null,
+        MaterialStateProperty<ShapeBorder?>? shape = null,
         Clip clipBehavior = Clip.None,
         FocusNode? focusNode = null,
         bool autofocus = false,
@@ -416,8 +416,8 @@ public sealed class ChoiceChip : StatelessWidget
     public Color? DisabledColor { get; }
     public Color? SelectedColor { get; }
     public string? Tooltip { get; }
-    public BorderSide? Side { get; }
-    public ShapeBorder? Shape { get; }
+    public MaterialStateProperty<BorderSide?>? Side { get; }
+    public MaterialStateProperty<ShapeBorder?>? Shape { get; }
     public Clip ClipBehavior { get; }
     public FocusNode? FocusNode { get; }
     public bool Autofocus { get; }
@@ -497,8 +497,8 @@ public sealed class RawChip : StatefulWidget
         bool? showCheckmark = null,
         Color? checkmarkColor = null,
         string? tooltip = null,
-        BorderSide? side = null,
-        ShapeBorder? shape = null,
+        MaterialStateProperty<BorderSide?>? side = null,
+        MaterialStateProperty<ShapeBorder?>? shape = null,
         Clip clipBehavior = Clip.None,
         FocusNode? focusNode = null,
         bool autofocus = false,
@@ -549,8 +549,8 @@ public sealed class RawChip : StatefulWidget
         bool? showCheckmark,
         Color? checkmarkColor,
         string? tooltip,
-        BorderSide? side,
-        ShapeBorder? shape,
+        MaterialStateProperty<BorderSide?>? side,
+        MaterialStateProperty<ShapeBorder?>? shape,
         Clip clipBehavior,
         FocusNode? focusNode,
         bool autofocus,
@@ -648,8 +648,8 @@ public sealed class RawChip : StatefulWidget
     public bool? ShowCheckmark { get; }
     public Color? CheckmarkColor { get; }
     public string? Tooltip { get; }
-    public BorderSide? Side { get; }
-    public ShapeBorder? Shape { get; }
+    public MaterialStateProperty<BorderSide?>? Side { get; }
+    public MaterialStateProperty<ShapeBorder?>? Shape { get; }
     public Clip ClipBehavior { get; }
     public FocusNode? FocusNode { get; }
     public bool Autofocus { get; }
@@ -691,80 +691,94 @@ public sealed class RawChip : StatefulWidget
     {
         private AnimationController? _selectionController;
         private double _selectionProgress;
+        private double _checkmarkProgress;
+        private AnimationController? _avatarDrawerController;
+        private double _avatarDrawerProgress;
         private AnimationController? _deleteController;
         private double _deleteProgress;
+        private AnimationController? _enableController;
+        private double _enableProgress;
 
         private RawChip CurrentWidget => (RawChip)StateWidget;
 
         public override void InitState()
         {
-            _selectionProgress = CurrentWidget.Selected ? 1 : 0;
-            _selectionController = new AnimationController(
-                CurrentWidget.ChipAnimationStyle?.SelectAnimation ?? TimeSpan.FromMilliseconds(195),
-                this)
-            {
-                Curve = Curves.EaseInOut,
-            };
+            _selectionController = CreateController(
+                CurrentWidget.ChipAnimationStyle?.SelectAnimation,
+                TimeSpan.FromMilliseconds(195));
+            _selectionController.SetValue(CurrentWidget.Selected ? 1.0 : 0.0);
             _selectionController.Changed += HandleSelectionTick;
-            _deleteProgress = CurrentWidget.OnDeleted is null ? 0 : 1;
-            _deleteController = new AnimationController(
-                CurrentWidget.ChipAnimationStyle?.DeleteDrawerAnimation ?? TimeSpan.FromMilliseconds(150),
-                this)
-            {
-                Curve = Curves.EaseInOut,
-            };
+
+            _avatarDrawerController = CreateController(
+                CurrentWidget.ChipAnimationStyle?.AvatarDrawerAnimation,
+                TimeSpan.FromMilliseconds(150));
+            _avatarDrawerController.SetValue(CurrentWidget.Avatar is not null || CurrentWidget.Selected ? 1.0 : 0.0);
+            _avatarDrawerController.Changed += HandleAvatarDrawerTick;
+
+            _deleteController = CreateController(
+                CurrentWidget.ChipAnimationStyle?.DeleteDrawerAnimation,
+                TimeSpan.FromMilliseconds(150));
+            _deleteController.SetValue(CurrentWidget.OnDeleted is null ? 0.0 : 1.0);
             _deleteController.Changed += HandleDeleteTick;
+
+            _enableController = CreateController(
+                CurrentWidget.ChipAnimationStyle?.EnableAnimation,
+                TimeSpan.FromMilliseconds(75));
+            _enableController.SetValue(CurrentWidget.IsEnabled ? 1.0 : 0.0);
+            _enableController.Changed += HandleEnableTick;
+
+            UpdateAnimationProgress();
         }
 
         public override void DidUpdateWidget(StatefulWidget oldWidget)
         {
             var oldChip = (RawChip)oldWidget;
-            if (oldChip.ChipAnimationStyle?.SelectAnimation != CurrentWidget.ChipAnimationStyle?.SelectAnimation)
+            if (oldChip.IsEnabled != CurrentWidget.IsEnabled)
             {
-                DisposeController();
-                _selectionController = new AnimationController(
-                    CurrentWidget.ChipAnimationStyle?.SelectAnimation ?? TimeSpan.FromMilliseconds(195),
-                    this)
+                if (CurrentWidget.IsEnabled)
                 {
-                    Curve = Curves.EaseInOut,
-                };
-                _selectionController.Changed += HandleSelectionTick;
+                    _enableController!.Forward();
+                }
+                else
+                {
+                    _enableController!.Reverse();
+                }
+            }
+
+            if (!ReferenceEquals(oldChip.Avatar, CurrentWidget.Avatar)
+                || oldChip.Selected != CurrentWidget.Selected)
+            {
+                if (CurrentWidget.Avatar is not null || CurrentWidget.Selected)
+                {
+                    _avatarDrawerController!.Forward();
+                }
+                else
+                {
+                    _avatarDrawerController!.Reverse();
+                }
             }
 
             if (oldChip.Selected != CurrentWidget.Selected)
             {
                 if (CurrentWidget.Selected)
                 {
-                    _selectionController!.Forward(0);
+                    _selectionController!.Forward();
                 }
                 else
                 {
-                    _selectionController!.Reverse(1);
+                    _selectionController!.Reverse();
                 }
             }
 
-            if (oldChip.ChipAnimationStyle?.DeleteDrawerAnimation
-                != CurrentWidget.ChipAnimationStyle?.DeleteDrawerAnimation)
-            {
-                DisposeDeleteController();
-                _deleteProgress = CurrentWidget.OnDeleted is null ? 0 : 1;
-                _deleteController = new AnimationController(
-                    CurrentWidget.ChipAnimationStyle?.DeleteDrawerAnimation ?? TimeSpan.FromMilliseconds(150),
-                    this)
-                {
-                    Curve = Curves.EaseInOut,
-                };
-                _deleteController.Changed += HandleDeleteTick;
-            }
-            else if ((oldChip.OnDeleted is null) != (CurrentWidget.OnDeleted is null))
+            if (!Equals(oldChip.OnDeleted, CurrentWidget.OnDeleted))
             {
                 if (CurrentWidget.OnDeleted is not null)
                 {
-                    _deleteController!.Forward(0);
+                    _deleteController!.Forward();
                 }
                 else
                 {
-                    _deleteController!.Reverse(1);
+                    _deleteController!.Reverse();
                 }
             }
         }
@@ -775,8 +789,6 @@ public sealed class RawChip : StatefulWidget
             var theme = Theme.Of(context);
             var chipTheme = ChipTheme.Of(context);
             var defaults = ResolveDefaults(context, theme, widget);
-            var shape = widget.Shape ?? chipTheme.Shape ?? defaults.Shape ?? ShapeBorder.RoundedRectangle(10_000);
-            var side = widget.Side ?? chipTheme.Side ?? defaults.Side ?? shape.Side;
             var padding = widget.Padding ?? chipTheme.Padding ?? defaults.Padding ?? new Thickness(4);
             var baseLabelStyle = chipTheme.LabelStyle ?? defaults.LabelStyle ?? theme.TextTheme.BodyLarge;
             var labelStyle = MergeTextStyles(baseLabelStyle, widget.LabelStyle);
@@ -792,6 +804,11 @@ public sealed class RawChip : StatefulWidget
             var density = widget.VisualDensity ?? theme.VisualDensity;
             var tapTargetSize = widget.MaterialTapTargetSize ?? theme.MaterialTapTargetSize;
             var effectiveIconTheme = widget.IconTheme ?? chipTheme.IconTheme ?? defaults.IconTheme;
+            bool showCheckmark = widget.ShowCheckmark ?? chipTheme.ShowCheckmark ?? defaults.ShowCheckmark ?? true;
+            Color checkmarkColor = widget.CheckmarkColor
+                                   ?? chipTheme.CheckmarkColor
+                                   ?? defaults.CheckmarkColor
+                                   ?? ResolveDefaultCheckmarkColor(theme.Brightness, widget.Avatar is not null);
 
             var style = new ButtonStyle(
                 ForegroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
@@ -811,41 +828,48 @@ public sealed class RawChip : StatefulWidget
                         ? widget.PressElevation ?? chipTheme.PressElevation ?? defaults.PressElevation ?? 0
                         : widget.Elevation ?? chipTheme.Elevation ?? defaults.Elevation ?? 0),
                 IconColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                {
-                    var iconColor = effectiveIconTheme?.Color
-                                    ?? ResolveLabelColor(states, widget, chipTheme, defaults, labelStyle, theme);
-                    return states.HasFlag(MaterialState.Disabled)
-                        ? MaterialButtonCore.ApplyOpacity(iconColor, 0.38)
-                        : iconColor;
-                }),
+                    effectiveIconTheme?.Color
+                    ?? ResolveLabelColor(states, widget, chipTheme, defaults, labelStyle, theme)),
                 IconSize: MaterialStateProperty<double?>.All(effectiveIconTheme?.Size ?? 18),
                 Side: MaterialStateProperty<BorderSide?>.ResolveWith(states =>
-                    ResolveSide(states, widget, chipTheme, defaults, shape, theme)),
-                Padding: MaterialStateProperty<Thickness?>.All(padding),
-                Shape: MaterialStateProperty<BorderRadius?>.All(shape.BorderRadius),
-                MinimumSize: MaterialStateProperty<Size?>.All(new Size(
-                    0,
-                    Math.Max(0, 32 + density.BaseSizeAdjustment.Y))),
+                    ResolveSide(states, widget, chipTheme, defaults)),
+                Padding: MaterialStateProperty<Thickness?>.All(new Thickness(0)),
+                Shape: MaterialStateProperty<BorderRadius?>.ResolveWith(states =>
+                    ResolveShape(states, widget, chipTheme, defaults).BorderRadius),
+                MinimumSize: MaterialStateProperty<Size?>.All(new Size(0, 0)),
+                VisualDensity: Plumix.Material.VisualDensity.Standard,
                 TapTargetSize: tapTargetSize,
                 TextStyle: MaterialStateProperty<TextStyle?>.All(labelStyle));
 
-            Widget label = new Padding(labelPadding, widget.Label);
-            var leading = BuildLeading(widget, chipTheme, defaults, effectiveIconTheme);
+            Widget label = widget.Label;
+            Widget? leading = BuildAvatar(widget, effectiveIconTheme);
             var delete = BuildDelete(
                 context,
                 widget,
                 chipTheme,
                 defaults,
-                effectiveIconTheme);
-            var contentChildren = new List<Widget>(3);
-            if (leading is not null) contentChildren.Add(leading);
-            contentChildren.Add(label);
-            if (delete is not null) contentChildren.Add(delete);
-            Widget content = contentChildren.Count == 1
-                ? label
-                : new Row(
-                    mainAxisSize: MainAxisSize.Min,
-                    children: contentChildren);
+                effectiveIconTheme,
+                density,
+                tapTargetSize);
+            Widget content = new ChipRenderWidget(
+                label: label,
+                avatar: leading,
+                deleteIcon: delete,
+                padding: padding,
+                labelPadding: labelPadding,
+                visualDensity: density,
+                textDirection: Directionality.Of(context),
+                isEnabled: widget.IsEnabled,
+                canTap: widget.CanTapBody,
+                showCheckmark: showCheckmark,
+                checkmarkColor: checkmarkColor,
+                avatarBorder: widget.AvatarBorder,
+                avatarBoxConstraints: widget.AvatarBoxConstraints ?? chipTheme.AvatarBoxConstraints,
+                deleteIconBoxConstraints: widget.DeleteIconBoxConstraints ?? chipTheme.DeleteIconBoxConstraints,
+                checkmarkProgress: _checkmarkProgress,
+                avatarDrawerProgress: _avatarDrawerProgress,
+                deleteDrawerProgress: _deleteProgress,
+                enableProgress: _enableProgress);
 
             Action? onTap = widget.CanTapBody
                 ? () =>
@@ -887,8 +911,10 @@ public sealed class RawChip : StatefulWidget
 
         public override void Dispose()
         {
-            DisposeController();
+            DisposeSelectionController();
+            DisposeAvatarDrawerController();
             DisposeDeleteController();
+            DisposeEnableController();
         }
 
         private Widget? BuildDelete(
@@ -896,7 +922,9 @@ public sealed class RawChip : StatefulWidget
             RawChip widget,
             ChipThemeData chipTheme,
             ChipThemeData defaults,
-            IconThemeData? iconTheme)
+            IconThemeData? iconTheme,
+            VisualDensity density,
+            MaterialTapTargetSize tapTargetSize)
         {
             if (_deleteProgress <= 0) return null;
 
@@ -907,22 +935,9 @@ public sealed class RawChip : StatefulWidget
                         ?? defaults.DeleteIconColor
                         ?? iconTheme?.Color
                         ?? Theme.Of(context).OnSurfaceVariantColor;
-            if (!widget.IsEnabled)
-            {
-                color = MaterialButtonCore.ApplyOpacity(color, 0.38);
-            }
-
             Widget icon = new IconTheme(
                 new IconThemeData(Color: color, Size: iconTheme?.Size ?? 18),
                 widget.DeleteIcon);
-            icon = widget.DeleteIconBoxConstraints is { } constraints
-                ? new ConstrainedBox(constraints, icon)
-                : new SizedBox(width: 24, height: 24, child: icon);
-            icon = new Align(
-                alignment: Alignment.Center,
-                widthFactor: _deleteProgress,
-                heightFactor: 1,
-                child: icon);
             icon = new Opacity(_deleteProgress, icon);
 
             Action? delete = widget.CanDelete ? widget.OnDeleted : null;
@@ -941,59 +956,24 @@ public sealed class RawChip : StatefulWidget
                 icon = new Tooltip(message: tooltip, child: icon);
             }
 
-            return new Semantics(
+            double semanticExtent = (tapTargetSize == Plumix.Material.MaterialTapTargetSize.Padded ? 48.0 : 32.0)
+                                    + density.BaseSizeAdjustment.Y;
+            semanticExtent = Math.Max(0.0, semanticExtent);
+            return new EnsureMinSemanticsSize(
+                minSemanticSize: new Size(semanticExtent, semanticExtent),
                 label: tooltip,
-                flags: delete is null
-                    ? SemanticsFlags.IsButton
-                    : SemanticsFlags.IsButton | SemanticsFlags.IsEnabled,
+                enabled: delete is not null,
                 onTap: delete,
                 child: icon);
         }
 
-        private Widget? BuildLeading(
-            RawChip widget,
-            ChipThemeData chipTheme,
-            ChipThemeData defaults,
-            IconThemeData? iconTheme)
+        private static Widget? BuildAvatar(RawChip widget, IconThemeData? iconTheme)
         {
-            bool showCheckmark = widget.ShowCheckmark ?? chipTheme.ShowCheckmark ?? defaults.ShowCheckmark ?? false;
-            bool checkmarkVisible = showCheckmark && _selectionProgress > 0;
-            var checkmarkColor = widget.CheckmarkColor ?? chipTheme.CheckmarkColor ?? defaults.CheckmarkColor;
-            if (!widget.IsEnabled && checkmarkColor.HasValue)
-            {
-                checkmarkColor = MaterialButtonCore.ApplyOpacity(checkmarkColor.Value, 0.38);
-            }
-            Widget? check = checkmarkVisible
-                ? new Opacity(
-                    opacity: _selectionProgress,
-                    child: new IconTheme(
-                        data: new IconThemeData(Color: checkmarkColor, Size: iconTheme?.Size ?? 18),
-                        child: new Icon(Icons.Check)))
-                : null;
-
             Widget? leading = widget.Avatar;
             if (leading is not null && iconTheme is not null)
             {
                 leading = new IconTheme(iconTheme, leading);
             }
-
-            if (leading is not null && check is not null)
-            {
-                leading = new Stack(
-                    alignment: Alignment.Center,
-                    fit: StackFit.Loose,
-                    children: [leading, check]);
-            }
-            else
-            {
-                leading ??= check;
-            }
-
-            if (leading is not null && widget.AvatarBoxConstraints is { } constraints)
-            {
-                leading = new ConstrainedBox(constraints, leading);
-            }
-
             return leading;
         }
 
@@ -1008,7 +988,7 @@ public sealed class RawChip : StatefulWidget
                     SelectedColor: WithAlpha(primary, 0x3d),
                     SecondarySelectedColor: WithAlpha(theme.PrimaryColor, 0x3d),
                     DeleteIconColor: WithAlpha(primary, 0xde),
-                    ShowCheckmark: false,
+                    ShowCheckmark: true,
                     CheckmarkColor: WithAlpha(primary, 0xde),
                     LabelStyle: theme.TextTheme.BodyLarge.CopyWith(color: WithAlpha(primary, 0xde)),
                     SecondaryLabelStyle: theme.TextTheme.BodyLarge.CopyWith(color: theme.PrimaryColor),
@@ -1223,21 +1203,26 @@ public sealed class RawChip : StatefulWidget
                            ?? (states.HasFlag(MaterialState.Disabled) ? theme.OnSurfaceColor : theme.OnSurfaceVariantColor);
             }
 
-            return states.HasFlag(MaterialState.Disabled)
-                ? MaterialButtonCore.ApplyOpacity(resolved, 0.38)
-                : resolved;
+            return resolved;
         }
 
         private static BorderSide? ResolveSide(
             MaterialState states,
             RawChip widget,
             ChipThemeData chipTheme,
-            ChipThemeData defaults,
-            ShapeBorder shape,
-            ThemeData theme)
+            ChipThemeData defaults)
         {
-            if (widget.Side.HasValue) return widget.Side;
+            BorderSide? widgetSide = widget.Side?.Resolve(states);
+            if (widgetSide.HasValue) return widgetSide;
             if (chipTheme.Side.HasValue) return chipTheme.Side;
+            ShapeBorder shape = widget.Shape?.Resolve(states)
+                                ?? chipTheme.Shape
+                                ?? defaults.Shape
+                                ?? ShapeBorder.Stadium();
+            if (shape.Side is { } shapeSide && shapeSide.Width > 0.0)
+            {
+                return shapeSide;
+            }
             if (widget.DefaultsKind is ChipDefaultsKind.Choice or ChipDefaultsKind.Filter or ChipDefaultsKind.Input
                 && widget.Variant == ChipVariant.Flat
                 && states.HasFlag(MaterialState.Selected))
@@ -1245,6 +1230,30 @@ public sealed class RawChip : StatefulWidget
                 return new BorderSide(Colors.Transparent, 0);
             }
             return defaults.Side ?? shape.Side;
+        }
+
+        private static ShapeBorder ResolveShape(
+            MaterialState states,
+            RawChip widget,
+            ChipThemeData chipTheme,
+            ChipThemeData defaults)
+        {
+            ShapeBorder shape = widget.Shape?.Resolve(states)
+                                ?? chipTheme.Shape
+                                ?? defaults.Shape
+                                ?? ShapeBorder.Stadium();
+            BorderSide? resolvedSide = widget.Side?.Resolve(states) ?? chipTheme.Side;
+            if (resolvedSide.HasValue)
+            {
+                return shape with { Side = resolvedSide };
+            }
+
+            if (shape.Side is { } shapeSide && shapeSide.Width > 0.0)
+            {
+                return shape;
+            }
+
+            return shape with { Side = defaults.Side };
         }
 
         private static TextStyle MergeTextStyles(TextStyle baseStyle, TextStyle? overrideStyle)
@@ -1262,20 +1271,122 @@ public sealed class RawChip : StatefulWidget
 
         private void HandleSelectionTick()
         {
-            SetState(() => _selectionProgress = _selectionController!.Evaluate());
+            SetState(UpdateSelectionProgress);
+        }
+
+        private void HandleAvatarDrawerTick()
+        {
+            SetState(UpdateAvatarDrawerProgress);
         }
 
         private void HandleDeleteTick()
         {
-            SetState(() => _deleteProgress = _deleteController!.Evaluate());
+            SetState(UpdateDeleteProgress);
         }
 
-        private void DisposeController()
+        private void HandleEnableTick()
+        {
+            SetState(UpdateEnableProgress);
+        }
+
+        private AnimationController CreateController(AnimationStyle? style, TimeSpan defaultDuration)
+        {
+            return new AnimationController(style?.Duration ?? defaultDuration, this)
+            {
+                ReverseDuration = style?.ReverseDuration,
+                Curve = Curves.Linear,
+            };
+        }
+
+        private void UpdateAnimationProgress()
+        {
+            UpdateSelectionProgress();
+            UpdateAvatarDrawerProgress();
+            UpdateDeleteProgress();
+            UpdateEnableProgress();
+        }
+
+        private void UpdateSelectionProgress()
+        {
+            AnimationStyle? style = CurrentWidget.ChipAnimationStyle?.SelectAnimation;
+            _selectionProgress = TransformController(
+                _selectionController!,
+                style,
+                Curves.FastOutSlowIn,
+                Curves.FastOutSlowIn);
+            Curve checkmarkCurve = _selectionController!.Status == AnimationStatus.Reverse
+                ? Curves.Interval(1.0 - (50.0 / 195.0), 1.0, Curves.FastOutSlowIn)
+                : Curves.Interval(1.0 - (150.0 / 195.0), 1.0, Curves.FastOutSlowIn);
+            _checkmarkProgress = checkmarkCurve(_selectionController.Value);
+        }
+
+        private void UpdateAvatarDrawerProgress()
+        {
+            AnimationStyle? style = CurrentWidget.ChipAnimationStyle?.AvatarDrawerAnimation;
+            _avatarDrawerProgress = TransformController(
+                _avatarDrawerController!,
+                style,
+                Curves.FastOutSlowIn,
+                Curves.Interval(1.0 - (100.0 / 195.0), 1.0, Curves.FastOutSlowIn));
+        }
+
+        private void UpdateDeleteProgress()
+        {
+            AnimationStyle? style = CurrentWidget.ChipAnimationStyle?.DeleteDrawerAnimation;
+            _deleteProgress = TransformController(
+                _deleteController!,
+                style,
+                Curves.FastOutSlowIn,
+                Curves.FastOutSlowIn);
+        }
+
+        private void UpdateEnableProgress()
+        {
+            AnimationStyle? style = CurrentWidget.ChipAnimationStyle?.EnableAnimation;
+            _enableProgress = TransformController(
+                _enableController!,
+                style,
+                Curves.FastOutSlowIn,
+                Curves.FastOutSlowIn);
+        }
+
+        private static double TransformController(
+            AnimationController controller,
+            AnimationStyle? style,
+            Curve defaultCurve,
+            Curve defaultReverseCurve)
+        {
+            bool reversing = controller.Status == AnimationStatus.Reverse;
+            Curve curve = reversing
+                ? style?.ReverseCurve ?? style?.Curve ?? defaultReverseCurve
+                : style?.Curve ?? defaultCurve;
+            return curve(Math.Clamp(controller.Value, 0.0, 1.0));
+        }
+
+        private static Color ResolveDefaultCheckmarkColor(Brightness brightness, bool hasAvatar)
+        {
+            if (brightness == Brightness.Light)
+            {
+                return hasAvatar ? Colors.White : WithAlpha(Colors.Black, 0xde);
+            }
+
+            return hasAvatar ? Colors.Black : WithAlpha(Colors.White, 0xde);
+        }
+
+        private void DisposeSelectionController()
         {
             if (_selectionController is null) return;
             _selectionController.Changed -= HandleSelectionTick;
             _selectionController.Dispose();
             _selectionController = null;
+        }
+
+        private void DisposeAvatarDrawerController()
+        {
+            if (_avatarDrawerController is null) return;
+            _avatarDrawerController.Changed -= HandleAvatarDrawerTick;
+            _avatarDrawerController.Dispose();
+            _avatarDrawerController = null;
         }
 
         private void DisposeDeleteController()
@@ -1284,6 +1395,14 @@ public sealed class RawChip : StatefulWidget
             _deleteController.Changed -= HandleDeleteTick;
             _deleteController.Dispose();
             _deleteController = null;
+        }
+
+        private void DisposeEnableController()
+        {
+            if (_enableController is null) return;
+            _enableController.Changed -= HandleEnableTick;
+            _enableController.Dispose();
+            _enableController = null;
         }
 
         private static Color WithOpacity(Color color, double opacity)

@@ -1,5 +1,10 @@
 # Changelog
 
+- Breaking: closed the Material chips render divergence. `RawChip` now uses Flutter's three-slot intrinsic/dry
+  layout, mirrored avatar/label/delete geometry and hit routing, painted checkmarks/scrims, enabled-state fading,
+  minimum delete semantics bounds, and independent forward/reverse selection/avatar/delete/enable animation styles.
+  Stateful chip sides/shapes and `ChipThemeData.fromDefaults` are source-shaped, with focused parity coverage.
+
 - Breaking: completed the strict Material `ListTile` closeout. The widget and theme now use source-shaped M2/M3
   defaults, state resolution, ink/semantics/SafeArea composition, directional padding, and a dedicated slotted
   render object with intrinsic/dry layout. Added focused coverage and a mirrored M2/M3 demo probe.

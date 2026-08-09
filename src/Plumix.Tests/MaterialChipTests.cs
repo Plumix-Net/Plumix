@@ -41,6 +41,29 @@ public sealed class MaterialChipTests : IDisposable
     }
 
     [Fact]
+    public void ChipThemeData_FromDefaultsMatchesFlutterAlphaAndGeometryDefaults()
+    {
+        ChipThemeData defaults = ChipThemeData.FromDefaults(
+            secondaryColor: Colors.CadetBlue,
+            labelStyle: new TextStyle(FontSize: 14),
+            brightness: Brightness.Light);
+
+        Assert.Equal(Color.FromArgb(0x1f, 0, 0, 0), defaults.BackgroundColor);
+        Assert.Equal(Color.FromArgb(0x0c, 0, 0, 0), defaults.DisabledColor);
+        Assert.Equal(Color.FromArgb(0x3d, 0, 0, 0), defaults.SelectedColor);
+        Assert.Equal(Color.FromArgb(0x3d, 95, 158, 160), defaults.SecondarySelectedColor);
+        Assert.True(defaults.ShowCheckmark);
+        Assert.Equal(new Thickness(4), defaults.Padding);
+        Assert.Equal(8.0, defaults.PressElevation);
+        Assert.Equal(18.0, defaults.IconTheme!.Size);
+        Assert.Throws<ArgumentException>(() => ChipThemeData.FromDefaults(
+            secondaryColor: Colors.CadetBlue,
+            labelStyle: new TextStyle(),
+            brightness: Brightness.Light,
+            primaryColor: Colors.Black));
+    }
+
+    [Fact]
     public void ActionChip_M3FlatDefaultsMatchOutlineLabelAndGeometryTokens()
     {
         var theme = ThemeData.Light with
@@ -60,10 +83,9 @@ public sealed class MaterialChipTests : IDisposable
         Assert.Equal(Colors.CadetBlue, decoration.Decoration.Border!.Value.Color);
         Assert.Equal(1, decoration.Decoration.Border.Value.Width);
         Assert.Equal(Colors.DarkSlateBlue, ForegroundColor(Paragraph(harness.RenderView, "Action")));
-        Assert.Contains(FindDescendants<RenderConstrainedBox>(harness.RenderView),
-            box => box.AdditionalConstraints.MinHeight == 32);
-        Assert.Contains(FindDescendants<RenderPadding>(harness.RenderView),
-            box => box.Padding.Left == 8 && box.Padding.Right == 8 && box.Padding.Top == 0);
+        RenderChip renderChip = FindChipRender(harness.RenderView);
+        Assert.True(renderChip.Size.Height >= 32);
+        Assert.Equal(new Thickness(8), renderChip.Padding);
     }
 
     [Fact]
@@ -103,7 +125,7 @@ public sealed class MaterialChipTests : IDisposable
 
         Assert.Equal(Colors.DarkGreen, FindChipDecoration(harness.RenderView).Decoration.Color);
         Assert.Equal(Colors.Gold, ForegroundColor(Paragraph(harness.RenderView, "Selected")));
-        Assert.True(FindDescendants<RenderParagraph>(harness.RenderView).Count >= 2);
+        Assert.Equal(1.0, FindChipRender(harness.RenderView).CheckmarkProgress);
         var selected = FindSemantics(semantics, node => node.Flags.HasFlag(SemanticsFlags.IsChecked));
         Assert.NotNull(selected);
         Assert.True(selected!.Flags.HasFlag(SemanticsFlags.IsSelected));
@@ -122,7 +144,8 @@ public sealed class MaterialChipTests : IDisposable
         var semantics = harness.PumpAndGetSemantics(new Size(320, 120));
 
         Assert.Equal(WithOpacity(Colors.Crimson, 0.12), FindChipDecoration(harness.RenderView).Decoration.Color);
-        Assert.Equal(MaterialButtonCore.ApplyOpacity(Colors.Crimson, 0.38), ForegroundColor(Paragraph(harness.RenderView, "Disabled")));
+        Assert.Equal(Colors.Crimson, ForegroundColor(Paragraph(harness.RenderView, "Disabled")));
+        Assert.Equal(0.0, FindChipRender(harness.RenderView).EnableProgress);
         var selected = FindSemantics(semantics, node => node.Flags.HasFlag(SemanticsFlags.IsChecked));
         Assert.NotNull(selected);
         Assert.False(selected!.Flags.HasFlag(SemanticsFlags.IsEnabled));
@@ -196,7 +219,8 @@ public sealed class MaterialChipTests : IDisposable
     public void RawChip_LegacySelectedColorAnimatesOverConfiguredSelectDuration()
     {
         var theme = ThemeData.Light with { SecondaryContainerColor = Colors.DarkGreen };
-        var animation = new ChipAnimationStyle(SelectAnimation: TimeSpan.FromSeconds(10));
+        var animation = new ChipAnimationStyle(
+            SelectAnimation: new AnimationStyle(Duration: TimeSpan.FromSeconds(10)));
         using var harness = new WidgetRenderHarness(Root(
             theme,
             new RawChip(
@@ -311,8 +335,7 @@ public sealed class MaterialChipTests : IDisposable
         RenderParagraph clear = FindDescendants<RenderParagraph>(harness.RenderView)
             .Single(paragraph => paragraph.Text == IconText(Icons.Clear));
         Assert.Equal(Colors.Purple, ForegroundColor(clear));
-        Assert.Contains(FindDescendants<RenderConstrainedBox>(harness.RenderView),
-            box => box.AdditionalConstraints == deleteConstraints);
+        Assert.Equal(deleteConstraints, FindChipRender(harness.RenderView).DeleteIconBoxConstraints);
 
         var body = FindSemantics(semantics, node => node.Label == "Information"
                                                  && node.Actions.HasFlag(SemanticsActions.Tap));
@@ -344,8 +367,7 @@ public sealed class MaterialChipTests : IDisposable
 
         Assert.Equal(Colors.DarkGreen, FindChipDecoration(harness.RenderView).Decoration.Color);
         Assert.Equal(Colors.Gold, ForegroundColor(Paragraph(harness.RenderView, "Filter")));
-        Assert.Contains(FindDescendants<RenderParagraph>(harness.RenderView),
-            paragraph => paragraph.Text == IconText(Icons.Check));
+        Assert.Equal(1.0, FindChipRender(harness.RenderView).CheckmarkProgress);
         Assert.Contains(FindDescendants<RenderParagraph>(harness.RenderView),
             paragraph => paragraph.Text == IconText(Icons.Clear));
     }
@@ -525,11 +547,11 @@ public sealed class MaterialChipTests : IDisposable
 
         Assert.Equal(Colors.DarkGreen, FindChipDecoration(harness.RenderView).Decoration.Color);
         Assert.Equal(Colors.Gold, ForegroundColor(Paragraph(harness.RenderView, "Selected input")));
-        var check = FindDescendants<RenderParagraph>(harness.RenderView)
-            .Single(paragraph => paragraph.Text == IconText(Icons.Check));
+        RenderChip renderChip = FindChipRender(harness.RenderView);
         var clear = FindDescendants<RenderParagraph>(harness.RenderView)
             .Single(paragraph => paragraph.Text == IconText(Icons.Clear));
-        Assert.Equal(Colors.CadetBlue, ForegroundColor(check));
+        Assert.Equal(Colors.CadetBlue, renderChip.CheckmarkColor);
+        Assert.Equal(1.0, renderChip.CheckmarkProgress);
         Assert.Equal(Colors.Gold, ForegroundColor(clear));
     }
 
@@ -571,11 +593,153 @@ public sealed class MaterialChipTests : IDisposable
         var clear = FindDescendants<RenderParagraph>(harness.RenderView)
             .Single(paragraph => paragraph.Text == IconText(Icons.Clear));
         Assert.Equal(Colors.Purple, ForegroundColor(clear));
-        Assert.Contains(FindDescendants<RenderConstrainedBox>(harness.RenderView),
-            box => box.AdditionalConstraints == constraints);
+        Assert.Equal(constraints, FindChipRender(harness.RenderView).DeleteIconBoxConstraints);
         var delete = FindSemantics(semantics, node => node.Label == "Effacer");
         Assert.NotNull(delete);
         Assert.True(delete!.Actions.HasFlag(SemanticsActions.Tap));
+        Assert.True(delete.Rect.Width >= 48);
+        Assert.True(delete.Rect.Height >= 48);
+    }
+
+    [Fact]
+    public void RawChip_UsesSlottedRenderGeometryAndMirrorsOffsetsInRtl()
+    {
+        var avatarConstraints = BoxConstraints.Tight(new Size(18, 18));
+        var deleteConstraints = BoxConstraints.Tight(new Size(20, 20));
+        Widget Chip() => new RawChip(
+            label: new Text("Geometry"),
+            avatar: new Icon(Icons.Star),
+            onDeleted: () => { },
+            avatarBoxConstraints: avatarConstraints,
+            deleteIconBoxConstraints: deleteConstraints);
+
+        using var ltrHarness = new WidgetRenderHarness(Root(ThemeData.Light, Chip()));
+        ltrHarness.Pump(new Size(320, 120));
+        RenderChip ltr = FindChipRender(ltrHarness.RenderView);
+        Point ltrAvatar = ParentOffset(ltr.Avatar!);
+        Point ltrLabel = ParentOffset(ltr.Label);
+        Point ltrDelete = ParentOffset(ltr.DeleteIcon!);
+        Assert.True(ltrAvatar.X < ltrLabel.X);
+        Assert.True(ltrLabel.X < ltrDelete.X);
+        Assert.Equal(avatarConstraints, ltr.AvatarBoxConstraints);
+        Assert.Equal(deleteConstraints, ltr.DeleteIconBoxConstraints);
+        Assert.True(ltr.DeleteButtonRect.Width <= ltr.Size.Width * 0.5);
+
+        using var rtlHarness = new WidgetRenderHarness(Root(
+            ThemeData.Light,
+            new Directionality(TextDirection.Rtl, Chip())));
+        rtlHarness.Pump(new Size(320, 120));
+        RenderChip rtl = FindChipRender(rtlHarness.RenderView);
+        Point rtlAvatar = ParentOffset(rtl.Avatar!);
+        Point rtlLabel = ParentOffset(rtl.Label);
+        Point rtlDelete = ParentOffset(rtl.DeleteIcon!);
+        Assert.True(rtlDelete.X < rtlLabel.X);
+        Assert.True(rtlLabel.X < rtlAvatar.X);
+    }
+
+    [Fact]
+    public void RawChip_AvatarAndDeleteDrawersHonorForwardAndReverseAnimationStyles()
+    {
+        var animations = new ChipAnimationStyle(
+            AvatarDrawerAnimation: new AnimationStyle(
+                Duration: TimeSpan.FromMilliseconds(800),
+                ReverseDuration: TimeSpan.FromMilliseconds(400)),
+            DeleteDrawerAnimation: new AnimationStyle(
+                Duration: TimeSpan.FromMilliseconds(500),
+                ReverseDuration: TimeSpan.FromMilliseconds(250)));
+        using var harness = new WidgetRenderHarness(Root(
+            ThemeData.Light,
+            new RawChip(label: new Text("Animated slots"), chipAnimationStyle: animations)));
+        harness.Pump(new Size(320, 120));
+        Assert.Equal(0.0, FindChipRender(harness.RenderView).AvatarDrawerProgress);
+        Assert.Equal(0.0, FindChipRender(harness.RenderView).DeleteDrawerProgress);
+
+        harness.Update(Root(
+            ThemeData.Light,
+            new RawChip(
+                label: new Text("Animated slots"),
+                avatar: new Icon(Icons.Star),
+                onDeleted: () => { },
+                chipAnimationStyle: animations)));
+        harness.Pump(new Size(320, 120));
+        double forwardStart = Scheduler.CurrentSeconds;
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(forwardStart + 0.25));
+        harness.Pump(new Size(320, 120));
+        RenderChip opening = FindChipRender(harness.RenderView);
+        Assert.InRange(opening.AvatarDrawerProgress, 0.001, 0.999);
+        Assert.InRange(opening.DeleteDrawerProgress, 0.001, 0.999);
+
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(forwardStart + 1.0));
+        harness.Pump(new Size(320, 120));
+        Assert.Equal(1.0, FindChipRender(harness.RenderView).AvatarDrawerProgress);
+        Assert.Equal(1.0, FindChipRender(harness.RenderView).DeleteDrawerProgress);
+
+        harness.Update(Root(
+            ThemeData.Light,
+            new RawChip(label: new Text("Animated slots"), chipAnimationStyle: animations)));
+        harness.Pump(new Size(320, 120));
+        double reverseStart = Scheduler.CurrentSeconds;
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(reverseStart + 0.125));
+        harness.Pump(new Size(320, 120));
+        RenderChip closing = FindChipRender(harness.RenderView);
+        Assert.InRange(closing.AvatarDrawerProgress, 0.001, 0.999);
+        Assert.InRange(closing.DeleteDrawerProgress, 0.001, 0.999);
+
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(reverseStart + 1.0));
+        harness.Pump(new Size(320, 120));
+        RenderChip closed = FindChipRender(harness.RenderView);
+        Assert.Equal(0.0, closed.AvatarDrawerProgress);
+        Assert.Equal(0.0, closed.DeleteDrawerProgress);
+        Assert.Null(closed.Avatar);
+        Assert.Null(closed.DeleteIcon);
+    }
+
+    [Fact]
+    public void RawChip_StatefulShapeAndSideResolveSelectedAndDisabledStates()
+    {
+        var shape = MaterialStateProperty<ShapeBorder?>.ResolveWith(states =>
+            states.HasFlag(MaterialState.Selected)
+                ? ShapeBorder.RoundedRectangle(13)
+                : ShapeBorder.RoundedRectangle(3));
+        var side = MaterialStateProperty<BorderSide?>.ResolveWith(states =>
+            states.HasFlag(MaterialState.Disabled)
+                ? new BorderSide(Colors.Crimson, 2)
+                : new BorderSide(Colors.CadetBlue, 1));
+        using var harness = new WidgetRenderHarness(Root(
+            ThemeData.Light,
+            new RawChip(
+                label: new Text("State geometry"),
+                selected: true,
+                isEnabled: false,
+                shape: shape,
+                side: side)));
+
+        harness.Pump(new Size(320, 120));
+
+        RenderDecoratedBox decoration = FindChipDecoration(harness.RenderView);
+        Assert.Equal(13, decoration.Decoration.BorderRadius!.Value.Radius);
+        Assert.Equal(Colors.Crimson, decoration.Decoration.Border!.Value.Color);
+        Assert.Equal(2, decoration.Decoration.Border.Value.Width);
+    }
+
+    [Fact]
+    public void RawChip_HorizontalDensityDoesNotChangeContentWidth()
+    {
+        using var standardHarness = new WidgetRenderHarness(Root(
+            ThemeData.Light,
+            new RawChip(label: new Text("Density"))));
+        standardHarness.Pump(new Size(320, 120));
+        double standardWidth = FindChipRender(standardHarness.RenderView).Size.Width;
+
+        using var horizontalHarness = new WidgetRenderHarness(Root(
+            ThemeData.Light,
+            new RawChip(
+                label: new Text("Density"),
+                visualDensity: new VisualDensity(Horizontal: 4, Vertical: 0))));
+        horizontalHarness.Pump(new Size(320, 120));
+        double horizontalWidth = FindChipRender(horizontalHarness.RenderView).Size.Width;
+
+        Assert.Equal(standardWidth, horizontalWidth);
     }
 
     private static Widget Root(
@@ -601,6 +765,16 @@ public sealed class MaterialChipTests : IDisposable
     {
         return FindDescendants<RenderDecoratedBox>(root)
             .First(box => box.Decoration.BorderRadius.HasValue);
+    }
+
+    private static RenderChip FindChipRender(RenderObject root)
+    {
+        return FindDescendants<RenderChip>(root).Single();
+    }
+
+    private static Point ParentOffset(RenderBox child)
+    {
+        return ((BoxParentData)child.parentData!).offset;
     }
 
     private static RenderParagraph Paragraph(RenderObject root, string text)

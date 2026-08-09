@@ -28,8 +28,8 @@ public sealed class FilterChip : StatelessWidget
         Color? disabledColor = null,
         Color? selectedColor = null,
         string? tooltip = null,
-        BorderSide? side = null,
-        ShapeBorder? shape = null,
+        MaterialStateProperty<BorderSide?>? side = null,
+        MaterialStateProperty<ShapeBorder?>? shape = null,
         Clip clipBehavior = Clip.None,
         FocusNode? focusNode = null,
         bool autofocus = false,
@@ -75,8 +75,8 @@ public sealed class FilterChip : StatelessWidget
         Color? disabledColor,
         Color? selectedColor,
         string? tooltip,
-        BorderSide? side,
-        ShapeBorder? shape,
+        MaterialStateProperty<BorderSide?>? side,
+        MaterialStateProperty<ShapeBorder?>? shape,
         Clip clipBehavior,
         FocusNode? focusNode,
         bool autofocus,
@@ -156,8 +156,8 @@ public sealed class FilterChip : StatelessWidget
         Color? disabledColor = null,
         Color? selectedColor = null,
         string? tooltip = null,
-        BorderSide? side = null,
-        ShapeBorder? shape = null,
+        MaterialStateProperty<BorderSide?>? side = null,
+        MaterialStateProperty<ShapeBorder?>? shape = null,
         Clip clipBehavior = Clip.None,
         FocusNode? focusNode = null,
         bool autofocus = false,
@@ -203,8 +203,8 @@ public sealed class FilterChip : StatelessWidget
     public Color? DisabledColor { get; }
     public Color? SelectedColor { get; }
     public string? Tooltip { get; }
-    public BorderSide? Side { get; }
-    public ShapeBorder? Shape { get; }
+    public MaterialStateProperty<BorderSide?>? Side { get; }
+    public MaterialStateProperty<ShapeBorder?>? Shape { get; }
     public Clip ClipBehavior { get; }
     public FocusNode? FocusNode { get; }
     public bool Autofocus { get; }
@@ -304,8 +304,8 @@ public sealed class InputChip : StatelessWidget
         Color? disabledColor = null,
         Color? selectedColor = null,
         string? tooltip = null,
-        BorderSide? side = null,
-        ShapeBorder? shape = null,
+        MaterialStateProperty<BorderSide?>? side = null,
+        MaterialStateProperty<ShapeBorder?>? shape = null,
         Clip clipBehavior = Clip.None,
         FocusNode? focusNode = null,
         bool autofocus = false,
@@ -391,8 +391,8 @@ public sealed class InputChip : StatelessWidget
     public Color? DisabledColor { get; }
     public Color? SelectedColor { get; }
     public string? Tooltip { get; }
-    public BorderSide? Side { get; }
-    public ShapeBorder? Shape { get; }
+    public MaterialStateProperty<BorderSide?>? Side { get; }
+    public MaterialStateProperty<ShapeBorder?>? Shape { get; }
     public Clip ClipBehavior { get; }
     public FocusNode? FocusNode { get; }
     public bool Autofocus { get; }
