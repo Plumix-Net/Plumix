@@ -2649,6 +2649,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
 {
     private string? _label;
     private string? _hint;
+    private string? _onTapHint;
     private string? _tooltip;
     private string? _value;
     private string? _minValue;
@@ -2669,6 +2670,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
     public RenderSemanticsAnnotations(
         string? label = null,
         string? hint = null,
+        string? onTapHint = null,
         string? tooltip = null,
         string? value = null,
         string? minValue = null,
@@ -2688,6 +2690,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
     {
         _label = label;
         _hint = hint;
+        _onTapHint = onTapHint;
         _tooltip = tooltip;
         _value = value;
         _minValue = minValue;
@@ -2728,6 +2731,21 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         {
             if (_hint == value) return;
             _hint = value;
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
+    public string? OnTapHint
+    {
+        get => _onTapHint;
+        set
+        {
+            if (_onTapHint == value)
+            {
+                return;
+            }
+
+            _onTapHint = value;
             MarkNeedsSemanticsUpdate();
         }
     }
@@ -2944,6 +2962,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
     {
         if (string.IsNullOrWhiteSpace(_label)
             && string.IsNullOrWhiteSpace(_hint)
+            && string.IsNullOrWhiteSpace(_onTapHint)
             && string.IsNullOrWhiteSpace(_tooltip)
             && string.IsNullOrWhiteSpace(_value)
             && string.IsNullOrWhiteSpace(_minValue)
@@ -2986,6 +3005,11 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         if (!string.IsNullOrWhiteSpace(_hint))
         {
             configuration.Hint = _hint;
+        }
+
+        if (!string.IsNullOrWhiteSpace(_onTapHint))
+        {
+            configuration.OnTapHint = _onTapHint;
         }
 
         if (!string.IsNullOrWhiteSpace(_tooltip))

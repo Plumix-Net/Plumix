@@ -43,6 +43,8 @@ internal sealed class StepperDemoPageState : State
                             onPressed: _ => SetState(() => _expanded = !_expanded),
                             expandedColor: Color.Parse("#FF6750A4")),
                         new Text(_expanded ? "Expanded" : "Collapsed", fontSize: 14),
+                        new ExpandIcon(onPressed: null),
+                        new Text("Disabled", fontSize: 14),
                         new TextButton(
                             child: new Text(_horizontal ? "Use vertical" : "Use horizontal"),
                             onPressed: () => SetState(() => _horizontal = !_horizontal)),

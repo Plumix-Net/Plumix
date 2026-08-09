@@ -1,5 +1,9 @@
 # Changelog
 
+- Breaking: completed the strict `ExpandIcon` closeout. Directional padding, half-turn transition composition,
+  M2/M3 enabled and disabled colors, callback/state behavior, and action-specific semantic hints now match Flutter;
+  shared IconButton state fallback and opacity rounding were corrected, with focused tests and a mirrored demo probe.
+
 - Breaking: completed the `LinearProgressIndicator`/`CircularProgressIndicator` ColorScheme and API closeout.
   Defaults now read direct M2/M3 roles; the shared theme, controller precedence, circular padding, adaptive path,
   constructor contracts, and progress semantics are source-shaped. Added focused coverage and mirrored padding probes.

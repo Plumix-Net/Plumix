@@ -74,7 +74,7 @@ public sealed class ModalBarrierTests
         Assert.NotNull(gesture.OnSecondaryTap);
         Assert.Equal(BoxConstraints.Expand(), constraints.Constraints);
         Assert.Equal(Colors.SlateBlue, coloredBox.Color);
-        Assert.Equal("Close the overlay", semantics.Hint);
+        Assert.Equal("Close the overlay", semantics.OnTapHint);
 
         bool semanticsSupported = OperatingSystem.IsAndroid()
                                   || OperatingSystem.IsIOS()

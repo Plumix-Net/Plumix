@@ -107,6 +107,7 @@ public sealed class SemanticsConfiguration
     public bool IsExcluded { get; set; }
     public string? Label { get; set; }
     public string? Hint { get; set; }
+    public string? OnTapHint { get; set; }
     public string? Tooltip { get; set; }
     public string? Value { get; set; }
     public string? MinValue { get; set; }
@@ -174,6 +175,7 @@ public sealed class SemanticsConfiguration
             IsExcluded = IsExcluded,
             Label = Label,
             Hint = Hint,
+            OnTapHint = OnTapHint,
             Tooltip = Tooltip,
             Value = Value,
             MinValue = MinValue,
@@ -209,6 +211,7 @@ public sealed class SemanticsConfiguration
     internal bool HasBeenAnnotated =>
         !string.IsNullOrWhiteSpace(Label)
         || !string.IsNullOrWhiteSpace(Hint)
+        || !string.IsNullOrWhiteSpace(OnTapHint)
         || !string.IsNullOrWhiteSpace(Tooltip)
         || !string.IsNullOrWhiteSpace(Value)
         || !string.IsNullOrWhiteSpace(MinValue)
@@ -305,6 +308,8 @@ public sealed class SemanticsConfiguration
             Hint = string.IsNullOrWhiteSpace(Hint) ? child.Hint : $"{Hint} {child.Hint}";
         }
 
+        OnTapHint ??= child.OnTapHint;
+
         if (!string.IsNullOrWhiteSpace(child.Tooltip))
         {
             Tooltip = string.IsNullOrWhiteSpace(Tooltip)
@@ -348,6 +353,7 @@ public sealed class SemanticsNode
     public Rect Rect { get; internal set; }
     public string? Label { get; internal set; }
     public string? Hint { get; internal set; }
+    public string? OnTapHint { get; internal set; }
     public string? Tooltip { get; internal set; }
     public string? Value { get; internal set; }
     public string? MinValue { get; internal set; }
@@ -488,6 +494,7 @@ public sealed class SemanticsOwner
         _syntheticRoot.Rect = UnionBounds(roots);
         _syntheticRoot.Label = null;
         _syntheticRoot.Hint = null;
+        _syntheticRoot.OnTapHint = null;
         _syntheticRoot.Tooltip = null;
         _syntheticRoot.Value = null;
         _syntheticRoot.MinValue = null;
@@ -568,6 +575,11 @@ public sealed class SemanticsOwner
         if (!string.IsNullOrEmpty(node.Value))
         {
             builder.Append(" value=\"").Append(node.Value).Append('"');
+        }
+
+        if (!string.IsNullOrEmpty(node.OnTapHint))
+        {
+            builder.Append(" onTapHint=\"").Append(node.OnTapHint).Append('"');
         }
 
         if (node.Flags != SemanticsFlags.None)

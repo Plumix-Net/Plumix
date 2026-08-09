@@ -25,7 +25,7 @@ public sealed class IconButton : StatelessWidget
         Action? onPressed,
         double? iconSize = null,
         VisualDensity? visualDensity = null,
-        Thickness? padding = null,
+        EdgeInsetsGeometry? padding = null,
         Alignment? alignment = null,
         Color? color = null,
         Color? disabledColor = null,
@@ -83,7 +83,7 @@ public sealed class IconButton : StatelessWidget
         IconButtonVariant variant,
         double? iconSize,
         VisualDensity? visualDensity,
-        Thickness? padding,
+        EdgeInsetsGeometry? padding,
         Alignment? alignment,
         Color? color,
         Color? disabledColor,
@@ -156,7 +156,7 @@ public sealed class IconButton : StatelessWidget
 
     public VisualDensity? VisualDensity { get; }
 
-    public Thickness? Padding { get; }
+    public EdgeInsetsGeometry? Padding { get; }
 
     public Alignment? Alignment { get; }
 
@@ -203,7 +203,7 @@ public sealed class IconButton : StatelessWidget
         Action? onPressed,
         double? iconSize = null,
         VisualDensity? visualDensity = null,
-        Thickness? padding = null,
+        EdgeInsetsGeometry? padding = null,
         Alignment? alignment = null,
         Color? color = null,
         Color? disabledColor = null,
@@ -261,7 +261,7 @@ public sealed class IconButton : StatelessWidget
         Action? onPressed,
         double? iconSize = null,
         VisualDensity? visualDensity = null,
-        Thickness? padding = null,
+        EdgeInsetsGeometry? padding = null,
         Alignment? alignment = null,
         Color? color = null,
         Color? disabledColor = null,
@@ -319,7 +319,7 @@ public sealed class IconButton : StatelessWidget
         Action? onPressed,
         double? iconSize = null,
         VisualDensity? visualDensity = null,
-        Thickness? padding = null,
+        EdgeInsetsGeometry? padding = null,
         Alignment? alignment = null,
         Color? color = null,
         Color? disabledColor = null,
@@ -489,7 +489,7 @@ public sealed class IconButton : StatelessWidget
             focusColor: FocusColor,
             hoverColor: HoverColor,
             highlightColor: HighlightColor,
-            padding: Padding,
+            padding: Padding?.Resolve(Directionality.Of(context)),
             minimumSize: minimumSize,
             maximumSize: maximumSize,
             iconSize: IconSize,
@@ -559,7 +559,7 @@ public sealed class IconButton : StatelessWidget
             unadjustedConstraints);
         var ambientIconTheme = Plumix.Widgets.IconTheme.Of(context);
         double effectiveIconSize = IconSize ?? ambientIconTheme.Size ?? 24.0;
-        Thickness effectivePadding = Padding ?? new Thickness(8);
+        Thickness effectivePadding = Padding?.Resolve(Directionality.Of(context)) ?? new Thickness(8);
         Plumix.Rendering.Alignment effectiveAlignment = Alignment
                                                          ?? Plumix.Rendering.Alignment.Center;
         bool effectiveEnableFeedback = EnableFeedback ?? true;
@@ -851,7 +851,7 @@ public sealed class IconButton : StatelessWidget
 
         return MaterialStateProperty<Color?>.ResolveWith(states =>
             states.HasFlag(MaterialState.Disabled)
-                ? disabledColor ?? enabledColor
+                ? disabledColor
                 : enabledColor);
     }
 

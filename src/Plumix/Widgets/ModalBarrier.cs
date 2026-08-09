@@ -176,7 +176,7 @@ public sealed class ModalBarrier : StatelessWidget
         }
 
         Widget barrier = new Semantics(
-            hint: SemanticsOnTapHint,
+            onTapHint: SemanticsOnTapHint,
             onTap: semanticsDismissible && SemanticsLabel != null ? HandleDismiss : null,
             onDismiss: semanticsDismissible && SemanticsLabel != null ? HandleDismiss : null,
             label: semanticsDismissible ? SemanticsLabel : null,

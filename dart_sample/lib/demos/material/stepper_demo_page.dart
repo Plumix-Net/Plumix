@@ -36,6 +36,8 @@ class _StepperDemoPageState extends State<StepperDemoPage> {
               expandedColor: const Color(0xFF6750A4),
             ),
             Text(_expanded ? 'Expanded' : 'Collapsed'),
+            const ExpandIcon(onPressed: null),
+            const Text('Disabled'),
             TextButton(
               onPressed: () => setState(() => _horizontal = !_horizontal),
               child: Text(_horizontal ? 'Use vertical' : 'Use horizontal'),

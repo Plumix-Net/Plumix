@@ -569,7 +569,7 @@ public sealed class MaterialSliderTests
 
     private static Color ApplyOpacity(Color color, double opacity)
     {
-        byte alpha = (byte)Math.Clamp((int)(255 * opacity), 0, 255);
+        byte alpha = (byte)Math.Clamp((int)Math.Round(255 * opacity), 0, 255);
         return Color.FromArgb(alpha, color.R, color.G, color.B);
     }
 

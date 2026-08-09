@@ -1,6 +1,6 @@
-using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
+using Plumix.Rendering;
 using Plumix.Widgets;
 
 namespace Plumix.Material;
@@ -12,7 +12,7 @@ public sealed class ExpandIcon : StatefulWidget
         Action<bool>? onPressed,
         bool isExpanded = false,
         double size = 24,
-        Thickness? padding = null,
+        EdgeInsetsGeometry? padding = null,
         Color? color = null,
         Color? disabledColor = null,
         Color? expandedColor = null,
@@ -20,15 +20,10 @@ public sealed class ExpandIcon : StatefulWidget
         Color? highlightColor = null,
         Key? key = null) : base(key)
     {
-        if (!double.IsFinite(size) || size <= 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(size), "ExpandIcon size must be finite and positive.");
-        }
-
         IsExpanded = isExpanded;
         Size = size;
         OnPressed = onPressed;
-        Padding = padding ?? new Thickness(8);
+        Padding = padding ?? EdgeInsetsGeometry.All(8.0);
         Color = color;
         DisabledColor = disabledColor;
         ExpandedColor = expandedColor;
@@ -39,7 +34,7 @@ public sealed class ExpandIcon : StatefulWidget
     public bool IsExpanded { get; }
     public double Size { get; }
     public Action<bool>? OnPressed { get; }
-    public Thickness Padding { get; }
+    public EdgeInsetsGeometry Padding { get; }
     public Color? Color { get; }
     public Color? DisabledColor { get; }
     public Color? ExpandedColor { get; }
@@ -51,18 +46,22 @@ public sealed class ExpandIcon : StatefulWidget
     private sealed class ExpandIconState : State
     {
         private static readonly TimeSpan ThemeAnimationDuration = TimeSpan.FromMilliseconds(200);
+        private static readonly DoubleTween IconTurnTween = new(begin: 0.0, end: 0.5);
+
         private AnimationController? _controller;
+        private CurvedAnimation? _curvedAnimation;
+        private Animation<double>? _iconTurns;
 
         private ExpandIcon CurrentWidget => (ExpandIcon)StateWidget;
 
         public override void InitState()
         {
-            _controller = new AnimationController(ThemeAnimationDuration, this) { Curve = Curves.FastOutSlowIn };
-            _controller.Changed += HandleChanged;
+            _controller = new AnimationController(ThemeAnimationDuration, this);
+            _curvedAnimation = new CurvedAnimation(_controller, Curves.FastOutSlowIn);
+            _iconTurns = IconTurnTween.Animate(_curvedAnimation);
             if (CurrentWidget.IsExpanded)
             {
-                _controller.Forward(from: 1);
-                _controller.Stop();
+                _controller.SetValue(1.0);
             }
         }
 
@@ -86,43 +85,33 @@ public sealed class ExpandIcon : StatefulWidget
             string onTapHint = CurrentWidget.IsExpanded
                 ? localizations.ExpandedIconTapHint
                 : localizations.CollapsedIconTapHint;
-            var iconColor = ResolveIconColor(Theme.Of(context));
-            double progress = _controller!.Evaluate();
-            double angle = Math.PI * progress;
-            double center = CurrentWidget.Size / 2;
-            var rotation = new Matrix(
-                Math.Cos(angle), Math.Sin(angle),
-                -Math.Sin(angle), Math.Cos(angle),
-                0, 0);
-            Widget icon = new Plumix.Widgets.Transform(
-                transform: Matrix.CreateTranslation(center, center)
-                           * rotation
-                           * Matrix.CreateTranslation(-center, -center),
-                child: new Icon(Icons.ExpandMore, size: CurrentWidget.Size));
-
-            icon = new IconButton(
-                icon: icon,
-                iconSize: CurrentWidget.Size,
-                padding: CurrentWidget.Padding,
-                color: iconColor,
-                disabledColor: CurrentWidget.DisabledColor,
-                highlightColor: CurrentWidget.HighlightColor,
-                splashColor: CurrentWidget.SplashColor,
-                onPressed: CurrentWidget.OnPressed is null
-                    ? null
-                    : () => CurrentWidget.OnPressed(CurrentWidget.IsExpanded));
-
             return new Semantics(
-                hint: CurrentWidget.OnPressed is null ? null : onTapHint,
-                child: icon);
+                onTapHint: CurrentWidget.OnPressed is null ? null : onTapHint,
+                child: new IconButton(
+                    padding: CurrentWidget.Padding,
+                    iconSize: CurrentWidget.Size,
+                    highlightColor: CurrentWidget.HighlightColor,
+                    splashColor: CurrentWidget.SplashColor,
+                    color: ResolveIconColor(Theme.Of(context)),
+                    disabledColor: CurrentWidget.DisabledColor,
+                    onPressed: CurrentWidget.OnPressed is null ? null : HandlePressed,
+                    icon: new RotationTransition(
+                        turns: _iconTurns!,
+                        child: new Icon(Icons.ExpandMore))));
         }
 
         public override void Dispose()
         {
-            if (_controller is null) return;
-            _controller.Changed -= HandleChanged;
-            _controller.Dispose();
+            _curvedAnimation?.Dispose();
+            _controller?.Dispose();
+            _iconTurns = null;
+            _curvedAnimation = null;
             _controller = null;
+        }
+
+        private void HandlePressed()
+        {
+            CurrentWidget.OnPressed?.Invoke(CurrentWidget.IsExpanded);
         }
 
         private Color ResolveIconColor(ThemeData theme)
@@ -137,7 +126,5 @@ public sealed class ExpandIcon : StatefulWidget
                 ? Avalonia.Media.Color.FromArgb(0x99, 0xFF, 0xFF, 0xFF)
                 : Avalonia.Media.Color.FromArgb(0x8A, 0x00, 0x00, 0x00);
         }
-
-        private void HandleChanged() => SetState(() => { });
     }
 }

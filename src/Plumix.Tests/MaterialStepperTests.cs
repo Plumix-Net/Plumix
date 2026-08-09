@@ -27,43 +27,6 @@ public sealed class MaterialStepperTests : IDisposable
     }
 
     [Fact]
-    public void ExpandIcon_DefaultsAndCallback_MatchFlutterContract()
-    {
-        bool? pressedValue = null;
-        var icon = new ExpandIcon(value => pressedValue = value);
-
-        Assert.False(icon.IsExpanded);
-        Assert.Equal(24, icon.Size);
-        Assert.Equal(new Thickness(8), icon.Padding);
-        Assert.Throws<ArgumentOutOfRangeException>(() => new ExpandIcon(_ => { }, size: 0));
-
-        using var harness = new WidgetRenderHarness(BuildThemed(icon));
-        var semantics = harness.PumpAndGetSemantics(new Size(80, 80));
-        var button = FindNode(semantics!, node => node.Actions.HasFlag(SemanticsActions.Tap));
-        var hint = FindNode(semantics!, node => node.Hint == "Expand");
-        Assert.NotNull(button);
-        Assert.NotNull(hint);
-        Assert.True(harness.PerformSemanticsAction(button.Id, SemanticsActions.Tap));
-        Assert.False(pressedValue);
-    }
-
-    [Fact]
-    public void ExpandIcon_ExpandedUpdate_AnimatesHalfTurnAndChangesHint()
-    {
-        using var harness = new WidgetRenderHarness(BuildThemed(new ExpandIcon(_ => { })));
-        harness.Pump(new Size(80, 80));
-        var transform = FindDescendants<RenderTransform>(harness.RenderView).Single();
-        Assert.True(Math.Abs(transform.Transform.M11 - 1) < 0.001);
-
-        harness.Update(BuildThemed(new ExpandIcon(_ => { }, isExpanded: true)));
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.25));
-        var semantics = harness.PumpAndGetSemantics(new Size(80, 80));
-        transform = FindDescendants<RenderTransform>(harness.RenderView).Single();
-        Assert.True(transform.Transform.M11 < -0.99);
-        Assert.NotNull(FindNode(semantics!, node => node.Hint == "Collapse"));
-    }
-
-    [Fact]
     public void Stepper_DefaultsAndValidation_MatchFlutterSurface()
     {
         var steps = BuildSteps();

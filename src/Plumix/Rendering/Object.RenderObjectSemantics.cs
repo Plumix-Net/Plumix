@@ -394,6 +394,7 @@ internal sealed class RenderObjectSemantics
                || config.IsBlockingSemanticsOfPreviouslyPaintedNodes
                || !string.IsNullOrEmpty(config.Label)
                || !string.IsNullOrEmpty(config.Hint)
+               || !string.IsNullOrEmpty(config.OnTapHint)
                || !string.IsNullOrEmpty(config.Tooltip)
                || config.Role != SemanticsRole.None
                || config.InputType != SemanticsInputType.None
@@ -786,6 +787,7 @@ internal sealed class RenderObjectSemantics
             IsSemanticBoundary = node.IsSemanticBoundary,
             Label = node.Label,
             Hint = node.Hint,
+            OnTapHint = node.OnTapHint,
             Tooltip = node.Tooltip,
             Value = node.Value,
             MinValue = node.MinValue,
@@ -826,6 +828,7 @@ internal sealed class RenderObjectSemantics
         node.Rect = rect;
         node.Label = configuration.Label;
         node.Hint = configuration.Hint;
+        node.OnTapHint = configuration.OnTapHint;
         node.Tooltip = configuration.Tooltip;
         node.Value = configuration.Value;
         node.MinValue = configuration.MinValue;

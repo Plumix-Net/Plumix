@@ -29,6 +29,7 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         Widget? child = null,
         string? label = null,
         string? hint = null,
+        string? onTapHint = null,
         string? tooltip = null,
         string? value = null,
         string? minValue = null,
@@ -54,6 +55,7 @@ public sealed class Semantics : SingleChildRenderObjectWidget
     {
         Label = label;
         Hint = hint;
+        OnTapHint = onTapHint;
         Tooltip = tooltip;
         Value = value;
         MinValue = minValue;
@@ -89,6 +91,8 @@ public sealed class Semantics : SingleChildRenderObjectWidget
     public string? Label { get; }
 
     public string? Hint { get; }
+
+    public string? OnTapHint { get; }
 
     public string? Tooltip { get; }
 
@@ -139,6 +143,7 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         var semantics = new RenderSemanticsAnnotations(
             label: Label,
             hint: Hint,
+            onTapHint: OnTapHint,
             tooltip: Tooltip,
             value: Value,
             minValue: MinValue,
@@ -163,6 +168,7 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         var semantics = (RenderSemanticsAnnotations)renderObject;
         semantics.Label = Label;
         semantics.Hint = Hint;
+        semantics.OnTapHint = OnTapHint;
         semantics.Tooltip = Tooltip;
         semantics.Value = Value;
         semantics.MinValue = MinValue;

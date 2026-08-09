@@ -100,6 +100,8 @@
   - `LinearProgressIndicator`/`CircularProgressIndicator` (direct M2/M3 primary/background/secondary-container
     roles, source theme API/copy/lerp/capture, controller precedence, 2023/2024 geometry, range semantics, adaptive
     Cupertino routing, circular padding, and mirrored runtime probes).
+  - `ExpandIcon` (exact M2/M3 enabled/disabled colors, directional padding, source half-turn animation,
+    action-specific semantic hints, callback/state behavior, and mirrored enabled/disabled runtime probes).
 - Completed `Typography.Material2014`/`Material2018`, exact platform black/white themes, dense/tall geometry, and
   locale script-category selection.
 - Remove the narrowed `ColorScheme + Typography closeout` row from `docs/MATERIAL_TODO.md` only after those checks
