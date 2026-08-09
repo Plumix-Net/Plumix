@@ -36,7 +36,7 @@ class _ScrollbarDemoPageState extends State<ScrollbarDemoPage> {
           style: TextStyle(fontSize: 20, color: Colors.black),
         ),
         const Text(
-          'Material defaults/fade beside an always-visible themed raw track; both thumbs are draggable.',
+          'Material state theming/fade beside an always-visible raw track; both thumbs are draggable.',
           style: TextStyle(fontSize: 14, color: Colors.black54),
         ),
         Expanded(
@@ -45,10 +45,28 @@ class _ScrollbarDemoPageState extends State<ScrollbarDemoPage> {
             children: <Widget>[
               Expanded(
                 child: _buildPane(
-                  'Material',
-                  Scrollbar(
-                    controller: _materialController,
-                    child: _buildList(_materialController, 'material'),
+                  'Material state theme',
+                  ScrollbarTheme(
+                    data: ScrollbarThemeData(
+                      trackVisibility: WidgetStateProperty<bool?>.resolveWith(
+                        (Set<WidgetState> states) =>
+                            states.contains(WidgetState.hovered),
+                      ),
+                      thickness: WidgetStateProperty<double?>.resolveWith(
+                        (Set<WidgetState> states) =>
+                            states.contains(WidgetState.hovered) ? 12 : 8,
+                      ),
+                      thumbColor: WidgetStateProperty<Color?>.resolveWith(
+                        (Set<WidgetState> states) =>
+                            states.contains(WidgetState.dragged)
+                            ? const Color(0xFF7B1FA2)
+                            : const Color(0xFF1565C0),
+                      ),
+                    ),
+                    child: Scrollbar(
+                      controller: _materialController,
+                      child: _buildList(_materialController, 'material'),
+                    ),
                   ),
                 ),
               ),

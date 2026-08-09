@@ -5,7 +5,7 @@ using Plumix.Rendering;
 using Plumix.Widgets;
 using MaterialScrollbar = Plumix.Material.Scrollbar;
 
-// Dart parity source (reference): dart_sample/lib/scrollbar_demo_page.dart (exact sample parity)
+// Dart parity source (reference): dart_sample/lib/demos/general/scrollbar_demo_page.dart (exact sample parity)
 
 namespace Plumix;
 
@@ -43,7 +43,7 @@ internal sealed class ScrollbarDemoPageState : State
             [
                 new Text("Scrollbar + RawScrollbar", fontSize: 20, color: Colors.Black),
                 new Text(
-                    "Material defaults/fade beside an always-visible themed raw track; both thumbs are draggable.",
+                    "Material state theming/fade beside an always-visible raw track; both thumbs are draggable.",
                     fontSize: 14,
                     color: Colors.DimGray),
                 new Expanded(
@@ -53,10 +53,20 @@ internal sealed class ScrollbarDemoPageState : State
                         [
                             new Expanded(
                                 child: BuildPane(
-                                    "Material",
-                                    new MaterialScrollbar(
-                                        controller: _materialController,
-                                        child: BuildList(_materialController, "material")))),
+                                    "Material state theme",
+                                    new ScrollbarTheme(
+                                        data: new ScrollbarThemeData(
+                                            trackVisibility: WidgetStateProperty<bool?>.ResolveWith(states =>
+                                                states.Contains(WidgetState.Hovered)),
+                                            thickness: WidgetStateProperty<double?>.ResolveWith(states =>
+                                                states.Contains(WidgetState.Hovered) ? 12 : 8),
+                                            thumbColor: WidgetStateProperty<Color?>.ResolveWith(states =>
+                                                states.Contains(WidgetState.Dragged)
+                                                    ? Color.Parse("#FF7B1FA2")
+                                                    : Color.Parse("#FF1565C0"))),
+                                        child: new MaterialScrollbar(
+                                            controller: _materialController,
+                                            child: BuildList(_materialController, "material"))))),
                             new Expanded(
                                 child: BuildPane(
                                     "Raw + track",

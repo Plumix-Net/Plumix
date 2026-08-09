@@ -465,6 +465,8 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
 
     public ScrollActivity Activity => _activity;
 
+    public AxisDirection AxisDirection { get; internal set; } = AxisDirection.Down;
+
     public ValueNotifier<bool> IsScrollingNotifier { get; }
 
     internal ITickerProvider? TickerProvider { get; set; }
@@ -515,6 +517,15 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
     public void BeginDrag()
     {
         BeginActivity(new DragScrollActivity(this));
+    }
+
+    internal void UpdateDragTo(double value)
+    {
+        if (Activity is not DragScrollActivity)
+        {
+            BeginDrag();
+        }
+        SetPixels(value);
     }
 
     public void EndDrag(double primaryPointerVelocity)

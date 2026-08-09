@@ -262,6 +262,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `semantics/semantics.dart` | `src/Plumix/Rendering/Semantics.cs` | `src/Plumix.Tests/FlutterHostSemanticsTests.cs`<br>`src/Plumix.Tests/MetaDataIndexedSemanticsTests.cs`<br>`src/Plumix.Tests/SemanticsTreeTests.cs` | — |
 | `services/binding.dart` | `src/Plumix/Widgets/AppLifecycleListener.cs` | `src/Plumix.Tests/AppLifecycleListenerTests.cs` | — |
 | `services/clipboard.dart` | `src/Plumix/Widgets/TextClipboard.cs` | — | — |
+| `services/haptic_feedback.dart` | `src/Plumix/UI/HapticFeedback.cs` | — | — |
 | `services/hardware_keyboard.dart` | `src/Plumix/UI/KeyboardEvents.cs` | — | — |
 | `services/mouse_cursor.dart` | `src/Plumix/Widgets/MouseCursor.cs` | — | — |
 | `services/predictive_back_event.dart` | `src/Plumix/UI/PredictiveBackEvent.cs` | — | — |
@@ -422,8 +423,8 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 
 ## Summary
 
-- Flutter files mapped: 371
-- C# files carrying a marker: 466
+- Flutter files mapped: 372
+- C# files carrying a marker: 467
 - C# files without a marker: 15
 - Markers not resolvable in the pinned checkout: 5
 

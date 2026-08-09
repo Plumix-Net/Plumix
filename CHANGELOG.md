@@ -1,5 +1,10 @@
 # Changelog
 
+- Breaking: completed the strict Material `Scrollbar` closeout. The theme now uses Flutter's
+  `WidgetStateProperty` API and direct `ColorScheme.onSurface` roles; public painter/state extension contracts,
+  controller validation, fade/hover/track motion, exact margin geometry, and adaptive Cupertino dark/resize/haptic
+  behavior are covered, with a mirrored state-theme demo probe.
+
 - Breaking: completed the strict Material `Switch` closeout. M2/M3 and adaptive defaults now read the exact direct
   roles, state colors, geometry, and 140/200/300 ms motion paths; thumb images, cursor, drag-start, padding, adaptive
   theme policy, theme copy/lerp, and source precedence are covered, with a mirrored M2/M3 demo probe.

@@ -476,34 +476,52 @@ public sealed partial record PopupMenuThemeData
 
 public sealed partial record ScrollbarThemeData
 {
-    public static ScrollbarThemeData Lerp(ScrollbarThemeData a, ScrollbarThemeData b, double t)
+    public static ScrollbarThemeData Lerp(ScrollbarThemeData? a, ScrollbarThemeData? b, double t)
     {
-        ArgumentNullException.ThrowIfNull(a);
-        ArgumentNullException.ThrowIfNull(b);
-        if (ReferenceEquals(a, b))
+        if (ReferenceEquals(a, b) && a is not null)
         {
             return a;
         }
 
-        ScrollbarThemeData selected = t < 0.5 ? a : b;
-        return selected with
-        {
-            ThumbVisibility = t < 0.5 ? a.ThumbVisibility : b.ThumbVisibility,
-            Thickness = MaterialThemeLerp.DoubleStateProperty(a.Thickness, b.Thickness, t),
-            TrackVisibility = t < 0.5 ? a.TrackVisibility : b.TrackVisibility,
-            Interactive = t < 0.5 ? a.Interactive : b.Interactive,
-            Radius = MaterialThemeLerp.Double(a.Radius, b.Radius, t),
-            ThumbColor = MaterialThemeLerp.ColorStateProperty(a.ThumbColor, b.ThumbColor, t),
-            TrackColor = MaterialThemeLerp.ColorStateProperty(a.TrackColor, b.TrackColor, t),
-            TrackBorderColor = MaterialThemeLerp.ColorStateProperty(
-                a.TrackBorderColor,
-                b.TrackBorderColor,
-                t),
-            CrossAxisMargin = MaterialThemeLerp.Double(a.CrossAxisMargin, b.CrossAxisMargin, t),
-            MainAxisMargin = MaterialThemeLerp.Double(a.MainAxisMargin, b.MainAxisMargin, t),
-            MinThumbLength = MaterialThemeLerp.Double(a.MinThumbLength, b.MinThumbLength, t),
-        };
+        return new ScrollbarThemeData(
+            thumbVisibility: WidgetStateProperty<bool?>.Lerp(
+                a?.ThumbVisibility,
+                b?.ThumbVisibility,
+                t,
+                LerpBool),
+            thickness: WidgetStateProperty<double?>.Lerp(
+                a?.Thickness,
+                b?.Thickness,
+                t,
+                MaterialThemeLerp.Double),
+            trackVisibility: WidgetStateProperty<bool?>.Lerp(
+                a?.TrackVisibility,
+                b?.TrackVisibility,
+                t,
+                LerpBool),
+            interactive: LerpBool(a?.Interactive, b?.Interactive, t),
+            radius: MaterialThemeLerp.Double(a?.Radius, b?.Radius, t),
+            thumbColor: WidgetStateProperty<Color?>.Lerp(
+                a?.ThumbColor,
+                b?.ThumbColor,
+                t,
+                MaterialThemeLerp.Color),
+            trackColor: WidgetStateProperty<Color?>.Lerp(
+                a?.TrackColor,
+                b?.TrackColor,
+                t,
+                MaterialThemeLerp.Color),
+            trackBorderColor: WidgetStateProperty<Color?>.Lerp(
+                a?.TrackBorderColor,
+                b?.TrackBorderColor,
+                t,
+                MaterialThemeLerp.Color),
+            crossAxisMargin: MaterialThemeLerp.Double(a?.CrossAxisMargin, b?.CrossAxisMargin, t),
+            mainAxisMargin: MaterialThemeLerp.Double(a?.MainAxisMargin, b?.MainAxisMargin, t),
+            minThumbLength: MaterialThemeLerp.Double(a?.MinThumbLength, b?.MinThumbLength, t));
     }
+
+    private static bool? LerpBool(bool? a, bool? b, double t) => t < 0.5 ? a : b;
 }
 
 public sealed partial record SnackBarThemeData

@@ -117,7 +117,8 @@ public sealed class MaterialScrollbarTests
         Assert.Equal(Axis.Horizontal, geometry.Axis);
         Assert.Equal(12, geometry.TrackRect.X);
         Assert.Equal(270, geometry.TrackRect.Width);
-        Assert.Equal(92, geometry.TrackRect.Y);
+        Assert.Equal(89, geometry.TrackRect.Y);
+        Assert.Equal(14, geometry.TrackRect.Height);
         Assert.True(overlay.TrackVisible);
         Assert.True(geometry.ThumbRect.Width >= 18);
     }
@@ -318,6 +319,9 @@ public sealed class MaterialScrollbarTests
             buttons: PointerButtons.Primary,
             timestampUtc: DateTime.UtcNow), new BoxHitTestEntry(overlay, point));
 
+        double schedulerNow = Scheduler.CurrentSeconds;
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(schedulerNow + 0.12));
+
         Assert.Equal(240, controller.Offset, precision: 3);
     }
 
@@ -357,15 +361,15 @@ public sealed class MaterialScrollbarTests
     public void MaterialScrollbar_DesktopDefaultsAndThemeStatesMatchFlutter()
     {
         var themeData = new ScrollbarThemeData(
-            thumbVisibility: MaterialStateProperty<bool?>.All(true),
-            trackVisibility: MaterialStateProperty<bool?>.ResolveWith(states =>
-                states.HasFlag(MaterialState.Hovered)),
-            thickness: MaterialStateProperty<double?>.ResolveWith(states =>
-                states.HasFlag(MaterialState.Hovered) ? 14 : 9),
-            thumbColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                states.HasFlag(MaterialState.Dragged) ? Colors.Crimson : Colors.DarkCyan),
-            trackColor: MaterialStateProperty<Color?>.All(Colors.Beige),
-            trackBorderColor: MaterialStateProperty<Color?>.All(Colors.Brown),
+            thumbVisibility: WidgetStateProperty<bool?>.All(true),
+            trackVisibility: WidgetStateProperty<bool?>.ResolveWith(states =>
+                states.Contains(WidgetState.Hovered)),
+            thickness: WidgetStateProperty<double?>.ResolveWith(states =>
+                states.Contains(WidgetState.Hovered) ? 14 : 9),
+            thumbColor: WidgetStateProperty<Color?>.ResolveWith(states =>
+                states.Contains(WidgetState.Dragged) ? Colors.Crimson : Colors.DarkCyan),
+            trackColor: WidgetStateProperty<Color?>.All(Colors.Beige),
+            trackBorderColor: WidgetStateProperty<Color?>.All(Colors.Brown),
             radius: 6,
             crossAxisMargin: 4,
             mainAxisMargin: 3,
@@ -380,7 +384,7 @@ public sealed class MaterialScrollbarTests
             },
             child: new MaterialScrollbar(child: new SizedBox())));
 
-        var raw = Assert.IsType<RawScrollbar>(tree.FindWidget<RawScrollbar>());
+        var raw = Assert.IsAssignableFrom<RawScrollbar>(tree.FindWidget<RawScrollbar>());
         Assert.Equal(6, raw.Radius);
         Assert.Equal(4, raw.CrossAxisMargin);
         Assert.Equal(3, raw.MainAxisMargin);
@@ -402,13 +406,13 @@ public sealed class MaterialScrollbarTests
     {
         using var controller = new ScrollController();
         var scrollbarTheme = new ScrollbarThemeData(
-            thumbVisibility: MaterialStateProperty<bool?>.All(true),
-            trackVisibility: MaterialStateProperty<bool?>.ResolveWith(states =>
-                states.HasFlag(MaterialState.Hovered)),
-            thickness: MaterialStateProperty<double?>.ResolveWith(states =>
-                states.HasFlag(MaterialState.Hovered) ? 14 : 9),
-            thumbColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                states.HasFlag(MaterialState.Dragged) ? Colors.Crimson : Colors.DarkCyan));
+            thumbVisibility: WidgetStateProperty<bool?>.All(true),
+            trackVisibility: WidgetStateProperty<bool?>.ResolveWith(states =>
+                states.Contains(WidgetState.Hovered)),
+            thickness: WidgetStateProperty<double?>.ResolveWith(states =>
+                states.Contains(WidgetState.Hovered) ? 14 : 9),
+            thumbColor: WidgetStateProperty<Color?>.ResolveWith(states =>
+                states.Contains(WidgetState.Dragged) ? Colors.Crimson : Colors.DarkCyan));
         using var harness = new WidgetRenderHarness(new Theme(
             data: ThemeData.Light with
             {
@@ -450,8 +454,8 @@ public sealed class MaterialScrollbarTests
         using var androidTree = new WidgetTree(new Theme(
             data: ThemeData.Light with { Platform = TargetPlatform.Android },
             child: new MaterialScrollbar(child: new SizedBox())));
-        var android = Assert.IsType<RawScrollbar>(androidTree.FindWidget<RawScrollbar>());
-        Assert.Equal(0, android.Radius);
+        var android = Assert.IsAssignableFrom<RawScrollbar>(androidTree.FindWidget<RawScrollbar>());
+        Assert.Null(android.Radius);
         Assert.Equal(0, android.CrossAxisMargin);
         Assert.False(android.Interactive);
         Assert.Equal(4, android.ThicknessResolver!(ScrollbarInteractionState.None));
@@ -459,15 +463,15 @@ public sealed class MaterialScrollbarTests
         using var desktopTree = new WidgetTree(new Theme(
             data: ThemeData.Light with { Platform = TargetPlatform.Windows },
             child: new MaterialScrollbar(child: new SizedBox(), trackVisibility: true)));
-        var desktop = Assert.IsType<RawScrollbar>(desktopTree.FindWidget<RawScrollbar>());
+        var desktop = Assert.IsAssignableFrom<RawScrollbar>(desktopTree.FindWidget<RawScrollbar>());
         Assert.Equal(8, desktop.Radius);
         Assert.Equal(2, desktop.CrossAxisMargin);
         Assert.True(desktop.Interactive);
         Assert.Equal(8, desktop.ThicknessResolver!(ScrollbarInteractionState.None));
         Assert.Equal(12, desktop.ThicknessResolver!(ScrollbarInteractionState.Hovered));
-        Assert.Equal(ApplyOpacity(ThemeData.Light.OnSurfaceColor, 0.10),
+        Assert.Equal(ApplyOpacity(ThemeData.Light.ColorScheme.OnSurface, 0.50),
             desktop.ThumbColorResolver!(ScrollbarInteractionState.None));
-        Assert.Equal(ApplyOpacity(ThemeData.Light.OnSurfaceColor, 0.60),
+        Assert.Equal(ApplyOpacity(ThemeData.Light.ColorScheme.OnSurface, 0.60),
             desktop.ThumbColorResolver!(ScrollbarInteractionState.Dragged));
     }
 
@@ -481,7 +485,7 @@ public sealed class MaterialScrollbarTests
                 thumbVisibility: true)));
 
         var cupertino = Assert.IsType<CupertinoScrollbar>(tree.FindWidget<CupertinoScrollbar>());
-        var raw = Assert.IsType<RawScrollbar>(tree.FindWidget<RawScrollbar>());
+        var raw = Assert.IsAssignableFrom<RawScrollbar>(tree.FindWidget<RawScrollbar>());
         Assert.Equal(CupertinoScrollbar.DefaultThickness, cupertino.Thickness);
         Assert.Equal(CupertinoScrollbar.DefaultThicknessWhileDragging, cupertino.ThicknessWhileDragging);
         Assert.Equal(CupertinoScrollbar.DefaultRadius, cupertino.Radius);
@@ -489,11 +493,274 @@ public sealed class MaterialScrollbarTests
         Assert.Equal(TimeSpan.FromMilliseconds(1200), raw.TimeToFade);
         Assert.Equal(TimeSpan.FromMilliseconds(100), raw.PressDuration);
         Assert.False(raw.TrackTapEnabled);
-        Assert.Equal(3, raw.ThicknessResolver!(ScrollbarInteractionState.None));
-        Assert.Equal(8, raw.ThicknessResolver!(ScrollbarInteractionState.Dragged));
-        Assert.Equal(1.5, raw.RadiusResolver!(ScrollbarInteractionState.None));
-        Assert.Equal(4, raw.RadiusResolver!(ScrollbarInteractionState.Dragged));
+        Assert.Equal(Color.FromArgb(0x59, 0, 0, 0), raw.ThumbColor);
     }
+
+    [Fact]
+    public void ScrollbarThemeData_CopyWithLerpAndInheritedWrapMatchFlutter()
+    {
+        var idleStates = new HashSet<WidgetState>();
+        var hoveredStates = new HashSet<WidgetState> { WidgetState.Hovered };
+        var start = new ScrollbarThemeData(
+            thumbVisibility: WidgetStateProperty<bool?>.All(false),
+            thickness: WidgetStateProperty<double?>.All(4),
+            trackVisibility: WidgetStateProperty<bool?>.All(false),
+            thumbColor: WidgetStateProperty<Color?>.All(Colors.Black),
+            radius: 2,
+            interactive: false);
+        ScrollbarThemeData copied = start.CopyWith(mainAxisMargin: 6);
+
+        Assert.Same(start.ThumbVisibility, copied.ThumbVisibility);
+        Assert.Same(start.Thickness, copied.Thickness);
+        Assert.Equal(6, copied.MainAxisMargin);
+
+        var end = new ScrollbarThemeData(
+            thumbVisibility: WidgetStateProperty<bool?>.All(true),
+            thickness: WidgetStateProperty<double?>.ResolveWith(states =>
+                states.Contains(WidgetState.Hovered) ? 20 : 12),
+            trackVisibility: WidgetStateProperty<bool?>.All(true),
+            thumbColor: WidgetStateProperty<Color?>.All(Colors.White),
+            radius: 10,
+            interactive: true);
+        ScrollbarThemeData firstHalf = ScrollbarThemeData.Lerp(start, end, 0.25);
+        ScrollbarThemeData secondHalf = ScrollbarThemeData.Lerp(start, end, 0.75);
+
+        Assert.False(firstHalf.ThumbVisibility!.Resolve(idleStates));
+        Assert.True(secondHalf.ThumbVisibility!.Resolve(idleStates));
+        Assert.Equal(6, firstHalf.Thickness!.Resolve(idleStates));
+        Assert.Equal(8, firstHalf.Thickness.Resolve(hoveredStates));
+        Assert.Equal(4, firstHalf.Radius);
+        Assert.False(firstHalf.Interactive);
+        Assert.True(secondHalf.Interactive);
+
+        using var tree = new WidgetTree(new Theme(
+            data: ThemeData.Light with
+            {
+                Platform = TargetPlatform.Windows,
+                ScrollbarTheme = start,
+            },
+            child: new ScrollbarTheme(
+                data: end,
+                child: new MaterialScrollbar(child: new SizedBox()))));
+        var raw = Assert.IsAssignableFrom<RawScrollbar>(tree.FindWidget<RawScrollbar>());
+        Assert.Equal(12, raw.ThicknessResolver!(ScrollbarInteractionState.None));
+
+        var inherited = new ScrollbarTheme(end, new SizedBox());
+        Assert.IsAssignableFrom<InheritedTheme>(inherited);
+        Assert.Equal(end, Assert.IsType<ScrollbarTheme>(inherited.Wrap(default, new SizedBox())).Data);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void MaterialScrollbar_UsesDirectColorSchemeRolesWithoutMaterialVersionSplit(bool useMaterial3)
+    {
+        ColorScheme scheme = ThemeData.Light.ColorScheme.CopyWith(onSurface: Colors.Magenta);
+        var data = new ThemeData(
+            colorScheme: scheme,
+            onSurfaceColor: Colors.Green,
+            platform: TargetPlatform.Windows,
+            useMaterial3: useMaterial3);
+        using var tree = new WidgetTree(new Theme(
+            data: data,
+            child: new MaterialScrollbar(child: new SizedBox())));
+        var raw = Assert.IsAssignableFrom<RawScrollbar>(tree.FindWidget<RawScrollbar>());
+
+        Assert.Equal(
+            ApplyOpacity(Colors.Magenta, 0.10),
+            raw.ThumbColorResolver!(ScrollbarInteractionState.None));
+        Assert.Equal(
+            ApplyOpacity(Colors.Magenta, 0.60),
+            raw.ThumbColorResolver!(ScrollbarInteractionState.Dragged));
+    }
+
+    [Fact]
+    public void RawScrollbar_ForcedVisibilityRequiresExactlyOneAttachedPosition()
+    {
+        Scheduler.ResetForTests();
+        using var missingControllerHarness = new WidgetRenderHarness(new RawScrollbar(
+            thumbVisibility: true,
+            child: new SizedBox()));
+        missingControllerHarness.Pump(new Size(200, 240));
+        double schedulerNow = Scheduler.CurrentSeconds;
+        InvalidOperationException missing = Assert.Throws<InvalidOperationException>(() =>
+            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(schedulerNow + 0.01)));
+        Assert.Contains("ScrollController", missing.Message);
+
+        Scheduler.ResetForTests();
+        using var controller = new ScrollController();
+        using var multipleHarness = new WidgetRenderHarness(new RawScrollbar(
+            controller: controller,
+            thumbVisibility: true,
+            child: new Stack(
+                children:
+                [
+                    BuildVerticalList(controller, 20),
+                    BuildVerticalList(controller, 20),
+                ])));
+        multipleHarness.Pump(new Size(200, 240));
+        schedulerNow = Scheduler.CurrentSeconds;
+        InvalidOperationException multiple = Assert.Throws<InvalidOperationException>(() =>
+            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(schedulerNow + 0.01)));
+        Assert.Contains("exactly one attached ScrollPosition", multiple.Message);
+        Scheduler.ResetForTests();
+    }
+
+    [Fact]
+    public void RawScrollbar_ThumbVisibilityToggleFadesWhileIdle()
+    {
+        using var controller = new ScrollController();
+        using var harness = new WidgetRenderHarness(BuildMaterialScrollbar(controller, thumbVisibility: true));
+        harness.Pump(new Size(200, 240));
+        Assert.Equal(1, RequireOverlay(harness.RenderView).Opacity);
+
+        harness.UpdateWidget(BuildMaterialScrollbar(controller, thumbVisibility: false));
+        harness.Pump(new Size(200, 240));
+        double schedulerNow = Scheduler.CurrentSeconds;
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(schedulerNow + 0.35));
+        harness.Pump(new Size(200, 240));
+        Assert.Equal(0, RequireOverlay(harness.RenderView).Opacity, precision: 3);
+
+        harness.UpdateWidget(BuildMaterialScrollbar(controller, thumbVisibility: true));
+        harness.Pump(new Size(200, 240));
+        Assert.Equal(1, RequireOverlay(harness.RenderView).Opacity);
+    }
+
+    [Fact]
+    public void MaterialScrollbar_ThumbColorUsesTwoHundredMillisecondHoverTransition()
+    {
+        using var controller = new ScrollController();
+        using var harness = new WidgetRenderHarness(new Theme(
+            data: ThemeData.Light with { Platform = TargetPlatform.Windows },
+            child: new MaterialScrollbar(
+                controller: controller,
+                thumbVisibility: true,
+                child: BuildVerticalList(controller, 30))));
+        harness.Pump(new Size(200, 240));
+        var overlay = RequireOverlay(harness.RenderView);
+        Color idle = ApplyOpacity(ThemeData.Light.ColorScheme.OnSurface, 0.10);
+        Color hovered = ApplyOpacity(ThemeData.Light.ColorScheme.OnSurface, 0.50);
+        Assert.Equal(idle, overlay.ThumbColor);
+
+        Point point = overlay.Geometry!.Value.ThumbRect.Center;
+        overlay.HandleEvent(
+            new PointerHoverEvent(41, PointerDeviceKind.Mouse, point, PointerButtons.None, DateTime.UtcNow),
+            new BoxHitTestEntry(overlay, point));
+        harness.Pump(new Size(200, 240));
+        Assert.Equal(idle, RequireOverlay(harness.RenderView).ThumbColor);
+
+        double schedulerNow = Scheduler.CurrentSeconds;
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(schedulerNow + 0.1));
+        harness.Pump(new Size(200, 240));
+        Color halfway = RequireOverlay(harness.RenderView).ThumbColor;
+        Assert.NotEqual(idle, halfway);
+        Assert.NotEqual(hovered, halfway);
+
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(schedulerNow + 0.25));
+        harness.Pump(new Size(200, 240));
+        Assert.Equal(hovered, RequireOverlay(harness.RenderView).ThumbColor);
+    }
+
+    [Fact]
+    public void ScrollbarPainter_ExposesFlutterGeometryHitTestsAndInfiniteExtentGuard()
+    {
+        using var painter = new ScrollbarPainter(
+            color: Colors.Crimson,
+            fadeoutOpacityAnimation: new ConstantAnimation<double>(1),
+            textDirection: TextDirection.Ltr,
+            thickness: 8,
+            crossAxisMargin: 2,
+            radius: 4,
+            minLength: 48);
+        var metrics = new TestScrollMetrics(0, 0, 560, 240);
+        painter.Update(metrics, AxisDirection.Down);
+        using var harness = new WidgetRenderHarness(new CustomPaint(
+            foregroundPainter: painter,
+            size: new Size(200, 240)));
+        harness.Pump(new Size(200, 240));
+
+        ScrollbarGeometry geometry = Assert.IsType<ScrollbarGeometry>(painter.Geometry);
+        Assert.Equal(new Rect(188, 0, 12, 240), geometry.TrackRect);
+        Assert.Equal(new Rect(190, 0, 8, 72), geometry.ThumbRect);
+        Assert.True(painter.HitTestOnlyThumbInteractive(
+            new Point(geometry.ThumbRect.Left - 20, geometry.ThumbRect.Center.Y),
+            PointerDeviceKind.Touch));
+        Assert.False(painter.HitTestOnlyThumbInteractive(
+            new Point(geometry.ThumbRect.Left - 30, geometry.ThumbRect.Center.Y),
+            PointerDeviceKind.Mouse));
+        Assert.Equal(560, painter.GetTrackToScroll(geometry.MaxThumbTravel), precision: 3);
+        Assert.Equal(geometry.MaxThumbTravel, painter.GetScrollToTrack(560), precision: 3);
+
+        painter.Update(new TestScrollMetrics(0, 0, double.PositiveInfinity, 240), AxisDirection.Down);
+        harness.Pump(new Size(200, 240));
+        Assert.Null(painter.Geometry);
+    }
+
+    [Fact]
+    public void RawScrollbar_ZeroAreaDoesNotPaintOrCrash()
+    {
+        using var controller = new ScrollController();
+        using var harness = new WidgetRenderHarness(new RawScrollbar(
+            controller: controller,
+            thumbVisibility: true,
+            child: BuildVerticalList(controller, 20)));
+
+        var emptySize = new Size(0, 0);
+        harness.Pump(emptySize);
+
+        var overlay = RequireOverlay(harness.RenderView);
+        Assert.Equal(emptySize, overlay.Size);
+        Assert.Null(overlay.Geometry);
+    }
+
+    [Fact]
+    public void CupertinoScrollbar_UsesBrightnessResizeAnimationAndHapticRequests()
+    {
+        using var controller = new ScrollController();
+        var requested = new List<HapticFeedbackType>();
+        HapticFeedback.FeedbackRequested += requested.Add;
+        try
+        {
+            using var harness = new WidgetRenderHarness(new MediaQuery(
+                data: new MediaQueryData(PlatformBrightness: PlatformBrightness.Dark),
+                child: new Theme(
+                    data: ThemeData.Light with { Platform = TargetPlatform.IOS },
+                    child: new MaterialScrollbar(
+                        controller: controller,
+                        thumbVisibility: true,
+                        child: BuildVerticalList(controller, 30)))));
+            harness.Pump(new Size(200, 240));
+            var overlay = RequireOverlay(harness.RenderView);
+            Assert.Equal(Color.FromArgb(0x80, 0xFF, 0xFF, 0xFF), overlay.ThumbColor);
+            Assert.Equal(3, overlay.Thickness);
+
+            Point point = overlay.Geometry!.Value.ThumbRect.Center;
+            DateTime now = DateTime.UtcNow;
+            overlay.HandleEvent(
+                new PointerDownEvent(51, PointerDeviceKind.Touch, point, PointerButtons.Primary, now),
+                new BoxHitTestEntry(overlay, point));
+            double schedulerNow = Scheduler.CurrentSeconds;
+            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(schedulerNow + 0.11));
+            double resizeStart = Scheduler.CurrentSeconds;
+            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(resizeStart + 0.05));
+            harness.Pump(new Size(200, 240));
+
+            Assert.Single(requested);
+            Assert.Equal(HapticFeedbackType.MediumImpact, requested[0]);
+            Assert.InRange(RequireOverlay(harness.RenderView).Thickness, 3.01, 7.99);
+        }
+        finally
+        {
+            HapticFeedback.FeedbackRequested -= requested.Add;
+        }
+    }
+
+    private static Widget BuildMaterialScrollbar(ScrollController controller, bool thumbVisibility) => new Theme(
+        data: ThemeData.Light with { Platform = TargetPlatform.Windows },
+        child: new MaterialScrollbar(
+            controller: controller,
+            thumbVisibility: thumbVisibility,
+            child: BuildVerticalList(controller, 30)));
 
     private static Widget BuildVerticalList(ScrollController controller, int count) => ListView.Builder(
         itemCount: count,
@@ -501,6 +768,12 @@ public sealed class MaterialScrollbarTests
         itemExtent: 40,
         itemBuilder: (_, index) => new SizedBox(height: 40, child: new Text($"row {index}")),
         addAutomaticKeepAlives: false);
+
+    private sealed record TestScrollMetrics(
+        double Pixels,
+        double MinScrollExtent,
+        double MaxScrollExtent,
+        double ViewportDimension) : IScrollMetrics;
 
     private static RenderRawScrollbarOverlay RequireOverlay(RenderObject root) =>
         Assert.IsType<RenderRawScrollbarOverlay>(FindDescendant<RenderRawScrollbarOverlay>(root));
@@ -553,6 +826,12 @@ public sealed class MaterialScrollbarTests
             _pipeline.FlushLayout(size);
             _pipeline.FlushCompositingBits();
             _pipeline.FlushPaint();
+        }
+
+        public void UpdateWidget(Widget widget)
+        {
+            _root.Update(widget);
+            _owner.FlushBuild();
         }
 
         public void Dispose() => _root.Unmount();

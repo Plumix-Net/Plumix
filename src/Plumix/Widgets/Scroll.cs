@@ -494,9 +494,16 @@ public class ScrollController : ChangeNotifier
 
     public bool HasClients => _positions.Count > 0;
 
+    public IReadOnlyList<ScrollPosition> Positions => _positions;
+
     public double Offset => _positions.Count == 0 ? InitialScrollOffset : _positions[0].Pixels;
 
     public ScrollPosition? PrimaryPosition => _positions.Count == 0 ? null : _positions[0];
+
+    public ScrollPosition Position => _positions.Count == 1
+        ? _positions[0]
+        : throw new InvalidOperationException(
+            $"ScrollController.Position requires exactly one attached ScrollPosition; found {_positions.Count}.");
 
     public virtual ScrollPosition CreateScrollPosition(ScrollPhysics? physics = null)
     {
@@ -767,6 +774,7 @@ public sealed class Scrollable : StatefulWidget
         {
             var widget = CurrentWidget;
             var axisDirection = ResolveAxisDirection(widget.Axis, widget.Reverse);
+            _position.AxisDirection = axisDirection;
             Widget viewport = widget.UseSingleChildViewport
                 ? new SingleChildViewport(
                     child: widget.Child ?? new SizedBox(),
@@ -830,6 +838,7 @@ public sealed class Scrollable : StatefulWidget
             _attachedController = providedController ?? _fallbackController;
             var position = _attachedController.CreateScrollPosition(physics);
             position.TickerProvider = this;
+            position.AxisDirection = ResolveAxisDirection(CurrentWidget.Axis, CurrentWidget.Reverse);
             _attachedController.Attach(position);
             return position;
         }

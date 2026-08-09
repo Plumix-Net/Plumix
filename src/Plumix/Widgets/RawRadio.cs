@@ -6,6 +6,7 @@ using Plumix.UI;
 namespace Plumix.Widgets;
 
 // Dart parity source: flutter/packages/flutter/lib/src/widgets/widget_state.dart
+// Dart parity source: flutter/packages/flutter/lib/src/widgets/raw_radio.dart
 public enum WidgetState
 {
     Hovered,
@@ -13,6 +14,7 @@ public enum WidgetState
     Pressed,
     Disabled,
     Selected,
+    Dragged,
 }
 
 public abstract class WidgetStateProperty<T>
@@ -27,6 +29,24 @@ public abstract class WidgetStateProperty<T>
     public static WidgetStateProperty<T> ResolveWith(Func<IReadOnlySet<WidgetState>, T> resolver)
     {
         return new WidgetStatePropertyResolver<T>(resolver);
+    }
+
+    public static WidgetStateProperty<T>? Lerp(
+        WidgetStateProperty<T>? a,
+        WidgetStateProperty<T>? b,
+        double t,
+        Func<T, T, double, T> lerpFunction)
+    {
+        ArgumentNullException.ThrowIfNull(lerpFunction);
+        if (a is null && b is null)
+        {
+            return null;
+        }
+
+        return ResolveWith(states => lerpFunction(
+            a is null ? default! : a.Resolve(states),
+            b is null ? default! : b.Resolve(states),
+            t));
     }
 }
 
@@ -62,7 +82,6 @@ internal sealed class WidgetStatePropertyResolver<T> : WidgetStateProperty<T>
 
 public delegate Widget RadioBuilder<T>(BuildContext context, RawRadioState<T> state);
 
-// Dart parity source: flutter/packages/flutter/lib/src/widgets/raw_radio.dart
 public sealed class RawRadio<T> : StatefulWidget
 {
     public RawRadio(

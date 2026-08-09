@@ -42,6 +42,7 @@ public class PlumixHost : Control
     private bool _isSubscribedToMouseCursor;
     private bool _isSubscribedToFeedback;
     private bool _isSubscribedToSystemSound;
+    private bool _isSubscribedToHapticFeedback;
     private bool _allowWindowClose;
     private SystemUiOverlayStyle _currentSystemUiOverlayStyle = SystemChrome.CurrentSystemUiOverlayStyle;
     private ApplicationSwitcherDescription? _currentApplicationSwitcherDescription =
@@ -313,6 +314,7 @@ public class PlumixHost : Control
         AttachMouseCursorListener();
         AttachFeedbackListener();
         AttachSystemSoundListener();
+        AttachHapticFeedbackListener();
         AttachTextInputConfigurationListener();
         AttachMetricSources();
         OnMetricsChanged();
@@ -321,6 +323,7 @@ public class PlumixHost : Control
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
     {
         DetachMetricSources();
+        DetachHapticFeedbackListener();
         DetachSystemSoundListener();
         DetachFeedbackListener();
         DetachTextInputConfigurationListener();
@@ -817,6 +820,37 @@ public class PlumixHost : Control
     }
 
     protected virtual void OnFrameworkSystemSound(SystemSoundType type)
+    {
+    }
+
+    private void AttachHapticFeedbackListener()
+    {
+        if (_isSubscribedToHapticFeedback)
+        {
+            return;
+        }
+
+        HapticFeedback.FeedbackRequested += HandleHapticFeedbackRequested;
+        _isSubscribedToHapticFeedback = true;
+    }
+
+    private void DetachHapticFeedbackListener()
+    {
+        if (!_isSubscribedToHapticFeedback)
+        {
+            return;
+        }
+
+        HapticFeedback.FeedbackRequested -= HandleHapticFeedbackRequested;
+        _isSubscribedToHapticFeedback = false;
+    }
+
+    private void HandleHapticFeedbackRequested(HapticFeedbackType type)
+    {
+        OnFrameworkHapticFeedback(type);
+    }
+
+    protected virtual void OnFrameworkHapticFeedback(HapticFeedbackType type)
     {
     }
 

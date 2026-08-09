@@ -9,13 +9,13 @@ namespace Plumix.Material;
 public sealed partial record ScrollbarThemeData
 {
     public ScrollbarThemeData(
-        MaterialStateProperty<bool?>? thumbVisibility = null,
-        MaterialStateProperty<double?>? thickness = null,
-        MaterialStateProperty<bool?>? trackVisibility = null,
+        WidgetStateProperty<bool?>? thumbVisibility = null,
+        WidgetStateProperty<double?>? thickness = null,
+        WidgetStateProperty<bool?>? trackVisibility = null,
         double? radius = null,
-        MaterialStateProperty<Color?>? thumbColor = null,
-        MaterialStateProperty<Color?>? trackColor = null,
-        MaterialStateProperty<Color?>? trackBorderColor = null,
+        WidgetStateProperty<Color?>? thumbColor = null,
+        WidgetStateProperty<Color?>? trackColor = null,
+        WidgetStateProperty<Color?>? trackBorderColor = null,
         double? crossAxisMargin = null,
         double? mainAxisMargin = null,
         double? minThumbLength = null,
@@ -38,17 +38,44 @@ public sealed partial record ScrollbarThemeData
         Interactive = interactive;
     }
 
-    public MaterialStateProperty<bool?>? ThumbVisibility { get; init; }
-    public MaterialStateProperty<double?>? Thickness { get; init; }
-    public MaterialStateProperty<bool?>? TrackVisibility { get; init; }
+    public WidgetStateProperty<bool?>? ThumbVisibility { get; init; }
+    public WidgetStateProperty<double?>? Thickness { get; init; }
+    public WidgetStateProperty<bool?>? TrackVisibility { get; init; }
     public bool? Interactive { get; init; }
     public double? Radius { get; init; }
-    public MaterialStateProperty<Color?>? ThumbColor { get; init; }
-    public MaterialStateProperty<Color?>? TrackColor { get; init; }
-    public MaterialStateProperty<Color?>? TrackBorderColor { get; init; }
+    public WidgetStateProperty<Color?>? ThumbColor { get; init; }
+    public WidgetStateProperty<Color?>? TrackColor { get; init; }
+    public WidgetStateProperty<Color?>? TrackBorderColor { get; init; }
     public double? CrossAxisMargin { get; init; }
     public double? MainAxisMargin { get; init; }
     public double? MinThumbLength { get; init; }
+
+    public ScrollbarThemeData CopyWith(
+        WidgetStateProperty<bool?>? thumbVisibility = null,
+        WidgetStateProperty<double?>? thickness = null,
+        WidgetStateProperty<bool?>? trackVisibility = null,
+        bool? interactive = null,
+        double? radius = null,
+        WidgetStateProperty<Color?>? thumbColor = null,
+        WidgetStateProperty<Color?>? trackColor = null,
+        WidgetStateProperty<Color?>? trackBorderColor = null,
+        double? crossAxisMargin = null,
+        double? mainAxisMargin = null,
+        double? minThumbLength = null)
+    {
+        return new ScrollbarThemeData(
+            thumbVisibility: thumbVisibility ?? ThumbVisibility,
+            thickness: thickness ?? Thickness,
+            trackVisibility: trackVisibility ?? TrackVisibility,
+            interactive: interactive ?? Interactive,
+            radius: radius ?? Radius,
+            thumbColor: thumbColor ?? ThumbColor,
+            trackColor: trackColor ?? TrackColor,
+            trackBorderColor: trackBorderColor ?? TrackBorderColor,
+            crossAxisMargin: crossAxisMargin ?? CrossAxisMargin,
+            mainAxisMargin: mainAxisMargin ?? MainAxisMargin,
+            minThumbLength: minThumbLength ?? MinThumbLength);
+    }
 
     private static void ValidateNonNegative(string name, double? value)
     {
@@ -59,7 +86,7 @@ public sealed partial record ScrollbarThemeData
     }
 }
 
-public sealed class ScrollbarTheme : InheritedWidget
+public sealed class ScrollbarTheme : InheritedTheme
 {
     public ScrollbarTheme(ScrollbarThemeData data, Widget child, Key? key = null) : base(key)
     {
@@ -71,6 +98,8 @@ public sealed class ScrollbarTheme : InheritedWidget
     public Widget Child { get; }
 
     public override Widget Build(BuildContext context) => Child;
+
+    public override Widget Wrap(BuildContext context, Widget child) => new ScrollbarTheme(Data, child);
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
         !Equals(((ScrollbarTheme)oldWidget).Data, Data);
