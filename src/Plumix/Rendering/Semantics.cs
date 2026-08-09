@@ -42,6 +42,7 @@ public enum SemanticsFlags
     HasCheckedState = 1 << 19,
     IsInvalid = 1 << 20,
     IsFocusable = 1 << 21,
+    IsCheckStateMixed = 1 << 22,
 }
 
 [Flags]

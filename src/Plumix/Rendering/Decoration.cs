@@ -358,6 +358,9 @@ public sealed record ShapeBorder(
 
     public static ShapeBorder Stadium(BorderSide? side = null) =>
         new(BorderRadius.Circular(9999), side);
+
+    public static implicit operator ShapeBorder(BorderRadius borderRadius) =>
+        new(borderRadius);
 }
 
 public sealed record BoxDecoration(

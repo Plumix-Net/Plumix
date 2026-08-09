@@ -108,13 +108,15 @@ public sealed partial record CheckboxThemeData
         }
 
         return new CheckboxThemeData(
+            MouseCursor: t < 0.5 ? a?.MouseCursor : b?.MouseCursor,
             FillColor: MaterialThemeLerp.ColorStateProperty(a?.FillColor, b?.FillColor, t),
             CheckColor: MaterialThemeLerp.ColorStateProperty(a?.CheckColor, b?.CheckColor, t),
             OverlayColor: MaterialThemeLerp.ColorStateProperty(a?.OverlayColor, b?.OverlayColor, t),
-            Side: MaterialThemeLerp.BorderSideStateProperty(a?.Side, b?.Side, t),
+            SplashRadius: MaterialThemeLerp.Double(a?.SplashRadius, b?.SplashRadius, t),
             MaterialTapTargetSize: t < 0.5 ? a?.MaterialTapTargetSize : b?.MaterialTapTargetSize,
-            Shape: MaterialThemeLerp.BorderRadius(a?.Shape, b?.Shape, t),
-            SplashRadius: MaterialThemeLerp.Double(a?.SplashRadius, b?.SplashRadius, t));
+            VisualDensity: t < 0.5 ? a?.VisualDensity : b?.VisualDensity,
+            Shape: MaterialThemeLerp.Shape(a?.Shape, b?.Shape, t),
+            Side: WidgetStateBorderSide.Lerp(a?.Side, b?.Side, t));
     }
 }
 

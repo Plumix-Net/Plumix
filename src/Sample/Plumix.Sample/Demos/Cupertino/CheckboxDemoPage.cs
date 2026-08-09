@@ -23,6 +23,7 @@ internal sealed class CheckboxDemoPageState : State
     private bool _checked;
     private bool? _tristateValue;
     private bool _shrinkWrapTapTarget;
+    private bool _useMaterial3 = true;
     private int _changes;
 
     public override Widget Build(BuildContext context)
@@ -30,10 +31,17 @@ internal sealed class CheckboxDemoPageState : State
         var baseTheme = Theme.Of(context);
         var checkboxTheme = baseTheme with
         {
+            UseMaterial3 = _useMaterial3,
             MaterialTapTargetSize = _shrinkWrapTapTarget
                 ? MaterialTapTargetSize.ShrinkWrap
                 : MaterialTapTargetSize.Padded
         };
+        string status = $"mode={(_useMaterial3 ? "M3" : "M2")}, "
+                        + $"enabled={(_enabled ? "true" : "false")}, "
+                        + $"checked={(_checked ? "true" : "false")}, "
+                        + $"tristate={FormatNullableBool(_tristateValue)}, "
+                        + $"changes={_changes}, "
+                        + $"tapTarget={(_shrinkWrapTapTarget ? "shrinkWrap" : "padded")}";
 
         return new Column(
             crossAxisAlignment: CrossAxisAlignment.Stretch,
@@ -42,7 +50,7 @@ internal sealed class CheckboxDemoPageState : State
             [
                 new Text("Checkbox baseline", fontSize: 20, color: Colors.Black),
                 new Text(
-                    "Material Checkbox with bool and bool? (tristate) values, enabled/disabled flow, and tap-target policy toggle.",
+                    "Material Checkbox with M2/M3 defaults, tristate values, theme precedence, and tap-target policy.",
                     fontSize: 14,
                     color: Color.Parse("#8A000000")),
                 new Row(
@@ -60,13 +68,18 @@ internal sealed class CheckboxDemoPageState : State
                             width: 128,
                             background: Color.Parse("#FFEAE4FF")),
                         BuildControlButton(
+                            label: _useMaterial3 ? "Material 3" : "Material 2",
+                            onTap: ToggleMaterialVersion,
+                            width: 104,
+                            background: Color.Parse("#FFE8F5E9")),
+                        BuildControlButton(
                             label: "Reset",
                             onTap: Reset,
                             width: 80,
                             background: Color.Parse("#FFF3E8D8")),
                     ]),
                 new Text(
-                    $"enabled={(_enabled ? "true" : "false")}, checked={(_checked ? "true" : "false")}, tristate={FormatNullableBool(_tristateValue)}, changes={_changes}, tapTarget={(_shrinkWrapTapTarget ? "shrinkWrap" : "padded")}",
+                    status,
                     fontSize: 12,
                     color: Color.Parse("#FF607D8B")),
                 new Theme(
@@ -112,11 +125,31 @@ internal sealed class CheckboxDemoPageState : State
                                     side: new BorderSide(Color.Parse("#FF00695C"), 2)),
                                 title: "Custom colors",
                                 subtitle: "active/check/fill/side overrides"),
+                            BuildCheckboxRow(
+                                checkbox: new CheckboxTheme(
+                                    data: new CheckboxThemeData(
+                                        FillColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+                                            states.HasFlag(MaterialState.Selected)
+                                                ? Color.Parse("#FF7B1FA2")
+                                                : Colors.Transparent),
+                                        CheckColor: MaterialStateProperty<Color?>.All(Colors.White),
+                                        Shape: ShapeBorder.RoundedRectangle(6),
+                                        Side: WidgetStateBorderSide.ResolveWith(states =>
+                                            new BorderSide(
+                                                states.HasFlag(MaterialState.Error)
+                                                    ? Colors.Red
+                                                    : Color.Parse("#FF7B1FA2"),
+                                                2))),
+                                    child: new Checkbox(
+                                        value: _checked,
+                                        onChanged: _enabled ? OnCheckedChanged : null)),
+                                title: "CheckboxTheme",
+                                subtitle: "fill/check/shape/stateful side precedence"),
                         ])),
             ]);
     }
 
-    private Widget BuildCheckboxRow(Checkbox checkbox, string title, string subtitle)
+    private Widget BuildCheckboxRow(Widget checkbox, string title, string subtitle)
     {
         return new Container(
             padding: new Thickness(10, 8),
@@ -171,6 +204,11 @@ internal sealed class CheckboxDemoPageState : State
         SetState(() => _shrinkWrapTapTarget = !_shrinkWrapTapTarget);
     }
 
+    private void ToggleMaterialVersion()
+    {
+        SetState(() => _useMaterial3 = !_useMaterial3);
+    }
+
     private void Reset()
     {
         SetState(() =>
@@ -179,6 +217,7 @@ internal sealed class CheckboxDemoPageState : State
             _checked = false;
             _tristateValue = null;
             _shrinkWrapTapTarget = false;
+            _useMaterial3 = true;
             _changes = 0;
         });
     }

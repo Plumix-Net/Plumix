@@ -42,6 +42,7 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         bool namesRoute = false,
         bool? expanded = null,
         bool? @checked = null,
+        bool? mixed = null,
         bool? selected = null,
         Key? key = null,
         bool mergeDescendants = false) : base(child, key)
@@ -57,6 +58,7 @@ public sealed class Semantics : SingleChildRenderObjectWidget
                 | (expanded == true ? SemanticsFlags.IsExpanded : SemanticsFlags.None)
                 | (@checked.HasValue ? SemanticsFlags.HasCheckedState : SemanticsFlags.None)
                 | (@checked == true ? SemanticsFlags.IsChecked : SemanticsFlags.None)
+                | (mixed == true ? SemanticsFlags.IsCheckStateMixed : SemanticsFlags.None)
                 | (selected == true ? SemanticsFlags.IsSelected : SemanticsFlags.None);
         OnTap = onTap;
         OnLongPress = onLongPress;
@@ -71,6 +73,7 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         NamesRoute = namesRoute;
         Expanded = expanded;
         Checked = @checked;
+        Mixed = mixed;
         Selected = selected;
         MergeDescendants = mergeDescendants;
     }
@@ -110,6 +113,8 @@ public sealed class Semantics : SingleChildRenderObjectWidget
     public bool? Expanded { get; }
 
     public bool? Checked { get; }
+
+    public bool? Mixed { get; }
 
     public bool? Selected { get; }
 

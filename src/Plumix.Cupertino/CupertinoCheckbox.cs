@@ -35,6 +35,7 @@ public sealed class CupertinoCheckbox : StatefulWidget
         bool? value,
         Action<bool?>? onChanged,
         bool tristate = false,
+        MouseCursor? mouseCursor = null,
         Color? activeColor = null,
         Color? checkColor = null,
         Color? focusColor = null,
@@ -55,6 +56,7 @@ public sealed class CupertinoCheckbox : StatefulWidget
         Value = value;
         OnChanged = onChanged;
         Tristate = tristate;
+        MouseCursor = mouseCursor;
         ActiveColor = activeColor;
         CheckColor = checkColor;
         FocusColor = focusColor;
@@ -72,6 +74,8 @@ public sealed class CupertinoCheckbox : StatefulWidget
     public Action<bool?>? OnChanged { get; }
 
     public bool Tristate { get; }
+
+    public MouseCursor? MouseCursor { get; }
 
     public Color? ActiveColor { get; }
 
@@ -233,11 +237,19 @@ public sealed class CupertinoCheckbox : StatefulWidget
                 onKeyEvent: HandleKeyEvent,
                 child: result);
 
+            Widget mouseResult = CurrentWidget.MouseCursor is null
+                ? focusedResult
+                : new MouseRegion(
+                    cursor: CurrentWidget.MouseCursor,
+                    child: focusedResult);
+
             return new Semantics(
                 label: CurrentWidget.SemanticLabel,
                 flags: ResolveSemanticsFlags(),
+                @checked: CurrentWidget.Value ?? false,
+                mixed: CurrentWidget.Tristate ? CurrentWidget.Value is null : null,
                 onTap: Enabled ? HandleTap : null,
-                child: focusedResult);
+                child: mouseResult);
         }
 
         private SemanticsFlags ResolveSemanticsFlags()

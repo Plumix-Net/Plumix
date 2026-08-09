@@ -27,7 +27,7 @@ public sealed class CheckboxListTile : StatelessWidget
         MaterialStatesController? statesController = null,
         bool autofocus = false,
         BorderRadius? shape = null,
-        BorderSide? side = null,
+        WidgetStateBorderSide? side = null,
         bool isError = false,
         bool? enabled = null,
         Color? tileColor = null,
@@ -40,7 +40,7 @@ public sealed class CheckboxListTile : StatelessWidget
         ListTileControlAffinity? controlAffinity = null,
         Thickness? contentPadding = null,
         bool tristate = false,
-        BorderRadius? checkboxShape = null,
+        ShapeBorder? checkboxShape = null,
         Color? selectedTileColor = null,
         Action<bool>? onFocusChange = null,
         bool? enableFeedback = null,
@@ -114,7 +114,7 @@ public sealed class CheckboxListTile : StatelessWidget
         MaterialStatesController? statesController,
         bool autofocus,
         BorderRadius? shape,
-        BorderSide? side,
+        WidgetStateBorderSide? side,
         bool isError,
         bool? enabled,
         Color? tileColor,
@@ -127,7 +127,7 @@ public sealed class CheckboxListTile : StatelessWidget
         ListTileControlAffinity? controlAffinity,
         Thickness? contentPadding,
         bool tristate,
-        BorderRadius? checkboxShape,
+        ShapeBorder? checkboxShape,
         Color? selectedTileColor,
         Action<bool>? onFocusChange,
         bool? enableFeedback,
@@ -215,7 +215,7 @@ public sealed class CheckboxListTile : StatelessWidget
     public MaterialStatesController? StatesController { get; }
     public bool Autofocus { get; }
     public BorderRadius? Shape { get; }
-    public BorderSide? Side { get; }
+    public WidgetStateBorderSide? Side { get; }
     public bool IsError { get; }
     public bool? Enabled { get; }
     public Color? TileColor { get; }
@@ -228,7 +228,7 @@ public sealed class CheckboxListTile : StatelessWidget
     public ListTileControlAffinity? ControlAffinity { get; }
     public Thickness? ContentPadding { get; }
     public bool Tristate { get; }
-    public BorderRadius? CheckboxShape { get; }
+    public ShapeBorder? CheckboxShape { get; }
     public Color? SelectedTileColor { get; }
     public Action<bool>? OnFocusChange { get; }
     public bool? EnableFeedback { get; }
@@ -257,7 +257,7 @@ public sealed class CheckboxListTile : StatelessWidget
         MaterialStatesController? statesController = null,
         bool autofocus = false,
         BorderRadius? shape = null,
-        BorderSide? side = null,
+        WidgetStateBorderSide? side = null,
         bool isError = false,
         bool? enabled = null,
         Color? tileColor = null,
@@ -270,7 +270,7 @@ public sealed class CheckboxListTile : StatelessWidget
         ListTileControlAffinity? controlAffinity = null,
         Thickness? contentPadding = null,
         bool tristate = false,
-        BorderRadius? checkboxShape = null,
+        ShapeBorder? checkboxShape = null,
         Color? selectedTileColor = null,
         Action<bool>? onFocusChange = null,
         bool? enableFeedback = null,

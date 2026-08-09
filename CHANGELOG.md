@@ -1,5 +1,10 @@
 # Changelog
 
+- Breaking: completed the strict Material `Checkbox` closeout. The control now uses shared Flutter-shaped toggleable
+  state and custom-paint geometry, direct M2/M3 `ColorScheme` defaults, mixed semantics, stateful sides, outlined
+  shapes, cursor/density/theme copy/lerp APIs, exact tap-target and transition timing, focused source-test coverage,
+  and a mirrored M2/M3 plus local-theme demo probe.
+
 - Breaking: closed the remaining Apple page-transition divergence. Cupertino routes now use leading-edge drag
   ownership, linear finger tracking, exact velocity/position settle rules and timing, directional parallax and edge
   shadow paint, balanced navigator gesture callbacks, and LTR/RTL focused coverage.

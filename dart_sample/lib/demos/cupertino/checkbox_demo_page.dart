@@ -12,11 +12,13 @@ class _CheckboxDemoPageState extends State<CheckboxDemoPage> {
   bool _checked = false;
   bool? _tristateValue;
   bool _shrinkWrapTapTarget = false;
+  bool _useMaterial3 = true;
   int _changes = 0;
 
   @override
   Widget build(BuildContext context) {
     final ThemeData checkboxTheme = Theme.of(context).copyWith(
+      useMaterial3: _useMaterial3,
       materialTapTargetSize: _shrinkWrapTapTarget
           ? MaterialTapTargetSize.shrinkWrap
           : MaterialTapTargetSize.padded,
@@ -31,7 +33,7 @@ class _CheckboxDemoPageState extends State<CheckboxDemoPage> {
           style: TextStyle(fontSize: 20, color: Colors.black),
         ),
         const Text(
-          'Material Checkbox with bool and bool? (tristate) values, enabled/disabled flow, and tap-target policy toggle.',
+          'Material Checkbox with M2/M3 defaults, tristate values, theme precedence, and tap-target policy.',
           style: TextStyle(fontSize: 14, color: Colors.black54),
         ),
         Row(
@@ -50,6 +52,12 @@ class _CheckboxDemoPageState extends State<CheckboxDemoPage> {
               background: const Color(0xFFEAE4FF),
             ),
             _buildControlButton(
+              label: _useMaterial3 ? 'Material 3' : 'Material 2',
+              onTap: _toggleMaterialVersion,
+              width: 104,
+              background: const Color(0xFFE8F5E9),
+            ),
+            _buildControlButton(
               label: 'Reset',
               onTap: _reset,
               width: 80,
@@ -58,7 +66,7 @@ class _CheckboxDemoPageState extends State<CheckboxDemoPage> {
           ],
         ),
         Text(
-          'enabled=$_enabled, checked=$_checked, tristate=${_formatNullableBool(_tristateValue)}, changes=$_changes, tapTarget=${_shrinkWrapTapTarget ? 'shrinkWrap' : 'padded'}',
+          'mode=${_useMaterial3 ? 'M3' : 'M2'}, enabled=$_enabled, checked=$_checked, tristate=${_formatNullableBool(_tristateValue)}, changes=$_changes, tapTarget=${_shrinkWrapTapTarget ? 'shrinkWrap' : 'padded'}',
           style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
         ),
         Theme(
@@ -107,6 +115,41 @@ class _CheckboxDemoPageState extends State<CheckboxDemoPage> {
                 ),
                 title: 'Custom colors',
                 subtitle: 'active/check/fill/side overrides',
+              ),
+              _buildCheckboxRow(
+                checkbox: CheckboxTheme(
+                  data: CheckboxThemeData(
+                    fillColor: WidgetStateProperty.resolveWith((
+                      Set<WidgetState> states,
+                    ) {
+                      return states.contains(WidgetState.selected)
+                          ? const Color(0xFF7B1FA2)
+                          : Colors.transparent;
+                    }),
+                    checkColor: const WidgetStatePropertyAll<Color>(
+                      Colors.white,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    side: WidgetStateBorderSide.resolveWith((
+                      Set<WidgetState> states,
+                    ) {
+                      return BorderSide(
+                        color: states.contains(WidgetState.error)
+                            ? Colors.red
+                            : const Color(0xFF7B1FA2),
+                        width: 2,
+                      );
+                    }),
+                  ),
+                  child: Checkbox(
+                    value: _checked,
+                    onChanged: _enabled ? _onCheckedChanged : null,
+                  ),
+                ),
+                title: 'CheckboxTheme',
+                subtitle: 'fill/check/shape/stateful side precedence',
               ),
             ],
           ),
@@ -186,12 +229,19 @@ class _CheckboxDemoPageState extends State<CheckboxDemoPage> {
     });
   }
 
+  void _toggleMaterialVersion() {
+    setState(() {
+      _useMaterial3 = !_useMaterial3;
+    });
+  }
+
   void _reset() {
     setState(() {
       _enabled = true;
       _checked = false;
       _tristateValue = null;
       _shrinkWrapTapTarget = false;
+      _useMaterial3 = true;
       _changes = 0;
     });
   }

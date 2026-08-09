@@ -24,6 +24,8 @@ public abstract class RenderObject : IRenderObject
     private bool _needsCompositedLayerUpdate;
     internal RenderObjectSemantics Semantics => _semantics;
 
+    public int? SemanticsNodeId => _semanticsNode?.Id;
+
     protected RenderObject()
     {
         _semantics = new RenderObjectSemantics(this);

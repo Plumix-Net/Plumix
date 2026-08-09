@@ -379,6 +379,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `widgets/text_selection_toolbar_layout_delegate.dart` | `src/Plumix/Widgets/TextSelectionToolbarLayoutDelegate.cs` | — | — |
 | `widgets/ticker_provider.dart` | `src/Plumix/Widgets/TickerProvider.cs` | `src/Plumix.Tests/TickerProviderTickerModeTests.cs` | — |
 | `widgets/title.dart` | `src/Plumix/Widgets/Title.cs` | `src/Plumix.Tests/TitleDefaultSelectionStyleTests.cs` | — |
+| `widgets/toggleable.dart` | `src/Plumix/Widgets/Toggleable.cs` | — | — |
 | `widgets/transitions.dart` | `src/Plumix/Widgets/Transitions.cs` | `src/Plumix.Tests/MaterialPageTransitionsTests.cs`<br>`src/Plumix.Tests/TransitionsTests.cs` | — |
 | `widgets/tween_animation_builder.dart` | `src/Plumix/Widgets/TweenAnimationBuilder.cs` | — | — |
 | `widgets/value_listenable_builder.dart` | `src/Plumix/Widgets/ValueListenableBuilder.cs` | — | — |
@@ -421,8 +422,8 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 
 ## Summary
 
-- Flutter files mapped: 370
-- C# files carrying a marker: 465
+- Flutter files mapped: 371
+- C# files carrying a marker: 466
 - C# files without a marker: 15
 - Markers not resolvable in the pinned checkout: 5
 

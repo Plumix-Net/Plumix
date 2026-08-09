@@ -386,6 +386,7 @@ public sealed record ThemeData
         ScrollbarThemeData? scrollbarTheme = null,
         TabBarThemeData? tabBarTheme = null,
         Color? disabledColor = null,
+        Color? unselectedWidgetColor = null,
         Color? hintColor = null,
         Color? focusColor = null,
         Color? hoverColor = null,
@@ -522,6 +523,10 @@ public sealed record ThemeData
         ErrorColor = errorColor ?? ColorScheme.Error;
         OnErrorColor = onErrorColor ?? ColorScheme.OnError;
         DisabledColor = disabledColor ?? ApplyOpacity(OnSurfaceColor, 0.38);
+        UnselectedWidgetColor = unselectedWidgetColor
+                                ?? (Brightness == Brightness.Dark
+                                    ? Color.FromArgb(0xB3, 0xFF, 0xFF, 0xFF)
+                                    : Color.FromArgb(0x8A, 0x00, 0x00, 0x00));
         HintColor = hintColor ?? ApplyOpacity(OnSurfaceColor, 0.60);
         FocusColor = focusColor ?? ApplyOpacity(OnSurfaceColor, 0.12);
         HoverColor = hoverColor ?? ApplyOpacity(
@@ -676,6 +681,8 @@ public sealed record ThemeData
     public Color OnErrorColor { get; init; }
 
     public Color DisabledColor { get; init; }
+
+    public Color UnselectedWidgetColor { get; init; }
 
     public Color HintColor { get; init; }
 
@@ -1110,6 +1117,10 @@ public sealed record ThemeData
             ErrorColor = LerpColor(a.ErrorColor, b.ErrorColor, t),
             OnErrorColor = LerpColor(a.OnErrorColor, b.OnErrorColor, t),
             DisabledColor = LerpColor(a.DisabledColor, b.DisabledColor, t),
+            UnselectedWidgetColor = LerpColor(
+                a.UnselectedWidgetColor,
+                b.UnselectedWidgetColor,
+                t),
             HintColor = LerpColor(a.HintColor, b.HintColor, t),
             FocusColor = LerpColor(a.FocusColor, b.FocusColor, t),
             HoverColor = LerpColor(a.HoverColor, b.HoverColor, t),

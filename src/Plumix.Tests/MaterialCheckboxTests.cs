@@ -38,7 +38,10 @@ public sealed class MaterialCheckboxTests
         var owner = new BuildOwner();
         var theme = ThemeData.Light with
         {
-            PrimaryColor = Colors.Coral
+            ColorScheme = ThemeData.Light.ColorScheme with
+            {
+                Primary = Colors.Coral
+            }
         };
 
         var root = new TestRootElement(
@@ -52,12 +55,11 @@ public sealed class MaterialCheckboxTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(decorated);
-        Assert.Equal(Colors.Coral, decorated!.Decoration.Color);
-        Assert.True(decorated.Decoration.Border.HasValue);
-        Assert.Equal(0, decorated.Decoration.Border!.Value.Width);
-        Assert.Equal(Colors.Transparent, decorated.Decoration.Border.Value.Color);
+        CheckboxPainter painter = FindCheckboxPainter(root.ChildElement);
+        Assert.Equal(Colors.Coral, painter.ActiveColor);
+        Assert.True(painter.ActiveSide.HasValue);
+        Assert.Equal(0, painter.ActiveSide!.Value.Width);
+        Assert.Equal(Colors.Transparent, painter.ActiveSide.Value.Color);
     }
 
     [Fact]
@@ -66,7 +68,10 @@ public sealed class MaterialCheckboxTests
         var owner = new BuildOwner();
         var theme = ThemeData.Light with
         {
-            OnSurfaceVariantColor = Colors.CadetBlue
+            ColorScheme = ThemeData.Light.ColorScheme with
+            {
+                OnSurfaceVariant = Colors.CadetBlue
+            }
         };
 
         var root = new TestRootElement(
@@ -80,12 +85,11 @@ public sealed class MaterialCheckboxTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(decorated);
-        Assert.Equal(Colors.Transparent, decorated!.Decoration.Color);
-        Assert.True(decorated.Decoration.Border.HasValue);
-        Assert.Equal(2, decorated.Decoration.Border!.Value.Width);
-        Assert.Equal(Colors.CadetBlue, decorated.Decoration.Border.Value.Color);
+        CheckboxPainter painter = FindCheckboxPainter(root.ChildElement);
+        Assert.Equal(Colors.Transparent, painter.InactiveColor);
+        Assert.True(painter.InactiveSide.HasValue);
+        Assert.Equal(2, painter.InactiveSide!.Value.Width);
+        Assert.Equal(Colors.CadetBlue, painter.InactiveSide.Value.Color);
     }
 
     [Fact]
@@ -94,7 +98,10 @@ public sealed class MaterialCheckboxTests
         var owner = new BuildOwner();
         var theme = ThemeData.Light with
         {
-            OnSurfaceColor = Colors.Brown
+            ColorScheme = ThemeData.Light.ColorScheme with
+            {
+                OnSurface = Colors.Brown
+            }
         };
 
         var root = new TestRootElement(
@@ -108,9 +115,8 @@ public sealed class MaterialCheckboxTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(decorated);
-        Assert.Equal(ApplyOpacity(Colors.Brown, 0.38), decorated!.Decoration.Color);
+        CheckboxPainter painter = FindCheckboxPainter(root.ChildElement);
+        Assert.Equal(ApplyOpacity(Colors.Brown, 0.38), painter.ActiveColor);
     }
 
     [Fact]
@@ -129,9 +135,8 @@ public sealed class MaterialCheckboxTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(paragraph);
-        Assert.Equal(Colors.Lime, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+        CheckboxPainter painter = FindCheckboxPainter(root.ChildElement);
+        Assert.Equal(Colors.Lime, painter.CheckColor);
     }
 
     [Fact]
@@ -169,12 +174,9 @@ public sealed class MaterialCheckboxTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
-        var paragraph = FindDescendant<RenderParagraph>(renderRoot);
-        var dash = FindDescendant<RenderColoredBox>(renderRoot);
-        Assert.Null(paragraph);
-        Assert.NotNull(dash);
-        Assert.Equal(ThemeData.Light.OnPrimaryColor, dash!.Color);
+        CheckboxPainter painter = FindCheckboxPainter(root.ChildElement);
+        Assert.Null(painter.Value);
+        Assert.Equal(ThemeData.Light.ColorScheme.OnPrimary, painter.CheckColor);
     }
 
     [Fact]
@@ -240,6 +242,41 @@ public sealed class MaterialCheckboxTests
         }
         finally
         {
+            FocusManager.Instance.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void Checkbox_Activation_EmitsTapSemanticEvent()
+    {
+        FocusManager.Instance.ResetForTests();
+        SemanticsEvent? received = null;
+        void HandleEvent(SemanticsEvent semanticsEvent) => received = semanticsEvent;
+        SemanticsService.SemanticsEventRequested += HandleEvent;
+        try
+        {
+            var focusNode = new FocusNode();
+            using var harness = new WidgetRenderHarness(
+                new Theme(
+                    data: ThemeData.Light,
+                    child: new Checkbox(
+                        value: false,
+                        onChanged: _ => { },
+                        focusNode: focusNode,
+                        semanticLabel: "Event checkbox")));
+            _ = harness.PumpAndGetSemantics(new Size(120, 120));
+
+            Assert.True(focusNode.RequestFocus());
+            Assert.True(FocusManager.Instance.HandleKeyEvent(
+                new KeyEvent(key: "Space", isDown: true)));
+
+            TapSemanticEvent tapEvent = Assert.IsType<TapSemanticEvent>(received);
+            Assert.Equal("tap", tapEvent.Type);
+            Assert.NotNull(tapEvent.NodeId);
+        }
+        finally
+        {
+            SemanticsService.SemanticsEventRequested -= HandleEvent;
             FocusManager.Instance.ResetForTests();
         }
     }
@@ -373,9 +410,8 @@ public sealed class MaterialCheckboxTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(decorated);
-        Assert.Equal(Colors.MediumPurple, decorated!.Decoration.Color);
+        CheckboxPainter painter = FindCheckboxPainter(root.ChildElement);
+        Assert.Equal(Colors.MediumPurple, painter.ActiveColor);
     }
 
     [Fact]
@@ -398,9 +434,8 @@ public sealed class MaterialCheckboxTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(decorated);
-        Assert.Equal(Colors.ForestGreen, decorated!.Decoration.Color);
+        CheckboxPainter painter = FindCheckboxPainter(root.ChildElement);
+        Assert.Equal(Colors.ForestGreen, painter.ActiveColor);
     }
 
     [Fact]
@@ -409,8 +444,11 @@ public sealed class MaterialCheckboxTests
         var owner = new BuildOwner();
         var theme = ThemeData.Light with
         {
-            ErrorColor = Colors.OrangeRed,
-            OnErrorColor = Colors.AliceBlue
+            ColorScheme = ThemeData.Light.ColorScheme with
+            {
+                Error = Colors.OrangeRed,
+                OnError = Colors.AliceBlue
+            }
         };
 
         var root = new TestRootElement(
@@ -425,13 +463,9 @@ public sealed class MaterialCheckboxTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
-        var decorated = FindDescendant<RenderDecoratedBox>(renderRoot);
-        var paragraph = FindDescendant<RenderParagraph>(renderRoot);
-        Assert.NotNull(decorated);
-        Assert.NotNull(paragraph);
-        Assert.Equal(Colors.OrangeRed, decorated!.Decoration.Color);
-        Assert.Equal(Colors.AliceBlue, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+        CheckboxPainter painter = FindCheckboxPainter(root.ChildElement);
+        Assert.Equal(Colors.OrangeRed, painter.ActiveColor);
+        Assert.Equal(Colors.AliceBlue, painter.CheckColor);
     }
 
     [Fact]
@@ -440,7 +474,10 @@ public sealed class MaterialCheckboxTests
         var owner = new BuildOwner();
         var theme = ThemeData.Light with
         {
-            ErrorColor = Colors.OrangeRed
+            ColorScheme = ThemeData.Light.ColorScheme with
+            {
+                Error = Colors.OrangeRed
+            }
         };
 
         var root = new TestRootElement(
@@ -455,11 +492,10 @@ public sealed class MaterialCheckboxTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(decorated);
-        Assert.True(decorated!.Decoration.Border.HasValue);
-        Assert.Equal(Colors.OrangeRed, decorated.Decoration.Border!.Value.Color);
-        Assert.Equal(2, decorated.Decoration.Border.Value.Width);
+        CheckboxPainter painter = FindCheckboxPainter(root.ChildElement);
+        Assert.True(painter.InactiveSide.HasValue);
+        Assert.Equal(Colors.OrangeRed, painter.InactiveSide!.Value.Color);
+        Assert.Equal(2, painter.InactiveSide.Value.Width);
     }
 
     [Fact]
@@ -679,10 +715,8 @@ public sealed class MaterialCheckboxTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
-        var inkSplash = FindDescendant<RenderInkResponsePaint>(renderRoot);
-        Assert.NotNull(inkSplash);
-        Assert.Equal(7, inkSplash!.SplashRadius);
+        CheckboxPainter painter = FindCheckboxPainter(root.ChildElement);
+        Assert.Equal(7, painter.ResolvedSplashRadius);
     }
 
     [Fact]
@@ -705,18 +739,15 @@ public sealed class MaterialCheckboxTests
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
             harness.Pump(new Size(160, 120));
 
-            var paragraphDuringTransition = FindDescendant<RenderParagraph>(harness.RenderView);
-            var dashDuringTransition = FindDescendant<RenderColoredBox>(harness.RenderView);
-            Assert.NotNull(paragraphDuringTransition);
-            Assert.NotNull(dashDuringTransition);
+            CheckboxPainter duringTransition = FindCheckboxPainter(harness.RenderView);
+            Assert.Equal(true, duringTransition.PreviousValue);
+            Assert.Null(duringTransition.Value);
 
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.30));
             harness.Pump(new Size(160, 120));
 
-            var paragraphAfterTransition = FindDescendant<RenderParagraph>(harness.RenderView);
-            var dashAfterTransition = FindDescendant<RenderColoredBox>(harness.RenderView);
-            Assert.Null(paragraphAfterTransition);
-            Assert.NotNull(dashAfterTransition);
+            CheckboxPainter afterTransition = FindCheckboxPainter(harness.RenderView);
+            Assert.Null(afterTransition.Value);
         }
         finally
         {
@@ -724,11 +755,271 @@ public sealed class MaterialCheckboxTests
         }
     }
 
+    [Fact]
+    public void Checkbox_DefaultM2_UsesSecondaryWhiteCheckAndUnselectedWidgetTokens()
+    {
+        var colorScheme = ColorScheme.Light(secondary: Colors.Coral);
+        var theme = new ThemeData(
+            useMaterial3: false,
+            colorScheme: colorScheme,
+            unselectedWidgetColor: Colors.CadetBlue);
+        var owner = new BuildOwner();
+        var checkedRoot = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: new Checkbox(value: true, onChanged: _ => { })));
+
+        checkedRoot.Attach(owner);
+        checkedRoot.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        CheckboxPainter checkedPainter = FindCheckboxPainter(checkedRoot.ChildElement);
+        Assert.Equal(Colors.Coral, checkedPainter.ActiveColor);
+        Assert.Equal(Colors.White, checkedPainter.CheckColor);
+        Assert.Equal(1.0, checkedPainter.Shape.BorderRadius.Radius);
+        Assert.Equal(2.0, checkedPainter.ActiveSide!.Value.Width);
+
+        var uncheckedRoot = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: new Checkbox(value: false, onChanged: _ => { })));
+        uncheckedRoot.Attach(owner);
+        uncheckedRoot.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        CheckboxPainter uncheckedPainter = FindCheckboxPainter(uncheckedRoot.ChildElement);
+        Assert.Equal(Colors.CadetBlue, uncheckedPainter.InactiveSide!.Value.Color);
+    }
+
+    [Fact]
+    public void Checkbox_M3ThemeVisualDensity_IsIgnored_ButWidgetDensityApplies()
+    {
+        using var themedHarness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light with { VisualDensity = VisualDensity.Compact },
+                child: new Checkbox(value: false, onChanged: _ => { })));
+        themedHarness.Pump(new Size(120, 120));
+
+        RenderCustomPaint themedPaint = FindDescendant<RenderCustomPaint>(themedHarness.RenderView)!;
+        Assert.Equal(new Size(48, 48), themedPaint.Size);
+
+        using var widgetHarness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light,
+                child: new Checkbox(
+                    value: false,
+                    onChanged: _ => { },
+                    visualDensity: new VisualDensity(3, -3))));
+        widgetHarness.Pump(new Size(120, 120));
+
+        RenderCustomPaint widgetPaint = FindDescendant<RenderCustomPaint>(widgetHarness.RenderView)!;
+        Assert.Equal(new Size(60, 36), widgetPaint.Size);
+    }
+
+    [Fact]
+    public void Checkbox_M2ThemeVisualDensity_AdjustsTapTarget()
+    {
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: new ThemeData(
+                    useMaterial3: false,
+                    visualDensity: VisualDensity.Compact),
+                child: new Checkbox(value: false, onChanged: _ => { })));
+        harness.Pump(new Size(120, 120));
+
+        RenderCustomPaint customPaint = FindDescendant<RenderCustomPaint>(harness.RenderView)!;
+        Assert.Equal(new Size(40, 40), customPaint.Size);
+    }
+
+    [Fact]
+    public void Checkbox_TristateNull_ExposesMixedSemantics()
+    {
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light,
+                child: new Checkbox(
+                    value: null,
+                    onChanged: _ => { },
+                    tristate: true,
+                    semanticLabel: "Mixed checkbox")));
+
+        SemanticsNode? semanticsRoot = harness.PumpAndGetSemantics(new Size(120, 120));
+        SemanticsNode? checkboxNode = FindFirstSemanticsNode(
+            semanticsRoot!,
+            static node => node.Label == "Mixed checkbox");
+
+        Assert.NotNull(checkboxNode);
+        Assert.True(checkboxNode!.Flags.HasFlag(SemanticsFlags.HasCheckedState));
+        Assert.True(checkboxNode.Flags.HasFlag(SemanticsFlags.IsCheckStateMixed));
+        Assert.False(checkboxNode.Flags.HasFlag(SemanticsFlags.IsChecked));
+    }
+
+    [Fact]
+    public void Checkbox_FixedSide_AppliesOnlyWhenUnselected()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new Checkbox(
+                    value: true,
+                    onChanged: _ => { },
+                    side: new BorderSide(Colors.Red, 4))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        CheckboxPainter painter = FindCheckboxPainter(root.ChildElement);
+        Assert.Equal(0.0, painter.ActiveSide!.Value.Width);
+        Assert.Equal(4.0, painter.InactiveSide!.Value.Width);
+        Assert.Equal(Colors.Red, painter.InactiveSide.Value.Color);
+    }
+
+    [Fact]
+    public void Checkbox_WidgetStateBorderSide_AppliesWhenSelectedAndInError()
+    {
+        bool sawSelectedError = false;
+        WidgetStateBorderSide side = WidgetStateBorderSide.ResolveWith(states =>
+        {
+            sawSelectedError |= states.HasFlag(MaterialState.Selected)
+                                && states.HasFlag(MaterialState.Error);
+            return new BorderSide(Colors.Red, 4);
+        });
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new Checkbox(
+                    value: true,
+                    onChanged: _ => { },
+                    side: side,
+                    isError: true)));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        CheckboxPainter painter = FindCheckboxPainter(root.ChildElement);
+        Assert.Equal(4.0, painter.ActiveSide!.Value.Width);
+        Assert.Equal(Colors.Red, painter.ActiveSide.Value.Color);
+        Assert.True(sawSelectedError);
+    }
+
+    [Fact]
+    public void Checkbox_UncheckedFillColor_IsRetainedAlongsideDefaultBorder()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new Checkbox(
+                    value: false,
+                    onChanged: _ => { },
+                    fillColor: MaterialStateProperty<Color?>.All(Colors.ForestGreen))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        CheckboxPainter painter = FindCheckboxPainter(root.ChildElement);
+        Assert.Equal(Colors.ForestGreen, painter.InactiveColor);
+        Assert.Equal(ThemeData.Light.ColorScheme.OnSurfaceVariant, painter.InactiveSide!.Value.Color);
+    }
+
+    [Fact]
+    public void Checkbox_DefaultM3OverlayColors_MatchActiveAndInactiveTokens()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new Checkbox(value: true, onChanged: _ => { })));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        CheckboxPainter painter = FindCheckboxPainter(root.ChildElement);
+        Assert.Equal(ApplyOpacity(ThemeData.Light.ColorScheme.OnSurface, 0.10), painter.ActiveReactionColor);
+        Assert.Equal(ApplyOpacity(ThemeData.Light.ColorScheme.Primary, 0.10), painter.InactiveReactionColor);
+        Assert.Equal(ApplyOpacity(ThemeData.Light.ColorScheme.Primary, 0.08), painter.ResolvedHoverColor);
+        Assert.Equal(ApplyOpacity(ThemeData.Light.ColorScheme.Primary, 0.10), painter.ResolvedFocusColor);
+    }
+
+    [Fact]
+    public void CheckboxThemeData_CopyWithAndLerp_CoverEveryField()
+    {
+        var first = new CheckboxThemeData(
+            MouseCursor: MaterialStateProperty<MouseCursor?>.All(SystemMouseCursors.Basic),
+            FillColor: MaterialStateProperty<Color?>.All(Colors.Black),
+            CheckColor: MaterialStateProperty<Color?>.All(Colors.Red),
+            OverlayColor: MaterialStateProperty<Color?>.All(Colors.Blue),
+            SplashRadius: 10,
+            MaterialTapTargetSize: MaterialTapTargetSize.Padded,
+            VisualDensity: VisualDensity.Compact,
+            Shape: ShapeBorder.RoundedRectangle(2),
+            Side: new BorderSide(Colors.Black, 2));
+        CheckboxThemeData copied = first.CopyWith(splashRadius: 14);
+        Assert.Equal(14, copied.SplashRadius);
+        Assert.Same(first.MouseCursor, copied.MouseCursor);
+        Assert.Same(first.FillColor, copied.FillColor);
+        Assert.Equal(first.Shape, copied.Shape);
+
+        var second = new CheckboxThemeData(
+            MouseCursor: MaterialStateProperty<MouseCursor?>.All(SystemMouseCursors.Click),
+            FillColor: MaterialStateProperty<Color?>.All(Colors.White),
+            CheckColor: MaterialStateProperty<Color?>.All(Colors.Blue),
+            OverlayColor: MaterialStateProperty<Color?>.All(Colors.Red),
+            SplashRadius: 20,
+            MaterialTapTargetSize: MaterialTapTargetSize.ShrinkWrap,
+            VisualDensity: VisualDensity.Standard,
+            Shape: ShapeBorder.RoundedRectangle(6),
+            Side: WidgetStateBorderSide.All(new BorderSide(Colors.White, 4)));
+        CheckboxThemeData midpoint = CheckboxThemeData.Lerp(first, second, 0.5);
+
+        Assert.Equal(15, midpoint.SplashRadius);
+        Assert.Same(second.MouseCursor, midpoint.MouseCursor);
+        Assert.Equal(MaterialTapTargetSize.ShrinkWrap, midpoint.MaterialTapTargetSize);
+        Assert.Equal(VisualDensity.Standard, midpoint.VisualDensity);
+        Assert.Equal(4, midpoint.Shape!.BorderRadius.Radius);
+        Assert.Equal(3, midpoint.Side!.Resolve(MaterialState.None)!.Value.Width);
+    }
+
+    [Fact]
+    public void Checkbox_RendersUnderZeroConstraints()
+    {
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light,
+                child: new SizedBox(
+                    width: 0,
+                    height: 0,
+                    child: new Checkbox(value: true, onChanged: null))));
+
+        harness.Pump(new Size(0, 0));
+
+        RenderCustomPaint customPaint = FindDescendant<RenderCustomPaint>(harness.RenderView)!;
+        Assert.Equal(new Size(0, 0), customPaint.Size);
+    }
+
     private static T RequireRenderObject<T>(Element? element) where T : RenderObject
     {
         Assert.NotNull(element);
         Assert.NotNull(element!.RenderObject);
         return Assert.IsAssignableFrom<T>(element.RenderObject);
+    }
+
+    private static CheckboxPainter FindCheckboxPainter(Element? element)
+    {
+        return FindCheckboxPainter(RequireRenderObject<RenderObject>(element));
+    }
+
+    private static CheckboxPainter FindCheckboxPainter(RenderObject root)
+    {
+        RenderCustomPaint? customPaint = FindDescendant<RenderCustomPaint>(root);
+        Assert.NotNull(customPaint);
+        return Assert.IsType<CheckboxPainter>(customPaint!.Painter);
     }
 
     private static T? FindDescendant<T>(RenderObject? root) where T : RenderObject
@@ -818,7 +1109,7 @@ public sealed class MaterialCheckboxTests
 
     private static Color ApplyOpacity(Color color, double opacity)
     {
-        byte alpha = (byte)Math.Clamp((int)(255 * opacity), 0, 255);
+        byte alpha = (byte)Math.Clamp((int)Math.Round(255 * opacity), 0, 255);
         return Color.FromArgb(alpha, color.R, color.G, color.B);
     }
 

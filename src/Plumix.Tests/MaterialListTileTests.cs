@@ -442,8 +442,8 @@ public sealed class MaterialListTileTests
         {
             var children = ImmediateChildren(flex);
             return children.Count == 5
-                   && FindDescendants<RenderDecoratedBox>(children[0]).Any(box =>
-                       Math.Abs(box.Size.Width - Checkbox.Width) < 0.001)
+                   && FindDescendants<RenderCustomPaint>(children[0]).Any(paint =>
+                       paint.Painter is CheckboxPainter)
                    && FindDescendants<RenderParagraph>(children[^1]).Any(paragraph =>
                        paragraph.Text == secondaryGlyph);
         });
