@@ -1,5 +1,9 @@
 # Changelog
 
+- Breaking: completed the strict Material `ListTile` closeout. The widget and theme now use source-shaped M2/M3
+  defaults, state resolution, ink/semantics/SafeArea composition, directional padding, and a dedicated slotted
+  render object with intrinsic/dry layout. Added focused coverage and a mirrored M2/M3 demo probe.
+
 - Breaking: completed the strict Material `Scrollbar` closeout. The theme now uses Flutter's
   `WidgetStateProperty` API and direct `ColorScheme.onSurface` roles; public painter/state extension contracts,
   controller validation, fade/hover/track motion, exact margin geometry, and adaptive Cupertino dark/resize/haptic

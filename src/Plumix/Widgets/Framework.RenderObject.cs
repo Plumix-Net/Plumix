@@ -17,6 +17,11 @@ public interface IRenderObjectSingleChildContainer
     RenderObject? Child { get; set; }
 }
 
+public interface ISlottedRenderObjectContainer
+{
+    void SetChild(RenderObject? child, object slot);
+}
+
 public abstract class RenderObjectWidget(Key? key = null) : Widget(key)
 {
     internal abstract RenderObject CreateRenderObject(BuildContext context);
@@ -53,6 +58,20 @@ public abstract class MultiChildRenderObjectWidget : RenderObjectWidget
     public IReadOnlyList<Widget> Children { get; }
 
     internal override Element CreateElement() => new MultiChildRenderObjectElement(this);
+}
+
+public abstract class SlottedMultiChildRenderObjectWidget<TSlot> : RenderObjectWidget
+    where TSlot : notnull
+{
+    protected SlottedMultiChildRenderObjectWidget(Key? key = null) : base(key)
+    {
+    }
+
+    public abstract IReadOnlyList<TSlot> Slots { get; }
+
+    public abstract Widget? ChildForSlot(TSlot slot);
+
+    internal override Element CreateElement() => new SlottedRenderObjectElement<TSlot>(this);
 }
 
 public abstract class RenderObjectElement : Element, IRenderObjectHost
@@ -435,5 +454,142 @@ public sealed class MultiChildRenderObjectElement : RenderObjectElement
         _children.Clear();
         _forgottenChildren.Clear();
         base.Unmount();
+    }
+}
+
+public sealed class SlottedRenderObjectElement<TSlot> : RenderObjectElement
+    where TSlot : notnull
+{
+    private readonly Dictionary<TSlot, Element> _children = [];
+
+    public SlottedRenderObjectElement(SlottedMultiChildRenderObjectWidget<TSlot> widget) : base(widget)
+    {
+    }
+
+    private SlottedMultiChildRenderObjectWidget<TSlot> SlottedWidget =>
+        (SlottedMultiChildRenderObjectWidget<TSlot>)Widget;
+
+    protected override void OnMount()
+    {
+        base.OnMount();
+        UpdateSlotChildren();
+    }
+
+    internal override void Rebuild()
+    {
+        base.Rebuild();
+        UpdateSlotChildren();
+    }
+
+    internal override void Update(Widget newWidget)
+    {
+        base.Update(newWidget);
+        UpdateSlotChildren();
+    }
+
+    internal override void ForgetChild(Element child)
+    {
+        TSlot? forgottenSlot = default;
+        bool found = false;
+        foreach ((TSlot slot, Element element) in _children)
+        {
+            if (!ReferenceEquals(element, child))
+            {
+                continue;
+            }
+
+            forgottenSlot = slot;
+            found = true;
+            break;
+        }
+
+        if (found)
+        {
+            _children.Remove(forgottenSlot!);
+        }
+    }
+
+    internal override void VisitChildren(Action<Element> visitor)
+    {
+        foreach (Element child in _children.Values)
+        {
+            visitor(child);
+        }
+    }
+
+    public override void InsertRenderObjectChild(RenderObject child, object? slot)
+    {
+        RequireContainer().SetChild(child, RequireSlot(slot));
+    }
+
+    public override void MoveRenderObjectChild(RenderObject child, object? oldSlot, object? newSlot)
+    {
+        object resolvedOldSlot = RequireSlot(oldSlot);
+        object resolvedNewSlot = RequireSlot(newSlot);
+        if (Equals(resolvedOldSlot, resolvedNewSlot))
+        {
+            return;
+        }
+
+        ISlottedRenderObjectContainer container = RequireContainer();
+        container.SetChild(null, resolvedOldSlot);
+        container.SetChild(child, resolvedNewSlot);
+    }
+
+    public override void RemoveRenderObjectChild(RenderObject child, object? slot)
+    {
+        RequireContainer().SetChild(null, RequireSlot(slot));
+    }
+
+    internal override void Unmount()
+    {
+        foreach (Element child in _children.Values.ToList())
+        {
+            UnmountChild(child);
+        }
+
+        _children.Clear();
+        base.Unmount();
+    }
+
+    private void UpdateSlotChildren()
+    {
+        var activeSlots = new HashSet<TSlot>(SlottedWidget.Slots);
+        foreach (TSlot oldSlot in _children.Keys.Where(slot => !activeSlots.Contains(slot)).ToList())
+        {
+            Element oldChild = _children[oldSlot];
+            UpdateChild(oldChild, null, oldSlot);
+            _children.Remove(oldSlot);
+        }
+
+        foreach (TSlot slot in SlottedWidget.Slots)
+        {
+            _children.TryGetValue(slot, out Element? oldChild);
+            Element? newChild = UpdateChild(oldChild, SlottedWidget.ChildForSlot(slot), slot);
+            if (newChild is null)
+            {
+                _children.Remove(slot);
+            }
+            else
+            {
+                _children[slot] = newChild;
+            }
+        }
+    }
+
+    private ISlottedRenderObjectContainer RequireContainer()
+    {
+        if (RequireRenderObject() is ISlottedRenderObjectContainer container)
+        {
+            return container;
+        }
+
+        throw new InvalidOperationException(
+            $"{RequireRenderObject().GetType().Name} must implement {nameof(ISlottedRenderObjectContainer)}.");
+    }
+
+    private static object RequireSlot(object? slot)
+    {
+        return slot ?? throw new InvalidOperationException("A slotted render child requires a non-null slot.");
     }
 }

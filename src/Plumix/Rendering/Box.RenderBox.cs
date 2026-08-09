@@ -28,6 +28,58 @@ public abstract class RenderBox : RenderObject
 
     public new BoxConstraints Constraints => (BoxConstraints)base.Constraints;
 
+    public double GetMinIntrinsicWidth(double height)
+    {
+        return ComputeMinIntrinsicWidth(height);
+    }
+
+    public double GetMaxIntrinsicWidth(double height)
+    {
+        return ComputeMaxIntrinsicWidth(height);
+    }
+
+    public double GetMinIntrinsicHeight(double width)
+    {
+        return ComputeMinIntrinsicHeight(width);
+    }
+
+    public double GetMaxIntrinsicHeight(double width)
+    {
+        return ComputeMaxIntrinsicHeight(width);
+    }
+
+    public Size GetDryLayout(BoxConstraints constraints)
+    {
+        if (!constraints.IsNormalized)
+        {
+            throw new InvalidOperationException("RenderBox.GetDryLayout requires normalized constraints.");
+        }
+
+        return constraints.Constrain(ComputeDryLayout(constraints));
+    }
+
+    public double? GetDryBaseline(BoxConstraints constraints, TextBaseline baseline)
+    {
+        if (!constraints.IsNormalized)
+        {
+            throw new InvalidOperationException("RenderBox.GetDryBaseline requires normalized constraints.");
+        }
+
+        return ComputeDryBaseline(constraints, baseline);
+    }
+
+    protected virtual double ComputeMinIntrinsicWidth(double height) => 0.0;
+
+    protected virtual double ComputeMaxIntrinsicWidth(double height) => ComputeMinIntrinsicWidth(height);
+
+    protected virtual double ComputeMinIntrinsicHeight(double width) => 0.0;
+
+    protected virtual double ComputeMaxIntrinsicHeight(double width) => ComputeMinIntrinsicHeight(width);
+
+    protected virtual Size ComputeDryLayout(BoxConstraints constraints) => constraints.Smallest;
+
+    protected virtual double? ComputeDryBaseline(BoxConstraints constraints, TextBaseline baseline) => null;
+
     public override bool HitTest(BoxHitTestResult result, Point position)
     {
         if (!HasSize)

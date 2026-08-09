@@ -155,16 +155,13 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
         Assert.Equal(selectedColor, Assert.IsType<SolidColorBrush>(title!.Foreground).Color);
 
         string secondaryGlyph = char.ConvertFromUtf32(Icons.InfoOutline.CodePoint);
-        var row = FindDescendants<RenderFlex>(harness.RenderView).FirstOrDefault(flex =>
-        {
-            var children = ImmediateChildren(flex);
-            return children.Count == 5
-                   && FindDescendants<RenderDecoratedBox>(children[0]).Any(box =>
-                       Math.Abs(box.Size.Width - Radio<string>.Width) < 0.001)
-                   && FindDescendants<RenderParagraph>(children[^1]).Any(paragraph =>
-                       paragraph.Text == secondaryGlyph);
-        });
-        Assert.NotNull(row);
+        var tile = Assert.IsType<RenderListTile>(FindDescendant<RenderListTile>(harness.RenderView));
+        Assert.Contains(
+            FindDescendants<RenderDecoratedBox>(tile.Leading),
+            box => Math.Abs(box.Size.Width - Radio<string>.Width) < 0.001);
+        Assert.Contains(
+            FindDescendants<RenderParagraph>(tile.Trailing),
+            paragraph => paragraph.Text == secondaryGlyph);
     }
 
     [Fact]
@@ -409,7 +406,9 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
     {
         return new Theme(
             data: theme ?? ThemeData.Light,
-            child: new SizedBox(width: 320, child: child));
+            child: new MediaQuery(
+                data: new MediaQueryData(Size: new Size(320, 800)),
+                child: new SizedBox(width: 320, child: child)));
     }
 
     private static void Tap(RenderView renderView, Point position, int pointer)

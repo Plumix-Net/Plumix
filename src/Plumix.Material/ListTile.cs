@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
@@ -9,31 +7,34 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/material/list_tile.dart (approximate)
+// Dart parity source: flutter/packages/flutter/lib/src/material/list_tile.dart
 
 public sealed class ListTile : StatelessWidget
 {
-    private static readonly Action Noop = () => { };
+    private static readonly TimeSpan ThemeChangeDuration = TimeSpan.FromMilliseconds(200);
     private static readonly Color M2LightDefaultIconColor = Color.FromArgb(0x73, 0x00, 0x00, 0x00);
 
     public ListTile(
+        Widget? leading = null,
         Widget? title = null,
         Widget? subtitle = null,
-        Widget? leading = null,
         Widget? trailing = null,
         bool? isThreeLine = null,
         bool? dense = null,
+        VisualDensity? visualDensity = null,
+        ShapeBorder? shape = null,
         ListTileStyle? style = null,
         Color? selectedColor = null,
-        Color? iconColor = null,
-        Color? textColor = null,
+        MaterialStateProperty<Color?>? iconColor = null,
+        MaterialStateProperty<Color?>? textColor = null,
         TextStyle? titleTextStyle = null,
         TextStyle? subtitleTextStyle = null,
         TextStyle? leadingAndTrailingTextStyle = null,
-        Thickness? contentPadding = null,
+        EdgeInsetsGeometry? contentPadding = null,
         bool enabled = true,
         Action? onTap = null,
         Action? onLongPress = null,
+        Action<bool>? onFocusChange = null,
         MouseCursor? mouseCursor = null,
         bool selected = false,
         Color? focusColor = null,
@@ -44,16 +45,13 @@ public sealed class ListTile : StatelessWidget
         Color? tileColor = null,
         Color? selectedTileColor = null,
         bool? enableFeedback = null,
-        Action<bool>? onFocusChange = null,
         double? horizontalTitleGap = null,
         double? minVerticalPadding = null,
         double? minLeadingWidth = null,
         double? minTileHeight = null,
-        VisualDensity? visualDensity = null,
         ListTileTitleAlignment? titleAlignment = null,
         bool internalAddSemanticForOnTap = true,
         MaterialStatesController? statesController = null,
-        BorderRadius? shape = null,
         Key? key = null) : base(key)
     {
         if (isThreeLine == true && subtitle is null)
@@ -61,17 +59,14 @@ public sealed class ListTile : StatelessWidget
             throw new ArgumentException("ListTile with isThreeLine=true requires a non-null subtitle.", nameof(isThreeLine));
         }
 
-        HorizontalTitleGap = ValidateNonNegativeFinite(horizontalTitleGap, nameof(horizontalTitleGap));
-        MinVerticalPadding = ValidateNonNegativeFinite(minVerticalPadding, nameof(minVerticalPadding));
-        MinLeadingWidth = ValidateNonNegativeFinite(minLeadingWidth, nameof(minLeadingWidth));
-        MinTileHeight = ValidateNonNegativeFinite(minTileHeight, nameof(minTileHeight));
-
+        Leading = leading;
         Title = title;
         Subtitle = subtitle;
-        Leading = leading;
         Trailing = trailing;
         IsThreeLine = isThreeLine;
         Dense = dense;
+        VisualDensity = visualDensity;
+        Shape = shape;
         Style = style;
         SelectedColor = selectedColor;
         IconColor = iconColor;
@@ -83,6 +78,7 @@ public sealed class ListTile : StatelessWidget
         Enabled = enabled;
         OnTap = onTap;
         OnLongPress = onLongPress;
+        OnFocusChange = onFocusChange;
         MouseCursor = mouseCursor;
         Selected = selected;
         FocusColor = focusColor;
@@ -93,685 +89,326 @@ public sealed class ListTile : StatelessWidget
         TileColor = tileColor;
         SelectedTileColor = selectedTileColor;
         EnableFeedback = enableFeedback;
-        OnFocusChange = onFocusChange;
         HorizontalTitleGap = horizontalTitleGap;
         MinVerticalPadding = minVerticalPadding;
         MinLeadingWidth = minLeadingWidth;
         MinTileHeight = minTileHeight;
-        VisualDensity = visualDensity;
         TitleAlignment = titleAlignment;
         InternalAddSemanticForOnTap = internalAddSemanticForOnTap;
         StatesController = statesController;
-        Shape = shape;
     }
 
-    public Widget? Title { get; }
-
-    public Widget? Subtitle { get; }
-
     public Widget? Leading { get; }
-
+    public Widget? Title { get; }
+    public Widget? Subtitle { get; }
     public Widget? Trailing { get; }
-
     public bool? IsThreeLine { get; }
-
     public bool? Dense { get; }
-
-    public ListTileStyle? Style { get; }
-
-    public Color? SelectedColor { get; }
-
-    public Color? IconColor { get; }
-
-    public Color? TextColor { get; }
-
-    public TextStyle? TitleTextStyle { get; }
-
-    public TextStyle? SubtitleTextStyle { get; }
-
-    public TextStyle? LeadingAndTrailingTextStyle { get; }
-
-    public Thickness? ContentPadding { get; }
-
-    public bool Enabled { get; }
-
-    public Action? OnTap { get; }
-
-    public Action? OnLongPress { get; }
-
-    public MouseCursor? MouseCursor { get; }
-
-    public bool Selected { get; }
-
-    public Color? FocusColor { get; }
-
-    public Color? HoverColor { get; }
-
-    public Color? SplashColor { get; }
-
-    public FocusNode? FocusNode { get; }
-
-    public bool Autofocus { get; }
-
-    public Color? TileColor { get; }
-
-    public Color? SelectedTileColor { get; }
-
-    public bool? EnableFeedback { get; }
-
-    public Action<bool>? OnFocusChange { get; }
-
-    public double? HorizontalTitleGap { get; }
-
-    public double? MinVerticalPadding { get; }
-
-    public double? MinLeadingWidth { get; }
-
-    public double? MinTileHeight { get; }
-
     public VisualDensity? VisualDensity { get; }
-
+    public ShapeBorder? Shape { get; }
+    public ListTileStyle? Style { get; }
+    public Color? SelectedColor { get; }
+    public MaterialStateProperty<Color?>? IconColor { get; }
+    public MaterialStateProperty<Color?>? TextColor { get; }
+    public TextStyle? TitleTextStyle { get; }
+    public TextStyle? SubtitleTextStyle { get; }
+    public TextStyle? LeadingAndTrailingTextStyle { get; }
+    public EdgeInsetsGeometry? ContentPadding { get; }
+    public bool Enabled { get; }
+    public Action? OnTap { get; }
+    public Action? OnLongPress { get; }
+    public Action<bool>? OnFocusChange { get; }
+    public MouseCursor? MouseCursor { get; }
+    public bool Selected { get; }
+    public Color? FocusColor { get; }
+    public Color? HoverColor { get; }
+    public Color? SplashColor { get; }
+    public FocusNode? FocusNode { get; }
+    public bool Autofocus { get; }
+    public Color? TileColor { get; }
+    public Color? SelectedTileColor { get; }
+    public bool? EnableFeedback { get; }
+    public double? HorizontalTitleGap { get; }
+    public double? MinVerticalPadding { get; }
+    public double? MinLeadingWidth { get; }
+    public double? MinTileHeight { get; }
     public ListTileTitleAlignment? TitleAlignment { get; }
-
     public bool InternalAddSemanticForOnTap { get; }
-
     public MaterialStatesController? StatesController { get; }
 
-    public BorderRadius? Shape { get; }
+    public static IReadOnlyList<Widget> DivideTiles(
+        IEnumerable<Widget> tiles,
+        BuildContext? context = null,
+        Color? color = null)
+    {
+        ArgumentNullException.ThrowIfNull(tiles);
+        if (!color.HasValue && !context.HasValue)
+        {
+            throw new ArgumentException("ListTile.DivideTiles requires either a context or an explicit color.");
+        }
+
+        List<Widget> tileList = tiles.ToList();
+        if (tileList.Count <= 1)
+        {
+            return tileList;
+        }
+
+        var result = new List<Widget>(tileList.Count);
+        for (int index = 0; index < tileList.Count - 1; index++)
+        {
+            result.Add(new DecoratedBox(
+                position: DecorationPosition.Foreground,
+                decoration: new BoxDecoration(
+                    BorderSides: new BoxBorder(
+                        Bottom: Divider.CreateBorderSide(context, color: color))),
+                child: tileList[index]));
+        }
+
+        result.Add(tileList[^1]);
+        return result;
+    }
 
     public override Widget Build(BuildContext context)
     {
-        var theme = Theme.Of(context);
-        var tileTheme = ListTileTheme.Of(context);
-        bool useMaterial3 = theme.UseMaterial3;
-        var effectiveStyle = Style ?? tileTheme.Style ?? ListTileStyle.List;
-        bool isDense = Dense ?? tileTheme.Dense ?? false;
-        bool hasSubtitle = Subtitle is not null;
-        bool isThreeLine = hasSubtitle && (IsThreeLine ?? tileTheme.IsThreeLine ?? false);
-        int lineCount = hasSubtitle ? (isThreeLine ? 3 : 2) : 1;
-        var visualDensity = VisualDensity ?? tileTheme.VisualDensity ?? theme.VisualDensity;
-        double effectiveHorizontalTitleGap = HorizontalTitleGap
-                                             ?? tileTheme.HorizontalTitleGap
-                                             ?? 16;
-        effectiveHorizontalTitleGap += visualDensity.Horizontal * 2.0;
-        double effectiveMinVerticalPadding = MinVerticalPadding
-                                             ?? tileTheme.MinVerticalPadding
-                                             ?? (useMaterial3 ? 8 : 4);
-        double effectiveMinLeadingWidth = MinLeadingWidth ?? tileTheme.MinLeadingWidth ?? (useMaterial3 ? 24 : 40);
-        double effectiveMinTileHeight = MinTileHeight
-                                        ?? tileTheme.MinTileHeight
-                                        ?? ResolveDefaultTileHeight(lineCount, isDense)
-                                        + visualDensity.BaseSizeAdjustment.Y;
-        effectiveMinTileHeight = Math.Max(0, effectiveMinTileHeight);
-        var effectiveTitleAlignment = TitleAlignment
-                                      ?? tileTheme.TitleAlignment
-                                      ?? (useMaterial3
-                                          ? ListTileTitleAlignment.ThreeLine
-                                          : ListTileTitleAlignment.TitleHeight);
-        var textDirection = Directionality.Of(context);
-        var effectiveContentPadding = ContentPadding
-            ?? tileTheme.ContentPadding
-            ?? ResolveDefaultContentPadding(useMaterial3, textDirection);
-        var effectiveShape = Shape ?? tileTheme.Shape ?? BorderRadius.Zero;
-        var selectedColor = SelectedColor ?? tileTheme.SelectedColor ?? theme.PrimaryColor;
-        var disabledColor = ApplyOpacity(theme.OnSurfaceColor, 0.38);
-        var defaultIconColor = ResolveDefaultIconColor(theme);
-        var defaultTitleColor = useMaterial3 ? theme.OnSurfaceColor : theme.OnSurfaceColor;
-        var defaultSubtitleColor = useMaterial3
-            ? theme.OnSurfaceVariantColor
-            : ApplyOpacity(theme.OnSurfaceColor, 0.60);
-        var defaultLeadingTrailingTextColor = useMaterial3
-            ? theme.OnSurfaceVariantColor
-            : theme.OnSurfaceColor;
-        var configuredTextColor = TextColor ?? tileTheme.TextColor;
-        var effectiveTitleColor = ResolveContentColor(
-            enabled: Enabled,
+        ThemeData theme = Theme.Of(context);
+        IconButtonThemeData iconButtonTheme = IconButtonTheme.Of(context);
+        ListTileThemeData tileTheme = ListTileTheme.Of(context);
+        ListTileStyle listTileStyle = Style
+                                      ?? tileTheme.Style
+                                      ?? theme.ListTileTheme.Style
+                                      ?? ListTileStyle.List;
+        ListTileThemeData defaults = ResolveDefaults(theme, listTileStyle);
+
+        Color backgroundColor = TileColor
+                                ?? tileTheme.TileColor
+                                ?? theme.ListTileTheme.TileColor
+                                ?? defaults.TileColor!.Value;
+        Color selectedBackgroundColor = SelectedTileColor
+                                        ?? tileTheme.SelectedTileColor
+                                        ?? theme.ListTileTheme.SelectedTileColor
+                                        ?? defaults.TileColor!.Value;
+        Color effectiveTileColor = Selected ? selectedBackgroundColor : backgroundColor;
+        MaterialState states = (Enabled ? MaterialState.None : MaterialState.Disabled)
+                               | (Selected ? MaterialState.Selected : MaterialState.None);
+
+        Color? preDefaultIconColor = ResolveContentColor(IconColor, SelectedColor, null, null, states)
+                                     ?? ResolveContentColor(
+                                         tileTheme.IconColor,
+                                         tileTheme.SelectedColor,
+                                         null,
+                                         null,
+                                         states)
+                                     ?? ResolveContentColor(
+                                         theme.ListTileTheme.IconColor,
+                                         theme.ListTileTheme.SelectedColor,
+                                         null,
+                                         null,
+                                         states);
+        Color? defaultIconColor = ResolveContentColor(
+            null,
+            defaults.SelectedColor,
+            defaults.IconColor?.Resolve(MaterialState.None),
+            theme.DisabledColor,
+            states);
+        Color? effectiveIconButtonColor = preDefaultIconColor
+                                          ?? iconButtonTheme.Style?.ForegroundColor?.Resolve(states)
+                                          ?? defaultIconColor;
+        Color? effectiveIconColor = preDefaultIconColor ?? defaultIconColor;
+
+        Color? effectiveTextColor = ResolveContentColor(TextColor, SelectedColor, null, null, states)
+                                    ?? ResolveContentColor(
+                                        tileTheme.TextColor,
+                                        tileTheme.SelectedColor,
+                                        null,
+                                        null,
+                                        states)
+                                    ?? ResolveContentColor(
+                                        theme.ListTileTheme.TextColor,
+                                        theme.ListTileTheme.SelectedColor,
+                                        null,
+                                        null,
+                                        states)
+                                    ?? ResolveContentColor(
+                                        null,
+                                        defaults.SelectedColor,
+                                        defaults.TextColor?.Resolve(MaterialState.None),
+                                        theme.DisabledColor,
+                                        states);
+
+        bool isDense = Dense ?? tileTheme.Dense ?? theme.ListTileTheme.Dense ?? false;
+        TextStyle leadingAndTrailingStyle = (LeadingAndTrailingTextStyle
+                                             ?? tileTheme.LeadingAndTrailingTextStyle
+                                             ?? defaults.LeadingAndTrailingTextStyle!)
+            .CopyWith(color: effectiveTextColor);
+        TextStyle titleStyle = (TitleTextStyle ?? tileTheme.TitleTextStyle ?? defaults.TitleTextStyle!)
+            .CopyWith(color: effectiveTextColor, fontSize: isDense ? 13.0 : null);
+        TextStyle subtitleStyle = (SubtitleTextStyle ?? tileTheme.SubtitleTextStyle ?? defaults.SubtitleTextStyle!)
+            .CopyWith(color: effectiveTextColor, fontSize: isDense ? 12.0 : null);
+
+        Widget? leading = WrapSlot(Leading, leadingAndTrailingStyle);
+        Widget title = new AnimatedDefaultTextStyle(
+            style: titleStyle,
+            duration: ThemeChangeDuration,
+            child: Title ?? new SizedBox());
+        Widget? subtitle = Subtitle is null
+            ? null
+            : new AnimatedDefaultTextStyle(
+                style: subtitleStyle,
+                duration: ThemeChangeDuration,
+                child: Subtitle);
+        Widget? trailing = WrapSlot(Trailing, leadingAndTrailingStyle);
+
+        TextDirection textDirection = Directionality.Of(context);
+        Thickness resolvedContentPadding = (ContentPadding
+                                            ?? tileTheme.ContentPadding
+                                            ?? defaults.ContentPadding!.Value)
+            .Resolve(textDirection);
+        MaterialState mouseStates = !Enabled || (OnTap is null && OnLongPress is null)
+            ? MaterialState.Disabled
+            : MaterialState.None;
+        MouseCursor effectiveMouseCursor = MouseCursor
+                                           ?? tileTheme.MouseCursor?.Resolve(mouseStates)
+                                           ?? (mouseStates.HasFlag(MaterialState.Disabled)
+                                               ? SystemMouseCursors.Basic
+                                               : SystemMouseCursors.Click);
+        ListTileTitleAlignment effectiveTitleAlignment = TitleAlignment
+                                                         ?? tileTheme.TitleAlignment
+                                                         ?? (theme.UseMaterial3
+                                                             ? ListTileTitleAlignment.ThreeLine
+                                                             : ListTileTitleAlignment.TitleHeight);
+        ShapeBorder effectiveShape = Shape ?? tileTheme.Shape ?? ShapeBorder.RoundedRectangle(0.0);
+        ButtonStyle effectiveIconButtonStyle = iconButtonTheme.Style is null
+            ? new ButtonStyle(
+                ForegroundColor: MaterialStateProperty<Color?>.All(effectiveIconButtonColor))
+            : iconButtonTheme.Style with
+            {
+                ForegroundColor = MaterialStateProperty<Color?>.All(effectiveIconButtonColor)
+            };
+
+        Widget content = new ListTileRenderWidget(
+            leading: leading,
+            title: title,
+            subtitle: subtitle,
+            trailing: trailing,
+            isThreeLine: IsThreeLine
+                         ?? tileTheme.IsThreeLine
+                         ?? theme.ListTileTheme.IsThreeLine
+                         ?? false,
+            isDense: isDense,
+            visualDensity: VisualDensity ?? tileTheme.VisualDensity ?? theme.VisualDensity,
+            textDirection: textDirection,
+            titleBaselineType: titleStyle.TextBaseline ?? defaults.TitleTextStyle!.TextBaseline!.Value,
+            subtitleBaselineType: subtitleStyle.TextBaseline ?? defaults.SubtitleTextStyle!.TextBaseline,
+            horizontalTitleGap: HorizontalTitleGap ?? tileTheme.HorizontalTitleGap ?? 16.0,
+            minVerticalPadding: MinVerticalPadding
+                                ?? tileTheme.MinVerticalPadding
+                                ?? defaults.MinVerticalPadding!.Value,
+            minLeadingWidth: MinLeadingWidth ?? tileTheme.MinLeadingWidth ?? defaults.MinLeadingWidth!.Value,
+            minTileHeight: MinTileHeight ?? tileTheme.MinTileHeight,
+            titleAlignment: effectiveTitleAlignment);
+        content = IconTheme.Merge(
+            new IconThemeData(Color: effectiveIconColor),
+            new IconButtonTheme(
+                data: new IconButtonThemeData(effectiveIconButtonStyle),
+                child: content));
+        content = new SafeArea(
+            top: false,
+            bottom: false,
+            minimum: resolvedContentPadding,
+            child: content);
+        content = new Ink(
+            decoration: new ShapeDecoration(effectiveShape, effectiveTileColor),
+            child: content);
+        content = new Semantics(
+            flags: (Enabled ? SemanticsFlags.IsEnabled : SemanticsFlags.None)
+                   | (InternalAddSemanticForOnTap && (OnTap is not null || OnLongPress is not null)
+                       ? SemanticsFlags.IsButton
+                       : SemanticsFlags.None),
             selected: Selected,
-            selectedColor: selectedColor,
-            configuredColor: configuredTextColor,
-            defaultColor: defaultTitleColor,
-            disabledColor: disabledColor);
-        var effectiveSubtitleColor = ResolveContentColor(
-            enabled: Enabled,
-            selected: Selected,
-            selectedColor: selectedColor,
-            configuredColor: configuredTextColor,
-            defaultColor: defaultSubtitleColor,
-            disabledColor: disabledColor);
-        var effectiveLeadingTrailingTextColor = ResolveContentColor(
-            enabled: Enabled,
-            selected: Selected,
-            selectedColor: selectedColor,
-            configuredColor: configuredTextColor,
-            defaultColor: defaultLeadingTrailingTextColor,
-            disabledColor: disabledColor);
-        var effectiveIconColor = ResolveContentColor(
-            enabled: Enabled,
-            selected: Selected,
-            selectedColor: selectedColor,
-            configuredColor: IconColor ?? tileTheme.IconColor,
-            defaultColor: defaultIconColor,
-            disabledColor: disabledColor);
-        var effectiveTileColor = ResolveTileColor(tileTheme);
-        var interactionColor = Selected ? selectedColor : theme.PrimaryColor;
-        var effectiveMouseCursor = ResolveMouseCursor(tileTheme);
+            child: content);
 
-        var titleStyle = ResolveTitleTextStyle(theme, tileTheme, effectiveStyle, isDense, effectiveTitleColor);
-        var subtitleStyle = ResolveSubtitleTextStyle(theme, tileTheme, isDense, effectiveSubtitleColor);
-        var leadingTrailingStyle = ResolveLeadingTrailingTextStyle(theme, tileTheme, effectiveLeadingTrailingTextColor);
-
-        Widget BuildSlotWidget(Widget child)
-        {
-            return new IconTheme(
-                data: new IconThemeData(Color: effectiveIconColor),
-                child: new DefaultTextStyle(
-                    style: leadingTrailingStyle,
-                    child: child));
-        }
-
-        Widget AlignSlot(Widget child, bool isLeading)
-        {
-            return new ListTileSlotAlign(
-                tileHeight: effectiveMinTileHeight,
-                minVerticalPadding: effectiveMinVerticalPadding,
-                titleAlignment: effectiveTitleAlignment,
-                isThreeLine: isThreeLine,
-                isLeading: isLeading,
-                child: child);
-        }
-
-        Widget textChild;
-        if (Subtitle is null)
-        {
-            textChild = new DefaultTextStyle(
-                style: titleStyle,
-                child: ApplyTitleTextDefaults(Title ?? new SizedBox()));
-        }
-        else
-        {
-            textChild = new Column(
-                mainAxisSize: MainAxisSize.Min,
-                crossAxisAlignment: CrossAxisAlignment.Start,
-                children:
-                [
-                    new DefaultTextStyle(
-                        style: titleStyle,
-                        child: ApplyTitleTextDefaults(Title ?? new SizedBox())),
-                    new DefaultTextStyle(
-                        style: subtitleStyle,
-                        child: ApplySubtitleTextDefaults(Subtitle, isThreeLine)),
-                ]);
-        }
-
-        var rowChildren = new List<Widget>();
-        if (Leading is not null)
-        {
-            rowChildren.Add(new ConstrainedBox(
-                constraints: new BoxConstraints(MinWidth: effectiveMinLeadingWidth),
-                child: AlignSlot(BuildSlotWidget(Leading), isLeading: true)));
-            rowChildren.Add(new SizedBox(width: effectiveHorizontalTitleGap));
-        }
-
-        rowChildren.Add(new Expanded(child: textChild));
-
-        if (Trailing is not null)
-        {
-            rowChildren.Add(new SizedBox(width: effectiveHorizontalTitleGap));
-            rowChildren.Add(AlignSlot(BuildSlotWidget(Trailing), isLeading: false));
-        }
-
-        var padding = new Thickness(
-            effectiveContentPadding.Left,
-            effectiveContentPadding.Top,
-            effectiveContentPadding.Right,
-            effectiveContentPadding.Bottom);
-
-        var tileBody = new Align(
-            alignment: Alignment.CenterLeft,
-            heightFactor: 1,
-            child: new Row(
-                crossAxisAlignment: CrossAxisAlignment.Center,
-                children: rowChildren));
-
-        var child = new ConstrainedBox(
-            constraints: new BoxConstraints(MinHeight: effectiveMinTileHeight),
-            child: new Container(
-                padding: padding,
-                child: tileBody));
-
-        var style = new ButtonStyle(
-            ForegroundColor: MaterialStateProperty<Color?>.All(effectiveTitleColor),
-            BackgroundColor: MaterialStateProperty<Color?>.All(effectiveTileColor),
-            OverlayColor: ResolveOverlayColorProperty(interactionColor),
-            SplashColor: ResolveSplashColorProperty(interactionColor),
-            IconColor: MaterialStateProperty<Color?>.All(effectiveIconColor),
-            Padding: MaterialStateProperty<Thickness?>.All(default),
-            Shape: MaterialStateProperty<BorderRadius?>.All(effectiveShape),
-            MinimumSize: MaterialStateProperty<Size?>.All(new Size(0, effectiveMinTileHeight)),
-            TapTargetSize: MaterialTapTargetSize.ShrinkWrap);
-
-        bool hasAnyAction = OnTap is not null || OnLongPress is not null;
-        Action? onPressed = null;
-        if (Enabled && hasAnyAction)
-        {
-            onPressed = OnTap ?? Noop;
-        }
-
-        return new MaterialButtonCore(
-            child: child,
-            onPressed: onPressed,
+        return new InkWell(
+            customBorder: Shape ?? tileTheme.Shape,
+            onTap: Enabled ? OnTap : null,
             onLongPress: Enabled ? OnLongPress : null,
-            style: style,
-            mouseCursor: effectiveMouseCursor,
-            focusNode: FocusNode,
-            statesController: StatesController,
             onFocusChange: OnFocusChange,
+            mouseCursor: effectiveMouseCursor,
+            canRequestFocus: Enabled,
+            focusNode: FocusNode,
+            focusColor: FocusColor,
+            hoverColor: HoverColor,
+            splashColor: SplashColor,
             autofocus: Autofocus,
-            isSelected: Selected,
-            includeSemanticSelected: true,
-            isSemanticButton: InternalAddSemanticForOnTap && hasAnyAction,
-            enableFeedback: EnableFeedback ?? tileTheme.EnableFeedback ?? true);
+            enableFeedback: EnableFeedback ?? tileTheme.EnableFeedback ?? true,
+            excludeFromSemantics: false,
+            statesController: StatesController,
+            child: content);
     }
 
-    private MaterialStateProperty<Color?> ResolveOverlayColorProperty(Color interactionColor)
+    private static Color? ResolveContentColor(
+        MaterialStateProperty<Color?>? explicitColor,
+        Color? selectedColor,
+        Color? enabledColor,
+        Color? disabledColor,
+        MaterialState states)
     {
-        if (FocusColor.HasValue || HoverColor.HasValue)
+        if (explicitColor is not null)
         {
-            return MaterialStateProperty<Color?>.ResolveWith(states =>
-            {
-                if (states.HasFlag(MaterialState.Disabled))
-                {
-                    return null;
-                }
-
-                if (states.HasFlag(MaterialState.Pressed))
-                {
-                    return FocusColor ?? HoverColor ?? ApplyOpacity(interactionColor, 0.10);
-                }
-
-                if (states.HasFlag(MaterialState.Hovered))
-                {
-                    return HoverColor ?? ApplyOpacity(interactionColor, 0.08);
-                }
-
-                if (states.HasFlag(MaterialState.Focused))
-                {
-                    return FocusColor ?? ApplyOpacity(interactionColor, 0.10);
-                }
-
-                return null;
-            });
+            return explicitColor.Resolve(states);
         }
 
-        return MaterialButtonCore.CreateDefaultOverlayResolver(interactionColor);
-    }
-
-    private MaterialStateProperty<Color?> ResolveSplashColorProperty(Color interactionColor)
-    {
-        if (SplashColor.HasValue)
-        {
-            return MaterialButtonCore.CreateExplicitSplashResolver(SplashColor.Value);
-        }
-
-        return MaterialButtonCore.CreateDefaultSplashResolver(interactionColor);
-    }
-
-    private MouseCursor ResolveMouseCursor(ListTileThemeData tileTheme)
-    {
-        if (MouseCursor is not null)
-        {
-            return MouseCursor;
-        }
-
-        if (tileTheme.MouseCursor is not null)
-        {
-            return tileTheme.MouseCursor;
-        }
-
-        bool hasAnyAction = OnTap is not null || OnLongPress is not null;
-        return Enabled && hasAnyAction
-            ? SystemMouseCursors.Click
-            : SystemMouseCursors.Basic;
-    }
-
-    private Color ResolveTileColor(ListTileThemeData tileTheme)
-    {
-        if (Selected)
-        {
-            return SelectedTileColor
-                   ?? tileTheme.SelectedTileColor
-                   ?? Colors.Transparent;
-        }
-
-        return TileColor
-               ?? tileTheme.TileColor
-               ?? Colors.Transparent;
-    }
-
-    private TextStyle ResolveTitleTextStyle(
-        ThemeData theme,
-        ListTileThemeData tileTheme,
-        ListTileStyle style,
-        bool dense,
-        Color color)
-    {
-        var fallback = style == ListTileStyle.Drawer
-            ? theme.TextTheme.BodyMedium
-            : theme.TextTheme.BodyMedium;
-        var baseStyle = fallback with
-        {
-            Color = color
-        };
-        var styleFromTheme = TitleTextStyle ?? tileTheme.TitleTextStyle ?? baseStyle;
-        var effective = styleFromTheme with
-        {
-            Color = color
-        };
-
-        if (dense)
-        {
-            effective = effective with
-            {
-                FontSize = 13
-            };
-        }
-
-        return effective;
-    }
-
-    private TextStyle ResolveSubtitleTextStyle(
-        ThemeData theme,
-        ListTileThemeData tileTheme,
-        bool dense,
-        Color color)
-    {
-        var baseStyle = (SubtitleTextStyle
-                         ?? tileTheme.SubtitleTextStyle
-                         ?? theme.TextTheme.BodyMedium) with
-        {
-            Color = color
-        };
-
-        if (dense)
-        {
-            baseStyle = baseStyle with
-            {
-                FontSize = 12
-            };
-        }
-
-        return baseStyle;
-    }
-
-    private TextStyle ResolveLeadingTrailingTextStyle(
-        ThemeData theme,
-        ListTileThemeData tileTheme,
-        Color color)
-    {
-        return (LeadingAndTrailingTextStyle
-                ?? tileTheme.LeadingAndTrailingTextStyle
-                ?? theme.TextTheme.LabelLarge) with
-        {
-            Color = color
-        };
-    }
-
-    private static double ResolveDefaultTileHeight(int lineCount, bool dense)
-    {
-        return lineCount switch
-        {
-            3 => dense ? 76 : 88,
-            2 => dense ? 64 : 72,
-            _ => dense ? 48 : 56,
-        };
-    }
-
-    private static Thickness ResolveDefaultContentPadding(bool useMaterial3, TextDirection textDirection)
-    {
-        if (!useMaterial3)
-        {
-            return new Thickness(16, 0, 16, 0);
-        }
-
-        return textDirection == TextDirection.Rtl
-            ? new Thickness(24, 0, 16, 0)
-            : new Thickness(16, 0, 24, 0);
-    }
-
-    private static Color ResolveDefaultIconColor(ThemeData theme)
-    {
-        if (theme.UseMaterial3)
-        {
-            return theme.OnSurfaceVariantColor;
-        }
-
-        return theme.Brightness == Brightness.Light
-            ? M2LightDefaultIconColor
-            : theme.OnSurfaceColor;
-    }
-
-    private static Color ResolveContentColor(
-        bool enabled,
-        bool selected,
-        Color selectedColor,
-        Color? configuredColor,
-        Color defaultColor,
-        Color disabledColor)
-    {
-        if (!enabled)
+        if (states.HasFlag(MaterialState.Disabled))
         {
             return disabledColor;
         }
 
-        if (selected)
+        return states.HasFlag(MaterialState.Selected) ? selectedColor : enabledColor;
+    }
+
+    private static Widget? WrapSlot(Widget? child, TextStyle style)
+    {
+        return child is null
+            ? null
+            : new AnimatedDefaultTextStyle(
+                style: style,
+                duration: ThemeChangeDuration,
+                child: child);
+    }
+
+    private static ListTileThemeData ResolveDefaults(ThemeData theme, ListTileStyle style)
+    {
+        if (theme.UseMaterial3)
         {
-            return selectedColor;
+            return new ListTileThemeData(
+                Shape: ShapeBorder.RoundedRectangle(0.0),
+                SelectedColor: theme.ColorScheme.Primary,
+                IconColor: MaterialStateProperty<Color?>.All(theme.ColorScheme.OnSurfaceVariant),
+                TitleTextStyle: theme.TextTheme.BodyLarge.CopyWith(color: theme.ColorScheme.OnSurface),
+                SubtitleTextStyle: theme.TextTheme.BodyMedium.CopyWith(color: theme.ColorScheme.OnSurfaceVariant),
+                LeadingAndTrailingTextStyle:
+                    theme.TextTheme.LabelSmall.CopyWith(color: theme.ColorScheme.OnSurfaceVariant),
+                ContentPadding: EdgeInsetsGeometry.DirectionalOnly(start: 16.0, end: 24.0),
+                TileColor: Colors.Transparent,
+                MinLeadingWidth: 24.0,
+                MinVerticalPadding: 8.0);
         }
 
-        return configuredColor ?? defaultColor;
-    }
-
-    private static Color ApplyOpacity(Color color, double opacity)
-    {
-        double baseOpacity = color.A / 255.0;
-        double effectiveOpacity = Math.Clamp(baseOpacity * opacity, 0, 1);
-        byte alpha = (byte)Math.Clamp((int)(effectiveOpacity * 255), 0, 255);
-        return Color.FromArgb(alpha, color.R, color.G, color.B);
-    }
-
-    private static Widget ApplyTitleTextDefaults(Widget child)
-    {
-        return ApplyTextLineDefaults(child, maxLines: 1);
-    }
-
-    private static Widget ApplySubtitleTextDefaults(Widget child, bool isThreeLine)
-    {
-        return ApplyTextLineDefaults(child, maxLines: isThreeLine ? 2 : 1);
-    }
-
-    private static Widget ApplyTextLineDefaults(Widget child, int maxLines)
-    {
-        if (child is not Text text)
-        {
-            return child;
-        }
-
-        int effectiveMaxLines = text.MaxLines ?? maxLines;
-        bool effectiveSoftWrap = text.MaxLines.HasValue
-            ? text.SoftWrap ?? true
-            : effectiveMaxLines > 1;
-        TextOverflow effectiveOverflow = text.Overflow ?? TextOverflow.Ellipsis;
-
-        return new Text(
-            data: text.Data,
-            fontSize: text.FontSize,
-            color: text.Color,
-            fontWeight: text.FontWeight,
-            fontStyle: text.FontStyle,
-            fontFamily: text.FontFamily,
-            height: text.Height,
-            letterSpacing: text.LetterSpacing,
-            textAlign: text.TextAlign,
-            softWrap: effectiveSoftWrap,
-            maxLines: effectiveMaxLines,
-            overflow: effectiveOverflow,
-            textDirection: text.TextDirection,
-            textWidthBasis: text.TextWidthBasis,
-            textHeightBehavior: text.TextHeightBehavior,
-            key: text.Key);
-    }
-
-    private static double? ValidateNonNegativeFinite(double? value, string parameterName)
-    {
-        if (!value.HasValue)
-        {
-            return null;
-        }
-
-        if (double.IsNaN(value.Value) || double.IsInfinity(value.Value) || value.Value < 0)
-        {
-            throw new ArgumentOutOfRangeException(parameterName, "Value must be non-negative and finite.");
-        }
-
-        return value.Value;
-    }
-}
-
-internal sealed class ListTileSlotAlign : SingleChildRenderObjectWidget
-{
-    public ListTileSlotAlign(
-        double tileHeight,
-        double minVerticalPadding,
-        ListTileTitleAlignment titleAlignment,
-        bool isThreeLine,
-        bool isLeading,
-        Widget child) : base(child)
-    {
-        TileHeight = tileHeight;
-        MinVerticalPadding = minVerticalPadding;
-        TitleAlignment = titleAlignment;
-        IsThreeLine = isThreeLine;
-        IsLeading = isLeading;
-    }
-
-    public double TileHeight { get; }
-    public double MinVerticalPadding { get; }
-    public ListTileTitleAlignment TitleAlignment { get; }
-    public bool IsThreeLine { get; }
-    public bool IsLeading { get; }
-
-    internal override RenderObject CreateRenderObject(BuildContext context)
-    {
-        return new RenderListTileSlotAlign(
-            tileHeight: TileHeight,
-            minVerticalPadding: MinVerticalPadding,
-            titleAlignment: TitleAlignment,
-            isThreeLine: IsThreeLine,
-            isLeading: IsLeading);
-    }
-
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
-    {
-        var align = (RenderListTileSlotAlign)renderObject;
-        align.TileHeight = TileHeight;
-        align.MinVerticalPadding = MinVerticalPadding;
-        align.TitleAlignment = TitleAlignment;
-        align.IsThreeLine = IsThreeLine;
-        align.IsLeading = IsLeading;
-    }
-}
-
-internal sealed class RenderListTileSlotAlign : RenderProxyBox
-{
-    private double _tileHeight;
-    private double _minVerticalPadding;
-    private ListTileTitleAlignment _titleAlignment;
-    private bool _isThreeLine;
-    private bool _isLeading;
-
-    public RenderListTileSlotAlign(
-        double tileHeight,
-        double minVerticalPadding,
-        ListTileTitleAlignment titleAlignment,
-        bool isThreeLine,
-        bool isLeading)
-    {
-        _tileHeight = tileHeight;
-        _minVerticalPadding = minVerticalPadding;
-        _titleAlignment = titleAlignment;
-        _isThreeLine = isThreeLine;
-        _isLeading = isLeading;
-    }
-
-    public double TileHeight
-    {
-        get => _tileHeight;
-        set => SetLayoutValue(ref _tileHeight, value);
-    }
-
-    public double MinVerticalPadding
-    {
-        get => _minVerticalPadding;
-        set => SetLayoutValue(ref _minVerticalPadding, value);
-    }
-
-    public ListTileTitleAlignment TitleAlignment
-    {
-        get => _titleAlignment;
-        set => SetLayoutValue(ref _titleAlignment, value);
-    }
-
-    public bool IsThreeLine
-    {
-        get => _isThreeLine;
-        set => SetLayoutValue(ref _isThreeLine, value);
-    }
-
-    public bool IsLeading
-    {
-        get => _isLeading;
-        set => SetLayoutValue(ref _isLeading, value);
-    }
-
-    protected override void PerformLayout()
-    {
-        if (Child is null)
-        {
-            Size = Constraints.Constrain(new Size(0, TileHeight));
-            return;
-        }
-
-        Child.Layout(Constraints.Loosen(), parentUsesSize: true);
-        double height = Math.Max(TileHeight, Child.Size.Height);
-        Size = Constraints.Constrain(new Size(Child.Size.Width, height));
-        double y = ResolveYOffset(Child.Size.Height, Size.Height);
-        ((BoxParentData)Child.parentData!).offset = new Point(0, y);
-    }
-
-    private double ResolveYOffset(double childHeight, double tileHeight)
-    {
-        ListTileTitleAlignment alignment = TitleAlignment == ListTileTitleAlignment.ThreeLine
-            ? IsThreeLine ? ListTileTitleAlignment.Top : ListTileTitleAlignment.Center
-            : TitleAlignment;
-        return alignment switch
-        {
-            ListTileTitleAlignment.TitleHeight when tileHeight > 72 => 16,
-            ListTileTitleAlignment.TitleHeight when IsLeading => Math.Min((tileHeight - childHeight) / 2.0, 16),
-            ListTileTitleAlignment.TitleHeight => (tileHeight - childHeight) / 2.0,
-            ListTileTitleAlignment.Top => MinVerticalPadding,
-            ListTileTitleAlignment.Bottom => tileHeight - childHeight - MinVerticalPadding,
-            _ => (tileHeight - childHeight) / 2.0,
-        };
-    }
-
-    private void SetLayoutValue<T>(ref T field, T value)
-    {
-        if (EqualityComparer<T>.Default.Equals(field, value))
-        {
-            return;
-        }
-
-        field = value;
-        MarkNeedsLayout();
+        TextStyle titleStyle = style == ListTileStyle.Drawer
+            ? theme.TextTheme.BodyLarge
+            : theme.TextTheme.TitleMedium;
+        return new ListTileThemeData(
+            Shape: ShapeBorder.RoundedRectangle(0.0),
+            SelectedColor: theme.ColorScheme.Primary,
+            IconColor: theme.Brightness == Brightness.Light
+                ? MaterialStateProperty<Color?>.All(M2LightDefaultIconColor)
+                : null,
+            TitleTextStyle: titleStyle,
+            SubtitleTextStyle: theme.TextTheme.BodyMedium.CopyWith(color: theme.TextTheme.BodySmall.Color),
+            LeadingAndTrailingTextStyle: theme.TextTheme.BodyMedium,
+            ContentPadding: EdgeInsetsGeometry.Symmetric(horizontal: 16.0),
+            TileColor: Colors.Transparent,
+            MinLeadingWidth: 40.0,
+            MinVerticalPadding: 4.0,
+            Style: style);
     }
 }

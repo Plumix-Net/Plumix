@@ -37,8 +37,9 @@ public sealed class MaterialInkResponseTests : IDisposable
 
         var provider = new MemoryImage([1, 2, 3]);
         var image = Ink.Image(provider);
-        Assert.NotNull(image.Decoration?.Image);
-        Assert.Same(provider, image.Decoration!.Image!.Image);
+        var decoration = Assert.IsType<BoxDecoration>(image.Decoration);
+        Assert.NotNull(decoration.Image);
+        Assert.Same(provider, decoration.Image!.Image);
     }
 
     [Fact]

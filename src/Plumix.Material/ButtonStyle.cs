@@ -60,6 +60,11 @@ public abstract class MaterialStateProperty<T>
 {
     public abstract T Resolve(MaterialState states);
 
+    public static implicit operator MaterialStateProperty<T>(T value)
+    {
+        return All(value);
+    }
+
     public static MaterialStateProperty<T> All(T value)
     {
         return new MaterialStatePropertyAll<T>(value);
@@ -73,6 +78,24 @@ public abstract class MaterialStateProperty<T>
         }
 
         return new MaterialStatePropertyResolver<T>(resolver);
+    }
+
+    public static MaterialStateProperty<T>? Lerp(
+        MaterialStateProperty<T>? a,
+        MaterialStateProperty<T>? b,
+        double t,
+        Func<T, T, double, T> lerpFunction)
+    {
+        ArgumentNullException.ThrowIfNull(lerpFunction);
+        if (a is null && b is null)
+        {
+            return null;
+        }
+
+        return ResolveWith(states => lerpFunction(
+            a is null ? default! : a.Resolve(states),
+            b is null ? default! : b.Resolve(states),
+            t));
     }
 }
 

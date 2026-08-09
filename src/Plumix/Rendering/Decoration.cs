@@ -363,6 +363,39 @@ public sealed record ShapeBorder(
         new(borderRadius);
 }
 
+public sealed record ShapeDecoration(
+    ShapeBorder Shape,
+    Color? Color = null) : Decoration
+{
+    public override BoxPainter CreateBoxPainter(Action? onChanged = null)
+    {
+        var border = Shape.Side;
+        return new BoxDecoration(
+            Color: Color,
+            BorderRadius: Shape.BorderRadius,
+            Shape: Shape.Shape,
+            BorderSides: border.HasValue ? BoxBorder.All(border.Value) : null)
+            .CreateBoxPainter(onChanged);
+    }
+
+    public override Decoration? LerpFrom(Decoration? a, double t)
+    {
+        if (a is not ShapeDecoration from)
+        {
+            return base.LerpFrom(a, t);
+        }
+
+        return new ShapeDecoration(
+            Shape: new ShapeBorder(
+                BorderRadius.Lerp(from.Shape.BorderRadius, Shape.BorderRadius, t)!.Value,
+                t < 0.5 ? from.Shape.Side : Shape.Side)
+            {
+                Shape = t < 0.5 ? from.Shape.Shape : Shape.Shape
+            },
+            Color: BoxDecoration.LerpColor(from.Color, Color, t));
+    }
+}
+
 public sealed record BoxDecoration(
     Color? Color = null,
     IBrush? Brush = null,

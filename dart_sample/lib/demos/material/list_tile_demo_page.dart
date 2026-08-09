@@ -12,6 +12,7 @@ class _ListTileDemoPageState extends State<ListTileDemoPage> {
   bool _selected = false;
   bool _dense = false;
   bool _threeLine = false;
+  bool _useMaterial3 = true;
   bool _useThemeOverrides = false;
   int _tapCount = 0;
   int _longPressCount = 0;
@@ -30,6 +31,10 @@ class _ListTileDemoPageState extends State<ListTileDemoPage> {
         child: content,
       );
     }
+    content = Theme(
+      data: Theme.of(context).copyWith(useMaterial3: _useMaterial3),
+      child: content,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -40,7 +45,7 @@ class _ListTileDemoPageState extends State<ListTileDemoPage> {
           style: TextStyle(fontSize: 20, color: Colors.black),
         ),
         const Text(
-          'Leading/title/subtitle/trailing composition with selected, dense, and theme-override probes.',
+          'Exact M2/M3 padding, typography, slot geometry, states, and theme precedence.',
           style: TextStyle(fontSize: 14, color: Colors.black54),
         ),
         Row(
@@ -83,22 +88,27 @@ class _ListTileDemoPageState extends State<ListTileDemoPage> {
               background: const Color(0xFFEAF6F7),
             ),
             _buildControlButton(
+              label: _useMaterial3 ? 'M3' : 'M2',
+              onTap: () => setState(() => _useMaterial3 = !_useMaterial3),
+              width: 64,
+              background: const Color(0xFFFFF3CD),
+            ),
+            _buildControlButton(
               label: 'Reset',
               onTap: _resetState,
-              width: 88,
+              width: 76,
               background: const Color(0xFFF3E8D8),
             ),
           ],
         ),
         Text(
-          'enabled=$_enabled, selected=$_selected, dense=$_dense, threeLine=$_threeLine, theme=$_useThemeOverrides, taps=$_tapCount, longPress=$_longPressCount',
+          'material=${_useMaterial3 ? 'M3' : 'M2'}, enabled=$_enabled, selected=$_selected, '
+          'dense=$_dense, threeLine=$_threeLine, theme=$_useThemeOverrides, '
+          'taps=$_tapCount, longPress=$_longPressCount',
           style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
         ),
         Expanded(
-          child: ColoredBox(
-            color: const Color(0xFFF7F9FC),
-            child: content,
-          ),
+          child: ColoredBox(color: const Color(0xFFF7F9FC), child: content),
         ),
       ],
     );
@@ -195,6 +205,7 @@ class _ListTileDemoPageState extends State<ListTileDemoPage> {
       _selected = false;
       _dense = false;
       _threeLine = false;
+      _useMaterial3 = true;
       _useThemeOverrides = false;
       _tapCount = 0;
       _longPressCount = 0;

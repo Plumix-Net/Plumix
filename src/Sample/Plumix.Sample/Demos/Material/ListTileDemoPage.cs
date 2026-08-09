@@ -23,6 +23,7 @@ internal sealed class ListTileDemoPageState : State
     private bool _selected;
     private bool _dense;
     private bool _threeLine;
+    private bool _useMaterial3 = true;
     private bool _useThemeOverrides;
     private int _tapCount;
     private int _longPressCount;
@@ -42,6 +43,10 @@ internal sealed class ListTileDemoPageState : State
                 child: content);
         }
 
+        content = new Theme(
+            data: Theme.Of(context) with { UseMaterial3 = _useMaterial3 },
+            child: content);
+
         return new Column(
             crossAxisAlignment: CrossAxisAlignment.Stretch,
             spacing: 10,
@@ -49,7 +54,7 @@ internal sealed class ListTileDemoPageState : State
             [
                 new Text("ListTile baseline", fontSize: 20, color: Colors.Black),
                 new Text(
-                    "Leading/title/subtitle/trailing composition with selected, dense, and theme-override probes.",
+                    "Exact M2/M3 padding, typography, slot geometry, states, and theme precedence.",
                     fontSize: 14,
                     color: Color.Parse("#8A000000")),
                 new Row(
@@ -87,13 +92,22 @@ internal sealed class ListTileDemoPageState : State
                             width: 112,
                             background: Color.Parse("#FFEAF6F7")),
                         BuildControlButton(
+                            label: _useMaterial3 ? "M3" : "M2",
+                            onTap: () => SetState(() => _useMaterial3 = !_useMaterial3),
+                            width: 64,
+                            background: Color.Parse("#FFFFF3CD")),
+                        BuildControlButton(
                             label: "Reset",
                             onTap: ResetState,
-                            width: 88,
+                            width: 76,
                             background: Color.Parse("#FFF3E8D8")),
                     ]),
                 new Text(
-                    $"enabled={(_enabled ? "true" : "false")}, selected={(_selected ? "true" : "false")}, dense={(_dense ? "true" : "false")}, threeLine={(_threeLine ? "true" : "false")}, theme={(_useThemeOverrides ? "true" : "false")}, taps={_tapCount}, longPress={_longPressCount}",
+                    $"material={(_useMaterial3 ? "M3" : "M2")}, enabled={(_enabled ? "true" : "false")}, "
+                    + $"selected={(_selected ? "true" : "false")}, dense={(_dense ? "true" : "false")}, "
+                    + $"threeLine={(_threeLine ? "true" : "false")}, "
+                    + $"theme={(_useThemeOverrides ? "true" : "false")}, taps={_tapCount}, "
+                    + $"longPress={_longPressCount}",
                     fontSize: 12,
                     color: Color.Parse("#FF607D8B")),
                 new Expanded(
@@ -184,6 +198,7 @@ internal sealed class ListTileDemoPageState : State
             _selected = false;
             _dense = false;
             _threeLine = false;
+            _useMaterial3 = true;
             _useThemeOverrides = false;
             _tapCount = 0;
             _longPressCount = 0;

@@ -432,47 +432,48 @@ public sealed class RenderParagraph : RenderBox
         }
     }
 
+    protected override double ComputeMinIntrinsicWidth(double height)
+    {
+        return MeasureForConstraints(new BoxConstraints(MaxHeight: NormalizeIntrinsicExtent(height))).Size.Width;
+    }
+
+    protected override double ComputeMaxIntrinsicWidth(double height)
+    {
+        return MeasureForConstraints(new BoxConstraints(MaxHeight: NormalizeIntrinsicExtent(height))).Size.Width;
+    }
+
+    protected override double ComputeMinIntrinsicHeight(double width)
+    {
+        return MeasureForConstraints(new BoxConstraints(MaxWidth: NormalizeIntrinsicExtent(width))).Size.Height;
+    }
+
+    protected override double ComputeMaxIntrinsicHeight(double width)
+    {
+        return ComputeMinIntrinsicHeight(width);
+    }
+
+    protected override Size ComputeDryLayout(BoxConstraints constraints)
+    {
+        return MeasureForConstraints(constraints).Size;
+    }
+
+    protected override double? ComputeDryBaseline(BoxConstraints constraints, TextBaseline baseline)
+    {
+        (TextLayout? layout, Size size) = MeasureForConstraints(constraints);
+        if (layout is not null)
+        {
+            return layout.Baseline;
+        }
+
+        double lineHeight = _height is > 0 ? _fontSize * _height.Value : _fontSize * 1.2;
+        return Math.Min(size.Height, lineHeight * 0.8);
+    }
+
     protected override void PerformLayout()
     {
-        double maxWidth = double.IsInfinity(Constraints.MaxWidth)
-            ? double.PositiveInfinity
-            : Math.Max(0, Constraints.MaxWidth);
-        double maxHeight = double.IsInfinity(Constraints.MaxHeight)
-            ? double.PositiveInfinity
-            : Math.Max(0, Constraints.MaxHeight);
-        double lineHeight = _height is > 0
-            ? Math.Max(0.01, _fontSize * _height.Value)
-            : double.NaN;
-        var typeface = new Typeface(_fontFamily, _fontStyle, _fontWeight, _fontStretch);
-
-        try
-        {
-            _layout = CreateTextLayout(typeface, maxWidth, maxHeight, lineHeight);
-
-            if (ShouldTightenAlignedWidth(_layout, maxWidth))
-            {
-                double tightenedWidth = Math.Max(0, Math.Min(maxWidth, _layout.WidthIncludingTrailingWhitespace));
-                if (tightenedWidth > 0)
-                {
-                    _layout = CreateTextLayout(typeface, tightenedWidth, maxHeight, lineHeight);
-                }
-            }
-
-            double layoutWidth = _textWidthBasis == TextWidthBasis.LongestLine
-                ? _layout.WidthIncludingTrailingWhitespace
-                : _layout.Width;
-            Size = Constraints.Constrain(new Size(layoutWidth, _layout.Height));
-        }
-        catch (Exception exception) when (TextLayoutFallback.IsMissingFontManager(exception))
-        {
-            _layout = null;
-            Size = Constraints.Constrain(TextLayoutFallback.EstimateTextSize(
-                _text,
-                _fontSize,
-                maxWidth,
-                _height,
-                _letterSpacing));
-        }
+        (TextLayout? layout, Size size) = MeasureForConstraints(Constraints);
+        _layout = layout;
+        Size = size;
     }
 
     protected override double? ComputeDistanceToActualBaseline(TextBaseline baseline)
@@ -510,14 +511,59 @@ public sealed class RenderParagraph : RenderBox
             maxLines: _maxLines ?? 0);
     }
 
-    private bool ShouldTightenAlignedWidth(TextLayout layout, double maxWidth)
+    private (TextLayout? Layout, Size Size) MeasureForConstraints(BoxConstraints constraints)
+    {
+        double maxWidth = double.IsInfinity(constraints.MaxWidth)
+            ? double.PositiveInfinity
+            : Math.Max(0, constraints.MaxWidth);
+        double maxHeight = double.IsInfinity(constraints.MaxHeight)
+            ? double.PositiveInfinity
+            : Math.Max(0, constraints.MaxHeight);
+        double lineHeight = _height is > 0
+            ? Math.Max(0.01, _fontSize * _height.Value)
+            : double.NaN;
+        var typeface = new Typeface(_fontFamily, _fontStyle, _fontWeight, _fontStretch);
+
+        try
+        {
+            TextLayout layout = CreateTextLayout(typeface, maxWidth, maxHeight, lineHeight);
+            if (ShouldTightenAlignedWidth(layout, maxWidth, constraints))
+            {
+                double tightenedWidth = Math.Max(0, Math.Min(maxWidth, layout.WidthIncludingTrailingWhitespace));
+                if (tightenedWidth > 0)
+                {
+                    layout = CreateTextLayout(typeface, tightenedWidth, maxHeight, lineHeight);
+                }
+            }
+
+            double layoutWidth = _textWidthBasis == TextWidthBasis.LongestLine
+                ? layout.WidthIncludingTrailingWhitespace
+                : layout.Width;
+            return (layout, constraints.Constrain(new Size(layoutWidth, layout.Height)));
+        }
+        catch (Exception exception) when (TextLayoutFallback.IsMissingFontManager(exception))
+        {
+            Size estimate = TextLayoutFallback.EstimateTextSize(
+                _text,
+                _fontSize,
+                maxWidth,
+                _height,
+                _letterSpacing);
+            return (null, constraints.Constrain(estimate));
+        }
+    }
+
+    private bool ShouldTightenAlignedWidth(
+        TextLayout layout,
+        double maxWidth,
+        BoxConstraints constraints)
     {
         if (!double.IsFinite(maxWidth) || maxWidth <= 0)
         {
             return false;
         }
 
-        if (Constraints.MinWidth >= maxWidth - 0.01)
+        if (constraints.MinWidth >= maxWidth - 0.01)
         {
             return false;
         }
@@ -534,6 +580,11 @@ public sealed class RenderParagraph : RenderBox
 
         var firstGlyph = layout.HitTestTextPosition(0);
         return firstGlyph.X > 0.01;
+    }
+
+    private static double NormalizeIntrinsicExtent(double value)
+    {
+        return double.IsNaN(value) || value < 0.0 ? 0.0 : value;
     }
 
     public override void Paint(PaintingContext ctx, Point offset)

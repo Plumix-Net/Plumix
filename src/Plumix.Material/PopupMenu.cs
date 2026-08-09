@@ -186,10 +186,10 @@ public class PopupMenuItemState<T> : State
             canRequestFocus: widget.Enabled,
             mouseCursor: ResolveMouseCursor(widget, popupTheme, states),
             child: new ListTileTheme(
-                new ListTileThemeData(
+                data: new ListTileThemeData(
                     ContentPadding: default,
                     TitleTextStyle: style),
-                item));
+                child: item));
         return new MergeSemantics(BuildSemantics(item));
     }
 

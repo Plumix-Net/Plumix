@@ -50,6 +50,34 @@ public sealed class RenderListBody : RenderBox,
         if (child.parentData is not ListBodyParentData) child.parentData = new ListBodyParentData();
     }
 
+    protected override double ComputeMinIntrinsicWidth(double height)
+    {
+        return MainAxis == Axis.Horizontal
+            ? SumIntrinsic(static (child, extent) => child.GetMinIntrinsicWidth(extent), height)
+            : MaxIntrinsic(static (child, extent) => child.GetMinIntrinsicWidth(extent), height);
+    }
+
+    protected override double ComputeMaxIntrinsicWidth(double height)
+    {
+        return MainAxis == Axis.Horizontal
+            ? SumIntrinsic(static (child, extent) => child.GetMaxIntrinsicWidth(extent), height)
+            : MaxIntrinsic(static (child, extent) => child.GetMaxIntrinsicWidth(extent), height);
+    }
+
+    protected override double ComputeMinIntrinsicHeight(double width)
+    {
+        return MainAxis == Axis.Horizontal
+            ? MaxIntrinsic(static (child, extent) => child.GetMinIntrinsicHeight(extent), width)
+            : SumIntrinsic(static (child, extent) => child.GetMinIntrinsicHeight(extent), width);
+    }
+
+    protected override double ComputeMaxIntrinsicHeight(double width)
+    {
+        return MainAxis == Axis.Horizontal
+            ? MaxIntrinsic(static (child, extent) => child.GetMaxIntrinsicHeight(extent), width)
+            : SumIntrinsic(static (child, extent) => child.GetMaxIntrinsicHeight(extent), width);
+    }
+
     protected override void PerformLayout()
     {
         ValidateConstraints();
@@ -151,6 +179,28 @@ public sealed class RenderListBody : RenderBox,
         }
 
         return extent;
+    }
+
+    private double SumIntrinsic(Func<RenderBox, double, double> measure, double extent)
+    {
+        double result = 0.0;
+        for (RenderBox? child = FirstChild; child is not null; child = ChildAfter(child))
+        {
+            result += measure(child, extent);
+        }
+
+        return result;
+    }
+
+    private double MaxIntrinsic(Func<RenderBox, double, double> measure, double extent)
+    {
+        double result = 0.0;
+        for (RenderBox? child = FirstChild; child is not null; child = ChildAfter(child))
+        {
+            result = Math.Max(result, measure(child, extent));
+        }
+
+        return result;
     }
 
     private void ReverseOffsets(bool horizontal, double mainAxisExtent)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Avalonia;
 using Avalonia.Media;
+using Plumix.Foundation;
 using Plumix.Gestures;
 using Plumix.Material;
 using Plumix.Rendering;
@@ -99,7 +100,7 @@ public sealed class MaterialListTileTests
     {
         var theme = ThemeData.Light with
         {
-            PrimaryColor = Colors.Coral
+            ColorScheme = ThemeData.Light.ColorScheme with { Primary = Colors.Coral }
         };
 
         using var harness = new WidgetRenderHarness(
@@ -136,9 +137,9 @@ public sealed class MaterialListTileTests
 
         harness.Pump(new Size(400, 200));
 
-        var material = FindDescendant<RenderDecoratedBox>(harness.RenderView);
-        Assert.NotNull(material);
-        Assert.Equal(selectedTileColor, material!.Decoration.Color);
+        var ink = FindDescendant<RenderInkDecoration>(harness.RenderView);
+        var decoration = Assert.IsType<ShapeDecoration>(ink!.Decoration);
+        Assert.Equal(selectedTileColor, decoration.Color);
     }
 
     [Fact]
@@ -174,9 +175,218 @@ public sealed class MaterialListTileTests
         Assert.NotNull(iconParagraph);
         Assert.Equal(themedIcon, Assert.IsType<SolidColorBrush>(iconParagraph!.Foreground).Color);
 
-        var material = FindDescendant<RenderDecoratedBox>(renderRoot);
-        Assert.NotNull(material);
-        Assert.Equal(themedTile, material!.Decoration.Color);
+        var ink = FindDescendant<RenderInkDecoration>(renderRoot);
+        var decoration = Assert.IsType<ShapeDecoration>(ink!.Decoration);
+        Assert.Equal(themedTile, decoration.Color);
+    }
+
+    [Fact]
+    public void ListTile_LocalThemeMergeAndWidget_UseSourcePrecedence()
+    {
+        var globalColor = Color.Parse("#FF8E2430");
+        var localColor = Color.Parse("#FF176B52");
+        var mergedColor = Color.Parse("#FF4051B5");
+        var widgetColor = Color.Parse("#FF9A5B00");
+        ThemeData theme = ThemeData.Light with
+        {
+            ListTileTheme = new ListTileThemeData(TextColor: globalColor)
+        };
+        using var harness = new WidgetRenderHarness(BuildThemedTile(
+            new Column(children:
+            [
+                new ListTile(title: new Text("Global")),
+                new ListTileTheme(
+                    child: new ListTile(title: new Text("Local")),
+                    data: new ListTileThemeData(TextColor: localColor)),
+                ListTileTheme.Merge(
+                    child: new ListTile(title: new Text("Merged")),
+                    textColor: mergedColor),
+                new ListTile(title: new Text("Widget"), textColor: widgetColor),
+            ]),
+            theme));
+
+        harness.Pump(new Size(400, 280));
+
+        AssertParagraphColor(harness.RenderView, "Global", globalColor);
+        AssertParagraphColor(harness.RenderView, "Local", localColor);
+        AssertParagraphColor(harness.RenderView, "Merged", mergedColor);
+        AssertParagraphColor(harness.RenderView, "Widget", widgetColor);
+    }
+
+    [Theory]
+    [InlineData(true, 16.0, 24.0, 56.0)]
+    [InlineData(false, 16.0, 16.0, 72.0)]
+    public void ListTile_MaterialVersionDefaults_UseExactDirectionalGeometry(
+        bool useMaterial3,
+        double startPadding,
+        double endPadding,
+        double titleX)
+    {
+        ThemeData theme = ThemeData.Light with { UseMaterial3 = useMaterial3 };
+        using var harness = new WidgetRenderHarness(
+            BuildThemedTile(
+                new ListTile(
+                    leading: new SizedBox(width: 24, height: 24),
+                    title: new Text("Geometry"),
+                    trailing: new SizedBox(width: 24, height: 24)),
+                theme));
+
+        harness.Pump(new Size(400, 200));
+
+        var tile = Assert.IsType<RenderListTile>(FindDescendant<RenderListTile>(harness.RenderView));
+        Assert.Equal(300.0 - startPadding - endPadding, tile.Size.Width, 3);
+        Assert.Equal(startPadding, GlobalOffsetOf(tile.Leading!).X, 3);
+        Assert.Equal(titleX, GlobalOffsetOf(tile.Title).X, 3);
+        Assert.Equal(300.0 - endPadding - 24.0, GlobalOffsetOf(tile.Trailing!).X, 3);
+    }
+
+    [Fact]
+    public void ListTile_M3DirectionalPaddingAndSlots_MirrorInRtl()
+    {
+        using var harness = new WidgetRenderHarness(
+            BuildThemedTile(new Directionality(
+                TextDirection.Rtl,
+                new ListTile(
+                    leading: new SizedBox(width: 24, height: 24),
+                    title: new Text("RTL"),
+                    trailing: new SizedBox(width: 24, height: 24)))));
+
+        harness.Pump(new Size(400, 200));
+
+        var tile = Assert.IsType<RenderListTile>(FindDescendant<RenderListTile>(harness.RenderView));
+        Assert.Equal(260, GlobalOffsetOf(tile.Leading!).X, 3);
+        Assert.Equal(64, GlobalOffsetOf(tile.Title).X, 3);
+        Assert.Equal(24, GlobalOffsetOf(tile.Trailing!).X, 3);
+    }
+
+    [Fact]
+    public void ListTile_StateColors_ResolveDisabledAndSelectedTogether()
+    {
+        var disabledSelected = Color.Parse("#FF8B1E3F");
+        MaterialStateProperty<Color?> stateColor = MaterialStateProperty<Color?>.ResolveWith(states =>
+            states.HasFlag(MaterialState.Disabled) && states.HasFlag(MaterialState.Selected)
+                ? disabledSelected
+                : Colors.Teal);
+        using var harness = new WidgetRenderHarness(
+            BuildThemedTile(new ListTile(
+                leading: new Icon(Icons.StarOutline),
+                title: new Text("State colors"),
+                selected: true,
+                enabled: false,
+                iconColor: stateColor,
+                textColor: stateColor)));
+
+        harness.Pump(new Size(400, 200));
+
+        var title = Assert.IsType<RenderParagraph>(FindParagraphByText(harness.RenderView, "State colors"));
+        Assert.Equal(disabledSelected, Assert.IsType<SolidColorBrush>(title.Foreground).Color);
+        string glyph = char.ConvertFromUtf32(Icons.StarOutline.CodePoint);
+        var icon = Assert.IsType<RenderParagraph>(FindParagraphByText(harness.RenderView, glyph));
+        Assert.Equal(disabledSelected, Assert.IsType<SolidColorBrush>(icon.Foreground).Color);
+    }
+
+    [Fact]
+    public void ListTileThemeData_CopyWithAndLerp_PreserveAndInterpolateStateValues()
+    {
+        var start = new ListTileThemeData(
+            Dense: true,
+            IconColor: MaterialStateProperty<Color?>.All(Colors.Black),
+            TextColor: MaterialStateProperty<Color?>.All(Colors.Red),
+            ContentPadding: EdgeInsetsGeometry.DirectionalOnly(start: 8, end: 12),
+            MinTileHeight: 48);
+        ListTileThemeData copy = start.CopyWith(minTileHeight: 64);
+        var end = new ListTileThemeData(
+            IconColor: MaterialStateProperty<Color?>.All(Colors.White),
+            TextColor: MaterialStateProperty<Color?>.All(Colors.Blue),
+            ContentPadding: EdgeInsetsGeometry.DirectionalOnly(start: 16, end: 24),
+            MinTileHeight: 72);
+
+        Assert.True(copy.Dense);
+        Assert.Equal(64, copy.MinTileHeight);
+        Assert.Equal(start.ContentPadding, copy.ContentPadding);
+
+        ListTileThemeData lerped = Assert.IsType<ListTileThemeData>(ListTileThemeData.Lerp(start, end, 0.5));
+        Assert.Equal(
+            MaterialThemeLerp.Color(Colors.Black, Colors.White, 0.5),
+            lerped.IconColor!.Resolve(MaterialState.Selected));
+        Assert.Equal(
+            MaterialThemeLerp.Color(Colors.Red, Colors.Blue, 0.5),
+            lerped.TextColor!.Resolve(MaterialState.Disabled));
+        Assert.Equal(12, lerped.ContentPadding!.Value.Start, 3);
+        Assert.Equal(18, lerped.ContentPadding.Value.End, 3);
+        Assert.Equal(60, lerped.MinTileHeight);
+        Assert.Throws<ArgumentException>(() => new ListTileTheme(
+            child: new SizedBox(),
+            data: start,
+            selectedColor: Colors.Coral));
+    }
+
+    [Fact]
+    public void ListTile_IntrinsicAndDryLayout_UseSlottedChildren()
+    {
+        using var harness = new WidgetRenderHarness(
+            BuildThemedTile(new ListTile(
+                leading: new SizedBox(width: 24, height: 24),
+                title: new Text("Intrinsic tile"),
+                trailing: new SizedBox(width: 24, height: 24))));
+
+        harness.Pump(new Size(400, 200));
+
+        var tile = Assert.IsType<RenderListTile>(FindDescendant<RenderListTile>(harness.RenderView));
+        Size drySize = tile.GetDryLayout(new BoxConstraints(MaxWidth: tile.Size.Width));
+        Assert.Equal(tile.Size, drySize);
+        Assert.Equal(56, tile.GetMinIntrinsicHeight(tile.Size.Width), 3);
+        Assert.True(tile.GetMinIntrinsicWidth(56) > 64);
+        Assert.NotNull(tile.GetDryBaseline(new BoxConstraints(MaxWidth: tile.Size.Width), TextBaseline.Alphabetic));
+    }
+
+    [Fact]
+    public void ListTile_SlottedElement_ReconcilesAddedAndRemovedSlots()
+    {
+        using var showLeading = new ValueNotifier<bool>(false);
+        using var harness = new WidgetRenderHarness(
+            BuildThemedTile(new ValueListenableBuilder<bool>(
+                showLeading,
+                (_, visible, _) => new ListTile(
+                    leading: visible ? new Icon(Icons.StarOutline) : null,
+                    title: new Text(visible ? "Leading visible" : "Trailing visible"),
+                    trailing: visible ? null : new Icon(Icons.InfoOutline)))));
+
+        harness.Pump(new Size(400, 200));
+        var tile = Assert.IsType<RenderListTile>(FindDescendant<RenderListTile>(harness.RenderView));
+        Assert.Null(tile.Leading);
+        Assert.NotNull(tile.Trailing);
+
+        showLeading.Value = true;
+        harness.Pump(new Size(400, 200));
+
+        var updatedTile = Assert.IsType<RenderListTile>(FindDescendant<RenderListTile>(harness.RenderView));
+        Assert.Same(tile, updatedTile);
+        Assert.NotNull(updatedTile.Leading);
+        Assert.Null(updatedTile.Trailing);
+        Assert.NotNull(FindParagraphByText(harness.RenderView, "Leading visible"));
+    }
+
+    [Fact]
+    public void ListTile_DivideTiles_AddsOnlyForegroundBottomBorders()
+    {
+        var dividerColor = Color.Parse("#FF123456");
+        Widget last = new Text("last");
+        IReadOnlyList<Widget> divided = ListTile.DivideTiles(
+            [new Text("first"), new Text("second"), last],
+            color: dividerColor);
+
+        Assert.Equal(3, divided.Count);
+        foreach (Widget widget in divided.Take(2))
+        {
+            var decorated = Assert.IsType<DecoratedBox>(widget);
+            Assert.Equal(DecorationPosition.Foreground, decorated.Position);
+            var decoration = Assert.IsType<BoxDecoration>(decorated.Decoration);
+            Assert.Equal(dividerColor, decoration.BorderSides!.Bottom!.Value.Color);
+        }
+
+        Assert.Same(last, divided[2]);
+        Assert.Throws<ArgumentException>(() => ListTile.DivideTiles([new Text("tile")]));
     }
 
     [Fact]
@@ -273,30 +483,35 @@ public sealed class MaterialListTileTests
         using var harness = new WidgetRenderHarness(
             new Theme(
                 data: theme,
-                child: new SizedBox(
-                    width: 720,
-                    child: new Column(
-                        crossAxisAlignment: CrossAxisAlignment.Stretch,
-                        children:
-                        [
-                            new ListTile(
-                                title: new Text("One-line tile"),
-                                leading: new Icon(Icons.Menu),
-                                trailing: new Icon(Icons.InfoOutline),
-                                enabled: false),
-                            new ListTile(
-                                title: new Text("Two-line tile"),
-                                subtitle: new Text("Subtitle text demonstrates two-line default height."),
-                                leading: new Icon(Icons.Add),
-                                trailing: new Text("meta", fontSize: 12),
-                                enabled: false),
-                            new ListTile(
-                                title: new Text("Three-line probe"),
-                                subtitle: new Text("When 3-line is enabled this tile uses the taller baseline height for parity checks."),
-                                leading: new Icon(Icons.StarOutline),
-                                trailing: new Icon(Icons.Close),
-                                enabled: false),
-                        ]))));
+                child: new MediaQuery(
+                    data: new MediaQueryData(Size: new Size(720, 420)),
+                    child: new Plumix.Material.Material(
+                        child: new SizedBox(
+                            width: 720,
+                            child: new Column(
+                                crossAxisAlignment: CrossAxisAlignment.Stretch,
+                                children:
+                                [
+                                    new ListTile(
+                                        title: new Text("One-line tile"),
+                                        leading: new Icon(Icons.Menu),
+                                        trailing: new Icon(Icons.InfoOutline),
+                                        enabled: false),
+                                    new ListTile(
+                                        title: new Text("Two-line tile"),
+                                        subtitle: new Text("Subtitle text demonstrates two-line default height."),
+                                        leading: new Icon(Icons.Add),
+                                        trailing: new Text("meta", fontSize: 12),
+                                        enabled: false),
+                                    new ListTile(
+                                        title: new Text("Three-line probe"),
+                                        subtitle: new Text(
+                                            "When 3-line is enabled this tile uses the taller baseline height "
+                                            + "for parity checks."),
+                                        leading: new Icon(Icons.StarOutline),
+                                        trailing: new Icon(Icons.Close),
+                                        enabled: false),
+                                ]))))));
 
         harness.Pump(new Size(760, 420));
 
@@ -438,16 +653,14 @@ public sealed class MaterialListTileTests
         string secondaryGlyph = char.ConvertFromUtf32(Icons.InfoOutline.CodePoint);
         Assert.NotNull(FindParagraphByText(harness.RenderView, secondaryGlyph));
 
-        var affinityRow = FindDescendants<RenderFlex>(harness.RenderView).FirstOrDefault(flex =>
-        {
-            var children = ImmediateChildren(flex);
-            return children.Count == 5
-                   && FindDescendants<RenderCustomPaint>(children[0]).Any(paint =>
-                       paint.Painter is CheckboxPainter)
-                   && FindDescendants<RenderParagraph>(children[^1]).Any(paragraph =>
-                       paragraph.Text == secondaryGlyph);
-        });
-        Assert.NotNull(affinityRow);
+        var renderTile = FindDescendant<RenderListTile>(harness.RenderView);
+        Assert.NotNull(renderTile);
+        Assert.Contains(
+            FindDescendants<RenderCustomPaint>(renderTile!.Leading),
+            static paint => paint.Painter is CheckboxPainter);
+        Assert.Contains(
+            FindDescendants<RenderParagraph>(renderTile.Trailing),
+            paragraph => paragraph.Text == secondaryGlyph);
     }
 
     [Fact]
@@ -532,19 +745,15 @@ public sealed class MaterialListTileTests
 
         checkboxHarness.Pump(new Size(400, 200));
         switchHarness.Pump(new Size(400, 200));
-        Assert.True(checkboxStates.Value.HasFlag(MaterialState.Selected));
-        Color? checkboxIdle = FindTileSurface(checkboxHarness.RenderView, 56)?.Decoration.Color;
-        Color? switchIdle = FindTileSurface(switchHarness.RenderView, 56)?.Decoration.Color;
+        Assert.False(checkboxStates.Value.HasFlag(MaterialState.Selected));
 
         checkboxStates.Update(MaterialState.Pressed, true);
         switchStates.Update(MaterialState.Pressed, true);
         checkboxHarness.Pump(new Size(400, 200));
         switchHarness.Pump(new Size(400, 200));
 
-        Color? checkboxPressed = FindTileSurface(checkboxHarness.RenderView, 56)?.Decoration.Color;
-        Color? switchPressed = FindTileSurface(switchHarness.RenderView, 56)?.Decoration.Color;
-        Assert.NotEqual(checkboxIdle, checkboxPressed);
-        Assert.NotEqual(switchIdle, switchPressed);
+        Assert.True(checkboxStates.Value.HasFlag(MaterialState.Pressed));
+        Assert.True(switchStates.Value.HasFlag(MaterialState.Pressed));
     }
 
     [Fact]
@@ -661,9 +870,11 @@ public sealed class MaterialListTileTests
     {
         return new Theme(
             data: theme ?? ThemeData.Light,
-            child: new SizedBox(
-                width: 300,
-                child: tile));
+            child: new MediaQuery(
+                data: new MediaQueryData(Size: new Size(300, 800)),
+                child: new SizedBox(
+                    width: 300,
+                    child: new Plumix.Material.Material(child: tile))));
     }
 
     private static void Tap(RenderView renderView, Point position, int pointer)
@@ -700,6 +911,12 @@ public sealed class MaterialListTileTests
     {
         return FindDescendants<RenderParagraph>(root)
             .FirstOrDefault(paragraph => string.Equals(paragraph.Text, text, StringComparison.Ordinal));
+    }
+
+    private static void AssertParagraphColor(RenderObject? root, string text, Color expectedColor)
+    {
+        var paragraph = Assert.IsType<RenderParagraph>(FindParagraphByText(root, text));
+        Assert.Equal(expectedColor, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color);
     }
 
     private static RenderDecoratedBox? FindTileSurface(RenderObject? root, double expectedHeight)

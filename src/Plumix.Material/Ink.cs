@@ -17,7 +17,7 @@ public sealed class Ink : StatelessWidget
     public Ink(
         Thickness? padding = null,
         Color? color = null,
-        BoxDecoration? decoration = null,
+        Decoration? decoration = null,
         double? width = null,
         double? height = null,
         Widget? child = null,
@@ -41,7 +41,7 @@ public sealed class Ink : StatelessWidget
 
     public Thickness? Padding { get; }
 
-    public BoxDecoration? Decoration { get; }
+    public Decoration? Decoration { get; }
 
     public double? Width { get; }
 
@@ -137,7 +137,7 @@ public sealed class Ink : StatelessWidget
 internal sealed class InkDecorationWidget : SingleChildRenderObjectWidget
 {
     public InkDecorationWidget(
-        BoxDecoration decoration,
+        Decoration decoration,
         bool isVisible,
         ImageConfiguration configuration,
         MaterialInkController controller,
@@ -149,7 +149,7 @@ internal sealed class InkDecorationWidget : SingleChildRenderObjectWidget
         Controller = controller;
     }
 
-    public BoxDecoration Decoration { get; }
+    public Decoration Decoration { get; }
 
     public bool IsVisible { get; }
 
@@ -174,14 +174,14 @@ internal sealed class InkDecorationWidget : SingleChildRenderObjectWidget
 
 internal sealed class RenderInkDecoration : RenderProxyBox, IMaterialInkFeature
 {
-    private BoxDecoration _decoration;
+    private Decoration _decoration;
     private bool _isVisible;
     private ImageConfiguration _configuration;
     private MaterialInkController _controller;
     private BoxPainter? _painter;
 
     public RenderInkDecoration(
-        BoxDecoration decoration,
+        Decoration decoration,
         bool isVisible,
         ImageConfiguration configuration,
         MaterialInkController controller)
@@ -193,7 +193,7 @@ internal sealed class RenderInkDecoration : RenderProxyBox, IMaterialInkFeature
         _controller.AddInkFeature(this);
     }
 
-    public BoxDecoration Decoration
+    public Decoration Decoration
     {
         get => _decoration;
         set

@@ -723,11 +723,19 @@ public sealed partial record ListTileThemeData
 
         return new ListTileThemeData(
             Dense: t < 0.5 ? a?.Dense : b?.Dense,
-            Shape: MaterialThemeLerp.BorderRadius(a?.Shape, b?.Shape, t),
+            Shape: MaterialThemeLerp.Shape(a?.Shape, b?.Shape, t),
             Style: t < 0.5 ? a?.Style : b?.Style,
             SelectedColor: MaterialThemeLerp.Color(a?.SelectedColor, b?.SelectedColor, t),
-            IconColor: MaterialThemeLerp.Color(a?.IconColor, b?.IconColor, t),
-            TextColor: MaterialThemeLerp.Color(a?.TextColor, b?.TextColor, t),
+            IconColor: MaterialStateProperty<Color?>.Lerp(
+                a?.IconColor,
+                b?.IconColor,
+                t,
+                MaterialThemeLerp.Color),
+            TextColor: MaterialStateProperty<Color?>.Lerp(
+                a?.TextColor,
+                b?.TextColor,
+                t,
+                MaterialThemeLerp.Color),
             TitleTextStyle: MaterialThemeLerp.TextStyle(a?.TitleTextStyle, b?.TitleTextStyle, t),
             SubtitleTextStyle: MaterialThemeLerp.TextStyle(
                 a?.SubtitleTextStyle,
@@ -737,7 +745,7 @@ public sealed partial record ListTileThemeData
                 a?.LeadingAndTrailingTextStyle,
                 b?.LeadingAndTrailingTextStyle,
                 t),
-            ContentPadding: MaterialThemeLerp.Thickness(a?.ContentPadding, b?.ContentPadding, t),
+            ContentPadding: EdgeInsetsGeometry.Lerp(a?.ContentPadding, b?.ContentPadding, t),
             TileColor: MaterialThemeLerp.Color(a?.TileColor, b?.TileColor, t),
             SelectedTileColor: MaterialThemeLerp.Color(a?.SelectedTileColor, b?.SelectedTileColor, t),
             HorizontalTitleGap: MaterialThemeLerp.Double(
@@ -751,7 +759,11 @@ public sealed partial record ListTileThemeData
             MinLeadingWidth: MaterialThemeLerp.Double(a?.MinLeadingWidth, b?.MinLeadingWidth, t),
             MinTileHeight: MaterialThemeLerp.Double(a?.MinTileHeight, b?.MinTileHeight, t),
             EnableFeedback: t < 0.5 ? a?.EnableFeedback : b?.EnableFeedback,
-            MouseCursor: t < 0.5 ? a?.MouseCursor : b?.MouseCursor,
+            MouseCursor: MaterialStateProperty<MouseCursor?>.Lerp(
+                a?.MouseCursor,
+                b?.MouseCursor,
+                t,
+                static (from, to, progress) => progress < 0.5 ? from : to),
             IsThreeLine: t < 0.5 ? a?.IsThreeLine : b?.IsThreeLine,
             ControlAffinity: t < 0.5 ? a?.ControlAffinity : b?.ControlAffinity,
             VisualDensity: t < 0.5 ? a?.VisualDensity : b?.VisualDensity,

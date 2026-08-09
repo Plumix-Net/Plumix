@@ -83,6 +83,36 @@ public abstract class RenderProxyBox : RenderBox, IRenderObjectSingleChildContai
         }
     }
 
+    protected override double ComputeMinIntrinsicWidth(double height)
+    {
+        return _child?.GetMinIntrinsicWidth(height) ?? 0.0;
+    }
+
+    protected override double ComputeMaxIntrinsicWidth(double height)
+    {
+        return _child?.GetMaxIntrinsicWidth(height) ?? 0.0;
+    }
+
+    protected override double ComputeMinIntrinsicHeight(double width)
+    {
+        return _child?.GetMinIntrinsicHeight(width) ?? 0.0;
+    }
+
+    protected override double ComputeMaxIntrinsicHeight(double width)
+    {
+        return _child?.GetMaxIntrinsicHeight(width) ?? 0.0;
+    }
+
+    protected override Size ComputeDryLayout(BoxConstraints constraints)
+    {
+        return _child?.GetDryLayout(constraints) ?? constraints.Smallest;
+    }
+
+    protected override double? ComputeDryBaseline(BoxConstraints constraints, TextBaseline baseline)
+    {
+        return _child?.GetDryBaseline(constraints, baseline);
+    }
+
     public override void Paint(PaintingContext ctx, Point offset)
     {
         if (_child != null)
@@ -374,6 +404,57 @@ public sealed class RenderConstrainedBox : RenderProxyBox
         {
             Size = enforced.Constrain(new Size());
         }
+    }
+
+    protected override double ComputeMinIntrinsicWidth(double height)
+    {
+        if (_additionalConstraints.HasTightWidth)
+        {
+            return _additionalConstraints.MinWidth;
+        }
+
+        return _additionalConstraints.ConstrainWidth(base.ComputeMinIntrinsicWidth(height));
+    }
+
+    protected override double ComputeMaxIntrinsicWidth(double height)
+    {
+        if (_additionalConstraints.HasTightWidth)
+        {
+            return _additionalConstraints.MinWidth;
+        }
+
+        return _additionalConstraints.ConstrainWidth(base.ComputeMaxIntrinsicWidth(height));
+    }
+
+    protected override double ComputeMinIntrinsicHeight(double width)
+    {
+        if (_additionalConstraints.HasTightHeight)
+        {
+            return _additionalConstraints.MinHeight;
+        }
+
+        return _additionalConstraints.ConstrainHeight(base.ComputeMinIntrinsicHeight(width));
+    }
+
+    protected override double ComputeMaxIntrinsicHeight(double width)
+    {
+        if (_additionalConstraints.HasTightHeight)
+        {
+            return _additionalConstraints.MinHeight;
+        }
+
+        return _additionalConstraints.ConstrainHeight(base.ComputeMaxIntrinsicHeight(width));
+    }
+
+    protected override Size ComputeDryLayout(BoxConstraints constraints)
+    {
+        BoxConstraints enforced = _additionalConstraints.Enforce(constraints);
+        return Child?.GetDryLayout(enforced) ?? enforced.Smallest;
+    }
+
+    protected override double? ComputeDryBaseline(BoxConstraints constraints, TextBaseline baseline)
+    {
+        return Child?.GetDryBaseline(_additionalConstraints.Enforce(constraints), baseline);
     }
 }
 
@@ -1245,6 +1326,45 @@ public sealed class RenderPadding : RenderProxyBox
 
         ((BoxParentData)Child.parentData!).offset = new Point(Padding.Left, Padding.Top);
     }
+
+    protected override double ComputeMinIntrinsicWidth(double height)
+    {
+        return Padding.Left + Padding.Right
+               + (Child?.GetMinIntrinsicWidth(Math.Max(0.0, height - Padding.Top - Padding.Bottom)) ?? 0.0);
+    }
+
+    protected override double ComputeMaxIntrinsicWidth(double height)
+    {
+        return Padding.Left + Padding.Right
+               + (Child?.GetMaxIntrinsicWidth(Math.Max(0.0, height - Padding.Top - Padding.Bottom)) ?? 0.0);
+    }
+
+    protected override double ComputeMinIntrinsicHeight(double width)
+    {
+        return Padding.Top + Padding.Bottom
+               + (Child?.GetMinIntrinsicHeight(Math.Max(0.0, width - Padding.Left - Padding.Right)) ?? 0.0);
+    }
+
+    protected override double ComputeMaxIntrinsicHeight(double width)
+    {
+        return Padding.Top + Padding.Bottom
+               + (Child?.GetMaxIntrinsicHeight(Math.Max(0.0, width - Padding.Left - Padding.Right)) ?? 0.0);
+    }
+
+    protected override Size ComputeDryLayout(BoxConstraints constraints)
+    {
+        BoxConstraints innerConstraints = constraints.Deflate(Padding);
+        Size childSize = Child?.GetDryLayout(innerConstraints) ?? innerConstraints.Smallest;
+        return constraints.Constrain(new Size(
+            childSize.Width + Padding.Left + Padding.Right,
+            childSize.Height + Padding.Top + Padding.Bottom));
+    }
+
+    protected override double? ComputeDryBaseline(BoxConstraints constraints, TextBaseline baseline)
+    {
+        double? childBaseline = Child?.GetDryBaseline(constraints.Deflate(Padding), baseline);
+        return childBaseline.HasValue ? childBaseline.Value + Padding.Top : null;
+    }
 }
 
 public sealed class RenderAlign : RenderProxyBox
@@ -1333,6 +1453,20 @@ public sealed class RenderAlign : RenderProxyBox
         double targetHeight = shrinkWrapHeight ? childSize.Height * heightFactor : double.PositiveInfinity;
         Size = Constraints.Constrain(new Size(targetWidth, targetHeight));
         ((BoxParentData)Child.parentData!).offset = _alignment.AlongOffset(Size, childSize);
+    }
+
+    protected override Size ComputeDryLayout(BoxConstraints constraints)
+    {
+        bool shrinkWrapWidth = _widthFactor.HasValue || !constraints.HasBoundedWidth;
+        bool shrinkWrapHeight = _heightFactor.HasValue || !constraints.HasBoundedHeight;
+        Size childSize = Child?.GetDryLayout(BoxConstraints.Loose(constraints.Biggest)) ?? new Size();
+        double targetWidth = shrinkWrapWidth
+            ? childSize.Width * (_widthFactor ?? 1.0)
+            : double.PositiveInfinity;
+        double targetHeight = shrinkWrapHeight
+            ? childSize.Height * (_heightFactor ?? 1.0)
+            : double.PositiveInfinity;
+        return constraints.Constrain(new Size(targetWidth, targetHeight));
     }
 
     private static double? ValidateFactor(double? value, string parameterName)

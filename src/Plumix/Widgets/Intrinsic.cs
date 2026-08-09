@@ -117,15 +117,25 @@ public sealed class RenderIntrinsicWidth : RenderProxyBox
         double? width = null;
         if (!Constraints.HasTightWidth)
         {
-            Child.Layout(IntrinsicProbeConstraints.ForWidth(Constraints), parentUsesSize: true);
-            width = Constraints.ConstrainWidth(ApplyStep(Child.Size.Width, _stepWidth));
+            double intrinsicWidth = Child.GetMaxIntrinsicWidth(Constraints.MaxHeight);
+            if (intrinsicWidth <= 0.0)
+            {
+                Child.Layout(IntrinsicProbeConstraints.ForWidth(Constraints), parentUsesSize: true);
+                intrinsicWidth = Child.Size.Width;
+            }
+            width = Constraints.ConstrainWidth(ApplyStep(intrinsicWidth, _stepWidth));
         }
 
         double? height = null;
         if (_stepHeight.HasValue && !Constraints.HasTightHeight)
         {
-            Child.Layout(IntrinsicProbeConstraints.ForHeight(Constraints), parentUsesSize: true);
-            height = Constraints.ConstrainHeight(ApplyStep(Child.Size.Height, _stepHeight));
+            double intrinsicHeight = Child.GetMaxIntrinsicHeight(width ?? Constraints.MaxWidth);
+            if (intrinsicHeight <= 0.0)
+            {
+                Child.Layout(IntrinsicProbeConstraints.ForHeight(Constraints), parentUsesSize: true);
+                intrinsicHeight = Child.Size.Height;
+            }
+            height = Constraints.ConstrainHeight(ApplyStep(intrinsicHeight, _stepHeight));
         }
 
         var finalConstraints = Constraints.Tighten(width: width, height: height);
@@ -171,8 +181,13 @@ public sealed class RenderIntrinsicHeight : RenderProxyBox
             return;
         }
 
-        Child.Layout(IntrinsicProbeConstraints.ForHeight(Constraints), parentUsesSize: true);
-        double height = Constraints.ConstrainHeight(Child.Size.Height);
+        double intrinsicHeight = Child.GetMaxIntrinsicHeight(Constraints.MaxWidth);
+        if (intrinsicHeight <= 0.0)
+        {
+            Child.Layout(IntrinsicProbeConstraints.ForHeight(Constraints), parentUsesSize: true);
+            intrinsicHeight = Child.Size.Height;
+        }
+        double height = Constraints.ConstrainHeight(intrinsicHeight);
         Child.Layout(Constraints.Tighten(height: height), parentUsesSize: true);
         Size = Constraints.Constrain(Child.Size);
         ((BoxParentData)Child.parentData!).offset = default;
