@@ -13,19 +13,14 @@ namespace Plumix.Tests;
 public sealed class MaterialCircularProgressIndicatorTests
 {
     [Fact]
-    public void CircularProgressIndicator_Constructors_Throw_OnInvalidNumericValues()
+    public void CircularProgressIndicator_Constructor_MatchesFlutterAssertions()
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() => new CircularProgressIndicator(value: double.NaN));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new CircularProgressIndicator(value: double.PositiveInfinity));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new CircularProgressIndicator(strokeWidth: 0));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new CircularProgressIndicator(strokeWidth: -1));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new CircularProgressIndicator(size: 0));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new CircularProgressIndicator(size: -1));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new CircularProgressIndicator(strokeAlign: double.NaN));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new CircularProgressIndicator(strokeAlign: double.NegativeInfinity));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new CircularProgressIndicator(trackGap: -1));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new CircularProgressIndicator(trackGap: double.NaN));
-        Assert.Throws<ArgumentException>(() => new CircularProgressIndicator(value: 0.3, controller: new AnimationController(TimeSpan.FromSeconds(1))));
+        _ = new CircularProgressIndicator(value: double.NaN);
+        _ = new CircularProgressIndicator(strokeWidth: -1);
+        _ = new CircularProgressIndicator(strokeAlign: 2);
+        _ = new CircularProgressIndicator(trackGap: -1);
+        using var controller = new AnimationController(TimeSpan.FromSeconds(1));
+        Assert.Throws<ArgumentException>(() => new CircularProgressIndicator(value: 0.3, controller: controller));
     }
 
     [Fact]
@@ -40,7 +35,6 @@ public sealed class MaterialCircularProgressIndicatorTests
                 },
                 child: CircularProgressIndicator.Adaptive(
                     backgroundColor: Colors.OrangeRed,
-                    color: Colors.MediumPurple,
                     valueColor: valueColor,
                     strokeWidth: 9,
                     strokeAlign: -1,
@@ -72,7 +66,6 @@ public sealed class MaterialCircularProgressIndicatorTests
                 child: CircularProgressIndicator.Adaptive(
                     value: 0.37,
                     backgroundColor: Colors.SeaGreen,
-                    color: Colors.DarkRed,
                     valueColor: valueColor,
                     strokeCap: StrokeCap.Round)));
 
@@ -88,7 +81,7 @@ public sealed class MaterialCircularProgressIndicatorTests
     }
 
     [Fact]
-    public void CircularProgressIndicator_AdaptiveIOS_SemanticsLabel_IncludesComputedPercentForDeterminateValue()
+    public void CircularProgressIndicator_AdaptiveIOS_IgnoresMaterialSemanticsParameters()
     {
         using var harness = new WidgetRenderHarness(
             new Theme(
@@ -101,13 +94,9 @@ public sealed class MaterialCircularProgressIndicatorTests
                     semanticsLabel: "Loading")));
 
         var semanticsRoot = harness.PumpAndGetSemantics(new Size(140, 140));
-        Assert.NotNull(semanticsRoot);
-
-        var semanticsNode = FindFirstSemanticsNode(
+        Assert.Null(FindFirstSemanticsNode(
             semanticsRoot!,
-            node => node.Label != null && node.Label.Contains("Loading"));
-        Assert.NotNull(semanticsNode);
-        Assert.Contains("37%", semanticsNode!.Label);
+            node => node.Label != null && node.Label.Contains("Loading")));
     }
 
     [Fact]
@@ -118,7 +107,10 @@ public sealed class MaterialCircularProgressIndicatorTests
                 data: ThemeData.Light with
                 {
                     Platform = TargetPlatform.Android,
-                    PrimaryColor = Colors.DarkOrange
+                    ColorScheme = ThemeData.Light.ColorScheme with
+                    {
+                        Primary = Colors.DarkOrange,
+                    },
                 },
                 child: CircularProgressIndicator.Adaptive(
                     value: 0.5)));
@@ -139,8 +131,11 @@ public sealed class MaterialCircularProgressIndicatorTests
         var theme = ThemeData.Light with
         {
             UseMaterial3 = true,
-            PrimaryColor = Colors.DarkOrange,
-            SecondaryContainerColor = Colors.LightBlue
+            ColorScheme = ThemeData.Light.ColorScheme with
+            {
+                Primary = Colors.DarkOrange,
+                SecondaryContainer = Colors.LightBlue,
+            },
         };
 
         using var harness = new WidgetRenderHarness(
@@ -174,8 +169,11 @@ public sealed class MaterialCircularProgressIndicatorTests
         var theme = ThemeData.Light with
         {
             UseMaterial3 = true,
-            PrimaryColor = Colors.DarkOrange,
-            SecondaryContainerColor = Colors.LightBlue
+            ColorScheme = ThemeData.Light.ColorScheme with
+            {
+                Primary = Colors.DarkOrange,
+                SecondaryContainer = Colors.LightBlue,
+            },
         };
 
         using var harness = new WidgetRenderHarness(
@@ -198,6 +196,43 @@ public sealed class MaterialCircularProgressIndicatorTests
         double? trackGap = ReadNullableProperty<double>(renderIndicator, "TrackGap");
         Assert.NotNull(trackGap);
         Assert.Equal(4.0, trackGap.Value, 3);
+
+        var padding = FindDescendantByTypeName(harness.RenderView, "RenderPadding");
+        Assert.NotNull(padding);
+        Assert.Equal(48.0, ReadProperty<Size>(padding!, "Size").Width, 3);
+    }
+
+    [Fact]
+    public void CircularProgressIndicator_PaddingUsesWidgetThemeDefaultPrecedence()
+    {
+        var theme = ThemeData.Light with
+        {
+            ProgressIndicatorTheme = new ProgressIndicatorThemeData(
+                Constraints: new BoxConstraints(MinWidth: 40, MinHeight: 40),
+                CircularTrackPadding: EdgeInsetsGeometry.All(3),
+                Year2023: false),
+        };
+
+        using var themedHarness = new WidgetRenderHarness(
+            new Theme(
+                data: theme,
+                child: new Center(child: new CircularProgressIndicator(value: 0.5))));
+        themedHarness.Pump(new Size(140, 140));
+        var themedPadding = FindDescendantByTypeName(themedHarness.RenderView, "RenderPadding");
+        Assert.NotNull(themedPadding);
+        Assert.Equal(46.0, ReadProperty<Size>(themedPadding!, "Size").Width, 3);
+
+        using var widgetHarness = new WidgetRenderHarness(
+            new Theme(
+                data: theme,
+                child: new Center(
+                    child: new CircularProgressIndicator(
+                        value: 0.5,
+                        padding: EdgeInsetsGeometry.All(5)))));
+        widgetHarness.Pump(new Size(140, 140));
+        var widgetPadding = FindDescendantByTypeName(widgetHarness.RenderView, "RenderPadding");
+        Assert.NotNull(widgetPadding);
+        Assert.Equal(50.0, ReadProperty<Size>(widgetPadding!, "Size").Width, 3);
     }
 
     [Fact]
@@ -206,7 +241,10 @@ public sealed class MaterialCircularProgressIndicatorTests
         var theme = ThemeData.Light with
         {
             UseMaterial3 = false,
-            PrimaryColor = Colors.MediumVioletRed
+            ColorScheme = ThemeData.Light.ColorScheme with
+            {
+                Primary = Colors.MediumVioletRed,
+            },
         };
 
         using var harness = new WidgetRenderHarness(
@@ -239,10 +277,10 @@ public sealed class MaterialCircularProgressIndicatorTests
             ProgressIndicatorTheme = new ProgressIndicatorThemeData(
                 Color: Colors.Green,
                 CircularTrackColor: Colors.MediumPurple,
-                CircularStrokeWidth: 6,
-                CircularStrokeAlign: -1.0,
-                CircularConstraints: new BoxConstraints(MinWidth: 48, MinHeight: 48),
-                CircularStrokeCap: StrokeCap.Round,
+                StrokeWidth: 6,
+                StrokeAlign: -1.0,
+                Constraints: new BoxConstraints(MinWidth: 48, MinHeight: 48),
+                StrokeCap: StrokeCap.Round,
                 TrackGap: 7.0,
                 Year2023: false)
         };
@@ -429,12 +467,12 @@ public sealed class MaterialCircularProgressIndicatorTests
     }
 
     [Fact]
-    public void CircularProgressIndicator_LegacySizeFallback_RemainsSupported()
+    public void CircularProgressIndicator_Constraints_ReplaceDefaultSize()
     {
         var theme = ThemeData.Light with
         {
             ProgressIndicatorTheme = new ProgressIndicatorThemeData(
-                CircularSize: 46)
+                Constraints: new BoxConstraints(MinWidth: 46, MinHeight: 46))
         };
 
         using var themedHarness = new WidgetRenderHarness(
@@ -455,7 +493,7 @@ public sealed class MaterialCircularProgressIndicatorTests
                 child: new Center(
                     child: new CircularProgressIndicator(
                         value: 0.5,
-                        size: 50))));
+                        constraints: new BoxConstraints(MinWidth: 50, MinHeight: 50)))));
 
         widgetHarness.Pump(new Size(140, 140));
 
@@ -513,7 +551,7 @@ public sealed class MaterialCircularProgressIndicatorTests
     }
 
     [Fact]
-    public void CircularProgressIndicator_SemanticsLabel_IncludesComputedPercentForDeterminateValue()
+    public void CircularProgressIndicator_SemanticsExposeProgressRoleAndNumericRange()
     {
         using var harness = new WidgetRenderHarness(
             new Theme(
@@ -529,7 +567,10 @@ public sealed class MaterialCircularProgressIndicatorTests
             semanticsRoot!,
             node => node.Label != null && node.Label.Contains("Loading"));
         Assert.NotNull(semanticsNode);
-        Assert.Contains("37%", semanticsNode!.Label);
+        Assert.Equal(SemanticsRole.ProgressBar, semanticsNode!.Role);
+        Assert.Equal("37", semanticsNode.Value);
+        Assert.Equal("0", semanticsNode.MinValue);
+        Assert.Equal("100", semanticsNode.MaxValue);
     }
 
     private static T ReadProperty<T>(RenderObject target, string propertyName)

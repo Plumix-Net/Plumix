@@ -97,6 +97,9 @@
     transition composition, theme copy/lerp, and widget/theme/default precedence).
   - `ExpansionPanel`/`ExpansionPanelList` (source card/divider/icon and interaction-color precedence, directional
     header geometry, exact header/body composition, independent transition timing, and radio callback ownership).
+  - `LinearProgressIndicator`/`CircularProgressIndicator` (direct M2/M3 primary/background/secondary-container
+    roles, source theme API/copy/lerp/capture, controller precedence, 2023/2024 geometry, range semantics, adaptive
+    Cupertino routing, circular padding, and mirrored runtime probes).
 - Completed `Typography.Material2014`/`Material2018`, exact platform black/white themes, dense/tall geometry, and
   locale script-category selection.
 - Remove the narrowed `ColorScheme + Typography closeout` row from `docs/MATERIAL_TODO.md` only after those checks

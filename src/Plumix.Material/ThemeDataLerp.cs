@@ -838,43 +838,34 @@ public sealed partial record ProgressIndicatorThemeData
             Color: MaterialThemeLerp.Color(a?.Color, b?.Color, t),
             LinearTrackColor: MaterialThemeLerp.Color(a?.LinearTrackColor, b?.LinearTrackColor, t),
             LinearMinHeight: MaterialThemeLerp.Double(a?.LinearMinHeight, b?.LinearMinHeight, t),
-            BorderRadius: MaterialThemeLerp.BorderRadius(a?.BorderRadius, b?.BorderRadius, t),
-            LinearStopIndicatorColor: MaterialThemeLerp.Color(
-                a?.LinearStopIndicatorColor,
-                b?.LinearStopIndicatorColor,
-                t),
-            LinearStopIndicatorRadius: MaterialThemeLerp.Double(
-                a?.LinearStopIndicatorRadius,
-                b?.LinearStopIndicatorRadius,
-                t),
-            TrackGap: MaterialThemeLerp.Double(a?.TrackGap, b?.TrackGap, t),
-            Year2023: t < 0.5 ? a?.Year2023 : b?.Year2023,
-            Controller: t < 0.5 ? a?.Controller : b?.Controller,
             CircularTrackColor: MaterialThemeLerp.Color(
                 a?.CircularTrackColor,
                 b?.CircularTrackColor,
                 t),
-            CircularStrokeWidth: MaterialThemeLerp.Double(
-                a?.CircularStrokeWidth,
-                b?.CircularStrokeWidth,
-                t),
-            CircularStrokeAlign: MaterialThemeLerp.Double(
-                a?.CircularStrokeAlign,
-                b?.CircularStrokeAlign,
-                t),
-            CircularConstraints: MaterialThemeLerp.BoxConstraints(
-                a?.CircularConstraints,
-                b?.CircularConstraints,
-                t),
-            CircularSize: MaterialThemeLerp.Double(a?.CircularSize, b?.CircularSize, t),
-            CircularStrokeCap: t < 0.5 ? a?.CircularStrokeCap : b?.CircularStrokeCap,
             RefreshBackgroundColor: MaterialThemeLerp.Color(
                 a?.RefreshBackgroundColor,
                 b?.RefreshBackgroundColor,
                 t),
+            BorderRadius: BorderRadiusGeometry.Lerp(a?.BorderRadius, b?.BorderRadius, t),
+            StopIndicatorColor: MaterialThemeLerp.Color(
+                a?.StopIndicatorColor,
+                b?.StopIndicatorColor,
+                t),
+            StopIndicatorRadius: MaterialThemeLerp.Double(
+                a?.StopIndicatorRadius,
+                b?.StopIndicatorRadius,
+                t),
             StrokeWidth: MaterialThemeLerp.Double(a?.StrokeWidth, b?.StrokeWidth, t),
             StrokeAlign: MaterialThemeLerp.Double(a?.StrokeAlign, b?.StrokeAlign, t),
-            StrokeCap: t < 0.5 ? a?.StrokeCap : b?.StrokeCap);
+            StrokeCap: t < 0.5 ? a?.StrokeCap : b?.StrokeCap,
+            Constraints: MaterialThemeLerp.BoxConstraints(a?.Constraints, b?.Constraints, t),
+            TrackGap: MaterialThemeLerp.Double(a?.TrackGap, b?.TrackGap, t),
+            CircularTrackPadding: EdgeInsetsGeometry.Lerp(
+                a?.CircularTrackPadding,
+                b?.CircularTrackPadding,
+                t),
+            Year2023: t < 0.5 ? a?.Year2023 : b?.Year2023,
+            Controller: t < 0.5 ? a?.Controller : b?.Controller);
     }
 }
 

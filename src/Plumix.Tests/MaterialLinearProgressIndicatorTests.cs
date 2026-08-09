@@ -13,17 +13,18 @@ namespace Plumix.Tests;
 public sealed class MaterialLinearProgressIndicatorTests
 {
     [Fact]
-    public void LinearProgressIndicator_Constructors_Throw_OnInvalidNumericValues()
+    public void LinearProgressIndicator_Constructor_MatchesFlutterAssertions()
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() => new LinearProgressIndicator(value: double.NaN));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new LinearProgressIndicator(value: double.PositiveInfinity));
+        _ = new LinearProgressIndicator(value: double.NaN);
+        _ = new LinearProgressIndicator(value: double.PositiveInfinity);
         Assert.Throws<ArgumentOutOfRangeException>(() => new LinearProgressIndicator(minHeight: 0));
         Assert.Throws<ArgumentOutOfRangeException>(() => new LinearProgressIndicator(minHeight: -1));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new LinearProgressIndicator(stopIndicatorRadius: -0.1));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new LinearProgressIndicator(stopIndicatorRadius: double.NaN));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new LinearProgressIndicator(trackGap: -0.1));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new LinearProgressIndicator(trackGap: double.PositiveInfinity));
-        Assert.Throws<ArgumentException>(() => new LinearProgressIndicator(value: 0.2, controller: new AnimationController(TimeSpan.FromSeconds(1))));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new LinearProgressIndicator(minHeight: double.NaN));
+        _ = new LinearProgressIndicator(minHeight: double.PositiveInfinity);
+        _ = new LinearProgressIndicator(stopIndicatorRadius: -0.1);
+        _ = new LinearProgressIndicator(trackGap: -0.1);
+        using var controller = new AnimationController(TimeSpan.FromSeconds(1));
+        Assert.Throws<ArgumentException>(() => new LinearProgressIndicator(value: 0.2, controller: controller));
     }
 
     [Fact]
@@ -74,6 +75,40 @@ public sealed class MaterialLinearProgressIndicatorTests
         Assert.NotNull(themedRender);
         Assert.Null(ReadNullableProperty<double>(themedRender!, "Value"));
         Assert.Equal(Curves.EaseIn(0.5), ReadProperty<double>(themedRender, "AnimationValue"), 3);
+    }
+
+    [Fact]
+    public void ProgressIndicatorThemeData_CopyWithAndWrapMatchFlutterSurface()
+    {
+        using var controller = new AnimationController(TimeSpan.FromSeconds(1));
+        var data = new ProgressIndicatorThemeData(
+            Color: Colors.Red,
+            LinearTrackColor: Colors.Blue,
+            LinearMinHeight: 6,
+            CircularTrackColor: Colors.Green,
+            RefreshBackgroundColor: Colors.White,
+            BorderRadius: BorderRadiusDirectional.Only(topStart: 3),
+            StopIndicatorColor: Colors.Orange,
+            StopIndicatorRadius: 2,
+            StrokeWidth: 5,
+            StrokeAlign: -1,
+            StrokeCap: StrokeCap.Round,
+            Constraints: new BoxConstraints(MinWidth: 40, MinHeight: 40),
+            TrackGap: 4,
+            CircularTrackPadding: EdgeInsetsGeometry.All(3),
+            Year2023: false,
+            Controller: controller);
+
+        ProgressIndicatorThemeData copied = data.CopyWith(color: Colors.Purple);
+        Assert.Equal(Colors.Purple, copied.Color);
+        Assert.Equal(data with { Color = Colors.Purple }, copied);
+
+        var child = new SizedBox();
+        var theme = new ProgressIndicatorTheme(data: data, child: child);
+        var wrapped = Assert.IsType<ProgressIndicatorTheme>(theme.Wrap(default, child));
+        Assert.NotSame(theme, wrapped);
+        Assert.Equal(data, wrapped.Data);
+        Assert.Same(child, wrapped.Child);
     }
 
     [Fact]
@@ -148,8 +183,11 @@ public sealed class MaterialLinearProgressIndicatorTests
         var theme = ThemeData.Light with
         {
             UseMaterial3 = true,
-            PrimaryColor = Colors.DarkOrange,
-            SecondaryContainerColor = Colors.LightBlue
+            ColorScheme = ThemeData.Light.ColorScheme with
+            {
+                Primary = Colors.DarkOrange,
+                SecondaryContainer = Colors.LightBlue,
+            },
         };
 
         using var harness = new WidgetRenderHarness(
@@ -181,8 +219,11 @@ public sealed class MaterialLinearProgressIndicatorTests
         var theme = ThemeData.Light with
         {
             UseMaterial3 = true,
-            PrimaryColor = Colors.DarkOrange,
-            SecondaryContainerColor = Colors.LightBlue
+            ColorScheme = ThemeData.Light.ColorScheme with
+            {
+                Primary = Colors.DarkOrange,
+                SecondaryContainer = Colors.LightBlue,
+            },
         };
 
         using var harness = new WidgetRenderHarness(
@@ -216,8 +257,11 @@ public sealed class MaterialLinearProgressIndicatorTests
         var theme = ThemeData.Light with
         {
             UseMaterial3 = false,
-            PrimaryColor = Colors.MediumVioletRed,
-            CanvasColor = Colors.Wheat
+            ColorScheme = ThemeData.Light.ColorScheme with
+            {
+                Primary = Colors.MediumVioletRed,
+                Background = Colors.Wheat,
+            },
         };
 
         using var harness = new WidgetRenderHarness(
@@ -254,8 +298,8 @@ public sealed class MaterialLinearProgressIndicatorTests
                 LinearTrackColor: Colors.MediumPurple,
                 LinearMinHeight: 6,
                 BorderRadius: BorderRadius.Circular(3),
-                LinearStopIndicatorColor: Colors.DeepSkyBlue,
-                LinearStopIndicatorRadius: 1.5,
+                StopIndicatorColor: Colors.DeepSkyBlue,
+                StopIndicatorRadius: 1.5,
                 TrackGap: 6.0,
                 Year2023: false)
         };
@@ -382,7 +426,7 @@ public sealed class MaterialLinearProgressIndicatorTests
     }
 
     [Fact]
-    public void LinearProgressIndicator_SemanticsLabel_IncludesComputedPercentForDeterminateValue()
+    public void LinearProgressIndicator_SemanticsExposeProgressRoleAndNumericRange()
     {
         using var harness = new WidgetRenderHarness(
             new Theme(
@@ -400,7 +444,32 @@ public sealed class MaterialLinearProgressIndicatorTests
             semanticsRoot!,
             node => node.Label != null && node.Label.Contains("Loading"));
         Assert.NotNull(semanticsNode);
-        Assert.Contains("37%", semanticsNode!.Label);
+        Assert.Equal(SemanticsRole.ProgressBar, semanticsNode!.Role);
+        Assert.Equal("37", semanticsNode.Value);
+        Assert.Equal("0", semanticsNode.MinValue);
+        Assert.Equal("100", semanticsNode.MaxValue);
+    }
+
+    [Fact]
+    public void LinearProgressIndicator_IndeterminateSemanticsUseLoadingSpinnerRole()
+    {
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light,
+                child: new LinearProgressIndicator(
+                    semanticsLabel: "Loading",
+                    semanticsValue: "waiting")));
+
+        SemanticsNode? semanticsRoot = harness.PumpAndGetSemantics(new Size(240, 80));
+        Assert.NotNull(semanticsRoot);
+        SemanticsNode? node = FindFirstSemanticsNode(
+            semanticsRoot!,
+            candidate => candidate.Role == SemanticsRole.LoadingSpinner);
+        Assert.NotNull(node);
+        Assert.Equal("Loading", node!.Label);
+        Assert.Equal("waiting", node.Value);
+        Assert.Null(node.MinValue);
+        Assert.Null(node.MaxValue);
     }
 
     private static T ReadProperty<T>(RenderObject target, string propertyName)

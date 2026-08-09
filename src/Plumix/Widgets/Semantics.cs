@@ -19,6 +19,8 @@ public enum SemanticsRole
     Form,
     Cell,
     RadioGroup,
+    ProgressBar,
+    LoadingSpinner,
 }
 
 public sealed class Semantics : SingleChildRenderObjectWidget
@@ -28,6 +30,9 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         string? label = null,
         string? hint = null,
         string? tooltip = null,
+        string? value = null,
+        string? minValue = null,
+        string? maxValue = null,
         SemanticsFlags flags = SemanticsFlags.None,
         Action? onTap = null,
         Action? onLongPress = null,
@@ -50,6 +55,9 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         Label = label;
         Hint = hint;
         Tooltip = tooltip;
+        Value = value;
+        MinValue = minValue;
+        MaxValue = maxValue;
         Flags = flags
                 | RoleFlags(role)
                 | (scopesRoute ? SemanticsFlags.ScopesRoute : SemanticsFlags.None)
@@ -83,6 +91,12 @@ public sealed class Semantics : SingleChildRenderObjectWidget
     public string? Hint { get; }
 
     public string? Tooltip { get; }
+
+    public string? Value { get; }
+
+    public string? MinValue { get; }
+
+    public string? MaxValue { get; }
 
     public SemanticsFlags Flags { get; }
 
@@ -126,6 +140,9 @@ public sealed class Semantics : SingleChildRenderObjectWidget
             label: Label,
             hint: Hint,
             tooltip: Tooltip,
+            value: Value,
+            minValue: MinValue,
+            maxValue: MaxValue,
             role: Role,
             inputType: InputType,
             flags: Flags,
@@ -147,6 +164,9 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         semantics.Label = Label;
         semantics.Hint = Hint;
         semantics.Tooltip = Tooltip;
+        semantics.Value = Value;
+        semantics.MinValue = MinValue;
+        semantics.MaxValue = MaxValue;
         semantics.Role = Role;
         semantics.InputType = InputType;
         semantics.Flags = Flags;

@@ -42,8 +42,8 @@ internal sealed class LinearProgressIndicatorDemoPageState : State
                     LinearTrackColor: Color.Parse("#FFC5CAE9"),
                     LinearMinHeight: 6,
                     BorderRadius: BorderRadius.Circular(3),
-                    LinearStopIndicatorColor: Color.Parse("#FF0D47A1"),
-                    LinearStopIndicatorRadius: 3,
+                    StopIndicatorColor: Color.Parse("#FF0D47A1"),
+                    StopIndicatorRadius: 3,
                     TrackGap: 6,
                     Year2023: _useYear2023)
                 : new ProgressIndicatorThemeData(

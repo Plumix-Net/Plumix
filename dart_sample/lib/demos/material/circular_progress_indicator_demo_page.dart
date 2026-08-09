@@ -37,6 +37,7 @@ class _CircularProgressIndicatorDemoPageState
               strokeCap: StrokeCap.round,
               constraints: BoxConstraints(minWidth: 44, minHeight: 44),
               trackGap: 7,
+              circularTrackPadding: EdgeInsets.all(3),
               year2023: _useYear2023,
             )
           : ProgressIndicatorThemeData(year2023: _useYear2023),
@@ -53,7 +54,8 @@ class _CircularProgressIndicatorDemoPageState
           ),
           const SizedBox(height: 8),
           const Text(
-            'Determinate/indeterminate behavior, M2/M3 defaults, year2023 toggle, theme/widget precedence, valueColor priority, and circular trackGap/strokeCap/strokeAlign/constraints.',
+            'Determinate/indeterminate behavior, M2/M3 defaults, theme/widget precedence, '
+            'valueColor priority, and circular gap/cap/alignment/constraints/padding.',
             style: TextStyle(fontSize: 14, color: Color(0x8A000000)),
           ),
           const SizedBox(height: 10),
@@ -229,6 +231,7 @@ class _CircularProgressIndicatorDemoPageState
         strokeCap: StrokeCap.square,
         constraints: const BoxConstraints(minWidth: 56, minHeight: 56),
         trackGap: _widgetTrackGap,
+        padding: const EdgeInsets.all(5),
         valueColor: _useValueColorOverride
             ? const AlwaysStoppedAnimation<Color>(Color(0xFF1B5E20))
             : null,

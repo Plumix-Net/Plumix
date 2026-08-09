@@ -43,11 +43,12 @@ internal sealed class CircularProgressIndicatorDemoPageState : State
                 ? new ProgressIndicatorThemeData(
                     Color: Color.Parse("#FF1565C0"),
                     CircularTrackColor: Color.Parse("#FFC5CAE9"),
-                    CircularStrokeWidth: 6,
-                    CircularStrokeAlign: -1.0,
-                    CircularConstraints: new BoxConstraints(MinWidth: 44, MinHeight: 44),
-                    CircularStrokeCap: StrokeCap.Round,
+                    StrokeWidth: 6,
+                    StrokeAlign: -1.0,
+                    Constraints: new BoxConstraints(MinWidth: 44, MinHeight: 44),
+                    StrokeCap: StrokeCap.Round,
                     TrackGap: 7.0,
+                    CircularTrackPadding: EdgeInsetsGeometry.All(3.0),
                     Year2023: _useYear2023)
                 : new ProgressIndicatorThemeData(
                     Year2023: _useYear2023)
@@ -62,7 +63,8 @@ internal sealed class CircularProgressIndicatorDemoPageState : State
                 [
                     new Text("CircularProgressIndicator baseline", fontSize: 20, color: Colors.Black),
                     new Text(
-                        "Determinate/indeterminate behavior, M2/M3 defaults, year2023 toggle, theme/widget precedence, valueColor priority, and circular trackGap/strokeCap/strokeAlign/constraints.",
+                        "Determinate/indeterminate behavior, M2/M3 defaults, theme/widget precedence, valueColor " +
+                        "priority, and circular gap/cap/alignment/constraints/padding.",
                         fontSize: 14,
                         color: Color.Parse("#8A000000")),
                     new Row(
@@ -186,6 +188,7 @@ internal sealed class CircularProgressIndicatorDemoPageState : State
                 constraints: new BoxConstraints(MinWidth: 56, MinHeight: 56),
                 strokeCap: StrokeCap.Square,
                 trackGap: GetWidgetTrackGap(),
+                padding: EdgeInsetsGeometry.All(5.0),
                 valueColor: _useValueColorOverride ? ValueColorOverride : null,
                 year2023: _useYear2023,
                 semanticsLabel: "Widget override progress");

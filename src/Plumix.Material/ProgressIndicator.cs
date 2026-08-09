@@ -8,65 +8,23 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/material/progress_indicator.dart (linear baseline subset)
+// Dart parity source: flutter/packages/flutter/lib/src/material/progress_indicator.dart
 
-public sealed class LinearProgressIndicator : StatefulWidget
+public abstract class ProgressIndicator : StatefulWidget
 {
-    private const double DefaultMinHeight = 4.0;
-    private static readonly TimeSpan IndeterminateDuration = TimeSpan.FromMilliseconds(1800);
-
-    public LinearProgressIndicator(
-        double? value = null,
-        Color? backgroundColor = null,
-        Color? color = null,
-        IValueListenable<Color?>? valueColor = null,
-        double? minHeight = null,
-        BorderRadius? borderRadius = null,
-        Color? stopIndicatorColor = null,
-        double? stopIndicatorRadius = null,
-        double? trackGap = null,
-        bool? year2023 = null,
-        AnimationController? controller = null,
-        string? semanticsLabel = null,
-        string? semanticsValue = null,
-        Key? key = null) : base(key)
+    protected ProgressIndicator(
+        double? value,
+        Color? backgroundColor,
+        Color? color,
+        IValueListenable<Color?>? valueColor,
+        string? semanticsLabel,
+        string? semanticsValue,
+        Key? key) : base(key)
     {
-        if (value.HasValue && (double.IsNaN(value.Value) || double.IsInfinity(value.Value)))
-        {
-            throw new ArgumentOutOfRangeException(nameof(value), "LinearProgressIndicator value must be finite when provided.");
-        }
-
-        if (minHeight.HasValue && (double.IsNaN(minHeight.Value) || double.IsInfinity(minHeight.Value) || minHeight.Value <= 0))
-        {
-            throw new ArgumentOutOfRangeException(nameof(minHeight), "LinearProgressIndicator minHeight must be finite and greater than zero.");
-        }
-
-        if (stopIndicatorRadius.HasValue && (double.IsNaN(stopIndicatorRadius.Value) || double.IsInfinity(stopIndicatorRadius.Value) || stopIndicatorRadius.Value < 0))
-        {
-            throw new ArgumentOutOfRangeException(nameof(stopIndicatorRadius), "LinearProgressIndicator stopIndicatorRadius must be finite and greater than or equal to zero.");
-        }
-
-        if (trackGap.HasValue && (double.IsNaN(trackGap.Value) || double.IsInfinity(trackGap.Value) || trackGap.Value < 0))
-        {
-            throw new ArgumentOutOfRangeException(nameof(trackGap), "LinearProgressIndicator trackGap must be finite and greater than or equal to zero.");
-        }
-
-        if (value.HasValue && controller is not null)
-        {
-            throw new ArgumentException("LinearProgressIndicator cannot set both value and controller.", nameof(controller));
-        }
-
         Value = value;
         BackgroundColor = backgroundColor;
         Color = color;
         ValueColor = valueColor;
-        MinHeight = minHeight;
-        BorderRadius = borderRadius;
-        StopIndicatorColor = stopIndicatorColor;
-        StopIndicatorRadius = stopIndicatorRadius;
-        TrackGap = trackGap;
-        Year2023 = year2023;
-        Controller = controller;
         SemanticsLabel = semanticsLabel;
         SemanticsValue = semanticsValue;
     }
@@ -79,9 +37,85 @@ public sealed class LinearProgressIndicator : StatefulWidget
 
     public IValueListenable<Color?>? ValueColor { get; }
 
+    public string? SemanticsLabel { get; }
+
+    public string? SemanticsValue { get; }
+
+    internal static double ClampValue(double value) => Math.Clamp(value, 0.0, 1.0);
+
+    internal static Widget BuildSemantics(
+        Widget child,
+        double? value,
+        string? semanticsLabel,
+        string? semanticsValue)
+    {
+        string? effectiveValue = semanticsValue;
+        if (effectiveValue is null && value.HasValue)
+        {
+            effectiveValue = Math.Round(value.Value * 100.0)
+                .ToString(System.Globalization.CultureInfo.InvariantCulture);
+        }
+
+        return new Semantics(
+            label: semanticsLabel,
+            value: effectiveValue,
+            minValue: value.HasValue ? "0" : null,
+            maxValue: value.HasValue ? "100" : null,
+            role: value.HasValue ? SemanticsRole.ProgressBar : SemanticsRole.LoadingSpinner,
+            child: child);
+    }
+}
+
+public sealed class LinearProgressIndicator : ProgressIndicator
+{
+    private const double DefaultMinHeight = 4.0;
+    public static readonly TimeSpan DefaultAnimationDuration = TimeSpan.FromMilliseconds(1800);
+
+    public LinearProgressIndicator(
+        double? value = null,
+        Color? backgroundColor = null,
+        Color? color = null,
+        IValueListenable<Color?>? valueColor = null,
+        double? minHeight = null,
+        BorderRadiusGeometry? borderRadius = null,
+        Color? stopIndicatorColor = null,
+        double? stopIndicatorRadius = null,
+        double? trackGap = null,
+        bool? year2023 = null,
+        AnimationController? controller = null,
+        string? semanticsLabel = null,
+        string? semanticsValue = null,
+        Key? key = null) : base(
+            value,
+            backgroundColor,
+            color,
+            valueColor,
+            semanticsLabel,
+            semanticsValue,
+            key)
+    {
+        if (minHeight.HasValue && !(minHeight.Value > 0))
+        {
+            throw new ArgumentOutOfRangeException(nameof(minHeight));
+        }
+
+        if (value.HasValue && controller is not null)
+        {
+            throw new ArgumentException("LinearProgressIndicator cannot set both value and controller.", nameof(controller));
+        }
+
+        MinHeight = minHeight;
+        BorderRadius = borderRadius;
+        StopIndicatorColor = stopIndicatorColor;
+        StopIndicatorRadius = stopIndicatorRadius;
+        TrackGap = trackGap;
+        Year2023 = year2023;
+        Controller = controller;
+    }
+
     public double? MinHeight { get; }
 
-    public BorderRadius? BorderRadius { get; }
+    public BorderRadiusGeometry? BorderRadius { get; }
 
     public Color? StopIndicatorColor { get; }
 
@@ -93,18 +127,9 @@ public sealed class LinearProgressIndicator : StatefulWidget
 
     public AnimationController? Controller { get; }
 
-    public string? SemanticsLabel { get; }
-
-    public string? SemanticsValue { get; }
-
     public override State CreateState()
     {
         return new LinearProgressIndicatorState();
-    }
-
-    internal static double ClampValue(double value)
-    {
-        return Math.Clamp(value, 0.0, 1.0);
     }
 
     private sealed class LinearProgressIndicatorState : State
@@ -118,7 +143,7 @@ public sealed class LinearProgressIndicator : StatefulWidget
 
         public override void InitState()
         {
-            _internalController = new AnimationController(IndeterminateDuration, this);
+            _internalController = new AnimationController(DefaultAnimationDuration, this);
             _isMounted = true;
         }
 
@@ -153,51 +178,52 @@ public sealed class LinearProgressIndicator : StatefulWidget
         {
             var theme = Theme.Of(context);
             var progressTheme = ProgressIndicatorTheme.Of(context);
-            bool useYear2023 = ResolveYear2023(theme, progressTheme);
-            var animationController = ResolveAnimationController(progressTheme);
+            bool useYear2023 = ResolveYear2023(progressTheme);
+            var animationController = ResolveAnimationController(context);
             UpdateAnimationBinding(animationController);
             UpdateValueColorBinding(CurrentWidget.ValueColor);
-            UpdateAnimationStatus(animationController);
+            UpdateAnimationStatus();
 
             var resolvedValueColor = CurrentWidget.ValueColor?.Value
                                      ?? CurrentWidget.Color
                                      ?? progressTheme.Color
-                                     ?? theme.PrimaryColor;
+                                     ?? theme.ColorScheme.Primary;
 
             var resolvedTrackColor = CurrentWidget.BackgroundColor
                                      ?? progressTheme.LinearTrackColor
                                      ?? (theme.UseMaterial3
-                                         ? theme.SecondaryContainerColor
-                                         : theme.CanvasColor);
+                                         ? theme.ColorScheme.SecondaryContainer
+                                         : theme.ColorScheme.Background);
 
             double resolvedMinHeight = CurrentWidget.MinHeight
                                        ?? progressTheme.LinearMinHeight
                                        ?? DefaultMinHeight;
 
-            var resolvedBorderRadius = CurrentWidget.BorderRadius
-                                       ?? progressTheme.BorderRadius
-                                       ?? ResolveDefaultBorderRadius(theme, useYear2023);
+            BorderRadiusGeometry resolvedBorderRadiusGeometry = CurrentWidget.BorderRadius
+                ?? progressTheme.BorderRadius
+                ?? ResolveDefaultBorderRadius(theme, useYear2023);
+            BorderRadius resolvedBorderRadius = resolvedBorderRadiusGeometry.Resolve(Directionality.Of(context));
 
-            Color? resolvedStopIndicatorColor = theme.UseMaterial3 && !useYear2023
+            Color? resolvedStopIndicatorColor = !useYear2023
                 ? CurrentWidget.StopIndicatorColor
-                  ?? progressTheme.LinearStopIndicatorColor
-                  ?? theme.PrimaryColor
+                  ?? progressTheme.StopIndicatorColor
+                  ?? (theme.UseMaterial3 ? theme.ColorScheme.Primary : null)
                 : null;
 
-            double? resolvedStopIndicatorRadius = theme.UseMaterial3 && !useYear2023
+            double? resolvedStopIndicatorRadius = !useYear2023
                 ? CurrentWidget.StopIndicatorRadius
-                  ?? progressTheme.LinearStopIndicatorRadius
-                  ?? 2.0
+                  ?? progressTheme.StopIndicatorRadius
+                  ?? (theme.UseMaterial3 ? 2.0 : null)
                 : null;
 
-            double resolvedTrackGap = theme.UseMaterial3 && !useYear2023
+            double resolvedTrackGap = !useYear2023
                 ? CurrentWidget.TrackGap
                   ?? progressTheme.TrackGap
-                  ?? 4.0
+                  ?? (theme.UseMaterial3 ? 4.0 : 0.0)
                 : 0.0;
 
             double? resolvedValue = CurrentWidget.Value.HasValue
-                ? ClampValue(CurrentWidget.Value.Value)
+                ? ProgressIndicator.ClampValue(CurrentWidget.Value.Value)
                 : (double?)null;
 
             double animationValue = animationController.Evaluate();
@@ -215,21 +241,18 @@ public sealed class LinearProgressIndicator : StatefulWidget
                 trackGap: resolvedTrackGap,
                 textDirection: textDirection);
 
-            string? semanticsLabel = ResolveSemanticsLabel(resolvedValue);
-            if (!string.IsNullOrWhiteSpace(semanticsLabel))
-            {
-                child = new Semantics(
-                    label: semanticsLabel,
-                    child: child);
-            }
-
-            return child;
+            return ProgressIndicator.BuildSemantics(
+                child,
+                resolvedValue,
+                CurrentWidget.SemanticsLabel,
+                CurrentWidget.SemanticsValue);
         }
 
-        private AnimationController ResolveAnimationController(ProgressIndicatorThemeData progressTheme)
+        private AnimationController ResolveAnimationController(BuildContext context)
         {
             return CurrentWidget.Controller
-                   ?? progressTheme.Controller
+                   ?? context.FindAncestorWidgetOfExactType<ProgressIndicatorTheme>()?.Data.Controller
+                   ?? Theme.Of(context).ProgressIndicatorTheme.Controller
                    ?? _internalController
                    ?? throw new InvalidOperationException("LinearProgressIndicator internal controller is not initialized.");
         }
@@ -266,38 +289,14 @@ public sealed class LinearProgressIndicator : StatefulWidget
             _activeValueColor?.AddListener(HandleValueColorChanged);
         }
 
-        private string? ResolveSemanticsLabel(double? resolvedValue)
-        {
-            string? label = CurrentWidget.SemanticsLabel;
-            string? value = CurrentWidget.SemanticsValue;
-
-            if (string.IsNullOrWhiteSpace(value) && resolvedValue.HasValue)
-            {
-                value = $"{Math.Round(resolvedValue.Value * 100)}%";
-            }
-
-            if (string.IsNullOrWhiteSpace(label))
-            {
-                return value;
-            }
-
-            if (string.IsNullOrWhiteSpace(value))
-            {
-                return label;
-            }
-
-            return $"{label} {value}";
-        }
-
-        private void UpdateAnimationStatus(AnimationController animationController)
+        private void UpdateAnimationStatus()
         {
             if (_internalController is null)
             {
                 return;
             }
 
-            bool shouldAnimateInternalController = !CurrentWidget.Value.HasValue
-                                                   && ReferenceEquals(animationController, _internalController);
+            bool shouldAnimateInternalController = !CurrentWidget.Value.HasValue;
 
             if (!shouldAnimateInternalController)
             {
@@ -335,19 +334,14 @@ public sealed class LinearProgressIndicator : StatefulWidget
             SetState(() => { });
         }
 
-        private bool ResolveYear2023(ThemeData theme, ProgressIndicatorThemeData progressTheme)
+        private bool ResolveYear2023(ProgressIndicatorThemeData progressTheme)
         {
-            if (!theme.UseMaterial3)
-            {
-                return true;
-            }
-
             return CurrentWidget.Year2023
                    ?? progressTheme.Year2023
                    ?? true;
         }
 
-        private static BorderRadius ResolveDefaultBorderRadius(ThemeData theme, bool useYear2023)
+        private static BorderRadiusGeometry ResolveDefaultBorderRadius(ThemeData theme, bool useYear2023)
         {
             if (!theme.UseMaterial3 || useYear2023)
             {
@@ -842,10 +836,13 @@ internal sealed class RenderLinearProgressIndicator : RenderBox
     }
 }
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/material/progress_indicator.dart (circular baseline subset)
+// Dart parity source: flutter/packages/flutter/lib/src/material/progress_indicator.dart
 
-public class CircularProgressIndicator : StatefulWidget
+public class CircularProgressIndicator : ProgressIndicator
 {
+    public const double StrokeAlignInside = -1.0;
+    public const double StrokeAlignCenter = 0.0;
+    public const double StrokeAlignOutside = 1.0;
     private const double DefaultStrokeWidth = 4.0;
     private const double DefaultM2Size = 36.0;
     private const double DefaultM3Year2023Size = 36.0;
@@ -853,7 +850,7 @@ public class CircularProgressIndicator : StatefulWidget
     private static readonly BoxConstraints DefaultM2Constraints = new(MinWidth: DefaultM2Size, MinHeight: DefaultM2Size);
     private static readonly BoxConstraints DefaultM3Year2023Constraints = new(MinWidth: DefaultM3Year2023Size, MinHeight: DefaultM3Year2023Size);
     private static readonly BoxConstraints DefaultM3Constraints = new(MinWidth: DefaultM3Size, MinHeight: DefaultM3Size);
-    private static readonly TimeSpan IndeterminateDuration = TimeSpan.FromMilliseconds(1333.0 * 2222.0);
+    public static readonly TimeSpan DefaultAnimationDuration = TimeSpan.FromMilliseconds(1333.0 * 2222.0);
     private readonly CircularProgressIndicatorType _indicatorType;
 
     private enum CircularProgressIndicatorType
@@ -870,10 +867,10 @@ public class CircularProgressIndicator : StatefulWidget
         double? strokeWidth = null,
         double? strokeAlign = null,
         BoxConstraints? constraints = null,
-        double? size = null,
         StrokeCap? strokeCap = null,
         double? trackGap = null,
         bool? year2023 = null,
+        EdgeInsetsGeometry? padding = null,
         AnimationController? controller = null,
         string? semanticsLabel = null,
         string? semanticsValue = null,
@@ -886,10 +883,10 @@ public class CircularProgressIndicator : StatefulWidget
             strokeWidth: strokeWidth,
             strokeAlign: strokeAlign,
             constraints: constraints,
-            size: size,
             strokeCap: strokeCap,
             trackGap: trackGap,
             year2023: year2023,
+            padding: padding,
             controller: controller,
             semanticsLabel: semanticsLabel,
             semanticsValue: semanticsValue,
@@ -906,76 +903,51 @@ public class CircularProgressIndicator : StatefulWidget
         double? strokeWidth,
         double? strokeAlign,
         BoxConstraints? constraints,
-        double? size,
         StrokeCap? strokeCap,
         double? trackGap,
         bool? year2023,
+        EdgeInsetsGeometry? padding,
         AnimationController? controller,
         string? semanticsLabel,
         string? semanticsValue,
         CircularProgressIndicatorType indicatorType,
         Key? key = null)
-        : base(key)
+        : base(
+            value,
+            backgroundColor,
+            color,
+            valueColor,
+            semanticsLabel,
+            semanticsValue,
+            key)
     {
-        if (value.HasValue && (double.IsNaN(value.Value) || double.IsInfinity(value.Value)))
-        {
-            throw new ArgumentOutOfRangeException(nameof(value), "CircularProgressIndicator value must be finite when provided.");
-        }
-
-        if (strokeWidth.HasValue && (double.IsNaN(strokeWidth.Value) || double.IsInfinity(strokeWidth.Value) || strokeWidth.Value <= 0))
-        {
-            throw new ArgumentOutOfRangeException(nameof(strokeWidth), "CircularProgressIndicator strokeWidth must be finite and greater than zero.");
-        }
-
-        if (strokeAlign.HasValue && (double.IsNaN(strokeAlign.Value) || double.IsInfinity(strokeAlign.Value)))
-        {
-            throw new ArgumentOutOfRangeException(nameof(strokeAlign), "CircularProgressIndicator strokeAlign must be finite when provided.");
-        }
-
-        if (size.HasValue && (double.IsNaN(size.Value) || double.IsInfinity(size.Value) || size.Value <= 0))
-        {
-            throw new ArgumentOutOfRangeException(nameof(size), "CircularProgressIndicator size must be finite and greater than zero.");
-        }
-
-        if (trackGap.HasValue && (double.IsNaN(trackGap.Value) || double.IsInfinity(trackGap.Value) || trackGap.Value < 0))
-        {
-            throw new ArgumentOutOfRangeException(nameof(trackGap), "CircularProgressIndicator trackGap must be finite and greater than or equal to zero.");
-        }
-
         if (value.HasValue && controller is not null)
         {
             throw new ArgumentException("CircularProgressIndicator cannot set both value and controller.", nameof(controller));
         }
 
-        Value = value;
-        BackgroundColor = backgroundColor;
-        Color = color;
-        ValueColor = valueColor;
         StrokeWidth = strokeWidth;
         StrokeAlign = strokeAlign;
         Constraints = constraints;
-        Size = size;
         StrokeCap = strokeCap;
         TrackGap = trackGap;
         Year2023 = year2023;
+        Padding = padding;
         Controller = controller;
-        SemanticsLabel = semanticsLabel;
-        SemanticsValue = semanticsValue;
         _indicatorType = indicatorType;
     }
 
     public static CircularProgressIndicator Adaptive(
         double? value = null,
         Color? backgroundColor = null,
-        Color? color = null,
         IValueListenable<Color?>? valueColor = null,
         double? strokeWidth = null,
         double? strokeAlign = null,
         BoxConstraints? constraints = null,
-        double? size = null,
         StrokeCap? strokeCap = null,
         double? trackGap = null,
         bool? year2023 = null,
+        EdgeInsetsGeometry? padding = null,
         AnimationController? controller = null,
         string? semanticsLabel = null,
         string? semanticsValue = null,
@@ -984,15 +956,15 @@ public class CircularProgressIndicator : StatefulWidget
         return new CircularProgressIndicator(
             value: value,
             backgroundColor: backgroundColor,
-            color: color,
+            color: null,
             valueColor: valueColor,
             strokeWidth: strokeWidth,
             strokeAlign: strokeAlign,
             constraints: constraints,
-            size: size,
             strokeCap: strokeCap,
             trackGap: trackGap,
             year2023: year2023,
+            padding: padding,
             controller: controller,
             semanticsLabel: semanticsLabel,
             semanticsValue: semanticsValue,
@@ -1000,21 +972,11 @@ public class CircularProgressIndicator : StatefulWidget
             key: key);
     }
 
-    public double? Value { get; }
-
-    public Color? BackgroundColor { get; }
-
-    public Color? Color { get; }
-
-    public IValueListenable<Color?>? ValueColor { get; }
-
     public double? StrokeWidth { get; }
 
     public double? StrokeAlign { get; }
 
     public BoxConstraints? Constraints { get; }
-
-    public double? Size { get; }
 
     public StrokeCap? StrokeCap { get; }
 
@@ -1022,20 +984,13 @@ public class CircularProgressIndicator : StatefulWidget
 
     public bool? Year2023 { get; }
 
+    public EdgeInsetsGeometry? Padding { get; }
+
     public AnimationController? Controller { get; }
-
-    public string? SemanticsLabel { get; }
-
-    public string? SemanticsValue { get; }
 
     public override State CreateState()
     {
         return new CircularProgressIndicatorState();
-    }
-
-    internal static double ClampValue(double value)
-    {
-        return Math.Clamp(value, 0.0, 1.0);
     }
 
     private sealed class CircularProgressIndicatorState : State
@@ -1055,7 +1010,7 @@ public class CircularProgressIndicator : StatefulWidget
 
         public override void InitState()
         {
-            _internalController = new AnimationController(IndeterminateDuration, this);
+            _internalController = new AnimationController(DefaultAnimationDuration, this);
             _isMounted = true;
         }
 
@@ -1090,51 +1045,50 @@ public class CircularProgressIndicator : StatefulWidget
         {
             var theme = Theme.Of(context);
             var progressTheme = ProgressIndicatorTheme.Of(context);
-            bool useYear2023 = ResolveYear2023(theme, progressTheme);
-            var animationController = ResolveAnimationController(progressTheme);
+            bool useYear2023 = ResolveYear2023(progressTheme);
+            var animationController = ResolveAnimationController(context);
             UpdateAnimationBinding(animationController);
             UpdateValueColorBinding(CurrentWidget.ValueColor);
-            UpdateAnimationStatus(animationController);
+            UpdateAnimationStatus();
 
             double? resolvedValue = CurrentWidget.Value.HasValue
-                ? ClampValue(CurrentWidget.Value.Value)
+                ? ProgressIndicator.ClampValue(CurrentWidget.Value.Value)
                 : (double?)null;
-            string? semanticsLabel = ResolveSemanticsLabel(resolvedValue);
 
             if (IsAdaptiveCupertino(theme))
             {
-                return WrapWithSemanticsIfNeeded(
-                    BuildAdaptiveCupertinoIndicator(theme, resolvedValue),
-                    semanticsLabel);
+                return BuildAdaptiveCupertinoIndicator(theme, resolvedValue);
             }
 
             var resolvedValueColor = CurrentWidget.ValueColor?.Value
                                      ?? CurrentWidget.Color
                                      ?? progressTheme.Color
-                                     ?? theme.PrimaryColor;
+                                     ?? theme.ColorScheme.Primary;
 
             var resolvedTrackColor = CurrentWidget.BackgroundColor
                                      ?? progressTheme.CircularTrackColor
                                      ?? ResolveDefaultTrackColor(theme, resolvedValue, useYear2023);
 
             double resolvedStrokeWidth = CurrentWidget.StrokeWidth
-                                         ?? progressTheme.CircularStrokeWidth
+                                         ?? progressTheme.StrokeWidth
                                          ?? DefaultStrokeWidth;
 
             double resolvedStrokeAlign = CurrentWidget.StrokeAlign
-                                         ?? progressTheme.CircularStrokeAlign
+                                         ?? progressTheme.StrokeAlign
                                          ?? ResolveDefaultStrokeAlign(theme, useYear2023);
 
-            var resolvedConstraints = ResolveConstraints(CurrentWidget, progressTheme, theme, useYear2023, out double resolvedIndicatorSize);
+            BoxConstraints resolvedConstraints = ResolveConstraints(progressTheme, theme, useYear2023);
 
-            double? resolvedTrackGap = theme.UseMaterial3 && !useYear2023
+            double? resolvedTrackGap = !useYear2023
                 ? CurrentWidget.TrackGap
                   ?? progressTheme.TrackGap
-                  ?? 4.0
+                  ?? (theme.UseMaterial3 ? 4.0 : null)
                 : (double?)null;
 
-            var resolvedStrokeCap = CurrentWidget.StrokeCap
-                                    ?? progressTheme.CircularStrokeCap;
+            var resolvedStrokeCap = CurrentWidget.StrokeCap ?? progressTheme.StrokeCap;
+            EdgeInsetsGeometry? resolvedPadding = CurrentWidget.Padding
+                                                    ?? progressTheme.CircularTrackPadding
+                                                    ?? ResolveDefaultPadding(theme, useYear2023);
 
             double animationValue = animationController.Evaluate();
             double arcStart = ArcStart;
@@ -1150,15 +1104,23 @@ public class CircularProgressIndicator : StatefulWidget
                 valueColor: resolvedValueColor,
                 strokeWidth: resolvedStrokeWidth,
                 strokeAlign: resolvedStrokeAlign,
-                indicatorSize: resolvedIndicatorSize,
+                indicatorSize: 0.0,
                 strokeCap: resolvedStrokeCap,
                 trackGap: resolvedTrackGap,
                 year2023: useYear2023);
             child = new ConstrainedBox(
                 constraints: resolvedConstraints,
                 child: child);
+            if (resolvedPadding.HasValue)
+            {
+                child = new Padding(insets: resolvedPadding.Value, child: child);
+            }
 
-            return WrapWithSemanticsIfNeeded(child, semanticsLabel);
+            return ProgressIndicator.BuildSemantics(
+                child,
+                resolvedValue,
+                CurrentWidget.SemanticsLabel,
+                CurrentWidget.SemanticsValue);
         }
 
         private Widget BuildAdaptiveCupertinoIndicator(ThemeData theme, double? resolvedValue)
@@ -1180,22 +1142,11 @@ public class CircularProgressIndicator : StatefulWidget
                 key: CurrentWidget.Key);
         }
 
-        private static Widget WrapWithSemanticsIfNeeded(Widget child, string? semanticsLabel)
-        {
-            if (string.IsNullOrWhiteSpace(semanticsLabel))
-            {
-                return child;
-            }
-
-            return new Semantics(
-                label: semanticsLabel,
-                child: child);
-        }
-
-        private AnimationController ResolveAnimationController(ProgressIndicatorThemeData progressTheme)
+        private AnimationController ResolveAnimationController(BuildContext context)
         {
             return CurrentWidget.Controller
-                   ?? progressTheme.Controller
+                   ?? context.FindAncestorWidgetOfExactType<ProgressIndicatorTheme>()?.Data.Controller
+                   ?? Theme.Of(context).ProgressIndicatorTheme.Controller
                    ?? _internalController
                    ?? throw new InvalidOperationException("CircularProgressIndicator internal controller is not initialized.");
         }
@@ -1232,38 +1183,14 @@ public class CircularProgressIndicator : StatefulWidget
             _activeValueColor?.AddListener(HandleValueColorChanged);
         }
 
-        private string? ResolveSemanticsLabel(double? resolvedValue)
-        {
-            string? label = CurrentWidget.SemanticsLabel;
-            string? value = CurrentWidget.SemanticsValue;
-
-            if (string.IsNullOrWhiteSpace(value) && resolvedValue.HasValue)
-            {
-                value = $"{Math.Round(resolvedValue.Value * 100)}%";
-            }
-
-            if (string.IsNullOrWhiteSpace(label))
-            {
-                return value;
-            }
-
-            if (string.IsNullOrWhiteSpace(value))
-            {
-                return label;
-            }
-
-            return $"{label} {value}";
-        }
-
-        private void UpdateAnimationStatus(AnimationController animationController)
+        private void UpdateAnimationStatus()
         {
             if (_internalController is null)
             {
                 return;
             }
 
-            bool shouldAnimateInternalController = !CurrentWidget.Value.HasValue
-                                                   && ReferenceEquals(animationController, _internalController);
+            bool shouldAnimateInternalController = !CurrentWidget.Value.HasValue;
 
             if (!shouldAnimateInternalController)
             {
@@ -1301,13 +1228,8 @@ public class CircularProgressIndicator : StatefulWidget
             SetState(() => { });
         }
 
-        private bool ResolveYear2023(ThemeData theme, ProgressIndicatorThemeData progressTheme)
+        private bool ResolveYear2023(ProgressIndicatorThemeData progressTheme)
         {
-            if (!theme.UseMaterial3)
-            {
-                return true;
-            }
-
             return CurrentWidget.Year2023
                    ?? progressTheme.Year2023
                    ?? true;
@@ -1327,7 +1249,7 @@ public class CircularProgressIndicator : StatefulWidget
             }
 
             return resolvedValue.HasValue
-                ? theme.SecondaryContainerColor
+                ? theme.ColorScheme.SecondaryContainer
                 : null;
         }
 
@@ -1341,48 +1263,30 @@ public class CircularProgressIndicator : StatefulWidget
             return -1.0;
         }
 
-        private static BoxConstraints ResolveConstraints(
-            CircularProgressIndicator widget,
+        private BoxConstraints ResolveConstraints(
             ProgressIndicatorThemeData progressTheme,
             ThemeData theme,
-            bool useYear2023,
-            out double resolvedIndicatorSize)
+            bool useYear2023)
         {
-            if (widget.Constraints.HasValue)
+            BoxConstraints? configuredConstraints = CurrentWidget.Constraints ?? progressTheme.Constraints;
+            if (configuredConstraints.HasValue)
             {
-                resolvedIndicatorSize = 0.0;
-                return widget.Constraints.Value;
+                return configuredConstraints.Value;
             }
 
-            if (widget.Size.HasValue)
-            {
-                resolvedIndicatorSize = widget.Size.Value;
-                return new BoxConstraints(
-                    MinWidth: widget.Size.Value,
-                    MinHeight: widget.Size.Value);
-            }
-
-            if (progressTheme.CircularConstraints.HasValue)
-            {
-                resolvedIndicatorSize = 0.0;
-                return progressTheme.CircularConstraints.Value;
-            }
-
-            if (progressTheme.CircularSize.HasValue)
-            {
-                resolvedIndicatorSize = progressTheme.CircularSize.Value;
-                return new BoxConstraints(
-                    MinWidth: progressTheme.CircularSize.Value,
-                    MinHeight: progressTheme.CircularSize.Value);
-            }
-
-            resolvedIndicatorSize = 0.0;
             if (!theme.UseMaterial3)
             {
                 return DefaultM2Constraints;
             }
 
             return useYear2023 ? DefaultM3Year2023Constraints : DefaultM3Constraints;
+        }
+
+        private static EdgeInsetsGeometry? ResolveDefaultPadding(ThemeData theme, bool useYear2023)
+        {
+            return theme.UseMaterial3 && !useYear2023
+                ? EdgeInsetsGeometry.All(4.0)
+                : null;
         }
 
         private static double ResolveDeterminateSweep(double value)

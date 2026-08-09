@@ -1,5 +1,9 @@
 # Changelog
 
+- Breaking: completed the `LinearProgressIndicator`/`CircularProgressIndicator` ColorScheme and API closeout.
+  Defaults now read direct M2/M3 roles; the shared theme, controller precedence, circular padding, adaptive path,
+  constructor contracts, and progress semantics are source-shaped. Added focused coverage and mirrored padding probes.
+
 - Breaking: closed the shared Material ink-ownership divergence. `Material` now owns ordered descendant ink
   features, `Ink` decorations and responses paint beneath Material children, rapid splashes fade independently,
   pressed/hover/focus highlights use source timing, nested responses coordinate press ownership, and circular

@@ -787,6 +787,9 @@ internal sealed class RenderObjectSemantics
             Label = node.Label,
             Hint = node.Hint,
             Tooltip = node.Tooltip,
+            Value = node.Value,
+            MinValue = node.MinValue,
+            MaxValue = node.MaxValue,
             Role = node.Role,
             InputType = node.InputType,
             Flags = node.Flags,
@@ -824,6 +827,9 @@ internal sealed class RenderObjectSemantics
         node.Label = configuration.Label;
         node.Hint = configuration.Hint;
         node.Tooltip = configuration.Tooltip;
+        node.Value = configuration.Value;
+        node.MinValue = configuration.MinValue;
+        node.MaxValue = configuration.MaxValue;
         node.Role = configuration.Role;
         node.InputType = configuration.InputType;
         node.Flags = configuration.Flags;

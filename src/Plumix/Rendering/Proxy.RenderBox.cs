@@ -2650,6 +2650,9 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
     private string? _label;
     private string? _hint;
     private string? _tooltip;
+    private string? _value;
+    private string? _minValue;
+    private string? _maxValue;
     private SemanticsRole _role;
     private SemanticsInputType _inputType;
     private SemanticsFlags _flags;
@@ -2667,6 +2670,9 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         string? label = null,
         string? hint = null,
         string? tooltip = null,
+        string? value = null,
+        string? minValue = null,
+        string? maxValue = null,
         SemanticsRole role = SemanticsRole.None,
         SemanticsInputType inputType = SemanticsInputType.None,
         SemanticsFlags flags = SemanticsFlags.None,
@@ -2683,6 +2689,9 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         _label = label;
         _hint = hint;
         _tooltip = tooltip;
+        _value = value;
+        _minValue = minValue;
+        _maxValue = maxValue;
         _role = role;
         _inputType = inputType;
         _flags = flags;
@@ -2734,6 +2743,39 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
             }
 
             _tooltip = value;
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
+    public string? Value
+    {
+        get => _value;
+        set
+        {
+            if (_value == value) return;
+            _value = value;
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
+    public string? MinValue
+    {
+        get => _minValue;
+        set
+        {
+            if (_minValue == value) return;
+            _minValue = value;
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
+    public string? MaxValue
+    {
+        get => _maxValue;
+        set
+        {
+            if (_maxValue == value) return;
+            _maxValue = value;
             MarkNeedsSemanticsUpdate();
         }
     }
@@ -2903,6 +2945,9 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         if (string.IsNullOrWhiteSpace(_label)
             && string.IsNullOrWhiteSpace(_hint)
             && string.IsNullOrWhiteSpace(_tooltip)
+            && string.IsNullOrWhiteSpace(_value)
+            && string.IsNullOrWhiteSpace(_minValue)
+            && string.IsNullOrWhiteSpace(_maxValue)
             && _role == SemanticsRole.None
             && _inputType == SemanticsInputType.None
             && _flags == SemanticsFlags.None
@@ -2932,6 +2977,10 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         {
             configuration.Label = _label;
         }
+
+        configuration.Value = _value;
+        configuration.MinValue = _minValue;
+        configuration.MaxValue = _maxValue;
 
 
         if (!string.IsNullOrWhiteSpace(_hint))

@@ -1,42 +1,76 @@
 using Avalonia.Media;
-using Plumix;
 using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/material/progress_indicator_theme.dart (baseline subset)
+// Dart parity source: flutter/packages/flutter/lib/src/material/progress_indicator_theme.dart
 
 public enum StrokeCap
 {
     Butt,
     Round,
-    Square
+    Square,
 }
 
 public sealed partial record ProgressIndicatorThemeData(
     Color? Color = null,
     Color? LinearTrackColor = null,
     double? LinearMinHeight = null,
-    BorderRadius? BorderRadius = null,
-    Color? LinearStopIndicatorColor = null,
-    double? LinearStopIndicatorRadius = null,
-    double? TrackGap = null,
-    bool? Year2023 = null,
-    AnimationController? Controller = null,
     Color? CircularTrackColor = null,
-    double? CircularStrokeWidth = null,
-    double? CircularStrokeAlign = null,
-    BoxConstraints? CircularConstraints = null,
-    double? CircularSize = null,
-    StrokeCap? CircularStrokeCap = null,
     Color? RefreshBackgroundColor = null,
+    BorderRadiusGeometry? BorderRadius = null,
+    Color? StopIndicatorColor = null,
+    double? StopIndicatorRadius = null,
     double? StrokeWidth = null,
     double? StrokeAlign = null,
-    StrokeCap? StrokeCap = null);
+    StrokeCap? StrokeCap = null,
+    BoxConstraints? Constraints = null,
+    double? TrackGap = null,
+    EdgeInsetsGeometry? CircularTrackPadding = null,
+    bool? Year2023 = null,
+    AnimationController? Controller = null)
+{
+    public ProgressIndicatorThemeData CopyWith(
+        Color? color = null,
+        Color? linearTrackColor = null,
+        double? linearMinHeight = null,
+        Color? circularTrackColor = null,
+        Color? refreshBackgroundColor = null,
+        BorderRadiusGeometry? borderRadius = null,
+        Color? stopIndicatorColor = null,
+        double? stopIndicatorRadius = null,
+        double? strokeWidth = null,
+        double? strokeAlign = null,
+        StrokeCap? strokeCap = null,
+        BoxConstraints? constraints = null,
+        double? trackGap = null,
+        EdgeInsetsGeometry? circularTrackPadding = null,
+        bool? year2023 = null,
+        AnimationController? controller = null)
+    {
+        return new ProgressIndicatorThemeData(
+            Color: color ?? Color,
+            LinearTrackColor: linearTrackColor ?? LinearTrackColor,
+            LinearMinHeight: linearMinHeight ?? LinearMinHeight,
+            CircularTrackColor: circularTrackColor ?? CircularTrackColor,
+            RefreshBackgroundColor: refreshBackgroundColor ?? RefreshBackgroundColor,
+            BorderRadius: borderRadius ?? BorderRadius,
+            StopIndicatorColor: stopIndicatorColor ?? StopIndicatorColor,
+            StopIndicatorRadius: stopIndicatorRadius ?? StopIndicatorRadius,
+            StrokeWidth: strokeWidth ?? StrokeWidth,
+            StrokeAlign: strokeAlign ?? StrokeAlign,
+            StrokeCap: strokeCap ?? StrokeCap,
+            Constraints: constraints ?? Constraints,
+            TrackGap: trackGap ?? TrackGap,
+            CircularTrackPadding: circularTrackPadding ?? CircularTrackPadding,
+            Year2023: year2023 ?? Year2023,
+            Controller: controller ?? Controller);
+    }
+}
 
-public sealed class ProgressIndicatorTheme : InheritedWidget
+public sealed class ProgressIndicatorTheme : InheritedTheme
 {
     public ProgressIndicatorTheme(
         ProgressIndicatorThemeData data,
@@ -51,9 +85,11 @@ public sealed class ProgressIndicatorTheme : InheritedWidget
 
     public Widget Child { get; }
 
-    public override Widget Build(BuildContext context)
+    public override Widget Build(BuildContext context) => Child;
+
+    public override Widget Wrap(BuildContext context, Widget child)
     {
-        return Child;
+        return new ProgressIndicatorTheme(data: Data, child: child);
     }
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
@@ -63,12 +99,7 @@ public sealed class ProgressIndicatorTheme : InheritedWidget
 
     public static ProgressIndicatorThemeData Of(BuildContext context)
     {
-        var localTheme = context.DependOnInherited<ProgressIndicatorTheme>();
-        if (localTheme is not null)
-        {
-            return localTheme.Data;
-        }
-
-        return Theme.Of(context).ProgressIndicatorTheme;
+        return context.DependOnInherited<ProgressIndicatorTheme>()?.Data
+               ?? Theme.Of(context).ProgressIndicatorTheme;
     }
 }

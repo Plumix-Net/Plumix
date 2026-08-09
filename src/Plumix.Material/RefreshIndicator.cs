@@ -192,13 +192,11 @@ public sealed class RefreshProgressIndicator : CircularProgressIndicator
                 child: child);
             child = new Padding(widget.IndicatorMargin, child);
 
-            string? semanticsLabel = ResolveSemanticsLabel(value);
-            if (!string.IsNullOrWhiteSpace(semanticsLabel))
-            {
-                child = new Semantics(label: semanticsLabel, child: child);
-            }
-
-            return child;
+            return ProgressIndicator.BuildSemantics(
+                child,
+                value,
+                widget.SemanticsLabel,
+                widget.SemanticsValue);
         }
 
         private void BindValueColor(IValueListenable<Color?>? valueColor)
@@ -215,20 +213,6 @@ public sealed class RefreshProgressIndicator : CircularProgressIndicator
 
             _activeValueColor = valueColor;
             _activeValueColor?.AddListener(HandleChanged);
-        }
-
-        private string? ResolveSemanticsLabel(double? value)
-        {
-            string? label = CurrentWidget.SemanticsLabel;
-            string? semanticsValue = CurrentWidget.SemanticsValue;
-            if (string.IsNullOrWhiteSpace(semanticsValue) && value.HasValue)
-            {
-                semanticsValue = $"{Math.Round(value.Value * 100)}%";
-            }
-
-            if (string.IsNullOrWhiteSpace(label)) return semanticsValue;
-            if (string.IsNullOrWhiteSpace(semanticsValue)) return label;
-            return $"{label} {semanticsValue}";
         }
 
         private void HandleChanged()

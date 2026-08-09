@@ -108,6 +108,9 @@ public sealed class SemanticsConfiguration
     public string? Label { get; set; }
     public string? Hint { get; set; }
     public string? Tooltip { get; set; }
+    public string? Value { get; set; }
+    public string? MinValue { get; set; }
+    public string? MaxValue { get; set; }
     public SemanticsRole Role { get; set; }
     public SemanticsInputType InputType { get; set; }
     public SemanticsFlags Flags { get; set; } = SemanticsFlags.None;
@@ -172,6 +175,9 @@ public sealed class SemanticsConfiguration
             Label = Label,
             Hint = Hint,
             Tooltip = Tooltip,
+            Value = Value,
+            MinValue = MinValue,
+            MaxValue = MaxValue,
             Role = Role,
             InputType = InputType,
             Flags = Flags,
@@ -204,6 +210,9 @@ public sealed class SemanticsConfiguration
         !string.IsNullOrWhiteSpace(Label)
         || !string.IsNullOrWhiteSpace(Hint)
         || !string.IsNullOrWhiteSpace(Tooltip)
+        || !string.IsNullOrWhiteSpace(Value)
+        || !string.IsNullOrWhiteSpace(MinValue)
+        || !string.IsNullOrWhiteSpace(MaxValue)
         || Role != SemanticsRole.None
         || InputType != SemanticsInputType.None
         || Flags != SemanticsFlags.None
@@ -287,6 +296,10 @@ public sealed class SemanticsConfiguration
             }
         }
 
+        Value ??= child.Value;
+        MinValue ??= child.MinValue;
+        MaxValue ??= child.MaxValue;
+
         if (!string.IsNullOrWhiteSpace(child.Hint))
         {
             Hint = string.IsNullOrWhiteSpace(Hint) ? child.Hint : $"{Hint} {child.Hint}";
@@ -336,6 +349,9 @@ public sealed class SemanticsNode
     public string? Label { get; internal set; }
     public string? Hint { get; internal set; }
     public string? Tooltip { get; internal set; }
+    public string? Value { get; internal set; }
+    public string? MinValue { get; internal set; }
+    public string? MaxValue { get; internal set; }
     public SemanticsRole Role { get; internal set; }
     public SemanticsInputType InputType { get; internal set; }
     public SemanticsFlags Flags { get; internal set; }
@@ -473,6 +489,9 @@ public sealed class SemanticsOwner
         _syntheticRoot.Label = null;
         _syntheticRoot.Hint = null;
         _syntheticRoot.Tooltip = null;
+        _syntheticRoot.Value = null;
+        _syntheticRoot.MinValue = null;
+        _syntheticRoot.MaxValue = null;
         _syntheticRoot.Role = SemanticsRole.None;
         _syntheticRoot.InputType = SemanticsInputType.None;
         _syntheticRoot.Flags = SemanticsFlags.None;
@@ -544,6 +563,11 @@ public sealed class SemanticsOwner
         if (!string.IsNullOrEmpty(node.Label))
         {
             builder.Append(" label=\"").Append(node.Label).Append('"');
+        }
+
+        if (!string.IsNullOrEmpty(node.Value))
+        {
+            builder.Append(" value=\"").Append(node.Value).Append('"');
         }
 
         if (node.Flags != SemanticsFlags.None)

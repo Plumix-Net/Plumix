@@ -125,11 +125,11 @@ public sealed class MaterialRefreshIndicatorTests : IDisposable
     }
 
     [Fact]
-    public void RefreshProgressIndicator_ValidatesNumericContractsAndBuildsPercentSemantics()
+    public void RefreshProgressIndicator_UsesCircularContractsAndProgressSemantics()
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() => new RefreshProgressIndicator(value: double.NaN));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new RefreshProgressIndicator(strokeWidth: 0));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new RefreshProgressIndicator(strokeAlign: double.PositiveInfinity));
+        _ = new RefreshProgressIndicator(value: double.NaN);
+        _ = new RefreshProgressIndicator(strokeWidth: 0);
+        _ = new RefreshProgressIndicator(strokeAlign: double.PositiveInfinity);
         Assert.Throws<ArgumentOutOfRangeException>(() => new RefreshProgressIndicator(elevation: -1));
 
         using var harness = new WidgetRenderHarness(Wrap(
@@ -137,7 +137,10 @@ public sealed class MaterialRefreshIndicatorTests : IDisposable
         var root = harness.PumpAndGetSemantics(new Size(120, 120));
         var semantics = FindSemantics(root, node => node.Label?.Contains("Refreshing") == true);
         Assert.NotNull(semantics);
-        Assert.Contains("37%", semantics!.Label);
+        Assert.Equal(SemanticsRole.ProgressBar, semantics!.Role);
+        Assert.Equal("37", semantics.Value);
+        Assert.Equal("0", semantics.MinValue);
+        Assert.Equal("100", semantics.MaxValue);
     }
 
     [Fact]
