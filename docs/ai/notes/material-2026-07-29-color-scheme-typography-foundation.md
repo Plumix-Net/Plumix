@@ -102,6 +102,8 @@
     Cupertino routing, circular padding, and mirrored runtime probes).
   - `ExpandIcon` (exact M2/M3 enabled/disabled colors, directional padding, source half-turn animation,
     action-specific semantic hints, callback/state behavior, and mirrored enabled/disabled runtime probes).
+  - `Switch` (direct M2/M3 roles, adaptive Cupertino defaults, state colors, source sizing and transition geometry,
+    thumb-image/cursor/drag/padding APIs, theme copy/lerp, and mirrored runtime M2/M3 probes).
 - Completed `Typography.Material2014`/`Material2018`, exact platform black/white themes, dense/tall geometry, and
   locale script-category selection.
 - Remove the narrowed `ColorScheme + Typography closeout` row from `docs/MATERIAL_TODO.md` only after those checks

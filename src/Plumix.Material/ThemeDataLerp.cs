@@ -913,6 +913,7 @@ public sealed partial record SwitchThemeData
                 b?.TrackOutlineWidth,
                 t),
             MaterialTapTargetSize: t < 0.5 ? a?.MaterialTapTargetSize : b?.MaterialTapTargetSize,
+            MouseCursor: t < 0.5 ? a?.MouseCursor : b?.MouseCursor,
             OverlayColor: MaterialThemeLerp.ColorStateProperty(a?.OverlayColor, b?.OverlayColor, t),
             SplashRadius: MaterialThemeLerp.Double(a?.SplashRadius, b?.SplashRadius, t),
             ThumbIcon: t < 0.5 ? a?.ThumbIcon : b?.ThumbIcon,

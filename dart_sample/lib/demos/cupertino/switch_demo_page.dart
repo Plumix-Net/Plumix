@@ -9,6 +9,7 @@ class SwitchDemoPage extends StatefulWidget {
 
 class _SwitchDemoPageState extends State<SwitchDemoPage> {
   bool _enabled = true;
+  bool _useMaterial3 = true;
   bool _value = true;
   bool _shrinkWrapTapTarget = false;
   bool _showThumbIcons = true;
@@ -17,6 +18,14 @@ class _SwitchDemoPageState extends State<SwitchDemoPage> {
   @override
   Widget build(BuildContext context) {
     final ThemeData switchTheme = Theme.of(context).copyWith(
+      useMaterial3: _useMaterial3,
+      colorScheme: Theme.of(context).colorScheme.copyWith(
+        primary: const Color(0xFF006A60),
+        onPrimary: Colors.white,
+        secondary: const Color(0xFF9C432E),
+        surfaceContainerHighest: const Color(0xFFDCE5E1),
+        outline: const Color(0xFF6F7975),
+      ),
       materialTapTargetSize: _shrinkWrapTapTarget
           ? MaterialTapTargetSize.shrinkWrap
           : MaterialTapTargetSize.padded,
@@ -72,8 +81,20 @@ class _SwitchDemoPageState extends State<SwitchDemoPage> {
             ),
           ],
         ),
+        Row(
+          children: <Widget>[
+            _buildControlButton(
+              label: _useMaterial3 ? 'Material 3' : 'Material 2',
+              onTap: _toggleMaterialVersion,
+              width: 108,
+              background: const Color(0xFFE6F3EF),
+            ),
+          ],
+        ),
         Text(
-          'enabled=$_enabled, value=$_value, thumbIcons=$_showThumbIcons, changes=$_changes, tapTarget=${_shrinkWrapTapTarget ? 'shrinkWrap' : 'padded'}',
+          'material=${_useMaterial3 ? 'M3' : 'M2'}, enabled=$_enabled, value=$_value, '
+          'thumbIcons=$_showThumbIcons, changes=$_changes, '
+          'tapTarget=${_shrinkWrapTapTarget ? 'shrinkWrap' : 'padded'}',
           style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
         ),
         Theme(
@@ -210,6 +231,12 @@ class _SwitchDemoPageState extends State<SwitchDemoPage> {
     });
   }
 
+  void _toggleMaterialVersion() {
+    setState(() {
+      _useMaterial3 = !_useMaterial3;
+    });
+  }
+
   void _toggleTapTargetSize() {
     setState(() {
       _shrinkWrapTapTarget = !_shrinkWrapTapTarget;
@@ -219,6 +246,7 @@ class _SwitchDemoPageState extends State<SwitchDemoPage> {
   void _reset() {
     setState(() {
       _enabled = true;
+      _useMaterial3 = true;
       _value = true;
       _showThumbIcons = true;
       _shrinkWrapTapTarget = false;

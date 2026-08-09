@@ -5,7 +5,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/material/switch_theme.dart (approximate)
+// Dart parity source: flutter/packages/flutter/lib/src/material/switch_theme.dart
 
 public sealed partial record SwitchThemeData(
     MaterialStateProperty<Color?>? ThumbColor = null,
@@ -13,6 +13,7 @@ public sealed partial record SwitchThemeData(
     MaterialStateProperty<Color?>? TrackOutlineColor = null,
     MaterialStateProperty<double?>? TrackOutlineWidth = null,
     MaterialTapTargetSize? MaterialTapTargetSize = null,
+    MaterialStateProperty<MouseCursor?>? MouseCursor = null,
     MaterialStateProperty<Color?>? OverlayColor = null,
     double? SplashRadius = null,
     MaterialStateProperty<Icon?>? ThumbIcon = null,

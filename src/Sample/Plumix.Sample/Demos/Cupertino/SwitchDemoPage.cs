@@ -20,6 +20,7 @@ public sealed class SwitchDemoPage : StatefulWidget
 internal sealed class SwitchDemoPageState : State
 {
     private bool _enabled = true;
+    private bool _useMaterial3 = true;
     private bool _value = true;
     private bool _shrinkWrapTapTarget;
     private bool _showThumbIcons = true;
@@ -30,6 +31,15 @@ internal sealed class SwitchDemoPageState : State
         var baseTheme = Theme.Of(context);
         var switchTheme = baseTheme with
         {
+            UseMaterial3 = _useMaterial3,
+            ColorScheme = baseTheme.ColorScheme with
+            {
+                Primary = Color.Parse("#FF006A60"),
+                OnPrimary = Colors.White,
+                Secondary = Color.Parse("#FF9C432E"),
+                SurfaceContainerHighest = Color.Parse("#FFDCE5E1"),
+                Outline = Color.Parse("#FF6F7975")
+            },
             MaterialTapTargetSize = _shrinkWrapTapTarget
                 ? MaterialTapTargetSize.ShrinkWrap
                 : MaterialTapTargetSize.Padded,
@@ -79,8 +89,19 @@ internal sealed class SwitchDemoPageState : State
                             width: 80,
                             background: Color.Parse("#FFF3E8D8")),
                     ]),
+                new Row(
+                    children:
+                    [
+                        BuildControlButton(
+                            label: _useMaterial3 ? "Material 3" : "Material 2",
+                            onTap: ToggleMaterialVersion,
+                            width: 108,
+                            background: Color.Parse("#FFE6F3EF")),
+                    ]),
                 new Text(
-                    $"enabled={(_enabled ? "true" : "false")}, value={(_value ? "true" : "false")}, thumbIcons={(_showThumbIcons ? "true" : "false")}, changes={_changes}, tapTarget={(_shrinkWrapTapTarget ? "shrinkWrap" : "padded")}",
+                    $"material={(_useMaterial3 ? "M3" : "M2")}, enabled={(_enabled ? "true" : "false")}, "
+                    + $"value={(_value ? "true" : "false")}, thumbIcons={(_showThumbIcons ? "true" : "false")}, "
+                    + $"changes={_changes}, tapTarget={(_shrinkWrapTapTarget ? "shrinkWrap" : "padded")}",
                     fontSize: 12,
                     color: Color.Parse("#FF607D8B")),
                 new Theme(
@@ -196,6 +217,11 @@ internal sealed class SwitchDemoPageState : State
         SetState(() => _showThumbIcons = !_showThumbIcons);
     }
 
+    private void ToggleMaterialVersion()
+    {
+        SetState(() => _useMaterial3 = !_useMaterial3);
+    }
+
     private void ToggleTapTargetSize()
     {
         SetState(() => _shrinkWrapTapTarget = !_shrinkWrapTapTarget);
@@ -206,6 +232,7 @@ internal sealed class SwitchDemoPageState : State
         SetState(() =>
         {
             _enabled = true;
+            _useMaterial3 = true;
             _value = true;
             _showThumbIcons = true;
             _shrinkWrapTapTarget = false;

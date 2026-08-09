@@ -151,12 +151,15 @@ public sealed class MaterialThemeAnimationTests : IDisposable
             Assert.NotNull(lerp);
         }
 
+        var switchCursorBegin = new SystemMouseCursor("switch-begin");
+        var switchCursorEnd = new SystemMouseCursor("switch-end");
         var begin = new ThemeData(
             dividerTheme: new DividerThemeData(Space: 4),
             tooltipTheme: new TooltipThemeData(Height: 8),
             sliderTheme: new SliderThemeData(TrackHeight: 2),
             switchTheme: new SwitchThemeData(
-                ThumbColor: MaterialStateProperty<Color?>.All(Colors.Black)),
+                ThumbColor: MaterialStateProperty<Color?>.All(Colors.Black),
+                MouseCursor: MaterialStateProperty<MouseCursor?>.All(switchCursorBegin)),
             datePickerTheme: new DatePickerThemeData(RangePickerElevation: 4),
             snackBarTheme: new SnackBarThemeData(Elevation: 2),
             menuBarTheme: new MenuBarThemeData(
@@ -166,7 +169,8 @@ public sealed class MaterialThemeAnimationTests : IDisposable
             tooltipTheme: new TooltipThemeData(Height: 24),
             sliderTheme: new SliderThemeData(TrackHeight: 10),
             switchTheme: new SwitchThemeData(
-                ThumbColor: MaterialStateProperty<Color?>.All(Colors.White)),
+                ThumbColor: MaterialStateProperty<Color?>.All(Colors.White),
+                MouseCursor: MaterialStateProperty<MouseCursor?>.All(switchCursorEnd)),
             datePickerTheme: new DatePickerThemeData(RangePickerElevation: 12),
             snackBarTheme: new SnackBarThemeData(Elevation: 10),
             menuBarTheme: new MenuBarThemeData(
@@ -178,6 +182,7 @@ public sealed class MaterialThemeAnimationTests : IDisposable
         Assert.Equal(12, result.TooltipTheme.Height);
         Assert.Equal(4, result.SliderTheme.TrackHeight);
         Assert.Equal(Color.FromRgb(63, 63, 63), result.SwitchTheme.ThumbColor!.Resolve(MaterialState.None));
+        Assert.Equal(switchCursorBegin, result.SwitchTheme.MouseCursor!.Resolve(MaterialState.None));
         Assert.Equal(6, result.DatePickerTheme.RangePickerElevation);
         Assert.Equal(4, result.SnackBarTheme.Elevation);
         Assert.Equal(4, result.MenuBarTheme.Style!.Elevation!.Resolve(MaterialState.None));

@@ -1,5 +1,9 @@
 # Changelog
 
+- Breaking: completed the strict Material `Switch` closeout. M2/M3 and adaptive defaults now read the exact direct
+  roles, state colors, geometry, and 140/200/300 ms motion paths; thumb images, cursor, drag-start, padding, adaptive
+  theme policy, theme copy/lerp, and source precedence are covered, with a mirrored M2/M3 demo probe.
+
 - Breaking: completed the strict `ExpandIcon` closeout. Directional padding, half-turn transition composition,
   M2/M3 enabled and disabled colors, callback/state behavior, and action-specific semantic hints now match Flutter;
   shared IconButton state fallback and opacity rounding were corrected, with focused tests and a mirrored demo probe.

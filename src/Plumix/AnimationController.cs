@@ -66,6 +66,9 @@ public static class Curves
     // Flutter Curves.easeOut: Cubic(0.0, 0.0, 0.58, 1.0).
     public static double EaseOut(double t) => CubicBezier(t, 0.0, 0.0, 0.58, 1.0);
 
+    // Flutter Curves.easeOutBack: Cubic(0.175, 0.885, 0.32, 1.275).
+    public static Curve EaseOutBack { get; } = Cubic(0.175, 0.885, 0.32, 1.275);
+
     public static double FastOutSlowIn(double t)
     {
         t = Math.Clamp(t, 0, 1);

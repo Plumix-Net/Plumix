@@ -18,10 +18,14 @@ public sealed class MaterialSwitchTests
     public void Switch_DefaultM3_Selected_UsesPrimaryTrackAndOnPrimaryThumb()
     {
         var owner = new BuildOwner();
-        var theme = ThemeData.Light with
+        var baseTheme = ThemeData.Light;
+        var theme = baseTheme with
         {
-            PrimaryColor = Colors.Coral,
-            OnPrimaryColor = Colors.WhiteSmoke
+            ColorScheme = baseTheme.ColorScheme with
+            {
+                Primary = Colors.Coral,
+                OnPrimary = Colors.WhiteSmoke
+            }
         };
 
         var root = new TestRootElement(
@@ -49,10 +53,14 @@ public sealed class MaterialSwitchTests
     public void Switch_DefaultM3_Unselected_UsesSurfaceContainerHighestTrackAndOutlineThumb()
     {
         var owner = new BuildOwner();
-        var theme = ThemeData.Light with
+        var baseTheme = ThemeData.Light;
+        var theme = baseTheme with
         {
-            SurfaceContainerHighestColor = Colors.PowderBlue,
-            OutlineColor = Colors.CadetBlue
+            ColorScheme = baseTheme.ColorScheme with
+            {
+                SurfaceContainerHighest = Colors.PowderBlue,
+                Outline = Colors.CadetBlue
+            }
         };
 
         var root = new TestRootElement(
@@ -83,9 +91,10 @@ public sealed class MaterialSwitchTests
     public void Switch_DefaultM3_DisabledSelected_UsesOnSurfaceOpacityTrackColor()
     {
         var owner = new BuildOwner();
-        var theme = ThemeData.Light with
+        var baseTheme = ThemeData.Light;
+        var theme = baseTheme with
         {
-            OnSurfaceColor = Colors.Brown
+            ColorScheme = baseTheme.ColorScheme with { OnSurface = Colors.Brown }
         };
 
         var root = new TestRootElement(
@@ -103,6 +112,261 @@ public sealed class MaterialSwitchTests
         var track = FindTrackDecoration(renderRoot);
         Assert.NotNull(track);
         Assert.Equal(ApplyOpacity(Colors.Brown, 0.12), track!.Decoration.Color);
+    }
+
+    [Fact]
+    public void Switch_PublicApi_ExposesSourceImageCursorDragAndAdaptiveFields()
+    {
+        var activeImage = new MemoryImage([1]);
+        var inactiveImage = new MemoryImage([2]);
+        ImageErrorListener activeError = (_, _) => { };
+        ImageErrorListener inactiveError = (_, _) => { };
+        var cursor = new SystemMouseCursor("switch");
+
+        var materialSwitch = new Switch(
+            value: true,
+            onChanged: _ => { },
+            activeThumbImage: activeImage,
+            onActiveThumbImageError: activeError,
+            inactiveThumbImage: inactiveImage,
+            onInactiveThumbImageError: inactiveError,
+            dragStartBehavior: DragStartBehavior.Down,
+            mouseCursor: cursor);
+        var adaptiveSwitch = Switch.Adaptive(
+            value: false,
+            onChanged: _ => { },
+            applyCupertinoTheme: true);
+
+        Assert.Same(activeImage, materialSwitch.ActiveThumbImage);
+        Assert.Same(activeError, materialSwitch.OnActiveThumbImageError);
+        Assert.Same(inactiveImage, materialSwitch.InactiveThumbImage);
+        Assert.Same(inactiveError, materialSwitch.OnInactiveThumbImageError);
+        Assert.Equal(DragStartBehavior.Down, materialSwitch.DragStartBehavior);
+        Assert.Equal(cursor, materialSwitch.MouseCursor);
+        Assert.True(adaptiveSwitch.ApplyCupertinoTheme);
+        Assert.Throws<ArgumentException>(() => new Switch(
+            value: false,
+            onChanged: _ => { },
+            onActiveThumbImageError: activeError));
+        Assert.Throws<ArgumentException>(() => Switch.Adaptive(
+            value: false,
+            onChanged: _ => { },
+            onInactiveThumbImageError: inactiveError));
+    }
+
+    [Fact]
+    public void Switch_DefaultM2_UsesSecondaryAndLegacyGreyPalette()
+    {
+        var baseTheme = new ThemeData(useMaterial3: false);
+        var theme = baseTheme with
+        {
+            ColorScheme = baseTheme.ColorScheme with { Secondary = Colors.DarkOrange }
+        };
+
+        var selectedRoot = MountSwitch(theme, value: true, onChanged: _ => { });
+        var selectedTrack = FindTrackDecoration(RequireRenderObject<RenderObject>(selectedRoot.ChildElement));
+        var selectedThumb = FindThumbDecoration(RequireRenderObject<RenderObject>(selectedRoot.ChildElement));
+
+        Assert.NotNull(selectedTrack);
+        Assert.NotNull(selectedThumb);
+        Assert.Equal(Color.FromArgb(0x80, 0xFF, 0x8C, 0x00), selectedTrack!.Decoration.Color);
+        Assert.Equal(Colors.DarkOrange, selectedThumb!.Decoration.Color);
+
+        var unselectedRoot = MountSwitch(theme, value: false, onChanged: _ => { });
+        var unselectedTrack = FindTrackDecoration(RequireRenderObject<RenderObject>(unselectedRoot.ChildElement));
+        var unselectedThumb = FindThumbDecoration(RequireRenderObject<RenderObject>(unselectedRoot.ChildElement));
+
+        Assert.NotNull(unselectedTrack);
+        Assert.NotNull(unselectedThumb);
+        Assert.Equal(Color.FromArgb(0x52, 0x00, 0x00, 0x00), unselectedTrack!.Decoration.Color);
+        Assert.Equal(Color.FromRgb(0xFA, 0xFA, 0xFA), unselectedThumb!.Decoration.Color);
+    }
+
+    [Fact]
+    public void Switch_DefaultM3_DisabledInactive_AlphaBlendsThumbAgainstSurface()
+    {
+        var baseTheme = ThemeData.Light;
+        var theme = baseTheme with
+        {
+            ColorScheme = baseTheme.ColorScheme with
+            {
+                OnSurface = Colors.Red,
+                Surface = Colors.Blue
+            }
+        };
+        var root = MountSwitch(theme, value: false, onChanged: null);
+
+        var thumb = FindThumbDecoration(RequireRenderObject<RenderObject>(root.ChildElement));
+
+        Assert.NotNull(thumb);
+        Assert.Equal(AlphaBlend(ApplyOpacity(Colors.Red, 0.38), Colors.Blue), thumb!.Decoration.Color);
+    }
+
+    [Fact]
+    public void Switch_ActiveThumbColor_SuppliesFallbackActiveTrackAtHalfAlpha()
+    {
+        var root = MountSwitch(
+            ThemeData.Light,
+            value: true,
+            onChanged: _ => { },
+            activeThumbColor: Colors.Orange);
+
+        var track = FindTrackDecoration(RequireRenderObject<RenderObject>(root.ChildElement));
+
+        Assert.NotNull(track);
+        Assert.Equal(Color.FromArgb(0x80, 0xFF, 0xA5, 0x00), track!.Decoration.Color);
+    }
+
+    [Fact]
+    public void Switch_M3PressedSelected_UsesPrimaryContainerAndTwentyEightPixelThumb()
+    {
+        var binding = GestureBinding.Instance;
+        binding.ResetForTests();
+        try
+        {
+            var baseTheme = ThemeData.Light;
+            var theme = baseTheme with
+            {
+                ColorScheme = baseTheme.ColorScheme with { PrimaryContainer = Colors.LimeGreen }
+            };
+            using var harness = new WidgetRenderHarness(
+                new Theme(
+                    data: theme,
+                    child: new Align(
+                        alignment: Alignment.TopLeft,
+                        child: new Switch(
+                            value: true,
+                            onChanged: _ => { }))));
+            harness.Pump(new Size(220, 120));
+
+            DispatchPointerDown(binding, harness.RenderView, pointer: 640, position: new Point(20, 20));
+            harness.Pump(new Size(220, 120));
+
+            var thumb = FindDecoratedBoxBySize(harness.RenderView, width: 28, height: 28);
+            Assert.NotNull(thumb);
+            Assert.Equal(Colors.LimeGreen, thumb!.Decoration.Color);
+
+            DispatchPointerUp(binding, harness.RenderView, pointer: 640, position: new Point(20, 20));
+        }
+        finally
+        {
+            binding.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void Switch_M3Toggle_UsesThreeHundredMillisecondStadiumTransition()
+    {
+        Widget BuildSwitch(bool value) => new Theme(
+            data: ThemeData.Light,
+            child: new Align(
+                alignment: Alignment.TopLeft,
+                child: new Switch(
+                    value: value,
+                    onChanged: _ => { })));
+
+        using var harness = new WidgetRenderHarness(BuildSwitch(value: false));
+        harness.Pump(new Size(220, 120));
+        harness.Update(BuildSwitch(value: true));
+        harness.Pump(new Size(220, 120));
+
+        double start = Scheduler.CurrentSeconds;
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(start + 0.01));
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(start + 0.15));
+        harness.Pump(new Size(220, 120));
+
+        var middleThumb = FindThumbDecoration(harness.RenderView);
+        Assert.NotNull(middleThumb);
+        Assert.True(middleThumb!.Size.Width > middleThumb.Size.Height);
+
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(start + 0.31));
+        harness.Pump(new Size(220, 120));
+
+        var completedThumb = FindDecoratedBoxBySize(harness.RenderView, width: 24, height: 24);
+        Assert.NotNull(completedThumb);
+    }
+
+    [Fact]
+    public void Switch_ThumbImage_UsesSelectedProviderAndErrorListener()
+    {
+        var activeImage = new MemoryImage([1]);
+        var inactiveImage = new MemoryImage([2]);
+        ImageErrorListener activeError = (_, _) => { };
+        ImageErrorListener inactiveError = (_, _) => { };
+        var root = MountSwitch(
+            ThemeData.Light,
+            value: true,
+            onChanged: _ => { },
+            activeThumbImage: activeImage,
+            onActiveThumbImageError: activeError,
+            inactiveThumbImage: inactiveImage,
+            onInactiveThumbImageError: inactiveError);
+
+        var thumb = FindThumbDecoration(RequireRenderObject<RenderObject>(root.ChildElement));
+
+        Assert.NotNull(thumb);
+        Assert.NotNull(thumb!.Decoration.Image);
+        Assert.Same(activeImage, thumb.Decoration.Image!.Image);
+        Assert.Same(activeError, thumb.Decoration.Image.OnError);
+    }
+
+    [Fact]
+    public void Switch_AdaptiveIOS_IgnoresInheritedSwitchThemeByDefault()
+    {
+        var theme = ThemeData.Light with
+        {
+            Platform = TargetPlatform.IOS,
+            SwitchTheme = new SwitchThemeData(
+                ThumbColor: MaterialStateProperty<Color?>.All(Colors.Yellow),
+                TrackColor: MaterialStateProperty<Color?>.All(Colors.Brown))
+        };
+        var root = MountSwitch(theme, value: true, onChanged: _ => { }, adaptive: true);
+
+        var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
+        var track = FindTrackDecoration(renderRoot);
+        var thumb = FindThumbDecoration(renderRoot);
+
+        Assert.NotNull(track);
+        Assert.NotNull(thumb);
+        Assert.Equal(Color.FromRgb(0x34, 0xC7, 0x59), track!.Decoration.Color);
+        Assert.Equal(Colors.White, thumb!.Decoration.Color);
+    }
+
+    [Fact]
+    public void Switch_AdaptiveIOS_FocusUsesCupertinoOutlineColorAndWidth()
+    {
+        FocusManager.Instance.ResetForTests();
+        try
+        {
+            var focusNode = new FocusNode();
+            var owner = new BuildOwner();
+            var root = new TestRootElement(
+                new Theme(
+                    data: ThemeData.Light with { Platform = TargetPlatform.IOS },
+                    child: Switch.Adaptive(
+                        value: true,
+                        onChanged: _ => { },
+                        focusNode: focusNode)));
+            root.Attach(owner);
+            root.Mount(parent: null, newSlot: null);
+            owner.FlushBuild();
+
+            Assert.True(focusNode.RequestFocus());
+            owner.FlushBuild();
+
+            var boxes = FindDescendants<RenderDecoratedBox>(
+                RequireRenderObject<RenderObject>(root.ChildElement));
+            var focusOutline = boxes.FirstOrDefault(box =>
+                box.Decoration.Border is { Width: 3.5 });
+            Assert.NotNull(focusOutline);
+            Assert.Equal(
+                Color.FromArgb(0xCC, 0x6E, 0xF2, 0x8F),
+                focusOutline!.Decoration.Border!.Value.Color);
+        }
+        finally
+        {
+            FocusManager.Instance.ResetForTests();
+        }
     }
 
     [Fact]
@@ -301,7 +565,7 @@ public sealed class MaterialSwitchTests
 
         Assert.NotNull(track);
         Assert.NotNull(thumb);
-        Assert.Equal(Colors.CornflowerBlue, track!.Decoration.Color);
+        Assert.Equal(Color.FromArgb(0x80, 0xFF, 0xA5, 0x00), track!.Decoration.Color);
         Assert.Equal(Colors.Orange, thumb!.Decoration.Color);
     }
 
@@ -497,6 +761,46 @@ public sealed class MaterialSwitchTests
     }
 
     [Fact]
+    public void Switch_M3OuterSize_TracksTapTargetAndCustomPadding()
+    {
+        using var paddedHarness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light,
+                child: new Switch(
+                    value: false,
+                    onChanged: _ => { })));
+        paddedHarness.Pump(new Size(220, 120));
+
+        using var shrinkHarness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light,
+                child: new Switch(
+                    value: false,
+                    onChanged: _ => { },
+                    materialTapTargetSize: MaterialTapTargetSize.ShrinkWrap)));
+        shrinkHarness.Pump(new Size(220, 120));
+
+        using var customPaddingHarness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light,
+                child: new Switch(
+                    value: false,
+                    onChanged: _ => { },
+                    padding: new Thickness(4))));
+        customPaddingHarness.Pump(new Size(220, 120));
+
+        Assert.Contains(
+            FindDescendants<RenderBox>(paddedHarness.RenderView),
+            box => IsSize(box.Size, width: 60, height: 48));
+        Assert.Contains(
+            FindDescendants<RenderBox>(shrinkHarness.RenderView),
+            box => IsSize(box.Size, width: 60, height: 40));
+        Assert.Contains(
+            FindDescendants<RenderBox>(customPaddingHarness.RenderView),
+            box => IsSize(box.Size, width: 60, height: 56));
+    }
+
+    [Fact]
     public void Switch_SemanticLabel_PropagatesEnabledSemanticsAndUncheckedState()
     {
         FocusManager.Instance.ResetForTests();
@@ -570,6 +874,42 @@ public sealed class MaterialSwitchTests
         return Assert.IsAssignableFrom<T>(element.RenderObject);
     }
 
+    private static TestRootElement MountSwitch(
+        ThemeData theme,
+        bool value,
+        Action<bool>? onChanged,
+        Color? activeThumbColor = null,
+        ImageProvider? activeThumbImage = null,
+        ImageErrorListener? onActiveThumbImageError = null,
+        ImageProvider? inactiveThumbImage = null,
+        ImageErrorListener? onInactiveThumbImageError = null,
+        bool adaptive = false)
+    {
+        Widget child = adaptive
+            ? Switch.Adaptive(
+                value: value,
+                onChanged: onChanged,
+                activeThumbColor: activeThumbColor,
+                activeThumbImage: activeThumbImage,
+                onActiveThumbImageError: onActiveThumbImageError,
+                inactiveThumbImage: inactiveThumbImage,
+                onInactiveThumbImageError: onInactiveThumbImageError)
+            : new Switch(
+                value: value,
+                onChanged: onChanged,
+                activeThumbColor: activeThumbColor,
+                activeThumbImage: activeThumbImage,
+                onActiveThumbImageError: onActiveThumbImageError,
+                inactiveThumbImage: inactiveThumbImage,
+                onInactiveThumbImageError: onInactiveThumbImageError);
+        var root = new TestRootElement(new Theme(data: theme, child: child));
+        var owner = new BuildOwner();
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+        return root;
+    }
+
     private static T? FindDescendant<T>(RenderObject? root) where T : RenderObject
     {
         if (root is null)
@@ -630,7 +970,7 @@ public sealed class MaterialSwitchTests
     private static RenderDecoratedBox? FindThumbDecoration(RenderObject root)
     {
         return FindDescendants<RenderDecoratedBox>(root)
-            .FirstOrDefault(box =>
+            .LastOrDefault(box =>
                 box.Decoration.Color.HasValue
                 && box.Decoration.Color.Value.A > 0
                 && !box.Decoration.Border.HasValue);
@@ -646,6 +986,12 @@ public sealed class MaterialSwitchTests
             .FirstOrDefault(box =>
                 Math.Abs(box.Size.Width - width) <= tolerance
                 && Math.Abs(box.Size.Height - height) <= tolerance);
+    }
+
+    private static bool IsSize(Size actual, double width, double height, double tolerance = 0.01)
+    {
+        return Math.Abs(actual.Width - width) <= tolerance
+               && Math.Abs(actual.Height - height) <= tolerance;
     }
 
     private static void DispatchPointerDown(GestureBinding binding, RenderView renderView, int pointer, Point position)
@@ -710,6 +1056,25 @@ public sealed class MaterialSwitchTests
         return Color.FromArgb(alpha, color.R, color.G, color.B);
     }
 
+    private static Color AlphaBlend(Color foreground, Color background)
+    {
+        double foregroundAlpha = foreground.A / 255.0;
+        double backgroundAlpha = background.A / 255.0;
+        double outputAlpha = foregroundAlpha + (backgroundAlpha * (1.0 - foregroundAlpha));
+        byte BlendChannel(byte foregroundChannel, byte backgroundChannel)
+        {
+            double numerator = (foregroundChannel * foregroundAlpha)
+                               + (backgroundChannel * backgroundAlpha * (1.0 - foregroundAlpha));
+            return (byte)Math.Round(numerator / outputAlpha);
+        }
+
+        return Color.FromArgb(
+            (byte)Math.Round(outputAlpha * 255.0),
+            BlendChannel(foreground.R, background.R),
+            BlendChannel(foreground.G, background.G),
+            BlendChannel(foreground.B, background.B));
+    }
+
     private sealed class WidgetRenderHarness : IDisposable
     {
         private readonly BuildOwner _owner = new();
@@ -729,6 +1094,11 @@ public sealed class MaterialSwitchTests
         }
 
         public RenderView RenderView { get; }
+
+        public void Update(Widget widget)
+        {
+            _rootElement.Update(widget);
+        }
 
         public void Pump(Size size)
         {
