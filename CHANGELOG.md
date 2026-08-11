@@ -1,5 +1,10 @@
 # Changelog
 
+- Breaking: completed the strict Material `PopupMenu` closeout. The family now uses source-shaped inherited-theme
+  capture, directional padding, direct M2/M3 surface and label roles, navigator-owned route transitions, display-
+  feature-aware placement, selected-item scrolling, stateful cursors, and zero-area-safe checked entries. Focused
+  Flutter-test coverage and the mirrored M2/M3/directional-theme demo probes expanded.
+
 - Breaking: completed the strict Material `Slider`/`RangeSlider` shape closeout. The family now exposes and
   executes Flutter-shaped track, thumb, overlay, tick, and value-indicator contracts; `SliderThemeData` carries
   the source fields/copy/lerp behavior, range selection and separation are pluggable, and `Slider.adaptive` routes

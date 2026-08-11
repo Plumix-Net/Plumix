@@ -46,10 +46,6 @@ public sealed class PopupMenuDivider : PopupMenuEntry
         Color? color = null,
         Key? key = null) : base(key)
     {
-        Divider.ValidateNonNegative(height, nameof(height));
-        Divider.ValidateNonNegative(thickness, nameof(thickness));
-        Divider.ValidateNonNegative(indent, nameof(indent));
-        Divider.ValidateNonNegative(endIndent, nameof(endIndent));
         Height = height;
         Thickness = thickness;
         Indent = indent;
@@ -98,8 +94,6 @@ public class PopupMenuItem<T> : PopupMenuEntry<T>
         MouseCursor? mouseCursor = null,
         Key? key = null) : base(key)
     {
-        if (!double.IsFinite(height) || height < 0) throw new ArgumentOutOfRangeException(nameof(height));
-        ValidateInsets(padding, nameof(padding));
         Child = child;
         Value = value;
         OnTap = onTap;
@@ -128,15 +122,6 @@ public class PopupMenuItem<T> : PopupMenuEntry<T>
 
     internal void InvokeOnTap() => OnTap?.Invoke();
 
-    private static void ValidateInsets(Thickness? value, string name)
-    {
-        if (!value.HasValue) return;
-        var p = value.Value;
-        if (!double.IsFinite(p.Left) || !double.IsFinite(p.Top)
-            || !double.IsFinite(p.Right) || !double.IsFinite(p.Bottom)
-            || p.Left < 0 || p.Top < 0 || p.Right < 0 || p.Bottom < 0)
-            throw new ArgumentOutOfRangeException(name);
-    }
 }
 
 public class PopupMenuItemState<T> : State
@@ -147,10 +132,10 @@ public class PopupMenuItemState<T> : State
 
     public override Widget Build(BuildContext context)
     {
-        var widget = CurrentWidget;
-        var theme = Theme.Of(context);
-        var popupTheme = PopupMenuTheme.Of(context);
-        var states = widget.Enabled ? MaterialState.None : MaterialState.Disabled;
+        PopupMenuItem<T> widget = CurrentWidget;
+        ThemeData theme = Theme.Of(context);
+        PopupMenuThemeData popupTheme = PopupMenuTheme.Of(context);
+        MaterialState states = widget.Enabled ? MaterialState.None : MaterialState.Disabled;
         TextStyle style;
         if (theme.UseMaterial3)
         {
@@ -164,16 +149,20 @@ public class PopupMenuItemState<T> : State
         else
         {
             style = widget.TextStyle ?? popupTheme.TextStyle ?? theme.TextTheme.TitleMedium;
-            if (!widget.Enabled) style = style.CopyWith(color: ApplyOpacity(theme.OnSurfaceColor, 0.38));
+            if (!widget.Enabled)
+            {
+                style = style.CopyWith(color: theme.DisabledColor);
+            }
         }
 
-        var padding = widget.Padding ?? (theme.UseMaterial3 ? new Thickness(12, 0) : new Thickness(16, 0));
-        var alignment = Directionality.Of(context) == TextDirection.Rtl
+        Thickness padding = widget.Padding ?? (theme.UseMaterial3 ? new Thickness(12, 0) : new Thickness(16, 0));
+        Alignment alignment = Directionality.Of(context) == TextDirection.Rtl
             ? Alignment.CenterRight
             : Alignment.CenterLeft;
-        Widget item = new DefaultTextStyle(
-            style,
-            new ConstrainedBox(
+        Widget item = new AnimatedDefaultTextStyle(
+            style: style,
+            duration: MaterialConstants.ThemeAnimationDuration,
+            child: new ConstrainedBox(
                 new BoxConstraints(MinHeight: widget.Height),
                 new Padding(
                     padding,
@@ -181,15 +170,22 @@ public class PopupMenuItemState<T> : State
                         alignment: alignment,
                         widthFactor: 1,
                         child: BuildChild() ?? new SizedBox()))));
+        if (!widget.Enabled)
+        {
+            double opacity = theme.Brightness == Brightness.Dark ? 0.5 : 0.38;
+            item = IconTheme.Merge(
+                new IconThemeData(Color: null, Size: null, Opacity: opacity),
+                item);
+        }
+        item = ListTileTheme.Merge(
+            child: item,
+            contentPadding: EdgeInsetsGeometry.Zero,
+            titleTextStyle: style);
         item = new InkWell(
             onTap: widget.Enabled ? HandleTap : null,
             canRequestFocus: widget.Enabled,
-            mouseCursor: ResolveMouseCursor(widget, popupTheme, states),
-            child: new ListTileTheme(
-                data: new ListTileThemeData(
-                    ContentPadding: default,
-                    TitleTextStyle: style),
-                child: item));
+            mouseCursor: ResolveMouseCursor(widget, popupTheme),
+            child: item);
         return new MergeSemantics(BuildSemantics(item));
     }
 
@@ -208,9 +204,23 @@ public class PopupMenuItemState<T> : State
 
     private static MouseCursor ResolveMouseCursor(
         PopupMenuItem<T> widget,
-        PopupMenuThemeData theme,
-        MaterialState states) =>
-        widget.MouseCursor ?? theme.MouseCursor?.Resolve(states) ?? SystemMouseCursors.Click;
+        PopupMenuThemeData theme)
+    {
+        return WidgetStateMouseCursor.ResolveWith(states =>
+        {
+            MaterialState effectiveStates = widget.Enabled
+                ? states & ~MaterialState.Disabled
+                : states | MaterialState.Disabled;
+            MouseCursor? widgetCursor = widget.MouseCursor is WidgetStateMouseCursor stateCursor
+                ? stateCursor.Resolve(effectiveStates)
+                : widget.MouseCursor;
+            return widgetCursor
+                   ?? theme.MouseCursor?.Resolve(effectiveStates)
+                   ?? (effectiveStates.HasFlag(MaterialState.Disabled)
+                       ? SystemMouseCursors.Basic
+                       : SystemMouseCursors.Click);
+        });
+    }
 
     private static Color ApplyOpacity(Color color, double opacity) => Color.FromArgb(
         (byte)Math.Round(color.A * Math.Clamp(opacity, 0, 1)), color.R, color.G, color.B);
@@ -260,8 +270,7 @@ internal sealed class CheckedPopupMenuItemState<T> : PopupMenuItemState<T>
     {
         _opacity = CheckedWidget.Checked ? 1 : 0;
         _controller = new AnimationController(FadeDuration, this);
-        _controller.Forward(from: _opacity);
-        _controller.Stop();
+        _controller.SetValue(_opacity);
         _controller.Changed += HandleAnimationChanged;
     }
 
@@ -295,24 +304,27 @@ internal sealed class CheckedPopupMenuItemState<T> : PopupMenuItemState<T>
 
     protected override Widget? BuildChild()
     {
-        var theme = Theme.Of(Context);
-        var popupTheme = PopupMenuTheme.Of(Context);
-        var states = CheckedWidget.Checked ? MaterialState.Selected : MaterialState.None;
-        var effectiveLabelTextStyle = CheckedWidget.LabelTextStyle?.Resolve(states)
-                                      ?? popupTheme.LabelTextStyle?.Resolve(states)
-                                      ?? (theme.UseMaterial3
-                                          ? theme.TextTheme.LabelLarge.CopyWith(color: theme.OnSurfaceColor)
-                                          : theme.TextTheme.TitleMedium);
+        ThemeData theme = Theme.Of(Context);
+        PopupMenuThemeData popupTheme = PopupMenuTheme.Of(Context);
+        MaterialState states = CheckedWidget.Checked ? MaterialState.Selected : MaterialState.None;
+        TextStyle effectiveLabelTextStyle = CheckedWidget.LabelTextStyle?.Resolve(states)
+                                            ?? popupTheme.LabelTextStyle?.Resolve(states)
+                                            ?? (theme.UseMaterial3
+                                                ? theme.TextTheme.LabelLarge.CopyWith(color: theme.OnSurfaceColor)
+                                                : theme.TextTheme.TitleMedium);
         Widget leading = new Opacity(
             _opacity,
             new Icon(_opacity <= 0 ? null : Icons.Done));
-        return new ListTile(
-            enabled: CheckedWidget.Enabled,
-            title: CheckedWidget.Child,
-            leading: leading,
-            titleTextStyle: effectiveLabelTextStyle,
-            textColor: effectiveLabelTextStyle.Color,
-            contentPadding: new Thickness(0));
+        return new IgnorePointer(
+            child: ListTileTheme.Merge(
+                contentPadding: EdgeInsetsGeometry.Zero,
+                child: new ListTile(
+                    enabled: CheckedWidget.Enabled,
+                    title: CheckedWidget.Child,
+                    leading: leading,
+                    titleTextStyle: effectiveLabelTextStyle,
+                    textColor: effectiveLabelTextStyle.Color,
+                    contentPadding: EdgeInsetsGeometry.Zero)));
     }
 
     private void HandleAnimationChanged()
@@ -334,8 +346,8 @@ public sealed class PopupMenuButton<T> : StatefulWidget
         double? elevation = null,
         Color? shadowColor = null,
         Color? surfaceTintColor = null,
-        Thickness? padding = null,
-        Thickness? menuPadding = null,
+        EdgeInsetsGeometry? padding = null,
+        EdgeInsetsGeometry? menuPadding = null,
         Widget? child = null,
         BorderRadius? borderRadius = null,
         double? splashRadius = null,
@@ -357,13 +369,10 @@ public sealed class PopupMenuButton<T> : StatefulWidget
         bool? requestFocus = null,
         Key? key = null) : base(key)
     {
-        if (child is not null && icon is not null) throw new ArgumentException("Only one of child and icon may be provided.");
-        if (elevation.HasValue && (!double.IsFinite(elevation.Value) || elevation.Value < 0))
-            throw new ArgumentOutOfRangeException(nameof(elevation));
-        if (splashRadius.HasValue && (!double.IsFinite(splashRadius.Value) || splashRadius.Value <= 0))
-            throw new ArgumentOutOfRangeException(nameof(splashRadius));
-        if (iconSize.HasValue && (!double.IsFinite(iconSize.Value) || iconSize.Value < 0))
-            throw new ArgumentOutOfRangeException(nameof(iconSize));
+        if (child is not null && icon is not null)
+        {
+            throw new ArgumentException("Only one of child and icon may be provided.");
+        }
         ItemBuilder = itemBuilder ?? throw new ArgumentNullException(nameof(itemBuilder));
         InitialValue = initialValue;
         OnOpened = onOpened;
@@ -373,7 +382,7 @@ public sealed class PopupMenuButton<T> : StatefulWidget
         Elevation = elevation;
         ShadowColor = shadowColor;
         SurfaceTintColor = surfaceTintColor;
-        Padding = padding ?? new Thickness(8);
+        Padding = padding ?? EdgeInsetsGeometry.All(8);
         MenuPadding = menuPadding;
         Child = child;
         BorderRadius = borderRadius;
@@ -405,8 +414,8 @@ public sealed class PopupMenuButton<T> : StatefulWidget
     public double? Elevation { get; }
     public Color? ShadowColor { get; }
     public Color? SurfaceTintColor { get; }
-    public Thickness Padding { get; }
-    public Thickness? MenuPadding { get; }
+    public EdgeInsetsGeometry Padding { get; }
+    public EdgeInsetsGeometry? MenuPadding { get; }
     public Widget? Child { get; }
     public BorderRadius? BorderRadius { get; }
     public double? SplashRadius { get; }
@@ -435,56 +444,75 @@ public sealed class PopupMenuButtonState<T> : State
     private bool _isMenuExpanded;
     private RelativeRect? _lastPosition;
     private PopupMenuThemeData _popupMenuTheme = new();
+    private RenderBox? _navigatorBox;
 
     private PopupMenuButton<T> CurrentWidget => (PopupMenuButton<T>)StateWidget;
 
     public override Widget Build(BuildContext context)
     {
-        var widget = CurrentWidget;
+        PopupMenuButton<T> widget = CurrentWidget;
         _popupMenuTheme = PopupMenuTheme.Of(context);
-        var localizations = MaterialLocalizations.Of(context);
+        MaterialLocalizations localizations = MaterialLocalizations.Of(context);
         string tooltip = widget.Tooltip ?? localizations.ShowMenuTooltip;
         bool feedback = widget.EnableFeedback ?? _popupMenuTheme.EnableFeedback ?? true;
         Widget button;
         if (widget.Child is not null)
         {
-            button = new InkWell(
-                onTap: widget.Enabled ? ShowButtonMenu : null,
-                borderRadius: widget.BorderRadius,
-                enableFeedback: feedback,
-                child: widget.Child);
+            bool canRequestFocus = widget.Enabled
+                                   || MediaQuery.Of(context).NavigationMode == NavigationMode.Directional;
+            button = new Tooltip(
+                message: tooltip,
+                child: new InkWell(
+                    onTap: widget.Enabled ? ShowButtonMenu : null,
+                    borderRadius: widget.BorderRadius,
+                    radius: widget.SplashRadius,
+                    canRequestFocus: canRequestFocus,
+                    enableFeedback: feedback,
+                    child: widget.Child));
+            if (widget.Style?.TapTargetSize == MaterialTapTargetSize.Padded)
+            {
+                button = new ConstrainedBox(
+                    new BoxConstraints(MinWidth: 48, MinHeight: 48),
+                    button);
+            }
+            button = new Semantics(expanded: _isMenuExpanded, child: button);
         }
         else
         {
-            var iconTheme = IconTheme.Of(context);
-            var icon = widget.Icon ?? new Icon(
-                Theme.Of(context).Platform is TargetPlatform.IOS or TargetPlatform.MacOS
+            IconThemeData iconTheme = IconTheme.Of(context);
+            Widget icon = widget.Icon ?? new Icon(
+                PlatformDefaults.TargetPlatform is TargetPlatform.IOS or TargetPlatform.MacOS
                     ? Icons.MoreHoriz
                     : Icons.MoreVert);
             button = new IconButton(
-                icon: icon,
+                icon: new Semantics(expanded: _isMenuExpanded, child: icon),
                 onPressed: widget.Enabled ? ShowButtonMenu : null,
                 padding: widget.Padding,
                 iconSize: widget.IconSize ?? _popupMenuTheme.IconSize ?? iconTheme.Size,
                 color: widget.IconColor ?? _popupMenuTheme.IconColor ?? iconTheme.Color,
                 splashRadius: widget.SplashRadius,
                 enableFeedback: feedback,
+                tooltip: tooltip,
                 style: widget.Style);
         }
 
-        button = new Tooltip(message: tooltip, child: button);
-        return new Semantics(expanded: _isMenuExpanded, child: button);
+        return button;
     }
 
     public void ShowButtonMenu()
     {
-        var widget = CurrentWidget;
-        if (!widget.Enabled) return;
-        var items = widget.ItemBuilder(Context);
+        PopupMenuButton<T> widget = CurrentWidget;
+        IReadOnlyList<PopupMenuEntry> items = widget.ItemBuilder(Context);
         if (items.Count == 0) return;
+        NavigatorState navigator = Navigator.Of(Context, rootNavigator: widget.UseRootNavigator);
+        _navigatorBox = navigator.Context.FindRenderObject() as RenderBox;
+        _popupMenuTheme = PopupMenuTheme.Of(Context);
         widget.OnOpened?.Invoke();
-        _lastPosition = ResolvePosition(BoxConstraints.Tight(MediaQuery.Of(Context).Size));
-        var task = PopupMenus.ShowMenu(
+        Size overlaySize = _navigatorBox?.HasSize == true
+            ? _navigatorBox.Size
+            : MediaQuery.Of(Context).Size;
+        _lastPosition = ResolvePosition(BoxConstraints.Tight(overlaySize));
+        Task<T?> task = PopupMenus.ShowMenu(
             context: Context,
             items: items,
             initialValue: widget.InitialValue,
@@ -521,31 +549,36 @@ public sealed class PopupMenuButtonState<T> : State
             return _lastPosition ?? RelativeRect.FromSize(new Rect(), constraints.Biggest);
         }
 
-        var bounds = ResolveGlobalBounds(button);
-        var position = CurrentWidget.Position ?? _popupMenuTheme.Position ?? PopupMenuPosition.Over;
-        var offset = CurrentWidget.Offset;
+        Rect bounds;
+        try
+        {
+            bounds = ResolveBounds(button, _navigatorBox);
+        }
+        catch (InvalidOperationException)
+        {
+            return _lastPosition ?? RelativeRect.FromSize(new Rect(), constraints.Biggest);
+        }
+
+        PopupMenuPosition position = CurrentWidget.Position
+                                     ?? _popupMenuTheme.Position
+                                     ?? PopupMenuPosition.Over;
+        Vector offset = CurrentWidget.Offset;
         double yOffset = position == PopupMenuPosition.Under ? button.Size.Height : 0;
-        var shifted = bounds.Translate(new Vector(offset.X, offset.Y + yOffset));
-        var resolved = RelativeRect.FromSize(shifted, constraints.Biggest);
+        if (position == PopupMenuPosition.Under && CurrentWidget.Child is null)
+        {
+            Thickness padding = CurrentWidget.Padding.Resolve(Directionality.Of(Context));
+            yOffset -= (padding.Top + padding.Bottom) / 2.0;
+        }
+        Rect shifted = bounds.Translate(new Vector(offset.X, offset.Y + yOffset));
+        RelativeRect resolved = RelativeRect.FromSize(shifted, constraints.Biggest);
         _lastPosition = resolved;
         return resolved;
     }
 
-    private static Rect ResolveGlobalBounds(RenderBox renderBox)
+    private static Rect ResolveBounds(RenderBox renderBox, RenderBox? ancestor)
     {
-        var transform = Matrix.Identity;
-        RenderObject? child = renderBox;
-        while (child?.Parent is not null)
-        {
-            var parent = child.Parent;
-            var childOffset = child.parentData is BoxParentData data ? data.offset : default;
-            var childTransform = Matrix.CreateTranslation(childOffset.X, childOffset.Y);
-            if (parent is RenderTransform renderTransform) childTransform *= renderTransform.Transform;
-            transform = childTransform * transform;
-            child = parent;
-        }
-
-        var points = new[]
+        Matrix transform = renderBox.GetTransformTo(ancestor);
+        Point[] points =
         {
             transform.Transform(new Point(0, 0)),
             transform.Transform(new Point(renderBox.Size.Width, 0)),
@@ -573,7 +606,7 @@ public static class PopupMenus
         Color? surfaceTintColor = null,
         string? semanticLabel = null,
         ShapeBorder? shape = null,
-        Thickness? menuPadding = null,
+        EdgeInsetsGeometry? menuPadding = null,
         Color? color = null,
         bool useRootNavigator = false,
         BoxConstraints? constraints = null,
@@ -614,7 +647,7 @@ public static class PopupMenus
         Color? surfaceTintColor = null,
         string? semanticLabel = null,
         ShapeBorder? shape = null,
-        Thickness? menuPadding = null,
+        EdgeInsetsGeometry? menuPadding = null,
         Color? color = null,
         bool useRootNavigator = false,
         BoxConstraints? constraints = null,
@@ -626,11 +659,16 @@ public static class PopupMenus
         if (items is null || items.Count == 0) throw new ArgumentException("Popup menu items must not be empty.", nameof(items));
         if (position.HasValue == (positionBuilder is not null))
             throw new ArgumentException("Exactly one of position and positionBuilder must be provided.");
-        var theme = Theme.Of(context);
-        if (semanticLabel is null && theme.Platform is not (TargetPlatform.IOS or TargetPlatform.MacOS))
+        if (semanticLabel is null
+            && PlatformDefaults.TargetPlatform is not (TargetPlatform.IOS or TargetPlatform.MacOS))
+        {
             semanticLabel = MaterialLocalizations.Of(context).PopupMenuLabel;
+        }
+        NavigatorState navigator = Navigator.Of(context, rootNavigator: useRootNavigator);
+        CapturedThemes capturedThemes = InheritedTheme.Capture(context, navigator.Context);
         var route = new PopupMenuRoute<T>(
             context,
+            capturedThemes,
             items,
             position,
             positionBuilder,
@@ -647,7 +685,7 @@ public static class PopupMenus
             routeSettings,
             popUpAnimationStyle,
             requestFocus);
-        Navigator.Of(context, rootNavigator: useRootNavigator).Push(route);
+        navigator.Push(route);
         return route.Completed;
     }
 }
@@ -655,21 +693,16 @@ public static class PopupMenus
 internal sealed class PopupMenuRoute<T> : PageRoute
 {
     private readonly IReadOnlyList<PopupMenuEntry> _items;
+    private readonly CapturedThemes _capturedThemes;
     private readonly RelativeRect? _position;
     private readonly PopupMenuPositionBuilder? _positionBuilder;
     private readonly T? _initialValue;
-    private readonly ThemeData _theme;
-    private readonly PopupMenuThemeData _popupTheme;
-    private readonly MediaQueryData _mediaQuery;
-    private readonly TextDirection _direction;
-    private readonly AnimationController _animation;
     private readonly TaskCompletionSource<T?> _completed = new(TaskCreationOptions.RunContinuationsAsynchronously);
-    private object? _pendingResult;
-    private bool _isExiting;
     private int _focusIndex;
 
     public PopupMenuRoute(
         BuildContext context,
+        CapturedThemes capturedThemes,
         IReadOnlyList<PopupMenuEntry> items,
         RelativeRect? position,
         PopupMenuPositionBuilder? positionBuilder,
@@ -679,7 +712,7 @@ internal sealed class PopupMenuRoute<T> : PageRoute
         Color? surfaceTintColor,
         string? semanticLabel,
         ShapeBorder? shape,
-        Thickness? menuPadding,
+        EdgeInsetsGeometry? menuPadding,
         Color? color,
         BoxConstraints? constraints,
         Clip clipBehavior,
@@ -687,6 +720,7 @@ internal sealed class PopupMenuRoute<T> : PageRoute
         AnimationStyle? animationStyle,
         bool? requestFocus) : base(settings)
     {
+        _capturedThemes = capturedThemes ?? throw new ArgumentNullException(nameof(capturedThemes));
         _items = items;
         _position = position;
         _positionBuilder = positionBuilder;
@@ -701,27 +735,24 @@ internal sealed class PopupMenuRoute<T> : PageRoute
         Constraints = constraints;
         ClipBehavior = clipBehavior;
         RequestFocus = requestFocus;
-        _theme = Theme.Of(context);
-        _popupTheme = PopupMenuTheme.Of(context);
-        _mediaQuery = MediaQuery.Of(context);
-        _direction = Directionality.Of(context);
         BarrierLabel = MaterialLocalizations.Of(context).MenuDismissLabel;
         AnimationStyle = animationStyle;
-        var duration = animationStyle?.Duration ?? TimeSpan.FromMilliseconds(300);
-        if (duration < TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(animationStyle));
-        _animation = new AnimationController(duration) { Curve = animationStyle?.Curve ?? Curves.Linear };
-        _animation.Changed += HandleAnimationChanged;
-        _animation.Dismissed += HandleDismissed;
         _focusIndex = ResolveInitialIndex();
     }
 
     public override bool Opaque => false;
+    public override TimeSpan TransitionDuration =>
+        AnimationStyle?.Duration ?? TimeSpan.FromMilliseconds(300);
+    public override TimeSpan ReverseTransitionDuration =>
+        AnimationStyle?.ReverseDuration
+        ?? AnimationStyle?.Duration
+        ?? TimeSpan.FromMilliseconds(300);
     public double? Elevation { get; }
     public Color? ShadowColor { get; }
     public Color? SurfaceTintColor { get; }
     public string? SemanticLabel { get; }
     public ShapeBorder? Shape { get; }
-    public Thickness? MenuPadding { get; }
+    public EdgeInsetsGeometry? MenuPadding { get; }
     public Color? Color { get; }
     public BoxConstraints? Constraints { get; }
     public Clip ClipBehavior { get; }
@@ -729,20 +760,6 @@ internal sealed class PopupMenuRoute<T> : PageRoute
     public string BarrierLabel { get; }
     public AnimationStyle? AnimationStyle { get; }
     public Task<T?> Completed => _completed.Task;
-
-    protected override void OnAttach() => _animation.Forward(from: 0);
-
-    public override bool WillPop(object? result)
-    {
-        if (_isExiting || _animation.Value <= 0) return base.WillPop(result);
-        _pendingResult = result;
-        _isExiting = true;
-        var reverseDuration = AnimationStyle?.ReverseDuration ?? AnimationStyle?.Duration ?? TimeSpan.FromMilliseconds(300);
-        _animation.Duration = reverseDuration;
-        _animation.Curve = AnimationStyle?.ReverseCurve ?? DefaultReverseCurve;
-        _animation.Reverse();
-        return false;
-    }
 
     public override void DidComplete(object? result)
     {
@@ -753,17 +770,22 @@ internal sealed class PopupMenuRoute<T> : PageRoute
 
     public override Widget BuildPage(BuildContext context)
     {
-        var constraints = BoxConstraints.Tight(_mediaQuery.Size);
-        var position = _positionBuilder?.Invoke(context, constraints)
-                       ?? _position
-                       ?? RelativeRect.FromSize(new Rect(), _mediaQuery.Size);
-        Widget menu = new PopupMenuPanel<T>(this, _items, _initialValue, _focusIndex);
-        menu = new PopupMenuTheme(_popupTheme, menu);
-        menu = new Theme(_theme, menu);
-        menu = new PopupMenuPositionLayout(position, _mediaQuery.Padding, menu);
-        var barrier = new Semantics(
+        MediaQueryData mediaQuery = MediaQuery.Of(context);
+        BoxConstraints constraints = BoxConstraints.Tight(mediaQuery.Size);
+        RelativeRect position = _positionBuilder?.Invoke(context, constraints)
+                                ?? _position
+                                ?? RelativeRect.FromSize(new Rect(), mediaQuery.Size);
+        Widget menu = new PopupMenuPanel<T>(this, _items, _initialValue);
+        menu = _capturedThemes.Wrap(menu);
+        menu = new PopupMenuPositionLayout(
+            position,
+            mediaQuery.Padding,
+            mediaQuery.DisplayFeatures,
+            menu);
+        Widget barrier = new Semantics(
             label: BarrierLabel,
             onTap: () => Navigator?.MaybePop(),
+            onDismiss: () => Navigator?.MaybePop(),
             child: new GestureDetector(
                 behavior: HitTestBehavior.Opaque,
                 onTap: () => Navigator?.MaybePop(),
@@ -780,21 +802,26 @@ internal sealed class PopupMenuRoute<T> : PageRoute
             onKeyEvent: HandleKeyEvent,
             child: page);
         page = MediaQuery.RemovePadding(context, page, true, true, true, true);
-        page = new MediaQuery(_mediaQuery, page);
-        page = new Directionality(_direction, page);
         return page;
     }
 
     public override void Dispose()
     {
-        _animation.Changed -= HandleAnimationChanged;
-        _animation.Dismissed -= HandleDismissed;
-        _animation.Dispose();
         if (!_completed.Task.IsCompleted) _completed.TrySetResult(default);
         base.Dispose();
     }
 
-    internal double Progress => Math.Clamp(_animation.Evaluate(), 0, 1);
+    internal double Progress
+    {
+        get
+        {
+            double value = Math.Clamp(Animation.Value, 0, 1);
+            Curve curve = Animation.Status == AnimationStatus.Reverse
+                ? AnimationStyle?.ReverseCurve ?? DefaultReverseCurve
+                : AnimationStyle?.Curve ?? Curves.Linear;
+            return Math.Clamp(curve(value), 0, 1);
+        }
+    }
 
     private int ResolveInitialIndex()
     {
@@ -858,9 +885,6 @@ internal sealed class PopupMenuRoute<T> : PageRoute
         }
     }
 
-    private void HandleAnimationChanged() => NotifyRouteChanged();
-    private void HandleDismissed() { if (_isExiting) Navigator?.MaybePop(_pendingResult); }
-
     private static double DefaultReverseCurve(double value) => Math.Clamp(value / (2.0 / 3.0), 0, 1);
 }
 
@@ -869,43 +893,60 @@ internal sealed class PopupMenuPanel<T> : StatelessWidget
     private readonly PopupMenuRoute<T> _route;
     private readonly IReadOnlyList<PopupMenuEntry> _items;
     private readonly T? _initialValue;
-    private readonly int _focusIndex;
 
-    public PopupMenuPanel(PopupMenuRoute<T> route, IReadOnlyList<PopupMenuEntry> items, T? initialValue, int focusIndex)
+    public PopupMenuPanel(
+        PopupMenuRoute<T> route,
+        IReadOnlyList<PopupMenuEntry> items,
+        T? initialValue)
     {
         _route = route;
         _items = items;
         _initialValue = initialValue;
-        _focusIndex = focusIndex;
     }
 
     public override Widget Build(BuildContext context)
     {
-        var theme = Theme.Of(context);
-        var popupTheme = PopupMenuTheme.Of(context);
+        ThemeData theme = Theme.Of(context);
+        PopupMenuThemeData popupTheme = PopupMenuTheme.Of(context);
         bool useM3 = theme.UseMaterial3;
         double elevation = _route.Elevation ?? popupTheme.Elevation ?? (useM3 ? 3 : 8);
-        var color = _route.Color ?? popupTheme.Color ?? (useM3 ? theme.SurfaceContainerColor : theme.CardColor);
-        var surfaceTint = _route.SurfaceTintColor ?? popupTheme.SurfaceTintColor ?? Colors.Transparent;
-        if (useM3 && surfaceTint.A > 0) color = NavigationSurfaceUtilities.ApplySurfaceTint(color, surfaceTint, elevation);
-        var shadow = _route.ShadowColor ?? popupTheme.ShadowColor ?? theme.ShadowColor;
-        var shape = _route.Shape ?? popupTheme.Shape ?? ShapeBorder.RoundedRectangle(useM3 ? 4 : 2);
+        Color? color = _route.Color
+                       ?? popupTheme.Color
+                       ?? (useM3 ? theme.SurfaceContainerColor : null);
+        Color? surfaceTint = _route.SurfaceTintColor
+                             ?? popupTheme.SurfaceTintColor
+                             ?? (useM3 ? Colors.Transparent : null);
+        Color? shadow = _route.ShadowColor
+                        ?? popupTheme.ShadowColor
+                        ?? (useM3 ? theme.ColorScheme.Shadow : null);
+        ShapeBorder? shape = _route.Shape
+                             ?? popupTheme.Shape
+                             ?? (useM3 ? ShapeBorder.RoundedRectangle(4) : null);
         var children = new List<Widget>(_items.Count);
+        bool selectedItemWrapped = false;
         double unit = 1.0 / (_items.Count + 1.5);
         for (int i = 0; i < _items.Count; i++)
         {
             Widget item = _items[i];
-            if (i == _focusIndex || (_initialValue is not null && _items[i].Represents(_initialValue)))
+            if (_initialValue is not null && _items[i].Represents(_initialValue))
             {
-                item = new ColoredBox(ApplyOpacity(theme.OnSurfaceColor, 0.12), item);
+                item = new ColoredBox(theme.HighlightColor, item);
+                if (!selectedItemWrapped)
+                {
+                    item = new PopupMenuEnsureVisible(item);
+                    selectedItemWrapped = true;
+                }
             }
             double start = (i + 1) * unit;
             double end = Math.Min(1, start + (1.5 * unit));
             children.Add(new Opacity(Interval(_route.Progress, start, end), item));
         }
 
+        EdgeInsetsGeometry menuPaddingGeometry = _route.MenuPadding
+                                                 ?? popupTheme.MenuPadding
+                                                 ?? EdgeInsetsGeometry.Symmetric(vertical: 8);
         Widget content = new SingleChildScrollView(
-            padding: _route.MenuPadding ?? popupTheme.MenuPadding ?? new Thickness(0, 8),
+            padding: menuPaddingGeometry.Resolve(Directionality.Of(context)),
             child: new ListBody(children: children));
         content = new Semantics(
             role: SemanticsRole.Menu,
@@ -918,15 +959,7 @@ internal sealed class PopupMenuPanel<T> : StatelessWidget
         content = new ConstrainedBox(
             _route.Constraints ?? new BoxConstraints(MinWidth: 112, MaxWidth: 280),
             content);
-        content = new DecoratedBox(
-            new BoxDecoration(
-                Color: color,
-                Border: shape.Side,
-                BorderRadius: shape.BorderRadius,
-                BoxShadows: BuildBoxShadows(shadow, elevation)),
-            content);
-        if (_route.ClipBehavior != Clip.None) content = new ClipRRect(shape.BorderRadius, content);
-        var alignment = Directionality.Of(context) == TextDirection.Rtl
+        Alignment alignment = Directionality.Of(context) == TextDirection.Rtl
             ? Alignment.TopLeft
             : Alignment.TopRight;
         content = new Align(
@@ -934,22 +967,17 @@ internal sealed class PopupMenuPanel<T> : StatelessWidget
             widthFactor: Interval(_route.Progress, 0, unit),
             heightFactor: Interval(_route.Progress, 0, unit * _items.Count),
             child: content);
+        content = new Material(
+            type: MaterialType.Card,
+            elevation: elevation,
+            color: color,
+            shadowColor: shadow,
+            surfaceTintColor: surfaceTint,
+            shape: shape,
+            clipBehavior: _route.ClipBehavior,
+            child: content);
         return new Opacity(Interval(_route.Progress, 0, 1.0 / 3.0), content);
     }
-
-    private static BoxShadows? BuildBoxShadows(Color color, double elevation)
-    {
-        if (color.A == 0 || elevation <= 0) return null;
-        return new BoxShadows(new BoxShadow
-        {
-            OffsetY = Math.Max(1, elevation * 0.5),
-            Blur = Math.Max(2, elevation * 2.4),
-            Color = ApplyOpacity(color, 0.20),
-        });
-    }
-
-    private static Color ApplyOpacity(Color color, double opacity) => Color.FromArgb(
-        (byte)Math.Round(color.A * Math.Clamp(opacity, 0, 1)), color.R, color.G, color.B);
 
     private static double Interval(double value, double start, double end)
     {
@@ -958,26 +986,74 @@ internal sealed class PopupMenuPanel<T> : StatelessWidget
     }
 }
 
+internal sealed class PopupMenuEnsureVisible : StatefulWidget
+{
+    public PopupMenuEnsureVisible(Widget child, Key? key = null) : base(key)
+    {
+        Child = child ?? throw new ArgumentNullException(nameof(child));
+    }
+
+    public Widget Child { get; }
+
+    public override State CreateState() => new PopupMenuEnsureVisibleState();
+
+    private sealed class PopupMenuEnsureVisibleState : State
+    {
+        private int _attempts;
+
+        private PopupMenuEnsureVisible CurrentWidget => (PopupMenuEnsureVisible)StateWidget;
+
+        public override void InitState()
+        {
+            Scheduler.AddPostFrameCallback(EnsureVisible);
+        }
+
+        public override Widget Build(BuildContext context) => CurrentWidget.Child;
+
+        private void EnsureVisible(TimeSpan timestamp)
+        {
+            _attempts++;
+            if (!Mounted || Scrollable.EnsureVisible(Context) || _attempts >= 3)
+            {
+                return;
+            }
+
+            Scheduler.AddPostFrameCallback(EnsureVisible);
+        }
+    }
+}
+
 internal sealed class PopupMenuPositionLayout : SingleChildRenderObjectWidget
 {
-    public PopupMenuPositionLayout(RelativeRect position, Thickness safePadding, Widget child)
+    public PopupMenuPositionLayout(
+        RelativeRect position,
+        Thickness safePadding,
+        IReadOnlyList<DisplayFeature>? displayFeatures,
+        Widget child)
         : base(child)
     {
         Position = position;
         SafePadding = safePadding;
+        DisplayFeatures = displayFeatures ?? [];
     }
 
     public RelativeRect Position { get; }
     public Thickness SafePadding { get; }
+    public IReadOnlyList<DisplayFeature> DisplayFeatures { get; }
 
     internal override RenderObject CreateRenderObject(BuildContext context) =>
-        new RenderPopupMenuPositionLayout(Position, SafePadding, Directionality.Of(context));
+        new RenderPopupMenuPositionLayout(
+            Position,
+            SafePadding,
+            DisplayFeatures,
+            Directionality.Of(context));
 
     internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var layout = (RenderPopupMenuPositionLayout)renderObject;
         layout.Position = Position;
         layout.SafePadding = SafePadding;
+        layout.DisplayFeatures = DisplayFeatures;
         layout.TextDirection = Directionality.Of(context);
     }
 }
@@ -986,17 +1062,33 @@ internal sealed class RenderPopupMenuPositionLayout : RenderProxyBox
 {
     private RelativeRect _position;
     private Thickness _safePadding;
+    private IReadOnlyList<DisplayFeature> _displayFeatures;
     private TextDirection _textDirection;
 
-    public RenderPopupMenuPositionLayout(RelativeRect position, Thickness safePadding, TextDirection textDirection)
+    public RenderPopupMenuPositionLayout(
+        RelativeRect position,
+        Thickness safePadding,
+        IReadOnlyList<DisplayFeature> displayFeatures,
+        TextDirection textDirection)
     {
         _position = position;
         _safePadding = safePadding;
+        _displayFeatures = displayFeatures;
         _textDirection = textDirection;
     }
 
     public RelativeRect Position { get => _position; set { if (_position != value) { _position = value; MarkNeedsLayout(); } } }
     public Thickness SafePadding { get => _safePadding; set { if (_safePadding != value) { _safePadding = value; MarkNeedsLayout(); } } }
+    public IReadOnlyList<DisplayFeature> DisplayFeatures
+    {
+        get => _displayFeatures;
+        set
+        {
+            if (_displayFeatures.SequenceEqual(value)) return;
+            _displayFeatures = value;
+            MarkNeedsLayout();
+        }
+    }
     public TextDirection TextDirection { get => _textDirection; set { if (_textDirection != value) { _textDirection = value; MarkNeedsLayout(); } } }
 
     protected override void PerformLayout()
@@ -1008,6 +1100,7 @@ internal sealed class RenderPopupMenuPositionLayout : RenderProxyBox
         Child.Layout(new BoxConstraints(
             MaxWidth: Math.Max(0, Size.Width - horizontalInset),
             MaxHeight: Math.Max(0, Size.Height - verticalInset)), parentUsesSize: true);
+        Rect availableRegion = ResolveAvailableRegion();
         double x = Position.Left > Position.Right
             ? Size.Width - Position.Right - Child.Size.Width
             : Position.Left < Position.Right
@@ -1016,8 +1109,52 @@ internal sealed class RenderPopupMenuPositionLayout : RenderProxyBox
                     ? Size.Width - Position.Right - Child.Size.Width
                     : Position.Left;
         double y = Position.Top;
-        x = Math.Clamp(x, 8 + SafePadding.Left, Math.Max(8 + SafePadding.Left, Size.Width - Child.Size.Width - 8 - SafePadding.Right));
-        y = Math.Clamp(y, 8 + SafePadding.Top, Math.Max(8 + SafePadding.Top, Size.Height - Child.Size.Height - 8 - SafePadding.Bottom));
+        double leftLimit = availableRegion.Left + 8 + SafePadding.Left;
+        double rightLimit = availableRegion.Right - 8 - SafePadding.Right;
+        double topLimit = availableRegion.Top + 8 + SafePadding.Top;
+        double bottomLimit = availableRegion.Bottom - 8 - SafePadding.Bottom;
+        x = Math.Clamp(x, leftLimit, Math.Max(leftLimit, rightLimit - Child.Size.Width));
+        y = Math.Clamp(y, topLimit, Math.Max(topLimit, bottomLimit - Child.Size.Height));
         ((BoxParentData)Child.parentData!).offset = new Point(x, y);
+    }
+
+    private Rect ResolveAvailableRegion()
+    {
+        var regions = new List<Rect> { new(Size) };
+        foreach (DisplayFeature feature in DisplayFeatures)
+        {
+            var next = new List<Rect>();
+            foreach (Rect region in regions)
+            {
+                Rect bounds = feature.Bounds.Intersect(region);
+                if (bounds.Width <= 0 || bounds.Height <= 0)
+                {
+                    next.Add(region);
+                }
+                else if (bounds.Height >= region.Height && bounds.Width < region.Width)
+                {
+                    next.Add(new Rect(region.Left, region.Top, bounds.Left - region.Left, region.Height));
+                    next.Add(new Rect(bounds.Right, region.Top, region.Right - bounds.Right, region.Height));
+                }
+                else if (bounds.Width >= region.Width && bounds.Height < region.Height)
+                {
+                    next.Add(new Rect(region.Left, region.Top, region.Width, bounds.Top - region.Top));
+                    next.Add(new Rect(region.Left, bounds.Bottom, region.Width, region.Bottom - bounds.Bottom));
+                }
+                else
+                {
+                    next.Add(region);
+                }
+            }
+            regions = next.Where(region => region.Width > 0 && region.Height > 0).ToList();
+        }
+
+        Rect anchor = Position.ToRect(new Rect(Size));
+        return regions.MinBy(region =>
+        {
+            double dx = region.Center.X - anchor.Center.X;
+            double dy = region.Center.Y - anchor.Center.Y;
+            return (dx * dx) + (dy * dy);
+        });
     }
 }

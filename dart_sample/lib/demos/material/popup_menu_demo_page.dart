@@ -11,6 +11,7 @@ class _PopupMenuDemoPageState extends State<PopupMenuDemoPage> {
   bool _enabled = true;
   bool _under = false;
   bool _useTheme = false;
+  bool _useMaterial3 = true;
   bool _keepFavorite = true;
   String _selected = 'copy';
   String _status = 'idle';
@@ -23,7 +24,7 @@ class _PopupMenuDemoPageState extends State<PopupMenuDemoPage> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
-            menuPadding: const EdgeInsets.all(4),
+            menuPadding: const EdgeInsetsDirectional.fromSTEB(12, 4, 4, 4),
             iconColor: Colors.orange.shade900,
             labelTextStyle: WidgetStateProperty.resolveWith<TextStyle?>((
               Set<WidgetState> states,
@@ -36,9 +37,12 @@ class _PopupMenuDemoPageState extends State<PopupMenuDemoPage> {
             }),
           )
         : const PopupMenuThemeData();
-    return PopupMenuTheme(
-      data: popupTheme,
-      child: Builder(builder: _buildContent),
+    return Theme(
+      data: Theme.of(context).copyWith(useMaterial3: _useMaterial3),
+      child: PopupMenuTheme(
+        data: popupTheme,
+        child: Builder(builder: _buildContent),
+      ),
     );
   }
 
@@ -70,6 +74,10 @@ class _PopupMenuDemoPageState extends State<PopupMenuDemoPage> {
             TextButton(
               onPressed: () => setState(() => _useTheme = !_useTheme),
               child: Text(_useTheme ? 'Theme on' : 'Theme off'),
+            ),
+            TextButton(
+              onPressed: () => setState(() => _useMaterial3 = !_useMaterial3),
+              child: Text(_useMaterial3 ? 'Material 3' : 'Material 2'),
             ),
           ],
         ),

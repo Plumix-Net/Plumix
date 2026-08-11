@@ -866,6 +866,25 @@ public sealed class MaterialListTileTests
         Assert.NotNull(FindParagraphByText(harness.RenderView, "Adaptive switch tile"));
     }
 
+    [Fact]
+    public void ListTile_WithLeading_RemainsSafeAtZeroArea()
+    {
+        using var harness = new WidgetRenderHarness(new Theme(
+            ThemeData.Light,
+            new MediaQuery(
+                new MediaQueryData(Size: new Size()),
+                new Plumix.Material.Material(
+                    child: new ListTile(
+                        leading: new Icon(Icons.Done),
+                        title: new Text("Zero"))))));
+
+        harness.Pump(new Size());
+
+        RenderListTile tile = Assert.IsType<RenderListTile>(
+            FindDescendant<RenderListTile>(harness.RenderView));
+        Assert.Equal(new Size(), tile.Size);
+    }
+
     private static Widget BuildThemedTile(Widget tile, ThemeData? theme = null)
     {
         return new Theme(

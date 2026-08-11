@@ -384,6 +384,29 @@ internal sealed class RenderListTile : RenderBox, ISlottedRenderObjectContainer
         {
             throw new InvalidOperationException("ListTile requires a bounded width.");
         }
+        if (tileWidth == 0.0)
+        {
+            BoxConstraints zeroConstraints = BoxConstraints.Tight(new Size());
+            getSize(Title, zeroConstraints);
+            positionChild?.Invoke(Title, default);
+            if (_leading is not null)
+            {
+                getSize(_leading, zeroConstraints);
+                positionChild?.Invoke(_leading, default);
+            }
+            if (_subtitle is not null)
+            {
+                getSize(_subtitle, zeroConstraints);
+                positionChild?.Invoke(_subtitle, default);
+            }
+            if (_trailing is not null)
+            {
+                getSize(_trailing, zeroConstraints);
+                positionChild?.Invoke(_trailing, default);
+            }
+
+            return new ListTileSizes(0.0, zeroConstraints, new Size());
+        }
         if (tileWidth != 0.0 && (tileWidth == leadingSize?.Width || tileWidth == trailingSize?.Width))
         {
             string slot = tileWidth == leadingSize?.Width ? "Leading" : "Trailing";

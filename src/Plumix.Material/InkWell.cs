@@ -811,12 +811,16 @@ public class InkResponse : StatefulWidget
             if (_hovered == value) return;
             SetState(() => _hovered = value);
             _statesController?.Update(MaterialState.Hovered, value);
-            if (value && Enabled)
+            if (value)
             {
                 ReleaseCursor();
-                var cursor = CurrentWidget.MouseCursor ?? (Enabled ? SystemMouseCursors.Click : SystemMouseCursors.Basic);
+                MaterialState states = _statesController?.Value ?? MaterialState.None;
+                MouseCursor? cursor = CurrentWidget.MouseCursor is WidgetStateMouseCursor stateCursor
+                    ? stateCursor.Resolve(states)
+                    : CurrentWidget.MouseCursor;
+                cursor ??= Enabled ? SystemMouseCursors.Click : SystemMouseCursors.Basic;
                 _cursorHandle = MouseCursorManager.PushCursor(cursor);
-                if (notify)
+                if (notify && Enabled)
                 {
                     _hoverCallbackActive = true;
                     CurrentWidget.OnHover?.Invoke(true);

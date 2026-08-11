@@ -773,6 +773,52 @@ public abstract class RenderObject : IRenderObject
         }
     }
 
+    public Matrix GetTransformTo(RenderObject? ancestor = null)
+    {
+        if (ancestor is not null)
+        {
+            RenderObject? node = this;
+            while (node is not null && !ReferenceEquals(node, ancestor))
+            {
+                node = node.Parent;
+            }
+
+            if (node is null)
+            {
+                throw new InvalidOperationException(
+                    "The requested render object is not an ancestor of this render object.");
+            }
+        }
+
+        if (!TryGetTransformFromRoot(out Matrix transformToRoot))
+        {
+            throw new InvalidOperationException("The render object is not attached to a render tree.");
+        }
+
+        if (ancestor is null)
+        {
+            return transformToRoot;
+        }
+
+        if (!ancestor.TryGetTransformFromRoot(out Matrix ancestorToRoot))
+        {
+            throw new InvalidOperationException("The ancestor render object is not attached to a render tree.");
+        }
+
+        if (!ancestorToRoot.TryInvert(out Matrix rootToAncestor))
+        {
+            throw new InvalidOperationException("The ancestor transform is not invertible.");
+        }
+
+        return rootToAncestor * transformToRoot;
+    }
+
+    public Point LocalToGlobal(Point point, RenderObject? ancestor = null)
+    {
+        Matrix transform = GetTransformTo(ancestor);
+        return transform.Transform(point);
+    }
+
     /// <summary>
     /// Paint this render object into the given context at the given offset.
     /// </summary>

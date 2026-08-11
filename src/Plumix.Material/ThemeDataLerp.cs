@@ -456,7 +456,7 @@ public sealed partial record PopupMenuThemeData
         {
             Color = MaterialThemeLerp.Color(a?.Color, b?.Color, t),
             Shape = MaterialThemeLerp.Shape(a?.Shape, b?.Shape, t),
-            MenuPadding = MaterialThemeLerp.Thickness(a?.MenuPadding, b?.MenuPadding, t),
+            MenuPadding = EdgeInsetsGeometry.Lerp(a?.MenuPadding, b?.MenuPadding, t),
             Elevation = MaterialThemeLerp.Double(a?.Elevation, b?.Elevation, t),
             ShadowColor = MaterialThemeLerp.Color(a?.ShadowColor, b?.ShadowColor, t),
             SurfaceTintColor = MaterialThemeLerp.Color(a?.SurfaceTintColor, b?.SurfaceTintColor, t),

@@ -20,6 +20,8 @@ public sealed class MaterialPopupMenuTests : IDisposable
         Scheduler.ResetForTests();
         FocusManager.Instance.ResetForTests();
         GestureBinding.Instance.ResetForTests();
+        MouseCursorManager.ResetForTests();
+        PlatformDefaults.DebugTargetPlatformOverride = TargetPlatform.Android;
     }
 
     public void Dispose()
@@ -27,6 +29,8 @@ public sealed class MaterialPopupMenuTests : IDisposable
         GestureBinding.Instance.ResetForTests();
         FocusManager.Instance.ResetForTests();
         Scheduler.ResetForTests();
+        MouseCursorManager.ResetForTests();
+        PlatformDefaults.DebugTargetPlatformOverride = null;
     }
 
     [Fact]
@@ -49,7 +53,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
 
         var button = new PopupMenuButton<string>(_ => [item]);
         Assert.True(button.Enabled);
-        Assert.Equal(new Thickness(8), button.Padding);
+        Assert.Equal(EdgeInsetsGeometry.All(8), button.Padding);
         Assert.Equal(Clip.None, button.ClipBehavior);
         Assert.False(button.UseRootNavigator);
 
@@ -57,12 +61,11 @@ public sealed class MaterialPopupMenuTests : IDisposable
             _ => [item],
             child: new Text("child"),
             icon: new Icon(Icons.MoreVert)));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new PopupMenuButton<string>(_ => [item], elevation: -1));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new PopupMenuItem<string>(new Text("bad"), height: -1));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new CheckedPopupMenuItem<string>(new Text("bad"), height: -1));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new PopupMenuDivider(height: -1));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new PopupMenuDivider(thickness: double.NaN));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new PopupMenuThemeData(Elevation: -1));
+        Assert.Equal(-1, new PopupMenuButton<string>(_ => [item], elevation: -1).Elevation);
+        Assert.Equal(-1, new PopupMenuItem<string>(new Text("bad"), height: -1).Height);
+        Assert.Equal(-1, new CheckedPopupMenuItem<string>(new Text("bad"), height: -1).Height);
+        Assert.Equal(-1, new PopupMenuDivider(height: -1).Height);
+        Assert.Equal(-1, new PopupMenuThemeData(Elevation: -1).Elevation);
         Assert.Throws<ArgumentException>(() =>
         {
             _ = PopupMenus.ShowMenu(
@@ -164,6 +167,9 @@ public sealed class MaterialPopupMenuTests : IDisposable
         Assert.Equal(
             ThemeData.Localize(ThemeData.Light, Typography.EnglishLike2021).TextTheme.LabelLarge.FontSize,
             FindParagraph(m3.RenderView, "M3 item")!.FontSize);
+        Assert.Equal(
+            ThemeData.Light.OnSurfaceColor,
+            Assert.IsType<SolidColorBrush>(FindParagraph(m3.RenderView, "M3 item")!.Foreground).Color);
         Assert.NotNull(FindSemantics(m3Semantics, node =>
             node.Flags.HasFlag(SemanticsFlags.IsButton)
             && node.Flags.HasFlag(SemanticsFlags.IsEnabled)));
@@ -176,6 +182,9 @@ public sealed class MaterialPopupMenuTests : IDisposable
         Assert.Equal(
             ThemeData.Localize(ThemeData.Light, Typography.EnglishLike2021).TextTheme.TitleMedium.FontSize,
             FindParagraph(m2.RenderView, "M2 disabled")!.FontSize);
+        Assert.Equal(
+            ThemeData.Light.DisabledColor,
+            Assert.IsType<SolidColorBrush>(FindParagraph(m2.RenderView, "M2 disabled")!.Foreground).Color);
         Assert.NotNull(FindSemantics(m2Semantics, node => node.Flags.HasFlag(SemanticsFlags.IsButton)));
         Assert.Null(FindSemantics(m2Semantics, node => node.Actions.HasFlag(SemanticsActions.Tap)));
     }
@@ -382,6 +391,432 @@ public sealed class MaterialPopupMenuTests : IDisposable
         Assert.Equal(1, canceled);
     }
 
+    [Fact]
+    public void PopupMenuThemeData_CopiesAndLerpsDirectionalConfiguration()
+    {
+        var from = new PopupMenuThemeData(
+            Color: Colors.Red,
+            MenuPadding: EdgeInsetsGeometry.DirectionalOnly(start: 4, top: 2, end: 8, bottom: 6),
+            Elevation: 2,
+            EnableFeedback: false,
+            Position: PopupMenuPosition.Over,
+            IconSize: 20);
+        var to = new PopupMenuThemeData(
+            Color: Colors.Blue,
+            MenuPadding: EdgeInsetsGeometry.DirectionalOnly(start: 12, top: 6, end: 16, bottom: 10),
+            Elevation: 6,
+            EnableFeedback: true,
+            Position: PopupMenuPosition.Under,
+            IconSize: 28);
+
+        PopupMenuThemeData copy = from.CopyWith(iconSize: 24);
+        Assert.Equal(Colors.Red, copy.Color);
+        Assert.Equal(24, copy.IconSize);
+        Assert.False(copy.EnableFeedback);
+
+        PopupMenuThemeData lerped = Assert.IsType<PopupMenuThemeData>(
+            PopupMenuThemeData.Lerp(from, to, 0.5));
+        Assert.Equal(4, lerped.Elevation);
+        Assert.Equal(24, lerped.IconSize);
+        Assert.Equal(new Thickness(8, 4, 12, 8), lerped.MenuPadding!.Value.Resolve(TextDirection.Ltr));
+        Assert.Equal(new Thickness(12, 4, 8, 8), lerped.MenuPadding.Value.Resolve(TextDirection.Rtl));
+        Assert.True(lerped.EnableFeedback);
+        Assert.Equal(PopupMenuPosition.Under, lerped.Position);
+        Assert.Same(from, PopupMenuThemeData.Lerp(from, from, 0.25));
+        Assert.Null(PopupMenuThemeData.Lerp(null, null, 0.5));
+        Assert.IsAssignableFrom<InheritedTheme>(
+            new PopupMenuTheme(new PopupMenuThemeData(), new SizedBox()));
+    }
+
+    [Fact]
+    public void PopupMenuButton_ProgrammaticDisabledOpenAndEmptyBuilderMatchFlutter()
+    {
+        int disabledBuilds = 0;
+        int disabledOpened = 0;
+        int disabledCanceled = 0;
+        int emptyBuilds = 0;
+        int emptyOpened = 0;
+        var disabledKey = new LabeledGlobalKey<PopupMenuButtonState<string>>("disabled popup");
+        var emptyKey = new LabeledGlobalKey<PopupMenuButtonState<string>>("empty popup");
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new Navigator(new BuilderPageRoute(_ => new Column(children:
+            [
+                new PopupMenuButton<string>(
+                    key: disabledKey,
+                    enabled: false,
+                    itemBuilder: _ =>
+                    {
+                        disabledBuilds++;
+                        return [new PopupMenuItem<string>(new Text("Disabled programmatic"), value: "value")];
+                    },
+                    onOpened: () => disabledOpened++,
+                    onCanceled: () => disabledCanceled++),
+                new PopupMenuButton<string>(
+                    key: emptyKey,
+                    itemBuilder: _ =>
+                    {
+                        emptyBuilds++;
+                        return [];
+                    },
+                    onOpened: () => emptyOpened++),
+            ])))));
+        SemanticsNode? initialSemantics = harness.PumpAndGetSemantics(new Size(500, 360));
+        Assert.Null(FindSemantics(initialSemantics, node =>
+            node.Actions.HasFlag(SemanticsActions.Tap)
+            && node.Label == "Disabled programmatic"));
+        Assert.Equal(0, disabledBuilds);
+
+        disabledKey.CurrentState!.ShowButtonMenu();
+        Assert.Equal(1, disabledBuilds);
+        Assert.Equal(1, disabledOpened);
+        PumpAnimation();
+        SemanticsNode? openSemantics = harness.PumpAndGetSemantics(new Size(500, 360));
+        SemanticsNode? barrier = FindSemantics(openSemantics, node => node.Label == "Dismiss menu");
+        Assert.NotNull(barrier);
+        Assert.True(barrier!.PerformAction(SemanticsActions.Dismiss));
+        PumpAnimation();
+        harness.Pump(new Size(500, 360));
+        Assert.Equal(1, disabledCanceled);
+
+        emptyKey.CurrentState!.ShowButtonMenu();
+        Assert.Equal(1, emptyBuilds);
+        Assert.Equal(0, emptyOpened);
+    }
+
+    [Fact]
+    public void ShowMenu_CapturesLocalThemeAndTracksGlobalThemeChanges()
+    {
+        BuildContext localContext = default;
+        using var localHarness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new Navigator(new BuilderPageRoute(_ => new PopupMenuTheme(
+                new PopupMenuThemeData(Color: Colors.Purple),
+                new Builder(context => new CaptureContext(value => localContext = value, new Text("Home"))))))));
+        localHarness.Pump(new Size(500, 360));
+        _ = PopupMenus.ShowMenu(
+            localContext,
+            items: [new PopupMenuItem<string>(new Text("Local theme"), value: "local")],
+            position: new RelativeRect(20, 20, 400, 290));
+        PumpAnimation();
+        localHarness.Pump(new Size(500, 360));
+        Assert.Contains(FindDescendants<RenderDecoratedBox>(localHarness.RenderView), box =>
+            box.Decoration.Color == Colors.Purple);
+
+        BuildContext globalContext = default;
+        Widget BuildRoot(Color color) => Wrap(
+            ThemeData.Light with
+            {
+                PopupMenuTheme = new PopupMenuThemeData(Color: color),
+            },
+            new Navigator(new BuilderPageRoute(context => new CaptureContext(
+                value => globalContext = value,
+                new Text("Global home")))));
+        using var globalHarness = new WidgetRenderHarness(BuildRoot(Colors.Green));
+        globalHarness.Pump(new Size(500, 360));
+        _ = PopupMenus.ShowMenu(
+            globalContext,
+            items: [new PopupMenuItem<string>(new Text("Global theme"), value: "global")],
+            position: new RelativeRect(20, 20, 400, 290));
+        PumpAnimation();
+        globalHarness.Pump(new Size(500, 360));
+        Assert.Contains(FindDescendants<RenderDecoratedBox>(globalHarness.RenderView), box =>
+            box.Decoration.Color == Colors.Green);
+
+        globalHarness.UpdateRoot(BuildRoot(Colors.Orange));
+        globalHarness.Pump(new Size(500, 360));
+        Assert.Contains(FindDescendants<RenderDecoratedBox>(globalHarness.RenderView), box =>
+            box.Decoration.Color == Colors.Orange);
+    }
+
+    [Fact]
+    public void ShowMenu_SemanticLabelUsesDefaultTargetPlatformInsteadOfThemePlatform()
+    {
+        PlatformDefaults.DebugTargetPlatformOverride = TargetPlatform.IOS;
+        BuildContext appleContext = default;
+        using (var appleHarness = new WidgetRenderHarness(Wrap(
+                   ThemeData.Light with { Platform = TargetPlatform.Android },
+                   new Navigator(new BuilderPageRoute(context => new CaptureContext(
+                       value => appleContext = value,
+                       new Text("Apple home")))))))
+        {
+            appleHarness.Pump(new Size(500, 360));
+            _ = PopupMenus.ShowMenu(
+                appleContext,
+                items: [new PopupMenuItem<string>(new Text("Apple item"), value: "apple")],
+                position: new RelativeRect(20, 20, 400, 290));
+            PumpAnimation();
+            SemanticsNode? semantics = appleHarness.PumpAndGetSemantics(new Size(500, 360));
+            SemanticsNode? menu = FindSemantics(semantics, node => node.Role == SemanticsRole.Menu);
+            Assert.NotNull(menu);
+            Assert.Null(menu!.Label);
+        }
+
+        PlatformDefaults.DebugTargetPlatformOverride = TargetPlatform.Android;
+        BuildContext androidContext = default;
+        using var androidHarness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light with { Platform = TargetPlatform.IOS },
+            new Navigator(new BuilderPageRoute(context => new CaptureContext(
+                value => androidContext = value,
+                new Text("Android home"))))));
+        androidHarness.Pump(new Size(500, 360));
+        _ = PopupMenus.ShowMenu(
+            androidContext,
+            items: [new PopupMenuItem<string>(new Text("Android item"), value: "android")],
+            position: new RelativeRect(20, 20, 400, 290));
+        PumpAnimation();
+        SemanticsNode? androidSemantics = androidHarness.PumpAndGetSemantics(new Size(500, 360));
+        Assert.NotNull(FindSemantics(androidSemantics, node =>
+            node.Role == SemanticsRole.Menu && node.Label == "Popup menu"));
+    }
+
+    [Fact]
+    public async Task PopupMenuItem_PopsBeforeOnTapPushesAnotherRoute()
+    {
+        BuildContext captured = default;
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new Navigator(new BuilderPageRoute(context => new CaptureContext(
+                value => captured = value,
+                new Text("Home"))))));
+        harness.Pump(new Size(500, 360));
+
+        Task<string?> result = PopupMenus.ShowMenu(
+            captured,
+            items:
+            [
+                new PopupMenuItem<string>(
+                    new Text("Push next"),
+                    value: "next",
+                    onTap: () => Navigator.Of(captured).Push(
+                        new BuilderPageRoute(_ => new Text("Pushed route")))),
+            ],
+            position: new RelativeRect(20, 20, 400, 290));
+        PumpAnimation();
+        SemanticsNode? semantics = harness.PumpAndGetSemantics(new Size(500, 360));
+        SemanticsNode? action = FindSemantics(semantics, node =>
+            node.Actions.HasFlag(SemanticsActions.Tap)
+            && node.Label != "Dismiss menu");
+        Assert.NotNull(action);
+        Assert.True(action!.PerformAction(SemanticsActions.Tap));
+        Assert.Equal("next", await result);
+
+        PumpAnimation();
+        harness.Pump(new Size(500, 360));
+        Assert.NotNull(FindParagraph(harness.RenderView, "Pushed route"));
+    }
+
+    [Fact]
+    public void ShowMenu_UsesDisplayFeatureSubScreenAndDirectionalMenuPadding()
+    {
+        BuildContext captured = default;
+        var mediaQuery = new MediaQueryData(
+            Size: new Size(800, 600),
+            DisplayFeatures:
+            [
+                new DisplayFeature(new Rect(390, 0, 20, 600), DisplayFeatureType.Hinge),
+            ]);
+        using var harness = new WidgetRenderHarness(new Directionality(
+            TextDirection.Rtl,
+            new MediaQuery(
+                mediaQuery,
+                new Theme(
+                    ThemeData.Light,
+                    new Navigator(new BuilderPageRoute(_ => new PopupMenuTheme(
+                        new PopupMenuThemeData(
+                            MenuPadding: EdgeInsetsGeometry.DirectionalOnly(
+                                start: 20,
+                                top: 6,
+                                end: 4,
+                                bottom: 10)),
+                        new Builder(context => new CaptureContext(
+                            value => captured = value,
+                            new Text("Home"))))))))));
+        harness.Pump(new Size(800, 600));
+        _ = PopupMenus.ShowMenu(
+            captured,
+            items: [new PopupMenuItem<string>(new Text("Fold item"), value: "fold")],
+            position: new RelativeRect(380, 20, 410, 500));
+        PumpAnimation();
+        harness.Pump(new Size(800, 600));
+
+        RenderPopupMenuPositionLayout layout = Assert.Single(
+            FindDescendants<RenderPopupMenuPositionLayout>(harness.RenderView));
+        Point offset = ((BoxParentData)layout.Child!.parentData!).offset;
+        Assert.Equal(382, offset.X + layout.Child.Size.Width, precision: 3);
+        Assert.Contains(FindDescendants<RenderPadding>(harness.RenderView), padding =>
+            padding.Padding == new Thickness(4, 6, 20, 10));
+    }
+
+    [Fact]
+    public void ShowMenu_ScrollsTheFirstInitialValueIntoView()
+    {
+        BuildContext captured = default;
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new Navigator(new BuilderPageRoute(context => new CaptureContext(
+                value => captured = value,
+                new Text("Home"))))));
+        harness.Pump(new Size(300, 200));
+        PopupMenuEntry<string>[] items = Enumerable.Range(0, 50)
+            .Select(index => (PopupMenuEntry<string>)new PopupMenuItem<string>(
+                new Text($"Item {index}"),
+                value: index.ToString()))
+            .ToArray();
+        _ = PopupMenus.ShowMenu(
+            captured,
+            items: items,
+            initialValue: "49",
+            position: new RelativeRect(20, 20, 200, 100));
+        PumpAnimation();
+        harness.Pump(new Size(300, 200));
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.02));
+        harness.Pump(new Size(300, 200));
+
+        RenderSingleChildViewport viewport = Assert.Single(
+            FindDescendants<RenderSingleChildViewport>(harness.RenderView));
+        Assert.True(viewport.OffsetPixels > 0);
+    }
+
+    [Fact]
+    public void PopupMenuItems_TreatHeightAsMinimumAndRemainSafeAtZeroArea()
+    {
+        using var ordinary = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new Column(
+                mainAxisSize: MainAxisSize.Min,
+                children:
+                [
+                    new PopupMenuItem<string>(
+                        new SizedBox(width: 20, height: 75),
+                        height: 16,
+                        padding: new Thickness(0)),
+                ])));
+        ordinary.Pump(new Size(200, 200));
+        RenderConstrainedBox ordinaryMinimum = Assert.Single(
+            FindDescendants<RenderConstrainedBox>(ordinary.RenderView),
+            box => box.AdditionalConstraints.MinHeight == 16);
+        Assert.Equal(75, ordinaryMinimum.Size.Height);
+
+        using var checkedItem = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new Column(
+                mainAxisSize: MainAxisSize.Min,
+                children:
+                [
+                    new CheckedPopupMenuItem<string>(
+                        new SizedBox(width: 20, height: 10),
+                        height: 16,
+                        padding: new Thickness(0)),
+                ])));
+        checkedItem.Pump(new Size(200, 200));
+        RenderConstrainedBox checkedMinimum = Assert.Single(
+            FindDescendants<RenderConstrainedBox>(checkedItem.RenderView),
+            box => box.AdditionalConstraints.MinHeight == 16);
+        Assert.Equal(56, checkedMinimum.Size.Height);
+
+        using var zero = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new CheckedPopupMenuItem<string>(new Text("Zero"))));
+        zero.Pump(new Size());
+        Assert.Equal(new Size(), zero.RenderView.Child!.Size);
+    }
+
+    [Fact]
+    public void PopupMenuItem_ResolvesThemeCursorFromHoveredAndDisabledStates()
+    {
+        var cursor = MaterialStateProperty<MouseCursor?>.ResolveWith(states =>
+            states.HasFlag(MaterialState.Disabled)
+                ? SystemMouseCursors.Grab
+                : states.HasFlag(MaterialState.Hovered)
+                    ? SystemMouseCursors.Text
+                    : SystemMouseCursors.Click);
+        using var enabled = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new PopupMenuTheme(
+                new PopupMenuThemeData(MouseCursor: cursor),
+                new PopupMenuItem<string>(new Text("Enabled")))));
+        enabled.Pump(new Size(200, 80));
+        RenderPointerListener enabledListener = Assert.Single(
+            FindDescendants<RenderPointerListener>(enabled.RenderView),
+            listener => listener.OnPointerEnter is not null && listener.OnPointerExit is not null);
+        enabledListener.HandleEvent(
+            new PointerEnterEvent(
+                101,
+                PointerDeviceKind.Mouse,
+                new Point(10, 10),
+                PointerButtons.None,
+                DateTime.UtcNow),
+            new BoxHitTestEntry(enabledListener, new Point(10, 10)));
+        Assert.Equal(SystemMouseCursors.Text, MouseCursorManager.CurrentCursor);
+
+        MouseCursorManager.ResetForTests();
+        using var disabled = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new PopupMenuTheme(
+                new PopupMenuThemeData(MouseCursor: cursor),
+                new PopupMenuItem<string>(new Text("Disabled"), enabled: false))));
+        disabled.Pump(new Size(200, 80));
+        RenderPointerListener disabledListener = Assert.Single(
+            FindDescendants<RenderPointerListener>(disabled.RenderView),
+            listener => listener.OnPointerEnter is not null && listener.OnPointerExit is not null);
+        disabledListener.HandleEvent(
+            new PointerEnterEvent(
+                102,
+                PointerDeviceKind.Mouse,
+                new Point(10, 10),
+                PointerButtons.None,
+                DateTime.UtcNow),
+            new BoxHitTestEntry(disabledListener, new Point(10, 10)));
+        Assert.Equal(SystemMouseCursors.Grab, MouseCursorManager.CurrentCursor);
+    }
+
+    [Fact]
+    public void ShowMenu_ReevaluatesPositionBuilderAndHonorsNoAnimationConstraintsAndClip()
+    {
+        BuildContext captured = default;
+        int positionBuilds = 0;
+        Size lastConstraintSize = default;
+        Widget BuildRoot(Size size) => new Directionality(
+            TextDirection.Ltr,
+            new MediaQuery(
+                new MediaQueryData(Size: size),
+                new Theme(
+                    ThemeData.Light,
+                    new Navigator(new BuilderPageRoute(context => new CaptureContext(
+                        value => captured = value,
+                        new Text("Home")))))));
+        using var harness = new WidgetRenderHarness(BuildRoot(new Size(500, 360)));
+        harness.Pump(new Size(500, 360));
+        _ = PopupMenus.ShowMenu(
+            captured,
+            items: [new PopupMenuItem<string>(new Text("Sized"), value: "sized")],
+            positionBuilder: (_, constraints) =>
+            {
+                positionBuilds++;
+                lastConstraintSize = constraints.Biggest;
+                return new RelativeRect(20, 20, 200, 200);
+            },
+            constraints: new BoxConstraints(MinWidth: 180, MaxWidth: 180),
+            clipBehavior: Clip.HardEdge,
+            popUpAnimationStyle: AnimationStyle.NoAnimation);
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.01));
+        harness.Pump(new Size(500, 360));
+
+        Assert.True(positionBuilds >= 1);
+        Assert.Equal(new Size(500, 360), lastConstraintSize);
+        RenderPopupMenuPositionLayout layout = Assert.Single(
+            FindDescendants<RenderPopupMenuPositionLayout>(harness.RenderView));
+        Assert.Equal(180, layout.Child!.Size.Width);
+        Assert.NotEmpty(FindDescendants<RenderClipRRect>(harness.RenderView));
+
+        int previousBuilds = positionBuilds;
+        harness.UpdateRoot(BuildRoot(new Size(640, 420)));
+        harness.Pump(new Size(640, 420));
+        Assert.True(positionBuilds > previousBuilds);
+        Assert.Equal(new Size(640, 420), lastConstraintSize);
+    }
+
     private static Widget Wrap(ThemeData theme, Widget child) =>
         new Directionality(
             TextDirection.Ltr,
@@ -462,6 +897,11 @@ public sealed class MaterialPopupMenuTests : IDisposable
         }
 
         public RenderView RenderView { get; }
+
+        public void UpdateRoot(Widget widget)
+        {
+            _rootElement.Update(widget);
+        }
 
         public void Pump(Size size)
         {

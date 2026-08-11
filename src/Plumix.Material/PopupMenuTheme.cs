@@ -19,7 +19,7 @@ public sealed partial record PopupMenuThemeData
     public PopupMenuThemeData(
         Color? Color = null,
         ShapeBorder? Shape = null,
-        Thickness? MenuPadding = null,
+        EdgeInsetsGeometry? MenuPadding = null,
         double? Elevation = null,
         Color? ShadowColor = null,
         Color? SurfaceTintColor = null,
@@ -31,11 +31,6 @@ public sealed partial record PopupMenuThemeData
         Color? IconColor = null,
         double? IconSize = null)
     {
-        if (Elevation.HasValue && (!double.IsFinite(Elevation.Value) || Elevation.Value < 0))
-            throw new ArgumentOutOfRangeException(nameof(Elevation));
-        if (IconSize.HasValue && (!double.IsFinite(IconSize.Value) || IconSize.Value < 0))
-            throw new ArgumentOutOfRangeException(nameof(IconSize));
-        ValidateInsets(MenuPadding, nameof(MenuPadding));
         this.Color = Color;
         this.Shape = Shape;
         this.MenuPadding = MenuPadding;
@@ -53,7 +48,7 @@ public sealed partial record PopupMenuThemeData
 
     public Color? Color { get; init; }
     public ShapeBorder? Shape { get; init; }
-    public Thickness? MenuPadding { get; init; }
+    public EdgeInsetsGeometry? MenuPadding { get; init; }
     public double? Elevation { get; init; }
     public Color? ShadowColor { get; init; }
     public Color? SurfaceTintColor { get; init; }
@@ -65,18 +60,39 @@ public sealed partial record PopupMenuThemeData
     public Color? IconColor { get; init; }
     public double? IconSize { get; init; }
 
-    private static void ValidateInsets(Thickness? value, string parameterName)
+    public PopupMenuThemeData CopyWith(
+        Color? color = null,
+        ShapeBorder? shape = null,
+        EdgeInsetsGeometry? menuPadding = null,
+        double? elevation = null,
+        Color? shadowColor = null,
+        Color? surfaceTintColor = null,
+        TextStyle? textStyle = null,
+        MaterialStateProperty<TextStyle?>? labelTextStyle = null,
+        bool? enableFeedback = null,
+        MaterialStateProperty<MouseCursor?>? mouseCursor = null,
+        PopupMenuPosition? position = null,
+        Color? iconColor = null,
+        double? iconSize = null)
     {
-        if (!value.HasValue) return;
-        var insets = value.Value;
-        if (!double.IsFinite(insets.Left) || !double.IsFinite(insets.Top)
-            || !double.IsFinite(insets.Right) || !double.IsFinite(insets.Bottom)
-            || insets.Left < 0 || insets.Top < 0 || insets.Right < 0 || insets.Bottom < 0)
-            throw new ArgumentOutOfRangeException(parameterName);
+        return new PopupMenuThemeData(
+            Color: color ?? Color,
+            Shape: shape ?? Shape,
+            MenuPadding: menuPadding ?? MenuPadding,
+            Elevation: elevation ?? Elevation,
+            ShadowColor: shadowColor ?? ShadowColor,
+            SurfaceTintColor: surfaceTintColor ?? SurfaceTintColor,
+            TextStyle: textStyle ?? TextStyle,
+            LabelTextStyle: labelTextStyle ?? LabelTextStyle,
+            EnableFeedback: enableFeedback ?? EnableFeedback,
+            MouseCursor: mouseCursor ?? MouseCursor,
+            Position: position ?? Position,
+            IconColor: iconColor ?? IconColor,
+            IconSize: iconSize ?? IconSize);
     }
 }
 
-public sealed class PopupMenuTheme : InheritedWidget
+public sealed class PopupMenuTheme : InheritedTheme
 {
     public PopupMenuTheme(PopupMenuThemeData data, Widget child, Key? key = null) : base(key)
     {
@@ -88,6 +104,8 @@ public sealed class PopupMenuTheme : InheritedWidget
     public Widget Child { get; }
 
     public override Widget Build(BuildContext context) => Child;
+
+    public override Widget Wrap(BuildContext context, Widget child) => new PopupMenuTheme(Data, child);
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
         !Equals(((PopupMenuTheme)oldWidget).Data, Data);

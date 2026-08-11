@@ -19,17 +19,23 @@ public sealed class PopupMenuDemoPage : StatefulWidget
         private bool _enabled = true;
         private bool _under;
         private bool _useTheme;
+        private bool _useMaterial3 = true;
         private bool _keepFavorite = true;
         private string _selected = "copy";
         private string _status = "idle";
 
         public override Widget Build(BuildContext context)
         {
+            ThemeData theme = Theme.Of(context) with { UseMaterial3 = _useMaterial3 };
             var popupTheme = _useTheme
                 ? new PopupMenuThemeData(
                     Color: Color.Parse("#FFFFF3E0"),
                     Shape: ShapeBorder.RoundedRectangle(12),
-                    MenuPadding: new Thickness(4),
+                    MenuPadding: EdgeInsetsGeometry.DirectionalOnly(
+                        start: 12,
+                        top: 4,
+                        end: 4,
+                        bottom: 4),
                     IconColor: Color.Parse("#FFE65100"),
                     LabelTextStyle: MaterialStateProperty<TextStyle?>.ResolveWith(states =>
                         Theme.Of(context).TextTheme.LabelLarge.CopyWith(
@@ -37,9 +43,11 @@ public sealed class PopupMenuDemoPage : StatefulWidget
                                 ? Color.Parse("#619E9E9E")
                                 : Color.Parse("#FFE65100"))))
                 : new PopupMenuThemeData();
-            return new PopupMenuTheme(
-                popupTheme,
-                new Builder(innerContext => BuildContent(innerContext)));
+            return new Theme(
+                theme,
+                new PopupMenuTheme(
+                    popupTheme,
+                    new Builder(innerContext => BuildContent(innerContext))));
         }
 
         private Widget BuildContent(BuildContext context)
@@ -62,6 +70,9 @@ public sealed class PopupMenuDemoPage : StatefulWidget
                             ControlButton(_enabled ? "Enabled" : "Disabled", () => SetState(() => _enabled = !_enabled)),
                             ControlButton(_under ? "Under" : "Over", () => SetState(() => _under = !_under)),
                             ControlButton(_useTheme ? "Theme on" : "Theme off", () => SetState(() => _useTheme = !_useTheme)),
+                            ControlButton(
+                                _useMaterial3 ? "Material 3" : "Material 2",
+                                () => SetState(() => _useMaterial3 = !_useMaterial3)),
                         ]),
                     new Row(
                         spacing: 16,
