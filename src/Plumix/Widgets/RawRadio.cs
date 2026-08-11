@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Avalonia;
+using Avalonia.Media;
 using Plumix;
 using Plumix.Foundation;
 using Plumix.Rendering;
@@ -17,11 +18,20 @@ public enum WidgetState
     Disabled,
     Selected,
     Dragged,
+    ScrolledUnder,
 }
 
 public abstract class WidgetStateProperty<T>
 {
     public abstract T Resolve(IReadOnlySet<WidgetState> states);
+
+    public static T ResolveAs(object value, IReadOnlySet<WidgetState> states)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        return value is WidgetStateProperty<T> property
+            ? property.Resolve(states)
+            : (T)value;
+    }
 
     public static WidgetStateProperty<T> All(T value)
     {
@@ -49,6 +59,58 @@ public abstract class WidgetStateProperty<T>
             a is null ? default! : a.Resolve(states),
             b is null ? default! : b.Resolve(states),
             t));
+    }
+}
+
+/// <summary>
+/// A color whose value can depend on the current widget states.
+/// </summary>
+public sealed class WidgetStateColor : WidgetStateProperty<Color>
+{
+    private readonly Func<IReadOnlySet<WidgetState>, Color> _resolver;
+
+    public WidgetStateColor(Color defaultValue)
+        : this(defaultValue, _ => defaultValue)
+    {
+    }
+
+    public WidgetStateColor(
+        Color defaultValue,
+        Func<IReadOnlySet<WidgetState>, Color> resolver)
+    {
+        DefaultValue = defaultValue;
+        _resolver = resolver ?? throw new ArgumentNullException(nameof(resolver));
+    }
+
+    public Color DefaultValue { get; }
+
+    public override Color Resolve(IReadOnlySet<WidgetState> states)
+    {
+        return _resolver(states);
+    }
+
+    public static WidgetStateColor ResolveWith(
+        Color defaultValue,
+        Func<IReadOnlySet<WidgetState>, Color> resolver)
+    {
+        return new WidgetStateColor(defaultValue, resolver);
+    }
+
+    public new static WidgetStateColor ResolveWith(Func<IReadOnlySet<WidgetState>, Color> resolver)
+    {
+        ArgumentNullException.ThrowIfNull(resolver);
+        return new WidgetStateColor(resolver(new HashSet<WidgetState>()), resolver);
+    }
+
+    public static implicit operator WidgetStateColor(Color color)
+    {
+        return new WidgetStateColor(color);
+    }
+
+    public static implicit operator Color(WidgetStateColor color)
+    {
+        ArgumentNullException.ThrowIfNull(color);
+        return color.DefaultValue;
     }
 }
 

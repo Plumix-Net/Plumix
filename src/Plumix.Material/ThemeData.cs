@@ -72,7 +72,8 @@ public sealed record AppBarThemeData(
     double? ScrolledUnderElevation = null,
     Color? ShadowColor = null,
     Color? SurfaceTintColor = null,
-    ShapeBorder? Shape = null)
+    ShapeBorder? Shape = null,
+    WidgetStateColor? BackgroundColorState = null)
 {
     public AppBarThemeData CopyWith(
         Color? color = null,
@@ -92,7 +93,8 @@ public sealed record AppBarThemeData(
         double? scrolledUnderElevation = null,
         Color? shadowColor = null,
         Color? surfaceTintColor = null,
-        ShapeBorder? shape = null)
+        ShapeBorder? shape = null,
+        WidgetStateColor? backgroundColorState = null)
     {
         if (color.HasValue && backgroundColor.HasValue)
         {
@@ -101,7 +103,10 @@ public sealed record AppBarThemeData(
         }
 
         return new AppBarThemeData(
-            BackgroundColor: backgroundColor ?? color ?? BackgroundColor,
+            BackgroundColor: backgroundColor
+                             ?? color
+                             ?? backgroundColorState?.DefaultValue
+                             ?? BackgroundColor,
             ForegroundColor: foregroundColor ?? ForegroundColor,
             IconTheme: iconTheme ?? IconTheme,
             ActionsIconTheme: actionsIconTheme ?? ActionsIconTheme,
@@ -117,7 +122,11 @@ public sealed record AppBarThemeData(
             ScrolledUnderElevation: scrolledUnderElevation ?? ScrolledUnderElevation,
             ShadowColor: shadowColor ?? ShadowColor,
             SurfaceTintColor: surfaceTintColor ?? SurfaceTintColor,
-            Shape: shape ?? Shape);
+            Shape: shape ?? Shape,
+            BackgroundColorState: backgroundColorState
+                                  ?? (backgroundColor.HasValue || color.HasValue
+                                      ? new WidgetStateColor((backgroundColor ?? color)!.Value)
+                                      : BackgroundColorState));
     }
 
     public static AppBarThemeData Lerp(AppBarThemeData? a, AppBarThemeData? b, double t)
@@ -174,7 +183,6 @@ public sealed record AppBarThemeData(
         var to = b ?? Color.FromArgb(0, a!.Value.R, a.Value.G, a.Value.B);
         return new ColorTween().Evaluate(t, from, to);
     }
-
     private static IconThemeData? LerpIconTheme(IconThemeData? a, IconThemeData? b, double t)
     {
         if (a is null && b is null)

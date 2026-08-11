@@ -1,5 +1,10 @@
 # Changelog
 
+- Breaking: completed the strict Material `AppBar` closeout. The standard app bar now uses direct M2/M3
+  `ColorScheme` roles, state-resolving scrolled-under surfaces/elevation, source `Material`/`NavigationToolbar`
+  composition, visual configuration fields, system-overlay policy, and semantic ordering. Shared widget-state color
+  and ordinal semantics-sort primitives, focused coverage, and the mirrored scroll-under demo probe were added.
+
 - Breaking: completed the strict Material `Drawer` ColorScheme/theme closeout. The control now uses direct M3
   `surfaceContainerLow`, exact M2/M3 surface/shadow/tint/elevation defaults, direction-aware inner-edge shapes,
   source-shaped theme copy/lerp/capture, host-platform route semantics, and zero-width-compatible constraints.

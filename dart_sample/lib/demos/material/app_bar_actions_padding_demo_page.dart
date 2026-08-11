@@ -125,6 +125,11 @@ class _AppBarActionsPaddingDemoPageState
                 style: TextStyle(fontSize: 11, color: Colors.black54),
               ),
               _buildDefaultReferencePreview(),
+              const Text(
+                'Scroll to resolve WidgetState.scrolledUnder',
+                style: TextStyle(fontSize: 11, color: Colors.black54),
+              ),
+              _buildScrolledUnderPreview(),
             ],
           ),
         ),
@@ -161,6 +166,52 @@ class _AppBarActionsPaddingDemoPageState
         _buildActionBadge(Icons.close),
         _buildActionBadge(Icons.menu),
       ],
+    );
+  }
+
+  static Widget _buildScrolledUnderPreview() {
+    final WidgetStateColor background = WidgetStateColor.resolveWith(
+      (Set<WidgetState> states) => states.contains(WidgetState.scrolledUnder)
+          ? const Color(0xFFB8C7DB)
+          : const Color(0xFFE7EDF6),
+    );
+    return SizedBox(
+      height: 150,
+      child: ScrollNotificationObserver(
+        child: Column(
+          children: <Widget>[
+            AppBar(
+              title: const Text('Scrolled-under state'),
+              backgroundColor: background,
+              scrolledUnderElevation: 3,
+              animateColor: true,
+            ),
+            Expanded(
+              child: ListView(
+                children: List<Widget>.generate(
+                  6,
+                  (int index) => SizedBox(
+                    height: 36,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      child: Text(
+                        'Scroll row ${index + 1}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.blueGrey,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

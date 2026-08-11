@@ -8,6 +8,7 @@ using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
 using Xunit;
+using MaterialWidget = global::Plumix.Material.Material;
 
 namespace Plumix.Tests;
 
@@ -1891,8 +1892,7 @@ public sealed class MaterialScaffoldTests
         var owner = new BuildOwner();
         var theme = ThemeData.Light with
         {
-            CanvasColor = Colors.DarkSlateBlue,
-            PrimaryColor = Colors.Crimson
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(surface: Colors.DarkSlateBlue),
         };
 
         var root = new TestRootElement(
@@ -1907,11 +1907,12 @@ public sealed class MaterialScaffoldTests
         owner.FlushBuild();
 
         var scaffoldBackground = RequireRenderObject<RenderColoredBox>(root.ChildElement);
-        var contentColumn = Assert.IsType<RenderFlex>(scaffoldBackground.Child);
-        var appBarBackground = Assert.IsType<RenderColoredBox>(contentColumn.FirstChild);
-
-        Assert.Equal(Colors.DarkSlateBlue, appBarBackground.Color);
-        Assert.NotNull(contentColumn.ChildAfter(appBarBackground));
+        var contentColumn = FindDescendant<RenderFlex>(scaffoldBackground);
+        Assert.NotNull(contentColumn);
+        Assert.Contains(
+            FindWidgets<MaterialWidget>(root.ChildElement),
+            material => material.Color == Colors.DarkSlateBlue);
+        Assert.NotNull(contentColumn.ChildAfter(contentColumn.FirstChild!));
     }
 
     [Fact]
@@ -1921,8 +1922,7 @@ public sealed class MaterialScaffoldTests
         var theme = ThemeData.Light with
         {
             UseMaterial3 = false,
-            CanvasColor = Colors.Goldenrod,
-            PrimaryColor = Colors.DarkSlateBlue
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(primary: Colors.DarkSlateBlue),
         };
 
         var root = new TestRootElement(
@@ -1937,11 +1937,12 @@ public sealed class MaterialScaffoldTests
         owner.FlushBuild();
 
         var scaffoldBackground = RequireRenderObject<RenderColoredBox>(root.ChildElement);
-        var contentColumn = Assert.IsType<RenderFlex>(scaffoldBackground.Child);
-        var appBarBackground = Assert.IsType<RenderColoredBox>(contentColumn.FirstChild);
-
-        Assert.Equal(Colors.DarkSlateBlue, appBarBackground.Color);
-        Assert.NotNull(contentColumn.ChildAfter(appBarBackground));
+        var contentColumn = FindDescendant<RenderFlex>(scaffoldBackground);
+        Assert.NotNull(contentColumn);
+        Assert.Contains(
+            FindWidgets<MaterialWidget>(root.ChildElement),
+            material => material.Color == Colors.DarkSlateBlue);
+        Assert.NotNull(contentColumn.ChildAfter(contentColumn.FirstChild!));
     }
 
     [Fact]
@@ -1952,8 +1953,9 @@ public sealed class MaterialScaffoldTests
         {
             UseMaterial3 = false,
             Brightness = Brightness.Dark,
-            CanvasColor = Colors.DarkSlateBlue,
-            PrimaryColor = Colors.Crimson
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(
+                brightness: Brightness.Dark,
+                surface: Colors.DarkSlateBlue),
         };
 
         var root = new TestRootElement(
@@ -1968,11 +1970,12 @@ public sealed class MaterialScaffoldTests
         owner.FlushBuild();
 
         var scaffoldBackground = RequireRenderObject<RenderColoredBox>(root.ChildElement);
-        var contentColumn = Assert.IsType<RenderFlex>(scaffoldBackground.Child);
-        var appBarBackground = Assert.IsType<RenderColoredBox>(contentColumn.FirstChild);
-
-        Assert.Equal(Colors.DarkSlateBlue, appBarBackground.Color);
-        Assert.NotNull(contentColumn.ChildAfter(appBarBackground));
+        var contentColumn = FindDescendant<RenderFlex>(scaffoldBackground);
+        Assert.NotNull(contentColumn);
+        Assert.Contains(
+            FindWidgets<MaterialWidget>(root.ChildElement),
+            material => material.Color == Colors.DarkSlateBlue);
+        Assert.NotNull(contentColumn.ChildAfter(contentColumn.FirstChild!));
     }
 
     [Fact]
@@ -1981,9 +1984,9 @@ public sealed class MaterialScaffoldTests
         var owner = new BuildOwner();
         var theme = ThemeData.Light with
         {
-            CanvasColor = Colors.DarkSlateBlue,
-            OnSurfaceColor = Colors.Bisque,
-            OnPrimaryColor = Colors.Crimson
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(
+                surface: Colors.DarkSlateBlue,
+                onSurface: Colors.Bisque),
         };
 
         var root = new TestRootElement(
@@ -1995,8 +1998,10 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var appBarBackground = RequireRenderObject<RenderColoredBox>(root.ChildElement);
-        Assert.Equal(Colors.DarkSlateBlue, appBarBackground.Color);
+        RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
+        Assert.Contains(
+            FindWidgets<MaterialWidget>(root.ChildElement),
+            material => material.Color == Colors.DarkSlateBlue);
 
         var paragraph = FindDescendant<RenderParagraph>(appBarBackground);
         Assert.NotNull(paragraph);
@@ -2010,9 +2015,9 @@ public sealed class MaterialScaffoldTests
         var theme = ThemeData.Light with
         {
             UseMaterial3 = false,
-            PrimaryColor = Colors.DarkSlateBlue,
-            OnSurfaceColor = Colors.Crimson,
-            OnPrimaryColor = Colors.Bisque
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(
+                primary: Colors.DarkSlateBlue,
+                onPrimary: Colors.Bisque),
         };
 
         var root = new TestRootElement(
@@ -2024,8 +2029,10 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var appBarBackground = RequireRenderObject<RenderColoredBox>(root.ChildElement);
-        Assert.Equal(Colors.DarkSlateBlue, appBarBackground.Color);
+        RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
+        Assert.Contains(
+            FindWidgets<MaterialWidget>(root.ChildElement),
+            material => material.Color == Colors.DarkSlateBlue);
 
         var paragraph = FindDescendant<RenderParagraph>(appBarBackground);
         Assert.NotNull(paragraph);
@@ -2040,10 +2047,10 @@ public sealed class MaterialScaffoldTests
         {
             UseMaterial3 = false,
             Brightness = Brightness.Dark,
-            CanvasColor = Colors.DarkSlateBlue,
-            PrimaryColor = Colors.Crimson,
-            OnSurfaceColor = Colors.Bisque,
-            OnPrimaryColor = Colors.CadetBlue
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(
+                brightness: Brightness.Dark,
+                surface: Colors.DarkSlateBlue,
+                onSurface: Colors.Bisque),
         };
 
         var root = new TestRootElement(
@@ -2055,8 +2062,10 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var appBarBackground = RequireRenderObject<RenderColoredBox>(root.ChildElement);
-        Assert.Equal(Colors.DarkSlateBlue, appBarBackground.Color);
+        RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
+        Assert.Contains(
+            FindWidgets<MaterialWidget>(root.ChildElement),
+            material => material.Color == Colors.DarkSlateBlue);
 
         var paragraph = FindDescendant<RenderParagraph>(appBarBackground);
         Assert.NotNull(paragraph);
@@ -2077,7 +2086,7 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var appBarBackground = RequireRenderObject<RenderColoredBox>(root.ChildElement);
+        RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
         var paragraph = FindParagraphByText(appBarBackground, title);
         Assert.NotNull(paragraph);
         Assert.False(paragraph!.SoftWrap);
@@ -2098,7 +2107,7 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var appBarBackground = RequireRenderObject<RenderColoredBox>(root.ChildElement);
+        RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
         var paragraph = FindParagraphByText(appBarBackground, string.Empty);
         Assert.NotNull(paragraph);
         Assert.False(paragraph!.SoftWrap);
@@ -2125,8 +2134,10 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var appBarBackground = RequireRenderObject<RenderColoredBox>(root.ChildElement);
-        Assert.Equal(Colors.Crimson, appBarBackground.Color);
+        RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
+        Assert.Contains(
+            FindWidgets<MaterialWidget>(root.ChildElement),
+            material => material.Color == Colors.Crimson);
     }
 
     [Fact]
@@ -2149,8 +2160,10 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var appBarBackground = RequireRenderObject<RenderColoredBox>(root.ChildElement);
-        Assert.Equal(Colors.DarkOliveGreen, appBarBackground.Color);
+        RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
+        Assert.Contains(
+            FindWidgets<MaterialWidget>(root.ChildElement),
+            material => material.Color == Colors.DarkOliveGreen);
     }
 
     [Fact]
@@ -2172,7 +2185,7 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var appBarBackground = RequireRenderObject<RenderColoredBox>(root.ChildElement);
+        RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
         var paragraph = FindParagraphByText(appBarBackground, "Demo");
         Assert.NotNull(paragraph);
         Assert.Equal(Colors.Goldenrod, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
@@ -2198,7 +2211,7 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var appBarBackground = RequireRenderObject<RenderColoredBox>(root.ChildElement);
+        RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
         var paragraph = FindParagraphByText(appBarBackground, "Demo");
         Assert.NotNull(paragraph);
         Assert.Equal(Colors.CadetBlue, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
@@ -2264,7 +2277,7 @@ public sealed class MaterialScaffoldTests
     }
 
     [Fact]
-    public void AppBar_CenterTitleTrue_WrapsTitleInCenterAlign()
+    public void AppBar_CenterTitleTrue_ConfiguresNavigationToolbar()
     {
         var owner = new BuildOwner();
         var root = new TestRootElement(
@@ -2278,10 +2291,8 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var appBarBackground = RequireRenderObject<RenderColoredBox>(root.ChildElement);
-        var align = FindDescendant<RenderAlign>(appBarBackground);
-        Assert.NotNull(align);
-        Assert.Equal(Alignment.Center, align!.Alignment);
+        NavigationToolbar toolbar = Assert.Single(FindWidgets<NavigationToolbar>(root.ChildElement));
+        Assert.True(toolbar.CenterMiddle);
     }
 
     [Fact]
@@ -2303,10 +2314,8 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var appBarBackground = RequireRenderObject<RenderColoredBox>(root.ChildElement);
-        var align = FindDescendant<RenderAlign>(appBarBackground);
-        Assert.NotNull(align);
-        Assert.Equal(Alignment.Center, align!.Alignment);
+        NavigationToolbar toolbar = Assert.Single(FindWidgets<NavigationToolbar>(root.ChildElement));
+        Assert.True(toolbar.CenterMiddle);
     }
 
     [Fact]
@@ -2330,9 +2339,8 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var appBarBackground = RequireRenderObject<RenderColoredBox>(root.ChildElement);
-        var align = FindDescendant<RenderAlign>(appBarBackground);
-        Assert.Null(align);
+        NavigationToolbar toolbar = Assert.Single(FindWidgets<NavigationToolbar>(root.ChildElement));
+        Assert.False(toolbar.CenterMiddle);
     }
 
     [Fact]
@@ -2358,10 +2366,8 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var appBarBackground = RequireRenderObject<RenderColoredBox>(root.ChildElement);
-        var align = FindDescendant<RenderAlign>(appBarBackground);
-        Assert.NotNull(align);
-        Assert.Equal(Alignment.Center, align!.Alignment);
+        NavigationToolbar toolbar = Assert.Single(FindWidgets<NavigationToolbar>(root.ChildElement));
+        Assert.True(toolbar.CenterMiddle);
     }
 
     [Fact]
@@ -2388,9 +2394,8 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var appBarBackground = RequireRenderObject<RenderColoredBox>(root.ChildElement);
-        var align = FindDescendant<RenderAlign>(appBarBackground);
-        Assert.Null(align);
+        NavigationToolbar toolbar = Assert.Single(FindWidgets<NavigationToolbar>(root.ChildElement));
+        Assert.False(toolbar.CenterMiddle);
     }
 
     [Fact]
@@ -2413,7 +2418,7 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var appBarBackground = RequireRenderObject<RenderColoredBox>(root.ChildElement);
+        RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
         var leadingBox = FindConstrainedBox(appBarBackground, constraints =>
             Math.Abs(constraints.MinWidth - 80) < 0.001
             && Math.Abs(constraints.MaxWidth - 80) < 0.001);
@@ -2442,7 +2447,7 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var appBarBackground = RequireRenderObject<RenderColoredBox>(root.ChildElement);
+        RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
         var leadingBox = FindConstrainedBox(appBarBackground, constraints =>
             Math.Abs(constraints.MinWidth - 64) < 0.001
             && Math.Abs(constraints.MaxWidth - 64) < 0.001);
@@ -2467,7 +2472,7 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var appBarBackground = RequireRenderObject<RenderColoredBox>(root.ChildElement);
+        RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
         var leadingBox = FindConstrainedBox(appBarBackground, constraints =>
             Math.Abs(constraints.MinWidth - 64) < 0.001
             && Math.Abs(constraints.MaxWidth - 64) < 0.001
@@ -2701,7 +2706,7 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var appBarBackground = RequireRenderObject<RenderColoredBox>(root.ChildElement);
+        RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
         var actionsPadding = FindPadding(appBarBackground, padding =>
             Math.Abs(padding.Left - 13) < 0.001
             && Math.Abs(padding.Top - 5) < 0.001
@@ -2735,7 +2740,7 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var appBarBackground = RequireRenderObject<RenderColoredBox>(root.ChildElement);
+        RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
         var actionsPadding = FindPadding(appBarBackground, padding =>
             Math.Abs(padding.Left - 4) < 0.001
             && Math.Abs(padding.Top - 6) < 0.001
@@ -2758,7 +2763,7 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var appBarBackground = RequireRenderObject<RenderColoredBox>(root.ChildElement);
+        RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
         var outerPadding = FindPadding(appBarBackground, padding =>
             Math.Abs(padding.Left) < 0.001
             && Math.Abs(padding.Top) < 0.001
@@ -2785,7 +2790,7 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var appBarBackground = RequireRenderObject<RenderColoredBox>(root.ChildElement);
+        RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
         var safeAreaPadding = FindPadding(appBarBackground, padding =>
             Math.Abs(padding.Left) < 0.001
             && Math.Abs(padding.Top - 24) < 0.001
@@ -2814,7 +2819,7 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var appBarBackground = RequireRenderObject<RenderColoredBox>(root.ChildElement);
+        RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
         var safeAreaPadding = FindPadding(appBarBackground, padding =>
             Math.Abs(padding.Left) < 0.001
             && Math.Abs(padding.Top - 24) < 0.001
@@ -2844,7 +2849,7 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var appBarBackground = RequireRenderObject<RenderColoredBox>(root.ChildElement);
+        RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
         var actionsPadding = FindPadding(appBarBackground, padding =>
             Math.Abs(padding.Left - 3) < 0.001
             && Math.Abs(padding.Top - 4) < 0.001
@@ -2883,7 +2888,7 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var appBarBackground = RequireRenderObject<RenderColoredBox>(root.ChildElement);
+        RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
         var actionsPadding = FindPadding(appBarBackground, padding =>
             Math.Abs(padding.Left - 7) < 0.001
             && Math.Abs(padding.Top - 8) < 0.001
@@ -2934,8 +2939,7 @@ public sealed class MaterialScaffoldTests
         var owner = new BuildOwner();
         var theme = ThemeData.Light with
         {
-            OnSurfaceColor = Colors.CadetBlue,
-            OnPrimaryColor = Colors.Crimson
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(onSurface: Colors.CadetBlue),
         };
 
         var root = new TestRootElement(
@@ -2962,8 +2966,7 @@ public sealed class MaterialScaffoldTests
         var theme = ThemeData.Light with
         {
             UseMaterial3 = false,
-            OnSurfaceColor = Colors.Crimson,
-            OnPrimaryColor = Colors.CadetBlue
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(onPrimary: Colors.CadetBlue),
         };
 
         var root = new TestRootElement(
@@ -3076,9 +3079,9 @@ public sealed class MaterialScaffoldTests
         var owner = new BuildOwner();
         var theme = ThemeData.Light with
         {
-            OnSurfaceColor = Colors.CadetBlue,
-            OnSurfaceVariantColor = Colors.Goldenrod,
-            OnPrimaryColor = Colors.Crimson
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(
+                onSurface: Colors.CadetBlue,
+                onSurfaceVariant: Colors.Goldenrod),
         };
 
         var root = new TestRootElement(
@@ -3108,8 +3111,7 @@ public sealed class MaterialScaffoldTests
         var theme = ThemeData.Light with
         {
             UseMaterial3 = false,
-            OnSurfaceVariantColor = Colors.Goldenrod,
-            OnPrimaryColor = Colors.CadetBlue
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(onPrimary: Colors.CadetBlue),
         };
 
         var root = new TestRootElement(
@@ -3286,7 +3288,7 @@ public sealed class MaterialScaffoldTests
     }
 
     [Fact]
-    public void AppBar_TitleSpacing_AppliesHorizontalPaddingToTitle()
+    public void AppBar_TitleSpacing_ConfiguresNavigationToolbar()
     {
         var owner = new BuildOwner();
         var root = new TestRootElement(
@@ -3300,14 +3302,8 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var appBarBackground = RequireRenderObject<RenderColoredBox>(root.ChildElement);
-        var titlePadding = FindPadding(appBarBackground, padding =>
-            Math.Abs(padding.Left - 24) < 0.001
-            && Math.Abs(padding.Right - 24) < 0.001
-            && Math.Abs(padding.Top) < 0.001
-            && Math.Abs(padding.Bottom) < 0.001);
-
-        Assert.NotNull(titlePadding);
+        NavigationToolbar toolbar = Assert.Single(FindWidgets<NavigationToolbar>(root.ChildElement));
+        Assert.Equal(24, toolbar.MiddleSpacing);
     }
 
     [Fact]
@@ -3328,14 +3324,8 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var appBarBackground = RequireRenderObject<RenderColoredBox>(root.ChildElement);
-        var titlePadding = FindPadding(appBarBackground, padding =>
-            Math.Abs(padding.Left - 22) < 0.001
-            && Math.Abs(padding.Right - 22) < 0.001
-            && Math.Abs(padding.Top) < 0.001
-            && Math.Abs(padding.Bottom) < 0.001);
-
-        Assert.NotNull(titlePadding);
+        NavigationToolbar toolbar = Assert.Single(FindWidgets<NavigationToolbar>(root.ChildElement));
+        Assert.Equal(22, toolbar.MiddleSpacing);
     }
 
     [Fact]
@@ -3358,14 +3348,8 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var appBarBackground = RequireRenderObject<RenderColoredBox>(root.ChildElement);
-        var titlePadding = FindPadding(appBarBackground, padding =>
-            Math.Abs(padding.Left - 30) < 0.001
-            && Math.Abs(padding.Right - 30) < 0.001
-            && Math.Abs(padding.Top) < 0.001
-            && Math.Abs(padding.Bottom) < 0.001);
-
-        Assert.NotNull(titlePadding);
+        NavigationToolbar toolbar = Assert.Single(FindWidgets<NavigationToolbar>(root.ChildElement));
+        Assert.Equal(30, toolbar.MiddleSpacing);
     }
 
     [Fact]
@@ -3386,7 +3370,7 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var appBarBackground = RequireRenderObject<RenderColoredBox>(root.ChildElement);
+        RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
         var toolbarBox = FindConstrainedBox(appBarBackground, constraints =>
             Math.Abs(constraints.MinHeight - 72) < 0.001
             && Math.Abs(constraints.MaxHeight - 72) < 0.001);
@@ -3414,7 +3398,7 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var appBarBackground = RequireRenderObject<RenderColoredBox>(root.ChildElement);
+        RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
         var toolbarBox = FindConstrainedBox(appBarBackground, constraints =>
             Math.Abs(constraints.MinHeight - 64) < 0.001
             && Math.Abs(constraints.MaxHeight - 64) < 0.001);
@@ -3435,7 +3419,7 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var appBarBackground = RequireRenderObject<RenderColoredBox>(root.ChildElement);
+        RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
         var toolbarBox = FindConstrainedBox(appBarBackground, constraints =>
             Math.Abs(constraints.MinHeight - 56) < 0.001
             && Math.Abs(constraints.MaxHeight - 56) < 0.001);
@@ -3460,7 +3444,7 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var appBarBackground = RequireRenderObject<RenderColoredBox>(root.ChildElement);
+        RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
         var toolbarBox = FindConstrainedBox(appBarBackground, constraints =>
             Math.Abs(constraints.MinHeight - 56) < 0.001
             && Math.Abs(constraints.MaxHeight - 56) < 0.001);
@@ -3474,8 +3458,7 @@ public sealed class MaterialScaffoldTests
         var owner = new BuildOwner();
         var theme = ThemeData.Light with
         {
-            OnSurfaceColor = Colors.Bisque,
-            OnPrimaryColor = Colors.Crimson,
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(onSurface: Colors.Bisque),
             TextTheme = new MaterialTextTheme(
                 titleLarge: new TextStyle(
                     FontSize: 29,
@@ -3492,7 +3475,7 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var appBarBackground = RequireRenderObject<RenderColoredBox>(root.ChildElement);
+        RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
         var titleParagraph = FindParagraphByText(appBarBackground, "Title");
         Assert.NotNull(titleParagraph);
         Assert.Equal(29, titleParagraph!.FontSize);
@@ -3522,7 +3505,7 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var appBarBackground = RequireRenderObject<RenderColoredBox>(root.ChildElement);
+        RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
         var titleParagraph = FindParagraphByText(appBarBackground, "Title");
         Assert.NotNull(titleParagraph);
         Assert.Equal(26, titleParagraph!.FontSize);
@@ -3557,7 +3540,7 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var appBarBackground = RequireRenderObject<RenderColoredBox>(root.ChildElement);
+        RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
         var titleParagraph = FindParagraphByText(appBarBackground, "Title");
         Assert.NotNull(titleParagraph);
         Assert.Equal(18, titleParagraph!.FontSize);
@@ -3592,7 +3575,7 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var appBarBackground = RequireRenderObject<RenderColoredBox>(root.ChildElement);
+        RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
         var actionParagraph = FindParagraphByText(appBarBackground, "Action");
         Assert.NotNull(actionParagraph);
         Assert.Equal(17, actionParagraph!.FontSize);
@@ -3631,7 +3614,7 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var appBarBackground = RequireRenderObject<RenderColoredBox>(root.ChildElement);
+        RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
         var actionParagraph = FindParagraphByText(appBarBackground, "Action");
         Assert.NotNull(actionParagraph);
         Assert.Equal(15, actionParagraph!.FontSize);
@@ -3640,15 +3623,17 @@ public sealed class MaterialScaffoldTests
     }
 
     [Fact]
-    public void AppBar_NegativeTitleSpacing_Throws()
+    public void AppBar_NegativeTitleSpacing_IsAcceptedLikeFlutter()
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() => new AppBar(
+        var appBar = new AppBar(
             titleText: "Invalid",
-            titleSpacing: -1));
+            titleSpacing: -1);
+
+        Assert.Equal(-1, appBar.TitleSpacing);
     }
 
     [Fact]
-    public void AppBar_NonPositiveThemeToolbarHeight_Throws()
+    public void AppBar_ZeroThemeToolbarHeight_IsAcceptedLikeFlutter()
     {
         var owner = new BuildOwner();
         var root = new TestRootElement(
@@ -3660,15 +3645,17 @@ public sealed class MaterialScaffoldTests
                 child: new AppBar(titleText: "Invalid")));
 
         root.Attach(owner);
-        Assert.Throws<ArgumentOutOfRangeException>(() =>
-        {
-            root.Mount(parent: null, newSlot: null);
-            owner.FlushBuild();
-        });
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var toolbar = FindConstrainedBox(
+            root.ChildElement?.RenderObject,
+            constraints => constraints.MinHeight == 0 && constraints.MaxHeight == 0);
+        Assert.NotNull(toolbar);
     }
 
     [Fact]
-    public void AppBar_NonPositiveThemeLeadingWidth_Throws()
+    public void AppBar_ZeroThemeLeadingWidth_IsAcceptedLikeFlutter()
     {
         var owner = new BuildOwner();
         var root = new TestRootElement(
@@ -3682,11 +3669,13 @@ public sealed class MaterialScaffoldTests
                     leading: new SizedBox(width: 8, height: 8))));
 
         root.Attach(owner);
-        Assert.Throws<ArgumentOutOfRangeException>(() =>
-        {
-            root.Mount(parent: null, newSlot: null);
-            owner.FlushBuild();
-        });
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var leading = FindConstrainedBox(
+            root.ChildElement?.RenderObject,
+            constraints => constraints.MinWidth == 0 && constraints.MaxWidth == 0);
+        Assert.NotNull(leading);
     }
 
     [Fact]
@@ -3706,9 +3695,9 @@ public sealed class MaterialScaffoldTests
         localRoot.Attach(localOwner);
         localRoot.Mount(parent: null, newSlot: null);
         localOwner.FlushBuild();
-        Assert.NotNull(FindColoredBox(
-            localRoot.ChildElement?.RenderObject,
-            color => color == Colors.Crimson));
+        Assert.Contains(
+            FindWidgets<MaterialWidget>(localRoot.ChildElement),
+            material => material.Color == Colors.Crimson);
 
         var widgetOwner = new BuildOwner();
         var widgetRoot = new TestRootElement(
@@ -3723,9 +3712,9 @@ public sealed class MaterialScaffoldTests
         widgetRoot.Attach(widgetOwner);
         widgetRoot.Mount(parent: null, newSlot: null);
         widgetOwner.FlushBuild();
-        Assert.NotNull(FindColoredBox(
-            widgetRoot.ChildElement?.RenderObject,
-            color => color == Colors.DarkGreen));
+        Assert.Contains(
+            FindWidgets<MaterialWidget>(widgetRoot.ChildElement),
+            material => material.Color == Colors.DarkGreen);
     }
 
     [Fact]
@@ -4092,11 +4081,133 @@ public sealed class MaterialScaffoldTests
         Assert.Equal(DrawerAlignment.End, captured!.Alignment);
     }
 
+    [Fact]
+    public void AppBar_StatefulWidgetAndThemeBackgrounds_ResolveScrolledUnderFromVerticalUpdates()
+    {
+        BuildContext? emitterContext = null;
+        WidgetStateColor widgetBackground = WidgetStateColor.ResolveWith(
+            states => states.Contains(WidgetState.ScrolledUnder)
+                ? Colors.DarkGreen
+                : Colors.Goldenrod);
+        WidgetStateColor themeBackground = WidgetStateColor.ResolveWith(
+            states => states.Contains(WidgetState.ScrolledUnder)
+                ? Colors.DarkSlateBlue
+                : Colors.Crimson);
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    AppBarTheme = new AppBarThemeData(BackgroundColorState: themeBackground),
+                },
+                child: new ScrollNotificationObserver(
+                    child: new Column(
+                        children:
+                        [
+                            new AppBar(titleText: "Theme state"),
+                            new AppBar(titleText: "Widget state", backgroundColor: widgetBackground),
+                            new CaptureBuildContextWidget(context => emitterContext = context),
+                        ]))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.NotNull(emitterContext);
+        Assert.Contains(
+            FindWidgets<MaterialWidget>(root.ChildElement),
+            material => material.Color == Colors.Crimson);
+        Assert.Contains(
+            FindWidgets<MaterialWidget>(root.ChildElement),
+            material => material.Color == Colors.Goldenrod);
+
+        var notification = new ScrollUpdateNotification(
+            new ScrollMetricsSnapshot(
+                Pixels: 12,
+                MinScrollExtent: 0,
+                MaxScrollExtent: 100,
+                ViewportDimension: 40,
+                AxisDirection: AxisDirection.Down));
+        notification.Dispatch(emitterContext);
+        owner.FlushBuild();
+
+        Assert.Contains(
+            FindWidgets<MaterialWidget>(root.ChildElement),
+            material => material.Color == Colors.DarkSlateBlue);
+        Assert.Contains(
+            FindWidgets<MaterialWidget>(root.ChildElement),
+            material => material.Color == Colors.DarkGreen);
+    }
+
+    [Fact]
+    public void AppBar_ExposesFlutterVisualAndSemanticsConfiguration()
+    {
+        var shape = ShapeBorder.RoundedRectangle(12);
+        var appBar = new AppBar(
+            titleText: "Configured",
+            elevation: 2,
+            scrolledUnderElevation: 5,
+            shadowColor: Colors.Black,
+            surfaceTintColor: Colors.CadetBlue,
+            shape: shape,
+            excludeHeaderSemantics: true,
+            toolbarOpacity: 0.75,
+            bottomOpacity: 0.5,
+            forceMaterialTransparency: true,
+            useDefaultSemanticsOrder: false,
+            clipBehavior: Clip.AntiAlias,
+            animateColor: true);
+
+        Assert.Equal(2, appBar.Elevation);
+        Assert.Equal(5, appBar.ScrolledUnderElevation);
+        Assert.Equal(Colors.Black, appBar.ShadowColor);
+        Assert.Equal(Colors.CadetBlue, appBar.SurfaceTintColor);
+        Assert.Same(shape, appBar.Shape);
+        Assert.True(appBar.ExcludeHeaderSemantics);
+        Assert.Equal(0.75, appBar.ToolbarOpacity);
+        Assert.Equal(0.5, appBar.BottomOpacity);
+        Assert.True(appBar.ForceMaterialTransparency);
+        Assert.False(appBar.UseDefaultSemanticsOrder);
+        Assert.Equal(Clip.AntiAlias, appBar.ClipBehavior);
+        Assert.True(appBar.AnimateColor);
+        Assert.Throws<ArgumentOutOfRangeException>(() => new AppBar(elevation: -1));
+    }
+
     private static T RequireRenderObject<T>(Element? element) where T : RenderObject
     {
         Assert.NotNull(element);
         Assert.NotNull(element!.RenderObject);
-        return Assert.IsType<T>(element.RenderObject);
+        T? result = FindDescendant<T>(element.RenderObject);
+        return Assert.IsType<T>(result);
+    }
+
+    private static RenderObject RequireRenderObject(Element? element)
+    {
+        Assert.NotNull(element);
+        Assert.NotNull(element!.RenderObject);
+        return element.RenderObject;
+    }
+
+    private static IReadOnlyList<T> FindWidgets<T>(Element? element) where T : Widget
+    {
+        var widgets = new List<T>();
+        FindWidgets(element, widgets);
+        return widgets;
+    }
+
+    private static void FindWidgets<T>(Element? element, List<T> widgets) where T : Widget
+    {
+        if (element is null)
+        {
+            return;
+        }
+
+        if (element.Widget is T widget)
+        {
+            widgets.Add(widget);
+        }
+
+        element.VisitChildren(child => FindWidgets(child, widgets));
     }
 
     private static T? FindDescendant<T>(RenderObject? root) where T : RenderObject

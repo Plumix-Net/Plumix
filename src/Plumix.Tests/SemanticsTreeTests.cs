@@ -10,6 +10,37 @@ namespace Plumix.Tests;
 public sealed class SemanticsTreeTests
 {
     [Fact]
+    public void OrdinalSortKeys_ReorderSemanticSiblingsWithoutChangingPaintOrder()
+    {
+        var later = new RenderSemanticsAnnotations(
+            label: "Later",
+            container: true,
+            sortKey: new OrdinalSortKey(1.0),
+            child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))));
+        var earlier = new RenderSemanticsAnnotations(
+            label: "Earlier",
+            container: true,
+            sortKey: new OrdinalSortKey(0.0),
+            child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))));
+        var row = new RenderFlex(
+            children: [later, earlier],
+            direction: Axis.Horizontal);
+        var renderView = new RenderView { Child = row };
+        var pipeline = new PipelineOwner(renderView);
+        pipeline.Attach(renderView);
+
+        pipeline.FlushLayout(new Size(100, 40));
+        pipeline.FlushSemantics();
+
+        var root = pipeline.SemanticsOwner.RootNode;
+        Assert.NotNull(root);
+        Assert.Collection(
+            root.Children,
+            node => Assert.Equal("Earlier", node.Label),
+            node => Assert.Equal("Later", node.Label));
+    }
+
+    [Fact]
     public void Button_ProducesSemanticsNode_WithButtonFlagsAndTapAction()
     {
         var button = new RenderButton(

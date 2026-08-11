@@ -630,9 +630,10 @@ public sealed class ScaffoldState : State
             geometry: new ScaffoldGeometryData(
                 FloatingActionButtonArea: floatingActionButtonArea,
                 BottomNavigationBarTop: bottomNavigationBarTop),
-            child: new Container(
-                color: effectiveBackground,
-                child: content));
+            child: new ScrollNotificationObserver(
+                child: new Container(
+                    color: effectiveBackground,
+                    child: content)));
     }
 
     private Widget? BuildPresentedBottomSheet(BuildContext context)
@@ -1336,7 +1337,7 @@ public sealed class ScaffoldState : State
     }
 }
 
-public sealed class AppBar : StatelessWidget, IPreferredSizeWidget
+public sealed class AppBar : StatefulWidget, IPreferredSizeWidget
 {
     public AppBar(
         string? titleText = null,
@@ -1356,26 +1357,29 @@ public sealed class AppBar : StatelessWidget, IPreferredSizeWidget
         Thickness? actionsPadding = null,
         double? toolbarHeight = null,
         Thickness? padding = null,
-        Color? backgroundColor = null,
+        WidgetStateColor? backgroundColor = null,
         Color? foregroundColor = null,
         SystemUiOverlayStyle? systemOverlayStyle = null,
         Widget? bottom = null,
         Widget? flexibleSpace = null,
+        double? elevation = null,
+        double? scrolledUnderElevation = null,
+        ScrollNotificationPredicate? notificationPredicate = null,
+        Color? shadowColor = null,
+        Color? surfaceTintColor = null,
+        ShapeBorder? shape = null,
+        bool excludeHeaderSemantics = false,
+        double toolbarOpacity = 1.0,
+        double bottomOpacity = 1.0,
+        bool forceMaterialTransparency = false,
+        bool useDefaultSemanticsOrder = true,
+        Clip? clipBehavior = null,
+        bool animateColor = false,
         Key? key = null) : base(key)
     {
-        if (toolbarHeight.HasValue && (double.IsNaN(toolbarHeight.Value) || double.IsInfinity(toolbarHeight.Value) || toolbarHeight.Value <= 0))
+        if (elevation.HasValue && (double.IsNaN(elevation.Value) || elevation.Value < 0.0))
         {
-            throw new ArgumentOutOfRangeException(nameof(toolbarHeight), "Toolbar height must be positive and finite.");
-        }
-
-        if (leadingWidth.HasValue && (double.IsNaN(leadingWidth.Value) || double.IsInfinity(leadingWidth.Value) || leadingWidth.Value <= 0))
-        {
-            throw new ArgumentOutOfRangeException(nameof(leadingWidth), "Leading width must be positive and finite.");
-        }
-
-        if (titleSpacing.HasValue && (double.IsNaN(titleSpacing.Value) || double.IsInfinity(titleSpacing.Value) || titleSpacing.Value < 0))
-        {
-            throw new ArgumentOutOfRangeException(nameof(titleSpacing), "Title spacing must be non-negative and finite.");
+            throw new ArgumentOutOfRangeException(nameof(elevation), "Elevation must be non-negative.");
         }
 
         TitleText = titleText;
@@ -1400,6 +1404,19 @@ public sealed class AppBar : StatelessWidget, IPreferredSizeWidget
         SystemOverlayStyle = systemOverlayStyle;
         Bottom = bottom;
         FlexibleSpace = flexibleSpace;
+        Elevation = elevation;
+        ScrolledUnderElevation = scrolledUnderElevation;
+        NotificationPredicate = notificationPredicate ?? RawScrollbar.DefaultScrollNotificationPredicate;
+        ShadowColor = shadowColor;
+        SurfaceTintColor = surfaceTintColor;
+        Shape = shape;
+        ExcludeHeaderSemantics = excludeHeaderSemantics;
+        ToolbarOpacity = toolbarOpacity;
+        BottomOpacity = bottomOpacity;
+        ForceMaterialTransparency = forceMaterialTransparency;
+        UseDefaultSemanticsOrder = useDefaultSemanticsOrder;
+        ClipBehavior = clipBehavior;
+        AnimateColor = animateColor;
     }
 
     public string? TitleText { get; }
@@ -1436,7 +1453,7 @@ public sealed class AppBar : StatelessWidget, IPreferredSizeWidget
 
     public Thickness? Padding { get; }
 
-    public Color? BackgroundColor { get; }
+    public WidgetStateColor? BackgroundColor { get; }
 
     public Color? ForegroundColor { get; }
 
@@ -1446,28 +1463,85 @@ public sealed class AppBar : StatelessWidget, IPreferredSizeWidget
 
     public Widget? FlexibleSpace { get; }
 
+    public double? Elevation { get; }
+
+    public double? ScrolledUnderElevation { get; }
+
+    public ScrollNotificationPredicate NotificationPredicate { get; }
+
+    public Color? ShadowColor { get; }
+
+    public Color? SurfaceTintColor { get; }
+
+    public ShapeBorder? Shape { get; }
+
+    public bool ExcludeHeaderSemantics { get; }
+
+    public double ToolbarOpacity { get; }
+
+    public double BottomOpacity { get; }
+
+    public bool ForceMaterialTransparency { get; }
+
+    public bool UseDefaultSemanticsOrder { get; }
+
+    public Clip? ClipBehavior { get; }
+
+    public bool AnimateColor { get; }
+
     public Size PreferredSize => new(
         0,
         (ToolbarHeight ?? 56) + (Bottom is IPreferredSizeWidget preferred ? preferred.PreferredSize.Height : 0));
 
-    public override Widget Build(BuildContext context)
+    public static double PreferredHeightFor(BuildContext context, Size preferredSize)
+    {
+        return preferredSize.Height;
+    }
+
+    public override State CreateState()
+    {
+        return new AppBarState();
+    }
+
+    private Widget BuildAppBar(BuildContext context, bool scrolledUnder)
     {
         var theme = Theme.Of(context);
         var appBarTheme = AppBarTheme.Of(context);
-        var effectiveBackground = BackgroundColor
-                                  ?? appBarTheme.BackgroundColor
-                                  ?? ResolveDefaultBackgroundColor(theme);
-        var effectiveForeground = ForegroundColor
-                                  ?? appBarTheme.ForegroundColor
-                                  ?? ResolveDefaultForegroundColor(theme);
+        IReadOnlySet<WidgetState> states = scrolledUnder
+            ? new HashSet<WidgetState> { WidgetState.ScrolledUnder }
+            : new HashSet<WidgetState>();
+        WidgetStateColor defaultBackground = new(ResolveDefaultBackgroundColor(theme));
+        WidgetStateColor? backgroundSource = BackgroundColor
+                                             ?? appBarTheme.BackgroundColorState
+                                             ?? (appBarTheme.BackgroundColor.HasValue
+                                                 ? new WidgetStateColor(appBarTheme.BackgroundColor.Value)
+                                                 : null);
+        Color effectiveBackground = backgroundSource?.Resolve(states)
+                                    ?? (theme.UseMaterial3 && scrolledUnder
+                                        ? theme.ColorScheme.SurfaceContainer
+                                        : defaultBackground.Resolve(states));
+        Color effectiveForeground = ForegroundColor
+                                    ?? appBarTheme.ForegroundColor
+                                    ?? ResolveDefaultForegroundColor(theme);
         bool effectiveCenterTitle = ResolveEffectiveCenterTitle(theme, appBarTheme);
-        double effectiveTitleSpacing = TitleSpacing ?? appBarTheme.TitleSpacing ?? 16;
+        double effectiveTitleSpacing = TitleSpacing
+                                       ?? appBarTheme.TitleSpacing
+                                       ?? NavigationToolbar.KMiddleSpacing;
         var effectiveIconTheme = ResolveEffectiveIconTheme(theme, appBarTheme, effectiveForeground);
         var effectiveActionsIconTheme = ResolveEffectiveActionsIconTheme(
             theme,
             appBarTheme,
             effectiveForeground,
             effectiveIconTheme);
+        double effectiveToolbarOpacity = ResolveToolbarOpacity(ToolbarOpacity);
+        effectiveIconTheme = effectiveIconTheme with
+        {
+            Opacity = (effectiveIconTheme.Opacity ?? 1.0) * effectiveToolbarOpacity,
+        };
+        effectiveActionsIconTheme = effectiveActionsIconTheme with
+        {
+            Opacity = (effectiveActionsIconTheme.Opacity ?? 1.0) * effectiveToolbarOpacity,
+        };
         var effectiveLeading = ResolveEffectiveLeading(context);
         var effectiveActions = ResolveEffectiveActions(context);
         double effectiveLeadingWidth = ResolveEffectiveLeadingWidth(appBarTheme);
@@ -1475,38 +1549,66 @@ public sealed class AppBar : StatelessWidget, IPreferredSizeWidget
         double effectiveToolbarHeight = ResolveEffectiveToolbarHeight(appBarTheme);
         var effectiveToolbarTextStyle = ResolveToolbarTextStyle(theme, appBarTheme, effectiveForeground);
         var effectiveTitleTextStyle = ResolveTitleTextStyle(theme, appBarTheme, effectiveForeground);
+        effectiveToolbarTextStyle = ApplyTextOpacity(effectiveToolbarTextStyle, effectiveToolbarOpacity);
+        effectiveTitleTextStyle = ApplyTextOpacity(effectiveTitleTextStyle, effectiveToolbarOpacity);
         var effectiveSystemOverlayStyle = ResolveEffectiveSystemOverlayStyle(
             theme,
             appBarTheme,
             effectiveBackground);
+        double effectiveElevation = Elevation
+                                    ?? appBarTheme.Elevation
+                                    ?? (theme.UseMaterial3 ? 0.0 : 4.0);
+        double effectiveScrolledUnderElevation = ScrolledUnderElevation
+                                                 ?? appBarTheme.ScrolledUnderElevation
+                                                 ?? (theme.UseMaterial3 ? 3.0 : effectiveElevation);
+        double materialElevation = scrolledUnder ? effectiveScrolledUnderElevation : effectiveElevation;
+        Color? effectiveShadowColor = ShadowColor
+                                      ?? appBarTheme.ShadowColor
+                                      ?? (theme.UseMaterial3 ? Colors.Transparent : Colors.Black);
+        Color? effectiveSurfaceTintColor = SurfaceTintColor
+                                           ?? appBarTheme.SurfaceTintColor
+                                           ?? (theme.UseMaterial3 ? theme.ColorScheme.SurfaceTint : null);
+        ShapeBorder? effectiveShape = Shape ?? appBarTheme.Shape;
 
-        var titleWidget = (Widget)new DefaultTextStyle(
-            style: effectiveTitleTextStyle,
-            child: Title ?? BuildDefaultTitle());
-        var middle = (Widget)new Padding(
-            insets: new Thickness(effectiveTitleSpacing, 0, effectiveTitleSpacing, 0),
-            child: effectiveCenterTitle
-                ? new Center(child: titleWidget)
-                : titleWidget);
-
-        var rowChildren = new List<Widget>();
-        if (effectiveLeading != null)
+        Widget? titleWidget = Title ?? (TitleText is null ? null : BuildDefaultTitle());
+        if (titleWidget is not null && !ExcludeHeaderSemantics)
         {
-            rowChildren.Add(
-                new SizedBox(
-                    width: effectiveLeadingWidth,
-                    height: effectiveToolbarHeight,
-                    child: new Center(
-                        child: new Plumix.Widgets.IconTheme(
-                            data: effectiveIconTheme,
-                            child: effectiveLeading))));
+            bool namesRoute = PlatformDefaults.TargetPlatform is not (TargetPlatform.IOS or TargetPlatform.MacOS);
+            titleWidget = new Semantics(
+                flags: SemanticsFlags.IsHeader,
+                namesRoute: namesRoute,
+                child: titleWidget);
+        }
+        if (titleWidget is not null)
+        {
+            titleWidget = new DefaultTextStyle(
+                style: effectiveTitleTextStyle,
+                child: titleWidget);
+            if (MediaQuery.MaybeOf(context) is not null)
+            {
+                titleWidget = MediaQuery.WithClampedTextScaling(
+                    context,
+                    titleWidget,
+                    maxScaleFactor: 1.34);
+            }
         }
 
-        rowChildren.Add(new Expanded(child: middle));
+        Widget? toolbarLeading = null;
+        if (effectiveLeading != null)
+        {
+            Widget leadingChild = theme.UseMaterial3 && effectiveLeading is IconButton
+                ? new Center(child: effectiveLeading)
+                : effectiveLeading;
+            toolbarLeading = new SizedBox(
+                width: effectiveLeadingWidth,
+                height: effectiveToolbarHeight,
+                child: leadingChild);
+        }
 
+        Widget? toolbarTrailing = null;
         if (effectiveActions.Count > 0)
         {
-            rowChildren.Add(new Padding(
+            Widget actions = new Padding(
                 insets: effectiveActionsPadding,
                 child: new Plumix.Widgets.IconTheme(
                     data: effectiveActionsIconTheme,
@@ -1516,30 +1618,52 @@ public sealed class AppBar : StatelessWidget, IPreferredSizeWidget
                             ? CrossAxisAlignment.Center
                             : CrossAxisAlignment.Stretch,
                         spacing: 0,
-                        children: effectiveActions))));
-        }
-        else if (effectiveCenterTitle && effectiveLeading != null)
-        {
-            // Reserve symmetric trailing space when centering title without explicit actions.
-            rowChildren.Add(new SizedBox(width: effectiveLeadingWidth));
+                        children: effectiveActions)));
+            toolbarTrailing = new IconButtonTheme(
+                data: new IconButtonThemeData(
+                    IconButton.StyleFrom(iconSize: effectiveActionsIconTheme.Size ?? 24.0)),
+                child: actions);
         }
 
-        Widget appBarContent = new SizedBox(
+        Widget toolbar = new SizedBox(
             height: effectiveToolbarHeight,
             child: new DefaultTextStyle(
                 style: effectiveToolbarTextStyle,
-                child: new Row(
-                    crossAxisAlignment: CrossAxisAlignment.Center,
-                    spacing: 0,
-                    children: rowChildren)));
+                child: new Plumix.Widgets.IconTheme(
+                    data: effectiveIconTheme,
+                    child: new NavigationToolbar(
+                        leading: toolbarLeading,
+                        middle: titleWidget,
+                        trailing: toolbarTrailing,
+                        centerMiddle: effectiveCenterTitle,
+                        middleSpacing: effectiveTitleSpacing))));
+        toolbar = new ClipRect(
+            clipBehavior: ClipBehavior ?? Clip.HardEdge,
+            child: toolbar);
+
+        Widget toolbarAndBottom = toolbar;
 
         if (Bottom is not null)
         {
-            appBarContent = new Column(
-                mainAxisSize: MainAxisSize.Min,
+            Widget effectiveBottom = BottomOpacity == 1.0
+                ? Bottom
+                : new Opacity(
+                    opacity: ResolveToolbarOpacity(BottomOpacity),
+                    child: Bottom);
+            toolbarAndBottom = new Column(
+                mainAxisAlignment: MainAxisAlignment.SpaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
-                children: [appBarContent, Bottom]);
+                children: [new Flexible(child: toolbar), effectiveBottom]);
         }
+
+        Widget appBarContent = new Padding(Padding ?? new Thickness(), toolbarAndBottom);
+
+        if (Primary && MediaQuery.MaybeOf(context) != null)
+        {
+            appBarContent = new SafeArea(bottom: false, child: appBarContent);
+        }
+
+        appBarContent = new Align(alignment: Alignment.TopCenter, child: appBarContent);
 
         if (FlexibleSpace is not null)
         {
@@ -1547,22 +1671,125 @@ public sealed class AppBar : StatelessWidget, IPreferredSizeWidget
                 fit: StackFit.Passthrough,
                 children:
                 [
-                    new Positioned(left: 0, top: 0, right: 0, bottom: 0, child: FlexibleSpace),
-                    appBarContent,
+                    new Semantics(
+                        sortKey: UseDefaultSemanticsOrder ? new OrdinalSortKey(1.0) : null,
+                        explicitChildNodes: true,
+                        child: FlexibleSpace),
+                    new Semantics(
+                        sortKey: UseDefaultSemanticsOrder ? new OrdinalSortKey(0.0) : null,
+                        explicitChildNodes: true,
+                        child: new Material(
+                            type: MaterialType.Transparency,
+                            child: appBarContent)),
                 ]);
-        }
-
-        if (Primary && MediaQuery.MaybeOf(context) != null)
-        {
-            appBarContent = new SafeArea(bottom: false, child: appBarContent);
         }
 
         SystemChrome.SetSystemUiOverlayStyle(effectiveSystemOverlayStyle);
 
-        return new Container(
+        Widget material = new Material(
+            type: ForceMaterialTransparency ? MaterialType.Transparency : MaterialType.Canvas,
             color: effectiveBackground,
-            padding: Padding ?? new Thickness(),
-            child: appBarContent);
+            elevation: materialElevation,
+            shadowColor: effectiveShadowColor,
+            surfaceTintColor: effectiveSurfaceTintColor,
+            shape: effectiveShape,
+            animateColor: AnimateColor,
+            child: new Semantics(
+                explicitChildNodes: true,
+                child: appBarContent));
+        return new Semantics(
+            container: true,
+            child: new AnnotatedRegion<SystemUiOverlayStyle>(
+                value: effectiveSystemOverlayStyle,
+                child: material));
+    }
+
+    private static double ResolveToolbarOpacity(double opacity)
+    {
+        double intervalValue = Math.Clamp((opacity - 0.25) / 0.75, 0.0, 1.0);
+        return Curves.FastOutSlowIn(intervalValue);
+    }
+
+    private static TextStyle ApplyTextOpacity(TextStyle style, double opacity)
+    {
+        if (!style.Color.HasValue || opacity >= 1.0)
+        {
+            return style;
+        }
+
+        return style with
+        {
+            Color = ApplyOpacity(style.Color.Value, opacity),
+        };
+    }
+
+    private static Color ApplyOpacity(Color color, double opacity)
+    {
+        byte alpha = (byte)Math.Clamp((int)Math.Round(color.A * opacity), 0, 255);
+        return Color.FromArgb(alpha, color.R, color.G, color.B);
+    }
+
+    private sealed class AppBarState : State
+    {
+        private ScrollNotificationObserverState? _scrollNotificationObserver;
+        private bool _scrolledUnder;
+
+        private AppBar CurrentWidget => (AppBar)StateWidget;
+
+        public override void DidChangeDependencies()
+        {
+            base.DidChangeDependencies();
+
+            var scaffold = Scaffold.MaybeOf(Context);
+            if (scaffold?.IsDrawerOpen == true || scaffold?.IsEndDrawerOpen == true)
+            {
+                return;
+            }
+
+            ScrollNotificationObserverState? observer = ScrollNotificationObserver.MaybeOf(Context);
+            if (ReferenceEquals(observer, _scrollNotificationObserver))
+            {
+                return;
+            }
+
+            _scrollNotificationObserver?.RemoveListener(HandleScrollNotification);
+            observer?.AddListener(HandleScrollNotification);
+            _scrollNotificationObserver = observer;
+        }
+
+        public override Widget Build(BuildContext context)
+        {
+            return CurrentWidget.BuildAppBar(context, _scrolledUnder);
+        }
+
+        public override void Dispose()
+        {
+            _scrollNotificationObserver?.RemoveListener(HandleScrollNotification);
+            _scrollNotificationObserver = null;
+            base.Dispose();
+        }
+
+        private void HandleScrollNotification(ScrollNotification notification)
+        {
+            if (notification is not ScrollUpdateNotification
+                || !CurrentWidget.NotificationPredicate(notification))
+            {
+                return;
+            }
+
+            bool? next = notification.Metrics.AxisDirection switch
+            {
+                AxisDirection.Down => notification.Metrics.ExtentBefore > 0.0,
+                AxisDirection.Up => notification.Metrics.ExtentAfter > 0.0,
+                _ => null,
+            };
+            if (!next.HasValue || next.Value == _scrolledUnder)
+            {
+                return;
+            }
+
+            SetState(() => _scrolledUnder = next.Value);
+        }
     }
 
     private bool ResolveEffectiveCenterTitle(ThemeData theme, AppBarThemeData appBarTheme)
@@ -1652,17 +1879,7 @@ public sealed class AppBar : StatelessWidget, IPreferredSizeWidget
 
     private double ResolveEffectiveLeadingWidth(AppBarThemeData appBarTheme)
     {
-        double effectiveLeadingWidth = LeadingWidth ?? appBarTheme.LeadingWidth ?? 56;
-        if (double.IsNaN(effectiveLeadingWidth)
-            || double.IsInfinity(effectiveLeadingWidth)
-            || effectiveLeadingWidth <= 0)
-        {
-            throw new ArgumentOutOfRangeException(
-                nameof(AppBarThemeData.LeadingWidth),
-                "Leading width must be positive and finite.");
-        }
-
-        return effectiveLeadingWidth;
+        return LeadingWidth ?? appBarTheme.LeadingWidth ?? 56;
     }
 
     private IconThemeData ResolveEffectiveIconTheme(
@@ -1700,19 +1917,9 @@ public sealed class AppBar : StatelessWidget, IPreferredSizeWidget
 
     private double ResolveEffectiveToolbarHeight(AppBarThemeData appBarTheme)
     {
-        double effectiveToolbarHeight = ToolbarHeight
-                                        ?? appBarTheme.ToolbarHeight
-                                        ?? ResolveDefaultToolbarHeight();
-        if (double.IsNaN(effectiveToolbarHeight)
-            || double.IsInfinity(effectiveToolbarHeight)
-            || effectiveToolbarHeight <= 0)
-        {
-            throw new ArgumentOutOfRangeException(
-                nameof(AppBarThemeData.ToolbarHeight),
-                "Toolbar height must be positive and finite.");
-        }
-
-        return effectiveToolbarHeight;
+        return ToolbarHeight
+               ?? appBarTheme.ToolbarHeight
+               ?? ResolveDefaultToolbarHeight();
     }
 
     private static double ResolveDefaultToolbarHeight()
@@ -1724,31 +1931,31 @@ public sealed class AppBar : StatelessWidget, IPreferredSizeWidget
     {
         if (theme.UseMaterial3)
         {
-            return theme.CanvasColor;
+            return theme.ColorScheme.Surface;
         }
 
-        return theme.Brightness == Brightness.Dark
-            ? theme.CanvasColor
-            : theme.PrimaryColor;
+        return theme.ColorScheme.Brightness == Brightness.Dark
+            ? theme.ColorScheme.Surface
+            : theme.ColorScheme.Primary;
     }
 
     private static Color ResolveDefaultForegroundColor(ThemeData theme)
     {
         if (theme.UseMaterial3)
         {
-            return theme.OnSurfaceColor;
+            return theme.ColorScheme.OnSurface;
         }
 
-        return theme.Brightness == Brightness.Dark
-            ? theme.OnSurfaceColor
-            : theme.OnPrimaryColor;
+        return theme.ColorScheme.Brightness == Brightness.Dark
+            ? theme.ColorScheme.OnSurface
+            : theme.ColorScheme.OnPrimary;
     }
 
     private static IconThemeData ResolveDefaultIconTheme(ThemeData theme, Color effectiveForeground)
     {
         return theme.UseMaterial3
             ? new IconThemeData(Color: effectiveForeground, Size: 24)
-            : new IconThemeData(Color: effectiveForeground);
+            : theme.IconTheme with { Color = effectiveForeground };
     }
 
     private static IconThemeData ResolveDefaultActionsIconTheme(
@@ -1762,7 +1969,7 @@ public sealed class AppBar : StatelessWidget, IPreferredSizeWidget
         }
 
         return new IconThemeData(
-            Color: actionForeground ?? theme.OnSurfaceVariantColor,
+            Color: actionForeground ?? theme.ColorScheme.OnSurfaceVariant,
             Size: effectiveIconTheme.Size ?? 24);
     }
 
@@ -1817,12 +2024,9 @@ public sealed class AppBar : StatelessWidget, IPreferredSizeWidget
     private static SystemUiOverlayStyle ResolveDefaultSystemOverlayStyle(ThemeData theme, Color effectiveBackground)
     {
         var iconBrightness = EstimateIconBrightnessForColor(effectiveBackground);
-        var systemBarColor = effectiveBackground;
         return new SystemUiOverlayStyle(
-            StatusBarColor: systemBarColor,
-            NavigationBarColor: systemBarColor,
-            StatusBarIconBrightness: iconBrightness,
-            NavigationBarIconBrightness: iconBrightness);
+            StatusBarColor: theme.UseMaterial3 ? Colors.Transparent : null,
+            StatusBarIconBrightness: iconBrightness);
     }
 
     private static SystemUiIconBrightness EstimateIconBrightnessForColor(Color color)
@@ -1852,13 +2056,8 @@ public sealed class AppBar : StatelessWidget, IPreferredSizeWidget
 
     private Widget BuildDefaultTitle()
     {
-        if (TitleText is null)
-        {
-            return new SizedBox();
-        }
-
         return new Text(
-            TitleText,
+            TitleText!,
             softWrap: false,
             maxLines: 1,
             overflow: TextOverflow.Ellipsis);

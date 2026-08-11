@@ -50,6 +50,7 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         bool? @checked = null,
         bool? mixed = null,
         bool? selected = null,
+        SemanticsSortKey? sortKey = null,
         Key? key = null,
         bool mergeDescendants = false) : base(child, key)
     {
@@ -85,6 +86,7 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         Checked = @checked;
         Mixed = mixed;
         Selected = selected;
+        SortKey = sortKey;
         MergeDescendants = mergeDescendants;
     }
 
@@ -136,6 +138,8 @@ public sealed class Semantics : SingleChildRenderObjectWidget
 
     public bool? Selected { get; }
 
+    public SemanticsSortKey? SortKey { get; }
+
     public bool MergeDescendants { get; }
 
     internal override RenderObject CreateRenderObject(BuildContext context)
@@ -158,6 +162,7 @@ public sealed class Semantics : SingleChildRenderObjectWidget
             liveRegion: LiveRegion,
             container: Container,
             explicitChildNodes: ExplicitChildNodes,
+            sortKey: SortKey,
             mergeDescendants: MergeDescendants);
         semantics.OnFocus = OnFocus;
         return semantics;
@@ -184,6 +189,7 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         semantics.LiveRegion = LiveRegion;
         semantics.Container = Container;
         semantics.ExplicitChildNodes = ExplicitChildNodes;
+        semantics.SortKey = SortKey;
         semantics.MergeDescendants = MergeDescendants;
     }
 

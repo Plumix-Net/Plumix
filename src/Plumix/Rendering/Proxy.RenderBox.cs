@@ -2859,6 +2859,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
     private bool _container;
     private bool _explicitChildNodes;
     private bool _mergeDescendants;
+    private SemanticsSortKey? _sortKey;
 
     public RenderSemanticsAnnotations(
         string? label = null,
@@ -2878,6 +2879,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         bool liveRegion = false,
         bool container = false,
         bool explicitChildNodes = false,
+        SemanticsSortKey? sortKey = null,
         bool mergeDescendants = false,
         RenderBox? child = null)
     {
@@ -2898,6 +2900,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         _liveRegion = liveRegion;
         _container = container;
         _explicitChildNodes = explicitChildNodes;
+        _sortKey = sortKey;
         _mergeDescendants = mergeDescendants;
         Child = child;
     }
@@ -3136,6 +3139,21 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         }
     }
 
+    public SemanticsSortKey? SortKey
+    {
+        get => _sortKey;
+        set
+        {
+            if (Equals(_sortKey, value))
+            {
+                return;
+            }
+
+            _sortKey = value;
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
     public bool MergeDescendants
     {
         get => _mergeDescendants;
@@ -3171,6 +3189,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
             && !_liveRegion
             && !_container
             && !_explicitChildNodes
+            && _sortKey is null
             && !_mergeDescendants)
         {
             return;
@@ -3180,6 +3199,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         configuration.Role = _role;
         configuration.InputType = _inputType;
         configuration.ExplicitChildNodes = _explicitChildNodes;
+        configuration.SortKey = _sortKey;
         if (_mergeDescendants)
         {
             configuration.IsMergingSemanticsOfDescendants = true;

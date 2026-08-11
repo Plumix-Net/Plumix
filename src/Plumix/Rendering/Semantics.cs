@@ -3,8 +3,34 @@ using System.Text;
 using Plumix.Widgets;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/rendering/semantics.dart (approximate)
+// Dart parity source: flutter/packages/flutter/lib/src/semantics/semantics.dart
 
 namespace Plumix.Rendering;
+
+public abstract record SemanticsSortKey(string? Name) : IComparable<SemanticsSortKey>
+{
+    public abstract int CompareTo(SemanticsSortKey? other);
+}
+
+public sealed record OrdinalSortKey(double Order, string? GroupName = null)
+    : SemanticsSortKey(GroupName)
+{
+    public override int CompareTo(SemanticsSortKey? other)
+    {
+        if (other is null)
+        {
+            return -1;
+        }
+
+        if (other is not OrdinalSortKey ordinal)
+        {
+            return string.Compare(GetType().FullName, other.GetType().FullName, StringComparison.Ordinal);
+        }
+
+        int nameComparison = string.Compare(Name, ordinal.Name, StringComparison.Ordinal);
+        return nameComparison != 0 ? nameComparison : Order.CompareTo(ordinal.Order);
+    }
+}
 
 public enum SemanticsInputType
 {
@@ -62,7 +88,6 @@ public enum SemanticsActions
     ShowOnScreen = 1 << 10,
 }
 
-// Dart parity source: flutter/packages/flutter/lib/src/semantics/semantics.dart
 public sealed record CustomSemanticsAction
 {
     public CustomSemanticsAction(string label)
@@ -120,6 +145,7 @@ public sealed class SemanticsConfiguration
     public SemanticsActions Actions { get; set; } = SemanticsActions.None;
     public Rect? ExplicitRect { get; set; }
     public int? IndexInParent { get; set; }
+    public SemanticsSortKey? SortKey { get; set; }
 
     private Dictionary<SemanticsActions, Action>? _actionHandlers;
     private Dictionary<CustomSemanticsAction, Action>? _customActionHandlers;
@@ -189,7 +215,8 @@ public sealed class SemanticsConfiguration
             Flags = Flags,
             Actions = Actions,
             ExplicitRect = ExplicitRect,
-            IndexInParent = IndexInParent
+            IndexInParent = IndexInParent,
+            SortKey = SortKey
         };
 
         if (_actionHandlers is { Count: > 0 })
@@ -284,6 +311,7 @@ public sealed class SemanticsConfiguration
         Flags |= child.Flags;
         Actions |= child.Actions;
         IndexInParent ??= child.IndexInParent;
+        SortKey ??= child.SortKey;
         if (Role == SemanticsRole.None)
         {
             Role = child.Role;
@@ -373,6 +401,7 @@ public sealed class SemanticsNode
     public SemanticsFlags Flags { get; internal set; }
     public SemanticsActions Actions { get; internal set; }
     public int? IndexInParent { get; internal set; }
+    public SemanticsSortKey? SortKey { get; internal set; }
     public bool IsHidden { get; internal set; }
     public IReadOnlyList<SemanticsNode> Children => _children;
     public IReadOnlyDictionary<CustomSemanticsAction, Action> CustomSemanticsActions => _customActionHandlers;

@@ -75,6 +75,11 @@ internal sealed class AppBarActionsPaddingDemoPageState : State
                             BuildThemedPreview(),
                             new Text("Default app bar reference (actionsPadding = 0)", fontSize: 11, color: Colors.DimGray),
                             BuildDefaultReferencePreview(),
+                            new Text(
+                                "Scroll to resolve WidgetState.scrolledUnder",
+                                fontSize: 11,
+                                color: Colors.DimGray),
+                            BuildScrolledUnderPreview(),
                         ])),
             ]);
     }
@@ -110,6 +115,46 @@ internal sealed class AppBarActionsPaddingDemoPageState : State
                 BuildActionBadge(Icons.Close),
                 BuildActionBadge(Icons.Menu),
             ]);
+    }
+
+    private static Widget BuildScrolledUnderPreview()
+    {
+        WidgetStateColor background = WidgetStateColor.ResolveWith(
+            states => states.Contains(WidgetState.ScrolledUnder)
+                ? Color.Parse("#FFB8C7DB")
+                : Color.Parse("#FFE7EDF6"));
+        return new SizedBox(
+            height: 150,
+            child: new ScrollNotificationObserver(
+                child: new Column(
+                    children:
+                    [
+                        new AppBar(
+                            titleText: "Scrolled-under state",
+                            backgroundColor: background,
+                            scrolledUnderElevation: 3,
+                            animateColor: true),
+                        new Expanded(
+                            child: new ListView(
+                                children:
+                                [
+                                    BuildScrollRow("Scroll row 1"),
+                                    BuildScrollRow("Scroll row 2"),
+                                    BuildScrollRow("Scroll row 3"),
+                                    BuildScrollRow("Scroll row 4"),
+                                    BuildScrollRow("Scroll row 5"),
+                                    BuildScrollRow("Scroll row 6"),
+                                ])),
+                    ])));
+    }
+
+    private static Widget BuildScrollRow(string label)
+    {
+        return new SizedBox(
+            height: 36,
+            child: new Padding(
+                new Thickness(12, 8),
+                new Text(label, fontSize: 12, color: Colors.DarkSlateGray)));
     }
 
     private static Widget BuildActionBadge(IconData icon)

@@ -400,6 +400,7 @@ internal sealed class RenderObjectSemantics
                || config.InputType != SemanticsInputType.None
                || config.Flags != SemanticsFlags.None
                || config.Actions != SemanticsActions.None
+               || config.SortKey is not null
                || config.HasActionHandlers;
     }
 
@@ -819,7 +820,8 @@ internal sealed class RenderObjectSemantics
             InputType = node.InputType,
             Flags = node.Flags,
             Actions = node.Actions,
-            IndexInParent = node.IndexInParent
+            IndexInParent = node.IndexInParent,
+            SortKey = node.SortKey
         };
 
         var handlers = new Dictionary<SemanticsActions, Action>();
@@ -863,11 +865,48 @@ internal sealed class RenderObjectSemantics
         node.Flags = configuration.Flags;
         node.Actions = configuration.Actions;
         node.IndexInParent = configuration.IndexInParent;
+        node.SortKey = configuration.SortKey;
         node.IsHidden = isHidden;
         node.BlocksPreviousNodes = blocksPreviousNodes;
         node.IsSemanticBoundary = configuration.IsSemanticBoundary;
-        node.ReplaceChildren(children);
+        node.ReplaceChildren(SortChildren(children));
         node.SetActionHandlers(configuration.ActionHandlers);
         node.SetCustomActionHandlers(configuration.CustomActionHandlers);
+    }
+
+    private static List<SemanticsNode> SortChildren(List<SemanticsNode> children)
+    {
+        if (children.Count < 2 || children.All(child => child.SortKey is null))
+        {
+            return children;
+        }
+
+        return children
+            .Select((child, index) => (child, index))
+            .OrderBy(pair => pair.child.SortKey is null ? 1 : 0)
+            .ThenBy(pair => pair.child.SortKey, SemanticsSortKeyComparer.Instance)
+            .ThenBy(pair => pair.index)
+            .Select(pair => pair.child)
+            .ToList();
+    }
+
+    private sealed class SemanticsSortKeyComparer : IComparer<SemanticsSortKey?>
+    {
+        public static SemanticsSortKeyComparer Instance { get; } = new();
+
+        public int Compare(SemanticsSortKey? x, SemanticsSortKey? y)
+        {
+            if (ReferenceEquals(x, y))
+            {
+                return 0;
+            }
+
+            if (x is null)
+            {
+                return 1;
+            }
+
+            return x.CompareTo(y);
+        }
     }
 }
