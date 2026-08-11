@@ -318,7 +318,10 @@ public sealed class OverscrollIndicatorTests : IDisposable
                 axisDirection: AxisDirection.Down,
                 color: Colors.Blue,
                 child: new ScrollConfiguration(
-                    behavior: new ScrollBehavior().CopyWith(
+                    // Android is pinned explicitly: the glow indicator belongs to clamping physics,
+                    // and the host platform default would otherwise supply bouncing physics, which
+                    // absorb the overscroll instead of reporting it.
+                    behavior: new FixedPlatformScrollBehavior(TargetPlatform.Android).CopyWith(
                         dragDevices: new HashSet<PointerDeviceKind>
                         {
                             PointerDeviceKind.Mouse,
@@ -426,6 +429,11 @@ public sealed class OverscrollIndicatorTests : IDisposable
         {
             return new SizedBox(width: 200, height: 200);
         }
+    }
+
+    private sealed class FixedPlatformScrollBehavior(TargetPlatform platform) : ScrollBehavior
+    {
+        public override TargetPlatform GetPlatform(BuildContext context) => platform;
     }
 
     private sealed class FixedPlatformMaterialScrollBehavior(TargetPlatform platform)

@@ -1,5 +1,16 @@
 # Changelog
 
+- Breaking: completed the strict `BouncingScrollPhysics` (iOS rubber-band scrolling) closeout. A new
+  `Plumix.Physics` library ports `Simulation`/`Tolerance`/`FrictionSimulation`/`SpringDescription`/`SpringSimulation`/
+  `ScrollSpringSimulation`/`ClampedSimulation` with Flutter's exact math, plus `BouncingScrollSimulation` and
+  `ClampingScrollSimulation`. `ScrollPhysics` gained the full source surface (`ApplyTo`/`Spring`/`ToleranceFor`/
+  fling limits/`CarriedMomentum`/`AdjustPositionForNewDimensions`), `RangeMaintainingScrollPhysics` is now the real
+  algorithm, `ScrollPosition.SetPixels` returns overscroll instead of clamping, ballistic activities follow the
+  simulation and re-settle through `GoBallistic`/`ApplyNewDimensions`, and the viewports keep out-of-range offsets so
+  the overscroll is visible. Pointer (wheel) scrolling follows the source rule and clamps its target into range, so
+  only drags and flings rubber-band. `Simulation`/`FrictionSimulation` moved from `Plumix.Rendering` to `Plumix.Physics` and
+  `FrictionSimulation`'s `drag` now has Flutter's meaning; `CarouselScrollPhysics` moved to `ScrollSpringSimulation`.
+
 - Breaking: completed the strict Material `AppBar` closeout. The standard app bar now uses direct M2/M3
   `ColorScheme` roles, state-resolving scrolled-under surfaces/elevation, source `Material`/`NavigationToolbar`
   composition, visual configuration fields, system-overlay policy, and semantic ordering. Shared widget-state color

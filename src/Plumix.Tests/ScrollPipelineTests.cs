@@ -224,6 +224,54 @@ public sealed class ScrollPipelineTests
     }
 
     [Fact]
+    public void RenderViewport_OverscrolledOffset_ShiftsChildrenInsteadOfBeingClamped()
+    {
+        var innerSliver = new RenderSliverToBoxAdapter(new FixedSizeBox(new Size(100, 300)));
+        double maxExtent = -1;
+        var viewport = new RenderViewport(
+            axis: Axis.Vertical,
+            offsetPixels: 0,
+            onViewportMetricsChanged: (_, _, max) => maxExtent = max);
+        viewport.Insert(innerSliver);
+
+        var root = new RenderView { Child = viewport };
+        var pipeline = new PipelineOwner(root);
+        pipeline.Attach(root);
+        pipeline.FlushLayout(new Size(100, 100));
+
+        Assert.Equal(200, maxExtent);
+        var sliverParentData = (SliverPhysicalParentData)innerSliver.parentData!;
+        Assert.Equal(new Point(0, 0), sliverParentData.offset);
+
+        // Overscrolled past the leading edge: the offset survives layout and the content is pushed
+        // down by exactly the overscroll, which is what makes the iOS rubber band visible.
+        viewport.OffsetPixels = -30;
+        pipeline.FlushLayout(new Size(100, 100));
+
+        Assert.Equal(-30, viewport.OffsetPixels);
+        Assert.Equal(new Point(0, 30), sliverParentData.offset);
+
+        // The leading sliver is told about the overscroll through a negative overlap, which is what
+        // overscroll-aware slivers stretch into.
+        Assert.Equal(-30, innerSliver.ConstraintsForSliver.Overlap);
+        Assert.Equal(0, innerSliver.ConstraintsForSliver.ScrollOffset);
+
+        // Overscrolled past the trailing edge: the offset is kept rather than clamped to the max.
+        viewport.OffsetPixels = 240;
+        pipeline.FlushLayout(new Size(100, 100));
+
+        Assert.Equal(240, viewport.OffsetPixels);
+        Assert.Equal(200, maxExtent);
+
+        // Back in range, the offset is used as-is again.
+        viewport.OffsetPixels = 50;
+        pipeline.FlushLayout(new Size(100, 100));
+
+        Assert.Equal(50, viewport.OffsetPixels);
+        Assert.Equal(new Point(0, 0), sliverParentData.offset);
+    }
+
+    [Fact]
     public void RenderSliverPadding_ContributesPaddingToScrollExtent()
     {
         double maxExtent = -1;
@@ -400,6 +448,10 @@ public sealed class ScrollPipelineTests
         var widget = ListView.Separated(
             itemCount: 120,
             controller: controller,
+            // Pinned so the jump coverage is checked against boundary-clamping physics rather than
+            // the host platform's default (bouncing physics legitimately overscroll a jump that
+            // lands past a lazily-estimated max extent).
+            physics: new ClampingScrollPhysics(parent: new RangeMaintainingScrollPhysics()),
             padding: new Thickness(12),
             addAutomaticKeepAlives: false,
             itemBuilder: (_, index) => new Container(

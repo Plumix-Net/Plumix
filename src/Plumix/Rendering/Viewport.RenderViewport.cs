@@ -290,6 +290,7 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer
                 : Constraints.Constrain(new Size(desiredExtent, Size.Height));
             viewportMainAxisExtent = Axis == Axis.Vertical ? Size.Height : Size.Width;
         }
+        double rawOffset = _offsetPixels;
         double currentOffset = Math.Max(0, _offsetPixels);
         double currentMaxScrollExtent = Math.Max(0, _maxScrollExtent);
         const double precisionErrorTolerance = 0.0001;
@@ -317,8 +318,27 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer
             if (offsetStable && effectiveOffsetStable && maxExtentStable)
             {
                 currentOffset = clampedOffset;
-                _offsetPixels = currentOffset;
                 _maxScrollExtent = maxScrollExtent;
+
+                // Offsets outside [0, maxScrollExtent] are legitimate under physics that allow
+                // overscroll (iOS bouncing): keep them and lay the children out shifted by the
+                // overscroll instead of clamping the position back into range.
+                double inRangeOffset = Math.Clamp(rawOffset, 0, maxScrollExtent);
+                bool correctedByLayout = Math.Abs(currentOffset - inRangeOffset) > precisionErrorTolerance;
+                double overscroll = correctedByLayout ? 0.0 : rawOffset - inRangeOffset;
+                if (Math.Abs(overscroll) > precisionErrorTolerance)
+                {
+                    LayoutWithCorrections(
+                        scrollOffset: EffectiveScrollOffsetForOverscroll(rawOffset, maxScrollExtent),
+                        viewportMainAxisExtent: viewportMainAxisExtent,
+                        crossAxisExtent: crossAxisExtent);
+                    _offsetPixels = rawOffset;
+                }
+                else
+                {
+                    _offsetPixels = currentOffset;
+                }
+
                 OnViewportMetricsChanged?.Invoke(viewportMainAxisExtent, 0, _maxScrollExtent);
                 return;
             }
@@ -410,6 +430,10 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer
         double crossAxisExtent)
     {
         const double precisionErrorTolerance = 0.0001;
+
+        // A scroll offset before the leading edge is not passed to the slivers: they keep laying out
+        // from zero and the whole sequence is shifted down by the overscroll instead.
+        double leadingOverscroll = Math.Max(0.0, -scrollOffset);
         double currentScrollOffset = Math.Max(0, scrollOffset);
 
         for (int pass = 0; pass < 8; pass++)
@@ -417,7 +441,8 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer
             var result = LayoutChildren(
                 currentScrollOffset,
                 viewportMainAxisExtent,
-                crossAxisExtent);
+                crossAxisExtent,
+                leadingOverscroll);
             if (!result.scrollOffsetCorrection.HasValue
                 || Math.Abs(result.scrollOffsetCorrection.Value) <= precisionErrorTolerance)
             {
@@ -430,18 +455,20 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer
         var finalResult = LayoutChildren(
             currentScrollOffset,
             viewportMainAxisExtent,
-            crossAxisExtent);
+            crossAxisExtent,
+            leadingOverscroll);
         return (currentScrollOffset, finalResult.totalScrollExtent, finalResult.paintedExtent);
     }
 
     private (double totalScrollExtent, double paintedExtent, double? scrollOffsetCorrection) LayoutChildren(
         double scrollOffset,
         double viewportMainAxisExtent,
-        double crossAxisExtent)
+        double crossAxisExtent,
+        double leadingOverscroll = 0.0)
     {
         double precedingScrollExtent = 0.0;
-        double layoutOffset = 0.0;
-        double maxPaintOffset = 0.0;
+        double layoutOffset = leadingOverscroll;
+        double maxPaintOffset = leadingOverscroll;
         double cacheExtent = Math.Max(0, _cacheExtentStyle == CacheExtentStyle.Viewport
             ? _cacheExtent * viewportMainAxisExtent
             : _cacheExtent);
@@ -467,7 +494,11 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer
                 RemainingCacheExtent: remainingCacheExtent,
                 AxisDirection: _axisDirection,
                 GrowthDirection: _growthDirection,
-                Overlap: maxPaintOffset - layoutOffset,
+                // The leading sliver receives the leading overscroll as a negative overlap, which is
+                // what overscroll-aware slivers stretch into.
+                Overlap: ReferenceEquals(child, FirstChild)
+                    ? -leadingOverscroll
+                    : maxPaintOffset - layoutOffset,
                 PrecedingScrollExtent: precedingScrollExtent,
                 UserScrollDirection: _userScrollDirection));
 
@@ -501,6 +532,20 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer
         }
 
         return Math.Max(0, maxScrollExtent - clampedOffset);
+    }
+
+    /// <summary>
+    /// Maps a user offset that may lie outside <c>[0, maxScrollExtent]</c> into layout space without
+    /// clamping, so the overscroll survives into the sliver layout.
+    /// </summary>
+    private double EffectiveScrollOffsetForOverscroll(double userOffset, double maxScrollExtent)
+    {
+        if (!ScrollDirectionUtils.AxisDirectionIsReversed(_axisDirection))
+        {
+            return userOffset;
+        }
+
+        return Math.Max(0, maxScrollExtent) - userOffset;
     }
 
     private double UserOffsetFromEffective(double effectiveOffset, double maxScrollExtent)

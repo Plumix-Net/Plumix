@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Material;
+using Plumix.Physics;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;

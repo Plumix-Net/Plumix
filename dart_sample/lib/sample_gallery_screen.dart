@@ -60,6 +60,7 @@ import 'demos/material/grid_tile_demo_page.dart';
 import 'demos/material/linear_progress_indicator_demo_page.dart';
 import 'demos/general/list_view_fixed_extent_demo_page.dart';
 import 'demos/general/list_view_reverse_demo_page.dart';
+import 'demos/general/scroll_physics_demo_page.dart';
 import 'demos/general/list_view_separated_demo_page.dart';
 import 'demos/material/list_tile_demo_page.dart';
 import 'demos/material/list_tile_controls_demo_page.dart';
@@ -470,6 +471,12 @@ class SampleGalleryScreen extends StatelessWidget {
           title: 'ListView reverse',
           subtitle: 'reverse=true behavior',
           builder: () => const ListViewReverseDemoPage(),
+        ),
+        SampleRouteDefinition(
+          routeName: SampleRoutes.scrollPhysics,
+          title: 'Scroll physics',
+          subtitle: 'bouncing overscroll + spring back vs clamping',
+          builder: () => const ScrollPhysicsDemoPage(),
         ),
         SampleRouteDefinition(
           routeName: SampleRoutes.animatedList,

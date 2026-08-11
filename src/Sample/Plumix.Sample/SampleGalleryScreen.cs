@@ -25,6 +25,7 @@ internal static class SampleRoutes
     public const string NavigatorDetails = "/navigator/details";
     public const string ListViewSeparated = "/list-separated";
     public const string ListViewFixedExtent = "/list-fixed-extent";
+    public const string ScrollPhysics = "/scroll-physics";
     public const string ListViewReverse = "/list-reverse";
     public const string GridView = "/grid-view";
     public const string CustomSlivers = "/custom-slivers";
@@ -225,6 +226,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
         new(SampleRoutes.ListViewSeparated, "ListView.Separated", "item + separator builder", () => new ListViewSeparatedDemoPage()),
         new(SampleRoutes.ListViewFixedExtent, "ListView fixed extent", "itemExtent + padding", () => new ListViewFixedExtentDemoPage()),
         new(SampleRoutes.ListViewReverse, "ListView reverse", "reverse=true behavior", () => new ListViewReverseDemoPage()),
+        new(
+            SampleRoutes.ScrollPhysics,
+            "Scroll physics",
+            "bouncing overscroll + spring back vs clamping",
+            () => new ScrollPhysicsDemoPage()),
         new(
             SampleRoutes.AnimatedList,
             "AnimatedList + SliverAnimatedList",

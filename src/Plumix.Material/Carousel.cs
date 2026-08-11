@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
+using Plumix.Physics;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -222,12 +223,13 @@ public sealed class CarouselScrollPhysics : ScrollPhysics
             return null;
         }
 
+        Tolerance tolerance = ToleranceFor(position);
         double item = Math.Max(0, carouselPosition.Pixels) / itemExtent;
-        if (velocity < -20)
+        if (velocity < -tolerance.Velocity)
         {
             item -= 0.5;
         }
-        else if (velocity > 20)
+        else if (velocity > tolerance.Velocity)
         {
             item += 0.5;
         }
@@ -238,7 +240,12 @@ public sealed class CarouselScrollPhysics : ScrollPhysics
             carouselPosition.MaxScrollExtent);
         return Math.Abs(target - carouselPosition.Pixels) < 0.0001
             ? null
-            : new FrictionSimulation(8, carouselPosition.Pixels, (target - carouselPosition.Pixels) * 8);
+            : new ScrollSpringSimulation(
+                Spring,
+                carouselPosition.Pixels,
+                target,
+                velocity,
+                tolerance: tolerance);
     }
 }
 

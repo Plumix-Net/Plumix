@@ -71,8 +71,9 @@ public sealed class RenderSingleChildViewport : RenderProxyBox
         double viewportExtent = MainExtent(Size);
         double childExtent = MainExtent(Child.Size);
         MaxScrollExtent = Math.Max(0, childExtent - viewportExtent);
-        double pixels = Math.Clamp(OffsetPixels, 0, MaxScrollExtent);
-        ((BoxParentData)Child.parentData!).offset = ResolvePaintOffset(pixels);
+        // Out-of-range offsets are kept: physics that allow overscroll (iOS bouncing) shift the child
+        // instead of being clamped back into range.
+        ((BoxParentData)Child.parentData!).offset = ResolvePaintOffset(OffsetPixels);
         OnViewportMetricsChanged?.Invoke(viewportExtent, 0, MaxScrollExtent);
     }
 

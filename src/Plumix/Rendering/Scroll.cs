@@ -1,16 +1,43 @@
 using Plumix;
 using Plumix.Foundation;
+using Plumix.Physics;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/widgets/scroll_position.dart; flutter/packages/flutter/lib/src/widgets/scroll_physics.dart; flutter/packages/flutter/lib/src/widgets/scroll_activity.dart (adapted)
 
 namespace Plumix.Rendering;
 
+// Dart parity source: flutter/packages/flutter/lib/src/widgets/scroll_metrics.dart
 public interface IScrollMetrics
 {
     double Pixels { get; }
     double MinScrollExtent { get; }
     double MaxScrollExtent { get; }
     double ViewportDimension { get; }
+
+    /// <summary>Whether the <see cref="Pixels"/> value is outside the <c>Min</c>/<c>Max</c> extents.</summary>
+    bool OutOfRange => Pixels < MinScrollExtent || Pixels > MaxScrollExtent;
+
+    /// <summary>The number of device pixels for each logical pixel of the view the scrollable is in.</summary>
+    double DevicePixelRatio => 1.0;
+}
+
+/// <summary>An immutable snapshot of values associated with a <see cref="ScrollPosition"/>.</summary>
+public sealed record FixedScrollMetrics(
+    double Pixels,
+    double MinScrollExtent,
+    double MaxScrollExtent,
+    double ViewportDimension,
+    double DevicePixelRatio = 1.0) : IScrollMetrics
+{
+    /// <summary>Whether the <see cref="Pixels"/> value is outside the min/max extents.</summary>
+    public bool OutOfRange => Pixels < MinScrollExtent || Pixels > MaxScrollExtent;
+
+    public static FixedScrollMetrics From(IScrollMetrics metrics) => new(
+        metrics.Pixels,
+        metrics.MinScrollExtent,
+        metrics.MaxScrollExtent,
+        metrics.ViewportDimension,
+        metrics.DevicePixelRatio);
 }
 
 public enum CacheExtentStyle
@@ -94,216 +121,6 @@ public static class ScrollDirectionUtils
     }
 }
 
-public abstract class Simulation
-{
-    public abstract double X(double timeSeconds);
-
-    public abstract double DX(double timeSeconds);
-
-    public abstract bool IsDone(double timeSeconds);
-}
-
-public sealed class FrictionSimulation : Simulation
-{
-    private readonly double _drag;
-    private readonly double _position;
-    private readonly double _velocity;
-
-    public FrictionSimulation(double drag, double position, double velocity)
-    {
-        _drag = Math.Max(0.0001, drag);
-        _position = position;
-        _velocity = velocity;
-    }
-
-    public override double X(double timeSeconds)
-    {
-        double decay = Math.Exp(-_drag * timeSeconds);
-        return _position + (_velocity / _drag) * (1 - decay);
-    }
-
-    public override double DX(double timeSeconds)
-    {
-        return _velocity * Math.Exp(-_drag * timeSeconds);
-    }
-
-    public override bool IsDone(double timeSeconds)
-    {
-        return Math.Abs(DX(timeSeconds)) < 5.0;
-    }
-}
-
-public abstract class ScrollPhysics
-{
-    protected ScrollPhysics(ScrollPhysics? parent = null)
-    {
-        Parent = parent;
-    }
-
-    public ScrollPhysics? Parent { get; }
-
-    public virtual double ApplyPhysicsToUserOffset(IScrollMetrics position, double offset)
-    {
-        if (Parent != null)
-        {
-            return Parent.ApplyPhysicsToUserOffset(position, offset);
-        }
-
-        return offset;
-    }
-
-    public virtual double ApplyBoundaryConditions(IScrollMetrics position, double value)
-    {
-        if (Parent != null)
-        {
-            return Parent.ApplyBoundaryConditions(position, value);
-        }
-
-        return 0;
-    }
-
-    public virtual Simulation? CreateBallisticSimulation(IScrollMetrics position, double velocity)
-    {
-        if (Parent != null)
-        {
-            return Parent.CreateBallisticSimulation(position, velocity);
-        }
-
-        return null;
-    }
-}
-
-public sealed class RangeMaintainingScrollPhysics : ScrollPhysics
-{
-    public RangeMaintainingScrollPhysics(ScrollPhysics? parent = null) : base(parent)
-    {
-    }
-
-    public override double ApplyBoundaryConditions(IScrollMetrics position, double value)
-    {
-        if (position.Pixels < position.MinScrollExtent && value < position.Pixels)
-        {
-            return value - position.Pixels;
-        }
-
-        if (position.MaxScrollExtent < position.Pixels && position.Pixels < value)
-        {
-            return value - position.Pixels;
-        }
-
-        return base.ApplyBoundaryConditions(position, value);
-    }
-}
-
-public enum ScrollDecelerationRate
-{
-    Normal,
-    Fast,
-}
-
-public sealed class BouncingScrollPhysics : ScrollPhysics
-{
-    public BouncingScrollPhysics(
-        ScrollDecelerationRate decelerationRate = ScrollDecelerationRate.Normal,
-        ScrollPhysics? parent = null) : base(parent)
-    {
-        DecelerationRate = decelerationRate;
-    }
-
-    public ScrollDecelerationRate DecelerationRate { get; }
-
-    public override double ApplyPhysicsToUserOffset(IScrollMetrics position, double offset)
-    {
-        if (offset == 0.0)
-        {
-            return 0.0;
-        }
-
-        double overscrollPastStart = Math.Max(position.MinScrollExtent - position.Pixels, 0.0);
-        double overscrollPastEnd = Math.Max(position.Pixels - position.MaxScrollExtent, 0.0);
-        double overscrollPast = Math.Max(overscrollPastStart, overscrollPastEnd);
-        bool easing = (overscrollPastStart > 0.0 && offset < 0.0)
-                      || (overscrollPastEnd > 0.0 && offset > 0.0);
-        double viewportDimension = Math.Max(position.ViewportDimension, 1.0);
-        double fraction = Math.Clamp(
-            (overscrollPast - (easing ? Math.Abs(offset) : 0.0)) / viewportDimension,
-            0.0,
-            1.0);
-        double friction = 0.52 * Math.Pow(1.0 - fraction, 2.0);
-        return offset * friction;
-    }
-
-    public override double ApplyBoundaryConditions(IScrollMetrics position, double value) => 0.0;
-
-    public override Simulation? CreateBallisticSimulation(IScrollMetrics position, double velocity)
-    {
-        if (position.Pixels < position.MinScrollExtent || position.Pixels > position.MaxScrollExtent)
-        {
-            double target = Math.Clamp(position.Pixels, position.MinScrollExtent, position.MaxScrollExtent);
-            double springVelocity = velocity + ((target - position.Pixels) * 12.0);
-            return new FrictionSimulation(8.0, position.Pixels, springVelocity);
-        }
-
-        if (Math.Abs(velocity) < 20.0)
-        {
-            return null;
-        }
-
-        double drag = DecelerationRate == ScrollDecelerationRate.Fast ? 2.6 : 3.4;
-        return new FrictionSimulation(drag, position.Pixels, velocity);
-    }
-}
-
-public sealed class ClampingScrollPhysics : ScrollPhysics
-{
-    public ClampingScrollPhysics(ScrollPhysics? parent = null) : base(parent)
-    {
-    }
-
-    public override double ApplyBoundaryConditions(IScrollMetrics position, double value)
-    {
-        if (value < position.Pixels && position.Pixels <= position.MinScrollExtent)
-        {
-            return value - position.Pixels;
-        }
-
-        if (position.MaxScrollExtent <= position.Pixels && position.Pixels < value)
-        {
-            return value - position.Pixels;
-        }
-
-        if (value < position.MinScrollExtent && position.MinScrollExtent < position.Pixels)
-        {
-            return value - position.MinScrollExtent;
-        }
-
-        if (position.Pixels < position.MaxScrollExtent && position.MaxScrollExtent < value)
-        {
-            return value - position.MaxScrollExtent;
-        }
-
-        return base.ApplyBoundaryConditions(position, value);
-    }
-
-    public override Simulation? CreateBallisticSimulation(IScrollMetrics position, double velocity)
-    {
-        bool outOfRange = position.Pixels < position.MinScrollExtent || position.Pixels > position.MaxScrollExtent;
-        if (outOfRange)
-        {
-            double target = Math.Clamp(position.Pixels, position.MinScrollExtent, position.MaxScrollExtent);
-            double correctedVelocity = (target - position.Pixels) * 8.0;
-            return new FrictionSimulation(6.0, position.Pixels, correctedVelocity);
-        }
-
-        if (Math.Abs(velocity) < 20)
-        {
-            return null;
-        }
-
-        return new FrictionSimulation(4.5, position.Pixels, velocity);
-    }
-}
-
 public abstract class ScrollActivity : IDisposable
 {
     protected ScrollActivity(ScrollPosition position)
@@ -313,6 +130,20 @@ public abstract class ScrollActivity : IDisposable
 
     protected ScrollPosition Position { get; }
 
+    /// <summary>Whether performing this activity constitutes scrolling.</summary>
+    public virtual bool IsScrolling => true;
+
+    /// <summary>The velocity at which the scroll offset is currently independently changing.</summary>
+    public virtual double Velocity => 0.0;
+
+    /// <summary>
+    /// Called when the viewport or content dimensions change, so the activity can react to a
+    /// position that the new dimensions may have put out of range.
+    /// </summary>
+    public virtual void ApplyNewDimensions()
+    {
+    }
+
     public virtual void Dispose()
     {
     }
@@ -320,6 +151,9 @@ public abstract class ScrollActivity : IDisposable
 
 public sealed class IdleScrollActivity(ScrollPosition position) : ScrollActivity(position)
 {
+    public override bool IsScrolling => false;
+
+    public override void ApplyNewDimensions() => Position.GoBallistic(0.0);
 }
 
 public sealed class DragScrollActivity(ScrollPosition position) : ScrollActivity(position)
@@ -406,6 +240,10 @@ public sealed class BallisticScrollActivity : ScrollActivity
         _ticker.Start();
     }
 
+    public override double Velocity => _disposed ? 0.0 : _simulation.DX(_elapsedSeconds);
+
+    public override void ApplyNewDimensions() => Position.GoBallistic(Velocity);
+
     public override void Dispose()
     {
         if (_disposed)
@@ -425,12 +263,22 @@ public sealed class BallisticScrollActivity : ScrollActivity
         }
 
         _elapsedSeconds += elapsed.TotalSeconds;
-        Position.SetPixelsFromActivity(_simulation.X(_elapsedSeconds));
 
-        bool outOfRange = Position.Pixels < Position.MinScrollExtent || Position.Pixels > Position.MaxScrollExtent;
-        if (_simulation.IsDone(_elapsedSeconds) || outOfRange)
+        // The simulation drives the position directly; the physics decide whether the proposed value
+        // is reachable. A non-zero overscroll means the boundary conditions clipped the value, so the
+        // simulation can no longer be followed and the activity ends.
+        if (Math.Abs(Position.SetPixelsFromActivity(_simulation.X(_elapsedSeconds)))
+            >= Constants.PrecisionErrorTolerance)
         {
             Position.GoIdle();
+            return;
+        }
+
+        if (_simulation.IsDone(_elapsedSeconds))
+        {
+            // A completed ballistic run restarts ballistic with zero velocity, which springs the
+            // position back when it is still out of range and goes idle otherwise.
+            Position.GoBallistic(0.0);
         }
     }
 }
@@ -444,6 +292,8 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
     private double _viewportDimension;
     private ScrollActivity _activity;
     private ScrollDirection _userScrollDirection = ScrollDirection.Idle;
+    private FixedScrollMetrics? _lastMetrics;
+    private bool _didChangeViewportDimensionOrReceiveCorrection = true;
 
     public ScrollPosition(double initialPixels = 0.0, ScrollPhysics? physics = null)
     {
@@ -461,11 +311,16 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
 
     public double ViewportDimension => _viewportDimension;
 
+    /// <summary>Whether the <see cref="Pixels"/> value is outside the min/max scroll extents.</summary>
+    public bool OutOfRange => _pixels < _minScrollExtent || _pixels > _maxScrollExtent;
+
     public ScrollPhysics Physics => _physics;
 
     public ScrollActivity Activity => _activity;
 
     public AxisDirection AxisDirection { get; internal set; } = AxisDirection.Down;
+
+    public double DevicePixelRatio { get; internal set; } = 1.0;
 
     public ValueNotifier<bool> IsScrollingNotifier { get; }
 
@@ -477,6 +332,9 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
     {
         GoIdle();
         SetPixels(value);
+
+        // Physics that allow out-of-range offsets settle the jump back into range.
+        GoBallistic(0.0);
     }
 
     public void AnimateTo(double value, TimeSpan duration, Curve? curve = null)
@@ -530,8 +388,16 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
 
     public void EndDrag(double primaryPointerVelocity)
     {
-        double scrollVelocity = -primaryPointerVelocity;
-        var simulation = Physics.CreateBallisticSimulation(this, scrollVelocity);
+        GoBallistic(-primaryPointerVelocity);
+    }
+
+    /// <summary>
+    /// Starts a ballistic activity with the given velocity, or goes idle when the physics report
+    /// that no simulation is needed.
+    /// </summary>
+    public void GoBallistic(double velocity)
+    {
+        Simulation? simulation = Physics.CreateBallisticSimulation(this, velocity);
         if (simulation == null)
         {
             GoIdle();
@@ -551,11 +417,24 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
 
     public void ApplyPointerScrollDelta(double delta)
     {
+        if (delta == 0.0)
+        {
+            GoBallistic(0.0);
+            return;
+        }
+
+        // A pointer scroll never overscrolls: unlike a drag, the target is clamped into range and
+        // written directly, bypassing the physics' boundary conditions.
+        double targetPixels = Math.Min(Math.Max(Pixels + delta, MinScrollExtent), MaxScrollExtent);
+        if (Math.Abs(targetPixels - Pixels) < Constants.PrecisionErrorTolerance)
+        {
+            return;
+        }
+
         BeginActivity(new PointerScrollActivity(this));
-        double targetPixels = Pixels + delta;
         UpdateUserScrollDirection(targetPixels);
-        SetPixels(targetPixels);
-        GoIdle();
+        CorrectPixels(targetPixels);
+        GoBallistic(0.0);
     }
 
     public virtual bool ApplyViewportDimension(double viewportDimension)
@@ -566,6 +445,7 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
         }
 
         _viewportDimension = viewportDimension;
+        _didChangeViewportDimensionOrReceiveCorrection = true;
         return true;
     }
 
@@ -573,11 +453,35 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
     {
         bool minChanged = Math.Abs(_minScrollExtent - minScrollExtent) > 0.0001;
         bool maxChanged = Math.Abs(_maxScrollExtent - maxScrollExtent) > 0.0001;
+        if (!minChanged && !maxChanged && !_didChangeViewportDimensionOrReceiveCorrection)
+        {
+            return false;
+        }
+
         _minScrollExtent = minScrollExtent;
         _maxScrollExtent = maxScrollExtent;
+        _didChangeViewportDimensionOrReceiveCorrection = false;
 
-        bool changed = SetPixels(_pixels);
-        return changed || minChanged || maxChanged;
+        var currentMetrics = FixedScrollMetrics.From(this);
+        if (_lastMetrics != null)
+        {
+            // The physics decide where the position lands after the dimensions change: clamping
+            // physics reinforce the boundary, bouncing physics keep the relative overscroll.
+            double newPixels = Physics.AdjustPositionForNewDimensions(
+                oldPosition: _lastMetrics,
+                newPosition: currentMetrics,
+                isScrolling: Activity.IsScrolling,
+                velocity: Activity.Velocity);
+            if (Math.Abs(newPixels - _pixels) > 0.0001)
+            {
+                CorrectPixels(newPixels);
+            }
+        }
+
+        // Lets the current activity settle a position the new dimensions put out of range.
+        Activity.ApplyNewDimensions();
+        _lastMetrics = FixedScrollMetrics.From(this);
+        return true;
     }
 
     public override void Dispose()
@@ -604,7 +508,7 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
         BeginActivity(new IdleScrollActivity(this));
     }
 
-    internal bool SetPixelsFromActivity(double value)
+    internal double SetPixelsFromActivity(double value)
     {
         return SetPixels(value);
     }
@@ -621,20 +525,31 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
         return true;
     }
 
-    protected virtual bool SetPixels(double value)
+    /// <summary>
+    /// Updates the scroll position to the given value, applying the physics' boundary conditions.
+    /// </summary>
+    /// <returns>
+    /// The overscroll: how far the value went beyond what the physics allow, or 0.0 when the whole
+    /// change was applied. Physics that accept arbitrary offsets (such as
+    /// <see cref="BouncingScrollPhysics"/>) always report 0.0, which is what lets the position travel
+    /// outside the scroll extents.
+    /// </returns>
+    protected virtual double SetPixels(double value)
     {
-        double overscroll = Physics.ApplyBoundaryConditions(this, value);
-        double newPixels = value - overscroll;
-        newPixels = Math.Clamp(newPixels, _minScrollExtent, _maxScrollExtent);
-
-        if (Math.Abs(newPixels - _pixels) < 0.0001)
+        if (Math.Abs(value - _pixels) < Constants.PrecisionErrorTolerance)
         {
-            return false;
+            return 0.0;
         }
 
-        _pixels = newPixels;
-        NotifyListeners();
-        return true;
+        double overscroll = Physics.ApplyBoundaryConditions(this, value);
+        double oldPixels = _pixels;
+        _pixels = value - overscroll;
+        if (Math.Abs(_pixels - oldPixels) > Constants.PrecisionErrorTolerance)
+        {
+            NotifyListeners();
+        }
+
+        return Math.Abs(overscroll) > Constants.PrecisionErrorTolerance ? overscroll : 0.0;
     }
 
     private void UpdateUserScrollDirection(double targetPixels)

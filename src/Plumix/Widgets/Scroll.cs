@@ -839,6 +839,9 @@ public sealed class Scrollable : StatefulWidget
             var position = _attachedController.CreateScrollPosition(physics);
             position.TickerProvider = this;
             position.AxisDirection = ResolveAxisDirection(CurrentWidget.Axis, CurrentWidget.Reverse);
+
+            // Ballistic tolerances are expressed in device pixels, so the physics need the view's ratio.
+            position.DevicePixelRatio = MediaQuery.MaybeOf(Context)?.DevicePixelRatio ?? 1.0;
             _attachedController.Attach(position);
             return position;
         }
