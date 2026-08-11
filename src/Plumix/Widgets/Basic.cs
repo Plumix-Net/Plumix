@@ -1004,6 +1004,7 @@ public class Flex : MultiChildRenderObjectWidget
         double spacing = 0,
         Key? key = null,
         TextDirection? textDirection = null,
+        VerticalDirection verticalDirection = VerticalDirection.Down,
         TextBaseline? textBaseline = null) : base(children, key)
     {
         Direction = direction;
@@ -1012,6 +1013,7 @@ public class Flex : MultiChildRenderObjectWidget
         CrossAxisAlignment = crossAxisAlignment;
         Spacing = spacing;
         TextDirection = textDirection;
+        VerticalDirection = verticalDirection;
         TextBaseline = textBaseline;
     }
 
@@ -1027,6 +1029,8 @@ public class Flex : MultiChildRenderObjectWidget
 
     public TextDirection? TextDirection { get; }
 
+    public VerticalDirection VerticalDirection { get; }
+
     public TextBaseline? TextBaseline { get; }
 
     internal override RenderObject CreateRenderObject(BuildContext context)
@@ -1039,6 +1043,7 @@ public class Flex : MultiChildRenderObjectWidget
             mainAxisAlignment: MainAxisAlignment,
             crossAxisAlignment: CrossAxisAlignment,
             textDirection: effectiveTextDirection,
+            verticalDirection: VerticalDirection,
             textBaseline: TextBaseline,
             spacing: Spacing);
     }
@@ -1051,6 +1056,7 @@ public class Flex : MultiChildRenderObjectWidget
         flex.MainAxisAlignment = MainAxisAlignment;
         flex.CrossAxisAlignment = CrossAxisAlignment;
         flex.TextDirection = TextDirection ?? Directionality.MaybeOf(context);
+        flex.VerticalDirection = VerticalDirection;
         flex.TextBaseline = TextBaseline;
         flex.Spacing = Spacing;
     }
@@ -1141,6 +1147,7 @@ public sealed class Row : Flex
         double spacing = 0,
         Key? key = null,
         TextDirection? textDirection = null,
+        VerticalDirection verticalDirection = VerticalDirection.Down,
         TextBaseline? textBaseline = null) : base(
         direction: Axis.Horizontal,
         children: children,
@@ -1150,6 +1157,7 @@ public sealed class Row : Flex
         spacing: spacing,
         key: key,
         textDirection: textDirection,
+        verticalDirection: verticalDirection,
         textBaseline: textBaseline)
     {
     }
@@ -1165,6 +1173,7 @@ public sealed class Column : Flex
         double spacing = 0,
         Key? key = null,
         TextDirection? textDirection = null,
+        VerticalDirection verticalDirection = VerticalDirection.Down,
         TextBaseline? textBaseline = null) : base(
         direction: Axis.Vertical,
         children: children,
@@ -1174,6 +1183,7 @@ public sealed class Column : Flex
         spacing: spacing,
         key: key,
         textDirection: textDirection,
+        verticalDirection: verticalDirection,
         textBaseline: textBaseline)
     {
     }

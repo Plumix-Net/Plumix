@@ -94,10 +94,52 @@ public abstract class BoxPainter : IDisposable
     }
 }
 
+public readonly record struct Radius
+{
+    public Radius(double x, double y)
+    {
+        X = Math.Max(0.0, x);
+        Y = Math.Max(0.0, y);
+    }
+
+    public double X { get; }
+
+    public double Y { get; }
+
+    public static Radius Zero => new(0.0, 0.0);
+
+    public static Radius Circular(double radius)
+    {
+        double effectiveRadius = Math.Max(0.0, radius);
+        return new Radius(effectiveRadius, effectiveRadius);
+    }
+
+    public static Radius Elliptical(double x, double y)
+    {
+        return new Radius(x, y);
+    }
+
+    public Radius Deflate(double amount)
+    {
+        return new Radius(Math.Max(0.0, X - amount), Math.Max(0.0, Y - amount));
+    }
+
+    public static Radius Lerp(Radius a, Radius b, double t)
+    {
+        return new Radius(
+            a.X + ((b.X - a.X) * t),
+            a.Y + ((b.Y - a.Y) * t));
+    }
+}
+
 public readonly record struct BorderRadius
 {
     public BorderRadius(double radius)
-        : this(radius, radius, radius, radius)
+        : this(
+            Plumix.Rendering.Radius.Circular(radius),
+            Plumix.Rendering.Radius.Circular(radius),
+            Plumix.Rendering.Radius.Circular(radius),
+            Plumix.Rendering.Radius.Circular(radius))
     {
     }
 
@@ -106,26 +148,47 @@ public readonly record struct BorderRadius
         double topRight,
         double bottomRight,
         double bottomLeft)
+        : this(
+            Plumix.Rendering.Radius.Circular(topLeft),
+            Plumix.Rendering.Radius.Circular(topRight),
+            Plumix.Rendering.Radius.Circular(bottomRight),
+            Plumix.Rendering.Radius.Circular(bottomLeft))
     {
-        TopLeft = Math.Max(0.0, topLeft);
-        TopRight = Math.Max(0.0, topRight);
-        BottomRight = Math.Max(0.0, bottomRight);
-        BottomLeft = Math.Max(0.0, bottomLeft);
     }
 
-    public double TopLeft { get; }
+    public BorderRadius(
+        Radius topLeft,
+        Radius topRight,
+        Radius bottomRight,
+        Radius bottomLeft)
+    {
+        TopLeftRadius = topLeft;
+        TopRightRadius = topRight;
+        BottomRightRadius = bottomRight;
+        BottomLeftRadius = bottomLeft;
+    }
 
-    public double TopRight { get; }
+    public Radius TopLeftRadius { get; }
 
-    public double BottomRight { get; }
+    public Radius TopRightRadius { get; }
 
-    public double BottomLeft { get; }
+    public Radius BottomRightRadius { get; }
+
+    public Radius BottomLeftRadius { get; }
+
+    public double TopLeft => TopLeftRadius.X;
+
+    public double TopRight => TopRightRadius.X;
+
+    public double BottomRight => BottomRightRadius.X;
+
+    public double BottomLeft => BottomLeftRadius.X;
 
     public double Radius => TopLeft;
 
-    public bool IsUniform => TopLeft == TopRight
-                             && TopLeft == BottomRight
-                             && TopLeft == BottomLeft;
+    public bool IsUniform => TopLeftRadius == TopRightRadius
+                             && TopLeftRadius == BottomRightRadius
+                             && TopLeftRadius == BottomLeftRadius;
 
     public static BorderRadius Zero => new(0);
 
@@ -143,6 +206,15 @@ public readonly record struct BorderRadius
         return new BorderRadius(topLeft, topRight, bottomRight, bottomLeft);
     }
 
+    public static BorderRadius Only(
+        Radius topLeft,
+        Radius topRight,
+        Radius bottomRight,
+        Radius bottomLeft)
+    {
+        return new BorderRadius(topLeft, topRight, bottomRight, bottomLeft);
+    }
+
     public static BorderRadius? Lerp(BorderRadius? a, BorderRadius? b, double t)
     {
         if (!a.HasValue && !b.HasValue)
@@ -153,15 +225,10 @@ public readonly record struct BorderRadius
         BorderRadius from = a ?? Zero;
         BorderRadius to = b ?? Zero;
         return new BorderRadius(
-            LerpDouble(from.TopLeft, to.TopLeft, t),
-            LerpDouble(from.TopRight, to.TopRight, t),
-            LerpDouble(from.BottomRight, to.BottomRight, t),
-            LerpDouble(from.BottomLeft, to.BottomLeft, t));
-    }
-
-    private static double LerpDouble(double a, double b, double t)
-    {
-        return a + ((b - a) * t);
+            Plumix.Rendering.Radius.Lerp(from.TopLeftRadius, to.TopLeftRadius, t),
+            Plumix.Rendering.Radius.Lerp(from.TopRightRadius, to.TopRightRadius, t),
+            Plumix.Rendering.Radius.Lerp(from.BottomRightRadius, to.BottomRightRadius, t),
+            Plumix.Rendering.Radius.Lerp(from.BottomLeftRadius, to.BottomLeftRadius, t));
     }
 }
 
@@ -294,6 +361,8 @@ public readonly record struct BorderSide
     public double Width { get; }
 
     public BorderStyle Style { get; }
+
+    public static BorderSide None => new(Colors.Transparent, 0.0, BorderStyle.None);
 }
 
 public sealed record BoxBorder(

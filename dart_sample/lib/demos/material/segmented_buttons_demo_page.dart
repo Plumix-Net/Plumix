@@ -17,9 +17,19 @@ class _SegmentedButtonsDemoPageState extends State<SegmentedButtonsDemoPage> {
   bool _showSelectedIcon = true;
   bool _useThemeOverrides = false;
   bool _useWidgetStyle = false;
+  bool _useStatefulFill = false;
 
   @override
   Widget build(BuildContext context) {
+    final Color? toggleFill = _useStatefulFill
+        ? WidgetStateColor.resolveWith(
+            (Set<WidgetState> states) => states.contains(WidgetState.selected)
+                ? Colors.teal
+                : Colors.lightBlue,
+          )
+        : _useWidgetStyle
+        ? Colors.deepPurple
+        : null;
     final ThemeData ambientTheme = Theme.of(context);
     final ThemeData theme = ambientTheme.copyWith(
       toggleButtonsTheme: _useThemeOverrides
@@ -88,6 +98,10 @@ class _SegmentedButtonsDemoPageState extends State<SegmentedButtonsDemoPage> {
                 _useWidgetStyle ? 'Widget style on' : 'Widget style off',
                 () => setState(() => _useWidgetStyle = !_useWidgetStyle),
               ),
+              _controlButton(
+                _useStatefulFill ? 'State fill on' : 'State fill off',
+                () => setState(() => _useStatefulFill = !_useStatefulFill),
+              ),
             ],
           ),
           Text(
@@ -105,7 +119,7 @@ class _SegmentedButtonsDemoPageState extends State<SegmentedButtonsDemoPage> {
                   ? const BorderRadius.all(Radius.circular(20))
                   : null,
               selectedColor: _useWidgetStyle ? Colors.white : null,
-              fillColor: _useWidgetStyle ? Colors.deepPurple : null,
+              fillColor: toggleFill,
               children: const <Widget>[
                 Icon(Icons.star_outline),
                 Icon(Icons.info_outline),

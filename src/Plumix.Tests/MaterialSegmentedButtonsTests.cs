@@ -13,19 +13,17 @@ namespace Plumix.Tests;
 public sealed class MaterialSegmentedButtonsTests
 {
     [Fact]
-    public void ToggleButtons_ValidatesParallelListsAndGeometry()
+    public void ToggleButtons_ValidatesParallelListsAndFocusNodesAtBuild()
     {
         Assert.Throws<ArgumentException>(() => new ToggleButtons(
             children: [new Text("One")],
             isSelected: []));
-        Assert.Throws<ArgumentException>(() => new ToggleButtons(
-            children: [new Text("One")],
-            isSelected: [false],
-            focusNodes: []));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new ToggleButtons(
-            children: [new Text("One")],
-            isSelected: [false],
-            borderWidth: -1));
+        Assert.Throws<ArgumentException>(() => new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new ToggleButtons(
+                children: [new Text("One")],
+                isSelected: [false],
+                focusNodes: []))));
     }
 
     [Fact]
@@ -33,8 +31,12 @@ public sealed class MaterialSegmentedButtonsTests
     {
         var theme = ThemeData.Light with
         {
-            PrimaryColor = Colors.DarkGreen,
-            OnSurfaceColor = Colors.DarkSlateBlue,
+            ColorScheme = ThemeData.Light.ColorScheme with
+            {
+                Primary = Colors.DarkGreen,
+                OnSurface = Colors.DarkSlateBlue,
+                Surface = Colors.Beige,
+            },
         };
         using var enabled = new WidgetRenderHarness(Wrap(
             theme,
@@ -100,6 +102,119 @@ public sealed class MaterialSegmentedButtonsTests
         Assert.NotNull(checkedNode);
         Assert.True(checkedNode!.Flags.HasFlag(SemanticsFlags.IsEnabled));
         Assert.True(checkedNode.Actions.HasFlag(SemanticsActions.Tap));
+    }
+
+    [Fact]
+    public void ToggleButtons_StatefulFillAndAdjacentSelectedBorderResolveByState()
+    {
+        var statefulFill = MaterialStateProperty<Color?>.ResolveWith(states =>
+        {
+            if (states.HasFlag(MaterialState.Disabled)) return Colors.Orange;
+            if (states.HasFlag(MaterialState.Selected)) return Colors.DarkGreen;
+            return Colors.SteelBlue;
+        });
+        var theme = ThemeData.Light with
+        {
+            ToggleButtonsTheme = new ToggleButtonsThemeData(
+                FillColor: statefulFill,
+                BorderColor: Colors.Purple,
+                SelectedBorderColor: Colors.Gold,
+                DisabledBorderColor: Colors.Orange),
+        };
+        using var enabled = new WidgetRenderHarness(Wrap(
+            theme,
+            new ToggleButtons(
+                children: [new Text("One"), new Text("Two"), new Text("Three")],
+                isSelected: [true, false, false],
+                onPressed: _ => { })));
+        enabled.Pump(new Size(360, 120));
+
+        Assert.Contains(FindDescendants<RenderDecoratedBox>(enabled.RenderView),
+            box => box.Decoration.Color == Colors.DarkGreen);
+        Assert.Contains(FindDescendants<RenderDecoratedBox>(enabled.RenderView),
+            box => box.Decoration.Color == Colors.SteelBlue);
+        var borders = FindDescendants<RenderBox>(enabled.RenderView)
+            .Where(renderBox => renderBox.GetType().Name == "RenderSelectToggleButton")
+            .ToList();
+        Assert.Equal(3, borders.Count);
+        Assert.Equal(Colors.Gold, Property<BorderSide>(borders[1], "LeadingBorderSide").Color);
+        Assert.Equal(Colors.Purple, Property<BorderSide>(borders[1], "BorderSide").Color);
+        Assert.Equal(BorderStyle.None, Property<BorderSide>(borders[1], "TrailingBorderSide").Style);
+
+        using var disabled = new WidgetRenderHarness(Wrap(
+            theme,
+            new ToggleButtons(
+                children: [new Text("Disabled")],
+                isSelected: [true])));
+        disabled.Pump(new Size(200, 80));
+        Assert.Contains(FindDescendants<RenderDecoratedBox>(disabled.RenderView),
+            box => box.Decoration.Color == Colors.Orange);
+    }
+
+    [Fact]
+    public void ToggleButtons_TapTargetPaddingIsCrossAxisOnlyAndBordersCanBeSuppressed()
+    {
+        var tight = BoxConstraints.Tight(new Size(20, 20));
+        using var horizontal = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new ToggleButtons(
+                children: [new SizedBox()],
+                isSelected: [false],
+                onPressed: _ => { },
+                constraints: tight,
+                renderBorder: false,
+                direction: Axis.Horizontal)));
+        horizontal.Pump(new Size(120, 120));
+        RenderBox horizontalPadding = Assert.Single(
+            FindDescendants<RenderBox>(horizontal.RenderView),
+            renderBox => renderBox.GetType().Name == "RenderToggleButtonInputPadding");
+        Assert.Equal(new Size(20, 48), horizontalPadding.Size);
+        RenderBox horizontalBorder = Assert.Single(
+            FindDescendants<RenderBox>(horizontal.RenderView),
+            renderBox => renderBox.GetType().Name == "RenderSelectToggleButton");
+        Assert.Equal(BorderStyle.None, Property<BorderSide>(horizontalBorder, "LeadingBorderSide").Style);
+
+        using var vertical = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new ToggleButtons(
+                children: [new SizedBox()],
+                isSelected: [false],
+                onPressed: _ => { },
+                constraints: tight,
+                renderBorder: false,
+                direction: Axis.Vertical)));
+        vertical.Pump(new Size(120, 120));
+        RenderBox verticalPadding = Assert.Single(
+            FindDescendants<RenderBox>(vertical.RenderView),
+            renderBox => renderBox.GetType().Name == "RenderToggleButtonInputPadding");
+        Assert.Equal(new Size(48, 20), verticalPadding.Size);
+    }
+
+    [Fact]
+    public void ToggleButtons_PreservesEllipticalCornersAndTreatsAZeroAxisAsSquare()
+    {
+        var radius = new BorderRadius(
+            Radius.Elliptical(12, 0),
+            Radius.Elliptical(16, 8),
+            Radius.Elliptical(10, 6),
+            Radius.Elliptical(0, 14));
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new ToggleButtons(
+                children: [new Text("One")],
+                isSelected: [true],
+                onPressed: _ => { },
+                borderRadius: radius)));
+        harness.Pump(new Size(160, 80));
+
+        RenderBox border = Assert.Single(
+            FindDescendants<RenderBox>(harness.RenderView),
+            renderBox => renderBox.GetType().Name == "RenderSelectToggleButton");
+        var actual = Property<BorderRadius>(border, "BorderRadius");
+        Assert.Equal(Radius.Elliptical(12, 0), actual.TopLeftRadius);
+        Assert.Equal(Radius.Elliptical(16, 8), actual.TopRightRadius);
+        Assert.Equal(Radius.Elliptical(10, 6), actual.BottomRightRadius);
+        Assert.Equal(Radius.Elliptical(0, 14), actual.BottomLeftRadius);
     }
 
     [Fact]
@@ -277,9 +392,12 @@ public sealed class MaterialSegmentedButtonsTests
                 onPressed: _ => { })));
         harness.Pump(new Size(320, 140));
 
-        var layout = Assert.Single(FindDescendants<RenderSegmentedControlLayout>(harness.RenderView));
-        Assert.Equal(layout.FirstChild!.Size.Height, layout.LastChild!.Size.Height, precision: 3);
-        Assert.True(layout.Size.Height >= 72);
+        var buttons = FindDescendants<RenderBox>(harness.RenderView)
+            .Where(renderBox => renderBox.GetType().Name == "RenderSelectToggleButton")
+            .ToList();
+        Assert.Equal(2, buttons.Count);
+        Assert.Equal(buttons[0].Size.Height, buttons[1].Size.Height, precision: 3);
+        Assert.True(buttons[0].Size.Height >= 72);
     }
 
     private static IReadOnlyList<ButtonSegment<int>> Segments(bool disableSecond = false) =>
@@ -340,6 +458,12 @@ public sealed class MaterialSegmentedButtonsTests
             if (match is not null) return match;
         }
         return null;
+    }
+
+    private static T Property<T>(object instance, string name)
+    {
+        object? value = instance.GetType().GetProperty(name)?.GetValue(instance);
+        return Assert.IsType<T>(value);
     }
 
     private sealed class WidgetRenderHarness : IDisposable

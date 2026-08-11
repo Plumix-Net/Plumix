@@ -26,9 +26,16 @@ public sealed class SegmentedButtonsDemoPage : StatefulWidget
         private bool _showSelectedIcon = true;
         private bool _useThemeOverrides;
         private bool _useWidgetStyle;
+        private bool _useStatefulFill;
 
         public override Widget Build(BuildContext context)
         {
+            MaterialStateProperty<Color?>? toggleFill = _useStatefulFill
+                ? MaterialStateProperty<Color?>.ResolveWith(states =>
+                    states.HasFlag(MaterialState.Selected) ? Colors.Teal : Colors.LightBlue)
+                : _useWidgetStyle
+                    ? MaterialStateProperty<Color?>.All(Color.Parse("#FF673AB7"))
+                    : null;
             var theme = Theme.Of(context) with
             {
                 ToggleButtonsTheme = _useThemeOverrides
@@ -79,6 +86,9 @@ public sealed class SegmentedButtonsDemoPage : StatefulWidget
                             [
                                 ControlButton(_useThemeOverrides ? "Theme on" : "Theme off", () => SetState(() => _useThemeOverrides = !_useThemeOverrides)),
                                 ControlButton(_useWidgetStyle ? "Widget style on" : "Widget style off", () => SetState(() => _useWidgetStyle = !_useWidgetStyle)),
+                                ControlButton(
+                                    _useStatefulFill ? "State fill on" : "State fill off",
+                                    () => SetState(() => _useStatefulFill = !_useStatefulFill)),
                             ]),
                         new Text($"ToggleButtons selection: {string.Join(",", _toggleSelection.Select(value => value ? "1" : "0"))}"),
                         new Align(
@@ -89,7 +99,7 @@ public sealed class SegmentedButtonsDemoPage : StatefulWidget
                                 direction: _vertical ? Axis.Vertical : Axis.Horizontal,
                                 borderRadius: _useWidgetStyle ? BorderRadius.Circular(20) : null,
                                 selectedColor: _useWidgetStyle ? Colors.White : null,
-                                fillColor: _useWidgetStyle ? Color.Parse("#FF673AB7") : null,
+                                fillColor: toggleFill,
                                 children:
                                 [
                                     new Icon(Icons.StarOutline),

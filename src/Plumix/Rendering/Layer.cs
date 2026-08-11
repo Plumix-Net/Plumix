@@ -114,6 +114,36 @@ public abstract class Layer
         return context.PushClip(new RoundedRect(rect, clampedRadius));
     }
 
+    internal static DrawingContext.PushedState PushRoundedRectClip(
+        DrawingContext context,
+        Rect rect,
+        BorderRadius borderRadius)
+    {
+        double maxX = Math.Max(0.0, rect.Width / 2.0);
+        double maxY = Math.Max(0.0, rect.Height / 2.0);
+        var topLeft = ClampRadius(borderRadius.TopLeftRadius, maxX, maxY);
+        var topRight = ClampRadius(borderRadius.TopRightRadius, maxX, maxY);
+        var bottomRight = ClampRadius(borderRadius.BottomRightRadius, maxX, maxY);
+        var bottomLeft = ClampRadius(borderRadius.BottomLeftRadius, maxX, maxY);
+        if (CapturingMagnifierBackdrop || CapturingBackdrop)
+        {
+            double fallbackX = Math.Max(
+                Math.Max(topLeft.X, topRight.X),
+                Math.Max(bottomRight.X, bottomLeft.X));
+            double fallbackY = Math.Max(
+                Math.Max(topLeft.Y, topRight.Y),
+                Math.Max(bottomRight.Y, bottomLeft.Y));
+            return context.PushGeometryClip(new RectangleGeometry(rect, fallbackX, fallbackY));
+        }
+
+        return context.PushClip(new RoundedRect(
+            rect,
+            new Vector(topLeft.X, topLeft.Y),
+            new Vector(topRight.X, topRight.Y),
+            new Vector(bottomRight.X, bottomRight.Y),
+            new Vector(bottomLeft.X, bottomLeft.Y)));
+    }
+
     internal static bool ContainsRoundedRect(
         Rect rect,
         BorderRadius borderRadius,
@@ -124,25 +154,41 @@ public abstract class Layer
             return false;
         }
 
-        double radius = Math.Min(
-            Math.Max(0.0, borderRadius.Radius),
-            Math.Min(rect.Width, rect.Height) / 2.0);
-        if (radius <= 0.0
-            || (position.X >= rect.Left + radius && position.X <= rect.Right - radius)
-            || (position.Y >= rect.Top + radius && position.Y <= rect.Bottom - radius))
+        bool left = position.X < rect.Center.X;
+        bool top = position.Y < rect.Center.Y;
+        Radius corner = (left, top) switch
+        {
+            (true, true) => borderRadius.TopLeftRadius,
+            (false, true) => borderRadius.TopRightRadius,
+            (false, false) => borderRadius.BottomRightRadius,
+            _ => borderRadius.BottomLeftRadius,
+        };
+        Radius radius = ClampRadius(corner, rect.Width / 2.0, rect.Height / 2.0);
+        if (radius.X <= 0.0
+            || radius.Y <= 0.0
+            || (position.X >= rect.Left + radius.X && position.X <= rect.Right - radius.X)
+            || (position.Y >= rect.Top + radius.Y && position.Y <= rect.Bottom - radius.Y))
         {
             return true;
         }
 
-        double centerX = position.X < rect.Left + radius
-            ? rect.Left + radius
-            : rect.Right - radius;
-        double centerY = position.Y < rect.Top + radius
-            ? rect.Top + radius
-            : rect.Bottom - radius;
-        double dx = position.X - centerX;
-        double dy = position.Y - centerY;
-        return (dx * dx) + (dy * dy) <= radius * radius;
+        double centerX = left ? rect.Left + radius.X : rect.Right - radius.X;
+        double centerY = top ? rect.Top + radius.Y : rect.Bottom - radius.Y;
+        double dx = (position.X - centerX) / radius.X;
+        double dy = (position.Y - centerY) / radius.Y;
+        return (dx * dx) + (dy * dy) <= 1.0;
+    }
+
+    private static Radius ClampRadius(Radius radius, double maxX, double maxY)
+    {
+        if (radius.X * radius.Y == 0.0)
+        {
+            return Radius.Zero;
+        }
+
+        return Radius.Elliptical(
+            Math.Min(radius.X, Math.Max(0.0, maxX)),
+            Math.Min(radius.Y, Math.Max(0.0, maxY)));
     }
 
     internal static bool ContainsRect(Rect rect, Point position)
@@ -973,16 +1019,10 @@ public sealed class ClipRRectOffsetLayer : OffsetLayer
     {
         var sceneOffset = offset + Offset;
         var translatedRect = new Rect(ClipRect.Position + sceneOffset, ClipRect.Size);
-        using (PushRoundedRectClip(context, translatedRect, ClampRadius(translatedRect, BorderRadius)))
+        using (PushRoundedRectClip(context, translatedRect, BorderRadius))
         {
             AddChildrenToScene(context, sceneOffset);
         }
-    }
-
-    private static double ClampRadius(Rect clipRect, BorderRadius borderRadius)
-    {
-        double maxRadius = Math.Max(0, Math.Min(clipRect.Width, clipRect.Height) / 2);
-        return Math.Min(borderRadius.Radius, maxRadius);
     }
 
     protected internal override bool FindAnnotations<T>(
@@ -1034,16 +1074,10 @@ public sealed class ClipRRectLayer : ContainerLayer
     internal override void AddToScene(DrawingContext context, Point offset)
     {
         var translatedRect = new Rect(ClipRect.Position + offset, ClipRect.Size);
-        using (PushRoundedRectClip(context, translatedRect, ClampRadius(translatedRect, BorderRadius)))
+        using (PushRoundedRectClip(context, translatedRect, BorderRadius))
         {
             base.AddToScene(context, offset);
         }
-    }
-
-    private static double ClampRadius(Rect clipRect, BorderRadius borderRadius)
-    {
-        double maxRadius = Math.Max(0, Math.Min(clipRect.Width, clipRect.Height) / 2);
-        return Math.Min(borderRadius.Radius, maxRadius);
     }
 
     protected internal override bool FindAnnotations<T>(

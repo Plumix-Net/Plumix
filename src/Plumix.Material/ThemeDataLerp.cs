@@ -201,7 +201,7 @@ public sealed partial record ToggleButtonsThemeData
             Color: MaterialThemeLerp.Color(a?.Color, b?.Color, t),
             SelectedColor: MaterialThemeLerp.Color(a?.SelectedColor, b?.SelectedColor, t),
             DisabledColor: MaterialThemeLerp.Color(a?.DisabledColor, b?.DisabledColor, t),
-            FillColor: MaterialThemeLerp.Color(a?.FillColor, b?.FillColor, t),
+            FillColor: MaterialThemeLerp.ColorStateProperty(a?.FillColor, b?.FillColor, t),
             FocusColor: MaterialThemeLerp.Color(a?.FocusColor, b?.FocusColor, t),
             HighlightColor: MaterialThemeLerp.Color(a?.HighlightColor, b?.HighlightColor, t),
             HoverColor: MaterialThemeLerp.Color(a?.HoverColor, b?.HoverColor, t),

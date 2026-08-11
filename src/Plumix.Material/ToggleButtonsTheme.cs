@@ -13,7 +13,7 @@ public sealed partial record ToggleButtonsThemeData(
     Color? Color = null,
     Color? SelectedColor = null,
     Color? DisabledColor = null,
-    Color? FillColor = null,
+    MaterialStateProperty<Color?>? FillColor = null,
     Color? FocusColor = null,
     Color? HighlightColor = null,
     Color? HoverColor = null,
@@ -22,9 +22,45 @@ public sealed partial record ToggleButtonsThemeData(
     Color? SelectedBorderColor = null,
     Color? DisabledBorderColor = null,
     BorderRadius? BorderRadius = null,
-    double? BorderWidth = null);
+    double? BorderWidth = null)
+{
+    public ToggleButtonsThemeData CopyWith(
+        TextStyle? textStyle = null,
+        BoxConstraints? constraints = null,
+        Color? color = null,
+        Color? selectedColor = null,
+        Color? disabledColor = null,
+        MaterialStateProperty<Color?>? fillColor = null,
+        Color? focusColor = null,
+        Color? highlightColor = null,
+        Color? hoverColor = null,
+        Color? splashColor = null,
+        Color? borderColor = null,
+        Color? selectedBorderColor = null,
+        Color? disabledBorderColor = null,
+        BorderRadius? borderRadius = null,
+        double? borderWidth = null)
+    {
+        return new ToggleButtonsThemeData(
+            TextStyle: textStyle ?? TextStyle,
+            Constraints: constraints ?? Constraints,
+            Color: color ?? Color,
+            SelectedColor: selectedColor ?? SelectedColor,
+            DisabledColor: disabledColor ?? DisabledColor,
+            FillColor: fillColor ?? FillColor,
+            FocusColor: focusColor ?? FocusColor,
+            HighlightColor: highlightColor ?? HighlightColor,
+            HoverColor: hoverColor ?? HoverColor,
+            SplashColor: splashColor ?? SplashColor,
+            BorderColor: borderColor ?? BorderColor,
+            SelectedBorderColor: selectedBorderColor ?? SelectedBorderColor,
+            DisabledBorderColor: disabledBorderColor ?? DisabledBorderColor,
+            BorderRadius: borderRadius ?? BorderRadius,
+            BorderWidth: borderWidth ?? BorderWidth);
+    }
+}
 
-public sealed class ToggleButtonsTheme : InheritedWidget
+public sealed class ToggleButtonsTheme : InheritedTheme
 {
     public ToggleButtonsTheme(ToggleButtonsThemeData data, Widget child, Key? key = null) : base(key)
     {
@@ -36,6 +72,11 @@ public sealed class ToggleButtonsTheme : InheritedWidget
     public Widget Child { get; }
 
     public override Widget Build(BuildContext context) => Child;
+
+    public override Widget Wrap(BuildContext context, Widget child)
+    {
+        return new ToggleButtonsTheme(Data, child);
+    }
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {

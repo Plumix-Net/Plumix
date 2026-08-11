@@ -83,10 +83,10 @@ public sealed class PaintingContext
             var translatedRect = new Rect(rect.Position + sceneOffset, rect.Size);
             var roundedRect = new RoundedRect(
                 translatedRect,
-                borderRadius.TopLeft,
-                borderRadius.TopRight,
-                borderRadius.BottomRight,
-                borderRadius.BottomLeft);
+                new Vector(borderRadius.TopLeftRadius.X, borderRadius.TopLeftRadius.Y),
+                new Vector(borderRadius.TopRightRadius.X, borderRadius.TopRightRadius.Y),
+                new Vector(borderRadius.BottomRightRadius.X, borderRadius.BottomRightRadius.Y),
+                new Vector(borderRadius.BottomLeftRadius.X, borderRadius.BottomLeftRadius.Y));
             drawingContext.DrawRectangle(brush, pen, roundedRect, boxShadows);
         });
     }

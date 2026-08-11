@@ -118,6 +118,9 @@
   - `Stepper` (direct light/dark M2/M3 circle, connector, and control roles; source `WidgetStateProperty`,
     directional inset, `BoxBorder`, and gradient APIs; exact connector geometry and old/new icon transitions;
     focused coverage and mirrored runtime probes).
+  - `ToggleButtons` (direct `ColorScheme.primary`/`onSurface`/`surface` roles, state-resolving fill API, inherited
+    theme copy/lerp/capture, source checked/TextButton composition, adjacent selected-border ownership, intrinsic and
+    baseline layout, cross-axis tap targets, RTL/vertical border paint, and elliptical per-corner clipping).
 - Completed `Typography.Material2014`/`Material2018`, exact platform black/white themes, dense/tall geometry, and
   locale script-category selection.
 - Remove the narrowed `ColorScheme + Typography closeout` row from `docs/MATERIAL_TODO.md` only after those checks

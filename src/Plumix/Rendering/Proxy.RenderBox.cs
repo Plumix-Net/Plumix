@@ -2726,7 +2726,7 @@ public sealed class RenderClipRRect : RenderProxyBox
     public override bool HitTest(BoxHitTestResult result, Point position)
     {
         var clip = _hasExplicitClipRect ? _clipRect : new Rect(new Point(0, 0), Size);
-        if (!clip.Contains(position))
+        if (!Layer.ContainsRoundedRect(clip, _borderRadius, position))
         {
             return false;
         }

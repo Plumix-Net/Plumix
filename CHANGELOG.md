@@ -1,5 +1,10 @@
 # Changelog
 
+- Breaking: completed the strict Material `ToggleButtons` closeout. Direct `ColorScheme` defaults, state-resolving
+  fills, exact checked/theme/TextButton composition, axis-aware tap targets, adjacent border ownership, intrinsic/
+  baseline layout, RTL/vertical paint, and elliptical corner clipping now match Flutter; focused coverage and the
+  mirrored state-fill probe were expanded.
+
 - Breaking: closed the `RadioGroup` traversal divergence. Shared focus traversal groups now apply Flutter's stable
   geometry/bidi reading order and nested policies; radios use source shortcut-manager composition, selected-only Tab
   entry, enabled-only wrapping arrows, Space toggling, and non-radio shortcut fall-through with focused coverage.
