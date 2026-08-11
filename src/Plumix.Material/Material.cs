@@ -394,7 +394,8 @@ public sealed class Material : StatefulWidget
                     : ElevationOverlay.ApplyOverlay(theme, baseColor, material.Elevation);
             return new MaterialVisual(
                 effectiveColor,
-                material.ShadowColor ?? theme.ShadowColor,
+                material.ShadowColor
+                ?? (theme.UseMaterial3 ? theme.ColorScheme.Shadow : theme.ShadowColor),
                 material.Elevation,
                 effectiveShape,
                 material.TextStyle ?? theme.TextTheme.BodyMedium);

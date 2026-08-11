@@ -217,7 +217,9 @@ public sealed record AppBarThemeData(
 
 public sealed record ThemeData
 {
-    private static readonly Color LightScaffoldAndCanvasColor = Color.Parse("#FFFEF7FF");
+    private static readonly Color Material2LightCanvasColor = Color.Parse("#FFFAFAFA");
+    private static readonly Color Material2DarkCanvasColor = Color.Parse("#FF303030");
+    private static readonly Color Material2DarkCardColor = Color.Parse("#FF424242");
     private static readonly Color LightPrimaryColor = Color.Parse("#FF6750A4");
     private static readonly Color DefaultPrimaryColorLight = Color.Parse("#FFBBDEFB");
     private static readonly Color DefaultPrimaryColorDark = Color.Parse("#FF1976D2");
@@ -229,9 +231,6 @@ public sealed record ThemeData
     private static readonly Color LightOnSurfaceVariantColor = Color.Parse("#FF49454F");
     private static readonly Color LightOutlineColor = Color.Parse("#FF79747E");
     private static readonly Color LightOutlineVariantColor = Color.Parse("#FFCAC4D0");
-    private static readonly Color LightDividerColor = Color.FromArgb(0x1F, 0x00, 0x00, 0x00);
-    private static readonly Color LightShadowColor = Colors.Black;
-    private static readonly Color LightCardColor = Colors.White;
     private static readonly Color LightSurfaceContainerLowColor = Color.Parse("#FFF7F2FA");
     private static readonly Color LightSurfaceContainerColor = Color.Parse("#FFF3EDF7");
     private static readonly Color LightSurfaceContainerHighColor = Color.Parse("#FFECE6F0");
@@ -464,8 +463,13 @@ public sealed record ThemeData
             defaultTextTheme = defaultTextTheme.Apply(package: package);
         }
         TextTheme = defaultTextTheme.Merge(textTheme);
-        ScaffoldBackgroundColor = scaffoldBackgroundColor ?? ColorScheme.Surface;
-        CanvasColor = canvasColor ?? ColorScheme.Surface;
+        CanvasColor = canvasColor
+                      ?? (UseMaterial3
+                          ? ColorScheme.Surface
+                          : Brightness == Brightness.Dark
+                              ? Material2DarkCanvasColor
+                              : Material2LightCanvasColor);
+        ScaffoldBackgroundColor = scaffoldBackgroundColor ?? CanvasColor;
         PrimaryColor = primaryColor
                        ?? (Brightness == Brightness.Dark
                            ? ColorScheme.Surface
@@ -503,14 +507,24 @@ public sealed record ThemeData
         PrimaryContainerColor = primaryContainerColor ?? ColorScheme.PrimaryContainer;
         OnPrimaryContainerColor = onPrimaryContainerColor ?? ColorScheme.OnPrimaryContainer;
         _appBarTheme = appBarTheme;
-        ShadowColor = shadowColor ?? ColorScheme.Shadow;
+        ShadowColor = shadowColor ?? Colors.Black;
         SurfaceColor = surfaceColor ?? ColorScheme.Surface;
         OnSurfaceColor = onSurfaceColor ?? ColorScheme.OnSurface;
         OnSurfaceVariantColor = onSurfaceVariantColor ?? ColorScheme.OnSurfaceVariant;
         OutlineColor = outlineColor ?? ColorScheme.Outline;
         OutlineVariantColor = outlineVariantColor ?? ColorScheme.OutlineVariant;
-        DividerColor = dividerColor ?? ColorScheme.Outline;
-        CardColor = cardColor ?? ColorScheme.Surface;
+        DividerColor = dividerColor
+                       ?? (UseMaterial3
+                           ? ColorScheme.Outline
+                           : Brightness == Brightness.Dark
+                               ? Color.FromArgb(0x1F, 0xFF, 0xFF, 0xFF)
+                               : Color.FromArgb(0x1F, 0x00, 0x00, 0x00));
+        CardColor = cardColor
+                    ?? (UseMaterial3
+                        ? ColorScheme.Surface
+                        : Brightness == Brightness.Dark
+                            ? Material2DarkCardColor
+                            : Colors.White);
         SurfaceContainerLowColor = surfaceContainerLowColor ?? ColorScheme.SurfaceContainerLow;
         SurfaceContainerColor = surfaceContainerColor ?? ColorScheme.SurfaceContainer;
         SurfaceContainerHighColor = surfaceContainerHighColor ?? ColorScheme.SurfaceContainerHigh;
@@ -528,7 +542,9 @@ public sealed record ThemeData
                                     ? Color.FromArgb(0xB3, 0xFF, 0xFF, 0xFF)
                                     : Color.FromArgb(0x8A, 0x00, 0x00, 0x00));
         HintColor = hintColor ?? ApplyOpacity(OnSurfaceColor, 0.60);
-        FocusColor = focusColor ?? ApplyOpacity(OnSurfaceColor, 0.12);
+        FocusColor = focusColor ?? ApplyOpacity(
+            Brightness == Brightness.Dark ? Colors.White : Colors.Black,
+            0.12);
         HoverColor = hoverColor ?? ApplyOpacity(
             Brightness == Brightness.Dark ? Colors.White : Colors.Black,
             0.04);

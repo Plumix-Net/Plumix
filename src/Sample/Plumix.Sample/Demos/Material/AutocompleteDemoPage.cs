@@ -36,6 +36,7 @@ internal sealed class AutocompleteDemoPageState : State
     private readonly TextEditingController _rawController = new();
     private readonly FocusNode _rawFocusNode = new();
     private OptionsViewOpenDirection _openDirection = OptionsViewOpenDirection.Down;
+    private bool _useMaterial3 = true;
     private string _materialSelection = "none";
     private string _rawSelection = "none";
 
@@ -50,22 +51,33 @@ internal sealed class AutocompleteDemoPageState : State
                     new Text("Autocomplete + RawAutocomplete", fontSize: 20, color: Colors.Black),
                     new Text(
                         "Material defaults and a route-free raw options portal with shared filtering, keyboard " +
-                        "highlighting, inherited theme, and anchored direction probes.",
+                        "highlighting, M2/M3 surfaces, inherited theme, and anchored direction probes.",
                         fontSize: 14,
                         color: Color.Parse("#8A000000")),
                     new Align(
                         alignment: Alignment.CenterLeft,
-                        child: new TextButton(
-                            new Text($"Open: {FormatDirection(_openDirection)}"),
-                            () => SetState(() => _openDirection = NextDirection(_openDirection)))),
+                        child: new Row(
+                            mainAxisSize: MainAxisSize.Min,
+                            children:
+                            [
+                                new TextButton(
+                                    new Text($"Open: {FormatDirection(_openDirection)}"),
+                                    () => SetState(() => _openDirection = NextDirection(_openDirection))),
+                                new SizedBox(width: 8),
+                                new TextButton(
+                                    new Text(_useMaterial3 ? "Theme: M3" : "Theme: M2"),
+                                    () => SetState(() => _useMaterial3 = !_useMaterial3)),
+                            ])),
                     new Text("Material Autocomplete", fontSize: 18, color: Colors.Black),
-                    new Autocomplete<string>(
-                        optionsBuilder: FilterTerms,
-                        textEditingController: _materialController,
-                        focusNode: _materialFocusNode,
-                        optionsViewOpenDirection: _openDirection,
-                        optionsMaxHeight: 160,
-                        onSelected: value => SetState(() => _materialSelection = value)),
+                    new Theme(
+                        new ThemeData(useMaterial3: _useMaterial3),
+                        new Autocomplete<string>(
+                            optionsBuilder: FilterTerms,
+                            textEditingController: _materialController,
+                            focusNode: _materialFocusNode,
+                            optionsViewOpenDirection: _openDirection,
+                            optionsMaxHeight: 160,
+                            onSelected: value => SetState(() => _materialSelection = value))),
                     new Text($"Selected: {_materialSelection}", fontSize: 13),
                     new Divider(),
                     new Text("RawAutocomplete", fontSize: 18, color: Colors.Black),

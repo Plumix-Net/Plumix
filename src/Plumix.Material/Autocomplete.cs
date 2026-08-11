@@ -102,10 +102,10 @@ public sealed class Autocomplete<T> : StatelessWidget
         FocusNode focusNode,
         Action onFieldSubmitted)
     {
-        return new TextFormField(
-            controller: textEditingController,
-            focusNode: focusNode,
-            onFieldSubmitted: value => onFieldSubmitted());
+        return new AutocompleteField(
+            focusNode,
+            textEditingController,
+            onFieldSubmitted);
     }
 
     private Widget BuildDefaultOptions(
@@ -116,8 +116,8 @@ public sealed class Autocomplete<T> : StatelessWidget
         return new AutocompleteOptions<T>(
             DisplayStringForOption,
             onSelected,
-            options.ToArray(),
             OptionsViewOpenDirection,
+            options.ToArray(),
             OptionsMaxHeight);
     }
 
@@ -129,19 +129,46 @@ public sealed class Autocomplete<T> : StatelessWidget
     }
 }
 
+internal sealed class AutocompleteField : StatelessWidget
+{
+    public AutocompleteField(
+        FocusNode focusNode,
+        TextEditingController textEditingController,
+        Action onFieldSubmitted)
+    {
+        FocusNode = focusNode;
+        TextEditingController = textEditingController;
+        OnFieldSubmitted = onFieldSubmitted;
+    }
+
+    public FocusNode FocusNode { get; }
+
+    public Action OnFieldSubmitted { get; }
+
+    public TextEditingController TextEditingController { get; }
+
+    public override Widget Build(BuildContext context)
+    {
+        return new TextFormField(
+            controller: TextEditingController,
+            focusNode: FocusNode,
+            onFieldSubmitted: value => OnFieldSubmitted());
+    }
+}
+
 internal sealed class AutocompleteOptions<T> : StatelessWidget
 {
     public AutocompleteOptions(
         AutocompleteOptionToString<T> displayStringForOption,
         AutocompleteOnSelected<T> onSelected,
-        IReadOnlyList<T> options,
         OptionsViewOpenDirection openDirection,
+        IReadOnlyList<T> options,
         double optionsMaxHeight)
     {
         DisplayStringForOption = displayStringForOption;
         OnSelected = onSelected;
-        Options = options;
         OpenDirection = openDirection;
+        Options = options;
         OptionsMaxHeight = optionsMaxHeight;
     }
 
@@ -149,9 +176,9 @@ internal sealed class AutocompleteOptions<T> : StatelessWidget
 
     public AutocompleteOnSelected<T> OnSelected { get; }
 
-    public IReadOnlyList<T> Options { get; }
-
     public OptionsViewOpenDirection OpenDirection { get; }
+
+    public IReadOnlyList<T> Options { get; }
 
     public double OptionsMaxHeight { get; }
 
@@ -199,7 +226,6 @@ internal sealed class AutocompleteOptionsList<T> : StatefulWidget
 internal sealed class AutocompleteOptionsListState<T> : State
 {
     private readonly ScrollController _scrollController = new();
-    private readonly Dictionary<object, GlobalObjectKey<State>> _optionKeys = new();
 
     private AutocompleteOptionsList<T> Current => (AutocompleteOptionsList<T>)StateWidget;
 
@@ -211,7 +237,7 @@ internal sealed class AutocompleteOptionsListState<T> : State
             return;
         }
 
-        ScheduleEnsureHighlightedVisible(remainingAttempts: 4);
+        ScheduleEnsureHighlightedVisible();
     }
 
     public override void Dispose()
@@ -221,9 +247,7 @@ internal sealed class AutocompleteOptionsListState<T> : State
 
     public override Widget Build(BuildContext context)
     {
-        var theme = Theme.Of(context);
         int highlightedIndex = AutocompleteHighlightedOption.Of(context);
-        RemoveStaleOptionKeys();
         return ListView.Builder(
             itemCount: Current.Options.Count,
             controller: _scrollController,
@@ -232,51 +256,31 @@ internal sealed class AutocompleteOptionsListState<T> : State
             itemBuilder: (itemContext, index) =>
             {
                 T option = Current.Options[index];
-                Widget optionContent = new Padding(
-                    new Thickness(16),
-                    new Text(Current.DisplayStringForOption(option)));
-                if (highlightedIndex == index)
-                {
-                    optionContent = new ColoredBox(theme.FocusColor, optionContent);
-                }
-
                 return new Semantics(
                     flags: SemanticsFlags.IsButton,
-                    onTap: () => Current.OnSelected(option),
                     child: new InkWell(
                         key: KeyForOption(option),
                         onTap: () => Current.OnSelected(option),
-                        child: optionContent));
+                        child: new Builder(builderContext => new Container(
+                            color: highlightedIndex == index
+                                ? Theme.Of(builderContext).FocusColor
+                                : null,
+                            padding: new Thickness(16),
+                            child: new Text(Current.DisplayStringForOption(option))))));
             });
     }
 
-    private GlobalObjectKey<State> KeyForOption(T option)
+    private static GlobalObjectKey<State> KeyForOption(T option)
     {
         if (option is null)
         {
             throw new InvalidOperationException("Autocomplete options must not be null.");
         }
 
-        object keyValue = option;
-        if (!_optionKeys.TryGetValue(keyValue, out GlobalObjectKey<State>? key))
-        {
-            key = new GlobalObjectKey<State>(keyValue);
-            _optionKeys.Add(keyValue, key);
-        }
-
-        return key;
+        return new GlobalObjectKey<State>(option);
     }
 
-    private void RemoveStaleOptionKeys()
-    {
-        var retained = Current.Options.Cast<object>().ToHashSet();
-        foreach (object option in _optionKeys.Keys.Where(option => !retained.Contains(option)).ToArray())
-        {
-            _optionKeys.Remove(option);
-        }
-    }
-
-    private void ScheduleEnsureHighlightedVisible(int remainingAttempts)
+    private void ScheduleEnsureHighlightedVisible()
     {
         Scheduler.AddPostFrameCallback(timestamp =>
         {
@@ -302,10 +306,6 @@ internal sealed class AutocompleteOptionsListState<T> : State
             _scrollController.JumpTo(Current.HighlightedIndex == 0
                 ? 0.0
                 : position.MaxScrollExtent);
-            if (remainingAttempts > 1)
-            {
-                ScheduleEnsureHighlightedVisible(remainingAttempts - 1);
-            }
         });
     }
 }

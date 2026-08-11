@@ -1,5 +1,9 @@
 # Changelog
 
+- Breaking: completed the strict Material `Autocomplete` closeout. The wrapper now matches Flutter's field/options
+  composition, sizing, scrolling, selection, overlay, and option semantics; shared M2/M3 canvas, focus, and shadow
+  defaults are source-shaped. Focused Flutter-test coverage and the mirrored live M2/M3 demo probe were expanded.
+
 - Breaking: completed the strict Material `FlexibleSpaceBar` closeout. The control now uses the source stateful/
   layout-builder composition, logical title padding and scaled-width constraint, exact collapse and M2/M3 title
   rules, all zoom/blur/fade stretch modes, repaint-aware background opacity, and strict settings extents. Focused

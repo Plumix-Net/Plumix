@@ -380,7 +380,21 @@ public sealed class InputDecorator : StatefulWidget
             if (ShouldFloat(Current, inputTheme)) _labelController!.Forward(); else _labelController!.Reverse();
         }
         public override void Dispose() { _labelController!.Changed -= Changed; _labelController.Dispose(); }
-        public override Widget Build(BuildContext context) => BuildDecorator(context, _labelController!.Evaluate());
+        public override Widget Build(BuildContext context)
+        {
+            return new LayoutBuilder((layoutContext, constraints) =>
+            {
+                if (constraints.MaxWidth == 0.0 && constraints.MaxHeight == 0.0)
+                {
+                    return new SizedBox(
+                        width: 0.0,
+                        height: 0.0,
+                        child: Current.Child);
+                }
+
+                return BuildDecorator(layoutContext, _labelController!.Evaluate());
+            });
+        }
         private void Changed() => SetState(() => { });
 
         private Widget BuildDecorator(BuildContext context, double floatProgress)

@@ -356,11 +356,25 @@ public class InkResponse : StatefulWidget
 
             if (!widget.ExcludeFromSemantics)
             {
+                bool canRequestSemanticFocus = _focusNode?.CanRequestFocus == true;
+                SemanticsFlags flags = Enabled ? SemanticsFlags.IsEnabled : SemanticsFlags.None;
+                if (canRequestSemanticFocus)
+                {
+                    flags |= SemanticsFlags.IsFocusable;
+                    if (_focusNode!.HasFocus)
+                    {
+                        flags |= SemanticsFlags.IsFocused;
+                    }
+                }
+
                 result = new Semantics(
-                    flags: Enabled ? SemanticsFlags.IsEnabled : SemanticsFlags.None,
+                    flags: flags,
                     onTap: widget.OnTap is null ? null : HandleSemanticTap,
                     onLongPress: widget.OnLongPress is null ? null : HandleSemanticLongPress,
-                    child: result);
+                    child: result)
+                {
+                    OnFocus = canRequestSemanticFocus ? () => _focusNode!.RequestFocus() : null,
+                };
             }
 
             return new ParentInkResponseProvider(this, result);

@@ -25,6 +25,7 @@ class _AutocompleteDemoPageState extends State<AutocompleteDemoPage> {
   final TextEditingController _rawController = TextEditingController();
   final FocusNode _rawFocusNode = FocusNode();
   OptionsViewOpenDirection _openDirection = OptionsViewOpenDirection.down;
+  bool _useMaterial3 = true;
   String _materialSelection = 'none';
   String _rawSelection = 'none';
 
@@ -41,32 +42,47 @@ class _AutocompleteDemoPageState extends State<AutocompleteDemoPage> {
           ),
           const Text(
             'Material defaults and a route-free raw options portal with shared '
-            'filtering, keyboard highlighting, inherited theme, and anchored '
-            'direction probes.',
+            'filtering, keyboard highlighting, M2/M3 surfaces, inherited theme, '
+            'and anchored direction probes.',
             style: TextStyle(fontSize: 14, color: Color(0x8A000000)),
           ),
           Align(
             alignment: Alignment.centerLeft,
-            child: TextButton(
-              onPressed: () => setState(() {
-                _openDirection = _nextDirection(_openDirection);
-              }),
-              child: Text('Open: ${_formatDirection(_openDirection)}'),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                TextButton(
+                  onPressed: () => setState(() {
+                    _openDirection = _nextDirection(_openDirection);
+                  }),
+                  child: Text('Open: ${_formatDirection(_openDirection)}'),
+                ),
+                const SizedBox(width: 8),
+                TextButton(
+                  onPressed: () => setState(() {
+                    _useMaterial3 = !_useMaterial3;
+                  }),
+                  child: Text(_useMaterial3 ? 'Theme: M3' : 'Theme: M2'),
+                ),
+              ],
             ),
           ),
           const Text(
             'Material Autocomplete',
             style: TextStyle(fontSize: 18, color: Colors.black),
           ),
-          Autocomplete<String>(
-            optionsBuilder: _filterTerms,
-            textEditingController: _materialController,
-            focusNode: _materialFocusNode,
-            optionsViewOpenDirection: _openDirection,
-            optionsMaxHeight: 160,
-            onSelected: (String value) {
-              setState(() => _materialSelection = value);
-            },
+          Theme(
+            data: ThemeData(useMaterial3: _useMaterial3),
+            child: Autocomplete<String>(
+              optionsBuilder: _filterTerms,
+              textEditingController: _materialController,
+              focusNode: _materialFocusNode,
+              optionsViewOpenDirection: _openDirection,
+              optionsMaxHeight: 160,
+              onSelected: (String value) {
+                setState(() => _materialSelection = value);
+              },
+            ),
           ),
           Text(
             'Selected: $_materialSelection',
