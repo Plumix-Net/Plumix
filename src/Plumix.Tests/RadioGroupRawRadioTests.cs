@@ -6,6 +6,7 @@ using Plumix.UI;
 using Plumix.Widgets;
 using Xunit;
 
+// Dart parity source: flutter/packages/flutter/lib/src/widgets/focus_traversal.dart
 namespace Plumix.Tests;
 
 [Collection(SchedulerTestCollection.Name)]
@@ -110,6 +111,46 @@ public sealed class RadioGroupRawRadioTests : IDisposable
     }
 
     [Fact]
+    public void RadioGroup_ArrowKeysFollowGeometryReadingOrder()
+    {
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light,
+                child: new Directionality(
+                    textDirection: TextDirection.Ltr,
+                    child: new RadioGroupProbe(geometryOrder: true))));
+        harness.Pump(new Size(240, 120));
+        RadioGroupProbeState state = harness.FindState<RadioGroupProbeState>();
+
+        Assert.True(state.FirstFocus.RequestFocus());
+        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("ArrowRight", isDown: true)));
+        harness.Pump(new Size(240, 120));
+
+        Assert.Equal("third", state.GroupValue);
+        Assert.True(state.ThirdFocus.HasFocus);
+    }
+
+    [Fact]
+    public void RadioGroup_ArrowKeysHonorRtlReadingOrder()
+    {
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light,
+                child: new Directionality(
+                    textDirection: TextDirection.Rtl,
+                    child: new RadioGroupProbe(rtlOrder: true))));
+        harness.Pump(new Size(240, 120));
+        RadioGroupProbeState state = harness.FindState<RadioGroupProbeState>();
+
+        Assert.True(state.FirstFocus.RequestFocus());
+        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("ArrowRight", isDown: true)));
+        harness.Pump(new Size(240, 120));
+
+        Assert.Equal("third", state.GroupValue);
+        Assert.True(state.ThirdFocus.HasFocus);
+    }
+
+    [Fact]
     public void RadioGroup_SpaceTogglesOnlyToggleableSelectedRadio()
     {
         using var harness = new WidgetRenderHarness(
@@ -126,6 +167,47 @@ public sealed class RadioGroupRawRadioTests : IDisposable
         harness.Pump(new Size(240, 120));
 
         Assert.Null(state.GroupValue);
+    }
+
+    [Fact]
+    public void RadioGroup_ShortcutsFallThroughWhenNonRadioDescendantHasFocus()
+    {
+        int outerShortcutCount = 0;
+        string? groupValue = "first";
+        var radioFocus = new FocusNode();
+        var otherFocus = new FocusNode();
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light,
+                child: new Directionality(
+                    textDirection: TextDirection.Ltr,
+                    child: new Shortcuts(
+                        shortcuts: new Dictionary<ShortcutActivator, Intent>
+                        {
+                            [new SingleActivator("ArrowLeft")] = new VoidCallbackIntent(
+                                () => outerShortcutCount += 1),
+                        },
+                        child: new RadioGroup<string>(
+                            groupValue: groupValue,
+                            onChanged: value => groupValue = value,
+                            child: new Column(
+                                children:
+                                [
+                                    new Radio<string>(value: "first", focusNode: radioFocus),
+                                    new Focus(
+                                        focusNode: otherFocus,
+                                        child: new SizedBox(width: 20, height: 20)),
+                                ]))))));
+        harness.Pump(new Size(240, 120));
+
+        Assert.True(otherFocus.RequestFocus());
+        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("ArrowLeft", isDown: true)));
+        Assert.Equal(1, outerShortcutCount);
+
+        Assert.True(radioFocus.RequestFocus());
+        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("ArrowLeft", isDown: true)));
+        Assert.Equal(1, outerShortcutCount);
+        Assert.Equal("first", groupValue);
     }
 
     [Fact]
@@ -152,6 +234,73 @@ public sealed class RadioGroupRawRadioTests : IDisposable
         Assert.True(FocusManager.Instance.FocusNext());
         Assert.False(state.SecondFocus.HasFocus);
         Assert.False(state.ThirdFocus.HasFocus);
+    }
+
+    [Fact]
+    public void RadioGroup_TabTraversalUsesFirstRadioInReadingOrderWhenUnselected()
+    {
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light,
+                child: new Directionality(
+                    textDirection: TextDirection.Ltr,
+                    child: new RadioGroupProbe(
+                        geometryOrder: true,
+                        initialGroupValue: null))));
+        harness.Pump(new Size(240, 120));
+        RadioGroupProbeState state = harness.FindState<RadioGroupProbeState>();
+
+        Assert.True(FocusManager.Instance.FocusNext());
+
+        Assert.True(state.ThirdFocus.HasFocus);
+        Assert.False(state.FirstFocus.HasFocus);
+        Assert.False(state.SecondFocus.HasFocus);
+    }
+
+    [Fact]
+    public void FocusTraversalGroup_NestedPoliciesSortThenFlattenTheirMembers()
+    {
+        var first = new FocusNode();
+        var nestedFirst = new FocusNode();
+        var nestedSecond = new FocusNode();
+        var last = new FocusNode();
+        using var harness = new WidgetRenderHarness(
+            new Directionality(
+                textDirection: TextDirection.Ltr,
+                child: new FocusTraversalGroup(
+                    policy: new WidgetOrderTraversalPolicy(),
+                    child: new Column(
+                        children:
+                        [
+                            new Focus(
+                                focusNode: first,
+                                child: new SizedBox(width: 20, height: 20)),
+                            new FocusTraversalGroup(
+                                policy: new ReverseTraversalPolicy(),
+                                child: new Column(
+                                    children:
+                                    [
+                                        new Focus(
+                                            focusNode: nestedFirst,
+                                            child: new SizedBox(width: 20, height: 20)),
+                                        new Focus(
+                                            focusNode: nestedSecond,
+                                            child: new SizedBox(width: 20, height: 20)),
+                                    ])),
+                            new Focus(
+                                focusNode: last,
+                                child: new SizedBox(width: 20, height: 20)),
+                        ]))));
+        harness.Pump(new Size(240, 120));
+
+        Assert.True(FocusManager.Instance.FocusNext());
+        Assert.True(first.HasFocus);
+        Assert.True(FocusManager.Instance.FocusNext());
+        Assert.True(nestedSecond.HasFocus);
+        Assert.True(FocusManager.Instance.FocusNext());
+        Assert.True(nestedFirst.HasFocus);
+        Assert.True(FocusManager.Instance.FocusNext());
+        Assert.True(last.HasFocus);
     }
 
     [Fact]
@@ -244,6 +393,16 @@ public sealed class RadioGroupRawRadioTests : IDisposable
         }
     }
 
+    private sealed class ReverseTraversalPolicy : FocusTraversalPolicy
+    {
+        public override IReadOnlyList<FocusNode> SortDescendants(
+            IEnumerable<FocusNode> descendants,
+            FocusNode currentNode)
+        {
+            return descendants.Reverse().ToList();
+        }
+    }
+
     private sealed class RawRadioFromGroup : StatelessWidget
     {
         public RawRadioFromGroup(string value)
@@ -271,15 +430,29 @@ public sealed class RadioGroupRawRadioTests : IDisposable
 
     private sealed class RadioGroupProbe : StatefulWidget
     {
-        public RadioGroupProbe(bool disableMiddle = false, bool toggleable = false)
+        public RadioGroupProbe(
+            bool disableMiddle = false,
+            bool toggleable = false,
+            bool geometryOrder = false,
+            bool rtlOrder = false,
+            string? initialGroupValue = "first")
         {
             DisableMiddle = disableMiddle;
             Toggleable = toggleable;
+            GeometryOrder = geometryOrder;
+            RtlOrder = rtlOrder;
+            InitialGroupValue = initialGroupValue;
         }
 
         public bool DisableMiddle { get; }
 
         public bool Toggleable { get; }
+
+        public bool GeometryOrder { get; }
+
+        public bool RtlOrder { get; }
+
+        public string? InitialGroupValue { get; }
 
         public override State CreateState()
         {
@@ -289,7 +462,7 @@ public sealed class RadioGroupRawRadioTests : IDisposable
 
     private sealed class RadioGroupProbeState : State
     {
-        public string? GroupValue { get; private set; } = "first";
+        public string? GroupValue { get; private set; }
 
         public FocusNode FirstFocus { get; } = new();
 
@@ -299,8 +472,26 @@ public sealed class RadioGroupRawRadioTests : IDisposable
 
         private RadioGroupProbe CurrentWidget => (RadioGroupProbe)StateWidget;
 
+        public override void InitState()
+        {
+            GroupValue = CurrentWidget.InitialGroupValue;
+        }
+
         public override Widget Build(BuildContext context)
         {
+            if (CurrentWidget.GeometryOrder)
+            {
+                FirstFocus.TraversalRect = new Rect(0, 80, 20, 20);
+                SecondFocus.TraversalRect = new Rect(0, 40, 20, 20);
+                ThirdFocus.TraversalRect = new Rect(0, 0, 20, 20);
+            }
+            else if (CurrentWidget.RtlOrder)
+            {
+                FirstFocus.TraversalRect = new Rect(0, 0, 20, 20);
+                SecondFocus.TraversalRect = new Rect(40, 0, 20, 20);
+                ThirdFocus.TraversalRect = new Rect(80, 0, 20, 20);
+            }
+
             return new RadioGroup<string>(
                 groupValue: GroupValue,
                 onChanged: value => SetState(() => GroupValue = value),
@@ -340,7 +531,13 @@ public sealed class RadioGroupRawRadioTests : IDisposable
             RenderView = new RenderView();
             _pipeline = new PipelineOwner(RenderView);
             _pipeline.Attach(RenderView);
-            _rootElement = new HarnessRootElement(RenderView, rootWidget);
+            Widget appRoot = new Actions(
+                actions: new Dictionary<Type, FlutterAction>
+                {
+                    [typeof(VoidCallbackIntent)] = new VoidCallbackAction(),
+                },
+                child: rootWidget);
+            _rootElement = new HarnessRootElement(RenderView, appRoot);
             _rootElement.Attach(_owner);
             _rootElement.Mount(parent: null, newSlot: null);
             _owner.FlushBuild();

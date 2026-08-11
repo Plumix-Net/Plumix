@@ -188,7 +188,9 @@ public sealed class MaterialDatePickerTests : IDisposable
             onDisplayedMonthChanged: value => displayed = value));
         harness.Pump(new Size(420, 500));
 
-        for (int index = 0; index < 12 && FocusManager.Instance.PrimaryFocus?.OnKeyEvent?.Method.Name != "HandleGridKey"; index++)
+        for (int index = 0;
+             index < 64 && FocusManager.Instance.PrimaryFocus?.OnKeyEvent?.Method.Name != "HandleGridKey";
+             index++)
         {
             Assert.True(FocusManager.Instance.FocusNext());
         }

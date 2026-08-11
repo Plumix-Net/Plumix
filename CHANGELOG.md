@@ -1,5 +1,9 @@
 # Changelog
 
+- Breaking: closed the `RadioGroup` traversal divergence. Shared focus traversal groups now apply Flutter's stable
+  geometry/bidi reading order and nested policies; radios use source shortcut-manager composition, selected-only Tab
+  entry, enabled-only wrapping arrows, Space toggling, and non-radio shortcut fall-through with focused coverage.
+
 - Breaking: completed the strict Material `Stepper` ColorScheme/API closeout. The control now uses direct M2/M3
   roles, `WidgetStateProperty`, directional inset APIs, `BoxBorder`, framework linear gradients, exact icon/error
   transitions and connector geometry, with expanded focused coverage and mirrored runtime probes.

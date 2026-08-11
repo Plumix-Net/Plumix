@@ -6,28 +6,6 @@ using Plumix.UI;
 namespace Plumix.Widgets;
 
 // Dart parity source: flutter/packages/flutter/lib/src/widgets/radio_group.dart
-public interface RadioClient<T>
-{
-    bool Tristate { get; }
-
-    T RadioValue { get; }
-
-    bool Enabled { get; }
-
-    FocusNode FocusNode { get; }
-}
-
-public abstract class RadioGroupRegistry<T>
-{
-    public abstract T? GroupValue { get; }
-
-    public abstract Action<T?> OnChanged { get; }
-
-    public abstract void RegisterClient(RadioClient<T> radio);
-
-    public abstract void UnregisterClient(RadioClient<T> radio);
-}
-
 public sealed class RadioGroup<T> : StatefulWidget
 {
     public RadioGroup(
@@ -60,49 +38,66 @@ public sealed class RadioGroup<T> : StatefulWidget
     private sealed class RadioGroupState : State
     {
         private readonly RegistryImpl _registry;
+        private readonly IReadOnlyDictionary<ShortcutActivator, Intent> _shortcuts;
+        private readonly RadioGroupShortcutManager _shortcutManager;
 
         public RadioGroupState()
         {
             _registry = new RegistryImpl(this);
+            _shortcuts = new Dictionary<ShortcutActivator, Intent>
+            {
+                [new SingleActivator("ArrowLeft")] = new VoidCallbackIntent(_registry.SelectPreviousRadio),
+                [new SingleActivator("ArrowRight")] = new VoidCallbackIntent(_registry.SelectNextRadio),
+                [new SingleActivator("ArrowDown")] = new VoidCallbackIntent(_registry.SelectNextRadio),
+                [new SingleActivator("ArrowUp")] = new VoidCallbackIntent(_registry.SelectPreviousRadio),
+                [new SingleActivator("Space")] = new VoidCallbackIntent(_registry.ToggleFocusedRadio),
+            };
+            _shortcutManager = new RadioGroupShortcutManager(_shortcuts, _registry);
         }
 
         private RadioGroup<T> CurrentWidget => (RadioGroup<T>)StateWidget;
 
         public override void DidUpdateWidget(StatefulWidget oldWidget)
         {
-            _registry.SyncTraversalPolicy();
             _registry.ValidateSingleSelection();
         }
 
         public override Widget Build(BuildContext context)
         {
-            _registry.SyncTraversalPolicy();
             _registry.ValidateSingleSelection();
-
+            Widget result = new RadioGroupStateScope<T>(
+                registry: _registry,
+                groupValue: CurrentWidget.GroupValue,
+                child: CurrentWidget.Child);
+            result = new FocusTraversalGroup(
+                policy: new SkipUnselectedRadioPolicy(_registry.Radios, CurrentWidget.GroupValue),
+                child: result);
+            result = new Shortcuts(
+                manager: _shortcutManager,
+                child: result);
             return new Semantics(
                 container: true,
                 role: SemanticsRole.RadioGroup,
-                child: new RadioGroupStateScope<T>(
-                    registry: _registry,
-                    groupValue: CurrentWidget.GroupValue,
-                    child: CurrentWidget.Child));
+                child: result);
         }
 
         public override void Dispose()
         {
+            _shortcutManager.Dispose();
             _registry.Dispose();
         }
 
         private sealed class RegistryImpl : RadioGroupRegistry<T>
         {
             private readonly RadioGroupState _state;
-            private readonly List<RadioClient<T>> _radios = [];
-            private readonly Dictionary<RadioClient<T>, FocusNode> _focusNodes = [];
+            private readonly HashSet<RadioClient<T>> _radios = [];
 
             public RegistryImpl(RadioGroupState state)
             {
                 _state = state;
             }
+
+            public IReadOnlyCollection<RadioClient<T>> Radios => _radios;
 
             public override T? GroupValue => _state.CurrentWidget.GroupValue;
 
@@ -111,105 +106,19 @@ public sealed class RadioGroup<T> : StatefulWidget
             public override void RegisterClient(RadioClient<T> radio)
             {
                 ArgumentNullException.ThrowIfNull(radio);
-                if (_radios.Contains(radio))
-                {
-                    return;
-                }
-
                 _radios.Add(radio);
-                _focusNodes[radio] = radio.FocusNode;
-                _focusNodes[radio].AddKeyEventHandler(HandleKeyEvent);
-                SyncTraversalPolicy();
                 ValidateSingleSelection();
             }
 
             public override void UnregisterClient(RadioClient<T> radio)
             {
-                if (!_radios.Remove(radio))
-                {
-                    return;
-                }
-
-                FocusNode focusNode = _focusNodes.GetValueOrDefault(radio) ?? radio.FocusNode;
-                focusNode.RemoveKeyEventHandler(HandleKeyEvent);
-                _focusNodes.Remove(radio);
-                focusNode.RemoveTraversalEligibility(this);
-
-                SyncTraversalPolicy();
+                _radios.Remove(radio);
             }
 
-            public void SyncTraversalPolicy()
+            public void ToggleFocusedRadio()
             {
-                RadioClient<T>? selected = _radios.FirstOrDefault(IsSelected);
-                RadioClient<T>? traversalTarget = selected is { Enabled: true }
-                    ? selected
-                    : _radios.FirstOrDefault(radio => radio.Enabled);
-
-                foreach (RadioClient<T> radio in _radios)
-                {
-                    FocusNode focusNode = _focusNodes.GetValueOrDefault(radio) ?? radio.FocusNode;
-                    focusNode.SetTraversalEligibility(
-                        this,
-                        radio.Enabled && ReferenceEquals(radio, traversalTarget));
-                }
-            }
-
-            public void ValidateSingleSelection()
-            {
-                int selectedCount = _radios.Count(IsSelected);
-                if (selectedCount > 1)
-                {
-                    throw new InvalidOperationException(
-                        "RadioGroup cannot contain more than one radio with the current group value.");
-                }
-            }
-
-            public void Dispose()
-            {
-                foreach (RadioClient<T> radio in _radios.ToArray())
-                {
-                    UnregisterClient(radio);
-                }
-            }
-
-            private KeyEventResult HandleKeyEvent(FocusNode node, KeyEvent keyEvent)
-            {
-                if (!keyEvent.IsDown)
-                {
-                    return IsRadioKey(keyEvent.Key) ? KeyEventResult.Handled : KeyEventResult.Ignored;
-                }
-
-                RadioClient<T>? focusedRadio = _radios.FirstOrDefault(radio =>
-                    ReferenceEquals(_focusNodes.GetValueOrDefault(radio), node) && node.HasFocus);
-                if (focusedRadio is null)
-                {
-                    return KeyEventResult.Ignored;
-                }
-
-                if (IsSpaceKey(keyEvent.Key))
-                {
-                    ToggleFocusedRadio(focusedRadio);
-                    return KeyEventResult.Handled;
-                }
-
-                if (IsNextKey(keyEvent.Key))
-                {
-                    SelectInDirection(focusedRadio, forward: true);
-                    return KeyEventResult.Handled;
-                }
-
-                if (IsPreviousKey(keyEvent.Key))
-                {
-                    SelectInDirection(focusedRadio, forward: false);
-                    return KeyEventResult.Handled;
-                }
-
-                return KeyEventResult.Ignored;
-            }
-
-            private void ToggleFocusedRadio(RadioClient<T> radio)
-            {
-                if (!radio.Enabled)
+                RadioClient<T>? radio = _radios.FirstOrDefault(candidate => candidate.FocusNode.HasFocus);
+                if (radio == null)
                 {
                     return;
                 }
@@ -226,26 +135,65 @@ public sealed class RadioGroup<T> : StatefulWidget
                 }
             }
 
-            private void SelectInDirection(RadioClient<T> current, bool forward)
+            public void SelectNextRadio()
             {
-                List<RadioClient<T>> enabledRadios = _radios.Where(radio => radio.Enabled).ToList();
-                if (enabledRadios.Count < 2)
+                SelectRadioInDirection(forward: true);
+            }
+
+            public void SelectPreviousRadio()
+            {
+                SelectRadioInDirection(forward: false);
+            }
+
+            public void ValidateSingleSelection()
+            {
+                int selectedCount = _radios.Count(IsSelected);
+                if (selectedCount > 1)
+                {
+                    throw new InvalidOperationException(
+                        "RadioGroupPolicy can't be used for a radio group that allows multiple selection.");
+                }
+            }
+
+            public void Dispose()
+            {
+                _radios.Clear();
+            }
+
+            private void SelectRadioInDirection(bool forward)
+            {
+                if (_radios.Count < 2)
                 {
                     return;
                 }
 
-                int currentIndex = enabledRadios.IndexOf(current);
-                if (currentIndex < 0)
+                FocusNode? currentFocus = _radios
+                    .FirstOrDefault(radio => radio.FocusNode.HasFocus)
+                    ?.FocusNode;
+                if (currentFocus == null)
                 {
                     return;
                 }
 
-                int nextIndex = forward
-                    ? (currentIndex + 1) % enabledRadios.Count
-                    : (currentIndex - 1 + enabledRadios.Count) % enabledRadios.Count;
-                RadioClient<T> nextRadio = enabledRadios[nextIndex];
-                OnChanged(nextRadio.RadioValue);
-                (_focusNodes.GetValueOrDefault(nextRadio) ?? nextRadio.FocusNode).RequestFocus();
+                IReadOnlyList<FocusNode> sorted = ReadingOrderTraversalPolicy.Sort(
+                    _radios
+                        .Where(radio => radio.Enabled)
+                        .Select(radio => radio.FocusNode));
+                if (sorted.Count == 0)
+                {
+                    return;
+                }
+
+                int currentIndex = IndexOfReference(sorted, currentFocus);
+                int nextIndex = currentIndex < 0
+                    ? 0
+                    : forward
+                        ? (currentIndex + 1) % sorted.Count
+                        : (currentIndex - 1 + sorted.Count) % sorted.Count;
+                FocusNode nextFocus = sorted[nextIndex];
+                RadioClient<T> radioToSelect = _radios.First(radio => ReferenceEquals(radio.FocusNode, nextFocus));
+                OnChanged(radioToSelect.RadioValue);
+                nextFocus.RequestFocus();
             }
 
             private bool IsSelected(RadioClient<T> radio)
@@ -253,27 +201,115 @@ public sealed class RadioGroup<T> : StatefulWidget
                 return EqualityComparer<T?>.Default.Equals(radio.RadioValue, GroupValue);
             }
 
-            private static bool IsRadioKey(string key)
+            private static int IndexOfReference(IReadOnlyList<FocusNode> nodes, FocusNode target)
             {
-                return IsSpaceKey(key) || IsNextKey(key) || IsPreviousKey(key);
+                for (int index = 0; index < nodes.Count; index++)
+                {
+                    if (ReferenceEquals(nodes[index], target))
+                    {
+                        return index;
+                    }
+                }
+
+                return -1;
+            }
+        }
+
+        private sealed class RadioGroupShortcutManager : ShortcutManager
+        {
+            private readonly RegistryImpl _registry;
+
+            public RadioGroupShortcutManager(
+                IReadOnlyDictionary<ShortcutActivator, Intent> shortcuts,
+                RegistryImpl registry) : base(shortcuts)
+            {
+                _registry = registry;
             }
 
-            private static bool IsSpaceKey(string key)
+            public override KeyEventResult HandleKeypress(BuildContext context, KeyEvent @event)
             {
-                return key is "Space" or "Spacebar";
+                bool radioHasFocus = _registry.Radios.Any(radio => radio.FocusNode.HasFocus);
+                return radioHasFocus
+                    ? base.HandleKeypress(context, @event)
+                    : KeyEventResult.Ignored;
+            }
+        }
+
+        private sealed class SkipUnselectedRadioPolicy : ReadingOrderTraversalPolicy
+        {
+            private readonly IReadOnlyCollection<RadioClient<T>> _radios;
+            private readonly T? _groupValue;
+
+            public SkipUnselectedRadioPolicy(
+                IReadOnlyCollection<RadioClient<T>> radios,
+                T? groupValue)
+            {
+                _radios = radios;
+                _groupValue = groupValue;
             }
 
-            private static bool IsNextKey(string key)
+            public override IReadOnlyList<FocusNode> SortDescendants(
+                IEnumerable<FocusNode> descendants,
+                FocusNode currentNode)
             {
-                return key is "ArrowRight" or "Right" or "ArrowDown" or "Down";
+                IReadOnlyList<FocusNode> nodesInReadingOrder = base.SortDescendants(descendants, currentNode);
+                RadioClient<T>? selected = _radios.FirstOrDefault(IsSelected);
+
+                if (selected == null)
+                {
+                    var radiosByFocusNode = _radios.ToDictionary(radio => radio.FocusNode);
+                    foreach (FocusNode node in nodesInReadingOrder)
+                    {
+                        if (radiosByFocusNode.TryGetValue(node, out selected))
+                        {
+                            break;
+                        }
+                    }
+                }
+
+                if (selected == null)
+                {
+                    return nodesInReadingOrder;
+                }
+
+                var nodesToSkip = _radios
+                    .Where(radio => !ReferenceEquals(selected, radio)
+                                    && !ReferenceEquals(radio.FocusNode, currentNode))
+                    .Select(radio => radio.FocusNode)
+                    .ToHashSet();
+                return base.SortDescendants(
+                    descendants.Where(node => !nodesToSkip.Contains(node)),
+                    currentNode);
             }
 
-            private static bool IsPreviousKey(string key)
+            private bool IsSelected(RadioClient<T> radio)
             {
-                return key is "ArrowLeft" or "Left" or "ArrowUp" or "Up";
+                return EqualityComparer<T?>.Default.Equals(radio.RadioValue, _groupValue);
             }
         }
     }
+}
+
+public abstract class RadioGroupRegistry<T>
+{
+    public abstract T? GroupValue { get; }
+
+    public abstract Action<T?> OnChanged { get; }
+
+    public abstract void RegisterClient(RadioClient<T> radio);
+
+    public abstract void UnregisterClient(RadioClient<T> radio);
+}
+
+public interface RadioClient<T>
+{
+    bool Tristate { get; }
+
+    T RadioValue { get; }
+
+    bool Enabled { get; }
+
+    FocusNode FocusNode { get; }
 }
 
 internal sealed class RadioGroupStateScope<T> : InheritedWidget

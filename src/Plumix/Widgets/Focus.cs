@@ -113,6 +113,8 @@ public class FocusNode : ChangeNotifier
 
     internal Element? AttachmentElement { get; private set; }
 
+    internal FocusTraversalGroupNode? TraversalGroup { get; set; }
+
     internal bool IsTraversalEligible => _traversalEligibility.Values.All(eligible => eligible);
 
     public bool RequestFocus()
@@ -752,24 +754,51 @@ public sealed class FocusManager
     private List<FocusNode> CollectTraversalCandidates()
     {
         var scope = PrimaryFocus?.Scope ?? _rootScope;
+        FocusNode currentNode = PrimaryFocus ?? scope;
+        var directMembers = scope.Members
+            .Where(candidate => candidate is not FocusScopeNode && candidate.TraversalGroup == null)
+            .Where(candidate => IsTraversalCandidate(candidate, currentNode))
+            .ToList();
+        IReadOnlyList<FocusNode> sorted = new ReadingOrderTraversalPolicy()
+            .SortDescendants(directMembers, currentNode);
+        return FlattenTraversalGroups(sorted, scope, currentNode);
+    }
+
+    private static List<FocusNode> FlattenTraversalGroups(
+        IEnumerable<FocusNode> sorted,
+        FocusScopeNode scope,
+        FocusNode currentNode)
+    {
         var result = new List<FocusNode>();
-
-        foreach (var candidate in scope.Members)
+        foreach (FocusNode node in sorted)
         {
-            if (candidate is FocusScopeNode)
+            if (node is not FocusTraversalGroupNode groupNode)
             {
+                result.Add(node);
                 continue;
             }
 
-            if (!candidate.CanRequestFocus || candidate.SkipTraversal || !candidate.IsTraversalEligible)
-            {
-                continue;
-            }
-
-            result.Add(candidate);
+            var directMembers = scope.Members
+                .Where(candidate => ReferenceEquals(candidate.TraversalGroup, groupNode))
+                .Where(candidate => IsTraversalCandidate(candidate, currentNode))
+                .ToList();
+            IReadOnlyList<FocusNode> groupSorted = groupNode.Policy
+                .SortDescendants(directMembers, currentNode);
+            result.AddRange(FlattenTraversalGroups(groupSorted, scope, currentNode));
         }
 
         return result;
+    }
+
+    private static bool IsTraversalCandidate(FocusNode candidate, FocusNode currentNode)
+    {
+        if (candidate is FocusTraversalGroupNode)
+        {
+            return true;
+        }
+
+        return ReferenceEquals(candidate, currentNode)
+               || (candidate.CanRequestFocus && !candidate.SkipTraversal && candidate.IsTraversalEligible);
     }
 
     private bool FocusInDirection(FocusTraversalDirection direction)
@@ -1333,6 +1362,7 @@ public sealed class Focus : StatefulWidget
 
             _focusNode.RemoveListener(HandleFocusChanged);
             _focusNode.RemoveTraversalEligibility(this);
+            _focusNode.TraversalGroup = null;
             FocusManager.Instance.UnregisterNode(_focusNode);
             _focusNode.DetachElement(Element);
 
@@ -1370,6 +1400,7 @@ public sealed class Focus : StatefulWidget
             node.SetTraversalEligibility(
                 this,
                 includedByExcludeFocus && focusable && traversable);
+            node.TraversalGroup = Context.GetInherited<FocusTraversalGroupMarker>()?.GroupNode;
             node.OnKeyEvent = Widget.OnKeyEvent;
             node.OnTextInput = Widget.OnTextInput;
             node.OnTextComposition = Widget.OnTextComposition;

@@ -302,8 +302,9 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `widgets/expansible.dart` | `src/Plumix/Widgets/Expansible.cs` | — | — |
 | `widgets/fade_in_image.dart` | `src/Plumix/Widgets/FadeInImage.cs` | — | — |
 | `widgets/feedback.dart` | `src/Plumix/UI/Feedback.cs` | — | — |
-| `widgets/focus_manager.dart` | `src/Plumix/UI/KeyboardEvents.cs`<br>`src/Plumix/Widgets/Focus.cs` | `src/Plumix.Tests/FocusTests.cs`<br>`src/Plumix.Tests/FocusableActionDetectorTests.cs` | — |
-| `widgets/focus_scope.dart` | `src/Plumix/Widgets/Focus.cs` | `src/Plumix.Tests/FocusTests.cs`<br>`src/Plumix.Tests/FocusableActionDetectorTests.cs` | — |
+| `widgets/focus_manager.dart` | `src/Plumix/UI/KeyboardEvents.cs`<br>`src/Plumix/Widgets/Focus.cs` | `src/Plumix.Tests/FocusTests.cs`<br>`src/Plumix.Tests/FocusTraversalTests.cs`<br>`src/Plumix.Tests/FocusableActionDetectorTests.cs` | — |
+| `widgets/focus_scope.dart` | `src/Plumix/Widgets/Focus.cs` | `src/Plumix.Tests/FocusTests.cs`<br>`src/Plumix.Tests/FocusTraversalTests.cs`<br>`src/Plumix.Tests/FocusableActionDetectorTests.cs` | — |
+| `widgets/focus_traversal.dart` | `src/Plumix/Widgets/FocusTraversal.cs` | `src/Plumix.Tests/FocusTraversalTests.cs` | — |
 | `widgets/form.dart` | `src/Plumix/Widgets/Form.cs` | `src/Plumix.Tests/FormTests.cs` | `dart_sample/lib/demos/general/composited_transform_demo_page.dart` |
 | `widgets/framework.dart` | `src/Plumix/Widgets/Framework.BuildOwner.cs`<br>`src/Plumix/Widgets/Framework.Element.cs`<br>`src/Plumix/Widgets/Framework.RenderObject.cs`<br>`src/Plumix/Widgets/Framework.Widget.cs`<br>`src/Plumix/Widgets/Framework.cs` | — | — |
 | `widgets/gesture_detector.dart` | `src/Plumix/Widgets/Gestures.cs` | — | — |
@@ -425,8 +426,8 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 
 ## Summary
 
-- Flutter files mapped: 374
-- C# files carrying a marker: 471
+- Flutter files mapped: 375
+- C# files carrying a marker: 472
 - C# files without a marker: 15
 - Markers not resolvable in the pinned checkout: 5
 

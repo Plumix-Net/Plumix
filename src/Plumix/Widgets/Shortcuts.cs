@@ -382,7 +382,7 @@ public sealed class CharacterActivator : ShortcutActivator, IEquatable<Character
     public override int GetHashCode() => HashCode.Combine(Character, Control, Alt, Meta, IncludeRepeats);
 }
 
-public sealed class ShortcutManager : ChangeNotifier
+public class ShortcutManager : ChangeNotifier
 {
     private IReadOnlyDictionary<ShortcutActivator, Intent> _shortcuts;
 
@@ -412,7 +412,7 @@ public sealed class ShortcutManager : ChangeNotifier
 
     public bool Modal { get; }
 
-    public KeyEventResult HandleKeypress(BuildContext context, KeyEvent @event)
+    public virtual KeyEventResult HandleKeypress(BuildContext context, KeyEvent @event)
     {
         Intent? intent = Find(@event, HardwareKeyboard.Instance);
         FlutterAction? action = intent == null ? null : Actions.MaybeFind(context, intent);
