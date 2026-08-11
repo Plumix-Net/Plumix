@@ -21,6 +21,9 @@ class _DrawerDemoPageState extends State<DrawerDemoPage> {
     final ThemeData pageTheme = baseTheme.copyWith(
       // ignore: deprecated_member_use
       useMaterial3: _useMaterial3,
+      colorScheme: baseTheme.colorScheme.copyWith(
+        surfaceContainerLow: const Color(0xFFE9F1FF),
+      ),
       drawerTheme: _useThemeOverrides
           ? const DrawerThemeData(
               backgroundColor: Color(0xFFF3F7FC),
@@ -43,7 +46,7 @@ class _DrawerDemoPageState extends State<DrawerDemoPage> {
             style: TextStyle(fontSize: 20, color: Colors.black),
           ),
           const Text(
-            'Scaffold drawer/endDrawer, theme precedence, and widget overrides.',
+            'M2/M3 defaults, direct surfaceContainerLow, inner-edge shape, and overrides.',
             style: TextStyle(fontSize: 14, color: Colors.black54),
           ),
           Row(
@@ -203,7 +206,7 @@ class _DrawerDemoPageState extends State<DrawerDemoPage> {
               children: <Widget>[
                 Text(title, style: TextStyle(fontSize: 16, color: accent)),
                 const Text(
-                  'Widget/theme/default precedence is visible through color, elevation, and width.',
+                  'Color, shape, elevation, and width show widget/theme/default precedence.',
                   style: TextStyle(fontSize: 12, color: Colors.black54),
                 ),
                 Text(

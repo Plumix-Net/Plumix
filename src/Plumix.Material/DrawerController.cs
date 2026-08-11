@@ -213,7 +213,7 @@ public sealed class DrawerControllerState : State
                                ?? drawerTheme.ScrimColor
                                ?? Color.FromArgb(0x8A, 0, 0, 0);
         Color scrimColor = ApplyOpacity(baseScrimColor, _controller.Value);
-        bool platformHasBackButton = Theme.Of(context).Platform == TargetPlatform.Android;
+        bool platformHasBackButton = PlatformDefaults.TargetPlatform == TargetPlatform.Android;
         var localizations = MaterialLocalizations.Of(context);
 
         Widget child = new DrawerControllerScope(

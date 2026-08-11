@@ -6,20 +6,44 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/material/drawer_theme.dart (approximate)
+// Dart parity source: flutter/packages/flutter/lib/src/material/drawer_theme.dart
 
 public sealed partial record DrawerThemeData(
     Color? BackgroundColor = null,
     Color? ScrimColor = null,
     double? Elevation = null,
     Color? ShadowColor = null,
-    double? Width = null,
     Color? SurfaceTintColor = null,
     ShapeBorder? Shape = null,
     ShapeBorder? EndShape = null,
-    Clip? ClipBehavior = null);
+    double? Width = null,
+    Clip? ClipBehavior = null)
+{
+    public DrawerThemeData CopyWith(
+        Color? backgroundColor = null,
+        Color? scrimColor = null,
+        double? elevation = null,
+        Color? shadowColor = null,
+        Color? surfaceTintColor = null,
+        ShapeBorder? shape = null,
+        ShapeBorder? endShape = null,
+        double? width = null,
+        Clip? clipBehavior = null)
+    {
+        return new DrawerThemeData(
+            BackgroundColor: backgroundColor ?? BackgroundColor,
+            ScrimColor: scrimColor ?? ScrimColor,
+            Elevation: elevation ?? Elevation,
+            ShadowColor: shadowColor ?? ShadowColor,
+            SurfaceTintColor: surfaceTintColor ?? SurfaceTintColor,
+            Shape: shape ?? Shape,
+            EndShape: endShape ?? EndShape,
+            Width: width ?? Width,
+            ClipBehavior: clipBehavior ?? ClipBehavior);
+    }
+}
 
-public sealed class DrawerTheme : InheritedWidget
+public sealed class DrawerTheme : InheritedTheme
 {
     public DrawerTheme(
         DrawerThemeData data,
@@ -37,6 +61,11 @@ public sealed class DrawerTheme : InheritedWidget
     public override Widget Build(BuildContext context)
     {
         return Child;
+    }
+
+    public override Widget Wrap(BuildContext context, Widget child)
+    {
+        return new DrawerTheme(Data, child);
     }
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)

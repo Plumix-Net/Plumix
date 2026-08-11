@@ -68,6 +68,8 @@
     default elevation/shadow, theme copy/lerp).
   - `BottomAppBar` (direct M2/M3 surface/tint/shadow roles, physical surface composition, configured FAB geometry,
     notch hit testing, inherited theme capture, theme copy/lerp).
+  - Classic `Drawer` (direct M3 surface-container role, exact M2/M3 elevation/shadow/tint paths, direction-aware
+    start/end shapes, inherited theme copy/lerp/capture, host-platform semantics, and zero-area-safe constraints).
   - `FloatingActionButton` (direct M2/M3 foreground/background/state roles, source shapes and adaptive cursors,
     default/null hero-tag policy, extended overflow layout, merged semantics, inherited theme copy/lerp).
   - `IconButton` (exact M2 legacy versus M3 styled composition, direct scheme roles, all variants, density/cursor/

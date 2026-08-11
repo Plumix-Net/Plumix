@@ -1,5 +1,10 @@
 # Changelog
 
+- Breaking: completed the strict Material `Drawer` ColorScheme/theme closeout. The control now uses direct M3
+  `surfaceContainerLow`, exact M2/M3 surface/shadow/tint/elevation defaults, direction-aware inner-edge shapes,
+  source-shaped theme copy/lerp/capture, host-platform route semantics, and zero-width-compatible constraints.
+  The source-ordered constructor, focused Flutter-test coverage, and mirrored runtime probe were updated.
+
 - Breaking: completed the strict Material `PopupMenu` closeout. The family now uses source-shaped inherited-theme
   capture, directional padding, direct M2/M3 surface and label roles, navigator-owned route transitions, display-
   feature-aware placement, selected-item scrolling, stateful cursors, and zero-area-safe checked entries. Focused

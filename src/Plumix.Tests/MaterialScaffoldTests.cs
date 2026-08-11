@@ -208,7 +208,7 @@ public sealed class MaterialScaffoldTests
     }
 
     [Fact]
-    public void Drawer_InvalidThemedWidth_ThrowsArgumentOutOfRange()
+    public void Drawer_ZeroThemedWidth_IsAcceptedLikeFlutterBoxConstraints()
     {
         var owner = new BuildOwner();
         var root = new TestRootElement(
@@ -220,14 +220,14 @@ public sealed class MaterialScaffoldTests
                 child: new Drawer(
                     child: new SizedBox(width: 24, height: 12))));
 
-        var exception = Assert.Throws<ArgumentOutOfRangeException>(() =>
-        {
-            root.Attach(owner);
-            root.Mount(parent: null, newSlot: null);
-            owner.FlushBuild();
-        });
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
 
-        Assert.Equal(nameof(DrawerThemeData.Width), exception.ParamName);
+        var constrained = FindConstrainedBox(
+            root.ChildElement?.RenderObject,
+            constraints => constraints.MinWidth == 0.0 && constraints.MaxWidth == 0.0);
+        Assert.NotNull(constrained);
     }
 
     [Fact]
@@ -250,7 +250,7 @@ public sealed class MaterialScaffoldTests
             owner.FlushBuild();
         });
 
-        Assert.Equal(nameof(DrawerThemeData.Elevation), exception.ParamName);
+        Assert.Equal("elevation", exception.ParamName);
     }
 
     [Fact]

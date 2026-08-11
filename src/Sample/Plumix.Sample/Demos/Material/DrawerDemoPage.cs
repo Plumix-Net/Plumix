@@ -32,6 +32,8 @@ internal sealed class DrawerDemoPageState : State
         var pageTheme = baseTheme with
         {
             UseMaterial3 = _useMaterial3,
+            ColorScheme = baseTheme.ColorScheme.CopyWith(
+                surfaceContainerLow: Color.Parse("#FFE9F1FF")),
             DrawerTheme = _useThemeOverrides
                 ? new DrawerThemeData(
                     BackgroundColor: Color.Parse("#FFF3F7FC"),
@@ -51,7 +53,7 @@ internal sealed class DrawerDemoPageState : State
                 [
                     new Text("Drawer baseline", fontSize: 20, color: Colors.Black),
                     new Text(
-                        "Scaffold drawer/endDrawer, theme precedence, and widget overrides.",
+                        "M2/M3 defaults, direct surfaceContainerLow, inner-edge shape, and overrides.",
                         fontSize: 14,
                         color: Color.Parse("#8A000000")),
                     new Row(
@@ -177,7 +179,7 @@ internal sealed class DrawerDemoPageState : State
                         [
                             new Text(title, fontSize: 16, color: accent),
                             new Text(
-                                "Widget/theme/default precedence is visible through color, elevation, and width.",
+                                "Color, shape, elevation, and width show widget/theme/default precedence.",
                                 fontSize: 12,
                                 color: Color.Parse("#8A000000")),
                             new Text(
