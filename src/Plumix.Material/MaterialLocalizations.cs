@@ -50,6 +50,12 @@ public abstract class MaterialLocalizations
 
     public virtual string ModalBarrierDismissLabel => "Dismiss";
 
+    public virtual string ScrimLabel => "Scrim";
+
+    public virtual string BottomSheetLabel => "Bottom Sheet";
+
+    public virtual string ScrimOnTapHint(string modalRouteContentName) => $"Close {modalRouteContentName}";
+
     public virtual string DrawerLabel => "Navigation menu";
 
     public virtual string ShowMenuTooltip => "Show menu";
@@ -292,6 +298,12 @@ public sealed class DefaultMaterialLocalizations : MaterialLocalizations
     public override string DialogLabel => "Dialog";
 
     public override string ModalBarrierDismissLabel => "Dismiss";
+
+    public override string ScrimLabel => "Scrim";
+
+    public override string BottomSheetLabel => "Bottom Sheet";
+
+    public override string ScrimOnTapHint(string modalRouteContentName) => $"Close {modalRouteContentName}";
 
     public override string ShowMenuTooltip => "Show menu";
 

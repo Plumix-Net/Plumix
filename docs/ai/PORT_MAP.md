@@ -304,6 +304,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `widgets/default_selection_style.dart` | `src/Plumix/Widgets/DefaultSelectionStyle.cs` | `src/Plumix.Tests/TitleDefaultSelectionStyleTests.cs` | — |
 | `widgets/desktop_text_selection_toolbar_layout_delegate.dart` | `src/Plumix.Material/DesktopTextSelectionToolbar.cs`<br>`src/Plumix/Widgets/DesktopTextSelectionToolbarLayoutDelegate.cs` | `src/Plumix.Tests/MaterialDesktopTextSelectionToolbarTests.cs` | `dart_sample/lib/demos/material/desktop_text_selection_toolbar_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/DesktopTextSelectionToolbarDemoPage.cs` |
 | `widgets/dismissible.dart` | `src/Plumix/Widgets/Dismissible.cs` | `src/Plumix.Tests/DismissibleSizeChangedLayoutTests.cs` | `dart_sample/lib/demos/general/dismissible_size_changed_layout_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/DismissibleSizeChangedLayoutDemoPage.cs` |
+| `widgets/display_feature_sub_screen.dart` | `src/Plumix/Widgets/DisplayFeatureSubScreen.cs` | `src/Plumix.Tests/DisplayFeatureSubScreenTests.cs` | — |
 | `widgets/disposable_build_context.dart` | `src/Plumix/Widgets/DisposableBuildContext.cs` | — | — |
 | `widgets/drag_boundary.dart` | `src/Plumix/Widgets/DragBoundary.cs` | — | — |
 | `widgets/drag_target.dart` | `src/Plumix/Widgets/DragTarget.cs` | `src/Plumix.Tests/DragTargetTests.cs` | `dart_sample/lib/demos/general/drag_target_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/DragTargetDemoPage.cs` |
@@ -438,8 +439,8 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 
 ## Summary
 
-- Flutter files mapped: 387
-- C# files carrying a marker: 486
+- Flutter files mapped: 388
+- C# files carrying a marker: 487
 - C# files without a marker: 15
 - Markers not resolvable in the pinned checkout: 5
 

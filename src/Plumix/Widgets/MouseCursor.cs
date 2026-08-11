@@ -1,4 +1,5 @@
 using Plumix.Foundation;
+using Plumix.Rendering;
 using Plumix.UI;
 
 namespace Plumix.Widgets;
@@ -35,12 +36,14 @@ public sealed class MouseRegion : StatefulWidget
         MouseCursor? cursor = null,
         Action<PointerEnterEvent>? onEnter = null,
         Action<PointerExitEvent>? onExit = null,
+        bool opaque = true,
         Key? key = null) : base(key)
     {
         Child = child;
         Cursor = cursor ?? MouseCursor.Defer;
         OnEnter = onEnter;
         OnExit = onExit;
+        Opaque = opaque;
     }
 
     public Widget? Child { get; }
@@ -50,6 +53,9 @@ public sealed class MouseRegion : StatefulWidget
     public Action<PointerEnterEvent>? OnEnter { get; }
 
     public Action<PointerExitEvent>? OnExit { get; }
+
+    /// <summary>Whether the region blocks pointers behind it from being detected, as in Flutter.</summary>
+    public bool Opaque { get; }
 
     public override State CreateState() => new MouseRegionState();
 
@@ -77,6 +83,7 @@ public sealed class MouseRegion : StatefulWidget
             return new Listener(
                 onPointerEnter: HandleEnter,
                 onPointerExit: HandleExit,
+                behavior: CurrentWidget.Opaque ? HitTestBehavior.Opaque : HitTestBehavior.DeferToChild,
                 child: CurrentWidget.Child);
         }
 

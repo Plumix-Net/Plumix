@@ -194,6 +194,37 @@ public sealed record MediaQueryData(
                 bottom: removeBottom ? 0.0 : null));
     }
 
+    /// <summary>
+    /// Returns the data for the sub-screen described by <paramref name="subScreen"/>, with the display features
+    /// removed and every inset shrunk by the amount the sub-screen already excludes.
+    /// </summary>
+    public MediaQueryData RemoveDisplayFeatures(Rect subScreen)
+    {
+        if (subScreen.Left < 0.0
+            || subScreen.Top < 0.0
+            || subScreen.Right > Size.Width
+            || subScreen.Bottom > Size.Height)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(subScreen),
+                "The sub-screen cannot be outside the bounds of the screen.");
+        }
+
+        if (subScreen.Size == Size && subScreen.Position == default)
+        {
+            return this;
+        }
+
+        double rightInset = Size.Width - subScreen.Right;
+        double bottomInset = Size.Height - subScreen.Bottom;
+        return CopyWith(
+            size: subScreen.Size,
+            padding: ShrinkToSubScreen(Padding, subScreen, rightInset, bottomInset),
+            viewPadding: ShrinkToSubScreen(ViewPadding, subScreen, rightInset, bottomInset),
+            viewInsets: ShrinkToSubScreen(ViewInsets, subScreen, rightInset, bottomInset),
+            displayFeatures: []);
+    }
+
     public static Thickness ComputePadding(Thickness viewPadding, Thickness viewInsets)
     {
         return new Thickness(
@@ -201,6 +232,19 @@ public sealed record MediaQueryData(
             Math.Max(0.0, viewPadding.Top - viewInsets.Top),
             Math.Max(0.0, viewPadding.Right - viewInsets.Right),
             Math.Max(0.0, viewPadding.Bottom - viewInsets.Bottom));
+    }
+
+    private static Thickness ShrinkToSubScreen(
+        Thickness insets,
+        Rect subScreen,
+        double rightInset,
+        double bottomInset)
+    {
+        return new Thickness(
+            Math.Max(0.0, insets.Left - subScreen.Left),
+            Math.Max(0.0, insets.Top - subScreen.Top),
+            Math.Max(0.0, insets.Right - rightInset),
+            Math.Max(0.0, insets.Bottom - bottomInset));
     }
 
     private static Thickness CopyThickness(

@@ -12,12 +12,18 @@ namespace Plumix.Material;
 // flutter/packages/flutter/lib/src/material/bottom_sheet.dart
 // flutter/packages/flutter/lib/src/material/bottom_sheet_theme.dart
 
+public delegate void BottomSheetDragStartHandler(DragStartDetails details);
+
 public delegate void BottomSheetDragEndHandler(DragEndDetails details, bool isClosing);
 
 public sealed class BottomSheet : StatefulWidget
 {
     public static readonly TimeSpan EnterDuration = TimeSpan.FromMilliseconds(250);
     public static readonly TimeSpan ExitDuration = TimeSpan.FromMilliseconds(200);
+
+    internal static readonly Curve ModalBottomSheetCurve = Curves.LegacyDecelerate;
+    internal const double MinFlingVelocity = 700.0;
+    internal const double CloseProgressThreshold = 0.5;
 
     public BottomSheet(
         Action onClosing,
@@ -74,28 +80,30 @@ public sealed class BottomSheet : StatefulWidget
     public Clip? ClipBehavior { get; }
     public BoxConstraints? Constraints { get; }
 
-    public static AnimationController CreateAnimationController(AnimationStyle? sheetAnimationStyle = null) =>
-        new(sheetAnimationStyle?.Duration ?? EnterDuration)
+    public static AnimationController CreateAnimationController(
+        ITickerProvider? vsync = null,
+        AnimationStyle? sheetAnimationStyle = null) =>
+        new(sheetAnimationStyle?.Duration ?? EnterDuration, vsync)
         {
-            Curve = sheetAnimationStyle?.Curve ?? Curves.EaseOut,
+            ReverseDuration = sheetAnimationStyle?.ReverseDuration ?? ExitDuration,
         };
 
     public override State CreateState() => new BottomSheetState();
 
-    internal static BottomSheetThemeData ResolveDefaults(ThemeData theme)
-    {
-        if (!theme.UseMaterial3) return new BottomSheetThemeData();
-        return new BottomSheetThemeData(
-            BackgroundColor: theme.SurfaceContainerLowColor,
-            SurfaceTintColor: Colors.Transparent,
-            Elevation: 1,
-            ModalElevation: 1,
-            ShadowColor: Colors.Transparent,
-            Shape: ShapeBorder.RoundedRectangle(28),
-            DragHandleColor: MaterialStateProperty<Color?>.All(theme.OnSurfaceVariantColor),
-            DragHandleSize: new Size(32, 4),
-            Constraints: new BoxConstraints(MaxWidth: 640));
-    }
+    /// <summary>The Material 3 token defaults, used regardless of <see cref="ThemeData.UseMaterial3"/>.</summary>
+    internal static BottomSheetThemeData Material3Defaults(ThemeData theme) => new(
+        BackgroundColor: theme.SurfaceContainerLowColor,
+        SurfaceTintColor: Colors.Transparent,
+        Elevation: 1,
+        ModalElevation: 1,
+        ShadowColor: Colors.Transparent,
+        Shape: new ShapeBorder(BorderRadius.Only(topLeft: 28.0, topRight: 28.0)),
+        DragHandleColor: MaterialStateProperty<Color?>.All(theme.OnSurfaceVariantColor),
+        DragHandleSize: new Size(32, 4),
+        Constraints: new BoxConstraints(MaxWidth: 640));
+
+    internal static BottomSheetThemeData ResolveDefaults(ThemeData theme) =>
+        theme.UseMaterial3 ? Material3Defaults(theme) : new BottomSheetThemeData();
 
     private static void ValidateElevation(double? value, string name)
     {
@@ -111,197 +119,532 @@ public sealed class BottomSheet : StatefulWidget
             throw new ArgumentOutOfRangeException(nameof(value));
     }
 
+    private sealed record BottomSheetChildKey(Guid Id) : GlobalKey;
+
     private sealed class BottomSheetState : State
     {
-        private const double MinFlingVelocity = 700;
-        private const double CloseProgressThreshold = 0.5;
-        private double _childHeight = 1;
-        private bool _dragged;
+        private readonly GlobalKey _childKey = new BottomSheetChildKey(Guid.NewGuid());
+        private MaterialState _dragHandleStates = MaterialState.None;
+
         private BottomSheet CurrentWidget => (BottomSheet)StateWidget;
+
+        private double ChildHeight =>
+            _childKey.CurrentContext?.FindRenderObject() is RenderBox { HasSize: true } box ? box.Size.Height : 0.0;
+
+        private bool DismissUnderway => CurrentWidget.AnimationController?.Status == AnimationStatus.Reverse;
 
         public override Widget Build(BuildContext context)
         {
             var widget = CurrentWidget;
             var theme = Theme.Of(context);
-            var sheetTheme = BottomSheetTheme.Of(context);
+            var bottomSheetTheme = BottomSheetTheme.Of(context);
             var defaults = ResolveDefaults(theme);
-            var constraints = widget.Constraints ?? sheetTheme.Constraints ?? defaults.Constraints;
-            var color = widget.BackgroundColor ?? sheetTheme.BackgroundColor ?? defaults.BackgroundColor ?? theme.CanvasColor;
-            var surfaceTint = sheetTheme.SurfaceTintColor ?? defaults.SurfaceTintColor;
-            double elevation = widget.Elevation ?? sheetTheme.Elevation ?? defaults.Elevation ?? 0;
-            var shadow = widget.ShadowColor ?? sheetTheme.ShadowColor ?? defaults.ShadowColor ?? Colors.Transparent;
-            var shape = widget.Shape ?? sheetTheme.Shape ?? defaults.Shape ?? ShapeBorder.RoundedRectangle(0);
-            var clip = widget.ClipBehavior ?? sheetTheme.ClipBehavior ?? Clip.None;
-            bool showHandle = widget.ShowDragHandle ?? (widget.EnableDrag && (sheetTheme.ShowDragHandle ?? false));
+            BoxConstraints? constraints = widget.Constraints ?? bottomSheetTheme.Constraints ?? defaults.Constraints;
+            Color? color = widget.BackgroundColor ?? bottomSheetTheme.BackgroundColor ?? defaults.BackgroundColor;
+            Color? surfaceTintColor = bottomSheetTheme.SurfaceTintColor ?? defaults.SurfaceTintColor;
+            Color? shadowColor = widget.ShadowColor ?? bottomSheetTheme.ShadowColor ?? defaults.ShadowColor;
+            double elevation = widget.Elevation ?? bottomSheetTheme.Elevation ?? defaults.Elevation ?? 0;
+            ShapeBorder? shape = widget.Shape ?? bottomSheetTheme.Shape ?? defaults.Shape;
+            Clip clipBehavior = widget.ClipBehavior ?? bottomSheetTheme.ClipBehavior ?? Clip.None;
+            bool showDragHandle = widget.ShowDragHandle
+                                  ?? (widget.EnableDrag && (bottomSheetTheme.ShowDragHandle ?? false));
 
-            if (surfaceTint.HasValue && surfaceTint.Value.A > 0 && elevation > 0)
+            Widget? dragHandle = null;
+            if (showDragHandle)
             {
-                color = NavigationSurfaceUtilities.ApplySurfaceTint(color, surfaceTint.Value, elevation);
+                dragHandle = new DragHandle(
+                    onSemanticsTap: widget.OnClosing,
+                    handleHover: HandleDragHandleHover,
+                    states: _dragHandleStates,
+                    dragHandleColor: widget.DragHandleColor,
+                    dragHandleSize: widget.DragHandleSize);
+
+                // A drag handle is draggable on its own only when the whole sheet is not.
+                if (!widget.EnableDrag)
+                {
+                    dragHandle = new BottomSheetGestureDetector(
+                        onVerticalDragStart: HandleDragStart,
+                        onVerticalDragUpdate: HandleDragUpdate,
+                        onVerticalDragEnd: HandleDragEnd,
+                        child: dragHandle);
+                }
             }
 
-            Widget child = widget.Builder(context);
-            if (showHandle)
-            {
-                child = new Stack(
+            Widget content = widget.Builder(context);
+            Widget child = showDragHandle
+                ? new Stack(
                     alignment: Alignment.TopCenter,
                     children:
                     [
-                        new Padding(new Thickness(0, 48, 0, 0), child),
-                        BuildDragHandle(context, sheetTheme, defaults, widget.EnableDrag),
-                    ]);
-            }
+                        dragHandle!,
+                        new Padding(new Thickness(0, WidgetConstants.MinInteractiveDimension, 0, 0), content),
+                    ])
+                : content;
 
-            Widget surface = new DecoratedBox(
-                new BoxDecoration(
-                    Color: color,
-                    Border: shape.Side,
-                    BorderRadius: shape.BorderRadius,
-                    BoxShadows: BuildBoxShadows(shadow, elevation)),
-                child);
-            if (clip != Clip.None) surface = new ClipRRect(shape.BorderRadius, surface);
-            surface = new BottomSheetMeasure(size => _childHeight = Math.Max(1, size.Height), surface);
+            Widget bottomSheet = new Material(
+                color: color,
+                elevation: elevation,
+                shadowColor: shadowColor,
+                surfaceTintColor: surfaceTintColor,
+                shape: shape,
+                clipBehavior: clipBehavior,
+                child: child,
+                key: _childKey);
 
             if (constraints is not null)
             {
-                surface = new Align(
+                bottomSheet = new Align(
                     alignment: Alignment.BottomCenter,
-                    heightFactor: 1,
-                    child: new ConstrainedBox(constraints.Value, surface));
+                    heightFactor: 1.0,
+                    child: new ConstrainedBox(constraints.Value, bottomSheet));
             }
 
-            return widget.EnableDrag ? WrapDrag(surface) : surface;
+            return !widget.EnableDrag
+                ? bottomSheet
+                : new BottomSheetGestureDetector(
+                    onVerticalDragStart: HandleDragStart,
+                    onVerticalDragUpdate: HandleDragUpdate,
+                    onVerticalDragEnd: HandleDragEnd,
+                    child: bottomSheet);
         }
-
-        private Widget BuildDragHandle(
-            BuildContext context,
-            BottomSheetThemeData sheetTheme,
-            BottomSheetThemeData defaults,
-            bool wholeSheetDraggable)
-        {
-            var size = CurrentWidget.DragHandleSize ?? sheetTheme.DragHandleSize ?? defaults.DragHandleSize ?? new Size(32, 4);
-            var states = _dragged ? MaterialState.Dragged : MaterialState.None;
-            var color = CurrentWidget.DragHandleColor
-                        ?? sheetTheme.DragHandleColor?.Resolve(states)
-                        ?? defaults.DragHandleColor?.Resolve(states)
-                        ?? Theme.Of(context).OnSurfaceVariantColor;
-            Widget handle = new Semantics(
-                label: MaterialLocalizations.Of(context).ModalBarrierDismissLabel,
-                flags: SemanticsFlags.IsButton,
-                container: true,
-                onTap: CurrentWidget.OnClosing,
-                child: new SizedBox(
-                    width: Math.Max(size.Width, 48),
-                    height: Math.Max(size.Height, 48),
-                    child: new Center(
-                        child: new Container(
-                            width: size.Width,
-                            height: size.Height,
-                            decoration: new BoxDecoration(
-                                Color: color,
-                                BorderRadius: BorderRadius.Circular(size.Height / 2))))));
-            return wholeSheetDraggable ? handle : WrapDrag(handle);
-        }
-
-        private Widget WrapDrag(Widget child) => new GestureDetector(
-            behavior: HitTestBehavior.Opaque,
-            onVerticalDragStart: HandleDragStart,
-            onVerticalDragUpdate: HandleDragUpdate,
-            onVerticalDragEnd: HandleDragEnd,
-            onVerticalDragCancel: HandleDragCancel,
-            child: child);
 
         private AnimationController RequireController()
         {
             return CurrentWidget.AnimationController
                    ?? throw new InvalidOperationException(
-                       "BottomSheet.animationController cannot be null when dragging is enabled or a drag handle is shown.");
+                       "BottomSheet.animationController cannot be null when BottomSheet.enableDrag or "
+                       + "BottomSheet.showDragHandle is true. Use BottomSheet.CreateAnimationController to create "
+                       + "one, or provide another AnimationController.");
+        }
+
+        private void HandleDragHandleHover(bool hovering)
+        {
+            MaterialState updated = hovering
+                ? _dragHandleStates | MaterialState.Hovered
+                : _dragHandleStates & ~MaterialState.Hovered;
+            if (updated == _dragHandleStates) return;
+            SetState(() => _dragHandleStates = updated);
         }
 
         private void HandleDragStart(DragStartDetails details)
         {
             RequireController();
-            SetState(() => _dragged = true);
+            SetState(() => _dragHandleStates |= MaterialState.Dragged);
             CurrentWidget.OnDragStart?.Invoke(details);
         }
 
         private void HandleDragUpdate(DragUpdateDetails details)
         {
             var controller = RequireController();
+            if (DismissUnderway) return;
+            double childHeight = ChildHeight;
+            if (childHeight <= 0.0) return;
             controller.Stop();
-            controller.SetValue(controller.Value - (details.PrimaryDelta / _childHeight));
+            controller.SetValue(controller.Value - (details.PrimaryDelta / childHeight));
         }
 
         private void HandleDragEnd(DragEndDetails details)
         {
             var controller = RequireController();
-            bool isClosing = details.PrimaryVelocity > MinFlingVelocity
-                             || (Math.Abs(details.PrimaryVelocity) <= MinFlingVelocity
-                                 && controller.Value < CloseProgressThreshold);
-            SetState(() => _dragged = false);
-            if (isClosing) controller.Reverse();
-            else controller.Forward();
+            if (DismissUnderway) return;
+            SetState(() => _dragHandleStates &= ~MaterialState.Dragged);
+            bool isClosing = false;
+            double childHeight = ChildHeight;
+            double verticalVelocity = details.Velocity.PixelsPerSecond.Y;
+            if (verticalVelocity > MinFlingVelocity)
+            {
+                double flingVelocity = childHeight > 0.0 ? -verticalVelocity / childHeight : -1.0;
+                if (controller.Value > 0.0)
+                {
+                    controller.Fling(flingVelocity);
+                }
+
+                if (flingVelocity < 0.0)
+                {
+                    isClosing = true;
+                }
+            }
+            else if (controller.Value < CloseProgressThreshold)
+            {
+                if (controller.Value > 0.0)
+                {
+                    controller.Fling(-1.0);
+                }
+
+                isClosing = true;
+            }
+            else
+            {
+                controller.Forward();
+            }
+
             CurrentWidget.OnDragEnd?.Invoke(details, isClosing);
-            if (isClosing) CurrentWidget.OnClosing();
-        }
-
-        private void HandleDragCancel()
-        {
-            SetState(() => _dragged = false);
-            RequireController().Forward();
-        }
-
-        private static BoxShadows? BuildBoxShadows(Color color, double elevation)
-        {
-            if (color.A == 0 || elevation <= 0) return null;
-            Color WithOpacity(double opacity) => Color.FromArgb(
-                (byte)Math.Round(color.A * opacity), color.R, color.G, color.B);
-            return new BoxShadows(
-                new BoxShadow { OffsetY = elevation * 0.5, Blur = elevation * 2.4, Color = WithOpacity(0.20) },
-                [new BoxShadow { OffsetY = elevation * 0.25, Blur = elevation * 3.2, Color = WithOpacity(0.14) }]);
+            if (isClosing)
+            {
+                CurrentWidget.OnClosing();
+            }
         }
     }
 }
 
-internal sealed class BottomSheetMeasure : SingleChildRenderObjectWidget
+internal sealed class DragHandle : StatelessWidget
 {
-    public BottomSheetMeasure(Action<Size> onSizeChanged, Widget child) : base(child) => OnSizeChanged = onSizeChanged;
-    public Action<Size> OnSizeChanged { get; }
-    internal override RenderObject CreateRenderObject(BuildContext context) => new RenderBottomSheetMeasure(OnSizeChanged);
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject) =>
-        ((RenderBottomSheetMeasure)renderObject).OnSizeChanged = OnSizeChanged;
+    public DragHandle(
+        Action? onSemanticsTap,
+        Action<bool> handleHover,
+        MaterialState states,
+        Color? dragHandleColor = null,
+        Size? dragHandleSize = null,
+        Key? key = null) : base(key)
+    {
+        OnSemanticsTap = onSemanticsTap;
+        HandleHover = handleHover ?? throw new ArgumentNullException(nameof(handleHover));
+        States = states;
+        DragHandleColor = dragHandleColor;
+        DragHandleSize = dragHandleSize;
+    }
+
+    public Action? OnSemanticsTap { get; }
+    public Action<bool> HandleHover { get; }
+    public MaterialState States { get; }
+    public Color? DragHandleColor { get; }
+    public Size? DragHandleSize { get; }
+
+    public override Widget Build(BuildContext context)
+    {
+        var bottomSheetTheme = BottomSheetTheme.Of(context);
+        var defaults = BottomSheet.Material3Defaults(Theme.Of(context));
+        Size handleSize = DragHandleSize ?? bottomSheetTheme.DragHandleSize ?? defaults.DragHandleSize!.Value;
+        Color color = DragHandleColor
+                      ?? bottomSheetTheme.DragHandleColor?.Resolve(States)
+                      ?? defaults.DragHandleColor!.Resolve(States)!.Value;
+
+        return new MouseRegion(
+            onEnter: _ => HandleHover(true),
+            onExit: _ => HandleHover(false),
+            child: new Semantics(
+                label: MaterialLocalizations.Of(context).ModalBarrierDismissLabel,
+                flags: SemanticsFlags.IsButton,
+                container: true,
+                onTap: OnSemanticsTap,
+                child: new SizedBox(
+                    width: Math.Max(handleSize.Width, WidgetConstants.MinInteractiveDimension),
+                    height: Math.Max(handleSize.Height, WidgetConstants.MinInteractiveDimension),
+                    child: new Center(
+                        child: new Container(
+                            width: handleSize.Width,
+                            height: handleSize.Height,
+                            decoration: new BoxDecoration(
+                                Color: color,
+                                BorderRadius: BorderRadius.Circular(handleSize.Height / 2)))))));
+    }
 }
 
-internal sealed class RenderBottomSheetMeasure : RenderProxyBox
+internal sealed class BottomSheetGestureDetector : StatelessWidget
 {
-    private Size _lastSize = new(double.NaN, double.NaN);
-    public RenderBottomSheetMeasure(Action<Size> onSizeChanged) => OnSizeChanged = onSizeChanged;
-    public Action<Size> OnSizeChanged { get; set; }
+    public BottomSheetGestureDetector(
+        Widget child,
+        Action<DragStartDetails> onVerticalDragStart,
+        Action<DragUpdateDetails> onVerticalDragUpdate,
+        Action<DragEndDetails> onVerticalDragEnd,
+        Key? key = null) : base(key)
+    {
+        Child = child ?? throw new ArgumentNullException(nameof(child));
+        OnVerticalDragStart = onVerticalDragStart;
+        OnVerticalDragUpdate = onVerticalDragUpdate;
+        OnVerticalDragEnd = onVerticalDragEnd;
+    }
+
+    public Widget Child { get; }
+    public Action<DragStartDetails> OnVerticalDragStart { get; }
+    public Action<DragUpdateDetails> OnVerticalDragUpdate { get; }
+    public Action<DragEndDetails> OnVerticalDragEnd { get; }
+
+    public override Widget Build(BuildContext context) => new GestureDetector(
+        onVerticalDragStart: OnVerticalDragStart,
+        onVerticalDragUpdate: OnVerticalDragUpdate,
+        onVerticalDragEnd: OnVerticalDragEnd,
+        child: Child);
+}
+
+internal sealed class BottomSheetLayoutWithSizeListener : SingleChildRenderObjectWidget
+{
+    public BottomSheetLayoutWithSizeListener(
+        Action<Size> onChildSizeChanged,
+        double animationValue,
+        bool isScrollControlled,
+        double scrollControlDisabledMaxHeightRatio,
+        Widget child) : base(child)
+    {
+        OnChildSizeChanged = onChildSizeChanged ?? throw new ArgumentNullException(nameof(onChildSizeChanged));
+        AnimationValue = animationValue;
+        IsScrollControlled = isScrollControlled;
+        ScrollControlDisabledMaxHeightRatio = scrollControlDisabledMaxHeightRatio;
+    }
+
+    public Action<Size> OnChildSizeChanged { get; }
+    public double AnimationValue { get; }
+    public bool IsScrollControlled { get; }
+    public double ScrollControlDisabledMaxHeightRatio { get; }
+
+    internal override RenderObject CreateRenderObject(BuildContext context) =>
+        new RenderBottomSheetLayoutWithSizeListener(
+            OnChildSizeChanged,
+            AnimationValue,
+            IsScrollControlled,
+            ScrollControlDisabledMaxHeightRatio);
+
+    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    {
+        var layout = (RenderBottomSheetLayoutWithSizeListener)renderObject;
+        layout.OnChildSizeChanged = OnChildSizeChanged;
+        layout.AnimationValue = AnimationValue;
+        layout.IsScrollControlled = IsScrollControlled;
+        layout.ScrollControlDisabledMaxHeightRatio = ScrollControlDisabledMaxHeightRatio;
+    }
+}
+
+internal sealed class RenderBottomSheetLayoutWithSizeListener : RenderProxyBox
+{
+    private Size _lastSize;
+    private double _animationValue;
+    private bool _isScrollControlled;
+    private double _scrollControlDisabledMaxHeightRatio;
+
+    public RenderBottomSheetLayoutWithSizeListener(
+        Action<Size> onChildSizeChanged,
+        double animationValue,
+        bool isScrollControlled,
+        double scrollControlDisabledMaxHeightRatio)
+    {
+        OnChildSizeChanged = onChildSizeChanged;
+        _animationValue = animationValue;
+        _isScrollControlled = isScrollControlled;
+        _scrollControlDisabledMaxHeightRatio = scrollControlDisabledMaxHeightRatio;
+    }
+
+    public Action<Size> OnChildSizeChanged { get; set; }
+
+    public double AnimationValue
+    {
+        get => _animationValue;
+        set
+        {
+            if (Math.Abs(_animationValue - value) <= double.Epsilon) return;
+            _animationValue = value;
+            MarkNeedsLayout();
+        }
+    }
+
+    public bool IsScrollControlled
+    {
+        get => _isScrollControlled;
+        set
+        {
+            if (_isScrollControlled == value) return;
+            _isScrollControlled = value;
+            MarkNeedsLayout();
+        }
+    }
+
+    public double ScrollControlDisabledMaxHeightRatio
+    {
+        get => _scrollControlDisabledMaxHeightRatio;
+        set
+        {
+            if (Math.Abs(_scrollControlDisabledMaxHeightRatio - value) <= double.Epsilon) return;
+            _scrollControlDisabledMaxHeightRatio = value;
+            MarkNeedsLayout();
+        }
+    }
+
+    protected override double ComputeMinIntrinsicWidth(double height) => 0.0;
+
+    protected override double ComputeMaxIntrinsicWidth(double height) => 0.0;
+
+    protected override double ComputeMinIntrinsicHeight(double width) => 0.0;
+
+    protected override double ComputeMaxIntrinsicHeight(double width) => 0.0;
+
+    protected override Size ComputeDryLayout(BoxConstraints constraints) => constraints.Biggest;
 
     protected override void PerformLayout()
     {
-        base.PerformLayout();
-        if (_lastSize == Size) return;
-        _lastSize = Size;
-        OnSizeChanged(Size);
+        Size = Constraints.Biggest;
+        if (Child is null) return;
+        BoxConstraints childConstraints = GetConstraintsForChild(Constraints);
+        Child.Layout(childConstraints, parentUsesSize: !childConstraints.IsTight);
+        Size childSize = childConstraints.IsTight ? childConstraints.Smallest : Child.Size;
+        ((BoxParentData)Child.parentData!).offset = GetPositionForChild(Size, childSize);
+        if (_lastSize == childSize) return;
+        _lastSize = childSize;
+        OnChildSizeChanged(_lastSize);
+    }
+
+    private BoxConstraints GetConstraintsForChild(BoxConstraints constraints) => new(
+        MinWidth: constraints.MaxWidth,
+        MaxWidth: constraints.MaxWidth,
+        MaxHeight: IsScrollControlled
+            ? constraints.MaxHeight
+            : constraints.MaxHeight * ScrollControlDisabledMaxHeightRatio);
+
+    private Point GetPositionForChild(Size size, Size childSize) =>
+        new(0.0, size.Height - (childSize.Height * AnimationValue));
+}
+
+internal sealed class ModalBottomSheetWidget<T> : StatefulWidget
+{
+    public ModalBottomSheetWidget(
+        ModalBottomSheetRoute<T> route,
+        Color? backgroundColor = null,
+        double? elevation = null,
+        ShapeBorder? shape = null,
+        Clip? clipBehavior = null,
+        BoxConstraints? constraints = null,
+        bool isScrollControlled = false,
+        double scrollControlDisabledMaxHeightRatio =
+            ModalBottomSheetRoute<T>.DefaultScrollControlDisabledMaxHeightRatio,
+        bool enableDrag = true,
+        bool showDragHandle = false,
+        AnimationStyle? animationStyle = null,
+        Key? key = null) : base(key)
+    {
+        Route = route ?? throw new ArgumentNullException(nameof(route));
+        BackgroundColor = backgroundColor;
+        Elevation = elevation;
+        Shape = shape;
+        ClipBehavior = clipBehavior;
+        Constraints = constraints;
+        IsScrollControlled = isScrollControlled;
+        ScrollControlDisabledMaxHeightRatio = scrollControlDisabledMaxHeightRatio;
+        EnableDrag = enableDrag;
+        ShowDragHandle = showDragHandle;
+        AnimationStyle = animationStyle;
+    }
+
+    public ModalBottomSheetRoute<T> Route { get; }
+    public Color? BackgroundColor { get; }
+    public double? Elevation { get; }
+    public ShapeBorder? Shape { get; }
+    public Clip? ClipBehavior { get; }
+    public BoxConstraints? Constraints { get; }
+    public bool IsScrollControlled { get; }
+    public double ScrollControlDisabledMaxHeightRatio { get; }
+    public bool EnableDrag { get; }
+    public bool ShowDragHandle { get; }
+    public AnimationStyle? AnimationStyle { get; }
+
+    public override State CreateState() => new ModalBottomSheetWidgetState<T>();
+}
+
+internal sealed class ModalBottomSheetWidgetState<T> : State
+{
+    private static readonly Animation<double> AlwaysDismissedAnimation =
+        new ConstantAnimation<double>(0.0, AnimationStatus.Dismissed);
+
+    private CurvedAnimation _curvedSheetAnimation = null!;
+    private ProxyAnimation _sheetAnimation = null!;
+
+    private ModalBottomSheetWidget<T> CurrentWidget => (ModalBottomSheetWidget<T>)StateWidget;
+
+    public override void InitState()
+    {
+        base.InitState();
+        var style = CurrentWidget.AnimationStyle;
+        _curvedSheetAnimation = new CurvedAnimation(
+            CurrentWidget.Route.Animation,
+            curve: style?.Curve ?? BottomSheet.ModalBottomSheetCurve,
+            reverseCurve: style?.ReverseCurve ?? BottomSheet.ModalBottomSheetCurve);
+        _sheetAnimation = new ProxyAnimation(_curvedSheetAnimation);
+    }
+
+    public override void Dispose()
+    {
+        _sheetAnimation.Parent = AlwaysDismissedAnimation;
+        _curvedSheetAnimation.Dispose();
+        base.Dispose();
+    }
+
+    public override Widget Build(BuildContext context)
+    {
+        var widget = CurrentWidget;
+        var route = widget.Route;
+        string routeLabel = GetRouteLabel(MaterialLocalizations.Of(context));
+
+        return new AnimatedBuilder(
+            animation: _sheetAnimation,
+            child: new BottomSheet(
+                animationController: route.SheetAnimationController,
+                onClosing: () =>
+                {
+                    if (route.IsCurrent)
+                    {
+                        Navigator.Pop(context);
+                    }
+                },
+                builder: route.Builder,
+                backgroundColor: widget.BackgroundColor,
+                elevation: widget.Elevation,
+                shape: widget.Shape,
+                clipBehavior: widget.ClipBehavior,
+                constraints: widget.Constraints,
+                enableDrag: widget.EnableDrag,
+                showDragHandle: widget.ShowDragHandle,
+                onDragStart: HandleDragStart,
+                onDragEnd: HandleDragEnd),
+            builder: (_, child) => new Semantics(
+                label: routeLabel,
+                scopesRoute: true,
+                namesRoute: true,
+                explicitChildNodes: true,
+                child: new ClipRect(
+                    child: new BottomSheetLayoutWithSizeListener(
+                        onChildSizeChanged: size =>
+                            route.DidChangeBarrierSemanticsClip(new Thickness(0, 0, 0, size.Height)),
+                        animationValue: _sheetAnimation.Value,
+                        isScrollControlled: widget.IsScrollControlled,
+                        scrollControlDisabledMaxHeightRatio: widget.ScrollControlDisabledMaxHeightRatio,
+                        child: child!))));
+    }
+
+    private static string GetRouteLabel(MaterialLocalizations localizations) =>
+        PlatformDefaults.TargetPlatform is TargetPlatform.IOS or TargetPlatform.MacOS
+            ? string.Empty
+            : localizations.DialogLabel;
+
+    private void HandleDragStart(DragStartDetails details)
+    {
+        // Allow the sheet to track the user's finger accurately.
+        _sheetAnimation.Parent = CurrentWidget.Route.Animation;
+    }
+
+    private void HandleDragEnd(DragEndDetails details, bool isClosing)
+    {
+        // Smooth out the animation from the current position of the sheet.
+        var style = CurrentWidget.AnimationStyle;
+        double currentProgress = CurrentWidget.Route.Animation.Value;
+        _sheetAnimation.Parent = new CurvedAnimation(
+            CurrentWidget.Route.Animation,
+            curve: Curves.Split(
+                currentProgress,
+                endCurve: style?.Curve ?? BottomSheet.ModalBottomSheetCurve),
+            reverseCurve: Curves.Split(
+                currentProgress,
+                endCurve: style?.ReverseCurve ?? BottomSheet.ModalBottomSheetCurve));
     }
 }
 
-public sealed class ModalBottomSheetRoute<T> : PageRoute
+public sealed class ModalBottomSheetRoute<T> : PopupRoute
 {
     public const double DefaultScrollControlDisabledMaxHeightRatio = 9.0 / 16.0;
-    private readonly ThemeData _capturedTheme;
+
+    private readonly ValueNotifier<Thickness> _clipDetailsNotifier = new(default);
+    private readonly CapturedThemes _capturedThemes;
     private readonly BottomSheetThemeData _capturedBottomSheetTheme;
-    private readonly MediaQueryData _capturedMediaQuery;
-    private readonly TextDirection _capturedDirection;
-    private readonly AnimationController _animation;
-    private readonly bool _ownsAnimation;
+    private readonly AnimationController? _transitionAnimationController;
+    private readonly AnimationStyle? _sheetAnimationStyle;
     private readonly TaskCompletionSource<T?> _completed = new(TaskCreationOptions.RunContinuationsAsynchronously);
-    private readonly TimeSpan _enterDuration;
-    private readonly TimeSpan _exitDuration;
-    private readonly Curve _forwardCurve;
-    private readonly Curve _reverseCurve;
-    private object? _pendingResult;
-    private bool _isExiting;
+    private AnimationController? _animationController;
 
     public ModalBottomSheetRoute(
         BuildContext context,
@@ -309,6 +652,7 @@ public sealed class ModalBottomSheetRoute<T> : PageRoute
         bool isScrollControlled,
         double scrollControlDisabledMaxHeightRatio = DefaultScrollControlDisabledMaxHeightRatio,
         string? barrierLabel = null,
+        string? barrierOnTapHint = null,
         Color? backgroundColor = null,
         double? elevation = null,
         ShapeBorder? shape = null,
@@ -319,6 +663,7 @@ public sealed class ModalBottomSheetRoute<T> : PageRoute
         bool enableDrag = true,
         bool? showDragHandle = null,
         bool useSafeArea = false,
+        Point? anchorPoint = null,
         RouteSettings? settings = null,
         AnimationController? transitionAnimationController = null,
         AnimationStyle? sheetAnimationStyle = null) : base(settings)
@@ -341,27 +686,16 @@ public sealed class ModalBottomSheetRoute<T> : PageRoute
         EnableDrag = enableDrag;
         ShowDragHandle = showDragHandle;
         UseSafeArea = useSafeArea;
-        BarrierLabel = barrierLabel ?? MaterialLocalizations.Of(context).ModalBarrierDismissLabel;
-        _capturedTheme = Theme.Of(context);
+        AnchorPoint = anchorPoint;
+        var localizations = MaterialLocalizations.Of(context);
+        BarrierLabel = barrierLabel ?? localizations.ScrimLabel;
+        BarrierOnTapHint = barrierOnTapHint ?? localizations.ScrimOnTapHint(localizations.BottomSheetLabel);
         _capturedBottomSheetTheme = BottomSheetTheme.Of(context);
-        _capturedMediaQuery = MediaQuery.Of(context);
-        _capturedDirection = Directionality.Of(context);
-        _enterDuration = transitionAnimationController?.Duration
-                         ?? sheetAnimationStyle?.Duration
-                         ?? BottomSheet.EnterDuration;
-        _exitDuration = transitionAnimationController?.Duration
-                        ?? sheetAnimationStyle?.ReverseDuration
-                        ?? BottomSheet.ExitDuration;
-        _forwardCurve = sheetAnimationStyle?.Curve ?? Curves.EaseOut;
-        _reverseCurve = sheetAnimationStyle?.ReverseCurve ?? Curves.EaseOut;
-        _animation = transitionAnimationController ?? BottomSheet.CreateAnimationController(sheetAnimationStyle);
-        _ownsAnimation = transitionAnimationController is null;
-        _animation.Curve = _forwardCurve;
-        _animation.Changed += HandleAnimationChanged;
-        _animation.Dismissed += HandleDismissed;
+        _capturedThemes = InheritedTheme.Capture(context, Widgets.Navigator.Of(context).Context);
+        _transitionAnimationController = transitionAnimationController;
+        _sheetAnimationStyle = sheetAnimationStyle;
     }
 
-    public override bool Opaque => false;
     public WidgetBuilder Builder { get; }
     public bool IsScrollControlled { get; }
     public double ScrollControlDisabledMaxHeightRatio { get; }
@@ -375,26 +709,36 @@ public sealed class ModalBottomSheetRoute<T> : PageRoute
     public bool EnableDrag { get; }
     public bool? ShowDragHandle { get; }
     public bool UseSafeArea { get; }
+    public Point? AnchorPoint { get; }
     public string BarrierLabel { get; }
+    public string BarrierOnTapHint { get; }
     public Task<T?> Completed => _completed.Task;
-    internal new AnimationController Animation => _animation;
 
-    protected override void OnAttach()
-    {
-        _animation.Duration = _enterDuration;
-        _animation.Curve = _forwardCurve;
-        _animation.Forward(from: 0);
-    }
+    public bool BarrierDismissible => IsDismissible;
 
-    public override bool WillPop(object? result)
+    public Color BarrierColor => ModalBarrierColor
+                                 ?? _capturedBottomSheetTheme.ModalBarrierColor
+                                 ?? Color.FromArgb(0x8A, 0, 0, 0);
+
+    public override TimeSpan TransitionDuration => _transitionAnimationController?.Duration
+                                                   ?? _sheetAnimationStyle?.Duration
+                                                   ?? BottomSheet.EnterDuration;
+
+    public override TimeSpan ReverseTransitionDuration => _transitionAnimationController?.ReverseDuration
+                                                          ?? _transitionAnimationController?.Duration
+                                                          ?? _sheetAnimationStyle?.ReverseDuration
+                                                          ?? BottomSheet.ExitDuration;
+
+    internal AnimationController SheetAnimationController => _animationController
+        ?? throw new InvalidOperationException("The bottom sheet animation is unavailable before it is installed.");
+
+    protected override bool WillDisposeAnimationController => _transitionAnimationController is null;
+
+    protected override AnimationController CreateAnimationController()
     {
-        if (_isExiting || _animation.Value <= 0) return base.WillPop(result);
-        _pendingResult = result;
-        _isExiting = true;
-        _animation.Duration = _exitDuration;
-        _animation.Curve = _reverseCurve;
-        _animation.Reverse();
-        return false;
+        _animationController = _transitionAnimationController
+                               ?? BottomSheet.CreateAnimationController(Navigator, _sheetAnimationStyle);
+        return _animationController;
     }
 
     public override void DidComplete(object? result)
@@ -407,131 +751,205 @@ public sealed class ModalBottomSheetRoute<T> : PageRoute
 
     public override Widget BuildPage(BuildContext context)
     {
-        double progress = Math.Clamp(_animation.Evaluate(), 0, 1);
-        var barrierColor = ModalBarrierColor ?? _capturedBottomSheetTheme.ModalBarrierColor ?? Color.FromArgb(0x8A, 0, 0, 0);
-        Widget barrier = new Semantics(
-            label: BarrierLabel,
-            container: true,
-            onTap: IsDismissible ? () => Navigator?.MaybePop() : null,
-            child: new GestureDetector(
-                behavior: HitTestBehavior.Opaque,
-                onTap: IsDismissible ? () => Navigator?.MaybePop() : null,
-                child: new ColoredBox(ApplyOpacity(barrierColor, progress))));
+        Widget content = new DisplayFeatureSubScreen(
+            anchorPoint: AnchorPoint,
+            child: new Builder(routeContext =>
+            {
+                var sheetTheme = BottomSheetTheme.Of(routeContext);
+                var defaults = BottomSheet.ResolveDefaults(Theme.Of(routeContext));
+                return new ModalBottomSheetWidget<T>(
+                    route: this,
+                    backgroundColor: BackgroundColor
+                                     ?? sheetTheme.ModalBackgroundColor
+                                     ?? sheetTheme.BackgroundColor
+                                     ?? defaults.BackgroundColor,
+                    elevation: Elevation
+                               ?? sheetTheme.ModalElevation
+                               ?? sheetTheme.Elevation
+                               ?? defaults.ModalElevation,
+                    shape: Shape,
+                    clipBehavior: ClipBehavior,
+                    constraints: Constraints,
+                    isScrollControlled: IsScrollControlled,
+                    scrollControlDisabledMaxHeightRatio: ScrollControlDisabledMaxHeightRatio,
+                    enableDrag: EnableDrag,
+                    showDragHandle: ShowDragHandle ?? (EnableDrag && (sheetTheme.ShowDragHandle ?? false)),
+                    animationStyle: _sheetAnimationStyle);
+            }));
 
-        var modalBackground = BackgroundColor ?? _capturedBottomSheetTheme.ModalBackgroundColor;
-        double? modalElevation = Elevation ?? _capturedBottomSheetTheme.ModalElevation;
-        Widget sheet = new BottomSheet(
-            animationController: _animation,
-            onClosing: () => Navigator?.MaybePop(),
-            builder: Builder,
-            backgroundColor: modalBackground,
-            elevation: modalElevation,
-            shape: Shape,
-            clipBehavior: ClipBehavior,
-            constraints: Constraints,
-            enableDrag: EnableDrag,
-            showDragHandle: ShowDragHandle);
-        if (UseSafeArea)
-        {
-            sheet = new SafeArea(left: true, top: true, right: true, bottom: false, child: sheet);
-        }
-        else
-        {
-            sheet = MediaQuery.RemovePadding(context, sheet, removeTop: true);
-        }
+        Widget bottomSheet = UseSafeArea
+            ? new SafeArea(bottom: false, child: content)
+            : MediaQuery.RemovePadding(context, content, removeTop: true);
 
-        sheet = new Semantics(
-            label: _capturedTheme.Platform is TargetPlatform.IOS or TargetPlatform.MacOS
-                ? null
-                : MaterialLocalizations.Of(context).DialogLabel,
-            scopesRoute: true,
-            namesRoute: true,
-            explicitChildNodes: true,
-            child: new ModalBottomSheetLayout(
-                progress,
-                IsScrollControlled,
-                ScrollControlDisabledMaxHeightRatio,
-                sheet));
-        sheet = new BottomSheetTheme(_capturedBottomSheetTheme, sheet);
-        sheet = new Theme(_capturedTheme, sheet);
-        sheet = new MediaQuery(_capturedMediaQuery, sheet);
-        sheet = new Directionality(_capturedDirection, sheet);
         return new Stack(
             fit: StackFit.Expand,
             children:
             [
-                new Positioned(left: 0, top: 0, right: 0, bottom: 0, child: barrier),
-                sheet,
+                new Positioned(left: 0, top: 0, right: 0, bottom: 0, child: BuildModalBarrier()),
+                _capturedThemes.Wrap(bottomSheet),
             ]);
     }
 
     public override void Dispose()
     {
-        _animation.Changed -= HandleAnimationChanged;
-        _animation.Dismissed -= HandleDismissed;
-        if (_ownsAnimation) _animation.Dispose();
+        _clipDetailsNotifier.Dispose();
         if (!_completed.Task.IsCompleted) _completed.TrySetResult(default);
         base.Dispose();
     }
 
-    private void HandleAnimationChanged() => NotifyRouteChanged();
-    private void HandleDismissed()
+    internal void DidChangeBarrierSemanticsClip(Thickness clipDetails)
     {
-        if (_isExiting) Navigator?.MaybePop(_pendingResult);
+        if (_clipDetailsNotifier.Value == clipDetails) return;
+        _clipDetailsNotifier.Value = clipDetails;
     }
-    private static Color ApplyOpacity(Color color, double opacity) => Color.FromArgb(
-        (byte)Math.Round(color.A * opacity), color.R, color.G, color.B);
+
+    private Widget BuildModalBarrier()
+    {
+        Color barrierColor = BarrierColor;
+        if (barrierColor.A != 0)
+        {
+            return new AnimatedModalBarrier(
+                color: new BarrierColorAnimation(Animation, barrierColor),
+                dismissible: BarrierDismissible,
+                semanticsLabel: BarrierLabel,
+                barrierSemanticsDismissible: true,
+                clipDetailsNotifier: _clipDetailsNotifier,
+                semanticsOnTapHint: BarrierOnTapHint,
+                onDismiss: () => Navigator?.MaybePop());
+        }
+
+        return new ModalBarrier(
+            dismissible: BarrierDismissible,
+            semanticsLabel: BarrierLabel,
+            barrierSemanticsDismissible: true,
+            clipDetailsNotifier: _clipDetailsNotifier,
+            semanticsOnTapHint: BarrierOnTapHint,
+            onDismiss: () => Navigator?.MaybePop());
+    }
+
+    private sealed class BarrierColorAnimation : Animation<Color?>
+    {
+        private readonly Animation<double> _parent;
+        private readonly Color _color;
+
+        public BarrierColorAnimation(Animation<double> parent, Color color)
+        {
+            _parent = parent;
+            _color = color;
+        }
+
+        public override Color? Value => Color.FromArgb(
+            (byte)Math.Round(_color.A * Curves.Ease(Math.Clamp(_parent.Value, 0, 1))),
+            _color.R,
+            _color.G,
+            _color.B);
+
+        public override AnimationStatus Status => _parent.Status;
+
+        public override void AddListener(Action listener) => _parent.AddListener(listener);
+
+        public override void RemoveListener(Action listener) => _parent.RemoveListener(listener);
+
+        public override void AddStatusListener(Action<AnimationStatus> listener) =>
+            _parent.AddStatusListener(listener);
+
+        public override void RemoveStatusListener(Action<AnimationStatus> listener) =>
+            _parent.RemoveStatusListener(listener);
+    }
 }
 
-internal sealed class ModalBottomSheetLayout : SingleChildRenderObjectWidget
+/// <summary>
+/// The persistent bottom sheet hosted by a <see cref="Scaffold"/>; the sheet grows and shrinks with the
+/// controller value instead of translating like the modal variant.
+/// </summary>
+internal sealed class StandardBottomSheet : StatefulWidget
 {
-    public ModalBottomSheetLayout(double animationValue, bool isScrollControlled, double maxHeightRatio, Widget child)
-        : base(child)
+    public StandardBottomSheet(
+        AnimationController animationController,
+        WidgetBuilder builder,
+        Action? onClosing = null,
+        bool enableDrag = true,
+        bool? showDragHandle = null,
+        bool isPersistent = false,
+        Color? backgroundColor = null,
+        double? elevation = null,
+        ShapeBorder? shape = null,
+        Clip? clipBehavior = null,
+        BoxConstraints? constraints = null,
+        Key? key = null) : base(key)
     {
-        AnimationValue = animationValue;
-        IsScrollControlled = isScrollControlled;
-        MaxHeightRatio = maxHeightRatio;
+        AnimationController = animationController ?? throw new ArgumentNullException(nameof(animationController));
+        Builder = builder ?? throw new ArgumentNullException(nameof(builder));
+        OnClosing = onClosing;
+        EnableDrag = enableDrag;
+        ShowDragHandle = showDragHandle;
+        IsPersistent = isPersistent;
+        BackgroundColor = backgroundColor;
+        Elevation = elevation;
+        Shape = shape;
+        ClipBehavior = clipBehavior;
+        Constraints = constraints;
     }
-    public double AnimationValue { get; }
-    public bool IsScrollControlled { get; }
-    public double MaxHeightRatio { get; }
-    internal override RenderObject CreateRenderObject(BuildContext context) =>
-        new RenderModalBottomSheetLayout(AnimationValue, IsScrollControlled, MaxHeightRatio);
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
-    {
-        var layout = (RenderModalBottomSheetLayout)renderObject;
-        layout.AnimationValue = AnimationValue;
-        layout.IsScrollControlled = IsScrollControlled;
-        layout.MaxHeightRatio = MaxHeightRatio;
-    }
+
+    public AnimationController AnimationController { get; }
+    public WidgetBuilder Builder { get; }
+    public Action? OnClosing { get; }
+    public bool EnableDrag { get; }
+    public bool? ShowDragHandle { get; }
+    public bool IsPersistent { get; }
+    public Color? BackgroundColor { get; }
+    public double? Elevation { get; }
+    public ShapeBorder? Shape { get; }
+    public Clip? ClipBehavior { get; }
+    public BoxConstraints? Constraints { get; }
+
+    public override State CreateState() => new StandardBottomSheetState();
 }
 
-internal sealed class RenderModalBottomSheetLayout : RenderProxyBox
+internal sealed class StandardBottomSheetState : State
 {
-    private double _animationValue;
-    private bool _isScrollControlled;
-    private double _maxHeightRatio;
-    public RenderModalBottomSheetLayout(double animationValue, bool isScrollControlled, double maxHeightRatio)
-    {
-        _animationValue = animationValue;
-        _isScrollControlled = isScrollControlled;
-        _maxHeightRatio = maxHeightRatio;
-    }
-    public double AnimationValue { get => _animationValue; set { if (Math.Abs(_animationValue - value) > 0.000001) { _animationValue = value; MarkNeedsLayout(); } } }
-    public bool IsScrollControlled { get => _isScrollControlled; set { if (_isScrollControlled != value) { _isScrollControlled = value; MarkNeedsLayout(); } } }
-    public double MaxHeightRatio { get => _maxHeightRatio; set { if (Math.Abs(_maxHeightRatio - value) > 0.000001) { _maxHeightRatio = value; MarkNeedsLayout(); } } }
+    private Curve _animationCurve = Curves.FastOutSlowIn;
 
-    protected override void PerformLayout()
+    private StandardBottomSheet CurrentWidget => (StandardBottomSheet)StateWidget;
+
+    public void Close()
     {
-        Size = Constraints.Biggest;
-        if (Child is null) return;
-        double maxHeight = IsScrollControlled ? Constraints.MaxHeight : Constraints.MaxHeight * MaxHeightRatio;
-        Child.Layout(new BoxConstraints(
-            MinWidth: Constraints.MaxWidth,
-            MaxWidth: Constraints.MaxWidth,
-            MaxHeight: maxHeight), parentUsesSize: true);
-        ((BoxParentData)Child.parentData!).offset = new Point(0, Size.Height - (Child.Size.Height * AnimationValue));
+        CurrentWidget.AnimationController.Reverse();
+        CurrentWidget.OnClosing?.Invoke();
     }
+
+    public override Widget Build(BuildContext context)
+    {
+        var widget = CurrentWidget;
+        return new AnimatedBuilder(
+            animation: widget.AnimationController,
+            child: new Semantics(
+                container: true,
+                onDismiss: widget.IsPersistent ? null : Close,
+                child: new BottomSheet(
+                    animationController: widget.AnimationController,
+                    onClosing: widget.OnClosing ?? (() => { }),
+                    builder: widget.Builder,
+                    enableDrag: widget.EnableDrag,
+                    showDragHandle: widget.ShowDragHandle,
+                    backgroundColor: widget.BackgroundColor,
+                    elevation: widget.Elevation,
+                    shape: widget.Shape,
+                    clipBehavior: widget.ClipBehavior,
+                    constraints: widget.Constraints,
+                    onDragStart: HandleDragStart,
+                    onDragEnd: HandleDragEnd)),
+            builder: (_, child) => new Align(
+                alignment: AlignmentDirectional.TopStart,
+                heightFactor: _animationCurve(Math.Clamp(widget.AnimationController.Value, 0.0, 1.0)),
+                child: child));
+    }
+
+    private void HandleDragStart(DragStartDetails details) => _animationCurve = Curves.Linear;
+
+    private void HandleDragEnd(DragEndDetails details, bool isClosing) => _animationCurve = Curves.Split(
+        Math.Clamp(CurrentWidget.AnimationController.Value, 0.0, 1.0),
+        endCurve: Curves.FastOutSlowIn);
 }
 
 public sealed class PersistentBottomSheetController
@@ -594,6 +1012,7 @@ public static class MaterialBottomSheets
         bool enableDrag = true,
         bool? showDragHandle = null,
         bool useSafeArea = false,
+        Point? anchorPoint = null,
         RouteSettings? routeSettings = null,
         AnimationController? transitionAnimationController = null,
         AnimationStyle? sheetAnimationStyle = null)
@@ -604,16 +1023,18 @@ public static class MaterialBottomSheets
             isScrollControlled,
             scrollControlDisabledMaxHeightRatio,
             barrierLabel,
+            barrierOnTapHint: null,
             backgroundColor,
             elevation,
             shape,
             clipBehavior,
             constraints,
-            barrierColor,
+            barrierColor ?? Theme.Of(context).BottomSheetTheme.ModalBarrierColor,
             isDismissible,
             enableDrag,
             showDragHandle,
             useSafeArea,
+            anchorPoint,
             routeSettings,
             transitionAnimationController,
             sheetAnimationStyle);

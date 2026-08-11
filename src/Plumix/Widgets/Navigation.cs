@@ -406,6 +406,12 @@ public abstract class TransitionRoute : Route
 
     public virtual bool AllowSnapshotting => true;
 
+    /// <summary>
+    /// Whether the route disposes the controller returned by <see cref="CreateAnimationController"/> when it is
+    /// uninstalled. Routes that adopt a caller-supplied controller must return <see langword="false"/>.
+    /// </summary>
+    protected virtual bool WillDisposeAnimationController => true;
+
     public Animation<double> Animation => _controller
         ?? throw new InvalidOperationException("The route animation is unavailable before the route is installed.");
 
@@ -435,7 +441,11 @@ public abstract class TransitionRoute : Route
         {
             _controller.Changed -= HandleAnimationChanged;
             _controller.RemoveStatusListener(HandleStatusChanged);
-            _controller.Dispose();
+            if (WillDisposeAnimationController)
+            {
+                _controller.Dispose();
+            }
+
             _controller = null;
         }
 
@@ -811,6 +821,20 @@ public abstract class PageRoute : ModalRoute
 
         _ = Controller.AnimateBack(0.0, duration, curve);
     }
+}
+
+/// <summary>
+/// A modal route that overlays a widget over the current route, leaving the route below visible.
+/// </summary>
+public abstract class PopupRoute : ModalRoute
+{
+    protected PopupRoute(RouteSettings? settings = null) : base(settings)
+    {
+    }
+
+    public override bool Opaque => false;
+
+    public override bool AllowSnapshotting => false;
 }
 
 public sealed class BuilderPageRoute : PageRoute

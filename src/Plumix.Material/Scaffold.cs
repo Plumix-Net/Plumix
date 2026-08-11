@@ -369,7 +369,8 @@ public sealed class ScaffoldState : State
             throw new ArgumentOutOfRangeException(nameof(elevation));
 
         ClosePersistentBottomSheet(immediate: true);
-        var animation = transitionAnimationController ?? BottomSheet.CreateAnimationController(sheetAnimationStyle);
+        var animation = transitionAnimationController
+                        ?? BottomSheet.CreateAnimationController(vsync: this, sheetAnimationStyle: sheetAnimationStyle);
         var presentation = new PersistentBottomSheetPresentation
         {
             Builder = builder,
@@ -640,32 +641,27 @@ public sealed class ScaffoldState : State
     {
         if (_persistentBottomSheet is { } presentation)
         {
-            return new FractionalTranslation(
-                new Vector(0, 1 - presentation.Animation.Evaluate()),
-                transformHitTests: true,
-                child: new BottomSheet(
-                    animationController: presentation.Animation,
-                    onClosing: ClosePersistentBottomSheet,
-                    builder: presentation.Builder,
-                    enableDrag: presentation.EnableDrag,
-                    showDragHandle: presentation.ShowDragHandle,
-                    backgroundColor: presentation.BackgroundColor,
-                    elevation: presentation.Elevation,
-                    shape: presentation.Shape,
-                    clipBehavior: presentation.ClipBehavior,
-                    constraints: presentation.Constraints));
+            return new StandardBottomSheet(
+                animationController: presentation.Animation,
+                builder: presentation.Builder,
+                onClosing: ClosePersistentBottomSheet,
+                enableDrag: presentation.EnableDrag,
+                showDragHandle: presentation.ShowDragHandle,
+                isPersistent: false,
+                backgroundColor: presentation.BackgroundColor,
+                elevation: presentation.Elevation,
+                shape: presentation.Shape,
+                clipBehavior: presentation.ClipBehavior,
+                constraints: presentation.Constraints);
         }
 
         if (CurrentWidget.BottomSheet is null) return null;
         _staticBottomSheetAnimation ??= CreateCompletedBottomSheetAnimation();
-        return new FractionalTranslation(
-            new Vector(0, 1 - _staticBottomSheetAnimation.Evaluate()),
-            transformHitTests: true,
-            child: new BottomSheet(
-                animationController: _staticBottomSheetAnimation,
-                onClosing: () => _staticBottomSheetAnimation.Reverse(),
-                builder: _ => CurrentWidget.BottomSheet,
-                enableDrag: true));
+        return new StandardBottomSheet(
+            animationController: _staticBottomSheetAnimation,
+            builder: _ => CurrentWidget.BottomSheet,
+            onClosing: () => _staticBottomSheetAnimation.Reverse(),
+            isPersistent: true);
     }
 
     private void ClosePersistentBottomSheet() => ClosePersistentBottomSheet(immediate: false);
@@ -717,9 +713,9 @@ public sealed class ScaffoldState : State
         _staticBottomSheetAnimation.Changed += HandleStaticBottomSheetAnimationChanged;
     }
 
-    private static AnimationController CreateCompletedBottomSheetAnimation()
+    private AnimationController CreateCompletedBottomSheetAnimation()
     {
-        var animation = BottomSheet.CreateAnimationController();
+        var animation = BottomSheet.CreateAnimationController(vsync: this);
         animation.SetValue(1);
         return animation;
     }

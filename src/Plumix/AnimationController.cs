@@ -69,6 +69,42 @@ public static class Curves
     // Flutter Curves.easeOutBack: Cubic(0.175, 0.885, 0.32, 1.275).
     public static Curve EaseOutBack { get; } = Cubic(0.175, 0.885, 0.32, 1.275);
 
+    // Flutter Curves.easeOutCubic: Cubic(0.33, 1.0, 0.68, 1.0).
+    public static Curve EaseOutCubic { get; } = Cubic(0.33, 1.0, 0.68, 1.0);
+
+    // Flutter Material Easing.legacyDecelerate: Cubic(0.0, 0.0, 0.2, 1.0).
+    public static Curve LegacyDecelerate { get; } = Cubic(0.0, 0.0, 0.2, 1.0);
+
+    /// <summary>
+    /// A curve that progresses through <paramref name="beginCurve"/> until <paramref name="split"/> and
+    /// through <paramref name="endCurve"/> afterwards, mapping each segment onto the matching output range.
+    /// </summary>
+    public static Curve Split(double split, Curve? beginCurve = null, Curve? endCurve = null)
+    {
+        if (!double.IsFinite(split) || split is < 0.0 or > 1.0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(split), "Split must be between 0.0 and 1.0.");
+        }
+
+        Curve begin = beginCurve ?? Linear;
+        Curve end = endCurve ?? EaseOutCubic;
+        return t =>
+        {
+            double clamped = Math.Clamp(t, 0.0, 1.0);
+            if (clamped is 0.0 or 1.0 || clamped == split)
+            {
+                return clamped;
+            }
+
+            if (clamped < split)
+            {
+                return begin(clamped / split) * split;
+            }
+
+            return split + (end((clamped - split) / (1.0 - split)) * (1.0 - split));
+        };
+    }
+
     public static double FastOutSlowIn(double t)
     {
         t = Math.Clamp(t, 0, 1);

@@ -1,5 +1,20 @@
 # Changelog
 
+- Breaking: completed the strict Material `BottomSheet`/`showModalBottomSheet`/`showBottomSheet` closeout. The sheet
+  surface is now a real `Material` (elevation, surface tint, shadow, shape, clip) and the M3 default shape is
+  top-only 28px corners instead of a uniform radius; drag handles resolve their color through hovered/dragged
+  `WidgetState`s and are ordered before the content in the stack; drag release uses Flutter's fling/threshold math and
+  ignores drags while the sheet is closing. `ModalBottomSheetRoute<T>` is now a `PopupRoute` driven by the route's own
+  transition controller (`transitionDuration`/`reverseTransitionDuration`, caller-supplied controllers are never
+  disposed), composes `AnimatedModalBarrier` with the localized `scrimLabel`/`scrimOnTapHint` and barrier-semantics
+  clipping, animates through `ProxyAnimation`/`CurvedAnimation` with `Split` on drag release, and accepts
+  `anchorPoint`. Scaffold-hosted sheets grow with `Align.heightFactor` on `fastOutSlowIn` rather than translating.
+  New core primitives: `DisplayFeatureSubScreen` + `MediaQueryData.RemoveDisplayFeatures`, `PopupRoute`,
+  `TransitionRoute.WillDisposeAnimationController`, `Curves.Split`/`EaseOutCubic`/`LegacyDecelerate`, and
+  `MouseRegion.Opaque` (Flutter's `true` default, so mouse regions now hit-test themselves).
+  `BottomSheet.CreateAnimationController` takes a ticker provider first and sets `ReverseDuration`;
+  `MaterialLocalizations` gained `ScrimLabel`/`BottomSheetLabel`/`ScrimOnTapHint`.
+
 - Breaking: closed the `ScrollPhysics` gesture-tuning divergence. `AlwaysScrollableScrollPhysics` and
   `NeverScrollableScrollPhysics` are ported, `ScrollPhysics.RecommendDeferredLoading` plus
   `ScrollPosition.RecommendDeferredLoading`/`Scrollable.RecommendDeferredLoadingForContext` are available, and

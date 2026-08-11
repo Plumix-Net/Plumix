@@ -17,6 +17,7 @@ public sealed class BottomSheetDemoPage : StatefulWidget
         private bool _showDragHandle = true;
         private bool _scrollControlled;
         private bool _customTheme;
+        private bool _anchorEnd;
         private string _lastResult = "none";
 
         public override Widget Build(BuildContext context)
@@ -28,7 +29,8 @@ public sealed class BottomSheetDemoPage : StatefulWidget
                 [
                     new Text("BottomSheet + ModalBottomSheet", fontSize: 20),
                     new Text(
-                        "Persistent LocalHistory/controller flow, modal barrier/result, drag handle, 9/16 height cap, SafeArea, and theme precedence.",
+                        "Persistent LocalHistory/controller flow, modal scrim/result, drag handle, 9/16 height cap, "
+                        + "SafeArea, display-feature anchoring, and theme precedence.",
                         fontSize: 14,
                         color: Colors.DimGray),
                     new Row(
@@ -38,6 +40,9 @@ public sealed class BottomSheetDemoPage : StatefulWidget
                             ControlButton(_showDragHandle ? "Handle on" : "Handle off", () => SetState(() => _showDragHandle = !_showDragHandle)),
                             ControlButton(_scrollControlled ? "Full height" : "9/16 cap", () => SetState(() => _scrollControlled = !_scrollControlled)),
                             ControlButton(_customTheme ? "Theme on" : "Theme off", () => SetState(() => _customTheme = !_customTheme)),
+                            ControlButton(
+                                _anchorEnd ? "Anchor end" : "Anchor start",
+                                () => SetState(() => _anchorEnd = !_anchorEnd)),
                         ]),
                     new Row(
                         spacing: 8,
@@ -70,7 +75,8 @@ public sealed class BottomSheetDemoPage : StatefulWidget
                 shape: _customTheme ? ShapeBorder.RoundedRectangle(18) : null,
                 isScrollControlled: _scrollControlled,
                 showDragHandle: _showDragHandle,
-                useSafeArea: true);
+                useSafeArea: true,
+                anchorPoint: _anchorEnd ? new Avalonia.Point(double.MaxValue, 0) : null);
             if (Mounted) SetState(() => _lastResult = result ?? "dismissed");
         }
 
