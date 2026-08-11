@@ -1,5 +1,10 @@
 # Changelog
 
+- Breaking: completed the strict Material `ExpansionTile` closeout. The control and theme now expose source-shaped
+  directional geometry, `ShapeBorder`, shared `AnimationStyle`, state-controller, and semantics APIs; direct M2/M3
+  roles, exact `Expansible`/`ListTileTheme` composition, per-side border paint, controller lookup, `PageStorage`
+  restoration, disabled/programmatic behavior, and mirrored live scheme probes now match the pinned Flutter source.
+
 - Breaking: completed the strict Material `Radio`/`RadioListTile` closeout. The family now uses the shared
   `RawRadio` toggleable path, direct M2/M3 scheme roles, exact state/theme precedence, source painter geometry and
   timing, density-adjusted targets, expanded theme/list-tile APIs, adaptive registry behavior, and merged semantics.

@@ -1,4 +1,3 @@
-using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Rendering;
@@ -7,7 +6,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/material/expansion_tile.dart
+// Dart parity source: flutter/packages/flutter/lib/src/material/expansion_tile.dart
 public sealed class ExpansionTile : StatefulWidget
 {
     public ExpansionTile(
@@ -16,43 +15,49 @@ public sealed class ExpansionTile : StatefulWidget
         Widget? subtitle = null,
         Action<bool>? onExpansionChanged = null,
         IReadOnlyList<Widget>? children = null,
-        Color? backgroundColor = null,
-        Color? collapsedBackgroundColor = null,
         Widget? trailing = null,
         bool showTrailingIcon = true,
         bool initiallyExpanded = false,
         bool maintainState = false,
-        Thickness? tilePadding = null,
-        Alignment? expandedAlignment = null,
+        EdgeInsetsGeometry? tilePadding = null,
         CrossAxisAlignment? expandedCrossAxisAlignment = null,
-        Thickness? childrenPadding = null,
-        Color? iconColor = null,
-        Color? collapsedIconColor = null,
+        AlignmentGeometry? expandedAlignment = null,
+        EdgeInsetsGeometry? childrenPadding = null,
+        Color? backgroundColor = null,
+        Color? collapsedBackgroundColor = null,
         Color? textColor = null,
         Color? collapsedTextColor = null,
-        BorderRadius? shape = null,
-        BorderRadius? collapsedShape = null,
+        Color? iconColor = null,
+        Color? collapsedIconColor = null,
+        ShapeBorder? shape = null,
+        ShapeBorder? collapsedShape = null,
         Clip? clipBehavior = null,
         ListTileControlAffinity? controlAffinity = null,
         ExpansibleController? controller = null,
         bool? dense = null,
         Color? splashColor = null,
+        VisualDensity? visualDensity = null,
         double? minTileHeight = null,
         bool? enableFeedback = true,
         bool enabled = true,
-        ExpansionAnimationStyle? expansionAnimationStyle = null,
+        AnimationStyle? expansionAnimationStyle = null,
+        bool internalAddSemanticForOnTap = false,
+        WidgetStatesController? statesController = null,
         Key? key = null) : base(key)
     {
         if (expandedCrossAxisAlignment == CrossAxisAlignment.Baseline)
         {
             throw new ArgumentException(
-                "CrossAxisAlignment.Baseline is not supported for ExpansionTile children.",
+                "CrossAxisAlignment.Baseline is not supported since the expanded children are aligned in a "
+                + "column, not a row. Try to use another constant.",
                 nameof(expandedCrossAxisAlignment));
         }
 
-        if (minTileHeight.HasValue && (!double.IsFinite(minTileHeight.Value) || minTileHeight.Value < 0))
+        if (minTileHeight.HasValue && (!double.IsFinite(minTileHeight.Value) || minTileHeight.Value < 0.0))
         {
-            throw new ArgumentOutOfRangeException(nameof(minTileHeight), "Minimum tile height must be finite and non-negative.");
+            throw new ArgumentOutOfRangeException(
+                nameof(minTileHeight),
+                "Minimum tile height must be finite and non-negative.");
         }
 
         Title = title ?? throw new ArgumentNullException(nameof(title));
@@ -60,20 +65,20 @@ public sealed class ExpansionTile : StatefulWidget
         Subtitle = subtitle;
         OnExpansionChanged = onExpansionChanged;
         Children = children ?? [];
-        BackgroundColor = backgroundColor;
-        CollapsedBackgroundColor = collapsedBackgroundColor;
         Trailing = trailing;
         ShowTrailingIcon = showTrailingIcon;
         InitiallyExpanded = initiallyExpanded;
         MaintainState = maintainState;
         TilePadding = tilePadding;
-        ExpandedAlignment = expandedAlignment;
         ExpandedCrossAxisAlignment = expandedCrossAxisAlignment;
+        ExpandedAlignment = expandedAlignment;
         ChildrenPadding = childrenPadding;
-        IconColor = iconColor;
-        CollapsedIconColor = collapsedIconColor;
+        BackgroundColor = backgroundColor;
+        CollapsedBackgroundColor = collapsedBackgroundColor;
         TextColor = textColor;
         CollapsedTextColor = collapsedTextColor;
+        IconColor = iconColor;
+        CollapsedIconColor = collapsedIconColor;
         Shape = shape;
         CollapsedShape = collapsedShape;
         ClipBehavior = clipBehavior;
@@ -81,10 +86,13 @@ public sealed class ExpansionTile : StatefulWidget
         Controller = controller;
         Dense = dense;
         SplashColor = splashColor;
+        VisualDensity = visualDensity;
         MinTileHeight = minTileHeight;
         EnableFeedback = enableFeedback;
         Enabled = enabled;
         ExpansionAnimationStyle = expansionAnimationStyle;
+        InternalAddSemanticForOnTap = internalAddSemanticForOnTap;
+        StatesController = statesController;
     }
 
     public Widget? Leading { get; }
@@ -92,31 +100,34 @@ public sealed class ExpansionTile : StatefulWidget
     public Widget? Subtitle { get; }
     public Action<bool>? OnExpansionChanged { get; }
     public IReadOnlyList<Widget> Children { get; }
-    public Color? BackgroundColor { get; }
-    public Color? CollapsedBackgroundColor { get; }
     public Widget? Trailing { get; }
     public bool ShowTrailingIcon { get; }
     public bool InitiallyExpanded { get; }
     public bool MaintainState { get; }
-    public Thickness? TilePadding { get; }
-    public Alignment? ExpandedAlignment { get; }
+    public EdgeInsetsGeometry? TilePadding { get; }
     public CrossAxisAlignment? ExpandedCrossAxisAlignment { get; }
-    public Thickness? ChildrenPadding { get; }
-    public Color? IconColor { get; }
-    public Color? CollapsedIconColor { get; }
+    public AlignmentGeometry? ExpandedAlignment { get; }
+    public EdgeInsetsGeometry? ChildrenPadding { get; }
+    public Color? BackgroundColor { get; }
+    public Color? CollapsedBackgroundColor { get; }
     public Color? TextColor { get; }
     public Color? CollapsedTextColor { get; }
-    public BorderRadius? Shape { get; }
-    public BorderRadius? CollapsedShape { get; }
+    public Color? IconColor { get; }
+    public Color? CollapsedIconColor { get; }
+    public ShapeBorder? Shape { get; }
+    public ShapeBorder? CollapsedShape { get; }
     public Clip? ClipBehavior { get; }
     public ListTileControlAffinity? ControlAffinity { get; }
     public ExpansibleController? Controller { get; }
     public bool? Dense { get; }
     public Color? SplashColor { get; }
+    public VisualDensity? VisualDensity { get; }
     public double? MinTileHeight { get; }
     public bool? EnableFeedback { get; }
     public bool Enabled { get; }
-    public ExpansionAnimationStyle? ExpansionAnimationStyle { get; }
+    public AnimationStyle? ExpansionAnimationStyle { get; }
+    public bool InternalAddSemanticForOnTap { get; }
+    public WidgetStatesController? StatesController { get; }
 
     public override State CreateState() => new ExpansionTileState();
 
@@ -124,6 +135,7 @@ public sealed class ExpansionTile : StatefulWidget
     {
         private ExpansibleController? _controller;
         private bool _ownsController;
+        private CancellationTokenSource? _announcementCancellation;
 
         private ExpansionTile CurrentWidget => (ExpansionTile)StateWidget;
 
@@ -151,23 +163,27 @@ public sealed class ExpansionTile : StatefulWidget
 
         public override void Dispose()
         {
+            _announcementCancellation?.Cancel();
+            _announcementCancellation?.Dispose();
+            _announcementCancellation = null;
             DetachController();
         }
 
         public override Widget Build(BuildContext context)
         {
-            var expansionTheme = ExpansionTileTheme.Of(context);
-            var animationStyle = CurrentWidget.ExpansionAnimationStyle
-                                 ?? expansionTheme.ExpansionAnimationStyle
-                                 ?? new ExpansionAnimationStyle();
+            ExpansionTileThemeData expansionTheme = ExpansionTileTheme.Of(context);
+            AnimationStyle animationStyle = CurrentWidget.ExpansionAnimationStyle
+                                            ?? expansionTheme.ExpansionAnimationStyle
+                                            ?? new AnimationStyle(
+                                                Duration: TimeSpan.FromMilliseconds(200),
+                                                Curve: Curves.EaseIn);
 
             return new Expansible(
                 controller: _controller!,
-                duration: animationStyle.Duration ?? TimeSpan.FromMilliseconds(200),
-                curve: animationStyle.Curve ?? Curves.EaseIn,
-                reverseCurve: animationStyle.ReverseCurve,
+                animationStyle: animationStyle,
                 maintainState: CurrentWidget.MaintainState,
-                headerBuilder: (buildContext, animation) => BuildHeader(buildContext, animation, expansionTheme),
+                headerBuilder: (buildContext, animation) =>
+                    BuildHeader(buildContext, animation, expansionTheme),
                 bodyBuilder: (buildContext, animation) => BuildBody(expansionTheme),
                 expansibleBuilder: (buildContext, header, body, animation) =>
                     BuildExpansible(header, body, animation, expansionTheme));
@@ -175,90 +191,90 @@ public sealed class ExpansionTile : StatefulWidget
 
         private Widget BuildHeader(
             BuildContext context,
-            AnimationController animation,
+            Animation<double> animation,
             ExpansionTileThemeData expansionTheme)
         {
-            var theme = Theme.Of(context);
+            ThemeData theme = Theme.Of(context);
+            ExpansionTileThemeData defaults = ResolveDefaults(theme);
             double progress = Curves.EaseIn(animation.Value);
-            var expandedTextColor = CurrentWidget.TextColor
-                                    ?? expansionTheme.TextColor
-                                    ?? (theme.UseMaterial3 ? theme.OnSurfaceColor : theme.PrimaryColor);
-            var collapsedTextColor = CurrentWidget.CollapsedTextColor
-                                     ?? expansionTheme.CollapsedTextColor
-                                     ?? theme.OnSurfaceColor;
-            var expandedIconColor = CurrentWidget.IconColor
-                                    ?? expansionTheme.IconColor
-                                    ?? theme.PrimaryColor;
-            var collapsedIconColor = CurrentWidget.CollapsedIconColor
-                                     ?? expansionTheme.CollapsedIconColor
-                                     ?? (theme.UseMaterial3
-                                         ? theme.OnSurfaceVariantColor
-                                         : ApplyOpacity(theme.OnSurfaceColor, 0.54));
-            var textColor = LerpColor(collapsedTextColor, expandedTextColor, progress);
-            var iconColor = LerpColor(collapsedIconColor, expandedIconColor, progress);
-            var affinity = ResolveAffinity(expansionTheme);
-            var arrow = BuildArrow(animation, iconColor);
-            var leading = affinity == ListTileControlAffinity.Leading
+            Color expandedTextColor = CurrentWidget.TextColor
+                                      ?? expansionTheme.TextColor
+                                      ?? defaults.TextColor!.Value;
+            Color collapsedTextColor = CurrentWidget.CollapsedTextColor
+                                       ?? expansionTheme.CollapsedTextColor
+                                       ?? defaults.CollapsedTextColor!.Value;
+            Color expandedIconColor = CurrentWidget.IconColor
+                                      ?? expansionTheme.IconColor
+                                      ?? defaults.IconColor!.Value;
+            Color collapsedIconColor = CurrentWidget.CollapsedIconColor
+                                       ?? expansionTheme.CollapsedIconColor
+                                       ?? defaults.CollapsedIconColor!.Value;
+            Color textColor = LerpColor(collapsedTextColor, expandedTextColor, progress);
+            Color iconColor = LerpColor(collapsedIconColor, expandedIconColor, progress);
+            ListTileControlAffinity affinity = ResolveAffinity();
+            Widget arrow = BuildArrow(animation, iconColor);
+            Widget? leading = affinity == ListTileControlAffinity.Leading
                 ? CurrentWidget.Leading ?? arrow
                 : CurrentWidget.Leading;
-            Widget? trailing = null;
-            if (CurrentWidget.ShowTrailingIcon)
-            {
-                trailing = affinity == ListTileControlAffinity.Trailing
+            Widget? trailing = CurrentWidget.ShowTrailingIcon
+                ? affinity == ListTileControlAffinity.Trailing
                     ? CurrentWidget.Trailing ?? arrow
-                    : CurrentWidget.Trailing;
-            }
+                    : CurrentWidget.Trailing
+                : null;
 
-            var tile = new ListTile(
-                enabled: CurrentWidget.Enabled,
-                onTap: CurrentWidget.Enabled
-                    ? (_controller!.IsExpanded ? _controller.Collapse : _controller.Expand)
-                    : null,
-                dense: CurrentWidget.Dense ?? expansionTheme.Dense,
-                splashColor: CurrentWidget.SplashColor,
-                enableFeedback: CurrentWidget.EnableFeedback ?? expansionTheme.EnableFeedback,
-                contentPadding: CurrentWidget.TilePadding
-                                ?? expansionTheme.TilePadding
-                                ?? new Thickness(16, 0),
-                leading: leading,
-                title: CurrentWidget.Title,
-                subtitle: CurrentWidget.Subtitle,
-                trailing: trailing,
-                minTileHeight: CurrentWidget.MinTileHeight ?? expansionTheme.MinTileHeight,
-                textColor: textColor,
-                iconColor: iconColor);
+            Widget child = ListTileTheme.Merge(
+                iconColor: MaterialStateProperty<Color?>.All(iconColor),
+                textColor: MaterialStateProperty<Color?>.All(textColor),
+                child: new ListTile(
+                    enabled: CurrentWidget.Enabled,
+                    onTap: _controller!.IsExpanded ? _controller.Collapse : _controller.Expand,
+                    dense: CurrentWidget.Dense,
+                    splashColor: CurrentWidget.SplashColor,
+                    visualDensity: CurrentWidget.VisualDensity,
+                    enableFeedback: CurrentWidget.EnableFeedback,
+                    contentPadding: CurrentWidget.TilePadding ?? expansionTheme.TilePadding,
+                    leading: leading,
+                    title: CurrentWidget.Title,
+                    subtitle: CurrentWidget.Subtitle,
+                    trailing: trailing,
+                    minTileHeight: CurrentWidget.MinTileHeight,
+                    internalAddSemanticForOnTap: CurrentWidget.InternalAddSemanticForOnTap,
+                    statesController: CurrentWidget.StatesController));
 
-            var flags = SemanticsFlags.HasExpandedState;
-            if (_controller!.IsExpanded)
-            {
-                flags |= SemanticsFlags.IsExpanded;
-            }
-
-            if (CurrentWidget.Enabled)
-            {
-                flags |= SemanticsFlags.IsEnabled;
-            }
-
-            return new Semantics(
-                child: tile,
-                flags: flags,
-                onTap: CurrentWidget.Enabled
-                    ? (_controller.IsExpanded ? _controller.Collapse : _controller.Expand)
-                    : null,
-                container: true);
+            MaterialLocalizations localizations = MaterialLocalizations.Of(context);
+            string onTapHint = _controller.IsExpanded
+                ? localizations.ExpansionTileExpandedTapHint
+                : localizations.ExpansionTileCollapsedTapHint;
+            TargetPlatform platform = PlatformDefaults.TargetPlatform;
+            string semanticsHint = platform is TargetPlatform.IOS or TargetPlatform.MacOS
+                ? _controller.IsExpanded
+                    ? $"{localizations.CollapsedHint}\n {localizations.ExpansionTileExpandedHint}"
+                    : $"{localizations.ExpandedHint}\n {localizations.ExpansionTileCollapsedHint}"
+                : _controller.IsExpanded
+                    ? localizations.CollapsedHint
+                    : localizations.ExpandedHint;
+            child = new Semantics(
+                hint: semanticsHint,
+                onTapHint: onTapHint,
+                child: child);
+            return platform == TargetPlatform.Android
+                ? new Semantics(
+                    label: semanticsHint,
+                    liveRegion: true,
+                    child: child)
+                : child;
         }
 
         private Widget BuildBody(ExpansionTileThemeData expansionTheme)
         {
             Widget body = new Column(
                 crossAxisAlignment: CurrentWidget.ExpandedCrossAxisAlignment
-                                    ?? expansionTheme.ExpandedCrossAxisAlignment
                                     ?? CrossAxisAlignment.Center,
                 children: CurrentWidget.Children);
             body = new Padding(
                 CurrentWidget.ChildrenPadding
                 ?? expansionTheme.ChildrenPadding
-                ?? default,
+                ?? EdgeInsetsGeometry.Zero,
                 body);
             return new Align(
                 alignment: CurrentWidget.ExpandedAlignment
@@ -270,66 +286,86 @@ public sealed class ExpansionTile : StatefulWidget
         private Widget BuildExpansible(
             Widget header,
             Widget body,
-            AnimationController animation,
+            Animation<double> animation,
             ExpansionTileThemeData expansionTheme)
         {
-            double backgroundProgress = Curves.EaseOut(animation.Value);
-            var collapsedBackground = CurrentWidget.CollapsedBackgroundColor
-                                      ?? expansionTheme.CollapsedBackgroundColor
-                                      ?? Colors.Transparent;
-            var expandedBackground = CurrentWidget.BackgroundColor
-                                     ?? expansionTheme.BackgroundColor
-                                     ?? Colors.Transparent;
-            var background = LerpColor(collapsedBackground, expandedBackground, backgroundProgress);
-            var collapsedShape = CurrentWidget.CollapsedShape
-                                 ?? expansionTheme.CollapsedShape
-                                 ?? BorderRadius.Zero;
-            var expandedShape = CurrentWidget.Shape
-                                ?? expansionTheme.Shape
-                                ?? BorderRadius.Zero;
-            var shape = LerpBorderRadius(collapsedShape, expandedShape, backgroundProgress);
-
-            Widget result = new Column(
-                mainAxisSize: MainAxisSize.Min,
-                children: [header, body]);
-            result = new DecoratedBox(
-                decoration: new BoxDecoration(
-                    Color: background,
-                    BorderRadius: shape),
-                child: result);
-
-            var clip = CurrentWidget.ClipBehavior
-                       ?? expansionTheme.ClipBehavior
-                       ?? Clip.AntiAlias;
-            if (clip != Clip.None && shape != BorderRadius.Zero)
+            ThemeData theme = Theme.Of(Context);
+            double progress = Curves.EaseOut(animation.Value);
+            Color? background = MaterialThemeLerp.Color(
+                CurrentWidget.CollapsedBackgroundColor ?? expansionTheme.CollapsedBackgroundColor,
+                CurrentWidget.BackgroundColor ?? expansionTheme.BackgroundColor,
+                progress);
+            Color backgroundColor = background ?? expansionTheme.BackgroundColor ?? Colors.Transparent;
+            ShapeBorder collapsedShape = CurrentWidget.CollapsedShape
+                                         ?? expansionTheme.CollapsedShape
+                                         ?? ShapeBorder.Border(
+                                             top: new BorderSide(Colors.Transparent),
+                                             bottom: new BorderSide(Colors.Transparent));
+            ShapeBorder expandedShape = CurrentWidget.Shape
+                                        ?? expansionTheme.Shape
+                                        ?? ShapeBorder.Border(
+                                            top: new BorderSide(theme.DividerColor),
+                                            bottom: new BorderSide(theme.DividerColor));
+            ShapeBorder expansionTileBorder = MaterialThemeLerp.Shape(collapsedShape, expandedShape, progress)!;
+            Clip clipBehavior = CurrentWidget.ClipBehavior
+                                ?? expansionTheme.ClipBehavior
+                                ?? Clip.AntiAlias;
+            Widget tile = new Padding(
+                expansionTileBorder.Padding,
+                new Column(
+                    mainAxisSize: MainAxisSize.Min,
+                    children: [header, body]));
+            bool isShapeProvided = CurrentWidget.Shape is not null
+                                   || expansionTheme.Shape is not null
+                                   || CurrentWidget.CollapsedShape is not null
+                                   || expansionTheme.CollapsedShape is not null;
+            if (isShapeProvided)
             {
-                result = new ClipRRect(shape, result);
+                return new Material(
+                    clipBehavior: clipBehavior,
+                    color: backgroundColor,
+                    shape: expansionTileBorder,
+                    child: tile);
             }
 
-            return result;
+            if (backgroundColor.A > 0)
+            {
+                tile = new Material(type: MaterialType.Transparency, child: tile);
+            }
+
+            return new DecoratedBox(
+                decoration: new ShapeDecoration(expansionTileBorder, backgroundColor),
+                child: tile);
         }
 
-        private Widget BuildArrow(AnimationController animation, Color color)
+        private static ExpansionTileThemeData ResolveDefaults(ThemeData theme)
         {
-            const double iconSize = 24;
-            double center = iconSize / 2;
-            double angle = Math.PI * Curves.EaseIn(animation.Value);
-            double cos = Math.Cos(angle);
-            double sin = Math.Sin(angle);
-            var rotation = new Matrix(cos, sin, -sin, cos, 0, 0);
-            return new Plumix.Widgets.Transform(
-                transform: Matrix.CreateTranslation(center, center)
-                           * rotation
-                           * Matrix.CreateTranslation(-center, -center),
-                child: new Icon(Icons.ExpandMore, size: iconSize, color: color));
+            return theme.UseMaterial3
+                ? new ExpansionTileThemeData(
+                    TextColor: theme.ColorScheme.OnSurface,
+                    IconColor: theme.ColorScheme.Primary,
+                    CollapsedTextColor: theme.ColorScheme.OnSurface,
+                    CollapsedIconColor: theme.ColorScheme.OnSurfaceVariant)
+                : new ExpansionTileThemeData(
+                    TextColor: theme.ColorScheme.Primary,
+                    IconColor: theme.ColorScheme.Primary,
+                    CollapsedTextColor: theme.TextTheme.TitleMedium.Color,
+                    CollapsedIconColor: theme.UnselectedWidgetColor);
         }
 
-        private ListTileControlAffinity ResolveAffinity(ExpansionTileThemeData expansionTheme)
+        private Widget BuildArrow(Animation<double> animation, Color color)
         {
-            var affinity = CurrentWidget.ControlAffinity
-                           ?? expansionTheme.ControlAffinity
-                           ?? ListTileTheme.Of(Context).ControlAffinity
-                           ?? ListTileControlAffinity.Trailing;
+            double turns = Curves.EaseIn(animation.Value) * 0.5;
+            return new RotationTransition(
+                turns: new ConstantAnimation<double>(turns, animation.Status),
+                child: new Icon(Icons.ExpandMore, color: color));
+        }
+
+        private ListTileControlAffinity ResolveAffinity()
+        {
+            ListTileControlAffinity affinity = CurrentWidget.ControlAffinity
+                                               ?? ListTileTheme.Of(Context).ControlAffinity
+                                               ?? ListTileControlAffinity.Trailing;
             return affinity == ListTileControlAffinity.Leading
                 ? ListTileControlAffinity.Leading
                 : ListTileControlAffinity.Trailing;
@@ -360,25 +396,56 @@ public sealed class ExpansionTile : StatefulWidget
 
         private void HandleExpansionChanged()
         {
+            AnnounceExpansionState();
             CurrentWidget.OnExpansionChanged?.Invoke(_controller!.IsExpanded);
-            SetState(() => { });
+        }
+
+        private void AnnounceExpansionState()
+        {
+            TargetPlatform platform = PlatformDefaults.TargetPlatform;
+            if (platform == TargetPlatform.Android)
+            {
+                return;
+            }
+
+            MaterialLocalizations localizations = MaterialLocalizations.Of(Context);
+            string stateHint = _controller!.IsExpanded
+                ? localizations.CollapsedHint
+                : localizations.ExpandedHint;
+            TextDirection direction = Localizations.MaybeOf<WidgetsLocalizations>(Context)?.TextDirection
+                                      ?? Directionality.Of(Context);
+            int viewId = MediaQuery.MaybeOf(Context)?.ViewId ?? 0;
+            if (platform == TargetPlatform.IOS)
+            {
+                _announcementCancellation?.Cancel();
+                _announcementCancellation?.Dispose();
+                _announcementCancellation = new CancellationTokenSource();
+                _ = SendDelayedAnnouncement(viewId, stateHint, direction, _announcementCancellation.Token);
+                return;
+            }
+
+            _ = SemanticsService.SendAnnouncement(viewId, stateHint, direction);
+        }
+
+        private static async Task SendDelayedAnnouncement(
+            int viewId,
+            string stateHint,
+            TextDirection direction,
+            CancellationToken cancellationToken)
+        {
+            try
+            {
+                await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ConfigureAwait(false);
+                await SemanticsService.SendAnnouncement(viewId, stateHint, direction).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+            }
         }
 
         private static Color LerpColor(Color from, Color to, double progress)
         {
-            return new ColorTween().Evaluate(Math.Clamp(progress, 0, 1), from, to);
-        }
-
-        private static BorderRadius LerpBorderRadius(BorderRadius from, BorderRadius to, double progress)
-        {
-            double t = Math.Clamp(progress, 0, 1);
-            return BorderRadius.Circular(from.Radius + ((to.Radius - from.Radius) * t));
-        }
-
-        private static Color ApplyOpacity(Color color, double opacity)
-        {
-            byte alpha = (byte)Math.Round(color.A * Math.Clamp(opacity, 0, 1));
-            return Color.FromArgb(alpha, color.R, color.G, color.B);
+            return new ColorTween().Evaluate(Math.Clamp(progress, 0.0, 1.0), from, to);
         }
     }
 }

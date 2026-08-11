@@ -1,4 +1,3 @@
-using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Rendering;
@@ -7,36 +6,55 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/material/expansion_tile_theme.dart
-public sealed record ExpansionAnimationStyle(
-    TimeSpan? Duration = null,
-    Curve? Curve = null,
-    Curve? ReverseCurve = null)
-{
-    public static ExpansionAnimationStyle NoAnimation { get; } = new(TimeSpan.Zero, Curves.Linear, Curves.Linear);
-}
-
+// Dart parity source: flutter/packages/flutter/lib/src/material/expansion_tile_theme.dart
 public sealed partial record ExpansionTileThemeData(
     Color? BackgroundColor = null,
     Color? CollapsedBackgroundColor = null,
-    Thickness? TilePadding = null,
-    Alignment? ExpandedAlignment = null,
-    CrossAxisAlignment? ExpandedCrossAxisAlignment = null,
-    Thickness? ChildrenPadding = null,
+    EdgeInsetsGeometry? TilePadding = null,
+    AlignmentGeometry? ExpandedAlignment = null,
+    EdgeInsetsGeometry? ChildrenPadding = null,
     Color? IconColor = null,
     Color? CollapsedIconColor = null,
     Color? TextColor = null,
     Color? CollapsedTextColor = null,
-    BorderRadius? Shape = null,
-    BorderRadius? CollapsedShape = null,
+    ShapeBorder? Shape = null,
+    ShapeBorder? CollapsedShape = null,
     Clip? ClipBehavior = null,
-    ListTileControlAffinity? ControlAffinity = null,
-    bool? Dense = null,
-    double? MinTileHeight = null,
-    bool? EnableFeedback = null,
-    ExpansionAnimationStyle? ExpansionAnimationStyle = null);
+    AnimationStyle? ExpansionAnimationStyle = null)
+{
+    public ExpansionTileThemeData CopyWith(
+        Color? backgroundColor = null,
+        Color? collapsedBackgroundColor = null,
+        EdgeInsetsGeometry? tilePadding = null,
+        AlignmentGeometry? expandedAlignment = null,
+        EdgeInsetsGeometry? childrenPadding = null,
+        Color? iconColor = null,
+        Color? collapsedIconColor = null,
+        Color? textColor = null,
+        Color? collapsedTextColor = null,
+        ShapeBorder? shape = null,
+        ShapeBorder? collapsedShape = null,
+        Clip? clipBehavior = null,
+        AnimationStyle? expansionAnimationStyle = null)
+    {
+        return new ExpansionTileThemeData(
+            BackgroundColor: backgroundColor ?? BackgroundColor,
+            CollapsedBackgroundColor: collapsedBackgroundColor ?? CollapsedBackgroundColor,
+            TilePadding: tilePadding ?? TilePadding,
+            ExpandedAlignment: expandedAlignment ?? ExpandedAlignment,
+            ChildrenPadding: childrenPadding ?? ChildrenPadding,
+            IconColor: iconColor ?? IconColor,
+            CollapsedIconColor: collapsedIconColor ?? CollapsedIconColor,
+            TextColor: textColor ?? TextColor,
+            CollapsedTextColor: collapsedTextColor ?? CollapsedTextColor,
+            Shape: shape ?? Shape,
+            CollapsedShape: collapsedShape ?? CollapsedShape,
+            ClipBehavior: clipBehavior ?? ClipBehavior,
+            ExpansionAnimationStyle: expansionAnimationStyle ?? ExpansionAnimationStyle);
+    }
+}
 
-public sealed class ExpansionTileTheme : InheritedWidget
+public sealed class ExpansionTileTheme : InheritedTheme
 {
     public ExpansionTileTheme(
         ExpansionTileThemeData data,
@@ -51,16 +69,21 @@ public sealed class ExpansionTileTheme : InheritedWidget
 
     public Widget Child { get; }
 
-    public override Widget Build(BuildContext context) => Child;
-
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
-    {
-        return !Equals(((ExpansionTileTheme)oldWidget).Data, Data);
-    }
-
     public static ExpansionTileThemeData Of(BuildContext context)
     {
         return context.DependOnInherited<ExpansionTileTheme>()?.Data
                ?? Theme.Of(context).ExpansionTileTheme;
+    }
+
+    public override Widget Build(BuildContext context) => Child;
+
+    public override Widget Wrap(BuildContext context, Widget child)
+    {
+        return new ExpansionTileTheme(Data, child);
+    }
+
+    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    {
+        return !Equals(((ExpansionTileTheme)oldWidget).Data, Data);
     }
 }

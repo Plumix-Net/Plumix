@@ -244,7 +244,10 @@ public sealed class Material : StatefulWidget
 
             var visual = Evaluate();
             Widget content = CurrentWidget.Child ?? new SizedBox();
-            if (CurrentWidget.BorderOnForeground && visual.Shape.Side is { Width: > 0 } foregroundBorder)
+            BorderSide? foregroundBorder = visual.Shape.BorderSides is null ? visual.Shape.Side : null;
+            BoxBorder? foregroundBorderSides = visual.Shape.BorderSides;
+            if (CurrentWidget.BorderOnForeground
+                && (foregroundBorder is { Width: > 0 } || foregroundBorderSides is not null))
             {
                 content = new Stack(
                     fit: StackFit.Passthrough,
@@ -259,6 +262,7 @@ public sealed class Material : StatefulWidget
                             child: new DecoratedBox(
                                 new BoxDecoration(
                                     Border: foregroundBorder,
+                                    BorderSides: foregroundBorderSides,
                                     BorderRadius: visual.Shape.BorderRadius,
                                     Shape: visual.Shape.Shape),
                                 new SizedBox()))
@@ -280,11 +284,18 @@ public sealed class Material : StatefulWidget
                         content);
             }
 
-            var backgroundBorder = CurrentWidget.BorderOnForeground ? null : visual.Shape.Side;
+            BorderSide? backgroundBorder = CurrentWidget.BorderOnForeground
+                || visual.Shape.BorderSides is not null
+                    ? null
+                    : visual.Shape.Side;
+            BoxBorder? backgroundBorderSides = CurrentWidget.BorderOnForeground
+                ? null
+                : visual.Shape.BorderSides;
             content = new DecoratedBox(
                 new BoxDecoration(
                     Color: visual.Color,
                     Border: backgroundBorder,
+                    BorderSides: backgroundBorderSides,
                     BorderRadius: visual.Shape.BorderRadius,
                     BoxShadows: MaterialSurface.BuildBoxShadows(visual.ShadowColor, visual.Elevation),
                     Shape: visual.Shape.Shape),
@@ -357,6 +368,7 @@ public sealed class Material : StatefulWidget
                 effectiveShape = new ShapeBorder(material.BorderRadius.Value, effectiveShape.Side)
                 {
                     Shape = effectiveShape.Shape,
+                    BorderSides = effectiveShape.BorderSides,
                 };
             }
 
@@ -392,10 +404,7 @@ public sealed class Material : StatefulWidget
             BorderRadius radius = new(
                 begin.Shape.BorderRadius.Radius
                 + ((end.Shape.BorderRadius.Radius - begin.Shape.BorderRadius.Radius) * clampedT));
-            var shape = new ShapeBorder(radius, clampedT < 0.5 ? begin.Shape.Side : end.Shape.Side)
-            {
-                Shape = clampedT < 0.5 ? begin.Shape.Shape : end.Shape.Shape,
-            };
+            ShapeBorder shape = MaterialThemeLerp.Shape(begin.Shape, end.Shape, clampedT)!;
             return new MaterialVisual(
                 color,
                 shadow,

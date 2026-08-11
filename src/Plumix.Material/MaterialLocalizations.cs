@@ -66,6 +66,18 @@ public abstract class MaterialLocalizations
 
     public virtual string CollapsedIconTapHint => "Expand";
 
+    public virtual string ExpansionTileExpandedHint => "double tap to collapse";
+
+    public virtual string ExpansionTileCollapsedHint => "double tap to expand";
+
+    public virtual string ExpansionTileExpandedTapHint => "Collapse";
+
+    public virtual string ExpansionTileCollapsedTapHint => "Expand for more details";
+
+    public virtual string ExpandedHint => "Collapsed";
+
+    public virtual string CollapsedHint => "Expanded";
+
     public virtual string ContinueButtonLabel => "Continue";
 
     public virtual string CancelButtonLabel => "Cancel";

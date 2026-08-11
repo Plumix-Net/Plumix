@@ -30,7 +30,7 @@ public enum IconAlignment
 
 public delegate Widget ButtonLayerBuilder(BuildContext context, MaterialState states, Widget? child);
 
-public sealed class MaterialStatesController : ChangeNotifier
+public class MaterialStatesController : ChangeNotifier
 {
     private MaterialState _value;
 
@@ -53,6 +53,13 @@ public sealed class MaterialStatesController : ChangeNotifier
     public void Update(MaterialState state, bool add)
     {
         Value = add ? Value | state : Value & ~state;
+    }
+}
+
+public sealed class WidgetStatesController : MaterialStatesController
+{
+    public WidgetStatesController(MaterialState value = MaterialState.None) : base(value)
+    {
     }
 }
 

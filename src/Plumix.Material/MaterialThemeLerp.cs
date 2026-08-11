@@ -86,6 +86,7 @@ internal static class MaterialThemeLerp
         return new ShapeBorder(radius, side)
         {
             Shape = t < 0.5 ? a.Shape : b.Shape,
+            BorderSides = BoxBorder.Lerp(a.BorderSides, b.BorderSides, t),
         };
     }
 
@@ -305,7 +306,29 @@ internal static class MaterialThemeLerp
             side)
         {
             Shape = shape.Shape,
+            BorderSides = ScaleBoxBorder(shape.BorderSides, clampedFactor),
         };
+    }
+
+    private static BoxBorder? ScaleBoxBorder(BoxBorder? border, double factor)
+    {
+        if (border is null)
+        {
+            return null;
+        }
+
+        return new BoxBorder(
+            Left: ScaleBorderSide(border.Left, factor),
+            Top: ScaleBorderSide(border.Top, factor),
+            Right: ScaleBorderSide(border.Right, factor),
+            Bottom: ScaleBorderSide(border.Bottom, factor));
+    }
+
+    private static BorderSide? ScaleBorderSide(BorderSide? side, double factor)
+    {
+        return side.HasValue
+            ? new BorderSide(side.Value.Color, side.Value.Width * factor, side.Value.Style)
+            : null;
     }
 
     private static double LerpConstraint(double a, double b, double t)

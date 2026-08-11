@@ -104,34 +104,39 @@ class _RadioExpansionTileDemoPageState
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
                 _buildRadioGroup(),
-                ExpansionTile(
-                  title: const Text('Advanced schedule options'),
-                  subtitle: const Text('Tap row or use the controller button.'),
-                  leading: const Icon(Icons.info_outline),
-                  controller: _expansionController,
-                  controlAffinity: _affinity,
-                  maintainState: _maintainState,
-                  backgroundColor: const Color(0xFFF0E8FF),
-                  collapsedBackgroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  collapsedShape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  onExpansionChanged: (bool value) =>
-                      setState(() => _expanded = value),
-                  childrenPadding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
-                  children: const <Widget>[
-                    Text(
-                      'Sync only while charging',
-                      style: TextStyle(fontSize: 13),
+                Theme(
+                  data: _buildControlTheme(),
+                  child: ExpansionTile(
+                    title: const Text('Advanced schedule options'),
+                    subtitle: const Text(
+                      'Tap row or use the controller button.',
                     ),
-                    Text(
-                      'Retry window: 15 minutes',
-                      style: TextStyle(fontSize: 13),
+                    leading: const Icon(Icons.info_outline),
+                    controller: _expansionController,
+                    controlAffinity: _affinity,
+                    maintainState: _maintainState,
+                    backgroundColor: const Color(0xFFF0E8FF),
+                    collapsedBackgroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                  ],
+                    collapsedShape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    onExpansionChanged: (bool value) =>
+                        setState(() => _expanded = value),
+                    childrenPadding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+                    children: const <Widget>[
+                      Text(
+                        'Sync only while charging',
+                        style: TextStyle(fontSize: 13),
+                      ),
+                      Text(
+                        'Retry window: 15 minutes',
+                        style: TextStyle(fontSize: 13),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -142,20 +147,8 @@ class _RadioExpansionTileDemoPageState
   }
 
   Widget _buildRadioGroup() {
-    final ThemeData ambient = Theme.of(context);
-    final ColorScheme radioScheme = ambient.colorScheme.copyWith(
-      primary: const Color(0xFF6750A4),
-      secondary: const Color(0xFF006C4C),
-      onSurface: const Color(0xFF1D1B20),
-      onSurfaceVariant: const Color(0xFF49454F),
-    );
-    final ThemeData radioTheme = ThemeData.from(
-      colorScheme: radioScheme,
-      textTheme: ambient.textTheme,
-      useMaterial3: _useMaterial3,
-    );
     return Theme(
-      data: radioTheme,
+      data: _buildControlTheme(),
       child: RadioGroup<String>(
         groupValue: _selectedSchedule,
         onChanged: (String? value) => setState(() => _selectedSchedule = value),
@@ -173,6 +166,21 @@ class _RadioExpansionTileDemoPageState
           ],
         ),
       ),
+    );
+  }
+
+  ThemeData _buildControlTheme() {
+    final ThemeData ambient = Theme.of(context);
+    final ColorScheme controlScheme = ambient.colorScheme.copyWith(
+      primary: const Color(0xFF6750A4),
+      secondary: const Color(0xFF006C4C),
+      onSurface: const Color(0xFF1D1B20),
+      onSurfaceVariant: const Color(0xFF49454F),
+    );
+    return ThemeData.from(
+      colorScheme: controlScheme,
+      textTheme: ambient.textTheme,
+      useMaterial3: _useMaterial3,
     );
   }
 

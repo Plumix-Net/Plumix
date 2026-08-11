@@ -282,10 +282,11 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
         Assert.NotNull(FindParagraphByText(harness.RenderView, "Expanded body"));
         var expandedNode = FindFirstSemanticsNode(
             semantics!,
-            node => node.Flags.HasFlag(SemanticsFlags.HasExpandedState));
+            node => node.OnTapHint == DefaultMaterialLocalizations.Instance.ExpansionTileExpandedTapHint);
         Assert.NotNull(expandedNode);
-        Assert.True(expandedNode!.Flags.HasFlag(SemanticsFlags.IsExpanded));
-        Assert.True(expandedNode.Actions.HasFlag(SemanticsActions.Tap));
+        Assert.Equal(
+            DefaultMaterialLocalizations.Instance.ExpansionTileExpandedTapHint,
+            expandedNode!.OnTapHint);
     }
 
     [Fact]
@@ -373,8 +374,9 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
         {
             ExpansionTileTheme = new ExpansionTileThemeData(
                 BackgroundColor: themeBackground,
-                ControlAffinity: ListTileControlAffinity.Leading,
-                IconColor: Colors.ForestGreen)
+                IconColor: Colors.ForestGreen),
+            ListTileTheme = new ListTileThemeData(
+                ControlAffinity: ListTileControlAffinity.Leading)
         };
         using var harness = new WidgetRenderHarness(
             BuildThemed(
@@ -388,7 +390,7 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
         harness.Pump(new Size(360, 240));
 
         var background = FindDescendants<RenderDecoratedBox>(harness.RenderView)
-            .FirstOrDefault(box => box.Decoration.Color == widgetBackground);
+            .FirstOrDefault(box => DecorationColor(box) == widgetBackground);
         Assert.NotNull(background);
         string iconGlyph = char.ConvertFromUtf32(Icons.ExpandMore.CodePoint);
         Assert.NotNull(FindParagraphByText(harness.RenderView, iconGlyph));
@@ -412,7 +414,7 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
 
         Assert.Contains(
             FindDescendants<RenderDecoratedBox>(harness.RenderView),
-            box => box.Decoration.Color == collapsedBackground);
+            box => DecorationColor(box) == collapsedBackground);
         var icon = FindParagraphByText(harness.RenderView, char.ConvertFromUtf32(Icons.ExpandMore.CodePoint));
         Assert.NotNull(icon);
         Assert.Equal(collapsedIcon, Assert.IsType<SolidColorBrush>(icon!.Foreground).Color);
@@ -434,6 +436,311 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
 
         Assert.False(controller.IsExpanded);
         Assert.Null(FindParagraphByText(harness.RenderView, "Hidden body"));
+    }
+
+    [Fact]
+    public void ExpansionTile_SourceDefaultsAndHeaderParameters_AreForwarded()
+    {
+        var statesController = new WidgetStatesController();
+        var density = new VisualDensity(-2.0, -1.0);
+        var splash = Color.Parse("#FF123456");
+        var tile = new ExpansionTile(
+            title: new Text("Forwarded header"),
+            dense: true,
+            splashColor: splash,
+            visualDensity: density,
+            enableFeedback: false,
+            statesController: statesController);
+
+        Assert.False(tile.InitiallyExpanded);
+        Assert.False(tile.MaintainState);
+        Assert.True(tile.ShowTrailingIcon);
+        Assert.True(tile.Enabled);
+        Assert.False(tile.InternalAddSemanticForOnTap);
+        Assert.False(tile.EnableFeedback);
+        Assert.True(new ExpansionTile(title: new Text("Defaults")).EnableFeedback);
+
+        using var harness = new WidgetRenderHarness(BuildThemed(tile));
+        harness.Pump(new Size(360, 160));
+
+        ListTile header = Assert.Single(harness.FindWidgets<ListTile>());
+        Assert.True(header.Dense);
+        Assert.Equal(splash, header.SplashColor);
+        Assert.Equal(density, header.VisualDensity);
+        Assert.False(header.EnableFeedback);
+        Assert.Same(statesController, header.StatesController);
+        statesController.Dispose();
+    }
+
+    [Fact]
+    public void ExpansionTile_M2AndM3Defaults_ReadDirectThemeRoles()
+    {
+        Color primary = Color.Parse("#FF2255AA");
+        Color onSurface = Color.Parse("#FF112233");
+        Color onSurfaceVariant = Color.Parse("#FF445566");
+        Color m2Title = Color.Parse("#FF778899");
+        Color m2Unselected = Color.Parse("#FF667788");
+        ColorScheme scheme = ThemeData.Light.ColorScheme.CopyWith(
+            primary: primary,
+            onSurface: onSurface,
+            onSurfaceVariant: onSurfaceVariant);
+        ThemeData m3 = ThemeData.Light with
+        {
+            UseMaterial3 = true,
+            ColorScheme = scheme,
+        };
+        using (var harness = new WidgetRenderHarness(BuildThemed(
+                   new ExpansionTile(
+                       title: new Text("M3 title"),
+                       children: [new Text("M3 body")]),
+                   m3)))
+        {
+            harness.Pump(new Size(360, 180));
+            Assert.Equal(onSurface, ParagraphColor(harness.RenderView, "M3 title"));
+            Assert.Equal(
+                onSurfaceVariant,
+                ParagraphColor(harness.RenderView, char.ConvertFromUtf32(Icons.ExpandMore.CodePoint)));
+        }
+
+        ThemeData m2 = ThemeData.Light with
+        {
+            UseMaterial3 = false,
+            ColorScheme = scheme,
+            UnselectedWidgetColor = m2Unselected,
+            TextTheme = ThemeData.Light.TextTheme.CopyWith(
+                titleMedium: ThemeData.Light.TextTheme.TitleMedium.CopyWith(color: m2Title)),
+        };
+        using var m2Harness = new WidgetRenderHarness(BuildThemed(
+            new ExpansionTile(
+                title: new Text("M2 title"),
+                children: [new Text("M2 body")]),
+            m2));
+        m2Harness.Pump(new Size(360, 180));
+        Assert.Equal(m2Title, ParagraphColor(m2Harness.RenderView, "M2 title"));
+        Assert.Equal(
+            m2Unselected,
+            ParagraphColor(m2Harness.RenderView, char.ConvertFromUtf32(Icons.ExpandMore.CodePoint)));
+    }
+
+    [Fact]
+    public void ExpansionTile_DefaultAndCustomShapes_UseSourceBordersAndClip()
+    {
+        Color divider = Color.Parse("#FF884422");
+        ThemeData theme = ThemeData.Light with { DividerColor = divider };
+        using (var harness = new WidgetRenderHarness(BuildThemed(
+                   new ExpansionTile(
+                       title: new Text("Default border"),
+                       initiallyExpanded: true),
+                   theme)))
+        {
+            harness.Pump(new Size(360, 160));
+            ShapeDecoration decoration = FindDescendants<RenderDecoratedBox>(harness.RenderView)
+                .Select(box => box.DecorationValue)
+                .OfType<ShapeDecoration>()
+                .First(value => value.Shape.BorderSides is not null);
+            Assert.Equal(divider, decoration.Shape.BorderSides!.Top!.Value.Color);
+            Assert.Equal(divider, decoration.Shape.BorderSides.Bottom!.Value.Color);
+            Assert.Null(decoration.Shape.BorderSides.Left);
+            Assert.Null(decoration.Shape.BorderSides.Right);
+            Assert.Equal(new Thickness(0, 1, 0, 1), decoration.Shape.Padding);
+        }
+
+        ShapeBorder shape = ShapeBorder.RoundedRectangle(12.0);
+        using var customHarness = new WidgetRenderHarness(BuildThemed(
+            new ExpansionTile(
+                title: new Text("Custom shape"),
+                shape: shape,
+                collapsedShape: shape,
+                clipBehavior: Clip.None)));
+        customHarness.Pump(new Size(360, 160));
+        Plumix.Material.Material material = Assert.Single(
+            customHarness.FindWidgets<Plumix.Material.Material>());
+        Assert.Equal(shape, material.Shape);
+        Assert.Equal(Clip.None, material.ClipBehavior);
+    }
+
+    [Fact]
+    public void ExpansionTile_ShowTrailingIconFalse_LeavesHeaderTrailingEmpty()
+    {
+        using var harness = new WidgetRenderHarness(BuildThemed(new ExpansionTile(
+            title: new Text("No arrow"),
+            showTrailingIcon: false,
+            tilePadding: EdgeInsetsGeometry.Zero)));
+
+        harness.Pump(new Size(360, 100));
+
+        Assert.Null(Assert.Single(harness.FindWidgets<ListTile>()).Trailing);
+        Assert.Null(FindParagraphByText(harness.RenderView, char.ConvertFromUtf32(Icons.ExpandMore.CodePoint)));
+    }
+
+    [Fact]
+    public void ExpansionTileTheme_CopyLerpAndCapture_AreSourceShaped()
+    {
+        var first = new ExpansionTileThemeData(
+            TilePadding: EdgeInsetsGeometry.DirectionalOnly(start: 4.0),
+            ExpandedAlignment: AlignmentDirectional.CenterStart,
+            Shape: ShapeBorder.RoundedRectangle(4.0),
+            ClipBehavior: Clip.None,
+            ExpansionAnimationStyle: AnimationStyle.NoAnimation);
+        ExpansionTileThemeData copy = first.CopyWith(
+            backgroundColor: Colors.ForestGreen,
+            shape: ShapeBorder.RoundedRectangle(12.0));
+        ExpansionTileThemeData lerped = ExpansionTileThemeData.Lerp(first, copy, 0.5)!;
+
+        Assert.Equal(Colors.ForestGreen, copy.BackgroundColor);
+        Assert.Equal(8.0, lerped.Shape!.BorderRadius.Radius);
+        Assert.Equal(first.TilePadding, lerped.TilePadding);
+        Assert.Equal(Clip.None, lerped.ClipBehavior);
+
+        var local = new ExpansionTileTheme(first, new SizedBox());
+        Widget wrapped = local.Wrap(default, new Text("captured"));
+        Assert.Equal(first, Assert.IsType<ExpansionTileTheme>(wrapped).Data);
+    }
+
+    [Fact]
+    public void Expansible_PageStorage_RestoresExpansionFromPageStorageKey()
+    {
+        var bucket = new PageStorageBucket();
+        var key = new PageStorageKey<string>("restored-expansion");
+        using (var controller = new ExpansibleController())
+        using (var firstHarness = new WidgetRenderHarness(BuildThemed(
+                   new PageStorage(
+                       bucket,
+                       new ExpansionTile(
+                           key: key,
+                           controller: controller,
+                           title: new Text("Stored tile"),
+                           children: [new Text("Stored body")])))))
+        {
+            firstHarness.Pump(new Size(360, 180));
+            controller.Expand();
+            firstHarness.Pump(new Size(360, 180));
+            Assert.True(controller.IsExpanded);
+        }
+
+        using var restoredController = new ExpansibleController();
+        using var restoredHarness = new WidgetRenderHarness(BuildThemed(
+            new PageStorage(
+                bucket,
+                new ExpansionTile(
+                    key: key,
+                    controller: restoredController,
+                    title: new Text("Stored tile"),
+                    children: [new Text("Stored body")]))));
+        restoredHarness.Pump(new Size(360, 180));
+
+        Assert.True(restoredController.IsExpanded);
+        Assert.NotNull(FindParagraphByText(restoredHarness.RenderView, "Stored body"));
+    }
+
+    [Fact]
+    public void ExpansibleController_OfAndMaybeOf_ResolveNearestController()
+    {
+        using var controller = new ExpansibleController();
+        ExpansibleController? resolved = null;
+        ExpansibleController? optional = null;
+        using var harness = new WidgetRenderHarness(BuildThemed(new Expansible(
+            controller: controller,
+            maintainState: true,
+            headerBuilder: (context, animation) => new Text("Header"),
+            bodyBuilder: (context, animation) => new Builder(probeContext =>
+            {
+                resolved = ExpansibleController.Of(probeContext);
+                optional = ExpansibleController.MaybeOf(probeContext);
+                return new Text("Body");
+            }))));
+
+        harness.Pump(new Size(360, 120));
+
+        Assert.Same(controller, resolved);
+        Assert.Same(controller, optional);
+    }
+
+    [Theory]
+    [InlineData(ListTileControlAffinity.Platform, false)]
+    [InlineData(ListTileControlAffinity.Trailing, false)]
+    [InlineData(ListTileControlAffinity.Leading, true)]
+    public void ExpansionTile_ControlAffinity_PlacesDefaultArrowInSourceSlot(
+        ListTileControlAffinity affinity,
+        bool expectedLeading)
+    {
+        using var harness = new WidgetRenderHarness(BuildThemed(new ExpansionTile(
+            title: new Text("Affinity"),
+            controlAffinity: affinity)));
+
+        harness.Pump(new Size(360, 100));
+
+        ListTile header = Assert.Single(harness.FindWidgets<ListTile>());
+        Assert.Equal(expectedLeading, header.Leading is RotationTransition);
+        Assert.Equal(!expectedLeading, header.Trailing is RotationTransition);
+    }
+
+    [Fact]
+    public void ExpansionTile_NoAnimationAndDisabledProgrammaticExpansion_MatchSource()
+    {
+        using var controller = new ExpansibleController();
+        using var harness = new WidgetRenderHarness(BuildThemed(new ExpansionTile(
+            title: new Text("Instant tile"),
+            controller: controller,
+            enabled: false,
+            expansionAnimationStyle: AnimationStyle.NoAnimation,
+            children: [new Text("Instant body")])));
+
+        harness.Pump(new Size(360, 140));
+        controller.Expand();
+        harness.Pump(new Size(360, 140));
+
+        Assert.True(controller.IsExpanded);
+        Assert.NotNull(FindParagraphByText(harness.RenderView, "Instant body"));
+        Assert.Contains(
+            FindDescendants<RenderAlign>(harness.RenderView),
+            align => align.HeightFactor == 1.0);
+    }
+
+    [Fact]
+    public void ExpansionTile_DirectionalBodyGeometry_ResolvesInRtl()
+    {
+        using var harness = new WidgetRenderHarness(BuildThemed(new Directionality(
+            TextDirection.Rtl,
+            new ExpansionTile(
+                title: new Text("RTL tile"),
+                initiallyExpanded: true,
+                expandedAlignment: AlignmentDirectional.CenterStart,
+                childrenPadding: EdgeInsetsGeometry.DirectionalOnly(start: 10.0, end: 20.0),
+                children: [new SizedBox(width: 40, height: 20)]))));
+
+        harness.Pump(new Size(360, 160));
+
+        Assert.Contains(
+            FindDescendants<RenderPadding>(harness.RenderView),
+            padding => padding.Padding.Left == 20.0 && padding.Padding.Right == 10.0);
+        Assert.Contains(
+            FindDescendants<RenderAlign>(harness.RenderView),
+            align => align.Alignment == Alignment.CenterRight);
+    }
+
+    [Fact]
+    public void ExpansionTile_NonAndroidExpansion_AnnouncesOppositeActionState()
+    {
+        if (PlatformDefaults.TargetPlatform is TargetPlatform.Android or TargetPlatform.IOS)
+        {
+            return;
+        }
+
+        SemanticsService.ResetForTests();
+        using var controller = new ExpansibleController();
+        SemanticsAnnouncement? announcement = null;
+        SemanticsService.AnnouncementRequested += value => announcement = value;
+        using var harness = new WidgetRenderHarness(BuildThemed(new ExpansionTile(
+            title: new Text("Announced tile"),
+            controller: controller)));
+        harness.Pump(new Size(360, 100));
+
+        controller.Expand();
+
+        Assert.NotNull(announcement);
+        Assert.Equal(DefaultMaterialLocalizations.Instance.CollapsedHint, announcement!.Message);
+        SemanticsService.ResetForTests();
     }
 
     private static Widget BuildThemed(Widget child, ThemeData? theme = null)
@@ -470,6 +777,22 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
     {
         return FindDescendants<RenderParagraph>(root)
             .FirstOrDefault(paragraph => paragraph.Text == text);
+    }
+
+    private static Color ParagraphColor(RenderObject? root, string text)
+    {
+        RenderParagraph paragraph = Assert.IsType<RenderParagraph>(FindParagraphByText(root, text));
+        return Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color;
+    }
+
+    private static Color? DecorationColor(RenderDecoratedBox box)
+    {
+        return box.DecorationValue switch
+        {
+            BoxDecoration decoration => decoration.Color,
+            ShapeDecoration decoration => decoration.Color,
+            _ => null,
+        };
     }
 
     private static T? FindDescendant<T>(RenderObject? root) where T : RenderObject
@@ -544,6 +867,13 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
 
         public RenderView RenderView { get; }
 
+        public IReadOnlyList<T> FindWidgets<T>() where T : Widget
+        {
+            var widgets = new List<T>();
+            CollectWidgets(_rootElement, widgets);
+            return widgets;
+        }
+
         public void Pump(Size size)
         {
             _owner.FlushBuild();
@@ -562,6 +892,16 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
         }
 
         public void Dispose() => _rootElement.Unmount();
+
+        private static void CollectWidgets<T>(Element element, List<T> widgets) where T : Widget
+        {
+            if (element.Widget is T typed)
+            {
+                widgets.Add(typed);
+            }
+
+            element.VisitChildren(child => CollectWidgets(child, widgets));
+        }
 
         private sealed class HarnessRootElement : Element, IRenderObjectHost
         {

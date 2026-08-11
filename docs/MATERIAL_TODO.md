@@ -2,7 +2,7 @@
 
 Widgets and subsystems from Flutter's Material library (`packages/flutter/lib/src/material`) that are **not yet ported** to `src/Plumix.Material`. Pick one, claim it, and submit a PR.
 
-Last verified against Flutter source and `src/Plumix.Material`: **2026-08-09**.
+Last verified against Flutter source and `src/Plumix.Material`: **2026-08-11**.
 
 ## How to claim and deliver
 
@@ -22,7 +22,7 @@ Size legend: **S** — one focused widget, few states. **M** — widget family o
 
 | Subsystem | Flutter source | Size | Notes |
 | --- | --- | --- | --- |
-| `ColorScheme` + `Typography` closeout | `color_scheme.dart`, `typography.dart`, `text_theme.dart`, component defaults | L | The Material 3 role model, HCT seed generation, 2014/2018/2021 type scales, exact platform themes, locale-script geometry, and `ThemeData` projection now exist; navigation surfaces, bottom/FAB surfaces, progress indicators, `MaterialBanner`, `Scrollbar`, `IconButton`, `ExpandIcon`, `ListTile`, `Card`, `Divider`, `Badge`, `RefreshIndicator`, `CircleAvatar`, `DrawerHeader`, `Checkbox`, `Switch`, `Radio`/`RadioListTile`, and the `TextButton`/`ElevatedButton`/`OutlinedButton`/`FilledButton` families have direct-token/theme-lerp closeouts. Remaining work is the other component families. See `docs/ai/notes/material-2026-07-29-color-scheme-typography-foundation.md`. |
+| `ColorScheme` + `Typography` closeout | `color_scheme.dart`, `typography.dart`, `text_theme.dart`, component defaults | L | The Material 3 role model, HCT seed generation, 2014/2018/2021 type scales, exact platform themes, locale-script geometry, and `ThemeData` projection now exist; navigation surfaces, bottom/FAB surfaces, progress indicators, `MaterialBanner`, `Scrollbar`, `IconButton`, `ExpandIcon`, `ExpansionTile`, `ListTile`, `Card`, `Divider`, `Badge`, `RefreshIndicator`, `CircleAvatar`, `DrawerHeader`, `Checkbox`, `Switch`, `Radio`/`RadioListTile`, and the `TextButton`/`ElevatedButton`/`OutlinedButton`/`FilledButton` families have direct-token/theme-lerp closeouts. Remaining work is the other component families. See `docs/ai/notes/material-2026-07-29-color-scheme-typography-foundation.md`. |
 
 ## Not listed / out of scope
 

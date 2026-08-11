@@ -348,6 +348,23 @@ public sealed record ShapeBorder(
 {
     public BoxShape Shape { get; init; } = BoxShape.Rectangle;
 
+    public BoxBorder? BorderSides { get; init; }
+
+    public BoxBorder? EffectiveBorderSides => BorderSides ?? (Side.HasValue ? BoxBorder.All(Side.Value) : null);
+
+    public Thickness Padding
+    {
+        get
+        {
+            BoxBorder? sides = EffectiveBorderSides;
+            return new Thickness(
+                sides?.Left?.Width ?? 0.0,
+                sides?.Top?.Width ?? 0.0,
+                sides?.Right?.Width ?? 0.0,
+                sides?.Bottom?.Width ?? 0.0);
+        }
+    }
+
     public static ShapeBorder RoundedRectangle(double radius, BorderSide? side = null)
     {
         return new ShapeBorder(BorderRadius.Circular(radius), side);
@@ -359,6 +376,18 @@ public sealed record ShapeBorder(
     public static ShapeBorder Stadium(BorderSide? side = null) =>
         new(BorderRadius.Circular(9999), side);
 
+    public static ShapeBorder Border(
+        BorderSide? left = null,
+        BorderSide? top = null,
+        BorderSide? right = null,
+        BorderSide? bottom = null)
+    {
+        return new ShapeBorder(BorderRadius.Zero)
+        {
+            BorderSides = new BoxBorder(left, top, right, bottom),
+        };
+    }
+
     public static implicit operator ShapeBorder(BorderRadius borderRadius) =>
         new(borderRadius);
 }
@@ -369,12 +398,11 @@ public sealed record ShapeDecoration(
 {
     public override BoxPainter CreateBoxPainter(Action? onChanged = null)
     {
-        var border = Shape.Side;
         return new BoxDecoration(
             Color: Color,
             BorderRadius: Shape.BorderRadius,
             Shape: Shape.Shape,
-            BorderSides: border.HasValue ? BoxBorder.All(border.Value) : null)
+            BorderSides: Shape.EffectiveBorderSides)
             .CreateBoxPainter(onChanged);
     }
 
@@ -385,14 +413,39 @@ public sealed record ShapeDecoration(
             return base.LerpFrom(a, t);
         }
 
+        var shape = new ShapeBorder(
+            BorderRadius.Lerp(from.Shape.BorderRadius, Shape.BorderRadius, t)!.Value,
+            MaterialBorderSideLerp.Lerp(from.Shape.Side, Shape.Side, t))
+        {
+            Shape = t < 0.5 ? from.Shape.Shape : Shape.Shape,
+            BorderSides = BoxBorder.Lerp(from.Shape.BorderSides, Shape.BorderSides, t),
+        };
         return new ShapeDecoration(
-            Shape: new ShapeBorder(
-                BorderRadius.Lerp(from.Shape.BorderRadius, Shape.BorderRadius, t)!.Value,
-                t < 0.5 ? from.Shape.Side : Shape.Side)
-            {
-                Shape = t < 0.5 ? from.Shape.Shape : Shape.Shape
-            },
+            Shape: shape,
             Color: BoxDecoration.LerpColor(from.Color, Color, t));
+    }
+}
+
+internal static class MaterialBorderSideLerp
+{
+    public static BorderSide? Lerp(BorderSide? a, BorderSide? b, double t)
+    {
+        if (!a.HasValue && !b.HasValue)
+        {
+            return null;
+        }
+
+        BorderSide from = a ?? TransparentSide(b!.Value);
+        BorderSide to = b ?? TransparentSide(a!.Value);
+        return new BorderSide(
+            BoxDecoration.LerpColor(from.Color, to.Color, t)!.Value,
+            from.Width + ((to.Width - from.Width) * t),
+            t < 0.5 ? from.Style : to.Style);
+    }
+
+    private static BorderSide TransparentSide(BorderSide side)
+    {
+        return new BorderSide(Color.FromArgb(0, side.Color.R, side.Color.G, side.Color.B), 0.0, side.Style);
     }
 }
 

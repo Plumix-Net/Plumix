@@ -1,9 +1,11 @@
 using Plumix.Foundation;
 using Plumix.Rendering;
 
+#pragma warning disable CS0618
+
 namespace Plumix.Widgets;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/widgets/expansible.dart
+// Dart parity source: flutter/packages/flutter/lib/src/widgets/expansible.dart
 public class ExpansibleController : ChangeNotifier
 {
     private bool _isExpanded;
@@ -14,7 +16,29 @@ public class ExpansibleController : ChangeNotifier
 
     public void Collapse() => SetExpansionState(false);
 
-    public void Toggle() => SetExpansionState(!_isExpanded);
+    public void Toggle()
+    {
+        if (IsExpanded)
+        {
+            Collapse();
+        }
+        else
+        {
+            Expand();
+        }
+    }
+
+    public static ExpansibleController Of(BuildContext context)
+    {
+        return MaybeOf(context)
+               ?? throw new InvalidOperationException(
+                   "ExpansibleController.Of() was called with a context that does not contain an Expansible.");
+    }
+
+    public static ExpansibleController? MaybeOf(BuildContext context)
+    {
+        return context.FindAncestorStateOfType<Expansible.ExpansibleState>()?.Controller;
+    }
 
     private void SetExpansionState(bool value)
     {
@@ -31,13 +55,13 @@ public class ExpansibleController : ChangeNotifier
 [Obsolete("Use ExpansibleController instead.")]
 public sealed class ExpansionTileController : ExpansibleController;
 
-public delegate Widget ExpansibleComponentBuilder(BuildContext context, AnimationController animation);
+public delegate Widget ExpansibleComponentBuilder(BuildContext context, Animation<double> animation);
 
 public delegate Widget ExpansibleBuilder(
     BuildContext context,
     Widget header,
     Widget body,
-    AnimationController animation);
+    Animation<double> animation);
 
 public sealed class Expansible : StatefulWidget
 {
@@ -46,6 +70,7 @@ public sealed class Expansible : StatefulWidget
         ExpansibleComponentBuilder headerBuilder,
         ExpansibleComponentBuilder bodyBuilder,
         ExpansibleBuilder? expansibleBuilder = null,
+        AnimationStyle? animationStyle = null,
         TimeSpan? duration = null,
         Curve? curve = null,
         Curve? reverseCurve = null,
@@ -56,8 +81,9 @@ public sealed class Expansible : StatefulWidget
         HeaderBuilder = headerBuilder ?? throw new ArgumentNullException(nameof(headerBuilder));
         BodyBuilder = bodyBuilder ?? throw new ArgumentNullException(nameof(bodyBuilder));
         ExpansibleBuilder = expansibleBuilder ?? DefaultExpansibleBuilder;
+        AnimationStyle = animationStyle;
         Duration = duration ?? TimeSpan.FromMilliseconds(200);
-        Curve = curve ?? Curves.EaseInOut;
+        Curve = curve ?? Curves.Ease;
         ReverseCurve = reverseCurve;
         MaintainState = maintainState;
     }
@@ -70,10 +96,15 @@ public sealed class Expansible : StatefulWidget
 
     public ExpansibleBuilder ExpansibleBuilder { get; }
 
+    public AnimationStyle? AnimationStyle { get; }
+
+    [Obsolete("Use AnimationStyle instead.")]
     public TimeSpan Duration { get; }
 
+    [Obsolete("Use AnimationStyle instead.")]
     public Curve Curve { get; }
 
+    [Obsolete("Use AnimationStyle instead.")]
     public Curve? ReverseCurve { get; }
 
     public bool MaintainState { get; }
@@ -84,28 +115,52 @@ public sealed class Expansible : StatefulWidget
         BuildContext context,
         Widget header,
         Widget body,
-        AnimationController animation)
+        Animation<double> animation)
     {
         return new Column(
             mainAxisSize: MainAxisSize.Min,
             children: [header, body]);
     }
 
-    private sealed class ExpansibleState : State
+    public sealed class ExpansibleState : State
     {
         private AnimationController? _animation;
 
         private Expansible CurrentWidget => (Expansible)StateWidget;
 
+        internal ExpansibleController Controller => CurrentWidget.Controller;
+
+        private TimeSpan EffectiveDuration => CurrentWidget.AnimationStyle?.Duration ?? CurrentWidget.Duration;
+
+        private Curve EffectiveCurve => CurrentWidget.AnimationStyle?.Curve ?? CurrentWidget.Curve;
+
+        private Curve? EffectiveReverseCurve =>
+            CurrentWidget.AnimationStyle?.ReverseCurve ?? CurrentWidget.ReverseCurve;
+
         public override void InitState()
         {
-            CreateAnimation(initialValue: CurrentWidget.Controller.IsExpanded ? 1.0 : 0.0);
+            bool initiallyExpanded = PageStorage.MaybeOf(Context)?.ReadState(Context) as bool?
+                                     ?? CurrentWidget.Controller.IsExpanded;
+            CreateAnimation(initiallyExpanded ? 1.0 : 0.0);
+            if (initiallyExpanded)
+            {
+                CurrentWidget.Controller.Expand();
+            }
+            else
+            {
+                CurrentWidget.Controller.Collapse();
+            }
+
             CurrentWidget.Controller.AddListener(HandleControllerChanged);
         }
 
         public override void DidUpdateWidget(StatefulWidget oldWidget)
         {
             var oldExpansible = (Expansible)oldWidget;
+            TimeSpan oldDuration = oldExpansible.AnimationStyle?.Duration ?? oldExpansible.Duration;
+            Curve oldCurve = oldExpansible.AnimationStyle?.Curve ?? oldExpansible.Curve;
+            Curve? oldReverseCurve = oldExpansible.AnimationStyle?.ReverseCurve ?? oldExpansible.ReverseCurve;
+
             if (!ReferenceEquals(oldExpansible.Controller, CurrentWidget.Controller))
             {
                 oldExpansible.Controller.RemoveListener(HandleControllerChanged);
@@ -116,30 +171,15 @@ public sealed class Expansible : StatefulWidget
                 }
             }
 
-            if (oldExpansible.Duration != CurrentWidget.Duration)
+            if (oldDuration != EffectiveDuration)
             {
-                double value = _animation?.Value ?? 0;
-                bool wasAnimating = _animation?.IsAnimating == true;
-                DisposeAnimation();
-                CreateAnimation(value);
-                if (wasAnimating)
-                {
-                    if (CurrentWidget.Controller.IsExpanded)
-                    {
-                        _animation!.Forward();
-                    }
-                    else
-                    {
-                        _animation!.Reverse();
-                    }
-                }
+                _animation!.Duration = NormalizeDuration(EffectiveDuration);
             }
-            else if (!Equals(oldExpansible.Curve, CurrentWidget.Curve)
-                     || !Equals(oldExpansible.ReverseCurve, CurrentWidget.ReverseCurve))
+
+            if (!Equals(oldCurve, EffectiveCurve)
+                || !Equals(oldReverseCurve, EffectiveReverseCurve))
             {
-                _animation!.Curve = CurrentWidget.Controller.IsExpanded
-                    ? CurrentWidget.Curve
-                    : CurrentWidget.ReverseCurve ?? CurrentWidget.Curve;
+                UpdateAnimationCurve();
             }
         }
 
@@ -155,42 +195,30 @@ public sealed class Expansible : StatefulWidget
             bool closed = !CurrentWidget.Controller.IsExpanded && animation.Value <= 0.0001;
             bool shouldRemoveBody = closed && !CurrentWidget.MaintainState;
 
-            Widget body = shouldRemoveBody
-                ? new SizedBox()
+            Widget? retainedBody = shouldRemoveBody
+                ? null
                 : new Offstage(
                     offstage: closed,
-                    child: CurrentWidget.BodyBuilder(context, animation));
-            body = new ClipRect(
+                    child: new TickerMode(
+                        enabled: !closed,
+                        child: CurrentWidget.BodyBuilder(context, animation)));
+            Widget body = new ClipRect(
                 child: new Align(
                     alignment: Alignment.TopCenter,
                     heightFactor: animation.Evaluate(),
-                    child: body));
-
-            var header = CurrentWidget.HeaderBuilder(context, animation);
+                    child: retainedBody));
+            Widget header = CurrentWidget.HeaderBuilder(context, animation);
             return CurrentWidget.ExpansibleBuilder(context, header, body, animation);
         }
 
         private void CreateAnimation(double initialValue)
         {
-            _animation = new AnimationController(CurrentWidget.Duration, this)
-            {
-                Curve = CurrentWidget.Controller.IsExpanded
-                    ? CurrentWidget.Curve
-                    : CurrentWidget.ReverseCurve ?? CurrentWidget.Curve
-            };
+            _animation = new AnimationController(NormalizeDuration(EffectiveDuration), this);
+            UpdateAnimationCurve();
             _animation.Changed += HandleAnimationChanged;
             _animation.Dismissed += HandleAnimationSettled;
             _animation.Completed += HandleAnimationSettled;
-            if (initialValue >= 1)
-            {
-                _animation.Forward(from: 1);
-                _animation.Stop();
-            }
-            else if (initialValue > 0)
-            {
-                _animation.Forward(from: initialValue);
-                _animation.Stop();
-            }
+            _animation.SetValue(initialValue);
         }
 
         private void DisposeAnimation()
@@ -209,21 +237,37 @@ public sealed class Expansible : StatefulWidget
 
         private void HandleControllerChanged()
         {
-            var animation = _animation!;
             SetState(() =>
             {
-                animation.Curve = CurrentWidget.Controller.IsExpanded
-                    ? CurrentWidget.Curve
-                    : CurrentWidget.ReverseCurve ?? CurrentWidget.Curve;
-                if (CurrentWidget.Controller.IsExpanded)
+                UpdateAnimationCurve();
+                if (EffectiveDuration <= TimeSpan.Zero)
                 {
-                    animation.Forward();
+                    _animation!.Stop();
+                    _animation.SetValue(CurrentWidget.Controller.IsExpanded ? 1.0 : 0.0);
+                }
+                else if (CurrentWidget.Controller.IsExpanded)
+                {
+                    _animation!.Forward();
                 }
                 else
                 {
-                    animation.Reverse();
+                    _animation!.Reverse();
                 }
+
+                PageStorage.MaybeOf(Context)?.WriteState(Context, CurrentWidget.Controller.IsExpanded);
             });
+        }
+
+        private void UpdateAnimationCurve()
+        {
+            _animation!.Curve = CurrentWidget.Controller.IsExpanded
+                ? EffectiveCurve
+                : EffectiveReverseCurve ?? EffectiveCurve;
+        }
+
+        private static TimeSpan NormalizeDuration(TimeSpan duration)
+        {
+            return duration <= TimeSpan.Zero ? TimeSpan.FromMilliseconds(1) : duration;
         }
 
         private void HandleAnimationChanged()
@@ -237,3 +281,5 @@ public sealed class Expansible : StatefulWidget
         }
     }
 }
+
+#pragma warning restore CS0618

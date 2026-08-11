@@ -680,15 +680,9 @@ public sealed partial record ExpansionTileThemeData
                 a?.CollapsedBackgroundColor,
                 b?.CollapsedBackgroundColor,
                 t),
-            TilePadding: MaterialThemeLerp.Thickness(a?.TilePadding, b?.TilePadding, t),
-            ExpandedAlignment: MaterialThemeLerp.Alignment(
-                a?.ExpandedAlignment,
-                b?.ExpandedAlignment,
-                t),
-            ExpandedCrossAxisAlignment: t < 0.5
-                ? a?.ExpandedCrossAxisAlignment
-                : b?.ExpandedCrossAxisAlignment,
-            ChildrenPadding: MaterialThemeLerp.Thickness(a?.ChildrenPadding, b?.ChildrenPadding, t),
+            TilePadding: EdgeInsetsGeometry.Lerp(a?.TilePadding, b?.TilePadding, t),
+            ExpandedAlignment: AlignmentGeometry.Lerp(a?.ExpandedAlignment, b?.ExpandedAlignment, t),
+            ChildrenPadding: EdgeInsetsGeometry.Lerp(a?.ChildrenPadding, b?.ChildrenPadding, t),
             IconColor: MaterialThemeLerp.Color(a?.IconColor, b?.IconColor, t),
             CollapsedIconColor: MaterialThemeLerp.Color(
                 a?.CollapsedIconColor,
@@ -699,13 +693,9 @@ public sealed partial record ExpansionTileThemeData
                 a?.CollapsedTextColor,
                 b?.CollapsedTextColor,
                 t),
-            Shape: MaterialThemeLerp.BorderRadius(a?.Shape, b?.Shape, t),
-            CollapsedShape: MaterialThemeLerp.BorderRadius(a?.CollapsedShape, b?.CollapsedShape, t),
+            Shape: MaterialThemeLerp.Shape(a?.Shape, b?.Shape, t),
+            CollapsedShape: MaterialThemeLerp.Shape(a?.CollapsedShape, b?.CollapsedShape, t),
             ClipBehavior: t < 0.5 ? a?.ClipBehavior : b?.ClipBehavior,
-            ControlAffinity: t < 0.5 ? a?.ControlAffinity : b?.ControlAffinity,
-            Dense: t < 0.5 ? a?.Dense : b?.Dense,
-            MinTileHeight: MaterialThemeLerp.Double(a?.MinTileHeight, b?.MinTileHeight, t),
-            EnableFeedback: t < 0.5 ? a?.EnableFeedback : b?.EnableFeedback,
             ExpansionAnimationStyle: t < 0.5
                 ? a?.ExpansionAnimationStyle
                 : b?.ExpansionAnimationStyle);

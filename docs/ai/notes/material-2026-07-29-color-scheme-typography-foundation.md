@@ -97,6 +97,8 @@
     transition composition, theme copy/lerp, and widget/theme/default precedence).
   - `ExpansionPanel`/`ExpansionPanelList` (source card/divider/icon and interaction-color precedence, directional
     header geometry, exact header/body composition, independent transition timing, and radio callback ownership).
+  - `ExpansionTile` (direct M2/M3 text/icon roles, source directional/theme/state API, exact `Expansible` and
+    `ListTileTheme` composition, per-side/custom shape paint, controller lookup, `PageStorage`, and semantics).
   - `LinearProgressIndicator`/`CircularProgressIndicator` (direct M2/M3 primary/background/secondary-container
     roles, source theme API/copy/lerp/capture, controller precedence, 2023/2024 geometry, range semantics, adaptive
     Cupertino routing, circular padding, and mirrored runtime probes).

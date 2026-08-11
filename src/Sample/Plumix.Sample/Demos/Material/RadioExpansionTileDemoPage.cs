@@ -98,42 +98,34 @@ internal sealed class RadioExpansionTileDemoPageState : State
                             children:
                             [
                                 BuildRadioGroup(context),
-                                new ExpansionTile(
-                                    title: new Text("Advanced schedule options"),
-                                    subtitle: new Text("Tap row or use the controller button."),
-                                    leading: new Icon(Icons.InfoOutline),
-                                    controller: _expansionController,
-                                    controlAffinity: _affinity,
-                                    maintainState: _maintainState,
-                                    backgroundColor: Color.Parse("#FFF0E8FF"),
-                                    collapsedBackgroundColor: Colors.White,
-                                    shape: BorderRadius.Circular(12),
-                                    collapsedShape: BorderRadius.Circular(4),
-                                    onExpansionChanged: value => SetState(() => _expanded = value),
-                                    childrenPadding: new Thickness(20, 8, 20, 12),
-                                    children:
-                                    [
-                                        new Text("Sync only while charging", fontSize: 13),
-                                        new Text("Retry window: 15 minutes", fontSize: 13),
-                                    ]),
+                                new Theme(
+                                    data: BuildControlTheme(context),
+                                    child: new ExpansionTile(
+                                        title: new Text("Advanced schedule options"),
+                                        subtitle: new Text("Tap row or use the controller button."),
+                                        leading: new Icon(Icons.InfoOutline),
+                                        controller: _expansionController,
+                                        controlAffinity: _affinity,
+                                        maintainState: _maintainState,
+                                        backgroundColor: Color.Parse("#FFF0E8FF"),
+                                        collapsedBackgroundColor: Colors.White,
+                                        shape: ShapeBorder.RoundedRectangle(12),
+                                        collapsedShape: ShapeBorder.RoundedRectangle(4),
+                                        onExpansionChanged: value => SetState(() => _expanded = value),
+                                        childrenPadding: EdgeInsetsGeometry.FromLTRB(20, 8, 20, 12),
+                                        children:
+                                        [
+                                            new Text("Sync only while charging", fontSize: 13),
+                                            new Text("Retry window: 15 minutes", fontSize: 13),
+                                        ])),
                             ]))),
             ]);
     }
 
     private Widget BuildRadioGroup(BuildContext context)
     {
-        ThemeData ambient = Theme.Of(context);
-        ThemeData radioTheme = ambient with
-        {
-            UseMaterial3 = _useMaterial3,
-            ColorScheme = ambient.ColorScheme.CopyWith(
-                primary: Color.Parse("#FF6750A4"),
-                secondary: Color.Parse("#FF006C4C"),
-                onSurface: Color.Parse("#FF1D1B20"),
-                onSurfaceVariant: Color.Parse("#FF49454F"))
-        };
         return new Theme(
-            data: radioTheme,
+            data: BuildControlTheme(context),
             child: new RadioGroup<string>(
                 groupValue: _selectedSchedule,
                 onChanged: value => SetState(() => _selectedSchedule = value),
@@ -145,6 +137,20 @@ internal sealed class RadioExpansionTileDemoPageState : State
                         BuildRadioTile("weekly", "Weekly", Icons.StarOutline),
                         BuildRadioTile("paused", "Paused (disabled)", Icons.InfoOutline, enabled: false),
                     ])));
+    }
+
+    private ThemeData BuildControlTheme(BuildContext context)
+    {
+        ThemeData ambient = Theme.Of(context);
+        return ambient with
+        {
+            UseMaterial3 = _useMaterial3,
+            ColorScheme = ambient.ColorScheme.CopyWith(
+                primary: Color.Parse("#FF6750A4"),
+                secondary: Color.Parse("#FF006C4C"),
+                onSurface: Color.Parse("#FF1D1B20"),
+                onSurfaceVariant: Color.Parse("#FF49454F"))
+        };
     }
 
     private Widget BuildRadioTile(
