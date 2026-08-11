@@ -7,6 +7,10 @@ namespace Plumix.Gestures;
 
 public abstract class DragGestureRecognizer : GestureRecognizer, IGestureArenaMember
 {
+    // gestures/constants.dart: kMinFlingVelocity, kMaxFlingVelocity.
+    public const double KMinFlingVelocity = 50.0;
+    public const double KMaxFlingVelocity = 8000.0;
+
     private const double DefaultTouchSlop = 18.0;
     private readonly Dictionary<int, DragTracker> _trackers = [];
 
@@ -16,6 +20,8 @@ public abstract class DragGestureRecognizer : GestureRecognizer, IGestureArenaMe
     protected DragGestureRecognizer(GestureBinding? binding = null) : base(binding)
     {
     }
+
+    public Action<DragDownDetails>? OnDown { get; set; }
 
     public Action<DragStartDetails>? OnStart { get; set; }
 
@@ -30,6 +36,24 @@ public abstract class DragGestureRecognizer : GestureRecognizer, IGestureArenaMe
     public GestureVelocityTrackerBuilder VelocityTrackerBuilder { get; set; } =
         DefaultVelocityTrackerBuilder;
 
+    /// <summary>
+    /// The minimum distance an input pointer drag must have moved to be considered a fling gesture.
+    /// Null falls back to the device's hit slop.
+    /// </summary>
+    public double? MinFlingDistance { get; set; }
+
+    /// <summary>
+    /// The minimum velocity for an input pointer drag to be considered a fling gesture. Null falls
+    /// back to <see cref="KMinFlingVelocity"/>.
+    /// </summary>
+    public double? MinFlingVelocity { get; set; }
+
+    /// <summary>
+    /// Fling velocity magnitudes are clamped to this value. Null falls back to
+    /// <see cref="KMaxFlingVelocity"/>.
+    /// </summary>
+    public double? MaxFlingVelocity { get; set; }
+
     protected double TouchSlop => GestureSettings?.TouchSlop ?? DefaultTouchSlop;
 
     public override void AddPointer(PointerDownEvent @event)
@@ -43,6 +67,9 @@ public abstract class DragGestureRecognizer : GestureRecognizer, IGestureArenaMe
         VelocityTracker velocityTracker = VelocityTrackerBuilder(@event);
         _trackers[@event.Pointer] = new DragTracker(@event, entry, velocityTracker);
         StartTrackingPointer(@event.Pointer);
+        OnDown?.Invoke(new DragDownDetails(
+            GlobalPosition: @event.Position,
+            LocalPosition: @event.LocalPosition));
     }
 
     public void AcceptGesture(int pointer)
@@ -70,7 +97,18 @@ public abstract class DragGestureRecognizer : GestureRecognizer, IGestureArenaMe
 
     public void RejectGesture(int pointer)
     {
+        if (!_trackers.TryGetValue(pointer, out var tracker))
+        {
+            return;
+        }
+
+        bool started = tracker.Started;
         Cleanup(pointer);
+        if (!started)
+        {
+            // Every OnDown is followed by either a start/end pair or a cancel.
+            OnCancel?.Invoke();
+        }
     }
 
     protected override void HandleEvent(PointerEvent @event)
@@ -144,33 +182,42 @@ public abstract class DragGestureRecognizer : GestureRecognizer, IGestureArenaMe
             {
                 if (!tracker.Accepted || !tracker.Started)
                 {
-                    tracker.Entry.Resolve(GestureDisposition.Rejected);
-                    Cleanup(@event.Pointer);
+                    ResolveWithoutDrag(tracker, @event.Pointer);
                     return;
                 }
 
-                Vector pixelsPerSecond = tracker.VelocityTracker.GetVelocity().PixelsPerSecond;
-                double primaryVelocity = GetPrimaryValue(new Point(
-                    pixelsPerSecond.X,
-                    pixelsPerSecond.Y));
-                OnEnd?.Invoke(new DragEndDetails(
-                    velocity: new Velocity(pixelsPerSecond),
-                    primaryVelocity: primaryVelocity));
+                if (OnEnd != null)
+                {
+                    VelocityEstimate? estimate = tracker.VelocityTracker.GetVelocityEstimate();
+                    DragEndDetails? details = estimate == null
+                        ? null
+                        : ConsiderFling(estimate, tracker.Kind);
+                    OnEnd.Invoke(details ?? new DragEndDetails(
+                        velocity: Velocity.Zero,
+                        primaryVelocity: 0.0));
+                }
+
                 Cleanup(@event.Pointer);
                 break;
             }
             case PointerCancelEvent:
             {
-                if (tracker.Started)
-                {
-                    OnCancel?.Invoke();
-                }
-
-                tracker.Entry.Resolve(GestureDisposition.Rejected);
-                Cleanup(@event.Pointer);
+                ResolveWithoutDrag(tracker, @event.Pointer);
                 break;
             }
         }
+    }
+
+    /// <summary>
+    /// Ends a pointer that never produced a drag: the arena entry is rejected and a single cancel is
+    /// reported. The tracker is removed first so the arena's own rejection callback is a no-op.
+    /// </summary>
+    private void ResolveWithoutDrag(DragTracker tracker, int pointer)
+    {
+        GestureArenaEntry entry = tracker.Entry;
+        Cleanup(pointer);
+        entry.Resolve(GestureDisposition.Rejected);
+        OnCancel?.Invoke();
     }
 
     private void Cleanup(int pointer)
@@ -184,6 +231,23 @@ public abstract class DragGestureRecognizer : GestureRecognizer, IGestureArenaMe
     protected abstract double GetCrossValue(Point offset);
 
     protected abstract Point GetPrimaryOffset(double value);
+
+    /// <summary>Whether the given velocity estimate is fast and far enough to be a fling.</summary>
+    protected abstract bool IsFlingGesture(VelocityEstimate estimate, PointerDeviceKind kind);
+
+    /// <summary>
+    /// The end details for a fling with the given estimate, or null when the gesture is not a fling.
+    /// </summary>
+    protected abstract DragEndDetails? ConsiderFling(VelocityEstimate estimate, PointerDeviceKind kind);
+
+    /// <summary>The fling distance floor: the recognizer's own value, or the device's hit slop.</summary>
+    protected double EffectiveMinFlingDistance => MinFlingDistance ?? TouchSlop;
+
+    /// <summary>The fling velocity floor: the recognizer's own value, or the framework default.</summary>
+    protected double EffectiveMinFlingVelocity => MinFlingVelocity ?? KMinFlingVelocity;
+
+    /// <summary>The fling velocity ceiling: the recognizer's own value, or the framework default.</summary>
+    protected double EffectiveMaxFlingVelocity => MaxFlingVelocity ?? KMaxFlingVelocity;
 
     /// <summary>Whether a drag that is dominated by the cross axis rejects this recognizer.</summary>
     protected virtual bool RejectsCrossAxisDrags => true;
@@ -268,6 +332,24 @@ public sealed class HorizontalDragGestureRecognizer : DragGestureRecognizer
     }
 
     protected override Point GetPrimaryOffset(double value) => new(value, 0.0);
+
+    protected override bool IsFlingGesture(VelocityEstimate estimate, PointerDeviceKind kind)
+    {
+        return Math.Abs(estimate.PixelsPerSecond.X) > EffectiveMinFlingVelocity
+               && Math.Abs(estimate.Offset.X) > EffectiveMinFlingDistance;
+    }
+
+    protected override DragEndDetails? ConsiderFling(VelocityEstimate estimate, PointerDeviceKind kind)
+    {
+        if (!IsFlingGesture(estimate, kind))
+        {
+            return null;
+        }
+
+        double maxVelocity = EffectiveMaxFlingVelocity;
+        double dx = Math.Clamp(estimate.PixelsPerSecond.X, -maxVelocity, maxVelocity);
+        return new DragEndDetails(velocity: new Velocity(new Vector(dx, 0.0)), primaryVelocity: dx);
+    }
 }
 
 /// <summary>Recognizes drags in any direction; it never yields to a competing axis.</summary>
@@ -297,6 +379,26 @@ public sealed class PanGestureRecognizer : DragGestureRecognizer
     {
         return currentPosition;
     }
+
+    protected override bool IsFlingGesture(VelocityEstimate estimate, PointerDeviceKind kind)
+    {
+        double minVelocity = EffectiveMinFlingVelocity;
+        double minDistance = EffectiveMinFlingDistance;
+        return estimate.PixelsPerSecond.SquaredLength > minVelocity * minVelocity
+               && estimate.Offset.SquaredLength > minDistance * minDistance;
+    }
+
+    protected override DragEndDetails? ConsiderFling(VelocityEstimate estimate, PointerDeviceKind kind)
+    {
+        if (!IsFlingGesture(estimate, kind))
+        {
+            return null;
+        }
+
+        Velocity velocity = new Velocity(estimate.PixelsPerSecond)
+            .ClampMagnitude(EffectiveMinFlingVelocity, EffectiveMaxFlingVelocity);
+        return new DragEndDetails(velocity: velocity, primaryVelocity: 0.0);
+    }
 }
 
 public sealed class VerticalDragGestureRecognizer : DragGestureRecognizer
@@ -316,4 +418,22 @@ public sealed class VerticalDragGestureRecognizer : DragGestureRecognizer
     }
 
     protected override Point GetPrimaryOffset(double value) => new(0.0, value);
+
+    protected override bool IsFlingGesture(VelocityEstimate estimate, PointerDeviceKind kind)
+    {
+        return Math.Abs(estimate.PixelsPerSecond.Y) > EffectiveMinFlingVelocity
+               && Math.Abs(estimate.Offset.Y) > EffectiveMinFlingDistance;
+    }
+
+    protected override DragEndDetails? ConsiderFling(VelocityEstimate estimate, PointerDeviceKind kind)
+    {
+        if (!IsFlingGesture(estimate, kind))
+        {
+            return null;
+        }
+
+        double maxVelocity = EffectiveMaxFlingVelocity;
+        double dy = Math.Clamp(estimate.PixelsPerSecond.Y, -maxVelocity, maxVelocity);
+        return new DragEndDetails(velocity: new Velocity(new Vector(0.0, dy)), primaryVelocity: dy);
+    }
 }

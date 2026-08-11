@@ -1,5 +1,15 @@
 # Changelog
 
+- Breaking: closed the `ScrollPhysics` gesture-tuning divergence. `AlwaysScrollableScrollPhysics` and
+  `NeverScrollableScrollPhysics` are ported, `ScrollPhysics.RecommendDeferredLoading` plus
+  `ScrollPosition.RecommendDeferredLoading`/`Scrollable.RecommendDeferredLoadingForContext` are available, and
+  `ShouldAcceptUserOffset` now registers or removes the scrollable's drag recognizers (and gates wheel scrolling)
+  instead of being ignored. Drags run through a ported `ScrollDragController`/`HoldScrollActivity` pair, so iOS
+  carried momentum and the 3.5px drag-start motion threshold apply; `DragGestureRecognizer` gained
+  `OnDown`/`MinFlingDistance`/`MinFlingVelocity`/`MaxFlingVelocity` with Flutter's `considerFling` gate, so a release
+  under the physics' fling floor now reports zero velocity and the reported fling is axis-projected and clamped.
+  A pointer that never becomes a drag now reports one cancel, and `MediaQueryData.PhysicalSize` was added.
+
 - Fixed `RenderTransform.EffectiveTransform` composing the alignment anchor in Flutter's column-vector order while
   Avalonia matrices are row-vector based, so every aligned `Transform` (`ScaleTransition`, `RotationTransition`,
   `MatrixTransition`, `RefreshProgressIndicator`) rotated/scaled around a mirrored anchor instead of the alignment

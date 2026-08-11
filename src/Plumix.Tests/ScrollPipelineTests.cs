@@ -933,6 +933,229 @@ public sealed class ScrollPipelineTests
         return offset;
     }
 
+    [Fact]
+    public void Scrollable_NeverScrollableScrollPhysics_IgnoresDragsAndPointerScrolls()
+    {
+        GestureBinding.Instance.ResetForTests();
+        var controller = new ScrollController();
+        var harness = new WidgetRenderHarness(
+            ListView.Builder(
+                itemCount: 40,
+                itemExtent: 40,
+                controller: controller,
+                physics: new NeverScrollableScrollPhysics(),
+                addAutomaticKeepAlives: false,
+                itemBuilder: (_, _) => new SizedBox(height: 40)));
+        var viewport = new Size(200, 240);
+        harness.Pump(viewport);
+
+        ScrollPosition position = controller.PrimaryPosition!;
+        Assert.True(position.MaxScrollExtent > 0);
+
+        DragBy(harness, pointer: 810, from: new Point(80, 200), delta: -120);
+        harness.Pump(viewport);
+        Assert.Equal(0.0, position.Pixels);
+
+        GestureBinding.Instance.HandlePointerEvent(
+            harness.RenderView,
+            new PointerScrollEvent(
+                pointer: 811,
+                kind: PointerDeviceKind.Mouse,
+                position: new Point(80, 100),
+                buttons: PointerButtons.None,
+                scrollDelta: new Point(0, 60),
+                timestampUtc: DateTime.UtcNow));
+        Assert.Equal(0.0, position.Pixels);
+
+        // The controller still owns the position: only *user* scrolling is refused.
+        controller.JumpTo(120);
+        Assert.Equal(120.0, position.Pixels);
+        GestureBinding.Instance.ResetForTests();
+    }
+
+    [Fact]
+    public void Scrollable_AlwaysScrollableScrollPhysics_AcceptsDragsWhenTheContentFits()
+    {
+        GestureBinding.Instance.ResetForTests();
+        var controller = new ScrollController();
+        var harness = new WidgetRenderHarness(
+            ListView.Builder(
+                itemCount: 2,
+                itemExtent: 40,
+                controller: controller,
+                physics: new AlwaysScrollableScrollPhysics(parent: new BouncingScrollPhysics()),
+                addAutomaticKeepAlives: false,
+                itemBuilder: (_, _) => new SizedBox(height: 40)));
+        var viewport = new Size(200, 240);
+        harness.Pump(viewport);
+
+        ScrollPosition position = controller.PrimaryPosition!;
+
+        // Nothing to scroll to, yet the drag is accepted and rubber-bands the content.
+        Assert.Equal(position.MinScrollExtent, position.MaxScrollExtent);
+        DragBy(harness, pointer: 812, from: new Point(80, 60), delta: 90);
+        Assert.True(position.Pixels < 0.0, $"Expected overscroll, got {position.Pixels}.");
+        GestureBinding.Instance.ResetForTests();
+    }
+
+    [Fact]
+    public void Scrollable_PhysicsMinFlingVelocity_ReachesTheDragRecognizer()
+    {
+        Scheduler.ResetForTests();
+        GestureBinding.Instance.ResetForTests();
+        try
+        {
+            // The same gesture is a fling under the default physics and not a fling under physics
+            // that raise the floor, which is only possible if the value reaches the recognizer.
+            Assert.IsType<BallisticScrollActivity>(FlingAndReadActivity(new ClampingScrollPhysics(), 813));
+            Assert.IsType<IdleScrollActivity>(FlingAndReadActivity(new UnflingableScrollPhysics(), 814));
+        }
+        finally
+        {
+            GestureBinding.Instance.ResetForTests();
+            Scheduler.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void Scrollable_RecommendDeferredLoadingForContext_FollowsTheActivityVelocity()
+    {
+        Scheduler.ResetForTests();
+        try
+        {
+            var controller = new ScrollController();
+            BuildContext? itemContext = null;
+            var harness = new WidgetRenderHarness(
+                new MediaQuery(
+                    // 200 x 400 physical pixels, so the heuristic threshold is 400 logical px/s.
+                    data: new MediaQueryData(Size: new Size(100, 200), DevicePixelRatio: 2.0),
+                    child: ListView.Builder(
+                        itemCount: 40,
+                        itemExtent: 40,
+                        controller: controller,
+                        physics: new ClampingScrollPhysics(),
+                        addAutomaticKeepAlives: false,
+                        itemBuilder: (context, _) =>
+                        {
+                            itemContext ??= context;
+                            return new SizedBox(height: 40);
+                        })));
+            harness.Pump(new Size(100, 200));
+
+            Assert.NotNull(itemContext);
+            Assert.False(Scrollable.RecommendDeferredLoadingForContext(itemContext!.Value));
+
+            ScrollPosition position = controller.PrimaryPosition!;
+
+            // Park the position mid-list so a fling in either direction has somewhere to go.
+            controller.JumpTo(200.0);
+            harness.Pump(new Size(100, 200));
+
+            position.GoBallistic(-300.0);
+            Assert.False(Scrollable.RecommendDeferredLoadingForContext(itemContext!.Value));
+
+            position.GoBallistic(-5000.0);
+            Assert.True(Scrollable.RecommendDeferredLoadingForContext(itemContext!.Value));
+
+            // A request for the other axis walks past this scrollable and finds none.
+            Assert.False(Scrollable.RecommendDeferredLoadingForContext(itemContext!.Value, Axis.Horizontal));
+            Assert.True(Scrollable.RecommendDeferredLoadingForContext(itemContext!.Value, Axis.Vertical));
+        }
+        finally
+        {
+            Scheduler.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void Scrollable_RecommendDeferredLoadingForContext_IsFalseOutsideAScrollable()
+    {
+        BuildContext? context = null;
+        var harness = new WidgetRenderHarness(
+            new Builder(builder: buildContext =>
+            {
+                context = buildContext;
+                return new SizedBox(width: 10, height: 10);
+            }));
+        harness.Pump(new Size(100, 100));
+
+        Assert.NotNull(context);
+        Assert.False(Scrollable.RecommendDeferredLoadingForContext(context!.Value));
+    }
+
+    private static ScrollActivity FlingAndReadActivity(ScrollPhysics physics, int pointer)
+    {
+        var controller = new ScrollController();
+        var harness = new WidgetRenderHarness(
+            ListView.Builder(
+                itemCount: 40,
+                itemExtent: 40,
+                controller: controller,
+                physics: physics,
+                addAutomaticKeepAlives: false,
+                itemBuilder: (_, _) => new SizedBox(height: 40)));
+        harness.Pump(new Size(200, 240));
+
+        DragBy(harness, pointer: pointer, from: new Point(80, 200), delta: -120, stepMilliseconds: 16);
+        return controller.PrimaryPosition!.Activity;
+    }
+
+    /// <summary>
+    /// Drives a full press-move-release pointer sequence down the vertical axis, in four steps so
+    /// the velocity tracker has enough samples to estimate a fling.
+    /// </summary>
+    private static void DragBy(
+        WidgetRenderHarness harness,
+        int pointer,
+        Point from,
+        double delta,
+        int stepMilliseconds = 30)
+    {
+        DateTime now = DateTime.UtcNow;
+        GestureBinding.Instance.HandlePointerEvent(
+            harness.RenderView,
+            new PointerDownEvent(pointer, PointerDeviceKind.Touch, from, PointerButtons.Primary, now));
+
+        Point position = from;
+        for (int step = 1; step <= 4; step++)
+        {
+            position = new Point(from.X, from.Y + (delta * step / 4.0));
+            GestureBinding.Instance.HandlePointerEvent(
+                harness.RenderView,
+                new PointerMoveEvent(
+                    pointer,
+                    PointerDeviceKind.Touch,
+                    position,
+                    PointerButtons.Primary,
+                    true,
+                    now.AddMilliseconds(stepMilliseconds * step)));
+        }
+
+        GestureBinding.Instance.HandlePointerEvent(
+            harness.RenderView,
+            new PointerUpEvent(
+                pointer,
+                PointerDeviceKind.Touch,
+                position,
+                PointerButtons.None,
+                now.AddMilliseconds(stepMilliseconds * 5)));
+    }
+
+    /// <summary>Physics whose fling floor no ordinary gesture can reach.</summary>
+    private sealed class UnflingableScrollPhysics : ScrollPhysics
+    {
+        public UnflingableScrollPhysics(ScrollPhysics? parent = null) : base(parent)
+        {
+        }
+
+        public override ScrollPhysics ApplyTo(ScrollPhysics? ancestor)
+        {
+            return new UnflingableScrollPhysics(BuildParent(ancestor));
+        }
+
+        public override double MinFlingVelocity => 1e6;
+    }
+
     private static TRenderObject? FindRenderObject<TRenderObject>(RenderObject root) where TRenderObject : RenderObject
     {
         if (root is TRenderObject typed)

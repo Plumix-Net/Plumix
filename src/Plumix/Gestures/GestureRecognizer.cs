@@ -79,6 +79,10 @@ public abstract class GestureRecognizer : IDisposable
     }
 }
 
+public readonly record struct DragDownDetails(
+    Point GlobalPosition,
+    Point LocalPosition = default);
+
 public readonly record struct DragStartDetails(
     Point GlobalPosition,
     Point LocalPosition = default,

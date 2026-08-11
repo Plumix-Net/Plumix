@@ -407,6 +407,137 @@ public sealed class GesturePipelineTests
         }
     }
 
+    [Theory]
+    // The unconfigured recognizer reports the estimate as-is.
+    [InlineData(null, null, null, 800.0)]
+    // A floor above the estimate turns the release into a plain stop, not a fling.
+    [InlineData(null, 900.0, null, 0.0)]
+    // A floor below it keeps the fling.
+    [InlineData(null, 100.0, null, 800.0)]
+    // A ceiling clamps the reported magnitude.
+    [InlineData(null, null, 250.0, 250.0)]
+    // A distance floor longer than the drag also rejects the fling.
+    [InlineData(500.0, null, null, 0.0)]
+    public void GestureBinding_HorizontalDragRecognizer_HonorsTheFlingTuningValues(
+        double? minFlingDistance,
+        double? minFlingVelocity,
+        double? maxFlingVelocity,
+        double expectedPrimaryVelocity)
+    {
+        var binding = GestureBinding.Instance;
+        binding.ResetForTests();
+
+        double? velocity = null;
+        var recognizer = new HorizontalDragGestureRecognizer
+        {
+            OnEnd = details => velocity = details.PrimaryVelocity,
+            MinFlingDistance = minFlingDistance,
+            MinFlingVelocity = minFlingVelocity,
+            MaxFlingVelocity = maxFlingVelocity,
+        };
+
+        try
+        {
+            var listener = new RenderPointerListener(
+                onPointerDown: recognizer.AddPointer,
+                behavior: HitTestBehavior.Opaque,
+                child: new FixedHitTestBox(new Size(160, 80), hitSelf: true));
+            var pipeline = BuildPipeline(listener);
+            var start = new DateTime(2026, 8, 11, 8, 0, 0, DateTimeKind.Utc);
+
+            binding.HandlePointerEvent(
+                pipeline.Root,
+                new PointerDownEvent(
+                    pointer: 9,
+                    kind: PointerDeviceKind.Mouse,
+                    position: new Point(10, 10),
+                    buttons: PointerButtons.Primary,
+                    timestampUtc: start));
+
+            for (int step = 1; step <= 3; step++)
+            {
+                binding.HandlePointerEvent(
+                    pipeline.Root,
+                    new PointerMoveEvent(
+                        pointer: 9,
+                        kind: PointerDeviceKind.Mouse,
+                        position: new Point(10 + (24 * step), 10),
+                        buttons: PointerButtons.Primary,
+                        down: true,
+                        timestampUtc: start.AddMilliseconds(30 * step)));
+            }
+
+            binding.HandlePointerEvent(
+                pipeline.Root,
+                new PointerUpEvent(
+                    pointer: 9,
+                    kind: PointerDeviceKind.Mouse,
+                    position: new Point(106, 10),
+                    buttons: PointerButtons.None,
+                    timestampUtc: start.AddMilliseconds(120)));
+
+            Assert.True(velocity.HasValue);
+            Assert.Equal(expectedPrimaryVelocity, velocity!.Value, precision: 3);
+        }
+        finally
+        {
+            recognizer.Dispose();
+            binding.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void GestureBinding_DragRecognizer_ReportsCancelWhenThePointerNeverDrags()
+    {
+        var binding = GestureBinding.Instance;
+        binding.ResetForTests();
+
+        var log = new List<string>();
+        var recognizer = new VerticalDragGestureRecognizer
+        {
+            OnDown = _ => log.Add("down"),
+            OnStart = _ => log.Add("start"),
+            OnEnd = _ => log.Add("end"),
+            OnCancel = () => log.Add("cancel"),
+        };
+
+        try
+        {
+            var listener = new RenderPointerListener(
+                onPointerDown: recognizer.AddPointer,
+                behavior: HitTestBehavior.Opaque,
+                child: new FixedHitTestBox(new Size(160, 80), hitSelf: true));
+            var pipeline = BuildPipeline(listener);
+            var start = new DateTime(2026, 8, 11, 8, 0, 0, DateTimeKind.Utc);
+
+            binding.HandlePointerEvent(
+                pipeline.Root,
+                new PointerDownEvent(
+                    pointer: 10,
+                    kind: PointerDeviceKind.Touch,
+                    position: new Point(20, 20),
+                    buttons: PointerButtons.Primary,
+                    timestampUtc: start));
+            binding.HandlePointerEvent(
+                pipeline.Root,
+                new PointerUpEvent(
+                    pointer: 10,
+                    kind: PointerDeviceKind.Touch,
+                    position: new Point(20, 22),
+                    buttons: PointerButtons.None,
+                    timestampUtc: start.AddMilliseconds(40)));
+
+            // A tap must complete the down with exactly one cancel, so anything holding state from
+            // the down (a scrollable's hold activity, for example) is released.
+            Assert.Equal(["down", "cancel"], log);
+        }
+        finally
+        {
+            recognizer.Dispose();
+            binding.ResetForTests();
+        }
+    }
+
     private sealed class RecordingVelocityTracker(PointerDeviceKind kind) : VelocityTracker(kind)
     {
         public List<Point> Positions { get; } = [];

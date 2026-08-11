@@ -19,7 +19,7 @@ public sealed class ScrollPhysicsDemoPage : StatelessWidget
                 new Text("Scroll physics", fontSize: 20, color: Colors.Black),
                 new Text(
                     "Drag past either end: bouncing physics rubber-band and spring back, "
-                    + "clamping physics stop at the edge.",
+                    + "clamping physics stop at the edge, never-scrollable ignores the drag.",
                     fontSize: 14,
                     color: Colors.DimGray),
                 new Expanded(
@@ -47,6 +47,11 @@ public sealed class ScrollPhysicsDemoPage : StatelessWidget
                                     Color.Parse("#FFE3F2FD"),
                                     new ClampingScrollPhysics(
                                         parent: new RangeMaintainingScrollPhysics()))),
+                            new Expanded(
+                                child: BuildList(
+                                    "Never (locked)",
+                                    Color.Parse("#FFF3E5F5"),
+                                    new NeverScrollableScrollPhysics())),
                         ])),
             ]);
     }

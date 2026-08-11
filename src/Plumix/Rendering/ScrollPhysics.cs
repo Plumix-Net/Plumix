@@ -1,6 +1,8 @@
 // Dart parity source: flutter/packages/flutter/lib/src/widgets/scroll_physics.dart
 
+using Avalonia;
 using Plumix.Physics;
+using Plumix.Widgets;
 
 namespace Plumix.Rendering;
 
@@ -70,6 +72,27 @@ public class ScrollPhysics
         }
 
         return Parent.ShouldAcceptUserOffset(position);
+    }
+
+    /// <summary>
+    /// Provides a heuristic to determine if expensive frame-bound tasks should be deferred because
+    /// the scroll offset is changing quickly.
+    /// </summary>
+    /// <remarks>
+    /// The default implementation compares the velocity, in logical pixels per second, against the
+    /// longest side of the view's physical size, matching Flutter's
+    /// <c>View.of(context).physicalSize.longestSide</c>. The comparison deliberately mixes logical
+    /// velocity with physical extent, exactly as the source does.
+    /// </remarks>
+    public virtual bool RecommendDeferredLoading(double velocity, IScrollMetrics metrics, BuildContext context)
+    {
+        if (Parent == null)
+        {
+            double maxPhysicalPixels = MaxPhysicalPixels(context);
+            return Math.Abs(velocity) > maxPhysicalPixels;
+        }
+
+        return Parent.RecommendDeferredLoading(velocity, metrics, context);
     }
 
     /// <summary>
@@ -150,6 +173,70 @@ public class ScrollPhysics
     {
         return Parent == null ? GetType().Name : $"{GetType().Name} -> {Parent}";
     }
+
+    /// <summary>
+    /// The longest side of the enclosing view's physical size, or infinity when the context has no
+    /// view metrics (in which case nothing is ever deferred).
+    /// </summary>
+    /// <remarks>
+    /// The lookup is deliberately dependency-free, like the source's <c>View.of</c>: consulting the
+    /// heuristic must not subscribe an arbitrary item builder to view-metric changes.
+    /// </remarks>
+    private static double MaxPhysicalPixels(BuildContext context)
+    {
+        if (context.FindAncestorWidgetOfExactType<MediaQuery>() is not { } mediaQuery)
+        {
+            return double.PositiveInfinity;
+        }
+
+        Size physicalSize = mediaQuery.Data.PhysicalSize;
+        return Math.Max(physicalSize.Width, physicalSize.Height);
+    }
+}
+
+/// <summary>
+/// Scroll physics that always lets the user scroll.
+/// </summary>
+/// <remarks>
+/// Used wherever a scrollable must accept drags even when its content fits inside the viewport,
+/// such as a pull-to-refresh list. On its own it does not disable overscroll or boundary
+/// conditions; combine it with another physics through <see cref="ApplyTo"/>.
+/// </remarks>
+public class AlwaysScrollableScrollPhysics : ScrollPhysics
+{
+    public AlwaysScrollableScrollPhysics(ScrollPhysics? parent = null) : base(parent)
+    {
+    }
+
+    public override ScrollPhysics ApplyTo(ScrollPhysics? ancestor)
+    {
+        return new AlwaysScrollableScrollPhysics(BuildParent(ancestor));
+    }
+
+    public override bool ShouldAcceptUserOffset(IScrollMetrics position) => true;
+}
+
+/// <summary>
+/// Scroll physics that does not allow the user to scroll.
+/// </summary>
+/// <remarks>
+/// It also blocks implicit scrolling, so a scrollable using it is not offered to accessibility
+/// services as a scrollable container.
+/// </remarks>
+public class NeverScrollableScrollPhysics : ScrollPhysics
+{
+    public NeverScrollableScrollPhysics(ScrollPhysics? parent = null) : base(parent)
+    {
+    }
+
+    public override ScrollPhysics ApplyTo(ScrollPhysics? ancestor)
+    {
+        return new NeverScrollableScrollPhysics(BuildParent(ancestor));
+    }
+
+    public override bool AllowUserScrolling => false;
+
+    public override bool AllowImplicitScrolling => false;
 }
 
 /// <summary>

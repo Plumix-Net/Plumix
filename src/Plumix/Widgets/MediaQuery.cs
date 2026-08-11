@@ -68,6 +68,12 @@ public sealed record MediaQueryData(
         ? Orientation.Landscape
         : Orientation.Portrait;
 
+    /// <summary>
+    /// The dimensions of the view in physical pixels: <see cref="Size"/> scaled by
+    /// <see cref="DevicePixelRatio"/>.
+    /// </summary>
+    public Size PhysicalSize => new(Size.Width * DevicePixelRatio, Size.Height * DevicePixelRatio);
+
     public MediaQueryData CopyWith(
         Size? size = null,
         double? devicePixelRatio = null,

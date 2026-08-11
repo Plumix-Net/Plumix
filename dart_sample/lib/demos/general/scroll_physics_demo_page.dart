@@ -15,7 +15,7 @@ class ScrollPhysicsDemoPage extends StatelessWidget {
         ),
         const Text(
           'Drag past either end: bouncing physics rubber-band and spring back, '
-          'clamping physics stop at the edge.',
+          'clamping physics stop at the edge, never-scrollable ignores the drag.',
           style: TextStyle(fontSize: 14, color: Colors.black54),
         ),
         Expanded(
@@ -49,6 +49,13 @@ class ScrollPhysicsDemoPage extends StatelessWidget {
                   const ClampingScrollPhysics(
                     parent: RangeMaintainingScrollPhysics(),
                   ),
+                ),
+              ),
+              Expanded(
+                child: _buildList(
+                  'Never (locked)',
+                  const Color(0xFFF3E5F5),
+                  const NeverScrollableScrollPhysics(),
                 ),
               ),
             ],

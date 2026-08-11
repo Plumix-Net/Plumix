@@ -242,15 +242,20 @@ public sealed class DismissibleSizeChangedLayoutTests : IDisposable
     }
 
     [Fact]
-    public void DragRecognizer_ReportsFullVelocityAndHonorsDragStartBehavior()
+    public void DragRecognizer_ReportsAxisProjectedFlingVelocityAndHonorsDragStartBehavior()
     {
         Point? startPosition = null;
         Velocity? velocity = null;
+        double? primaryVelocity = null;
         var recognizer = new HorizontalDragGestureRecognizer
         {
             DragStartBehavior = DragStartBehavior.Start,
             OnStart = details => startPosition = details.GlobalPosition,
-            OnEnd = details => velocity = details.Velocity,
+            OnEnd = details =>
+            {
+                velocity = details.Velocity;
+                primaryVelocity = details.PrimaryVelocity;
+            },
         };
 
         try
@@ -298,8 +303,12 @@ public sealed class DismissibleSizeChangedLayoutTests : IDisposable
 
             Assert.Equal(new Point(28, 10), startPosition);
             Assert.NotNull(velocity);
+
+            // considerFling projects onto the recognizer's axis: the cross-axis component of the
+            // estimate (50 px/s here) is dropped, and the primary velocity is the axis component.
             Assert.Equal(300.0, velocity.Value.PixelsPerSecond.X, precision: 3);
-            Assert.Equal(50.0, velocity.Value.PixelsPerSecond.Y, precision: 3);
+            Assert.Equal(0.0, velocity.Value.PixelsPerSecond.Y, precision: 3);
+            Assert.Equal(300.0, primaryVelocity!.Value, precision: 3);
         }
         finally
         {

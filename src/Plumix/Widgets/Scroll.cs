@@ -636,6 +636,32 @@ public sealed class Scrollable : StatefulWidget
                ?? throw new InvalidOperationException("Scrollable operation requested with no Scrollable ancestor.");
     }
 
+    /// <summary>
+    /// Whether the enclosing scrollable is scrolling fast enough that expensive frame-bound work
+    /// (such as decoding an image) should be deferred to a later frame.
+    /// </summary>
+    /// <param name="context">A context inside the scrollable to consult.</param>
+    /// <param name="axis">
+    /// When given, scrollables on other axes are skipped and the search continues outwards.
+    /// </param>
+    /// <remarks>Returns false when there is no enclosing scrollable on the requested axis.</remarks>
+    public static bool RecommendDeferredLoadingForContext(BuildContext context, Axis? axis = null)
+    {
+        ScrollableState? scrollable = MaybeOf(context);
+        while (scrollable != null)
+        {
+            if (axis == null || ScrollDirectionUtils.AxisDirectionToAxis(scrollable.AxisDirection) == axis)
+            {
+                return scrollable.Position.RecommendDeferredLoading(context);
+            }
+
+            context = scrollable.Context;
+            scrollable = MaybeOf(context);
+        }
+
+        return false;
+    }
+
     public static bool EnsureVisible(
         BuildContext context,
         double alignment = 0.0,
@@ -704,6 +730,14 @@ public sealed class Scrollable : StatefulWidget
         private bool _hasPosition;
         private bool _hasDispatchedScrollMetrics;
         private ScrollMetricsSnapshot _lastDispatchedScrollMetrics;
+        // Keys are records, so the identity has to come from a per-state sentinel: two scrollables
+        // must never share one global key.
+        private readonly GlobalObjectKey<RawGestureDetector.RawGestureDetectorState> _gestureDetectorKey =
+            new(new object());
+
+        private IScrollHoldController? _hold;
+        private ScrollDragController? _drag;
+        private bool _canDrag;
 
         private Scrollable CurrentWidget => (Scrollable)Element.Widget;
 
@@ -794,21 +828,32 @@ public sealed class Scrollable : StatefulWidget
                     slivers: ResolveSlivers(widget),
                     onViewportMetricsChanged: HandleViewportMetricsChanged);
 
+            bool horizontal = widget.Axis == Axis.Horizontal;
+            bool vertical = widget.Axis == Axis.Vertical;
             Widget scrollable = new Listener(
                 behavior: widget.HitTestBehavior,
                 onPointerSignal: HandlePointerSignal,
                 child: new RawGestureDetector(
+                    key: _gestureDetectorKey,
                     behavior: widget.HitTestBehavior,
-                    onHorizontalDragStart: widget.Axis == Axis.Horizontal ? HandleDragStart : null,
-                    onHorizontalDragUpdate: widget.Axis == Axis.Horizontal ? HandleHorizontalDragUpdate : null,
-                    onHorizontalDragEnd: widget.Axis == Axis.Horizontal ? HandleDragEnd : null,
-                    onHorizontalDragCancel: widget.Axis == Axis.Horizontal ? HandleDragCancel : null,
-                    onVerticalDragStart: widget.Axis == Axis.Vertical ? HandleDragStart : null,
-                    onVerticalDragUpdate: widget.Axis == Axis.Vertical ? HandleVerticalDragUpdate : null,
-                    onVerticalDragEnd: widget.Axis == Axis.Vertical ? HandleDragEnd : null,
-                    onVerticalDragCancel: widget.Axis == Axis.Vertical ? HandleDragCancel : null,
+                    // The physics decide whether the user may drag at all; when they refuse, the
+                    // recognizers are not registered, exactly like Flutter's `setCanDrag(false)`.
+                    dragEnabled: _canDrag,
+                    onHorizontalDragDown: horizontal ? HandleDragDown : null,
+                    onHorizontalDragStart: horizontal ? HandleDragStart : null,
+                    onHorizontalDragUpdate: horizontal ? HandleDragUpdate : null,
+                    onHorizontalDragEnd: horizontal ? HandleDragEnd : null,
+                    onHorizontalDragCancel: horizontal ? HandleDragCancel : null,
+                    onVerticalDragDown: vertical ? HandleDragDown : null,
+                    onVerticalDragStart: vertical ? HandleDragStart : null,
+                    onVerticalDragUpdate: vertical ? HandleDragUpdate : null,
+                    onVerticalDragEnd: vertical ? HandleDragEnd : null,
+                    onVerticalDragCancel: vertical ? HandleDragCancel : null,
                     velocityTrackerBuilder: _configuration.VelocityTrackerBuilder(context),
                     supportedDevices: _configuration.DragDevices,
+                    minFlingDistance: _effectivePhysics.MinFlingDistance,
+                    minFlingVelocity: _effectivePhysics.MinFlingVelocity,
+                    maxFlingVelocity: _effectivePhysics.MaxFlingVelocity,
                     child: viewport));
 
             var details = new ScrollableDetails(
@@ -838,6 +883,7 @@ public sealed class Scrollable : StatefulWidget
             _attachedController = providedController ?? _fallbackController;
             var position = _attachedController.CreateScrollPosition(physics);
             position.TickerProvider = this;
+            position.CanDragChanged = SetCanDrag;
             position.AxisDirection = ResolveAxisDirection(CurrentWidget.Axis, CurrentWidget.Reverse);
 
             // Ballistic tolerances are expressed in device pixels, so the physics need the view's ratio.
@@ -897,6 +943,43 @@ public sealed class Scrollable : StatefulWidget
             SetState(static () => { });
         }
 
+        /// <summary>
+        /// Adds or removes the drag gesture recognizers. Turning dragging off also cancels any hold
+        /// or drag in flight, so a physics change mid-gesture cannot leave the position captured.
+        /// </summary>
+        private void SetCanDrag(bool value)
+        {
+            if (value == _canDrag)
+            {
+                return;
+            }
+
+            _canDrag = value;
+            if (!value && (_hold != null || _drag != null))
+            {
+                HandleDragCancel();
+            }
+
+            // Applied straight away rather than through a rebuild: the physics can change their mind
+            // during layout, and the next pointer down must already see the new registration.
+            _gestureDetectorKey.CurrentState?.SetDragEnabled(value);
+        }
+
+        private void HandleDragDown(DragDownDetails details)
+        {
+            _hold = _position.Hold(DisposeHold);
+        }
+
+        private void DisposeHold()
+        {
+            _hold = null;
+        }
+
+        private void DisposeDrag()
+        {
+            _drag = null;
+        }
+
         private void HandleDragStart(DragStartDetails details)
         {
             ScrollViewKeyboardDismissBehavior keyboardDismissBehavior =
@@ -910,7 +993,7 @@ public sealed class Scrollable : StatefulWidget
                 primaryFocus.Unfocus();
             }
 
-            _position.BeginDrag();
+            _drag = _position.Drag(details, DisposeDrag);
             new ScrollStartNotification(CurrentMetrics(), dragDetails: details).Dispatch(Context);
         }
 
@@ -927,54 +1010,54 @@ public sealed class Scrollable : StatefulWidget
             return false;
         }
 
-        private void HandleHorizontalDragUpdate(DragUpdateDetails details)
+        private void HandleDragUpdate(DragUpdateDetails details)
         {
-            double delta = IsReversedAxisDirection()
-                ? -details.PrimaryDelta
-                : details.PrimaryDelta;
-            ApplyDragOffset(delta, details);
-        }
-
-        private void HandleVerticalDragUpdate(DragUpdateDetails details)
-        {
-            double delta = IsReversedAxisDirection()
-                ? -details.PrimaryDelta
-                : details.PrimaryDelta;
-            ApplyDragOffset(delta, details);
+            ApplyDragOffset(details);
         }
 
         private void HandleDragEnd(DragEndDetails details)
         {
-            double velocity = IsReversedAxisDirection()
-                ? -details.PrimaryVelocity
-                : details.PrimaryVelocity;
-            _position.EndDrag(velocity);
+            _drag?.End(details);
             new ScrollEndNotification(CurrentMetrics(), dragDetails: details).Dispatch(Context);
         }
 
         private void HandleDragCancel()
         {
-            _position.EndDrag(0.0);
+            _hold?.Cancel();
+            _drag?.Cancel();
             new ScrollEndNotification(CurrentMetrics()).Dispatch(Context);
         }
 
-        private void ApplyDragOffset(double delta, DragUpdateDetails details)
+        private void ApplyDragOffset(DragUpdateDetails details)
         {
-            double before = _position.Pixels;
-            double adjusted = _position.Physics.ApplyPhysicsToUserOffset(_position, delta);
-            double intendedScrollDelta = -adjusted;
+            if (_drag == null)
+            {
+                return;
+            }
 
+            FixedScrollMetrics before = FixedScrollMetrics.From(_position);
+            double applied;
             _isApplyingDrag = true;
             try
             {
-                _position.ApplyUserOffset(delta);
+                // The controller owns the motion-start threshold and axis reversal; it reports the
+                // offset it actually handed to the position.
+                applied = _drag.Update(details);
             }
             finally
             {
                 _isApplyingDrag = false;
             }
 
-            double actualScrollDelta = _position.Pixels - before;
+            if (applied == 0.0)
+            {
+                // The motion-start threshold swallowed this update; nothing moved and nothing
+                // overscrolled, so no notification is due.
+                return;
+            }
+
+            double intendedScrollDelta = -_position.Physics.ApplyPhysicsToUserOffset(before, applied);
+            double actualScrollDelta = _position.Pixels - before.Pixels;
             if (Math.Abs(actualScrollDelta) > 0.0001)
             {
                 new ScrollUpdateNotification(
@@ -997,6 +1080,11 @@ public sealed class Scrollable : StatefulWidget
         private void HandlePointerSignal(PointerSignalEvent @event)
         {
             if (@event is not PointerScrollEvent scroll)
+            {
+                return;
+            }
+
+            if (!_effectivePhysics.ShouldAcceptUserOffset(_position))
             {
                 return;
             }

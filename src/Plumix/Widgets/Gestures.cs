@@ -100,14 +100,17 @@ public sealed class RawGestureDetector : StatefulWidget
         Action<PointerDownEvent>? onSecondaryTapDown = null,
         Action<PointerUpEvent>? onSecondaryTapUp = null,
         Action? onSecondaryTapCancel = null,
+        Action<DragDownDetails>? onHorizontalDragDown = null,
         Action<DragStartDetails>? onHorizontalDragStart = null,
         Action<DragUpdateDetails>? onHorizontalDragUpdate = null,
         Action<DragEndDetails>? onHorizontalDragEnd = null,
         Action? onHorizontalDragCancel = null,
+        Action<DragDownDetails>? onVerticalDragDown = null,
         Action<DragStartDetails>? onVerticalDragStart = null,
         Action<DragUpdateDetails>? onVerticalDragUpdate = null,
         Action<DragEndDetails>? onVerticalDragEnd = null,
         Action? onVerticalDragCancel = null,
+        Action<DragDownDetails>? onPanDown = null,
         Action<DragStartDetails>? onPanStart = null,
         Action<DragUpdateDetails>? onPanUpdate = null,
         Action<DragEndDetails>? onPanEnd = null,
@@ -116,6 +119,10 @@ public sealed class RawGestureDetector : StatefulWidget
         IReadOnlySet<PointerDeviceKind>? supportedDevices = null,
         DragStartBehavior dragStartBehavior = DragStartBehavior.Start,
         DeviceGestureSettings? gestureSettings = null,
+        double? minFlingDistance = null,
+        double? minFlingVelocity = null,
+        double? maxFlingVelocity = null,
+        bool dragEnabled = true,
         Key? key = null) : base(key)
     {
         Child = child;
@@ -135,14 +142,17 @@ public sealed class RawGestureDetector : StatefulWidget
         OnSecondaryTapDown = onSecondaryTapDown;
         OnSecondaryTapUp = onSecondaryTapUp;
         OnSecondaryTapCancel = onSecondaryTapCancel;
+        OnHorizontalDragDown = onHorizontalDragDown;
         OnHorizontalDragStart = onHorizontalDragStart;
         OnHorizontalDragUpdate = onHorizontalDragUpdate;
         OnHorizontalDragEnd = onHorizontalDragEnd;
         OnHorizontalDragCancel = onHorizontalDragCancel;
+        OnVerticalDragDown = onVerticalDragDown;
         OnVerticalDragStart = onVerticalDragStart;
         OnVerticalDragUpdate = onVerticalDragUpdate;
         OnVerticalDragEnd = onVerticalDragEnd;
         OnVerticalDragCancel = onVerticalDragCancel;
+        OnPanDown = onPanDown;
         OnPanStart = onPanStart;
         OnPanUpdate = onPanUpdate;
         OnPanEnd = onPanEnd;
@@ -151,6 +161,10 @@ public sealed class RawGestureDetector : StatefulWidget
         SupportedDevices = supportedDevices;
         DragStartBehavior = dragStartBehavior;
         GestureSettings = gestureSettings;
+        MinFlingDistance = minFlingDistance;
+        MinFlingVelocity = minFlingVelocity;
+        MaxFlingVelocity = maxFlingVelocity;
+        DragEnabled = dragEnabled;
     }
 
     public Widget? Child { get; }
@@ -178,6 +192,8 @@ public sealed class RawGestureDetector : StatefulWidget
     public Action<PointerUpEvent>? OnSecondaryTapUp { get; }
     public Action? OnSecondaryTapCancel { get; }
 
+    public Action<DragDownDetails>? OnHorizontalDragDown { get; }
+
     public Action<DragStartDetails>? OnHorizontalDragStart { get; }
 
     public Action<DragUpdateDetails>? OnHorizontalDragUpdate { get; }
@@ -186,6 +202,8 @@ public sealed class RawGestureDetector : StatefulWidget
 
     public Action? OnHorizontalDragCancel { get; }
 
+    public Action<DragDownDetails>? OnVerticalDragDown { get; }
+
     public Action<DragStartDetails>? OnVerticalDragStart { get; }
 
     public Action<DragUpdateDetails>? OnVerticalDragUpdate { get; }
@@ -193,6 +211,8 @@ public sealed class RawGestureDetector : StatefulWidget
     public Action<DragEndDetails>? OnVerticalDragEnd { get; }
 
     public Action? OnVerticalDragCancel { get; }
+
+    public Action<DragDownDetails>? OnPanDown { get; }
 
     public Action<DragStartDetails>? OnPanStart { get; }
 
@@ -210,28 +230,62 @@ public sealed class RawGestureDetector : StatefulWidget
 
     public DeviceGestureSettings? GestureSettings { get; }
 
+    /// <summary>Drag distance floor below which a release is not treated as a fling.</summary>
+    public double? MinFlingDistance { get; }
+
+    /// <summary>Drag velocity floor below which a release is not treated as a fling.</summary>
+    public double? MinFlingVelocity { get; }
+
+    /// <summary>Ceiling applied to reported fling velocities.</summary>
+    public double? MaxFlingVelocity { get; }
+
+    /// <summary>
+    /// Whether the drag recognizers are registered at all. Setting this to false removes them from
+    /// the gesture arena instead of merely ignoring their callbacks.
+    /// </summary>
+    public bool DragEnabled { get; }
+
     public override State CreateState()
     {
         return new RawGestureDetectorState();
     }
 
-    private sealed class RawGestureDetectorState : State
+    public sealed class RawGestureDetectorState : State
     {
         private TapGestureRecognizer? _tap;
         private LongPressGestureRecognizer? _longPress;
         private HorizontalDragGestureRecognizer? _horizontalDrag;
         private VerticalDragGestureRecognizer? _verticalDrag;
         private PanGestureRecognizer? _pan;
+        private bool _dragEnabled = true;
 
         private RawGestureDetector CurrentWidget => (RawGestureDetector)Element.Widget;
 
         public override void InitState()
         {
+            _dragEnabled = CurrentWidget.DragEnabled;
             SyncRecognizers();
         }
 
         public override void DidUpdateWidget(StatefulWidget oldWidget)
         {
+            _dragEnabled = CurrentWidget.DragEnabled;
+            SyncRecognizers();
+        }
+
+        /// <summary>
+        /// Registers or unregisters the drag recognizers immediately, without waiting for a rebuild.
+        /// This is the counterpart of Flutter's <c>replaceGestureRecognizers</c>, which a scrollable
+        /// calls from layout when the physics change their mind about accepting user offsets.
+        /// </summary>
+        public void SetDragEnabled(bool value)
+        {
+            if (_dragEnabled == value)
+            {
+                return;
+            }
+
+            _dragEnabled = value;
             SyncRecognizers();
         }
 
@@ -307,12 +361,15 @@ public sealed class RawGestureDetector : StatefulWidget
                 DisposeRecognizer(ref _longPress);
             }
 
-            if (widget.OnHorizontalDragStart != null
-                || widget.OnHorizontalDragUpdate != null
-                || widget.OnHorizontalDragEnd != null
-                || widget.OnHorizontalDragCancel != null)
+            if (_dragEnabled
+                && (widget.OnHorizontalDragDown != null
+                    || widget.OnHorizontalDragStart != null
+                    || widget.OnHorizontalDragUpdate != null
+                    || widget.OnHorizontalDragEnd != null
+                    || widget.OnHorizontalDragCancel != null))
             {
                 _horizontalDrag ??= new HorizontalDragGestureRecognizer();
+                _horizontalDrag.OnDown = widget.OnHorizontalDragDown;
                 _horizontalDrag.OnStart = widget.OnHorizontalDragStart;
                 _horizontalDrag.OnUpdate = widget.OnHorizontalDragUpdate;
                 _horizontalDrag.OnEnd = widget.OnHorizontalDragEnd;
@@ -320,6 +377,9 @@ public sealed class RawGestureDetector : StatefulWidget
                 _horizontalDrag.DragStartBehavior = widget.DragStartBehavior;
                 _horizontalDrag.SupportedDevices = widget.SupportedDevices;
                 _horizontalDrag.GestureSettings = widget.GestureSettings;
+                _horizontalDrag.MinFlingDistance = widget.MinFlingDistance;
+                _horizontalDrag.MinFlingVelocity = widget.MinFlingVelocity;
+                _horizontalDrag.MaxFlingVelocity = widget.MaxFlingVelocity;
                 _horizontalDrag.VelocityTrackerBuilder = widget.VelocityTrackerBuilder
                     ?? DragGestureRecognizer.DefaultVelocityTrackerBuilder;
             }
@@ -328,12 +388,15 @@ public sealed class RawGestureDetector : StatefulWidget
                 DisposeRecognizer(ref _horizontalDrag);
             }
 
-            if (widget.OnVerticalDragStart != null
-                || widget.OnVerticalDragUpdate != null
-                || widget.OnVerticalDragEnd != null
-                || widget.OnVerticalDragCancel != null)
+            if (_dragEnabled
+                && (widget.OnVerticalDragDown != null
+                    || widget.OnVerticalDragStart != null
+                    || widget.OnVerticalDragUpdate != null
+                    || widget.OnVerticalDragEnd != null
+                    || widget.OnVerticalDragCancel != null))
             {
                 _verticalDrag ??= new VerticalDragGestureRecognizer();
+                _verticalDrag.OnDown = widget.OnVerticalDragDown;
                 _verticalDrag.OnStart = widget.OnVerticalDragStart;
                 _verticalDrag.OnUpdate = widget.OnVerticalDragUpdate;
                 _verticalDrag.OnEnd = widget.OnVerticalDragEnd;
@@ -341,6 +404,9 @@ public sealed class RawGestureDetector : StatefulWidget
                 _verticalDrag.DragStartBehavior = widget.DragStartBehavior;
                 _verticalDrag.SupportedDevices = widget.SupportedDevices;
                 _verticalDrag.GestureSettings = widget.GestureSettings;
+                _verticalDrag.MinFlingDistance = widget.MinFlingDistance;
+                _verticalDrag.MinFlingVelocity = widget.MinFlingVelocity;
+                _verticalDrag.MaxFlingVelocity = widget.MaxFlingVelocity;
                 _verticalDrag.VelocityTrackerBuilder = widget.VelocityTrackerBuilder
                     ?? DragGestureRecognizer.DefaultVelocityTrackerBuilder;
             }
@@ -349,12 +415,15 @@ public sealed class RawGestureDetector : StatefulWidget
                 DisposeRecognizer(ref _verticalDrag);
             }
 
-            if (widget.OnPanStart != null
-                || widget.OnPanUpdate != null
-                || widget.OnPanEnd != null
-                || widget.OnPanCancel != null)
+            if (_dragEnabled
+                && (widget.OnPanDown != null
+                    || widget.OnPanStart != null
+                    || widget.OnPanUpdate != null
+                    || widget.OnPanEnd != null
+                    || widget.OnPanCancel != null))
             {
                 _pan ??= new PanGestureRecognizer();
+                _pan.OnDown = widget.OnPanDown;
                 _pan.OnStart = widget.OnPanStart;
                 _pan.OnUpdate = widget.OnPanUpdate;
                 _pan.OnEnd = widget.OnPanEnd;
@@ -362,6 +431,9 @@ public sealed class RawGestureDetector : StatefulWidget
                 _pan.DragStartBehavior = widget.DragStartBehavior;
                 _pan.SupportedDevices = widget.SupportedDevices;
                 _pan.GestureSettings = widget.GestureSettings;
+                _pan.MinFlingDistance = widget.MinFlingDistance;
+                _pan.MinFlingVelocity = widget.MinFlingVelocity;
+                _pan.MaxFlingVelocity = widget.MaxFlingVelocity;
                 _pan.VelocityTrackerBuilder = widget.VelocityTrackerBuilder
                     ?? DragGestureRecognizer.DefaultVelocityTrackerBuilder;
             }

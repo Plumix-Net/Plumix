@@ -1,6 +1,8 @@
 using Plumix;
 using Plumix.Foundation;
+using Plumix.Gestures;
 using Plumix.Physics;
+using Plumix.Widgets;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/widgets/scroll_position.dart; flutter/packages/flutter/lib/src/widgets/scroll_physics.dart; flutter/packages/flutter/lib/src/widgets/scroll_activity.dart (adapted)
 
@@ -156,8 +158,266 @@ public sealed class IdleScrollActivity(ScrollPosition position) : ScrollActivity
     public override void ApplyNewDimensions() => Position.GoBallistic(0.0);
 }
 
-public sealed class DragScrollActivity(ScrollPosition position) : ScrollActivity(position)
+/// <summary>
+/// A scroll activity that holds the position still, cancelling any ballistic motion, while the
+/// pointer that will drive the drag is still down.
+/// </summary>
+public sealed class HoldScrollActivity : ScrollActivity, IScrollHoldController
 {
+    private readonly Action? _onHoldCanceled;
+
+    public HoldScrollActivity(ScrollPosition position, Action? onHoldCanceled = null) : base(position)
+    {
+        _onHoldCanceled = onHoldCanceled;
+    }
+
+    public override bool IsScrolling => false;
+
+    public override double Velocity => 0.0;
+
+    public void Cancel()
+    {
+        Position.GoBallistic(0.0);
+    }
+
+    public override void Dispose()
+    {
+        _onHoldCanceled?.Invoke();
+        base.Dispose();
+    }
+}
+
+/// <summary>The activity a scroll position runs while the user drags it.</summary>
+public sealed class DragScrollActivity : ScrollActivity
+{
+    private ScrollDragController? _controller;
+
+    public DragScrollActivity(ScrollPosition position, ScrollDragController? controller = null)
+        : base(position)
+    {
+        _controller = controller;
+    }
+
+    public override double Velocity => 0.0;
+
+    public override void Dispose()
+    {
+        _controller = null;
+        base.Dispose();
+    }
+}
+
+/// <summary>
+/// Scrolls a scroll position from the deltas reported by a drag gesture recognizer.
+/// </summary>
+/// <remarks>
+/// The controller owns the two pieces of drag behavior the physics parameterize: the momentum
+/// carried over from a previous fling (<see cref="CarriedVelocity"/>, from
+/// <see cref="ScrollPhysics.CarriedMomentum"/>) and the distance a resting finger must travel
+/// before the position starts moving again (<see cref="MotionStartDistanceThreshold"/>, from
+/// <see cref="ScrollPhysics.DragStartDistanceMotionThreshold"/>).
+/// </remarks>
+public sealed class ScrollDragController : IDrag, IDisposable
+{
+    /// <summary>How long a drag must be stationary before its carried momentum is dropped.</summary>
+    public static readonly TimeSpan MomentumRetainStationaryDurationThreshold =
+        TimeSpan.FromMilliseconds(20);
+
+    /// <summary>How long a drag must be stationary before the motion-start threshold re-arms.</summary>
+    public static readonly TimeSpan MotionStoppedDurationThreshold = TimeSpan.FromMilliseconds(50);
+
+    /// <summary>
+    /// The fraction of the carried velocity a new fling must reach to keep the carried momentum.
+    /// </summary>
+    public const double MomentumRetainVelocityThresholdFactor = 0.5;
+
+    // A single update this large is a deliberate motion and passes the threshold unmodified.
+    private const double BigThresholdBreakDistance = 24.0;
+
+    private readonly Action? _onDragCanceled;
+    private DateTime? _lastNonStationaryTimestampUtc;
+    private double? _offsetSinceLastStop;
+    private bool _retainMomentum;
+
+    public ScrollDragController(
+        ScrollPosition position,
+        DragStartDetails details,
+        Action? onDragCanceled = null,
+        double? carriedVelocity = null,
+        double? motionStartDistanceThreshold = null)
+    {
+        if (motionStartDistanceThreshold is <= 0.0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(motionStartDistanceThreshold),
+                "motionStartDistanceThreshold must be a positive number or null");
+        }
+
+        Position = position;
+        CarriedVelocity = carriedVelocity;
+        MotionStartDistanceThreshold = motionStartDistanceThreshold;
+        _onDragCanceled = onDragCanceled;
+        _retainMomentum = carriedVelocity is not null and not 0.0;
+        _lastNonStationaryTimestampUtc = details.SourceTimeStampUtc;
+        _offsetSinceLastStop = motionStartDistanceThreshold == null ? null : 0.0;
+    }
+
+    /// <summary>The position this drag scrolls.</summary>
+    public ScrollPosition Position { get; }
+
+    /// <summary>Velocity carried over from a previous ballistic activity, if any.</summary>
+    public double? CarriedVelocity { get; }
+
+    /// <summary>The distance a resting drag must travel before the position starts moving.</summary>
+    public double? MotionStartDistanceThreshold { get; }
+
+    private bool Reversed => ScrollDirectionUtils.AxisDirectionIsReversed(Position.AxisDirection);
+
+    /// <summary>
+    /// Applies a drag update, returning the offset actually handed to the position (zero when the
+    /// motion-start threshold swallowed it).
+    /// </summary>
+    public double Update(DragUpdateDetails details)
+    {
+        double offset = details.PrimaryDelta;
+        if (offset != 0.0)
+        {
+            _lastNonStationaryTimestampUtc = details.SourceTimeStampUtc;
+        }
+
+        // By default, iOS platforms carries momentum and has a start threshold (configured in
+        // BouncingScrollPhysics). The rest of the platforms does not.
+        MaybeLoseMomentum(offset, details.SourceTimeStampUtc);
+        offset = AdjustForScrollStartThreshold(offset, details.SourceTimeStampUtc);
+        if (offset == 0.0)
+        {
+            return 0.0;
+        }
+
+        if (Reversed)
+        {
+            offset = -offset;
+        }
+
+        Position.ApplyUserOffset(offset);
+        return offset;
+    }
+
+    void IDrag.Update(DragUpdateDetails details) => Update(details);
+
+    public void End(DragEndDetails details)
+    {
+        // We negate the velocity here because if the touch is moving downwards, the scroll has to
+        // move upwards. It's the same reason that update is negated.
+        double velocity = -details.PrimaryVelocity;
+        if (Reversed)
+        {
+            velocity = -velocity;
+        }
+
+        if (_retainMomentum)
+        {
+            // Build momentum only if the velocity of the last drag was in the same direction and if
+            // the velocity is not substantially lower than the carried momentum.
+            bool isFlingingInSameDirection = Math.Sign(velocity) == Math.Sign(CarriedVelocity!.Value);
+            bool isVelocityNotSubstantiallyLessThanCarriedMomentum =
+                Math.Abs(velocity)
+                > Math.Abs(CarriedVelocity.Value) * MomentumRetainVelocityThresholdFactor;
+            if (isFlingingInSameDirection && isVelocityNotSubstantiallyLessThanCarriedMomentum)
+            {
+                velocity += CarriedVelocity.Value;
+            }
+        }
+
+        Position.GoBallistic(velocity);
+    }
+
+    public void Cancel()
+    {
+        Position.GoBallistic(0.0);
+    }
+
+    public void Dispose()
+    {
+        _onDragCanceled?.Invoke();
+    }
+
+    /// <summary>Drops the carried momentum once the drag has been stationary for long enough.</summary>
+    private void MaybeLoseMomentum(double offset, DateTime? timestampUtc)
+    {
+        if (_retainMomentum
+            && offset == 0.0
+            && (timestampUtc == null || Elapsed(timestampUtc) > MomentumRetainStationaryDurationThreshold))
+        {
+            // If pointer is stationary for too long, we lose momentum.
+            _retainMomentum = false;
+        }
+    }
+
+    /// <summary>
+    /// Swallows offsets until the drag has moved past the motion-start threshold, then releases a
+    /// damped first offset so the position does not jump.
+    /// </summary>
+    private double AdjustForScrollStartThreshold(double offset, DateTime? timestampUtc)
+    {
+        if (timestampUtc == null)
+        {
+            // If we can't track time, we can't apply thresholds. Semantics-driven drags land here.
+            return offset;
+        }
+
+        if (offset == 0.0)
+        {
+            if (MotionStartDistanceThreshold != null
+                && _offsetSinceLastStop == null
+                && Elapsed(timestampUtc) > MotionStoppedDurationThreshold)
+            {
+                // Enforce a new threshold.
+                _offsetSinceLastStop = 0.0;
+            }
+
+            // Not moving can't break threshold.
+            return 0.0;
+        }
+
+        if (_offsetSinceLastStop == null)
+        {
+            // Already in motion or no threshold behavior configured such as for desktop.
+            return offset;
+        }
+
+        _offsetSinceLastStop += offset;
+        if (Math.Abs(_offsetSinceLastStop.Value) > MotionStartDistanceThreshold!.Value)
+        {
+            // Threshold broken.
+            _offsetSinceLastStop = null;
+            if (Math.Abs(offset) > BigThresholdBreakDistance)
+            {
+                // This is heuristically a very deliberate fling. Leave the drag alone.
+                return offset;
+            }
+
+            // This is a normal speed threshold break.
+            return Math.Min(
+                       // Ease into the motion when the threshold is initially broken to avoid a
+                       // visible jump.
+                       MotionStartDistanceThreshold.Value / 3.0,
+                       Math.Abs(offset))
+                   * Math.Sign(offset);
+        }
+
+        return 0.0;
+    }
+
+    private TimeSpan Elapsed(DateTime? timestampUtc)
+    {
+        if (timestampUtc == null || _lastNonStationaryTimestampUtc == null)
+        {
+            return TimeSpan.Zero;
+        }
+
+        return timestampUtc.Value - _lastNonStationaryTimestampUtc.Value;
+    }
 }
 
 public sealed class PointerScrollActivity(ScrollPosition position) : ScrollActivity(position)
@@ -294,6 +554,8 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
     private ScrollDirection _userScrollDirection = ScrollDirection.Idle;
     private FixedScrollMetrics? _lastMetrics;
     private bool _didChangeViewportDimensionOrReceiveCorrection = true;
+    private ScrollDragController? _currentDrag;
+    private double _heldPreviousVelocity;
 
     public ScrollPosition(double initialPixels = 0.0, ScrollPhysics? physics = null)
     {
@@ -325,6 +587,12 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
     public ValueNotifier<bool> IsScrollingNotifier { get; }
 
     internal ITickerProvider? TickerProvider { get; set; }
+
+    /// <summary>
+    /// Invoked with <see cref="ScrollPhysics.ShouldAcceptUserOffset"/> whenever the dimensions
+    /// change, so the owning scrollable can add or remove its drag gesture recognizers.
+    /// </summary>
+    internal Action<bool>? CanDragChanged { get; set; }
 
     public ScrollDirection UserScrollDirection => _userScrollDirection;
 
@@ -375,6 +643,53 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
     public void BeginDrag()
     {
         BeginActivity(new DragScrollActivity(this));
+    }
+
+    /// <summary>
+    /// Stops the current activity and holds the position still, remembering the velocity it was
+    /// carrying so a drag started from this hold can restore it.
+    /// </summary>
+    public IScrollHoldController Hold(Action? holdCancelCallback = null)
+    {
+        double previousVelocity = Activity.Velocity;
+        var holdActivity = new HoldScrollActivity(this, holdCancelCallback);
+        BeginActivity(holdActivity);
+        _heldPreviousVelocity = previousVelocity;
+        return holdActivity;
+    }
+
+    /// <summary>
+    /// Starts a drag, handing the physics' carried momentum and drag-start distance threshold to the
+    /// returned controller.
+    /// </summary>
+    public ScrollDragController Drag(DragStartDetails details, Action? dragCancelCallback = null)
+    {
+        var drag = new ScrollDragController(
+            position: this,
+            details: details,
+            onDragCanceled: dragCancelCallback,
+            carriedVelocity: Physics.CarriedMomentum(_heldPreviousVelocity),
+            motionStartDistanceThreshold: Physics.DragStartDistanceMotionThreshold);
+        BeginActivity(new DragScrollActivity(this, drag));
+        _currentDrag = drag;
+        return drag;
+    }
+
+    /// <summary>
+    /// Whether the physics recommend deferring expensive frame-bound work because this position is
+    /// changing quickly.
+    /// </summary>
+    /// <remarks>
+    /// The velocity handed to the physics is the current activity's velocity. Flutter also adds the
+    /// implied velocity of a forced pixel change; Plumix has no <c>forcePixels</c> path, so a jump
+    /// does not contribute velocity here.
+    /// </remarks>
+    public bool RecommendDeferredLoading(BuildContext context)
+    {
+        return Physics.RecommendDeferredLoading(
+            Activity.Velocity,
+            FixedScrollMetrics.From(this),
+            context);
     }
 
     internal void UpdateDragTo(double value)
@@ -479,13 +794,27 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
         }
 
         // Lets the current activity settle a position the new dimensions put out of range.
-        Activity.ApplyNewDimensions();
+        ApplyNewDimensions();
         _lastMetrics = FixedScrollMetrics.From(this);
         return true;
     }
 
+    /// <summary>
+    /// Notifies the activity and the scrollable that the dimensions changed. Re-evaluating
+    /// <see cref="ScrollPhysics.ShouldAcceptUserOffset"/> here is what registers or unregisters the
+    /// scrollable's drag gesture recognizers.
+    /// </summary>
+    protected virtual void ApplyNewDimensions()
+    {
+        Activity.ApplyNewDimensions();
+        CanDragChanged?.Invoke(Physics.ShouldAcceptUserOffset(this));
+    }
+
     public override void Dispose()
     {
+        ScrollDragController? drag = _currentDrag;
+        _currentDrag = null;
+        drag?.Dispose();
         _activity.Dispose();
         IsScrollingNotifier.Dispose();
         base.Dispose();
@@ -493,6 +822,7 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
 
     internal void BeginActivity(ScrollActivity activity)
     {
+        _heldPreviousVelocity = 0.0;
         if (ReferenceEquals(_activity, activity))
         {
             return;
@@ -500,6 +830,9 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
 
         _activity.Dispose();
         _activity = activity;
+        ScrollDragController? previousDrag = _currentDrag;
+        _currentDrag = null;
+        previousDrag?.Dispose();
         IsScrollingNotifier.Value = activity is not IdleScrollActivity;
     }
 

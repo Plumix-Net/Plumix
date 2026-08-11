@@ -36,6 +36,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `foundation/platform.dart` | `src/Plumix/UI/TargetPlatform.cs` | — | — |
 | `gestures/arena.dart` | `src/Plumix/Gestures/GestureArena.cs` | — | — |
 | `gestures/binding.dart` | `src/Plumix/Gestures/GestureBinding.cs` | — | — |
+| `gestures/drag.dart` | `src/Plumix/Gestures/Drag.cs` | `src/Plumix.Tests/DragTargetTests.cs` | `dart_sample/lib/demos/general/drag_target_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/DragTargetDemoPage.cs` |
 | `gestures/events.dart` | `src/Plumix/UI/PointerEvents.cs` | — | — |
 | `gestures/gesture_settings.dart` | `src/Plumix/Gestures/DeviceGestureSettings.cs` | — | — |
 | `gestures/long_press.dart` | `src/Plumix/Gestures/LongPressGestureRecognizer.cs` | — | — |
@@ -437,8 +438,8 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 
 ## Summary
 
-- Flutter files mapped: 386
-- C# files carrying a marker: 485
+- Flutter files mapped: 387
+- C# files carrying a marker: 486
 - C# files without a marker: 15
 - Markers not resolvable in the pinned checkout: 5
 
