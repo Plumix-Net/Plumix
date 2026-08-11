@@ -2010,7 +2010,7 @@ public sealed class RenderDecoratedBox : RenderProxyBox
     }
 }
 
-public sealed class RenderOpacity : RenderProxyBox
+public class RenderOpacity : RenderProxyBox
 {
     private double _opacity;
     private bool _alwaysIncludeSemantics;

@@ -121,6 +121,8 @@
   - `ToggleButtons` (direct `ColorScheme.primary`/`onSurface`/`surface` roles, state-resolving fill API, inherited
     theme copy/lerp/capture, source checked/TextButton composition, adjacent selected-border ownership, intrinsic and
     baseline layout, cross-axis tap targets, RTL/vertical border paint, and elliptical per-corner clipping).
+  - `FlexibleSpaceBar` (source state/settings split, exact M2/M3 title-theme branch, logical title geometry,
+    none/pin/parallax collapse, zoom/blur/fade stretch effects, and repaint-aware background opacity).
 - Completed `Typography.Material2014`/`Material2018`, exact platform black/white themes, dense/tall geometry, and
   locale script-category selection.
 - Remove the narrowed `ColorScheme + Typography closeout` row from `docs/MATERIAL_TODO.md` only after those checks

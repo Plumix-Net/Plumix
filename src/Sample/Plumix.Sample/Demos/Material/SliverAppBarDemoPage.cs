@@ -76,7 +76,12 @@ public sealed class SliverAppBarDemoPage : StatefulWidget
                     new Align(
                         alignment: Alignment.Center,
                         child: new Text("PARALLAX", fontSize: 30, color: Colors.White))),
-                stretchModes: [StretchMode.ZoomBackground, StretchMode.FadeTitle]);
+                stretchModes:
+                [
+                    StretchMode.ZoomBackground,
+                    StretchMode.BlurBackground,
+                    StretchMode.FadeTitle,
+                ]);
 
             return _variant switch
             {

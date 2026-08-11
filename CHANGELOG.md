@@ -1,5 +1,10 @@
 # Changelog
 
+- Breaking: completed the strict Material `FlexibleSpaceBar` closeout. The control now uses the source stateful/
+  layout-builder composition, logical title padding and scaled-width constraint, exact collapse and M2/M3 title
+  rules, all zoom/blur/fade stretch modes, repaint-aware background opacity, and strict settings extents. Focused
+  coverage and the mirrored SliverAppBar stretch-mode demo were expanded.
+
 - Breaking: completed the strict Material `ToggleButtons` closeout. Direct `ColorScheme` defaults, state-resolving
   fills, exact checked/theme/TextButton composition, axis-aware tap targets, adjacent border ownership, intrinsic/
   baseline layout, RTL/vertical paint, and elliptical corner clipping now match Flutter; focused coverage and the

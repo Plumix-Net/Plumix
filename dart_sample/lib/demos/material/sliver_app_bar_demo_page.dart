@@ -97,6 +97,7 @@ class _SliverAppBarDemoPageState extends State<SliverAppBarDemoPage> {
       title: title,
       stretchModes: const <StretchMode>[
         StretchMode.zoomBackground,
+        StretchMode.blurBackground,
         StretchMode.fadeTitle,
       ],
       background: const ColoredBox(
