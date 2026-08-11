@@ -35,7 +35,7 @@ internal sealed class ChipsDemoPageState : State
                 new Text("Material chips", fontSize: 20, color: Colors.Black),
                 new Text(
                     "Informational, action, choice, filter, and input chips use Wrap for multi-run layouts, "
-                    + "with deletion and ChipTheme precedence.",
+                    + "with deletion and a copyWith-derived local ChipTheme override.",
                     fontSize: 14,
                     color: Color.Parse("#8A000000")),
                 new Wrap(
@@ -161,13 +161,13 @@ internal sealed class ChipsDemoPageState : State
         }
 
         return new ChipTheme(
-            data: new ChipThemeData(
-                BackgroundColor: Color.Parse("#FFFFDDB3"),
-                SelectedColor: Color.Parse("#FF006C4C"),
-                CheckmarkColor: Colors.White,
-                LabelStyle: new TextStyle(Color: Color.Parse("#FF271900")),
-                SecondaryLabelStyle: new TextStyle(Color: Colors.White),
-                Shape: ShapeBorder.RoundedRectangle(14)),
+            data: ChipTheme.Of(context).CopyWith(
+                backgroundColor: Color.Parse("#FFFFDDB3"),
+                selectedColor: Color.Parse("#FF006C4C"),
+                checkmarkColor: Colors.White,
+                labelStyle: new TextStyle(Color: Color.Parse("#FF271900")),
+                secondaryLabelStyle: new TextStyle(Color: Colors.White),
+                shape: ShapeBorder.RoundedRectangle(14)),
             child: probes);
     }
 

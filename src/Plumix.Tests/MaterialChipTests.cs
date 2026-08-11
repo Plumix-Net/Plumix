@@ -52,15 +52,173 @@ public sealed class MaterialChipTests : IDisposable
         Assert.Equal(Color.FromArgb(0x0c, 0, 0, 0), defaults.DisabledColor);
         Assert.Equal(Color.FromArgb(0x3d, 0, 0, 0), defaults.SelectedColor);
         Assert.Equal(Color.FromArgb(0x3d, 95, 158, 160), defaults.SecondarySelectedColor);
+        Assert.Equal(Color.FromArgb(0xde, 95, 158, 160), defaults.SecondaryLabelStyle!.Color);
         Assert.True(defaults.ShowCheckmark);
         Assert.Equal(new Thickness(4), defaults.Padding);
         Assert.Equal(8.0, defaults.PressElevation);
         Assert.Equal(18.0, defaults.IconTheme!.Size);
+
+        Color customPrimary = Color.FromArgb(0x80, 0x11, 0x22, 0x33);
+        ChipThemeData primaryDefaults = ChipThemeData.FromDefaults(
+            secondaryColor: Colors.CadetBlue,
+            labelStyle: new TextStyle(FontSize: 14),
+            primaryColor: customPrimary);
+        Assert.Equal(Color.FromArgb(0x1f, 0x11, 0x22, 0x33), primaryDefaults.BackgroundColor);
+        Assert.Equal(Color.FromArgb(0xde, 0x11, 0x22, 0x33), primaryDefaults.LabelStyle!.Color);
         Assert.Throws<ArgumentException>(() => ChipThemeData.FromDefaults(
             secondaryColor: Colors.CadetBlue,
             labelStyle: new TextStyle(),
             brightness: Brightness.Light,
             primaryColor: Colors.Black));
+    }
+
+    [Fact]
+    public void ChipThemeData_CopyWithRetainsUnspecifiedFieldsAndOverridesSelectedFields()
+    {
+        var color = MaterialStateProperty<Color?>.All(Colors.CadetBlue);
+        var original = new ChipThemeData(
+            Color: color,
+            BackgroundColor: Colors.Black,
+            DeleteIconColor: Colors.Blue,
+            DisabledColor: Colors.Crimson,
+            SelectedColor: Colors.DarkGreen,
+            SecondarySelectedColor: Colors.Gold,
+            ShadowColor: Colors.Gray,
+            SurfaceTintColor: Colors.Green,
+            SelectedShadowColor: Colors.Indigo,
+            ShowCheckmark: false,
+            CheckmarkColor: Colors.Lime,
+            LabelPadding: new Thickness(1),
+            Padding: new Thickness(2),
+            Side: new BorderSide(Colors.Maroon, 3),
+            Shape: ShapeBorder.RoundedRectangle(4),
+            LabelStyle: new TextStyle(FontSize: 12),
+            SecondaryLabelStyle: new TextStyle(FontSize: 13),
+            Brightness: Brightness.Dark,
+            Elevation: 5,
+            PressElevation: 6,
+            IconTheme: new IconThemeData(Color: Colors.Navy, Size: 17),
+            AvatarBoxConstraints: new BoxConstraints(MinWidth: 18),
+            DeleteIconBoxConstraints: new BoxConstraints(MinWidth: 19));
+
+        Assert.Equal(original, original.CopyWith());
+
+        ChipThemeData changed = original.CopyWith(
+            backgroundColor: Colors.White,
+            showCheckmark: true,
+            elevation: 9);
+        Assert.Same(color, changed.Color);
+        Assert.Equal(Colors.White, changed.BackgroundColor);
+        Assert.True(changed.ShowCheckmark);
+        Assert.Equal(9, changed.Elevation);
+        Assert.Equal(original.DeleteIconBoxConstraints, changed.DeleteIconBoxConstraints);
+    }
+
+    [Fact]
+    public void ChipThemeData_LerpMatchesFlutterContinuousDiscreteAndNullEndpointRules()
+    {
+        var begin = new ChipThemeData(
+            Color: MaterialStateProperty<Color?>.All(Colors.Black),
+            BackgroundColor: Colors.Black,
+            DeleteIconColor: Colors.Black,
+            DisabledColor: Colors.Black,
+            SelectedColor: Colors.Black,
+            SecondarySelectedColor: Colors.Black,
+            ShadowColor: Colors.Black,
+            SurfaceTintColor: Colors.Black,
+            SelectedShadowColor: Colors.Black,
+            ShowCheckmark: false,
+            CheckmarkColor: Colors.Black,
+            LabelPadding: new Thickness(8, 0),
+            Padding: new Thickness(4),
+            Side: new BorderSide(Colors.Black, 2),
+            Shape: ShapeBorder.RoundedRectangle(2),
+            LabelStyle: new TextStyle(Color: Colors.Black, FontSize: 10),
+            SecondaryLabelStyle: new TextStyle(Color: Colors.Black, FontSize: 12),
+            Brightness: Brightness.Dark,
+            Elevation: 1,
+            PressElevation: 4,
+            IconTheme: new IconThemeData(Color: Colors.Black, Size: 26, Opacity: 0.2),
+            AvatarBoxConstraints: new BoxConstraints(MinWidth: 4, MaxWidth: 8),
+            DeleteIconBoxConstraints: new BoxConstraints(MinHeight: 6, MaxHeight: 10));
+        var end = new ChipThemeData(
+            Color: MaterialStateProperty<Color?>.All(Colors.White),
+            BackgroundColor: Colors.White,
+            DeleteIconColor: Colors.White,
+            DisabledColor: Colors.White,
+            SelectedColor: Colors.White,
+            SecondarySelectedColor: Colors.White,
+            ShadowColor: Colors.White,
+            SurfaceTintColor: Colors.White,
+            SelectedShadowColor: Colors.White,
+            ShowCheckmark: true,
+            CheckmarkColor: Colors.White,
+            LabelPadding: new Thickness(0, 8),
+            Padding: new Thickness(2),
+            Side: new BorderSide(Colors.White, 4),
+            Shape: ShapeBorder.RoundedRectangle(10),
+            LabelStyle: new TextStyle(Color: Colors.White, FontSize: 20),
+            SecondaryLabelStyle: new TextStyle(Color: Colors.White, FontSize: 22),
+            Brightness: Brightness.Light,
+            Elevation: 5,
+            PressElevation: 10,
+            IconTheme: new IconThemeData(Color: Colors.White, Size: 22, Opacity: 1.0),
+            AvatarBoxConstraints: new BoxConstraints(MinWidth: 8, MaxWidth: 12),
+            DeleteIconBoxConstraints: new BoxConstraints(MinHeight: 10, MaxHeight: 14));
+
+        Assert.Null(ChipThemeData.Lerp(null, null, 0.25));
+        Assert.Same(begin, ChipThemeData.Lerp(begin, begin, 0.5));
+
+        ChipThemeData midpoint = ChipThemeData.Lerp(begin, end, 0.5)!;
+        Color middleGray = Color.FromArgb(0xff, 0x7f, 0x7f, 0x7f);
+        Assert.Equal(middleGray, midpoint.Color!.Resolve(MaterialState.Pressed));
+        Assert.Equal(middleGray, midpoint.BackgroundColor);
+        Assert.Equal(middleGray, midpoint.DeleteIconColor);
+        Assert.Equal(middleGray, midpoint.CheckmarkColor);
+        Assert.True(midpoint.ShowCheckmark);
+        Assert.Equal(new Thickness(4, 4), midpoint.LabelPadding);
+        Assert.Equal(new Thickness(3), midpoint.Padding);
+        Assert.Equal(middleGray, midpoint.Side!.Value.Color);
+        Assert.Equal(3, midpoint.Side.Value.Width);
+        Assert.Equal(6, midpoint.Shape!.BorderRadius.Radius);
+        Assert.Equal(15, midpoint.LabelStyle!.FontSize);
+        Assert.Equal(Brightness.Light, midpoint.Brightness);
+        Assert.Equal(3, midpoint.Elevation);
+        Assert.Equal(7, midpoint.PressElevation);
+        Assert.Equal(24, midpoint.IconTheme!.Size);
+        Assert.Equal(0.6, midpoint.IconTheme.Opacity!.Value, precision: 12);
+        Assert.Equal(new BoxConstraints(MinWidth: 6, MaxWidth: 10), midpoint.AvatarBoxConstraints);
+        Assert.Equal(new BoxConstraints(MinHeight: 8, MaxHeight: 12), midpoint.DeleteIconBoxConstraints);
+
+        ChipThemeData fromNull = ChipThemeData.Lerp(null, end, 0.25)!;
+        Assert.Equal(5.5, fromNull.IconTheme!.Size);
+        Assert.Equal(0.25, fromNull.IconTheme.Opacity!.Value, precision: 12);
+    }
+
+    [Fact]
+    public void ChipTheme_ParticipatesInInheritedThemeCapture()
+    {
+        var capturedData = new ChipThemeData(BackgroundColor: Colors.CadetBlue);
+        var replacementData = new ChipThemeData(BackgroundColor: Colors.Crimson);
+        ChipThemeData? resolvedData = null;
+        Widget captureProbe = new ChipTheme(
+            capturedData,
+            new Builder(context =>
+            {
+                CapturedThemes capturedThemes = InheritedTheme.Capture(context);
+                return new ChipTheme(
+                    replacementData,
+                    capturedThemes.Wrap(new Builder(capturedContext =>
+                    {
+                        resolvedData = ChipTheme.Of(capturedContext);
+                        return new SizedBox();
+                    })));
+            }));
+
+        using var harness = new WidgetRenderHarness(Root(ThemeData.Light, captureProbe));
+        harness.Pump(new Size(320, 120));
+
+        Assert.Same(capturedData, resolvedData);
     }
 
     [Fact]

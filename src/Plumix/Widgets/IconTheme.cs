@@ -58,8 +58,8 @@ public sealed record IconThemeData(
             return null;
         }
 
-        double from = a ?? b!.Value;
-        double to = b ?? a!.Value;
+        double from = a ?? 0.0;
+        double to = b ?? 0.0;
         return from + ((to - from) * t);
     }
 

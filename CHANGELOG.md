@@ -1,5 +1,9 @@
 # Changelog
 
+- Breaking: completed the Material chips ColorScheme/theme closeout. Exact M2 derived-color alpha behavior,
+  source-shaped `ChipThemeData.copyWith`/lerp null-endpoint rules, shared icon-theme interpolation, and inherited-theme
+  capture now match Flutter; focused coverage and the mirrored local-theme demo were updated.
+
 - Breaking: completed the strict Material `ExpansionTile` closeout. The control and theme now expose source-shaped
   directional geometry, `ShapeBorder`, shared `AnimationStyle`, state-controller, and semantics APIs; direct M2/M3
   roles, exact `Expansible`/`ListTileTheme` composition, per-side border paint, controller lookup, `PageStorage`

@@ -25,7 +25,7 @@ class _ChipsDemoPageState extends State<ChipsDemoPage> {
         const Text('Material chips', style: TextStyle(fontSize: 20)),
         const SizedBox(height: 14),
         const Text(
-          'Informational, action, choice, filter, and input chips use Wrap for multi-run layouts, with deletion and ChipTheme precedence.',
+          'Informational, action, choice, filter, and input chips use Wrap for multi-run layouts, with deletion and a copyWith-derived local ChipTheme override.',
           style: TextStyle(fontSize: 14, color: Color(0x8A000000)),
         ),
         const SizedBox(height: 14),

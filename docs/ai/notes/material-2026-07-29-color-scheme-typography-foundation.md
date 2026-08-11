@@ -110,6 +110,8 @@
     public painter/state extension contracts, fade/hover/drag/track geometry, and adaptive Cupertino behavior).
   - `Radio`/`RadioListTile` (direct M2/M3 roles, state/theme precedence, source painter and toggleable timing,
     background/side/inner-radius APIs, density targets, adaptive registry behavior, and merged tile semantics).
+  - Chips (`Chip`/`ActionChip`/`ChoiceChip`/`FilterChip`/`InputChip`) with direct M3 roles, exact M2 derived-color
+    alpha behavior, theme copy/lerp/capture, state precedence, and source render/animation composition.
 - Completed `Typography.Material2014`/`Material2018`, exact platform black/white themes, dense/tall geometry, and
   locale script-category selection.
 - Remove the narrowed `ColorScheme + Typography closeout` row from `docs/MATERIAL_TODO.md` only after those checks

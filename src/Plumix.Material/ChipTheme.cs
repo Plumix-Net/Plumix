@@ -37,6 +37,57 @@ public sealed partial record ChipThemeData(
     {
     }
 
+    public ChipThemeData CopyWith(
+        MaterialStateProperty<Color?>? color = null,
+        Color? backgroundColor = null,
+        Color? deleteIconColor = null,
+        Color? disabledColor = null,
+        Color? selectedColor = null,
+        Color? secondarySelectedColor = null,
+        Color? shadowColor = null,
+        Color? surfaceTintColor = null,
+        Color? selectedShadowColor = null,
+        bool? showCheckmark = null,
+        Color? checkmarkColor = null,
+        Thickness? labelPadding = null,
+        Thickness? padding = null,
+        BorderSide? side = null,
+        ShapeBorder? shape = null,
+        TextStyle? labelStyle = null,
+        TextStyle? secondaryLabelStyle = null,
+        Brightness? brightness = null,
+        double? elevation = null,
+        double? pressElevation = null,
+        IconThemeData? iconTheme = null,
+        BoxConstraints? avatarBoxConstraints = null,
+        BoxConstraints? deleteIconBoxConstraints = null)
+    {
+        return new ChipThemeData(
+            Color: color ?? Color,
+            BackgroundColor: backgroundColor ?? BackgroundColor,
+            DeleteIconColor: deleteIconColor ?? DeleteIconColor,
+            DisabledColor: disabledColor ?? DisabledColor,
+            SelectedColor: selectedColor ?? SelectedColor,
+            SecondarySelectedColor: secondarySelectedColor ?? SecondarySelectedColor,
+            ShadowColor: shadowColor ?? ShadowColor,
+            SurfaceTintColor: surfaceTintColor ?? SurfaceTintColor,
+            SelectedShadowColor: selectedShadowColor ?? SelectedShadowColor,
+            ShowCheckmark: showCheckmark ?? ShowCheckmark,
+            CheckmarkColor: checkmarkColor ?? CheckmarkColor,
+            LabelPadding: labelPadding ?? LabelPadding,
+            Padding: padding ?? Padding,
+            Side: side ?? Side,
+            Shape: shape ?? Shape,
+            LabelStyle: labelStyle ?? LabelStyle,
+            SecondaryLabelStyle: secondaryLabelStyle ?? SecondaryLabelStyle,
+            Brightness: brightness ?? Brightness,
+            Elevation: elevation ?? Elevation,
+            PressElevation: pressElevation ?? PressElevation,
+            IconTheme: iconTheme ?? IconTheme,
+            AvatarBoxConstraints: avatarBoxConstraints ?? AvatarBoxConstraints,
+            DeleteIconBoxConstraints: deleteIconBoxConstraints ?? DeleteIconBoxConstraints);
+    }
+
     public static ChipThemeData FromDefaults(
         Color secondaryColor,
         TextStyle labelStyle,
@@ -50,9 +101,10 @@ public sealed partial record ChipThemeData(
 
         Brightness effectiveBrightness = brightness
                                          ?? ThemeData.EstimateBrightnessForColor(primaryColor!.Value);
-        Color baseColor = effectiveBrightness == global::Plumix.Material.Brightness.Light
-            ? Colors.Black
-            : Colors.White;
+        Color baseColor = primaryColor
+                          ?? (effectiveBrightness == global::Plumix.Material.Brightness.Light
+                              ? Colors.Black
+                              : Colors.White);
         return new ChipThemeData(
             BackgroundColor: WithAlpha(baseColor, 0x1f),
             DeleteIconColor: WithAlpha(baseColor, 0xde),
@@ -64,7 +116,7 @@ public sealed partial record ChipThemeData(
             ShowCheckmark: true,
             Padding: new Thickness(4),
             LabelStyle: labelStyle.CopyWith(color: WithAlpha(baseColor, 0xde)),
-            SecondaryLabelStyle: labelStyle.CopyWith(color: secondaryColor),
+            SecondaryLabelStyle: labelStyle.CopyWith(color: WithAlpha(secondaryColor, 0xde)),
             Brightness: effectiveBrightness,
             Elevation: 0.0,
             PressElevation: 8.0,
@@ -77,7 +129,7 @@ public sealed partial record ChipThemeData(
     }
 }
 
-public sealed class ChipTheme : InheritedWidget
+public sealed class ChipTheme : InheritedTheme
 {
     public ChipTheme(ChipThemeData data, Widget child, Key? key = null) : base(key)
     {
@@ -90,6 +142,11 @@ public sealed class ChipTheme : InheritedWidget
     public Widget Child { get; }
 
     public override Widget Build(BuildContext context) => Child;
+
+    public override Widget Wrap(BuildContext context, Widget child)
+    {
+        return new ChipTheme(Data, child);
+    }
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {

@@ -991,7 +991,8 @@ public sealed class RawChip : StatefulWidget
                     ShowCheckmark: true,
                     CheckmarkColor: WithAlpha(primary, 0xde),
                     LabelStyle: theme.TextTheme.BodyLarge.CopyWith(color: WithAlpha(primary, 0xde)),
-                    SecondaryLabelStyle: theme.TextTheme.BodyLarge.CopyWith(color: theme.PrimaryColor),
+                    SecondaryLabelStyle: theme.TextTheme.BodyLarge.CopyWith(
+                        color: WithAlpha(theme.PrimaryColor, 0xde)),
                     Padding: new Thickness(4),
                     Shape: ShapeBorder.RoundedRectangle(10_000),
                     Elevation: 0,
