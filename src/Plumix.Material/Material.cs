@@ -9,6 +9,11 @@ namespace Plumix.Material;
 
 // Dart parity source: flutter/packages/flutter/lib/src/material/material.dart
 
+public static class MaterialConstants
+{
+    public static readonly TimeSpan ThemeAnimationDuration = TimeSpan.FromMilliseconds(200);
+}
+
 /// <summary>The visual kind of a <see cref="Material"/> surface.</summary>
 public enum MaterialType
 {

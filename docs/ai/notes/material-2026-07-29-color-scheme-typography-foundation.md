@@ -115,6 +115,9 @@
   - Material action buttons (`BackButton`/`CloseButton`/`DrawerButton`/`EndDrawerButton`) with source `IconButton`
     inheritance/composition, standard-component keys, direct M3 `onSurfaceVariant` and M2 legacy icon colors,
     default-platform Android labels, and action-icon theme copy/precedence behavior.
+  - `Stepper` (direct light/dark M2/M3 circle, connector, and control roles; source `WidgetStateProperty`,
+    directional inset, `BoxBorder`, and gradient APIs; exact connector geometry and old/new icon transitions;
+    focused coverage and mirrored runtime probes).
 - Completed `Typography.Material2014`/`Material2018`, exact platform black/white themes, dense/tall geometry, and
   locale script-category selection.
 - Remove the narrowed `ColorScheme + Typography closeout` row from `docs/MATERIAL_TODO.md` only after those checks

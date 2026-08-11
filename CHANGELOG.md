@@ -1,5 +1,9 @@
 # Changelog
 
+- Breaking: completed the strict Material `Stepper` ColorScheme/API closeout. The control now uses direct M2/M3
+  roles, `WidgetStateProperty`, directional inset APIs, `BoxBorder`, framework linear gradients, exact icon/error
+  transitions and connector geometry, with expanded focused coverage and mirrored runtime probes.
+
 - Breaking: closed the shared intrinsic/dry-layout divergence. `RenderBox` now caches and invalidates intrinsic,
   dry-layout, and nullable baseline queries with relayout-boundary propagation; flex, rotated box, flow, image,
   custom layout, fill/header slivers, intrinsic widgets, and extended-FAB overflow now use direct source algorithms.

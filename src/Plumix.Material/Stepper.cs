@@ -40,9 +40,9 @@ public sealed record StepStyle(
     Color? ErrorColor = null,
     Color? ConnectorColor = null,
     double? ConnectorThickness = null,
-    BorderSide? Border = null,
+    BoxBorder? Border = null,
     BoxShadow? BoxShadow = null,
-    IBrush? Gradient = null,
+    Gradient? Gradient = null,
     TextStyle? IndexStyle = null)
 {
     public StepStyle CopyWith(
@@ -50,9 +50,9 @@ public sealed record StepStyle(
         Color? errorColor = null,
         Color? connectorColor = null,
         double? connectorThickness = null,
-        BorderSide? border = null,
+        BoxBorder? border = null,
         BoxShadow? boxShadow = null,
-        IBrush? gradient = null,
+        Gradient? gradient = null,
         TextStyle? indexStyle = null) => this with
     {
         Color = color ?? Color,
@@ -118,34 +118,25 @@ public sealed class Stepper : StatefulWidget
         Action? onStepCancel = null,
         ControlsWidgetBuilder? controlsBuilder = null,
         double? elevation = null,
-        Thickness? margin = null,
-        MaterialStateProperty<Color?>? connectorColor = null,
+        EdgeInsetsGeometry? margin = null,
+        WidgetStateProperty<Color>? connectorColor = null,
         double? connectorThickness = null,
         StepIconBuilder? stepIconBuilder = null,
         double? stepIconHeight = null,
         double? stepIconWidth = null,
-        Thickness? stepIconMargin = null,
+        EdgeInsets? stepIconMargin = null,
         Clip clipBehavior = Clip.None,
-        Thickness? headerPadding = null,
-        Thickness? contentPadding = null,
+        EdgeInsetsGeometry? headerPadding = null,
+        EdgeInsetsGeometry? contentPadding = null,
         Key? key = null) : base(key)
     {
         Steps = steps ?? throw new ArgumentNullException(nameof(steps));
-        if (steps.Count == 0) throw new ArgumentException("Stepper requires at least one step.", nameof(steps));
         if (currentStep < 0 || currentStep >= steps.Count) throw new ArgumentOutOfRangeException(nameof(currentStep));
         ValidateIconExtent(stepIconHeight, nameof(stepIconHeight));
         ValidateIconExtent(stepIconWidth, nameof(stepIconWidth));
         if (stepIconHeight.HasValue && stepIconWidth.HasValue && stepIconHeight != stepIconWidth)
         {
             throw new ArgumentException("When both icon dimensions are set, they must be equal.");
-        }
-        if (connectorThickness.HasValue && (!double.IsFinite(connectorThickness.Value) || connectorThickness.Value < 0))
-        {
-            throw new ArgumentOutOfRangeException(nameof(connectorThickness));
-        }
-        if (elevation.HasValue && (!double.IsFinite(elevation.Value) || elevation.Value < 0))
-        {
-            throw new ArgumentOutOfRangeException(nameof(elevation));
         }
         Controller = controller;
         Physics = physics;
@@ -178,16 +169,16 @@ public sealed class Stepper : StatefulWidget
     public Action? OnStepCancel { get; }
     public ControlsWidgetBuilder? ControlsBuilder { get; }
     public double? Elevation { get; }
-    public Thickness? Margin { get; }
-    public MaterialStateProperty<Color?>? ConnectorColor { get; }
+    public EdgeInsetsGeometry? Margin { get; }
+    public WidgetStateProperty<Color>? ConnectorColor { get; }
     public double? ConnectorThickness { get; }
     public StepIconBuilder? StepIconBuilder { get; }
     public double? StepIconHeight { get; }
     public double? StepIconWidth { get; }
-    public Thickness? StepIconMargin { get; }
+    public EdgeInsets? StepIconMargin { get; }
     public Clip ClipBehavior { get; }
-    public Thickness? HeaderPadding { get; }
-    public Thickness? ContentPadding { get; }
+    public EdgeInsetsGeometry? HeaderPadding { get; }
+    public EdgeInsetsGeometry? ContentPadding { get; }
 
     public override State CreateState() => new StepperState();
 
@@ -201,7 +192,6 @@ public sealed class Stepper : StatefulWidget
 
     private sealed class StepperState : State
     {
-        private static readonly TimeSpan ThemeAnimationDuration = TimeSpan.FromMilliseconds(200);
         private readonly List<GlobalKey> _keys = [];
         private readonly Dictionary<int, StepState> _oldStates = [];
 
@@ -232,7 +222,7 @@ public sealed class Stepper : StatefulWidget
 
         public override Widget Build(BuildContext context)
         {
-            if (context.DependOnInherited<StepperScope>() is not null)
+            if (context.FindAncestorWidgetOfExactType<Stepper>() is not null)
             {
                 throw new InvalidOperationException("Steppers must not be nested.");
             }
@@ -243,7 +233,7 @@ public sealed class Stepper : StatefulWidget
                 StepperType.Horizontal => BuildHorizontal(context),
                 _ => throw new ArgumentOutOfRangeException(),
             };
-            return new StepperScope(child);
+            return child;
         }
 
         private Widget BuildVertical(BuildContext context)
@@ -278,7 +268,7 @@ public sealed class Stepper : StatefulWidget
             var step = CurrentWidget.Steps[index];
             bool previousActive = index > 0 && CurrentWidget.Steps[index - 1].IsActive;
             return new Padding(
-                CurrentWidget.HeaderPadding ?? new Thickness(24, 0),
+                CurrentWidget.HeaderPadding ?? EdgeInsetsGeometry.Symmetric(horizontal: 24),
                 new Row(children:
                 [
                     new Column(
@@ -289,7 +279,9 @@ public sealed class Stepper : StatefulWidget
                             BuildIcon(context, index),
                             BuildVerticalLine(index != CurrentWidget.Steps.Count - 1, step.IsActive),
                         ]),
-                    new Expanded(new Padding(new Thickness(12, 0, 0, 0), BuildHeaderText(context, index))),
+                    new Expanded(new Padding(
+                        EdgeInsetsGeometry.DirectionalOnly(start: 12),
+                        BuildHeaderText(context, index))),
                 ]));
         }
 
@@ -305,22 +297,25 @@ public sealed class Stepper : StatefulWidget
                 children: [ClipContent(CurrentWidget.Steps[index].Content), BuildControls(context, index)]);
             content = new Padding(padding, content);
 
-            double connectorThickness = CurrentWidget.ConnectorThickness ?? 1;
-            double connectorOffset = 24 + ((leftMargin + rightMargin) / 2)
-                                     + (((CurrentWidget.StepIconWidth ?? 24) - connectorThickness) / 2);
+            double connectorOffset = 24 + ((leftMargin + rightMargin) / 2);
             var connector = new PositionedDirectional(
                 start: connectorOffset,
                 top: 0,
                 bottom: 0,
-                width: index == CurrentWidget.Steps.Count - 1 ? 0 : CurrentWidget.ConnectorThickness ?? 1,
-                child: new ColoredBox(ResolveConnectorColor(CurrentWidget.Steps[index].IsActive)));
+                width: CurrentWidget.StepIconWidth ?? 24,
+                child: new Center(
+                    child: new SizedBox(
+                        width: index == CurrentWidget.Steps.Count - 1
+                            ? 0
+                            : CurrentWidget.ConnectorThickness ?? 1,
+                        child: new ColoredBox(ResolveConnectorColor(CurrentWidget.Steps[index].IsActive)))));
             var body = new AnimatedCrossFade(
-                firstChild: new SizedBox(height: 0),
+                firstChild: new SizedBox(width: double.PositiveInfinity, height: 0),
                 secondChild: content,
                 crossFadeState: index == CurrentWidget.CurrentStep
                     ? CrossFadeState.ShowSecond
                     : CrossFadeState.ShowFirst,
-                duration: ThemeAnimationDuration,
+                duration: MaterialConstants.ThemeAnimationDuration,
                 firstCurve: Curves.Interval(0.0, 0.6, Curves.FastOutSlowIn),
                 secondCurve: Curves.Interval(0.4, 1.0, Curves.FastOutSlowIn),
                 sizeCurve: Curves.FastOutSlowIn);
@@ -344,13 +339,19 @@ public sealed class Stepper : StatefulWidget
                         children:
                         [
                             BuildHorizontalIconAndLabel(context, index),
-                            new Padding(CurrentWidget.StepIconMargin ?? new Thickness(12, 0, 0, 0), BuildHeaderText(context, index)),
+                            new Padding(
+                                CurrentWidget.StepIconMargin.HasValue
+                                    ? (EdgeInsetsGeometry)CurrentWidget.StepIconMargin.Value
+                                    : EdgeInsetsGeometry.DirectionalOnly(start: 12),
+                                BuildHeaderText(context, index)),
                         ])));
                 if (index != CurrentWidget.Steps.Count - 1)
                 {
                     var style = step.StepStyle;
                     headerChildren.Add(new Expanded(new Padding(
-                        CurrentWidget.StepIconMargin ?? new Thickness(8, 0),
+                        CurrentWidget.StepIconMargin.HasValue
+                            ? (EdgeInsetsGeometry)CurrentWidget.StepIconMargin.Value
+                            : EdgeInsetsGeometry.Symmetric(horizontal: 8),
                         new SizedBox(
                             height: style?.ConnectorThickness ?? CurrentWidget.ConnectorThickness ?? 1,
                             child: new ColoredBox(style?.ConnectorColor ?? ResolveConnectorColor(step.IsActive))))));
@@ -358,7 +359,7 @@ public sealed class Stepper : StatefulWidget
             }
 
             Widget header = new Padding(
-                CurrentWidget.HeaderPadding ?? new Thickness(24, 0),
+                CurrentWidget.HeaderPadding ?? EdgeInsetsGeometry.Symmetric(horizontal: 24),
                 new SizedBox(
                     height: CurrentWidget.StepIconHeight.HasValue
                         ? CurrentWidget.StepIconHeight.Value * (HasLabels ? 2.5 : 2)
@@ -373,7 +374,7 @@ public sealed class Stepper : StatefulWidget
                     child: ClipContent(step.Content)))
                 .ToArray();
             Widget panel = new AnimatedSize(
-                duration: ThemeAnimationDuration,
+                duration: MaterialConstants.ThemeAnimationDuration,
                 curve: Curves.FastOutSlowIn,
                 child: new Column(
                     mainAxisSize: MainAxisSize.Min,
@@ -382,7 +383,8 @@ public sealed class Stepper : StatefulWidget
             Widget content = new ListView(
                 controller: CurrentWidget.Controller,
                 physics: CurrentWidget.Physics,
-                padding: CurrentWidget.ContentPadding ?? new Thickness(24),
+                padding: (CurrentWidget.ContentPadding ?? EdgeInsetsGeometry.All(24))
+                    .Resolve(Directionality.Of(context)),
                 children:
                 [
                     panel,
@@ -414,69 +416,80 @@ public sealed class Stepper : StatefulWidget
         private Widget BuildIcon(BuildContext context, int index)
         {
             StepState state = CurrentWidget.Steps[index].State;
-            Widget? custom = CurrentWidget.StepIconBuilder?.Invoke(index, state);
-            Widget icon;
-            if (custom is not null)
+            StepState oldState = _oldStates[index];
+            if (state == oldState)
             {
-                icon = custom;
-            }
-            else
-            {
-                StepState oldState = _oldStates[index];
-                StepState circleState = state == StepState.Error ? oldState : state;
-                StepState triangleState = state == StepState.Error ? state : oldState;
-                icon = new AnimatedCrossFade(
-                    firstChild: BuildCircle(context, index, circleState),
-                    secondChild: BuildTriangle(context, index, triangleState),
-                    crossFadeState: state == StepState.Error
-                        ? CrossFadeState.ShowSecond
-                        : CrossFadeState.ShowFirst,
-                    duration: ThemeAnimationDuration,
-                    firstCurve: Curves.Interval(0.0, 0.6, Curves.FastOutSlowIn),
-                    secondCurve: Curves.Interval(0.4, 1.0, Curves.FastOutSlowIn),
-                    sizeCurve: Curves.FastOutSlowIn);
+                return state == StepState.Error
+                    ? BuildTriangle(context, index, state)
+                    : BuildCircle(context, index, state);
             }
 
-            return new Padding(
-                CurrentWidget.StepIconMargin ?? new Thickness(0, 8),
-                new SizedBox(
-                    width: CurrentWidget.StepIconWidth ?? 24,
-                    height: CurrentWidget.StepIconHeight ?? 24,
-                    child: icon));
+            StepState circleState = state == StepState.Error ? oldState : state;
+            StepState triangleState = state == StepState.Error ? state : oldState;
+            return new AnimatedCrossFade(
+                firstChild: BuildCircle(context, index, circleState),
+                secondChild: BuildTriangle(context, index, triangleState),
+                crossFadeState: state == StepState.Error
+                    ? CrossFadeState.ShowSecond
+                    : CrossFadeState.ShowFirst,
+                duration: MaterialConstants.ThemeAnimationDuration,
+                firstCurve: Curves.Interval(0.0, 0.6, Curves.FastOutSlowIn),
+                secondCurve: Curves.Interval(0.4, 1.0, Curves.FastOutSlowIn),
+                sizeCurve: Curves.FastOutSlowIn);
         }
 
         private Widget BuildCircle(BuildContext context, int index, StepState state)
         {
             var style = CurrentWidget.Steps[index].StepStyle;
-            return new AnimatedContainer(
-                duration: ThemeAnimationDuration,
-                curve: Curves.FastOutSlowIn,
-                decoration: new BoxDecoration(
-                    Color: style?.Gradient is null ? style?.Color ?? ResolveCircleColor(index) : null,
-                    Brush: style?.Gradient,
-                    Border: style?.Border,
-                    BoxShadows: style?.BoxShadow is { } shadow ? new BoxShadows(shadow) : null,
-                    Shape: BoxShape.Circle),
-                child: new Center(child: BuildIconChild(index, state)));
+            return new Padding(
+                CurrentWidget.StepIconMargin.HasValue
+                    ? (EdgeInsetsGeometry)CurrentWidget.StepIconMargin.Value
+                    : EdgeInsetsGeometry.Symmetric(vertical: 8),
+                new SizedBox(
+                    width: CurrentWidget.StepIconWidth ?? 24,
+                    height: CurrentWidget.StepIconHeight ?? 24,
+                    child: new AnimatedContainer(
+                        duration: MaterialConstants.ThemeAnimationDuration,
+                        curve: Curves.FastOutSlowIn,
+                        decoration: new BoxDecoration(
+                            Color: style?.Color ?? ResolveCircleColor(index),
+                            Gradient: style?.Gradient,
+                            BorderSides: style?.Border,
+                            BoxShadows: style?.BoxShadow is { } shadow ? new BoxShadows(shadow) : null,
+                            Shape: BoxShape.Circle),
+                        child: new Center(child: BuildIconChild(index, state)))));
         }
 
         private Widget BuildTriangle(BuildContext context, int index, StepState state)
         {
             double height = (CurrentWidget.StepIconHeight ?? 24) * 0.866025;
             Color color = ResolveErrorColor(context, index);
-            return new Center(
-                child: new SizedBox(
+            return new Padding(
+                CurrentWidget.StepIconMargin.HasValue
+                    ? (EdgeInsetsGeometry)CurrentWidget.StepIconMargin.Value
+                    : EdgeInsetsGeometry.Symmetric(vertical: 8),
+                new SizedBox(
                     width: CurrentWidget.StepIconWidth ?? 24,
-                    height: height,
-                    child: new CustomPaint(
-                        painter: new TrianglePainter(color),
-                        child: new Align(
-                            alignment: new Alignment(0, 0.8),
-                            child: BuildIconChild(index, state)))));
+                    height: CurrentWidget.StepIconHeight ?? 24,
+                    child: new Center(
+                        child: new SizedBox(
+                            width: CurrentWidget.StepIconWidth ?? 24,
+                            height: height,
+                            child: new CustomPaint(
+                                painter: new TrianglePainter(color),
+                                child: new Align(
+                                    alignment: new Alignment(0, 0.8),
+                                    child: BuildIconChild(index, state)))))));
         }
 
         private Widget BuildIconChild(int index, StepState state)
         {
+            Widget? custom = CurrentWidget.StepIconBuilder?.Invoke(index, state);
+            if (custom is not null)
+            {
+                return custom;
+            }
+
             if (state == StepState.Editing)
             {
                 return new Icon(Icons.Edit, size: 18, color: ResolveIconForeground(index));
@@ -536,7 +549,7 @@ public sealed class Stepper : StatefulWidget
             return new AnimatedDefaultTextStyle(
                 child: child,
                 style: style,
-                duration: ThemeAnimationDuration,
+                duration: MaterialConstants.ThemeAnimationDuration,
                 curve: labelStyle ? Curves.Linear : Curves.FastOutSlowIn);
         }
 
@@ -557,9 +570,22 @@ public sealed class Stepper : StatefulWidget
             string cancelText = theme.UseMaterial3
                 ? localizations.CancelButtonLabel
                 : localizations.CancelButtonLabel.ToUpperInvariant();
-            var cancelColor = theme.Brightness == Brightness.Dark
+            Color cancelColor = theme.Brightness == Brightness.Dark
                 ? Color.FromArgb(0xB3, 0xFF, 0xFF, 0xFF)
                 : Color.FromArgb(0x8A, 0, 0, 0);
+            var continueStyle = new ButtonStyle(
+                ForegroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+                    states.HasFlag(MaterialState.Disabled)
+                        ? null
+                        : theme.Brightness == Brightness.Dark
+                            ? theme.ColorScheme.OnSurface
+                            : theme.ColorScheme.OnPrimary),
+                BackgroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+                    states.HasFlag(MaterialState.Disabled) || theme.Brightness == Brightness.Dark
+                        ? null
+                        : theme.ColorScheme.Primary),
+                Padding: MaterialStateProperty<Thickness?>.All(new Thickness(16, 0)),
+                Shape: MaterialStateProperty<BorderRadius?>.All(BorderRadius.Circular(2)));
             return new Padding(
                 new Thickness(0, 16, 0, 0),
                 new SizedBox(
@@ -571,13 +597,9 @@ public sealed class Stepper : StatefulWidget
                             new TextButton(
                                 onPressed: CurrentWidget.OnStepContinue,
                                 child: new Text(continueText),
-                                style: TextButton.StyleFrom(
-                                    foregroundColor: theme.Brightness == Brightness.Dark ? theme.OnSurfaceColor : theme.OnPrimaryColor,
-                                    backgroundColor: theme.Brightness == Brightness.Dark ? null : theme.PrimaryColor,
-                                    padding: new Thickness(16, 0),
-                                    shape: BorderRadius.Circular(2))),
+                                style: continueStyle),
                             new Padding(
-                                new Thickness(8, 0, 0, 0),
+                                EdgeInsetsGeometry.DirectionalOnly(start: 8),
                                 new TextButton(
                                     onPressed: CurrentWidget.OnStepCancel,
                                     child: new Text(cancelText),
@@ -598,17 +620,21 @@ public sealed class Stepper : StatefulWidget
 
         private Color ResolveConnectorColor(bool active)
         {
-            var state = active ? MaterialState.Selected : MaterialState.Disabled;
-            return CurrentWidget.ConnectorColor?.Resolve(state)
-                   ?? (active ? Theme.Of(Context).PrimaryColor : Color.Parse("#FFBDBDBD"));
+            IReadOnlySet<WidgetState> states = active
+                ? new HashSet<WidgetState> { WidgetState.Selected }
+                : new HashSet<WidgetState> { WidgetState.Disabled };
+            return CurrentWidget.ConnectorColor?.Resolve(states)
+                   ?? (active ? Theme.Of(Context).ColorScheme.Primary : Color.Parse("#FFBDBDBD"));
         }
 
         private Color ResolveCircleColor(int index)
         {
             var theme = Theme.Of(Context);
             var step = CurrentWidget.Steps[index];
-            var state = step.IsActive ? MaterialState.Selected : MaterialState.Disabled;
-            var connector = CurrentWidget.ConnectorColor?.Resolve(state);
+            IReadOnlySet<WidgetState> states = step.IsActive
+                ? new HashSet<WidgetState> { WidgetState.Selected }
+                : new HashSet<WidgetState> { WidgetState.Disabled };
+            Color? connector = CurrentWidget.ConnectorColor?.Resolve(states);
             if (connector.HasValue) return connector.Value;
             if (theme.Brightness == Brightness.Dark)
             {
@@ -621,7 +647,7 @@ public sealed class Stepper : StatefulWidget
         {
             var theme = Theme.Of(Context);
             return theme.Brightness == Brightness.Dark && CurrentWidget.Steps[index].IsActive
-                ? Color.FromArgb(0xDE, 0, 0, 0)
+                ? Color.FromArgb(0xDD, 0, 0, 0)
                 : Colors.White;
         }
 
@@ -641,7 +667,7 @@ public sealed class Stepper : StatefulWidget
             {
                 _ = Scrollable.EnsureVisible(
                     stepContext.Value,
-                    duration: ThemeAnimationDuration,
+                    duration: MaterialConstants.ThemeAnimationDuration,
                     curve: Curves.FastOutSlowIn);
             }
             CurrentWidget.OnStepTapped?.Invoke(index);
@@ -649,28 +675,24 @@ public sealed class Stepper : StatefulWidget
 
         private Thickness ResolveVerticalContentPadding(TextDirection textDirection, double iconMarginLeft)
         {
-            Thickness padding = CurrentWidget.ContentPadding ?? (textDirection == TextDirection.Rtl
-                ? new Thickness(24, 0, 60, 24)
-                : new Thickness(60, 0, 24, 24));
-            return textDirection == TextDirection.Rtl
-                ? new Thickness(padding.Left, padding.Top, padding.Right + iconMarginLeft, padding.Bottom)
-                : new Thickness(padding.Left + iconMarginLeft, padding.Top, padding.Right, padding.Bottom);
+            EdgeInsetsGeometry padding = CurrentWidget.ContentPadding
+                                         ?? EdgeInsetsGeometry.DirectionalOnly(start: 60, end: 24, bottom: 24);
+            EdgeInsetsGeometry iconPadding = EdgeInsetsGeometry.DirectionalOnly(start: iconMarginLeft);
+            return Add(padding.Resolve(textDirection), iconPadding.Resolve(textDirection));
+        }
+
+        private static Thickness Add(Thickness a, Thickness b)
+        {
+            return new Thickness(
+                a.Left + b.Left,
+                a.Top + b.Top,
+                a.Right + b.Right,
+                a.Bottom + b.Bottom);
         }
 
         private static Color ApplyOpacity(Color color, double opacity) => Color.FromArgb(
             (byte)Math.Round(color.A * Math.Clamp(opacity, 0, 1)), color.R, color.G, color.B);
 
-    }
-
-    private sealed class StepperScope : InheritedWidget
-    {
-        public StepperScope(Widget child) => Child = child;
-
-        public Widget Child { get; }
-
-        public override Widget Build(BuildContext context) => Child;
-
-        protected override bool UpdateShouldNotify(InheritedWidget oldWidget) => false;
     }
 
     private sealed class TrianglePainter(Color color) : CustomPainter

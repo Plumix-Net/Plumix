@@ -36,12 +36,13 @@ public sealed class MaterialStepperTests : IDisposable
         Assert.Equal(0, stepper.CurrentStep);
         Assert.Equal(Clip.None, stepper.ClipBehavior);
         Assert.Null(stepper.ConnectorThickness);
-        Assert.Throws<ArgumentException>(() => new Stepper([]));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new Stepper([]));
         Assert.Throws<ArgumentOutOfRangeException>(() => new Stepper(steps, currentStep: 2));
         Assert.Throws<ArgumentOutOfRangeException>(() => new Stepper(steps, stepIconWidth: 23));
         Assert.Throws<ArgumentOutOfRangeException>(() => new Stepper(steps, stepIconHeight: 81));
         Assert.Throws<ArgumentException>(() => new Stepper(steps, stepIconWidth: 32, stepIconHeight: 40));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new Stepper(steps, connectorThickness: -1));
+        Assert.Equal(-1, new Stepper(steps, connectorThickness: -1).ConnectorThickness);
+        Assert.Equal(-1, new Stepper(steps, elevation: -1).Elevation);
     }
 
     [Fact]
@@ -138,7 +139,7 @@ public sealed class MaterialStepperTests : IDisposable
     {
         using var vertical = new WidgetRenderHarness(BuildThemed(new Stepper(steps: BuildSteps())));
         vertical.Pump(new Size(420, 420));
-        Assert.True(vertical.FindWidgets<AnimatedCrossFade>().Count >= 4);
+        Assert.True(vertical.FindWidgets<AnimatedCrossFade>().Count >= 2);
         Assert.True(vertical.FindWidgets<AnimatedDefaultTextStyle>().Count >= 2);
         Assert.True(vertical.FindWidgets<AnimatedContainer>().Count >= 2);
 
@@ -160,8 +161,8 @@ public sealed class MaterialStepperTests : IDisposable
         using var harness = new WidgetRenderHarness(BuildThemed(new Stepper(
             type: StepperType.Horizontal,
             currentStep: 1,
-            connectorColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                states.HasFlag(MaterialState.Selected) ? Colors.Green : Colors.Gray),
+            connectorColor: WidgetStateProperty<Color>.ResolveWith(states =>
+                states.Contains(WidgetState.Selected) ? Colors.Green : Colors.Gray),
             connectorThickness: 3,
             stepIconWidth: 32,
             stepIconHeight: 32,
@@ -189,17 +190,229 @@ public sealed class MaterialStepperTests : IDisposable
         Assert.Contains(FindDescendants<RenderOffstage>(harness.RenderView), offstage => offstage.Offstage);
     }
 
+    [Fact]
+    public void Stepper_PublicGeometryAndStepStyle_MatchFlutterSurface()
+    {
+        EdgeInsetsGeometry margin = EdgeInsetsGeometry.DirectionalOnly(start: 5, end: 7);
+        EdgeInsetsGeometry headerPadding = EdgeInsetsGeometry.DirectionalOnly(start: 11, end: 13);
+        EdgeInsetsGeometry contentPadding = EdgeInsetsGeometry.DirectionalOnly(start: 17, end: 19, bottom: 23);
+        var iconMargin = new EdgeInsets(2, 3, 4, 5);
+        var border = BoxBorder.All(new BorderSide(Colors.Red, 2));
+        var gradient = new LinearGradient([Colors.Red, Colors.Blue]);
+        var style = new StepStyle(
+            Color: Colors.Green,
+            ErrorColor: Colors.Yellow,
+            ConnectorColor: Colors.Purple,
+            ConnectorThickness: 3,
+            Border: border,
+            Gradient: gradient,
+            IndexStyle: new TextStyle(FontSize: 14));
+        var stepper = new Stepper(
+            BuildSteps(),
+            margin: margin,
+            headerPadding: headerPadding,
+            contentPadding: contentPadding,
+            stepIconMargin: iconMargin);
+
+        Assert.Equal(margin, stepper.Margin);
+        Assert.Equal(headerPadding, stepper.HeaderPadding);
+        Assert.Equal(contentPadding, stepper.ContentPadding);
+        Assert.Equal(iconMargin, stepper.StepIconMargin);
+        Assert.Same(gradient, style.Gradient);
+        Assert.Same(border, style.Border);
+        Assert.Equal(4, style.CopyWith(connectorThickness: 4).ConnectorThickness);
+        Assert.Equal(Colors.Orange, style.Merge(new StepStyle(Color: Colors.Orange)).Color);
+
+        using var harness = new WidgetRenderHarness(BuildThemed(new Stepper(
+            steps:
+            [
+                new Step(new Text("Styled"), new Text("Body"), isActive: true, stepStyle: style),
+            ])));
+        harness.Pump(new Size(320, 240));
+        BoxDecoration decoration = Assert.IsType<BoxDecoration>(
+            Assert.Single(harness.FindWidgets<AnimatedContainer>()).Decoration);
+        Assert.Same(gradient, decoration.Gradient);
+        Assert.Same(border, decoration.BorderSides);
+    }
+
+    [Fact]
+    public void Stepper_CircleAndConnectorColors_ReadColorSchemeAndWidgetStates()
+    {
+        Color lightPrimary = Color.Parse("#FF123456");
+        Color lightOnSurface = Color.Parse("#FF654321");
+        var lightTheme = ThemeData.Light with
+        {
+            PrimaryColor = Colors.Orange,
+            ColorScheme = ThemeData.Light.ColorScheme with
+            {
+                Primary = lightPrimary,
+                OnSurface = lightOnSurface,
+            },
+        };
+        using var light = new WidgetRenderHarness(BuildThemed(new Stepper(
+            steps:
+            [
+                new Step(new Text("Active"), new Text("A"), isActive: true),
+                new Step(new Text("Inactive"), new Text("B")),
+            ]), lightTheme));
+        light.Pump(new Size(360, 360));
+        BoxDecoration[] lightCircles = FindCircleDecorations(light);
+        Assert.Contains(lightCircles, decoration => decoration.Color == lightPrimary);
+        Assert.Contains(lightCircles, decoration => decoration.Color == ApplyOpacity(lightOnSurface, 0.38));
+
+        Color darkSecondary = Color.Parse("#FF234567");
+        Color darkBackground = Color.Parse("#FF765432");
+        var darkTheme = ThemeData.Dark with
+        {
+            ColorScheme = ThemeData.Dark.ColorScheme with
+            {
+                Secondary = darkSecondary,
+                Background = darkBackground,
+            },
+        };
+        using var dark = new WidgetRenderHarness(BuildThemed(new Stepper(
+            steps:
+            [
+                new Step(new Text("Active"), new Text("A"), isActive: true),
+                new Step(new Text("Inactive"), new Text("B")),
+            ]), darkTheme));
+        dark.Pump(new Size(360, 360));
+        BoxDecoration[] darkCircles = FindCircleDecorations(dark);
+        Assert.Contains(darkCircles, decoration => decoration.Color == darkSecondary);
+        Assert.Contains(darkCircles, decoration => decoration.Color == darkBackground);
+
+        var resolvedStates = new List<IReadOnlySet<WidgetState>>();
+        using var custom = new WidgetRenderHarness(BuildThemed(new Stepper(
+            connectorColor: WidgetStateProperty<Color>.ResolveWith(states =>
+            {
+                resolvedStates.Add(states);
+                return states.Contains(WidgetState.Selected) ? Colors.Green : Colors.Gray;
+            }),
+            steps:
+            [
+                new Step(new Text("Active"), new Text("A"), isActive: true),
+                new Step(new Text("Inactive"), new Text("B")),
+            ])));
+        custom.Pump(new Size(360, 360));
+        Assert.Contains(resolvedStates, states => states.SetEquals([WidgetState.Selected]));
+        Assert.Contains(resolvedStates, states => states.SetEquals([WidgetState.Disabled]));
+    }
+
+    [Theory]
+    [InlineData(false, false, "CONTINUE", "CANCEL")]
+    [InlineData(true, false, "Continue", "Cancel")]
+    [InlineData(true, true, "Continue", "Cancel")]
+    public void Stepper_DefaultControlStyles_UseDirectColorSchemeRoles(
+        bool useMaterial3,
+        bool dark,
+        string continueLabel,
+        string cancelLabel)
+    {
+        ThemeData baseTheme = dark ? ThemeData.Dark : ThemeData.Light;
+        Color primary = Color.Parse("#FF0A6B4F");
+        Color onPrimary = Color.Parse("#FFF0FFF9");
+        Color onSurface = Color.Parse("#FF102019");
+        var theme = baseTheme with
+        {
+            UseMaterial3 = useMaterial3,
+            PrimaryColor = Colors.Orange,
+            OnPrimaryColor = Colors.Purple,
+            OnSurfaceColor = Colors.Yellow,
+            ColorScheme = baseTheme.ColorScheme with
+            {
+                Primary = primary,
+                OnPrimary = onPrimary,
+                OnSurface = onSurface,
+            },
+        };
+        using var harness = new WidgetRenderHarness(BuildThemed(new Stepper(
+            onStepContinue: () => { },
+            onStepCancel: () => { },
+            steps: [new Step(new Text("One"), new Text("Body"), isActive: true)]), theme));
+        harness.Pump(new Size(360, 260));
+
+        Assert.NotNull(FindParagraph(harness.RenderView, continueLabel));
+        Assert.NotNull(FindParagraph(harness.RenderView, cancelLabel));
+        TextButton continueButton = harness.FindWidgets<TextButton>()[0];
+        Assert.Equal(dark ? onSurface : onPrimary, continueButton.Style!.ForegroundColor!.Resolve(MaterialState.None));
+        Assert.Equal(dark ? null : primary, continueButton.Style.BackgroundColor!.Resolve(MaterialState.None));
+        Assert.Null(continueButton.Style.ForegroundColor.Resolve(MaterialState.Disabled));
+        Assert.Null(continueButton.Style.BackgroundColor.Resolve(MaterialState.Disabled));
+        Assert.Equal(BorderRadius.Circular(2), continueButton.Style.Shape!.Resolve(MaterialState.None));
+    }
+
+    [Fact]
+    public void Stepper_DirectionalPaddingAndIconMargin_ResolveLikeFlutter()
+    {
+        using var harness = new WidgetRenderHarness(new Directionality(
+            TextDirection.Rtl,
+            new MaterialLocalizationsScope(
+                DefaultMaterialLocalizations.Instance,
+                new Theme(
+                    ThemeData.Light,
+                    new Stepper(
+                        headerPadding: EdgeInsetsGeometry.DirectionalOnly(start: 10, end: 20),
+                        stepIconMargin: new EdgeInsets(7, 8, 9, 10),
+                        steps: [new Step(new Text("One"), new Text("Body"), isActive: true)])))));
+        harness.Pump(new Size(360, 300));
+
+        Assert.Contains(
+            FindDescendants<RenderPadding>(harness.RenderView),
+            padding => padding.Padding == new Thickness(20, 0, 10, 0));
+        Assert.Contains(
+            FindDescendants<RenderPadding>(harness.RenderView),
+            padding => padding.Padding == new Thickness(24, 0, 67, 24));
+    }
+
+    [Fact]
+    public void Stepper_IconBuilderReceivesBothSidesOfErrorTransition()
+    {
+        var states = new List<StepState>();
+        StepIconBuilder builder = (_, state) =>
+        {
+            states.Add(state);
+            return state == StepState.Error ? new Text("Custom error") : null;
+        };
+        using var harness = new WidgetRenderHarness(BuildThemed(new Stepper(
+            stepIconBuilder: builder,
+            steps: [new Step(new Text("One"), new Text("Body"), state: StepState.Indexed)])));
+        harness.Pump(new Size(320, 260));
+        states.Clear();
+
+        harness.Update(BuildThemed(new Stepper(
+            stepIconBuilder: builder,
+            steps: [new Step(new Text("One"), new Text("Body"), state: StepState.Error)])));
+        harness.Pump(new Size(320, 260));
+
+        Assert.Contains(StepState.Indexed, states);
+        Assert.Contains(StepState.Error, states);
+        Assert.NotNull(FindParagraph(harness.RenderView, "Custom error"));
+    }
+
     private static IReadOnlyList<Step> BuildSteps() =>
     [
         new Step(new Text("One"), new Text("Content one")),
         new Step(new Text("Two"), new Text("Content two")),
     ];
 
-    private static Widget BuildThemed(Widget child) => new Directionality(
+    private static Widget BuildThemed(Widget child, ThemeData? theme = null) => new Directionality(
         TextDirection.Ltr,
         new MaterialLocalizationsScope(
             DefaultMaterialLocalizations.Instance,
-            new Theme(ThemeData.Light, child)));
+            new Theme(theme ?? ThemeData.Light, child)));
+
+    private static BoxDecoration[] FindCircleDecorations(WidgetRenderHarness harness) => harness
+        .FindWidgets<AnimatedContainer>()
+        .Select(container => container.Decoration)
+        .OfType<BoxDecoration>()
+        .Where(decoration => decoration.Shape == BoxShape.Circle)
+        .ToArray();
+
+    private static Color ApplyOpacity(Color color, double opacity) => Color.FromArgb(
+        (byte)Math.Round(color.A * Math.Clamp(opacity, 0, 1)),
+        color.R,
+        color.G,
+        color.B);
 
     private static RenderParagraph? FindParagraph(RenderObject? root, string text) =>
         FindDescendants<RenderParagraph>(root).FirstOrDefault(paragraph => paragraph.Text == text);

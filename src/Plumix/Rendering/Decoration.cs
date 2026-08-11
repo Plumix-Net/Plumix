@@ -452,6 +452,7 @@ internal static class MaterialBorderSideLerp
 public sealed record BoxDecoration(
     Color? Color = null,
     IBrush? Brush = null,
+    Gradient? Gradient = null,
     BorderSide? Border = null,
     BorderRadius? BorderRadius = null,
     BoxShadows? BoxShadows = null,
@@ -493,6 +494,7 @@ public sealed record BoxDecoration(
         return new BoxDecoration(
             Color: LerpColor(a.Color, b.Color, t),
             Brush: t < 0.5 ? a.Brush : b.Brush,
+            Gradient: Plumix.Rendering.Gradient.Lerp(a.Gradient, b.Gradient, t),
             Border: LerpBorder(a.Border, b.Border, t),
             BorderRadius: LerpBorderRadius(a.BorderRadius, b.BorderRadius, t),
             BoxShadows: t < 0.5 ? a.BoxShadows : b.BoxShadows,
@@ -506,6 +508,7 @@ public sealed record BoxDecoration(
         return this with
         {
             Color = LerpColor(null, Color, factor),
+            Gradient = Gradient?.Scale(factor),
             Border = LerpBorder(null, Border, factor),
             Image = DecorationImage.Lerp(null, Image, factor),
             BorderSides = BoxBorder.Lerp(null, BorderSides, factor),
@@ -571,7 +574,7 @@ internal sealed class BoxDecorationPainter : BoxPainter
         var rect = new Rect(offset, size);
         BorderRadius borderRadius = _decoration.EffectiveBorderRadius;
         BoxShadows boxShadows = _decoration.EffectiveBoxShadows;
-        IBrush? fill = _decoration.Brush;
+        IBrush? fill = _decoration.Gradient?.CreateBrush() ?? _decoration.Brush;
         if (fill is null && _decoration.Color.HasValue)
         {
             fill = new SolidColorBrush(_decoration.Color.Value);
@@ -629,7 +632,14 @@ internal sealed class BoxDecorationPainter : BoxPainter
 
         if (_decoration.BorderSides is { } borderSides)
         {
-            PaintBorderSides(context, rect, borderRadius, borderSides);
+            if (_decoration.Shape == BoxShape.Circle && TryGetUniformSide(borderSides, out BorderSide side))
+            {
+                PaintCircleBorder(context, rect, side);
+            }
+            else
+            {
+                PaintBorderSides(context, rect, borderRadius, borderSides);
+            }
         }
 
         if (borderPen is null)
@@ -656,6 +666,43 @@ internal sealed class BoxDecorationPainter : BoxPainter
         {
             context.DrawRectangle(Brushes.Transparent, borderPen, rect, borderRadius);
         }
+    }
+
+    private static bool TryGetUniformSide(BoxBorder border, out BorderSide side)
+    {
+        if (border.Left is { } left
+            && border.Top == left
+            && border.Right == left
+            && border.Bottom == left)
+        {
+            side = left;
+            return true;
+        }
+
+        side = default;
+        return false;
+    }
+
+    private static void PaintCircleBorder(PaintingContext context, Rect rect, BorderSide side)
+    {
+        if (side.Style != BorderStyle.Solid || side.Width <= 0.0)
+        {
+            return;
+        }
+
+        double diameter = Math.Min(rect.Width, rect.Height);
+        var circleRect = new Rect(
+            rect.Center.X - (diameter / 2.0),
+            rect.Center.Y - (diameter / 2.0),
+            diameter,
+            diameter);
+        var pen = new Pen(new SolidColorBrush(side.Color), side.Width);
+        context.DrawRectangle(
+            Brushes.Transparent,
+            pen,
+            circleRect,
+            diameter / 2.0,
+            diameter / 2.0);
     }
 
     private static void PaintBorderSides(

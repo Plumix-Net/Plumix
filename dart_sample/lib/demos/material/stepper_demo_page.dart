@@ -14,6 +14,7 @@ class _StepperDemoPageState extends State<StepperDemoPage> {
 
   @override
   Widget build(BuildContext context) {
+    final ColorScheme colors = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: 10,
@@ -57,31 +58,58 @@ class _StepperDemoPageState extends State<StepperDemoPage> {
                 setState(() => _currentStep = (_currentStep + 1).clamp(0, 2)),
             onStepCancel: () =>
                 setState(() => _currentStep = (_currentStep - 1).clamp(0, 2)),
+            connectorColor: WidgetStateProperty.resolveWith<Color>(
+              (Set<WidgetState> states) => states.contains(WidgetState.selected)
+                  ? colors.primary
+                  : colors.outlineVariant,
+            ),
             connectorThickness: 2,
-            steps: _buildSteps(),
+            headerPadding: const EdgeInsetsDirectional.symmetric(
+              horizontal: 20,
+            ),
+            contentPadding: const EdgeInsetsDirectional.only(
+              start: 56,
+              end: 20,
+              bottom: 20,
+            ),
+            steps: _buildSteps(colors),
           ),
         ),
       ],
     );
   }
 
-  List<Step> _buildSteps() => <Step>[
+  List<Step> _buildSteps(ColorScheme colors) => <Step>[
     _buildStep(
       0,
       'Account',
       'Choose an account',
       'Account settings are ready.',
+      colors,
     ),
     _buildStep(
       1,
       'Details',
       'Review preferences',
       'Notification and sync preferences.',
+      colors,
     ),
-    _buildStep(2, 'Confirm', 'Finish setup', 'Everything is ready to submit.'),
+    _buildStep(
+      2,
+      'Confirm',
+      'Finish setup',
+      'Everything is ready to submit.',
+      colors,
+    ),
   ];
 
-  Step _buildStep(int index, String title, String subtitle, String content) {
+  Step _buildStep(
+    int index,
+    String title,
+    String subtitle,
+    String content,
+    ColorScheme colors,
+  ) {
     return Step(
       title: Text(title),
       subtitle: Text(subtitle),
@@ -97,6 +125,17 @@ class _StepperDemoPageState extends State<StepperDemoPage> {
           ? StepState.editing
           : StepState.indexed,
       isActive: index <= _currentStep,
+      stepStyle: index == 2
+          ? StepStyle(
+              border: Border.all(color: colors.outline),
+              gradient: LinearGradient(
+                colors: <Color>[
+                  colors.secondaryContainer,
+                  colors.primaryContainer,
+                ],
+              ),
+            )
+          : null,
     );
   }
 }
