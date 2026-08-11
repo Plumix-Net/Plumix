@@ -10,6 +10,7 @@ class ActionButtonsDemoPage extends StatefulWidget {
 class _ActionButtonsDemoPageState extends State<ActionButtonsDemoPage> {
   bool _applePlatform = false;
   bool _customIcons = false;
+  bool _useMaterial3 = true;
   int _backCount = 0;
   int _closeCount = 0;
   int _drawerCount = 0;
@@ -19,6 +20,10 @@ class _ActionButtonsDemoPageState extends State<ActionButtonsDemoPage> {
   Widget build(BuildContext context) {
     final localTheme = Theme.of(context).copyWith(
       platform: _applePlatform ? TargetPlatform.iOS : TargetPlatform.windows,
+      useMaterial3: _useMaterial3,
+      colorScheme: Theme.of(
+        context,
+      ).colorScheme.copyWith(onSurfaceVariant: Colors.teal),
     );
     final actionIconTheme = _customIcons
         ? ActionIconThemeData(
@@ -51,6 +56,12 @@ class _ActionButtonsDemoPageState extends State<ActionButtonsDemoPage> {
             TextButton(
               onPressed: () => setState(() => _customIcons = !_customIcons),
               child: Text('customIcons=$_customIcons'),
+            ),
+            TextButton(
+              onPressed: () => setState(() => _useMaterial3 = !_useMaterial3),
+              child: Text(
+                _useMaterial3 ? 'scheme=M3 teal' : 'scheme=M2 legacy',
+              ),
             ),
           ],
         ),

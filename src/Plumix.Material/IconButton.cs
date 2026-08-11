@@ -18,7 +18,7 @@ internal enum IconButtonVariant
     Outlined,
 }
 
-public sealed class IconButton : StatelessWidget
+public class IconButton : StatelessWidget
 {
     public IconButton(
         Widget icon,

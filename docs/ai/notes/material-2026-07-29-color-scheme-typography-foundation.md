@@ -112,6 +112,9 @@
     background/side/inner-radius APIs, density targets, adaptive registry behavior, and merged tile semantics).
   - Chips (`Chip`/`ActionChip`/`ChoiceChip`/`FilterChip`/`InputChip`) with direct M3 roles, exact M2 derived-color
     alpha behavior, theme copy/lerp/capture, state precedence, and source render/animation composition.
+  - Material action buttons (`BackButton`/`CloseButton`/`DrawerButton`/`EndDrawerButton`) with source `IconButton`
+    inheritance/composition, standard-component keys, direct M3 `onSurfaceVariant` and M2 legacy icon colors,
+    default-platform Android labels, and action-icon theme copy/precedence behavior.
 - Completed `Typography.Material2014`/`Material2018`, exact platform black/white themes, dense/tall geometry, and
   locale script-category selection.
 - Remove the narrowed `ColorScheme + Typography closeout` row from `docs/MATERIAL_TODO.md` only after those checks

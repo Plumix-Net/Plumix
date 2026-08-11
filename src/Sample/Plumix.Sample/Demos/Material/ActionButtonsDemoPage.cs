@@ -15,6 +15,7 @@ public sealed class ActionButtonsDemoPage : StatefulWidget
     {
         private bool _applePlatform;
         private bool _customIcons;
+        private bool _useMaterial3 = true;
         private int _backCount;
         private int _closeCount;
         private int _drawerCount;
@@ -25,6 +26,8 @@ public sealed class ActionButtonsDemoPage : StatefulWidget
             var localTheme = Theme.Of(context) with
             {
                 Platform = _applePlatform ? TargetPlatform.IOS : TargetPlatform.Windows,
+                UseMaterial3 = _useMaterial3,
+                ColorScheme = Theme.Of(context).ColorScheme.CopyWith(onSurfaceVariant: Colors.Teal),
             };
             var actionIconTheme = _customIcons
                 ? new ActionIconThemeData(
@@ -54,6 +57,9 @@ public sealed class ActionButtonsDemoPage : StatefulWidget
                             new TextButton(
                                 child: new Text($"customIcons={_customIcons.ToString().ToLowerInvariant()}"),
                                 onPressed: () => SetState(() => _customIcons = !_customIcons)),
+                            new TextButton(
+                                child: new Text(_useMaterial3 ? "scheme=M3 teal" : "scheme=M2 legacy"),
+                                onPressed: () => SetState(() => _useMaterial3 = !_useMaterial3)),
                         ]),
                     new Theme(
                         data: localTheme,

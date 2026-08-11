@@ -1,5 +1,10 @@
 # Changelog
 
+- Breaking: completed the strict Material action-button closeout. Back, close, drawer, and end-drawer buttons now
+  use the source `IconButton` inheritance/composition, standard-component keys, default-platform Android labels,
+  direct M3 `onSurfaceVariant` and legacy M2 icon colors, plus source-shaped action-icon theme copying. Focused
+  coverage and the mirrored M2/M3 scheme probe were expanded.
+
 - Breaking: completed the Material chips ColorScheme/theme closeout. Exact M2 derived-color alpha behavior,
   source-shaped `ChipThemeData.copyWith`/lerp null-endpoint rules, shared icon-theme interpolation, and inherited-theme
   capture now match Flutter; focused coverage and the mirrored local-theme demo were updated.

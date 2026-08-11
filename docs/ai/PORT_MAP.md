@@ -370,6 +370,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `widgets/sliver_resizing_header.dart` | `src/Plumix/Rendering/SliverHeaders.cs`<br>`src/Plumix/Widgets/SliverHeaders.cs` | — | — |
 | `widgets/snapshot_widget.dart` | `src/Plumix/Rendering/SnapshotWidget.cs`<br>`src/Plumix/Widgets/SnapshotWidget.cs` | — | — |
 | `widgets/spell_check.dart` | `src/Plumix/Widgets/SpellCheck.cs` | — | — |
+| `widgets/standard_component_type.dart` | `src/Plumix/Widgets/StandardComponentType.cs` | — | — |
 | `widgets/status_transitions.dart` | `src/Plumix/Widgets/StatusTransitionWidget.cs` | — | — |
 | `widgets/stretch_effect.dart` | `src/Plumix/Widgets/OverscrollIndicator.cs` | `src/Plumix.Tests/OverscrollIndicatorTests.cs` | — |
 | `widgets/table.dart` | `src/Plumix/Widgets/Table.cs` | `src/Plumix.Tests/DirectionalPositionedTableCellTests.cs`<br>`src/Plumix.Tests/MaterialDataTableTests.cs` | `dart_sample/lib/demos/general/editable_text_demo_page.dart`<br>`dart_sample/lib/demos/material/data_table_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/DataTableDemoPage.cs` |
@@ -423,8 +424,8 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 
 ## Summary
 
-- Flutter files mapped: 372
-- C# files carrying a marker: 469
+- Flutter files mapped: 373
+- C# files carrying a marker: 470
 - C# files without a marker: 15
 - Markers not resolvable in the pinned checkout: 5
 

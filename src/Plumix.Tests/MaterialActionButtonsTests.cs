@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
+using Plumix.Foundation;
 using Plumix.Material;
 using Plumix.Rendering;
 using Plumix.Widgets;
@@ -66,6 +67,68 @@ public sealed class MaterialActionButtonsTests
         Assert.Null(FindParagraph(harness.RenderView, "theme-close"));
         Assert.Null(FindParagraph(harness.RenderView, "theme-drawer"));
         Assert.Null(FindParagraph(harness.RenderView, "theme-end-drawer"));
+    }
+
+    [Fact]
+    public void ActionIconThemeData_CopyWithPreservesAndOverridesBuilders()
+    {
+        Func<BuildContext, Widget> originalBuilder = _ => new Text("original");
+        Func<BuildContext, Widget> replacementBuilder = _ => new Text("replacement");
+        var original = new ActionIconThemeData(
+            BackButtonIconBuilder: originalBuilder,
+            CloseButtonIconBuilder: originalBuilder,
+            DrawerButtonIconBuilder: originalBuilder,
+            EndDrawerButtonIconBuilder: originalBuilder);
+
+        var copy = original.CopyWith();
+        var overridden = original.CopyWith(
+            backButtonIconBuilder: replacementBuilder,
+            closeButtonIconBuilder: replacementBuilder,
+            drawerButtonIconBuilder: replacementBuilder,
+            endDrawerButtonIconBuilder: replacementBuilder);
+
+        Assert.Same(originalBuilder, copy.BackButtonIconBuilder);
+        Assert.Same(originalBuilder, copy.CloseButtonIconBuilder);
+        Assert.Same(originalBuilder, copy.DrawerButtonIconBuilder);
+        Assert.Same(originalBuilder, copy.EndDrawerButtonIconBuilder);
+        Assert.Same(replacementBuilder, overridden.BackButtonIconBuilder);
+        Assert.Same(replacementBuilder, overridden.CloseButtonIconBuilder);
+        Assert.Same(replacementBuilder, overridden.DrawerButtonIconBuilder);
+        Assert.Same(replacementBuilder, overridden.EndDrawerButtonIconBuilder);
+    }
+
+    [Fact]
+    public void ActionButtons_BuildSourceIconButtonsWithStandardComponentKeys()
+    {
+        var outerKey = new ValueKey<string>("outer-back");
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                ThemeData.Light,
+                new Row(children:
+                [
+                    new BackButton(onPressed: () => { }, key: outerKey),
+                    new CloseButton(onPressed: () => { }),
+                    new DrawerButton(onPressed: () => { }),
+                    new EndDrawerButton(onPressed: () => { }),
+                ])));
+
+        harness.Pump(new Size(240, 80));
+
+        var back = Assert.Single(harness.FindWidgets<BackButton>());
+        Assert.Equal(outerKey, back.Key);
+        var builtButtons = harness.FindWidgets<IconButton>()
+            .Where(button => button.GetType() == typeof(IconButton))
+            .ToList();
+        Assert.Equal(4, builtButtons.Count);
+        Assert.Equal(StandardComponentType.BackButton.Key(), builtButtons[0].Key);
+        Assert.Equal(StandardComponentType.CloseButton.Key(), builtButtons[1].Key);
+        Assert.Equal(StandardComponentType.DrawerButton.Key(), builtButtons[2].Key);
+        Assert.Null(builtButtons[3].Key);
+        Assert.Equal("Back", builtButtons[0].Tooltip);
+        Assert.Equal("Close", builtButtons[1].Tooltip);
+        Assert.Equal("Open navigation menu", builtButtons[2].Tooltip);
+        Assert.Equal("Open navigation menu", builtButtons[3].Tooltip);
+        Assert.All(builtButtons, button => Assert.NotNull(button.OnPressed));
     }
 
     [Fact]
@@ -223,21 +286,89 @@ public sealed class MaterialActionButtonsTests
     }
 
     [Fact]
-    public void AndroidActionIcons_ExposePlatformLabelAndTooltipSemantics()
+    public void Material3ActionButtons_UseDirectOnSurfaceVariantRole()
     {
+        Color expected = Color.FromRgb(0x12, 0x78, 0x84);
+        var theme = ThemeData.Light with
+        {
+            UseMaterial3 = true,
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(onSurfaceVariant: expected),
+        };
         using var harness = new WidgetRenderHarness(
             new Theme(
-                ThemeData.Light with { Platform = TargetPlatform.Android },
-                new BackButton(onPressed: () => { })));
+                theme,
+                new Row(children:
+                [
+                    new BackButton(onPressed: () => { }),
+                    new CloseButton(onPressed: () => { }),
+                    new DrawerButton(onPressed: () => { }),
+                    new EndDrawerButton(onPressed: () => { }),
+                ])));
 
-        harness.Pump(new Size(80, 80));
+        harness.Pump(new Size(240, 80));
 
-        int labels = FindDescendants<RenderSemanticsAnnotations>(harness.RenderView)
-            .Count(semantics => semantics.Label == "Back");
-        int tooltips = FindDescendants<RenderSemanticsAnnotations>(harness.RenderView)
-            .Count(semantics => semantics.Tooltip == "Back");
-        Assert.Equal(1, labels);
-        Assert.Equal(1, tooltips);
+        var icons = FindDescendants<RenderParagraph>(harness.RenderView)
+            .Where(paragraph => paragraph.Text.Length == 1)
+            .ToList();
+        Assert.Equal(4, icons.Count);
+        Assert.All(
+            icons,
+            icon => Assert.Equal(expected, Assert.IsType<SolidColorBrush>(icon.Foreground).Color));
+    }
+
+    [Fact]
+    public void Material2ActionButtons_UseLegacyAmbientIconTheme()
+    {
+        Color expected = Color.FromRgb(0x51, 0x24, 0x7A);
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                ThemeData.Light with { UseMaterial3 = false },
+                new Plumix.Widgets.IconTheme(
+                    data: new IconThemeData(Color: expected),
+                    child: new Row(children:
+                    [
+                        new BackButton(onPressed: () => { }),
+                        new CloseButton(onPressed: () => { }),
+                        new DrawerButton(onPressed: () => { }),
+                        new EndDrawerButton(onPressed: () => { }),
+                    ]))));
+
+        harness.Pump(new Size(240, 80));
+
+        var icons = FindDescendants<RenderParagraph>(harness.RenderView)
+            .Where(paragraph => paragraph.Text.Length == 1)
+            .ToList();
+        Assert.Equal(4, icons.Count);
+        Assert.All(
+            icons,
+            icon => Assert.Equal(expected, Assert.IsType<SolidColorBrush>(icon.Foreground).Color));
+    }
+
+    [Fact]
+    public void AndroidActionIcons_ExposePlatformLabelAndTooltipSemantics()
+    {
+        TargetPlatform? previousOverride = PlatformDefaults.DebugTargetPlatformOverride;
+        PlatformDefaults.DebugTargetPlatformOverride = TargetPlatform.Android;
+        try
+        {
+            using var harness = new WidgetRenderHarness(
+                new Theme(
+                    ThemeData.Light with { Platform = TargetPlatform.Windows },
+                    new BackButton(onPressed: () => { })));
+
+            harness.Pump(new Size(80, 80));
+
+            int labels = FindDescendants<RenderSemanticsAnnotations>(harness.RenderView)
+                .Count(semantics => semantics.Label == "Back");
+            int tooltips = FindDescendants<RenderSemanticsAnnotations>(harness.RenderView)
+                .Count(semantics => semantics.Tooltip == "Back");
+            Assert.Equal(1, labels);
+            Assert.Equal(1, tooltips);
+        }
+        finally
+        {
+            PlatformDefaults.DebugTargetPlatformOverride = previousOverride;
+        }
     }
 
     private static RenderParagraph? FindParagraph(RenderObject? root, string text)
@@ -340,6 +471,23 @@ public sealed class MaterialActionButtonsTests
             _pipeline.RequestSemanticsUpdate();
             _pipeline.FlushSemantics();
             return _pipeline.SemanticsOwner.RootNode;
+        }
+
+        public List<T> FindWidgets<T>() where T : Widget
+        {
+            var result = new List<T>();
+            Visit(_rootElement);
+            return result;
+
+            void Visit(Element element)
+            {
+                if (element.Widget is T widget)
+                {
+                    result.Add(widget);
+                }
+
+                element.VisitChildren(Visit);
+            }
         }
 
         public void Dispose() => _rootElement.Unmount();

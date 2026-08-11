@@ -13,10 +13,23 @@ public enum TargetPlatform
 
 public static class PlatformDefaults
 {
+    private static readonly AsyncLocal<TargetPlatform?> DebugOverride = new();
+
+    public static TargetPlatform? DebugTargetPlatformOverride
+    {
+        get => DebugOverride.Value;
+        set => DebugOverride.Value = value;
+    }
+
     public static TargetPlatform TargetPlatform
     {
         get
         {
+            if (DebugTargetPlatformOverride is TargetPlatform debugOverride)
+            {
+                return debugOverride;
+            }
+
             if (OperatingSystem.IsIOS())
             {
                 return TargetPlatform.IOS;

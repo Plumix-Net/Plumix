@@ -9,7 +9,21 @@ public sealed partial record ActionIconThemeData(
     Func<BuildContext, Widget>? BackButtonIconBuilder = null,
     Func<BuildContext, Widget>? CloseButtonIconBuilder = null,
     Func<BuildContext, Widget>? DrawerButtonIconBuilder = null,
-    Func<BuildContext, Widget>? EndDrawerButtonIconBuilder = null);
+    Func<BuildContext, Widget>? EndDrawerButtonIconBuilder = null)
+{
+    public ActionIconThemeData CopyWith(
+        Func<BuildContext, Widget>? backButtonIconBuilder = null,
+        Func<BuildContext, Widget>? closeButtonIconBuilder = null,
+        Func<BuildContext, Widget>? drawerButtonIconBuilder = null,
+        Func<BuildContext, Widget>? endDrawerButtonIconBuilder = null)
+    {
+        return new ActionIconThemeData(
+            BackButtonIconBuilder: backButtonIconBuilder ?? BackButtonIconBuilder,
+            CloseButtonIconBuilder: closeButtonIconBuilder ?? CloseButtonIconBuilder,
+            DrawerButtonIconBuilder: drawerButtonIconBuilder ?? DrawerButtonIconBuilder,
+            EndDrawerButtonIconBuilder: endDrawerButtonIconBuilder ?? EndDrawerButtonIconBuilder);
+    }
+}
 
 public sealed class ActionIconTheme : InheritedWidget
 {
