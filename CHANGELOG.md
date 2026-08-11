@@ -1,5 +1,10 @@
 # Changelog
 
+- Fixed `RenderTransform.EffectiveTransform` composing the alignment anchor in Flutter's column-vector order while
+  Avalonia matrices are row-vector based, so every aligned `Transform` (`ScaleTransition`, `RotationTransition`,
+  `MatrixTransition`, `RefreshProgressIndicator`) rotated/scaled around a mirrored anchor instead of the alignment
+  point. Most visibly, the pull-to-refresh arrow flew outside its indicator circle while rotating.
+
 - Breaking: completed the strict `BouncingScrollPhysics` (iOS rubber-band scrolling) closeout. A new
   `Plumix.Physics` library ports `Simulation`/`Tolerance`/`FrictionSimulation`/`SpringDescription`/`SpringSimulation`/
   `ScrollSpringSimulation`/`ClampedSimulation` with Flutter's exact math, plus `BouncingScrollSimulation` and

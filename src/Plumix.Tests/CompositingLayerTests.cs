@@ -292,6 +292,34 @@ public sealed class CompositingLayerTests
     }
 
     [Fact]
+    public void RenderTransform_WithAlignment_RotatesAroundTheAnchorPoint()
+    {
+        var leaf = new TestLeafRenderBox();
+        var transform = new RenderTransform(
+            Matrix.CreateRotation(Math.PI / 2.0),
+            alignment: Alignment.Center,
+            child: leaf);
+        var root = new RenderView
+        {
+            Child = transform
+        };
+
+        var pipeline = new PipelineOwner(root);
+        pipeline.Attach(root);
+        pipeline.FlushLayout(new Size(300, 200));
+
+        Assert.Equal(new Size(32, 32), transform.Size);
+        var center = new Point(16, 16);
+        Point mappedCenter = transform.EffectiveTransform.Transform(center);
+        Assert.Equal(center.X, mappedCenter.X, 6);
+        Assert.Equal(center.Y, mappedCenter.Y, 6);
+
+        Point mappedTopLeft = transform.EffectiveTransform.Transform(new Point(0, 0));
+        Assert.Equal(32.0, mappedTopLeft.X, 6);
+        Assert.Equal(0.0, mappedTopLeft.Y, 6);
+    }
+
+    [Fact]
     public void RenderClipRect_UpdatesLayerClip_WithoutRepaintingChild()
     {
         var leaf = new TestLeafRenderBox();

@@ -2150,9 +2150,11 @@ public sealed class RenderTransform : RenderProxyBox
             var anchor = new Point(
                 Size.Width * (Alignment.Value.X + 1) / 2.0,
                 Size.Height * (Alignment.Value.Y + 1) / 2.0);
-            return Matrix.CreateTranslation(anchor.X, anchor.Y)
+            // Avalonia matrices are row-vector based (`a * b` applies `a` first), so the anchor
+            // shift is composed in the opposite order from Flutter's column-vector `Matrix4`.
+            return Matrix.CreateTranslation(-anchor.X, -anchor.Y)
                    * Transform
-                   * Matrix.CreateTranslation(-anchor.X, -anchor.Y);
+                   * Matrix.CreateTranslation(anchor.X, anchor.Y);
         }
     }
 
