@@ -110,6 +110,8 @@ public sealed class SemanticsConfiguration
     public string? OnTapHint { get; set; }
     public string? Tooltip { get; set; }
     public string? Value { get; set; }
+    public string? IncreasedValue { get; set; }
+    public string? DecreasedValue { get; set; }
     public string? MinValue { get; set; }
     public string? MaxValue { get; set; }
     public SemanticsRole Role { get; set; }
@@ -178,6 +180,8 @@ public sealed class SemanticsConfiguration
             OnTapHint = OnTapHint,
             Tooltip = Tooltip,
             Value = Value,
+            IncreasedValue = IncreasedValue,
+            DecreasedValue = DecreasedValue,
             MinValue = MinValue,
             MaxValue = MaxValue,
             Role = Role,
@@ -214,6 +218,8 @@ public sealed class SemanticsConfiguration
         || !string.IsNullOrWhiteSpace(OnTapHint)
         || !string.IsNullOrWhiteSpace(Tooltip)
         || !string.IsNullOrWhiteSpace(Value)
+        || !string.IsNullOrWhiteSpace(IncreasedValue)
+        || !string.IsNullOrWhiteSpace(DecreasedValue)
         || !string.IsNullOrWhiteSpace(MinValue)
         || !string.IsNullOrWhiteSpace(MaxValue)
         || Role != SemanticsRole.None
@@ -300,6 +306,8 @@ public sealed class SemanticsConfiguration
         }
 
         Value ??= child.Value;
+        IncreasedValue ??= child.IncreasedValue;
+        DecreasedValue ??= child.DecreasedValue;
         MinValue ??= child.MinValue;
         MaxValue ??= child.MaxValue;
 
@@ -356,6 +364,8 @@ public sealed class SemanticsNode
     public string? OnTapHint { get; internal set; }
     public string? Tooltip { get; internal set; }
     public string? Value { get; internal set; }
+    public string? IncreasedValue { get; internal set; }
+    public string? DecreasedValue { get; internal set; }
     public string? MinValue { get; internal set; }
     public string? MaxValue { get; internal set; }
     public SemanticsRole Role { get; internal set; }
@@ -497,6 +507,8 @@ public sealed class SemanticsOwner
         _syntheticRoot.OnTapHint = null;
         _syntheticRoot.Tooltip = null;
         _syntheticRoot.Value = null;
+        _syntheticRoot.IncreasedValue = null;
+        _syntheticRoot.DecreasedValue = null;
         _syntheticRoot.MinValue = null;
         _syntheticRoot.MaxValue = null;
         _syntheticRoot.Role = SemanticsRole.None;

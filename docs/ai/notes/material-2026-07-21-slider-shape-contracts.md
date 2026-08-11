@@ -30,9 +30,9 @@
   - [x] Constraint/layout behavior for built-in controls
   - [x] Built-in paint/visual semantics
   - [x] Focused tests for built-in behavior
-  - [ ] Public custom shape contracts and defaults
-  - [ ] Render delegation to custom shape implementations
-  - [ ] Range thumb-selector and minimum-separation contracts
+  - [x] Public custom shape contracts and defaults
+  - [x] Render delegation to custom shape implementations
+  - [x] Range thumb-selector and minimum-separation contracts
 
 ## Invariants Impacted
 
@@ -55,8 +55,8 @@
   - [x] Built-in state transitions mapped
   - [x] Built-in constraint/layout behavior mapped
   - [x] Built-in paint behavior mapped
-  - [ ] Custom shape subclass API mapped
-  - [ ] Custom shape paint dispatch mapped
+  - [x] Custom shape subclass API mapped
+  - [x] Custom shape paint dispatch mapped
 - Divergences:
   - None. This is an open parity gap, not an intentional platform divergence.
 
@@ -80,7 +80,7 @@
 - [x] C# sample impact checked
 - [x] Dart sample parity checked
 - [x] `docs/ai/PARITY_MATRIX.md` updated for the completed built-in behavior
-- [ ] Add mirrored custom-shape probes when the shape layer is implemented
+- [x] Add mirrored custom-shape probes when the shape layer is implemented
 
 ## Docs and Tracking
 
@@ -90,7 +90,7 @@
 
 ## Done Criteria
 
-- [ ] Both controls accept and execute every Flutter public shape slot in `SliderThemeData`.
-- [ ] Range thumb selection and minimum separation match the Dart contracts.
-- [ ] Focused shape tests and the full test suite pass.
-- [ ] The custom-shape gap is removed from `docs/ai/TEST_MATRIX.md` and this note is archived as complete context.
+- [x] Both controls accept and execute every Flutter public shape slot in `SliderThemeData`.
+- [x] Range thumb selection and minimum separation match the Dart contracts.
+- [x] Focused shape tests and the full test suite pass.
+- [x] The custom-shape gap is removed from `docs/ai/TEST_MATRIX.md` and this note is archived as complete context.

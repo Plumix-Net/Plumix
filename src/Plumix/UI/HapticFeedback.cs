@@ -5,6 +5,7 @@ namespace Plumix.UI;
 public enum HapticFeedbackType
 {
     MediumImpact,
+    SelectionClick,
 }
 
 public static class HapticFeedback
@@ -20,6 +21,11 @@ public static class HapticFeedback
     public static void MediumImpact()
     {
         _feedbackRequested?.Invoke(HapticFeedbackType.MediumImpact);
+    }
+
+    public static void SelectionClick()
+    {
+        _feedbackRequested?.Invoke(HapticFeedbackType.SelectionClick);
     }
 
     internal static void ResetForTests()

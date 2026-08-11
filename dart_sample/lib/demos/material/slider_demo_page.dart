@@ -19,6 +19,7 @@ class _SliderDemoPageState extends State<SliderDemoPage> {
   bool _useMaterial3 = true;
   bool _year2023 = true;
   bool _tapOnly = false;
+  bool _customShape = false;
   double _value = 0.35;
   double _secondaryTrackValue = 0.7;
   String _status = 'idle';
@@ -28,17 +29,21 @@ class _SliderDemoPageState extends State<SliderDemoPage> {
     final ThemeData baseTheme = Theme.of(context);
     final ThemeData themedData = baseTheme.copyWith(
       useMaterial3: _useMaterial3,
-      sliderTheme: _useThemeOverrides
-          ? const SliderThemeData(
-              activeTrackColor: Color(0xFF1565C0),
-              inactiveTrackColor: Color(0xFFC5CAE9),
-              thumbColor: Color(0xFF0D47A1),
-              disabledActiveTrackColor: Color(0x66212121),
-              disabledInactiveTrackColor: Color(0x1F212121),
-              disabledThumbColor: Color(0x66212121),
-              trackHeight: 6,
-            )
-          : const SliderThemeData(),
+      sliderTheme: SliderThemeData(
+        activeTrackColor:
+            _useThemeOverrides ? const Color(0xFF1565C0) : null,
+        inactiveTrackColor:
+            _useThemeOverrides ? const Color(0xFFC5CAE9) : null,
+        thumbColor: _useThemeOverrides ? const Color(0xFF0D47A1) : null,
+        disabledActiveTrackColor:
+            _useThemeOverrides ? const Color(0x66212121) : null,
+        disabledInactiveTrackColor:
+            _useThemeOverrides ? const Color(0x1F212121) : null,
+        disabledThumbColor:
+            _useThemeOverrides ? const Color(0x66212121) : null,
+        trackHeight: _useThemeOverrides ? 6 : null,
+        thumbShape: _customShape ? const _DemoSliderThumbShape() : null,
+      ),
     );
 
     return Theme(
@@ -189,6 +194,13 @@ class _SliderDemoPageState extends State<SliderDemoPage> {
                 width: 104,
                 background: const Color(0xFFF0E8FF),
               ),
+              const SizedBox(width: 8),
+              _buildControlButton(
+                label: _customShape ? 'Custom thumb' : 'Default thumb',
+                onTap: () => setState(() => _customShape = !_customShape),
+                width: 112,
+                background: const Color(0xFFE8F6EE),
+              ),
             ],
           ),
           const SizedBox(height: 10),
@@ -304,6 +316,40 @@ class _SliderDemoPageState extends State<SliderDemoPage> {
         ),
         child: Text(label, style: const TextStyle(fontSize: 12)),
       ),
+    );
+  }
+}
+
+class _DemoSliderThumbShape extends SliderComponentShape {
+  const _DemoSliderThumbShape();
+
+  @override
+  Size getPreferredSize(bool isEnabled, bool isDiscrete) => const Size(20, 20);
+
+  @override
+  void paint(
+    PaintingContext context,
+    Offset center, {
+    required Animation<double> activationAnimation,
+    required Animation<double> enableAnimation,
+    required bool isDiscrete,
+    required TextPainter labelPainter,
+    required RenderBox parentBox,
+    required SliderThemeData sliderTheme,
+    required TextDirection textDirection,
+    required double value,
+    required double textScaleFactor,
+    required Size sizeWithOverflow,
+  }) {
+    final Color color = enableAnimation.value >= 0.5
+        ? sliderTheme.thumbColor ?? Colors.blue
+        : sliderTheme.disabledThumbColor ?? Colors.grey;
+    context.canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(center: center, width: 20, height: 20),
+        const Radius.circular(5),
+      ),
+      Paint()..color = color,
     );
   }
 }

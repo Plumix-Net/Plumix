@@ -125,6 +125,8 @@
     none/pin/parallax collapse, zoom/blur/fade stretch effects, and repaint-aware background opacity).
   - `Autocomplete` (source field/options composition, exact M2/M3 canvas/focus/shadow defaults, lazy highlight
     scrolling, focusable button semantics, zero-area layout, and live M2/M3 runtime probes).
+  - `Slider`/`RangeSlider` (direct M2/M3 roles, source theme copy/lerp and state properties, 2023/2024 track/thumb/
+    indicator shapes, pluggable range selection/separation, adaptive Cupertino routing, and mirrored shape probes).
 - Completed `Typography.Material2014`/`Material2018`, exact platform black/white themes, dense/tall geometry, and
   locale script-category selection.
 - Remove the narrowed `ColorScheme + Typography closeout` row from `docs/MATERIAL_TODO.md` only after those checks

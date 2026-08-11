@@ -26,6 +26,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `cupertino/radio.dart` | `src/Plumix.Cupertino/CupertinoRadio.cs` | — | — |
 | `cupertino/route.dart` | `src/Plumix.Material/PageTransitionsTheme.cs` | — | — |
 | `cupertino/scrollbar.dart` | `src/Plumix.Cupertino/CupertinoScrollbar.cs` | — | — |
+| `cupertino/slider.dart` | `src/Plumix.Cupertino/CupertinoSlider.cs` | — | — |
 | `foundation/binding.dart` | `src/Plumix/HotReload.cs` | `src/Plumix.Tests/HotReloadTests.cs` | — |
 | `foundation/change_notifier.dart` | `src/Plumix/Foundation/Listenable.cs` | — | — |
 | `foundation/constants.dart` | `src/Plumix/Foundation/Constants.cs` | — | — |
@@ -166,6 +167,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `material/radio_list_tile.dart` | `src/Plumix.Material/RadioListTile.cs` | — | — |
 | `material/radio_theme.dart` | `src/Plumix.Material/RadioTheme.cs` | — | — |
 | `material/range_slider.dart` | `src/Plumix.Material/RangeSlider.cs` | `src/Plumix.Tests/MaterialRangeSliderTests.cs` | `dart_sample/lib/demos/material/range_slider_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/RangeSliderDemoPage.cs` |
+| `material/range_slider_parts.dart` | `src/Plumix.Material/SliderShapes.cs` | — | — |
 | `material/refresh_indicator.dart` | `src/Plumix.Material/RefreshIndicator.cs` | `src/Plumix.Tests/MaterialRefreshIndicatorTests.cs` | `dart_sample/lib/demos/material/refresh_indicator_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/RefreshIndicatorDemoPage.cs` |
 | `material/reorderable_list.dart` | `src/Plumix.Material/ReorderableListView.cs` | — | — |
 | `material/scaffold.dart` | `src/Plumix.Material/Scaffold.cs`<br>`src/Plumix.Material/ScaffoldMessenger.cs` | `src/Plumix.Tests/MaterialScaffoldTests.cs` | — |
@@ -180,7 +182,9 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `material/selectable_text.dart` | `src/Plumix.Material/SelectableText.cs` | — | — |
 | `material/selection_area.dart` | `src/Plumix.Material/SelectionArea.cs` | — | — |
 | `material/slider.dart` | `src/Plumix.Material/Slider.cs` | `src/Plumix.Tests/MaterialRangeSliderTests.cs`<br>`src/Plumix.Tests/MaterialSliderTests.cs` | `dart_sample/lib/demos/material/range_slider_demo_page.dart`<br>`dart_sample/lib/demos/material/slider_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/RangeSliderDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/SliderDemoPage.cs` |
-| `material/slider_theme.dart` | `src/Plumix.Material/SliderTheme.cs` | — | — |
+| `material/slider_parts.dart` | `src/Plumix.Material/SliderShapes.cs` | — | — |
+| `material/slider_theme.dart` | `src/Plumix.Material/SliderShapes.cs`<br>`src/Plumix.Material/SliderTheme.cs` | — | — |
+| `material/slider_value_indicator_shape.dart` | `src/Plumix.Material/SliderShapes.cs` | — | — |
 | `material/snack_bar.dart` | `src/Plumix.Material/SnackBar.cs` | `src/Plumix.Tests/MaterialSnackBarTests.cs` | `dart_sample/lib/demos/material/snack_bar_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/SnackBarDemoPage.cs` |
 | `material/snack_bar_theme.dart` | `src/Plumix.Material/SnackBarTheme.cs` | — | — |
 | `material/spell_check_suggestions_toolbar.dart` | `src/Plumix.Material/SpellCheckSuggestionsToolbar.cs` | — | — |
@@ -426,8 +430,8 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 
 ## Summary
 
-- Flutter files mapped: 375
-- C# files carrying a marker: 472
+- Flutter files mapped: 379
+- C# files carrying a marker: 477
 - C# files without a marker: 15
 - Markers not resolvable in the pinned checkout: 5
 

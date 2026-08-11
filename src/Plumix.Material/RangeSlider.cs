@@ -26,15 +26,15 @@ public sealed class RangeSlider : StatefulWidget
         int? divisions = null,
         Color? activeColor = null,
         Color? inactiveColor = null,
-        MaterialStateProperty<Color?>? overlayColor = null,
+        WidgetStateProperty<Color?>? overlayColor = null,
         MaterialTapTargetSize? materialTapTargetSize = null,
         FocusNode? focusNode = null,
         bool autofocus = false,
         SemanticFormatterCallback? semanticFormatterCallback = null,
         Key? key = null,
         RangeLabels? labels = null,
-        MaterialStateProperty<MouseCursor?>? mouseCursor = null,
-        Thickness? padding = null,
+        WidgetStateProperty<MouseCursor?>? mouseCursor = null,
+        EdgeInsetsGeometry? padding = null,
         bool? year2023 = null) : base(key)
     {
         if (double.IsNaN(min) || double.IsInfinity(min))
@@ -83,7 +83,8 @@ public sealed class RangeSlider : StatefulWidget
         }
 
         if (padding.HasValue && (padding.Value.Left < 0 || padding.Value.Top < 0
-                                 || padding.Value.Right < 0 || padding.Value.Bottom < 0))
+                                 || padding.Value.Right < 0 || padding.Value.Bottom < 0
+                                 || padding.Value.Start < 0 || padding.Value.End < 0))
         {
             throw new ArgumentOutOfRangeException(nameof(padding), "RangeSlider padding cannot be negative.");
         }
@@ -128,9 +129,9 @@ public sealed class RangeSlider : StatefulWidget
 
     public Color? InactiveColor { get; }
 
-    public MaterialStateProperty<Color?>? OverlayColor { get; }
+    public WidgetStateProperty<Color?>? OverlayColor { get; }
 
-    public MaterialStateProperty<MouseCursor?>? MouseCursor { get; }
+    public WidgetStateProperty<MouseCursor?>? MouseCursor { get; }
 
     public MaterialTapTargetSize? MaterialTapTargetSize { get; }
 
@@ -140,7 +141,7 @@ public sealed class RangeSlider : StatefulWidget
 
     public SemanticFormatterCallback? SemanticFormatterCallback { get; }
 
-    public Thickness? Padding { get; }
+    public EdgeInsetsGeometry? Padding { get; }
 
     public bool? Year2023 { get; }
 
@@ -200,7 +201,9 @@ public sealed class RangeSlider : StatefulWidget
                 : Math.Max(trackHeight, thumbRadius * 2);
             double overlayRadius = sliderTheme.OverlayRadius
                                    ?? Math.Max(thumbRadius, theme.UseMaterial3 ? 20.0 : 16.0);
-            Thickness padding = CurrentWidget.Padding ?? sliderTheme.Padding ?? new Thickness();
+            TextDirection textDirection = Directionality.Of(context);
+            EdgeInsetsGeometry? paddingGeometry = CurrentWidget.Padding ?? sliderTheme.Padding;
+            Thickness padding = paddingGeometry?.Resolve(textDirection) ?? new Thickness();
             var showValueIndicator = sliderTheme.ShowValueIndicator
                                      ?? Plumix.Material.ShowValueIndicator.OnlyForDiscrete;
             double tickMarkRadius = sliderTheme.TickMarkRadius ?? Math.Max(1.0, trackHeight / 4.0);
@@ -222,13 +225,14 @@ public sealed class RangeSlider : StatefulWidget
             var inactiveTickMarkColor = ResolveInactiveTickMarkColor(theme, sliderTheme, year2023);
             var valueIndicatorColor = sliderTheme.ValueIndicatorColor
                                       ?? (theme.UseMaterial3 && !year2023
-                                          ? theme.InverseSurfaceColor
-                                          : theme.PrimaryColor);
+                                          ? theme.ColorScheme.InverseSurface
+                                          : theme.ColorScheme.Primary);
             var valueIndicatorTextStyle = sliderTheme.ValueIndicatorTextStyle
                                           ?? (theme.UseMaterial3 && !year2023
                                               ? theme.TextTheme.LabelLarge.CopyWith(
-                                                  color: theme.OnInverseSurfaceColor)
-                                              : theme.TextTheme.BodyLarge.CopyWith(color: theme.OnPrimaryColor));
+                                                  color: theme.ColorScheme.OnInverseSurface)
+                                              : theme.TextTheme.BodyLarge.CopyWith(
+                                                  color: theme.ColorScheme.OnPrimary));
 
             var focusedStates = BuildStates(interactive: IsInteractive, focused: true);
             var hoveredStates = BuildStates(interactive: IsInteractive, hovered: true);
@@ -236,6 +240,56 @@ public sealed class RangeSlider : StatefulWidget
             var overlayFocusedColor = ResolveOverlayColor(theme, sliderTheme, focusedStates);
             var overlayHoveredColor = ResolveOverlayColor(theme, sliderTheme, hoveredStates);
             var overlayDraggedColor = ResolveOverlayColor(theme, sliderTheme, draggedStates);
+            RangeSliderValueIndicatorShape valueIndicatorShape = sliderTheme.RangeValueIndicatorShape
+                                                                 ?? (theme.UseMaterial3 && !year2023
+                                                                     ? new RoundedRectRangeSliderValueIndicatorShape()
+                                                                     : new RectangularRangeSliderValueIndicatorShape());
+            if (valueIndicatorShape is RectangularRangeSliderValueIndicatorShape
+                && !sliderTheme.ValueIndicatorColor.HasValue)
+            {
+                valueIndicatorColor = AlphaBlend(
+                    MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnSurface, 0.60),
+                    MaterialButtonCore.ApplyOpacity(theme.ColorScheme.Surface, 0.90));
+            }
+
+            var effectiveSliderTheme = new SliderThemeData(
+                TrackHeight: trackHeight,
+                ActiveTrackColor: activeTrackColor,
+                InactiveTrackColor: inactiveTrackColor,
+                DisabledActiveTrackColor: disabledActiveTrackColor,
+                DisabledInactiveTrackColor: disabledInactiveTrackColor,
+                ActiveTickMarkColor: activeTickMarkColor,
+                InactiveTickMarkColor: inactiveTickMarkColor,
+                DisabledActiveTickMarkColor: activeTickMarkColor,
+                DisabledInactiveTickMarkColor: inactiveTickMarkColor,
+                ThumbColor: thumbColor,
+                OverlappingShapeStrokeColor: sliderTheme.OverlappingShapeStrokeColor
+                                             ?? theme.ColorScheme.Surface,
+                DisabledThumbColor: disabledThumbColor,
+                OverlayColor: WidgetStateProperty<Color?>.All(overlayDraggedColor),
+                ValueIndicatorColor: valueIndicatorColor,
+                ValueIndicatorStrokeColor: sliderTheme.ValueIndicatorStrokeColor,
+                OverlayShape: sliderTheme.OverlayShape ?? new RoundSliderOverlayShape(overlayRadius),
+                RangeTickMarkShape: sliderTheme.RangeTickMarkShape
+                                    ?? new RoundRangeSliderTickMarkShape(tickMarkRadius),
+                RangeThumbShape: sliderTheme.RangeThumbShape
+                                 ?? (year2023
+                                     ? new RoundRangeSliderThumbShape(thumbRadius)
+                                     : new HandleRangeSliderThumbShape()),
+                RangeTrackShape: sliderTheme.RangeTrackShape
+                                 ?? (year2023
+                                     ? new RoundedRectRangeSliderTrackShape()
+                                     : new GappedRangeSliderTrackShape()),
+                RangeValueIndicatorShape: valueIndicatorShape,
+                ShowValueIndicator: showValueIndicator,
+                ValueIndicatorTextStyle: valueIndicatorTextStyle,
+                MinThumbSeparation: sliderTheme.MinThumbSeparation ?? (year2023 ? 8.0 : 0.0),
+                ThumbSelector: sliderTheme.ThumbSelector,
+                MouseCursor: sliderTheme.MouseCursor,
+                Padding: paddingGeometry,
+                ThumbSize: sliderTheme.ThumbSize ?? WidgetStateProperty<Size?>.All(thumbSize),
+                TrackGap: trackGap,
+                Year2023: year2023);
 
             var semanticsFlags = SemanticsFlags.IsSlider;
             if (IsInteractive)
@@ -255,6 +309,7 @@ public sealed class RangeSlider : StatefulWidget
                     canRequestFocus: IsInteractive,
                     onKeyEvent: HandleKeyEvent,
                     child: new RangeSliderRenderWidget(
+                        sliderTheme: effectiveSliderTheme,
                         startValueNormalized: normalizedValues.Start,
                         endValueNormalized: normalizedValues.End,
                         divisions: CurrentWidget.Divisions,
@@ -569,7 +624,7 @@ public sealed class RangeSlider : StatefulWidget
         {
             return CurrentWidget.ActiveColor
                    ?? sliderTheme.ActiveTrackColor
-                   ?? theme.PrimaryColor;
+                   ?? theme.ColorScheme.Primary;
         }
 
         private Color ResolveInactiveTrackColor(ThemeData theme, SliderThemeData sliderTheme)
@@ -578,33 +633,41 @@ public sealed class RangeSlider : StatefulWidget
             return CurrentWidget.InactiveColor
                    ?? sliderTheme.InactiveTrackColor
                    ?? (theme.UseMaterial3 && !year2023
-                       ? theme.SecondaryContainerColor
-                       : MaterialButtonCore.ApplyOpacity(theme.PrimaryColor, 0.24));
+                       ? theme.ColorScheme.SecondaryContainer
+                       : MaterialButtonCore.ApplyOpacity(theme.ColorScheme.Primary, 0.24));
         }
 
         private Color ResolveThumbColor(ThemeData theme, SliderThemeData sliderTheme)
         {
             return CurrentWidget.ActiveColor
                    ?? sliderTheme.ThumbColor
-                   ?? theme.PrimaryColor;
+                   ?? theme.ColorScheme.Primary;
         }
 
         private Color ResolveDisabledActiveTrackColor(ThemeData theme, SliderThemeData sliderTheme)
         {
+            bool useLatest = theme.UseMaterial3
+                             && !(CurrentWidget.Year2023 ?? sliderTheme.Year2023 ?? true);
             return sliderTheme.DisabledActiveTrackColor
-                   ?? MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, theme.UseMaterial3 ? 0.38 : 0.32);
+                   ?? MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnSurface, useLatest ? 0.38 : 0.32);
         }
 
         private Color ResolveDisabledInactiveTrackColor(ThemeData theme, SliderThemeData sliderTheme)
         {
             return sliderTheme.DisabledInactiveTrackColor
-                   ?? MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.12);
+                   ?? MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnSurface, 0.12);
         }
 
         private Color ResolveDisabledThumbColor(ThemeData theme, SliderThemeData sliderTheme)
         {
+            bool useLatest = theme.UseMaterial3
+                             && !(CurrentWidget.Year2023 ?? sliderTheme.Year2023 ?? true);
             return sliderTheme.DisabledThumbColor
-                   ?? MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.38);
+                   ?? (useLatest
+                       ? MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnSurface, 0.38)
+                       : AlphaBlend(
+                           MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnSurface, 0.38),
+                           theme.ColorScheme.Surface));
         }
 
         private Color ResolveActiveTickMarkColor(
@@ -613,12 +676,14 @@ public sealed class RangeSlider : StatefulWidget
             bool year2023)
         {
             Color fallback = theme.UseMaterial3 && !year2023
-                ? theme.OnPrimaryColor
-                : MaterialButtonCore.ApplyOpacity(theme.OnPrimaryColor, 0.54);
+                ? theme.ColorScheme.OnPrimary
+                : MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnPrimary, 0.54);
             return IsInteractive
                 ? sliderTheme.ActiveTickMarkColor ?? fallback
                 : sliderTheme.DisabledActiveTickMarkColor
-                  ?? MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.12);
+                  ?? (theme.UseMaterial3 && !year2023
+                      ? theme.ColorScheme.OnInverseSurface
+                      : MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnPrimary, 0.12));
         }
 
         private Color ResolveInactiveTickMarkColor(
@@ -627,20 +692,32 @@ public sealed class RangeSlider : StatefulWidget
             bool year2023)
         {
             Color fallback = theme.UseMaterial3 && !year2023
-                ? theme.OnSecondaryContainerColor
-                : MaterialButtonCore.ApplyOpacity(theme.PrimaryColor, 0.54);
+                ? theme.ColorScheme.OnSecondaryContainer
+                : MaterialButtonCore.ApplyOpacity(theme.ColorScheme.Primary, 0.54);
             return IsInteractive
                 ? sliderTheme.InactiveTickMarkColor ?? fallback
                 : sliderTheme.DisabledInactiveTickMarkColor
-                  ?? MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.12);
+                  ?? (theme.UseMaterial3 && !year2023
+                      ? theme.ColorScheme.OnSurface
+                      : MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnSurface, 0.12));
         }
 
-        private Color? ResolveOverlayColor(ThemeData theme, SliderThemeData sliderTheme, MaterialState states)
+        private Color? ResolveOverlayColor(
+            ThemeData theme,
+            SliderThemeData sliderTheme,
+            IReadOnlySet<WidgetState> states)
         {
             var widgetOverlay = CurrentWidget.OverlayColor?.Resolve(states);
             if (widgetOverlay.HasValue)
             {
                 return widgetOverlay.Value;
+            }
+
+            if (CurrentWidget.ActiveColor.HasValue)
+            {
+                return states.Contains(WidgetState.Disabled)
+                    ? null
+                    : MaterialButtonCore.ApplyOpacity(CurrentWidget.ActiveColor.Value, 0.12);
             }
 
             var themeOverlay = sliderTheme.OverlayColor?.Resolve(states);
@@ -649,26 +726,26 @@ public sealed class RangeSlider : StatefulWidget
                 return themeOverlay.Value;
             }
 
-            var baseColor = CurrentWidget.ActiveColor ?? theme.PrimaryColor;
+            Color baseColor = theme.ColorScheme.Primary;
 
             if (!theme.UseMaterial3)
             {
-                return states.HasFlag(MaterialState.Disabled)
+                return states.Contains(WidgetState.Disabled)
                     ? null
                     : MaterialButtonCore.ApplyOpacity(baseColor, 0.12);
             }
 
-            if (states.HasFlag(MaterialState.Pressed))
+            if (states.Contains(WidgetState.Dragged))
             {
                 return MaterialButtonCore.ApplyOpacity(baseColor, 0.10);
             }
 
-            if (states.HasFlag(MaterialState.Hovered))
+            if (states.Contains(WidgetState.Hovered))
             {
                 return MaterialButtonCore.ApplyOpacity(baseColor, 0.08);
             }
 
-            if (states.HasFlag(MaterialState.Focused))
+            if (states.Contains(WidgetState.Focused))
             {
                 return MaterialButtonCore.ApplyOpacity(baseColor, 0.10);
             }
@@ -676,26 +753,50 @@ public sealed class RangeSlider : StatefulWidget
             return null;
         }
 
-        private static MaterialState BuildStates(
+        private static Color AlphaBlend(Color foreground, Color background)
+        {
+            double alpha = foreground.A / 255.0;
+            double backgroundAlpha = background.A / 255.0;
+            double outputAlpha = alpha + (backgroundAlpha * (1.0 - alpha));
+            if (outputAlpha <= 0.0)
+            {
+                return Colors.Transparent;
+            }
+
+            byte a = (byte)Math.Round(outputAlpha * 255.0);
+            byte r = (byte)Math.Round(
+                ((foreground.R * alpha) + (background.R * backgroundAlpha * (1.0 - alpha))) / outputAlpha);
+            byte g = (byte)Math.Round(
+                ((foreground.G * alpha) + (background.G * backgroundAlpha * (1.0 - alpha))) / outputAlpha);
+            byte b = (byte)Math.Round(
+                ((foreground.B * alpha) + (background.B * backgroundAlpha * (1.0 - alpha))) / outputAlpha);
+            return Color.FromArgb(a, r, g, b);
+        }
+
+        private static IReadOnlySet<WidgetState> BuildStates(
             bool interactive,
             bool focused = false,
             bool hovered = false,
             bool dragged = false)
         {
-            var states = interactive ? MaterialState.None : MaterialState.Disabled;
+            var states = new HashSet<WidgetState>();
+            if (!interactive)
+            {
+                states.Add(WidgetState.Disabled);
+            }
             if (focused)
             {
-                states |= MaterialState.Focused;
+                states.Add(WidgetState.Focused);
             }
 
             if (hovered)
             {
-                states |= MaterialState.Hovered;
+                states.Add(WidgetState.Hovered);
             }
 
             if (dragged)
             {
-                states |= MaterialState.Pressed;
+                states.Add(WidgetState.Dragged);
             }
 
             return states;
@@ -720,6 +821,7 @@ internal readonly record struct NormalizedRangeValues(double Start, double End);
 internal sealed class RangeSliderRenderWidget : LeafRenderObjectWidget
 {
     public RangeSliderRenderWidget(
+        SliderThemeData sliderTheme,
         double startValueNormalized,
         double endValueNormalized,
         int? divisions,
@@ -751,6 +853,7 @@ internal sealed class RangeSliderRenderWidget : LeafRenderObjectWidget
         Action<NormalizedRangeValues, RangeSliderThumb>? onChangeEndNormalized,
         Key? key = null) : base(key)
     {
+        SliderTheme = sliderTheme;
         StartValueNormalized = startValueNormalized;
         EndValueNormalized = endValueNormalized;
         Divisions = divisions;
@@ -781,6 +884,8 @@ internal sealed class RangeSliderRenderWidget : LeafRenderObjectWidget
         OnChangedNormalized = onChangedNormalized;
         OnChangeEndNormalized = onChangeEndNormalized;
     }
+
+    public SliderThemeData SliderTheme { get; }
 
     public double StartValueNormalized { get; }
 
@@ -843,6 +948,7 @@ internal sealed class RangeSliderRenderWidget : LeafRenderObjectWidget
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderRangeSlider(
+            sliderTheme: SliderTheme,
             startValueNormalized: StartValueNormalized,
             endValueNormalized: EndValueNormalized,
             divisions: Divisions,
@@ -877,6 +983,7 @@ internal sealed class RangeSliderRenderWidget : LeafRenderObjectWidget
     internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var rangeSlider = (RenderRangeSlider)renderObject;
+        rangeSlider.SliderTheme = SliderTheme;
         rangeSlider.StartValueNormalized = StartValueNormalized;
         rangeSlider.EndValueNormalized = EndValueNormalized;
         rangeSlider.Divisions = Divisions;
@@ -914,6 +1021,7 @@ internal sealed class RenderRangeSlider : RenderBox
     private const double DefaultTrackWidth = 144.0;
     private const double Epsilon = 0.0001;
 
+    private SliderThemeData _sliderTheme;
     private double _startValueNormalized;
     private double _endValueNormalized;
     private int? _divisions;
@@ -952,6 +1060,7 @@ internal sealed class RenderRangeSlider : RenderBox
     private double? _lastGlobalPointerX;
 
     public RenderRangeSlider(
+        SliderThemeData sliderTheme,
         double startValueNormalized,
         double endValueNormalized,
         int? divisions,
@@ -982,6 +1091,7 @@ internal sealed class RenderRangeSlider : RenderBox
         Action<NormalizedRangeValues, RangeSliderThumb>? onChangedNormalized,
         Action<NormalizedRangeValues, RangeSliderThumb>? onChangeEndNormalized)
     {
+        _sliderTheme = sliderTheme;
         var initial = OrderAndClamp(startValueNormalized, endValueNormalized);
         _startValueNormalized = initial.Start;
         _endValueNormalized = initial.End;
@@ -1012,6 +1122,22 @@ internal sealed class RenderRangeSlider : RenderBox
         _onChangeStartNormalized = onChangeStartNormalized;
         _onChangedNormalized = onChangedNormalized;
         _onChangeEndNormalized = onChangeEndNormalized;
+    }
+
+    public SliderThemeData SliderTheme
+    {
+        get => _sliderTheme;
+        set
+        {
+            if (Equals(_sliderTheme, value))
+            {
+                return;
+            }
+
+            _sliderTheme = value;
+            MarkNeedsLayout();
+            MarkNeedsPaint();
+        }
     }
 
     public double StartValueNormalized
@@ -1369,15 +1495,42 @@ internal sealed class RenderRangeSlider : RenderBox
         return true;
     }
 
+    protected override double ComputeMinIntrinsicWidth(double height) => PreferredWidth;
+
+    protected override double ComputeMaxIntrinsicWidth(double height) => PreferredWidth;
+
+    protected override double ComputeMinIntrinsicHeight(double width) => PreferredHeight;
+
+    protected override double ComputeMaxIntrinsicHeight(double width) => PreferredHeight;
+
+    private double PreferredWidth => DefaultTrackWidth + MaxSliderPartSize.Width;
+
+    private double PreferredHeight => Math.Max(TrackHeight, MaxSliderPartSize.Height);
+
+    private Size MaxSliderPartSize
+    {
+        get
+        {
+            bool discrete = Divisions.HasValue;
+            Size overlay = SliderTheme.OverlayShape!.GetPreferredSize(IsInteractive, discrete);
+            Size thumb = SliderTheme.RangeThumbShape!.GetPreferredSize(IsInteractive, discrete);
+            Size tick = SliderTheme.RangeTickMarkShape!.GetPreferredSize(SliderTheme, IsInteractive);
+            double overlayHeight = SliderTheme.Padding.HasValue ? thumb.Height : overlay.Height;
+            return new Size(
+                Math.Max(overlay.Width, Math.Max(thumb.Width, tick.Width)),
+                Math.Max(overlayHeight, Math.Max(thumb.Height, tick.Height)));
+        }
+    }
+
     protected override void PerformLayout()
     {
-        double desiredWidth = Constraints.HasBoundedWidth ? Constraints.MaxWidth : DefaultTrackWidth;
+        double desiredWidth = Constraints.HasBoundedWidth ? Constraints.MaxWidth : PreferredWidth;
         if (!double.IsFinite(desiredWidth) || desiredWidth <= 0)
         {
             desiredWidth = DefaultTrackWidth;
         }
 
-        double contentHeight = Math.Max(MinPreferredHeight, Math.Max(TrackHeight, ThumbSize.Height));
+        double contentHeight = Math.Max(MinPreferredHeight, PreferredHeight);
         double desiredHeight = contentHeight + Padding.Top + Padding.Bottom;
         if (!double.IsFinite(desiredHeight) || desiredHeight <= 0)
         {
@@ -1395,43 +1548,102 @@ internal sealed class RenderRangeSlider : RenderBox
         }
 
         var values = ResolveVisualValues();
-        double contentHeight = Math.Max(0.0, Size.Height - Padding.Top - Padding.Bottom);
-        double centerY = offset.Y + Padding.Top + (contentHeight / 2.0);
-        var geometry = ResolveTrackGeometry(offset.X);
+        bool discrete = Divisions.HasValue;
+        RangeSliderTrackShape trackShape = SliderTheme.RangeTrackShape!;
+        Rect trackRect = trackShape.GetPreferredRect(this, offset, SliderTheme, IsInteractive, discrete);
+        var geometry = new TrackGeometry(trackRect.Left, trackRect.Right);
+        var startCenter = new Point(
+            ResolveThumbCenterX(geometry, values.Start),
+            trackRect.Center.Y);
+        var endCenter = new Point(
+            ResolveThumbCenterX(geometry, values.End),
+            trackRect.Center.Y);
+        var enableAnimation = new ConstantAnimation<double>(IsInteractive ? 1.0 : 0.0);
+        bool active = _dragging || _hovered || IsFocused;
+        var activationAnimation = new ConstantAnimation<double>(active ? 1.0 : 0.0);
+        trackShape.Paint(
+            ctx,
+            offset,
+            startCenter,
+            endCenter,
+            enableAnimation,
+            discrete,
+            IsInteractive,
+            this,
+            SliderTheme,
+            TextDirection);
 
-        if (geometry.Width > 0 && TrackHeight > 0)
+        Color? overlayColor = ResolveOverlayColor();
+        SliderThemeData paintTheme = SliderTheme.CopyWith(
+            overlayColor: WidgetStateProperty<Color?>.All(overlayColor));
+        if (active && overlayColor is { A: > 0 })
         {
-            double startThumbCenterX = ResolveThumbCenterX(geometry, values.Start);
-            double endThumbCenterX = ResolveThumbCenterX(geometry, values.End);
-            double activeLeft = Math.Min(startThumbCenterX, endThumbCenterX);
-            double activeRight = Math.Max(startThumbCenterX, endThumbCenterX);
-            double gapExtent = (ThumbSize.Width / 2.0) + TrackGap;
-            PaintTrackSegment(ctx, geometry.Left, activeLeft - gapExtent, centerY, InactiveTrackColor);
-            PaintTrackSegment(ctx, activeLeft + gapExtent, activeRight - gapExtent, centerY, ActiveTrackColor);
-            PaintTrackSegment(ctx, activeRight + gapExtent, geometry.Right, centerY, InactiveTrackColor);
-
-            PaintTickMarks(ctx, geometry, centerY, values);
-
-            var overlayColor = ResolveOverlayColor();
-            if (overlayColor.HasValue && overlayColor.Value.A > 0 && OverlayRadius > 0)
-            {
-                double overlayCenterX = ResolveOverlayCenterX(startThumbCenterX, endThumbCenterX);
-                ctx.DrawCircle(
-                    brush: new SolidColorBrush(overlayColor.Value),
-                    pen: null,
-                    center: new Point(overlayCenterX, centerY),
-                    radius: OverlayRadius);
-            }
-
-            PaintThumb(ctx, new Point(startThumbCenterX, centerY));
-            PaintThumb(ctx, new Point(endThumbCenterX, centerY));
-
-            if (ShouldShowValueIndicator())
-            {
-                PaintValueIndicator(ctx, new Point(startThumbCenterX, centerY), Labels!.Value.Start);
-                PaintValueIndicator(ctx, new Point(endThumbCenterX, centerY), Labels.Value.End);
-            }
+            Point overlayCenter = _activeThumb == RangeSliderThumb.Start ? startCenter : endCenter;
+            paintTheme.OverlayShape!.Paint(
+                ctx,
+                overlayCenter,
+                activationAnimation,
+                enableAnimation,
+                discrete,
+                null,
+                this,
+                paintTheme,
+                TextDirection,
+                _activeThumb == RangeSliderThumb.Start ? values.Start : values.End,
+                1.0,
+                Size);
         }
+
+        PaintTickMarks(ctx, geometry, trackRect.Center.Y, values);
+        bool startIsTop = _activeThumb == RangeSliderThumb.Start;
+        Point bottomCenter = startIsTop ? endCenter : startCenter;
+        Point topCenter = startIsTop ? startCenter : endCenter;
+        Thumb bottomThumb = startIsTop ? Thumb.End : Thumb.Start;
+        Thumb topThumb = startIsTop ? Thumb.Start : Thumb.End;
+        RangeSliderThumbShape thumbShape = paintTheme.RangeThumbShape!;
+        double distance = Math.Abs(startCenter.X - endCenter.X);
+        bool overlaps = distance < thumbShape.GetPreferredSize(IsInteractive, discrete).Width;
+
+        PaintRangeValueIndicator(
+            ctx,
+            bottomCenter,
+            bottomThumb,
+            isOnTop: false,
+            activationAnimation,
+            enableAnimation,
+            paintTheme,
+            discrete);
+        thumbShape.Paint(
+            ctx,
+            bottomCenter,
+            activationAnimation,
+            enableAnimation,
+            discrete,
+            isOnTop: false,
+            isPressed: false,
+            paintTheme,
+            TextDirection,
+            bottomThumb);
+        PaintRangeValueIndicator(
+            ctx,
+            topCenter,
+            topThumb,
+            overlaps,
+            activationAnimation,
+            enableAnimation,
+            paintTheme,
+            discrete);
+        thumbShape.Paint(
+            ctx,
+            topCenter,
+            activationAnimation,
+            enableAnimation,
+            discrete,
+            overlaps,
+            isPressed: _dragging,
+            paintTheme,
+            TextDirection,
+            topThumb);
     }
 
     private void PaintTrackSegment(
@@ -1468,16 +1680,89 @@ internal sealed class RenderRangeSlider : RenderBox
         }
 
         int divisions = Divisions.Value;
+        RangeSliderTickMarkShape tickShape = SliderTheme.RangeTickMarkShape!;
+        Size tickSize = tickShape.GetPreferredSize(SliderTheme, IsInteractive);
+        double spacing = geometry.Width / divisions;
+        if (spacing < tickSize.Width * 3.0)
+        {
+            return;
+        }
+
+        var enableAnimation = new ConstantAnimation<double>(IsInteractive ? 1.0 : 0.0);
+        var startCenter = new Point(ResolveThumbCenterX(geometry, values.Start), centerY);
+        var endCenter = new Point(ResolveThumbCenterX(geometry, values.End), centerY);
         for (int index = 0; index <= divisions; index++)
         {
             double value = (double)index / divisions;
             double centerX = ResolveThumbCenterX(geometry, value);
-            bool isActive = value >= values.Start - Epsilon && value <= values.End + Epsilon;
-            context.DrawCircle(
-                brush: new SolidColorBrush(isActive ? ActiveTickMarkColor : InactiveTickMarkColor),
-                pen: null,
-                center: new Point(centerX, centerY),
-                radius: TickMarkRadius);
+            tickShape.Paint(
+                context,
+                new Point(centerX, centerY),
+                startCenter,
+                endCenter,
+                enableAnimation,
+                SliderTheme,
+                TextDirection);
+        }
+    }
+
+    private void PaintRangeValueIndicator(
+        PaintingContext context,
+        Point center,
+        Thumb thumb,
+        bool isOnTop,
+        Animation<double> activationAnimation,
+        Animation<double> enableAnimation,
+        SliderThemeData sliderTheme,
+        bool isDiscrete)
+    {
+        if (!ShouldShowValueIndicator() || !Labels.HasValue)
+        {
+            return;
+        }
+
+        string label = thumb == Thumb.Start ? Labels.Value.Start : Labels.Value.End;
+        TextLayout? layout = CreateLabelLayout(label);
+        if (layout is null)
+        {
+            return;
+        }
+
+        sliderTheme.RangeValueIndicatorShape!.Paint(
+            context,
+            center,
+            new ConstantAnimation<double>(1.0),
+            enableAnimation,
+            isDiscrete,
+            isOnTop,
+            layout,
+            this,
+            sliderTheme,
+            TextDirection,
+            thumb,
+            thumb == Thumb.Start ? StartValueNormalized : EndValueNormalized,
+            1.0,
+            Size);
+    }
+
+    private TextLayout? CreateLabelLayout(string label)
+    {
+        try
+        {
+            var typeface = new Typeface(
+                ValueIndicatorTextStyle.FontFamily ?? FontFamily.Default,
+                ValueIndicatorTextStyle.FontStyle ?? FontStyle.Normal,
+                ValueIndicatorTextStyle.FontWeight ?? FontWeight.Normal,
+                FontStretch.Normal);
+            return new TextLayout(
+                label,
+                typeface,
+                ValueIndicatorTextStyle.FontSize ?? 14.0,
+                new SolidColorBrush(ValueIndicatorTextStyle.Color ?? Colors.White));
+        }
+        catch (Exception exception) when (TextLayoutFallback.IsMissingFontManager(exception))
+        {
+            return null;
         }
     }
 
@@ -1761,6 +2046,25 @@ internal sealed class RenderRangeSlider : RenderBox
     private RangeSliderThumb ResolveClosestThumb(double localX, NormalizedRangeValues values)
     {
         double tapValue = ResolveNormalizedFromLocalX(localX);
+        Rect trackRect = SliderTheme.RangeTrackShape!.GetPreferredRect(
+            this,
+            default,
+            SliderTheme,
+            IsInteractive,
+            Divisions.HasValue);
+        Size thumbSize = SliderTheme.RangeThumbShape!.GetPreferredSize(IsInteractive, Divisions.HasValue);
+        Thumb? selectedThumb = SliderTheme.ThumbSelector?.Invoke(
+            TextDirection,
+            new RangeValues(values.Start, values.End),
+            tapValue,
+            thumbSize,
+            trackRect.Size,
+            localX - trackRect.Left);
+        if (selectedThumb.HasValue)
+        {
+            return selectedThumb.Value == Thumb.Start ? RangeSliderThumb.Start : RangeSliderThumb.End;
+        }
+
         double distanceToStart = Math.Abs(tapValue - values.Start);
         double distanceToEnd = Math.Abs(tapValue - values.End);
         if (Math.Abs(distanceToStart - distanceToEnd) <= Epsilon)
@@ -1781,13 +2085,17 @@ internal sealed class RenderRangeSlider : RenderBox
         double nextRawValue)
     {
         double nextValue = SnapNormalized(nextRawValue);
+        var geometry = ResolveTrackGeometry(offsetX: 0.0);
+        double minimumSeparation = Divisions.HasValue || geometry.Width <= Epsilon
+            ? 0.0
+            : (SliderTheme.MinThumbSeparation ?? 0.0) / geometry.Width;
         if (thumb == RangeSliderThumb.Start)
         {
-            double nextStart = Math.Clamp(nextValue, 0.0, current.End);
+            double nextStart = Math.Clamp(nextValue, 0.0, Math.Max(0.0, current.End - minimumSeparation));
             return OrderAndClamp(nextStart, current.End);
         }
 
-        double nextEnd = Math.Clamp(nextValue, current.Start, 1.0);
+        double nextEnd = Math.Clamp(nextValue, Math.Min(1.0, current.Start + minimumSeparation), 1.0);
         return OrderAndClamp(current.Start, nextEnd);
     }
 
@@ -1802,8 +2110,14 @@ internal sealed class RenderRangeSlider : RenderBox
 
     private TrackGeometry ResolveTrackGeometry(double offsetX)
     {
-        double left = offsetX + Padding.Left + (ThumbSize.Width / 2.0);
-        double right = offsetX + Size.Width - Padding.Right - (ThumbSize.Width / 2.0);
+        Rect preferredRect = SliderTheme.RangeTrackShape!.GetPreferredRect(
+            this,
+            new Point(offsetX, 0.0),
+            SliderTheme,
+            IsInteractive,
+            Divisions.HasValue);
+        double left = preferredRect.Left;
+        double right = preferredRect.Right;
         if (right < left)
         {
             double center = offsetX + (Size.Width / 2.0);

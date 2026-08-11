@@ -1,6 +1,7 @@
 using System.Reflection;
 using Avalonia;
 using Avalonia.Media;
+using Avalonia.Media.TextFormatting;
 using Plumix;
 using Plumix.Gestures;
 using Plumix.Material;
@@ -14,6 +15,65 @@ namespace Plumix.Tests;
 [Collection(SchedulerTestCollection.Name)]
 public sealed class MaterialRangeSliderTests
 {
+    [Fact]
+    public void RangeSlider_CustomShapesAndThumbSelector_AreUsed()
+    {
+        bool selectorCalled = false;
+        var track = new RecordingRangeTrackShape();
+        var tick = new RecordingRangeTickMarkShape();
+        var thumb = new RecordingRangeThumbShape();
+        var indicator = new RecordingRangeValueIndicatorShape();
+        RangeThumbSelector selector = (_, _, _, _, _, _) =>
+        {
+            selectorCalled = true;
+            return Thumb.End;
+        };
+        var theme = ThemeData.Light with
+        {
+            SliderTheme = new SliderThemeData(
+                RangeTrackShape: track,
+                RangeTickMarkShape: tick,
+                RangeThumbShape: thumb,
+                RangeValueIndicatorShape: indicator,
+                ThumbSelector: selector,
+                ShowValueIndicator: ShowValueIndicator.AlwaysVisible),
+        };
+        var binding = GestureBinding.Instance;
+        binding.ResetForTests();
+        try
+        {
+            using var harness = new WidgetRenderHarness(
+                new Theme(
+                    data: theme,
+                    child: new Align(
+                        alignment: Alignment.TopLeft,
+                        child: new SizedBox(
+                            width: 220.0,
+                            child: new RangeSlider(
+                                values: new RangeValues(0.2, 0.8),
+                                divisions: 4,
+                                labels: new RangeLabels("20", "80"),
+                                onChanged: _ => { })))));
+
+            harness.Pump(new Size(260.0, 120.0));
+            DispatchPointerDown(binding, harness.RenderView, pointer: 799, position: new Point(40.0, 24.0));
+
+            Assert.True(selectorCalled);
+            Assert.True(track.PreferredRectCalls > 0);
+            Assert.True(track.PaintCalls > 0);
+            Assert.True(tick.PaintCalls > 0);
+            Assert.True(thumb.PaintCalls >= 2);
+            object? render = FindDescendantByTypeName(harness.RenderView, "RenderRangeSlider");
+            Assert.NotNull(render);
+            SliderThemeData effectiveTheme = ReadProperty<SliderThemeData>(render!, "SliderTheme");
+            Assert.Same(indicator, effectiveTheme.RangeValueIndicatorShape);
+        }
+        finally
+        {
+            binding.ResetForTests();
+        }
+    }
+
     [Fact]
     public void RangeSlider_Constructor_Throws_OnInvalidArguments()
     {
@@ -97,7 +157,12 @@ public sealed class MaterialRangeSliderTests
         {
             UseMaterial3 = true,
             PrimaryColor = Colors.Coral,
-            SurfaceContainerHighestColor = Colors.PowderBlue
+            SurfaceContainerHighestColor = Colors.PowderBlue,
+            ColorScheme = ThemeData.Light.ColorScheme with
+            {
+                Primary = Colors.Coral,
+                SurfaceContainerHighest = Colors.PowderBlue,
+            },
         };
 
         using var harness = new WidgetRenderHarness(
@@ -214,9 +279,9 @@ public sealed class MaterialRangeSliderTests
             Assert.NotNull(end);
             Assert.Equal(0.2, start!.Value.Start, 2);
             Assert.Equal(0.7, start.Value.End, 2);
-            Assert.Equal(0.4, changed!.Value.Start, 2);
+            Assert.Equal(0.39, changed!.Value.Start, 2);
             Assert.Equal(0.7, changed.Value.End, 2);
-            Assert.Equal(0.4, end!.Value.Start, 2);
+            Assert.Equal(0.39, end!.Value.Start, 2);
             Assert.Equal(0.7, end.Value.End, 2);
         }
         finally
@@ -433,6 +498,107 @@ public sealed class MaterialRangeSliderTests
         }
 
         return null;
+    }
+
+    private sealed class RecordingRangeTrackShape : RangeSliderTrackShape
+    {
+        public int PreferredRectCalls { get; private set; }
+        public int PaintCalls { get; private set; }
+
+        public override Rect GetPreferredRect(
+            RenderBox parentBox,
+            Point offset,
+            SliderThemeData sliderTheme,
+            bool isEnabled = false,
+            bool isDiscrete = false)
+        {
+            PreferredRectCalls++;
+            return base.GetPreferredRect(parentBox, offset, sliderTheme, isEnabled, isDiscrete);
+        }
+
+        public override void Paint(
+            PaintingContext context,
+            Point offset,
+            Point startThumbCenter,
+            Point endThumbCenter,
+            Animation<double> enableAnimation,
+            bool isDiscrete,
+            bool isEnabled,
+            RenderBox parentBox,
+            SliderThemeData sliderTheme,
+            TextDirection textDirection)
+        {
+            PaintCalls++;
+        }
+    }
+
+    private sealed class RecordingRangeTickMarkShape : RangeSliderTickMarkShape
+    {
+        public int PaintCalls { get; private set; }
+
+        public override Size GetPreferredSize(SliderThemeData sliderTheme, bool isEnabled = false) => new(2.0, 2.0);
+
+        public override void Paint(
+            PaintingContext context,
+            Point center,
+            Point startThumbCenter,
+            Point endThumbCenter,
+            Animation<double> enableAnimation,
+            SliderThemeData sliderTheme,
+            TextDirection textDirection)
+        {
+            PaintCalls++;
+        }
+    }
+
+    private sealed class RecordingRangeThumbShape : RangeSliderThumbShape
+    {
+        public int PaintCalls { get; private set; }
+
+        public override Size GetPreferredSize(bool isEnabled, bool isDiscrete) => new(20.0, 20.0);
+
+        public override void Paint(
+            PaintingContext context,
+            Point center,
+            Animation<double> activationAnimation,
+            Animation<double> enableAnimation,
+            bool isDiscrete,
+            bool isOnTop,
+            bool isPressed,
+            SliderThemeData sliderTheme,
+            TextDirection textDirection,
+            Thumb thumb)
+        {
+            PaintCalls++;
+        }
+    }
+
+    private sealed class RecordingRangeValueIndicatorShape : RangeSliderValueIndicatorShape
+    {
+        public RecordingRangeValueIndicatorShape() : base(32.0, 16.0)
+        {
+        }
+
+        public int PaintCalls { get; private set; }
+
+        public override void Paint(
+            PaintingContext context,
+            Point center,
+            Animation<double> activationAnimation,
+            Animation<double> enableAnimation,
+            bool isDiscrete,
+            bool isOnTop,
+            TextLayout labelLayout,
+            RenderBox parentBox,
+            SliderThemeData sliderTheme,
+            TextDirection textDirection,
+            Thumb thumb,
+            double value,
+            double textScaleFactor,
+            Size sizeWithOverflow)
+        {
+            PaintCalls++;
+        }
     }
 
     private sealed class WidgetRenderHarness : IDisposable

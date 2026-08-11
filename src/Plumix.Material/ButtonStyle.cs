@@ -63,16 +63,36 @@ public sealed class WidgetStatesController : MaterialStatesController
     }
 }
 
-public abstract class MaterialStateProperty<T>
+public abstract class MaterialStateProperty<T> : WidgetStateProperty<T>
 {
     public abstract T Resolve(MaterialState states);
+
+    public sealed override T Resolve(IReadOnlySet<WidgetState> states)
+    {
+        MaterialState materialStates = MaterialState.None;
+        foreach (WidgetState state in states)
+        {
+            materialStates |= state switch
+            {
+                WidgetState.Hovered => MaterialState.Hovered,
+                WidgetState.Focused => MaterialState.Focused,
+                WidgetState.Pressed => MaterialState.Pressed,
+                WidgetState.Disabled => MaterialState.Disabled,
+                WidgetState.Selected => MaterialState.Selected,
+                WidgetState.Dragged => MaterialState.Dragged,
+                _ => MaterialState.None,
+            };
+        }
+
+        return Resolve(materialStates);
+    }
 
     public static implicit operator MaterialStateProperty<T>(T value)
     {
         return All(value);
     }
 
-    public static MaterialStateProperty<T> All(T value)
+    public new static MaterialStateProperty<T> All(T value)
     {
         return new MaterialStatePropertyAll<T>(value);
     }

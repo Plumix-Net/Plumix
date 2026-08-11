@@ -1014,7 +1014,11 @@ public sealed partial record SliderThemeData
                 t),
             ThumbColor: MaterialThemeLerp.Color(a.ThumbColor, b.ThumbColor, t),
             DisabledThumbColor: MaterialThemeLerp.Color(a.DisabledThumbColor, b.DisabledThumbColor, t),
-            OverlayColor: MaterialThemeLerp.ColorStateProperty(a.OverlayColor, b.OverlayColor, t),
+            OverlayColor: WidgetStateProperty<Color?>.Lerp(
+                a.OverlayColor,
+                b.OverlayColor,
+                t,
+                MaterialThemeLerp.Color),
             TrackHeight: MaterialThemeLerp.Double(a.TrackHeight, b.TrackHeight, t),
             ThumbRadius: MaterialThemeLerp.Double(a.ThumbRadius, b.ThumbRadius, t),
             MaterialTapTargetSize: t < 0.5 ? a.MaterialTapTargetSize : b.MaterialTapTargetSize,
@@ -1046,6 +1050,17 @@ public sealed partial record SliderThemeData
                 a.ValueIndicatorStrokeColor,
                 b.ValueIndicatorStrokeColor,
                 t),
+            OverlayShape: t < 0.5 ? a.OverlayShape : b.OverlayShape,
+            TickMarkShape: t < 0.5 ? a.TickMarkShape : b.TickMarkShape,
+            ThumbShape: t < 0.5 ? a.ThumbShape : b.ThumbShape,
+            TrackShape: t < 0.5 ? a.TrackShape : b.TrackShape,
+            ValueIndicatorShape: t < 0.5 ? a.ValueIndicatorShape : b.ValueIndicatorShape,
+            RangeTickMarkShape: t < 0.5 ? a.RangeTickMarkShape : b.RangeTickMarkShape,
+            RangeThumbShape: t < 0.5 ? a.RangeThumbShape : b.RangeThumbShape,
+            RangeTrackShape: t < 0.5 ? a.RangeTrackShape : b.RangeTrackShape,
+            RangeValueIndicatorShape: t < 0.5
+                ? a.RangeValueIndicatorShape
+                : b.RangeValueIndicatorShape,
             OverlayRadius: MaterialThemeLerp.Double(a.OverlayRadius, b.OverlayRadius, t),
             TickMarkRadius: MaterialThemeLerp.Double(a.TickMarkRadius, b.TickMarkRadius, t),
             ShowValueIndicator: t < 0.5 ? a.ShowValueIndicator : b.ShowValueIndicator,
@@ -1057,10 +1072,15 @@ public sealed partial record SliderThemeData
                 a.MinThumbSeparation,
                 b.MinThumbSeparation,
                 t),
+            ThumbSelector: t < 0.5 ? a.ThumbSelector : b.ThumbSelector,
             MouseCursor: t < 0.5 ? a.MouseCursor : b.MouseCursor,
             AllowedInteraction: t < 0.5 ? a.AllowedInteraction : b.AllowedInteraction,
-            Padding: MaterialThemeLerp.Thickness(a.Padding, b.Padding, t),
-            ThumbSize: MaterialThemeLerp.SizeStateProperty(a.ThumbSize, b.ThumbSize, t),
+            Padding: EdgeInsetsGeometry.Lerp(a.Padding, b.Padding, t),
+            ThumbSize: WidgetStateProperty<Size?>.Lerp(
+                a.ThumbSize,
+                b.ThumbSize,
+                t,
+                MaterialThemeLerp.Size),
             TrackGap: MaterialThemeLerp.Double(a.TrackGap, b.TrackGap, t),
             Year2023: t < 0.5 ? a.Year2023 : b.Year2023);
     }

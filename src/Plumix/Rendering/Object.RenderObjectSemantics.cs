@@ -811,6 +811,8 @@ internal sealed class RenderObjectSemantics
             OnTapHint = node.OnTapHint,
             Tooltip = node.Tooltip,
             Value = node.Value,
+            IncreasedValue = node.IncreasedValue,
+            DecreasedValue = node.DecreasedValue,
             MinValue = node.MinValue,
             MaxValue = node.MaxValue,
             Role = node.Role,
@@ -852,6 +854,8 @@ internal sealed class RenderObjectSemantics
         node.OnTapHint = configuration.OnTapHint;
         node.Tooltip = configuration.Tooltip;
         node.Value = configuration.Value;
+        node.IncreasedValue = configuration.IncreasedValue;
+        node.DecreasedValue = configuration.DecreasedValue;
         node.MinValue = configuration.MinValue;
         node.MaxValue = configuration.MaxValue;
         node.Role = configuration.Role;

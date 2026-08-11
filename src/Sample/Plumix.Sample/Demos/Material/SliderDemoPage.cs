@@ -1,6 +1,7 @@
 using System;
 using Avalonia;
 using Avalonia.Media;
+using Avalonia.Media.TextFormatting;
 using Plumix.Material;
 using Plumix.Rendering;
 using Plumix.UI;
@@ -29,6 +30,7 @@ internal sealed class SliderDemoPageState : State
     private bool _useMaterial3 = true;
     private bool _year2023 = true;
     private bool _tapOnly;
+    private bool _customShape;
     private double _value = 0.35;
     private double _secondaryTrackValue = 0.7;
     private string _status = "idle";
@@ -39,17 +41,16 @@ internal sealed class SliderDemoPageState : State
         var themedData = baseTheme with
         {
             UseMaterial3 = _useMaterial3,
-            SliderTheme = _useThemeOverrides
-                ? new SliderThemeData(
-                    ActiveTrackColor: Color.Parse("#FF1565C0"),
-                    InactiveTrackColor: Color.Parse("#FFC5CAE9"),
-                    ThumbColor: Color.Parse("#FF0D47A1"),
-                    DisabledActiveTrackColor: Color.Parse("#66212121"),
-                    DisabledInactiveTrackColor: Color.Parse("#1F212121"),
-                    DisabledThumbColor: Color.Parse("#66212121"),
-                    TrackHeight: 6,
-                    ThumbRadius: 11)
-                : new SliderThemeData()
+            SliderTheme = new SliderThemeData(
+                ActiveTrackColor: _useThemeOverrides ? Color.Parse("#FF1565C0") : null,
+                InactiveTrackColor: _useThemeOverrides ? Color.Parse("#FFC5CAE9") : null,
+                ThumbColor: _useThemeOverrides ? Color.Parse("#FF0D47A1") : null,
+                DisabledActiveTrackColor: _useThemeOverrides ? Color.Parse("#66212121") : null,
+                DisabledInactiveTrackColor: _useThemeOverrides ? Color.Parse("#1F212121") : null,
+                DisabledThumbColor: _useThemeOverrides ? Color.Parse("#66212121") : null,
+                TrackHeight: _useThemeOverrides ? 6 : null,
+                ThumbShape: _customShape ? new DemoSliderThumbShape() : null,
+                ThumbRadius: _useThemeOverrides ? 11 : null)
         };
 
         return new Theme(
@@ -153,6 +154,11 @@ internal sealed class SliderDemoPageState : State
                                 onTap: () => SetState(() => _tapOnly = !_tapOnly),
                                 width: 104,
                                 background: Color.Parse("#FFF0E8FF")),
+                            BuildControlButton(
+                                label: _customShape ? "Custom thumb" : "Default thumb",
+                                onTap: () => SetState(() => _customShape = !_customShape),
+                                width: 112,
+                                background: Color.Parse("#FFE8F6EE")),
                         ]),
                     new Expanded(
                         child: new SingleChildScrollView(
@@ -243,5 +249,35 @@ internal sealed class SliderDemoPageState : State
                 padding: new Thickness(10, 8),
                 borderRadius: BorderRadius.Circular(8),
                 child: new Text(label, fontSize: 12)));
+    }
+}
+
+internal sealed class DemoSliderThumbShape : SliderComponentShape
+{
+    public override Size GetPreferredSize(bool isEnabled, bool isDiscrete) => new(20.0, 20.0);
+
+    public override void Paint(
+        PaintingContext context,
+        Point center,
+        Animation<double> activationAnimation,
+        Animation<double> enableAnimation,
+        bool isDiscrete,
+        TextLayout? labelLayout,
+        RenderBox parentBox,
+        SliderThemeData sliderTheme,
+        TextDirection textDirection,
+        double value,
+        double textScaleFactor,
+        Size sizeWithOverflow)
+    {
+        Color color = enableAnimation.Value >= 0.5
+            ? sliderTheme.ThumbColor ?? Colors.Blue
+            : sliderTheme.DisabledThumbColor ?? Colors.Gray;
+        context.DrawRectangle(
+            brush: new SolidColorBrush(color),
+            pen: null,
+            rect: new Rect(center.X - 10.0, center.Y - 10.0, 20.0, 20.0),
+            radiusX: 5.0,
+            radiusY: 5.0);
     }
 }

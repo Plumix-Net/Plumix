@@ -1,5 +1,10 @@
 # Changelog
 
+- Breaking: completed the strict Material `Slider`/`RangeSlider` shape closeout. The family now exposes and
+  executes Flutter-shaped track, thumb, overlay, tick, and value-indicator contracts; `SliderThemeData` carries
+  the source fields/copy/lerp behavior, range selection and separation are pluggable, and `Slider.adaptive` routes
+  Apple platforms through the new `CupertinoSlider`. Focused coverage and the mirrored custom-thumb probe expanded.
+
 - Breaking: completed the strict Material `Autocomplete` closeout. The wrapper now matches Flutter's field/options
   composition, sizing, scrolling, selection, overlay, and option semantics; shared M2/M3 canvas, focus, and shadow
   defaults are source-shaped. Focused Flutter-test coverage and the mirrored live M2/M3 demo probe were expanded.

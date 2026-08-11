@@ -1,6 +1,7 @@
 using System.Reflection;
 using Avalonia;
 using Avalonia.Media;
+using Avalonia.Media.TextFormatting;
 using Plumix;
 using Plumix.Gestures;
 using Plumix.Material;
@@ -14,6 +15,108 @@ namespace Plumix.Tests;
 [Collection(SchedulerTestCollection.Name)]
 public sealed class MaterialSliderTests
 {
+    [Fact]
+    public void SliderThemeData_FromPrimaryColorsAndLerp_CoverSourceFields()
+    {
+        var textStyle = new TextStyle(FontSize: 13.0);
+        SliderThemeData source = SliderThemeData.FromPrimaryColors(
+            Colors.CadetBlue,
+            Colors.DarkSlateBlue,
+            Colors.PowderBlue,
+            textStyle);
+
+        Assert.Equal(2.0, source.TrackHeight);
+        Assert.Equal(ApplyOpacity(Colors.CadetBlue, 0x3d / 255.0), source.InactiveTrackColor);
+        Assert.IsType<RoundedRectSliderTrackShape>(source.TrackShape);
+        Assert.IsType<PaddleRangeSliderValueIndicatorShape>(source.RangeValueIndicatorShape);
+        Assert.Same(textStyle, source.ValueIndicatorTextStyle);
+
+        var firstTrack = new RecordingSliderTrackShape();
+        var secondTrack = new RecordingSliderTrackShape();
+        RangeThumbSelector firstSelector = (_, _, _, _, _, _) => Thumb.Start;
+        RangeThumbSelector secondSelector = (_, _, _, _, _, _) => Thumb.End;
+        var first = new SliderThemeData(
+            TrackHeight: 2.0,
+            TrackShape: firstTrack,
+            ThumbSelector: firstSelector,
+            Padding: EdgeInsetsGeometry.DirectionalOnly(start: 4.0));
+        var second = new SliderThemeData(
+            TrackHeight: 6.0,
+            TrackShape: secondTrack,
+            ThumbSelector: secondSelector,
+            Padding: EdgeInsetsGeometry.DirectionalOnly(start: 12.0));
+
+        SliderThemeData beforeMidpoint = SliderThemeData.Lerp(first, second, 0.25);
+        SliderThemeData afterMidpoint = SliderThemeData.Lerp(first, second, 0.75);
+        Assert.Equal(3.0, beforeMidpoint.TrackHeight);
+        Assert.Same(firstTrack, beforeMidpoint.TrackShape);
+        Assert.Same(firstSelector, beforeMidpoint.ThumbSelector);
+        Assert.Equal(new Thickness(6.0, 0.0, 0.0, 0.0), beforeMidpoint.Padding!.Value.Resolve(TextDirection.Ltr));
+        Assert.Same(secondTrack, afterMidpoint.TrackShape);
+        Assert.Same(secondSelector, afterMidpoint.ThumbSelector);
+    }
+
+    [Fact]
+    public void Slider_CustomShapeHierarchy_IsUsedForLayoutAndPaint()
+    {
+        var track = new RecordingSliderTrackShape();
+        var overlay = new RecordingSliderComponentShape(new Size(36.0, 36.0));
+        var tick = new RecordingSliderTickMarkShape();
+        var thumb = new RecordingSliderComponentShape(new Size(20.0, 20.0));
+        var indicator = new RecordingSliderComponentShape(new Size(32.0, 32.0));
+        var theme = ThemeData.Light with
+        {
+            SliderTheme = new SliderThemeData(
+                TrackShape: track,
+                OverlayShape: overlay,
+                TickMarkShape: tick,
+                ThumbShape: thumb,
+                ValueIndicatorShape: indicator,
+                ShowValueIndicator: ShowValueIndicator.AlwaysVisible),
+        };
+
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: theme,
+                child: new SizedBox(
+                    width: 220.0,
+                    child: new Slider(
+                        value: 0.5,
+                        divisions: 4,
+                        label: "50",
+                        onChanged: _ => { }))));
+
+        harness.Pump(new Size(260.0, 120.0));
+
+        Assert.True(track.PreferredRectCalls > 0);
+        Assert.True(track.PaintCalls > 0);
+        Assert.True(tick.PaintCalls > 0);
+        Assert.True(thumb.PaintCalls > 0);
+        object? render = FindDescendantByTypeName(harness.RenderView, "RenderSlider");
+        Assert.NotNull(render);
+        SliderThemeData effectiveTheme = ReadProperty<SliderThemeData>(render!, "SliderTheme");
+        Assert.Same(indicator, effectiveTheme.ValueIndicatorShape);
+    }
+
+    [Fact]
+    public void Slider_Adaptive_UsesCupertinoOnlyOnApplePlatforms()
+    {
+        using var iosHarness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light with { Platform = TargetPlatform.IOS },
+                child: Slider.Adaptive(value: 0.5, onChanged: _ => { })));
+        iosHarness.Pump(new Size(220.0, 80.0));
+        Assert.NotNull(FindDescendantByTypeName(iosHarness.RenderView, "RenderCupertinoSlider"));
+        Assert.Null(FindDescendantByTypeName(iosHarness.RenderView, "RenderSlider"));
+
+        using var androidHarness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light with { Platform = TargetPlatform.Android },
+                child: Slider.Adaptive(value: 0.5, onChanged: _ => { })));
+        androidHarness.Pump(new Size(220.0, 80.0));
+        Assert.NotNull(FindDescendantByTypeName(androidHarness.RenderView, "RenderSlider"));
+    }
+
     [Fact]
     public void Slider_Constructor_Throws_OnInvalidArguments()
     {
@@ -103,7 +206,12 @@ public sealed class MaterialSliderTests
         {
             UseMaterial3 = true,
             PrimaryColor = Colors.Coral,
-            SurfaceContainerHighestColor = Colors.PowderBlue
+            SurfaceContainerHighestColor = Colors.PowderBlue,
+            ColorScheme = ThemeData.Light.ColorScheme with
+            {
+                Primary = Colors.Coral,
+                SurfaceContainerHighest = Colors.PowderBlue,
+            },
         };
 
         using var harness = new WidgetRenderHarness(
@@ -130,7 +238,8 @@ public sealed class MaterialSliderTests
         var theme = ThemeData.Light with
         {
             UseMaterial3 = false,
-            PrimaryColor = Colors.CadetBlue
+            PrimaryColor = Colors.CadetBlue,
+            ColorScheme = ThemeData.Light.ColorScheme with { Primary = Colors.CadetBlue },
         };
 
         using var harness = new WidgetRenderHarness(
@@ -156,7 +265,8 @@ public sealed class MaterialSliderTests
         var theme = ThemeData.Light with
         {
             UseMaterial3 = true,
-            PrimaryColor = Colors.CadetBlue
+            PrimaryColor = Colors.CadetBlue,
+            ColorScheme = ThemeData.Light.ColorScheme with { Primary = Colors.CadetBlue },
         };
 
         using var harness = new WidgetRenderHarness(
@@ -627,6 +737,87 @@ public sealed class MaterialSliderTests
         }
 
         return null;
+    }
+
+    private sealed class RecordingSliderTrackShape : SliderTrackShape
+    {
+        public int PreferredRectCalls { get; private set; }
+        public int PaintCalls { get; private set; }
+
+        public override Rect GetPreferredRect(
+            RenderBox parentBox,
+            Point offset,
+            SliderThemeData sliderTheme,
+            bool isEnabled = false,
+            bool isDiscrete = false)
+        {
+            PreferredRectCalls++;
+            return base.GetPreferredRect(parentBox, offset, sliderTheme, isEnabled, isDiscrete);
+        }
+
+        public override void Paint(
+            PaintingContext context,
+            Point offset,
+            Point thumbCenter,
+            Point? secondaryOffset,
+            Animation<double> enableAnimation,
+            bool isDiscrete,
+            bool isEnabled,
+            RenderBox parentBox,
+            SliderThemeData sliderTheme,
+            TextDirection textDirection)
+        {
+            PaintCalls++;
+        }
+    }
+
+    private sealed class RecordingSliderTickMarkShape : SliderTickMarkShape
+    {
+        public int PaintCalls { get; private set; }
+
+        public override Size GetPreferredSize(SliderThemeData sliderTheme, bool isEnabled) => new(2.0, 2.0);
+
+        public override void Paint(
+            PaintingContext context,
+            Point center,
+            Point thumbCenter,
+            Animation<double> enableAnimation,
+            SliderThemeData sliderTheme,
+            TextDirection textDirection)
+        {
+            PaintCalls++;
+        }
+    }
+
+    private sealed class RecordingSliderComponentShape : SliderComponentShape
+    {
+        private readonly Size _preferredSize;
+
+        public RecordingSliderComponentShape(Size preferredSize)
+        {
+            _preferredSize = preferredSize;
+        }
+
+        public int PaintCalls { get; private set; }
+
+        public override Size GetPreferredSize(bool isEnabled, bool isDiscrete) => _preferredSize;
+
+        public override void Paint(
+            PaintingContext context,
+            Point center,
+            Animation<double> activationAnimation,
+            Animation<double> enableAnimation,
+            bool isDiscrete,
+            TextLayout? labelLayout,
+            RenderBox parentBox,
+            SliderThemeData sliderTheme,
+            TextDirection textDirection,
+            double value,
+            double textScaleFactor,
+            Size sizeWithOverflow)
+        {
+            PaintCalls++;
+        }
     }
 
     private sealed class WidgetRenderHarness : IDisposable
