@@ -212,8 +212,35 @@ public sealed class RenderCustomMultiChildLayoutBox : RenderBox,
 
     protected override void PerformLayout()
     {
-        Size = Constraints.Constrain(_delegate.GetSize(Constraints));
+        Size = GetSize(Constraints);
         _delegate.CallPerformLayout(Size, FirstChild);
+    }
+
+    protected override double ComputeMinIntrinsicWidth(double height) => ComputeIntrinsicWidth(height);
+
+    protected override double ComputeMaxIntrinsicWidth(double height) => ComputeIntrinsicWidth(height);
+
+    protected override double ComputeMinIntrinsicHeight(double width) => ComputeIntrinsicHeight(width);
+
+    protected override double ComputeMaxIntrinsicHeight(double width) => ComputeIntrinsicHeight(width);
+
+    protected override Size ComputeDryLayout(BoxConstraints constraints) => GetSize(constraints);
+
+    private Size GetSize(BoxConstraints constraints)
+    {
+        return constraints.Constrain(_delegate.GetSize(constraints));
+    }
+
+    private double ComputeIntrinsicWidth(double height)
+    {
+        double width = GetSize(BoxConstraints.TightForFinite(height: height)).Width;
+        return double.IsFinite(width) ? width : 0.0;
+    }
+
+    private double ComputeIntrinsicHeight(double width)
+    {
+        double height = GetSize(BoxConstraints.TightForFinite(width: width)).Height;
+        return double.IsFinite(height) ? height : 0.0;
     }
 
     public override void Paint(PaintingContext context, Point offset)

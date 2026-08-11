@@ -76,10 +76,8 @@ internal sealed class RenderSliverResizingHeader : RenderSliver
         }
         else if (_child != null)
         {
-            // Flutter uses getDryLayout here. Until Plumix exposes the shared dry-layout protocol,
-            // use the same speculative loose layout fallback as the other intrinsic sliver adapters.
-            _child.Layout(prototypeConstraints, parentUsesSize: true);
-            maxExtent = BoxExtent(_child, constraints.Axis);
+            Size childSize = _child.GetDryLayout(prototypeConstraints);
+            maxExtent = constraints.Axis == Axis.Vertical ? childSize.Height : childSize.Width;
         }
         else
         {

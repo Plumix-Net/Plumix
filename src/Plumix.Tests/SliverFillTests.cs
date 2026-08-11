@@ -317,6 +317,12 @@ public sealed class SliverFillTests
 
     private sealed class NaturalSizeBox(Size naturalSize) : RenderBox
     {
+        protected override double ComputeMaxIntrinsicWidth(double height) => naturalSize.Width;
+
+        protected override double ComputeMaxIntrinsicHeight(double width) => naturalSize.Height;
+
+        protected override Size ComputeDryLayout(BoxConstraints constraints) => constraints.Constrain(naturalSize);
+
         protected override void PerformLayout()
         {
             Size = Constraints.Constrain(naturalSize);

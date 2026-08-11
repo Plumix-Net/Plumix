@@ -248,14 +248,244 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
         }
     }
 
+    protected override double ComputeMinIntrinsicWidth(double height)
+    {
+        return GetIntrinsicSize(
+            Axis.Horizontal,
+            height,
+            static (child, extent) => child.GetMinIntrinsicWidth(extent));
+    }
+
+    protected override double ComputeMaxIntrinsicWidth(double height)
+    {
+        return GetIntrinsicSize(
+            Axis.Horizontal,
+            height,
+            static (child, extent) => child.GetMaxIntrinsicWidth(extent));
+    }
+
+    protected override double ComputeMinIntrinsicHeight(double width)
+    {
+        return GetIntrinsicSize(
+            Axis.Vertical,
+            width,
+            static (child, extent) => child.GetMinIntrinsicHeight(extent));
+    }
+
+    protected override double ComputeMaxIntrinsicHeight(double width)
+    {
+        return GetIntrinsicSize(
+            Axis.Vertical,
+            width,
+            static (child, extent) => child.GetMaxIntrinsicHeight(extent));
+    }
+
+    protected override Size ComputeDryLayout(BoxConstraints constraints)
+    {
+        EnsureDryLayoutIsSupported(constraints);
+        return _computeSizes(
+            constraints,
+            ChildLayoutHelper.DryLayoutChild,
+            ChildLayoutHelper.GetDryBaseline).axisSize.ToSize(Direction);
+    }
+
+    protected override double? ComputeDryBaseline(BoxConstraints constraints, TextBaseline baseline)
+    {
+        EnsureDryLayoutIsSupported(constraints);
+        _LayoutSizes sizes = _computeSizes(
+            constraints,
+            ChildLayoutHelper.DryLayoutChild,
+            ChildLayoutHelper.GetDryBaseline);
+        if (IsBaselineAligned)
+        {
+            return sizes.baselineOffset;
+        }
+
+        BoxConstraints nonFlexConstraints = _constraintsForNonFlexChild(constraints);
+        Dictionary<RenderBox, double> mainPositions = GetDryMainAxisPositions(
+            constraints,
+            sizes,
+            nonFlexConstraints);
+
+        if (Direction == Axis.Vertical)
+        {
+            for (RenderBox? child = FirstChild; child != null; child = ChildAfter(child))
+            {
+                BoxConstraints childConstraints = GetDryChildConstraints(
+                    child,
+                    constraints,
+                    sizes,
+                    nonFlexConstraints);
+                double? childBaseline = child.GetDryBaseline(childConstraints, baseline);
+                if (childBaseline.HasValue)
+                {
+                    return mainPositions[child] + childBaseline.Value;
+                }
+            }
+
+            return null;
+        }
+
+        double? result = null;
+        bool flipCrossAxis = _flipCrossAxis;
+        foreach (RenderBox child in EnumerateChildren())
+        {
+            BoxConstraints childConstraints = GetDryChildConstraints(
+                child,
+                constraints,
+                sizes,
+                nonFlexConstraints);
+            Size childSize = child.GetDryLayout(childConstraints);
+            double? childBaseline = child.GetDryBaseline(childConstraints, baseline);
+            if (!childBaseline.HasValue)
+            {
+                continue;
+            }
+
+            double crossPosition = _getChildCrossAxisOffset(
+                CrossAxisAlignment,
+                sizes.axisSize.crossAxisExtent - _getCrossSize(childSize),
+                flipCrossAxis);
+            double candidate = crossPosition + childBaseline.Value;
+            result = result.HasValue ? Math.Min(result.Value, candidate) : candidate;
+        }
+
+        return result;
+    }
+
+    private double GetIntrinsicSize(
+        Axis sizingDirection,
+        double extent,
+        Func<RenderBox, double, double> childSize)
+    {
+        if (Direction == sizingDirection)
+        {
+            double totalFlex = 0.0;
+            double inflexibleSpace = Spacing * (ChildCount - 1);
+            double maxFlexFraction = 0.0;
+            foreach (RenderBox child in EnumerateChildren())
+            {
+                int flex = _getFlex(child);
+                totalFlex += flex;
+                if (flex > 0)
+                {
+                    maxFlexFraction = Math.Max(maxFlexFraction, childSize(child, extent) / flex);
+                }
+                else
+                {
+                    inflexibleSpace += childSize(child, extent);
+                }
+            }
+
+            return maxFlexFraction * totalFlex + inflexibleSpace;
+        }
+
+        BoxConstraints constraints = Direction == Axis.Horizontal
+            ? new BoxConstraints(MaxWidth: extent)
+            : new BoxConstraints(MaxHeight: extent);
+        Size DryLayoutChild(RenderBox child, BoxConstraints childConstraints)
+        {
+            double mainExtent = Direction == Axis.Horizontal
+                ? childConstraints.MaxWidth
+                : childConstraints.MaxHeight;
+            if (!double.IsFinite(mainExtent))
+            {
+                mainExtent = Direction == Axis.Horizontal
+                    ? child.GetMaxIntrinsicWidth(double.PositiveInfinity)
+                    : child.GetMaxIntrinsicHeight(double.PositiveInfinity);
+            }
+
+            double crossExtent = childSize(child, mainExtent);
+            return _AxisSize.Create(mainExtent, crossExtent).ToSize(Direction);
+        }
+
+        _LayoutSizes sizes = _computeSizes(
+            constraints,
+            DryLayoutChild,
+            ChildLayoutHelper.GetDryBaseline);
+        return sizes.axisSize.crossAxisExtent;
+    }
+
+    private void EnsureDryLayoutIsSupported(BoxConstraints constraints)
+    {
+        double maxMainExtent = _getMainSize(constraints.Biggest);
+        if (double.IsFinite(maxMainExtent))
+        {
+            return;
+        }
+
+        foreach (RenderBox child in EnumerateChildren())
+        {
+            if (_getFlex(child) > 0
+                && (MainAxisSize == MainAxisSize.Max || _getFit(child) == FlexFit.Tight))
+            {
+                DebugCannotComputeDryLayout(
+                    "RenderFlex cannot compute dry layout with flex children under unbounded main-axis constraints.");
+            }
+        }
+    }
+
+    private Dictionary<RenderBox, double> GetDryMainAxisPositions(
+        BoxConstraints constraints,
+        _LayoutSizes sizes,
+        BoxConstraints nonFlexConstraints)
+    {
+        double remainingSpace = Math.Max(0.0, sizes.mainAxisFreeSpace);
+        bool flipMainAxis = _flipMainAxis;
+        (double leadingSpace, double betweenSpace) = _distributeSpace(
+            MainAxisAlignment,
+            remainingSpace,
+            ChildCount,
+            flipMainAxis,
+            Spacing);
+        var positions = new Dictionary<RenderBox, double>();
+        double childMainPosition = leadingSpace;
+        RenderBox? child = flipMainAxis ? LastChild : FirstChild;
+        Func<RenderBox, RenderBox?> nextChild = flipMainAxis ? ChildBefore : ChildAfter;
+        while (child != null)
+        {
+            positions[child] = childMainPosition;
+            BoxConstraints childConstraints = GetDryChildConstraints(
+                child,
+                constraints,
+                sizes,
+                nonFlexConstraints);
+            Size childSize = child.GetDryLayout(childConstraints);
+            childMainPosition += _getMainSize(childSize) + betweenSpace;
+            child = nextChild(child);
+        }
+
+        return positions;
+    }
+
+    private BoxConstraints GetDryChildConstraints(
+        RenderBox child,
+        BoxConstraints constraints,
+        _LayoutSizes sizes,
+        BoxConstraints nonFlexConstraints)
+    {
+        int flex = _getFlex(child);
+        return flex > 0 && sizes.spacePerFlex.HasValue
+            ? _constraintsForFlexChild(child, constraints, sizes.spacePerFlex.Value * flex)
+            : nonFlexConstraints;
+    }
+
+    private IEnumerable<RenderBox> EnumerateChildren()
+    {
+        for (RenderBox? child = FirstChild; child != null; child = ChildAfter(child))
+        {
+            yield return child;
+        }
+    }
+
     protected override void PerformLayout()
     {
         var constraints = Constraints;
 
         var sizes = _computeSizes(
             constraints: constraints,
-            layoutChild: ChildLayoutHelper.layoutChild,
-            getBaseline: ChildLayoutHelper.getBaseline
+            layoutChild: ChildLayoutHelper.LayoutChild,
+            getBaseline: ChildLayoutHelper.GetBaseline
         );
 
         double crossAxisExtent = sizes.axisSize.crossAxisExtent;

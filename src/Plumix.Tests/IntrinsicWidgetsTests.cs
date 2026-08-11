@@ -165,6 +165,12 @@ public sealed class IntrinsicWidgetsTests
             _desiredSize = desiredSize;
         }
 
+        protected override double ComputeMaxIntrinsicWidth(double height) => _desiredSize.Width;
+
+        protected override double ComputeMaxIntrinsicHeight(double width) => _desiredSize.Height;
+
+        protected override Size ComputeDryLayout(BoxConstraints constraints) => constraints.Constrain(_desiredSize);
+
         protected override void PerformLayout()
         {
             Size = Constraints.Constrain(_desiredSize);

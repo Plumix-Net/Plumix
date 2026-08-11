@@ -10,7 +10,8 @@ namespace Plumix.Rendering;
 /// given set of [BoxConstraints].
 ///
 /// All of the functions adhere to the [ChildLayouter] signature.
-public static class ChildLayoutHelper {
+public static class ChildLayoutHelper
+{
   /// Returns the [Size] that the [RenderBox] would have if it were to
   /// be laid out with the given [BoxConstraints].
   ///
@@ -24,9 +25,10 @@ public static class ChildLayoutHelper {
   ///
   ///  * [layoutChild], which actually lays out the child with the given
   ///    constraints.
-  // public static Size dryLayoutChild(RenderBox child, BoxConstraints constraints) {
-  //   return child.getDryLayout(constraints);
-  // }
+    public static Size DryLayoutChild(RenderBox child, BoxConstraints constraints)
+    {
+        return child.GetDryLayout(constraints);
+    }
 
   /// Lays out the [RenderBox] with the given constraints and returns its
   /// [Size].
@@ -41,27 +43,27 @@ public static class ChildLayoutHelper {
   /// See also:
   ///
   ///  * [dryLayoutChild], which does not perform a real layout of the child.
-  public static Size layoutChild(RenderBox child, BoxConstraints constraints) {
-    child.Layout(constraints, parentUsesSize: true);
-    return child.Size;
-  }
+    public static Size LayoutChild(RenderBox child, BoxConstraints constraints)
+    {
+        child.Layout(constraints, parentUsesSize: true);
+        return child.Size;
+    }
 
   /// Convenience function that calls [RenderBox.getDryBaseline].
-  // static double? getDryBaseline(
-  //   RenderBox child,
-  //   BoxConstraints constraints,
-  //   TextBaseline baseline
-  // ) {
-  //   return child.getDryBaseline(constraints, baseline);
-  // }
+    public static double? GetDryBaseline(
+        RenderBox child,
+        BoxConstraints constraints,
+        TextBaseline baseline)
+    {
+        return child.GetDryBaseline(constraints, baseline);
+    }
 
   /// Convenience function that calls [RenderBox.getDistanceToBaseline].
   ///
   /// The given `child` must be already laid out with `constraints`.
-  public static double? getBaseline(RenderBox child, BoxConstraints constraints, TextBaseline baseline) {
-    //Debug.Assert(!child.debugNeedsLayout);
-    Debug.Assert(child.Constraints == constraints);
-    
-    return child.GetDistanceToBaseline(baseline, onlyReal: true);
-  }
+    public static double? GetBaseline(RenderBox child, BoxConstraints constraints, TextBaseline baseline)
+    {
+        Debug.Assert(child.Constraints == constraints);
+        return child.GetDistanceToBaseline(baseline, onlyReal: true);
+    }
 }

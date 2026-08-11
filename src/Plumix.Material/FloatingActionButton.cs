@@ -692,6 +692,23 @@ internal sealed class FloatingActionButtonChildOverflowBox : SingleChildRenderOb
 
 internal sealed class RenderFloatingActionButtonChildOverflowBox : RenderProxyBox
 {
+    protected override double ComputeMinIntrinsicWidth(double height) => 0.0;
+
+    protected override double ComputeMinIntrinsicHeight(double width) => 0.0;
+
+    protected override Size ComputeDryLayout(BoxConstraints constraints)
+    {
+        if (Child is null)
+        {
+            return constraints.Biggest;
+        }
+
+        Size childSize = Child.GetDryLayout(new BoxConstraints(
+            MaxWidth: double.PositiveInfinity,
+            MaxHeight: double.PositiveInfinity));
+        return constraints.Constrain(childSize);
+    }
+
     protected override void PerformLayout()
     {
         if (Child is null)
@@ -700,7 +717,11 @@ internal sealed class RenderFloatingActionButtonChildOverflowBox : RenderProxyBo
             return;
         }
 
-        Child.Layout(new BoxConstraints(), parentUsesSize: true);
+        Child.Layout(
+            new BoxConstraints(
+                MaxWidth: double.PositiveInfinity,
+                MaxHeight: double.PositiveInfinity),
+            parentUsesSize: true);
         Size childSize = Child.Size;
         Size = new Size(
             Math.Max(Constraints.MinWidth, Math.Min(Constraints.MaxWidth, childSize.Width)),

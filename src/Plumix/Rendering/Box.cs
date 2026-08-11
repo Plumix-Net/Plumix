@@ -124,6 +124,15 @@ public readonly record struct BoxConstraints(
             height ?? 0.0,
             height ?? double.PositiveInfinity);
 
+    public static BoxConstraints TightForFinite(
+        double width = double.PositiveInfinity,
+        double height = double.PositiveInfinity)
+    {
+        return TightFor(
+            width: double.IsFinite(width) ? width : null,
+            height: double.IsFinite(height) ? height : null);
+    }
+
     /// <summary>
     /// Creates constraints that expand to fill the maximum size permitted by the parent.
     /// </summary>

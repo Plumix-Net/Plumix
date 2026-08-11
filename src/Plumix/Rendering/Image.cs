@@ -334,6 +334,32 @@ public sealed class RenderImage : RenderBox
         Size = SizeForConstraints(Constraints);
     }
 
+    protected override double ComputeMinIntrinsicWidth(double height)
+    {
+        return !_width.HasValue && !_height.HasValue
+            ? 0.0
+            : SizeForConstraints(BoxConstraints.TightForFinite(height: height)).Width;
+    }
+
+    protected override double ComputeMaxIntrinsicWidth(double height)
+    {
+        return SizeForConstraints(BoxConstraints.TightForFinite(height: height)).Width;
+    }
+
+    protected override double ComputeMinIntrinsicHeight(double width)
+    {
+        return !_width.HasValue && !_height.HasValue
+            ? 0.0
+            : SizeForConstraints(BoxConstraints.TightForFinite(width: width)).Height;
+    }
+
+    protected override double ComputeMaxIntrinsicHeight(double width)
+    {
+        return SizeForConstraints(BoxConstraints.TightForFinite(width: width)).Height;
+    }
+
+    protected override Size ComputeDryLayout(BoxConstraints constraints) => SizeForConstraints(constraints);
+
     protected override bool HitTestSelf(Point position) => true;
 
     protected override void OnAttach()

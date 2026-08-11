@@ -2316,6 +2316,65 @@ public sealed class RenderRotatedBox : RenderProxyBox
 
     private bool IsVertical => QuarterTurns % 2 != 0;
 
+    protected override double ComputeMinIntrinsicWidth(double height)
+    {
+        if (Child is null)
+        {
+            return 0.0;
+        }
+
+        return IsVertical
+            ? Child.GetMinIntrinsicHeight(height)
+            : Child.GetMinIntrinsicWidth(height);
+    }
+
+    protected override double ComputeMaxIntrinsicWidth(double height)
+    {
+        if (Child is null)
+        {
+            return 0.0;
+        }
+
+        return IsVertical
+            ? Child.GetMaxIntrinsicHeight(height)
+            : Child.GetMaxIntrinsicWidth(height);
+    }
+
+    protected override double ComputeMinIntrinsicHeight(double width)
+    {
+        if (Child is null)
+        {
+            return 0.0;
+        }
+
+        return IsVertical
+            ? Child.GetMinIntrinsicWidth(width)
+            : Child.GetMinIntrinsicHeight(width);
+    }
+
+    protected override double ComputeMaxIntrinsicHeight(double width)
+    {
+        if (Child is null)
+        {
+            return 0.0;
+        }
+
+        return IsVertical
+            ? Child.GetMaxIntrinsicWidth(width)
+            : Child.GetMaxIntrinsicHeight(width);
+    }
+
+    protected override Size ComputeDryLayout(BoxConstraints constraints)
+    {
+        if (Child is null)
+        {
+            return constraints.Smallest;
+        }
+
+        Size childSize = Child.GetDryLayout(IsVertical ? constraints.Flipped : constraints);
+        return IsVertical ? childSize.Flipped : childSize;
+    }
+
     protected override void PerformLayout()
     {
         _paintTransform = Matrix.Identity;

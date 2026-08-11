@@ -205,7 +205,7 @@ public sealed class RenderSliverFillRemaining : RenderSliverSingleBoxAdapter
         double extent = Math.Max(0.0, constraints.ViewportMainAxisExtent - constraints.PrecedingScrollExtent);
         if (Child != null)
         {
-            double childExtent = ProbeNaturalChildExtent(Child, constraints);
+            double childExtent = ChildIntrinsicExtent(Child, constraints);
             extent = Math.Max(extent, childExtent);
             Child.Layout(
                 constraints.AsBoxConstraints(minExtent: extent, maxExtent: extent),
@@ -229,13 +229,11 @@ public sealed class RenderSliverFillRemaining : RenderSliverSingleBoxAdapter
         }
     }
 
-    internal static double ProbeNaturalChildExtent(RenderBox child, SliverConstraints constraints)
+    internal static double ChildIntrinsicExtent(RenderBox child, SliverConstraints constraints)
     {
-        child.Layout(constraints.AsBoxConstraints(), parentUsesSize: true);
-        double extent = ChildExtentForAxis(child.Size, constraints.Axis);
-        // Plumix does not yet expose Flutter's side-effect-free intrinsic query protocol. An expanding box reports
-        // infinity under the loose probe, which corresponds to no intrinsic minimum rather than infinite content.
-        return double.IsFinite(extent) ? extent : 0.0;
+        return constraints.Axis == Axis.Vertical
+            ? child.GetMaxIntrinsicHeight(constraints.CrossAxisExtent)
+            : child.GetMaxIntrinsicWidth(constraints.CrossAxisExtent);
     }
 
     internal static void EnsureFiniteExtent(double extent)
@@ -265,7 +263,7 @@ public sealed class RenderSliverFillRemainingAndOverscroll : RenderSliverSingleB
 
         if (Child != null)
         {
-            double childExtent = RenderSliverFillRemaining.ProbeNaturalChildExtent(Child, constraints);
+            double childExtent = RenderSliverFillRemaining.ChildIntrinsicExtent(Child, constraints);
             extent = Math.Max(extent, childExtent);
             maxExtent = Math.Max(extent, maxExtent);
             Child.Layout(

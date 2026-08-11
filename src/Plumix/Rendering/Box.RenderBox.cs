@@ -12,15 +12,32 @@ namespace Plumix.Rendering;
 /// </summary>
 public abstract class RenderBox : RenderObject
 {
+    [ThreadStatic]
+    private static RenderBox? _activeDryCalculation;
+
+    private readonly LayoutCacheStorage _layoutCacheStorage = new();
     private Size? _size;
+
+    internal static bool DebugCheckingIntrinsics { get; set; }
 
     protected override Rect SemanticBounds => new(new Point(0, 0), HasSize ? Size : new Size());
 
     public Size Size
     {
-        get => _size ??
-               throw new InvalidOperationException(
-                   $"RenderBox was not laid out: {GetType()}#{Diagnostics.ShortHash(this)}");
+        get
+        {
+            if (_activeDryCalculation != null)
+            {
+                throw new InvalidOperationException(
+                    $"RenderBox.Size was accessed while {_activeDryCalculation.GetType().Name} was computing "
+                    + "a dry layout result.");
+            }
+
+            return _size ??
+                   throw new InvalidOperationException(
+                       $"RenderBox was not laid out: {GetType()}#{Diagnostics.ShortHash(this)}");
+        }
+
         protected set => _size = value;
     }
 
@@ -30,22 +47,22 @@ public abstract class RenderBox : RenderObject
 
     public double GetMinIntrinsicWidth(double height)
     {
-        return ComputeMinIntrinsicWidth(height);
+        return GetIntrinsicDimension(IntrinsicDimension.MinWidth, height, ComputeMinIntrinsicWidth);
     }
 
     public double GetMaxIntrinsicWidth(double height)
     {
-        return ComputeMaxIntrinsicWidth(height);
+        return GetIntrinsicDimension(IntrinsicDimension.MaxWidth, height, ComputeMaxIntrinsicWidth);
     }
 
     public double GetMinIntrinsicHeight(double width)
     {
-        return ComputeMinIntrinsicHeight(width);
+        return GetIntrinsicDimension(IntrinsicDimension.MinHeight, width, ComputeMinIntrinsicHeight);
     }
 
     public double GetMaxIntrinsicHeight(double width)
     {
-        return ComputeMaxIntrinsicHeight(width);
+        return GetIntrinsicDimension(IntrinsicDimension.MaxHeight, width, ComputeMaxIntrinsicHeight);
     }
 
     public Size GetDryLayout(BoxConstraints constraints)
@@ -55,7 +72,19 @@ public abstract class RenderBox : RenderObject
             throw new InvalidOperationException("RenderBox.GetDryLayout requires normalized constraints.");
         }
 
-        return constraints.Constrain(ComputeDryLayout(constraints));
+        if (!DebugCheckingIntrinsics
+            && _layoutCacheStorage.DryLayouts.TryGetValue(constraints, out Size cached))
+        {
+            return cached;
+        }
+
+        Size result = constraints.Constrain(RunDryCalculation(() => ComputeDryLayout(constraints)));
+        if (!DebugCheckingIntrinsics)
+        {
+            _layoutCacheStorage.DryLayouts[constraints] = result;
+        }
+
+        return result;
     }
 
     public double? GetDryBaseline(BoxConstraints constraints, TextBaseline baseline)
@@ -65,7 +94,21 @@ public abstract class RenderBox : RenderObject
             throw new InvalidOperationException("RenderBox.GetDryBaseline requires normalized constraints.");
         }
 
-        return ComputeDryBaseline(constraints, baseline);
+        double? result = GetCachedBaseline(
+            constraints,
+            baseline,
+            () => RunDryCalculation(() => ComputeDryBaseline(constraints, baseline)));
+
+#if DEBUG
+        double? verification = RunDryCalculation(() => ComputeDryBaseline(constraints, baseline));
+        if (verification != result)
+        {
+            throw new InvalidOperationException(
+                $"{GetType().Name}.ComputeDryBaseline returned inconsistent results for {constraints}.");
+        }
+#endif
+
+        return result;
     }
 
     protected virtual double ComputeMinIntrinsicWidth(double height) => 0.0;
@@ -79,6 +122,24 @@ public abstract class RenderBox : RenderObject
     protected virtual Size ComputeDryLayout(BoxConstraints constraints) => constraints.Smallest;
 
     protected virtual double? ComputeDryBaseline(BoxConstraints constraints, TextBaseline baseline) => null;
+
+    protected void DebugCannotComputeDryLayout(string? reason = null)
+    {
+        throw new InvalidOperationException(
+            reason ?? $"{GetType().Name} cannot compute a dry layout result for the supplied constraints.");
+    }
+
+    public override void MarkNeedsLayout()
+    {
+        bool hadCachedLayoutData = _layoutCacheStorage.Clear();
+        if (hadCachedLayoutData && Parent != null)
+        {
+            MarkParentNeedsLayout();
+            return;
+        }
+
+        base.MarkNeedsLayout();
+    }
 
     public override bool HitTest(BoxHitTestResult result, Point position)
     {
@@ -159,7 +220,10 @@ public abstract class RenderBox : RenderObject
 
         try
         {
-            result = ComputeDistanceToActualBaseline(baseline);
+            result = GetCachedBaseline(
+                Constraints,
+                baseline,
+                () => ComputeDistanceToActualBaseline(baseline));
         }
         finally
         {
@@ -194,6 +258,106 @@ public abstract class RenderBox : RenderObject
         // ).offset;
 
         return null;
+    }
+
+    private double GetIntrinsicDimension(
+        IntrinsicDimension dimension,
+        double argument,
+        Func<double, double> computer)
+    {
+        if (double.IsNaN(argument) || argument < 0.0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(argument), "Intrinsic dimensions must be non-negative.");
+        }
+
+        var key = (dimension, argument);
+        if (!DebugCheckingIntrinsics
+            && _layoutCacheStorage.IntrinsicDimensions.TryGetValue(key, out double cached))
+        {
+            return cached;
+        }
+
+        double result = RunDryCalculation(() => computer(argument));
+        if (!DebugCheckingIntrinsics)
+        {
+            _layoutCacheStorage.IntrinsicDimensions[key] = result;
+        }
+
+        return result;
+    }
+
+    private double? GetCachedBaseline(
+        BoxConstraints constraints,
+        TextBaseline baseline,
+        Func<double?> computer)
+    {
+        Dictionary<BoxConstraints, BaselineOffset> cache = baseline switch
+        {
+            TextBaseline.Alphabetic => _layoutCacheStorage.AlphabeticBaselines,
+            TextBaseline.Ideographic => _layoutCacheStorage.IdeographicBaselines,
+            _ => throw new ArgumentOutOfRangeException(nameof(baseline), baseline, null)
+        };
+
+        if (!DebugCheckingIntrinsics && cache.TryGetValue(constraints, out BaselineOffset cached))
+        {
+            return cached.Offset;
+        }
+
+        double? result = computer();
+        if (!DebugCheckingIntrinsics)
+        {
+            cache[constraints] = new BaselineOffset(result);
+        }
+
+        return result;
+    }
+
+    private T RunDryCalculation<T>(Func<T> computer)
+    {
+        RenderBox? previous = _activeDryCalculation;
+        _activeDryCalculation = this;
+        try
+        {
+            return computer();
+        }
+        finally
+        {
+            _activeDryCalculation = previous;
+        }
+    }
+
+    private enum IntrinsicDimension
+    {
+        MinWidth,
+        MaxWidth,
+        MinHeight,
+        MaxHeight
+    }
+
+    private readonly record struct BaselineOffset(double? Offset);
+
+    private sealed class LayoutCacheStorage
+    {
+        public Dictionary<(IntrinsicDimension Dimension, double Argument), double> IntrinsicDimensions { get; } = [];
+
+        public Dictionary<BoxConstraints, Size> DryLayouts { get; } = [];
+
+        public Dictionary<BoxConstraints, BaselineOffset> AlphabeticBaselines { get; } = [];
+
+        public Dictionary<BoxConstraints, BaselineOffset> IdeographicBaselines { get; } = [];
+
+        public bool Clear()
+        {
+            bool hadCachedLayoutData = IntrinsicDimensions.Count > 0
+                                       || DryLayouts.Count > 0
+                                       || AlphabeticBaselines.Count > 0
+                                       || IdeographicBaselines.Count > 0;
+            IntrinsicDimensions.Clear();
+            DryLayouts.Clear();
+            AlphabeticBaselines.Clear();
+            IdeographicBaselines.Clear();
+            return hadCachedLayoutData;
+        }
     }
 
     // private TOutput _computeIntrinsics<TInput, TOutput>(

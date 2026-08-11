@@ -1,5 +1,9 @@
 # Changelog
 
+- Breaking: closed the shared intrinsic/dry-layout divergence. `RenderBox` now caches and invalidates intrinsic,
+  dry-layout, and nullable baseline queries with relayout-boundary propagation; flex, rotated box, flow, image,
+  custom layout, fill/header slivers, intrinsic widgets, and extended-FAB overflow now use direct source algorithms.
+
 - Breaking: completed the strict Material action-button closeout. Back, close, drawer, and end-drawer buttons now
   use the source `IconButton` inheritance/composition, standard-component keys, default-platform Android labels,
   direct M3 `onSurfaceVariant` and legacy M2 icon colors, plus source-shaped action-icon theme copying. Focused

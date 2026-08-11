@@ -118,11 +118,6 @@ public sealed class RenderIntrinsicWidth : RenderProxyBox
         if (!Constraints.HasTightWidth)
         {
             double intrinsicWidth = Child.GetMaxIntrinsicWidth(Constraints.MaxHeight);
-            if (intrinsicWidth <= 0.0)
-            {
-                Child.Layout(IntrinsicProbeConstraints.ForWidth(Constraints), parentUsesSize: true);
-                intrinsicWidth = Child.Size.Width;
-            }
             width = Constraints.ConstrainWidth(ApplyStep(intrinsicWidth, _stepWidth));
         }
 
@@ -130,11 +125,6 @@ public sealed class RenderIntrinsicWidth : RenderProxyBox
         if (_stepHeight.HasValue && !Constraints.HasTightHeight)
         {
             double intrinsicHeight = Child.GetMaxIntrinsicHeight(width ?? Constraints.MaxWidth);
-            if (intrinsicHeight <= 0.0)
-            {
-                Child.Layout(IntrinsicProbeConstraints.ForHeight(Constraints), parentUsesSize: true);
-                intrinsicHeight = Child.Size.Height;
-            }
             height = Constraints.ConstrainHeight(ApplyStep(intrinsicHeight, _stepHeight));
         }
 
@@ -182,49 +172,9 @@ public sealed class RenderIntrinsicHeight : RenderProxyBox
         }
 
         double intrinsicHeight = Child.GetMaxIntrinsicHeight(Constraints.MaxWidth);
-        if (intrinsicHeight <= 0.0)
-        {
-            Child.Layout(IntrinsicProbeConstraints.ForHeight(Constraints), parentUsesSize: true);
-            intrinsicHeight = Child.Size.Height;
-        }
         double height = Constraints.ConstrainHeight(intrinsicHeight);
         Child.Layout(Constraints.Tighten(height: height), parentUsesSize: true);
         Size = Constraints.Constrain(Child.Size);
         ((BoxParentData)Child.parentData!).offset = default;
-    }
-}
-
-internal static class IntrinsicProbeConstraints
-{
-    public static BoxConstraints ForWidth(BoxConstraints constraints)
-    {
-        double minHeight = constraints.MinHeight;
-        double maxHeight = constraints.MaxHeight;
-        if (double.IsFinite(maxHeight))
-        {
-            minHeight = maxHeight;
-        }
-
-        return new BoxConstraints(
-            MinWidth: 0.0,
-            MaxWidth: double.PositiveInfinity,
-            MinHeight: minHeight,
-            MaxHeight: maxHeight);
-    }
-
-    public static BoxConstraints ForHeight(BoxConstraints constraints)
-    {
-        double minWidth = constraints.MinWidth;
-        double maxWidth = constraints.MaxWidth;
-        if (double.IsFinite(maxWidth))
-        {
-            minWidth = maxWidth;
-        }
-
-        return new BoxConstraints(
-            MinWidth: minWidth,
-            MaxWidth: maxWidth,
-            MinHeight: 0.0,
-            MaxHeight: double.PositiveInfinity);
     }
 }

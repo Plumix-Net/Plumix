@@ -355,7 +355,7 @@ public abstract class RenderObject : IRenderObject
     /// this object with its [PipelineOwner], or defer to the parent, depending on
     /// whether this object is a relayout boundary or not respectively.
     /// </summary>
-    public void MarkNeedsLayout()
+    public virtual void MarkNeedsLayout()
     {
         if (_needsLayout)
         {

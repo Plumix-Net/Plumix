@@ -242,6 +242,8 @@ public sealed class SliverHeaderTests
 
     private sealed class NaturalSizeBox(Size naturalSize) : RenderBox
     {
+        protected override Size ComputeDryLayout(BoxConstraints constraints) => constraints.Constrain(naturalSize);
+
         protected override void PerformLayout()
         {
             Size = Constraints.Constrain(naturalSize);
