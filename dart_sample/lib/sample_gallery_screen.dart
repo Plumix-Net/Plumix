@@ -86,6 +86,7 @@ import 'demos/general/overflow_indicator_demo_page.dart';
 import 'demos/general/proxy_widgets_demo_page.dart';
 import 'demos/cupertino/radio_demo_page.dart';
 import 'sample_routes.dart';
+import 'demos/general/draggable_scrollable_sheet_demo_page.dart';
 import 'demos/general/scrollbar_demo_page.dart';
 import 'demos/general/stack_demo_page.dart';
 import 'demos/general/state_storage_demo_page.dart';
@@ -508,6 +509,12 @@ class SampleGalleryScreen extends StatelessWidget {
           title: 'Scrollbar',
           subtitle: 'controller + thumb',
           builder: () => const ScrollbarDemoPage(),
+        ),
+        SampleRouteDefinition(
+          routeName: SampleRoutes.draggableScrollableSheet,
+          title: 'DraggableScrollableSheet',
+          subtitle: 'drag-to-resize + snap + controller + actuator reset',
+          builder: () => const DraggableScrollableSheetDemoPage(),
         ),
         SampleRouteDefinition(
           routeName: SampleRoutes.editableText,

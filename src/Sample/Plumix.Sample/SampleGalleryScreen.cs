@@ -30,6 +30,7 @@ internal static class SampleRoutes
     public const string GridView = "/grid-view";
     public const string CustomSlivers = "/custom-slivers";
     public const string Scrollbar = "/scrollbar";
+    public const string DraggableScrollableSheet = "/draggable-scrollable-sheet";
     public const string EditableText = "/editable-text";
     public const string MaterialButtons = "/material-buttons";
     public const string AnimatedIcon = "/animated-icon";
@@ -248,6 +249,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "resizing/floating/fill/group/prototype/varied sliver adapters",
             () => new CustomSliversDemoPage()),
         new(SampleRoutes.Scrollbar, "Scrollbar", "controller + thumb", () => new ScrollbarDemoPage()),
+        new(
+            SampleRoutes.DraggableScrollableSheet,
+            "DraggableScrollableSheet",
+            "drag-to-resize + snap + controller + actuator reset",
+            () => new DraggableScrollableSheetDemoPage()),
         new(SampleRoutes.EditableText, "EditableText", "focus + IME + multiline caret", () => new EditableTextDemoPage()),
         new(
             SampleRoutes.ProxyWidgets,

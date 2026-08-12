@@ -38,6 +38,9 @@ public class ChangeNotifier : IListenable, IDisposable
         _ = _listeners.Remove(listener);
     }
 
+    /// <summary>Whether any listeners are currently registered.</summary>
+    protected bool HasListeners => _listeners.Count > 0;
+
     public void NotifyListeners()
     {
         if (_disposed)

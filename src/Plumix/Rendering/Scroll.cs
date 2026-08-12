@@ -130,7 +130,16 @@ public abstract class ScrollActivity : IDisposable
         Position = position;
     }
 
-    protected ScrollPosition Position { get; }
+    protected ScrollPosition Position { get; private set; }
+
+    /// <summary>
+    /// Re-points this activity at the position that absorbed it, so an in-flight drag or ballistic
+    /// run survives a scrollable replacing its <see cref="ScrollPosition"/>.
+    /// </summary>
+    public virtual void UpdateDelegate(ScrollPosition value)
+    {
+        Position = value;
+    }
 
     /// <summary>Whether performing this activity constitutes scrolling.</summary>
     public virtual bool IsScrolling => true;
@@ -263,7 +272,16 @@ public sealed class ScrollDragController : IDrag, IDisposable
     }
 
     /// <summary>The position this drag scrolls.</summary>
-    public ScrollPosition Position { get; }
+    public ScrollPosition Position { get; private set; }
+
+    /// <summary>
+    /// Re-points this drag at the position that absorbed it (Flutter's
+    /// <c>ScrollDragController.updatePosition</c>).
+    /// </summary>
+    public void UpdatePosition(ScrollPosition value)
+    {
+        Position = value;
+    }
 
     /// <summary>Velocity carried over from a previous ballistic activity, if any.</summary>
     public double? CarriedVelocity { get; }
@@ -589,6 +607,13 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
     internal ITickerProvider? TickerProvider { get; set; }
 
     /// <summary>
+    /// The context a scroll position dispatches its notifications from. Flutter reaches this through
+    /// <c>ScrollPosition.context.notificationContext</c>; Plumix has no separate `ScrollContext`, so the
+    /// owning <see cref="Scrollable.ScrollableState"/> hands its own context to the position instead.
+    /// </summary>
+    public BuildContext? NotificationContext { get; internal set; }
+
+    /// <summary>
     /// Invoked with <see cref="ScrollPhysics.ShouldAcceptUserOffset"/> whenever the dimensions
     /// change, so the owning scrollable can add or remove its drag gesture recognizers.
     /// </summary>
@@ -662,7 +687,7 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
     /// Starts a drag, handing the physics' carried momentum and drag-start distance threshold to the
     /// returned controller.
     /// </summary>
-    public ScrollDragController Drag(DragStartDetails details, Action? dragCancelCallback = null)
+    public virtual ScrollDragController Drag(DragStartDetails details, Action? dragCancelCallback = null)
     {
         var drag = new ScrollDragController(
             position: this,
@@ -710,7 +735,7 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
     /// Starts a ballistic activity with the given velocity, or goes idle when the physics report
     /// that no simulation is needed.
     /// </summary>
-    public void GoBallistic(double velocity)
+    public virtual void GoBallistic(double velocity)
     {
         Simulation? simulation = Physics.CreateBallisticSimulation(this, velocity);
         if (simulation == null)
@@ -722,7 +747,7 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
         BeginActivity(new BallisticScrollActivity(this, simulation));
     }
 
-    public void ApplyUserOffset(double delta)
+    public virtual void ApplyUserOffset(double delta)
     {
         double adjusted = Physics.ApplyPhysicsToUserOffset(this, delta);
         double targetPixels = Pixels - adjusted;
@@ -810,6 +835,41 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
         CanDragChanged?.Invoke(Physics.ShouldAcceptUserOffset(this));
     }
 
+    /// <summary>
+    /// Takes over the scroll state of the position this one replaces, so that a drag or ballistic
+    /// run in flight is not interrupted when a scrollable rebuilds its position (Flutter's
+    /// <c>ScrollPosition.absorb</c> plus <c>ScrollPositionWithSingleContext.absorb</c>).
+    /// </summary>
+    public virtual void Absorb(ScrollPosition other)
+    {
+        ArgumentNullException.ThrowIfNull(other);
+
+        _minScrollExtent = other._minScrollExtent;
+        _maxScrollExtent = other._maxScrollExtent;
+        _viewportDimension = other._viewportDimension;
+        _pixels = other._pixels;
+        _lastMetrics = other._lastMetrics;
+        _userScrollDirection = other._userScrollDirection;
+        _heldPreviousVelocity = other._heldPreviousVelocity;
+        _didChangeViewportDimensionOrReceiveCorrection = true;
+
+        // The activity moves over rather than being restarted: its ticker and simulation are still
+        // valid, only the position they drive changes.
+        ScrollActivity absorbed = other._activity;
+        other._activity = new IdleScrollActivity(other);
+        _activity.Dispose();
+        _activity = absorbed;
+        _activity.UpdateDelegate(this);
+        IsScrollingNotifier.Value = _activity.IsScrolling;
+
+        if (other._currentDrag is { } drag)
+        {
+            other._currentDrag = null;
+            drag.UpdatePosition(this);
+            _currentDrag = drag;
+        }
+    }
+
     public override void Dispose()
     {
         ScrollDragController? drag = _currentDrag;
@@ -820,7 +880,7 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
         base.Dispose();
     }
 
-    internal void BeginActivity(ScrollActivity activity)
+    internal virtual void BeginActivity(ScrollActivity activity)
     {
         _heldPreviousVelocity = 0.0;
         if (ReferenceEquals(_activity, activity))
@@ -836,7 +896,7 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
         IsScrollingNotifier.Value = activity is not IdleScrollActivity;
     }
 
-    internal void GoIdle()
+    internal virtual void GoIdle()
     {
         BeginActivity(new IdleScrollActivity(this));
     }

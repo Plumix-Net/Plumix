@@ -39,53 +39,66 @@ public sealed class ModalBarrierTests
     [Fact]
     public void ModalBarrier_PlatformSemanticsPolicyMatchesFlutter()
     {
-        Assert.True(ModalBarrier.PlatformSupportsDismissingBarrier(ModalBarrierTargetPlatform.Android));
-        Assert.True(ModalBarrier.PlatformSupportsDismissingBarrier(ModalBarrierTargetPlatform.IOS));
-        Assert.True(ModalBarrier.PlatformSupportsDismissingBarrier(ModalBarrierTargetPlatform.MacOS));
-        Assert.False(ModalBarrier.PlatformSupportsDismissingBarrier(ModalBarrierTargetPlatform.Fuchsia));
-        Assert.False(ModalBarrier.PlatformSupportsDismissingBarrier(ModalBarrierTargetPlatform.Linux));
-        Assert.False(ModalBarrier.PlatformSupportsDismissingBarrier(ModalBarrierTargetPlatform.Windows));
+        Assert.True(ModalBarrier.PlatformSupportsDismissingBarrier(TargetPlatform.Android));
+        Assert.True(ModalBarrier.PlatformSupportsDismissingBarrier(TargetPlatform.IOS));
+        Assert.True(ModalBarrier.PlatformSupportsDismissingBarrier(TargetPlatform.MacOS));
+        Assert.False(ModalBarrier.PlatformSupportsDismissingBarrier(TargetPlatform.Fuchsia));
+        Assert.False(ModalBarrier.PlatformSupportsDismissingBarrier(TargetPlatform.Linux));
+        Assert.False(ModalBarrier.PlatformSupportsDismissingBarrier(TargetPlatform.Windows));
     }
 
-    [Fact]
-    public void ModalBarrier_BuildsSourceShapedBlockingOpaqueSurface()
+    [Theory]
+    [InlineData(TargetPlatform.Android, true)]
+    [InlineData(TargetPlatform.IOS, true)]
+    [InlineData(TargetPlatform.MacOS, true)]
+    [InlineData(TargetPlatform.Fuchsia, false)]
+    [InlineData(TargetPlatform.Linux, false)]
+    [InlineData(TargetPlatform.Windows, false)]
+    public void ModalBarrier_BuildsSourceShapedBlockingOpaqueSurface(TargetPlatform platform, bool semanticsSupported)
     {
-        int dismissCount = 0;
-        var owner = new BuildOwner();
-        var root = new TestRootElement(new Directionality(
-            TextDirection.Rtl,
-            new ModalBarrier(
-                color: Colors.SlateBlue,
-                semanticsLabel: "Close overlay",
-                semanticsOnTapHint: "Close the overlay",
-                onDismiss: () => dismissCount++)));
-        Mount(root, owner);
+        TargetPlatform? previous = PlatformDefaults.DebugTargetPlatformOverride;
+        PlatformDefaults.DebugTargetPlatformOverride = platform;
+        try
+        {
+            int dismissCount = 0;
+            var owner = new BuildOwner();
+            var root = new TestRootElement(new Directionality(
+                TextDirection.Rtl,
+                new ModalBarrier(
+                    color: Colors.SlateBlue,
+                    semanticsLabel: "Close overlay",
+                    semanticsOnTapHint: "Close the overlay",
+                    onDismiss: () => dismissCount++)));
+            Mount(root, owner);
 
-        var block = FindWidget<BlockSemantics>(root);
-        var exclude = FindWidget<ExcludeSemantics>(root);
-        var gesture = FindWidget<GestureDetector>(root);
-        var semantics = FindWidget<Semantics>(root);
-        var constraints = FindWidget<ConstrainedBox>(root);
-        var coloredBox = FindWidget<ColoredBox>(root);
+            var block = FindWidget<BlockSemantics>(root);
+            var exclude = FindWidget<ExcludeSemantics>(root);
+            var gesture = FindWidget<GestureDetector>(root);
+            var semantics = FindWidget<Semantics>(root);
+            var constraints = FindWidget<ConstrainedBox>(root);
+            var coloredBox = FindWidget<ColoredBox>(root);
 
-        Assert.True(block.Blocking);
-        Assert.Equal(HitTestBehavior.Opaque, gesture.Behavior);
-        Assert.NotNull(gesture.OnTap);
-        Assert.NotNull(gesture.OnSecondaryTap);
-        Assert.Equal(BoxConstraints.Expand(), constraints.Constraints);
-        Assert.Equal(Colors.SlateBlue, coloredBox.Color);
-        Assert.Equal("Close the overlay", semantics.OnTapHint);
+            Assert.True(block.Blocking);
+            Assert.Equal(HitTestBehavior.Opaque, gesture.Behavior);
+            Assert.NotNull(gesture.OnTap);
+            Assert.NotNull(gesture.OnSecondaryTap);
+            Assert.Equal(BoxConstraints.Expand(), constraints.Constraints);
+            Assert.Equal(Colors.SlateBlue, coloredBox.Color);
+            Assert.Equal("Close the overlay", semantics.OnTapHint);
 
-        bool semanticsSupported = OperatingSystem.IsAndroid()
-                                  || OperatingSystem.IsIOS()
-                                  || OperatingSystem.IsMacOS();
-        Assert.Equal(!semanticsSupported, exclude.Excluding);
-        Assert.Equal(semanticsSupported ? "Close overlay" : null, semantics.Label);
+            // Only platforms that support dismissing the barrier expose it to semantics.
+            Assert.Equal(!semanticsSupported, exclude.Excluding);
+            Assert.Equal(semanticsSupported ? "Close overlay" : null, semantics.Label);
 
-        gesture.OnTap!();
-        gesture.OnSecondaryTap!();
-        Assert.Equal(2, dismissCount);
-        root.Unmount();
+            gesture.OnTap!();
+            gesture.OnSecondaryTap!();
+            Assert.Equal(2, dismissCount);
+            root.Unmount();
+        }
+        finally
+        {
+            PlatformDefaults.DebugTargetPlatformOverride = previous;
+        }
     }
 
     [Fact]

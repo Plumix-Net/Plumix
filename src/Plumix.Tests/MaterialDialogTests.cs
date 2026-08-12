@@ -382,41 +382,54 @@ public sealed class MaterialDialogTests : IDisposable
         Assert.NotNull(FindParagraph(harness.RenderView, "Underlying"));
     }
 
-    [Fact]
-    public async Task ShowDialog_BarrierSemanticsDismissesOnlyWhenEnabled()
+    [Theory]
+    [InlineData(TargetPlatform.Android, true)]
+    [InlineData(TargetPlatform.IOS, true)]
+    [InlineData(TargetPlatform.MacOS, true)]
+    [InlineData(TargetPlatform.Linux, false)]
+    [InlineData(TargetPlatform.Windows, false)]
+    public async Task ShowDialog_BarrierSemanticsDismissesOnlyWhenEnabled(
+        TargetPlatform platform,
+        bool platformSupportsDismissingBarrier)
     {
-        BuildContext captured = default;
-        using var harness = new WidgetRenderHarness(Wrap(
-            ThemeData.Light,
-            new Navigator(new BuilderPageRoute(context => new CaptureContext(
-                value => captured = value,
-                new Text("Home"))))));
-        harness.Pump(new Size(500, 320));
-        var result = MaterialDialogs.ShowDialog<string>(
-            captured,
-            _ => new Dialog(child: new Text("Dismiss me")),
-            barrierLabel: "Close modal");
-        PumpAnimation();
-        var semantics = harness.PumpAndGetSemantics(new Size(500, 320));
-        var barrier = FindSemantics(semantics, node => node.Label == "Close modal");
-        bool platformSupportsDismissingBarrier = OperatingSystem.IsAndroid()
-                                                  || OperatingSystem.IsIOS()
-                                                  || OperatingSystem.IsMacOS();
-        if (platformSupportsDismissingBarrier)
+        TargetPlatform? previous = PlatformDefaults.DebugTargetPlatformOverride;
+        PlatformDefaults.DebugTargetPlatformOverride = platform;
+        try
         {
-            Assert.NotNull(barrier);
-            Assert.True(barrier!.Actions.HasFlag(SemanticsActions.Tap));
-            Assert.True(barrier.PerformAction(SemanticsActions.Tap));
-        }
-        else
-        {
-            Assert.Null(barrier);
-            Navigator.Of(captured).Pop();
-        }
+            BuildContext captured = default;
+            using var harness = new WidgetRenderHarness(Wrap(
+                ThemeData.Light,
+                new Navigator(new BuilderPageRoute(context => new CaptureContext(
+                    value => captured = value,
+                    new Text("Home"))))));
+            harness.Pump(new Size(500, 320));
+            var result = MaterialDialogs.ShowDialog<string>(
+                captured,
+                _ => new Dialog(child: new Text("Dismiss me")),
+                barrierLabel: "Close modal");
+            PumpAnimation();
+            var semantics = harness.PumpAndGetSemantics(new Size(500, 320));
+            var barrier = FindSemantics(semantics, node => node.Label == "Close modal");
+            if (platformSupportsDismissingBarrier)
+            {
+                Assert.NotNull(barrier);
+                Assert.True(barrier!.Actions.HasFlag(SemanticsActions.Tap));
+                Assert.True(barrier.PerformAction(SemanticsActions.Tap));
+            }
+            else
+            {
+                Assert.Null(barrier);
+                Navigator.Of(captured).Pop();
+            }
 
-        PumpAnimation();
-        harness.Pump(new Size(500, 320));
-        Assert.Null(await result);
+            PumpAnimation();
+            harness.Pump(new Size(500, 320));
+            Assert.Null(await result);
+        }
+        finally
+        {
+            PlatformDefaults.DebugTargetPlatformOverride = previous;
+        }
     }
 
     [Fact]

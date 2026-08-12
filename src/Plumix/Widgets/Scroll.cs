@@ -510,7 +510,7 @@ public class ScrollController : ChangeNotifier
         return new ScrollPosition(initialPixels: InitialScrollOffset, physics: physics ?? Physics);
     }
 
-    internal void Attach(ScrollPosition position)
+    internal virtual void Attach(ScrollPosition position)
     {
         if (_positions.Contains(position))
         {
@@ -521,7 +521,7 @@ public class ScrollController : ChangeNotifier
         position.AddListener(NotifyListeners);
     }
 
-    internal void Detach(ScrollPosition position)
+    internal virtual void Detach(ScrollPosition position)
     {
         if (!_positions.Remove(position))
         {
@@ -877,33 +877,44 @@ public sealed class Scrollable : StatefulWidget
             return [new SliverToBoxAdapter(widget.Child ?? new SizedBox())];
         }
 
-        private ScrollPosition AttachToController(ScrollController? providedController, ScrollPhysics? physics)
+        private ScrollPosition AttachToController(
+            ScrollController? providedController,
+            ScrollPhysics? physics,
+            ScrollPosition? oldPosition = null)
         {
             _fallbackController ??= new ScrollController();
             _attachedController = providedController ?? _fallbackController;
             var position = _attachedController.CreateScrollPosition(physics);
             position.TickerProvider = this;
+            position.NotificationContext = Context;
             position.CanDragChanged = SetCanDrag;
             position.AxisDirection = ResolveAxisDirection(CurrentWidget.Axis, CurrentWidget.Reverse);
 
             // Ballistic tolerances are expressed in device pixels, so the physics need the view's ratio.
             position.DevicePixelRatio = MediaQuery.MaybeOf(Context)?.DevicePixelRatio ?? 1.0;
+            if (oldPosition != null)
+            {
+                position.Absorb(oldPosition);
+            }
+
             _attachedController.Attach(position);
             return position;
         }
 
         private void ReplacePosition(ScrollController? controller, ScrollPhysics physics)
         {
-            _position.RemoveListener(HandlePositionChanged);
+            ScrollPosition oldPosition = _position;
+            oldPosition.RemoveListener(HandlePositionChanged);
             SaveScrollOffset();
-            _attachedController?.Detach(_position);
-            _position.Dispose();
+            _attachedController?.Detach(oldPosition);
 
             _effectivePhysics = physics;
-            _position = AttachToController(controller, physics);
+            // The new position absorbs the old one before the old one is disposed, so a drag or
+            // ballistic run crossing the replacement is not dropped.
+            _position = AttachToController(controller, physics, oldPosition);
             _hasDispatchedScrollMetrics = false;
-            RestoreScrollOffset();
             _position.AddListener(HandlePositionChanged);
+            oldPosition.Dispose();
             SetState(static () => { });
         }
 

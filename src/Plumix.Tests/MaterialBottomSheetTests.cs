@@ -390,36 +390,46 @@ public sealed class MaterialBottomSheetTests : IDisposable
     [Fact]
     public async Task ModalBottomSheet_RouteKeepsUnderlyingPageAndReturnsTypedResult()
     {
-        BuildContext captured = default;
-        using var harness = new WidgetRenderHarness(Wrap(
-            ThemeData.Light,
-            new Navigator(new BuilderPageRoute(context => new CaptureContext(
-                value => captured = value,
-                child: new Text("Underlying"))))));
-        harness.Pump(new Size(500, 400));
+        // The scrim is only exposed to semantics on platforms that support dismissing the barrier.
+        TargetPlatform? previous = PlatformDefaults.DebugTargetPlatformOverride;
+        PlatformDefaults.DebugTargetPlatformOverride = TargetPlatform.Android;
+        try
+        {
+            BuildContext captured = default;
+            using var harness = new WidgetRenderHarness(Wrap(
+                ThemeData.Light,
+                new Navigator(new BuilderPageRoute(context => new CaptureContext(
+                    value => captured = value,
+                    child: new Text("Underlying"))))));
+            harness.Pump(new Size(500, 400));
 
-        var result = MaterialBottomSheets.ShowModalBottomSheet<string>(
-            captured,
-            _ => new SizedBox(height: 120, child: new Text("Modal sheet")));
-        PumpAnimation();
-        var semantics = harness.PumpAndGetSemantics(new Size(500, 400));
+            var result = MaterialBottomSheets.ShowModalBottomSheet<string>(
+                captured,
+                _ => new SizedBox(height: 120, child: new Text("Modal sheet")));
+            PumpAnimation();
+            var semantics = harness.PumpAndGetSemantics(new Size(500, 400));
 
-        Assert.NotNull(FindParagraph(harness.RenderView, "Underlying"));
-        Assert.NotNull(FindParagraph(harness.RenderView, "Modal sheet"));
-        // The scrim uses the localized default label and close hint; the sheet names/scopes the route.
-        Assert.NotNull(FindSemantics(semantics, node =>
-            node.Label == "Scrim"
-            && node.OnTapHint == "Close Bottom Sheet"
-            && node.Actions.HasFlag(SemanticsActions.Tap)));
-        Assert.NotNull(FindSemantics(semantics, node =>
-            node.Flags.HasFlag(SemanticsFlags.ScopesRoute)
-            && node.Flags.HasFlag(SemanticsFlags.NamesRoute)));
+            Assert.NotNull(FindParagraph(harness.RenderView, "Underlying"));
+            Assert.NotNull(FindParagraph(harness.RenderView, "Modal sheet"));
+            // The scrim uses the localized default label and close hint; the sheet names/scopes the route.
+            Assert.NotNull(FindSemantics(semantics, node =>
+                node.Label == "Scrim"
+                && node.OnTapHint == "Close Bottom Sheet"
+                && node.Actions.HasFlag(SemanticsActions.Tap)));
+            Assert.NotNull(FindSemantics(semantics, node =>
+                node.Flags.HasFlag(SemanticsFlags.ScopesRoute)
+                && node.Flags.HasFlag(SemanticsFlags.NamesRoute)));
 
-        Navigator.Of(captured).Pop("done");
-        PumpAnimation();
-        harness.Pump(new Size(500, 400));
-        Assert.Equal("done", await result);
-        Assert.Null(FindParagraph(harness.RenderView, "Modal sheet"));
+            Navigator.Of(captured).Pop("done");
+            PumpAnimation();
+            harness.Pump(new Size(500, 400));
+            Assert.Equal("done", await result);
+            Assert.Null(FindParagraph(harness.RenderView, "Modal sheet"));
+        }
+        finally
+        {
+            PlatformDefaults.DebugTargetPlatformOverride = previous;
+        }
     }
 
     [Theory]
@@ -460,22 +470,32 @@ public sealed class MaterialBottomSheetTests : IDisposable
     [Fact]
     public void ModalBottomSheet_ClipsBarrierSemanticsToTheSheetHeight()
     {
-        BuildContext captured = default;
-        using var harness = new WidgetRenderHarness(Wrap(
-            ThemeData.Light,
-            new Navigator(new BuilderPageRoute(_ => new CaptureContext(
-                value => captured = value,
-                child: new Text("Underlying"))))));
-        harness.Pump(new Size(500, 400));
+        // The clipper is only inserted where the barrier participates in semantics.
+        TargetPlatform? previous = PlatformDefaults.DebugTargetPlatformOverride;
+        PlatformDefaults.DebugTargetPlatformOverride = TargetPlatform.Android;
+        try
+        {
+            BuildContext captured = default;
+            using var harness = new WidgetRenderHarness(Wrap(
+                ThemeData.Light,
+                new Navigator(new BuilderPageRoute(_ => new CaptureContext(
+                    value => captured = value,
+                    child: new Text("Underlying"))))));
+            harness.Pump(new Size(500, 400));
 
-        MaterialBottomSheets.ShowModalBottomSheet<string>(
-            captured,
-            _ => new SizedBox(height: 120, child: new Text("Modal sheet")));
-        PumpAnimation();
-        harness.Pump(new Size(500, 400));
+            MaterialBottomSheets.ShowModalBottomSheet<string>(
+                captured,
+                _ => new SizedBox(height: 120, child: new Text("Modal sheet")));
+            PumpAnimation();
+            harness.Pump(new Size(500, 400));
 
-        var clipper = Assert.Single(FindDescendants<RenderSemanticsClipper>(harness.RenderView));
-        Assert.Equal(120, clipper.ClipDetailsNotifier.Value.Bottom, precision: 3);
+            var clipper = Assert.Single(FindDescendants<RenderSemanticsClipper>(harness.RenderView));
+            Assert.Equal(120, clipper.ClipDetailsNotifier.Value.Bottom, precision: 3);
+        }
+        finally
+        {
+            PlatformDefaults.DebugTargetPlatformOverride = previous;
+        }
     }
 
     [Fact]

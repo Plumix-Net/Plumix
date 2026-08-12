@@ -1,5 +1,6 @@
 ﻿using Avalonia;
 using Avalonia.Media;
+using Plumix.Physics;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/animation/animation_controller.dart (approximate)
 
@@ -682,12 +683,51 @@ public sealed class AnimationController : Animation<double>, IDisposable
     private TimeSpan _animateDuration;
     private Curve _animateCurve = Curves.Linear;
     private TaskCompletionSource? _animateCompletion;
+    private readonly bool _unbounded;
+    private Simulation? _simulation;
+    private double _simulationElapsedSeconds;
+    private TaskCompletionSource? _simulationCompletion;
 
     public AnimationController(TimeSpan duration, ITickerProvider? vsync = null)
     {
         Duration = duration <= TimeSpan.Zero ? TimeSpan.FromMilliseconds(1) : duration;
         _ticker = vsync?.CreateTicker(OnTick) ?? new Ticker(OnTick);
     }
+
+    private AnimationController(TimeSpan duration, ITickerProvider? vsync, double initialValue)
+        : this(duration, vsync)
+    {
+        _unbounded = true;
+        _value = initialValue;
+    }
+
+    /// <summary>
+    /// Creates a controller whose value is not clamped to <c>[0, 1]</c>, matching Flutter's
+    /// <c>AnimationController.unbounded</c>. Callers that animate real-world quantities (pixels, or
+    /// curves such as <see cref="Curves.EaseOutBack"/> that overshoot their bounds) need this.
+    /// </summary>
+    public static AnimationController Unbounded(
+        double value = 0.0,
+        ITickerProvider? vsync = null,
+        TimeSpan? duration = null)
+    {
+        return new AnimationController(duration ?? TimeSpan.FromSeconds(1), vsync, value);
+    }
+
+    /// <summary>Whether this controller's value may leave the <c>[0, 1]</c> range.</summary>
+    public bool IsUnbounded => _unbounded;
+
+    /// <summary>
+    /// The rate of change of <see cref="Value"/> per second while a simulation started by
+    /// <see cref="AnimateWith"/> is running; zero otherwise.
+    /// </summary>
+    /// <remarks>
+    /// Duration-driven animations (<see cref="AnimateTo"/>, <see cref="Forward"/>) are not
+    /// simulation-backed in Plumix and therefore report zero.
+    /// </remarks>
+    public double Velocity => _simulation is { } simulation && IsAnimating
+        ? simulation.DX(_simulationElapsedSeconds)
+        : 0.0;
 
     public void Forward(double? from = null)
     {
@@ -743,6 +783,33 @@ public sealed class AnimationController : Animation<double>, IDisposable
         Start();
     }
 
+    /// <summary>
+    /// Drives <see cref="Value"/> from the given simulation, matching Flutter's
+    /// <c>AnimationController.animateWith</c>.
+    /// </summary>
+    /// <returns>
+    /// A task that completes when the simulation reports it is done <b>or</b> when the animation is
+    /// stopped, which is the contract Flutter's <c>TickerFuture.whenCompleteOrCancel</c> provides.
+    /// </returns>
+    public Task AnimateWith(Simulation simulation)
+    {
+        ArgumentNullException.ThrowIfNull(simulation);
+
+        CancelAnimateTo();
+        CompleteSimulation();
+        _flingSimulation = null;
+        _repeat = false;
+        _repeatReverse = false;
+        _reversing = false;
+        _simulation = simulation;
+        _simulationElapsedSeconds = 0.0;
+        _simulationCompletion = new TaskCompletionSource();
+        _value = ClampValue(simulation.X(0.0));
+        SetStatus(AnimationStatus.Forward);
+        Start();
+        return _simulationCompletion.Task;
+    }
+
     public Task AnimateTo(double target, TimeSpan? duration = null, Curve? curve = null)
     {
         return AnimateToInternal(target, duration, curve, reversing: false);
@@ -755,7 +822,7 @@ public sealed class AnimationController : Animation<double>, IDisposable
 
     private Task AnimateToInternal(double target, TimeSpan? duration, Curve? curve, bool reversing)
     {
-        if (!double.IsFinite(target) || target is < 0.0 or > 1.0)
+        if (!double.IsFinite(target) || (!_unbounded && target is < 0.0 or > 1.0))
         {
             throw new ArgumentOutOfRangeException(nameof(target), "Animation target must be between 0.0 and 1.0.");
         }
@@ -766,6 +833,7 @@ public sealed class AnimationController : Animation<double>, IDisposable
         }
 
         CancelAnimateTo();
+        CompleteSimulation();
         double distance = Math.Abs(target - _value);
         TimeSpan effectiveDuration = duration ?? TimeSpan.FromTicks((long)(Duration.Ticks * distance));
         if (distance <= 0.000001 || effectiveDuration <= TimeSpan.Zero)
@@ -796,14 +864,15 @@ public sealed class AnimationController : Animation<double>, IDisposable
         IsAnimating = false;
         _ticker.Stop();
         _flingSimulation = null;
+        CompleteSimulation();
     }
 
     public void SetValue(double value)
     {
-        double next = Math.Clamp(value, 0, 1);
+        double next = ClampValue(value);
         if (Math.Abs(_value - next) <= 0.000001) return;
         _value = next;
-        if (!IsAnimating)
+        if (!IsAnimating && !_unbounded)
         {
             SetStatus(next <= 0.0
                 ? AnimationStatus.Dismissed
@@ -854,6 +923,12 @@ public sealed class AnimationController : Animation<double>, IDisposable
 
     private void OnTick(TimeSpan dt)
     {
+        if (_simulation is not null)
+        {
+            TickSimulation(dt);
+            return;
+        }
+
         if (_animateTarget.HasValue)
         {
             TickAnimateTo(dt);
@@ -956,6 +1031,46 @@ public sealed class AnimationController : Animation<double>, IDisposable
         {
             Completed?.Invoke();
         }
+    }
+
+    private double ClampValue(double value) => _unbounded ? value : Math.Clamp(value, 0.0, 1.0);
+
+    /// <summary>
+    /// Advances the running simulation. The status is switched to
+    /// <see cref="AnimationStatus.Completed"/> <b>before</b> listeners run on the final tick, so a
+    /// listener can react to completion in the same callback that receives the final value.
+    /// </summary>
+    private void TickSimulation(TimeSpan delta)
+    {
+        Simulation simulation = _simulation!;
+        _simulationElapsedSeconds += delta.TotalSeconds;
+        _value = ClampValue(simulation.X(_simulationElapsedSeconds));
+        if (!simulation.IsDone(_simulationElapsedSeconds))
+        {
+            Changed?.Invoke();
+            return;
+        }
+
+        IsAnimating = false;
+        _ticker.Stop();
+        SetStatus(AnimationStatus.Completed);
+        Changed?.Invoke();
+        CompleteSimulation();
+        Completed?.Invoke();
+    }
+
+    /// <summary>
+    /// Ends a running simulation and completes its task. Completing on cancellation as well as on
+    /// natural completion is what makes the returned task usable the way Flutter's
+    /// <c>whenCompleteOrCancel</c> is used.
+    /// </summary>
+    private void CompleteSimulation()
+    {
+        TaskCompletionSource? completion = _simulationCompletion;
+        _simulation = null;
+        _simulationCompletion = null;
+        _simulationElapsedSeconds = 0.0;
+        completion?.TrySetResult();
     }
 
     private void CancelAnimateTo()

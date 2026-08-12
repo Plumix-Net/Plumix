@@ -8,16 +8,6 @@ namespace Plumix.Widgets;
 
 // Dart parity source: flutter/packages/flutter/lib/src/widgets/modal_barrier.dart
 
-internal enum ModalBarrierTargetPlatform
-{
-    Android,
-    Fuchsia,
-    IOS,
-    Linux,
-    MacOS,
-    Windows,
-}
-
 internal sealed class RenderSemanticsClipper : RenderProxyBox
 {
     private ValueNotifier<Thickness> _clipDetailsNotifier;
@@ -152,7 +142,8 @@ public sealed class ModalBarrier : StatelessWidget
 
     public override Widget Build(BuildContext context)
     {
-        bool platformSupportsDismissingBarrier = PlatformSupportsDismissingBarrier(ResolveTargetPlatform());
+        bool platformSupportsDismissingBarrier =
+            PlatformSupportsDismissingBarrier(PlatformDefaults.TargetPlatform);
         bool semanticsDismissible = Dismissible && platformSupportsDismissingBarrier;
         bool modalBarrierSemanticsDismissible = BarrierSemanticsDismissible ?? semanticsDismissible;
 
@@ -204,41 +195,11 @@ public sealed class ModalBarrier : StatelessWidget
                     child: barrier)));
     }
 
-    internal static bool PlatformSupportsDismissingBarrier(ModalBarrierTargetPlatform platform)
+    internal static bool PlatformSupportsDismissingBarrier(TargetPlatform platform)
     {
-        return platform is ModalBarrierTargetPlatform.Android
-            or ModalBarrierTargetPlatform.IOS
-            or ModalBarrierTargetPlatform.MacOS;
-    }
-
-    private static ModalBarrierTargetPlatform ResolveTargetPlatform()
-    {
-        if (OperatingSystem.IsIOS())
-        {
-            return ModalBarrierTargetPlatform.IOS;
-        }
-
-        if (OperatingSystem.IsMacOS())
-        {
-            return ModalBarrierTargetPlatform.MacOS;
-        }
-
-        if (OperatingSystem.IsAndroid())
-        {
-            return ModalBarrierTargetPlatform.Android;
-        }
-
-        if (OperatingSystem.IsWindows())
-        {
-            return ModalBarrierTargetPlatform.Windows;
-        }
-
-        if (OperatingSystem.IsLinux())
-        {
-            return ModalBarrierTargetPlatform.Linux;
-        }
-
-        return ModalBarrierTargetPlatform.Fuchsia;
+        return platform is TargetPlatform.Android
+            or TargetPlatform.IOS
+            or TargetPlatform.MacOS;
     }
 }
 

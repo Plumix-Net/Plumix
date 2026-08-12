@@ -1,5 +1,24 @@
 # Changelog
 
+- Breaking: ported `widgets/draggable_scrollable_sheet.dart` — `DraggableScrollableSheet`,
+  `DraggableScrollableController`, `DraggableScrollableNotification` and `DraggableScrollableActuator`, with
+  Flutter's extent math, drag-versus-list hand-off, constant-velocity snapping (including `snapAnimationDuration`),
+  implied min/max snap sizes, ballistic hand-off velocity boost, and the `hasDragged`/`hasChanged` rules that decide
+  when a new `initialChildSize` moves the sheet.
+  Supporting core primitives: `ScrollPosition.Absorb` plus virtual `ApplyUserOffset`/`GoBallistic`/`GoIdle`/
+  `BeginActivity`/`Drag`, `ScrollPosition.NotificationContext`, virtual `ScrollController.Attach`/`Detach`,
+  `AnimationController.Unbounded`/`AnimateWith`/`Velocity`, and `ChangeNotifier.HasListeners`.
+  **Breaking:** a `Scrollable` replacing its `ScrollPosition` (physics or controller change) now absorbs the old
+  position's pixels, extents, activity and in-flight drag instead of resetting to the stored offset.
+  Test classes no longer run in parallel: the frame clock is process-wide, so concurrent classes could rewind each
+  other's tickers mid-animation.
+
+- Fixed `ModalBarrier` resolving its target platform from the host OS instead of `PlatformDefaults.TargetPlatform`,
+  so barrier semantics (label, tap/dismiss actions, `SemanticsClipper`) ignored
+  `PlatformDefaults.DebugTargetPlatformOverride` and varied by the machine running the tests. The private
+  `ModalBarrierTargetPlatform` enum is gone; `PlatformSupportsDismissingBarrier` now takes `TargetPlatform`.
+  Modal barrier/dialog/bottom-sheet semantics tests pin the platform instead of branching on `OperatingSystem`.
+
 - Breaking: closed the `Table`/`RenderTable` divergence with a strict port of `rendering/table.dart`,
   `rendering/table_border.dart` and `widgets/table.dart`. The full `TableColumnWidth` algebra is available
   (`FlexColumnWidth`, `FractionColumnWidth`, `MaxColumnWidth`, `MinColumnWidth` join the existing fixed/intrinsic

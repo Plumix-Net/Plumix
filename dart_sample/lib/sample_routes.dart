@@ -22,6 +22,7 @@ class SampleRoutes {
   static const String gridView = '/grid-view';
   static const String customSlivers = '/custom-slivers';
   static const String scrollbar = '/scrollbar';
+  static const String draggableScrollableSheet = '/draggable-scrollable-sheet';
   static const String editableText = '/editable-text';
   static const String materialButtons = '/material-buttons';
   static const String animatedIcon = '/animated-icon';
