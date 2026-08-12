@@ -7,7 +7,11 @@ namespace Plumix.Widgets;
 /// </summary>
 public sealed class BuildOwner
 {
-    private readonly SortedSet<Element> _dirty = new(ElementDepthComparer.Instance);
+    // Flutter parity: a list plus a membership set, not a depth-ordered set. An element's depth changes when
+    // it is reparented, which would corrupt an ordered container it is already sitting in.
+    private readonly List<Element> _dirty = [];
+    private readonly HashSet<Element> _dirtyMembership = [];
+    private bool _dirtyNeedsResorting;
     private readonly HashSet<Element> _tracked = [];
     private readonly HashSet<Element> _inactive = [];
     private readonly Dictionary<GlobalKey, Element> _globalKeyRegistry = [];
@@ -103,7 +107,16 @@ public sealed class BuildOwner
             return;
         }
 
-        _dirty.Add(element);
+        if (_dirtyMembership.Add(element))
+        {
+            _dirty.Add(element);
+        }
+        else
+        {
+            // Already queued. It may have been rebuilt already in the current scope, so ask the scope to
+            // re-sort and rewind onto it (Flutter's `_dirtyElementsNeedsResorting`).
+            _dirtyNeedsResorting = true;
+        }
 
         if (_scheduled)
         {
@@ -116,7 +129,9 @@ public sealed class BuildOwner
 
     internal void UnscheduleBuild(Element element)
     {
-        _dirty.Remove(element);
+        // The list entry is left behind as a tombstone: the build scope skips inactive or clean elements,
+        // and removing by value from an ordered container whose key (depth) may have changed is unsafe.
+        _dirtyMembership.Remove(element);
     }
 
     public void MarkSubtreeNeedsBuild(Element root)
@@ -157,22 +172,39 @@ public sealed class BuildOwner
 
         using IDisposable buildPhase = Scheduler.BuildScope();
 
-        // Flutter parity: process the dirty list in order of increasing depth so
-        // parents rebuild before children; elements cleaned by an ancestor's
-        // rebuild are skipped via the Dirty check instead of rebuilding twice.
-        while (_dirty.Count > 0)
+        // Flutter parity (`BuildOwner.buildScope`): process the dirty list in order of increasing depth so
+        // parents rebuild before children; elements cleaned by an ancestor's rebuild are skipped via the
+        // Dirty check instead of rebuilding twice. The list is re-sorted whenever it grew or an element was
+        // re-dirtied, and the cursor rewinds onto whatever became dirty behind it.
+        _dirty.Sort(ElementDepthComparer.Instance.Compare);
+        _dirtyNeedsResorting = false;
+        int dirtyCount = _dirty.Count;
+        int index = 0;
+        while (index < dirtyCount)
         {
-            var element = _dirty.Min!;
-            _dirty.Remove(element);
+            Element element = _dirty[index];
+            if (element.IsActive && element.Owner == this && element.Dirty)
+            {
+                element.Rebuild();
+            }
 
-            if (!element.IsActive || element.Owner != this || !element.Dirty)
+            index += 1;
+            if (dirtyCount >= _dirty.Count && !_dirtyNeedsResorting)
             {
                 continue;
             }
 
-            element.Rebuild();
+            _dirty.Sort(ElementDepthComparer.Instance.Compare);
+            _dirtyNeedsResorting = false;
+            dirtyCount = _dirty.Count;
+            while (index > 0 && _dirty[index - 1].Dirty)
+            {
+                index -= 1;
+            }
         }
 
+        _dirty.Clear();
+        _dirtyMembership.Clear();
         FinalizeInactiveElements();
     }
 

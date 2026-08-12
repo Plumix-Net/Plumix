@@ -48,7 +48,9 @@ public sealed class NavigationTests
         Assert.True(navigatorState.MaybePop());
         owner.FlushBuild();
 
-        Assert.Equal("root", currentPageName);
+        // The revealed route keeps its cached page instead of rebuilding, so the visible route is read from
+        // the navigator rather than from the last build that ran.
+        Assert.Equal("root", CurrentPage(navigatorState));
         Assert.False(navigatorState.CanPop);
     }
 
@@ -379,7 +381,7 @@ public sealed class NavigationTests
         Assert.True(Navigator.TryHandleBackButton());
         owner.FlushBuild();
 
-        Assert.Equal("root", currentPageName);
+        Assert.Equal("root", CurrentPage(navigatorState!));
         Assert.False(Navigator.TryHandleBackButton());
     }
 
@@ -424,7 +426,7 @@ public sealed class NavigationTests
         owner.FlushBuild();
 
         Assert.Equal("outer-root", currentOuterPage);
-        Assert.Equal("inner-root", currentInnerPage);
+        Assert.Equal("inner-root", CurrentPage(innerNavigatorState));
         Assert.False(Navigator.TryHandleBackButton());
     }
 
@@ -473,7 +475,7 @@ public sealed class NavigationTests
         Assert.True(Navigator.TryHandleBackButton());
         owner.FlushBuild();
 
-        Assert.Equal("outer-root", currentOuterPage);
+        Assert.Equal("outer-root", CurrentPage(outerNavigatorState));
         Assert.False(outerNavigatorState.CanPop);
         Assert.False(Navigator.TryHandleBackButton());
     }
@@ -618,7 +620,7 @@ public sealed class NavigationTests
         Assert.True(navigatorState.MaybePopFromUserGesture());
         owner.FlushBuild();
 
-        Assert.Equal("root", currentPageName);
+        Assert.Equal("root", CurrentPage(navigatorState));
         Assert.False(navigatorState.UserGestureInProgress);
         Assert.Equal(
             [
@@ -747,7 +749,7 @@ public sealed class NavigationTests
         owner.FlushBuild();
 
         Assert.True(rootContext.HasValue);
-        Assert.Equal("root", currentPageName);
+        Assert.Equal("/", CurrentPage(Navigator.Of(rootContext.Value)));
         Assert.False(Navigator.CanPop(rootContext.Value));
     }
 
@@ -827,7 +829,7 @@ public sealed class NavigationTests
         navigatorState.PopUntil(route => route.Settings.Name == "a");
         owner.FlushBuild();
 
-        Assert.Equal("a", currentPageName);
+        Assert.Equal("a", CurrentPage(navigatorState));
         Assert.True(navigatorState.CanPop);
     }
 
@@ -885,7 +887,7 @@ public sealed class NavigationTests
 
         Assert.True(navigatorState.MaybePop());
         owner.FlushBuild();
-        Assert.Equal("root", currentPageName);
+        Assert.Equal("/", CurrentPage(navigatorState));
         Assert.False(navigatorState.CanPop);
     }
 
@@ -1004,7 +1006,7 @@ public sealed class NavigationTests
 
         navigatorState.Pop();
         owner.FlushBuild();
-        Assert.Equal("root", currentPageName);
+        Assert.Equal("/", CurrentPage(navigatorState));
         Assert.False(navigatorState.CanPop);
     }
 
@@ -1062,7 +1064,7 @@ public sealed class NavigationTests
         navigatorState.Pop();
         owner.FlushBuild();
 
-        Assert.Equal("root", currentPageName);
+        Assert.Equal("/", CurrentPage(navigatorState));
         Assert.False(navigatorState.CanPop);
     }
 
@@ -1142,6 +1144,7 @@ public sealed class NavigationTests
         NavigatorState? navigatorState = null;
         Animation<double>? rootSecondaryAnimation = null;
         Animation<double>? detailsAnimation = null;
+        Animation<double>? detailsTransitionAnimation = null;
 
         var initialRoute = new PageRouteBuilder(
             pageBuilder: (context, _, secondaryAnimation) =>
@@ -1161,7 +1164,9 @@ public sealed class NavigationTests
             },
             transitionsBuilder: (_, animation, secondaryAnimation, child) =>
             {
-                Assert.Same(detailsAnimation, animation);
+                // The transitions builder runs before the page builder it wraps, so the identity check
+                // happens after the frame rather than inside the callback.
+                detailsTransitionAnimation = animation;
                 Assert.NotNull(secondaryAnimation);
                 return child;
             },
@@ -1178,6 +1183,7 @@ public sealed class NavigationTests
         owner.FlushBuild();
 
         Assert.NotNull(detailsAnimation);
+        Assert.Same(detailsAnimation, detailsTransitionAnimation);
         Assert.Equal(AnimationStatus.Forward, detailsAnimation!.Status);
         Assert.Equal(detailsAnimation.Value, rootSecondaryAnimation!.Value, precision: 6);
 
@@ -1228,6 +1234,15 @@ public sealed class NavigationTests
         Assert.Throws<ArgumentOutOfRangeException>(() => new PageRouteBuilder(
             pageBuilder: (_, _, _) => new SizedBox(),
             reverseTransitionDuration: TimeSpan.FromMilliseconds(-1)));
+    }
+
+    /// <summary>
+    /// The route on top of the navigator. Routes below an opaque route stay mounted with their cached page,
+    /// so the name of the last page that happened to build is not the name of the visible one.
+    /// </summary>
+    private static string CurrentPage(NavigatorState navigator)
+    {
+        return navigator.CurrentRoute?.Settings.Name ?? string.Empty;
     }
 
     private static Route BuildRoute(

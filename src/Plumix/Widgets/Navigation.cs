@@ -212,6 +212,12 @@ public abstract class Route
 
     public virtual bool Opaque => true;
 
+    /// <summary>
+    /// The overlay entries this route installs into <see cref="NavigatorState.Overlay"/>. The base route
+    /// contributes nothing; <see cref="OverlayRoute"/> fills the list from <c>CreateOverlayEntries</c>.
+    /// </summary>
+    public virtual IReadOnlyList<OverlayEntry> OverlayEntries => Array.Empty<OverlayEntry>();
+
     public virtual RoutePopDisposition PopDisposition => Navigator?.IsFirst(this) == false
         ? RoutePopDisposition.Pop
         : RoutePopDisposition.Bubble;
@@ -221,6 +227,9 @@ public abstract class Route
     public bool IsFirst => Navigator?.IsFirst(this) == true;
 
     public bool IsActive => Navigator?.IsActive(this) == true;
+
+    /// <summary>Whether there is at least one active route below this one in the navigator's history.</summary>
+    public bool HasActiveRouteBelow => Navigator?.HasActiveRouteBelow(this) == true;
 
     public bool WillHandlePopInternally => _localHistoryEntries is { Count: > 0 };
 
@@ -235,7 +244,7 @@ public abstract class Route
         get
         {
             bool hasDismissalLocalHistory = _localHistoryEntries?.Any(entry => entry.ImpliesAppBarDismissal) == true;
-            return hasDismissalLocalHistory || (Navigator?.CanPop ?? false);
+            return hasDismissalLocalHistory || HasActiveRouteBelow;
         }
     }
 
@@ -378,9 +387,33 @@ public abstract class Route
 
     protected virtual void OnLocalHistoryChanged()
     {
+        ChangedInternalState();
     }
 
+    /// <summary>
+    /// The hook routes call when their own state changed the page they build. Routes that drive their page
+    /// from route-owned animations rely on this, so it maps to <see cref="ChangedExternalState"/>, which
+    /// invalidates the cached page; the internal lifecycle hooks use <see cref="ChangedInternalState"/>.
+    /// </summary>
     protected void NotifyRouteChanged()
+    {
+        ChangedExternalState();
+    }
+
+    /// <summary>
+    /// Called when internal route state that affects the route's own widgets changed. Mirrors Flutter's
+    /// <c>Route.changedInternalState</c>.
+    /// </summary>
+    protected internal virtual void ChangedInternalState()
+    {
+        Navigator?.NotifyRouteChanged();
+    }
+
+    /// <summary>
+    /// Called when state external to the route (its position in the history) changed. Mirrors Flutter's
+    /// <c>Route.changedExternalState</c>.
+    /// </summary>
+    protected internal virtual void ChangedExternalState()
     {
         Navigator?.NotifyRouteChanged();
     }
@@ -388,13 +421,68 @@ public abstract class Route
     public abstract Widget BuildPage(BuildContext context);
 }
 
-public abstract class TransitionRoute : Route
+/// <summary>
+/// A route that installs one or more <see cref="OverlayEntry"/> objects into the navigator's
+/// <see cref="Overlay"/>.
+/// </summary>
+public abstract class OverlayRoute : Route
 {
-    private static readonly Animation<double> AlwaysDismissedAnimation =
+    private readonly List<OverlayEntry> _overlayEntries = [];
+
+    protected OverlayRoute(RouteSettings? settings = null) : base(settings)
+    {
+    }
+
+    public override IReadOnlyList<OverlayEntry> OverlayEntries => _overlayEntries;
+
+    /// <summary>Creates the overlay entries for this route, ordered from bottom-most to top-most.</summary>
+    protected abstract IEnumerable<OverlayEntry> CreateOverlayEntries();
+
+    /// <summary>Whether the route is finished (and can be disposed) as soon as it is popped.</summary>
+    public virtual bool FinishedWhenPopped => true;
+
+    protected override void Install()
+    {
+        if (_overlayEntries.Count > 0)
+        {
+            throw new InvalidOperationException("The route already installed its overlay entries.");
+        }
+
+        _overlayEntries.AddRange(CreateOverlayEntries());
+        base.Install();
+    }
+
+    public override void DidPop(Route? previousRoute)
+    {
+        base.DidPop(previousRoute);
+        if (FinishedWhenPopped)
+        {
+            Navigator?.FinalizeRoute(this);
+        }
+    }
+
+    public override void Dispose()
+    {
+        foreach (OverlayEntry entry in _overlayEntries)
+        {
+            entry.Dispose();
+        }
+
+        _overlayEntries.Clear();
+        base.Dispose();
+    }
+}
+
+public abstract class TransitionRoute : OverlayRoute
+{
+    private protected static readonly Animation<double> AlwaysDismissedAnimation =
         new ConstantAnimation<double>(0.0, AnimationStatus.Dismissed);
+    private protected static readonly Animation<double> AlwaysCompleteAnimation =
+        new ConstantAnimation<double>(1.0, AnimationStatus.Completed);
     private readonly ProxyAnimation _secondaryAnimation = new(AlwaysDismissedAnimation);
     private AnimationController? _controller;
     private bool _isPopped;
+    private bool _popFinalized;
     private bool _handlingPopGesture;
 
     protected TransitionRoute(RouteSettings? settings = null) : base(settings)
@@ -413,13 +501,15 @@ public abstract class TransitionRoute : Route
     /// </summary>
     protected virtual bool WillDisposeAnimationController => true;
 
-    public Animation<double> Animation => _controller
+    public virtual Animation<double> Animation => _controller
         ?? throw new InvalidOperationException("The route animation is unavailable before the route is installed.");
 
-    public Animation<double> SecondaryAnimation => _secondaryAnimation;
+    public virtual Animation<double> SecondaryAnimation => _secondaryAnimation;
 
     protected AnimationController Controller => _controller
         ?? throw new InvalidOperationException("The route controller is unavailable before the route is installed.");
+
+    public override bool FinishedWhenPopped => IsTransitionDismissed && !_popFinalized;
 
     internal bool IsTransitionDismissed => _controller?.Status == AnimationStatus.Dismissed;
 
@@ -430,11 +520,23 @@ public abstract class TransitionRoute : Route
         ValidateDuration(TransitionDuration, nameof(TransitionDuration));
         ValidateDuration(ReverseTransitionDuration, nameof(ReverseTransitionDuration));
         _isPopped = false;
+        _popFinalized = false;
         _controller = CreateAnimationController();
         _controller.Changed += HandleAnimationChanged;
         _controller.AddStatusListener(HandleStatusChanged);
         base.Install();
+        if (_controller.Status == AnimationStatus.Completed)
+        {
+            SetPrimaryEntryOpaque(Opaque);
+        }
     }
+
+    /// <summary>The raw controller-backed animations, before <see cref="ModalRoute.Offstage"/> proxies them.</summary>
+    private protected Animation<double> RawAnimation => _controller ?? AlwaysDismissedAnimation;
+
+    private protected bool HasController => _controller is not null;
+
+    private protected Animation<double> RawSecondaryAnimation => _secondaryAnimation;
 
     protected override void Uninstall()
     {
@@ -530,7 +632,7 @@ public abstract class TransitionRoute : Route
         _secondaryAnimation.Parent = nextRoute is TransitionRoute transitionRoute
                                      && CanTransitionTo(transitionRoute)
                                      && transitionRoute.CanTransitionFrom(this)
-            ? transitionRoute.Animation
+            ? transitionRoute.RawAnimation
             : AlwaysDismissedAnimation;
     }
 
@@ -541,6 +643,10 @@ public abstract class TransitionRoute : Route
 
     private void HandleStatusChanged(AnimationStatus status)
     {
+        // The bottom-most entry carries the route's opacity: while the route animates it must let the route
+        // below build, and once the transition completed an opaque route hides everything under it.
+        SetPrimaryEntryOpaque(status == AnimationStatus.Completed && Opaque);
+
         NotifyRouteChanged();
         if (_handlingPopGesture && status is AnimationStatus.Completed or AnimationStatus.Dismissed)
         {
@@ -549,9 +655,28 @@ public abstract class TransitionRoute : Route
 
         if (status == AnimationStatus.Dismissed && _isPopped)
         {
-            Navigator?.FinalizeTransitionRoute(this);
+            _popFinalized = true;
+            Navigator?.FinalizeRoute(this);
         }
     }
+
+    private protected void SetPrimaryEntryOpaque(bool opaque)
+    {
+        if (OverlayEntries.Count == 0)
+        {
+            return;
+        }
+
+        OverlayEntries[0].Opaque = opaque;
+    }
+
+    /// <summary>
+    /// Keeps the route below onstage while a hero flight runs across a zero-length transition, where the
+    /// controller never reports <see cref="AnimationStatus.Forward"/> or <see cref="AnimationStatus.Reverse"/>.
+    /// </summary>
+    internal void SuspendEntryOpacityForFlight() => SetPrimaryEntryOpaque(false);
+
+    internal void RestoreEntryOpacityAfterFlight() => SetPrimaryEntryOpaque(EffectiveOpaque);
 
     protected void StartPopGesture(double progress)
     {
@@ -626,12 +751,121 @@ public abstract class ModalRoute : TransitionRoute
 {
     private readonly PageStorageBucket _storageBucket = new();
     private readonly List<PopEntry> _popEntries = [];
+    private readonly GlobalKey<ModalScopeState> _scopeKey;
+    private readonly GlobalKey _subtreeKey;
+    private readonly ProxyAnimation _animationProxy = new(AlwaysDismissedAnimation);
+    private readonly ProxyAnimation _secondaryAnimationProxy = new(AlwaysDismissedAnimation);
+    private OverlayEntry? _modalBarrier;
+    private OverlayEntry? _modalScope;
+    private Widget? _modalScopeCache;
+    private bool _offstage;
 
-    protected ModalRoute(RouteSettings? settings = null) : base(settings)
+    protected ModalRoute(RouteSettings? settings = null, ImageFilter? filter = null) : base(settings)
     {
+        // Identity-based keys: a label-based GlobalKey is a record and would compare equal across routes.
+        _scopeKey = new GlobalObjectKey<ModalScopeState>(this);
+        _subtreeKey = new GlobalObjectKey<State>(this);
+        Filter = filter;
     }
 
     internal PageStorageBucket StorageBucket => _storageBucket;
+
+    internal GlobalKey SubtreeKey => _subtreeKey;
+
+    /// <summary>The filter applied to the modal barrier through a <see cref="BackdropFilter"/>.</summary>
+    public ImageFilter? Filter { get; }
+
+    /// <summary>Whether the route keeps its state alive while another route covers it.</summary>
+    public virtual bool MaintainState => true;
+
+    public override Animation<double> Animation => HasController
+        ? _animationProxy
+        : throw new InvalidOperationException("The route animation is unavailable before the route is installed.");
+
+    public override Animation<double> SecondaryAnimation => _secondaryAnimationProxy;
+
+    /// <summary>
+    /// Whether the route is currently hidden. An offstage route still builds and lays out, but it is not
+    /// painted and its animations report their end values. Mirrors Flutter's <c>ModalRoute.offstage</c>.
+    /// </summary>
+    public bool Offstage
+    {
+        get => _offstage;
+        set
+        {
+            if (_offstage == value)
+            {
+                return;
+            }
+
+            SetState(() => _offstage = value);
+            _animationProxy.Parent = _offstage ? AlwaysCompleteAnimation : RawAnimation;
+            _secondaryAnimationProxy.Parent = _offstage ? AlwaysDismissedAnimation : RawSecondaryAnimation;
+            ChangedInternalState();
+        }
+    }
+
+    /// <summary>Whether the route can be popped, mirroring Flutter's <c>ModalRoute.canPop</c>.</summary>
+    public bool CanPop => HasActiveRouteBelow || WillHandlePopInternally;
+
+    protected override void Install()
+    {
+        base.Install();
+        _animationProxy.Parent = _offstage ? AlwaysCompleteAnimation : RawAnimation;
+        _secondaryAnimationProxy.Parent = _offstage ? AlwaysDismissedAnimation : RawSecondaryAnimation;
+    }
+
+    protected override IEnumerable<OverlayEntry> CreateOverlayEntries()
+    {
+        return
+        [
+            _modalBarrier = new OverlayEntry(BuildModalBarrierEntry),
+            _modalScope = new OverlayEntry(
+                BuildModalScopeEntry,
+                maintainState: MaintainState,
+                canSizeOverlay: Opaque),
+        ];
+    }
+
+    /// <summary>
+    /// Runs <paramref name="mutation"/> and rebuilds the modal scope, mirroring <c>ModalRoute.setState</c>.
+    /// </summary>
+    protected void SetState(Action mutation)
+    {
+        ArgumentNullException.ThrowIfNull(mutation);
+        ModalScopeState? scopeState = _scopeKey.CurrentState;
+        if (scopeState is not null)
+        {
+            scopeState.RouteSetState(mutation);
+            return;
+        }
+
+        mutation();
+    }
+
+    protected internal override void ChangedInternalState()
+    {
+        base.ChangedInternalState();
+        SetState(static () => { });
+        _modalBarrier?.MarkNeedsBuild();
+        if (_modalScope is not null && _modalScope.Owner is not null)
+        {
+            _modalScope.MaintainState = MaintainState;
+        }
+    }
+
+    protected internal override void ChangedExternalState()
+    {
+        base.ChangedExternalState();
+        _modalBarrier?.MarkNeedsBuild();
+        _scopeKey.CurrentState?.ForceRebuildPage();
+    }
+
+    public override void DidChangePrevious(Route? previousRoute)
+    {
+        base.DidChangePrevious(previousRoute);
+        ChangedInternalState();
+    }
 
     /// <summary>Whether tapping the modal barrier dismisses the route.</summary>
     public virtual bool BarrierDismissible => false;
@@ -703,18 +937,26 @@ public abstract class ModalRoute : TransitionRoute
 
         _popEntries.Clear();
         base.Dispose();
+
+        // Cleared after `OverlayRoute.Dispose` disposed them, so a late `ChangedInternalState` cannot mark a
+        // disposed entry as needing build.
+        _modalBarrier = null;
+        _modalScope = null;
+        _modalScopeCache = null;
     }
 
     public override void DidChangeNext(Route? nextRoute)
     {
         UpdateReceivedTransition(nextRoute);
         base.DidChangeNext(nextRoute);
+        ChangedInternalState();
     }
 
     public override void DidPopNext(Route nextRoute)
     {
         UpdateReceivedTransition(nextRoute);
         base.DidPopNext(nextRoute);
+        ChangedInternalState();
     }
 
     /// <summary>
@@ -722,7 +964,7 @@ public abstract class ModalRoute : TransitionRoute
     /// </summary>
     public virtual Widget BuildModalBarrier()
     {
-        if (BarrierColor is { A: not 0 } barrierColor)
+        if (!Offstage && BarrierColor is { A: not 0 } barrierColor)
         {
             return new AnimatedModalBarrier(
                 color: CreateBarrierColorAnimation(barrierColor),
@@ -744,16 +986,29 @@ public abstract class ModalRoute : TransitionRoute
     protected Animation<Color?> CreateBarrierColorAnimation(Color barrierColor) =>
         new BarrierColorAnimation(Animation, barrierColor, BarrierCurve);
 
-    /// <summary>The barrier overlay entry: the barrier plus the pointer and semantics wrappers Flutter adds.</summary>
-    internal Widget BuildModalBarrierEntry()
+    /// <summary>The barrier overlay entry: the barrier plus the filter, pointer and semantics wrappers.</summary>
+    internal Widget BuildModalBarrierEntry(BuildContext context)
     {
         Widget barrier = BuildModalBarrier();
+        if (Filter is not null)
+        {
+            barrier = new BackdropFilter(filter: Filter, child: barrier);
+        }
+
         barrier = new IgnorePointer(
             ignoring: Animation.Status is not (AnimationStatus.Forward or AnimationStatus.Completed),
             child: barrier);
         return SemanticsDismissible && BarrierDismissible
             ? new Semantics(sortKey: new OrdinalSortKey(1.0), child: barrier)
             : barrier;
+    }
+
+    /// <summary>The page overlay entry: Flutter's cached <c>_buildModalScope</c>.</summary>
+    internal Widget BuildModalScopeEntry(BuildContext context)
+    {
+        return _modalScopeCache ??= new Semantics(
+            sortKey: new OrdinalSortKey(0.0),
+            child: new ModalScope(route: this, key: _scopeKey));
     }
 
     internal Widget BuildFlexibleTransitions(
@@ -851,12 +1106,19 @@ public abstract class ModalRoute : TransitionRoute
 
 public abstract class PageRoute : ModalRoute
 {
-    protected PageRoute(RouteSettings? settings = null, bool fullscreenDialog = false) : base(settings)
+    protected PageRoute(
+        RouteSettings? settings = null,
+        bool fullscreenDialog = false,
+        bool maintainState = true,
+        ImageFilter? filter = null) : base(settings, filter)
     {
         FullscreenDialog = fullscreenDialog;
+        MaintainState = maintainState;
     }
 
     public bool FullscreenDialog { get; }
+
+    public override bool MaintainState { get; }
 
     public override bool PopGestureEnabled => !IsFirst
                                               && !WillHandlePopInternally
@@ -915,11 +1177,13 @@ public abstract class PageRoute : ModalRoute
 /// </summary>
 public abstract class PopupRoute : ModalRoute
 {
-    protected PopupRoute(RouteSettings? settings = null) : base(settings)
+    protected PopupRoute(RouteSettings? settings = null, ImageFilter? filter = null) : base(settings, filter)
     {
     }
 
     public override bool Opaque => false;
+
+    public override bool MaintainState => true;
 
     public override bool AllowSnapshotting => false;
 }
@@ -952,7 +1216,8 @@ public sealed class PageRouteBuilder : PageRoute
         bool opaque = true,
         bool fullscreenDialog = false,
         bool allowSnapshotting = true,
-        RouteSettings? settings = null) : base(settings, fullscreenDialog)
+        bool maintainState = true,
+        RouteSettings? settings = null) : base(settings, fullscreenDialog, maintainState)
     {
         TimeSpan effectiveTransitionDuration = transitionDuration ?? TimeSpan.FromMilliseconds(300);
         TimeSpan effectiveReverseTransitionDuration =
@@ -1380,6 +1645,8 @@ public sealed class NavigatorState : State
     private readonly Func<bool> _backButtonHandler;
     private readonly HeroTransitionController _heroTransitionController = new();
     private readonly Plumix.AnimationController _heroFlightController;
+    private readonly GlobalKey<OverlayState> _overlayKey;
+    private OverlayEntry? _heroFlightEntry;
     private int _userGestureCount;
     private HeroTransitionSession? _heroTransitionSession;
     private bool? _lastCanHandlePop;
@@ -1387,6 +1654,8 @@ public sealed class NavigatorState : State
 
     public NavigatorState()
     {
+        // Identity-based key: a label-based GlobalKey is a record and would collide across navigators.
+        _overlayKey = new GlobalObjectKey<OverlayState>(this);
         _backButtonHandler = HandleBackButton;
         _heroFlightController = new Plumix.AnimationController(
             TimeSpan.FromMilliseconds(HeroTransitionDurationMilliseconds))
@@ -1405,6 +1674,14 @@ public sealed class NavigatorState : State
     public Route? CurrentRoute => _history.Count == 0 ? null : _history[^1];
 
     public bool UserGestureInProgress => _userGestureCount > 0;
+
+    /// <summary>The overlay this navigator installs its routes into.</summary>
+    public OverlayState? Overlay => _overlayKey.CurrentState;
+
+    /// <summary>Notifies while a user-driven route gesture is in progress.</summary>
+    public ValueNotifier<bool> UserGestureInProgressNotifier { get; } = new(false);
+
+    internal HeroTransitionController HeroTransitionController => _heroTransitionController;
 
     public override void InitState()
     {
@@ -1449,10 +1726,10 @@ public sealed class NavigatorState : State
 
         foreach (var route in _history.Concat(_exitingRoutes).Distinct().ToArray())
         {
-            route.Dispose();
-            route.Detach();
+            DisposeRoute(route, immediate: true);
         }
 
+        UserGestureInProgressNotifier.Dispose();
         _history.Clear();
         _exitingRoutes.Clear();
         _exitingPreviousRoutes.Clear();
@@ -1472,26 +1749,13 @@ public sealed class NavigatorState : State
 
     public override Widget Build(BuildContext context)
     {
-        Widget child;
-        if (_heroTransitionSession == null)
-        {
-            var visibleRoutes = VisibleRoutes();
-            child = visibleRoutes.Count switch
-            {
-                0 => new SizedBox(),
-                _ => new Stack(
-                    fit: StackFit.Expand,
-                    children: visibleRoutes.Select(BuildRouteHost).Cast<Widget>().ToArray()),
-            };
-        }
-        else
-        {
-            child = BuildHeroTransitionHost(_heroTransitionSession);
-        }
-
         bool routeBlocksPop = !CanPop && CurrentRoute?.PopDisposition == RoutePopDisposition.DoNotPop;
         ScheduleNavigationNotification(CanPop || routeBlocksPop);
-        return new NavigatorScope(this, child);
+        return new NavigatorScope(
+            this,
+            new Overlay(
+                initialEntries: Overlay is null ? AllRouteOverlayEntries() : [],
+                key: _overlayKey));
     }
 
     internal void NotifyRouteChanged()
@@ -1502,7 +1766,7 @@ public sealed class NavigatorState : State
         }
     }
 
-    internal void FinalizeTransitionRoute(TransitionRoute route)
+    internal void FinalizeRoute(Route route)
     {
         TryFinalizePoppedRoute(route);
     }
@@ -1517,66 +1781,46 @@ public sealed class NavigatorState : State
         return _history.Contains(route);
     }
 
-    private IReadOnlyList<Route> VisibleRoutes()
+    internal bool HasActiveRouteBelow(Route route)
     {
-        var routes = new List<Route>(_history.Count + _exitingRoutes.Count);
-        routes.AddRange(_history);
-        routes.AddRange(_exitingRoutes);
-        if (routes.Count == 0)
+        for (int index = 0; index < _history.Count; index += 1)
         {
-            return routes;
+            if (ReferenceEquals(_history[index], route))
+            {
+                return index > 0;
+            }
         }
 
-        int firstVisible = routes.Count - 1;
-        while (firstVisible > 0 && !IsEffectivelyOpaque(routes[firstVisible]))
-        {
-            firstVisible--;
-        }
-
-        return routes.Skip(firstVisible).ToArray();
+        return false;
     }
 
-    private static bool IsEffectivelyOpaque(Route route)
+    /// <summary>
+    /// The overlay entries of every route this navigator owns, ordered bottom-most first, mirroring
+    /// Flutter's <c>_allRouteOverlayEntries</c>.
+    /// </summary>
+    private List<OverlayEntry> AllRouteOverlayEntries()
     {
-        return route is TransitionRoute transitionRoute
-            ? transitionRoute.EffectiveOpaque
-            : route.Opaque;
+        var entries = new List<OverlayEntry>();
+        foreach (Route route in _history)
+        {
+            entries.AddRange(route.OverlayEntries);
+        }
+
+        foreach (Route route in _exitingRoutes)
+        {
+            entries.AddRange(route.OverlayEntries);
+        }
+
+        return entries;
     }
 
-    private ActiveRouteHost BuildRouteHost(Route route)
+    /// <summary>
+    /// Inserts newly installed entries and restores route order in the overlay, mirroring the
+    /// <c>overlay.rearrange(_allRouteOverlayEntries)</c> step of Flutter's <c>_flushHistoryUpdates</c>.
+    /// </summary>
+    private void FlushOverlayEntries()
     {
-        return new ActiveRouteHost(
-            route: route,
-            isCurrent: ReferenceEquals(CurrentRoute, route),
-            heroTransitionController: _heroTransitionController,
-            key: new ObjectKey(route));
-    }
-
-    private Widget BuildHeroTransitionHost(HeroTransitionSession session)
-    {
-        var children = new List<Widget>();
-        if (session.Direction == HeroTransitionDirection.Pop)
-        {
-            children.Add(BuildRouteHost(session.ToRoute));
-            children.Add(BuildRouteHost(session.FromRoute));
-        }
-        else
-        {
-            children.Add(BuildRouteHost(session.FromRoute));
-            children.Add(BuildRouteHost(session.ToRoute));
-        }
-
-        var flights = _heroTransitionController.ActiveFlights;
-        if (flights.Count > 0)
-        {
-            children.Add(
-                BuildHeroFlightOverlay(
-                    flights,
-                    _heroFlightController.Evaluate(),
-                    isPushTransition: session.Direction == HeroTransitionDirection.Push));
-        }
-
-        return new Stack(children: children);
+        Overlay?.Rearrange(AllRouteOverlayEntries());
     }
 
     private static Widget BuildHeroFlightOverlay(
@@ -1826,8 +2070,8 @@ public sealed class NavigatorState : State
 
             oldRoute.DidPop(previousRoute);
             oldRoute.DidComplete(result);
-            oldRoute.Dispose();
-            oldRoute.Detach();
+            DisposeRoute(oldRoute);
+            FlushOverlayEntries();
             NotifyObserversReplace(newRoute, oldRoute);
             _ = result;
         });
@@ -1909,6 +2153,7 @@ public sealed class NavigatorState : State
         }
 
         _userGestureCount += 1;
+        UserGestureInProgressNotifier.Value = true;
         if (_userGestureCount > 1)
         {
             return;
@@ -1926,6 +2171,7 @@ public sealed class NavigatorState : State
         }
 
         _userGestureCount -= 1;
+        UserGestureInProgressNotifier.Value = _userGestureCount > 0;
         if (_userGestureCount > 0)
         {
             return;
@@ -1963,6 +2209,8 @@ public sealed class NavigatorState : State
             direction: direction,
             detachFromRouteOnComplete: detachFromRouteOnComplete,
             isUserGestureTransition: isUserGestureTransition);
+        SuspendRouteOpacityForFlight(fromRoute);
+        SuspendRouteOpacityForFlight(toRoute);
 
         Scheduler.AddPostFrameCallback(_ => ResolvePendingHeroTransition());
     }
@@ -2032,8 +2280,69 @@ public sealed class NavigatorState : State
             _heroTransitionController.ActivateFlights(
                 flights,
                 isPushTransition: session.Direction == HeroTransitionDirection.Push);
+            InsertHeroFlightEntry();
             _heroFlightController.Forward(from: 0.0);
         });
+    }
+
+    private void InsertHeroFlightEntry()
+    {
+        if (_heroFlightEntry is not null)
+        {
+            return;
+        }
+
+        var entry = new OverlayEntry(BuildHeroFlightEntry);
+        _heroFlightEntry = entry;
+        Overlay?.Insert(entry);
+    }
+
+    private Widget BuildHeroFlightEntry(BuildContext context)
+    {
+        HeroTransitionSession? session = _heroTransitionSession;
+        IReadOnlyList<HeroFlightManifest> flights = _heroTransitionController.ActiveFlights;
+        if (session is null || flights.Count == 0)
+        {
+            return new SizedBox();
+        }
+
+        return BuildHeroFlightOverlay(
+            flights,
+            _heroFlightController.Evaluate(),
+            isPushTransition: session.Direction == HeroTransitionDirection.Push);
+    }
+
+    private void RemoveHeroFlightEntry()
+    {
+        OverlayEntry? entry = _heroFlightEntry;
+        _heroFlightEntry = null;
+        if (entry is null)
+        {
+            return;
+        }
+
+        if (entry.Owner is not null)
+        {
+            entry.Remove();
+        }
+
+        entry.Dispose();
+    }
+
+    private static void SuspendRouteOpacityForFlight(Route route)
+    {
+        if (route is TransitionRoute transitionRoute)
+        {
+            transitionRoute.SuspendEntryOpacityForFlight();
+        }
+    }
+
+    private static void RestoreRouteOpacityAfterFlight(Route route)
+    {
+        if (route is TransitionRoute transitionRoute)
+        {
+            transitionRoute.RestoreEntryOpacityAfterFlight();
+        }
     }
 
     private void HandleHeroFlightTick()
@@ -2043,7 +2352,7 @@ public sealed class NavigatorState : State
             return;
         }
 
-        SetState(() => { });
+        _heroFlightEntry?.MarkNeedsBuild();
     }
 
     private void HandleHeroFlightCompleted()
@@ -2066,9 +2375,15 @@ public sealed class NavigatorState : State
     {
         _heroFlightController.Stop();
         _heroTransitionController.ClearFlights();
+        RemoveHeroFlightEntry();
 
         var session = _heroTransitionSession;
         _heroTransitionSession = null;
+        if (session != null)
+        {
+            RestoreRouteOpacityAfterFlight(session.FromRoute);
+            RestoreRouteOpacityAfterFlight(session.ToRoute);
+        }
 
         if (!disposeDetachedRoute || session == null || !session.DetachFromRouteOnComplete)
         {
@@ -2164,8 +2479,8 @@ public sealed class NavigatorState : State
         Route? previousRoute = _exitingPreviousRoutes.GetValueOrDefault(route);
         _exitingRoutes.Remove(route);
         _exitingPreviousRoutes.Remove(route);
-        route.Dispose();
-        route.Detach();
+        DisposeRoute(route);
+        FlushOverlayEntries();
         previousRoute?.DidChangeNext(nextRoute: null);
         if (Element.IsActive)
         {
@@ -2215,6 +2530,71 @@ public sealed class NavigatorState : State
         {
             _history.Add(route);
         }
+
+        FlushOverlayEntries();
+    }
+
+    /// <summary>
+    /// Removes the route's overlay entries and disposes the route. Disposal is deferred until every entry
+    /// widget unmounted, mirroring Flutter's <c>_RouteEntry.dispose</c>: widgets in the route's subtree can
+    /// still reference the route while they are mounted.
+    /// </summary>
+    private void DisposeRoute(Route route, bool immediate = false)
+    {
+        OverlayEntry[] allEntries = route.OverlayEntries.ToArray();
+        OverlayEntry[] mountedEntries = allEntries.Where(entry => entry.Mounted).ToArray();
+        foreach (OverlayEntry entry in allEntries)
+        {
+            if (entry.Owner is not null)
+            {
+                entry.Remove();
+            }
+        }
+
+        if (immediate)
+        {
+            route.Dispose();
+            route.Detach();
+            return;
+        }
+
+        if (mountedEntries.Length == 0)
+        {
+            FinishDisposingRoute(route, allEntries);
+            return;
+        }
+
+        int remaining = mountedEntries.Length;
+        foreach (OverlayEntry entry in mountedEntries)
+        {
+            Action? listener = null;
+            listener = () =>
+            {
+                if (entry.Mounted)
+                {
+                    return;
+                }
+
+                entry.RemoveListener(listener!);
+                remaining -= 1;
+                if (remaining == 0)
+                {
+                    FinishDisposingRoute(route, allEntries);
+                }
+            };
+
+            entry.AddListener(listener);
+        }
+    }
+
+    private static void FinishDisposingRoute(Route route, IReadOnlyList<OverlayEntry> entries)
+    {
+        route.Dispose();
+        route.Detach();
+        foreach (OverlayEntry entry in entries)
+        {
+            entry.Dispose();
+        }
     }
 
     private void RemoveRoutesBelowTopUntil(RoutePredicate predicate)
@@ -2249,8 +2629,8 @@ public sealed class NavigatorState : State
             previousRoute?.DidPopNext(removedRoute);
         }
         removedRoute.DidComplete(result);
-        removedRoute.Dispose();
-        removedRoute.Detach();
+        DisposeRoute(removedRoute);
+        FlushOverlayEntries();
 
         previousRoute?.DidChangeNext(nextRoute);
         nextRoute?.DidChangePrevious(previousRoute);
@@ -2520,22 +2900,35 @@ internal sealed class NavigatorScope : InheritedWidget
     }
 }
 
+/// <summary>Flutter's <c>_ModalScopeStatus</c>: the route status the page subtree depends on.</summary>
 internal sealed class RouteScope : InheritedWidget
 {
     public RouteScope(
         Route route,
         bool isCurrent,
+        bool canPop,
+        bool impliesAppBarDismissal,
+        bool opaque,
         Widget child,
         Key? key = null) : base(key)
     {
         Route = route;
         IsCurrent = isCurrent;
+        CanPop = canPop;
+        ImpliesAppBarDismissal = impliesAppBarDismissal;
+        Opaque = opaque;
         Child = child;
     }
 
     public Route Route { get; }
 
     public bool IsCurrent { get; }
+
+    public bool CanPop { get; }
+
+    public bool ImpliesAppBarDismissal { get; }
+
+    public bool Opaque { get; }
 
     public Widget Child { get; }
 
@@ -2548,80 +2941,154 @@ internal sealed class RouteScope : InheritedWidget
     {
         var oldScope = (RouteScope)oldWidget;
         return !ReferenceEquals(oldScope.Route, Route)
-               || oldScope.IsCurrent != IsCurrent;
+               || oldScope.IsCurrent != IsCurrent
+               || oldScope.CanPop != CanPop
+               || oldScope.ImpliesAppBarDismissal != ImpliesAppBarDismissal
+               || oldScope.Opaque != Opaque;
     }
 }
 
-internal sealed class ActiveRouteHost : StatelessWidget
+/// <summary>Flutter's <c>_ModalScope</c>: the page half of a <see cref="ModalRoute"/>'s overlay entries.</summary>
+internal sealed class ModalScope : StatefulWidget
 {
-    private readonly Route _route;
-    private readonly bool _isCurrent;
-    private readonly HeroTransitionController _heroTransitionController;
-
-    public ActiveRouteHost(
-        Route route,
-        bool isCurrent,
-        HeroTransitionController heroTransitionController,
-        Key? key = null) : base(key)
+    public ModalScope(ModalRoute route, Key? key = null) : base(key)
     {
-        _route = route;
-        _isCurrent = isCurrent;
-        _heroTransitionController = heroTransitionController;
+        Route = route ?? throw new ArgumentNullException(nameof(route));
+    }
+
+    public ModalRoute Route { get; }
+
+    public override State CreateState() => new ModalScopeState();
+}
+
+internal sealed class ModalScopeState : State
+{
+    private readonly FocusScopeNode _focusScopeNode = new();
+    private readonly ScrollController _primaryScrollController = new();
+    private Animation<double> _animation = new ConstantAnimation<double>(0.0, AnimationStatus.Dismissed);
+    private Animation<double> _secondaryAnimation = new ConstantAnimation<double>(0.0, AnimationStatus.Dismissed);
+    private IListenable _listenable = Listenable.Merge();
+    private Widget? _page;
+
+    private ModalScope CurrentWidget => (ModalScope)StateWidget;
+
+    private bool ShouldIgnoreFocusRequest =>
+        _animation.Status == AnimationStatus.Reverse
+        || CurrentWidget.Route.Navigator?.UserGestureInProgress == true;
+
+    public override void InitState()
+    {
+        base.InitState();
+        ModalRoute route = CurrentWidget.Route;
+        // The proxies outlive the route's controller, so they are captured once: an entry can still be
+        // mounted for a frame after the route was uninstalled.
+        _animation = route.Animation;
+        _secondaryAnimation = route.SecondaryAnimation;
+        _listenable = Listenable.Merge(_animation, _secondaryAnimation);
+    }
+
+    public override void DidChangeDependencies()
+    {
+        base.DidChangeDependencies();
+        _page = null;
+    }
+
+    public override void Dispose()
+    {
+        _primaryScrollController.Dispose();
+        base.Dispose();
+    }
+
+    internal void ForceRebuildPage()
+    {
+        SetState(() => _page = null);
+    }
+
+    internal void RouteSetState(Action mutation)
+    {
+        SetState(mutation);
     }
 
     public override Widget Build(BuildContext context)
     {
-        // Flutter's ModalRoute contributes two overlay entries: the barrier below, the modal scope above.
-        // The barrier is a sibling of the page, so route transitions never apply to it, and the scope sorts
-        // before the barrier in the semantics tree.
-        Widget host = _route is ModalRoute modalRoute
-            ? new Stack(
-                fit: StackFit.Expand,
-                children:
-                [
-                    modalRoute.BuildModalBarrierEntry(),
-                    new Semantics(sortKey: new OrdinalSortKey(0.0), child: new RoutePageHost(_route)),
-                ])
-            : new RoutePageHost(_route);
-
+        ModalRoute route = CurrentWidget.Route;
         return new RouteScope(
-            route: _route,
-            isCurrent: _isCurrent,
-            child: new HeroControllerScope(
-                controller: _heroTransitionController,
-                route: _route,
-                child: host));
+            route: route,
+            isCurrent: route.IsCurrent,
+            canPop: route.CanPop,
+            impliesAppBarDismissal: route.ImpliesAppBarDismissal,
+            opaque: route.Opaque,
+            child: new Offstage(
+                offstage: route.Offstage,
+                child: new PageStorage(
+                    route.StorageBucket,
+                    new Builder(BuildScopeBody))));
+    }
+
+    private Widget BuildScopeBody(BuildContext context)
+    {
+        ModalRoute route = CurrentWidget.Route;
+        var actions = new Dictionary<Type, FlutterAction>
+        {
+            [typeof(DismissIntent)] = new DismissModalAction(context),
+        };
+
+        Widget body = new ListenableBuilder(
+            listenable: route.Navigator?.UserGestureInProgressNotifier ?? Listenable.Merge(),
+            builder: (_, child) => BuildFocusedTransitions(child),
+            child: _page ??= new RepaintBoundary(
+                key: route.SubtreeKey,
+                child: new Builder(route.BuildPage)));
+
+        return new Actions(
+            actions: actions,
+            child: new PrimaryScrollController(
+                controller: _primaryScrollController,
+                child: new HeroControllerScope(
+                    controller: route.Navigator!.HeroTransitionController,
+                    route: route,
+                    child: body)));
+    }
+
+    private Widget BuildFocusedTransitions(Widget? page)
+    {
+        ModalRoute route = CurrentWidget.Route;
+        bool ignoreEvents = ShouldIgnoreFocusRequest;
+        return new FocusScope(
+            focusScopeNode: _focusScopeNode,
+            canRequestFocus: !ignoreEvents,
+            skipTraversal: !route.IsCurrent,
+            child: new RepaintBoundary(
+                child: new ListenableBuilder(
+                    listenable: _listenable,
+                    builder: (transitionContext, child) => route.BuildFlexibleTransitions(
+                        transitionContext,
+                        _animation,
+                        _secondaryAnimation,
+                        new IgnorePointer(ignoring: ignoreEvents, child: child)),
+                    child: page)));
     }
 }
 
-internal sealed class RoutePageHost : StatelessWidget
+/// <summary>Flutter's <c>_DismissModalAction</c>: Escape pops a dismissible modal route.</summary>
+internal sealed class DismissModalAction : DismissAction
 {
-    private readonly Route _route;
+    private readonly BuildContext _context;
 
-    public RoutePageHost(Route route)
+    public DismissModalAction(BuildContext context)
     {
-        _route = route;
+        _context = context;
     }
 
-    public override Widget Build(BuildContext context)
+    public override bool IsEnabled(DismissIntent intent)
     {
-        Widget page = _route.BuildPage(context);
-        page = _route is ModalRoute modalRoute
-            ? new PageStorage(modalRoute.StorageBucket, page)
-            : page;
-        return _route is ModalRoute transitionModalRoute
-            ? transitionModalRoute.BuildFlexibleTransitions(
-                context,
-                transitionModalRoute.Animation,
-                transitionModalRoute.SecondaryAnimation,
-                page)
-            : _route is TransitionRoute transitionRoute
-            ? transitionRoute.BuildTransitions(
-                context,
-                transitionRoute.Animation,
-                transitionRoute.SecondaryAnimation,
-                page)
-            : page;
+        return ModalRoute.MaybeOf(_context)?.BarrierDismissible == true;
+    }
+
+    public override object? Invoke(DismissIntent intent)
+    {
+        Navigator.Of(_context).MaybePop();
+        return null;
     }
 }
 

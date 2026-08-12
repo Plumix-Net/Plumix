@@ -798,9 +798,21 @@ public sealed class FocusManager
     {
         var scope = PrimaryFocus?.Scope ?? _rootScope;
         FocusNode currentNode = PrimaryFocus ?? scope;
+        return CollectScopeCandidates(scope, currentNode);
+    }
+
+    /// <summary>
+    /// The traversable nodes of <paramref name="scope"/> in reading order. Nested scopes are spliced in at
+    /// their own position, mirroring Flutter's <c>FocusNode.traversalDescendants</c>, which walks the whole
+    /// subtree instead of stopping at scope boundaries.
+    /// </summary>
+    private static List<FocusNode> CollectScopeCandidates(FocusScopeNode scope, FocusNode currentNode)
+    {
         var directMembers = scope.Members
-            .Where(candidate => candidate is not FocusScopeNode && candidate.TraversalGroup == null)
-            .Where(candidate => IsTraversalCandidate(candidate, currentNode))
+            .Where(candidate => candidate.TraversalGroup == null)
+            .Where(candidate => candidate is FocusScopeNode nested
+                ? nested.CanRequestFocus && !nested.SkipTraversal
+                : IsTraversalCandidate(candidate, currentNode))
             .ToList();
         IReadOnlyList<FocusNode> sorted = new ReadingOrderTraversalPolicy()
             .SortDescendants(directMembers, currentNode);
@@ -815,6 +827,12 @@ public sealed class FocusManager
         var result = new List<FocusNode>();
         foreach (FocusNode node in sorted)
         {
+            if (node is FocusScopeNode nestedScope)
+            {
+                result.AddRange(CollectScopeCandidates(nestedScope, currentNode));
+                continue;
+            }
+
             if (node is not FocusTraversalGroupNode groupNode)
             {
                 result.Add(node);

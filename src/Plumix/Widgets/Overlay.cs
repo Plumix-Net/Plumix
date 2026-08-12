@@ -380,9 +380,10 @@ public sealed class OverlayEntry : IListenable, IDisposable
                 return;
             }
 
-            RequireOverlay();
+            // Settable before insertion: a route stamps its opacity while installing, before the navigator
+            // hands its entries to the overlay.
             _opaque = value;
-            _overlay!.MarkDirty();
+            _overlay?.MarkDirty();
         }
     }
 
@@ -802,9 +803,12 @@ public sealed class OverlayState : State
         bool tickerEnabled,
         bool isOnstage)
     {
+        // Both levels carry the entry's identity: the theater's children change position (and count) as
+        // entries go offstage, so an unkeyed parent would re-target its child element onto another entry.
         return new OverlayTheaterEntry(
             canSizeOverlay: entry.CanSizeOverlay,
             isOnstage: isOnstage,
+            key: new ObjectKey(entry),
             child: new OverlayEntryWidget(
                 entry,
                 tickerEnabled,
@@ -1370,7 +1374,8 @@ internal sealed class OverlayTheaterEntry : ParentDataWidget<OverlayTheaterParen
     public OverlayTheaterEntry(
         Widget child,
         bool canSizeOverlay,
-        bool isOnstage) : base(child)
+        bool isOnstage,
+        Key? key = null) : base(child, key)
     {
         CanSizeOverlay = canSizeOverlay;
         IsOnstage = isOnstage;

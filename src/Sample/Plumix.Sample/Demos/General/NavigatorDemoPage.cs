@@ -23,6 +23,11 @@ public sealed class NavigatorDemoPage : StatelessWidget
                     fontSize: 14,
                     color: Colors.DimGray),
                 new NavigatorRouteAwareProbe(),
+                new NavigatorOverlayProbe(),
+                BuildAction(
+                    "Push blurred popup (ModalRoute.filter)",
+                    () => Navigator.Of(context).Push(new SampleBlurredPopupRoute()),
+                    Color.Parse("#FFE0F2F1")),
                 BuildAction(
                     "PushNamed('/navigator/details?id=42&mode=string')",
                     () => Navigator.PushNamed(
@@ -65,6 +70,53 @@ public sealed class NavigatorDemoPage : StatelessWidget
             foreground: Colors.Black,
             fontSize: 12,
             padding: new Thickness(10, 8));
+    }
+}
+
+internal sealed class NavigatorOverlayProbe : StatelessWidget
+{
+    public override Widget Build(BuildContext context)
+    {
+        var route = ModalRoute.MaybeOf(context);
+        string entries = route is null ? "-" : route.OverlayEntries.Count.ToString();
+        string maintainState = route?.MaintainState.ToString() ?? "-";
+        string opaque = route?.Opaque.ToString() ?? "-";
+        string canPop = route?.CanPop.ToString() ?? "-";
+        return new Container(
+            color: Color.Parse("#FFE8F0FE"),
+            padding: new Thickness(10, 8),
+            child: new Text(
+                $"Overlay: entries={entries} maintainState={maintainState} opaque={opaque} canPop={canPop}",
+                fontSize: 12,
+                color: Colors.Black));
+    }
+}
+
+/// <summary>A popup route that blurs everything below it through <see cref="ModalRoute.Filter"/>.</summary>
+internal sealed class SampleBlurredPopupRoute : PopupRoute
+{
+    public SampleBlurredPopupRoute() : base(filter: new ImageFilter.Blur(6.0))
+    {
+    }
+
+    public override bool BarrierDismissible => true;
+
+    public override Color? BarrierColor => Color.FromArgb(0x33, 0, 0, 0);
+
+    public override string? BarrierLabel => "Dismiss";
+
+    public override TimeSpan TransitionDuration => TimeSpan.FromMilliseconds(150);
+
+    public override Widget BuildPage(BuildContext context)
+    {
+        return new Center(
+            child: new Container(
+                color: Colors.White,
+                padding: new Thickness(20, 16),
+                child: new Text(
+                    "Blurred popup — tap outside to dismiss",
+                    fontSize: 14,
+                    color: Colors.Black)));
     }
 }
 

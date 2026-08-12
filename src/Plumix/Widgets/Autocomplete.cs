@@ -506,7 +506,9 @@ internal sealed class RawAutocompleteState<T> : State
 
     private IReadOnlyDictionary<Type, FlutterAction> BuildActions(BuildContext context)
     {
-        FlutterAction? previousDismissAction = Actions.MaybeFind(context, new DismissIntent());
+        // Skip disabled handlers (a non-dismissible ModalRoute maps DismissIntent but keeps it disabled) so
+        // Escape reaches the handler that would have received it without the autocomplete portal.
+        FlutterAction? previousDismissAction = Actions.MaybeFindEnabled(context, new DismissIntent());
         _previousDismissAction = previousDismissAction;
         _previousDismissContext = context;
         return new Dictionary<Type, FlutterAction>

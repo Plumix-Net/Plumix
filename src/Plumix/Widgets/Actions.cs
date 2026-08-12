@@ -323,6 +323,25 @@ public sealed class Actions : StatefulWidget
         return null;
     }
 
+    /// <summary>
+    /// Like <see cref="MaybeFind(BuildContext, Intent)"/>, but skips mappings whose action is disabled and
+    /// keeps walking. Used where a widget delegates an intent to the handler that would have received it.
+    /// </summary>
+    internal static FlutterAction? MaybeFindEnabled(BuildContext context, Intent intent)
+    {
+        Type intentType = intent.GetType();
+        foreach ((InheritedElement _, ActionsScope scope) in VisitScopes(context))
+        {
+            if (scope.ActionsMap.TryGetValue(intentType, out FlutterAction? action)
+                && action.IsEnabledObject(intent, context))
+            {
+                return action;
+            }
+        }
+
+        return null;
+    }
+
     public static ActionDispatcher Of(BuildContext context)
     {
         bool isNearest = true;

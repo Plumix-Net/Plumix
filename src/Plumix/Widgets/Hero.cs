@@ -167,6 +167,15 @@ internal sealed class HeroState : State
         }
     }
 
+    /// <summary>Rebuilds the hero after its flight placeholder appeared or disappeared.</summary>
+    internal void MarkPlaceholderChanged()
+    {
+        if (Mounted)
+        {
+            SetState(static () => { });
+        }
+    }
+
     internal HeroSnapshot? CreateSnapshot(Route expectedRoute)
     {
         if (!_isEnabled || !IsRegisteredForRoute(expectedRoute))
@@ -547,25 +556,16 @@ internal sealed class HeroTransitionController
 
     public void ActivateFlights(IReadOnlyList<HeroFlightManifest> flights, bool isPushTransition)
     {
-        if (flights.Count == 0)
-        {
-            _activeFlights = [];
-            _hiddenHeroes.Clear();
-            return;
-        }
-
-        _activeFlights = flights.ToArray();
+        _activeFlights = flights.Count == 0 ? [] : flights.ToArray();
         UpdateActiveFlightPlaceholders(isPushTransition);
     }
 
     public void UpdateActiveFlightPlaceholders(bool isPushTransition)
     {
+        // Routes cache their page subtree, so a placeholder change has to reach the heroes directly the way
+        // Flutter's `_HeroState.startFlight`/`endFlight` call `setState` on the hero itself.
+        var affected = new HashSet<HeroState>(PlaceholderHosts());
         _hiddenHeroes.Clear();
-        if (_activeFlights.Count == 0)
-        {
-            return;
-        }
-
         foreach (var flight in _activeFlights)
         {
             _hiddenHeroes[(flight.FromRoute, flight.Tag)] = new HeroPlaceholderState(
@@ -575,12 +575,30 @@ internal sealed class HeroTransitionController
                 new Size(flight.ToBounds.Width, flight.ToBounds.Height),
                 IncludeChild: false);
         }
+
+        affected.UnionWith(PlaceholderHosts());
+        foreach (HeroState hero in affected)
+        {
+            hero.MarkPlaceholderChanged();
+        }
     }
 
     public void ClearFlights()
     {
         _activeFlights = [];
-        _hiddenHeroes.Clear();
+        UpdateActiveFlightPlaceholders(isPushTransition: false);
+    }
+
+    private IEnumerable<HeroState> PlaceholderHosts()
+    {
+        foreach ((Route route, object tag) in _hiddenHeroes.Keys)
+        {
+            if (_heroesByRoute.TryGetValue(route, out var heroes)
+                && heroes.TryGetValue(tag, out HeroState? heroState))
+            {
+                yield return heroState;
+            }
+        }
     }
 }
 

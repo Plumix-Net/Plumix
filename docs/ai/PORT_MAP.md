@@ -363,7 +363,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `widgets/notification_listener.dart` | `src/Plumix/Widgets/Notifications.cs` | — | — |
 | `widgets/orientation_builder.dart` | `src/Plumix/Widgets/OrientationBuilder.cs` | — | — |
 | `widgets/overflow_bar.dart` | `src/Plumix/Widgets/OverflowBar.cs` | — | — |
-| `widgets/overlay.dart` | `src/Plumix/Rendering/Overlay.cs`<br>`src/Plumix/Widgets/Overlay.cs` | `src/Plumix.Tests/MaterialElevationOverlayTests.cs`<br>`src/Plumix.Tests/SelectionOverlayTests.cs` | — |
+| `widgets/overlay.dart` | `src/Plumix/Rendering/Overlay.cs`<br>`src/Plumix/Widgets/Overlay.cs` | `src/Plumix.Tests/MaterialElevationOverlayTests.cs`<br>`src/Plumix.Tests/NavigatorOverlayTests.cs`<br>`src/Plumix.Tests/SelectionOverlayTests.cs` | — |
 | `widgets/overscroll_indicator.dart` | `src/Plumix/Widgets/OverscrollIndicator.cs` | `src/Plumix.Tests/OverscrollIndicatorTests.cs` | — |
 | `widgets/page_storage.dart` | `src/Plumix/Widgets/PageStorage.cs` | — | — |
 | `widgets/page_view.dart` | `src/Plumix/Widgets/PageView.cs` | — | — |

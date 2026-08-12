@@ -49,7 +49,9 @@ public sealed class HeroNavigatorTests
                     captureState: _ => { }));
             harness.Pump(viewportSize);
 
-            Assert.True(rootBuildCount >= 2);
+            // Flutter's "Pushing opaque Route does not rebuild routes below": the route below stays mounted
+            // through `maintainState` and keeps its cached page, so it is never rebuilt by the push.
+            Assert.Equal(1, rootBuildCount);
             Assert.True(detailsBuildCount >= 1);
             Assert.NotNull(FindParagraphByText(harness.RenderView, "root-page"));
             Assert.NotNull(FindParagraphByText(harness.RenderView, "details-page"));
@@ -344,7 +346,7 @@ public sealed class HeroNavigatorTests
 
             Assert.Null(FindParagraphByText(harness.RenderView, "root-page"));
             Assert.NotNull(FindParagraphByText(harness.RenderView, "details-page"));
-            Assert.Equal(0, CountDescendants<RenderOffstage>(harness.RenderView));
+            Assert.Equal(0, CountHiddenPlaceholders(harness.RenderView));
         }
         finally
         {
@@ -443,7 +445,7 @@ public sealed class HeroNavigatorTests
 
             Assert.NotNull(FindParagraphByText(harness.RenderView, "root-page"));
             Assert.Null(FindParagraphByText(harness.RenderView, "details-page"));
-            Assert.Equal(0, CountDescendants<RenderOffstage>(harness.RenderView));
+            Assert.Equal(0, CountHiddenPlaceholders(harness.RenderView));
         }
         finally
         {
@@ -663,11 +665,11 @@ public sealed class HeroNavigatorTests
             harness.Pump(viewportSize);
             PumpHeroTransitionFrame(harness, viewportSize);
 
-            Assert.True(CountDescendants<RenderOffstage>(harness.RenderView) > 0);
+            Assert.True(CountHiddenPlaceholders(harness.RenderView) > 0);
 
             AdvanceHeroTransition(harness, viewportSize);
 
-            Assert.Equal(0, CountDescendants<RenderOffstage>(harness.RenderView));
+            Assert.Equal(0, CountHiddenPlaceholders(harness.RenderView));
         }
         finally
         {
@@ -713,7 +715,7 @@ public sealed class HeroNavigatorTests
             harness.Pump(viewportSize);
             PumpHeroTransitionFrame(harness, viewportSize);
 
-            Assert.Equal(0, CountDescendants<RenderOffstage>(harness.RenderView));
+            Assert.Equal(0, CountHiddenPlaceholders(harness.RenderView));
 
             AdvanceHeroTransition(harness, viewportSize);
         }
@@ -1014,41 +1016,33 @@ public sealed class HeroNavigatorTests
             ]);
     }
 
+    // Offstage overlay entries are skipped, matching the `skipOffstage: true` default of Flutter's finders:
+    // a route below an opaque route stays mounted through `maintainState` but is neither laid out nor painted.
     private static RenderParagraph? FindParagraphByText(RenderObject? root, string text)
     {
-        if (root is null)
-        {
-            return null;
-        }
-
-        if (root is RenderParagraph paragraph && paragraph.PlainText == text)
-        {
-            return paragraph;
-        }
-
-        RenderParagraph? result = null;
-        root.VisitChildren(child =>
-        {
-            if (result != null)
-            {
-                return;
-            }
-
-            result = FindParagraphByText(child, text);
-        });
-
-        return result;
+        return OverlayVisibility.FindOnstage<RenderParagraph>(root, paragraph => paragraph.PlainText == text);
     }
 
     private static int CountDescendants<TRenderObject>(RenderObject? root) where TRenderObject : RenderObject
     {
-        if (root is null)
-        {
-            return 0;
-        }
+        return OverlayVisibility.CountOnstage<TRenderObject>(root);
+    }
 
-        int count = root is TRenderObject ? 1 : 0;
-        root.VisitChildren(child => count += CountDescendants<TRenderObject>(child));
+    /// <summary>
+    /// Hero placeholders that are actually hiding their child. Every modal route also composes an
+    /// <see cref="Offstage"/> for <c>ModalRoute.offstage</c>, so only enabled ones count as placeholders.
+    /// </summary>
+    private static int CountHiddenPlaceholders(RenderObject? root)
+    {
+        int count = 0;
+        OverlayVisibility.VisitOnstage(root, node =>
+        {
+            if (node is RenderOffstage { Offstage: true })
+            {
+                count += 1;
+            }
+        });
+
         return count;
     }
 

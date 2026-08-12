@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 
 import '../../counter_widgets.dart';
@@ -21,6 +23,13 @@ class NavigatorDemoPage extends StatelessWidget {
           style: TextStyle(fontSize: 14, color: Colors.black54),
         ),
         const NavigatorRouteAwareProbe(),
+        const NavigatorOverlayProbe(),
+        _buildAction(
+          label: 'Push blurred popup (ModalRoute.filter)',
+          onTap: () =>
+              Navigator.of(context).push<void>(SampleBlurredPopupRoute()),
+          background: const Color(0xFFE0F2F1),
+        ),
         _buildAction(
           label: "PushNamed('/navigator/details?id=42&mode=string')",
           onTap: () => Navigator.of(context).pushNamed(
@@ -75,6 +84,65 @@ class NavigatorDemoPage extends StatelessWidget {
       foreground: Colors.black,
       fontSize: 12,
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+    );
+  }
+}
+
+class NavigatorOverlayProbe extends StatelessWidget {
+  const NavigatorOverlayProbe({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final ModalRoute<dynamic>? route = ModalRoute.of(context);
+    final String entries = route == null
+        ? '-'
+        : route.overlayEntries.length.toString();
+    final String maintainState = route?.maintainState.toString() ?? '-';
+    final String opaque = route?.opaque.toString() ?? '-';
+    final String canPop = route?.canPop.toString() ?? '-';
+    return Container(
+      color: const Color(0xFFE8F0FE),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      child: Text(
+        'Overlay: entries=$entries maintainState=$maintainState opaque=$opaque canPop=$canPop',
+        style: const TextStyle(fontSize: 12, color: Colors.black),
+      ),
+    );
+  }
+}
+
+/// A popup route that blurs everything below it through [ModalRoute.filter].
+class SampleBlurredPopupRoute extends PopupRoute<void> {
+  SampleBlurredPopupRoute()
+    : super(filter: ui.ImageFilter.blur(sigmaX: 6.0, sigmaY: 6.0));
+
+  @override
+  bool get barrierDismissible => true;
+
+  @override
+  Color? get barrierColor => const Color(0x33000000);
+
+  @override
+  String? get barrierLabel => 'Dismiss';
+
+  @override
+  Duration get transitionDuration => const Duration(milliseconds: 150);
+
+  @override
+  Widget buildPage(
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+  ) {
+    return Center(
+      child: Container(
+        color: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        child: const Text(
+          'Blurred popup — tap outside to dismiss',
+          style: TextStyle(fontSize: 14, color: Colors.black),
+        ),
+      ),
     );
   }
 }

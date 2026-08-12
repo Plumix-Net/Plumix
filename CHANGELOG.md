@@ -1,5 +1,19 @@
 # Changelog
 
+- Breaking: rebased `Navigator` on the ported `Overlay`. `Route` gained `OverlayEntries`/`ChangedInternalState`/
+  `ChangedExternalState`/`HasActiveRouteBelow`, the new `OverlayRoute` owns `CreateOverlayEntries`/`FinishedWhenPopped`,
+  and `ModalRoute` now installs Flutter's `[barrier, scope]` entry pair with `Filter` (`BackdropFilter` on the barrier),
+  `MaintainState`, `Offstage`, `CanPop` and the `_ModalScope` composition (`Offstage`/`PageStorage`/`Actions`+
+  `DismissModalAction`/`PrimaryScrollController`/`FocusScope`/`RepaintBoundary`/transitions over a cached page).
+  `TransitionRoute` drives `overlayEntries.first.opaque` from its animation status; `NavigatorState` exposes `Overlay`
+  and `UserGestureInProgressNotifier`, rearranges entries to history order, and defers route disposal until the entries
+  unmount. **Breaking:** routes below an opaque route now stay mounted (`maintainState` defaults to `true`) instead of
+  being dropped from the tree, and they are no longer rebuilt by a push; `PageRoute`/`PageRouteBuilder`/`PopupRoute`
+  take `maintainState`/`filter`; `ImpliesAppBarDismissal` is per-route (`HasActiveRouteBelow`) rather than
+  `Navigator.CanPop`. Fixes: `OverlayEntry.Opaque` is settable before insertion and theater children carry the entry
+  identity at both levels; focus traversal descends into nested scopes; `BuildOwner` no longer keeps dirty elements in
+  a depth-ordered set (reparenting could corrupt it and crash a flush).
+
 - Breaking: ported `material/time_picker.dart` and `material/time_picker_theme.dart` strictly. The dialog is now
   Flutter's widget tree — `_TimePickerModel` (aspect-based `InheritedModel`), `_DialTimePickerHeader`,
   `_DialTimeSelectorControl`/`_DialHourControl`/`_DialMinuteControl`, `_TimeSelectorSeparator`, `_DayPeriodControl`
