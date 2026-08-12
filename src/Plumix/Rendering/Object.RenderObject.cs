@@ -231,8 +231,7 @@ public abstract class RenderObject : IRenderObject
     {
         OnDetach();
         _layer = null;
-        _semanticsNode = null;
-        _semantics.ResetForDetach();
+        ClearOwnSemantics();
         Owner = null;
     }
 
@@ -528,6 +527,57 @@ public abstract class RenderObject : IRenderObject
     internal void InvokeDescribeSemanticsConfiguration(SemanticsConfiguration configuration)
     {
         DescribeSemanticsConfiguration(configuration);
+    }
+
+    /// <summary>
+    /// Assemble the <see cref="SemanticsNode"/> for this <see cref="RenderObject"/>.
+    /// </summary>
+    /// <remarks>
+    /// If <see cref="DescribeSemanticsConfiguration"/> sets <see cref="SemanticsConfiguration.IsSemanticBoundary"/>
+    /// to true, this method is called with the <paramref name="node"/> created for this render object, the
+    /// <paramref name="config"/> to be applied to that node, and the <paramref name="children"/> nodes that
+    /// descendants of this render object have generated. By default the method annotates the node with the
+    /// configuration and adds the children to it. Subclasses can override it to add additional nodes to the tree;
+    /// nodes instantiated here must be released in <see cref="ClearSemantics"/>.
+    /// </remarks>
+    protected virtual void AssembleSemanticsNode(
+        SemanticsNode node,
+        SemanticsConfiguration config,
+        IReadOnlyList<SemanticsNode> children)
+    {
+        node.UpdateWith(config, children);
+    }
+
+    internal void InvokeAssembleSemanticsNode(
+        SemanticsNode node,
+        SemanticsConfiguration config,
+        IReadOnlyList<SemanticsNode> children)
+    {
+        AssembleSemanticsNode(node, config, children);
+    }
+
+    /// <summary>
+    /// Removes all semantics from this render object and its descendants.
+    /// </summary>
+    public void ClearSemantics()
+    {
+        ClearOwnSemantics();
+        VisitChildren(static child => child.ClearSemantics());
+    }
+
+    /// <summary>
+    /// Removes the semantics of this render object only, without walking the descendants.
+    /// </summary>
+    /// <remarks>
+    /// This is the non-recursive half of <see cref="ClearSemantics"/>; <see cref="Detach"/> uses it because it
+    /// already reaches every descendant, so the recursive form would re-walk the subtree once per level.
+    /// Override this method if new <see cref="SemanticsNode"/>s are instantiated in an overridden
+    /// <see cref="AssembleSemanticsNode"/>, to release those nodes.
+    /// </remarks>
+    protected virtual void ClearOwnSemantics()
+    {
+        _semanticsNode = null;
+        _semantics.ResetForDetach();
     }
 
     protected virtual bool AlwaysNeedsCompositing => false;

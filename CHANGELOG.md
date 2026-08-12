@@ -1,5 +1,16 @@
 # Changelog
 
+- Closed the `RenderTable` semantics divergence: the shared pipeline gained Flutter's
+  `RenderObject.AssembleSemanticsNode` hook (called for every semantic boundary, default annotates the node and
+  adds the children), `SemanticsNode.UpdateWith` with public `Rect`/`IndexInParent` mutation, and
+  `RenderObject.ClearSemantics` (recursive) plus the non-recursive `ClearOwnSemantics` used by `Detach`.
+  `RenderTable` now synthesizes one semantics node per non-empty row (`SemanticsRole.Row`, `IndexInParent`, row
+  box geometry) and wraps a cell in a `SemanticsRole.Cell` node when it produced several nodes or a node whose
+  role is neither `Cell` nor `ColumnHeader`; cells narrower than their column edge are skipped, children are
+  bucketed by geometry with an id-to-index map, and row/cell nodes are reused across passes and released on
+  detach. Remaining pipeline-level gap (no per-node transform, no `showOnScreen` node callback): see
+  `docs/ai/DIVERGENCES.md`.
+
 - Breaking: closed the Material `BottomSheet`/`Scaffold` divergence against `DraggableScrollableSheet`, and moved
   modal-barrier ownership into `ModalRoute`. `BottomSheet` and the scaffold's `_StandardBottomSheet` now listen for
   `DraggableScrollableNotification`, so a draggable-scrollable child closes the sheet at its minimum extent

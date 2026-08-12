@@ -416,7 +416,7 @@ public sealed class SemanticsNode
     }
 
     public int Id { get; }
-    public Rect Rect { get; internal set; }
+    public Rect Rect { get; set; }
     public string? Label { get; internal set; }
     public string? Hint { get; internal set; }
     public string? OnTapHint { get; internal set; }
@@ -431,7 +431,7 @@ public sealed class SemanticsNode
     public SemanticsHitTestBehavior HitTestBehavior { get; internal set; } = SemanticsHitTestBehavior.Defer;
     public SemanticsFlags Flags { get; internal set; }
     public SemanticsActions Actions { get; internal set; }
-    public int? IndexInParent { get; internal set; }
+    public int? IndexInParent { get; set; }
     public SemanticsSortKey? SortKey { get; internal set; }
     public bool IsHidden { get; internal set; }
     public IReadOnlyList<SemanticsNode> Children => _children;
@@ -439,10 +439,81 @@ public sealed class SemanticsNode
     internal bool BlocksPreviousNodes { get; set; }
     internal bool IsSemanticBoundary { get; set; }
 
-    internal void ReplaceChildren(List<SemanticsNode> children)
+    /// <summary>
+    /// Reconfigures this node with <paramref name="config"/> and replaces its children.
+    /// </summary>
+    /// <remarks>
+    /// Geometry (<see cref="Rect"/>, <see cref="IsHidden"/>) is owned by the semantics compiler and is not
+    /// touched here, so a render object that synthesizes extra nodes from
+    /// <c>RenderObject.AssembleSemanticsNode</c> assigns it explicitly.
+    /// </remarks>
+    public void UpdateWith(
+        SemanticsConfiguration config,
+        IReadOnlyList<SemanticsNode>? childrenInInversePaintOrder = null)
+    {
+        ArgumentNullException.ThrowIfNull(config);
+        Label = config.Label;
+        Hint = config.Hint;
+        OnTapHint = config.OnTapHint;
+        Tooltip = config.Tooltip;
+        Value = config.Value;
+        IncreasedValue = config.IncreasedValue;
+        DecreasedValue = config.DecreasedValue;
+        MinValue = config.MinValue;
+        MaxValue = config.MaxValue;
+        Role = config.Role;
+        InputType = config.InputType;
+        HitTestBehavior = config.HitTestBehavior;
+        Flags = config.Flags;
+        Actions = config.Actions;
+        IndexInParent = config.IndexInParent;
+        SortKey = config.SortKey;
+        IsSemanticBoundary = config.IsSemanticBoundary;
+        ReplaceChildren(SortChildren(childrenInInversePaintOrder ?? []));
+        SetActionHandlers(config.ActionHandlers);
+        SetCustomActionHandlers(config.CustomActionHandlers);
+    }
+
+    internal void ReplaceChildren(IReadOnlyList<SemanticsNode> children)
     {
         _children.Clear();
         _children.AddRange(children);
+    }
+
+    private static IReadOnlyList<SemanticsNode> SortChildren(IReadOnlyList<SemanticsNode> children)
+    {
+        if (children.Count < 2 || children.All(static child => child.SortKey is null))
+        {
+            return children;
+        }
+
+        return children
+            .Select(static (child, index) => (child, index))
+            .OrderBy(static pair => pair.child.SortKey is null ? 1 : 0)
+            .ThenBy(static pair => pair.child.SortKey, SemanticsSortKeyComparer.Instance)
+            .ThenBy(static pair => pair.index)
+            .Select(static pair => pair.child)
+            .ToList();
+    }
+
+    private sealed class SemanticsSortKeyComparer : IComparer<SemanticsSortKey?>
+    {
+        public static SemanticsSortKeyComparer Instance { get; } = new();
+
+        public int Compare(SemanticsSortKey? x, SemanticsSortKey? y)
+        {
+            if (ReferenceEquals(x, y))
+            {
+                return 0;
+            }
+
+            if (x is null)
+            {
+                return 1;
+            }
+
+            return x.CompareTo(y);
+        }
     }
 
     internal void SetActionHandlers(IReadOnlyDictionary<SemanticsActions, Action> handlers)

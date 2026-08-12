@@ -720,6 +720,174 @@ public sealed class RenderTable : RenderBox
         configuration.ExplicitChildNodes = true;
     }
 
+    private readonly Dictionary<int, CellIndex> _idToIndexMap = [];
+    private readonly Dictionary<int, SemanticsNode> _cachedRows = [];
+    private readonly Dictionary<CellIndex, SemanticsNode> _cachedCells = [];
+
+    protected override void ClearOwnSemantics()
+    {
+        base.ClearOwnSemantics();
+        _cachedRows.Clear();
+        _cachedCells.Clear();
+    }
+
+    /// Provides custom semantics for tables by generating nodes for rows and maybe cells.
+    ///
+    /// Table rows are not RenderObjects, so their semantics nodes must be created separately.
+    /// And if a cell has multiple semantics node or has a different semantic role, we create
+    /// a new semantics node to wrap it.
+    protected override void AssembleSemanticsNode(
+        SemanticsNode node,
+        SemanticsConfiguration config,
+        IReadOnlyList<SemanticsNode> children)
+    {
+        var rows = new List<SemanticsNode>();
+        var rawCells = new List<SemanticsNode>[_rows, _columns];
+        for (int rowIndex = 0; rowIndex < _rows; rowIndex++)
+        {
+            for (int columnIndex = 0; columnIndex < _columns; columnIndex++)
+            {
+                rawCells[rowIndex, columnIndex] = [];
+            }
+        }
+
+        // Semantics rects are already resolved into the root coordinate space, so a child's position inside
+        // this table is its rect relative to the table node's own origin. That is the same information
+        // Flutter recovers from the child node's translation-only transform.
+        Point origin = node.Rect.TopLeft;
+
+        Rect LocalRect(SemanticsNode child) =>
+            new(child.Rect.X - origin.X, child.Rect.Y - origin.Y, child.Rect.Width, child.Rect.Height);
+
+        int FindRowIndex(double top)
+        {
+            for (int i = _rowTops.Count - 1; i >= 0; i--)
+            {
+                if (_rowTops[i] <= top) return i;
+            }
+
+            return -1;
+        }
+
+        int FindColumnIndex(double left)
+        {
+            if (_columnLefts is null) return -1;
+            for (int i = _columnLefts.Count - 1; i >= 0; i--)
+            {
+                if (_columnLefts[i] <= left) return i;
+            }
+
+            return -1;
+        }
+
+        foreach (SemanticsNode child in children)
+        {
+            if (_idToIndexMap.TryGetValue(child.Id, out CellIndex index))
+            {
+                if (index.Y < _rows && index.X < _columns)
+                {
+                    rawCells[index.Y, index.X].Add(child);
+                }
+            }
+            else
+            {
+                Rect rect = LocalRect(child);
+                int y = FindRowIndex(rect.Y);
+                int x = FindColumnIndex(rect.X);
+                if (y >= 0 && y < _rows && x >= 0 && x < _columns)
+                {
+                    rawCells[y, x].Add(child);
+                }
+            }
+        }
+
+        for (int y = 0; y < _rows; y++)
+        {
+            Rect rowBox = GetRowBox(y);
+
+            // Skip row if it's empty
+            if (rowBox.Height == 0) continue;
+
+            if (!_cachedRows.TryGetValue(y, out SemanticsNode? newRow))
+            {
+                newRow = CreateSynthesizedSemanticsNode();
+                _cachedRows[y] = newRow;
+            }
+
+            // The list of cells of this Row.
+            var cells = new List<SemanticsNode>();
+
+            for (int x = 0; x < _columns; x++)
+            {
+                List<SemanticsNode> rawChildren = rawCells[y, x];
+                if (rawChildren.Count == 0) continue;
+
+                // If the cell has multiple children or the only child is not a cell or columnHeader,
+                // create a new semantic node with role cell to wrap it. This can happen when the cell has a
+                // different semantic role, or the cell doesn't have a semantic role because user is not
+                // using the `TableCell` widget.
+                bool addCellWrapper = rawChildren.Count > 1
+                                      || (rawChildren[0].Role != SemanticsRole.Cell
+                                          && rawChildren[0].Role != SemanticsRole.ColumnHeader);
+
+                SemanticsNode cell;
+                if (!addCellWrapper)
+                {
+                    cell = rawChildren[0];
+                }
+                else
+                {
+                    var index = new CellIndex(y, x);
+                    if (!_cachedCells.TryGetValue(index, out SemanticsNode? wrapper))
+                    {
+                        wrapper = CreateSynthesizedSemanticsNode();
+                        _cachedCells[index] = wrapper;
+                    }
+
+                    wrapper.UpdateWith(new SemanticsConfiguration { Role = SemanticsRole.Cell }, rawChildren);
+                    cell = wrapper;
+                }
+
+                double cellWidth = x == _columns - 1
+                    ? rowBox.Width - _columnLefts![x]
+                    : _columnLefts![x + 1] - _columnLefts[x];
+
+                // Skip cell if it's invisible
+                if (cellWidth <= 0.0) continue;
+
+                // Add wrapper geometry
+                if (addCellWrapper)
+                {
+                    cell.Rect = new Rect(origin.X + _columnLefts[x], origin.Y + rowBox.Y, cellWidth, rowBox.Height);
+                }
+
+                foreach (SemanticsNode child in rawChildren)
+                {
+                    _idToIndexMap[child.Id] = new CellIndex(y, x);
+                }
+
+                cell.IndexInParent = x;
+                cells.Add(cell);
+            }
+
+            newRow.UpdateWith(
+                new SemanticsConfiguration { IndexInParent = y, Role = SemanticsRole.Row },
+                cells);
+            newRow.Rect = new Rect(origin.X + rowBox.X, origin.Y + rowBox.Y, rowBox.Width, rowBox.Height);
+
+            rows.Add(newRow);
+        }
+
+        node.UpdateWith(config, rows);
+    }
+
+    private SemanticsNode CreateSynthesizedSemanticsNode()
+    {
+        return Owner!.SemanticsOwner.CreateDetachedNode();
+    }
+
+    private readonly record struct CellIndex(int Y, int X);
+
     internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
     {
         foreach (RenderBox? child in _children)

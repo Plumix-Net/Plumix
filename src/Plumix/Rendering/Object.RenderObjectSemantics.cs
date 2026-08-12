@@ -297,13 +297,20 @@ internal sealed class RenderObjectSemantics
         }
 
         var semanticsNode = owner.EnsureNode(_owner);
-        ApplySemanticsConfigurationToNode(
+        ApplySemanticsNodeGeometry(
             semanticsNode,
-            config,
             _rect,
             _hidden,
-            config.IsBlockingSemanticsOfPreviouslyPaintedNodes,
-            children);
+            config.IsBlockingSemanticsOfPreviouslyPaintedNodes);
+
+        if (config.IsSemanticBoundary)
+        {
+            _owner.InvokeAssembleSemanticsNode(semanticsNode, config, children);
+        }
+        else
+        {
+            semanticsNode.UpdateWith(config, children);
+        }
 
         output.Add(semanticsNode);
         output.AddRange(siblingNodes);
@@ -844,6 +851,17 @@ internal sealed class RenderObjectSemantics
         return new Rect(minX, minY, maxX - minX, maxY - minY);
     }
 
+    private static void ApplySemanticsNodeGeometry(
+        SemanticsNode node,
+        Rect rect,
+        bool isHidden,
+        bool blocksPreviousNodes)
+    {
+        node.Rect = rect;
+        node.IsHidden = isHidden;
+        node.BlocksPreviousNodes = blocksPreviousNodes;
+    }
+
     private static void ApplySemanticsConfigurationToNode(
         SemanticsNode node,
         SemanticsConfiguration configuration,
@@ -852,64 +870,7 @@ internal sealed class RenderObjectSemantics
         bool blocksPreviousNodes,
         List<SemanticsNode> children)
     {
-        node.Rect = rect;
-        node.Label = configuration.Label;
-        node.Hint = configuration.Hint;
-        node.OnTapHint = configuration.OnTapHint;
-        node.Tooltip = configuration.Tooltip;
-        node.Value = configuration.Value;
-        node.IncreasedValue = configuration.IncreasedValue;
-        node.DecreasedValue = configuration.DecreasedValue;
-        node.MinValue = configuration.MinValue;
-        node.MaxValue = configuration.MaxValue;
-        node.Role = configuration.Role;
-        node.InputType = configuration.InputType;
-        node.HitTestBehavior = configuration.HitTestBehavior;
-        node.Flags = configuration.Flags;
-        node.Actions = configuration.Actions;
-        node.IndexInParent = configuration.IndexInParent;
-        node.SortKey = configuration.SortKey;
-        node.IsHidden = isHidden;
-        node.BlocksPreviousNodes = blocksPreviousNodes;
-        node.IsSemanticBoundary = configuration.IsSemanticBoundary;
-        node.ReplaceChildren(SortChildren(children));
-        node.SetActionHandlers(configuration.ActionHandlers);
-        node.SetCustomActionHandlers(configuration.CustomActionHandlers);
-    }
-
-    private static List<SemanticsNode> SortChildren(List<SemanticsNode> children)
-    {
-        if (children.Count < 2 || children.All(child => child.SortKey is null))
-        {
-            return children;
-        }
-
-        return children
-            .Select((child, index) => (child, index))
-            .OrderBy(pair => pair.child.SortKey is null ? 1 : 0)
-            .ThenBy(pair => pair.child.SortKey, SemanticsSortKeyComparer.Instance)
-            .ThenBy(pair => pair.index)
-            .Select(pair => pair.child)
-            .ToList();
-    }
-
-    private sealed class SemanticsSortKeyComparer : IComparer<SemanticsSortKey?>
-    {
-        public static SemanticsSortKeyComparer Instance { get; } = new();
-
-        public int Compare(SemanticsSortKey? x, SemanticsSortKey? y)
-        {
-            if (ReferenceEquals(x, y))
-            {
-                return 0;
-            }
-
-            if (x is null)
-            {
-                return 1;
-            }
-
-            return x.CompareTo(y);
-        }
+        ApplySemanticsNodeGeometry(node, rect, isHidden, blocksPreviousNodes);
+        node.UpdateWith(configuration, children);
     }
 }

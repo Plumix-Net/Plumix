@@ -580,6 +580,218 @@ public sealed class TableTests
         Assert.True(configuration.ExplicitChildNodes);
     }
 
+    [Fact]
+    public void RenderTable_SynthesizesOneRowNodePerRowAndKeepsCellRoledChildren()
+    {
+        RenderSemanticsAnnotations header = SemanticsCell("Header", SemanticsRole.ColumnHeader);
+        RenderSemanticsAnnotations trailingHeader = SemanticsCell("Trailing", SemanticsRole.ColumnHeader);
+        RenderSemanticsAnnotations first = SemanticsCell("First", SemanticsRole.Cell);
+        RenderSemanticsAnnotations second = SemanticsCell("Second", SemanticsRole.Cell);
+        var table = new RenderTable(textDirection: TextDirection.Ltr);
+        table.SetFlatChildren(2, [header, trailingHeader, first, second]);
+
+        SemanticsNode tableNode = FlushTableSemantics(table, new Size(100, 100)).TableNode;
+
+        Assert.Equal(SemanticsRole.Table, tableNode.Role);
+        Assert.Collection(
+            tableNode.Children,
+            row =>
+            {
+                Assert.Equal(SemanticsRole.Row, row.Role);
+                Assert.Equal(0, row.IndexInParent);
+                Assert.Equal(new Rect(0, 0, 100, 10), row.Rect);
+                Assert.Collection(
+                    row.Children,
+                    cell =>
+                    {
+                        // A ColumnHeader/Cell child is used as-is: no wrapper node is inserted.
+                        Assert.Same(FindNodeWithLabel(tableNode, "Header"), cell);
+                        Assert.Equal(SemanticsRole.ColumnHeader, cell.Role);
+                        Assert.Equal(0, cell.IndexInParent);
+                    },
+                    cell =>
+                    {
+                        Assert.Equal("Trailing", cell.Label);
+                        Assert.Equal(1, cell.IndexInParent);
+                    });
+            },
+            row =>
+            {
+                Assert.Equal(SemanticsRole.Row, row.Role);
+                Assert.Equal(1, row.IndexInParent);
+                Assert.Equal(new Rect(0, 10, 100, 10), row.Rect);
+                Assert.Collection(
+                    row.Children,
+                    cell =>
+                    {
+                        Assert.Equal("First", cell.Label);
+                        Assert.Equal(SemanticsRole.Cell, cell.Role);
+                        Assert.Equal(0, cell.IndexInParent);
+                    },
+                    cell =>
+                    {
+                        Assert.Equal("Second", cell.Label);
+                        Assert.Equal(1, cell.IndexInParent);
+                    });
+            });
+    }
+
+    [Fact]
+    public void RenderTable_WrapsChildrenThatDoNotAlreadyCarryACellRole()
+    {
+        RenderSemanticsAnnotations plain = SemanticsCell("Plain", SemanticsRole.None);
+        RenderSemanticsAnnotations celled = SemanticsCell("Celled", SemanticsRole.Cell);
+        var table = new RenderTable(textDirection: TextDirection.Ltr);
+        table.SetFlatChildren(2, [plain, celled]);
+
+        SemanticsNode tableNode = FlushTableSemantics(table, new Size(100, 100)).TableNode;
+
+        SemanticsNode row = Assert.Single(tableNode.Children);
+        SemanticsNode wrapper = row.Children[0];
+        Assert.Equal(SemanticsRole.Cell, wrapper.Role);
+        Assert.Null(wrapper.Label);
+        Assert.Equal(0, wrapper.IndexInParent);
+        // The wrapper is clipped to its column, not to the whole row.
+        Assert.Equal(new Rect(0, 0, 50, 10), wrapper.Rect);
+        Assert.Equal("Plain", Assert.Single(wrapper.Children).Label);
+        Assert.Same(FindNodeWithLabel(tableNode, "Celled"), row.Children[1]);
+    }
+
+    [Fact]
+    public void RenderTable_WrapsCellsThatProduceMoreThanOneSemanticsNode()
+    {
+        RenderSemanticsAnnotations left = SemanticsCell("Left", SemanticsRole.Cell, new Size(20, 10));
+        RenderSemanticsAnnotations right = SemanticsCell("Right", SemanticsRole.Cell, new Size(20, 10));
+        var pair = new RenderFlex(children: [left, right], direction: Axis.Horizontal);
+        var table = new RenderTable(textDirection: TextDirection.Ltr);
+        table.SetFlatChildren(2, [pair, SemanticsCell("Other", SemanticsRole.Cell)]);
+
+        SemanticsNode tableNode = FlushTableSemantics(table, new Size(100, 100)).TableNode;
+
+        SemanticsNode row = Assert.Single(tableNode.Children);
+        SemanticsNode wrapper = row.Children[0];
+        Assert.Equal(SemanticsRole.Cell, wrapper.Role);
+        Assert.Collection(
+            wrapper.Children,
+            child => Assert.Equal("Left", child.Label),
+            child => Assert.Equal("Right", child.Label));
+    }
+
+    [Fact]
+    public void RenderTable_ReusesSynthesizedRowAndCellNodesAcrossSemanticsPasses()
+    {
+        RenderSemanticsAnnotations plain = SemanticsCell("Plain", SemanticsRole.None);
+        var table = new RenderTable(textDirection: TextDirection.Ltr);
+        table.SetFlatChildren(1, [plain]);
+
+        (PipelineOwner pipeline, SemanticsNode tableNode) = FlushTableSemantics(table, new Size(100, 100));
+        SemanticsNode row = Assert.Single(tableNode.Children);
+        SemanticsNode wrapper = row.Children[0];
+
+        plain.Label = "Renamed";
+        pipeline.FlushSemantics();
+
+        SemanticsNode rebuiltRow = Assert.Single(FindNodeWithRole(pipeline, SemanticsRole.Table).Children);
+        Assert.Same(row, rebuiltRow);
+        Assert.Same(wrapper, rebuiltRow.Children[0]);
+        Assert.Equal("Renamed", Assert.Single(rebuiltRow.Children[0].Children).Label);
+    }
+
+    [Fact]
+    public void RenderTable_SkipsEmptyRowsAndZeroWidthCells()
+    {
+        RenderSemanticsAnnotations visible = SemanticsCell("Visible", SemanticsRole.Cell);
+        RenderSemanticsAnnotations collapsed = SemanticsCell("Collapsed", SemanticsRole.Cell, new Size(0, 10));
+        var table = new RenderTable(
+            columnWidths: new Dictionary<int, TableColumnWidth> { [1] = new FixedColumnWidth(0) },
+            defaultColumnWidth: new FixedColumnWidth(50),
+            textDirection: TextDirection.Ltr);
+        // Row 1 has no children at all, so it collapses to zero height.
+        table.SetFlatChildren(2, [visible, collapsed, null, null]);
+
+        SemanticsNode tableNode = FlushTableSemantics(table, new Size(100, 100)).TableNode;
+
+        SemanticsNode row = Assert.Single(tableNode.Children);
+        Assert.Equal(0, row.IndexInParent);
+        Assert.Equal("Visible", Assert.Single(row.Children).Label);
+    }
+
+    [Fact]
+    public void RenderTable_ClearSemanticsReleasesTheSynthesizedNodes()
+    {
+        RenderSemanticsAnnotations plain = SemanticsCell("Plain", SemanticsRole.None);
+        var table = new RenderTable(textDirection: TextDirection.Ltr);
+        table.SetFlatChildren(1, [plain]);
+        var renderView = new RenderView { Child = table };
+        var pipeline = new PipelineOwner(renderView);
+        pipeline.Attach(renderView);
+        pipeline.FlushLayout(new Size(100, 100));
+        pipeline.FlushSemantics();
+        SemanticsNode wrapper = FindNodeWithRole(pipeline, SemanticsRole.Table).Children[0].Children[0];
+
+        renderView.ClearSemantics();
+        Assert.Null(table.SemanticsNodeId);
+
+        // Re-hosting the table must not resurrect nodes whose ids came from the previous owner.
+        var rehostedView = new RenderView { Child = table };
+        var rehostedPipeline = new PipelineOwner(rehostedView);
+        rehostedPipeline.Attach(rehostedView);
+        rehostedPipeline.FlushLayout(new Size(100, 100));
+        rehostedPipeline.FlushSemantics();
+
+        SemanticsNode rebuiltWrapper = FindNodeWithRole(rehostedPipeline, SemanticsRole.Table).Children[0].Children[0];
+        Assert.NotSame(wrapper, rebuiltWrapper);
+        Assert.Equal(SemanticsRole.Cell, rebuiltWrapper.Role);
+    }
+
+    private static RenderSemanticsAnnotations SemanticsCell(string label, SemanticsRole role, Size? size = null)
+    {
+        return new RenderSemanticsAnnotations(
+            label: label,
+            role: role,
+            container: true,
+            child: new RenderConstrainedBox(BoxConstraints.Tight(size ?? new Size(20, 10))));
+    }
+
+    private static (PipelineOwner Pipeline, SemanticsNode TableNode) FlushTableSemantics(
+        RenderTable table,
+        Size viewSize)
+    {
+        var renderView = new RenderView { Child = table };
+        var pipeline = new PipelineOwner(renderView);
+        pipeline.Attach(renderView);
+        pipeline.FlushLayout(viewSize);
+        pipeline.FlushSemantics();
+        return (pipeline, FindNodeWithRole(pipeline, SemanticsRole.Table));
+    }
+
+    private static SemanticsNode FindNodeWithRole(PipelineOwner pipeline, SemanticsRole role)
+    {
+        SemanticsNode? found = FindNode(pipeline.SemanticsOwner.RootNode, node => node.Role == role);
+        Assert.NotNull(found);
+        return found;
+    }
+
+    private static SemanticsNode FindNodeWithLabel(SemanticsNode root, string label)
+    {
+        SemanticsNode? found = FindNode(root, node => node.Label == label);
+        Assert.NotNull(found);
+        return found;
+    }
+
+    private static SemanticsNode? FindNode(SemanticsNode? node, Func<SemanticsNode, bool> predicate)
+    {
+        if (node is null) return null;
+        if (predicate(node)) return node;
+        foreach (SemanticsNode child in node.Children)
+        {
+            SemanticsNode? found = FindNode(child, predicate);
+            if (found is not null) return found;
+        }
+
+        return null;
+    }
+
     // ---------------------------------------------------------------- TableBorder
 
     [Fact]
