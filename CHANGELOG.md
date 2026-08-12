@@ -1,5 +1,27 @@
 # Changelog
 
+- Breaking: moved Flutter's stateful menu-anchor tree into core and closed the `RawMenuAnchor`/`MenuAnchor`
+  divergence. `widgets/raw_menu_anchor.dart` is now a strict port: `MenuController` (subclassable, with
+  `Open(position)`/`Close`/`CloseChildren`/`IsOpen`/`MaybeOf`/`MaybeIsOpenOf`), the shared anchor/group state
+  with parent/child registration, sibling exclusivity, root-anchor ancestor-scroll and view-size closure, the
+  intercepted `onOpenRequested`/`onCloseRequested` protocol, `DismissMenuAction`, and the six-entry traversal
+  shortcut map. Material `MenuAnchor` now sits on top of it: `_MenuAnchorScope`, the `_Submenu`/`_MenuPanel`
+  composition (menu `FocusScope`, `Actions`+`Shortcuts`, `ScrollConfiguration`/`PrimaryScrollController`),
+  the source eight-entry shortcut map, `_MenuDirectionalFocusAction`'s open/close/traverse behavior on
+  `SubmenuButton`, the staggered per-item fades, the completion-gated panel `Scrollbar`, and `MenuBar` built
+  on `RawMenuAnchorGroup`.
+  **Breaking:** `MenuController` moved from `Plumix.Material` to `Plumix.Widgets` and no longer derives from
+  `ChangeNotifier`; `Open`/`CloseChildren` throw when detached (`Close` stays silent). `RawMenuAnchor` is a
+  `StatefulWidget` taking a `MenuController` (`RawMenuAnchorController` is gone), `RawMenuAnchorGroup` requires
+  a controller, `MenuStyle.Padding` moved from `Thickness` to `EdgeInsetsGeometry`, `MenuAnchor.ReservedPadding`
+  likewise, `MenuAnchor.AnchorTapClosesMenu` was dropped, and `MenuItemButton.OnPressed` now runs in a
+  post-frame callback (Flutter restores focus first).
+  New primitives: `TraversalDirection`, `DirectionalFocusIntent`/`Action`, `NextFocusIntent`/`Action`,
+  `PreviousFocusIntent`/`Action`, `RequestFocusIntent`/`Action`, `FocusTraversalPolicy.InDirection`/
+  `FindFirstFocus`/`FindLastFocus`/`InvalidateScopeData`, `FocusNode.NextFocus`/`PreviousFocus`/
+  `FocusInDirection`/`HasPrimaryFocus`, `FocusScopeNode.HasFocusInScope`, `Scheduler.Phase` with
+  `SchedulerPhase`, `Curves.TweenCurve`, and `EdgeInsetsGeometry.Clamp`/`Infinity`.
+
 - Breaking: ported the `painting` border hierarchy strictly — `borders.dart`, `box_border.dart`,
   `rounded_rectangle_border.dart`, `stadium_border.dart`, `circle_border.dart`, `oval_border.dart`,
   `beveled_rectangle_border.dart`, `continuous_rectangle_border.dart`, `linear_border.dart`,

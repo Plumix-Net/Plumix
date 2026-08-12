@@ -241,6 +241,14 @@ internal static class MaterialThemeLerp
         return StateProperty(a, b, t, Thickness);
     }
 
+    public static MaterialStateProperty<EdgeInsetsGeometry?>? EdgeInsetsStateProperty(
+        MaterialStateProperty<EdgeInsetsGeometry?>? a,
+        MaterialStateProperty<EdgeInsetsGeometry?>? b,
+        double t)
+    {
+        return StateProperty(a, b, t, EdgeInsetsGeometry.Lerp);
+    }
+
     public static MaterialStateProperty<TextStyle?>? TextStyleStateProperty(
         MaterialStateProperty<TextStyle?>? a,
         MaterialStateProperty<TextStyle?>? b,

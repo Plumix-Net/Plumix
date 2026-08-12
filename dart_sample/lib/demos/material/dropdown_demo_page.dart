@@ -29,6 +29,9 @@ class _DropdownDemoPageState extends State<DropdownDemoPage> {
   final MenuController _anchorController = MenuController();
   final MenuController _fileMenuController = MenuController();
   final MenuController _editMenuController = MenuController();
+  final MenuController _animatedMenuController = MenuController();
+  String _animatedMenuStatus = 'dismissed';
+  String _animatedMenuPick = 'none';
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final GlobalKey<FormState> _modernFormKey = GlobalKey<FormState>();
 
@@ -336,6 +339,40 @@ class _DropdownDemoPageState extends State<DropdownDemoPage> {
           ),
           const Divider(),
           const Text(
+            'Animated MenuAnchor',
+            style: TextStyle(fontSize: 18),
+          ),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: MenuAnchor(
+              controller: _animatedMenuController,
+              animated: true,
+              onAnimationStatusChanged: (status) =>
+                  setState(() => _animatedMenuStatus = status.name),
+              menuChildren: <Widget>[
+                _animatedMenuItem('First'),
+                _animatedMenuItem('Second'),
+                _animatedMenuItem('Third'),
+                _animatedMenuItem('Fourth'),
+              ],
+              builder: (context, controller, child) => _controlButton(
+                controller.isOpen ? 'Hide staggered menu' : 'Show staggered menu',
+                () {
+                  if (controller.isOpen) {
+                    controller.close();
+                  } else {
+                    controller.open();
+                  }
+                },
+              ),
+            ),
+          ),
+          Text(
+            'Animated menu: $_animatedMenuStatus / $_animatedMenuPick',
+            style: const TextStyle(fontSize: 13),
+          ),
+          const Divider(),
+          const Text(
             'DropdownMenuFormField + Form',
             style: TextStyle(fontSize: 18),
           ),
@@ -492,6 +529,11 @@ class _DropdownDemoPageState extends State<DropdownDemoPage> {
           enabled: false,
         ),
       ];
+
+  Widget _animatedMenuItem(String label) => MenuItemButton(
+    onPressed: () => setState(() => _animatedMenuPick = label.toLowerCase()),
+    child: Text(label),
+  );
 
   Widget _controlButton(String label, VoidCallback onPressed) => TextButton(
     onPressed: onPressed,

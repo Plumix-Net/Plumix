@@ -97,6 +97,27 @@ public readonly record struct EdgeInsetsGeometry
         return a.Add(b);
     }
 
+    /// <summary>Insets with every edge set to positive infinity.</summary>
+    public static EdgeInsetsGeometry Infinity => new(
+        double.PositiveInfinity,
+        double.PositiveInfinity,
+        double.PositiveInfinity,
+        double.PositiveInfinity,
+        double.PositiveInfinity,
+        double.PositiveInfinity);
+
+    /// <summary>Clamps every edge of these insets between the matching edges of the bounds.</summary>
+    public EdgeInsetsGeometry Clamp(EdgeInsetsGeometry min, EdgeInsetsGeometry max)
+    {
+        return new EdgeInsetsGeometry(
+            left: Math.Clamp(Left, min.Left, max.Left),
+            top: Math.Clamp(Top, min.Top, max.Top),
+            right: Math.Clamp(Right, min.Right, max.Right),
+            bottom: Math.Clamp(Bottom, min.Bottom, max.Bottom),
+            start: Math.Clamp(Start, min.Start, max.Start),
+            end: Math.Clamp(End, min.End, max.End));
+    }
+
     public static EdgeInsetsGeometry? Lerp(
         EdgeInsetsGeometry? a,
         EdgeInsetsGeometry? b,

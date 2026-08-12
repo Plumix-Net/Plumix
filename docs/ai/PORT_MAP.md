@@ -141,7 +141,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `material/material_button.dart` | `src/Plumix.Material/MaterialButton.cs` | `src/Plumix.Tests/MaterialButtonsTests.cs` | `dart_sample/lib/demos/material/material_buttons_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/MaterialButtonsDemoPage.cs` |
 | `material/material_localizations.dart` | `src/Plumix.Material/MaterialLocalizations.cs` | — | — |
 | `material/material_state.dart` | `src/Plumix.Material/InputBorder.cs` | — | — |
-| `material/menu_anchor.dart` | `src/Plumix.Material/MenuAccelerator.cs`<br>`src/Plumix.Material/MenuAnchor.cs` | `src/Plumix.Tests/MaterialMenuAcceleratorTests.cs`<br>`src/Plumix.Tests/MaterialMenuAnchorTests.cs` | — |
+| `material/menu_anchor.dart` | `src/Plumix.Material/MenuAccelerator.cs`<br>`src/Plumix.Material/MenuAnchor.cs` | `src/Plumix.Tests/MaterialMenuAcceleratorTests.cs`<br>`src/Plumix.Tests/MaterialMenuAnchorTests.cs`<br>`src/Plumix.Tests/RawMenuAnchorTests.cs` | — |
 | `material/menu_bar_theme.dart` | `src/Plumix.Material/MenuThemes.cs` | — | — |
 | `material/menu_button_theme.dart` | `src/Plumix.Material/MenuThemes.cs` | — | — |
 | `material/menu_style.dart` | `src/Plumix.Material/DropdownMenuTheme.cs` | — | — |
@@ -366,7 +366,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `widgets/preferred_size.dart` | `src/Plumix/Widgets/PreferredSize.cs` | — | — |
 | `widgets/radio_group.dart` | `src/Plumix/Widgets/RadioGroup.cs` | `src/Plumix.Tests/RadioGroupRawRadioTests.cs` | — |
 | `widgets/raw_keyboard_listener.dart` | `src/Plumix/Widgets/KeyboardListener.cs` | `src/Plumix.Tests/KeyboardListenerTests.cs` | `dart_sample/lib/demos/general/keyboard_listener_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/KeyboardListenerDemoPage.cs` |
-| `widgets/raw_menu_anchor.dart` | `src/Plumix/Widgets/RawMenuAnchor.cs` | — | — |
+| `widgets/raw_menu_anchor.dart` | `src/Plumix/Widgets/RawMenuAnchor.cs` | `src/Plumix.Tests/RawMenuAnchorTests.cs` | — |
 | `widgets/raw_radio.dart` | `src/Plumix/Widgets/RawRadio.cs` | `src/Plumix.Tests/RadioGroupRawRadioTests.cs` | — |
 | `widgets/raw_tooltip.dart` | `src/Plumix/Widgets/RawTooltip.cs` | `src/Plumix.Tests/RawTooltipTests.cs` | — |
 | `widgets/reorderable_list.dart` | `src/Plumix/Widgets/ReorderableList.cs` | `src/Plumix.Tests/MaterialReorderableListTests.cs` | `dart_sample/lib/demos/material/reorderable_list_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/ReorderableListDemoPage.cs` |

@@ -57,103 +57,6 @@ public enum DropdownMenuCloseBehavior
     None,
 }
 
-public sealed class MenuController : ChangeNotifier
-{
-    private Action? _open;
-    private Action? _close;
-    private object? _owner;
-
-    public bool IsOpen { get; private set; }
-
-    internal Vector? Position { get; private set; }
-
-    public void Open(Vector? position = null)
-    {
-        Position = position;
-        _open?.Invoke();
-    }
-
-    public void Close() => _close?.Invoke();
-
-    public void CloseChildren()
-    {
-        if (_owner is null) throw new InvalidOperationException("The MenuController is not attached to a menu anchor.");
-        (_owner as IMenuControllerHost)?.CloseChildren();
-    }
-
-    internal void Attach(object owner, Action open, Action close)
-    {
-        if (_owner is not null && !ReferenceEquals(_owner, owner))
-            throw new InvalidOperationException("A MenuController cannot be attached to more than one menu anchor.");
-        _owner = owner;
-        _open = open;
-        _close = close;
-    }
-
-    internal void Detach(object owner)
-    {
-        if (!ReferenceEquals(_owner, owner)) return;
-        _owner = null;
-        _open = null;
-        _close = null;
-        SetOpen(false);
-    }
-
-    internal void SetOpen(bool value)
-    {
-        if (IsOpen == value) return;
-        IsOpen = value;
-        if (!value)
-        {
-            Position = null;
-        }
-        NotifyListeners();
-    }
-
-    /// <summary>Returns the nearest menu-anchor controller without creating an inherited dependency.</summary>
-    public static MenuController? MaybeOf(BuildContext context)
-    {
-        return context.GetInherited<MenuControllerScope>()?.Controller;
-    }
-
-    internal static MenuControllerScope? MaybeScopeOf(BuildContext context)
-    {
-        return context.GetInherited<MenuControllerScope>();
-    }
-}
-
-internal interface IMenuControllerHost
-{
-    void CloseChildren();
-}
-
-internal sealed class MenuControllerScope : InheritedWidget
-{
-    public MenuControllerScope(
-        MenuController controller,
-        MenuAnchorState host,
-        bool isOpen,
-        Axis orientation,
-        Widget child) : base()
-    {
-        Controller = controller;
-        Host = host;
-        IsOpen = isOpen;
-        Orientation = orientation;
-        Child = child;
-    }
-
-    public MenuController Controller { get; }
-    public MenuAnchorState Host { get; }
-    public bool IsOpen { get; }
-    public Axis Orientation { get; }
-    public Widget Child { get; }
-    public override Widget Build(BuildContext context) => Child;
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
-        ((MenuControllerScope)oldWidget).IsOpen != IsOpen
-        || ((MenuControllerScope)oldWidget).Orientation != Orientation;
-}
-
 public sealed class DropdownMenu<T> : StatefulWidget
 {
     public DropdownMenu(
@@ -302,16 +205,16 @@ public sealed class DropdownMenu<T> : StatefulWidget
     }
 }
 
-internal sealed class DropdownMenuState<T> : State
+internal sealed class DropdownMenuState<T> : RawMenuAnchorBaseState
 {
     private TextEditingController? _controller;
     private FocusNode? _focusNode;
     private FocusNode? _trailingFocusNode;
-    private MenuController? _menuController;
+    private MenuController? _internalMenuController;
+    private bool _menuOpen;
     private bool _ownsController;
     private bool _ownsFocusNode;
     private bool _ownsTrailingFocusNode;
-    private bool _ownsMenuController;
     private bool _suppressControllerChange;
     private bool _filterActive;
     private bool _searchActive;
@@ -321,12 +224,17 @@ internal sealed class DropdownMenuState<T> : State
 
     private DropdownMenu<T> Current => (DropdownMenu<T>)StateWidget;
 
+    internal override MenuController MenuController => Current.MenuController ?? _internalMenuController!;
+
+    internal override bool IsOpen => _menuOpen;
+
     public override void InitState()
     {
         AttachController(Current.Controller);
         AttachFocusNode(Current.FocusNode);
         AttachTrailingFocusNode(Current.TrailingIconFocusNode);
-        AttachMenuController(Current.MenuController);
+        _internalMenuController = Current.MenuController is null ? new MenuController() : null;
+        base.InitState();
         _filteredEntries = Current.DropdownMenuEntries;
         _searchActive = Current.EnableSearch;
         ApplyInitialSelection();
@@ -352,8 +260,9 @@ internal sealed class DropdownMenuState<T> : State
         }
         if (!ReferenceEquals(old.MenuController, Current.MenuController))
         {
-            DetachMenuController();
-            AttachMenuController(Current.MenuController);
+            MenuController.Detach(this);
+            _internalMenuController = Current.MenuController is null ? new MenuController() : null;
+            MenuController.Attach(this);
         }
         if (!ReferenceEquals(old.DropdownMenuEntries, Current.DropdownMenuEntries))
         {
@@ -375,14 +284,21 @@ internal sealed class DropdownMenuState<T> : State
 
     public override void Dispose()
     {
-        if (_route is not null) _route.Navigator?.MaybePop();
-        DetachMenuController();
+        base.Dispose();
         DetachTrailingFocusNode();
         DetachFocusNode();
         DetachController();
     }
 
-    public override Widget Build(BuildContext context)
+    internal override void Open(Vector? position = null) => OpenMenu();
+
+    internal override void Close(bool inDispose = false) => CloseMenu();
+
+    internal override void HandleOpenRequest(Vector? position = null) => Open(position);
+
+    internal override void HandleCloseRequest() => Close();
+
+    protected override Widget BuildAnchor(BuildContext context)
     {
         var theme = Theme.Of(context);
         var dropdownTheme = DropdownMenuTheme.Of(context);
@@ -398,7 +314,7 @@ internal sealed class DropdownMenuState<T> : State
                          ?? defaults.InputDecorationTheme
                          ?? new InputDecorationThemeData(Border: new OutlineInputBorder());
 
-        var decoration = Current.DecorationBuilder?.Invoke(context, _menuController!)
+        var decoration = Current.DecorationBuilder?.Invoke(context, MenuController)
                          ?? new InputDecoration(
                              label: Current.Label,
                              hintText: Current.HintText,
@@ -412,7 +328,7 @@ internal sealed class DropdownMenuState<T> : State
 
         Widget textField = new Semantics(
             flags: isButton ? SemanticsFlags.IsButton : SemanticsFlags.None,
-            expanded: _menuController!.IsOpen,
+            expanded: MenuController.IsOpen,
             onTap: Current.Enabled ? ToggleMenu : null,
             child: new TextField(
                 controller: _controller,
@@ -459,7 +375,7 @@ internal sealed class DropdownMenuState<T> : State
         if (!Current.ShowTrailingIcon) return null;
         return new IconButton(
             focusNode: _trailingFocusNode,
-            isSelected: _menuController?.IsOpen == true,
+            isSelected: MenuController.IsOpen,
             icon: Current.TrailingIcon ?? new Icon(Icons.ArrowDropDown),
             selectedIcon: Current.SelectedTrailingIcon ?? new Icon(Icons.ArrowDropUp),
             onPressed: Current.Enabled ? ToggleMenu : null);
@@ -500,7 +416,7 @@ internal sealed class DropdownMenuState<T> : State
             maxHeight = maximumSize.Height;
         var shape = style.Shape?.Resolve(states);
         var side = style.Side?.Resolve(states);
-        var menuPadding = style.Padding?.Resolve(states);
+        Thickness? menuPadding = style.Padding?.Resolve(states)?.Resolve(Directionality.Of(Context));
         var routeItems = BuildRouteItems();
         int selectedIndex = _currentHighlight ?? FirstEnabledIndex(_filteredEntries);
         _route = new DropdownRoute<T>(
@@ -525,7 +441,7 @@ internal sealed class DropdownMenuState<T> : State
             side: side,
             menuPadding: menuPadding);
         Navigator.Of(Context).Push(_route);
-        _menuController!.SetOpen(true);
+        _menuOpen = true;
         if (CanRequestFocus(Theme.Of(Context))) _focusNode?.RequestFocus();
         SetState(() => { });
         _ = AwaitRoute(_route);
@@ -535,13 +451,13 @@ internal sealed class DropdownMenuState<T> : State
     {
         await route.Completed;
         if (!Mounted || !ReferenceEquals(route, _route)) return;
+        _menuOpen = false;
         SetState(() => _route = null);
-        _menuController?.SetOpen(false);
     }
 
     private void CloseMenu()
     {
-        _menuController?.SetOpen(false);
+        _menuOpen = false;
         _route?.Navigator?.MaybePop();
     }
 
@@ -807,21 +723,6 @@ internal sealed class DropdownMenuState<T> : State
         if (_ownsTrailingFocusNode) _trailingFocusNode?.Dispose();
         _trailingFocusNode = null;
         _ownsTrailingFocusNode = false;
-    }
-
-    private void AttachMenuController(MenuController? external)
-    {
-        _menuController = external ?? new MenuController();
-        _ownsMenuController = external is null;
-        _menuController.Attach(this, OpenMenu, CloseMenu);
-    }
-
-    private void DetachMenuController()
-    {
-        _menuController?.Detach(this);
-        if (_ownsMenuController) _menuController?.Dispose();
-        _menuController = null;
-        _ownsMenuController = false;
     }
 
     private static int FirstEnabledIndex(IReadOnlyList<DropdownMenuEntry<T>> entries)

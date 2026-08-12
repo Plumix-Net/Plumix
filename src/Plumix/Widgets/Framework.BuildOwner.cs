@@ -155,6 +155,8 @@ public sealed class BuildOwner
     {
         _scheduled = false;
 
+        using IDisposable buildPhase = Scheduler.BuildScope();
+
         // Flutter parity: process the dirty list in order of increasing depth so
         // parents rebuild before children; elements cleaned by an ancestor's
         // rebuild are skipped via the Dirty check instead of rebuilding twice.

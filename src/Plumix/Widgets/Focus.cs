@@ -122,6 +122,28 @@ public class FocusNode : ChangeNotifier
         return (Manager ?? FocusManager.Instance).RequestFocus(this);
     }
 
+    /// <summary>Moves focus to the next node in the traversal order.</summary>
+    public bool NextFocus()
+    {
+        return (Manager ?? FocusManager.Instance).FocusNext();
+    }
+
+    /// <summary>Moves focus to the previous node in the traversal order.</summary>
+    public bool PreviousFocus()
+    {
+        return (Manager ?? FocusManager.Instance).FocusPrevious();
+    }
+
+    /// <summary>Moves focus to the closest node in <paramref name="direction"/>.</summary>
+    public bool FocusInDirection(TraversalDirection direction)
+    {
+        return (Manager ?? FocusManager.Instance).FocusInDirection(direction);
+    }
+
+    /// <summary>Whether this node currently holds the primary focus.</summary>
+    public bool HasPrimaryFocus =>
+        ReferenceEquals((Manager ?? FocusManager.Instance).PrimaryFocus, this);
+
     public void Unfocus()
     {
         (Manager ?? FocusManager.Instance).Unfocus(this);
@@ -289,6 +311,27 @@ public sealed class FocusScopeNode : FocusNode
     private readonly List<FocusNode> _members = [];
 
     public FocusNode? FocusedChild { get; private set; }
+
+    /// <summary>Whether this scope or one of its descendants currently holds the primary focus.</summary>
+    /// <remarks>Matches Flutter's ancestor-inclusive `FocusNode.hasFocus` for scopes.</remarks>
+    public bool HasFocusInScope
+    {
+        get
+        {
+            FocusNode? node = (Manager ?? FocusManager.Instance).PrimaryFocus;
+            while (node is not null)
+            {
+                if (ReferenceEquals(node, this))
+                {
+                    return true;
+                }
+
+                node = node.Scope;
+            }
+
+            return false;
+        }
+    }
 
     internal IReadOnlyList<FocusNode> Members => _members;
 
@@ -567,15 +610,15 @@ public sealed class FocusManager
             if (IsDirectionalNextKey(@event.Key))
             {
                 return FocusInDirection(direction: @event.Key is "ArrowDown" or "Down"
-                    ? FocusTraversalDirection.Down
-                    : FocusTraversalDirection.Right);
+                    ? TraversalDirection.Down
+                    : TraversalDirection.Right);
             }
 
             if (IsDirectionalPreviousKey(@event.Key))
             {
                 return FocusInDirection(direction: @event.Key is "ArrowUp" or "Up"
-                    ? FocusTraversalDirection.Up
-                    : FocusTraversalDirection.Left);
+                    ? TraversalDirection.Up
+                    : TraversalDirection.Left);
             }
 
             return false;
@@ -801,7 +844,11 @@ public sealed class FocusManager
                || (candidate.CanRequestFocus && !candidate.SkipTraversal && candidate.IsTraversalEligible);
     }
 
-    private bool FocusInDirection(FocusTraversalDirection direction)
+    /// <summary>
+    /// Moves the primary focus to the closest focusable node in <paramref name="direction"/>, falling
+    /// back to ordinal traversal when no directional candidate exists.
+    /// </summary>
+    public bool FocusInDirection(TraversalDirection direction)
     {
         var candidates = CollectTraversalCandidates();
         if (candidates.Count == 0)
@@ -813,8 +860,8 @@ public sealed class FocusManager
         {
             return direction switch
             {
-                FocusTraversalDirection.Left => RequestFocus(candidates[candidates.Count - 1]),
-                FocusTraversalDirection.Up => RequestFocus(candidates[candidates.Count - 1]),
+                TraversalDirection.Left => RequestFocus(candidates[candidates.Count - 1]),
+                TraversalDirection.Up => RequestFocus(candidates[candidates.Count - 1]),
                 _ => RequestFocus(candidates[0])
             };
         }
@@ -822,7 +869,7 @@ public sealed class FocusManager
         var sourceRect = PrimaryFocus.ResolveTraversalRect();
         if (!sourceRect.HasValue)
         {
-            return direction is FocusTraversalDirection.Left or FocusTraversalDirection.Up
+            return direction is TraversalDirection.Left or TraversalDirection.Up
                 ? FocusPrevious()
                 : FocusNext();
         }
@@ -871,7 +918,7 @@ public sealed class FocusManager
             return RequestFocus(bestNode);
         }
 
-        return direction is FocusTraversalDirection.Left or FocusTraversalDirection.Up
+        return direction is TraversalDirection.Left or TraversalDirection.Up
             ? FocusPrevious()
             : FocusNext();
     }
@@ -893,7 +940,7 @@ public sealed class FocusManager
     }
 
     private static bool TryComputeDirectionalDistance(
-        FocusTraversalDirection direction,
+        TraversalDirection direction,
         double dx,
         double dy,
         out double primaryDistance,
@@ -901,19 +948,19 @@ public sealed class FocusManager
     {
         switch (direction)
         {
-            case FocusTraversalDirection.Right:
+            case TraversalDirection.Right:
                 primaryDistance = dx;
                 secondaryDistance = Math.Abs(dy);
                 return primaryDistance > 0;
-            case FocusTraversalDirection.Left:
+            case TraversalDirection.Left:
                 primaryDistance = -dx;
                 secondaryDistance = Math.Abs(dy);
                 return primaryDistance > 0;
-            case FocusTraversalDirection.Down:
+            case TraversalDirection.Down:
                 primaryDistance = dy;
                 secondaryDistance = Math.Abs(dx);
                 return primaryDistance > 0;
-            case FocusTraversalDirection.Up:
+            case TraversalDirection.Up:
                 primaryDistance = -dy;
                 secondaryDistance = Math.Abs(dx);
                 return primaryDistance > 0;
@@ -923,14 +970,6 @@ public sealed class FocusManager
                 return false;
         }
     }
-}
-
-internal enum FocusTraversalDirection
-{
-    Left,
-    Right,
-    Up,
-    Down
 }
 
 internal sealed class FocusScopeMarker : InheritedWidget

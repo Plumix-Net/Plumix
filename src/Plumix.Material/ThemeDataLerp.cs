@@ -589,7 +589,7 @@ public sealed partial record MenuStyle
                 b?.SurfaceTintColor,
                 t),
             Elevation: MaterialThemeLerp.DoubleStateProperty(a?.Elevation, b?.Elevation, t),
-            Padding: MaterialThemeLerp.ThicknessStateProperty(a?.Padding, b?.Padding, t),
+            Padding: MaterialThemeLerp.EdgeInsetsStateProperty(a?.Padding, b?.Padding, t),
             MinimumSize: MaterialThemeLerp.SizeStateProperty(a?.MinimumSize, b?.MinimumSize, t),
             FixedSize: MaterialThemeLerp.SizeStateProperty(a?.FixedSize, b?.FixedSize, t),
             MaximumSize: MaterialThemeLerp.SizeStateProperty(a?.MaximumSize, b?.MaximumSize, t),

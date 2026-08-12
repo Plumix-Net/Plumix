@@ -7,6 +7,15 @@ namespace Plumix.Widgets;
 // Dart parity source: flutter/packages/flutter/lib/src/widgets/focus_traversal.dart
 public delegate void TraversalRequestFocusCallback(FocusNode node);
 
+/// <summary>A direction along either the horizontal or vertical axes.</summary>
+public enum TraversalDirection
+{
+    Up,
+    Right,
+    Down,
+    Left,
+}
+
 public abstract class FocusTraversalPolicy
 {
     protected FocusTraversalPolicy(TraversalRequestFocusCallback? requestFocusCallback = null)
@@ -41,6 +50,59 @@ public abstract class FocusTraversalPolicy
     {
         ArgumentNullException.ThrowIfNull(currentNode);
         return (currentNode.Manager ?? FocusManager.Instance).FocusPrevious();
+    }
+
+    public bool InDirection(FocusNode currentNode, TraversalDirection direction)
+    {
+        ArgumentNullException.ThrowIfNull(currentNode);
+        return (currentNode.Manager ?? FocusManager.Instance).FocusInDirection(direction);
+    }
+
+    /// <summary>Returns the node that should receive focus first inside <paramref name="scope"/>.</summary>
+    public FocusNode? FindFirstFocus(FocusScopeNode scope, bool ignoreCurrentFocus = false)
+    {
+        ArgumentNullException.ThrowIfNull(scope);
+        if (!ignoreCurrentFocus && scope.FocusedChild is { } focusedChild)
+        {
+            return focusedChild;
+        }
+
+        IReadOnlyList<FocusNode> candidates = SortDescendants(CollectScopeCandidates(scope), scope);
+        return candidates.Count == 0 ? null : candidates[0];
+    }
+
+    /// <summary>Returns the node that should receive focus last inside <paramref name="scope"/>.</summary>
+    public FocusNode? FindLastFocus(FocusScopeNode scope, bool ignoreCurrentFocus = false)
+    {
+        ArgumentNullException.ThrowIfNull(scope);
+        if (!ignoreCurrentFocus && scope.FocusedChild is { } focusedChild)
+        {
+            return focusedChild;
+        }
+
+        IReadOnlyList<FocusNode> candidates = SortDescendants(CollectScopeCandidates(scope), scope);
+        return candidates.Count == 0 ? null : candidates[^1];
+    }
+
+    /// <summary>Drops any cached traversal order for <paramref name="scope"/>.</summary>
+    /// <remarks>
+    /// Plumix recomputes the traversal order on every request, so there is no cache to drop; the
+    /// method exists because Flutter callers must invalidate after focusing out of order.
+    /// </remarks>
+    public void InvalidateScopeData(FocusScopeNode scope)
+    {
+        ArgumentNullException.ThrowIfNull(scope);
+    }
+
+    private static List<FocusNode> CollectScopeCandidates(FocusScopeNode scope)
+    {
+        return scope.Members
+            .Where(candidate => candidate is not FocusScopeNode)
+            .Where(candidate => candidate is not FocusTraversalGroupNode)
+            .Where(candidate => candidate.CanRequestFocus
+                                && !candidate.SkipTraversal
+                                && candidate.IsTraversalEligible)
+            .ToList();
     }
 }
 
@@ -388,5 +450,115 @@ internal sealed class FocusTraversalGroupMarker : InheritedWidget
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !ReferenceEquals(((FocusTraversalGroupMarker)oldWidget).GroupNode, GroupNode);
+    }
+}
+
+/// <summary>An intent for use with <see cref="RequestFocusAction"/>, supplying the node to focus.</summary>
+public sealed class RequestFocusIntent : Intent
+{
+    public RequestFocusIntent(
+        FocusNode focusNode,
+        TraversalRequestFocusCallback? requestFocusCallback = null)
+    {
+        FocusNode = focusNode ?? throw new ArgumentNullException(nameof(focusNode));
+        RequestFocusCallback = requestFocusCallback
+                               ?? FocusTraversalPolicy.DefaultTraversalRequestFocusCallback;
+    }
+
+    public FocusNode FocusNode { get; }
+
+    public TraversalRequestFocusCallback RequestFocusCallback { get; }
+}
+
+/// <summary>Requests focus on the node supplied by its <see cref="RequestFocusIntent"/>.</summary>
+public sealed class RequestFocusAction : FlutterAction<RequestFocusIntent>
+{
+    public override object? Invoke(RequestFocusIntent intent)
+    {
+        ArgumentNullException.ThrowIfNull(intent);
+        intent.RequestFocusCallback(intent.FocusNode);
+        return null;
+    }
+}
+
+/// <summary>Moves focus to the next focusable node in the traversal order.</summary>
+public sealed class NextFocusIntent : Intent
+{
+}
+
+/// <summary>Attempts to pass focus to the next widget.</summary>
+public sealed class NextFocusAction : FlutterAction<NextFocusIntent>
+{
+    public override object? Invoke(NextFocusIntent intent)
+    {
+        return FocusManager.Instance.FocusNext();
+    }
+
+    public override KeyEventResult ToKeyEventResult(NextFocusIntent intent, object? invokeResult)
+    {
+        return invokeResult is true ? KeyEventResult.Handled : KeyEventResult.SkipRemainingHandlers;
+    }
+}
+
+/// <summary>Moves focus to the previous focusable node in the traversal order.</summary>
+public sealed class PreviousFocusIntent : Intent
+{
+}
+
+/// <summary>Attempts to pass focus to the previous widget.</summary>
+public sealed class PreviousFocusAction : FlutterAction<PreviousFocusIntent>
+{
+    public override object? Invoke(PreviousFocusIntent intent)
+    {
+        return FocusManager.Instance.FocusPrevious();
+    }
+
+    public override KeyEventResult ToKeyEventResult(PreviousFocusIntent intent, object? invokeResult)
+    {
+        return invokeResult is true ? KeyEventResult.Handled : KeyEventResult.SkipRemainingHandlers;
+    }
+}
+
+/// <summary>Moves focus to the next focusable node in <see cref="Direction"/>.</summary>
+public sealed class DirectionalFocusIntent : Intent
+{
+    public DirectionalFocusIntent(TraversalDirection direction, bool ignoreTextFields = true)
+    {
+        Direction = direction;
+        IgnoreTextFields = ignoreTextFields;
+    }
+
+    public TraversalDirection Direction { get; }
+
+    public bool IgnoreTextFields { get; }
+}
+
+/// <summary>Moves focus in the direction configured by its <see cref="DirectionalFocusIntent"/>.</summary>
+public sealed class DirectionalFocusAction : FlutterAction<DirectionalFocusIntent>
+{
+    private readonly bool _isForTextField;
+
+    public DirectionalFocusAction()
+    {
+        _isForTextField = false;
+    }
+
+    private DirectionalFocusAction(bool isForTextField)
+    {
+        _isForTextField = isForTextField;
+    }
+
+    /// <summary>Creates an action that ignores intents whose `ignoreTextFields` field is true.</summary>
+    public static DirectionalFocusAction ForTextField() => new(isForTextField: true);
+
+    public override object? Invoke(DirectionalFocusIntent intent)
+    {
+        ArgumentNullException.ThrowIfNull(intent);
+        if (!intent.IgnoreTextFields || !_isForTextField)
+        {
+            FocusManager.Instance.FocusInDirection(intent.Direction);
+        }
+
+        return null;
     }
 }

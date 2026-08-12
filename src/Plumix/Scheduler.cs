@@ -5,6 +5,23 @@ using Avalonia.Threading;
 
 namespace Plumix;
 
+/// <summary>The phase that the frame pipeline is currently in.</summary>
+/// <remarks>Dart parity source: flutter/packages/flutter/lib/src/scheduler/binding.dart (SchedulerPhase).</remarks>
+public enum SchedulerPhase
+{
+    /// <summary>No frame is being processed.</summary>
+    Idle,
+
+    /// <summary>Animation tickers are being ticked.</summary>
+    TransientCallbacks,
+
+    /// <summary>The frame is being built, laid out and painted.</summary>
+    PersistentCallbacks,
+
+    /// <summary>Post-frame callbacks are running.</summary>
+    PostFrameCallbacks,
+}
+
 public static class Scheduler
 {
     private static readonly List<Ticker> _active = [];
@@ -22,6 +39,9 @@ public static class Scheduler
 
     public static double CurrentSeconds => _sw.Elapsed.TotalSeconds;
     public static bool HasScheduledFrame => _hasScheduledFrame;
+
+    /// <summary>The phase the frame pipeline is currently in.</summary>
+    public static SchedulerPhase Phase { get; private set; } = SchedulerPhase.Idle;
 
     public static void ScheduleFrame()
     {
@@ -48,6 +68,14 @@ public static class Scheduler
     public static void RemovePersistentFrameCallback(Action<TimeSpan> callback)
     {
         _persistentFrameCallbacks.Remove(callback);
+    }
+
+    // Flutter runs every build inside the persistent-callback phase of a frame. Plumix hosts do the
+    // same, but tests drive `BuildOwner.FlushBuild` directly, so a build scope reports the build
+    // phase on its own when no frame is running.
+    internal static IDisposable BuildScope()
+    {
+        return new BuildScopeToken();
     }
 
     internal static void Add(Ticker ticker)
@@ -113,6 +141,7 @@ public static class Scheduler
         _postFrameCallbacks.Clear();
         _hasScheduledFrame = false;
         _handlingFrame = false;
+        Phase = SchedulerPhase.Idle;
         BeginFrame = null;
         DrawFrame = null;
     }
@@ -178,14 +207,18 @@ public static class Scheduler
 
         try
         {
+            Phase = SchedulerPhase.TransientCallbacks;
             TickActiveTickers(nowSeconds);
+            Phase = SchedulerPhase.PersistentCallbacks;
             BeginFrame?.Invoke(timestamp);
             RunPersistentFrameCallbacks(timestamp);
             DrawFrame?.Invoke(timestamp);
+            Phase = SchedulerPhase.PostFrameCallbacks;
             RunPostFrameCallbacks(timestamp);
         }
         finally
         {
+            Phase = SchedulerPhase.Idle;
             _handlingFrame = false;
         }
 
@@ -234,6 +267,24 @@ public static class Scheduler
         if (_postFrameCallbacks.Count > 0)
         {
             _hasScheduledFrame = true;
+        }
+    }
+
+    private sealed class BuildScopeToken : IDisposable
+    {
+        private readonly SchedulerPhase _previousPhase = Phase;
+
+        public BuildScopeToken()
+        {
+            if (Phase == SchedulerPhase.Idle)
+            {
+                Phase = SchedulerPhase.PersistentCallbacks;
+            }
+        }
+
+        public void Dispose()
+        {
+            Phase = _previousPhase;
         }
     }
 

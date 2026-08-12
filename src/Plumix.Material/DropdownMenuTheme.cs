@@ -15,7 +15,7 @@ public sealed partial record MenuStyle(
     MaterialStateProperty<Color?>? ShadowColor = null,
     MaterialStateProperty<Color?>? SurfaceTintColor = null,
     MaterialStateProperty<double?>? Elevation = null,
-    MaterialStateProperty<Thickness?>? Padding = null,
+    MaterialStateProperty<EdgeInsetsGeometry?>? Padding = null,
     MaterialStateProperty<Size?>? MinimumSize = null,
     MaterialStateProperty<Size?>? FixedSize = null,
     MaterialStateProperty<Size?>? MaximumSize = null,
@@ -83,7 +83,7 @@ public sealed class DropdownMenuTheme : InheritedWidget
                 ShadowColor: MaterialStateProperty<Color?>.All(theme.ShadowColor),
                 SurfaceTintColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
                 Elevation: MaterialStateProperty<double?>.All(3),
-                Padding: MaterialStateProperty<Thickness?>.All(new Thickness(0, 8)),
+                Padding: MaterialStateProperty<EdgeInsetsGeometry?>.All(EdgeInsetsGeometry.Symmetric(vertical: 8)),
                 MinimumSize: MaterialStateProperty<Size?>.All(new Size(112, 0)),
                 MaximumSize: MaterialStateProperty<Size?>.All(new Size(double.PositiveInfinity, double.PositiveInfinity)),
                 Shape: MaterialStateProperty<ShapeBorder?>.All(new RoundedRectangleBorder(borderRadius:

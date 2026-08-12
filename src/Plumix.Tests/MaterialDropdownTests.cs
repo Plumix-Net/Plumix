@@ -433,8 +433,9 @@ public sealed class MaterialDropdownTests : IDisposable
             label: new Text("Label"),
             decorationBuilder: (_, _) => new InputDecoration()));
         var unattachedController = new MenuController();
-        unattachedController.Open();
         Assert.False(unattachedController.IsOpen);
+        unattachedController.Close();
+        Assert.Throws<InvalidOperationException>(() => unattachedController.Open());
     }
 
     [Fact]
@@ -483,7 +484,7 @@ public sealed class MaterialDropdownTests : IDisposable
                     BackgroundColor: MaterialStateProperty<Color?>.All(background),
                     ShadowColor: MaterialStateProperty<Color?>.All(shadow),
                     Elevation: MaterialStateProperty<double?>.All(5),
-                    Padding: MaterialStateProperty<Thickness?>.All(new Thickness(0, 6)),
+                    Padding: MaterialStateProperty<EdgeInsetsGeometry?>.All(EdgeInsetsGeometry.Symmetric(vertical: 6)),
                     Side: MaterialStateProperty<BorderSide?>.All(side),
                     Shape: MaterialStateProperty<ShapeBorder?>.All(new RoundedRectangleBorder(borderRadius:
                         Plumix.Rendering.BorderRadius.Circular(11))))));
@@ -620,6 +621,7 @@ public sealed class MaterialDropdownTests : IDisposable
         var item = FindSemantics(semantics, node => node.Actions.HasFlag(SemanticsActions.Tap));
         Assert.NotNull(item);
         Assert.True(item!.PerformAction(SemanticsActions.Tap));
+        Scheduler.PumpFrameForTests();
         harness.Pump(new Size(500, 360));
         Assert.False(controller.IsOpen);
         Assert.Equal(1, activations);
@@ -924,6 +926,7 @@ public sealed class MaterialDropdownTests : IDisposable
         var item = FindSemantics(semantics, node => node.Actions.HasFlag(SemanticsActions.Tap));
         Assert.NotNull(item);
         Assert.True(item!.PerformAction(SemanticsActions.Tap));
+        Scheduler.PumpFrameForTests();
         harness.Pump(new Size(500, 360));
 
         Assert.True(invoked);
@@ -961,6 +964,7 @@ public sealed class MaterialDropdownTests : IDisposable
         var item = FindSemantics(semantics, node => node.Actions.HasFlag(SemanticsActions.Tap));
         Assert.NotNull(item);
         Assert.True(item!.PerformAction(SemanticsActions.Tap));
+        Scheduler.PumpFrameForTests();
         harness.Pump(new Size(500, 360));
 
         Assert.Null(changed);

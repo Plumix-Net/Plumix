@@ -37,6 +37,9 @@ public sealed class DropdownDemoPage : StatefulWidget
         private readonly MenuController _anchorController = new();
         private readonly MenuController _fileMenuController = new();
         private readonly MenuController _editMenuController = new();
+        private readonly MenuController _animatedMenuController = new();
+        private string _animatedMenuStatus = "Dismissed";
+        private string _animatedMenuPick = "none";
         private readonly LabeledGlobalKey<FormState> _formKey = new("dropdown-form");
         private readonly LabeledGlobalKey<FormState> _modernFormKey = new("dropdown-menu-form");
 
@@ -250,6 +253,38 @@ public sealed class DropdownDemoPage : StatefulWidget
                                         ]))))),
                         new Text($"Menu bar: {_menuBarStatus}", fontSize: 13),
                         new Divider(),
+                        new Text("Animated MenuAnchor", fontSize: 18),
+                        new Align(
+                            alignment: Alignment.CenterLeft,
+                            child: new MenuAnchor(
+                                controller: _animatedMenuController,
+                                animated: true,
+                                onAnimationStatusChanged: status =>
+                                    SetState(() => _animatedMenuStatus = status.ToString()),
+                                menuChildren:
+                                [
+                                    AnimatedMenuItem("First"),
+                                    AnimatedMenuItem("Second"),
+                                    AnimatedMenuItem("Third"),
+                                    AnimatedMenuItem("Fourth"),
+                                ],
+                                builder: (_, controller, _) => ControlButton(
+                                    controller.IsOpen ? "Hide staggered menu" : "Show staggered menu",
+                                    () =>
+                                    {
+                                        if (controller.IsOpen)
+                                        {
+                                            controller.Close();
+                                        }
+                                        else
+                                        {
+                                            controller.Open();
+                                        }
+                                    }))),
+                        new Text(
+                            $"Animated menu: {_animatedMenuStatus} / {_animatedMenuPick}",
+                            fontSize: 13),
+                        new Divider(),
                         new Text("DropdownMenuFormField + Form", fontSize: 18),
                         new Form(
                             key: _modernFormKey,
@@ -370,6 +405,10 @@ public sealed class DropdownDemoPage : StatefulWidget
             new DropdownMenuEntry<string>("three", "Three", trailingIcon: new Icon(Icons.Check)),
             new DropdownMenuEntry<string>("disabled", "Disabled entry", enabled: false),
         ];
+
+        private Widget AnimatedMenuItem(string label) => new MenuItemButton(
+            child: new Text(label),
+            onPressed: () => SetState(() => _animatedMenuPick = label.ToLowerInvariant()));
 
         private static Widget ControlButton(string label, Action action) =>
             new TextButton(new Text(label, fontSize: 12), action);

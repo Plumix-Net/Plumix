@@ -113,6 +113,7 @@ public sealed class MaterialMenuAcceleratorTests : IDisposable
         Assert.NotNull(accelerator.TextDecorations);
         Assert.True(FocusManager.Instance.HandleKeyEvent(
             new KeyEvent("O", true, isAltPressed: true)));
+        Scheduler.PumpFrameForTests();
         Assert.Equal(1, invoked);
 
         Assert.False(FocusManager.Instance.HandleKeyEvent(new KeyEvent("LeftAlt", false)));

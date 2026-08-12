@@ -33,6 +33,23 @@ public static class Curves
         return t => 1.0 - curve(1.0 - t);
     }
 
+    /// <summary>
+    /// Remaps the <em>output</em> of <paramref name="curve"/> into
+    /// <c>[<paramref name="begin"/>, <paramref name="end"/>]</c>, unlike <see cref="Interval"/>
+    /// which remaps the input.
+    /// </summary>
+    /// <remarks>Ports the private `_TweenCurve` of Flutter's `material/menu_anchor.dart`.</remarks>
+    public static Curve TweenCurve(double begin, double end, Curve? curve = null)
+    {
+        if (begin < 0.0 || begin > 1.0 || end < 0.0 || end > 1.0 || end < begin)
+        {
+            throw new ArgumentOutOfRangeException(nameof(begin));
+        }
+
+        Curve effectiveCurve = curve ?? Linear;
+        return t => begin + ((end - begin) * effectiveCurve(t));
+    }
+
     public static Curve Threshold(double threshold)
     {
         if (threshold < 0.0 || threshold > 1.0)
