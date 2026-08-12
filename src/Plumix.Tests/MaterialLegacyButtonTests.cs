@@ -193,7 +193,7 @@ public sealed class MaterialLegacyButtonTests
         Assert.Equal(new Thickness(2, 0), core.Style.ResolvePadding(MaterialState.None));
         Assert.Equal(new Size(80, 28), EffectiveMinimum(core));
         Assert.Equal(new Size(40, 40), core.TapTargetMinimumSize);
-        Assert.Equal(7, core.Style.ResolveShape(MaterialState.None)?.Radius);
+        Assert.Equal(7, ShapeBorderGeometry.ResolveRadius(core.Style.ResolveShape(MaterialState.None)).Radius);
         Assert.Equal(Colors.Navy, core.Style.ResolveForegroundColor(MaterialState.None));
     }
 

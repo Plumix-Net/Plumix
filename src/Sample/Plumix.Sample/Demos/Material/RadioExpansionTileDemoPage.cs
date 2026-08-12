@@ -109,8 +109,10 @@ internal sealed class RadioExpansionTileDemoPageState : State
                                         maintainState: _maintainState,
                                         backgroundColor: Color.Parse("#FFF0E8FF"),
                                         collapsedBackgroundColor: Colors.White,
-                                        shape: ShapeBorder.RoundedRectangle(12),
-                                        collapsedShape: ShapeBorder.RoundedRectangle(4),
+                                        shape: new RoundedRectangleBorder(borderRadius:
+                                            Plumix.Rendering.BorderRadius.Circular(12)),
+                                        collapsedShape: new RoundedRectangleBorder(borderRadius:
+                                            Plumix.Rendering.BorderRadius.Circular(4)),
                                         onExpansionChanged: value => SetState(() => _expanded = value),
                                         childrenPadding: EdgeInsetsGeometry.FromLTRB(20, 8, 20, 12),
                                         children:

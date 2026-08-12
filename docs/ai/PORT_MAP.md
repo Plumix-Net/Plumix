@@ -219,18 +219,29 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `material/user_accounts_drawer_header.dart` | `src/Plumix.Material/DrawerHeader.cs` | `src/Plumix.Tests/MaterialDrawerHeaderTests.cs` | `dart_sample/lib/demos/material/drawer_headers_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/DrawerHeadersDemoPage.cs` |
 | `painting/alignment.dart` | `src/Plumix/Rendering/Alignment.cs`<br>`src/Plumix/Rendering/AlignmentGeometry.cs` | — | — |
 | `painting/basic_types.dart` | `src/Plumix/Painting/BasicTypes.cs` | — | — |
-| `painting/borders.dart` | `src/Plumix/Rendering/Decoration.cs` | `src/Plumix.Tests/ImageProviderDecorationTests.cs` | — |
+| `painting/beveled_rectangle_border.dart` | `src/Plumix/Rendering/BeveledRectangleBorder.cs` | — | — |
+| `painting/border_radius.dart` | `src/Plumix/Rendering/Decoration.cs` | `src/Plumix.Tests/ImageProviderDecorationTests.cs` | — |
+| `painting/borders.dart` | `src/Plumix/Rendering/Borders.cs`<br>`src/Plumix/Rendering/Decoration.cs` | `src/Plumix.Tests/ImageProviderDecorationTests.cs` | `dart_sample/lib/demos/general/shape_borders_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/ShapeBordersDemoPage.cs` |
+| `painting/box_border.dart` | `src/Plumix/Rendering/BoxBorder.cs` | — | — |
 | `painting/box_decoration.dart` | `src/Plumix/Rendering/Decoration.cs` | `src/Plumix.Tests/ImageProviderDecorationTests.cs` | — |
 | `painting/box_fit.dart` | `src/Plumix/Rendering/BoxFit.cs` | — | — |
+| `painting/circle_border.dart` | `src/Plumix/Rendering/CircleBorder.cs` | — | — |
+| `painting/continuous_rectangle_border.dart` | `src/Plumix/Rendering/ContinuousRectangleBorder.cs` | — | — |
 | `painting/decoration.dart` | `src/Plumix/Rendering/Decoration.cs` | `src/Plumix.Tests/ImageProviderDecorationTests.cs` | — |
 | `painting/decoration_image.dart` | `src/Plumix/Rendering/DecorationImage.cs` | — | — |
-| `painting/edge_insets.dart` | `src/Plumix/Rendering/EdgeInsetsGeometry.cs` | — | — |
+| `painting/edge_insets.dart` | `src/Plumix/Rendering/EdgeInsetsGeometry.cs`<br>`src/Plumix/UI/RRect.cs` | — | — |
 | `painting/gradient.dart` | `src/Plumix/Rendering/Gradient.cs` | `src/Plumix.Tests/GradientTests.cs` | — |
 | `painting/image_cache.dart` | `src/Plumix/Rendering/ImageCache.cs` | — | — |
 | `painting/image_provider.dart` | `src/Plumix/Rendering/ImageProvider.cs` | `src/Plumix.Tests/ImageProviderDecorationTests.cs` | — |
 | `painting/image_resolution.dart` | `src/Plumix/Rendering/ImageProvider.cs` | `src/Plumix.Tests/ImageProviderDecorationTests.cs` | — |
 | `painting/image_stream.dart` | `src/Plumix/Rendering/ImageStream.cs` | — | — |
+| `painting/linear_border.dart` | `src/Plumix/Rendering/LinearBorder.cs` | — | — |
 | `painting/notched_shapes.dart` | `src/Plumix/Rendering/NotchedShape.cs` | — | — |
+| `painting/oval_border.dart` | `src/Plumix/Rendering/OvalBorder.cs` | — | — |
+| `painting/rounded_rectangle_border.dart` | `src/Plumix/Rendering/RoundedRectangleBorder.cs` | — | — |
+| `painting/shape_decoration.dart` | `src/Plumix/Rendering/Decoration.cs` | `src/Plumix.Tests/ImageProviderDecorationTests.cs` | — |
+| `painting/stadium_border.dart` | `src/Plumix/Rendering/StadiumBorder.cs` | — | — |
+| `painting/star_border.dart` | `src/Plumix/Rendering/StarBorder.cs` | — | — |
 | `physics/clamped_simulation.dart` | `src/Plumix/Physics/ClampedSimulation.cs` | — | — |
 | `physics/friction_simulation.dart` | `src/Plumix/Physics/FrictionSimulation.cs` | — | — |
 | `physics/simulation.dart` | `src/Plumix/Physics/Simulation.cs` | — | — |
@@ -429,11 +440,11 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 - `src/Plumix/PlumixOptions.cs`
 - `src/Plumix/Rendering/FilterLayerRasterizer.cs`
 - `src/Plumix/Rendering/ImageFilter.cs`
+- `src/Plumix/Rendering/ShapeBorderGeometry.cs`
 - `src/Plumix/UI/AppLifecycle.cs`
 - `src/Plumix/UI/Clip.cs`
 - `src/Plumix/UI/Geometry.cs`
 - `src/Plumix/UI/Path.cs`
-- `src/Plumix/UI/RRect.cs`
 - `src/Plumix/UI/Text.cs`
 - `src/Plumix.Material/MaterialThemeLerp.cs`
 - `src/Plumix.Material/RenderTabBar.cs`
@@ -442,8 +453,8 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 
 ## Summary
 
-- Flutter files mapped: 390
-- C# files carrying a marker: 489
+- Flutter files mapped: 401
+- C# files carrying a marker: 502
 - C# files without a marker: 16
 - Markers not resolvable in the pinned checkout: 5
 

@@ -109,7 +109,7 @@ public sealed class DatePickerTheme : InheritedWidget
             Elevation: m3 ? 6 : 24,
             ShadowColor: m3 ? Colors.Transparent : theme.ShadowColor,
             SurfaceTintColor: Colors.Transparent,
-            Shape: ShapeBorder.RoundedRectangle(m3 ? 28 : 4),
+            Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(m3 ? 28 : 4)),
             HeaderBackgroundColor: m3 ? Colors.Transparent : theme.PrimaryColor,
             HeaderForegroundColor: m3 ? theme.OnSurfaceVariantColor : theme.OnPrimaryColor,
             HeaderHeadlineStyle: m3 ? theme.TextTheme.HeadlineMedium : theme.TextTheme.HeadlineSmall,
@@ -119,7 +119,7 @@ public sealed class DatePickerTheme : InheritedWidget
             DayForegroundColor: foreground(),
             DayBackgroundColor: background(),
             DayOverlayColor: overlay(),
-            DayShape: MaterialStateProperty<ShapeBorder?>.All(ShapeBorder.Circle()),
+            DayShape: MaterialStateProperty<ShapeBorder?>.All(new CircleBorder()),
             TodayForegroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
             {
                 if (states.HasFlag(MaterialState.Selected)) return theme.OnPrimaryColor;
@@ -135,7 +135,7 @@ public sealed class DatePickerTheme : InheritedWidget
             YearForegroundColor: foreground(year: true),
             YearBackgroundColor: background(),
             YearOverlayColor: overlay(),
-            YearShape: MaterialStateProperty<ShapeBorder?>.All(ShapeBorder.Stadium()),
+            YearShape: MaterialStateProperty<ShapeBorder?>.All(new StadiumBorder()),
             DividerColor: theme.DividerColor,
             ToggleButtonTextStyle: theme.TextTheme.TitleSmall.CopyWith(color: ApplyOpacity(theme.OnSurfaceColor, 0.60)),
             SubHeaderForegroundColor: ApplyOpacity(theme.OnSurfaceColor, 0.60),
@@ -143,7 +143,7 @@ public sealed class DatePickerTheme : InheritedWidget
             RangePickerElevation: m3 ? 0 : 24,
             RangePickerShadowColor: Colors.Transparent,
             RangePickerSurfaceTintColor: Colors.Transparent,
-            RangePickerShape: ShapeBorder.RoundedRectangle(0),
+            RangePickerShape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(0)),
             RangePickerHeaderBackgroundColor: m3 ? theme.SurfaceContainerLowColor : theme.PrimaryColor,
             RangePickerHeaderForegroundColor: m3 ? theme.OnSurfaceColor : theme.OnPrimaryColor,
             RangePickerHeaderHeadlineStyle: m3 ? theme.TextTheme.TitleLarge : theme.TextTheme.HeadlineSmall,

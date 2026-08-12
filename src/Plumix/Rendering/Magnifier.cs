@@ -20,7 +20,7 @@ public sealed record MagnifierDecoration
 
         Opacity = opacity;
         Shadows = shadows;
-        Shape = shape ?? ShapeBorder.RoundedRectangle(0);
+        Shape = shape ?? new RoundedRectangleBorder();
     }
 
     public double Opacity { get; }

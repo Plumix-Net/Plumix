@@ -267,7 +267,7 @@ public sealed class CupertinoMagnifier : StatelessWidget
                 focalPointOffset: focalPointOffset,
                 decoration: new MagnifierDecoration(
                     opacity: animationValue,
-                    shape: ShapeBorder.RoundedRectangle(BorderRadius.Radius, BorderSide),
+                    shape: new RoundedRectangleBorder(BorderSide, BorderRadius),
                     shadows: Shadows),
                 clipBehavior: ClipBehavior,
                 magnificationScale: MagnificationScale));

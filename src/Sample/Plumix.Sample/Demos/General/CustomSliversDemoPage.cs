@@ -125,7 +125,7 @@ public sealed class CustomSliversDemoPage : StatelessWidget
                 new DecoratedSliver(
                     decoration: new BoxDecoration(
                         Color: Color.Parse("#FFEAF4FF"),
-                        Border: new BorderSide(Color.Parse("#FF90CAF9"), 2),
+                        Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(Color.Parse("#FF90CAF9"), 2)),
                         BorderRadius: BorderRadius.Circular(18)),
                     sliver: new SliverPadding(
                         padding: new Thickness(12, 10, 12, 8),

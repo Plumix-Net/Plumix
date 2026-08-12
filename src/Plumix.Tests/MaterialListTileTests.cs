@@ -382,7 +382,7 @@ public sealed class MaterialListTileTests
             var decorated = Assert.IsType<DecoratedBox>(widget);
             Assert.Equal(DecorationPosition.Foreground, decorated.Position);
             var decoration = Assert.IsType<BoxDecoration>(decorated.Decoration);
-            Assert.Equal(dividerColor, decoration.BorderSides!.Bottom!.Value.Color);
+            Assert.Equal(dividerColor, ((Plumix.Rendering.Border)decoration.Border!).Bottom.Color);
         }
 
         Assert.Same(last, divided[2]);

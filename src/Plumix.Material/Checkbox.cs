@@ -306,7 +306,8 @@ public sealed class Checkbox : StatefulWidget
 
             ShapeBorder shape = CurrentWidget.Shape
                                 ?? checkboxTheme.Shape
-                                ?? ShapeBorder.RoundedRectangle(theme.UseMaterial3 ? 2.0 : 1.0);
+                                ?? new RoundedRectangleBorder(borderRadius:
+                                    Plumix.Rendering.BorderRadius.Circular(theme.UseMaterial3 ? 2.0 : 1.0));
             double splashRadius = CurrentWidget.SplashRadius
                                   ?? checkboxTheme.SplashRadius
                                   ?? DefaultSplashRadius;
@@ -381,7 +382,7 @@ public sealed class Checkbox : StatefulWidget
                 focusNode: CurrentWidget.FocusNode,
                 autofocus: CurrentWidget.Autofocus,
                 side: side,
-                shape: CurrentWidget.Shape?.BorderRadius,
+                shape: ShapeBorderGeometry.ResolveRadiusOrNull(CurrentWidget.Shape),
                 tapTargetSize: tapTargetSize,
                 isDark: theme.Brightness == Brightness.Dark,
                 semanticLabel: CurrentWidget.SemanticLabel);
@@ -733,7 +734,7 @@ internal sealed class CheckboxPainter : ToggleablePainter
     private Color _checkColor;
     private BorderSide? _activeSide;
     private BorderSide? _inactiveSide;
-    private ShapeBorder _shape = ShapeBorder.RoundedRectangle(2.0);
+    private ShapeBorder _shape = new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(2.0));
     private Color _inactiveReactionColor;
 
     public CheckboxPainter(
@@ -884,14 +885,14 @@ internal sealed class CheckboxPainter : ToggleablePainter
         Pen? pen = side is { Width: > 0.0 }
             ? new Pen(new SolidColorBrush(side.Value.Color), side.Value.Width)
             : null;
-        if (_shape.Shape == BoxShape.Circle)
+        if (_shape is CircleBorder)
         {
             double radius = Math.Min(rect.Width, rect.Height) / 2.0;
             context.DrawCircle(brush, pen, rect.Center, radius);
             return;
         }
 
-        context.DrawRectangle(brush, pen, rect, _shape.BorderRadius);
+        context.DrawRectangle(brush, pen, rect, ShapeBorderGeometry.ResolveRadius(_shape));
     }
 
     private Rect OuterRectAt(Point origin, double t)

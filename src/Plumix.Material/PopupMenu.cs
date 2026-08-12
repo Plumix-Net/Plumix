@@ -914,7 +914,8 @@ internal sealed class PopupMenuPanel<T> : StatelessWidget
                         ?? (useM3 ? theme.ColorScheme.Shadow : null);
         ShapeBorder? shape = _route.Shape
                              ?? popupTheme.Shape
-                             ?? (useM3 ? ShapeBorder.RoundedRectangle(4) : null);
+                             ?? (useM3 ? new RoundedRectangleBorder(borderRadius:
+                                 Plumix.Rendering.BorderRadius.Circular(4)) : null);
         var children = new List<Widget>(_items.Count);
         bool selectedItemWrapped = false;
         double unit = 1.0 / (_items.Count + 1.5);

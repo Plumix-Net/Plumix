@@ -91,7 +91,7 @@ public sealed class MaterialChipTests : IDisposable
             LabelPadding: new Thickness(1),
             Padding: new Thickness(2),
             Side: new BorderSide(Colors.Maroon, 3),
-            Shape: ShapeBorder.RoundedRectangle(4),
+            Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(4)),
             LabelStyle: new TextStyle(FontSize: 12),
             SecondaryLabelStyle: new TextStyle(FontSize: 13),
             Brightness: Brightness.Dark,
@@ -132,7 +132,7 @@ public sealed class MaterialChipTests : IDisposable
             LabelPadding: new Thickness(8, 0),
             Padding: new Thickness(4),
             Side: new BorderSide(Colors.Black, 2),
-            Shape: ShapeBorder.RoundedRectangle(2),
+            Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(2)),
             LabelStyle: new TextStyle(Color: Colors.Black, FontSize: 10),
             SecondaryLabelStyle: new TextStyle(Color: Colors.Black, FontSize: 12),
             Brightness: Brightness.Dark,
@@ -156,7 +156,7 @@ public sealed class MaterialChipTests : IDisposable
             LabelPadding: new Thickness(0, 8),
             Padding: new Thickness(2),
             Side: new BorderSide(Colors.White, 4),
-            Shape: ShapeBorder.RoundedRectangle(10),
+            Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(10)),
             LabelStyle: new TextStyle(Color: Colors.White, FontSize: 20),
             SecondaryLabelStyle: new TextStyle(Color: Colors.White, FontSize: 22),
             Brightness: Brightness.Light,
@@ -180,7 +180,7 @@ public sealed class MaterialChipTests : IDisposable
         Assert.Equal(new Thickness(3), midpoint.Padding);
         Assert.Equal(middleGray, midpoint.Side!.Value.Color);
         Assert.Equal(3, midpoint.Side.Value.Width);
-        Assert.Equal(6, midpoint.Shape!.BorderRadius.Radius);
+        Assert.Equal(6, ShapeBorderGeometry.ResolveRadius(midpoint.Shape).Radius);
         Assert.Equal(15, midpoint.LabelStyle!.FontSize);
         Assert.Equal(Brightness.Light, midpoint.Brightness);
         Assert.Equal(3, midpoint.Elevation);
@@ -238,8 +238,8 @@ public sealed class MaterialChipTests : IDisposable
         var decoration = FindChipDecoration(harness.RenderView);
         Assert.Equal(Colors.Transparent, decoration.Decoration.Color);
         Assert.Equal(8, decoration.Decoration.BorderRadius!.Value.Radius);
-        Assert.Equal(Colors.CadetBlue, decoration.Decoration.Border!.Value.Color);
-        Assert.Equal(1, decoration.Decoration.Border.Value.Width);
+        Assert.Equal(Colors.CadetBlue, ((Plumix.Rendering.Border)decoration.Decoration.Border!).Top.Color);
+        Assert.Equal(1, ((Plumix.Rendering.Border)decoration.Decoration.Border!).Top.Width);
         Assert.Equal(Colors.DarkSlateBlue, ForegroundColor(Paragraph(harness.RenderView, "Action")));
         RenderChip renderChip = FindChipRender(harness.RenderView);
         Assert.True(renderChip.Size.Height >= 32);
@@ -262,7 +262,7 @@ public sealed class MaterialChipTests : IDisposable
 
         var decoration = FindChipDecoration(harness.RenderView);
         Assert.Equal(Colors.MediumPurple, decoration.Decoration.Color);
-        Assert.Equal(Colors.Transparent, decoration.Decoration.Border!.Value.Color);
+        Assert.Equal(Colors.Transparent, ((Plumix.Rendering.Border)decoration.Decoration.Border!).Top.Color);
         Assert.True(decoration.Decoration.BoxShadows.HasValue);
         Assert.True(decoration.Decoration.BoxShadows.Value.Count > 0);
     }
@@ -317,7 +317,7 @@ public sealed class MaterialChipTests : IDisposable
             BackgroundColor: Colors.Purple,
             SelectedColor: Colors.DarkGreen,
             LabelStyle: new TextStyle(Color: Colors.Orange),
-            Shape: ShapeBorder.RoundedRectangle(13));
+            Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(13)));
         using var themedHarness = new WidgetRenderHarness(Root(
             ThemeData.Light,
             new ChipTheme(
@@ -340,7 +340,7 @@ public sealed class MaterialChipTests : IDisposable
                     onSelected: _ => { },
                     selectedColor: Colors.Gold,
                     labelStyle: new TextStyle(Color: Colors.Navy),
-                    shape: ShapeBorder.RoundedRectangle(3)))));
+                    shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(3))))));
         widgetHarness.Pump(new Size(320, 120));
 
         var widget = FindChipDecoration(widgetHarness.RenderView);
@@ -647,7 +647,7 @@ public sealed class MaterialChipTests : IDisposable
         var semantics = harness.PumpAndGetSemantics(new Size(320, 120));
 
         var decoration = FindChipDecoration(harness.RenderView);
-        Assert.Equal(Colors.CadetBlue, decoration.Decoration.Border!.Value.Color);
+        Assert.Equal(Colors.CadetBlue, ((Plumix.Rendering.Border)decoration.Decoration.Border!).Top.Color);
         Assert.Equal(Colors.Transparent, decoration.Decoration.Color);
         var body = FindSemantics(semantics, node => node.Flags.HasFlag(SemanticsFlags.IsSelected));
         Assert.Null(body);
@@ -857,8 +857,8 @@ public sealed class MaterialChipTests : IDisposable
     {
         var shape = MaterialStateProperty<ShapeBorder?>.ResolveWith(states =>
             states.HasFlag(MaterialState.Selected)
-                ? ShapeBorder.RoundedRectangle(13)
-                : ShapeBorder.RoundedRectangle(3));
+                ? new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(13))
+                : new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(3)));
         var side = MaterialStateProperty<BorderSide?>.ResolveWith(states =>
             states.HasFlag(MaterialState.Disabled)
                 ? new BorderSide(Colors.Crimson, 2)
@@ -876,8 +876,8 @@ public sealed class MaterialChipTests : IDisposable
 
         RenderDecoratedBox decoration = FindChipDecoration(harness.RenderView);
         Assert.Equal(13, decoration.Decoration.BorderRadius!.Value.Radius);
-        Assert.Equal(Colors.Crimson, decoration.Decoration.Border!.Value.Color);
-        Assert.Equal(2, decoration.Decoration.Border.Value.Width);
+        Assert.Equal(Colors.Crimson, ((Plumix.Rendering.Border)decoration.Decoration.Border!).Top.Color);
+        Assert.Equal(2, ((Plumix.Rendering.Border)decoration.Decoration.Border!).Top.Width);
     }
 
     [Fact]

@@ -310,7 +310,7 @@ public sealed class MaterialTabsTests
         var decoration = Assert.Single(FindDescendants<RenderDecoratedBox>(harness.RenderView),
             box => box.Decoration.Shape == BoxShape.Circle);
         Assert.Equal(Colors.Red, decoration.Decoration.Color);
-        Assert.Equal(new BorderSide(Colors.Blue), decoration.Decoration.Border);
+        Assert.Equal(Plumix.Rendering.Border.FromBorderSide(new BorderSide(Colors.Blue)), decoration.Decoration.Border);
         Assert.Equal(new Size(16, 16), decoration.Size);
         Assert.Equal(new Size(24, 24), harness.RenderView.Child!.Size);
 
@@ -321,7 +321,7 @@ public sealed class MaterialTabsTests
             borderStyle: BorderStyle.None)));
         borderless.Pump(new Size(100, 100));
         Assert.Equal(
-            new BorderSide(Colors.Blue, style: BorderStyle.None),
+            Plumix.Rendering.Border.FromBorderSide(new BorderSide(Colors.Blue, style: BorderStyle.None)),
             Assert.Single(FindDescendants<RenderDecoratedBox>(borderless.RenderView),
                 box => box.Decoration.Shape == BoxShape.Circle).Decoration.Border);
     }
@@ -345,7 +345,7 @@ public sealed class MaterialTabsTests
         Assert.Equal([Colors.Transparent, ThemeData.Light.SecondaryColor, Colors.Transparent],
             circles.Select(circle => circle.Decoration.Color!.Value).ToArray());
         Assert.All(circles, circle => Assert.Equal(
-            new BorderSide(ThemeData.Light.SecondaryColor),
+            Plumix.Rendering.Border.FromBorderSide(new BorderSide(ThemeData.Light.SecondaryColor)),
             circle.Decoration.Border));
         Assert.Equal(new Size(60, 20), harness.RenderView.Child!.Size);
     }

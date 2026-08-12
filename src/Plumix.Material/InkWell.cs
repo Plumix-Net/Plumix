@@ -288,7 +288,7 @@ public class InkResponse : StatefulWidget
                 _currentSplash.Feature.UpdateConfiguration(
                     _currentSplash.Feature.Configuration with { Color = splashColor });
             }
-            var borderRadius = widget.CustomBorder?.BorderRadius
+            var borderRadius = ShapeBorderGeometry.ResolveRadiusOrNull(widget.CustomBorder)
                                ?? widget.BorderRadius
                                ?? Plumix.Rendering.BorderRadius.Zero;
 

@@ -739,7 +739,8 @@ public sealed class CarouselViewState : State
         Thickness padding = Current.Padding ?? carouselTheme.Padding ?? new Thickness(4);
         Color backgroundColor = Current.BackgroundColor ?? carouselTheme.BackgroundColor ?? theme.SurfaceColor;
         double elevation = Current.Elevation ?? carouselTheme.Elevation ?? 0;
-        ShapeBorder shape = Current.Shape ?? carouselTheme.Shape ?? ShapeBorder.RoundedRectangle(28);
+        ShapeBorder shape = Current.Shape ?? carouselTheme.Shape ?? new RoundedRectangleBorder(borderRadius:
+            Plumix.Rendering.BorderRadius.Circular(28));
         Clip clipBehavior = Current.ItemClipBehavior ?? carouselTheme.ItemClipBehavior ?? Clip.AntiAlias;
         MaterialStateProperty<Color?> overlayColor = Current.OverlayColor
             ?? carouselTheme.OverlayColor
@@ -765,13 +766,13 @@ public sealed class CarouselViewState : State
         Widget material = new DecoratedBox(
             new BoxDecoration(
                 Color: backgroundColor,
-                Border: shape.Side,
-                BorderRadius: shape.BorderRadius,
-                Shape: shape.Shape),
+                Border: null,
+                BorderRadius: ShapeBorderGeometry.ResolveRadius(shape),
+                Shape: ShapeBorderGeometry.BoxShapeOf(shape)),
             contents);
         if (clipBehavior != Clip.None)
         {
-            material = new ClipRRect(shape.BorderRadius, material);
+            material = new ClipPath(clipper: new ShapeBorderClipper(shape), child: material);
         }
 
         _ = elevation;

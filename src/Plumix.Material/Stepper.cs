@@ -454,7 +454,7 @@ public sealed class Stepper : StatefulWidget
                         decoration: new BoxDecoration(
                             Color: style?.Color ?? ResolveCircleColor(index),
                             Gradient: style?.Gradient,
-                            BorderSides: style?.Border,
+                            Border: style?.Border,
                             BoxShadows: style?.BoxShadow is { } shadow ? new BoxShadows(shadow) : null,
                             Shape: BoxShape.Circle),
                         child: new Center(child: BuildIconChild(index, state)))));
@@ -585,7 +585,8 @@ public sealed class Stepper : StatefulWidget
                         ? null
                         : theme.ColorScheme.Primary),
                 Padding: MaterialStateProperty<Thickness?>.All(new Thickness(16, 0)),
-                Shape: MaterialStateProperty<BorderRadius?>.All(BorderRadius.Circular(2)));
+                Shape: MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius:
+                    BorderRadius.Circular(2))));
             return new Padding(
                 new Thickness(0, 16, 0, 0),
                 new SizedBox(

@@ -464,9 +464,10 @@ public sealed class FloatingActionButton : StatelessWidget
                 highlightElevation: highlightElevation,
                 disabledElevation: disabledElevation),
             IconSize: MaterialStateProperty<double?>.All(iconSize),
-            Side: MaterialStateProperty<BorderSide?>.All(shape.Side),
+            Side: MaterialStateProperty<BorderSide?>.All(ShapeBorderGeometry.SideOrNull(shape)),
             Padding: MaterialStateProperty<Thickness?>.All(default),
-            Shape: MaterialStateProperty<BorderRadius?>.All(shape.BorderRadius),
+            Shape: MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius:
+                ShapeBorderGeometry.ResolveRadius(shape))),
             MinimumSize: MaterialStateProperty<Size?>.All(
                 new Size(sizeConstraints.MinWidth, sizeConstraints.MinHeight)),
             MaximumSize: MaterialStateProperty<Size?>.All(
@@ -831,18 +832,21 @@ internal sealed record FloatingActionButtonDefaults(
     private static ShapeBorder ResolveM2Shape(FloatingActionButtonType type)
     {
         return type == FloatingActionButtonType.Extended
-            ? ShapeBorder.Stadium()
-            : ShapeBorder.Circle();
+            ? new StadiumBorder()
+            : new CircleBorder();
     }
 
     private static ShapeBorder ResolveM3Shape(FloatingActionButtonType type)
     {
         return type switch
         {
-            FloatingActionButtonType.Small => ShapeBorder.RoundedRectangle(12),
-            FloatingActionButtonType.Large => ShapeBorder.RoundedRectangle(28),
-            FloatingActionButtonType.Extended => ShapeBorder.RoundedRectangle(16),
-            _ => ShapeBorder.RoundedRectangle(16),
+            FloatingActionButtonType.Small => new RoundedRectangleBorder(borderRadius:
+                Plumix.Rendering.BorderRadius.Circular(12)),
+            FloatingActionButtonType.Large => new RoundedRectangleBorder(borderRadius:
+                Plumix.Rendering.BorderRadius.Circular(28)),
+            FloatingActionButtonType.Extended => new RoundedRectangleBorder(borderRadius:
+                Plumix.Rendering.BorderRadius.Circular(16)),
+            _ => new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(16)),
         };
     }
 

@@ -257,7 +257,7 @@ public sealed class TextButton : StatelessWidget
                 ? MaterialStateProperty<Thickness?>.All(padding.Value)
                 : null,
             Shape: shape.HasValue
-                ? MaterialStateProperty<BorderRadius?>.All(shape.Value)
+                ? MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius: shape.Value))
                 : null,
             MinimumSize: minimumSize.HasValue
                 ? MaterialStateProperty<Size?>.All(minimumSize.Value)
@@ -365,7 +365,7 @@ public sealed class TextButton : StatelessWidget
             IconSize: useMaterial3 ? MaterialStateProperty<double?>.All(18) : null,
             Side: MaterialStateProperty<BorderSide?>.All(null),
             Padding: MaterialStateProperty<Thickness?>.All(defaultPadding),
-            Shape: MaterialStateProperty<BorderRadius?>.All(defaultShape),
+            Shape: MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius: defaultShape)),
             MinimumSize: MaterialStateProperty<Size?>.All(new Size(minWidth, resolvedMinHeight)),
             MaximumSize: MaterialStateProperty<Size?>.All(
                 new Size(double.PositiveInfinity, double.PositiveInfinity)),
@@ -413,7 +413,8 @@ public sealed class TextButton : StatelessWidget
                 ? MaterialStateProperty<Thickness?>.All(Padding.Value)
                 : null,
             Shape: BorderRadius.HasValue
-                ? MaterialStateProperty<BorderRadius?>.All(BorderRadius.Value)
+                ? MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius:
+                    BorderRadius.Value))
                 : null);
     }
 }
@@ -673,7 +674,7 @@ public sealed class ElevatedButton : StatelessWidget
                 ? MaterialStateProperty<Thickness?>.All(padding.Value)
                 : null,
             Shape: shape.HasValue
-                ? MaterialStateProperty<BorderRadius?>.All(shape.Value)
+                ? MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius: shape.Value))
                 : null,
             MinimumSize: minimumSize.HasValue
                 ? MaterialStateProperty<Size?>.All(minimumSize.Value)
@@ -803,7 +804,7 @@ public sealed class ElevatedButton : StatelessWidget
                                 : 2),
             Side: MaterialStateProperty<BorderSide?>.All(null),
             Padding: MaterialStateProperty<Thickness?>.All(defaultPadding),
-            Shape: MaterialStateProperty<BorderRadius?>.All(defaultShape),
+            Shape: MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius: defaultShape)),
             MinimumSize: MaterialStateProperty<Size?>.All(new Size(minWidth, resolvedMinHeight)),
             MaximumSize: MaterialStateProperty<Size?>.All(
                 new Size(double.PositiveInfinity, double.PositiveInfinity)),
@@ -853,7 +854,8 @@ public sealed class ElevatedButton : StatelessWidget
                 ? MaterialStateProperty<Thickness?>.All(Padding.Value)
                 : null,
             Shape: BorderRadius.HasValue
-                ? MaterialStateProperty<BorderRadius?>.All(BorderRadius.Value)
+                ? MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius:
+                    BorderRadius.Value))
                 : null);
     }
 }
@@ -1193,7 +1195,7 @@ public sealed class FilledButton : StatelessWidget
                 ? MaterialStateProperty<Thickness?>.All(padding.Value)
                 : null,
             Shape: shape.HasValue
-                ? MaterialStateProperty<BorderRadius?>.All(shape.Value)
+                ? MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius: shape.Value))
                 : null,
             MinimumSize: minimumSize.HasValue
                 ? MaterialStateProperty<Size?>.All(minimumSize.Value)
@@ -1328,7 +1330,8 @@ public sealed class FilledButton : StatelessWidget
                             : 0),
             Side: null,
             Padding: MaterialStateProperty<Thickness?>.All(defaultPadding),
-            Shape: MaterialStateProperty<BorderRadius?>.All(Plumix.Rendering.BorderRadius.Circular(20)),
+            Shape: MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius:
+                Plumix.Rendering.BorderRadius.Circular(20))),
             MinimumSize: MaterialStateProperty<Size?>.All(new Size(minWidth, minHeight)),
             MaximumSize: MaterialStateProperty<Size?>.All(
                 new Size(double.PositiveInfinity, double.PositiveInfinity)),
@@ -1378,7 +1381,8 @@ public sealed class FilledButton : StatelessWidget
                 ? MaterialStateProperty<Thickness?>.All(Padding.Value)
                 : null,
             Shape: BorderRadius.HasValue
-                ? MaterialStateProperty<BorderRadius?>.All(BorderRadius.Value)
+                ? MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius:
+                    BorderRadius.Value))
                 : null);
     }
 }
@@ -1656,7 +1660,7 @@ public sealed class OutlinedButton : StatelessWidget
                 ? MaterialStateProperty<Thickness?>.All(padding.Value)
                 : null,
             Shape: shape.HasValue
-                ? MaterialStateProperty<BorderRadius?>.All(shape.Value)
+                ? MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius: shape.Value))
                 : null,
             MinimumSize: minimumSize.HasValue
                 ? MaterialStateProperty<Size?>.All(minimumSize.Value)
@@ -1770,7 +1774,7 @@ public sealed class OutlinedButton : StatelessWidget
                         ? new BorderSide(stateColor, 1)
                     : new BorderSide(useMaterial3 ? colorScheme.Outline : m2SideColor, 1)),
             Padding: MaterialStateProperty<Thickness?>.All(defaultPadding),
-            Shape: MaterialStateProperty<BorderRadius?>.All(defaultShape),
+            Shape: MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius: defaultShape)),
             MinimumSize: MaterialStateProperty<Size?>.All(new Size(minWidth, resolvedMinHeight)),
             MaximumSize: MaterialStateProperty<Size?>.All(
                 new Size(double.PositiveInfinity, double.PositiveInfinity)),
@@ -1831,7 +1835,8 @@ public sealed class OutlinedButton : StatelessWidget
                 ? MaterialStateProperty<Thickness?>.All(Padding.Value)
                 : null,
             Shape: BorderRadius.HasValue
-                ? MaterialStateProperty<BorderRadius?>.All(BorderRadius.Value)
+                ? MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius:
+                    BorderRadius.Value))
                 : null);
     }
 }
@@ -2088,7 +2093,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
                 widgetStyle?.Padding,
                 themeStyle?.Padding,
                 defaults?.Padding),
-            Shape: ComposeStateProperty<BorderRadius?>(
+            Shape: ComposeStateProperty<OutlinedBorder?>(
                 legacyOverrides?.Shape,
                 widgetStyle?.Shape,
                 themeStyle?.Shape,
@@ -2557,7 +2562,8 @@ internal sealed class MaterialButtonCore : StatefulWidget
                 theme.UseMaterial3);
             var border = style.ResolveSide(baseStates);
             var padding = style.ResolvePadding(baseStates) ?? default;
-            var borderRadius = style.ResolveShape(baseStates) ?? Plumix.Rendering.BorderRadius.Zero;
+            OutlinedBorder resolvedShape = style.ResolveShape(baseStates) ?? new RoundedRectangleBorder();
+            var borderRadius = ShapeBorderGeometry.ResolveRadius(resolvedShape);
             _resolvedSplashFactory = style.SplashFactory ?? theme.SplashFactory;
             _resolvedBorderRadius = borderRadius;
             _resolvedTextDirection = Directionality.Of(context);
@@ -2654,7 +2660,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
 
             var decoration = new BoxDecoration(
                 Color: background,
-                Border: border,
+                Border: border is { } borderSide ? Plumix.Rendering.Border.FromBorderSide(borderSide) : null,
                 BorderRadius: borderRadius,
                 BoxShadows: ResolveBoxShadows(elevation, shadowColor));
             content = style.AnimationDuration is { } animationDuration && animationDuration > TimeSpan.Zero

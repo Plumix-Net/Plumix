@@ -43,7 +43,7 @@ internal sealed class SelectionDemoPageState : State
                     new DecoratedBox(
                         decoration: new BoxDecoration(
                             Color: Color.Parse("#FFF7F2FA"),
-                            Border: new BorderSide(Color.Parse("#FFCAC4D0")),
+                            Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(Color.Parse("#FFCAC4D0"))),
                             BorderRadius: BorderRadius.Circular(12)),
                         child: new Padding(
                             insets: new Thickness(16),
@@ -69,7 +69,8 @@ internal sealed class SelectionDemoPageState : State
                             child: new DecoratedBox(
                                 decoration: new BoxDecoration(
                                     Color: Color.Parse("#FFF4FBF8"),
-                                    Border: new BorderSide(Color.Parse("#FF80CBC4")),
+                                    Border: Plumix.Rendering.Border.FromBorderSide(
+                                        new BorderSide(Color.Parse("#FF80CBC4"))),
                                     BorderRadius: BorderRadius.Circular(12)),
                                 child: new Padding(
                                     insets: new Thickness(16),

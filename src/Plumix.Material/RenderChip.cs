@@ -751,7 +751,7 @@ internal sealed class RenderChip : RenderBox, ISlottedRenderObjectContainer
         {
             avatarRect = new Rect(ParentDataOf(_avatar).offset + offset, _avatar.Size);
             var scrim = new SolidColorBrush(Color.FromArgb(0x60, 0x19, 0x19, 0x19));
-            if (_avatarBorder.Shape == BoxShape.Circle)
+            if (_avatarBorder is CircleBorder)
             {
                 context.DrawCircle(
                     scrim,
@@ -765,7 +765,7 @@ internal sealed class RenderChip : RenderBox, ISlottedRenderObjectContainer
                     scrim,
                     null,
                     avatarRect,
-                    _avatarBorder.BorderRadius);
+                    ShapeBorderGeometry.ResolveRadius(_avatarBorder));
             }
         }
         else

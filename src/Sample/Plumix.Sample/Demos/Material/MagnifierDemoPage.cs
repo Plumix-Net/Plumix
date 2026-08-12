@@ -74,9 +74,9 @@ internal sealed class MagnifierDemoPageState : State
                                         magnificationScale: 1.8,
                                         focalPointOffset: new Point(0, 74),
                                         decoration: new MagnifierDecoration(
-                                            shape: ShapeBorder.RoundedRectangle(
-                                                14,
-                                                new BorderSide(Color.Parse("#FF006A6A"), 2)),
+                                            shape: new RoundedRectangleBorder(
+                                                new BorderSide(Color.Parse("#FF006A6A"), 2),
+                                                Plumix.Rendering.BorderRadius.Circular(14)),
                                             shadows: BuildLensShadow()),
                                         clipBehavior: Clip.HardEdge,
                                         child: new ColoredBox(

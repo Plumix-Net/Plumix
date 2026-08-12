@@ -174,7 +174,8 @@ public sealed class ToggleButtons : StatelessWidget
                 IconColor: MaterialStateProperty<Color?>.All(foreground),
                 IconSize: MaterialStateProperty<double?>.All(24.0),
                 Padding: MaterialStateProperty<Thickness?>.All(default),
-                Shape: MaterialStateProperty<BorderRadius?>.All(Plumix.Rendering.BorderRadius.Zero),
+                Shape: MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius:
+                    Plumix.Rendering.BorderRadius.Zero)),
                 MinimumSize: MaterialStateProperty<Size?>.All(minimumSize),
                 MaximumSize: maximumSize.HasValue
                     ? MaterialStateProperty<Size?>.All(maximumSize.Value)

@@ -103,7 +103,8 @@ internal sealed class BottomAppBarState : State
         var shape = widget.Shape
                     ?? barTheme.Shape
                     ?? (useMaterial3
-                        ? new AutomaticNotchedShape(ShapeBorder.RoundedRectangle(0))
+                        ? new AutomaticNotchedShape(new RoundedRectangleBorder(borderRadius:
+                            Plumix.Rendering.BorderRadius.Circular(0)))
                         : null);
         var padding = widget.Padding
                       ?? barTheme.Padding

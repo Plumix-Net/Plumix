@@ -68,6 +68,51 @@ public sealed class Path
         }
     }
 
+    // Dart parity source: dart:ui Path.conicTo (rational quadratic segment).
+    public void ConicTo(double x1, double y1, double x2, double y2, double weight)
+    {
+        EnsureCurrentContour();
+        Point start = _currentPoints![^1];
+        const int segmentCount = 24;
+        for (int segment = 1; segment <= segmentCount; segment++)
+        {
+            double t = segment / (double)segmentCount;
+            double inverse = 1.0 - t;
+            double weightedMiddle = 2.0 * inverse * t * weight;
+            double denominator = (inverse * inverse) + weightedMiddle + (t * t);
+            if (denominator == 0.0)
+            {
+                continue;
+            }
+
+            _currentPoints.Add(new Point(
+                ((inverse * inverse * start.X) + (weightedMiddle * x1) + (t * t * x2)) / denominator,
+                ((inverse * inverse * start.Y) + (weightedMiddle * y1) + (t * t * y2)) / denominator));
+        }
+    }
+
+    // Dart parity source: dart:ui Path.reset.
+    public void Reset()
+    {
+        _contours.Clear();
+        _currentPoints = null;
+        _currentClosed = false;
+    }
+
+    // Dart parity source: dart:ui Path.transform (affine subset).
+    public Path Transform(Matrix matrix)
+    {
+        var transformed = new Path { FillType = FillType };
+        foreach (PathContour contour in SnapshotContours())
+        {
+            transformed._contours.Add(PathContour.Polygon(
+                [.. contour.FlattenedPoints.Select(point => point.Transform(matrix))],
+                contour.IsClosed));
+        }
+
+        return transformed;
+    }
+
     // Dart parity source: dart:ui Path.addArc / Path.arcTo (oval-inscribed sweep).
     public void AddArc(Rect oval, double startAngleRadians, double sweepAngleRadians)
     {
@@ -136,6 +181,55 @@ public sealed class Path
         FinishCurrentContour();
         double clampedRadius = Math.Clamp(radius, 0.0, Math.Min(rect.Width, rect.Height) / 2.0);
         _contours.Add(PathContour.RoundedRectangle(rect, clampedRadius));
+    }
+
+    // Dart parity source: dart:ui Path.addRRect.
+    public void AddRRect(RRect rrect)
+    {
+        RRect scaled = rrect.ScaleRadii();
+        Plumix.Rendering.Radius topLeft = scaled.TopLeft;
+        bool uniformCircular = topLeft.X == topLeft.Y
+                               && scaled.TopRight == topLeft
+                               && scaled.BottomRight == topLeft
+                               && scaled.BottomLeft == topLeft;
+        if (uniformCircular)
+        {
+            AddRoundedRect(scaled.Rect, topLeft.X);
+            return;
+        }
+
+        AddPath(scaled.ToPath());
+    }
+
+    // Dart parity source: dart:ui Path.addPolygon.
+    public void AddPolygon(IReadOnlyList<Point> points, bool close)
+    {
+        ArgumentNullException.ThrowIfNull(points);
+        if (points.Count == 0)
+        {
+            return;
+        }
+
+        FinishCurrentContour();
+        _contours.Add(PathContour.Polygon(points, close));
+    }
+
+    // Dart parity source: dart:ui Path.getBounds.
+    public Rect GetBounds()
+    {
+        IReadOnlyList<PathContour> contours = SnapshotContours();
+        if (contours.Count == 0)
+        {
+            return default;
+        }
+
+        Rect bounds = contours[0].Bounds;
+        for (int index = 1; index < contours.Count; index++)
+        {
+            bounds = bounds.Union(contours[index].Bounds);
+        }
+
+        return bounds;
     }
 
     public void AddPath(Path other)

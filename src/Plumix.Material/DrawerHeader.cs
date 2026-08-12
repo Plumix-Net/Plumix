@@ -73,7 +73,7 @@ public sealed class DrawerHeader : StatelessWidget
             height: statusBarHeight + DrawerHeaderHeight,
             margin: Margin?.Resolve(direction),
             decoration: new BoxDecoration(
-                BorderSides: new BoxBorder(Bottom: divider)),
+                Border: new Plumix.Rendering.Border(bottom: divider)),
             child: animated);
     }
 }

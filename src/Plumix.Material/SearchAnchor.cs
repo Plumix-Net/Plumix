@@ -849,7 +849,7 @@ internal sealed class SearchViewContent : StatefulWidget
             var side = Current.ViewSide ?? viewTheme.Side ?? defaults.Side;
             if (side.HasValue)
             {
-                shape = shape with { Side = side };
+                shape = shape is OutlinedBorder outlinedside ? outlinedside.CopyWith(side) : shape;
             }
 
             double elevation = Current.ViewElevation ?? viewTheme.Elevation ?? defaults.Elevation ?? 6.0;
@@ -906,11 +906,12 @@ internal sealed class SearchViewContent : StatefulWidget
             surface = new DecoratedBox(
                 new BoxDecoration(
                     Color: background,
-                    Border: shape.Side,
-                    BorderRadius: shape.BorderRadius,
+                    Border: ShapeBorderGeometry.SideOrNull(
+                        shape) is { } shapeSide ? Plumix.Rendering.Border.FromBorderSide(shapeSide) : null,
+                    BorderRadius: ShapeBorderGeometry.ResolveRadius(shape),
                     BoxShadows: BuildBoxShadows(theme.ShadowColor, elevation)),
                 surface);
-            surface = new ClipRRect(shape.BorderRadius, surface);
+            surface = new ClipRRect(ShapeBorderGeometry.ResolveRadius(shape), surface);
             surface = new ConstrainedBox(
                 new BoxConstraints(
                     MinWidth: minWidth,
@@ -1196,11 +1197,11 @@ public sealed class SearchBar : StatefulWidget
             var surfaceTint = Resolve(CurrentWidget.SurfaceTintColor, searchBarTheme.SurfaceTintColor, defaults.SurfaceTintColor, states)
                               ?? Colors.Transparent;
             var shape = Resolve(CurrentWidget.Shape, searchBarTheme.Shape, defaults.Shape, states)
-                        ?? ShapeBorder.Stadium();
+                        ?? new StadiumBorder();
             var side = Resolve(CurrentWidget.Side, searchBarTheme.Side, defaults.Side, states);
             if (side.HasValue)
             {
-                shape = shape with { Side = side };
+                shape = shape is OutlinedBorder outlinedside ? outlinedside.CopyWith(side) : shape;
             }
             var padding = Resolve(CurrentWidget.Padding, searchBarTheme.Padding, defaults.Padding, states) ?? new Thickness(8, 0);
             var constraints = CurrentWidget.Constraints
@@ -1266,16 +1267,17 @@ public sealed class SearchBar : StatefulWidget
                 statesController: _statesController,
                 focusNode: _focusNode,
                 canRequestFocus: CurrentWidget.Enabled,
-                borderRadius: shape.BorderRadius,
+                borderRadius: ShapeBorderGeometry.ResolveRadius(shape),
                 child: content);
             content = new DecoratedBox(
                 new BoxDecoration(
                     Color: background,
-                    Border: shape.Side,
-                    BorderRadius: shape.BorderRadius,
+                    Border: ShapeBorderGeometry.SideOrNull(
+                        shape) is { } shapeSide ? Plumix.Rendering.Border.FromBorderSide(shapeSide) : null,
+                    BorderRadius: ShapeBorderGeometry.ResolveRadius(shape),
                     BoxShadows: BuildBoxShadows(shadowColor, elevation)),
                 content);
-            content = new ClipRRect(shape.BorderRadius, content);
+            content = new ClipRRect(ShapeBorderGeometry.ResolveRadius(shape), content);
             content = new Opacity(CurrentWidget.Enabled ? 1.0 : DisabledOpacity, content);
             return new ConstrainedBox(constraints, content);
         }
@@ -1393,7 +1395,7 @@ internal static class SearchBarDefaults
 
                 return Colors.Transparent;
             }),
-            Shape: MaterialStateProperty<ShapeBorder?>.All(ShapeBorder.Stadium()),
+            Shape: MaterialStateProperty<ShapeBorder?>.All(new StadiumBorder()),
             Padding: MaterialStateProperty<Thickness?>.All(new Thickness(8, 0)),
             TextStyle: MaterialStateProperty<TextStyle?>.All(
                 theme.TextTheme.BodyLarge.CopyWith(color: theme.OnSurfaceColor)),
@@ -1415,8 +1417,8 @@ internal static class SearchViewDefaults
             Elevation: 6.0,
             SurfaceTintColor: Colors.Transparent,
             Shape: isFullScreen
-                ? ShapeBorder.RoundedRectangle(0)
-                : ShapeBorder.RoundedRectangle(28),
+                ? new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(0))
+                : new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(28)),
             HeaderTextStyle: theme.TextTheme.BodyLarge.CopyWith(color: theme.OnSurfaceColor),
             HeaderHintStyle: theme.TextTheme.BodyLarge.CopyWith(color: theme.OnSurfaceVariantColor),
             Constraints: new BoxConstraints(MinWidth: 360, MinHeight: 240),

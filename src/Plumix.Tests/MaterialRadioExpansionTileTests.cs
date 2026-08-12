@@ -537,15 +537,15 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
             ShapeDecoration decoration = FindDescendants<RenderDecoratedBox>(harness.RenderView)
                 .Select(box => box.DecorationValue)
                 .OfType<ShapeDecoration>()
-                .First(value => value.Shape.BorderSides is not null);
-            Assert.Equal(divider, decoration.Shape.BorderSides!.Top!.Value.Color);
-            Assert.Equal(divider, decoration.Shape.BorderSides.Bottom!.Value.Color);
-            Assert.Null(decoration.Shape.BorderSides.Left);
-            Assert.Null(decoration.Shape.BorderSides.Right);
-            Assert.Equal(new Thickness(0, 1, 0, 1), decoration.Shape.Padding);
+                .First(value => value.Shape is Plumix.Rendering.Border);
+            Assert.Equal(divider, ((Plumix.Rendering.Border)decoration.Shape).Top.Color);
+            Assert.Equal(divider, ((Plumix.Rendering.Border)decoration.Shape).Bottom.Color);
+            Assert.Equal(BorderStyle.None, ((Plumix.Rendering.Border)decoration.Shape).Left.Style);
+            Assert.Equal(BorderStyle.None, ((Plumix.Rendering.Border)decoration.Shape).Right.Style);
+            Assert.Equal(new Thickness(0, 1, 0, 1), decoration.Shape.Dimensions.Resolve(TextDirection.Ltr));
         }
 
-        ShapeBorder shape = ShapeBorder.RoundedRectangle(12.0);
+        ShapeBorder shape = new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(12.0));
         using var customHarness = new WidgetRenderHarness(BuildThemed(
             new ExpansionTile(
                 title: new Text("Custom shape"),
@@ -579,16 +579,16 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
         var first = new ExpansionTileThemeData(
             TilePadding: EdgeInsetsGeometry.DirectionalOnly(start: 4.0),
             ExpandedAlignment: AlignmentDirectional.CenterStart,
-            Shape: ShapeBorder.RoundedRectangle(4.0),
+            Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(4.0)),
             ClipBehavior: Clip.None,
             ExpansionAnimationStyle: AnimationStyle.NoAnimation);
         ExpansionTileThemeData copy = first.CopyWith(
             backgroundColor: Colors.ForestGreen,
-            shape: ShapeBorder.RoundedRectangle(12.0));
+            shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(12.0)));
         ExpansionTileThemeData lerped = ExpansionTileThemeData.Lerp(first, copy, 0.5)!;
 
         Assert.Equal(Colors.ForestGreen, copy.BackgroundColor);
-        Assert.Equal(8.0, lerped.Shape!.BorderRadius.Radius);
+        Assert.Equal(8.0, ShapeBorderGeometry.ResolveRadius(lerped.Shape).Radius);
         Assert.Equal(first.TilePadding, lerped.TilePadding);
         Assert.Equal(Clip.None, lerped.ClipBehavior);
 

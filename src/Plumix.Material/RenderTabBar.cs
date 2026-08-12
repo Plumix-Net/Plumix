@@ -181,7 +181,9 @@ internal sealed class RenderTabBar : RenderBox,
             double radius = decoration.EffectiveBorderRadius.Radius;
             context.DrawRectangle(
                 decoration.Brush ?? new SolidColorBrush(decoration.Color ?? Colors.Transparent),
-                decoration.Border is { } border ? new Pen(new SolidColorBrush(border.Color), border.Width) : null,
+                decoration.Border is { } border
+                    ? new Pen(new SolidColorBrush(border.Top.Color), border.Top.Width)
+                    : null,
                 translated,
                 radius,
                 radius);

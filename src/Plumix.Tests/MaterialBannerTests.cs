@@ -146,9 +146,9 @@ public sealed class MaterialBannerTests
             box => box.Decoration.Color.HasValue);
         var m3Divider = Assert.Single(
             FindDescendants<RenderDecoratedBox>(m3.RenderView),
-            box => box.Decoration.BorderSides?.Bottom is not null);
+            box => box.Decoration.Border is Plumix.Rendering.Border { Bottom.Style: BorderStyle.Solid });
         Assert.Equal(m3Surface, m3Background.Decoration.Color);
-        Assert.Equal(m3Outline, m3Divider.Decoration.BorderSides!.Bottom!.Value.Color);
+        Assert.Equal(m3Outline, ((Plumix.Rendering.Border)m3Divider.Decoration.Border!).Bottom.Color);
         Assert.Null(m3Background.Decoration.BoxShadows);
 
         Color m2Surface = Color.Parse("#FF708090");

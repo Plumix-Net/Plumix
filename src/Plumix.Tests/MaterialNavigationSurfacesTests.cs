@@ -144,7 +144,8 @@ public sealed class MaterialNavigationSurfacesTests
             ShadowColor: Colors.Black,
             SurfaceTintColor: Colors.Black,
             IndicatorColor: Colors.Black,
-            IndicatorShape: ShapeBorder.RoundedRectangle(4, new BorderSide(Colors.Black, 1)),
+            IndicatorShape: new RoundedRectangleBorder(
+                new BorderSide(Colors.Black, 1), Plumix.Rendering.BorderRadius.Circular(4)),
             LabelTextStyle: MaterialStateProperty<TextStyle?>.All(
                 new TextStyle(Color: Colors.Black, FontSize: 10)),
             IconTheme: MaterialStateProperty<IconThemeData?>.All(
@@ -159,7 +160,8 @@ public sealed class MaterialNavigationSurfacesTests
             shadowColor: Colors.White,
             surfaceTintColor: Colors.White,
             indicatorColor: Colors.White,
-            indicatorShape: ShapeBorder.RoundedRectangle(12, new BorderSide(Colors.White, 3)),
+            indicatorShape: new RoundedRectangleBorder(
+                new BorderSide(Colors.White, 3), Plumix.Rendering.BorderRadius.Circular(12)),
             labelTextStyle: MaterialStateProperty<TextStyle?>.All(
                 new TextStyle(Color: Colors.White, FontSize: 20)),
             iconTheme: MaterialStateProperty<IconThemeData?>.All(
@@ -174,8 +176,8 @@ public sealed class MaterialNavigationSurfacesTests
         Assert.Equal(70, midpoint.Height);
         Assert.Equal(2, midpoint.Elevation);
         Assert.Equal(Color.FromRgb(127, 127, 127), midpoint.BackgroundColor);
-        Assert.Equal(8, midpoint.IndicatorShape!.BorderRadius.Radius);
-        Assert.Equal(2, midpoint.IndicatorShape.Side!.Value.Width);
+        Assert.Equal(8, ShapeBorderGeometry.ResolveRadius(midpoint.IndicatorShape).Radius);
+        Assert.Equal(2, ShapeBorderGeometry.SideOrNone(midpoint.IndicatorShape).Width);
         Assert.Equal(15, midpoint.LabelTextStyle!.Resolve(states)!.FontSize);
         Assert.Equal(20, midpoint.IconTheme!.Resolve(states)!.Size);
         Assert.Equal(Color.FromRgb(127, 127, 127), midpoint.OverlayColor!.Resolve(states));
@@ -320,7 +322,8 @@ public sealed class MaterialNavigationSurfacesTests
             ShadowColor: Colors.Black,
             SurfaceTintColor: Colors.Black,
             IndicatorColor: Colors.Black,
-            IndicatorShape: ShapeBorder.RoundedRectangle(4, new BorderSide(Colors.Black, 1)),
+            IndicatorShape: new RoundedRectangleBorder(
+                new BorderSide(Colors.Black, 1), Plumix.Rendering.BorderRadius.Circular(4)),
             IndicatorSize: new Size(200, 40),
             LabelTextStyle: MaterialStateProperty<TextStyle?>.All(
                 new TextStyle(Color: Colors.Black, FontSize: 10)),
@@ -333,7 +336,8 @@ public sealed class MaterialNavigationSurfacesTests
             shadowColor: Colors.White,
             surfaceTintColor: Colors.White,
             indicatorColor: Colors.White,
-            indicatorShape: ShapeBorder.RoundedRectangle(12, new BorderSide(Colors.White, 3)),
+            indicatorShape: new RoundedRectangleBorder(
+                new BorderSide(Colors.White, 3), Plumix.Rendering.BorderRadius.Circular(12)),
             indicatorSize: new Size(300, 60),
             labelTextStyle: MaterialStateProperty<TextStyle?>.All(
                 new TextStyle(Color: Colors.White, FontSize: 20)),
@@ -349,8 +353,8 @@ public sealed class MaterialNavigationSurfacesTests
         Assert.Equal(Color.FromRgb(127, 127, 127), midpoint.ShadowColor);
         Assert.Equal(Color.FromRgb(127, 127, 127), midpoint.SurfaceTintColor);
         Assert.Equal(Color.FromRgb(127, 127, 127), midpoint.IndicatorColor);
-        Assert.Equal(8, midpoint.IndicatorShape!.BorderRadius.Radius);
-        Assert.Equal(2, midpoint.IndicatorShape.Side!.Value.Width);
+        Assert.Equal(8, ShapeBorderGeometry.ResolveRadius(midpoint.IndicatorShape).Radius);
+        Assert.Equal(2, ShapeBorderGeometry.SideOrNone(midpoint.IndicatorShape).Width);
         Assert.Equal(begin.IndicatorSize, midpoint.IndicatorSize);
         Assert.Equal(15, midpoint.LabelTextStyle!.Resolve(states)!.FontSize);
         Assert.Equal(20, midpoint.IconTheme!.Resolve(states)!.Size);
@@ -622,7 +626,8 @@ public sealed class MaterialNavigationSurfacesTests
             LabelType: NavigationRailLabelType.None,
             UseIndicator: false,
             IndicatorColor: Colors.Black,
-            IndicatorShape: ShapeBorder.RoundedRectangle(4, new BorderSide(Colors.Black, 1)),
+            IndicatorShape: new RoundedRectangleBorder(
+                new BorderSide(Colors.Black, 1), Plumix.Rendering.BorderRadius.Circular(4)),
             MinWidth: 60,
             MinExtendedWidth: 200);
         NavigationRailThemeData end = begin.CopyWith(
@@ -636,7 +641,8 @@ public sealed class MaterialNavigationSurfacesTests
             labelType: NavigationRailLabelType.All,
             useIndicator: true,
             indicatorColor: Colors.White,
-            indicatorShape: ShapeBorder.RoundedRectangle(12, new BorderSide(Colors.White, 3)),
+            indicatorShape: new RoundedRectangleBorder(
+                new BorderSide(Colors.White, 3), Plumix.Rendering.BorderRadius.Circular(12)),
             minWidth: 80,
             minExtendedWidth: 280);
 
@@ -652,7 +658,7 @@ public sealed class MaterialNavigationSurfacesTests
         Assert.Equal(NavigationRailLabelType.All, midpoint.LabelType);
         Assert.True(midpoint.UseIndicator);
         Assert.Equal(Color.FromRgb(127, 127, 127), midpoint.IndicatorColor);
-        Assert.Equal(8, midpoint.IndicatorShape!.BorderRadius.Radius);
+        Assert.Equal(8, ShapeBorderGeometry.ResolveRadius(midpoint.IndicatorShape).Radius);
         Assert.Equal(70, midpoint.MinWidth);
         Assert.Equal(240, midpoint.MinExtendedWidth);
     }

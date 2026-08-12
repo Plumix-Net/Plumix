@@ -524,7 +524,7 @@ public sealed class Switch : StatefulWidget
                 height: config.TrackHeight,
                 decoration: new BoxDecoration(
                     Color: trackColor,
-                    Border: trackOutline,
+                    Border: trackOutline is { } outline ? Plumix.Rendering.Border.FromBorderSide(outline) : null,
                     BorderRadius: BorderRadius.Circular(config.TrackHeight / 2)),
                 child: trackBody);
 
@@ -535,7 +535,7 @@ public sealed class Switch : StatefulWidget
                     width: config.TrackWidth + 3.5,
                     height: config.TrackHeight + 3.5,
                     decoration: new BoxDecoration(
-                        Border: new BorderSide(overlayColor.Value, 3.5),
+                        Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(overlayColor.Value, 3.5)),
                         BorderRadius: BorderRadius.Circular((config.TrackHeight + 3.5) / 2)),
                     child: new Center(child: track));
             }
@@ -600,7 +600,8 @@ public sealed class Switch : StatefulWidget
                 IconSize: MaterialStateProperty<double?>.All(config.IconSize),
                 Side: MaterialStateProperty<BorderSide?>.All(null),
                 Padding: MaterialStateProperty<Thickness?>.All(new Thickness(0)),
-                Shape: MaterialStateProperty<BorderRadius?>.All(BorderRadius.Circular(totalHeight / 2)),
+                Shape: MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius:
+                    BorderRadius.Circular(totalHeight / 2))),
                 MinimumSize: MaterialStateProperty<Size?>.All(new Size(totalWidth, totalHeight)),
                 FixedSize: MaterialStateProperty<Size?>.All(new Size(totalWidth, totalHeight)),
                 MaximumSize: MaterialStateProperty<Size?>.All(new Size(totalWidth, totalHeight)),

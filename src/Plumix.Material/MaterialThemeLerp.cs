@@ -66,28 +66,7 @@ internal static class MaterialThemeLerp
 
     public static ShapeBorder? Shape(ShapeBorder? a, ShapeBorder? b, double t)
     {
-        if (a is null && b is null)
-        {
-            return null;
-        }
-
-        if (a is null)
-        {
-            return ScaleShape(b!, t);
-        }
-
-        if (b is null)
-        {
-            return ScaleShape(a, 1.0 - t);
-        }
-
-        BorderSide? side = BorderSide(a.Side, b.Side, t);
-        BorderRadius radius = Plumix.Rendering.BorderRadius.Lerp(a.BorderRadius, b.BorderRadius, t)!.Value;
-        return new ShapeBorder(radius, side)
-        {
-            Shape = t < 0.5 ? a.Shape : b.Shape,
-            BorderSides = BoxBorder.Lerp(a.BorderSides, b.BorderSides, t),
-        };
+        return ShapeBorder.Lerp(a, b, t);
     }
 
     public static BorderRadius? BorderRadius(BorderRadius? a, BorderRadius? b, double t)
@@ -290,45 +269,6 @@ internal static class MaterialThemeLerp
 
         return MaterialStateProperty<Color?>.ResolveWith(
             states => Color(a?.Resolve(states), b?.Resolve(states), t));
-    }
-
-    private static ShapeBorder ScaleShape(ShapeBorder shape, double factor)
-    {
-        double clampedFactor = Math.Clamp(factor, 0.0, 1.0);
-        BorderSide? side = shape.Side.HasValue
-            ? new Plumix.Rendering.BorderSide(
-                shape.Side.Value.Color,
-                shape.Side.Value.Width * clampedFactor,
-                shape.Side.Value.Style)
-            : null;
-        return new ShapeBorder(
-            Plumix.Rendering.BorderRadius.Circular(shape.BorderRadius.Radius * clampedFactor),
-            side)
-        {
-            Shape = shape.Shape,
-            BorderSides = ScaleBoxBorder(shape.BorderSides, clampedFactor),
-        };
-    }
-
-    private static BoxBorder? ScaleBoxBorder(BoxBorder? border, double factor)
-    {
-        if (border is null)
-        {
-            return null;
-        }
-
-        return new BoxBorder(
-            Left: ScaleBorderSide(border.Left, factor),
-            Top: ScaleBorderSide(border.Top, factor),
-            Right: ScaleBorderSide(border.Right, factor),
-            Bottom: ScaleBorderSide(border.Bottom, factor));
-    }
-
-    private static BorderSide? ScaleBorderSide(BorderSide? side, double factor)
-    {
-        return side.HasValue
-            ? new BorderSide(side.Value.Color, side.Value.Width * factor, side.Value.Style)
-            : null;
     }
 
     private static double LerpConstraint(double a, double b, double t)

@@ -485,7 +485,8 @@ public sealed class MaterialDropdownTests : IDisposable
                     Elevation: MaterialStateProperty<double?>.All(5),
                     Padding: MaterialStateProperty<Thickness?>.All(new Thickness(0, 6)),
                     Side: MaterialStateProperty<BorderSide?>.All(side),
-                    Shape: MaterialStateProperty<ShapeBorder?>.All(ShapeBorder.RoundedRectangle(11)))));
+                    Shape: MaterialStateProperty<ShapeBorder?>.All(new RoundedRectangleBorder(borderRadius:
+                        Plumix.Rendering.BorderRadius.Circular(11))))));
         using var harness = new WidgetRenderHarness(Wrap(new Navigator(new BuilderPageRoute(_ => page))));
         var semantics = harness.PumpAndGetSemantics(new Size(500, 360));
         var anchor = FindSemantics(semantics, node =>
@@ -509,7 +510,7 @@ public sealed class MaterialDropdownTests : IDisposable
         Assert.Equal(new Thickness(0, 6), layout.Route.MenuPadding);
         Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView), box =>
             box.Decoration.Color == background
-            && box.Decoration.Border == side
+            && box.Decoration.Border == Plumix.Rendering.Border.FromBorderSide(side)
             && box.Decoration.EffectiveBorderRadius == BorderRadius.Circular(11));
     }
 

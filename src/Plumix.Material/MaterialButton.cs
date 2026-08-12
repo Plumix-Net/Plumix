@@ -330,7 +330,8 @@ public sealed class RawMaterialButton : StatefulWidget
                     return widget.Elevation;
                 }),
                 Padding: MaterialStateProperty<Thickness?>.All(padding),
-                Shape: MaterialStateProperty<BorderRadius?>.All(widget.Shape),
+                Shape: MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius:
+                    widget.Shape)),
                 MinimumSize: MaterialStateProperty<Size?>.All(new Size(
                     widget.Constraints.MinWidth,
                     widget.Constraints.MinHeight)),

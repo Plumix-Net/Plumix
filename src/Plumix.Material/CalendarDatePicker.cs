@@ -601,8 +601,9 @@ internal sealed class CalendarDay : StatefulWidget
             var foreground = (widget.IsToday ? local.TodayForegroundColor ?? defaults.TodayForegroundColor : local.DayForegroundColor ?? defaults.DayForegroundColor)!.Resolve(states);
             var background = (widget.IsToday ? local.TodayBackgroundColor ?? defaults.TodayBackgroundColor : local.DayBackgroundColor ?? defaults.DayBackgroundColor)!.Resolve(states);
             var overlay = local.DayOverlayColor ?? defaults.DayOverlayColor!;
-            var shape = (local.DayShape ?? defaults.DayShape)!.Resolve(states) ?? ShapeBorder.Circle();
-            var border = widget.IsToday ? local.TodayBorder ?? defaults.TodayBorder : shape.Side;
+            var shape = (local.DayShape ?? defaults.DayShape)!.Resolve(states) ?? new CircleBorder();
+            var border = widget.IsToday ? local.TodayBorder ?? defaults.TodayBorder : ShapeBorderGeometry.SideOrNull(
+                shape);
             if (widget.IsToday && border.HasValue && border.Value.Color.A == 0 && foreground.HasValue)
             {
                 border = new BorderSide(foreground.Value, border.Value.Width);
@@ -610,9 +611,9 @@ internal sealed class CalendarDay : StatefulWidget
             var style = (local.DayStyle ?? defaults.DayStyle!).CopyWith(color: foreground);
             var decoration = new BoxDecoration(
                 Color: background,
-                Border: border,
-                BorderRadius: shape.Shape == BoxShape.Circle ? null : shape.BorderRadius,
-                Shape: shape.Shape);
+                Border: border is { } cellBorder ? Plumix.Rendering.Border.FromBorderSide(cellBorder) : null,
+                BorderRadius: shape is CircleBorder ? null : ShapeBorderGeometry.ResolveRadius(shape),
+                Shape: ShapeBorderGeometry.BoxShapeOf(shape));
 
             Widget result = new Semantics(
                 label: $"{MaterialLocalizations.Of(context).FormatDecimal(widget.Day.Day)}, {widget.CalendarDelegate.FormatFullDate(widget.Day, MaterialLocalizations.Of(context))}{(widget.IsToday ? $", {MaterialLocalizations.Of(context).CurrentDateLabel}" : string.Empty)}",
@@ -637,7 +638,7 @@ internal sealed class CalendarDay : StatefulWidget
                     overlayColor: overlay,
                     customBorder: shape,
                     containedInkWell: true,
-                    highlightShape: shape.Shape,
+                    highlightShape: ShapeBorderGeometry.BoxShapeOf(shape),
                     child: result);
             }
             return result;
@@ -828,8 +829,10 @@ internal sealed class CalendarYear : StatefulWidget
             var foreground = (widget.IsCurrent ? local.TodayForegroundColor ?? defaults.TodayForegroundColor : local.YearForegroundColor ?? defaults.YearForegroundColor)!.Resolve(states);
             var background = (widget.IsCurrent ? local.TodayBackgroundColor ?? defaults.TodayBackgroundColor : local.YearBackgroundColor ?? defaults.YearBackgroundColor)!.Resolve(states);
             var overlay = local.YearOverlayColor ?? defaults.YearOverlayColor!;
-            var shape = (local.YearShape ?? defaults.YearShape)!.Resolve(states) ?? ShapeBorder.Stadium();
-            var border = widget.IsCurrent ? local.TodayBorder ?? defaults.TodayBorder : shape.Side;
+            var shape = (local.YearShape ?? defaults.YearShape)!.Resolve(states) ?? new StadiumBorder();
+            var border = widget.IsCurrent
+                ? local.TodayBorder ?? defaults.TodayBorder
+                : ShapeBorderGeometry.SideOrNull(shape);
             if (widget.IsCurrent && border is not null && foreground.HasValue)
             {
                 border = new BorderSide(foreground.Value, border.Value.Width);
@@ -843,9 +846,9 @@ internal sealed class CalendarYear : StatefulWidget
                     alignment: Alignment.Center,
                     decoration: new BoxDecoration(
                         Color: background,
-                        Border: border,
-                        BorderRadius: shape.BorderRadius,
-                        Shape: shape.Shape),
+                        Border: border is { } cellBorder ? Plumix.Rendering.Border.FromBorderSide(cellBorder) : null,
+                        BorderRadius: ShapeBorderGeometry.ResolveRadius(shape),
+                        Shape: ShapeBorderGeometry.BoxShapeOf(shape)),
                     child: new Semantics(
                         label: widget.CalendarDelegate.FormatYear(widget.Year, localizations),
                         flags: SemanticsFlags.IsButton

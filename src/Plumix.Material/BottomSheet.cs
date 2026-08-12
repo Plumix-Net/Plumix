@@ -97,7 +97,7 @@ public sealed class BottomSheet : StatefulWidget
         Elevation: 1,
         ModalElevation: 1,
         ShadowColor: Colors.Transparent,
-        Shape: new ShapeBorder(BorderRadius.Only(topLeft: 28.0, topRight: 28.0)),
+        Shape: new RoundedRectangleBorder(borderRadius: BorderRadius.Only(topLeft: 28.0, topRight: 28.0)),
         DragHandleColor: MaterialStateProperty<Color?>.All(theme.OnSurfaceVariantColor),
         DragHandleSize: new Size(32, 4),
         Constraints: new BoxConstraints(MaxWidth: 640));

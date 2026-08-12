@@ -173,9 +173,9 @@ internal sealed class KeyboardListenerDemoPageState : State
             padding: new Thickness(12),
             decoration: new BoxDecoration(
                 Color: focused ? Color.Parse("#FFE0F2F1") : Color.Parse("#FFF1F3F4"),
-                Border: new BorderSide(
+                Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(
                     color: focused ? Color.Parse("#FF00796B") : Color.Parse("#FF9AA0A6"),
-                    width: focused ? 2 : 1),
+                    width: focused ? 2 : 1)),
                 BorderRadius: BorderRadius.Circular(10)),
             child: new Column(
                 mainAxisAlignment: MainAxisAlignment.Center,

@@ -63,13 +63,15 @@ public sealed class MaterialCardTests
 
         var outlinedBackground = FindMaterialDecoration(outlinedHarness.RenderView);
         var outlinedBorder = FindDescendants<RenderDecoratedBox>(outlinedHarness.RenderView)
-            .FirstOrDefault(box => box.Decoration.Border.HasValue);
+            .FirstOrDefault(box => box.Decoration.Border is not null);
 
         Assert.NotNull(outlinedBackground);
         Assert.Equal(theme.SurfaceColor, outlinedBackground!.Decoration.Color);
         Assert.False(outlinedBackground.Decoration.BoxShadows.HasValue);
         Assert.NotNull(outlinedBorder);
-        Assert.Equal(theme.OutlineVariantColor, outlinedBorder!.Decoration.Border!.Value.Color);
+        Assert.Equal(
+            theme.OutlineVariantColor,
+            ((Plumix.Rendering.Border)outlinedBorder!.Decoration.Border!).Top.Color);
         Assert.Equal(12, outlinedBorder.Decoration.EffectiveBorderRadius.Radius);
     }
 
@@ -115,9 +117,9 @@ public sealed class MaterialCardTests
         outlinedHarness.Pump(new Size(220, 140));
         var outlinedSurface = FindMaterialDecoration(outlinedHarness.RenderView);
         var outlinedBorder = FindDescendants<RenderDecoratedBox>(outlinedHarness.RenderView)
-            .Single(box => box.Decoration.Border.HasValue);
+            .Single(box => box.Decoration.Border is not null);
         Assert.Equal(outlined, outlinedSurface!.Decoration.Color);
-        Assert.Equal(outline, outlinedBorder.Decoration.Border!.Value.Color);
+        Assert.Equal(outline, ((Plumix.Rendering.Border)outlinedBorder.Decoration.Border!).Top.Color);
     }
 
     [Fact]
@@ -140,7 +142,7 @@ public sealed class MaterialCardTests
         Assert.NotNull(material);
         Assert.Equal(cardColor, material!.Decoration.Color);
         Assert.Equal(4, material.Decoration.EffectiveBorderRadius.Radius);
-        Assert.False(material.Decoration.Border.HasValue);
+        Assert.False(material.Decoration.Border is not null);
         Assert.True(material.Decoration.BoxShadows.HasValue);
     }
 
@@ -155,7 +157,7 @@ public sealed class MaterialCardTests
                 ShadowColor: Colors.DarkGreen,
                 Elevation: 3,
                 Margin: new Thickness(9),
-                Shape: ShapeBorder.RoundedRectangle(18),
+                Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(18)),
                 ClipBehavior: Clip.AntiAlias)
         };
 
@@ -173,7 +175,7 @@ public sealed class MaterialCardTests
         var margin = FindDescendant<RenderPadding>(harness.RenderView);
         Assert.NotNull(margin);
         Assert.Equal(new Thickness(9), margin!.Padding);
-        Assert.NotNull(FindDescendant<RenderClipRRect>(harness.RenderView));
+        Assert.NotNull(FindDescendant<RenderClipPath>(harness.RenderView));
     }
 
     [Fact]
@@ -193,13 +195,13 @@ public sealed class MaterialCardTests
                 child: new CardTheme(
                     data: new CardThemeData(
                         Color: localThemeColor,
-                        Shape: ShapeBorder.RoundedRectangle(22)),
+                        Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(22))),
                     child: new SizedBox(
                         width: 180,
                         height: 96,
                         child: new Card(
                             color: widgetColor,
-                            shape: ShapeBorder.RoundedRectangle(6),
+                            shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(6)),
                             child: new SizedBox())))));
 
         harness.Pump(new Size(240, 160));
@@ -228,7 +230,8 @@ public sealed class MaterialCardTests
             SurfaceTintColor: Colors.Blue,
             Elevation: 2,
             Margin: new Thickness(2, 4, 6, 8),
-            Shape: ShapeBorder.RoundedRectangle(4, new BorderSide(Colors.Red, 1)));
+            Shape: new RoundedRectangleBorder(
+                new BorderSide(Colors.Red, 1), Plumix.Rendering.BorderRadius.Circular(4)));
         CardThemeData copy = a.CopyWith(color: Colors.Green, elevation: 6);
         Assert.Equal(Colors.Green, copy.Color);
         Assert.Equal(6, copy.Elevation);
@@ -241,23 +244,25 @@ public sealed class MaterialCardTests
             SurfaceTintColor: Colors.Green,
             Elevation: 10,
             Margin: new Thickness(10, 12, 14, 16),
-            Shape: ShapeBorder.RoundedRectangle(12, new BorderSide(Colors.Blue, 3)));
+            Shape: new RoundedRectangleBorder(
+                new BorderSide(Colors.Blue, 3), Plumix.Rendering.BorderRadius.Circular(12)));
         CardThemeData midpoint = Assert.IsType<CardThemeData>(CardThemeData.Lerp(a, b, 0.5));
 
         Assert.Equal(Clip.AntiAlias, midpoint.ClipBehavior);
         Assert.Equal(6, midpoint.Elevation);
         Assert.Equal(new Thickness(6, 8, 10, 12), midpoint.Margin);
-        Assert.Equal(8, midpoint.Shape!.BorderRadius.Radius);
-        Assert.Equal(2, midpoint.Shape.Side!.Value.Width);
+        Assert.Equal(8, ShapeBorderGeometry.ResolveRadius(midpoint.Shape).Radius);
+        Assert.Equal(2, ShapeBorderGeometry.SideOrNone(midpoint.Shape).Width);
         Assert.Equal(new ColorTween().Evaluate(0.5, Colors.Red, Colors.Blue), midpoint.Color);
 
         CardThemeData scaled = Assert.IsType<CardThemeData>(
             CardThemeData.Lerp(null, new CardThemeData(
                 Elevation: 8,
-                Shape: ShapeBorder.RoundedRectangle(12, new BorderSide(Colors.Blue, 2))), 0.25));
+                Shape: new RoundedRectangleBorder(
+                    new BorderSide(Colors.Blue, 2), Plumix.Rendering.BorderRadius.Circular(12))), 0.25));
         Assert.Equal(2, scaled.Elevation);
-        Assert.Equal(3, scaled.Shape!.BorderRadius.Radius);
-        Assert.Equal(0.5, scaled.Shape.Side!.Value.Width);
+        Assert.Equal(3, ShapeBorderGeometry.ResolveRadius(scaled.Shape).Radius);
+        Assert.Equal(0.5, ShapeBorderGeometry.SideOrNone(scaled.Shape).Width);
         Assert.Equal(new CardThemeData(), CardThemeData.Lerp(null, null, 0.5));
 
         var themeA = new CardTheme(data: a);
@@ -319,24 +324,28 @@ public sealed class MaterialCardTests
             BuildThemedCard(new Card(child: new SizedBox(width: 80, height: 32))));
         defaultHarness.Pump(new Size(220, 140));
 
-        Assert.Null(FindDescendant<RenderClipRRect>(defaultHarness.RenderView));
+        Assert.Null(FindDescendant<RenderClipPath>(defaultHarness.RenderView));
 
         using var clippedHarness = new WidgetRenderHarness(
             BuildThemedCard(new Card(
                 clipBehavior: Clip.AntiAlias,
-                shape: ShapeBorder.RoundedRectangle(20),
+                shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(20)),
                 child: new SizedBox(width: 80, height: 32))));
         clippedHarness.Pump(new Size(220, 140));
 
-        var clip = FindDescendant<RenderClipRRect>(clippedHarness.RenderView);
+        var clip = FindDescendant<RenderClipPath>(clippedHarness.RenderView);
         Assert.NotNull(clip);
-        Assert.Equal(20, clip!.BorderRadius.Radius);
+        var clipper = Assert.IsType<ShapeBorderClipper>(clip!.Clipper);
+        Assert.Equal(
+            new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(20)),
+            clipper.Shape);
     }
 
     [Fact]
     public void Card_BorderOnForegroundControlsMaterialPaintOrder()
     {
-        ShapeBorder shape = ShapeBorder.RoundedRectangle(9, new BorderSide(Colors.DarkGreen, 2));
+        ShapeBorder shape = new RoundedRectangleBorder(
+            new BorderSide(Colors.DarkGreen, 2), Plumix.Rendering.BorderRadius.Circular(9));
         using var foregroundHarness = new WidgetRenderHarness(
             BuildThemedCard(new Card(
                 shape: shape,
@@ -346,7 +355,7 @@ public sealed class MaterialCardTests
 
         Assert.NotNull(FindDescendant<RenderStack>(foregroundHarness.RenderView));
         var foregroundBorders = FindDescendants<RenderDecoratedBox>(foregroundHarness.RenderView)
-            .Where(box => box.Decoration.Border.HasValue)
+            .Where(box => box.Decoration.Border is not null)
             .ToArray();
         Assert.Single(foregroundBorders);
 
@@ -359,7 +368,7 @@ public sealed class MaterialCardTests
 
         Assert.Null(FindDescendant<RenderStack>(backgroundHarness.RenderView));
         var backgroundBorders = FindDescendants<RenderDecoratedBox>(backgroundHarness.RenderView)
-            .Where(box => box.Decoration.Border.HasValue)
+            .Where(box => box.Decoration.Border is not null)
             .ToArray();
         Assert.Single(backgroundBorders);
     }
@@ -379,7 +388,7 @@ public sealed class MaterialCardTests
     {
         Assert.Throws<ArgumentOutOfRangeException>(() => new MaterialSurface(elevation: -0.1));
         Assert.Throws<ArgumentException>(() => new MaterialSurface(
-            shape: ShapeBorder.RoundedRectangle(4),
+            shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(4)),
             borderRadius: BorderRadius.Circular(4)));
         Assert.Throws<ArgumentException>(() => new MaterialSurface(
             type: MaterialType.Circle,
@@ -427,25 +436,25 @@ public sealed class MaterialCardTests
             BuildThemedCard(new MaterialSurface(
                 borderOnForeground: true,
                 clipBehavior: Clip.AntiAlias,
-                shape: ShapeBorder.RoundedRectangle(9, side),
+                shape: new RoundedRectangleBorder(side, Plumix.Rendering.BorderRadius.Circular(9)),
                 child: new SizedBox(width: 80, height: 32))));
         foregroundHarness.Pump(new Size(220, 140));
 
-        Assert.NotNull(FindDescendant<RenderClipRRect>(foregroundHarness.RenderView));
+        Assert.NotNull(FindDescendant<RenderClipPath>(foregroundHarness.RenderView));
         Assert.Single(FindDescendants<RenderDecoratedBox>(foregroundHarness.RenderView)
-            .Where(box => box.Decoration.Border.HasValue)
+            .Where(box => box.Decoration.Border is not null)
             .ToArray());
         Assert.NotNull(FindDescendant<RenderStack>(foregroundHarness.RenderView));
 
         using var backgroundHarness = new WidgetRenderHarness(
             BuildThemedCard(new MaterialSurface(
                 borderOnForeground: false,
-                shape: ShapeBorder.RoundedRectangle(9, side),
+                shape: new RoundedRectangleBorder(side, Plumix.Rendering.BorderRadius.Circular(9)),
                 child: new SizedBox(width: 80, height: 32))));
         backgroundHarness.Pump(new Size(220, 140));
 
         var backgroundBorders = FindDescendants<RenderDecoratedBox>(backgroundHarness.RenderView)
-            .Where(box => box.Decoration.Border.HasValue)
+            .Where(box => box.Decoration.Border is not null)
             .ToArray();
         Assert.Single(backgroundBorders);
     }

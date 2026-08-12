@@ -39,7 +39,7 @@ public sealed class TabPageSelectorIndicator : StatelessWidget
             margin: new Thickness(4),
             decoration: new BoxDecoration(
                 Color: BackgroundColor,
-                Border: new BorderSide(BorderColor, style: BorderStyle),
+                Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(BorderColor, style: BorderStyle)),
                 Shape: BoxShape.Circle));
     }
 }

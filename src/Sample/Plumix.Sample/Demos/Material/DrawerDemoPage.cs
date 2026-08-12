@@ -100,7 +100,8 @@ internal sealed class DrawerDemoPageState : State
                             decoration: new BoxDecoration(
                                 Color: Color.Parse("#FFFDFEFF"),
                                 BorderRadius: BorderRadius.Circular(10),
-                                Border: new BorderSide(Color.Parse("#FFD6DEEA"), 1)),
+                                Border: Plumix.Rendering.Border.FromBorderSide(
+                                    new BorderSide(Color.Parse("#FFD6DEEA"), 1))),
                             child: new Scaffold(
                                 drawerScrimColor: _useWidgetOverrides ? Color.FromArgb(0x99, 0x33, 0x44, 0x55) : null,
                                 drawer: BuildDrawerPanel(isStartDrawer: true),

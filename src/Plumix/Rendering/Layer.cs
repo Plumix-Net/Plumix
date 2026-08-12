@@ -604,11 +604,15 @@ public sealed class MagnifierLayer : ContainerLayer
             return;
         }
 
-        double radius = Decoration.Shape.Shape == BoxShape.Circle
-            ? Math.Min(lensRect.Width, lensRect.Height) / 2.0
-            : Math.Min(
-                Decoration.Shape.BorderRadius.Radius,
-                Math.Min(lensRect.Width, lensRect.Height) / 2.0);
+        double maximumRadius = Math.Min(lensRect.Width, lensRect.Height) / 2.0;
+        double radius = Decoration.Shape switch
+        {
+            CircleBorder or StadiumBorder => maximumRadius,
+            RoundedRectangleBorder rounded => Math.Min(
+                rounded.BorderRadius.Resolve(Plumix.UI.TextDirection.Ltr).Radius,
+                maximumRadius),
+            _ => 0.0,
+        };
         using (context.PushOpacity(Math.Clamp(Decoration.Opacity, 0.0, 1.0)))
         {
             using (PushRoundedRectClip(context, lensRect, radius))
@@ -661,9 +665,9 @@ public sealed class MagnifierLayer : ContainerLayer
     private void DrawDecoration(DrawingContext context, Rect lensRect, double radius)
     {
         BoxShadows shadows = Decoration.Shadows ?? default;
-        BorderSide? side = Decoration.Shape.Side;
+        BorderSide side = Decoration.Shape is OutlinedBorder outlined ? outlined.Side : BorderSide.None;
         IPen? pen = side is { Style: BorderStyle.Solid, Width: > 0 }
-            ? new Pen(new SolidColorBrush(side.Value.Color), side.Value.Width)
+            ? new Pen(new SolidColorBrush(side.Color), side.Width)
             : null;
 
         if (shadows.Count == 0 && pen == null)

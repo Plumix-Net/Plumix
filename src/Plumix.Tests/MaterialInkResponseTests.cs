@@ -197,7 +197,9 @@ public sealed class MaterialInkResponseTests : IDisposable
             child: new SizedBox(width: 80.0, height: 48.0)));
         harness.Pump(new Size(120.0, 80.0));
 
-        Assert.Single(FindDescendants<RenderClipOval>(harness.RenderView));
+        RenderClipPath clip = Assert.Single(FindDescendants<RenderClipPath>(harness.RenderView));
+        var clipper = Assert.IsType<ShapeBorderClipper>(clip.Clipper);
+        Assert.IsType<CircleBorder>(clipper.Shape);
         Assert.Empty(FindDescendants<RenderClipRRect>(harness.RenderView));
     }
 

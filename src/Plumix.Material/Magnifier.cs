@@ -232,7 +232,8 @@ public sealed class Magnifier : StatelessWidget
         return new RawMagnifier(
             size: Size,
             decoration: new MagnifierDecoration(
-                shape: ShapeBorder.RoundedRectangle(BorderRadius.Radius),
+                shape: new RoundedRectangleBorder(borderRadius:
+                    Plumix.Rendering.BorderRadius.Circular(BorderRadius.Radius)),
                 shadows: Shadows),
             clipBehavior: ClipBehavior,
             magnificationScale: Magnification,

@@ -441,7 +441,7 @@ public class IconButton : StatelessWidget
                 ? MaterialStateProperty<Thickness?>.All(padding.Value)
                 : null,
             Shape: shape.HasValue
-                ? MaterialStateProperty<BorderRadius?>.All(shape.Value)
+                ? MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius: shape.Value))
                 : null,
             MinimumSize: minimumSize.HasValue
                 ? MaterialStateProperty<Size?>.All(minimumSize.Value)
@@ -658,8 +658,8 @@ public class IconButton : StatelessWidget
                     ResolveOutlinedBorderSide(theme, states))
                 : null,
             Padding: MaterialStateProperty<Thickness?>.All(new Thickness(8)),
-            Shape: MaterialStateProperty<BorderRadius?>.All(
-                Plumix.Rendering.BorderRadius.Circular(9999)),
+            Shape: MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius: 
+                Plumix.Rendering.BorderRadius.Circular(9999))),
             MinimumSize: MaterialStateProperty<Size?>.All(new Size(40, 40)),
             MaximumSize: MaterialStateProperty<Size?>.All(new Size(double.PositiveInfinity, double.PositiveInfinity)),
             Alignment: Plumix.Rendering.Alignment.Center,

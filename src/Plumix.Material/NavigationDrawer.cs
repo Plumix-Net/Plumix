@@ -226,7 +226,7 @@ internal sealed class NavigationDrawerDestinationTileState : State
                          ?? ResolveDefaultLabelStyle(theme, states);
         var indicatorShape = widget.IndicatorShape
                              ?? drawerTheme.IndicatorShape
-                             ?? ShapeBorder.Stadium();
+                             ?? new StadiumBorder();
         var indicatorSize = drawerTheme.IndicatorSize ?? new Size(336, 56);
         var indicatorColor = widget.IndicatorColor
                              ?? drawerTheme.IndicatorColor
@@ -278,7 +278,8 @@ internal sealed class NavigationDrawerDestinationTileState : State
             IconSize: MaterialStateProperty<double?>.All(iconTheme.Size),
             TextStyle: MaterialStateProperty<TextStyle?>.All(labelStyle),
             Padding: MaterialStateProperty<Thickness?>.All(default),
-            Shape: MaterialStateProperty<BorderRadius?>.All(indicatorShape.BorderRadius),
+            Shape: MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius:
+                ShapeBorderGeometry.ResolveRadius(indicatorShape))),
             MinimumSize: MaterialStateProperty<Size?>.All(new Size(0, tileHeight)),
             TapTargetSize: MaterialTapTargetSize.ShrinkWrap,
             Alignment: Alignment.Center);

@@ -2726,7 +2726,8 @@ public sealed class MaterialButtonsTests
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
         Assert.Equal(Colors.Transparent, decorated!.Decoration.Color);
-        Assert.Equal(new BorderSide(theme.ColorScheme.Outline, 1), decorated.Decoration.Border);
+        Assert.Equal(Plumix.Rendering.Border.FromBorderSide(
+            new BorderSide(theme.ColorScheme.Outline, 1)), decorated.Decoration.Border);
         Assert.NotNull(paragraph);
         Assert.Equal(
             theme.ColorScheme.Primary,
@@ -2737,7 +2738,8 @@ public sealed class MaterialButtonsTests
 
         decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
-        Assert.Equal(new BorderSide(theme.ColorScheme.Primary, 1), decorated!.Decoration.Border);
+        Assert.Equal(Plumix.Rendering.Border.FromBorderSide(
+            new BorderSide(theme.ColorScheme.Primary, 1)), decorated!.Decoration.Border);
 
         root.Unmount();
         FocusManager.Instance.ResetForTests();
@@ -2769,7 +2771,7 @@ public sealed class MaterialButtonsTests
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
         Assert.Equal(
-            new BorderSide(ApplyOpacity(theme.ColorScheme.OnSurface, 0.12), 1),
+            Plumix.Rendering.Border.FromBorderSide(new BorderSide(ApplyOpacity(theme.ColorScheme.OnSurface, 0.12), 1)),
             decorated!.Decoration.Border);
     }
 
@@ -2808,7 +2810,7 @@ public sealed class MaterialButtonsTests
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
         Assert.Equal(
-            new BorderSide(ApplyOpacity(theme.ColorScheme.OnSurface, 0.12), 1),
+            Plumix.Rendering.Border.FromBorderSide(new BorderSide(ApplyOpacity(theme.ColorScheme.OnSurface, 0.12), 1)),
             decorated!.Decoration.Border);
     }
 
@@ -3312,7 +3314,8 @@ public sealed class MaterialButtonsTests
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
-        Assert.Equal(new BorderSide(Colors.Goldenrod, 2), decorated!.Decoration.Border);
+        Assert.Equal(Plumix.Rendering.Border.FromBorderSide(
+            new BorderSide(Colors.Goldenrod, 2)), decorated!.Decoration.Border);
     }
 
     [Fact]
@@ -3451,7 +3454,8 @@ public sealed class MaterialButtonsTests
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
-        Assert.Equal(new BorderSide(Colors.Goldenrod, 3), decorated!.Decoration.Border);
+        Assert.Equal(Plumix.Rendering.Border.FromBorderSide(
+            new BorderSide(Colors.Goldenrod, 3)), decorated!.Decoration.Border);
     }
 
     [Fact]
@@ -3538,7 +3542,8 @@ public sealed class MaterialButtonsTests
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
-        Assert.Equal(new BorderSide(Colors.Crimson, 4), decorated!.Decoration.Border);
+        Assert.Equal(Plumix.Rendering.Border.FromBorderSide(
+            new BorderSide(Colors.Crimson, 4)), decorated!.Decoration.Border);
     }
 
     [Fact]
@@ -3723,7 +3728,8 @@ public sealed class MaterialButtonsTests
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
-        Assert.Equal(new BorderSide(Colors.Crimson, 4), decorated!.Decoration.Border);
+        Assert.Equal(Plumix.Rendering.Border.FromBorderSide(
+            new BorderSide(Colors.Crimson, 4)), decorated!.Decoration.Border);
     }
 
     [Fact]
@@ -4514,7 +4520,8 @@ public sealed class MaterialButtonsTests
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
-        Assert.Equal(new BorderSide(theme.ColorScheme.Outline, 1), decorated!.Decoration.Border);
+        Assert.Equal(Plumix.Rendering.Border.FromBorderSide(
+            new BorderSide(theme.ColorScheme.Outline, 1)), decorated!.Decoration.Border);
     }
 
     [Fact]
@@ -4546,7 +4553,7 @@ public sealed class MaterialButtonsTests
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
         Assert.Equal(
-            new BorderSide(ApplyOpacity(theme.ColorScheme.OnSurface, 0.12), 1),
+            Plumix.Rendering.Border.FromBorderSide(new BorderSide(ApplyOpacity(theme.ColorScheme.OnSurface, 0.12), 1)),
             decorated!.Decoration.Border);
     }
 
@@ -6327,7 +6334,9 @@ public sealed class MaterialButtonsTests
                 RequireRenderObject<RenderObject>(root.ChildElement));
             Assert.NotNull(decorated);
             Assert.Equal(expectedBackground, decorated!.Decoration.Color);
-            Assert.Equal(expectedBorder, decorated.Decoration.Border);
+            Assert.Equal(
+                expectedBorder is { } expectedSide ? Plumix.Rendering.Border.FromBorderSide(expectedSide) : null,
+                decorated.Decoration.Border);
             root.Unmount();
         }
     }
@@ -6521,7 +6530,8 @@ public sealed class MaterialButtonsTests
 
         var unselectedDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(unselectedDecorated);
-        Assert.Equal(new BorderSide(ThemeData.Light.OutlineColor, 1), unselectedDecorated!.Decoration.Border);
+        Assert.Equal(Plumix.Rendering.Border.FromBorderSide(
+            new BorderSide(ThemeData.Light.OutlineColor, 1)), unselectedDecorated!.Decoration.Border);
 
         root.Update(
             new Theme(

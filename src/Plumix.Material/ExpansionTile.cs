@@ -298,12 +298,12 @@ public sealed class ExpansionTile : StatefulWidget
             Color backgroundColor = background ?? expansionTheme.BackgroundColor ?? Colors.Transparent;
             ShapeBorder collapsedShape = CurrentWidget.CollapsedShape
                                          ?? expansionTheme.CollapsedShape
-                                         ?? ShapeBorder.Border(
+                                         ?? new Plumix.Rendering.Border(
                                              top: new BorderSide(Colors.Transparent),
                                              bottom: new BorderSide(Colors.Transparent));
             ShapeBorder expandedShape = CurrentWidget.Shape
                                         ?? expansionTheme.Shape
-                                        ?? ShapeBorder.Border(
+                                        ?? new Plumix.Rendering.Border(
                                             top: new BorderSide(theme.DividerColor),
                                             bottom: new BorderSide(theme.DividerColor));
             ShapeBorder expansionTileBorder = MaterialThemeLerp.Shape(collapsedShape, expandedShape, progress)!;
@@ -311,7 +311,7 @@ public sealed class ExpansionTile : StatefulWidget
                                 ?? expansionTheme.ClipBehavior
                                 ?? Clip.AntiAlias;
             Widget tile = new Padding(
-                expansionTileBorder.Padding,
+                expansionTileBorder.Dimensions.Resolve(TextDirection.Ltr),
                 new Column(
                     mainAxisSize: MainAxisSize.Min,
                     children: [header, body]));

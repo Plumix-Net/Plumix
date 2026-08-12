@@ -353,7 +353,7 @@ public sealed class ScrollbarPainter : CustomPainter
             context.DrawLine(pen, start, end);
         }
 
-        BorderSide? side = Shape?.Side;
+        BorderSide? side = (Shape as OutlinedBorder)?.Side;
         IPen? thumbPen = side is null
             ? null
             : new Pen(
@@ -363,8 +363,8 @@ public sealed class ScrollbarPainter : CustomPainter
             new SolidColorBrush(ApplyOpacity(Color, opacity)),
             thumbPen,
             value.ThumbRect,
-            Shape?.BorderRadius.Radius ?? Radius ?? 0,
-            Shape?.BorderRadius.Radius ?? Radius ?? 0);
+            ScrollbarShapeGeometry.Radius(Shape) ?? Radius ?? 0,
+            ScrollbarShapeGeometry.Radius(Shape) ?? Radius ?? 0);
     }
 
     public override bool? HitTest(Point position)
@@ -986,7 +986,7 @@ public class RawScrollbarState<T> : State where T : RawScrollbar
                 thickness: thickness,
                 thumbColor: ResolveThumbColor(states),
                 radius: radius,
-                thumbBorder: widget.Shape?.Side,
+                thumbBorder: (widget.Shape as OutlinedBorder)?.Side,
                 minThumbLength: widget.MinThumbLength,
                 minOverscrollLength: widget.MinOverscrollLength ?? widget.MinThumbLength,
                 trackVisible: trackVisible && (forcedVisible || opacity > 0.001),
@@ -1028,7 +1028,7 @@ public class RawScrollbarState<T> : State where T : RawScrollbar
             ?? 6;
 
         protected virtual double ResolveRadius(ScrollbarInteractionState states) =>
-            CurrentWidget.Shape?.BorderRadius.Radius
+            ScrollbarShapeGeometry.Radius(CurrentWidget.Shape)
             ?? CurrentWidget.Radius
             ?? CurrentWidget.RadiusResolver?.Invoke(states)
             ?? 0;
@@ -1832,4 +1832,17 @@ internal sealed class RenderRawScrollbarOverlay : RenderProxyBox
 
     private static Color ApplyOpacity(Color color, double opacity) => Color.FromArgb(
         (byte)Math.Clamp((int)(color.A * opacity), 0, 255), color.R, color.G, color.B);
+}
+
+/// Resolves the corner radius a scrollbar thumb shape paints with.
+internal static class ScrollbarShapeGeometry
+{
+    public static double? Radius(ShapeBorder? shape)
+    {
+        return shape switch
+        {
+            RoundedRectangleBorder rounded => rounded.BorderRadius.Resolve(TextDirection.Ltr).Radius,
+            _ => null,
+        };
+    }
 }

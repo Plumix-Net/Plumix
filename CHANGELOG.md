@@ -1,5 +1,24 @@
 # Changelog
 
+- Breaking: ported the `painting` border hierarchy strictly — `borders.dart`, `box_border.dart`,
+  `rounded_rectangle_border.dart`, `stadium_border.dart`, `circle_border.dart`, `oval_border.dart`,
+  `beveled_rectangle_border.dart`, `continuous_rectangle_border.dart`, `linear_border.dart`,
+  `star_border.dart` and `shape_decoration.dart`. `ShapeBorder` is now the abstract Flutter class
+  (`Dimensions`, `Add`/`operator +`, `Scale`, `LerpFrom`/`LerpTo`/`Lerp`, `GetOuterPath`/`GetInnerPath`,
+  `PreferPaintInterior`/`PaintInterior`, `Paint`) with `CompoundBorder`, `OutlinedBorder` and the concrete
+  shapes, including the private stadium/rounded-rect-to-circle interpolators and `StarBorder`'s conic path
+  generator. `BoxBorder`/`Border`/`BorderDirectional` replace the old four-side record, and `ShapeDecoration`
+  is Flutter's decoration (padding, `FromBoxDecoration`, hit testing, clip path, shape-driven paint).
+  **Breaking:** `ShapeBorder.RoundedRectangle`/`Circle`/`Stadium`/`Border` factories are gone in favor of the
+  real types; `BoxDecoration.Border` is a `BoxBorder?` and `BorderSides` was removed; `ButtonStyle.Shape`,
+  `MenuStyle`, `SegmentedButton` and the list-tile controls take `OutlinedBorder`; `BorderSide.None` is black
+  (was transparent) and `BorderSide.Scale` no longer carries `strokeAlign`. `Material` now paints through
+  `ShapeDecoration` and clips with `ShapeBorderClipper`, so arbitrary shapes reach clips, hit tests and the
+  bottom-app-bar notch.
+  New primitives: `Path.AddRRect`/`AddPolygon`/`ConicTo`/`Reset`/`Transform`/`GetBounds`, `RRect.ShortestSide`/
+  `InflateEdges`/`DeflateEdges`, `EdgeInsetsGeometry.Add`, `BorderRadiusGeometry * double`, `BorderSide.Merge`/
+  `CanMerge`/`ToPen`, and `PaintingContext.DrawRRect`/`DrawDRRect`/`DrawOval`/`DrawPath`.
+
 - Breaking: ported `material/input_decorator.dart` and `material/input_border.dart` strictly. The decoration is
   now laid out by `RenderDecoration` (`RenderInputDecoration.cs`), a slotted render object carrying Flutter's
   `_layout`/`performLayout` verbatim — baseline-driven slot placement, `_interpolateThree` outline alignment,

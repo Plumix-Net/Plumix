@@ -201,7 +201,7 @@ public sealed class CupertinoCheckbox : StatefulWidget
             {
                 body = new DecoratedBox(
                     decoration: new BoxDecoration(
-                        Border: new BorderSide(focusRingColor, 3.5),
+                        Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(focusRingColor, 3.5)),
                         BorderRadius: Plumix.Rendering.BorderRadius.Circular(shape.Radius + 1.0)),
                     child: new Padding(
                         new Thickness(1),
@@ -282,7 +282,7 @@ public sealed class CupertinoCheckbox : StatefulWidget
                 new DecoratedBox(
                     decoration: new BoxDecoration(
                         Color: fillColor,
-                        Border: borderSide,
+                        Border: borderSide is { } side ? Plumix.Rendering.Border.FromBorderSide(side) : null,
                         BorderRadius: shape),
                     child: new SizedBox(width: Width, height: Width)),
             };

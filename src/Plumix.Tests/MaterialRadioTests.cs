@@ -300,9 +300,9 @@ public sealed class MaterialRadioTests
         Assert.NotNull(outer);
         Assert.NotNull(dot);
         Assert.Equal(Color.FromArgb(255, 0, 122, 255), outer!.Decoration.Color);
-        Assert.True(outer.Decoration.Border.HasValue);
-        Assert.Equal(0, outer.Decoration.Border!.Value.Width);
-        Assert.Equal(Colors.Transparent, outer.Decoration.Border.Value.Color);
+        Assert.True(outer.Decoration.Border is not null);
+        Assert.Equal(0, ((Plumix.Rendering.Border)outer.Decoration.Border!).Top.Width);
+        Assert.Equal(Colors.Transparent, ((Plumix.Rendering.Border)outer.Decoration.Border!).Top.Color);
         Assert.Equal(Colors.White, dot!.Decoration.Color);
     }
 
@@ -620,14 +620,14 @@ public sealed class MaterialRadioTests
     private static RenderDecoratedBox? FindOuterDecoration(RenderObject root)
     {
         return FindDescendants<RenderDecoratedBox>(root)
-            .FirstOrDefault(box => box.Decoration.Border.HasValue);
+            .FirstOrDefault(box => box.Decoration.Border is not null);
     }
 
     private static RenderDecoratedBox? FindInnerDotDecoration(RenderObject root)
     {
         return FindDescendants<RenderDecoratedBox>(root)
             .FirstOrDefault(box =>
-                !box.Decoration.Border.HasValue
+                box.Decoration.Border is null
                 && box.Decoration.Color.HasValue
                 && box.Decoration.Color.Value.A > 0
                 && box.Decoration.Color.Value != Colors.Transparent);

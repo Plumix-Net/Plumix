@@ -197,7 +197,7 @@ public sealed class MaterialStepperTests : IDisposable
         EdgeInsetsGeometry headerPadding = EdgeInsetsGeometry.DirectionalOnly(start: 11, end: 13);
         EdgeInsetsGeometry contentPadding = EdgeInsetsGeometry.DirectionalOnly(start: 17, end: 19, bottom: 23);
         var iconMargin = new EdgeInsets(2, 3, 4, 5);
-        var border = BoxBorder.All(new BorderSide(Colors.Red, 2));
+        var border = Plumix.Rendering.Border.FromBorderSide(new BorderSide(Colors.Red, 2));
         var gradient = new LinearGradient([Colors.Red, Colors.Blue]);
         var style = new StepStyle(
             Color: Colors.Green,
@@ -232,7 +232,7 @@ public sealed class MaterialStepperTests : IDisposable
         BoxDecoration decoration = Assert.IsType<BoxDecoration>(
             Assert.Single(harness.FindWidgets<AnimatedContainer>()).Decoration);
         Assert.Same(gradient, decoration.Gradient);
-        Assert.Same(border, decoration.BorderSides);
+        Assert.Same(border, decoration.Border);
     }
 
     [Fact]
@@ -338,7 +338,9 @@ public sealed class MaterialStepperTests : IDisposable
         Assert.Equal(dark ? null : primary, continueButton.Style.BackgroundColor!.Resolve(MaterialState.None));
         Assert.Null(continueButton.Style.ForegroundColor.Resolve(MaterialState.Disabled));
         Assert.Null(continueButton.Style.BackgroundColor.Resolve(MaterialState.Disabled));
-        Assert.Equal(BorderRadius.Circular(2), continueButton.Style.Shape!.Resolve(MaterialState.None));
+        Assert.Equal(
+            new RoundedRectangleBorder(borderRadius: BorderRadius.Circular(2)),
+            continueButton.Style.Shape!.Resolve(MaterialState.None));
     }
 
     [Fact]

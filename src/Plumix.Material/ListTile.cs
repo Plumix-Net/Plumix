@@ -159,8 +159,8 @@ public sealed class ListTile : StatelessWidget
             result.Add(new DecoratedBox(
                 position: DecorationPosition.Foreground,
                 decoration: new BoxDecoration(
-                    BorderSides: new BoxBorder(
-                        Bottom: Divider.CreateBorderSide(context, color: color))),
+                    Border: new Plumix.Rendering.Border(
+                        bottom: Divider.CreateBorderSide(context, color: color))),
                 child: tileList[index]));
         }
 
@@ -276,7 +276,8 @@ public sealed class ListTile : StatelessWidget
                                                          ?? (theme.UseMaterial3
                                                              ? ListTileTitleAlignment.ThreeLine
                                                              : ListTileTitleAlignment.TitleHeight);
-        ShapeBorder effectiveShape = Shape ?? tileTheme.Shape ?? ShapeBorder.RoundedRectangle(0.0);
+        ShapeBorder effectiveShape = Shape ?? tileTheme.Shape ?? new RoundedRectangleBorder(borderRadius:
+            Plumix.Rendering.BorderRadius.Circular(0.0));
         ButtonStyle effectiveIconButtonStyle = iconButtonTheme.Style is null
             ? new ButtonStyle(
                 ForegroundColor: MaterialStateProperty<Color?>.All(effectiveIconButtonColor))
@@ -380,7 +381,7 @@ public sealed class ListTile : StatelessWidget
         if (theme.UseMaterial3)
         {
             return new ListTileThemeData(
-                Shape: ShapeBorder.RoundedRectangle(0.0),
+                Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(0.0)),
                 SelectedColor: theme.ColorScheme.Primary,
                 IconColor: MaterialStateProperty<Color?>.All(theme.ColorScheme.OnSurfaceVariant),
                 TitleTextStyle: theme.TextTheme.BodyLarge.CopyWith(color: theme.ColorScheme.OnSurface),
@@ -397,7 +398,7 @@ public sealed class ListTile : StatelessWidget
             ? theme.TextTheme.BodyLarge
             : theme.TextTheme.TitleMedium;
         return new ListTileThemeData(
-            Shape: ShapeBorder.RoundedRectangle(0.0),
+            Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(0.0)),
             SelectedColor: theme.ColorScheme.Primary,
             IconColor: theme.Brightness == Brightness.Light
                 ? MaterialStateProperty<Color?>.All(M2LightDefaultIconColor)

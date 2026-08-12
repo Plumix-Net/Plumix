@@ -69,7 +69,8 @@ internal sealed class DecoratedBoxDemoPageState : State
                             child: new DecoratedBox(
                                 decoration: new BoxDecoration(
                                     Color: fillColor,
-                                    Border: new BorderSide(borderColor, _borderWidth),
+                                    Border: Plumix.Rendering.Border.FromBorderSide(
+                                        new BorderSide(borderColor, _borderWidth)),
                                     BorderRadius: BorderRadius.Circular(_radius)),
                                 child: new Center(
                                     child: new Text("Decorated", fontSize: 14, color: Color.Parse("#FF14213D"))))))),

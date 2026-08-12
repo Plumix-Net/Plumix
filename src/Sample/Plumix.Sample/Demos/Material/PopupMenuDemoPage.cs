@@ -30,7 +30,7 @@ public sealed class PopupMenuDemoPage : StatefulWidget
             var popupTheme = _useTheme
                 ? new PopupMenuThemeData(
                     Color: Color.Parse("#FFFFF3E0"),
-                    Shape: ShapeBorder.RoundedRectangle(12),
+                    Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(12)),
                     MenuPadding: EdgeInsetsGeometry.DirectionalOnly(
                         start: 12,
                         top: 4,

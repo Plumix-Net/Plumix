@@ -64,7 +64,7 @@ public sealed class MaterialSnackBarTests : IDisposable
                 Elevation: 0,
                 Behavior: SnackBarBehavior.Floating,
                 InsetPadding: new Thickness(7),
-                Shape: ShapeBorder.RoundedRectangle(9)),
+                Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(9))),
         };
         using var themed = new WidgetRenderHarness(Wrap(themedData, Bar(action: Action())));
         themed.Pump(new Size(360, 180));

@@ -182,7 +182,7 @@ public sealed class CupertinoRadio<T> : StatefulWidget
                 new DecoratedBox(
                     decoration: new BoxDecoration(
                         Color: bodyColor,
-                        Border: new BorderSide(borderColor, borderWidth),
+                        Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(borderColor, borderWidth)),
                         BorderRadius: shape),
                     child: new SizedBox(width: Width, height: Width))
             };
@@ -219,7 +219,7 @@ public sealed class CupertinoRadio<T> : StatefulWidget
             {
                 body = new DecoratedBox(
                     decoration: new BoxDecoration(
-                        Border: new BorderSide(focusRingColor, FocusRingWidth),
+                        Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(focusRingColor, FocusRingWidth)),
                         BorderRadius: Plumix.Rendering.BorderRadius.Circular(shape.Radius + 1.5)),
                     child: new Padding(
                         new Thickness(1.5),

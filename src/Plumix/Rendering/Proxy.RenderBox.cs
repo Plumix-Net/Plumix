@@ -1931,11 +1931,42 @@ public sealed class RenderDecoratedBox : RenderProxyBox
         }
     }
 
+    /// The decoration as a [BoxDecoration]. A [ShapeDecoration] whose shape has an exact box
+    /// equivalent (rounded rectangle, stadium, circle or [BoxBorder]) is projected onto one; any
+    /// other shape has no box equivalent and throws.
     public BoxDecoration Decoration
     {
-        get => _decoration as BoxDecoration
-               ?? throw new InvalidOperationException("The current decoration is not a BoxDecoration.");
+        get => _decoration switch
+        {
+            BoxDecoration box => box,
+            ShapeDecoration shape when TryProjectToBoxDecoration(shape) is { } projected => projected,
+            _ => throw new InvalidOperationException("The current decoration is not a BoxDecoration."),
+        };
         set => DecorationValue = value;
+    }
+
+    private static BoxDecoration? TryProjectToBoxDecoration(ShapeDecoration decoration)
+    {
+        BorderSide side = ShapeBorderGeometry.SideOrNone(decoration.Shape);
+        BoxBorder? border = decoration.Shape as BoxBorder
+                            ?? (side == BorderSide.None ? null : Border.FromBorderSide(side));
+        BoxShape shape = ShapeBorderGeometry.BoxShapeOf(decoration.Shape);
+        BorderRadius? radius = decoration.Shape is BoxBorder
+            ? null
+            : ShapeBorderGeometry.ResolveRadiusOrNull(decoration.Shape);
+        if (radius is null && decoration.Shape is not BoxBorder)
+        {
+            return null;
+        }
+
+        return new BoxDecoration(
+            Color: decoration.Color,
+            Gradient: decoration.Gradient,
+            Border: border,
+            BorderRadius: shape == BoxShape.Circle ? null : radius,
+            BoxShadows: decoration.Shadows.Count == 0 ? null : decoration.Shadows,
+            Image: decoration.Image,
+            Shape: shape);
     }
 
     public Decoration DecorationValue

@@ -81,6 +81,22 @@ public readonly record struct EdgeInsetsGeometry
             : new Thickness(Left + End, Top, Right + Start, Bottom);
     }
 
+    public EdgeInsetsGeometry Add(EdgeInsetsGeometry other)
+    {
+        return new EdgeInsetsGeometry(
+            left: Left + other.Left,
+            top: Top + other.Top,
+            right: Right + other.Right,
+            bottom: Bottom + other.Bottom,
+            start: Start + other.Start,
+            end: End + other.End);
+    }
+
+    public static EdgeInsetsGeometry operator +(EdgeInsetsGeometry a, EdgeInsetsGeometry b)
+    {
+        return a.Add(b);
+    }
+
     public static EdgeInsetsGeometry? Lerp(
         EdgeInsetsGeometry? a,
         EdgeInsetsGeometry? b,

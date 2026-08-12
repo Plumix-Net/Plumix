@@ -91,7 +91,8 @@ public sealed class MaterialSearchTests : IDisposable
             SearchBarTheme = new SearchBarThemeData(
                 BackgroundColor: MaterialStateProperty<Color?>.All(Colors.LightBlue),
                 Elevation: MaterialStateProperty<double?>.All(2),
-                Shape: MaterialStateProperty<ShapeBorder?>.All(ShapeBorder.RoundedRectangle(12)),
+                Shape: MaterialStateProperty<ShapeBorder?>.All(new RoundedRectangleBorder(borderRadius:
+                    Plumix.Rendering.BorderRadius.Circular(12))),
                 Padding: MaterialStateProperty<Thickness?>.All(new Thickness(4, 0)),
                 Constraints: new BoxConstraints(MinWidth: 240, MaxWidth: 300, MinHeight: 48))
         };
@@ -111,7 +112,8 @@ public sealed class MaterialSearchTests : IDisposable
             theme,
             new SearchBar(
                 backgroundColor: MaterialStateProperty<Color?>.All(Colors.Orange),
-                shape: MaterialStateProperty<ShapeBorder?>.All(ShapeBorder.RoundedRectangle(20)))));
+                shape: MaterialStateProperty<ShapeBorder?>.All(new RoundedRectangleBorder(borderRadius:
+                    Plumix.Rendering.BorderRadius.Circular(20))))));
         widgetOverride.Pump(new Size(500, 100));
         Assert.Contains(FindDescendants<RenderDecoratedBox>(widgetOverride.RenderView),
             box => box.Decoration.Color == Colors.Orange
@@ -298,7 +300,7 @@ public sealed class MaterialSearchTests : IDisposable
             SearchViewTheme = new SearchViewThemeData(
                 BackgroundColor: Colors.LightGreen,
                 Elevation: 0,
-                Shape: ShapeBorder.RoundedRectangle(18),
+                Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(18)),
                 HeaderHeight: 64,
                 BarPadding: new Thickness(10, 0),
                 DividerColor: Colors.Red,
@@ -328,7 +330,8 @@ public sealed class MaterialSearchTests : IDisposable
                    && box.AdditionalConstraints.MaxHeight == 64);
         Assert.Contains(
             FindDescendants<RenderDecoratedBox>(harness.RenderView),
-            box => box.Decoration.BorderSides?.Bottom?.Color == Colors.Red);
+            box => box.Decoration.Border is Plumix.Rendering.Border sideBottom
+                   && sideBottom.Bottom.Color == Colors.Red);
         Assert.NotNull(FindParagraph(harness.RenderView, "Themed suggestion"));
     }
 

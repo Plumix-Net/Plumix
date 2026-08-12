@@ -59,7 +59,7 @@ public sealed class MaterialScrollbarTests
             minOverscrollLength: 11));
         Assert.Throws<ArgumentException>(() => new RawScrollbar(
             child: new SizedBox(),
-            shape: ShapeBorder.RoundedRectangle(4),
+            shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(4)),
             radius: 4));
         Assert.Throws<ArgumentOutOfRangeException>(() => new MaterialScrollbar(
             child: new SizedBox(),

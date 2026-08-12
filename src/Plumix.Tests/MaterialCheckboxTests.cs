@@ -534,9 +534,9 @@ public sealed class MaterialCheckboxTests
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
         Assert.Equal(Color.FromArgb(255, 0, 122, 255), decorated!.Decoration.Color);
-        Assert.True(decorated.Decoration.Border.HasValue);
-        Assert.Equal(0, decorated.Decoration.Border!.Value.Width);
-        Assert.Equal(Colors.Transparent, decorated.Decoration.Border.Value.Color);
+        Assert.True(decorated.Decoration.Border is not null);
+        Assert.Equal(0, ((Plumix.Rendering.Border)decorated.Decoration.Border!).Top.Width);
+        Assert.Equal(Colors.Transparent, ((Plumix.Rendering.Border)decorated.Decoration.Border!).Top.Color);
     }
 
     [Fact]
@@ -776,7 +776,7 @@ public sealed class MaterialCheckboxTests
         CheckboxPainter checkedPainter = FindCheckboxPainter(checkedRoot.ChildElement);
         Assert.Equal(Colors.Coral, checkedPainter.ActiveColor);
         Assert.Equal(Colors.White, checkedPainter.CheckColor);
-        Assert.Equal(1.0, checkedPainter.Shape.BorderRadius.Radius);
+        Assert.Equal(1.0, ShapeBorderGeometry.ResolveRadius(checkedPainter.Shape).Radius);
         Assert.Equal(2.0, checkedPainter.ActiveSide!.Value.Width);
 
         var uncheckedRoot = new TestRootElement(
@@ -958,7 +958,7 @@ public sealed class MaterialCheckboxTests
             SplashRadius: 10,
             MaterialTapTargetSize: MaterialTapTargetSize.Padded,
             VisualDensity: VisualDensity.Compact,
-            Shape: ShapeBorder.RoundedRectangle(2),
+            Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(2)),
             Side: new BorderSide(Colors.Black, 2));
         CheckboxThemeData copied = first.CopyWith(splashRadius: 14);
         Assert.Equal(14, copied.SplashRadius);
@@ -974,7 +974,7 @@ public sealed class MaterialCheckboxTests
             SplashRadius: 20,
             MaterialTapTargetSize: MaterialTapTargetSize.ShrinkWrap,
             VisualDensity: VisualDensity.Standard,
-            Shape: ShapeBorder.RoundedRectangle(6),
+            Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(6)),
             Side: WidgetStateBorderSide.All(new BorderSide(Colors.White, 4)));
         CheckboxThemeData midpoint = CheckboxThemeData.Lerp(first, second, 0.5);
 
@@ -982,7 +982,7 @@ public sealed class MaterialCheckboxTests
         Assert.Same(second.MouseCursor, midpoint.MouseCursor);
         Assert.Equal(MaterialTapTargetSize.ShrinkWrap, midpoint.MaterialTapTargetSize);
         Assert.Equal(VisualDensity.Standard, midpoint.VisualDensity);
-        Assert.Equal(4, midpoint.Shape!.BorderRadius.Radius);
+        Assert.Equal(4, ShapeBorderGeometry.ResolveRadius(midpoint.Shape).Radius);
         Assert.Equal(3, midpoint.Side!.Resolve(MaterialState.None)!.Value.Width);
     }
 

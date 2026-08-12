@@ -92,8 +92,8 @@ public sealed class MaterialPopupMenuTests : IDisposable
 
         var line = Assert.Single(
             FindDescendants<RenderDecoratedBox>(harness.RenderView),
-            box => box.Decoration.BorderSides?.Bottom is not null);
-        BorderSide side = line.Decoration.BorderSides!.Bottom!.Value;
+            box => box.Decoration.Border is Plumix.Rendering.Border { Bottom.Style: BorderStyle.Solid });
+        BorderSide side = ((Plumix.Rendering.Border)line.Decoration.Border!).Bottom;
         Assert.Equal(5, side.Width);
         Assert.Equal(radius, line.Decoration.BorderRadius);
         Assert.Equal(Colors.Orange, side.Color);
@@ -286,7 +286,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
         {
             PopupMenuTheme = new PopupMenuThemeData(
                 Color: Colors.Green,
-                Shape: ShapeBorder.RoundedRectangle(6),
+                Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(6)),
                 Elevation: 2),
         };
         using var harness = new WidgetRenderHarness(Wrap(
@@ -294,7 +294,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
             new Navigator(new BuilderPageRoute(context => new PopupMenuTheme(
                 new PopupMenuThemeData(
                     Color: Colors.Purple,
-                    Shape: ShapeBorder.RoundedRectangle(10),
+                    Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(10)),
                     MenuPadding: new Thickness(5)),
                 new CaptureContext(value => captured = value, new Text("Home")))))));
         harness.Pump(new Size(500, 360));
@@ -303,7 +303,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
             items: [new PopupMenuItem<string>(new Text("Override"), value: "override")],
             position: new RelativeRect(20, 20, 400, 290),
             color: Colors.Orange,
-            shape: ShapeBorder.RoundedRectangle(3),
+            shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(3)),
             elevation: 0,
             menuPadding: new Thickness(7));
         PumpAnimation();
@@ -819,7 +819,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
         RenderPopupMenuPositionLayout layout = Assert.Single(
             FindDescendants<RenderPopupMenuPositionLayout>(harness.RenderView));
         Assert.Equal(180, layout.Child!.Size.Width);
-        Assert.NotEmpty(FindDescendants<RenderClipRRect>(harness.RenderView));
+        Assert.NotEmpty(FindDescendants<RenderClipPath>(harness.RenderView));
 
         int previousBuilds = positionBuilds;
         harness.UpdateRoot(BuildRoot(new Size(640, 420)));

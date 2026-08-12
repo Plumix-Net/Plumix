@@ -92,11 +92,11 @@ internal sealed class AlignDemoPageState : State
         _explicitDecorationAnimation = new DecorationTween(
             begin: new BoxDecoration(
                 Color: Color.Parse("#FF315A7D"),
-                Border: new BorderSide(Color.Parse("#FF9EC5E5"), 2),
+                Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(Color.Parse("#FF9EC5E5"), 2)),
                 BorderRadius: BorderRadius.Circular(4)),
             end: new BoxDecoration(
                 Color: Color.Parse("#FF9C4F63"),
-                Border: new BorderSide(Color.Parse("#FFF4B6C2"), 6),
+                Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(Color.Parse("#FFF4B6C2"), 6)),
                 BorderRadius: BorderRadius.Circular(24))).Animate(_explicitTransitionsController);
     }
 

@@ -42,7 +42,7 @@ public sealed class MaterialCarouselTests
         {
             CarouselViewTheme = new CarouselViewThemeData(
                 BackgroundColor: themeColor,
-                Shape: ShapeBorder.RoundedRectangle(12),
+                Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(12)),
                 Padding: new Thickness(6)),
         };
 
@@ -55,7 +55,8 @@ public sealed class MaterialCarouselTests
 
         using WidgetRenderHarness localHarness = new(Wrap(
             new CarouselViewTheme(
-                new CarouselViewThemeData(BackgroundColor: localColor, Shape: ShapeBorder.RoundedRectangle(18)),
+                new CarouselViewThemeData(BackgroundColor: localColor, Shape: new RoundedRectangleBorder(borderRadius:
+                    Plumix.Rendering.BorderRadius.Circular(18))),
                 new CarouselView(80, [new SizedBox()])),
             theme));
         localHarness.Pump(new Size(240, 100));
@@ -64,7 +65,8 @@ public sealed class MaterialCarouselTests
         Assert.Equal(18, localSurface.Decoration.EffectiveBorderRadius.Radius);
 
         using WidgetRenderHarness widgetHarness = new(Wrap(
-            new CarouselView(80, [new SizedBox()], backgroundColor: widgetColor, shape: ShapeBorder.RoundedRectangle(6)),
+            new CarouselView(80, [new SizedBox()], backgroundColor: widgetColor, shape: new RoundedRectangleBorder(
+                borderRadius: Plumix.Rendering.BorderRadius.Circular(6))),
             theme));
         widgetHarness.Pump(new Size(240, 100));
         RenderDecoratedBox widgetSurface = Assert.Single(FindDescendants<RenderDecoratedBox>(widgetHarness.RenderView));

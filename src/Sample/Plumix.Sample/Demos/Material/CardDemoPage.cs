@@ -41,7 +41,7 @@ internal sealed class CardDemoPageState : State
                     SurfaceTintColor: Color.Parse("#FF6750A4"),
                     Elevation: 3,
                     Margin: new Thickness(8),
-                    Shape: ShapeBorder.RoundedRectangle(18),
+                    Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(18)),
                     ClipBehavior: _clip ? Clip.AntiAlias : Clip.None)
                 : new CardThemeData()
         };

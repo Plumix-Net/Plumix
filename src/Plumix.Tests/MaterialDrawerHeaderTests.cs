@@ -36,7 +36,8 @@ public sealed class MaterialDrawerHeaderTests
             padding => padding.Padding == new Thickness(16, 40, 16, 8));
         Assert.Contains(
             FindDescendants<RenderDecoratedBox>(harness.RenderView),
-            box => box.Decoration.BorderSides?.Bottom?.Color == Colors.Crimson);
+            box => box.Decoration.Border is Plumix.Rendering.Border sideBottom
+                   && sideBottom.Bottom.Color == Colors.Crimson);
         Assert.Equal(19, FindParagraph(harness.RenderView, "Header")!.FontSize);
     }
 

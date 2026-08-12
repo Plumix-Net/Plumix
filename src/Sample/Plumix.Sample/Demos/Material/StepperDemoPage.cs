@@ -87,7 +87,7 @@ internal sealed class StepperDemoPageState : State
         isActive: index <= _currentStep,
         stepStyle: index == 2
             ? new StepStyle(
-                Border: BoxBorder.All(new BorderSide(colors.Outline, 1)),
+                Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(colors.Outline, 1)),
                 Gradient: new LinearGradient([colors.SecondaryContainer, colors.PrimaryContainer]))
             : null);
 }

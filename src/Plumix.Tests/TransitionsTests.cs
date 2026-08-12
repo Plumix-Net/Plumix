@@ -686,11 +686,11 @@ public sealed class TransitionsTests : IDisposable
     {
         var begin = new BoxDecoration(
             Color: Color.Parse("#FF102030"),
-            Border: new BorderSide(Color.Parse("#FF203040"), 2),
+            Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(Color.Parse("#FF203040"), 2)),
             BorderRadius: BorderRadius.Circular(4));
         var end = new BoxDecoration(
             Color: Color.Parse("#FF90A0B0"),
-            Border: new BorderSide(Color.Parse("#FFA0B0C0"), 6),
+            Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(Color.Parse("#FFA0B0C0"), 6)),
             BorderRadius: BorderRadius.Circular(20));
         var tween = new DecorationTween(begin, end);
 
@@ -699,13 +699,13 @@ public sealed class TransitionsTests : IDisposable
 
         var midpoint = Assert.IsType<BoxDecoration>(tween.Evaluate(0.5));
         Assert.Equal(Color.Parse("#FF506070"), midpoint.Color);
-        Assert.Equal(4, midpoint.Border!.Value.Width);
+        Assert.Equal(4, ((Plumix.Rendering.Border)midpoint.Border!).Top.Width);
         Assert.Equal(12, midpoint.BorderRadius!.Value.Radius);
 
         tween.Begin = null;
         var scaled = Assert.IsType<BoxDecoration>(tween.Evaluate(0.5));
         Assert.Equal(0x7F, scaled.Color!.Value.A);
-        Assert.Equal(3, scaled.Border!.Value.Width);
+        Assert.Equal(3, ((Plumix.Rendering.Border)scaled.Border!).Top.Width);
 
         tween.End = null;
         Assert.Throws<InvalidOperationException>(() => tween.Evaluate(0.5));

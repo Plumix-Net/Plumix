@@ -128,7 +128,7 @@ internal sealed class AutocompleteDemoPageState : State
         return new DecoratedBox(
             new BoxDecoration(
                 Color: theme.CanvasColor,
-                Border: new BorderSide(theme.OutlineVariantColor),
+                Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(theme.OutlineVariantColor)),
                 BorderRadius: BorderRadius.Circular(12)),
             new ClipRRect(
                 BorderRadius.Circular(12),

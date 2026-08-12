@@ -356,7 +356,8 @@ public sealed class ChoiceChip : StatelessWidget
         SelectedShadowColor = selectedShadowColor;
         ShowCheckmark = showCheckmark;
         CheckmarkColor = checkmarkColor;
-        AvatarBorder = avatarBorder ?? ShapeBorder.RoundedRectangle(10_000);
+        AvatarBorder = avatarBorder ?? new RoundedRectangleBorder(borderRadius:
+            Plumix.Rendering.BorderRadius.Circular(10_000));
         AvatarBoxConstraints = avatarBoxConstraints;
         ChipAnimationStyle = chipAnimationStyle;
         MouseCursor = mouseCursor;
@@ -622,7 +623,8 @@ public sealed class RawChip : StatefulWidget
         ShadowColor = shadowColor;
         SurfaceTintColor = surfaceTintColor;
         SelectedShadowColor = selectedShadowColor;
-        AvatarBorder = avatarBorder ?? ShapeBorder.RoundedRectangle(10_000);
+        AvatarBorder = avatarBorder ?? new RoundedRectangleBorder(borderRadius:
+            Plumix.Rendering.BorderRadius.Circular(10_000));
         IconTheme = iconTheme;
         AvatarBoxConstraints = avatarBoxConstraints;
         DeleteIcon = deleteIcon ?? new Icon(Icons.Cancel);
@@ -834,8 +836,8 @@ public sealed class RawChip : StatefulWidget
                 Side: MaterialStateProperty<BorderSide?>.ResolveWith(states =>
                     ResolveSide(states, widget, chipTheme, defaults)),
                 Padding: MaterialStateProperty<Thickness?>.All(new Thickness(0)),
-                Shape: MaterialStateProperty<BorderRadius?>.ResolveWith(states =>
-                    ResolveShape(states, widget, chipTheme, defaults).BorderRadius),
+                Shape: MaterialStateProperty<OutlinedBorder?>.ResolveWith(states =>
+                    ResolveShape(states, widget, chipTheme, defaults) as OutlinedBorder),
                 MinimumSize: MaterialStateProperty<Size?>.All(new Size(0, 0)),
                 VisualDensity: Plumix.Material.VisualDensity.Standard,
                 TapTargetSize: tapTargetSize,
@@ -994,7 +996,7 @@ public sealed class RawChip : StatefulWidget
                     SecondaryLabelStyle: theme.TextTheme.BodyLarge.CopyWith(
                         color: WithAlpha(theme.PrimaryColor, 0xde)),
                     Padding: new Thickness(4),
-                    Shape: ShapeBorder.RoundedRectangle(10_000),
+                    Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(10_000)),
                     Elevation: 0,
                     PressElevation: 8,
                     IconTheme: new IconThemeData(Color: WithAlpha(primary, 0xde), Size: 18));
@@ -1004,7 +1006,7 @@ public sealed class RawChip : StatefulWidget
             bool selected = chip.Selected;
             bool elevated = chip.Variant == ChipVariant.Elevated;
             var baseDefaults = new ChipThemeData(
-                Shape: ShapeBorder.RoundedRectangle(8),
+                Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(8)),
                 ShowCheckmark: true,
                 SurfaceTintColor: Colors.Transparent,
                 Padding: new Thickness(8),
@@ -1219,8 +1221,8 @@ public sealed class RawChip : StatefulWidget
             ShapeBorder shape = widget.Shape?.Resolve(states)
                                 ?? chipTheme.Shape
                                 ?? defaults.Shape
-                                ?? ShapeBorder.Stadium();
-            if (shape.Side is { } shapeSide && shapeSide.Width > 0.0)
+                                ?? new StadiumBorder();
+            if (ShapeBorderGeometry.SideOrNull(shape) is { } shapeSide && shapeSide.Width > 0.0)
             {
                 return shapeSide;
             }
@@ -1230,7 +1232,7 @@ public sealed class RawChip : StatefulWidget
             {
                 return new BorderSide(Colors.Transparent, 0);
             }
-            return defaults.Side ?? shape.Side;
+            return defaults.Side ?? ShapeBorderGeometry.SideOrNull(shape);
         }
 
         private static ShapeBorder ResolveShape(
@@ -1242,19 +1244,21 @@ public sealed class RawChip : StatefulWidget
             ShapeBorder shape = widget.Shape?.Resolve(states)
                                 ?? chipTheme.Shape
                                 ?? defaults.Shape
-                                ?? ShapeBorder.Stadium();
+                                ?? new StadiumBorder();
             BorderSide? resolvedSide = widget.Side?.Resolve(states) ?? chipTheme.Side;
             if (resolvedSide.HasValue)
             {
-                return shape with { Side = resolvedSide };
+                return shape is OutlinedBorder outlinedShape
+                    ? outlinedShape.CopyWith(resolvedSide)
+                    : shape;
             }
 
-            if (shape.Side is { } shapeSide && shapeSide.Width > 0.0)
+            if (ShapeBorderGeometry.SideOrNull(shape) is { } shapeSide && shapeSide.Width > 0.0)
             {
                 return shape;
             }
 
-            return shape with { Side = defaults.Side };
+            return shape is OutlinedBorder outlinedDefault ? outlinedDefault.CopyWith(defaults.Side) : shape;
         }
 
         private static TextStyle MergeTextStyles(TextStyle baseStyle, TextStyle? overrideStyle)

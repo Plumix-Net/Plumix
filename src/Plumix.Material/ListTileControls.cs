@@ -26,7 +26,7 @@ public sealed class CheckboxListTile : StatelessWidget
         FocusNode? focusNode = null,
         MaterialStatesController? statesController = null,
         bool autofocus = false,
-        BorderRadius? shape = null,
+        ShapeBorder? shape = null,
         WidgetStateBorderSide? side = null,
         bool isError = false,
         bool? enabled = null,
@@ -113,7 +113,7 @@ public sealed class CheckboxListTile : StatelessWidget
         FocusNode? focusNode,
         MaterialStatesController? statesController,
         bool autofocus,
-        BorderRadius? shape,
+        ShapeBorder? shape,
         WidgetStateBorderSide? side,
         bool isError,
         bool? enabled,
@@ -214,7 +214,7 @@ public sealed class CheckboxListTile : StatelessWidget
     public FocusNode? FocusNode { get; }
     public MaterialStatesController? StatesController { get; }
     public bool Autofocus { get; }
-    public BorderRadius? Shape { get; }
+    public ShapeBorder? Shape { get; }
     public WidgetStateBorderSide? Side { get; }
     public bool IsError { get; }
     public bool? Enabled { get; }
@@ -256,7 +256,7 @@ public sealed class CheckboxListTile : StatelessWidget
         FocusNode? focusNode = null,
         MaterialStatesController? statesController = null,
         bool autofocus = false,
-        BorderRadius? shape = null,
+        ShapeBorder? shape = null,
         WidgetStateBorderSide? side = null,
         bool isError = false,
         bool? enabled = null,
@@ -483,7 +483,7 @@ public sealed class SwitchListTile : StatelessWidget
         Thickness? contentPadding = null,
         bool selected = false,
         ListTileControlAffinity? controlAffinity = null,
-        BorderRadius? shape = null,
+        ShapeBorder? shape = null,
         Color? selectedTileColor = null,
         bool? enableFeedback = null,
         double? horizontalTitleGap = null,
@@ -566,7 +566,7 @@ public sealed class SwitchListTile : StatelessWidget
         Thickness? contentPadding,
         bool selected,
         ListTileControlAffinity? controlAffinity,
-        BorderRadius? shape,
+        ShapeBorder? shape,
         Color? selectedTileColor,
         bool? enableFeedback,
         double? horizontalTitleGap,
@@ -653,7 +653,7 @@ public sealed class SwitchListTile : StatelessWidget
     public Thickness? ContentPadding { get; }
     public bool Selected { get; }
     public ListTileControlAffinity? ControlAffinity { get; }
-    public BorderRadius? Shape { get; }
+    public ShapeBorder? Shape { get; }
     public Color? SelectedTileColor { get; }
     public bool? EnableFeedback { get; }
     public double? HorizontalTitleGap { get; }
@@ -693,7 +693,7 @@ public sealed class SwitchListTile : StatelessWidget
         Thickness? contentPadding = null,
         bool selected = false,
         ListTileControlAffinity? controlAffinity = null,
-        BorderRadius? shape = null,
+        ShapeBorder? shape = null,
         Color? selectedTileColor = null,
         bool? enableFeedback = null,
         double? horizontalTitleGap = null,

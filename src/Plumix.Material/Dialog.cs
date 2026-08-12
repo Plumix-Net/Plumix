@@ -155,13 +155,13 @@ public sealed class Dialog : StatelessWidget
             Widget surface = new DecoratedBox(
                 new BoxDecoration(
                     Color: background,
-                    Border: shape.Side,
-                    BorderRadius: shape.BorderRadius,
+                    Border: null,
+                    BorderRadius: ShapeBorderGeometry.ResolveRadius(shape),
                     BoxShadows: BuildBoxShadows(shadow, elevation)),
                 Child ?? new SizedBox());
             if (clip != Clip.None)
             {
-                surface = new ClipRRect(shape.BorderRadius, surface);
+                surface = new ClipPath(clipper: new ShapeBorderClipper(shape), child: surface);
             }
 
             dialogChild = new Align(
@@ -199,7 +199,7 @@ public sealed class Dialog : StatelessWidget
                 BackgroundColor: theme.Brightness == Brightness.Dark ? Color.Parse("#FF424242") : Colors.White,
                 Elevation: 24,
                 ShadowColor: theme.ShadowColor,
-                Shape: ShapeBorder.RoundedRectangle(4),
+                Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(4)),
                 Alignment: Plumix.Rendering.Alignment.Center,
                 IconColor: theme.IconTheme.Color,
                 TitleTextStyle: theme.TextTheme.TitleLarge,
@@ -213,7 +213,7 @@ public sealed class Dialog : StatelessWidget
             Elevation: 6,
             ShadowColor: Colors.Transparent,
             SurfaceTintColor: Colors.Transparent,
-            Shape: ShapeBorder.RoundedRectangle(28),
+            Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(28)),
             Alignment: Plumix.Rendering.Alignment.Center,
             IconColor: theme.SecondaryColor,
             TitleTextStyle: theme.TextTheme.HeadlineSmall,

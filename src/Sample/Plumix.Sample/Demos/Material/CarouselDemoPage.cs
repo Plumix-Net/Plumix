@@ -30,7 +30,7 @@ public sealed class CarouselDemoPage : StatelessWidget
                 new SizedBox(height: 132, child: new CarouselViewTheme(
                     new CarouselViewThemeData(
                         Padding: new Thickness(6),
-                        Shape: ShapeBorder.RoundedRectangle(20)),
+                        Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(20))),
                     CarouselView.Weighted(
                         flexWeights: [1, 6, 1],
                         itemSnapping: true,

@@ -74,7 +74,8 @@ internal sealed class FractionallySizedBoxDemoPageState : State
                         child: new Container(
                             decoration: new BoxDecoration(
                                 Color: Color.Parse("#FFCCE3FF"),
-                                Border: new BorderSide(Color.Parse("#FF1D3557"), 2),
+                                Border: Plumix.Rendering.Border.FromBorderSide(
+                                    new BorderSide(Color.Parse("#FF1D3557"), 2)),
                                 BorderRadius: BorderRadius.Circular(10)),
                             child: new Center(
                                 child: new Text("fraction child", fontSize: 14, color: Colors.Black))))),

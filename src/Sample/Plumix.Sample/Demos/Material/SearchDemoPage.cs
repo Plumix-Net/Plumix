@@ -61,7 +61,8 @@ internal sealed class SearchDemoPageState : State
                 ? new SearchBarThemeData(
                     BackgroundColor: MaterialStateProperty<Color?>.All(Color.Parse("#FFEAF6F7")),
                     Elevation: MaterialStateProperty<double?>.All(1),
-                    Shape: MaterialStateProperty<ShapeBorder?>.All(ShapeBorder.RoundedRectangle(18)),
+                    Shape: MaterialStateProperty<ShapeBorder?>.All(new RoundedRectangleBorder(borderRadius:
+                        Plumix.Rendering.BorderRadius.Circular(18))),
                     Side: MaterialStateProperty<BorderSide?>.All(new BorderSide(Color.Parse("#FF00695C"))),
                     Padding: MaterialStateProperty<Thickness?>.All(new Thickness(12, 0)),
                     Constraints: new BoxConstraints(MinWidth: 280, MaxWidth: 520, MinHeight: 52),
@@ -71,7 +72,8 @@ internal sealed class SearchDemoPageState : State
                 ? new SearchViewThemeData(
                     BackgroundColor: Color.Parse("#FFF5FBFA"),
                     Elevation: 0,
-                    Shape: ShapeBorder.RoundedRectangle(22, new BorderSide(Color.Parse("#FF80CBC4"))),
+                    Shape: new RoundedRectangleBorder(
+                        new BorderSide(Color.Parse("#FF80CBC4")), Plumix.Rendering.BorderRadius.Circular(22)),
                     HeaderHeight: 64,
                     BarPadding: new Thickness(12, 0),
                     DividerColor: Color.Parse("#FF80CBC4"),

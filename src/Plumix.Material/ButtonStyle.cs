@@ -168,7 +168,7 @@ public sealed record ButtonStyle(
     MaterialStateProperty<double?>? IconSize = null,
     MaterialStateProperty<BorderSide?>? Side = null,
     MaterialStateProperty<Thickness?>? Padding = null,
-    MaterialStateProperty<BorderRadius?>? Shape = null,
+    MaterialStateProperty<OutlinedBorder?>? Shape = null,
     MaterialStateProperty<Size?>? MinimumSize = null,
     MaterialStateProperty<Size?>? FixedSize = null,
     MaterialStateProperty<Size?>? MaximumSize = null,
@@ -320,7 +320,7 @@ public sealed record ButtonStyle(
         return Padding?.Resolve(states);
     }
 
-    internal BorderRadius? ResolveShape(MaterialState states)
+    internal OutlinedBorder? ResolveShape(MaterialState states)
     {
         return Shape?.Resolve(states);
     }
@@ -439,9 +439,9 @@ public sealed record ButtonStyle(
                 t));
     }
 
-    private static MaterialStateProperty<BorderRadius?>? LerpBorderRadiusProperty(
-        MaterialStateProperty<BorderRadius?>? a,
-        MaterialStateProperty<BorderRadius?>? b,
+    private static MaterialStateProperty<OutlinedBorder?>? LerpBorderRadiusProperty(
+        MaterialStateProperty<OutlinedBorder?>? a,
+        MaterialStateProperty<OutlinedBorder?>? b,
         double t)
     {
         if (a is null && b is null)
@@ -449,19 +449,8 @@ public sealed record ButtonStyle(
             return null;
         }
 
-        return MaterialStateProperty<BorderRadius?>.ResolveWith(states =>
-        {
-            BorderRadius? fromRadius = a?.Resolve(states);
-            BorderRadius? toRadius = b?.Resolve(states);
-            if (!fromRadius.HasValue && !toRadius.HasValue)
-            {
-                return null;
-            }
-
-            double from = fromRadius?.Radius ?? 0.0;
-            double to = toRadius?.Radius ?? 0.0;
-            return BorderRadius.Circular(from + ((to - from) * t));
-        });
+        return MaterialStateProperty<OutlinedBorder?>.ResolveWith(states =>
+            (OutlinedBorder?)ShapeBorder.Lerp(a?.Resolve(states), b?.Resolve(states), t));
     }
 
     private static MaterialStateProperty<Size?>? LerpSizeProperty(

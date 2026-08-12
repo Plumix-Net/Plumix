@@ -127,9 +127,6 @@ public sealed class AutomaticNotchedShape : NotchedShape
 
     private static Geometry BuildShapeGeometry(ShapeBorder shape, Rect rect)
     {
-        double radius = Math.Min(
-            shape.BorderRadius.Radius,
-            Math.Min(rect.Width, rect.Height) / 2.0);
-        return new RectangleGeometry(rect, radius, radius);
+        return shape.GetOuterPath(rect).ToGeometry();
     }
 }

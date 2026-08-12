@@ -169,7 +169,7 @@ internal sealed class SwitchDemoPageState : State
             decoration: new BoxDecoration(
                 Color: Color.Parse("#FFF1F4F9"),
                 BorderRadius: BorderRadius.Circular(10),
-                Border: new BorderSide(Color.Parse("#FFD6DEEA"), 1)),
+                Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(Color.Parse("#FFD6DEEA"), 1))),
             child: new Row(
                 spacing: 10,
                 children:

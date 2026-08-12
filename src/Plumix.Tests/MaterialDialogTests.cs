@@ -72,12 +72,12 @@ public sealed class MaterialDialogTests : IDisposable
             DialogTheme = new DialogThemeData(
                 BackgroundColor: Colors.Green,
                 Elevation: 2,
-                Shape: ShapeBorder.RoundedRectangle(10)),
+                Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(10))),
         };
         var local = new DialogThemeData(
             BackgroundColor: Colors.Purple,
             Elevation: 0,
-            Shape: ShapeBorder.RoundedRectangle(12),
+            Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(12)),
             InsetPadding: new Thickness(9));
         using var themed = new WidgetRenderHarness(Wrap(
             global,
@@ -93,7 +93,7 @@ public sealed class MaterialDialogTests : IDisposable
             new Dialog(
                 backgroundColor: Colors.Orange,
                 elevation: 0,
-                shape: ShapeBorder.RoundedRectangle(6),
+                shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(6)),
                 child: new Text("widget"))));
         widget.Pump(new Size(500, 300));
         Assert.Contains(FindDescendants<RenderDecoratedBox>(widget.RenderView), box =>

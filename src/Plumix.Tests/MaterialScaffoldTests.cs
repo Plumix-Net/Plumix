@@ -3850,8 +3850,9 @@ public sealed class MaterialScaffoldTests
                     data: ThemeData.Light with
                     {
                         DrawerTheme = new DrawerThemeData(
-                            Shape: ShapeBorder.RoundedRectangle(4),
-                            EndShape: ShapeBorder.RoundedRectangle(18)),
+                            Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(4)),
+                            EndShape: new RoundedRectangleBorder(borderRadius:
+                                Plumix.Rendering.BorderRadius.Circular(18))),
                     },
                     child: new DrawerController(
                         alignment: DrawerAlignment.End,
@@ -4142,7 +4143,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void AppBar_ExposesFlutterVisualAndSemanticsConfiguration()
     {
-        var shape = ShapeBorder.RoundedRectangle(12);
+        var shape = new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(12));
         var appBar = new AppBar(
             titleText: "Configured",
             elevation: 2,

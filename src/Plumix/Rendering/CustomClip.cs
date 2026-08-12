@@ -53,19 +53,7 @@ public sealed class ShapeBorderClipper : CustomClipper<Path>
 
     public override Path GetClip(Size size)
     {
-        var rect = new Rect(new Point(0, 0), size);
-        var path = new Path();
-        if (Shape.Shape == BoxShape.Circle)
-        {
-            path.AddOval(rect);
-            return path;
-        }
-
-        double radius = Math.Min(
-            Shape.BorderRadius.Radius,
-            Math.Min(rect.Width, rect.Height) / 2.0);
-        path.AddRoundedRect(rect, radius);
-        return path;
+        return Shape.GetOuterPath(new Rect(new Point(0, 0), size), TextDirection);
     }
 
     public override bool ShouldReclip(CustomClipper<Path> oldClipper)

@@ -34,7 +34,7 @@ public sealed class MagnifierTests : IDisposable
         Assert.Equal(1, widget.MagnificationScale);
         Assert.Equal(1, widget.Decoration.Opacity);
         Assert.Null(widget.Decoration.Shadows);
-        Assert.Equal(0, widget.Decoration.Shape.BorderRadius.Radius);
+        Assert.Equal(0, ShapeBorderGeometry.ResolveRadius(widget.Decoration.Shape).Radius);
         Assert.Throws<ArgumentOutOfRangeException>(() => new RawMagnifier(new Size(-1, 10)));
         Assert.Throws<ArgumentOutOfRangeException>(() => new RawMagnifier(new Size(10, 10), magnificationScale: 0));
         Assert.Throws<ArgumentOutOfRangeException>(() => new MagnifierDecoration(opacity: 1.1));
@@ -45,7 +45,8 @@ public sealed class MagnifierTests : IDisposable
     {
         var decoration = new MagnifierDecoration(
             opacity: 0.75,
-            shape: ShapeBorder.RoundedRectangle(9, new BorderSide(Colors.Blue, 2)),
+            shape: new RoundedRectangleBorder(
+                new BorderSide(Colors.Blue, 2), Plumix.Rendering.BorderRadius.Circular(9)),
             shadows: new BoxShadows(new BoxShadow { Blur = 2, Color = Colors.Black }));
         using var harness = new WidgetRenderHarness(new Align(
             alignment: Alignment.TopLeft,
@@ -207,7 +208,7 @@ public sealed class MagnifierTests : IDisposable
                 MaterialMagnifier.StandardVerticalFocalPointShift
                 + (MaterialMagnifier.DefaultMagnifierSize.Height / 2.0)),
             render.FocalPointOffset);
-        Assert.Equal(40, render.Decoration.Shape.BorderRadius.Radius);
+        Assert.Equal(40, ShapeBorderGeometry.ResolveRadius(render.Decoration.Shape).Radius);
         Assert.Equal(Clip.HardEdge, render.ClipBehavior);
         Assert.Equal(1, render.Decoration.Shadows!.Value.Count);
     }
@@ -273,7 +274,7 @@ public sealed class MagnifierTests : IDisposable
         Assert.NotNull(render);
         Assert.Equal(CupertinoMagnifier.DefaultSize, render!.Size);
         Assert.Equal(0.5, render.Decoration.Opacity);
-        Assert.Equal(2, render.Decoration.Shape.Side!.Value.Width);
+        Assert.Equal(2, render.Decoration.Shape is OutlinedBorder shapeOutlined ? shapeOutlined.Side.Width : 0.0);
         Assert.Equal(1, render.MagnificationScale);
         Assert.Equal(2, render.FocalPointOffset.X);
         Assert.Equal(

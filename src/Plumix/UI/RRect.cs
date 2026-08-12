@@ -55,6 +55,31 @@ public readonly record struct RRect
         borderRadius.BottomRightRadius,
         borderRadius.BottomLeftRadius);
 
+    public double ShortestSide => Math.Min(Math.Abs(Width), Math.Abs(Height));
+
+    public Point Center => Rect.Center;
+
+    public static RRect FromRectAndRadius(Rect rect, double radius) =>
+        FromRectAndRadius(rect, Plumix.Rendering.Radius.Circular(radius));
+
+    /// Moves each edge out by the matching inset and grows every radius by the same amounts.
+    // Dart parity source: flutter/packages/flutter/lib/src/painting/edge_insets.dart EdgeInsets.inflateRRect.
+    public RRect InflateEdges(Thickness insets) => new(
+        new Rect(
+            Rect.Left - insets.Left,
+            Rect.Top - insets.Top,
+            Rect.Width + insets.Left + insets.Right,
+            Rect.Height + insets.Top + insets.Bottom),
+        Plumix.Rendering.Radius.Elliptical(TopLeft.X + insets.Left, TopLeft.Y + insets.Top),
+        Plumix.Rendering.Radius.Elliptical(TopRight.X + insets.Right, TopRight.Y + insets.Top),
+        Plumix.Rendering.Radius.Elliptical(BottomRight.X + insets.Right, BottomRight.Y + insets.Bottom),
+        Plumix.Rendering.Radius.Elliptical(BottomLeft.X + insets.Left, BottomLeft.Y + insets.Bottom));
+
+    /// Moves each edge in by the matching inset and shrinks every radius by the same amounts.
+    // Dart parity source: flutter/packages/flutter/lib/src/painting/edge_insets.dart EdgeInsets.deflateRRect.
+    public RRect DeflateEdges(Thickness insets) =>
+        InflateEdges(new Thickness(-insets.Left, -insets.Top, -insets.Right, -insets.Bottom));
+
     public RRect Inflate(double delta) => new(
         new Rect(Rect.Left - delta, Rect.Top - delta, Rect.Width + (delta * 2.0), Rect.Height + (delta * 2.0)),
         InflateRadius(TopLeft, delta),

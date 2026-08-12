@@ -71,7 +71,8 @@ public sealed class TimePickerTheme : InheritedWidget
             ConfirmButtonStyle: TextButton.StyleFrom(foregroundColor: theme.PrimaryColor),
             DayPeriodBorderSide: new BorderSide(m3 ? theme.OutlineColor : WithOpacity(theme.OnSurfaceColor, 0.38)),
             DayPeriodColor: stateColor(selectedFill, Colors.Transparent),
-            DayPeriodShape: ShapeBorder.RoundedRectangle(m3 ? 8 : 4),
+            DayPeriodShape: new RoundedRectangleBorder(borderRadius:
+                Plumix.Rendering.BorderRadius.Circular(m3 ? 8 : 4)),
             DayPeriodTextColor: stateColor(m3 ? theme.OnPrimaryContainerColor : theme.PrimaryColor, theme.OnSurfaceColor),
             DayPeriodTextStyle: theme.TextTheme.TitleMedium,
             DialBackgroundColor: m3 ? theme.SurfaceContainerHighestColor : WithOpacity(theme.OnSurfaceColor, theme.Brightness == Brightness.Dark ? 0.12 : 0.08),
@@ -82,14 +83,15 @@ public sealed class TimePickerTheme : InheritedWidget
             EntryModeIconColor: m3 ? theme.OnSurfaceVariantColor : WithOpacity(theme.OnSurfaceColor, theme.Brightness == Brightness.Dark ? 1 : 0.60),
             HelpTextStyle: m3 ? theme.TextTheme.LabelSmall : theme.TextTheme.OverlineFallback(),
             HourMinuteColor: stateColor(selectedFill, idleFill),
-            HourMinuteShape: ShapeBorder.RoundedRectangle(m3 ? 8 : 4),
+            HourMinuteShape: new RoundedRectangleBorder(borderRadius:
+                Plumix.Rendering.BorderRadius.Circular(m3 ? 8 : 4)),
             HourMinuteTextColor: stateColor(m3 ? theme.OnPrimaryContainerColor : theme.PrimaryColor, theme.OnSurfaceColor),
             HourMinuteTextStyle: theme.TextTheme.HeadlineMedium.CopyWith(fontSize: m3 ? 64 : 60),
             InputDecorationTheme: new InputDecorationThemeData(
                 Filled: true,
                 Border: new OutlineInputBorder(borderRadius: BorderRadius.Circular(m3 ? 8 : 4))),
             Padding: m3 ? new Thickness(24) : new Thickness(24, 20),
-            Shape: ShapeBorder.RoundedRectangle(m3 ? 28 : 4),
+            Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(m3 ? 28 : 4)),
             TimeSelectorSeparatorColor: MaterialStateProperty<Color?>.All(theme.OnSurfaceColor),
             TimeSelectorSeparatorTextStyle: MaterialStateProperty<TextStyle?>.All(
                 theme.TextTheme.HeadlineMedium.CopyWith(fontSize: m3 ? 64 : 60)));

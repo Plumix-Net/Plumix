@@ -338,7 +338,8 @@ internal sealed class TimePickerDialogState : State
         var states = selected ? MaterialState.Selected : MaterialState.None;
         var background = (local.HourMinuteColor ?? defaults.HourMinuteColor)?.Resolve(states);
         var foreground = (local.HourMinuteTextColor ?? defaults.HourMinuteTextColor)?.Resolve(states);
-        var shape = local.HourMinuteShape ?? defaults.HourMinuteShape ?? ShapeBorder.RoundedRectangle(4);
+        var shape = local.HourMinuteShape ?? defaults.HourMinuteShape ?? new RoundedRectangleBorder(borderRadius:
+            Plumix.Rendering.BorderRadius.Circular(4));
 
         return new Semantics(
             label: hour ? MaterialLocalizations.Of(context).HourLabel : MaterialLocalizations.Of(context).MinuteLabel,
@@ -346,16 +347,18 @@ internal sealed class TimePickerDialogState : State
             onTap: () => SetState(() => _selectingHour = hour),
             child: new InkWell(
                 onTap: () => SetState(() => _selectingHour = hour),
-                borderRadius: shape.BorderRadius,
+                borderRadius: ShapeBorderGeometry.ResolveRadius(shape),
                 child: new Container(
                     width: 96,
                     height: 72,
                     alignment: Alignment.Center,
                     decoration: new BoxDecoration(
                         Color: background,
-                        Border: shape.Side,
-                        BorderRadius: shape.BorderRadius,
-                        Shape: shape.Shape),
+                        Border: ShapeBorderGeometry.SideOrNull(shape) is { } shapeSide
+                            ? Plumix.Rendering.Border.FromBorderSide(shapeSide)
+                            : null,
+                        BorderRadius: ShapeBorderGeometry.ResolveRadius(shape),
+                        Shape: ShapeBorderGeometry.BoxShapeOf(shape)),
                     child: new DefaultTextStyle(style.CopyWith(color: foreground), new Text(label)))));
     }
 
@@ -365,7 +368,8 @@ internal sealed class TimePickerDialogState : State
         TimePickerThemeData defaults)
     {
         var localizations = MaterialLocalizations.Of(context);
-        var shape = local.DayPeriodShape ?? defaults.DayPeriodShape ?? ShapeBorder.RoundedRectangle(4);
+        var shape = local.DayPeriodShape ?? defaults.DayPeriodShape ?? new RoundedRectangleBorder(borderRadius:
+            Plumix.Rendering.BorderRadius.Circular(4));
 
         Widget button(DayPeriod period, string label)
         {
@@ -393,8 +397,10 @@ internal sealed class TimePickerDialogState : State
             width: 64,
             height: 72,
             decoration: new BoxDecoration(
-                Border: local.DayPeriodBorderSide ?? defaults.DayPeriodBorderSide,
-                BorderRadius: shape.BorderRadius),
+                Border: (local.DayPeriodBorderSide ?? defaults.DayPeriodBorderSide) is { } periodSide
+                    ? Plumix.Rendering.Border.FromBorderSide(periodSide)
+                    : null,
+                BorderRadius: ShapeBorderGeometry.ResolveRadius(shape)),
             child: new Column(
                 mainAxisSize: MainAxisSize.Max,
                 crossAxisAlignment: CrossAxisAlignment.Stretch,

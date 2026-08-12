@@ -167,7 +167,7 @@ internal sealed class ChipsDemoPageState : State
                 checkmarkColor: Colors.White,
                 labelStyle: new TextStyle(Color: Color.Parse("#FF271900")),
                 secondaryLabelStyle: new TextStyle(Color: Colors.White),
-                shape: ShapeBorder.RoundedRectangle(14)),
+                shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(14))),
             child: probes);
     }
 

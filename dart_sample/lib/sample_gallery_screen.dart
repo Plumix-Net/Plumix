@@ -42,6 +42,7 @@ import 'demos/general/custom_multi_child_layout_demo_page.dart';
 import 'demos/general/dismissible_size_changed_layout_demo_page.dart';
 import 'demos/general/custom_slivers_demo_page.dart';
 import 'demos/general/decorated_box_demo_page.dart';
+import 'demos/general/shape_borders_demo_page.dart';
 import 'demos/general/debug_painting_demo_page.dart';
 import 'demos/general/drag_target_demo_page.dart';
 import 'demos/material/drawer_demo_page.dart';
@@ -546,6 +547,12 @@ class SampleGalleryScreen extends StatelessWidget {
           title: 'DecoratedBox',
           subtitle: 'border + radius + fill decoration',
           builder: () => const DecoratedBoxDemoPage(),
+        ),
+        SampleRouteDefinition(
+          routeName: SampleRoutes.shapeBorders,
+          title: 'ShapeBorders',
+          subtitle: 'outlined border shapes + lerp',
+          builder: () => const ShapeBordersDemoPage(),
         ),
         SampleRouteDefinition(
           routeName: SampleRoutes.container,

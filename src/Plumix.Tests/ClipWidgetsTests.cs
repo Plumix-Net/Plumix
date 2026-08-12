@@ -61,7 +61,7 @@ public sealed class ClipWidgetsTests
     [Fact]
     public void ClipPathShape_UsesShapeBorderClipperAndAmbientDirection()
     {
-        var shape = ShapeBorder.Circle(new BorderSide(Colors.Red, 2));
+        var shape = new CircleBorder(new BorderSide(Colors.Red, 2));
         var owner = new BuildOwner();
         var root = new TestRootElement(new Directionality(
             TextDirection.Rtl,
@@ -79,11 +79,14 @@ public sealed class ClipWidgetsTests
         Assert.False(shapeClipper.GetClip(new Size(60, 40)).Contains(new Point(1, 1)));
         Assert.Equal(Clip.HardEdge, renderPath.ClipBehavior);
 
-        var rounded = new ShapeBorderClipper(ShapeBorder.RoundedRectangle(12));
+        var rounded = new ShapeBorderClipper(new RoundedRectangleBorder(borderRadius:
+            Plumix.Rendering.BorderRadius.Circular(12)));
         Assert.True(rounded.GetClip(new Size(60, 40)).Contains(new Point(30, 20)));
         Assert.False(rounded.GetClip(new Size(60, 40)).Contains(new Point(1, 1)));
-        Assert.False(rounded.ShouldReclip(new ShapeBorderClipper(ShapeBorder.RoundedRectangle(12))));
-        Assert.True(rounded.ShouldReclip(new ShapeBorderClipper(ShapeBorder.RoundedRectangle(8))));
+        Assert.False(rounded.ShouldReclip(new ShapeBorderClipper(new RoundedRectangleBorder(borderRadius:
+            Plumix.Rendering.BorderRadius.Circular(12)))));
+        Assert.True(rounded.ShouldReclip(new ShapeBorderClipper(new RoundedRectangleBorder(borderRadius:
+            Plumix.Rendering.BorderRadius.Circular(8)))));
 
         root.Unmount();
     }

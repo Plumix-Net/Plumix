@@ -319,13 +319,15 @@ public sealed class SnackBar : StatefulWidget
                              ?? ResolveDefaultBackground(theme);
             var shape = widget.Shape
                         ?? snackBarTheme.Shape
-                        ?? (behavior == SnackBarBehavior.Floating ? ShapeBorder.RoundedRectangle(4) : null);
-            var radius = shape?.BorderRadius ?? BorderRadius.Zero;
+                        ?? (behavior == SnackBarBehavior.Floating ? new RoundedRectangleBorder(borderRadius:
+                            Plumix.Rendering.BorderRadius.Circular(4)) : null);
+            var radius = ShapeBorderGeometry.ResolveRadiusOrNull(shape) ?? BorderRadius.Zero;
             var shadow = theme.ShadowColor;
             snackBar = new DecoratedBox(
                 new BoxDecoration(
                     Color: background,
-                    Border: shape?.Side,
+                    Border: ShapeBorderGeometry.SideOrNull(
+                        shape) is { } shapeSide ? Plumix.Rendering.Border.FromBorderSide(shapeSide) : null,
                     BorderRadius: radius,
                     BoxShadows: BuildBoxShadows(shadow, elevation)),
                 snackBar);

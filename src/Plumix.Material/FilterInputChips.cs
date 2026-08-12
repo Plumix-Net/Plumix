@@ -133,7 +133,8 @@ public sealed class FilterChip : StatelessWidget
         SelectedShadowColor = selectedShadowColor;
         ShowCheckmark = showCheckmark;
         CheckmarkColor = checkmarkColor;
-        AvatarBorder = avatarBorder ?? ShapeBorder.RoundedRectangle(10_000);
+        AvatarBorder = avatarBorder ?? new RoundedRectangleBorder(borderRadius:
+            Plumix.Rendering.BorderRadius.Circular(10_000));
         AvatarBoxConstraints = avatarBoxConstraints;
         DeleteIconBoxConstraints = deleteIconBoxConstraints;
         ChipAnimationStyle = chipAnimationStyle;
@@ -368,7 +369,8 @@ public sealed class InputChip : StatelessWidget
         SelectedShadowColor = selectedShadowColor;
         ShowCheckmark = showCheckmark;
         CheckmarkColor = checkmarkColor;
-        AvatarBorder = avatarBorder ?? ShapeBorder.RoundedRectangle(10_000);
+        AvatarBorder = avatarBorder ?? new RoundedRectangleBorder(borderRadius:
+            Plumix.Rendering.BorderRadius.Circular(10_000));
         AvatarBoxConstraints = avatarBoxConstraints;
         DeleteIconBoxConstraints = deleteIconBoxConstraints;
         ChipAnimationStyle = chipAnimationStyle;

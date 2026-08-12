@@ -127,6 +127,6 @@ public sealed class Drawer : StatelessWidget
         BorderRadius radius = isDrawerOnLeft
             ? BorderRadius.Only(topRight: DefaultM3Radius, bottomRight: DefaultM3Radius)
             : BorderRadius.Only(topLeft: DefaultM3Radius, bottomLeft: DefaultM3Radius);
-        return new ShapeBorder(radius);
+        return new RoundedRectangleBorder(borderRadius: radius);
     }
 }

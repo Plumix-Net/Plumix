@@ -65,7 +65,8 @@ public sealed class BottomSheetDemoPage : StatefulWidget
                 context,
                 _ => BuildSheetContent("Persistent sheet", () => controller?.Close()),
                 backgroundColor: _customTheme ? Color.Parse("#FFFFF0F5") : null,
-                shape: _customTheme ? ShapeBorder.RoundedRectangle(18) : null,
+                shape: _customTheme ? new RoundedRectangleBorder(borderRadius:
+                    Plumix.Rendering.BorderRadius.Circular(18)) : null,
                 showDragHandle: _showDragHandle);
         }
 
@@ -75,7 +76,8 @@ public sealed class BottomSheetDemoPage : StatefulWidget
                 context,
                 sheetContext => BuildSheetContent("Modal sheet", () => Navigator.Pop(sheetContext, "accepted")),
                 backgroundColor: _customTheme ? Color.Parse("#FFE8DEF8") : null,
-                shape: _customTheme ? ShapeBorder.RoundedRectangle(18) : null,
+                shape: _customTheme ? new RoundedRectangleBorder(borderRadius:
+                    Plumix.Rendering.BorderRadius.Circular(18)) : null,
                 isScrollControlled: _scrollControlled,
                 showDragHandle: _showDragHandle,
                 useSafeArea: true,

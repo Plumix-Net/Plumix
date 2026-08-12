@@ -27,7 +27,7 @@ public sealed class DialogDemoPage : StatefulWidget
                 ? new DialogThemeData(
                     BackgroundColor: Color.Parse("#FFE0F2F1"),
                     IconColor: Color.Parse("#FF00695C"),
-                    Shape: ShapeBorder.RoundedRectangle(14),
+                    Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(14)),
                     TitleTextStyle: Theme.Of(context).TextTheme.HeadlineSmall.CopyWith(color: Color.Parse("#FF004D40")),
                     BarrierColor: Color.FromArgb(0x99, 0x00, 0x4D, 0x40))
                 : new DialogThemeData();

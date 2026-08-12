@@ -146,7 +146,8 @@ public sealed class SegmentedButton<T> : StatefulWidget
             IconSize: iconSize.HasValue ? MaterialStateProperty<double?>.All(iconSize) : null,
             Side: side.HasValue ? MaterialStateProperty<BorderSide?>.All(side) : null,
             Padding: padding.HasValue ? MaterialStateProperty<Thickness?>.All(padding) : null,
-            Shape: shape.HasValue ? MaterialStateProperty<BorderRadius?>.All(shape) : null,
+            Shape: shape.HasValue ? MaterialStateProperty<OutlinedBorder?>.All(
+                new RoundedRectangleBorder(borderRadius: shape)) : null,
             MinimumSize: minimumSize.HasValue ? MaterialStateProperty<Size?>.All(minimumSize) : null,
             FixedSize: fixedSize.HasValue ? MaterialStateProperty<Size?>.All(fixedSize) : null,
             MaximumSize: maximumSize.HasValue ? MaterialStateProperty<Size?>.All(maximumSize) : null,
@@ -224,7 +225,8 @@ internal sealed class SegmentedButtonState<T> : State
                               widget.Style,
                               segmentedTheme.Style,
                               defaults)
-                          ?? Plumix.Rendering.BorderRadius.Circular(20);
+                          ?? new RoundedRectangleBorder(
+                              borderRadius: Plumix.Rendering.BorderRadius.Circular(20));
 
         var children = new List<Widget>(widget.Segments.Count);
         foreach (var segment in widget.Segments)
@@ -290,7 +292,7 @@ internal sealed class SegmentedButtonState<T> : State
             textDirection: Directionality.Of(context),
             expanded: widget.ExpandedInsets.HasValue);
 
-        group = new ClipRRect(outerRadius, group);
+        group = new ClipPath(clipper: new ShapeBorderClipper(outerRadius), child: group);
         if (widget.ExpandedInsets is { } insets)
         {
             group = new Padding(insets, group);
@@ -373,7 +375,8 @@ internal sealed class SegmentedButtonState<T> : State
                         ? NavigationSurfaceUtilities.WithOpacity(theme.OnSurfaceColor, 0.12)
                         : theme.OutlineColor)),
             Padding: MaterialStateProperty<Thickness?>.All(new Thickness(12, 8)),
-            Shape: MaterialStateProperty<BorderRadius?>.All(Plumix.Rendering.BorderRadius.Circular(20)),
+            Shape: MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius:
+                Plumix.Rendering.BorderRadius.Circular(20))),
             MinimumSize: MaterialStateProperty<Size?>.All(new Size(0, 40)),
             Alignment: Alignment.Center,
             TapTargetSize: theme.MaterialTapTargetSize,
@@ -405,7 +408,8 @@ internal sealed class SegmentedButtonState<T> : State
             IconSize: Compose(style => style.IconSize, baseStates, widget, localTheme, defaults),
             Side: Compose(style => style.Side, baseStates, widget, localTheme, defaults),
             Padding: Compose(style => style.Padding, baseStates, widget, localTheme, defaults),
-            Shape: MaterialStateProperty<BorderRadius?>.All(Plumix.Rendering.BorderRadius.Zero),
+            Shape: MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius:
+                Plumix.Rendering.BorderRadius.Zero)),
             MinimumSize: Compose(style => style.MinimumSize, baseStates, widget, localTheme, defaults),
             FixedSize: Compose(style => style.FixedSize, baseStates, widget, localTheme, defaults),
             MaximumSize: Compose(style => style.MaximumSize, baseStates, widget, localTheme, defaults),

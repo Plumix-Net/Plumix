@@ -88,7 +88,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
             BottomSheetTheme = new BottomSheetThemeData(
                 BackgroundColor: Colors.Purple,
                 Elevation: 0,
-                Shape: ShapeBorder.RoundedRectangle(12),
+                Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(12)),
                 ShowDragHandle: true,
                 DragHandleColor: MaterialStateProperty<Color?>.All(Colors.Green),
                 DragHandleSize: new Size(40, 6),
@@ -101,7 +101,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
                 builder: _ => new SizedBox(width: 200, height: 80),
                 animationController: BottomSheet.CreateAnimationController(),
                 backgroundColor: Colors.Orange,
-                shape: ShapeBorder.RoundedRectangle(8),
+                shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(8)),
                 showDragHandle: true,
                 enableDrag: false)));
         var semantics = harness.PumpAndGetSemantics(new Size(800, 400));
@@ -130,7 +130,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
                 BackgroundColor: Colors.Purple,
                 Elevation: 4,
                 ShadowColor: Colors.Red,
-                Shape: ShapeBorder.RoundedRectangle(12)),
+                Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(12))),
         };
         using var harness = new WidgetRenderHarness(Wrap(
             theme,

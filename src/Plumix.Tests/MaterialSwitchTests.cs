@@ -81,9 +81,9 @@ public sealed class MaterialSwitchTests
         Assert.NotNull(track);
         Assert.NotNull(thumb);
         Assert.Equal(Colors.PowderBlue, track!.Decoration.Color);
-        Assert.True(track.Decoration.Border.HasValue);
-        Assert.Equal(Colors.CadetBlue, track.Decoration.Border!.Value.Color);
-        Assert.Equal(2, track.Decoration.Border.Value.Width);
+        Assert.True(track.Decoration.Border is not null);
+        Assert.Equal(Colors.CadetBlue, ((Plumix.Rendering.Border)track.Decoration.Border!).Top.Color);
+        Assert.Equal(2, ((Plumix.Rendering.Border)track.Decoration.Border!).Top.Width);
         Assert.Equal(Colors.CadetBlue, thumb!.Decoration.Color);
     }
 
@@ -357,11 +357,11 @@ public sealed class MaterialSwitchTests
             var boxes = FindDescendants<RenderDecoratedBox>(
                 RequireRenderObject<RenderObject>(root.ChildElement));
             var focusOutline = boxes.FirstOrDefault(box =>
-                box.Decoration.Border is { Width: 3.5 });
+                box.Decoration.Border is Plumix.Rendering.Border { Top.Width: 3.5 });
             Assert.NotNull(focusOutline);
             Assert.Equal(
                 Color.FromArgb(0xCC, 0x6E, 0xF2, 0x8F),
-                focusOutline!.Decoration.Border!.Value.Color);
+                ((Plumix.Rendering.Border)focusOutline!.Decoration.Border!).Top.Color);
         }
         finally
         {
@@ -476,9 +476,9 @@ public sealed class MaterialSwitchTests
 
         var track = FindTrackDecoration(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(track);
-        Assert.True(track!.Decoration.Border.HasValue);
-        Assert.Equal(Colors.Indigo, track.Decoration.Border!.Value.Color);
-        Assert.Equal(3, track.Decoration.Border.Value.Width);
+        Assert.True(track!.Decoration.Border is not null);
+        Assert.Equal(Colors.Indigo, ((Plumix.Rendering.Border)track.Decoration.Border!).Top.Color);
+        Assert.Equal(3, ((Plumix.Rendering.Border)track.Decoration.Border!).Top.Width);
     }
 
     [Fact]
@@ -961,7 +961,7 @@ public sealed class MaterialSwitchTests
     private static RenderDecoratedBox? FindTrackDecoration(RenderObject root)
     {
         var boxes = FindDescendants<RenderDecoratedBox>(root);
-        return boxes.FirstOrDefault(box => box.Decoration.Border.HasValue)
+        return boxes.FirstOrDefault(box => box.Decoration.Border is not null)
                ?? boxes.FirstOrDefault(box =>
                    box.Decoration.Color.HasValue
                    && box.Decoration.Color.Value.A > 0);
@@ -973,7 +973,7 @@ public sealed class MaterialSwitchTests
             .LastOrDefault(box =>
                 box.Decoration.Color.HasValue
                 && box.Decoration.Color.Value.A > 0
-                && !box.Decoration.Border.HasValue);
+                && box.Decoration.Border is null);
     }
 
     private static RenderDecoratedBox? FindDecoratedBoxBySize(

@@ -133,7 +133,8 @@ internal sealed class CheckboxDemoPageState : State
                                                 ? Color.Parse("#FF7B1FA2")
                                                 : Colors.Transparent),
                                         CheckColor: MaterialStateProperty<Color?>.All(Colors.White),
-                                        Shape: ShapeBorder.RoundedRectangle(6),
+                                        Shape: new RoundedRectangleBorder(borderRadius:
+                                            Plumix.Rendering.BorderRadius.Circular(6)),
                                         Side: WidgetStateBorderSide.ResolveWith(states =>
                                             new BorderSide(
                                                 states.HasFlag(MaterialState.Error)
@@ -156,7 +157,7 @@ internal sealed class CheckboxDemoPageState : State
             decoration: new BoxDecoration(
                 Color: Color.Parse("#FFF1F4F9"),
                 BorderRadius: BorderRadius.Circular(10),
-                Border: new BorderSide(Color.Parse("#FFD6DEEA"), 1)),
+                Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(Color.Parse("#FFD6DEEA"), 1))),
             child: new Row(
                 spacing: 10,
                 children:

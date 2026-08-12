@@ -367,7 +367,7 @@ public sealed class MaterialSliverAppBarTests
                 BackgroundColor: Colors.Purple,
                 ScrolledUnderElevation: 5,
                 ShadowColor: Colors.Black,
-                Shape: ShapeBorder.RoundedRectangle(10)),
+                Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(10))),
         };
         using var harness = new WidgetRenderHarness(Wrap(
             new CustomScrollView(
@@ -379,7 +379,7 @@ public sealed class MaterialSliverAppBarTests
                         pinned: true,
                         expandedHeight: 160,
                         backgroundColor: Colors.Orange,
-                        shape: ShapeBorder.RoundedRectangle(8)),
+                        shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(8))),
                     new SliverToBoxAdapter(new SizedBox(height: 800)),
                 ]),
             theme));
@@ -403,7 +403,7 @@ public sealed class MaterialSliverAppBarTests
             new AppBarTheme(
                 data: new AppBarThemeData(
                     BackgroundColor: Colors.CadetBlue,
-                    Shape: ShapeBorder.RoundedRectangle(12)),
+                    Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(12))),
                 child: new CustomScrollView(
                     slivers:
                     [

@@ -415,7 +415,8 @@ internal sealed class SliverAppBarDelegate : SliverPersistentHeaderDelegate
         var shadow = _widget.ShadowColor
                      ?? appBarTheme.ShadowColor
                      ?? (theme.UseMaterial3 ? Colors.Transparent : theme.ShadowColor);
-        var shape = _widget.Shape ?? appBarTheme.Shape ?? ShapeBorder.RoundedRectangle(0);
+        var shape = _widget.Shape ?? appBarTheme.Shape ?? new RoundedRectangleBorder(borderRadius:
+            Plumix.Rendering.BorderRadius.Circular(0));
 
         var children = new List<Widget>();
         if (_flexibleSpace is not null)
@@ -464,12 +465,13 @@ internal sealed class SliverAppBarDelegate : SliverPersistentHeaderDelegate
         Widget content = new DecoratedBox(
             new BoxDecoration(
                 Color: _widget.ForceMaterialTransparency ? Colors.Transparent : background,
-                Border: shape.Side,
-                BorderRadius: shape.BorderRadius,
+                Border: ShapeBorderGeometry.SideOrNull(
+                    shape) is { } shapeSide ? Plumix.Rendering.Border.FromBorderSide(shapeSide) : null,
+                BorderRadius: ShapeBorderGeometry.ResolveRadius(shape),
                 BoxShadows: BuildShadows(shadow, elevation)),
             new Stack(fit: StackFit.Expand, children: children));
         if ((_widget.ClipBehavior ?? Clip.None) != Clip.None)
-            content = new ClipRRect(shape.BorderRadius, content);
+            content = new ClipRRect(ShapeBorderGeometry.ResolveRadius(shape), content);
         return content;
     }
 

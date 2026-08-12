@@ -354,7 +354,7 @@ internal sealed class NavigationRailState : State
             LabelType: NavigationRailLabelType.None,
             UseIndicator: true,
             IndicatorColor: colors.SecondaryContainer,
-            IndicatorShape: ShapeBorder.Stadium(),
+            IndicatorShape: new StadiumBorder(),
             MinWidth: 80,
             MinExtendedWidth: 256);
     }
@@ -540,8 +540,9 @@ internal sealed class NavigationRailDestinationTileState : State
                         : null),
             SplashColor: MaterialStateProperty<Color?>.All(splashColor),
             Padding: MaterialStateProperty<Thickness?>.All(default),
-            Shape: MaterialStateProperty<BorderRadius?>.All(
-                widget.IndicatorShape?.BorderRadius ?? Plumix.Rendering.BorderRadius.Circular(widget.MinWidth / 2)),
+            Shape: MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius: 
+                ShapeBorderGeometry.ResolveRadiusOrNull(widget.IndicatorShape)
+                ?? Plumix.Rendering.BorderRadius.Circular(widget.MinWidth / 2))),
             MinimumSize: MaterialStateProperty<Size?>.All(new Size(widget.MinWidth, 0)),
             TapTargetSize: MaterialTapTargetSize.ShrinkWrap,
             Alignment: Alignment.Center);

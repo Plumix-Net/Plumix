@@ -316,11 +316,12 @@ public sealed class MenuAnchorState : State, IMenuControllerHost
             padding.Top,
             padding.Right + horizontalDensityPadding,
             padding.Bottom);
-        ShapeBorder? shape = style.Shape?.Resolve(state) ?? ShapeBorder.RoundedRectangle(4.0);
+        ShapeBorder? shape = style.Shape?.Resolve(state) ?? new RoundedRectangleBorder(borderRadius:
+            Plumix.Rendering.BorderRadius.Circular(4.0));
         BorderSide? side = style.Side?.Resolve(state);
         if (side.HasValue)
         {
-            shape = shape with { Side = side };
+            shape = shape is OutlinedBorder outlinedside ? outlinedside.CopyWith(side) : shape;
         }
         Widget content = new Padding(
             padding,
@@ -463,7 +464,8 @@ public sealed class MenuItemButton : StatelessWidget
             OverlayColor: MaterialButtonCore.CreateDefaultOverlayResolver(theme.OnSurfaceColor),
             Padding: MaterialStateProperty<Thickness?>.All(new Thickness(12, 0)),
             MinimumSize: MaterialStateProperty<Size?>.All(new Size(64, 48)),
-            Shape: MaterialStateProperty<BorderRadius?>.All(BorderRadius.Zero),
+            Shape: MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius:
+                BorderRadius.Zero)),
             TextStyle: MaterialStateProperty<TextStyle?>.All(theme.TextTheme.LabelLarge),
             TapTargetSize: MaterialTapTargetSize.ShrinkWrap);
         Action? activate = OnPressed is null ? null : () =>
@@ -718,11 +720,12 @@ public sealed class MenuBar : StatelessWidget
             padding.Top,
             padding.Right + horizontalDensityPadding,
             padding.Bottom);
-        ShapeBorder? shape = style.Shape?.Resolve(states) ?? ShapeBorder.RoundedRectangle(4.0);
+        ShapeBorder? shape = style.Shape?.Resolve(states) ?? new RoundedRectangleBorder(borderRadius:
+            Plumix.Rendering.BorderRadius.Circular(4.0));
         BorderSide? side = style.Side?.Resolve(states);
         if (side.HasValue)
         {
-            shape = shape with { Side = side };
+            shape = shape is OutlinedBorder outlinedside ? outlinedside.CopyWith(side) : shape;
         }
 
         Widget content = new ConstrainedBox(
@@ -907,7 +910,8 @@ public sealed class SubmenuButtonState : State
             OverlayColor: MaterialButtonCore.CreateDefaultOverlayResolver(theme.OnSurfaceColor),
             Padding: MaterialStateProperty<Thickness?>.All(new Thickness(12, 0)),
             MinimumSize: MaterialStateProperty<Size?>.All(new Size(64, 48)),
-            Shape: MaterialStateProperty<BorderRadius?>.All(BorderRadius.Zero),
+            Shape: MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius:
+                BorderRadius.Zero)),
             TextStyle: MaterialStateProperty<TextStyle?>.All(theme.TextTheme.LabelLarge),
             TapTargetSize: MaterialTapTargetSize.ShrinkWrap);
         Widget button = new MaterialButtonCore(

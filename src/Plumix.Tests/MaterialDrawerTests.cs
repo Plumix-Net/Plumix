@@ -17,8 +17,8 @@ public sealed class MaterialDrawerTests
     [Fact]
     public void DrawerTheme_CopyLerpAndWrap_AreSourceShaped()
     {
-        var startShape = new ShapeBorder(BorderRadius.Only(topRight: 4.0));
-        var endShape = new ShapeBorder(BorderRadius.Only(topLeft: 8.0));
+        var startShape = new RoundedRectangleBorder(borderRadius: BorderRadius.Only(topRight: 4.0));
+        var endShape = new RoundedRectangleBorder(borderRadius: BorderRadius.Only(topLeft: 8.0));
         var data = new DrawerThemeData(
             BackgroundColor: Colors.Red,
             ScrimColor: Colors.Green,
@@ -48,17 +48,17 @@ public sealed class MaterialDrawerTests
             new DrawerThemeData(
                 Elevation: 2.0,
                 Width: 200.0,
-                Shape: ShapeBorder.RoundedRectangle(4.0),
+                Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(4.0)),
                 ClipBehavior: Clip.None),
             new DrawerThemeData(
                 Elevation: 6.0,
                 Width: 280.0,
-                Shape: ShapeBorder.RoundedRectangle(12.0),
+                Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(12.0)),
                 ClipBehavior: Clip.AntiAlias),
             0.5)!;
         Assert.Equal(4.0, midpoint.Elevation);
         Assert.Equal(240.0, midpoint.Width);
-        Assert.Equal(8.0, midpoint.Shape!.BorderRadius.Radius);
+        Assert.Equal(8.0, ShapeBorderGeometry.ResolveRadius(midpoint.Shape).Radius);
         Assert.Equal(Clip.AntiAlias, midpoint.ClipBehavior);
 
         var child = new Text("wrapped");
@@ -106,7 +106,8 @@ public sealed class MaterialDrawerTests
         Assert.Equal(1.0, m3Material.Elevation);
         Assert.Equal(Colors.Transparent, m3Material.ShadowColor);
         Assert.Equal(Colors.Transparent, m3Material.SurfaceTintColor);
-        Assert.Equal(BorderRadius.Only(topRight: 16.0, bottomRight: 16.0), m3Material.Shape!.BorderRadius);
+        Assert.Equal(BorderRadius.Only(topRight: 16.0, bottomRight: 16.0), ShapeBorderGeometry.ResolveRadius(
+            m3Material.Shape));
         Assert.Equal(Clip.HardEdge, m3Material.ClipBehavior);
     }
 
@@ -131,7 +132,7 @@ public sealed class MaterialDrawerTests
             ? BorderRadius.Only(topLeft: 16.0, bottomLeft: 16.0)
             : BorderRadius.Only(topRight: 16.0, bottomRight: 16.0);
 
-        Assert.Equal(expected, material.Shape!.BorderRadius);
+        Assert.Equal(expected, ShapeBorderGeometry.ResolveRadius(material.Shape));
         Assert.Equal(Clip.HardEdge, material.ClipBehavior);
     }
 

@@ -85,8 +85,8 @@ public sealed class Divider : StatelessWidget
                     margin: margin,
                     decoration: new BoxDecoration(
                         BorderRadius: effectiveRadius,
-                        BorderSides: new BoxBorder(
-                            Bottom: CreateBorderSide(
+                        Border: new Plumix.Rendering.Border(
+                            bottom: CreateBorderSide(
                                 context,
                                 color: Color,
                                 width: effectiveThickness))))));
@@ -157,8 +157,8 @@ public sealed class VerticalDivider : StatelessWidget
                     margin: new Thickness(0.0, effectiveIndent, 0.0, effectiveEndIndent),
                     decoration: new BoxDecoration(
                         BorderRadius: effectiveRadius,
-                        BorderSides: new BoxBorder(
-                            Left: Divider.CreateBorderSide(
+                        Border: new Plumix.Rendering.Border(
+                            left: Divider.CreateBorderSide(
                                 context,
                                 color: Color,
                                 width: effectiveThickness))))));

@@ -85,7 +85,9 @@ public sealed class MaterialFloatingActionButtonTests
         Assert.Equal(hover, button.Style.ResolveOverlayColor(MaterialState.Hovered));
         Assert.Equal(splash, button.Style.ResolveOverlayColor(MaterialState.Pressed));
         Assert.Equal(splash, button.Style.ResolveSplashColor(MaterialState.Pressed));
-        Assert.Equal(BorderRadius.Circular(9999), button.Style.ResolveShape(MaterialState.None));
+        Assert.Equal(
+            new RoundedRectangleBorder(borderRadius: BorderRadius.Circular(9999)),
+            button.Style.ResolveShape(MaterialState.None));
         Assert.Equal(12, button.Style.ResolveElevation(MaterialState.Pressed));
     }
 
@@ -641,7 +643,7 @@ public sealed class MaterialFloatingActionButtonTests
         var a = new FloatingActionButtonThemeData(
             ForegroundColor: Colors.Red,
             Elevation: 2,
-            Shape: ShapeBorder.RoundedRectangle(4),
+            Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(4)),
             EnableFeedback: false,
             SizeConstraints: TightConstraints(40, 50),
             ExtendedPadding: new Thickness(10, 0, 20, 0),
@@ -649,7 +651,7 @@ public sealed class MaterialFloatingActionButtonTests
         var b = new FloatingActionButtonThemeData(
             ForegroundColor: Colors.Blue,
             Elevation: 6,
-            Shape: ShapeBorder.RoundedRectangle(12),
+            Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(12)),
             EnableFeedback: true,
             SizeConstraints: TightConstraints(80, 90),
             ExtendedPadding: new Thickness(30, 0, 40, 0),
@@ -661,7 +663,7 @@ public sealed class MaterialFloatingActionButtonTests
         FloatingActionButtonThemeData? midpoint = FloatingActionButtonThemeData.Lerp(a, b, 0.5);
         Assert.NotNull(midpoint);
         Assert.Equal(4, midpoint!.Elevation);
-        Assert.Equal(BorderRadius.Circular(8), midpoint.Shape!.BorderRadius);
+        Assert.Equal(BorderRadius.Circular(8), ShapeBorderGeometry.ResolveRadius(midpoint.Shape));
         Assert.Equal(TightConstraints(60, 70), midpoint.SizeConstraints);
         Assert.Equal(new Thickness(20, 0, 30, 0), midpoint.ExtendedPadding);
         Assert.Same(cursorB, midpoint.MouseCursor);
@@ -702,7 +704,7 @@ public sealed class MaterialFloatingActionButtonTests
         var theme = ThemeData.Light with
         {
             FloatingActionButtonTheme = new FloatingActionButtonThemeData(
-                Shape: ShapeBorder.Stadium(new BorderSide(Colors.Red, 2)),
+                Shape: new StadiumBorder(new BorderSide(Colors.Red, 2)),
                 MouseCursor: MaterialStateProperty<MouseCursor?>.ResolveWith(
                     states => states.HasFlag(MaterialState.Disabled) ? disabledCursor : enabledCursor)),
         };
@@ -721,7 +723,9 @@ public sealed class MaterialFloatingActionButtonTests
         owner.FlushBuild();
 
         MaterialButtonCore button = RequireBuiltButton(capturedBuiltWidget);
-        Assert.Equal(BorderRadius.Circular(9999), button.Style.ResolveShape(MaterialState.None));
+        Assert.Equal(
+            new RoundedRectangleBorder(borderRadius: BorderRadius.Circular(9999)),
+            button.Style.ResolveShape(MaterialState.None));
         Assert.Equal(new BorderSide(Colors.Red, 2), button.Style.ResolveSide(MaterialState.None));
         Assert.Equal(enabledCursor, button.Style.ResolveMouseCursor(MaterialState.None));
         Assert.Equal(disabledCursor, button.Style.ResolveMouseCursor(MaterialState.Disabled));

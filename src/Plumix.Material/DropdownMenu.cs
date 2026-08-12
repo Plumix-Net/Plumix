@@ -515,7 +515,7 @@ internal sealed class DropdownMenuState<T> : State
             dropdownColor: style.BackgroundColor?.Resolve(states),
             menuMaxHeight: maxHeight,
             enableFeedback: true,
-            borderRadius: shape?.BorderRadius,
+            borderRadius: ShapeBorderGeometry.ResolveRadiusOrNull(shape),
             barrierDismissible: true,
             mouseCursor: style.MouseCursor?.Resolve(states),
             requestFocus: false,

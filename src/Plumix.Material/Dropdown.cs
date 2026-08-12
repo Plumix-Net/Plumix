@@ -813,7 +813,7 @@ internal sealed class DropdownMenuPanel<T> : StatelessWidget
         content = new DecoratedBox(
             new BoxDecoration(
                 Color: _route.DropdownColor ?? theme.CanvasColor,
-                Border: _route.Side,
+                Border: _route.Side is { } routeSide ? Plumix.Rendering.Border.FromBorderSide(routeSide) : null,
                 BorderRadius: radius,
                 BoxShadows: BuildShadow(_route.ShadowColor ?? theme.ShadowColor, _route.Elevation)),
             content);

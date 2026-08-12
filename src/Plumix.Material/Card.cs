@@ -201,7 +201,7 @@ public sealed class Card : StatelessWidget
                 ShadowColor: theme.ShadowColor,
                 Elevation: 1,
                 Margin: DefaultMargin,
-                Shape: ShapeBorder.RoundedRectangle(4));
+                Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(4)));
         }
 
         return Variant switch
@@ -213,7 +213,7 @@ public sealed class Card : StatelessWidget
                 SurfaceTintColor: Colors.Transparent,
                 Elevation: 0,
                 Margin: DefaultMargin,
-                Shape: ShapeBorder.RoundedRectangle(12)),
+                Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(12))),
             CardVariant.Outlined => new CardThemeData(
                 ClipBehavior: Clip.None,
                 Color: theme.ColorScheme.Surface,
@@ -221,9 +221,8 @@ public sealed class Card : StatelessWidget
                 SurfaceTintColor: Colors.Transparent,
                 Elevation: 0,
                 Margin: DefaultMargin,
-                Shape: ShapeBorder.RoundedRectangle(
-                    12,
-                    new BorderSide(theme.ColorScheme.OutlineVariant))),
+                Shape: new RoundedRectangleBorder(
+                    new BorderSide(theme.ColorScheme.OutlineVariant), Plumix.Rendering.BorderRadius.Circular(12))),
             _ => new CardThemeData(
                 ClipBehavior: Clip.None,
                 Color: theme.ColorScheme.SurfaceContainerLow,
@@ -231,7 +230,7 @@ public sealed class Card : StatelessWidget
                 SurfaceTintColor: Colors.Transparent,
                 Elevation: 1,
                 Margin: DefaultMargin,
-                Shape: ShapeBorder.RoundedRectangle(12)),
+                Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(12))),
         };
     }
 
@@ -254,9 +253,11 @@ public sealed class Card : StatelessWidget
     {
         if (theme.UseMaterial3 && variant == CardVariant.Outlined)
         {
-            return ShapeBorder.RoundedRectangle(12, new BorderSide(theme.ColorScheme.OutlineVariant));
+            return new RoundedRectangleBorder(
+                new BorderSide(theme.ColorScheme.OutlineVariant), Plumix.Rendering.BorderRadius.Circular(12));
         }
 
-        return ShapeBorder.RoundedRectangle(theme.UseMaterial3 ? 12 : 4);
+        return new RoundedRectangleBorder(borderRadius:
+            Plumix.Rendering.BorderRadius.Circular(theme.UseMaterial3 ? 12 : 4));
     }
 }

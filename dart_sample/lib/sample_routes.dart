@@ -86,6 +86,7 @@ class SampleRoutes {
   static const String align = '/align';
   static const String stack = '/stack';
   static const String decoratedBox = '/decorated-box';
+  static const String shapeBorders = '/shape-borders';
   static const String container = '/container';
   static const String aspectRatio = '/aspect-ratio';
   static const String fractionallySizedBox = '/fractionally-sized-box';

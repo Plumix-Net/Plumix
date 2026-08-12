@@ -249,10 +249,7 @@ public sealed class Material : StatefulWidget
 
             var visual = Evaluate();
             Widget content = CurrentWidget.Child ?? new SizedBox();
-            BorderSide? foregroundBorder = visual.Shape.BorderSides is null ? visual.Shape.Side : null;
-            BoxBorder? foregroundBorderSides = visual.Shape.BorderSides;
-            if (CurrentWidget.BorderOnForeground
-                && (foregroundBorder is { Width: > 0 } || foregroundBorderSides is not null))
+            if (CurrentWidget.BorderOnForeground && HasVisibleOutline(visual.Shape))
             {
                 content = new Stack(
                     fit: StackFit.Passthrough,
@@ -265,11 +262,7 @@ public sealed class Material : StatefulWidget
                             right: 0,
                             bottom: 0,
                             child: new DecoratedBox(
-                                new BoxDecoration(
-                                    Border: foregroundBorder,
-                                    BorderSides: foregroundBorderSides,
-                                    BorderRadius: visual.Shape.BorderRadius,
-                                    Shape: visual.Shape.Shape),
+                                new ShapeDecoration(visual.Shape),
                                 new SizedBox()))
                     ]);
             }
@@ -282,31 +275,44 @@ public sealed class Material : StatefulWidget
 
             if (CurrentWidget.ClipBehavior != Clip.None)
             {
-                content = CurrentWidget.Type == MaterialType.Circle
-                    ? new ClipOval(child: content, clipBehavior: CurrentWidget.ClipBehavior)
-                    : new ClipRRect(
-                        visual.Shape.BorderRadius,
-                        content);
+                content = new ClipPath(
+                    clipper: new ShapeBorderClipper(visual.Shape),
+                    clipBehavior: CurrentWidget.ClipBehavior,
+                    child: content);
             }
 
-            BorderSide? backgroundBorder = CurrentWidget.BorderOnForeground
-                || visual.Shape.BorderSides is not null
-                    ? null
-                    : visual.Shape.Side;
-            BoxBorder? backgroundBorderSides = CurrentWidget.BorderOnForeground
-                ? null
-                : visual.Shape.BorderSides;
+            ShapeBorder backgroundShape = CurrentWidget.BorderOnForeground
+                ? StripOutline(visual.Shape)
+                : visual.Shape;
             content = new DecoratedBox(
-                new BoxDecoration(
+                new ShapeDecoration(
+                    Shape: backgroundShape,
                     Color: visual.Color,
-                    Border: backgroundBorder,
-                    BorderSides: backgroundBorderSides,
-                    BorderRadius: visual.Shape.BorderRadius,
-                    BoxShadows: MaterialSurface.BuildBoxShadows(visual.ShadowColor, visual.Elevation),
-                    Shape: visual.Shape.Shape),
+                    Shadows: MaterialSurface.BuildBoxShadows(visual.ShadowColor, visual.Elevation) ?? default),
                 content);
 
             return new DefaultTextStyle(visual.TextStyle, content);
+        }
+
+        private static bool HasVisibleOutline(ShapeBorder shape)
+        {
+            return shape switch
+            {
+                OutlinedBorder outlined => outlined.Side is { Style: BorderStyle.Solid, Width: > 0 },
+                BoxBorder box => box.Top.Style == BorderStyle.Solid
+                                 || box.Bottom.Style == BorderStyle.Solid,
+                _ => true,
+            };
+        }
+
+        private static ShapeBorder StripOutline(ShapeBorder shape)
+        {
+            return shape switch
+            {
+                OutlinedBorder outlined => outlined.CopyWith(BorderSide.None),
+                BoxBorder => new Plumix.Rendering.Border(),
+                _ => shape,
+            };
         }
 
         public override void Dispose()
@@ -366,15 +372,13 @@ public sealed class Material : StatefulWidget
         {
             ShapeBorder effectiveShape = material.Shape
                 ?? (material.Type == MaterialType.Circle
-                    ? ShapeBorder.Circle()
-                    : new ShapeBorder(MaterialEdges.ForType(material.Type) ?? Plumix.Rendering.BorderRadius.Zero));
+                    ? new CircleBorder()
+                    : new RoundedRectangleBorder(
+                        borderRadius: MaterialEdges.ForType(material.Type) ?? Plumix.Rendering.BorderRadius.Zero));
             if (material.BorderRadius.HasValue)
             {
-                effectiveShape = new ShapeBorder(material.BorderRadius.Value, effectiveShape.Side)
-                {
-                    Shape = effectiveShape.Shape,
-                    BorderSides = effectiveShape.BorderSides,
-                };
+                BorderSide side = effectiveShape is OutlinedBorder outlined ? outlined.Side : BorderSide.None;
+                effectiveShape = new RoundedRectangleBorder(side, material.BorderRadius.Value);
             }
 
             Color defaultColor = material.Type switch
@@ -407,9 +411,6 @@ public sealed class Material : StatefulWidget
             Color color = animateColor ? MaterialSurface.LerpColor(begin.Color, end.Color, clampedT) : end.Color;
             Color shadow = MaterialSurface.LerpColor(begin.ShadowColor, end.ShadowColor, clampedT);
             double elevation = begin.Elevation + ((end.Elevation - begin.Elevation) * clampedT);
-            BorderRadius radius = new(
-                begin.Shape.BorderRadius.Radius
-                + ((end.Shape.BorderRadius.Radius - begin.Shape.BorderRadius.Radius) * clampedT));
             ShapeBorder shape = MaterialThemeLerp.Shape(begin.Shape, end.Shape, clampedT)!;
             return new MaterialVisual(
                 color,

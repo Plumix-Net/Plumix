@@ -78,8 +78,9 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
 
         Assert.Contains(FindDescendants<RenderConstrainedBox>(harness.RenderView), box =>
             box.AdditionalConstraints == BoxConstraints.TightFor(width: 222));
-        Assert.Contains(FindDescendants<RenderClipRRect>(harness.RenderView), clip =>
-            clip.BorderRadius == BorderRadius.Circular(7));
+        Assert.Contains(FindDescendants<RenderClipPath>(harness.RenderView), clip =>
+            clip.Clipper is ShapeBorderClipper { Shape: RoundedRectangleBorder rounded }
+            && rounded.BorderRadius.Resolve(TextDirection.Ltr) == BorderRadius.Circular(7));
         Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView), box =>
             box.Decoration.Color == ThemeData.Light.CardColor
             && box.Decoration.EffectiveBorderRadius == BorderRadius.Circular(7));
@@ -260,8 +261,9 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
         Assert.Equal(new Point(152, 72), layoutDelegate.AnchorAbove);
         Assert.Equal(new Point(152, 120), layoutDelegate.AnchorBelow);
         Assert.True(layoutDelegate.FitsAbove);
-        Assert.Contains(FindDescendants<RenderClipRRect>(harness.RenderView), clip =>
-            clip.BorderRadius == BorderRadius.Circular(22));
+        Assert.Contains(FindDescendants<RenderClipPath>(harness.RenderView), clip =>
+            clip.Clipper is ShapeBorderClipper { Shape: RoundedRectangleBorder rounded }
+            && rounded.BorderRadius.Resolve(TextDirection.Ltr) == BorderRadius.Circular(22));
         Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView), box =>
             box.Decoration.Color == Colors.White
             && box.Decoration.EffectiveBorderRadius == BorderRadius.Circular(22));

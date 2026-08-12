@@ -103,7 +103,7 @@ internal sealed class NavigationSurfacesDemoPageState : State
                             $"titleMedium · {pageTheme.TextTheme.TitleMedium.FontSize:0}px")),
                     new Container(
                         decoration: new BoxDecoration(
-                            Border: new BorderSide(Color.Parse("#33000000")),
+                            Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(Color.Parse("#33000000"))),
                             BorderRadius: BorderRadius.Circular(12)),
                         child: new NavigationBar(
                             selectedIndex: _selectedIndex,

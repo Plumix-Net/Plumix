@@ -86,7 +86,8 @@ public sealed class DropdownMenuTheme : InheritedWidget
                 Padding: MaterialStateProperty<Thickness?>.All(new Thickness(0, 8)),
                 MinimumSize: MaterialStateProperty<Size?>.All(new Size(112, 0)),
                 MaximumSize: MaterialStateProperty<Size?>.All(new Size(double.PositiveInfinity, double.PositiveInfinity)),
-                Shape: MaterialStateProperty<ShapeBorder?>.All(ShapeBorder.RoundedRectangle(4)),
+                Shape: MaterialStateProperty<ShapeBorder?>.All(new RoundedRectangleBorder(borderRadius:
+                    Plumix.Rendering.BorderRadius.Circular(4))),
                 VisualDensity: Plumix.Material.VisualDensity.Standard),
             DisabledColor: MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.38));
     }

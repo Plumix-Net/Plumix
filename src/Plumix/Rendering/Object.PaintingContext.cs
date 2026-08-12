@@ -91,6 +91,45 @@ public sealed class PaintingContext
         });
     }
 
+    // Dart parity source: dart:ui Canvas.drawRRect.
+    public void DrawRRect(Plumix.UI.RRect rrect, IBrush? brush, IPen? pen)
+    {
+        var path = new Plumix.UI.Path();
+        path.AddRRect(rrect);
+        DrawGeometry(brush, pen, path.ToGeometry());
+    }
+
+    // Dart parity source: dart:ui Canvas.drawDRRect (the ring between two rounded rectangles).
+    public void DrawDRRect(Plumix.UI.RRect outer, Plumix.UI.RRect inner, IBrush brush)
+    {
+        var outerPath = new Plumix.UI.Path();
+        outerPath.AddRRect(outer);
+        var innerPath = new Plumix.UI.Path();
+        innerPath.AddRRect(inner);
+        DrawGeometry(
+            brush,
+            null,
+            new CombinedGeometry(GeometryCombineMode.Exclude, outerPath.ToGeometry(), innerPath.ToGeometry()));
+    }
+
+    // Dart parity source: dart:ui Canvas.drawOval.
+    public void DrawOval(Rect oval, IBrush? brush, IPen? pen)
+    {
+        var pictureLayer = EnsurePictureLayer();
+        pictureLayer.AddDrawCommand((drawingContext, sceneOffset) =>
+        {
+            var translated = new Rect(oval.Position + sceneOffset, oval.Size);
+            drawingContext.DrawEllipse(brush, pen, translated.Center, translated.Width / 2.0, translated.Height / 2.0);
+        });
+    }
+
+    // Dart parity source: dart:ui Canvas.drawPath.
+    public void DrawPath(Plumix.UI.Path path, IBrush? brush, IPen? pen)
+    {
+        ArgumentNullException.ThrowIfNull(path);
+        DrawGeometry(brush, pen, path.ToGeometry());
+    }
+
     public void DrawCircle(IBrush brush, IPen? pen, Point center, double radius)
     {
         double clampedRadius = Math.Max(0, radius);

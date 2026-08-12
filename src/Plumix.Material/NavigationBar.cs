@@ -216,7 +216,7 @@ public sealed class NavigationBar : StatelessWidget
                     3.0),
                 Elevation: 0,
                 IndicatorColor: NavigationSurfaceUtilities.WithOpacity(colors.Secondary, 0.24),
-                IndicatorShape: ShapeBorder.RoundedRectangle(16),
+                IndicatorShape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(16)),
                 LabelTextStyle: MaterialStateProperty<TextStyle?>.All(
                     theme.TextTheme.LabelSmall.CopyWith(color: colors.OnSurface)),
                 IconTheme: MaterialStateProperty<IconThemeData?>.All(
@@ -238,7 +238,7 @@ public sealed class NavigationBar : StatelessWidget
             ShadowColor: Colors.Transparent,
             SurfaceTintColor: Colors.Transparent,
             IndicatorColor: colors.SecondaryContainer,
-            IndicatorShape: ShapeBorder.Stadium(),
+            IndicatorShape: new StadiumBorder(),
             LabelTextStyle: MaterialStateProperty<TextStyle?>.ResolveWith(states =>
                 theme.TextTheme.LabelMedium.CopyWith(color:
                     states.HasFlag(MaterialState.Disabled)
@@ -338,7 +338,8 @@ public sealed class NavigationIndicator : StatelessWidget
         double scale = AnimationValue <= 0
             ? 0
             : 0.4 + (0.6 * Curves.EaseInOut(AnimationValue));
-        var shape = Shape ?? ShapeBorder.RoundedRectangle(BorderRadius.Radius);
+        var shape = Shape ?? new RoundedRectangleBorder(borderRadius:
+            Plumix.Rendering.BorderRadius.Circular(BorderRadius.Radius));
         return new Opacity(
             opacity: AnimationValue,
             child: new SizedBox(
@@ -347,8 +348,10 @@ public sealed class NavigationIndicator : StatelessWidget
                 child: new DecoratedBox(
                     decoration: new BoxDecoration(
                         Color: Color ?? Theme.Of(context).ColorScheme.Secondary,
-                        Border: shape.Side,
-                        BorderRadius: shape.BorderRadius))));
+                        Border: ShapeBorderGeometry.SideOrNull(shape) is { } shapeSide
+                            ? Plumix.Rendering.Border.FromBorderSide(shapeSide)
+                            : null,
+                        BorderRadius: ShapeBorderGeometry.ResolveRadius(shape)))));
     }
 }
 
@@ -482,7 +485,8 @@ internal sealed class NavigationBarDestinationTileState : State
             IconSize: MaterialStateProperty<double?>.ResolveWith(states => widget.IconTheme.Resolve(states)?.Size),
             TextStyle: widget.LabelTextStyle,
             Padding: MaterialStateProperty<Thickness?>.All(default),
-            Shape: MaterialStateProperty<BorderRadius?>.All(widget.IndicatorShape.BorderRadius),
+            Shape: MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius:
+                ShapeBorderGeometry.ResolveRadius(widget.IndicatorShape))),
             MinimumSize: MaterialStateProperty<Size?>.All(new Size(0, widget.Height)),
             TapTargetSize: MaterialTapTargetSize.ShrinkWrap,
             Alignment: Alignment.Center);

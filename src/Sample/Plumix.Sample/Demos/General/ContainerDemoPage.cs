@@ -84,7 +84,7 @@ internal sealed class ContainerDemoPageState : State
                         alignment: _alignment,
                         decoration: new BoxDecoration(
                             Color: Color.Parse("#FFCCE3FF"),
-                            Border: new BorderSide(Color.Parse("#FF1D3557"), 2),
+                            Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(Color.Parse("#FF1D3557"), 2)),
                             BorderRadius: BorderRadius.Circular(12)),
                         child: new Container(
                             width: 32,

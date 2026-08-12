@@ -206,7 +206,7 @@ public sealed class MaterialElevationOverlayTests : IDisposable
         var decorations = new List<DecoratedBox>();
         CollectWidgets(root, decorations);
         DecoratedBox decoration = Assert.Single(decorations);
-        BoxDecoration boxDecoration = Assert.IsType<BoxDecoration>(decoration.Decoration);
+        ShapeDecoration boxDecoration = Assert.IsType<ShapeDecoration>(decoration.Decoration);
         root.Unmount();
         return boxDecoration.Color
                ?? throw new InvalidOperationException("Material did not resolve a surface color.");
