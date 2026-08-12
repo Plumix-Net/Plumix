@@ -160,7 +160,9 @@ public sealed class PaginatedDataTableState : State
 
     public override void InitState()
     {
-        _firstRowIndex = CurrentWidget.InitialFirstRowIndex ?? 0;
+        _firstRowIndex = PageStorage.MaybeOf(Context)?.ReadState(Context) as int?
+                         ?? CurrentWidget.InitialFirstRowIndex
+                         ?? 0;
         CurrentWidget.Source.AddListener(HandleDataSourceChanged);
         UpdateCaches();
     }

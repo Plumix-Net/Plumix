@@ -1109,7 +1109,7 @@ public sealed class TableRowInkWell : InkResponse
         }
 
         if (table is not RenderTable renderTable
-            || cell.parentData is not TableCellParentData cellParentData)
+            || cell.parentData is not TableCellParentData { Y: { } rowIndex })
         {
             return new Rect();
         }
@@ -1128,7 +1128,7 @@ public sealed class TableRowInkWell : InkResponse
             return new Rect();
         }
 
-        Rect row = renderTable.GetRowBox(cellParentData.Y);
+        Rect row = renderTable.GetRowBox(rowIndex);
         return row.Translate(new Vector(-origin.X, -origin.Y));
     }
 

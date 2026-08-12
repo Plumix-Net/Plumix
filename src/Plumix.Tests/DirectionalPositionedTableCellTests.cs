@@ -92,7 +92,7 @@ public sealed class DirectionalPositionedTableCellTests
         owner.FlushBuild();
 
         var table = FindRenderObject<RenderTable>(root);
-        var cell = Assert.IsType<RenderSemanticsAnnotations>(table.FirstChild);
+        var cell = Assert.IsType<RenderSemanticsAnnotations>(table.Row(0)[0]);
         var parentData = Assert.IsType<TableCellParentData>(cell.parentData);
         Assert.Equal(TableCellVerticalAlignment.Top, parentData.VerticalAlignment);
         Assert.Equal(SemanticsRole.Cell, cell.Role);
@@ -101,7 +101,7 @@ public sealed class DirectionalPositionedTableCellTests
         owner.FlushBuild();
 
         var updatedTable = FindRenderObject<RenderTable>(root);
-        var updatedCell = Assert.IsType<RenderSemanticsAnnotations>(updatedTable.FirstChild);
+        var updatedCell = Assert.IsType<RenderSemanticsAnnotations>(updatedTable.Row(0)[0]);
         Assert.Same(table, updatedTable);
         Assert.Same(cell, updatedCell);
         Assert.Equal(
@@ -175,7 +175,7 @@ public sealed class DirectionalPositionedTableCellTests
             rowDecorations: [null],
             border: null,
             textDirection: TextDirection.Rtl);
-        table.AddAll([first, second, third]);
+        table.SetFlatChildren(3, [first, second, third]);
 
         table.Layout(new BoxConstraints(MaxWidth: 60, MaxHeight: 40));
 
@@ -240,12 +240,12 @@ public sealed class DirectionalPositionedTableCellTests
             rows: children.Count / columns,
             columnWidths: widths,
             defaultColumnWidth: new IntrinsicColumnWidth(),
-            rowDecorations: Enumerable.Repeat<BoxDecoration?>(null, children.Count / columns).ToArray(),
+            rowDecorations: Enumerable.Repeat<Decoration?>(null, children.Count / columns).ToArray(),
             border: null,
             textDirection: textDirection,
             defaultVerticalAlignment: defaultVerticalAlignment,
             textBaseline: textBaseline);
-        table.AddAll(children.ToList());
+        table.SetFlatChildren(columns, [.. children]);
         return table;
     }
 

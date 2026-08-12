@@ -2523,7 +2523,10 @@ public sealed class CustomScrollView : StatelessWidget
             cacheExtentStyle: CacheExtentStyle,
             shrinkWrap: ShrinkWrap,
             clipBehavior: ClipBehavior);
-        return usePrimary ? PrimaryScrollController.None(scrollable) : scrollable;
+        // Further descendant scroll views must not inherit the same PrimaryScrollController.
+        return usePrimary && effectiveController != null
+            ? PrimaryScrollController.None(scrollable)
+            : scrollable;
     }
 }
 
@@ -2611,7 +2614,10 @@ public sealed class SingleChildScrollView : StatelessWidget
         {
             UseSingleChildViewport = true,
         };
-        return usePrimary ? PrimaryScrollController.None(scrollable) : scrollable;
+        // Further descendant scroll views must not inherit the same PrimaryScrollController.
+        return usePrimary && effectiveController != null
+            ? PrimaryScrollController.None(scrollable)
+            : scrollable;
     }
 }
 

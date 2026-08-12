@@ -73,6 +73,8 @@ internal sealed class DataTableDemoPageState : State
                         new SingleChildScrollView(
                             scrollDirection: Axis.Horizontal,
                             child: BuildTableCellProbe()),
+                        new Text("Core TableColumnWidth algebra", fontSize: 16, color: Colors.Black),
+                        BuildColumnWidthProbe(),
                         new Text("PaginatedDataTable", fontSize: 16, color: Colors.Black),
                         new PaginatedDataTable(
                             header: new Text("People"),
@@ -104,7 +106,7 @@ internal sealed class DataTableDemoPageState : State
 
     private static Table BuildTableCellProbe() => new(
         defaultColumnWidth: new FixedColumnWidth(100),
-        border: TableBorder.All(new BorderSide(Color.Parse("#FF94A3B8"))),
+        border: TableBorder.All(color: Color.Parse("#FF94A3B8")),
         children:
         [
             new TableRow(
@@ -114,6 +116,40 @@ internal sealed class DataTableDemoPageState : State
                 BuildProbeCell("bottom", 32, TableCellVerticalAlignment.Bottom, "#FFFFEDD5"),
             ]),
         ]);
+
+    private static Table BuildColumnWidthProbe() => new(
+        columnWidths: new Dictionary<int, TableColumnWidth>
+        {
+            [0] = new FixedColumnWidth(72),
+            [1] = new FractionColumnWidth(0.25),
+            [2] = new MaxColumnWidth(new IntrinsicColumnWidth(), new FixedColumnWidth(90)),
+            [3] = new FlexColumnWidth(2),
+        },
+        border: TableBorder.All(color: Color.Parse("#FF94A3B8"), borderRadius: BorderRadius.Circular(8)),
+        defaultVerticalAlignment: TableCellVerticalAlignment.IntrinsicHeight,
+        children:
+        [
+            new TableRow(
+                [
+                    BuildWidthCell("fixed 72"),
+                    BuildWidthCell("fraction .25"),
+                    BuildWidthCell("max(intrinsic, 90)"),
+                    BuildWidthCell("flex 2"),
+                ],
+                decoration: new BoxDecoration(Color: Color.Parse("#FFF1F5F9"))),
+            new TableRow(
+                [
+                    BuildWidthCell("a"),
+                    BuildWidthCell("b"),
+                    BuildWidthCell("a wide intrinsic cell"),
+                    BuildWidthCell("d"),
+                ],
+                decoration: new BoxDecoration(Color: Color.Parse("#FFFFFFFF"))),
+        ]);
+
+    private static Widget BuildWidthCell(string label) => new Padding(
+        new Thickness(8, 6),
+        new Text(label, fontSize: 11, color: Colors.Black));
 
     private static TableCell BuildProbeCell(
         string label,

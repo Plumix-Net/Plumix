@@ -1,5 +1,20 @@
 # Changelog
 
+- Breaking: closed the `Table`/`RenderTable` divergence with a strict port of `rendering/table.dart`,
+  `rendering/table_border.dart` and `widgets/table.dart`. The full `TableColumnWidth` algebra is available
+  (`FlexColumnWidth`, `FractionColumnWidth`, `MaxColumnWidth`, `MinColumnWidth` join the existing fixed/intrinsic
+  modes) and column sizing now runs Flutter's exact flex-grow/deficit-shrink algorithm instead of an approximation.
+  `RenderTable` stores its cells as a flat row-major grid with `SetFlatChildren`/`SetChildren`/`AddRow`/`SetChild`/
+  `Column`/`Row`, supports null cells, implements every intrinsic, dry-layout and dry-baseline path, paints arbitrary
+  row `Decoration`s through cached `BoxPainter`s, and declares the `SemanticsRole.Table` boundary.
+  `Table` now uses Flutter's `TableElement`, reconciling one `TableRow` at a time so keyed rows keep their state, and
+  rejects irregular/empty rows and duplicate row or cell keys. **Breaking:** `Table.defaultColumnWidth` defaults to
+  `FlexColumnWidth()` (was `IntrinsicColumnWidth()`), `TableRow.decoration` takes `Decoration` (was `BoxDecoration`),
+  and `TableBorder` sides are non-nullable `BorderSide.None`-defaulted with `TableBorder.All(color:, width:, style:,
+  borderRadius:)`/`Symmetric`/`Scale`/`Lerp` replacing `All(BorderSide)`.
+  `PaginatedDataTable` restores its page index from `PageStorage`, and `ScrollView`/`SingleChildScrollView` only
+  insert `PrimaryScrollController.None` when a primary controller was actually resolved.
+
 - Breaking: completed the strict Material `BottomSheet`/`showModalBottomSheet`/`showBottomSheet` closeout. The sheet
   surface is now a real `Material` (elevation, surface tint, shadow, shape, clip) and the M3 default shape is
   top-only 28px corners instead of a uniform radius; drag handles resolve their color through hovered/dragged

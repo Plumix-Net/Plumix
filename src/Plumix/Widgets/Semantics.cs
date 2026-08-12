@@ -21,6 +21,9 @@ public enum SemanticsRole
     RadioGroup,
     ProgressBar,
     LoadingSpinner,
+    Table,
+    Row,
+    ColumnHeader,
 }
 
 public sealed class Semantics : SingleChildRenderObjectWidget

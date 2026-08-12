@@ -320,8 +320,8 @@ public sealed class DataTable : StatelessWidget
 
         var divider = new BorderSide(theme.DividerColor, DividerThickness ?? localTheme.DividerThickness ?? 1.0);
         var effectiveBorder = Border ?? new TableBorder(
-            Bottom: ShowBottomBorder ? divider : null,
-            HorizontalInside: divider);
+            bottom: ShowBottomBorder ? divider : null,
+            horizontalInside: divider);
         Widget result = new Table(
             tableRows,
             widths,

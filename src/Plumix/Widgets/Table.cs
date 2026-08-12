@@ -1,167 +1,387 @@
-using Avalonia;
-using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
 
 namespace Plumix.Widgets;
 
-// Dart parity sources:
-// flutter/packages/flutter/lib/src/widgets/table.dart
-// flutter/packages/flutter/lib/src/rendering/table.dart
+// Dart parity source: flutter/packages/flutter/lib/src/widgets/table.dart
 
-public abstract record TableColumnWidth;
-
-public sealed record FixedColumnWidth(double Value) : TableColumnWidth
-{
-    public double Value { get; } = Validate(Value);
-
-    private static double Validate(double value)
-    {
-        if (!double.IsFinite(value) || value < 0) throw new ArgumentOutOfRangeException(nameof(value));
-        return value;
-    }
-}
-
-public sealed record IntrinsicColumnWidth(double? Flex = null) : TableColumnWidth
-{
-    public double? Flex { get; } = Validate(Flex);
-
-    private static double? Validate(double? value)
-    {
-        if (value.HasValue && (!double.IsFinite(value.Value) || value.Value < 0))
-        {
-            throw new ArgumentOutOfRangeException(nameof(value));
-        }
-        return value;
-    }
-}
-
-public sealed record TableBorder(
-    BorderSide? Top = null,
-    BorderSide? Right = null,
-    BorderSide? Bottom = null,
-    BorderSide? Left = null,
-    BorderSide? HorizontalInside = null,
-    BorderSide? VerticalInside = null,
-    BorderRadius? BorderRadius = null)
-{
-    public static TableBorder All(BorderSide side) => new(
-        Top: side,
-        Right: side,
-        Bottom: side,
-        Left: side,
-        HorizontalInside: side,
-        VerticalInside: side);
-}
-
+/// A horizontal group of cells in a [Table].
+///
+/// Every row in a table must have the same number of children.
+///
+/// The alignment of individual cells in a row can be controlled using a
+/// [TableCell].
 public sealed class TableRow
 {
     public TableRow(
-        IReadOnlyList<Widget> children,
+        IReadOnlyList<Widget>? children = null,
         Key? key = null,
-        BoxDecoration? decoration = null)
+        Decoration? decoration = null)
     {
-        Children = children ?? throw new ArgumentNullException(nameof(children));
+        Children = children ?? [];
         Key = key;
         Decoration = decoration;
     }
 
+    /// An identifier for this row.
     public Key? Key { get; }
-    public BoxDecoration? Decoration { get; }
+
+    /// A decoration to paint behind this row.
+    ///
+    /// Row decorations fill the horizontal and vertical extent of each row in
+    /// the table, unlike decorations for individual cells, which might not fill
+    /// either.
+    public Decoration? Decoration { get; }
+
+    /// The widgets that comprise the cells in this row.
+    ///
+    /// Children may be wrapped in [TableCell] widgets to provide per-cell
+    /// configuration to the [Table], but children are not required to be wrapped.
     public IReadOnlyList<Widget> Children { get; }
+
+    public override string ToString()
+    {
+        string result = "TableRow(";
+        if (Key is not null) result += $"{Key}, ";
+        if (Decoration is not null) result += $"{Decoration}, ";
+        result += Children.Count == 0 ? "no children" : $"[{string.Join(", ", Children)}]";
+        return result + ")";
+    }
 }
 
-public sealed class Table : MultiChildRenderObjectWidget
+/// A widget that uses the table layout algorithm for its children.
+///
+/// If you only have one row, the [Row] widget is more appropriate. If you only
+/// have one column, the [SliverList] or [Column] widgets will be more
+/// appropriate.
+///
+/// Rows size vertically based on their contents. To control the individual
+/// column widths, use the [ColumnWidths] property to specify a
+/// [TableColumnWidth] for each column. If [ColumnWidths] is null, or there is a
+/// null entry for a given column in [ColumnWidths], the table uses the
+/// [DefaultColumnWidth] instead.
+public sealed class Table : RenderObjectWidget
 {
+    private static readonly IReadOnlyDictionary<int, TableColumnWidth> EmptyColumnWidths =
+        new Dictionary<int, TableColumnWidth>();
+
+    private readonly IReadOnlyList<Decoration?>? _rowDecorations;
+
     public Table(
-        IReadOnlyList<TableRow> children,
+        IReadOnlyList<TableRow>? children = null,
         IReadOnlyDictionary<int, TableColumnWidth>? columnWidths = null,
         TableColumnWidth? defaultColumnWidth = null,
-        TableBorder? border = null,
         TextDirection? textDirection = null,
+        TableBorder? border = null,
         TableCellVerticalAlignment defaultVerticalAlignment = TableCellVerticalAlignment.Top,
         TextBaseline? textBaseline = null,
-        Key? key = null) : base(Flatten(children), key)
+        Key? key = null) : base(key)
     {
-        ArgumentNullException.ThrowIfNull(children);
-        if (defaultVerticalAlignment == TableCellVerticalAlignment.Baseline && !textBaseline.HasValue)
+        Children = children ?? [];
+        if (defaultVerticalAlignment == TableCellVerticalAlignment.Baseline && textBaseline is null)
         {
             throw new ArgumentException(
-                "textBaseline is required when defaultVerticalAlignment is baseline.",
+                "textBaseline is required if you specify the defaultVerticalAlignment with "
+                + "TableCellVerticalAlignment.baseline",
                 nameof(textBaseline));
         }
 
-        int columnCount = children.Count == 0 ? 0 : children[0].Children.Count;
-        if (children.Any(row => row.Children.Count != columnCount))
+        if (Children.Any(row1 =>
+                row1.Key is not null
+                && Children.Any(row2 => !ReferenceEquals(row1, row2) && Equals(row1.Key, row2.Key))))
         {
-            throw new ArgumentException("Every TableRow must have the same number of children.", nameof(children));
+            throw new ArgumentException(
+                "Two or more TableRow children of this Table had the same key.\n"
+                + "All the keyed TableRow children of a Table must have different Keys.",
+                nameof(children));
         }
 
-        Rows = children;
-        ColumnCount = columnCount;
-        ColumnWidths = columnWidths ?? new Dictionary<int, TableColumnWidth>();
-        DefaultColumnWidth = defaultColumnWidth ?? new IntrinsicColumnWidth();
-        Border = border;
+        if (Children.Count > 0)
+        {
+            int cellCount = Children[0].Children.Count;
+            if (Children.Any(row => row.Children.Count != cellCount))
+            {
+                throw new ArgumentException(
+                    "Table contains irregular row lengths.\n"
+                    + "Every TableRow in a Table must have the same number of children, so that every cell is "
+                    + "filled. Otherwise, the table will contain holes.",
+                    nameof(children));
+            }
+
+            if (Children.Any(row => row.Children.Count == 0))
+            {
+                throw new ArgumentException(
+                    "One or more TableRow have no children.\n"
+                    + "Every TableRow in a Table must have at least one child, so there is no empty row.",
+                    nameof(children));
+            }
+        }
+
+        _rowDecorations = Children.Any(row => row.Decoration is not null)
+            ? [.. Children.Select(row => row.Decoration)]
+            : null;
+
+        var flatChildren = Children.SelectMany(row => row.Children).ToArray();
+        var seenKeys = new HashSet<Key>();
+        foreach (Widget child in flatChildren)
+        {
+            if (child.Key is not null && !seenKeys.Add(child.Key))
+            {
+                throw new ArgumentException(
+                    "Two or more cells in this Table contain widgets with the same key.\n"
+                    + "Every widget child of every TableRow in a Table must have different keys. The cells of a "
+                    + "Table are flattened out for processing, so separate cells cannot have duplicate keys even "
+                    + "if they are in different rows.",
+                    nameof(children));
+            }
+        }
+
+        ColumnWidths = columnWidths;
+        DefaultColumnWidth = defaultColumnWidth ?? new FlexColumnWidth();
         TextDirection = textDirection;
+        Border = border;
         DefaultVerticalAlignment = defaultVerticalAlignment;
         TextBaseline = textBaseline;
     }
 
-    public IReadOnlyList<TableRow> Rows { get; }
-    public int ColumnCount { get; }
-    public IReadOnlyDictionary<int, TableColumnWidth> ColumnWidths { get; }
+    /// The rows of the table.
+    ///
+    /// Every row in a table must have the same number of children, and all the
+    /// children must be non-null.
+    public IReadOnlyList<TableRow> Children { get; }
+
+    /// How the horizontal extents of the columns of this table should be determined.
+    public IReadOnlyDictionary<int, TableColumnWidth>? ColumnWidths { get; }
+
+    /// How to determine with widths of columns that don't have an explicit sizing algorithm.
+    ///
+    /// Specifically, the [DefaultColumnWidth] is used for column `i` if
+    /// `ColumnWidths[i]` is null. Defaults to [FlexColumnWidth], which will
+    /// divide the remaining horizontal space up evenly between as many columns
+    /// as there are.
     public TableColumnWidth DefaultColumnWidth { get; }
-    public TableBorder? Border { get; }
+
+    /// The direction in which the columns are ordered.
+    ///
+    /// Defaults to the ambient [Directionality].
     public TextDirection? TextDirection { get; }
+
+    /// The style to use when painting the boundary and interior divisions of the table.
+    public TableBorder? Border { get; }
+
+    /// How cells that do not explicitly specify a vertical alignment are aligned vertically.
+    ///
+    /// Cells may specify a vertical alignment by wrapping their contents in a [TableCell] widget.
     public TableCellVerticalAlignment DefaultVerticalAlignment { get; }
+
+    /// The text baseline to use when aligning rows using [TableCellVerticalAlignment.Baseline].
+    ///
+    /// This must be set if using baseline alignment. There is no default because there is no
+    /// way for the framework to know the correct baseline _a priori_.
     public TextBaseline? TextBaseline { get; }
+
+    /// The number of columns the table has, derived from its first row.
+    public int ColumnCount => Children.Count > 0 ? Children[0].Children.Count : 0;
+
+    internal IReadOnlyList<Decoration?>? RowDecorations => _rowDecorations;
+
+    internal override Element CreateElement() => new TableElement(this);
 
     internal override RenderObject CreateRenderObject(BuildContext context) => new RenderTable(
         columns: ColumnCount,
-        rows: Rows.Count,
+        rows: Children.Count,
         columnWidths: ColumnWidths,
         defaultColumnWidth: DefaultColumnWidth,
-        rowDecorations: Rows.Select(row => row.Decoration).ToArray(),
-        border: Border,
         textDirection: TextDirection ?? Directionality.Of(context),
+        border: Border,
+        rowDecorations: _rowDecorations,
+        configuration: ImageConfigurationUtils.CreateLocalImageConfiguration(context),
         defaultVerticalAlignment: DefaultVerticalAlignment,
         textBaseline: TextBaseline);
 
     internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var table = (RenderTable)renderObject;
-        table.Columns = ColumnCount;
-        table.Rows = Rows.Count;
-        table.ColumnWidths = ColumnWidths;
+        table.ColumnWidths = ColumnWidths ?? EmptyColumnWidths;
         table.DefaultColumnWidth = DefaultColumnWidth;
-        table.RowDecorations = Rows.Select(row => row.Decoration).ToArray();
-        table.Border = Border;
         table.TextDirection = TextDirection ?? Directionality.Of(context);
-        if (TextBaseline.HasValue)
-        {
-            table.TextBaseline = TextBaseline;
-            table.DefaultVerticalAlignment = DefaultVerticalAlignment;
-        }
-        else
-        {
-            table.DefaultVerticalAlignment = DefaultVerticalAlignment;
-            table.TextBaseline = null;
-        }
-    }
-
-    private static IReadOnlyList<Widget> Flatten(IReadOnlyList<TableRow> rows)
-    {
-        ArgumentNullException.ThrowIfNull(rows);
-        return rows.SelectMany(row => row.Key is null
-            ? row.Children
-            : row.Children.Select((child, column) => (Widget)new KeyedSubtree(
-                child,
-                new ValueKey<(Key Row, int Column)>((row.Key, column))))).ToArray();
+        table.Border = Border;
+        table.RowDecorations = _rowDecorations;
+        table.Configuration = ImageConfigurationUtils.CreateLocalImageConfiguration(context);
+        table.DefaultVerticalAlignment = DefaultVerticalAlignment;
+        table.TextBaseline = TextBaseline;
     }
 }
 
-// Dart parity source: flutter/packages/flutter/lib/src/widgets/table.dart (TableCell)
+/// The element for a [Table], which reconciles its children one [TableRow] at a
+/// time so that keyed rows keep their state when they move.
+public sealed class TableElement : RenderObjectElement
+{
+    private IReadOnlyList<TableElementRow> _children = [];
+    private bool _doingMountOrUpdate;
+    private readonly HashSet<Element> _forgottenChildren = [];
+
+    public TableElement(Table widget) : base(widget)
+    {
+    }
+
+    private RenderTable Table => (RenderTable)RequireRenderObject();
+
+    protected override void OnMount()
+    {
+        base.OnMount();
+        _doingMountOrUpdate = true;
+        int rowIndex = -1;
+        var rows = new List<TableElementRow>();
+        foreach (TableRow row in ((Table)Widget).Children)
+        {
+            var children = new List<Element>();
+            rowIndex += 1;
+            int columnIndex = 0;
+            foreach (Widget child in row.Children)
+            {
+                children.Add(InflateWidget(child, new TableSlot(columnIndex, rowIndex)));
+                columnIndex += 1;
+            }
+
+            rows.Add(new TableElementRow(row.Key, children));
+        }
+
+        _children = rows;
+        UpdateRenderObjectChildren();
+        _doingMountOrUpdate = false;
+    }
+
+    internal override void Update(Widget newWidget)
+    {
+        _doingMountOrUpdate = true;
+        var oldKeyedRows = new Dictionary<Key, List<Element>>();
+        foreach (TableElementRow row in _children)
+        {
+            if (row.Key is not null) oldKeyedRows[row.Key] = row.Children;
+        }
+
+        var oldUnkeyedRows = _children.Where(row => row.Key is null).GetEnumerator();
+        var newChildren = new List<TableElementRow>();
+        var taken = new HashSet<List<Element>>();
+        var newWidgetRows = ((Table)newWidget).Children;
+
+        for (int rowIndex = 0; rowIndex < newWidgetRows.Count; rowIndex++)
+        {
+            TableRow row = newWidgetRows[rowIndex];
+            List<Element> oldChildren;
+            if (row.Key is not null && oldKeyedRows.TryGetValue(row.Key, out List<Element>? keyed))
+            {
+                oldChildren = keyed;
+                taken.Add(keyed);
+            }
+            else if (row.Key is null && oldUnkeyedRows.MoveNext())
+            {
+                oldChildren = oldUnkeyedRows.Current.Children;
+            }
+            else
+            {
+                oldChildren = [];
+            }
+
+            var slots = new List<object?>(row.Children.Count);
+            for (int columnIndex = 0; columnIndex < row.Children.Count; columnIndex++)
+            {
+                slots.Add(new TableSlot(columnIndex, rowIndex));
+            }
+
+            newChildren.Add(new TableElementRow(
+                row.Key,
+                UpdateChildren(oldChildren, row.Children, _forgottenChildren, slots)));
+        }
+
+        while (oldUnkeyedRows.MoveNext())
+        {
+            UpdateChildren(oldUnkeyedRows.Current.Children, [], _forgottenChildren);
+        }
+
+        oldUnkeyedRows.Dispose();
+
+        foreach (List<Element> oldChildren in oldKeyedRows.Values.Where(children => !taken.Contains(children)))
+        {
+            UpdateChildren(oldChildren, [], _forgottenChildren);
+        }
+
+        _children = newChildren;
+        UpdateRenderObjectChildren();
+        _forgottenChildren.Clear();
+        base.Update(newWidget);
+        _doingMountOrUpdate = false;
+    }
+
+    public override void InsertRenderObjectChild(RenderObject child, object? slot)
+    {
+        Table.SetupParentData(child);
+
+        // Once [Update] or [OnMount] has run, the whole grid is written at once by
+        // [UpdateRenderObjectChildren]; only out-of-band insertions land here.
+        if (!_doingMountOrUpdate)
+        {
+            var tableSlot = (TableSlot)slot!;
+            Table.SetChild(tableSlot.Column, tableSlot.Row, (RenderBox)child);
+        }
+    }
+
+    public override void MoveRenderObjectChild(RenderObject child, object? oldSlot, object? newSlot)
+    {
+        // Moves are handled by [UpdateRenderObjectChildren], which rewrites the grid.
+    }
+
+    public override void RemoveRenderObjectChild(RenderObject child, object? slot)
+    {
+        var tableSlot = (TableSlot)slot!;
+        Table.SetChild(tableSlot.Column, tableSlot.Row, null);
+    }
+
+    internal override void ForgetChild(Element child)
+    {
+        _forgottenChildren.Add(child);
+    }
+
+    internal override void VisitChildren(Action<Element> visitor)
+    {
+        foreach (TableElementRow row in _children)
+        {
+            foreach (Element child in row.Children)
+            {
+                if (!_forgottenChildren.Contains(child)) visitor(child);
+            }
+        }
+    }
+
+    private void UpdateRenderObjectChildren()
+    {
+        var cells = new List<RenderBox?>();
+        foreach (TableElementRow row in _children)
+        {
+            foreach (Element child in row.Children)
+            {
+                cells.Add((RenderBox?)child.RenderObject);
+            }
+        }
+
+        Table.SetFlatChildren(_children.Count > 0 ? _children[0].Children.Count : 0, cells);
+    }
+}
+
+/// One row of elements owned by a [TableElement].
+public sealed record TableElementRow(Key? Key, List<Element> Children);
+
+/// The slot a [Table] cell occupies, identified by its column and row.
+public sealed record TableSlot(int Column, int Row);
+
+/// A widget that controls how a child of a [Table] is aligned.
+///
+/// A [TableCell] widget must be a descendant of a [Table], and the path from
+/// the [TableCell] widget to its enclosing [Table] must contain only
+/// [TableRow]s, [StatelessWidget]s, or [StatefulWidget]s (not
+/// other kinds of widgets, like [RenderObjectWidget]s).
 public sealed class TableCell : StatelessWidget
 {
     public TableCell(
@@ -173,6 +393,7 @@ public sealed class TableCell : StatelessWidget
         VerticalAlignment = verticalAlignment;
     }
 
+    /// How this cell is aligned vertically.
     public TableCellVerticalAlignment? VerticalAlignment { get; }
 
     public Widget Child { get; }

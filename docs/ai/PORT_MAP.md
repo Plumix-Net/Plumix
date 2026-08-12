@@ -263,7 +263,8 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `rendering/sliver_fill.dart` | `src/Plumix/Rendering/SliverFill.cs` | `src/Plumix.Tests/SliverFillTests.cs` | — |
 | `rendering/sliver_group.dart` | `src/Plumix/Rendering/SliverGroup.cs` | `src/Plumix.Tests/SliverGroupTests.cs` | — |
 | `rendering/stack.dart` | `src/Plumix/Rendering/Stack.RenderIndexedStack.cs`<br>`src/Plumix/Rendering/Stack.RenderStack.cs` | — | — |
-| `rendering/table.dart` | `src/Plumix/Rendering/Table.cs`<br>`src/Plumix/Widgets/Table.cs` | `src/Plumix.Tests/DirectionalPositionedTableCellTests.cs`<br>`src/Plumix.Tests/MaterialDataTableTests.cs` | `dart_sample/lib/demos/general/editable_text_demo_page.dart`<br>`dart_sample/lib/demos/material/data_table_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/DataTableDemoPage.cs` |
+| `rendering/table.dart` | `src/Plumix/Rendering/Table.cs` | `src/Plumix.Tests/DirectionalPositionedTableCellTests.cs`<br>`src/Plumix.Tests/MaterialDataTableTests.cs`<br>`src/Plumix.Tests/TableTests.cs` | `dart_sample/lib/demos/general/editable_text_demo_page.dart`<br>`dart_sample/lib/demos/material/data_table_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/DataTableDemoPage.cs` |
+| `rendering/table_border.dart` | `src/Plumix/Rendering/TableBorder.cs` | — | — |
 | `rendering/view.dart` | `src/Plumix/RenderView.cs` | — | — |
 | `rendering/viewport.dart` | `src/Plumix/Rendering/PageView.cs`<br>`src/Plumix/Rendering/Scroll.cs`<br>`src/Plumix/Rendering/Viewport.RenderViewport.cs` | `src/Plumix.Tests/MaterialScrollbarTests.cs`<br>`src/Plumix.Tests/ScrollBehaviorParityTests.cs`<br>`src/Plumix.Tests/ScrollInfrastructureTests.cs`<br>`src/Plumix.Tests/ScrollNotificationObserverTests.cs`<br>`src/Plumix.Tests/ScrollPhysicsTests.cs`<br>`src/Plumix.Tests/ScrollPipelineTests.cs` | `dart_sample/lib/demos/general/scroll_physics_demo_page.dart`<br>`dart_sample/lib/demos/general/scrollbar_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/ScrollPhysicsDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ScrollbarDemoPage.cs` |
 | `rendering/wrap.dart` | `src/Plumix/Rendering/Wrap.cs` | `src/Plumix.Tests/WrapTests.cs` | — |
@@ -388,7 +389,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `widgets/standard_component_type.dart` | `src/Plumix/Widgets/StandardComponentType.cs` | — | — |
 | `widgets/status_transitions.dart` | `src/Plumix/Widgets/StatusTransitionWidget.cs` | — | — |
 | `widgets/stretch_effect.dart` | `src/Plumix/Widgets/OverscrollIndicator.cs` | `src/Plumix.Tests/OverscrollIndicatorTests.cs` | — |
-| `widgets/table.dart` | `src/Plumix/Widgets/Table.cs` | `src/Plumix.Tests/DirectionalPositionedTableCellTests.cs`<br>`src/Plumix.Tests/MaterialDataTableTests.cs` | `dart_sample/lib/demos/general/editable_text_demo_page.dart`<br>`dart_sample/lib/demos/material/data_table_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/DataTableDemoPage.cs` |
+| `widgets/table.dart` | `src/Plumix/Widgets/Table.cs` | `src/Plumix.Tests/DirectionalPositionedTableCellTests.cs`<br>`src/Plumix.Tests/MaterialDataTableTests.cs`<br>`src/Plumix.Tests/TableTests.cs` | `dart_sample/lib/demos/general/editable_text_demo_page.dart`<br>`dart_sample/lib/demos/material/data_table_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/DataTableDemoPage.cs` |
 | `widgets/tap_region.dart` | `src/Plumix/Rendering/TapRegion.cs`<br>`src/Plumix/Widgets/TapRegion.cs` | `src/Plumix.Tests/TapRegionTests.cs` | — |
 | `widgets/text.dart` | `src/Plumix/Widgets/DefaultTextStyle.cs`<br>`src/Plumix/Widgets/Text.cs` | `src/Plumix.Tests/MaterialDesktopTextSelectionToolbarTests.cs`<br>`src/Plumix.Tests/MaterialTextFieldTests.cs`<br>`src/Plumix.Tests/MaterialTextSelectionControlsTests.cs`<br>`src/Plumix.Tests/TextInputTests.cs`<br>`src/Plumix.Tests/TextWidgetTests.cs` | `dart_sample/lib/demos/general/editable_text_demo_page.dart`<br>`dart_sample/lib/demos/material/app_bar_text_styles_demo_page.dart`<br>`dart_sample/lib/demos/material/desktop_text_selection_toolbar_demo_page.dart`<br>`dart_sample/lib/demos/material/text_field_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/EditableTextDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/AppBarTextStylesDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/DesktopTextSelectionToolbarDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/TextFieldDemoPage.cs` |
 | `widgets/text_selection.dart` | `src/Plumix/Widgets/TextSelection.cs` | `src/Plumix.Tests/MaterialDesktopTextSelectionToolbarTests.cs`<br>`src/Plumix.Tests/MaterialTextSelectionControlsTests.cs` | `dart_sample/lib/demos/material/desktop_text_selection_toolbar_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/DesktopTextSelectionToolbarDemoPage.cs` |
@@ -439,7 +440,7 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 
 ## Summary
 
-- Flutter files mapped: 388
+- Flutter files mapped: 389
 - C# files carrying a marker: 487
 - C# files without a marker: 15
 - Markers not resolvable in the pinned checkout: 5

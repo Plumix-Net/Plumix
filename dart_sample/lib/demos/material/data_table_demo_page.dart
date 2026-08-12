@@ -89,6 +89,13 @@ class _DataTableDemoPageState extends State<DataTableDemoPage> {
             ),
             const SizedBox(height: 12),
             const Text(
+              'Core TableColumnWidth algebra',
+              style: TextStyle(fontSize: 16, color: Colors.black),
+            ),
+            const SizedBox(height: 8),
+            _buildColumnWidthProbe(),
+            const SizedBox(height: 12),
+            const Text(
               'PaginatedDataTable',
               style: TextStyle(fontSize: 16, color: Colors.black),
             ),
@@ -165,6 +172,49 @@ class _DataTableDemoPageState extends State<DataTableDemoPage> {
           ],
         ),
       ],
+    );
+  }
+
+  Table _buildColumnWidthProbe() {
+    return Table(
+      columnWidths: const <int, TableColumnWidth>{
+        0: FixedColumnWidth(72),
+        1: FractionColumnWidth(0.25),
+        2: MaxColumnWidth(IntrinsicColumnWidth(), FixedColumnWidth(90)),
+        3: FlexColumnWidth(2),
+      },
+      border: TableBorder.all(
+        color: const Color(0xFF94A3B8),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      defaultVerticalAlignment: TableCellVerticalAlignment.intrinsicHeight,
+      children: <TableRow>[
+        TableRow(
+          decoration: const BoxDecoration(color: Color(0xFFF1F5F9)),
+          children: <Widget>[
+            _buildWidthCell('fixed 72'),
+            _buildWidthCell('fraction .25'),
+            _buildWidthCell('max(intrinsic, 90)'),
+            _buildWidthCell('flex 2'),
+          ],
+        ),
+        TableRow(
+          decoration: const BoxDecoration(color: Color(0xFFFFFFFF)),
+          children: <Widget>[
+            _buildWidthCell('a'),
+            _buildWidthCell('b'),
+            _buildWidthCell('a wide intrinsic cell'),
+            _buildWidthCell('d'),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildWidthCell(String label) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      child: Text(label, style: const TextStyle(fontSize: 11)),
     );
   }
 

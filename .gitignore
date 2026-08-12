@@ -12,3 +12,6 @@ avalonia-src
 
 # Claude Code: share project config, keep personal overrides local.
 .claude/settings.local.json
+
+# `dotnet test` artifacts (sequence logs and multi-GB hang dumps).
+TestResults/

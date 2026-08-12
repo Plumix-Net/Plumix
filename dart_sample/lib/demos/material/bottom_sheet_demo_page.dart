@@ -11,6 +11,7 @@ class _BottomSheetDemoPageState extends State<BottomSheetDemoPage> {
   bool _showDragHandle = true;
   bool _scrollControlled = false;
   bool _customTheme = false;
+  bool _anchorEnd = false;
   String _lastResult = 'none';
 
   @override
@@ -24,7 +25,7 @@ class _BottomSheetDemoPageState extends State<BottomSheetDemoPage> {
           style: TextStyle(fontSize: 20),
         ),
         const Text(
-          'Persistent LocalHistory/controller flow, modal barrier/result, drag handle, 9/16 height cap, SafeArea, and theme precedence.',
+          'Persistent LocalHistory/controller flow, modal scrim/result, drag handle, 9/16 height cap, SafeArea, display-feature anchoring, and theme precedence.',
           style: TextStyle(fontSize: 14, color: Colors.black54),
         ),
         Wrap(
@@ -44,6 +45,10 @@ class _BottomSheetDemoPageState extends State<BottomSheetDemoPage> {
             TextButton(
               onPressed: () => setState(() => _customTheme = !_customTheme),
               child: Text(_customTheme ? 'Theme on' : 'Theme off'),
+            ),
+            TextButton(
+              onPressed: () => setState(() => _anchorEnd = !_anchorEnd),
+              child: Text(_anchorEnd ? 'Anchor end' : 'Anchor start'),
             ),
           ],
         ),
@@ -89,6 +94,7 @@ class _BottomSheetDemoPageState extends State<BottomSheetDemoPage> {
       showDragHandle: _showDragHandle,
       isScrollControlled: _scrollControlled,
       useSafeArea: true,
+      anchorPoint: _anchorEnd ? const Offset(double.maxFinite, 0) : null,
       backgroundColor: _customTheme ? const Color(0xFFE8DEF8) : null,
       shape: _customTheme
           ? RoundedRectangleBorder(borderRadius: BorderRadius.circular(18))
