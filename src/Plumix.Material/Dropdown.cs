@@ -550,7 +550,8 @@ internal sealed class DropdownRoute<T> : PageRoute
     public double? MenuMaxHeight { get; }
     public bool EnableFeedback { get; }
     public BorderRadius? BorderRadius { get; }
-    public bool BarrierDismissible { get; }
+    public override bool BarrierDismissible { get; }
+    public override string? BarrierLabel => _localizations.ModalBarrierDismissLabel;
     public MouseCursor? MouseCursor { get; }
     public bool RequestFocus { get; }
     public bool CloseOnSelect { get; }
@@ -589,28 +590,11 @@ internal sealed class DropdownRoute<T> : PageRoute
         menu = new MaterialLocalizationsScope(_localizations, menu);
         menu = new Theme(_theme, menu);
         menu = new DropdownMenuPositionLayout<T>(this, menu);
-        var localizations = _localizations;
-        Widget barrier = new SizedBox();
-        if (BarrierDismissible)
-        {
-            barrier = new Semantics(
-                label: localizations.ModalBarrierDismissLabel,
-                onTap: () => Navigator?.MaybePop(),
-                child: new GestureDetector(
-                    behavior: HitTestBehavior.Opaque,
-                    onTap: () => Navigator?.MaybePop(),
-                    child: barrier));
-        }
-        else
-        {
-            barrier = new GestureDetector(behavior: HitTestBehavior.Opaque, child: barrier);
-        }
-
+        // The dismissal barrier is owned by ModalRoute and painted below this page.
         Widget page = new Stack(
             fit: StackFit.Expand,
             children:
             [
-                new Positioned(left: 0, top: 0, right: 0, bottom: 0, child: barrier),
                 new Positioned(left: 0, top: 0, right: 0, bottom: 0, child: menu),
             ]);
         if (RequestFocus) page = new Focus(autofocus: true, onKeyEvent: HandleKeyEvent, child: page);

@@ -11,6 +11,7 @@ using Xunit;
 
 namespace Plumix.Tests;
 
+[Collection(SchedulerTestCollection.Name)]
 public sealed class DraggableScrollableSheetTests
 {
     private const double ScreenHeight = 600.0;

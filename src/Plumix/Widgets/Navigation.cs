@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Avalonia;
+using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Rendering;
 
@@ -632,6 +633,21 @@ public abstract class ModalRoute : TransitionRoute
 
     internal PageStorageBucket StorageBucket => _storageBucket;
 
+    /// <summary>Whether tapping the modal barrier dismisses the route.</summary>
+    public virtual bool BarrierDismissible => false;
+
+    /// <summary>Whether the modal barrier can be dismissed through the accessibility layer.</summary>
+    public virtual bool SemanticsDismissible => true;
+
+    /// <summary>The color painted by the modal barrier; <see langword="null"/> keeps the barrier invisible.</summary>
+    public virtual Color? BarrierColor => null;
+
+    /// <summary>The semantics label announced for the modal barrier.</summary>
+    public virtual string? BarrierLabel => null;
+
+    /// <summary>The curve the barrier color follows while the route animates in.</summary>
+    public virtual Curve BarrierCurve => Curves.Ease;
+
     public virtual DelegatedTransitionBuilder? DelegatedTransition => null;
 
     public DelegatedTransitionBuilder? ReceivedTransition { get; internal set; }
@@ -701,6 +717,45 @@ public abstract class ModalRoute : TransitionRoute
         base.DidPopNext(nextRoute);
     }
 
+    /// <summary>
+    /// Builds the barrier painted below the route's page. Subclasses override this to create their own barrier.
+    /// </summary>
+    public virtual Widget BuildModalBarrier()
+    {
+        if (BarrierColor is { A: not 0 } barrierColor)
+        {
+            return new AnimatedModalBarrier(
+                color: CreateBarrierColorAnimation(barrierColor),
+                dismissible: BarrierDismissible,
+                semanticsLabel: BarrierLabel,
+                barrierSemanticsDismissible: SemanticsDismissible);
+        }
+
+        return new ModalBarrier(
+            dismissible: BarrierDismissible,
+            semanticsLabel: BarrierLabel,
+            barrierSemanticsDismissible: SemanticsDismissible);
+    }
+
+    /// <summary>
+    /// Drives <paramref name="barrierColor"/> from fully transparent to opaque through <see cref="BarrierCurve"/>,
+    /// mirroring Flutter's <c>animation.drive(ColorTween(...).chain(CurveTween(curve: barrierCurve)))</c>.
+    /// </summary>
+    protected Animation<Color?> CreateBarrierColorAnimation(Color barrierColor) =>
+        new BarrierColorAnimation(Animation, barrierColor, BarrierCurve);
+
+    /// <summary>The barrier overlay entry: the barrier plus the pointer and semantics wrappers Flutter adds.</summary>
+    internal Widget BuildModalBarrierEntry()
+    {
+        Widget barrier = BuildModalBarrier();
+        barrier = new IgnorePointer(
+            ignoring: Animation.Status is not (AnimationStatus.Forward or AnimationStatus.Completed),
+            child: barrier);
+        return SemanticsDismissible && BarrierDismissible
+            ? new Semantics(sortKey: new OrdinalSortKey(1.0), child: barrier)
+            : barrier;
+    }
+
     internal Widget BuildFlexibleTransitions(
         BuildContext context,
         Animation<double> animation,
@@ -759,6 +814,38 @@ public abstract class ModalRoute : TransitionRoute
         return context.DependOnInherited<RouteScope>()?.Route is ModalRoute route
             ? route.Opaque
             : null;
+    }
+
+    private sealed class BarrierColorAnimation : Animation<Color?>
+    {
+        private readonly Animation<double> _parent;
+        private readonly Color _color;
+        private readonly Curve _curve;
+
+        public BarrierColorAnimation(Animation<double> parent, Color color, Curve curve)
+        {
+            _parent = parent;
+            _color = color;
+            _curve = curve;
+        }
+
+        public override Color? Value => Color.FromArgb(
+            (byte)Math.Round(_color.A * _curve(Math.Clamp(_parent.Value, 0.0, 1.0))),
+            _color.R,
+            _color.G,
+            _color.B);
+
+        public override AnimationStatus Status => _parent.Status;
+
+        public override void AddListener(Action listener) => _parent.AddListener(listener);
+
+        public override void RemoveListener(Action listener) => _parent.RemoveListener(listener);
+
+        public override void AddStatusListener(Action<AnimationStatus> listener) =>
+            _parent.AddStatusListener(listener);
+
+        public override void RemoveStatusListener(Action<AnimationStatus> listener) =>
+            _parent.RemoveStatusListener(listener);
     }
 }
 
@@ -2484,13 +2571,26 @@ internal sealed class ActiveRouteHost : StatelessWidget
 
     public override Widget Build(BuildContext context)
     {
+        // Flutter's ModalRoute contributes two overlay entries: the barrier below, the modal scope above.
+        // The barrier is a sibling of the page, so route transitions never apply to it, and the scope sorts
+        // before the barrier in the semantics tree.
+        Widget host = _route is ModalRoute modalRoute
+            ? new Stack(
+                fit: StackFit.Expand,
+                children:
+                [
+                    modalRoute.BuildModalBarrierEntry(),
+                    new Semantics(sortKey: new OrdinalSortKey(0.0), child: new RoutePageHost(_route)),
+                ])
+            : new RoutePageHost(_route);
+
         return new RouteScope(
             route: _route,
             isCurrent: _isCurrent,
             child: new HeroControllerScope(
                 controller: _heroTransitionController,
                 route: _route,
-                child: new RoutePageHost(_route)));
+                child: host));
     }
 }
 

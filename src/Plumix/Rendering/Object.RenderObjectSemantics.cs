@@ -398,6 +398,7 @@ internal sealed class RenderObjectSemantics
                || !string.IsNullOrEmpty(config.Tooltip)
                || config.Role != SemanticsRole.None
                || config.InputType != SemanticsInputType.None
+               || config.HitTestBehavior != SemanticsHitTestBehavior.Defer
                || config.Flags != SemanticsFlags.None
                || config.Actions != SemanticsActions.None
                || config.SortKey is not null
@@ -818,6 +819,7 @@ internal sealed class RenderObjectSemantics
             MaxValue = node.MaxValue,
             Role = node.Role,
             InputType = node.InputType,
+            HitTestBehavior = node.HitTestBehavior,
             Flags = node.Flags,
             Actions = node.Actions,
             IndexInParent = node.IndexInParent,
@@ -862,6 +864,7 @@ internal sealed class RenderObjectSemantics
         node.MaxValue = configuration.MaxValue;
         node.Role = configuration.Role;
         node.InputType = configuration.InputType;
+        node.HitTestBehavior = configuration.HitTestBehavior;
         node.Flags = configuration.Flags;
         node.Actions = configuration.Actions;
         node.IndexInParent = configuration.IndexInParent;

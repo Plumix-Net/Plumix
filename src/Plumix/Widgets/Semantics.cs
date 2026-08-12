@@ -47,6 +47,7 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         bool explicitChildNodes = false,
         SemanticsRole role = SemanticsRole.None,
         SemanticsInputType inputType = SemanticsInputType.None,
+        SemanticsHitTestBehavior hitTestBehavior = SemanticsHitTestBehavior.Defer,
         bool scopesRoute = false,
         bool namesRoute = false,
         bool? expanded = null,
@@ -83,6 +84,7 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         ExplicitChildNodes = explicitChildNodes;
         Role = role;
         InputType = inputType;
+        HitTestBehavior = hitTestBehavior;
         ScopesRoute = scopesRoute;
         NamesRoute = namesRoute;
         Expanded = expanded;
@@ -129,6 +131,8 @@ public sealed class Semantics : SingleChildRenderObjectWidget
 
     public SemanticsInputType InputType { get; }
 
+    public SemanticsHitTestBehavior HitTestBehavior { get; }
+
     public bool ScopesRoute { get; }
 
     public bool NamesRoute { get; }
@@ -157,6 +161,7 @@ public sealed class Semantics : SingleChildRenderObjectWidget
             maxValue: MaxValue,
             role: Role,
             inputType: InputType,
+            hitTestBehavior: HitTestBehavior,
             flags: Flags,
             onTap: OnTap,
             onLongPress: OnLongPress,
@@ -183,6 +188,7 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         semantics.MaxValue = MaxValue;
         semantics.Role = Role;
         semantics.InputType = InputType;
+        semantics.HitTestBehavior = HitTestBehavior;
         semantics.Flags = Flags;
         semantics.OnTap = OnTap;
         semantics.OnLongPress = OnLongPress;

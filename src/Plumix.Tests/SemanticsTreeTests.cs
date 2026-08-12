@@ -41,6 +41,57 @@ public sealed class SemanticsTreeTests
     }
 
     [Fact]
+    public void HitTestBehavior_DefaultsToDeferAndReachesTheNode()
+    {
+        var annotations = new RenderSemanticsAnnotations(
+            child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))));
+        var renderView = new RenderView { Child = annotations };
+        var pipeline = new PipelineOwner(renderView);
+        pipeline.Attach(renderView);
+
+        pipeline.FlushLayout(new Size(100, 40));
+        pipeline.FlushSemantics();
+        // A defer-only annotation is not an annotation at all: it contributes no node of its own.
+        Assert.Equal(SemanticsHitTestBehavior.Defer, pipeline.SemanticsOwner.RootNode!.HitTestBehavior);
+        Assert.Empty(pipeline.SemanticsOwner.RootNode!.Children);
+
+        annotations.HitTestBehavior = SemanticsHitTestBehavior.Opaque;
+        pipeline.FlushSemantics();
+
+        var root = pipeline.SemanticsOwner.RootNode;
+        Assert.NotNull(root);
+        var node = Assert.Single(root.Children);
+        Assert.Equal(SemanticsHitTestBehavior.Opaque, node.HitTestBehavior);
+    }
+
+    [Fact]
+    public void HitTestBehavior_IsAbsorbedFromAChildButNeverMergesWithAnotherAnnotatedConfiguration()
+    {
+        var parent = new SemanticsConfiguration { Label = "Parent" };
+        var child = new SemanticsConfiguration
+        {
+            Label = "Child",
+            HitTestBehavior = SemanticsHitTestBehavior.Opaque,
+        };
+
+        // A non-defer behavior on either side blocks the merge, matching Flutter's isCompatibleWith.
+        Assert.False(parent.IsCompatibleWith(child));
+        Assert.False(child.IsCompatibleWith(parent));
+
+        parent.Absorb(child);
+        Assert.Equal(SemanticsHitTestBehavior.Opaque, parent.HitTestBehavior);
+        Assert.Equal(SemanticsHitTestBehavior.Opaque, parent.Clone().HitTestBehavior);
+
+        // A defer child never overwrites a behavior the parent already declares.
+        var transparent = new SemanticsConfiguration
+        {
+            HitTestBehavior = SemanticsHitTestBehavior.Transparent,
+        };
+        transparent.Absorb(new SemanticsConfiguration { Label = "Plain" });
+        Assert.Equal(SemanticsHitTestBehavior.Transparent, transparent.HitTestBehavior);
+    }
+
+    [Fact]
     public void Button_ProducesSemanticsNode_WithButtonFlagsAndTapAction()
     {
         var button = new RenderButton(

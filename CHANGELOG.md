@@ -1,5 +1,27 @@
 # Changelog
 
+- Breaking: closed the Material `BottomSheet`/`Scaffold` divergence against `DraggableScrollableSheet`, and moved
+  modal-barrier ownership into `ModalRoute`. `BottomSheet` and the scaffold's `_StandardBottomSheet` now listen for
+  `DraggableScrollableNotification`, so a draggable-scrollable child closes the sheet at its minimum extent
+  (unless `shouldCloseOnMinExtent` is false), drives the new `Scaffold.bottomSheetScrimBuilder` body scrim
+  (`max(0.1, 0.6 - extentRemaining * 3)` black by default) and shrinks the floating action button through
+  Flutter's `extentRemaining * 3` visibility curve. A `Scaffold.bottomSheet` is wrapped in a
+  `DraggableScrollableActuator` and registers a `LocalHistoryEntry` once dragged past its initial extent, so back
+  resets the sheet instead of closing it.
+  **Breaking:** `ModalRoute` now owns the barrier: `BarrierColor`/`BarrierDismissible`/`BarrierLabel`/`BarrierCurve`/
+  `SemanticsDismissible` and an overridable `BuildModalBarrier()` build a barrier painted below the page, outside the
+  route's transition, wrapped in `IgnorePointer` while the route animates out and sorted after the page
+  (`OrdinalSortKey(1.0)` versus `0.0`). Every `ModalRoute` therefore contributes a barrier, and modal routes block
+  the semantics of the routes below them. `ModalBottomSheetRoute`, `DialogRoute`, `PopupMenuRoute` and
+  `DropdownRoute` stopped composing their own barriers in `BuildPage`; `DialogRoute.BarrierColor` is now `Color?`.
+  Core semantics gained `SemanticsHitTestBehavior` (`Defer`/`Opaque`/`Transparent`) on `Semantics`,
+  `RenderSemanticsAnnotations`, `SemanticsConfiguration` (with Flutter's absorb/compatibility rules) and
+  `SemanticsNode`; the modal bottom sheet marks its page opaque so taps inside it never reach the barrier.
+  `Scaffold` builds its overlay stack unconditionally and keys the snackbar/scrim/sheet/banner slots, so a slot
+  appearing no longer rebuilds the body's elements (which re-registered its heroes and detached sheet controllers).
+  `DraggableScrollableSheetTests` joined the serial scheduler collection; it drives the process-wide frame clock and
+  could be rewound by another class mid-animation.
+
 - Breaking: ported `widgets/draggable_scrollable_sheet.dart` — `DraggableScrollableSheet`,
   `DraggableScrollableController`, `DraggableScrollableNotification` and `DraggableScrollableActuator`, with
   Flutter's extent math, drag-versus-list hand-off, constant-velocity snapping (including `snapAnimationDuration`),

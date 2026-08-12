@@ -57,7 +57,8 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Transient message controls enter through `SnackBar.cs` + `SnackBarTheme.cs` and `MaterialBanner.cs` +
   `MaterialBannerTheme.cs`; their independent queue/presentation lifecycles live in `ScaffoldMessenger.cs`, with
   Scaffold placement in `Scaffold.cs` and focused coverage in `MaterialSnackBarTests.cs`/`MaterialBannerTests.cs`.
-- Bottom sheets enter through `BottomSheet.cs` + `BottomSheetTheme.cs`; persistent presentation integrates with `Scaffold.cs`, modal presentation with `Widgets/Navigation.cs`, and focused coverage lives in `MaterialBottomSheetTests.cs`.
+- Bottom sheets enter through `BottomSheet.cs` + `BottomSheetTheme.cs`; persistent presentation integrates with `Scaffold.cs` (body scrim, FAB visibility, `DraggableScrollableActuator`/local history), modal presentation with `Widgets/Navigation.cs`, and focused coverage lives in `MaterialBottomSheetTests.cs`.
+- Modal barriers are owned by `ModalRoute` in `Widgets/Navigation.cs` (`BuildModalBarrier` plus the barrier/label/curve members) and rendered by `Widgets/ModalBarrier.cs`; routes must not compose their own barrier in `BuildPage`. Coverage lives in `ModalRouteBarrierTests.cs` and `ModalBarrierTests.cs`.
 - Sliver app bars enter through `SliverAppBar.cs` + `FlexibleSpaceBar.cs`; persistent-header layout lives in `Widgets/Scroll.cs` and `Rendering/Sliver.cs`, with focused coverage in `MaterialSliverAppBarTests.cs`.
 - Material text inputs enter through `TextField.cs` + `TextFormField.cs` + `InputDecorator.cs` + `InputDecoratorTheme.cs`; form lifecycle lives in core `Widgets/Form.cs`, editing/IME behavior stays in `Widgets/TextInput.cs`, and focused coverage is split across `FormTests.cs` and `MaterialTextFieldTests.cs`.
 - Material read-only selection enters through `SelectableText.cs` + `SelectionArea.cs` + `TextSelectionTheme.cs`;

@@ -757,7 +757,8 @@ internal sealed class PopupMenuRoute<T> : PageRoute
     public BoxConstraints? Constraints { get; }
     public Clip ClipBehavior { get; }
     public bool? RequestFocus { get; }
-    public string BarrierLabel { get; }
+    public override bool BarrierDismissible => true;
+    public override string? BarrierLabel { get; }
     public AnimationStyle? AnimationStyle { get; }
     public Task<T?> Completed => _completed.Task;
 
@@ -782,19 +783,11 @@ internal sealed class PopupMenuRoute<T> : PageRoute
             mediaQuery.Padding,
             mediaQuery.DisplayFeatures,
             menu);
-        Widget barrier = new Semantics(
-            label: BarrierLabel,
-            onTap: () => Navigator?.MaybePop(),
-            onDismiss: () => Navigator?.MaybePop(),
-            child: new GestureDetector(
-                behavior: HitTestBehavior.Opaque,
-                onTap: () => Navigator?.MaybePop(),
-                child: new SizedBox()));
+        // The dismissal barrier is owned by ModalRoute and painted below this page.
         Widget page = new Stack(
             fit: StackFit.Expand,
             children:
             [
-                new Positioned(left: 0, top: 0, right: 0, bottom: 0, child: barrier),
                 new Positioned(left: 0, top: 0, right: 0, bottom: 0, child: menu),
             ]);
         page = new Focus(

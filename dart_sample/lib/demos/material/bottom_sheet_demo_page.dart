@@ -25,7 +25,7 @@ class _BottomSheetDemoPageState extends State<BottomSheetDemoPage> {
           style: TextStyle(fontSize: 20),
         ),
         const Text(
-          'Persistent LocalHistory/controller flow, modal scrim/result, drag handle, 9/16 height cap, SafeArea, display-feature anchoring, and theme precedence.',
+          'Persistent LocalHistory/controller flow, modal scrim/result, drag handle, 9/16 height cap, SafeArea, display-feature anchoring, theme precedence, and a draggable-scrollable child that closes the sheet at its minimum extent.',
           style: TextStyle(fontSize: 14, color: Colors.black54),
         ),
         Wrap(
@@ -63,6 +63,10 @@ class _BottomSheetDemoPageState extends State<BottomSheetDemoPage> {
             FilledButton(
               onPressed: () => _showModal(context),
               child: const Text('SHOW MODAL'),
+            ),
+            OutlinedButton(
+              onPressed: () => _showDraggable(context),
+              child: const Text('SHOW DRAGGABLE'),
             ),
           ],
         ),
@@ -105,6 +109,39 @@ class _BottomSheetDemoPageState extends State<BottomSheetDemoPage> {
       ),
     );
     if (mounted) setState(() => _lastResult = result ?? 'dismissed');
+  }
+
+  Future<void> _showDraggable(BuildContext context) async {
+    final String? result = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: _showDragHandle,
+      builder: (BuildContext context) => DraggableScrollableSheet(
+        initialChildSize: 0.5,
+        minChildSize: 0.25,
+        maxChildSize: 0.95,
+        expand: false,
+        builder: (BuildContext context, ScrollController scrollController) =>
+            ColoredBox(
+              color: const Color(0xFFF7F2FA),
+              child: ListView.builder(
+                controller: scrollController,
+                itemExtent: 48,
+                itemCount: 40,
+                itemBuilder: (BuildContext context, int index) => Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
+                  child: Text('Draggable row $index'),
+                ),
+              ),
+            ),
+      ),
+    );
+    if (mounted) {
+      setState(() => _lastResult = result ?? 'dragged to minimum');
+    }
   }
 
   Widget _sheetContent(String title, VoidCallback close) {

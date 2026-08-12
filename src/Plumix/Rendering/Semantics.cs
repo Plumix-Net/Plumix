@@ -32,6 +32,21 @@ public sealed record OrdinalSortKey(double Order, string? GroupName = null)
     }
 }
 
+/// <summary>
+/// How a semantics node participates in the platform's accessibility hit testing.
+/// </summary>
+public enum SemanticsHitTestBehavior
+{
+    /// <summary>Defer to the platform's default hit-test behavior inference.</summary>
+    Defer,
+
+    /// <summary>Consume pointer events within the node's bounds, blocking nodes behind it.</summary>
+    Opaque,
+
+    /// <summary>Let pointer events pass through to the elements behind the node.</summary>
+    Transparent,
+}
+
 public enum SemanticsInputType
 {
     None,
@@ -141,6 +156,7 @@ public sealed class SemanticsConfiguration
     public string? MaxValue { get; set; }
     public SemanticsRole Role { get; set; }
     public SemanticsInputType InputType { get; set; }
+    public SemanticsHitTestBehavior HitTestBehavior { get; set; } = SemanticsHitTestBehavior.Defer;
     public SemanticsFlags Flags { get; set; } = SemanticsFlags.None;
     public SemanticsActions Actions { get; set; } = SemanticsActions.None;
     public Rect? ExplicitRect { get; set; }
@@ -212,6 +228,7 @@ public sealed class SemanticsConfiguration
             MaxValue = MaxValue,
             Role = Role,
             InputType = InputType,
+            HitTestBehavior = HitTestBehavior,
             Flags = Flags,
             Actions = Actions,
             ExplicitRect = ExplicitRect,
@@ -251,6 +268,7 @@ public sealed class SemanticsConfiguration
         || !string.IsNullOrWhiteSpace(MaxValue)
         || Role != SemanticsRole.None
         || InputType != SemanticsInputType.None
+        || HitTestBehavior != SemanticsHitTestBehavior.Defer
         || Flags != SemanticsFlags.None
         || Actions != SemanticsActions.None
         || IndexInParent.HasValue
@@ -293,6 +311,12 @@ public sealed class SemanticsConfiguration
             return false;
         }
 
+        if (HitTestBehavior != SemanticsHitTestBehavior.Defer
+            || other.HitTestBehavior != SemanticsHitTestBehavior.Defer)
+        {
+            return false;
+        }
+
         return true;
     }
 
@@ -319,6 +343,12 @@ public sealed class SemanticsConfiguration
         if (InputType == SemanticsInputType.None)
         {
             InputType = child.InputType;
+        }
+
+        if (HitTestBehavior == SemanticsHitTestBehavior.Defer
+            && child.HitTestBehavior != SemanticsHitTestBehavior.Defer)
+        {
+            HitTestBehavior = child.HitTestBehavior;
         }
 
         if (!string.IsNullOrWhiteSpace(child.Label))
@@ -398,6 +428,7 @@ public sealed class SemanticsNode
     public string? MaxValue { get; internal set; }
     public SemanticsRole Role { get; internal set; }
     public SemanticsInputType InputType { get; internal set; }
+    public SemanticsHitTestBehavior HitTestBehavior { get; internal set; } = SemanticsHitTestBehavior.Defer;
     public SemanticsFlags Flags { get; internal set; }
     public SemanticsActions Actions { get; internal set; }
     public int? IndexInParent { get; internal set; }
@@ -542,6 +573,7 @@ public sealed class SemanticsOwner
         _syntheticRoot.MaxValue = null;
         _syntheticRoot.Role = SemanticsRole.None;
         _syntheticRoot.InputType = SemanticsInputType.None;
+        _syntheticRoot.HitTestBehavior = SemanticsHitTestBehavior.Defer;
         _syntheticRoot.Flags = SemanticsFlags.None;
         _syntheticRoot.Actions = SemanticsActions.None;
         _syntheticRoot.IndexInParent = null;
@@ -631,6 +663,11 @@ public sealed class SemanticsOwner
         if (node.InputType != SemanticsInputType.None)
         {
             builder.Append(" inputType=").Append(node.InputType);
+        }
+
+        if (node.HitTestBehavior != SemanticsHitTestBehavior.Defer)
+        {
+            builder.Append(" hitTestBehavior=").Append(node.HitTestBehavior);
         }
 
         if (node.Actions != SemanticsActions.None)

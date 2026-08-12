@@ -718,15 +718,15 @@ public sealed class DialogRoute<T> : PageRoute
         TransitionDuration = transitionDuration ?? TimeSpan.FromMilliseconds(150);
         if (TransitionDuration < TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(transitionDuration));
         _animation = new Plumix.AnimationController(TransitionDuration) { Curve = Curves.EaseOut };
-        _barrierColorAnimation = new DialogBarrierColorAnimation(_animation, BarrierColor);
+        _barrierColorAnimation = new DialogBarrierColorAnimation(_animation, BarrierColor.Value);
         _animation.Changed += HandleAnimationChanged;
         _animation.Dismissed += HandleDismissed;
     }
 
     public override bool Opaque => false;
-    public Color BarrierColor { get; }
-    public bool BarrierDismissible { get; }
-    public string BarrierLabel { get; }
+    public override Color? BarrierColor { get; }
+    public override bool BarrierDismissible { get; }
+    public override string? BarrierLabel { get; }
     public bool UseSafeArea { get; }
     public new TimeSpan TransitionDuration { get; }
     public Task<T?> Completed => _completed.Task;
@@ -762,29 +762,25 @@ public sealed class DialogRoute<T> : PageRoute
         }
     }
 
+    /// <summary>
+    /// The dialog scrim follows its own entry animation rather than the (zero-length) route transition.
+    /// </summary>
+    public override Widget BuildModalBarrier() => new AnimatedModalBarrier(
+        color: _barrierColorAnimation,
+        dismissible: BarrierDismissible,
+        semanticsLabel: BarrierLabel,
+        barrierSemanticsDismissible: SemanticsDismissible);
+
     public override Widget BuildPage(BuildContext context)
     {
         double progress = Math.Clamp(_animation.Value, 0, 1);
-        var barrier = new AnimatedModalBarrier(
-            color: _barrierColorAnimation,
-            dismissible: BarrierDismissible,
-            semanticsLabel: BarrierLabel,
-            onDismiss: () => Navigator?.MaybePop());
-
         Widget page = new Builder(_builder);
         if (UseSafeArea) page = new SafeArea(child: page);
         page = new Opacity(progress, page);
         page = new DialogTheme(_capturedDialogTheme, page);
         page = new Theme(_capturedTheme, page);
         page = new MediaQuery(_capturedMediaQuery, page);
-        page = new Directionality(_capturedDirection, page);
-        return new Stack(
-            fit: StackFit.Expand,
-            children:
-            [
-                new Positioned(left: 0, top: 0, right: 0, bottom: 0, child: barrier),
-                page,
-            ]);
+        return new Directionality(_capturedDirection, page);
     }
 
     public override void Dispose()

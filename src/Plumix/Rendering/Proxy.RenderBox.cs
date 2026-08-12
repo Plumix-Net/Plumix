@@ -2851,6 +2851,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
     private string? _maxValue;
     private SemanticsRole _role;
     private SemanticsInputType _inputType;
+    private SemanticsHitTestBehavior _hitTestBehavior;
     private SemanticsFlags _flags;
     private Action? _onTap;
     private Action? _onLongPress;
@@ -2873,6 +2874,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         string? maxValue = null,
         SemanticsRole role = SemanticsRole.None,
         SemanticsInputType inputType = SemanticsInputType.None,
+        SemanticsHitTestBehavior hitTestBehavior = SemanticsHitTestBehavior.Defer,
         SemanticsFlags flags = SemanticsFlags.None,
         Action? onTap = null,
         Action? onLongPress = null,
@@ -2894,6 +2896,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         _maxValue = maxValue;
         _role = role;
         _inputType = inputType;
+        _hitTestBehavior = hitTestBehavior;
         _flags = flags;
         _onTap = onTap;
         _onLongPress = onLongPress;
@@ -3033,6 +3036,21 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
             }
 
             _inputType = value;
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
+    public SemanticsHitTestBehavior HitTestBehavior
+    {
+        get => _hitTestBehavior;
+        set
+        {
+            if (_hitTestBehavior == value)
+            {
+                return;
+            }
+
+            _hitTestBehavior = value;
             MarkNeedsSemanticsUpdate();
         }
     }
@@ -3182,6 +3200,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
             && string.IsNullOrWhiteSpace(_maxValue)
             && _role == SemanticsRole.None
             && _inputType == SemanticsInputType.None
+            && _hitTestBehavior == SemanticsHitTestBehavior.Defer
             && _flags == SemanticsFlags.None
             && _onTap is null
             && _onLongPress is null
@@ -3200,6 +3219,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         configuration.IsSemanticBoundary = _container;
         configuration.Role = _role;
         configuration.InputType = _inputType;
+        configuration.HitTestBehavior = _hitTestBehavior;
         configuration.ExplicitChildNodes = _explicitChildNodes;
         configuration.SortKey = _sortKey;
         if (_mergeDescendants)

@@ -181,6 +181,10 @@ public sealed class BottomSheet : StatefulWidget
                     ])
                 : content;
 
+            child = new NotificationListener<DraggableScrollableNotification>(
+                onNotification: ExtentChanged,
+                child: child);
+
             Widget bottomSheet = new Material(
                 color: color,
                 elevation: elevation,
@@ -206,6 +210,16 @@ public sealed class BottomSheet : StatefulWidget
                     onVerticalDragUpdate: HandleDragUpdate,
                     onVerticalDragEnd: HandleDragEnd,
                     child: bottomSheet);
+        }
+
+        private bool ExtentChanged(DraggableScrollableNotification notification)
+        {
+            if (notification.Extent == notification.MinExtent && notification.ShouldCloseOnMinExtent)
+            {
+                CurrentWidget.OnClosing();
+            }
+
+            return false;
         }
 
         private AnimationController RequireController()
@@ -710,15 +724,15 @@ public sealed class ModalBottomSheetRoute<T> : PopupRoute
     public bool? ShowDragHandle { get; }
     public bool UseSafeArea { get; }
     public Point? AnchorPoint { get; }
-    public string BarrierLabel { get; }
+    public override string? BarrierLabel { get; }
     public string BarrierOnTapHint { get; }
     public Task<T?> Completed => _completed.Task;
 
-    public bool BarrierDismissible => IsDismissible;
+    public override bool BarrierDismissible => IsDismissible;
 
-    public Color BarrierColor => ModalBarrierColor
-                                 ?? _capturedBottomSheetTheme.ModalBarrierColor
-                                 ?? Color.FromArgb(0x8A, 0, 0, 0);
+    public override Color? BarrierColor => ModalBarrierColor
+                                           ?? _capturedBottomSheetTheme.ModalBarrierColor
+                                           ?? Color.FromArgb(0x8A, 0, 0, 0);
 
     public override TimeSpan TransitionDuration => _transitionAnimationController?.Duration
                                                    ?? _sheetAnimationStyle?.Duration
@@ -781,13 +795,10 @@ public sealed class ModalBottomSheetRoute<T> : PopupRoute
             ? new SafeArea(bottom: false, child: content)
             : MediaQuery.RemovePadding(context, content, removeTop: true);
 
-        return new Stack(
-            fit: StackFit.Expand,
-            children:
-            [
-                new Positioned(left: 0, top: 0, right: 0, bottom: 0, child: BuildModalBarrier()),
-                _capturedThemes.Wrap(bottomSheet),
-            ]);
+        // Prevent clicks inside the bottom sheet from passing through to the barrier.
+        bottomSheet = new Semantics(hitTestBehavior: SemanticsHitTestBehavior.Opaque, child: bottomSheet);
+
+        return _capturedThemes.Wrap(bottomSheet);
     }
 
     public override void Dispose()
@@ -803,58 +814,25 @@ public sealed class ModalBottomSheetRoute<T> : PopupRoute
         _clipDetailsNotifier.Value = clipDetails;
     }
 
-    private Widget BuildModalBarrier()
+    public override Widget BuildModalBarrier()
     {
-        Color barrierColor = BarrierColor;
-        if (barrierColor.A != 0)
+        if (BarrierColor is { A: not 0 } barrierColor)
         {
             return new AnimatedModalBarrier(
-                color: new BarrierColorAnimation(Animation, barrierColor),
+                color: CreateBarrierColorAnimation(barrierColor),
                 dismissible: BarrierDismissible,
                 semanticsLabel: BarrierLabel,
-                barrierSemanticsDismissible: true,
+                barrierSemanticsDismissible: SemanticsDismissible,
                 clipDetailsNotifier: _clipDetailsNotifier,
-                semanticsOnTapHint: BarrierOnTapHint,
-                onDismiss: () => Navigator?.MaybePop());
+                semanticsOnTapHint: BarrierOnTapHint);
         }
 
         return new ModalBarrier(
             dismissible: BarrierDismissible,
             semanticsLabel: BarrierLabel,
-            barrierSemanticsDismissible: true,
+            barrierSemanticsDismissible: SemanticsDismissible,
             clipDetailsNotifier: _clipDetailsNotifier,
-            semanticsOnTapHint: BarrierOnTapHint,
-            onDismiss: () => Navigator?.MaybePop());
-    }
-
-    private sealed class BarrierColorAnimation : Animation<Color?>
-    {
-        private readonly Animation<double> _parent;
-        private readonly Color _color;
-
-        public BarrierColorAnimation(Animation<double> parent, Color color)
-        {
-            _parent = parent;
-            _color = color;
-        }
-
-        public override Color? Value => Color.FromArgb(
-            (byte)Math.Round(_color.A * Curves.Ease(Math.Clamp(_parent.Value, 0, 1))),
-            _color.R,
-            _color.G,
-            _color.B);
-
-        public override AnimationStatus Status => _parent.Status;
-
-        public override void AddListener(Action listener) => _parent.AddListener(listener);
-
-        public override void RemoveListener(Action listener) => _parent.RemoveListener(listener);
-
-        public override void AddStatusListener(Action<AnimationStatus> listener) =>
-            _parent.AddStatusListener(listener);
-
-        public override void RemoveStatusListener(Action<AnimationStatus> listener) =>
-            _parent.RemoveStatusListener(listener);
+            semanticsOnTapHint: BarrierOnTapHint);
     }
 }
 
@@ -926,23 +904,52 @@ internal sealed class StandardBottomSheetState : State
             child: new Semantics(
                 container: true,
                 onDismiss: widget.IsPersistent ? null : Close,
-                child: new BottomSheet(
-                    animationController: widget.AnimationController,
-                    onClosing: widget.OnClosing ?? (() => { }),
-                    builder: widget.Builder,
-                    enableDrag: widget.EnableDrag,
-                    showDragHandle: widget.ShowDragHandle,
-                    backgroundColor: widget.BackgroundColor,
-                    elevation: widget.Elevation,
-                    shape: widget.Shape,
-                    clipBehavior: widget.ClipBehavior,
-                    constraints: widget.Constraints,
-                    onDragStart: HandleDragStart,
-                    onDragEnd: HandleDragEnd)),
+                child: new NotificationListener<DraggableScrollableNotification>(
+                    onNotification: ExtentChanged,
+                    child: new BottomSheet(
+                        animationController: widget.AnimationController,
+                        onClosing: widget.OnClosing ?? (() => { }),
+                        builder: widget.Builder,
+                        enableDrag: widget.EnableDrag,
+                        showDragHandle: widget.ShowDragHandle,
+                        backgroundColor: widget.BackgroundColor,
+                        elevation: widget.Elevation,
+                        shape: widget.Shape,
+                        clipBehavior: widget.ClipBehavior,
+                        constraints: widget.Constraints,
+                        onDragStart: HandleDragStart,
+                        onDragEnd: HandleDragEnd))),
             builder: (_, child) => new Align(
                 alignment: AlignmentDirectional.TopStart,
                 heightFactor: _animationCurve(Math.Clamp(widget.AnimationController.Value, 0.0, 1.0)),
                 child: child));
+    }
+
+    private bool ExtentChanged(DraggableScrollableNotification notification)
+    {
+        double extentRemaining = 1.0 - notification.Extent;
+        var scaffold = Scaffold.Of(Context);
+        if (extentRemaining < Scaffold.BottomSheetDominatesPercentage)
+        {
+            scaffold.FloatingActionButtonVisibilityController.SetValue(
+                extentRemaining * Scaffold.BottomSheetDominatesPercentage * 10);
+            scaffold.ShowBodyScrim(true, 1 - (extentRemaining / Scaffold.BottomSheetDominatesPercentage));
+        }
+        else
+        {
+            scaffold.FloatingActionButtonVisibilityController.SetValue(1.0);
+            scaffold.ShowBodyScrim(false, 0.0);
+        }
+
+        // A Scaffold.bottomSheet is persistent, so it is never closed by reaching the minimum extent.
+        if (notification.Extent == notification.MinExtent
+            && !scaffold.HasStaticBottomSheet
+            && notification.ShouldCloseOnMinExtent)
+        {
+            Close();
+        }
+
+        return false;
     }
 
     private void HandleDragStart(DragStartDetails details) => _animationCurve = Curves.Linear;

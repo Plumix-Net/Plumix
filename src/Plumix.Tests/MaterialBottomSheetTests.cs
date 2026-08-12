@@ -702,6 +702,199 @@ public sealed class MaterialBottomSheetTests : IDisposable
         Assert.Equal(expected, align.Size.Height, precision: 1);
     }
 
+    [Fact]
+    public void ModalBottomSheet_PageSemanticsAreOpaqueToHitTesting()
+    {
+        BuildContext captured = default;
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new Navigator(new BuilderPageRoute(_ => new CaptureContext(
+                value => captured = value,
+                child: new Text("Underlying"))))));
+        harness.Pump(new Size(500, 400));
+
+        MaterialBottomSheets.ShowModalBottomSheet<string>(
+            captured,
+            _ => new SizedBox(height: 120, child: new Text("Modal sheet")));
+        PumpAnimation();
+        var semantics = harness.PumpAndGetSemantics(new Size(500, 400));
+
+        // The route wraps the sheet in Semantics(hitTestBehavior: opaque) so clicks inside the sheet do not
+        // pass through to the barrier.
+        var opaque = FindSemantics(
+            semantics,
+            node => node.HitTestBehavior == SemanticsHitTestBehavior.Opaque);
+        Assert.NotNull(opaque);
+        // The route's own scope node is a descendant of the opaque one.
+        Assert.NotNull(FindSemantics(opaque, node => node.Flags.HasFlag(SemanticsFlags.ScopesRoute)));
+    }
+
+    [Fact]
+    public void ModalBottomSheet_DraggableChildAtItsMinimumExtentClosesTheSheet()
+    {
+        var controller = new DraggableScrollableController();
+        using var harness = ShowModalDraggableSheet(controller, shouldCloseOnMinExtent: true, out var context);
+        Assert.NotNull(FindParagraph(harness.RenderView, "Sheet content"));
+
+        controller.JumpTo(0.25);
+        PumpAnimation();
+        harness.Pump(new Size(500, 400));
+
+        Assert.Null(FindParagraph(harness.RenderView, "Sheet content"));
+        Assert.False(Navigator.Of(context).CanPop);
+    }
+
+    [Fact]
+    public void ModalBottomSheet_DraggableChildKeepsTheSheetWhenItShouldNotCloseOnMinExtent()
+    {
+        var controller = new DraggableScrollableController();
+        using var harness = ShowModalDraggableSheet(controller, shouldCloseOnMinExtent: false, out _);
+
+        controller.JumpTo(0.25);
+        PumpAnimation();
+        harness.Pump(new Size(500, 400));
+
+        Assert.NotNull(FindParagraph(harness.RenderView, "Sheet content"));
+    }
+
+    [Fact]
+    public void PersistentBottomSheet_DraggableChildAtItsMinimumExtentClosesTheSheet()
+    {
+        var controller = new DraggableScrollableController();
+        BuildContext captured = default;
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new Navigator(new BuilderPageRoute(_ => new Scaffold(
+                body: new CaptureContext(value => captured = value, new Text("Body")))))));
+        harness.Pump(new Size(500, 400));
+
+        MaterialBottomSheets.ShowBottomSheet(captured, _ => DraggableSheet(controller, shouldCloseOnMinExtent: true));
+        PumpAnimation();
+        harness.Pump(new Size(500, 400));
+        Assert.NotNull(FindParagraph(harness.RenderView, "Sheet content"));
+
+        controller.JumpTo(0.25);
+        PumpAnimation();
+        harness.Pump(new Size(500, 400));
+        Assert.Null(FindParagraph(harness.RenderView, "Sheet content"));
+    }
+
+    [Fact]
+    public void PersistentBottomSheet_DominatingDraggableChildDrivesTheBodyScrimAndTheFloatingActionButton()
+    {
+        var controller = new DraggableScrollableController();
+        BuildContext captured = default;
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new Navigator(new BuilderPageRoute(_ => new Scaffold(
+                body: new CaptureContext(value => captured = value, new Text("Body")),
+                floatingActionButton: new FloatingActionButton(child: new Text("+"), onPressed: () => { }))))));
+        harness.Pump(new Size(500, 400));
+
+        MaterialBottomSheets.ShowBottomSheet(captured, _ => DraggableSheet(controller, shouldCloseOnMinExtent: true));
+        PumpAnimation();
+        harness.Pump(new Size(500, 400));
+
+        // Below the dominating threshold there is no scrim and the button keeps its full size.
+        Assert.DoesNotContain(FindDescendants<RenderConstrainedBox>(harness.RenderView), IsScrimBox);
+        var scaffold = Scaffold.Of(captured);
+        Assert.Equal(1.0, scaffold.FloatingActionButtonVisibilityController.Value, precision: 6);
+
+        controller.JumpTo(0.9);
+        PumpAnimation();
+        harness.Pump(new Size(500, 400));
+
+        double extentRemaining = 1.0 - 0.9;
+        Assert.Equal(
+            extentRemaining * Scaffold.BottomSheetDominatesPercentage * 10,
+            scaffold.FloatingActionButtonVisibilityController.Value,
+            precision: 6);
+        Assert.Contains(FindDescendants<RenderConstrainedBox>(harness.RenderView), IsScrimBox);
+
+        controller.JumpTo(0.5);
+        PumpAnimation();
+        harness.Pump(new Size(500, 400));
+        Assert.Equal(1.0, scaffold.FloatingActionButtonVisibilityController.Value, precision: 6);
+        Assert.DoesNotContain(FindDescendants<RenderConstrainedBox>(harness.RenderView), IsScrimBox);
+    }
+
+    [Fact]
+    public void StaticBottomSheet_DraggableChildRegistersALocalHistoryEntryAboveItsInitialExtent()
+    {
+        var controller = new DraggableScrollableController();
+        BuildContext captured = default;
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new Navigator(new BuilderPageRoute(_ => new Scaffold(
+                body: new CaptureContext(value => captured = value, new Text("Body")),
+                bottomSheet: DraggableSheet(controller, shouldCloseOnMinExtent: true))))));
+        harness.Pump(new Size(500, 400));
+        var route = ModalRoute.Of(captured);
+        Assert.False(route.WillHandlePopInternally);
+
+        controller.JumpTo(0.9);
+        PumpAnimation();
+        harness.Pump(new Size(500, 400));
+        Assert.True(route.WillHandlePopInternally);
+
+        // Popping the local history entry resets the sheet instead of closing it: a Scaffold.bottomSheet is
+        // persistent, so reaching the minimum extent never closes it either.
+        Navigator.Of(captured).MaybePop();
+        PumpAnimation();
+        harness.Pump(new Size(500, 400));
+        Assert.False(route.WillHandlePopInternally);
+        Assert.Equal(0.5, controller.Size, precision: 6);
+        Assert.NotNull(FindParagraph(harness.RenderView, "Sheet content"));
+
+        controller.JumpTo(0.25);
+        PumpAnimation();
+        harness.Pump(new Size(500, 400));
+        Assert.NotNull(FindParagraph(harness.RenderView, "Sheet content"));
+    }
+
+    private static bool IsScrimBox(RenderConstrainedBox box) =>
+        box.AdditionalConstraints.MinWidth == double.PositiveInfinity
+        && box.AdditionalConstraints.MinHeight == double.PositiveInfinity
+        && box.Child is RenderColoredBox;
+
+    private static Widget DraggableSheet(DraggableScrollableController controller, bool shouldCloseOnMinExtent) =>
+        new DraggableScrollableSheet(
+            builder: (_, scrollController) => new ListView(
+                controller: scrollController,
+                itemExtent: 25.0,
+                children: [new Text("Sheet content"), .. Enumerable
+                    .Range(0, 40)
+                    .Select(Widget (_) => new SizedBox(height: 25.0))]),
+            initialChildSize: 0.5,
+            minChildSize: 0.25,
+            maxChildSize: 1.0,
+            expand: false,
+            controller: controller,
+            shouldCloseOnMinExtent: shouldCloseOnMinExtent);
+
+    private static WidgetRenderHarness ShowModalDraggableSheet(
+        DraggableScrollableController controller,
+        bool shouldCloseOnMinExtent,
+        out BuildContext context)
+    {
+        BuildContext captured = default;
+        var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new Navigator(new BuilderPageRoute(_ => new CaptureContext(
+                value => captured = value,
+                child: new Text("Underlying"))))));
+        harness.Pump(new Size(500, 400));
+
+        MaterialBottomSheets.ShowModalBottomSheet<string>(
+            captured,
+            _ => DraggableSheet(controller, shouldCloseOnMinExtent),
+            isScrollControlled: true);
+        PumpAnimation();
+        harness.Pump(new Size(500, 400));
+        context = captured;
+        return harness;
+    }
+
     private static Rect ShowModalAndMeasureSheet(MediaQueryData media, Point? anchorPoint)
     {
         BuildContext captured = default;

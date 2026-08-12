@@ -7,6 +7,12 @@ namespace Plumix.Material;
 
 // Dart parity source: flutter/packages/flutter/lib/src/material/floating_action_button_location.dart
 
+public static class FloatingActionButtonConstants
+{
+    /// <summary>Flutter's <c>kFloatingActionButtonSegue</c>: how long a FAB takes to appear or disappear.</summary>
+    public static readonly TimeSpan Segue = TimeSpan.FromMilliseconds(200);
+}
+
 public sealed record ScaffoldPrelayoutGeometry(
     Size ScaffoldSize,
     double ContentTop,

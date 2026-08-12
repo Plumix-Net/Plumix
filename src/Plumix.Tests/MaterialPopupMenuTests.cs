@@ -365,9 +365,15 @@ public sealed class MaterialPopupMenuTests : IDisposable
         Assert.Equal(5, positionLayout.Position.Left, precision: 3);
         Assert.Equal(39, positionLayout.Position.Top, precision: 3);
         var expandedSemantics = harness.PumpAndGetSemantics(new Size(500, 360));
-        Assert.True(FindSemantics(expandedSemantics, node =>
-            node.Flags.HasFlag(SemanticsFlags.HasExpandedState)
-            && node.Flags.HasFlag(SemanticsFlags.IsExpanded)) is not null, DumpSemantics(expandedSemantics));
+        // The route-owned modal barrier blocks the semantics painted before it, so the anchor leaves the tree
+        // while the menu is open; the menu route and its dismiss barrier are what assistive technology sees.
+        Assert.True(FindSemantics(expandedSemantics, node => node.Label == "Popup menu") is not null,
+            DumpSemantics(expandedSemantics));
+        Assert.True(FindSemantics(expandedSemantics, node => node.Label == "Dismiss menu") is not null,
+            DumpSemantics(expandedSemantics));
+        Assert.True(
+            FindSemantics(expandedSemantics, node => node.Flags.HasFlag(SemanticsFlags.HasExpandedState)) is null,
+            DumpSemantics(expandedSemantics));
 
         Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("ArrowDown", true)));
         Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("Enter", true)));
@@ -377,6 +383,11 @@ public sealed class MaterialPopupMenuTests : IDisposable
         Assert.Equal("three", selected);
 
         var reopenSemantics = harness.PumpAndGetSemantics(new Size(500, 360));
+        var collapsedAnchor = FindSemantics(
+            reopenSemantics,
+            node => node.Flags.HasFlag(SemanticsFlags.HasExpandedState));
+        Assert.True(collapsedAnchor is not null, DumpSemantics(reopenSemantics));
+        Assert.False(collapsedAnchor!.Flags.HasFlag(SemanticsFlags.IsExpanded));
         var reopen = FindSemantics(reopenSemantics, node => node.Actions.HasFlag(SemanticsActions.Tap));
         Assert.NotNull(reopen);
         Assert.True(reopen!.PerformAction(SemanticsActions.Tap));

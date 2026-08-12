@@ -496,7 +496,9 @@ public sealed class MaterialDropdownTests : IDisposable
         PumpAnimation();
         semantics = harness.PumpAndGetSemantics(new Size(500, 360));
 
-        Assert.NotNull(FindSemantics(semantics, node => node.Flags.HasFlag(SemanticsFlags.IsExpanded)));
+        // The menu route's modal barrier blocks the anchor's semantics while the menu is open, so the expanded
+        // state is observed on the route instead; the barrier itself carries the dismiss label.
+        Assert.NotNull(FindSemantics(semantics, node => node.Label == "Dismiss"));
         var layout = Assert.Single(FindDescendants<RenderDropdownMenuPositionLayout<string>>(harness.RenderView));
         Assert.True(layout.Route.MenuBelowAnchor);
         Assert.Equal(210, layout.Child!.Size.Width, precision: 3);

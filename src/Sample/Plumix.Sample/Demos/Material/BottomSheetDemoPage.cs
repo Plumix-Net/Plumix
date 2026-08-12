@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Avalonia.Media;
 using Plumix.Material;
 using Plumix.Rendering;
@@ -30,7 +31,8 @@ public sealed class BottomSheetDemoPage : StatefulWidget
                     new Text("BottomSheet + ModalBottomSheet", fontSize: 20),
                     new Text(
                         "Persistent LocalHistory/controller flow, modal scrim/result, drag handle, 9/16 height cap, "
-                        + "SafeArea, display-feature anchoring, and theme precedence.",
+                        + "SafeArea, display-feature anchoring, theme precedence, and a draggable-scrollable child "
+                        + "that closes the sheet at its minimum extent.",
                         fontSize: 14,
                         color: Colors.DimGray),
                     new Row(
@@ -50,6 +52,7 @@ public sealed class BottomSheetDemoPage : StatefulWidget
                         [
                             new ElevatedButton(new Text("SHOW PERSISTENT"), () => ShowPersistent(context)),
                             new FilledButton(new Text("SHOW MODAL"), () => ShowModal(context)),
+                            new OutlinedButton(new Text("SHOW DRAGGABLE"), () => ShowDraggable(context)),
                         ]),
                     new Text($"Last modal result: {_lastResult}", fontSize: 13),
                 ]);
@@ -78,6 +81,31 @@ public sealed class BottomSheetDemoPage : StatefulWidget
                 useSafeArea: true,
                 anchorPoint: _anchorEnd ? new Avalonia.Point(double.MaxValue, 0) : null);
             if (Mounted) SetState(() => _lastResult = result ?? "dismissed");
+        }
+
+        private async void ShowDraggable(BuildContext context)
+        {
+            string? result = await MaterialBottomSheets.ShowModalBottomSheet<string>(
+                context,
+                _ => new DraggableScrollableSheet(
+                    builder: (_, scrollController) => new Container(
+                        color: Color.Parse("#FFF7F2FA"),
+                        child: new ListView(
+                            controller: scrollController,
+                            itemExtent: 48.0,
+                            children: Enumerable
+                                .Range(0, 40)
+                                .Select(Widget (index) => new Padding(
+                                    new Avalonia.Thickness(24, 12),
+                                    new Text($"Draggable row {index}")))
+                                .ToList())),
+                    initialChildSize: 0.5,
+                    minChildSize: 0.25,
+                    maxChildSize: 0.95,
+                    expand: false),
+                isScrollControlled: true,
+                showDragHandle: _showDragHandle);
+            if (Mounted) SetState(() => _lastResult = result ?? "dragged to minimum");
         }
 
         private static Widget BuildSheetContent(string title, Action close) => new Padding(

@@ -39,7 +39,8 @@ public sealed class Scaffold : StatefulWidget
         Widget? bottomNavigationBar = null,
         Color? backgroundColor = null,
         Key? key = null,
-        Widget? bottomSheet = null) : base(key)
+        Widget? bottomSheet = null,
+        BottomSheetScrimBuilder? bottomSheetScrimBuilder = null) : base(key)
     {
         if (drawerEdgeDragWidth.HasValue
             && (double.IsNaN(drawerEdgeDragWidth.Value)
@@ -65,6 +66,7 @@ public sealed class Scaffold : StatefulWidget
                                       ?? Plumix.Material.FloatingActionButtonAnimator.Scaling;
         BottomNavigationBar = bottomNavigationBar;
         BottomSheet = bottomSheet;
+        BottomSheetScrimBuilder = bottomSheetScrimBuilder ?? DefaultBottomSheetScrimBuilder;
         BackgroundColor = backgroundColor;
     }
 
@@ -95,6 +97,13 @@ public sealed class Scaffold : StatefulWidget
     public Widget? BottomNavigationBar { get; }
 
     public Widget? BottomSheet { get; }
+
+    /// <summary>
+    /// Builds the scrim shown over the body while a draggable bottom sheet dominates the screen. The animation
+    /// runs from 0.0 (the sheet covers 70% of the screen) to 1.0 (the sheet covers the screen); returning
+    /// <see langword="null"/> suppresses the scrim.
+    /// </summary>
+    public BottomSheetScrimBuilder BottomSheetScrimBuilder { get; }
 
     public Color? BackgroundColor { get; }
 
@@ -128,7 +137,31 @@ public sealed class Scaffold : StatefulWidget
     {
         return context.DependOnInherited<ScaffoldScope>()?.Geometry;
     }
+
+    internal const double BottomSheetDominatesPercentage = 0.3;
+    internal const double MinBottomSheetScrimOpacity = 0.1;
+    internal const double MaxBottomSheetScrimOpacity = 0.6;
+
+    private static Widget? DefaultBottomSheetScrimBuilder(BuildContext context, Animation<double> animation)
+    {
+        return new AnimatedBuilder(
+            animation: animation,
+            builder: (_, _) =>
+            {
+                double extentRemaining = BottomSheetDominatesPercentage * (1.0 - animation.Value);
+                double floatingButtonVisibilityValue = extentRemaining * BottomSheetDominatesPercentage * 10;
+                double opacity = Math.Max(
+                    MinBottomSheetScrimOpacity,
+                    MaxBottomSheetScrimOpacity - floatingButtonVisibilityValue);
+                return new ModalBarrier(
+                    dismissible: false,
+                    color: Color.FromArgb((byte)Math.Round(opacity * 255), 0, 0, 0));
+            });
+    }
 }
+
+/// <summary>Builds the scrim painted over the scaffold body while a bottom sheet dominates the screen.</summary>
+public delegate Widget? BottomSheetScrimBuilder(BuildContext context, Animation<double> animation);
 
 internal sealed record ScaffoldGeometryData(
     Rect? FloatingActionButtonArea,
@@ -208,6 +241,18 @@ public sealed class ScaffoldState : State
     private PersistentBottomSheetPresentation? _persistentBottomSheet;
     private AnimationController? _staticBottomSheetAnimation;
     private ScaffoldMessengerState? _scaffoldMessenger;
+    private AnimationController _bottomSheetScrimAnimationController = null!;
+    private AnimationController _floatingActionButtonVisibilityController = null!;
+    private CurvedAnimation _floatingActionButtonScaleAnimation = null!;
+    private bool _showBodyScrim;
+    private LocalHistoryEntry? _persistentSheetHistoryEntry;
+
+    // Flutter identifies the scaffold's children by `_ScaffoldSlot`; the overlay stack keys them so that a
+    // slot appearing or disappearing never shifts another slot's element onto a different widget.
+    private static readonly Key SnackBarSlotKey = new ValueKey<string>("scaffold.snackBar");
+    private static readonly Key BodyScrimSlotKey = new ValueKey<string>("scaffold.bodyScrim");
+    private static readonly Key BottomSheetSlotKey = new ValueKey<string>("scaffold.bottomSheet");
+    private static readonly Key MaterialBannerSlotKey = new ValueKey<string>("scaffold.materialBanner");
 
     private Scaffold CurrentWidget => (Scaffold)StateWidget;
 
@@ -230,6 +275,14 @@ public sealed class ScaffoldState : State
         _isDisposed = false;
         _drawerProgress = 0;
         _endDrawerProgress = 0;
+        _bottomSheetScrimAnimationController = new AnimationController(TimeSpan.Zero, this);
+        _floatingActionButtonVisibilityController =
+            new AnimationController(FloatingActionButtonConstants.Segue, this);
+        _floatingActionButtonVisibilityController.SetValue(1.0);
+        _floatingActionButtonVisibilityController.Changed += HandleFloatingActionButtonVisibilityChanged;
+        _floatingActionButtonScaleAnimation = new CurvedAnimation(
+            _floatingActionButtonVisibilityController,
+            curve: Curves.EaseIn);
         SyncStaticBottomSheetAnimation();
     }
 
@@ -239,11 +292,46 @@ public sealed class ScaffoldState : State
         _scaffoldMessenger?.Unregister(this);
         _scaffoldMessenger = null;
         RemoveDrawerHistoryEntry();
+        RemovePersistentSheetHistoryEntry();
         StopSettleAnimation(DrawerSide.Start);
         StopSettleAnimation(DrawerSide.End);
         DisposeStaticBottomSheetAnimation();
         DisposePersistentBottomSheet(complete: true);
+        _floatingActionButtonVisibilityController.Changed -= HandleFloatingActionButtonVisibilityChanged;
+        _floatingActionButtonScaleAnimation.Dispose();
+        _floatingActionButtonVisibilityController.Dispose();
+        _bottomSheetScrimAnimationController.Dispose();
     }
+
+    /// <summary>
+    /// Shows or hides the scrim painted over the body while a draggable bottom sheet dominates the screen.
+    /// </summary>
+    public void ShowBodyScrim(bool value, double animationValue)
+    {
+        if (_showBodyScrim != value)
+        {
+            SetState(() => _showBodyScrim = value);
+        }
+
+        if (_bottomSheetScrimAnimationController.Value != animationValue)
+        {
+            _bottomSheetScrimAnimationController.SetValue(animationValue);
+        }
+    }
+
+    /// <summary>The controller a dominating bottom sheet drives to shrink the floating action button.</summary>
+    internal AnimationController FloatingActionButtonVisibilityController =>
+        _floatingActionButtonVisibilityController;
+
+    /// <summary>Whether the scaffold hosts a <see cref="Scaffold.BottomSheet"/> rather than a shown sheet.</summary>
+    internal bool HasStaticBottomSheet => CurrentWidget.BottomSheet is not null;
+
+    private void HandleFloatingActionButtonVisibilityChanged()
+    {
+        if (!_isDisposed) SetState(() => { });
+    }
+
+    private void ShowFloatingActionButton() => _floatingActionButtonVisibilityController.Forward();
 
     public override void DidChangeDependencies()
     {
@@ -534,7 +622,9 @@ public sealed class ScaffoldState : State
                         child: new FloatingActionButtonPosition(
                             geometry,
                             CurrentWidget.FloatingActionButtonLocation,
-                            CurrentWidget.FloatingActionButton)),
+                            new ScaleTransition(
+                                scale: _floatingActionButtonScaleAnimation,
+                                child: CurrentWidget.FloatingActionButton))),
                 ]);
         }
 
@@ -550,7 +640,29 @@ public sealed class ScaffoldState : State
                 left: 0,
                 right: 0,
                 bottom: 0,
+                key: SnackBarSlotKey,
                 child: presentedSnackBar));
+        }
+
+        if (_showBodyScrim
+            && CurrentWidget.BottomSheetScrimBuilder(context, _bottomSheetScrimAnimationController) is { } bodyScrim)
+        {
+            double scrimBottom = bottomNavigationBarTop.HasValue
+                ? Math.Max(0.0, mediaQuery.Size.Height - bottomNavigationBarTop.Value)
+                : 0.0;
+            overlayChildren.Add(new Positioned(
+                left: 0,
+                top: 0,
+                right: 0,
+                bottom: scrimBottom,
+                key: BodyScrimSlotKey,
+                child: MediaQuery.RemovePadding(
+                    context,
+                    bodyScrim,
+                    removeLeft: true,
+                    removeTop: true,
+                    removeRight: true,
+                    removeBottom: true)));
         }
 
         var bottomSheet = BuildPresentedBottomSheet(context);
@@ -560,6 +672,7 @@ public sealed class ScaffoldState : State
                 left: 0,
                 right: 0,
                 bottom: 0,
+                key: BottomSheetSlotKey,
                 child: bottomSheet));
         }
 
@@ -570,6 +683,7 @@ public sealed class ScaffoldState : State
                 left: 0,
                 top: appBarHeight,
                 right: 0,
+                key: MaterialBannerSlotKey,
                 child: MediaQuery.RemovePadding(
                     context,
                     presentedMaterialBanner,
@@ -615,12 +729,11 @@ public sealed class ScaffoldState : State
                 child: CurrentWidget.EndDrawer));
         }
 
-        if (overlayChildren.Count > 1)
-        {
-            content = new Stack(
-                fit: StackFit.Expand,
-                children: overlayChildren);
-        }
+        // The overlay stack is unconditional: adding the first sheet/drawer/scrim child must not restructure
+        // the body's subtree, which would rebuild its elements (and re-register its heroes) from scratch.
+        content = new Stack(
+            fit: StackFit.Expand,
+            children: overlayChildren);
 
         return new ScaffoldScope(
             scaffold: this,
@@ -659,9 +772,44 @@ public sealed class ScaffoldState : State
         _staticBottomSheetAnimation ??= CreateCompletedBottomSheetAnimation();
         return new StandardBottomSheet(
             animationController: _staticBottomSheetAnimation,
-            builder: _ => CurrentWidget.BottomSheet,
+            builder: _ => new NotificationListener<DraggableScrollableNotification>(
+                onNotification: PersistentBottomSheetExtentChanged,
+                child: new DraggableScrollableActuator(child: CurrentWidget.BottomSheet)),
             onClosing: () => _staticBottomSheetAnimation.Reverse(),
             isPersistent: true);
+    }
+
+    private bool PersistentBottomSheetExtentChanged(DraggableScrollableNotification notification)
+    {
+        if (notification.Extent - notification.InitialExtent > Constants.PrecisionErrorTolerance)
+        {
+            if (_persistentSheetHistoryEntry is null && ModalRoute.MaybeOf(Context) is { } route)
+            {
+                _persistentSheetHistoryEntry = new LocalHistoryEntry(onRemove: () =>
+                {
+                    _persistentSheetHistoryEntry = null;
+                    if (_isDisposed) return;
+                    DraggableScrollableActuator.Reset(notification.SourceContext);
+                    ShowBodyScrim(false, 0.0);
+                    _floatingActionButtonVisibilityController.SetValue(1.0);
+                    _persistentSheetHistoryEntry = null;
+                });
+                route.AddLocalHistoryEntry(_persistentSheetHistoryEntry);
+            }
+        }
+        else
+        {
+            _persistentSheetHistoryEntry?.Remove();
+        }
+
+        return false;
+    }
+
+    private void RemovePersistentSheetHistoryEntry()
+    {
+        if (_persistentSheetHistoryEntry is null) return;
+        _persistentSheetHistoryEntry.Remove();
+        _persistentSheetHistoryEntry = null;
     }
 
     private void ClosePersistentBottomSheet() => ClosePersistentBottomSheet(immediate: false);
@@ -671,6 +819,8 @@ public sealed class ScaffoldState : State
         var presentation = _persistentBottomSheet;
         if (presentation is null || presentation.Closing) return;
         presentation.Closing = true;
+        ShowFloatingActionButton();
+        ShowBodyScrim(false, 0.0);
         if (immediate)
         {
             DisposePersistentBottomSheet(complete: true);
