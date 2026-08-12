@@ -2880,6 +2880,8 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
     private string? _value;
     private string? _minValue;
     private string? _maxValue;
+    private string? _increasedValue;
+    private string? _decreasedValue;
     private SemanticsRole _role;
     private SemanticsInputType _inputType;
     private SemanticsHitTestBehavior _hitTestBehavior;
@@ -2887,6 +2889,8 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
     private Action? _onTap;
     private Action? _onLongPress;
     private Action? _onDismiss;
+    private Action? _onIncrease;
+    private Action? _onDecrease;
     private IReadOnlyDictionary<CustomSemanticsAction, Action>? _customSemanticsActions;
     private Action? _onFocus;
     private bool _liveRegion;
@@ -2903,6 +2907,8 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         string? value = null,
         string? minValue = null,
         string? maxValue = null,
+        string? increasedValue = null,
+        string? decreasedValue = null,
         SemanticsRole role = SemanticsRole.None,
         SemanticsInputType inputType = SemanticsInputType.None,
         SemanticsHitTestBehavior hitTestBehavior = SemanticsHitTestBehavior.Defer,
@@ -2910,6 +2916,8 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         Action? onTap = null,
         Action? onLongPress = null,
         Action? onDismiss = null,
+        Action? onIncrease = null,
+        Action? onDecrease = null,
         IReadOnlyDictionary<CustomSemanticsAction, Action>? customSemanticsActions = null,
         bool liveRegion = false,
         bool container = false,
@@ -2925,6 +2933,8 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         _value = value;
         _minValue = minValue;
         _maxValue = maxValue;
+        _increasedValue = increasedValue;
+        _decreasedValue = decreasedValue;
         _role = role;
         _inputType = inputType;
         _hitTestBehavior = hitTestBehavior;
@@ -2932,6 +2942,8 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         _onTap = onTap;
         _onLongPress = onLongPress;
         _onDismiss = onDismiss;
+        _onIncrease = onIncrease;
+        _onDecrease = onDecrease;
         _customSemanticsActions = customSemanticsActions;
         _liveRegion = liveRegion;
         _container = container;
@@ -3005,6 +3017,52 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
             if (_value == value) return;
             _value = value;
             MarkNeedsSemanticsUpdate();
+        }
+    }
+
+    public string? IncreasedValue
+    {
+        get => _increasedValue;
+        set
+        {
+            if (_increasedValue == value) return;
+            _increasedValue = value;
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
+    public string? DecreasedValue
+    {
+        get => _decreasedValue;
+        set
+        {
+            if (_decreasedValue == value) return;
+            _decreasedValue = value;
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
+    public Action? OnIncrease
+    {
+        get => _onIncrease;
+        set
+        {
+            if (_onIncrease == value) return;
+            bool hadHandler = _onIncrease is not null;
+            _onIncrease = value;
+            if (hadHandler != (value is not null)) MarkNeedsSemanticsUpdate();
+        }
+    }
+
+    public Action? OnDecrease
+    {
+        get => _onDecrease;
+        set
+        {
+            if (_onDecrease == value) return;
+            bool hadHandler = _onDecrease is not null;
+            _onDecrease = value;
+            if (hadHandler != (value is not null)) MarkNeedsSemanticsUpdate();
         }
     }
 
@@ -3229,6 +3287,8 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
             && string.IsNullOrWhiteSpace(_value)
             && string.IsNullOrWhiteSpace(_minValue)
             && string.IsNullOrWhiteSpace(_maxValue)
+            && string.IsNullOrWhiteSpace(_increasedValue)
+            && string.IsNullOrWhiteSpace(_decreasedValue)
             && _role == SemanticsRole.None
             && _inputType == SemanticsInputType.None
             && _hitTestBehavior == SemanticsHitTestBehavior.Defer
@@ -3236,6 +3296,8 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
             && _onTap is null
             && _onLongPress is null
             && _onDismiss is null
+            && _onIncrease is null
+            && _onDecrease is null
             && _customSemanticsActions is null
             && _onFocus is null
             && !_liveRegion
@@ -3266,6 +3328,8 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         configuration.Value = _value;
         configuration.MinValue = _minValue;
         configuration.MaxValue = _maxValue;
+        configuration.IncreasedValue = _increasedValue;
+        configuration.DecreasedValue = _decreasedValue;
 
 
         if (!string.IsNullOrWhiteSpace(_hint))
@@ -3299,6 +3363,14 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         if (_onDismiss is not null)
         {
             configuration.AddActionHandler(SemanticsActions.Dismiss, _onDismiss);
+        }
+        if (_onIncrease is not null)
+        {
+            configuration.AddActionHandler(SemanticsActions.Increase, _onIncrease);
+        }
+        if (_onDecrease is not null)
+        {
+            configuration.AddActionHandler(SemanticsActions.Decrease, _onDecrease);
         }
         if (_onFocus is not null)
         {

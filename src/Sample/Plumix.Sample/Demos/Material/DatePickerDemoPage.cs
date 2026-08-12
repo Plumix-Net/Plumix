@@ -22,6 +22,7 @@ public sealed class DatePickerDemoPage : StatefulWidget
         private bool _showYearPicker;
         private bool _useMaterial3 = true;
         private bool _useThemeOverride;
+        private bool _use24HourTime;
         private TimeOfDay _selectedTime = new(14, 30);
         private DateTimeRange<DateTime> _selectedRange = new(new DateTime(2026, 3, 10), new DateTime(2026, 3, 16));
         private readonly LabeledGlobalKey<FormState> _dateFormKey = new("date-input-form");
@@ -43,8 +44,11 @@ public sealed class DatePickerDemoPage : StatefulWidget
                 ? new TimePickerThemeData(
                     DialBackgroundColor: Color.Parse("#FFE0F2F1"),
                     DialHandColor: Color.Parse("#FF006C4C"),
-                    HourMinuteColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                        states.HasFlag(MaterialState.Selected) ? Color.Parse("#FFCDE8DE") : Color.Parse("#FFF2F2F2")))
+                    HourMinuteColor: WidgetStateColor.ResolveWith(
+                        Color.Parse("#FFF2F2F2"),
+                        states => states.Contains(WidgetState.Selected)
+                            ? Color.Parse("#FFCDE8DE")
+                            : Color.Parse("#FFF2F2F2")))
                 : new TimePickerThemeData();
 
             Widget picker = _showYearPicker
@@ -148,6 +152,20 @@ public sealed class DatePickerDemoPage : StatefulWidget
                                 spacing: 8,
                                 children:
                                 [
+                                    BuildToggle(
+                                        "Dial only",
+                                        () => _ = OpenTimePicker(context, TimePickerEntryMode.DialOnly)),
+                                    BuildToggle(
+                                        "Input only",
+                                        () => _ = OpenTimePicker(context, TimePickerEntryMode.InputOnly)),
+                                    BuildToggle(
+                                        _use24HourTime ? "24h ✓" : "24h",
+                                        () => SetState(() => _use24HourTime = !_use24HourTime)),
+                                ]),
+                            new Row(
+                                spacing: 8,
+                                children:
+                                [
                                     BuildToggle("Calendar range", () => _ = OpenRangePicker(context, DatePickerEntryMode.Calendar)),
                                     BuildToggle("Input range", () => _ = OpenRangePicker(context, DatePickerEntryMode.Input)),
                                 ]),
@@ -200,7 +218,10 @@ public sealed class DatePickerDemoPage : StatefulWidget
             var result = await MaterialTimePickers.ShowTimePicker(
                 context,
                 initialTime: _selectedTime,
-                initialEntryMode: entryMode);
+                initialEntryMode: entryMode,
+                builder: (dialogContext, child) => new MediaQuery(
+                    MediaQuery.Of(dialogContext) with { AlwaysUse24HourFormat = _use24HourTime },
+                    child));
             if (!Mounted) return;
             SetState(() =>
             {

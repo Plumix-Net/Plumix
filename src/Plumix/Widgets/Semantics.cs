@@ -37,10 +37,14 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         string? value = null,
         string? minValue = null,
         string? maxValue = null,
+        string? increasedValue = null,
+        string? decreasedValue = null,
         SemanticsFlags flags = SemanticsFlags.None,
         Action? onTap = null,
         Action? onLongPress = null,
         Action? onDismiss = null,
+        Action? onIncrease = null,
+        Action? onDecrease = null,
         IReadOnlyDictionary<CustomSemanticsAction, Action>? customSemanticsActions = null,
         bool liveRegion = false,
         bool container = false,
@@ -65,6 +69,8 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         Value = value;
         MinValue = minValue;
         MaxValue = maxValue;
+        IncreasedValue = increasedValue;
+        DecreasedValue = decreasedValue;
         Flags = flags
                 | RoleFlags(role)
                 | (scopesRoute ? SemanticsFlags.ScopesRoute : SemanticsFlags.None)
@@ -78,6 +84,8 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         OnTap = onTap;
         OnLongPress = onLongPress;
         OnDismiss = onDismiss;
+        OnIncrease = onIncrease;
+        OnDecrease = onDecrease;
         CustomSemanticsActions = customSemanticsActions;
         LiveRegion = liveRegion;
         Container = container;
@@ -109,6 +117,10 @@ public sealed class Semantics : SingleChildRenderObjectWidget
 
     public string? MaxValue { get; }
 
+    public string? IncreasedValue { get; }
+
+    public string? DecreasedValue { get; }
+
     public SemanticsFlags Flags { get; }
 
     public Action? OnTap { get; }
@@ -116,6 +128,10 @@ public sealed class Semantics : SingleChildRenderObjectWidget
     public Action? OnLongPress { get; }
 
     public Action? OnDismiss { get; }
+
+    public Action? OnIncrease { get; }
+
+    public Action? OnDecrease { get; }
 
     public IReadOnlyDictionary<CustomSemanticsAction, Action>? CustomSemanticsActions { get; }
 
@@ -159,6 +175,8 @@ public sealed class Semantics : SingleChildRenderObjectWidget
             value: Value,
             minValue: MinValue,
             maxValue: MaxValue,
+            increasedValue: IncreasedValue,
+            decreasedValue: DecreasedValue,
             role: Role,
             inputType: InputType,
             hitTestBehavior: HitTestBehavior,
@@ -166,6 +184,8 @@ public sealed class Semantics : SingleChildRenderObjectWidget
             onTap: OnTap,
             onLongPress: OnLongPress,
             onDismiss: OnDismiss,
+            onIncrease: OnIncrease,
+            onDecrease: OnDecrease,
             customSemanticsActions: CustomSemanticsActions,
             liveRegion: LiveRegion,
             container: Container,
@@ -186,6 +206,8 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         semantics.Value = Value;
         semantics.MinValue = MinValue;
         semantics.MaxValue = MaxValue;
+        semantics.IncreasedValue = IncreasedValue;
+        semantics.DecreasedValue = DecreasedValue;
         semantics.Role = Role;
         semantics.InputType = InputType;
         semantics.HitTestBehavior = HitTestBehavior;
@@ -193,6 +215,8 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         semantics.OnTap = OnTap;
         semantics.OnLongPress = OnLongPress;
         semantics.OnDismiss = OnDismiss;
+        semantics.OnIncrease = OnIncrease;
+        semantics.OnDecrease = OnDecrease;
         semantics.CustomSemanticsActions = CustomSemanticsActions;
         semantics.OnFocus = OnFocus;
         semantics.LiveRegion = LiveRegion;

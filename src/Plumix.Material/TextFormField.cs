@@ -18,6 +18,8 @@ public sealed class TextFormField : FormField<string>
         TextStyle? style = null,
         TextAlign textAlign = TextAlign.Start,
         TextDirection? textDirection = null,
+        TextInputType? keyboardType = null,
+        TextInputAction? textInputAction = null,
         bool readOnly = false,
         bool autofocus = false,
         string obscuringCharacter = "•",
@@ -52,6 +54,8 @@ public sealed class TextFormField : FormField<string>
                 style,
                 textAlign,
                 textDirection,
+                keyboardType,
+                textInputAction,
                 readOnly,
                 autofocus,
                 obscuringCharacter,
@@ -91,6 +95,8 @@ public sealed class TextFormField : FormField<string>
         Style = style;
         TextAlign = textAlign;
         TextDirection = textDirection;
+        KeyboardType = keyboardType;
+        TextInputAction = textInputAction;
         ReadOnly = readOnly;
         Autofocus = autofocus;
         ObscuringCharacter = obscuringCharacter;
@@ -120,6 +126,8 @@ public sealed class TextFormField : FormField<string>
     public TextStyle? Style { get; }
     public TextAlign TextAlign { get; }
     public TextDirection? TextDirection { get; }
+    public TextInputType? KeyboardType { get; }
+    public TextInputAction? TextInputAction { get; }
     public bool ReadOnly { get; }
     public bool Autofocus { get; }
     public string ObscuringCharacter { get; }
@@ -184,6 +192,8 @@ public sealed class TextFormField : FormField<string>
         TextStyle? style,
         TextAlign textAlign,
         TextDirection? textDirection,
+        TextInputType? keyboardType,
+        TextInputAction? textInputAction,
         bool readOnly,
         bool autofocus,
         string obscuringCharacter,
@@ -220,6 +230,8 @@ public sealed class TextFormField : FormField<string>
             style: style,
             textAlign: textAlign,
             textDirection: textDirection,
+            keyboardType: keyboardType,
+            textInputAction: textInputAction,
             readOnly: readOnly,
             autofocus: autofocus,
             obscuringCharacter: obscuringCharacter,

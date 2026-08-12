@@ -72,6 +72,7 @@ public sealed class WidgetStateColor : WidgetStateProperty<Color>
     public WidgetStateColor(Color defaultValue)
         : this(defaultValue, _ => defaultValue)
     {
+        IsConstantColor = true;
     }
 
     public WidgetStateColor(
@@ -83,6 +84,11 @@ public sealed class WidgetStateColor : WidgetStateProperty<Color>
     }
 
     public Color DefaultValue { get; }
+
+    /// True when this value stands in for a plain <see cref="Color"/> — the implicit conversion and
+    /// the single-argument constructor set it. Dart distinguishes the same two cases with
+    /// `value is WidgetStateColor`, which C# cannot express because `Color` is a sealed value type.
+    public bool IsConstantColor { get; }
 
     public override Color Resolve(IReadOnlySet<WidgetState> states)
     {

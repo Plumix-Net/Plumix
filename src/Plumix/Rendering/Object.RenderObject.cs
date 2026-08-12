@@ -823,6 +823,32 @@ public abstract class RenderObject : IRenderObject, IHitTestTarget
         }
     }
 
+    /// The accumulated paint offset from the root of the render tree, walking the parent chain and
+    /// summing box offsets.
+    ///
+    /// Unlike <see cref="GetTransformTo"/> this does not depend on the semantics walk, so it still
+    /// resolves inside subtrees hidden from semantics (for example under `ExcludeSemantics`). Flutter
+    /// composes the full `applyPaintTransform` chain here; this accumulates translations only, so it
+    /// is exact whenever no ancestor applies a rotation or scale.
+    public Point GetPaintOffsetToRoot()
+    {
+        double x = 0;
+        double y = 0;
+        RenderObject? node = this;
+        while (node is not null)
+        {
+            if (node.parentData is BoxParentData box)
+            {
+                x += box.offset.X;
+                y += box.offset.Y;
+            }
+
+            node = node.Parent;
+        }
+
+        return new Point(x, y);
+    }
+
     public Matrix GetTransformTo(RenderObject? ancestor = null)
     {
         if (ancestor is not null)

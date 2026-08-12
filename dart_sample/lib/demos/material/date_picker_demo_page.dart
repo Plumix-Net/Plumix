@@ -13,6 +13,7 @@ class _DatePickerDemoPageState extends State<DatePickerDemoPage> {
   bool _showYearPicker = false;
   bool _useMaterial3 = true;
   bool _useThemeOverride = false;
+  bool _use24HourTime = false;
   TimeOfDay _selectedTime = const TimeOfDay(hour: 14, minute: 30);
   DateTimeRange _selectedRange = DateTimeRange(
     start: DateTime(2026, 3, 10),
@@ -199,6 +200,23 @@ class _DatePickerDemoPageState extends State<DatePickerDemoPage> {
               spacing: 8,
               children: <Widget>[
                 _buildToggle(
+                  'Dial only',
+                  () => _openTimePicker(context, TimePickerEntryMode.dialOnly),
+                ),
+                _buildToggle(
+                  'Input only',
+                  () => _openTimePicker(context, TimePickerEntryMode.inputOnly),
+                ),
+                _buildToggle(
+                  _use24HourTime ? '24h ✓' : '24h',
+                  () => setState(() => _use24HourTime = !_use24HourTime),
+                ),
+              ],
+            ),
+            Row(
+              spacing: 8,
+              children: <Widget>[
+                _buildToggle(
                   'Calendar range',
                   () => _openRangePicker(context, DatePickerEntryMode.calendar),
                 ),
@@ -264,6 +282,12 @@ class _DatePickerDemoPageState extends State<DatePickerDemoPage> {
       context: context,
       initialTime: _selectedTime,
       initialEntryMode: entryMode,
+      builder: (BuildContext dialogContext, Widget? child) => MediaQuery(
+        data: MediaQuery.of(
+          dialogContext,
+        ).copyWith(alwaysUse24HourFormat: _use24HourTime),
+        child: child!,
+      ),
     );
     if (!mounted) return;
     setState(() {

@@ -129,6 +129,10 @@
     scrolling, focusable button semantics, zero-area layout, and live M2/M3 runtime probes).
   - `Slider`/`RangeSlider` (direct M2/M3 roles, source theme copy/lerp and state properties, 2023/2024 track/thumb/
     indicator shapes, pluggable range selection/separation, adaptive Cupertino routing, and mirrored shape probes).
+  - `TimePicker` (exact `_TimePickerDefaultsM2`/`_TimePickerDefaultsM3` tables, Dart's `WidgetStateColor` field types
+    with the `dayPeriodColor` auto-wrap, source theme copy/lerp/`InheritedTheme` wrap, the full `_TimePickerModel`
+    widget tree, dial theta/radius math and painter, `_RenderInputPadding` tap targets, input validation and
+    auto-advance, size tables, and mirrored dial/input/dial-only/input-only/24h runtime probes).
 - Completed `Typography.Material2014`/`Material2018`, exact platform black/white themes, dense/tall geometry, and
   locale script-category selection.
 - Remove the narrowed `ColorScheme + Typography closeout` row from `docs/MATERIAL_TODO.md` only after those checks

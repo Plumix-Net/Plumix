@@ -4,6 +4,7 @@ namespace Plumix.UI;
 
 public enum HapticFeedbackType
 {
+    Vibrate,
     MediumImpact,
     SelectionClick,
 }
@@ -16,6 +17,11 @@ public static class HapticFeedback
     {
         add => _feedbackRequested += value;
         remove => _feedbackRequested -= value;
+    }
+
+    public static void Vibrate()
+    {
+        _feedbackRequested?.Invoke(HapticFeedbackType.Vibrate);
     }
 
     public static void MediumImpact()

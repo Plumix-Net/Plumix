@@ -1,5 +1,22 @@
 # Changelog
 
+- Breaking: ported `material/time_picker.dart` and `material/time_picker_theme.dart` strictly. The dialog is now
+  Flutter's widget tree — `_TimePickerModel` (aspect-based `InheritedModel`), `_DialTimePickerHeader`,
+  `_DialTimeSelectorControl`/`_DialHourControl`/`_DialMinuteControl`, `_TimeSelectorSeparator`, `_DayPeriodControl`
+  with `_AmPmButton` and `_RenderInputPadding`, `_TimePickerInput`/`_HourMinuteTextField`, and `_Dial`/`_DialPainter`
+  with the source theta/radius math, shortest-path animation, inner/outer 24-hour ring and selector-dot label clip.
+  `_TimePickerDefaultsM2`/`_TimePickerDefaultsM3` carry the exact M2/M3 tables (including the entry-mode-dependent
+  `hourMinuteTextStyle` and both `inputDecorationTheme`s), and the dialog reproduces Flutter's size tables, minimum
+  sizes, text-scale clamp, tap-target offset and `AnimatedContainer` resize.
+  **Breaking:** `TimePickerThemeData` now matches Dart's field types — `DayPeriodColor`/`DayPeriodTextColor`/
+  `DialTextColor`/`HourMinuteColor`/`HourMinuteTextColor` are `WidgetStateColor?` (a plain `Color` is auto-wrapped to
+  selected-only, as in Dart), `DayPeriodShape` is `OutlinedBorder?`, and `Padding` is `EdgeInsetsGeometry?`;
+  `TimePickerDialog.SwitchTo*EntryModeIcon` are `Icon?`; `TimePickerTheme` is an `InheritedTheme`.
+  New primitives: `TextScaler.Clamp`, `WidgetStateColor.IsConstantColor`, `HapticFeedback.Vibrate`,
+  `RenderObject.GetPaintOffsetToRoot`, `Semantics`/`RenderSemanticsAnnotations` increase/decrease values and actions,
+  `TextFormField` `keyboardType`/`textInputAction`, and the `timePickerHourModeAnnouncement`/
+  `timePickerMinuteModeAnnouncement` localizations.
+
 - Breaking: ported Flutter's rich-text span model and rebased the paragraph stack on it —
   `painting/inline_span.dart`, `text_span.dart`, `placeholder_span.dart`, `text_scaler.dart`,
   `widgets/widget_span.dart`, `RichText` from `widgets/basic.dart`, and `Text`/`Text.rich` from

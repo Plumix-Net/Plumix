@@ -158,6 +158,10 @@ public abstract class MaterialLocalizations
 
     public virtual string InvalidTimeLabel => "Enter a valid time";
 
+    public virtual string TimePickerHourModeAnnouncement => "Select hours";
+
+    public virtual string TimePickerMinuteModeAnnouncement => "Select minutes";
+
     public virtual string HourLabel => "Hour";
 
     public virtual string MinuteLabel => "Minute";

@@ -1213,6 +1213,14 @@ public sealed partial record DatePickerThemeData
 
 public sealed partial record TimePickerThemeData
 {
+    /// Dart lerps the state-color fields with `Color.lerp`, which collapses a `WidgetStateColor` to
+    /// its default resolution; `StateColor` reproduces that.
+    private static WidgetStateColor? StateColor(WidgetStateColor? a, WidgetStateColor? b, double t)
+    {
+        var lerped = MaterialThemeLerp.Color(a?.DefaultValue, b?.DefaultValue, t);
+        return lerped is null ? null : new WidgetStateColor(lerped.Value);
+    }
+
     public static TimePickerThemeData Lerp(TimePickerThemeData? a, TimePickerThemeData? b, double t)
     {
         if (ReferenceEquals(a, b) && a is not null)
@@ -1220,58 +1228,46 @@ public sealed partial record TimePickerThemeData
             return a;
         }
 
+        BorderSide? lerpedBorderSide;
+        if (a?.DayPeriodBorderSide is null && b?.DayPeriodBorderSide is null)
+        {
+            lerpedBorderSide = null;
+        }
+        else if (a?.DayPeriodBorderSide is null)
+        {
+            lerpedBorderSide = b?.DayPeriodBorderSide;
+        }
+        else if (b?.DayPeriodBorderSide is null)
+        {
+            lerpedBorderSide = a.DayPeriodBorderSide;
+        }
+        else
+        {
+            lerpedBorderSide = MaterialThemeLerp.BorderSide(a.DayPeriodBorderSide, b.DayPeriodBorderSide, t);
+        }
+
         return new TimePickerThemeData(
             BackgroundColor: MaterialThemeLerp.Color(a?.BackgroundColor, b?.BackgroundColor, t),
             CancelButtonStyle: ButtonStyle.Lerp(a?.CancelButtonStyle, b?.CancelButtonStyle, t),
             ConfirmButtonStyle: ButtonStyle.Lerp(a?.ConfirmButtonStyle, b?.ConfirmButtonStyle, t),
-            DayPeriodBorderSide: MaterialThemeLerp.BorderSide(
-                a?.DayPeriodBorderSide,
-                b?.DayPeriodBorderSide,
-                t),
-            DayPeriodColor: MaterialThemeLerp.ColorStateProperty(
-                a?.DayPeriodColor,
-                b?.DayPeriodColor,
-                t),
-            DayPeriodShape: MaterialThemeLerp.Shape(a?.DayPeriodShape, b?.DayPeriodShape, t),
-            DayPeriodTextColor: MaterialThemeLerp.ColorStateProperty(
-                a?.DayPeriodTextColor,
-                b?.DayPeriodTextColor,
-                t),
-            DayPeriodTextStyle: MaterialThemeLerp.TextStyle(
-                a?.DayPeriodTextStyle,
-                b?.DayPeriodTextStyle,
-                t),
-            DialBackgroundColor: MaterialThemeLerp.Color(
-                a?.DialBackgroundColor,
-                b?.DialBackgroundColor,
-                t),
+            DayPeriodBorderSide: lerpedBorderSide,
+            DayPeriodColor: StateColor(a?.DayPeriodColor, b?.DayPeriodColor, t),
+            DayPeriodShape: MaterialThemeLerp.Shape(a?.DayPeriodShape, b?.DayPeriodShape, t) as OutlinedBorder,
+            DayPeriodTextColor: StateColor(a?.DayPeriodTextColor, b?.DayPeriodTextColor, t),
+            DayPeriodTextStyle: MaterialThemeLerp.TextStyle(a?.DayPeriodTextStyle, b?.DayPeriodTextStyle, t),
+            DialBackgroundColor: MaterialThemeLerp.Color(a?.DialBackgroundColor, b?.DialBackgroundColor, t),
             DialHandColor: MaterialThemeLerp.Color(a?.DialHandColor, b?.DialHandColor, t),
-            DialTextColor: MaterialThemeLerp.ColorStateProperty(
-                a?.DialTextColor,
-                b?.DialTextColor,
-                t),
+            DialTextColor: StateColor(a?.DialTextColor, b?.DialTextColor, t),
             DialTextStyle: MaterialThemeLerp.TextStyle(a?.DialTextStyle, b?.DialTextStyle, t),
             Elevation: MaterialThemeLerp.Double(a?.Elevation, b?.Elevation, t),
-            EntryModeIconColor: MaterialThemeLerp.Color(
-                a?.EntryModeIconColor,
-                b?.EntryModeIconColor,
-                t),
+            EntryModeIconColor: MaterialThemeLerp.Color(a?.EntryModeIconColor, b?.EntryModeIconColor, t),
             HelpTextStyle: MaterialThemeLerp.TextStyle(a?.HelpTextStyle, b?.HelpTextStyle, t),
-            HourMinuteColor: MaterialThemeLerp.ColorStateProperty(
-                a?.HourMinuteColor,
-                b?.HourMinuteColor,
-                t),
+            HourMinuteColor: StateColor(a?.HourMinuteColor, b?.HourMinuteColor, t),
             HourMinuteShape: MaterialThemeLerp.Shape(a?.HourMinuteShape, b?.HourMinuteShape, t),
-            HourMinuteTextColor: MaterialThemeLerp.ColorStateProperty(
-                a?.HourMinuteTextColor,
-                b?.HourMinuteTextColor,
-                t),
-            HourMinuteTextStyle: MaterialThemeLerp.TextStyle(
-                a?.HourMinuteTextStyle,
-                b?.HourMinuteTextStyle,
-                t),
+            HourMinuteTextColor: StateColor(a?.HourMinuteTextColor, b?.HourMinuteTextColor, t),
+            HourMinuteTextStyle: MaterialThemeLerp.TextStyle(a?.HourMinuteTextStyle, b?.HourMinuteTextStyle, t),
             InputDecorationTheme: t < 0.5 ? a?.InputDecorationTheme : b?.InputDecorationTheme,
-            Padding: MaterialThemeLerp.Thickness(a?.Padding, b?.Padding, t),
+            Padding: EdgeInsetsGeometry.Lerp(a?.Padding, b?.Padding, t),
             Shape: MaterialThemeLerp.Shape(a?.Shape, b?.Shape, t),
             TimeSelectorSeparatorColor: MaterialThemeLerp.ColorStateProperty(
                 a?.TimeSelectorSeparatorColor,

@@ -35,6 +35,36 @@ public abstract record TextScaler
     /// The default font size multiplier this [TextScaler] applies, when it scales
     /// text proportionally.
     public abstract double TextScaleFactor { get; }
+
+    /// Returns a [TextScaler] that restricts the scaled font size to within the
+    /// range `[minScaleFactor * fontSize, maxScaleFactor * fontSize]`.
+    public TextScaler Clamp(double minScaleFactor = 0, double maxScaleFactor = double.PositiveInfinity)
+    {
+        if (double.IsNaN(maxScaleFactor) || maxScaleFactor < minScaleFactor)
+        {
+            throw new ArgumentOutOfRangeException(nameof(maxScaleFactor));
+        }
+
+        if (!double.IsFinite(minScaleFactor) || minScaleFactor < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(minScaleFactor));
+        }
+
+        return minScaleFactor == maxScaleFactor
+            ? Linear(minScaleFactor)
+            : new ClampedTextScaler(this, minScaleFactor, maxScaleFactor);
+    }
+}
+
+/// A [TextScaler] that clamps the scaled font size of an inner scaler.
+public sealed record ClampedTextScaler(TextScaler Inner, double MinScale, double MaxScale) : TextScaler
+{
+    public override double Scale(double fontSize) => Math.Clamp(
+        Inner.Scale(fontSize),
+        fontSize * MinScale,
+        fontSize * MaxScale);
+
+    public override double TextScaleFactor => Math.Clamp(Inner.TextScaleFactor, MinScale, MaxScale);
 }
 
 /// A [TextScaler] that scales the incoming font size by a constant factor.
