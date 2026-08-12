@@ -26,7 +26,7 @@ public enum SelectionChangedCause
 
 public sealed record SelectedContent(string PlainText);
 
-internal interface ITextSelectionRegistrar
+public interface ITextSelectionRegistrar
 {
     void Register(RenderParagraph paragraph);
     void Unregister(RenderParagraph paragraph);
@@ -130,7 +130,7 @@ internal sealed class TextSelectionRegistrar : ITextSelectionRegistrar
         _anchorParagraph = ordered[0];
         _anchorOffset = 0;
         _extentParagraph = ordered[^1];
-        _extentOffset = ordered[^1].Text.Length;
+        _extentOffset = ordered[^1].PlainText.Length;
         _lastGlobalPosition = null;
         ApplySelection(cause);
     }
@@ -142,7 +142,7 @@ internal sealed class TextSelectionRegistrar : ITextSelectionRegistrar
             return;
         }
 
-        string text = _extentParagraph.Text;
+        string text = _extentParagraph.PlainText;
         if (text.Length == 0)
         {
             return;
@@ -215,7 +215,7 @@ internal sealed class TextSelectionRegistrar : ITextSelectionRegistrar
             return startIndex == 0
                    && endIndex == ordered.Count - 1
                    && startOffset == 0
-                   && endOffset == ordered[^1].Text.Length;
+                   && endOffset == ordered[^1].PlainText.Length;
         }
     }
 
@@ -244,10 +244,10 @@ internal sealed class TextSelectionRegistrar : ITextSelectionRegistrar
         {
             RenderParagraph paragraph = ordered[index];
             int start = index == startIndex ? startOffset : 0;
-            int end = index == endIndex ? endOffset : paragraph.Text.Length;
+            int end = index == endIndex ? endOffset : paragraph.PlainText.Length;
             if (end > start)
             {
-                parts.Add(paragraph.Text[start..end]);
+                parts.Add(paragraph.PlainText[start..end]);
             }
         }
 
@@ -286,7 +286,7 @@ internal sealed class TextSelectionRegistrar : ITextSelectionRegistrar
             }
 
             int start = index == startIndex ? startOffset : 0;
-            int end = index == endIndex ? endOffset : paragraph.Text.Length;
+            int end = index == endIndex ? endOffset : paragraph.PlainText.Length;
             paragraph.SetSelection(start, end);
         }
 
@@ -403,9 +403,9 @@ internal sealed class TextSelectionRegistrar : ITextSelectionRegistrar
         {
             if (ReferenceEquals(paragraph, target))
             {
-                return offset + Math.Clamp(localOffset, 0, paragraph.Text.Length);
+                return offset + Math.Clamp(localOffset, 0, paragraph.PlainText.Length);
             }
-            offset += paragraph.Text.Length;
+            offset += paragraph.PlainText.Length;
         }
         return offset;
     }

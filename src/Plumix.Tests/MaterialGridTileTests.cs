@@ -161,7 +161,7 @@ public sealed class MaterialGridTileTests
         Assert.Equal(TextOverflow.Ellipsis, subtitle.Overflow);
 
         var iconParagraphs = FindDescendants<RenderParagraph>(harness.RenderView)
-            .Where(paragraph => paragraph.Text is "\ue3dc" or "\ue16a")
+            .Where(paragraph => paragraph.PlainText is "\ue3dc" or "\ue16a")
             .ToList();
         Assert.Equal(2, iconParagraphs.Count);
         Assert.All(iconParagraphs, paragraph =>
@@ -213,7 +213,7 @@ public sealed class MaterialGridTileTests
 
     private static RenderParagraph? FindParagraph(RenderObject? root, string text)
     {
-        return FindDescendants<RenderParagraph>(root).FirstOrDefault(paragraph => paragraph.Text == text);
+        return FindDescendants<RenderParagraph>(root).FirstOrDefault(paragraph => paragraph.PlainText == text);
     }
 
     private static T? FindDescendant<T>(RenderObject? root) where T : RenderObject

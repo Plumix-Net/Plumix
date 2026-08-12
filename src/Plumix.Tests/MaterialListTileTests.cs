@@ -660,7 +660,7 @@ public sealed class MaterialListTileTests
             static paint => paint.Painter is CheckboxPainter);
         Assert.Contains(
             FindDescendants<RenderParagraph>(renderTile.Trailing),
-            paragraph => paragraph.Text == secondaryGlyph);
+            paragraph => paragraph.PlainText == secondaryGlyph);
     }
 
     [Fact]
@@ -929,7 +929,7 @@ public sealed class MaterialListTileTests
     private static RenderParagraph? FindParagraphByText(RenderObject? root, string text)
     {
         return FindDescendants<RenderParagraph>(root)
-            .FirstOrDefault(paragraph => string.Equals(paragraph.Text, text, StringComparison.Ordinal));
+            .FirstOrDefault(paragraph => string.Equals(paragraph.PlainText, text, StringComparison.Ordinal));
     }
 
     private static void AssertParagraphColor(RenderObject? root, string text, Color expectedColor)

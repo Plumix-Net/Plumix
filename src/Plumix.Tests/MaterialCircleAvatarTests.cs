@@ -63,7 +63,7 @@ public sealed class MaterialCircleAvatarTests : IDisposable
             FindDescendants<RenderConstrainedBox>(harness.RenderView),
             box => box.AdditionalConstraints == BoxConstraints.Tight(new Size(40, 40)));
         var paragraph = Assert.Single(FindDescendants<RenderParagraph>(harness.RenderView));
-        Assert.Equal("AB", paragraph.Text);
+        Assert.Equal("AB", paragraph.PlainText);
         Assert.Equal(18, paragraph.FontSize);
         Assert.Equal(Colors.MidnightBlue, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color);
     }
@@ -119,7 +119,7 @@ public sealed class MaterialCircleAvatarTests : IDisposable
         Assert.Same(foregroundError, foregroundBox.Decoration.Image.OnError);
         Assert.Same(backgroundError, backgroundBox.Decoration.Image.OnError);
         Assert.NotNull(FindDescendants<RenderParagraph>(harness.RenderView)
-            .SingleOrDefault(paragraph => paragraph.Text == "fallback"));
+            .SingleOrDefault(paragraph => paragraph.PlainText == "fallback"));
     }
 
     [Fact]
@@ -143,7 +143,7 @@ public sealed class MaterialCircleAvatarTests : IDisposable
         Assert.Contains(decorations, box => ReferenceEquals(box.Decoration.Image?.Image, background));
         Assert.Contains(
             FindDescendants<RenderParagraph>(harness.RenderView),
-            paragraph => paragraph.Text == "initials");
+            paragraph => paragraph.PlainText == "initials");
     }
 
     [Fact]
@@ -165,7 +165,7 @@ public sealed class MaterialCircleAvatarTests : IDisposable
             FindDescendants<RenderDecoratedBox>(defaultHarness.RenderView),
             box => box.Decoration.Color == Colors.Navy);
         var defaultParagraph = FindDescendants<RenderParagraph>(defaultHarness.RenderView)
-            .Single(value => value.Text == "default");
+            .Single(value => value.PlainText == "default");
         Assert.Equal(Colors.White, Assert.IsType<SolidColorBrush>(defaultParagraph.Foreground).Color);
 
         using var explicitHarness = new WidgetRenderHarness(BuildRoot(
@@ -173,7 +173,7 @@ public sealed class MaterialCircleAvatarTests : IDisposable
             new CircleAvatar(backgroundColor: Colors.Black, child: new Text("explicit"))));
         explicitHarness.Pump(new Size(100, 100));
         var paragraph = FindDescendants<RenderParagraph>(explicitHarness.RenderView)
-            .Single(value => value.Text == "explicit");
+            .Single(value => value.PlainText == "explicit");
         Assert.Equal(Colors.Gold, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color);
 
         using var lightBackgroundHarness = new WidgetRenderHarness(BuildRoot(
@@ -181,7 +181,7 @@ public sealed class MaterialCircleAvatarTests : IDisposable
             new CircleAvatar(backgroundColor: Colors.White, child: new Text("light"))));
         lightBackgroundHarness.Pump(new Size(100, 100));
         var lightParagraph = FindDescendants<RenderParagraph>(lightBackgroundHarness.RenderView)
-            .Single(value => value.Text == "light");
+            .Single(value => value.PlainText == "light");
         Assert.Equal(Colors.Navy, Assert.IsType<SolidColorBrush>(lightParagraph.Foreground).Color);
 
         using var foregroundHarness = new WidgetRenderHarness(BuildRoot(

@@ -4244,7 +4244,7 @@ public sealed class MaterialScaffoldTests
             return null;
         }
 
-        if (root is RenderParagraph paragraph && string.Equals(paragraph.Text, text, StringComparison.Ordinal))
+        if (root is RenderParagraph paragraph && string.Equals(paragraph.PlainText, text, StringComparison.Ordinal))
         {
             return paragraph;
         }

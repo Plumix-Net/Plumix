@@ -14,8 +14,15 @@ namespace Plumix.Tests;
 [Collection(SchedulerTestCollection.Name)]
 public sealed class MaterialDropdownTests : IDisposable
 {
+    private readonly TargetPlatform? _previousPlatform;
+
     public MaterialDropdownTests()
     {
+        // `ModalBarrier` only exposes its dismiss label where the a11y layer supports barrier dismissal
+        // (Flutter's `platformSupportsDismissingBarrier`), so pin the platform the way `flutter_test` does
+        // instead of inheriting the host OS — CI runs Linux, developers run macOS/Windows.
+        _previousPlatform = PlatformDefaults.DebugTargetPlatformOverride;
+        PlatformDefaults.DebugTargetPlatformOverride = TargetPlatform.Android;
         Scheduler.ResetForTests();
         FocusManager.Instance.ResetForTests();
         GestureBinding.Instance.ResetForTests();
@@ -26,6 +33,7 @@ public sealed class MaterialDropdownTests : IDisposable
         GestureBinding.Instance.ResetForTests();
         FocusManager.Instance.ResetForTests();
         Scheduler.ResetForTests();
+        PlatformDefaults.DebugTargetPlatformOverride = _previousPlatform;
     }
 
     [Fact]
@@ -370,7 +378,9 @@ public sealed class MaterialDropdownTests : IDisposable
 
         Assert.False(formState.Validate());
         harness.Pump(new Size(420, 180));
-        Assert.Contains(FindDescendants<RenderParagraph>(harness.RenderView), value => value.Text == "Choose another");
+        Assert.Contains(
+            FindDescendants<RenderParagraph>(harness.RenderView),
+            value => value.PlainText == "Choose another");
 
         state.DidChange("two");
         Assert.Equal(new[] { "form", "field:two" }, callbacks.TakeLast(2));
@@ -461,7 +471,7 @@ public sealed class MaterialDropdownTests : IDisposable
         var body = Assert.Single(FindDescendants<RenderDropdownMenuBody>(harness.RenderView));
         Assert.True(body.Size.Width >= 112);
         Assert.Contains(FindDescendants<RenderParagraph>(harness.RenderView), paragraph =>
-            paragraph.Text == "Short" && Close(paragraph.FontSize, 19));
+            paragraph.PlainText == "Short" && Close(paragraph.FontSize, 19));
     }
 
     [Fact]
@@ -1094,7 +1104,7 @@ public sealed class MaterialDropdownTests : IDisposable
     }
 
     private static RenderParagraph? FindParagraph(RenderObject? root, string text) =>
-        FindDescendants<RenderParagraph>(root).FirstOrDefault(paragraph => paragraph.Text == text);
+        FindDescendants<RenderParagraph>(root).FirstOrDefault(paragraph => paragraph.PlainText == text);
 
     private static bool Close(double a, double b) => Math.Abs(a - b) < 0.001;
 

@@ -102,6 +102,7 @@ internal static class SampleRoutes
     public const string OverflowIndicator = "/overflow-indicator";
     public const string Offstage = "/offstage";
     public const string Baseline = "/baseline";
+    public const string RichText = "/rich-text";
     public const string IntrinsicWidgets = "/intrinsic-widgets";
     public const string LayoutBuilder = "/layout-builder";
     public const string KeyboardListener = "/keyboard-listener";
@@ -294,6 +295,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "Baseline + IgnoreBaseline",
             "real text baselines + bottom fallback + Row exclusion",
             () => new BaselineDemoPage()),
+        new(
+            SampleRoutes.RichText,
+            "RichText + TextSpan + WidgetSpan",
+            "styled runs + span recognizers + inline widget alignment",
+            () => new RichTextDemoPage()),
         new(
             SampleRoutes.IntrinsicWidgets,
             "IntrinsicWidth + IntrinsicHeight",

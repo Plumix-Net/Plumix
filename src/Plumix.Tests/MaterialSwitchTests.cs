@@ -505,7 +505,7 @@ public sealed class MaterialSwitchTests
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
         string iconGlyph = char.ConvertFromUtf32(Icons.Check.CodePoint);
         var iconParagraph = FindDescendants<RenderParagraph>(renderRoot)
-            .FirstOrDefault(paragraph => paragraph.Text == iconGlyph);
+            .FirstOrDefault(paragraph => paragraph.PlainText == iconGlyph);
         Assert.NotNull(iconParagraph);
     }
 

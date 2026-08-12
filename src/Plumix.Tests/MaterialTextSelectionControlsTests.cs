@@ -254,7 +254,7 @@ public sealed class MaterialTextSelectionControlsTests : IDisposable
     private static string[] ToolbarLabels(WidgetRenderHarness harness)
     {
         return harness.FindWidgets<TextSelectionToolbarTextButton>()
-            .Select(button => Assert.IsType<Text>(button.Child).Data)
+            .Select(button => Assert.IsType<Text>(button.Child).Data!)
             .ToArray();
     }
 

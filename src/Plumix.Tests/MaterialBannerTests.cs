@@ -297,8 +297,9 @@ public sealed class MaterialBannerTests
         double bodyMediumSize = ThemeData.Localize(
             ThemeData.Light,
             Typography.EnglishLike2021).TextTheme.BodyMedium.FontSize!.Value;
+        RenderParagraph content = FindParagraph(harness.RenderView, "Content")!;
         Assert.Equal(bodyMediumSize * 1.5,
-            FindParagraph(harness.RenderView, "Content")!.FontSize,
+            content.TextScaler.Scale(content.FontSize),
             precision: 3);
         Assert.Contains(FindDescendants<RenderPadding>(harness.RenderView),
             padding => padding.Padding == new Thickness(0, 2, 16, 0));
@@ -495,8 +496,8 @@ public sealed class MaterialBannerTests
         messenger.ShowMaterialBanner(Banner(content: "Banner"));
         harness.Pump(new Size(360, 220));
 
-        Assert.Single(FindDescendants<RenderParagraph>(harness.RenderView), value => value.Text == "Snack");
-        Assert.Single(FindDescendants<RenderParagraph>(harness.RenderView), value => value.Text == "Banner");
+        Assert.Single(FindDescendants<RenderParagraph>(harness.RenderView), value => value.PlainText == "Snack");
+        Assert.Single(FindDescendants<RenderParagraph>(harness.RenderView), value => value.PlainText == "Banner");
     }
 
     [Fact]
@@ -512,7 +513,7 @@ public sealed class MaterialBannerTests
         messenger.ShowMaterialBanner(Banner(content: "Nested"));
         harness.Pump(new Size(360, 220));
 
-        Assert.Single(FindDescendants<RenderParagraph>(harness.RenderView), value => value.Text == "Nested");
+        Assert.Single(FindDescendants<RenderParagraph>(harness.RenderView), value => value.PlainText == "Nested");
     }
 
     [Fact]
@@ -535,7 +536,7 @@ public sealed class MaterialBannerTests
 
         Assert.Equal(
             2,
-            FindDescendants<RenderParagraph>(harness.RenderView).Count(value => value.Text == "Sibling"));
+            FindDescendants<RenderParagraph>(harness.RenderView).Count(value => value.PlainText == "Sibling"));
     }
 
     [Theory]
@@ -612,7 +613,7 @@ public sealed class MaterialBannerTests
                     new Align(alignment: Alignment.TopLeft, child: child))));
 
     private static RenderParagraph? FindParagraph(RenderObject? root, string text) =>
-        FindDescendants<RenderParagraph>(root).FirstOrDefault(paragraph => paragraph.Text == text);
+        FindDescendants<RenderParagraph>(root).FirstOrDefault(paragraph => paragraph.PlainText == text);
 
     private static List<T> FindDescendants<T>(RenderObject? root) where T : RenderObject
     {

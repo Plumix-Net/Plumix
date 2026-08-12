@@ -293,7 +293,7 @@ public sealed class MaterialBadgeTests
 
     private static RenderParagraph? FindParagraph(RenderObject? root, string text)
     {
-        return FindDescendants<RenderParagraph>(root).FirstOrDefault(paragraph => paragraph.Text == text);
+        return FindDescendants<RenderParagraph>(root).FirstOrDefault(paragraph => paragraph.PlainText == text);
     }
 
     private static T? FindDescendant<T>(RenderObject? root) where T : RenderObject

@@ -140,7 +140,7 @@ public sealed class ModalRouteBarrierTests : IDisposable
         {
             PumpAnimation();
             harness.Pump(new Size(400, 300));
-            TapAt(harness, new Point(300, 250));
+            TapAt(harness, new Point(390, 290));
             PumpAnimation();
             harness.Pump(new Size(400, 300));
             Assert.Null(FindParagraph(harness.RenderView, "Page"));
@@ -154,7 +154,7 @@ public sealed class ModalRouteBarrierTests : IDisposable
         {
             PumpAnimation();
             harness.Pump(new Size(400, 300));
-            TapAt(harness, new Point(300, 250));
+            TapAt(harness, new Point(390, 290));
             PumpAnimation();
             harness.Pump(new Size(400, 300));
             Assert.NotNull(FindParagraph(harness.RenderView, "Page"));
@@ -242,7 +242,7 @@ public sealed class ModalRouteBarrierTests : IDisposable
     }
 
     private static RenderParagraph? FindParagraph(RenderObject? root, string text) =>
-        FindDescendants<RenderParagraph>(root).FirstOrDefault(value => value.Text == text);
+        FindDescendants<RenderParagraph>(root).FirstOrDefault(value => value.PlainText == text);
 
     private static List<T> FindDescendants<T>(RenderObject? root) where T : RenderObject
     {

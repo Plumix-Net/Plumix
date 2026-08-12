@@ -325,7 +325,7 @@ public sealed class MaterialDataTableTests : IDisposable
             new Theme(theme ?? ThemeData.Light, child)));
 
     private static RenderParagraph? FindParagraph(RenderObject? root, string text) =>
-        FindDescendants<RenderParagraph>(root).FirstOrDefault(paragraph => paragraph.Text == text);
+        FindDescendants<RenderParagraph>(root).FirstOrDefault(paragraph => paragraph.PlainText == text);
 
     private static IEnumerable<T> FindDescendants<T>(RenderObject? root) where T : RenderObject
     {

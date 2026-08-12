@@ -1021,7 +1021,7 @@ public sealed class HeroNavigatorTests
             return null;
         }
 
-        if (root is RenderParagraph paragraph && paragraph.Text == text)
+        if (root is RenderParagraph paragraph && paragraph.PlainText == text)
         {
             return paragraph;
         }

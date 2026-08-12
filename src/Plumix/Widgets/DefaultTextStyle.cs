@@ -1,5 +1,6 @@
 using Avalonia.Media;
 using Plumix.Foundation;
+using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.UI;
 
@@ -90,6 +91,53 @@ public sealed record TextStyle(
             decoration: other.Decoration,
             decorationColor: other.DecorationColor,
             decorationStyle: other.DecorationStyle);
+    }
+
+    /// Describe the difference between this style and another, in terms of how
+    /// much damage it will make to the rendering.
+    public RenderComparison CompareTo(TextStyle other)
+    {
+        ArgumentNullException.ThrowIfNull(other);
+        if (ReferenceEquals(this, other))
+        {
+            return RenderComparison.Identical;
+        }
+
+        if (Inherit != other.Inherit
+            || !Equals(FontFamily, other.FontFamily)
+            || FontSize != other.FontSize
+            || FontWeight != other.FontWeight
+            || FontStyle != other.FontStyle
+            || LetterSpacing != other.LetterSpacing
+            || WordSpacing != other.WordSpacing
+            || TextBaseline != other.TextBaseline
+            || Height != other.Height
+            || LeadingDistribution != other.LeadingDistribution
+            || !FontFamilyFallbackEquals(FontFamilyFallback, other.FontFamilyFallback)
+            || !string.Equals(Package, other.Package, StringComparison.Ordinal))
+        {
+            return RenderComparison.Layout;
+        }
+
+        if (Color != other.Color
+            || Decoration != other.Decoration
+            || DecorationColor != other.DecorationColor
+            || DecorationStyle != other.DecorationStyle)
+        {
+            return RenderComparison.Paint;
+        }
+
+        return RenderComparison.Identical;
+    }
+
+    private static bool FontFamilyFallbackEquals(IReadOnlyList<string>? a, IReadOnlyList<string>? b)
+    {
+        if (ReferenceEquals(a, b))
+        {
+            return true;
+        }
+
+        return a is not null && b is not null && a.SequenceEqual(b, StringComparer.Ordinal);
     }
 
     public static TextStyle Lerp(TextStyle a, TextStyle b, double t)

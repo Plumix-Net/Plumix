@@ -304,7 +304,7 @@ public sealed class PaginatedDataTableState : State
 
     private Widget PageButton(IconData icon, string tooltip, Action? onPressed) => new Tooltip(
         tooltip,
-        new IconButton(
+        child: new IconButton(
             new Icon(icon),
             onPressed,
             color: CurrentWidget.ArrowHeadColor,

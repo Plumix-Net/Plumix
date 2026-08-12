@@ -215,7 +215,9 @@ public sealed class MaterialAboutTests : IDisposable
         using var harness = new WidgetRenderHarness(BuildThemed(navigator));
 
         PumpUntil(harness, new Size(700, 560), () => FindParagraph(harness.RenderView, "app") is not null);
-        string[] paragraphs = FindDescendants<RenderParagraph>(harness.RenderView).Select(item => item.Text).ToArray();
+        string[] paragraphs = FindDescendants<RenderParagraph>(harness.RenderView)
+            .Select(item => item.PlainText)
+            .ToArray();
         Assert.True(Array.IndexOf(paragraphs, "app") < Array.IndexOf(paragraphs, "alpha"));
         Assert.True(Array.IndexOf(paragraphs, "alpha") < Array.IndexOf(paragraphs, "zeta"));
         Assert.Contains("1 license", paragraphs);
@@ -251,7 +253,7 @@ public sealed class MaterialAboutTests : IDisposable
     }
 
     private static RenderParagraph? FindParagraph(RenderObject? root, string text) =>
-        FindDescendants<RenderParagraph>(root).FirstOrDefault(paragraph => paragraph.Text == text);
+        FindDescendants<RenderParagraph>(root).FirstOrDefault(paragraph => paragraph.PlainText == text);
 
     private static List<T> FindDescendants<T>(RenderObject? root) where T : RenderObject
     {

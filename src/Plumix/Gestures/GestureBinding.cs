@@ -148,9 +148,9 @@ public sealed class GestureBinding
         }
     }
 
-    private static Dictionary<RenderObject, HitTestEntry> BuildEntryMap(HitTestResult? result)
+    private static Dictionary<IHitTestTarget, HitTestEntry> BuildEntryMap(HitTestResult? result)
     {
-        var map = new Dictionary<RenderObject, HitTestEntry>();
+        var map = new Dictionary<IHitTestTarget, HitTestEntry>();
         if (result is null)
         {
             return map;

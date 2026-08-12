@@ -569,7 +569,7 @@ public sealed class MaterialFloatingActionButtonTests
         var constrainedBox = FindDescendant<RenderConstrainedBox>(renderRoot);
         var paddings = FindDescendants<RenderPadding>(renderRoot);
         bool hasExpectedPadding = paddings.Any(p => p.Padding == new Thickness(16, 0, 20, 0));
-        var label = FindDescendants<RenderParagraph>(renderRoot).FirstOrDefault(p => p.Text == "Create");
+        var label = FindDescendants<RenderParagraph>(renderRoot).FirstOrDefault(p => p.PlainText == "Create");
 
         Assert.NotNull(constrainedBox);
         Assert.Equal(56, constrainedBox!.AdditionalConstraints.MinHeight);
@@ -1111,7 +1111,7 @@ public sealed class MaterialFloatingActionButtonTests
             return null;
         }
 
-        if (root is RenderParagraph paragraph && paragraph.Text == text)
+        if (root is RenderParagraph paragraph && paragraph.PlainText == text)
         {
             return paragraph;
         }

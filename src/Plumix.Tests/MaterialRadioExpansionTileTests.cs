@@ -162,7 +162,7 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
             paint => Math.Abs(paint.Size.Width - 40.0) < 0.001);
         Assert.Contains(
             FindDescendants<RenderParagraph>(tile.Trailing),
-            paragraph => paragraph.Text == secondaryGlyph);
+            paragraph => paragraph.PlainText == secondaryGlyph);
     }
 
     [Fact]
@@ -776,7 +776,7 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
     private static RenderParagraph? FindParagraphByText(RenderObject? root, string text)
     {
         return FindDescendants<RenderParagraph>(root)
-            .FirstOrDefault(paragraph => paragraph.Text == text);
+            .FirstOrDefault(paragraph => paragraph.PlainText == text);
     }
 
     private static Color ParagraphColor(RenderObject? root, string text)

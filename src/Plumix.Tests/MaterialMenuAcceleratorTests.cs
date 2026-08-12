@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Media;
 using Plumix;
 using Plumix.Material;
+using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -107,10 +108,22 @@ public sealed class MaterialMenuAcceleratorTests : IDisposable
             new KeyEvent("LeftAlt", true, isAltPressed: true)));
         harness.Pump(new Size(300, 100));
 
+        // The default builder composes one RichText paragraph whose accelerator run
+        // carries the underline, rather than baseline-aligned sibling paragraphs.
         RenderParagraph accelerator = Assert.Single(
             FindDescendants<RenderParagraph>(harness.RenderView),
-            paragraph => paragraph.Text == "O");
-        Assert.NotNull(accelerator.TextDecorations);
+            paragraph => paragraph.PlainText == "Open");
+        var underlined = new List<TextSpan>();
+        accelerator.Text.VisitChildren(span =>
+        {
+            if (span is TextSpan textSpan && textSpan.Style?.Decoration == Plumix.UI.TextDecoration.Underline)
+            {
+                underlined.Add(textSpan);
+            }
+
+            return true;
+        });
+        Assert.Equal("O", Assert.Single(underlined).Text);
         Assert.True(FocusManager.Instance.HandleKeyEvent(
             new KeyEvent("O", true, isAltPressed: true)));
         Scheduler.PumpFrameForTests();
@@ -268,7 +281,7 @@ public sealed class MaterialMenuAcceleratorTests : IDisposable
     private static RenderParagraph? FindParagraph(RenderObject? root, string text)
     {
         return FindDescendants<RenderParagraph>(root)
-            .FirstOrDefault(paragraph => paragraph.Text == text);
+            .FirstOrDefault(paragraph => paragraph.PlainText == text);
     }
 
     private static List<T> FindDescendants<T>(RenderObject? root) where T : RenderObject

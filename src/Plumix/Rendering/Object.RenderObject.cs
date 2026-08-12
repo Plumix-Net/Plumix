@@ -14,7 +14,7 @@ public interface IRenderObject
 /// <summary>
 /// An object in the render tree.
 /// </summary>
-public abstract class RenderObject : IRenderObject
+public abstract class RenderObject : IRenderObject, IHitTestTarget
 {
     internal bool _wasRepaintBoundary;
     internal Layer? _layer;

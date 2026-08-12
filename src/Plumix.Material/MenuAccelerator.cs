@@ -1,6 +1,7 @@
 using System.Globalization;
 using Avalonia.Media;
 using Plumix.Foundation;
+using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -94,28 +95,24 @@ public sealed class MenuAcceleratorLabel : StatefulWidget
             return new Text(label);
         }
 
-        var children = new List<Widget>(3);
+        // Flutter builds the default label as one RichText paragraph so the runs
+        // share a single line layout instead of being baseline-aligned siblings.
+        var children = new List<InlineSpan>(3);
         if (index > 0)
         {
-            children.Add(new Text(string.Concat(characters.Take(index))));
+            children.Add(new TextSpan(text: string.Concat(characters.Take(index))));
         }
 
-        children.Add(new Text(
-            characters[index],
-            textDecorations: TextDecorations.Underline));
+        children.Add(new TextSpan(
+            text: characters[index],
+            style: new TextStyle(Decoration: Plumix.UI.TextDecoration.Underline)));
 
         if (index < characters.Count - 1)
         {
-            children.Add(new Text(string.Concat(characters.Skip(index + 1))));
+            children.Add(new TextSpan(text: string.Concat(characters.Skip(index + 1))));
         }
 
-        return new MergeSemantics(
-            new Row(
-                children: children,
-                mainAxisSize: MainAxisSize.Min,
-                crossAxisAlignment: CrossAxisAlignment.Baseline,
-                textBaseline: TextBaseline.Alphabetic,
-                textDirection: Directionality.Of(context)));
+        return new MergeSemantics(Text.Rich(new TextSpan(children: children)));
     }
 
     public static string StripAcceleratorMarkers(string label, Action<int>? setIndex = null)

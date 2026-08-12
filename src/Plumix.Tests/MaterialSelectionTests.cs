@@ -212,8 +212,8 @@ public sealed class MaterialSelectionTests
         Assert.Equal("first second", selected?.PlainText);
         Assert.Equal("first second", key.CurrentState.SelectableRegion.SelectedContent?.PlainText);
         List<RenderParagraph> paragraphs = FindParagraphs(harness.RenderView);
-        Assert.Equal(paragraphs[0].Text.Length, paragraphs[0].SelectionExtentOffset);
-        Assert.Equal(paragraphs[1].Text.Length, paragraphs[1].SelectionExtentOffset);
+        Assert.Equal(paragraphs[0].PlainText.Length, paragraphs[0].SelectionExtentOffset);
+        Assert.Equal(paragraphs[1].PlainText.Length, paragraphs[1].SelectionExtentOffset);
 
         key.CurrentState.SelectableRegion.CopySelection();
         Assert.Equal("first second", TextClipboard.GetText());
@@ -262,8 +262,8 @@ public sealed class MaterialSelectionTests
 
         Assert.Equal("first second", selected?.PlainText);
         List<RenderParagraph> paragraphs = FindParagraphs(harness.RenderView);
-        Assert.Equal(paragraphs[0].Text.Length, paragraphs[0].SelectionExtentOffset);
-        Assert.Equal(paragraphs[1].Text.Length, paragraphs[1].SelectionExtentOffset);
+        Assert.Equal(paragraphs[0].PlainText.Length, paragraphs[0].SelectionExtentOffset);
+        Assert.Equal(paragraphs[1].PlainText.Length, paragraphs[1].SelectionExtentOffset);
     }
 
     [Fact]

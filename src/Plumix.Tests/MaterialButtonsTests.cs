@@ -6508,7 +6508,7 @@ public sealed class MaterialButtonsTests
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(paragraph);
-        Assert.Equal("selected", paragraph!.Text);
+        Assert.Equal("selected", paragraph!.PlainText);
     }
 
     [Fact]

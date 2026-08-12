@@ -12,9 +12,9 @@ public enum HitTestBehavior
     Translucent
 }
 
-public class HitTestEntry(RenderObject target)
+public class HitTestEntry(IHitTestTarget target)
 {
-    public RenderObject Target { get; } = target;
+    public IHitTestTarget Target { get; } = target;
 
     public virtual PointerEvent TransformEvent(PointerEvent @event)
     {

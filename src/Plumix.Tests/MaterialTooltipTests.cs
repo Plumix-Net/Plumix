@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Media;
 using Plumix;
 using Plumix.Material;
+using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -21,6 +22,47 @@ public sealed class MaterialTooltipTests
             constraints: new BoxConstraints(MinHeight: 24)));
         Assert.Throws<ArgumentOutOfRangeException>(() => new Tooltip(message: "tip", verticalOffset: -1));
         Assert.Throws<ArgumentOutOfRangeException>(() => new Tooltip(message: "tip", waitDuration: TimeSpan.FromMilliseconds(-1)));
+    }
+
+    [Fact]
+    public void Tooltip_RequiresExactlyOneOfMessageAndRichMessage()
+    {
+        Assert.Throws<ArgumentException>(() => new Tooltip(child: new SizedBox()));
+        Assert.Throws<ArgumentException>(() => new Tooltip(
+            message: "tip",
+            richMessage: new TextSpan(text: "tip"),
+            child: new SizedBox()));
+    }
+
+    [Fact]
+    public void Tooltip_RichMessage_RendersTheSuppliedSpanAndItsPlainSemanticsText()
+    {
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                ThemeData.Light,
+                new Tooltip(
+                    richMessage: new TextSpan(
+                        text: "Save ",
+                        children:
+                        [
+                            new TextSpan(
+                                text: "now",
+                                style: new TextStyle(FontWeight: FontWeight.Bold)),
+                        ]),
+                    child: new SizedBox(width: 24, height: 24))));
+        harness.Pump(new Size(200, 120));
+
+        var state = harness.FindState<TooltipState>();
+        Assert.True(state.EnsureTooltipVisible());
+        Scheduler.PumpFrameForTests();
+        harness.Pump(new Size(200, 120));
+
+        RenderParagraph bubble = Assert.Single(
+            FindDescendants<RenderParagraph>(harness.RenderView),
+            paragraph => paragraph.PlainText == "Save now");
+        var root = Assert.IsType<TextSpan>(bubble.Text);
+        InlineSpan supplied = Assert.Single(root.Children!);
+        Assert.Equal("Save now", supplied.ToPlainText());
     }
 
     [Fact]
@@ -297,8 +339,8 @@ public sealed class MaterialTooltipTests
             }
             harness.Pump(new Size(120, 60));
             List<RenderParagraph> paragraphs = FindDescendants<RenderParagraph>(harness.RenderView);
-            Assert.Contains(paragraphs, paragraph => paragraph.Text == "One");
-            Assert.Contains(paragraphs, paragraph => paragraph.Text == "Two");
+            Assert.Contains(paragraphs, paragraph => paragraph.PlainText == "One");
+            Assert.Contains(paragraphs, paragraph => paragraph.PlainText == "Two");
 
             Assert.True(Tooltip.DismissAllToolTips());
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.20));
@@ -326,7 +368,7 @@ public sealed class MaterialTooltipTests
 
     private static RenderParagraph? FindParagraph(RenderObject? root, string text)
     {
-        return FindDescendants<RenderParagraph>(root).FirstOrDefault(paragraph => paragraph.Text == text);
+        return FindDescendants<RenderParagraph>(root).FirstOrDefault(paragraph => paragraph.PlainText == text);
     }
 
     private static List<T> FindDescendants<T>(RenderObject? root) where T : RenderObject

@@ -372,7 +372,7 @@ public sealed class DataTable : StatelessWidget
                     textDirection: column.Numeric ? TextDirection.Rtl : null,
                     children: content),
                 softWrap: false));
-        if (column.Tooltip is not null) label = new Tooltip(column.Tooltip, label);
+        if (column.Tooltip is not null) label = new Tooltip(column.Tooltip, child: label);
         var states = column.OnSort is null ? MaterialState.Disabled : MaterialState.None;
         return new InkWell(
             onTap: column.OnSort is null

@@ -491,7 +491,7 @@ public sealed class MaterialChipTests : IDisposable
 
         Assert.Equal(Colors.Transparent, FindChipDecoration(harness.RenderView).Decoration.Color);
         RenderParagraph clear = FindDescendants<RenderParagraph>(harness.RenderView)
-            .Single(paragraph => paragraph.Text == IconText(Icons.Clear));
+            .Single(paragraph => paragraph.PlainText == IconText(Icons.Clear));
         Assert.Equal(Colors.Purple, ForegroundColor(clear));
         Assert.Equal(deleteConstraints, FindChipRender(harness.RenderView).DeleteIconBoxConstraints);
 
@@ -527,7 +527,7 @@ public sealed class MaterialChipTests : IDisposable
         Assert.Equal(Colors.Gold, ForegroundColor(Paragraph(harness.RenderView, "Filter")));
         Assert.Equal(1.0, FindChipRender(harness.RenderView).CheckmarkProgress);
         Assert.Contains(FindDescendants<RenderParagraph>(harness.RenderView),
-            paragraph => paragraph.Text == IconText(Icons.Clear));
+            paragraph => paragraph.PlainText == IconText(Icons.Clear));
     }
 
     [Fact]
@@ -574,9 +574,9 @@ public sealed class MaterialChipTests : IDisposable
         filter.Pump(new Size(320, 120));
         Assert.Equal(WithOpacity(Colors.Black, 0x3d / 255.0), FindChipDecoration(filter.RenderView).Decoration.Color);
         Assert.Contains(FindDescendants<RenderParagraph>(filter.RenderView),
-            paragraph => paragraph.Text == IconText(Icons.Cancel));
+            paragraph => paragraph.PlainText == IconText(Icons.Cancel));
         Assert.DoesNotContain(FindDescendants<RenderParagraph>(filter.RenderView),
-            paragraph => paragraph.Text == IconText(Icons.Check));
+            paragraph => paragraph.PlainText == IconText(Icons.Check));
 
         using var input = new WidgetRenderHarness(Root(
             theme,
@@ -588,9 +588,9 @@ public sealed class MaterialChipTests : IDisposable
         input.Pump(new Size(320, 120));
         Assert.Equal(WithOpacity(Colors.Black, 0x3d / 255.0), FindChipDecoration(input.RenderView).Decoration.Color);
         Assert.Contains(FindDescendants<RenderParagraph>(input.RenderView),
-            paragraph => paragraph.Text == IconText(Icons.Cancel));
+            paragraph => paragraph.PlainText == IconText(Icons.Cancel));
         Assert.DoesNotContain(FindDescendants<RenderParagraph>(input.RenderView),
-            paragraph => paragraph.Text == IconText(Icons.Check));
+            paragraph => paragraph.PlainText == IconText(Icons.Check));
     }
 
     [Fact]
@@ -707,7 +707,7 @@ public sealed class MaterialChipTests : IDisposable
         Assert.Equal(Colors.Gold, ForegroundColor(Paragraph(harness.RenderView, "Selected input")));
         RenderChip renderChip = FindChipRender(harness.RenderView);
         var clear = FindDescendants<RenderParagraph>(harness.RenderView)
-            .Single(paragraph => paragraph.Text == IconText(Icons.Clear));
+            .Single(paragraph => paragraph.PlainText == IconText(Icons.Clear));
         Assert.Equal(Colors.CadetBlue, renderChip.CheckmarkColor);
         Assert.Equal(1.0, renderChip.CheckmarkProgress);
         Assert.Equal(Colors.Gold, ForegroundColor(clear));
@@ -749,7 +749,7 @@ public sealed class MaterialChipTests : IDisposable
         var semantics = harness.PumpAndGetSemantics(new Size(320, 120));
 
         var clear = FindDescendants<RenderParagraph>(harness.RenderView)
-            .Single(paragraph => paragraph.Text == IconText(Icons.Clear));
+            .Single(paragraph => paragraph.PlainText == IconText(Icons.Clear));
         Assert.Equal(Colors.Purple, ForegroundColor(clear));
         Assert.Equal(constraints, FindChipRender(harness.RenderView).DeleteIconBoxConstraints);
         var delete = FindSemantics(semantics, node => node.Label == "Effacer");
@@ -937,7 +937,7 @@ public sealed class MaterialChipTests : IDisposable
 
     private static RenderParagraph Paragraph(RenderObject root, string text)
     {
-        return FindDescendants<RenderParagraph>(root).Single(paragraph => paragraph.Text == text);
+        return FindDescendants<RenderParagraph>(root).Single(paragraph => paragraph.PlainText == text);
     }
 
     private static Color ForegroundColor(RenderParagraph paragraph)

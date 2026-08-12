@@ -411,7 +411,7 @@ public sealed class MaterialDrawerHeaderTests
 
     private static RenderParagraph? FindParagraph(RenderObject? root, string text)
     {
-        return FindDescendants<RenderParagraph>(root).FirstOrDefault(paragraph => paragraph.Text == text);
+        return FindDescendants<RenderParagraph>(root).FirstOrDefault(paragraph => paragraph.PlainText == text);
     }
 
     private static RenderBox FindLayoutChild(RenderCustomMultiChildLayoutBox layout, string id)

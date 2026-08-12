@@ -809,7 +809,7 @@ public sealed class MaterialAutocompleteTests : IDisposable
 
     private static RenderParagraph? FindParagraph(RenderObject? root, string text)
     {
-        return FindDescendants<RenderParagraph>(root).FirstOrDefault(paragraph => paragraph.Text == text);
+        return FindDescendants<RenderParagraph>(root).FirstOrDefault(paragraph => paragraph.PlainText == text);
     }
 
     private static Rect GlobalRect(RenderBox renderBox)

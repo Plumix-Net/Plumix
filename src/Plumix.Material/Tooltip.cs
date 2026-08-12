@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
+using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -13,6 +14,7 @@ public sealed class Tooltip : StatefulWidget
 {
     public Tooltip(
         string? message = null,
+        InlineSpan? richMessage = null,
         Widget? child = null,
         double? height = null,
         BoxConstraints? constraints = null,
@@ -41,6 +43,13 @@ public sealed class Tooltip : StatefulWidget
             throw new ArgumentException("Only one of height and constraints may be specified.");
         }
 
+        if ((message is null) == (richMessage is null))
+        {
+            throw new ArgumentException(
+                "Either `message` or `richMessage` must be specified, but not both.",
+                nameof(richMessage));
+        }
+
         ValidateFiniteNonNegative(height, nameof(height));
         ValidateFiniteNonNegative(verticalOffset, nameof(verticalOffset));
         ValidateDuration(waitDuration, nameof(waitDuration));
@@ -48,6 +57,7 @@ public sealed class Tooltip : StatefulWidget
         ValidateDuration(exitDuration, nameof(exitDuration));
 
         Message = message;
+        RichMessage = richMessage;
         Child = child;
         Height = height;
         Constraints = constraints;
@@ -71,7 +81,15 @@ public sealed class Tooltip : StatefulWidget
         PositionDelegate = positionDelegate;
     }
 
+    /// The text to display in the tooltip.
+    ///
+    /// Only one of [Message] and [RichMessage] may be non-null.
     public string? Message { get; }
+
+    /// The rich text to display in the tooltip.
+    ///
+    /// Only one of [Message] and [RichMessage] may be non-null.
+    public InlineSpan? RichMessage { get; }
 
     public Widget? Child { get; }
 
@@ -162,7 +180,9 @@ public sealed class TooltipState : State
         _theme = Theme.Of(context);
         _tooltipTheme = TooltipTheme.Of(context);
         _visible = TooltipVisibility.Of(context);
-        string message = CurrentWidget.Message ?? string.Empty;
+        InlineSpan richMessage = CurrentWidget.RichMessage
+                                 ?? new TextSpan(text: CurrentWidget.Message ?? string.Empty);
+        string message = richMessage.ToPlainText();
         if (message.Length == 0)
         {
             return CurrentWidget.Child ?? new SizedBox();
@@ -189,7 +209,7 @@ public sealed class TooltipState : State
             semanticsTooltip: excludeFromSemantics ? null : message,
             tooltipBuilder: (_, animation) => new FadeTransition(
                 opacity: animation,
-                child: BuildBubble(message)),
+                child: BuildBubble(richMessage)),
             hoverDelay: CurrentWidget.WaitDuration
                         ?? _tooltipTheme.WaitDuration
                         ?? TimeSpan.Zero,
@@ -217,7 +237,7 @@ public sealed class TooltipState : State
         return _visible && (_tooltipKey.CurrentState?.EnsureTooltipVisible() ?? false);
     }
 
-    private Widget BuildBubble(string message)
+    private Widget BuildBubble(InlineSpan richMessage)
     {
         bool desktop = _theme.Platform is TargetPlatform.MacOS
             or TargetPlatform.Linux
@@ -254,8 +274,8 @@ public sealed class TooltipState : State
         Widget bubble = new Center(
             widthFactor: 1,
             heightFactor: 1,
-            child: new Text(
-                message,
+            child: Text.Rich(
+                richMessage,
                 textAlign: textAlign,
                 textDirection: TextDirection.Ltr));
         bubble = new Container(

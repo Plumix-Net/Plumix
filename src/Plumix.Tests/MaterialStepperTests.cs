@@ -417,7 +417,7 @@ public sealed class MaterialStepperTests : IDisposable
         color.B);
 
     private static RenderParagraph? FindParagraph(RenderObject? root, string text) =>
-        FindDescendants<RenderParagraph>(root).FirstOrDefault(paragraph => paragraph.Text == text);
+        FindDescendants<RenderParagraph>(root).FirstOrDefault(paragraph => paragraph.PlainText == text);
 
     private static List<T> FindDescendants<T>(RenderObject? root) where T : RenderObject
     {

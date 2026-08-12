@@ -392,8 +392,8 @@ public sealed class MaterialInputDecoratorTests
         harness.Pump();
 
         List<RenderParagraph> paragraphs = DecoratorHarness.FindAll<RenderParagraph>(harness.RenderView);
-        Assert.Contains(paragraphs, value => value.Text == "Invalid");
-        Assert.DoesNotContain(paragraphs, value => value.Text == "Helper");
+        Assert.Contains(paragraphs, value => value.PlainText == "Invalid");
+        Assert.DoesNotContain(paragraphs, value => value.PlainText == "Helper");
         Assert.Equal(theme.ErrorColor, Painter(harness).Border.BorderSide.Color);
     }
 

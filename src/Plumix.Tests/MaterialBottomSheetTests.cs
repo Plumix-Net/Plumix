@@ -991,7 +991,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
         binding.HandlePointerEvent(view, new PointerUpEvent(pointer, PointerDeviceKind.Mouse, position, PointerButtons.None, time));
 
     private static RenderParagraph? FindParagraph(RenderObject? root, string text) =>
-        FindDescendants<RenderParagraph>(root).FirstOrDefault(value => value.Text == text);
+        FindDescendants<RenderParagraph>(root).FirstOrDefault(value => value.PlainText == text);
 
     private static List<T> FindDescendants<T>(RenderObject? root) where T : RenderObject
     {

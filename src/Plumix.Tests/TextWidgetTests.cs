@@ -35,7 +35,7 @@ public sealed class TextWidgetTests
         owner.FlushBuild();
 
         var paragraph = RequireRenderObject<RenderParagraph>(root.ChildElement);
-        Assert.Equal("alpha", paragraph.Text);
+        Assert.Equal("alpha", paragraph.PlainText);
         Assert.Equal(16, paragraph.FontSize);
         Assert.Equal(FontWeight.Bold, paragraph.FontWeight);
         Assert.Equal(FontStyle.Italic, paragraph.FontStyle);
@@ -64,7 +64,7 @@ public sealed class TextWidgetTests
 
         var updated = RequireRenderObject<RenderParagraph>(root.ChildElement);
         Assert.Same(paragraph, updated);
-        Assert.Equal("beta", updated.Text);
+        Assert.Equal("beta", updated.PlainText);
         Assert.Equal(12, updated.FontSize);
         Assert.Equal(FontWeight.Normal, updated.FontWeight);
         Assert.Equal(FontStyle.Normal, updated.FontStyle);
@@ -249,7 +249,7 @@ public sealed class TextWidgetTests
 
         var paragraph = FindDescendant<RenderParagraph>(root.ChildElement!.RenderObject);
         Assert.NotNull(paragraph);
-        Assert.Equal(char.ConvertFromUtf32(0xe047), paragraph!.Text);
+        Assert.Equal(char.ConvertFromUtf32(0xe047), paragraph!.PlainText);
         Assert.Equal(28, paragraph.FontSize);
         Assert.Equal(Colors.DarkOrange, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color);
         Assert.Equal(

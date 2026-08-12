@@ -38,7 +38,7 @@ public sealed class MaterialTextFieldTests : IDisposable
         harness.Pump(new Size(360, 120));
         Assert.Equal("a😀c", controller.Text);
         Assert.Equal("a😀c", changed);
-        Assert.Contains(FindDescendants<RenderParagraph>(harness.RenderView), value => value.Text == "3/3");
+        Assert.Contains(FindDescendants<RenderParagraph>(harness.RenderView), value => value.PlainText == "3/3");
 
         Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("Enter", true)));
         Assert.Equal("a😀c", submitted);
@@ -249,7 +249,9 @@ public sealed class MaterialTextFieldTests : IDisposable
         Assert.Equal(1, formChanged);
         Assert.False(formState.Validate());
         harness.Pump(new Size(360, 160));
-        Assert.Contains(FindDescendants<RenderParagraph>(harness.RenderView), value => value.Text == "Name is required");
+        Assert.Contains(
+            FindDescendants<RenderParagraph>(harness.RenderView),
+            value => value.PlainText == "Name is required");
 
         formState.Save();
         Assert.Equal(string.Empty, saved);
@@ -277,8 +279,12 @@ public sealed class MaterialTextFieldTests : IDisposable
         harness.Pump(new Size(360, 140));
         Assert.False(formState!.Validate());
         harness.Pump(new Size(360, 160));
-        Assert.Contains(FindDescendants<RenderParagraph>(harness.RenderView), value => value.Text == "custom: raw error");
-        Assert.DoesNotContain(FindDescendants<RenderParagraph>(harness.RenderView), value => value.Text == "raw error");
+        Assert.Contains(
+            FindDescendants<RenderParagraph>(harness.RenderView),
+            value => value.PlainText == "custom: raw error");
+        Assert.DoesNotContain(
+            FindDescendants<RenderParagraph>(harness.RenderView),
+            value => value.PlainText == "raw error");
     }
 
     [Fact]

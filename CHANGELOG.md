@@ -1,5 +1,25 @@
 # Changelog
 
+- Breaking: ported Flutter's rich-text span model and rebased the paragraph stack on it —
+  `painting/inline_span.dart`, `text_span.dart`, `placeholder_span.dart`, `text_scaler.dart`,
+  `widgets/widget_span.dart`, `RichText` from `widgets/basic.dart`, and `Text`/`Text.rich` from
+  `widgets/text.dart`. `InlineSpan`/`TextSpan`/`PlaceholderSpan`/`WidgetSpan` carry the source
+  traversal, `ToPlainText`, `CodeUnitAt`, affinity-based `GetSpanForPosition`, semantics information
+  with spell-out/locale attributes, and `CompareTo`. `RenderParagraph` is now a multi-child render
+  object driven by an `InlineSpan`: the `RenderComparison` setter switch, styled runs and inline
+  placeholders through one Avalonia `TextLayout`, the six `PlaceholderAlignment` rules, span hit
+  testing that adds the hit `TextSpan` as the hit-test entry, and `AssembleSemanticsNode` with
+  per-run `OrdinalSortKey` nodes plus tap/long-press actions.
+  **Breaking:** `RenderParagraph.Text` is an `InlineSpan` (the flattened string moved to `PlainText`),
+  `Text` is a `StatelessWidget` that builds `RichText`, and text scaling now lives on
+  `RenderParagraph.TextScaler` instead of being folded into `FontSize`.
+  Closes the `Tooltip.richMessage` divergence (Material `Tooltip` takes `message` or `richMessage`
+  with the source mutual-exclusion guard) and the `RichText` half of the `MenuAccelerator` one (the
+  default label is one paragraph whose accelerator run carries the underline).
+  New primitives: `RenderComparison`, `TextStyle.CompareTo`, `TextScaler`, `PlaceholderDimensions`,
+  `PlaceholderAlignment`, `TextParentData`, `RenderInlineChildrenContainerDefaults`, `IHitTestTarget`
+  (now the `HitTestEntry` target type) and `IMouseTrackerAnnotation`.
+
 - Breaking: moved Flutter's stateful menu-anchor tree into core and closed the `RawMenuAnchor`/`MenuAnchor`
   divergence. `widgets/raw_menu_anchor.dart` is now a strict port: `MenuController` (subclassable, with
   `Open(position)`/`Close`/`CloseChildren`/`IsOpen`/`MaybeOf`/`MaybeIsOpenOf`), the shared anchor/group state

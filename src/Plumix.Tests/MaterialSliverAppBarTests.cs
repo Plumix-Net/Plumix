@@ -278,7 +278,7 @@ public sealed class MaterialSliverAppBarTests
             FindDescendants<RenderConstrainedBox>(rtl.RenderView),
             box => box.AdditionalConstraints == BoxConstraints.TightFor(width: 192));
         var paragraph = FindDescendants<RenderParagraph>(rtl.RenderView)
-            .Single(value => value.Text == "RTL title");
+            .Single(value => value.PlainText == "RTL title");
         Assert.Equal(
             Color.FromArgb(128, Colors.Purple.R, Colors.Purple.G, Colors.Purple.B),
             Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color);
@@ -297,7 +297,7 @@ public sealed class MaterialSliverAppBarTests
         m2.Pump(new Size(360, 200));
 
         var m2Paragraph = FindDescendants<RenderParagraph>(m2.RenderView)
-            .Single(value => value.Text == "M2 title");
+            .Single(value => value.PlainText == "M2 title");
         Assert.Equal(
             Color.FromArgb(128, Colors.Green.R, Colors.Green.G, Colors.Green.B),
             Assert.IsType<SolidColorBrush>(m2Paragraph.Foreground).Color);
@@ -354,7 +354,7 @@ public sealed class MaterialSliverAppBarTests
         Assert.Equal(144, header.LastShrinkOffset, precision: 3);
         Assert.Equal(56, header.Child!.Size.Height, precision: 3);
         Assert.True(header.LastOverlapsContent);
-        Assert.Contains(FindDescendants<RenderParagraph>(harness.RenderView), value => value.Text == "Toolbar");
+        Assert.Contains(FindDescendants<RenderParagraph>(harness.RenderView), value => value.PlainText == "Toolbar");
     }
 
     [Fact]

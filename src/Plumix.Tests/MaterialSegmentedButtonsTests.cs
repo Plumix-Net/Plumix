@@ -434,7 +434,7 @@ public sealed class MaterialSegmentedButtonsTests
     }
 
     private static RenderParagraph? FindParagraph(RenderObject? root, string text) =>
-        FindDescendants<RenderParagraph>(root).FirstOrDefault(paragraph => paragraph.Text == text);
+        FindDescendants<RenderParagraph>(root).FirstOrDefault(paragraph => paragraph.PlainText == text);
 
     private static RenderParagraph? FindParagraphByCodePoint(RenderObject? root, int codePoint) =>
         FindParagraph(root, char.ConvertFromUtf32(codePoint));

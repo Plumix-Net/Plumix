@@ -110,7 +110,7 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
             align.Alignment == Alignment.CenterLeft);
 
         RenderParagraph paragraph = Assert.Single(FindDescendants<RenderParagraph>(harness.RenderView), value =>
-            value.Text == "Copy a very long selection");
+            value.PlainText == "Copy a very long selection");
         Assert.Equal(14.0, paragraph.FontSize);
         Assert.Equal(-0.15, paragraph.LetterSpacing);
         Assert.Equal(FontWeight.Normal, paragraph.FontWeight);
@@ -148,7 +148,7 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
 
         SemanticsNode? semantics = harness.PumpAndGetSemantics(new Size(222, 60));
         RenderParagraph paragraph = Assert.Single(FindDescendants<RenderParagraph>(harness.RenderView), value =>
-            value.Text == "Paste");
+            value.PlainText == "Paste");
 
         Assert.Equal(Colors.White, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color);
         Assert.Null(FindSemantics(semantics, node => node.Actions.HasFlag(SemanticsActions.Tap)));
@@ -163,7 +163,7 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
 
         harness.Pump(new Size(222, 60));
         RenderParagraph paragraph = Assert.Single(FindDescendants<RenderParagraph>(harness.RenderView), value =>
-            value.Text == "Custom");
+            value.PlainText == "Custom");
 
         Assert.Equal(Colors.DarkOrange, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color);
     }
@@ -226,7 +226,7 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
             box.AdditionalConstraints.MinWidth == 48
             && box.AdditionalConstraints.MinHeight == 48);
         RenderParagraph paragraph = Assert.Single(FindDescendants<RenderParagraph>(harness.RenderView), value =>
-            value.Text == "Copy");
+            value.PlainText == "Copy");
         Assert.Equal(Colors.Black, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color);
         Assert.Equal(FontWeight.Normal, paragraph.FontWeight);
     }
@@ -366,11 +366,15 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
         androidHarness.Pump(new Size(300, 220));
 
         Assert.Single(FindDescendants<RenderTextSelectionToolbarItemsLayout>(androidHarness.RenderView));
-        Assert.Contains(FindDescendants<RenderParagraph>(androidHarness.RenderView), value => value.Text == "Copy");
-        Assert.Contains(FindDescendants<RenderParagraph>(androidHarness.RenderView), value => value.Text == "DELETE");
         Assert.Contains(
             FindDescendants<RenderParagraph>(androidHarness.RenderView),
-            value => value.Text == "Custom action");
+            value => value.PlainText == "Copy");
+        Assert.Contains(
+            FindDescendants<RenderParagraph>(androidHarness.RenderView),
+            value => value.PlainText == "DELETE");
+        Assert.Contains(
+            FindDescendants<RenderParagraph>(androidHarness.RenderView),
+            value => value.PlainText == "Custom action");
 
         using var desktopHarness = CreateHarness(
             ThemeData.Light with { Platform = TargetPlatform.Windows },
@@ -458,10 +462,10 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
             value.AdditionalConstraints == BoxConstraints.TightFor(width: 165, height: 97));
         Assert.Contains(
             FindDescendants<RenderParagraph>(harness.RenderView),
-            value => value.Text == "replacement");
+            value => value.PlainText == "replacement");
         RenderParagraph delete = Assert.Single(
             FindDescendants<RenderParagraph>(harness.RenderView),
-            value => value.Text == "DELETE");
+            value => value.PlainText == "DELETE");
         Assert.Equal(
             Color.Parse("#FF2196F3"),
             Assert.IsType<SolidColorBrush>(delete.Foreground).Color);

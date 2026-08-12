@@ -354,7 +354,7 @@ public sealed class MaterialReorderableListTests
 
         string dragGlyph = char.ConvertFromUtf32(Icons.DragHandle.CodePoint);
         Assert.Equal(3, FindDescendants<RenderParagraph>(desktop.RenderView)
-            .Count(paragraph => paragraph.Text == dragGlyph));
+            .Count(paragraph => paragraph.PlainText == dragGlyph));
 
         ThemeData mobileTheme = ThemeData.Light with { Platform = TargetPlatform.Android };
         using WidgetRenderHarness mobile = new(Wrap(
@@ -364,7 +364,7 @@ public sealed class MaterialReorderableListTests
 
         Assert.DoesNotContain(
             FindDescendants<RenderParagraph>(mobile.RenderView),
-            paragraph => paragraph.Text == dragGlyph);
+            paragraph => paragraph.PlainText == dragGlyph);
     }
 
     [Fact]
@@ -518,7 +518,7 @@ public sealed class MaterialReorderableListTests
             Assert.Equal(baselineEntries + 1, harness.FindState<OverlayState>().Entries.Count);
             RenderParagraph proxyText = Assert.Single(
                 FindDescendants<RenderParagraph>(harness.RenderView),
-                paragraph => paragraph.Text == "Item 0");
+                paragraph => paragraph.PlainText == "Item 0");
             Assert.Equal(31, proxyText.FontSize);
 
             double pickupClock = Scheduler.CurrentSeconds;
@@ -567,7 +567,7 @@ public sealed class MaterialReorderableListTests
             Assert.Equal(
                 ["Bravo", "Charlie", "Alpha"],
                 FindDescendants<RenderParagraph>(harness.RenderView)
-                    .Select(paragraph => paragraph.Text)
+                    .Select(paragraph => paragraph.PlainText)
                     .Where(text => text is "Alpha" or "Bravo" or "Charlie"));
         }
         finally

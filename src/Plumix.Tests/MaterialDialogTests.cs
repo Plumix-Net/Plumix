@@ -290,8 +290,8 @@ public sealed class MaterialDialogTests : IDisposable
             && Close(value.Padding.Top, 12)
             && Close(value.Padding.Right, 0)
             && Close(value.Padding.Bottom, 16.0 / 3.0));
-        Assert.Equal(60, FindParagraph(harness.RenderView, "Scaled title")!.FontSize);
-        Assert.Equal(36, FindParagraph(harness.RenderView, "Scaled option")!.FontSize);
+        Assert.Equal(60, ScaledFontSize(FindParagraph(harness.RenderView, "Scaled title")!));
+        Assert.Equal(36, ScaledFontSize(FindParagraph(harness.RenderView, "Scaled option")!));
     }
 
     [Fact]
@@ -464,8 +464,11 @@ public sealed class MaterialDialogTests : IDisposable
 
     private static bool Close(double actual, double expected) => Math.Abs(actual - expected) < 0.01;
 
+    private static double ScaledFontSize(RenderParagraph paragraph) =>
+        paragraph.TextScaler.Scale(paragraph.FontSize);
+
     private static RenderParagraph? FindParagraph(RenderObject? root, string text) =>
-        FindDescendants<RenderParagraph>(root).FirstOrDefault(paragraph => paragraph.Text == text);
+        FindDescendants<RenderParagraph>(root).FirstOrDefault(paragraph => paragraph.PlainText == text);
 
     private static List<T> FindDescendants<T>(RenderObject? root) where T : RenderObject
     {

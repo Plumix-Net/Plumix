@@ -315,7 +315,9 @@ public sealed class MaterialDatePickerTests : IDisposable
         textState.EffectiveController.Text = "not-a-date";
         Assert.False(formKey.CurrentState.Validate());
         harness.Pump(new Size(420, 180));
-        Assert.Contains(FindDescendants<RenderParagraph>(harness.RenderView), paragraph => paragraph.Text == "Bad format");
+        Assert.Contains(
+            FindDescendants<RenderParagraph>(harness.RenderView),
+            paragraph => paragraph.PlainText == "Bad format");
 
         textState.EffectiveController.Text = "03/15/2026";
         Assert.False(formKey.CurrentState.Validate());
@@ -407,7 +409,9 @@ public sealed class MaterialDatePickerTests : IDisposable
         semantics = harness.PumpAndGetSemantics(new Size(500, 700));
         Assert.Equal(DatePickerEntryMode.Input, Assert.Single(modes));
         Assert.NotNull(FindSemantics(semantics, node => node.Label == "Switch to calendar"));
-        Assert.Contains(FindDescendants<RenderParagraph>(harness.RenderView), paragraph => paragraph.Text == "Enter date");
+        Assert.Contains(
+            FindDescendants<RenderParagraph>(harness.RenderView),
+            paragraph => paragraph.PlainText == "Enter date");
     }
 
     [Fact]
@@ -434,9 +438,15 @@ public sealed class MaterialDatePickerTests : IDisposable
             node.Label is "Switch to input" or "Switch to calendar"));
         Assert.Contains(FindDescendants<RenderColoredBox>(harness.RenderView), box => box.Color == Colors.Orange);
         Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView), box => box.Decoration.Color == Colors.Purple);
-        Assert.Contains(FindDescendants<RenderParagraph>(harness.RenderView), paragraph => paragraph.Text == "Choose birthday");
-        Assert.Contains(FindDescendants<RenderParagraph>(harness.RenderView), paragraph => paragraph.Text == "BACK");
-        Assert.Contains(FindDescendants<RenderParagraph>(harness.RenderView), paragraph => paragraph.Text == "USE");
+        Assert.Contains(
+            FindDescendants<RenderParagraph>(harness.RenderView),
+            paragraph => paragraph.PlainText == "Choose birthday");
+        Assert.Contains(
+            FindDescendants<RenderParagraph>(harness.RenderView),
+            paragraph => paragraph.PlainText == "BACK");
+        Assert.Contains(
+            FindDescendants<RenderParagraph>(harness.RenderView),
+            paragraph => paragraph.PlainText == "USE");
     }
 
     [Fact]
@@ -495,7 +505,9 @@ public sealed class MaterialDatePickerTests : IDisposable
         Assert.True(ok!.PerformAction(SemanticsActions.Tap));
         harness.Pump(new Size(500, 700));
         Assert.False(result.IsCompleted);
-        Assert.Contains(FindDescendants<RenderParagraph>(harness.RenderView), paragraph => paragraph.Text == "Bad date");
+        Assert.Contains(
+            FindDescendants<RenderParagraph>(harness.RenderView),
+            paragraph => paragraph.PlainText == "Bad date");
 
         Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("A", isDown: true, isControlPressed: true)));
         Assert.True(FocusManager.Instance.HandleTextInput("03/16/2026"));
@@ -529,7 +541,9 @@ public sealed class MaterialDatePickerTests : IDisposable
         Assert.NotNull(day);
         Assert.True(day!.PerformAction(SemanticsActions.Tap));
         harness.Pump(new Size(500, 700));
-        Assert.Contains(FindDescendants<RenderParagraph>(harness.RenderView), paragraph => paragraph.Text == "Mon, Mar 16");
+        Assert.Contains(
+            FindDescendants<RenderParagraph>(harness.RenderView),
+            paragraph => paragraph.PlainText == "Mon, Mar 16");
 
         semantics = harness.PumpAndGetSemantics(new Size(500, 700));
         var ok = FindSemantics(semantics, node =>
@@ -643,7 +657,9 @@ public sealed class MaterialDatePickerTests : IDisposable
         Assert.True(ok!.PerformAction(SemanticsActions.Tap));
         harness.Pump(new Size(500, 700));
         Assert.False(result.IsCompleted);
-        Assert.Contains(FindDescendants<RenderParagraph>(harness.RenderView), paragraph => paragraph.Text == "Bad time");
+        Assert.Contains(
+            FindDescendants<RenderParagraph>(harness.RenderView),
+            paragraph => paragraph.PlainText == "Bad time");
 
         Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("A", isDown: true, isControlPressed: true)));
         Assert.True(FocusManager.Instance.HandleTextInput("11"));

@@ -308,7 +308,7 @@ public sealed class MaterialActionButtonsTests
         harness.Pump(new Size(240, 80));
 
         var icons = FindDescendants<RenderParagraph>(harness.RenderView)
-            .Where(paragraph => paragraph.Text.Length == 1)
+            .Where(paragraph => paragraph.PlainText.Length == 1)
             .ToList();
         Assert.Equal(4, icons.Count);
         Assert.All(
@@ -336,7 +336,7 @@ public sealed class MaterialActionButtonsTests
         harness.Pump(new Size(240, 80));
 
         var icons = FindDescendants<RenderParagraph>(harness.RenderView)
-            .Where(paragraph => paragraph.Text.Length == 1)
+            .Where(paragraph => paragraph.PlainText.Length == 1)
             .ToList();
         Assert.Equal(4, icons.Count);
         Assert.All(
@@ -373,7 +373,7 @@ public sealed class MaterialActionButtonsTests
 
     private static RenderParagraph? FindParagraph(RenderObject? root, string text)
     {
-        return FindDescendants<RenderParagraph>(root).FirstOrDefault(paragraph => paragraph.Text == text);
+        return FindDescendants<RenderParagraph>(root).FirstOrDefault(paragraph => paragraph.PlainText == text);
     }
 
     private static List<T> FindDescendants<T>(RenderObject? root) where T : RenderObject
