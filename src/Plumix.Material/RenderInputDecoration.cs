@@ -368,6 +368,79 @@ internal sealed class RenderDecoration : RenderBox, ISlottedRenderObjectContaine
         }
     }
 
+    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    {
+        void Visit(RenderBox? child)
+        {
+            if (child is not null)
+            {
+                visitor(child, ParentDataOf(child).offset, Matrix.Identity);
+            }
+        }
+
+        Visit(_icon);
+        Visit(_prefix);
+        Visit(_prefixIcon);
+        Visit(_label);
+
+        // The hint is not visible when the label is not floating, so it is not exposed then either.
+        if (IsFocused || _label is null)
+        {
+            Visit(_hint);
+        }
+
+        Visit(_input);
+        Visit(_suffixIcon);
+        Visit(_suffix);
+        Visit(_container);
+        Visit(_helperError);
+        Visit(_counter);
+    }
+
+    protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
+    {
+        base.DescribeSemanticsConfiguration(configuration);
+        configuration.ChildConfigurationsDelegate = ChildSemanticsConfigurationDelegate;
+    }
+
+    /// Groups each tagged affix into its own sibling semantics node and merges everything else up,
+    /// so a prefix, the input and a suffix are three siblings rather than one concatenated label.
+    private static ChildSemanticsConfigurationsResult ChildSemanticsConfigurationDelegate(
+        List<SemanticsConfiguration> childConfigs)
+    {
+        var builder = new ChildSemanticsConfigurationsResultBuilder();
+        var mergeGroups = new Dictionary<SemanticsTag, List<SemanticsConfiguration>>();
+        foreach (SemanticsConfiguration childConfig in childConfigs)
+        {
+            SemanticsTag? tag = Array.Find(
+                InputDecorator.AffixSemanticsTags,
+                candidate => childConfig.TagsChildrenWith(candidate));
+            if (tag is null)
+            {
+                builder.MarkAsMergeUp(childConfig);
+                continue;
+            }
+
+            if (!mergeGroups.TryGetValue(tag, out List<SemanticsConfiguration>? group))
+            {
+                group = [];
+                mergeGroups[tag] = group;
+            }
+
+            group.Add(childConfig);
+        }
+
+        foreach (SemanticsTag tag in InputDecorator.AffixSemanticsTags)
+        {
+            if (mergeGroups.TryGetValue(tag, out List<SemanticsConfiguration>? group))
+            {
+                builder.MarkAsSiblingMergeGroup(group);
+            }
+        }
+
+        return builder.Build();
+    }
+
     private IEnumerable<RenderBox> Children()
     {
         if (_icon is not null) yield return _icon;
@@ -1023,10 +1096,12 @@ internal sealed class RenderDecoration : RenderBox, ISlottedRenderObjectContaine
             double dx = Lerp(startX, floatEndX, t);
             double dy = Lerp(0.0, floatingY - labelOffset.Y, t);
 
+            // Records where the label was painted, in this render object's own coordinate space so
+            // that ApplyPaintTransform can hand the same matrix to the geometry protocol.
             _labelTransform = Matrix.CreateScale(scale, scale)
-                              * Matrix.CreateTranslation(dx + offset.X, labelOffset.Y + dy + offset.Y);
+                              * Matrix.CreateTranslation(dx, labelOffset.Y + dy);
             context.PushTransform(
-                _labelTransform.Value,
+                _labelTransform.Value * Matrix.CreateTranslation(offset.X, offset.Y),
                 childContext => childContext.PaintChild(_label, default));
         }
         else
@@ -1055,6 +1130,19 @@ internal sealed class RenderDecoration : RenderBox, ISlottedRenderObjectContaine
         {
             context.PaintChild(child, ParentDataOf(child).offset + offset);
         }
+    }
+
+    public override void ApplyPaintTransform(RenderObject child, ref Matrix transform)
+    {
+        if (ReferenceEquals(child, _label) && _labelTransform is Matrix labelTransform)
+        {
+            // The label is painted through _labelTransform, which already carries its absolute
+            // position, so the offset the base implementation appends is cancelled out first.
+            Point labelOffset = ParentDataOf(_label!).offset;
+            transform = Matrix.CreateTranslation(-labelOffset.X, -labelOffset.Y) * labelTransform * transform;
+        }
+
+        base.ApplyPaintTransform(child, ref transform);
     }
 
     protected override bool HitTestSelf(Point position) => true;

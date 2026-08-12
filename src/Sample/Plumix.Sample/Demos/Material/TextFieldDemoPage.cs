@@ -104,6 +104,15 @@ public sealed class TextFieldDemoPage : StatefulWidget
                     new TextField(
                         enabled: _enabled,
                         decoration: new InputDecoration(
+                            labelText: "Shaped border",
+                            hintText: "Any ShapeBorder as the input outline",
+                            helperText: "ShapedInputBorder cuts the label gap out of the shape",
+                            border: new ShapedInputBorder(
+                                new StadiumBorder(),
+                                new BorderSide(Colors.Indigo, 2.0)))),
+                    new TextField(
+                        enabled: _enabled,
+                        decoration: new InputDecoration(
                             labelText: "Dense + compact density",
                             helperText: "isDense with VisualDensity.Compact",
                             isDense: true,

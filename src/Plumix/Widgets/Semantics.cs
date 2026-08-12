@@ -59,9 +59,11 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         bool? mixed = null,
         bool? selected = null,
         SemanticsSortKey? sortKey = null,
+        SemanticsTag? tagForChildren = null,
         Key? key = null,
         bool mergeDescendants = false) : base(child, key)
     {
+        TagForChildren = tagForChildren;
         Label = label;
         Hint = hint;
         OnTapHint = onTapHint;
@@ -163,6 +165,9 @@ public sealed class Semantics : SingleChildRenderObjectWidget
 
     public SemanticsSortKey? SortKey { get; }
 
+    /// The tag attached to every semantics node created below this widget.
+    public SemanticsTag? TagForChildren { get; }
+
     public bool MergeDescendants { get; }
 
     internal override RenderObject CreateRenderObject(BuildContext context)
@@ -191,7 +196,8 @@ public sealed class Semantics : SingleChildRenderObjectWidget
             container: Container,
             explicitChildNodes: ExplicitChildNodes,
             sortKey: SortKey,
-            mergeDescendants: MergeDescendants);
+            mergeDescendants: MergeDescendants,
+            tagForChildren: TagForChildren);
         semantics.OnFocus = OnFocus;
         return semantics;
     }
@@ -224,6 +230,7 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         semantics.ExplicitChildNodes = ExplicitChildNodes;
         semantics.SortKey = SortKey;
         semantics.MergeDescendants = MergeDescendants;
+        semantics.TagForChildren = TagForChildren;
     }
 
     private static SemanticsFlags RoleFlags(SemanticsRole role) => role switch

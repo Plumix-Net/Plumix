@@ -308,6 +308,14 @@ public sealed class RenderFlow : RenderBox,
         }
     }
 
+    public override void ApplyPaintTransform(RenderObject child, ref Matrix transform)
+    {
+        if (((FlowParentData)child.parentData!).Transform is Matrix childTransform)
+        {
+            transform = childTransform * transform;
+        }
+    }
+
     protected override Rect? DescribeApproximatePaintClip(RenderObject? child)
     {
         return ClipBehavior == Clip.None ? null : new Rect(default, Size);

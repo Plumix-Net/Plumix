@@ -1,5 +1,22 @@
 # Changelog
 
+- Breaking: closed the `InputBorder`/`InputDecorator` divergence and landed the two core primitives it needed.
+  `RenderObject.ApplyPaintTransform` is now Flutter's protocol: `GetTransformTo`/`LocalToGlobal`/the new
+  `GlobalToLocal` compose the parent chain instead of the semantics walk, so they also resolve inside subtrees
+  hidden from semantics; `RenderBox`, `RenderTransform`, `RenderFittedBox`, `RenderFractionalTranslation`,
+  `RenderRotatedBox`, `RenderFlow` and `RenderFollowerLayer` implement it, and `GetPaintOffsetToRoot` is no longer
+  a translations-only approximation. Core semantics gained `SemanticsTag`, `SemanticsConfiguration.AddTagForChildren`/
+  `TagsChildrenWith`, `SemanticsNode.Tags` and `ChildSemanticsConfigurationsResultBuilder`; `Semantics` takes
+  `tagForChildren`. `UI/Path` gained `Combine(PathOperation, …)`. **Breaking:** `InputBorder` is now a `ShapeBorder`
+  record (so `Dimensions` is an `EdgeInsetsGeometry`, `LerpFrom`/`LerpTo` take `ShapeBorder?`, and the removed
+  `InputBorder.Lerp` is `ShapeBorder.Lerp` — which switches at the midpoint between unlike borders instead of scaling
+  through it, and no longer short-circuits t=0/1); `UnderlineInputBorder` paints its rounded branch through
+  `BoxBorder.PaintNonUniformBorder`; new `ShapedInputBorder` wraps an arbitrary `ShapeBorder`. `_RenderDecoration`
+  records the label transform in its own coordinate space and overrides `ApplyPaintTransform`, so the floating label's
+  global rect is now the painted one; the decorator ports Flutter's semantics visit order and the affix
+  `childConfigurationsDelegate`, so prefix/suffix/prefixIcon/suffixIcon form sibling nodes with per-decorator ordinal
+  sort keys (0/1/2) instead of merging into one label.
+
 - Breaking: rebased `Navigator` on the ported `Overlay`. `Route` gained `OverlayEntries`/`ChangedInternalState`/
   `ChangedExternalState`/`HasActiveRouteBelow`, the new `OverlayRoute` owns `CreateOverlayEntries`/`FinishedWhenPopped`,
   and `ModalRoute` now installs Flutter's `[barrier, scope]` entry pair with `Filter` (`BackdropFilter` on the barrier),

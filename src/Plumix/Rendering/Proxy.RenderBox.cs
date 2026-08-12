@@ -1831,6 +1831,19 @@ public sealed class RenderFittedBox : RenderProxyBox
         visitor(Child, new Point(0, 0), _transform);
     }
 
+    public override void ApplyPaintTransform(RenderObject child, ref Matrix transform)
+    {
+        if (Size.Width == 0 || Size.Height == 0 || Child is null
+            || Child.Size.Width == 0 || Child.Size.Height == 0)
+        {
+            transform = default;
+            return;
+        }
+
+        UpdatePaintData();
+        transform = _transform * transform;
+    }
+
     private void UpdatePaintData()
     {
         if (!_paintDataDirty)
@@ -2220,6 +2233,11 @@ public sealed class RenderTransform : RenderProxyBox
         }
     }
 
+    public override void ApplyPaintTransform(RenderObject child, ref Matrix transform)
+    {
+        transform = EffectiveTransform * transform;
+    }
+
     protected override OffsetLayer CreateCompositedLayer(OffsetLayer? oldLayer)
     {
         return oldLayer as TransformOffsetLayer ?? new TransformOffsetLayer();
@@ -2316,6 +2334,13 @@ public sealed class RenderFractionalTranslation : RenderProxyBox
         var data = (BoxParentData)Child.parentData!;
         var offset = PaintOffset;
         visitor(Child, data.offset, Matrix.CreateTranslation(offset.X, offset.Y));
+    }
+
+    public override void ApplyPaintTransform(RenderObject child, ref Matrix transform)
+    {
+        base.ApplyPaintTransform(child, ref transform);
+        Vector offset = PaintOffset;
+        transform = Matrix.CreateTranslation(offset.X, offset.Y) * transform;
     }
 }
 
@@ -2444,6 +2469,14 @@ public sealed class RenderRotatedBox : RenderProxyBox
         if (Child != null)
         {
             visitor(Child, default, _paintTransform);
+        }
+    }
+
+    public override void ApplyPaintTransform(RenderObject child, ref Matrix transform)
+    {
+        if (Child is not null)
+        {
+            transform = _paintTransform * transform;
         }
     }
 
@@ -2898,6 +2931,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
     private bool _explicitChildNodes;
     private bool _mergeDescendants;
     private SemanticsSortKey? _sortKey;
+    private SemanticsTag? _tagForChildren;
 
     public RenderSemanticsAnnotations(
         string? label = null,
@@ -2924,6 +2958,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         bool explicitChildNodes = false,
         SemanticsSortKey? sortKey = null,
         bool mergeDescendants = false,
+        SemanticsTag? tagForChildren = null,
         RenderBox? child = null)
     {
         _label = label;
@@ -2950,6 +2985,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         _explicitChildNodes = explicitChildNodes;
         _sortKey = sortKey;
         _mergeDescendants = mergeDescendants;
+        _tagForChildren = tagForChildren;
         Child = child;
     }
 
@@ -3278,6 +3314,21 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         }
     }
 
+    public SemanticsTag? TagForChildren
+    {
+        get => _tagForChildren;
+        set
+        {
+            if (ReferenceEquals(_tagForChildren, value))
+            {
+                return;
+            }
+
+            _tagForChildren = value;
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
     protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
     {
         if (string.IsNullOrWhiteSpace(_label)
@@ -3304,9 +3355,15 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
             && !_container
             && !_explicitChildNodes
             && _sortKey is null
+            && _tagForChildren is null
             && !_mergeDescendants)
         {
             return;
+        }
+
+        if (_tagForChildren is not null)
+        {
+            configuration.AddTagForChildren(_tagForChildren);
         }
 
         configuration.IsSemanticBoundary = _container;

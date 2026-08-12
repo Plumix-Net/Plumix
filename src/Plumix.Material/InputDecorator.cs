@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
+using System.Globalization;
 using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
@@ -377,6 +378,20 @@ public sealed class InputDecorator : StatefulWidget
 
     internal bool LabelShouldWithdraw => !IsEmpty || (IsFocused && Decoration.Enabled);
 
+    internal static readonly SemanticsTag PrefixSemanticsTag = new("_InputDecoratorState.prefix");
+    internal static readonly SemanticsTag PrefixIconSemanticsTag = new("_InputDecoratorState.prefixIcon");
+    internal static readonly SemanticsTag SuffixSemanticsTag = new("_InputDecoratorState.suffix");
+    internal static readonly SemanticsTag SuffixIconSemanticsTag = new("_InputDecoratorState.suffixIcon");
+
+    /// The affix tags in the order the render object groups them into sibling semantics nodes.
+    internal static readonly SemanticsTag[] AffixSemanticsTags =
+    [
+        PrefixSemanticsTag,
+        PrefixIconSemanticsTag,
+        SuffixSemanticsTag,
+        SuffixIconSemanticsTag,
+    ];
+
     public override State CreateState() => new InputDecoratorState();
 
     private sealed class InputDecoratorState : State
@@ -386,6 +401,11 @@ public sealed class InputDecorator : StatefulWidget
         private AnimationController _shakingLabelController = null!;
         private readonly InputBorderGap _borderGap = new();
         private InputDecoration? _effectiveDecoration;
+
+        // Provide a unique name to avoid mixing up sort order with sibling input decorators.
+        private OrdinalSortKey _prefixSemanticsSortOrder = null!;
+        private OrdinalSortKey _inputSemanticsSortOrder = null!;
+        private OrdinalSortKey _suffixSemanticsSortOrder = null!;
 
         private InputDecorator Current => (InputDecorator)StateWidget;
 
@@ -402,6 +422,11 @@ public sealed class InputDecorator : StatefulWidget
                 Curves.FastOutSlowIn,
                 Curves.Flipped(Curves.FastOutSlowIn));
             _shakingLabelController = new AnimationController(InputDecoration.TransitionDuration, this);
+
+            string group = GetHashCode().ToString(CultureInfo.InvariantCulture);
+            _prefixSemanticsSortOrder = new OrdinalSortKey(0, group);
+            _inputSemanticsSortOrder = new OrdinalSortKey(1, group);
+            _suffixSemanticsSortOrder = new OrdinalSortKey(2, group);
         }
 
         public override void DidChangeDependencies()
@@ -575,22 +600,43 @@ public sealed class InputDecorator : StatefulWidget
                 decoration.PrefixIconConstraints,
                 decoration.PrefixIconColor ?? defaults.PrefixIconColor,
                 iconSize,
-                visualDensity);
+                visualDensity,
+                InputDecorator.PrefixIconSemanticsTag);
             Widget? suffixIcon = BuildIconSlot(
                 decoration.SuffixIcon,
                 decoration.SuffixIconConstraints,
                 decoration.SuffixIconColor ?? defaults.SuffixIconColor,
                 iconSize,
-                visualDensity);
+                visualDensity,
+                InputDecorator.SuffixIconSemanticsTag);
+
+            bool hasPrefix = decoration.Prefix is not null || decoration.PrefixText is not null;
+            bool hasSuffix = decoration.Suffix is not null || decoration.SuffixText is not null;
+            Widget? input = Current.Child;
+
+            // If at least two out of the three are visible, it needs semantics sort order.
+            bool needsSemanticsSortOrder = LabelShouldWithdraw
+                                           && (input is not null
+                                               ? hasPrefix || hasSuffix
+                                               : hasPrefix && hasSuffix);
 
             Widget? prefix = BuildAffix(
                 decoration.Prefix,
                 decoration.PrefixText,
-                decoration.PrefixStyle ?? hintStyle);
+                decoration.PrefixStyle ?? hintStyle,
+                needsSemanticsSortOrder ? _prefixSemanticsSortOrder : null,
+                InputDecorator.PrefixSemanticsTag);
             Widget? suffix = BuildAffix(
                 decoration.Suffix,
                 decoration.SuffixText,
-                decoration.SuffixStyle ?? hintStyle);
+                decoration.SuffixStyle ?? hintStyle,
+                needsSemanticsSortOrder ? _suffixSemanticsSortOrder : null,
+                InputDecorator.SuffixSemanticsTag);
+
+            if (input is not null && needsSemanticsSortOrder)
+            {
+                input = new Semantics(container: true, sortKey: _inputSemanticsSortOrder, child: input);
+            }
 
             Widget? label = BuildLabel(decoration, labelStyle, floatingLabelStyle);
             Widget? hint = BuildHint(decoration, hintStyle);
@@ -634,7 +680,7 @@ public sealed class InputDecorator : StatefulWidget
                 MaintainHintSize: decoration.MaintainHintSize,
                 MaintainLabelSize: decoration.MaintainLabelSize,
                 Icon: icon,
-                Input: Current.Child,
+                Input: input,
                 Label: label,
                 Hint: hint,
                 Prefix: prefix,
@@ -752,14 +798,26 @@ public sealed class InputDecorator : StatefulWidget
                 child: showHint ? hintWidget : new SizedBox());
         }
 
-        private Widget? BuildAffix(Widget? affix, string? affixText, TextStyle style)
+        private Widget? BuildAffix(
+            Widget? affix,
+            string? affixText,
+            TextStyle style,
+            SemanticsSortKey? semanticsSortKey,
+            SemanticsTag semanticsTag)
         {
             if (affix is null && affixText is null)
             {
                 return null;
             }
 
-            Widget content = affix ?? new Text(affixText!);
+            // Flutter's affix Semantics is not a container: its descendants merge up as fragments and
+            // the decorator's delegate sees the tagging configuration itself. Plumix hands the delegate
+            // the child semantics nodes instead, so the affix forms one node carrying its merged label.
+            Widget content = new Semantics(
+                container: true,
+                sortKey: semanticsSortKey,
+                tagForChildren: semanticsTag,
+                child: affix ?? new Text(affixText!));
             return Styled(
                 new IgnorePointer(
                     ignoring: !LabelShouldWithdraw,
@@ -776,7 +834,8 @@ public sealed class InputDecorator : StatefulWidget
             BoxConstraints? constraints,
             Color color,
             double iconSize,
-            VisualDensity visualDensity)
+            VisualDensity visualDensity,
+            SemanticsTag semanticsTag)
         {
             if (icon is null)
             {
@@ -792,7 +851,9 @@ public sealed class InputDecorator : StatefulWidget
                     cursor: SystemMouseCursors.Basic,
                     child: new ConstrainedBox(
                         effective,
-                        new IconTheme(new IconThemeData(Color: color, Size: iconSize), icon))));
+                        new IconTheme(
+                            new IconThemeData(Color: color, Size: iconSize),
+                            new Semantics(container: true, tagForChildren: semanticsTag, child: icon)))));
         }
 
         private InputBorder ResolveBorder(
@@ -1220,7 +1281,8 @@ internal sealed class BorderContainer : StatefulWidget
 
         public override Widget Build(BuildContext context) => new CustomPaint(
             painter: new InputBorderPainter(
-                border: InputBorder.Lerp(_begin, _end, _borderAnimation.Value),
+                // Flutter's _InputBorderTween is `ShapeBorder.lerp(begin, end, t)! as InputBorder`.
+                border: (InputBorder)ShapeBorder.Lerp(_begin, _end, _borderAnimation.Value)!,
                 gap: Current.Gap,
                 gapPercentage: Current.GapAnimation.Value,
                 fillColor: Current.FillColor,

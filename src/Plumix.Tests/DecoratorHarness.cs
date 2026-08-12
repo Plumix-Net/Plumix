@@ -54,6 +54,15 @@ internal sealed class DecoratorHarness : IDisposable
         _pipeline.FlushPaint();
     }
 
+    public SemanticsNode PumpSemantics()
+    {
+        Pump();
+        _pipeline.RequestSemanticsUpdate();
+        _pipeline.FlushSemantics();
+        return _pipeline.SemanticsOwner.RootNode
+               ?? throw new InvalidOperationException("The semantics tree is empty.");
+    }
+
     public void Update(Widget decorator, ThemeData? theme = null, TextDirection textDirection = TextDirection.Ltr)
     {
         _root.Update(new Directionality(

@@ -118,6 +118,25 @@ public sealed record CustomSemanticsAction
     public string Label { get; }
 }
 
+/// A tag for a [SemanticsNode].
+///
+/// Tags can be interpreted by the parent of a [SemanticsNode] and depending on the presence of a tag
+/// the parent can for example decide how to add the tagged node as a child.
+///
+/// Tags are compared by identity, exactly as in Flutter: two tags with the same name are distinct.
+public sealed class SemanticsTag
+{
+    public SemanticsTag(string name)
+    {
+        Name = name;
+    }
+
+    /// A human-readable name for this tag used for debugging.
+    public string Name { get; }
+
+    public override string ToString() => $"{nameof(SemanticsTag)}({Name})";
+}
+
 public delegate ChildSemanticsConfigurationsResult ChildSemanticsConfigurationsDelegate(
     List<SemanticsConfiguration> childConfigurations);
 
@@ -134,6 +153,31 @@ public sealed class ChildSemanticsConfigurationsResult
     public List<SemanticsConfiguration> MergeUp { get; }
 
     public List<List<SemanticsConfiguration>> SiblingMergeGroups { get; }
+}
+
+/// The builder to build a [ChildSemanticsConfigurationsResult] based on its annotations.
+public sealed class ChildSemanticsConfigurationsResultBuilder
+{
+    private readonly List<SemanticsConfiguration> _mergeUp = [];
+    private readonly List<List<SemanticsConfiguration>> _siblingMergeGroups = [];
+
+    /// Marks the [SemanticsConfiguration] to be merged into the parent semantics node.
+    public void MarkAsMergeUp(SemanticsConfiguration config)
+    {
+        _mergeUp.Add(config);
+    }
+
+    /// Marks a group of [SemanticsConfiguration]s to merge into the same sibling node.
+    public void MarkAsSiblingMergeGroup(List<SemanticsConfiguration> configs)
+    {
+        _siblingMergeGroups.Add(configs);
+    }
+
+    /// Builds a [ChildSemanticsConfigurationsResult] that contains the annotations.
+    public ChildSemanticsConfigurationsResult Build()
+    {
+        return new ChildSemanticsConfigurationsResult([.. _mergeUp], [.. _siblingMergeGroups]);
+    }
 }
 
 public sealed class SemanticsConfiguration
@@ -162,6 +206,22 @@ public sealed class SemanticsConfiguration
     public Rect? ExplicitRect { get; set; }
     public int? IndexInParent { get; set; }
     public SemanticsSortKey? SortKey { get; set; }
+
+    private HashSet<SemanticsTag>? _tagsForChildren;
+
+    /// The tags that this configuration attaches to the semantics nodes created below it.
+    public IReadOnlyCollection<SemanticsTag>? TagsForChildren => _tagsForChildren;
+
+    /// Whether the child semantics nodes of this configuration are tagged with `tag`.
+    public bool TagsChildrenWith(SemanticsTag tag) => _tagsForChildren?.Contains(tag) ?? false;
+
+    /// Tags all child semantics nodes with `tag`.
+    public void AddTagForChildren(SemanticsTag tag)
+    {
+        ArgumentNullException.ThrowIfNull(tag);
+        _tagsForChildren ??= [];
+        _tagsForChildren.Add(tag);
+    }
 
     private Dictionary<SemanticsActions, Action>? _actionHandlers;
     private Dictionary<CustomSemanticsAction, Action>? _customActionHandlers;
@@ -235,6 +295,11 @@ public sealed class SemanticsConfiguration
             IndexInParent = IndexInParent,
             SortKey = SortKey
         };
+
+        if (_tagsForChildren is { Count: > 0 })
+        {
+            clone._tagsForChildren = [.. _tagsForChildren];
+        }
 
         if (_actionHandlers is { Count: > 0 })
         {
@@ -433,6 +498,22 @@ public sealed class SemanticsNode
     public SemanticsActions Actions { get; internal set; }
     public int? IndexInParent { get; set; }
     public SemanticsSortKey? SortKey { get; internal set; }
+
+    /// The tags the render objects between this node and its parent node attached to it, through
+    /// their configurations' `AddTagForChildren`.
+    public IReadOnlyCollection<SemanticsTag>? Tags => _tags;
+
+    private HashSet<SemanticsTag>? _tags;
+
+    internal void AddTags(IReadOnlyCollection<SemanticsTag> tags)
+    {
+        _tags ??= [];
+        foreach (SemanticsTag tag in tags)
+        {
+            _tags.Add(tag);
+        }
+    }
+
     public bool IsHidden { get; internal set; }
     public IReadOnlyList<SemanticsNode> Children => _children;
     public IReadOnlyDictionary<CustomSemanticsAction, Action> CustomSemanticsActions => _customActionHandlers;
@@ -468,6 +549,8 @@ public sealed class SemanticsNode
         Actions = config.Actions;
         IndexInParent = config.IndexInParent;
         SortKey = config.SortKey;
+        // Tags are attached by the ancestors this node passes through, after this update runs.
+        _tags = null;
         IsSemanticBoundary = config.IsSemanticBoundary;
         ReplaceChildren(SortChildren(childrenInInversePaintOrder ?? []));
         SetActionHandlers(config.ActionHandlers);

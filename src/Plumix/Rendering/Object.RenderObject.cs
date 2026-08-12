@@ -781,118 +781,110 @@ public abstract class RenderObject : IRenderObject, IHitTestTarget
         return intersection.Width <= 0 || intersection.Height <= 0 ? null : intersection;
     }
 
+    /// <summary>
+    /// Applies the transform that would be applied when painting the given child to the given matrix.
+    /// </summary>
+    /// <remarks>
+    /// Flutter mutates a `Matrix4` in place and post-multiplies its own step, because its matrices map
+    /// points as `M * p`. Avalonia's <see cref="Matrix"/> is an immutable struct that maps points as
+    /// `p * M`, so implementations pre-multiply instead: `transform = step * transform`. The composed
+    /// order — this render object's own step applied to the child's coordinates first, ancestors after —
+    /// is the same in both conventions.
+    /// </remarks>
+    public virtual void ApplyPaintTransform(RenderObject child, ref Matrix transform)
+    {
+    }
+
     internal bool TryGetTransformFromRoot(out Matrix transform)
     {
-        transform = Matrix.Identity;
         RenderObject? root = Owner?.Root;
         if (root is null)
         {
+            transform = Matrix.Identity;
             return false;
         }
 
-        return Find(root, Matrix.Identity, this, out transform);
-
-        static bool Find(RenderObject node, Matrix current, RenderObject target, out Matrix result)
-        {
-            if (ReferenceEquals(node, target))
-            {
-                result = current;
-                return true;
-            }
-
-            bool found = false;
-            Matrix foundResult = Matrix.Identity;
-            node.VisitChildrenForSemantics((child, childOffset, childTransform) =>
-            {
-                if (found)
-                {
-                    return;
-                }
-
-                Matrix next = childTransform
-                              * Matrix.CreateTranslation(childOffset.X, childOffset.Y)
-                              * current;
-                if (Find(child, next, target, out Matrix childResult))
-                {
-                    foundResult = childResult;
-                    found = true;
-                }
-            });
-            result = foundResult;
-            return found;
-        }
+        return TryComputeTransformTo(root, ancestorSpecified: false, out transform);
     }
 
-    /// The accumulated paint offset from the root of the render tree, walking the parent chain and
-    /// summing box offsets.
-    ///
-    /// Unlike <see cref="GetTransformTo"/> this does not depend on the semantics walk, so it still
-    /// resolves inside subtrees hidden from semantics (for example under `ExcludeSemantics`). Flutter
-    /// composes the full `applyPaintTransform` chain here; this accumulates translations only, so it
-    /// is exact whenever no ancestor applies a rotation or scale.
+    /// The paint offset of this render object's origin in the coordinate space of the render tree root.
     public Point GetPaintOffsetToRoot()
     {
-        double x = 0;
-        double y = 0;
-        RenderObject? node = this;
-        while (node is not null)
-        {
-            if (node.parentData is BoxParentData box)
-            {
-                x += box.offset.X;
-                y += box.offset.Y;
-            }
+        return ComputePaintTransformToRoot().Transform(default);
+    }
 
-            node = node.Parent;
+    /// The paint transform from this render object to the topmost render object of its parent chain.
+    ///
+    /// Unlike <see cref="GetTransformTo"/> this walks the parent chain directly, so it also resolves for
+    /// render objects that are not attached to a <see cref="PipelineOwner"/>.
+    internal Matrix ComputePaintTransformToRoot()
+    {
+        Matrix transform = Matrix.Identity;
+        for (RenderObject node = this; node.Parent is not null; node = node.Parent)
+        {
+            node.Parent.ApplyPaintTransform(node, ref transform);
         }
 
-        return new Point(x, y);
+        return transform;
     }
 
     public Matrix GetTransformTo(RenderObject? ancestor = null)
     {
-        if (ancestor is not null)
+        bool ancestorSpecified = ancestor is not null;
+        ancestor ??= Owner?.Root
+                     ?? throw new InvalidOperationException("The render object is not attached to a render tree.");
+
+        if (!TryComputeTransformTo(ancestor, ancestorSpecified, out Matrix transform))
         {
-            RenderObject? node = this;
-            while (node is not null && !ReferenceEquals(node, ancestor))
+            throw new InvalidOperationException(
+                "The requested render object is not an ancestor of this render object.");
+        }
+
+        return transform;
+    }
+
+    private bool TryComputeTransformTo(RenderObject ancestor, bool ancestorSpecified, out Matrix transform)
+    {
+        transform = Matrix.Identity;
+        var renderers = new List<RenderObject>();
+        for (RenderObject renderer = this; !ReferenceEquals(renderer, ancestor); renderer = renderer.Parent!)
+        {
+            renderers.Add(renderer);
+            if (renderer.Parent is null)
             {
-                node = node.Parent;
-            }
-
-            if (node is null)
-            {
-                throw new InvalidOperationException(
-                    "The requested render object is not an ancestor of this render object.");
+                return false;
             }
         }
 
-        if (!TryGetTransformFromRoot(out Matrix transformToRoot))
+        if (ancestorSpecified)
         {
-            throw new InvalidOperationException("The render object is not attached to a render tree.");
+            renderers.Add(ancestor);
         }
 
-        if (ancestor is null)
+        for (int index = renderers.Count - 1; index > 0; index--)
         {
-            return transformToRoot;
+            renderers[index].ApplyPaintTransform(renderers[index - 1], ref transform);
         }
 
-        if (!ancestor.TryGetTransformFromRoot(out Matrix ancestorToRoot))
-        {
-            throw new InvalidOperationException("The ancestor render object is not attached to a render tree.");
-        }
-
-        if (!ancestorToRoot.TryInvert(out Matrix rootToAncestor))
-        {
-            throw new InvalidOperationException("The ancestor transform is not invertible.");
-        }
-
-        return rootToAncestor * transformToRoot;
+        return true;
     }
 
     public Point LocalToGlobal(Point point, RenderObject? ancestor = null)
     {
         Matrix transform = GetTransformTo(ancestor);
         return transform.Transform(point);
+    }
+
+    public Point GlobalToLocal(Point point, RenderObject? ancestor = null)
+    {
+        Matrix transform = GetTransformTo(ancestor);
+        if (!transform.TryInvert(out Matrix inverse))
+        {
+            // The determinant is zero, so the transform maps the whole plane onto a line or a point.
+            return default;
+        }
+
+        return inverse.Transform(point);
     }
 
     /// <summary>

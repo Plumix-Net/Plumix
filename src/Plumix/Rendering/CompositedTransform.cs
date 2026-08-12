@@ -247,6 +247,12 @@ public sealed class RenderFollowerLayer : RenderProxyBox
         visitor(Child, childParentData.offset, GetCurrentTransform());
     }
 
+    public override void ApplyPaintTransform(RenderObject child, ref Matrix transform)
+    {
+        base.ApplyPaintTransform(child, ref transform);
+        transform = GetCurrentTransform() * transform;
+    }
+
     public override void Paint(PaintingContext ctx, Point offset)
     {
         Matrix? linkedTransform = ComputeLinkedTransform();

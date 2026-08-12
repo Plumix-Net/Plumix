@@ -1557,6 +1557,82 @@ public sealed class SemanticsTreeTests
         }
     }
 
+    [Fact]
+    public void SemanticsTag_IsComparedByIdentityAndIsNotAdoptedThroughAbsorb()
+    {
+        var tag = new SemanticsTag("group");
+        var sameName = new SemanticsTag("group");
+        var configuration = new SemanticsConfiguration();
+        configuration.AddTagForChildren(tag);
+
+        Assert.True(configuration.TagsChildrenWith(tag));
+        Assert.False(configuration.TagsChildrenWith(sameName));
+        Assert.Equal("SemanticsTag(group)", tag.ToString());
+        Assert.True(configuration.Clone().TagsChildrenWith(tag));
+
+        // Tags belong to the render object that declared them, so absorbing a child never adopts the
+        // child's tags.
+        var child = new SemanticsConfiguration { Label = "Child" };
+        var otherTag = new SemanticsTag("other");
+        child.AddTagForChildren(otherTag);
+        configuration.Absorb(child);
+
+        Assert.True(configuration.TagsChildrenWith(tag));
+        Assert.False(configuration.TagsChildrenWith(otherTag));
+    }
+
+    [Fact]
+    public void TagForChildren_TagsPassingNodesAndReachesTheChildConfigurationsDelegate()
+    {
+        var tag = new SemanticsTag("affix");
+        int taggedConfigurations = 0;
+        var tagged = new RenderSemanticsAnnotations(
+            tagForChildren: tag,
+            child: new FixedSemanticBox("Tagged", new Size(12, 8)));
+        var row = new RenderFlex(
+            children: [tagged, new FixedSemanticBox("Plain", new Size(12, 8))],
+            direction: Axis.Horizontal);
+        var delegated = new ChildDelegateSemanticBoundaryRenderBox("Parent", row, childConfigurations =>
+        {
+            var builder = new ChildSemanticsConfigurationsResultBuilder();
+            var group = new List<SemanticsConfiguration>();
+            foreach (SemanticsConfiguration childConfiguration in childConfigurations)
+            {
+                if (childConfiguration.TagsChildrenWith(tag))
+                {
+                    taggedConfigurations += 1;
+                    group.Add(childConfiguration);
+                }
+                else
+                {
+                    builder.MarkAsMergeUp(childConfiguration);
+                }
+            }
+
+            if (group.Count > 0)
+            {
+                builder.MarkAsSiblingMergeGroup(group);
+            }
+
+            return builder.Build();
+        });
+
+        var renderView = new RenderView { Child = delegated };
+        var pipeline = new PipelineOwner(renderView);
+        pipeline.Attach(renderView);
+        pipeline.FlushLayout(new Size(220, 120));
+        pipeline.FlushSemantics();
+
+        SemanticsNode? root = pipeline.SemanticsOwner.RootNode;
+        Assert.NotNull(root);
+        Assert.Equal(2, root.Children.Count);
+        Assert.Single(root.Children, static node => node.Label == "Parent Plain");
+        Assert.Single(root.Children, static node => node.Label == "Tagged");
+
+        // The node that passed through the tagging render object reached the delegate tagged.
+        Assert.True(taggedConfigurations > 0);
+    }
+
     private sealed class DelegatingSemanticBoundaryRenderBox : RenderProxyBox
     {
         private static readonly ChildSemanticsConfigurationsDelegate MergeAllDelegate = static childConfigurations =>

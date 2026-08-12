@@ -1330,8 +1330,8 @@ internal sealed class RenderOverlayPortalSurrogate : RenderProxyBox
             return;
         }
 
-        Matrix portalChildToRoot = ResolveTransformToRoot(_portalChild);
-        Matrix surrogateToRoot = ResolveTransformToRoot(this);
+        Matrix portalChildToRoot = _portalChild.ComputePaintTransformToRoot();
+        Matrix surrogateToRoot = ComputePaintTransformToRoot();
         if (!surrogateToRoot.TryInvert(out Matrix rootToSurrogate))
         {
             return;
@@ -1341,31 +1341,6 @@ internal sealed class RenderOverlayPortalSurrogate : RenderProxyBox
             _portalChild,
             new Point(),
             portalChildToRoot * rootToSurrogate);
-    }
-
-    private static Matrix ResolveTransformToRoot(RenderObject renderObject)
-    {
-        Matrix transform = Matrix.Identity;
-        RenderObject? child = renderObject;
-        while (child?.Parent is not null)
-        {
-            RenderObject parent = child.Parent;
-            Point childOffset = child.parentData is BoxParentData boxParentData
-                ? boxParentData.offset
-                : default;
-            Matrix childToParent = Matrix.CreateTranslation(
-                childOffset.X,
-                childOffset.Y);
-            if (parent is RenderTransform renderTransform)
-            {
-                childToParent *= renderTransform.EffectiveTransform;
-            }
-
-            transform = childToParent * transform;
-            child = parent;
-        }
-
-        return transform;
     }
 }
 

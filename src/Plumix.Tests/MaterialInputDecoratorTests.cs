@@ -631,7 +631,8 @@ public sealed class MaterialInputDecoratorTests
         Assert.Equal(new Thickness(0, 0, 0, 3.0), underline.Dimensions);
         Assert.Equal(default, InputBorder.None.Dimensions);
         Assert.False(InputBorder.None.IsOutline);
-        Assert.Same(InputBorder.None, InputBorder.None.CopyWith(new BorderSide(Colors.Red, 4.0)));
+        // _NoInputBorder.copyWith ignores its argument and returns another empty border.
+        Assert.Equal(InputBorder.None, InputBorder.None.CopyWith(new BorderSide(Colors.Red, 4.0)));
     }
 
     [Fact]
@@ -659,26 +660,33 @@ public sealed class MaterialInputDecoratorTests
             new BorderSide(Colors.Black, 8.0),
             BorderRadius.Circular(16.0),
             gapPadding: 10.0);
-        var mid = (OutlineInputBorder)InputBorder.Lerp(outline, target, 0.5);
+        var mid = (OutlineInputBorder)ShapeBorder.Lerp(outline, target, 0.5)!;
         Assert.Equal(6.0, mid.BorderSide.Width, precision: 6);
         Assert.Equal(12.0, mid.BorderRadius.TopLeft, precision: 6);
         // gapPadding is taken from the source border verbatim rather than interpolated.
         Assert.Equal(6.0, mid.GapPadding, precision: 6);
 
-        Assert.Same(outline, InputBorder.Lerp(outline, target, 0.0));
-        Assert.Same(target, InputBorder.Lerp(outline, target, 1.0));
+        // ShapeBorder.Lerp does not short-circuit the endpoints, so the interpolated border keeps the
+        // gapPadding of the border it started from even at t == 1.
+        var start = (OutlineInputBorder)ShapeBorder.Lerp(outline, target, 0.0)!;
+        Assert.Equal(outline.BorderSide, start.BorderSide);
+        Assert.Equal(outline.BorderRadius, start.BorderRadius);
+        var end = (OutlineInputBorder)ShapeBorder.Lerp(outline, target, 1.0)!;
+        Assert.Equal(target.BorderSide, end.BorderSide);
+        Assert.Equal(target.BorderRadius, end.BorderRadius);
+        Assert.Equal(outline.GapPadding, end.GapPadding, precision: 6);
     }
 
     [Fact]
-    public void InputBorder_LerpAcrossKindsScalesThroughTheMidpoint()
+    public void InputBorder_LerpAcrossKindsSwitchesAtTheMidpoint()
     {
         var underline = new UnderlineInputBorder(new BorderSide(Colors.Black, 4.0));
         var outline = new OutlineInputBorder(new BorderSide(Colors.Black, 4.0));
 
-        Assert.IsType<UnderlineInputBorder>(InputBorder.Lerp(underline, outline, 0.25));
-        Assert.IsType<OutlineInputBorder>(InputBorder.Lerp(underline, outline, 0.75));
-        Assert.Equal(2.0, InputBorder.Lerp(underline, outline, 0.25).BorderSide.Width, precision: 6);
-        Assert.Equal(2.0, InputBorder.Lerp(underline, outline, 0.75).BorderSide.Width, precision: 6);
+        // Neither border can interpolate to the other kind, so ShapeBorder.Lerp falls back to the
+        // hard switch at the midpoint instead of scaling either border out.
+        Assert.Same(underline, ShapeBorder.Lerp(underline, outline, 0.25));
+        Assert.Same(outline, ShapeBorder.Lerp(underline, outline, 0.75));
     }
 
     [Fact]
@@ -697,6 +705,160 @@ public sealed class MaterialInputDecoratorTests
             child: new Text("value")));
         // The border tween starts at the previous border, so the first focused frame is still 1dp wide.
         Assert.Equal(1.0, Painter(harness).Border.BorderSide.Width, precision: 6);
+    }
+
+    [Fact]
+    public void InputDecorator_FloatingLabelRectFollowsThePaintTransform()
+    {
+        using var inline = new DecoratorHarness(Decorator(
+            new InputDecoration(labelText: "Label", border: new OutlineInputBorder()),
+            isEmpty: true));
+        inline.Pump();
+        RenderBox inlineLabel = inline.Decorator.LabelBox!;
+        Point inlineTopLeft = inlineLabel.LocalToGlobal(default);
+        Size inlineSize = inlineLabel.Size;
+
+        using var floating = new DecoratorHarness(Decorator(new InputDecoration(
+            labelText: "Label",
+            border: new OutlineInputBorder(),
+            floatingLabelBehavior: FloatingLabelBehavior.Always)));
+        floating.Pump();
+        RenderDecoration decorator = floating.Decorator;
+        RenderBox label = decorator.LabelBox!;
+
+        // Flutter asserts the same shape through tester.getRect, which resolves applyPaintTransform:
+        // the label keeps its left edge, is lifted above the outline and painted at 0.75 scale.
+        Point floatingTopLeft = label.LocalToGlobal(default);
+        Point floatingBottomRight = label.LocalToGlobal(new Point(label.Size.Width, label.Size.Height));
+        BorderSide side = Painter(floating).Border.BorderSide;
+        double expectedTop = (-label.Size.Height * FinalLabelScale / 2.0) - (side.StrokeOffset / 2.0);
+
+        Assert.Equal(inlineTopLeft.X, floatingTopLeft.X, precision: 6);
+        Assert.Equal(expectedTop, floatingTopLeft.Y, precision: 6);
+        Assert.True(floatingTopLeft.Y < inlineTopLeft.Y);
+        Assert.Equal(inlineSize.Width * FinalLabelScale, floatingBottomRight.X - floatingTopLeft.X, precision: 6);
+        Assert.Equal(inlineSize.Height * FinalLabelScale, floatingBottomRight.Y - floatingTopLeft.Y, precision: 6);
+
+        // The inverse maps a painted point back into the label's own coordinate space.
+        Assert.Equal(new Point(0, 0), label.GlobalToLocal(floatingTopLeft));
+
+        // Every other slot keeps the plain parent-data offset.
+        RenderBox input = decorator.InputBox!;
+        Assert.Equal(DecoratorHarness.OffsetOf(input), input.LocalToGlobal(default));
+    }
+
+    [Fact]
+    public void InputDecorator_PrefixAndSuffixFormSiblingSemanticsNodes()
+    {
+        using var harness = new DecoratorHarness(Decorator(
+            new InputDecoration(prefixText: "Prefix", suffixText: "Suffix"),
+            child: new Text("value")));
+        SemanticsNode root = harness.PumpSemantics();
+
+        // Flutter: "TextField prefix and suffix create a sibling node" — the three parts stay apart
+        // instead of merging into one concatenated label.
+        Assert.Contains(root.Children, static node => node.Label == "Prefix");
+        Assert.Contains(root.Children, static node => node.Label == "Suffix");
+        Assert.Contains(root.Children, static node => node.Label == "value");
+        Assert.DoesNotContain(root.Children, static node => node.Label == "Prefix value Suffix");
+    }
+
+    [Fact]
+    public void InputDecorator_PrefixAndSuffixIconsFormTheirOwnSiblingNodes()
+    {
+        using var harness = new DecoratorHarness(Decorator(
+            new InputDecoration(
+                prefixIcon: new Semantics(label: "Leading", child: new SizedBox(width: 24, height: 24)),
+                suffixIcon: new Semantics(label: "Trailing", child: new SizedBox(width: 24, height: 24))),
+            child: new Text("value")));
+        SemanticsNode root = harness.PumpSemantics();
+
+        Assert.Contains(root.Children, static node => node.Label == "Leading");
+        Assert.Contains(root.Children, static node => node.Label == "Trailing");
+    }
+
+    [Fact]
+    public void InputDecorator_AffixSortOrderIsScopedPerDecoratorAndOnlyAppliedWhenNeeded()
+    {
+        using var withAffixes = new DecoratorHarness(Decorator(
+            new InputDecoration(prefixText: "Prefix", suffixText: "Suffix"),
+            child: new Text("value")));
+        SemanticsNode root = withAffixes.PumpSemantics();
+
+        var keys = root.Children
+            .Where(static node => node.SortKey is OrdinalSortKey)
+            .Select(static node => (OrdinalSortKey)node.SortKey!)
+            .ToList();
+        Assert.Equal(3, keys.Count);
+        Assert.Equal([0.0, 1.0, 2.0], keys.Select(static key => key.Order).Order());
+        Assert.Single(keys.Select(static key => key.GroupName).Distinct());
+        Assert.All(keys, static key => Assert.False(string.IsNullOrEmpty(key.GroupName)));
+
+        // With no affix at all the decorator does not need a traversal order.
+        using var plain = new DecoratorHarness(Decorator(
+            new InputDecoration(labelText: "Label"),
+            child: new Text("value")));
+        SemanticsNode plainRoot = plain.PumpSemantics();
+        Assert.All(plainRoot.Children, static node => Assert.Null(node.SortKey));
+    }
+
+    [Fact]
+    public void ShapedInputBorder_WrapsAnArbitraryShapeAndOpensTheLabelGap()
+    {
+        var shape = new StadiumBorder();
+        var border = new ShapedInputBorder(shape, new BorderSide(Colors.Black, 2.0), gapPadding: 6.0);
+
+        Assert.True(border.IsOutline);
+        Assert.Equal(EdgeInsets.All(2.0), border.Dimensions);
+        Assert.Equal(shape.PreferPaintInterior, border.PreferPaintInterior);
+        Assert.Equal(shape.GetOuterPath(new Rect(0, 0, 40, 20)).GetBounds(),
+            border.GetOuterPath(new Rect(0, 0, 40, 20)).GetBounds());
+
+        var scaled = (ShapedInputBorder)border.Scale(0.5);
+        Assert.Equal(1.0, scaled.BorderSide.Width, precision: 6);
+        Assert.Equal(3.0, scaled.GapPadding, precision: 6);
+
+        var target = new ShapedInputBorder(shape, new BorderSide(Colors.Black, 6.0), gapPadding: 10.0);
+        var mid = (ShapedInputBorder)ShapeBorder.Lerp(border, target, 0.5)!;
+        Assert.Equal(4.0, mid.BorderSide.Width, precision: 6);
+        // gapPadding follows the source border, matching OutlineInputBorder's quirk.
+        Assert.Equal(6.0, mid.GapPadding, precision: 6);
+
+        ShapedInputBorder copied = border.CopyWith(null, new CircleBorder(), gapPadding: null);
+        Assert.IsType<CircleBorder>(copied.Shape);
+        Assert.Equal(6.0, copied.GapPadding, precision: 6);
+
+        // The gap cuts the top edge of the outline out of the painted path.
+        var probe = new PaintingContext(new OffsetLayer());
+        border.Paint(probe, new Rect(0, 0, 200, 56), gapStart: 40.0, gapExtent: 30.0, gapPercentage: 1.0,
+            textDirection: TextDirection.Ltr);
+        border.Paint(probe, new Rect(0, 0, 200, 56), gapStart: null, textDirection: TextDirection.Ltr);
+        Assert.Throws<ArgumentOutOfRangeException>(() => new ShapedInputBorder(shape, gapPadding: -1.0));
+    }
+
+    [Fact]
+    public void UnderlineInputBorder_RoundedBottomCornersPaintThroughTheNonUniformRing()
+    {
+        var border = new UnderlineInputBorder(
+            new BorderSide(Colors.Black, 1.0),
+            BorderRadius.Circular(12.0));
+
+        // The inner edge is the rect deflated by the bottom side, which is what the ring is filled
+        // between; Flutter asserts the same outer/inner pair through paintNonUniformBorder.
+        Plumix.UI.Path inner = border.GetInnerPath(new Rect(0, 0, 100, 100));
+        Assert.Equal(new Rect(0, 0, 100, 99), inner.GetBounds());
+        Assert.Equal(new Rect(0, 0, 100, 100), border.GetOuterPath(new Rect(0, 0, 100, 100)).GetBounds());
+
+        var probe = new PaintingContext(new OffsetLayer());
+        var squared = new UnderlineInputBorder(new BorderSide(Colors.Black, 2.0), BorderRadius.Zero);
+        squared.Paint(probe, new Rect(0, 0, 100, 100), gapStart: null);
+        Assert.Equal(new Thickness(0, 0, 0, 2.0), squared.Dimensions);
+
+        // A border with no style paints nothing at all.
+        var invisible = new UnderlineInputBorder(BorderSide.None);
+        var emptyProbe = new PaintingContext(new OffsetLayer());
+        invisible.Paint(emptyProbe, new Rect(0, 0, 100, 100), gapStart: null);
+        Assert.Equal(EdgeInsetsGeometry.Zero, invisible.Dimensions);
     }
 
     private static Widget Decorator(

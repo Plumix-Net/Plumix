@@ -265,6 +265,16 @@ internal sealed class RenderObjectSemantics
             children.AddRange(childNodes);
         });
 
+        // Every semantics node that passes through this render object on its way to a parent node is
+        // tagged, so an ancestor's ChildConfigurationsDelegate can tell where the node came from.
+        if (config.TagsForChildren is { Count: > 0 } tagsForChildren)
+        {
+            foreach (SemanticsNode child in children)
+            {
+                child.AddTags(tagsForChildren);
+            }
+        }
+
         var siblingNodes = ApplyChildConfigurationsDelegate(owner, config, children, explicitChildNodesForChildren);
 
         if (config.IsSemanticBoundary
@@ -310,6 +320,13 @@ internal sealed class RenderObjectSemantics
         else
         {
             semanticsNode.UpdateWith(config, children);
+        }
+
+        // A tagging configuration that also owns a node keeps the tags on that node: an ancestor's
+        // ChildConfigurationsDelegate inspects the nodes handed to it, not the fragments below them.
+        if (config.TagsForChildren is { Count: > 0 } ownTags)
+        {
+            semanticsNode.AddTags(ownTags);
         }
 
         output.Add(semanticsNode);
@@ -832,6 +849,14 @@ internal sealed class RenderObjectSemantics
             IndexInParent = node.IndexInParent,
             SortKey = node.SortKey
         };
+
+        if (node.Tags is { Count: > 0 } tags)
+        {
+            foreach (SemanticsTag tag in tags)
+            {
+                configuration.AddTagForChildren(tag);
+            }
+        }
 
         var handlers = new Dictionary<SemanticsActions, Action>();
         node.CopyActionHandlersTo(handlers);

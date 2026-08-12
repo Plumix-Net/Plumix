@@ -11,13 +11,32 @@ public enum PathFillType
     EvenOdd,
 }
 
+/// Strategies for combining paths, matching `dart:ui`'s `PathOperation`.
+public enum PathOperation
+{
+    Difference,
+    Intersect,
+    Union,
+    Xor,
+    ReverseDifference,
+}
+
 public sealed class Path
 {
     private readonly List<PathContour> _contours = [];
     private List<Point>? _currentPoints;
     private bool _currentClosed;
+    private (PathOperation Operation, Path First, Path Second)? _combination;
 
     public PathFillType FillType { get; set; } = PathFillType.NonZero;
+
+    /// Combines the two paths according to the manner specified by the given `operation`.
+    public static Path Combine(PathOperation operation, Path path1, Path path2)
+    {
+        ArgumentNullException.ThrowIfNull(path1);
+        ArgumentNullException.ThrowIfNull(path2);
+        return new Path { _combination = (operation, path1, path2) };
+    }
 
     public void MoveTo(double x, double y)
     {
@@ -97,11 +116,20 @@ public sealed class Path
         _contours.Clear();
         _currentPoints = null;
         _currentClosed = false;
+        _combination = null;
     }
 
     // Dart parity source: dart:ui Path.transform (affine subset).
     public Path Transform(Matrix matrix)
     {
+        if (_combination is { } combination)
+        {
+            return Combine(
+                combination.Operation,
+                combination.First.Transform(matrix),
+                combination.Second.Transform(matrix));
+        }
+
         var transformed = new Path { FillType = FillType };
         foreach (PathContour contour in SnapshotContours())
         {
@@ -217,6 +245,19 @@ public sealed class Path
     // Dart parity source: dart:ui Path.getBounds.
     public Rect GetBounds()
     {
+        if (_combination is { } combination)
+        {
+            Rect first = combination.First.GetBounds();
+            Rect second = combination.Second.GetBounds();
+            return combination.Operation switch
+            {
+                PathOperation.Difference => first,
+                PathOperation.ReverseDifference => second,
+                PathOperation.Intersect => first.Intersect(second),
+                _ => first.Union(second),
+            };
+        }
+
         IReadOnlyList<PathContour> contours = SnapshotContours();
         if (contours.Count == 0)
         {
@@ -235,12 +276,27 @@ public sealed class Path
     public void AddPath(Path other)
     {
         ArgumentNullException.ThrowIfNull(other);
+        other.ThrowIfCombined();
         FinishCurrentContour();
         _contours.AddRange(other.SnapshotContours());
     }
 
     public bool Contains(Point point)
     {
+        if (_combination is { } combination)
+        {
+            bool first = combination.First.Contains(point);
+            bool second = combination.Second.Contains(point);
+            return combination.Operation switch
+            {
+                PathOperation.Difference => first && !second,
+                PathOperation.ReverseDifference => second && !first,
+                PathOperation.Intersect => first && second,
+                PathOperation.Xor => first ^ second,
+                _ => first || second,
+            };
+        }
+
         IReadOnlyList<PathContour> contours = SnapshotContours();
         if (FillType == PathFillType.EvenOdd)
         {
@@ -267,6 +323,22 @@ public sealed class Path
 
     internal Geometry ToGeometry()
     {
+        if (_combination is { } combination)
+        {
+            GeometryCombineMode mode = combination.Operation switch
+            {
+                PathOperation.Difference or PathOperation.ReverseDifference => GeometryCombineMode.Exclude,
+                PathOperation.Intersect => GeometryCombineMode.Intersect,
+                PathOperation.Xor => GeometryCombineMode.Xor,
+                _ => GeometryCombineMode.Union,
+            };
+            bool reversed = combination.Operation == PathOperation.ReverseDifference;
+            return new CombinedGeometry(
+                mode,
+                (reversed ? combination.Second : combination.First).ToGeometry(),
+                (reversed ? combination.First : combination.Second).ToGeometry());
+        }
+
         IReadOnlyList<PathContour> contours = SnapshotContours();
         if (contours.Count == 0)
         {
@@ -320,7 +392,18 @@ public sealed class Path
 
     private void EnsureCurrentContour()
     {
+        ThrowIfCombined();
         _currentPoints ??= [new Point(0, 0)];
+    }
+
+    /// A path produced by <see cref="Combine"/> keeps its operands instead of a flattened contour list,
+    /// so contours cannot be appended to it. Combine again to build a larger shape.
+    private void ThrowIfCombined()
+    {
+        if (_combination is not null)
+        {
+            throw new InvalidOperationException("A combined path cannot be extended with new contours.");
+        }
     }
 
     private IReadOnlyList<PathContour> SnapshotContours()
@@ -338,6 +421,7 @@ public sealed class Path
 
     private void FinishCurrentContour()
     {
+        ThrowIfCombined();
         if (_currentPoints is not { Count: > 0 } points)
         {
             _currentPoints = null;

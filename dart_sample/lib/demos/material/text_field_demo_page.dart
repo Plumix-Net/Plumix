@@ -128,6 +128,18 @@ class _TextFieldDemoPageState extends State<TextFieldDemoPage> {
           TextField(
             enabled: _enabled,
             decoration: const InputDecoration(
+              labelText: 'Shaped border',
+              hintText: 'Any ShapeBorder as the input outline',
+              helperText: 'ShapedInputBorder cuts the label gap out of the shape',
+              border: ShapedInputBorder(
+                shape: StadiumBorder(),
+                borderSide: BorderSide(color: Colors.indigo, width: 2.0),
+              ),
+            ),
+          ),
+          TextField(
+            enabled: _enabled,
+            decoration: const InputDecoration(
               labelText: 'Dense + compact density',
               helperText: 'isDense with VisualDensity.compact',
               isDense: true,
