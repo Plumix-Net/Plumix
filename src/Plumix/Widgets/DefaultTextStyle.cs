@@ -62,6 +62,36 @@ public sealed record TextStyle(
             DecorationStyle: decorationStyle ?? DecorationStyle);
     }
 
+    public TextStyle Merge(TextStyle? other)
+    {
+        if (other is null)
+        {
+            return this;
+        }
+
+        if (!other.Inherit)
+        {
+            return other;
+        }
+
+        return CopyWith(
+            fontFamily: other.FontFamily,
+            fontFamilyFallback: other.FontFamilyFallback,
+            package: other.Package,
+            fontSize: other.FontSize,
+            color: other.Color,
+            fontWeight: other.FontWeight,
+            fontStyle: other.FontStyle,
+            height: other.Height,
+            letterSpacing: other.LetterSpacing,
+            wordSpacing: other.WordSpacing,
+            textBaseline: other.TextBaseline,
+            leadingDistribution: other.LeadingDistribution,
+            decoration: other.Decoration,
+            decorationColor: other.DecorationColor,
+            decorationStyle: other.DecorationStyle);
+    }
+
     public static TextStyle Lerp(TextStyle a, TextStyle b, double t)
     {
         ArgumentNullException.ThrowIfNull(a);

@@ -114,6 +114,40 @@ class _TextFieldDemoPageState extends State<TextFieldDemoPage> {
             readOnly: true,
             decoration: const InputDecoration.collapsed(hintText: 'Read only'),
           ),
+          const Text('Decorator geometry probes', style: TextStyle(fontSize: 18)),
+          TextField(
+            enabled: _enabled,
+            decoration: const InputDecoration(
+              labelText: 'Centered floating label',
+              hintText: 'Gap follows the label',
+              floatingLabelAlignment: FloatingLabelAlignment.center,
+              floatingLabelBehavior: FloatingLabelBehavior.always,
+              border: OutlineInputBorder(),
+            ),
+          ),
+          TextField(
+            enabled: _enabled,
+            decoration: const InputDecoration(
+              labelText: 'Dense + compact density',
+              helperText: 'isDense with VisualDensity.compact',
+              isDense: true,
+              visualDensity: VisualDensity.compact,
+              filled: true,
+            ),
+          ),
+          SizedBox(
+            height: 96,
+            child: TextField(
+              enabled: _enabled,
+              expands: true,
+              maxLines: null,
+              textAlignVertical: TextAlignVertical.bottom,
+              decoration: const InputDecoration(
+                labelText: 'Expanded, bottom aligned',
+                filled: true,
+              ),
+            ),
+          ),
           Text(
             'Last submitted email: $_submitted',
             style: const TextStyle(fontSize: 13),

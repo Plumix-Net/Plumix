@@ -92,6 +92,33 @@ public sealed class TextFieldDemoPage : StatefulWidget
                         controller: _readOnly,
                         readOnly: true,
                         decoration: InputDecoration.Collapsed("Read only")),
+                    new Text("Decorator geometry probes", fontSize: 18),
+                    new TextField(
+                        enabled: _enabled,
+                        decoration: new InputDecoration(
+                            labelText: "Centered floating label",
+                            hintText: "Gap follows the label",
+                            floatingLabelAlignment: FloatingLabelAlignment.Center,
+                            floatingLabelBehavior: FloatingLabelBehavior.Always,
+                            border: new OutlineInputBorder())),
+                    new TextField(
+                        enabled: _enabled,
+                        decoration: new InputDecoration(
+                            labelText: "Dense + compact density",
+                            helperText: "isDense with VisualDensity.Compact",
+                            isDense: true,
+                            visualDensity: VisualDensity.Compact,
+                            filled: true)),
+                    new SizedBox(
+                        height: 96,
+                        child: new TextField(
+                            enabled: _enabled,
+                            expands: true,
+                            maxLines: null,
+                            textAlignVertical: TextAlignVertical.Bottom,
+                            decoration: new InputDecoration(
+                                labelText: "Expanded, bottom aligned",
+                                filled: true))),
                     new Text($"Last submitted email: {_submitted}", fontSize: 13),
                     new Divider(),
                     new Text("TextFormField + Form", fontSize: 18),

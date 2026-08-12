@@ -25,3 +25,24 @@ public readonly record struct Alignment(double X, double Y)
             freeHeight * (Y + 1) / 2.0);
     }
 }
+
+public readonly record struct TextAlignVertical
+{
+    public TextAlignVertical(double y)
+    {
+        if (y < -1.0 || y > 1.0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(y), y, "TextAlignVertical.y must be between -1.0 and 1.0.");
+        }
+
+        Y = y;
+    }
+
+    public double Y { get; }
+
+    public static TextAlignVertical Top => new(-1.0);
+
+    public static TextAlignVertical Center => new(0.0);
+
+    public static TextAlignVertical Bottom => new(1.0);
+}

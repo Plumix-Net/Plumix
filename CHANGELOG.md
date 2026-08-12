@@ -1,5 +1,25 @@
 # Changelog
 
+- Breaking: ported `material/input_decorator.dart` and `material/input_border.dart` strictly. The decoration is
+  now laid out by `RenderDecoration` (`RenderInputDecoration.cs`), a slotted render object carrying Flutter's
+  `_layout`/`performLayout` verbatim — baseline-driven slot placement, `_interpolateThree` outline alignment,
+  container/subtext split, intrinsics, dry layout and dry baselines. `InputBorder`/`UnderlineInputBorder`/
+  `OutlineInputBorder` moved to `InputBorder.cs` with the real paint math (`_gapBorderPath` arcs, `strokeOffset`
+  inflation, bottom-radius clamping, `lerpFrom`/`lerpTo`/`scale`/equality). `_BorderContainer`, `_HelperError`,
+  the affix opacity fades, the shaking label and the M2/M3 defaults (fill, indicator/outline sides, label/hint/
+  helper/error styles, the full `contentPadding` table, the M3 input gap) are ported too.
+  **Breaking:** `InputDecoration` is a record with `init` properties, `ContentPadding` moved from `Thickness` to
+  `EdgeInsetsGeometry`, `InputBorder.CopyWith` takes a nullable side, per-state border slots (`disabledBorder`,
+  `errorBorder`, …) are used verbatim instead of being state-resolved (only `border` resolves an
+  `IStateInputBorder`), and `Hovered` is masked while disabled. `InputDecorationThemeData` gained
+  `ActiveIndicatorBorder`, `OutlineBorder`, `VisualDensity`, `HintFadeDuration`, `AlignLabelWithHint`, the icon
+  constraints and `Merge`; `InputDecorator`/`TextField` gained `textAlignVertical`, and `TextField` no longer
+  forces `expands` for multiline.
+  New core primitives: `TextAlignVertical`, `TextStyle.Merge`, `Listenable.Merge`, `RRect` (with `ScaleRadii`/
+  `Inflate`/`ToPath`), `Path.AddArc`/`ArcTo`/`AddPath` plus open-contour stroking, `BorderSide.StrokeAlign`/
+  `StrokeInset`/`StrokeOutset`/`StrokeOffset`/`Lerp`/`Scale`/`CopyWith`, `Radius.Clamp`, `BorderRadius * double`
+  and `BorderRadius.ToRRect`.
+
 - Closed the `RenderTable` semantics divergence: the shared pipeline gained Flutter's
   `RenderObject.AssembleSemanticsNode` hook (called for every semantic boundary, default annotates the node and
   adds the children), `SemanticsNode.UpdateWith` with public `Rect`/`IndexInParent` mutation, and

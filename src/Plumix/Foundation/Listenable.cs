@@ -13,6 +13,34 @@ public interface IValueListenable<out T> : IListenable
     T Value { get; }
 }
 
+public static class Listenable
+{
+    public static IListenable Merge(params IListenable?[] listenables) => new MergingListenable(listenables);
+
+    private sealed class MergingListenable : IListenable
+    {
+        private readonly IListenable?[] _children;
+
+        public MergingListenable(IListenable?[] children) => _children = children;
+
+        public void AddListener(Action listener)
+        {
+            foreach (IListenable? child in _children)
+            {
+                child?.AddListener(listener);
+            }
+        }
+
+        public void RemoveListener(Action listener)
+        {
+            foreach (IListenable? child in _children)
+            {
+                child?.RemoveListener(listener);
+            }
+        }
+    }
+}
+
 public class ChangeNotifier : IListenable, IDisposable
 {
     private readonly List<Action> _listeners = [];

@@ -68,6 +68,46 @@ public sealed class Path
         }
     }
 
+    // Dart parity source: dart:ui Path.addArc / Path.arcTo (oval-inscribed sweep).
+    public void AddArc(Rect oval, double startAngleRadians, double sweepAngleRadians)
+    {
+        FinishCurrentContour();
+        _currentPoints = [];
+        _currentClosed = false;
+        AppendArcPoints(oval, startAngleRadians, sweepAngleRadians, forceMoveTo: true);
+    }
+
+    public void ArcTo(Rect oval, double startAngleRadians, double sweepAngleRadians, bool forceMoveTo)
+    {
+        EnsureCurrentContour();
+        AppendArcPoints(oval, startAngleRadians, sweepAngleRadians, forceMoveTo);
+    }
+
+    private void AppendArcPoints(
+        Rect oval,
+        double startAngleRadians,
+        double sweepAngleRadians,
+        bool forceMoveTo)
+    {
+        double radiusX = oval.Width / 2.0;
+        double radiusY = oval.Height / 2.0;
+        Point center = oval.Center;
+        int segmentCount = Math.Max(2, (int)Math.Ceiling(Math.Abs(sweepAngleRadians) / (Math.PI / 16.0)));
+        for (int segment = 0; segment <= segmentCount; segment++)
+        {
+            double angle = startAngleRadians + (sweepAngleRadians * segment / segmentCount);
+            var point = new Point(
+                center.X + (Math.Cos(angle) * radiusX),
+                center.Y + (Math.Sin(angle) * radiusY));
+            if (segment == 0 && !forceMoveTo && _currentPoints!.Count > 0)
+            {
+                continue;
+            }
+
+            _currentPoints!.Add(point);
+        }
+    }
+
     public void Close()
     {
         if (_currentPoints is null)
@@ -96,6 +136,13 @@ public sealed class Path
         FinishCurrentContour();
         double clampedRadius = Math.Clamp(radius, 0.0, Math.Min(rect.Width, rect.Height) / 2.0);
         _contours.Add(PathContour.RoundedRectangle(rect, clampedRadius));
+    }
+
+    public void AddPath(Path other)
+    {
+        ArgumentNullException.ThrowIfNull(other);
+        FinishCurrentContour();
+        _contours.AddRange(other.SnapshotContours());
     }
 
     public bool Contains(Point point)
@@ -171,7 +218,7 @@ public sealed class Path
                 context.LineTo(points[index]);
             }
 
-            context.EndFigure(isClosed: true);
+            context.EndFigure(contour.IsClosed);
         }
 
         return geometry;

@@ -124,6 +124,16 @@ public readonly record struct Radius
         return new Radius(Math.Max(0.0, X - amount), Math.Max(0.0, Y - amount));
     }
 
+    public Radius Clamp(Radius maximum)
+    {
+        return new Radius(Math.Min(X, maximum.X), Math.Min(Y, maximum.Y));
+    }
+
+    public static Radius operator *(Radius radius, double factor)
+    {
+        return new Radius(radius.X * factor, radius.Y * factor);
+    }
+
     public static Radius Lerp(Radius a, Radius b, double t)
     {
         return new Radius(
@@ -213,6 +223,17 @@ public readonly record struct BorderRadius
         Radius bottomLeft)
     {
         return new BorderRadius(topLeft, topRight, bottomRight, bottomLeft);
+    }
+
+    public Plumix.UI.RRect ToRRect(Avalonia.Rect rect) => Plumix.UI.RRect.FromRectAndCorners(rect, this);
+
+    public static BorderRadius operator *(BorderRadius radius, double factor)
+    {
+        return new BorderRadius(
+            radius.TopLeftRadius * factor,
+            radius.TopRightRadius * factor,
+            radius.BottomRightRadius * factor,
+            radius.BottomLeftRadius * factor);
     }
 
     public static BorderRadius? Lerp(BorderRadius? a, BorderRadius? b, double t)
@@ -346,14 +367,20 @@ public readonly record struct BorderRadiusGeometry
 
 public readonly record struct BorderSide
 {
+    public const double StrokeAlignInside = -1.0;
+    public const double StrokeAlignCenter = 0.0;
+    public const double StrokeAlignOutside = 1.0;
+
     public BorderSide(
         Color color,
         double width = 1.0,
-        BorderStyle style = BorderStyle.Solid) : this()
+        BorderStyle style = BorderStyle.Solid,
+        double strokeAlign = StrokeAlignInside) : this()
     {
         Color = color;
         Width = Math.Max(0, width);
         Style = style;
+        StrokeAlign = strokeAlign;
     }
 
     public Color Color { get; }
@@ -362,7 +389,66 @@ public readonly record struct BorderSide
 
     public BorderStyle Style { get; }
 
+    public double StrokeAlign { get; }
+
+    public double StrokeInset => Width * (1.0 - ((1.0 + StrokeAlign) / 2.0));
+
+    public double StrokeOutset => Width * ((1.0 + StrokeAlign) / 2.0);
+
+    public double StrokeOffset => Width * StrokeAlign;
+
     public static BorderSide None => new(Colors.Transparent, 0.0, BorderStyle.None);
+
+    public BorderSide CopyWith(
+        Color? color = null,
+        double? width = null,
+        BorderStyle? style = null,
+        double? strokeAlign = null) =>
+        new(color ?? Color, width ?? Width, style ?? Style, strokeAlign ?? StrokeAlign);
+
+    public BorderSide Scale(double t) => new(
+        Color,
+        Math.Max(0.0, Width * t),
+        t <= 0.0 ? BorderStyle.None : Style,
+        StrokeAlign);
+
+    public static BorderSide Lerp(BorderSide a, BorderSide b, double t)
+    {
+        if (t == 0.0)
+        {
+            return a;
+        }
+
+        if (t == 1.0)
+        {
+            return b;
+        }
+
+        double width = a.Width + ((b.Width - a.Width) * t);
+        if (width < 0.0)
+        {
+            return None;
+        }
+
+        if (a.Style == b.Style && a.StrokeAlign == b.StrokeAlign)
+        {
+            return new BorderSide(LerpColor(a.Color, b.Color, t), width, a.Style, a.StrokeAlign);
+        }
+
+        Color colorA = a.Style == BorderStyle.Solid ? a.Color : Color.FromArgb(0, a.Color.R, a.Color.G, a.Color.B);
+        Color colorB = b.Style == BorderStyle.Solid ? b.Color : Color.FromArgb(0, b.Color.R, b.Color.G, b.Color.B);
+        return new BorderSide(
+            LerpColor(colorA, colorB, t),
+            width,
+            BorderStyle.Solid,
+            a.StrokeAlign + ((b.StrokeAlign - a.StrokeAlign) * t));
+    }
+
+    private static Color LerpColor(Color a, Color b, double t) => Color.FromArgb(
+        (byte)Math.Clamp(Math.Round(a.A + ((b.A - a.A) * t)), 0, 255),
+        (byte)Math.Clamp(Math.Round(a.R + ((b.R - a.R) * t)), 0, 255),
+        (byte)Math.Clamp(Math.Round(a.G + ((b.G - a.G) * t)), 0, 255),
+        (byte)Math.Clamp(Math.Round(a.B + ((b.B - a.B) * t)), 0, 255));
 }
 
 public sealed record BoxBorder(

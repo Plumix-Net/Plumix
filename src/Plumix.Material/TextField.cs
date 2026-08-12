@@ -26,6 +26,7 @@ public sealed class TextField : StatefulWidget
         bool useDecoration = true,
         TextStyle? style = null,
         TextAlign textAlign = TextAlign.Start,
+        TextAlignVertical? textAlignVertical = null,
         TextDirection? textDirection = null,
         TextInputType? keyboardType = null,
         TextInputAction? textInputAction = null,
@@ -73,6 +74,7 @@ public sealed class TextField : StatefulWidget
         Decoration = useDecoration ? decoration ?? new InputDecoration() : null;
         Style = style;
         TextAlign = textAlign;
+        TextAlignVertical = textAlignVertical;
         TextDirection = textDirection;
         KeyboardType = keyboardType;
         TextInputAction = textInputAction;
@@ -108,6 +110,7 @@ public sealed class TextField : StatefulWidget
     public InputDecoration? Decoration { get; }
     public TextStyle? Style { get; }
     public TextAlign TextAlign { get; }
+    public TextAlignVertical? TextAlignVertical { get; }
     public TextDirection? TextDirection { get; }
     public TextInputType? KeyboardType { get; }
     public TextInputAction? TextInputAction { get; }
@@ -282,9 +285,10 @@ public sealed class TextField : StatefulWidget
                     decoration: decoration,
                     baseStyle: baseStyle,
                     textAlign: Current.TextAlign,
+                    textAlignVertical: Current.TextAlignVertical,
                     isFocused: _focusNode!.HasFocus,
                     isHovering: _hovering,
-                    expands: Current.Expands || multiline,
+                    expands: Current.Expands,
                     isEmpty: string.IsNullOrEmpty(_controller!.Text),
                     child: editable);
             }
