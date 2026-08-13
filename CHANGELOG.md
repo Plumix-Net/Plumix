@@ -1,5 +1,11 @@
 # Changelog
 
+- Breaking: closed the nonlinear text-scaling divergence. `MediaQueryData` now owns the exact `TextScaler` strategy,
+  adds scaler-aware `CopyWith`, and keeps `TextScaleFactor` as a derived compatibility surface; `MediaQuery` adds
+  scaler accessors and aspect-scoped dependencies, while its no-scaling/clamped wrappers preserve strategy behavior.
+  `Text`/`RichText` retain their legacy scale-factor inputs with Flutter's mutual-exclusion rules, and `TabBar` now
+  passes widget/theme/ambient scalers unchanged, including custom and clamped nonlinear implementations.
+
 - Breaking: closed the `MenuAnchor` divergence by landing its three missing primitives. Core gained
   `IMenuSerializableShortcut`/`ShortcutSerialization` (`SingleActivator`/`CharacterActivator` now serialize for
   menus) and `MouseRegion.OnHover`; `MaterialLocalizations` gained the 47 `KeyboardKey*` strings; and

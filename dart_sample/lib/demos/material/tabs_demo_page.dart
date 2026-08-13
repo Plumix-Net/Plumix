@@ -14,6 +14,7 @@ class _TabsDemoPageState extends State<TabsDemoPage> {
   bool _isPrimary = true;
   bool _useElasticIndicator = true;
   bool _useCenterAlignment = false;
+  bool _useClampedTextScaling = false;
 
   @override
   Widget build(BuildContext context) {
@@ -43,6 +44,9 @@ class _TabsDemoPageState extends State<TabsDemoPage> {
     final TabIndicatorAnimation indicatorAnimation = _useElasticIndicator
         ? TabIndicatorAnimation.elastic
         : TabIndicatorAnimation.linear;
+    final TextScaler? tabTextScaler = _useClampedTextScaling
+        ? TextScaler.linear(2.0).clamp(maxScaleFactor: 1.25)
+        : null;
 
     const List<Widget> tabs = <Widget>[
       Tab(text: 'HOME', icon: Icon(Icons.star_outline)),
@@ -87,8 +91,15 @@ class _TabsDemoPageState extends State<TabsDemoPage> {
                 ),
                 _controlButton(
                   _useCenterAlignment ? 'Center' : 'Default align',
-                  () =>
-                      setState(() => _useCenterAlignment = !_useCenterAlignment),
+                  () => setState(
+                    () => _useCenterAlignment = !_useCenterAlignment,
+                  ),
+                ),
+                _controlButton(
+                  _useClampedTextScaling ? 'Scale 1.25×' : 'Ambient scale',
+                  () => setState(
+                    () => _useClampedTextScaling = !_useClampedTextScaling,
+                  ),
                 ),
               ],
             ),
@@ -139,12 +150,14 @@ class _TabsDemoPageState extends State<TabsDemoPage> {
                           isScrollable: _isScrollable,
                           tabAlignment: alignment,
                           indicatorAnimation: indicatorAnimation,
+                          textScaler: tabTextScaler,
                           tabs: tabs,
                         )
                       : TabBar.secondary(
                           isScrollable: _isScrollable,
                           tabAlignment: alignment,
                           indicatorAnimation: indicatorAnimation,
+                          textScaler: tabTextScaler,
                           tabs: tabs,
                         ),
                 ),

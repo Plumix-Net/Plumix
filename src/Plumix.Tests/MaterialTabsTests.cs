@@ -918,19 +918,18 @@ public sealed class MaterialTabsTests
     public void TabBar_TextScalerOverridesTheAmbientMediaQuery()
     {
         using var controller = new TabController(2);
+        var scaler = new SquareTextScaler();
         using var harness = new WidgetRenderHarness(Wrap(new MediaQuery(
             new MediaQueryData(Size: new Size(300, 100), TextScaleFactor: 3.0),
             new TabBar(
                 controller: controller,
-                textScaler: TextScaler.Linear(1.75),
+                textScaler: scaler,
                 tabs: [new Tab(text: "One"), new Tab(text: "Two")]))));
         harness.Pump(new Size(300, 100));
 
-        double? scale = null;
-        _ = FindWidgets<MediaQuery>(harness.RenderView)
-            .Select(query => scale = query.Data.TextScaleFactor)
-            .ToList();
-        Assert.Equal(1.75, scale);
+        Assert.Contains(
+            FindWidgets<MediaQuery>(harness.RenderView),
+            query => ReferenceEquals(query.Data.TextScaler, scaler));
     }
 
     [Fact]
@@ -1560,6 +1559,13 @@ public sealed class MaterialTabsTests
             _ = Roots.Remove(RenderView);
             _root.Unmount();
         }
+    }
+
+    private sealed record SquareTextScaler : TextScaler
+    {
+        public override double Scale(double fontSize) => fontSize * fontSize;
+
+        public override double TextScaleFactor => 1.0;
     }
 
     private sealed class HarnessRootElement : Element, IRenderObjectHost

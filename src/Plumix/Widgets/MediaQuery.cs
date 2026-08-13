@@ -1,10 +1,11 @@
 using Avalonia;
 using Plumix.Foundation;
+using Plumix.Painting;
 using Plumix.Rendering;
 
 namespace Plumix.Widgets;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/widgets/media_query.dart (approximate)
+// Dart parity source: flutter/packages/flutter/lib/src/widgets/media_query.dart
 
 public enum Orientation
 {
@@ -44,26 +45,94 @@ public sealed record DisplayFeature(
     DisplayFeatureType Type = DisplayFeatureType.Unknown,
     DisplayFeatureState State = DisplayFeatureState.Unknown);
 
-public sealed record MediaQueryData(
-    Size Size = default,
-    double DevicePixelRatio = 1.0,
-    Thickness Padding = default,
-    Thickness ViewInsets = default,
-    Thickness SystemGestureInsets = default,
-    Thickness ViewPadding = default,
-    double TextScaleFactor = 1.0,
-    bool AccessibleNavigation = false,
-    bool AlwaysUse24HourFormat = false,
-    bool DisableAnimations = false,
-    bool InvertColors = false,
-    NavigationMode NavigationMode = NavigationMode.Traditional,
-    PlatformBrightness PlatformBrightness = PlatformBrightness.Light,
-    bool HighContrast = false,
-    bool SupportsAnnounce = false,
-    int ViewId = 0,
-    BorderRadius? DisplayCornerRadii = null,
-    IReadOnlyList<DisplayFeature>? DisplayFeatures = null)
+public sealed record MediaQueryData
 {
+    public MediaQueryData(
+        Size Size = default,
+        double DevicePixelRatio = 1.0,
+        Thickness Padding = default,
+        Thickness ViewInsets = default,
+        Thickness SystemGestureInsets = default,
+        Thickness ViewPadding = default,
+        double TextScaleFactor = 1.0,
+        TextScaler? TextScaler = null,
+        bool AccessibleNavigation = false,
+        bool AlwaysUse24HourFormat = false,
+        bool DisableAnimations = false,
+        bool InvertColors = false,
+        NavigationMode NavigationMode = NavigationMode.Traditional,
+        PlatformBrightness PlatformBrightness = PlatformBrightness.Light,
+        bool HighContrast = false,
+        bool SupportsAnnounce = false,
+        int ViewId = 0,
+        BorderRadius? DisplayCornerRadii = null,
+        IReadOnlyList<DisplayFeature>? DisplayFeatures = null)
+    {
+        if (TextScaler is not null && TextScaleFactor != 1.0)
+        {
+            throw new ArgumentException(
+                "TextScaleFactor cannot be specified when TextScaler is specified.",
+                nameof(TextScaleFactor));
+        }
+
+        this.Size = Size;
+        this.DevicePixelRatio = DevicePixelRatio;
+        this.Padding = Padding;
+        this.ViewInsets = ViewInsets;
+        this.SystemGestureInsets = SystemGestureInsets;
+        this.ViewPadding = ViewPadding;
+        this.TextScaler = TextScaler ?? Painting.TextScaler.Linear(TextScaleFactor);
+        this.AccessibleNavigation = AccessibleNavigation;
+        this.AlwaysUse24HourFormat = AlwaysUse24HourFormat;
+        this.DisableAnimations = DisableAnimations;
+        this.InvertColors = InvertColors;
+        this.NavigationMode = NavigationMode;
+        this.PlatformBrightness = PlatformBrightness;
+        this.HighContrast = HighContrast;
+        this.SupportsAnnounce = SupportsAnnounce;
+        this.ViewId = ViewId;
+        this.DisplayCornerRadii = DisplayCornerRadii;
+        this.DisplayFeatures = DisplayFeatures;
+    }
+
+    public Size Size { get; init; }
+
+    public double DevicePixelRatio { get; init; }
+
+    public Thickness Padding { get; init; }
+
+    public Thickness ViewInsets { get; init; }
+
+    public Thickness SystemGestureInsets { get; init; }
+
+    public Thickness ViewPadding { get; init; }
+
+    public double TextScaleFactor => TextScaler.TextScaleFactor;
+
+    public TextScaler TextScaler { get; init; }
+
+    public bool AccessibleNavigation { get; init; }
+
+    public bool AlwaysUse24HourFormat { get; init; }
+
+    public bool DisableAnimations { get; init; }
+
+    public bool InvertColors { get; init; }
+
+    public NavigationMode NavigationMode { get; init; }
+
+    public PlatformBrightness PlatformBrightness { get; init; }
+
+    public bool HighContrast { get; init; }
+
+    public bool SupportsAnnounce { get; init; }
+
+    public int ViewId { get; init; }
+
+    public BorderRadius? DisplayCornerRadii { get; init; }
+
+    public IReadOnlyList<DisplayFeature>? DisplayFeatures { get; init; }
+
     public Orientation Orientation => Size.Width > Size.Height
         ? Orientation.Landscape
         : Orientation.Portrait;
@@ -82,6 +151,7 @@ public sealed record MediaQueryData(
         Thickness? systemGestureInsets = null,
         Thickness? viewPadding = null,
         double? textScaleFactor = null,
+        TextScaler? textScaler = null,
         bool? accessibleNavigation = null,
         bool? alwaysUse24HourFormat = null,
         bool? disableAnimations = null,
@@ -95,6 +165,14 @@ public sealed record MediaQueryData(
         bool clearDisplayCornerRadii = false,
         IReadOnlyList<DisplayFeature>? displayFeatures = null)
     {
+        if (textScaleFactor is not null && textScaler is not null)
+        {
+            throw new ArgumentException("TextScaleFactor and TextScaler cannot both be specified.");
+        }
+
+        TextScaler effectiveTextScaler = textScaleFactor is { } scaleFactor
+            ? Painting.TextScaler.Linear(scaleFactor)
+            : textScaler ?? TextScaler;
         return new MediaQueryData(
             Size: size ?? Size,
             DevicePixelRatio: devicePixelRatio ?? DevicePixelRatio,
@@ -102,7 +180,7 @@ public sealed record MediaQueryData(
             ViewInsets: viewInsets ?? ViewInsets,
             SystemGestureInsets: systemGestureInsets ?? SystemGestureInsets,
             ViewPadding: viewPadding ?? ViewPadding,
-            TextScaleFactor: textScaleFactor ?? TextScaleFactor,
+            TextScaler: effectiveTextScaler,
             AccessibleNavigation: accessibleNavigation ?? AccessibleNavigation,
             AlwaysUse24HourFormat: alwaysUse24HourFormat ?? AlwaysUse24HourFormat,
             DisableAnimations: disableAnimations ?? DisableAnimations,
@@ -262,8 +340,14 @@ public sealed record MediaQueryData(
     }
 }
 
-public sealed class MediaQuery : InheritedWidget
+public sealed class MediaQuery : InheritedModel<object>
 {
+    private enum Aspect
+    {
+        TextScaleFactor,
+        TextScaler,
+    }
+
     public MediaQuery(
         MediaQueryData data,
         Widget child,
@@ -284,6 +368,19 @@ public sealed class MediaQuery : InheritedWidget
         return !Equals(((MediaQuery)oldWidget).Data, Data);
     }
 
+    protected override bool UpdateShouldNotifyDependent(
+        InheritedModel<object> oldWidget,
+        IReadOnlySet<object> dependencies)
+    {
+        MediaQueryData oldData = ((MediaQuery)oldWidget).Data;
+        return dependencies.Any(aspect => aspect switch
+        {
+            Aspect.TextScaleFactor => oldData.TextScaleFactor != Data.TextScaleFactor,
+            Aspect.TextScaler => oldData.TextScaler != Data.TextScaler,
+            _ => !Equals(oldData, Data),
+        });
+    }
+
     public static MediaQueryData Of(BuildContext context)
     {
         return MaybeOf(context)
@@ -293,6 +390,11 @@ public sealed class MediaQuery : InheritedWidget
     public static MediaQueryData? MaybeOf(BuildContext context)
     {
         return context.DependOnInherited<MediaQuery>()?.Data;
+    }
+
+    private static MediaQueryData? MaybeOf(BuildContext context, Aspect aspect)
+    {
+        return InheritedModel<object>.InheritFrom<MediaQuery>(context, aspect)?.Data;
     }
 
     public static Thickness PaddingOf(BuildContext context) => Of(context).Padding;
@@ -329,9 +431,17 @@ public sealed class MediaQuery : InheritedWidget
     public static BorderRadius? MaybeDisplayCornerRadiiOf(BuildContext context) =>
         MaybeOf(context)?.DisplayCornerRadii;
 
-    public static double TextScaleFactorOf(BuildContext context) => Of(context).TextScaleFactor;
+    public static double TextScaleFactorOf(BuildContext context) =>
+        MaybeTextScaleFactorOf(context) ?? 1.0;
 
-    public static double? MaybeTextScaleFactorOf(BuildContext context) => MaybeOf(context)?.TextScaleFactor;
+    public static double? MaybeTextScaleFactorOf(BuildContext context) =>
+        MaybeOf(context, Aspect.TextScaleFactor)?.TextScaleFactor;
+
+    public static TextScaler TextScalerOf(BuildContext context) =>
+        MaybeTextScalerOf(context) ?? Painting.TextScaler.NoScaling;
+
+    public static TextScaler? MaybeTextScalerOf(BuildContext context) =>
+        MaybeOf(context, Aspect.TextScaler)?.TextScaler;
 
     public static bool AccessibleNavigationOf(BuildContext context) => Of(context).AccessibleNavigation;
 
@@ -361,21 +471,25 @@ public sealed class MediaQuery : InheritedWidget
         double maxScaleFactor,
         double minScaleFactor = 0)
     {
-        if (!double.IsFinite(maxScaleFactor) || maxScaleFactor <= 0) throw new ArgumentOutOfRangeException(nameof(maxScaleFactor));
+        if (double.IsNaN(maxScaleFactor) || maxScaleFactor < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(maxScaleFactor));
+        }
+
         if (!double.IsFinite(minScaleFactor) || minScaleFactor < 0 || minScaleFactor > maxScaleFactor)
         {
             throw new ArgumentOutOfRangeException(nameof(minScaleFactor));
         }
-        var data = Of(context);
+        MediaQueryData data = Of(context);
         return new MediaQuery(
-            data.CopyWith(textScaleFactor: Math.Clamp(data.TextScaleFactor, minScaleFactor, maxScaleFactor)),
+            data.CopyWith(textScaler: data.TextScaler.Clamp(minScaleFactor, maxScaleFactor)),
             child);
     }
 
     public static Widget WithNoTextScaling(BuildContext context, Widget child)
     {
         return new MediaQuery(
-            data: Of(context).CopyWith(textScaleFactor: 1.0),
+            data: Of(context).CopyWith(textScaler: Painting.TextScaler.NoScaling),
             child: child);
     }
 

@@ -2,6 +2,7 @@ using System;
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Material;
+using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.Widgets;
 
@@ -22,6 +23,7 @@ internal sealed class TabsDemoPageState : State
     private bool _isPrimary = true;
     private bool _useElasticIndicator = true;
     private bool _useCenterAlignment;
+    private bool _useClampedTextScaling;
 
     public override Widget Build(BuildContext context)
     {
@@ -47,6 +49,9 @@ internal sealed class TabsDemoPageState : State
         var indicatorAnimation = _useElasticIndicator
             ? TabIndicatorAnimation.Elastic
             : TabIndicatorAnimation.Linear;
+        TextScaler? tabTextScaler = _useClampedTextScaling
+            ? TextScaler.Linear(2.0).Clamp(maxScaleFactor: 1.25)
+            : null;
 
         Widget[] tabs =
         [
@@ -82,6 +87,8 @@ internal sealed class TabsDemoPageState : State
                                     () => SetState(() => _useElasticIndicator = !_useElasticIndicator)),
                                 ControlButton(_useCenterAlignment ? "Center" : "Default align",
                                     () => SetState(() => _useCenterAlignment = !_useCenterAlignment)),
+                                ControlButton(_useClampedTextScaling ? "Scale 1.25×" : "Ambient scale",
+                                    () => SetState(() => _useClampedTextScaling = !_useClampedTextScaling)),
                             ]),
                         new Text("Tap tabs or swipe pages; the indicator and labels share one TabController.",
                             fontSize: 13,
@@ -113,11 +120,13 @@ internal sealed class TabsDemoPageState : State
                                             isScrollable: _isScrollable,
                                             tabAlignment: alignment,
                                             indicatorAnimation: indicatorAnimation,
+                                            textScaler: tabTextScaler,
                                             tabs: tabs)
                                         : TabBar.Secondary(
                                             isScrollable: _isScrollable,
                                             tabAlignment: alignment,
                                             indicatorAnimation: indicatorAnimation,
+                                            textScaler: tabTextScaler,
                                             tabs: tabs)),
                                 body: new TabBarView(
                                     children:

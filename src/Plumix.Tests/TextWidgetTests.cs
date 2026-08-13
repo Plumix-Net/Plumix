@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Material;
+using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -234,6 +235,51 @@ public sealed class TextWidgetTests
     }
 
     [Fact]
+    public void TextWidget_PreservesTheExactAmbientTextScaler()
+    {
+        var owner = new BuildOwner();
+        var scaler = new SquareTextScaler();
+        var root = new TestRootElement(new MediaQuery(
+            data: new MediaQueryData(TextScaler: scaler),
+            child: new Text("scaled", fontSize: 12)));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var paragraph = FindDescendant<RenderParagraph>(root.ChildElement!.RenderObject);
+        Assert.NotNull(paragraph);
+        Assert.Same(scaler, paragraph!.TextScaler);
+        Assert.Equal(144, paragraph.TextScaler.Scale(12));
+    }
+
+    [Fact]
+    public void TextAndRichText_KeepLegacyScaleFactorCompatibility()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(new Text("scaled", fontSize: 12, textScaleFactor: 1.5));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var paragraph = RequireRenderObject<RenderParagraph>(root.ChildElement);
+        Assert.Equal(TextScaler.Linear(1.5), paragraph.TextScaler);
+
+        var richText = new RichText(new TextSpan(text: "rich"), textScaleFactor: 2.0);
+        Assert.Equal(TextScaler.Linear(2.0), richText.TextScaler);
+        Assert.Equal(2.0, richText.TextScaleFactor);
+        Assert.Throws<ArgumentException>(() => new Text(
+            "invalid",
+            textScaleFactor: 2.0,
+            textScaler: TextScaler.NoScaling));
+        Assert.Throws<ArgumentException>(() => new RichText(
+            new TextSpan(text: "invalid"),
+            textScaler: TextScaler.Linear(1.5),
+            textScaleFactor: 2.0));
+    }
+
+    [Fact]
     public void IconWidget_UsesIconThemeDefaults_WhenArgumentsAreOmitted()
     {
         var owner = new BuildOwner();
@@ -386,6 +432,13 @@ public sealed class TextWidgetTests
         });
 
         return result;
+    }
+
+    private sealed record SquareTextScaler : TextScaler
+    {
+        public override double Scale(double fontSize) => fontSize * fontSize;
+
+        public override double TextScaleFactor => 1.0;
     }
 
     private sealed class TestRootElement : Element, IRenderObjectHost

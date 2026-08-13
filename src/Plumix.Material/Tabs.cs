@@ -1779,15 +1779,10 @@ public sealed class TabBar : StatefulWidget, IPreferredSizeWidget
             }
 
             TextScaler? effectiveTextScaler = Current.TextScaler ?? tabBarTheme.TextScaler;
-            if (effectiveTextScaler is not null)
-            {
-                // Core's MediaQueryData carries a scalar text scale factor rather than a TextScaler;
-                // see docs/ai/DIVERGENCES.md.
-                tabBar = new MediaQuery(
-                    MediaQuery.Of(context).CopyWith(
-                        textScaleFactor: effectiveTextScaler.TextScaleFactor),
-                    tabBar);
-            }
+            MediaQueryData ambientMedia = MediaQuery.MaybeOf(context) ?? new MediaQueryData();
+            tabBar = new MediaQuery(
+                ambientMedia.CopyWith(textScaler: effectiveTextScaler),
+                tabBar);
 
             return new Material(type: MaterialType.Transparency, child: tabBar);
         }

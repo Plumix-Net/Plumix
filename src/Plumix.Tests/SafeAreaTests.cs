@@ -1,5 +1,6 @@
 using Avalonia;
 using Plumix;
+using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.Widgets;
 using Xunit;
@@ -230,6 +231,32 @@ public sealed class SafeAreaTests
     }
 
     [Fact]
+    public void MediaQueryData_TextScalerIsAuthoritativeAndCopyWithPreservesTheStrategy()
+    {
+        var scaler = new SquareTextScaler();
+        var data = new MediaQueryData(Size: new Size(320, 180), TextScaler: scaler);
+
+        Assert.Same(scaler, data.TextScaler);
+        Assert.Equal(1.0, data.TextScaleFactor);
+        Assert.Same(scaler, data.CopyWith(size: new Size(640, 360)).TextScaler);
+
+        MediaQueryData legacy = data.CopyWith(textScaleFactor: 2.5);
+        Assert.Equal(TextScaler.Linear(2.5), legacy.TextScaler);
+        Assert.Equal(2.5, legacy.TextScaleFactor);
+    }
+
+    [Fact]
+    public void MediaQueryData_RejectsBothTextScalingCompatibilityInputs()
+    {
+        Assert.Throws<ArgumentException>(() => new MediaQueryData(
+            TextScaleFactor: 2.0,
+            TextScaler: TextScaler.NoScaling));
+        Assert.Throws<ArgumentException>(() => new MediaQueryData().CopyWith(
+            textScaleFactor: 2.0,
+            textScaler: TextScaler.NoScaling));
+    }
+
+    [Fact]
     public void WidgetHost_ProvidesAmbientMediaQueryToRootWidget()
     {
         MediaQueryProbe.Reset();
@@ -322,6 +349,13 @@ public sealed class SafeAreaTests
                 Overlay.MaybeOf(context) is not null);
             return new SizedBox(width: 1, height: 1);
         }
+    }
+
+    private sealed record SquareTextScaler : TextScaler
+    {
+        public override double Scale(double fontSize) => fontSize * fontSize;
+
+        public override double TextScaleFactor => 1.0;
     }
 
     private sealed class TestRootElement : Element, IRenderObjectHost

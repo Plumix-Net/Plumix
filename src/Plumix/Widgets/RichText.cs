@@ -38,6 +38,7 @@ public sealed class RichText : MultiChildRenderObjectWidget
         bool softWrap = true,
         TextOverflow overflow = TextOverflow.Clip,
         TextScaler? textScaler = null,
+        double textScaleFactor = 1.0,
         int? maxLines = null,
         string? locale = null,
         TextWidthBasis textWidthBasis = TextWidthBasis.Parent,
@@ -45,7 +46,7 @@ public sealed class RichText : MultiChildRenderObjectWidget
         ITextSelectionRegistrar? selectionRegistrar = null,
         Avalonia.Media.Color? selectionColor = null,
         Key? key = null)
-        : base(WidgetSpan.ExtractFromInlineSpan(text, textScaler ?? TextScaler.NoScaling), key)
+        : base(WidgetSpan.ExtractFromInlineSpan(text, ResolveTextScaler(textScaler, textScaleFactor)), key)
     {
         ArgumentNullException.ThrowIfNull(text);
         if (maxLines is <= 0)
@@ -65,7 +66,7 @@ public sealed class RichText : MultiChildRenderObjectWidget
         TextDirection = textDirection;
         SoftWrap = softWrap;
         Overflow = overflow;
-        TextScaler = textScaler ?? TextScaler.NoScaling;
+        TextScaler = ResolveTextScaler(textScaler, textScaleFactor);
         MaxLines = maxLines;
         Locale = locale;
         TextWidthBasis = textWidthBasis;
@@ -82,6 +83,7 @@ public sealed class RichText : MultiChildRenderObjectWidget
         bool softWrap = true,
         TextOverflow overflow = TextOverflow.Clip,
         TextScaler? textScaler = null,
+        double textScaleFactor = 1.0,
         int? maxLines = null,
         string? locale = null,
         TextWidthBasis textWidthBasis = TextWidthBasis.Parent,
@@ -95,6 +97,7 @@ public sealed class RichText : MultiChildRenderObjectWidget
             softWrap,
             overflow,
             textScaler,
+            textScaleFactor,
             maxLines,
             locale,
             textWidthBasis,
@@ -126,6 +129,9 @@ public sealed class RichText : MultiChildRenderObjectWidget
 
     /// The font scaling strategy to use when laying the text out.
     public TextScaler TextScaler { get; }
+
+    /// The deprecated linear font scale compatibility value.
+    public double TextScaleFactor => TextScaler.TextScaleFactor;
 
     /// An optional maximum number of lines for the text to span.
     public int? MaxLines { get; }
@@ -209,5 +215,22 @@ public sealed class RichText : MultiChildRenderObjectWidget
         paragraph.ShowCursor = selection.ShowCursor;
         paragraph.CursorWidth = selection.CursorWidth;
         paragraph.CursorHeight = selection.CursorHeight;
+    }
+
+    private static TextScaler ResolveTextScaler(TextScaler? textScaler, double textScaleFactor)
+    {
+        if (textScaleFactor != 1.0)
+        {
+            if (textScaler is not null && !ReferenceEquals(textScaler, Painting.TextScaler.NoScaling))
+            {
+                throw new ArgumentException(
+                    "TextScaleFactor cannot be specified with a non-default TextScaler.",
+                    nameof(textScaleFactor));
+            }
+
+            return Painting.TextScaler.Linear(textScaleFactor);
+        }
+
+        return textScaler ?? Painting.TextScaler.NoScaling;
     }
 }

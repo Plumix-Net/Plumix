@@ -40,6 +40,7 @@ public sealed class Text : StatelessWidget
         TextDecorationCollection? textDecorations = null,
         TextStyle? style = null,
         string? semanticsLabel = null,
+        double? textScaleFactor = null,
         TextScaler? textScaler = null,
         string? locale = null) : base(key)
     {
@@ -47,6 +48,13 @@ public sealed class Text : StatelessWidget
         if (maxLines is <= 0)
         {
             throw new ArgumentOutOfRangeException(nameof(maxLines), "Max lines must be greater than zero.");
+        }
+
+        if (textScaleFactor is not null && textScaler is not null)
+        {
+            throw new ArgumentException(
+                "TextScaleFactor and TextScaler cannot both be specified.",
+                nameof(textScaleFactor));
         }
 
         Data = data;
@@ -68,6 +76,7 @@ public sealed class Text : StatelessWidget
         TextDecorations = textDecorations;
         Style = style;
         SemanticsLabel = semanticsLabel;
+        TextScaleFactor = textScaleFactor;
         TextScaler = textScaler;
         Locale = locale;
     }
@@ -83,6 +92,7 @@ public sealed class Text : StatelessWidget
         TextWidthBasis? textWidthBasis,
         TextHeightBehavior? textHeightBehavior,
         string? semanticsLabel,
+        double? textScaleFactor,
         TextScaler? textScaler,
         string? locale,
         Key? key) : base(key)
@@ -91,6 +101,14 @@ public sealed class Text : StatelessWidget
         if (maxLines is <= 0)
         {
             throw new ArgumentOutOfRangeException(nameof(maxLines), "Max lines must be greater than zero.");
+        }
+
+
+        if (textScaleFactor is not null && textScaler is not null)
+        {
+            throw new ArgumentException(
+                "TextScaleFactor and TextScaler cannot both be specified.",
+                nameof(textScaleFactor));
         }
 
         Data = null;
@@ -104,6 +122,7 @@ public sealed class Text : StatelessWidget
         TextWidthBasis = textWidthBasis;
         TextHeightBehavior = textHeightBehavior;
         SemanticsLabel = semanticsLabel;
+        TextScaleFactor = textScaleFactor;
         TextScaler = textScaler;
         Locale = locale;
     }
@@ -125,6 +144,7 @@ public sealed class Text : StatelessWidget
         TextWidthBasis? textWidthBasis = null,
         TextHeightBehavior? textHeightBehavior = null,
         string? semanticsLabel = null,
+        double? textScaleFactor = null,
         TextScaler? textScaler = null,
         string? locale = null,
         Key? key = null)
@@ -140,6 +160,7 @@ public sealed class Text : StatelessWidget
             textWidthBasis,
             textHeightBehavior,
             semanticsLabel,
+            textScaleFactor,
             textScaler,
             locale,
             key);
@@ -194,6 +215,9 @@ public sealed class Text : StatelessWidget
     /// The font scaling strategy to use when laying the text out.
     public TextScaler? TextScaler { get; }
 
+    /// The deprecated linear font scale compatibility value.
+    public double? TextScaleFactor { get; }
+
     /// Used to select a font when the same Unicode character can be rendered
     /// differently, depending on the locale.
     public string? Locale { get; }
@@ -229,7 +253,10 @@ public sealed class Text : StatelessWidget
             locale: Locale,
             children: TextSpan is null ? null : [TextSpan]);
         SelectionContainer? selection = SelectionContainer.MaybeOf(context);
-        double textScaleFactor = MediaQuery.MaybeTextScaleFactorOf(context) ?? 1.0;
+        TextScaler effectiveTextScaler = TextScaler
+                                         ?? (TextScaleFactor is { } textScaleFactor
+                                             ? Painting.TextScaler.Linear(textScaleFactor)
+                                             : MediaQuery.TextScalerOf(context));
 
         Widget result = new RichText(
             text: effectiveTextSpan,
@@ -238,7 +265,7 @@ public sealed class Text : StatelessWidget
             textDirection: TextDirection,
             softWrap: SoftWrap ?? ambient?.SoftWrap ?? true,
             overflow: Overflow ?? ambient?.Overflow ?? TextOverflow.Clip,
-            textScaler: TextScaler ?? Painting.TextScaler.Linear(textScaleFactor),
+            textScaler: effectiveTextScaler,
             maxLines: ambient?.MaxLines ?? MaxLines,
             locale: Locale,
             textWidthBasis: TextWidthBasis ?? ambient?.TextWidthBasis ?? UI.TextWidthBasis.Parent,
