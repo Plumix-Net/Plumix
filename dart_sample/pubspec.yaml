@@ -38,8 +38,10 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.9
 
-  material_ui: any
-  cupertino_ui: any
+  # Exact pins: parity is defined against these versions (AGENTS.md > Local Reference Paths).
+  # When bumping, re-point material-ui-src/cupertino-ui-src and re-run generate_port_map.py.
+  material_ui: 1.0.0
+  cupertino_ui: 1.0.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

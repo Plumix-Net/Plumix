@@ -65,6 +65,17 @@ def package_root(package: str) -> Path | None:
     return None
 
 
+def package_version(root: Path) -> str:
+    """The `version:` field of the package's pubspec.yaml, or '?' when unreadable."""
+    try:
+        for line in (root / "pubspec.yaml").read_text(encoding="utf-8").splitlines():
+            if line.startswith("version:"):
+                return line.split(":", 1)[1].strip()
+    except OSError:
+        pass
+    return "?"
+
+
 def resolve_dart(dart: str, froot: Path | None, proots: dict[str, Path | None]) -> bool | None:
     """True/False if the marker path exists under its root; None when the root is unavailable."""
     for package in proots:
@@ -140,7 +151,7 @@ def render(
         f"Flutter checkout used for validation: `{froot}`" if froot else
         "Flutter checkout not found — existence of `packages/flutter/...` paths was NOT validated.",
         *(
-            f"`{p}` package used for validation: `{r}`" if r else
+            f"`{p}` package used for validation: version {package_version(r)} at `{r}`" if r else
             f"`{p}` package root not found — existence of `{p}/...` paths was NOT validated."
             for p, r in proots.items()
         ),

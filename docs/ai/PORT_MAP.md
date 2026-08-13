@@ -11,8 +11,8 @@ searching. Paths under `packages/flutter/...` resolve inside the pinned checkout
 **This is a lookup table — grep it for your control, do not read it end-to-end.**
 
 Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
-`material_ui` package used for validation: `/Users/egorozh/Plumix/Plumix/material-ui-src`
-`cupertino_ui` package used for validation: `/Users/egorozh/Plumix/Plumix/cupertino-ui-src`
+`material_ui` package used for validation: version 1.0.0 at `/Users/egorozh/Plumix/Plumix/material-ui-src`
+`cupertino_ui` package used for validation: version 1.0.0 at `/Users/egorozh/Plumix/Plumix/cupertino-ui-src`
 
 ## Index
 
