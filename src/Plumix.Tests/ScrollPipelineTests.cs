@@ -63,9 +63,9 @@ public sealed class ScrollPipelineTests
     }
 
     [Fact]
-    public void ScrollPosition_ClampingPhysics_ClampsToContentBounds()
+    public void ScrollPosition_JumpForcesTheRequestedOffsetBeforeBallisticSettling()
     {
-        var position = new ScrollPosition(initialPixels: 10);
+        using var position = new ScrollPosition(initialPixels: 10);
         int notifications = 0;
         position.AddListener(() => notifications += 1);
 
@@ -73,7 +73,8 @@ public sealed class ScrollPipelineTests
         position.ApplyContentDimensions(0, 60);
         position.JumpTo(1000);
 
-        Assert.Equal(60, position.Pixels);
+        Assert.Equal(1000, position.Pixels);
+        Assert.IsType<BallisticScrollActivity>(position.Activity);
         Assert.True(notifications > 0);
     }
 
@@ -115,7 +116,10 @@ public sealed class ScrollPipelineTests
         controller.JumpTo(120);
 
         Assert.Equal(120, first.Pixels);
-        Assert.Equal(50, second.Pixels);
+        Assert.Equal(120, second.Pixels);
+        Assert.IsType<BallisticScrollActivity>(second.Activity);
+        first.Dispose();
+        second.Dispose();
     }
 
     [Fact]
@@ -467,7 +471,8 @@ public sealed class ScrollPipelineTests
         harness.Pump(viewportSize);
         var position = controller.PrimaryPosition;
         Assert.NotNull(position);
-        double maxOffsetToCheck = Math.Max(0, position!.MaxScrollExtent - 1);
+        double contentExtent = (120 * 44) + (119 * 4) + 24;
+        double maxOffsetToCheck = Math.Max(0, contentExtent - viewportHeight - 1);
         var viewport = Assert.IsType<RenderViewport>(FindRenderObject<RenderViewport>(harness.RenderView)!);
 
         for (double offset = 0; offset <= maxOffsetToCheck; offset += 53)
@@ -1026,9 +1031,62 @@ public sealed class ScrollPipelineTests
             var controller = new ScrollController();
             BuildContext? itemContext = null;
             var harness = new WidgetRenderHarness(
-                new MediaQuery(
-                    // 200 x 400 physical pixels, so the heuristic threshold is 400 logical px/s.
-                    data: new MediaQueryData(Size: new Size(100, 200), DevicePixelRatio: 2.0),
+                new View(
+                    // The raw view is 200 x 400 physical pixels, so the threshold is 400 logical px/s.
+                    view: new FlutterView(new Size(200, 400), devicePixelRatio: 2.0),
+                    child: new MediaQuery(
+                        // A nested override must not change the raw-view heuristic threshold.
+                        data: new MediaQueryData(Size: new Size(5, 5)),
+                        child: ListView.Builder(
+                            itemCount: 40,
+                            itemExtent: 40,
+                            controller: controller,
+                            physics: new ClampingScrollPhysics(),
+                            addAutomaticKeepAlives: false,
+                            itemBuilder: (context, _) =>
+                            {
+                                itemContext ??= context;
+                                return new SizedBox(height: 40);
+                            }))));
+            harness.Pump(new Size(100, 200));
+
+            Assert.NotNull(itemContext);
+            Assert.False(Scrollable.RecommendDeferredLoadingForContext(itemContext!.Value));
+
+            ScrollPosition position = controller.PrimaryPosition!;
+
+            // Park the position mid-list so a fling in either direction has somewhere to go.
+            controller.JumpTo(200.0);
+            harness.Pump(new Size(100, 200));
+            Scheduler.PumpFrameForTests();
+
+            position.GoBallistic(-300.0);
+            Assert.False(Scrollable.RecommendDeferredLoadingForContext(itemContext!.Value));
+
+            position.GoBallistic(-5000.0);
+            Assert.True(Scrollable.RecommendDeferredLoadingForContext(itemContext!.Value));
+
+            // A request for the other axis walks past this scrollable and finds none.
+            Assert.False(Scrollable.RecommendDeferredLoadingForContext(itemContext!.Value, Axis.Horizontal));
+            Assert.True(Scrollable.RecommendDeferredLoadingForContext(itemContext!.Value, Axis.Vertical));
+        }
+        finally
+        {
+            Scheduler.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void Scrollable_JumpContributesImpliedVelocityUntilTheNextFrame()
+    {
+        Scheduler.ResetForTests();
+        try
+        {
+            var controller = new ScrollController();
+            BuildContext? itemContext = null;
+            var harness = new WidgetRenderHarness(
+                new View(
+                    view: new FlutterView(new Size(200, 400)),
                     child: ListView.Builder(
                         itemCount: 40,
                         itemExtent: 40,
@@ -1042,24 +1100,13 @@ public sealed class ScrollPipelineTests
                         })));
             harness.Pump(new Size(100, 200));
 
-            Assert.NotNull(itemContext);
-            Assert.False(Scrollable.RecommendDeferredLoadingForContext(itemContext!.Value));
+            controller.JumpTo(1000.0);
 
-            ScrollPosition position = controller.PrimaryPosition!;
-
-            // Park the position mid-list so a fling in either direction has somewhere to go.
-            controller.JumpTo(200.0);
-            harness.Pump(new Size(100, 200));
-
-            position.GoBallistic(-300.0);
-            Assert.False(Scrollable.RecommendDeferredLoadingForContext(itemContext!.Value));
-
-            position.GoBallistic(-5000.0);
             Assert.True(Scrollable.RecommendDeferredLoadingForContext(itemContext!.Value));
 
-            // A request for the other axis walks past this scrollable and finds none.
-            Assert.False(Scrollable.RecommendDeferredLoadingForContext(itemContext!.Value, Axis.Horizontal));
-            Assert.True(Scrollable.RecommendDeferredLoadingForContext(itemContext!.Value, Axis.Vertical));
+            Scheduler.PumpFrameForTests();
+
+            Assert.False(Scrollable.RecommendDeferredLoadingForContext(itemContext.Value));
         }
         finally
         {

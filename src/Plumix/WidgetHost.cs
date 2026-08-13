@@ -11,6 +11,7 @@ public sealed class WidgetHost : PlumixHost
     private RootElement? _rootElement;
     private Widget? _rootWidget;
     private MediaQueryData? _lastMediaQueryData;
+    private FlutterView? _view;
 
     public WidgetHost()
     {
@@ -99,9 +100,13 @@ public sealed class WidgetHost : PlumixHost
     {
         var data = GetMediaQueryData();
         _lastMediaQueryData = data;
-        return new MediaQuery(
-            data: data,
-            child: Overlay.Wrap(rootWidget));
+        _view ??= new FlutterView(data.PhysicalSize, data.DevicePixelRatio, data.ViewId);
+        _view.UpdateMetrics(data.PhysicalSize, data.DevicePixelRatio, data.ViewId);
+        return new View(
+            view: _view,
+            child: new MediaQuery(
+                data: data,
+                child: Overlay.Wrap(rootWidget)));
     }
 
     private sealed class RootElement : Element, IRenderObjectHost

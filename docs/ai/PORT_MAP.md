@@ -422,6 +422,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `widgets/transitions.dart` | `src/Plumix/Widgets/Transitions.cs` | `src/Plumix.Tests/MaterialPageTransitionsTests.cs`<br>`src/Plumix.Tests/TransitionsTests.cs` | — |
 | `widgets/tween_animation_builder.dart` | `src/Plumix/Widgets/TweenAnimationBuilder.cs` | — | — |
 | `widgets/value_listenable_builder.dart` | `src/Plumix/Widgets/ValueListenableBuilder.cs` | — | — |
+| `widgets/view.dart` | `src/Plumix/Widgets/View.cs` | — | `dart_sample/lib/demos/general/grid_view_demo_page.dart`<br>`dart_sample/lib/demos/general/list_view_fixed_extent_demo_page.dart`<br>`dart_sample/lib/demos/general/list_view_reverse_demo_page.dart`<br>`dart_sample/lib/demos/general/list_view_separated_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/GridViewDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ListViewFixedExtentDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ListViewReverseDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ListViewSeparatedDemoPage.cs` |
 | `widgets/visibility.dart` | `src/Plumix/Widgets/Visibility.cs` | `src/Plumix.Tests/VisibilityTests.cs` | — |
 | `widgets/widget_span.dart` | `src/Plumix/Widgets/WidgetSpan.cs` | — | — |
 | `widgets/widget_state.dart` | `src/Plumix/Widgets/RawRadio.cs` | `src/Plumix.Tests/RadioGroupRawRadioTests.cs` | — |
@@ -462,8 +463,8 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 
 ## Summary
 
-- Flutter files mapped: 411
-- C# files carrying a marker: 516
+- Flutter files mapped: 412
+- C# files carrying a marker: 517
 - C# files without a marker: 15
 - Markers not resolvable in the pinned checkout: 5
 

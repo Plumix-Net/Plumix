@@ -3,6 +3,7 @@ using Plumix;
 using Plumix.Gestures;
 using Plumix.Physics;
 using Plumix.Rendering;
+using Plumix.Widgets;
 using Xunit;
 
 namespace Plumix.Tests;
@@ -704,6 +705,43 @@ public sealed class ScrollPhysicsTests
     }
 
     [Fact]
+    public void ScrollPosition_ForcePixelsBypassesBoundariesAndResetsImpliedVelocityAfterTheFrame()
+    {
+        Scheduler.ResetForTests();
+        try
+        {
+            var physics = new RecordingDeferredLoadingPhysics();
+            using var position = new TestScrollPosition(physics);
+            position.ApplyViewportDimension(100);
+            position.ApplyContentDimensions(0, 100);
+            int notifications = 0;
+            position.AddListener(() => notifications += 1);
+
+            position.CallForcePixels(0.0);
+            Assert.Equal(1, notifications);
+
+            position.CallForcePixels(600.0);
+            Assert.Equal(600.0, position.Pixels);
+            Assert.True(position.OutOfRange);
+            Assert.True(position.RecommendDeferredLoading(default));
+            Assert.Equal(600.0, physics.LastVelocity);
+
+            position.CallForcePixels(100.0);
+            Assert.True(position.RecommendDeferredLoading(default));
+            Assert.Equal(-500.0, physics.LastVelocity);
+
+            Scheduler.PumpFrameForTests();
+
+            Assert.False(position.RecommendDeferredLoading(default));
+            Assert.Equal(0.0, physics.LastVelocity);
+        }
+        finally
+        {
+            Scheduler.ResetForTests();
+        }
+    }
+
+    [Fact]
     public void ScrollPosition_PointerScroll_NeverOverscrollsUnderBouncingPhysics()
     {
         using var position = new ScrollPosition(physics: new BouncingScrollPhysics());
@@ -1075,5 +1113,21 @@ public sealed class ScrollPhysicsTests
     private sealed class TestScrollPosition(ScrollPhysics physics) : ScrollPosition(physics: physics)
     {
         public double CallSetPixels(double value) => SetPixels(value);
+
+        public void CallForcePixels(double value) => ForcePixels(value);
+    }
+
+    private sealed class RecordingDeferredLoadingPhysics : ScrollPhysics
+    {
+        public double LastVelocity { get; private set; }
+
+        public override bool RecommendDeferredLoading(
+            double velocity,
+            IScrollMetrics metrics,
+            BuildContext context)
+        {
+            LastVelocity = velocity;
+            return Math.Abs(velocity) > 400.0;
+        }
     }
 }

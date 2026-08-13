@@ -1,5 +1,10 @@
 # Changelog
 
+- Breaking: closed deferred-loading scroll parity. The widget root now exposes the raw platform view through
+  `View.Of`/`View.MaybeOf`; the default physics threshold ignores nested `MediaQuery` overrides, and `JumpTo` plus
+  pointer scrolling contribute their forced displacement as implied velocity until the next frame. The direct
+  widget property is named `ViewHandle` because C# forbids a member named `View` on the `View` class.
+
 - Breaking: completed the Material `BottomSheet`/`BottomSheetThemeData` direct-token and theme closeout. M3 sheets
   now read `surfaceContainerLow`/`onSurfaceVariant` from `ColorScheme` directly; drag-handle colors use the
   source-shaped `WidgetStateColor` contract, and bottom-sheet themes now provide exact copy/lerp, diagnostics, and

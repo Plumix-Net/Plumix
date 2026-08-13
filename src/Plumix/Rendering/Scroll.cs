@@ -574,6 +574,7 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
     private bool _didChangeViewportDimensionOrReceiveCorrection = true;
     private ScrollDragController? _currentDrag;
     private double _heldPreviousVelocity;
+    private double _impliedVelocity;
 
     public ScrollPosition(double initialPixels = 0.0, ScrollPhysics? physics = null)
     {
@@ -624,7 +625,10 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
     public void JumpTo(double value)
     {
         GoIdle();
-        SetPixels(value);
+        if (Pixels != value)
+        {
+            ForcePixels(value);
+        }
 
         // Physics that allow out-of-range offsets settle the jump back into range.
         GoBallistic(0.0);
@@ -704,15 +708,10 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
     /// Whether the physics recommend deferring expensive frame-bound work because this position is
     /// changing quickly.
     /// </summary>
-    /// <remarks>
-    /// The velocity handed to the physics is the current activity's velocity. Flutter also adds the
-    /// implied velocity of a forced pixel change; Plumix has no <c>forcePixels</c> path, so a jump
-    /// does not contribute velocity here.
-    /// </remarks>
     public bool RecommendDeferredLoading(BuildContext context)
     {
         return Physics.RecommendDeferredLoading(
-            Activity.Velocity,
+            Activity.Velocity + _impliedVelocity,
             FixedScrollMetrics.From(this),
             context);
     }
@@ -771,9 +770,10 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
             return;
         }
 
-        BeginActivity(new PointerScrollActivity(this));
+        GoIdle();
         UpdateUserScrollDirection(targetPixels);
-        CorrectPixels(targetPixels);
+        IsScrollingNotifier.Value = true;
+        ForcePixels(targetPixels);
         GoBallistic(0.0);
     }
 
@@ -916,6 +916,18 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
         _pixels = value;
         NotifyListeners();
         return true;
+    }
+
+    /// <summary>
+    /// Updates the offset without applying boundary conditions and contributes the displacement to
+    /// deferred-loading velocity for the remainder of the current frame.
+    /// </summary>
+    protected void ForcePixels(double value)
+    {
+        _impliedVelocity = value - _pixels;
+        _pixels = value;
+        NotifyListeners();
+        Scheduler.AddPostFrameCallback(_ => _impliedVelocity = 0.0);
     }
 
     /// <summary>

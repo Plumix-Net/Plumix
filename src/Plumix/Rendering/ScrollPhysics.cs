@@ -88,7 +88,8 @@ public class ScrollPhysics
     {
         if (Parent == null)
         {
-            double maxPhysicalPixels = MaxPhysicalPixels(context);
+            Size physicalSize = View.Of(context).PhysicalSize;
+            double maxPhysicalPixels = Math.Max(physicalSize.Width, physicalSize.Height);
             return Math.Abs(velocity) > maxPhysicalPixels;
         }
 
@@ -174,24 +175,6 @@ public class ScrollPhysics
         return Parent == null ? GetType().Name : $"{GetType().Name} -> {Parent}";
     }
 
-    /// <summary>
-    /// The longest side of the enclosing view's physical size, or infinity when the context has no
-    /// view metrics (in which case nothing is ever deferred).
-    /// </summary>
-    /// <remarks>
-    /// The lookup is deliberately dependency-free, like the source's <c>View.of</c>: consulting the
-    /// heuristic must not subscribe an arbitrary item builder to view-metric changes.
-    /// </remarks>
-    private static double MaxPhysicalPixels(BuildContext context)
-    {
-        if (context.FindAncestorWidgetOfExactType<MediaQuery>() is not { } mediaQuery)
-        {
-            return double.PositiveInfinity;
-        }
-
-        Size physicalSize = mediaQuery.Data.PhysicalSize;
-        return Math.Max(physicalSize.Width, physicalSize.Height);
-    }
 }
 
 /// <summary>

@@ -143,6 +143,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/UI/AppLifecycle.cs`
   - `src/Plumix/Widgets/StatusTransitionWidget.cs`
   - `src/Plumix/Widgets/DisposableBuildContext.cs`
+  - `src/Plumix/Widgets/View.cs`
   - `src/Plumix/UI/SystemChrome.cs`
   - `src/Plumix/Scheduler.cs`
   - `src/Plumix/PipelineOwner.cs`
