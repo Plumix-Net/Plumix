@@ -17,6 +17,14 @@ public sealed class FilterWidgetsTests
         0.0, 0.0, 0.0, 1.0,
     ];
 
+    private static readonly IReadOnlyList<double> IdentityColorMatrix =
+    [
+        1.0, 0.0, 0.0, 0.0, 0.0,
+        0.0, 1.0, 0.0, 0.0, 0.0,
+        0.0, 0.0, 1.0, 0.0, 0.0,
+        0.0, 0.0, 0.0, 1.0, 0.0,
+    ];
+
     [Fact]
     public void ImageFilterFactories_ExposeFlutterDefaultsAndValidateArguments()
     {
@@ -28,6 +36,8 @@ public sealed class FilterWidgetsTests
         var matrix = new ImageFilter.Matrix(IdentityImageMatrix);
         Assert.Equal(IdentityImageMatrix, matrix.Values);
         Assert.Equal(FilterQuality.Low, matrix.FilterQuality);
+        var colorMatrix = new ImageFilter.ColorMatrix(IdentityColorMatrix);
+        Assert.Equal(IdentityColorMatrix, colorMatrix.Values);
 
         var dilate = new ImageFilter.Dilate(2.0, 3.0);
         var erode = new ImageFilter.Erode(4.0, 5.0);
@@ -42,6 +52,7 @@ public sealed class FilterWidgetsTests
         Assert.Throws<ArgumentOutOfRangeException>(() => new ImageFilter.Blur(-1.0));
         Assert.Throws<ArgumentOutOfRangeException>(() => new ImageFilter.Blur(sigmaY: double.NaN));
         Assert.Throws<ArgumentException>(() => new ImageFilter.Matrix([1.0, 0.0]));
+        Assert.Throws<ArgumentException>(() => new ImageFilter.ColorMatrix([1.0, 0.0]));
         Assert.Throws<ArgumentException>(() => new ImageFilter.Matrix(
         [
             1.0, 0.0, 0.0, 0.0,
@@ -582,6 +593,13 @@ public sealed class FilterWidgetsTests
         Assert.Equal(1, translated.Height);
         Assert.Equal(new Rect(2.0, 3.0, 1.0, 1.0), translated.Bounds);
         Assert.Equal([255, 0, 0, 255], translated.Pixels);
+
+        var colorMatrix = FilterLayerRasterizer.ApplyImageFilterForTests(
+            [13, 27, 39, 255],
+            width: 1,
+            height: 1,
+            imageFilter: new ImageFilter.ColorMatrix(IdentityColorMatrix));
+        Assert.Equal([13, 27, 39, 255], colorMatrix.Pixels);
 
         var dilated = FilterLayerRasterizer.ApplyImageFilterForTests(
             [0, 0, 255, 255],

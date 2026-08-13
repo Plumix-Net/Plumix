@@ -23,11 +23,14 @@ public class MainActivity : AvaloniaMainActivity
 {
     private readonly AndroidLifecycleChannel _lifecycleChannel = new(
         WidgetsBinding.Instance.HandleAppLifecycleStateChanged);
+    private AndroidSpellCheckService? _spellCheckService;
     private PredictiveBackCallback? _predictiveBackCallback;
 
     protected override void OnCreate(Bundle? savedInstanceState)
     {
         base.OnCreate(savedInstanceState);
+        _spellCheckService = new AndroidSpellCheckService(this);
+        DefaultSpellCheckService.PlatformHandler = _spellCheckService.Handler;
         if (!OperatingSystem.IsAndroidVersionAtLeast(34))
         {
             return;
@@ -59,6 +62,18 @@ public class MainActivity : AvaloniaMainActivity
 
     protected override void OnDestroy()
     {
+        AndroidSpellCheckService? spellCheckService = _spellCheckService;
+        if (spellCheckService is not null)
+        {
+            if (DefaultSpellCheckService.PlatformHandler == spellCheckService.Handler)
+            {
+                DefaultSpellCheckService.PlatformHandler = null;
+            }
+
+            spellCheckService.Dispose();
+            _spellCheckService = null;
+        }
+
         PredictiveBackCallback? callback = _predictiveBackCallback;
         if (callback is not null && OperatingSystem.IsAndroidVersionAtLeast(34))
         {

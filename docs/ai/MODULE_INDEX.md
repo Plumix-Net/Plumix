@@ -81,6 +81,10 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   `Widgets/TextSelectionToolbarLayoutDelegate.cs`, `Widgets/DesktopTextSelectionToolbarLayoutDelegate.cs`,
   `Widgets/AnimatedSize.cs`, and their rendering counterparts, with focused coverage in
   `MaterialDesktopTextSelectionToolbarTests.cs` and `ImplicitAnimationsTests.cs`.
+- Cupertino text-selection toolbar controls enter through `src/Plumix.Cupertino/CupertinoTextSelectionToolbar.cs`,
+  `CupertinoDesktopTextSelectionToolbar.cs`, their button/adaptive/spell-check files, and `CupertinoTheme.cs`;
+  Material adaptive routing consumes them on iOS/macOS, while the Android sample host registers the native default
+  spell-check handler. Coverage shares `MaterialDesktopTextSelectionToolbarTests.cs`.
 - Material search routes enter through `SearchDelegate.cs` alongside `SearchAnchor.cs`; route ownership uses core `Widgets/Navigation.cs`, query editing stays on `Widgets/TextInput.cs`, and focused coverage lives in `MaterialSearchTests.cs`.
 - Autocomplete enters through core `Widgets/Autocomplete.cs` and Material `Autocomplete.cs`; direct options presentation
   uses `Widgets/Overlay.cs` + `TapRegion.cs`, availability announcements use `UI/SemanticsService.cs`, and focused

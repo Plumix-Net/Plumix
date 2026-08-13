@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
+using Plumix.Cupertino;
 using Plumix.Material;
 using Plumix.Rendering;
 using Plumix.UI;
@@ -16,11 +17,13 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
     {
         Scheduler.ResetForTests();
         MouseCursorManager.ResetForTests();
+        PlatformDefaults.DebugTargetPlatformOverride = null;
     }
 
     public void Dispose()
     {
         MouseCursorManager.ResetForTests();
+        PlatformDefaults.DebugTargetPlatformOverride = null;
         Scheduler.ResetForTests();
     }
 
@@ -417,6 +420,163 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
     }
 
     [Fact]
+    public void AdaptiveToolbar_UsesCupertinoControlsOnApplePlatforms()
+    {
+        var items = new ContextMenuButtonItem[]
+        {
+            new(() => { }, label: "Copy"),
+        };
+        var anchors = new TextSelectionToolbarAnchors(new Point(120, 80), new Point(120, 104));
+
+        using var iosHarness = CreateHarness(
+            ThemeData.Light with { Platform = TargetPlatform.IOS },
+            AdaptiveTextSelectionToolbar.FromButtonItems(items, anchors));
+        iosHarness.Pump(new Size(300, 220));
+        Assert.Single(FindDescendants<RenderCupertinoTextSelectionToolbarItems>(iosHarness.RenderView));
+
+        using var macHarness = CreateHarness(
+            ThemeData.Light with { Platform = TargetPlatform.MacOS },
+            AdaptiveTextSelectionToolbar.FromButtonItems(items, anchors));
+        macHarness.Pump(new Size(300, 220));
+        Assert.Contains(FindDescendants<RenderConstrainedBox>(macHarness.RenderView), value =>
+            value.AdditionalConstraints == BoxConstraints.TightFor(width: 222.0));
+        RenderBackdropFilter backdrop = Assert.Single(
+            FindDescendants<RenderBackdropFilter>(macHarness.RenderView));
+        var compose = Assert.IsType<ImageFilter.Compose>(backdrop.Filter);
+        Assert.IsType<ImageFilter.ColorMatrix>(compose.Outer);
+        Assert.IsType<ImageFilter.Blur>(compose.Inner);
+    }
+
+    [Fact]
+    public void CupertinoAdaptiveToolbar_UsesMobileAndDesktopCupertinoFamilies()
+    {
+        var items = new ContextMenuButtonItem[]
+        {
+            new(() => { }, label: "Copy"),
+            new(() => { }, label: "Paste"),
+        };
+        var anchors = new TextSelectionToolbarAnchors(new Point(120, 80), new Point(120, 104));
+
+        PlatformDefaults.DebugTargetPlatformOverride = TargetPlatform.IOS;
+        using var iosHarness = CreateHarness(
+            ThemeData.Light,
+            CupertinoAdaptiveTextSelectionToolbar.FromButtonItems(items, anchors));
+        iosHarness.Pump(new Size(300, 220));
+        Assert.Single(FindDescendants<RenderCupertinoTextSelectionToolbarItems>(iosHarness.RenderView));
+
+        PlatformDefaults.DebugTargetPlatformOverride = TargetPlatform.MacOS;
+        using var macHarness = CreateHarness(
+            ThemeData.Light,
+            CupertinoAdaptiveTextSelectionToolbar.FromButtonItems(items, anchors));
+        macHarness.Pump(new Size(300, 220));
+        Assert.Contains(FindDescendants<RenderBackdropFilter>(macHarness.RenderView), _ => true);
+        PlatformDefaults.DebugTargetPlatformOverride = null;
+    }
+
+    [Fact]
+    public void CupertinoToolbarButtonsAndSpellToolbarExposeFlutterContracts()
+    {
+        Assert.Throws<ArgumentException>(() => new CupertinoTextSelectionToolbar(default, default, []));
+        Assert.Throws<ArgumentException>(() => new CupertinoDesktopTextSelectionToolbar(default, []));
+        Assert.Throws<ArgumentException>(() => new CupertinoSpellCheckSuggestionsToolbar(
+            default,
+            Enumerable.Range(0, 4)
+                .Select(index => new ContextMenuButtonItem(() => { }, label: index.ToString()))
+                .ToArray()));
+        Assert.Equal(8.0, CupertinoTextSelectionToolbar.ToolbarScreenPadding);
+        Assert.Equal(222.0, CupertinoDesktopTextSelectionToolbar.ToolbarWidth);
+        Assert.Equal(3, CupertinoSpellCheckSuggestionsToolbar.MaxSuggestions);
+
+        ContextMenuButtonItem item = new(() => { }, ContextMenuButtonType.Copy, "Custom");
+        CupertinoTextSelectionToolbarButton mobile =
+            CupertinoTextSelectionToolbarButton.FromButtonItem(item);
+        CupertinoDesktopTextSelectionToolbarButton desktop =
+            CupertinoDesktopTextSelectionToolbarButton.FromButtonItem(item);
+        Assert.Same(item, mobile.ButtonItem);
+        Assert.Same(item, desktop.ButtonItem);
+        Assert.Equal(20, CupertinoDesktopTextSelectionToolbar.SaturationMatrix(3.0).Count);
+    }
+
+    [Fact]
+    public void CupertinoToolbarShape_AppliesArrowGeometryAndInteriorHitBand()
+    {
+        var above = new RenderCupertinoTextSelectionToolbarShape(
+            anchorAbove: new Point(50, 100),
+            anchorBelow: new Point(50, 120),
+            backgroundColor: Colors.White,
+            shadowColor: Colors.Black)
+        {
+            Child = new FixedHitRenderBox(new Size(100, 51)),
+        };
+        above.Layout(BoxConstraints.Loose(new Size(200, 200)));
+
+        Assert.Equal(new Size(100, 44), above.Size);
+        Assert.Equal(new Point(0, -7), ((BoxParentData)above.Child!.parentData!).offset);
+        Assert.False(above.HitTest(new BoxHitTestResult(), new Point(50, 43)));
+        Assert.True(above.HitTest(new BoxHitTestResult(), new Point(50, 20)));
+
+        var below = new RenderCupertinoTextSelectionToolbarShape(
+            anchorAbove: new Point(50, 10),
+            anchorBelow: new Point(50, 40),
+            backgroundColor: Colors.White,
+            shadowColor: null)
+        {
+            Child = new FixedHitRenderBox(new Size(100, 51)),
+        };
+        below.Layout(BoxConstraints.Loose(new Size(200, 200)));
+        Assert.Equal(default, ((BoxParentData)below.Child!.parentData!).offset);
+    }
+
+    [Fact]
+    public void CupertinoToolbarItems_PaginatesLargeChildrenAndExposesNavigationState()
+    {
+        var layout = new RenderCupertinoTextSelectionToolbarItems(0, Colors.Gray);
+        RenderConstrainedBox back = FixedRenderBox(48, 51);
+        RenderConstrainedBox first = FixedRenderBox(70, 51);
+        RenderConstrainedBox second = FixedRenderBox(70, 51);
+        RenderConstrainedBox third = FixedRenderBox(70, 51);
+        RenderConstrainedBox next = FixedRenderBox(48, 51);
+        layout.AddAll([back, first, second, third, next]);
+
+        layout.Layout(BoxConstraints.Loose(new Size(180, 300)));
+        Assert.True(layout.HasNextPage);
+        Assert.False(layout.HasPreviousPage);
+        Assert.True(((CupertinoToolbarItemParentData)first.parentData!).ShouldPaint);
+        Assert.False(((CupertinoToolbarItemParentData)third.parentData!).ShouldPaint);
+
+        layout.Page = 1;
+        layout.Layout(BoxConstraints.Loose(new Size(180, 300)));
+        Assert.True(layout.HasPreviousPage);
+        Assert.True(((CupertinoToolbarItemParentData)second.parentData!).ShouldPaint);
+    }
+
+    [Fact]
+    public void CupertinoMobileButton_UsesSourceTypographyAndDisabledState()
+    {
+        int taps = 0;
+        using var harness = CreateHarness(
+            ThemeData.Light with { Platform = TargetPlatform.IOS },
+            CupertinoTextSelectionToolbarButton.TextButton(() => taps++, "Copy"));
+        SemanticsNode? semantics = harness.PumpAndGetSemantics(new Size(160, 80));
+
+        RenderParagraph paragraph = Assert.Single(FindDescendants<RenderParagraph>(harness.RenderView));
+        Assert.Equal(15.0, paragraph.FontSize);
+        Assert.Equal(-0.15, paragraph.LetterSpacing);
+        Assert.Equal(FontWeight.Normal, paragraph.FontWeight);
+        SemanticsNode tap = Assert.IsType<SemanticsNode>(FindSemantics(
+            semantics,
+            node => node.Actions.HasFlag(SemanticsActions.Tap)));
+        Assert.True(tap.PerformAction(SemanticsActions.Tap));
+        Assert.Equal(1, taps);
+
+        using var disabledHarness = CreateHarness(
+            ThemeData.Light with { Platform = TargetPlatform.IOS },
+            CupertinoTextSelectionToolbarButton.TextButton(null, "Disabled"));
+        SemanticsNode? disabledSemantics = disabledHarness.PumpAndGetSemantics(new Size(160, 80));
+        Assert.Null(FindSemantics(disabledSemantics, node => node.Actions.HasFlag(SemanticsActions.Tap)));
+    }
+
+    [Fact]
     public void SpellCheckLayoutDelegate_CentersAndRaisesToolbarAboveViewportBottom()
     {
         var layoutDelegate = new SpellCheckSuggestionsToolbarLayoutDelegate(new Point(140, 170));
@@ -450,7 +610,7 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
             new(() => { }, ContextMenuButtonType.Delete),
         };
         using var harness = CreateHarness(
-            ThemeData.Light,
+            ThemeData.Light with { Platform = TargetPlatform.Android },
             new SpellCheckSuggestionsToolbar(new Point(150, 180), items),
             padding: new Thickness(0, 10, 0, 0),
             viewInsets: new Thickness(0, 0, 0, 30));
@@ -489,7 +649,15 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
                 theme,
                 new MediaQuery(
                     new MediaQueryData(Padding: padding, ViewInsets: viewInsets),
-                    new Directionality(TextDirection.Ltr, child))));
+                    new Localizations(
+                        locale: new Locale("en"),
+                        delegates:
+                        [
+                            DefaultWidgetsLocalizations.Delegate,
+                            DefaultMaterialLocalizations.Delegate,
+                            DefaultCupertinoLocalizations.Delegate,
+                        ],
+                        child: new Directionality(TextDirection.Ltr, child)))));
     }
 
     private static SemanticsNode? FindSemantics(SemanticsNode? node, Func<SemanticsNode, bool> predicate)
@@ -647,5 +815,26 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
                 base.Unmount();
             }
         }
+    }
+
+    private sealed class FixedHitRenderBox : RenderBox
+    {
+        private readonly Size _preferredSize;
+
+        public FixedHitRenderBox(Size preferredSize)
+        {
+            _preferredSize = preferredSize;
+        }
+
+        protected override void PerformLayout()
+        {
+            Size = Constraints.Constrain(_preferredSize);
+        }
+
+        public override void Paint(PaintingContext context, Point offset)
+        {
+        }
+
+        protected override bool HitTestSelf(Point position) => true;
     }
 }

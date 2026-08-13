@@ -1,4 +1,5 @@
 using Avalonia;
+using Plumix.Cupertino;
 using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
@@ -101,6 +102,12 @@ public sealed class AdaptiveTextSelectionToolbar : StatelessWidget
             return label;
         }
 
+        TargetPlatform platform = Theme.Of(context).Platform;
+        if (platform is TargetPlatform.IOS or TargetPlatform.MacOS)
+        {
+            return CupertinoTextSelectionToolbarButton.GetButtonLabel(context, buttonItem);
+        }
+
         MaterialLocalizations localizations = MaterialLocalizations.Of(context);
         return buttonItem.Type switch
         {
@@ -130,7 +137,19 @@ public sealed class AdaptiveTextSelectionToolbar : StatelessWidget
         {
             ContextMenuButtonItem item = buttonItems[index];
             string label = GetButtonLabel(context, item);
-            if (platform is TargetPlatform.Linux or TargetPlatform.Windows or TargetPlatform.MacOS)
+            if (platform == TargetPlatform.IOS)
+            {
+                buttons.Add(CupertinoTextSelectionToolbarButton.FromButtonItem(item));
+                continue;
+            }
+
+            if (platform == TargetPlatform.MacOS)
+            {
+                buttons.Add(CupertinoDesktopTextSelectionToolbarButton.TextButton(item.OnPressed, label));
+                continue;
+            }
+
+            if (platform is TargetPlatform.Linux or TargetPlatform.Windows)
             {
                 buttons.Add(DesktopTextSelectionToolbarButton.Text(context, item.OnPressed, label));
                 continue;
@@ -158,10 +177,24 @@ public sealed class AdaptiveTextSelectionToolbar : StatelessWidget
 
         IReadOnlyList<Widget> children = Children ?? GetAdaptiveButtons(context, ButtonItems!);
         TargetPlatform platform = Theme.Of(context).Platform;
+        if (platform == TargetPlatform.IOS)
+        {
+            return new CupertinoTextSelectionToolbar(
+                anchorAbove: Anchors.PrimaryAnchor,
+                anchorBelow: Anchors.SecondaryAnchor ?? Anchors.PrimaryAnchor,
+                children: children);
+        }
+
+        if (platform == TargetPlatform.MacOS)
+        {
+            return new CupertinoDesktopTextSelectionToolbar(
+                anchor: Anchors.PrimaryAnchor,
+                children: children);
+        }
+
         if (platform is TargetPlatform.Fuchsia
             or TargetPlatform.Linux
-            or TargetPlatform.Windows
-            or TargetPlatform.MacOS)
+            or TargetPlatform.Windows)
         {
             return new DesktopTextSelectionToolbar(
                 anchor: Anchors.PrimaryAnchor,

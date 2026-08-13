@@ -20,13 +20,22 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `animation/animation_style.dart` | `src/Plumix/AnimationStyle.cs` | — | — |
 | `animation/animations.dart` | `src/Plumix/Animation.cs` | `src/Plumix.Tests/ImplicitAnimationsTests.cs`<br>`src/Plumix.Tests/MaterialThemeAnimationTests.cs` | — |
 | `cupertino/activity_indicator.dart` | `src/Plumix.Cupertino/CupertinoActivityIndicator.cs` | — | — |
+| `cupertino/adaptive_text_selection_toolbar.dart` | `src/Plumix.Cupertino/CupertinoAdaptiveTextSelectionToolbar.cs` | — | — |
+| `cupertino/button.dart` | `src/Plumix.Cupertino/CupertinoButton.cs` | — | — |
 | `cupertino/checkbox.dart` | `src/Plumix.Cupertino/CupertinoCheckbox.cs`<br>`src/Plumix/RenderStrokeGlyph.cs`<br>`src/Plumix/Widgets/StrokeGlyph.cs` | — | — |
+| `cupertino/colors.dart` | `src/Plumix.Cupertino/CupertinoTheme.cs` | — | — |
+| `cupertino/desktop_text_selection_toolbar.dart` | `src/Plumix.Cupertino/CupertinoDesktopTextSelectionToolbar.cs` | — | — |
+| `cupertino/desktop_text_selection_toolbar_button.dart` | `src/Plumix.Cupertino/CupertinoTextSelectionToolbarButton.cs` | — | — |
 | `cupertino/localizations.dart` | `src/Plumix.Cupertino/CupertinoLocalizations.cs` | — | — |
 | `cupertino/magnifier.dart` | `src/Plumix.Cupertino/CupertinoMagnifier.cs` | — | — |
 | `cupertino/radio.dart` | `src/Plumix.Cupertino/CupertinoRadio.cs` | — | — |
 | `cupertino/route.dart` | `src/Plumix.Material/PageTransitionsTheme.cs` | — | — |
 | `cupertino/scrollbar.dart` | `src/Plumix.Cupertino/CupertinoScrollbar.cs` | — | — |
 | `cupertino/slider.dart` | `src/Plumix.Cupertino/CupertinoSlider.cs` | — | — |
+| `cupertino/spell_check_suggestions_toolbar.dart` | `src/Plumix.Cupertino/CupertinoSpellCheckSuggestionsToolbar.cs` | — | — |
+| `cupertino/text_selection_toolbar.dart` | `src/Plumix.Cupertino/CupertinoTextSelectionToolbar.cs` | — | — |
+| `cupertino/text_selection_toolbar_button.dart` | `src/Plumix.Cupertino/CupertinoTextSelectionToolbarButton.cs` | — | — |
+| `cupertino/theme.dart` | `src/Plumix.Cupertino/CupertinoTheme.cs` | — | — |
 | `foundation/binding.dart` | `src/Plumix/HotReload.cs` | `src/Plumix.Tests/HotReloadTests.cs` | — |
 | `foundation/change_notifier.dart` | `src/Plumix/Foundation/Listenable.cs` | — | — |
 | `foundation/constants.dart` | `src/Plumix/Foundation/Constants.cs` | — | — |
@@ -463,8 +472,8 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 
 ## Summary
 
-- Flutter files mapped: 412
-- C# files carrying a marker: 517
+- Flutter files mapped: 421
+- C# files carrying a marker: 526
 - C# files without a marker: 15
 - Markers not resolvable in the pinned checkout: 5
 

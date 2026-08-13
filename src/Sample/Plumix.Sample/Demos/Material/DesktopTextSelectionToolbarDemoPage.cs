@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Avalonia;
 using Avalonia.Media;
+using Plumix.Cupertino;
 using Plumix.Material;
 using Plumix.Rendering;
 using Plumix.UI;
@@ -29,6 +30,9 @@ internal sealed class DesktopTextSelectionToolbarDemoPageState : State
             1 => BuildMaterialToolbar(context, anchor),
             2 => BuildAdaptiveToolbar(context, anchor),
             3 => BuildSpellCheckToolbar(anchor),
+            4 => BuildCupertinoToolbar(anchor),
+            5 => BuildCupertinoDesktopToolbar(anchor),
+            6 => BuildCupertinoSpellCheckToolbar(anchor),
             _ => BuildDesktopToolbar(context, anchor),
         };
         return new Column(
@@ -38,7 +42,7 @@ internal sealed class DesktopTextSelectionToolbarDemoPageState : State
             [
                 new Text("Material text selection toolbars", fontSize: 20, color: Colors.Black),
                 new Text(
-                    "Android, adaptive, spell-check, and desktop toolbars with edge clamping and disabled actions.",
+                    "Material and Cupertino mobile, desktop, adaptive, and spell-check toolbars.",
                     fontSize: 14,
                     color: Colors.DimGray),
                 new Row(
@@ -50,7 +54,7 @@ internal sealed class DesktopTextSelectionToolbarDemoPageState : State
                             onPressed: () => SetState(() => _nearViewportEdge = !_nearViewportEdge)),
                         new TextButton(
                             child: new Text($"Show {NextToolbarLabel}"),
-                            onPressed: () => SetState(() => _toolbarKind = (_toolbarKind + 1) % 4)),
+                            onPressed: () => SetState(() => _toolbarKind = (_toolbarKind + 1) % 7)),
                         new Text($"Last action: {_lastAction}"),
                     ]),
                 new Expanded(
@@ -122,11 +126,53 @@ internal sealed class DesktopTextSelectionToolbarDemoPageState : State
             ]);
     }
 
-    private string NextToolbarLabel => ((_toolbarKind + 1) % 4) switch
+    private Widget BuildCupertinoToolbar(Point anchor)
+    {
+        return new CupertinoTextSelectionToolbar(
+            anchorAbove: anchor,
+            anchorBelow: anchor + new Vector(0, 20),
+            children:
+            [
+                CupertinoTextSelectionToolbarButton.TextButton(() => SetAction("Cut"), "Cut"),
+                CupertinoTextSelectionToolbarButton.TextButton(() => SetAction("Copy"), "Copy"),
+                CupertinoTextSelectionToolbarButton.TextButton(() => SetAction("Paste"), "Paste"),
+                CupertinoTextSelectionToolbarButton.TextButton(null, "Disabled"),
+            ]);
+    }
+
+    private Widget BuildCupertinoDesktopToolbar(Point anchor)
+    {
+        return new CupertinoDesktopTextSelectionToolbar(
+            anchor: anchor,
+            children:
+            [
+                CupertinoDesktopTextSelectionToolbarButton.TextButton(() => SetAction("Cut"), "Cut"),
+                CupertinoDesktopTextSelectionToolbarButton.TextButton(() => SetAction("Copy"), "Copy"),
+                CupertinoDesktopTextSelectionToolbarButton.TextButton(() => SetAction("Paste"), "Paste"),
+                CupertinoDesktopTextSelectionToolbarButton.TextButton(null, "Disabled"),
+            ]);
+    }
+
+    private Widget BuildCupertinoSpellCheckToolbar(Point anchor)
+    {
+        return new CupertinoSpellCheckSuggestionsToolbar(
+            anchors: new TextSelectionToolbarAnchors(anchor, anchor + new Vector(0, 20)),
+            buttonItems:
+            [
+                new ContextMenuButtonItem(() => SetAction("framework"), label: "framework"),
+                new ContextMenuButtonItem(() => SetAction("frameworks"), label: "frameworks"),
+                new ContextMenuButtonItem(null, label: "No Replacements Found"),
+            ]);
+    }
+
+    private string NextToolbarLabel => ((_toolbarKind + 1) % 7) switch
     {
         1 => "Android",
         2 => "adaptive",
         3 => "spell check",
+        4 => "Cupertino mobile",
+        5 => "Cupertino desktop",
+        6 => "Cupertino spell check",
         _ => "desktop",
     };
 

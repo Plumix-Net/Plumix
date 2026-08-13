@@ -13,6 +13,12 @@ public static class Curves
 {
     public static double Linear(double t) => t;
 
+    public static double Decelerate(double t)
+    {
+        double clamped = Math.Clamp(t, 0.0, 1.0);
+        return 1.0 - ((1.0 - clamped) * (1.0 - clamped));
+    }
+
     public static Curve Cubic(double x1, double y1, double x2, double y2) =>
         t => CubicBezier(t, x1, y1, x2, y2);
 

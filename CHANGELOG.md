@@ -1,5 +1,11 @@
 # Changelog
 
+- Completed Cupertino text-selection toolbar parity: mobile/desktop surfaces, buttons, adaptive routing, overflow,
+  spell-check suggestions, Cupertino theme/color primitives, and mirrored gallery probes are now available. Material
+  adaptive toolbars select Cupertino controls on iOS/macOS, and the Android host registers the native default
+  sentence spell checker through `DefaultSpellCheckService`. Rounded-superellipse/path-shadow/retained-clip backend
+  limits remain documented in `DIVERGENCES.md`.
+
 - Breaking: completed strict Material `ReorderableListView` parity. The public wrapper now preserves nullable
   padding and auto-scroll defaults, forwards anchor/drag/keyboard/restoration/clip contracts, resolves desktop
   cursors from dragged state, animates the default proxy elevation, and follows horizontal RTL axis direction.

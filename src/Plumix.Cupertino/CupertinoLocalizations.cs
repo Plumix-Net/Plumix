@@ -14,7 +14,15 @@ public abstract class CupertinoLocalizations
 
     public virtual string PasteButtonLabel => "Paste";
 
-    public virtual string SelectAllButtonLabel => "Select all";
+    public virtual string NoSpellCheckReplacementsLabel => "No Replacements Found";
+
+    public virtual string SelectAllButtonLabel => "Select All";
+
+    public virtual string LookUpButtonLabel => "Look Up";
+
+    public virtual string SearchWebButtonLabel => "Search Web";
+
+    public virtual string ShareButtonLabel => "Share...";
 
     public static CupertinoLocalizations Of(BuildContext context)
     {

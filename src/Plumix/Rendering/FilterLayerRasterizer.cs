@@ -627,6 +627,7 @@ internal static class FilterLayerRasterizer
         {
             ImageFilter.Blur blur => ApplyBlur(frame, blur),
             ImageFilter.Matrix matrix => ApplyMatrix(frame, matrix),
+            ImageFilter.ColorMatrix matrix => ApplyColorMatrix(frame, matrix),
             ImageFilter.Dilate dilate => ApplyMorphology(frame, dilate.RadiusX, dilate.RadiusY, dilate: true),
             ImageFilter.Erode erode => ApplyMorphology(frame, erode.RadiusX, erode.RadiusY, dilate: false),
             ImageFilter.Compose compose => ApplyImageFilter(
@@ -634,6 +635,12 @@ internal static class FilterLayerRasterizer
                 compose.Outer),
             _ => throw new NotSupportedException($"Unsupported image filter: {imageFilter.GetType().Name}."),
         };
+    }
+
+    private static RasterFrame ApplyColorMatrix(RasterFrame frame, ImageFilter.ColorMatrix matrix)
+    {
+        ApplyColorMatrix(frame.Pixels, matrix.Values);
+        return frame;
     }
 
     private static RasterFrame ApplyBlur(RasterFrame frame, ImageFilter.Blur blur)

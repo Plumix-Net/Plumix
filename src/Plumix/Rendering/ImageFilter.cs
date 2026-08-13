@@ -79,6 +79,26 @@ public abstract record ImageFilter
         public FilterQuality FilterQuality { get; }
     }
 
+    public sealed record ColorMatrix : ImageFilter
+    {
+        public ColorMatrix(IReadOnlyList<double> values)
+        {
+            ArgumentNullException.ThrowIfNull(values);
+            if (values.Count != 20)
+            {
+                throw new ArgumentException("A color-matrix image filter must contain 20 values.", nameof(values));
+            }
+
+            Values = values.ToArray();
+        }
+
+        public ColorMatrix(params double[] values) : this((IReadOnlyList<double>)values)
+        {
+        }
+
+        public IReadOnlyList<double> Values { get; }
+    }
+
     public sealed record Dilate : ImageFilter
     {
         public Dilate(double radiusX = 0.0, double radiusY = 0.0)

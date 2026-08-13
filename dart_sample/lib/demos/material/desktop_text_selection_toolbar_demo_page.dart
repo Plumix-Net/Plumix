@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart' as cupertino;
 
 class DesktopTextSelectionToolbarDemoPage extends StatefulWidget {
   const DesktopTextSelectionToolbarDemoPage({super.key});
@@ -23,6 +24,9 @@ class _DesktopTextSelectionToolbarDemoPageState
       1 => _buildMaterialToolbar(context, anchor),
       2 => _buildAdaptiveToolbar(context, anchor),
       3 => _buildSpellCheckToolbar(anchor),
+      4 => _buildCupertinoToolbar(anchor),
+      5 => _buildCupertinoDesktopToolbar(anchor),
+      6 => _buildCupertinoSpellCheckToolbar(anchor),
       _ => _buildDesktopToolbar(context, anchor),
     };
     return Column(
@@ -34,7 +38,7 @@ class _DesktopTextSelectionToolbarDemoPageState
           style: TextStyle(fontSize: 20, color: Colors.black),
         ),
         const Text(
-          'Android, adaptive, spell-check, and desktop toolbars with edge clamping and disabled actions.',
+          'Material and Cupertino mobile, desktop, adaptive, and spell-check toolbars.',
           style: TextStyle(fontSize: 14, color: Colors.black54),
         ),
         Row(
@@ -53,7 +57,7 @@ class _DesktopTextSelectionToolbarDemoPageState
             TextButton(
               onPressed: () {
                 setState(() {
-                  _toolbarKind = (_toolbarKind + 1) % 4;
+                  _toolbarKind = (_toolbarKind + 1) % 7;
                 });
               },
               child: Text('Show $_nextToolbarLabel'),
@@ -174,10 +178,85 @@ class _DesktopTextSelectionToolbarDemoPageState
     );
   }
 
-  String get _nextToolbarLabel => switch ((_toolbarKind + 1) % 4) {
+  Widget _buildCupertinoToolbar(Offset anchor) {
+    return cupertino.CupertinoTextSelectionToolbar(
+      anchorAbove: anchor,
+      anchorBelow: anchor + const Offset(0, 20),
+      children: <Widget>[
+        cupertino.CupertinoTextSelectionToolbarButton.text(
+          onPressed: () => _setAction('Cut'),
+          text: 'Cut',
+        ),
+        cupertino.CupertinoTextSelectionToolbarButton.text(
+          onPressed: () => _setAction('Copy'),
+          text: 'Copy',
+        ),
+        cupertino.CupertinoTextSelectionToolbarButton.text(
+          onPressed: () => _setAction('Paste'),
+          text: 'Paste',
+        ),
+        const cupertino.CupertinoTextSelectionToolbarButton.text(
+          onPressed: null,
+          text: 'Disabled',
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCupertinoDesktopToolbar(Offset anchor) {
+    return cupertino.CupertinoDesktopTextSelectionToolbar(
+      anchor: anchor,
+      children: <Widget>[
+        cupertino.CupertinoDesktopTextSelectionToolbarButton.text(
+          onPressed: () => _setAction('Cut'),
+          text: 'Cut',
+        ),
+        cupertino.CupertinoDesktopTextSelectionToolbarButton.text(
+          onPressed: () => _setAction('Copy'),
+          text: 'Copy',
+        ),
+        cupertino.CupertinoDesktopTextSelectionToolbarButton.text(
+          onPressed: () => _setAction('Paste'),
+          text: 'Paste',
+        ),
+        const cupertino.CupertinoDesktopTextSelectionToolbarButton.text(
+          onPressed: null,
+          text: 'Disabled',
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCupertinoSpellCheckToolbar(Offset anchor) {
+    return cupertino.CupertinoSpellCheckSuggestionsToolbar(
+      anchors: TextSelectionToolbarAnchors(
+        primaryAnchor: anchor,
+        secondaryAnchor: anchor + const Offset(0, 20),
+      ),
+      buttonItems: <ContextMenuButtonItem>[
+        ContextMenuButtonItem(
+          onPressed: () => _setAction('framework'),
+          label: 'framework',
+        ),
+        ContextMenuButtonItem(
+          onPressed: () => _setAction('frameworks'),
+          label: 'frameworks',
+        ),
+        const ContextMenuButtonItem(
+          onPressed: null,
+          label: 'No Replacements Found',
+        ),
+      ],
+    );
+  }
+
+  String get _nextToolbarLabel => switch ((_toolbarKind + 1) % 7) {
     1 => 'Android',
     2 => 'adaptive',
     3 => 'spell check',
+    4 => 'Cupertino mobile',
+    5 => 'Cupertino desktop',
+    6 => 'Cupertino spell check',
     _ => 'desktop',
   };
 
