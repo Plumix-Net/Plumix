@@ -138,6 +138,12 @@
     colour chains including `WidgetStateColor` label colours, theme copy/lerp/capture, `_IndicatorPainter` linear and
     elastic geometry, `_TabBarScrollPosition` initial-offset correction, and mirrored primary/secondary/alignment/
     indicator-animation runtime probes.
+  - `Tooltip`/`TooltipThemeData` (exact brightness/platform defaults, directional padding/margin, arbitrary
+    decoration, plain/rich pointer policy, inherited theme precedence, copy/lerp/diagnostics, semantics events, and
+    mirrored plain/rich/custom-position probes).
+  - Legacy `ButtonBar`/`ButtonBarThemeData` (exact default/theme/widget precedence, directional button padding,
+    source `RenderFlex` row-to-column overflow and dry layout, LTR/RTL alignment, spacing/direction, theme
+    copy/lerp/diagnostics, and mirrored wide/narrow/directional runtime probes).
 - Completed `Typography.Material2014`/`Material2018`, exact platform black/white themes, dense/tall geometry, and
   locale script-category selection.
 - Remove the narrowed `ColorScheme + Typography closeout` row from `docs/MATERIAL_TODO.md` only after those checks

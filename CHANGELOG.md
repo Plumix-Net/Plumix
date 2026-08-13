@@ -1,5 +1,11 @@
 # Changelog
 
+- Breaking: completed strict Material `ButtonBar`/`ButtonBarThemeData` parity. Button padding now remains
+  directional through the legacy `ButtonThemeData`/`MaterialButton`/`RawMaterialButton` path; the bar uses
+  Flutter's `RenderFlex`-based unconstrained probe, constrained row retry, vertical overflow and dry layout; and its
+  theme now has source copy/lerp/diagnostics and validation. Focused tests and mirrored C#/Dart probes cover theme
+  precedence, logical padding, LTR/RTL overflow alignment, spacing, direction, and constrained/padded sizing.
+
 - Breaking: completed strict Material `Tooltip`/`TooltipThemeData` parity. Tooltip padding and margin now use
   directional `EdgeInsetsGeometry`, decoration accepts any `Decoration`, rich-message overlays remain interactive by
   default, cursor/text-direction/style composition matches Flutter, local tooltip themes participate in inherited

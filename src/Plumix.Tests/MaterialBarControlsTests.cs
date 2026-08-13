@@ -295,6 +295,70 @@ public sealed class MaterialBarControlsTests
         Assert.Throws<ArgumentOutOfRangeException>(() => new ButtonBar(buttonMinWidth: -1));
         Assert.Throws<ArgumentOutOfRangeException>(() => new ButtonBar(buttonHeight: -1));
         Assert.Throws<ArgumentOutOfRangeException>(() => new ButtonBar(overflowButtonSpacing: -1));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new ButtonBarThemeData(ButtonMinWidth: -1));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new ButtonBarThemeData(ButtonHeight: -1));
+        Assert.Equal(double.PositiveInfinity, new ButtonBar(buttonMinWidth: double.PositiveInfinity).ButtonMinWidth);
+        Assert.Equal(
+            double.PositiveInfinity,
+            new ButtonBarThemeData(ButtonHeight: double.PositiveInfinity).ButtonHeight);
+    }
+
+    [Fact]
+    public void ButtonBarThemeData_DefaultsCopyLerpAndDiagnosticsMatchSource()
+    {
+        var empty = new ButtonBarThemeData();
+        Assert.Null(empty.Alignment);
+        Assert.Null(empty.MainAxisSize);
+        Assert.Null(empty.ButtonTextTheme);
+        Assert.Null(empty.ButtonMinWidth);
+        Assert.Null(empty.ButtonHeight);
+        Assert.Null(empty.ButtonPadding);
+        Assert.Null(empty.ButtonAlignedDropdown);
+        Assert.Null(empty.LayoutBehavior);
+        Assert.Null(empty.OverflowDirection);
+        Assert.Equal(empty, empty.CopyWith());
+        Assert.Null(ButtonBarThemeData.Lerp(null, null, 0));
+        Assert.Same(empty, ButtonBarThemeData.Lerp(empty, empty, 0.5));
+
+        var start = new ButtonBarThemeData(
+            Alignment: MainAxisAlignment.End,
+            MainAxisSize: MainAxisSize.Min,
+            ButtonTextTheme: ButtonTextTheme.Primary,
+            ButtonMinWidth: 20,
+            ButtonHeight: 20,
+            ButtonPadding: EdgeInsetsGeometry.Symmetric(vertical: 5),
+            ButtonAlignedDropdown: false,
+            LayoutBehavior: ButtonBarLayoutBehavior.Padded,
+            OverflowDirection: VerticalDirection.Down);
+        var end = new ButtonBarThemeData(
+            Alignment: MainAxisAlignment.Center,
+            MainAxisSize: MainAxisSize.Max,
+            ButtonTextTheme: ButtonTextTheme.Accent,
+            ButtonMinWidth: 10,
+            ButtonHeight: 40,
+            ButtonPadding: EdgeInsetsGeometry.Symmetric(horizontal: 10),
+            ButtonAlignedDropdown: true,
+            LayoutBehavior: ButtonBarLayoutBehavior.Constrained,
+            OverflowDirection: VerticalDirection.Up);
+        ButtonBarThemeData midpoint = ButtonBarThemeData.Lerp(start, end, 0.5)!;
+        Assert.Equal(MainAxisAlignment.Center, midpoint.Alignment);
+        Assert.Equal(MainAxisSize.Max, midpoint.MainAxisSize);
+        Assert.Equal(ButtonTextTheme.Accent, midpoint.ButtonTextTheme);
+        Assert.Equal(15, midpoint.ButtonMinWidth);
+        Assert.Equal(30, midpoint.ButtonHeight);
+        Assert.Equal(EdgeInsetsGeometry.FromLTRB(5, 2.5, 5, 2.5), midpoint.ButtonPadding);
+        Assert.True(midpoint.ButtonAlignedDropdown);
+        Assert.Equal(ButtonBarLayoutBehavior.Constrained, midpoint.LayoutBehavior);
+        Assert.Equal(VerticalDirection.Up, midpoint.OverflowDirection);
+
+        var defaultDiagnostics = new DiagnosticPropertiesBuilder();
+        empty.DebugFillProperties(defaultDiagnostics);
+        Assert.DoesNotContain(
+            defaultDiagnostics.Properties,
+            node => !node.IsFiltered(DiagnosticLevel.Info));
+        var diagnostics = new DiagnosticPropertiesBuilder();
+        midpoint.DebugFillProperties(diagnostics);
+        Assert.Equal(9, diagnostics.Properties.Count(node => !node.IsFiltered(DiagnosticLevel.Info)));
     }
 
     [Fact]
@@ -317,7 +381,7 @@ public sealed class MaterialBarControlsTests
         Assert.Equal(ButtonTextTheme.Primary, captured!.TextTheme);
         Assert.Equal(64, captured.MinWidth);
         Assert.Equal(36, captured.Height);
-        Assert.Equal(new Thickness(8, 0), captured.Padding);
+        Assert.Equal(EdgeInsetsGeometry.Symmetric(horizontal: 8), captured.Padding);
         Assert.False(captured.AlignedDropdown);
         Assert.Equal(ButtonBarLayoutBehavior.Padded, captured.LayoutBehavior);
     }
@@ -332,7 +396,7 @@ public sealed class MaterialBarControlsTests
             ButtonTextTheme: ButtonTextTheme.Accent,
             ButtonMinWidth: 70,
             ButtonHeight: 42,
-            ButtonPadding: new Thickness(10, 2),
+            ButtonPadding: EdgeInsetsGeometry.DirectionalOnly(start: 14, top: 2, end: 6, bottom: 2),
             ButtonAlignedDropdown: true,
             LayoutBehavior: ButtonBarLayoutBehavior.Constrained,
             OverflowDirection: VerticalDirection.Up);
@@ -356,7 +420,7 @@ public sealed class MaterialBarControlsTests
                     buttonTextTheme: ButtonTextTheme.Primary,
                     buttonMinWidth: 90,
                     buttonHeight: 48,
-                    buttonPadding: new Thickness(12, 4),
+                    buttonPadding: EdgeInsetsGeometry.DirectionalOnly(start: 16, top: 4, end: 8, bottom: 4),
                     buttonAlignedDropdown: false,
                     layoutBehavior: ButtonBarLayoutBehavior.Padded,
                     children: [new ButtonThemeProbe(value => widgetCaptured = value)]))));
@@ -385,8 +449,8 @@ public sealed class MaterialBarControlsTests
         Assert.True(maxRow!.Size.Width > 200);
         var first = maxRow.FirstChild!;
         var second = maxRow.ChildAfter(first)!;
-        Assert.True(((ButtonBarParentData)first.parentData!).offset.X > 100);
-        Assert.True(((ButtonBarParentData)second.parentData!).offset.X > ((ButtonBarParentData)first.parentData!).offset.X);
+        Assert.True(((FlexParentData)first.parentData!).offset.X > 100);
+        Assert.True(((FlexParentData)second.parentData!).offset.X > ((FlexParentData)first.parentData!).offset.X);
 
         using var minHarness = new WidgetRenderHarness(Wrap(new ButtonBar(
             mainAxisSize: MainAxisSize.Min,
@@ -418,8 +482,8 @@ public sealed class MaterialBarControlsTests
         Assert.Equal(50, down!.Size.Height, 3);
         var downFirst = down.FirstChild!;
         var downSecond = down.ChildAfter(downFirst)!;
-        Assert.Equal(0, ((ButtonBarParentData)downFirst.parentData!).offset.Y, 3);
-        Assert.Equal(30, ((ButtonBarParentData)downSecond.parentData!).offset.Y, 3);
+        Assert.Equal(0, ((FlexParentData)downFirst.parentData!).offset.Y, 3);
+        Assert.Equal(30, ((FlexParentData)downSecond.parentData!).offset.Y, 3);
 
         using var upHarness = new WidgetRenderHarness(Wrap(new ButtonBar(
             overflowDirection: VerticalDirection.Up,
@@ -434,8 +498,42 @@ public sealed class MaterialBarControlsTests
         Assert.NotNull(up);
         var upFirst = up!.FirstChild!;
         var upSecond = up.ChildAfter(upFirst)!;
-        Assert.Equal(30, ((ButtonBarParentData)upFirst.parentData!).offset.Y, 3);
-        Assert.Equal(0, ((ButtonBarParentData)upSecond.parentData!).offset.Y, 3);
+        Assert.Equal(30, ((FlexParentData)upFirst.parentData!).offset.Y, 3);
+        Assert.Equal(0, ((FlexParentData)upSecond.parentData!).offset.Y, 3);
+    }
+
+    [Theory]
+    [InlineData(TextDirection.Ltr, MainAxisAlignment.End, 50)]
+    [InlineData(TextDirection.Ltr, MainAxisAlignment.Start, 0)]
+    [InlineData(TextDirection.Rtl, MainAxisAlignment.End, 0)]
+    [InlineData(TextDirection.Rtl, MainAxisAlignment.Start, 50)]
+    [InlineData(TextDirection.Rtl, MainAxisAlignment.SpaceEvenly, 50)]
+    public void ButtonBar_OverflowAlignmentUsesSourceTextDirectionPolicy(
+        TextDirection textDirection,
+        MainAxisAlignment alignment,
+        double expectedX)
+    {
+        using var harness = new WidgetRenderHarness(
+            new Directionality(
+                textDirection,
+                new Theme(
+                    ThemeData.Light,
+                    new SizedBox(
+                        width: 150,
+                        child: new ButtonBar(
+                            alignment: alignment,
+                            buttonPadding: EdgeInsetsGeometry.Zero,
+                            children:
+                            [
+                                new SizedBox(width: 100, height: 20),
+                                new SizedBox(width: 100, height: 20),
+                            ])))));
+        harness.Pump(new Size(150, 100));
+
+        RenderButtonBarRow row = Assert.IsType<RenderButtonBarRow>(
+            FindDescendant<RenderButtonBarRow>(harness.RenderView));
+        Assert.Equal(expectedX, ((FlexParentData)row.FirstChild!.parentData!).offset.X, 3);
+        Assert.Equal(new Size(150, 40), row.GetDryLayout(new BoxConstraints(MaxWidth: 150, MaxHeight: 100)));
     }
 
     [Fact]

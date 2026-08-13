@@ -60,6 +60,23 @@ public sealed class MaterialLegacyButtonTests
     }
 
     [Fact]
+    public void ButtonThemeData_PaddingGetterAndButtonTextThemeResolutionMatchSource()
+    {
+        var defaults = new ButtonThemeData();
+        Assert.Equal(EdgeInsetsGeometry.Symmetric(horizontal: 16), defaults.Padding);
+        var primary = new MaterialButton(
+            onPressed: () => { },
+            textTheme: ButtonTextTheme.Primary);
+        Assert.Equal(EdgeInsetsGeometry.Symmetric(horizontal: 24), defaults.GetPadding(primary));
+
+        var explicitPadding = new ButtonThemeData(
+            Padding: EdgeInsetsGeometry.DirectionalOnly(start: 14, end: 6));
+        Assert.Equal(
+            EdgeInsetsGeometry.DirectionalOnly(start: 14, end: 6),
+            explicitPadding.GetPadding(primary));
+    }
+
+    [Fact]
     public void MaterialButton_Defaults_AreResolvedThroughRawMaterialButton()
     {
         using var tree = Build(new Theme(
@@ -73,7 +90,7 @@ public sealed class MaterialLegacyButtonTests
 
         Assert.NotNull(raw);
         Assert.True(raw!.Enabled);
-        Assert.Equal(new Thickness(16, 0), raw.Padding);
+        Assert.Equal(EdgeInsetsGeometry.Symmetric(horizontal: 16), raw.Padding);
         Assert.Equal(new BoxConstraints(MinWidth: 88, MinHeight: 36), raw.Constraints);
         Assert.Equal(2, raw.Shape.Radius);
         Assert.Equal(2, raw.Elevation);
@@ -119,12 +136,39 @@ public sealed class MaterialLegacyButtonTests
         var raw = Assert.IsType<RawMaterialButton>(tree.FindWidget<RawMaterialButton>());
         Assert.Equal(120, raw.Constraints.MinWidth);
         Assert.Equal(52, raw.Constraints.MinHeight);
-        Assert.Equal(new Thickness(19, 3), raw.Padding);
+        Assert.Equal(EdgeInsetsGeometry.Symmetric(horizontal: 19, vertical: 3), raw.Padding);
         Assert.Equal(9, raw.Shape.Radius);
         Assert.Equal(Colors.Crimson, raw.TextStyle?.Color);
         Assert.Equal(Colors.DarkOrange, raw.FocusColor);
         Assert.Equal(Colors.HotPink, raw.HoverColor);
         Assert.Equal(MaterialTapTargetSize.ShrinkWrap, raw.MaterialTapTargetSize);
+    }
+
+    [Theory]
+    [InlineData(TextDirection.Ltr, 14, 6)]
+    [InlineData(TextDirection.Rtl, 6, 14)]
+    public void MaterialButton_DirectionalThemePaddingResolvesAtTheFinalPaddingLayer(
+        TextDirection textDirection,
+        double expectedLeft,
+        double expectedRight)
+    {
+        using var tree = Build(new Directionality(
+            textDirection,
+            new Theme(
+                data: ThemeData.Light,
+                child: new ButtonTheme(
+                    data: new ButtonThemeData(
+                        Padding: EdgeInsetsGeometry.DirectionalOnly(start: 14, end: 6)),
+                    child: new MaterialButton(
+                        onPressed: () => { },
+                        child: new Text("Directional"))))));
+
+        var raw = Assert.IsType<RawMaterialButton>(tree.FindWidget<RawMaterialButton>());
+        Assert.Equal(EdgeInsetsGeometry.DirectionalOnly(start: 14, end: 6), raw.Padding);
+        var core = Assert.IsType<MaterialButtonCore>(tree.FindWidget<MaterialButtonCore>());
+        Assert.Equal(
+            new Thickness(expectedLeft, 0, expectedRight, 0),
+            core.Style.ResolvePadding(MaterialState.None));
     }
 
     [Fact]

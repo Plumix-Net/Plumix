@@ -13,6 +13,7 @@ class _BarControlsDemoPageState extends State<BarControlsDemoPage> {
   bool _showNotch = true;
   bool _narrowButtonBar = false;
   bool _overflowUp = false;
+  bool _useRtl = false;
   int _actionCount = 0;
 
   @override
@@ -37,10 +38,7 @@ class _BarControlsDemoPageState extends State<BarControlsDemoPage> {
               alignment: MainAxisAlignment.center,
               buttonMinWidth: 72,
               buttonHeight: 40,
-              buttonPadding: const EdgeInsets.symmetric(
-                horizontal: 10,
-                vertical: 2,
-              ),
+              buttonPadding: const EdgeInsetsDirectional.fromSTEB(14, 2, 6, 2),
               layoutBehavior: ButtonBarLayoutBehavior.constrained,
               overflowDirection: _overflowUp
                   ? VerticalDirection.up
@@ -98,6 +96,10 @@ class _BarControlsDemoPageState extends State<BarControlsDemoPage> {
                 () => _overflowUp = !_overflowUp,
                 118,
               ),
+              const SizedBox(width: 8),
+              _buildToggle(_useRtl ? 'RTL' : 'LTR', () {
+                _useRtl = !_useRtl;
+              }, 68),
             ],
           ),
           const SizedBox(height: 8),
@@ -113,13 +115,18 @@ class _BarControlsDemoPageState extends State<BarControlsDemoPage> {
               child: ColoredBox(
                 color: const Color(0xFFF7F9FC),
                 // ignore: deprecated_member_use
-                child: ButtonBar(
-                  overflowButtonSpacing: 8,
-                  children: <Widget>[
-                    _buildAction('CANCEL'),
-                    _buildAction('LATER'),
-                    _buildAction('CONFIRM'),
-                  ],
+                child: Directionality(
+                  textDirection: _useRtl
+                      ? TextDirection.rtl
+                      : TextDirection.ltr,
+                  child: ButtonBar(
+                    overflowButtonSpacing: 8,
+                    children: <Widget>[
+                      _buildAction('CANCEL'),
+                      _buildAction('LATER'),
+                      _buildAction('CONFIRM'),
+                    ],
+                  ),
                 ),
               ),
             ),

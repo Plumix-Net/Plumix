@@ -23,6 +23,7 @@ internal sealed class BarControlsDemoPageState : State
     private bool _showNotch = true;
     private bool _narrowButtonBar;
     private bool _overflowUp;
+    private bool _useRtl;
     private int _actionCount;
 
     public override Widget Build(BuildContext context)
@@ -44,7 +45,7 @@ internal sealed class BarControlsDemoPageState : State
                     Alignment: MainAxisAlignment.Center,
                     ButtonMinWidth: 72,
                     ButtonHeight: 40,
-                    ButtonPadding: new Thickness(10, 2),
+                    ButtonPadding: EdgeInsetsGeometry.DirectionalOnly(start: 14, top: 2, end: 6, bottom: 2),
                     LayoutBehavior: ButtonBarLayoutBehavior.Constrained,
                     OverflowDirection: _overflowUp ? VerticalDirection.Up : VerticalDirection.Down)
                 : new ButtonBarThemeData(
@@ -72,6 +73,7 @@ internal sealed class BarControlsDemoPageState : State
                             BuildToggle(_showNotch ? "notch=on" : "notch=off", () => _showNotch = !_showNotch, 104),
                             BuildToggle(_narrowButtonBar ? "bar=narrow" : "bar=wide", () => _narrowButtonBar = !_narrowButtonBar, 106),
                             BuildToggle(_overflowUp ? "overflow=up" : "overflow=down", () => _overflowUp = !_overflowUp, 118),
+                            BuildToggle(_useRtl ? "RTL" : "LTR", () => _useRtl = !_useRtl, 68),
                         ]),
                     new Text($"actionCount={_actionCount}", fontSize: 12, color: Color.Parse("#FF607D8B")),
                     new Align(
@@ -80,14 +82,16 @@ internal sealed class BarControlsDemoPageState : State
                             width: _narrowButtonBar ? 190 : 520,
                             child: new Container(
                                 color: Color.Parse("#FFF7F9FC"),
-                                child: new ButtonBar(
-                                    overflowButtonSpacing: 8,
-                                    children:
-                                    [
-                                        BuildAction("CANCEL"),
-                                        BuildAction("LATER"),
-                                        BuildAction("CONFIRM"),
-                                    ])))),
+                                child: new Directionality(
+                                    _useRtl ? TextDirection.Rtl : TextDirection.Ltr,
+                                    new ButtonBar(
+                                        overflowButtonSpacing: 8,
+                                        children:
+                                        [
+                                            BuildAction("CANCEL"),
+                                            BuildAction("LATER"),
+                                            BuildAction("CONFIRM"),
+                                        ]))))),
                     new Expanded(
                         child: new Scaffold(
                             backgroundColor: Color.Parse("#FFF4F6FA"),

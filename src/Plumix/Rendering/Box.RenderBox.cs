@@ -43,7 +43,7 @@ public abstract class RenderBox : RenderObject
 
     public bool HasSize => _size != null;
 
-    public new BoxConstraints Constraints => (BoxConstraints)base.Constraints;
+    public new virtual BoxConstraints Constraints => (BoxConstraints)base.Constraints;
 
     public double GetMinIntrinsicWidth(double height)
     {

@@ -161,7 +161,7 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
 
     private TextDirection? _textDirection;
 
-    internal TextDirection? TextDirection
+    public TextDirection? TextDirection
     {
         get => _textDirection;
         set

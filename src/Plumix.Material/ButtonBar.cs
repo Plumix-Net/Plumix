@@ -12,23 +12,22 @@ namespace Plumix.Material;
 public sealed class ButtonBar : StatelessWidget
 {
     public ButtonBar(
-        IReadOnlyList<Widget>? children = null,
         MainAxisAlignment? alignment = null,
         MainAxisSize? mainAxisSize = null,
         ButtonTextTheme? buttonTextTheme = null,
         double? buttonMinWidth = null,
         double? buttonHeight = null,
-        Thickness? buttonPadding = null,
+        EdgeInsetsGeometry? buttonPadding = null,
         bool? buttonAlignedDropdown = null,
         ButtonBarLayoutBehavior? layoutBehavior = null,
         VerticalDirection? overflowDirection = null,
         double? overflowButtonSpacing = null,
+        IReadOnlyList<Widget>? children = null,
         Key? key = null) : base(key)
     {
         ValidateNonNegative(nameof(buttonMinWidth), buttonMinWidth);
         ValidateNonNegative(nameof(buttonHeight), buttonHeight);
         ValidateNonNegative(nameof(overflowButtonSpacing), overflowButtonSpacing);
-        Children = children ?? [];
         Alignment = alignment;
         MainAxisSize = mainAxisSize;
         ButtonTextTheme = buttonTextTheme;
@@ -39,26 +38,39 @@ public sealed class ButtonBar : StatelessWidget
         LayoutBehavior = layoutBehavior;
         OverflowDirection = overflowDirection;
         OverflowButtonSpacing = overflowButtonSpacing;
+        Children = children ?? [];
     }
 
-    public IReadOnlyList<Widget> Children { get; }
     public MainAxisAlignment? Alignment { get; }
+
     public MainAxisSize? MainAxisSize { get; }
+
     public ButtonTextTheme? ButtonTextTheme { get; }
+
     public double? ButtonMinWidth { get; }
+
     public double? ButtonHeight { get; }
-    public Thickness? ButtonPadding { get; }
+
+    public EdgeInsetsGeometry? ButtonPadding { get; }
+
     public bool? ButtonAlignedDropdown { get; }
+
     public ButtonBarLayoutBehavior? LayoutBehavior { get; }
+
     public VerticalDirection? OverflowDirection { get; }
+
     public double? OverflowButtonSpacing { get; }
+
+    public IReadOnlyList<Widget> Children { get; }
 
     public override Widget Build(BuildContext context)
     {
-        var parentTheme = ButtonTheme.Of(context);
+        var parentButtonTheme = ButtonTheme.Of(context);
         var barTheme = ButtonBarTheme.Of(context);
-        var effectivePadding = ButtonPadding ?? barTheme.ButtonPadding ?? new Thickness(8, 0);
-        var effectiveButtonTheme = parentTheme with
+        EdgeInsetsGeometry effectivePadding = ButtonPadding
+                                               ?? barTheme.ButtonPadding
+                                               ?? EdgeInsetsGeometry.Symmetric(horizontal: 8);
+        var buttonTheme = parentButtonTheme with
         {
             TextTheme = ButtonTextTheme ?? barTheme.ButtonTextTheme ?? global::Plumix.Material.ButtonTextTheme.Primary,
             MinWidth = ButtonMinWidth ?? barTheme.ButtonMinWidth ?? 64,
@@ -67,220 +79,217 @@ public sealed class ButtonBar : StatelessWidget
             AlignedDropdown = ButtonAlignedDropdown ?? barTheme.ButtonAlignedDropdown ?? false,
             LayoutBehavior = LayoutBehavior ?? barTheme.LayoutBehavior ?? ButtonBarLayoutBehavior.Padded,
         };
-        double paddingUnit = (effectivePadding.Left + effectivePadding.Right) / 4.0;
-        var paddedChildren = Children
-            .Select(child => (Widget)new Padding(new Thickness(paddingUnit, 0), child))
+        double paddingUnit = buttonTheme.EffectivePadding.Horizontal / 4.0;
+        List<Widget> paddedChildren = Children
+            .Select(child => (Widget)new Padding(
+                EdgeInsetsGeometry.Symmetric(horizontal: paddingUnit),
+                child))
             .ToList();
 
-        Widget row = new ButtonBarRow(
-            children: paddedChildren,
-            mainAxisAlignment: Alignment ?? barTheme.Alignment ?? MainAxisAlignment.End,
-            mainAxisSize: MainAxisSize ?? barTheme.MainAxisSize ?? global::Plumix.Rendering.MainAxisSize.Max,
-            overflowDirection: OverflowDirection ?? barTheme.OverflowDirection ?? VerticalDirection.Down,
-            overflowButtonSpacing: OverflowButtonSpacing ?? 0,
-            textDirection: Directionality.Of(context));
-        row = new ButtonTheme(effectiveButtonTheme, row);
+        Widget child = new ButtonTheme(
+            data: buttonTheme,
+            child: new ButtonBarRow(
+                children: paddedChildren,
+                mainAxisAlignment: Alignment ?? barTheme.Alignment ?? MainAxisAlignment.End,
+                mainAxisSize: MainAxisSize ?? barTheme.MainAxisSize ?? global::Plumix.Rendering.MainAxisSize.Max,
+                overflowDirection: OverflowDirection ?? barTheme.OverflowDirection ?? VerticalDirection.Down,
+                overflowButtonSpacing: OverflowButtonSpacing));
 
-        return effectiveButtonTheme.LayoutBehavior switch
+        return buttonTheme.LayoutBehavior switch
         {
+            ButtonBarLayoutBehavior.Padded => new Padding(
+                EdgeInsetsGeometry.Symmetric(
+                    vertical: 2.0 * paddingUnit,
+                    horizontal: paddingUnit),
+                child),
             ButtonBarLayoutBehavior.Constrained => new ConstrainedBox(
                 new BoxConstraints(MinHeight: 52),
                 new Padding(
-                    new Thickness(paddingUnit, 0),
-                    new Center(child: row))),
-            _ => new Padding(
-                new Thickness(paddingUnit, 2 * paddingUnit),
-                row),
+                    EdgeInsetsGeometry.Symmetric(horizontal: paddingUnit),
+                    new Center(child: child))),
+            _ => throw new ArgumentOutOfRangeException(),
         };
     }
 
     private static void ValidateNonNegative(string name, double? value)
     {
-        if (value.HasValue && (!double.IsFinite(value.Value) || value.Value < 0))
+        if (value.HasValue && (double.IsNaN(value.Value) || value.Value < 0))
         {
             throw new ArgumentOutOfRangeException(name);
         }
     }
 }
 
-internal sealed class ButtonBarRow : MultiChildRenderObjectWidget
+internal sealed class ButtonBarRow : Flex
 {
     public ButtonBarRow(
         IReadOnlyList<Widget> children,
-        MainAxisAlignment mainAxisAlignment,
         MainAxisSize mainAxisSize,
+        MainAxisAlignment mainAxisAlignment,
         VerticalDirection overflowDirection,
-        double overflowButtonSpacing,
-        TextDirection textDirection) : base(children)
+        double? overflowButtonSpacing) : base(
+        direction: Axis.Horizontal,
+        children: children,
+        mainAxisSize: mainAxisSize,
+        mainAxisAlignment: mainAxisAlignment,
+        verticalDirection: overflowDirection)
     {
-        MainAxisAlignment = mainAxisAlignment;
-        MainAxisSize = mainAxisSize;
-        OverflowDirection = overflowDirection;
         OverflowButtonSpacing = overflowButtonSpacing;
-        TextDirection = textDirection;
     }
 
-    public MainAxisAlignment MainAxisAlignment { get; }
-    public MainAxisSize MainAxisSize { get; }
-    public VerticalDirection OverflowDirection { get; }
-    public double OverflowButtonSpacing { get; }
-    public TextDirection TextDirection { get; }
+    public double? OverflowButtonSpacing { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context) => new RenderButtonBarRow(
-        MainAxisAlignment,
-        MainAxisSize,
-        OverflowDirection,
-        OverflowButtonSpacing,
-        TextDirection);
+    internal override RenderObject CreateRenderObject(BuildContext context)
+    {
+        return new RenderButtonBarRow(
+            mainAxisSize: MainAxisSize,
+            mainAxisAlignment: MainAxisAlignment,
+            textDirection: Directionality.Of(context),
+            verticalDirection: VerticalDirection,
+            overflowButtonSpacing: OverflowButtonSpacing);
+    }
 
     internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var row = (RenderButtonBarRow)renderObject;
+        row.Direction = Direction;
         row.MainAxisAlignment = MainAxisAlignment;
         row.MainAxisSize = MainAxisSize;
-        row.OverflowDirection = OverflowDirection;
+        row.CrossAxisAlignment = CrossAxisAlignment;
+        row.TextDirection = Directionality.Of(context);
+        row.VerticalDirection = VerticalDirection;
+        row.TextBaseline = TextBaseline;
         row.OverflowButtonSpacing = OverflowButtonSpacing;
-        row.TextDirection = TextDirection;
     }
 }
 
-internal sealed class ButtonBarParentData : ContainerBoxParentData<RenderBox>;
-
-internal sealed class RenderButtonBarRow : RenderBox,
-    IRenderBoxContainerDefaultsMixin<RenderBox, ButtonBarParentData>,
-    IRenderObjectContainer
+internal sealed class RenderButtonBarRow : RenderFlex
 {
-    private readonly RenderBoxContainerDefaultsMixin<RenderBox, ButtonBarParentData> _container;
-    private MainAxisAlignment _mainAxisAlignment;
-    private MainAxisSize _mainAxisSize;
-    private VerticalDirection _overflowDirection;
-    private double _overflowButtonSpacing;
-    private TextDirection _textDirection;
+    private bool _hasCheckedLayoutWidth;
+    private double? _overflowButtonSpacing;
 
     public RenderButtonBarRow(
-        MainAxisAlignment mainAxisAlignment,
         MainAxisSize mainAxisSize,
-        VerticalDirection overflowDirection,
-        double overflowButtonSpacing,
-        TextDirection textDirection)
+        MainAxisAlignment mainAxisAlignment,
+        TextDirection textDirection,
+        VerticalDirection verticalDirection,
+        double? overflowButtonSpacing) : base(
+        children: null,
+        direction: Axis.Horizontal,
+        mainAxisSize: mainAxisSize,
+        mainAxisAlignment: mainAxisAlignment,
+        crossAxisAlignment: CrossAxisAlignment.Center,
+        textDirection: textDirection,
+        verticalDirection: verticalDirection)
     {
-        _container = new RenderBoxContainerDefaultsMixin<RenderBox, ButtonBarParentData>(this);
-        _mainAxisAlignment = mainAxisAlignment;
-        _mainAxisSize = mainAxisSize;
-        _overflowDirection = overflowDirection;
-        _overflowButtonSpacing = overflowButtonSpacing;
-        _textDirection = textDirection;
+        _overflowButtonSpacing = ValidateSpacing(overflowButtonSpacing);
     }
 
-    public MainAxisAlignment MainAxisAlignment { get => _mainAxisAlignment; set { if (_mainAxisAlignment != value) { _mainAxisAlignment = value; MarkNeedsLayout(); } } }
-    public MainAxisSize MainAxisSize { get => _mainAxisSize; set { if (_mainAxisSize != value) { _mainAxisSize = value; MarkNeedsLayout(); } } }
-    public VerticalDirection OverflowDirection { get => _overflowDirection; set { if (_overflowDirection != value) { _overflowDirection = value; MarkNeedsLayout(); } } }
-    public double OverflowButtonSpacing { get => _overflowButtonSpacing; set { if (Math.Abs(_overflowButtonSpacing - value) > 0.0001) { _overflowButtonSpacing = value; MarkNeedsLayout(); } } }
-    public TextDirection TextDirection { get => _textDirection; set { if (_textDirection != value) { _textDirection = value; MarkNeedsLayout(); } } }
-    public int ChildCount => _container.ChildCount;
-    public RenderBox? FirstChild => _container.FirstChild;
-    public RenderBox? LastChild => _container.LastChild;
-    public void AddAll(List<RenderBox> children) => _container.AddAll(children);
-    public RenderBox? ChildBefore(RenderBox child) => _container.ChildBefore(child);
-    public RenderBox? ChildAfter(RenderBox child) => _container.ChildAfter(child);
-
-    public override void SetupParentData(RenderObject child)
+    public override BoxConstraints Constraints
     {
-        if (child.parentData is not ButtonBarParentData) child.parentData = new ButtonBarParentData();
+        get
+        {
+            BoxConstraints constraints = base.Constraints;
+            return _hasCheckedLayoutWidth
+                ? constraints
+                : constraints with { MaxWidth = double.PositiveInfinity };
+        }
+    }
+
+    public double? OverflowButtonSpacing
+    {
+        get => _overflowButtonSpacing;
+        set
+        {
+            double? validated = ValidateSpacing(value);
+            if (_overflowButtonSpacing == validated)
+            {
+                return;
+            }
+
+            _overflowButtonSpacing = validated;
+            MarkNeedsLayout();
+        }
+    }
+
+    protected override Size ComputeDryLayout(BoxConstraints constraints)
+    {
+        Size size = base.ComputeDryLayout(constraints with { MaxWidth = double.PositiveInfinity });
+        if (size.Width <= constraints.MaxWidth)
+        {
+            return base.ComputeDryLayout(constraints);
+        }
+
+        double currentHeight = 0;
+        for (RenderBox? child = FirstChild; child is not null; child = ChildAfter(child))
+        {
+            Size childSize = child.GetDryLayout(constraints with { MinWidth = 0 });
+            currentHeight += childSize.Height;
+            if (OverflowButtonSpacing.HasValue && ChildAfter(child) is not null)
+            {
+                currentHeight += OverflowButtonSpacing.Value;
+            }
+        }
+
+        return constraints.Constrain(new Size(constraints.MaxWidth, currentHeight));
     }
 
     protected override void PerformLayout()
     {
-        if (ChildCount == 0)
+        _hasCheckedLayoutWidth = false;
+        base.PerformLayout();
+        _hasCheckedLayoutWidth = true;
+
+        if (Size.Width <= Constraints.MaxWidth)
         {
-            Size = Constraints.Smallest;
+            base.PerformLayout();
             return;
         }
 
-        var children = new List<RenderBox>(ChildCount);
-        var childConstraints = new BoxConstraints(MaxWidth: double.PositiveInfinity, MaxHeight: Constraints.MaxHeight);
-        double idealWidth = 0.0;
-        double maxHeight = 0.0;
-        for (var child = FirstChild; child is not null; child = ChildAfter(child))
+        BoxConstraints childConstraints = Constraints with { MinWidth = 0 };
+        double currentHeight = 0;
+        RenderBox? child = VerticalDirection == VerticalDirection.Down ? FirstChild : LastChild;
+        while (child is not null)
         {
+            var childParentData = (FlexParentData)child.parentData!;
             child.Layout(childConstraints, parentUsesSize: true);
-            children.Add(child);
-            idealWidth += child.Size.Width;
-            maxHeight = Math.Max(maxHeight, child.Size.Height);
+            childParentData.offset = new Point(ResolveOverflowX(child.Size.Width), currentHeight);
+            currentHeight += child.Size.Height;
+            child = VerticalDirection == VerticalDirection.Down
+                ? ChildAfter(child)
+                : ChildBefore(child);
+            if (OverflowButtonSpacing.HasValue && child is not null)
+            {
+                currentHeight += OverflowButtonSpacing.Value;
+            }
         }
 
-        if (!Constraints.HasBoundedWidth || idealWidth <= Constraints.MaxWidth)
-        {
-            double width = MainAxisSize == MainAxisSize.Max && Constraints.HasBoundedWidth
-                ? Constraints.MaxWidth
-                : idealWidth;
-            Size = Constraints.Constrain(new Size(width, maxHeight));
-            PositionHorizontal(children, idealWidth);
-            return;
-        }
-
-        double height = children.Sum(child => child.Size.Height)
-                        + (OverflowButtonSpacing * Math.Max(0, children.Count - 1));
-        Size = Constraints.Constrain(new Size(Constraints.MaxWidth, height));
-        PositionVertical(children);
+        Size = Constraints.Constrain(new Size(Constraints.MaxWidth, currentHeight));
     }
 
-    private void PositionHorizontal(IReadOnlyList<RenderBox> children, double childrenWidth)
+    private double ResolveOverflowX(double childWidth)
     {
-        double free = Math.Max(0, Size.Width - childrenWidth);
-        (double leading, double between) = MainAxisAlignment switch
+        if (MainAxisAlignment == MainAxisAlignment.Center)
         {
-            MainAxisAlignment.Center => (free / 2, 0.0),
-            MainAxisAlignment.End => (free, 0.0),
-            MainAxisAlignment.SpaceBetween when children.Count > 1 => (0.0, free / (children.Count - 1)),
-            MainAxisAlignment.SpaceAround => (free / children.Count / 2, free / children.Count),
-            MainAxisAlignment.SpaceEvenly => (free / (children.Count + 1), free / (children.Count + 1)),
-            _ => (0.0, 0.0),
+            return (Constraints.MaxWidth - childWidth) / 2.0;
+        }
+
+        bool alignToRight = TextDirection switch
+        {
+            UI.TextDirection.Ltr => MainAxisAlignment == MainAxisAlignment.End,
+            UI.TextDirection.Rtl => MainAxisAlignment != MainAxisAlignment.End,
+            _ => throw new InvalidOperationException("ButtonBar requires a text direction."),
         };
-        bool rtl = TextDirection == TextDirection.Rtl;
-        double x = rtl ? Size.Width - leading : leading;
-        foreach (var child in children)
-        {
-            if (rtl) x -= child.Size.Width;
-            ((ButtonBarParentData)child.parentData!).offset = new Point(x, (Size.Height - child.Size.Height) / 2);
-            if (rtl) x -= between;
-            else x += child.Size.Width + between;
-        }
+        return alignToRight ? Constraints.MaxWidth - childWidth : 0;
     }
 
-    private void PositionVertical(IReadOnlyList<RenderBox> children)
+    private static double? ValidateSpacing(double? value)
     {
-        var ordered = OverflowDirection == VerticalDirection.Down ? children : children.Reverse().ToList();
-        double y = 0.0;
-        foreach (var child in ordered)
+        if (value.HasValue && (double.IsNaN(value.Value) || value.Value < 0))
         {
-            double x = ResolveOverflowX(child.Size.Width);
-            ((ButtonBarParentData)child.parentData!).offset = new Point(x, y);
-            y += child.Size.Height + OverflowButtonSpacing;
+            throw new ArgumentOutOfRangeException(nameof(value));
         }
-    }
 
-    private double ResolveOverflowX(double width)
-    {
-        var logical = MainAxisAlignment is MainAxisAlignment.SpaceAround or MainAxisAlignment.SpaceBetween or MainAxisAlignment.SpaceEvenly
-            ? MainAxisAlignment.Start
-            : MainAxisAlignment;
-        if (logical == MainAxisAlignment.Center) return (Size.Width - width) / 2;
-        double start = TextDirection == TextDirection.Ltr ? 0 : Size.Width - width;
-        double end = TextDirection == TextDirection.Ltr ? Size.Width - width : 0;
-        return logical == MainAxisAlignment.End ? end : start;
+        return value;
     }
-
-    public override void Paint(PaintingContext context, Point offset) => DefaultPaint(context, offset);
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position) => DefaultHitTestChildren(result, position);
-    public void DefaultPaint(PaintingContext context, Point offset) => _container.DefaultPaint(context, offset);
-    public bool DefaultHitTestChildren(BoxHitTestResult result, Point position) => _container.DefaultHitTestChildren(result, position);
-    public override void VisitChildren(Action<RenderObject> visitor) { for (var child = FirstChild; child is not null; child = ChildAfter(child)) visitor(child); }
-    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor) { for (var child = FirstChild; child is not null; child = ChildAfter(child)) { var data = (ButtonBarParentData)child.parentData!; visitor(child, data.offset, Matrix.Identity); } }
-    public void Insert(RenderBox child, RenderBox? after = null) => _container.Insert(child, after);
-    public void Move(RenderBox child, RenderBox? after = null) => _container.Move(child, after);
-    public void Remove(RenderBox child) => _container.Remove(child);
-    void IRenderObjectContainer.Insert(RenderObject child, RenderObject? after) => Insert((RenderBox)child, after as RenderBox);
-    void IRenderObjectContainer.Move(RenderObject child, RenderObject? after) => Move((RenderBox)child, after as RenderBox);
-    void IRenderObjectContainer.Remove(RenderObject child) => Remove((RenderBox)child);
 }

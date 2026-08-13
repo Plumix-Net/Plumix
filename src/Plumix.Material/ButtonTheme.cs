@@ -23,12 +23,14 @@ public enum ButtonBarLayoutBehavior
 
 public sealed record ButtonThemeData
 {
+    private EdgeInsetsGeometry? _padding;
+
     public ButtonThemeData(
         bool AlignedDropdown = false,
         ButtonTextTheme TextTheme = ButtonTextTheme.Normal,
         double MinWidth = 88.0,
         double Height = 36.0,
-        Thickness? Padding = null,
+        EdgeInsetsGeometry? Padding = null,
         BorderRadius? Shape = null,
         ButtonBarLayoutBehavior LayoutBehavior = ButtonBarLayoutBehavior.Padded,
         Color? ButtonColor = null,
@@ -45,7 +47,7 @@ public sealed record ButtonThemeData
         this.TextTheme = TextTheme;
         this.MinWidth = MinWidth;
         this.Height = Height;
-        this.Padding = Padding;
+        _padding = Padding;
         this.Shape = Shape;
         this.LayoutBehavior = LayoutBehavior;
         this.ButtonColor = ButtonColor;
@@ -61,7 +63,11 @@ public sealed record ButtonThemeData
     public ButtonTextTheme TextTheme { get; init; }
     public double MinWidth { get; init; }
     public double Height { get; init; }
-    public Thickness? Padding { get; init; }
+    public EdgeInsetsGeometry Padding
+    {
+        get => _padding ?? DefaultPadding(TextTheme);
+        init => _padding = value;
+    }
     public BorderRadius? Shape { get; init; }
     public ButtonBarLayoutBehavior LayoutBehavior { get; init; }
     public Color? ButtonColor { get; init; }
@@ -74,9 +80,7 @@ public sealed record ButtonThemeData
 
     public BoxConstraints Constraints => new(MinWidth: MinWidth, MinHeight: Height);
 
-    public Thickness EffectivePadding => Padding ?? (TextTheme == ButtonTextTheme.Primary
-        ? new Thickness(24, 0)
-        : new Thickness(16, 0));
+    public EdgeInsetsGeometry EffectivePadding => Padding;
 
     public BorderRadius EffectiveShape => Shape ?? BorderRadius.Circular(
         TextTheme == ButtonTextTheme.Primary ? 4 : 2);
@@ -166,7 +170,10 @@ public sealed record ButtonThemeData
 
     public double GetDisabledElevation(MaterialButton button) => button.DisabledElevation ?? 0;
 
-    public Thickness GetPadding(MaterialButton button) => button.Padding ?? EffectivePadding;
+    public EdgeInsetsGeometry GetPadding(MaterialButton button)
+    {
+        return button.Padding ?? _padding ?? DefaultPadding(button.TextTheme ?? TextTheme);
+    }
 
     public BorderRadius GetShape(MaterialButton button) => button.Shape ?? EffectiveShape;
 
@@ -212,6 +219,13 @@ public sealed record ButtonThemeData
             throw new ArgumentOutOfRangeException(name);
         }
     }
+
+    private static EdgeInsetsGeometry DefaultPadding(ButtonTextTheme textTheme)
+    {
+        return textTheme == ButtonTextTheme.Primary
+            ? EdgeInsetsGeometry.Symmetric(horizontal: 24)
+            : EdgeInsetsGeometry.Symmetric(horizontal: 16);
+    }
 }
 
 public sealed class ButtonTheme : InheritedWidget
@@ -222,7 +236,7 @@ public sealed class ButtonTheme : InheritedWidget
         ButtonBarLayoutBehavior layoutBehavior = ButtonBarLayoutBehavior.Padded,
         double minWidth = 88,
         double height = 36,
-        Thickness? padding = null,
+        EdgeInsetsGeometry? padding = null,
         BorderRadius? shape = null,
         bool alignedDropdown = false,
         Color? buttonColor = null,

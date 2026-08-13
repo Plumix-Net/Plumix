@@ -34,7 +34,7 @@ public sealed class MaterialButton : StatelessWidget
         double? hoverElevation = null,
         double? highlightElevation = null,
         double? disabledElevation = null,
-        Thickness? padding = null,
+        EdgeInsetsGeometry? padding = null,
         VisualDensity? visualDensity = null,
         BorderRadius? shape = null,
         Clip clipBehavior = Clip.None,
@@ -107,7 +107,7 @@ public sealed class MaterialButton : StatelessWidget
     public double? HoverElevation { get; }
     public double? HighlightElevation { get; }
     public double? DisabledElevation { get; }
-    public Thickness? Padding { get; }
+    public EdgeInsetsGeometry? Padding { get; }
     public VisualDensity? VisualDensity { get; }
     public BorderRadius? Shape { get; }
     public Clip ClipBehavior { get; }
@@ -199,7 +199,7 @@ public sealed class RawMaterialButton : StatefulWidget
         double hoverElevation = 4,
         double highlightElevation = 8,
         double disabledElevation = 0,
-        Thickness? padding = null,
+        EdgeInsetsGeometry padding = default,
         VisualDensity? visualDensity = null,
         BoxConstraints? constraints = null,
         BorderRadius? shape = null,
@@ -233,7 +233,7 @@ public sealed class RawMaterialButton : StatefulWidget
         HoverElevation = hoverElevation;
         HighlightElevation = highlightElevation;
         DisabledElevation = disabledElevation;
-        Padding = padding ?? default;
+        Padding = padding;
         VisualDensity = visualDensity ?? global::Plumix.Material.VisualDensity.Standard;
         Constraints = constraints ?? new BoxConstraints(MinWidth: 88, MinHeight: 36);
         if (!Constraints.IsNormalized)
@@ -265,7 +265,7 @@ public sealed class RawMaterialButton : StatefulWidget
     public double HoverElevation { get; }
     public double HighlightElevation { get; }
     public double DisabledElevation { get; }
-    public Thickness Padding { get; }
+    public EdgeInsetsGeometry Padding { get; }
     public VisualDensity VisualDensity { get; }
     public BoxConstraints Constraints { get; }
     public BorderRadius Shape { get; }
@@ -296,11 +296,14 @@ public sealed class RawMaterialButton : StatefulWidget
         {
             var widget = CurrentWidget;
             var densityAdjustment = widget.VisualDensity.BaseSizeAdjustment;
-            var padding = new Thickness(
-                Math.Max(0, widget.Padding.Left + densityAdjustment.X),
-                Math.Max(0, widget.Padding.Top + densityAdjustment.Y),
-                Math.Max(0, widget.Padding.Right + densityAdjustment.X),
-                Math.Max(0, widget.Padding.Bottom + densityAdjustment.Y));
+            EdgeInsetsGeometry padding = widget.Padding
+                .Add(EdgeInsetsGeometry.Only(
+                    left: densityAdjustment.X,
+                    top: densityAdjustment.Y,
+                    right: densityAdjustment.X,
+                    bottom: densityAdjustment.Y))
+                .Clamp(EdgeInsetsGeometry.Zero, EdgeInsetsGeometry.Infinity);
+            Thickness resolvedPadding = padding.Resolve(Directionality.Of(context));
             var foreground = widget.TextStyle?.Color;
 
             var style = new ButtonStyle(
@@ -329,7 +332,7 @@ public sealed class RawMaterialButton : StatefulWidget
                     if (states.HasFlag(MaterialState.Focused)) return widget.FocusElevation;
                     return widget.Elevation;
                 }),
-                Padding: MaterialStateProperty<Thickness?>.All(padding),
+                Padding: MaterialStateProperty<Thickness?>.All(resolvedPadding),
                 Shape: MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius:
                     widget.Shape)),
                 MinimumSize: MaterialStateProperty<Size?>.All(new Size(
