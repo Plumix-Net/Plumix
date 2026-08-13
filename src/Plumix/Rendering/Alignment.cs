@@ -24,6 +24,36 @@ public readonly record struct Alignment(double X, double Y)
             freeWidth * (X + 1) / 2.0,
             freeHeight * (Y + 1) / 2.0);
     }
+
+    /// <summary>The offset that is this fraction within a rect of the given size.</summary>
+    public Point AlongSize(Size other)
+    {
+        double centerX = other.Width / 2.0;
+        double centerY = other.Height / 2.0;
+        return new Point(centerX + (X * centerX), centerY + (Y * centerY));
+    }
+
+    /// <summary>The point that is this fraction within the given rect.</summary>
+    public Point WithinRect(Rect rect)
+    {
+        double halfWidth = rect.Width / 2.0;
+        double halfHeight = rect.Height / 2.0;
+        return new Point(
+            rect.Left + halfWidth + (X * halfWidth),
+            rect.Top + halfHeight + (Y * halfHeight));
+    }
+
+    /// <summary>A rect of the given size, aligned within <paramref name="rect"/> by this alignment.</summary>
+    public Rect Inscribe(Size size, Rect rect)
+    {
+        double halfWidthDelta = (rect.Width - size.Width) / 2.0;
+        double halfHeightDelta = (rect.Height - size.Height) / 2.0;
+        return new Rect(
+            rect.Left + halfWidthDelta + (X * halfWidthDelta),
+            rect.Top + halfHeightDelta + (Y * halfHeightDelta),
+            size.Width,
+            size.Height);
+    }
 }
 
 public readonly record struct TextAlignVertical

@@ -1,5 +1,19 @@
 # Changelog
 
+- Breaking: ported Flutter's `_MenuLayout` and rebased the menu buttons on `TextButton`. Menu overlays are now placed
+  by `MenuStyle.Alignment` resolved within the anchor rect (`MenuStyle.Alignment` widened from `Alignment?` to
+  `AlignmentGeometry?`; the panel defaults are the source `AlignmentDirectional.BottomStart`/`TopEnd` instead of
+  `Alignment.BottomLeft`/`TopRight`), with directional `alignmentOffset` mirroring, cascade-flip vs screen-clamp chosen
+  by parent orientation, `MediaQuery` padding/view-insets deflation and `DisplayFeatureSubScreen` sub-screens.
+  `MenuItemButton` is now stateful (own focus node, so `requestFocusOnHover` works without an external one) and both
+  it and `SubmenuButton` build a `TextButton` over `_MenuButtonDefaultsM3` + `_MenuItemLabel`: square shape, 64x48
+  minimum, 24 icon size, `onSurface`/`onSurfaceVariant` roles, the 0.08/0.1 overlay ladder and the density- and
+  text-scale-driven `_scaledPadding`. **Breaking:** a `SubmenuButton` in a `MenuBar` no longer paints a submenu arrow
+  (Flutter shows it only inside a vertical menu), the default arrow is `Icons.ArrowRight`, and menu button metrics,
+  colors and label spacing all change. Core gained `Alignment.WithinRect`/`AlongSize`/`Inscribe`, public
+  `AlignmentGeometry.IsDirectional` (with Flutter's mixed-lerp semantics, so `Alignment.Center` and
+  `AlignmentDirectional.Center` are no longer equal) and public `DisplayFeatureSubScreen.SubScreensInBounds`.
+
 - Breaking: closed the `InputBorder`/`InputDecorator` divergence and landed the two core primitives it needed.
   `RenderObject.ApplyPaintTransform` is now Flutter's protocol: `GetTransformTo`/`LocalToGlobal`/the new
   `GlobalToLocal` compose the parent chain instead of the semantics walk, so they also resolve inside subtrees

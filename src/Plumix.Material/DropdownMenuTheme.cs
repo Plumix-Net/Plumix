@@ -22,7 +22,7 @@ public sealed partial record MenuStyle(
     MaterialStateProperty<BorderSide?>? Side = null,
     MaterialStateProperty<ShapeBorder?>? Shape = null,
     MaterialStateProperty<MouseCursor?>? MouseCursor = null,
-    Alignment? Alignment = null,
+    AlignmentGeometry? Alignment = null,
     VisualDensity? VisualDensity = null)
 {
     public MenuStyle Merge(MenuStyle? style) => style is null ? this : this with

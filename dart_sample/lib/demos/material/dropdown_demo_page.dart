@@ -30,6 +30,9 @@ class _DropdownDemoPageState extends State<DropdownDemoPage> {
   final MenuController _fileMenuController = MenuController();
   final MenuController _editMenuController = MenuController();
   final MenuController _animatedMenuController = MenuController();
+  final MenuController _alignedMenuController = MenuController();
+  AlignmentGeometry _menuAlignment = AlignmentDirectional.bottomStart;
+  String _alignedMenuStatus = 'idle';
   String _animatedMenuStatus = 'dismissed';
   String _animatedMenuPick = 'none';
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
@@ -232,6 +235,74 @@ class _DropdownDemoPageState extends State<DropdownDemoPage> {
           ),
           Text(
             'Menu choices: pinned=$_menuCheckbox, layout=$_menuRadio',
+            style: const TextStyle(fontSize: 13),
+          ),
+          const Divider(),
+          const Text('MenuStyle alignment', style: TextStyle(fontSize: 18)),
+          const Text(
+            'MenuStyle.alignment places the panel within the anchor rect; menu '
+            'items space their leading and trailing icons by visual density.',
+            style: TextStyle(fontSize: 14, color: Colors.black54),
+          ),
+          Row(
+            spacing: 8,
+            children: <Widget>[
+              TextButton(
+                onPressed: () => setState(
+                  () => _menuAlignment = AlignmentDirectional.bottomStart,
+                ),
+                child: const Text('Bottom start'),
+              ),
+              TextButton(
+                onPressed: () => setState(
+                  () => _menuAlignment = AlignmentDirectional.topEnd,
+                ),
+                child: const Text('Top end'),
+              ),
+            ],
+          ),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: MenuAnchor(
+              controller: _alignedMenuController,
+              style: MenuStyle(alignment: _menuAlignment),
+              menuChildren: <Widget>[
+                MenuItemButton(
+                  leadingIcon: const Icon(Icons.chevron_left, size: 18),
+                  onPressed: () => setState(() => _alignedMenuStatus = 'cut'),
+                  child: const Text('Cut'),
+                ),
+                MenuItemButton(
+                  trailingIcon: const Icon(Icons.chevron_right, size: 18),
+                  onPressed: () => setState(() => _alignedMenuStatus = 'copy'),
+                  child: const Text('Copy'),
+                ),
+              ],
+              builder:
+                  (
+                    BuildContext context,
+                    MenuController controller,
+                    Widget? child,
+                  ) {
+                    return TextButton(
+                      onPressed: () {
+                        if (controller.isOpen) {
+                          controller.close();
+                        } else {
+                          controller.open();
+                        }
+                      },
+                      child: Text(
+                        controller.isOpen
+                            ? 'Close aligned menu'
+                            : 'Open aligned menu',
+                      ),
+                    );
+                  },
+            ),
+          ),
+          Text(
+            'Aligned menu: $_alignedMenuStatus',
             style: const TextStyle(fontSize: 13),
           ),
           const Divider(),

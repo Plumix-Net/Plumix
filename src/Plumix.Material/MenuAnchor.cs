@@ -24,6 +24,9 @@ internal static class MenuConstants
     public static readonly TimeSpan OpeningDuration = TimeSpan.FromMilliseconds(500);
     public static readonly TimeSpan ClosingDuration = TimeSpan.FromMilliseconds(150);
 
+    /// <summary>Flutter's `kThemeChangeDuration`, used by the menu button defaults.</summary>
+    public static readonly TimeSpan ThemeChangeDuration = TimeSpan.FromMilliseconds(200);
+
     public const double ItemRelativeFadeInDuration = 1.0 / 2.0;
     public const double ItemRelativeFadeOutDuration = 1.0 / 3.0;
     public const double ItemRelativeFadeOutDelay = 1.0 / 3.0;
@@ -538,6 +541,7 @@ internal sealed class Submenu : StatelessWidget
     public override Widget Build(BuildContext context)
     {
         ThemeData theme = Theme.Of(context);
+        TextDirection textDirection = Directionality.Of(context);
         MenuStyle defaults = Anchor.AnchorParentOrientation == Axis.Vertical
             ? MenuStyleDefaults.Menu(theme)
             : MenuStyleDefaults.MenuBar(theme);
@@ -546,7 +550,21 @@ internal sealed class Submenu : StatelessWidget
             : MenuBarTheme.Of(context).Style;
         MenuStyle resolved = (MenuStyle ?? new MenuStyle()).Merge(themeStyle).Merge(defaults);
         VisualDensity visualDensity = resolved.VisualDensity ?? theme.VisualDensity;
+        AlignmentGeometry alignment = resolved.Alignment ?? AlignmentDirectional.BottomStart;
         MouseCursor cursor = resolved.MouseCursor?.Resolve(MaterialState.None) ?? Plumix.Widgets.MouseCursor.Defer;
+        EdgeInsetsGeometry menuPadding = resolved.Padding?.Resolve(MaterialState.None)
+                                         ?? EdgeInsetsGeometry.Zero;
+        double densityDx = Math.Max(0.0, visualDensity.BaseSizeAdjustment.X);
+        EdgeInsetsGeometry resolvedMenuPadding = menuPadding
+            .Add(EdgeInsetsGeometry.Symmetric(horizontal: densityDx))
+            .Clamp(EdgeInsetsGeometry.Zero, EdgeInsetsGeometry.Infinity);
+        Rect layoutAnchorRect = LayerLink is null
+            ? new Rect(
+                MenuPosition.AnchorRect.Left + densityDx,
+                MenuPosition.AnchorRect.Top,
+                Math.Max(0.0, MenuPosition.AnchorRect.Right - MenuPosition.AnchorRect.Left - densityDx),
+                MenuPosition.AnchorRect.Height)
+            : default;
 
         Widget panel = new MenuPanel(
             menuStyle: MenuStyle,
@@ -580,21 +598,26 @@ internal sealed class Submenu : StatelessWidget
             debugLabel: "MenuAnchor panel");
 
         MediaQueryData? mediaQuery = MediaQuery.MaybeOf(context);
+        List<Rect> avoidBounds = mediaQuery is null
+            ? []
+            : DisplayFeatureSubScreen.AvoidBounds(mediaQuery);
         Widget layout = new AnimatedBuilder(
             animation: HeightAnimation,
             builder: (_, child) => new CustomSingleChildLayout(
-                layoutDelegate: new MenuOverlayLayoutDelegate(
-                    anchorRect: MenuPosition.AnchorRect,
+                layoutDelegate: new MenuLayout(
+                    anchorRect: layoutAnchorRect,
+                    textDirection: textDirection,
+                    alignment: alignment,
                     alignmentOffset: AlignmentOffset,
-                    reservedPadding: ReservedPadding.Resolve(Directionality.Of(context)),
-                    placementAxis: Anchor.AnchorParentOrientation == Axis.Horizontal
-                        ? Axis.Vertical
-                        : Axis.Horizontal,
-                    textDirection: Directionality.Of(context),
-                    viewInsets: mediaQuery?.ViewInsets ?? default,
-                    position: MenuPosition.Position,
-                    displayFeatures: mediaQuery?.DisplayFeatures,
-                    heightFactor: HeightAnimation.Value),
+                    menuPosition: MenuPosition.Position,
+                    menuPadding: resolvedMenuPadding,
+                    orientation: Anchor.Orientation,
+                    parentOrientation: Anchor.AnchorParentOrientation,
+                    reservedPadding: ReservedPadding,
+                    avoidBounds: avoidBounds,
+                    heightFactor: HeightAnimation.Value,
+                    viewPadding: mediaQuery?.Padding ?? default,
+                    viewInsets: mediaQuery?.ViewInsets ?? default),
                 child: child!),
             child: content);
 
@@ -767,7 +790,7 @@ internal static class MenuStyleDefaults
                 end: MenuConstants.TopLevelMenuHorizontalMinPadding)),
         Shape: MaterialStateProperty<ShapeBorder?>.All(
             new RoundedRectangleBorder(borderRadius: BorderRadius.Circular(4.0))),
-        Alignment: Plumix.Rendering.Alignment.BottomLeft,
+        Alignment: AlignmentDirectional.BottomStart,
         VisualDensity: theme.VisualDensity);
 
     public static MenuStyle Menu(ThemeData theme) => new(
@@ -779,11 +802,191 @@ internal static class MenuStyleDefaults
             EdgeInsetsGeometry.Symmetric(vertical: MenuConstants.MenuVerticalMinPadding)),
         Shape: MaterialStateProperty<ShapeBorder?>.All(
             new RoundedRectangleBorder(borderRadius: BorderRadius.Circular(4.0))),
-        Alignment: Plumix.Rendering.Alignment.TopRight,
+        Alignment: AlignmentDirectional.TopEnd,
         VisualDensity: theme.VisualDensity);
 }
 
-public sealed class MenuItemButton : StatelessWidget
+/// <summary>Flutter's `_MenuItemLabel`: the leading/label/trailing/submenu row of a menu button.</summary>
+internal sealed class MenuItemLabel : StatelessWidget
+{
+    public MenuItemLabel(
+        bool hasSubmenu,
+        bool showDecoration = true,
+        Widget? leadingIcon = null,
+        Widget? trailingIcon = null,
+        Widget? submenuIcon = null,
+        string? semanticsLabel = null,
+        Axis overflowAxis = Axis.Vertical,
+        Widget? child = null,
+        Key? key = null) : base(key)
+    {
+        HasSubmenu = hasSubmenu;
+        ShowDecoration = showDecoration;
+        LeadingIcon = leadingIcon;
+        TrailingIcon = trailingIcon;
+        SubmenuIcon = submenuIcon;
+        SemanticsLabel = semanticsLabel;
+        OverflowAxis = overflowAxis;
+        Child = child;
+    }
+
+    public bool HasSubmenu { get; }
+    public bool ShowDecoration { get; }
+    public Widget? LeadingIcon { get; }
+    public Widget? TrailingIcon { get; }
+    public Widget? SubmenuIcon { get; }
+    public string? SemanticsLabel { get; }
+    public Axis OverflowAxis { get; }
+    public Widget? Child { get; }
+
+    public override Widget Build(BuildContext context)
+    {
+        VisualDensity density = Theme.Of(context).VisualDensity;
+        TextDirection textDirection = Directionality.Of(context);
+        double horizontalPadding = Math.Max(
+            MenuConstants.LabelItemMinSpacing,
+            MenuConstants.LabelItemDefaultSpacing + (density.Horizontal * 2));
+        Thickness leadingPadding = EdgeInsetsGeometry
+            .DirectionalOnly(start: horizontalPadding)
+            .Resolve(textDirection);
+
+        Widget leadings = BuildLeadings(leadingPadding);
+        var children = new List<Widget> { leadings };
+        if (TrailingIcon is not null)
+        {
+            children.Add(new Padding(leadingPadding, TrailingIcon));
+        }
+
+        if (ShowDecoration && HasSubmenu && SubmenuIcon is not null)
+        {
+            children.Add(new Padding(leadingPadding, SubmenuIcon));
+        }
+
+        Widget result = new Row(
+            mainAxisAlignment: MainAxisAlignment.SpaceBetween,
+            textDirection: textDirection,
+            children: children);
+
+        if (SemanticsLabel is not null)
+        {
+            result = new Semantics(
+                label: SemanticsLabel,
+                child: new ExcludeSemantics(result));
+        }
+
+        return result;
+    }
+
+    private Widget BuildLeadings(Thickness leadingPadding)
+    {
+        var inner = new List<Widget>();
+        if (LeadingIcon is not null)
+        {
+            inner.Add(LeadingIcon);
+        }
+
+        if (OverflowAxis == Axis.Vertical)
+        {
+            if (Child is not null)
+            {
+                inner.Add(new Expanded(child: new ClipRect(
+                    child: new Padding(LeadingIcon is not null ? leadingPadding : default, Child))));
+            }
+
+            return new Expanded(child: new ClipRect(
+                child: new Row(mainAxisSize: MainAxisSize.Min, children: inner)));
+        }
+
+        if (Child is not null)
+        {
+            inner.Add(new Padding(LeadingIcon is not null ? leadingPadding : default, Child));
+        }
+
+        return new Row(mainAxisSize: MainAxisSize.Min, children: inner);
+    }
+}
+
+/// <summary>Flutter's `_MenuButtonDefaultsM3`: the Material 3 defaults for menu buttons.</summary>
+internal static class MenuButtonDefaults
+{
+    public static ButtonStyle M3(BuildContext context)
+    {
+        ThemeData theme = Theme.Of(context);
+        ColorScheme colors = theme.ColorScheme;
+        return new ButtonStyle(
+            BackgroundColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
+            Elevation: MaterialStateProperty<double?>.All(0.0),
+            ForegroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+                states.HasFlag(MaterialState.Disabled)
+                    ? MaterialButtonCore.ApplyOpacity(colors.OnSurface, 0.38)
+                    : colors.OnSurface),
+            IconColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+                states.HasFlag(MaterialState.Disabled)
+                    ? MaterialButtonCore.ApplyOpacity(colors.OnSurface, 0.38)
+                    : colors.OnSurfaceVariant),
+            IconSize: MaterialStateProperty<double?>.All(24.0),
+            MaximumSize: MaterialStateProperty<Size?>.All(
+                new Size(double.PositiveInfinity, double.PositiveInfinity)),
+            MinimumSize: MaterialStateProperty<Size?>.All(new Size(64.0, 48.0)),
+            MouseCursor: MaterialStateProperty<MouseCursor?>.ResolveWith(states =>
+                states.HasFlag(MaterialState.Disabled) || !OperatingSystem.IsBrowser()
+                    ? SystemMouseCursors.Basic
+                    : SystemMouseCursors.Click),
+            OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+            {
+                if (states.HasFlag(MaterialState.Pressed))
+                {
+                    return MaterialButtonCore.ApplyOpacity(colors.OnSurface, 0.1);
+                }
+
+                if (states.HasFlag(MaterialState.Hovered))
+                {
+                    return MaterialButtonCore.ApplyOpacity(colors.OnSurface, 0.08);
+                }
+
+                if (states.HasFlag(MaterialState.Focused))
+                {
+                    return MaterialButtonCore.ApplyOpacity(colors.OnSurface, 0.1);
+                }
+
+                return Colors.Transparent;
+            }),
+            Padding: MaterialStateProperty<Thickness?>.All(ScaledPadding(context)),
+            Shape: MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder()),
+            SplashFactory: theme.SplashFactory,
+            TapTargetSize: theme.MaterialTapTargetSize,
+            TextStyle: MaterialStateProperty<TextStyle?>.All(theme.TextTheme.LabelLarge),
+            VisualDensity: theme.VisualDensity,
+            Alignment: Plumix.Rendering.Alignment.CenterLeft,
+            AnimationDuration: MenuConstants.ThemeChangeDuration,
+            EnableFeedback: true);
+    }
+
+    /// <summary>Flutter's `_scaledPadding`: horizontal-only padding that shrinks with text scale.</summary>
+    internal static Thickness ScaledPadding(BuildContext context)
+    {
+        ThemeData theme = Theme.Of(context);
+        VisualDensity density = theme.VisualDensity;
+        if (density.Horizontal > 0)
+        {
+            density = new VisualDensity(Vertical: density.Vertical);
+        }
+
+        double fontSizeRatio = MaterialButtonCore.ResolvePaddingFontSizeMultiplier(
+            context,
+            theme.TextTheme.LabelLarge.FontSize);
+        double densityDx = density.BaseSizeAdjustment.X;
+        return MaterialButtonCore.ScalePadding(
+            new Thickness(
+                Math.Max(MenuConstants.MenuViewPadding, MenuConstants.LabelItemDefaultSpacing + densityDx),
+                0.0),
+            new Thickness(Math.Max(MenuConstants.MenuViewPadding, 8.0 + densityDx), 0.0),
+            new Thickness(MenuConstants.MenuViewPadding, 0.0),
+            fontSizeRatio);
+    }
+}
+
+public sealed class MenuItemButton : StatefulWidget
 {
     public MenuItemButton(
         Widget? child = null,
@@ -837,77 +1040,125 @@ public sealed class MenuItemButton : StatelessWidget
     public Axis OverflowAxis { get; }
     public bool Enabled => OnPressed is not null;
 
+    /// <summary>Flutter's `MenuItemButton.defaultStyleOf`.</summary>
+    public ButtonStyle DefaultStyleOf(BuildContext context) => MenuButtonDefaults.M3(context);
+
+    /// <summary>Flutter's `MenuItemButton.themeStyleOf`.</summary>
+    public ButtonStyle? ThemeStyleOf(BuildContext context) => MenuButtonTheme.Of(context).Style;
+
+    public override State CreateState() => new MenuItemButtonState();
+}
+
+public sealed class MenuItemButtonState : State
+{
+    private readonly FocusNode _internalFocusNode = new();
+    private MenuAnchorState? _anchor;
+
+    private MenuItemButton Current => (MenuItemButton)StateWidget;
+
+    internal FocusNode ButtonFocusNode => Current.FocusNode ?? _internalFocusNode;
+
+    public override void InitState()
+    {
+        ButtonFocusNode.AddListener(HandleFocusChanged);
+    }
+
+    public override void DidChangeDependencies()
+    {
+        _anchor = MenuAnchorScope.MaybeOf(Context)?.State;
+    }
+
+    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    {
+        var previous = (MenuItemButton)oldWidget;
+        if (!ReferenceEquals(previous.FocusNode, Current.FocusNode))
+        {
+            (previous.FocusNode ?? _internalFocusNode).RemoveListener(HandleFocusChanged);
+            ButtonFocusNode.AddListener(HandleFocusChanged);
+        }
+    }
+
+    public override void Dispose()
+    {
+        ButtonFocusNode.RemoveListener(HandleFocusChanged);
+        _internalFocusNode.Dispose();
+    }
+
     public override Widget Build(BuildContext context)
     {
-        ThemeData theme = Theme.Of(context);
-        Widget label = Child ?? new SizedBox();
-        var row = new List<Widget>();
-        if (LeadingIcon is not null) row.Add(LeadingIcon);
-        row.Add(new Flexible(child: label));
-        if (TrailingIcon is not null) row.Add(TrailingIcon);
-        Widget content = new Row(
-            mainAxisSize: MainAxisSize.Max,
-            spacing: MenuConstants.LabelItemDefaultSpacing,
-            children: row,
-            textDirection: Directionality.Of(context));
-        ButtonStyle defaults = new(
-            ForegroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                states.HasFlag(MaterialState.Disabled) ? theme.DisabledColor : theme.OnSurfaceColor),
-            OverlayColor: MaterialButtonCore.CreateDefaultOverlayResolver(theme.OnSurfaceColor),
-            Padding: MaterialStateProperty<Thickness?>.All(new Thickness(12, 0)),
-            MinimumSize: MaterialStateProperty<Size?>.All(new Size(64, 48)),
-            Shape: MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius:
-                BorderRadius.Zero)),
-            TextStyle: MaterialStateProperty<TextStyle?>.All(theme.TextTheme.LabelLarge),
-            TapTargetSize: MaterialTapTargetSize.ShrinkWrap);
-        Action? activate = OnPressed is null ? null : () =>
+        ButtonStyle mergedStyle = MaterialButtonCore.ComposeStyles(
+            defaults: Current.DefaultStyleOf(context),
+            themeStyle: Current.ThemeStyleOf(context),
+            widgetStyle: Current.Style,
+            legacyOverrides: null);
+
+        Widget result = new TextButton(
+            child: new MenuItemLabel(
+                hasSubmenu: false,
+                leadingIcon: Current.LeadingIcon,
+                trailingIcon: Current.TrailingIcon,
+                semanticsLabel: Current.SemanticsLabel,
+                overflowAxis: _anchor?.Orientation ?? Current.OverflowAxis,
+                child: Current.Child),
+            onPressed: Current.Enabled ? HandleSelect : null,
+            onFocusChange: Current.Enabled ? Current.OnFocusChange : null,
+            focusNode: ButtonFocusNode,
+            style: mergedStyle,
+            autofocus: Current.Enabled && Current.Autofocus,
+            statesController: Current.StatesController,
+            clipBehavior: Current.ClipBehavior,
+            isSemanticButton: OperatingSystem.IsBrowser() ? true : null);
+
+        if (Current.OnHover is not null || Current.RequestFocusOnHover)
         {
-            if (CloseOnActivate)
-            {
-                MenuAnchorScope.MaybeOf(context)?.State.RootAnchor.MenuController.Close();
-            }
+            result = new MouseRegion(
+                onEnter: _ => HandlePointerEnter(),
+                onExit: _ => HandlePointerExit(),
+                child: result);
+        }
 
-            Scheduler.AddPostFrameCallback(_ => OnPressed());
-        };
-        Widget result = new MaterialButtonCore(
-            child: content,
-            onPressed: activate,
-            style: MaterialButtonCore.ComposeStyles(
-                defaults,
-                MenuButtonTheme.Of(context).Style,
-                Style,
-                null),
-            onHoverChanged: value =>
-            {
-                OnHover?.Invoke(value);
-                if (value && RequestFocusOnHover)
-                {
-                    FocusNode?.RequestFocus();
-                }
-            },
-            onFocusChange: focused =>
-            {
-                OnFocusChange?.Invoke(focused);
-                if (!focused)
-                {
-                    MenuController.MaybeOf(context)?.CloseChildren();
-                }
-            },
-            focusNode: FocusNode,
-            statesController: StatesController,
-            autofocus: Autofocus,
-            semanticLabel: SemanticsLabel,
-            clipBehavior: ClipBehavior,
-            enabled: Enabled);
-
-        if (Enabled && MenuAcceleratorLabel.PlatformSupportsAccelerators(context))
+        if (Current.Enabled && MenuAcceleratorLabel.PlatformSupportsAccelerators(context))
         {
             result = new MenuAcceleratorCallbackBinding(
                 child: result,
-                onInvoke: activate);
+                onInvoke: HandleSelect);
         }
 
-        return result;
+        return new MergeSemantics(result);
+    }
+
+    private void HandleSelect()
+    {
+        if (Current.CloseOnActivate)
+        {
+            _anchor?.RootAnchor.MenuController.Close();
+        }
+
+        // Delay the callback until the menu has finished closing, as Flutter does.
+        Scheduler.AddPostFrameCallback(_ => Current.OnPressed?.Invoke());
+    }
+
+    private void HandlePointerEnter()
+    {
+        Current.OnHover?.Invoke(true);
+        if (Current.RequestFocusOnHover && Current.Enabled)
+        {
+            ButtonFocusNode.RequestFocus();
+        }
+    }
+
+    private void HandlePointerExit()
+    {
+        Current.OnHover?.Invoke(false);
+    }
+
+    private void HandleFocusChanged()
+    {
+        if (!ButtonFocusNode.HasPrimaryFocus && Mounted)
+        {
+            // Close any child menus of this button's menu.
+            MenuController.MaybeOf(Context)?.CloseChildren();
+        }
     }
 }
 
@@ -1248,6 +1499,12 @@ public sealed class SubmenuButton : StatefulWidget
     public Action<AnimationStatus>? OnAnimationStatusChanged { get; }
     public bool Enabled => MenuChildren.Count > 0;
 
+    /// <summary>Flutter's `SubmenuButton.defaultStyleOf`.</summary>
+    public ButtonStyle DefaultStyleOf(BuildContext context) => MenuButtonDefaults.M3(context);
+
+    /// <summary>Flutter's `SubmenuButton.themeStyleOf`.</summary>
+    public ButtonStyle? ThemeStyleOf(BuildContext context) => MenuButtonTheme.Of(context).Style;
+
     public override State CreateState() => new SubmenuButtonState();
 }
 
@@ -1312,45 +1569,43 @@ public sealed class SubmenuButtonState : State
             states |= MaterialState.Disabled;
         }
 
+        if (_isHovered)
+        {
+            states |= MaterialState.Hovered;
+        }
+
+        if (ButtonFocusNode.HasFocus)
+        {
+            states |= MaterialState.Focused;
+        }
+
         Widget submenuIcon = Current.SubmenuIcon?.Resolve(states)
                              ?? MenuTheme.Of(context).SubmenuIcon?.Resolve(states)
-                             ?? new Icon(Icons.ChevronRight, size: MenuConstants.DefaultSubmenuIconSize);
-        var row = new List<Widget>();
-        if (Current.LeadingIcon is not null) row.Add(Current.LeadingIcon);
-        row.Add(new Flexible(child: Current.Child ?? new SizedBox()));
-        if (Current.TrailingIcon is not null) row.Add(Current.TrailingIcon);
-        row.Add(submenuIcon);
+                             ?? new Icon(Icons.ArrowRight, size: MenuConstants.DefaultSubmenuIconSize);
 
-        ThemeData theme = Theme.Of(context);
-        ButtonStyle defaults = new(
-            ForegroundColor: MaterialStateProperty<Color?>.ResolveWith(value =>
-                value.HasFlag(MaterialState.Disabled) ? theme.DisabledColor : theme.OnSurfaceColor),
-            OverlayColor: MaterialButtonCore.CreateDefaultOverlayResolver(theme.OnSurfaceColor),
-            Padding: MaterialStateProperty<Thickness?>.All(new Thickness(12, 0)),
-            MinimumSize: MaterialStateProperty<Size?>.All(new Size(64, 48)),
-            Shape: MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius:
-                BorderRadius.Zero)),
-            TextStyle: MaterialStateProperty<TextStyle?>.All(theme.TextTheme.LabelLarge),
-            TapTargetSize: MaterialTapTargetSize.ShrinkWrap);
-        Widget button = new MaterialButtonCore(
-            child: new Row(
-                mainAxisSize: MainAxisSize.Max,
-                spacing: MenuConstants.LabelItemDefaultSpacing,
-                children: row,
-                textDirection: Directionality.Of(context)),
+        ButtonStyle mergedStyle = MaterialButtonCore.ComposeStyles(
+            defaults: Current.DefaultStyleOf(context),
+            themeStyle: Current.ThemeStyleOf(context),
+            widgetStyle: Current.Style,
+            legacyOverrides: null);
+        Widget button = new TextButton(
+            child: new MenuItemLabel(
+                hasSubmenu: true,
+                showDecoration: parentOrientation == Axis.Vertical,
+                leadingIcon: Current.LeadingIcon,
+                trailingIcon: Current.TrailingIcon,
+                submenuIcon: submenuIcon,
+                child: Current.Child),
             onPressed: Current.Enabled ? ToggleShowMenu : null,
-            style: MaterialButtonCore.ComposeStyles(
-                defaults,
-                MenuButtonTheme.Of(context).Style,
-                Current.Style,
-                null),
-            onHoverChanged: HandleHover,
             onFocusChange: HandleFocusChange,
+            onHover: HandleHover,
             focusNode: ButtonFocusNode,
+            style: mergedStyle,
+            statesController: Current.StatesController,
             clipBehavior: Current.ClipBehavior,
-            enabled: Current.Enabled);
+            isSemanticButton: OperatingSystem.IsBrowser() ? true : null);
 
-        Vector menuPaddingOffset = ResolveMenuPaddingOffset(context, parentOrientation);
+        Vector menuPaddingOffset = ResolveMenuPaddingOffset(context);
 
         Widget anchor = new MenuAnchor(
             menuChildren: Current.MenuChildren,
@@ -1409,17 +1664,21 @@ public sealed class SubmenuButtonState : State
         }
     }
 
-    private Vector ResolveMenuPaddingOffset(BuildContext context, Axis parentOrientation)
+    private Vector ResolveMenuPaddingOffset(BuildContext context)
     {
         Vector offset = Current.AlignmentOffset ?? default;
-        EdgeInsetsGeometry menuPaddingGeometry = Current.MenuStyle?.Padding?.Resolve(MaterialState.None)
-                                                 ?? MenuTheme.Of(context).Style?.Padding
-                                                     ?.Resolve(MaterialState.None)
+        MaterialState states = Current.StatesController?.Value ?? MaterialState.None;
+        EdgeInsetsGeometry menuPaddingGeometry = Current.MenuStyle?.Padding?.Resolve(states)
+                                                 ?? MenuTheme.Of(context).Style?.Padding?.Resolve(states)
                                                  ?? MenuStyleDefaults.Menu(Theme.Of(context)).Padding!
-                                                     .Resolve(MaterialState.None)!.Value;
-        Thickness menuPadding = menuPaddingGeometry.Resolve(Directionality.Of(context));
+                                                     .Resolve(states)!.Value;
         TextDirection direction = Directionality.Of(context);
-        Vector delta = (parentOrientation, direction) switch
+        Thickness menuPadding = menuPaddingGeometry.Resolve(direction);
+
+        // Flutter's `_SubmenuButtonState.build` falls back to `Axis.vertical` here, unlike the
+        // horizontal fallback the label decoration and the overlay theme switch use.
+        Axis orientation = _parentAnchor?.Orientation ?? Axis.Vertical;
+        Vector delta = (orientation, direction) switch
         {
             (Axis.Horizontal, TextDirection.Rtl) => new Vector(menuPadding.Right, 0),
             (Axis.Horizontal, TextDirection.Ltr) => new Vector(-menuPadding.Left, 0),
@@ -1714,64 +1973,88 @@ internal sealed class SubmenuDirectionalFocusAction : FlutterAction<DirectionalF
     }
 }
 
-internal sealed class MenuOverlayLayoutDelegate : SingleChildLayoutDelegate
+/// <summary>Flutter's `_MenuLayout`: places an open menu panel relative to its anchor.</summary>
+internal sealed class MenuLayout : SingleChildLayoutDelegate
 {
-    public MenuOverlayLayoutDelegate(
+    public MenuLayout(
         Rect anchorRect,
-        Vector alignmentOffset,
-        Thickness reservedPadding,
-        Axis placementAxis,
         TextDirection textDirection,
-        Thickness viewInsets,
-        Vector? position,
-        IReadOnlyList<DisplayFeature>? displayFeatures = null,
-        double heightFactor = 1.0)
+        AlignmentGeometry alignment,
+        Vector alignmentOffset,
+        Vector? menuPosition,
+        EdgeInsetsGeometry menuPadding,
+        Axis orientation,
+        Axis parentOrientation,
+        EdgeInsetsGeometry reservedPadding,
+        IReadOnlyList<Rect>? avoidBounds = null,
+        double heightFactor = 1.0,
+        Thickness viewPadding = default,
+        Thickness viewInsets = default)
     {
         AnchorRect = anchorRect;
-        AlignmentOffset = alignmentOffset;
-        ReservedPadding = reservedPadding;
-        PlacementAxis = placementAxis;
         TextDirection = textDirection;
-        ViewInsets = viewInsets;
-        Position = position;
-        DisplayFeatures = displayFeatures ?? [];
+        Alignment = alignment;
+        AlignmentOffset = alignmentOffset;
+        MenuPosition = menuPosition;
+        MenuPadding = menuPadding;
+        Orientation = orientation;
+        ParentOrientation = parentOrientation;
+        ReservedPadding = reservedPadding;
+        AvoidBounds = avoidBounds ?? [];
         HeightFactor = heightFactor;
+        ViewPadding = viewPadding;
+        ViewInsets = viewInsets;
     }
 
+    /// <summary>The anchor's rect, relative to the overlay the menu is placed in.</summary>
     public Rect AnchorRect { get; }
-
-    public Vector AlignmentOffset { get; }
-
-    public Thickness ReservedPadding { get; }
-
-    public Axis PlacementAxis { get; }
 
     public TextDirection TextDirection { get; }
 
-    public Thickness ViewInsets { get; }
+    public AlignmentGeometry Alignment { get; }
 
-    public Vector? Position { get; }
+    public Vector AlignmentOffset { get; }
 
-    public IReadOnlyList<DisplayFeature> DisplayFeatures { get; }
+    /// <summary>The position passed to <see cref="MenuController.Open"/>, if any.</summary>
+    public Vector? MenuPosition { get; }
+
+    /// <summary>The menu panel's own padding. Only <see cref="ShouldRelayout"/> reads it, as in Dart.</summary>
+    public EdgeInsetsGeometry MenuPadding { get; }
+
+    public Axis Orientation { get; }
+
+    public Axis ParentOrientation { get; }
+
+    public EdgeInsetsGeometry ReservedPadding { get; }
+
+    public IReadOnlyList<Rect> AvoidBounds { get; }
 
     /// <summary>The fraction of the panel's full height that is currently revealed.</summary>
     public double HeightFactor { get; }
 
+    /// <summary>`MediaQueryData.padding` of the overlay's media query.</summary>
+    public Thickness ViewPadding { get; }
+
+    /// <summary>`MediaQueryData.viewInsets` of the overlay's media query.</summary>
+    public Thickness ViewInsets { get; }
+
     public override BoxConstraints GetConstraintsForChild(BoxConstraints constraints)
     {
-        Rect available = ResolveAvailableRegion(constraints.Biggest);
-        return BoxConstraints.Loose(available.Size);
+        return BoxConstraints.Loose(constraints.Biggest).Deflate(ReservedPadding.Resolve(TextDirection));
     }
 
     public override Point GetPositionForChild(Size size, Size childSize)
     {
-        // Flutter's `_MenuLayout` positions the menu using its *unfolded* height so a growing panel
-        // does not slide across the screen while it opens.
+        Rect overlayRect = DeflateRect(ViewPadding, DeflateRect(ViewInsets, new Rect(default, size)));
+
+        // Position the menu using its *unfolded* height so a growing panel does not slide across
+        // the screen while it opens.
         double unconstrainedHeight = HeightFactor > 0.01 ? childSize.Height / HeightFactor : 0.0;
         double childHeightEstimate = Math.Min(unconstrainedHeight, size.Height);
         var childSizeEstimate = new Size(childSize.Width, childHeightEstimate);
-        Point finalPosition = PositionChild(size, childSizeEstimate);
-        if (Position.HasValue)
+        Point finalPosition = PositionChild(childSizeEstimate, overlayRect);
+
+        if (MenuPosition.HasValue)
         {
             return finalPosition;
         }
@@ -1790,123 +2073,139 @@ internal sealed class MenuOverlayLayoutDelegate : SingleChildLayoutDelegate
 
     public override bool ShouldRelayout(SingleChildLayoutDelegate oldDelegate)
     {
-        if (oldDelegate is not MenuOverlayLayoutDelegate oldLayout)
+        if (oldDelegate is not MenuLayout oldLayout)
         {
             return true;
         }
 
         return AnchorRect != oldLayout.AnchorRect
-               || AlignmentOffset != oldLayout.AlignmentOffset
-               || ReservedPadding != oldLayout.ReservedPadding
-               || PlacementAxis != oldLayout.PlacementAxis
                || TextDirection != oldLayout.TextDirection
-               || ViewInsets != oldLayout.ViewInsets
-               || Position != oldLayout.Position
+               || Alignment != oldLayout.Alignment
+               || AlignmentOffset != oldLayout.AlignmentOffset
+               || MenuPosition != oldLayout.MenuPosition
+               || MenuPadding != oldLayout.MenuPadding
+               || Orientation != oldLayout.Orientation
+               || ParentOrientation != oldLayout.ParentOrientation
+               || ReservedPadding != oldLayout.ReservedPadding
                || HeightFactor != oldLayout.HeightFactor
-               || !DisplayFeatures.SequenceEqual(oldLayout.DisplayFeatures);
+               || !AvoidBounds.SequenceEqual(oldLayout.AvoidBounds);
     }
 
-    private Point PositionChild(Size size, Size childSize)
+    private Point PositionChild(Size childSize, Rect overlayRect)
     {
-        Rect available = ResolveAvailableRegion(size);
-        double leftLimit = available.Left;
-        double topLimit = available.Top;
-        double rightLimit = available.Right;
-        double bottomLimit = available.Bottom;
         double x;
         double y;
-        if (Position.HasValue)
+        if (!MenuPosition.HasValue)
         {
-            x = AnchorRect.Left + Position.Value.X;
-            y = AnchorRect.Top + Position.Value.Y;
-        }
-        else if (PlacementAxis == Axis.Horizontal)
-        {
-            bool placeAfter = TextDirection == TextDirection.Ltr;
-            double after = placeAfter ? AnchorRect.Right : AnchorRect.Left - childSize.Width;
-            double before = placeAfter ? AnchorRect.Left - childSize.Width : AnchorRect.Right;
-            x = FitsHorizontally(after, childSize.Width, leftLimit, rightLimit) ? after : before;
-            y = AnchorRect.Top;
+            Alignment resolved = Alignment.Resolve(TextDirection);
+            Point desiredPosition = resolved.WithinRect(AnchorRect);
+            Vector directionalOffset = Alignment.IsDirectional && TextDirection == TextDirection.Rtl
+                ? new Vector(-AlignmentOffset.X, AlignmentOffset.Y)
+                : AlignmentOffset;
+            x = desiredPosition.X + directionalOffset.X;
+            y = desiredPosition.Y + directionalOffset.Y;
+            if (TextDirection == TextDirection.Rtl)
+            {
+                x -= childSize.Width;
+            }
         }
         else
         {
-            x = TextDirection == TextDirection.Ltr
-                ? AnchorRect.Left
-                : AnchorRect.Right - childSize.Width;
-            double below = AnchorRect.Bottom;
-            double above = AnchorRect.Top - childSize.Height;
-            y = below + childSize.Height <= bottomLimit ? below : above;
+            x = MenuPosition.Value.X + AnchorRect.Left;
+            y = MenuPosition.Value.Y + AnchorRect.Top;
         }
 
-        if (!Position.HasValue)
+        List<Rect> subScreens = DisplayFeatureSubScreen.SubScreensInBounds(overlayRect, AvoidBounds);
+        Rect allowedRect = ClosestScreen(subScreens, AnchorRect.Center);
+
+        bool OffLeftSide(double value) => value < allowedRect.Left;
+        bool OffRightSide(double value) => value + childSize.Width > allowedRect.Right;
+        bool OffTop(double value) => value < allowedRect.Top;
+        bool OffBottom(double value) => value + childSize.Height > allowedRect.Bottom;
+
+        if (childSize.Width >= allowedRect.Width)
         {
-            x += AlignmentOffset.X;
-            y += AlignmentOffset.Y;
+            x = allowedRect.Left;
+        }
+        else if (OffLeftSide(x))
+        {
+            if (ParentOrientation != Orientation)
+            {
+                x = allowedRect.Left;
+            }
+            else
+            {
+                double newX = AnchorRect.Right + AlignmentOffset.X;
+                x = !OffRightSide(newX) ? newX : allowedRect.Left;
+            }
+        }
+        else if (OffRightSide(x))
+        {
+            if (ParentOrientation != Orientation)
+            {
+                x = allowedRect.Right - childSize.Width;
+            }
+            else
+            {
+                double newX = AnchorRect.Left - childSize.Width - AlignmentOffset.X;
+                x = !OffLeftSide(newX) ? newX : allowedRect.Right - childSize.Width;
+            }
         }
 
-        x = Math.Clamp(x, leftLimit, Math.Max(leftLimit, rightLimit - childSize.Width));
-        y = Math.Clamp(y, topLimit, Math.Max(topLimit, bottomLimit - childSize.Height));
+        if (childSize.Height >= allowedRect.Height)
+        {
+            y = allowedRect.Top;
+        }
+        else if (OffTop(y))
+        {
+            double newY = AnchorRect.Bottom;
+            y = !OffBottom(newY) ? newY : allowedRect.Top;
+        }
+        else if (OffBottom(y))
+        {
+            double newY = AnchorRect.Top - childSize.Height;
+            if (!OffTop(newY))
+            {
+                y = ParentOrientation == Axis.Horizontal ? newY - AlignmentOffset.Y : newY;
+            }
+            else
+            {
+                y = allowedRect.Bottom - childSize.Height;
+            }
+        }
+
         return new Point(x, y);
     }
 
-    private static bool FitsHorizontally(
-        double x,
-        double width,
-        double leftLimit,
-        double rightLimit)
+    private static Rect ClosestScreen(IReadOnlyList<Rect> screens, Point point)
     {
-        return x >= leftLimit && x + width <= rightLimit;
-    }
-
-    private Rect ResolveAvailableRegion(Size size)
-    {
-        var regions = new List<Rect>
+        Rect closest = screens[0];
+        foreach (Rect screen in screens)
         {
-            new(
-                ReservedPadding.Left,
-                ReservedPadding.Top,
-                Math.Max(0.0, size.Width - ReservedPadding.Left - ReservedPadding.Right),
-                Math.Max(
-                    0.0,
-                    size.Height - ReservedPadding.Top - ReservedPadding.Bottom - ViewInsets.Bottom)),
-        };
-        foreach (DisplayFeature feature in DisplayFeatures)
-        {
-            var next = new List<Rect>();
-            foreach (Rect region in regions)
+            if (Distance(screen.Center, point) < Distance(closest.Center, point))
             {
-                Rect bounds = feature.Bounds.Intersect(region);
-                if (bounds.Width <= 0.0 || bounds.Height <= 0.0)
-                {
-                    next.Add(region);
-                    continue;
-                }
-
-                if (bounds.Height >= region.Height && bounds.Width < region.Width)
-                {
-                    next.Add(new Rect(region.Left, region.Top, bounds.Left - region.Left, region.Height));
-                    next.Add(new Rect(bounds.Right, region.Top, region.Right - bounds.Right, region.Height));
-                }
-                else if (bounds.Width >= region.Width && bounds.Height < region.Height)
-                {
-                    next.Add(new Rect(region.Left, region.Top, region.Width, bounds.Top - region.Top));
-                    next.Add(new Rect(region.Left, bounds.Bottom, region.Width, region.Bottom - bounds.Bottom));
-                }
-                else
-                {
-                    next.Add(region);
-                }
+                closest = screen;
             }
-
-            regions = next.Where(region => region.Width > 0.0 && region.Height > 0.0).ToList();
         }
 
-        Point anchorCenter = AnchorRect.Center;
-        return regions.MinBy(region =>
-        {
-            double dx = region.Center.X - anchorCenter.X;
-            double dy = region.Center.Y - anchorCenter.Y;
-            return (dx * dx) + (dy * dy);
-        });
+        return closest;
+    }
+
+    private static double Distance(Point from, Point to)
+    {
+        double dx = from.X - to.X;
+        double dy = from.Y - to.Y;
+        return Math.Sqrt((dx * dx) + (dy * dy));
+    }
+
+    private static Rect DeflateRect(Thickness insets, Rect rect)
+    {
+        double left = rect.Left + insets.Left;
+        double top = rect.Top + insets.Top;
+        return new Rect(
+            left,
+            top,
+            Math.Max(0.0, rect.Right - insets.Right - left),
+            Math.Max(0.0, rect.Bottom - insets.Bottom - top));
     }
 }

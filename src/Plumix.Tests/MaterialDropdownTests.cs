@@ -835,25 +835,182 @@ public sealed class MaterialDropdownTests : IDisposable
                 SubmenuIcon: MaterialStateProperty<Widget?>.All(new Text("theme icon"))),
         };
 
+        var controller = new MenuController();
         Widget themed = new MenuTheme(
             new MenuThemeData(
                 SubmenuIcon: MaterialStateProperty<Widget?>.All(new Text("local icon"))),
-            new MenuBar(
-            [
-                new SubmenuButton(
-                    [new MenuItemButton(child: new Text("Open"), onPressed: () => { })],
-                    new Text("Local")),
-                new SubmenuButton(
-                    [new MenuItemButton(child: new Text("Save"), onPressed: () => { })],
-                    new Text("Widget"),
-                    submenuIcon: MaterialStateProperty<Widget?>.All(new Text("widget icon"))),
-            ]));
+            new MenuAnchor(
+                [
+                    new SubmenuButton(
+                        [new MenuItemButton(child: new Text("Open"), onPressed: () => { })],
+                        new Text("Local")),
+                    new SubmenuButton(
+                        [new MenuItemButton(child: new Text("Save"), onPressed: () => { })],
+                        new Text("Widget"),
+                        submenuIcon: MaterialStateProperty<Widget?>.All(new Text("widget icon"))),
+                ],
+                controller: controller,
+                child: new SizedBox(width: 80, height: 40)));
         using var harness = new WidgetRenderHarness(Wrap(themed, theme));
-        harness.Pump(new Size(500, 180));
+        harness.Pump(new Size(500, 260));
+        controller.Open();
+        harness.Pump(new Size(500, 260));
 
         Assert.NotNull(FindParagraph(harness.RenderView, "local icon"));
         Assert.NotNull(FindParagraph(harness.RenderView, "widget icon"));
         Assert.Null(FindParagraph(harness.RenderView, "theme icon"));
+    }
+
+    [Fact]
+    public void SubmenuButton_ShowsItsSubmenuIconOnlyInsideAVerticalMenu()
+    {
+        // Flutter's `_MenuItemLabel.showDecoration` is `parentOrientation == Axis.vertical`, so a
+        // top-level `MenuBar` button paints no arrow while a nested submenu does.
+        var controller = new MenuController();
+        Widget bar = new MenuBar(
+        [
+            new SubmenuButton(
+                [
+                    new SubmenuButton(
+                        [new MenuItemButton(child: new Text("Leaf"), onPressed: () => { })],
+                        new Text("Nested"),
+                        submenuIcon: MaterialStateProperty<Widget?>.All(new Text("nested arrow"))),
+                ],
+                new Text("Top"),
+                controller: controller,
+                submenuIcon: MaterialStateProperty<Widget?>.All(new Text("top arrow"))),
+        ]);
+        using var harness = new WidgetRenderHarness(Wrap(bar));
+        harness.Pump(new Size(500, 260));
+
+        Assert.Null(FindParagraph(harness.RenderView, "top arrow"));
+
+        controller.Open();
+        harness.Pump(new Size(500, 260));
+
+        Assert.Null(FindParagraph(harness.RenderView, "top arrow"));
+        Assert.NotNull(FindParagraph(harness.RenderView, "nested arrow"));
+    }
+
+    [Fact]
+    public void MenuButtonDefaults_MatchTheSourceMaterial3Table()
+    {
+        ThemeData theme = ThemeData.Light;
+        ButtonStyle style = CaptureMenuButtonDefaults(theme);
+        ColorScheme colors = theme.ColorScheme;
+
+        Assert.Equal(Colors.Transparent, style.BackgroundColor!.Resolve(MaterialState.None));
+        Assert.Equal(0.0, style.Elevation!.Resolve(MaterialState.None));
+        Assert.Equal(colors.OnSurface, style.ForegroundColor!.Resolve(MaterialState.None));
+        Assert.Equal(
+            Opacity(colors.OnSurface, 0.38),
+            style.ForegroundColor.Resolve(MaterialState.Disabled));
+        Assert.Equal(colors.OnSurfaceVariant, style.IconColor!.Resolve(MaterialState.None));
+        Assert.Equal(Opacity(colors.OnSurface, 0.38), style.IconColor.Resolve(MaterialState.Disabled));
+        Assert.Equal(24.0, style.IconSize!.Resolve(MaterialState.None));
+        Assert.Equal(new Size(64.0, 48.0), style.MinimumSize!.Resolve(MaterialState.None));
+        Assert.Equal(
+            new Size(double.PositiveInfinity, double.PositiveInfinity),
+            style.MaximumSize!.Resolve(MaterialState.None));
+
+        // Square corners, unlike `TextButton`'s 20-radius stadium-ish default.
+        var shape = Assert.IsType<RoundedRectangleBorder>(style.Shape!.Resolve(MaterialState.None));
+        Assert.Equal(BorderRadius.Zero, shape.BorderRadius.Resolve(TextDirection.Ltr));
+
+        Assert.Equal(Colors.Transparent, style.OverlayColor!.Resolve(MaterialState.None));
+        Assert.Equal(Opacity(colors.OnSurface, 0.08), style.OverlayColor.Resolve(MaterialState.Hovered));
+        Assert.Equal(Opacity(colors.OnSurface, 0.1), style.OverlayColor.Resolve(MaterialState.Focused));
+        Assert.Equal(Opacity(colors.OnSurface, 0.1), style.OverlayColor.Resolve(MaterialState.Pressed));
+
+        // Flutter's "Menu defaults" asserts labelLarge's 14 / 1.43 metrics on the button material.
+        TextStyle? textStyle = style.TextStyle!.Resolve(MaterialState.None);
+        Assert.Equal(14.0, textStyle!.FontSize);
+        Assert.Equal(1.43, textStyle.Height);
+        Assert.Equal(theme.VisualDensity, style.VisualDensity);
+        Assert.Equal(theme.MaterialTapTargetSize, style.TapTargetSize);
+        Assert.Equal(Alignment.CenterLeft, style.Alignment);
+        Assert.Equal(TimeSpan.FromMilliseconds(200), style.AnimationDuration);
+        Assert.True(style.EnableFeedback);
+    }
+
+    [Theory]
+    // `_scaledPadding`: max(8, 12 + baseSizeAdjustment.dx) at 1x, and a positive horizontal density
+    // is dropped before the adjustment is taken.
+    [InlineData(0.0, 1.0, 12.0)]
+    [InlineData(-2.0, 1.0, 8.0)]
+    [InlineData(-1.0, 1.0, 8.0)]
+    [InlineData(2.0, 1.0, 12.0)]
+    // The 1x -> 2x -> 3x geometries lerp on `textScale * fontSize / 14`, with labelLarge at 14.
+    [InlineData(0.0, 1.5, 10.0)]
+    [InlineData(0.0, 2.0, 8.0)]
+    [InlineData(0.0, 3.0, 8.0)]
+    public void MenuButtonDefaults_ScaledPaddingFollowsDensityAndTextScale(
+        double horizontalDensity,
+        double textScaleFactor,
+        double expectedHorizontal)
+    {
+        ThemeData theme = ThemeData.Light with
+        {
+            VisualDensity = new VisualDensity(horizontalDensity, horizontalDensity),
+        };
+
+        ButtonStyle style = CaptureMenuButtonDefaults(theme, textScaleFactor);
+
+        Assert.Equal(
+            new Thickness(expectedHorizontal, 0.0, expectedHorizontal, 0.0),
+            style.Padding!.Resolve(MaterialState.None));
+    }
+
+    [Theory]
+    // `_MenuItemLabel`: max(4, 12 + density.horizontal * 2) between the leading icon and the label.
+    [InlineData(0.0, 12.0)]
+    [InlineData(-2.0, 8.0)]
+    [InlineData(2.0, 16.0)]
+    [InlineData(-8.0, 4.0)]
+    public void MenuItemLabel_SpacesTheLeadingIconByTheSourceDensityFormula(
+        double horizontalDensity,
+        double expectedSpacing)
+    {
+        ThemeData theme = ThemeData.Light with
+        {
+            VisualDensity = new VisualDensity(horizontalDensity, 0.0),
+        };
+        var controller = new MenuController();
+        Widget anchor = new MenuAnchor(
+            [
+                new MenuItemButton(
+                    child: new Text("Item"),
+                    onPressed: () => { },
+                    leadingIcon: new SizedBox(width: 24, height: 24)),
+            ],
+            controller: controller,
+            child: new SizedBox(width: 80, height: 40));
+        using var harness = new WidgetRenderHarness(Wrap(anchor, theme));
+        harness.Pump(new Size(500, 260));
+        controller.Open();
+        harness.Pump(new Size(500, 260));
+
+        Assert.Contains(
+            FindDescendants<RenderPadding>(harness.RenderView),
+            padding => padding.Padding == new Thickness(expectedSpacing, 0.0, 0.0, 0.0));
+    }
+
+    [Fact]
+    public void MenuItemButton_ExposesFlutterDefaultsAndTheSourceStyleHooks()
+    {
+        var button = new MenuItemButton(child: new Text("Item"));
+
+        Assert.False(button.Enabled);
+        Assert.True(button.RequestFocusOnHover);
+        Assert.True(button.CloseOnActivate);
+        Assert.False(button.Autofocus);
+        Assert.Equal(Clip.None, button.ClipBehavior);
+        Assert.Equal(Axis.Horizontal, button.OverflowAxis);
+        Assert.Null(button.SemanticsLabel);
+
+        // Flutter's `defaultStyleOf`/`themeStyleOf` protocol, so a `MenuButtonTheme` can layer over
+        // `_MenuButtonDefaultsM3` without the button re-deriving either.
+        Assert.IsType<MenuItemButtonState>(button.CreateState());
     }
 
     [Fact]
@@ -1090,6 +1247,28 @@ public sealed class MaterialDropdownTests : IDisposable
             new Theme(
                 theme ?? ThemeData.Light,
                 new Overlay(initialEntries: [new OverlayEntry(_ => child)]))));
+
+    private static Color Opacity(Color color, double opacity) =>
+        MaterialButtonCore.ApplyOpacity(color, opacity);
+
+    private static ButtonStyle CaptureMenuButtonDefaults(ThemeData theme, double textScaleFactor = 1.0)
+    {
+        ButtonStyle? captured = null;
+        using var harness = new WidgetRenderHarness(new Directionality(
+            TextDirection.Ltr,
+            new MediaQuery(
+                new MediaQueryData(Size: new Size(500, 360), TextScaleFactor: textScaleFactor),
+                new Theme(
+                    theme,
+                    new Builder(context =>
+                    {
+                        captured = MenuButtonDefaults.M3(context);
+                        return new SizedBox();
+                    })))));
+        harness.Pump(new Size(500, 360));
+        Assert.NotNull(captured);
+        return captured;
+    }
 
     private static void PumpAnimation()
     {

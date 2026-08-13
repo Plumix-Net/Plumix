@@ -38,6 +38,9 @@ public sealed class DropdownDemoPage : StatefulWidget
         private readonly MenuController _fileMenuController = new();
         private readonly MenuController _editMenuController = new();
         private readonly MenuController _animatedMenuController = new();
+        private readonly MenuController _alignedMenuController = new();
+        private AlignmentGeometry _menuAlignment = AlignmentDirectional.BottomStart;
+        private string _alignedMenuStatus = "idle";
         private string _animatedMenuStatus = "Dismissed";
         private string _animatedMenuPick = "none";
         private readonly LabeledGlobalKey<FormState> _formKey = new("dropdown-form");
@@ -195,6 +198,48 @@ public sealed class DropdownDemoPage : StatefulWidget
                         new Text(
                             $"Menu choices: pinned={_menuCheckbox}, layout={_menuRadio}",
                             fontSize: 13),
+                        new Divider(),
+                        new Text("MenuStyle alignment", fontSize: 18),
+                        new Text(
+                            "MenuStyle.alignment places the panel within the anchor rect; menu items"
+                            + " space their leading and trailing icons by visual density.",
+                            fontSize: 14,
+                            color: Colors.DimGray),
+                        new Row(
+                            spacing: 8,
+                            children:
+                            [
+                                new TextButton(
+                                    new Text("Bottom start"),
+                                    () => SetState(() =>
+                                        _menuAlignment = AlignmentDirectional.BottomStart)),
+                                new TextButton(
+                                    new Text("Top end"),
+                                    () => SetState(() => _menuAlignment = AlignmentDirectional.TopEnd)),
+                            ]),
+                        new Align(
+                            alignment: Alignment.CenterLeft,
+                            child: new MenuAnchor(
+                                controller: _alignedMenuController,
+                                style: new MenuStyle(Alignment: _menuAlignment),
+                                menuChildren:
+                                [
+                                    new MenuItemButton(
+                                        child: new Text("Cut"),
+                                        leadingIcon: new Icon(Icons.ChevronLeft, size: 18),
+                                        onPressed: () => SetState(() => _alignedMenuStatus = "cut")),
+                                    new MenuItemButton(
+                                        child: new Text("Copy"),
+                                        trailingIcon: new Icon(Icons.ChevronRight, size: 18),
+                                        onPressed: () => SetState(() => _alignedMenuStatus = "copy")),
+                                ],
+                                builder: (_, controller, _) => new TextButton(
+                                    new Text(controller.IsOpen ? "Close aligned menu" : "Open aligned menu"),
+                                    () =>
+                                    {
+                                        if (controller.IsOpen) controller.Close(); else controller.Open();
+                                    }))),
+                        new Text($"Aligned menu: {_alignedMenuStatus}", fontSize: 13),
                         new Divider(),
                         new Text("MenuBar + SubmenuButton", fontSize: 18),
                         new Text(

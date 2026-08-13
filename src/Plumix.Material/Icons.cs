@@ -58,6 +58,9 @@ public static class Icons
 
     public static IconData ChevronRight { get; } = new(0xe5cc, FontFamily: MaterialIconsFontFamily, MatchTextDirection: true);
 
+    public static IconData ArrowRight { get; } =
+        new(0xe09e, FontFamily: MaterialIconsFontFamily, MatchTextDirection: true);
+
     public static IconData ExpandMore { get; } = new(0xe246, FontFamily: MaterialIconsFontFamily);
 
     public static IconData InfoOutline { get; } = new(0xe33d, FontFamily: MaterialIconsFontFamily);

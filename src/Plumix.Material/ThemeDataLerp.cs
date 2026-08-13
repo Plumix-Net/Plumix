@@ -596,7 +596,7 @@ public sealed partial record MenuStyle
             Side: MaterialThemeLerp.BorderSideStateProperty(a?.Side, b?.Side, t),
             Shape: MaterialThemeLerp.ShapeStateProperty(a?.Shape, b?.Shape, t),
             MouseCursor: t < 0.5 ? a?.MouseCursor : b?.MouseCursor,
-            Alignment: MaterialThemeLerp.Alignment(a?.Alignment, b?.Alignment, t),
+            Alignment: AlignmentGeometry.Lerp(a?.Alignment, b?.Alignment, t),
             VisualDensity: t < 0.5 ? a?.VisualDensity : b?.VisualDensity);
     }
 }

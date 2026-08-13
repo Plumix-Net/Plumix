@@ -37,116 +37,209 @@ public sealed class MaterialMenuAnchorTests
     }
 
     [Fact]
-    public void MenuOverlayLayout_DefaultReservedPaddingAndKeyboardInsetsConstrainPanel()
+    public void MenuLayout_ReservedPaddingDeflatesTheChildConstraints()
     {
-        var layout = new MenuOverlayLayoutDelegate(
-            anchorRect: new Rect(20.0, 40.0, 80.0, 40.0),
-            alignmentOffset: default,
-            reservedPadding: new Thickness(8.0),
-            placementAxis: Axis.Vertical,
-            textDirection: TextDirection.Ltr,
-            viewInsets: new Thickness(0.0, 0.0, 0.0, 120.0),
-            position: null);
+        // Flutter: "Menu panel default reserved padding" / "Menu panel accepts custom reserved padding".
+        BoxConstraints defaultPadding = Layout(
+            anchorRect: AnchorRect,
+            reservedPadding: EdgeInsetsGeometry.All(8.0))
+            .GetConstraintsForChild(BoxConstraints.Tight(new Size(800.0, 600.0)));
+        BoxConstraints customPadding = Layout(
+            anchorRect: AnchorRect,
+            reservedPadding: EdgeInsetsGeometry.Symmetric(horizontal: 13.0))
+            .GetConstraintsForChild(BoxConstraints.Tight(new Size(800.0, 600.0)));
 
-        BoxConstraints constraints = layout.GetConstraintsForChild(
-            BoxConstraints.Tight(new Size(500.0, 360.0)));
-
-        Assert.Equal(484.0, constraints.MaxWidth);
-        Assert.Equal(224.0, constraints.MaxHeight);
+        Assert.Equal(0.0, defaultPadding.MinWidth);
+        Assert.Equal(800.0 - 16.0, defaultPadding.MaxWidth);
+        Assert.Equal(600.0 - 16.0, defaultPadding.MaxHeight);
+        Assert.Equal(800.0 - 26.0, customPadding.MaxWidth);
+        Assert.Equal(600.0, customPadding.MaxHeight);
     }
 
-    [Fact]
-    public void MenuOverlayLayout_FlipsAboveWhenPanelWouldOverflowBottom()
+    [Theory]
+    // Flutter's "menu alignment and offset in LTR": anchor (328, 14, 472, 62), menu 274 x 112.
+    [InlineData(-1.0, 1.0, 328.0, 62.0)]
+    [InlineData(-1.0, -1.0, 328.0, 14.0)]
+    [InlineData(0.0, 0.0, 400.0, 38.0)]
+    [InlineData(1.0, 1.0, 472.0, 62.0)]
+    public void MenuLayout_ResolvesDirectionalAlignmentWithinTheAnchorRectInLtr(
+        double start,
+        double y,
+        double expectedX,
+        double expectedY)
     {
-        var layout = new MenuOverlayLayoutDelegate(
-            anchorRect: new Rect(20.0, 300.0, 80.0, 40.0),
-            alignmentOffset: default,
-            reservedPadding: new Thickness(8.0),
-            placementAxis: Axis.Vertical,
-            textDirection: TextDirection.Ltr,
-            viewInsets: default,
-            position: null);
-
-        Point position = layout.GetPositionForChild(
-            new Size(500.0, 360.0),
-            new Size(120.0, 100.0));
-
-        Assert.Equal(new Point(20.0, 200.0), position);
-    }
-
-    [Fact]
-    public void MenuOverlayLayout_CascadingPlacementMirrorsAndClamps()
-    {
-        var ltr = new MenuOverlayLayoutDelegate(
-            anchorRect: new Rect(120.0, 40.0, 80.0, 40.0),
-            alignmentOffset: new Vector(4.0, 6.0),
-            reservedPadding: new Thickness(8.0),
-            placementAxis: Axis.Horizontal,
-            textDirection: TextDirection.Ltr,
-            viewInsets: default,
-            position: null);
-        var rtl = new MenuOverlayLayoutDelegate(
-            anchorRect: new Rect(120.0, 40.0, 80.0, 40.0),
-            alignmentOffset: new Vector(-4.0, 6.0),
-            reservedPadding: new Thickness(8.0),
-            placementAxis: Axis.Horizontal,
-            textDirection: TextDirection.Rtl,
-            viewInsets: default,
-            position: null);
+        MenuLayout layout = Layout(
+            anchorRect: AnchorRect,
+            alignment: new AlignmentDirectional(start, y));
 
         Assert.Equal(
-            new Point(204.0, 46.0),
-            ltr.GetPositionForChild(new Size(500.0, 360.0), new Size(100.0, 120.0)));
+            new Point(expectedX, expectedY),
+            layout.GetPositionForChild(OverlaySize, MenuSize));
+    }
+
+    [Theory]
+    // Flutter's "menu alignment and offset in RTL": the same anchor mirrors and anchors the right edge.
+    [InlineData(-1.0, 1.0, 198.0, 62.0)]
+    [InlineData(-1.0, -1.0, 198.0, 14.0)]
+    [InlineData(0.0, 0.0, 126.0, 38.0)]
+    [InlineData(1.0, 1.0, 54.0, 62.0)]
+    public void MenuLayout_ResolvesDirectionalAlignmentWithinTheAnchorRectInRtl(
+        double start,
+        double y,
+        double expectedX,
+        double expectedY)
+    {
+        MenuLayout layout = Layout(
+            anchorRect: AnchorRect,
+            alignment: new AlignmentDirectional(start, y),
+            textDirection: TextDirection.Rtl);
+
         Assert.Equal(
-            new Point(16.0, 46.0),
-            rtl.GetPositionForChild(new Size(500.0, 360.0), new Size(100.0, 120.0)));
+            new Point(expectedX, expectedY),
+            layout.GetPositionForChild(OverlaySize, MenuSize));
     }
 
     [Fact]
-    public void MenuOverlayLayout_ExplicitPositionOverridesDirectionalPlacementAndOffset()
+    public void MenuLayout_MirrorsTheAlignmentOffsetOnlyForDirectionalAlignments()
     {
-        var layout = new MenuOverlayLayoutDelegate(
-            anchorRect: new Rect(20.0, 40.0, 80.0, 40.0),
-            alignmentOffset: new Vector(100.0, 100.0),
-            reservedPadding: new Thickness(8.0),
-            placementAxis: Axis.Vertical,
-            textDirection: TextDirection.Rtl,
-            viewInsets: default,
-            position: new Vector(12.0, 24.0));
+        Point ltr = Layout(
+            anchorRect: AnchorRect,
+            alignment: AlignmentDirectional.TopStart,
+            alignmentOffset: new Vector(10.0, 20.0))
+            .GetPositionForChild(OverlaySize, MenuSize);
+        Point rtl = Layout(
+            anchorRect: AnchorRect,
+            alignment: AlignmentDirectional.TopStart,
+            alignmentOffset: new Vector(10.0, 20.0),
+            textDirection: TextDirection.Rtl)
+            .GetPositionForChild(OverlaySize, MenuSize);
+        Point rtlPhysical = Layout(
+            anchorRect: AnchorRect,
+            alignment: Alignment.TopLeft,
+            alignmentOffset: new Vector(10.0, 20.0),
+            textDirection: TextDirection.Rtl)
+            .GetPositionForChild(OverlaySize, MenuSize);
 
-        Point position = layout.GetPositionForChild(
-            new Size(500.0, 360.0),
-            new Size(120.0, 100.0));
+        // Flutter asserts deltas of (10, 20) in LTR and (-10, 20) in RTL against the un-offset menu.
+        Assert.Equal(new Point(338.0, 34.0), ltr);
+        Assert.Equal(new Point(188.0, 34.0), rtl);
 
-        Assert.Equal(new Point(32.0, 64.0), position);
+        // A plain `Alignment` never mirrors dx. `Alignment.topLeft` resolves to x = 328 in both
+        // directions, and RTL still anchors the menu's right edge.
+        Assert.Equal(new Point(328.0 + 10.0 - 274.0, 34.0), rtlPhysical);
     }
 
     [Fact]
-    public void MenuOverlayLayout_SelectsClosestDisplayFeatureSubScreen()
+    public void MenuLayout_ExplicitPositionIsAnchorRelativeAndIgnoresAlignment()
     {
-        var layout = new MenuOverlayLayoutDelegate(
+        // Flutter's "menu position in LTR"/"in RTL": both land on the same clamped rect.
+        Point ltr = Layout(
+            anchorRect: AnchorRect,
+            alignmentOffset: new Vector(100.0, 50.0),
+            menuPosition: new Vector(200.0, 200.0))
+            .GetPositionForChild(OverlaySize, MenuSize);
+        Point rtl = Layout(
+            anchorRect: AnchorRect,
+            alignmentOffset: new Vector(100.0, 50.0),
+            menuPosition: new Vector(400.0, 200.0),
+            textDirection: TextDirection.Rtl)
+            .GetPositionForChild(OverlaySize, MenuSize);
+        Point offsetOnly = Layout(
+            anchorRect: AnchorRect,
+            alignmentOffset: new Vector(100.0, 50.0))
+            .GetPositionForChild(OverlaySize, MenuSize);
+
+        Assert.Equal(new Point(526.0, 214.0), ltr);
+        Assert.Equal(new Point(526.0, 214.0), rtl);
+        Assert.Equal(new Point(428.0, 112.0), offsetOnly);
+    }
+
+    [Fact]
+    public void MenuLayout_FlipsAboveTheAnchorAndSubtractsTheOffsetUnderAHorizontalParent()
+    {
+        // Flutter's "vertically constrained menus are positioned above the anchor by default" and
+        // "…with the provided offset": a 122 x 64 menu under a bottom-aligned 552..600 anchor.
+        var anchorRect = new Rect(0.0, 552.0, 116.0, 48.0);
+        var childSize = new Size(122.0, 64.0);
+
+        Point noOffset = Layout(anchorRect: anchorRect)
+            .GetPositionForChild(OverlaySize, childSize);
+        Point withOffset = Layout(anchorRect: anchorRect, alignmentOffset: new Vector(0.0, 50.0))
+            .GetPositionForChild(OverlaySize, childSize);
+
+        Assert.Equal(new Point(0.0, 488.0), noOffset);
+        Assert.Equal(new Point(0.0, 438.0), withOffset);
+    }
+
+    [Fact]
+    public void MenuLayout_CascadingSubmenuFlipsToTheOtherSideOfItsAnchor()
+    {
+        // A submenu of a vertical menu has parentOrientation == orientation, so an overflowing menu
+        // flips across the anchor instead of being clamped to the screen edge.
+        MenuLayout Cascading(Rect anchorRect) => new(
+            anchorRect: anchorRect,
+            textDirection: TextDirection.Ltr,
+            alignment: AlignmentDirectional.TopEnd,
+            alignmentOffset: new Vector(0.0, -8.0),
+            menuPosition: null,
+            menuPadding: EdgeInsetsGeometry.Zero,
+            orientation: Axis.Vertical,
+            parentOrientation: Axis.Vertical,
+            reservedPadding: EdgeInsetsGeometry.Zero,
+            avoidBounds: null,
+            heightFactor: 1.0);
+
+        Point fits = Cascading(new Rect(120.0, 40.0, 80.0, 40.0))
+            .GetPositionForChild(new Size(500.0, 360.0), new Size(100.0, 120.0));
+        Point flipped = Cascading(new Rect(120.0, 40.0, 80.0, 40.0))
+            .GetPositionForChild(new Size(260.0, 360.0), new Size(100.0, 120.0));
+        Point clamped = Cascading(new Rect(20.0, 40.0, 80.0, 40.0))
+            .GetPositionForChild(new Size(150.0, 360.0), new Size(100.0, 120.0));
+
+        Assert.Equal(new Point(200.0, 32.0), fits);
+        Assert.Equal(new Point(20.0, 32.0), flipped);
+        Assert.Equal(new Point(50.0, 32.0), clamped);
+    }
+
+    [Fact]
+    public void MenuLayout_ClampsToTheScreenEdgeWhenTheParentOrientationDiffers()
+    {
+        // A menu bar's submenu (parent horizontal, menu vertical) is clamped, never flipped.
+        Point position = Layout(anchorRect: new Rect(700.0, 0.0, 80.0, 48.0))
+            .GetPositionForChild(OverlaySize, MenuSize);
+
+        Assert.Equal(new Point(800.0 - 274.0, 48.0), position);
+    }
+
+    [Fact]
+    public void MenuLayout_AvoidsTheSoftwareKeyboardAndTheViewPadding()
+    {
+        // Flutter's "menu is positioned to avoid the software keyboard" (flutter/flutter#142921).
+        var overlaySize = new Size(600.0, 800.0);
+        MenuLayout layout = Layout(
+            anchorRect: new Rect(0.0, 500.0, 100.0, 60.0),
+            viewInsets: new Thickness(0.0, 0.0, 0.0, 200.0));
+
+        Point position = layout.GetPositionForChild(overlaySize, new Size(200.0, 100.0));
+
+        Assert.Equal(new Point(0.0, 400.0), position);
+        Assert.True(position.Y + 100.0 <= overlaySize.Height - 200.0);
+    }
+
+    [Fact]
+    public void MenuLayout_SelectsTheDisplayFeatureSubScreenClosestToTheAnchor()
+    {
+        // A vertical hinge splits the 500-wide overlay into 0..246 and 254..500; the anchor sits in
+        // the right sub-screen, and a menu wider than it is pinned to that sub-screen's left edge.
+        MenuLayout layout = Layout(
             anchorRect: new Rect(360.0, 40.0, 80.0, 40.0),
-            alignmentOffset: default,
-            reservedPadding: new Thickness(8.0),
-            placementAxis: Axis.Vertical,
-            textDirection: TextDirection.Ltr,
-            viewInsets: default,
-            position: null,
-            displayFeatures:
-            [
-                new DisplayFeature(
-                    new Rect(246.0, 8.0, 8.0, 344.0),
-                    DisplayFeatureType.Hinge),
-            ]);
+            avoidBounds: [new Rect(246.0, 0.0, 8.0, 360.0)]);
 
-        BoxConstraints constraints = layout.GetConstraintsForChild(
-            BoxConstraints.Tight(new Size(500.0, 360.0)));
-        Point position = layout.GetPositionForChild(
-            new Size(500.0, 360.0),
-            new Size(120.0, 100.0));
+        Point wide = layout.GetPositionForChild(new Size(500.0, 360.0), new Size(300.0, 100.0));
+        Point narrow = layout.GetPositionForChild(new Size(500.0, 360.0), new Size(120.0, 100.0));
 
-        Assert.Equal(238.0, constraints.MaxWidth);
-        Assert.Equal(new Point(360.0, 80.0), position);
+        Assert.Equal(new Point(254.0, 80.0), wide);
+        Assert.Equal(new Point(360.0, 80.0), narrow);
     }
 
     [Fact]
@@ -241,46 +334,127 @@ public sealed class MaterialMenuAnchorTests
     }
 
     [Fact]
-    public void MenuOverlayLayout_KeepsTheSettledPositionWhileThePanelHeightGrows()
+    public void MenuLayout_LerpsADownwardGrowingPanelFromTheAnchorsBottomEdge()
     {
-        MenuOverlayLayoutDelegate Layout(double heightFactor) => new(
-            anchorRect: new Rect(20.0, 40.0, 80.0, 40.0),
-            alignmentOffset: default,
-            reservedPadding: new Thickness(8.0),
-            placementAxis: Axis.Vertical,
-            textDirection: TextDirection.Ltr,
-            viewInsets: default,
-            position: null,
-            displayFeatures: null,
+        MenuLayout Growing(double heightFactor) => Layout(
+            anchorRect: AnchorRect,
+            alignment: AlignmentDirectional.TopStart,
             heightFactor: heightFactor);
 
-        Point settled = Layout(1.0).GetPositionForChild(new Size(500.0, 360.0), new Size(120.0, 100.0));
-        Point half = Layout(0.5).GetPositionForChild(new Size(500.0, 360.0), new Size(120.0, 50.0));
+        Point settled = Growing(1.0).GetPositionForChild(OverlaySize, MenuSize);
+        Point half = Growing(0.5).GetPositionForChild(OverlaySize, new Size(274.0, 56.0));
 
-        // A downward-growing panel starts at the anchor's bottom edge and lerps to its settled spot.
-        Assert.Equal(new Point(20.0, 80.0), settled);
-        Assert.Equal(settled.X, half.X);
-        Assert.Equal(80.0, half.Y);
+        Assert.Equal(new Point(328.0, 14.0), settled);
+        Assert.Equal(new Point(328.0, 38.0), half);
     }
 
     [Fact]
-    public void MenuOverlayLayout_KeepsAnUpwardGrowingPanelPinnedToItsBottomEdge()
+    public void MenuLayout_KeepsAnUpwardGrowingPanelPinnedToItsBottomEdge()
     {
-        MenuOverlayLayoutDelegate Layout(double heightFactor) => new(
-            anchorRect: new Rect(20.0, 300.0, 80.0, 40.0),
-            alignmentOffset: default,
-            reservedPadding: new Thickness(8.0),
-            placementAxis: Axis.Vertical,
-            textDirection: TextDirection.Ltr,
-            viewInsets: default,
-            position: null,
-            displayFeatures: null,
+        MenuLayout Growing(double heightFactor) => Layout(
+            anchorRect: new Rect(0.0, 552.0, 116.0, 48.0),
             heightFactor: heightFactor);
 
-        Point settled = Layout(1.0).GetPositionForChild(new Size(500.0, 360.0), new Size(120.0, 100.0));
-        Point half = Layout(0.5).GetPositionForChild(new Size(500.0, 360.0), new Size(120.0, 50.0));
+        Point settled = Growing(1.0).GetPositionForChild(OverlaySize, new Size(122.0, 64.0));
+        Point half = Growing(0.5).GetPositionForChild(OverlaySize, new Size(122.0, 32.0));
 
-        Assert.Equal(new Point(20.0, 200.0), settled);
-        Assert.Equal(new Point(20.0, 250.0), half);
+        Assert.Equal(new Point(0.0, 488.0), settled);
+        Assert.Equal(new Point(0.0, 520.0), half);
     }
+
+    [Fact]
+    public void MenuLayout_PositionedMenusNeverAnimateTheirOrigin()
+    {
+        // Flutter's "Positioned menus always begin animating at the target position".
+        MenuLayout Growing(double heightFactor) => Layout(
+            anchorRect: AnchorRect,
+            menuPosition: new Vector(20.0, 30.0),
+            heightFactor: heightFactor);
+
+        Assert.Equal(
+            new Point(348.0, 44.0),
+            Growing(0.02).GetPositionForChild(OverlaySize, new Size(274.0, 2.0)));
+        Assert.Equal(
+            new Point(348.0, 44.0),
+            Growing(1.0).GetPositionForChild(OverlaySize, MenuSize));
+    }
+
+    [Fact]
+    public void MenuLayout_ShouldRelayoutTracksEveryPositioningInput()
+    {
+        MenuLayout baseline = Layout(anchorRect: AnchorRect);
+
+        Assert.False(baseline.ShouldRelayout(Layout(anchorRect: AnchorRect)));
+        Assert.True(baseline.ShouldRelayout(Layout(anchorRect: new Rect(0.0, 0.0, 10.0, 10.0))));
+        Assert.True(baseline.ShouldRelayout(
+            Layout(anchorRect: AnchorRect, textDirection: TextDirection.Rtl)));
+        Assert.True(baseline.ShouldRelayout(
+            Layout(anchorRect: AnchorRect, alignment: AlignmentDirectional.TopEnd)));
+        Assert.True(baseline.ShouldRelayout(
+            Layout(anchorRect: AnchorRect, alignmentOffset: new Vector(1.0, 0.0))));
+        Assert.True(baseline.ShouldRelayout(
+            Layout(anchorRect: AnchorRect, menuPosition: new Vector(1.0, 1.0))));
+        Assert.True(baseline.ShouldRelayout(
+            Layout(anchorRect: AnchorRect, menuPadding: EdgeInsetsGeometry.All(4.0))));
+        Assert.True(baseline.ShouldRelayout(
+            Layout(anchorRect: AnchorRect, parentOrientation: Axis.Vertical)));
+        Assert.True(baseline.ShouldRelayout(
+            Layout(anchorRect: AnchorRect, reservedPadding: EdgeInsetsGeometry.All(4.0))));
+        Assert.True(baseline.ShouldRelayout(Layout(anchorRect: AnchorRect, heightFactor: 0.5)));
+        Assert.True(baseline.ShouldRelayout(
+            Layout(anchorRect: AnchorRect, avoidBounds: [new Rect(0.0, 0.0, 1.0, 1.0)])));
+    }
+
+    [Fact]
+    public void MenuStyleDefaults_UseTheSourceDirectionalPanelAlignments()
+    {
+        Assert.Equal(
+            (AlignmentGeometry)AlignmentDirectional.BottomStart,
+            MenuStyleDefaults.MenuBar(ThemeData.Light).Alignment);
+        Assert.Equal(
+            (AlignmentGeometry)AlignmentDirectional.TopEnd,
+            MenuStyleDefaults.Menu(ThemeData.Light).Alignment);
+        Assert.Equal(
+            new Thickness(4.0, 0.0, 4.0, 0.0),
+            MenuStyleDefaults.MenuBar(ThemeData.Light).Padding!
+                .Resolve(MaterialState.None)!.Value.Resolve(TextDirection.Ltr));
+        Assert.Equal(
+            new Thickness(0.0, 8.0, 0.0, 8.0),
+            MenuStyleDefaults.Menu(ThemeData.Light).Padding!
+                .Resolve(MaterialState.None)!.Value.Resolve(TextDirection.Ltr));
+    }
+
+    private static readonly Rect AnchorRect = new(328.0, 14.0, 144.0, 48.0);
+
+    private static readonly Size OverlaySize = new(800.0, 600.0);
+
+    private static readonly Size MenuSize = new(274.0, 112.0);
+
+    private static MenuLayout Layout(
+        Rect anchorRect,
+        AlignmentGeometry? alignment = null,
+        Vector alignmentOffset = default,
+        Vector? menuPosition = null,
+        EdgeInsetsGeometry menuPadding = default,
+        Axis orientation = Axis.Vertical,
+        Axis parentOrientation = Axis.Horizontal,
+        EdgeInsetsGeometry reservedPadding = default,
+        IReadOnlyList<Rect>? avoidBounds = null,
+        double heightFactor = 1.0,
+        TextDirection textDirection = TextDirection.Ltr,
+        Thickness viewPadding = default,
+        Thickness viewInsets = default) => new(
+        anchorRect: anchorRect,
+        textDirection: textDirection,
+        alignment: alignment ?? AlignmentDirectional.BottomStart,
+        alignmentOffset: alignmentOffset,
+        menuPosition: menuPosition,
+        menuPadding: menuPadding,
+        orientation: orientation,
+        parentOrientation: parentOrientation,
+        reservedPadding: reservedPadding,
+        avoidBounds: avoidBounds,
+        heightFactor: heightFactor,
+        viewPadding: viewPadding,
+        viewInsets: viewInsets);
 }

@@ -72,7 +72,8 @@ public sealed class DisplayFeatureSubScreen : StatelessWidget
             : default;
     }
 
-    private static List<Rect> SubScreensInBounds(Rect wantedBounds, List<Rect> avoidBounds)
+    /// <summary>The sub-screens of <paramref name="wantedBounds"/> that avoid every supplied bound.</summary>
+    public static List<Rect> SubScreensInBounds(Rect wantedBounds, IEnumerable<Rect> avoidBounds)
     {
         var subScreens = new List<Rect> { wantedBounds };
         foreach (Rect bounds in avoidBounds)
