@@ -1,5 +1,20 @@
 # Changelog
 
+- Breaking: completed the strict `SearchAnchor`/`SearchBar` closeout. The search view now uses the source
+  `PopupRoute` with the 600ms `easeInOutCubicEmphasized` grow/fade choreography from the anchor rect (navigator-
+  relative geometry, LTR/RTL clamping, fullscreen top-padding lerp, interval-staggered icon/divider/list fades),
+  `CapturedThemes` for local inherited themes, docked-close-on-resize, and the exact `_SearchBarDefaultsM3`/
+  `_SearchViewDefaultsM3` tables on `Material` surfaces. `SuggestionsBuilder` is now async
+  (`ValueTask<IReadOnlyList<Widget>>`, Dart `FutureOr`) with source dedupe/coalescing; `SearchViewTheme` is an
+  `InheritedTheme` and both theme records use source types (`OutlinedBorder` shapes, `EdgeInsetsGeometry`
+  paddings, the upstream `headerHintStyle` lerp quirk). Core gained `TextCapitalization`/`SmartDashesType`/
+  `SmartQuotesType` in `TextInputConfiguration`/`EditableText` (moved from `Plumix.Material`), plus
+  `scrollPadding`; `TextField` gained `textCapitalization`, `smartDashesType`/`smartQuotesType`, `onTapOutside`,
+  `onTapAlwaysCalled`, and `scrollPadding`. **Breaking:** `SearchViewBuilder` was renamed `ViewBuilder`,
+  `SearchController.CloseView` takes a required argument and `IsOpen`/`OpenView`/`CloseView` throw when detached,
+  non-source constructor validation was removed, and `SearchAnchor.Bar` forwards `scrollPadding`/
+  `contextMenuBuilder`.
+
 - Moved the pinned Flutter parity revision from 3.44.0 to 3.47.0 (`4cf24164269`) and switched the
   Material/Cupertino source of truth to the extracted `material_ui`/`cupertino_ui` pub packages
   (pinned 1.0.0, code-identical to the SDK's frozen copies at these pins). `dart_sample` now imports

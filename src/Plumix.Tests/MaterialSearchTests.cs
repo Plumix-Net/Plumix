@@ -27,8 +27,11 @@ public sealed class MaterialSearchTests : IDisposable
         Scheduler.ResetForTests();
     }
 
+    private static SuggestionsBuilder Sync(Func<SearchController, IReadOnlyList<Widget>> builder) =>
+        (_, controller) => new ValueTask<IReadOnlyList<Widget>>(builder(controller));
+
     [Fact]
-    public void SearchBar_ExposesFlutterDefaultsAndConstructorMetadata()
+    public void SearchBar_DefaultsConstructorMetadataAndControllerAsserts()
     {
         var bar = new SearchBar();
         Assert.True(bar.Enabled);
@@ -39,26 +42,21 @@ public sealed class MaterialSearchTests : IDisposable
         Assert.Null(bar.FocusNode);
         Assert.Null(bar.HintText);
 
-        var anchor = SearchAnchor.Bar(
-            suggestionsBuilder: (_, _) => []);
+        var anchor = SearchAnchor.Bar(suggestionsBuilder: Sync(_ => Array.Empty<Widget>()));
         Assert.True(anchor.Enabled);
         Assert.Null(anchor.IsFullScreen);
         Assert.NotNull(anchor.Builder);
         Assert.NotNull(anchor.SuggestionsBuilder);
 
-        Assert.Throws<InvalidOperationException>(() => new SearchController().OpenView());
-        Assert.Throws<ArgumentOutOfRangeException>(() => new SearchAnchor(
-            builder: (_, _) => new SizedBox(),
-            suggestionsBuilder: (_, _) => [],
-            viewElevation: -1));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new SearchAnchor(
-            builder: (_, _) => new SizedBox(),
-            suggestionsBuilder: (_, _) => [],
-            headerHeight: 0));
+        var detached = new SearchController();
+        Assert.False(detached.IsAttached);
+        Assert.Throws<InvalidOperationException>(() => detached.OpenView());
+        Assert.Throws<InvalidOperationException>(() => detached.CloseView(null));
+        Assert.Throws<InvalidOperationException>(() => detached.IsOpen);
     }
 
     [Fact]
-    public void SearchBar_DefaultsUseM3TokensAndCollapsedTextFieldComposition()
+    public void SearchBar_DefaultsUseM3MaterialSurfaceAndCollapsedField()
     {
         var theme = ThemeData.Light;
         using var harness = new WidgetRenderHarness(Wrap(
@@ -69,17 +67,34 @@ public sealed class MaterialSearchTests : IDisposable
                 trailing: [new Icon(Icons.MoreVert)])));
         harness.Pump(new Size(900, 120));
 
-        var constraints = Assert.Single(FindDescendants<RenderConstrainedBox>(harness.RenderView),
+        Assert.Contains(FindDescendants<RenderConstrainedBox>(harness.RenderView),
             box => box.AdditionalConstraints.MinWidth == 360
                    && box.AdditionalConstraints.MaxWidth == 800
                    && box.AdditionalConstraints.MinHeight == 56);
-        Assert.Equal(360, constraints.AdditionalConstraints.MinWidth);
 
-        var surface = Assert.Single(FindDescendants<RenderDecoratedBox>(harness.RenderView),
-            box => box.Decoration.Color == theme.SurfaceContainerHighColor
-                   && box.Decoration.BorderRadius == BorderRadius.Circular(9999));
-        Assert.NotNull(surface.Decoration.BoxShadows);
-        Assert.Contains(FindDescendants<RenderPadding>(harness.RenderView), value => value.Padding == new Thickness(8, 0));
+        Plumix.Material.Material surface = Assert.Single(harness.FindWidgets<Plumix.Material.Material>());
+        Assert.Equal(6.0, surface.Elevation);
+        Assert.Equal(theme.SurfaceContainerHighColor, surface.Color);
+        Assert.Equal(theme.ShadowColor, surface.ShadowColor);
+        Assert.Equal(Colors.Transparent, surface.SurfaceTintColor);
+        Assert.IsType<StadiumBorder>(surface.Shape);
+
+        // The resolved padding is applied twice: around the Row and around the inner text field.
+        Assert.True(harness.FindWidgets<Padding>()
+            .Count(padding => padding.InsetsGeometry == EdgeInsetsGeometry.Symmetric(horizontal: 8.0)) >= 2);
+
+        TextField field = Assert.Single(harness.FindWidgets<TextField>());
+        Assert.Equal(InputBorder.None, field.Decoration?.Border);
+        Assert.Equal(InputBorder.None, field.Decoration?.EnabledBorder);
+        Assert.Equal(InputBorder.None, field.Decoration?.FocusedBorder);
+        Assert.Equal(EdgeInsetsGeometry.Zero, field.Decoration?.ContentPadding);
+        Assert.True(field.Decoration?.IsDense);
+        Assert.NotEqual(true, field.Decoration?.IsCollapsed);
+        Assert.Equal(theme.OnSurfaceVariantColor, field.Decoration?.HintStyle?.Color);
+        Assert.Equal(theme.OnSurfaceColor, field.Style?.Color);
+        Assert.Contains(
+            harness.FindWidgets<Semantics>(),
+            semantics => semantics.InputType == SemanticsInputType.Search);
         Assert.NotNull(FindParagraph(harness.RenderView, "Search mail"));
     }
 
@@ -91,9 +106,10 @@ public sealed class MaterialSearchTests : IDisposable
             SearchBarTheme = new SearchBarThemeData(
                 BackgroundColor: MaterialStateProperty<Color?>.All(Colors.LightBlue),
                 Elevation: MaterialStateProperty<double?>.All(2),
-                Shape: MaterialStateProperty<ShapeBorder?>.All(new RoundedRectangleBorder(borderRadius:
+                Shape: MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius:
                     Plumix.Rendering.BorderRadius.Circular(12))),
-                Padding: MaterialStateProperty<Thickness?>.All(new Thickness(4, 0)),
+                Padding: MaterialStateProperty<EdgeInsetsGeometry?>.All(
+                    EdgeInsetsGeometry.Symmetric(horizontal: 4)),
                 Constraints: new BoxConstraints(MinWidth: 240, MaxWidth: 300, MinHeight: 48))
         };
 
@@ -103,21 +119,81 @@ public sealed class MaterialSearchTests : IDisposable
             box => box.AdditionalConstraints.MinWidth == 240
                    && box.AdditionalConstraints.MaxWidth == 300
                    && box.AdditionalConstraints.MinHeight == 48);
-        Assert.Contains(FindDescendants<RenderDecoratedBox>(themed.RenderView),
-            box => box.Decoration.Color == Colors.LightBlue
-                   && box.Decoration.BorderRadius == BorderRadius.Circular(12));
-        Assert.Contains(FindDescendants<RenderPadding>(themed.RenderView), value => value.Padding == new Thickness(4, 0));
+        Plumix.Material.Material themedSurface = Assert.Single(themed.FindWidgets<Plumix.Material.Material>());
+        Assert.Equal(Colors.LightBlue, themedSurface.Color);
+        Assert.Equal(2.0, themedSurface.Elevation);
+        Assert.Equal(
+            new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(12)),
+            themedSurface.Shape);
+        Assert.Contains(themed.FindWidgets<Padding>(),
+            padding => padding.InsetsGeometry == EdgeInsetsGeometry.Symmetric(horizontal: 4));
 
         using var widgetOverride = new WidgetRenderHarness(Wrap(
             theme,
             new SearchBar(
                 backgroundColor: MaterialStateProperty<Color?>.All(Colors.Orange),
-                shape: MaterialStateProperty<ShapeBorder?>.All(new RoundedRectangleBorder(borderRadius:
+                shape: MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius:
                     Plumix.Rendering.BorderRadius.Circular(20))))));
         widgetOverride.Pump(new Size(500, 100));
-        Assert.Contains(FindDescendants<RenderDecoratedBox>(widgetOverride.RenderView),
-            box => box.Decoration.Color == Colors.Orange
-                   && box.Decoration.BorderRadius == BorderRadius.Circular(20));
+        Plumix.Material.Material overriddenSurface = Assert.Single(
+            widgetOverride.FindWidgets<Plumix.Material.Material>());
+        Assert.Equal(Colors.Orange, overriddenSurface.Color);
+        Assert.Equal(
+            new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(20)),
+            overriddenSurface.Shape);
+    }
+
+    [Fact]
+    public void SearchBar_HintStyleFallsBackToTextStyleAndOverridesIt()
+    {
+        using var fallback = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new SearchBar(
+                hintText: "hint",
+                textStyle: MaterialStateProperty<TextStyle?>.All(new TextStyle(Color: Colors.Purple)))));
+        fallback.Pump(new Size(900, 120));
+        TextField fallbackField = Assert.Single(fallback.FindWidgets<TextField>());
+        Assert.Equal(Colors.Purple, fallbackField.Decoration?.HintStyle?.Color);
+
+        using var overridden = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new SearchBar(
+                hintText: "hint",
+                textStyle: MaterialStateProperty<TextStyle?>.All(new TextStyle(Color: Colors.Purple)),
+                hintStyle: MaterialStateProperty<TextStyle?>.All(new TextStyle(Color: Colors.Green)))));
+        overridden.Pump(new Size(900, 120));
+        TextField overriddenField = Assert.Single(overridden.FindWidgets<TextField>());
+        Assert.Equal(Colors.Green, overriddenField.Decoration?.HintStyle?.Color);
+        Assert.Equal(Colors.Purple, overriddenField.Style?.Color);
+    }
+
+    [Fact]
+    public void SearchBar_ForwardsInputConfigurationToEditableText()
+    {
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new SearchBar(
+                keyboardType: TextInputType.EmailAddress,
+                textInputAction: TextInputAction.Done,
+                textCapitalization: TextCapitalization.Characters,
+                smartDashesType: SmartDashesType.Disabled,
+                smartQuotesType: SmartQuotesType.Disabled,
+                scrollPadding: new Thickness(42))));
+        harness.Pump(new Size(900, 120));
+
+        TextField field = Assert.Single(harness.FindWidgets<TextField>());
+        Assert.Equal(TextInputType.EmailAddress, field.KeyboardType);
+        Assert.Equal(TextInputAction.Done, field.TextInputAction);
+        Assert.Equal(TextCapitalization.Characters, field.TextCapitalization);
+        Assert.Equal(SmartDashesType.Disabled, field.SmartDashesType);
+        Assert.Equal(SmartQuotesType.Disabled, field.SmartQuotesType);
+        Assert.Equal(new Thickness(42), field.ScrollPadding);
+
+        EditableText editable = Assert.Single(harness.FindWidgets<EditableText>());
+        Assert.Equal(TextCapitalization.Characters, editable.TextCapitalization);
+        Assert.Equal(SmartDashesType.Disabled, editable.SmartDashesType);
+        Assert.Equal(SmartQuotesType.Disabled, editable.SmartQuotesType);
+        Assert.Equal(new Thickness(42), editable.ScrollPadding);
     }
 
     [Fact]
@@ -127,6 +203,7 @@ public sealed class MaterialSearchTests : IDisposable
         int opened = 0;
         int closed = 0;
         var changed = new List<string>();
+        var size = new Size(640, 420);
         using var harness = new WidgetRenderHarness(Wrap(
             ThemeData.Light,
             new Navigator(new BuilderPageRoute(_ => SearchAnchor.Bar(
@@ -135,35 +212,416 @@ public sealed class MaterialSearchTests : IDisposable
                 onOpen: () => opened++,
                 onClose: () => closed++,
                 onChanged: changed.Add,
-                suggestionsBuilder: (context, searchController) =>
-                [
+                suggestionsBuilder: Sync(searchController => new Widget[]
+                {
                     new ListTile(
                         title: new Text($"Result for {searchController.Text}"),
                         onTap: () => searchController.CloseView("selected")),
                     new Text("Secondary suggestion"),
-                ])))));
+                }))))));
 
-        harness.Pump(new Size(640, 420));
+        harness.Pump(size);
         Assert.True(controller.IsAttached);
         Assert.False(controller.IsOpen);
 
         controller.OpenView();
-        harness.Pump(new Size(640, 420));
+        Settle(harness, size);
         Assert.True(controller.IsOpen);
         Assert.Equal(1, opened);
         Assert.NotNull(FindParagraph(harness.RenderView, "Find item"));
         Assert.NotNull(FindParagraph(harness.RenderView, "Result for "));
         Assert.NotNull(FindParagraph(harness.RenderView, "Secondary suggestion"));
 
+        // The anchor fades out while the view is open.
+        Assert.Contains(harness.FindWidgets<AnimatedOpacity>(), widget => widget.Opacity == 0.0);
+
         controller.Text = "ap";
-        harness.Pump(new Size(640, 420));
+        Settle(harness, size);
         Assert.NotNull(FindParagraph(harness.RenderView, "Result for ap"));
 
         controller.CloseView("selected");
-        harness.Pump(new Size(640, 420));
+        Settle(harness, size);
         Assert.False(controller.IsOpen);
         Assert.Equal("selected", controller.Text);
         Assert.Equal(1, closed);
+        Assert.Contains(harness.FindWidgets<AnimatedOpacity>(), widget => widget.Opacity == 1.0);
+    }
+
+    [Fact]
+    public void SearchAnchor_OpensAnchoredViewWithM3DefaultsAndGeometry()
+    {
+        var controller = new SearchController();
+        var size = new Size(700, 500);
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new Navigator(new BuilderPageRoute(_ => SearchAnchor.Bar(
+                searchController: controller,
+                suggestionsBuilder: Sync(_ => new Widget[] { new Text("suggestion") }))))));
+        harness.Pump(size);
+
+        controller.OpenView();
+        Settle(harness, size);
+
+        Plumix.Material.Material view = Assert.Single(
+            harness.FindWidgets<Plumix.Material.Material>(),
+            material => material.ClipBehavior == Clip.AntiAlias);
+        Assert.Equal(6.0, view.Elevation);
+        Assert.Equal(ThemeData.Light.SurfaceContainerHighColor, view.Color);
+        Assert.Equal(Colors.Transparent, view.SurfaceTintColor);
+        Assert.Equal(
+            new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(28.0)),
+            view.Shape);
+
+        // Docked geometry: width clamps the anchor width, height is 2/3 of the navigator height.
+        Assert.Contains(harness.FindWidgets<ConstrainedBox>(),
+            box => box.Constraints.MaxWidth == 700
+                   && box.Constraints.MaxHeight == 500 * 2.0 / 3.0
+                   && box.Constraints.MinWidth == 360
+                   && box.Constraints.MinHeight == 240);
+        Assert.Contains(harness.FindWidgets<Widgets.Transform>(),
+            transform => transform.Matrix == Matrix.CreateTranslation(0, 0));
+        Assert.Contains(harness.FindWidgets<OverflowBox>(),
+            box => box.Fit == OverflowBoxFit.DeferToChild && box.MaxWidth == 700);
+    }
+
+    [Fact]
+    public void SearchAnchor_ViewGeometryClampsToNavigator_LtrRtl()
+    {
+        var size = new Size(700, 500);
+        foreach ((TextDirection direction, double expectedX) in new[]
+                 {
+                     (TextDirection.Ltr, 340.0),
+                     (TextDirection.Rtl, 0.0),
+                 })
+        {
+            var controller = new SearchController();
+            Alignment anchorAlignment = direction == TextDirection.Ltr
+                ? Alignment.BottomRight
+                : Alignment.BottomLeft;
+            using var harness = new WidgetRenderHarness(Wrap(
+                ThemeData.Light,
+                new Navigator(new BuilderPageRoute(_ => new Align(
+                    alignment: anchorAlignment,
+                    child: new SearchAnchor(
+                        searchController: controller,
+                        builder: (_, _) => new SizedBox(width: 24, height: 24),
+                        suggestionsBuilder: Sync(_ => Array.Empty<Widget>()))))),
+                direction));
+            harness.Pump(size);
+
+            controller.OpenView();
+            Settle(harness, size);
+
+            double expectedY = 500 - 500 * 2.0 / 3.0;
+            Assert.Contains(harness.FindWidgets<Widgets.Transform>(),
+                transform => transform.Matrix == Matrix.CreateTranslation(expectedX, expectedY));
+            Assert.Contains(harness.FindWidgets<ConstrainedBox>(),
+                box => box.Constraints.MaxWidth == 360 && box.Constraints.MaxHeight == 500 * 2.0 / 3.0);
+        }
+    }
+
+    [Fact]
+    public void SearchAnchor_FullScreenFillsNavigatorAndIgnoresViewPadding()
+    {
+        var controller = new SearchController();
+        var size = new Size(700, 500);
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new Navigator(new BuilderPageRoute(_ => new SearchAnchor(
+                searchController: controller,
+                isFullScreen: true,
+                viewPadding: EdgeInsetsGeometry.All(16),
+                builder: (_, _) => new SizedBox(width: 24, height: 24),
+                suggestionsBuilder: Sync(_ => Array.Empty<Widget>()))))));
+        harness.Pump(size);
+
+        controller.OpenView();
+        Settle(harness, size);
+
+        Plumix.Material.Material view = Assert.Single(
+            harness.FindWidgets<Plumix.Material.Material>(),
+            material => material.ClipBehavior == Clip.AntiAlias);
+        Assert.Equal(new RoundedRectangleBorder(), view.Shape);
+        Assert.Contains(harness.FindWidgets<ConstrainedBox>(),
+            box => box.Constraints.MaxWidth == 700 && box.Constraints.MaxHeight == 500);
+        // viewPadding is ignored in the full-screen branch.
+        Assert.DoesNotContain(harness.FindWidgets<Padding>(),
+            padding => padding.InsetsGeometry == EdgeInsetsGeometry.All(16));
+        // The full-screen header bar keeps the 72dp minimum.
+        Assert.Contains(FindDescendants<RenderConstrainedBox>(harness.RenderView),
+            box => box.AdditionalConstraints.MinHeight == 72);
+    }
+
+    [Fact]
+    public void SearchAnchor_DockedViewPopsOnMetricsChangeWhileFullScreenStays()
+    {
+        foreach (bool fullScreen in new[] { false, true })
+        {
+            var controller = new SearchController();
+            var host = new MediaSizeHost(
+                new Size(640, 420),
+                new Navigator(new BuilderPageRoute(_ => new SearchAnchor(
+                    searchController: controller,
+                    isFullScreen: fullScreen,
+                    builder: (_, _) => new SizedBox(width: 24, height: 24),
+                    suggestionsBuilder: Sync(_ => Array.Empty<Widget>())))));
+            using var harness = new WidgetRenderHarness(new Directionality(
+                TextDirection.Ltr,
+                host));
+            harness.Pump(new Size(640, 420));
+
+            controller.OpenView();
+            Settle(harness, new Size(640, 420));
+            Assert.True(controller.IsOpen);
+
+            harness.FindState<MediaSizeHostState>().SetSize(new Size(500, 300));
+            Settle(harness, new Size(500, 300));
+
+            Assert.Equal(fullScreen, controller.IsOpen);
+        }
+    }
+
+    [Fact]
+    public void SearchAnchor_CapturedInheritedThemesReachTheViewRoute()
+    {
+        var controller = new SearchController();
+        var size = new Size(640, 420);
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new Navigator(new BuilderPageRoute(_ => new SearchViewTheme(
+                new SearchViewThemeData(BackgroundColor: Colors.LightGreen),
+                new SearchAnchor(
+                    searchController: controller,
+                    builder: (_, _) => new SizedBox(width: 24, height: 24),
+                    suggestionsBuilder: Sync(_ => Array.Empty<Widget>())))))));
+        harness.Pump(size);
+
+        controller.OpenView();
+        Settle(harness, size);
+
+        Plumix.Material.Material view = Assert.Single(
+            harness.FindWidgets<Plumix.Material.Material>(),
+            material => material.ClipBehavior == Clip.AntiAlias);
+        Assert.Equal(Colors.LightGreen, view.Color);
+    }
+
+    [Fact]
+    public void SearchAnchor_AsyncSuggestionsResolveOnceAndRefreshOnTextChange()
+    {
+        var controller = new SearchController();
+        int builderCalls = 0;
+        var completion = new TaskCompletionSource<IReadOnlyList<Widget>>();
+        var size = new Size(640, 420);
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new Navigator(new BuilderPageRoute(_ => new SearchAnchor(
+                searchController: controller,
+                builder: (_, _) => new SizedBox(width: 24, height: 24),
+                suggestionsBuilder: async (_, _) =>
+                {
+                    builderCalls++;
+                    return await completion.Task;
+                })))));
+        harness.Pump(size);
+
+        controller.OpenView();
+        Settle(harness, size);
+        Assert.Equal(1, builderCalls);
+        Assert.Null(FindParagraph(harness.RenderView, "Async result"));
+
+        // Extra frames with an unchanged query must not re-run the builder.
+        Settle(harness, size);
+        Assert.Equal(1, builderCalls);
+
+        completion.SetResult([new Text("Async result")]);
+        Settle(harness, size);
+        Assert.NotNull(FindParagraph(harness.RenderView, "Async result"));
+
+        completion = new TaskCompletionSource<IReadOnlyList<Widget>>();
+        completion.SetResult([new Text("Typed result")]);
+        controller.Text = "ty";
+        Settle(harness, size);
+        Assert.Equal(2, builderCalls);
+        Assert.NotNull(FindParagraph(harness.RenderView, "Typed result"));
+    }
+
+    [Fact]
+    public void SearchAnchor_DefaultViewLeadingTrailingAndClearButton()
+    {
+        var controller = new SearchController();
+        var size = new Size(640, 420);
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new Navigator(new BuilderPageRoute(_ => new SearchAnchor(
+                searchController: controller,
+                builder: (_, _) => new SizedBox(width: 24, height: 24),
+                suggestionsBuilder: Sync(_ => Array.Empty<Widget>()))))));
+        harness.Pump(size);
+
+        controller.OpenView();
+        Settle(harness, size);
+
+        string clearTooltip = DefaultMaterialLocalizations.Instance.ClearButtonTooltip;
+        Assert.NotEmpty(harness.FindWidgets<BackButton>());
+        Assert.DoesNotContain(harness.FindWidgets<IconButton>(), button => button.Tooltip == clearTooltip);
+
+        controller.Text = "query";
+        Settle(harness, size);
+        Assert.Single(harness.FindWidgets<IconButton>(), button => button.Tooltip == clearTooltip);
+
+        controller.Clear();
+        Settle(harness, size);
+        Assert.DoesNotContain(harness.FindWidgets<IconButton>(), button => button.Tooltip == clearTooltip);
+    }
+
+    [Fact]
+    public void SearchAnchor_ViewForwardsInputConfigurationAndCallbacks()
+    {
+        var controller = new SearchController();
+        var changed = new List<string>();
+        var submitted = new List<string>();
+        var size = new Size(640, 420);
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new Navigator(new BuilderPageRoute(_ => new SearchAnchor(
+                searchController: controller,
+                textCapitalization: TextCapitalization.Sentences,
+                textInputAction: TextInputAction.Send,
+                keyboardType: TextInputType.Url,
+                smartDashesType: SmartDashesType.Disabled,
+                smartQuotesType: SmartQuotesType.Disabled,
+                viewOnChanged: changed.Add,
+                viewOnSubmitted: submitted.Add,
+                builder: (_, _) => new SizedBox(width: 24, height: 24),
+                suggestionsBuilder: Sync(_ => Array.Empty<Widget>()))))));
+        harness.Pump(size);
+
+        controller.OpenView();
+        Settle(harness, size);
+
+        TextField viewField = Assert.Single(harness.FindWidgets<TextField>());
+        Assert.True(viewField.Autofocus);
+        Assert.Equal(TextCapitalization.Sentences, viewField.TextCapitalization);
+        Assert.Equal(TextInputAction.Send, viewField.TextInputAction);
+        Assert.Equal(TextInputType.Url, viewField.KeyboardType);
+        Assert.Equal(SmartDashesType.Disabled, viewField.SmartDashesType);
+        Assert.Equal(SmartQuotesType.Disabled, viewField.SmartQuotesType);
+
+        viewField.OnChanged?.Invoke("abc");
+        Assert.Equal("abc", Assert.Single(changed));
+        viewField.OnSubmitted?.Invoke("abc");
+        Assert.Equal("abc", Assert.Single(submitted));
+    }
+
+    [Fact]
+    public void SearchAnchor_AttachDetachAndExternalControllerSurvivesDispose()
+    {
+        var first = new SearchController();
+        var second = new SearchController();
+        var host = new ControllerSwapHost(first, second);
+        var size = new Size(640, 420);
+        var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new Navigator(new BuilderPageRoute(_ => host))));
+        harness.Pump(size);
+        Assert.True(first.IsAttached);
+        Assert.False(second.IsAttached);
+
+        harness.FindState<ControllerSwapHostState>().UseSecond();
+        harness.Pump(size);
+        Assert.False(first.IsAttached);
+        Assert.True(second.IsAttached);
+
+        second.OpenView();
+        Settle(harness, size);
+        Assert.True(second.IsOpen);
+
+        harness.Dispose();
+        Assert.False(second.IsAttached);
+        second.Text = "still usable";
+        Assert.Equal("still usable", second.Text);
+    }
+
+    [Fact]
+    public void SearchAnchor_DisabledStatesUseOpacityAndBlockOpening()
+    {
+        var controller = new SearchController();
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new Navigator(new BuilderPageRoute(_ => SearchAnchor.Bar(
+                searchController: controller,
+                enabled: false,
+                suggestionsBuilder: Sync(_ => Array.Empty<Widget>()))))));
+        harness.Pump(new Size(640, 420));
+
+        Assert.Contains(harness.FindWidgets<AnimatedOpacity>(), widget => widget.Opacity == 0.38);
+        Assert.Contains(harness.FindWidgets<Opacity>(), widget => widget.Value == 0.38);
+        Assert.Contains(harness.FindWidgets<IgnorePointer>(), widget => widget.Ignoring);
+        TextField field = Assert.Single(harness.FindWidgets<TextField>());
+        Assert.False(field.Enabled ?? true);
+    }
+
+    [Fact]
+    public void SearchAnchor_ShrinkWrapOmitsDividerUntilSuggestionsExist()
+    {
+        var controller = new SearchController();
+        var suggestions = new List<Widget>();
+        var size = new Size(640, 420);
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new Navigator(new BuilderPageRoute(_ => new SearchAnchor(
+                searchController: controller,
+                shrinkWrap: true,
+                viewConstraints: new BoxConstraints(),
+                builder: (_, _) => new SizedBox(width: 24, height: 24),
+                suggestionsBuilder: Sync(_ => suggestions.ToList()))))));
+        harness.Pump(size);
+
+        controller.OpenView();
+        Settle(harness, size);
+        Assert.Empty(harness.FindWidgets<Divider>());
+
+        suggestions.Add(new Text("One suggestion"));
+        controller.Text = "o";
+        Settle(harness, size);
+        Assert.NotEmpty(harness.FindWidgets<Divider>());
+    }
+
+    [Fact]
+    public void SearchThemes_LerpFollowsSourceQuirks()
+    {
+        var barTheme = new SearchBarThemeData(Elevation: MaterialStateProperty<double?>.All(3));
+        Assert.Same(barTheme, SearchBarThemeData.Lerp(barTheme, barTheme, 0.3));
+
+        var viewTheme = new SearchViewThemeData(Elevation: 1);
+        Assert.Same(viewTheme, SearchViewThemeData.Lerp(viewTheme, viewTheme, 0.6));
+
+        var a = new SearchViewThemeData(
+            HeaderTextStyle: new TextStyle(Color: Colors.Blue),
+            HeaderHintStyle: new TextStyle(Color: Colors.Red),
+            Side: new BorderSide(Colors.Black, 4.0));
+        var b = new SearchViewThemeData(
+            HeaderTextStyle: new TextStyle(Color: Colors.Blue),
+            HeaderHintStyle: new TextStyle(Color: Colors.Yellow));
+        SearchViewThemeData mid = SearchViewThemeData.Lerp(a, b, 0.5)!;
+
+        // Upstream quirk: headerHintStyle lerps the headerTextStyle inputs.
+        Assert.Equal(mid.HeaderTextStyle, mid.HeaderHintStyle);
+        // A null side lerps against a transparent zero-width side.
+        Assert.Equal(2.0, mid.Side!.Value.Width);
+    }
+
+    [Fact]
+    public void SearchAnchor_ZeroAreaDoesNotCrash()
+    {
+        var controller = new SearchController();
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new Navigator(new BuilderPageRoute(_ => SearchAnchor.Bar(
+                searchController: controller,
+                suggestionsBuilder: Sync(_ => Array.Empty<Widget>()))))));
+        harness.Pump(new Size(0, 0));
+        harness.Pump(new Size(0, 0));
     }
 
     [Fact]
@@ -302,42 +760,55 @@ public sealed class MaterialSearchTests : IDisposable
                 Elevation: 0,
                 Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(18)),
                 HeaderHeight: 64,
-                BarPadding: new Thickness(10, 0),
+                BarPadding: EdgeInsetsGeometry.Symmetric(horizontal: 10),
                 DividerColor: Colors.Red,
                 Constraints: new BoxConstraints(MinWidth: 420, MinHeight: 260))
         };
+        var size = new Size(700, 500);
 
         using var harness = new WidgetRenderHarness(Wrap(
             theme,
             new Navigator(new BuilderPageRoute(_ => new SearchAnchor(
                 searchController: controller,
                 builder: (_, searchController) => new SearchBar(controller: searchController, hintText: "Anchor"),
-                suggestionsBuilder: (_, _) => [new Text("Themed suggestion")],
+                suggestionsBuilder: Sync(_ => new Widget[] { new Text("Themed suggestion") }),
                 isFullScreen: false)))));
-        harness.Pump(new Size(700, 500));
+        harness.Pump(size);
 
         controller.OpenView();
-        harness.Pump(new Size(700, 500));
+        Settle(harness, size);
 
-        Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView),
-            box => box.Decoration.Color == Colors.LightGreen
-                   && box.Decoration.BorderRadius == BorderRadius.Circular(18));
-        Assert.Contains(FindDescendants<RenderConstrainedBox>(harness.RenderView),
-            box => box.AdditionalConstraints.MinWidth == 420
-                   && box.AdditionalConstraints.MinHeight == 260);
+        Plumix.Material.Material view = Assert.Single(
+            harness.FindWidgets<Plumix.Material.Material>(),
+            material => material.ClipBehavior == Clip.AntiAlias);
+        Assert.Equal(Colors.LightGreen, view.Color);
+        Assert.Equal(0.0, view.Elevation);
+        Assert.Equal(
+            new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(18)),
+            view.Shape);
         Assert.Contains(FindDescendants<RenderConstrainedBox>(harness.RenderView),
             box => box.AdditionalConstraints.MinHeight == 64
                    && box.AdditionalConstraints.MaxHeight == 64);
-        Assert.Contains(
-            FindDescendants<RenderDecoratedBox>(harness.RenderView),
-            box => box.Decoration.Border is Plumix.Rendering.Border sideBottom
-                   && sideBottom.Bottom.Color == Colors.Red);
+        Divider divider = Assert.Single(harness.FindWidgets<Divider>());
+        Assert.Equal(1.0, divider.Height!.Value);
+        Assert.Contains(harness.FindWidgets<DividerTheme>(), widget => widget.Data.Color == Colors.Red);
         Assert.NotNull(FindParagraph(harness.RenderView, "Themed suggestion"));
     }
 
-    private static Widget Wrap(ThemeData theme, Widget child) =>
+    private static void Settle(WidgetRenderHarness harness, Size size)
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            harness.Pump(size);
+            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.7));
+        }
+
+        harness.Pump(size);
+    }
+
+    private static Widget Wrap(ThemeData theme, Widget child, TextDirection direction = TextDirection.Ltr) =>
         new Directionality(
-            TextDirection.Ltr,
+            direction,
             new MediaQuery(
                 new MediaQueryData(Size: new Size(700, 500)),
                 new Theme(theme, child)));
@@ -369,6 +840,63 @@ public sealed class MaterialSearchTests : IDisposable
                 yield return descendant;
             }
         }
+    }
+
+    private sealed class MediaSizeHost : StatefulWidget
+    {
+        public MediaSizeHost(Size initialSize, Widget child)
+        {
+            InitialSize = initialSize;
+            Child = child;
+        }
+
+        public Size InitialSize { get; }
+
+        public Widget Child { get; }
+
+        public override State CreateState() => new MediaSizeHostState();
+    }
+
+    private sealed class MediaSizeHostState : State
+    {
+        private Size? _size;
+
+        private MediaSizeHost Current => (MediaSizeHost)StateWidget;
+
+        public void SetSize(Size size) => SetState(() => _size = size);
+
+        public override Widget Build(BuildContext context) => new MediaQuery(
+            new MediaQueryData(Size: _size ?? Current.InitialSize),
+            Current.Child);
+    }
+
+    private sealed class ControllerSwapHost : StatefulWidget
+    {
+        public ControllerSwapHost(SearchController first, SearchController second)
+        {
+            First = first;
+            Second = second;
+        }
+
+        public SearchController First { get; }
+
+        public SearchController Second { get; }
+
+        public override State CreateState() => new ControllerSwapHostState();
+    }
+
+    private sealed class ControllerSwapHostState : State
+    {
+        private bool _useSecond;
+
+        private ControllerSwapHost Current => (ControllerSwapHost)StateWidget;
+
+        public void UseSecond() => SetState(() => _useSecond = true);
+
+        public override Widget Build(BuildContext context) => new SearchAnchor(
+            searchController: _useSecond ? Current.Second : Current.First,
+            builder: (_, _) => new SizedBox(width: 24, height: 24),
+            suggestionsBuilder: (_, _) => new ValueTask<IReadOnlyList<Widget>>([]));
     }
 
     private sealed class TestSearchDelegate : SearchDelegate<string>

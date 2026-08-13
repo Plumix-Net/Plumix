@@ -28,6 +28,7 @@ class _SearchDemoPageState extends State<SearchDemoPage> {
   bool _enabled = true;
   bool _useFullScreen = false;
   bool _useThemeOverrides = false;
+  bool _useAsyncSuggestions = false;
   String _selected = 'none';
   String _status = 'idle';
 
@@ -112,6 +113,12 @@ class _SearchDemoPageState extends State<SearchDemoPage> {
                   _useThemeOverrides ? 'Theme on' : 'Theme off',
                   () =>
                       setState(() => _useThemeOverrides = !_useThemeOverrides),
+                ),
+                _controlButton(
+                  _useAsyncSuggestions ? 'Async on' : 'Async off',
+                  () => setState(
+                    () => _useAsyncSuggestions = !_useAsyncSuggestions,
+                  ),
                 ),
                 _controlButton(
                   'Legacy route',
@@ -207,10 +214,14 @@ class _SearchDemoPageState extends State<SearchDemoPage> {
     );
   }
 
-  Iterable<Widget> _buildSuggestions(
+  Future<Iterable<Widget>> _buildSuggestions(
     BuildContext context,
     SearchController controller,
-  ) {
+  ) async {
+    if (_useAsyncSuggestions) {
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+    }
+
     final String query = controller.text.trim();
     final List<Widget> suggestions = <Widget>[];
     for (final String term in _searchTerms) {

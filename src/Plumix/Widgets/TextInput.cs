@@ -627,6 +627,10 @@ public sealed class EditableText : StatefulWidget
         TextDirection? textDirection = null,
         TextInputKeyboardType keyboardType = TextInputKeyboardType.Text,
         TextInputActionType textInputAction = TextInputActionType.Unspecified,
+        TextCapitalization textCapitalization = TextCapitalization.None,
+        SmartDashesType? smartDashesType = null,
+        SmartQuotesType? smartQuotesType = null,
+        Thickness? scrollPadding = null,
         bool autocorrect = true,
         bool enableSuggestions = true,
         bool canRequestFocus = true,
@@ -673,6 +677,10 @@ public sealed class EditableText : StatefulWidget
         TextDirection = textDirection;
         KeyboardType = keyboardType;
         TextInputAction = textInputAction;
+        TextCapitalization = textCapitalization;
+        SmartDashesType = smartDashesType ?? (obscureText ? SmartDashesType.Disabled : SmartDashesType.Enabled);
+        SmartQuotesType = smartQuotesType ?? (obscureText ? SmartQuotesType.Disabled : SmartQuotesType.Enabled);
+        ScrollPadding = scrollPadding ?? new Thickness(20);
         Autocorrect = autocorrect;
         EnableSuggestions = enableSuggestions;
         CanRequestFocus = canRequestFocus;
@@ -733,6 +741,10 @@ public sealed class EditableText : StatefulWidget
     public TextDirection? TextDirection { get; }
     public TextInputKeyboardType KeyboardType { get; }
     public TextInputActionType TextInputAction { get; }
+    public TextCapitalization TextCapitalization { get; }
+    public SmartDashesType SmartDashesType { get; }
+    public SmartQuotesType SmartQuotesType { get; }
+    public Thickness ScrollPadding { get; }
     public bool Autocorrect { get; }
     public bool EnableSuggestions { get; }
     public bool CanRequestFocus { get; }
@@ -1524,7 +1536,10 @@ public sealed class EditableText : StatefulWidget
                     Autocorrect: Widget.Autocorrect,
                     EnableSuggestions: Widget.EnableSuggestions,
                     ObscureText: Widget.ObscureText,
-                    Multiline: Widget.Multiline));
+                    Multiline: Widget.Multiline,
+                    TextCapitalization: Widget.TextCapitalization,
+                    SmartDashesType: Widget.SmartDashesType,
+                    SmartQuotesType: Widget.SmartQuotesType));
         }
 
         private bool HandleTextSelectionChanged(FocusNode node, int baseOffset, int extentOffset)

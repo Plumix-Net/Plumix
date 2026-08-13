@@ -1,4 +1,3 @@
-using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Rendering;
@@ -12,18 +11,18 @@ public sealed partial record SearchViewThemeData(
     Color? BackgroundColor = null,
     double? Elevation = null,
     Color? SurfaceTintColor = null,
+    BoxConstraints? Constraints = null,
+    EdgeInsetsGeometry? Padding = null,
+    EdgeInsetsGeometry? BarPadding = null,
+    bool? ShrinkWrap = null,
     BorderSide? Side = null,
-    ShapeBorder? Shape = null,
+    OutlinedBorder? Shape = null,
     double? HeaderHeight = null,
     TextStyle? HeaderTextStyle = null,
     TextStyle? HeaderHintStyle = null,
-    BoxConstraints? Constraints = null,
-    Thickness? Padding = null,
-    Thickness? BarPadding = null,
-    bool? ShrinkWrap = null,
     Color? DividerColor = null);
 
-public sealed class SearchViewTheme : InheritedWidget
+public sealed class SearchViewTheme : InheritedTheme
 {
     public SearchViewTheme(
         SearchViewThemeData data,
@@ -41,6 +40,11 @@ public sealed class SearchViewTheme : InheritedWidget
     public override Widget Build(BuildContext context)
     {
         return Child;
+    }
+
+    public override Widget Wrap(BuildContext context, Widget child)
+    {
+        return new SearchViewTheme(Data, child);
     }
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)

@@ -781,8 +781,8 @@ public sealed partial record SearchBarThemeData
                 t),
             OverlayColor: MaterialThemeLerp.ColorStateProperty(a?.OverlayColor, b?.OverlayColor, t),
             Side: MaterialThemeLerp.BorderSideStateProperty(a?.Side, b?.Side, t),
-            Shape: MaterialThemeLerp.ShapeStateProperty(a?.Shape, b?.Shape, t),
-            Padding: MaterialThemeLerp.ThicknessStateProperty(a?.Padding, b?.Padding, t),
+            Shape: MaterialThemeLerp.OutlinedBorderStateProperty(a?.Shape, b?.Shape, t),
+            Padding: MaterialThemeLerp.EdgeInsetsStateProperty(a?.Padding, b?.Padding, t),
             TextStyle: MaterialThemeLerp.TextStyleStateProperty(a?.TextStyle, b?.TextStyle, t),
             HintStyle: MaterialThemeLerp.TextStyleStateProperty(a?.HintStyle, b?.HintStyle, t),
             Constraints: MaterialThemeLerp.BoxConstraints(a?.Constraints, b?.Constraints, t),
@@ -803,22 +803,54 @@ public sealed partial record SearchViewThemeData
             BackgroundColor: MaterialThemeLerp.Color(a?.BackgroundColor, b?.BackgroundColor, t),
             Elevation: MaterialThemeLerp.Double(a?.Elevation, b?.Elevation, t),
             SurfaceTintColor: MaterialThemeLerp.Color(a?.SurfaceTintColor, b?.SurfaceTintColor, t),
-            Side: MaterialThemeLerp.BorderSide(a?.Side, b?.Side, t),
-            Shape: MaterialThemeLerp.Shape(a?.Shape, b?.Shape, t),
+            Side: LerpSides(a?.Side, b?.Side, t),
+            Shape: OutlinedBorder.Lerp(a?.Shape, b?.Shape, t),
             HeaderHeight: MaterialThemeLerp.Double(a?.HeaderHeight, b?.HeaderHeight, t),
             HeaderTextStyle: MaterialThemeLerp.TextStyle(
                 a?.HeaderTextStyle,
                 b?.HeaderTextStyle,
                 t),
+            // Upstream Flutter lerps headerTextStyle into the headerHintStyle slot; preserved bug-for-bug.
             HeaderHintStyle: MaterialThemeLerp.TextStyle(
-                a?.HeaderHintStyle,
-                b?.HeaderHintStyle,
+                a?.HeaderTextStyle,
+                b?.HeaderTextStyle,
                 t),
             Constraints: MaterialThemeLerp.BoxConstraints(a?.Constraints, b?.Constraints, t),
-            Padding: MaterialThemeLerp.Thickness(a?.Padding, b?.Padding, t),
-            BarPadding: MaterialThemeLerp.Thickness(a?.BarPadding, b?.BarPadding, t),
+            Padding: EdgeInsetsGeometry.Lerp(a?.Padding, b?.Padding, t),
+            BarPadding: EdgeInsetsGeometry.Lerp(a?.BarPadding, b?.BarPadding, t),
             ShrinkWrap: t < 0.5 ? a?.ShrinkWrap : b?.ShrinkWrap,
             DividerColor: MaterialThemeLerp.Color(a?.DividerColor, b?.DividerColor, t));
+    }
+
+    private static BorderSide? LerpSides(BorderSide? a, BorderSide? b, double t)
+    {
+        if (!a.HasValue && !b.HasValue)
+        {
+            return null;
+        }
+
+        if (!a.HasValue)
+        {
+            return Rendering.BorderSide.Lerp(
+                new BorderSide(WithAlpha(b!.Value.Color, 0), 0.0),
+                b.Value,
+                t);
+        }
+
+        if (!b.HasValue)
+        {
+            return Rendering.BorderSide.Lerp(
+                a.Value,
+                new BorderSide(WithAlpha(a.Value.Color, 0), 0.0),
+                t);
+        }
+
+        return Rendering.BorderSide.Lerp(a.Value, b.Value, t);
+    }
+
+    private static Color WithAlpha(Color color, byte alpha)
+    {
+        return Avalonia.Media.Color.FromArgb(alpha, color.R, color.G, color.B);
     }
 }
 

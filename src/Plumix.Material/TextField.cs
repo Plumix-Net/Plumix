@@ -1,3 +1,4 @@
+using Avalonia;
 using Avalonia.Media;
 using System.Globalization;
 using Plumix.Foundation;
@@ -30,6 +31,9 @@ public sealed class TextField : StatefulWidget
         TextDirection? textDirection = null,
         TextInputType? keyboardType = null,
         TextInputAction? textInputAction = null,
+        TextCapitalization textCapitalization = TextCapitalization.None,
+        SmartDashesType? smartDashesType = null,
+        SmartQuotesType? smartQuotesType = null,
         bool autocorrect = true,
         bool enableSuggestions = true,
         bool readOnly = false,
@@ -45,6 +49,9 @@ public sealed class TextField : StatefulWidget
         Action<string>? onSubmitted = null,
         bool? enabled = null,
         Action? onTap = null,
+        bool onTapAlwaysCalled = false,
+        Action<PointerDownEvent>? onTapOutside = null,
+        Thickness? scrollPadding = null,
         MouseCursor? mouseCursor = null,
         TextFieldCounterBuilder? buildCounter = null,
         bool canRequestFocus = true,
@@ -78,6 +85,9 @@ public sealed class TextField : StatefulWidget
         TextDirection = textDirection;
         KeyboardType = keyboardType;
         TextInputAction = textInputAction;
+        TextCapitalization = textCapitalization;
+        SmartDashesType = smartDashesType;
+        SmartQuotesType = smartQuotesType;
         Autocorrect = autocorrect;
         EnableSuggestions = enableSuggestions;
         ReadOnly = readOnly;
@@ -93,6 +103,9 @@ public sealed class TextField : StatefulWidget
         OnSubmitted = onSubmitted;
         Enabled = enabled;
         OnTap = onTap;
+        OnTapAlwaysCalled = onTapAlwaysCalled;
+        OnTapOutside = onTapOutside;
+        ScrollPadding = scrollPadding ?? new Thickness(20);
         MouseCursor = mouseCursor;
         BuildCounter = buildCounter;
         CanRequestFocus = canRequestFocus;
@@ -114,6 +127,9 @@ public sealed class TextField : StatefulWidget
     public TextDirection? TextDirection { get; }
     public TextInputType? KeyboardType { get; }
     public TextInputAction? TextInputAction { get; }
+    public TextCapitalization TextCapitalization { get; }
+    public SmartDashesType? SmartDashesType { get; }
+    public SmartQuotesType? SmartQuotesType { get; }
     public bool Autocorrect { get; }
     public bool EnableSuggestions { get; }
     public bool ReadOnly { get; }
@@ -129,6 +145,9 @@ public sealed class TextField : StatefulWidget
     public Action<string>? OnSubmitted { get; }
     public bool? Enabled { get; }
     public Action? OnTap { get; }
+    public bool OnTapAlwaysCalled { get; }
+    public Action<PointerDownEvent>? OnTapOutside { get; }
+    public Thickness ScrollPadding { get; }
     public MouseCursor? MouseCursor { get; }
     public TextFieldCounterBuilder? BuildCounter { get; }
     public bool CanRequestFocus { get; }
@@ -246,6 +265,10 @@ public sealed class TextField : StatefulWidget
                 textDirection: Current.TextDirection,
                 keyboardType: ResolveKeyboardType(Current.KeyboardType, multiline),
                 textInputAction: ResolveTextInputAction(Current.TextInputAction),
+                textCapitalization: Current.TextCapitalization,
+                smartDashesType: Current.SmartDashesType,
+                smartQuotesType: Current.SmartQuotesType,
+                scrollPadding: Current.ScrollPadding,
                 autocorrect: Current.Autocorrect,
                 enableSuggestions: Current.EnableSuggestions,
                 canRequestFocus: Current.CanRequestFocus,
@@ -307,12 +330,20 @@ public sealed class TextField : StatefulWidget
                 onSecondaryTap: () => _editableTextKey.CurrentState?.ShowToolbar(),
                 behavior: HitTestBehavior.Translucent,
                 child: result);
-            return new Listener(
+            result = new Listener(
                 onPointerEnter: _ => BeginHover(),
                 onPointerExit: _ => EndHover(),
                 onPointerHover: _ => BeginHover(),
                 behavior: HitTestBehavior.Translucent,
                 child: result);
+            if (Current.OnTapOutside is not null)
+            {
+                result = new TextFieldTapRegion(
+                    onTapOutside: Current.OnTapOutside,
+                    child: result);
+            }
+
+            return result;
         }
 
         public override void Dispose()

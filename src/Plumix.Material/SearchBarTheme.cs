@@ -1,7 +1,7 @@
-using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Rendering;
+using Plumix.UI;
 using Plumix.Widgets;
 
 namespace Plumix.Material;
@@ -15,8 +15,8 @@ public sealed partial record SearchBarThemeData(
     MaterialStateProperty<Color?>? SurfaceTintColor = null,
     MaterialStateProperty<Color?>? OverlayColor = null,
     MaterialStateProperty<BorderSide?>? Side = null,
-    MaterialStateProperty<ShapeBorder?>? Shape = null,
-    MaterialStateProperty<Thickness?>? Padding = null,
+    MaterialStateProperty<OutlinedBorder?>? Shape = null,
+    MaterialStateProperty<EdgeInsetsGeometry?>? Padding = null,
     MaterialStateProperty<TextStyle?>? TextStyle = null,
     MaterialStateProperty<TextStyle?>? HintStyle = null,
     BoxConstraints? Constraints = null,

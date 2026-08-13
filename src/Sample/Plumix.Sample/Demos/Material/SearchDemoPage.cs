@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Material;
@@ -40,6 +41,7 @@ internal sealed class SearchDemoPageState : State
     private bool _enabled = true;
     private bool _useFullScreen;
     private bool _useThemeOverrides;
+    private bool _useAsyncSuggestions;
     private string _selected = "none";
     private string _status = "idle";
 
@@ -61,10 +63,11 @@ internal sealed class SearchDemoPageState : State
                 ? new SearchBarThemeData(
                     BackgroundColor: MaterialStateProperty<Color?>.All(Color.Parse("#FFEAF6F7")),
                     Elevation: MaterialStateProperty<double?>.All(1),
-                    Shape: MaterialStateProperty<ShapeBorder?>.All(new RoundedRectangleBorder(borderRadius:
+                    Shape: MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius:
                         Plumix.Rendering.BorderRadius.Circular(18))),
                     Side: MaterialStateProperty<BorderSide?>.All(new BorderSide(Color.Parse("#FF00695C"))),
-                    Padding: MaterialStateProperty<Thickness?>.All(new Thickness(12, 0)),
+                    Padding: MaterialStateProperty<EdgeInsetsGeometry?>.All(
+                        EdgeInsetsGeometry.Symmetric(horizontal: 12)),
                     Constraints: new BoxConstraints(MinWidth: 280, MaxWidth: 520, MinHeight: 52),
                     HintStyle: MaterialStateProperty<TextStyle?>.All(new TextStyle(Color: Color.Parse("#FF00695C"))))
                 : new SearchBarThemeData(),
@@ -75,10 +78,10 @@ internal sealed class SearchDemoPageState : State
                     Shape: new RoundedRectangleBorder(
                         new BorderSide(Color.Parse("#FF80CBC4")), Plumix.Rendering.BorderRadius.Circular(22)),
                     HeaderHeight: 64,
-                    BarPadding: new Thickness(12, 0),
+                    BarPadding: EdgeInsetsGeometry.Symmetric(horizontal: 12),
                     DividerColor: Color.Parse("#FF80CBC4"),
                     Constraints: new BoxConstraints(MinWidth: 360, MinHeight: 260, MaxWidth: 560, MaxHeight: 420),
-                    Padding: new Thickness(16))
+                    Padding: EdgeInsetsGeometry.All(16))
                 : new SearchViewThemeData()
         };
 
@@ -103,6 +106,9 @@ internal sealed class SearchDemoPageState : State
                                 ControlButton(_enabled ? "Enabled" : "Disabled", () => SetState(() => _enabled = !_enabled)),
                                 ControlButton(_useFullScreen ? "Full screen" : "Docked view", () => SetState(() => _useFullScreen = !_useFullScreen)),
                                 ControlButton(_useThemeOverrides ? "Theme on" : "Theme off", () => SetState(() => _useThemeOverrides = !_useThemeOverrides)),
+                                ControlButton(
+                                    _useAsyncSuggestions ? "Async on" : "Async off",
+                                    () => SetState(() => _useAsyncSuggestions = !_useAsyncSuggestions)),
                                 ControlButton("Legacy route", () => OpenLegacySearch(context)),
                             ]),
                         new Row(
@@ -171,8 +177,13 @@ internal sealed class SearchDemoPageState : State
         _legacyDelegate?.Dispose();
     }
 
-    private IReadOnlyList<Widget> BuildSuggestions(BuildContext context, SearchController controller)
+    private async ValueTask<IReadOnlyList<Widget>> BuildSuggestions(BuildContext context, SearchController controller)
     {
+        if (_useAsyncSuggestions)
+        {
+            await Task.Delay(300);
+        }
+
         string query = controller.Text.Trim();
         var suggestions = new List<Widget>();
         foreach (string term in SearchTerms)

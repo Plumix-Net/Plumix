@@ -24,10 +24,33 @@ public enum TextInputActionType
     Send,
 }
 
+public enum TextCapitalization
+{
+    Words,
+    Sentences,
+    Characters,
+    None,
+}
+
+public enum SmartDashesType
+{
+    Disabled,
+    Enabled,
+}
+
+public enum SmartQuotesType
+{
+    Disabled,
+    Enabled,
+}
+
 public readonly record struct TextInputConfiguration(
     TextInputKeyboardType KeyboardType,
     TextInputActionType InputAction,
     bool Autocorrect,
     bool EnableSuggestions,
     bool ObscureText,
-    bool Multiline);
+    bool Multiline,
+    TextCapitalization TextCapitalization = TextCapitalization.None,
+    SmartDashesType SmartDashesType = SmartDashesType.Enabled,
+    SmartQuotesType SmartQuotesType = SmartQuotesType.Enabled);

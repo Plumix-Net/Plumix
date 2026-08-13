@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
+using Plumix.Gestures;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -8,14 +9,6 @@ using Plumix.Widgets;
 namespace Plumix.Material;
 
 // Dart parity source: material_ui/lib/src/search_anchor.dart
-
-public enum TextCapitalization
-{
-    None,
-    Characters,
-    Words,
-    Sentences,
-}
 
 public enum TextInputAction
 {
@@ -38,23 +31,33 @@ public enum TextInputType
     Url,
 }
 
-public enum SmartDashesType
-{
-    Disabled,
-    Enabled,
-}
-
-public enum SmartQuotesType
-{
-    Disabled,
-    Enabled,
-}
-
 public delegate Widget SearchAnchorChildBuilder(BuildContext context, SearchController controller);
 
-public delegate IReadOnlyList<Widget> SuggestionsBuilder(BuildContext context, SearchController controller);
+public delegate ValueTask<IReadOnlyList<Widget>> SuggestionsBuilder(BuildContext context, SearchController controller);
 
-public delegate Widget SearchViewBuilder(IReadOnlyList<Widget> suggestions);
+public delegate Widget ViewBuilder(IReadOnlyList<Widget> suggestions);
+
+internal static class SearchViewChoreography
+{
+    internal static readonly TimeSpan OpenViewDuration = TimeSpan.FromMilliseconds(600);
+    internal static readonly TimeSpan AnchorFadeDuration = TimeSpan.FromMilliseconds(150);
+    internal static readonly Curve ViewFadeOnInterval = Curves.Interval(0.0, 1.0 / 2.0);
+    internal static readonly Curve ViewIconsFadeOnInterval = Curves.Interval(1.0 / 6.0, 2.0 / 6.0);
+    internal static readonly Curve ViewDividerFadeOnInterval = Curves.Interval(0.0, 1.0 / 6.0);
+    internal static readonly Curve ViewListFadeOnInterval = Curves.Interval(133.0 / 600.0, 233.0 / 600.0);
+    internal const double DisableSearchBarOpacity = 0.38;
+
+    internal static double ClampDouble(double value, double min, double max)
+    {
+        // Mirrors Dart's clampDouble: no min <= max validation, max wins on conflict.
+        if (value < min)
+        {
+            value = min;
+        }
+
+        return value > max ? max : value;
+    }
+}
 
 public sealed class SearchController : TextEditingController
 {
@@ -66,35 +69,29 @@ public sealed class SearchController : TextEditingController
 
     public bool IsAttached => _anchor is not null;
 
-    public bool IsOpen => _anchor?.ViewIsOpen ?? false;
+    public bool IsOpen
+    {
+        get
+        {
+            EnsureAttached();
+            return _anchor!.ViewIsOpen;
+        }
+    }
 
     public void OpenView()
     {
-        if (_anchor is null)
-        {
-            throw new InvalidOperationException("SearchController is not attached to a SearchAnchor.");
-        }
-
-        _anchor.OpenView();
+        EnsureAttached();
+        _anchor!.OpenView();
     }
 
-    public void CloseView(string? selectedText = null)
+    public void CloseView(string? selectedText)
     {
-        if (_anchor is null)
-        {
-            throw new InvalidOperationException("SearchController is not attached to a SearchAnchor.");
-        }
-
-        _anchor.CloseView(selectedText);
+        EnsureAttached();
+        _anchor!.CloseView(selectedText);
     }
 
     internal void Attach(SearchAnchor.SearchAnchorState anchor)
     {
-        if (_anchor is not null && !ReferenceEquals(_anchor, anchor))
-        {
-            throw new InvalidOperationException("A SearchController cannot be attached to more than one SearchAnchor.");
-        }
-
         _anchor = anchor;
     }
 
@@ -105,19 +102,24 @@ public sealed class SearchController : TextEditingController
             _anchor = null;
         }
     }
+
+    private void EnsureAttached()
+    {
+        if (_anchor is null)
+        {
+            throw new InvalidOperationException("SearchController is not attached to a SearchAnchor.");
+        }
+    }
 }
 
-public sealed class SearchAnchor : StatefulWidget
+public class SearchAnchor : StatefulWidget
 {
-    private const double DisabledOpacity = 0.38;
-    private static readonly TimeSpan AnchorFadeDuration = TimeSpan.FromMilliseconds(150);
-
     public SearchAnchor(
         SearchAnchorChildBuilder builder,
         SuggestionsBuilder suggestionsBuilder,
         bool? isFullScreen = null,
         SearchController? searchController = null,
-        SearchViewBuilder? viewBuilder = null,
+        ViewBuilder? viewBuilder = null,
         Widget? viewLeading = null,
         IReadOnlyList<Widget>? viewTrailing = null,
         string? viewHintText = null,
@@ -125,14 +127,14 @@ public sealed class SearchAnchor : StatefulWidget
         double? viewElevation = null,
         Color? viewSurfaceTintColor = null,
         BorderSide? viewSide = null,
-        ShapeBorder? viewShape = null,
-        Thickness? viewBarPadding = null,
+        OutlinedBorder? viewShape = null,
+        EdgeInsetsGeometry? viewBarPadding = null,
         double? headerHeight = null,
         TextStyle? headerTextStyle = null,
         TextStyle? headerHintStyle = null,
         Color? dividerColor = null,
         BoxConstraints? viewConstraints = null,
-        Thickness? viewPadding = null,
+        EdgeInsetsGeometry? viewPadding = null,
         bool? shrinkWrap = null,
         TextCapitalization? textCapitalization = null,
         Action<string>? viewOnChanged = null,
@@ -148,16 +150,6 @@ public sealed class SearchAnchor : StatefulWidget
     {
         Builder = builder ?? throw new ArgumentNullException(nameof(builder));
         SuggestionsBuilder = suggestionsBuilder ?? throw new ArgumentNullException(nameof(suggestionsBuilder));
-        if (viewElevation.HasValue && (!double.IsFinite(viewElevation.Value) || viewElevation.Value < 0))
-        {
-            throw new ArgumentOutOfRangeException(nameof(viewElevation), "Search view elevation must be non-negative and finite.");
-        }
-
-        if (headerHeight.HasValue && (!double.IsFinite(headerHeight.Value) || headerHeight.Value <= 0))
-        {
-            throw new ArgumentOutOfRangeException(nameof(headerHeight), "Search view header height must be positive and finite.");
-        }
-
         IsFullScreen = isFullScreen;
         SearchController = searchController;
         ViewBuilder = viewBuilder;
@@ -191,7 +183,7 @@ public sealed class SearchAnchor : StatefulWidget
 
     public bool? IsFullScreen { get; }
     public SearchController? SearchController { get; }
-    public SearchViewBuilder? ViewBuilder { get; }
+    public ViewBuilder? ViewBuilder { get; }
     public Widget? ViewLeading { get; }
     public IReadOnlyList<Widget>? ViewTrailing { get; }
     public string? ViewHintText { get; }
@@ -199,14 +191,14 @@ public sealed class SearchAnchor : StatefulWidget
     public double? ViewElevation { get; }
     public Color? ViewSurfaceTintColor { get; }
     public BorderSide? ViewSide { get; }
-    public ShapeBorder? ViewShape { get; }
-    public Thickness? ViewBarPadding { get; }
+    public OutlinedBorder? ViewShape { get; }
+    public EdgeInsetsGeometry? ViewBarPadding { get; }
     public double? HeaderHeight { get; }
     public TextStyle? HeaderTextStyle { get; }
     public TextStyle? HeaderHintStyle { get; }
     public Color? DividerColor { get; }
     public BoxConstraints? ViewConstraints { get; }
-    public Thickness? ViewPadding { get; }
+    public EdgeInsetsGeometry? ViewPadding { get; }
     public bool? ShrinkWrap { get; }
     public TextCapitalization? TextCapitalization { get; }
     public Action<string>? ViewOnChanged { get; }
@@ -235,32 +227,34 @@ public sealed class SearchAnchor : StatefulWidget
         MaterialStateProperty<Color?>? barBackgroundColor = null,
         MaterialStateProperty<Color?>? barOverlayColor = null,
         MaterialStateProperty<BorderSide?>? barSide = null,
-        MaterialStateProperty<ShapeBorder?>? barShape = null,
-        MaterialStateProperty<Thickness?>? barPadding = null,
-        Thickness? viewBarPadding = null,
+        MaterialStateProperty<OutlinedBorder?>? barShape = null,
+        MaterialStateProperty<EdgeInsetsGeometry?>? barPadding = null,
+        EdgeInsetsGeometry? viewBarPadding = null,
         MaterialStateProperty<TextStyle?>? barTextStyle = null,
         MaterialStateProperty<TextStyle?>? barHintStyle = null,
-        SearchViewBuilder? viewBuilder = null,
+        ViewBuilder? viewBuilder = null,
         Widget? viewLeading = null,
         IReadOnlyList<Widget>? viewTrailing = null,
         string? viewHintText = null,
         Color? viewBackgroundColor = null,
         double? viewElevation = null,
         BorderSide? viewSide = null,
-        ShapeBorder? viewShape = null,
+        OutlinedBorder? viewShape = null,
         double? viewHeaderHeight = null,
         TextStyle? viewHeaderTextStyle = null,
         TextStyle? viewHeaderHintStyle = null,
         Color? dividerColor = null,
         BoxConstraints? constraints = null,
         BoxConstraints? viewConstraints = null,
-        Thickness? viewPadding = null,
+        EdgeInsetsGeometry? viewPadding = null,
         bool? shrinkWrap = null,
         bool? isFullScreen = null,
         SearchController? searchController = null,
         TextCapitalization? textCapitalization = null,
         TextInputAction? textInputAction = null,
         TextInputType? keyboardType = null,
+        Thickness? scrollPadding = null,
+        EditableTextContextMenuBuilder? contextMenuBuilder = null,
         bool enabled = true,
         SmartDashesType? smartDashesType = null,
         SmartQuotesType? smartQuotesType = null,
@@ -268,20 +262,14 @@ public sealed class SearchAnchor : StatefulWidget
     {
         return new SearchAnchor(
             builder: (context, controller) => new SearchBar(
-                controller: controller,
                 constraints: constraints,
+                controller: controller,
                 onTap: () =>
                 {
                     controller.OpenView();
                     onTap?.Invoke();
                 },
-                onChanged: _ =>
-                {
-                    if (!controller.IsOpen)
-                    {
-                        controller.OpenView();
-                    }
-                },
+                onChanged: _ => controller.OpenView(),
                 onSubmitted: onSubmitted,
                 hintText: barHintText,
                 hintStyle: barHintStyle,
@@ -291,13 +279,17 @@ public sealed class SearchAnchor : StatefulWidget
                 overlayColor: barOverlayColor,
                 side: barSide,
                 shape: barShape,
-                padding: barPadding ?? MaterialStateProperty<Thickness?>.All(new Thickness(16, 0)),
+                padding: barPadding
+                         ?? MaterialStateProperty<EdgeInsetsGeometry?>.All(
+                             EdgeInsetsGeometry.Symmetric(horizontal: 16.0)),
                 leading: barLeading ?? new Icon(Icons.Search),
                 trailing: barTrailing,
                 textCapitalization: textCapitalization,
-                enabled: enabled,
                 textInputAction: textInputAction,
                 keyboardType: keyboardType,
+                scrollPadding: scrollPadding,
+                contextMenuBuilder: contextMenuBuilder,
+                enabled: enabled,
                 smartDashesType: smartDashesType,
                 smartQuotesType: smartQuotesType),
             suggestionsBuilder: suggestionsBuilder,
@@ -339,18 +331,34 @@ public sealed class SearchAnchor : StatefulWidget
 
     public sealed class SearchAnchorState : State
     {
-        private SearchController? _controller;
-        private bool _ownsController;
-        private bool _viewIsOpen;
+        private readonly GlobalKey _anchorKey = new GlobalObjectKey<State>(new object());
+        private bool _anchorIsVisible = true;
+        private SearchController? _internalSearchController;
         private SearchViewRoute? _route;
+        private Size? _screenSize;
 
         private SearchAnchor CurrentWidget => (SearchAnchor)StateWidget;
 
-        internal bool ViewIsOpen => _viewIsOpen;
+        internal bool ViewIsOpen => !_anchorIsVisible;
+
+        private SearchController ControllerInstance =>
+            CurrentWidget.SearchController ?? (_internalSearchController ??= new SearchController());
 
         public override void InitState()
         {
-            AttachController(CurrentWidget.SearchController);
+            ControllerInstance.Attach(this);
+        }
+
+        public override void DidChangeDependencies()
+        {
+            Size updatedScreenSize = MediaQuery.Of(Context).Size;
+            if (_screenSize is not null && _screenSize != updatedScreenSize
+                && ViewIsOpen && !GetShowFullScreenView())
+            {
+                CloseView(null);
+            }
+
+            _screenSize = updatedScreenSize;
         }
 
         public override void DidUpdateWidget(StatefulWidget oldWidget)
@@ -358,58 +366,51 @@ public sealed class SearchAnchor : StatefulWidget
             var old = (SearchAnchor)oldWidget;
             if (!ReferenceEquals(old.SearchController, CurrentWidget.SearchController))
             {
-                DetachController();
-                AttachController(CurrentWidget.SearchController);
+                old.SearchController?.Detach(this);
+                ControllerInstance.Attach(this);
+            }
+        }
+
+        public override void Dispose()
+        {
+            CurrentWidget.SearchController?.Detach(this);
+            _internalSearchController?.Detach(this);
+            bool usingExternalController = CurrentWidget.SearchController is not null;
+            if (_route is not null && _route.Navigator is not null)
+            {
+                _route.Dismiss(disposeController: !usingExternalController);
+            }
+            else
+            {
+                _internalSearchController?.Dispose();
             }
         }
 
         public override Widget Build(BuildContext context)
         {
-            double opacity = CurrentWidget.Enabled
-                ? _viewIsOpen ? 0.0 : 1.0
-                : DisabledOpacity;
-            Widget child = CurrentWidget.Builder(context, _controller!);
-            child = new Opacity(opacity, child);
-            if (CurrentWidget.Enabled)
-            {
-                child = new GestureDetector(
-                    onTap: OpenView,
-                    behavior: HitTestBehavior.Translucent,
-                    child: child);
-            }
-
-            return child;
-        }
-
-        public override void Dispose()
-        {
-            if (_route is not null)
-            {
-                _route.SuppressCloseCallback();
-                _route.Navigator?.MaybePop();
-                _route = null;
-            }
-
-            DetachController();
+            return new AnimatedOpacity(
+                opacity: GetOpacity(),
+                duration: SearchViewChoreography.AnchorFadeDuration,
+                key: _anchorKey,
+                child: new IgnorePointer(
+                    ignoring: !CurrentWidget.Enabled,
+                    child: new GestureDetector(
+                        onTap: OpenView,
+                        child: CurrentWidget.Builder(context, ControllerInstance))));
         }
 
         internal void OpenView()
         {
-            if (_viewIsOpen || !CurrentWidget.Enabled)
+            if (ViewIsOpen)
             {
                 return;
             }
 
-            var navigator = Navigator.MaybeOf(Context);
-            if (navigator is null)
-            {
-                return;
-            }
-
-            bool showFullScreen = ResolveFullScreen(Theme.Of(Context), CurrentWidget.IsFullScreen);
+            NavigatorState navigator = Navigator.Of(Context);
             _route = new SearchViewRoute(
-                anchor: this,
-                searchController: _controller!,
+                anchorKey: _anchorKey,
+                toggleVisibility: ToggleVisibility,
+                searchController: ControllerInstance,
                 suggestionsBuilder: CurrentWidget.SuggestionsBuilder,
                 viewBuilder: CurrentWidget.ViewBuilder,
                 viewLeading: CurrentWidget.ViewLeading,
@@ -421,9 +422,9 @@ public sealed class SearchAnchor : StatefulWidget
                 viewSide: CurrentWidget.ViewSide,
                 viewShape: CurrentWidget.ViewShape,
                 viewBarPadding: CurrentWidget.ViewBarPadding,
-                headerHeight: CurrentWidget.HeaderHeight,
-                headerTextStyle: CurrentWidget.HeaderTextStyle,
-                headerHintStyle: CurrentWidget.HeaderHintStyle,
+                viewHeaderHeight: CurrentWidget.HeaderHeight,
+                viewHeaderTextStyle: CurrentWidget.HeaderTextStyle,
+                viewHeaderHintStyle: CurrentWidget.HeaderHintStyle,
                 dividerColor: CurrentWidget.DividerColor,
                 viewConstraints: CurrentWidget.ViewConstraints,
                 viewPadding: CurrentWidget.ViewPadding,
@@ -431,96 +432,63 @@ public sealed class SearchAnchor : StatefulWidget
                 textCapitalization: CurrentWidget.TextCapitalization,
                 viewOnChanged: CurrentWidget.ViewOnChanged,
                 viewOnSubmitted: CurrentWidget.ViewOnSubmitted,
+                viewOnOpen: CurrentWidget.ViewOnOpen,
+                viewOnClose: CurrentWidget.ViewOnClose,
                 textInputAction: CurrentWidget.TextInputAction,
                 keyboardType: CurrentWidget.KeyboardType,
                 smartDashesType: CurrentWidget.SmartDashesType,
                 smartQuotesType: CurrentWidget.SmartQuotesType,
-                showFullScreenView: showFullScreen,
-                theme: Theme.Of(Context),
-                searchBarTheme: SearchBarTheme.Of(Context),
-                searchViewTheme: SearchViewTheme.Of(Context),
-                dividerTheme: DividerTheme.Of(Context),
-                mediaQuery: MediaQuery.Of(Context),
+                capturedThemes: InheritedTheme.Capture(from: Context, to: navigator.Context),
                 textDirection: Directionality.Of(Context),
-                localizations: MaterialLocalizations.Of(Context));
-            _viewIsOpen = true;
-            CurrentWidget.ViewOnOpen?.Invoke();
-            SetState(() => { });
+                showFullScreenView: GetShowFullScreenView());
             navigator.Push(_route);
         }
 
         internal void CloseView(string? selectedText)
         {
-            if (!_viewIsOpen)
-            {
-                return;
-            }
-
             if (selectedText is not null)
             {
-                _controller!.Text = selectedText;
+                ControllerInstance.Text = selectedText;
             }
 
-            _route?.Navigator?.MaybePop();
+            Navigator.Of(Context).Pop();
         }
 
-        internal void NotifyRouteClosed(SearchViewRoute route)
+        internal bool GetShowFullScreenView()
         {
-            if (!ReferenceEquals(_route, route))
+            if (CurrentWidget.IsFullScreen.HasValue)
             {
-                return;
+                return CurrentWidget.IsFullScreen.Value;
             }
 
-            _route = null;
-            _viewIsOpen = false;
-            CurrentWidget.ViewOnClose?.Invoke();
-            if (Mounted)
-            {
-                SetState(() => { });
-            }
+            return Theme.Of(Context).Platform
+                is TargetPlatform.IOS or TargetPlatform.Android or TargetPlatform.Fuchsia;
         }
 
-        private void AttachController(SearchController? external)
+        private double GetOpacity()
         {
-            _controller = external ?? new SearchController();
-            _ownsController = external is null;
-            _controller.Attach(this);
+            if (!CurrentWidget.Enabled)
+            {
+                return SearchViewChoreography.DisableSearchBarOpacity;
+            }
+
+            return _anchorIsVisible ? 1.0 : 0.0;
         }
 
-        private void DetachController()
+        private bool ToggleVisibility()
         {
-            if (_controller is null)
-            {
-                return;
-            }
-
-            _controller.Detach(this);
-            if (_ownsController)
-            {
-                _controller.Dispose();
-            }
-
-            _controller = null;
-            _ownsController = false;
-        }
-
-        private static bool ResolveFullScreen(ThemeData theme, bool? overrideValue)
-        {
-            if (overrideValue.HasValue)
-            {
-                return overrideValue.Value;
-            }
-
-            return theme.Platform is TargetPlatform.Android or TargetPlatform.Fuchsia or TargetPlatform.IOS;
+            SetState(() => _anchorIsVisible = !_anchorIsVisible);
+            return _anchorIsVisible;
         }
     }
 
-    internal sealed class SearchViewRoute : PageRoute
+    internal sealed class SearchViewRoute : PopupRoute
     {
-        private readonly SearchAnchorState _anchor;
+        private readonly GlobalKey _anchorKey;
+        private readonly Func<bool>? _toggleVisibility;
         private readonly SearchController _searchController;
         private readonly SuggestionsBuilder _suggestionsBuilder;
-        private readonly SearchViewBuilder? _viewBuilder;
+        private readonly ViewBuilder? _viewBuilder;
         private readonly Widget? _viewLeading;
         private readonly IReadOnlyList<Widget>? _viewTrailing;
         private readonly string? _viewHintText;
@@ -528,37 +496,40 @@ public sealed class SearchAnchor : StatefulWidget
         private readonly double? _viewElevation;
         private readonly Color? _viewSurfaceTintColor;
         private readonly BorderSide? _viewSide;
-        private readonly ShapeBorder? _viewShape;
-        private readonly Thickness? _viewBarPadding;
-        private readonly double? _headerHeight;
-        private readonly TextStyle? _headerTextStyle;
-        private readonly TextStyle? _headerHintStyle;
+        private readonly OutlinedBorder? _viewShape;
+        private readonly EdgeInsetsGeometry? _viewBarPadding;
+        private readonly double? _viewHeaderHeight;
+        private readonly TextStyle? _viewHeaderTextStyle;
+        private readonly TextStyle? _viewHeaderHintStyle;
         private readonly Color? _dividerColor;
         private readonly BoxConstraints? _viewConstraints;
-        private readonly Thickness? _viewPadding;
+        private readonly EdgeInsetsGeometry? _viewPadding;
         private readonly bool? _shrinkWrap;
         private readonly TextCapitalization? _textCapitalization;
         private readonly Action<string>? _viewOnChanged;
         private readonly Action<string>? _viewOnSubmitted;
+        private readonly Action? _viewOnOpen;
+        private readonly Action? _viewOnClose;
         private readonly TextInputAction? _textInputAction;
         private readonly TextInputType? _keyboardType;
         private readonly SmartDashesType? _smartDashesType;
         private readonly SmartQuotesType? _smartQuotesType;
+        private readonly CapturedThemes _capturedThemes;
+        private readonly TextDirection? _textDirection;
         private readonly bool _showFullScreenView;
-        private readonly ThemeData _theme;
-        private readonly SearchBarThemeData _searchBarTheme;
-        private readonly SearchViewThemeData _searchViewTheme;
-        private readonly DividerThemeData _dividerTheme;
-        private readonly MediaQueryData _mediaQuery;
-        private readonly TextDirection _textDirection;
-        private readonly MaterialLocalizations _localizations;
-        private bool _suppressCloseCallback;
+        private readonly RectTween _rectTween = new();
+        private SearchViewThemeData? _viewDefaults;
+        private SearchViewThemeData? _viewTheme;
+        private CurvedAnimation? _curvedAnimation;
+        private CurvedAnimation? _viewFadeOnIntervalCurve;
+        private bool _willDisposeSearchController;
 
         public SearchViewRoute(
-            SearchAnchorState anchor,
+            GlobalKey anchorKey,
+            Func<bool>? toggleVisibility,
             SearchController searchController,
             SuggestionsBuilder suggestionsBuilder,
-            SearchViewBuilder? viewBuilder,
+            ViewBuilder? viewBuilder,
             Widget? viewLeading,
             IReadOnlyList<Widget>? viewTrailing,
             string? viewHintText,
@@ -566,32 +537,30 @@ public sealed class SearchAnchor : StatefulWidget
             double? viewElevation,
             Color? viewSurfaceTintColor,
             BorderSide? viewSide,
-            ShapeBorder? viewShape,
-            Thickness? viewBarPadding,
-            double? headerHeight,
-            TextStyle? headerTextStyle,
-            TextStyle? headerHintStyle,
+            OutlinedBorder? viewShape,
+            EdgeInsetsGeometry? viewBarPadding,
+            double? viewHeaderHeight,
+            TextStyle? viewHeaderTextStyle,
+            TextStyle? viewHeaderHintStyle,
             Color? dividerColor,
             BoxConstraints? viewConstraints,
-            Thickness? viewPadding,
+            EdgeInsetsGeometry? viewPadding,
             bool? shrinkWrap,
             TextCapitalization? textCapitalization,
             Action<string>? viewOnChanged,
             Action<string>? viewOnSubmitted,
+            Action? viewOnOpen,
+            Action? viewOnClose,
             TextInputAction? textInputAction,
             TextInputType? keyboardType,
             SmartDashesType? smartDashesType,
             SmartQuotesType? smartQuotesType,
-            bool showFullScreenView,
-            ThemeData theme,
-            SearchBarThemeData searchBarTheme,
-            SearchViewThemeData searchViewTheme,
-            DividerThemeData dividerTheme,
-            MediaQueryData mediaQuery,
-            TextDirection textDirection,
-            MaterialLocalizations localizations) : base()
+            CapturedThemes capturedThemes,
+            TextDirection? textDirection,
+            bool showFullScreenView) : base()
         {
-            _anchor = anchor;
+            _anchorKey = anchorKey;
+            _toggleVisibility = toggleVisibility;
             _searchController = searchController;
             _suggestionsBuilder = suggestionsBuilder;
             _viewBuilder = viewBuilder;
@@ -604,9 +573,9 @@ public sealed class SearchAnchor : StatefulWidget
             _viewSide = viewSide;
             _viewShape = viewShape;
             _viewBarPadding = viewBarPadding;
-            _headerHeight = headerHeight;
-            _headerTextStyle = headerTextStyle;
-            _headerHintStyle = headerHintStyle;
+            _viewHeaderHeight = viewHeaderHeight;
+            _viewHeaderTextStyle = viewHeaderTextStyle;
+            _viewHeaderHintStyle = viewHeaderHintStyle;
             _dividerColor = dividerColor;
             _viewConstraints = viewConstraints;
             _viewPadding = viewPadding;
@@ -614,93 +583,203 @@ public sealed class SearchAnchor : StatefulWidget
             _textCapitalization = textCapitalization;
             _viewOnChanged = viewOnChanged;
             _viewOnSubmitted = viewOnSubmitted;
+            _viewOnOpen = viewOnOpen;
+            _viewOnClose = viewOnClose;
             _textInputAction = textInputAction;
             _keyboardType = keyboardType;
             _smartDashesType = smartDashesType;
             _smartQuotesType = smartQuotesType;
-            _showFullScreenView = showFullScreenView;
-            _theme = theme;
-            _searchBarTheme = searchBarTheme;
-            _searchViewTheme = searchViewTheme;
-            _dividerTheme = dividerTheme;
-            _mediaQuery = mediaQuery;
+            _capturedThemes = capturedThemes;
             _textDirection = textDirection;
-            _localizations = localizations;
+            _showFullScreenView = showFullScreenView;
         }
 
-        public override bool Opaque => false;
+        public override Color? BarrierColor => Colors.Transparent;
 
-        internal void SuppressCloseCallback()
+        public override bool BarrierDismissible => true;
+
+        public override string? BarrierLabel => "Dismiss";
+
+        public override TimeSpan TransitionDuration => SearchViewChoreography.OpenViewDuration;
+
+        public override void DidPush()
         {
-            _suppressCloseCallback = true;
+            BuildContext anchorContext = _anchorKey.CurrentContext!.Value;
+            UpdateViewConfig(anchorContext);
+            UpdateTweens(anchorContext);
+            _toggleVisibility?.Invoke();
+            _viewOnOpen?.Invoke();
+            base.DidPush();
         }
 
-        public override void DidComplete(object? result)
+        public override void DidPop(Route? previousRoute)
         {
-            if (!_suppressCloseCallback)
+            BuildContext? anchorContext = _anchorKey.CurrentContext;
+            if (anchorContext.HasValue)
             {
-                _anchor.NotifyRouteClosed(this);
+                UpdateTweens(anchorContext.Value);
             }
+
+            _toggleVisibility?.Invoke();
+            _viewOnClose?.Invoke();
+            Scheduler.AddPostFrameCallback(_ =>
+            {
+                BuildContext? context = _anchorKey.CurrentContext;
+                if (context.HasValue)
+                {
+                    FocusScope.MaybeOf(context.Value)?.Unfocus();
+                }
+            });
+            base.DidPop(previousRoute);
+        }
+
+        internal void Dismiss(bool disposeController)
+        {
+            _willDisposeSearchController = disposeController;
+            if (IsActive)
+            {
+                Navigator?.RemoveRoute(this);
+            }
+        }
+
+        public override void Dispose()
+        {
+            _curvedAnimation?.Dispose();
+            _viewFadeOnIntervalCurve?.Dispose();
+            if (_willDisposeSearchController)
+            {
+                _searchController.Dispose();
+            }
+
+            base.Dispose();
         }
 
         public override Widget BuildPage(BuildContext context)
         {
-            Widget barrier = new Semantics(
-                label: _localizations.ModalBarrierDismissLabel,
-                onTap: () => Navigator?.MaybePop(),
-                child: new GestureDetector(
-                    behavior: HitTestBehavior.Opaque,
-                    onTap: () => Navigator?.MaybePop(),
-                    child: new SizedBox()));
+            return new Directionality(
+                _textDirection ?? TextDirection.Ltr,
+                new AnimatedBuilder(
+                    animation: Animation,
+                    builder: (builderContext, _) =>
+                    {
+                        _curvedAnimation ??= new CurvedAnimation(
+                            Animation,
+                            Curves.EaseInOutCubicEmphasized,
+                            Curves.Flipped(Curves.EaseInOutCubicEmphasized));
+                        Rect viewRect = _rectTween.Evaluate(_curvedAnimation.Value);
+                        double topPadding = _showFullScreenView
+                            ? LerpDouble(0.0, MediaQuery.PaddingOf(builderContext).Top, _curvedAnimation.Value)
+                            : 0.0;
+                        _viewFadeOnIntervalCurve ??= new CurvedAnimation(
+                            Animation,
+                            SearchViewChoreography.ViewFadeOnInterval,
+                            Curves.Flipped(SearchViewChoreography.ViewFadeOnInterval));
+                        return new FadeTransition(
+                            opacity: _viewFadeOnIntervalCurve,
+                            child: _capturedThemes.Wrap(new SearchViewContent(
+                                animation: _curvedAnimation,
+                                topPadding: topPadding,
+                                viewMaxWidth: _rectTween.End!.Value.Width,
+                                viewRect: viewRect,
+                                searchController: _searchController,
+                                suggestionsBuilder: _suggestionsBuilder,
+                                viewBuilder: _viewBuilder,
+                                viewLeading: _viewLeading,
+                                viewTrailing: _viewTrailing,
+                                viewHintText: _viewHintText,
+                                viewBackgroundColor: _viewBackgroundColor,
+                                viewElevation: _viewElevation,
+                                viewSurfaceTintColor: _viewSurfaceTintColor,
+                                viewSide: _viewSide,
+                                viewShape: _viewShape,
+                                viewBarPadding: _viewBarPadding,
+                                viewHeaderHeight: _viewHeaderHeight,
+                                viewHeaderTextStyle: _viewHeaderTextStyle,
+                                viewHeaderHintStyle: _viewHeaderHintStyle,
+                                dividerColor: _dividerColor,
+                                viewConstraints: _viewConstraints,
+                                viewPadding: _viewPadding,
+                                shrinkWrap: _shrinkWrap,
+                                textCapitalization: _textCapitalization,
+                                viewOnChanged: _viewOnChanged,
+                                viewOnSubmitted: _viewOnSubmitted,
+                                textInputAction: _textInputAction,
+                                keyboardType: _keyboardType,
+                                smartDashesType: _smartDashesType,
+                                smartQuotesType: _smartQuotesType,
+                                showFullScreenView: _showFullScreenView)));
+                    }));
+        }
 
-            Widget content = new SearchViewContent(
-                route: this,
-                searchController: _searchController,
-                suggestionsBuilder: _suggestionsBuilder,
-                viewBuilder: _viewBuilder,
-                viewLeading: _viewLeading,
-                viewTrailing: _viewTrailing,
-                viewHintText: _viewHintText,
-                viewBackgroundColor: _viewBackgroundColor,
-                viewElevation: _viewElevation,
-                viewSurfaceTintColor: _viewSurfaceTintColor,
-                viewSide: _viewSide,
-                viewShape: _viewShape,
-                viewBarPadding: _viewBarPadding,
-                headerHeight: _headerHeight,
-                headerTextStyle: _headerTextStyle,
-                headerHintStyle: _headerHintStyle,
-                dividerColor: _dividerColor,
-                viewConstraints: _viewConstraints,
-                viewPadding: _viewPadding,
-                shrinkWrap: _shrinkWrap,
-                textCapitalization: _textCapitalization,
-                viewOnChanged: _viewOnChanged,
-                viewOnSubmitted: _viewOnSubmitted,
-                textInputAction: _textInputAction,
-                keyboardType: _keyboardType,
-                smartDashesType: _smartDashesType,
-                smartQuotesType: _smartQuotesType,
-                showFullScreenView: _showFullScreenView,
-                theme: _theme,
-                searchViewTheme: _searchViewTheme,
-                dividerTheme: _dividerTheme,
-                mediaQuery: _mediaQuery,
-                localizations: _localizations);
+        internal Rect? GetRect()
+        {
+            BuildContext? context = _anchorKey.CurrentContext;
+            if (!context.HasValue)
+            {
+                return null;
+            }
 
-            Widget page = new Stack(
-                fit: StackFit.Expand,
-                children:
-                [
-                    new Positioned(left: 0, top: 0, right: 0, bottom: 0, child: barrier),
-                    new Positioned(left: 0, top: 0, right: 0, bottom: 0, child: content),
-                ]);
-            page = new SearchBarTheme(_searchBarTheme, page);
-            page = new SearchViewTheme(_searchViewTheme, page);
-            page = new Theme(_theme, page);
-            page = new MediaQuery(_mediaQuery, page);
-            page = new Directionality(_textDirection, page);
-            return page;
+            var searchBarBox = (RenderBox)context.Value.FindRenderObject()!;
+            RenderObject? navigatorBox = Navigator!.Context.FindRenderObject();
+            Point boxLocation = searchBarBox.LocalToGlobal(default, ancestor: navigatorBox);
+            return new Rect(boxLocation, searchBarBox.Size);
+        }
+
+        private void UpdateViewConfig(BuildContext context)
+        {
+            _viewDefaults = SearchViewDefaultsM3.Resolve(Theme.Of(context), _showFullScreenView);
+            _viewTheme = SearchViewTheme.Of(context);
+        }
+
+        private void UpdateTweens(BuildContext context)
+        {
+            var navigatorBox = (RenderBox)Navigator!.Context.FindRenderObject()!;
+            Size screenSize = navigatorBox.Size;
+            Rect anchorRect = GetRect() ?? default;
+            BoxConstraints effectiveConstraints =
+                _viewConstraints ?? _viewTheme!.Constraints ?? _viewDefaults!.Constraints!.Value;
+            _rectTween.Begin = anchorRect;
+
+            double viewWidth = SearchViewChoreography.ClampDouble(
+                anchorRect.Width, effectiveConstraints.MinWidth, effectiveConstraints.MaxWidth);
+            double viewHeight = SearchViewChoreography.ClampDouble(
+                screenSize.Height * 2.0 / 3.0, effectiveConstraints.MinHeight, effectiveConstraints.MaxHeight);
+
+            double dx;
+            double dy = anchorRect.Top;
+            switch (_textDirection ?? TextDirection.Ltr)
+            {
+                case TextDirection.Ltr:
+                    dx = anchorRect.Left;
+                    if (screenSize.Width - anchorRect.Left < viewWidth)
+                    {
+                        dx = screenSize.Width - Math.Min(viewWidth, screenSize.Width);
+                    }
+
+                    break;
+                default:
+                    dx = Math.Max(anchorRect.Right - viewWidth, 0.0);
+                    if (anchorRect.Right < viewWidth)
+                    {
+                        dx = 0.0;
+                    }
+
+                    break;
+            }
+
+            if (screenSize.Height - anchorRect.Top < viewHeight)
+            {
+                dy = screenSize.Height - Math.Min(viewHeight, screenSize.Height);
+            }
+
+            _rectTween.End = _showFullScreenView
+                ? new Rect(default(Point), screenSize)
+                : new Rect(new Point(dx, dy), new Size(viewWidth, viewHeight));
+        }
+
+        private static double LerpDouble(double a, double b, double t)
+        {
+            return a + (b - a) * t;
         }
     }
 }
@@ -708,10 +787,13 @@ public sealed class SearchAnchor : StatefulWidget
 internal sealed class SearchViewContent : StatefulWidget
 {
     public SearchViewContent(
-        SearchAnchor.SearchViewRoute route,
+        Animation<double> animation,
+        double topPadding,
+        double viewMaxWidth,
+        Rect viewRect,
         SearchController searchController,
         SuggestionsBuilder suggestionsBuilder,
-        SearchViewBuilder? viewBuilder,
+        ViewBuilder? viewBuilder,
         Widget? viewLeading,
         IReadOnlyList<Widget>? viewTrailing,
         string? viewHintText,
@@ -719,14 +801,14 @@ internal sealed class SearchViewContent : StatefulWidget
         double? viewElevation,
         Color? viewSurfaceTintColor,
         BorderSide? viewSide,
-        ShapeBorder? viewShape,
-        Thickness? viewBarPadding,
-        double? headerHeight,
-        TextStyle? headerTextStyle,
-        TextStyle? headerHintStyle,
+        OutlinedBorder? viewShape,
+        EdgeInsetsGeometry? viewBarPadding,
+        double? viewHeaderHeight,
+        TextStyle? viewHeaderTextStyle,
+        TextStyle? viewHeaderHintStyle,
         Color? dividerColor,
         BoxConstraints? viewConstraints,
-        Thickness? viewPadding,
+        EdgeInsetsGeometry? viewPadding,
         bool? shrinkWrap,
         TextCapitalization? textCapitalization,
         Action<string>? viewOnChanged,
@@ -735,14 +817,12 @@ internal sealed class SearchViewContent : StatefulWidget
         TextInputType? keyboardType,
         SmartDashesType? smartDashesType,
         SmartQuotesType? smartQuotesType,
-        bool showFullScreenView,
-        ThemeData theme,
-        SearchViewThemeData searchViewTheme,
-        DividerThemeData dividerTheme,
-        MediaQueryData mediaQuery,
-        MaterialLocalizations localizations)
+        bool showFullScreenView)
     {
-        Route = route;
+        Animation = animation;
+        TopPadding = topPadding;
+        ViewMaxWidth = viewMaxWidth;
+        ViewRect = viewRect;
         SearchController = searchController;
         SuggestionsBuilder = suggestionsBuilder;
         ViewBuilder = viewBuilder;
@@ -755,9 +835,9 @@ internal sealed class SearchViewContent : StatefulWidget
         ViewSide = viewSide;
         ViewShape = viewShape;
         ViewBarPadding = viewBarPadding;
-        HeaderHeight = headerHeight;
-        HeaderTextStyle = headerTextStyle;
-        HeaderHintStyle = headerHintStyle;
+        ViewHeaderHeight = viewHeaderHeight;
+        ViewHeaderTextStyle = viewHeaderTextStyle;
+        ViewHeaderHintStyle = viewHeaderHintStyle;
         DividerColor = dividerColor;
         ViewConstraints = viewConstraints;
         ViewPadding = viewPadding;
@@ -770,17 +850,15 @@ internal sealed class SearchViewContent : StatefulWidget
         SmartDashesType = smartDashesType;
         SmartQuotesType = smartQuotesType;
         ShowFullScreenView = showFullScreenView;
-        Theme = theme;
-        SearchViewTheme = searchViewTheme;
-        DividerTheme = dividerTheme;
-        MediaQuery = mediaQuery;
-        Localizations = localizations;
     }
 
-    public SearchAnchor.SearchViewRoute Route { get; }
+    public Animation<double> Animation { get; }
+    public double TopPadding { get; }
+    public double ViewMaxWidth { get; }
+    public Rect ViewRect { get; }
     public SearchController SearchController { get; }
     public SuggestionsBuilder SuggestionsBuilder { get; }
-    public SearchViewBuilder? ViewBuilder { get; }
+    public ViewBuilder? ViewBuilder { get; }
     public Widget? ViewLeading { get; }
     public IReadOnlyList<Widget>? ViewTrailing { get; }
     public string? ViewHintText { get; }
@@ -788,14 +866,14 @@ internal sealed class SearchViewContent : StatefulWidget
     public double? ViewElevation { get; }
     public Color? ViewSurfaceTintColor { get; }
     public BorderSide? ViewSide { get; }
-    public ShapeBorder? ViewShape { get; }
-    public Thickness? ViewBarPadding { get; }
-    public double? HeaderHeight { get; }
-    public TextStyle? HeaderTextStyle { get; }
-    public TextStyle? HeaderHintStyle { get; }
+    public OutlinedBorder? ViewShape { get; }
+    public EdgeInsetsGeometry? ViewBarPadding { get; }
+    public double? ViewHeaderHeight { get; }
+    public TextStyle? ViewHeaderTextStyle { get; }
+    public TextStyle? ViewHeaderHintStyle { get; }
     public Color? DividerColor { get; }
     public BoxConstraints? ViewConstraints { get; }
-    public Thickness? ViewPadding { get; }
+    public EdgeInsetsGeometry? ViewPadding { get; }
     public bool? ShrinkWrap { get; }
     public TextCapitalization? TextCapitalization { get; }
     public Action<string>? ViewOnChanged { get; }
@@ -805,11 +883,6 @@ internal sealed class SearchViewContent : StatefulWidget
     public SmartDashesType? SmartDashesType { get; }
     public SmartQuotesType? SmartQuotesType { get; }
     public bool ShowFullScreenView { get; }
-    public ThemeData Theme { get; }
-    public SearchViewThemeData SearchViewTheme { get; }
-    public DividerThemeData DividerTheme { get; }
-    public MediaQueryData MediaQuery { get; }
-    public MaterialLocalizations Localizations { get; }
 
     public override State CreateState()
     {
@@ -818,11 +891,34 @@ internal sealed class SearchViewContent : StatefulWidget
 
     private sealed class SearchViewContentState : State
     {
+        private Size? _screenSize;
+        private Rect _viewRect;
+        private string? _searchValue;
+        private IReadOnlyList<Widget> _result = [];
+        private CurvedAnimation? _viewIconsFade;
+        private CurvedAnimation? _viewDividerFade;
+        private CurvedAnimation? _viewListFade;
+        private int _refreshGeneration;
+
         private SearchViewContent Current => (SearchViewContent)StateWidget;
 
         public override void InitState()
         {
-            Current.SearchController.AddListener(HandleControllerChanged);
+            _viewRect = Current.ViewRect;
+            Current.SearchController.AddListener(UpdateSuggestions);
+            _viewIconsFade = new CurvedAnimation(
+                Current.Animation,
+                SearchViewChoreography.ViewIconsFadeOnInterval,
+                Curves.Flipped(SearchViewChoreography.ViewIconsFadeOnInterval));
+            // Upstream quirk: the divider reverses along the whole-view fade interval, not its own.
+            _viewDividerFade = new CurvedAnimation(
+                Current.Animation,
+                SearchViewChoreography.ViewDividerFadeOnInterval,
+                Curves.Flipped(SearchViewChoreography.ViewFadeOnInterval));
+            _viewListFade = new CurvedAnimation(
+                Current.Animation,
+                SearchViewChoreography.ViewListFadeOnInterval,
+                Curves.Flipped(SearchViewChoreography.ViewListFadeOnInterval));
         }
 
         public override void DidUpdateWidget(StatefulWidget oldWidget)
@@ -830,142 +926,119 @@ internal sealed class SearchViewContent : StatefulWidget
             var old = (SearchViewContent)oldWidget;
             if (!ReferenceEquals(old.SearchController, Current.SearchController))
             {
-                old.SearchController.RemoveListener(HandleControllerChanged);
-                Current.SearchController.AddListener(HandleControllerChanged);
+                old.SearchController.RemoveListener(UpdateSuggestions);
+                Current.SearchController.AddListener(UpdateSuggestions);
+            }
+
+            if (old.ViewRect != Current.ViewRect)
+            {
+                SetState(() => _viewRect = Current.ViewRect);
+            }
+        }
+
+        public override void DidChangeDependencies()
+        {
+            Size updatedScreenSize = MediaQuery.Of(Context).Size;
+            if (_screenSize != updatedScreenSize)
+            {
+                _screenSize = updatedScreenSize;
+                if (Current.ShowFullScreenView)
+                {
+                    _viewRect = new Rect(default(Point), updatedScreenSize);
+                }
+            }
+
+            if (_searchValue != Current.SearchController.Text)
+            {
+                ScheduleSuggestionsRefresh();
             }
         }
 
         public override void Dispose()
         {
-            Current.SearchController.RemoveListener(HandleControllerChanged);
+            Current.SearchController.RemoveListener(UpdateSuggestions);
+            _viewIconsFade?.Dispose();
+            _viewDividerFade?.Dispose();
+            _viewListFade?.Dispose();
+            _refreshGeneration++;
         }
 
         public override Widget Build(BuildContext context)
         {
-            var theme = Current.Theme;
-            var viewTheme = Current.SearchViewTheme;
-            var defaults = SearchViewDefaults.Resolve(theme, Current.ShowFullScreenView);
-            var shape = Current.ViewShape ?? viewTheme.Shape ?? defaults.Shape!;
-            var side = Current.ViewSide ?? viewTheme.Side ?? defaults.Side;
-            if (side.HasValue)
+            var theme = Theme.Of(context);
+            SearchViewThemeData viewTheme = SearchViewTheme.Of(context);
+            SearchViewThemeData viewDefaults = SearchViewDefaultsM3.Resolve(theme, Current.ShowFullScreenView);
+
+            Color effectiveBackgroundColor =
+                Current.ViewBackgroundColor ?? viewTheme.BackgroundColor ?? viewDefaults.BackgroundColor!.Value;
+            Color effectiveSurfaceTint =
+                Current.ViewSurfaceTintColor ?? viewTheme.SurfaceTintColor ?? viewDefaults.SurfaceTintColor!.Value;
+            double effectiveElevation = Current.ViewElevation ?? viewTheme.Elevation ?? viewDefaults.Elevation!.Value;
+            BorderSide? effectiveSide = Current.ViewSide ?? viewTheme.Side ?? viewDefaults.Side;
+            OutlinedBorder effectiveShape = Current.ViewShape ?? viewTheme.Shape ?? viewDefaults.Shape!;
+            if (effectiveSide.HasValue)
             {
-                shape = shape is OutlinedBorder outlinedside ? outlinedside.CopyWith(side) : shape;
+                effectiveShape = effectiveShape.CopyWith(effectiveSide);
             }
 
-            double elevation = Current.ViewElevation ?? viewTheme.Elevation ?? defaults.Elevation ?? 6.0;
-            var background = Current.ViewBackgroundColor ?? viewTheme.BackgroundColor ?? defaults.BackgroundColor ?? theme.SurfaceContainerHighColor;
-            var surfaceTint = Current.ViewSurfaceTintColor ?? viewTheme.SurfaceTintColor ?? defaults.SurfaceTintColor ?? Colors.Transparent;
-            if (theme.UseMaterial3 && surfaceTint.A > 0)
-            {
-                background = NavigationSurfaceUtilities.ApplySurfaceTint(background, surfaceTint, elevation);
-            }
+            Color effectiveDividerColor = Current.DividerColor
+                                          ?? viewTheme.DividerColor
+                                          ?? DividerTheme.Of(context).Color
+                                          ?? viewDefaults.DividerColor!.Value;
+            double? effectiveHeaderHeight = Current.ViewHeaderHeight ?? viewTheme.HeaderHeight;
+            BoxConstraints? headerConstraints = effectiveHeaderHeight.HasValue
+                ? BoxConstraints.TightFor(height: effectiveHeaderHeight)
+                : null;
+            TextStyle? effectiveTextStyle =
+                Current.ViewHeaderTextStyle ?? viewTheme.HeaderTextStyle ?? viewDefaults.HeaderTextStyle;
+            TextStyle? effectiveHintStyle = Current.ViewHeaderHintStyle
+                                            ?? viewTheme.HeaderHintStyle
+                                            ?? Current.ViewHeaderTextStyle
+                                            ?? viewTheme.HeaderTextStyle
+                                            ?? viewDefaults.HeaderHintStyle;
+            EdgeInsetsGeometry? effectivePadding = Current.ViewPadding ?? viewTheme.Padding ?? viewDefaults.Padding;
+            EdgeInsetsGeometry? effectiveBarPadding =
+                Current.ViewBarPadding ?? viewTheme.BarPadding ?? viewDefaults.BarPadding;
+            bool effectiveShrinkWrap = Current.ShrinkWrap ?? viewTheme.ShrinkWrap ?? viewDefaults.ShrinkWrap!.Value;
+            BoxConstraints effectiveConstraints =
+                Current.ViewConstraints ?? viewTheme.Constraints ?? viewDefaults.Constraints!.Value;
+            double minHeight = Math.Min(effectiveConstraints.MinHeight, _viewRect.Height);
 
-            BoxConstraints constraints = Current.ViewConstraints ?? viewTheme.Constraints ?? defaults.Constraints!.Value;
-            double maxWidth = Current.ShowFullScreenView
-                ? Current.MediaQuery.Size.Width
-                : Math.Min(Current.MediaQuery.Size.Width, double.IsInfinity(constraints.MaxWidth) ? Current.MediaQuery.Size.Width : constraints.MaxWidth);
-            double maxHeight = Current.ShowFullScreenView
-                ? Current.MediaQuery.Size.Height
-                : Math.Min(Current.MediaQuery.Size.Height, double.IsInfinity(constraints.MaxHeight) ? Current.MediaQuery.Size.Height * 2 / 3 : constraints.MaxHeight);
-            double minWidth = Current.ShowFullScreenView ? maxWidth : Math.Min(constraints.MinWidth, maxWidth);
-            double minHeight = Current.ShowFullScreenView ? maxHeight : Math.Min(constraints.MinHeight, maxHeight);
-            bool shrinkWrap = Current.ShrinkWrap ?? viewTheme.ShrinkWrap ?? defaults.ShrinkWrap ?? false;
-
-            var suggestions = Current.SuggestionsBuilder(context, Current.SearchController) ?? [];
-            Widget suggestionList = Current.ViewBuilder?.Invoke(suggestions)
-                                    ?? new ListView(children: suggestions, padding: new Thickness(0));
-            if (shrinkWrap && !Current.ShowFullScreenView)
-            {
-                suggestionList = new SingleChildScrollView(
-                    child: new ListBody(children: suggestions),
-                    padding: new Thickness(0));
-            }
-
-            var contentChildren = new List<Widget>
-            {
-                BuildHeader(context, viewTheme, defaults),
-            };
-
-            if (!shrinkWrap || minHeight > 0 || Current.ShowFullScreenView || suggestions.Count > 0)
-            {
-                var dividerColor = Current.DividerColor
-                                   ?? viewTheme.DividerColor
-                                   ?? Current.DividerTheme.Color
-                                   ?? defaults.DividerColor
-                                   ?? theme.OutlineColor;
-                contentChildren.Add(new Divider(height: 1, thickness: 1, color: dividerColor));
-                contentChildren.Add(new Flexible(
-                    child: suggestionList,
-                    fit: shrinkWrap && !Current.ShowFullScreenView ? FlexFit.Loose : FlexFit.Tight));
-            }
-
-            Widget surface = new Column(
-                mainAxisSize: Current.ShowFullScreenView || !shrinkWrap ? MainAxisSize.Max : MainAxisSize.Min,
-                crossAxisAlignment: CrossAxisAlignment.Stretch,
-                children: contentChildren);
-            surface = new DecoratedBox(
-                new BoxDecoration(
-                    Color: background,
-                    Border: ShapeBorderGeometry.SideOrNull(
-                        shape) is { } shapeSide ? Plumix.Rendering.Border.FromBorderSide(shapeSide) : null,
-                    BorderRadius: ShapeBorderGeometry.ResolveRadius(shape),
-                    BoxShadows: BuildBoxShadows(theme.ShadowColor, elevation)),
-                surface);
-            surface = new ClipRRect(ShapeBorderGeometry.ResolveRadius(shape), surface);
-            surface = new ConstrainedBox(
-                new BoxConstraints(
-                    MinWidth: minWidth,
-                    MaxWidth: maxWidth,
-                    MinHeight: minHeight,
-                    MaxHeight: maxHeight),
-                surface);
-
-            if (!Current.ShowFullScreenView)
-            {
-                surface = new Padding(Current.ViewPadding ?? viewTheme.Padding ?? default, surface);
-            }
-
-            return new Align(
-                alignment: Current.ShowFullScreenView ? Alignment.TopLeft : Alignment.TopCenter,
-                child: surface);
-        }
-
-        private Widget BuildHeader(BuildContext context, SearchViewThemeData viewTheme, SearchViewThemeData defaults)
-        {
-            double? height = Current.HeaderHeight ?? viewTheme.HeaderHeight;
-            var headerTextStyle = Current.HeaderTextStyle ?? viewTheme.HeaderTextStyle ?? defaults.HeaderTextStyle;
-            var headerHintStyle = Current.HeaderHintStyle
-                                  ?? viewTheme.HeaderHintStyle
-                                  ?? Current.HeaderTextStyle
-                                  ?? viewTheme.HeaderTextStyle
-                                  ?? defaults.HeaderHintStyle;
-            var barPadding = Current.ViewBarPadding ?? viewTheme.BarPadding ?? defaults.BarPadding;
-            var trailing = Current.ViewTrailing ?? BuildDefaultTrailing();
-            Widget leading = Current.ViewLeading ?? new BackButton(
+            Widget defaultLeading = new BackButton(
                 style: new ButtonStyle(TapTargetSize: MaterialTapTargetSize.ShrinkWrap),
-                onPressed: () => Current.Route.Navigator?.MaybePop());
+                onPressed: () => Navigator.Of(context).Pop());
+            IReadOnlyList<Widget> defaultTrailing = string.IsNullOrEmpty(Current.SearchController.Text)
+                ? []
+                :
+                [
+                    new IconButton(
+                        icon: new Icon(Icons.Close),
+                        tooltip: MaterialLocalizations.Of(context).ClearButtonTooltip,
+                        onPressed: Current.SearchController.Clear),
+                ];
+            Widget viewDivider = new DividerTheme(
+                DividerTheme.Of(context).CopyWith(color: effectiveDividerColor),
+                new Divider(height: 1));
 
-            Widget searchBar = new SearchBar(
+            Widget headerBar = new SearchBar(
                 controller: Current.SearchController,
                 autoFocus: true,
-                constraints: height.HasValue
-                    ? BoxConstraints.TightFor(height: height)
-                    : Current.ShowFullScreenView
-                        ? new BoxConstraints(MinHeight: SearchViewDefaults.FullScreenBarHeight)
-                        : null,
-                padding: MaterialStateProperty<Thickness?>.All(barPadding),
-                leading: leading,
-                trailing: trailing,
+                constraints: headerConstraints ?? (Current.ShowFullScreenView
+                    ? new BoxConstraints(MinHeight: SearchViewDefaultsM3.FullScreenBarHeight)
+                    : null),
+                padding: MaterialStateProperty<EdgeInsetsGeometry?>.All(effectiveBarPadding),
+                leading: Current.ViewLeading ?? defaultLeading,
+                trailing: Current.ViewTrailing ?? defaultTrailing,
                 hintText: Current.ViewHintText,
                 backgroundColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
                 overlayColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
                 elevation: MaterialStateProperty<double?>.All(0.0),
-                textStyle: MaterialStateProperty<TextStyle?>.All(headerTextStyle),
-                hintStyle: MaterialStateProperty<TextStyle?>.All(headerHintStyle),
+                textStyle: MaterialStateProperty<TextStyle?>.All(effectiveTextStyle),
+                hintStyle: MaterialStateProperty<TextStyle?>.All(effectiveHintStyle),
                 onChanged: value =>
                 {
                     Current.ViewOnChanged?.Invoke(value);
-                    SetState(() => { });
+                    UpdateSuggestions();
                 },
                 onSubmitted: Current.ViewOnSubmitted,
                 textCapitalization: Current.TextCapitalization,
@@ -974,70 +1047,112 @@ internal sealed class SearchViewContent : StatefulWidget
                 smartDashesType: Current.SmartDashesType,
                 smartQuotesType: Current.SmartQuotesType);
 
-            return Current.ShowFullScreenView
-                ? new Padding(new Thickness(0, Current.MediaQuery.Padding.Top, 0, 0), searchBar)
-                : searchBar;
-        }
-
-        private IReadOnlyList<Widget> BuildDefaultTrailing()
-        {
-            if (string.IsNullOrEmpty(Current.SearchController.Text))
+            var columnChildren = new List<Widget>
             {
-                return [];
+                new Padding(
+                    EdgeInsetsGeometry.Only(top: Current.TopPadding),
+                    new SafeArea(top: false, bottom: false, child: headerBar)),
+            };
+            if (!effectiveShrinkWrap || minHeight > 0 || Current.ShowFullScreenView || _result.Count > 0)
+            {
+                Widget viewList = Current.ViewBuilder is null
+                    ? MediaQuery.RemovePadding(
+                        context: context,
+                        removeTop: true,
+                        child: new ListView(
+                            children: _result,
+                            padding: new Thickness(0, 0, 0, MediaQuery.ViewInsetsOf(context).Bottom),
+                            shrinkWrap: effectiveShrinkWrap))
+                    : Current.ViewBuilder(_result);
+                columnChildren.Add(new FadeTransition(opacity: _viewDividerFade!, child: viewDivider));
+                columnChildren.Add(new Flexible(
+                    fit: effectiveShrinkWrap && !Current.ShowFullScreenView ? FlexFit.Loose : FlexFit.Tight,
+                    child: new FadeTransition(opacity: _viewListFade!, child: viewList)));
             }
 
-            return
-            [
-                new IconButton(
-                    icon: new Icon(Icons.Clear),
-                    onPressed: () =>
-                    {
-                        Current.SearchController.Clear();
-                        SetState(() => { });
-                    },
-                    padding: new Thickness(8),
-                    constraints: BoxConstraints.TightFor(width: 48, height: 48))
-            ];
+            Widget viewSurface = new Material(
+                clipBehavior: Clip.AntiAlias,
+                shape: effectiveShape,
+                color: effectiveBackgroundColor,
+                surfaceTintColor: effectiveSurfaceTint,
+                elevation: effectiveElevation,
+                child: new OverflowBox(
+                    alignment: Alignment.TopLeft,
+                    maxWidth: Math.Min(Current.ViewMaxWidth, _screenSize!.Value.Width),
+                    minWidth: 0,
+                    fit: OverflowBoxFit.DeferToChild,
+                    child: new FadeTransition(
+                        opacity: _viewIconsFade!,
+                        child: new Column(
+                            mainAxisSize: MainAxisSize.Min,
+                            crossAxisAlignment: CrossAxisAlignment.Stretch,
+                            children: columnChildren))));
+
+            return new Align(
+                alignment: Alignment.TopLeft,
+                child: new Widgets.Transform(
+                    Matrix.CreateTranslation(_viewRect.X, _viewRect.Y),
+                    child: new ConstrainedBox(
+                        new BoxConstraints(
+                            MinWidth: Math.Min(effectiveConstraints.MinWidth, _viewRect.Width),
+                            MaxWidth: _viewRect.Width,
+                            MinHeight: minHeight,
+                            MaxHeight: _viewRect.Height),
+                        new Padding(
+                            Current.ShowFullScreenView
+                                ? EdgeInsetsGeometry.Zero
+                                : effectivePadding ?? EdgeInsetsGeometry.Zero,
+                            viewSurface))));
         }
 
-        private void HandleControllerChanged()
+        private async void UpdateSuggestions()
         {
+            if (_searchValue == Current.SearchController.Text)
+            {
+                return;
+            }
+
+            _searchValue = Current.SearchController.Text;
+            BuildContext context = Context;
+            IReadOnlyList<Widget> suggestions = await Current.SuggestionsBuilder(context, Current.SearchController);
             if (Mounted)
             {
-                SetState(() => { });
+                SetState(() => _result = suggestions);
             }
         }
 
-        private static BoxShadows? BuildBoxShadows(Color color, double elevation)
+        private void ScheduleSuggestionsRefresh()
         {
-            if (color.A == 0 || elevation <= 0)
+            // Dart coalesces bursts of dependency changes through Timer(Duration.zero, ...); the post-frame
+            // callback plays that role here, with the generation counter as the cancellation token.
+            int generation = ++_refreshGeneration;
+            Scheduler.AddPostFrameCallback(_ =>
             {
-                return null;
-            }
+                if (generation != _refreshGeneration || !Mounted)
+                {
+                    return;
+                }
 
-            return new BoxShadows(new BoxShadow
-            {
-                OffsetY = Math.Max(1, elevation * 0.5),
-                Blur = Math.Max(2, elevation * 2.4),
-                Color = ApplyOpacity(color, 0.20),
+                RunScheduledRefresh();
             });
         }
 
-        private static Color ApplyOpacity(Color color, double opacity)
+        private async void RunScheduledRefresh()
         {
-            return Color.FromArgb(
-                (byte)Math.Round(color.A * Math.Clamp(opacity, 0, 1)),
-                color.R,
-                color.G,
-                color.B);
+            _searchValue = Current.SearchController.Text;
+            BuildContext context = Context;
+            IReadOnlyList<Widget> suggestions = await Current.SuggestionsBuilder(context, Current.SearchController);
+            _refreshGeneration++;
+            if (Mounted)
+            {
+                SetState(() => _result = suggestions);
+            }
         }
     }
 }
 
 public sealed class SearchBar : StatefulWidget
 {
-    private const double DisabledOpacity = 0.38;
-
     public SearchBar(
         TextEditingController? controller = null,
         FocusNode? focusNode = null,
@@ -1045,7 +1160,7 @@ public sealed class SearchBar : StatefulWidget
         Widget? leading = null,
         IReadOnlyList<Widget>? trailing = null,
         Action? onTap = null,
-        Action? onTapOutside = null,
+        Action<PointerDownEvent>? onTapOutside = null,
         Action<string>? onChanged = null,
         Action<string>? onSubmitted = null,
         BoxConstraints? constraints = null,
@@ -1055,8 +1170,8 @@ public sealed class SearchBar : StatefulWidget
         MaterialStateProperty<Color?>? surfaceTintColor = null,
         MaterialStateProperty<Color?>? overlayColor = null,
         MaterialStateProperty<BorderSide?>? side = null,
-        MaterialStateProperty<ShapeBorder?>? shape = null,
-        MaterialStateProperty<Thickness?>? padding = null,
+        MaterialStateProperty<OutlinedBorder?>? shape = null,
+        MaterialStateProperty<EdgeInsetsGeometry?>? padding = null,
         MaterialStateProperty<TextStyle?>? textStyle = null,
         MaterialStateProperty<TextStyle?>? hintStyle = null,
         TextCapitalization? textCapitalization = null,
@@ -1065,6 +1180,7 @@ public sealed class SearchBar : StatefulWidget
         TextInputAction? textInputAction = null,
         TextInputType? keyboardType = null,
         Thickness? scrollPadding = null,
+        EditableTextContextMenuBuilder? contextMenuBuilder = null,
         bool readOnly = false,
         SmartDashesType? smartDashesType = null,
         SmartQuotesType? smartQuotesType = null,
@@ -1096,6 +1212,7 @@ public sealed class SearchBar : StatefulWidget
         TextInputAction = textInputAction;
         KeyboardType = keyboardType;
         ScrollPadding = scrollPadding ?? new Thickness(20);
+        ContextMenuBuilder = contextMenuBuilder ?? TextField.DefaultContextMenuBuilder;
         ReadOnly = readOnly;
         SmartDashesType = smartDashesType;
         SmartQuotesType = smartQuotesType;
@@ -1107,7 +1224,7 @@ public sealed class SearchBar : StatefulWidget
     public Widget? Leading { get; }
     public IReadOnlyList<Widget>? Trailing { get; }
     public Action? OnTap { get; }
-    public Action? OnTapOutside { get; }
+    public Action<PointerDownEvent>? OnTapOutside { get; }
     public Action<string>? OnChanged { get; }
     public Action<string>? OnSubmitted { get; }
     public BoxConstraints? Constraints { get; }
@@ -1117,8 +1234,8 @@ public sealed class SearchBar : StatefulWidget
     public MaterialStateProperty<Color?>? SurfaceTintColor { get; }
     public MaterialStateProperty<Color?>? OverlayColor { get; }
     public MaterialStateProperty<BorderSide?>? Side { get; }
-    public MaterialStateProperty<ShapeBorder?>? Shape { get; }
-    public MaterialStateProperty<Thickness?>? Padding { get; }
+    public MaterialStateProperty<OutlinedBorder?>? Shape { get; }
+    public MaterialStateProperty<EdgeInsetsGeometry?>? Padding { get; }
     public MaterialStateProperty<TextStyle?>? TextStyle { get; }
     public MaterialStateProperty<TextStyle?>? HintStyle { get; }
     public TextCapitalization? TextCapitalization { get; }
@@ -1127,6 +1244,7 @@ public sealed class SearchBar : StatefulWidget
     public TextInputAction? TextInputAction { get; }
     public TextInputType? KeyboardType { get; }
     public Thickness ScrollPadding { get; }
+    public EditableTextContextMenuBuilder ContextMenuBuilder { get; }
     public bool ReadOnly { get; }
     public SmartDashesType? SmartDashesType { get; }
     public SmartQuotesType? SmartQuotesType { get; }
@@ -1138,18 +1256,18 @@ public sealed class SearchBar : StatefulWidget
 
     private sealed class SearchBarState : State
     {
-        private MaterialStatesController? _statesController;
-        private FocusNode? _focusNode;
-        private bool _ownsFocusNode;
+        private readonly MaterialStatesController _internalStatesController = new();
+        private FocusNode? _internalFocusNode;
+        private FocusNode? _attachedFocusNode;
 
         private SearchBar CurrentWidget => (SearchBar)StateWidget;
 
+        private FocusNode FocusNodeInstance => CurrentWidget.FocusNode ?? (_internalFocusNode ??= new FocusNode());
+
         public override void InitState()
         {
-            _statesController = new MaterialStatesController();
-            _statesController.AddListener(HandleStatesChanged);
-            AttachFocusNode(CurrentWidget.FocusNode);
-            SyncDisabledState();
+            _internalStatesController.AddListener(HandleStatesChanged);
+            AttachFocusListener();
         }
 
         public override void DidUpdateWidget(StatefulWidget oldWidget)
@@ -1157,129 +1275,144 @@ public sealed class SearchBar : StatefulWidget
             var old = (SearchBar)oldWidget;
             if (!ReferenceEquals(old.FocusNode, CurrentWidget.FocusNode))
             {
-                DetachFocusNode();
-                AttachFocusNode(CurrentWidget.FocusNode);
+                AttachFocusListener();
             }
-
-            SyncDisabledState();
         }
 
         public override void Dispose()
         {
-            DetachFocusNode();
-            if (_statesController is not null)
-            {
-                _statesController.RemoveListener(HandleStatesChanged);
-                _statesController.Dispose();
-                _statesController = null;
-            }
+            _attachedFocusNode?.RemoveListener(HandleFocusChanged);
+            _attachedFocusNode = null;
+            _internalFocusNode?.Dispose();
+            _internalStatesController.RemoveListener(HandleStatesChanged);
+            _internalStatesController.Dispose();
         }
 
         public override Widget Build(BuildContext context)
         {
             var theme = Theme.Of(context);
-            var searchBarTheme = SearchBarTheme.Of(context);
-            var defaults = SearchBarDefaults.Resolve(theme);
-            MaterialState states = _statesController?.Value ?? MaterialState.None;
-            if (!CurrentWidget.Enabled)
+            SearchBarThemeData searchBarTheme = SearchBarTheme.Of(context);
+            SearchBarThemeData defaults = SearchBarDefaultsM3.Resolve(theme);
+            MaterialState states = _internalStatesController.Value;
+
+            TextStyle? effectiveTextStyle = Resolve(
+                CurrentWidget.TextStyle, searchBarTheme.TextStyle, defaults.TextStyle, states);
+            TextStyle? effectiveHintStyle = ResolveProperty(CurrentWidget.HintStyle, states)
+                                            ?? ResolveProperty(searchBarTheme.HintStyle, states)
+                                            ?? ResolveProperty(CurrentWidget.TextStyle, states)
+                                            ?? ResolveProperty(searchBarTheme.TextStyle, states)
+                                            ?? ResolveProperty(defaults.HintStyle, states);
+            double effectiveElevation = Resolve(
+                CurrentWidget.Elevation, searchBarTheme.Elevation, defaults.Elevation, states)!.Value;
+            Color effectiveBackgroundColor = Resolve(
+                CurrentWidget.BackgroundColor, searchBarTheme.BackgroundColor, defaults.BackgroundColor, states)!.Value;
+            Color effectiveShadowColor = Resolve(
+                CurrentWidget.ShadowColor, searchBarTheme.ShadowColor, defaults.ShadowColor, states)!.Value;
+            Color effectiveSurfaceTintColor = Resolve(
+                CurrentWidget.SurfaceTintColor,
+                searchBarTheme.SurfaceTintColor,
+                defaults.SurfaceTintColor,
+                states)!.Value;
+            MaterialStateProperty<Color?>? effectiveOverlayColor =
+                CurrentWidget.OverlayColor ?? searchBarTheme.OverlayColor ?? defaults.OverlayColor;
+            BorderSide? effectiveSide = Resolve(CurrentWidget.Side, searchBarTheme.Side, defaults.Side, states);
+            OutlinedBorder? effectiveShape = Resolve(
+                CurrentWidget.Shape, searchBarTheme.Shape, defaults.Shape, states);
+            if (effectiveSide.HasValue)
             {
-                states |= MaterialState.Disabled;
+                effectiveShape = effectiveShape?.CopyWith(effectiveSide);
             }
 
-            var effectiveTextStyle = Resolve(CurrentWidget.TextStyle, searchBarTheme.TextStyle, defaults.TextStyle, states);
-            var effectiveHintStyle = Resolve(CurrentWidget.HintStyle, searchBarTheme.HintStyle, CurrentWidget.TextStyle, states)
-                                     ?? Resolve(searchBarTheme.TextStyle, defaults.HintStyle, null, states);
-            double elevation = Resolve(CurrentWidget.Elevation, searchBarTheme.Elevation, defaults.Elevation, states) ?? 6.0;
-            var background = Resolve(CurrentWidget.BackgroundColor, searchBarTheme.BackgroundColor, defaults.BackgroundColor, states)
-                             ?? theme.SurfaceContainerHighColor;
-            var shadowColor = Resolve(CurrentWidget.ShadowColor, searchBarTheme.ShadowColor, defaults.ShadowColor, states)
-                              ?? theme.ShadowColor;
-            var surfaceTint = Resolve(CurrentWidget.SurfaceTintColor, searchBarTheme.SurfaceTintColor, defaults.SurfaceTintColor, states)
-                              ?? Colors.Transparent;
-            var shape = Resolve(CurrentWidget.Shape, searchBarTheme.Shape, defaults.Shape, states)
-                        ?? new StadiumBorder();
-            var side = Resolve(CurrentWidget.Side, searchBarTheme.Side, defaults.Side, states);
-            if (side.HasValue)
-            {
-                shape = shape is OutlinedBorder outlinedside ? outlinedside.CopyWith(side) : shape;
-            }
-            var padding = Resolve(CurrentWidget.Padding, searchBarTheme.Padding, defaults.Padding, states) ?? new Thickness(8, 0);
-            var constraints = CurrentWidget.Constraints
-                              ?? searchBarTheme.Constraints
-                              ?? defaults.Constraints
-                              ?? new BoxConstraints(MinWidth: 360, MaxWidth: 800, MinHeight: 56);
-            if (theme.UseMaterial3 && surfaceTint.A > 0)
-            {
-                background = NavigationSurfaceUtilities.ApplySurfaceTint(background, surfaceTint, elevation);
-            }
+            EdgeInsetsGeometry? effectivePadding = Resolve(
+                CurrentWidget.Padding, searchBarTheme.Padding, defaults.Padding, states);
+            TextCapitalization effectiveTextCapitalization = CurrentWidget.TextCapitalization
+                                                             ?? searchBarTheme.TextCapitalization
+                                                             ?? defaults.TextCapitalization!.Value;
+            BoxConstraints effectiveConstraints =
+                CurrentWidget.Constraints ?? searchBarTheme.Constraints ?? defaults.Constraints!.Value;
+
+            bool isDark = theme.Brightness == Brightness.Dark;
+            Color defaultIconColor = isDark ? TabStyle.DefaultIconLightColor : TabStyle.DefaultIconDarkColor;
+            IconThemeData ambientIconTheme = IconTheme.Of(context);
+            IconThemeData? customIconTheme = ambientIconTheme.Color != defaultIconColor ? ambientIconTheme : null;
 
             var children = new List<Widget>();
             if (CurrentWidget.Leading is not null)
             {
-                children.Add(new IconTheme(
-                    new IconThemeData(Color: theme.OnSurfaceColor, Size: 24),
-                    CurrentWidget.Leading));
+                children.Add(IconTheme.Merge(
+                    data: customIconTheme ?? new IconThemeData(Color: theme.OnSurfaceColor),
+                    child: CurrentWidget.Leading));
             }
 
             Widget textField = new TextField(
                 controller: CurrentWidget.Controller,
-                focusNode: _focusNode,
-                decoration: InputDecoration.Collapsed(
-                    hintText: CurrentWidget.HintText,
-                    hintStyle: effectiveHintStyle,
-                    enabled: CurrentWidget.Enabled),
-                style: effectiveTextStyle,
-                keyboardType: CurrentWidget.KeyboardType,
-                textInputAction: CurrentWidget.TextInputAction,
-                autofocus: CurrentWidget.AutoFocus,
+                focusNode: FocusNodeInstance,
                 readOnly: CurrentWidget.ReadOnly,
-                enabled: CurrentWidget.Enabled,
+                autofocus: CurrentWidget.AutoFocus,
+                onTap: CurrentWidget.OnTap,
+                onTapAlwaysCalled: true,
+                onTapOutside: CurrentWidget.OnTapOutside,
                 onChanged: CurrentWidget.OnChanged,
                 onSubmitted: CurrentWidget.OnSubmitted,
-                canRequestFocus: CurrentWidget.Enabled);
+                style: effectiveTextStyle,
+                enabled: CurrentWidget.Enabled,
+                decoration: new InputDecoration(hintText: CurrentWidget.HintText).ApplyDefaults(
+                    new InputDecorationThemeData(
+                        HintStyle: effectiveHintStyle,
+                        EnabledBorder: InputBorder.None,
+                        Border: InputBorder.None,
+                        FocusedBorder: InputBorder.None,
+                        ContentPadding: EdgeInsetsGeometry.Zero,
+                        IsDense: true)),
+                textCapitalization: effectiveTextCapitalization,
+                textInputAction: CurrentWidget.TextInputAction,
+                keyboardType: CurrentWidget.KeyboardType,
+                scrollPadding: CurrentWidget.ScrollPadding,
+                contextMenuBuilder: CurrentWidget.ContextMenuBuilder,
+                smartDashesType: CurrentWidget.SmartDashesType,
+                smartQuotesType: CurrentWidget.SmartQuotesType);
             children.Add(new Expanded(
-                new Padding(padding, textField)));
+                new Padding(
+                    effectivePadding!.Value,
+                    new Semantics(inputType: SemanticsInputType.Search, child: textField))));
 
             if (CurrentWidget.Trailing is not null)
             {
-                foreach (var trailing in CurrentWidget.Trailing)
+                foreach (Widget trailing in CurrentWidget.Trailing)
                 {
-                    children.Add(new IconTheme(
-                        new IconThemeData(Color: theme.OnSurfaceVariantColor, Size: 24),
-                        trailing));
+                    children.Add(IconTheme.Merge(
+                        data: customIconTheme ?? new IconThemeData(Color: theme.OnSurfaceVariantColor),
+                        child: trailing));
                 }
             }
 
-            Widget content = new Row(
-                textDirection: Directionality.Of(context),
-                children: children);
-            content = new Padding(padding, content);
+            Widget content = new Row(children: children);
+            content = new Padding(effectivePadding.Value, content);
             content = new InkWell(
-                onTap: CurrentWidget.Enabled
-                    ? () =>
+                onTap: () =>
+                {
+                    CurrentWidget.OnTap?.Invoke();
+                    if (!FocusNodeInstance.HasFocus)
                     {
-                        CurrentWidget.OnTap?.Invoke();
-                        _focusNode?.RequestFocus();
+                        FocusNodeInstance.RequestFocus();
                     }
-                    : null,
-                overlayColor: CurrentWidget.OverlayColor ?? searchBarTheme.OverlayColor ?? defaults.OverlayColor,
-                customBorder: shape,
-                statesController: _statesController,
-                focusNode: _focusNode,
-                canRequestFocus: CurrentWidget.Enabled,
-                borderRadius: ShapeBorderGeometry.ResolveRadius(shape),
+                },
+                overlayColor: effectiveOverlayColor,
+                customBorder: effectiveShape,
+                statesController: _internalStatesController,
                 child: content);
-            content = new DecoratedBox(
-                new BoxDecoration(
-                    Color: background,
-                    Border: ShapeBorderGeometry.SideOrNull(
-                        shape) is { } shapeSide ? Plumix.Rendering.Border.FromBorderSide(shapeSide) : null,
-                    BorderRadius: ShapeBorderGeometry.ResolveRadius(shape),
-                    BoxShadows: BuildBoxShadows(shadowColor, elevation)),
+            content = new IgnorePointer(ignoring: !CurrentWidget.Enabled, child: content);
+            content = new Material(
+                elevation: effectiveElevation,
+                shadowColor: effectiveShadowColor,
+                color: effectiveBackgroundColor,
+                surfaceTintColor: effectiveSurfaceTintColor,
+                shape: effectiveShape,
+                child: content);
+            content = new Opacity(
+                CurrentWidget.Enabled ? 1.0 : SearchViewChoreography.DisableSearchBarOpacity,
                 content);
-            content = new ClipRRect(ShapeBorderGeometry.ResolveRadius(shape), content);
-            content = new Opacity(CurrentWidget.Enabled ? 1.0 : DisabledOpacity, content);
-            return new ConstrainedBox(constraints, content);
+            return new ConstrainedBox(effectiveConstraints, content);
         }
 
         private static T? Resolve<T>(
@@ -1288,49 +1421,27 @@ public sealed class SearchBar : StatefulWidget
             MaterialStateProperty<T?>? defaultValue,
             MaterialState states)
         {
-            T? value = widgetValue is null ? default : widgetValue.Resolve(states);
-            if (value is not null)
-            {
-                return value;
-            }
-
-            value = themeValue is null ? default : themeValue.Resolve(states);
-            if (value is not null)
-            {
-                return value;
-            }
-
-            return defaultValue is null ? default : defaultValue.Resolve(states);
+            return ResolveProperty(widgetValue, states)
+                   ?? ResolveProperty(themeValue, states)
+                   ?? ResolveProperty(defaultValue, states);
         }
 
-        private void AttachFocusNode(FocusNode? external)
+        private static T? ResolveProperty<T>(MaterialStateProperty<T?>? property, MaterialState states)
         {
-            _focusNode = external ?? new FocusNode();
-            _ownsFocusNode = external is null;
-            _focusNode.AddListener(HandleFocusChanged);
-            _statesController?.Update(MaterialState.Focused, _focusNode.HasFocus);
+            return property is null ? default : property.Resolve(states);
         }
 
-        private void DetachFocusNode()
+        private void AttachFocusListener()
         {
-            if (_focusNode is null)
-            {
-                return;
-            }
-
-            _focusNode.RemoveListener(HandleFocusChanged);
-            if (_ownsFocusNode)
-            {
-                _focusNode.Dispose();
-            }
-
-            _focusNode = null;
-            _ownsFocusNode = false;
+            _attachedFocusNode?.RemoveListener(HandleFocusChanged);
+            _attachedFocusNode = FocusNodeInstance;
+            _attachedFocusNode.AddListener(HandleFocusChanged);
+            _internalStatesController.Update(MaterialState.Focused, _attachedFocusNode.HasFocus);
         }
 
         private void HandleFocusChanged()
         {
-            _statesController?.Update(MaterialState.Focused, _focusNode?.HasFocus == true);
+            _internalStatesController.Update(MaterialState.Focused, _attachedFocusNode?.HasFocus == true);
         }
 
         private void HandleStatesChanged()
@@ -1340,39 +1451,10 @@ public sealed class SearchBar : StatefulWidget
                 SetState(() => { });
             }
         }
-
-        private void SyncDisabledState()
-        {
-            _statesController?.Update(MaterialState.Disabled, !CurrentWidget.Enabled);
-        }
-
-        private static BoxShadows? BuildBoxShadows(Color color, double elevation)
-        {
-            if (color.A == 0 || elevation <= 0)
-            {
-                return null;
-            }
-
-            return new BoxShadows(new BoxShadow
-            {
-                OffsetY = Math.Max(1, elevation * 0.5),
-                Blur = Math.Max(2, elevation * 2.4),
-                Color = ApplyOpacity(color, 0.20),
-            });
-        }
-
-        private static Color ApplyOpacity(Color color, double opacity)
-        {
-            return Color.FromArgb(
-                (byte)Math.Round(color.A * Math.Clamp(opacity, 0, 1)),
-                color.R,
-                color.G,
-                color.B);
-        }
     }
 }
 
-internal static class SearchBarDefaults
+internal static class SearchBarDefaultsM3
 {
     public static SearchBarThemeData Resolve(ThemeData theme)
     {
@@ -1385,7 +1467,7 @@ internal static class SearchBarDefaults
             {
                 if (states.HasFlag(MaterialState.Pressed))
                 {
-                    return MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.10);
+                    return MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.1);
                 }
 
                 if (states.HasFlag(MaterialState.Hovered))
@@ -1393,20 +1475,25 @@ internal static class SearchBarDefaults
                     return MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.08);
                 }
 
+                if (states.HasFlag(MaterialState.Focused))
+                {
+                    return Colors.Transparent;
+                }
+
                 return Colors.Transparent;
             }),
-            Shape: MaterialStateProperty<ShapeBorder?>.All(new StadiumBorder()),
-            Padding: MaterialStateProperty<Thickness?>.All(new Thickness(8, 0)),
+            Shape: MaterialStateProperty<OutlinedBorder?>.All(new StadiumBorder()),
+            Padding: MaterialStateProperty<EdgeInsetsGeometry?>.All(EdgeInsetsGeometry.Symmetric(horizontal: 8.0)),
             TextStyle: MaterialStateProperty<TextStyle?>.All(
                 theme.TextTheme.BodyLarge.CopyWith(color: theme.OnSurfaceColor)),
             HintStyle: MaterialStateProperty<TextStyle?>.All(
                 theme.TextTheme.BodyLarge.CopyWith(color: theme.OnSurfaceVariantColor)),
-            Constraints: new BoxConstraints(MinWidth: 360, MaxWidth: 800, MinHeight: 56),
+            Constraints: new BoxConstraints(MinWidth: 360.0, MaxWidth: 800.0, MinHeight: 56.0),
             TextCapitalization: TextCapitalization.None);
     }
 }
 
-internal static class SearchViewDefaults
+internal static class SearchViewDefaultsM3
 {
     public const double FullScreenBarHeight = 72.0;
 
@@ -1417,12 +1504,12 @@ internal static class SearchViewDefaults
             Elevation: 6.0,
             SurfaceTintColor: Colors.Transparent,
             Shape: isFullScreen
-                ? new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(0))
-                : new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(28)),
+                ? new RoundedRectangleBorder()
+                : new RoundedRectangleBorder(borderRadius: BorderRadius.Circular(28.0)),
             HeaderTextStyle: theme.TextTheme.BodyLarge.CopyWith(color: theme.OnSurfaceColor),
             HeaderHintStyle: theme.TextTheme.BodyLarge.CopyWith(color: theme.OnSurfaceVariantColor),
-            Constraints: new BoxConstraints(MinWidth: 360, MinHeight: 240),
-            BarPadding: new Thickness(8, 0),
+            Constraints: new BoxConstraints(MinWidth: 360.0, MinHeight: 240.0),
+            BarPadding: EdgeInsetsGeometry.Symmetric(horizontal: 8.0),
             ShrinkWrap: false,
             DividerColor: theme.OutlineColor);
     }
