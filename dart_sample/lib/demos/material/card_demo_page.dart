@@ -13,6 +13,7 @@ class _CardDemoPageState extends State<CardDemoPage> {
   bool _clip = false;
   bool _dense = false;
   bool _borderOnForeground = true;
+  bool _mergeableSeparated = true;
 
   @override
   Widget build(BuildContext context) {
@@ -91,6 +92,21 @@ class _CardDemoPageState extends State<CardDemoPage> {
                 width: 118,
                 background: const Color(0xFFE8F5E9),
               ),
+            ],
+          ),
+          Row(
+            spacing: 8,
+            children: <Widget>[
+              _buildControlButton(
+                label: _mergeableSeparated
+                    ? 'Merge slices'
+                    : 'Separate slices',
+                onTap: () => setState(
+                  () => _mergeableSeparated = !_mergeableSeparated,
+                ),
+                width: 128,
+                background: const Color(0xFFE3F2FD),
+              ),
               _buildControlButton(
                 label: 'Reset',
                 onTap: _resetState,
@@ -102,7 +118,8 @@ class _CardDemoPageState extends State<CardDemoPage> {
           Text(
             'useMaterial3=$_useMaterial3, theme=$_useThemeOverrides, '
             'clip=$_clip, dense=$_dense, '
-            'borderOnForeground=$_borderOnForeground',
+            'borderOnForeground=$_borderOnForeground, '
+            'separated=$_mergeableSeparated',
             style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
           ),
           Expanded(
@@ -200,17 +217,18 @@ class _CardDemoPageState extends State<CardDemoPage> {
               body: 'Slices join on a shared Material card surface.',
             ),
           ),
-          MaterialGap(
-            key: const ValueKey<String>('material-slice-gap'),
-            size: _dense ? 8 : 16,
-          ),
+          if (_mergeableSeparated)
+            MaterialGap(
+              key: const ValueKey<String>('material-slice-gap'),
+              size: _dense ? 8 : 16,
+            ),
           MaterialSlice(
             key: const ValueKey<String>('material-slice-second'),
             color: const Color(0xFFE3F2FD),
             child: _buildCardBody(
               title: 'Second mergeable slice',
-              body:
-                  'The gap is controller-animated when the item list changes.',
+              body: 'The gap and adjoining corners animate when slices merge '
+                  'or separate.',
             ),
           ),
         ],
@@ -269,6 +287,7 @@ class _CardDemoPageState extends State<CardDemoPage> {
       _clip = false;
       _dense = false;
       _borderOnForeground = true;
+      _mergeableSeparated = true;
     });
   }
 }

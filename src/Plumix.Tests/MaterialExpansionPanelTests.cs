@@ -109,6 +109,7 @@ public sealed class MaterialExpansionPanelTests : IDisposable
 
         harness.Pump(new Size(360, 280));
         TapParagraph(harness.RenderView, "First gap panel", pointer: 813);
+        harness.Pump(new Size(360, 280));
 
         double now = Scheduler.CurrentSeconds;
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
@@ -250,7 +251,9 @@ public sealed class MaterialExpansionPanelTests : IDisposable
 
         harness.Pump(new Size(360, 300));
 
-        Assert.Contains(FindDescendants<RenderColoredBox>(harness.RenderView), box => box.Color == background);
+        Assert.Contains(
+            FindDescendants<RenderDecoratedBox>(harness.RenderView),
+            box => box.Decoration.Color == background);
         var iconGlyph = FindParagraphByText(harness.RenderView, char.ConvertFromUtf32(Icons.ExpandMore.CodePoint));
         Assert.NotNull(iconGlyph);
         Assert.Equal(icon, Assert.IsType<SolidColorBrush>(iconGlyph!.Foreground).Color);

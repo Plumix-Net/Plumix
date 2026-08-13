@@ -1,5 +1,11 @@
 # Changelog
 
+- Breaking: completed strict Material `MergeableMaterial` parity. The constructor now follows Flutter's field
+  order and accepts arbitrary source-shaped gap/elevation values; keyed gap/chunk reconciliation, 200ms extent,
+  corner and divider transitions, transparent slice materials, directional list-body layout, and one render-owned
+  card shadow per connected slice group now match the pinned implementation. Focused tests and the mirrored Card
+  demo cover live merge/separate choreography.
+
 - Completed Cupertino text-selection toolbar parity: mobile/desktop surfaces, buttons, adaptive routing, overflow,
   spell-check suggestions, Cupertino theme/color primitives, and mirrored gallery probes are now available. Material
   adaptive toolbars select Cupertino controls on iOS/macOS, and the Android host registers the native default

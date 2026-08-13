@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
@@ -27,6 +28,7 @@ internal sealed class CardDemoPageState : State
     private bool _clip;
     private bool _dense;
     private bool _borderOnForeground = true;
+    private bool _mergeableSeparated = true;
 
     public override Widget Build(BuildContext context)
     {
@@ -92,6 +94,16 @@ internal sealed class CardDemoPageState : State
                                 onTap: () => SetState(() => _borderOnForeground = !_borderOnForeground),
                                 width: 118,
                                 background: Color.Parse("#FFE8F5E9")),
+                        ]),
+                    new Row(
+                        spacing: 8,
+                        children:
+                        [
+                            BuildControlButton(
+                                label: _mergeableSeparated ? "Merge slices" : "Separate slices",
+                                onTap: () => SetState(() => _mergeableSeparated = !_mergeableSeparated),
+                                width: 128,
+                                background: Color.Parse("#FFE3F2FD")),
                             BuildControlButton(
                                 label: "Reset",
                                 onTap: ResetState,
@@ -102,7 +114,8 @@ internal sealed class CardDemoPageState : State
                         $"useMaterial3={(_useMaterial3 ? "true" : "false")}, "
                         + $"theme={(_useThemeOverrides ? "true" : "false")}, "
                         + $"clip={(_clip ? "true" : "false")}, dense={(_dense ? "true" : "false")}, "
-                        + $"borderOnForeground={(_borderOnForeground ? "true" : "false")}",
+                        + $"borderOnForeground={(_borderOnForeground ? "true" : "false")}, "
+                        + $"separated={(_mergeableSeparated ? "true" : "false")}",
                         fontSize: 12,
                         color: Color.Parse("#FF607D8B")),
                     new Expanded(
@@ -171,25 +184,31 @@ internal sealed class CardDemoPageState : State
 
     private Widget BuildMergeableMaterial()
     {
+        var children = new List<MergeableMaterialItem>
+        {
+            new MaterialSlice(
+                new ValueKey<string>("material-slice-first"),
+                BuildCardBody("First mergeable slice", "Slices join on a shared Material card surface."),
+                Color.Parse("#FFE8F5E9")),
+        };
+        if (_mergeableSeparated)
+        {
+            children.Add(new MaterialGap(new ValueKey<string>("material-slice-gap"), _dense ? 8 : 16));
+        }
+
+        children.Add(new MaterialSlice(
+            new ValueKey<string>("material-slice-second"),
+            BuildCardBody(
+                "Second mergeable slice",
+                "The gap and adjoining corners animate when slices merge or separate."),
+            Color.Parse("#FFE3F2FD")));
+
         return new Container(
             margin: new Thickness(4),
             child: new MergeableMaterial(
                 elevation: _useThemeOverrides ? 4 : 2,
                 hasDividers: true,
-                children:
-                [
-                    new MaterialSlice(
-                        new ValueKey<string>("material-slice-first"),
-                        BuildCardBody("First mergeable slice", "Slices join on a shared Material card surface."),
-                        Color.Parse("#FFE8F5E9")),
-                    new MaterialGap(new ValueKey<string>("material-slice-gap"), _dense ? 8 : 16),
-                    new MaterialSlice(
-                        new ValueKey<string>("material-slice-second"),
-                        BuildCardBody(
-                            "Second mergeable slice",
-                            "The gap is controller-animated when the item list changes."),
-                        Color.Parse("#FFE3F2FD")),
-                ]));
+                children: children));
     }
 
     private Widget BuildCardBody(string title, string body)
@@ -233,6 +252,7 @@ internal sealed class CardDemoPageState : State
             _clip = false;
             _dense = false;
             _borderOnForeground = true;
+            _mergeableSeparated = true;
         });
     }
 }

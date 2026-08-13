@@ -460,7 +460,7 @@ public sealed class MaterialCardTests
     }
 
     [Fact]
-    public void MergeableMaterial_ComposesCardMaterialSurfaceForEachConnectedSliceGroup()
+    public void MergeableMaterial_ComposesSourceListBodySliceGroupsAndShadows()
     {
         using var harness = new WidgetRenderHarness(
             new Theme(
@@ -484,11 +484,19 @@ public sealed class MaterialCardTests
                         ]))));
         harness.Pump(new Size(220, 140));
 
+        var body = Assert.Single(FindDescendants<RenderMergeableMaterialListBody>(harness.RenderView));
+        Assert.Equal(2, body.Elevation);
+        Assert.Equal(3, body.ChildCount);
+
         var surfaces = FindDescendants<RenderDecoratedBox>(harness.RenderView)
-            .Where(box => box.Decoration.BoxShadows.HasValue)
+            .Where(box => box.Decoration.Color is { } color
+                          && (color == Colors.LightBlue || color == Colors.LightGreen))
             .ToArray();
         Assert.Equal(2, surfaces.Length);
         Assert.All(surfaces, surface => Assert.Equal(2, surface.Decoration.EffectiveBorderRadius.Radius));
+        Assert.DoesNotContain(
+            FindDescendants<RenderDecoratedBox>(harness.RenderView),
+            box => box.Decoration.BoxShadows.HasValue);
     }
 
     [Fact]

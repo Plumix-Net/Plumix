@@ -159,6 +159,9 @@
   - `DataTable`/`DataTableThemeData` (direct M2/M3 selected-row and divider roles, exact local/global theme
     precedence, arbitrary decoration and transparent Material clipping, source row borders, ambient style merge,
     column-header semantics, 150ms sort-arrow state transitions, and mirrored runtime probes).
+  - `MergeableMaterial` (strict constructor/defaults, keyed gap/chunk reconciliation, source 200ms gap/corner/divider
+    transitions, transparent slice materials, directional list-body layout, render-owned group shadows, and a
+    mirrored live merge/separate probe).
 - Completed `Typography.Material2014`/`Material2018`, exact platform black/white themes, dense/tall geometry, and
   locale script-category selection.
 - Remove the narrowed `ColorScheme + Typography closeout` row from `docs/MATERIAL_TODO.md` only after those checks

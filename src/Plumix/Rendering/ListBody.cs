@@ -7,7 +7,7 @@ namespace Plumix.Rendering;
 
 public sealed class ListBodyParentData : ContainerBoxParentData<RenderBox>;
 
-public sealed class RenderListBody : RenderBox,
+public class RenderListBody : RenderBox,
     IRenderBoxContainerDefaultsMixin<RenderBox, ListBodyParentData>,
     IRenderObjectContainer
 {
