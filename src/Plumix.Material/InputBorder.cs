@@ -6,8 +6,8 @@ using Path = Plumix.UI.Path;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/input_border.dart;
-// flutter/packages/flutter/lib/src/material/material_state.dart (WidgetStateInputBorder)
+// Dart parity source: material_ui/lib/src/input_border.dart;
+// material_ui/lib/src/material_state.dart (WidgetStateInputBorder)
 
 /// Defines the appearance of an [InputDecorator]'s border.
 ///
@@ -508,7 +508,7 @@ public record ShapedInputBorder : InputBorder
     }
 }
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/material_state.dart
+// Dart parity source: material_ui/lib/src/material_state.dart
 // (WidgetStateInputBorder, MaterialStateOutlineInputBorder, MaterialStateUnderlineInputBorder).
 //
 // InputDecoration resolves these borders from its current interactive states before any default

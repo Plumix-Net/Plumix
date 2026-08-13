@@ -8,10 +8,10 @@ using Plumix.Widgets;
 namespace Plumix.Material;
 
 // Dart parity sources:
-// flutter/packages/flutter/lib/src/material/slider_theme.dart
-// flutter/packages/flutter/lib/src/material/slider_parts.dart
-// flutter/packages/flutter/lib/src/material/range_slider_parts.dart
-// flutter/packages/flutter/lib/src/material/slider_value_indicator_shape.dart
+// material_ui/lib/src/slider_theme.dart
+// material_ui/lib/src/slider_parts.dart
+// material_ui/lib/src/range_slider_parts.dart
+// material_ui/lib/src/slider_value_indicator_shape.dart
 
 public abstract class SliderComponentShape
 {

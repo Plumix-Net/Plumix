@@ -3,7 +3,9 @@ using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Rendering;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/widgets/basic.dart; flutter/packages/flutter/lib/src/material/text_button.dart (adapted)
+// Dart parity sources (reference, adapted):
+// flutter/packages/flutter/lib/src/widgets/basic.dart
+// material_ui/lib/src/text_button.dart
 
 namespace Plumix.Widgets;
 

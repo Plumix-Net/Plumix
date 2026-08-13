@@ -6,7 +6,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/popup_menu_theme.dart
+// Dart parity source: material_ui/lib/src/popup_menu_theme.dart
 
 public enum PopupMenuPosition
 {

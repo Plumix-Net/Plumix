@@ -5,8 +5,8 @@ using Plumix.Widgets;
 namespace Plumix.Cupertino;
 
 // Dart parity sources:
-// flutter/packages/flutter/lib/src/cupertino/theme.dart
-// flutter/packages/flutter/lib/src/cupertino/colors.dart
+// cupertino_ui/lib/src/theme.dart
+// cupertino_ui/lib/src/colors.dart
 
 public sealed record CupertinoThemeData(
     Color? PrimaryColor = null,

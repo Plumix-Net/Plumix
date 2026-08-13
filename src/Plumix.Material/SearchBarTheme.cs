@@ -6,7 +6,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/search_bar_theme.dart
+// Dart parity source: material_ui/lib/src/search_bar_theme.dart
 
 public sealed partial record SearchBarThemeData(
     MaterialStateProperty<double?>? Elevation = null,

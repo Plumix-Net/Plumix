@@ -5,7 +5,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/navigation_rail_theme.dart
+// Dart parity source: material_ui/lib/src/navigation_rail_theme.dart
 
 public sealed record NavigationRailThemeData(
     Color? BackgroundColor = null,

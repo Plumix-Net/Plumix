@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class ScrollbarDemoPage extends StatefulWidget {
   const ScrollbarDemoPage({super.key});
@@ -48,15 +48,15 @@ class _ScrollbarDemoPageState extends State<ScrollbarDemoPage> {
                   'Material state theme',
                   ScrollbarTheme(
                     data: ScrollbarThemeData(
-                      trackVisibility: WidgetStateProperty<bool?>.resolveWith(
+                      trackVisibility: WidgetStateProperty.resolveWith<bool?>(
                         (Set<WidgetState> states) =>
                             states.contains(WidgetState.hovered),
                       ),
-                      thickness: WidgetStateProperty<double?>.resolveWith(
+                      thickness: WidgetStateProperty.resolveWith<double?>(
                         (Set<WidgetState> states) =>
                             states.contains(WidgetState.hovered) ? 12 : 8,
                       ),
-                      thumbColor: WidgetStateProperty<Color?>.resolveWith(
+                      thumbColor: WidgetStateProperty.resolveWith<Color?>(
                         (Set<WidgetState> states) =>
                             states.contains(WidgetState.dragged)
                             ? const Color(0xFF7B1FA2)

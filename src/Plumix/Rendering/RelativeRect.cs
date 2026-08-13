@@ -2,7 +2,7 @@ using Avalonia;
 
 namespace Plumix.Rendering;
 
-// Dart parity source: flutter/packages/flutter/lib/src/rendering/relative_rect.dart
+// Dart parity source: flutter/packages/flutter/lib/src/rendering/stack.dart
 
 public readonly record struct RelativeRect(double Left, double Top, double Right, double Bottom)
 {

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class CheckboxDemoPage extends StatefulWidget {
   const CheckboxDemoPage({super.key});

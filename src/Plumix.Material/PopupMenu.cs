@@ -8,7 +8,7 @@ using RelativeRect = Plumix.Rendering.RelativeRect;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/popup_menu.dart
+// Dart parity source: material_ui/lib/src/popup_menu.dart
 
 public delegate IReadOnlyList<PopupMenuEntry> PopupMenuItemBuilder<T>(BuildContext context);
 public delegate RelativeRect PopupMenuPositionBuilder(BuildContext context, BoxConstraints constraints);

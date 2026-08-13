@@ -7,7 +7,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/bottom_sheet_theme.dart
+// Dart parity source: material_ui/lib/src/bottom_sheet_theme.dart
 
 public sealed partial record BottomSheetThemeData
 {

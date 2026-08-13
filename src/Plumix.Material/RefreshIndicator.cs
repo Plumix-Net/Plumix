@@ -9,8 +9,8 @@ using Plumix.Widgets;
 namespace Plumix.Material;
 
 // Dart parity sources:
-// flutter/packages/flutter/lib/src/material/progress_indicator.dart (RefreshProgressIndicator)
-// flutter/packages/flutter/lib/src/material/refresh_indicator.dart (RefreshIndicator)
+// material_ui/lib/src/progress_indicator.dart (RefreshProgressIndicator)
+// material_ui/lib/src/refresh_indicator.dart (RefreshIndicator)
 
 public sealed class RefreshProgressIndicator : CircularProgressIndicator
 {

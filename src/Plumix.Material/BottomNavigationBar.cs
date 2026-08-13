@@ -8,7 +8,9 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/material/bottom_navigation_bar.dart; flutter/packages/flutter/lib/src/widgets/bottom_navigation_bar_item.dart
+// Dart parity sources (reference):
+// material_ui/lib/src/bottom_navigation_bar.dart
+// flutter/packages/flutter/lib/src/widgets/bottom_navigation_bar_item.dart
 
 public enum BottomNavigationBarType
 {

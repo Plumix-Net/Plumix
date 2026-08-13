@@ -5,7 +5,7 @@ using Plumix.UI;
 namespace Plumix.Material;
 
 // Dart parity source:
-// flutter/packages/flutter/lib/src/material/color_scheme.dart
+// material_ui/lib/src/color_scheme.dart
 
 public enum DynamicSchemeVariant
 {

@@ -7,7 +7,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/navigation_drawer.dart
+// Dart parity source: material_ui/lib/src/navigation_drawer.dart
 
 public sealed class NavigationDrawer : StatelessWidget
 {

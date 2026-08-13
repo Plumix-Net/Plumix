@@ -4,7 +4,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/scaffold.dart
+// Dart parity source: material_ui/lib/src/scaffold.dart
 
 public sealed class ScaffoldFeatureController<TFeature, TClosedReason>
     where TFeature : Widget

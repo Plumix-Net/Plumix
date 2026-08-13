@@ -8,8 +8,8 @@ using Plumix.Widgets;
 namespace Plumix.Material;
 
 // Dart parity sources:
-// flutter/packages/flutter/lib/src/material/filter_chip.dart
-// flutter/packages/flutter/lib/src/material/input_chip.dart
+// material_ui/lib/src/filter_chip.dart
+// material_ui/lib/src/input_chip.dart
 
 public sealed class FilterChip : StatelessWidget
 {

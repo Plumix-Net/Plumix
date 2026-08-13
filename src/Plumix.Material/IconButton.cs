@@ -7,8 +7,8 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/icon_button.dart;
-// flutter/packages/flutter/lib/src/material/icon_button_theme.dart
+// Dart parity source: material_ui/lib/src/icon_button.dart;
+// material_ui/lib/src/icon_button_theme.dart
 
 internal enum IconButtonVariant
 {

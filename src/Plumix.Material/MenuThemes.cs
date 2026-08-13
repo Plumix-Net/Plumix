@@ -3,8 +3,8 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity sources: flutter/packages/flutter/lib/src/material/menu_bar_theme.dart;
-// flutter/packages/flutter/lib/src/material/menu_button_theme.dart
+// Dart parity sources: material_ui/lib/src/menu_bar_theme.dart;
+// material_ui/lib/src/menu_button_theme.dart
 
 /// <summary>Visual overrides for a <see cref="MenuBar"/>, excluding its submenu panels.</summary>
 public sealed partial record MenuBarThemeData(MenuStyle? Style = null);

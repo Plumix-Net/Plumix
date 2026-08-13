@@ -8,8 +8,8 @@ using Plumix.Widgets;
 namespace Plumix.Material;
 
 // Dart parity sources:
-// flutter/packages/flutter/lib/src/material/drawer_header.dart
-// flutter/packages/flutter/lib/src/material/user_accounts_drawer_header.dart
+// material_ui/lib/src/drawer_header.dart
+// material_ui/lib/src/user_accounts_drawer_header.dart
 
 public sealed class DrawerHeader : StatelessWidget
 {

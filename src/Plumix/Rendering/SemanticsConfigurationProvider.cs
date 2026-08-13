@@ -1,4 +1,4 @@
-// Dart parity source (reference): flutter/packages/flutter/lib/src/rendering/semantics.dart (approximate)
+// Dart parity source (reference): flutter/packages/flutter/lib/src/semantics/semantics.dart (approximate)
 
 namespace Plumix.Rendering;
 

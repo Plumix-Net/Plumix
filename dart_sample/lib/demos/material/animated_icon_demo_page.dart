@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class AnimatedIconDemoPage extends StatefulWidget {
   const AnimatedIconDemoPage({super.key});

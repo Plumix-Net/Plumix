@@ -7,7 +7,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/selectable_text.dart
+// Dart parity source: material_ui/lib/src/selectable_text.dart
 
 public sealed class SelectableText : StatefulWidget
 {

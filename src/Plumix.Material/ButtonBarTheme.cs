@@ -5,7 +5,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/button_bar_theme.dart
+// Dart parity source: material_ui/lib/src/button_bar_theme.dart
 
 public sealed record ButtonBarThemeData
 {

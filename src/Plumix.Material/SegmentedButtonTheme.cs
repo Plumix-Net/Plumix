@@ -3,7 +3,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/segmented_button_theme.dart
+// Dart parity source: material_ui/lib/src/segmented_button_theme.dart
 
 public sealed partial record SegmentedButtonThemeData(
     ButtonStyle? Style = null,

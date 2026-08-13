@@ -7,7 +7,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/ink_well.dart
+// Dart parity source: material_ui/lib/src/ink_well.dart
 
 public class InkResponse : StatefulWidget
 {
@@ -1057,7 +1057,7 @@ public sealed class InkWell : InkResponse
 }
 
 /// <summary>An ink response whose highlight and splash are clipped to its nearest table row.</summary>
-/// <remarks>Dart parity source: flutter/packages/flutter/lib/src/material/data_table.dart.</remarks>
+/// <remarks>Dart parity source: material_ui/lib/src/data_table.dart.</remarks>
 public sealed class TableRowInkWell : InkResponse
 {
     public TableRowInkWell(

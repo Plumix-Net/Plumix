@@ -7,7 +7,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/dropdown_menu.dart
+// Dart parity source: material_ui/lib/src/dropdown_menu.dart
 
 public delegate IReadOnlyList<DropdownMenuEntry<T>> DropdownMenuFilterCallback<T>(
     IReadOnlyList<DropdownMenuEntry<T>> entries,

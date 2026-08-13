@@ -3,7 +3,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/input_date_picker_form_field.dart
+// Dart parity source: material_ui/lib/src/input_date_picker_form_field.dart
 
 public sealed class InputDatePickerFormField : StatefulWidget
 {

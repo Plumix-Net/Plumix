@@ -7,7 +7,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/menu_anchor.dart.
+// Dart parity source: material_ui/lib/src/menu_anchor.dart.
 
 public delegate Widget MenuAnchorChildBuilder(BuildContext context, MenuController controller, Widget? child);
 
@@ -1403,7 +1403,7 @@ public sealed class MenuItemButtonState : State
 }
 
 /// <summary>A menu item that combines a <see cref="Checkbox"/> with a <see cref="MenuItemButton"/>.</summary>
-/// <remarks>Dart parity source: flutter/packages/flutter/lib/src/material/menu_anchor.dart.</remarks>
+/// <remarks>Dart parity source: material_ui/lib/src/menu_anchor.dart.</remarks>
 public sealed class CheckboxMenuButton : StatelessWidget
 {
     public CheckboxMenuButton(
@@ -1501,7 +1501,7 @@ public sealed class CheckboxMenuButton : StatelessWidget
 }
 
 /// <summary>A menu item that combines a <see cref="Radio{T}"/> with a <see cref="MenuItemButton"/>.</summary>
-/// <remarks>Dart parity source: flutter/packages/flutter/lib/src/material/menu_anchor.dart.</remarks>
+/// <remarks>Dart parity source: material_ui/lib/src/menu_anchor.dart.</remarks>
 public sealed class RadioMenuButton<T> : StatelessWidget
 {
     public RadioMenuButton(
@@ -1587,7 +1587,7 @@ public sealed class RadioMenuButton<T> : StatelessWidget
 }
 
 /// <summary>A horizontal collection of top-level <see cref="SubmenuButton"/> controls.</summary>
-/// <remarks>Dart parity source: flutter/packages/flutter/lib/src/material/menu_anchor.dart (MenuBar).</remarks>
+/// <remarks>Dart parity source: material_ui/lib/src/menu_anchor.dart (MenuBar).</remarks>
 public sealed class MenuBar : StatelessWidget
 {
     public MenuBar(
@@ -1672,7 +1672,7 @@ internal sealed class MenuBarAnchorState : MenuAnchorState
 }
 
 /// <summary>A menu button that opens a nested vertical menu.</summary>
-/// <remarks>Dart parity source: flutter/packages/flutter/lib/src/material/menu_anchor.dart (SubmenuButton).</remarks>
+/// <remarks>Dart parity source: material_ui/lib/src/menu_anchor.dart (SubmenuButton).</remarks>
 public sealed class SubmenuButton : StatefulWidget
 {
     public SubmenuButton(

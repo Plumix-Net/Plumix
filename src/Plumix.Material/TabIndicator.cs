@@ -5,7 +5,7 @@ using Plumix.UI;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/tab_indicator.dart
+// Dart parity source: material_ui/lib/src/tab_indicator.dart
 
 /// <summary>
 /// Used with <see cref="TabBar.Indicator"/> to draw a horizontal line below the selected tab.
@@ -96,7 +96,7 @@ public sealed record UnderlineTabIndicator : Decoration
     }
 }
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/tab_indicator.dart (_UnderlinePainter)
+// Dart parity source: material_ui/lib/src/tab_indicator.dart (_UnderlinePainter)
 internal sealed class UnderlinePainter : BoxPainter
 {
     private readonly UnderlineTabIndicator _decoration;

@@ -27,7 +27,8 @@ unconfirmed pick that follows this order is the expected behavior.
 Look at the Dart file size first:
 
 ```bash
-wc -l flutter-src/packages/flutter/lib/src/material/<x>.dart
+wc -l material-ui-src/lib/src/<x>.dart   # cupertino-ui-src/lib/src/ for Cupertino;
+                                         # flutter-src/packages/flutter/lib/src/<library>/ otherwise
 ```
 
 Over ~800 lines: extract the spec in a separate context per `docs/ai/DART_SPEC_PROTOCOL.md` before

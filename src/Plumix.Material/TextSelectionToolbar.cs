@@ -8,8 +8,8 @@ using Plumix.Widgets;
 namespace Plumix.Material;
 
 // Dart parity sources:
-// - flutter/packages/flutter/lib/src/material/text_selection_toolbar.dart
-// - flutter/packages/flutter/lib/src/material/text_selection_toolbar_text_button.dart
+// - material_ui/lib/src/text_selection_toolbar.dart
+// - material_ui/lib/src/text_selection_toolbar_text_button.dart
 
 public delegate Widget ToolbarBuilder(BuildContext context, Widget child);
 

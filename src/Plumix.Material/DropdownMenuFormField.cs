@@ -5,7 +5,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/dropdown_menu_form_field.dart
+// Dart parity source: material_ui/lib/src/dropdown_menu_form_field.dart
 
 public sealed class DropdownMenuFormField<T> : FormField<T>
 {

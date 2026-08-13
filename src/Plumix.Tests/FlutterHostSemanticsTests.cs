@@ -3,7 +3,9 @@ using Avalonia.Media;
 using Plumix.Rendering;
 using Xunit;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/rendering/semantics.dart; flutter/packages/flutter/lib/src/widgets/binding.dart (host semantics bridge regression tests)
+// Dart parity sources (reference, host semantics bridge regression tests):
+// flutter/packages/flutter/lib/src/semantics/semantics.dart
+// flutter/packages/flutter/lib/src/widgets/binding.dart
 
 namespace Plumix.Tests;
 

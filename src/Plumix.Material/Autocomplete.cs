@@ -6,7 +6,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/autocomplete.dart
+// Dart parity source: material_ui/lib/src/autocomplete.dart
 
 public sealed class Autocomplete<T> : StatelessWidget
 {

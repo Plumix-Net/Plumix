@@ -3,7 +3,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/tab_controller.dart
+// Dart parity source: material_ui/lib/src/tab_controller.dart
 
 /// <summary>
 /// Coordinates tab selection between a <see cref="TabBar"/> and a <see cref="TabBarView"/>.
@@ -215,7 +215,7 @@ public sealed class TabController : ChangeNotifier
     }
 }
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/tab_controller.dart (_TabControllerScope)
+// Dart parity source: material_ui/lib/src/tab_controller.dart (_TabControllerScope)
 internal sealed class TabControllerScope : InheritedWidget
 {
     public TabControllerScope(TabController controller, bool enabled, Widget child, Key? key = null) : base(key)

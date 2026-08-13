@@ -7,7 +7,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/stepper.dart
+// Dart parity source: material_ui/lib/src/stepper.dart
 public enum StepState
 {
     Indexed,

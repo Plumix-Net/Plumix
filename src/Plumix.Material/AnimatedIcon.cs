@@ -8,9 +8,9 @@ using Plumix.Widgets;
 namespace Plumix.Material;
 
 // Dart parity sources:
-// flutter/packages/flutter/lib/src/material/animated_icons.dart
-// flutter/packages/flutter/lib/src/material/animated_icons/animated_icons.dart
-// flutter/packages/flutter/lib/src/material/animated_icons/animated_icons_data.dart
+// material_ui/lib/src/animated_icons.dart
+// material_ui/lib/src/animated_icons/animated_icons.dart
+// material_ui/lib/src/animated_icons/animated_icons_data.dart
 
 public abstract class AnimatedIconData
 {

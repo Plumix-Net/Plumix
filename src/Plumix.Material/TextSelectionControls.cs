@@ -5,7 +5,7 @@ using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/text_selection.dart
+// Dart parity source: material_ui/lib/src/text_selection.dart
 
 namespace Plumix.Material;
 

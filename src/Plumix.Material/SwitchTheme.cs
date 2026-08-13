@@ -5,7 +5,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/switch_theme.dart
+// Dart parity source: material_ui/lib/src/switch_theme.dart
 
 public sealed partial record SwitchThemeData(
     MaterialStateProperty<Color?>? ThumbColor = null,

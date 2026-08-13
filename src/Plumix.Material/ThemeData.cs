@@ -6,7 +6,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/material/theme_data.dart (approximate)
+// Dart parity source (reference): material_ui/lib/src/theme_data.dart (approximate)
 
 public enum Brightness
 {

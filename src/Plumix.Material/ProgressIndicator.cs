@@ -8,7 +8,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/progress_indicator.dart
+// Dart parity source: material_ui/lib/src/progress_indicator.dart
 
 public abstract class ProgressIndicator : StatefulWidget
 {
@@ -836,7 +836,7 @@ internal sealed class RenderLinearProgressIndicator : RenderBox
     }
 }
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/progress_indicator.dart
+// Dart parity source: material_ui/lib/src/progress_indicator.dart
 
 public class CircularProgressIndicator : ProgressIndicator
 {

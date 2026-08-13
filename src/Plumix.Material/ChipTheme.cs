@@ -6,7 +6,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/chip_theme.dart
+// Dart parity source: material_ui/lib/src/chip_theme.dart
 
 public sealed partial record ChipThemeData(
     MaterialStateProperty<Color?>? Color = null,

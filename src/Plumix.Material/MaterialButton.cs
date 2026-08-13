@@ -8,8 +8,8 @@ using Plumix.Widgets;
 namespace Plumix.Material;
 
 // Dart parity sources:
-// flutter/packages/flutter/lib/src/material/material_button.dart
-// flutter/packages/flutter/lib/src/material/button.dart
+// material_ui/lib/src/material_button.dart
+// material_ui/lib/src/button.dart
 
 public sealed class MaterialButton : StatelessWidget
 {

@@ -8,8 +8,8 @@ using Plumix.Widgets;
 namespace Plumix.Material;
 
 // Dart parity sources:
-// flutter/packages/flutter/lib/src/material/spell_check_suggestions_toolbar.dart
-// flutter/packages/flutter/lib/src/material/spell_check_suggestions_toolbar_layout_delegate.dart
+// material_ui/lib/src/spell_check_suggestions_toolbar.dart
+// material_ui/lib/src/spell_check_suggestions_toolbar_layout_delegate.dart
 
 /// <summary>The default Android Material toolbar for spell-check suggestions.</summary>
 public sealed class SpellCheckSuggestionsToolbar : StatelessWidget

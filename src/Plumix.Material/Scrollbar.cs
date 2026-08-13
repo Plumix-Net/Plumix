@@ -7,7 +7,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/scrollbar.dart
+// Dart parity source: material_ui/lib/src/scrollbar.dart
 
 public sealed class Scrollbar : StatelessWidget
 {

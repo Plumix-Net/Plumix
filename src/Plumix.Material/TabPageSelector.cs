@@ -6,7 +6,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/tabs.dart
+// Dart parity source: material_ui/lib/src/tabs.dart
 
 /// <summary>
 /// Displays a single circle with the specified border and background colors. Used by

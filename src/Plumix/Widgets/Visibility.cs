@@ -3,7 +3,7 @@ using Plumix.Rendering;
 
 namespace Plumix.Widgets;
 
-// Dart parity source: flutter/packages/flutter/lib/src/widgets/visibility.dart
+// Dart parity source: flutter/packages/flutter/lib/src/widgets/indexed_stack.dart
 
 public sealed class Visibility : StatelessWidget
 {

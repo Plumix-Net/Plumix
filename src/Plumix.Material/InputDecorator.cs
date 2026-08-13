@@ -8,7 +8,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/input_decorator.dart
+// Dart parity source: material_ui/lib/src/input_decorator.dart
 
 public enum FloatingLabelBehavior { Never, Auto, Always }
 
@@ -1009,7 +1009,7 @@ public sealed class InputDecorator : StatefulWidget
     }
 }
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/input_decorator.dart (_HelperError).
+// Dart parity source: material_ui/lib/src/input_decorator.dart (_HelperError).
 internal sealed class HelperError : StatefulWidget
 {
     public HelperError(
@@ -1183,7 +1183,7 @@ internal sealed class HelperError : StatefulWidget
     }
 }
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/input_decorator.dart (_BorderContainer).
+// Dart parity source: material_ui/lib/src/input_decorator.dart (_BorderContainer).
 internal sealed class BorderContainer : StatefulWidget
 {
     public BorderContainer(
@@ -1292,7 +1292,7 @@ internal sealed class BorderContainer : StatefulWidget
     }
 }
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/input_decorator.dart (_InputBorderPainter).
+// Dart parity source: material_ui/lib/src/input_decorator.dart (_InputBorderPainter).
 internal sealed class InputBorderPainter : CustomPainter
 {
     public InputBorderPainter(
@@ -1367,7 +1367,7 @@ internal sealed class InputBorderPainter : CustomPainter
                                                                      || old.TextDirection != TextDirection;
 }
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/input_decorator.dart
+// Dart parity source: material_ui/lib/src/input_decorator.dart
 // (_InputDecoratorDefaultsM2 / _InputDecoratorDefaultsM3).
 internal sealed record InputDecoratorDefaults(
     TextStyle HintStyle,

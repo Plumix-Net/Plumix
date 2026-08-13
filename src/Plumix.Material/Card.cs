@@ -7,7 +7,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/card.dart
+// Dart parity source: material_ui/lib/src/card.dart
 
 public enum CardVariant
 {

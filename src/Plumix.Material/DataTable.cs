@@ -7,7 +7,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/data_table.dart
+// Dart parity source: material_ui/lib/src/data_table.dart
 
 public delegate void DataColumnSortCallback(int columnIndex, bool ascending);
 

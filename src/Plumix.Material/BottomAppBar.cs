@@ -7,7 +7,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/bottom_app_bar.dart
+// Dart parity source: material_ui/lib/src/bottom_app_bar.dart
 
 public sealed class BottomAppBar : StatefulWidget
 {

@@ -6,11 +6,11 @@ using Plumix.UI;
 namespace Plumix.Material;
 
 // Dart parity sources:
-// - flutter/packages/flutter/lib/src/material/ink_splash.dart
-// - flutter/packages/flutter/lib/src/material/ink_ripple.dart
-// - flutter/packages/flutter/lib/src/material/ink_sparkle.dart
-// - flutter/packages/flutter/lib/src/material/no_splash.dart
-// - flutter/packages/flutter/lib/src/material/ink_well.dart
+// - material_ui/lib/src/ink_splash.dart
+// - material_ui/lib/src/ink_ripple.dart
+// - material_ui/lib/src/ink_sparkle.dart
+// - material_ui/lib/src/no_splash.dart
+// - material_ui/lib/src/ink_well.dart
 
 public sealed record InkFeatureConfiguration(
     Point Position,
@@ -143,7 +143,7 @@ public abstract class InteractiveInkFeature
 }
 
 /// <summary>An interactive ink feature that deliberately paints no splash.</summary>
-/// <remarks>Dart parity source: flutter/packages/flutter/lib/src/material/no_splash.dart.</remarks>
+/// <remarks>Dart parity source: material_ui/lib/src/no_splash.dart.</remarks>
 public sealed class NoSplash : InteractiveInkFeature
 {
     public NoSplash(InkFeatureConfiguration configuration) : base(configuration)

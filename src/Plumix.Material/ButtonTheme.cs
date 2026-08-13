@@ -6,7 +6,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/button_theme.dart
+// Dart parity source: material_ui/lib/src/button_theme.dart
 
 public enum ButtonTextTheme
 {

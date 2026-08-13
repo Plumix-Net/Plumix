@@ -8,9 +8,9 @@ using Plumix.Widgets;
 namespace Plumix.Material;
 
 // Dart parity sources:
-// flutter/packages/flutter/lib/src/material/chip.dart
-// flutter/packages/flutter/lib/src/material/action_chip.dart
-// flutter/packages/flutter/lib/src/material/choice_chip.dart
+// material_ui/lib/src/chip.dart
+// material_ui/lib/src/action_chip.dart
+// material_ui/lib/src/choice_chip.dart
 
 public sealed record ChipAnimationStyle(
     AnimationStyle? EnableAnimation = null,

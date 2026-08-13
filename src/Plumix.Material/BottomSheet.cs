@@ -10,8 +10,8 @@ using Plumix.Widgets;
 namespace Plumix.Material;
 
 // Dart parity sources:
-// flutter/packages/flutter/lib/src/material/bottom_sheet.dart
-// flutter/packages/flutter/lib/src/material/bottom_sheet_theme.dart
+// material_ui/lib/src/bottom_sheet.dart
+// material_ui/lib/src/bottom_sheet_theme.dart
 
 public delegate void BottomSheetDragStartHandler(DragStartDetails details);
 

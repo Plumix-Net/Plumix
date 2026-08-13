@@ -5,7 +5,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/toggle_buttons_theme.dart
+// Dart parity source: material_ui/lib/src/toggle_buttons_theme.dart
 
 public sealed partial record ToggleButtonsThemeData(
     TextStyle? TextStyle = null,

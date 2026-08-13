@@ -11,7 +11,7 @@ namespace Plumix.Tests;
 // Dart parity sources:
 // flutter/packages/flutter/lib/src/widgets/app.dart
 // flutter/packages/flutter/lib/src/widgets/localizations.dart
-// flutter/packages/flutter/lib/src/material/app.dart
+// material_ui/lib/src/app.dart
 
 [Collection(SchedulerTestCollection.Name)]
 public sealed class ApplicationWidgetsTests : IDisposable

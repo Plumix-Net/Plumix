@@ -4,7 +4,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/text_selection_theme.dart
+// Dart parity source: material_ui/lib/src/text_selection_theme.dart
 
 public sealed partial record TextSelectionThemeData(
     Color? CursorColor = null,

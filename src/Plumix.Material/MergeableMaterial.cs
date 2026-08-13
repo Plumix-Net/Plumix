@@ -8,7 +8,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/mergeable_material.dart
+// Dart parity source: material_ui/lib/src/mergeable_material.dart
 
 internal static class MaterialElevation
 {

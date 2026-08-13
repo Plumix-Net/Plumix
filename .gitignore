@@ -9,6 +9,8 @@ riderModule.iml
 # Local symlink to the pinned Flutter checkout (see AGENTS.md > Local Reference Paths).
 flutter-src
 avalonia-src
+material-ui-src
+cupertino-ui-src
 
 # Claude Code: share project config, keep personal overrides local.
 .claude/settings.local.json

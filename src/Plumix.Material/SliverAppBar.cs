@@ -7,7 +7,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/app_bar.dart
+// Dart parity source: material_ui/lib/src/app_bar.dart
 
 internal enum SliverAppBarVariant
 {

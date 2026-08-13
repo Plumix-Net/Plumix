@@ -7,7 +7,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/material/checkbox_list_tile.dart
+// Dart parity source (reference): material_ui/lib/src/checkbox_list_tile.dart
 public sealed class CheckboxListTile : StatelessWidget
 {
     private readonly bool _adaptive;
@@ -448,7 +448,7 @@ public sealed class CheckboxListTile : StatelessWidget
     }
 }
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/material/switch_list_tile.dart
+// Dart parity source (reference): material_ui/lib/src/switch_list_tile.dart
 public sealed class SwitchListTile : StatelessWidget
 {
     private readonly bool _adaptive;

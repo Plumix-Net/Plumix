@@ -8,7 +8,7 @@ using Plumix.Widgets;
 namespace Plumix.Material;
 
 // Dart parity source:
-// flutter/packages/flutter/lib/src/material/adaptive_text_selection_toolbar.dart
+// material_ui/lib/src/adaptive_text_selection_toolbar.dart
 
 /// <summary>Selects the default Material text-selection toolbar for the ambient platform.</summary>
 public sealed class AdaptiveTextSelectionToolbar : StatelessWidget

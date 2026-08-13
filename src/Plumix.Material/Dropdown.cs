@@ -7,7 +7,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/dropdown.dart
+// Dart parity source: material_ui/lib/src/dropdown.dart
 
 public delegate IReadOnlyList<Widget> DropdownButtonBuilder(BuildContext context);
 

@@ -5,7 +5,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/circle_avatar.dart
+// Dart parity source: material_ui/lib/src/circle_avatar.dart
 
 public sealed class CircleAvatar : StatelessWidget
 {

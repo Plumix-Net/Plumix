@@ -3,7 +3,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/elevation_overlay.dart
+// Dart parity source: material_ui/lib/src/elevation_overlay.dart
 
 /// <summary>
 /// Applies the Material 2 elevation overlay and Material 3 surface tint used to

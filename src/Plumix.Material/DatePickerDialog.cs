@@ -7,7 +7,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/date_picker.dart
+// Dart parity source: material_ui/lib/src/date_picker.dart
 
 public delegate Widget DatePickerTransitionBuilder(BuildContext context, Widget child);
 

@@ -9,8 +9,8 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity sources (reference): flutter/packages/flutter/lib/src/material/scaffold.dart;
-// flutter/packages/flutter/lib/src/material/app_bar.dart
+// Dart parity sources (reference): material_ui/lib/src/scaffold.dart;
+// material_ui/lib/src/app_bar.dart
 
 internal enum DrawerSide
 {

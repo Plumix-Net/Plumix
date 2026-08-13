@@ -5,7 +5,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/date_picker_theme.dart
+// Dart parity source: material_ui/lib/src/date_picker_theme.dart
 
 public partial record DatePickerThemeData(
     Color? BackgroundColor = null,

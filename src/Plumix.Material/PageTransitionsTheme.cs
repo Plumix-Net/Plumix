@@ -8,10 +8,10 @@ using Plumix.Widgets;
 namespace Plumix.Material;
 
 // Dart parity sources:
-// flutter/packages/flutter/lib/src/material/page.dart
-// flutter/packages/flutter/lib/src/material/page_transitions_theme.dart
-// flutter/packages/flutter/lib/src/material/predictive_back_page_transitions_builder.dart
-// flutter/packages/flutter/lib/src/cupertino/route.dart
+// material_ui/lib/src/page.dart
+// material_ui/lib/src/page_transitions_theme.dart
+// material_ui/lib/src/predictive_back_page_transitions_builder.dart
+// cupertino_ui/lib/src/route.dart
 
 public abstract class PageTransitionsBuilder
 {

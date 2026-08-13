@@ -4,7 +4,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/selection_area.dart
+// Dart parity source: material_ui/lib/src/selection_area.dart
 
 public sealed class SelectionArea : StatefulWidget
 {

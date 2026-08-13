@@ -8,7 +8,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/snack_bar.dart
+// Dart parity source: material_ui/lib/src/snack_bar.dart
 
 public enum SnackBarClosedReason
 {

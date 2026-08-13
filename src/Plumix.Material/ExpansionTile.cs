@@ -6,7 +6,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/expansion_tile.dart
+// Dart parity source: material_ui/lib/src/expansion_tile.dart
 public sealed class ExpansionTile : StatefulWidget
 {
     public ExpansionTile(

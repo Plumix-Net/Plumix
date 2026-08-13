@@ -5,7 +5,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/text_form_field.dart
+// Dart parity source: material_ui/lib/src/text_form_field.dart
 
 public sealed class TextFormField : FormField<string>
 {

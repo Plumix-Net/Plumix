@@ -8,8 +8,8 @@ using MaterialSurface = Plumix.Material.Material;
 namespace Plumix.Tests;
 
 // Dart parity sources:
-// flutter/packages/flutter/lib/src/material/elevation_overlay.dart
-// flutter/packages/flutter/lib/src/material/material.dart
+// material_ui/lib/src/elevation_overlay.dart
+// material_ui/lib/src/material.dart
 // flutter/packages/flutter/test/material/elevation_overlay_test.dart
 // flutter/packages/flutter/test/material/material_test.dart
 

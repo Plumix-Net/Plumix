@@ -8,8 +8,8 @@ using Plumix.Widgets;
 namespace Plumix.Material;
 
 // Dart parity sources:
-// - flutter/packages/flutter/lib/src/material/desktop_text_selection_toolbar.dart
-// - flutter/packages/flutter/lib/src/material/desktop_text_selection_toolbar_button.dart
+// - material_ui/lib/src/desktop_text_selection_toolbar.dart
+// - material_ui/lib/src/desktop_text_selection_toolbar_button.dart
 // - flutter/packages/flutter/lib/src/widgets/desktop_text_selection_toolbar_layout_delegate.dart
 
 /// <summary>A Material-style desktop text selection toolbar.</summary>

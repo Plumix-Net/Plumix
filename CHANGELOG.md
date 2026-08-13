@@ -1,5 +1,18 @@
 # Changelog
 
+- Moved the pinned Flutter parity revision from 3.44.0 to 3.47.0 (`4cf24164269`) and switched the
+  Material/Cupertino source of truth to the extracted `material_ui`/`cupertino_ui` pub packages
+  (pinned 1.0.0, code-identical to the SDK's frozen copies at these pins). `dart_sample` now imports
+  `package:material_ui`/`package:cupertino_ui` (via `dart fix --code=migrate_design_widgets`); all
+  material/cupertino parity markers were rewritten to `material_ui/lib/src/...` /
+  `cupertino_ui/lib/src/...` and `generate_port_map.py` resolves them against the new
+  `material-ui-src`/`cupertino-ui-src` symlinks. Six stale markers were fixed (`visibility.dart` →
+  `indexed_stack.dart` rename plus five pre-existing wrong paths) and `PORT_MAP.md` regenerated
+  clean. All 66 ported files that changed upstream were audited; the 40 behavior-bearing deltas are
+  recorded as the re-port backlog in `docs/ai/notes/migration-2026-08-13-flutter-3.47-pin.md`.
+  Two pre-existing `dart_sample` analyzer errors surfaced by the SDK update were fixed
+  (`WidgetStateProperty.resolveWith` static-call form; `SearchDelegate<String?>` nullable result).
+
 - Breaking: completed strict Material `MergeableMaterial` parity. The constructor now follows Flutter's field
   order and accepts arbitrary source-shaped gap/elevation values; keyed gap/chunk reconciliation, 200ms extent,
   corner and divider transitions, transparent slice materials, directional list-body layout, and one render-owned

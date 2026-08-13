@@ -7,7 +7,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/divider.dart
+// Dart parity source: material_ui/lib/src/divider.dart
 
 public sealed class Divider : StatelessWidget
 {

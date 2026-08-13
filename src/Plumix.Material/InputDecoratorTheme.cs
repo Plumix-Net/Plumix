@@ -6,7 +6,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/input_decorator.dart
+// Dart parity source: material_ui/lib/src/input_decorator.dart
 
 public sealed record InputDecorationThemeData(
     TextStyle? LabelStyle = null,

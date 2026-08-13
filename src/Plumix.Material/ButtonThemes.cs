@@ -3,11 +3,11 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/material/text_button_theme.dart;
-// flutter/packages/flutter/lib/src/material/elevated_button_theme.dart;
-// flutter/packages/flutter/lib/src/material/outlined_button_theme.dart;
-// flutter/packages/flutter/lib/src/material/filled_button_theme.dart;
-// flutter/packages/flutter/lib/src/material/icon_button_theme.dart
+// Dart parity source (reference): material_ui/lib/src/text_button_theme.dart;
+// material_ui/lib/src/elevated_button_theme.dart;
+// material_ui/lib/src/outlined_button_theme.dart;
+// material_ui/lib/src/filled_button_theme.dart;
+// material_ui/lib/src/icon_button_theme.dart
 
 public sealed partial record TextButtonThemeData
 {

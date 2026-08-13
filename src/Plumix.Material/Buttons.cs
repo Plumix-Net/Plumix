@@ -8,7 +8,12 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/material/button_style_button.dart; flutter/packages/flutter/lib/src/material/text_button.dart; flutter/packages/flutter/lib/src/material/elevated_button.dart; flutter/packages/flutter/lib/src/material/filled_button.dart; flutter/packages/flutter/lib/src/material/outlined_button.dart (approximate)
+// Dart parity sources (reference, approximate):
+// material_ui/lib/src/button_style_button.dart
+// material_ui/lib/src/text_button.dart
+// material_ui/lib/src/elevated_button.dart
+// material_ui/lib/src/filled_button.dart
+// material_ui/lib/src/outlined_button.dart
 
 public sealed class TextButton : StatelessWidget
 {

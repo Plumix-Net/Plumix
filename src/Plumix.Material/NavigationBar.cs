@@ -7,7 +7,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/navigation_bar.dart
+// Dart parity source: material_ui/lib/src/navigation_bar.dart
 
 public enum NavigationDestinationLabelBehavior
 {

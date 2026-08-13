@@ -7,7 +7,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/navigation_rail.dart
+// Dart parity source: material_ui/lib/src/navigation_rail.dart
 
 public enum NavigationRailLabelType
 {

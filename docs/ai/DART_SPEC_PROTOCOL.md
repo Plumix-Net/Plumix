@@ -21,9 +21,13 @@ This protocol is tool-agnostic on purpose — see *Running it* below.
 
 For control `X`, the extractor reads, in this order:
 
-1. `flutter-src/packages/flutter/lib/src/<library>/<x>.dart` — the control.
-2. `flutter-src/packages/flutter/lib/src/<library>/<x>_theme.dart` — its theme pair, when Flutter has one.
-3. `flutter-src/packages/flutter/test/<library>/<x>_test.dart` — Flutter's own tests. **Do not skip
+1. `<root>/<x>.dart` — the control. For Material/Cupertino, `<root>` is `material-ui-src/lib/src`
+   or `cupertino-ui-src/lib/src` (the extracted pub packages — see `AGENTS.md` > Local Reference
+   Paths); for every other library it is `flutter-src/packages/flutter/lib/src/<library>`.
+2. `<root>/<x>_theme.dart` — its theme pair, when Flutter has one.
+3. The matching Flutter tests: `material-ui-src/test/<x>_test.dart` / `cupertino-ui-src/test/...`
+   for the packages, `flutter-src/packages/flutter/test/<library>/<x>_test.dart` otherwise.
+   **Do not skip
    this.** It is the most reliable source of exact default values and edge-case behavior, and it tells
    you which behaviors Flutter itself considers contractual.
 4. Any `_<X>DefaultsM3` / `_<X>DefaultsM2` token classes, wherever they live.

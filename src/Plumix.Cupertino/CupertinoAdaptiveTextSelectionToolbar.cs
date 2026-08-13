@@ -4,7 +4,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Cupertino;
 
-// Dart parity source: flutter/packages/flutter/lib/src/cupertino/adaptive_text_selection_toolbar.dart
+// Dart parity source: cupertino_ui/lib/src/adaptive_text_selection_toolbar.dart
 
 /// <summary>Selects the mobile or desktop Cupertino text-selection toolbar for the platform.</summary>
 public sealed class CupertinoAdaptiveTextSelectionToolbar : StatelessWidget

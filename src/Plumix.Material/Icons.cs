@@ -2,7 +2,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/material/icons.dart (subset used by current framework samples/tests)
+// Dart parity source (reference): material_ui/lib/src/icons.dart (subset used by current framework samples/tests)
 
 public static class Icons
 {

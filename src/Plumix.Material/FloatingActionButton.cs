@@ -7,7 +7,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/floating_action_button.dart
+// Dart parity source: material_ui/lib/src/floating_action_button.dart
 
 internal enum FloatingActionButtonType
 {

@@ -7,7 +7,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/flexible_space_bar.dart
+// Dart parity source: material_ui/lib/src/flexible_space_bar.dart
 
 public enum CollapseMode
 {

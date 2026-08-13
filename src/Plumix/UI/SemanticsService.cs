@@ -1,6 +1,6 @@
 namespace Plumix.UI;
 
-// Dart parity source: flutter/packages/flutter/lib/src/services/semantics.dart
+// Dart parity source: flutter/packages/flutter/lib/src/semantics/semantics_service.dart
 
 public sealed record SemanticsAnnouncement(
     int ViewId,

@@ -6,7 +6,6 @@ namespace Plumix.Widgets;
 
 // Dart parity sources:
 // flutter/packages/flutter/lib/src/widgets/localizations.dart
-// flutter/packages/flutter/lib/src/widgets/widgets_localizations.dart
 
 public sealed record Locale
 {

@@ -3,7 +3,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Cupertino;
 
-// Dart parity source: flutter/packages/flutter/lib/src/cupertino/spell_check_suggestions_toolbar.dart
+// Dart parity source: cupertino_ui/lib/src/spell_check_suggestions_toolbar.dart
 
 /// <summary>The default iOS spell-check suggestions toolbar.</summary>
 public sealed class CupertinoSpellCheckSuggestionsToolbar : StatelessWidget

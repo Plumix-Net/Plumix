@@ -6,7 +6,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/reorderable_list.dart
+// Dart parity source: material_ui/lib/src/reorderable_list.dart
 
 #pragma warning disable CS0618
 

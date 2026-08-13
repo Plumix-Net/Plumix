@@ -8,10 +8,10 @@ using Xunit;
 namespace Plumix.Tests;
 
 // Dart parity sources:
-// flutter/packages/flutter/lib/src/material/theme.dart
-// flutter/packages/flutter/lib/src/material/theme_data.dart
-// flutter/packages/flutter/lib/src/material/page.dart
-// flutter/packages/flutter/lib/src/material/page_transitions_theme.dart
+// material_ui/lib/src/theme.dart
+// material_ui/lib/src/theme_data.dart
+// material_ui/lib/src/page.dart
+// material_ui/lib/src/page_transitions_theme.dart
 
 [Collection(SchedulerTestCollection.Name)]
 public sealed class MaterialThemeAnimationTests : IDisposable

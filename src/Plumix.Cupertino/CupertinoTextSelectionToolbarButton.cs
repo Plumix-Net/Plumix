@@ -8,8 +8,8 @@ using Plumix.Widgets;
 namespace Plumix.Cupertino;
 
 // Dart parity sources:
-// flutter/packages/flutter/lib/src/cupertino/text_selection_toolbar_button.dart
-// flutter/packages/flutter/lib/src/cupertino/desktop_text_selection_toolbar_button.dart
+// cupertino_ui/lib/src/text_selection_toolbar_button.dart
+// cupertino_ui/lib/src/desktop_text_selection_toolbar_button.dart
 
 /// <summary>An iOS-style text-selection toolbar button.</summary>
 public sealed class CupertinoTextSelectionToolbarButton : StatefulWidget

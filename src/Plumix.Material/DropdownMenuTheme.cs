@@ -7,8 +7,8 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity sources: flutter/packages/flutter/lib/src/material/dropdown_menu_theme.dart;
-// flutter/packages/flutter/lib/src/material/menu_style.dart
+// Dart parity sources: material_ui/lib/src/dropdown_menu_theme.dart;
+// material_ui/lib/src/menu_style.dart
 
 public sealed partial record MenuStyle(
     MaterialStateProperty<Color?>? BackgroundColor = null,

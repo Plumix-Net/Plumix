@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class SearchDemoPage extends StatefulWidget {
   const SearchDemoPage({super.key});
@@ -264,7 +264,7 @@ class _SearchDemoPageState extends State<SearchDemoPage> {
   }
 
   Future<void> _openLegacySearch(BuildContext context) async {
-    final String? result = await showSearch<String>(
+    final String? result = await showSearch<String?>(
       context: context,
       query: _controller.text,
       delegate: _TermSearchDelegate(_searchTerms, (String value) {
@@ -280,7 +280,7 @@ class _SearchDemoPageState extends State<SearchDemoPage> {
   }
 }
 
-class _TermSearchDelegate extends SearchDelegate<String> {
+class _TermSearchDelegate extends SearchDelegate<String?> {
   _TermSearchDelegate(this._terms, this._onSelected)
     : super(
         searchFieldLabel: 'Search framework terms',

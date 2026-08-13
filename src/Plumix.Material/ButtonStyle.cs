@@ -7,7 +7,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/material/button_style.dart (approximate)
+// Dart parity source (reference): material_ui/lib/src/button_style.dart (approximate)
 
 [Flags]
 public enum MaterialState

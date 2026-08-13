@@ -8,7 +8,7 @@ using Path = Plumix.UI.Path;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/segmented_button.dart
+// Dart parity source: material_ui/lib/src/segmented_button.dart
 
 internal sealed class SegmentedButtonRenderWidget : MultiChildRenderObjectWidget
 {

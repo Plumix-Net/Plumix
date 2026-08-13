@@ -8,7 +8,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/dialog.dart
+// Dart parity source: material_ui/lib/src/dialog.dart
 
 public sealed class Dialog : StatelessWidget
 {

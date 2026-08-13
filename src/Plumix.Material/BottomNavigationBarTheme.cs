@@ -4,7 +4,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/material/bottom_navigation_bar_theme.dart (approximate)
+// Dart parity source (reference): material_ui/lib/src/bottom_navigation_bar_theme.dart (approximate)
 
 public sealed record BottomNavigationBarThemeData(
     Color? BackgroundColor = null,

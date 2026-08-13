@@ -7,7 +7,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Cupertino;
 
-// Dart parity source: flutter/packages/flutter/lib/src/cupertino/slider.dart
+// Dart parity source: cupertino_ui/lib/src/slider.dart
 
 public sealed class CupertinoSlider : StatefulWidget
 {

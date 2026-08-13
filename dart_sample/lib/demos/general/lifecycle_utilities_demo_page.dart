@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class LifecycleUtilitiesDemoPage extends StatefulWidget {
   const LifecycleUtilitiesDemoPage({super.key});

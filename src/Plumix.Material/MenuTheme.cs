@@ -3,7 +3,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/menu_theme.dart.
+// Dart parity source: material_ui/lib/src/menu_theme.dart.
 
 /// <summary>Visual overrides for submenu panels and submenu disclosure icons.</summary>
 public sealed partial record MenuThemeData(

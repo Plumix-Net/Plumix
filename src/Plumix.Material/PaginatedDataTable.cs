@@ -8,8 +8,8 @@ using Plumix.Widgets;
 namespace Plumix.Material;
 
 // Dart parity sources:
-// flutter/packages/flutter/lib/src/material/data_table_source.dart
-// flutter/packages/flutter/lib/src/material/paginated_data_table.dart
+// material_ui/lib/src/data_table_source.dart
+// material_ui/lib/src/paginated_data_table.dart
 
 public abstract class DataTableSource : ChangeNotifier
 {

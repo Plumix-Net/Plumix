@@ -11,7 +11,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/time_picker.dart
+// Dart parity source: material_ui/lib/src/time_picker.dart
 
 public enum TimePickerEntryMode
 {

@@ -93,22 +93,32 @@ does what `/port` does, and the spec protocol works inline when subagents are un
 
 ## Local Reference Paths
 
-Both are gitignored symlinks in the repository root, so every reference in docs and code can use a
+All are gitignored symlinks in the repository root, so every reference in docs and code can use a
 stable relative path. Create them once after cloning:
 
 ```bash
 ln -s /path/to/your/flutter flutter-src     # Flutter checkout (see pin below)
+ln -s ~/.pub-cache/hosted/pub.dev/material_ui-1.0.0 material-ui-src    # Material pub package
+ln -s ~/.pub-cache/hosted/pub.dev/cupertino_ui-1.0.0 cupertino-ui-src  # Cupertino pub package
 ln -s /path/to/your/Avalonia avalonia-src   # optional, for host/backend questions
 ```
 
-- `flutter-src` — Flutter source of truth. Controls: `flutter-src/packages/flutter/lib/src/<library>/`.
-  Flutter's own tests: `flutter-src/packages/flutter/test/<library>/` — the most reliable record of
-  exact defaults and contractual behavior; read them during ports.
+- `material-ui-src` / `cupertino-ui-src` — source of truth for Material/Cupertino controls. Flutter
+  extracted these libraries into the `material_ui`/`cupertino_ui` pub packages (developed in
+  `flutter/packages`); the copies inside the Flutter SDK are frozen leftovers. Controls:
+  `<pkg>-src/lib/src/`; Flutter's own tests ship with the package: `<pkg>-src/test/` — the most
+  reliable record of exact defaults and contractual behavior; read them during ports.
+- `flutter-src` — source of truth for everything else (`widgets`, `rendering`, `painting`,
+  `gestures`, `semantics`, ...): `flutter-src/packages/flutter/lib/src/<library>/`, tests under
+  `flutter-src/packages/flutter/test/<library>/`.
 - `avalonia-src` — Avalonia source, host/platform questions only.
 
-**Pinned Flutter revision: 3.44.0 (`559ffa3f75e`, `flutter-3.44-candidate.0`).** Parity is defined
-against this revision. Material defaults change between Flutter releases, so a port validated against
-a different checkout is not validated. When the pin moves, update this line and re-run
+**Pinned Flutter revision: 3.47.0 (`4cf24164269`, `flutter-3.47-candidate.0`). Pinned packages:
+`material_ui` 1.0.0, `cupertino_ui` 1.0.0** (what `dart_sample` resolves; at these pins the package
+sources are code-identical to the SDK's frozen `src/material`/`src/cupertino` copies, modulo doc
+comments and constructor-style modernization). Parity is defined against these pins. Material
+defaults change between releases, so a port validated against a different checkout is not validated.
+When a pin moves, update this line, re-point the symlink(s), and re-run
 `python3 scripts/generate_port_map.py` — it flags markers whose Dart file no longer exists.
 
 ## Common Commands
@@ -145,7 +155,7 @@ dotnet build src/Sample/Plumix.iOS/Plumix.iOS.csproj -c Debug
 6. Keep nullability correctness (`Nullable` is enabled). Nullable warnings are promoted to errors in `src/Directory.Build.props`, so they fail the build.
 7. Code style: use explicit types for primitives and `string` (`double`, `int`, `bool`, `string`, `char`, `byte`, `long`, `float`, `decimal`, ...); keep `var` only for complex/reference types whose type is obvious from the right-hand side. See `docs/ai/INVARIANTS.md` (Code Style). Emit this correctly on first pass — `EnforceCodeStyleInBuild` makes IDE0008 a **build error**, so a violation breaks the build rather than surfacing in review.
 8. Max line length is 120 characters (`.editorconfig` `max_line_length`), checked by `scripts/check_line_length.sh` on new/edited lines only; do not mass-reformat untouched code. Wrap long argument lists, chained calls, and conditions instead of exceeding it.
-8a. Every framework file carries a `// Dart parity source: flutter/packages/flutter/lib/src/<library>/<file>.dart` header marker. Keep it on new files — `docs/ai/PORT_MAP.md` is generated from these markers, and a missing one drops the file out of the map. C#-only infrastructure states that in a header comment instead.
+8a. Every framework file carries a `// Dart parity source:` header marker naming its Dart origin: `material_ui/lib/src/<file>.dart` or `cupertino_ui/lib/src/<file>.dart` for the extracted design packages, `flutter/packages/flutter/lib/src/<library>/<file>.dart` for everything else. Keep it on new files — `docs/ai/PORT_MAP.md` is generated from these markers, and a missing one drops the file out of the map. C#-only infrastructure states that in a header comment instead.
 9. Avoid broad dependency/framework upgrades unless explicitly requested.
 10. Demo feature/route/page-structure updates in `src/Sample/Plumix.Sample` must be mirrored in `dart_sample` in the same change; host glue is exempt (see `docs/ai/INVARIANTS.md`, Sample Parity).
 

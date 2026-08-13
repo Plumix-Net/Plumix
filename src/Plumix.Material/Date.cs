@@ -2,7 +2,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/date.dart
+// Dart parity source: material_ui/lib/src/date.dart
 
 public delegate bool SelectableDayPredicate(DateTime day);
 

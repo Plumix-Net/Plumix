@@ -5,7 +5,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/expand_icon.dart
+// Dart parity source: material_ui/lib/src/expand_icon.dart
 public sealed class ExpandIcon : StatefulWidget
 {
     public ExpandIcon(

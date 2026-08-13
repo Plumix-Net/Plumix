@@ -4,7 +4,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/material/material_localizations.dart (baseline subset)
+// Dart parity source (reference): material_ui/lib/src/material_localizations.dart (baseline subset)
 
 public abstract class MaterialLocalizations
 {

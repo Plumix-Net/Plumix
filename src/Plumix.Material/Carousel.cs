@@ -8,8 +8,8 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/carousel.dart
-// Dart parity source: flutter/packages/flutter/lib/src/material/carousel_theme.dart
+// Dart parity source: material_ui/lib/src/carousel.dart
+// Dart parity source: material_ui/lib/src/carousel_theme.dart
 
 public delegate Widget? CarouselItemBuilder(BuildContext context, int index);
 

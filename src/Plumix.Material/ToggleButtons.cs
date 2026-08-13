@@ -8,7 +8,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/toggle_buttons.dart
+// Dart parity source: material_ui/lib/src/toggle_buttons.dart
 
 public sealed class ToggleButtons : StatelessWidget
 {

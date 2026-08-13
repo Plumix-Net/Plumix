@@ -7,7 +7,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/list_tile.dart
+// Dart parity source: material_ui/lib/src/list_tile.dart
 
 public sealed class ListTile : StatelessWidget
 {

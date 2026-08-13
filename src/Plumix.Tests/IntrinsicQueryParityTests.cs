@@ -16,7 +16,7 @@ namespace Plumix.Tests;
 // flutter/packages/flutter/lib/src/rendering/flex.dart
 // flutter/packages/flutter/lib/src/rendering/sliver_fill.dart
 // flutter/packages/flutter/lib/src/widgets/sliver_resizing_header.dart
-// flutter/packages/flutter/lib/src/material/floating_action_button.dart
+// material_ui/lib/src/floating_action_button.dart
 public sealed class IntrinsicQueryParityTests
 {
     [Fact]

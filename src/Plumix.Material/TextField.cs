@@ -7,7 +7,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/text_field.dart
+// Dart parity source: material_ui/lib/src/text_field.dart
 
 public delegate Widget TextFieldCounterBuilder(
     BuildContext context,

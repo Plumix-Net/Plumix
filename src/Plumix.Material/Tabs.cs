@@ -8,7 +8,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/tabs.dart
+// Dart parity source: material_ui/lib/src/tabs.dart
 
 /// <summary>Defines how the bounds of the selected tab indicator are computed.</summary>
 public enum TabBarIndicatorSize
@@ -154,7 +154,7 @@ public sealed class Tab : StatelessWidget, IPreferredSizeWidget
         Child ?? new Text(Text!, softWrap: false, overflow: TextOverflow.Fade);
 }
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/tabs.dart (_TabStyle)
+// Dart parity source: material_ui/lib/src/tabs.dart (_TabStyle)
 internal sealed class TabStyle : AnimatedWidget
 {
     public TabStyle(
@@ -329,7 +329,7 @@ internal abstract class TabBarDefaults
     public virtual BorderRadius? SplashBorderRadius => null;
 }
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/tabs.dart (_TabsDefaultsM2)
+// Dart parity source: material_ui/lib/src/tabs.dart (_TabsDefaultsM2)
 internal sealed class TabsDefaultsM2 : TabBarDefaults
 {
     /// <summary>Dart's <c>Colors.blue</c>, the Material 2 light primary color.</summary>
@@ -373,7 +373,7 @@ internal sealed class TabsDefaultsM2 : TabBarDefaults
     public override InteractiveInkFeatureFactory? SplashFactory => _theme.SplashFactory;
 }
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/tabs.dart (_TabsPrimaryDefaultsM3)
+// Dart parity source: material_ui/lib/src/tabs.dart (_TabsPrimaryDefaultsM3)
 internal sealed class TabsPrimaryDefaultsM3 : TabBarDefaults
 {
     internal static readonly EdgeInsetsGeometry IconMargin = EdgeInsetsGeometry.Only(bottom: 2);
@@ -449,7 +449,7 @@ internal sealed class TabsPrimaryDefaultsM3 : TabBarDefaults
         });
 }
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/tabs.dart (_TabsSecondaryDefaultsM3)
+// Dart parity source: material_ui/lib/src/tabs.dart (_TabsSecondaryDefaultsM3)
 internal sealed class TabsSecondaryDefaultsM3 : TabBarDefaults
 {
     /// <summary>Dart's <c>_TabsSecondaryDefaultsM3.indicatorWeight</c>.</summary>
@@ -508,7 +508,7 @@ internal sealed class TabsSecondaryDefaultsM3 : TabBarDefaults
 /// <summary>Reports the laid-out leading edges of every tab plus the trailing edge of the last one.</summary>
 internal delegate void TabLayoutCallback(IReadOnlyList<double> xOffsets, TextDirection textDirection, double width);
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/tabs.dart (_TabLabelBarRenderer)
+// Dart parity source: material_ui/lib/src/tabs.dart (_TabLabelBarRenderer)
 internal sealed class TabLabelBarRenderer : RenderFlex
 {
     public TabLabelBarRenderer(
@@ -556,7 +556,7 @@ internal sealed class TabLabelBarRenderer : RenderFlex
     }
 }
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/tabs.dart (_TabLabelBar)
+// Dart parity source: material_ui/lib/src/tabs.dart (_TabLabelBar)
 internal sealed class TabLabelBar : Flex
 {
     public TabLabelBar(
@@ -591,7 +591,7 @@ internal sealed class TabLabelBar : Flex
     }
 }
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/tabs.dart (_DividerPainter)
+// Dart parity source: material_ui/lib/src/tabs.dart (_DividerPainter)
 internal sealed class DividerPainter : CustomPainter
 {
     public DividerPainter(Color dividerColor, double dividerHeight)
@@ -631,7 +631,7 @@ internal sealed class IndicatorPainterNotifier : ChangeNotifier
     public void Notify() => NotifyListeners();
 }
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/tabs.dart (_IndicatorPainter)
+// Dart parity source: material_ui/lib/src/tabs.dart (_IndicatorPainter)
 internal sealed class IndicatorPainter : CustomPainter
 {
     private readonly IndicatorPainterNotifier _repaint;
@@ -981,7 +981,7 @@ internal sealed class IndicatorPainter : CustomPainter
         Math.Max(0.0, Lerp(a.Bottom, b.Bottom, t) - Lerp(a.Top, b.Top, t)));
 }
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/tabs.dart (_indexChangeProgress)
+// Dart parity source: material_ui/lib/src/tabs.dart (_indexChangeProgress)
 internal static class TabIndexProgress
 {
     public static double Of(TabController controller)
@@ -1000,7 +1000,7 @@ internal static class TabIndexProgress
     }
 }
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/tabs.dart (_ChangeAnimation)
+// Dart parity source: material_ui/lib/src/tabs.dart (_ChangeAnimation)
 internal sealed class ChangeAnimation : AnimationWithParentMixin<double>
 {
     private readonly TabController _controller;
@@ -1028,7 +1028,7 @@ internal sealed class ChangeAnimation : AnimationWithParentMixin<double>
     }
 }
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/tabs.dart (_DragAnimation)
+// Dart parity source: material_ui/lib/src/tabs.dart (_DragAnimation)
 internal sealed class DragAnimation : AnimationWithParentMixin<double>
 {
     private readonly TabController _controller;
@@ -1069,7 +1069,7 @@ internal sealed class DragAnimation : AnimationWithParentMixin<double>
     }
 }
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/tabs.dart (_TabBarScrollPosition)
+// Dart parity source: material_ui/lib/src/tabs.dart (_TabBarScrollPosition)
 internal sealed class TabBarScrollPosition : ScrollPosition
 {
     private readonly ITabBarScrollHost _tabBar;

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'demos/general/align_demo_page.dart';
 import 'demos/general/async_builder_demo_page.dart';

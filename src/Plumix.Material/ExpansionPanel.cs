@@ -8,7 +8,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/expansion_panel.dart
+// Dart parity source: material_ui/lib/src/expansion_panel.dart
 internal sealed record ExpansionPanelSaltedKey(BuildContext Salt, int Value) : LocalKey;
 
 public delegate void ExpansionPanelCallback(int panelIndex, bool isExpanded);

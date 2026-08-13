@@ -3,7 +3,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/action_icons_theme.dart
+// Dart parity source: material_ui/lib/src/action_icons_theme.dart
 
 public sealed partial record ActionIconThemeData(
     Func<BuildContext, Widget>? BackButtonIconBuilder = null,

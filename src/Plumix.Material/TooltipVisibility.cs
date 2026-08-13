@@ -3,7 +3,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/tooltip_visibility.dart
+// Dart parity source: material_ui/lib/src/tooltip_visibility.dart
 
 public sealed class TooltipVisibility : StatelessWidget
 {

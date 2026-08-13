@@ -2,7 +2,9 @@ using Avalonia;
 using Avalonia.Media;
 using Plumix.Widgets;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/rendering/object.dart; flutter/packages/flutter/lib/src/rendering/semantics.dart (approximate)
+// Dart parity sources (reference, approximate):
+// flutter/packages/flutter/lib/src/rendering/object.dart
+// flutter/packages/flutter/lib/src/semantics/semantics.dart
 
 namespace Plumix.Rendering;
 

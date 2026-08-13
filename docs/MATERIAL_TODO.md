@@ -1,6 +1,6 @@
 # Material Port — Up for Grabs
 
-Widgets and subsystems from Flutter's Material library (`packages/flutter/lib/src/material`) that are **not yet ported** to `src/Plumix.Material`. Pick one, claim it, and submit a PR.
+Widgets and subsystems from Flutter's Material library (the `material_ui` pub package, `material-ui-src/lib/src/`) that are **not yet ported** to `src/Plumix.Material`. Pick one, claim it, and submit a PR.
 
 Last verified against Flutter source and `src/Plumix.Material`: **2026-08-13**.
 

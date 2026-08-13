@@ -5,8 +5,8 @@ using Plumix.Widgets;
 namespace Plumix.Material;
 
 // Dart parity sources:
-// flutter/packages/flutter/lib/src/material/text_theme.dart
-// flutter/packages/flutter/lib/src/material/typography.dart
+// material_ui/lib/src/text_theme.dart
+// material_ui/lib/src/typography.dart
 
 public record TextTheme
 {

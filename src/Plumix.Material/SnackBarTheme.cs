@@ -7,7 +7,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/snack_bar_theme.dart
+// Dart parity source: material_ui/lib/src/snack_bar_theme.dart
 
 public enum SnackBarBehavior
 {

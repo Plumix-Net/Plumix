@@ -9,7 +9,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/checkbox.dart
+// Dart parity source: material_ui/lib/src/checkbox.dart
 
 public sealed class Checkbox : StatefulWidget
 {

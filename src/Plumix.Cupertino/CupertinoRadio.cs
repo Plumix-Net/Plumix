@@ -8,7 +8,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Cupertino;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/cupertino/radio.dart (adapted)
+// Dart parity source (reference): cupertino_ui/lib/src/radio.dart (adapted)
 
 public sealed class CupertinoRadio<T> : StatefulWidget
 {

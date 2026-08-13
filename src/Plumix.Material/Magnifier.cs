@@ -6,7 +6,7 @@ using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/magnifier.dart
+// Dart parity source: material_ui/lib/src/magnifier.dart
 
 namespace Plumix.Material;
 

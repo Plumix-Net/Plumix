@@ -7,7 +7,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/dialog_theme.dart
+// Dart parity source: material_ui/lib/src/dialog_theme.dart
 
 public sealed partial record DialogThemeData
 {

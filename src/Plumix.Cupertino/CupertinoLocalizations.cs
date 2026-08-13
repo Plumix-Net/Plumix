@@ -2,7 +2,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Cupertino;
 
-// Dart parity source: flutter/packages/flutter/lib/src/cupertino/localizations.dart
+// Dart parity source: cupertino_ui/lib/src/localizations.dart
 
 public abstract class CupertinoLocalizations
 {

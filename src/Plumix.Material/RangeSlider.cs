@@ -8,7 +8,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/range_slider.dart
+// Dart parity source: material_ui/lib/src/range_slider.dart
 
 public readonly record struct RangeValues(double Start, double End);
 

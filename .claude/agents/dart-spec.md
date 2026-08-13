@@ -13,9 +13,11 @@ section order it defines. That document is the contract; this file only points a
 
 Operating notes:
 
-- The Flutter checkout is `flutter-src/` in the repo root (a symlink to the pinned revision recorded
-  in `AGENTS.md`). Control sources are under `flutter-src/packages/flutter/lib/src/<library>/`,
-  Flutter's own tests under `flutter-src/packages/flutter/test/<library>/`.
+- Reference roots are symlinks in the repo root, pinned in `AGENTS.md`. Material/Cupertino control
+  sources live in the extracted pub packages: `material-ui-src/lib/src/` / `cupertino-ui-src/lib/src/`,
+  their Flutter tests in `material-ui-src/test/` / `cupertino-ui-src/test/`. Everything else lives in
+  the Flutter checkout: `flutter-src/packages/flutter/lib/src/<library>/`, tests under
+  `flutter-src/packages/flutter/test/<library>/`.
 - Always read the control, its `_theme.dart` pair, and its `_test.dart` — the tests carry exact
   defaults and the contractual behavior list.
 - Large files: read them in ranges until complete. Never sample, never summarize a section you did

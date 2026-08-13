@@ -9,7 +9,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/switch.dart
+// Dart parity source: material_ui/lib/src/switch.dart
 
 public sealed class Switch : StatefulWidget
 {

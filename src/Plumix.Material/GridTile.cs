@@ -4,7 +4,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/grid_tile.dart
+// Dart parity source: material_ui/lib/src/grid_tile.dart
 
 /// <summary>
 /// A tile in a Material grid, with optional content overlaid at its top and bottom edges.

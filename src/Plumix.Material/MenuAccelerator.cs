@@ -6,7 +6,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/menu_anchor.dart
+// Dart parity source: material_ui/lib/src/menu_anchor.dart
 
 public delegate Widget MenuAcceleratorChildBuilder(BuildContext context, string label, int index);
 

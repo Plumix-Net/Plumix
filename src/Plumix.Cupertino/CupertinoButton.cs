@@ -6,7 +6,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Cupertino;
 
-// Dart parity source: flutter/packages/flutter/lib/src/cupertino/button.dart
+// Dart parity source: cupertino_ui/lib/src/button.dart
 
 /// <summary>A Cupertino push button with pressed-opacity and colored-background behavior.</summary>
 public sealed class CupertinoButton : StatefulWidget

@@ -7,7 +7,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/tab_bar_theme.dart
+// Dart parity source: material_ui/lib/src/tab_bar_theme.dart
 
 /// <summary>
 /// Defines a theme for <see cref="TabBar"/> widgets. Every member is nullable; a null member means

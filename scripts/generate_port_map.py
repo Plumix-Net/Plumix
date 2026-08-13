@@ -35,8 +35,13 @@ CS_DEMOS = REPO / "src" / "Sample" / "Plumix.Sample"
 DART_DEMOS = REPO / "dart_sample" / "lib"
 
 # Matches both `// Dart parity source: flutter/packages/...` and the `(reference)` / plural forms,
-# plus bare continuation lines listing a second dart path.
-MARKER = re.compile(r"(?:^|\s)((?:flutter/)?packages/flutter/lib/src/[\w/]+\.dart)")
+# plus bare continuation lines listing a second dart path. Material/Cupertino ports reference the
+# extracted pub packages (`material_ui/lib/src/...`, `cupertino_ui/lib/src/...`) instead of the
+# framework checkout.
+MARKER = re.compile(
+    r"(?:^|\s)((?:flutter/)?packages/flutter/lib/src/[\w/]+\.dart"
+    r"|(?:material_ui|cupertino_ui)/lib/src/[\w/]+\.dart)"
+)
 
 
 def flutter_root() -> Path | None:
@@ -47,6 +52,27 @@ def flutter_root() -> Path | None:
         if (c / "packages/flutter/lib/src").is_dir():
             return c
     return None
+
+
+def package_root(package: str) -> Path | None:
+    """Root of an extracted design-library pub package (material_ui / cupertino_ui)."""
+    env = os.environ.get(package.upper() + "_SRC")
+    candidates = [Path(env)] if env else []
+    candidates.append(REPO / (package.replace("_", "-") + "-src"))
+    for c in candidates:
+        if (c / "lib/src").is_dir():
+            return c
+    return None
+
+
+def resolve_dart(dart: str, froot: Path | None, proots: dict[str, Path | None]) -> bool | None:
+    """True/False if the marker path exists under its root; None when the root is unavailable."""
+    for package in proots:
+        prefix = package + "/"
+        if dart.startswith(prefix):
+            root = proots[package]
+            return None if root is None else (root / dart.removeprefix(prefix)).is_file()
+    return None if froot is None else (froot / dart).is_file()
 
 
 def snake(name: str) -> str:
@@ -92,7 +118,12 @@ def related(cs_files: list[str]) -> tuple[list[str], list[str]]:
     return sorted(tests), sorted(demos)
 
 
-def render(index: dict[str, list[str]], unmarked: list[str], froot: Path | None) -> str:
+def render(
+    index: dict[str, list[str]],
+    unmarked: list[str],
+    froot: Path | None,
+    proots: dict[str, Path | None],
+) -> str:
     lines = [
         "# Port Map (Dart -> C#)",
         "",
@@ -100,13 +131,19 @@ def render(index: dict[str, list[str]], unmarked: list[str], froot: Path | None)
         "framework sources. **Do not edit by hand** — fix the marker in the C# file and regenerate.",
         "",
         "Use it to go straight from a Flutter file to everything on the C# side (and back) without",
-        "searching. Paths under `packages/flutter/...` resolve inside the pinned checkout — see",
-        "`AGENTS.md` > Local Reference Paths for the pin and the `flutter-src` symlink.",
+        "searching. Paths under `packages/flutter/...` resolve inside the pinned checkout; paths under",
+        "`material_ui/...` / `cupertino_ui/...` resolve inside the pinned pub packages — see",
+        "`AGENTS.md` > Local Reference Paths for the pins and the symlinks.",
         "",
         "**This is a lookup table — grep it for your control, do not read it end-to-end.**",
         "",
         f"Flutter checkout used for validation: `{froot}`" if froot else
-        "Flutter checkout not found — existence of Dart paths was NOT validated.",
+        "Flutter checkout not found — existence of `packages/flutter/...` paths was NOT validated.",
+        *(
+            f"`{p}` package used for validation: `{r}`" if r else
+            f"`{p}` package root not found — existence of `{p}/...` paths was NOT validated."
+            for p, r in proots.items()
+        ),
         "",
         "## Index",
         "",
@@ -118,10 +155,11 @@ def render(index: dict[str, list[str]], unmarked: list[str], froot: Path | None)
     for dart in sorted(index):
         cs_files = sorted(index[dart])
         tests, demos = related(cs_files)
-        exists = froot is None or (froot / dart).is_file()
+        resolved = resolve_dart(dart, froot, proots)
+        exists = resolved is not False
         if not exists:
             missing_dart.append(dart)
-        short = dart.removeprefix("packages/flutter/lib/src/")
+        short = dart.removeprefix("packages/flutter/lib/src/").replace("/lib/src/", "/")
         mark = "" if exists else " ⚠️"
         lines.append(
             f"| `{short}`{mark} | {'<br>'.join(f'`{c}`' for c in cs_files)} "
@@ -170,8 +208,9 @@ def main() -> int:
     args = ap.parse_args()
 
     froot = flutter_root()
+    proots = {p: package_root(p) for p in ("material_ui", "cupertino_ui")}
     index, unmarked = scan_markers()
-    content = render(index, unmarked, froot)
+    content = render(index, unmarked, froot, proots)
 
     if args.check:
         current = OUT.read_text(encoding="utf-8") if OUT.exists() else ""

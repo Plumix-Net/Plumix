@@ -3,7 +3,7 @@ using Avalonia.Media;
 using Plumix.Rendering;
 using Xunit;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/rendering/semantics.dart (parity regression tests)
+// Dart parity source (reference): flutter/packages/flutter/lib/src/semantics/semantics.dart (parity regression tests)
 
 namespace Plumix.Tests;
 

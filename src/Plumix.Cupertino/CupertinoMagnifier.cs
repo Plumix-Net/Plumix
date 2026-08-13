@@ -5,7 +5,7 @@ using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
 
-// Dart parity source: flutter/packages/flutter/lib/src/cupertino/magnifier.dart
+// Dart parity source: cupertino_ui/lib/src/magnifier.dart
 
 namespace Plumix.Cupertino;
 

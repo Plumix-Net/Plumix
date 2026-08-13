@@ -5,7 +5,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/progress_indicator_theme.dart
+// Dart parity source: material_ui/lib/src/progress_indicator_theme.dart
 
 public enum StrokeCap
 {

@@ -6,7 +6,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/navigation_drawer_theme.dart
+// Dart parity source: material_ui/lib/src/navigation_drawer_theme.dart
 
 public sealed record NavigationDrawerThemeData(
     double? TileHeight = null,

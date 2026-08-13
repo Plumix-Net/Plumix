@@ -6,7 +6,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Cupertino;
 
-// Dart parity source: flutter/packages/flutter/lib/src/cupertino/desktop_text_selection_toolbar.dart
+// Dart parity source: cupertino_ui/lib/src/desktop_text_selection_toolbar.dart
 
 /// <summary>A macOS-style desktop text-selection toolbar.</summary>
 public sealed class CupertinoDesktopTextSelectionToolbar : StatelessWidget

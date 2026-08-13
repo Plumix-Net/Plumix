@@ -6,7 +6,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/bottom_app_bar_theme.dart
+// Dart parity source: material_ui/lib/src/bottom_app_bar_theme.dart
 
 public sealed record BottomAppBarThemeData(
     Color? Color = null,

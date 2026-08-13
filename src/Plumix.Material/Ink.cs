@@ -6,7 +6,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/ink_decoration.dart
+// Dart parity source: material_ui/lib/src/ink_decoration.dart
 
 /// <summary>
 /// Draws a decoration beneath its child so a descendant <see cref="InkWell"/>

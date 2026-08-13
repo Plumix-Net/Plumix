@@ -11,7 +11,7 @@ namespace Plumix.Tests;
 
 // Dart parity sources:
 // flutter/packages/flutter/lib/src/widgets/reorderable_list.dart
-// flutter/packages/flutter/lib/src/material/reorderable_list.dart
+// material_ui/lib/src/reorderable_list.dart
 
 [Collection(SchedulerTestCollection.Name)]
 public sealed class MaterialReorderableListTests

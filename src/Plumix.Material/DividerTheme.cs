@@ -5,7 +5,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/divider_theme.dart
+// Dart parity source: material_ui/lib/src/divider_theme.dart
 
 public sealed partial record DividerThemeData(
     Color? Color = null,

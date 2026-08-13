@@ -6,7 +6,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/time_picker_theme.dart
+// Dart parity source: material_ui/lib/src/time_picker_theme.dart
 
 public sealed partial record TimePickerThemeData(
     Color? BackgroundColor = null,
@@ -188,7 +188,7 @@ internal abstract class TimePickerDefaults
     }
 }
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/time_picker.dart (_TimePickerDefaultsM2)
+// Dart parity source: material_ui/lib/src/time_picker.dart (_TimePickerDefaultsM2)
 internal sealed class TimePickerDefaultsM2 : TimePickerDefaults
 {
     private static readonly OutlinedBorder DefaultShape = new RoundedRectangleBorder(
@@ -306,7 +306,7 @@ internal sealed class TimePickerDefaultsM2 : TimePickerDefaults
     public override ShapeBorder Shape => DefaultShape;
 }
 
-// Dart parity source: flutter/packages/flutter/lib/src/material/time_picker.dart (_TimePickerDefaultsM3)
+// Dart parity source: material_ui/lib/src/time_picker.dart (_TimePickerDefaultsM3)
 internal sealed class TimePickerDefaultsM3 : TimePickerDefaults
 {
     private readonly ColorScheme _colors;
