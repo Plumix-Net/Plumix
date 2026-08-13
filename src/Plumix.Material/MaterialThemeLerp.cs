@@ -283,6 +283,14 @@ internal static class MaterialThemeLerp
         return StateProperty(a, b, t, Shape);
     }
 
+    public static MaterialStateProperty<OutlinedBorder?>? OutlinedBorderStateProperty(
+        MaterialStateProperty<OutlinedBorder?>? a,
+        MaterialStateProperty<OutlinedBorder?>? b,
+        double t)
+    {
+        return StateProperty(a, b, t, OutlinedBorder.Lerp);
+    }
+
     public static MaterialStateProperty<Color?>? ColorStateProperty(
         MaterialStateProperty<Color?>? a,
         MaterialStateProperty<Color?>? b,

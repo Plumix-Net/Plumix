@@ -136,6 +136,9 @@
     with the `dayPeriodColor` auto-wrap, source theme copy/lerp/`InheritedTheme` wrap, the full `_TimePickerModel`
     widget tree, dial theta/radius math and painter, `_RenderInputPadding` tap targets, input validation and
     auto-advance, size tables, and mirrored dial/input/dial-only/input-only/24h runtime probes).
+  - `DatePicker`/range pickers (exact `_DatePickerDefaultsM2`/`_DatePickerDefaultsM3` direct roles and typography,
+    state-shape/overlay tables, theme copy/lerp/capture, local/default state fallback, dialog precedence, and
+    explicit/theme locale overrides; the existing mirrored demo covers M2/M3, calendar/input, and range modes).
   - Tabs (`TabBar`/`TabBar.secondary`/`TabBarView`/`TabPageSelector`/`TabController`/`UnderlineTabIndicator`) with the
     exact `_TabsDefaultsM2`/`_TabsPrimaryDefaultsM3`/`_TabsSecondaryDefaultsM3` tables, the `_TabStyle` label/icon
     colour chains including `WidgetStateColor` label colours, theme copy/lerp/capture, `_IndicatorPainter` linear and

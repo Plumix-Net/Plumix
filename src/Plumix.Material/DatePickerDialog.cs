@@ -128,6 +128,7 @@ internal sealed class DatePickerDialogState : State
         var localizations = MaterialLocalizations.Of(context);
         var datePickerTheme = DatePickerTheme.Of(context);
         var defaults = DatePickerTheme.Defaults(context);
+        var dialogTheme = DialogTheme.Of(context);
         var media = MediaQuery.MaybeOf(context) ?? new MediaQueryData(Size: new Size(360, 640));
         bool landscape = media.Size.Width > media.Size.Height;
         bool calendarMode = _entryMode is DatePickerEntryMode.Calendar or DatePickerEntryMode.CalendarOnly;
@@ -224,10 +225,12 @@ internal sealed class DatePickerDialogState : State
 
         return new Dialog(
             backgroundColor: datePickerTheme.BackgroundColor ?? defaults.BackgroundColor,
-            elevation: datePickerTheme.Elevation ?? defaults.Elevation,
+            elevation: datePickerTheme.Elevation
+                       ?? (useMaterial3 ? defaults.Elevation : dialogTheme.Elevation ?? defaults.Elevation),
             shadowColor: datePickerTheme.ShadowColor ?? defaults.ShadowColor,
             surfaceTintColor: datePickerTheme.SurfaceTintColor ?? defaults.SurfaceTintColor,
-            shape: datePickerTheme.Shape ?? defaults.Shape,
+            shape: datePickerTheme.Shape
+                   ?? (useMaterial3 ? defaults.Shape : dialogTheme.Shape ?? defaults.Shape),
             insetPadding: Current.InsetPadding,
             clipBehavior: Clip.AntiAlias,
             child: content);
@@ -433,12 +436,10 @@ internal sealed class DatePickerDialogState : State
         DatePickerThemeData defaults,
         bool landscape)
     {
-        if (theme.UseMaterial3)
-        {
-            var style = pickerTheme.HeaderHeadlineStyle ?? defaults.HeaderHeadlineStyle ?? theme.TextTheme.HeadlineMedium;
-            return landscape ? theme.TextTheme.HeadlineSmall : style;
-        }
-        return landscape ? theme.TextTheme.HeadlineSmall : theme.TextTheme.HeadlineMedium;
+        var style = pickerTheme.HeaderHeadlineStyle
+                    ?? defaults.HeaderHeadlineStyle
+                    ?? theme.TextTheme.HeadlineSmall;
+        return landscape ? theme.TextTheme.HeadlineSmall : style;
     }
 }
 
@@ -460,6 +461,7 @@ public static partial class MaterialDatePickers
         string? barrierLabel = null,
         bool useRootNavigator = true,
         RouteSettings? routeSettings = null,
+        Locale? locale = null,
         TextDirection? textDirection = null,
         DatePickerTransitionBuilder? builder = null,
         DatePickerMode initialDatePickerMode = DatePickerMode.Day,
@@ -492,6 +494,11 @@ public static partial class MaterialDatePickers
             switchToCalendarEntryModeIcon: switchToCalendarEntryModeIcon,
             calendarDelegate: calendarDelegate);
         if (textDirection.HasValue) dialog = new Directionality(textDirection.Value, dialog);
+        Locale? effectiveLocale = locale ?? DatePickerTheme.Of(context).Locale;
+        if (effectiveLocale is not null)
+        {
+            dialog = Localizations.Override(context, dialog, locale: effectiveLocale);
+        }
         var capturedDialog = dialog;
         return MaterialDialogs.ShowDialog<DateTime?>(
             context,

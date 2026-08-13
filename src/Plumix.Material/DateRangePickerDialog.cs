@@ -294,11 +294,13 @@ internal sealed class DateRangePickerDialogState : State
                 children:
                 [
                     new TextButton(
+                        style: local.CancelButtonStyle ?? defaults.CancelButtonStyle,
                         onPressed: () => Navigator.Pop(context),
                         child: new Text(Current.CancelText ?? (theme.UseMaterial3
                             ? localizations.CancelButtonLabel
                             : localizations.CancelButtonLabel.ToUpperInvariant()))),
                     new TextButton(
+                        style: local.ConfirmButtonStyle ?? defaults.ConfirmButtonStyle,
                         onPressed: HandleOk,
                         child: new Text(Current.ConfirmText ?? localizations.OkButtonLabel)),
                 ]));
@@ -322,8 +324,16 @@ internal sealed class DateRangePickerDialogState : State
 
         return new Dialog(
             backgroundColor: local.BackgroundColor ?? defaults.BackgroundColor,
-            elevation: local.Elevation ?? defaults.Elevation,
-            shape: local.Shape ?? defaults.Shape,
+            elevation: local.Elevation
+                       ?? (theme.UseMaterial3
+                           ? defaults.Elevation
+                           : DialogTheme.Of(context).Elevation ?? defaults.Elevation),
+            shadowColor: local.ShadowColor ?? defaults.ShadowColor,
+            surfaceTintColor: local.SurfaceTintColor ?? defaults.SurfaceTintColor,
+            shape: local.Shape
+                   ?? (theme.UseMaterial3
+                       ? defaults.Shape
+                       : DialogTheme.Of(context).Shape ?? defaults.Shape),
             insetPadding: new Thickness(16, 24),
             child: new SizedBox(width: size.Width, height: size.Height, child: content));
     }
@@ -589,7 +599,10 @@ internal sealed class CalendarDateRangePickerState : State
                 isToday: Current.CalendarDelegate.IsSameDay(date, Current.CurrentDate),
                 isFocused: false,
                 onChanged: UpdateSelection,
-                calendarDelegate: Current.CalendarDelegate);
+                calendarDelegate: Current.CalendarDelegate,
+                overlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+                    dateTheme.RangeSelectionOverlayColor?.Resolve(states)
+                    ?? defaults.RangeSelectionOverlayColor?.Resolve(states)));
             if (inRange)
             {
                 cell = new CustomPaint(
@@ -734,6 +747,7 @@ public static partial class MaterialDatePickers
         string? barrierLabel = null,
         bool useRootNavigator = true,
         RouteSettings? routeSettings = null,
+        Locale? locale = null,
         TextDirection? textDirection = null,
         DatePickerTransitionBuilder? builder = null,
         Widget? switchToInputEntryModeIcon = null,
@@ -763,6 +777,11 @@ public static partial class MaterialDatePickers
             selectableDayPredicate: selectableDayPredicate,
             calendarDelegate: calendarDelegate);
         if (textDirection.HasValue) dialog = new Directionality(textDirection.Value, dialog);
+        Locale? effectiveLocale = locale ?? DatePickerTheme.Of(context).Locale;
+        if (effectiveLocale is not null)
+        {
+            dialog = Localizations.Override(context, dialog, locale: effectiveLocale);
+        }
         var captured = dialog;
         return MaterialDialogs.ShowDialog<DateTimeRange<DateTime>?>(
             context,

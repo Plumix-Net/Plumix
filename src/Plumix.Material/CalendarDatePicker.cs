@@ -546,7 +546,8 @@ internal sealed class CalendarDayPicker : StatelessWidget
 internal sealed class CalendarDay : StatefulWidget
 {
     public CalendarDay(DateTime day, bool isDisabled, bool isSelected, bool isToday, bool isFocused,
-        Action<DateTime> onChanged, CalendarDelegate<DateTime> calendarDelegate) : base(new ValueKey<DateTime>(day))
+        Action<DateTime> onChanged, CalendarDelegate<DateTime> calendarDelegate,
+        MaterialStateProperty<Color?>? overlayColor = null) : base(new ValueKey<DateTime>(day))
     {
         Day = day;
         IsDisabled = isDisabled;
@@ -555,6 +556,7 @@ internal sealed class CalendarDay : StatefulWidget
         IsFocused = isFocused;
         OnChanged = onChanged;
         CalendarDelegate = calendarDelegate;
+        OverlayColor = overlayColor;
     }
 
     public DateTime Day { get; }
@@ -564,6 +566,7 @@ internal sealed class CalendarDay : StatefulWidget
     public bool IsFocused { get; }
     public Action<DateTime> OnChanged { get; }
     public CalendarDelegate<DateTime> CalendarDelegate { get; }
+    public MaterialStateProperty<Color?>? OverlayColor { get; }
     public override State CreateState() => new CalendarDayState();
 
     private sealed class CalendarDayState : State
@@ -598,13 +601,30 @@ internal sealed class CalendarDay : StatefulWidget
             var local = DatePickerTheme.Of(context);
             var defaults = DatePickerTheme.Defaults(context);
             var states = _states!.Value;
-            var foreground = (widget.IsToday ? local.TodayForegroundColor ?? defaults.TodayForegroundColor : local.DayForegroundColor ?? defaults.DayForegroundColor)!.Resolve(states);
-            var background = (widget.IsToday ? local.TodayBackgroundColor ?? defaults.TodayBackgroundColor : local.DayBackgroundColor ?? defaults.DayBackgroundColor)!.Resolve(states);
-            var overlay = local.DayOverlayColor ?? defaults.DayOverlayColor!;
-            var shape = (local.DayShape ?? defaults.DayShape)!.Resolve(states) ?? new CircleBorder();
-            var border = widget.IsToday ? local.TodayBorder ?? defaults.TodayBorder : ShapeBorderGeometry.SideOrNull(
-                shape);
-            if (widget.IsToday && border.HasValue && border.Value.Color.A == 0 && foreground.HasValue)
+            var foreground = widget.IsToday
+                ? local.TodayForegroundColor?.Resolve(states)
+                  ?? defaults.TodayForegroundColor?.Resolve(states)
+                : local.DayForegroundColor?.Resolve(states)
+                  ?? defaults.DayForegroundColor?.Resolve(states);
+            var background = widget.IsToday
+                ? local.TodayBackgroundColor?.Resolve(states)
+                  ?? defaults.TodayBackgroundColor?.Resolve(states)
+                : local.DayBackgroundColor?.Resolve(states)
+                  ?? defaults.DayBackgroundColor?.Resolve(states);
+            var overlay = widget.OverlayColor ?? MaterialStateProperty<Color?>.ResolveWith(
+                overlayStates => local.DayOverlayColor?.Resolve(overlayStates)
+                                 ?? defaults.DayOverlayColor?.Resolve(overlayStates));
+            OutlinedBorder shape = local.DayShape?.Resolve(states)
+                                   ?? defaults.DayShape?.Resolve(states)
+                                   ?? new CircleBorder();
+            BorderSide? localTodayBorder = local.TodayBorder;
+            var border = widget.IsToday
+                ? localTodayBorder ?? defaults.TodayBorder
+                : ShapeBorderGeometry.SideOrNull(shape);
+            if (widget.IsToday
+                && border.HasValue
+                && foreground.HasValue
+                && (!localTodayBorder.HasValue || localTodayBorder.Value.Color.A == 0))
             {
                 border = new BorderSide(foreground.Value, border.Value.Width);
             }
@@ -826,10 +846,25 @@ internal sealed class CalendarYear : StatefulWidget
             var local = DatePickerTheme.Of(context);
             var defaults = DatePickerTheme.Defaults(context);
             var states = _states!.Value;
-            var foreground = (widget.IsCurrent ? local.TodayForegroundColor ?? defaults.TodayForegroundColor : local.YearForegroundColor ?? defaults.YearForegroundColor)!.Resolve(states);
-            var background = (widget.IsCurrent ? local.TodayBackgroundColor ?? defaults.TodayBackgroundColor : local.YearBackgroundColor ?? defaults.YearBackgroundColor)!.Resolve(states);
-            var overlay = local.YearOverlayColor ?? defaults.YearOverlayColor!;
-            var shape = (local.YearShape ?? defaults.YearShape)!.Resolve(states) ?? new StadiumBorder();
+            var foreground = widget.IsCurrent
+                ? local.TodayForegroundColor?.Resolve(states)
+                  ?? defaults.TodayForegroundColor?.Resolve(states)
+                : local.YearForegroundColor?.Resolve(states)
+                  ?? defaults.YearForegroundColor?.Resolve(states);
+            var background = widget.IsCurrent
+                ? local.TodayBackgroundColor?.Resolve(states)
+                  ?? defaults.TodayBackgroundColor?.Resolve(states)
+                : local.YearBackgroundColor?.Resolve(states)
+                  ?? defaults.YearBackgroundColor?.Resolve(states);
+            MaterialStateProperty<Color?>? overlay = local.YearOverlayColor is null
+                                                        && defaults.YearOverlayColor is null
+                ? null
+                : MaterialStateProperty<Color?>.ResolveWith(
+                    overlayStates => local.YearOverlayColor?.Resolve(overlayStates)
+                                     ?? defaults.YearOverlayColor?.Resolve(overlayStates));
+            OutlinedBorder shape = local.YearShape?.Resolve(states)
+                                   ?? defaults.YearShape?.Resolve(states)
+                                   ?? new StadiumBorder();
             var border = widget.IsCurrent
                 ? local.TodayBorder ?? defaults.TodayBorder
                 : ShapeBorderGeometry.SideOrNull(shape);

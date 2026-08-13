@@ -258,12 +258,154 @@ public sealed class MaterialDatePickerTests : IDisposable
     }
 
     [Fact]
+    public void DatePickerThemeDefaultsUseExactM2AndM3ColorSchemeRoles()
+    {
+        var primary = Color.Parse("#FF102030");
+        var onPrimary = Color.Parse("#FF405060");
+        var onPrimaryContainer = Color.Parse("#FF708090");
+        var surface = Color.Parse("#FF90A0B0");
+        var onSurface = Color.Parse("#FFB0C0D0");
+        var onSurfaceVariant = Color.Parse("#FFD0E0F0");
+        var secondaryContainer = Color.Parse("#FF314253");
+        var surfaceContainerHigh = Color.Parse("#FF647586");
+        var scheme = ColorScheme.Material3Light with
+        {
+            Primary = primary,
+            OnPrimary = onPrimary,
+            OnPrimaryContainer = onPrimaryContainer,
+            Surface = surface,
+            OnSurface = onSurface,
+            OnSurfaceVariant = onSurfaceVariant,
+            SecondaryContainer = secondaryContainer,
+            SurfaceContainerHigh = surfaceContainerHigh,
+        };
+        var material3Theme = new ThemeData(colorScheme: scheme, useMaterial3: true) with
+        {
+            PrimaryColor = Colors.Crimson,
+            OnPrimaryColor = Colors.Cyan,
+            SurfaceColor = Colors.Gold,
+            OnSurfaceColor = Colors.Green,
+        };
+        DatePickerThemeData? material3 = null;
+        using (var harness = CreateHarness(
+                   new CaptureDatePickerDefaults(value => material3 = value),
+                   material3Theme))
+        {
+            harness.Pump(new Size(200, 100));
+        }
+
+        Assert.NotNull(material3);
+        Assert.Equal(surfaceContainerHigh, material3!.BackgroundColor);
+        Assert.Equal(6.0, material3.Elevation);
+        Assert.Equal(Colors.Transparent, material3.ShadowColor);
+        Assert.Equal(Colors.Transparent, material3.HeaderBackgroundColor);
+        Assert.Equal(onSurfaceVariant, material3.HeaderForegroundColor);
+        Assert.Equal(32.0, material3.HeaderHeadlineStyle!.FontSize);
+        Assert.Equal(primary, material3.DayBackgroundColor!.Resolve(MaterialState.Selected));
+        Assert.Equal(
+            WithOpacity(onPrimary, 0.10),
+            material3.DayOverlayColor!.Resolve(MaterialState.Selected | MaterialState.Pressed));
+        Assert.Equal(onSurfaceVariant, material3.YearForegroundColor!.Resolve(MaterialState.None));
+        Assert.Null(material3.RangePickerBackgroundColor);
+        Assert.Equal(Colors.Transparent, material3.RangePickerHeaderBackgroundColor);
+        Assert.Equal(onSurfaceVariant, material3.RangePickerHeaderForegroundColor);
+        Assert.Equal(14.0, material3.RangePickerHeaderHelpStyle!.FontSize);
+        Assert.Equal(secondaryContainer, material3.RangeSelectionBackgroundColor);
+        Assert.Equal(
+            WithOpacity(onPrimaryContainer, 0.10),
+            material3.RangeSelectionOverlayColor!.Resolve(MaterialState.Selected | MaterialState.Pressed));
+        Assert.Null(material3.DividerColor);
+        Assert.NotNull(material3.CancelButtonStyle);
+        Assert.NotNull(material3.ConfirmButtonStyle);
+
+        var material2Theme = new ThemeData(colorScheme: scheme, useMaterial3: false) with
+        {
+            PrimaryColor = Colors.Crimson,
+            OnPrimaryColor = Colors.Cyan,
+            SurfaceColor = Colors.Gold,
+        };
+        DatePickerThemeData? material2 = null;
+        using (var harness = CreateHarness(
+                   new CaptureDatePickerDefaults(value => material2 = value),
+                   material2Theme))
+        {
+            harness.Pump(new Size(200, 100));
+        }
+
+        Assert.NotNull(material2);
+        Assert.Null(material2!.BackgroundColor);
+        Assert.Equal(24.0, material2.Elevation);
+        Assert.Null(material2.ShadowColor);
+        Assert.Null(material2.SurfaceTintColor);
+        Assert.Equal(primary, material2.HeaderBackgroundColor);
+        Assert.Equal(onPrimary, material2.HeaderForegroundColor);
+        Assert.Null(material2.YearForegroundColor);
+        Assert.Null(material2.YearBackgroundColor);
+        Assert.Null(material2.YearOverlayColor);
+        Assert.Equal(surface, material2.RangePickerBackgroundColor);
+        Assert.Equal(0.0, material2.RangePickerElevation);
+        Assert.Equal(
+            WithOpacity(onPrimary, 0.38),
+            material2.DayOverlayColor!.Resolve(MaterialState.Selected | MaterialState.Pressed));
+        Assert.Equal(material2.DayOverlayColor, material2.RangeSelectionOverlayColor);
+        Assert.Null(material2.DividerColor);
+    }
+
+    [Fact]
+    public void DatePickerThemeDataCopyLerpAndInheritedCaptureMatchFlutter()
+    {
+        var localeA = new Locale("en", countryCode: "GB");
+        var localeB = new Locale("fr", countryCode: "FR");
+        var dayShape = MaterialStateProperty<OutlinedBorder?>.All(new CircleBorder());
+        var source = new DatePickerThemeData(
+            BackgroundColor: Colors.Beige,
+            DayShape: dayShape,
+            Locale: localeA);
+        var copy = source.CopyWith(headerBackgroundColor: Colors.Crimson);
+
+        Assert.Equal(Colors.Beige, copy.BackgroundColor);
+        Assert.Same(dayShape, copy.DayShape);
+        Assert.Equal(localeA, copy.Locale);
+        Assert.Equal(Colors.Crimson, copy.HeaderBackgroundColor);
+        Assert.Same(source, DatePickerThemeData.Lerp(source, source, 0.25));
+        Assert.Equal(localeA, DatePickerThemeData.Lerp(source, source with { Locale = localeB }, 0.25).Locale);
+        Assert.Equal(localeB, DatePickerThemeData.Lerp(source, source with { Locale = localeB }, 0.75).Locale);
+
+        DatePickerThemeData? captured = null;
+        var localTheme = new DatePickerThemeData(BackgroundColor: Colors.CornflowerBlue);
+        using var harness = CreateHarness(new DatePickerTheme(
+            localTheme,
+            new CaptureAndOverrideDatePickerTheme(value => captured = value)));
+        harness.Pump(new Size(200, 100));
+
+        Assert.Same(localTheme, captured);
+    }
+
+    [Fact]
     public void CalendarDatePickerM2UsesFortyTwoPixelRows()
     {
         using var harness = CreateHarness(BuildPicker(), ThemeData.Light with { UseMaterial3 = false });
         harness.Pump(new Size(420, 500));
         Assert.Contains(FindDescendants<RenderConstrainedBox>(harness.RenderView), box =>
             Close(box.AdditionalConstraints.MinHeight, 346) && Close(box.AdditionalConstraints.MaxHeight, 346));
+    }
+
+    [Fact]
+    public void YearPickerM2UsesTextThemeWhenYearStateColorsAreNull()
+    {
+        using var harness = CreateHarness(
+            new YearPicker(
+                firstDate: new DateTime(2024, 1, 1),
+                lastDate: new DateTime(2028, 12, 31),
+                selectedDate: new DateTime(2026, 1, 1),
+                currentDate: new DateTime(2025, 1, 1),
+                onChanged: _ => { }),
+            ThemeData.Light with { UseMaterial3 = false });
+        harness.Pump(new Size(420, 320));
+
+        Assert.Contains(
+            FindDescendants<RenderParagraph>(harness.RenderView),
+            paragraph => paragraph.PlainText == "2026");
     }
 
     [Fact]
@@ -679,6 +821,12 @@ public sealed class MaterialDatePickerTests : IDisposable
 
     private static bool Close(double a, double b) => Math.Abs(a - b) < 0.001;
 
+    private static Color WithOpacity(Color color, double opacity) => Color.FromArgb(
+        (byte)Math.Round(255 * opacity),
+        color.R,
+        color.G,
+        color.B);
+
     private static List<T> FindDescendants<T>(RenderObject? root) where T : RenderObject
     {
         var result = new List<T>();
@@ -738,6 +886,44 @@ public sealed class MaterialDatePickerTests : IDisposable
         {
             _capture(context);
             return _child;
+        }
+    }
+
+    private sealed class CaptureDatePickerDefaults : StatelessWidget
+    {
+        private readonly Action<DatePickerThemeData> _capture;
+
+        public CaptureDatePickerDefaults(Action<DatePickerThemeData> capture)
+        {
+            _capture = capture;
+        }
+
+        public override Widget Build(BuildContext context)
+        {
+            _capture(DatePickerTheme.Defaults(context));
+            return new SizedBox();
+        }
+    }
+
+    private sealed class CaptureAndOverrideDatePickerTheme : StatelessWidget
+    {
+        private readonly Action<DatePickerThemeData> _capture;
+
+        public CaptureAndOverrideDatePickerTheme(Action<DatePickerThemeData> capture)
+        {
+            _capture = capture;
+        }
+
+        public override Widget Build(BuildContext context)
+        {
+            CapturedThemes capturedThemes = InheritedTheme.Capture(context);
+            return new DatePickerTheme(
+                new DatePickerThemeData(BackgroundColor: Colors.Crimson),
+                capturedThemes.Wrap(new Builder(capturedContext =>
+                {
+                    _capture(DatePickerTheme.Of(capturedContext));
+                    return new SizedBox();
+                })));
         }
     }
 

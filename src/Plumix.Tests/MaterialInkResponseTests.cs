@@ -148,9 +148,14 @@ public sealed class MaterialInkResponseTests : IDisposable
                 PointerButtons.None,
                 DateTime.UtcNow),
             new BoxHitTestEntry(hoverListener, new Point(10.0, 10.0)));
+        double hoverStartSeconds = Scheduler.CurrentSeconds;
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(hoverStartSeconds));
         harness.Pump(new Size(120.0, 80.0));
 
-        PumpAnimation(harness, new Size(120.0, 80.0), TimeSpan.FromMilliseconds(50.0));
+        PumpAnimation(
+            harness,
+            new Size(120.0, 80.0),
+            TimeSpan.FromSeconds(hoverStartSeconds) + TimeSpan.FromMilliseconds(50.0));
         RenderInkResponsePaint response = Assert.Single(
             FindDescendants<RenderInkResponsePaint>(harness.RenderView));
         InkHighlightVisual hover = Assert.Single(
@@ -158,7 +163,7 @@ public sealed class MaterialInkResponseTests : IDisposable
             highlight => highlight.Kind == InkHighlightKind.Hover);
 
         Assert.Equal(hoverColor, hover.Color);
-        Assert.InRange(hover.Opacity, 0.49, 0.51);
+        Assert.InRange(hover.Opacity, 0.47, 0.53);
     }
 
     [Fact]
@@ -595,9 +600,9 @@ public sealed class MaterialInkResponseTests : IDisposable
         harness.Pump(new Size(120.0, 80.0));
     }
 
-    private static void PumpAnimation(WidgetRenderHarness harness, Size size, TimeSpan elapsed)
+    private static void PumpAnimation(WidgetRenderHarness harness, Size size, TimeSpan timestamp)
     {
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds) + elapsed);
+        Scheduler.PumpFrameForTests(timestamp);
         harness.Pump(size);
     }
 

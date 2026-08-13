@@ -1084,7 +1084,7 @@ public sealed partial record SliderThemeData
     }
 }
 
-public sealed partial record DatePickerThemeData
+public partial record DatePickerThemeData
 {
     public static DatePickerThemeData Lerp(DatePickerThemeData? a, DatePickerThemeData? b, double t)
     {
@@ -1129,7 +1129,7 @@ public sealed partial record DatePickerThemeData
                 a?.DayOverlayColor,
                 b?.DayOverlayColor,
                 t),
-            DayShape: MaterialThemeLerp.ShapeStateProperty(a?.DayShape, b?.DayShape, t),
+            DayShape: MaterialThemeLerp.OutlinedBorderStateProperty(a?.DayShape, b?.DayShape, t),
             TodayForegroundColor: MaterialThemeLerp.ColorStateProperty(
                 a?.TodayForegroundColor,
                 b?.TodayForegroundColor,
@@ -1152,11 +1152,12 @@ public sealed partial record DatePickerThemeData
                 a?.YearOverlayColor,
                 b?.YearOverlayColor,
                 t),
-            YearShape: MaterialThemeLerp.ShapeStateProperty(a?.YearShape, b?.YearShape, t),
+            YearShape: MaterialThemeLerp.OutlinedBorderStateProperty(a?.YearShape, b?.YearShape, t),
             DividerColor: MaterialThemeLerp.Color(a?.DividerColor, b?.DividerColor, t),
             InputDecorationTheme: t < 0.5 ? a?.InputDecorationTheme : b?.InputDecorationTheme,
             CancelButtonStyle: ButtonStyle.Lerp(a?.CancelButtonStyle, b?.CancelButtonStyle, t),
             ConfirmButtonStyle: ButtonStyle.Lerp(a?.ConfirmButtonStyle, b?.ConfirmButtonStyle, t),
+            Locale: t < 0.5 ? a?.Locale : b?.Locale,
             ToggleButtonTextStyle: MaterialThemeLerp.TextStyle(
                 a?.ToggleButtonTextStyle,
                 b?.ToggleButtonTextStyle,

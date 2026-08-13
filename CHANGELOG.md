@@ -1,5 +1,10 @@
 # Changelog
 
+- Breaking: completed the Material date/range-picker direct-token and theme closeout. `DatePickerThemeData` now
+  uses Flutter's `OutlinedBorder` state-shape contract, locale/copy/lerp surface, inherited-theme capture, and exact
+  M2/M3 `ColorScheme`/`TextTheme` defaults; picker dialogs honor source theme precedence and range overlays, and
+  `showDatePicker`/`showDateRangePicker` apply explicit or themed locale overrides.
+
 - Breaking: completed strict Material `DataTable`/`DataTableThemeData` parity. Tables now resolve local and global
   theme fields in Flutter order, use direct `ColorScheme` row roles and source divider defaults, accept arbitrary
   decorations, compose through clipped transparent `Material`, merge ambient text styles, expose column-header
