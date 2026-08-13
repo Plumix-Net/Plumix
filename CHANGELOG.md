@@ -1,5 +1,12 @@
 # Changelog
 
+- Breaking: closed `MenuAcceleratorLabel` parity by replacing its global deepest/latest Alt dispatcher with
+  per-label `CharacterActivator` entries in the nearest `ShortcutRegistry`. Accelerator callbacks now participate
+  in normal focus-local `Shortcuts` precedence, entries follow Alt/dependency/submenu/disposal lifecycle, and labels
+  without a registrar remain display-only. The default builder now matches Flutter's direct `RichText`/ambient-style
+  span composition. Focused coverage mirrors Flutter's marker table, submenu replacement, Apple policy, and zero-area
+  layout; the paired dropdown demos include a focus-local Alt+N override probe.
+
 - Breaking: closed the nonlinear text-scaling divergence. `MediaQueryData` now owns the exact `TextScaler` strategy,
   adds scaler-aware `CopyWith`, and keeps `TextScaleFactor` as a derived compatibility surface; `MediaQuery` adds
   scaler accessors and aspect-scoped dependencies, while its no-scaling/clamped wrappers preserve strategy behavior.

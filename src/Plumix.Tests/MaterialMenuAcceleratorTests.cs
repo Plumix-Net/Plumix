@@ -26,11 +26,14 @@ public sealed class MaterialMenuAcceleratorTests : IDisposable
     }
 
     [Theory]
-    [InlineData("&File", "File", 0)]
-    [InlineData("Save && E&xit", "Save & Exit", 8)]
-    [InlineData("Trailing&", "Trailing", -1)]
-    [InlineData("No & accelerator", "No  accelerator", -1)]
-    [InlineData("&&Help", "&Help", -1)]
+    [InlineData("Plain String", "Plain String", -1)]
+    [InlineData("&Simple Accelerator", "Simple Accelerator", 0)]
+    [InlineData("&Multiple &Accelerators", "Multiple Accelerators", 0)]
+    [InlineData("Whitespace & Accelerators", "Whitespace  Accelerators", -1)]
+    [InlineData("&Quoted && Ampersand", "Quoted & Ampersand", 0)]
+    [InlineData("Ampersand at End &", "Ampersand at End ", -1)]
+    [InlineData("&&Multiple Ampersands &&& &&&A &&&&B &&&&", "&Multiple Ampersands & &A &&B &&", 24)]
+    [InlineData("Bohrium 𨨏 Code point U+28A0F", "Bohrium 𨨏 Code point U+28A0F", -1)]
     public void StripAcceleratorMarkers_MatchesFlutterRules(
         string source,
         string expectedLabel,
@@ -125,7 +128,7 @@ public sealed class MaterialMenuAcceleratorTests : IDisposable
         });
         Assert.Equal("O", Assert.Single(underlined).Text);
         Assert.True(FocusManager.Instance.HandleKeyEvent(
-            new KeyEvent("O", true, isAltPressed: true)));
+            new KeyEvent("KeyO", true, isAltPressed: true, character: "o")));
         Scheduler.PumpFrameForTests();
         Assert.Equal(1, invoked);
 
@@ -161,6 +164,42 @@ public sealed class MaterialMenuAcceleratorTests : IDisposable
     }
 
     [Fact]
+    public void DefaultBuilder_AppliesAmbientStyleToEveryRichTextRun()
+    {
+        TextStyle style = new(FontSize: 23, Color: Colors.DarkSlateBlue);
+        using var harness = new WidgetRenderHarness(Wrap(
+            new DefaultTextStyle(
+                style,
+                new MenuAcceleratorCallbackBinding(
+                    child: new MenuAcceleratorLabel("E&xit"),
+                    onInvoke: () => { }))));
+        harness.Pump(new Size(300, 100));
+
+        FocusManager.Instance.HandleKeyEvent(new KeyEvent("LeftAlt", true, isAltPressed: true));
+        harness.Pump(new Size(300, 100));
+
+        RenderParagraph paragraph = Assert.Single(
+            FindDescendants<RenderParagraph>(harness.RenderView),
+            candidate => candidate.PlainText == "Exit");
+        var runs = new List<TextSpan>();
+        paragraph.Text.VisitChildren(span =>
+        {
+            if (span is TextSpan { Text: not null } run)
+            {
+                runs.Add(run);
+            }
+
+            return true;
+        });
+        Assert.Equal(3, runs.Count);
+        Assert.All(runs, run => Assert.Equal(23.0, run.Style?.FontSize));
+        Assert.All(runs, run => Assert.Equal(Colors.DarkSlateBlue, run.Style?.Color));
+        Assert.Equal(
+            Plumix.UI.TextDecoration.Underline,
+            Assert.Single(runs, run => run.Text == "x").Style?.Decoration);
+    }
+
+    [Fact]
     public void LabelMountedWhileAltIsHeld_ShowsItsAcceleratorImmediately()
     {
         int lastIndex = int.MinValue;
@@ -182,33 +221,41 @@ public sealed class MaterialMenuAcceleratorTests : IDisposable
     }
 
     [Fact]
-    public void DuplicateAccelerators_InvokeOnlyDeepestMostRecentlyMountedLabel()
+    public void FocusLocalShortcut_TakesPrecedenceOverMenuAccelerator()
     {
-        var invocations = new List<string>();
+        int menuInvocations = 0;
+        int localInvocations = 0;
         using var harness = new WidgetRenderHarness(Wrap(
-            new Column(
-                children:
-                [
-                    new MenuAcceleratorCallbackBinding(
+            new CallbackShortcuts(
+                bindings: new Dictionary<ShortcutActivator, Action>
+                {
+                    [new CharacterActivator("o", alt: true)] = () => localInvocations++,
+                },
+                child: new Focus(
+                    autofocus: true,
+                    child: new MenuAcceleratorCallbackBinding(
                         new MenuAcceleratorLabel("&Open"),
-                        () => invocations.Add("first")),
-                    new MenuAcceleratorCallbackBinding(
-                        new MenuAcceleratorLabel("&Other"),
-                        () => invocations.Add("second")),
-                ])));
+                        () => menuInvocations++))),
+            autofocus: false));
         harness.Pump(new Size(300, 100));
 
         FocusManager.Instance.HandleKeyEvent(new KeyEvent("LeftAlt", true, isAltPressed: true));
+        harness.Pump(new Size(300, 100));
         Assert.True(FocusManager.Instance.HandleKeyEvent(
-            new KeyEvent("O", true, isAltPressed: true)));
+            new KeyEvent("KeyO", true, isAltPressed: true, character: "o")));
 
-        Assert.Equal(["second"], invocations);
+        Assert.Equal(1, localInvocations);
+        Assert.Equal(0, menuInvocations);
     }
 
     [Fact]
-    public void SubmenuAccelerator_OpensClosedMenuAndIsSuppressedWhileItIsOpen()
+    public void IdenticalChildAccelerator_ReplacesOpenSubmenuRegistration()
     {
         var controller = new MenuController();
+        int selected = 0;
+        bool childHasRegistry = false;
+        int childAcceleratorIndex = -1;
+        ShortcutRegistry? childRegistry = null;
         using var harness = new WidgetRenderHarness(Wrap(
             new MenuBar(
                 children:
@@ -217,8 +264,16 @@ public sealed class MaterialMenuAcceleratorTests : IDisposable
                         menuChildren:
                         [
                             new MenuItemButton(
-                                child: new MenuAcceleratorLabel("&New"),
-                                onPressed: () => { }),
+                                child: new MenuAcceleratorLabel(
+                                    "&File child",
+                                    (context, label, index) =>
+                                    {
+                                        childRegistry = ShortcutRegistry.MaybeOf(context);
+                                        childHasRegistry = childRegistry is not null;
+                                        childAcceleratorIndex = index;
+                                        return new Text(label);
+                                    }),
+                                onPressed: () => selected++),
                         ],
                         child: new MenuAcceleratorLabel("&File"),
                         controller: controller),
@@ -226,14 +281,25 @@ public sealed class MaterialMenuAcceleratorTests : IDisposable
         harness.Pump(new Size(500, 240));
 
         FocusManager.Instance.HandleKeyEvent(new KeyEvent("LeftAlt", true, isAltPressed: true));
+        harness.Pump(new Size(500, 240));
         Assert.True(FocusManager.Instance.HandleKeyEvent(
-            new KeyEvent("F", true, isAltPressed: true)));
+            new KeyEvent("KeyF", true, isAltPressed: true, character: "f")));
+        Assert.False(FocusManager.Instance.HandleKeyEvent(
+            new KeyEvent("KeyF", false, isAltPressed: true, character: "f")));
         harness.Pump(new Size(500, 240));
         Assert.True(controller.IsOpen);
+        harness.Pump(new Size(500, 240));
+        harness.Pump(new Size(500, 240));
+        Assert.True(childHasRegistry);
+        Assert.Equal(0, childAcceleratorIndex);
+        Intent registeredIntent = Assert.Single(childRegistry!.Shortcuts).Value;
+        var callbackIntent = Assert.IsType<VoidCallbackIntent>(registeredIntent);
+        Assert.Contains("HandleSelect", callbackIntent.Callback.Method.Name, StringComparison.OrdinalIgnoreCase);
 
-        Assert.False(FocusManager.Instance.HandleKeyEvent(
-            new KeyEvent("F", true, isAltPressed: true)));
-        Assert.True(controller.IsOpen);
+        callbackIntent.Callback();
+        harness.Pump(new Size(500, 240));
+        Assert.Equal(1, selected);
+        Assert.False(controller.IsOpen);
     }
 
     [Theory]
@@ -260,22 +326,87 @@ public sealed class MaterialMenuAcceleratorTests : IDisposable
         FocusManager.Instance.HandleKeyEvent(new KeyEvent("LeftAlt", true, isAltPressed: true));
         harness.Pump(new Size(300, 100));
         Assert.False(FocusManager.Instance.HandleKeyEvent(
-            new KeyEvent("O", true, isAltPressed: true)));
+            new KeyEvent("KeyO", true, isAltPressed: true, character: "o")));
 
         Assert.Equal(-1, lastIndex);
         Assert.Equal(0, invoked);
         Assert.NotNull(FindParagraph(harness.RenderView, "Open"));
     }
 
+    [Fact]
+    public void MissingShortcutRegistry_ShowsUnderlineWithoutInvoking()
+    {
+        int invoked = 0;
+        using var harness = new WidgetRenderHarness(WrapWithoutShortcutRegistrar(
+            new MenuAcceleratorCallbackBinding(
+                child: new MenuAcceleratorLabel("&Open"),
+                onInvoke: () => invoked++)));
+        harness.Pump(new Size(300, 100));
+
+        FocusManager.Instance.HandleKeyEvent(new KeyEvent("LeftAlt", true, isAltPressed: true));
+        harness.Pump(new Size(300, 100));
+
+        RenderParagraph paragraph = Assert.Single(
+            FindDescendants<RenderParagraph>(harness.RenderView),
+            candidate => candidate.PlainText == "Open");
+        bool hasUnderline = false;
+        paragraph.Text.VisitChildren(span =>
+        {
+            hasUnderline |= span is TextSpan textSpan
+                            && textSpan.Style?.Decoration == Plumix.UI.TextDecoration.Underline;
+            return true;
+        });
+        Assert.True(hasUnderline);
+        Assert.False(FocusManager.Instance.HandleKeyEvent(
+            new KeyEvent("KeyO", true, isAltPressed: true, character: "o")));
+        Assert.Equal(0, invoked);
+    }
+
+    [Fact]
+    public void ZeroArea_DoesNotCrashOrExpandLabel()
+    {
+        using var harness = new WidgetRenderHarness(Wrap(
+            new Center(
+                child: new SizedBox(
+                    width: 0,
+                    height: 0,
+                    child: new MenuAcceleratorLabel("X")))));
+
+        harness.Pump(new Size(300, 100));
+
+        RenderParagraph paragraph = Assert.Single(
+            FindDescendants<RenderParagraph>(harness.RenderView),
+            candidate => candidate.PlainText == "X");
+        Assert.Equal(new Size(0, 0), paragraph.Size);
+    }
+
     private static Widget Wrap(
         Widget child,
-        TargetPlatform platform = TargetPlatform.Windows)
+        TargetPlatform platform = TargetPlatform.Windows,
+        bool autofocus = true)
     {
+        Widget themed = WrapWithoutShortcutRegistrar(child, platform, autofocus);
+        return new Actions(
+            actions: new Dictionary<Type, FlutterAction>
+            {
+                [typeof(VoidCallbackIntent)] = new VoidCallbackAction(),
+            },
+            child: new ShortcutRegistrar(themed));
+    }
+
+    private static Widget WrapWithoutShortcutRegistrar(
+        Widget child,
+        TargetPlatform platform = TargetPlatform.Windows,
+        bool autofocus = true)
+    {
+        Widget content = autofocus
+            ? new Focus(autofocus: true, child: child)
+            : child;
         return new Directionality(
             TextDirection.Ltr,
             new Theme(
                 ThemeData.Light with { Platform = platform },
-                new Overlay(initialEntries: [new OverlayEntry(_ => child)])));
+                new Overlay(initialEntries: [new OverlayEntry(_ => content)])));
     }
 
     private static RenderParagraph? FindParagraph(RenderObject? root, string text)
@@ -327,6 +458,7 @@ public sealed class MaterialMenuAcceleratorTests : IDisposable
             _pipeline.FlushLayout(size);
             _pipeline.FlushCompositingBits();
             _pipeline.FlushPaint();
+            Scheduler.PumpFrameForTests();
         }
 
         public void Dispose() => _rootElement.Unmount();

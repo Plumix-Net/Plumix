@@ -92,9 +92,9 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Legacy Material dropdown controls enter through `Dropdown.cs` + `DropdownButtonFormField.cs`; form lifecycle lives in core `Widgets/Form.cs`, selected-size behavior uses core `IndexedStack`, and positioned route/scroll/focus/form behavior is covered by `MaterialDropdownTests.cs`.
 - Modern Material dropdown controls enter through `DropdownMenu.cs` + `DropdownMenuFormField.cs` +
   `DropdownMenuTheme.cs`; cascading controls and accelerators enter through `MenuAnchor.cs` +
-  `MenuAccelerator.cs`, with global key dispatch in core `UI/KeyboardEvents.cs`; filtering/search/controller/form
-  behavior is covered by `MaterialDropdownTests.cs`, and accelerator behavior by
-  `MaterialMenuAcceleratorTests.cs`.
+  `MenuAccelerator.cs`, with Alt observation in core `UI/KeyboardEvents.cs` and focus-local dispatch through core
+  `Widgets/Shortcuts.cs`; filtering/search/controller/form behavior is covered by `MaterialDropdownTests.cs`, and
+  accelerator behavior by `MaterialMenuAcceleratorTests.cs`.
 - Disclosure/progress controls enter through `ExpandIcon.cs` + `Stepper.cs`; integration with expansion controls and vertical/horizontal step behavior is covered by `MaterialStepperTests.cs`.
 - About/license controls enter through `About.cs` plus core `Foundation/Licenses.cs` and `Widgets/Title.cs`;
   dialog/list/detail navigation, title-derived application names, and registry parsing are covered by

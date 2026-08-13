@@ -1,8 +1,6 @@
 using System.Globalization;
-using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Painting;
-using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
 
@@ -90,29 +88,27 @@ public sealed class MenuAcceleratorLabel : StatefulWidget
         }
 
         IReadOnlyList<string> characters = GetTextElements(label);
-        if (index >= characters.Count)
-        {
-            return new Text(label);
-        }
-
-        // Flutter builds the default label as one RichText paragraph so the runs
-        // share a single line layout instead of being baseline-aligned siblings.
+        TextStyle defaultStyle = DefaultTextStyle.Of(context);
         var children = new List<InlineSpan>(3);
         if (index > 0)
         {
-            children.Add(new TextSpan(text: string.Concat(characters.Take(index))));
+            children.Add(new TextSpan(
+                text: string.Concat(characters.Take(index)),
+                style: defaultStyle));
         }
 
         children.Add(new TextSpan(
             text: characters[index],
-            style: new TextStyle(Decoration: Plumix.UI.TextDecoration.Underline)));
+            style: defaultStyle.CopyWith(decoration: TextDecoration.Underline)));
 
         if (index < characters.Count - 1)
         {
-            children.Add(new TextSpan(text: string.Concat(characters.Skip(index + 1))));
+            children.Add(new TextSpan(
+                text: string.Concat(characters.Skip(index + 1)),
+                style: defaultStyle));
         }
 
-        return new MergeSemantics(Text.Rich(new TextSpan(children: children)));
+        return new RichText(new TextSpan(children: children));
     }
 
     public static string StripAcceleratorMarkers(string label, Action<int>? setIndex = null)
@@ -186,23 +182,44 @@ internal sealed class MenuAcceleratorLabelState : State
     private int _acceleratorIndex = -1;
     private MenuAcceleratorCallbackBinding? _binding;
     private MenuController? _menuController;
+    private ShortcutRegistry? _shortcutRegistry;
+    private ShortcutRegistryEntry? _shortcutRegistryEntry;
     private bool _platformSupportsAccelerators;
     private bool _showAccelerators;
+    private bool _listeningToKeyboard;
 
     private MenuAcceleratorLabel Current => (MenuAcceleratorLabel)StateWidget;
 
     public override void InitState()
     {
         UpdateDisplayLabel();
-        MenuAcceleratorKeyboardRegistry.Register(this);
     }
 
     public override void DidChangeDependencies()
     {
+        _platformSupportsAccelerators = MenuAcceleratorLabel.PlatformSupportsAccelerators(Context);
+        if (!_platformSupportsAccelerators)
+        {
+            StopListeningToKeyboard();
+            _showAccelerators = false;
+            _binding = null;
+            _menuController = null;
+            _shortcutRegistry = null;
+            UpdateAcceleratorShortcut();
+            return;
+        }
+
+        if (!_listeningToKeyboard)
+        {
+            _showAccelerators = HardwareKeyboard.Instance.IsAltPressed;
+            HardwareKeyboard.Instance.AddHandler(HandleKeyEvent);
+            _listeningToKeyboard = true;
+        }
+
         _binding = MenuAcceleratorCallbackBinding.MaybeOf(Context);
         _menuController = MenuController.MaybeOf(Context);
-        _platformSupportsAccelerators = MenuAcceleratorLabel.PlatformSupportsAccelerators(Context);
-        SetAcceleratorsVisible(MenuAcceleratorKeyboardRegistry.ShowAccelerators);
+        _shortcutRegistry = ShortcutRegistry.MaybeOf(Context);
+        UpdateAcceleratorShortcut();
     }
 
     public override void DidUpdateWidget(StatefulWidget oldWidget)
@@ -216,52 +233,64 @@ internal sealed class MenuAcceleratorLabelState : State
 
     public override Widget Build(BuildContext context)
     {
-        int index = _showAccelerators && _platformSupportsAccelerators ? _acceleratorIndex : -1;
+        int index = _showAccelerators ? _acceleratorIndex : -1;
         return Current.Builder(context, _displayLabel, index);
     }
 
     public override void Dispose()
     {
-        MenuAcceleratorKeyboardRegistry.Unregister(this);
+        _shortcutRegistryEntry?.Dispose();
+        _shortcutRegistryEntry = null;
+        _shortcutRegistry = null;
+        StopListeningToKeyboard();
         _displayLabel = string.Empty;
         _binding = null;
         _menuController = null;
     }
 
-    internal void SetAcceleratorsVisible(bool visible)
+    private bool HandleKeyEvent(KeyEvent keyEvent)
     {
-        bool next = visible && _platformSupportsAccelerators;
-        if (_showAccelerators == next)
+        SetState(() =>
+        {
+            _showAccelerators = HardwareKeyboard.Instance.IsAltPressed;
+            UpdateAcceleratorShortcut();
+        });
+        return false;
+    }
+
+    private void StopListeningToKeyboard()
+    {
+        if (!_listeningToKeyboard)
         {
             return;
         }
 
-        SetState(() => _showAccelerators = next);
+        HardwareKeyboard.Instance.RemoveHandler(HandleKeyEvent);
+        _listeningToKeyboard = false;
     }
 
-    internal bool TryInvoke(string character)
+    private void UpdateAcceleratorShortcut()
     {
-        if (!_platformSupportsAccelerators
-            || !_showAccelerators
+        _shortcutRegistryEntry?.Dispose();
+        _shortcutRegistryEntry = null;
+
+        if (!_showAccelerators
             || _acceleratorIndex < 0
             || _binding?.OnInvoke is null
             || (_binding.HasSubmenu && (_menuController?.IsOpen ?? false)))
         {
-            return false;
+            return;
         }
 
-        IReadOnlyList<string> characters = MenuAcceleratorLabel.GetTextElements(_displayLabel);
-        if (_acceleratorIndex >= characters.Count
-            || !string.Equals(
-                characters[_acceleratorIndex],
-                character,
-                StringComparison.OrdinalIgnoreCase))
-        {
-            return false;
-        }
-
-        _binding.OnInvoke();
-        return true;
+        string acceleratorCharacter = _displayLabel[_acceleratorIndex]
+            .ToString()
+            .ToLowerInvariant();
+        _shortcutRegistryEntry = _shortcutRegistry?.AddAll(
+            new Dictionary<ShortcutActivator, Intent>
+            {
+                [new CharacterActivator(acceleratorCharacter, alt: true)] =
+                    new VoidCallbackIntent(_binding.OnInvoke),
+            });
     }
 
     private void UpdateDisplayLabel()
@@ -269,92 +298,5 @@ internal sealed class MenuAcceleratorLabelState : State
         _displayLabel = MenuAcceleratorLabel.StripAcceleratorMarkers(
             Current.Label,
             index => _acceleratorIndex = index);
-    }
-}
-
-internal static class MenuAcceleratorKeyboardRegistry
-{
-    private static readonly List<MenuAcceleratorLabelState> Entries = [];
-    private static bool _showAccelerators;
-
-    internal static bool ShowAccelerators => _showAccelerators;
-
-    internal static void Register(MenuAcceleratorLabelState entry)
-    {
-        if (Entries.Contains(entry))
-        {
-            return;
-        }
-
-        if (Entries.Count == 0)
-        {
-            HardwareKeyboard.Instance.AddHandler(HandleKeyEvent);
-            _showAccelerators = HardwareKeyboard.Instance.IsAltPressed;
-        }
-
-        Entries.Add(entry);
-        entry.SetAcceleratorsVisible(_showAccelerators);
-    }
-
-    internal static void Unregister(MenuAcceleratorLabelState entry)
-    {
-        Entries.Remove(entry);
-        if (Entries.Count != 0)
-        {
-            return;
-        }
-
-        HardwareKeyboard.Instance.RemoveHandler(HandleKeyEvent);
-        _showAccelerators = false;
-    }
-
-    private static bool HandleKeyEvent(KeyEvent keyEvent)
-    {
-        bool altKey = IsAltKey(keyEvent.Key);
-        bool showAccelerators = altKey
-            ? HardwareKeyboard.Instance.IsAltPressed
-            : keyEvent.IsAltPressed || HardwareKeyboard.Instance.IsAltPressed;
-        if (_showAccelerators != showAccelerators)
-        {
-            _showAccelerators = showAccelerators;
-            foreach (MenuAcceleratorLabelState entry in Entries.ToArray())
-            {
-                entry.SetAcceleratorsVisible(_showAccelerators);
-            }
-        }
-
-        if (!keyEvent.IsDown || altKey || !_showAccelerators)
-        {
-            return false;
-        }
-
-        string? character = NormalizeCharacterKey(keyEvent.Key);
-        if (character is null)
-        {
-            return false;
-        }
-
-        for (int index = Entries.Count - 1; index >= 0; index--)
-        {
-            if (Entries[index].TryInvoke(character))
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private static bool IsAltKey(string key)
-    {
-        return key is "Alt" or "LeftAlt" or "RightAlt";
-    }
-
-    private static string? NormalizeCharacterKey(string key)
-    {
-        IReadOnlyList<string> characters = MenuAcceleratorLabel.GetTextElements(key);
-        return characters.Count == 1
-            ? characters[0].ToLowerInvariant()
-            : null;
     }
 }

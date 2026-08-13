@@ -250,7 +250,7 @@ public sealed class DropdownDemoPage : StatefulWidget
                         new Text("MenuBar + SubmenuButton", fontSize: 18),
                         new Text(
                             "Horizontal menu bar with controller-owned sibling closing, nested side submenu, "
-                            + "local menu themes, and Alt-key accelerators.",
+                            + "local menu themes, Alt-key accelerators, and a focus-local Alt+N override.",
                             fontSize: 14,
                             color: Colors.DimGray),
                         new Align(
@@ -266,7 +266,13 @@ public sealed class DropdownDemoPage : StatefulWidget
                                     new MenuButtonTheme(
                                     new MenuButtonThemeData(new ButtonStyle(
                                         ForegroundColor: MaterialStateProperty<Color?>.All(Colors.DarkSlateBlue))),
-                                    new MenuBar(
+                                    new CallbackShortcuts(
+                                        bindings: new Dictionary<ShortcutActivator, Action>
+                                        {
+                                            [new CharacterActivator("n", alt: true)] = () => SetState(
+                                                () => _menuBarStatus = "focus-local Alt+N override"),
+                                        },
+                                        child: new MenuBar(
                                         children:
                                         [
                                     new SubmenuButton(
@@ -301,7 +307,7 @@ public sealed class DropdownDemoPage : StatefulWidget
                                         onOpen: () => SetState(() => _menuBarStatus = "edit opened"),
                                         onClose: () => SetState(() => _menuBarStatus = "edit closed")),
                                     new SubmenuButton([], new MenuAcceleratorLabel("&Disabled")),
-                                        ]))))),
+                                        ])))))),
                         new Text($"Menu bar: {_menuBarStatus}", fontSize: 13),
                         new Divider(),
                         new Text("Animated MenuAnchor", fontSize: 18),

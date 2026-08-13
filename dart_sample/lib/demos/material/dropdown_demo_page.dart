@@ -323,7 +323,8 @@ class _DropdownDemoPageState extends State<DropdownDemoPage> {
           const Text('MenuBar + SubmenuButton', style: TextStyle(fontSize: 18)),
           const Text(
             'Horizontal menu bar with controller-owned sibling closing, '
-            'nested side submenu, local menu themes, and Alt-key accelerators.',
+            'nested side submenu, local menu themes, Alt-key accelerators, '
+            'and a focus-local Alt+N override.',
             style: TextStyle(fontSize: 14, color: Colors.black54),
           ),
           Align(
@@ -355,64 +356,74 @@ class _DropdownDemoPageState extends State<DropdownDemoPage> {
                       ),
                     ),
                   ),
-                  child: MenuBar(
-                    children: <Widget>[
-                      SubmenuButton(
-                        controller: _fileMenuController,
-                        onOpen: () =>
-                            setState(() => _menuBarStatus = 'file opened'),
-                        onClose: () =>
-                            setState(() => _menuBarStatus = 'file closed'),
-                        menuChildren: <Widget>[
-                          MenuItemButton(
-                            onPressed: () =>
-                                setState(() => _menuBarStatus = 'new document'),
-                            child: const MenuAcceleratorLabel('&New document'),
-                          ),
-                          SubmenuButton(
-                            onOpen: () => setState(
-                              () => _menuBarStatus = 'recent opened',
-                            ),
-                            menuChildren: <Widget>[
-                              MenuItemButton(
-                                onPressed: () => setState(
-                                  () => _menuBarStatus = 'recent report',
-                                ),
-                                child: const MenuAcceleratorLabel(
-                                  '&Quarterly report',
-                                ),
+                  child: CallbackShortcuts(
+                    bindings: <ShortcutActivator, VoidCallback>{
+                      const CharacterActivator('n', alt: true): () => setState(
+                        () => _menuBarStatus = 'focus-local Alt+N override',
+                      ),
+                    },
+                    child: MenuBar(
+                      children: <Widget>[
+                        SubmenuButton(
+                          controller: _fileMenuController,
+                          onOpen: () =>
+                              setState(() => _menuBarStatus = 'file opened'),
+                          onClose: () =>
+                              setState(() => _menuBarStatus = 'file closed'),
+                          menuChildren: <Widget>[
+                            MenuItemButton(
+                              onPressed: () => setState(
+                                () => _menuBarStatus = 'new document',
                               ),
-                            ],
-                            child: const MenuAcceleratorLabel('&Recent'),
+                              child: const MenuAcceleratorLabel(
+                                '&New document',
+                              ),
+                            ),
+                            SubmenuButton(
+                              onOpen: () => setState(
+                                () => _menuBarStatus = 'recent opened',
+                              ),
+                              menuChildren: <Widget>[
+                                MenuItemButton(
+                                  onPressed: () => setState(
+                                    () => _menuBarStatus = 'recent report',
+                                  ),
+                                  child: const MenuAcceleratorLabel(
+                                    '&Quarterly report',
+                                  ),
+                                ),
+                              ],
+                              child: const MenuAcceleratorLabel('&Recent'),
+                            ),
+                          ],
+                          style: ButtonStyle(
+                            foregroundColor: WidgetStatePropertyAll<Color>(
+                              Colors.deepOrange,
+                            ),
                           ),
-                        ],
-                        style: ButtonStyle(
-                          foregroundColor: WidgetStatePropertyAll<Color>(
-                            Colors.deepOrange,
-                          ),
+                          child: const MenuAcceleratorLabel('&File'),
                         ),
-                        child: const MenuAcceleratorLabel('&File'),
-                      ),
-                      SubmenuButton(
-                        controller: _editMenuController,
-                        onOpen: () =>
-                            setState(() => _menuBarStatus = 'edit opened'),
-                        onClose: () =>
-                            setState(() => _menuBarStatus = 'edit closed'),
-                        menuChildren: <Widget>[
-                          MenuItemButton(
-                            onPressed: () =>
-                                setState(() => _menuBarStatus = 'paste'),
-                            child: const MenuAcceleratorLabel('&Paste'),
-                          ),
-                        ],
-                        child: const MenuAcceleratorLabel('&Edit'),
-                      ),
-                      const SubmenuButton(
-                        menuChildren: <Widget>[],
-                        child: MenuAcceleratorLabel('&Disabled'),
-                      ),
-                    ],
+                        SubmenuButton(
+                          controller: _editMenuController,
+                          onOpen: () =>
+                              setState(() => _menuBarStatus = 'edit opened'),
+                          onClose: () =>
+                              setState(() => _menuBarStatus = 'edit closed'),
+                          menuChildren: <Widget>[
+                            MenuItemButton(
+                              onPressed: () =>
+                                  setState(() => _menuBarStatus = 'paste'),
+                              child: const MenuAcceleratorLabel('&Paste'),
+                            ),
+                          ],
+                          child: const MenuAcceleratorLabel('&Edit'),
+                        ),
+                        const SubmenuButton(
+                          menuChildren: <Widget>[],
+                          child: MenuAcceleratorLabel('&Disabled'),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -423,10 +434,7 @@ class _DropdownDemoPageState extends State<DropdownDemoPage> {
             style: const TextStyle(fontSize: 13),
           ),
           const Divider(),
-          const Text(
-            'Animated MenuAnchor',
-            style: TextStyle(fontSize: 18),
-          ),
+          const Text('Animated MenuAnchor', style: TextStyle(fontSize: 18)),
           Align(
             alignment: Alignment.centerLeft,
             child: MenuAnchor(
@@ -441,7 +449,9 @@ class _DropdownDemoPageState extends State<DropdownDemoPage> {
                 _animatedMenuItem('Fourth'),
               ],
               builder: (context, controller, child) => _controlButton(
-                controller.isOpen ? 'Hide staggered menu' : 'Show staggered menu',
+                controller.isOpen
+                    ? 'Hide staggered menu'
+                    : 'Show staggered menu',
                 () {
                   if (controller.isOpen) {
                     controller.close();
