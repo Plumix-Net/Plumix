@@ -821,12 +821,12 @@ public sealed partial record SearchViewThemeData
 
 public sealed partial record SegmentedButtonThemeData
 {
-    public static SegmentedButtonThemeData? Lerp(
+    public static SegmentedButtonThemeData Lerp(
         SegmentedButtonThemeData? a,
         SegmentedButtonThemeData? b,
         double t)
     {
-        if (ReferenceEquals(a, b))
+        if (ReferenceEquals(a, b) && a is not null)
         {
             return a;
         }

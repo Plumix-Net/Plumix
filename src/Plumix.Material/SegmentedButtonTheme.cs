@@ -7,9 +7,19 @@ namespace Plumix.Material;
 
 public sealed partial record SegmentedButtonThemeData(
     ButtonStyle? Style = null,
-    Widget? SelectedIcon = null);
+    Widget? SelectedIcon = null)
+{
+    public SegmentedButtonThemeData CopyWith(
+        ButtonStyle? style = null,
+        Widget? selectedIcon = null)
+    {
+        return new SegmentedButtonThemeData(
+            Style: style ?? Style,
+            SelectedIcon: selectedIcon ?? SelectedIcon);
+    }
+}
 
-public sealed class SegmentedButtonTheme : InheritedWidget
+public sealed class SegmentedButtonTheme : InheritedTheme
 {
     public SegmentedButtonTheme(SegmentedButtonThemeData data, Widget child, Key? key = null) : base(key)
     {
@@ -22,6 +32,11 @@ public sealed class SegmentedButtonTheme : InheritedWidget
 
     public override Widget Build(BuildContext context) => Child;
 
+    public override Widget Wrap(BuildContext context, Widget child)
+    {
+        return new SegmentedButtonTheme(Data, child);
+    }
+
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !Equals(((SegmentedButtonTheme)oldWidget).Data, Data);
@@ -29,7 +44,9 @@ public sealed class SegmentedButtonTheme : InheritedWidget
 
     public static SegmentedButtonThemeData Of(BuildContext context)
     {
-        return context.DependOnInherited<SegmentedButtonTheme>()?.Data
-               ?? Theme.Of(context).SegmentedButtonTheme;
+        return MaybeOf(context) ?? Theme.Of(context).SegmentedButtonTheme;
     }
+
+    public static SegmentedButtonThemeData? MaybeOf(BuildContext context) =>
+        context.DependOnInherited<SegmentedButtonTheme>()?.Data;
 }

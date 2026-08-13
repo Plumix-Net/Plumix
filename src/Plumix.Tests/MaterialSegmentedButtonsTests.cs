@@ -230,13 +230,14 @@ public sealed class MaterialSegmentedButtonsTests
         Assert.Throws<ArgumentException>(() => new SegmentedButton<int>(
             segments: Segments(),
             selected: new HashSet<int> { 0, 1 }));
-        Assert.Throws<ArgumentException>(() => new SegmentedButton<int>(
+        var duplicateValues = new SegmentedButton<int>(
             segments:
             [
                 new ButtonSegment<int>(0, label: new Text("A")),
                 new ButtonSegment<int>(0, label: new Text("B")),
             ],
-            selected: new HashSet<int> { 0 }));
+            selected: new HashSet<int> { 0 });
+        Assert.Equal(2, duplicateValues.Segments.Count);
 
         using var toggleZero = new WidgetRenderHarness(Wrap(
             ThemeData.Light,
@@ -260,10 +261,13 @@ public sealed class MaterialSegmentedButtonsTests
     {
         var theme = ThemeData.Light with
         {
-            SecondaryContainerColor = Colors.DarkGreen,
-            OnSecondaryContainerColor = Colors.Gold,
-            OnSurfaceColor = Colors.DarkSlateBlue,
-            OutlineColor = Colors.Orange,
+            ColorScheme = ThemeData.Light.ColorScheme with
+            {
+                SecondaryContainer = Colors.DarkGreen,
+                OnSecondaryContainer = Colors.Gold,
+                OnSurface = Colors.DarkSlateBlue,
+                Outline = Colors.Orange,
+            },
         };
         using var harness = new WidgetRenderHarness(Wrap(
             theme,
@@ -280,6 +284,7 @@ public sealed class MaterialSegmentedButtonsTests
         Assert.Equal(NavigationSurfaceUtilities.WithOpacity(Colors.DarkSlateBlue, 0.38),
             Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "Two")!.Foreground).Color);
         Assert.NotNull(FindParagraphByCodePoint(harness.RenderView, Icons.Check.CodePoint));
+        Assert.Empty(harness.FindWidgets<Tooltip>());
         Assert.Contains(FindDescendants<RenderConstrainedBox>(harness.RenderView),
             box => box.AdditionalConstraints.MinHeight == 40);
 
@@ -359,7 +364,7 @@ public sealed class MaterialSegmentedButtonsTests
                     ],
                     selected: new HashSet<int> { 0 },
                     onSelectionChanged: _ => { },
-                    expandedInsets: new Thickness(8),
+                    expandedInsets: EdgeInsets.All(8),
                     direction: Axis.Vertical,
                     style: SegmentedButton<int>.StyleFrom(selectedForegroundColor: Colors.Gold)))));
         harness.Pump(new Size(360, 220));
@@ -369,12 +374,287 @@ public sealed class MaterialSegmentedButtonsTests
         Assert.Equal(Colors.Purple,
             Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "Two")!.Foreground).Color);
         Assert.NotNull(FindParagraph(harness.RenderView, "theme-check"));
+        Assert.Single(harness.FindWidgets<Tooltip>());
         Assert.Contains(FindDescendants<RenderConstrainedBox>(harness.RenderView),
-            box => box.AdditionalConstraints.MinHeight == 44);
+            box => box.AdditionalConstraints.MinHeight == 40);
 
-        var layout = Assert.Single(FindDescendants<RenderSegmentedControlLayout>(harness.RenderView));
+        var layout = Assert.Single(FindDescendants<RenderSegmentedButton>(harness.RenderView));
         Assert.Equal(164, layout.Size.Height, precision: 3);
         Assert.Equal(layout.FirstChild!.Size.Width, layout.LastChild!.Size.Width, precision: 3);
+    }
+
+    [Fact]
+    public void SegmentedButtonThemeData_CopyLerpAndInheritedThemeContractsMatchFlutter()
+    {
+        var style = SegmentedButton<int>.StyleFrom(foregroundColor: Colors.DarkGreen);
+        var icon = new Icon(Icons.InfoOutline);
+        var data = new SegmentedButtonThemeData(style, icon);
+
+        Assert.Equal(data, data.CopyWith());
+        Assert.Same(style, data.CopyWith().Style);
+        Assert.Same(icon, data.CopyWith().SelectedIcon);
+        Assert.Equal(new SegmentedButtonThemeData(), SegmentedButtonThemeData.Lerp(null, null, 0.0));
+        Assert.Same(data, SegmentedButtonThemeData.Lerp(data, data, 0.75));
+        Assert.Same(icon, SegmentedButtonThemeData.Lerp(null, data, 0.75).SelectedIcon);
+        Assert.Null(SegmentedButtonThemeData.Lerp(data, null, 0.75).SelectedIcon);
+
+        var theme = new SegmentedButtonTheme(data, new Text("child"));
+        Assert.IsAssignableFrom<InheritedTheme>(theme);
+        Assert.IsType<SegmentedButtonTheme>(theme.Wrap(default, new Text("wrapped")));
+    }
+
+    [Fact]
+    public void SegmentedButton_UsesTransparentMaterialAndRetainsOnlyLiveSegmentControllers()
+    {
+        var first = new ButtonSegment<int>(1, label: new Text("One"));
+        var retained = new ButtonSegment<int>(2, label: new Text("Two"));
+        var added = new ButtonSegment<int>(3, label: new Text("Three"));
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new SegmentedButton<int>(
+                segments: [first, retained],
+                selected: new HashSet<int> { 1 },
+                onSelectionChanged: _ => { })));
+        harness.Pump(new Size(360, 120));
+
+        SegmentedButtonState<int> state = harness.FindState<SegmentedButtonState<int>>();
+        MaterialStatesController retainedController = state.StatesControllers[retained];
+        Assert.Contains(
+            harness.FindWidgets<Plumix.Material.Material>(),
+            material => material.Type == MaterialType.Transparency);
+        Assert.Equal(2, state.StatesControllers.Count);
+
+        harness.Update(Wrap(
+            ThemeData.Light,
+            new SegmentedButton<int>(
+                segments: [retained, added],
+                selected: new HashSet<int> { 2 },
+                onSelectionChanged: _ => { })));
+        harness.Pump(new Size(360, 120));
+
+        Assert.Equal(2, state.StatesControllers.Count);
+        Assert.False(state.StatesControllers.ContainsKey(first));
+        Assert.Same(retainedController, state.StatesControllers[retained]);
+        Assert.True(state.StatesControllers[retained].Value.HasFlag(MaterialState.Selected));
+        Assert.True(state.StatesControllers.ContainsKey(added));
+    }
+
+    [Fact]
+    public void SegmentedButton_FocusedSegmentKeepsFocusWhenSelectionChanges()
+    {
+        IReadOnlyList<ButtonSegment<int>> segments = Segments();
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new SegmentedButton<int>(
+                segments: segments,
+                selected: new HashSet<int> { 0 },
+                onSelectionChanged: _ => { })));
+        harness.Pump(new Size(360, 120));
+        IReadOnlyList<Focus> focusWidgets = harness.FindWidgets<Focus>();
+        FocusNode focusNode = Assert.IsType<FocusNode>(focusWidgets[1].FocusNode);
+        Assert.True(focusNode.RequestFocus());
+        harness.Pump(new Size(360, 120));
+        Assert.True(focusNode.HasFocus);
+
+        harness.Update(Wrap(
+            ThemeData.Light,
+            new SegmentedButton<int>(
+                segments: segments,
+                selected: new HashSet<int> { 1 },
+                onSelectionChanged: _ => { })));
+        harness.Pump(new Size(360, 120));
+
+        Assert.True(focusNode.HasFocus);
+        Assert.Same(focusNode, harness.FindWidgets<Focus>()[1].FocusNode);
+    }
+
+    [Fact]
+    public void SegmentedButton_SelectedIconReplacesLabeledIconAndJoinsIconOnlySegment()
+    {
+        using var labeled = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new SegmentedButton<int>(
+                segments:
+                [
+                    new ButtonSegment<int>(
+                        0,
+                        icon: new Icon(Icons.StarOutline),
+                        label: new Text("Selected")),
+                    new ButtonSegment<int>(
+                        1,
+                        icon: new Icon(Icons.InfoOutline),
+                        label: new Text("Other")),
+                ],
+                selected: new HashSet<int> { 0 },
+                onSelectionChanged: _ => { })));
+        labeled.Pump(new Size(360, 120));
+
+        Assert.NotNull(FindParagraphByCodePoint(labeled.RenderView, Icons.Check.CodePoint));
+        Assert.Null(FindParagraphByCodePoint(labeled.RenderView, Icons.StarOutline.CodePoint));
+        Assert.NotNull(FindParagraphByCodePoint(labeled.RenderView, Icons.InfoOutline.CodePoint));
+
+        using var iconOnly = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new SegmentedButton<int>(
+                segments:
+                [
+                    new ButtonSegment<int>(0, icon: new Icon(Icons.StarOutline)),
+                    new ButtonSegment<int>(1, icon: new Icon(Icons.InfoOutline)),
+                ],
+                selected: new HashSet<int> { 0 },
+                onSelectionChanged: _ => { })));
+        iconOnly.Pump(new Size(360, 120));
+
+        Assert.NotNull(FindParagraphByCodePoint(iconOnly.RenderView, Icons.Check.CodePoint));
+        Assert.NotNull(FindParagraphByCodePoint(iconOnly.RenderView, Icons.StarOutline.CodePoint));
+    }
+
+    [Fact]
+    public void SegmentedButton_SemanticsExposeSelectedAndEnabledStatesWithoutCheckedState()
+    {
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new SegmentedButton<int>(
+                segments: Segments(disableSecond: true),
+                selected: new HashSet<int> { 0 },
+                onSelectionChanged: _ => { })));
+        SemanticsNode? root = harness.PumpAndGetSemantics(new Size(360, 120));
+        List<SemanticsNode> segments = FindAllSemantics(
+            root,
+            node => node.Flags.HasFlag(SemanticsFlags.HasSelectedState));
+
+        Assert.Equal(2, segments.Count);
+        Assert.Single(segments, node => node.Flags.HasFlag(SemanticsFlags.IsSelected));
+        Assert.All(segments, node =>
+        {
+            Assert.True(node.Flags.HasFlag(SemanticsFlags.HasEnabledState));
+            Assert.False(node.Flags.HasFlag(SemanticsFlags.HasCheckedState));
+            Assert.False(node.Flags.HasFlag(SemanticsFlags.IsChecked));
+        });
+        Assert.Contains(segments, node => node.Flags.HasFlag(SemanticsFlags.IsEnabled));
+        Assert.Contains(segments, node => !node.Flags.HasFlag(SemanticsFlags.IsEnabled));
+    }
+
+    [Fact]
+    public void SegmentedButton_StyleFromResolvesAllColorBranchesAndTransparentOverlay()
+    {
+        ButtonStyle style = SegmentedButton<int>.StyleFrom(
+            foregroundColor: Colors.Purple,
+            selectedForegroundColor: Colors.Gold,
+            disabledForegroundColor: Colors.Gray,
+            backgroundColor: Colors.Beige,
+            selectedBackgroundColor: Colors.DarkGreen,
+            disabledBackgroundColor: Colors.Black,
+            overlayColor: Colors.Red,
+            iconColor: Colors.Blue,
+            disabledIconColor: Colors.Orange,
+            iconSize: 32.0,
+            shape: new StadiumBorder(),
+            splashFactory: NoSplash.SplashFactory);
+
+        Assert.Equal(Colors.Purple, style.ForegroundColor!.Resolve(MaterialState.None));
+        Assert.Equal(Colors.Gold, style.ForegroundColor.Resolve(MaterialState.Selected));
+        Assert.Equal(Colors.Gray, style.ForegroundColor.Resolve(MaterialState.Disabled));
+        Assert.Equal(Colors.Beige, style.BackgroundColor!.Resolve(MaterialState.None));
+        Assert.Equal(Colors.DarkGreen, style.BackgroundColor.Resolve(MaterialState.Selected));
+        Assert.Equal(Colors.Black, style.BackgroundColor.Resolve(MaterialState.Disabled));
+        Assert.Equal(
+            NavigationSurfaceUtilities.WithOpacity(Colors.Red, 0.08),
+            style.OverlayColor!.Resolve(MaterialState.Hovered));
+        Assert.Equal(
+            NavigationSurfaceUtilities.WithOpacity(Colors.Red, 0.10),
+            style.OverlayColor.Resolve(MaterialState.Selected | MaterialState.Pressed));
+        Assert.Equal(Colors.Blue, style.IconColor!.Resolve(MaterialState.None));
+        Assert.Equal(Colors.Orange, style.IconColor.Resolve(MaterialState.Disabled));
+        Assert.Equal(32.0, style.IconSize!.Resolve(MaterialState.None));
+        Assert.IsType<StadiumBorder>(style.Shape!.Resolve(MaterialState.None));
+        Assert.Same(NoSplash.SplashFactory, style.SplashFactory);
+
+        ButtonStyle transparent = SegmentedButton<int>.StyleFrom(overlayColor: Colors.Transparent);
+        Assert.Equal(Colors.Transparent, transparent.OverlayColor!.Resolve(MaterialState.Hovered));
+        Assert.Equal(Colors.Transparent, transparent.OverlayColor.Resolve(MaterialState.Pressed));
+    }
+
+    [Fact]
+    public void SegmentedButton_DefaultTapTargetAndEqualizedLayoutMatchFlutter()
+    {
+        using var horizontal = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new SegmentedButton<int>(
+                segments:
+                [
+                    new ButtonSegment<int>(0, label: new Text("Short")),
+                    new ButtonSegment<int>(1, label: new Text("A much wider label")),
+                ],
+                selected: new HashSet<int> { 0 },
+                onSelectionChanged: _ => { })));
+        horizontal.Pump(new Size(600, 120));
+        RenderSegmentedButton horizontalLayout = Assert.Single(
+            FindDescendants<RenderSegmentedButton>(horizontal.RenderView));
+
+        Assert.Equal(48.0, horizontalLayout.Size.Height, precision: 3);
+        Assert.Equal(horizontalLayout.FirstChild!.Size, horizontalLayout.LastChild!.Size);
+        Assert.Equal(
+            Math.Max(
+                horizontalLayout.FirstChild.GetMinIntrinsicWidth(double.PositiveInfinity),
+                horizontalLayout.LastChild.GetMinIntrinsicWidth(double.PositiveInfinity)) * 2.0,
+            horizontalLayout.GetMinIntrinsicWidth(double.PositiveInfinity),
+            precision: 3);
+
+        using var rtlVertical = new WidgetRenderHarness(new Directionality(
+            TextDirection.Rtl,
+            new MediaQuery(
+                new MediaQueryData(Size: new Size(320, 220)),
+                new Theme(
+                    ThemeData.Light,
+                    new SizedBox(
+                        width: 300,
+                        height: 180,
+                        child: new SegmentedButton<int>(
+                            segments: Segments(),
+                            selected: new HashSet<int> { 0 },
+                            onSelectionChanged: _ => { },
+                            expandedInsets: EdgeInsets.Zero,
+                            direction: Axis.Vertical))))));
+        rtlVertical.Pump(new Size(320, 220));
+        RenderSegmentedButton verticalLayout = Assert.Single(
+            FindDescendants<RenderSegmentedButton>(rtlVertical.RenderView));
+        var firstData = Assert.IsType<SegmentedButtonParentData>(verticalLayout.FirstChild!.parentData);
+        var lastData = Assert.IsType<SegmentedButtonParentData>(verticalLayout.LastChild!.parentData);
+
+        Assert.Equal(300.0, verticalLayout.Size.Width, precision: 3);
+        Assert.True(firstData.offset.Y > lastData.offset.Y);
+        Assert.Equal(verticalLayout.FirstChild.Size, verticalLayout.LastChild.Size);
+    }
+
+    [Fact]
+    public void SegmentedButton_GroupBorderResolvesSelectedAndDisabledStateSides()
+    {
+        var side = MaterialStateProperty<BorderSide?>.ResolveWith(states =>
+        {
+            if (states.HasFlag(MaterialState.Disabled))
+            {
+                return new BorderSide(Colors.Gray);
+            }
+            if (states.HasFlag(MaterialState.Selected))
+            {
+                return new BorderSide(Colors.Gold);
+            }
+            return new BorderSide(Colors.Red);
+        });
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new SegmentedButton<int>(
+                segments: Segments(disableSecond: true),
+                selected: new HashSet<int> { 0 },
+                onSelectionChanged: _ => { },
+                style: new ButtonStyle(Side: side))));
+        harness.Pump(new Size(360, 120));
+        RenderSegmentedButton layout = Assert.Single(FindDescendants<RenderSegmentedButton>(harness.RenderView));
+
+        Assert.Equal(Colors.Gold, layout.EnabledBorder.Side.Color);
+        Assert.Equal(Colors.Gray, layout.DisabledBorder.Side.Color);
+        Assert.Equal(BorderSide.StrokeAlignInside, layout.EnabledBorder.Side.StrokeAlign);
     }
 
     [Fact]
@@ -460,6 +740,26 @@ public sealed class MaterialSegmentedButtonsTests
         return null;
     }
 
+    private static List<SemanticsNode> FindAllSemantics(
+        SemanticsNode? root,
+        Func<SemanticsNode, bool> predicate)
+    {
+        var result = new List<SemanticsNode>();
+        if (root is null)
+        {
+            return result;
+        }
+        if (predicate(root))
+        {
+            result.Add(root);
+        }
+        foreach (SemanticsNode child in root.Children)
+        {
+            result.AddRange(FindAllSemantics(child, predicate));
+        }
+        return result;
+    }
+
     private static T Property<T>(object instance, string name)
     {
         object? value = instance.GetType().GetProperty(name)?.GetValue(instance);
@@ -484,6 +784,49 @@ public sealed class MaterialSegmentedButtonsTests
         }
 
         public RenderView RenderView { get; }
+
+        public void Update(Widget rootWidget)
+        {
+            _rootElement.UpdateRoot(rootWidget);
+            _owner.FlushBuild();
+        }
+
+        public T FindState<T>() where T : State
+        {
+            T? result = null;
+            Visit(_rootElement);
+            return Assert.IsType<T>(result);
+
+            void Visit(Element element)
+            {
+                if (result is not null)
+                {
+                    return;
+                }
+                if (element is StatefulElement { State: T state })
+                {
+                    result = state;
+                    return;
+                }
+                element.VisitChildren(Visit);
+            }
+        }
+
+        public IReadOnlyList<T> FindWidgets<T>() where T : Widget
+        {
+            var result = new List<T>();
+            Visit(_rootElement);
+            return result;
+
+            void Visit(Element element)
+            {
+                if (element.Widget is T widget)
+                {
+                    result.Add(widget);
+                }
+                element.VisitChildren(Visit);
+            }
+        }
 
         public void Pump(Size size)
         {
@@ -515,6 +858,7 @@ public sealed class MaterialSegmentedButtonsTests
             protected override void OnMount() { base.OnMount(); Rebuild(); }
             internal override void Rebuild() { Dirty = false; _child = UpdateChild(_child, Widget, Slot); }
             internal override void Update(Widget newWidget) { base.Update(newWidget); Rebuild(); }
+            public void UpdateRoot(Widget widget) => Update(widget);
             internal override void ForgetChild(Element child) { if (ReferenceEquals(_child, child)) _child = null; }
             internal override void VisitChildren(Action<Element> visitor) { if (_child is not null) visitor(_child); }
             public void InsertRenderObjectChild(RenderObject child, object? slot) => _renderView.Child = (RenderBox)child;

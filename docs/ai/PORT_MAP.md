@@ -179,7 +179,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `material/search_anchor.dart` | `src/Plumix.Material/SearchAnchor.cs` | — | — |
 | `material/search_bar_theme.dart` | `src/Plumix.Material/SearchBarTheme.cs` | — | — |
 | `material/search_view_theme.dart` | `src/Plumix.Material/SearchViewTheme.cs` | — | — |
-| `material/segmented_button.dart` | `src/Plumix.Material/SegmentedButton.cs` | `src/Plumix.Tests/MaterialSegmentedButtonsTests.cs` | `dart_sample/lib/demos/material/segmented_buttons_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/SegmentedButtonsDemoPage.cs` |
+| `material/segmented_button.dart` | `src/Plumix.Material/SegmentedButton.cs`<br>`src/Plumix.Material/SegmentedButtonLayout.cs` | `src/Plumix.Tests/MaterialSegmentedButtonsTests.cs` | `dart_sample/lib/demos/material/segmented_buttons_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/SegmentedButtonsDemoPage.cs` |
 | `material/segmented_button_theme.dart` | `src/Plumix.Material/SegmentedButtonTheme.cs` | — | — |
 | `material/selectable_text.dart` | `src/Plumix.Material/SelectableText.cs` | — | — |
 | `material/selection_area.dart` | `src/Plumix.Material/SelectionArea.cs` | — | — |
@@ -463,7 +463,7 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 ## Summary
 
 - Flutter files mapped: 411
-- C# files carrying a marker: 515
+- C# files carrying a marker: 516
 - C# files without a marker: 15
 - Markers not resolvable in the pinned checkout: 5
 

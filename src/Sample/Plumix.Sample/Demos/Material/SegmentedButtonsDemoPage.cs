@@ -54,7 +54,7 @@ public sealed class SegmentedButtonsDemoPage : StatefulWidget
                             selectedForegroundColor: Colors.White,
                             selectedBackgroundColor: Colors.Teal,
                             side: new BorderSide(Colors.Teal),
-                            shape: BorderRadius.Circular(18)),
+                            shape: new StadiumBorder()),
                         SelectedIcon: new Icon(Icons.Star))
                     : new SegmentedButtonThemeData(),
             };
@@ -124,7 +124,7 @@ public sealed class SegmentedButtonsDemoPage : StatefulWidget
                                         selectedForegroundColor: Colors.White,
                                         selectedBackgroundColor: Color.Parse("#FF673AB7"),
                                         side: new BorderSide(Color.Parse("#FF673AB7")),
-                                        shape: BorderRadius.Circular(20))
+                                        shape: new StadiumBorder())
                                     : null,
                                 segments:
                                 [

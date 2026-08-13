@@ -58,6 +58,8 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         bool? @checked = null,
         bool? mixed = null,
         bool? selected = null,
+        bool? enabled = null,
+        bool? focusable = null,
         SemanticsSortKey? sortKey = null,
         SemanticsTag? tagForChildren = null,
         Key? key = null,
@@ -82,7 +84,11 @@ public sealed class Semantics : SingleChildRenderObjectWidget
                 | (@checked.HasValue ? SemanticsFlags.HasCheckedState : SemanticsFlags.None)
                 | (@checked == true ? SemanticsFlags.IsChecked : SemanticsFlags.None)
                 | (mixed == true ? SemanticsFlags.IsCheckStateMixed : SemanticsFlags.None)
-                | (selected == true ? SemanticsFlags.IsSelected : SemanticsFlags.None);
+                | (selected.HasValue ? SemanticsFlags.HasSelectedState : SemanticsFlags.None)
+                | (selected == true ? SemanticsFlags.IsSelected : SemanticsFlags.None)
+                | (enabled.HasValue ? SemanticsFlags.HasEnabledState : SemanticsFlags.None)
+                | (enabled == true ? SemanticsFlags.IsEnabled : SemanticsFlags.None)
+                | (focusable == true ? SemanticsFlags.IsFocusable : SemanticsFlags.None);
         OnTap = onTap;
         OnLongPress = onLongPress;
         OnDismiss = onDismiss;
@@ -101,6 +107,8 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         Checked = @checked;
         Mixed = mixed;
         Selected = selected;
+        Enabled = enabled;
+        Focusable = focusable;
         SortKey = sortKey;
         MergeDescendants = mergeDescendants;
     }
@@ -162,6 +170,10 @@ public sealed class Semantics : SingleChildRenderObjectWidget
     public bool? Mixed { get; }
 
     public bool? Selected { get; }
+
+    public bool? Enabled { get; }
+
+    public bool? Focusable { get; }
 
     public SemanticsSortKey? SortKey { get; }
 

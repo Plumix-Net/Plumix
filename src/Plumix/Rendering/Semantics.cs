@@ -84,6 +84,8 @@ public enum SemanticsFlags
     IsInvalid = 1 << 20,
     IsFocusable = 1 << 21,
     IsCheckStateMixed = 1 << 22,
+    HasEnabledState = 1 << 23,
+    HasSelectedState = 1 << 24,
 }
 
 [Flags]

@@ -49,6 +49,8 @@ public sealed class TextButton : StatelessWidget
             statesController: statesController,
             isSemanticButton: isSemanticButton,
             applyIconFactoryPadding: false,
+            isSelected: false,
+            includeSemanticSelected: true,
             key: key)
     {
     }
@@ -72,6 +74,8 @@ public sealed class TextButton : StatelessWidget
         MaterialStatesController? statesController,
         bool? isSemanticButton,
         bool applyIconFactoryPadding,
+        bool isSelected,
+        bool includeSemanticSelected,
         Key? key) : base(key)
     {
         Child = child;
@@ -93,6 +97,8 @@ public sealed class TextButton : StatelessWidget
         StatesController = statesController;
         IsSemanticButton = isSemanticButton;
         ApplyIconFactoryPadding = applyIconFactoryPadding;
+        IsSelected = isSelected;
+        IncludeSemanticSelected = includeSemanticSelected;
     }
 
     public Widget Child { get; }
@@ -132,6 +138,10 @@ public sealed class TextButton : StatelessWidget
     public bool? IsSemanticButton { get; }
 
     private bool ApplyIconFactoryPadding { get; }
+
+    private bool IsSelected { get; }
+
+    private bool IncludeSemanticSelected { get; }
 
     public static TextButton Icon(
         Widget label,
@@ -180,7 +190,50 @@ public sealed class TextButton : StatelessWidget
             statesController: statesController,
             isSemanticButton: true,
             applyIconFactoryPadding: icon is not null,
+            isSelected: false,
+            includeSemanticSelected: true,
             key: key);
+    }
+
+    internal static TextButton Segment(
+        Widget label,
+        Widget? icon,
+        Action? onPressed,
+        ButtonStyle style,
+        Action<bool>? onHover,
+        Action<bool>? onFocusChange,
+        MaterialStatesController statesController,
+        bool isSelected)
+    {
+        Widget child = icon is null
+            ? label
+            : MaterialButtonIconFactory.Create(
+                icon,
+                label,
+                buttonStyle: style,
+                themeIconAlignmentResolver: context => TextButtonTheme.Of(context).Style?.ResolveIconAlignment());
+        return new TextButton(
+            child: child,
+            onPressed: onPressed,
+            foregroundColor: null,
+            backgroundColor: null,
+            padding: null,
+            borderRadius: null,
+            minWidth: 64,
+            minHeight: null,
+            style: style,
+            focusNode: null,
+            autofocus: false,
+            onLongPress: null,
+            onHover: onHover,
+            onFocusChange: onFocusChange,
+            clipBehavior: Clip.None,
+            statesController: statesController,
+            isSemanticButton: true,
+            applyIconFactoryPadding: icon is not null,
+            isSelected: isSelected,
+            includeSemanticSelected: false,
+            key: null);
     }
 
     public static ButtonStyle StyleFrom(
@@ -298,6 +351,8 @@ public sealed class TextButton : StatelessWidget
             onFocusChange: OnFocusChange,
             focusNode: FocusNode,
             statesController: StatesController,
+            isSelected: IsSelected,
+            includeSemanticSelected: IncludeSemanticSelected,
             isSemanticButton: IsSemanticButton ?? false,
             clipBehavior: ClipBehavior ?? Clip.None,
             autofocus: Autofocus);
@@ -1892,13 +1947,13 @@ internal static class MaterialButtonIconFactory
                 defaultFontSize = 14.0;
             }
 
-            double textScaleFactor = MediaQuery.MaybeTextScaleFactorOf(context) ?? 1.0;
-            if (double.IsNaN(textScaleFactor) || double.IsInfinity(textScaleFactor) || textScaleFactor <= 0)
+            double scaledFontSize = MediaQuery.TextScalerOf(context).Scale(defaultFontSize);
+            if (double.IsNaN(scaledFontSize) || double.IsInfinity(scaledFontSize) || scaledFontSize <= 0)
             {
-                textScaleFactor = 1.0;
+                scaledFontSize = defaultFontSize;
             }
 
-            double effectiveTextScale = (textScaleFactor * defaultFontSize) / 14.0;
+            double effectiveTextScale = scaledFontSize / 14.0;
             double clampedScaleDelta = Math.Clamp(effectiveTextScale, 1.0, 2.0) - 1.0;
             double spacing = 8.0 + ((4.0 - 8.0) * clampedScaleDelta);
 
@@ -2231,13 +2286,13 @@ internal sealed class MaterialButtonCore : StatefulWidget
             resolvedFontSize = 14.0;
         }
 
-        double textScaleFactor = MediaQuery.MaybeTextScaleFactorOf(context) ?? 1.0;
-        if (double.IsNaN(textScaleFactor) || double.IsInfinity(textScaleFactor) || textScaleFactor <= 0)
+        double scaledFontSize = MediaQuery.TextScalerOf(context).Scale(resolvedFontSize);
+        if (double.IsNaN(scaledFontSize) || double.IsInfinity(scaledFontSize) || scaledFontSize <= 0)
         {
-            textScaleFactor = 1.0;
+            scaledFontSize = resolvedFontSize;
         }
 
-        return (textScaleFactor * resolvedFontSize) / 14.0;
+        return scaledFontSize / 14.0;
     }
 
     internal static Thickness ScalePadding(
@@ -2732,7 +2787,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
 
         private static SemanticsFlags ResolveSemanticsFlags(MaterialButtonCore widget, bool enabled)
         {
-            var flags = SemanticsFlags.None;
+            var flags = SemanticsFlags.HasEnabledState;
             if (widget.IsSemanticButton)
             {
                 flags |= SemanticsFlags.IsButton;
@@ -3585,6 +3640,34 @@ internal sealed class RenderButtonTapTargetPadding : RenderProxyBox
             _minSize = normalized;
             MarkNeedsLayout();
         }
+    }
+
+    protected override double ComputeMinIntrinsicWidth(double height)
+    {
+        return Math.Max(_minSize.Width, base.ComputeMinIntrinsicWidth(height));
+    }
+
+    protected override double ComputeMaxIntrinsicWidth(double height)
+    {
+        return Math.Max(_minSize.Width, base.ComputeMaxIntrinsicWidth(height));
+    }
+
+    protected override double ComputeMinIntrinsicHeight(double width)
+    {
+        return Math.Max(_minSize.Height, base.ComputeMinIntrinsicHeight(width));
+    }
+
+    protected override double ComputeMaxIntrinsicHeight(double width)
+    {
+        return Math.Max(_minSize.Height, base.ComputeMaxIntrinsicHeight(width));
+    }
+
+    protected override Size ComputeDryLayout(BoxConstraints constraints)
+    {
+        Size childSize = Child?.GetDryLayout(constraints) ?? constraints.Smallest;
+        return constraints.Constrain(new Size(
+            Math.Max(childSize.Width, _minSize.Width),
+            Math.Max(childSize.Height, _minSize.Height)));
     }
 
     protected override void PerformLayout()

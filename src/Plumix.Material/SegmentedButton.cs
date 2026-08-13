@@ -22,6 +22,7 @@ public sealed class ButtonSegment<T>
         {
             throw new ArgumentException("A button segment requires an icon or label.");
         }
+
         Value = value;
         Icon = icon;
         Label = label;
@@ -44,39 +45,28 @@ public sealed class SegmentedButton<T> : StatefulWidget
         Action<IReadOnlySet<T>>? onSelectionChanged = null,
         bool multiSelectionEnabled = false,
         bool emptySelectionAllowed = false,
-        Thickness? expandedInsets = null,
+        EdgeInsets? expandedInsets = null,
         ButtonStyle? style = null,
         bool showSelectedIcon = true,
         Widget? selectedIcon = null,
         Axis direction = Axis.Horizontal,
         Key? key = null) : base(key)
     {
-        if (segments is null) throw new ArgumentNullException(nameof(segments));
-        if (selected is null) throw new ArgumentNullException(nameof(selected));
+        ArgumentNullException.ThrowIfNull(segments);
+        ArgumentNullException.ThrowIfNull(selected);
         if (segments.Count == 0)
         {
             throw new ArgumentException("SegmentedButton requires at least one segment.", nameof(segments));
         }
         if (selected.Count == 0 && !emptySelectionAllowed)
         {
-            throw new ArgumentException("Selection cannot be empty unless emptySelectionAllowed is true.", nameof(selected));
+            throw new ArgumentException(
+                "Selection cannot be empty unless emptySelectionAllowed is true.",
+                nameof(selected));
         }
         if (selected.Count > 1 && !multiSelectionEnabled)
         {
             throw new ArgumentException("Multiple selected values require multiSelectionEnabled.", nameof(selected));
-        }
-        var values = new HashSet<T>();
-        foreach (var segment in segments)
-        {
-            if (!values.Add(segment.Value))
-            {
-                throw new ArgumentException("Segment values must be unique.", nameof(segments));
-            }
-        }
-        if (expandedInsets is { } insets
-            && (insets.Left < 0 || insets.Top < 0 || insets.Right < 0 || insets.Bottom < 0))
-        {
-            throw new ArgumentOutOfRangeException(nameof(expandedInsets), "Expanded insets must be non-negative.");
         }
 
         Segments = segments;
@@ -96,7 +86,7 @@ public sealed class SegmentedButton<T> : StatefulWidget
     public Action<IReadOnlySet<T>>? OnSelectionChanged { get; }
     public bool MultiSelectionEnabled { get; }
     public bool EmptySelectionAllowed { get; }
-    public Thickness? ExpandedInsets { get; }
+    public EdgeInsets? ExpandedInsets { get; }
     public ButtonStyle? Style { get; }
     public bool ShowSelectedIcon { get; }
     public Widget? SelectedIcon { get; }
@@ -122,22 +112,30 @@ public sealed class SegmentedButton<T> : StatefulWidget
         Size? fixedSize = null,
         Size? maximumSize = null,
         BorderSide? side = null,
-        BorderRadius? shape = null,
+        OutlinedBorder? shape = null,
         MouseCursor? enabledMouseCursor = null,
         MouseCursor? disabledMouseCursor = null,
         VisualDensity? visualDensity = null,
         MaterialTapTargetSize? tapTargetSize = null,
         TimeSpan? animationDuration = null,
         bool? enableFeedback = null,
-        AlignmentGeometry? alignment = null)
+        AlignmentGeometry? alignment = null,
+        InteractiveInkFeatureFactory? splashFactory = null)
     {
         return new ButtonStyle(
-            ForegroundColor: BuildStateColor(foregroundColor, disabledForegroundColor, selectedForegroundColor),
-            BackgroundColor: BuildStateColor(backgroundColor, disabledBackgroundColor, selectedBackgroundColor),
+            ForegroundColor: BuildStateColor(
+                foregroundColor,
+                disabledForegroundColor,
+                selectedForegroundColor),
+            BackgroundColor: BuildStateColor(
+                backgroundColor,
+                disabledBackgroundColor,
+                selectedBackgroundColor),
             ShadowColor: shadowColor.HasValue ? MaterialStateProperty<Color?>.All(shadowColor) : null,
-            SurfaceTintColor: surfaceTintColor.HasValue ? MaterialStateProperty<Color?>.All(surfaceTintColor) : null,
+            SurfaceTintColor: surfaceTintColor.HasValue
+                ? MaterialStateProperty<Color?>.All(surfaceTintColor)
+                : null,
             OverlayColor: BuildOverlayColor(foregroundColor, selectedForegroundColor, overlayColor),
-            SplashColor: BuildOverlayColor(foregroundColor, selectedForegroundColor, overlayColor),
             Elevation: elevation.HasValue ? MaterialStateProperty<double?>.All(elevation) : null,
             IconColor: iconColor.HasValue || disabledIconColor.HasValue
                 ? MaterialStateProperty<Color?>.ResolveWith(states =>
@@ -146,8 +144,7 @@ public sealed class SegmentedButton<T> : StatefulWidget
             IconSize: iconSize.HasValue ? MaterialStateProperty<double?>.All(iconSize) : null,
             Side: side.HasValue ? MaterialStateProperty<BorderSide?>.All(side) : null,
             Padding: padding.HasValue ? MaterialStateProperty<Thickness?>.All(padding) : null,
-            Shape: shape.HasValue ? MaterialStateProperty<OutlinedBorder?>.All(
-                new RoundedRectangleBorder(borderRadius: shape)) : null,
+            Shape: shape is not null ? MaterialStateProperty<OutlinedBorder?>.All(shape) : null,
             MinimumSize: minimumSize.HasValue ? MaterialStateProperty<Size?>.All(minimumSize) : null,
             FixedSize: fixedSize.HasValue ? MaterialStateProperty<Size?>.All(fixedSize) : null,
             MaximumSize: maximumSize.HasValue ? MaterialStateProperty<Size?>.All(maximumSize) : null,
@@ -160,7 +157,8 @@ public sealed class SegmentedButton<T> : StatefulWidget
                 : null,
             VisualDensity: visualDensity,
             AnimationDuration: animationDuration,
-            EnableFeedback: enableFeedback);
+            EnableFeedback: enableFeedback,
+            SplashFactory: splashFactory);
     }
 
     public override State CreateState() => new SegmentedButtonState<T>();
@@ -170,7 +168,11 @@ public sealed class SegmentedButton<T> : StatefulWidget
         Color? disabled,
         Color? selected)
     {
-        if (!enabled.HasValue && !disabled.HasValue && !selected.HasValue) return null;
+        if (!enabled.HasValue && !disabled.HasValue && !selected.HasValue)
+        {
+            return null;
+        }
+
         return MaterialStateProperty<Color?>.ResolveWith(states =>
             states.HasFlag(MaterialState.Disabled)
                 ? disabled
@@ -184,135 +186,269 @@ public sealed class SegmentedButton<T> : StatefulWidget
         Color? selectedForeground,
         Color? overlay)
     {
-        if (!foreground.HasValue && !selectedForeground.HasValue && !overlay.HasValue) return null;
-        if (overlay is { A: 0 }) return MaterialStateProperty<Color?>.All(Colors.Transparent);
+        if (!foreground.HasValue && !selectedForeground.HasValue && !overlay.HasValue)
+        {
+            return null;
+        }
+        if (overlay is { A: 0 })
+        {
+            return MaterialStateProperty<Color?>.All(Colors.Transparent);
+        }
+
         return MaterialStateProperty<Color?>.ResolveWith(states =>
         {
-            var baseColor = overlay
-                            ?? (states.HasFlag(MaterialState.Selected) ? selectedForeground : foreground);
-            if (!baseColor.HasValue) return null;
+            Color? stateColor = overlay
+                                ?? (states.HasFlag(MaterialState.Selected) ? selectedForeground : foreground);
+            if (!stateColor.HasValue)
+            {
+                return null;
+            }
             if (states.HasFlag(MaterialState.Pressed) || states.HasFlag(MaterialState.Focused))
             {
-                return NavigationSurfaceUtilities.WithOpacity(baseColor.Value, 0.10);
+                return NavigationSurfaceUtilities.WithOpacity(stateColor.Value, 0.10);
             }
             if (states.HasFlag(MaterialState.Hovered))
             {
-                return NavigationSurfaceUtilities.WithOpacity(baseColor.Value, 0.08);
+                return NavigationSurfaceUtilities.WithOpacity(stateColor.Value, 0.08);
             }
+
             return Colors.Transparent;
         });
     }
 }
 
-internal sealed class SegmentedButtonState<T> : State
+public sealed class SegmentedButtonState<T> : State
 {
+    private bool _hovering;
+    private bool _focused;
+
     private SegmentedButton<T> CurrentWidget => (SegmentedButton<T>)StateWidget;
+
+    public Dictionary<ButtonSegment<T>, MaterialStatesController> StatesControllers { get; } = [];
+
+    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    {
+        var retainedSegments = CurrentWidget.Segments.ToHashSet();
+        foreach (ButtonSegment<T> segment in StatesControllers.Keys.ToArray())
+        {
+            if (retainedSegments.Contains(segment))
+            {
+                continue;
+            }
+
+            MaterialStatesController controller = StatesControllers[segment];
+            StatesControllers.Remove(segment);
+            controller.Dispose();
+        }
+    }
 
     public override Widget Build(BuildContext context)
     {
-        var widget = CurrentWidget;
-        var theme = Theme.Of(context);
-        var segmentedTheme = SegmentedButtonTheme.Of(context);
-        var defaults = DefaultStyle(theme);
-        var selectedIcon = widget.ShowSelectedIcon
+        SegmentedButton<T> widget = CurrentWidget;
+        ThemeData theme = Theme.Of(context);
+        SegmentedButtonThemeData segmentedTheme = SegmentedButtonTheme.Of(context);
+        ButtonStyle defaults = DefaultStyle(theme);
+        ButtonStyle segmentThemeStyle = SegmentStyleFor(segmentedTheme.Style)
+            .Merge(SegmentStyleFor(defaults));
+        ButtonStyle widgetSegmentStyle = SegmentStyleFor(widget.Style);
+        Widget? selectedIcon = widget.ShowSelectedIcon
             ? widget.SelectedIcon ?? segmentedTheme.SelectedIcon ?? new Icon(Icons.Check)
             : null;
-        var groupStates = widget.OnSelectionChanged is null ? MaterialState.Disabled : MaterialState.None;
-        if (widget.Selected.Count > 0) groupStates |= MaterialState.Selected;
-        var outerRadius = ResolveValue(
-                              style => style.Shape,
-                              groupStates,
-                              widget.Style,
-                              segmentedTheme.Style,
-                              defaults)
-                          ?? new RoundedRectangleBorder(
-                              borderRadius: Plumix.Rendering.BorderRadius.Circular(20));
+        MaterialState groupStates = ResolveGroupStates(widget);
+        OutlinedBorder enabledShape = ResolveValue(
+            static style => style.Shape,
+            groupStates,
+            widget.Style,
+            segmentedTheme.Style,
+            defaults) ?? new RoundedRectangleBorder();
+        BorderSide enabledSide = ResolveValue(
+            static style => style.Side,
+            groupStates,
+            widget.Style,
+            segmentedTheme.Style,
+            defaults) ?? BorderSide.None;
+        OutlinedBorder disabledShape = ResolveValue(
+            static style => style.Shape,
+            MaterialState.Disabled,
+            widget.Style,
+            segmentedTheme.Style,
+            defaults) ?? new RoundedRectangleBorder();
+        BorderSide disabledSide = ResolveValue(
+            static style => style.Side,
+            MaterialState.Disabled,
+            widget.Style,
+            segmentedTheme.Style,
+            defaults) ?? BorderSide.None;
+        OutlinedBorder enabledBorder = enabledShape.CopyWith(enabledSide);
+        OutlinedBorder disabledBorder = disabledShape.CopyWith(disabledSide);
 
         var children = new List<Widget>(widget.Segments.Count);
-        foreach (var segment in widget.Segments)
+        var segmentEnabled = new List<bool>(widget.Segments.Count);
+        foreach (ButtonSegment<T> segment in widget.Segments)
         {
             bool selected = widget.Selected.Contains(segment.Value);
             bool enabled = widget.OnSelectionChanged is not null && segment.Enabled;
-            var baseStates = enabled ? MaterialState.None : MaterialState.Disabled;
-            if (selected) baseStates |= MaterialState.Selected;
-            var segmentStyle = ComposeStyle(
-                baseStates,
-                widget.Style,
-                segmentedTheme.Style,
-                defaults);
-
+            MaterialStatesController controller = StatesControllers.GetValueOrDefault(segment)
+                ?? AddStatesController(segment);
+            controller.Update(MaterialState.Selected, selected);
             Widget label = segment.Label ?? segment.Icon ?? new SizedBox();
             Widget? icon = selected && widget.ShowSelectedIcon
                 ? selectedIcon
                 : segment.Label is not null
                     ? segment.Icon
                     : null;
-            Widget content = label;
-            if (icon is not null)
-            {
-                var iconAlignment = widget.Style?.IconAlignment
-                                    ?? segmentedTheme.Style?.IconAlignment
-                                    ?? defaults.IconAlignment
-                                    ?? IconAlignment.Start;
-                var rowChildren = iconAlignment == IconAlignment.Start
-                    ? new List<Widget> { icon, new Flexible(label) }
-                    : new List<Widget> { new Flexible(label), icon };
-                content = new Row(
-                    mainAxisSize: MainAxisSize.Min,
-                    spacing: 8,
-                    children: rowChildren);
-            }
-
-            var capturedValue = segment.Value;
-            Widget button = new MaterialButtonCore(
-                child: content,
+            T capturedValue = segment.Value;
+            Widget button = TextButton.Segment(
+                label: label,
+                icon: icon,
                 onPressed: enabled ? () => HandlePressed(capturedValue) : null,
-                style: segmentStyle,
-                isSelected: selected,
-                isSemanticButton: true,
-                clipBehavior: Clip.HardEdge);
+                style: widgetSegmentStyle,
+                onHover: HandleHover,
+                onFocusChange: HandleFocus,
+                statesController: controller,
+                isSelected: selected);
             if (segment.Tooltip is not null)
             {
                 button = new Tooltip(message: segment.Tooltip, child: button);
             }
-            if (!widget.MultiSelectionEnabled)
-            {
-                button = new Semantics(
-                    child: button,
-                    flags: SemanticsFlags.IsInMutuallyExclusiveGroup,
-                    container: true);
-            }
-            button = new MergeSemantics(button);
-            children.Add(button);
+
+            button = new Semantics(
+                child: button,
+                selected: selected,
+                enabled: enabled,
+                focusable: enabled,
+                onTap: enabled ? () => HandlePressed(capturedValue) : null,
+                flags: widget.MultiSelectionEnabled
+                    ? SemanticsFlags.None
+                    : SemanticsFlags.IsInMutuallyExclusiveGroup);
+            children.Add(new MergeSemantics(button));
+            segmentEnabled.Add(enabled);
         }
 
-        Widget group = new SegmentedControlLayout(
+        double tapTargetVerticalPadding = ResolveTapTargetVerticalPadding(
+            theme,
+            segmentedTheme.Style,
+            defaults,
+            groupStates);
+        Widget group = new SegmentedButtonRenderWidget(
             children: children,
+            segmentEnabled: segmentEnabled,
+            enabledBorder: enabledBorder,
+            disabledBorder: disabledBorder,
             direction: widget.Direction,
             textDirection: Directionality.Of(context),
-            expanded: widget.ExpandedInsets.HasValue);
+            expanded: widget.ExpandedInsets.HasValue,
+            tapTargetVerticalPadding: tapTargetVerticalPadding);
+        group = new Padding(widget.ExpandedInsets ?? EdgeInsets.Zero, group);
+        group = new TextButtonTheme(new TextButtonThemeData(segmentThemeStyle), group);
 
-        group = new ClipPath(clipper: new ShapeBorderClipper(outerRadius), child: group);
-        if (widget.ExpandedInsets is { } insets)
+        double elevation = ResolveValue(
+            static style => style.Elevation,
+            groupStates,
+            widget.Style,
+            segmentedTheme.Style,
+            defaults) ?? 0.0;
+        Color? shadowColor = ResolveValue(
+            static style => style.ShadowColor,
+            groupStates,
+            widget.Style,
+            segmentedTheme.Style,
+            defaults);
+        Color? surfaceTintColor = ResolveValue(
+            static style => style.SurfaceTintColor,
+            groupStates,
+            widget.Style,
+            segmentedTheme.Style,
+            defaults);
+        TimeSpan duration = widget.Style?.AnimationDuration
+                            ?? segmentedTheme.Style?.AnimationDuration
+                            ?? defaults.AnimationDuration
+                            ?? MaterialConstants.ThemeAnimationDuration;
+        return new Material(
+            type: MaterialType.Transparency,
+            elevation: elevation,
+            shadowColor: shadowColor,
+            surfaceTintColor: surfaceTintColor,
+            animationDuration: duration,
+            child: group);
+    }
+
+    public override void Dispose()
+    {
+        foreach (MaterialStatesController controller in StatesControllers.Values)
         {
-            group = new Padding(insets, group);
+            controller.Dispose();
         }
-        return group;
+        StatesControllers.Clear();
+        base.Dispose();
+    }
+
+    private MaterialStatesController AddStatesController(ButtonSegment<T> segment)
+    {
+        var controller = new MaterialStatesController();
+        StatesControllers.Add(segment, controller);
+        return controller;
+    }
+
+    private MaterialState ResolveGroupStates(SegmentedButton<T> widget)
+    {
+        MaterialState states = widget.OnSelectionChanged is null ? MaterialState.Disabled : MaterialState.None;
+        if (_hovering)
+        {
+            states |= MaterialState.Hovered;
+        }
+        if (_focused)
+        {
+            states |= MaterialState.Focused;
+        }
+        if (widget.Selected.Count > 0)
+        {
+            states |= MaterialState.Selected;
+        }
+        return states;
+    }
+
+    private void HandleHover(bool value)
+    {
+        if (_hovering == value)
+        {
+            return;
+        }
+        SetState(() => _hovering = value);
+    }
+
+    private void HandleFocus(bool value)
+    {
+        if (_focused == value)
+        {
+            return;
+        }
+        SetState(() => _focused = value);
     }
 
     private void HandlePressed(T segmentValue)
     {
-        var widget = CurrentWidget;
-        if (widget.OnSelectionChanged is null) return;
-        bool onlySelected = widget.Selected.Count == 1 && widget.Selected.Contains(segmentValue);
-        if (!widget.EmptySelectionAllowed && onlySelected) return;
+        SegmentedButton<T> widget = CurrentWidget;
+        if (widget.OnSelectionChanged is null)
+        {
+            return;
+        }
 
-        HashSet<T> updated;
+        bool onlySelected = widget.Selected.Count == 1 && widget.Selected.Contains(segmentValue);
+        if (!widget.EmptySelectionAllowed && onlySelected)
+        {
+            return;
+        }
+
         bool toggle = widget.MultiSelectionEnabled || (widget.EmptySelectionAllowed && onlySelected);
+        HashSet<T> updated;
         if (toggle)
         {
             updated = new HashSet<T>(widget.Selected);
-            if (!updated.Add(segmentValue)) updated.Remove(segmentValue);
+            if (!updated.Add(segmentValue))
+            {
+                updated.Remove(segmentValue);
+            }
         }
         else
         {
@@ -325,133 +461,119 @@ internal sealed class SegmentedButtonState<T> : State
         }
     }
 
+    private double ResolveTapTargetVerticalPadding(
+        ThemeData theme,
+        ButtonStyle? segmentedThemeStyle,
+        ButtonStyle defaults,
+        MaterialState states)
+    {
+        SegmentedButton<T> widget = CurrentWidget;
+        VisualDensity density = widget.Style?.VisualDensity
+                                ?? segmentedThemeStyle?.VisualDensity
+                                ?? theme.VisualDensity;
+        Vector densityAdjustment = density.BaseSizeAdjustment;
+        Thickness padding = ResolveValue(
+            static style => style.Padding,
+            states,
+            widget.Style,
+            segmentedThemeStyle,
+            defaults) ?? default;
+        TextStyle? textStyle = ResolveValue(
+            static style => style.TextStyle,
+            states,
+            widget.Style,
+            segmentedThemeStyle,
+            defaults);
+        double fontSize = textStyle?.FontSize ?? 20.0;
+        double adjustedMinimumHeight = 40.0 + densityAdjustment.Y;
+        double effectiveVerticalPadding = padding.Top + padding.Bottom + (densityAdjustment.Y * 2.0);
+        double buttonHeight = Math.Max(fontSize + effectiveVerticalPadding, adjustedMinimumHeight);
+        MaterialTapTargetSize tapTargetSize = widget.Style?.TapTargetSize
+                                               ?? segmentedThemeStyle?.TapTargetSize
+                                               ?? theme.MaterialTapTargetSize;
+        return tapTargetSize == MaterialTapTargetSize.ShrinkWrap
+            ? 0.0
+            : Math.Max(0.0, 48.0 + densityAdjustment.Y - buttonHeight);
+    }
+
     private static ButtonStyle DefaultStyle(ThemeData theme)
     {
+        ColorScheme colors = theme.ColorScheme;
         return new ButtonStyle(
+            TextStyle: MaterialStateProperty<TextStyle?>.All(theme.TextTheme.LabelLarge),
+            BackgroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+                states.HasFlag(MaterialState.Disabled)
+                    ? null
+                    : states.HasFlag(MaterialState.Selected)
+                        ? colors.SecondaryContainer
+                        : null),
             ForegroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
                 states.HasFlag(MaterialState.Disabled)
-                    ? NavigationSurfaceUtilities.WithOpacity(theme.OnSurfaceColor, 0.38)
+                    ? NavigationSurfaceUtilities.WithOpacity(colors.OnSurface, 0.38)
                     : states.HasFlag(MaterialState.Selected)
-                        ? theme.OnSecondaryContainerColor
-                        : theme.OnSurfaceColor),
-            BackgroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                !states.HasFlag(MaterialState.Disabled) && states.HasFlag(MaterialState.Selected)
-                    ? theme.SecondaryContainerColor
-                    : Colors.Transparent),
-            ShadowColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
-            SurfaceTintColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
+                        ? colors.OnSecondaryContainer
+                        : colors.OnSurface),
             OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
             {
-                var color = states.HasFlag(MaterialState.Selected)
-                    ? theme.OnSecondaryContainerColor
-                    : theme.OnSurfaceColor;
+                Color stateColor = states.HasFlag(MaterialState.Selected)
+                    ? colors.OnSecondaryContainer
+                    : colors.OnSurface;
                 if (states.HasFlag(MaterialState.Pressed) || states.HasFlag(MaterialState.Focused))
                 {
-                    return NavigationSurfaceUtilities.WithOpacity(color, 0.10);
+                    return NavigationSurfaceUtilities.WithOpacity(stateColor, 0.10);
                 }
                 if (states.HasFlag(MaterialState.Hovered))
                 {
-                    return NavigationSurfaceUtilities.WithOpacity(color, 0.08);
+                    return NavigationSurfaceUtilities.WithOpacity(stateColor, 0.08);
                 }
                 return null;
             }),
-            SplashColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                NavigationSurfaceUtilities.WithOpacity(
-                    states.HasFlag(MaterialState.Selected)
-                        ? theme.OnSecondaryContainerColor
-                        : theme.OnSurfaceColor,
-                    0.10)),
-            Elevation: MaterialStateProperty<double?>.All(0),
-            IconColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                states.HasFlag(MaterialState.Disabled)
-                    ? NavigationSurfaceUtilities.WithOpacity(theme.OnSurfaceColor, 0.38)
-                    : states.HasFlag(MaterialState.Selected)
-                        ? theme.OnSecondaryContainerColor
-                        : theme.OnSurfaceColor),
-            IconSize: MaterialStateProperty<double?>.All(18),
+            SurfaceTintColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
+            Elevation: MaterialStateProperty<double?>.All(0.0),
+            IconSize: MaterialStateProperty<double?>.All(18.0),
             Side: MaterialStateProperty<BorderSide?>.ResolveWith(states =>
                 new BorderSide(
                     states.HasFlag(MaterialState.Disabled)
-                        ? NavigationSurfaceUtilities.WithOpacity(theme.OnSurfaceColor, 0.12)
-                        : theme.OutlineColor)),
-            Padding: MaterialStateProperty<Thickness?>.All(new Thickness(12, 8)),
-            Shape: MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius:
-                Plumix.Rendering.BorderRadius.Circular(20))),
-            MinimumSize: MaterialStateProperty<Size?>.All(new Size(0, 40)),
-            Alignment: Alignment.Center,
-            TapTargetSize: theme.MaterialTapTargetSize,
-            TextStyle: MaterialStateProperty<TextStyle?>.All(theme.TextTheme.LabelLarge),
-            MouseCursor: MaterialStateProperty<MouseCursor?>.ResolveWith(states =>
-                states.HasFlag(MaterialState.Disabled)
-                    ? SystemMouseCursors.Basic
-                    : SystemMouseCursors.Click),
-            VisualDensity: theme.VisualDensity,
-            AnimationDuration: TimeSpan.FromMilliseconds(200),
-            EnableFeedback: true);
+                        ? NavigationSurfaceUtilities.WithOpacity(colors.OnSurface, 0.12)
+                        : colors.Outline)),
+            Shape: MaterialStateProperty<OutlinedBorder?>.All(new StadiumBorder()),
+            MinimumSize: MaterialStateProperty<Size?>.All(new Size(0.0, 40.0)));
     }
 
-    private static ButtonStyle ComposeStyle(
-        MaterialState baseStates,
-        ButtonStyle? widget,
-        ButtonStyle? localTheme,
-        ButtonStyle defaults)
+    private static ButtonStyle SegmentStyleFor(ButtonStyle? style)
     {
         return new ButtonStyle(
-            ForegroundColor: Compose(style => style.ForegroundColor, baseStates, widget, localTheme, defaults),
-            BackgroundColor: Compose(style => style.BackgroundColor, baseStates, widget, localTheme, defaults),
-            ShadowColor: Compose(style => style.ShadowColor, baseStates, widget, localTheme, defaults),
-            SurfaceTintColor: Compose(style => style.SurfaceTintColor, baseStates, widget, localTheme, defaults),
-            OverlayColor: Compose(style => style.OverlayColor, baseStates, widget, localTheme, defaults),
-            SplashColor: Compose(style => style.SplashColor, baseStates, widget, localTheme, defaults),
-            Elevation: Compose(style => style.Elevation, baseStates, widget, localTheme, defaults),
-            IconColor: Compose(style => style.IconColor, baseStates, widget, localTheme, defaults),
-            IconSize: Compose(style => style.IconSize, baseStates, widget, localTheme, defaults),
-            Side: Compose(style => style.Side, baseStates, widget, localTheme, defaults),
-            Padding: Compose(style => style.Padding, baseStates, widget, localTheme, defaults),
-            Shape: MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius:
-                Plumix.Rendering.BorderRadius.Zero)),
-            MinimumSize: Compose(style => style.MinimumSize, baseStates, widget, localTheme, defaults),
-            FixedSize: Compose(style => style.FixedSize, baseStates, widget, localTheme, defaults),
-            MaximumSize: Compose(style => style.MaximumSize, baseStates, widget, localTheme, defaults),
-            Alignment: widget?.Alignment ?? localTheme?.Alignment ?? defaults.Alignment,
-            IconAlignment: widget?.IconAlignment ?? localTheme?.IconAlignment ?? defaults.IconAlignment,
-            TapTargetSize: widget?.TapTargetSize ?? localTheme?.TapTargetSize ?? defaults.TapTargetSize,
-            TextStyle: Compose(style => style.TextStyle, baseStates, widget, localTheme, defaults),
-            MouseCursor: Compose(style => style.MouseCursor, baseStates, widget, localTheme, defaults),
-            VisualDensity: widget?.VisualDensity ?? localTheme?.VisualDensity ?? defaults.VisualDensity,
-            AnimationDuration: widget?.AnimationDuration ?? localTheme?.AnimationDuration ?? defaults.AnimationDuration,
-            EnableFeedback: widget?.EnableFeedback ?? localTheme?.EnableFeedback ?? defaults.EnableFeedback);
-    }
-
-    private static MaterialStateProperty<TValue?> Compose<TValue>(
-        Func<ButtonStyle, MaterialStateProperty<TValue?>?> selector,
-        MaterialState baseStates,
-        params ButtonStyle?[] layers) where TValue : struct
-    {
-        return MaterialStateProperty<TValue?>.ResolveWith(runtimeStates =>
-            ResolveValue(selector, runtimeStates | baseStates, layers));
-    }
-
-    private static MaterialStateProperty<TValue?> Compose<TValue>(
-        Func<ButtonStyle, MaterialStateProperty<TValue?>?> selector,
-        MaterialState baseStates,
-        ButtonStyle? widget,
-        ButtonStyle? localTheme,
-        ButtonStyle defaults) where TValue : class
-    {
-        return MaterialStateProperty<TValue?>.ResolveWith(runtimeStates =>
-            ResolveValue(selector, runtimeStates | baseStates, widget, localTheme, defaults));
+            TextStyle: style?.TextStyle,
+            BackgroundColor: style?.BackgroundColor,
+            ForegroundColor: style?.ForegroundColor,
+            OverlayColor: style?.OverlayColor,
+            SurfaceTintColor: style?.SurfaceTintColor,
+            Elevation: style?.Elevation,
+            Padding: style?.Padding,
+            IconColor: style?.IconColor,
+            IconSize: style?.IconSize,
+            MouseCursor: style?.MouseCursor,
+            VisualDensity: style?.VisualDensity,
+            TapTargetSize: style?.TapTargetSize,
+            AnimationDuration: style?.AnimationDuration,
+            EnableFeedback: style?.EnableFeedback,
+            Alignment: style?.Alignment,
+            SplashFactory: style?.SplashFactory,
+            Shape: MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder()));
     }
 
     private static TValue? ResolveValue<TValue>(
         Func<ButtonStyle, MaterialStateProperty<TValue?>?> selector,
         MaterialState states,
-        params ButtonStyle?[] layers) where TValue : struct
+        params ButtonStyle?[] styles) where TValue : struct
     {
-        foreach (var layer in layers)
+        foreach (ButtonStyle? style in styles)
         {
-            var value = layer is null ? null : selector(layer)?.Resolve(states);
-            if (value.HasValue) return value;
+            TValue? value = style is null ? null : selector(style)?.Resolve(states);
+            if (value.HasValue)
+            {
+                return value;
+            }
         }
         return null;
     }
@@ -459,12 +581,15 @@ internal sealed class SegmentedButtonState<T> : State
     private static TValue? ResolveValue<TValue>(
         Func<ButtonStyle, MaterialStateProperty<TValue?>?> selector,
         MaterialState states,
-        params ButtonStyle?[] layers) where TValue : class
+        params ButtonStyle?[] styles) where TValue : class
     {
-        foreach (var layer in layers)
+        foreach (ButtonStyle? style in styles)
         {
-            var value = layer is null ? null : selector(layer)?.Resolve(states);
-            if (value is not null) return value;
+            TValue? value = style is null ? null : selector(style)?.Resolve(states);
+            if (value is not null)
+            {
+                return value;
+            }
         }
         return null;
     }

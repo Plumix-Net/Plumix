@@ -453,6 +453,16 @@ public sealed class PaintingContext
         childContext.StopRecordingIfNeeded();
     }
 
+    public void PushClipPath(
+        Plumix.UI.Path path,
+        Action<PaintingContext> painter,
+        Clip clipBehavior = Clip.AntiAlias,
+        Point geometryOffset = default)
+    {
+        ArgumentNullException.ThrowIfNull(path);
+        PushClipGeometry(path.ToGeometry(), painter, clipBehavior, geometryOffset);
+    }
+
     public void PushTransform(Matrix transform, Action<PaintingContext> painter)
     {
         StopRecordingIfNeeded();

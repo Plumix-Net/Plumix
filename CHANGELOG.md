@@ -1,5 +1,12 @@
 # Changelog
 
+- Breaking: completed strict Material `SegmentedButton<T>`/`SegmentedButtonThemeData` parity. Expanded insets now
+  use `EdgeInsets`, `styleFrom` accepts any `OutlinedBorder`, segment state controllers survive updates, and the
+  source `Material`/`TextButtonTheme`/`TextButton` composition carries selected and enabled semantics. A dedicated
+  render object now equalizes intrinsic sizes, honors 48px tap targets, mirrors RTL placement, clips segment shapes,
+  and paints source dividers and mixed-state borders; focused tests cover defaults, style/theme precedence,
+  lifecycle, selection content, semantics, layout and paint.
+
 - Breaking: completed strict Material `ButtonBar`/`ButtonBarThemeData` parity. Button padding now remains
   directional through the legacy `ButtonThemeData`/`MaterialButton`/`RawMaterialButton` path; the bar uses
   Flutter's `RenderFlex`-based unconstrained probe, constrained row retry, vertical overflow and dry layout; and its

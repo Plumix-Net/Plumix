@@ -1234,7 +1234,7 @@ public sealed record ThemeData
             SegmentedButtonTheme = SegmentedButtonThemeData.Lerp(
                 a.SegmentedButtonTheme,
                 b.SegmentedButtonTheme,
-                t) ?? new SegmentedButtonThemeData(),
+                t),
             SliderTheme = SliderThemeData.Lerp(a.SliderTheme, b.SliderTheme, t),
             SnackBarTheme = SnackBarThemeData.Lerp(a.SnackBarTheme, b.SnackBarTheme, t),
             SwitchTheme = SwitchThemeData.Lerp(a.SwitchTheme, b.SwitchTheme, t),

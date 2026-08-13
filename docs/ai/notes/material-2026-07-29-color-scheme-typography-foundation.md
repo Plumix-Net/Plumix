@@ -123,6 +123,9 @@
   - `ToggleButtons` (direct `ColorScheme.primary`/`onSurface`/`surface` roles, state-resolving fill API, inherited
     theme copy/lerp/capture, source checked/TextButton composition, adjacent selected-border ownership, intrinsic and
     baseline layout, cross-axis tap targets, RTL/vertical border paint, and elliptical per-corner clipping).
+  - `SegmentedButton` (direct M3 `secondaryContainer`/`onSecondaryContainer`/`onSurface`/`outline` roles, inherited
+    theme copy/lerp/capture, retained state controllers, source `Material`/`TextButton` composition and semantics,
+    equalized intrinsic layout, tap targets, RTL placement, segment clipping, dividers, and mixed-state borders).
   - `FlexibleSpaceBar` (source state/settings split, exact M2/M3 title-theme branch, logical title geometry,
     none/pin/parallax collapse, zoom/blur/fade stretch effects, and repaint-aware background opacity).
   - `Autocomplete` (source field/options composition, exact M2/M3 canvas/focus/shadow defaults, lazy highlight
