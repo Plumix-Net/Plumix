@@ -1,5 +1,14 @@
 # Changelog
 
+- Breaking: completed strict Material `Tooltip`/`TooltipThemeData` parity. Tooltip padding and margin now use
+  directional `EdgeInsetsGeometry`, decoration accepts any `Decoration`, rich-message overlays remain interactive by
+  default, cursor/text-direction/style composition matches Flutter, local tooltip themes participate in inherited
+  theme capture, and theme copy/lerp follows the pinned source fields exactly. Core `Container` now resolves
+  directional padding/margin, tooltip presentation emits `TooltipSemanticEvent`, and the framework has reusable
+  diagnostic-property nodes for source-shaped `DebugFillProperties` output. Focused tests and the mirrored demo cover
+  plain/rich pointer policy, arbitrary shape decoration, directional insets, semantic events, diagnostics, and theme
+  copy/lerp behavior. Advanced `Plumix` and `Plumix.Material` to `0.2.0-alpha.1`.
+
 - Breaking: closed `MenuAcceleratorLabel` parity by replacing its global deepest/latest Alt dispatcher with
   per-label `CharacterActivator` entries in the nearest `ShortcutRegistry`. Accelerator callbacks now participate
   in normal focus-local `Shortcuts` precedence, entries follow Alt/dependency/submenu/disposal lifecycle, and labels

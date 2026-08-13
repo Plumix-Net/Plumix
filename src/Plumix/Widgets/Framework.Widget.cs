@@ -23,6 +23,11 @@ public abstract class Widget(Key? key = null)
     }
 
     internal abstract Element CreateElement();
+
+    public virtual void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        ArgumentNullException.ThrowIfNull(properties);
+    }
 }
 
 public abstract class StatelessWidget : Widget

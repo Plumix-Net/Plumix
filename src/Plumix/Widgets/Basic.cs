@@ -806,10 +806,10 @@ public sealed class Container : StatelessWidget
         Color? color = null,
         Decoration? decoration = null,
         Alignment? alignment = null,
-        Thickness? margin = null,
+        EdgeInsetsGeometry? margin = null,
         BoxConstraints? constraints = null,
         Matrix? transform = null,
-        Thickness? padding = null,
+        EdgeInsetsGeometry? padding = null,
         double? width = null,
         double? height = null,
         Key? key = null,
@@ -837,13 +837,13 @@ public sealed class Container : StatelessWidget
 
     public Alignment? Alignment { get; }
 
-    public Thickness? Margin { get; }
+    public EdgeInsetsGeometry? Margin { get; }
 
     public BoxConstraints? Constraints { get; }
 
     public Matrix? Transform { get; }
 
-    public Thickness? Padding { get; }
+    public EdgeInsetsGeometry? Padding { get; }
 
     public double? Width { get; }
 

@@ -22,7 +22,7 @@ class _BadgeTooltipDemoPageState extends State<BadgeTooltipDemoPage> {
         const Text('Badge + Tooltip', style: TextStyle(fontSize: 20)),
         const SizedBox(height: 14),
         const Text(
-          'Badge geometry plus overlay tooltips with hover, edge-aware placement, and custom positioning.',
+          'Badge geometry plus plain/rich tooltips with hover, directional theming, and custom positioning.',
           style: TextStyle(fontSize: 14, color: Color(0x8A000000)),
         ),
         const SizedBox(height: 14),
@@ -131,41 +131,63 @@ class _BadgeTooltipDemoPageState extends State<BadgeTooltipDemoPage> {
         const SizedBox(height: 14),
         TooltipVisibility(
           visible: _tooltipsVisible,
-          child: Row(
-            children: <Widget>[
-              Tooltip(
-                message: 'Default tooltip',
-                child: OutlinedButton(
-                  onPressed: () {},
-                  child: const Text('Default'),
+          child: Directionality(
+            textDirection: _useRtl ? TextDirection.rtl : TextDirection.ltr,
+            child: Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: <Widget>[
+                Tooltip(
+                  message: 'Default tooltip',
+                  child: OutlinedButton(
+                    onPressed: () {},
+                    child: const Text('Default'),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Tooltip(
-                message: 'Widget override tooltip',
-                preferBelow: false,
-                verticalOffset: 28,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF4527A0),
-                  borderRadius: BorderRadius.circular(8),
+                Tooltip(
+                  richMessage: const TextSpan(
+                    children: <InlineSpan>[
+                      TextSpan(
+                        text: 'Rich ',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      TextSpan(text: 'interactive tooltip'),
+                    ],
+                  ),
+                  decoration: const ShapeDecoration(
+                    shape: StadiumBorder(),
+                    color: Color(0xFF00695C),
+                  ),
+                  child: OutlinedButton(
+                    onPressed: () {},
+                    child: const Text('Rich + shape'),
+                  ),
                 ),
-                textStyle: const TextStyle(color: Colors.white, fontSize: 13),
-                waitDuration: const Duration(milliseconds: 250),
-                child: OutlinedButton(
-                  onPressed: () {},
-                  child: const Text('Above + delay'),
+                Tooltip(
+                  message: 'Widget override tooltip',
+                  preferBelow: false,
+                  verticalOffset: 28,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF4527A0),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  textStyle: const TextStyle(color: Colors.white, fontSize: 13),
+                  waitDuration: const Duration(milliseconds: 250),
+                  child: OutlinedButton(
+                    onPressed: () {},
+                    child: const Text('Above + delay'),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Tooltip(
-                message: 'Custom right tooltip',
-                positionDelegate: _positionTooltipRight,
-                child: OutlinedButton(
-                  onPressed: _noop,
-                  child: const Text('Custom right'),
+                Tooltip(
+                  message: 'Custom right tooltip',
+                  positionDelegate: _positionTooltipRight,
+                  child: OutlinedButton(
+                    onPressed: _noop,
+                    child: const Text('Custom right'),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ],
@@ -191,6 +213,7 @@ class _BadgeTooltipDemoPageState extends State<BadgeTooltipDemoPage> {
             borderRadius: BorderRadius.circular(6),
           ),
           textStyle: const TextStyle(color: Colors.white, fontSize: 12),
+          padding: const EdgeInsetsDirectional.fromSTEB(12, 4, 4, 4),
           waitDuration: const Duration(milliseconds: 150),
           exitDuration: const Duration(milliseconds: 200),
         ),

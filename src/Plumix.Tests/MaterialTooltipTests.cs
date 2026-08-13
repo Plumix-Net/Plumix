@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Media;
 using Plumix;
+using Plumix.Foundation;
 using Plumix.Material;
 using Plumix.Painting;
 using Plumix.Rendering;
@@ -14,14 +15,22 @@ namespace Plumix.Tests;
 public sealed class MaterialTooltipTests
 {
     [Fact]
-    public void Tooltip_ValidatesMutuallyExclusiveSizingAndDurations()
+    public void Tooltip_ValidatesOnlyFlutterConstructorAssertions()
     {
         Assert.Throws<ArgumentException>(() => new Tooltip(
             message: "tip",
             height: 24,
             constraints: new BoxConstraints(MinHeight: 24)));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new Tooltip(message: "tip", verticalOffset: -1));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new Tooltip(message: "tip", waitDuration: TimeSpan.FromMilliseconds(-1)));
+        Assert.Throws<ArgumentException>(() => new TooltipThemeData(
+            Height: 24,
+            Constraints: new BoxConstraints(MinHeight: 24)));
+
+        var tooltip = new Tooltip(
+            message: "tip",
+            verticalOffset: -1,
+            waitDuration: TimeSpan.FromMilliseconds(-1));
+        Assert.Equal(-1, tooltip.VerticalOffset);
+        Assert.Equal(TimeSpan.FromMilliseconds(-1), tooltip.WaitDuration);
     }
 
     [Fact]
@@ -66,6 +75,154 @@ public sealed class MaterialTooltipTests
     }
 
     [Fact]
+    public void Tooltip_PlainAndRichMessagesResolveSourcePointerDefaults()
+    {
+        using var plainHarness = new WidgetRenderHarness(
+            new Theme(
+                ThemeData.Light,
+                new Tooltip(message: "Plain", child: new SizedBox(width: 24, height: 24))));
+        plainHarness.Pump(new Size(160, 80));
+        RawTooltip plain = Assert.Single(plainHarness.FindWidgets<RawTooltip>());
+        Assert.True(plain.IgnorePointer);
+        Assert.Equal(MouseCursor.Defer, Assert.Single(plainHarness.FindWidgets<MouseRegion>()).Cursor);
+
+        using var richHarness = new WidgetRenderHarness(
+            new Theme(
+                ThemeData.Light,
+                new Tooltip(
+                    richMessage: new TextSpan(text: "Rich"),
+                    child: new SizedBox(width: 24, height: 24))));
+        richHarness.Pump(new Size(160, 80));
+        RawTooltip rich = Assert.Single(richHarness.FindWidgets<RawTooltip>());
+        Assert.False(rich.IgnorePointer);
+    }
+
+    [Fact]
+    public void TooltipThemeData_CopyLerpDiagnosticsAndInheritedCaptureMatchSource()
+    {
+        var shape = new ShapeDecoration(new StadiumBorder(), Color: Colors.Teal);
+        var source = new TooltipThemeData(
+            Height: 20,
+            Padding: EdgeInsetsGeometry.DirectionalOnly(start: 4, end: 12),
+            Margin: EdgeInsetsGeometry.All(3),
+            VerticalOffset: 6,
+            PreferBelow: false,
+            ExcludeFromSemantics: true,
+            Decoration: shape,
+            TextStyle: new TextStyle(Color: Colors.Orange, FontSize: 10),
+            TextAlign: TextAlign.Center,
+            WaitDuration: TimeSpan.FromMilliseconds(100),
+            ShowDuration: TimeSpan.FromMilliseconds(200),
+            ExitDuration: TimeSpan.FromMilliseconds(300),
+            TriggerMode: TooltipTriggerMode.Tap,
+            EnableFeedback: true);
+
+        TooltipThemeData copy = source.CopyWith(verticalOffset: 10);
+        Assert.Equal(10, copy.VerticalOffset);
+        Assert.Same(shape, copy.Decoration);
+        Assert.Null(copy.ExitDuration);
+
+        Assert.Null(TooltipThemeData.Lerp(null, null, 0.5));
+        Assert.Same(source, TooltipThemeData.Lerp(source, source, 0.5));
+        TooltipThemeData midpoint = TooltipThemeData.Lerp(
+            source,
+            new TooltipThemeData(Height: 40, VerticalOffset: 14, PreferBelow: true),
+            0.5)!;
+        Assert.Equal(30, midpoint.Height);
+        Assert.Equal(10, midpoint.VerticalOffset);
+        Assert.True(midpoint.PreferBelow);
+        Assert.Null(midpoint.WaitDuration);
+        Assert.Null(midpoint.ShowDuration);
+        Assert.Null(midpoint.ExitDuration);
+        Assert.Null(midpoint.TriggerMode);
+        Assert.Null(midpoint.EnableFeedback);
+
+        var defaultDiagnostics = new DiagnosticPropertiesBuilder();
+        new TooltipThemeData().DebugFillProperties(defaultDiagnostics);
+        Assert.DoesNotContain(
+            defaultDiagnostics.Properties,
+            node => !node.IsFiltered(DiagnosticLevel.Info));
+
+        var theme = new TooltipTheme(source, new SizedBox());
+        Assert.IsAssignableFrom<InheritedTheme>(theme);
+        var wrapped = Assert.IsType<TooltipTheme>(theme.Wrap(default, new Text("wrapped")));
+        Assert.Same(source, wrapped.Data);
+    }
+
+    [Fact]
+    public void Tooltip_UsesDirectionalInsetsAndArbitraryDecoration()
+    {
+        var decoration = new ShapeDecoration(new StadiumBorder(), Color: Colors.Teal);
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                ThemeData.Light,
+                new Directionality(
+                    TextDirection.Rtl,
+                    new Tooltip(
+                        message: "Directional",
+                        decoration: decoration,
+                        padding: EdgeInsetsGeometry.DirectionalOnly(start: 12, top: 3, end: 2, bottom: 4),
+                        margin: EdgeInsetsGeometry.DirectionalOnly(start: 7, end: 1),
+                        child: new SizedBox(width: 24, height: 24)))));
+        harness.Pump(new Size(220, 100));
+        Assert.True(harness.FindState<TooltipState>().EnsureTooltipVisible());
+        harness.Pump(new Size(220, 100));
+
+        Assert.Contains(
+            FindDescendants<RenderDecoratedBox>(harness.RenderView),
+            box => box.DecorationValue is ShapeDecoration
+            {
+                Color: var color,
+                Shape: StadiumBorder,
+            } && color == Colors.Teal);
+        Assert.Contains(
+            FindDescendants<RenderPadding>(harness.RenderView),
+            padding => padding.Padding == new Thickness(2, 3, 12, 4));
+        Assert.Contains(
+            FindDescendants<RenderPadding>(harness.RenderView),
+            padding => padding.Padding == new Thickness(1, 0, 7, 0));
+    }
+
+    [Fact]
+    public void Tooltip_ShowEmitsTooltipSemanticEventAndSourceDiagnostics()
+    {
+        SemanticsService.ResetForTests();
+        try
+        {
+            TooltipSemanticEvent? received = null;
+            SemanticsService.SemanticsEventRequested += semanticsEvent =>
+            {
+                received = semanticsEvent as TooltipSemanticEvent;
+            };
+            var tooltip = new Tooltip(message: "Semantic event", child: new SizedBox(width: 24, height: 24));
+            var diagnostics = new DiagnosticPropertiesBuilder();
+            tooltip.DebugFillProperties(diagnostics);
+            DiagnosticsNode diagnostic = Assert.Single(
+                diagnostics.Properties,
+                node => !node.IsFiltered(DiagnosticLevel.Info));
+            Assert.Equal(string.Empty, diagnostic.Name);
+            Assert.Equal("Semantic event", diagnostic.Description);
+
+            var richDiagnostics = new DiagnosticPropertiesBuilder();
+            new Tooltip(richMessage: new TextSpan(text: "Rich diagnostic"))
+                .DebugFillProperties(richDiagnostics);
+            DiagnosticsNode richDiagnostic = Assert.Single(
+                richDiagnostics.Properties,
+                node => !node.IsFiltered(DiagnosticLevel.Info));
+            Assert.Equal("Rich diagnostic", richDiagnostic.Description);
+
+            using var harness = new WidgetRenderHarness(new Theme(ThemeData.Light, tooltip));
+            harness.Pump(new Size(160, 80));
+            Assert.True(harness.FindState<TooltipState>().EnsureTooltipVisible());
+            Assert.Equal("Semantic event", Assert.IsType<TooltipSemanticEvent>(received).Message);
+        }
+        finally
+        {
+            SemanticsService.ResetForTests();
+        }
+    }
+
+    [Fact]
     public void Tooltip_EmptyMessage_ReturnsChildWithoutTriggerWrapper()
     {
         using var harness = new WidgetRenderHarness(
@@ -95,8 +252,8 @@ public sealed class MaterialTooltipTests
 
         var state = harness.FindState<TooltipState>();
         Assert.False(state.EnsureTooltipVisible());
-        var listener = FindTooltipListener(harness.RenderView);
-        Assert.Null(listener);
+        Assert.NotNull(FindTooltipListener(harness.RenderView));
+        Assert.Empty(harness.FindWidgets<RawTooltip>());
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.2));
         harness.Pump(new Size(120, 60));
 
@@ -436,12 +593,29 @@ public sealed class MaterialTooltipTests
             return states;
         }
 
+        public IReadOnlyList<T> FindWidgets<T>() where T : Widget
+        {
+            var widgets = new List<T>();
+            CollectWidgets(_rootElement, widgets);
+            return widgets;
+        }
+
         public void Dispose() => _rootElement.Unmount();
 
         private static void CollectStates<T>(Element element, List<T> states) where T : State
         {
             if (element is StatefulElement stateful && stateful.State is T state) states.Add(state);
             element.VisitChildren(child => CollectStates(child, states));
+        }
+
+        private static void CollectWidgets<T>(Element element, List<T> widgets) where T : Widget
+        {
+            if (element.Widget is T widget)
+            {
+                widgets.Add(widget);
+            }
+
+            element.VisitChildren(child => CollectWidgets(child, widgets));
         }
 
         private sealed class HarnessRootElement : Element, IRenderObjectHost

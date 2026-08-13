@@ -11,6 +11,8 @@ public abstract record SemanticsEvent(string Type, int? NodeId);
 
 public sealed record TapSemanticEvent(int? NodeId = null) : SemanticsEvent("tap", NodeId);
 
+public sealed record TooltipSemanticEvent(string Message) : SemanticsEvent("tooltip", NodeId: null);
+
 public static class SemanticsService
 {
     private static Action<SemanticsAnnouncement>? _announcementRequested;
@@ -41,6 +43,12 @@ public static class SemanticsService
     {
         ArgumentNullException.ThrowIfNull(semanticsEvent);
         _semanticsEventRequested?.Invoke(semanticsEvent);
+    }
+
+    public static void Tooltip(string message)
+    {
+        ArgumentNullException.ThrowIfNull(message);
+        SendEvent(new TooltipSemanticEvent(message));
     }
 
     public static async Task SendAnnouncement(

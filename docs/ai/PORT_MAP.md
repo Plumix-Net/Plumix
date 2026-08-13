@@ -30,7 +30,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `foundation/binding.dart` | `src/Plumix/HotReload.cs` | `src/Plumix.Tests/HotReloadTests.cs` | — |
 | `foundation/change_notifier.dart` | `src/Plumix/Foundation/Listenable.cs` | — | — |
 | `foundation/constants.dart` | `src/Plumix/Foundation/Constants.cs` | — | — |
-| `foundation/diagnostics.dart` | `src/Plumix/Foundation/Diagnostics.cs` | — | — |
+| `foundation/diagnostics.dart` | `src/Plumix/Foundation/DiagnosticProperties.cs`<br>`src/Plumix/Foundation/Diagnostics.cs` | — | — |
 | `foundation/key.dart` | `src/Plumix/Foundation/Key.cs` | `src/Plumix.Tests/KeyboardListenerTests.cs` | `dart_sample/lib/demos/general/keyboard_listener_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/KeyboardListenerDemoPage.cs` |
 | `foundation/licenses.dart` | `src/Plumix/Foundation/Licenses.cs` | — | — |
 | `foundation/platform.dart` | `src/Plumix/UI/TargetPlatform.cs` | — | — |
@@ -463,7 +463,7 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 ## Summary
 
 - Flutter files mapped: 411
-- C# files carrying a marker: 514
+- C# files carrying a marker: 515
 - C# files without a marker: 15
 - Markers not resolvable in the pinned checkout: 5
 

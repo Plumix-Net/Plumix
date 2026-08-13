@@ -17,6 +17,17 @@ module private Interop =
 
     let inline obj' o = Option.toObj o
 
+    let edgeInsets (o: Thickness option) : Nullable<EdgeInsetsGeometry> =
+        match o with
+        | Some value ->
+            Nullable(
+                EdgeInsetsGeometry.FromLTRB(
+                    value.Left,
+                    value.Top,
+                    value.Right,
+                    value.Bottom))
+        | None -> Nullable()
+
     let action (f: (unit -> unit) option) : Action =
         match f with
         | Some f -> Action(f)
@@ -153,8 +164,8 @@ type Ui private () =
         Container(
             child = obj' child,
             color = nul color,
-            padding = nul padding,
-            margin = nul margin,
+            padding = edgeInsets padding,
+            margin = edgeInsets margin,
             width = nul width,
             height = nul height,
             alignment = nul alignment,

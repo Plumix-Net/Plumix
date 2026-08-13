@@ -2,6 +2,7 @@ using System;
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Material;
+using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -32,7 +33,7 @@ internal sealed class BadgeTooltipDemoPageState : State
             [
                 new Text("Badge + Tooltip", fontSize: 20, color: Colors.Black),
                 new Text(
-                    "Badge geometry plus overlay tooltips with hover, edge-aware placement, and custom positioning.",
+                    "Badge geometry plus plain/rich tooltips with hover, directional theming, and custom positioning.",
                     fontSize: 14,
                     color: Color.Parse("#8A000000")),
                 new Row(
@@ -108,36 +109,54 @@ internal sealed class BadgeTooltipDemoPageState : State
                 new Text("Hover or long-press these controls:", fontSize: 14, color: Colors.Black),
                 new TooltipVisibility(
                     visible: _tooltipsVisible,
-                    child: new Row(
-                        spacing: 12,
-                        children:
-                        [
-                            new Tooltip(
-                                message: "Default tooltip",
-                                child: new OutlinedButton(
-                                    onPressed: () => { },
-                                    child: new Text("Default"))),
-                            new Tooltip(
-                                message: "Widget override tooltip",
-                                preferBelow: false,
-                                verticalOffset: 28,
-                                decoration: new BoxDecoration(
-                                    Color: Color.Parse("#FF4527A0"),
-                                    BorderRadius: BorderRadius.Circular(8)),
-                                textStyle: new TextStyle(Color: Colors.White, FontSize: 13),
-                                waitDuration: TimeSpan.FromMilliseconds(250),
-                                child: new OutlinedButton(
-                                    onPressed: () => { },
-                                    child: new Text("Above + delay"))),
-                            new Tooltip(
-                                message: "Custom right tooltip",
-                                positionDelegate: position => new Point(
-                                    position.Target.X + (position.TargetSize.Width / 2.0) + 8,
-                                    position.Target.Y - (position.TooltipSize.Height / 2.0)),
-                                child: new OutlinedButton(
-                                    onPressed: () => { },
-                                    child: new Text("Custom right"))),
-                        ])),
+                    child: new Directionality(
+                        _useRtl ? TextDirection.Rtl : TextDirection.Ltr,
+                        new Wrap(
+                            spacing: 12,
+                            runSpacing: 12,
+                            children:
+                            [
+                                new Tooltip(
+                                    message: "Default tooltip",
+                                    child: new OutlinedButton(
+                                        onPressed: () => { },
+                                        child: new Text("Default"))),
+                                new Tooltip(
+                                    richMessage: new TextSpan(
+                                        children:
+                                        [
+                                            new TextSpan(
+                                                text: "Rich ",
+                                                style: new TextStyle(FontWeight: FontWeight.Bold)),
+                                            new TextSpan(text: "interactive tooltip"),
+                                        ]),
+                                    decoration: new ShapeDecoration(
+                                        Shape: new StadiumBorder(),
+                                        Color: Color.Parse("#FF00695C")),
+                                    child: new OutlinedButton(
+                                        onPressed: () => { },
+                                        child: new Text("Rich + shape"))),
+                                new Tooltip(
+                                    message: "Widget override tooltip",
+                                    preferBelow: false,
+                                    verticalOffset: 28,
+                                    decoration: new BoxDecoration(
+                                        Color: Color.Parse("#FF4527A0"),
+                                        BorderRadius: BorderRadius.Circular(8)),
+                                    textStyle: new TextStyle(Color: Colors.White, FontSize: 13),
+                                    waitDuration: TimeSpan.FromMilliseconds(250),
+                                    child: new OutlinedButton(
+                                        onPressed: () => { },
+                                        child: new Text("Above + delay"))),
+                                new Tooltip(
+                                    message: "Custom right tooltip",
+                                    positionDelegate: position => new Point(
+                                        position.Target.X + (position.TargetSize.Width / 2.0) + 8,
+                                        position.Target.Y - (position.TooltipSize.Height / 2.0)),
+                                    child: new OutlinedButton(
+                                        onPressed: () => { },
+                                        child: new Text("Custom right"))),
+                            ]))),
             ]);
 
         if (!_useThemeOverrides)
@@ -159,6 +178,7 @@ internal sealed class BadgeTooltipDemoPageState : State
                         Color: Color.Parse("#FF00695C"),
                         BorderRadius: BorderRadius.Circular(6)),
                     TextStyle: new TextStyle(Color: Colors.White, FontSize: 12),
+                    Padding: EdgeInsetsGeometry.DirectionalOnly(start: 12, top: 4, end: 4, bottom: 4),
                     WaitDuration: TimeSpan.FromMilliseconds(150),
                     ExitDuration: TimeSpan.FromMilliseconds(200)),
                 child: content));

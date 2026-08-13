@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Rendering;
+using Plumix.UI;
 using Plumix.Widgets;
 using Xunit;
 
@@ -121,6 +122,28 @@ public sealed class ContainerTests
         Assert.Equal(Matrix.CreateTranslation(12, 0), transform.Transform);
         var marginPadding = Assert.IsType<RenderPadding>(transform.Child);
         Assert.Equal(new Thickness(5), marginPadding.Padding);
+    }
+
+    [Fact]
+    public void Container_ResolvesDirectionalPaddingAndMarginFromDirectionality()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Directionality(
+                TextDirection.Rtl,
+                new Container(
+                    padding: EdgeInsetsGeometry.DirectionalOnly(start: 9, top: 2, end: 3, bottom: 4),
+                    margin: EdgeInsetsGeometry.DirectionalOnly(start: 7, end: 1),
+                    child: new SizedBox(width: 8, height: 6))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var margin = RequireRenderObject<RenderPadding>(root.ChildElement);
+        Assert.Equal(new Thickness(1, 0, 7, 0), margin.Padding);
+        var padding = Assert.IsType<RenderPadding>(margin.Child);
+        Assert.Equal(new Thickness(3, 2, 9, 4), padding.Padding);
     }
 
     private static T RequireRenderObject<T>(Element? element) where T : RenderObject

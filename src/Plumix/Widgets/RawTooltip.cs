@@ -362,6 +362,7 @@ public sealed class RawTooltipState : State
         {
             _overlayController.Show();
             RawTooltip.AddOpened(this);
+            SemanticsService.Tooltip(CurrentWidget.SemanticsTooltip ?? string.Empty);
         }
 
         _animationStatus = status;

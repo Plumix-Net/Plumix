@@ -232,19 +232,14 @@ public sealed partial record TooltipThemeData
         return new TooltipThemeData(
             Height: MaterialThemeLerp.Double(a?.Height, b?.Height, t),
             Constraints: MaterialThemeLerp.BoxConstraints(a?.Constraints, b?.Constraints, t),
-            Padding: MaterialThemeLerp.Thickness(a?.Padding, b?.Padding, t),
-            Margin: MaterialThemeLerp.Thickness(a?.Margin, b?.Margin, t),
+            Padding: MaterialThemeLerp.EdgeInsets(a?.Padding, b?.Padding, t),
+            Margin: MaterialThemeLerp.EdgeInsets(a?.Margin, b?.Margin, t),
             VerticalOffset: MaterialThemeLerp.Double(a?.VerticalOffset, b?.VerticalOffset, t),
             PreferBelow: t < 0.5 ? a?.PreferBelow : b?.PreferBelow,
             ExcludeFromSemantics: t < 0.5 ? a?.ExcludeFromSemantics : b?.ExcludeFromSemantics,
-            Decoration: MaterialThemeLerp.Decoration(a?.Decoration, b?.Decoration, t),
+            Decoration: MaterialThemeLerp.AnyDecoration(a?.Decoration, b?.Decoration, t),
             TextStyle: MaterialThemeLerp.TextStyle(a?.TextStyle, b?.TextStyle, t),
-            TextAlign: t < 0.5 ? a?.TextAlign : b?.TextAlign,
-            WaitDuration: t < 0.5 ? a?.WaitDuration : b?.WaitDuration,
-            ShowDuration: t < 0.5 ? a?.ShowDuration : b?.ShowDuration,
-            ExitDuration: t < 0.5 ? a?.ExitDuration : b?.ExitDuration,
-            TriggerMode: t < 0.5 ? a?.TriggerMode : b?.TriggerMode,
-            EnableFeedback: t < 0.5 ? a?.EnableFeedback : b?.EnableFeedback);
+            TextAlign: t < 0.5 ? a?.TextAlign : b?.TextAlign);
     }
 }
 

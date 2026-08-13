@@ -18,12 +18,12 @@ public sealed class Tooltip : StatefulWidget
         Widget? child = null,
         double? height = null,
         BoxConstraints? constraints = null,
-        Thickness? padding = null,
-        Thickness? margin = null,
+        EdgeInsetsGeometry? padding = null,
+        EdgeInsetsGeometry? margin = null,
         double? verticalOffset = null,
         bool? preferBelow = null,
         bool? excludeFromSemantics = null,
-        BoxDecoration? decoration = null,
+        Decoration? decoration = null,
         TextStyle? textStyle = null,
         TextAlign? textAlign = null,
         TimeSpan? waitDuration = null,
@@ -49,12 +49,6 @@ public sealed class Tooltip : StatefulWidget
                 "Either `message` or `richMessage` must be specified, but not both.",
                 nameof(richMessage));
         }
-
-        ValidateFiniteNonNegative(height, nameof(height));
-        ValidateFiniteNonNegative(verticalOffset, nameof(verticalOffset));
-        ValidateDuration(waitDuration, nameof(waitDuration));
-        ValidateDuration(showDuration, nameof(showDuration));
-        ValidateDuration(exitDuration, nameof(exitDuration));
 
         Message = message;
         RichMessage = richMessage;
@@ -97,9 +91,9 @@ public sealed class Tooltip : StatefulWidget
 
     public BoxConstraints? Constraints { get; }
 
-    public Thickness? Padding { get; }
+    public EdgeInsetsGeometry? Padding { get; }
 
-    public Thickness? Margin { get; }
+    public EdgeInsetsGeometry? Margin { get; }
 
     public double? VerticalOffset { get; }
 
@@ -107,7 +101,7 @@ public sealed class Tooltip : StatefulWidget
 
     public bool? ExcludeFromSemantics { get; }
 
-    public BoxDecoration? Decoration { get; }
+    public Decoration? Decoration { get; }
 
     public TextStyle? TextStyle { get; }
 
@@ -137,24 +131,28 @@ public sealed class Tooltip : StatefulWidget
 
     public override State CreateState() => new TooltipState();
 
-    private static void ValidateFiniteNonNegative(double? value, string parameterName)
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
-        if (value.HasValue && (!double.IsFinite(value.Value) || value.Value < 0))
-        {
-            throw new ArgumentOutOfRangeException(
-                parameterName,
-                "Tooltip values must be finite and non-negative.");
-        }
-    }
-
-    private static void ValidateDuration(TimeSpan? value, string parameterName)
-    {
-        if (value.HasValue && value.Value < TimeSpan.Zero)
-        {
-            throw new ArgumentOutOfRangeException(
-                parameterName,
-                "Tooltip durations must be non-negative.");
-        }
+        base.DebugFillProperties(properties);
+        properties.Add(new StringProperty("message", Message, showName: Message is null));
+        properties.Add(new StringProperty(
+            "richMessage",
+            RichMessage?.ToPlainText(),
+            showName: RichMessage is null));
+        properties.Add(new DoubleProperty("height", Height));
+        properties.Add(new DiagnosticsProperty<BoxConstraints?>("constraints", Constraints));
+        properties.Add(new DiagnosticsProperty<EdgeInsetsGeometry?>("padding", Padding));
+        properties.Add(new DiagnosticsProperty<EdgeInsetsGeometry?>("margin", Margin));
+        properties.Add(new DoubleProperty("vertical offset", VerticalOffset));
+        properties.Add(new FlagProperty("position", PreferBelow, "below", "above", showName: true));
+        properties.Add(new FlagProperty("semantics", ExcludeFromSemantics, "excluded", showName: true));
+        properties.Add(new DiagnosticsProperty<TimeSpan?>("wait duration", WaitDuration));
+        properties.Add(new DiagnosticsProperty<TimeSpan?>("show duration", ShowDuration));
+        properties.Add(new DiagnosticsProperty<TimeSpan?>("exit duration", ExitDuration));
+        properties.Add(new DiagnosticsProperty<TooltipTriggerMode?>("triggerMode", TriggerMode));
+        properties.Add(new FlagProperty("enableFeedback", EnableFeedback, "true", showName: true));
+        properties.Add(new DiagnosticsProperty<TextAlign?>("textAlign", TextAlign));
+        properties.Add(new DiagnosticsProperty<TooltipPositionDelegate?>("positionDelegate", PositionDelegate));
     }
 }
 
@@ -188,13 +186,9 @@ public sealed class TooltipState : State
             return CurrentWidget.Child ?? new SizedBox();
         }
 
-        Widget effectiveChild = CurrentWidget.Child ?? new SizedBox();
-        if (CurrentWidget.MouseCursor is not null)
-        {
-            effectiveChild = new MouseRegion(
-                cursor: CurrentWidget.MouseCursor,
-                child: effectiveChild);
-        }
+        Widget effectiveChild = new MouseRegion(
+            cursor: CurrentWidget.MouseCursor ?? MouseCursor.Defer,
+            child: CurrentWidget.Child ?? new SizedBox());
 
         bool excludeFromSemantics = CurrentWidget.ExcludeFromSemantics
                                     ?? _tooltipTheme.ExcludeFromSemantics
@@ -228,7 +222,7 @@ public sealed class TooltipState : State
                             ?? true,
             onTriggered: CurrentWidget.OnTriggered,
             positionDelegate: ResolvePosition,
-            ignorePointer: CurrentWidget.IgnorePointer ?? true,
+            ignorePointer: CurrentWidget.IgnorePointer ?? CurrentWidget.Message is not null,
             child: effectiveChild);
     }
 
@@ -243,7 +237,9 @@ public sealed class TooltipState : State
             or TargetPlatform.Linux
             or TargetPlatform.Windows;
         double defaultHeight = desktop ? 24.0 : 32.0;
-        var defaultPadding = desktop ? new Thickness(8, 4) : new Thickness(16, 4);
+        EdgeInsetsGeometry defaultPadding = desktop
+            ? EdgeInsetsGeometry.Symmetric(horizontal: 8, vertical: 4)
+            : EdgeInsetsGeometry.Symmetric(horizontal: 16, vertical: 4);
         Color foreground = _theme.Brightness == Brightness.Dark ? Colors.Black : Colors.White;
         Color background = _theme.Brightness == Brightness.Dark
             ? Color.FromArgb(0xE6, 0xFF, 0xFF, 0xFF)
@@ -265,25 +261,25 @@ public sealed class TooltipState : State
         TextAlign textAlign = CurrentWidget.TextAlign
                               ?? _tooltipTheme.TextAlign
                               ?? Plumix.UI.TextAlign.Start;
-        BoxDecoration decoration = CurrentWidget.Decoration
-                                   ?? _tooltipTheme.Decoration
-                                   ?? new BoxDecoration(
-                                       Color: background,
-                                       BorderRadius: BorderRadius.Circular(4));
+        Decoration decoration = CurrentWidget.Decoration
+                                ?? _tooltipTheme.Decoration
+                                ?? new BoxDecoration(
+                                    Color: background,
+                                    BorderRadius: BorderRadius.Circular(4));
 
         Widget bubble = new Center(
             widthFactor: 1,
             heightFactor: 1,
             child: Text.Rich(
                 richMessage,
-                textAlign: textAlign,
-                textDirection: TextDirection.Ltr));
+                style: style,
+                textAlign: textAlign));
         bubble = new Container(
             decoration: decoration,
             padding: CurrentWidget.Padding ?? _tooltipTheme.Padding ?? defaultPadding,
-            margin: CurrentWidget.Margin ?? _tooltipTheme.Margin ?? new Thickness(),
+            margin: CurrentWidget.Margin ?? _tooltipTheme.Margin ?? EdgeInsetsGeometry.Zero,
             child: bubble);
-        bubble = new DefaultTextStyle(style, bubble);
+        bubble = new DefaultTextStyle(style, bubble, textAlign: textAlign);
         return new ConstrainedBox(constraints, bubble);
     }
 
