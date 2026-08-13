@@ -36,6 +36,7 @@ public sealed class MouseRegion : StatefulWidget
         MouseCursor? cursor = null,
         Action<PointerEnterEvent>? onEnter = null,
         Action<PointerExitEvent>? onExit = null,
+        Action<PointerHoverEvent>? onHover = null,
         bool opaque = true,
         Key? key = null) : base(key)
     {
@@ -43,6 +44,7 @@ public sealed class MouseRegion : StatefulWidget
         Cursor = cursor ?? MouseCursor.Defer;
         OnEnter = onEnter;
         OnExit = onExit;
+        OnHover = onHover;
         Opaque = opaque;
     }
 
@@ -53,6 +55,14 @@ public sealed class MouseRegion : StatefulWidget
     public Action<PointerEnterEvent>? OnEnter { get; }
 
     public Action<PointerExitEvent>? OnExit { get; }
+
+    /// <summary>
+    /// Triggered when a mouse pointer moves while inside this region, mirroring Flutter's
+    /// `MouseRegion.onHover`. Like Flutter, this is dispatched from ordinary pointer routing rather
+    /// than by the enter/exit tracker, so the hover event that first enters the region fires both
+    /// <see cref="OnEnter"/> and this callback.
+    /// </summary>
+    public Action<PointerHoverEvent>? OnHover { get; }
 
     /// <summary>Whether the region blocks pointers behind it from being detected, as in Flutter.</summary>
     public bool Opaque { get; }
@@ -83,6 +93,7 @@ public sealed class MouseRegion : StatefulWidget
             return new Listener(
                 onPointerEnter: HandleEnter,
                 onPointerExit: HandleExit,
+                onPointerHover: HandleHover,
                 behavior: CurrentWidget.Opaque ? HitTestBehavior.Opaque : HitTestBehavior.DeferToChild,
                 child: CurrentWidget.Child);
         }
@@ -101,6 +112,11 @@ public sealed class MouseRegion : StatefulWidget
             }
 
             CurrentWidget.OnEnter?.Invoke(@event);
+        }
+
+        private void HandleHover(PointerHoverEvent @event)
+        {
+            CurrentWidget.OnHover?.Invoke(@event);
         }
 
         private void HandleExit(PointerExitEvent @event)

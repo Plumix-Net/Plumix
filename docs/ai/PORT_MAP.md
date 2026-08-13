@@ -370,6 +370,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `widgets/page_view.dart` | `src/Plumix/Widgets/PageView.cs` | — | — |
 | `widgets/pinned_header_sliver.dart` | `src/Plumix/Widgets/SliverDecoratedPinned.cs` | — | — |
 | `widgets/placeholder.dart` | `src/Plumix/Widgets/Placeholder.cs` | — | — |
+| `widgets/platform_menu_bar.dart` | `src/Plumix/Widgets/PlatformMenuBar.cs` | — | — |
 | `widgets/pop_scope.dart` | `src/Plumix/Widgets/PopScope.cs` | `src/Plumix.Tests/PopScopeTests.cs` | — |
 | `widgets/preferred_size.dart` | `src/Plumix/Widgets/PreferredSize.cs` | — | — |
 | `widgets/radio_group.dart` | `src/Plumix/Widgets/RadioGroup.cs` | `src/Plumix.Tests/RadioGroupRawRadioTests.cs` | — |
@@ -461,8 +462,8 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 
 ## Summary
 
-- Flutter files mapped: 410
-- C# files carrying a marker: 513
+- Flutter files mapped: 411
+- C# files carrying a marker: 514
 - C# files without a marker: 15
 - Markers not resolvable in the pinned checkout: 5
 

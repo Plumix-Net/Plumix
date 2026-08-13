@@ -203,7 +203,7 @@ public sealed class TextButton : StatelessWidget
         Size? minimumSize = null,
         Size? fixedSize = null,
         Size? maximumSize = null,
-        Alignment? alignment = null,
+        AlignmentGeometry? alignment = null,
         IconAlignment? iconAlignment = null,
         MaterialTapTargetSize? tapTargetSize = null,
         TextStyle? textStyle = null)
@@ -617,7 +617,7 @@ public sealed class ElevatedButton : StatelessWidget
         VisualDensity? visualDensity = null,
         TimeSpan? animationDuration = null,
         bool? enableFeedback = null,
-        Alignment? alignment = null,
+        AlignmentGeometry? alignment = null,
         IconAlignment? iconAlignment = null,
         MaterialTapTargetSize? tapTargetSize = null,
         TextStyle? textStyle = null)
@@ -1140,7 +1140,7 @@ public sealed class FilledButton : StatelessWidget
         Size? minimumSize = null,
         Size? fixedSize = null,
         Size? maximumSize = null,
-        Alignment? alignment = null,
+        AlignmentGeometry? alignment = null,
         IconAlignment? iconAlignment = null,
         MaterialTapTargetSize? tapTargetSize = null,
         TextStyle? textStyle = null,
@@ -1606,7 +1606,7 @@ public sealed class OutlinedButton : StatelessWidget
         VisualDensity? visualDensity = null,
         TimeSpan? animationDuration = null,
         bool? enableFeedback = null,
-        Alignment? alignment = null,
+        AlignmentGeometry? alignment = null,
         IconAlignment? iconAlignment = null,
         MaterialTapTargetSize? tapTargetSize = null,
         TextStyle? textStyle = null)
@@ -2578,7 +2578,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
             var fixedSize = style.ResolveFixedSize(baseStates);
             ValidateFixedSize(fixedSize);
             var effectiveConstraints = CreateEffectiveConstraints(minimumSize, maximumSize, fixedSize);
-            var alignment = style.Alignment ?? Alignment.Center;
+            Alignment alignment = style.Alignment?.Resolve(Directionality.Of(context)) ?? Alignment.Center;
             var tapTargetSize = style.ResolveTapTargetSize() ?? MaterialTapTargetSize.Padded;
             var resolvedTextStyle = style.ResolveTextStyle(baseStates);
             var baseTextStyle = theme.TextTheme.LabelLarge with

@@ -172,7 +172,7 @@ public sealed record ButtonStyle(
     MaterialStateProperty<Size?>? MinimumSize = null,
     MaterialStateProperty<Size?>? FixedSize = null,
     MaterialStateProperty<Size?>? MaximumSize = null,
-    Alignment? Alignment = null,
+    AlignmentGeometry? Alignment = null,
     IconAlignment? IconAlignment = null,
     MaterialTapTargetSize? TapTargetSize = null,
     MaterialStateProperty<TextStyle?>? TextStyle = null,
@@ -212,7 +212,7 @@ public sealed record ButtonStyle(
             MinimumSize: LerpSizeProperty(a?.MinimumSize, b?.MinimumSize, clampedT),
             FixedSize: LerpSizeProperty(a?.FixedSize, b?.FixedSize, clampedT),
             MaximumSize: LerpSizeProperty(a?.MaximumSize, b?.MaximumSize, clampedT),
-            Alignment: LerpAlignment(a?.Alignment, b?.Alignment, clampedT),
+            Alignment: AlignmentGeometry.Lerp(a?.Alignment, b?.Alignment, clampedT),
             IconAlignment: clampedT < 0.5 ? a?.IconAlignment : b?.IconAlignment,
             TapTargetSize: clampedT < 0.5 ? a?.TapTargetSize : b?.TapTargetSize,
             TextStyle: LerpTextStyleProperty(a?.TextStyle, b?.TextStyle, clampedT),
@@ -485,20 +485,6 @@ public sealed record ButtonStyle(
                 a?.Resolve(states),
                 b?.Resolve(states),
                 t));
-    }
-
-    private static Alignment? LerpAlignment(Alignment? a, Alignment? b, double t)
-    {
-        if (!a.HasValue && !b.HasValue)
-        {
-            return null;
-        }
-
-        Alignment from = a ?? default;
-        Alignment to = b ?? default;
-        return new Alignment(
-            from.X + ((to.X - from.X) * t),
-            from.Y + ((to.Y - from.Y) * t));
     }
 
     private static BorderSide TransparentSide(BorderSide source)

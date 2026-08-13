@@ -129,7 +129,7 @@ public sealed class SegmentedButton<T> : StatefulWidget
         MaterialTapTargetSize? tapTargetSize = null,
         TimeSpan? animationDuration = null,
         bool? enableFeedback = null,
-        Alignment? alignment = null)
+        AlignmentGeometry? alignment = null)
     {
         return new ButtonStyle(
             ForegroundColor: BuildStateColor(foregroundColor, disabledForegroundColor, selectedForegroundColor),

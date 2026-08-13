@@ -806,7 +806,197 @@ internal static class MenuStyleDefaults
         VisualDensity: theme.VisualDensity);
 }
 
-/// <summary>Flutter's `_MenuItemLabel`: the leading/label/trailing/submenu row of a menu button.</summary>
+/// <summary>Flutter's `_LocalizedShortcutLabeler`: renders a menu item's shortcut as label text.</summary>
+internal sealed class LocalizedShortcutLabeler
+{
+    /// <summary>Flutter's `_shortcutGraphicEquivalents`, keyed by normalized Plumix key names.</summary>
+    private static readonly IReadOnlyDictionary<string, string> GraphicEquivalents =
+        new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["Left"] = "←",
+            ["Right"] = "→",
+            ["Up"] = "↑",
+            ["Down"] = "↓",
+            ["Enter"] = "↵",
+        };
+
+    private static LocalizedShortcutLabeler? _instance;
+
+    private readonly Dictionary<MaterialLocalizations, Dictionary<string, string>> _cachedShortcutKeys = [];
+
+    private LocalizedShortcutLabeler()
+    {
+    }
+
+    public static LocalizedShortcutLabeler Instance => _instance ??= new LocalizedShortcutLabeler();
+
+    /// <summary>Flutter's `_usesSymbolicModifiers`: Apple platforms use ⌃⌥⇧⌘ joined by a space.</summary>
+    internal static bool UsesSymbolicModifiers(TargetPlatform platform) =>
+        platform is TargetPlatform.IOS or TargetPlatform.MacOS;
+
+    public string GetShortcutLabel(
+        IMenuSerializableShortcut shortcut,
+        MaterialLocalizations localizations,
+        TargetPlatform platform)
+    {
+        ArgumentNullException.ThrowIfNull(shortcut);
+        ShortcutSerialization serialized = shortcut.SerializeForMenu();
+        bool symbolic = UsesSymbolicModifiers(platform);
+        string keySeparator = symbolic ? " " : "+";
+        var parts = new List<string>();
+
+        if (serialized.Trigger is not null)
+        {
+            AddModifiers(parts, serialized, localizations, platform, symbolic, includeShift: true);
+            string trigger = serialized.Trigger;
+            string? shortcutTrigger = GraphicEquivalents.GetValueOrDefault(trigger)
+                                      ?? GetLocalizedName(trigger, localizations)
+                                      ?? (trigger.Length == 1 ? trigger.ToUpperInvariant() : null)
+                                      ?? trigger;
+            if (shortcutTrigger.Length > 0)
+            {
+                parts.Add(shortcutTrigger);
+            }
+
+            return string.Join(keySeparator, parts);
+        }
+
+        if (serialized.Character is not null)
+        {
+            // A character encodes its own shift state, so shift is never emitted here.
+            AddModifiers(parts, serialized, localizations, platform, symbolic, includeShift: false);
+            parts.Add(serialized.Character);
+            return string.Join(keySeparator, parts);
+        }
+
+        throw new NotSupportedException(
+            "Shortcut labels for shortcut activators that do not implement IMenuSerializableShortcut "
+            + "(that is, activators other than SingleActivator or CharacterActivator) are not supported.");
+    }
+
+    private static void AddModifiers(
+        List<string> parts,
+        ShortcutSerialization serialized,
+        MaterialLocalizations localizations,
+        TargetPlatform platform,
+        bool symbolic,
+        bool includeShift)
+    {
+        if (symbolic)
+        {
+            // Apple ordering: control, alt, shift, meta — ⌘ always last.
+            AddModifier(parts, serialized.Control, "Control", localizations, platform);
+            AddModifier(parts, serialized.Alt, "Alt", localizations, platform);
+            if (includeShift)
+            {
+                AddModifier(parts, serialized.Shift, "Shift", localizations, platform);
+            }
+
+            AddModifier(parts, serialized.Meta, "Meta", localizations, platform);
+            return;
+        }
+
+        // Non-Apple ordering, matching Flutter's LogicalKeySet order.
+        AddModifier(parts, serialized.Alt, "Alt", localizations, platform);
+        AddModifier(parts, serialized.Control, "Control", localizations, platform);
+        AddModifier(parts, serialized.Meta, "Meta", localizations, platform);
+        if (includeShift)
+        {
+            AddModifier(parts, serialized.Shift, "Shift", localizations, platform);
+        }
+    }
+
+    private static void AddModifier(
+        List<string> parts,
+        bool? pressed,
+        string modifier,
+        MaterialLocalizations localizations,
+        TargetPlatform platform)
+    {
+        if (pressed == true)
+        {
+            parts.Add(GetModifierLabel(modifier, localizations, platform));
+        }
+    }
+
+    /// <summary>Flutter's `_getModifierLabel`.</summary>
+    internal static string GetModifierLabel(
+        string modifier,
+        MaterialLocalizations localizations,
+        TargetPlatform platform)
+    {
+        bool apple = UsesSymbolicModifiers(platform);
+        return modifier switch
+        {
+            "Meta" => apple
+                ? "⌘"
+                : platform == TargetPlatform.Windows
+                    ? localizations.KeyboardKeyMetaWindows
+                    : localizations.KeyboardKeyMeta,
+            "Alt" => apple ? "⌥" : localizations.KeyboardKeyAlt,
+            "Control" => apple ? "⌃" : localizations.KeyboardKeyControl,
+            "Shift" => apple ? "⇧" : localizations.KeyboardKeyShift,
+            _ => throw new ArgumentException($"Keyboard key {modifier} is not a modifier.", nameof(modifier))
+        };
+    }
+
+    /// <summary>Flutter's `_getLocalizedName`; returns null for keys without a localized name.</summary>
+    private string? GetLocalizedName(string key, MaterialLocalizations localizations)
+    {
+        if (!_cachedShortcutKeys.TryGetValue(localizations, out Dictionary<string, string>? names))
+        {
+            names = new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["AltGraph"] = localizations.KeyboardKeyAltGraph,
+                ["Backspace"] = localizations.KeyboardKeyBackspace,
+                ["CapsLock"] = localizations.KeyboardKeyCapsLock,
+                ["ChannelDown"] = localizations.KeyboardKeyChannelDown,
+                ["ChannelUp"] = localizations.KeyboardKeyChannelUp,
+                ["Delete"] = localizations.KeyboardKeyDelete,
+                ["Eject"] = localizations.KeyboardKeyEject,
+                ["End"] = localizations.KeyboardKeyEnd,
+                ["Escape"] = localizations.KeyboardKeyEscape,
+                ["Fn"] = localizations.KeyboardKeyFn,
+                ["Home"] = localizations.KeyboardKeyHome,
+                ["Insert"] = localizations.KeyboardKeyInsert,
+                ["NumLock"] = localizations.KeyboardKeyNumLock,
+                ["Numpad1"] = localizations.KeyboardKeyNumpad1,
+                ["Numpad2"] = localizations.KeyboardKeyNumpad2,
+                ["Numpad3"] = localizations.KeyboardKeyNumpad3,
+                ["Numpad4"] = localizations.KeyboardKeyNumpad4,
+                ["Numpad5"] = localizations.KeyboardKeyNumpad5,
+                ["Numpad6"] = localizations.KeyboardKeyNumpad6,
+                ["Numpad7"] = localizations.KeyboardKeyNumpad7,
+                ["Numpad8"] = localizations.KeyboardKeyNumpad8,
+                ["Numpad9"] = localizations.KeyboardKeyNumpad9,
+                ["Numpad0"] = localizations.KeyboardKeyNumpad0,
+                ["NumpadAdd"] = localizations.KeyboardKeyNumpadAdd,
+                ["NumpadComma"] = localizations.KeyboardKeyNumpadComma,
+                ["NumpadDecimal"] = localizations.KeyboardKeyNumpadDecimal,
+                ["NumpadDivide"] = localizations.KeyboardKeyNumpadDivide,
+                ["NumpadEnter"] = localizations.KeyboardKeyNumpadEnter,
+                ["NumpadEqual"] = localizations.KeyboardKeyNumpadEqual,
+                ["NumpadMultiply"] = localizations.KeyboardKeyNumpadMultiply,
+                ["NumpadParenLeft"] = localizations.KeyboardKeyNumpadParenLeft,
+                ["NumpadParenRight"] = localizations.KeyboardKeyNumpadParenRight,
+                ["NumpadSubtract"] = localizations.KeyboardKeyNumpadSubtract,
+                ["PageDown"] = localizations.KeyboardKeyPageDown,
+                ["PageUp"] = localizations.KeyboardKeyPageUp,
+                ["Power"] = localizations.KeyboardKeyPower,
+                ["PowerOff"] = localizations.KeyboardKeyPowerOff,
+                ["PrintScreen"] = localizations.KeyboardKeyPrintScreen,
+                ["ScrollLock"] = localizations.KeyboardKeyScrollLock,
+                ["Select"] = localizations.KeyboardKeySelect,
+                ["Space"] = localizations.KeyboardKeySpace,
+            };
+            _cachedShortcutKeys[localizations] = names;
+        }
+
+        return names.GetValueOrDefault(key);
+    }
+}
+
+/// <summary>Flutter's `_MenuItemLabel`: the leading/label/shortcut/submenu row of a menu button.</summary>
 internal sealed class MenuItemLabel : StatelessWidget
 {
     public MenuItemLabel(
@@ -814,6 +1004,7 @@ internal sealed class MenuItemLabel : StatelessWidget
         bool showDecoration = true,
         Widget? leadingIcon = null,
         Widget? trailingIcon = null,
+        IMenuSerializableShortcut? shortcut = null,
         Widget? submenuIcon = null,
         string? semanticsLabel = null,
         Axis overflowAxis = Axis.Vertical,
@@ -824,6 +1015,7 @@ internal sealed class MenuItemLabel : StatelessWidget
         ShowDecoration = showDecoration;
         LeadingIcon = leadingIcon;
         TrailingIcon = trailingIcon;
+        Shortcut = shortcut;
         SubmenuIcon = submenuIcon;
         SemanticsLabel = semanticsLabel;
         OverflowAxis = overflowAxis;
@@ -834,6 +1026,7 @@ internal sealed class MenuItemLabel : StatelessWidget
     public bool ShowDecoration { get; }
     public Widget? LeadingIcon { get; }
     public Widget? TrailingIcon { get; }
+    public IMenuSerializableShortcut? Shortcut { get; }
     public Widget? SubmenuIcon { get; }
     public string? SemanticsLabel { get; }
     public Axis OverflowAxis { get; }
@@ -855,6 +1048,16 @@ internal sealed class MenuItemLabel : StatelessWidget
         if (TrailingIcon is not null)
         {
             children.Add(new Padding(leadingPadding, TrailingIcon));
+        }
+
+        if (ShowDecoration && Shortcut is not null)
+        {
+            children.Add(new Padding(
+                leadingPadding,
+                new Text(LocalizedShortcutLabeler.Instance.GetShortcutLabel(
+                    Shortcut,
+                    MaterialLocalizations.Of(context),
+                    Theme.Of(context).Platform))));
         }
 
         if (ShowDecoration && HasSubmenu && SubmenuIcon is not null)
@@ -957,7 +1160,7 @@ internal static class MenuButtonDefaults
             TapTargetSize: theme.MaterialTapTargetSize,
             TextStyle: MaterialStateProperty<TextStyle?>.All(theme.TextTheme.LabelLarge),
             VisualDensity: theme.VisualDensity,
-            Alignment: Plumix.Rendering.Alignment.CenterLeft,
+            Alignment: AlignmentDirectional.CenterStart,
             AnimationDuration: MenuConstants.ThemeChangeDuration,
             EnableFeedback: true);
     }
@@ -996,6 +1199,7 @@ public sealed class MenuItemButton : StatefulWidget
         Action<bool>? onFocusChange = null,
         FocusNode? focusNode = null,
         bool autofocus = false,
+        IMenuSerializableShortcut? shortcut = null,
         string? semanticsLabel = null,
         ButtonStyle? style = null,
         MaterialStatesController? statesController = null,
@@ -1013,6 +1217,7 @@ public sealed class MenuItemButton : StatefulWidget
         OnFocusChange = onFocusChange;
         FocusNode = focusNode;
         Autofocus = autofocus;
+        Shortcut = shortcut;
         SemanticsLabel = semanticsLabel;
         Style = style;
         StatesController = statesController;
@@ -1030,6 +1235,13 @@ public sealed class MenuItemButton : StatefulWidget
     public Action<bool>? OnFocusChange { get; }
     public FocusNode? FocusNode { get; }
     public bool Autofocus { get; }
+
+    /// <summary>
+    /// The shortcut label shown at the end of the item. As in Flutter, this is display-only: the
+    /// activator is never registered, so the owner must handle the key binding itself.
+    /// </summary>
+    public IMenuSerializableShortcut? Shortcut { get; }
+
     public string? SemanticsLabel { get; }
     public ButtonStyle? Style { get; }
     public MaterialStatesController? StatesController { get; }
@@ -1053,6 +1265,7 @@ public sealed class MenuItemButtonState : State
 {
     private readonly FocusNode _internalFocusNode = new();
     private MenuAnchorState? _anchor;
+    private bool _isHovered;
 
     private MenuItemButton Current => (MenuItemButton)StateWidget;
 
@@ -1097,6 +1310,7 @@ public sealed class MenuItemButtonState : State
                 hasSubmenu: false,
                 leadingIcon: Current.LeadingIcon,
                 trailingIcon: Current.TrailingIcon,
+                shortcut: Current.Shortcut,
                 semanticsLabel: Current.SemanticsLabel,
                 overflowAxis: _anchor?.Orientation ?? Current.OverflowAxis,
                 child: Current.Child),
@@ -1111,8 +1325,10 @@ public sealed class MenuItemButtonState : State
 
         if (Current.OnHover is not null || Current.RequestFocusOnHover)
         {
+            // Flutter deliberately uses onHover rather than onEnter here: onEnter also fires when a
+            // button scrolls under a stationary pointer, which would steal focus during scrolling.
             result = new MouseRegion(
-                onEnter: _ => HandlePointerEnter(),
+                onHover: _ => HandlePointerHover(),
                 onExit: _ => HandlePointerExit(),
                 child: result);
         }
@@ -1138,17 +1354,41 @@ public sealed class MenuItemButtonState : State
         Scheduler.AddPostFrameCallback(_ => Current.OnPressed?.Invoke());
     }
 
-    private void HandlePointerEnter()
+    private void HandlePointerHover()
     {
-        Current.OnHover?.Invoke(true);
-        if (Current.RequestFocusOnHover && Current.Enabled)
+        if (_isHovered)
         {
-            ButtonFocusNode.RequestFocus();
+            return;
         }
+
+        _isHovered = true;
+        Current.OnHover?.Invoke(true);
+
+        // Flutter requests focus without testing `enabled`, because a disabled button builds no
+        // `Focus` and its unregistered node cannot take primary focus. Plumix's `FocusNode` can
+        // focus while unattached, so the disabled case is excluded explicitly to keep the same
+        // observable behavior.
+        if (!Current.RequestFocusOnHover || !Current.Enabled)
+        {
+            return;
+        }
+
+        ButtonFocusNode.RequestFocus();
+
+        // Without invalidating the focus policy, switching to directional focus may not originate
+        // at this node.
+        FocusTraversalGroup.MaybeOf(Context)?.InvalidateScopeData(
+            FocusScope.MaybeOf(Context) ?? FocusManager.Instance.RootScope);
     }
 
     private void HandlePointerExit()
     {
+        if (!_isHovered)
+        {
+            return;
+        }
+
+        _isHovered = false;
         Current.OnHover?.Invoke(false);
     }
 
@@ -1175,6 +1415,7 @@ public sealed class CheckboxMenuButton : StatelessWidget
         Action<bool>? onHover = null,
         Action<bool>? onFocusChange = null,
         FocusNode? focusNode = null,
+        IMenuSerializableShortcut? shortcut = null,
         ButtonStyle? style = null,
         MaterialStatesController? statesController = null,
         Clip clipBehavior = Clip.None,
@@ -1197,6 +1438,7 @@ public sealed class CheckboxMenuButton : StatelessWidget
         OnHover = onHover;
         OnFocusChange = onFocusChange;
         FocusNode = focusNode;
+        Shortcut = shortcut;
         Style = style;
         StatesController = statesController;
         ClipBehavior = clipBehavior;
@@ -1212,6 +1454,7 @@ public sealed class CheckboxMenuButton : StatelessWidget
     public Action<bool>? OnHover { get; }
     public Action<bool>? OnFocusChange { get; }
     public FocusNode? FocusNode { get; }
+    public IMenuSerializableShortcut? Shortcut { get; }
     public ButtonStyle? Style { get; }
     public MaterialStatesController? StatesController { get; }
     public Clip ClipBehavior { get; }
@@ -1227,6 +1470,7 @@ public sealed class CheckboxMenuButton : StatelessWidget
             onHover: OnHover,
             onFocusChange: OnFocusChange,
             focusNode: FocusNode,
+            shortcut: Shortcut,
             style: Style,
             statesController: StatesController,
             clipBehavior: ClipBehavior,
@@ -1269,6 +1513,7 @@ public sealed class RadioMenuButton<T> : StatelessWidget
         Action<bool>? onHover = null,
         Action<bool>? onFocusChange = null,
         FocusNode? focusNode = null,
+        IMenuSerializableShortcut? shortcut = null,
         ButtonStyle? style = null,
         MaterialStatesController? statesController = null,
         Clip clipBehavior = Clip.None,
@@ -1284,6 +1529,7 @@ public sealed class RadioMenuButton<T> : StatelessWidget
         OnHover = onHover;
         OnFocusChange = onFocusChange;
         FocusNode = focusNode;
+        Shortcut = shortcut;
         Style = style;
         StatesController = statesController;
         ClipBehavior = clipBehavior;
@@ -1299,6 +1545,7 @@ public sealed class RadioMenuButton<T> : StatelessWidget
     public Action<bool>? OnHover { get; }
     public Action<bool>? OnFocusChange { get; }
     public FocusNode? FocusNode { get; }
+    public IMenuSerializableShortcut? Shortcut { get; }
     public ButtonStyle? Style { get; }
     public MaterialStatesController? StatesController { get; }
     public Clip ClipBehavior { get; }
@@ -1314,6 +1561,7 @@ public sealed class RadioMenuButton<T> : StatelessWidget
             onHover: OnHover,
             onFocusChange: OnFocusChange,
             focusNode: FocusNode,
+            shortcut: Shortcut,
             style: Style,
             statesController: StatesController,
             clipBehavior: ClipBehavior,
@@ -1598,12 +1846,22 @@ public sealed class SubmenuButtonState : State
                 child: Current.Child),
             onPressed: Current.Enabled ? ToggleShowMenu : null,
             onFocusChange: HandleFocusChange,
-            onHover: HandleHover,
             focusNode: ButtonFocusNode,
             style: mergedStyle,
             statesController: Current.StatesController,
             clipBehavior: Current.ClipBehavior,
             isSemanticButton: OperatingSystem.IsBrowser() ? true : null);
+
+        if (Current.Enabled)
+        {
+            // As in Flutter, hover is read from MouseRegion.onHover rather than TextButton.onHover:
+            // onEnter/onHover-on-enter also fire when a button scrolls under a stationary pointer,
+            // which interferes with focus traversal and the scroll position.
+            button = new MouseRegion(
+                onHover: _ => HandleHover(true),
+                onExit: _ => HandleHover(false),
+                child: button);
+        }
 
         Vector menuPaddingOffset = ResolveMenuPaddingOffset(context);
 

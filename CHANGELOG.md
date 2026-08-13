@@ -1,5 +1,17 @@
 # Changelog
 
+- Breaking: closed the `MenuAnchor` divergence by landing its three missing primitives. Core gained
+  `IMenuSerializableShortcut`/`ShortcutSerialization` (`SingleActivator`/`CharacterActivator` now serialize for
+  menus) and `MouseRegion.OnHover`; `MaterialLocalizations` gained the 47 `KeyboardKey*` strings; and
+  `_LocalizedShortcutLabeler` is ported, so `MenuItemButton`/`CheckboxMenuButton`/`RadioMenuButton` take a
+  display-only `shortcut` whose label renders between the trailing icon and the submenu arrow with the source
+  per-platform modifier order, separator and Apple ⌃⌥⇧⌘ symbols. `MenuItemButton` and `SubmenuButton` now read hover
+  from `MouseRegion.OnHover` (edge-detected) instead of `onEnter`/`TextButton.onHover`, matching Flutter's
+  scroll-under focus behavior, and `MenuItemButton` invalidates the traversal scope after taking focus.
+  **Breaking:** `ButtonStyle.Alignment` and every `styleFrom` `alignment` parameter widen from `Alignment?` to
+  `AlignmentGeometry?`, and `_MenuButtonDefaultsM3.alignment` is now the source `AlignmentDirectional.CenterStart`,
+  so a menu button's content aligns to the text-direction start and mirrors under RTL.
+
 - Breaking: ported Flutter's `tabs.dart`, `tab_bar_theme.dart`, `tab_controller.dart` and `tab_indicator.dart`
   strictly. `TabBar` now composes `_TabStyle` + `_TabLabelBar` (a `RenderFlex` subclass reporting tab offsets) under a
   `CustomPaint` driven by the ported `_IndicatorPainter`, replacing the bespoke `RenderTabBar`; the M2/M3 primary and

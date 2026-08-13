@@ -928,7 +928,11 @@ public sealed class MaterialDropdownTests : IDisposable
         Assert.Equal(1.43, textStyle.Height);
         Assert.Equal(theme.VisualDensity, style.VisualDensity);
         Assert.Equal(theme.MaterialTapTargetSize, style.TapTargetSize);
-        Assert.Equal(Alignment.CenterLeft, style.Alignment);
+        // `_MenuButtonDefaultsM3` uses AlignmentDirectional.centerStart, so it mirrors under RTL.
+        Assert.Equal<AlignmentGeometry?>(AlignmentDirectional.CenterStart, style.Alignment);
+        Assert.True(style.Alignment!.Value.IsDirectional);
+        Assert.Equal(Alignment.CenterLeft, style.Alignment!.Value.Resolve(TextDirection.Ltr));
+        Assert.Equal(Alignment.CenterRight, style.Alignment!.Value.Resolve(TextDirection.Rtl));
         Assert.Equal(TimeSpan.FromMilliseconds(200), style.AnimationDuration);
         Assert.True(style.EnableFeedback);
     }
@@ -996,6 +1000,241 @@ public sealed class MaterialDropdownTests : IDisposable
     }
 
     [Fact]
+    public void MenuItemLabel_PlacesTheShortcutAfterTheTrailingIcon()
+    {
+        // `_MenuItemLabel` orders its row leading -> trailing icon -> shortcut -> submenu arrow, and
+        // pads every non-leading slot by the same directional start spacing.
+        var controller = new MenuController();
+        Widget anchor = new MenuAnchor(
+            [
+                new MenuItemButton(
+                    child: new Text("Save"),
+                    onPressed: () => { },
+                    shortcut: new SingleActivator("KeyS", control: true),
+                    trailingIcon: new Text("trailing")),
+            ],
+            controller: controller,
+            child: new SizedBox(width: 80, height: 40));
+        using var harness = new WidgetRenderHarness(Wrap(anchor, NonAppleTheme));
+        harness.Pump(new Size(500, 260));
+        controller.Open();
+        harness.Pump(new Size(500, 260));
+
+        RenderParagraph? label = FindParagraph(harness.RenderView, "Save");
+        RenderParagraph? trailing = FindParagraph(harness.RenderView, "trailing");
+        RenderParagraph? shortcut = FindParagraph(harness.RenderView, "Ctrl+S");
+
+        Assert.NotNull(label);
+        Assert.NotNull(trailing);
+        Assert.NotNull(shortcut);
+        Assert.True(GlobalLeft(label!) < GlobalLeft(trailing!));
+        Assert.True(GlobalLeft(trailing!) < GlobalLeft(shortcut!));
+
+        // The shortcut slot uses the same max(4, 12 + density.horizontal * 2) start padding.
+        Assert.Equal(
+            2,
+            FindDescendants<RenderPadding>(harness.RenderView)
+                .Count(padding => padding.Padding == new Thickness(12.0, 0.0, 0.0, 0.0)));
+    }
+
+    [Theory]
+    // `_MenuButtonDefaultsM3.alignment` is `AlignmentDirectional.centerStart`, so the button's
+    // content aligns to the text-direction start rather than always to the left.
+    [InlineData(TextDirection.Ltr, -1.0)]
+    [InlineData(TextDirection.Rtl, 1.0)]
+    public void MenuItemButton_AlignsItsContentToTheTextDirectionStart(
+        TextDirection direction,
+        double expectedX)
+    {
+        var controller = new MenuController();
+        Widget anchor = new MenuAnchor(
+            [new MenuItemButton(child: new Text("Save"), onPressed: () => { })],
+            controller: controller,
+            child: new SizedBox(width: 80, height: 40));
+        using var harness = new WidgetRenderHarness(Wrap(anchor, NonAppleTheme, direction));
+        harness.Pump(new Size(500, 260));
+        controller.Open();
+        harness.Pump(new Size(500, 260));
+
+        Assert.Contains(
+            FindDescendants<RenderAlign>(harness.RenderView),
+            align => Close(align.Alignment.X, expectedX) && Close(align.Alignment.Y, 0.0));
+    }
+
+    [Fact]
+    public void MenuItemLabel_OmitsTheShortcutWhenTheItemHasNone()
+    {
+        var controller = new MenuController();
+        Widget anchor = new MenuAnchor(
+            [new MenuItemButton(child: new Text("Save"), onPressed: () => { })],
+            controller: controller,
+            child: new SizedBox(width: 80, height: 40));
+        using var harness = new WidgetRenderHarness(Wrap(anchor));
+        harness.Pump(new Size(500, 260));
+        controller.Open();
+        harness.Pump(new Size(500, 260));
+
+        Assert.NotNull(FindParagraph(harness.RenderView, "Save"));
+        Assert.DoesNotContain(
+            FindDescendants<RenderParagraph>(harness.RenderView),
+            paragraph => paragraph.PlainText.Contains("Ctrl", StringComparison.Ordinal));
+    }
+
+    [Theory]
+    // The rendered label follows the ambient `ThemeData.platform`, as Flutter's per-platform
+    // "Shortcut mnemonics are displayed" variants do.
+    [InlineData(TargetPlatform.Linux, "Ctrl+S")]
+    [InlineData(TargetPlatform.Android, "Ctrl+S")]
+    [InlineData(TargetPlatform.Windows, "Ctrl+S")]
+    [InlineData(TargetPlatform.MacOS, "⌃ S")]
+    [InlineData(TargetPlatform.IOS, "⌃ S")]
+    public void MenuItemLabel_ResolvesTheShortcutLabelAgainstTheAmbientPlatform(
+        TargetPlatform platform,
+        string expected)
+    {
+        ThemeData theme = ThemeData.Light with { Platform = platform };
+        var controller = new MenuController();
+        Widget anchor = new MenuAnchor(
+            [
+                new MenuItemButton(
+                    child: new Text("Save"),
+                    onPressed: () => { },
+                    shortcut: new SingleActivator("KeyS", control: true)),
+            ],
+            controller: controller,
+            child: new SizedBox(width: 80, height: 40));
+        using var harness = new WidgetRenderHarness(Wrap(anchor, theme));
+        harness.Pump(new Size(500, 260));
+        controller.Open();
+        harness.Pump(new Size(500, 260));
+
+        Assert.NotNull(FindParagraph(harness.RenderView, expected));
+    }
+
+    [Fact]
+    public void MenuItemButton_SemanticsLabelHidesTheGeneratedShortcutText()
+    {
+        // Flutter's "MenuItemButton semantics respects label": `_MenuItemLabel` wraps the whole row
+        // in Semantics(label:, excludeSemantics: true), so the generated shortcut text never reaches
+        // the accessibility tree.
+        var controller = new MenuController();
+        Widget anchor = new MenuAnchor(
+            [
+                new MenuItemButton(
+                    child: new Text("Save"),
+                    onPressed: () => { },
+                    shortcut: new SingleActivator("KeyS", control: true),
+                    semanticsLabel: "TestWidget"),
+            ],
+            controller: controller,
+            child: new SizedBox(width: 80, height: 40));
+        using var harness = new WidgetRenderHarness(Wrap(anchor, NonAppleTheme));
+        harness.Pump(new Size(500, 260));
+        controller.Open();
+        harness.Pump(new Size(500, 260));
+
+        RenderParagraph shortcut = Assert.Single(
+            FindDescendants<RenderParagraph>(harness.RenderView),
+            paragraph => paragraph.PlainText == "Ctrl+S");
+        Assert.Contains(
+            FindDescendants<RenderExcludeSemantics>(harness.RenderView),
+            excluded => excluded.Excluding && FindDescendants<RenderParagraph>(excluded).Contains(shortcut));
+    }
+
+    [Fact]
+    public void CheckboxAndRadioMenuButtons_ForwardTheirShortcutToTheItemLabel()
+    {
+        var controller = new MenuController();
+        Widget anchor = new MenuAnchor(
+            [
+                new CheckboxMenuButton(
+                    true,
+                    _ => { },
+                    new Text("Pin"),
+                    shortcut: new SingleActivator("KeyP", control: true)),
+                new RadioMenuButton<string>(
+                    "one",
+                    "one",
+                    _ => { },
+                    new Text("Layout"),
+                    shortcut: new SingleActivator("KeyL", alt: true)),
+            ],
+            controller: controller,
+            child: new SizedBox(width: 80, height: 40));
+        using var harness = new WidgetRenderHarness(Wrap(anchor, NonAppleTheme));
+        harness.Pump(new Size(500, 320));
+        controller.Open();
+        harness.Pump(new Size(500, 320));
+
+        Assert.NotNull(FindParagraph(harness.RenderView, "Ctrl+P"));
+        Assert.NotNull(FindParagraph(harness.RenderView, "Alt+L"));
+    }
+
+    [Fact]
+    public void MenuItemButton_TakesFocusOnPointerHoverAndOnlyOnTheHoverEdge()
+    {
+        // Flutter uses MouseRegion.onHover rather than onEnter so that a button scrolling under a
+        // stationary pointer does not steal focus; the callback is edge-detected by `_isHovered`.
+        var hovers = new List<bool>();
+        var focusNode = new FocusNode();
+        var controller = new MenuController();
+        Widget anchor = new MenuAnchor(
+            [
+                new MenuItemButton(
+                    child: new Text("Save"),
+                    onPressed: () => { },
+                    focusNode: focusNode,
+                    onHover: hovers.Add),
+            ],
+            controller: controller,
+            child: new SizedBox(width: 80, height: 40));
+        using var harness = new WidgetRenderHarness(Wrap(anchor));
+        harness.Pump(new Size(500, 320));
+        controller.Open();
+        harness.Pump(new Size(500, 320));
+
+        RenderParagraph label = FindParagraph(harness.RenderView, "Save")!;
+        Point inside = GlobalCenter(label);
+        Assert.False(focusNode.HasFocus);
+
+        harness.SendPointer(HoverAt(inside));
+        harness.Pump(new Size(500, 320));
+        Assert.Equal([true], hovers);
+        Assert.True(focusNode.HasFocus);
+
+        // A second hover inside the same item is not a new edge.
+        harness.SendPointer(HoverAt(new Point(inside.X + 1, inside.Y)));
+        Assert.Equal([true], hovers);
+
+        harness.SendPointer(HoverAt(new Point(inside.X, inside.Y + 400)));
+        Assert.Equal([true, false], hovers);
+    }
+
+    [Fact]
+    public void MenuItemButton_HoverDoesNotFocusADisabledItem()
+    {
+        // Flutter's `_handlePointerHover` requests focus without checking `enabled`; the disabled
+        // button simply has no focusable subtree, so the request is a no-op.
+        var hovers = new List<bool>();
+        var focusNode = new FocusNode();
+        var controller = new MenuController();
+        Widget anchor = new MenuAnchor(
+            [new MenuItemButton(child: new Text("Save"), focusNode: focusNode, onHover: hovers.Add)],
+            controller: controller,
+            child: new SizedBox(width: 80, height: 40));
+        using var harness = new WidgetRenderHarness(Wrap(anchor, NonAppleTheme));
+        harness.Pump(new Size(500, 320));
+        controller.Open();
+        harness.Pump(new Size(500, 320));
+
+        harness.SendPointer(HoverAt(GlobalCenter(FindParagraph(harness.RenderView, "Save")!)));
+        harness.Pump(new Size(500, 320));
+
+        Assert.Equal([true], hovers);
+        Assert.False(focusNode.HasFocus);
+    }
+
+    [Fact]
     public void MenuItemButton_ExposesFlutterDefaultsAndTheSourceStyleHooks()
     {
         var button = new MenuItemButton(child: new Text("Item"));
@@ -1007,6 +1246,9 @@ public sealed class MaterialDropdownTests : IDisposable
         Assert.Equal(Clip.None, button.ClipBehavior);
         Assert.Equal(Axis.Horizontal, button.OverflowAxis);
         Assert.Null(button.SemanticsLabel);
+        Assert.Null(button.Shortcut);
+        Assert.Null(new CheckboxMenuButton(false, _ => { }, new Text("Item")).Shortcut);
+        Assert.Null(new RadioMenuButton<string>("a", "a", _ => { }, new Text("Item")).Shortcut);
 
         // Flutter's `defaultStyleOf`/`themeStyleOf` protocol, so a `MenuButtonTheme` can layer over
         // `_MenuButtonDefaultsM3` without the button re-deriving either.
@@ -1287,6 +1529,21 @@ public sealed class MaterialDropdownTests : IDisposable
 
     private static bool Close(double a, double b) => Math.Abs(a - b) < 0.001;
 
+    /// <summary>`ThemeData.Light` resolves its platform from the host, so label tests pin it.</summary>
+    private static ThemeData NonAppleTheme => ThemeData.Light with { Platform = TargetPlatform.Linux };
+
+    private static double GlobalLeft(RenderBox box) => box.LocalToGlobal(default).X;
+
+    private static Point GlobalCenter(RenderBox box) =>
+        box.LocalToGlobal(new Point(box.Size.Width / 2.0, box.Size.Height / 2.0));
+
+    private static PointerHoverEvent HoverAt(Point position) => new(
+        pointer: 1,
+        kind: PointerDeviceKind.Mouse,
+        position: position,
+        buttons: PointerButtons.None,
+        timestampUtc: DateTime.UtcNow);
+
     private static List<T> FindDescendants<T>(RenderObject? root) where T : RenderObject
     {
         var result = new List<T>();
@@ -1340,6 +1597,12 @@ public sealed class MaterialDropdownTests : IDisposable
             _pipeline.FlushLayout(size);
             _pipeline.FlushCompositingBits();
             _pipeline.FlushPaint();
+        }
+
+        public void SendPointer(PointerEvent @event)
+        {
+            GestureBinding.Instance.HandlePointerEvent(RenderView, @event);
+            _owner.FlushBuild();
         }
 
         public SemanticsNode? PumpAndGetSemantics(Size size)

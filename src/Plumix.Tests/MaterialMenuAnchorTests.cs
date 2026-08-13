@@ -457,4 +457,205 @@ public sealed class MaterialMenuAnchorTests
         heightFactor: heightFactor,
         viewPadding: viewPadding,
         viewInsets: viewInsets);
+
+    // ---- Shortcut serialization and localized shortcut labels ----
+
+    [Fact]
+    public void ShortcutSerialization_ModifierMatchesTheSourceChannelShape()
+    {
+        ShortcutSerialization serialized =
+            new SingleActivator("KeyA", control: true, shift: true).SerializeForMenu();
+
+        Assert.Equal("A", serialized.Trigger);
+        Assert.Null(serialized.Character);
+        Assert.True(serialized.Control);
+        Assert.True(serialized.Shift);
+        Assert.False(serialized.Alt);
+        Assert.False(serialized.Meta);
+
+        IReadOnlyDictionary<string, object?> channel = serialized.ToChannelRepresentation();
+        Assert.Equal("A", channel["shortcutTrigger"]);
+        // control (1 << 3) | shift (1 << 1)
+        Assert.Equal(10, channel["shortcutModifiers"]);
+        Assert.False(channel.ContainsKey("shortcutCharacter"));
+    }
+
+    [Fact]
+    public void ShortcutSerialization_CharacterMatchesTheSourceChannelShapeAndCarriesNoShift()
+    {
+        ShortcutSerialization serialized =
+            new CharacterActivator("a", alt: true, meta: true).SerializeForMenu();
+
+        Assert.Equal("a", serialized.Character);
+        Assert.Null(serialized.Trigger);
+        Assert.Null(serialized.Shift);
+        Assert.True(serialized.Alt);
+        Assert.True(serialized.Meta);
+        Assert.False(serialized.Control);
+
+        IReadOnlyDictionary<string, object?> channel = serialized.ToChannelRepresentation();
+        Assert.Equal("a", channel["shortcutCharacter"]);
+        // alt (1 << 2) | meta (1 << 0)
+        Assert.Equal(5, channel["shortcutModifiers"]);
+        Assert.False(channel.ContainsKey("shortcutTrigger"));
+    }
+
+    [Fact]
+    public void ShortcutSerialization_RejectsModifierTriggersAndNonSingleCharacters()
+    {
+        Assert.Throws<ArgumentException>(() => ShortcutSerialization.Modifier("ShiftLeft"));
+        Assert.Throws<ArgumentException>(() => ShortcutSerialization.Modifier("Control"));
+        Assert.Throws<ArgumentException>(() => ShortcutSerialization.ForCharacter("ab"));
+        Assert.Throws<ArgumentException>(() => ShortcutSerialization.ForCharacter(string.Empty));
+    }
+
+    [Theory]
+    // Flutter's "Shortcut mnemonics are displayed", one row per modifier and platform family.
+    [InlineData(TargetPlatform.Android, "KeyA", true, false, false, false, "Ctrl+A")]
+    [InlineData(TargetPlatform.Linux, "KeyA", true, false, false, false, "Ctrl+A")]
+    [InlineData(TargetPlatform.Windows, "KeyA", true, false, false, false, "Ctrl+A")]
+    [InlineData(TargetPlatform.MacOS, "KeyA", true, false, false, false, "\u2303 A")]
+    [InlineData(TargetPlatform.IOS, "KeyA", true, false, false, false, "\u2303 A")]
+    [InlineData(TargetPlatform.Android, "KeyB", false, true, false, false, "Shift+B")]
+    [InlineData(TargetPlatform.MacOS, "KeyB", false, true, false, false, "\u21e7 B")]
+    [InlineData(TargetPlatform.Android, "KeyC", false, false, true, false, "Alt+C")]
+    [InlineData(TargetPlatform.MacOS, "KeyC", false, false, true, false, "\u2325 C")]
+    [InlineData(TargetPlatform.Android, "KeyD", false, false, false, true, "Meta+D")]
+    [InlineData(TargetPlatform.Linux, "KeyD", false, false, false, true, "Meta+D")]
+    [InlineData(TargetPlatform.Fuchsia, "KeyD", false, false, false, true, "Meta+D")]
+    [InlineData(TargetPlatform.Windows, "KeyD", false, false, false, true, "Win+D")]
+    [InlineData(TargetPlatform.MacOS, "KeyD", false, false, false, true, "\u2318 D")]
+    public void LocalizedShortcutLabeler_SingleActivatorModifierLabelsMatchTheSource(
+        TargetPlatform platform,
+        string trigger,
+        bool control,
+        bool shift,
+        bool alt,
+        bool meta,
+        string expected)
+    {
+        Assert.Equal(expected, Label(new SingleActivator(trigger, control, shift, alt, meta), platform));
+    }
+
+    [Theory]
+    // The graphic table wins on every platform; `enter` never uses a localized name.
+    [InlineData("ArrowLeft", "\u2190")]
+    [InlineData("ArrowRight", "\u2192")]
+    [InlineData("ArrowUp", "\u2191")]
+    [InlineData("ArrowDown", "\u2193")]
+    [InlineData("Enter", "\u21b5")]
+    // Localized names come next, then the single-character upper-cased fallback.
+    [InlineData("Escape", "Esc")]
+    [InlineData("Fn", "Fn")]
+    [InlineData("Delete", "Del")]
+    [InlineData("PageDown", "PgDown")]
+    [InlineData("NumpadEnter", "Num Enter")]
+    [InlineData("KeyA", "A")]
+    [InlineData("Digit5", "5")]
+    // Nothing matches, so the key label itself is used.
+    [InlineData("F4", "F4")]
+    public void LocalizedShortcutLabeler_TriggerNamesFollowTheSourceFallbackChain(
+        string trigger,
+        string expected)
+    {
+        foreach (TargetPlatform platform in Enum.GetValues<TargetPlatform>())
+        {
+            Assert.Equal(expected, Label(new SingleActivator(trigger), platform));
+        }
+    }
+
+    [Theory]
+    // Flutter's "CharacterActivator shortcut mnemonics include modifiers" (flutter/flutter#145040).
+    [InlineData(TargetPlatform.Android, "A", true, false, false, "Ctrl+A")]
+    [InlineData(TargetPlatform.MacOS, "A", true, false, false, "\u2303 A")]
+    [InlineData(TargetPlatform.Android, "B", false, true, false, "Alt+B")]
+    [InlineData(TargetPlatform.MacOS, "B", false, true, false, "\u2325 B")]
+    [InlineData(TargetPlatform.Android, "C", false, false, true, "Meta+C")]
+    [InlineData(TargetPlatform.Windows, "C", false, false, true, "Win+C")]
+    [InlineData(TargetPlatform.MacOS, "C", false, false, true, "\u2318 C")]
+    // The character is emitted verbatim, never upper-cased.
+    [InlineData(TargetPlatform.Android, "\u00f1", false, false, false, "\u00f1")]
+    [InlineData(TargetPlatform.MacOS, "\u00f1", false, false, false, "\u00f1")]
+    public void LocalizedShortcutLabeler_CharacterActivatorLabelsMatchTheSource(
+        TargetPlatform platform,
+        string character,
+        bool control,
+        bool alt,
+        bool meta,
+        string expected)
+    {
+        Assert.Equal(expected, Label(new CharacterActivator(character, control, alt, meta), platform));
+    }
+
+    [Theory]
+    // Flutter's "getShortcutLabel returns the right labels": modifier order and separator per family.
+    [InlineData(TargetPlatform.Android, "Alt+Ctrl+Meta+Shift+A")]
+    [InlineData(TargetPlatform.Linux, "Alt+Ctrl+Meta+Shift+A")]
+    [InlineData(TargetPlatform.Fuchsia, "Alt+Ctrl+Meta+Shift+A")]
+    [InlineData(TargetPlatform.Windows, "Alt+Ctrl+Win+Shift+A")]
+    [InlineData(TargetPlatform.MacOS, "\u2303 \u2325 \u21e7 \u2318 A")]
+    [InlineData(TargetPlatform.IOS, "\u2303 \u2325 \u21e7 \u2318 A")]
+    public void LocalizedShortcutLabeler_EveryModifierUsesTheSourceOrderAndSeparator(
+        TargetPlatform platform,
+        string expected)
+    {
+        var activator = new SingleActivator("KeyA", control: true, shift: true, alt: true, meta: true);
+
+        Assert.Equal(expected, Label(activator, platform));
+    }
+
+    [Fact]
+    public void LocalizedShortcutLabeler_LabelsCustomSerializableActivators()
+    {
+        // The labeler works off `SerializeForMenu`, so a third-party activator labels like the
+        // built-in ones, matching Dart's `MenuSerializableShortcut` mixin contract.
+        Assert.Equal("Ctrl+Home", Label(new CustomActivator(), TargetPlatform.Linux));
+        Assert.Equal("\u2303 Home", Label(new CustomActivator(), TargetPlatform.MacOS));
+    }
+
+    [Fact]
+    public void LocalizedShortcutLabeler_CachesTheLocalizedNameTablePerLocalizations()
+    {
+        // Flutter memoizes `_cachedShortcutKeys` per `MaterialLocalizations` instance; a second
+        // lookup must return the same string without rebuilding the table.
+        var overridden = new KeyLabelOverrideLocalizations();
+
+        Assert.Equal("Ctrl+Escape!", Label(new SingleActivator("Escape", control: true), overridden));
+        Assert.Equal("Ctrl+Escape!", Label(new SingleActivator("Escape", control: true), overridden));
+        Assert.Equal(
+            "Ctrl+Esc",
+            Label(new SingleActivator("Escape", control: true), TargetPlatform.Linux));
+    }
+
+    private static string Label(IMenuSerializableShortcut shortcut, TargetPlatform platform) =>
+        LocalizedShortcutLabeler.Instance.GetShortcutLabel(
+            shortcut,
+            DefaultMaterialLocalizations.Instance,
+            platform);
+
+    private static string Label(IMenuSerializableShortcut shortcut, MaterialLocalizations localizations) =>
+        LocalizedShortcutLabeler.Instance.GetShortcutLabel(
+            shortcut,
+            localizations,
+            TargetPlatform.Linux);
+
+    /// <summary>A third-party activator, standing in for a Dart class mixing in the shortcut.</summary>
+    private sealed class CustomActivator : IMenuSerializableShortcut
+    {
+        public IReadOnlySet<string>? Triggers => null;
+
+        public bool Accepts(KeyEvent @event, HardwareKeyboard state) => false;
+
+        public string DebugDescribeKeys() => "Control + Home";
+
+        public ShortcutSerialization SerializeForMenu() =>
+            ShortcutSerialization.Modifier("Home", control: true);
+    }
+
+    private sealed class KeyLabelOverrideLocalizations : MaterialLocalizations
+    {
+        public override string TabLabel(int tabIndex, int tabCount) => $"Tab {tabIndex} of {tabCount}";
+
+        public override string KeyboardKeyEscape => "Escape!";
+    }
 }

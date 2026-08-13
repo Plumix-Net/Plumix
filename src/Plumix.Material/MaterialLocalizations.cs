@@ -250,6 +250,104 @@ public abstract class MaterialLocalizations
     public virtual string LicensesPackageDetailText(int licenseCount) =>
         licenseCount == 1 ? "1 license" : $"{licenseCount} licenses";
 
+    // Flutter's `keyboardKey*` getters, used by the menu shortcut labeler. Declared here with the
+    // `DefaultMaterialLocalizations` English strings, matching how the rest of this class carries
+    // its defaults.
+
+    public virtual string KeyboardKeyAlt => "Alt";
+
+    public virtual string KeyboardKeyAltGraph => "AltGr";
+
+    public virtual string KeyboardKeyBackspace => "Backspace";
+
+    public virtual string KeyboardKeyCapsLock => "Caps Lock";
+
+    public virtual string KeyboardKeyChannelDown => "Channel Down";
+
+    public virtual string KeyboardKeyChannelUp => "Channel Up";
+
+    public virtual string KeyboardKeyControl => "Ctrl";
+
+    public virtual string KeyboardKeyDelete => "Del";
+
+    public virtual string KeyboardKeyEject => "Eject";
+
+    public virtual string KeyboardKeyEnd => "End";
+
+    public virtual string KeyboardKeyEscape => "Esc";
+
+    public virtual string KeyboardKeyFn => "Fn";
+
+    public virtual string KeyboardKeyHome => "Home";
+
+    public virtual string KeyboardKeyInsert => "Insert";
+
+    public virtual string KeyboardKeyMeta => "Meta";
+
+    public virtual string KeyboardKeyMetaMacOs => "Command";
+
+    public virtual string KeyboardKeyMetaWindows => "Win";
+
+    public virtual string KeyboardKeyNumLock => "Num Lock";
+
+    public virtual string KeyboardKeyNumpad1 => "Num 1";
+
+    public virtual string KeyboardKeyNumpad2 => "Num 2";
+
+    public virtual string KeyboardKeyNumpad3 => "Num 3";
+
+    public virtual string KeyboardKeyNumpad4 => "Num 4";
+
+    public virtual string KeyboardKeyNumpad5 => "Num 5";
+
+    public virtual string KeyboardKeyNumpad6 => "Num 6";
+
+    public virtual string KeyboardKeyNumpad7 => "Num 7";
+
+    public virtual string KeyboardKeyNumpad8 => "Num 8";
+
+    public virtual string KeyboardKeyNumpad9 => "Num 9";
+
+    public virtual string KeyboardKeyNumpad0 => "Num 0";
+
+    public virtual string KeyboardKeyNumpadAdd => "Num +";
+
+    public virtual string KeyboardKeyNumpadComma => "Num ,";
+
+    public virtual string KeyboardKeyNumpadDecimal => "Num .";
+
+    public virtual string KeyboardKeyNumpadDivide => "Num /";
+
+    public virtual string KeyboardKeyNumpadEnter => "Num Enter";
+
+    public virtual string KeyboardKeyNumpadEqual => "Num =";
+
+    public virtual string KeyboardKeyNumpadMultiply => "Num *";
+
+    public virtual string KeyboardKeyNumpadParenLeft => "Num (";
+
+    public virtual string KeyboardKeyNumpadParenRight => "Num )";
+
+    public virtual string KeyboardKeyNumpadSubtract => "Num -";
+
+    public virtual string KeyboardKeyPageDown => "PgDown";
+
+    public virtual string KeyboardKeyPageUp => "PgUp";
+
+    public virtual string KeyboardKeyPower => "Power";
+
+    public virtual string KeyboardKeyPowerOff => "Power Off";
+
+    public virtual string KeyboardKeyPrintScreen => "Print Screen";
+
+    public virtual string KeyboardKeyScrollLock => "Scroll Lock";
+
+    public virtual string KeyboardKeySelect => "Select";
+
+    public virtual string KeyboardKeyShift => "Shift";
+
+    public virtual string KeyboardKeySpace => "Space";
+
     public static MaterialLocalizations Of(BuildContext context)
     {
         return Localizations.MaybeOf<MaterialLocalizations>(context)

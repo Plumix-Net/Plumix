@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class DropdownDemoPage extends StatefulWidget {
   const DropdownDemoPage({super.key});
@@ -166,7 +167,8 @@ class _DropdownDemoPageState extends State<DropdownDemoPage> {
             style: TextStyle(fontSize: 18),
           ),
           const Text(
-            'Animated overlay menu with consumed outside taps and close-on-activate policy.',
+            'Animated overlay menu with consumed outside taps, close-on-activate policy and'
+            ' display-only shortcut labels.',
             style: TextStyle(fontSize: 14, color: Colors.black54),
           ),
           Align(
@@ -179,18 +181,30 @@ class _DropdownDemoPageState extends State<DropdownDemoPage> {
               onClose: () => setState(() => _anchorStatus = 'closed'),
               menuChildren: <Widget>[
                 MenuItemButton(
+                  shortcut: const SingleActivator(
+                    LogicalKeyboardKey.keyR,
+                    control: true,
+                  ),
                   onPressed: () => setState(() => _anchorStatus = 'activated'),
                   child: const Text('Run action'),
                 ),
-                const MenuItemButton(child: Text('Disabled item')),
+                const MenuItemButton(
+                  shortcut: SingleActivator(LogicalKeyboardKey.escape),
+                  child: Text('Disabled item'),
+                ),
                 MenuItemButton(
                   closeOnActivate: false,
+                  shortcut: const SingleActivator(
+                    LogicalKeyboardKey.arrowRight,
+                    shift: true,
+                  ),
                   onPressed: () => setState(() => _anchorStatus = 'kept open'),
                   child: const Text('Keep open'),
                 ),
                 CheckboxMenuButton(
                   value: _menuCheckbox,
                   closeOnActivate: false,
+                  shortcut: const CharacterActivator('p', control: true),
                   onChanged: (bool? value) =>
                       setState(() => _menuCheckbox = value),
                   child: const Text('Pin menu'),

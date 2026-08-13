@@ -149,7 +149,8 @@ public sealed class DropdownDemoPage : StatefulWidget
                         new Divider(),
                         new Text("MenuAnchor + MenuItemButton", fontSize: 18),
                         new Text(
-                            "Animated overlay menu with consumed outside taps and close-on-activate policy.",
+                            "Animated overlay menu with consumed outside taps, close-on-activate"
+                            + " policy and display-only shortcut labels.",
                             fontSize: 14,
                             color: Colors.DimGray),
                         new Align(
@@ -164,16 +165,21 @@ public sealed class DropdownDemoPage : StatefulWidget
                                 [
                                     new MenuItemButton(
                                         child: new Text("Run action"),
+                                        shortcut: new SingleActivator("KeyR", control: true),
                                         onPressed: () => SetState(() => _anchorStatus = "activated")),
-                                    new MenuItemButton(child: new Text("Disabled item")),
+                                    new MenuItemButton(
+                                        child: new Text("Disabled item"),
+                                        shortcut: new SingleActivator("Escape")),
                                     new MenuItemButton(
                                         child: new Text("Keep open"),
+                                        shortcut: new SingleActivator("ArrowRight", shift: true),
                                         closeOnActivate: false,
                                         onPressed: () => SetState(() => _anchorStatus = "kept open")),
                                     new CheckboxMenuButton(
                                         _menuCheckbox,
                                         value => SetState(() => _menuCheckbox = value),
                                         new Text("Pin menu"),
+                                        shortcut: new CharacterActivator("p", control: true),
                                         closeOnActivate: false),
                                     new RadioMenuButton<string>(
                                         "one",

@@ -399,7 +399,7 @@ public class IconButton : StatelessWidget
         MaterialTapTargetSize? tapTargetSize = null,
         TimeSpan? animationDuration = null,
         bool? enableFeedback = null,
-        Alignment? alignment = null)
+        AlignmentGeometry? alignment = null)
     {
         if (iconSize.HasValue
             && (double.IsNaN(iconSize.Value)

@@ -193,7 +193,7 @@ public sealed class LogicalKeySet : KeySet<string>, ShortcutActivator, IEquatabl
     }
 }
 
-public sealed class SingleActivator : ShortcutActivator, IEquatable<SingleActivator>
+public sealed class SingleActivator : IMenuSerializableShortcut, IEquatable<SingleActivator>
 {
     public SingleActivator(
         string trigger,
@@ -281,6 +281,17 @@ public sealed class SingleActivator : ShortcutActivator, IEquatable<SingleActiva
         return string.Join(" + ", keys);
     }
 
+    /// <summary>Flutter's `SingleActivator.serializeForMenu`; `numLock`/`includeRepeats` are not serialized.</summary>
+    public ShortcutSerialization SerializeForMenu()
+    {
+        return ShortcutSerialization.Modifier(
+            Trigger,
+            shift: Shift,
+            alt: Alt,
+            meta: Meta,
+            control: Control);
+    }
+
     public bool Equals(SingleActivator? other)
     {
         return other != null
@@ -307,7 +318,7 @@ public sealed class SingleActivator : ShortcutActivator, IEquatable<SingleActiva
     }
 }
 
-public sealed class CharacterActivator : ShortcutActivator, IEquatable<CharacterActivator>
+public sealed class CharacterActivator : IMenuSerializableShortcut, IEquatable<CharacterActivator>
 {
     public CharacterActivator(
         string character,
@@ -365,6 +376,16 @@ public sealed class CharacterActivator : ShortcutActivator, IEquatable<Character
 
         keys.Add($"'{Character}'");
         return string.Join(" + ", keys);
+    }
+
+    /// <summary>Flutter's `CharacterActivator.serializeForMenu`.</summary>
+    public ShortcutSerialization SerializeForMenu()
+    {
+        return ShortcutSerialization.ForCharacter(
+            Character,
+            alt: Alt,
+            control: Control,
+            meta: Meta);
     }
 
     public bool Equals(CharacterActivator? other)
