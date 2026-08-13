@@ -37,23 +37,114 @@ public sealed class MaterialBottomSheetTests : IDisposable
     }
 
     [Fact]
+    public void BottomSheetThemeData_CopyWithLerpAndInheritedWrapMatchSource()
+    {
+        var shape = new RoundedRectangleBorder(borderRadius: BorderRadius.Circular(12));
+        var data = new BottomSheetThemeData(
+            BackgroundColor: Colors.Blue,
+            SurfaceTintColor: Colors.Green,
+            Elevation: 2,
+            ModalBackgroundColor: Colors.Orange,
+            ModalBarrierColor: Colors.Purple,
+            ShadowColor: Colors.Red,
+            ModalElevation: 4,
+            Shape: shape,
+            ShowDragHandle: true,
+            DragHandleColor: Colors.White,
+            DragHandleSize: new Size(32, 4),
+            ClipBehavior: Clip.AntiAlias,
+            Constraints: new BoxConstraints(MaxWidth: 640));
+
+        Assert.Equal(data, data.CopyWith());
+        Assert.Equal(Colors.Black, data.CopyWith(backgroundColor: Colors.Black).BackgroundColor);
+        Assert.Same(data, BottomSheetThemeData.Lerp(data, data, 0.5));
+        Assert.Null(BottomSheetThemeData.Lerp(null, null, 0.5));
+
+        var diagnostics = new DiagnosticPropertiesBuilder();
+        data.DebugFillProperties(diagnostics);
+        Assert.Equal(
+            [
+                "backgroundColor",
+                "surfaceTintColor",
+                "elevation",
+                "modalBackgroundColor",
+                "shadowColor",
+                "modalBarrierColor",
+                "modalElevation",
+                "shape",
+                "showDragHandle",
+                "dragHandleColor",
+                "dragHandleSize",
+                "clipBehavior",
+                "constraints",
+            ],
+            diagnostics.Properties.Select(property => property.Name));
+
+        var stateful = WidgetStateColor.ResolveWith(
+            Colors.Blue,
+            states => states.Contains(WidgetState.Hovered) ? Colors.Red : Colors.Blue);
+        var lerped = BottomSheetThemeData.Lerp(
+            new BottomSheetThemeData(DragHandleColor: stateful),
+            new BottomSheetThemeData(DragHandleColor: Colors.Green),
+            0.5);
+        Assert.NotNull(lerped?.DragHandleColor);
+        Assert.True(lerped!.DragHandleColor!.IsConstantColor);
+        Assert.Equal(
+            lerped.DragHandleColor.DefaultValue,
+            lerped.DragHandleColor.Resolve(new HashSet<WidgetState> { WidgetState.Hovered }));
+
+        var theme = new BottomSheetTheme(data, new SizedBox());
+        var wrapped = Assert.IsType<BottomSheetTheme>(theme.Wrap(default, new Text("child")));
+        Assert.Same(data, wrapped.Data);
+
+        var replacement = new BottomSheetThemeData(BackgroundColor: Colors.Crimson);
+        BottomSheetThemeData? resolved = null;
+        Widget captureProbe = new BottomSheetTheme(
+            data,
+            new Builder(context =>
+            {
+                CapturedThemes capturedThemes = InheritedTheme.Capture(context);
+                return new BottomSheetTheme(
+                    replacement,
+                    capturedThemes.Wrap(new Builder(capturedContext =>
+                    {
+                        resolved = BottomSheetTheme.Of(capturedContext);
+                        return new SizedBox();
+                    })));
+            }));
+        using var harness = new WidgetRenderHarness(Wrap(ThemeData.Light, captureProbe));
+        harness.Pump(new Size(320, 120));
+        Assert.Same(data, resolved);
+    }
+
+    [Fact]
     public void BottomSheet_Material3DefaultsMatchSource()
     {
-        var theme = ThemeData.Light;
+        Color surfaceContainerLow = Color.Parse("#FF102030");
+        Color onSurfaceVariant = Color.Parse("#FF405060");
+        var theme = ThemeData.Light with
+        {
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(
+                surfaceContainerLow: surfaceContainerLow,
+                onSurfaceVariant: onSurfaceVariant),
+        };
         using var harness = new WidgetRenderHarness(Wrap(
             theme,
             new BottomSheet(
                 onClosing: () => { },
                 builder: _ => new SizedBox(width: 200, height: 80),
                 animationController: BottomSheet.CreateAnimationController(),
-                enableDrag: false)));
+                enableDrag: false,
+                showDragHandle: true)));
         harness.Pump(new Size(800, 400));
 
         // Material 3 tokens: surfaceContainerLow, elevation 1 with a transparent shadow, and top-only 28px corners.
         var surface = Assert.Single(FindDescendants<RenderDecoratedBox>(harness.RenderView), box =>
-            box.Decoration.Color == theme.SurfaceContainerLowColor);
+            box.Decoration.Color == surfaceContainerLow);
         Assert.Equal(BorderRadius.Only(topLeft: 28.0, topRight: 28.0), surface.Decoration.EffectiveBorderRadius);
         Assert.Null(surface.Decoration.BoxShadows);
+        Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView), box =>
+            box.Decoration.Color == onSurfaceVariant && box.Size == new Size(32, 4));
         Assert.Contains(FindDescendants<RenderConstrainedBox>(harness.RenderView), box =>
             box.AdditionalConstraints.MaxWidth == 640);
     }
@@ -90,7 +181,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
                 Elevation: 0,
                 Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(12)),
                 ShowDragHandle: true,
-                DragHandleColor: MaterialStateProperty<Color?>.All(Colors.Green),
+                DragHandleColor: Colors.Green,
                 DragHandleSize: new Size(40, 6),
                 Constraints: new BoxConstraints(MaxWidth: 200)),
         };
@@ -152,7 +243,9 @@ public sealed class MaterialBottomSheetTests : IDisposable
         var theme = ThemeData.Light with
         {
             BottomSheetTheme = new BottomSheetThemeData(
-                DragHandleColor: new HoverDragHandleColor(Colors.Green, Colors.Red)),
+                DragHandleColor: WidgetStateColor.ResolveWith(
+                    Colors.Green,
+                    states => states.Contains(WidgetState.Hovered) ? Colors.Red : Colors.Green)),
         };
         using var harness = new WidgetRenderHarness(Wrap(
             theme,
@@ -1023,21 +1116,6 @@ public sealed class MaterialBottomSheetTests : IDisposable
             result.AddRange(CollectSemantics(child));
         }
         return result;
-    }
-
-    private sealed class HoverDragHandleColor : MaterialStateProperty<Color?>
-    {
-        private readonly Color _resting;
-        private readonly Color _hovered;
-
-        public HoverDragHandleColor(Color resting, Color hovered)
-        {
-            _resting = resting;
-            _hovered = hovered;
-        }
-
-        public override Color? Resolve(MaterialState states) =>
-            states.HasFlag(MaterialState.Hovered) ? _hovered : _resting;
     }
 
     private sealed class CaptureContext : StatelessWidget

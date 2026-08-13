@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
@@ -31,7 +32,7 @@ public sealed class BottomSheet : StatefulWidget
         AnimationController? animationController = null,
         bool enableDrag = true,
         bool? showDragHandle = null,
-        Color? dragHandleColor = null,
+        WidgetStateColor? dragHandleColor = null,
         Size? dragHandleSize = null,
         Action<DragStartDetails>? onDragStart = null,
         BottomSheetDragEndHandler? onDragEnd = null,
@@ -69,7 +70,7 @@ public sealed class BottomSheet : StatefulWidget
     public WidgetBuilder Builder { get; }
     public bool EnableDrag { get; }
     public bool? ShowDragHandle { get; }
-    public Color? DragHandleColor { get; }
+    public WidgetStateColor? DragHandleColor { get; }
     public Size? DragHandleSize { get; }
     public Action<DragStartDetails>? OnDragStart { get; }
     public BottomSheetDragEndHandler? OnDragEnd { get; }
@@ -92,13 +93,13 @@ public sealed class BottomSheet : StatefulWidget
 
     /// <summary>The Material 3 token defaults, used regardless of <see cref="ThemeData.UseMaterial3"/>.</summary>
     internal static BottomSheetThemeData Material3Defaults(ThemeData theme) => new(
-        BackgroundColor: theme.SurfaceContainerLowColor,
+        BackgroundColor: theme.ColorScheme.SurfaceContainerLow,
         SurfaceTintColor: Colors.Transparent,
         Elevation: 1,
         ModalElevation: 1,
         ShadowColor: Colors.Transparent,
         Shape: new RoundedRectangleBorder(borderRadius: BorderRadius.Only(topLeft: 28.0, topRight: 28.0)),
-        DragHandleColor: MaterialStateProperty<Color?>.All(theme.OnSurfaceVariantColor),
+        DragHandleColor: theme.ColorScheme.OnSurfaceVariant,
         DragHandleSize: new Size(32, 4),
         Constraints: new BoxConstraints(MaxWidth: 640));
 
@@ -124,7 +125,7 @@ public sealed class BottomSheet : StatefulWidget
     private sealed class BottomSheetState : State
     {
         private readonly GlobalKey _childKey = new BottomSheetChildKey(Guid.NewGuid());
-        private MaterialState _dragHandleStates = MaterialState.None;
+        private readonly HashSet<WidgetState> _dragHandleStates = [];
 
         private BottomSheet CurrentWidget => (BottomSheet)StateWidget;
 
@@ -233,17 +234,24 @@ public sealed class BottomSheet : StatefulWidget
 
         private void HandleDragHandleHover(bool hovering)
         {
-            MaterialState updated = hovering
-                ? _dragHandleStates | MaterialState.Hovered
-                : _dragHandleStates & ~MaterialState.Hovered;
-            if (updated == _dragHandleStates) return;
-            SetState(() => _dragHandleStates = updated);
+            if (hovering == _dragHandleStates.Contains(WidgetState.Hovered)) return;
+            SetState(() =>
+            {
+                if (hovering)
+                {
+                    _dragHandleStates.Add(WidgetState.Hovered);
+                }
+                else
+                {
+                    _dragHandleStates.Remove(WidgetState.Hovered);
+                }
+            });
         }
 
         private void HandleDragStart(DragStartDetails details)
         {
             RequireController();
-            SetState(() => _dragHandleStates |= MaterialState.Dragged);
+            SetState(() => _dragHandleStates.Add(WidgetState.Dragged));
             CurrentWidget.OnDragStart?.Invoke(details);
         }
 
@@ -261,7 +269,7 @@ public sealed class BottomSheet : StatefulWidget
         {
             var controller = RequireController();
             if (DismissUnderway) return;
-            SetState(() => _dragHandleStates &= ~MaterialState.Dragged);
+            SetState(() => _dragHandleStates.Remove(WidgetState.Dragged));
             bool isClosing = false;
             double childHeight = ChildHeight;
             double verticalVelocity = details.Velocity.PixelsPerSecond.Y;
@@ -306,8 +314,8 @@ internal sealed class DragHandle : StatelessWidget
     public DragHandle(
         Action? onSemanticsTap,
         Action<bool> handleHover,
-        MaterialState states,
-        Color? dragHandleColor = null,
+        IReadOnlySet<WidgetState> states,
+        WidgetStateColor? dragHandleColor = null,
         Size? dragHandleSize = null,
         Key? key = null) : base(key)
     {
@@ -320,8 +328,8 @@ internal sealed class DragHandle : StatelessWidget
 
     public Action? OnSemanticsTap { get; }
     public Action<bool> HandleHover { get; }
-    public MaterialState States { get; }
-    public Color? DragHandleColor { get; }
+    public IReadOnlySet<WidgetState> States { get; }
+    public WidgetStateColor? DragHandleColor { get; }
     public Size? DragHandleSize { get; }
 
     public override Widget Build(BuildContext context)
@@ -329,9 +337,9 @@ internal sealed class DragHandle : StatelessWidget
         var bottomSheetTheme = BottomSheetTheme.Of(context);
         var defaults = BottomSheet.Material3Defaults(Theme.Of(context));
         Size handleSize = DragHandleSize ?? bottomSheetTheme.DragHandleSize ?? defaults.DragHandleSize!.Value;
-        Color color = DragHandleColor
+        Color color = DragHandleColor?.Resolve(States)
                       ?? bottomSheetTheme.DragHandleColor?.Resolve(States)
-                      ?? defaults.DragHandleColor!.Resolve(States)!.Value;
+                      ?? defaults.DragHandleColor!.Resolve(States);
 
         return new MouseRegion(
             onEnter: _ => HandleHover(true),

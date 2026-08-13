@@ -16,7 +16,7 @@ class _BottomSheetDemoPageState extends State<BottomSheetDemoPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    Widget buildContent(BuildContext sheetContext) => Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: 12,
       children: <Widget>[
@@ -57,15 +57,15 @@ class _BottomSheetDemoPageState extends State<BottomSheetDemoPage> {
           runSpacing: 8,
           children: <Widget>[
             ElevatedButton(
-              onPressed: () => _showPersistent(context),
+              onPressed: () => _showPersistent(sheetContext),
               child: const Text('SHOW PERSISTENT'),
             ),
             FilledButton(
-              onPressed: () => _showModal(context),
+              onPressed: () => _showModal(sheetContext),
               child: const Text('SHOW MODAL'),
             ),
             OutlinedButton(
-              onPressed: () => _showDraggable(context),
+              onPressed: () => _showDraggable(sheetContext),
               child: const Text('SHOW DRAGGABLE'),
             ),
           ],
@@ -76,6 +76,28 @@ class _BottomSheetDemoPageState extends State<BottomSheetDemoPage> {
         ),
       ],
     );
+
+    if (!_customTheme) {
+      return buildContent(context);
+    }
+
+    return Theme(
+      data: Theme.of(context).copyWith(
+        bottomSheetTheme: BottomSheetThemeData(
+          backgroundColor: const Color(0xFFE8DEF8),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
+          showDragHandle: true,
+          dragHandleColor: WidgetStateColor.resolveWith(
+            (Set<WidgetState> states) => states.contains(WidgetState.hovered)
+                ? const Color(0xFFB3261E)
+                : const Color(0xFF6750A4),
+          ),
+        ),
+      ),
+      child: Builder(builder: buildContent),
+    );
   }
 
   void _showPersistent(BuildContext context) {
@@ -83,10 +105,6 @@ class _BottomSheetDemoPageState extends State<BottomSheetDemoPage> {
     controller = showBottomSheet(
       context: context,
       showDragHandle: _showDragHandle,
-      backgroundColor: _customTheme ? const Color(0xFFFFF0F5) : null,
-      shape: _customTheme
-          ? RoundedRectangleBorder(borderRadius: BorderRadius.circular(18))
-          : null,
       builder: (BuildContext context) =>
           _sheetContent('Persistent sheet', controller.close),
     );
@@ -99,10 +117,6 @@ class _BottomSheetDemoPageState extends State<BottomSheetDemoPage> {
       isScrollControlled: _scrollControlled,
       useSafeArea: true,
       anchorPoint: _anchorEnd ? const Offset(double.maxFinite, 0) : null,
-      backgroundColor: _customTheme ? const Color(0xFFE8DEF8) : null,
-      shape: _customTheme
-          ? RoundedRectangleBorder(borderRadius: BorderRadius.circular(18))
-          : null,
       builder: (BuildContext context) => _sheetContent(
         'Modal sheet',
         () => Navigator.pop(context, 'accepted'),

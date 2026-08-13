@@ -245,6 +245,12 @@ public sealed partial record TooltipThemeData
 
 public sealed partial record BottomSheetThemeData
 {
+    private static WidgetStateColor? LerpStateColor(WidgetStateColor? a, WidgetStateColor? b, double t)
+    {
+        Color? color = MaterialThemeLerp.Color(a?.DefaultValue, b?.DefaultValue, t);
+        return color is null ? null : new WidgetStateColor(color.Value);
+    }
+
     public static BottomSheetThemeData? Lerp(BottomSheetThemeData? a, BottomSheetThemeData? b, double t)
     {
         if (ReferenceEquals(a, b))
@@ -269,10 +275,7 @@ public sealed partial record BottomSheetThemeData
             ModalElevation = MaterialThemeLerp.Double(a?.ModalElevation, b?.ModalElevation, t),
             Shape = MaterialThemeLerp.Shape(a?.Shape, b?.Shape, t),
             ShowDragHandle = t < 0.5 ? a?.ShowDragHandle : b?.ShowDragHandle,
-            DragHandleColor = MaterialThemeLerp.ColorStateProperty(
-                a?.DragHandleColor,
-                b?.DragHandleColor,
-                t),
+            DragHandleColor = LerpStateColor(a?.DragHandleColor, b?.DragHandleColor, t),
             DragHandleSize = MaterialThemeLerp.Size(a?.DragHandleSize, b?.DragHandleSize, t),
             ClipBehavior = t < 0.5 ? a?.ClipBehavior : b?.ClipBehavior,
             Constraints = MaterialThemeLerp.BoxConstraints(a?.Constraints, b?.Constraints, t),

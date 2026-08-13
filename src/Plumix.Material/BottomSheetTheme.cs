@@ -21,7 +21,7 @@ public sealed partial record BottomSheetThemeData
         double? ModalElevation = null,
         ShapeBorder? Shape = null,
         bool? ShowDragHandle = null,
-        MaterialStateProperty<Color?>? DragHandleColor = null,
+        WidgetStateColor? DragHandleColor = null,
         Size? DragHandleSize = null,
         Clip? ClipBehavior = null,
         BoxConstraints? Constraints = null)
@@ -61,10 +61,59 @@ public sealed partial record BottomSheetThemeData
     public double? ModalElevation { get; init; }
     public ShapeBorder? Shape { get; init; }
     public bool? ShowDragHandle { get; init; }
-    public MaterialStateProperty<Color?>? DragHandleColor { get; init; }
+    public WidgetStateColor? DragHandleColor { get; init; }
     public Size? DragHandleSize { get; init; }
     public Clip? ClipBehavior { get; init; }
     public BoxConstraints? Constraints { get; init; }
+
+    public BottomSheetThemeData CopyWith(
+        Color? backgroundColor = null,
+        Color? surfaceTintColor = null,
+        double? elevation = null,
+        Color? modalBackgroundColor = null,
+        Color? modalBarrierColor = null,
+        Color? shadowColor = null,
+        double? modalElevation = null,
+        ShapeBorder? shape = null,
+        bool? showDragHandle = null,
+        WidgetStateColor? dragHandleColor = null,
+        Size? dragHandleSize = null,
+        Clip? clipBehavior = null,
+        BoxConstraints? constraints = null)
+    {
+        return new BottomSheetThemeData(
+            BackgroundColor: backgroundColor ?? BackgroundColor,
+            SurfaceTintColor: surfaceTintColor ?? SurfaceTintColor,
+            Elevation: elevation ?? Elevation,
+            ModalBackgroundColor: modalBackgroundColor ?? ModalBackgroundColor,
+            ModalBarrierColor: modalBarrierColor ?? ModalBarrierColor,
+            ShadowColor: shadowColor ?? ShadowColor,
+            ModalElevation: modalElevation ?? ModalElevation,
+            Shape: shape ?? Shape,
+            ShowDragHandle: showDragHandle ?? ShowDragHandle,
+            DragHandleColor: dragHandleColor ?? DragHandleColor,
+            DragHandleSize: dragHandleSize ?? DragHandleSize,
+            ClipBehavior: clipBehavior ?? ClipBehavior,
+            Constraints: constraints ?? Constraints);
+    }
+
+    public void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        ArgumentNullException.ThrowIfNull(properties);
+        properties.Add(new DiagnosticsProperty<Color?>("backgroundColor", BackgroundColor));
+        properties.Add(new DiagnosticsProperty<Color?>("surfaceTintColor", SurfaceTintColor));
+        properties.Add(new DoubleProperty("elevation", Elevation));
+        properties.Add(new DiagnosticsProperty<Color?>("modalBackgroundColor", ModalBackgroundColor));
+        properties.Add(new DiagnosticsProperty<Color?>("shadowColor", ShadowColor));
+        properties.Add(new DiagnosticsProperty<Color?>("modalBarrierColor", ModalBarrierColor));
+        properties.Add(new DoubleProperty("modalElevation", ModalElevation));
+        properties.Add(new DiagnosticsProperty<ShapeBorder?>("shape", Shape));
+        properties.Add(new DiagnosticsProperty<bool?>("showDragHandle", ShowDragHandle));
+        properties.Add(new DiagnosticsProperty<WidgetStateColor?>("dragHandleColor", DragHandleColor));
+        properties.Add(new DiagnosticsProperty<Size?>("dragHandleSize", DragHandleSize));
+        properties.Add(new DiagnosticsProperty<Clip?>("clipBehavior", ClipBehavior));
+        properties.Add(new DiagnosticsProperty<BoxConstraints?>("constraints", Constraints));
+    }
 
     private static void ValidateElevation(double? value, string name)
     {
@@ -75,7 +124,7 @@ public sealed partial record BottomSheetThemeData
     }
 }
 
-public sealed class BottomSheetTheme : InheritedWidget
+public sealed class BottomSheetTheme : InheritedTheme
 {
     public BottomSheetTheme(BottomSheetThemeData data, Widget child, Key? key = null) : base(key)
     {
@@ -87,6 +136,11 @@ public sealed class BottomSheetTheme : InheritedWidget
     public Widget Child { get; }
 
     public override Widget Build(BuildContext context) => Child;
+
+    public override Widget Wrap(BuildContext context, Widget child)
+    {
+        return new BottomSheetTheme(Data, child);
+    }
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
         !Equals(((BottomSheetTheme)oldWidget).Data, Data);

@@ -23,7 +23,7 @@ public sealed class BottomSheetDemoPage : StatefulWidget
 
         public override Widget Build(BuildContext context)
         {
-            return new Column(
+            Widget BuildContent(BuildContext sheetContext) => new Column(
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
                 spacing: 12,
                 children:
@@ -50,12 +50,30 @@ public sealed class BottomSheetDemoPage : StatefulWidget
                         spacing: 8,
                         children:
                         [
-                            new ElevatedButton(new Text("SHOW PERSISTENT"), () => ShowPersistent(context)),
-                            new FilledButton(new Text("SHOW MODAL"), () => ShowModal(context)),
-                            new OutlinedButton(new Text("SHOW DRAGGABLE"), () => ShowDraggable(context)),
+                            new ElevatedButton(new Text("SHOW PERSISTENT"), () => ShowPersistent(sheetContext)),
+                            new FilledButton(new Text("SHOW MODAL"), () => ShowModal(sheetContext)),
+                            new OutlinedButton(new Text("SHOW DRAGGABLE"), () => ShowDraggable(sheetContext)),
                         ]),
                     new Text($"Last modal result: {_lastResult}", fontSize: 13),
                 ]);
+
+            if (!_customTheme)
+            {
+                return BuildContent(context);
+            }
+
+            var bottomSheetTheme = new BottomSheetThemeData(
+                BackgroundColor: Color.Parse("#FFE8DEF8"),
+                Shape: new RoundedRectangleBorder(
+                    borderRadius: Plumix.Rendering.BorderRadius.Circular(18)),
+                ShowDragHandle: true,
+                DragHandleColor: WidgetStateColor.ResolveWith(
+                    Color.Parse("#FF6750A4"),
+                    states => states.Contains(WidgetState.Hovered)
+                        ? Color.Parse("#FFB3261E")
+                        : Color.Parse("#FF6750A4")));
+            ThemeData localTheme = Theme.Of(context) with { BottomSheetTheme = bottomSheetTheme };
+            return new Theme(data: localTheme, child: new Builder(BuildContent));
         }
 
         private void ShowPersistent(BuildContext context)
@@ -64,9 +82,6 @@ public sealed class BottomSheetDemoPage : StatefulWidget
             controller = MaterialBottomSheets.ShowBottomSheet(
                 context,
                 _ => BuildSheetContent("Persistent sheet", () => controller?.Close()),
-                backgroundColor: _customTheme ? Color.Parse("#FFFFF0F5") : null,
-                shape: _customTheme ? new RoundedRectangleBorder(borderRadius:
-                    Plumix.Rendering.BorderRadius.Circular(18)) : null,
                 showDragHandle: _showDragHandle);
         }
 
@@ -75,9 +90,6 @@ public sealed class BottomSheetDemoPage : StatefulWidget
             string? result = await MaterialBottomSheets.ShowModalBottomSheet<string>(
                 context,
                 sheetContext => BuildSheetContent("Modal sheet", () => Navigator.Pop(sheetContext, "accepted")),
-                backgroundColor: _customTheme ? Color.Parse("#FFE8DEF8") : null,
-                shape: _customTheme ? new RoundedRectangleBorder(borderRadius:
-                    Plumix.Rendering.BorderRadius.Circular(18)) : null,
                 isScrollControlled: _scrollControlled,
                 showDragHandle: _showDragHandle,
                 useSafeArea: true,

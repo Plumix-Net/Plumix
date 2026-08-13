@@ -1,5 +1,10 @@
 # Changelog
 
+- Breaking: completed the Material `BottomSheet`/`BottomSheetThemeData` direct-token and theme closeout. M3 sheets
+  now read `surfaceContainerLow`/`onSurfaceVariant` from `ColorScheme` directly; drag-handle colors use the
+  source-shaped `WidgetStateColor` contract, and bottom-sheet themes now provide exact copy/lerp, diagnostics, and
+  inherited-theme capture. The mirrored demo exercises captured theme overrides and hover-state handle colors.
+
 - Breaking: completed the Material date/range-picker direct-token and theme closeout. `DatePickerThemeData` now
   uses Flutter's `OutlinedBorder` state-shape contract, locale/copy/lerp surface, inherited-theme capture, and exact
   M2/M3 `ColorScheme`/`TextTheme` defaults; picker dialogs honor source theme precedence and range overlays, and
