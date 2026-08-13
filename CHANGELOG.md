@@ -1,5 +1,11 @@
 # Changelog
 
+- Breaking: completed strict Material `DataTable`/`DataTableThemeData` parity. Tables now resolve local and global
+  theme fields in Flutter order, use direct `ColorScheme` row roles and source divider defaults, accept arbitrary
+  decorations, compose through clipped transparent `Material`, merge ambient text styles, expose column-header
+  semantics, and animate sort arrows over 150ms. Focused tests and mirrored demos cover M2/M3 roles, row states,
+  theme fallback, layout, clipping, semantics, and sort transitions.
+
 - Breaking: completed strict Material `SegmentedButton<T>`/`SegmentedButtonThemeData` parity. Expanded insets now
   use `EdgeInsets`, `styleFrom` accepts any `OutlinedBorder`, segment state controllers survive updates, and the
   source `Material`/`TextButtonTheme`/`TextButton` composition carries selected and enabled semantics. A dedicated

@@ -349,7 +349,7 @@ public sealed partial record DataTableThemeData
         DataTableThemeData selected = t < 0.5 ? a : b;
         return selected with
         {
-            Decoration = MaterialThemeLerp.Decoration(a.Decoration, b.Decoration, t),
+            Decoration = MaterialThemeLerp.AnyDecoration(a.Decoration, b.Decoration, t),
             DataRowColor = MaterialThemeLerp.ColorStateProperty(a.DataRowColor, b.DataRowColor, t),
             DataRowMinHeight = MaterialThemeLerp.Double(a.DataRowMinHeight, b.DataRowMinHeight, t),
             DataRowMaxHeight = MaterialThemeLerp.Double(a.DataRowMaxHeight, b.DataRowMaxHeight, t),

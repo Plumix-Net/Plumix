@@ -33,6 +33,9 @@ internal sealed class DataTableDemoPageState : State
         var baseTheme = Theme.Of(context);
         var theme = baseTheme with
         {
+            ColorScheme = _useThemeOverrides
+                ? baseTheme.ColorScheme with { Primary = Color.Parse("#FF6750A4") }
+                : baseTheme.ColorScheme,
             DataTableTheme = _useThemeOverrides
                 ? new DataTableThemeData(
                     headingRowColor: MaterialStateProperty<Color?>.All(Color.Parse("#FFE8DEF8")),
@@ -55,7 +58,8 @@ internal sealed class DataTableDemoPageState : State
                         new Text("DataTable + PaginatedDataTable", fontSize: 20, color: Colors.Black),
                         new Text(
                             "Intrinsic columns, numeric alignment, row-wide TableRowInkWell selection, theme "
-                            + "precedence, source caching, and page controls.",
+                            + "precedence, direct ColorScheme row roles, animated sort arrows, source caching, "
+                            + "and page controls.",
                             fontSize: 14,
                             color: Color.Parse("#8A000000")),
                         new Row(

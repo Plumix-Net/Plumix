@@ -126,13 +126,15 @@ public sealed record DataCell
 
 public sealed class DataTable : StatelessWidget
 {
+    private static readonly LocalKey HeadingRowKey = new UniqueKey();
+
     public DataTable(
         IReadOnlyList<DataColumn> columns,
         IReadOnlyList<DataRow> rows,
         int? sortColumnIndex = null,
         bool sortAscending = true,
         Action<bool?>? onSelectAll = null,
-        BoxDecoration? decoration = null,
+        Decoration? decoration = null,
         MaterialStateProperty<Color?>? dataRowColor = null,
         double? dataRowHeight = null,
         double? dataRowMinHeight = null,
@@ -161,14 +163,14 @@ public sealed class DataTable : StatelessWidget
             throw new ArgumentException("dataRowHeight cannot be combined with dataRowMinHeight/dataRowMaxHeight.");
         dataRowMinHeight ??= dataRowHeight;
         dataRowMaxHeight ??= dataRowHeight;
-        ValidateNonNegative(dataRowMinHeight, nameof(dataRowMinHeight));
-        ValidateNonNegative(dataRowMaxHeight, nameof(dataRowMaxHeight));
-        if (dataRowMinHeight > dataRowMaxHeight) throw new ArgumentException("Maximum row height must be at least minimum row height.");
-        ValidateNonNegative(headingRowHeight, nameof(headingRowHeight));
-        ValidateNonNegative(horizontalMargin, nameof(horizontalMargin));
-        ValidateNonNegative(columnSpacing, nameof(columnSpacing));
-        ValidateNonNegative(dividerThickness, nameof(dividerThickness));
-        ValidateNonNegative(checkboxHorizontalMargin, nameof(checkboxHorizontalMargin));
+        if (dataRowMinHeight > dataRowMaxHeight)
+        {
+            throw new ArgumentException("Maximum row height must be at least minimum row height.");
+        }
+        if (dividerThickness < 0.0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(dividerThickness));
+        }
 
         Columns = columns;
         Rows = rows;
@@ -198,7 +200,7 @@ public sealed class DataTable : StatelessWidget
     public int? SortColumnIndex { get; }
     public bool SortAscending { get; }
     public Action<bool?>? OnSelectAll { get; }
-    public BoxDecoration? Decoration { get; }
+    public Decoration? Decoration { get; }
     public MaterialStateProperty<Color?>? DataRowColor { get; }
     public double? DataRowMinHeight { get; }
     public double? DataRowMaxHeight { get; }
@@ -218,43 +220,87 @@ public sealed class DataTable : StatelessWidget
 
     public override Widget Build(BuildContext context)
     {
-        var theme = Theme.Of(context);
-        var localTheme = DataTableTheme.Of(context);
-        var textDirection = Directionality.Of(context);
-        double horizontalMargin = HorizontalMargin ?? localTheme.HorizontalMargin ?? 24.0;
-        double columnSpacing = ColumnSpacing ?? localTheme.ColumnSpacing ?? 56.0;
-        double checkboxMargin = CheckboxHorizontalMargin ?? localTheme.CheckboxHorizontalMargin ?? horizontalMargin;
-        double headingHeight = HeadingRowHeight ?? localTheme.HeadingRowHeight ?? 56.0;
-        double dataMinHeight = DataRowMinHeight ?? localTheme.DataRowMinHeight ?? 48.0;
-        double dataMaxHeight = DataRowMaxHeight ?? localTheme.DataRowMaxHeight ?? 48.0;
-        var headingStyle = HeadingTextStyle ?? localTheme.HeadingTextStyle ?? theme.TextTheme.LabelLarge;
-        var dataStyle = DataTextStyle ?? localTheme.DataTextStyle ?? theme.TextTheme.BodyMedium;
-        var effectiveDataRowColor = DataRowColor ?? localTheme.DataRowColor;
-        var effectiveHeadingRowColor = HeadingRowColor ?? localTheme.HeadingRowColor;
+        ThemeData theme = Theme.Of(context);
+        DataTableThemeData dataTableTheme = DataTableTheme.Of(context);
+        DataTableThemeData globalDataTableTheme = theme.DataTableTheme;
+        TextDirection textDirection = Directionality.Of(context);
+        double horizontalMargin = HorizontalMargin
+                                  ?? dataTableTheme.HorizontalMargin
+                                  ?? globalDataTableTheme.HorizontalMargin
+                                  ?? 24.0;
+        double columnSpacing = ColumnSpacing
+                               ?? dataTableTheme.ColumnSpacing
+                               ?? globalDataTableTheme.ColumnSpacing
+                               ?? 56.0;
+        double checkboxMarginStart = CheckboxHorizontalMargin
+                                     ?? dataTableTheme.CheckboxHorizontalMargin
+                                     ?? globalDataTableTheme.CheckboxHorizontalMargin
+                                     ?? horizontalMargin;
+        double checkboxMarginEnd = CheckboxHorizontalMargin
+                                   ?? dataTableTheme.CheckboxHorizontalMargin
+                                   ?? globalDataTableTheme.CheckboxHorizontalMargin
+                                   ?? horizontalMargin / 2.0;
+        double headingHeight = HeadingRowHeight
+                               ?? dataTableTheme.HeadingRowHeight
+                               ?? globalDataTableTheme.HeadingRowHeight
+                               ?? 56.0;
+        double dataMinHeight = DataRowMinHeight
+                               ?? dataTableTheme.DataRowMinHeight
+                               ?? globalDataTableTheme.DataRowMinHeight
+                               ?? 48.0;
+        double dataMaxHeight = DataRowMaxHeight
+                               ?? dataTableTheme.DataRowMaxHeight
+                               ?? globalDataTableTheme.DataRowMaxHeight
+                               ?? 48.0;
+        TextStyle headingStyle = HeadingTextStyle
+                                 ?? dataTableTheme.HeadingTextStyle
+                                 ?? globalDataTableTheme.HeadingTextStyle
+                                 ?? theme.TextTheme.TitleSmall;
+        TextStyle dataStyle = DataTextStyle
+                              ?? dataTableTheme.DataTextStyle
+                              ?? globalDataTableTheme.DataTextStyle
+                              ?? theme.TextTheme.BodyMedium;
+        MaterialStateProperty<Color?>? effectiveDataRowColor = DataRowColor
+                                                                ?? dataTableTheme.DataRowColor
+                                                                ?? globalDataTableTheme.DataRowColor;
+        MaterialStateProperty<Color?>? effectiveHeadingRowColor = HeadingRowColor
+                                                                   ?? dataTableTheme.HeadingRowColor
+                                                                   ?? globalDataTableTheme.HeadingRowColor;
         bool anySelectable = Rows.Any(row => row.OnSelectChanged is not null);
         bool displayCheckbox = ShowCheckboxColumn && anySelectable;
         var selectableRows = Rows.Where(row => row.OnSelectChanged is not null).ToArray();
         int selectedRows = selectableRows.Count(row => row.Selected);
         bool allChecked = displayCheckbox && selectedRows == selectableRows.Length;
         bool someChecked = displayCheckbox && selectedRows > 0 && !allChecked;
-        var textColumns = Columns.Select((column, index) => (column, index)).Where(pair => !pair.column.Numeric).ToArray();
+        var textColumns = Columns
+            .Select((column, index) => (column, index))
+            .Where(pair => !pair.column.Numeric)
+            .ToArray();
         int? onlyTextColumn = textColumns.Length == 1 ? textColumns[0].index : (int?)null;
         var tableRows = new List<TableRow>();
+        double dividerThickness = DividerThickness
+                                  ?? dataTableTheme.DividerThickness
+                                  ?? globalDataTableTheme.DividerThickness
+                                  ?? 1.0;
+        BorderSide divider = Divider.CreateBorderSide(context, width: dividerThickness);
 
         var headingChildren = new List<Widget>();
         if (displayCheckbox)
         {
             headingChildren.Add(BuildCheckbox(
+                context: context,
                 value: someChecked ? null : allChecked,
                 tristate: true,
-                horizontalStart: checkboxMargin,
-                horizontalEnd: checkboxMargin / 2,
                 onRowTap: null,
                 onChanged: value => HandleSelectAll(value, someChecked)));
         }
         for (int columnIndex = 0; columnIndex < Columns.Count; columnIndex++)
         {
-            var padding = ResolveCellPadding(columnIndex, displayCheckbox, horizontalMargin, columnSpacing, textDirection);
+            EdgeInsetsGeometry padding = ResolveCellPadding(
+                columnIndex,
+                displayCheckbox,
+                horizontalMargin,
+                columnSpacing);
             headingChildren.Add(BuildHeadingCell(
                 context,
                 Columns[columnIndex],
@@ -262,30 +308,40 @@ public sealed class DataTable : StatelessWidget
                 padding,
                 headingHeight,
                 headingStyle,
-                localTheme));
+                dataTableTheme,
+                effectiveHeadingRowColor,
+                textDirection));
         }
+        Color? headingColor = effectiveHeadingRowColor?.Resolve(MaterialState.None);
+        var headingBorder = ShowBottomBorder
+            ? new Plumix.Rendering.Border(bottom: divider)
+            : null;
         tableRows.Add(new TableRow(
             headingChildren,
-            decoration: new BoxDecoration(Color: effectiveHeadingRowColor?.Resolve(MaterialState.None))));
+            key: HeadingRowKey,
+            decoration: new BoxDecoration(Color: headingColor, Border: headingBorder)));
 
         foreach (var row in Rows)
         {
             var children = new List<Widget>();
-            var rowStates = (row.Selected ? MaterialState.Selected : MaterialState.None)
-                            | (anySelectable && row.OnSelectChanged is null ? MaterialState.Disabled : MaterialState.None);
+            MaterialState colorStates = (row.Selected ? MaterialState.Selected : MaterialState.None)
+                                        | (anySelectable && row.OnSelectChanged is null
+                                            ? MaterialState.Disabled
+                                            : MaterialState.None);
+            MaterialState cursorStates = row.Selected ? MaterialState.Selected : MaterialState.None;
             if (displayCheckbox)
             {
                 children.Add(BuildCheckbox(
+                    context: context,
                     value: row.Selected,
                     tristate: false,
-                    horizontalStart: checkboxMargin,
-                    horizontalEnd: checkboxMargin / 2,
                     onRowTap: row.OnSelectChanged is null
                         ? null
                         : () => row.OnSelectChanged(!row.Selected),
                     onChanged: row.OnSelectChanged,
                     overlayColor: row.Color ?? effectiveDataRowColor,
-                    mouseCursor: row.MouseCursor?.Resolve(rowStates) ?? localTheme.DataRowCursor?.Resolve(rowStates)));
+                    mouseCursor: row.MouseCursor?.Resolve(cursorStates)
+                                 ?? dataTableTheme.DataRowCursor?.Resolve(cursorStates)));
             }
             for (int columnIndex = 0; columnIndex < Columns.Count; columnIndex++)
             {
@@ -294,92 +350,123 @@ public sealed class DataTable : StatelessWidget
                     Columns[columnIndex],
                     row,
                     row.Cells[columnIndex],
-                    ResolveCellPadding(columnIndex, displayCheckbox, horizontalMargin, columnSpacing, textDirection),
+                    ResolveCellPadding(columnIndex, displayCheckbox, horizontalMargin, columnSpacing),
                     dataMinHeight,
                     dataMaxHeight,
                     dataStyle,
                     row.Color ?? effectiveDataRowColor,
-                    row.MouseCursor?.Resolve(rowStates) ?? localTheme.DataRowCursor?.Resolve(rowStates)));
+                    row.MouseCursor?.Resolve(cursorStates)
+                    ?? dataTableTheme.DataRowCursor?.Resolve(cursorStates),
+                    textDirection));
             }
-            var rowColor = (row.Color ?? effectiveDataRowColor)?.Resolve(rowStates)
-                           ?? (row.Selected ? WithOpacity(theme.PrimaryColor, 0.08) : null);
-            tableRows.Add(new TableRow(children, row.Key, new BoxDecoration(Color: rowColor)));
+            Color? rowColor = (row.Color ?? effectiveDataRowColor)?.Resolve(colorStates)
+                              ?? (row.Selected ? WithOpacity(theme.ColorScheme.Primary, 0.08) : null);
+            var rowBorder = ShowBottomBorder
+                ? new Plumix.Rendering.Border(bottom: divider)
+                : new Plumix.Rendering.Border(top: divider);
+            tableRows.Add(new TableRow(
+                children,
+                row.Key,
+                new BoxDecoration(Color: rowColor, Border: rowBorder)));
         }
 
         var widths = new Dictionary<int, TableColumnWidth>();
         int displayIndex = 0;
         if (displayCheckbox)
         {
-            widths[displayIndex++] = new FixedColumnWidth(checkboxMargin + Checkbox.Width + (checkboxMargin / 2));
+            widths[displayIndex++] = new FixedColumnWidth(
+                checkboxMarginStart + Checkbox.Width + checkboxMarginEnd);
         }
         for (int columnIndex = 0; columnIndex < Columns.Count; columnIndex++)
         {
             widths[displayIndex++] = Columns[columnIndex].ColumnWidth
-                                     ?? (columnIndex == onlyTextColumn ? new IntrinsicColumnWidth(1) : new IntrinsicColumnWidth());
+                                     ?? (columnIndex == onlyTextColumn
+                                         ? new IntrinsicColumnWidth(1.0)
+                                         : new IntrinsicColumnWidth());
         }
 
-        var divider = new BorderSide(theme.DividerColor, DividerThickness ?? localTheme.DividerThickness ?? 1.0);
-        var effectiveBorder = Border ?? new TableBorder(
-            bottom: ShowBottomBorder ? divider : null,
-            horizontalInside: divider);
-        Widget result = new Table(
-            tableRows,
-            widths,
-            border: effectiveBorder,
+        Widget table = new Table(
+            children: tableRows,
+            columnWidths: widths,
+            border: Border,
             defaultVerticalAlignment: TableCellVerticalAlignment.Middle);
-        var decoration = Decoration ?? localTheme.Decoration;
-        if (decoration is not null) result = new DecoratedBox(decoration, result);
-        if (ClipBehavior != Clip.None)
-        {
-            result = decoration?.BorderRadius is { } radius
-                ? new ClipRRect(radius, result)
-                : new ClipRect(child: result);
-        }
-        return result;
+        Widget material = new Material(
+            type: MaterialType.Transparency,
+            borderRadius: Border?.BorderRadius,
+            clipBehavior: ClipBehavior,
+            child: table);
+        Decoration? decoration = Decoration
+                                 ?? dataTableTheme.Decoration
+                                 ?? globalDataTableTheme.Decoration;
+        return new Container(decoration: decoration, child: material);
     }
 
     private Widget BuildHeadingCell(
         BuildContext context,
         DataColumn column,
         int columnIndex,
-        Thickness padding,
+        EdgeInsetsGeometry padding,
         double height,
         TextStyle style,
-        DataTableThemeData tableTheme)
+        DataTableThemeData tableTheme,
+        MaterialStateProperty<Color?>? overlayColor,
+        TextDirection textDirection)
     {
         bool sorted = SortColumnIndex == columnIndex;
-        var alignment = column.HeadingRowAlignment ?? tableTheme.HeadingRowAlignment ?? MainAxisAlignment.Start;
+        MainAxisAlignment alignment = column.HeadingRowAlignment
+                                      ?? tableTheme.HeadingRowAlignment
+                                      ?? MainAxisAlignment.Start;
         var content = new List<Widget>();
-        if (alignment == MainAxisAlignment.Center && column.OnSort is not null) content.Add(new SizedBox(width: 18));
+        if (alignment == MainAxisAlignment.Center && column.OnSort is not null)
+        {
+            content.Add(new SizedBox(width: 18.0));
+        }
         content.Add(column.Label);
         if (column.OnSort is not null)
         {
-            content.Add(new SizedBox(width: 2));
-            content.Add(new Opacity(sorted ? 1 : 0, new Icon(
-                SortAscending ? Icons.ArrowUpward : Icons.ArrowDownward,
-                size: 16,
-                color: style.Color)));
+            content.Add(new SortArrow(
+                visible: sorted,
+                up: sorted ? SortAscending : null,
+                duration: TimeSpan.FromMilliseconds(150)));
+            content.Add(new SizedBox(width: 2.0));
         }
-        Widget label = new Container(
+        Widget label = new Row(
+            mainAxisAlignment: alignment,
+            textDirection: column.Numeric ? TextDirection.Rtl : null,
+            children: content);
+        TextStyle effectiveStyle = DefaultTextStyle.Of(context).Merge(style);
+        Alignment cellAlignment = column.Numeric
+            ? Alignment.CenterRight
+            : textDirection == TextDirection.Rtl
+                ? Alignment.CenterRight
+                : Alignment.CenterLeft;
+        label = new Container(
             height: height,
             padding: padding,
-            alignment: column.Numeric ? Alignment.CenterRight : Alignment.CenterLeft,
-            child: new DefaultTextStyle(
-                style,
-                new Row(
-                    mainAxisSize: MainAxisSize.Min,
-                    mainAxisAlignment: alignment,
-                    textDirection: column.Numeric ? TextDirection.Rtl : null,
-                    children: content),
-                softWrap: false));
-        if (column.Tooltip is not null) label = new Tooltip(column.Tooltip, child: label);
-        var states = column.OnSort is null ? MaterialState.Disabled : MaterialState.None;
-        return new InkWell(
+            alignment: cellAlignment,
+            child: new AnimatedDefaultTextStyle(
+                child: label,
+                style: effectiveStyle,
+                softWrap: false,
+                duration: TimeSpan.FromMilliseconds(150)));
+        if (column.Tooltip is not null)
+        {
+            label = new Tooltip(column.Tooltip, child: label);
+        }
+        MaterialState states = column.OnSort is null ? MaterialState.Disabled : MaterialState.None;
+        Widget inkWell = new InkWell(
             onTap: column.OnSort is null
                 ? null
                 : () => column.OnSort(columnIndex, SortColumnIndex != columnIndex || !SortAscending),
+            overlayColor: overlayColor,
             mouseCursor: column.MouseCursor?.Resolve(states) ?? tableTheme.HeadingCellCursor?.Resolve(states),
             child: label);
+        // Flutter's semantics fragments preserve the inner annotation through InkWell. Plumix's table compiler
+        // consumes the cell's outer node, so keep the same resulting role at that boundary.
+        return new Semantics(
+            container: true,
+            role: SemanticsRole.ColumnHeader,
+            child: inkWell);
     }
 
     private static Widget BuildDataCell(
@@ -387,28 +474,35 @@ public sealed class DataTable : StatelessWidget
         DataColumn column,
         DataRow row,
         DataCell cell,
-        Thickness padding,
+        EdgeInsetsGeometry padding,
         double minHeight,
         double maxHeight,
         TextStyle style,
         MaterialStateProperty<Color?>? overlayColor,
-        MouseCursor? cursor)
+        MouseCursor? cursor,
+        TextDirection textDirection)
     {
-        var effectiveStyle = cell.Placeholder && style.Color.HasValue
-            ? style.CopyWith(color: WithOpacity(style.Color.Value, 0.60))
-            : style;
         Widget label = cell.Child;
         if (cell.ShowEditIcon)
         {
             label = new Row(
-                mainAxisSize: MainAxisSize.Min,
                 textDirection: column.Numeric ? TextDirection.Rtl : null,
-                children: [new Flexible(label), new SizedBox(width: 8), new Icon(Icons.Edit, size: 18)]);
+                children: [new Expanded(label), new Icon(Icons.Edit, size: 18.0)]);
         }
+        TextStyle effectiveStyle = DefaultTextStyle.Of(context).Merge(style);
+        if (cell.Placeholder && style.Color.HasValue)
+        {
+            effectiveStyle = effectiveStyle.CopyWith(color: WithOpacity(style.Color.Value, 0.60));
+        }
+        Alignment cellAlignment = column.Numeric
+            ? Alignment.CenterRight
+            : textDirection == TextDirection.Rtl
+                ? Alignment.CenterRight
+                : Alignment.CenterLeft;
         label = new Container(
             constraints: new BoxConstraints(MinHeight: minHeight, MaxHeight: maxHeight),
             padding: padding,
-            alignment: column.Numeric ? Alignment.CenterRight : Alignment.CenterLeft,
+            alignment: cellAlignment,
             child: new DefaultTextStyle(effectiveStyle, new DropdownButtonHideUnderline(label)));
 
         if (cell.IsInteractive)
@@ -438,19 +532,30 @@ public sealed class DataTable : StatelessWidget
         return new TableCell(label);
     }
 
-    private static TableCell BuildCheckbox(
+    private TableCell BuildCheckbox(
+        BuildContext context,
         bool? value,
         bool tristate,
-        double horizontalStart,
-        double horizontalEnd,
         Action? onRowTap,
         Action<bool?>? onChanged,
         MaterialStateProperty<Color?>? overlayColor = null,
         MouseCursor? mouseCursor = null)
     {
-        Widget contents = new Padding(
-            new Thickness(horizontalStart, 0, horizontalEnd, 0),
-            new Center(child: new Checkbox(value, onChanged, tristate: tristate)));
+        ThemeData theme = Theme.Of(context);
+        double horizontalMargin = HorizontalMargin
+                                  ?? theme.DataTableTheme.HorizontalMargin
+                                  ?? 24.0;
+        double horizontalStart = CheckboxHorizontalMargin
+                                 ?? theme.DataTableTheme.CheckboxHorizontalMargin
+                                 ?? horizontalMargin;
+        double horizontalEnd = CheckboxHorizontalMargin
+                               ?? theme.DataTableTheme.CheckboxHorizontalMargin
+                               ?? horizontalMargin / 2.0;
+        Widget contents = new Semantics(
+            container: true,
+            child: new Padding(
+                EdgeInsetsGeometry.DirectionalOnly(start: horizontalStart, end: horizontalEnd),
+                new Center(child: new Checkbox(value, onChanged, tristate: tristate))));
         if (onRowTap is not null)
         {
             contents = new TableRowInkWell(
@@ -477,12 +582,11 @@ public sealed class DataTable : StatelessWidget
         }
     }
 
-    private Thickness ResolveCellPadding(
+    private EdgeInsetsGeometry ResolveCellPadding(
         int index,
         bool hasCheckbox,
         double horizontalMargin,
-        double columnSpacing,
-        TextDirection textDirection)
+        double columnSpacing)
     {
         double start = index switch
         {
@@ -491,17 +595,129 @@ public sealed class DataTable : StatelessWidget
             _ => columnSpacing / 2,
         };
         double end = index == Columns.Count - 1 ? horizontalMargin : columnSpacing / 2;
-        return textDirection == TextDirection.Rtl
-            ? new Thickness(end, 0, start, 0)
-            : new Thickness(start, 0, end, 0);
+        return EdgeInsetsGeometry.DirectionalOnly(start: start, end: end);
     }
 
     private static Color WithOpacity(Color color, double opacity) =>
         Color.FromArgb((byte)Math.Round(Math.Clamp(opacity, 0, 1) * 255), color.R, color.G, color.B);
 
-    private static void ValidateNonNegative(double? value, string name)
+    private sealed class SortArrow : StatefulWidget
     {
-        if (value.HasValue && (!double.IsFinite(value.Value) || value.Value < 0))
-            throw new ArgumentOutOfRangeException(name);
+        public SortArrow(bool visible, bool? up, TimeSpan duration)
+        {
+            Visible = visible;
+            Up = up;
+            Duration = duration;
+        }
+
+        public bool Visible { get; }
+
+        public bool? Up { get; }
+
+        public TimeSpan Duration { get; }
+
+        public override State CreateState() => new SortArrowState();
+
+        private sealed class SortArrowState : State
+        {
+            private AnimationController? _opacityController;
+            private AnimationController? _orientationController;
+            private double _orientationOffset;
+            private bool? _up;
+
+            private SortArrow CurrentWidget => (SortArrow)StateWidget;
+
+            public override void InitState()
+            {
+                _up = CurrentWidget.Up;
+                _opacityController = new AnimationController(CurrentWidget.Duration, this);
+                _opacityController.SetValue(CurrentWidget.Visible ? 1.0 : 0.0);
+                _opacityController.Changed += HandleChanged;
+                _orientationController = new AnimationController(CurrentWidget.Duration, this);
+                _orientationController.Changed += HandleChanged;
+                _orientationController.Completed += HandleOrientationCompleted;
+                if (CurrentWidget.Visible)
+                {
+                    _orientationOffset = CurrentWidget.Up == true ? 0.0 : Math.PI;
+                }
+            }
+
+            public override void DidUpdateWidget(StatefulWidget oldWidget)
+            {
+                var oldArrow = (SortArrow)oldWidget;
+                _opacityController!.Duration = CurrentWidget.Duration;
+                _orientationController!.Duration = CurrentWidget.Duration;
+                bool skipArrow = false;
+                bool? newUp = CurrentWidget.Up ?? _up;
+                if (oldArrow.Visible != CurrentWidget.Visible)
+                {
+                    if (CurrentWidget.Visible
+                        && _opacityController.Status == AnimationStatus.Dismissed)
+                    {
+                        _orientationController.Stop();
+                        _orientationController.SetValue(0.0);
+                        _orientationOffset = newUp == true ? 0.0 : Math.PI;
+                        skipArrow = true;
+                    }
+
+                    if (CurrentWidget.Visible)
+                    {
+                        _opacityController.Forward();
+                    }
+                    else
+                    {
+                        _opacityController.Reverse();
+                    }
+                }
+
+                if (_up != newUp && !skipArrow)
+                {
+                    if (_orientationController.Status == AnimationStatus.Dismissed)
+                    {
+                        _orientationController.Forward();
+                    }
+                    else
+                    {
+                        _orientationController.Reverse();
+                    }
+                }
+                _up = newUp;
+            }
+
+            public override Widget Build(BuildContext context)
+            {
+                double opacity = Curves.FastOutSlowIn(_opacityController!.Value);
+                double angle = _orientationOffset
+                               + (Math.PI * Curves.EaseIn(_orientationController!.Value));
+                double cosine = Math.Cos(angle);
+                double sine = Math.Sin(angle);
+                var transform = new Matrix(cosine, sine, -sine, cosine, 0.0, -1.5);
+                return new Opacity(
+                    opacity,
+                    new Plumix.Widgets.Transform(
+                        transform,
+                        alignment: Alignment.Center,
+                        child: new Icon(Icons.ArrowUpward, size: 16.0)));
+            }
+
+            public override void Dispose()
+            {
+                _opacityController!.Changed -= HandleChanged;
+                _orientationController!.Changed -= HandleChanged;
+                _orientationController.Completed -= HandleOrientationCompleted;
+                _opacityController.Dispose();
+                _orientationController.Dispose();
+                _opacityController = null;
+                _orientationController = null;
+            }
+
+            private void HandleChanged() => SetState(() => { });
+
+            private void HandleOrientationCompleted()
+            {
+                _orientationOffset += Math.PI;
+                _orientationController!.SetValue(0.0);
+            }
+        }
     }
 }

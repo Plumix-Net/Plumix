@@ -25,6 +25,9 @@ class _DataTableDemoPageState extends State<DataTableDemoPage> {
   Widget build(BuildContext context) {
     final ThemeData baseTheme = Theme.of(context);
     final ThemeData theme = baseTheme.copyWith(
+      colorScheme: _useThemeOverrides
+          ? baseTheme.colorScheme.copyWith(primary: const Color(0xFF6750A4))
+          : baseTheme.colorScheme,
       dataTableTheme: _useThemeOverrides
           ? const DataTableThemeData(
               headingRowColor: WidgetStatePropertyAll<Color>(Color(0xFFE8DEF8)),
@@ -50,7 +53,8 @@ class _DataTableDemoPageState extends State<DataTableDemoPage> {
             const SizedBox(height: 8),
             const Text(
               'Intrinsic columns, numeric alignment, row-wide TableRowInkWell '
-              'selection, theme precedence, source caching, and page controls.',
+              'selection, theme precedence, direct ColorScheme row roles, '
+              'animated sort arrows, source caching, and page controls.',
               style: TextStyle(fontSize: 14, color: Color(0x8A000000)),
             ),
             const SizedBox(height: 12),

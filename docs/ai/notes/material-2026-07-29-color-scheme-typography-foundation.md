@@ -147,6 +147,9 @@
   - Legacy `ButtonBar`/`ButtonBarThemeData` (exact default/theme/widget precedence, directional button padding,
     source `RenderFlex` row-to-column overflow and dry layout, LTR/RTL alignment, spacing/direction, theme
     copy/lerp/diagnostics, and mirrored wide/narrow/directional runtime probes).
+  - `DataTable`/`DataTableThemeData` (direct M2/M3 selected-row and divider roles, exact local/global theme
+    precedence, arbitrary decoration and transparent Material clipping, source row borders, ambient style merge,
+    column-header semantics, 150ms sort-arrow state transitions, and mirrored runtime probes).
 - Completed `Typography.Material2014`/`Material2018`, exact platform black/white themes, dense/tall geometry, and
   locale script-category selection.
 - Remove the narrowed `ColorScheme + Typography closeout` row from `docs/MATERIAL_TODO.md` only after those checks

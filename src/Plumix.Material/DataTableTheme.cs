@@ -11,7 +11,7 @@ namespace Plumix.Material;
 public sealed partial record DataTableThemeData
 {
     public DataTableThemeData(
-        BoxDecoration? decoration = null,
+        Decoration? decoration = null,
         MaterialStateProperty<Color?>? dataRowColor = null,
         double? dataRowHeight = null,
         double? dataRowMinHeight = null,
@@ -32,14 +32,10 @@ public sealed partial record DataTableThemeData
             throw new ArgumentException("dataRowHeight cannot be combined with min/max row heights.");
         dataRowMinHeight ??= dataRowHeight;
         dataRowMaxHeight ??= dataRowHeight;
-        ValidateNonNegative(dataRowMinHeight, nameof(dataRowMinHeight));
-        ValidateNonNegative(dataRowMaxHeight, nameof(dataRowMaxHeight));
-        if (dataRowMinHeight > dataRowMaxHeight) throw new ArgumentException("Maximum row height must be at least the minimum row height.");
-        ValidateNonNegative(headingRowHeight, nameof(headingRowHeight));
-        ValidateNonNegative(horizontalMargin, nameof(horizontalMargin));
-        ValidateNonNegative(columnSpacing, nameof(columnSpacing));
-        ValidateNonNegative(dividerThickness, nameof(dividerThickness));
-        ValidateNonNegative(checkboxHorizontalMargin, nameof(checkboxHorizontalMargin));
+        if (dataRowMinHeight > dataRowMaxHeight)
+        {
+            throw new ArgumentException("Maximum row height must be at least the minimum row height.");
+        }
 
         Decoration = decoration;
         DataRowColor = dataRowColor;
@@ -58,7 +54,7 @@ public sealed partial record DataTableThemeData
         HeadingRowAlignment = headingRowAlignment;
     }
 
-    public BoxDecoration? Decoration { get; init; }
+    public Decoration? Decoration { get; init; }
     public MaterialStateProperty<Color?>? DataRowColor { get; init; }
     public double? DataRowMinHeight { get; init; }
     public double? DataRowMaxHeight { get; init; }
@@ -75,10 +71,46 @@ public sealed partial record DataTableThemeData
     public MaterialStateProperty<MouseCursor?>? DataRowCursor { get; init; }
     public MainAxisAlignment? HeadingRowAlignment { get; init; }
 
-    private static void ValidateNonNegative(double? value, string name)
+    public DataTableThemeData CopyWith(
+        Decoration? decoration = null,
+        MaterialStateProperty<Color?>? dataRowColor = null,
+        double? dataRowHeight = null,
+        double? dataRowMinHeight = null,
+        double? dataRowMaxHeight = null,
+        TextStyle? dataTextStyle = null,
+        MaterialStateProperty<Color?>? headingRowColor = null,
+        double? headingRowHeight = null,
+        TextStyle? headingTextStyle = null,
+        double? horizontalMargin = null,
+        double? columnSpacing = null,
+        double? dividerThickness = null,
+        double? checkboxHorizontalMargin = null,
+        MaterialStateProperty<MouseCursor?>? headingCellCursor = null,
+        MaterialStateProperty<MouseCursor?>? dataRowCursor = null,
+        MainAxisAlignment? headingRowAlignment = null)
     {
-        if (value.HasValue && (!double.IsFinite(value.Value) || value.Value < 0))
-            throw new ArgumentOutOfRangeException(name);
+        if (dataRowHeight.HasValue && (dataRowMinHeight.HasValue || dataRowMaxHeight.HasValue))
+        {
+            throw new ArgumentException("dataRowHeight cannot be combined with min/max row heights.");
+        }
+        dataRowMinHeight ??= dataRowHeight;
+        dataRowMaxHeight ??= dataRowHeight;
+        return new DataTableThemeData(
+            decoration: decoration ?? Decoration,
+            dataRowColor: dataRowColor ?? DataRowColor,
+            dataRowMinHeight: dataRowMinHeight ?? DataRowMinHeight,
+            dataRowMaxHeight: dataRowMaxHeight ?? DataRowMaxHeight,
+            dataTextStyle: dataTextStyle ?? DataTextStyle,
+            headingRowColor: headingRowColor ?? HeadingRowColor,
+            headingRowHeight: headingRowHeight ?? HeadingRowHeight,
+            headingTextStyle: headingTextStyle ?? HeadingTextStyle,
+            horizontalMargin: horizontalMargin ?? HorizontalMargin,
+            columnSpacing: columnSpacing ?? ColumnSpacing,
+            dividerThickness: dividerThickness ?? DividerThickness,
+            checkboxHorizontalMargin: checkboxHorizontalMargin ?? CheckboxHorizontalMargin,
+            headingCellCursor: headingCellCursor ?? HeadingCellCursor,
+            dataRowCursor: dataRowCursor ?? DataRowCursor,
+            headingRowAlignment: headingRowAlignment ?? HeadingRowAlignment);
     }
 }
 

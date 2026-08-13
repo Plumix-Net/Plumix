@@ -51,6 +51,226 @@ public sealed class MaterialDataTableTests : IDisposable
             dataRowMinHeight: 50,
             dataRowMaxHeight: 40));
         Assert.Throws<ArgumentOutOfRangeException>(() => new DataTable([column], [], dividerThickness: -1));
+
+        var unbounded = new DataTable(
+            [column],
+            [],
+            dataRowMinHeight: 70.0,
+            dataRowMaxHeight: double.PositiveInfinity);
+        Assert.Equal(double.PositiveInfinity, unbounded.DataRowMaxHeight);
+    }
+
+    [Fact]
+    public void DataTableThemeData_CopyWithAndLerpMatchFlutterContracts()
+    {
+        var decoration = new ShapeDecoration(
+            new StadiumBorder(),
+            Color: Colors.AliceBlue);
+        var original = new DataTableThemeData(
+            decoration: decoration,
+            dataRowMinHeight: 40.0,
+            dataRowMaxHeight: 50.0,
+            headingRowAlignment: MainAxisAlignment.Start);
+
+        DataTableThemeData copied = original.CopyWith(
+            dataRowHeight: 44.0,
+            headingRowAlignment: MainAxisAlignment.Center);
+
+        Assert.Same(decoration, copied.Decoration);
+        Assert.Equal(44.0, copied.DataRowHeight);
+        Assert.Equal(MainAxisAlignment.Center, copied.HeadingRowAlignment);
+        Assert.Same(original, DataTableThemeData.Lerp(original, original, 0.5));
+        Assert.Throws<ArgumentException>(() => original.CopyWith(
+            dataRowHeight: 44.0,
+            dataRowMinHeight: 40.0));
+    }
+
+    [Fact]
+    public void DataTable_SelectedRowsAndDividersUseDirectM2M3ThemeRoles()
+    {
+        Color primary = Colors.OrangeRed;
+        Color outlineVariant = Colors.DodgerBlue;
+        Color legacyDivider = Colors.ForestGreen;
+        ThemeData m3Theme = ThemeData.Light with
+        {
+            UseMaterial3 = true,
+            ColorScheme = ThemeData.Light.ColorScheme with
+            {
+                Primary = primary,
+                OutlineVariant = outlineVariant,
+            },
+            DividerColor = legacyDivider,
+        };
+        using var m3 = new WidgetRenderHarness(Wrap(SelectedTable(), m3Theme));
+        m3.Pump(new Size(360.0, 180.0));
+
+        RenderTable m3Table = Assert.Single(FindDescendants<RenderTable>(m3.RenderView));
+        BoxDecoration m3Row = Assert.IsType<BoxDecoration>(m3Table.RowDecorations![1]);
+        Assert.Equal(Color.FromArgb(20, primary.R, primary.G, primary.B), m3Row.Color);
+        var m3Border = Assert.IsType<Plumix.Rendering.Border>(m3Row.Border);
+        Assert.Equal(outlineVariant, m3Border.Top.Color);
+        Assert.Equal(1.0, m3Border.Top.Width);
+
+        ThemeData m2Theme = m3Theme with { UseMaterial3 = false };
+        using var m2 = new WidgetRenderHarness(Wrap(SelectedTable(), m2Theme));
+        m2.Pump(new Size(360.0, 180.0));
+
+        RenderTable m2Table = Assert.Single(FindDescendants<RenderTable>(m2.RenderView));
+        BoxDecoration m2Row = Assert.IsType<BoxDecoration>(m2Table.RowDecorations![1]);
+        var m2Border = Assert.IsType<Plumix.Rendering.Border>(m2Row.Border);
+        Assert.Equal(legacyDivider, m2Border.Top.Color);
+    }
+
+    [Fact]
+    public void DataTable_LocalThemeFallsBackToGlobalThemePerProperty()
+    {
+        ThemeData global = ThemeData.Light with
+        {
+            DataTableTheme = new DataTableThemeData(
+                headingRowHeight: 63.0,
+                dataRowMinHeight: 51.0,
+                dataRowMaxHeight: 51.0,
+                horizontalMargin: 17.0,
+                columnSpacing: 29.0),
+        };
+        var local = new DataTableThemeData(
+            headingRowColor: MaterialStateProperty<Color?>.All(Colors.Gold));
+        using var harness = new WidgetRenderHarness(Wrap(
+            new DataTableTheme(local, SimpleTable()),
+            global));
+
+        harness.Pump(new Size(360.0, 220.0));
+
+        RenderTable table = Assert.Single(FindDescendants<RenderTable>(harness.RenderView));
+        Assert.Equal([63.0, 51.0], table.ResolvedRowHeights.Select(value => Math.Round(value, 3)).ToArray());
+        BoxDecoration heading = Assert.IsType<BoxDecoration>(table.RowDecorations![0]);
+        Assert.Equal(Colors.Gold, heading.Color);
+    }
+
+    [Fact]
+    public void DataTable_RowColorsResolveSelectedAndDisabledStates()
+    {
+        Color selected = Colors.ForestGreen;
+        Color disabled = Colors.OrangeRed;
+        MaterialStateProperty<Color?> rowColor = MaterialStateProperty<Color?>.ResolveWith(states =>
+        {
+            if (states.HasFlag(MaterialState.Disabled))
+            {
+                return disabled;
+            }
+            return states.HasFlag(MaterialState.Selected) ? selected : null;
+        });
+        using var harness = new WidgetRenderHarness(Wrap(new DataTable(
+            columns: [new DataColumn(new Text("Name"))],
+            rows:
+            [
+                new DataRow(
+                    [new DataCell(new Text("Selected"))],
+                    selected: true,
+                    onSelectChanged: _ => { }),
+                new DataRow([new DataCell(new Text("Disabled"))]),
+            ],
+            dataRowColor: rowColor)));
+
+        harness.Pump(new Size(360.0, 220.0));
+
+        RenderTable table = Assert.Single(FindDescendants<RenderTable>(harness.RenderView));
+        BoxDecoration selectedRow = Assert.IsType<BoxDecoration>(table.RowDecorations![1]);
+        BoxDecoration disabledRow = Assert.IsType<BoxDecoration>(table.RowDecorations[2]);
+        Assert.Equal(selected, selectedRow.Color);
+        Assert.Equal(disabled, disabledRow.Color);
+    }
+
+    [Fact]
+    public void DataTable_ComposesColumnHeaderSemanticsAndTransparentClippedMaterial()
+    {
+        BorderRadius radius = BorderRadius.Circular(12.0);
+        var decoration = new ShapeDecoration(
+            new RoundedRectangleBorder(borderRadius: radius),
+            Color: Colors.AliceBlue);
+        var border = TableBorder.All(borderRadius: radius);
+        using var harness = new WidgetRenderHarness(Wrap(new DataTable(
+            columns: [new DataColumn(new Text("Name")), new DataColumn(new Text("Score"))],
+            rows: [new DataRow([new DataCell(new Text("Ada")), new DataCell(new Text("10"))])],
+            decoration: decoration,
+            border: border,
+            clipBehavior: Clip.HardEdge)));
+
+        SemanticsNode? semanticsRoot = harness.PumpAndGetSemantics(new Size(420.0, 180.0));
+        SemanticsNode tableNode = Assert.Single(
+            FlattenSemantics(semanticsRoot),
+            node => node.Role == SemanticsRole.Table);
+        SemanticsNode headingRow = tableNode.Children[0];
+        Assert.Equal(SemanticsRole.Row, headingRow.Role);
+        Assert.Equal(
+            [SemanticsRole.ColumnHeader, SemanticsRole.ColumnHeader],
+            headingRow.Children.Select(node => node.Role).ToArray());
+
+        Plumix.Material.Material material = Assert.Single(
+            harness.FindWidgets<Plumix.Material.Material>(),
+            widget => widget.Type == MaterialType.Transparency);
+        Assert.Equal(Clip.HardEdge, material.ClipBehavior);
+        Assert.Equal(radius, material.BorderRadius);
+        Assert.Contains(
+            harness.FindWidgets<Container>(),
+            container => Equals(container.Decoration, decoration));
+    }
+
+    [Fact]
+    public void DataTable_TextStylesMergeWithAmbientDefaultTextStyle()
+    {
+        Color ambientColor = Colors.ForestGreen;
+        Color headingColor = Colors.Coral;
+        Color dataColor = Colors.DodgerBlue;
+        Widget table = new DefaultTextStyle(
+            new TextStyle(FontSize: 31.0, Color: ambientColor),
+            new DataTable(
+                columns: [new DataColumn(new Text("Heading"))],
+                rows: [new DataRow([new DataCell(new Text("Value"))])],
+                headingTextStyle: new TextStyle(Color: headingColor),
+                dataTextStyle: new TextStyle(Color: dataColor)));
+        using var harness = new WidgetRenderHarness(Wrap(table));
+
+        harness.Pump(new Size(360.0, 180.0));
+
+        RenderParagraph heading = Assert.IsType<RenderParagraph>(FindParagraph(harness.RenderView, "Heading"));
+        RenderParagraph data = Assert.IsType<RenderParagraph>(FindParagraph(harness.RenderView, "Value"));
+        Assert.Equal(31.0, heading.FontSize);
+        Assert.Equal(31.0, data.FontSize);
+        Assert.Equal(headingColor, Assert.IsType<SolidColorBrush>(heading.Foreground).Color);
+        Assert.Equal(dataColor, Assert.IsType<SolidColorBrush>(data.Foreground).Color);
+        Assert.Single(harness.FindWidgets<AnimatedDefaultTextStyle>());
+    }
+
+    [Fact]
+    public void DataTable_SortArrowAnimatesAndIgnoresUnrelatedRebuilds()
+    {
+        using var harness = new WidgetRenderHarness(Wrap(new SortTableHost()));
+        harness.Pump(new Size(360.0, 180.0));
+
+        SortTableHostState state = Assert.IsType<SortTableHostState>(harness.FindState<SortTableHostState>());
+        RenderTransform initial = Assert.Single(FindDescendants<RenderTransform>(harness.RenderView));
+        Assert.Equal(1.0, initial.Transform.M11, precision: 6);
+
+        double now = Scheduler.CurrentSeconds;
+        state.SetAscending(false);
+        harness.Pump(new Size(360.0, 180.0));
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.075));
+        harness.Pump(new Size(360.0, 180.0));
+        RenderTransform halfway = Assert.Single(FindDescendants<RenderTransform>(harness.RenderView));
+        Assert.InRange(halfway.Transform.M11, -0.999, 0.999);
+
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.200));
+        harness.Pump(new Size(360.0, 180.0));
+        RenderTransform reversed = Assert.Single(FindDescendants<RenderTransform>(harness.RenderView));
+        Assert.Equal(-1.0, reversed.Transform.M11, precision: 6);
+
+        state.RebuildWithoutSortChange();
+        harness.Pump(new Size(360.0, 180.0));
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.400));
+        harness.Pump(new Size(360.0, 180.0));
+        RenderTransform unchanged = Assert.Single(FindDescendants<RenderTransform>(harness.RenderView));
+        Assert.Equal(-1.0, unchanged.Transform.M11, precision: 6);
     }
 
     [Fact]
@@ -318,6 +538,16 @@ public sealed class MaterialDataTableTests : IDisposable
         columns: [new DataColumn(new Text("Name"))],
         rows: [new DataRow([new DataCell(new Text("Ada"))])]);
 
+    private static DataTable SelectedTable() => new(
+        columns: [new DataColumn(new Text("Name"))],
+        rows:
+        [
+            new DataRow(
+                [new DataCell(new Text("Ada"))],
+                selected: true,
+                onSelectChanged: _ => { }),
+        ]);
+
     private static Widget Wrap(Widget child, ThemeData? theme = null) => new Directionality(
         TextDirection.Ltr,
         new MaterialLocalizationsScope(
@@ -364,6 +594,35 @@ public sealed class MaterialDataTableTests : IDisposable
         public void Notify() => NotifyListeners();
     }
 
+    private sealed class SortTableHost : StatefulWidget
+    {
+        public override State CreateState() => new SortTableHostState();
+    }
+
+    private sealed class SortTableHostState : State
+    {
+        private bool _ascending = true;
+        private int _revision;
+
+        public void SetAscending(bool value) => SetState(() => _ascending = value);
+
+        public void RebuildWithoutSortChange() => SetState(() => _revision++);
+
+        public override Widget Build(BuildContext context)
+        {
+            return new DataTable(
+                columns:
+                [
+                    new DataColumn(
+                        new Text($"Name {_revision}"),
+                        onSort: (_, _) => { }),
+                ],
+                rows: [new DataRow([new DataCell(new Text("Ada"))])],
+                sortColumnIndex: 0,
+                sortAscending: _ascending);
+        }
+    }
+
     private sealed class WidgetRenderHarness : IDisposable
     {
         private readonly BuildOwner _owner = new();
@@ -383,6 +642,12 @@ public sealed class MaterialDataTableTests : IDisposable
 
         public RenderView RenderView { get; }
         public T? FindState<T>() where T : State => FindState<T>(_rootElement);
+        public IReadOnlyList<T> FindWidgets<T>() where T : Widget
+        {
+            var widgets = new List<T>();
+            VisitWidgets(_rootElement, widgets);
+            return widgets;
+        }
         public void Pump(Size size)
         {
             _owner.FlushBuild();
@@ -406,6 +671,15 @@ public sealed class MaterialDataTableTests : IDisposable
             T? result = null;
             element.VisitChildren(child => result ??= FindState<T>(child));
             return result;
+        }
+
+        private static void VisitWidgets<T>(Element element, List<T> widgets) where T : Widget
+        {
+            if (element.Widget is T widget)
+            {
+                widgets.Add(widget);
+            }
+            element.VisitChildren(child => VisitWidgets(child, widgets));
         }
 
         private sealed class HarnessRootElement : Element, IRenderObjectHost
