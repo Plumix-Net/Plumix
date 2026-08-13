@@ -11,6 +11,9 @@ class _TabsDemoPageState extends State<TabsDemoPage> {
   bool _useMaterial3 = true;
   bool _isScrollable = false;
   bool _useThemeOverrides = false;
+  bool _isPrimary = true;
+  bool _useElasticIndicator = true;
+  bool _useCenterAlignment = false;
 
   @override
   Widget build(BuildContext context) {
@@ -31,6 +34,22 @@ class _TabsDemoPageState extends State<TabsDemoPage> {
         ),
       );
     }
+
+    final TabAlignment alignment = _useCenterAlignment
+        ? TabAlignment.center
+        : _isScrollable
+        ? (_useMaterial3 ? TabAlignment.startOffset : TabAlignment.start)
+        : TabAlignment.fill;
+    final TabIndicatorAnimation indicatorAnimation = _useElasticIndicator
+        ? TabIndicatorAnimation.elastic
+        : TabIndicatorAnimation.linear;
+
+    const List<Widget> tabs = <Widget>[
+      Tab(text: 'HOME', icon: Icon(Icons.star_outline)),
+      Tab(text: 'EXPLORE', icon: Icon(Icons.info_outline)),
+      Tab(text: 'SAVED', icon: Icon(Icons.check)),
+      Tab(text: 'MORE', icon: Icon(Icons.menu)),
+    ];
 
     return Theme(
       data: pageTheme,
@@ -56,6 +75,21 @@ class _TabsDemoPageState extends State<TabsDemoPage> {
                   () =>
                       setState(() => _useThemeOverrides = !_useThemeOverrides),
                 ),
+                _controlButton(
+                  _isPrimary ? 'Primary' : 'Secondary',
+                  () => setState(() => _isPrimary = !_isPrimary),
+                ),
+                _controlButton(
+                  _useElasticIndicator ? 'Elastic' : 'Linear',
+                  () => setState(
+                    () => _useElasticIndicator = !_useElasticIndicator,
+                  ),
+                ),
+                _controlButton(
+                  _useCenterAlignment ? 'Center' : 'Default align',
+                  () =>
+                      setState(() => _useCenterAlignment = !_useCenterAlignment),
+                ),
               ],
             ),
             const SizedBox(height: 10),
@@ -75,20 +109,44 @@ class _TabsDemoPageState extends State<TabsDemoPage> {
               ),
             ),
             const SizedBox(height: 10),
+            const Text(
+              'Custom UnderlineTabIndicator: 6px inset, rounded, 5px weight.',
+              style: TextStyle(fontSize: 13, color: Color(0x8A000000)),
+            ),
+            const SizedBox(height: 10),
+            const TabBar(
+              indicator: UnderlineTabIndicator(
+                borderRadius: BorderRadius.all(Radius.circular(5)),
+                borderSide: BorderSide(width: 5, color: Color(0xFF6750A4)),
+                insets: EdgeInsets.symmetric(horizontal: 6),
+              ),
+              indicatorSize: TabBarIndicatorSize.label,
+              tabs: <Widget>[
+                Tab(text: 'ONE'),
+                Tab(text: 'TWO'),
+                Tab(text: 'THREE'),
+                Tab(text: 'FOUR'),
+              ],
+            ),
+            const SizedBox(height: 10),
             Expanded(
               child: Scaffold(
                 appBar: AppBar(
                   title: const Text('Tabs preview'),
                   automaticallyImplyLeading: false,
-                  bottom: TabBar(
-                    isScrollable: _isScrollable,
-                    tabs: const <Widget>[
-                      Tab(text: 'HOME', icon: Icon(Icons.star_outline)),
-                      Tab(text: 'EXPLORE', icon: Icon(Icons.info_outline)),
-                      Tab(text: 'SAVED', icon: Icon(Icons.check)),
-                      Tab(text: 'MORE', icon: Icon(Icons.menu)),
-                    ],
-                  ),
+                  bottom: _isPrimary
+                      ? TabBar(
+                          isScrollable: _isScrollable,
+                          tabAlignment: alignment,
+                          indicatorAnimation: indicatorAnimation,
+                          tabs: tabs,
+                        )
+                      : TabBar.secondary(
+                          isScrollable: _isScrollable,
+                          tabAlignment: alignment,
+                          indicatorAnimation: indicatorAnimation,
+                          tabs: tabs,
+                        ),
                 ),
                 body: const TabBarView(
                   children: <Widget>[

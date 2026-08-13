@@ -19,6 +19,9 @@ internal sealed class TabsDemoPageState : State
     private bool _useMaterial3 = true;
     private bool _isScrollable;
     private bool _useThemeOverrides;
+    private bool _isPrimary = true;
+    private bool _useElasticIndicator = true;
+    private bool _useCenterAlignment;
 
     public override Widget Build(BuildContext context)
     {
@@ -36,6 +39,23 @@ internal sealed class TabsDemoPageState : State
                 : new TabBarThemeData(),
         };
 
+        TabAlignment alignment = _useCenterAlignment
+            ? TabAlignment.Center
+            : _isScrollable
+                ? _useMaterial3 ? TabAlignment.StartOffset : TabAlignment.Start
+                : TabAlignment.Fill;
+        var indicatorAnimation = _useElasticIndicator
+            ? TabIndicatorAnimation.Elastic
+            : TabIndicatorAnimation.Linear;
+
+        Widget[] tabs =
+        [
+            new Tab(text: "HOME", icon: new Icon(Icons.StarOutline)),
+            new Tab(text: "EXPLORE", icon: new Icon(Icons.InfoOutline)),
+            new Tab(text: "SAVED", icon: new Icon(Icons.Check)),
+            new Tab(text: "MORE", icon: new Icon(Icons.Menu)),
+        ];
+
         return new Theme(
             pageTheme,
             new DefaultTabController(
@@ -45,8 +65,9 @@ internal sealed class TabsDemoPageState : State
                     spacing: 10,
                     children:
                     [
-                        new Row(
+                        new Wrap(
                             spacing: 8,
+                            runSpacing: 8,
                             children:
                             [
                                 ControlButton(_useMaterial3 ? "Material 3" : "Material 2",
@@ -55,6 +76,12 @@ internal sealed class TabsDemoPageState : State
                                     () => SetState(() => _isScrollable = !_isScrollable)),
                                 ControlButton(_useThemeOverrides ? "Theme on" : "Theme off",
                                     () => SetState(() => _useThemeOverrides = !_useThemeOverrides)),
+                                ControlButton(_isPrimary ? "Primary" : "Secondary",
+                                    () => SetState(() => _isPrimary = !_isPrimary)),
+                                ControlButton(_useElasticIndicator ? "Elastic" : "Linear",
+                                    () => SetState(() => _useElasticIndicator = !_useElasticIndicator)),
+                                ControlButton(_useCenterAlignment ? "Center" : "Default align",
+                                    () => SetState(() => _useCenterAlignment = !_useCenterAlignment)),
                             ]),
                         new Text("Tap tabs or swipe pages; the indicator and labels share one TabController.",
                             fontSize: 13,
@@ -65,27 +92,43 @@ internal sealed class TabsDemoPageState : State
                                 color: _useThemeOverrides ? Color.Parse("#FFB2DFDB") : null,
                                 selectedColor: _useThemeOverrides ? Color.Parse("#FF00695C") : null,
                                 borderStyle: _useThemeOverrides ? BorderStyle.None : null)),
+                        new Text("Custom UnderlineTabIndicator: 6px inset, rounded, 5px weight.",
+                            fontSize: 13,
+                            color: Color.Parse("#8A000000")),
+                        new TabBar(
+                            indicator: new UnderlineTabIndicator(
+                                borderRadius: BorderRadius.Circular(5),
+                                borderSide: new BorderSide(Color.Parse("#FF6750A4"), 5),
+                                insets: EdgeInsetsGeometry.Symmetric(horizontal: 6)),
+                            indicatorSize: TabBarIndicatorSize.Label,
+                            tabs: [new Tab(text: "ONE"), new Tab(text: "TWO"), new Tab(text: "THREE"),
+                                new Tab(text: "FOUR")]),
                         new Expanded(
                             child: new Scaffold(
                                 appBar: new AppBar(
                                     titleText: "Tabs preview",
                                     automaticallyImplyLeading: false,
-                                    bottom: new TabBar(
-                                        isScrollable: _isScrollable,
-                                        tabs:
-                                        [
-                                            new Tab(text: "HOME", icon: new Icon(Icons.StarOutline)),
-                                            new Tab(text: "EXPLORE", icon: new Icon(Icons.InfoOutline)),
-                                            new Tab(text: "SAVED", icon: new Icon(Icons.Check)),
-                                            new Tab(text: "MORE", icon: new Icon(Icons.Menu)),
-                                        ])),
+                                    bottom: _isPrimary
+                                        ? new TabBar(
+                                            isScrollable: _isScrollable,
+                                            tabAlignment: alignment,
+                                            indicatorAnimation: indicatorAnimation,
+                                            tabs: tabs)
+                                        : TabBar.Secondary(
+                                            isScrollable: _isScrollable,
+                                            tabAlignment: alignment,
+                                            indicatorAnimation: indicatorAnimation,
+                                            tabs: tabs)),
                                 body: new TabBarView(
                                     children:
                                     [
                                         Page("HOME", "Primary filled tab layout", Color.Parse("#FFE8DEF8")),
-                                        Page("EXPLORE", "Swipe keeps indicator animation synchronized", Color.Parse("#FFD0BCFF")),
-                                        Page("SAVED", "Selected semantics follow the active page", Color.Parse("#FFB2DFDB")),
-                                        Page("MORE", "Scrollable and themed paths use the same controller", Color.Parse("#FFFFD8E4")),
+                                        Page("EXPLORE", "Swipe keeps indicator animation synchronized",
+                                            Color.Parse("#FFD0BCFF")),
+                                        Page("SAVED", "Selected semantics follow the active page",
+                                            Color.Parse("#FFB2DFDB")),
+                                        Page("MORE", "Scrollable and themed paths use the same controller",
+                                            Color.Parse("#FFFFD8E4")),
                                     ])))
                     ])));
     }

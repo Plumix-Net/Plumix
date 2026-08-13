@@ -121,6 +121,24 @@ internal static class MaterialThemeLerp
         return BoxDecoration.Lerp(a, b, t);
     }
 
+    public static Plumix.Rendering.Decoration? AnyDecoration(
+        Plumix.Rendering.Decoration? a,
+        Plumix.Rendering.Decoration? b,
+        double t)
+    {
+        return Plumix.Rendering.Decoration.Lerp(a, b, t);
+    }
+
+    public static EdgeInsetsGeometry? EdgeInsets(EdgeInsetsGeometry? a, EdgeInsetsGeometry? b, double t)
+    {
+        if (!a.HasValue && !b.HasValue)
+        {
+            return null;
+        }
+
+        return EdgeInsetsGeometry.Lerp(a, b, t);
+    }
+
     public static Size? Size(Size? a, Size? b, double t)
     {
         if (!a.HasValue && !b.HasValue)

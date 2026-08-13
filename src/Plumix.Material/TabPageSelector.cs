@@ -8,6 +8,10 @@ namespace Plumix.Material;
 
 // Dart parity source: flutter/packages/flutter/lib/src/material/tabs.dart
 
+/// <summary>
+/// Displays a single circle with the specified border and background colors. Used by
+/// <see cref="TabPageSelector"/> to indicate the selected page.
+/// </summary>
 public sealed class TabPageSelectorIndicator : StatelessWidget
 {
     public TabPageSelectorIndicator(
@@ -44,11 +48,14 @@ public sealed class TabPageSelectorIndicator : StatelessWidget
     }
 }
 
+/// <summary>
+/// Displays a row of small circular indicators, one per tab.
+/// </summary>
 public sealed class TabPageSelector : StatefulWidget
 {
     public TabPageSelector(
         TabController? controller = null,
-        double indicatorSize = 12,
+        double indicatorSize = 12.0,
         Color? color = null,
         Color? selectedColor = null,
         BorderStyle? borderStyle = null,
@@ -80,51 +87,76 @@ public sealed class TabPageSelector : StatefulWidget
 
     private sealed class TabPageSelectorState : State
     {
-        private TabController? _controller;
+        private CurvedAnimation? _animation;
+        private TabController? _previousTabController;
 
         private TabPageSelector Current => (TabPageSelector)StateWidget;
 
+        private TabController TabController => Current.Controller
+                                               ?? DefaultTabController.MaybeOf(Context)
+                                               ?? throw new InvalidOperationException(
+                                                   "No TabController for TabPageSelector.\nWhen creating "
+                                                   + "a TabPageSelector, you must either provide an "
+                                                   + "explicit TabController, or you must ensure that "
+                                                   + "there is a DefaultTabController above it.");
+
         public override void DidChangeDependencies()
         {
-            UpdateController();
+            if (_animation is null
+                || !ReferenceEquals(_previousTabController?.Animation, TabController.Animation))
+            {
+                SetAnimation();
+            }
+
+            _previousTabController = TabController;
         }
 
         public override void DidUpdateWidget(StatefulWidget oldWidget)
         {
-            var old = (TabPageSelector)oldWidget;
-            if (!ReferenceEquals(old.Controller, Current.Controller))
+            if (!ReferenceEquals(_previousTabController?.Animation, TabController.Animation))
             {
-                UpdateController();
+                SetAnimation();
             }
+
+            _previousTabController = TabController;
         }
 
         public override void Dispose()
         {
-            DetachController();
+            _animation?.Dispose();
+            _animation = null;
         }
 
         public override Widget Build(BuildContext context)
         {
-            TabController controller = _controller ?? ResolveController();
-            Color unselectedColor = Current.Color ?? Colors.Transparent;
-            Color selectedColor = Current.SelectedColor ?? Theme.Of(context).SecondaryColor;
-            var children = new List<Widget>(controller.Length);
-            for (int tabIndex = 0; tabIndex < controller.Length; tabIndex++)
-            {
-                children.Add(BuildTabIndicator(
-                    tabIndex,
-                    controller,
-                    unselectedColor,
-                    selectedColor));
-            }
+            Color fixColor = Current.Color ?? Colors.Transparent;
+            Color fixSelectedColor = Current.SelectedColor ?? Theme.Of(context).ColorScheme.Secondary;
+            TabController controller = TabController;
 
-            return new Semantics(
-                label: MaterialLocalizations.Of(context).TabLabel(
-                    controller.Index,
-                    controller.Length),
-                child: new Row(
-                    mainAxisSize: MainAxisSize.Min,
-                    children: children));
+            return new AnimatedBuilder(
+                _animation!,
+                (builderContext, _) =>
+                {
+                    var children = new List<Widget>(controller.Length);
+                    for (int tabIndex = 0; tabIndex < controller.Length; tabIndex++)
+                    {
+                        children.Add(BuildTabIndicator(tabIndex, controller, fixColor, fixSelectedColor));
+                    }
+
+                    return new Semantics(
+                        label: MaterialLocalizations.Of(builderContext).TabLabel(
+                            controller.Index,
+                            controller.Length),
+                        child: new Row(mainAxisSize: MainAxisSize.Min, children: children));
+                });
+        }
+
+        private void SetAnimation()
+        {
+            _animation?.Dispose();
+            _animation = new CurvedAnimation(
+                parent: TabController.Animation!,
+                curve: Curves.FastOutSlowIn);
         }
 
         private Widget BuildTabIndicator(
@@ -136,7 +168,7 @@ public sealed class TabPageSelector : StatefulWidget
             Color background;
             if (controller.IndexIsChanging)
             {
-                double t = 1 - IndexChangeProgress(controller);
+                double t = 1.0 - TabIndexProgress.Of(controller);
                 if (controller.Index == tabIndex)
                 {
                     background = LerpColor(unselectedColor, selectedColor, t);
@@ -155,13 +187,13 @@ public sealed class TabPageSelector : StatefulWidget
                 double offset = controller.Offset;
                 if (controller.Index == tabIndex)
                 {
-                    background = LerpColor(unselectedColor, selectedColor, 1 - Math.Abs(offset));
+                    background = LerpColor(unselectedColor, selectedColor, 1.0 - Math.Abs(offset));
                 }
-                else if (controller.Index == tabIndex - 1 && offset > 0)
+                else if (controller.Index == tabIndex - 1 && offset > 0.0)
                 {
                     background = LerpColor(unselectedColor, selectedColor, offset);
                 }
-                else if (controller.Index == tabIndex + 1 && offset < 0)
+                else if (controller.Index == tabIndex + 1 && offset < 0.0)
                 {
                     background = LerpColor(unselectedColor, selectedColor, -offset);
                 }
@@ -178,60 +210,7 @@ public sealed class TabPageSelector : StatefulWidget
                 borderStyle: Current.BorderStyle ?? global::Plumix.Rendering.BorderStyle.Solid);
         }
 
-        private void UpdateController()
-        {
-            TabController nextController = ResolveController();
-            if (ReferenceEquals(nextController, _controller))
-            {
-                return;
-            }
-
-            DetachController();
-            _controller = nextController;
-            _controller.AddListener(HandleControllerChanged);
-        }
-
-        private TabController ResolveController()
-        {
-            return Current.Controller
-                   ?? DefaultTabController.MaybeOf(Context)
-                   ?? throw new InvalidOperationException(
-                       "No TabController was provided and no DefaultTabController ancestor was found.");
-        }
-
-        private void DetachController()
-        {
-            _controller?.RemoveListener(HandleControllerChanged);
-            _controller = null;
-        }
-
-        private void HandleControllerChanged()
-        {
-            if (Mounted)
-            {
-                SetState(() => { });
-            }
-        }
-
-        private static double IndexChangeProgress(TabController controller)
-        {
-            double controllerValue = controller.AnimationValue;
-            double previousIndex = controller.PreviousIndex;
-            double currentIndex = controller.Index;
-            if (!controller.IndexIsChanging)
-            {
-                return Math.Clamp(Math.Abs(currentIndex - controllerValue), 0, 1);
-            }
-
-            double distance = Math.Abs(currentIndex - previousIndex);
-            return distance <= 0
-                ? 1
-                : Math.Clamp(Math.Abs(controllerValue - currentIndex) / distance, 0, 1);
-        }
-
-        private static Color LerpColor(Color from, Color to, double t)
-        {
-            return new ColorTween().Evaluate(Math.Clamp(t, 0, 1), from, to);
-        }
+        private static Color LerpColor(Color from, Color to, double t) =>
+            new ColorTween().Evaluate(Math.Clamp(t, 0, 1), from, to);
     }
 }

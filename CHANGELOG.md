@@ -1,5 +1,23 @@
 # Changelog
 
+- Breaking: ported Flutter's `tabs.dart`, `tab_bar_theme.dart`, `tab_controller.dart` and `tab_indicator.dart`
+  strictly. `TabBar` now composes `_TabStyle` + `_TabLabelBar` (a `RenderFlex` subclass reporting tab offsets) under a
+  `CustomPaint` driven by the ported `_IndicatorPainter`, replacing the bespoke `RenderTabBar`; the M2/M3 primary and
+  secondary default tables, `_ChangeAnimation`/`_DragAnimation`, `_TabBarScrollController`/`_TabBarScrollPosition`
+  initial-offset correction, the elastic/linear indicator math, the scrollable M3 divider/`Align` wrapper and
+  `_warpToNonAdjacentTab` staging are all source-shaped. New `UnderlineTabIndicator`, `TabBarScrollController`,
+  `TabBar.Secondary`, `TabValueChanged<T>`, `TabBar.SplashFactory`/`TextScaler`/`TabHasTextAndIcon` and
+  `TabBarThemeData.SplashFactory`/`TextScaler`. **Breaking:** `TabBar.Indicator` and `TabBarThemeData.Indicator`
+  widen from `BoxDecoration?` to `Decoration?`; `LabelColor` becomes `WidgetStateColor?`; `Padding`/`LabelPadding`/
+  `IndicatorPadding`/`Tab.IconMargin` become `EdgeInsetsGeometry`; `MouseCursor` is a plain `MouseCursor?`;
+  `OnHover`/`OnFocusChange` take `TabValueChanged<bool>`; `TabController.AnimationValue` is replaced by
+  `TabController.Animation` (null after dispose); `TabBar.ScrollController` is a `TabBarScrollController`; and M2/M3
+  label colors, indicator weights (M3 primary label indicators are 3px and rounded), divider defaults and scrollable
+  `startOffset`/`start` alignment now follow the Dart tables. Core gained `AnimationWithParentMixin<T>` and
+  `BuildContext.Size`, `AnimationController.AnimateTo` no longer clamps unbounded controllers to `[0, 1]`, and
+  `PageView` now dispatches `ScrollUpdateNotification`/`ScrollEndNotification` so `TabBarView` syncs its controller
+  through Flutter's `_handleScrollNotification` instead of a page-controller listener.
+
 - Breaking: ported Flutter's `_MenuLayout` and rebased the menu buttons on `TextButton`. Menu overlays are now placed
   by `MenuStyle.Alignment` resolved within the anchor rect (`MenuStyle.Alignment` widened from `Alignment?` to
   `AlignmentGeometry?`; the panel defaults are the source `AlignmentDirectional.BottomStart`/`TopEnd` instead of

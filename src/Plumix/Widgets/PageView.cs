@@ -45,6 +45,23 @@ public sealed class PageController : ChangeNotifier
 
     internal double ViewportDimension { get; private set; }
 
+    internal int PageCount => _pageCount;
+
+    /// <summary>
+    /// The current page position expressed as scroll metrics, so a page view can report Flutter's
+    /// scroll notifications without owning a <see cref="ScrollPosition"/>.
+    /// </summary>
+    internal ScrollMetricsSnapshot Metrics(Axis axis)
+    {
+        double extent = ViewportDimension * ViewportFraction;
+        return new ScrollMetricsSnapshot(
+            Pixels: _page * extent,
+            MinScrollExtent: 0.0,
+            MaxScrollExtent: Math.Max(0.0, (_pageCount - 1) * extent),
+            ViewportDimension: ViewportDimension,
+            AxisDirection: axis == Axis.Horizontal ? AxisDirection.Right : AxisDirection.Down);
+    }
+
     public void JumpToPage(int page)
     {
         StopAnimation();
@@ -182,6 +199,7 @@ public sealed class PageView : StatefulWidget
         private PageController? _controller;
         private bool _ownsController;
         private int _lastReportedPage;
+        private bool _dragUnderway;
 
         private PageView CurrentWidget => (PageView)StateWidget;
 
@@ -197,7 +215,15 @@ public sealed class PageView : StatefulWidget
             }
         }
 
-        public override void Dispose() => DetachController();
+        public override void Dispose()
+        {
+            if (_controller is not null)
+            {
+                _controller.AnimationCompleted -= HandleSettleCompleted;
+            }
+
+            DetachController();
+        }
 
         public override Widget Build(BuildContext context)
         {
@@ -254,7 +280,48 @@ public sealed class PageView : StatefulWidget
                 CurrentWidget.OnPageChanged?.Invoke(page);
             }
 
+            DispatchScrollUpdate();
             SetState(() => { });
+        }
+
+        private void DispatchScrollUpdate()
+        {
+            if (_controller is null || !_controller.HasClients) return;
+            _ = new ScrollUpdateNotification(
+                _controller.Metrics(CurrentWidget.ScrollDirection),
+                scrollDelta: null,
+                hasDragDetails: _dragUnderway).Dispatch(Context);
+        }
+
+        private void DispatchScrollEnd()
+        {
+            if (_controller is null || !_controller.HasClients) return;
+            _ = new ScrollEndNotification(_controller.Metrics(CurrentWidget.ScrollDirection)).Dispatch(Context);
+        }
+
+        private void SettleTo(int target)
+        {
+            if (_controller is null) return;
+            if (!CurrentWidget.PageSnapping)
+            {
+                DispatchScrollEnd();
+                return;
+            }
+
+            _controller.AnimationCompleted -= HandleSettleCompleted;
+            _controller.AnimationCompleted += HandleSettleCompleted;
+            _controller.AnimateToPage(target, TimeSpan.FromMilliseconds(300), Curves.Ease);
+        }
+
+        private void HandleSettleCompleted()
+        {
+            if (_controller is not null)
+            {
+                _controller.AnimationCompleted -= HandleSettleCompleted;
+            }
+
+            _dragUnderway = false;
+            DispatchScrollEnd();
         }
 
         private void HandleDragUpdate(DragUpdateDetails details)
@@ -266,6 +333,7 @@ public sealed class PageView : StatefulWidget
                            (CurrentWidget.ScrollDirection == Axis.Horizontal &&
                             Directionality.Of(Context) == TextDirection.Rtl);
             int direction = reverse ? 1 : -1;
+            _dragUnderway = true;
             _controller.UpdatePageFromDrag(_controller.EffectivePage + (direction * details.PrimaryDelta / extent));
         }
 
@@ -287,19 +355,13 @@ public sealed class PageView : StatefulWidget
                 target = (int)Math.Round(page, MidpointRounding.AwayFromZero);
             }
 
-            if (CurrentWidget.PageSnapping)
-            {
-                _controller.AnimateToPage(target, TimeSpan.FromMilliseconds(300), Curves.Ease);
-            }
+            SettleTo(target);
         }
 
         private void HandleDragCancel()
         {
-            if (_controller is null || !CurrentWidget.PageSnapping) return;
-            _controller.AnimateToPage(
-                (int)Math.Round(_controller.EffectivePage),
-                TimeSpan.FromMilliseconds(300),
-                Curves.Ease);
+            if (_controller is null) return;
+            SettleTo((int)Math.Round(_controller.EffectivePage));
         }
     }
 }

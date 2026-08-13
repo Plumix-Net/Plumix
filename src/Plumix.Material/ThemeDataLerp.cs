@@ -955,13 +955,13 @@ public sealed partial record TabBarThemeData
         }
 
         return new TabBarThemeData(
-            Indicator: MaterialThemeLerp.Decoration(a.Indicator, b.Indicator, t),
+            Indicator: MaterialThemeLerp.AnyDecoration(a.Indicator, b.Indicator, t),
             IndicatorColor: MaterialThemeLerp.Color(a.IndicatorColor, b.IndicatorColor, t),
             IndicatorSize: t < 0.5 ? a.IndicatorSize : b.IndicatorSize,
             DividerColor: MaterialThemeLerp.Color(a.DividerColor, b.DividerColor, t),
             DividerHeight: t < 0.5 ? a.DividerHeight : b.DividerHeight,
             LabelColor: MaterialThemeLerp.Color(a.LabelColor, b.LabelColor, t),
-            LabelPadding: MaterialThemeLerp.Thickness(a.LabelPadding, b.LabelPadding, t),
+            LabelPadding: MaterialThemeLerp.EdgeInsets(a.LabelPadding, b.LabelPadding, t),
             LabelStyle: MaterialThemeLerp.TextStyle(a.LabelStyle, b.LabelStyle, t),
             UnselectedLabelColor: MaterialThemeLerp.Color(
                 a.UnselectedLabelColor,
@@ -972,9 +972,12 @@ public sealed partial record TabBarThemeData
                 b.UnselectedLabelStyle,
                 t),
             OverlayColor: MaterialThemeLerp.ColorStateProperty(a.OverlayColor, b.OverlayColor, t),
+            SplashFactory: t < 0.5 ? a.SplashFactory : b.SplashFactory,
             MouseCursor: t < 0.5 ? a.MouseCursor : b.MouseCursor,
             TabAlignment: t < 0.5 ? a.TabAlignment : b.TabAlignment,
+            TextScaler: t < 0.5 ? a.TextScaler : b.TextScaler,
             IndicatorAnimation: t < 0.5 ? a.IndicatorAnimation : b.IndicatorAnimation,
+            // Dart passes `a.splashBorderRadius` for both operands here; kept verbatim for parity.
             SplashBorderRadius: MaterialThemeLerp.BorderRadius(
                 a.SplashBorderRadius,
                 a.SplashBorderRadius,

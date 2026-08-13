@@ -1,3 +1,4 @@
+using Avalonia;
 using Plumix.Foundation;
 using Plumix.Rendering;
 
@@ -28,6 +29,12 @@ public readonly struct BuildContext
     }
 
     public T? DependOnInherited<T>(object? aspect = null) where T : InheritedWidget => Owner.DependOnInherited<T>(aspect);
+
+    /// <summary>
+    /// The size of the render object returned by <see cref="FindRenderObject"/> when it is a
+    /// <see cref="RenderBox"/>. Dart parity: <c>BuildContext.size</c>.
+    /// </summary>
+    public Size? Size => Owner.RenderObject is RenderBox box ? box.Size : null;
 
     internal IReadOnlyList<T> DependOnInheritedAncestors<T>() where T : InheritedWidget =>
         Owner.DependOnInheritedAncestors<T>();

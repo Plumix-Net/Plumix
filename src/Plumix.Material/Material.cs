@@ -12,6 +12,14 @@ namespace Plumix.Material;
 public static class MaterialConstants
 {
     public static readonly TimeSpan ThemeAnimationDuration = TimeSpan.FromMilliseconds(200);
+
+    // Mirrors Flutter's `kTabScrollDuration` from `material/constants.dart`.
+    /// <summary>The duration of a <see cref="TabController"/>'s index-change animation.</summary>
+    public static readonly TimeSpan TabScrollDuration = TimeSpan.FromMilliseconds(300);
+
+    // Mirrors Flutter's `kTabLabelPadding` from `material/constants.dart`.
+    /// <summary>The horizontal padding included by default in each <see cref="Tab"/> label.</summary>
+    public static readonly EdgeInsetsGeometry TabLabelPadding = EdgeInsetsGeometry.Symmetric(horizontal: 16.0);
 }
 
 /// <summary>The visual kind of a <see cref="Material"/> surface.</summary>

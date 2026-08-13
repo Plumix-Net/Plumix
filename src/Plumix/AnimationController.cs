@@ -1026,7 +1026,7 @@ public sealed class AnimationController : Animation<double>, IDisposable
             0.0,
             1.0);
         double transformed = _animateCurve(progress);
-        _value = Math.Clamp(_animateStart + ((target - _animateStart) * transformed), 0.0, 1.0);
+        _value = ClampValue(_animateStart + ((target - _animateStart) * transformed));
         if (progress < 1.0)
         {
             Changed?.Invoke();

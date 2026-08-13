@@ -196,6 +196,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `material/switch_theme.dart` | `src/Plumix.Material/SwitchTheme.cs` | — | — |
 | `material/tab_bar_theme.dart` | `src/Plumix.Material/TabBarTheme.cs` | — | — |
 | `material/tab_controller.dart` | `src/Plumix.Material/TabController.cs` | — | — |
+| `material/tab_indicator.dart` | `src/Plumix.Material/TabIndicator.cs` | — | — |
 | `material/tabs.dart` | `src/Plumix.Material/TabPageSelector.cs`<br>`src/Plumix.Material/Tabs.cs` | `src/Plumix.Tests/MaterialTabsTests.cs` | `dart_sample/lib/demos/material/tabs_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/TabsDemoPage.cs` |
 | `material/text_button.dart` | `src/Plumix.Material/Buttons.cs`<br>`src/Plumix/Widgets/Button.cs` | `src/Plumix.Tests/MaterialActionButtonsTests.cs`<br>`src/Plumix.Tests/MaterialButtonsTests.cs`<br>`src/Plumix.Tests/MaterialFloatingActionButtonLocationTests.cs`<br>`src/Plumix.Tests/MaterialFloatingActionButtonTests.cs`<br>`src/Plumix.Tests/MaterialLegacyButtonTests.cs`<br>`src/Plumix.Tests/MaterialSegmentedButtonsTests.cs` | `dart_sample/lib/demos/material/action_buttons_demo_page.dart`<br>`dart_sample/lib/demos/material/floating_action_button_demo_page.dart`<br>`dart_sample/lib/demos/material/material_buttons_demo_page.dart`<br>`dart_sample/lib/demos/material/segmented_buttons_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/ActionButtonsDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/FloatingActionButtonDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/MaterialButtonsDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/SegmentedButtonsDemoPage.cs` |
 | `material/text_button_theme.dart` | `src/Plumix.Material/ButtonThemes.cs` | — | — |
@@ -455,14 +456,13 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 - `src/Plumix/UI/Path.cs`
 - `src/Plumix/UI/Text.cs`
 - `src/Plumix.Material/MaterialThemeLerp.cs`
-- `src/Plumix.Material/RenderTabBar.cs`
 - `src/Plumix.Material/SegmentedControlLayout.cs`
 - `src/Plumix.Material/ThemeDataLerp.cs`
 
 ## Summary
 
-- Flutter files mapped: 409
-- C# files carrying a marker: 512
-- C# files without a marker: 16
+- Flutter files mapped: 410
+- C# files carrying a marker: 513
+- C# files without a marker: 15
 - Markers not resolvable in the pinned checkout: 5
 

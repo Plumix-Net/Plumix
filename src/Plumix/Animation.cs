@@ -462,3 +462,29 @@ internal sealed class MappedDoubleAnimation : Animation<double>, IDisposable
         }
     }
 }
+
+/// <summary>
+/// Implements most of the <see cref="Animation{T}"/> interface by deferring its behavior to a given
+/// <see cref="Parent"/>. Dart parity: <c>animation/animations.dart</c>
+/// (<c>AnimationWithParentMixin</c>; C# has no mixins, so it is an abstract base class).
+/// </summary>
+public abstract class AnimationWithParentMixin<T> : Animation<T>
+{
+    /// <summary>
+    /// The animation whose value this animation will proxy. This animation must remain the same for
+    /// the lifetime of this object; use <see cref="ProxyAnimation"/> to swap parents over time.
+    /// </summary>
+    public abstract Animation<T> Parent { get; }
+
+    public override AnimationStatus Status => Parent.Status;
+
+    public override void AddListener(Action listener) => Parent.AddListener(listener);
+
+    public override void RemoveListener(Action listener) => Parent.RemoveListener(listener);
+
+    public override void AddStatusListener(Action<AnimationStatus> listener) =>
+        Parent.AddStatusListener(listener);
+
+    public override void RemoveStatusListener(Action<AnimationStatus> listener) =>
+        Parent.RemoveStatusListener(listener);
+}
