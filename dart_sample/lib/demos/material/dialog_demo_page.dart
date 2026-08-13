@@ -1,3 +1,4 @@
+import 'package:cupertino_ui/cupertino_ui.dart' as cupertino;
 import 'package:material_ui/material_ui.dart';
 
 class DialogDemoPage extends StatefulWidget {
@@ -11,6 +12,7 @@ class _DialogDemoPageState extends State<DialogDemoPage> {
   bool _scrollable = false;
   bool _barrierDismissible = true;
   bool _useThemeOverrides = false;
+  bool _appleAdaptive = false;
   String _lastResult = 'none';
 
   @override
@@ -29,7 +31,10 @@ class _DialogDemoPageState extends State<DialogDemoPage> {
           )
         : const DialogThemeData();
     return Theme(
-      data: Theme.of(context).copyWith(dialogTheme: dialogTheme),
+      data: Theme.of(context).copyWith(
+        dialogTheme: dialogTheme,
+        platform: _appleAdaptive ? TargetPlatform.iOS : null,
+      ),
       child: Builder(builder: _buildContent),
     );
   }
@@ -64,6 +69,11 @@ class _DialogDemoPageState extends State<DialogDemoPage> {
                   setState(() => _useThemeOverrides = !_useThemeOverrides),
               child: Text(_useThemeOverrides ? 'Theme on' : 'Theme off'),
             ),
+            TextButton(
+              onPressed: () =>
+                  setState(() => _appleAdaptive = !_appleAdaptive),
+              child: Text(_appleAdaptive ? 'Apple platform' : 'Host platform'),
+            ),
           ],
         ),
         Wrap(
@@ -81,6 +91,10 @@ class _DialogDemoPageState extends State<DialogDemoPage> {
             FilledButton(
               onPressed: () => _showSimpleDialog(context),
               child: const Text('SHOW SIMPLE'),
+            ),
+            TextButton(
+              onPressed: () => _showAdaptive(context),
+              child: const Text('SHOW ADAPTIVE'),
             ),
           ],
         ),
@@ -170,6 +184,46 @@ class _DialogDemoPageState extends State<DialogDemoPage> {
             child: const Text('Guest workspace'),
           ),
         ],
+      ),
+    );
+    if (mounted) setState(() => _lastResult = result ?? 'dismissed');
+  }
+
+  Future<void> _showAdaptive(BuildContext context) async {
+    final bool apple = switch (Theme.of(context).platform) {
+      TargetPlatform.iOS || TargetPlatform.macOS => true,
+      _ => false,
+    };
+    final String? result = await showAdaptiveDialog<String>(
+      context: context,
+      barrierDismissible: _barrierDismissible,
+      builder: (BuildContext routeContext) => AlertDialog.adaptive(
+        title: const Text('Adaptive alert'),
+        content: const Text(
+          'Material on desktop platforms, Cupertino on Apple platforms.',
+        ),
+        actions: apple
+            ? <Widget>[
+                cupertino.CupertinoDialogAction(
+                  onPressed: () => Navigator.pop(routeContext, 'cancel'),
+                  child: const Text('Cancel'),
+                ),
+                cupertino.CupertinoDialogAction(
+                  isDefaultAction: true,
+                  onPressed: () => Navigator.pop(routeContext, 'ok'),
+                  child: const Text('OK'),
+                ),
+              ]
+            : <Widget>[
+                TextButton(
+                  onPressed: () => Navigator.pop(routeContext, 'cancel'),
+                  child: const Text('CANCEL'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(routeContext, 'ok'),
+                  child: const Text('OK'),
+                ),
+              ],
       ),
     );
     if (mounted) setState(() => _lastResult = result ?? 'dismissed');

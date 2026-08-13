@@ -8,6 +8,8 @@ public abstract class CupertinoLocalizations
 {
     public virtual string AlertDialogLabel => "Alert";
 
+    public virtual string ModalBarrierDismissLabel => "Dismiss";
+
     public virtual string CutButtonLabel => "Cut";
 
     public virtual string CopyButtonLabel => "Copy";
@@ -26,7 +28,8 @@ public abstract class CupertinoLocalizations
 
     public static CupertinoLocalizations Of(BuildContext context)
     {
-        return Localizations.Of<CupertinoLocalizations>(context);
+        return Localizations.MaybeOf<CupertinoLocalizations>(context)
+               ?? DefaultCupertinoLocalizations.Instance;
     }
 }
 

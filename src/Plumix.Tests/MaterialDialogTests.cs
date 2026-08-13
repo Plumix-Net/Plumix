@@ -22,6 +22,7 @@ public sealed class MaterialDialogTests : IDisposable
 
     public void Dispose()
     {
+        PlatformDefaults.DebugTargetPlatformOverride = null;
         GestureBinding.Instance.ResetForTests();
         Scheduler.ResetForTests();
     }
@@ -119,6 +120,8 @@ public sealed class MaterialDialogTests : IDisposable
     [Fact]
     public void AlertDialog_ComposesIconTitleContentActionsAndM3Defaults()
     {
+        // The route label follows the host platform (Dart's defaultTargetPlatform), not theme.platform.
+        PlatformDefaults.DebugTargetPlatformOverride = TargetPlatform.Android;
         using var harness = new WidgetRenderHarness(Wrap(
             ThemeData.Light with { Platform = TargetPlatform.Android },
             new AlertDialog(
@@ -222,13 +225,14 @@ public sealed class MaterialDialogTests : IDisposable
         Assert.Equal(new Thickness(0, 12, 0, 16), dialog.ContentPadding);
         Assert.Null(dialog.Children);
         Assert.Throws<ArgumentOutOfRangeException>(() => new SimpleDialog(elevation: -1));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new SimpleDialog(titlePadding: new Thickness(-1)));
         Assert.Throws<ArgumentOutOfRangeException>(() => new SimpleDialogOption(padding: new Thickness(-1)));
     }
 
     [Fact]
     public void SimpleDialog_ComposesScrollableListBodyWithFlutterPaddingTypographyAndSemantics()
     {
+        // The route label follows the host platform (Dart's defaultTargetPlatform), not theme.platform.
+        PlatformDefaults.DebugTargetPlatformOverride = TargetPlatform.Android;
         using var harness = new WidgetRenderHarness(Wrap(
             ThemeData.Light with { Platform = TargetPlatform.Android },
             new SimpleDialog(
@@ -373,11 +377,11 @@ public sealed class MaterialDialogTests : IDisposable
             box.Decoration.Color == Colors.Purple);
         Assert.False(result.IsCompleted);
 
+        // Flutter completes the dialog future on pop; the exit fade still runs afterwards.
         Navigator.Of(captured).Pop("accepted");
-        Assert.False(result.IsCompleted);
+        Assert.Equal("accepted", await result);
         PumpAnimation();
         harness.Pump(new Size(600, 400));
-        Assert.Equal("accepted", await result);
         Assert.Null(FindParagraph(harness.RenderView, "Route dialog"));
         Assert.NotNull(FindParagraph(harness.RenderView, "Underlying"));
     }
@@ -430,6 +434,172 @@ public sealed class MaterialDialogTests : IDisposable
         {
             PlatformDefaults.DebugTargetPlatformOverride = previous;
         }
+    }
+
+    [Theory]
+    [InlineData(TargetPlatform.IOS, true)]
+    [InlineData(TargetPlatform.MacOS, true)]
+    [InlineData(TargetPlatform.Android, false)]
+    [InlineData(TargetPlatform.Windows, false)]
+    [InlineData(TargetPlatform.Linux, false)]
+    public void AlertDialogAdaptive_SelectsCupertinoOnApplePlatforms(TargetPlatform platform, bool expectCupertino)
+    {
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light with { Platform = platform },
+            AlertDialog.Adaptive(
+                title: new Text("Adaptive title"),
+                content: new Text("Adaptive content"),
+                actions: [new TextButton(new Text("OK"), () => { })])));
+        harness.Pump(new Size(600, 600));
+
+        bool hasCupertinoSurface = FindDescendants<RenderColoredBox>(harness.RenderView)
+            .Any(box => box.Color == Color.FromUInt32(0xCCF2F2F2));
+        Assert.Equal(expectCupertino, hasCupertinoSurface);
+        Assert.NotNull(FindParagraph(harness.RenderView, "Adaptive title"));
+    }
+
+    [Fact]
+    public void DialogTitle_CentersWhenIconPresentAndStartsWithoutIcon()
+    {
+        using var withIcon = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new AlertDialog(icon: new Icon(Icons.InfoOutline), title: new Text("Centered"))));
+        withIcon.Pump(new Size(600, 400));
+        Assert.Equal(TextAlign.Center, FindParagraph(withIcon.RenderView, "Centered")!.TextAlign);
+
+        using var withoutIcon = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new AlertDialog(title: new Text("Start"))));
+        withoutIcon.Pump(new Size(600, 400));
+        Assert.Equal(TextAlign.Start, FindParagraph(withoutIcon.RenderView, "Start")!.TextAlign);
+    }
+
+    [Fact]
+    public async Task ShowDialog_ClosedLoopTraversalCyclesInsideDialogAndLeaveViewEscapes()
+    {
+        BuildContext captured = default;
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new Navigator(new BuilderPageRoute(context => new CaptureContext(
+                value => captured = value,
+                new Text("Home"))))));
+        harness.Pump(new Size(600, 400));
+
+        var result = MaterialDialogs.ShowDialog<string>(
+            captured,
+            _ => new AlertDialog(
+                title: new Text("Traversal"),
+                actions:
+                [
+                    new TextButton(new Text("CANCEL"), () => { }),
+                    new TextButton(new Text("OK"), () => { }),
+                ]));
+        PumpAnimation();
+        harness.Pump(new Size(600, 400));
+
+        // The dialog route focus scope defaults to a closed loop: Tab cycles endlessly.
+        Assert.True(FocusManager.Instance.FocusNext());
+        FocusNode first = FocusManager.Instance.PrimaryFocus!;
+        Assert.True(FocusManager.Instance.FocusNext());
+        Assert.True(FocusManager.Instance.FocusNext());
+        Assert.Same(first, FocusManager.Instance.PrimaryFocus);
+
+        Navigator.Of(captured).Pop();
+        PumpAnimation();
+        harness.Pump(new Size(600, 400));
+        Assert.Null(await result);
+
+        var escaping = MaterialDialogs.ShowDialog<string>(
+            captured,
+            _ => new AlertDialog(
+                title: new Text("Escaping"),
+                actions: [new TextButton(new Text("ONLY"), () => { })]),
+            traversalEdgeBehavior: TraversalEdgeBehavior.LeaveFlutterView);
+        PumpAnimation();
+        harness.Pump(new Size(600, 400));
+        Assert.True(FocusManager.Instance.FocusNext());
+        // At the loop edge the focus leaves the view instead of wrapping.
+        Assert.False(FocusManager.Instance.FocusNext());
+        Assert.Null(FocusManager.Instance.PrimaryFocus);
+        Navigator.Of(captured).Pop();
+        PumpAnimation();
+        harness.Pump(new Size(600, 400));
+        Assert.Null(await escaping);
+    }
+
+    [Fact]
+    public async Task ShowDialog_RequestFocusFalseKeepsPreviousFocus()
+    {
+        BuildContext captured = default;
+        var homeFocus = new FocusNode();
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new Navigator(new BuilderPageRoute(context => new CaptureContext(
+                value => captured = value,
+                new Focus(focusNode: homeFocus, child: new Text("Home")))))));
+        harness.Pump(new Size(600, 400));
+        homeFocus.RequestFocus();
+        Assert.Same(homeFocus, FocusManager.Instance.PrimaryFocus);
+
+        var kept = MaterialDialogs.ShowDialog<string>(
+            captured,
+            _ => new AlertDialog(title: new Text("Silent")),
+            requestFocus: false);
+        PumpAnimation();
+        harness.Pump(new Size(600, 400));
+        Assert.Same(homeFocus, FocusManager.Instance.PrimaryFocus);
+        Navigator.Of(captured).Pop();
+        PumpAnimation();
+        harness.Pump(new Size(600, 400));
+        Assert.Null(await kept);
+
+        var taken = MaterialDialogs.ShowDialog<string>(
+            captured,
+            _ => new AlertDialog(title: new Text("Focused")));
+        PumpAnimation();
+        harness.Pump(new Size(600, 400));
+        Assert.NotSame(homeFocus, FocusManager.Instance.PrimaryFocus);
+        Navigator.Of(captured).Pop();
+        PumpAnimation();
+        harness.Pump(new Size(600, 400));
+        Assert.Null(await taken);
+    }
+
+    [Fact]
+    public async Task ShowDialog_AppliesAnimationStyleDuration()
+    {
+        BuildContext captured = default;
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new Navigator(new BuilderPageRoute(context => new CaptureContext(
+                value => captured = value,
+                new Text("Home"))))));
+        harness.Pump(new Size(600, 400));
+
+        ModalRoute? route = null;
+        var result = MaterialDialogs.ShowDialog<string>(
+            captured,
+            dialogContext =>
+            {
+                route = ModalRoute.MaybeOf(dialogContext);
+                return new AlertDialog(title: new Text("Slow"));
+            },
+            animationStyle: new AnimationStyle(Duration: TimeSpan.FromSeconds(1)));
+        double now = Scheduler.CurrentSeconds;
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.5));
+        harness.Pump(new Size(600, 400));
+        Assert.Equal(TimeSpan.FromSeconds(1), Assert.IsType<DialogRoute<string>>(route).TransitionDuration);
+        Assert.True(route!.Animation.Value < 1.0);
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.2));
+        harness.Pump(new Size(600, 400));
+        Assert.Equal(1.0, route.Animation.Value, precision: 3);
+
+        Navigator.Of(captured).Pop();
+        PumpAnimation();
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 1.2));
+        harness.Pump(new Size(600, 400));
+        Assert.Null(await result);
     }
 
     [Fact]

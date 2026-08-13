@@ -25,10 +25,11 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `cupertino_ui/colors.dart` | `src/Plumix.Cupertino/CupertinoTheme.cs` | — | — |
 | `cupertino_ui/desktop_text_selection_toolbar.dart` | `src/Plumix.Cupertino/CupertinoDesktopTextSelectionToolbar.cs` | — | — |
 | `cupertino_ui/desktop_text_selection_toolbar_button.dart` | `src/Plumix.Cupertino/CupertinoTextSelectionToolbarButton.cs` | — | — |
+| `cupertino_ui/dialog.dart` | `src/Plumix.Cupertino/CupertinoDialog.cs` | `src/Plumix.Tests/CupertinoDialogTests.cs` | — |
 | `cupertino_ui/localizations.dart` | `src/Plumix.Cupertino/CupertinoLocalizations.cs` | — | — |
 | `cupertino_ui/magnifier.dart` | `src/Plumix.Cupertino/CupertinoMagnifier.cs` | — | — |
 | `cupertino_ui/radio.dart` | `src/Plumix.Cupertino/CupertinoRadio.cs` | — | — |
-| `cupertino_ui/route.dart` | `src/Plumix.Material/PageTransitionsTheme.cs` | — | — |
+| `cupertino_ui/route.dart` | `src/Plumix.Cupertino/CupertinoDialogRoute.cs`<br>`src/Plumix.Material/PageTransitionsTheme.cs` | — | — |
 | `cupertino_ui/scrollbar.dart` | `src/Plumix.Cupertino/CupertinoScrollbar.cs` | — | — |
 | `cupertino_ui/slider.dart` | `src/Plumix.Cupertino/CupertinoSlider.cs` | — | — |
 | `cupertino_ui/spell_check_suggestions_toolbar.dart` | `src/Plumix.Cupertino/CupertinoSpellCheckSuggestionsToolbar.cs` | — | — |
@@ -84,7 +85,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `material_ui/date_picker_theme.dart` | `src/Plumix.Material/DatePickerTheme.cs` | — | — |
 | `material_ui/desktop_text_selection_toolbar.dart` | `src/Plumix.Material/DesktopTextSelectionToolbar.cs` | `src/Plumix.Tests/MaterialDesktopTextSelectionToolbarTests.cs` | `dart_sample/lib/demos/material/desktop_text_selection_toolbar_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/DesktopTextSelectionToolbarDemoPage.cs` |
 | `material_ui/desktop_text_selection_toolbar_button.dart` | `src/Plumix.Material/DesktopTextSelectionToolbar.cs` | `src/Plumix.Tests/MaterialDesktopTextSelectionToolbarTests.cs` | `dart_sample/lib/demos/material/desktop_text_selection_toolbar_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/DesktopTextSelectionToolbarDemoPage.cs` |
-| `material_ui/dialog.dart` | `src/Plumix.Material/Dialog.cs` | `src/Plumix.Tests/MaterialDialogTests.cs`<br>`src/Plumix.Tests/MaterialTimePickerDialogTests.cs` | `dart_sample/lib/demos/material/dialog_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/DialogDemoPage.cs` |
+| `material_ui/dialog.dart` | `src/Plumix.Material/Dialog.cs` | `src/Plumix.Tests/CupertinoDialogTests.cs`<br>`src/Plumix.Tests/MaterialDialogTests.cs`<br>`src/Plumix.Tests/MaterialTimePickerDialogTests.cs` | `dart_sample/lib/demos/material/dialog_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/DialogDemoPage.cs` |
 | `material_ui/dialog_theme.dart` | `src/Plumix.Material/DialogTheme.cs` | — | — |
 | `material_ui/divider.dart` | `src/Plumix.Material/Divider.cs` | `src/Plumix.Tests/MaterialDividerTests.cs` | `dart_sample/lib/demos/material/divider_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/DividerDemoPage.cs` |
 | `material_ui/divider_theme.dart` | `src/Plumix.Material/DividerTheme.cs` | — | — |
@@ -391,7 +392,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `widgets/reorderable_list.dart` | `src/Plumix/Widgets/ReorderableList.cs` | `src/Plumix.Tests/MaterialReorderableListTests.cs` | `dart_sample/lib/demos/material/reorderable_list_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/ReorderableListDemoPage.cs` |
 | `widgets/repeating_animation_builder.dart` | `src/Plumix/Widgets/RepeatingAnimationBuilder.cs` | — | — |
 | `widgets/restoration.dart` | `src/Plumix/Widgets/Restoration.cs` | — | — |
-| `widgets/routes.dart` | `src/Plumix/Widgets/Navigation.cs` | `src/Plumix.Tests/MaterialBottomNavigationBarTests.cs`<br>`src/Plumix.Tests/MaterialNavigationSurfacesTests.cs`<br>`src/Plumix.Tests/NavigationTests.cs` | `dart_sample/lib/demos/general/navigation_pop_demo_page.dart`<br>`dart_sample/lib/demos/material/navigation_drawer_demo_page.dart`<br>`dart_sample/lib/demos/material/navigation_surfaces_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/NavigationPopDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/NavigationDrawerDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/NavigationSurfacesDemoPage.cs` |
+| `widgets/routes.dart` | `src/Plumix/Widgets/Navigation.cs`<br>`src/Plumix/Widgets/RawDialogRoute.cs` | `src/Plumix.Tests/MaterialBottomNavigationBarTests.cs`<br>`src/Plumix.Tests/MaterialNavigationSurfacesTests.cs`<br>`src/Plumix.Tests/NavigationTests.cs` | `dart_sample/lib/demos/general/navigation_pop_demo_page.dart`<br>`dart_sample/lib/demos/material/navigation_drawer_demo_page.dart`<br>`dart_sample/lib/demos/material/navigation_surfaces_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/NavigationPopDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/NavigationDrawerDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/NavigationSurfacesDemoPage.cs` |
 | `widgets/safe_area.dart` | `src/Plumix/Widgets/SafeArea.cs` | `src/Plumix.Tests/SafeAreaTests.cs` | — |
 | `widgets/scroll_activity.dart` | `src/Plumix/Rendering/Scroll.cs` | `src/Plumix.Tests/DraggableScrollableSheetTests.cs`<br>`src/Plumix.Tests/MaterialScrollbarTests.cs`<br>`src/Plumix.Tests/ScrollBehaviorParityTests.cs`<br>`src/Plumix.Tests/ScrollInfrastructureTests.cs`<br>`src/Plumix.Tests/ScrollNotificationObserverTests.cs`<br>`src/Plumix.Tests/ScrollPhysicsTests.cs`<br>`src/Plumix.Tests/ScrollPipelineTests.cs` | `dart_sample/lib/demos/general/draggable_scrollable_sheet_demo_page.dart`<br>`dart_sample/lib/demos/general/scroll_physics_demo_page.dart`<br>`dart_sample/lib/demos/general/scrollbar_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/DraggableScrollableSheetDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ScrollPhysicsDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ScrollbarDemoPage.cs` |
 | `widgets/scroll_configuration.dart` | `src/Plumix/Widgets/ScrollConfiguration.cs` | — | — |
@@ -460,8 +461,8 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 
 ## Summary
 
-- Flutter files mapped: 417
-- C# files carrying a marker: 523
+- Flutter files mapped: 418
+- C# files carrying a marker: 526
 - C# files without a marker: 15
 - Markers not resolvable in the pinned checkout: 0
 

@@ -708,6 +708,7 @@ public sealed class AnimationController : Animation<double>, IDisposable
     private TaskCompletionSource? _animateCompletion;
     private readonly bool _unbounded;
     private Simulation? _simulation;
+    private bool _simulationReversing;
     private double _simulationElapsedSeconds;
     private TaskCompletionSource? _simulationCompletion;
 
@@ -814,7 +815,7 @@ public sealed class AnimationController : Animation<double>, IDisposable
     /// A task that completes when the simulation reports it is done <b>or</b> when the animation is
     /// stopped, which is the contract Flutter's <c>TickerFuture.whenCompleteOrCancel</c> provides.
     /// </returns>
-    public Task AnimateWith(Simulation simulation)
+    public Task AnimateWith(Simulation simulation, bool reverse = false)
     {
         ArgumentNullException.ThrowIfNull(simulation);
 
@@ -825,10 +826,11 @@ public sealed class AnimationController : Animation<double>, IDisposable
         _repeatReverse = false;
         _reversing = false;
         _simulation = simulation;
+        _simulationReversing = reverse;
         _simulationElapsedSeconds = 0.0;
         _simulationCompletion = new TaskCompletionSource();
         _value = ClampValue(simulation.X(0.0));
-        SetStatus(AnimationStatus.Forward);
+        SetStatus(reverse ? AnimationStatus.Reverse : AnimationStatus.Forward);
         Start();
         return _simulationCompletion.Task;
     }
@@ -1076,10 +1078,18 @@ public sealed class AnimationController : Animation<double>, IDisposable
 
         IsAnimating = false;
         _ticker.Stop();
-        SetStatus(AnimationStatus.Completed);
+        bool reversing = _simulationReversing;
+        SetStatus(reversing ? AnimationStatus.Dismissed : AnimationStatus.Completed);
         Changed?.Invoke();
         CompleteSimulation();
-        Completed?.Invoke();
+        if (reversing)
+        {
+            Dismissed?.Invoke();
+        }
+        else
+        {
+            Completed?.Invoke();
+        }
     }
 
     /// <summary>

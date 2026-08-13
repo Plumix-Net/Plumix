@@ -97,8 +97,8 @@ public sealed class FocusTests : IDisposable
 
         manager.RequestFocus(second);
         bool movedPastLast = manager.HandleKeyEvent(new KeyEvent(key: "Tab", isDown: true));
-        Assert.False(movedPastLast);
-        Assert.Same(second, manager.PrimaryFocus);
+        Assert.True(movedPastLast);
+        Assert.Same(first, manager.PrimaryFocus);
     }
 
     [Fact]
@@ -124,13 +124,18 @@ public sealed class FocusTests : IDisposable
         Assert.Same(leftSecond, manager.PrimaryFocus);
         Assert.Same(leftSecond, leftScope.FocusedChild);
 
-        Assert.False(manager.FocusNext());
+        // The default closed loop wraps within the scope instead of escaping into the sibling scope.
+        Assert.True(manager.FocusNext());
+        Assert.Same(leftFirst, manager.PrimaryFocus);
+        Assert.False(rightOnly.HasFocus);
+
+        Assert.True(manager.FocusPrevious());
         Assert.Same(leftSecond, manager.PrimaryFocus);
         Assert.False(rightOnly.HasFocus);
 
-        manager.RequestFocus(leftFirst);
-        Assert.False(manager.FocusPrevious());
-        Assert.Same(leftFirst, manager.PrimaryFocus);
+        leftScope.TraversalEdgeBehavior = TraversalEdgeBehavior.Stop;
+        Assert.False(manager.FocusNext());
+        Assert.Same(leftSecond, manager.PrimaryFocus);
     }
 
     [Fact]
@@ -351,17 +356,18 @@ public sealed class FocusTests : IDisposable
 
         Assert.Same(firstInScope, FocusManager.Instance.PrimaryFocus);
 
+        // The default closed loop wraps within the scope instead of escaping into the siblings.
         bool movedBeforeScopeStart = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Tab", isDown: true, isShiftPressed: true));
-        Assert.False(movedBeforeScopeStart);
-        Assert.Same(firstInScope, FocusManager.Instance.PrimaryFocus);
+        Assert.True(movedBeforeScopeStart);
+        Assert.Same(secondInScope, FocusManager.Instance.PrimaryFocus);
         Assert.False(leadingSibling.HasFocus);
 
         bool movedInsideScope = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Tab", isDown: true));
         Assert.True(movedInsideScope);
-        Assert.Same(secondInScope, FocusManager.Instance.PrimaryFocus);
+        Assert.Same(firstInScope, FocusManager.Instance.PrimaryFocus);
 
         bool movedAfterScopeEnd = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Tab", isDown: true));
-        Assert.False(movedAfterScopeEnd);
+        Assert.True(movedAfterScopeEnd);
         Assert.Same(secondInScope, FocusManager.Instance.PrimaryFocus);
         Assert.False(trailingSibling.HasFocus);
     }

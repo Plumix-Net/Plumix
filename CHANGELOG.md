@@ -1,5 +1,26 @@
 # Changelog
 
+- Breaking: closed the `Dialog` family divergence end-to-end. Material `Dialog`/`AlertDialog`/`SimpleDialog` now
+  render on a real `Material(type: card)` surface with `AnimatedPadding`, `EdgeInsetsGeometry` slot paddings,
+  `AlignmentGeometry` alignment, `Curves.Decelerate` inset animation, host-platform (`defaultTargetPlatform`) route
+  labels, and icon-driven `TextAlign.Center` titles; `AlertDialog.Adaptive`/`ShowAdaptiveDialog` route to the new
+  Cupertino dialog on iOS/macOS. `DialogRoute<T>` is rebuilt on the new core `RawDialogRoute<T>` (`PopupRoute` +
+  `DisplayFeatureSubScreen` + scopesRoute semantics + `ShowGeneralDialog`): captured inherited themes, safe area,
+  opaque-surface semantics, the source 150ms easeOut fade (`AnimationStyle`-overridable), and the shared barrier
+  pipeline — its future now completes on pop, not after the exit fade. Ported Cupertino `dialog.dart` at the 3.47
+  shape: `CupertinoAlertDialog` (`_PriorityColumn`/`_AlertDialogActionsLayout` `RenderFlex` subclasses, overscroll
+  backgrounds, 270/310 widths, exact styles/colors), `CupertinoDialogAction`, blur+saturation `CupertinoPopupSurface`,
+  sliding-tap press/slide/confirm targets, and `CupertinoDialogRoute`/`ShowCupertinoDialog` with the critically-damped
+  spring (scale 1.3 fade-in, fade-only exit) via the new `TransitionRoute.CreateSimulation` hook. Core gained
+  `TraversalEdgeBehavior` (Tab wraps in a closed loop per scope by default — **Breaking** for edge-stop assumptions),
+  route `RequestFocus`/traversal-edge wiring in `ModalScope`, directional-edge handling, `RenderStack` intrinsics,
+  reversed `AnimationController.AnimateWith`, and Cupertino gained elevation-aware `CupertinoDynamicColor`,
+  `CupertinoUserInterfaceLevel`, `SystemRed`/`Separator`/`Label` colors. **Breaking:** `DialogThemeData.Alignment` is
+  `AlignmentGeometry?`, `ActionsPadding` is `EdgeInsetsGeometry?`, `DialogTheme` is an `InheritedTheme`, and
+  `MaterialDialogs.ShowDialog` replaced `transitionDuration` with `animationStyle` and gained
+  `anchorPoint`/`traversalEdgeBehavior`/`requestFocus`. Remaining deltas (slide-vs-scroll arena, superellipse clip,
+  high-contrast colors, legacy `DialogTheme` shims) are tracked in `DIVERGENCES.md`.
+
 - Breaking: completed the strict `SearchAnchor`/`SearchBar` closeout. The search view now uses the source
   `PopupRoute` with the 600ms `easeInOutCubicEmphasized` grow/fade choreography from the anchor rect (navigator-
   relative geometry, LTR/RTL clamping, fullscreen top-padding lerp, interval-staggered icon/divider/list fades),

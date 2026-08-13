@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
+using Plumix.Cupertino;
 using Plumix.Foundation;
 using Plumix.Painting;
 using Plumix.Rendering;
@@ -10,9 +11,9 @@ namespace Plumix.Material;
 
 // Dart parity source: material_ui/lib/src/dialog.dart
 
-public sealed class Dialog : StatelessWidget
+public class Dialog : StatelessWidget
 {
-    private static readonly Thickness DefaultInsetPadding = new(40, 24);
+    internal static readonly Thickness DefaultInsetPadding = new(40, 24);
 
     public Dialog(
         Color? backgroundColor = null,
@@ -24,7 +25,7 @@ public sealed class Dialog : StatelessWidget
         Thickness? insetPadding = null,
         Clip? clipBehavior = null,
         ShapeBorder? shape = null,
-        Alignment? alignment = null,
+        AlignmentGeometry? alignment = null,
         Widget? child = null,
         SemanticsRole semanticsRole = SemanticsRole.Dialog,
         BoxConstraints? constraints = null,
@@ -35,7 +36,7 @@ public sealed class Dialog : StatelessWidget
         shadowColor: shadowColor,
         surfaceTintColor: surfaceTintColor,
         insetAnimationDuration: insetAnimationDuration ?? TimeSpan.FromMilliseconds(100),
-        insetAnimationCurve: insetAnimationCurve ?? Curves.EaseOut,
+        insetAnimationCurve: insetAnimationCurve ?? Curves.Decelerate,
         insetPadding: insetPadding,
         clipBehavior: clipBehavior,
         shape: shape,
@@ -58,7 +59,7 @@ public sealed class Dialog : StatelessWidget
         Thickness? insetPadding,
         Clip? clipBehavior,
         ShapeBorder? shape,
-        Alignment? alignment,
+        AlignmentGeometry? alignment,
         Widget? child,
         SemanticsRole semanticsRole,
         BoxConstraints? constraints,
@@ -68,7 +69,7 @@ public sealed class Dialog : StatelessWidget
             throw new ArgumentOutOfRangeException(nameof(elevation));
         if (insetAnimationDuration < TimeSpan.Zero)
             throw new ArgumentOutOfRangeException(nameof(insetAnimationDuration));
-        ValidateInsets(insetPadding, nameof(insetPadding));
+        DialogThemeData.ValidateInsets(insetPadding, nameof(insetPadding));
         IsFullscreen = fullscreen;
         BackgroundColor = backgroundColor;
         Elevation = elevation;
@@ -94,12 +95,13 @@ public sealed class Dialog : StatelessWidget
     public Thickness? InsetPadding { get; }
     public Clip? ClipBehavior { get; }
     public ShapeBorder? Shape { get; }
-    public Alignment? Alignment { get; }
+    public AlignmentGeometry? Alignment { get; }
     public Widget? Child { get; }
     public SemanticsRole SemanticsRole { get; }
     public BoxConstraints? Constraints { get; }
     public bool IsFullscreen { get; }
 
+    /// <summary>Dart's `Dialog.fullscreen` named constructor.</summary>
     public static Dialog Fullscreen(
         Color? backgroundColor = null,
         TimeSpan? insetAnimationDuration = null,
@@ -113,7 +115,7 @@ public sealed class Dialog : StatelessWidget
         shadowColor: null,
         surfaceTintColor: null,
         insetAnimationDuration: insetAnimationDuration ?? TimeSpan.Zero,
-        insetAnimationCurve: insetAnimationCurve ?? Curves.EaseOut,
+        insetAnimationCurve: insetAnimationCurve ?? Curves.Decelerate,
         insetPadding: default(Thickness),
         clipBehavior: Clip.None,
         shape: null,
@@ -134,39 +136,28 @@ public sealed class Dialog : StatelessWidget
         Widget dialogChild;
         if (IsFullscreen)
         {
-            dialogChild = new ColoredBox(
-                BackgroundColor ?? dialogTheme.BackgroundColor ?? defaults.BackgroundColor!.Value,
-                Child);
+            dialogChild = new Material(
+                color: BackgroundColor ?? dialogTheme.BackgroundColor ?? defaults.BackgroundColor!.Value,
+                child: Child);
         }
         else
         {
             var constraints = Constraints ?? dialogTheme.Constraints ?? new BoxConstraints(MinWidth: 280);
-            var background = BackgroundColor ?? dialogTheme.BackgroundColor ?? defaults.BackgroundColor!.Value;
-            double elevation = Elevation ?? dialogTheme.Elevation ?? defaults.Elevation!.Value;
-            var shadow = ShadowColor ?? dialogTheme.ShadowColor ?? defaults.ShadowColor ?? Colors.Transparent;
-            var surfaceTint = SurfaceTintColor ?? dialogTheme.SurfaceTintColor ?? defaults.SurfaceTintColor;
-            if (theme.UseMaterial3 && surfaceTint.HasValue)
-            {
-                background = NavigationSurfaceUtilities.ApplySurfaceTint(background, surfaceTint.Value, elevation);
-            }
-
-            var shape = Shape ?? dialogTheme.Shape ?? defaults.Shape!;
-            var clip = ClipBehavior ?? dialogTheme.ClipBehavior ?? defaults.ClipBehavior ?? Clip.None;
-            Widget surface = new DecoratedBox(
-                new BoxDecoration(
-                    Color: background,
-                    Border: null,
-                    BorderRadius: ShapeBorderGeometry.ResolveRadius(shape),
-                    BoxShadows: BuildBoxShadows(shadow, elevation)),
-                Child ?? new SizedBox());
-            if (clip != Clip.None)
-            {
-                surface = new ClipPath(clipper: new ShapeBorderClipper(shape), child: surface);
-            }
-
             dialogChild = new Align(
-                alignment: Alignment ?? dialogTheme.Alignment ?? defaults.Alignment ?? Plumix.Rendering.Alignment.Center,
-                child: new ConstrainedBox(constraints, surface));
+                alignment: Alignment ?? dialogTheme.Alignment ?? defaults.Alignment!.Value,
+                child: new ConstrainedBox(
+                    constraints,
+                    new Material(
+                        color: BackgroundColor ?? dialogTheme.BackgroundColor ?? defaults.BackgroundColor!.Value,
+                        elevation: Elevation ?? dialogTheme.Elevation ?? defaults.Elevation!.Value,
+                        shadowColor: ShadowColor ?? dialogTheme.ShadowColor ?? defaults.ShadowColor,
+                        surfaceTintColor: SurfaceTintColor
+                                          ?? dialogTheme.SurfaceTintColor
+                                          ?? defaults.SurfaceTintColor,
+                        shape: Shape ?? dialogTheme.Shape ?? defaults.Shape!,
+                        type: MaterialType.Card,
+                        clipBehavior: ClipBehavior ?? dialogTheme.ClipBehavior ?? defaults.ClipBehavior ?? Clip.None,
+                        child: Child)));
         }
 
         dialogChild = MediaQuery.RemoveViewInsets(
@@ -176,7 +167,7 @@ public sealed class Dialog : StatelessWidget
             removeTop: true,
             removeRight: true,
             removeBottom: true);
-        dialogChild = new AnimatedContainer(
+        dialogChild = new AnimatedPadding(
             duration: InsetAnimationDuration,
             curve: InsetAnimationCurve,
             padding: effectivePadding,
@@ -204,7 +195,7 @@ public sealed class Dialog : StatelessWidget
                 IconColor: theme.IconTheme.Color,
                 TitleTextStyle: theme.TextTheme.TitleLarge,
                 ContentTextStyle: theme.TextTheme.TitleMedium,
-                ActionsPadding: default,
+                ActionsPadding: EdgeInsetsGeometry.Zero,
                 ClipBehavior: Clip.None);
         }
 
@@ -218,46 +209,22 @@ public sealed class Dialog : StatelessWidget
             IconColor: theme.SecondaryColor,
             TitleTextStyle: theme.TextTheme.HeadlineSmall,
             ContentTextStyle: theme.TextTheme.BodyMedium,
-            ActionsPadding: new Thickness(24, 0, 24, 24),
+            ActionsPadding: EdgeInsetsGeometry.Only(left: 24, right: 24, bottom: 24),
             ClipBehavior: Clip.None);
     }
 
-    private static BoxShadows? BuildBoxShadows(Color color, double elevation)
+    /// <summary>Dart's `_scalePadding`: 1.0 at text scale 1.0, shrinking to 1/3 at scale 2.0.</summary>
+    internal static double ScalePadding(double textScaleFactor)
     {
-        if (color.A == 0 || elevation <= 0) return null;
-        return new BoxShadows(
-            new BoxShadow
-            {
-                OffsetY = Math.Max(1, elevation * 0.5),
-                Blur = Math.Max(2, elevation * 2.4),
-                Color = ApplyOpacity(color, 0.20),
-            },
-            [new BoxShadow
-            {
-                OffsetY = Math.Max(1, elevation * 0.25),
-                Blur = Math.Max(3, elevation * 3.2),
-                Color = ApplyOpacity(color, 0.14),
-            }]);
+        double clamped = Math.Clamp(textScaleFactor, 1, 2);
+        return 1.0 + ((1.0 / 3.0 - 1.0) * (clamped - 1.0));
     }
 
-    private static Color ApplyOpacity(Color color, double opacity) => Color.FromArgb(
-        (byte)Math.Round(color.A * Math.Clamp(opacity, 0, 1)), color.R, color.G, color.B);
-
-    private static Thickness Add(Thickness a, Thickness b) => new(
+    internal static Thickness Add(Thickness a, Thickness b) => new(
         a.Left + b.Left,
         a.Top + b.Top,
         a.Right + b.Right,
         a.Bottom + b.Bottom);
-
-    internal static void ValidateInsets(Thickness? value, string parameterName)
-    {
-        if (!value.HasValue) return;
-        var insets = value.Value;
-        if (!double.IsFinite(insets.Left) || !double.IsFinite(insets.Top)
-            || !double.IsFinite(insets.Right) || !double.IsFinite(insets.Bottom)
-            || insets.Left < 0 || insets.Top < 0 || insets.Right < 0 || insets.Bottom < 0)
-            throw new ArgumentOutOfRangeException(parameterName);
-    }
 }
 
 public sealed class SimpleDialogOption : StatelessWidget
@@ -268,7 +235,7 @@ public sealed class SimpleDialogOption : StatelessWidget
         Widget? child = null,
         Key? key = null) : base(key)
     {
-        Dialog.ValidateInsets(padding, nameof(padding));
+        DialogThemeData.ValidateInsets(padding, nameof(padding));
         OnPressed = onPressed;
         Padding = padding;
         Child = child;
@@ -292,15 +259,12 @@ public sealed class SimpleDialogOption : StatelessWidget
 
 public sealed class SimpleDialog : StatelessWidget
 {
-    private static readonly Thickness DefaultTitlePadding = new(24, 24, 24, 0);
-    private static readonly Thickness DefaultContentPadding = new(0, 12, 0, 16);
-
     public SimpleDialog(
         Widget? title = null,
-        Thickness? titlePadding = null,
+        EdgeInsetsGeometry? titlePadding = null,
         TextStyle? titleTextStyle = null,
         IReadOnlyList<Widget>? children = null,
-        Thickness? contentPadding = null,
+        EdgeInsetsGeometry? contentPadding = null,
         TextStyle? contentTextStyle = null,
         Color? backgroundColor = null,
         double? elevation = null,
@@ -310,20 +274,18 @@ public sealed class SimpleDialog : StatelessWidget
         Thickness? insetPadding = null,
         Clip? clipBehavior = null,
         ShapeBorder? shape = null,
-        Alignment? alignment = null,
+        AlignmentGeometry? alignment = null,
         BoxConstraints? constraints = null,
         Key? key = null) : base(key)
     {
         if (elevation.HasValue && (!double.IsFinite(elevation.Value) || elevation.Value < 0))
             throw new ArgumentOutOfRangeException(nameof(elevation));
-        Dialog.ValidateInsets(titlePadding, nameof(titlePadding));
-        Dialog.ValidateInsets(contentPadding, nameof(contentPadding));
-        Dialog.ValidateInsets(insetPadding, nameof(insetPadding));
+        DialogThemeData.ValidateInsets(insetPadding, nameof(insetPadding));
         Title = title;
-        TitlePadding = titlePadding ?? DefaultTitlePadding;
+        TitlePadding = titlePadding ?? EdgeInsetsGeometry.FromLTRB(24, 24, 24, 0);
         TitleTextStyle = titleTextStyle;
         Children = children;
-        ContentPadding = contentPadding ?? DefaultContentPadding;
+        ContentPadding = contentPadding ?? EdgeInsetsGeometry.FromLTRB(0, 12, 0, 16);
         ContentTextStyle = contentTextStyle;
         BackgroundColor = backgroundColor;
         Elevation = elevation;
@@ -338,10 +300,10 @@ public sealed class SimpleDialog : StatelessWidget
     }
 
     public Widget? Title { get; }
-    public Thickness TitlePadding { get; }
+    public EdgeInsetsGeometry TitlePadding { get; }
     public TextStyle? TitleTextStyle { get; }
     public IReadOnlyList<Widget>? Children { get; }
-    public Thickness ContentPadding { get; }
+    public EdgeInsetsGeometry ContentPadding { get; }
     public TextStyle? ContentTextStyle { get; }
     public Color? BackgroundColor { get; }
     public double? Elevation { get; }
@@ -351,7 +313,7 @@ public sealed class SimpleDialog : StatelessWidget
     public Thickness? InsetPadding { get; }
     public Clip? ClipBehavior { get; }
     public ShapeBorder? Shape { get; }
-    public Alignment? Alignment { get; }
+    public AlignmentGeometry? Alignment { get; }
     public BoxConstraints? Constraints { get; }
 
     public override Widget Build(BuildContext context)
@@ -359,26 +321,33 @@ public sealed class SimpleDialog : StatelessWidget
         var theme = Theme.Of(context);
         var dialogTheme = DialogTheme.Of(context);
         var defaults = Dialog.ResolveDefaults(theme);
-        string? label = theme.Platform is TargetPlatform.IOS or TargetPlatform.MacOS
+        TargetPlatform hostPlatform = PlatformDefaults.TargetPlatform;
+        string? label = hostPlatform is TargetPlatform.IOS or TargetPlatform.MacOS
             ? SemanticLabel
             : SemanticLabel ?? MaterialLocalizations.Of(context).DialogLabel;
         var effectiveTitleTextStyle = TitleTextStyle ?? dialogTheme.TitleTextStyle ?? theme.TextTheme.TitleLarge;
-        double paddingScale = ScalePadding(MediaQuery.TextScaleFactorOf(context));
+        double fontSizeToScale = effectiveTitleTextStyle.FontSize is { } fontSize && fontSize != 0.0
+            ? fontSize
+            : 14.0;
+        double paddingScale = Dialog.ScalePadding(
+            MediaQuery.TextScalerOf(context).Scale(fontSizeToScale) / fontSizeToScale);
+        TextDirection direction = Directionality.MaybeOf(context) ?? TextDirection.Ltr;
 
         Widget? titleWidget = null;
         if (Title is not null)
         {
+            Thickness titlePadding = TitlePadding.Resolve(direction);
             var padding = new Thickness(
-                TitlePadding.Left * paddingScale,
-                TitlePadding.Top * paddingScale,
-                TitlePadding.Right * paddingScale,
-                Children is null ? TitlePadding.Bottom * paddingScale : TitlePadding.Bottom);
+                titlePadding.Left * paddingScale,
+                titlePadding.Top * paddingScale,
+                titlePadding.Right * paddingScale,
+                Children is null ? titlePadding.Bottom * paddingScale : titlePadding.Bottom);
             titleWidget = new Padding(
                 padding,
                 new DefaultTextStyle(
                     effectiveTitleTextStyle,
                     new Semantics(
-                        namesRoute: label is null && theme.Platform != TargetPlatform.IOS,
+                        namesRoute: label is null && hostPlatform != TargetPlatform.IOS,
                         container: true,
                         child: Title)));
         }
@@ -386,11 +355,12 @@ public sealed class SimpleDialog : StatelessWidget
         Widget? contentWidget = null;
         if (Children is not null)
         {
+            Thickness contentPadding = ContentPadding.Resolve(direction);
             var padding = new Thickness(
-                ContentPadding.Left * paddingScale,
-                Title is null ? ContentPadding.Top * paddingScale : ContentPadding.Top,
-                ContentPadding.Right * paddingScale,
-                ContentPadding.Bottom * paddingScale);
+                contentPadding.Left * paddingScale,
+                Title is null ? contentPadding.Top * paddingScale : contentPadding.Top,
+                contentPadding.Right * paddingScale,
+                contentPadding.Bottom * paddingScale);
             contentWidget = new Flexible(
                 new SingleChildScrollView(
                     padding: padding,
@@ -430,33 +400,27 @@ public sealed class SimpleDialog : StatelessWidget
             constraints: Constraints,
             child: dialogChild);
     }
-
-    private static double ScalePadding(double textScaleFactor)
-    {
-        double clamped = Math.Clamp(textScaleFactor, 1, 2);
-        return 1.0 + ((1.0 / 3.0 - 1.0) * (clamped - 1.0));
-    }
 }
 
-public sealed class AlertDialog : StatelessWidget
+public class AlertDialog : StatelessWidget
 {
     public AlertDialog(
         Widget? icon = null,
-        Thickness? iconPadding = null,
+        EdgeInsetsGeometry? iconPadding = null,
         Color? iconColor = null,
         Widget? title = null,
-        Thickness? titlePadding = null,
+        EdgeInsetsGeometry? titlePadding = null,
         TextStyle? titleTextStyle = null,
         Widget? content = null,
-        Thickness? contentPadding = null,
+        EdgeInsetsGeometry? contentPadding = null,
         TextStyle? contentTextStyle = null,
         IReadOnlyList<Widget>? actions = null,
-        Thickness? actionsPadding = null,
+        EdgeInsetsGeometry? actionsPadding = null,
         MainAxisAlignment? actionsAlignment = null,
         OverflowBarAlignment? actionsOverflowAlignment = null,
         VerticalDirection? actionsOverflowDirection = null,
         double? actionsOverflowButtonSpacing = null,
-        Thickness? buttonPadding = null,
+        EdgeInsetsGeometry? buttonPadding = null,
         Color? backgroundColor = null,
         double? elevation = null,
         Color? shadowColor = null,
@@ -465,7 +429,7 @@ public sealed class AlertDialog : StatelessWidget
         Thickness? insetPadding = null,
         Clip? clipBehavior = null,
         ShapeBorder? shape = null,
-        Alignment? alignment = null,
+        AlignmentGeometry? alignment = null,
         BoxConstraints? constraints = null,
         bool scrollable = false,
         Key? key = null) : base(key)
@@ -475,12 +439,7 @@ public sealed class AlertDialog : StatelessWidget
         if (actionsOverflowButtonSpacing.HasValue
             && (!double.IsFinite(actionsOverflowButtonSpacing.Value) || actionsOverflowButtonSpacing.Value < 0))
             throw new ArgumentOutOfRangeException(nameof(actionsOverflowButtonSpacing));
-        Dialog.ValidateInsets(iconPadding, nameof(iconPadding));
-        Dialog.ValidateInsets(titlePadding, nameof(titlePadding));
-        Dialog.ValidateInsets(contentPadding, nameof(contentPadding));
-        Dialog.ValidateInsets(actionsPadding, nameof(actionsPadding));
-        Dialog.ValidateInsets(buttonPadding, nameof(buttonPadding));
-        Dialog.ValidateInsets(insetPadding, nameof(insetPadding));
+        DialogThemeData.ValidateInsets(insetPadding, nameof(insetPadding));
         Icon = icon;
         IconPadding = iconPadding;
         IconColor = iconColor;
@@ -511,21 +470,21 @@ public sealed class AlertDialog : StatelessWidget
     }
 
     public Widget? Icon { get; }
-    public Thickness? IconPadding { get; }
+    public EdgeInsetsGeometry? IconPadding { get; }
     public Color? IconColor { get; }
     public Widget? Title { get; }
-    public Thickness? TitlePadding { get; }
+    public EdgeInsetsGeometry? TitlePadding { get; }
     public TextStyle? TitleTextStyle { get; }
     public Widget? Content { get; }
-    public Thickness? ContentPadding { get; }
+    public EdgeInsetsGeometry? ContentPadding { get; }
     public TextStyle? ContentTextStyle { get; }
     public IReadOnlyList<Widget>? Actions { get; }
-    public Thickness? ActionsPadding { get; }
+    public EdgeInsetsGeometry? ActionsPadding { get; }
     public MainAxisAlignment? ActionsAlignment { get; }
     public OverflowBarAlignment? ActionsOverflowAlignment { get; }
     public VerticalDirection? ActionsOverflowDirection { get; }
     public double? ActionsOverflowButtonSpacing { get; }
-    public Thickness? ButtonPadding { get; }
+    public EdgeInsetsGeometry? ButtonPadding { get; }
     public Color? BackgroundColor { get; }
     public double? Elevation { get; }
     public Color? ShadowColor { get; }
@@ -534,30 +493,74 @@ public sealed class AlertDialog : StatelessWidget
     public Thickness? InsetPadding { get; }
     public Clip? ClipBehavior { get; }
     public ShapeBorder? Shape { get; }
-    public Alignment? Alignment { get; }
+    public AlignmentGeometry? Alignment { get; }
     public BoxConstraints? Constraints { get; }
     public bool Scrollable { get; }
+
+    /// <summary>Dart's `AlertDialog.adaptive`: Cupertino on iOS/macOS, Material elsewhere.</summary>
+    public static AlertDialog Adaptive(
+        Widget? icon = null,
+        EdgeInsetsGeometry? iconPadding = null,
+        Color? iconColor = null,
+        Widget? title = null,
+        EdgeInsetsGeometry? titlePadding = null,
+        TextStyle? titleTextStyle = null,
+        Widget? content = null,
+        EdgeInsetsGeometry? contentPadding = null,
+        TextStyle? contentTextStyle = null,
+        IReadOnlyList<Widget>? actions = null,
+        EdgeInsetsGeometry? actionsPadding = null,
+        MainAxisAlignment? actionsAlignment = null,
+        OverflowBarAlignment? actionsOverflowAlignment = null,
+        VerticalDirection? actionsOverflowDirection = null,
+        double? actionsOverflowButtonSpacing = null,
+        EdgeInsetsGeometry? buttonPadding = null,
+        Color? backgroundColor = null,
+        double? elevation = null,
+        Color? shadowColor = null,
+        Color? surfaceTintColor = null,
+        string? semanticLabel = null,
+        Thickness? insetPadding = null,
+        Clip? clipBehavior = null,
+        ShapeBorder? shape = null,
+        AlignmentGeometry? alignment = null,
+        BoxConstraints? constraints = null,
+        bool scrollable = false,
+        ScrollController? scrollController = null,
+        ScrollController? actionScrollController = null,
+        TimeSpan? insetAnimationDuration = null,
+        Curve? insetAnimationCurve = null,
+        Key? key = null) => new AdaptiveAlertDialog(
+        icon, iconPadding, iconColor, title, titlePadding, titleTextStyle, content, contentPadding,
+        contentTextStyle, actions, actionsPadding, actionsAlignment, actionsOverflowAlignment,
+        actionsOverflowDirection, actionsOverflowButtonSpacing, buttonPadding, backgroundColor,
+        elevation, shadowColor, surfaceTintColor, semanticLabel, insetPadding, clipBehavior, shape,
+        alignment, constraints, scrollable, scrollController, actionScrollController,
+        insetAnimationDuration ?? TimeSpan.FromMilliseconds(100), insetAnimationCurve ?? Curves.Decelerate,
+        key);
 
     public override Widget Build(BuildContext context)
     {
         var theme = Theme.Of(context);
         var dialogTheme = DialogTheme.Of(context);
         var defaults = Dialog.ResolveDefaults(theme);
-        string? label = theme.Platform is TargetPlatform.IOS or TargetPlatform.MacOS
+        TargetPlatform hostPlatform = PlatformDefaults.TargetPlatform;
+        string? label = hostPlatform is TargetPlatform.IOS or TargetPlatform.MacOS
             ? SemanticLabel
             : SemanticLabel ?? MaterialLocalizations.Of(context).AlertDialogLabel;
-        double paddingScale = ScalePadding(MediaQuery.TextScaleFactorOf(context));
+        double paddingScale = Dialog.ScalePadding(MediaQuery.TextScalerOf(context).Scale(14.0) / 14.0);
+        TextDirection direction = Directionality.MaybeOf(context) ?? TextDirection.Ltr;
 
         Widget? iconWidget = null;
         if (Icon is not null)
         {
             bool belowIsTitle = Title is not null;
             bool belowIsContent = !belowIsTitle && Content is not null;
-            var padding = IconPadding ?? new Thickness(
-                24,
-                24,
-                24,
-                belowIsTitle ? 16 : belowIsContent ? 0 : 24);
+            Thickness padding = (IconPadding ?? EdgeInsetsGeometry.Only(
+                left: 24,
+                top: 24,
+                right: 24,
+                bottom: belowIsTitle ? 16 : belowIsContent ? 0 : 24)).Resolve(direction);
             padding = ScaleTopAndHorizontal(padding, paddingScale, scaleTop: true);
             iconWidget = new Padding(
                 padding,
@@ -569,19 +572,31 @@ public sealed class AlertDialog : StatelessWidget
         Widget? titleWidget = null;
         if (Title is not null)
         {
-            var padding = TitlePadding ?? new Thickness(24, Icon is null ? 24 : 0, 24, Content is null ? 20 : 0);
+            Thickness padding = (TitlePadding ?? EdgeInsetsGeometry.Only(
+                left: 24,
+                top: Icon is null ? 24 : 0,
+                right: 24,
+                bottom: Content is null ? 20 : 0)).Resolve(direction);
             padding = ScaleTopAndHorizontal(padding, paddingScale, scaleTop: Icon is null);
-            Widget title = new DefaultTextStyle(
-                TitleTextStyle ?? dialogTheme.TitleTextStyle ?? defaults.TitleTextStyle!,
-                Title);
-            if (Icon is not null) title = new Center(child: title);
-            titleWidget = new Padding(padding, new Semantics(container: true, child: title));
+            titleWidget = new Padding(
+                padding,
+                new DefaultTextStyle(
+                    TitleTextStyle ?? dialogTheme.TitleTextStyle ?? defaults.TitleTextStyle!,
+                    textAlign: Icon is null ? TextAlign.Start : TextAlign.Center,
+                    child: new Semantics(
+                        namesRoute: label is null && hostPlatform != TargetPlatform.IOS,
+                        container: true,
+                        child: Title)));
         }
 
         Widget? contentWidget = null;
         if (Content is not null)
         {
-            var padding = ContentPadding ?? new Thickness(24, theme.UseMaterial3 ? 16 : 20, 24, 24);
+            Thickness padding = (ContentPadding ?? EdgeInsetsGeometry.Only(
+                left: 24,
+                top: theme.UseMaterial3 ? 16 : 20,
+                right: 24,
+                bottom: 24)).Resolve(direction);
             padding = ScaleTopAndHorizontal(padding, paddingScale, scaleTop: Title is null && Icon is null);
             contentWidget = new Padding(
                 padding,
@@ -593,12 +608,12 @@ public sealed class AlertDialog : StatelessWidget
         Widget? actionsWidget = null;
         if (Actions is not null)
         {
-            double spacing = ((ButtonPadding?.Left ?? 8) + (ButtonPadding?.Right ?? 8)) / 2.0;
-            var defaultActionsPadding = theme.UseMaterial3
-                ? defaults.ActionsPadding!.Value
-                : Add(defaults.ActionsPadding ?? default, new Thickness(spacing));
+            double spacing = (ButtonPadding?.Horizontal ?? 16) / 2.0;
+            Thickness defaultActionsPadding = theme.UseMaterial3
+                ? defaults.ActionsPadding!.Value.Resolve(direction)
+                : defaults.ActionsPadding!.Value.Add(EdgeInsetsGeometry.All(spacing)).Resolve(direction);
             actionsWidget = new Padding(
-                ActionsPadding ?? dialogTheme.ActionsPadding ?? defaultActionsPadding,
+                (ActionsPadding ?? dialogTheme.ActionsPadding)?.Resolve(direction) ?? defaultActionsPadding,
                 new OverflowBar(
                     children: Actions,
                     alignment: ActionsAlignment ?? MainAxisAlignment.End,
@@ -661,176 +676,156 @@ public sealed class AlertDialog : StatelessWidget
             child: dialogChild);
     }
 
-    private static double ScalePadding(double textScaleFactor)
-    {
-        double clamped = Math.Clamp(textScaleFactor, 1, 2);
-        return 1.0 + ((1.0 / 3.0 - 1.0) * (clamped - 1.0));
-    }
-
     private static Thickness ScaleTopAndHorizontal(Thickness padding, double factor, bool scaleTop) => new(
         padding.Left * factor,
         scaleTop ? padding.Top * factor : padding.Top,
         padding.Right * factor,
         padding.Bottom);
-
-    private static Thickness Add(Thickness a, Thickness b) => new(
-        a.Left + b.Left,
-        a.Top + b.Top,
-        a.Right + b.Right,
-        a.Bottom + b.Bottom);
 }
 
-public sealed class DialogRoute<T> : PageRoute
+/// <summary>Dart's private `_AdaptiveAlertDialog`.</summary>
+internal sealed class AdaptiveAlertDialog : AlertDialog
 {
-    private readonly WidgetBuilder _builder;
-    private readonly ThemeData _capturedTheme;
-    private readonly DialogThemeData _capturedDialogTheme;
-    private readonly MediaQueryData _capturedMediaQuery;
-    private readonly TextDirection _capturedDirection;
-    private readonly Plumix.AnimationController _animation;
-    private readonly Animation<Color?> _barrierColorAnimation;
-    private readonly TaskCompletionSource<T?> _completed = new(TaskCreationOptions.RunContinuationsAsynchronously);
-    private object? _pendingResult;
-    private bool _isExiting;
+    private readonly ScrollController? _scrollController;
+    private readonly ScrollController? _actionScrollController;
+    private readonly TimeSpan _insetAnimationDuration;
+    private readonly Curve _insetAnimationCurve;
+
+    public AdaptiveAlertDialog(
+        Widget? icon,
+        EdgeInsetsGeometry? iconPadding,
+        Color? iconColor,
+        Widget? title,
+        EdgeInsetsGeometry? titlePadding,
+        TextStyle? titleTextStyle,
+        Widget? content,
+        EdgeInsetsGeometry? contentPadding,
+        TextStyle? contentTextStyle,
+        IReadOnlyList<Widget>? actions,
+        EdgeInsetsGeometry? actionsPadding,
+        MainAxisAlignment? actionsAlignment,
+        OverflowBarAlignment? actionsOverflowAlignment,
+        VerticalDirection? actionsOverflowDirection,
+        double? actionsOverflowButtonSpacing,
+        EdgeInsetsGeometry? buttonPadding,
+        Color? backgroundColor,
+        double? elevation,
+        Color? shadowColor,
+        Color? surfaceTintColor,
+        string? semanticLabel,
+        Thickness? insetPadding,
+        Clip? clipBehavior,
+        ShapeBorder? shape,
+        AlignmentGeometry? alignment,
+        BoxConstraints? constraints,
+        bool scrollable,
+        ScrollController? scrollController,
+        ScrollController? actionScrollController,
+        TimeSpan insetAnimationDuration,
+        Curve insetAnimationCurve,
+        Key? key) : base(
+        icon, iconPadding, iconColor, title, titlePadding, titleTextStyle, content, contentPadding,
+        contentTextStyle, actions, actionsPadding, actionsAlignment, actionsOverflowAlignment,
+        actionsOverflowDirection, actionsOverflowButtonSpacing, buttonPadding, backgroundColor,
+        elevation, shadowColor, surfaceTintColor, semanticLabel, insetPadding, clipBehavior, shape,
+        alignment, constraints, scrollable, key)
+    {
+        _scrollController = scrollController;
+        _actionScrollController = actionScrollController;
+        _insetAnimationDuration = insetAnimationDuration;
+        _insetAnimationCurve = insetAnimationCurve;
+    }
+
+    public override Widget Build(BuildContext context)
+    {
+        return Theme.Of(context).Platform switch
+        {
+            TargetPlatform.IOS or TargetPlatform.MacOS => new CupertinoAlertDialog(
+                title: Title,
+                content: Content,
+                actions: Actions ?? [],
+                scrollController: _scrollController,
+                actionScrollController: _actionScrollController,
+                insetAnimationDuration: _insetAnimationDuration,
+                insetAnimationCurve: _insetAnimationCurve),
+            _ => base.Build(context),
+        };
+    }
+}
+
+public sealed class DialogRoute<T> : RawDialogRoute<T>
+{
+    private readonly AnimationStyle? _animationStyle;
+    private CurvedAnimation? _curvedAnimation;
+    private Animation<double>? _curvedAnimationParent;
 
     public DialogRoute(
         BuildContext context,
         WidgetBuilder builder,
+        CapturedThemes? themes = null,
         Color? barrierColor = null,
         bool barrierDismissible = true,
         string? barrierLabel = null,
         bool useSafeArea = true,
         RouteSettings? settings = null,
+        bool? requestFocus = null,
+        Point? anchorPoint = null,
+        TraversalEdgeBehavior? traversalEdgeBehavior = null,
         bool fullscreenDialog = false,
-        TimeSpan? transitionDuration = null) : base(settings, fullscreenDialog)
+        AnimationStyle? animationStyle = null) : base(
+        pageBuilder: (pageContext, _, _) => BuildDialogPage(builder, themes, useSafeArea),
+        barrierDismissible: barrierDismissible,
+        barrierColor: barrierColor ?? Color.FromArgb(0x8A, 0, 0, 0),
+        barrierLabel: barrierLabel ?? MaterialLocalizations.Of(context).ModalBarrierDismissLabel,
+        transitionDuration: animationStyle?.Duration ?? TimeSpan.FromMilliseconds(150),
+        transitionBuilder: static (_, _, _, child) => child,
+        settings: settings,
+        requestFocus: requestFocus,
+        anchorPoint: anchorPoint,
+        traversalEdgeBehavior: traversalEdgeBehavior,
+        fullscreenDialog: fullscreenDialog)
     {
-        _builder = builder ?? throw new ArgumentNullException(nameof(builder));
-        _capturedTheme = Theme.Of(context);
-        _capturedDialogTheme = DialogTheme.Of(context);
-        _capturedMediaQuery = MediaQuery.Of(context);
-        _capturedDirection = Directionality.Of(context);
-        BarrierColor = barrierColor
-                       ?? _capturedDialogTheme.BarrierColor
-                       ?? Color.FromArgb(0x8A, 0, 0, 0);
-        BarrierDismissible = barrierDismissible;
-        BarrierLabel = barrierLabel ?? MaterialLocalizations.Of(context).ModalBarrierDismissLabel;
-        UseSafeArea = useSafeArea;
-        TransitionDuration = transitionDuration ?? TimeSpan.FromMilliseconds(150);
-        if (TransitionDuration < TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(transitionDuration));
-        _animation = new Plumix.AnimationController(TransitionDuration) { Curve = Curves.EaseOut };
-        _barrierColorAnimation = new DialogBarrierColorAnimation(_animation, BarrierColor.Value);
-        _animation.Changed += HandleAnimationChanged;
-        _animation.Dismissed += HandleDismissed;
+        _animationStyle = animationStyle;
     }
 
-    public override bool Opaque => false;
-    public override Color? BarrierColor { get; }
-    public override bool BarrierDismissible { get; }
-    public override string? BarrierLabel { get; }
-    public bool UseSafeArea { get; }
-    public new TimeSpan TransitionDuration { get; }
-    public Task<T?> Completed => _completed.Task;
-
-    protected override void OnAttach()
+    private static Widget BuildDialogPage(WidgetBuilder builder, CapturedThemes? themes, bool useSafeArea)
     {
-        _animation.Forward(from: 0);
-    }
-
-    public override bool WillPop(object? result)
-    {
-        if (_isExiting || _animation.Value <= 0) return base.WillPop(result);
-        _pendingResult = result;
-        _isExiting = true;
-        _animation.Reverse();
-        return false;
-    }
-
-    public override void DidComplete(object? result)
-    {
-        if (result is null)
+        Widget pageChild = new Builder(builder);
+        Widget dialog = themes?.Wrap(pageChild) ?? pageChild;
+        if (useSafeArea)
         {
-            _completed.TrySetResult(default);
+            dialog = new SafeArea(child: dialog);
         }
-        else if (result is T typed)
-        {
-            _completed.TrySetResult(typed);
-        }
-        else
-        {
-            _completed.TrySetException(new InvalidCastException(
-                $"Dialog result of type {result.GetType().Name} cannot be converted to {typeof(T).Name}."));
-        }
+
+        // Blocks taps on the dialog surface from reaching the dismissing barrier behind it.
+        return new Semantics(hitTestBehavior: SemanticsHitTestBehavior.Opaque, child: dialog);
     }
 
-    /// <summary>
-    /// The dialog scrim follows its own entry animation rather than the (zero-length) route transition.
-    /// </summary>
-    public override Widget BuildModalBarrier() => new AnimatedModalBarrier(
-        color: _barrierColorAnimation,
-        dismissible: BarrierDismissible,
-        semanticsLabel: BarrierLabel,
-        barrierSemanticsDismissible: SemanticsDismissible);
-
-    public override Widget BuildPage(BuildContext context)
+    public override Widget BuildTransitions(
+        BuildContext context,
+        Animation<double> animation,
+        Animation<double> secondaryAnimation,
+        Widget child)
     {
-        double progress = Math.Clamp(_animation.Value, 0, 1);
-        Widget page = new Builder(_builder);
-        if (UseSafeArea) page = new SafeArea(child: page);
-        page = new Opacity(progress, page);
-        page = new DialogTheme(_capturedDialogTheme, page);
-        page = new Theme(_capturedTheme, page);
-        page = new MediaQuery(_capturedMediaQuery, page);
-        return new Directionality(_capturedDirection, page);
+        if (!ReferenceEquals(_curvedAnimationParent, animation))
+        {
+            _curvedAnimation?.Dispose();
+            _curvedAnimation = new CurvedAnimation(
+                animation,
+                _animationStyle?.Curve ?? Curves.EaseOut,
+                _animationStyle?.ReverseCurve ?? Curves.EaseOut);
+            _curvedAnimationParent = animation;
+        }
+
+        return new FadeTransition(
+            opacity: _curvedAnimation!,
+            child: base.BuildTransitions(context, animation, secondaryAnimation, child));
     }
 
     public override void Dispose()
     {
-        _animation.Changed -= HandleAnimationChanged;
-        _animation.Dismissed -= HandleDismissed;
-        _animation.Dispose();
-        if (!_completed.Task.IsCompleted) _completed.TrySetResult(default);
+        _curvedAnimation?.Dispose();
         base.Dispose();
-    }
-
-    private void HandleAnimationChanged() => NotifyRouteChanged();
-
-    private void HandleDismissed()
-    {
-        if (_isExiting) Navigator?.MaybePop(_pendingResult);
-    }
-
-    private sealed class DialogBarrierColorAnimation : Animation<Color?>
-    {
-        private readonly Animation<double> _parent;
-        private readonly Color _color;
-
-        public DialogBarrierColorAnimation(Animation<double> parent, Color color)
-        {
-            _parent = parent;
-            _color = color;
-        }
-
-        public override Color? Value => Color.FromArgb(
-            (byte)Math.Round(_color.A * Math.Clamp(_parent.Value, 0, 1)),
-            _color.R,
-            _color.G,
-            _color.B);
-
-        public override AnimationStatus Status => _parent.Status;
-
-        public override void AddListener(Action listener) => _parent.AddListener(listener);
-
-        public override void RemoveListener(Action listener) => _parent.RemoveListener(listener);
-
-        public override void AddStatusListener(Action<AnimationStatus> listener)
-        {
-            _parent.AddStatusListener(listener);
-        }
-
-        public override void RemoveStatusListener(Action<AnimationStatus> listener)
-        {
-            _parent.RemoveStatusListener(listener);
-        }
     }
 }
 
@@ -845,20 +840,73 @@ public static class MaterialDialogs
         bool useSafeArea = true,
         RouteSettings? routeSettings = null,
         bool fullscreenDialog = false,
-        TimeSpan? transitionDuration = null,
-        bool useRootNavigator = true)
+        bool useRootNavigator = true,
+        Point? anchorPoint = null,
+        TraversalEdgeBehavior? traversalEdgeBehavior = null,
+        bool? requestFocus = null,
+        AnimationStyle? animationStyle = null)
     {
+        NavigatorState navigator = Navigator.Of(context, rootNavigator: useRootNavigator);
+        CapturedThemes themes = InheritedTheme.Capture(from: context, to: navigator.Context);
         var route = new DialogRoute<T>(
             context,
             builder,
-            barrierColor: barrierColor,
+            themes: themes,
+            barrierColor: barrierColor
+                          ?? DialogTheme.Of(context).BarrierColor
+                          ?? Color.FromArgb(0x8A, 0, 0, 0),
             barrierDismissible: barrierDismissible,
             barrierLabel: barrierLabel,
             useSafeArea: useSafeArea,
             settings: routeSettings,
+            requestFocus: requestFocus,
+            anchorPoint: anchorPoint,
+            traversalEdgeBehavior: traversalEdgeBehavior ?? TraversalEdgeBehavior.ClosedLoop,
             fullscreenDialog: fullscreenDialog,
-            transitionDuration: transitionDuration);
-        Navigator.Of(context, rootNavigator: useRootNavigator).Push(route);
+            animationStyle: animationStyle);
+        navigator.Push(route);
         return route.Completed;
+    }
+
+    /// <summary>Dart's `showAdaptiveDialog`: Cupertino presentation on iOS/macOS.</summary>
+    public static Task<T?> ShowAdaptiveDialog<T>(
+        BuildContext context,
+        WidgetBuilder builder,
+        bool? barrierDismissible = null,
+        Color? barrierColor = null,
+        string? barrierLabel = null,
+        bool useSafeArea = true,
+        bool useRootNavigator = true,
+        RouteSettings? routeSettings = null,
+        Point? anchorPoint = null,
+        TraversalEdgeBehavior? traversalEdgeBehavior = null,
+        bool? requestFocus = null,
+        AnimationStyle? animationStyle = null)
+    {
+        return Theme.Of(context).Platform switch
+        {
+            TargetPlatform.IOS or TargetPlatform.MacOS => CupertinoDialogs.ShowCupertinoDialog<T>(
+                context,
+                builder,
+                barrierLabel: barrierLabel,
+                useRootNavigator: useRootNavigator,
+                barrierDismissible: barrierDismissible ?? false,
+                routeSettings: routeSettings,
+                anchorPoint: anchorPoint,
+                requestFocus: requestFocus),
+            _ => ShowDialog<T>(
+                context,
+                builder,
+                barrierDismissible: barrierDismissible ?? true,
+                barrierColor: barrierColor,
+                barrierLabel: barrierLabel,
+                useSafeArea: useSafeArea,
+                routeSettings: routeSettings,
+                useRootNavigator: useRootNavigator,
+                anchorPoint: anchorPoint,
+                traversalEdgeBehavior: traversalEdgeBehavior,
+                requestFocus: requestFocus,
+                animationStyle: animationStyle),
+        };
     }
 }

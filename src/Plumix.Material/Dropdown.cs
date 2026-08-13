@@ -553,7 +553,6 @@ internal sealed class DropdownRoute<T> : PageRoute
     public override bool BarrierDismissible { get; }
     public override string? BarrierLabel => _localizations.ModalBarrierDismissLabel;
     public MouseCursor? MouseCursor { get; }
-    public bool RequestFocus { get; }
     public bool CloseOnSelect { get; }
     public bool MenuBelowAnchor { get; }
     public Color? ShadowColor { get; }
@@ -597,7 +596,7 @@ internal sealed class DropdownRoute<T> : PageRoute
             [
                 new Positioned(left: 0, top: 0, right: 0, bottom: 0, child: menu),
             ]);
-        if (RequestFocus) page = new Focus(autofocus: true, onKeyEvent: HandleKeyEvent, child: page);
+        if (RequestFocus ?? true) page = new Focus(autofocus: true, onKeyEvent: HandleKeyEvent, child: page);
         page = new MediaQuery(_mediaQuery, page);
         return new Directionality(_direction, page);
     }

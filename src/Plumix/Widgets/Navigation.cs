@@ -4,6 +4,7 @@ using System.Linq;
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
+using Plumix.Physics;
 using Plumix.Rendering;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/widgets/navigator.dart; flutter/packages/flutter/lib/src/widgets/routes.dart (approximate)
@@ -578,10 +579,22 @@ public abstract class TransitionRoute : OverlayRoute
         return child;
     }
 
+    /// <summary>
+    /// Flutter's <c>TransitionRoute.createSimulation</c>: a non-null simulation replaces the
+    /// duration/curve drive of the transition controller for the given direction.
+    /// </summary>
+    protected internal virtual Simulation? CreateSimulation(bool forward) => null;
+
     public override void DidPush()
     {
         base.DidPush();
         _isPopped = false;
+        if (CreateSimulation(forward: true) is { } simulation)
+        {
+            Controller.AnimateWith(simulation);
+            return;
+        }
+
         if (TransitionDuration == TimeSpan.Zero)
         {
             Controller.SetValue(1.0);
@@ -595,7 +608,11 @@ public abstract class TransitionRoute : OverlayRoute
     public override void DidPop(Route? previousRoute)
     {
         _isPopped = true;
-        if (ReverseTransitionDuration == TimeSpan.Zero)
+        if (CreateSimulation(forward: false) is { } simulation)
+        {
+            Controller.AnimateWith(simulation, reverse: true);
+        }
+        else if (ReverseTransitionDuration == TimeSpan.Zero)
         {
             Controller.Stop();
             Controller.SetValue(0.0);
@@ -777,6 +794,27 @@ public abstract class ModalRoute : TransitionRoute
 
     /// <summary>Whether the route keeps its state alive while another route covers it.</summary>
     public virtual bool MaintainState => true;
+
+    /// <summary>
+    /// How Tab traversal behaves at the edge of this route's focus scope; <see langword="null"/> falls
+    /// back to the navigator default (<see cref="Widgets.TraversalEdgeBehavior.ParentScope"/>).
+    /// </summary>
+    public TraversalEdgeBehavior? TraversalEdgeBehavior { get; set; }
+
+    /// <summary>
+    /// How arrow-key traversal behaves at the edge of this route's focus scope; <see langword="null"/>
+    /// falls back to the navigator default (<see cref="Widgets.TraversalEdgeBehavior.Stop"/>).
+    /// </summary>
+    public TraversalEdgeBehavior? DirectionalTraversalEdgeBehavior { get; set; }
+
+    /// <summary>
+    /// Whether this route requests focus for its scope when it becomes current; <see langword="null"/>
+    /// falls back to the navigator default (<see langword="true"/>).
+    /// </summary>
+    public bool? RequestFocus { get; set; }
+
+    /// <summary>Flutter's <c>fullscreenDialog</c> flag; page routes override it from their constructor.</summary>
+    public virtual bool FullscreenDialog => false;
 
     public override Animation<double> Animation => HasController
         ? _animationProxy
@@ -1116,7 +1154,7 @@ public abstract class PageRoute : ModalRoute
         MaintainState = maintainState;
     }
 
-    public bool FullscreenDialog { get; }
+    public override bool FullscreenDialog { get; }
 
     public override bool MaintainState { get; }
 
@@ -2991,6 +3029,7 @@ internal sealed class ModalScopeState : State
     {
         base.DidChangeDependencies();
         _page = null;
+        UpdateFocusScopeNode();
     }
 
     public override void Dispose()
@@ -3006,7 +3045,33 @@ internal sealed class ModalScopeState : State
 
     internal void RouteSetState(Action mutation)
     {
+        ModalRoute route = CurrentWidget.Route;
+        if (route.IsCurrent && !ShouldIgnoreFocusRequest && ShouldRequestFocus
+            && !_focusScopeNode.HasFocusInScope)
+        {
+            _focusScopeNode.RequestFocus();
+        }
+
         SetState(mutation);
+    }
+
+    private bool ShouldRequestFocus => CurrentWidget.Route.RequestFocus ?? true;
+
+    /// <summary>
+    /// Flutter's <c>_ModalScopeState._updateFocusScopeNode</c>: applies the route's traversal edge
+    /// behaviors (falling back to the navigator defaults) and focuses a newly current route's scope.
+    /// </summary>
+    private void UpdateFocusScopeNode()
+    {
+        ModalRoute route = CurrentWidget.Route;
+        _focusScopeNode.TraversalEdgeBehavior =
+            route.TraversalEdgeBehavior ?? TraversalEdgeBehavior.ParentScope;
+        _focusScopeNode.DirectionalTraversalEdgeBehavior =
+            route.DirectionalTraversalEdgeBehavior ?? TraversalEdgeBehavior.Stop;
+        if (route.IsCurrent && ShouldRequestFocus && !_focusScopeNode.HasFocusInScope)
+        {
+            _focusScopeNode.RequestFocus();
+        }
     }
 
     public override Widget Build(BuildContext context)

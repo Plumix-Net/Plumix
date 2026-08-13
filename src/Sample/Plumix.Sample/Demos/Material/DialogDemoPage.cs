@@ -1,6 +1,7 @@
 using System;
 using Avalonia;
 using Avalonia.Media;
+using Plumix.Cupertino;
 using Plumix.Material;
 using Plumix.Rendering;
 using Plumix.UI;
@@ -19,6 +20,7 @@ public sealed class DialogDemoPage : StatefulWidget
         private bool _scrollable;
         private bool _barrierDismissible = true;
         private bool _useThemeOverrides;
+        private bool _appleAdaptive;
         private string _lastResult = "none";
 
         public override Widget Build(BuildContext context)
@@ -31,9 +33,15 @@ public sealed class DialogDemoPage : StatefulWidget
                     TitleTextStyle: Theme.Of(context).TextTheme.HeadlineSmall.CopyWith(color: Color.Parse("#FF004D40")),
                     BarrierColor: Color.FromArgb(0x99, 0x00, 0x4D, 0x40))
                 : new DialogThemeData();
-            return new DialogTheme(
+            Widget content = new DialogTheme(
                 dialogTheme,
                 new Builder(innerContext => BuildContent(innerContext)));
+            if (_appleAdaptive)
+            {
+                content = new Theme(Theme.Of(context) with { Platform = TargetPlatform.IOS }, content);
+            }
+
+            return content;
         }
 
         private Widget BuildContent(BuildContext context)
@@ -55,6 +63,9 @@ public sealed class DialogDemoPage : StatefulWidget
                             ControlButton(_scrollable ? "Scrollable" : "Static", () => SetState(() => _scrollable = !_scrollable)),
                             ControlButton(_barrierDismissible ? "Barrier closes" : "Barrier locked", () => SetState(() => _barrierDismissible = !_barrierDismissible)),
                             ControlButton(_useThemeOverrides ? "Theme on" : "Theme off", () => SetState(() => _useThemeOverrides = !_useThemeOverrides)),
+                            ControlButton(
+                                _appleAdaptive ? "Apple platform" : "Host platform",
+                                () => SetState(() => _appleAdaptive = !_appleAdaptive)),
                         ]),
                     new Row(
                         spacing: 8,
@@ -63,6 +74,7 @@ public sealed class DialogDemoPage : StatefulWidget
                             new ElevatedButton(new Text("SHOW ALERT"), () => ShowAlert(context)),
                             new OutlinedButton(new Text("SHOW DIALOG"), () => ShowPlainDialog(context)),
                             new FilledButton(new Text("SHOW SIMPLE"), () => ShowSimpleDialog(context)),
+                            new TextButton(new Text("SHOW ADAPTIVE"), () => ShowAdaptive(context)),
                         ]),
                     new Text($"Last result: {_lastResult}", fontSize: 13),
                 ]);
@@ -131,6 +143,34 @@ public sealed class DialogDemoPage : StatefulWidget
                             onPressed: () => Navigator.Pop(routeContext, "guest"),
                             child: new Text("Guest workspace")),
                     ]),
+                barrierDismissible: _barrierDismissible);
+            if (Mounted) SetState(() => _lastResult = result ?? "dismissed");
+        }
+
+        private async void ShowAdaptive(BuildContext context)
+        {
+            bool apple = Theme.Of(context).Platform is TargetPlatform.IOS or TargetPlatform.MacOS;
+            string? result = await MaterialDialogs.ShowAdaptiveDialog<string>(
+                context,
+                routeContext => AlertDialog.Adaptive(
+                    title: new Text("Adaptive alert"),
+                    content: new Text("Material on desktop platforms, Cupertino on Apple platforms."),
+                    actions: apple
+                        ?
+                        [
+                            new CupertinoDialogAction(
+                                new Text("Cancel"),
+                                () => Navigator.Pop(routeContext, "cancel")),
+                            new CupertinoDialogAction(
+                                new Text("OK"),
+                                () => Navigator.Pop(routeContext, "ok"),
+                                isDefaultAction: true),
+                        ]
+                        :
+                        [
+                            new TextButton(new Text("CANCEL"), () => Navigator.Pop(routeContext, "cancel")),
+                            new TextButton(new Text("OK"), () => Navigator.Pop(routeContext, "ok")),
+                        ]),
                 barrierDismissible: _barrierDismissible);
             if (Mounted) SetState(() => _lastResult = result ?? "dismissed");
         }

@@ -162,6 +162,11 @@
   - `MergeableMaterial` (strict constructor/defaults, keyed gap/chunk reconciliation, source 200ms gap/corner/divider
     transitions, transparent slice materials, directional list-body layout, render-owned group shadows, and a
     mirrored live merge/separate probe).
+  - The `Dialog` family (`Dialog`/`AlertDialog`/`SimpleDialog` on a real `Material` card surface with exact M2/M3
+    role tables, `AlertDialog.Adaptive`/`ShowAdaptiveDialog`, `DialogRoute` on the new core `RawDialogRoute` with
+    captured themes/safe area/150ms fade/traversal edges/`requestFocus`, the ported Cupertino
+    `CupertinoAlertDialog`/`CupertinoDialogAction`/`CupertinoPopupSurface`/`CupertinoDialogRoute` with the
+    critically-damped spring transition, and mirrored adaptive demo probes).
 - Completed `Typography.Material2014`/`Material2018`, exact platform black/white themes, dense/tall geometry, and
   locale script-category selection.
 - Remove the narrowed `ColorScheme + Typography closeout` row from `docs/MATERIAL_TODO.md` only after those checks

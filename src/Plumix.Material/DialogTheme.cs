@@ -17,11 +17,11 @@ public sealed partial record DialogThemeData
         Color? ShadowColor = null,
         Color? SurfaceTintColor = null,
         ShapeBorder? Shape = null,
-        Alignment? Alignment = null,
-        Color? IconColor = null,
+        AlignmentGeometry? Alignment = null,
         TextStyle? TitleTextStyle = null,
         TextStyle? ContentTextStyle = null,
-        Thickness? ActionsPadding = null,
+        EdgeInsetsGeometry? ActionsPadding = null,
+        Color? IconColor = null,
         Color? BarrierColor = null,
         Thickness? InsetPadding = null,
         Clip? ClipBehavior = null,
@@ -29,7 +29,6 @@ public sealed partial record DialogThemeData
     {
         if (Elevation.HasValue && (!double.IsFinite(Elevation.Value) || Elevation.Value < 0))
             throw new ArgumentOutOfRangeException(nameof(Elevation));
-        ValidateInsets(ActionsPadding, nameof(ActionsPadding));
         ValidateInsets(InsetPadding, nameof(InsetPadding));
         this.BackgroundColor = BackgroundColor;
         this.Elevation = Elevation;
@@ -37,10 +36,10 @@ public sealed partial record DialogThemeData
         this.SurfaceTintColor = SurfaceTintColor;
         this.Shape = Shape;
         this.Alignment = Alignment;
-        this.IconColor = IconColor;
         this.TitleTextStyle = TitleTextStyle;
         this.ContentTextStyle = ContentTextStyle;
         this.ActionsPadding = ActionsPadding;
+        this.IconColor = IconColor;
         this.BarrierColor = BarrierColor;
         this.InsetPadding = InsetPadding;
         this.ClipBehavior = ClipBehavior;
@@ -52,17 +51,17 @@ public sealed partial record DialogThemeData
     public Color? ShadowColor { get; init; }
     public Color? SurfaceTintColor { get; init; }
     public ShapeBorder? Shape { get; init; }
-    public Alignment? Alignment { get; init; }
-    public Color? IconColor { get; init; }
+    public AlignmentGeometry? Alignment { get; init; }
     public TextStyle? TitleTextStyle { get; init; }
     public TextStyle? ContentTextStyle { get; init; }
-    public Thickness? ActionsPadding { get; init; }
+    public EdgeInsetsGeometry? ActionsPadding { get; init; }
+    public Color? IconColor { get; init; }
     public Color? BarrierColor { get; init; }
     public Thickness? InsetPadding { get; init; }
     public Clip? ClipBehavior { get; init; }
     public BoxConstraints? Constraints { get; init; }
 
-    private static void ValidateInsets(Thickness? value, string parameterName)
+    internal static void ValidateInsets(Thickness? value, string parameterName)
     {
         if (!value.HasValue) return;
         var insets = value.Value;
@@ -73,7 +72,12 @@ public sealed partial record DialogThemeData
     }
 }
 
-public sealed class DialogTheme : InheritedWidget
+/// <summary>
+/// An inherited widget overriding the dialog theme below it. Dart's legacy field-based constructor,
+/// `copyWith`, and `lerp` on the widget itself are obsolete back-compat shims and are not ported;
+/// only the `data`-based surface exists here.
+/// </summary>
+public sealed class DialogTheme : InheritedTheme
 {
     public DialogTheme(DialogThemeData data, Widget child, Key? key = null) : base(key)
     {
@@ -85,6 +89,8 @@ public sealed class DialogTheme : InheritedWidget
     public Widget Child { get; }
 
     public override Widget Build(BuildContext context) => Child;
+
+    public override Widget Wrap(BuildContext context, Widget child) => new DialogTheme(Data, child);
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
         !Equals(((DialogTheme)oldWidget).Data, Data);

@@ -119,6 +119,34 @@ public sealed class RenderStack : RenderBox,
         }
     }
 
+    /// <summary>Flutter's `RenderStack.getIntrinsicDimension`: the max over non-positioned children.</summary>
+    private double GetIntrinsicDimension(Func<RenderBox, double> mainChildSizeGetter)
+    {
+        double extent = 0.0;
+        for (RenderBox? child = FirstChild; child != null; child = ChildAfter(child))
+        {
+            var childParentData = (StackParentData)child.parentData!;
+            if (!childParentData.IsPositioned)
+            {
+                extent = Math.Max(extent, mainChildSizeGetter(child));
+            }
+        }
+
+        return extent;
+    }
+
+    protected override double ComputeMinIntrinsicWidth(double height) =>
+        GetIntrinsicDimension(child => child.GetMinIntrinsicWidth(height));
+
+    protected override double ComputeMaxIntrinsicWidth(double height) =>
+        GetIntrinsicDimension(child => child.GetMaxIntrinsicWidth(height));
+
+    protected override double ComputeMinIntrinsicHeight(double width) =>
+        GetIntrinsicDimension(child => child.GetMinIntrinsicHeight(width));
+
+    protected override double ComputeMaxIntrinsicHeight(double width) =>
+        GetIntrinsicDimension(child => child.GetMaxIntrinsicHeight(width));
+
     protected override void PerformLayout()
     {
         var constraints = Constraints;

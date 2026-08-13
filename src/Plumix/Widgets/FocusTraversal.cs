@@ -16,6 +16,22 @@ public enum TraversalDirection
     Left,
 }
 
+/// <summary>Controls what happens when focus traversal reaches the edge of a <see cref="FocusScopeNode"/>.</summary>
+public enum TraversalEdgeBehavior
+{
+    /// <summary>Wraps to the opposite edge, forming a closed loop of focusable items.</summary>
+    ClosedLoop,
+
+    /// <summary>Unfocuses so the embedder (host platform) can take over focus handling.</summary>
+    LeaveFlutterView,
+
+    /// <summary>Continues traversal in the parent scope; falls back to <see cref="ClosedLoop"/> at the root.</summary>
+    ParentScope,
+
+    /// <summary>Keeps focus in place when it reaches the edge of the scope.</summary>
+    Stop,
+}
+
 public abstract class FocusTraversalPolicy
 {
     protected FocusTraversalPolicy(TraversalRequestFocusCallback? requestFocusCallback = null)

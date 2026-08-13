@@ -312,6 +312,12 @@ public sealed class FocusScopeNode : FocusNode
 
     public FocusNode? FocusedChild { get; private set; }
 
+    /// <summary>How Tab/Shift-Tab traversal behaves at the first/last node of this scope.</summary>
+    public TraversalEdgeBehavior TraversalEdgeBehavior { get; set; } = TraversalEdgeBehavior.ClosedLoop;
+
+    /// <summary>How arrow-key traversal behaves at the edge node of this scope.</summary>
+    public TraversalEdgeBehavior DirectionalTraversalEdgeBehavior { get; set; } = TraversalEdgeBehavior.Stop;
+
     /// <summary>Whether this scope or one of its descendants currently holds the primary focus.</summary>
     /// <remarks>Matches Flutter's ancestor-inclusive `FocusNode.hasFocus` for scopes.</remarks>
     public bool HasFocusInScope
@@ -516,27 +522,15 @@ public sealed class FocusManager
 
     public bool FocusNext()
     {
-        var candidates = CollectTraversalCandidates();
-        if (candidates.Count == 0)
-        {
-            return false;
-        }
-
-        int currentIndex = PrimaryFocus != null ? candidates.IndexOf(PrimaryFocus) : -1;
-        int startIndex = currentIndex >= 0 ? currentIndex + 1 : 0;
-
-        for (int index = startIndex; index < candidates.Count; index++)
-        {
-            if (RequestFocus(candidates[index]))
-            {
-                return true;
-            }
-        }
-
-        return false;
+        return MoveFocusOrdinal(forward: true, directional: false);
     }
 
     public bool FocusPrevious()
+    {
+        return MoveFocusOrdinal(forward: false, directional: false);
+    }
+
+    private bool MoveFocusOrdinal(bool forward, bool directional)
     {
         var candidates = CollectTraversalCandidates();
         if (candidates.Count == 0)
@@ -545,17 +539,125 @@ public sealed class FocusManager
         }
 
         int currentIndex = PrimaryFocus != null ? candidates.IndexOf(PrimaryFocus) : -1;
-        int startIndex = currentIndex >= 0 ? currentIndex - 1 : candidates.Count - 1;
-
-        for (int index = startIndex; index >= 0; index--)
+        if (forward)
         {
-            if (RequestFocus(candidates[index]))
+            for (int index = currentIndex >= 0 ? currentIndex + 1 : 0; index < candidates.Count; index++)
+            {
+                if (RequestFocus(candidates[index]))
+                {
+                    return true;
+                }
+            }
+        }
+        else
+        {
+            for (int index = currentIndex >= 0 ? currentIndex - 1 : candidates.Count - 1; index >= 0; index--)
+            {
+                if (RequestFocus(candidates[index]))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return currentIndex >= 0 && HandleTraversalEdge(candidates, currentIndex, forward, directional);
+    }
+
+    /// <summary>
+    /// Flutter's <c>FocusTraversalPolicy._moveFocus</c> edge handling: what happens after the traversal
+    /// walked past the first/last node of the primary focus's nearest scope without finding a taker.
+    /// Directional moves that fell back to ordinal order consult the directional edge behavior.
+    /// </summary>
+    private bool HandleTraversalEdge(List<FocusNode> candidates, int currentIndex, bool forward, bool directional)
+    {
+        FocusNode? current = PrimaryFocus;
+        FocusScopeNode scope = NearestScopeOf(current);
+        switch (directional ? scope.DirectionalTraversalEdgeBehavior : scope.TraversalEdgeBehavior)
+        {
+            case TraversalEdgeBehavior.LeaveFlutterView:
+                current?.Unfocus();
+                return false;
+            case TraversalEdgeBehavior.Stop:
+                return false;
+            case TraversalEdgeBehavior.ParentScope:
+                FocusScopeNode? parentScope = ((FocusNode)scope).Scope;
+                if (parentScope != null && !ReferenceEquals(parentScope, _rootScope))
+                {
+                    current?.Unfocus();
+                    var parentCandidates = CollectScopeCandidates(parentScope, current ?? parentScope)
+                        .Where(candidate => !IsInsideScope(candidate, scope))
+                        .ToList();
+                    if (parentCandidates.Count == 0)
+                    {
+                        return false;
+                    }
+
+                    foreach (FocusNode candidate in forward ? parentCandidates : Reversed(parentCandidates))
+                    {
+                        if (RequestFocus(candidate))
+                        {
+                            return true;
+                        }
+                    }
+
+                    return false;
+                }
+
+                goto case TraversalEdgeBehavior.ClosedLoop;
+            case TraversalEdgeBehavior.ClosedLoop:
+            default:
+                if (forward)
+                {
+                    for (int index = 0; index <= currentIndex; index++)
+                    {
+                        if (RequestFocus(candidates[index]))
+                        {
+                            return true;
+                        }
+                    }
+                }
+                else
+                {
+                    for (int index = candidates.Count - 1; index >= currentIndex; index--)
+                    {
+                        if (RequestFocus(candidates[index]))
+                        {
+                            return true;
+                        }
+                    }
+                }
+
+                return false;
+        }
+    }
+
+    /// <summary>Flutter's <c>FocusNode.nearestScope</c>: a scope node is its own nearest scope.</summary>
+    private FocusScopeNode NearestScopeOf(FocusNode? node) => node switch
+    {
+        FocusScopeNode scopeNode => scopeNode,
+        { } focusNode => focusNode.Scope ?? _rootScope,
+        null => _rootScope,
+    };
+
+    private static bool IsInsideScope(FocusNode node, FocusScopeNode scope)
+    {
+        for (FocusScopeNode? ancestor = node.Scope; ancestor != null; ancestor = ((FocusNode)ancestor).Scope)
+        {
+            if (ReferenceEquals(ancestor, scope))
             {
                 return true;
             }
         }
 
         return false;
+    }
+
+    private static IEnumerable<FocusNode> Reversed(List<FocusNode> nodes)
+    {
+        for (int index = nodes.Count - 1; index >= 0; index--)
+        {
+            yield return nodes[index];
+        }
     }
 
     public bool HandleKeyEvent(KeyEvent @event)
@@ -796,7 +898,7 @@ public sealed class FocusManager
 
     private List<FocusNode> CollectTraversalCandidates()
     {
-        var scope = PrimaryFocus?.Scope ?? _rootScope;
+        FocusScopeNode scope = NearestScopeOf(PrimaryFocus);
         FocusNode currentNode = PrimaryFocus ?? scope;
         return CollectScopeCandidates(scope, currentNode);
     }
@@ -887,9 +989,9 @@ public sealed class FocusManager
         var sourceRect = PrimaryFocus.ResolveTraversalRect();
         if (!sourceRect.HasValue)
         {
-            return direction is TraversalDirection.Left or TraversalDirection.Up
-                ? FocusPrevious()
-                : FocusNext();
+            return MoveFocusOrdinal(
+                forward: direction is TraversalDirection.Right or TraversalDirection.Down,
+                directional: true);
         }
 
         FocusNode? bestNode = null;
@@ -936,9 +1038,67 @@ public sealed class FocusManager
             return RequestFocus(bestNode);
         }
 
-        return direction is TraversalDirection.Left or TraversalDirection.Up
-            ? FocusPrevious()
-            : FocusNext();
+        return HandleDirectionalEdge(candidates, direction);
+    }
+
+    /// <summary>
+    /// Flutter's <c>_onEdgeForDirection</c>: what happens when no candidate exists further in
+    /// <paramref name="direction"/> from the current primary focus.
+    /// </summary>
+    private bool HandleDirectionalEdge(List<FocusNode> candidates, TraversalDirection direction)
+    {
+        FocusNode? current = PrimaryFocus;
+        FocusScopeNode scope = NearestScopeOf(current);
+        switch (scope.DirectionalTraversalEdgeBehavior)
+        {
+            case TraversalEdgeBehavior.LeaveFlutterView:
+                current?.Unfocus();
+                return false;
+            case TraversalEdgeBehavior.ClosedLoop:
+            case TraversalEdgeBehavior.ParentScope:
+                // ParentScope falls back to the closed loop when the enclosing scope has no candidate,
+                // which is always the case in this framework's flattened traversal model.
+                FocusNode? opposite = FindOppositeEdgeCandidate(candidates, direction);
+                return opposite != null && RequestFocus(opposite);
+            case TraversalEdgeBehavior.Stop:
+            default:
+                return false;
+        }
+    }
+
+    /// <summary>The candidate farthest in the opposite direction: the wrap target of a closed loop.</summary>
+    private FocusNode? FindOppositeEdgeCandidate(List<FocusNode> candidates, TraversalDirection direction)
+    {
+        FocusNode? best = null;
+        double bestCoordinate = double.PositiveInfinity;
+        foreach (FocusNode candidate in candidates)
+        {
+            if (ReferenceEquals(candidate, PrimaryFocus))
+            {
+                continue;
+            }
+
+            Rect? rect = candidate.ResolveTraversalRect();
+            if (!rect.HasValue)
+            {
+                continue;
+            }
+
+            double coordinate = direction switch
+            {
+                TraversalDirection.Right => rect.Value.Center.X,
+                TraversalDirection.Left => -rect.Value.Center.X,
+                TraversalDirection.Down => rect.Value.Center.Y,
+                _ => -rect.Value.Center.Y,
+            };
+            if (coordinate < bestCoordinate)
+            {
+                bestCoordinate = coordinate;
+                best = candidate;
+            }
+        }
+
+        return best;
     }
 
     private static bool IsDirectionalNextKey(string key)
