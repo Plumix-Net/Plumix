@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 class ReorderableListDemoPage extends StatefulWidget {
@@ -31,8 +32,8 @@ class _ReorderableListDemoPageState extends State<ReorderableListDemoPage> {
           style: TextStyle(fontSize: 20, color: Colors.black),
         ),
         const Text(
-          'The nearest DragBoundary clamps the dragged proxy to the visible '
-          'list bounds.',
+          'An 8% anchor offsets the list; DragBoundary keeps its proxy inside '
+          'the visible bounds.',
           style: TextStyle(fontSize: 12, color: Colors.black54),
         ),
         Row(
@@ -81,6 +82,12 @@ class _ReorderableListDemoPageState extends State<ReorderableListDemoPage> {
               ),
               padding: const EdgeInsets.all(4),
               itemExtent: 58,
+              anchor: 0.08,
+              dragStartBehavior: DragStartBehavior.down,
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              restorationId: 'reorderable-demo',
+              clipBehavior: Clip.none,
+              autoScrollerVelocityScalar: 75.0,
               children: <Widget>[
                 for (int index = 0; index < _items.length; index++)
                   _buildItem(index),

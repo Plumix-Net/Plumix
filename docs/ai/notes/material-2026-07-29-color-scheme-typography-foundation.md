@@ -113,6 +113,9 @@
     thumb-image/cursor/drag/padding APIs, theme copy/lerp, and mirrored runtime M2/M3 probes).
   - `Scrollbar` (direct on-surface roles without an M2/M3 split, source `WidgetStateProperty` theme copy/lerp/capture,
     public painter/state extension contracts, fade/hover/drag/track geometry, and adaptive Cupertino behavior).
+  - `ReorderableListView` (strict nullable/default API, source scroll-view forwarding, anchored and RTL/reverse
+    viewport geometry, state-resolving desktop cursors, animated proxy elevation, padding/extent/drag/semantics
+    behavior, and mirrored runtime configuration probes).
   - `Radio`/`RadioListTile` (direct M2/M3 roles, state/theme precedence, source painter and toggleable timing,
     background/side/inner-radius APIs, density targets, adaptive registry behavior, and merged tile semantics).
   - Chips (`Chip`/`ActionChip`/`ChoiceChip`/`FilterChip`/`InputChip`) with direct M3 roles, exact M2 derived-color

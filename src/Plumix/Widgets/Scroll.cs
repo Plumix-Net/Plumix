@@ -571,12 +571,20 @@ public sealed class Scrollable : StatefulWidget
         double cacheExtent = 250.0,
         CacheExtentStyle cacheExtentStyle = CacheExtentStyle.Pixel,
         bool shrinkWrap = false,
+        double anchor = 0.0,
         HitTestBehavior hitTestBehavior = HitTestBehavior.Opaque,
         ScrollBehavior? scrollBehavior = null,
         ScrollViewKeyboardDismissBehavior? keyboardDismissBehavior = null,
+        DragStartBehavior dragStartBehavior = DragStartBehavior.Start,
+        string? restorationId = null,
         Key? key = null,
         Clip clipBehavior = Clip.HardEdge) : base(key)
     {
+        if (!double.IsFinite(anchor) || anchor < 0.0 || anchor > 1.0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(anchor));
+        }
+
         Child = child;
         Slivers = slivers;
         Axis = axis;
@@ -586,10 +594,13 @@ public sealed class Scrollable : StatefulWidget
         CacheExtent = cacheExtent;
         CacheExtentStyle = cacheExtentStyle;
         ShrinkWrap = shrinkWrap;
+        Anchor = anchor;
         ClipBehavior = clipBehavior;
         HitTestBehavior = hitTestBehavior;
         ScrollBehavior = scrollBehavior;
         KeyboardDismissBehavior = keyboardDismissBehavior;
+        DragStartBehavior = dragStartBehavior;
+        RestorationId = restorationId;
     }
 
     public Widget? Child { get; }
@@ -610,6 +621,8 @@ public sealed class Scrollable : StatefulWidget
 
     public bool ShrinkWrap { get; }
 
+    public double Anchor { get; }
+
     public Clip ClipBehavior { get; }
 
     public HitTestBehavior HitTestBehavior { get; }
@@ -617,6 +630,10 @@ public sealed class Scrollable : StatefulWidget
     public ScrollBehavior? ScrollBehavior { get; }
 
     public ScrollViewKeyboardDismissBehavior? KeyboardDismissBehavior { get; }
+
+    public DragStartBehavior DragStartBehavior { get; }
+
+    public string? RestorationId { get; }
 
     internal bool UseSingleChildViewport { get; init; }
 
@@ -774,6 +791,12 @@ public sealed class Scrollable : StatefulWidget
         {
             var oldScrollable = (Scrollable)oldWidget;
             var current = CurrentWidget;
+            if (!string.Equals(oldScrollable.RestorationId, current.RestorationId, StringComparison.Ordinal))
+            {
+                SaveScrollOffset(oldScrollable.RestorationId);
+                RestoreScrollOffset();
+            }
+
             bool controllerChanged = !ReferenceEquals(oldScrollable.Controller, current.Controller);
             ScrollBehavior configuration = current.ScrollBehavior ?? ScrollConfiguration.Of(Context);
             ScrollPhysics effectivePhysics = current.Physics ?? configuration.GetScrollPhysics(Context);
@@ -824,6 +847,7 @@ public sealed class Scrollable : StatefulWidget
                     cacheExtent: widget.CacheExtent,
                     cacheExtentStyle: widget.CacheExtentStyle,
                     shrinkWrap: widget.ShrinkWrap,
+                    anchor: widget.ShrinkWrap ? 0.0 : widget.Anchor,
                     clipBehavior: widget.ClipBehavior,
                     slivers: ResolveSlivers(widget),
                     onViewportMetricsChanged: HandleViewportMetricsChanged);
@@ -854,6 +878,7 @@ public sealed class Scrollable : StatefulWidget
                     minFlingDistance: _effectivePhysics.MinFlingDistance,
                     minFlingVelocity: _effectivePhysics.MinFlingVelocity,
                     maxFlingVelocity: _effectivePhysics.MaxFlingVelocity,
+                    dragStartBehavior: widget.DragStartBehavior,
                     child: viewport));
 
             var details = new ScrollableDetails(
@@ -925,7 +950,9 @@ public sealed class Scrollable : StatefulWidget
                 return;
             }
 
-            object? value = PageStorage.MaybeOf(Context)?.ReadState(Context);
+            object? value = PageStorage.MaybeOf(Context)?.ReadState(
+                Context,
+                CurrentWidget.RestorationId);
             if (value is double offset && double.IsFinite(offset))
             {
                 _position.RestoreOffset(offset, initialRestore: true);
@@ -934,12 +961,20 @@ public sealed class Scrollable : StatefulWidget
 
         private void SaveScrollOffset()
         {
+            SaveScrollOffset(CurrentWidget.RestorationId);
+        }
+
+        private void SaveScrollOffset(string? restorationId)
+        {
             if (_attachedController?.KeepScrollOffset != true)
             {
                 return;
             }
 
-            PageStorage.MaybeOf(Context)?.WriteState(Context, _position.Pixels);
+            PageStorage.MaybeOf(Context)?.WriteState(
+                Context,
+                _position.Pixels,
+                restorationId);
         }
 
         private void HandlePositionChanged()
@@ -1191,14 +1226,22 @@ public sealed class Scrollable : StatefulWidget
             return ScrollDirectionUtils.AxisDirectionIsReversed(axisDirection);
         }
 
-        private static AxisDirection ResolveAxisDirection(Axis axis, bool reverse)
+        private AxisDirection ResolveAxisDirection(Axis axis, bool reverse)
         {
             if (axis == Axis.Vertical)
             {
                 return reverse ? AxisDirection.Up : AxisDirection.Down;
             }
 
-            return reverse ? AxisDirection.Left : AxisDirection.Right;
+            AxisDirection readingDirection = Directionality.Of(Context) == TextDirection.Rtl
+                ? AxisDirection.Left
+                : AxisDirection.Right;
+            if (!reverse)
+            {
+                return readingDirection;
+            }
+
+            return readingDirection == AxisDirection.Left ? AxisDirection.Right : AxisDirection.Left;
         }
     }
 }
@@ -1213,6 +1256,7 @@ public sealed class Viewport : MultiChildRenderObjectWidget
         double cacheExtent,
         CacheExtentStyle cacheExtentStyle,
         bool shrinkWrap,
+        double anchor,
         IReadOnlyList<Widget> slivers,
         Action<double, double, double>? onViewportMetricsChanged = null,
         Key? key = null,
@@ -1227,6 +1271,7 @@ public sealed class Viewport : MultiChildRenderObjectWidget
         CacheExtent = cacheExtent;
         CacheExtentStyle = cacheExtentStyle;
         ShrinkWrap = shrinkWrap;
+        Anchor = anchor;
         ClipBehavior = clipBehavior;
         OnViewportMetricsChanged = onViewportMetricsChanged;
     }
@@ -1247,6 +1292,8 @@ public sealed class Viewport : MultiChildRenderObjectWidget
 
     public bool ShrinkWrap { get; }
 
+    public double Anchor { get; }
+
     public Clip ClipBehavior { get; }
 
     public Action<double, double, double>? OnViewportMetricsChanged { get; }
@@ -1262,6 +1309,7 @@ public sealed class Viewport : MultiChildRenderObjectWidget
             cacheExtent: CacheExtent,
             cacheExtentStyle: CacheExtentStyle,
             shrinkWrap: ShrinkWrap,
+            anchor: Anchor,
             clipBehavior: ClipBehavior,
             onViewportMetricsChanged: OnViewportMetricsChanged);
     }
@@ -1277,6 +1325,7 @@ public sealed class Viewport : MultiChildRenderObjectWidget
         viewport.CacheExtent = CacheExtent;
         viewport.CacheExtentStyle = CacheExtentStyle;
         viewport.ShrinkWrap = ShrinkWrap;
+        viewport.Anchor = Anchor;
         viewport.ClipBehavior = ClipBehavior;
         viewport.OnViewportMetricsChanged = OnViewportMetricsChanged;
     }
@@ -2465,12 +2514,20 @@ public sealed class CustomScrollView : StatelessWidget
         double cacheExtent = 250.0,
         CacheExtentStyle cacheExtentStyle = CacheExtentStyle.Pixel,
         bool shrinkWrap = false,
+        double anchor = 0.0,
+        DragStartBehavior dragStartBehavior = DragStartBehavior.Start,
+        string? restorationId = null,
         Key? key = null,
         Clip clipBehavior = Clip.HardEdge) : base(key)
     {
         if (primary == true && controller != null)
         {
             throw new ArgumentException("Primary scroll views cannot be given an explicit controller.");
+        }
+
+        if (!double.IsFinite(anchor) || anchor < 0.0 || anchor > 1.0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(anchor));
         }
 
         Slivers = slivers;
@@ -2484,6 +2541,9 @@ public sealed class CustomScrollView : StatelessWidget
         CacheExtent = cacheExtent;
         CacheExtentStyle = cacheExtentStyle;
         ShrinkWrap = shrinkWrap;
+        Anchor = anchor;
+        DragStartBehavior = dragStartBehavior;
+        RestorationId = restorationId;
         ClipBehavior = clipBehavior;
     }
 
@@ -2509,6 +2569,12 @@ public sealed class CustomScrollView : StatelessWidget
 
     public bool ShrinkWrap { get; }
 
+    public double Anchor { get; }
+
+    public DragStartBehavior DragStartBehavior { get; }
+
+    public string? RestorationId { get; }
+
     public Clip ClipBehavior { get; }
 
     public override Widget Build(BuildContext context)
@@ -2533,6 +2599,9 @@ public sealed class CustomScrollView : StatelessWidget
             cacheExtent: CacheExtent,
             cacheExtentStyle: CacheExtentStyle,
             shrinkWrap: ShrinkWrap,
+            anchor: Anchor,
+            dragStartBehavior: DragStartBehavior,
+            restorationId: RestorationId,
             clipBehavior: ClipBehavior);
         // Further descendant scroll views must not inherit the same PrimaryScrollController.
         return usePrimary && effectiveController != null

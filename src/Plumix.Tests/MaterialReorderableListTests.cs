@@ -59,7 +59,13 @@ public sealed class MaterialReorderableListTests
         Assert.True(list.BuildDefaultDragHandles);
         Assert.False(list.Reverse);
         Assert.False(list.ShrinkWrap);
-        Assert.Equal(50, list.AutoScrollerVelocityScalar);
+        Assert.Null(list.Padding);
+        Assert.Equal(0.0, list.Anchor);
+        Assert.Equal(DragStartBehavior.Start, list.DragStartBehavior);
+        Assert.Null(list.KeyboardDismissBehavior);
+        Assert.Null(list.RestorationId);
+        Assert.Equal(Clip.HardEdge, list.ClipBehavior);
+        Assert.Null(list.AutoScrollerVelocityScalar);
         Assert.Same(boundaryProvider, list.DragBoundaryProvider);
 #pragma warning disable CS0618
         Assert.Null(list.CacheExtent);
@@ -80,6 +86,115 @@ public sealed class MaterialReorderableListTests
             scrollCacheExtent: ScrollCacheExtent.Viewport(1.5));
         Assert.Equal(1.5, cachedList.ScrollCacheExtent!.Value);
         Assert.Equal(CacheExtentStyle.Viewport, cachedList.ScrollCacheExtent.Style);
+        Assert.Throws<ArgumentOutOfRangeException>(() => ReorderableListView.Builder(
+            builder,
+            3,
+            onReorderItem: callback,
+            anchor: -0.01));
+    }
+
+    [Fact]
+    public void ReorderableListView_ForwardsScrollViewContractsAndAnchorGeometry()
+    {
+        var itemKey = new LabeledGlobalKey<State>("anchored-reorderable-item");
+        Widget list = ReorderableListView.Builder(
+            (_, _) => new SizedBox(height: 20, key: itemKey),
+            1,
+            onReorderItem: (_, _) => { },
+            buildDefaultDragHandles: false,
+            padding: new Thickness(4),
+            itemExtent: 20,
+            anchor: 0.25,
+            dragStartBehavior: DragStartBehavior.Down,
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.OnDrag,
+            restorationId: "reorderable-items",
+            clipBehavior: Clip.None,
+            autoScrollerVelocityScalar: 75.0);
+
+        var configured = Assert.IsType<ReorderableListView>(list);
+        Assert.Equal(new Thickness(4), configured.Padding);
+        Assert.Equal(0.25, configured.Anchor);
+        Assert.Equal(DragStartBehavior.Down, configured.DragStartBehavior);
+        Assert.Equal(ScrollViewKeyboardDismissBehavior.OnDrag, configured.KeyboardDismissBehavior);
+        Assert.Equal("reorderable-items", configured.RestorationId);
+        Assert.Equal(Clip.None, configured.ClipBehavior);
+        Assert.Equal(75.0, configured.AutoScrollerVelocityScalar);
+
+        using WidgetRenderHarness harness = new(Wrap(list));
+        harness.Pump(new Size(200, 100));
+
+        BuildContext itemContext = itemKey.CurrentContext!.Value;
+        Scrollable scrollable = Assert.IsType<Scrollable>(
+            itemContext.FindAncestorWidgetOfExactType<Scrollable>());
+        Assert.Equal(0.25, scrollable.Anchor);
+        Assert.Equal(DragStartBehavior.Down, scrollable.DragStartBehavior);
+        Assert.Equal(ScrollViewKeyboardDismissBehavior.OnDrag, scrollable.KeyboardDismissBehavior);
+        Assert.Equal("reorderable-items", scrollable.RestorationId);
+        Assert.Equal(Clip.None, scrollable.ClipBehavior);
+
+        RenderViewport viewport = Assert.Single(FindDescendants<RenderViewport>(harness.RenderView));
+        Assert.Equal(0.25, viewport.Anchor);
+        Assert.Equal(Clip.None, viewport.ClipBehavior);
+        Assert.Equal(new Point(4, 29), itemContext.FindRenderObject()!.GetPaintOffsetToRoot());
+
+        SliverReorderableList sliver = Assert.IsType<SliverReorderableList>(
+            itemContext.FindAncestorWidgetOfExactType<SliverReorderableList>());
+        Assert.Equal(75.0, sliver.AutoScrollerVelocityScalar);
+    }
+
+    [Fact]
+    public void ReorderableListView_HorizontalAxisDirectionFollowsRtlAndReverse()
+    {
+        Widget Build(bool reverse) => new Directionality(
+            TextDirection.Rtl,
+            new ReorderableListView(
+                [new SizedBox(width: 40, key: new ValueKey<int>(0))],
+                onReorderItem: (_, _) => { },
+                buildDefaultDragHandles: false,
+                scrollDirection: Axis.Horizontal,
+                reverse: reverse,
+                itemExtent: 40));
+
+        using WidgetRenderHarness readingOrder = new(Wrap(Build(reverse: false)));
+        readingOrder.Pump(new Size(120, 60));
+        Assert.Equal(
+            AxisDirection.Left,
+            Assert.Single(FindDescendants<RenderViewport>(readingOrder.RenderView)).AxisDirection);
+
+        using WidgetRenderHarness reversed = new(Wrap(Build(reverse: true)));
+        reversed.Pump(new Size(120, 60));
+        Assert.Equal(
+            AxisDirection.Right,
+            Assert.Single(FindDescendants<RenderViewport>(reversed.RenderView)).AxisDirection);
+    }
+
+    [Fact]
+    public void ReorderableListView_RestorationIdPersistsOffsetInPageStorage()
+    {
+        var bucket = new PageStorageBucket();
+        Widget Build(string identity) => new PageStorage(
+            bucket,
+            ReorderableListView.Builder(
+                (_, index) => new SizedBox(height: 20, key: new ValueKey<int>(index)),
+                10,
+                onReorderItem: (_, _) => { },
+                buildDefaultDragHandles: false,
+                itemExtent: 20,
+                restorationId: "reorderable-items",
+                key: new ValueKey<string>(identity)));
+
+        using WidgetRenderHarness harness = new(Wrap(Build("first")));
+        harness.Pump(new Size(120, 80));
+        Scrollable.ScrollableState initial = harness.FindState<Scrollable.ScrollableState>();
+        initial.Position.JumpTo(40.0);
+        harness.Pump(new Size(120, 80));
+
+        harness.UpdateWidget(Wrap(Build("second")));
+        harness.Pump(new Size(120, 80));
+
+        Scrollable.ScrollableState restored = harness.FindState<Scrollable.ScrollableState>();
+        Assert.NotSame(initial, restored);
+        Assert.Equal(40.0, restored.Position.Pixels);
     }
 
     [Fact]
@@ -365,6 +480,53 @@ public sealed class MaterialReorderableListTests
         Assert.DoesNotContain(
             FindDescendants<RenderParagraph>(mobile.RenderView),
             paragraph => paragraph.PlainText == dragGlyph);
+    }
+
+    [Fact]
+    public void ReorderableListView_DesktopHandleResolvesDraggedMouseCursorState()
+    {
+        Scheduler.ResetForTests();
+        GestureBinding binding = GestureBinding.Instance;
+        binding.ResetForTests();
+        List<MaterialState> resolvedStates = [];
+        WidgetStateMouseCursor cursor = WidgetStateMouseCursor.ResolveWith(states =>
+        {
+            resolvedStates.Add(states);
+            return states.HasFlag(MaterialState.Dragged)
+                ? SystemMouseCursors.Grabbing
+                : SystemMouseCursors.Grab;
+        });
+
+        try
+        {
+            ThemeData theme = ThemeData.Light with { Platform = TargetPlatform.Windows };
+            Widget list = new ReorderableListView(
+                [
+                    new SizedBox(height: 50, key: new ValueKey<int>(0)),
+                    new SizedBox(height: 50, key: new ValueKey<int>(1)),
+                ],
+                onReorderItem: (_, _) => { },
+                itemExtent: 50,
+                mouseCursor: cursor);
+            using WidgetRenderHarness harness = new(Wrap(list, theme));
+            harness.Pump(new Size(240, 100));
+
+            Assert.Contains(MaterialState.None, resolvedStates);
+            DateTime start = DateTime.UtcNow;
+            DispatchDown(binding, harness.RenderView, 95, new Point(220, 25), start);
+            DispatchMove(binding, harness.RenderView, 95, new Point(220, 75), start.AddMilliseconds(100));
+            harness.Pump(new Size(240, 100));
+
+            Assert.Contains(resolvedStates, states => states.HasFlag(MaterialState.Dragged));
+
+            DispatchUp(binding, harness.RenderView, 95, new Point(220, 75), start.AddMilliseconds(200));
+            CompleteDropAnimation();
+        }
+        finally
+        {
+            binding.ResetForTests();
+            Scheduler.ResetForTests();
+        }
     }
 
     [Fact]
@@ -823,6 +985,12 @@ public sealed class MaterialReorderableListTests
             _pipeline.FlushLayout(size);
             _pipeline.FlushCompositingBits();
             _pipeline.FlushPaint();
+        }
+
+        public void UpdateWidget(Widget widget)
+        {
+            _root.Update(widget);
+            _owner.FlushBuild();
         }
 
         public SemanticsNode? PumpAndGetSemantics(Size size)

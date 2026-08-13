@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Plumix.Foundation;
 using Plumix.Material;
 using Plumix.Rendering;
+using Plumix.UI;
 using Plumix.Widgets;
 
 namespace Plumix;
@@ -29,7 +30,7 @@ public sealed class ReorderableListDemoPage : StatefulWidget
                 [
                     new Text("ReorderableListView + DragBoundary", fontSize: 20, color: Colors.Black),
                     new Text(
-                        "The nearest DragBoundary clamps the dragged proxy to the visible list bounds.",
+                        "An 8% anchor offsets the list; DragBoundary keeps its proxy inside the visible bounds.",
                         fontSize: 12,
                         color: Color.Parse("#8A000000")),
                     new Row(
@@ -57,7 +58,13 @@ public sealed class ReorderableListDemoPage : StatefulWidget
                                     new Thickness(12, 8),
                                     new Text("Footer (not reorderable)", fontSize: 13, color: Colors.Black)),
                                 padding: new Thickness(4),
-                                itemExtent: 58))),
+                                itemExtent: 58,
+                                anchor: 0.08,
+                                dragStartBehavior: DragStartBehavior.Down,
+                                keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.OnDrag,
+                                restorationId: "reorderable-demo",
+                                clipBehavior: Clip.None,
+                                autoScrollerVelocityScalar: 75.0))),
                 ]);
         }
 

@@ -17,6 +17,7 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer
     private double _cacheExtent;
     private CacheExtentStyle _cacheExtentStyle;
     private bool _shrinkWrap;
+    private double _anchor;
     private Clip _clipBehavior;
     private double _maxScrollExtent;
     private RenderSliverToBoxAdapter? _legacyChildSliver;
@@ -29,6 +30,7 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer
         double cacheExtent = 0.0,
         CacheExtentStyle cacheExtentStyle = CacheExtentStyle.Pixel,
         bool shrinkWrap = false,
+        double anchor = 0.0,
         Action<double, double, double>? onViewportMetricsChanged = null,
         RenderBox? child = null,
         Clip clipBehavior = Clip.HardEdge,
@@ -43,6 +45,7 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer
         _cacheExtent = Math.Max(0, cacheExtent);
         _cacheExtentStyle = cacheExtentStyle;
         _shrinkWrap = shrinkWrap;
+        Anchor = anchor;
         _clipBehavior = clipBehavior;
         OnViewportMetricsChanged = onViewportMetricsChanged;
 
@@ -142,6 +145,26 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer
         {
             if (_shrinkWrap == value) return;
             _shrinkWrap = value;
+            MarkNeedsLayout();
+        }
+    }
+
+    public double Anchor
+    {
+        get => _anchor;
+        set
+        {
+            if (!double.IsFinite(value) || value < 0.0 || value > 1.0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(value));
+            }
+
+            if (Math.Abs(_anchor - value) < 0.0001)
+            {
+                return;
+            }
+
+            _anchor = value;
             MarkNeedsLayout();
         }
     }
@@ -303,7 +326,8 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer
                 viewportMainAxisExtent: viewportMainAxisExtent,
                 crossAxisExtent: crossAxisExtent);
 
-            double maxScrollExtent = Math.Max(0, layout.totalScrollExtent - viewportMainAxisExtent);
+            double anchoredViewportExtent = viewportMainAxisExtent * (1.0 - Anchor);
+            double maxScrollExtent = Math.Max(0, layout.totalScrollExtent - anchoredViewportExtent);
             double clampedOffset = Math.Clamp(currentOffset, 0, maxScrollExtent);
             if (Math.Abs(layout.scrollOffset - effectiveScrollOffset) > precisionErrorTolerance)
             {
@@ -352,7 +376,8 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer
             scrollOffset: finalEffectiveScrollOffset,
             viewportMainAxisExtent: viewportMainAxisExtent,
             crossAxisExtent: crossAxisExtent);
-        _maxScrollExtent = Math.Max(0, finalLayout.totalScrollExtent - viewportMainAxisExtent);
+        double finalAnchoredViewportExtent = viewportMainAxisExtent * (1.0 - Anchor);
+        _maxScrollExtent = Math.Max(0, finalLayout.totalScrollExtent - finalAnchoredViewportExtent);
         _offsetPixels = UserOffsetFromEffective(finalLayout.scrollOffset, _maxScrollExtent);
         OnViewportMetricsChanged?.Invoke(viewportMainAxisExtent, 0, _maxScrollExtent);
     }
@@ -467,7 +492,7 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer
         double leadingOverscroll = 0.0)
     {
         double precedingScrollExtent = 0.0;
-        double layoutOffset = leadingOverscroll;
+        double layoutOffset = viewportMainAxisExtent * Anchor + leadingOverscroll;
         double maxPaintOffset = leadingOverscroll;
         double cacheExtent = Math.Max(0, _cacheExtentStyle == CacheExtentStyle.Viewport
             ? _cacheExtent * viewportMainAxisExtent

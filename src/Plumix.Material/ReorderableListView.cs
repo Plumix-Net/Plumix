@@ -33,8 +33,13 @@ public sealed class ReorderableListView : StatefulWidget
         bool? primary = null,
         ScrollPhysics? physics = null,
         bool shrinkWrap = false,
+        double anchor = 0.0,
         double? cacheExtent = null,
         ScrollCacheExtent? scrollCacheExtent = null,
+        DragStartBehavior dragStartBehavior = DragStartBehavior.Start,
+        ScrollViewKeyboardDismissBehavior? keyboardDismissBehavior = null,
+        string? restorationId = null,
+        Clip clipBehavior = Clip.HardEdge,
         double? autoScrollerVelocityScalar = null,
         ReorderDragBoundaryProvider? dragBoundaryProvider = null,
         MouseCursor? mouseCursor = null,
@@ -59,8 +64,13 @@ public sealed class ReorderableListView : StatefulWidget
         primary: primary,
         physics: physics,
         shrinkWrap: shrinkWrap,
+        anchor: anchor,
         cacheExtent: cacheExtent,
         scrollCacheExtent: scrollCacheExtent,
+        dragStartBehavior: dragStartBehavior,
+        keyboardDismissBehavior: keyboardDismissBehavior,
+        restorationId: restorationId,
+        clipBehavior: clipBehavior,
         autoScrollerVelocityScalar: autoScrollerVelocityScalar,
         dragBoundaryProvider: dragBoundaryProvider,
         mouseCursor: mouseCursor,
@@ -93,13 +103,23 @@ public sealed class ReorderableListView : StatefulWidget
         bool? primary,
         ScrollPhysics? physics,
         bool shrinkWrap,
+        double anchor,
         double? cacheExtent,
         ScrollCacheExtent? scrollCacheExtent,
+        DragStartBehavior dragStartBehavior,
+        ScrollViewKeyboardDismissBehavior? keyboardDismissBehavior,
+        string? restorationId,
+        Clip clipBehavior,
         double? autoScrollerVelocityScalar,
         ReorderDragBoundaryProvider? dragBoundaryProvider,
         MouseCursor? mouseCursor,
         Key? key) : base(key)
     {
+        if (!double.IsFinite(anchor) || anchor < 0.0 || anchor > 1.0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(anchor));
+        }
+
         ReorderableList.ValidateArguments(
             itemCount,
             onReorder,
@@ -120,7 +140,7 @@ public sealed class ReorderableListView : StatefulWidget
         PrototypeItem = prototypeItem;
         ProxyDecorator = proxyDecorator;
         BuildDefaultDragHandles = buildDefaultDragHandles;
-        Padding = padding ?? default;
+        Padding = padding;
         Header = header;
         Footer = footer;
         ScrollDirection = scrollDirection;
@@ -129,9 +149,14 @@ public sealed class ReorderableListView : StatefulWidget
         Primary = primary;
         Physics = physics;
         ShrinkWrap = shrinkWrap;
+        Anchor = anchor;
         CacheExtent = cacheExtent;
         ScrollCacheExtent = scrollCacheExtent;
-        AutoScrollerVelocityScalar = autoScrollerVelocityScalar ?? 50.0;
+        DragStartBehavior = dragStartBehavior;
+        KeyboardDismissBehavior = keyboardDismissBehavior;
+        RestorationId = restorationId;
+        ClipBehavior = clipBehavior;
+        AutoScrollerVelocityScalar = autoScrollerVelocityScalar;
         DragBoundaryProvider = dragBoundaryProvider;
         MouseCursor = mouseCursor;
     }
@@ -159,7 +184,7 @@ public sealed class ReorderableListView : StatefulWidget
 
     public bool BuildDefaultDragHandles { get; }
 
-    public Thickness Padding { get; }
+    public Thickness? Padding { get; }
 
     public Widget? Header { get; }
 
@@ -177,12 +202,22 @@ public sealed class ReorderableListView : StatefulWidget
 
     public bool ShrinkWrap { get; }
 
+    public double Anchor { get; }
+
     [Obsolete("Use ScrollCacheExtent.")]
     public double? CacheExtent { get; }
 
     public ScrollCacheExtent? ScrollCacheExtent { get; }
 
-    public double AutoScrollerVelocityScalar { get; }
+    public DragStartBehavior DragStartBehavior { get; }
+
+    public ScrollViewKeyboardDismissBehavior? KeyboardDismissBehavior { get; }
+
+    public string? RestorationId { get; }
+
+    public Clip ClipBehavior { get; }
+
+    public double? AutoScrollerVelocityScalar { get; }
 
     public ReorderDragBoundaryProvider? DragBoundaryProvider { get; }
 
@@ -209,8 +244,13 @@ public sealed class ReorderableListView : StatefulWidget
         bool? primary = null,
         ScrollPhysics? physics = null,
         bool shrinkWrap = false,
+        double anchor = 0.0,
         double? cacheExtent = null,
         ScrollCacheExtent? scrollCacheExtent = null,
+        DragStartBehavior dragStartBehavior = DragStartBehavior.Start,
+        ScrollViewKeyboardDismissBehavior? keyboardDismissBehavior = null,
+        string? restorationId = null,
+        Clip clipBehavior = Clip.HardEdge,
         double? autoScrollerVelocityScalar = null,
         ReorderDragBoundaryProvider? dragBoundaryProvider = null,
         MouseCursor? mouseCursor = null,
@@ -237,8 +277,13 @@ public sealed class ReorderableListView : StatefulWidget
             primary,
             physics,
             shrinkWrap,
+            anchor,
             cacheExtent,
             scrollCacheExtent,
+            dragStartBehavior,
+            keyboardDismissBehavior,
+            restorationId,
+            clipBehavior,
             autoScrollerVelocityScalar,
             dragBoundaryProvider,
             mouseCursor,
@@ -249,7 +294,7 @@ public sealed class ReorderableListView : StatefulWidget
 
     private sealed class ReorderableListViewState : State
     {
-        private bool _dragging;
+        private readonly ValueNotifier<bool> _dragging = new(false);
 
         private ReorderableListView CurrentWidget => (ReorderableListView)StateWidget;
 
@@ -286,7 +331,7 @@ public sealed class ReorderableListView : StatefulWidget
                     itemExtentBuilder: widget.ItemExtentBuilder,
                     prototypeItem: widget.PrototypeItem,
                     proxyDecorator: widget.ProxyDecorator ?? DefaultProxyDecorator,
-                    autoScrollerVelocityScalar: widget.AutoScrollerVelocityScalar,
+                    autoScrollerVelocityScalar: widget.AutoScrollerVelocityScalar ?? 50.0,
                     dragBoundaryProvider: widget.DragBoundaryProvider,
                     scrollController: effectiveController)));
 
@@ -304,9 +349,14 @@ public sealed class ReorderableListView : StatefulWidget
                 controller: effectiveController,
                 primary: widget.Primary,
                 physics: widget.Physics,
+                keyboardDismissBehavior: widget.KeyboardDismissBehavior,
                 cacheExtent: widget.ScrollCacheExtent?.Value ?? widget.CacheExtent ?? 250.0,
                 cacheExtentStyle: widget.ScrollCacheExtent?.Style ?? CacheExtentStyle.Pixel,
-                shrinkWrap: widget.ShrinkWrap);
+                shrinkWrap: widget.ShrinkWrap,
+                anchor: widget.Anchor,
+                dragStartBehavior: widget.DragStartBehavior,
+                restorationId: widget.RestorationId,
+                clipBehavior: widget.ClipBehavior);
         }
 
         private Widget BuildItem(BuildContext context, int index)
@@ -332,12 +382,11 @@ public sealed class ReorderableListView : StatefulWidget
                     key: itemGlobalKey);
             }
 
-            MouseCursor effectiveCursor = CurrentWidget.MouseCursor
-                                          ?? (_dragging
-                                              ? SystemMouseCursors.Grabbing
-                                              : SystemMouseCursors.Grab);
-            Widget dragHandle = new MouseRegion(
-                cursor: effectiveCursor,
+            Widget dragHandle = new ListenableBuilder(
+                listenable: _dragging,
+                builder: (_, child) => new MouseRegion(
+                    cursor: ResolveMouseCursor(),
+                    child: child),
                 child: new Icon(Icons.DragHandle));
             var listener = new ReorderableDragStartListener(dragHandle, index);
             TextDirection direction = Directionality.Of(context);
@@ -363,26 +412,48 @@ public sealed class ReorderableListView : StatefulWidget
 
         private Widget DefaultProxyDecorator(Widget child, int index, Animation<double> animation)
         {
-            double elevation = 6.0 * Curves.EaseInOut(animation.Value);
-            return new Material(elevation: elevation, child: child);
+            return new AnimatedBuilder(
+                animation: animation,
+                builder: (_, animatedChild) => new Material(
+                    elevation: 6.0 * Curves.EaseInOut(animation.Value),
+                    child: animatedChild),
+                child: child);
         }
 
         private void HandleReorderStart(int index)
         {
-            SetState(() => _dragging = true);
+            _dragging.Value = true;
             CurrentWidget.OnReorderStart?.Invoke(index);
         }
 
         private void HandleReorderEnd(int index)
         {
-            SetState(() => _dragging = false);
+            _dragging.Value = false;
             CurrentWidget.OnReorderEnd?.Invoke(index);
+        }
+
+        public override void Dispose()
+        {
+            _dragging.Dispose();
+            base.Dispose();
+        }
+
+        private MouseCursor ResolveMouseCursor()
+        {
+            MaterialState states = _dragging.Value ? MaterialState.Dragged : MaterialState.None;
+            MouseCursor? cursor = CurrentWidget.MouseCursor is WidgetStateMouseCursor stateCursor
+                ? stateCursor.Resolve(states)
+                : CurrentWidget.MouseCursor;
+            return cursor
+                   ?? (_dragging.Value
+                       ? SystemMouseCursors.Grabbing
+                       : SystemMouseCursors.Grab);
         }
 
         private static (Thickness Header, Thickness List, Thickness Footer) ResolvePadding(
             ReorderableListView widget)
         {
-            Thickness padding = widget.Padding;
+            Thickness padding = widget.Padding ?? default;
             double? start = widget.Header is null ? null : 0.0;
             double? end = widget.Footer is null ? null : 0.0;
             if (widget.Reverse)

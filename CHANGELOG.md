@@ -1,5 +1,11 @@
 # Changelog
 
+- Breaking: completed strict Material `ReorderableListView` parity. The public wrapper now preserves nullable
+  padding and auto-scroll defaults, forwards anchor/drag/keyboard/restoration/clip contracts, resolves desktop
+  cursors from dragged state, animates the default proxy elevation, and follows horizontal RTL axis direction.
+  Shared scrolling now supports anchored viewport geometry and restoration-ID-keyed page-storage offsets; process
+  restoration still awaits the framework restoration manager tracked in `DIVERGENCES.md`.
+
 - Breaking: closed deferred-loading scroll parity. The widget root now exposes the raw platform view through
   `View.Of`/`View.MaybeOf`; the default physics threshold ignores nested `MediaQuery` overrides, and `JumpTo` plus
   pointer scrolling contribute their forced displacement as implied velocity until the next frame. The direct
