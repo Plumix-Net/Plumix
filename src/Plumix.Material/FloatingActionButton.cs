@@ -566,23 +566,6 @@ public sealed class FloatingActionButton : StatelessWidget
         };
     }
 
-    internal Size ResolveNominalSizeForScaffold(BuildContext context)
-    {
-        var theme = Theme.Of(context);
-        var floatingActionButtonTheme = FloatingActionButtonTheme.Of(context);
-        var defaults = theme.UseMaterial3
-            ? FloatingActionButtonDefaults.Material3(context, Type, Child is not null)
-            : FloatingActionButtonDefaults.Material2(context, Type, Child is not null);
-        var constraints = ResolveSizeConstraints(floatingActionButtonTheme, defaults);
-        double width = double.IsFinite(constraints.MaxWidth)
-            ? constraints.MaxWidth
-            : Math.Max(constraints.MinWidth, 80);
-        double height = double.IsFinite(constraints.MaxHeight)
-            ? constraints.MaxHeight
-            : Math.Max(constraints.MinHeight, 56);
-        return new Size(width, height);
-    }
-
     private static MaterialStateProperty<Color?> CreateOverlayResolver(
         Color focusColor,
         Color hoverColor,

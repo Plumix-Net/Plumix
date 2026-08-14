@@ -243,6 +243,44 @@ public abstract class Animatable<T>
             parent ?? throw new ArgumentNullException(nameof(parent)),
             this);
     }
+
+    /// <summary>
+    /// Returns a new <see cref="Animatable{T}"/> whose value is determined by first evaluating
+    /// <paramref name="parent"/> and then evaluating this object.
+    /// </summary>
+    public Animatable<T> Chain(Animatable<double> parent)
+    {
+        return new ChainedEvaluation<T>(
+            parent ?? throw new ArgumentNullException(nameof(parent)),
+            this);
+    }
+}
+
+internal sealed class ChainedEvaluation<T> : Animatable<T>
+{
+    private readonly Animatable<double> _parent;
+    private readonly Animatable<T> _evaluatable;
+
+    public ChainedEvaluation(Animatable<double> parent, Animatable<T> evaluatable)
+    {
+        _parent = parent;
+        _evaluatable = evaluatable;
+    }
+
+    public override T Transform(double t) => _evaluatable.Transform(_parent.Transform(t));
+}
+
+public static class AnimationDriveExtensions
+{
+    /// <summary>
+    /// Chains a <see cref="Tween{T}"/> (or any <see cref="Animatable{T}"/>) to this animation. Ports
+    /// Flutter's <c>Animation&lt;double&gt;.drive</c>.
+    /// </summary>
+    public static Animation<TResult> Drive<TResult>(this Animation<double> animation, Animatable<TResult> child)
+    {
+        ArgumentNullException.ThrowIfNull(child);
+        return child.Animate(animation ?? throw new ArgumentNullException(nameof(animation)));
+    }
 }
 
 public sealed class ConstantTween<T> : Tween<T>

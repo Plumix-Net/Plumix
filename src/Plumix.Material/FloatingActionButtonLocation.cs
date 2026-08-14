@@ -11,6 +11,12 @@ public static class FloatingActionButtonConstants
 {
     /// <summary>Flutter's <c>kFloatingActionButtonSegue</c>: how long a FAB takes to appear or disappear.</summary>
     public static readonly TimeSpan Segue = TimeSpan.FromMilliseconds(200);
+
+    /// <summary>
+    /// Flutter's <c>kFloatingActionButtonTurnInterval</c>: the fraction of a circle the FAB rotates through
+    /// when it is appearing or disappearing.
+    /// </summary>
+    public const double TurnInterval = 0.125;
 }
 
 public sealed record ScaffoldPrelayoutGeometry(
@@ -28,7 +34,7 @@ public sealed record ScaffoldPrelayoutGeometry(
 public abstract class FloatingActionButtonLocation
 {
     public const double Margin = 16.0;
-    public const double MiniButtonOffsetAdjustment = 8.0;
+    public const double MiniButtonOffsetAdjustment = 4.0;
 
     public static FloatingActionButtonLocation StartTop { get; } =
         new StandardFabLocation(FabHorizontal.Start, FabVertical.Top);
@@ -183,29 +189,130 @@ public abstract class FloatingActionButtonLocation
 
 public abstract class FloatingActionButtonAnimator
 {
-    public static FloatingActionButtonAnimator Scaling { get; } = new ScalingFloatingActionButtonAnimator();
-    public static FloatingActionButtonAnimator NoAnimation { get; } = new NoAnimationFloatingActionButtonAnimator();
+    public static FloatingActionButtonAnimator Scaling { get; } = new ScalingFabMotionAnimator();
+    public static FloatingActionButtonAnimator NoAnimation { get; } = new NoAnimationFabMotionAnimator();
 
+    /// <summary>Gets the <see cref="FloatingActionButton"/>'s position relative to the origin of the
+    /// <see cref="Scaffold"/> based on <paramref name="progress"/>.</summary>
     public abstract Point GetOffset(Point begin, Point end, double progress);
-    public abstract double GetScale(double progress);
-    public abstract double GetRotation(double progress);
+
+    /// <summary>Animates the scale of the <see cref="FloatingActionButton"/>.</summary>
+    public abstract Animation<double> GetScaleAnimation(Animation<double> parent);
+
+    /// <summary>Animates the rotation of the <see cref="FloatingActionButton"/>, in turns.</summary>
+    public abstract Animation<double> GetRotationAnimation(Animation<double> parent);
+
+    /// <summary>
+    /// Gets the progress value to restart a motion animation from when the animation is interrupted.
+    /// </summary>
     public virtual double GetAnimationRestart(double previousValue) => 0.0;
 
-    private sealed class ScalingFloatingActionButtonAnimator : FloatingActionButtonAnimator
+    private sealed class ScalingFabMotionAnimator : FloatingActionButtonAnimator
     {
+        private static readonly Curve ScaleCurve = Curves.Interval(0.5, 1.0, Curves.Ease);
+
+        // Animate the scale down from 1 to 0 in the first half of the animation, then scale back up from
+        // 0 to 1 in the second half. The `flipped` curve is used so that the animation is symmetric.
+        private static readonly Animatable<double> RotationTween = new DoubleTween(
+            begin: 1.0 - (FloatingActionButtonConstants.TurnInterval * 2.0),
+            end: 1.0);
+
+        private static readonly Animatable<double> ThresholdCenterTween = new CurveTween(Curves.Threshold(0.5));
+
         public override Point GetOffset(Point begin, Point end, double progress) => progress < 0.5 ? begin : end;
-        public override double GetScale(double progress) => Math.Abs(1.0 - 2.0 * Math.Clamp(progress, 0.0, 1.0));
-        public override double GetRotation(double progress) => progress < 0.5 ? 1.0 - 0.25 * progress * 2.0 : 1.0;
+
+        public override Animation<double> GetScaleAnimation(Animation<double> parent)
+        {
+            ArgumentNullException.ThrowIfNull(parent);
+            return new AnimationSwap<double>(
+                new ReverseAnimation(parent.Drive(new CurveTween(Curves.Flipped(ScaleCurve)))),
+                parent.Drive(new CurveTween(ScaleCurve)),
+                parent,
+                0.5);
+        }
+
+        public override Animation<double> GetRotationAnimation(Animation<double> parent)
+        {
+            ArgumentNullException.ThrowIfNull(parent);
+            // This rotation will turn on the way in, but not on the way out.
+            return new AnimationSwap<double>(
+                parent.Drive(RotationTween),
+                new ReverseAnimation(parent.Drive(ThresholdCenterTween)),
+                parent,
+                0.5);
+        }
+
+        // If the animation was just starting, we'll continue from where we left off. If the animation was
+        // finishing, we'll treat it as if we were starting at that point in reverse. This avoids a size jump
+        // during the animation.
         public override double GetAnimationRestart(double previousValue) =>
             Math.Min(1.0 - previousValue, previousValue);
     }
 
-    private sealed class NoAnimationFloatingActionButtonAnimator : FloatingActionButtonAnimator
+    private sealed class NoAnimationFabMotionAnimator : FloatingActionButtonAnimator
     {
         public override Point GetOffset(Point begin, Point end, double progress) => end;
-        public override double GetScale(double progress) => 1.0;
-        public override double GetRotation(double progress) => 1.0;
+
+        public override Animation<double> GetScaleAnimation(Animation<double> parent) =>
+            new ConstantAnimation<double>(1.0);
+
+        public override Animation<double> GetRotationAnimation(Animation<double> parent) =>
+            new ConstantAnimation<double>(1.0);
     }
+}
+
+/// <summary>
+/// Ports Flutter's private <c>_AnimationSwap</c>: an animation that swaps from one animation to the next
+/// when the parent animation reaches the swap threshold.
+/// </summary>
+internal sealed class AnimationSwap<T> : CompoundAnimation<T>
+{
+    private readonly Animation<double> _parent;
+    private readonly double _swapThreshold;
+
+    public AnimationSwap(Animation<T> first, Animation<T> next, Animation<double> parent, double swapThreshold)
+        : base(first, next)
+    {
+        _parent = parent ?? throw new ArgumentNullException(nameof(parent));
+        _swapThreshold = swapThreshold;
+    }
+
+    public override T Value => _parent.Value < _swapThreshold ? First.Value : Next.Value;
+}
+
+/// <summary>
+/// Ports Flutter's private <c>_TransitionSnapshotFabLocation</c>: freezes an in-flight FAB motion so a new
+/// motion can start from the position the button currently occupies.
+/// </summary>
+internal sealed class TransitionSnapshotFabLocation : FloatingActionButtonLocation
+{
+    private readonly FloatingActionButtonLocation _begin;
+    private readonly FloatingActionButtonLocation _end;
+    private readonly FloatingActionButtonAnimator _animator;
+    private readonly double _progress;
+
+    public TransitionSnapshotFabLocation(
+        FloatingActionButtonLocation begin,
+        FloatingActionButtonLocation end,
+        FloatingActionButtonAnimator animator,
+        double progress)
+    {
+        _begin = begin;
+        _end = end;
+        _animator = animator;
+        _progress = progress;
+    }
+
+    public override Point GetOffset(ScaffoldPrelayoutGeometry scaffoldGeometry)
+    {
+        return _animator.GetOffset(
+            begin: _begin.GetOffset(scaffoldGeometry),
+            end: _end.GetOffset(scaffoldGeometry),
+            progress: _progress);
+    }
+
+    public override string ToString() =>
+        $"TransitionSnapshotFabLocation(begin: {_begin}, end: {_end}, progress: {_progress})";
 }
 
 internal sealed class FloatingActionButtonPosition : SingleChildRenderObjectWidget

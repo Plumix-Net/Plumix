@@ -40,7 +40,10 @@ public sealed class Scaffold : StatefulWidget
         Color? backgroundColor = null,
         Key? key = null,
         Widget? bottomSheet = null,
-        BottomSheetScrimBuilder? bottomSheetScrimBuilder = null) : base(key)
+        BottomSheetScrimBuilder? bottomSheetScrimBuilder = null,
+        bool extendBody = false,
+        bool extendBodyBehindAppBar = false,
+        bool? resizeToAvoidBottomInset = null) : base(key)
     {
         if (drawerEdgeDragWidth.HasValue
             && (double.IsNaN(drawerEdgeDragWidth.Value)
@@ -68,6 +71,9 @@ public sealed class Scaffold : StatefulWidget
         BottomSheet = bottomSheet;
         BottomSheetScrimBuilder = bottomSheetScrimBuilder ?? DefaultBottomSheetScrimBuilder;
         BackgroundColor = backgroundColor;
+        ExtendBody = extendBody;
+        ExtendBodyBehindAppBar = extendBodyBehindAppBar;
+        ResizeToAvoidBottomInset = resizeToAvoidBottomInset;
     }
 
     public Widget Body { get; }
@@ -107,6 +113,20 @@ public sealed class Scaffold : StatefulWidget
 
     public Color? BackgroundColor { get; }
 
+    /// <summary>
+    /// Whether <see cref="Body"/> should extend behind <see cref="BottomNavigationBar"/>.
+    /// </summary>
+    public bool ExtendBody { get; }
+
+    /// <summary>Whether <see cref="Body"/> should extend behind <see cref="AppBar"/>.</summary>
+    public bool ExtendBodyBehindAppBar { get; }
+
+    /// <summary>
+    /// Whether the scaffold's layout should keep its body above the on-screen keyboard. Defaults to
+    /// <see langword="true"/>.
+    /// </summary>
+    public bool? ResizeToAvoidBottomInset { get; }
+
     public override State CreateState()
     {
         return new ScaffoldState();
@@ -133,9 +153,27 @@ public sealed class Scaffold : StatefulWidget
         return drawerEdgeDragWidth ?? DefaultDrawerEdgeDragWidth;
     }
 
-    internal static ScaffoldGeometryData? GeometryMaybeOf(BuildContext context)
+    /// <summary>
+    /// Returns a <see cref="IValueListenable{T}"/> for the <see cref="ScaffoldGeometry"/> of the closest
+    /// <see cref="Scaffold"/> ancestor. The listenable may only be read during the paint phase.
+    /// </summary>
+    public static IValueListenable<ScaffoldGeometry> GeometryOf(BuildContext context)
     {
-        return context.DependOnInherited<ScaffoldScope>()?.Geometry;
+        ScaffoldScope? scope = context.DependOnInherited<ScaffoldScope>();
+        if (scope is null)
+        {
+            throw new InvalidOperationException(
+                "Scaffold.geometryOf() called with a context that does not contain a Scaffold.\n"
+                + "This usually happens when the context provided is from the same StatefulWidget as that "
+                + "whose build function actually creates the Scaffold widget being sought.");
+        }
+
+        return scope.GeometryNotifier;
+    }
+
+    internal static ScaffoldGeometryNotifier? GeometryNotifierMaybeOf(BuildContext context)
+    {
+        return context.DependOnInherited<ScaffoldScope>()?.GeometryNotifier;
     }
 
     internal const double BottomSheetDominatesPercentage = 0.3;
@@ -163,10 +201,6 @@ public sealed class Scaffold : StatefulWidget
 /// <summary>Builds the scrim painted over the scaffold body while a bottom sheet dominates the screen.</summary>
 public delegate Widget? BottomSheetScrimBuilder(BuildContext context, Animation<double> animation);
 
-internal sealed record ScaffoldGeometryData(
-    Rect? FloatingActionButtonArea,
-    double? BottomNavigationBarTop);
-
 internal sealed class ScaffoldScope : InheritedWidget
 {
     public ScaffoldScope(
@@ -175,7 +209,7 @@ internal sealed class ScaffoldScope : InheritedWidget
         bool hasEndDrawer,
         bool isDrawerOpen,
         bool isEndDrawerOpen,
-        ScaffoldGeometryData geometry,
+        ScaffoldGeometryNotifier geometryNotifier,
         Widget child,
         Key? key = null) : base(key)
     {
@@ -184,7 +218,7 @@ internal sealed class ScaffoldScope : InheritedWidget
         HasEndDrawer = hasEndDrawer;
         IsDrawerOpen = isDrawerOpen;
         IsEndDrawerOpen = isEndDrawerOpen;
-        Geometry = geometry ?? throw new ArgumentNullException(nameof(geometry));
+        GeometryNotifier = geometryNotifier ?? throw new ArgumentNullException(nameof(geometryNotifier));
         Child = child ?? throw new ArgumentNullException(nameof(child));
     }
 
@@ -198,7 +232,7 @@ internal sealed class ScaffoldScope : InheritedWidget
 
     public bool IsEndDrawerOpen { get; }
 
-    public ScaffoldGeometryData Geometry { get; }
+    public ScaffoldGeometryNotifier GeometryNotifier { get; }
 
     public Widget Child { get; }
 
@@ -212,7 +246,7 @@ internal sealed class ScaffoldScope : InheritedWidget
                || HasEndDrawer != oldScope.HasEndDrawer
                || IsDrawerOpen != oldScope.IsDrawerOpen
                || IsEndDrawerOpen != oldScope.IsEndDrawerOpen
-               || Geometry != oldScope.Geometry;
+               || !ReferenceEquals(GeometryNotifier, oldScope.GeometryNotifier);
     }
 }
 
@@ -243,16 +277,13 @@ public sealed class ScaffoldState : State
     private ScaffoldMessengerState? _scaffoldMessenger;
     private AnimationController _bottomSheetScrimAnimationController = null!;
     private AnimationController _floatingActionButtonVisibilityController = null!;
-    private CurvedAnimation _floatingActionButtonScaleAnimation = null!;
+    private AnimationController _floatingActionButtonMoveController = null!;
+    private FloatingActionButtonAnimator _floatingActionButtonAnimator = null!;
+    private FloatingActionButtonLocation? _previousFloatingActionButtonLocation;
+    private FloatingActionButtonLocation? _floatingActionButtonLocation;
+    private ScaffoldGeometryNotifier _geometryNotifier = null!;
     private bool _showBodyScrim;
     private LocalHistoryEntry? _persistentSheetHistoryEntry;
-
-    // Flutter identifies the scaffold's children by `_ScaffoldSlot`; the overlay stack keys them so that a
-    // slot appearing or disappearing never shifts another slot's element onto a different widget.
-    private static readonly Key SnackBarSlotKey = new ValueKey<string>("scaffold.snackBar");
-    private static readonly Key BodyScrimSlotKey = new ValueKey<string>("scaffold.bodyScrim");
-    private static readonly Key BottomSheetSlotKey = new ValueKey<string>("scaffold.bottomSheet");
-    private static readonly Key MaterialBannerSlotKey = new ValueKey<string>("scaffold.materialBanner");
 
     private Scaffold CurrentWidget => (Scaffold)StateWidget;
 
@@ -261,10 +292,6 @@ public sealed class ScaffoldState : State
     public bool HasEndDrawer => CurrentWidget.EndDrawer != null;
 
     public bool HasFloatingActionButton => CurrentWidget.FloatingActionButton != null;
-
-    public Size FloatingActionButtonSize => CurrentWidget.FloatingActionButton is FloatingActionButton button
-        ? button.ResolveNominalSizeForScaffold(Context)
-        : new Size(56, 56);
 
     public bool IsDrawerOpen => _isDrawerOpen;
 
@@ -275,14 +302,17 @@ public sealed class ScaffoldState : State
         _isDisposed = false;
         _drawerProgress = 0;
         _endDrawerProgress = 0;
+        _geometryNotifier = new ScaffoldGeometryNotifier(new ScaffoldGeometry(), Context);
         _bottomSheetScrimAnimationController = new AnimationController(TimeSpan.Zero, this);
+        _floatingActionButtonLocation = CurrentWidget.FloatingActionButtonLocation;
+        _floatingActionButtonAnimator = CurrentWidget.FloatingActionButtonAnimator;
+        _previousFloatingActionButtonLocation = _floatingActionButtonLocation;
+        _floatingActionButtonMoveController = new AnimationController(
+            FloatingActionButtonConstants.Segue * 2,
+            this);
+        _floatingActionButtonMoveController.SetValue(1.0);
         _floatingActionButtonVisibilityController =
             new AnimationController(FloatingActionButtonConstants.Segue, this);
-        _floatingActionButtonVisibilityController.SetValue(1.0);
-        _floatingActionButtonVisibilityController.Changed += HandleFloatingActionButtonVisibilityChanged;
-        _floatingActionButtonScaleAnimation = new CurvedAnimation(
-            _floatingActionButtonVisibilityController,
-            curve: Curves.EaseIn);
         SyncStaticBottomSheetAnimation();
     }
 
@@ -297,8 +327,8 @@ public sealed class ScaffoldState : State
         StopSettleAnimation(DrawerSide.End);
         DisposeStaticBottomSheetAnimation();
         DisposePersistentBottomSheet(complete: true);
-        _floatingActionButtonVisibilityController.Changed -= HandleFloatingActionButtonVisibilityChanged;
-        _floatingActionButtonScaleAnimation.Dispose();
+        _geometryNotifier.Dispose();
+        _floatingActionButtonMoveController.Dispose();
         _floatingActionButtonVisibilityController.Dispose();
         _bottomSheetScrimAnimationController.Dispose();
     }
@@ -319,6 +349,9 @@ public sealed class ScaffoldState : State
         }
     }
 
+    /// <summary>The progress of the floating action button's location change animation.</summary>
+    internal double FloatingActionButtonMoveProgressForTests => _floatingActionButtonMoveController.Value;
+
     /// <summary>The controller a dominating bottom sheet drives to shrink the floating action button.</summary>
     internal AnimationController FloatingActionButtonVisibilityController =>
         _floatingActionButtonVisibilityController;
@@ -326,9 +359,37 @@ public sealed class ScaffoldState : State
     /// <summary>Whether the scaffold hosts a <see cref="Scaffold.BottomSheet"/> rather than a shown sheet.</summary>
     internal bool HasStaticBottomSheet => CurrentWidget.BottomSheet is not null;
 
-    private void HandleFloatingActionButtonVisibilityChanged()
+    /// <summary>
+    /// Moves the floating action button to a new <see cref="FloatingActionButtonLocation"/>. Ports Flutter's
+    /// private <c>_moveFloatingActionButton</c>, including the interrupt-restart behavior.
+    /// </summary>
+    private void MoveFloatingActionButton(FloatingActionButtonLocation newLocation)
     {
-        if (!_isDisposed) SetState(() => { });
+        FloatingActionButtonLocation? previousLocation = _floatingActionButtonLocation;
+        double restartAnimationFrom = 0.0;
+
+        // If the animation is currently running, then we want to start from the current relative value so
+        // the animation does not jump.
+        if (_floatingActionButtonMoveController.IsAnimating)
+        {
+            previousLocation = new TransitionSnapshotFabLocation(
+                _previousFloatingActionButtonLocation!,
+                _floatingActionButtonLocation!,
+                _floatingActionButtonAnimator,
+                _floatingActionButtonMoveController.Value);
+            restartAnimationFrom =
+                _floatingActionButtonAnimator.GetAnimationRestart(_floatingActionButtonMoveController.Value);
+        }
+
+        SetState(() =>
+        {
+            _previousFloatingActionButtonLocation = previousLocation;
+            _floatingActionButtonLocation = newLocation;
+        });
+
+        // Animate the motion even when the fab is null so that if the exit animation is running, the fab
+        // will go to the right place.
+        _floatingActionButtonMoveController.Forward(from: restartAnimationFrom);
     }
 
     private void ShowFloatingActionButton() => _floatingActionButtonVisibilityController.Forward();
@@ -502,6 +563,20 @@ public sealed class ScaffoldState : State
     public override void DidUpdateWidget(StatefulWidget oldWidget)
     {
         var oldScaffold = (Scaffold)oldWidget;
+        if (!ReferenceEquals(
+                oldScaffold.FloatingActionButtonAnimator,
+                CurrentWidget.FloatingActionButtonAnimator))
+        {
+            _floatingActionButtonAnimator = CurrentWidget.FloatingActionButtonAnimator;
+        }
+
+        if (!ReferenceEquals(
+                oldScaffold.FloatingActionButtonLocation,
+                CurrentWidget.FloatingActionButtonLocation))
+        {
+            MoveFloatingActionButton(CurrentWidget.FloatingActionButtonLocation);
+        }
+
         if (!ReferenceEquals(oldScaffold.BottomSheet, CurrentWidget.BottomSheet))
         {
             SyncStaticBottomSheetAnimation();
@@ -535,98 +610,152 @@ public sealed class ScaffoldState : State
 
         var theme = Theme.Of(context);
         var effectiveBackground = CurrentWidget.BackgroundColor ?? theme.ScaffoldBackgroundColor;
+        var textDirection = Directionality.Of(context);
+        var mediaQuery = MediaQuery.MaybeOf(context) ?? new MediaQueryData();
         ScaffoldMessengerState? messenger = ScaffoldMessenger.MaybeOf(context);
         var presentedSnackBar = messenger?.SnackBarFor(this);
         MaterialBanner? presentedMaterialBanner = messenger?.MaterialBannerFor(this);
-        double materialBannerElevation = presentedMaterialBanner?.Elevation
-                                         ?? MaterialBannerTheme.Of(context).Elevation
-                                         ?? 0.0;
-        var presentedSnackBarBehavior = presentedSnackBar?.Behavior
-                                        ?? SnackBarTheme.Of(context).Behavior
-                                        ?? SnackBarBehavior.Fixed;
+        bool resizeToAvoidBottomInset = CurrentWidget.ResizeToAvoidBottomInset ?? true;
 
-        var columnChildren = new List<Widget>();
-        if (CurrentWidget.AppBar != null)
+        var children = new List<Widget>();
+        AddIfNonNull(
+            children,
+            mediaQuery,
+            CurrentWidget.Body,
+            ScaffoldSlot.Body,
+            removeTopPadding: CurrentWidget.AppBar is not null,
+            removeBottomPadding: CurrentWidget.BottomNavigationBar is not null,
+            removeBottomInset: resizeToAvoidBottomInset);
+
+        if (_showBodyScrim
+            && CurrentWidget.BottomSheetScrimBuilder(context, _bottomSheetScrimAnimationController) is { } bodyScrim)
         {
-            columnChildren.Add(CurrentWidget.AppBar);
+            AddIfNonNull(
+                children,
+                mediaQuery,
+                bodyScrim,
+                ScaffoldSlot.BodyScrim,
+                removeLeftPadding: true,
+                removeTopPadding: true,
+                removeRightPadding: true,
+                removeBottomPadding: true);
         }
 
-        if (presentedMaterialBanner is not null && materialBannerElevation == 0.0)
+        if (CurrentWidget.AppBar is { } appBar)
         {
-            columnChildren.Add(MediaQuery.RemovePadding(
-                context,
+            double topPadding = appBar.Primary ? mediaQuery.Padding.Top : 0.0;
+            double appBarMaxHeight = AppBar.PreferredHeightFor(context, appBar.PreferredSize) + topPadding;
+            AddIfNonNull(
+                children,
+                mediaQuery,
+                new ConstrainedBox(
+                    constraints: new BoxConstraints(MaxHeight: appBarMaxHeight),
+                    child: FlexibleSpaceBar.CreateSettings(currentExtent: appBarMaxHeight, child: appBar)),
+                ScaffoldSlot.AppBar,
+                removeBottomPadding: true);
+        }
+
+        var presentedBottomSheet = BuildPresentedBottomSheet(context);
+        if (presentedBottomSheet is not null)
+        {
+            AddIfNonNull(
+                children,
+                mediaQuery,
+                presentedBottomSheet,
+                ScaffoldSlot.BottomSheet,
+                removeTopPadding: true,
+                removeBottomPadding: resizeToAvoidBottomInset);
+        }
+
+        bool isSnackBarFloating = false;
+        double? snackBarWidth = null;
+        if (presentedSnackBar is not null)
+        {
+            var snackBarTheme = SnackBarTheme.Of(context);
+            SnackBarBehavior snackBarBehavior =
+                presentedSnackBar.Behavior ?? snackBarTheme.Behavior ?? SnackBarBehavior.Fixed;
+            isSnackBarFloating = snackBarBehavior == SnackBarBehavior.Floating;
+            snackBarWidth = presentedSnackBar.Width ?? snackBarTheme.Width;
+            AddIfNonNull(
+                children,
+                mediaQuery,
+                presentedSnackBar,
+                ScaffoldSlot.SnackBar,
+                removeTopPadding: true,
+                removeBottomPadding: CurrentWidget.BottomNavigationBar is not null,
+                maintainBottomViewPadding: !resizeToAvoidBottomInset);
+        }
+
+        bool extendBodyBehindMaterialBanner = false;
+        if (presentedMaterialBanner is not null)
+        {
+            double materialBannerElevation = presentedMaterialBanner.Elevation
+                                             ?? MaterialBannerTheme.Of(context).Elevation
+                                             ?? 0.0;
+            extendBodyBehindMaterialBanner = materialBannerElevation != 0.0;
+            AddIfNonNull(
+                children,
+                mediaQuery,
                 presentedMaterialBanner,
-                removeTop: CurrentWidget.AppBar is not null,
-                removeBottom: true));
+                ScaffoldSlot.MaterialBanner,
+                removeTopPadding: CurrentWidget.AppBar is not null,
+                removeBottomPadding: true,
+                maintainBottomViewPadding: !resizeToAvoidBottomInset);
         }
 
-        columnChildren.Add(new Expanded(child: CurrentWidget.Body));
-
-        if (presentedSnackBar is not null && presentedSnackBarBehavior == SnackBarBehavior.Fixed)
+        if (CurrentWidget.BottomNavigationBar is not null)
         {
-            columnChildren.Add(presentedSnackBar);
+            AddIfNonNull(
+                children,
+                mediaQuery,
+                CurrentWidget.BottomNavigationBar,
+                ScaffoldSlot.BottomNavigationBar,
+                removeTopPadding: true,
+                maintainBottomViewPadding: !resizeToAvoidBottomInset);
         }
 
-        if (CurrentWidget.BottomNavigationBar != null)
-        {
-            columnChildren.Add(CurrentWidget.BottomNavigationBar);
-        }
+        AddIfNonNull(
+            children,
+            mediaQuery,
+            new FloatingActionButtonTransition(
+                child: CurrentWidget.FloatingActionButton,
+                fabMoveAnimation: _floatingActionButtonMoveController,
+                fabMotionAnimator: _floatingActionButtonAnimator,
+                geometryNotifier: _geometryNotifier,
+                currentController: _floatingActionButtonVisibilityController),
+            ScaffoldSlot.FloatingActionButton,
+            removeLeftPadding: true,
+            removeTopPadding: true,
+            removeRightPadding: true,
+            removeBottomPadding: true);
 
-        Widget content = new Column(
-            crossAxisAlignment: CrossAxisAlignment.Stretch,
-            children: columnChildren);
+        // The minimum insets for contents of the Scaffold to keep visible.
+        Thickness minInsets = CopyBottomInset(
+            mediaQuery.Padding,
+            resizeToAvoidBottomInset ? mediaQuery.ViewInsets.Bottom : 0.0);
 
-        var textDirection = Directionality.Of(context);
-        var mediaQuery = MediaQuery.MaybeOf(context) ?? new MediaQueryData();
-        double? bottomNavigationBarTop = null;
-        if (CurrentWidget.BottomNavigationBar is BottomAppBar bottomAppBar)
-        {
-            bottomNavigationBarTop = Math.Max(
-                0.0,
-                mediaQuery.Size.Height - bottomAppBar.ResolveHeightForScaffold(context));
-        }
+        // The minimum viewPadding for interactive elements positioned by the Scaffold to keep within safe
+        // interactive areas.
+        Thickness minViewPadding = resizeToAvoidBottomInset && mediaQuery.ViewInsets.Bottom != 0.0
+            ? CopyBottomInset(mediaQuery.ViewPadding, 0.0)
+            : mediaQuery.ViewPadding;
 
-        Rect? floatingActionButtonArea = null;
-
-        if (CurrentWidget.FloatingActionButton != null)
-        {
-            double appBarHeight = CurrentWidget.AppBar?.PreferredSize.Height ?? 0.0;
-            double bottomNavigationHeight = bottomNavigationBarTop.HasValue
-                ? mediaQuery.Size.Height - bottomNavigationBarTop.Value
-                : 0.0;
-            var geometry = new ScaffoldPrelayoutGeometry(
-                ScaffoldSize: mediaQuery.Size,
-                ContentTop: appBarHeight,
-                ContentBottom: Math.Max(0.0, mediaQuery.Size.Height - bottomNavigationHeight),
-                FloatingActionButtonSize: FloatingActionButtonSize,
-                BottomSheetSize: new Size(),
-                SnackBarSize: new Size(),
-                MinInsets: mediaQuery.ViewInsets,
-                MinViewPadding: mediaQuery.ViewPadding,
-                TextDirection: textDirection,
-                MaterialBannerSize: new Size());
-            Point floatingActionButtonOffset = CurrentWidget.FloatingActionButtonLocation.GetOffset(geometry);
-            floatingActionButtonArea = new Rect(
-                floatingActionButtonOffset,
-                geometry.FloatingActionButtonSize);
-            content = new Stack(
-                fit: StackFit.Expand,
-                children:
-                [
-                    content,
-                    new Positioned(
-                        left: 0,
-                        top: 0,
-                        right: 0,
-                        bottom: 0,
-                        child: new FloatingActionButtonPosition(
-                            geometry,
-                            CurrentWidget.FloatingActionButtonLocation,
-                            new ScaleTransition(
-                                scale: _floatingActionButtonScaleAnimation,
-                                child: CurrentWidget.FloatingActionButton))),
-                ]);
-        }
+        Widget content = new CustomMultiChildLayout(
+            @delegate: new ScaffoldLayout(
+                minInsets: minInsets,
+                minViewPadding: minViewPadding,
+                geometryNotifier: _geometryNotifier,
+                previousFloatingActionButtonLocation: _previousFloatingActionButtonLocation!,
+                currentFloatingActionButtonLocation: _floatingActionButtonLocation!,
+                floatingActionButtonMoveAnimation: _floatingActionButtonMoveController,
+                floatingActionButtonMotionAnimator: _floatingActionButtonAnimator,
+                isSnackBarFloating: isSnackBarFloating,
+                snackBarWidth: snackBarWidth,
+                extendBody: CurrentWidget.ExtendBody,
+                extendBodyBehindAppBar: CurrentWidget.ExtendBodyBehindAppBar,
+                extendBodyBehindMaterialBanner: extendBodyBehindMaterialBanner,
+                textDirection: textDirection),
+            children: children);
 
         double drawerProgress = ResolveDrawerProgress(DrawerSide.Start);
         double endDrawerProgress = ResolveDrawerProgress(DrawerSide.End);
@@ -634,63 +763,6 @@ public sealed class ScaffoldState : State
         bool isEndDrawerVisible = IsDrawerVisible(DrawerSide.End, endDrawerProgress);
         bool isAnyDrawerVisible = isStartDrawerVisible || isEndDrawerVisible;
         var overlayChildren = new List<Widget> { content };
-        if (presentedSnackBar is not null && presentedSnackBarBehavior == SnackBarBehavior.Floating)
-        {
-            overlayChildren.Add(new Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                key: SnackBarSlotKey,
-                child: presentedSnackBar));
-        }
-
-        if (_showBodyScrim
-            && CurrentWidget.BottomSheetScrimBuilder(context, _bottomSheetScrimAnimationController) is { } bodyScrim)
-        {
-            double scrimBottom = bottomNavigationBarTop.HasValue
-                ? Math.Max(0.0, mediaQuery.Size.Height - bottomNavigationBarTop.Value)
-                : 0.0;
-            overlayChildren.Add(new Positioned(
-                left: 0,
-                top: 0,
-                right: 0,
-                bottom: scrimBottom,
-                key: BodyScrimSlotKey,
-                child: MediaQuery.RemovePadding(
-                    context,
-                    bodyScrim,
-                    removeLeft: true,
-                    removeTop: true,
-                    removeRight: true,
-                    removeBottom: true)));
-        }
-
-        var bottomSheet = BuildPresentedBottomSheet(context);
-        if (bottomSheet is not null)
-        {
-            overlayChildren.Add(new Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                key: BottomSheetSlotKey,
-                child: bottomSheet));
-        }
-
-        if (presentedMaterialBanner is not null && materialBannerElevation != 0.0)
-        {
-            double appBarHeight = CurrentWidget.AppBar?.PreferredSize.Height ?? 0.0;
-            overlayChildren.Add(new Positioned(
-                left: 0,
-                top: appBarHeight,
-                right: 0,
-                key: MaterialBannerSlotKey,
-                child: MediaQuery.RemovePadding(
-                    context,
-                    presentedMaterialBanner,
-                    removeTop: CurrentWidget.AppBar is not null,
-                    removeBottom: true)));
-        }
-
         if (!isAnyDrawerVisible)
         {
             if (ShouldEnableOpenDragGesture(DrawerSide.Start, theme))
@@ -741,14 +813,54 @@ public sealed class ScaffoldState : State
             hasEndDrawer: HasEndDrawer,
             isDrawerOpen: _isDrawerOpen,
             isEndDrawerOpen: _isEndDrawerOpen,
-            geometry: new ScaffoldGeometryData(
-                FloatingActionButtonArea: floatingActionButtonArea,
-                BottomNavigationBarTop: bottomNavigationBarTop),
+            geometryNotifier: _geometryNotifier,
             child: new ScrollNotificationObserver(
                 child: new Container(
                     color: effectiveBackground,
                     child: content)));
     }
+
+    /// <summary>
+    /// Ports Flutter's private <c>_addIfNonNull</c>: wraps a scaffold slot in the <see cref="MediaQuery"/>
+    /// the slot expects and gives it its <see cref="LayoutId"/>.
+    /// </summary>
+    private static void AddIfNonNull(
+        List<Widget> children,
+        MediaQueryData mediaQuery,
+        Widget? child,
+        ScaffoldSlot childId,
+        bool removeLeftPadding = false,
+        bool removeTopPadding = false,
+        bool removeRightPadding = false,
+        bool removeBottomPadding = false,
+        bool removeBottomInset = false,
+        bool maintainBottomViewPadding = false)
+    {
+        MediaQueryData data = mediaQuery.RemovePadding(
+            removeLeft: removeLeftPadding,
+            removeTop: removeTopPadding,
+            removeRight: removeRightPadding,
+            removeBottom: removeBottomPadding);
+        if (removeBottomInset)
+        {
+            data = data.RemoveViewInsets(removeBottom: true);
+        }
+
+        if (maintainBottomViewPadding && data.ViewInsets.Bottom != 0.0)
+        {
+            data = data.CopyWith(padding: CopyBottomInset(data.Padding, data.ViewPadding.Bottom));
+        }
+
+        if (child is null)
+        {
+            return;
+        }
+
+        children.Add(new LayoutId(id: childId, child: new MediaQuery(data: data, child: child)));
+    }
+
+    private static Thickness CopyBottomInset(Thickness insets, double bottom) =>
+        new(insets.Left, insets.Top, insets.Right, bottom);
 
     private Widget? BuildPresentedBottomSheet(BuildContext context)
     {

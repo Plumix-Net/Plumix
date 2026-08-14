@@ -13,6 +13,7 @@ class _FloatingActionButtonDemoPageState
   bool _enabled = true;
   bool _extendedOpen = true;
   bool _useMaterial3 = true;
+  bool _dockedLocation = false;
   int _regularTaps = 0;
   int _smallTaps = 0;
   int _largeTaps = 0;
@@ -75,6 +76,14 @@ class _FloatingActionButtonDemoPageState
                   background: const Color(0xFFE4F3E8),
                 ),
                 _buildControlButton(
+                  label: _dockedLocation
+                      ? 'Location: centerDocked'
+                      : 'Location: centerFloat',
+                  onTap: _toggleLocation,
+                  width: 190,
+                  background: const Color(0xFFFFE7D6),
+                ),
+                _buildControlButton(
                   label: 'Reset',
                   onTap: _resetCounters,
                   width: 88,
@@ -86,16 +95,23 @@ class _FloatingActionButtonDemoPageState
               'mode=${_useMaterial3 ? 'M3' : 'M2'}, enabled=$_enabled, '
               'extended=${_extendedOpen ? 'open' : 'icon'}, regular=$_regularTaps, '
               'small=$_smallTaps, large=$_largeTaps, extendedTaps=$_extendedTaps, '
-              'themed=$_themedTaps',
+              'themed=$_themedTaps, '
+              'location=${_dockedLocation ? 'centerDocked' : 'centerFloat'}',
               style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
             ),
             SizedBox(
               height: 160,
               child: Scaffold(
-                body: const Center(child: Text('Scaffold: centerFloat')),
-                bottomNavigationBar: const BottomAppBar(),
-                floatingActionButtonLocation:
-                    FloatingActionButtonLocation.centerFloat,
+                body: const Center(
+                  child: Text('Scaffold: animated FAB location'),
+                ),
+                bottomNavigationBar: const BottomAppBar(
+                  shape: CircularNotchedRectangle(),
+                  notchMargin: 6,
+                ),
+                floatingActionButtonLocation: _dockedLocation
+                    ? FloatingActionButtonLocation.centerDocked
+                    : FloatingActionButtonLocation.centerFloat,
                 floatingActionButton: FloatingActionButton(
                   onPressed: _enabled ? _onRegularTap : null,
                   tooltip: 'Center float action',
@@ -236,11 +252,18 @@ class _FloatingActionButtonDemoPageState
     });
   }
 
+  void _toggleLocation() {
+    setState(() {
+      _dockedLocation = !_dockedLocation;
+    });
+  }
+
   void _resetCounters() {
     setState(() {
       _enabled = true;
       _extendedOpen = true;
       _useMaterial3 = true;
+      _dockedLocation = false;
       _regularTaps = 0;
       _smallTaps = 0;
       _largeTaps = 0;

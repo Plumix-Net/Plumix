@@ -1,5 +1,24 @@
 # Changelog
 
+- Breaking: closed the live-`ScaffoldGeometry`/FAB-motion divergence (`material_ui/scaffold.dart`,
+  `floating_action_button_location.dart`). `Scaffold` now lays its slots out through the ported
+  `_ScaffoldLayout` (`CustomMultiChildLayout` + `ScaffoldSlot`) instead of a Column/Stack, so
+  `ScaffoldPrelayoutGeometry` carries measured snack-bar, bottom-sheet and material-banner sizes. New public
+  `ScaffoldGeometry` + `Scaffold.GeometryOf` (paint-phase only, backed by the ported
+  `_ScaffoldGeometryNotifier`), and the ported `_FloatingActionButtonTransition` drives entrance/exit/move
+  scale, rotation and cross-fade; a `floatingActionButtonLocation` change now animates over the 400 ms segue
+  and restarts from `GetAnimationRestart` when interrupted, relayouting through the delegate's `relayout`
+  listenable without rebuilding. `BottomAppBar` tracks the moving FAB through that listenable. New `Scaffold`
+  options: `ExtendBody`, `ExtendBodyBehindAppBar`, `ResizeToAvoidBottomInset`. Core gained
+  `CompoundAnimation`/`AnimationMin`/`AnimationMax`/`AnimationMean`, `TrainHoppingAnimation`,
+  `Animatable.Chain`, `Animation<double>.Drive` and `PipelineOwner.DebugDoingPaint`. **Breaking:**
+  `FloatingActionButtonAnimator.GetScale`/`GetRotation` became `GetScaleAnimation`/`GetRotationAnimation`
+  (`Animation<double>`); `FloatingActionButtonLocation.MiniButtonOffsetAdjustment` is Flutter's `4.0`, not
+  `8.0`; a fixed `SnackBar` and a zero-elevation `MaterialBanner` now follow Flutter's overlay/`contentTop`
+  placement instead of being Column children; and `ScaffoldState.FloatingActionButtonSize` is gone (the
+  layout measures the button, so the estimate had no callers). Remaining deltas are tracked in
+  `DIVERGENCES.md`.
+
 - Breaking: closed the `Navigator` divergence end-to-end (`widgets/navigator.dart`). The navigator now runs
   Flutter's staged route lifecycle: `_RouteLifecycle`/`_RouteEntry` (as internal `RouteLifecycle`/`RouteEntry`),
   `_flushHistoryUpdates` with its observer queues (`didPush`/`didReplace` drain LIFO before `didPop`/`didRemove`

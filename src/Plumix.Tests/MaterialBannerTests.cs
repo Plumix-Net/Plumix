@@ -555,19 +555,29 @@ public sealed class MaterialBannerTests
         PumpAnimation();
         harness.Pump(new Size(360, 220));
 
-        var scaffoldColumn = Assert.Single(FindDescendants<RenderFlex>(harness.RenderView), flex =>
-            flex.Direction == Axis.Vertical
-            && flex.MainAxisSize == MainAxisSize.Max
-            && flex.CrossAxisAlignment == CrossAxisAlignment.Stretch
-            && flex.Size == new Size(360, 220));
-        RenderBox first = scaffoldColumn.FirstChild!;
-        RenderBox? second = scaffoldColumn.ChildAfter(first);
+        var scaffoldLayout = Assert.Single(
+            FindDescendants<RenderCustomMultiChildLayoutBox>(harness.RenderView),
+            layout => layout.Size == new Size(360, 220));
+        RenderBox body = RequireSlot(scaffoldLayout, ScaffoldSlot.Body);
+        RenderBox banner = RequireSlot(scaffoldLayout, ScaffoldSlot.MaterialBanner);
 
-        Assert.Equal(bodyIsPushed, second is not null);
-        if (second is not null)
+        Assert.True(banner.Size.Height > 0);
+        double bodyTop = ((MultiChildLayoutParentData)body.parentData!).offset.Y;
+        Assert.Equal(bodyIsPushed ? banner.Size.Height : 0.0, bodyTop);
+        Assert.Equal(0.0, ((MultiChildLayoutParentData)banner.parentData!).offset.Y);
+    }
+
+    private static RenderBox RequireSlot(RenderCustomMultiChildLayoutBox layout, ScaffoldSlot slot)
+    {
+        for (RenderBox? child = layout.FirstChild; child is not null; child = layout.ChildAfter(child))
         {
-            Assert.True(((FlexParentData)second.parentData!).offset.Y >= first.Size.Height);
+            if (Equals(((MultiChildLayoutParentData)child.parentData!).Id, slot))
+            {
+                return child;
+            }
         }
+
+        throw new InvalidOperationException($"Scaffold slot '{slot}' was not found.");
     }
 
     private static MaterialBanner Banner(

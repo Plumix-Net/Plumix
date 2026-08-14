@@ -128,7 +128,7 @@ internal sealed class BottomAppBarState : State
                 child: child));
 
         var scaffold = Scaffold.MaybeOf(context);
-        ScaffoldGeometryData? geometry = Scaffold.GeometryMaybeOf(context);
+        ScaffoldGeometryNotifier? geometryNotifier = Scaffold.GeometryNotifierMaybeOf(context);
         bool hasFab = scaffold?.HasFloatingActionButton == true;
         return new BottomAppBarSurface(
             color: color,
@@ -138,8 +138,7 @@ internal sealed class BottomAppBarState : State
             notchMargin: widget.NotchMargin,
             clipBehavior: widget.ClipBehavior,
             hasFloatingActionButton: hasFab,
-            floatingActionButtonArea: geometry?.FloatingActionButtonArea,
-            bottomNavigationBarTop: geometry?.BottomNavigationBarTop,
+            geometryNotifier: geometryNotifier,
             child: child);
     }
 }
@@ -154,8 +153,7 @@ internal sealed class BottomAppBarSurface : SingleChildRenderObjectWidget
         double notchMargin,
         Clip clipBehavior,
         bool hasFloatingActionButton,
-        Rect? floatingActionButtonArea,
-        double? bottomNavigationBarTop,
+        ScaffoldGeometryNotifier? geometryNotifier,
         Widget child) : base(child)
     {
         Color = color;
@@ -165,8 +163,7 @@ internal sealed class BottomAppBarSurface : SingleChildRenderObjectWidget
         NotchMargin = notchMargin;
         ClipBehavior = clipBehavior;
         HasFloatingActionButton = hasFloatingActionButton;
-        FloatingActionButtonArea = floatingActionButtonArea;
-        BottomNavigationBarTop = bottomNavigationBarTop;
+        GeometryNotifier = geometryNotifier;
     }
 
     public Color Color { get; }
@@ -176,8 +173,7 @@ internal sealed class BottomAppBarSurface : SingleChildRenderObjectWidget
     public double NotchMargin { get; }
     public Clip ClipBehavior { get; }
     public bool HasFloatingActionButton { get; }
-    public Rect? FloatingActionButtonArea { get; }
-    public double? BottomNavigationBarTop { get; }
+    public ScaffoldGeometryNotifier? GeometryNotifier { get; }
 
     internal override RenderObject CreateRenderObject(BuildContext context) => new RenderBottomAppBarSurface(
         Color,
@@ -187,8 +183,7 @@ internal sealed class BottomAppBarSurface : SingleChildRenderObjectWidget
         NotchMargin,
         ClipBehavior,
         HasFloatingActionButton,
-        FloatingActionButtonArea,
-        BottomNavigationBarTop);
+        GeometryNotifier);
 
     internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
@@ -200,8 +195,7 @@ internal sealed class BottomAppBarSurface : SingleChildRenderObjectWidget
         surface.NotchMargin = NotchMargin;
         surface.ClipBehavior = ClipBehavior;
         surface.HasFloatingActionButton = HasFloatingActionButton;
-        surface.FloatingActionButtonArea = FloatingActionButtonArea;
-        surface.BottomNavigationBarTop = BottomNavigationBarTop;
+        surface.GeometryNotifier = GeometryNotifier;
     }
 }
 
@@ -214,8 +208,7 @@ internal sealed class RenderBottomAppBarSurface : RenderProxyBox
     private double _notchMargin;
     private Clip _clipBehavior;
     private bool _hasFloatingActionButton;
-    private Rect? _floatingActionButtonArea;
-    private double? _bottomNavigationBarTop;
+    private ScaffoldGeometryNotifier? _geometryNotifier;
 
     public RenderBottomAppBarSurface(
         Color color,
@@ -225,8 +218,7 @@ internal sealed class RenderBottomAppBarSurface : RenderProxyBox
         double notchMargin,
         Clip clipBehavior,
         bool hasFloatingActionButton,
-        Rect? floatingActionButtonArea,
-        double? bottomNavigationBarTop)
+        ScaffoldGeometryNotifier? geometryNotifier)
     {
         _color = color;
         _elevation = elevation;
@@ -235,8 +227,7 @@ internal sealed class RenderBottomAppBarSurface : RenderProxyBox
         _notchMargin = notchMargin;
         _clipBehavior = clipBehavior;
         _hasFloatingActionButton = hasFloatingActionButton;
-        _floatingActionButtonArea = floatingActionButtonArea;
-        _bottomNavigationBarTop = bottomNavigationBarTop;
+        _geometryNotifier = geometryNotifier;
     }
 
     public Color Color
@@ -316,26 +307,38 @@ internal sealed class RenderBottomAppBarSurface : RenderProxyBox
         }
     }
 
-    public Rect? FloatingActionButtonArea
+    /// <summary>
+    /// The live scaffold geometry the notch tracks. Ports the <c>reclip</c> listenable Flutter's
+    /// <c>_BottomAppBarClipper</c> subscribes to, so a moving floating action button repaints the notch
+    /// without rebuilding the bar.
+    /// </summary>
+    public ScaffoldGeometryNotifier? GeometryNotifier
     {
-        get => _floatingActionButtonArea;
+        get => _geometryNotifier;
         set
         {
-            if (_floatingActionButtonArea == value) return;
-            _floatingActionButtonArea = value;
+            if (ReferenceEquals(_geometryNotifier, value)) return;
+            if (Attached)
+            {
+                _geometryNotifier?.RemoveListener(MarkNeedsPaint);
+                value?.AddListener(MarkNeedsPaint);
+            }
+
+            _geometryNotifier = value;
             MarkNeedsPaint();
         }
     }
 
-    public double? BottomNavigationBarTop
+    protected override void OnAttach()
     {
-        get => _bottomNavigationBarTop;
-        set
-        {
-            if (_bottomNavigationBarTop == value) return;
-            _bottomNavigationBarTop = value;
-            MarkNeedsPaint();
-        }
+        base.OnAttach();
+        _geometryNotifier?.AddListener(MarkNeedsPaint);
+    }
+
+    protected override void OnDetach()
+    {
+        _geometryNotifier?.RemoveListener(MarkNeedsPaint);
+        base.OnDetach();
     }
 
     internal Rect? GuestRect => ResolveGuestRect();
@@ -434,20 +437,18 @@ internal sealed class RenderBottomAppBarSurface : RenderProxyBox
 
     private Rect? ResolveGuestRect()
     {
-        if (!HasFloatingActionButton
-            || Shape is null
-            || !FloatingActionButtonArea.HasValue
-            || !BottomNavigationBarTop.HasValue)
+        if (!HasFloatingActionButton || Shape is null || _geometryNotifier is null)
         {
             return null;
         }
 
-        Rect area = FloatingActionButtonArea.Value;
-        var localArea = new Rect(
-            area.X,
-            area.Y - BottomNavigationBarTop.Value,
-            area.Width,
-            area.Height);
+        ScaffoldGeometry geometry = _geometryNotifier.ValueForLayout;
+        if (geometry.FloatingActionButtonArea is not { } area || geometry.BottomNavigationBarTop is not { } top)
+        {
+            return null;
+        }
+
+        var localArea = new Rect(area.X, area.Y - top, area.Width, area.Height);
         return localArea.Inflate(NotchMargin);
     }
 }

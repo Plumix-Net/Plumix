@@ -193,6 +193,13 @@ public sealed class PipelineOwner
         _needsCompositingBitsUpdate = false;
     }
 
+    /// <summary>
+    /// Whether this pipeline owner is currently running <see cref="FlushPaint"/>. Ports Flutter's
+    /// <c>PipelineOwner.debugDoingPaint</c>, which gates paint-phase-only reads such as
+    /// <see cref="RenderObject"/> geometry published to descendants.
+    /// </summary>
+    public bool DebugDoingPaint { get; private set; }
+
     public void FlushPaint()
     {
         if (!_needsPaint)
@@ -200,6 +207,21 @@ public sealed class PipelineOwner
             return;
         }
 
+        DebugDoingPaint = true;
+        try
+        {
+            FlushPaintNodes();
+        }
+        finally
+        {
+            DebugDoingPaint = false;
+        }
+
+        _needsPaint = false;
+    }
+
+    private void FlushPaintNodes()
+    {
         while (_nodesNeedingPaint.Count > 0)
         {
             var dirtyNodes = _nodesNeedingPaint

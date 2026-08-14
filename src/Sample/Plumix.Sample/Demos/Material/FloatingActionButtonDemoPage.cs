@@ -22,6 +22,7 @@ internal sealed class FloatingActionButtonDemoPageState : State
     private bool _enabled = true;
     private bool _extendedOpen = true;
     private bool _useMaterial3 = true;
+    private bool _dockedLocation;
     private int _regularTaps;
     private int _smallTaps;
     private int _largeTaps;
@@ -85,6 +86,11 @@ internal sealed class FloatingActionButtonDemoPageState : State
                                 width: 104,
                                 background: Color.Parse("#FFE4F3E8")),
                             BuildControlButton(
+                                label: _dockedLocation ? "Location: centerDocked" : "Location: centerFloat",
+                                onTap: ToggleLocation,
+                                width: 190,
+                                background: Color.Parse("#FFFFE7D6")),
+                            BuildControlButton(
                                 label: "Reset",
                                 onTap: ResetCounters,
                                 width: 88,
@@ -94,15 +100,20 @@ internal sealed class FloatingActionButtonDemoPageState : State
                         $"mode={(_useMaterial3 ? "M3" : "M2")}, enabled={(_enabled ? "true" : "false")}, "
                         + $"extended={(_extendedOpen ? "open" : "icon")}, regular={_regularTaps}, "
                         + $"small={_smallTaps}, large={_largeTaps}, extendedTaps={_extendedTaps}, "
-                        + $"themed={_themedTaps}",
+                        + $"themed={_themedTaps}, "
+                        + $"location={(_dockedLocation ? "centerDocked" : "centerFloat")}",
                         fontSize: 12,
                         color: Color.Parse("#FF607D8B")),
                     new SizedBox(
                         height: 160,
                         child: new Scaffold(
-                            body: new Center(child: new Text("Scaffold: centerFloat")),
-                            bottomNavigationBar: new BottomAppBar(),
-                            floatingActionButtonLocation: FloatingActionButtonLocation.CenterFloat,
+                            body: new Center(child: new Text("Scaffold: animated FAB location")),
+                            bottomNavigationBar: new BottomAppBar(
+                                shape: new CircularNotchedRectangle(),
+                                notchMargin: 6),
+                            floatingActionButtonLocation: _dockedLocation
+                                ? FloatingActionButtonLocation.CenterDocked
+                                : FloatingActionButtonLocation.CenterFloat,
                             floatingActionButton: new FloatingActionButton(
                                 child: new Icon(Icons.Add),
                                 tooltip: "Center float action",
@@ -221,6 +232,11 @@ internal sealed class FloatingActionButtonDemoPageState : State
         SetState(() => _useMaterial3 = !_useMaterial3);
     }
 
+    private void ToggleLocation()
+    {
+        SetState(() => _dockedLocation = !_dockedLocation);
+    }
+
     private void ResetCounters()
     {
         SetState(() =>
@@ -228,6 +244,7 @@ internal sealed class FloatingActionButtonDemoPageState : State
             _enabled = true;
             _extendedOpen = true;
             _useMaterial3 = true;
+            _dockedLocation = false;
             _regularTaps = 0;
             _smallTaps = 0;
             _largeTaps = 0;

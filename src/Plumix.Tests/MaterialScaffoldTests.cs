@@ -1907,12 +1907,14 @@ public sealed class MaterialScaffoldTests
         owner.FlushBuild();
 
         var scaffoldBackground = RequireRenderObject<RenderColoredBox>(root.ChildElement);
-        var contentColumn = FindDescendant<RenderFlex>(scaffoldBackground);
-        Assert.NotNull(contentColumn);
+        var scaffoldLayout = FindDescendant<RenderCustomMultiChildLayoutBox>(scaffoldBackground);
+        Assert.NotNull(scaffoldLayout);
         Assert.Contains(
             FindWidgets<MaterialWidget>(root.ChildElement),
             material => material.Color == Colors.DarkSlateBlue);
-        Assert.NotNull(contentColumn.ChildAfter(contentColumn.FirstChild!));
+
+        // Body, app bar, and the always-present floating action button slot.
+        Assert.Equal(3, scaffoldLayout.ChildCount);
     }
 
     [Fact]
@@ -1937,12 +1939,14 @@ public sealed class MaterialScaffoldTests
         owner.FlushBuild();
 
         var scaffoldBackground = RequireRenderObject<RenderColoredBox>(root.ChildElement);
-        var contentColumn = FindDescendant<RenderFlex>(scaffoldBackground);
-        Assert.NotNull(contentColumn);
+        var scaffoldLayout = FindDescendant<RenderCustomMultiChildLayoutBox>(scaffoldBackground);
+        Assert.NotNull(scaffoldLayout);
         Assert.Contains(
             FindWidgets<MaterialWidget>(root.ChildElement),
             material => material.Color == Colors.DarkSlateBlue);
-        Assert.NotNull(contentColumn.ChildAfter(contentColumn.FirstChild!));
+
+        // Body, app bar, and the always-present floating action button slot.
+        Assert.Equal(3, scaffoldLayout.ChildCount);
     }
 
     [Fact]
@@ -1970,12 +1974,14 @@ public sealed class MaterialScaffoldTests
         owner.FlushBuild();
 
         var scaffoldBackground = RequireRenderObject<RenderColoredBox>(root.ChildElement);
-        var contentColumn = FindDescendant<RenderFlex>(scaffoldBackground);
-        Assert.NotNull(contentColumn);
+        var scaffoldLayout = FindDescendant<RenderCustomMultiChildLayoutBox>(scaffoldBackground);
+        Assert.NotNull(scaffoldLayout);
         Assert.Contains(
             FindWidgets<MaterialWidget>(root.ChildElement),
             material => material.Color == Colors.DarkSlateBlue);
-        Assert.NotNull(contentColumn.ChildAfter(contentColumn.FirstChild!));
+
+        // Body, app bar, and the always-present floating action button slot.
+        Assert.Equal(3, scaffoldLayout.ChildCount);
     }
 
     [Fact]
