@@ -205,7 +205,7 @@ public sealed class ApplicationWidgetsTests : IDisposable
         Assert.NotNull(SharedAppData.GetValue(homeContext.Value, "key", () => new object()));
         Assert.NotNull(ShortcutRegistry.MaybeOf(homeContext.Value));
         Assert.NotNull(TapRegion.MaybeOf(homeContext.Value));
-        Assert.Equal("app", RootRestorationScope.MaybeRestorationIdOf(homeContext.Value));
+        Assert.NotNull(homeContext.Value.DependOnInherited<UnmanagedRestorationScope>());
         Assert.Equal("ar", generatedTitleLocale);
         Assert.Equal(
             new ApplicationSwitcherDescription("localized", 0xFF112233),

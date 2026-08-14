@@ -27,12 +27,14 @@ public static class Scheduler
     private static readonly List<Ticker> _active = [];
     private static readonly List<Action<TimeSpan>> _persistentFrameCallbacks = [];
     private static readonly Queue<Action<TimeSpan>> _postFrameCallbacks = [];
+    private static readonly Queue<Action> _microtasks = [];
     private static readonly Stopwatch _sw = Stopwatch.StartNew();
 
     private static DispatcherTimer? _timer;
     private static bool _running;
     private static bool _hasScheduledFrame;
     private static bool _handlingFrame;
+    private static bool _microtaskDrainScheduled;
 
     public static event Action<TimeSpan>? BeginFrame;
     public static event Action<TimeSpan>? DrawFrame;
@@ -49,10 +51,46 @@ public static class Scheduler
         EnsureRunning();
     }
 
-    public static void AddPostFrameCallback(Action<TimeSpan> callback)
+    /// <summary>
+    /// Queues <paramref name="callback"/> for the end of the next frame. Plumix also schedules that
+    /// frame by default; pass <paramref name="scheduleFrame"/> as false for Flutter's behavior, where
+    /// a post-frame callback only runs once something else produces a frame.
+    /// </summary>
+    public static void AddPostFrameCallback(Action<TimeSpan> callback, bool scheduleFrame = true)
     {
         _postFrameCallbacks.Enqueue(callback);
-        ScheduleFrame();
+        if (scheduleFrame)
+        {
+            ScheduleFrame();
+        }
+    }
+
+    /// <summary>
+    /// Runs <paramref name="callback"/> at the end of the current event-loop turn, before the next
+    /// frame. Dart parity source: <c>dart:async scheduleMicrotask</c>.
+    /// </summary>
+    public static void ScheduleMicrotask(Action callback)
+    {
+        ArgumentNullException.ThrowIfNull(callback);
+
+        _microtasks.Enqueue(callback);
+        if (_microtaskDrainScheduled)
+        {
+            return;
+        }
+
+        _microtaskDrainScheduled = true;
+        Dispatcher.UIThread.Post(FlushMicrotasks, DispatcherPriority.Send);
+    }
+
+    /// <summary>Drains every microtask queued by <see cref="ScheduleMicrotask"/>.</summary>
+    public static void FlushMicrotasks()
+    {
+        _microtaskDrainScheduled = false;
+        while (_microtasks.Count > 0)
+        {
+            _microtasks.Dequeue()();
+        }
     }
 
     public static void AddPersistentFrameCallback(Action<TimeSpan> callback)
@@ -220,6 +258,7 @@ public static class Scheduler
         {
             Phase = SchedulerPhase.Idle;
             _handlingFrame = false;
+            FlushMicrotasks();
         }
 
         if (HasTickingTickers())

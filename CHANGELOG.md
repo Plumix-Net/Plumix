@@ -1,5 +1,19 @@
 # Changelog
 
+- Breaking: ported the state-restoration subsystem end-to-end (`services/restoration.dart`,
+  `widgets/restoration.dart`, `widgets/restoration_properties.dart`). New `RestorationManager`/
+  `RestorationBucket` in `Plumix.UI` (claim/adopt/rename/drop, duplicate-id detection, post-frame
+  serialization, `isReplacing`, `flushData`), real `RestorationScope`/`UnmanagedRestorationScope`/
+  `RootRestorationScope`, `RestorableProperty<T>`, the `RestorationMixin` equivalent
+  `RestorationState : State`, and the full `Restorable*` property family (num/double/int/string/bool
+  and their nullable forms, `DateTime`, `Enum`, `Listenable`, `ChangeNotifier`,
+  `TextEditingController`). `FormField.restorationId` now persists `error_text` and
+  `has_interacted_by_user`. Core gained `Scheduler.ScheduleMicrotask` and an
+  `AddPostFrameCallback(..., scheduleFrame: false)` overload. **Breaking:** the placeholder
+  `RootRestorationScope` is gone — `MaybeRestorationIdOf` was removed, the constructor takes
+  `(restorationId, child)`, and `FormFieldState` now derives from `RestorationState`. Host transport,
+  codec and first-frame-deferral deltas are tracked in `DIVERGENCES.md`.
+
 - Breaking: closed the `Dialog` family divergence end-to-end. Material `Dialog`/`AlertDialog`/`SimpleDialog` now
   render on a real `Material(type: card)` surface with `AnimatedPadding`, `EdgeInsetsGeometry` slot paddings,
   `AlignmentGeometry` alignment, `Curves.Decelerate` inset animation, host-platform (`defaultTargetPlatform`) route

@@ -132,6 +132,62 @@ public sealed class FormTests : IDisposable
         Assert.Null(key.CurrentWidget);
     }
 
+    [Fact]
+    public void FormField_RestoresErrorTextAndInteractionStateThroughItsRestorationId()
+    {
+        var manager = new MockRestorationManager();
+        var rawData = RawRestorationData.Build();
+
+        FormFieldState<string>? fieldState = null;
+        Dictionary<object, object?>? snapshot = null;
+        using (var harness = new WidgetRenderHarness(new UnmanagedRestorationScope(
+                   bucket: RestorationBucket.Root(manager, rawData),
+                   child: new Directionality(
+                       TextDirection.Ltr,
+                       new Form(child: new FormField<string>(
+                           restorationId: "field",
+                           initialValue: "seed",
+                           validator: value => string.IsNullOrWhiteSpace(value) ? "Required" : null,
+                           builder: field =>
+                           {
+                               fieldState = field;
+                               return new Text(field.ErrorText ?? field.Value ?? string.Empty);
+                           }))))))
+        {
+            harness.Pump(new Size(320, 120));
+            fieldState!.DidChange(string.Empty);
+            Assert.False(fieldState.Validate());
+            Assert.Equal("Required", fieldState.ErrorText);
+            manager.DoSerialization();
+            snapshot = RestorationSerialization.CopyRestorationData(rawData);
+        }
+
+        Dictionary<object, object?> fieldData = RawRestorationData.Values(
+            RawRestorationData.Child(snapshot!, "field")!)!;
+        Assert.Equal("Required", fieldData["error_text"]);
+        Assert.Equal(true, fieldData["has_interacted_by_user"]);
+
+        FormFieldState<string>? restored = null;
+        using var restart = new WidgetRenderHarness(new UnmanagedRestorationScope(
+            bucket: RestorationBucket.Root(manager, snapshot),
+            child: new Directionality(
+                TextDirection.Ltr,
+                new Form(child: new FormField<string>(
+                    restorationId: "field",
+                    initialValue: "seed",
+                    validator: value => string.IsNullOrWhiteSpace(value) ? "Required" : null,
+                    builder: field =>
+                    {
+                        restored = field;
+                        return new Text(field.ErrorText ?? field.Value ?? string.Empty);
+                    })))));
+        restart.Pump(new Size(320, 120));
+
+        Assert.NotSame(fieldState, restored);
+        Assert.Equal("Required", restored!.ErrorText);
+        Assert.True(restored.HasInteractedByUser);
+    }
+
     private static SemanticsNode? FindSemantics(SemanticsNode? node, Func<SemanticsNode, bool> predicate)
     {
         if (node is null || predicate(node)) return node;

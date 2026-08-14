@@ -1,5 +1,6 @@
 using Plumix.Rendering;
 using Plumix.Foundation;
+using Plumix.UI;
 
 namespace Plumix.Widgets;
 
@@ -203,7 +204,7 @@ internal sealed class FormScope : InheritedWidget
         Generation != ((FormScope)oldWidget).Generation;
 }
 
-public abstract class FormFieldState : State
+public abstract class FormFieldState : RestorationState
 {
     private FormState? _registeredForm;
     private bool _hadFocusWithin;
@@ -236,6 +237,7 @@ public abstract class FormFieldState : State
         FocusManager.Instance.PrimaryFocusChanged -= HandlePrimaryFocusChanged;
         _registeredForm?.Unregister(this);
         _registeredForm = null;
+        base.Dispose();
     }
 
     protected void RegisterWithForm(BuildContext context)
@@ -321,15 +323,16 @@ public class FormField<T> : StatefulWidget
 
 public class FormFieldState<T> : FormFieldState
 {
+    private readonly RestorableBool _hasInteractedByUser = new(false);
+    private RestorableStringN _errorText = null!;
     private T? _value;
-    private string? _errorText;
-    private bool _hasInteractedByUser;
 
     protected FormField<T> CurrentField => (FormField<T>)StateWidget;
 
     public T? Value => _value;
-    public override string? ErrorText => _errorText;
-    public override bool HasInteractedByUser => _hasInteractedByUser;
+    public override string? ErrorText => _errorText.Value;
+    public override bool HasInteractedByUser => _hasInteractedByUser.Value;
+    protected override string? RestorationId => CurrentField.RestorationId;
     public override bool IsValid => CurrentField.ForceErrorText is null
         && CurrentField.Validator?.Invoke(_value) is null;
     protected override AutovalidateMode EffectiveAutovalidateMode =>
@@ -341,19 +344,34 @@ public class FormFieldState<T> : FormFieldState
     public override void InitState()
     {
         _value = CurrentField.InitialValue;
-        _errorText = CurrentField.ForceErrorText;
+        _errorText = new RestorableStringN(CurrentField.ForceErrorText);
         base.InitState();
+    }
+
+    protected override void RestoreState(RestorationBucket? oldBucket, bool initialRestore)
+    {
+        RegisterForRestoration(_errorText, "error_text");
+        RegisterForRestoration(_hasInteractedByUser, "has_interacted_by_user");
     }
 
     public override void DidUpdateWidget(StatefulWidget oldWidget)
     {
+        base.DidUpdateWidget(oldWidget);
         var oldField = (FormField<T>)oldWidget;
         if (!string.Equals(oldField.ForceErrorText, CurrentField.ForceErrorText, StringComparison.Ordinal))
-            _errorText = CurrentField.ForceErrorText;
+            _errorText.Value = CurrentField.ForceErrorText;
+    }
+
+    public override void Dispose()
+    {
+        _errorText.Dispose();
+        _hasInteractedByUser.Dispose();
+        base.Dispose();
     }
 
     public override void DidChangeDependencies()
     {
+        base.DidChangeDependencies();
         var form = Form.MaybeOf(Context);
         if (form?.CurrentAutovalidateMode == AutovalidateMode.Always
             && CurrentField.Enabled
@@ -374,10 +392,10 @@ public class FormFieldState<T> : FormFieldState
                 case AutovalidateMode.Always:
                     ValidateInternal();
                     break;
-                case AutovalidateMode.OnUserInteraction when _hasInteractedByUser:
+                case AutovalidateMode.OnUserInteraction when HasInteractedByUser:
                     ValidateInternal();
                     break;
-                case AutovalidateMode.OnUserInteractionIfError when _hasInteractedByUser && HasError:
+                case AutovalidateMode.OnUserInteractionIfError when HasInteractedByUser && HasError:
                     ValidateInternal();
                     break;
             }
@@ -409,8 +427,8 @@ public class FormFieldState<T> : FormFieldState
 
     internal override void ClearErrorInternal()
     {
-        _errorText = null;
-        _hasInteractedByUser = false;
+        _errorText.Value = null;
+        _hasInteractedByUser.Value = false;
     }
 
     public override bool Validate()
@@ -424,7 +442,7 @@ public class FormFieldState<T> : FormFieldState
         SetState(() =>
         {
             _value = value;
-            _hasInteractedByUser = true;
+            _hasInteractedByUser.Value = true;
         });
         RegisteredForm?.FieldDidChange();
     }
@@ -433,7 +451,7 @@ public class FormFieldState<T> : FormFieldState
 
     private void ValidateInternal()
     {
-        _errorText = CurrentField.ForceErrorText
+        _errorText.Value = CurrentField.ForceErrorText
             ?? CurrentField.Validator?.Invoke(_value);
     }
 }

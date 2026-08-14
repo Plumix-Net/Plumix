@@ -308,6 +308,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `services/mouse_cursor.dart` | `src/Plumix/Widgets/MouseCursor.cs` | — | — |
 | `services/mouse_tracking.dart` | `src/Plumix/UI/MouseTracking.cs` | — | — |
 | `services/predictive_back_event.dart` | `src/Plumix/UI/PredictiveBackEvent.cs` | — | — |
+| `services/restoration.dart` | `src/Plumix/UI/Restoration.cs` | `src/Plumix.Tests/RestorationBucketTests.cs`<br>`src/Plumix.Tests/RestorationManagerTests.cs`<br>`src/Plumix.Tests/RestorationPropertiesTests.cs`<br>`src/Plumix.Tests/RestorationWidgetsTests.cs` | — |
 | `services/spell_check.dart` | `src/Plumix/Widgets/SpellCheck.cs` | — | — |
 | `services/system_chrome.dart` | `src/Plumix/UI/SystemChrome.cs` | — | — |
 | `services/system_sound.dart` | `src/Plumix/UI/SystemSound.cs` | — | — |
@@ -391,7 +392,8 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `widgets/raw_tooltip.dart` | `src/Plumix/Widgets/RawTooltip.cs` | `src/Plumix.Tests/RawTooltipTests.cs` | — |
 | `widgets/reorderable_list.dart` | `src/Plumix/Widgets/ReorderableList.cs` | `src/Plumix.Tests/MaterialReorderableListTests.cs` | `dart_sample/lib/demos/material/reorderable_list_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/ReorderableListDemoPage.cs` |
 | `widgets/repeating_animation_builder.dart` | `src/Plumix/Widgets/RepeatingAnimationBuilder.cs` | — | — |
-| `widgets/restoration.dart` | `src/Plumix/Widgets/Restoration.cs` | — | — |
+| `widgets/restoration.dart` | `src/Plumix/Widgets/Restoration.cs` | `src/Plumix.Tests/RestorationBucketTests.cs`<br>`src/Plumix.Tests/RestorationManagerTests.cs`<br>`src/Plumix.Tests/RestorationPropertiesTests.cs`<br>`src/Plumix.Tests/RestorationWidgetsTests.cs` | — |
+| `widgets/restoration_properties.dart` | `src/Plumix/Widgets/RestorationProperties.cs` | `src/Plumix.Tests/RestorationPropertiesTests.cs` | — |
 | `widgets/routes.dart` | `src/Plumix/Widgets/Navigation.cs`<br>`src/Plumix/Widgets/RawDialogRoute.cs` | `src/Plumix.Tests/MaterialBottomNavigationBarTests.cs`<br>`src/Plumix.Tests/MaterialNavigationSurfacesTests.cs`<br>`src/Plumix.Tests/NavigationTests.cs` | `dart_sample/lib/demos/general/navigation_pop_demo_page.dart`<br>`dart_sample/lib/demos/material/navigation_drawer_demo_page.dart`<br>`dart_sample/lib/demos/material/navigation_surfaces_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/NavigationPopDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/NavigationDrawerDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/NavigationSurfacesDemoPage.cs` |
 | `widgets/safe_area.dart` | `src/Plumix/Widgets/SafeArea.cs` | `src/Plumix.Tests/SafeAreaTests.cs` | — |
 | `widgets/scroll_activity.dart` | `src/Plumix/Rendering/Scroll.cs` | `src/Plumix.Tests/DraggableScrollableSheetTests.cs`<br>`src/Plumix.Tests/MaterialScrollbarTests.cs`<br>`src/Plumix.Tests/ScrollBehaviorParityTests.cs`<br>`src/Plumix.Tests/ScrollInfrastructureTests.cs`<br>`src/Plumix.Tests/ScrollNotificationObserverTests.cs`<br>`src/Plumix.Tests/ScrollPhysicsTests.cs`<br>`src/Plumix.Tests/ScrollPipelineTests.cs` | `dart_sample/lib/demos/general/draggable_scrollable_sheet_demo_page.dart`<br>`dart_sample/lib/demos/general/scroll_physics_demo_page.dart`<br>`dart_sample/lib/demos/general/scrollbar_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/DraggableScrollableSheetDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ScrollPhysicsDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ScrollbarDemoPage.cs` |
@@ -461,8 +463,8 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 
 ## Summary
 
-- Flutter files mapped: 418
-- C# files carrying a marker: 526
+- Flutter files mapped: 420
+- C# files carrying a marker: 528
 - C# files without a marker: 15
 - Markers not resolvable in the pinned checkout: 0
 
