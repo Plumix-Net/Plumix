@@ -30,6 +30,25 @@ public interface WidgetsBindingObserver
         return Task.FromResult(AppExitResponse.Exit);
     }
 
+    /// <summary>
+    /// Called when the host asks the application to pop the current route. Returning <c>true</c> stops the
+    /// dispatch; returning <c>false</c> lets the next observer (and finally the navigator stack) handle it.
+    /// </summary>
+    Task<bool> DidPopRoute()
+    {
+        return Task.FromResult(false);
+    }
+
+    /// <summary>
+    /// Called when the host pushes a new route location into the application. Returning <c>true</c> stops the
+    /// dispatch.
+    /// </summary>
+    Task<bool> DidPushRouteInformation(RouteInformation routeInformation)
+    {
+        _ = routeInformation;
+        return Task.FromResult(false);
+    }
+
     bool HandleStartBackGesture(PredictiveBackEvent backEvent)
     {
         _ = backEvent;
@@ -137,6 +156,43 @@ public class WidgetsBinding
         return didCancel ? AppExitResponse.Cancel : AppExitResponse.Exit;
     }
 
+    /// <summary>
+    /// Flutter's <c>WidgetsBinding.handlePopRoute</c>: offers the pop to every observer in registration order
+    /// and stops at the first one that handles it.
+    /// </summary>
+    public bool HandlePopRoute()
+    {
+        foreach (WidgetsBindingObserver observer in _observers.ToArray())
+        {
+            Task<bool> handled = observer.DidPopRoute();
+            if (handled.IsCompletedSuccessfully && handled.Result)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Flutter's <c>WidgetsBinding.handlePushRouteInformation</c>: offers the location to every observer in
+    /// registration order and stops at the first one that handles it.
+    /// </summary>
+    public bool HandlePushRouteInformation(RouteInformation routeInformation)
+    {
+        ArgumentNullException.ThrowIfNull(routeInformation);
+        foreach (WidgetsBindingObserver observer in _observers.ToArray())
+        {
+            Task<bool> handled = observer.DidPushRouteInformation(routeInformation);
+            if (handled.IsCompletedSuccessfully && handled.Result)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public bool HandleStartBackGesture(PredictiveBackEvent backEvent)
     {
         ArgumentNullException.ThrowIfNull(backEvent);
@@ -195,6 +251,12 @@ public class WidgetsBinding
         {
             observer.HandleCancelBackGesture();
         }
+    }
+
+    internal void ResetObserversForTests()
+    {
+        _observers.Clear();
+        _backGestureObservers.Clear();
     }
 
     private static IReadOnlyList<AppLifecycleState> GenerateStateTransitions(

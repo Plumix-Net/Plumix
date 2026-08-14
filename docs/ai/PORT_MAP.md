@@ -312,6 +312,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `services/restoration.dart` | `src/Plumix/UI/Restoration.cs` | `src/Plumix.Tests/RestorationBucketTests.cs`<br>`src/Plumix.Tests/RestorationManagerTests.cs`<br>`src/Plumix.Tests/RestorationPropertiesTests.cs`<br>`src/Plumix.Tests/RestorationWidgetsTests.cs` | — |
 | `services/spell_check.dart` | `src/Plumix/Widgets/SpellCheck.cs` | — | — |
 | `services/system_chrome.dart` | `src/Plumix/UI/SystemChrome.cs` | — | — |
+| `services/system_navigator.dart` | `src/Plumix/UI/SystemNavigator.cs` | — | — |
 | `services/system_sound.dart` | `src/Plumix/UI/SystemSound.cs` | — | — |
 | `services/text_input.dart` | `src/Plumix/UI/TextInputConfiguration.cs`<br>`src/Plumix/Widgets/TextSelection.cs` | `src/Plumix.Tests/MaterialDesktopTextSelectionToolbarTests.cs`<br>`src/Plumix.Tests/MaterialTextSelectionControlsTests.cs` | `dart_sample/lib/demos/material/desktop_text_selection_toolbar_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/DesktopTextSelectionToolbarDemoPage.cs` |
 | `widgets/actions.dart` | `src/Plumix/Widgets/Actions.cs` | `src/Plumix.Tests/ActionsShortcutsTests.cs` | `dart_sample/lib/demos/material/app_bar_actions_padding_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/AppBarActionsPaddingDemoPage.cs` |
@@ -395,6 +396,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `widgets/repeating_animation_builder.dart` | `src/Plumix/Widgets/RepeatingAnimationBuilder.cs` | — | — |
 | `widgets/restoration.dart` | `src/Plumix/Widgets/Restoration.cs` | `src/Plumix.Tests/RestorationBucketTests.cs`<br>`src/Plumix.Tests/RestorationManagerTests.cs`<br>`src/Plumix.Tests/RestorationPropertiesTests.cs`<br>`src/Plumix.Tests/RestorationWidgetsTests.cs` | — |
 | `widgets/restoration_properties.dart` | `src/Plumix/Widgets/RestorationProperties.cs` | `src/Plumix.Tests/RestorationPropertiesTests.cs` | — |
+| `widgets/router.dart` | `src/Plumix/Widgets/Router.cs` | `src/Plumix.Tests/RouterTests.cs` | `dart_sample/lib/demos/general/router_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/RouterDemoPage.cs` |
 | `widgets/routes.dart` | `src/Plumix/Widgets/Navigation.cs`<br>`src/Plumix/Widgets/RawDialogRoute.cs` | `src/Plumix.Tests/MaterialBottomNavigationBarTests.cs`<br>`src/Plumix.Tests/MaterialNavigationSurfacesTests.cs`<br>`src/Plumix.Tests/NavigationTests.cs` | `dart_sample/lib/demos/general/navigation_pop_demo_page.dart`<br>`dart_sample/lib/demos/material/navigation_drawer_demo_page.dart`<br>`dart_sample/lib/demos/material/navigation_surfaces_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/NavigationPopDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/NavigationDrawerDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/NavigationSurfacesDemoPage.cs` |
 | `widgets/safe_area.dart` | `src/Plumix/Widgets/SafeArea.cs` | `src/Plumix.Tests/SafeAreaTests.cs` | — |
 | `widgets/scroll_activity.dart` | `src/Plumix/Rendering/Scroll.cs` | `src/Plumix.Tests/DraggableScrollableSheetTests.cs`<br>`src/Plumix.Tests/MaterialScrollbarTests.cs`<br>`src/Plumix.Tests/ScrollBehaviorParityTests.cs`<br>`src/Plumix.Tests/ScrollInfrastructureTests.cs`<br>`src/Plumix.Tests/ScrollNotificationObserverTests.cs`<br>`src/Plumix.Tests/ScrollPhysicsTests.cs`<br>`src/Plumix.Tests/ScrollPipelineTests.cs` | `dart_sample/lib/demos/general/draggable_scrollable_sheet_demo_page.dart`<br>`dart_sample/lib/demos/general/scroll_physics_demo_page.dart`<br>`dart_sample/lib/demos/general/scrollbar_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/DraggableScrollableSheetDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ScrollPhysicsDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ScrollbarDemoPage.cs` |
@@ -464,8 +466,8 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 
 ## Summary
 
-- Flutter files mapped: 421
-- C# files carrying a marker: 535
+- Flutter files mapped: 423
+- C# files carrying a marker: 537
 - C# files without a marker: 15
 - Markers not resolvable in the pinned checkout: 0
 

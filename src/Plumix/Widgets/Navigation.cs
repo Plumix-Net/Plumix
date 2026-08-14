@@ -2032,9 +2032,14 @@ public sealed class Navigator : StatefulWidget
         return Of(context).MaybePopFromUserGesture(result);
     }
 
+    /// <summary>
+    /// Flutter routes the host back button through <c>WidgetsBinding.handlePopRoute</c>; Plumix additionally
+    /// keeps the navigator handler stack, so binding observers (where <see cref="RootBackButtonDispatcher"/>
+    /// registers) get the first refusal and the innermost navigator handles the rest.
+    /// </summary>
     public static bool TryHandleBackButton()
     {
-        return NavigatorBackButtonDispatcher.DispatchBackButton();
+        return WidgetsBinding.Instance.HandlePopRoute() || NavigatorBackButtonDispatcher.DispatchBackButton();
     }
 }
 

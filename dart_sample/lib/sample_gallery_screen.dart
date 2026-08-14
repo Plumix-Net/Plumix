@@ -79,6 +79,7 @@ import 'demos/material/segmented_buttons_demo_page.dart';
 import 'demos/material/chips_demo_page.dart';
 import 'demos/general/navigator_demo_page.dart';
 import 'demos/general/navigator_pages_demo_page.dart';
+import 'demos/general/router_demo_page.dart';
 import 'demos/general/offstage_demo_page.dart';
 import 'demos/general/baseline_demo_page.dart';
 import 'demos/general/rich_text_demo_page.dart';
@@ -471,6 +472,12 @@ class SampleGalleryScreen extends StatelessWidget {
           title: 'Navigator.pages',
           subtitle: 'declarative pages + transition delegate',
           builder: () => const NavigatorPagesDemoPage(),
+        ),
+        SampleRouteDefinition(
+          routeName: SampleRoutes.router,
+          title: 'Router',
+          subtitle: 'delegate + parser + provider + back-button dispatcher',
+          builder: () => const RouterDemoPage(),
         ),
         SampleRouteDefinition(
           routeName: SampleRoutes.listViewSeparated,

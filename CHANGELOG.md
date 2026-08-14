@@ -1,5 +1,19 @@
 # Changelog
 
+- Breaking: closed the `Router` divergence end-to-end (`widgets/router.dart`). `RouteInformation`,
+  `RouterConfig`, `Router`/`Router.WithConfig` with the `_RouterScope`/`_RouterState` transaction and
+  post-frame reporting machinery, `RouteInformationParser`, `RouterDelegate`,
+  `PopNavigatorRouterDelegateMixin`, `RouteInformationProvider`, `PlatformRouteInformationProvider`, the
+  `BackButtonDispatcher`/`RootBackButtonDispatcher`/`ChildBackButtonDispatcher` priority chain and
+  `BackButtonListener` are all ported, plus `WidgetsApp.Router`/`MaterialApp.Router`. New host plumbing:
+  `SystemNavigator` (history mode, route-information reporting, `DefaultRouteName`) and
+  `WidgetsBindingObserver.DidPopRoute`/`DidPushRouteInformation` with
+  `WidgetsBinding.HandlePopRoute`/`HandlePushRouteInformation`. **Breaking:**
+  `Navigator.TryHandleBackButton` now offers the pop to binding observers before the navigator handler
+  stack, so a `RootBackButtonDispatcher` wins over a nested `Navigator`; `WidgetsApp` registers itself as a
+  binding observer and resolves its initial route through `SystemNavigator.DefaultRouteName`. New
+  `Router` demo page in both samples.
+
 - Breaking: closed the `About`/`LicensePage` divergence end-to-end (`material_ui/about.dart`). The whole
   private master-detail shell is now ported — `_MasterDetailFlow`, `_MasterDetailScaffold`, `_MasterPage`,
   `_DetailView`, `_PackagesView`, `_PackageListTile`, `_PackageLicensePage(Title)`, `_LicenseData`,

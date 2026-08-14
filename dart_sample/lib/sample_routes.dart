@@ -16,6 +16,7 @@ class SampleRoutes {
   static const String navigator = '/navigator';
   static const String navigatorDetails = '/navigator/details';
   static const String navigatorPages = '/navigator-pages';
+  static const String router = '/router';
   static const String listViewSeparated = '/list-separated';
   static const String listViewFixedExtent = '/list-fixed-extent';
   static const String scrollPhysics = '/scroll-physics';

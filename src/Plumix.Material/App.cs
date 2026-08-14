@@ -147,6 +147,194 @@ public sealed class MaterialApp : StatefulWidget
         ThemeAnimationStyle = themeAnimationStyle;
     }
 
+    /// <summary>
+    /// Dart's <c>MaterialApp.router</c> named constructor. C# has no named constructors, and generics are
+    /// invariant, so the router delegates are captured by a generic factory (see
+    /// <see cref="WidgetsApp.Router{T}"/>).
+    /// </summary>
+    public static MaterialApp Router<T>(
+        RouterDelegate<T>? routerDelegate = null,
+        RouteInformationParser<T>? routeInformationParser = null,
+        RouteInformationProvider? routeInformationProvider = null,
+        RouterConfig<T>? routerConfig = null,
+        BackButtonDispatcher? backButtonDispatcher = null,
+        GlobalKey<ScaffoldMessengerState>? scaffoldMessengerKey = null,
+        TransitionBuilder? builder = null,
+        string title = "",
+        GenerateAppTitle? onGenerateTitle = null,
+        Func<NavigationNotification, bool>? onNavigationNotification = null,
+        Color? color = null,
+        ThemeData? theme = null,
+        ThemeData? darkTheme = null,
+        ThemeData? highContrastTheme = null,
+        ThemeData? highContrastDarkTheme = null,
+        ThemeMode themeMode = ThemeMode.System,
+        TimeSpan? themeAnimationDuration = null,
+        Curve? themeAnimationCurve = null,
+        Locale? locale = null,
+        IReadOnlyList<LocalizationsDelegate>? localizationsDelegates = null,
+        LocaleListResolutionCallback? localeListResolutionCallback = null,
+        LocaleResolutionCallback? localeResolutionCallback = null,
+        IReadOnlyList<Locale>? supportedLocales = null,
+        bool debugShowMaterialGrid = false,
+        bool showPerformanceOverlay = false,
+        bool showSemanticsDebugger = false,
+        bool debugShowCheckedModeBanner = true,
+        IReadOnlyDictionary<ShortcutActivator, Intent>? shortcuts = null,
+        IReadOnlyDictionary<Type, FlutterAction>? actions = null,
+        string? restorationScopeId = null,
+        ScrollBehavior? scrollBehavior = null,
+        bool useInheritedMediaQuery = false,
+        AnimationStyle? themeAnimationStyle = null,
+        Key? key = null)
+    {
+        if (routerDelegate is null && routerConfig is null)
+        {
+            throw new ArgumentException(
+                "Either one of routerDelegate or routerConfig must be provided.",
+                nameof(routerDelegate));
+        }
+
+        RouterHost host = WidgetsApp.CreateRouterHost(
+            routerDelegate,
+            routeInformationParser,
+            routeInformationProvider,
+            routerConfig,
+            backButtonDispatcher);
+
+        return new MaterialApp(
+            routerHost: host,
+            routeInformationProvider: routeInformationProvider,
+            backButtonDispatcher: backButtonDispatcher,
+            scaffoldMessengerKey: scaffoldMessengerKey,
+            builder: builder,
+            title: title,
+            onGenerateTitle: onGenerateTitle,
+            onNavigationNotification: onNavigationNotification,
+            color: color,
+            theme: theme,
+            darkTheme: darkTheme,
+            highContrastTheme: highContrastTheme,
+            highContrastDarkTheme: highContrastDarkTheme,
+            themeMode: themeMode,
+            themeAnimationDuration: themeAnimationDuration,
+            themeAnimationCurve: themeAnimationCurve,
+            locale: locale,
+            localizationsDelegates: localizationsDelegates,
+            localeListResolutionCallback: localeListResolutionCallback,
+            localeResolutionCallback: localeResolutionCallback,
+            supportedLocales: supportedLocales,
+            debugShowMaterialGrid: debugShowMaterialGrid,
+            showPerformanceOverlay: showPerformanceOverlay,
+            showSemanticsDebugger: showSemanticsDebugger,
+            debugShowCheckedModeBanner: debugShowCheckedModeBanner,
+            shortcuts: shortcuts,
+            actions: actions,
+            restorationScopeId: restorationScopeId,
+            scrollBehavior: scrollBehavior,
+            useInheritedMediaQuery: useInheritedMediaQuery,
+            themeAnimationStyle: themeAnimationStyle,
+            key: key);
+    }
+
+    private MaterialApp(
+        RouterHost routerHost,
+        RouteInformationProvider? routeInformationProvider,
+        BackButtonDispatcher? backButtonDispatcher,
+        GlobalKey<ScaffoldMessengerState>? scaffoldMessengerKey,
+        TransitionBuilder? builder,
+        string title,
+        GenerateAppTitle? onGenerateTitle,
+        Func<NavigationNotification, bool>? onNavigationNotification,
+        Color? color,
+        ThemeData? theme,
+        ThemeData? darkTheme,
+        ThemeData? highContrastTheme,
+        ThemeData? highContrastDarkTheme,
+        ThemeMode themeMode,
+        TimeSpan? themeAnimationDuration,
+        Curve? themeAnimationCurve,
+        Locale? locale,
+        IReadOnlyList<LocalizationsDelegate>? localizationsDelegates,
+        LocaleListResolutionCallback? localeListResolutionCallback,
+        LocaleResolutionCallback? localeResolutionCallback,
+        IReadOnlyList<Locale>? supportedLocales,
+        bool debugShowMaterialGrid,
+        bool showPerformanceOverlay,
+        bool showSemanticsDebugger,
+        bool debugShowCheckedModeBanner,
+        IReadOnlyDictionary<ShortcutActivator, Intent>? shortcuts,
+        IReadOnlyDictionary<Type, FlutterAction>? actions,
+        string? restorationScopeId,
+        ScrollBehavior? scrollBehavior,
+        bool useInheritedMediaQuery,
+        AnimationStyle? themeAnimationStyle,
+        Key? key) : base(key)
+    {
+        TimeSpan effectiveThemeAnimationDuration =
+            themeAnimationDuration ?? AnimatedTheme.DefaultDuration;
+        if (effectiveThemeAnimationDuration < TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(themeAnimationDuration));
+        }
+
+        RouterHostConfiguration = routerHost;
+        RouteInformationProvider = routeInformationProvider;
+        BackButtonDispatcher = backButtonDispatcher;
+        Routes = new Dictionary<string, WidgetBuilder>();
+        NavigatorObservers = [];
+        ScaffoldMessengerKey = scaffoldMessengerKey;
+        Builder = builder;
+        Title = title ?? throw new ArgumentNullException(nameof(title));
+        OnGenerateTitle = onGenerateTitle;
+        OnNavigationNotification = onNavigationNotification;
+        Color = color;
+        Theme = theme;
+        DarkTheme = darkTheme;
+        HighContrastTheme = highContrastTheme;
+        HighContrastDarkTheme = highContrastDarkTheme;
+        ThemeMode = themeMode;
+        ThemeAnimationDuration = effectiveThemeAnimationDuration;
+        ThemeAnimationCurve = themeAnimationCurve ?? Curves.Linear;
+        Locale = locale;
+        LocalizationsDelegates = localizationsDelegates ?? [];
+        LocaleListResolutionCallback = localeListResolutionCallback;
+        LocaleResolutionCallback = localeResolutionCallback;
+        SupportedLocales = supportedLocales ?? DefaultSupportedLocalesValue;
+        if (SupportedLocales.Count == 0)
+        {
+            throw new ArgumentException("Supported locales cannot be empty.", nameof(supportedLocales));
+        }
+
+        DebugShowMaterialGrid = debugShowMaterialGrid;
+        ShowPerformanceOverlay = showPerformanceOverlay;
+        ShowSemanticsDebugger = showSemanticsDebugger;
+        DebugShowCheckedModeBanner = debugShowCheckedModeBanner;
+        Shortcuts = shortcuts;
+        Actions = actions;
+        RestorationScopeId = restorationScopeId;
+        ScrollBehavior = scrollBehavior;
+        UseInheritedMediaQuery = useInheritedMediaQuery;
+        ThemeAnimationStyle = themeAnimationStyle;
+    }
+
+    /// <summary>The route-information provider forwarded to the <c>Router</c>, or null outside router mode.</summary>
+    public RouteInformationProvider? RouteInformationProvider { get; }
+
+    /// <summary>The back-button dispatcher forwarded to the <c>Router</c>, or null outside router mode.</summary>
+    public BackButtonDispatcher? BackButtonDispatcher { get; }
+
+    /// <summary>The router delegate this app was configured with, or null outside router mode.</summary>
+    public object? RouterDelegate => RouterHostConfiguration?.RouterDelegate;
+
+    /// <summary>The route-information parser this app was configured with, or null when there is none.</summary>
+    public object? RouteInformationParser => RouterHostConfiguration?.RouteInformationParser;
+
+    /// <summary>The router config this app was configured with, or null when delegates were passed directly.</summary>
+    public object? RouterConfig => RouterHostConfiguration?.RouterConfig;
+
+    internal RouterHost? RouterHostConfiguration { get; }
+
     public GlobalKey<NavigatorState>? NavigatorKey { get; }
 
     public GlobalKey<ScaffoldMessengerState>? ScaffoldMessengerKey { get; }
@@ -236,36 +424,61 @@ public sealed class MaterialApp : StatefulWidget
                 DefaultCupertinoLocalizations.Delegate,
             };
 
-            Widget result = new WidgetsApp(
-                navigatorKey: CurrentWidget.NavigatorKey,
-                navigatorObservers: CurrentWidget.NavigatorObservers,
-                pageRouteBuilder: (settings, builder) => new MaterialPageRoute(
-                    builder: builder,
-                    settings: settings),
-                home: CurrentWidget.Home,
-                routes: CurrentWidget.Routes,
-                initialRoute: CurrentWidget.InitialRoute,
-                onGenerateRoute: CurrentWidget.OnGenerateRoute,
-                onGenerateInitialRoutes: CurrentWidget.OnGenerateInitialRoutes,
-                onUnknownRoute: CurrentWidget.OnUnknownRoute,
-                onNavigationNotification: CurrentWidget.OnNavigationNotification,
-                builder: BuildMaterialShell,
-                title: CurrentWidget.Title,
-                onGenerateTitle: CurrentWidget.OnGenerateTitle,
-                textStyle: ErrorTextStyle,
-                color: materialColor,
-                locale: CurrentWidget.Locale,
-                localizationsDelegates: delegates,
-                localeListResolutionCallback: CurrentWidget.LocaleListResolutionCallback,
-                localeResolutionCallback: CurrentWidget.LocaleResolutionCallback,
-                supportedLocales: CurrentWidget.SupportedLocales,
-                showPerformanceOverlay: CurrentWidget.ShowPerformanceOverlay,
-                showSemanticsDebugger: CurrentWidget.ShowSemanticsDebugger,
-                debugShowCheckedModeBanner: CurrentWidget.DebugShowCheckedModeBanner,
-                shortcuts: CurrentWidget.Shortcuts,
-                actions: CurrentWidget.Actions,
-                restorationScopeId: CurrentWidget.RestorationScopeId,
-                useInheritedMediaQuery: CurrentWidget.UseInheritedMediaQuery);
+            Widget result = CurrentWidget.RouterHostConfiguration is not null
+                ? new WidgetsApp(
+                    color: materialColor,
+                    routerHost: CurrentWidget.RouterHostConfiguration,
+                    routeInformationProvider: CurrentWidget.RouteInformationProvider,
+                    backButtonDispatcher: CurrentWidget.BackButtonDispatcher,
+                    builder: BuildMaterialShell,
+                    title: CurrentWidget.Title,
+                    onGenerateTitle: CurrentWidget.OnGenerateTitle,
+                    onNavigationNotification: CurrentWidget.OnNavigationNotification,
+                    textStyle: ErrorTextStyle,
+                    locale: CurrentWidget.Locale,
+                    localizationsDelegates: delegates,
+                    localeListResolutionCallback: CurrentWidget.LocaleListResolutionCallback,
+                    localeResolutionCallback: CurrentWidget.LocaleResolutionCallback,
+                    supportedLocales: CurrentWidget.SupportedLocales,
+                    showPerformanceOverlay: CurrentWidget.ShowPerformanceOverlay,
+                    showSemanticsDebugger: CurrentWidget.ShowSemanticsDebugger,
+                    debugShowWidgetInspector: false,
+                    debugShowCheckedModeBanner: CurrentWidget.DebugShowCheckedModeBanner,
+                    shortcuts: CurrentWidget.Shortcuts,
+                    actions: CurrentWidget.Actions,
+                    restorationScopeId: CurrentWidget.RestorationScopeId,
+                    useInheritedMediaQuery: CurrentWidget.UseInheritedMediaQuery,
+                    key: null)
+                : new WidgetsApp(
+                    navigatorKey: CurrentWidget.NavigatorKey,
+                    navigatorObservers: CurrentWidget.NavigatorObservers,
+                    pageRouteBuilder: (settings, builder) => new MaterialPageRoute(
+                        builder: builder,
+                        settings: settings),
+                    home: CurrentWidget.Home,
+                    routes: CurrentWidget.Routes,
+                    initialRoute: CurrentWidget.InitialRoute,
+                    onGenerateRoute: CurrentWidget.OnGenerateRoute,
+                    onGenerateInitialRoutes: CurrentWidget.OnGenerateInitialRoutes,
+                    onUnknownRoute: CurrentWidget.OnUnknownRoute,
+                    onNavigationNotification: CurrentWidget.OnNavigationNotification,
+                    builder: BuildMaterialShell,
+                    title: CurrentWidget.Title,
+                    onGenerateTitle: CurrentWidget.OnGenerateTitle,
+                    textStyle: ErrorTextStyle,
+                    color: materialColor,
+                    locale: CurrentWidget.Locale,
+                    localizationsDelegates: delegates,
+                    localeListResolutionCallback: CurrentWidget.LocaleListResolutionCallback,
+                    localeResolutionCallback: CurrentWidget.LocaleResolutionCallback,
+                    supportedLocales: CurrentWidget.SupportedLocales,
+                    showPerformanceOverlay: CurrentWidget.ShowPerformanceOverlay,
+                    showSemanticsDebugger: CurrentWidget.ShowSemanticsDebugger,
+                    debugShowCheckedModeBanner: CurrentWidget.DebugShowCheckedModeBanner,
+                    shortcuts: CurrentWidget.Shortcuts,
+                    actions: CurrentWidget.Actions,
+                    restorationScopeId: CurrentWidget.RestorationScopeId,
+                    useInheritedMediaQuery: CurrentWidget.UseInheritedMediaQuery);
 
             if (CurrentWidget.DebugShowMaterialGrid)
             {
